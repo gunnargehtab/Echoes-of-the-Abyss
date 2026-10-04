@@ -1,0 +1,1392 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "dpr": 1.5
+  },
+  "unpaced": true,
+  "queueSteps": 12000,
+  "stations": [
+    {
+      "name": "home",
+      "summary": {
+        "name": "home",
+        "queuedOnMs": 1.23,
+        "queuedOffMs": 1.08,
+        "queuedSplitMs": 0.15,
+        "partsSplitMs": 0.15,
+        "unqueuedOnMs": 1.71,
+        "unqueuedOffMs": 1.56,
+        "connOnMs": 0.8,
+        "connOffMs": 0.79,
+        "halo": "drawn",
+        "calls": 64,
+        "triangles": 150696,
+        "splitBytes": 11664000,
+        "parts": {
+          "canvas": 0.53,
+          "halo-gather": 0,
+          "depth-copy": 0.27,
+          "halo-source": 0.02,
+          "halo-spread": 0.17,
+          "halo-composite": 0.1,
+          "split-copy": 0.1,
+          "split": 0.05
+        }
+      },
+      "readings": [
+        {
+          "split": true,
+          "queued": true,
+          "parts": false,
+          "gpuMs": 1.23,
+          "worstGpuMs": 1.76,
+          "loadMs": 3.8,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": null,
+          "connMs": 0.67,
+          "frameMs": 6.18,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite",
+            "split-copy",
+            "split"
+          ],
+          "calls": 64,
+          "triangles": 150696,
+          "splitBytes": 11664000,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": false,
+          "queued": true,
+          "parts": false,
+          "gpuMs": 1.08,
+          "worstGpuMs": 1.71,
+          "loadMs": 3.76,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": null,
+          "connMs": 0.65,
+          "frameMs": 5.9,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite"
+          ],
+          "calls": 63,
+          "triangles": 150695,
+          "splitBytes": 0,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": true,
+          "queued": true,
+          "parts": true,
+          "gpuMs": 1.24,
+          "worstGpuMs": 1.86,
+          "loadMs": 3.77,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": {
+            "canvas": {
+              "avgMs": 0.53,
+              "worstMs": 1.14,
+              "frames": 241
+            },
+            "halo-gather": {
+              "avgMs": 0,
+              "worstMs": 0,
+              "frames": 241
+            },
+            "depth-copy": {
+              "avgMs": 0.27,
+              "worstMs": 0.32,
+              "frames": 241
+            },
+            "halo-source": {
+              "avgMs": 0.02,
+              "worstMs": 0.05,
+              "frames": 241
+            },
+            "halo-spread": {
+              "avgMs": 0.17,
+              "worstMs": 0.49,
+              "frames": 241
+            },
+            "halo-composite": {
+              "avgMs": 0.1,
+              "worstMs": 0.57,
+              "frames": 241
+            },
+            "split-copy": {
+              "avgMs": 0.1,
+              "worstMs": 0.12,
+              "frames": 241
+            },
+            "split": {
+              "avgMs": 0.05,
+              "worstMs": 0.12,
+              "frames": 241
+            }
+          },
+          "connMs": 0.72,
+          "frameMs": 5.75,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite",
+            "split-copy",
+            "split"
+          ],
+          "calls": 64,
+          "triangles": 150696,
+          "splitBytes": 11664000,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": false,
+          "queued": true,
+          "parts": true,
+          "gpuMs": 1.1,
+          "worstGpuMs": 3.18,
+          "loadMs": 3.8,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": {
+            "canvas": {
+              "avgMs": 0.53,
+              "worstMs": 2.61,
+              "frames": 241
+            },
+            "halo-gather": {
+              "avgMs": 0,
+              "worstMs": 0.03,
+              "frames": 241
+            },
+            "depth-copy": {
+              "avgMs": 0.28,
+              "worstMs": 0.36,
+              "frames": 241
+            },
+            "halo-source": {
+              "avgMs": 0.02,
+              "worstMs": 0.33,
+              "frames": 241
+            },
+            "halo-spread": {
+              "avgMs": 0.17,
+              "worstMs": 0.43,
+              "frames": 241
+            },
+            "halo-composite": {
+              "avgMs": 0.1,
+              "worstMs": 0.12,
+              "frames": 240
+            }
+          },
+          "connMs": 0.64,
+          "frameMs": 6.08,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite"
+          ],
+          "calls": 63,
+          "triangles": 150695,
+          "splitBytes": 0,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": true,
+          "queued": false,
+          "parts": false,
+          "gpuMs": 1.71,
+          "worstGpuMs": 5.44,
+          "loadMs": null,
+          "gpuDropped": 0,
+          "loadDropped": null,
+          "gpuParts": null,
+          "connMs": 0.8,
+          "frameMs": 3.87,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite",
+            "split-copy",
+            "split"
+          ],
+          "calls": 64,
+          "triangles": 150696,
+          "splitBytes": 11664000,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": false,
+          "queued": false,
+          "parts": false,
+          "gpuMs": 1.56,
+          "worstGpuMs": 4.74,
+          "loadMs": null,
+          "gpuDropped": 0,
+          "loadDropped": null,
+          "gpuParts": null,
+          "connMs": 0.79,
+          "frameMs": 3.81,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite"
+          ],
+          "calls": 63,
+          "triangles": 150695,
+          "splitBytes": 0,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        }
+      ]
+    },
+    {
+      "name": "close",
+      "summary": {
+        "name": "close",
+        "queuedOnMs": 1.43,
+        "queuedOffMs": 1.3,
+        "queuedSplitMs": 0.13,
+        "partsSplitMs": 0.15,
+        "unqueuedOnMs": 1.65,
+        "unqueuedOffMs": 1.43,
+        "connOnMs": 0.78,
+        "connOffMs": 0.75,
+        "halo": "drawn",
+        "calls": 63,
+        "triangles": 150696,
+        "splitBytes": 11664000,
+        "parts": {
+          "canvas": 0.73,
+          "halo-gather": 0,
+          "depth-copy": 0.28,
+          "halo-source": 0.02,
+          "halo-spread": 0.17,
+          "halo-composite": 0.11,
+          "split-copy": 0.1,
+          "split": 0.05
+        }
+      },
+      "readings": [
+        {
+          "split": true,
+          "queued": true,
+          "parts": false,
+          "gpuMs": 1.43,
+          "worstGpuMs": 1.99,
+          "loadMs": 3.82,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": null,
+          "connMs": 0.65,
+          "frameMs": 5.94,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite",
+            "split-copy",
+            "split"
+          ],
+          "calls": 63,
+          "triangles": 150696,
+          "splitBytes": 11664000,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": false,
+          "queued": true,
+          "parts": false,
+          "gpuMs": 1.3,
+          "worstGpuMs": 1.83,
+          "loadMs": 3.79,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": null,
+          "connMs": 0.61,
+          "frameMs": 5.91,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite"
+          ],
+          "calls": 62,
+          "triangles": 150695,
+          "splitBytes": 0,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": true,
+          "queued": true,
+          "parts": true,
+          "gpuMs": 1.46,
+          "worstGpuMs": 1.9,
+          "loadMs": 3.78,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": {
+            "canvas": {
+              "avgMs": 0.73,
+              "worstMs": 1.2,
+              "frames": 241
+            },
+            "halo-gather": {
+              "avgMs": 0,
+              "worstMs": 0,
+              "frames": 241
+            },
+            "depth-copy": {
+              "avgMs": 0.28,
+              "worstMs": 0.31,
+              "frames": 241
+            },
+            "halo-source": {
+              "avgMs": 0.02,
+              "worstMs": 0.1,
+              "frames": 241
+            },
+            "halo-spread": {
+              "avgMs": 0.17,
+              "worstMs": 0.19,
+              "frames": 241
+            },
+            "halo-composite": {
+              "avgMs": 0.11,
+              "worstMs": 0.55,
+              "frames": 241
+            },
+            "split-copy": {
+              "avgMs": 0.1,
+              "worstMs": 0.12,
+              "frames": 241
+            },
+            "split": {
+              "avgMs": 0.05,
+              "worstMs": 0.07,
+              "frames": 241
+            }
+          },
+          "connMs": 0.65,
+          "frameMs": 5.97,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite",
+            "split-copy",
+            "split"
+          ],
+          "calls": 63,
+          "triangles": 150696,
+          "splitBytes": 11664000,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": false,
+          "queued": true,
+          "parts": true,
+          "gpuMs": 1.29,
+          "worstGpuMs": 1.91,
+          "loadMs": 3.78,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": {
+            "canvas": {
+              "avgMs": 0.72,
+              "worstMs": 1.32,
+              "frames": 241
+            },
+            "halo-gather": {
+              "avgMs": 0,
+              "worstMs": 0.02,
+              "frames": 241
+            },
+            "depth-copy": {
+              "avgMs": 0.28,
+              "worstMs": 0.34,
+              "frames": 241
+            },
+            "halo-source": {
+              "avgMs": 0.02,
+              "worstMs": 0.04,
+              "frames": 241
+            },
+            "halo-spread": {
+              "avgMs": 0.17,
+              "worstMs": 0.2,
+              "frames": 241
+            },
+            "halo-composite": {
+              "avgMs": 0.1,
+              "worstMs": 0.17,
+              "frames": 241
+            }
+          },
+          "connMs": 0.63,
+          "frameMs": 5.84,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite"
+          ],
+          "calls": 62,
+          "triangles": 150695,
+          "splitBytes": 0,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": true,
+          "queued": false,
+          "parts": false,
+          "gpuMs": 1.65,
+          "worstGpuMs": 3.56,
+          "loadMs": null,
+          "gpuDropped": 0,
+          "loadDropped": null,
+          "gpuParts": null,
+          "connMs": 0.78,
+          "frameMs": 3.4,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite",
+            "split-copy",
+            "split"
+          ],
+          "calls": 63,
+          "triangles": 150696,
+          "splitBytes": 11664000,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": false,
+          "queued": false,
+          "parts": false,
+          "gpuMs": 1.43,
+          "worstGpuMs": 3.53,
+          "loadMs": null,
+          "gpuDropped": 0,
+          "loadDropped": null,
+          "gpuParts": null,
+          "connMs": 0.75,
+          "frameMs": 3.33,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite"
+          ],
+          "calls": 62,
+          "triangles": 150695,
+          "splitBytes": 0,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        }
+      ]
+    },
+    {
+      "name": "low",
+      "summary": {
+        "name": "low",
+        "queuedOnMs": 1.23,
+        "queuedOffMs": 1.08,
+        "queuedSplitMs": 0.15,
+        "partsSplitMs": 0.15,
+        "unqueuedOnMs": 1.43,
+        "unqueuedOffMs": 1.27,
+        "connOnMs": 0.75,
+        "connOffMs": 0.74,
+        "halo": "drawn",
+        "calls": 64,
+        "triangles": 150696,
+        "splitBytes": 11664000,
+        "parts": {
+          "canvas": 0.52,
+          "halo-gather": 0,
+          "depth-copy": 0.28,
+          "halo-source": 0.02,
+          "halo-spread": 0.17,
+          "halo-composite": 0.1,
+          "split-copy": 0.1,
+          "split": 0.05
+        }
+      },
+      "readings": [
+        {
+          "split": true,
+          "queued": true,
+          "parts": false,
+          "gpuMs": 1.23,
+          "worstGpuMs": 1.86,
+          "loadMs": 3.83,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": null,
+          "connMs": 0.68,
+          "frameMs": 6.23,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite",
+            "split-copy",
+            "split"
+          ],
+          "calls": 64,
+          "triangles": 150696,
+          "splitBytes": 11664000,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": false,
+          "queued": true,
+          "parts": false,
+          "gpuMs": 1.08,
+          "worstGpuMs": 1.69,
+          "loadMs": 3.87,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": null,
+          "connMs": 0.64,
+          "frameMs": 5.99,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite"
+          ],
+          "calls": 63,
+          "triangles": 150695,
+          "splitBytes": 0,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": true,
+          "queued": true,
+          "parts": true,
+          "gpuMs": 1.24,
+          "worstGpuMs": 1.77,
+          "loadMs": 3.81,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": {
+            "canvas": {
+              "avgMs": 0.52,
+              "worstMs": 1.03,
+              "frames": 241
+            },
+            "halo-gather": {
+              "avgMs": 0,
+              "worstMs": 0,
+              "frames": 241
+            },
+            "depth-copy": {
+              "avgMs": 0.28,
+              "worstMs": 0.68,
+              "frames": 241
+            },
+            "halo-source": {
+              "avgMs": 0.02,
+              "worstMs": 0.09,
+              "frames": 241
+            },
+            "halo-spread": {
+              "avgMs": 0.17,
+              "worstMs": 0.22,
+              "frames": 241
+            },
+            "halo-composite": {
+              "avgMs": 0.1,
+              "worstMs": 0.12,
+              "frames": 241
+            },
+            "split-copy": {
+              "avgMs": 0.1,
+              "worstMs": 0.6,
+              "frames": 241
+            },
+            "split": {
+              "avgMs": 0.05,
+              "worstMs": 0.07,
+              "frames": 241
+            }
+          },
+          "connMs": 0.69,
+          "frameMs": 5,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite",
+            "split-copy",
+            "split"
+          ],
+          "calls": 64,
+          "triangles": 150696,
+          "splitBytes": 11664000,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": false,
+          "queued": true,
+          "parts": true,
+          "gpuMs": 1.09,
+          "worstGpuMs": 1.59,
+          "loadMs": 3.81,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": {
+            "canvas": {
+              "avgMs": 0.52,
+              "worstMs": 1.05,
+              "frames": 240
+            },
+            "halo-gather": {
+              "avgMs": 0,
+              "worstMs": 0.11,
+              "frames": 240
+            },
+            "depth-copy": {
+              "avgMs": 0.28,
+              "worstMs": 0.3,
+              "frames": 240
+            },
+            "halo-source": {
+              "avgMs": 0.02,
+              "worstMs": 0.08,
+              "frames": 240
+            },
+            "halo-spread": {
+              "avgMs": 0.17,
+              "worstMs": 0.46,
+              "frames": 240
+            },
+            "halo-composite": {
+              "avgMs": 0.1,
+              "worstMs": 0.55,
+              "frames": 240
+            }
+          },
+          "connMs": 0.62,
+          "frameMs": 5.6,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite"
+          ],
+          "calls": 63,
+          "triangles": 150695,
+          "splitBytes": 0,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": true,
+          "queued": false,
+          "parts": false,
+          "gpuMs": 1.43,
+          "worstGpuMs": 2.74,
+          "loadMs": null,
+          "gpuDropped": 0,
+          "loadDropped": null,
+          "gpuParts": null,
+          "connMs": 0.75,
+          "frameMs": 3.36,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite",
+            "split-copy",
+            "split"
+          ],
+          "calls": 64,
+          "triangles": 150696,
+          "splitBytes": 11664000,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": false,
+          "queued": false,
+          "parts": false,
+          "gpuMs": 1.27,
+          "worstGpuMs": 3.46,
+          "loadMs": null,
+          "gpuDropped": 0,
+          "loadDropped": null,
+          "gpuParts": null,
+          "connMs": 0.74,
+          "frameMs": 3.34,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite"
+          ],
+          "calls": 63,
+          "triangles": 150695,
+          "splitBytes": 0,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        }
+      ]
+    },
+    {
+      "name": "survey",
+      "summary": {
+        "name": "survey",
+        "queuedOnMs": 1.14,
+        "queuedOffMs": 1,
+        "queuedSplitMs": 0.14,
+        "partsSplitMs": 0.15,
+        "unqueuedOnMs": 1.75,
+        "unqueuedOffMs": 1.6,
+        "connOnMs": 0.82,
+        "connOffMs": 0.79,
+        "halo": "drawn",
+        "calls": 64,
+        "triangles": 150676,
+        "splitBytes": 11664000,
+        "parts": {
+          "canvas": 0.43,
+          "halo-gather": 0,
+          "depth-copy": 0.28,
+          "halo-source": 0.02,
+          "halo-spread": 0.17,
+          "halo-composite": 0.1,
+          "split-copy": 0.1,
+          "split": 0.05
+        }
+      },
+      "readings": [
+        {
+          "split": true,
+          "queued": true,
+          "parts": false,
+          "gpuMs": 1.14,
+          "worstGpuMs": 1.7,
+          "loadMs": 3.78,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": null,
+          "connMs": 0.68,
+          "frameMs": 6.12,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite",
+            "split-copy",
+            "split"
+          ],
+          "calls": 64,
+          "triangles": 150676,
+          "splitBytes": 11664000,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": false,
+          "queued": true,
+          "parts": false,
+          "gpuMs": 1,
+          "worstGpuMs": 4.34,
+          "loadMs": 3.81,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": null,
+          "connMs": 0.66,
+          "frameMs": 5.73,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite"
+          ],
+          "calls": 63,
+          "triangles": 150675,
+          "splitBytes": 0,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": true,
+          "queued": true,
+          "parts": true,
+          "gpuMs": 1.14,
+          "worstGpuMs": 1.67,
+          "loadMs": 3.79,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": {
+            "canvas": {
+              "avgMs": 0.43,
+              "worstMs": 0.96,
+              "frames": 241
+            },
+            "halo-gather": {
+              "avgMs": 0,
+              "worstMs": 0,
+              "frames": 241
+            },
+            "depth-copy": {
+              "avgMs": 0.28,
+              "worstMs": 0.33,
+              "frames": 241
+            },
+            "halo-source": {
+              "avgMs": 0.02,
+              "worstMs": 0.08,
+              "frames": 241
+            },
+            "halo-spread": {
+              "avgMs": 0.17,
+              "worstMs": 0.7,
+              "frames": 241
+            },
+            "halo-composite": {
+              "avgMs": 0.1,
+              "worstMs": 0.12,
+              "frames": 241
+            },
+            "split-copy": {
+              "avgMs": 0.1,
+              "worstMs": 0.12,
+              "frames": 241
+            },
+            "split": {
+              "avgMs": 0.05,
+              "worstMs": 0.07,
+              "frames": 241
+            }
+          },
+          "connMs": 0.65,
+          "frameMs": 6.12,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite",
+            "split-copy",
+            "split"
+          ],
+          "calls": 64,
+          "triangles": 150676,
+          "splitBytes": 11664000,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": false,
+          "queued": true,
+          "parts": true,
+          "gpuMs": 1,
+          "worstGpuMs": 1.47,
+          "loadMs": 3.8,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": {
+            "canvas": {
+              "avgMs": 0.44,
+              "worstMs": 0.91,
+              "frames": 240
+            },
+            "halo-gather": {
+              "avgMs": 0,
+              "worstMs": 0,
+              "frames": 240
+            },
+            "depth-copy": {
+              "avgMs": 0.28,
+              "worstMs": 0.47,
+              "frames": 240
+            },
+            "halo-source": {
+              "avgMs": 0.02,
+              "worstMs": 0.07,
+              "frames": 240
+            },
+            "halo-spread": {
+              "avgMs": 0.17,
+              "worstMs": 0.25,
+              "frames": 240
+            },
+            "halo-composite": {
+              "avgMs": 0.1,
+              "worstMs": 0.12,
+              "frames": 240
+            }
+          },
+          "connMs": 0.66,
+          "frameMs": 5.31,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite"
+          ],
+          "calls": 63,
+          "triangles": 150675,
+          "splitBytes": 0,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": true,
+          "queued": false,
+          "parts": false,
+          "gpuMs": 1.75,
+          "worstGpuMs": 4.45,
+          "loadMs": null,
+          "gpuDropped": 0,
+          "loadDropped": null,
+          "gpuParts": null,
+          "connMs": 0.82,
+          "frameMs": 4,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite",
+            "split-copy",
+            "split"
+          ],
+          "calls": 64,
+          "triangles": 150676,
+          "splitBytes": 11664000,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": false,
+          "queued": false,
+          "parts": false,
+          "gpuMs": 1.6,
+          "worstGpuMs": 4.35,
+          "loadMs": null,
+          "gpuDropped": 0,
+          "loadDropped": null,
+          "gpuParts": null,
+          "connMs": 0.79,
+          "frameMs": 3.92,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite"
+          ],
+          "calls": 63,
+          "triangles": 150675,
+          "splitBytes": 0,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        }
+      ]
+    },
+    {
+      "name": "fight",
+      "summary": {
+        "name": "fight",
+        "queuedOnMs": 1.25,
+        "queuedOffMs": 1.12,
+        "queuedSplitMs": 0.13,
+        "partsSplitMs": 0.16,
+        "unqueuedOnMs": 3.66,
+        "unqueuedOffMs": 3.1,
+        "connOnMs": 1.2,
+        "connOffMs": 1.12,
+        "halo": "drawn",
+        "calls": 66,
+        "triangles": 150966,
+        "splitBytes": 11664000,
+        "parts": {
+          "canvas": 0.93,
+          "halo-gather": 0.01,
+          "depth-copy": 0.28,
+          "halo-source": 0.04,
+          "halo-spread": 0.18,
+          "halo-composite": 0.1,
+          "split-copy": 0.1,
+          "split": 0.06
+        }
+      },
+      "readings": [
+        {
+          "split": true,
+          "queued": true,
+          "parts": false,
+          "gpuMs": 1.25,
+          "worstGpuMs": 1.77,
+          "loadMs": 3.75,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": null,
+          "connMs": 0.72,
+          "frameMs": 5.87,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite",
+            "split-copy",
+            "split"
+          ],
+          "calls": 66,
+          "triangles": 150984,
+          "splitBytes": 11664000,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": false,
+          "queued": true,
+          "parts": false,
+          "gpuMs": 1.12,
+          "worstGpuMs": 3.39,
+          "loadMs": 3.77,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": null,
+          "connMs": 1.04,
+          "frameMs": 6.72,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite"
+          ],
+          "calls": 65,
+          "triangles": 150983,
+          "splitBytes": 0,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": true,
+          "queued": true,
+          "parts": true,
+          "gpuMs": 1.7,
+          "worstGpuMs": 4.47,
+          "loadMs": 3.68,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": {
+            "canvas": {
+              "avgMs": 0.93,
+              "worstMs": 3.76,
+              "frames": 242
+            },
+            "halo-gather": {
+              "avgMs": 0.01,
+              "worstMs": 1.12,
+              "frames": 242
+            },
+            "depth-copy": {
+              "avgMs": 0.28,
+              "worstMs": 0.84,
+              "frames": 242
+            },
+            "halo-source": {
+              "avgMs": 0.04,
+              "worstMs": 1.45,
+              "frames": 242
+            },
+            "halo-spread": {
+              "avgMs": 0.18,
+              "worstMs": 1.25,
+              "frames": 241
+            },
+            "halo-composite": {
+              "avgMs": 0.1,
+              "worstMs": 0.58,
+              "frames": 241
+            },
+            "split-copy": {
+              "avgMs": 0.1,
+              "worstMs": 0.14,
+              "frames": 241
+            },
+            "split": {
+              "avgMs": 0.06,
+              "worstMs": 0.8,
+              "frames": 241
+            }
+          },
+          "connMs": 1.45,
+          "frameMs": 7.28,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite",
+            "split-copy",
+            "split"
+          ],
+          "calls": 66,
+          "triangles": 150966,
+          "splitBytes": 11664000,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": false,
+          "queued": true,
+          "parts": true,
+          "gpuMs": 1.24,
+          "worstGpuMs": 4.29,
+          "loadMs": 3.7,
+          "gpuDropped": 0,
+          "loadDropped": 0,
+          "gpuParts": {
+            "canvas": {
+              "avgMs": 0.67,
+              "worstMs": 3.74,
+              "frames": 241
+            },
+            "halo-gather": {
+              "avgMs": 0,
+              "worstMs": 0.02,
+              "frames": 241
+            },
+            "depth-copy": {
+              "avgMs": 0.27,
+              "worstMs": 0.29,
+              "frames": 241
+            },
+            "halo-source": {
+              "avgMs": 0.02,
+              "worstMs": 0.04,
+              "frames": 241
+            },
+            "halo-spread": {
+              "avgMs": 0.17,
+              "worstMs": 1.02,
+              "frames": 241
+            },
+            "halo-composite": {
+              "avgMs": 0.1,
+              "worstMs": 0.64,
+              "frames": 241
+            }
+          },
+          "connMs": 1.24,
+          "frameMs": 6.27,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite"
+          ],
+          "calls": 65,
+          "triangles": 150965,
+          "splitBytes": 0,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": true,
+          "queued": false,
+          "parts": false,
+          "gpuMs": 3.66,
+          "worstGpuMs": 30.5,
+          "loadMs": null,
+          "gpuDropped": 0,
+          "loadDropped": null,
+          "gpuParts": null,
+          "connMs": 1.2,
+          "frameMs": 6.31,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite",
+            "split-copy",
+            "split"
+          ],
+          "calls": 66,
+          "triangles": 150966,
+          "splitBytes": 11664000,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        },
+        {
+          "split": false,
+          "queued": false,
+          "parts": false,
+          "gpuMs": 3.1,
+          "worstGpuMs": 6.93,
+          "loadMs": null,
+          "gpuDropped": 0,
+          "loadDropped": null,
+          "gpuParts": null,
+          "connMs": 1.12,
+          "frameMs": 5.92,
+          "halo": "drawn",
+          "passes": [
+            "canvas",
+            "depth-copy",
+            "halo-source",
+            "halo-spread",
+            "halo-composite"
+          ],
+          "calls": 65,
+          "triangles": 150965,
+          "splitBytes": 0,
+          "drawingBuffer": {
+            "width": 2160,
+            "height": 1350
+          }
+        }
+      ]
+    }
+  ]
+}

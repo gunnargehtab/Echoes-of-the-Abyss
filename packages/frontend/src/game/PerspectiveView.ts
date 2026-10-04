@@ -136,6 +136,7 @@ import { LampHaloPass, markLamp, type HaloSplat } from './lampHaloPass.ts';
 import { LAMP_HALO } from './lampHalo.ts';
 import { publishLampHaloStatus } from './lampHaloStatus.ts';
 import { gatherHaloSplats } from './haloSource.ts';
+import { ChromaticSplit } from './chromaticSplit.ts';
 import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
 import { FaunaStipple } from './faunaStipple.ts';
 import { DREAM_LOOP, installDreamGround } from './dreamLoop.ts';
@@ -290,6 +291,16 @@ interface HaloFramePixels {
   after: Uint8Array;
   /** White where an own lamp marked the stencil, black elsewhere. */
   mask: Uint8Array;
+}
+
+/** One frame's conn canvas around the chromatic split, for #1003's frame reading. */
+interface SplitFramePixels {
+  width: number;
+  height: number;
+  /** After the canvas pass and the halo, before the split. */
+  before: Uint8Array;
+  /** After the split. */
+  after: Uint8Array;
 }
 
 /** The canvas's drawing buffer as RGBA bytes, rows bottom-up. */
@@ -620,6 +631,7 @@ export class PerspectiveView {
    */
   private readonly onContextLost = (): void => {
     this.queueLoad.set(0);
+    this.split.disable();
     if (!this.halo.on) return;
     this.halo.disable();
     this.markLamps(false);
@@ -630,6 +642,7 @@ export class PerspectiveView {
     const gl = this.renderer.getContext();
     this.canvasStencilBits = (gl.getParameter?.(gl.STENCIL_BITS) as number | undefined) ?? 0;
     if (this.haloWanted) this.setLampHalos(true, true);
+    this.setChromaticSplit(this.splitWanted);
   };
 
   /**
@@ -656,6 +669,10 @@ export class PerspectiveView {
   private haloWanted = false;
   /** The halo pass's own calls and triangles in the last frame. */
   private haloCost = { calls: 0, triangles: 0 };
+  /** The chromatic split, drawn after the halo while on (chromaticSplit.ts):
+   * on wherever its check passes, and off only by the development switch. */
+  private readonly split = new ChromaticSplit();
+  private splitWanted = true;
   /** Stencil bits the canvas got, read once at mount (the halo needs 8). */
   private canvasStencilBits = 0;
   /** The renders that made the last frame, in order (gate 6's pass list). */
@@ -667,6 +684,8 @@ export class PerspectiveView {
   private readonly queueLoad = new GpuQueueLoad();
   /** Captures waiting on the next frame's halo pixels (`__perspectiveHaloFrame`). */
   private haloFrameWaiters: ((frame: HaloFramePixels | null) => void)[] = [];
+  /** Captures waiting on the next frame's split pixels (`__perspectiveSplitFrame`). */
+  private splitFrameWaiters: ((frame: SplitFramePixels | null) => void)[] = [];
   /** Development only: draw one entity's halo alone (`__perspectiveHaloOnly`). */
   private haloOnly: string | null = null;
   private queueTimer: GpuTimer | null = null;
@@ -786,6 +805,7 @@ export class PerspectiveView {
       timers
     );
     this.halo.marker = (pass) => this.gpuTimer?.mark(pass);
+    this.split.marker = (pass) => this.gpuTimer?.mark(pass);
     this.queueTimer = new GpuTimer(
       this.renderer.getContext() as WebGL2RenderingContext,
       import.meta.env?.PROD !== true,
@@ -798,6 +818,7 @@ export class PerspectiveView {
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(host);
     this.resize();
+    this.setChromaticSplit(this.splitWanted);
     this.rebuildTerrain();
     this.exposeProbe();
     document.addEventListener('visibilitychange', this.onVisibility);
@@ -999,6 +1020,7 @@ export class PerspectiveView {
     this.queueTimer = null;
     this.queueLoad.dispose();
     this.halo.dispose();
+    this.split.dispose();
     // The SPEC binds a refusal to a view; one that is gone has refused
     // nothing, so Settings in the shell afterwards shows no stale note.
     publishLampHaloStatus('off');
@@ -1012,6 +1034,8 @@ export class PerspectiveView {
     delete (window as unknown as { __perspectiveCamera?: unknown }).__perspectiveCamera;
     delete (window as unknown as { __perspectiveLamps?: unknown }).__perspectiveLamps;
     delete (window as unknown as { __perspectiveHalo?: unknown }).__perspectiveHalo;
+    delete (window as unknown as { __perspectiveSplit?: unknown }).__perspectiveSplit;
+    delete (window as unknown as { __perspectiveSplitFrame?: unknown }).__perspectiveSplitFrame;
     delete (window as unknown as { __perspectiveGpuSplit?: unknown }).__perspectiveGpuSplit;
     delete (window as unknown as { __perspectiveGpuQueue?: unknown }).__perspectiveGpuQueue;
     delete (window as unknown as { __perspectiveHaloFrame?: unknown }).__perspectiveHaloFrame;
@@ -1019,6 +1043,8 @@ export class PerspectiveView {
     delete (window as unknown as { __perspectiveSeabedM?: unknown }).__perspectiveSeabedM;
     for (const resolve of this.haloFrameWaiters) resolve(null);
     this.haloFrameWaiters = [];
+    for (const resolve of this.splitFrameWaiters) resolve(null);
+    this.splitFrameWaiters = [];
   }
 
   // ---------------------------------------------------------------- camera
@@ -2335,6 +2361,13 @@ export class PerspectiveView {
         };
       }
       if (this.haloFrameWaiters.length > 0) this.resolveHaloFrame(renderer, captured);
+      // Last, over the frame as drawn, halo included (art-direction.md,
+      // "Atmosphere rides on top"). After the halo capture too, which reads
+      // the frame without it and then overwrites it with the lamp mask.
+      const splitBefore =
+        this.splitFrameWaiters.length > 0 && this.split.on ? readCanvasPixels(renderer) : null;
+      passes.push(...this.split.render(renderer, this.camera));
+      if (this.splitFrameWaiters.length > 0) this.resolveSplitFrame(renderer, splitBefore);
     } finally {
       this.gpuTimer?.end();
     }
@@ -2434,6 +2467,22 @@ export class PerspectiveView {
         this.setLampHalos(on);
         return this.halo.state;
       };
+      // The chromatic split's capture switch (tools/render-stack/split-cost.mjs):
+      // its on/off pair for gate 6. Players have no setting (art-direction.md).
+      (window as unknown as { __perspectiveSplit?: (on: boolean) => unknown }).__perspectiveSplit =
+        (on: boolean) => {
+          this.setChromaticSplit(on);
+          return this.split.state;
+        };
+      // #1003's frame reading (tools/render-stack/split-frames.mjs): the next
+      // frame's canvas before the split and after it, as RGBA rows bottom-up.
+      // Null when the split is off.
+      (
+        window as unknown as { __perspectiveSplitFrame?: () => Promise<SplitFramePixels | null> }
+      ).__perspectiveSplitFrame = () =>
+        new Promise((resolve) => {
+          this.splitFrameWaiters.push(resolve);
+        });
       // #1001's frame reading (tools/render-stack/halo-frames.mjs): the next
       // frame's canvas before the halo, after it, and the lamp mask, as RGBA
       // rows bottom-up. Null when the halo is off.
@@ -2543,6 +2592,10 @@ export class PerspectiveView {
       haloCalls: this.haloCost.calls,
       haloTriangles: this.haloCost.triangles,
       haloBytes: this.halo.bytes,
+      // The chromatic split (art-direction.md, "Atmosphere rides on top"):
+      // its state and the copy it holds (gate 6).
+      split: this.split.state,
+      splitBytes: this.split.bytes,
       canvasStencilBits: this.canvasStencilBits,
       textures: info?.memory.textures ?? 0,
       // What the GPU shades: the capped pixel ratio, and the drawing buffer
@@ -2646,8 +2699,8 @@ export class PerspectiveView {
 
   /**
    * Turn the lamp halo on or off (docs/art-direction.md, "Lamp halo — SPEC").
-   * On runs its capability check first; a view that fails it keeps the frame
-   * the canvas pass alone and says why on the probe. Never on while the Dream
+   * On runs its capability check first; a view that fails it draws the frame
+   * without the halo and says why on the probe. Never on while the Dream
    * Loop study is, which has lamp halos of its own.
    */
   setLampHalos(on: boolean, recheck = false): void {
@@ -2671,6 +2724,19 @@ export class PerspectiveView {
     // Settings reads the outcome here, not the choice: a refused display
     // keeps the choice and says "Not available on this display" (SPEC).
     publishLampHaloStatus(this.halo.state);
+  }
+
+  /**
+   * Turn the chromatic split on or off (docs/art-direction.md, "Atmosphere
+   * rides on top"). On runs its check, at mount, after a context restore and
+   * at the development switch; a display that fails it draws the frame
+   * without the split and says why on the probe.
+   */
+  private setChromaticSplit(on: boolean): void {
+    this.splitWanted = on;
+    if (this.renderer === null) return;
+    if (on && !this.split.on) this.split.enable(this.renderer);
+    else if (!on) this.split.disable();
   }
 
   /** Every own lamp clone marks its pixels in the canvas stencil while the
@@ -2714,6 +2780,24 @@ export class PerspectiveView {
         mask: readCanvasPixels(renderer),
       };
     }
+    for (const resolve of waiters) resolve(frame);
+  }
+
+  /** Hand the split's capture this frame's canvas before the split and after
+   * it. Null when the split is off. */
+  private resolveSplitFrame(renderer: WebGLRenderer, before: Uint8Array | null): void {
+    const waiters = this.splitFrameWaiters;
+    this.splitFrameWaiters = [];
+    const gl = renderer.getContext();
+    const frame =
+      before === null
+        ? null
+        : {
+            width: gl.drawingBufferWidth,
+            height: gl.drawingBufferHeight,
+            before,
+            after: readCanvasPixels(renderer),
+          };
     for (const resolve of waiters) resolve(frame);
   }
 

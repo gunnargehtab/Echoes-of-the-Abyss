@@ -112,7 +112,7 @@ already holds. It is not "bloom", which in this world is a Commune word
 
 **Route.** The canvas pass is drawn exactly as the SPEC above describes: per-material ACES,
 glow after the curve, the unlit layers, encoded blending and 4× MSAA. Then, inside the same
-GPU-timer bracket, four steps run, and nothing else is drawn:
+GPU-timer bracket, four steps run, and the halo draws nothing else:
 
 1. **Depth copy.** One framebuffer blit copies the canvas depth, the depth bit only, into a
    DEPTH24_STENCIL8 depth texture the size of the drawing buffer. Asking for the stencil
@@ -129,7 +129,9 @@ GPU-timer bracket, four steps run, and nothing else is drawn:
 There is no EffectComposer, no OutputPass and no second camera: the splats project through
 the conn camera, and the full-screen draws ignore its matrices (gate 8). A frame in which
 no entity draws a splat runs none of the four steps. The halo is never built while the
-development-only Dream Loop study is on, which has lamp halos of its own.
+development-only Dream Loop study is on, which has lamp halos of its own. The chromatic
+split runs after the composite, over the frame with its halo
+([Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)).
 
 **What feeds it.** Only own hull and structure lamps whose model is showing feed the
 source, one splat per lamp site: one connected bulb or strip of an emissive material, the
@@ -267,15 +269,15 @@ stations:
 - **Cost.** It spends only what gate 6 allocates.
 
 **Off, and when it is unavailable.** "Lamp halos" is a toggle in Settings
-([ui-ux.md](ui-ux.md) §14). Off, no halo pass runs and no halo target is
-held, so the frame is the canvas pass alone. Reduced motion keeps the halo, because its
-flare is a change of state and the state is the message. The halo turns itself off for a
-view only when that view fails its capability check, run when the halo turns on and after a
-context restore: a renderable half-float colour target, framebuffer-complete with its depth
-texture; a canvas stencil buffer; a depth copy that blits without error; and a known clear
-read back from the half-float target. On a failure the stored choice is kept, Settings says
-"Not available on this display", and the probe gives the reason. A software rasteriser is
-not a reason, since half-float targets render under SwiftShader.
+([ui-ux.md](ui-ux.md) §14). Off, no halo pass runs and no halo target is held, so the
+frame is the canvas pass and the chromatic split after it. Reduced motion keeps the halo,
+because its flare is a change of state and the state is the message. The halo turns itself
+off for a view only when that view fails its capability check, run when the halo turns on
+and after a context restore: a renderable half-float colour target, framebuffer-complete
+with its depth texture; a canvas stencil buffer; a depth copy that blits without error;
+and a known clear read back from the half-float target. On a failure the stored choice is
+kept, Settings says "Not available on this display", and the probe gives the reason. A
+software rasteriser is not a reason, since half-float targets render under SwiftShader.
 
 **What it is not.** It is not world light: the world-light families keep "no halo recipe"
 ([style-neon-noir.md](style-neon-noir.md)). It is not an interface glow: the glow recipe's
@@ -527,7 +529,7 @@ view's frame.
 | 1 | Shared rig, tone mapping, PMREM | This increment. Promote the tutorial rig; no model edits or full-screen pass |
 | 2 | Lamp core, then a lamp halo ([#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001)) | The lamp core landed ([#1021](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1021), [#1029](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1029)). From #1001's readings the owner picked the full-screen route, drawn after the canvas over a depth-only copy of its depth; "Lamp halo — SPEC" above and gate 6's line specify it, on by default behind its setting since the owner approved its frames |
 | 3 | Bevel coverage and baked AO ([#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002)) | Both landed ("Bevels and baked occlusion — SPEC" above). Coverage measured: 30 of 190 extruded plates are bevelled, and plates are 3 % of 7,480 parts, so no primitive was added. The Knights' Bastion carries the first baked occlusion map, on its own UV set, read by the conn view alone, its silhouette unchanged; the next model is a call per model |
-| 4 | Vignette, chromatic split, camera sway ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)) | Vignette and sway are built, with no pass ([Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)). The split waits on a gate-6 allocation for its full-screen draw and copy. Existing shader-driven kelp sway and water fog are different effects; do not duplicate them. Respect gate 8 and reduced motion |
+| 4 | Vignette, chromatic split, camera sway ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)) | All three are built ([Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)). The vignette and the sway use no pass. The split is a colour copy and one full-screen draw after the halo, and gate 6 allocates both. Existing shader-driven kelp sway and water fog are different effects; do not duplicate them. Respect gate 8 and reduced motion |
 | 5 | GLB gzip ([#1004](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1004)) | Built. The nginx image's `mime.types` names no `glb`, so `packages/frontend/nginx.conf` names the type in the models' own location and gzips them at level 6. Delivery cost, not frame quality |
 | 6 | UV layout and trim sheets ([#1005](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1005)) | Landed on one hull ("UV layout and trim sheets — SPEC" above). 6,863 of 7,025 primitives carry UV0 and 13 carry `uvAlike`'s zeros, but attribute presence is not a layout: the Bulwark's 162 parts are laid out in metres by its script, and four materials are tagged for the Consortium's sheet, one PNG a navy attached at load, luminance only, hue still the palette's. Sorrowgate's triplanar surfaces are kept under it; the next hull is a call per hull |
 | 7 | Shallow caustics ([#1006](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1006)) | Decided: none. The sunlit layer is the milky Lid, which scatters rather than focuses, and the water ramp already carries what light reaches the Shelf ("Shallow caustics — SPEC" above). Nothing to build |
@@ -1135,10 +1137,46 @@ static layers alone ([#1032](https://github.com/gunnargehtab/Echoes-of-the-Abyss
 Both are TUNABLE: `packages/frontend/src/game/cameraSway.ts` holds the sway's numbers, and
 the conn view's stylesheet holds the vignette's.
 
-The chromatic split is not built. It needs the drawn frame as a texture, so it is a
-full-screen draw and a framebuffer copy, and gate 6 of
-[graphics-standards.md](graphics-standards.md) must allocate both, and the named GPU time
-them, before it lands.
+The **chromatic split** is the one of the three that is a pass
+([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)). Near the frame's
+rim the picture comes apart into two images at most a pixel apart: a magenta one pushed
+outward from the frame's centre and a cyan one pulled in toward it. So a bright edge near the
+rim takes a magenta fringe on its outer side and a cyan one on its inner side
+([style-neon-noir.md](style-neon-noir.md), "Camera"). It needs the drawn frame as a
+texture, so it runs after the canvas render and the lamp halo, inside the same GPU-timer
+bracket, in two steps and with no composer:
+
+1. **Copy.** One framebuffer blit copies the canvas colour, its 4× samples resolved, into an
+   8-bit target the size of the drawing buffer. The canvas is already tone-mapped and
+   encoded, so the copy is the frame as drawn, and nothing in the canvas pass moves.
+2. **Split.** One full-screen draw reads the copy and writes onto the canvas. Red comes from
+   the magenta image, green from the cyan, and blue from the brighter of the two. A flat
+   colour is unchanged; only an edge splits.
+
+Nothing splits inside the vignette's clear ellipse, 55% of the way to the corners: the draw
+discards those pixels, so the middle of the frame keeps its samples untouched. Past it the
+two images separate linearly with the distance, to **1 drawing-buffer pixel at the
+corners** and 0.35 px at the middle of each edge, each image moving half of that along the
+ray from the frame's centre. The bound is a drawing-buffer pixel at every pixel ratio, so
+at 1.5 the split is two-thirds of a CSS pixel. It moves no colour across the frame, only
+along that ray, and it adds light in one place: blue from the brighter image widens a bright
+edge's blue by up to the separation.
+
+It reaches only the world canvas. The HUD and every contact mark are on the glass above,
+outside it by layer order, as they are outside the vignette. What the world canvas draws
+splits with it, by at most that pixel: the ground, hulls, lamps and the halo, and the map
+furniture drawn on the ground, such as the rim and the tunnel routes. The full-screen draw writes
+clip-space positions itself and never reads the conn camera, so it tilts, shears and
+rotates nothing (gate 8). It does not move, so reduced motion leaves it on. It is on
+wherever its check passes: an 8-bit target the canvas can blit into, complete, and a copy
+that raises no error. A display that fails it draws the frame without the split. A lost
+context drops the target and a restored one re-runs the check. There is no player setting:
+the owner decided on 4 October 2026 that a pixel at the corners needs none. A development
+switch turns it off for captures. A hull portrait does not take it either, since the
+portraits draw the halo through their own harness and the split belongs to the conn
+view's world canvas. Both numbers are TUNABLE, in `packages/frontend/src/game/chromaticSplit.ts`,
+and the separation may only fall: 1 px is style-neon-noir's bound. Gate 6 allocates the
+copy and the draw ([graphics-standards.md](graphics-standards.md), "Chromatic split").
 
 ## Atmosphere & Mood
 
@@ -1153,6 +1191,8 @@ Within it:
 
 - Slight vignette to simulate depth
 - Slow camera sway (submarine feel) — translation only, per the projection rules
+- A barely visible magenta/cyan split, at most 1 px, at the frame's edges — see
+  [Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)
 - The water itself is a rendered medium rather than a parallax layer — see
   [Reading the Water](#reading-the-water) above, which is where the old "fog layers for
   parallax depth" line went and why it is not a *layer*

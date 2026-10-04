@@ -757,7 +757,11 @@ export class HeadlessApplication {
   }
 }
 
-/** What the stub three.js renderer counted on its last `render`. */
+/**
+ * What the stub three.js renderer counted on the last frame's world pass: its
+ * first `render`, not the lamp halo's or the chromatic split's after it, so a
+ * test of the scene reads the scene. The frame's whole is three's `info`.
+ */
 export interface DrawLedger {
   frames: number;
   calls: number;
@@ -799,6 +803,9 @@ export class HeadlessGL {
   readback: [number, number, number, number] = [2.5, 1.25, 0.1, 1];
   /** Blits made, each a listed pass of the frame. */
   blits = 0;
+  /** The canvas's alpha: three r169 asks every context it creates for one
+   * (WebGLRenderer.js, `contextAttributes`), whatever its `alpha` option. */
+  alpha = true;
   private error = 0;
   readonly QUERY_RESULT = 0x8866;
   readonly QUERY_RESULT_AVAILABLE = 0x8867;
@@ -842,6 +849,10 @@ export class HeadlessGL {
       };
     }
     return null;
+  }
+
+  getContextAttributes(): { alpha: boolean } {
+    return { alpha: this.alpha };
   }
 
   bindFramebuffer(): void {}
@@ -1058,8 +1069,10 @@ export class HeadlessWebGLRenderer {
   }
 
   render(scene: Scene, camera: Camera): void {
-    // The frame's first pass is the world: the lighting and veil tests read it.
-    if (this.firstPass || this.info.autoReset) {
+    // The frame's first pass is the world: the lighting and veil tests read it,
+    // and the ledger counts it alone.
+    const world = this.firstPass || this.info.autoReset;
+    if (world) {
       this.lastScene = scene;
       this.lastCamera = camera;
       this.frameTargets.length = 0;
@@ -1091,9 +1104,11 @@ export class HeadlessWebGLRenderer {
       const corners = geometry.index?.count ?? geometry.attributes?.position?.count ?? 0;
       triangles += (corners / 3) * instances;
     });
-    this.ledger.frames++;
-    this.ledger.calls = calls;
-    this.ledger.triangles = triangles;
+    if (world) {
+      this.ledger.frames++;
+      this.ledger.calls = calls;
+      this.ledger.triangles = triangles;
+    }
     if (this.info.autoReset) this.info.reset();
     this.info.render.calls += calls;
     this.info.render.triangles += triangles;

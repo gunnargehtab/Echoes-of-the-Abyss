@@ -72,16 +72,7 @@ import { LampHaloPass } from '../src/game/lampHaloPass.ts';
 import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
 import { FAUNA_COLOR, TIER_STYLE } from '../src/game/palette.ts';
-import {
-  BufferAttribute,
-  FogExp2,
-  Mesh,
-  MeshBasicMaterial,
-  PlaneGeometry,
-  Points,
-  Scene,
-  type Camera,
-} from 'three';
+import { BufferAttribute, FogExp2, Mesh, Points, type Scene } from 'three';
 
 /** What the shell was told, in the order it was told. */
 interface CallbackLog {
@@ -935,9 +926,14 @@ describe('renderer smoke test: the conn view', () => {
       const probe = (
         globalThis as unknown as { window: { __perspectiveProbe: () => Record<string, unknown> } }
       ).window.__perspectiveProbe;
+      const split = (
+        globalThis as unknown as { window: { __perspectiveSplit: (on: boolean) => string } }
+      ).window.__perspectiveSplit;
+      // With the chromatic split off, the frame is the canvas pass alone.
+      assert.equal(split(false), 'off');
       world.frame(3);
       const one = probe();
-      assert.deepEqual(one.passes, ['canvas'], 'today the frame is the canvas pass alone');
+      assert.deepEqual(one.passes, ['canvas']);
       assert.equal(
         one.drawCalls,
         world.gl.ledger.calls,
@@ -947,19 +943,16 @@ describe('renderer smoke test: the conn view', () => {
       world.frame(5);
       // The view resets once a frame, so frames never pile up into the reading.
       assert.equal(probe().drawCalls, one.drawCalls, 'five more frames read one frame');
-      // A second pass inside the frame, as the lamp halo will add: one mesh
-      // of two triangles, rendered after the canvas pass by the same renderer.
-      const extra = new Scene();
-      extra.add(new Mesh(new PlaneGeometry(1, 1), new MeshBasicMaterial()));
-      const real = world.gl.render.bind(world.gl);
-      world.gl.render = (scene: Scene, camera: Camera) => {
-        real(scene, camera);
-        real(extra, camera);
-      };
+      // On, the split is a second render inside the frame: one full-screen
+      // triangle after the canvas pass, by the same renderer.
+      assert.equal(split(true), 'on');
       world.frame(2);
       const two = probe();
+      assert.deepEqual(two.passes, ['canvas', 'split-copy', 'split']);
       assert.equal(two.drawCalls, (one.drawCalls as number) + 1, 'both passes are counted');
-      assert.equal(two.triangles, (one.triangles as number) + 2);
+      assert.equal(two.triangles, (one.triangles as number) + 1);
+      world.frame(5);
+      assert.equal(probe().drawCalls, two.drawCalls, 'and five more frames still read one');
     } finally {
       world.teardown();
     }
@@ -985,7 +978,7 @@ describe('renderer smoke test: the conn view', () => {
       // The canned match draws sprites, not models, so no lamp feeds a splat:
       // the halo holds its targets and runs no pass.
       assert.equal(on.halo, 'idle');
-      assert.deepEqual(on.passes, ['canvas']);
+      assert.deepEqual(on.passes, ['canvas', 'split-copy', 'split'], 'the split alone follows');
       assert.equal(on.haloCalls, 0);
       assert.equal(on.drawCalls, off.drawCalls, 'an idle halo adds no call');
       // 17.25 bytes a drawing-buffer pixel and the instance buffer (gate 6).
@@ -1022,7 +1015,7 @@ describe('renderer smoke test: the conn view', () => {
     const probes = (globalThis as unknown as { window: Partial<Probes> }).window;
     assert.equal(probes.__perspectiveHalo, undefined, 'the switch goes with the view');
 
-    // A view without the float colour target keeps the canvas pass alone,
+    // A view without the float colour target draws no halo pass,
     // and Settings learns it: the view publishes the pass's state, keeps
     // the choice, and asks the display again only on a context restore —
     // the settings subscription re-applies the whole store on every write,
@@ -1044,7 +1037,8 @@ describe('renderer smoke test: the conn view', () => {
       blind.frame(2);
       const reading = window.__perspectiveProbe();
       assert.equal(reading.haloBytes, 0);
-      assert.deepEqual(reading.passes, ['canvas']);
+      // No halo pass; the split, which needs no float target, still runs.
+      assert.deepEqual(reading.passes, ['canvas', 'split-copy', 'split']);
       assert.equal(window.__perspectiveHalo!(false), 'off');
       assert.equal(lampHaloStatus(), 'off', 'turning a refused halo off clears the note');
       assert.equal(window.__perspectiveHalo!(true), 'unavailable: no EXT_color_buffer_float');
@@ -1053,6 +1047,55 @@ describe('renderer smoke test: the conn view', () => {
       blind.teardown();
     }
     assert.equal(lampHaloStatus(), 'off', 'a view that is gone has refused nothing');
+  });
+
+  it('draws the chromatic split on every frame, and checks again after a context restore (#1003)', async () => {
+    type Probes = {
+      __perspectiveProbe: () => Record<string, unknown>;
+      __perspectiveSplit?: (on: boolean) => string;
+    };
+    const world = await boot();
+    try {
+      const probes = (globalThis as unknown as { window: Probes }).window;
+      world.frame(2);
+      const on = probes.__perspectiveProbe();
+      // On from mount, with no setting: the copy is 4 bytes a drawing-buffer
+      // pixel (gate 6), and the frame ends on it.
+      assert.equal(on.split, 'on');
+      assert.equal(on.splitBytes, 1280 * 720 * 4);
+      assert.deepEqual((on.passes as string[]).slice(-2), ['split-copy', 'split']);
+      const blits = world.gl.context.blits;
+      world.frame(3);
+      assert.equal(world.gl.context.blits - blits, 3, 'one colour copy a frame');
+
+      // A lost context takes the copy; a restore re-runs the check, and a
+      // restored context whose copy fails draws the frame without it.
+      const canvas = world.gl.domElement;
+      canvas.dispatchEvent({ type: 'webglcontextlost' });
+      assert.equal(probes.__perspectiveProbe().split, 'off');
+      assert.equal(probes.__perspectiveProbe().splitBytes, 0);
+      world.gl.context.blitError = world.gl.context.INVALID_OPERATION;
+      canvas.dispatchEvent({ type: 'webglcontextrestored' });
+      assert.equal(probes.__perspectiveProbe().split, 'unavailable: the colour copy failed');
+      world.frame(2);
+      assert.deepEqual(probes.__perspectiveProbe().passes, ['canvas']);
+      world.gl.context.blitError = 0;
+      canvas.dispatchEvent({ type: 'webglcontextlost' });
+      canvas.dispatchEvent({ type: 'webglcontextrestored' });
+      assert.equal(probes.__perspectiveProbe().split, 'on', 'back on once it can draw');
+
+      // The development switch is the only way off, and a restore keeps it.
+      assert.equal(probes.__perspectiveSplit!(false), 'off');
+      canvas.dispatchEvent({ type: 'webglcontextlost' });
+      canvas.dispatchEvent({ type: 'webglcontextrestored' });
+      assert.equal(probes.__perspectiveProbe().split, 'off', 'a split switched off stays off');
+      world.frame(2);
+      assert.deepEqual(probes.__perspectiveProbe().passes, ['canvas']);
+    } finally {
+      world.teardown();
+    }
+    const probes = (globalThis as unknown as { window: Partial<Probes> }).window;
+    assert.equal(probes.__perspectiveSplit, undefined, 'the switch goes with the view');
   });
 
   it('times the frame on the GPU, every pass inside the bracket (gate 6, #1001)', async () => {
@@ -3302,7 +3345,7 @@ describe('renderer smoke test: the queued GPU reading (gate 6, #1001)', () => {
       const before = probes.__perspectiveProbe();
       assert.equal(before.gpuQueue, null, 'no load until a capture asks for one');
       const unloaded = rendersInAFrame();
-      assert.deepEqual(world.gl.frameTargets, [null], 'the frame is the canvas pass');
+      assert.deepEqual(world.gl.frameTargets, [null, null], 'the canvas pass, then the split');
       assert.equal(probes.__perspectiveGpuQueue!(12000), 12000);
       world.frame(1);
       assert.equal(rendersInAFrame(), unloaded + 1, 'the load is one render the renderer made');
@@ -3310,7 +3353,7 @@ describe('renderer smoke test: the queued GPU reading (gate 6, #1001)', () => {
       assert.equal(queued.drawCalls, before.drawCalls, 'and none of the frame it precedes');
       assert.equal(queued.triangles, before.triangles);
       assert.deepEqual(queued.passes, before.passes);
-      assert.deepEqual(world.gl.frameTargets, [null], 'the frame still opens on the world');
+      assert.deepEqual(world.gl.frameTargets, [null, null], 'the frame still opens on the world');
       assert.deepEqual(queued.gpuQueue, { steps: 12000, avgMs: 0, frames: 0, dropped: 0 });
       assert.equal(probes.__perspectiveGpuQueue!(0), 0);
       assert.equal(rendersInAFrame(), unloaded, 'taken away, it draws nothing');

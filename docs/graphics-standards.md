@@ -488,8 +488,8 @@ in existing material shaders; the PMREM bake does spend one-time GPU work at mou
 Retain one filtered environment target below **1 MiB** per view and release the source
 texture, generator scratch and target at their respective lifecycle boundaries.
 Report material cost on the named GPU: zero extra draws does not mean zero GPU time. That
-report is the conn view's GPU time over every pass of its frame (the canvas render, and the
-lamp halo's passes while it draws), from a timer query (`EXT_disjoint_timer_query_webgl2`,
+report is the conn view's GPU time over every pass of its frame (the canvas render, the
+lamp halo's passes while it draws, and the chromatic split's), from a timer query (`EXT_disjoint_timer_query_webgl2`,
 which Edge exposes on the named GPU). It is read before and after the change at pixel ratio
 1 and 1.5: at the close, home, low (12°) and survey cameras of
 `tools/render-stack/capture.mjs` on Ventfront and Sorrowgate, and at the fight station of
@@ -545,8 +545,9 @@ entity draws a splat.
   and 1/8 of the drawing buffer, each level an RGBA16F pair with no depth buffer; and one
   composite onto the canvas.
 - **Calls and triangles.** **+8 calls at any force size**, and 2 × sites + 7 triangles, with
-  at most 1,024 sites (2,055 triangles). Ventfront's opening reads 62–63 calls, Sorrowgate 53
-  while any entity draws a splat and 45–46 otherwise, and the fight station 65. Until #1001
+  at most 1,024 sites (2,055 triangles). Ventfront's opening read 62–63 calls, Sorrowgate 53
+  while any entity draws a splat and 45–46 otherwise, and the fight station 65, before the
+  chromatic split added its one. Until #1001
   folded each downsample into its blur, the chain was nine draws and the halo +11 calls.
   The halo neither causes nor fixes the berth-ceiling breach of
   [#1027](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1027).
@@ -557,9 +558,10 @@ entity draws a splat.
 - **GPU time.** The halo's cost is on − off `avgGpuMs`, read unpaced and queued on the
   named GPU, two runs each (`halo-cost.mjs`): **at most 0.40 ms at ratio 1 and 0.75 ms at
   1.5** at every station, and no station's conn frame over 1.2 ms at ratio 1 or 1.7 ms at
-  1.5. Queued, it reads 0.24–0.27 ms at ratio 1 and 0.54–0.59 ms at 1.5, and the conn frame
+  1.5. Queued, it read 0.24–0.27 ms at ratio 1 and 0.54–0.59 ms at 1.5, and the conn frame
   where it draws 0.51–0.63 and 0.98–1.29 ms ([issue-1001](screenshots/issue-1001/README.md),
-  "Six chain draws").
+  "Six chain draws"), before the chromatic split; with it, the frame where it draws read 0.58–0.71
+  and 1.12–1.43 ms ([issue-1003](screenshots/issue-1003/README.md), "The cost").
   `route-cost.mjs` read 0.29 and 0.54 ms for its stand-in route, and its depth copy cost the
   same with a canvas stencil present.
 - **CPU time.** `avgConnMs`, the CPU side (the per-site cull, the sort to 1,024 and the
@@ -570,6 +572,29 @@ entity draws a splat.
   The nine-draw chain rose 0.19–0.26 ms.
 - **Stations.** capture.mjs's four cameras on Ventfront and Sorrowgate, and the fight
   station of `stations.mjs` on Ventfront, at ratio 1 and 1.5.
+
+**Chromatic split** ([art-direction.md](art-direction.md#atmosphere-rides-on-top-in-screen-space),
+on wherever its check passes, with no setting; a development switch drives captures). It
+runs after the halo, inside the same GPU-timer bracket. Its work is fixed by the drawing
+buffer, not by what is in frame: one copy and one draw of the whole frame.
+
+- **Passes.** One blit of the canvas colour, its samples resolved, into a drawing-buffer-sized
+  8-bit target, a listed pass and not a call; and one full-screen draw onto the canvas.
+- **Calls and triangles.** **+1 call and +1 triangle**, whatever is in frame. Ventfront's
+  opening reads 63–64 calls with the halo drawn, Sorrowgate 54 while any entity draws a
+  splat and 46–47 otherwise, and the fight station 66.
+- **Memory.** 4 bytes per drawing-buffer pixel, an RGBA8 target in the canvas's own
+  format, since three r169 always asks the context for alpha: **4.94 MiB at 1440 × 900 and ratio 1, and 11.12 MiB at 2160 × 1350 and ratio
+  1.5**, counted from the live target.
+- **GPU time.** The split's cost is on − off `avgGpuMs`, read unpaced and queued on the named
+  GPU with the halo on, two runs each (`split-cost.mjs`): **at most 0.12 ms at ratio 1 and
+  0.24 ms at 1.5** at every station. Queued, it read 0.06–0.09 ms at ratio 1 and 0.10–0.17 ms
+  at 1.5. Split, the copy reads 0.05 and 0.10–0.11 ms and the draw 0.02 and 0.05–0.06 ms
+  ([issue-1003](screenshots/issue-1003/README.md), "The cost").
+- **CPU time.** `avgConnMs`, on − off, read −0.07 to +0.09 ms: run-to-run spread, since
+  the split's CPU side is one render call and one blit.
+- **Stations.** The halo's: capture.mjs's four cameras on Ventfront and Sorrowgate, and the
+  fight station of `stations.mjs` on Ventfront, at ratio 1 and 1.5.
 
 It must fit within the existing 150-call/250,000-triangle frame limits, not silently borrow historical
 headroom from #286 as a current measurement. That reading measures CPU submit and overlay
@@ -639,9 +664,10 @@ The sway shares the world/overlay projection and respects reduced motion: it tra
 the one camera after it is aimed, and reduced motion holds it at rest. The vignette is a
 layer between the world canvas and the glass, so it never reaches HUD or contact ink
 ([art-direction.md](art-direction.md#atmosphere-rides-on-top-in-screen-space)). The
-chromatic split is bounded to **1 px at frame edges**, must exclude HUD and contact ink,
-and stays deferred until gate 6 allocates its pass. None of this is permission to add a
-second camera in a lighting PR.
+chromatic split is bounded to **1 px at frame edges** and excludes HUD and contact ink:
+it is drawn on the world canvas alone, after the canvas pass and the halo, by a
+full-screen draw that never reads the camera, and gate 6 allocates its copy and its draw.
+None of this is permission to add a second camera in a lighting PR.
 
 ## What `npm test` holds, and what only a screenshot can
 

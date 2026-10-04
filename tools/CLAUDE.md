@@ -75,26 +75,26 @@ tools/hull-renders The same models photographed rather than measured:
                    gate — a picture is a presentation artifact, and a model
                    is still approved by hull-intake and check.mjs, which
                    measure.
-tools/render-stack #974's audit and camera pairs, kept runnable rather than
-                   quoted; not an npm workspace and not a gate. audit.mjs
-                   recounts the ranked audit's figures off the committed GLBs:
-                   raw and gzip bytes (a library sum, not a download), UV0 and
-                   uvAlike's zeros, materials with an AO map or a trim sheet. bevels.mjs
-                   runs the scripts and sums kit.mjs `census` by navy — parts
-                   by primitive, plates bevelled — since no GLB can say if a
-                   rim is a chamfer (#1002). capture.mjs, a run-game --steps module: four
-                   held cameras with the HUD on, gate 6's call and triangle
-                   limits asserted, the probe's GPU time required on a GPU
-                   and refused on a software rasteriser (#1001), HALO=on|off (the
-                   setting if unset), and readings.json beside the frames; the
-                   run-game skill has the recipe. fog.mjs reads fully fogged
-                   seabed against the backdrop (#1016) and the edge left where
-                   the two grade different depths (#1023), lamps.mjs own hulls quiet and
-                   loud (gate 3), and halo.mjs what a lamp halo would work with:
-                   near-black share, lamp sizes and light against SIG, a ping's flash.
-                   route-cost.mjs times each halo route's own passes on a stand-in
-                   scene, halo-cost.mjs the built halo queued as gate 6 reads it, and
-                   halo-frames.mjs its frames against the SPEC's must-shows (#1001).
+tools/render-stack #974's audit and camera pairs, kept runnable rather than quoted; not an
+                   npm workspace and not a gate. audit.mjs recounts the ranked audit's
+                   figures off the committed GLBs: raw and gzip bytes (a library sum, not a
+                   download), UV0 and uvAlike's zeros, materials with an AO map or a trim
+                   sheet. bevels.mjs runs the scripts and sums kit.mjs `census` by navy —
+                   parts by primitive, plates bevelled — since no GLB can say if a rim is a
+                   chamfer (#1002). capture.mjs, a run-game --steps module: four held
+                   cameras with the HUD on, gate 6's call and triangle limits asserted, the
+                   probe's GPU time required on a GPU and refused on a software rasteriser
+                   (#1001), HALO=on|off (the setting if unset), and readings.json beside
+                   the frames; the run-game skill has the recipe. fog.mjs reads fully
+                   fogged seabed against the backdrop (#1016) and the edge left where the
+                   two grade different depths (#1023), lamps.mjs own hulls quiet and loud
+                   (gate 3), and halo.mjs what a lamp halo would work with: near-black
+                   share, lamp sizes and light against SIG, a ping's flash. route-cost.mjs
+                   times each halo route's own passes on a stand-in scene, halo-cost.mjs
+                   the built halo queued as gate 6 reads it, and halo-frames.mjs its frames
+                   against the SPEC's must-shows (#1001). split-cost.mjs and
+                   split-frames.mjs do the same for the chromatic split: its cost, and its
+                   pixels recomputed (#1003).
 tools/audio-meter  What the mix measures, rather than what it was meant to.
                    meter.mjs bundles the production audio classes, renders one
                    layer at a time through Chromium's OfflineAudioContext, and
