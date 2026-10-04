@@ -140,12 +140,8 @@ function lightHeading(): [number, number] {
   return [KEY_LIGHT.x / length, KEY_LIGHT.y / length];
 }
 
-/**
- * The noise lattice's side, in lattice points. It repeats every 128: 54 km of
- * meander, 4.9 km of scour field before the second octave's offset, and 384 m
- * of grain, which reads as grain.
- */
-export const NOISE_SIZE = 128;
+/** The noise lattice's side, in lattice points (`SEABED_DETAIL.NOISE_SIZE`). */
+export const NOISE_SIZE = SEABED_DETAIL.NOISE_SIZE;
 
 /**
  * Four independent lattices, one byte a point a channel, from `propHash`: the

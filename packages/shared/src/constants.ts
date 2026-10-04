@@ -43,8 +43,9 @@ export const SORROWGATE_LOOK = {
 
 /**
  * Silt detail and seated stones — docs/art-direction.md "Silt detail and seated
- * stones — SPEC" (#1083). Every number the section prints is SPEC, and the
- * frontend's seabedDetail test holds the prose to it; the rest are TUNABLE.
+ * stones — SPEC" (#1083). Every number of this block the section prints is
+ * SPEC, and the frontend's seabedDetail test holds the prose to it; the rest
+ * are TUNABLE.
  * Presentation only: the simulation never reads any of it, and no floor,
  * collision, PF or detection derives from it.
  */
@@ -101,6 +102,12 @@ export const SEABED_DETAIL = {
   STONE_SCOUR_GAIN: 0.7,
   STONE_SCOUR_REACH: 2.2,
   STONE_SCOUR_LEE: 1.6,
+  /**
+   * SPEC — the noise lattice's side, in lattice points. It repeats every 128:
+   * 54 km of meander, 4.9 km of scour field before the second octave's offset,
+   * and 384 m of grain, which reads as grain.
+   */
+  NOISE_SIZE: 128,
 } as const;
 
 /** SPEC — docs/systems-depth.md §1. Metres. */

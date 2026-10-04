@@ -122,7 +122,7 @@ describe('the strength table', () => {
     assert.match(section, new RegExp(`gone by ${SEABED_DETAIL.FADE_M_PER_PX[1]}`));
   });
 
-  it('prints every SPEC number the constants hold, and no other', () => {
+  it('prints every SPEC number the constants hold', () => {
     // The prose wraps, so read it as one line. A number moved in one place and
     // not the other fails here, which is what makes it SPEC rather than TUNABLE.
     const doc = readFileSync(new URL('../../../docs/art-direction.md', import.meta.url), 'utf8');
@@ -148,6 +148,7 @@ describe('the strength table', () => {
       `darkens to ${d.STONE_SCOUR_GAIN} at and under the stone`,
       `recovers by ${d.STONE_SCOUR_REACH} radii`,
       `runs ${d.STONE_SCOUR_LEE} times further on the lee`,
+      `a ${d.NOISE_SIZE} × ${d.NOISE_SIZE} lattice`,
       ...ENVIRONMENT_PROPS.filter((spec) => (spec.buryFraction ?? 0) > 0).map(
         (spec) => `\`${spec.slug}\` ${spec.buryFraction} (`
       ),
