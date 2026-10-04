@@ -86,6 +86,10 @@ hold:
   happened to land a load inside the same minute. It now asks the question its own sentence
   asks, which is the first three clauses of this list turned around.
 
+  In team play, designed in [competitive.md](competitive.md) §5, *somebody else* means a
+  commander on another team: an ally cannot pay for you, so an ally's bank does not make
+  your attrition one-way.
+
 Sixty seconds because the position has to be a state rather than an instant: a commander who
 has just spent their last nodules is not beaten, and one who has not banked a thing in a
 minute with nothing in the water is.

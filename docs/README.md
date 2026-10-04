@@ -70,6 +70,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[systems-progression.md](systems-progression.md)** | The decision on upgrades, research and veterancy: five crystal-priced refits on the Slipway's line, rank earned per hull and paid in exposure, no research tree |
 | **[units.md](units.md)** | Prototype roster, SIG/PR stats, playtest plan |
 | **[roster-plan.md](roster-plan.md)** | The roster's second expansion: a role matrix per navy, twenty-two sketched hulls each argued from sound or depth, in eight waves (#495) |
+| **[competitive.md](competitive.md)** | Rated play, designed and unbuilt: the duel pool and its seeded spawns, one rating per navy, accounts, two-against-two teams, an inward-only post-game, and the spectator's heard view (#439) |
 
 ## Presentation
 

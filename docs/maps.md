@@ -249,6 +249,8 @@ Three archetypes are implemented, in `packages/backend/src/sim/maps/`. They were
 | Map Type 5 — Sunken Metropolis | Not yet | Sorrowgate is cut from this shape, but a one-seat chamber is not the four-seat archetype |
 | Map Type 6 — The Fourfold Frontier | Not yet | |
 
+Which of these a rated duel draws, and how it seats two commanders on a four-spawn map, is [competitive.md](competitive.md) §2's: all three are in its pool, and a rated match draws its spawns from the seed rather than seating slot *n* on spawn *n*.
+
 That count is a count of **archetypes**, which is the only thing this catalogue holds. A mission map is authored per mission and answers to that mission's document instead: it is not an archetype, it is not required to be multi-seat or balanced, and it is **not in the public catalogue** — it is resolved by mission id and cannot be selected in a skirmish. The ones that exist are listed under Mission maps below.
 
 **Floors and ceilings are built, and the archetypes author both.** Every region carries a floor and may carry a ceiling — the Ventfront's tunnels run under a 520 m roof, the Kelp Labyrinth's under 700 m — and the terrain grid stores each per cell, so `Terrain.admits()` answers whether a hull at a given depth can be in a given place at all. Ground whose ceiling sits below its floor admits nothing at any depth, which is how solid rock is written. [systems-depth.md](systems-depth.md) §6 tracks what the simulation enforces, row by row. Read the verticality in the archetype descriptions below as ground you can sail into, and be stopped by.

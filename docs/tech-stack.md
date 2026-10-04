@@ -527,6 +527,9 @@ other commander actually was. A post-match report that reveals the match is a de
 maphack — the next game on the same ground would be played with knowledge the last one
 refused to give. The player's own contact log stays on screen behind it, which is the
 honest version of a post-match report: what you knew, not what was true.
+[competitive.md](competitive.md) §6 designs what the screen may add, all of it the
+commander's own. Its §7 makes the one exception: a broadcast every commander consented
+to, which each can watch afterwards.
 
 A **mission concludes rather than resolving a winner.** `winnerSlot` stays -1 and the screen
 reports the outcome the mission's own objectives reached, in the register of whoever set them
@@ -585,10 +588,16 @@ the client message name where there is one, and what became of the throw.
 
 Not implemented, and the omission is deliberate rather than an oversight. A spectator is a
 client, and a client that receives unresolved world state is a maphack whatever it chooses
-to draw — the same rule that governs players, for the same reason. Spectators can exist
-here only by resolving the Echo Layer *again*, per spectator, against the 2 ms budget; a
-"spectator sees everything" mode would have to be a documented decision about a different
-product, not a shortcut taken because it was cheaper.
+to draw — the same rule that governs players, for the same reason. A "spectator sees
+everything" mode would have to be a documented decision about a different product, not a
+shortcut taken because it was cheaper.
+
+This section used to say a spectator could exist only by resolving the Echo Layer *again*,
+per spectator. That is one way, and not the cheapest: what each side has already resolved
+of the other is enough to watch, and needs no second pass.
+[competitive.md](competitive.md) §7 designs the spectator that way — the *heard view*,
+released after the result in a rated match and three minutes behind in a custom room,
+with every commander's consent — and the rest of rated play beside it.
 
 Related: [systems-echo.md](systems-echo.md) · [ui-ux.md](ui-ux.md) · [maps.md](maps.md)
 
