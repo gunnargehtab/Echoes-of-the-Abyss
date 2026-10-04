@@ -14,9 +14,9 @@
  * crown spines ring the apex boss and its light; two docking collars — a
  * main and a small — stand out from the flank with lit mouths and
  * mandibles; two pipes arc up the hull, three standpipes and two ballast
- * tanks sit on the far side; eight anchor claws grip the seabed; sixteen
- * photophores climb the tiers in three runs; and a worklight hangs over the
- * main dock. Nothing on it mirrors.
+ * tanks sit on the far side; six anchor claws of eight stations, two never
+ * grown, grip the seabed; sixteen photophores climb the tiers in three runs;
+ * and a worklight hangs over the main dock. Nothing on it mirrors.
  *
  * A port of the approved export (docs/concept-art/models/bastion-
  * directorate.glb at f7cce0f), part for part in its order, every number the
@@ -42,9 +42,10 @@
  * - The standpipes lean a hundredth or two off vertical and their flanges
  *   lie dead flat; the hull pipes are arcs of a torus, not tubes along a
  *   path.
- * - Every spine and claw leans out along its own bearing by the minimal
- *   rotation from +Y (`leaning`), the crown spines by `atan(0.8)` and the
- *   rib spikes by `atan(1 / 1.35)` — the file's numbers, recovered exactly.
+ * - Every spine leans out along its own bearing by the minimal rotation
+ *   from +Y (`leaning`), the crown spines by `atan(0.8)` and the rib spikes
+ *   by `atan(1 / 1.35)` — the file's numbers, recovered exactly; the claws
+ *   did too, until #1061 ran each between its two ends (`spanning`).
  * - The lamp is `biolight_crimson` burning at 3.3230551162025397, the
  *   file's own strength; the reds, violets and blacks are the hull inks.
  *   The export's lamp base (#3A0D16) and steel (#27313B) were a settlement
@@ -106,9 +107,10 @@
  * which is what makes intake's own rescale exactly 1 and leaves the maps
  * where the approved bake put them. Ground is y = 0, the base tier's foot.
  *
- * `node tools/hull-models/diff.mjs bastion-directorate f7cce0f` reads the
- * nine lamps and the two mouths above, and nothing else beyond the root
- * scale and shift.
+ * At the port (#652), `node tools/hull-models/diff.mjs bastion-directorate
+ * f7cce0f` read the nine lamps and the two mouths above, and nothing else
+ * beyond the root scale and shift; the passes below each record their own
+ * reading against the file before them.
  *
  * FACETS (#919). The navy's rule is one facet of 2 m, odd counts five to
  * fifteen, five and a named four the sections (docs/asset-prompts-3d.md
@@ -169,9 +171,9 @@
  * 0.40 — carapace plates stepping in under a boss, the spines and claws
  * leaning further out of vertical (the crown spines' atan 0.8 reads as 58°
  * in the file). The lowest point is `dock_main_mandible_1`'s, 3.28 m →
- * 1.64 under the ground; the anchor claws end 4.8–5.7 m above y 0, as they
- * ended 9.6–11.4 m before, a gap that predates this and is not touched
- * here. The facet rule is asked under the press (`directorate.cut(L /
+ * 1.64 under the ground; the anchor claws ended 4.8–5.7 m above y 0 there,
+ * as they had 9.6–11.4 m before, a gap this pass left and #1061 closed
+ * (ANCHOR CLAWS). The facet rule is asked under the press (`directorate.cut(L /
  * DRAWN, { press })`, Block 2c) and every count held: `facets.mjs
  * directorate` names the same two ballast meridians it did. Measured
  * vertex-true after: `apex_light` 127.60 m, `apex_boss` 123.6,
@@ -183,11 +185,53 @@
  * reads the same 20 lit parts at 993.1 m² and intake's raw E the same 8.32;
  * `contacts.mjs` lists the same 150 pairs. The plan is the file's, so the
  * maps keep their footprint.
+ *
+ * ANCHOR CLAWS (#1061). "Anchored to the seabed" (the block), and the file
+ * hung all six in the water: a cone each whose base stood 0.66–0.70 up on
+ * its node, 0.47–0.60 out from the base tier's wall, point rising out and
+ * up, its lowest vertex 4.8–5.7 m over y 0 under the press, touching two
+ * docks and a tank and nothing of the dome (contacts.mjs). Each runs from
+ * the wall to the seabed now, the way the Slipway's anchor claws go into
+ * the ground (directorate.mjs `slipwayHall`): the base seeded on the tier's
+ * ideal wall at the file's bearing and base height (`wall`) and seated on
+ * `carapace_tier_0`, its centre `r` in (`anchored`; kit.mjs `seat`), the
+ * point at the file's point in plan and `SUNK` 0.01 under y 0 — 0.12 m into
+ * the sand, past the 0.05 m contacts.mjs allows a claw's point, so it lists
+ * each one under the seabed — and the cone the span between (`spanning`).
+ * The bearings, the points' stations in plan, the skins and the 0.3 base
+ * are the file's but for the three turns below; the lean and the length
+ * are the span's, 2.74–3.84 on the nodes where the file wrote 1.94–2.94,
+ * the bases at y 0.51–0.55 (6.3–6.8 m up). Rooted on the wall, three ran
+ * into what the file's hanging claws had stood clear of (hull-reviewer,
+ * the first round): `_4` through the
+ * foot of `standpipe_1`, 1° off its bearing; `_5` through the belly of
+ * `ballast_tank_0`, deeper than the file's 42 %; `_3` 2.4 m into the floor
+ * of `dock_small_throat` mid-span. A turn moves the root alone along the
+ * wall (`foot`), the point held at the file's station as the rest are:
+ * `_4` −0.12 rad and `_5` −0.22, both clips at the root. `_4`'s point is
+ * also the plan's −x extreme, which the fit `fitFootprint` measures goes
+ * with — swung whole by 0.10–0.15 rad either way, the fit moved 1.0–1.6 %
+ * and the dome's scale with it. `_3`'s graze is mid-span, where a root
+ * turn moves the claw half as far as at the wall, so it swings 0.2 rad
+ * about the dome's axis with both ends (`swing`; as `swung` turns
+ * `photophore_8`), out from under the throat. contacts.mjs lists each claw on
+ * `carapace_tier_0` and nothing else, under the seabed to y −0.124, and
+ * 152 pairs where #960 read 150: six tier mounts gained, the file's four
+ * dock and tank clips gone. The fit moved 17.7998 → 17.8132 (`DRAWN`), a
+ * leaned cone's box overhanging its point, 0.08 % narrower at 440 m on that
+ * measure; the unpressed crown 255.1044 → 254.9125 (`TALL`), the press
+ * 0.5002 → 0.5006, the crown held at 127.6: `diff.mjs bastion-directorate
+ * origin/main` reads the root scale 0.9992, uniform, the six claws
+ * 16.0–37.6 m moved, and nothing else. Every facet count held (`facets.mjs
+ * directorate` names the same two ballast meridians); the light audit
+ * reads the same 20 lit parts at 991.5 m², the map bake raw E 8.28 → 5.50
+ * at ×0.662 with no warning, the outlines unchanged, the three maps and
+ * the roster sheet rebaked.
  */
-import { THREE, exportGlb, fitFootprint, holdCrown } from '../kit.mjs';
+import { THREE, exportGlb, fitFootprint, holdCrown, polar, seat } from '../kit.mjs';
 import * as directorate from '../factions/directorate.mjs';
 
-const { laid, leaning } = directorate;
+const { laid, leaning, spanning } = directorate;
 
 const L = 440;
 // HEIGHT (#960): the crown held at 0.29 of the plan, 127.6 m over the ground
@@ -196,13 +240,13 @@ const L = 440;
 // crown, metres vertex-true, asserted by `holdCrown`, so the press is known
 // before the build and the facet rule prices each part as the file draws it.
 const CROWN = 0.29 * L;
-const TALL = 255.1044;
+const TALL = 254.9125;
 const PRESS = CROWN / TALL;
 // The export's extent as `fitFootprint` measures it, three's `Box3` over the
 // parts' own boxes, which the facet rule is asked at: a `fitFootprint` file
 // learns its scale after it is built, so the fit is held here and asserted
 // at the foot (directorate.mjs `cut`, #919).
-const DRAWN = 17.7998;
+const DRAWN = 17.8132;
 const cut = directorate.cut(L / DRAWN, { press: PRESS });
 
 // A torus is born in the XY plane; every seam ring and flange here lies flat.
@@ -384,17 +428,46 @@ directorate.ballastTanks(root, steel, {
 });
 
 // Eight anchor claws round the foot, 2 and 6 never grown, each its own
-// bearing, reach, height, lean and length, skinned by no rule.
+// bearing, reach, height, lean and length, skinned by no rule. The file
+// hung each in the water, point up (the header, ANCHOR CLAWS; #1061): the
+// numbers here are the file's, read as where a claw's two ends were, and
+// `anchored` runs the claw from the base tier's wall to the seabed —
+// its base seeded on the tier's ideal wall at the file's bearing and base
+// height (`wall`, as the tier spines are) and seated on `carapace_tier_0`
+// with its centre `r` in (kit.mjs `seat`, nearest, as `footed` seats a
+// spine; seeded from the file's own base, 0.5–0.6 off the wall, the
+// nearest facet lay downhill and the roots came to rest at y 0.32 rather
+// than 0.5), its point at the file's point in plan and `SUNK` under y 0 — so
+// the lean and the length are the span's own (`spanning`). Where the
+// wall-rooted run met what the file's hanging claw had stood clear of
+// (the header), a claw turns about the dome's axis: `swing` both ends, as
+// `swung` turns `photophore_8` off its rib — `_3` 0.2 rad off the small
+// dock's throat; `foot` the root alone along the wall, the point held at
+// the file's station, since the plan's −x extreme is `_4`'s point and the
+// fit with it — `_4` −0.12 off `standpipe_1`, `_5` −0.22 off
+// `ballast_tank_0`.
+const SUNK = 0.01;
+const anchored = (r, bearing, rho, y, tilt, length, { swing = 0, foot = 0 } = {}) => {
+  const [at, rot] = leaning(bearing + swing, rho, y, tilt);
+  const axis = new THREE.Vector3(0, 1, 0).applyEuler(new THREE.Euler(...rot));
+  const centre = new THREE.Vector3(...at);
+  const base = centre.clone().addScaledVector(axis, -length / 2);
+  const tip = centre.clone().addScaledVector(axis, length / 2);
+  const seed = polar(bearing + swing + foot, wall(TIERS[0], base.y), base.y);
+  const seated = seat(root, 'carapace_tier_0', seed, { sink: r }).at;
+  const [mid, lean, span] = spanning(seated, [tip.x, -SUNK, tip.z]);
+  return { r, length: span, ...laid(mid, lean) };
+};
 directorate.clawGrips(root, [red, black], {
   name: 'anchor_claw',
   grips: [
-    { index: 0, skin: red, length: 2.074110508, ...laid(...leaning(0.4492733126, 7.624624744, 1.110029462, 1.166515623)) },
-    { index: 1, skin: black, length: 2.943204641, ...laid(...leaning(1.070480831, 7.935385412, 1.22288933, 1.183038215)) },
-    { index: 3, skin: red, length: 2.423635483, ...laid(...leaning(2.629008713, 7.719305127, 1.220649467, 1.096468681)) },
-    { index: 4, skin: black, length: 2.696407557, ...laid(...leaning(-2.785177571, 7.840070245, 1.207608371, 1.161669461)) },
-    { index: 5, skin: black, length: 2.917818785, ...laid(...leaning(-2.041293752, 7.917957057, 1.239473422, 1.163246747)) },
-    { index: 7, skin: black, length: 1.935090065, ...laid(...leaning(-0.4219618175, 7.554994465, 1.134213502, 1.098979261)) },
-  ].map((c) => ({ r: 0.3, ...c })),
+    { index: 0, skin: red, ...anchored(0.3, 0.4492733126, 7.624624744, 1.110029462, 1.166515623, 2.074110508) },
+    { index: 1, skin: black, ...anchored(0.3, 1.070480831, 7.935385412, 1.22288933, 1.183038215, 2.943204641) },
+    { index: 3, skin: red, ...anchored(0.3, 2.629008713, 7.719305127, 1.220649467, 1.096468681, 2.423635483, { swing: 0.2 }) },
+    { index: 4, skin: black, ...anchored(0.3, -2.785177571, 7.840070245, 1.207608371, 1.161669461, 2.696407557, { foot: -0.12 }) },
+    { index: 5, skin: black, ...anchored(0.3, -2.041293752, 7.917957057, 1.239473422, 1.163246747, 2.917818785, { foot: -0.22 }) },
+    { index: 7, skin: black, ...anchored(0.3, -0.4219618175, 7.554994465, 1.134213502, 1.098979261, 1.935090065) },
+  ],
 });
 
 // Sixteen photophores climbing the tiers in three runs — seven up the +z

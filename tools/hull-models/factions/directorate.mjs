@@ -2493,6 +2493,25 @@ export function leaning(bearing, rho, y, tilt) {
   return [polar(bearing, rho, y), [e.x, e.y, e.z]];
 }
 
+/**
+ * The same cone placed by its two ends: the centre and the minimal rotation
+ * from +Y that put a spike's base at `base` and its point at `tip`, and the
+ * length that span is. `leaning` describes a spike by where it stands and
+ * how far it leans; this describes one by what it reaches between — the
+ * Bastion's anchor claws, each rooted on the base tier's wall and run down
+ * to its own point in the seabed (#1061). Returns `[translation, XYZ Euler,
+ * length]` for `laid` or `drawn` and the part's own geometry.
+ */
+export function spanning(base, tip) {
+  const b = new THREE.Vector3(...base);
+  const t = new THREE.Vector3(...tip);
+  const span = t.clone().sub(b);
+  const length = span.length();
+  const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), span.normalize());
+  const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+  return [b.add(t).multiplyScalar(0.5).toArray(), [e.x, e.y, e.z], length];
+}
+
 /** An arc of a torus: kit `torus` with three's fifth argument, the angle it goes round. */
 const torusArc = (R, tube, rs, ts, arc) => new THREE.TorusGeometry(R, tube, rs, ts, arc);
 
