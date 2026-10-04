@@ -162,8 +162,8 @@ that already swings its lamps: w = clamp((SIG − 15) / 20, 0, 1), nothing throu
 rising linearly to full at SIG 35. It is not eased between snapshots, because the lamp core
 steps on the same 200 ms. An entity at weight 0 draws no splat, so gate 3's exclusion of
 SIG 0–15 holds by construction, over every input. Above 35 the halo rides the curve up to
-**SIG 85** and stops there, though `GLOW_FACTOR_MAX` stops the lamp itself at 6: a ping's
-SIG 95 carries what SIG 85 does, 35 times a SIG-35 entity's energy. Uncapped, a ping
+**SIG 80** and stops there, though `GLOW_FACTOR_MAX` stops the lamp itself at 6: a ping's
+SIG 95 carries what SIG 80 does, 25 times a SIG-35 entity's energy. Uncapped, a ping
 carried 73 times, and a pinging hull's halo reached its own collar
 ([issue-1001](screenshots/issue-1001/README.md), "The collar at a ping"). A hull whose live SIG
 stays at 15 or under, as a Light Scout's does idling (6) and cruising (12), gains a halo only
@@ -214,7 +214,7 @@ halo, so overlapping halos and a ping never sum toward white. Both are TUNABLE a
 on frames. Modelled at Ā = 20 m², as point sources at Ventfront's home camera at ratio 1,
 and so upper bounds: SIG 25 peaks at 0.08 encoded and never passes 10 % luma; SIG 35 peaks at
 0.22, past 10 % luma out to about 4.5 CSS px; a resting Caisson peaks at 0.48, out to 10 px;
-a ping reaches the ceiling, out to about 17 px, with its faint edge at about 25 px.
+a ping reaches the ceiling, out to about 15 px, with its faint edge at about 23 px.
 
 **Composite.** The halo is added as light: screen-blended onto the canvas, in the encoded
 space every transparent layer here blends in (out = halo + canvas × (1 − halo)). The
@@ -281,9 +281,10 @@ live SIG.
 
 **Where the numbers live.** The gate's 15 and 35 are SPEC, from gate 3, beside
 `SIG_GLOW_EFOLD` in `glow.ts`. The rest are TUNABLE, in the halo's own module: the 20 m²
-energy, the ceiling and the toe, the SIG-85 cap, the 1.69-tap kernel and the 0.6/0.3/0.1 weights, the 0.6 px
-floor, the 2 m bias, the 1,024 cap and the build default. All are frontend-only, because no
-other package reads them. The reach is derived from the chain and stored nowhere.
+energy and its SIG-80 cap, the ceiling and the toe, the 1.69-tap kernel and the 0.6/0.3/0.1
+weights, the 0.6 px floor, the 2 m bias, the 1,024 site cap and the build default. All are
+frontend-only, because no other package reads them. The reach is derived from the chain and
+stored nowhere.
 
 **Hull portraits** take this halo rather than a bloom of their own. Once the default turns
 on, `tools/hull-renders/scene.html` draws the game's frame and runs this pass at each hull's

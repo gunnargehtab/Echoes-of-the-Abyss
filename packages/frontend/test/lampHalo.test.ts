@@ -71,11 +71,11 @@ describe('lamp halo: the energy (art-direction, Lamp halo — SPEC)', () => {
     assert.equal(at(6), 0, 'and the resting scout carries none');
   });
 
-  it('stops rising at the cap, so a ping carries 35 times SIG 35 rather than 73', () => {
+  it('stops rising at the cap, so a ping carries 25 times SIG 35 rather than 73', () => {
     const at = (sig: number) => entityHaloEnergy(sig, 1);
     const cap = LAMP_HALO.ENERGY_SIG_CAP;
     assert.equal(at(95), at(cap), 'a ping lights what the cap does');
-    assert.ok(Math.abs(at(95) / at(35) - 35.5) < 0.1, `saw ${at(95) / at(35)}`);
+    assert.ok(Math.abs(at(95) / at(35) - 24.9) < 0.1, `saw ${at(95) / at(35)}`);
     assert.ok(at(cap - 5) < at(cap), 'and below the cap the curve still rises');
     assert.ok(close(at(64) / at(35), haloGain(64)), 'which leaves every resting hull where it was');
   });

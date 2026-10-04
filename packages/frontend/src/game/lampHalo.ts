@@ -33,10 +33,11 @@ export const LAMP_HALO = {
   SITE_CAP: 1024,
   /**
    * Past this live SIG the energy stops rising, so a ping (95) carries what SIG
-   * 85 does: 35 times SIG 35, not 73. Uncapped, a pinging hull's halo reached
-   * its own collar, which kept 3:1 on 86 % of its core against the SPEC's 90.
+   * 80 does: 25 times SIG 35, not 73. Uncapped, a pinging Harvester's halo
+   * reached its own collar, which kept 3:1 on 83 % of its core against the
+   * SPEC's 90; capped at 85 it still dipped to 89 % on its working route.
    */
-  ENERGY_SIG_CAP: 85,
+  ENERGY_SIG_CAP: 80,
 } as const;
 
 /** TUNABLE — whether "default" in Settings means on. Lands off (SPEC). */

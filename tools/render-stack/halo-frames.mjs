@@ -71,6 +71,7 @@ function tunables() {
     energyM2: read('ENERGY_M2'),
     ceiling: read('CEILING'),
     toe: read('TOE'),
+    energySigCap: read('ENERGY_SIG_CAP'),
     levelWeights: JSON.parse(src.match(/\bLEVEL_WEIGHTS: (\[[^\]]*\])/)?.[1] ?? 'null'),
   };
 }
