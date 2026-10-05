@@ -1461,9 +1461,10 @@ Next steps
   one hull available for a role a navy's own roster does not fill. Not a surplus market —
   nothing is priced at a premium and no yard sells them — and not dead weight either. See
   roster-plan.md §8 for the four readings that decided it, including the Cruiser, which two
-  navies name four times between them and nobody has ever built. Who *sells* them is the one
-  part left open, and it is answered after release: a fifth navy of mercenaries, multiplayer
-  only and never in the campaign (#543, ROADMAP.md, under Later)
+  navies name four times between them and nobody has ever built. Who *sells* them is
+  designed in mercenaries.md (#543): the moorages, a game-controlled party that hires the
+  commons out under no flag, in skirmish rooms and never in the campaign. The bars do not
+  change, and the build waits for release (ROADMAP.md, under Later)
 - Transcribe the refits and rank of systems-progression.md (#462): the five refits as
   producibles on the Slipway's line, which #461 built, then rank, which needs the TTK band
   test to grow a rank-3 row
@@ -1478,4 +1479,5 @@ Related
 - systems-depth.md — PR and depth behaviour
 - systems-progression.md — refits bought on the Slipway's line, and the rank a hull earns
 - roster-plan.md — the second expansion: a role matrix per navy, in eight waves
+- mercenaries.md — the moorages, who hire the three commons out under no flag
 - glossary.md — authoritative definitions

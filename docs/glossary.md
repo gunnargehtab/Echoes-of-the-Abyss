@@ -393,6 +393,7 @@ Doctrine Names
 - **The Veil** (Pelagia Commune) — the lowest SIG in the game. They harvest at 18 SIG where others harvest at 50, and Silent Running costs them only −20% speed.
 - **The Listening** (Abyssal Directorate) — the best hydrophone ratings by a wide margin: Directorate units resolve one tier higher than anyone else, and their Cantors project 1,200 m domes.
 - **The Score** (Hadron Knights) — sound as a weapon rather than a liability: high SIG, aimed. The term in the formula is Directional Signature, above.
+- **The Likeness** (the moorages) — outside the set, because the moorages are not a power: heard, never attributed. An unflagged hull classifies with its class and its flag like any other, and its employer at no tier (mercenaries.md §2, §4). Designed and unbuilt.
 - Used as bare nouns in faction voice — *the Klaxon posture*, *under the Veil* — and never as the name of a unit, structure or ability.
 
 Superweapon
@@ -423,8 +424,20 @@ The Committal
 - The Knights' name for their descent (see *The Descent*): the interval a person's name resolves to, played *over* the body by a hull within a sounding's reach of it — 400 m, twenty seconds, at SIG 80, the tuning's own instrument (mission-nineteen.md §1, §6). Where a name repeats the interval repeats — four Tessalys are four tones — because the interval belongs to the name and the count belongs to the house.
 - The act is the one culture.md §5 describes; the name is the campaign's. It is why nineteen Knights could lie uncommitted for three years: a committal cannot be played from a distance, and the floor they were on was under the Order's rating. The tide the Choirmaster stops signing the reason is the mission.
 
+Moorage
+
+- The mercenaries' site: one structure a map seats, on a map that authors one, in a skirmish room whose ready room switched it on — never in a mission. It takes no damage, sounds like a Foundry (SIG 25 idle, 55 while its line runs), and keeps three hulls of its own, the **guard**, inside its **water** of 600 m. A commander whose hull fires at another party's hull from or into that water is **struck** from its book for the match; a shot at a creature or at ordnance strikes nobody (mercenaries.md §3).
+- A commander **hires** a common hull there, in person, at the roster's price and against their own berths. The hull takes the buyer's orders and flies the moorage's flag (mercenaries.md §4). Designed and unbuilt.
+- Not a *yard*. units.md calls the Slipway the second yard, so the moorage never borrows the word.
+
+Unflagged
+
+- The moorages' flag, and the fifth `Faction` value it would be: a party to the war, game-controlled, never a seat (mercenaries.md). An unflagged hull is one of the three commons and is PR-2 exactly, carries no navy's doctrine, and names no employer at any tier.
+- Not *nobody's*. The commons on the four bars are nobody's by lock and fly their builder's flag (units.md); an unflagged hull flies the moorage's.
+
 Related
 
+- [mercenaries.md](mercenaries.md) — the moorages, the hire, and the Likeness
 - [systems-echo.md](systems-echo.md) — the Echo Layer and detailed detection rules
 - [systems-depth.md](systems-depth.md) — depth bands, PR, and pressure mechanics
 - [units.md](units.md) — per-unit SIG, HYD, and PR values

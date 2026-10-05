@@ -1151,12 +1151,13 @@ Three that were, one of them by wave 6 itself:
   Biomass against 55 a match) and #531 (the Cruiser, and the mid-tier gap it is holding open
   for two navies).
 
-  **Who sells them is answered later, and outside this plan.** The one thing the harness
-  could not read is the fiction — four navies at war building the same three hulls from
-  nobody — and the owner's answer is a fifth navy of mercenaries, with its own roster and
-  storyline, in multiplayer and never in the campaign. It is filed as #543 and placed after
-  release ([ROADMAP.md](ROADMAP.md), under Later), so nothing in this plan waits on it and no
-  price here moves for it.
+  **Who sells them is answered outside this plan.** The one thing the harness could not read
+  is the fiction — four navies at war building the same three hulls from nobody — and the
+  answer is [mercenaries.md](mercenaries.md) (#543): the moorages, crews who sail the commons
+  under no flag and hire them out, game-controlled, in skirmish rooms and never in the
+  campaign. The commons stay on every bar at the price they have, so nothing in this plan
+  waits on it and no price here moves for it. Its build is placed after release
+  ([ROADMAP.md](ROADMAP.md), under Later).
 
 And one the second half of #520 leaves open:
 
@@ -1208,4 +1209,5 @@ And two others, both on #495:
 - **[graphics-standards.md](graphics-standards.md)** — gate 1's procedural fallback and gate
   2's intake
 - **[asset-prompts-3d.md](asset-prompts-3d.md)** — where each new hull's prompt goes
+- **[mercenaries.md](mercenaries.md)** — who sells the commons: the moorages and their hire
 - **[ROADMAP.md](ROADMAP.md)** — the phase this sits in and the issue that tracks it

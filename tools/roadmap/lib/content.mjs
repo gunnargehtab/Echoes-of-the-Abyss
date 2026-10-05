@@ -385,7 +385,7 @@ export const items = {
   438: 'A tighter map and redesigned superweapons',
   439: 'Competitive play: a map pool, a ladder, accounts and an observer mode',
   535: 'Biomass that never grows back, and is paid to whoever stands nearest',
-  543: 'Mercenaries — a fifth navy selling the hulls every side already builds',
+  543: 'Mercenaries: crews who hire out the hulls every side already builds, under no navy’s flag',
   547: 'Kelp you can harvest — and the cover you spend by harvesting it',
   441: 'Hosting: a server you can join from anywhere on the internet',
   442: 'Faster loading: art fetched on demand, smaller downloads',

@@ -99,6 +99,19 @@ Two things about it belong in the world rather than in the ruleset. It **punishe
 
 ---
 
+## The Moorages
+
+Not every hull in the Rift flies a power's colours. The **moorages** are crews who belong to
+none of the four: paid off in the Long Arrangement, they kept the hulls, and they sell their
+service by the tide to whoever pays — which, since the present crisis began, is all four
+sides, often on the same tide. Their hulls are the commons every navy builds, stripped of
+paint and flying no navy's flag, and a moorage's water is one of the few places four navies'
+hulls can hold within a kilometre of each other without firing. The campaign never names
+them: its four stories are the powers' own. They are a skirmish's third party, and
+[mercenaries.md](mercenaries.md) is all of it.
+
+---
+
 ## The Mouth
 
 At **4,410 m**, at the southern terminus of everything, sits the Mouth: an eleven-kilometre depression that returns sonar pings *before they should arrive*, on a cycle that shortened from 43 hours to 39 in 213 PC. It is the unresolved centre of the setting's cosmology, and each faction has a different, incompatible relationship to it:
@@ -131,6 +144,7 @@ The Rift is described in five other places, and this document hands off rather t
 - **[timeline.md](timeline.md)** — two centuries from the Collapse to 214 PC, including the Sounding of 141
 - **[culture.md](culture.md)** — how the Rift speaks, expanded from the three cultural facts above
 - **[factions.md](factions.md)** — the four powers this world produced
+- **[mercenaries.md](mercenaries.md)** — the moorages, who are not a power, and the hulls they hire out
 - **[environments.md](environments.md)** — the five biomes as play spaces
 - **[bestiary.md](bestiary.md)** — the Drift: fauna as listeners, and the map that can be killed
 - **[glossary.md](glossary.md)** — the Lid, the Sounding, the Mouth and the rest, defined once
