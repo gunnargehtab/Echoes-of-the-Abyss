@@ -542,6 +542,31 @@ the standard 240-frame capture timed out, so the four views were held for four s
 each. The offline intake, lit-table and roster-sheet harnesses accept
 `PLAYWRIGHT_CHANNEL=chrome` to use installed Chrome when bundled Chromium is absent.
 
+**Evidence follow-up (#1108).** Independent visual reviews now cover all three
+comparison sheets: the hull/maps, close scout and four-camera view. The four-camera
+review found no obvious silhouette, faction-colour, HUD or acoustic-overlay regression.
+Its cameras are comparable, not pixel-identical: small eye/focus offsets and different
+simulation states prevent attributing every changed pixel to the trim. Survey distance
+does not resolve the trim; the close scout pair, not the survey frame, shows its detail.
+Still images do not establish temporal stability while the camera moves.
+An independent code review of `d62ffa62` → `c720cfa6` also found no significant
+issues, covering the drawing branch, layout opt-in, tests and browser selection.
+This closes the review-coverage gap left by the unavailable automated review service;
+it is not a claim that the service itself recovered.
+
+**Still open: hardware measurement and motion.** The follow-up runner exposes only
+`hyperv_drm` on `/dev/dri/card1`, with no GPU render node. A longer SwiftShader capture
+cannot close the hardware timing gap, and the four-second captures above do not satisfy
+the standard 240-frame dwell. On a GPU-equipped desktop, compare the baseline `d62ffa62`
+and trimmed assets at the same camera and Directorate fleet state, using
+`tools/render-stack/capture.mjs` with a headed browser, `UNPACED=1` and `VIEW_DPR=1`,
+then `VIEW_DPR=1.5`. Retain the renderer identity, four views and `readings.json`;
+require `software: false`, `gpuTimer: timing`, at least 240 frames per camera and the
+queued load longer than the measured frame. Review a moving-camera pass for seam
+shimmer as well. Select the Directorate **before readying**: the stock `drive.mjs`
+readies its default navy before invoking `--steps`, so passing the capture module alone
+does not prove this navy was measured. No GPU-time or motion pass is claimed here.
+
 #### Ranked audit and remaining work
 
 The baseline is commit `1df288a` (28 September 2026), not the earlier #286 scene.
