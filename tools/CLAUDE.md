@@ -53,28 +53,25 @@ tools/hull-maps    The committed outputs of the approved models: build.mjs bakes
                    and sheet.mjs the site's roster sheet in the game's own sprite
                    code; a roadmap test fails on a map the sheet predates.
                    models.mjs is the one table build and outlines read.
-tools/hull-renders The same models photographed rather than measured:
-                   render.mjs drives Chromium/three.js to write one beauty
-                   frame per hull into docs/concept-art/renders/, in the
-                   water its navy lives in, under the neon-noir rig.
-                   shots.mjs is the table of which hull in whose biome.
-                   inspect.mjs is the other rig: any model on a lit table —
-                   authored materials, a neutral key, fill and rim, a floor
-                   for contact shadows — beside the same file at a git
-                   revision (--before), from cameras that do not move
-                   between the two. The noir rig hides geometry by design,
-                   so a shape change is shown here (#947). It floors the
-                   sheet under the lowest part, not at the y 0 where the
-                   conn view stands a structure (#955), so an anchor that
-                   sinks into the seabed in the game rests on the table
-                   here. scene.html draws the game's frame: the curve per
-                   material, glow after it, lamp core and lamp halo, from the
-                   frontend through frame.mjs (#1015). inspect.mjs's page
-                   tone-maps once in OutputPass, lamps included: take glow
-                   from scene.html or run-game, never it. Not a workspace or a
-                   gate — a picture is a presentation artifact, and a model
-                   is still approved by hull-intake and check.mjs, which
-                   measure.
+tools/hull-renders The same models photographed rather than measured: render.mjs drives
+                   Chromium/three.js to write one beauty frame per hull into
+                   docs/concept-art/renders/, in the water its navy lives in, under the
+                   neon-noir rig. shots.mjs is the table of which hull in whose biome.
+                   inspect.mjs is the other rig: any model on a lit table — authored
+                   materials, a neutral key, fill and rim, a floor for contact shadows —
+                   beside the same file at a git revision (--before), from cameras that do
+                   not move between the two. The noir rig hides geometry by design, so a
+                   shape change is shown here (#947). It floors the sheet under the lowest
+                   part, not at the y 0 where the conn view stands a structure (#955), so
+                   an anchor that sinks into the seabed in the game rests on the table
+                   here. scene.html draws the game's frame: the curve per material, glow
+                   after it, lamp core and lamp halo, from the frontend through frame.mjs
+                   (#1015). Both pages put a navy's trim sheet on the materials tagged for
+                   it, as the conn view does (trimSheets.mjs, #1112). inspect.mjs's page
+                   tone-maps once in OutputPass, lamps included: take glow from scene.html
+                   or run-game, never it. Not a workspace or a gate — a picture is a
+                   presentation artifact, and a model is still approved by hull-intake and
+                   check.mjs, which measure.
 tools/render-stack #974's audit and camera pairs, kept runnable rather than quoted; not an
                    npm workspace and not a gate. audit.mjs recounts the ranked audit's
                    figures off the committed GLBs: raw and gzip bytes (a library sum, not a
