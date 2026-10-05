@@ -166,7 +166,10 @@ await new Promise((ok) => server.listen(0, '127.0.0.1', ok));
 const port = server.address().port;
 
 const { chromium } = loadPlaywright();
-const browser = await chromium.launch({ args: CHROMIUM_ARGS });
+const browser = await chromium.launch({
+  args: CHROMIUM_ARGS,
+  channel: process.env.PLAYWRIGHT_CHANNEL,
+});
 try {
   const page = await browser.newPage({ viewport: { width: tileW, height: tileH } });
   page.on('pageerror', (e) => console.error(`page error: ${e.message}`));

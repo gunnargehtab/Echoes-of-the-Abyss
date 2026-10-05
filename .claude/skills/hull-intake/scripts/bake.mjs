@@ -182,7 +182,10 @@ const port = server.address().port;
 
 // --- render the four passes ------------------------------------------------
 const { chromium } = loadPlaywright();
-const browser = await chromium.launch({ args: ['--no-sandbox'] });
+const browser = await chromium.launch({
+  args: ['--no-sandbox'],
+  channel: process.env.PLAYWRIGHT_CHANNEL,
+});
 let failed = false;
 try {
   const page = await browser.newPage();

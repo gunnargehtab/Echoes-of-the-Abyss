@@ -12,7 +12,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import * as THREE from 'three';
@@ -20,6 +20,8 @@ import { PLATES, bandsOf, drawTrimSheet, layoutTrim } from '../trim.mjs';
 import { readGlb, sceneParts } from '../glb.mjs';
 import { stripImages } from '../images.mjs';
 import { TRIM } from '../factions/bathyarch.mjs';
+import { TRIM as DIRECTORATE } from '../factions/directorate.mjs';
+import { navyTrims, sheetPath } from '../sheets.mjs';
 
 /** The Klaxon's own sheet: the seam is given in texels, so a smaller one would not be it. */
 const SPEC = TRIM;
@@ -143,6 +145,55 @@ test('the sheet is bright, seamed, and the same twice', () => {
   assert.ok(mid > edge + 40, `strake middle ${mid}, edge ${edge}`);
 });
 
+test('the Directorate draws repeatable grey chitin without changing the Consortium sheet', async () => {
+  const trims = await navyTrims();
+  assert.equal(trims.get('directorate'), DIRECTORATE);
+  const sheet = drawTrimSheet(DIRECTORATE);
+  assert.deepEqual(sheet.png, drawTrimSheet(DIRECTORATE).png);
+  assert.equal(sheet.png[25], 0, 'PNG must have one grey channel, not faction colour');
+  assert.ok(sheet.mean >= 0.85 && sheet.mean < 0.98, `mean ${sheet.mean}`);
+  assert.equal(sheet.wrapM, 16);
+  assert.notDeepEqual(sheet.pixels, drawTrimSheet(SPEC).pixels);
+  assert.deepEqual(drawTrimSheet(SPEC).png, readFileSync(sheetPath('bathyarch')));
+});
+
+test('tergite seams arch across strakes, with an overlap shadow rather than a rectangular grid', () => {
+  const sheet = drawTrimSheet({ ...DIRECTORATE, tone: 0, grain: 0, growth: 0 });
+  const four = band(4);
+  const h = ((four.v1 - four.v0) * sheet.size) / four.rows;
+  const y = Math.floor(four.v0 * sheet.size + h / 2);
+  const seamX = sheet.size / 2 - DIRECTORATE.archPx;
+  const at = (x, row = y) => sheet.pixels[row * sheet.size + x];
+  assert.ok(at(seamX) < at(sheet.size / 2) - 40, 'the seam did not bow off the plate grid');
+  assert.ok(at(seamX + 5) < at(seamX - 5) - 5, 'the overlap has no directional shadow');
+  assert.ok(at(128, four.v0 * sheet.size) > 240, 'a longitudinal strake seam draws a grid');
+  assert.ok(Math.abs(at(0) - at(sheet.size - 1)) <= 2, 'the horizontal wrap does not close');
+  const grown = drawTrimSheet({ ...DIRECTORATE, tone: 0, grain: 0 });
+  assert.ok(grown.mean < sheet.mean, 'growth lines have no luminance');
+});
+
+test('the Directorate layout changes only UVs and tags, never shape, finish or lamps', () => {
+  const { root, lamp, haze } = yard();
+  const before = sceneParts(root).parts;
+  const finishes = root.children.map((m) => m.material.toJSON());
+  const laid = layoutTrim(root, drawTrimSheet(DIRECTORATE), DIRECTORATE);
+  sceneParts(root).parts.forEach((p, i) => {
+    assert.deepEqual(p.positions, before[i].positions, `${p.name} moved`);
+    assert.deepEqual(p.normals, before[i].normals, `${p.name} normals changed`);
+    assert.equal(p.tris, before[i].tris);
+    assert.ok(p.uv0 && p.uv0.length === p.tris * 6, `${p.name} has no UV0`);
+  });
+  assert.deepEqual([...laid.materials], ['steel']);
+  assert.equal(root.children[0].material.userData.trim, 'directorate');
+  assert.equal(lamp.material.userData.trim, undefined);
+  assert.equal(haze.material.userData.trim, undefined);
+  root.children.forEach((m, i) => {
+    const finish = m.material.toJSON();
+    delete finish.userData;
+    assert.deepEqual(finish, finishes[i], `${m.name} finish changed`);
+  });
+});
+
 test('the export tags the solid unlit materials for the sheet, and glb.mjs reads it back', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'trim-'));
   process.env.HULL_MODELS_OUT = dir;
@@ -167,7 +218,10 @@ test('the export tags the solid unlit materials for the sheet, and glb.mjs reads
     assert.ok(both.trim && both.occlusion);
     assert.equal(both.occlusion.texCoord, 1);
     // Stripped of its image, the file keeps the layout and the tag.
-    writeFileSync(join(dir, 'bare.glb'), Buffer.from(stripImages(readFileSync(join(dir, 'both.glb')))));
+    writeFileSync(
+      join(dir, 'bare.glb'),
+      Buffer.from(stripImages(readFileSync(join(dir, 'both.glb'))))
+    );
     const bare = readGlb(join(dir, 'bare.glb'));
     assert.deepEqual(bare.trim, both.trim);
     assert.equal(bare.occlusion, null);

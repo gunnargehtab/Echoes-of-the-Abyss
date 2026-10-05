@@ -514,6 +514,21 @@ next is a call per hull, and cheap: a second Consortium script passes the same t
 re-exports itself alone; another navy's plate starts in its own faction module, as a table
 and a drawn sheet.
 
+The Directorate's sheet ([#1108](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1108))
+keeps that layout machinery, but not the Consortium's rectangular patchwork or its
+numbers above. Its substrate is segmented chitin: **8 m** tergites, **6 m** target strakes,
+two tergites per **16 m** wrap. The `tergite` draw mode curves each transverse seam by
+**24 texels** at 512², meeting the next strake's curve without a longitudinal grid.
+The **1.5 texel** seam sits at **0.45** of the shell's light; **8 texels** of shadow at
+**0.14** strength lie under the overlap, with a clean lip on the other side. Five faint
+growth lines follow each segment's curve at **0.035** strength, fading at the lip;
+**0.04** segment tone variation and **0.01** grain sit under a **0.98** light ceiling.
+These are surface marks, not new geometry, rivets or biolights. The Light Scout is the
+first hull: its carapace and tail expose the sheet in the opening fleet, while its three
+photophore domes keep their approved resting light. Other Directorate models remain
+unlaid. The sheet has the same 512² sRGB, mipmapped RGBA8 upload and page-lifetime ownership
+as the Consortium's: **1.33 MiB** once per navy present, no extra draw or triangle.
+
 #### Ranked audit and remaining work
 
 The baseline is commit `1df288a` (28 September 2026), not the earlier #286 scene.

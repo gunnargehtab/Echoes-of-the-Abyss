@@ -108,7 +108,10 @@ export async function bakeSheet() {
   });
 
   const { chromium } = loadPlaywright();
-  const browser = await chromium.launch({ args: ['--no-sandbox'] });
+  const browser = await chromium.launch({
+    args: ['--no-sandbox'],
+    channel: process.env.PLAYWRIGHT_CHANNEL,
+  });
   let result;
   try {
     const page = await browser.newPage();
