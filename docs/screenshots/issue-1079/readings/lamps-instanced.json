@@ -22,12 +22,12 @@
       "crop": "02-rest-caisson-crop.png",
       "clip": {
         "x": 587,
-        "y": 395,
+        "y": 394,
         "width": 263,
-        "height": 115
+        "height": 114
       },
       "unit": {
-        "id": 121,
+        "id": 59,
         "name": "Caisson",
         "sig": 64,
         "restSig": 64,
@@ -62,7 +62,7 @@
             50.37,
             49.1
           ],
-          "areaPx": 705.4,
+          "areaPx": 705,
           "hex": "#f2b233",
           "exportIntensity": 1.325461358491563,
           "restIntensity": 1.1262236334021603,
@@ -91,7 +91,7 @@
             2.41,
             4.14
           ],
-          "areaPx": 259.6,
+          "areaPx": 259.7,
           "hex": "#f2b233",
           "exportIntensity": 1,
           "restIntensity": 1,
@@ -106,15 +106,15 @@
         "waterReachM": 1600
       },
       "pixels": {
-        "n": 30245,
+        "n": 29982,
         "maxV": 0.914,
-        "over05": 1834,
-        "over08": 676,
+        "over05": 1759,
+        "over08": 630,
         "clipped": 0,
-        "meanV": 0.1983,
+        "meanV": 0.1973,
         "brightest1pc": {
           "v": 0.914,
-          "saturation": 0.765,
+          "saturation": 0.761,
           "hueDeg": 39.9
         },
         "lampInk": {
@@ -130,12 +130,12 @@
       "crop": "03-silent-caisson-crop.png",
       "clip": {
         "x": 587,
-        "y": 395,
+        "y": 394,
         "width": 263,
-        "height": 115
+        "height": 114
       },
       "unit": {
-        "id": 121,
+        "id": 59,
         "name": "Caisson",
         "sig": 8,
         "restSig": 64,
@@ -150,11 +150,11 @@
             5.77,
             5.7
           ],
-          "areaPx": 95,
+          "areaPx": 95.1,
           "hex": "#f2b233",
           "exportIntensity": 0.4561274725146121,
           "restIntensity": 0.4561274725146121,
-          "intensity": 0.022806373625730608,
+          "intensity": 0.022806373965572054,
           "afterToneMapping": true
         },
         {
@@ -170,11 +170,11 @@
             50.37,
             49.1
           ],
-          "areaPx": 705.3,
+          "areaPx": 705.5,
           "hex": "#f2b233",
           "exportIntensity": 1.325461358491563,
           "restIntensity": 1.1262236334021603,
-          "intensity": 0.05631118167010801,
+          "intensity": 0.05631118250921001,
           "afterToneMapping": true
         },
         {
@@ -203,7 +203,7 @@
           "hex": "#f2b233",
           "exportIntensity": 1,
           "restIntensity": 1,
-          "intensity": 0.05,
+          "intensity": 0.05000000074505806,
           "afterToneMapping": true
         }
       ],
@@ -214,16 +214,16 @@
         "waterReachM": 1600
       },
       "pixels": {
-        "n": 30245,
-        "maxV": 0.392,
+        "n": 29982,
+        "maxV": 0.388,
         "over05": 0,
         "over08": 0,
         "clipped": 0,
-        "meanV": 0.1363,
+        "meanV": 0.1365,
         "brightest1pc": {
-          "v": 0.358,
-          "saturation": 0.429,
-          "hueDeg": 46.6
+          "v": 0.346,
+          "saturation": 0.482,
+          "hueDeg": 43.5
         },
         "lampInk": {
           "hueDeg": 39.9,
@@ -238,12 +238,12 @@
       "crop": "04-rest-light-scout-crop.png",
       "clip": {
         "x": 626,
-        "y": 404,
+        "y": 402,
         "width": 185,
         "height": 93
       },
       "unit": {
-        "id": 120,
+        "id": 58,
         "name": "Light Scout",
         "sig": 6,
         "restSig": 6,
@@ -278,14 +278,14 @@
       "pixels": {
         "n": 17205,
         "maxV": 0.91,
-        "over05": 123,
-        "over08": 61,
+        "over05": 125,
+        "over08": 65,
         "clipped": 0,
-        "meanV": 0.1095,
+        "meanV": 0.1103,
         "brightest1pc": {
-          "v": 0.643,
-          "saturation": 0.702,
-          "hueDeg": 42.3
+          "v": 0.668,
+          "saturation": 0.699,
+          "hueDeg": 41.7
         },
         "lampInk": {
           "hueDeg": 39.9,
@@ -300,12 +300,12 @@
       "crop": "05-engine-off-light-scout-crop.png",
       "clip": {
         "x": 626,
-        "y": 404,
+        "y": 402,
         "width": 185,
         "height": 93
       },
       "unit": {
-        "id": 120,
+        "id": 58,
         "name": "Light Scout",
         "sig": 1.75,
         "restSig": 6,
@@ -327,7 +327,7 @@
           "hex": "#f2b233",
           "exportIntensity": 3.5,
           "restIntensity": 1.1262236334021603,
-          "intensity": 0.8313525635772707,
+          "intensity": 0.8313525860810155,
           "afterToneMapping": true
         }
       ],
@@ -339,15 +339,15 @@
       },
       "pixels": {
         "n": 17205,
-        "maxV": 0.871,
-        "over05": 115,
-        "over08": 54,
+        "maxV": 0.824,
+        "over05": 117,
+        "over08": 56,
         "clipped": 0,
-        "meanV": 0.1083,
+        "meanV": 0.1088,
         "brightest1pc": {
-          "v": 0.583,
-          "saturation": 0.698,
-          "hueDeg": 41.6
+          "v": 0.603,
+          "saturation": 0.704,
+          "hueDeg": 41.5
         },
         "lampInk": {
           "hueDeg": 39.9,
@@ -364,13 +364,13 @@
       "factorStep": 0.95,
       "comparable": true,
       "linearSum": [
-        1194.58,
-        647.39,
-        47.77
+        1167.96,
+        636.16,
+        52.49
       ],
-      "linearTotal": 1889.73,
+      "linearTotal": 1856.61,
       "hueDeg": 31.4,
-      "saturation": 0.96,
+      "saturation": 0.955,
       "lampInkLinear": {
         "hueDeg": 28.9,
         "saturation": 0.963
@@ -383,13 +383,13 @@
       "factorStep": 0.2618,
       "comparable": true,
       "linearSum": [
-        15.78,
-        9.51,
-        2.33
+        17.21,
+        10.88,
+        2.89
       ],
-      "linearTotal": 27.62,
-      "hueDeg": 32,
-      "saturation": 0.852,
+      "linearTotal": 30.99,
+      "hueDeg": 33.5,
+      "saturation": 0.832,
       "lampInkLinear": {
         "hueDeg": 28.9,
         "saturation": 0.963

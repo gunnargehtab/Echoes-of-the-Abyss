@@ -46,11 +46,13 @@ seconds, differences each hull's states in linear light:
 
 | Pair | `main`: emission moved / hue | Instanced: emission moved / hue | Lamp ink hue |
 | --- | --- | --- | --- |
-| Caisson, rest − silent | 1,950.7 / 31.4° | 1,889.7 / 31.4° | 28.9° |
-| Light Scout, rest − engine off | 29.3 / 30.4° | 27.6 / 32.0° | 28.9° |
+| Caisson, rest − silent | 1,950.7 / 31.4° | 1,856.6 / 31.4° | 28.9° |
+| Light Scout, rest − engine off | 29.3 / 30.4° | 31.0 / 33.5° | 28.9° |
 
-Both runs read every lamp on the curve and after the tone curve. The two differ by under
-6 %, and their crops sit a pixel apart (`clip` in each file). The two frames at close,
+Both runs read every lamp on the curve and after the tone curve; the instanced run, at
+`e906971`, reads each lamp's strength back from its hull's slot in the batch. The two
+differ by under 6 %, on identical crops, and that is the reading's own spread: an earlier
+instanced run, at `1c77bbe`, moved 1,889.7 and 27.6. The two frames at close,
 `dozen-close-main.png` and `dozen-close-instanced.png`, show the same force drawn both ways.
 
 ## Files
