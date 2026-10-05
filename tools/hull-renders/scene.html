@@ -210,9 +210,11 @@
       const hull = gltf.scene;
       // The sheet multiplies the plate's colour, as in the game, so it rides
       // the noir remap below rather than escaping it: it says where a plate
-      // ends, and darkens the band by its mean, about an eighth (0.88 linear
+      // ends, and darkens the band by its mean, about a seventh (0.86 linear
       // for the Consortium's), rather than moving it.
-      const trim = await attachTrimSheets(hull, (name) => `/trim/${name}.png`);
+      const trim = await attachTrimSheets(hull, (name) => `/trim/${name}.png`, {
+        anisotropy: FRAME.TRIM_SHEET.ANISOTROPY,
+      });
 
       // Canonicalise exactly as hull-intake does, so a render and a bake are
       // looking at the same ship: length onto X if the export drew it on Z,

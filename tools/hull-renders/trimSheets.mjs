@@ -24,9 +24,11 @@ import { RepeatWrapping, SRGBColorSpace, TextureLoader } from 'three';
 /**
  * Attach a sheet to every tagged material under `root`, `urlOf(name)` saying
  * where the driver serves it. One texture a name per call, shared by every
- * material that names it, as the game shares one a navy.
+ * material that names it, as the game shares one a navy. `anisotropy` is the
+ * game's `TRIM_SHEET.ANISOTROPY` (#1107), which the driver hands in since
+ * this page has no @echoes/shared of its own.
  */
-export async function attachTrimSheets(root, urlOf) {
+export async function attachTrimSheets(root, urlOf, { anisotropy = 1 } = {}) {
   // Parts share materials, so each is counted and attached once.
   const tagged = new Set();
   root.traverse((o) => {
@@ -51,6 +53,9 @@ export async function attachTrimSheets(root, urlOf) {
     // three's loader flips by default, which would hand every face the wrong
     // band. Read at upload, which is the first render, after this returns.
     texture.flipY = false;
+    // Filtered as the conn view filters it, so an edge-on deck keeps its
+    // plates here too; three clamps it to what the GPU offers at upload.
+    texture.anisotropy = anisotropy;
     sheets.set(name, texture);
   }
   let materials = 0;

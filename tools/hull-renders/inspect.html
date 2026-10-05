@@ -103,7 +103,9 @@
         const root = gltf.scene;
         // Each column's own sheet: the driver serves the --before column the
         // sheet as it stood at that revision.
-        trims[m.id] = await attachTrimSheets(root, (name) => `/trim/${m.id}/${name}.png`);
+        trims[m.id] = await attachTrimSheets(root, (name) => `/trim/${m.id}/${name}.png`, {
+          anisotropy: job.anisotropy,
+        });
         // The kit builds X-long with Y up; a Z-long export is turned as
         // hull-intake turns it, so a port and its pre-port file line up.
         const raw = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());

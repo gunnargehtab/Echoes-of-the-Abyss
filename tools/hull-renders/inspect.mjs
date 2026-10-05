@@ -46,6 +46,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { basename, dirname, extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { TRIM_SHEET } from '@echoes/shared';
 import { SHEET_DIR } from '../hull-models/trim.mjs';
 import { spawn } from '../lib/spawn.mjs';
 import { CHROMIUM_ARGS, emptyFrame } from './chromium.mjs';
@@ -228,6 +229,7 @@ try {
     floorGap,
     own,
     views,
+    anisotropy: TRIM_SHEET.ANISOTROPY,
     models: models.map((m) => ({ id: m.id, url: `/model/${m.id}.glb` })),
   });
   await page.goto(`http://127.0.0.1:${port}/inspect.html`);

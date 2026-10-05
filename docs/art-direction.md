@@ -509,7 +509,9 @@ which the Consortium's 0.25 m never is. A table that names none of these keys dr
 it drew before, texel for texel, and `tools/hull-models/test/trim.test.mjs` holds that, a
 seam's width on both axes and a rivet's area, each in metres. The sheet is filtered at
 four taps (`TRIM_SHEET.ANISOTROPY`, Sorrowgate's number), so a deck seen from the low
-camera keeps its plates; that is a sampler state, not a pass, call or texel more.
+camera keeps its plates, and the lit table and the portraits filter it the same
+(`tools/hull-renders/trimSheets.mjs`); that is a sampler state, not a pass, call or texel
+more.
 On the GTX 1070, with ten Bulwarks on screen at `capture.mjs`' four cameras on Ventfront,
 gate 6's queued GPU time reads 0.71 to 0.96 ms at pixel ratio 1 and 1.32 to 1.91 ms at 1.5,
 at four taps and at one alike within 0.03 ms a camera
