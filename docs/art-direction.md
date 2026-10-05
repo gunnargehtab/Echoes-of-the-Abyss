@@ -602,16 +602,17 @@ stayed at two fifths of #967's target. The owner lifted the ceiling on two condi
 keep the ground exactly as quiet as before:
 
 - **No texture averages brighter than its fill.** Each texture pass is centred: a face turned
-  to the key light lifts and one turned from it darkens. Over the pass's own scale — a dune
-  cycle, a ripple, the relief's and the mottle's wavelengths — its mean sits at or under the
-  fill. So wherever the eye averages, the ground keeps its brightness, the fills keep the 5–10 %
-  band, and depth keeps reading as luminance.
+  to the key light lifts and one turned from it darkens. Over many of its own scale — dune
+  cycles, ripples, the relief's and the mottle's wavelengths — it averages to the fill or
+  under it. So wherever the eye averages, the ground keeps its brightness, the fills keep the
+  5–10 % band, and depth keeps reading as luminance.
 - **No pixel lifts past 0.15 of its fill** (`TERRAIN_LIFT`): the bake's texture takes 0.05
   of it and the silt detail the rest. The ladder sets the cap ([map-visuals.md](map-visuals.md)
   §5). Its tightest pair, tritanopia's unselected ring over rung 5's floor, ties once the
-  palest fill is lifted by 0.19. At 0.15, every rung the tests hold still clears the one below
-  it over the lifted ground, and a lit face lifts the palest fill less than the quietest line
-  of survey ink lifts it.
+  palest fill is lifted by 0.19. At 0.15, rungs 4 to 6 still clear each other over the lifted
+  ground, and a lit face lifts the palest fill by 0.017, under the quietest line of survey
+  ink's 0.034 over it. Rung 7's recorded break on the chart widens to the standard palette
+  there, which the owner accepted and §10 of that doc records.
 
 What stays darken-only is everything that is not texture. `depthShade` does, because
 luminance is depth. An authored step's hillshade does, because a lit shelf edge would read
@@ -690,15 +691,17 @@ without ripples, and rock admits no water at all.
   the fill ([issue-1083](screenshots/issue-1083/README.md)). Signed terms give the same
   table twice the span, and the cap below bounds the lit half.
 - **Centred, and capped.** Each term is centred on its own mean, measured off the lattice
-  it reads, so a patch of silt averages at or under the fill. A dune is centred over its
-  cycle, offset by the least that keeps a saturated lee from tipping the mean bright. A
-  ripple is centred over its own 7 m, a scour on the lattice's share of hollow, and grain on
-  the lattice's mean byte. The detail lifts the bake's pixel by at most 0.095, so with the
+  it reads, so a patch of silt averages at or under the fill. A dune's stoss is 70 % of its
+  cycle, so a lit face as strong as the lee's shadow would tip the cycle bright: its lit side
+  takes 0.44 of the strength, the most that keeps every cycle at or under the fill at any
+  heading the meander gives it. A ripple is centred over its own 7 m, a scour on the
+  lattice's share of hollow, and grain on the lattice's mean byte. The detail lifts the bake's pixel by at most 0.095, so with the
   bake's own 0.05 no pixel passes `TERRAIN_LIFT`'s 0.15 of its fill.
 - **Dunes** run in crests 110 m apart, east–west, meandering over 420 m. The lee face is
   the south 30 % of each dune, down-current. They are hillshaded by the key light about
   flat ground: a face turned from it darkens by the whole strength, flat ground stays at
-  the fill, and a face turned to it lifts, as far as the cap lets it. The dunes read by
+  the fill, and a face turned to it lifts by up to 0.44 of the strength, as far as the cap
+  lets it. The dunes read by
   their lit faces as well as their shadows, the way a ridge does. A second field on the meander's 420 m lattice fades them in and out, down to a
   quarter of their strength.
 - **Ripples** lie 7 m apart, parallel to the dunes and settled in their troughs. A

@@ -110,6 +110,24 @@ export const SEABED_DETAIL = {
   NOISE_SIZE: 128,
 } as const;
 
+/**
+ * SPEC — docs/art-direction.md "Reading the Sea Floor" (#1103): how far terrain
+ * texture may lift a pixel above its fill, as an encoded-space gain. Texture is
+ * centred on the fill, so these bound its lit half only; nothing that is not
+ * texture lifts at all.
+ */
+export const TERRAIN_LIFT = {
+  /**
+   * The whole cap. Set by the loudness ladder (docs/map-visuals.md §5): over the
+   * palest fill lifted by 0.19, tritanopia's unselected ring falls under rung
+   * 5's floor. The frontend's ladder tests weigh every rung over the lifted
+   * palest fill.
+   */
+  MAX: 0.15,
+  /** The bake's share: its relief texture and mottle, together. The silt detail takes the rest. */
+  BAKE: 0.05,
+} as const;
+
 /** SPEC — docs/systems-depth.md §1. Metres. */
 export const DEPTH_BANDS: Record<DepthBand, { min: number; max: number }> = {
   [DepthBand.Shelf]: { min: 0, max: 400 },

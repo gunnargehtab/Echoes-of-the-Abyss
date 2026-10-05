@@ -11,8 +11,8 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { Biome, DEPTH, DEPTH_BANDS } from '@echoes/shared';
-import { BIOME_COLOR, PALETTE_NAMES, PALETTES, ROCK_FACE } from '../src/game/palette.ts';
+import { Biome, DEPTH, DEPTH_BANDS, TERRAIN_LIFT } from '@echoes/shared';
+import { BIOME_COLOR, PALETTE_NAMES, PALETTES, ROCK_FACE, scaleRgb } from '../src/game/palette.ts';
 import {
   encodedLuminance,
   furnitureFloorLift,
@@ -46,6 +46,14 @@ const saturation = (c: number) => {
 const PALEST_GROUND = Object.values(BIOME_COLOR).reduce((a, b) =>
   encodedLuminance(a) >= encodedLuminance(b) ? a : b
 );
+/**
+ * The palest pixel the ground draws: the palest fill, lifted by the whole
+ * terrain cap (docs/art-direction.md "Reading the Sea Floor", #1103). Texture
+ * averages to the fill, but a lit face may pass it, and a stroke lifts paler
+ * ground less. The ladder's tightest pair sets the cap: tritanopia's
+ * unselected ring falls under rung 5's floor once the fill is lifted by 0.19.
+ */
+const LIFTED_GROUND = scaleRgb(PALEST_GROUND, 1 + TERRAIN_LIFT.MAX);
 /** And the darkest: a fully drained veil over the trench is black. */
 const DARKEST_GROUND = 0x000000;
 
@@ -91,7 +99,7 @@ describe('the loudness ladder, rung 4 under rung 5', () => {
     // peak is quieter than the ink, and ladder.test.ts records it rather than
     // taking the ink down to follow it (§10).
     for (const name of PALETTE_NAMES) {
-      for (const ground of [DARKEST_GROUND, PALEST_GROUND]) {
+      for (const ground of [DARKEST_GROUND, PALEST_GROUND, LIFTED_GROUND]) {
         const ceiling = furnitureFloorLift(PALETTES[name], ground);
         for (const [kind, alpha] of Object.entries(SURVEY_ALPHA)) {
           const lift = strokeLift(SURVEY_INK_COLOR, alpha, ground);
@@ -120,7 +128,7 @@ describe('the loudness ladder, rung 4 under rung 5', () => {
     // up (#865); the ring came up later, to clear rung 5's floor (#866), and
     // the ink stayed where it was.
     for (const name of PALETTE_NAMES) {
-      for (const ground of [DARKEST_GROUND, PALEST_GROUND]) {
+      for (const ground of [DARKEST_GROUND, PALEST_GROUND, LIFTED_GROUND]) {
         const ceiling = unselectedRingLift(PALETTES[name], ground);
         for (const [kind, alpha] of Object.entries(SURVEY_ALPHA)) {
           const lift = strokeLift(SURVEY_INK_COLOR, alpha, ground);
@@ -187,5 +195,17 @@ describe('coastline cell classes', () => {
     patchSurveyCellClasses(classes, after, { col0: 0, row0: 1, col1: 1, row1: 1 });
     assert.equal(classes[4], Biome.KelpForest);
     assert.equal(classes[2], Biome.OpenWater, 'a cell outside the delta was rewritten');
+  });
+});
+
+describe('survey ink over lifted ground (#1103)', () => {
+  it('lifts the palest pixel the ground draws more than a lit face lifted it', () => {
+    // docs/art-direction.md "Reading the Sea Floor": texture sits under the
+    // quietest line of ink, so a contour still reads across a lit dune.
+    const faceLift = encodedLuminance(LIFTED_GROUND) - encodedLuminance(PALEST_GROUND);
+    for (const [kind, alpha] of Object.entries(SURVEY_ALPHA)) {
+      const inkLift = strokeLift(SURVEY_INK_COLOR, alpha, LIFTED_GROUND);
+      assert.ok(faceLift < inkLift, `${kind}: a lit face lifts ${faceLift}, the ink ${inkLift}`);
+    }
   });
 });

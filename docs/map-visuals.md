@@ -391,7 +391,11 @@ What stays recorded, for the owner. The tests pin each break and fail if it move
   Hadron's deep blue and dark teal, sit at 0.17–0.19 luminance. At 0.33 the ring lifts the kelp
   fill by 0.024–0.030: under rung 6's floor there (0.065–0.103), and under the survey ink's
   coast (0.042). A Tier-4 contact's glyph and health bar fall under rung 6's floor too in the
-  three palettes that draw the Hadron dark, in tritanopia by less than 0.0001. Ordnance's disc
+  three palettes that draw the Hadron dark, in tritanopia by less than 0.0001. In the
+  standard palette they fall under it over lifted ground only, once a lit face lifts the
+  palest fill by 0.05 or more; the owner kept the 0.15 cap and recorded it (#1103). The ground
+  itself stays far under them: a lit face lifts that fill by 0.017, and the glyph lifts the
+  lifted pixel by 0.067. Ordnance's disc
   does not: the server names no navy for ordnance, so it wears the Track tier's colour. Nor
   does a classified animal. Phase 4 made it dots, weighed by one dot at its tier's alpha, and
   that clears rung 6's floor in every palette. A Tier-3 Sounder's halo fell under it in the two

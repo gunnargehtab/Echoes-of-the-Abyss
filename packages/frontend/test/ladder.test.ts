@@ -41,7 +41,8 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { BIOME_COLOR, PALETTE_NAMES, PALETTES } from '../src/game/palette.ts';
+import { TERRAIN_LIFT } from '@echoes/shared';
+import { BIOME_COLOR, PALETTE_NAMES, PALETTES, scaleRgb } from '../src/game/palette.ts';
 import type { PaletteName } from '../src/game/palette.ts';
 import { waterColorAt } from '../src/game/water.ts';
 import {
@@ -68,9 +69,17 @@ import { SURVEY_ALPHA, SURVEY_INK_COLOR } from '../src/game/surveyInk.ts';
 const PALEST_GROUND = Object.values(BIOME_COLOR).reduce((a, b) =>
   encodedLuminance(a) >= encodedLuminance(b) ? a : b
 );
+/**
+ * The palest pixel the ground draws: the palest fill, lifted by the whole
+ * terrain cap (docs/art-direction.md "Reading the Sea Floor", #1103). Texture
+ * averages to the fill, but a lit face may pass it, and a stroke lifts paler
+ * ground less. The ladder's tightest pair sets the cap: tritanopia's
+ * unselected ring falls under rung 5's floor once the fill is lifted by 0.19.
+ */
+const LIFTED_GROUND = scaleRgb(PALEST_GROUND, 1 + TERRAIN_LIFT.MAX);
 /** And the darkest: a fully drained veil over the trench is black. */
 const DARKEST_GROUND = 0x000000;
-const GROUNDS = [DARKEST_GROUND, PALEST_GROUND];
+const GROUNDS = [DARKEST_GROUND, PALEST_GROUND, LIFTED_GROUND];
 
 /** `a` lifts every ground at least as much as `b` does. */
 const atLeast = (a: Stroke, b: Stroke) => GROUNDS.every((g) => liftOf(a, g) >= liftOf(b, g));
@@ -132,15 +141,17 @@ const RUNG_6_FLOOR_UNDER_RUNG_5_FLOOR: readonly PaletteName[] = [];
  *   luminance: at 0.33 and 0.55 they barely lift the ground.
  * - A Tier-4 contact's glyph and health bar, in the three palettes that draw
  *   the Hadron dark. In tritanopia they miss the ring by less than 0.0001
- *   over the palest ground. Ordnance's disc is not among them: the server names no
- *   navy for ordnance, so it is drawn in the Track tier's colour.
+ *   over the palest ground. In the standard palette they miss it only over
+ *   lifted ground, from a lift of 0.05; the owner kept the 0.15 cap and
+ *   recorded this (#1103). Ordnance's disc is not among them: the server names
+ *   no navy for ordnance, so it is drawn in the Track tier's colour.
  *
  * A classified animal's dot is not among them either. It is the fauna colour
  * at its tier's whole alpha, and clears rung 6's floor over both grounds in
  * every palette (faunaAgentStipple.test.ts weighs it against rung 5's too).
  */
 const RUNG_7_UNDER_RUNG_6_FLOOR: Record<PaletteName, readonly string[]> = {
-  standard: ['countRingTier3', 'glyphTier3'],
+  standard: ['countRingTier3', 'glyphTier3', 'glyphTier4', 'healthBarTier4'],
   deuteranopia: ['countRingTier3', 'glyphTier3', 'glyphTier4', 'healthBarTier4'],
   protanopia: ['countRingTier3', 'glyphTier3', 'glyphTier4', 'healthBarTier4'],
   tritanopia: ['countRingTier3', 'glyphTier3', 'glyphTier4', 'healthBarTier4'],
@@ -205,10 +216,11 @@ describe('the loudness ladder, rung 5', () => {
   it('weighs a stipple dot by what it adds, and no dot clips over any ground', () => {
     // An additive dot adds the same to every ground until a channel reaches
     // white, which is what lets two grounds speak for all of them. The
-    // terrain's passes and the veil only darken a fill (palette.ts), and the
-    // fog only carries it toward the water, so no ground has a channel
-    // brighter than the brightest fill's or the shallowest water's — which is
-    // also the brightest water a dot can hang against.
+    // terrain's texture lifts a fill by at most the cap and the veil only
+    // darkens it (palette.ts), and the fog only carries it toward the water, so
+    // no ground has a channel brighter than the brightest lifted fill's or the
+    // shallowest water's — which is also the brightest water a dot can hang
+    // against.
     const water = waterColorAt(0);
     const shallowest = [water.r, water.g, water.b].map((l) =>
       l <= 0.0031308 ? l * 12.92 : 1.055 * Math.pow(l, 1 / 2.4) - 0.055
@@ -216,7 +228,9 @@ describe('the loudness ladder, rung 5', () => {
     const brightest = [16, 8, 0].map((shift, i) =>
       Math.max(
         shallowest[i]!,
-        ...Object.values(BIOME_COLOR).map((c) => ((c >> shift) & 0xff) / 255)
+        ...Object.values(BIOME_COLOR).map(
+          (c) => ((scaleRgb(c, 1 + TERRAIN_LIFT.MAX) >> shift) & 0xff) / 255
+        )
       )
     );
     let weighed = 0;
