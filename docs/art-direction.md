@@ -503,8 +503,9 @@ octaves, cells of 8 and 3 m, each a whole number of cells a wrap so the sheet st
 Its rivets are the lap's, discs **0.14 m** across at a 0.6 m pitch 0.45 m in from each
 strake edge, read close in; the hero rivets stay geometry, `rivetRows`' boxes 0.3 to 1 m
 across (the Bulwark's 0.9 and 1 m), two to seven times the drawn ones. Each texel averages
-sixteen samples in linear light, so a seam or a rivet finer than a texel is drawn at its
-coverage rather than grown to the texel. A table that names none of these keys draws what
+sixteen samples in linear light, so a rivet finer than a texel is drawn at its coverage
+rather than grown to the texel; a seam is never drawn narrower than a texel on either axis,
+which the Consortium's 0.25 m never is. A table that names none of these keys draws what
 it drew before, texel for texel, and `tools/hull-models/test/trim.test.mjs` holds that, a
 seam's width on both axes and a rivet's area, each in metres. The sheet is filtered at
 four taps (`TRIM_SHEET.ANISOTROPY`, Sorrowgate's number), so a deck seen from the low

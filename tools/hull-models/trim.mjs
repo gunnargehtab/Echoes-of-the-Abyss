@@ -268,7 +268,8 @@ export function drawTrimSheet({
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       // `samples` a side inside the texel, averaged in linear light, so a
-      // seam or a rivet finer than a texel is drawn at its coverage.
+      // rivet finer than a texel is drawn at its coverage (a metre seam is
+      // held to a texel above, so it never is).
       let L = 0;
       for (let j = 0; j < samples; j++)
         for (let i = 0; i < samples; i++)
