@@ -134,13 +134,17 @@ first tick, like a vent's.
   is laid down again on the moorage's line, at the roster's build time. They are its only
   weapon.
 - **Its book.** A commander whose hull fires a weapon from or into the moorage's water is
-  **struck** for the rest of the match. A struck commander signs nothing, and the guard treats
-  that commander's hulls inside the water as hostile. Hulls the commander already hired keep
-  serving: they were paid for. Being struck is the moorage's whole power over a commander,
-  and it matters exactly as much as that commander needed it.
+  **struck** for the rest of the match. A struck commander signs nothing, and the guard
+  engages that commander's own-flag hulls inside the water. Hulls the commander already hired
+  keep serving: they were paid for. Being struck is the moorage's whole power over a
+  commander, and it matters exactly as much as that commander needed it.
 
-A ping inside the water is not violence and strikes nobody. A creature is not a commander
-and is struck from nothing.
+A ping inside the water is not violence and strikes nobody.
+
+**The Drift is not a party to the book.** A creature hunts a guard hull as it hunts any hull,
+and the guard fights a creature as any hull does. A shot at a creature strikes nobody, and
+guns do not hold for one: the book counts violence between the parties to the war, and a
+creature is not one ([bestiary.md](bestiary.md)).
 
 ### Neutral water
 
@@ -149,14 +153,18 @@ idle hull fires on any other slot in its range (§1). Left that way, the first h
 into the water would open fire on the guard, or on an enemy at the moorage, and strike its
 commander without anyone choosing it. So the moorage brings a relation of its own:
 
-- **Nothing acquires the moorage's slot by itself.** No gun auto-engages a guard hull, no
-  seeker homes on one, and no mine triggers on one. A commander reaches the guard only by an
-  order.
+- **Nothing a commander holds acquires the moorage's slot by itself.** No commander's gun
+  auto-engages a guard hull, no seeker homes on one, and no mine triggers on one. A commander
+  reaches the guard only by an order.
 - **Inside the water, guns hold unless ordered.** A hull inside the water, or one whose target
-  is, does not volunteer its fire. A hull running silent already holds its fire the same way
-  (`combat.ts`). So a strike is always a commander's order, never an idle hull's reflex. No
-  mine is laid inside the water.
-- **The guard engages only the struck**, and only inside the water.
+  is, does not volunteer its fire at another party's hull. A hull running silent already holds
+  its fire the same way (`combat.ts`). So a strike is always a commander's order, never an idle
+  hull's reflex. No mine is laid inside the water.
+- **The guard engages the struck, and never by employer.** Inside the water only, it engages a
+  struck commander's own-flag hulls, and any hull that itself fires there. It never engages an
+  unflagged hull for who employs it. A flag already names its seat at Tier 3 and a shot is
+  already heard, so the guard's fire tells a listener nothing the tiers did not. Fire at a
+  struck commander's hires would name their employer, which no tier does (§4).
 
 **The moorage does not listen.** Its guard fights what is in its guns' range, as every gun
 does, and a gun's range sits inside the distance any combat hull is heard at (`combat.ts`). So
@@ -336,13 +344,14 @@ the asset was never there: the flag rides with the class at Tier 3.
 
 **6. How neutral is the moorage's water?**
 
-- **Nothing acquires the moorage's slot by itself, guns hold inside the water unless ordered,
-  and the guard engages only the struck** **(recommended, taken).** A strike is always an
-  order (§3).
+- **Nothing a commander holds acquires the moorage's slot by itself, guns hold inside the
+  water unless ordered, and the guard engages a struck commander's own-flag hulls and any hull
+  that fires there** **(recommended, taken).** A strike is always an order, and the guard's
+  fire names no employer (§3).
 - **The same, with auto-fire left alone.** An idle hull drifting in strikes its commander by
   reflex, which teaches a player the moorage is arbitrary rather than dangerous.
-- **No neutrality: the guard is hostile to all.** Nobody can sign in water that fires on
-  them, so this deletes the hire.
+- **The guard engages every hull a struck commander holds, hires included.** Hearing the
+  guard fire on an unflagged hull would then name its employer, which no tier does.
 
 **7. Does a hire come from stock?**
 
@@ -360,6 +369,10 @@ In order, because each step can be played before the next exists:
 1. **A fifth `Faction` value, appended**, never renumbered, and never offered to a seat:
    `canChooseFaction` refuses it, and no `PlayerState.faction` holds it. Every table keyed by
    faction gains a row, `FACTION_PRESSURE_BASELINE` among them, at PR-2, with the cap beside it.
+   The value is available for the three commons only. `unitAvailableTo` checks the lock alone,
+   so it would admit every unlocked hull to a new value, the Harvester and the Lure among them.
+   The phantom list and the hire's check both read that answer, so a moorage phantom is only
+   ever a hull a moorage sails.
 2. **The slot and the flag, audited.** Every reader of `Owner.faction` is asked whether it means
    *whose* or *what doctrine*, and every reader of a rating whether it passes the cap. The
    phantom pool takes the fifth value into `NAVIES` and counts the moorage's own slot, which
@@ -397,6 +410,8 @@ Nothing in this list moves a price, a yield or a build list.
   and a hull that was paid for at a Foundry's price and then left. One that serves until it
   dies is simpler, and a term can be added if a match wants one.
 - **A moorage that can be sunk.** §3.
+- **A guard hostile to everyone.** Nobody can sign in water that fires on them, so it deletes
+  the hire.
 - **A sixth register.** The moorages have a manner of speech (§2) and no voice on the speech
   bus: no mission speaks in it, so [culture.md](culture.md) §3 stays at five.
 
