@@ -1,0 +1,106 @@
+[
+  {
+    "name": "home",
+    "drawCalls": 80,
+    "triangles": 314174,
+    "units": 40,
+    "structures": 12,
+    "modelBacked": 52,
+    "modelMeshes": 50,
+    "props": 367,
+    "propTris": 99520,
+    "halo": "drawn",
+    "haloCalls": 8,
+    "passes": [
+      "canvas",
+      "depth-copy",
+      "halo-source",
+      "halo-spread",
+      "halo-composite",
+      "split-copy",
+      "split"
+    ],
+    "onScreen": {
+      "units": 40,
+      "structures": 12
+    }
+  },
+  {
+    "name": "close",
+    "drawCalls": 63,
+    "triangles": 307760,
+    "units": 40,
+    "structures": 12,
+    "modelBacked": 52,
+    "modelMeshes": 50,
+    "props": 367,
+    "propTris": 99520,
+    "halo": "drawn",
+    "haloCalls": 8,
+    "passes": [
+      "canvas",
+      "depth-copy",
+      "halo-source",
+      "halo-spread",
+      "halo-composite",
+      "split-copy",
+      "split"
+    ],
+    "onScreen": {
+      "units": 32,
+      "structures": 4
+    }
+  },
+  {
+    "name": "low",
+    "drawCalls": 80,
+    "triangles": 314160,
+    "units": 40,
+    "structures": 12,
+    "modelBacked": 52,
+    "modelMeshes": 50,
+    "props": 367,
+    "propTris": 99520,
+    "halo": "drawn",
+    "haloCalls": 8,
+    "passes": [
+      "canvas",
+      "depth-copy",
+      "halo-source",
+      "halo-spread",
+      "halo-composite",
+      "split-copy",
+      "split"
+    ],
+    "onScreen": {
+      "units": 40,
+      "structures": 12
+    }
+  },
+  {
+    "name": "survey",
+    "drawCalls": 80,
+    "triangles": 314120,
+    "units": 40,
+    "structures": 12,
+    "modelBacked": 52,
+    "modelMeshes": 50,
+    "props": 367,
+    "propTris": 99520,
+    "halo": "drawn",
+    "haloCalls": 8,
+    "passes": [
+      "canvas",
+      "depth-copy",
+      "halo-source",
+      "halo-spread",
+      "halo-composite",
+      "split-copy",
+      "split"
+    ],
+    "onScreen": {
+      "units": 40,
+      "structures": 12
+    }
+  }
+]

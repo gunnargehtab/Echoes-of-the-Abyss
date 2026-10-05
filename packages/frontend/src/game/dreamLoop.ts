@@ -20,7 +20,8 @@ export function dreamSnowNear(aboveM: number): number {
 }
 
 /** Preserve lamp chromaticity instead of clipping two channels into flat yellow.
- * Installed after the per-entity clone; three.js does not clone shader hooks. */
+ * Installed first on a template's lamp, since it replaces the hook rather than
+ * chaining it (rosterModels.ts `buildTemplate`). */
 export function installDreamLamp(material: MeshStandardMaterial): void {
   material.onBeforeCompile = (shader) => {
     shader.fragmentShader = shader.fragmentShader.replace(
@@ -67,7 +68,12 @@ export function installDreamSteel(material: MeshStandardMaterial): void {
       .replace(
         '#include <begin_vertex>',
         `#include <begin_vertex>
-        vDreamLocal = position * length(modelMatrix[0].xyz);
+        // An instanced hull's scale is its instance matrix's (rosterBatches.ts).
+        #ifdef USE_INSTANCING
+          vDreamLocal = position * length((modelMatrix * instanceMatrix)[0].xyz);
+        #else
+          vDreamLocal = position * length(modelMatrix[0].xyz);
+        #endif
         vDreamNormal = normal;`
       );
     shader.fragmentShader = shader.fragmentShader
@@ -125,6 +131,6 @@ export function installDreamSteel(material: MeshStandardMaterial): void {
         #include <opaque_fragment>`
       );
   };
-  material.customProgramCacheKey = () => 'dream-steel-3';
+  material.customProgramCacheKey = () => 'dream-steel-4';
   material.needsUpdate = true;
 }

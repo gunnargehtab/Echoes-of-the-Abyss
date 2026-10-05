@@ -31,6 +31,10 @@
  *   (E(SIG) = 0.45·e^(SIG/14), graphics-standards.md — the ratio needs only
  *   the e-folding, so 0.45 cancels). A hull running silent goes dark; a hull
  *   firing flares. The renderer showing it is new; the rule is not.
+ *
+ * What this module hands the view is a template and an instance of it; what
+ * draws them is rosterBatches.ts, one `InstancedMesh` per template material
+ * (#1079).
  */
 
 import {
@@ -53,7 +57,7 @@ import { glowFactor } from './glow.ts';
 import { inkLamp } from './lampInk.ts';
 import { DREAM_LOOP, installDreamLamp, installDreamSteel } from './dreamLoop.ts';
 import { installHullSurface, type WorldLook } from './tutorialLook.ts';
-import { keepGlowOutsideToneMapping } from './modelLighting.ts';
+import { installInstanceGlow, keepGlowOutsideToneMapping } from './modelLighting.ts';
 import { trimSheet } from './trimSheets.ts';
 
 /**
@@ -232,11 +236,28 @@ export function slugFor(key: RosterModelKey): string {
   return `${base}-${FACTION_SLUG[key.faction]}`;
 }
 
-/** One entity's own copy of a model: a clone whose lamps it may dim alone. */
+/** A lamp material and the resting strength intake approved for it. */
+export interface Emissive {
+  material: MeshStandardMaterial;
+  restIntensity: number;
+}
+
+/**
+ * One entity's own copy of a model. Its `root` is a transform the view moves
+ * and rosterBatches.ts reads, never added to a scene: the batch draws it, and
+ * its meshes are where the lamp halo and the lamp reading find its lamps.
+ */
 export interface RosterModelInstance {
   root: Group;
-  /** Every lamp material, with the resting strength intake approved. */
-  emissives: { material: MeshStandardMaterial; restIntensity: number }[];
+  /** The template it was cloned from, which is the batch that draws it. */
+  template: Template;
+  /** Every lamp material, shared with the template, with its resting strength. */
+  emissives: readonly Emissive[];
+  /**
+   * Gate 3's factor on every lamp's resting strength at this hull's live SIG
+   * (`applyLiveGlow`), which the batch hands the lamp shader per instance.
+   */
+  glow: number;
   /** Extents of the recoloured template, metres, after centring. */
   lengthM: number;
   beamM: number;
@@ -259,6 +280,11 @@ export interface RosterModelInstance {
 /** A slug's recoloured, canonicalised model, which every instance clones. */
 export interface Template {
   root: Group;
+  /**
+   * Its lamp materials, shaded once for every instance: the curve keeps off
+   * their glow, and each instance's own factor scales it (modelLighting.ts).
+   */
+  emissives: readonly Emissive[];
   lengthM: number;
   beamM: number;
   heightM: number;
@@ -439,7 +465,7 @@ function designLengthM(key: RosterModelKey): number {
  * draws. `groundM` is where the file's own y 0 lands after the same yaw, scale
  * and centring; a yaw is about Y, so it leaves the ground where it was.
  */
-function normalise(scene: Group, key: RosterModelKey): Template {
+function normalise(scene: Group, key: RosterModelKey): Omit<Template, 'emissives'> {
   const raw = new Box3().setFromObject(scene).getSize(new Vector3());
   if (raw.z > raw.x) scene.rotation.y = Math.PI / 2;
 
@@ -507,7 +533,21 @@ export function buildTemplate(
       installHullSurface(material, key.faction, template.baseScale);
     }
   }
-  return template;
+  const emissives: Emissive[] = [];
+  for (const material of materialClones.values()) {
+    if (!isLamp(material)) continue;
+    // The Dream Loop's hook replaces rather than chains, so it goes first.
+    if (DREAM_LOOP && look === 'standard') installDreamLamp(material);
+    installInstanceGlow(material);
+    keepGlowOutsideToneMapping(material);
+    emissives.push({ material, restIntensity: material.emissiveIntensity });
+  }
+  return { ...template, emissives };
+}
+
+/** A lamp, as gate 3 dims one: a standard material whose emission has a colour. */
+function isLamp(material: Material): material is MeshStandardMaterial {
+  return material instanceof MeshStandardMaterial && material.emissive.getHex() !== 0;
 }
 
 function loadTemplate(
@@ -543,8 +583,7 @@ function loadTemplate(
  * A per-entity instance of the approved model, or null while it loads (or
  * when none exists — a kind whose navy has no variant, a failed decode).
  * Callers fall back to the Phase-1 sprite until this returns something, so a
- * null is never a hole on screen. Instances share geometry with their template; lamp materials are
- * cloned per instance so each hull's live SIG dims its own lights.
+ * null is never a hole on screen.
  */
 export function rosterModelInstance(
   key: RosterModelKey,
@@ -560,31 +599,21 @@ export function rosterModelInstance(
     return null;
   }
   if (template === null) return null;
+  return instantiate(template);
+}
 
-  const root = template.root.clone(true);
-  const emissives: RosterModelInstance['emissives'] = [];
-  root.traverse((child) => {
-    if (!(child instanceof Mesh)) return;
-    const materials = Array.isArray(child.material) ? child.material : [child.material];
-    const cloned = materials.map((material) => {
-      if (
-        material instanceof MeshStandardMaterial &&
-        (luminance(material.emissive) > 0 || material.emissiveIntensity > 0) &&
-        material.emissive.getHex() !== 0
-      ) {
-        const own = material.clone();
-        if (DREAM_LOOP && look === 'standard') installDreamLamp(own);
-        keepGlowOutsideToneMapping(own);
-        emissives.push({ material: own, restIntensity: own.emissiveIntensity });
-        return own;
-      }
-      return material;
-    });
-    child.material = Array.isArray(child.material) ? cloned : cloned[0]!;
-  });
+/**
+ * An instance of a built template. Geometry and materials, lamps included,
+ * stay the template's: the batch draws every instance in one call a material,
+ * and a hull's live SIG reaches its lamps as its own `glow`, not as a material
+ * of its own. Exported for the tests that hold real templates.
+ */
+export function instantiate(template: Template): RosterModelInstance {
   return {
-    root,
-    emissives,
+    root: template.root.clone(true),
+    template,
+    emissives: template.emissives,
+    glow: 1,
     lengthM: template.lengthM,
     beamM: template.beamM,
     heightM: template.heightM,
@@ -594,18 +623,16 @@ export function rosterModelInstance(
 }
 
 /**
- * Gate 3's live modulation: scale every lamp from its approved resting
- * strength by where the hull's live SIG sits against its resting SIG.
+ * Gate 3's live modulation: every lamp's approved resting strength scales by
+ * where the hull's live SIG sits against its resting SIG. The batch writes it
+ * when the view next places the hull (`RosterBatches.place`).
  */
 export function applyLiveGlow(
   instance: RosterModelInstance,
   liveSig: number,
   restSig: number
 ): void {
-  const factor = glowFactor(liveSig, restSig);
-  for (const { material, restIntensity } of instance.emissives) {
-    material.emissiveIntensity = restIntensity * factor;
-  }
+  instance.glow = glowFactor(liveSig, restSig);
 }
 
 /** For tests and teardown: forget every cached parse and template. */

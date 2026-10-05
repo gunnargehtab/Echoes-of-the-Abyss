@@ -22,8 +22,11 @@ import { cannedSnapshot, cannedTerrain } from './support/cannedMatch.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import {
   GLOW_AFTER_TONE_MAPPING,
+  INSTANCE_GLOW_VERTEX,
+  installInstanceGlow,
   keepGlowOutsideToneMapping,
   keepsGlowOutsideToneMapping,
+  readsInstanceGlow,
   waterEnvironmentSource,
 } from '../src/game/modelLighting.ts';
 import { waterColorAt } from '../src/game/water.ts';
@@ -209,5 +212,52 @@ describe('glow stays outside tone mapping: gates 3 and 4', () => {
     const declared = fragment.indexOf('vec3 totalEmissiveRadiance');
     const mapped = fragment.indexOf('#include <tonemapping_fragment>');
     assert.ok(declared >= 0 && mapped > declared, 'a renamed chunk would make the patch a no-op');
+  });
+});
+
+describe("each instance's own glow on a shared lamp: gate 3 (#1079)", () => {
+  // Three's own standard shader, so a renamed chunk fails here rather than
+  // silently leaving every instanced lamp at its resting strength.
+  const standard = () => ({
+    uniforms: {},
+    vertexShader: ShaderLib.standard.vertexShader,
+    fragmentShader: ShaderLib.standard.fragmentShader,
+  });
+
+  it('scales the emission by the instance factor before the curve keeps off it', () => {
+    const material = new MeshStandardMaterial({ emissive: 0xffb000 });
+    const earlier = mock.fn();
+    material.onBeforeCompile = earlier;
+    const keyBefore = material.customProgramCacheKey();
+    installInstanceGlow(material);
+    keepGlowOutsideToneMapping(material);
+    const shader = standard();
+    material.onBeforeCompile(shader as never, null as never);
+    assert.equal(earlier.mock.callCount(), 1, 'chained onto the earlier patch');
+    const { vertexShader: vertex, fragmentShader: fragment } = shader;
+    assert.ok(vertex.includes(INSTANCE_GLOW_VERTEX), 'the vertex stage hands the factor on');
+    assert.match(vertex, /#ifdef USE_INSTANCING\nattribute float instanceGlow;\n#endif/);
+    assert.ok(vertex.indexOf('varying float vInstanceGlow') < vertex.indexOf(INSTANCE_GLOW_VERTEX));
+    // Not instanced, a lamp draws at the strength its material holds.
+    assert.match(INSTANCE_GLOW_VERTEX, /#else\n\tvInstanceGlow = 1\.0;/);
+    const declared = fragment.indexOf('varying float vInstanceGlow');
+    const mapped = fragment.indexOf('#include <emissivemap_fragment>');
+    const scaled = fragment.indexOf('totalEmissiveRadiance *= vInstanceGlow;');
+    const summed = fragment.indexOf('vec3 outgoingLight = totalDiffuse');
+    const curve = fragment.indexOf(GLOW_AFTER_TONE_MAPPING);
+    assert.ok(declared >= 0 && mapped > declared, 'declared before main');
+    assert.ok(scaled > mapped, 'after the emissive map');
+    assert.ok(summed > scaled, 'before the emission joins the light');
+    assert.ok(curve > summed, 'and so before the curve adds it back');
+    assert.ok(readsInstanceGlow(material) && keepsGlowOutsideToneMapping(material));
+    assert.notEqual(material.customProgramCacheKey(), keyBefore, 'a distinct program');
+  });
+
+  it('can say whether a lamp carries the patch, which a solo batch must keep', () => {
+    const material = new MeshStandardMaterial({ emissive: 0xffb000 });
+    assert.equal(readsInstanceGlow(material), false, 'before the patch');
+    installInstanceGlow(material);
+    assert.equal(readsInstanceGlow(material), true, 'after it');
+    assert.equal(readsInstanceGlow(material.clone()), false, 'a clone of it');
   });
 });

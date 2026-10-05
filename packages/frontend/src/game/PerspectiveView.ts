@@ -107,6 +107,7 @@ import {
   type RosterModelInstance,
   type RosterModelKey,
 } from './rosterModels.ts';
+import { RosterBatches } from './rosterBatches.ts';
 import { OwnMotion } from './ownMotion.ts';
 import { OrdnanceLayer } from './ordnanceLayer.ts';
 import { EnvironmentLayer } from './environmentLayer.ts';
@@ -132,7 +133,7 @@ import { FrameCost, ms } from './frameCost.ts';
 import { GpuTimer } from './gpuTimer.ts';
 import { GpuQueueLoad } from './gpuQueueLoad.ts';
 import { lampScreen } from './lampScreen.ts';
-import { LampHaloPass, markLamp, type HaloSplat } from './lampHaloPass.ts';
+import { LampHaloPass, type HaloSplat } from './lampHaloPass.ts';
 import { LAMP_HALO } from './lampHalo.ts';
 import { publishLampHaloStatus } from './lampHaloStatus.ts';
 import { gatherHaloSplats } from './haloSource.ts';
@@ -573,6 +574,9 @@ export class PerspectiveView {
 
   private readonly unitGroup = new Group();
   private readonly structureGroup = new Group();
+  /** Every own model, one draw a template material (rosterBatches.ts, #1079):
+   * the two groups above hold the sprites a model replaces, never the model. */
+  private readonly models = new RosterBatches();
   /** Every plumb and every shadow, two draw calls in all (#434). */
   private readonly cues = new DepthCues(UI.accent);
   /** The player's own ordnance, instanced (ordnanceLayer.ts); shares the cues. */
@@ -732,7 +736,8 @@ export class PerspectiveView {
     //   as the deep water the map ends in.
     // - the environment props: rung 3, ground.
     // - the fauna stipple: rung 5, the public fields and shoals (§8).
-    // - units, ordnance and structures: rung 7, the player's own agents.
+    // - units, ordnance and structures: rung 7, the player's own agents,
+    //   their models drawn by the batches beside them (rosterBatches.ts).
     //   Their depth cues are not named in §5; they are placed with them,
     //   because a hull's plumb and shadow are how its figure says its depth
     //   (docs/art-direction.md, "Depth is drawn, not implied").
@@ -746,6 +751,7 @@ export class PerspectiveView {
       this.unitGroup,
       this.ordnanceLayer.group,
       this.structureGroup,
+      this.models.group,
       this.cues.group,
       this.snow.points
     );
@@ -1025,6 +1031,7 @@ export class PerspectiveView {
     this.resizeObserver?.disconnect();
     this.environment.destroy();
     this.ordnanceLayer.dispose();
+    this.models.dispose();
     this.cues.dispose();
     this.backdrop.dispose();
     this.snow.dispose();
@@ -1845,7 +1852,7 @@ export class PerspectiveView {
   private dropHandle(group: Group, handle: EntityHandle): void {
     group.remove(handle.mesh);
     this.cues.release(handle.cue);
-    if (handle.model !== null) group.remove(handle.model.root);
+    if (handle.model !== null) this.models.detach(handle.model);
   }
 
   /**
@@ -1901,13 +1908,13 @@ export class PerspectiveView {
     if (spec.modelDesc !== null && handle.modelKey !== spec.modelCacheKey) {
       const instance = rosterModelInstance(spec.modelDesc, this.look);
       if (instance !== null) {
-        if (handle.model !== null) group.remove(handle.model.root);
+        if (handle.model !== null) this.models.detach(handle.model);
         handle.model = instance;
         handle.modelKey = spec.modelCacheKey;
-        group.add(instance.root);
+        this.models.attach(instance);
       }
     } else if (spec.modelDesc === null && handle.model !== null) {
-      group.remove(handle.model.root);
+      this.models.detach(handle.model);
       handle.model = null;
       handle.modelKey = '';
     }
@@ -1973,6 +1980,9 @@ export class PerspectiveView {
       const modelY = handle.stands ? standingY(model.groundM, draw, y, groundY) : hullY;
       model.root.position.set(x, modelY, z);
       model.root.rotation.y = -yaw;
+      // Its slot in the batch, scale and glow included: the sync sets those
+      // before it places, so this is the one write either path needs.
+      this.models.place(model);
     } else {
       handle.mesh.position.set(x, hullY, z);
       handle.mesh.rotation.y = -yaw;
@@ -2341,8 +2351,7 @@ export class PerspectiveView {
     if (this.dreamLights !== null) {
       const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
       this.dreamLights.update(
-        this.unitGroup,
-        this.structureGroup,
+        this.shownModels(),
         this.camera,
         this.waterReach,
         this.waterDensity,
@@ -2710,6 +2719,9 @@ export class PerspectiveView {
       modelBacked:
         [...this.unitHandles.values()].filter((h) => h.model !== null).length +
         [...this.structureHandles.values()].filter((h) => h.model !== null).length,
+      // The instanced meshes those models draw from, before culling: one a
+      // template material, however many entities share it (#1079).
+      modelMeshes: this.models.stats().meshes,
       ownCentre: this.ownCentre(),
     };
   }
@@ -2776,23 +2788,34 @@ export class PerspectiveView {
     else if (!on) this.split.disable();
   }
 
-  /** Every own lamp clone marks its pixels in the canvas stencil while the
-   * halo is on, so the composite skips them; state only, no recompile. */
+  /** Every own lamp marks its pixels in the canvas stencil while the halo is
+   * on, so the composite skips them; state only, no recompile. */
   private markLamps(on: boolean): void {
     // Under `__perspectiveHaloOnly` only that entity marks, so a capture's
     // lamp mask is its lamps alone (development only).
     const only = this.haloOnly;
-    const handles: [string, EntityHandle][] = [
-      ...[...this.unitHandles].map(([id, h]): [string, EntityHandle] => [`unit:${id}`, h]),
-      ...[...this.structureHandles].map(([id, h]): [string, EntityHandle] => [
-        `structure:${id}`,
-        h,
-      ]),
-    ];
-    for (const [key, handle] of handles) {
-      const mark = on && (only === null || key === only);
-      for (const { material } of handle.model?.emissives ?? []) markLamp(material, mark);
+    if (!on) this.models.markLamps('none');
+    else if (only === null) this.models.markLamps('all');
+    else this.models.markLamps(this.shownModel(only) ?? 'none');
+  }
+
+  /** One own entity's model, by `unit:<id>` or `structure:<id>`, if it shows. */
+  private shownModel(key: string): RosterModelInstance | null {
+    const [kind, id] = key.split(':');
+    const handles = kind === 'unit' ? this.unitHandles : this.structureHandles;
+    const handle = handles.get(Number(id));
+    return handle === undefined || handle.mesh.visible ? null : handle.model;
+  }
+
+  /** Every own model showing, units then structures. */
+  private shownModels(): RosterModelInstance[] {
+    const shown: RosterModelInstance[] = [];
+    for (const handles of [this.unitHandles, this.structureHandles]) {
+      for (const handle of handles.values()) {
+        if (!handle.mesh.visible && handle.model !== null) shown.push(handle.model);
+      }
     }
+    return shown;
   }
 
   /**
@@ -2904,7 +2927,9 @@ export class PerspectiveView {
           exportIntensity:
             (material.userData.exportIntensity as number | undefined) ?? restIntensity,
           restIntensity,
-          intensity: material.emissiveIntensity,
+          // The strength it draws at: the material rests, and the factor is
+          // read back from the hull's slot in its batch (rosterBatches.ts).
+          intensity: restIntensity * (this.models.glowAt(model) ?? 0),
           afterToneMapping: keepsGlowOutsideToneMapping(material),
         })),
         screen: { x0: Math.floor(x0), y0: Math.floor(y0), x1: Math.ceil(x1), y1: Math.ceil(y1) },

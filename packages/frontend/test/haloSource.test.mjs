@@ -16,11 +16,11 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
-import { Mesh, MeshStandardMaterial, PerspectiveCamera } from 'three';
+import { Mesh, PerspectiveCamera } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { Faction, StructureKind, UnitKind } from '@echoes/shared';
 
-import { buildTemplate, slugFor } from '../src/game/rosterModels.ts';
+import { buildTemplate, instantiate, slugFor } from '../src/game/rosterModels.ts';
 import { gatherHaloSplats } from '../src/game/haloSource.ts';
 import { entityHaloEnergy, LAMP_HALO } from '../src/game/lampHalo.ts';
 
@@ -30,22 +30,10 @@ async function instance(key, xM) {
   const bytes = readFileSync(new URL(`${slugFor(key)}.glb`, MODELS));
   const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
   const raw = (await new GLTFLoader().parseAsync(buffer, '')).scene;
-  const template = buildTemplate(raw, key, 'standard');
-  // As rosterModelInstance builds one: the template cloned, lamps cloned per entity.
-  const root = template.root.clone(true);
-  const emissives = [];
-  root.traverse((child) => {
-    if (!(child instanceof Mesh)) return;
-    const material = child.material;
-    if (material instanceof MeshStandardMaterial && material.emissive.getHex() !== 0) {
-      const own = material.clone();
-      child.material = own;
-      emissives.push({ material: own, restIntensity: own.emissiveIntensity });
-    }
-  });
-  root.position.set(xM, 0, 0);
-  root.updateMatrixWorld(true);
-  return { root, emissives };
+  const model = instantiate(buildTemplate(raw, key, 'standard'));
+  model.root.position.set(xM, 0, 0);
+  model.root.updateMatrixWorld(true);
+  return model;
 }
 
 function camera(heightM = 600) {
