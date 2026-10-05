@@ -20,6 +20,8 @@
     lamp core, added after the tone curve (gates 3 and 4), and the lamp halo
     over them at the hull's idle SIG, all from packages/frontend through
     frame.mjs, which render.mjs bundles as /frame.js;
+  - a laid-out hull wears its navy's trim sheet, attached as the conn view
+    attaches it (trimSheets.mjs, #1112), under the noir band below;
   - the props are the shipped environment registry, canonicalised to the same
     footprint metres packages/frontend/src/game/environmentModels.ts uses.
 
@@ -44,6 +46,7 @@
       import * as THREE from 'three';
       import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
       import * as FRAME from '/frame.js';
+      import { attachTrimSheets } from '/trimSheets.mjs';
 
       const params = new URLSearchParams(location.search);
       const num = (k, d) => (params.has(k) ? Number(params.get(k)) : d);
@@ -205,6 +208,10 @@
       const glowInk = new THREE.Color(ink.glow);
       const gltf = await new GLTFLoader().loadAsync('/model.glb');
       const hull = gltf.scene;
+      // The sheet multiplies the plate's colour, as in the game, so it rides
+      // the noir remap below rather than escaping it: it says where a plate
+      // ends and leaves the band where it was.
+      const trim = await attachTrimSheets(hull, (name) => `/trim/${name}.png`);
 
       // Canonicalise exactly as hull-intake does, so a render and a bake are
       // looking at the same ship: length onto X if the export drew it on Z,
@@ -702,6 +709,7 @@
         haloScale,
         haloState: halo.state,
         haloSites: halo.sites,
+        trim,
       };
       window.__png = () => renderer.domElement.toDataURL('image/png');
       window.__ready = true;

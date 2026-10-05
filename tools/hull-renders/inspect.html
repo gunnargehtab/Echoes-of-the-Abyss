@@ -11,7 +11,9 @@
   a portrait is built to hide exactly the geometry a review is asking about.
 
   This page is the other rig: a lit table. Authored albedo, roughness and
-  metalness untouched; a neutral studio environment for the metal to
+  metalness untouched, and a laid-out material wearing its navy's trim sheet
+  as the conn view attaches it (trimSheets.mjs, #1112), since the plates are
+  part of what is authored; a neutral studio environment for the metal to
   reflect; a warm key that casts the only shadow, a cool fill and a white
   rim, all placed relative to each camera so every view is lit from the same
   side of the lens; a grey floor under the model so a part that floats, or
@@ -48,6 +50,7 @@
       import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
       import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
       import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+      import { attachTrimSheets } from '/trimSheets.mjs';
 
       const job = window.__job;
       const W = job.width;
@@ -94,9 +97,13 @@
       // --- the models -------------------------------------------------------
       const loader = new GLTFLoader();
       const models = [];
+      const trims = {};
       for (const m of job.models) {
         const gltf = await loader.loadAsync(m.url);
         const root = gltf.scene;
+        // Each column's own sheet: the driver serves the --before column the
+        // sheet as it stood at that revision.
+        trims[m.id] = await attachTrimSheets(root, (name) => `/trim/${m.id}/${name}.png`);
         // The kit builds X-long with Y up; a Z-long export is turned as
         // hull-intake turns it, so a port and its pre-port file line up.
         const raw = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());
@@ -231,6 +238,7 @@
         out[`${m.id}/${view.id}`] = renderer.domElement.toDataURL('image/png');
       }
       window.__shots = out;
+      window.__trims = trims;
       window.__ready = true;
     </script>
     <script>

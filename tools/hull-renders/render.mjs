@@ -24,6 +24,10 @@
  *
  * Output lands in docs/concept-art/renders/<kind>-<navy>.png.
  *
+ * A hull its script laid out wears its navy's trim sheet, served from the
+ * client's assets and attached as the conn view attaches it (trimSheets.mjs,
+ * #1112); an untagged hull renders exactly as it did before the sheets.
+ *
  * Rendering happens in headless Chromium through three.js, for the same
  * reason hull-intake does it there: it is the only real glTF renderer in this
  * container (no Blender), and it is the Playwright setup the run-game skill
@@ -39,6 +43,7 @@ import { tmpdir } from 'node:os';
 import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
+import { SHEET_DIR } from '../hull-models/trim.mjs';
 import { spawn } from '../lib/spawn.mjs';
 import { CHROMIUM_ARGS, emptyFrame } from './chromium.mjs';
 import { KINDS, NAVIES, NEW_KINDS, shots } from './shots.mjs';
@@ -158,6 +163,7 @@ const MIME = {
   '.mjs': 'text/javascript',
   '.glb': 'model/gltf-binary',
   '.json': 'application/json',
+  '.png': 'image/png',
 };
 let currentModel = null;
 const server = createServer((req, res) => {
@@ -168,7 +174,13 @@ const server = createServer((req, res) => {
     return;
   }
   if (url.pathname === '/scene.html') file = join(here, 'scene.html');
+  else if (url.pathname === '/trimSheets.mjs') file = join(here, 'trimSheets.mjs');
   else if (url.pathname === '/model.glb') file = currentModel;
+  else if (url.pathname.startsWith('/trim/')) {
+    // The name comes from the model's extras, so it may only ever name a sheet.
+    const name = url.pathname.slice('/trim/'.length).replace(/\.png$/, '');
+    if (/^[a-z0-9-]+$/.test(name)) file = join(repo, SHEET_DIR, `${name}.png`);
+  }
   else if (url.pathname.startsWith('/props/')) {
     // Prop slugs come from the shot table, never from the request, so the
     // only thing a path can name is a file the table already chose.
@@ -248,11 +260,15 @@ try {
       const path = join(outDir, `${shot.id}.png`);
       writeFileSync(path, png);
       const kb = Math.round(statSync(path).size / 1024);
+      // Only a laid-out hull says so: bare plate is the default.
+      const trim = stats.trim.sheets.length > 0 ? ` · trim ${stats.trim.sheets.join(', ')}` : '';
       console.log(
         `${shot.id.padEnd(32)} ${shot.lengthM} m · SIG ${String(shot.sig).padStart(4)} · ` +
           `${stats.lamps} lamp(s) · halo ×${stats.haloScale.toFixed(1)} ${stats.haloState} ` +
-          `${stats.haloSites} site(s) · ${navy.biome} · ${kb} KB`
+          `${stats.haloSites} site(s) · ${navy.biome}${trim} · ${kb} KB`
       );
+      if (stats.trim.missing.length > 0)
+        console.warn(`${shot.id}: no sheet named ${stats.trim.missing.join(', ')}; left bare`);
     } catch (err) {
       console.error(`${shot.id}: ${err.message || err}`);
       failed++;
