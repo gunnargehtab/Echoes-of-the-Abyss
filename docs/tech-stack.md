@@ -1035,9 +1035,9 @@ the seat ignores no longer reads as a commander that chose not to act.
 **That check only ever held one of the two directions**, and the arithmetic above went stale
 while nobody noticed. A client message with *no* variant is invisible to a `never` on a switch,
 because there is nothing in the union for the switch to fail on; five more verbs accumulated
-behind `depth` in exactly that blind spot. The counts today are **24 variants against 27
-in-match client messages** — `rally`, `ability` and `sow` are the difference — and the reason this paragraph can state them is that both directions are now
-checked rather than asserted (#621). `wire.ts` declares `LOBBY_MSG` beside `CLIENT_MSG`, so
+behind `depth` in exactly that blind spot. The counts today are **25 variants against 27
+in-match client messages** — `ability` and `sow` are the difference — and the reason this
+paragraph can state them is that both directions are now checked rather than asserted (#621). `wire.ts` declares `LOBBY_MSG` beside `CLIENT_MSG`, so
 the five phase-gated names are a type rather than a comment and the in-match set can be
 subtracted; `ai/types.ts` carries an `Exclude<>` assertion against it, and a 28th in-match
 message fails `npm run type-check` until someone writes the verb or names it as an exception
@@ -1057,10 +1057,12 @@ that list is meant to shrink — a verb built and its entry pruned moves two cou
 commit, and nothing would have caught the other five going stale behind it. That is #621's
 defect one level up: the partition was asserted, and the arithmetic over it was still prose.
 
-**The three are two different things, and they are two types.** `AiUnbuilt` holds the one
-nobody has written a rule for — `rally` — and the price of an entry there is the issue that
-fills it, because a list you may add to without a number is this same defect with a rubber
-stamp on it. `AiExempt` holds the two an AI seat provably cannot use:
+**A gap and an exemption are two different things, and they are two types.** `AiUnbuilt`
+holds the verbs nobody has written a rule for, and is empty: #703 built the last three when
+a rule wanted each, `rally` last, as the standing order on every yard that launches a
+fighting hull (`commandRally`). The price of an entry there is the issue that fills it,
+because a list you may add to without a number is this same defect with a rubber stamp on
+it. `AiExempt` holds the two an AI seat provably cannot use:
 `MatchRoom` refuses `addAi` in any room carrying a mission and `ability` does nothing outside
 one, and `docs/systems-flora.md` gives the commander two judgements about flora, neither of
 which is sowing. Those carry no issue, and the absence is the claim. A gap and an exemption

@@ -14,10 +14,10 @@
  * Not a resemblance — "the AI plays through the interface a player plays
  * through" has to be literally true or it is decoration.
  *
- * Today it is true with **three named exceptions**: 24 variants against the 27
+ * Today it is true with **two named exceptions**: 25 variants against the 27
  * in-match client messages, the difference listed and justified in
- * `AiUnbuilt` and `AiExempt` below — one verb nobody has written a rule for,
- * and two an AI seat provably cannot use. That is a narrower claim than
+ * `AiExempt` below — two verbs an AI seat provably cannot use, and none
+ * nobody has written a rule for (`AiUnbuilt`). That is a narrower claim than
  * this comment used to make, and the reason it is written down rather than
  * asserted is #621 — this comment claimed the two sets were identical, and
  * for the whole of this file's life that was false. `depth` was the set
@@ -212,7 +212,15 @@ export type AiCommand =
    * why the commander gives it to the one hull whose rating no floor on any
    * map exceeds, and to no other — see `commandField`.
    */
-  | { kind: 'followFloor'; unitIds: number[]; active: boolean };
+  | { kind: 'followFloor'; unitIds: number[]; active: boolean }
+  /**
+   * A yard's rally point: where every hull it launches goes first. Names
+   * structures, like the client message, because it is a standing order on a
+   * yard and moves no hull that already exists — which is why it is not the
+   * per-hull walk that sends a siege hull back to the fleet. See
+   * `commandRally`.
+   */
+  | { kind: 'rally'; structureIds: number[]; x: number; y: number };
 
 // --- The vocabularies are held against each other --------------------------
 //
@@ -242,40 +250,29 @@ export type AiCommand =
  * defect again with a rubber stamp on it: the list stops being a record of
  * known gaps and becomes a place to put inconvenient verbs.
  *
- * The commander has no rule that would spend this one:
+ * **The list is empty, and #703 closed it.** Each name on it has gone the
+ * same way: built when a rule wanted it, never exempted to round a count up.
  *
- * - `rally` (`Match.setRally`) — a *structure's* spawn point, which is why it
- *   cannot be conflated with the per-hull walks that send a siege hull back
- *   to the fleet. #703.
+ * - `noisemaker` is `commandCountermeasures`. It was the one that bought
+ *   strength rather than tidiness, which is what earned it a doctrine field
+ *   and a measured range instead of a variant and a reflex.
+ * - `hold` and `followFloor` left together, by one rule that needs both:
+ *   `commandField` posts the Dredge on the crystal field that docs/units.md
+ *   says the Directorate is meant to *hold*, on the floor it says the hull is
+ *   for. Neither was converted from an existing caller. The watch post still
+ *   cuts its drive: `engineOffSig` is half the hull's *Silent Running* figure,
+ *   which parks an Acolyte near SIG 2 where a hold leaves it at its idle 10,
+ *   and that is the trade this game is about.
+ * - `rally` is `commandRally`, the last, and the one that buys least: a
+ *   launch leaves the apron one decision cadence sooner. It is built because
+ *   "the AI plays through the interface a player plays through" is the claim
+ *   this file opens with, and a yard's rally is the order every player gives.
  *
- * The issue number moved from #621 to #703 when the first closed, and that is
- * the maintenance this list costs: an entry naming a *closed* issue names
- * nothing that will fill it, which is the rubber stamp the paragraph above
- * warns about, arrived at by attrition rather than by anyone deciding.
- *
- * **#703 is the last of those moves, by decision.** The rule above wants a
- * live issue, and that issue could only close once this list was empty — by
- * building every entry or exempting it, and #703 declined exempting on the
- * merits. So it would have closed by attrition in its turn and handed these
- * same entries to a fresh successor, and that one to the next: the
- * convention eating its own tail one closed citation at a time. So #703
- * stays open because the decision went that way, and closes when this list is
- * empty rather than by attrition. Its labels are GitHub's state and not this
- * tree's, so this comment names none: the sentence here that named one
- * outlived the label. The citation above is therefore stable, and an author
- * who wants to add another entry has a live issue to name rather than a
- * reason to file one.
- *
- * `noisemaker` was on this list and is `commandCountermeasures` now. It was
- * the one that bought strength rather than tidiness, which is what earned it
- * a doctrine field and a measured range instead of a variant and a reflex.
- * `hold` and `followFloor` were here too, and left together, by one rule
- * that needs both: `commandField` posts the Dredge on the crystal field that
- * docs/units.md says the Directorate is meant to *hold*, on the floor it says
- * the hull is for. Neither was converted from an existing caller. The watch
- * post still cuts its drive: `engineOffSig` is half the hull's *Silent
- * Running* figure, which parks an Acolyte near SIG 2 where a hold leaves it at
- * its idle 10, and that is the trade this game is about.
+ * The next in-match message lands here or in the union, and the assertions
+ * below say which. An entry here names a *live* issue: one naming a closed
+ * issue names nothing that will fill it, which is the rubber stamp the
+ * paragraph above warns about, arrived at by attrition. #621 → #703 was that
+ * move once.
  *
  * **A tuple rather than a bare union, for `LOBBY_MSG`'s reason** (`wire.ts`):
  * the length of this list is arithmetic somewhere else — the header's variant
@@ -283,9 +280,9 @@ export type AiCommand =
  * derived from the tuple rather than written beside it, so the two cannot
  * disagree about what is on the list.
  */
-export const AI_UNBUILT = ['rally'] as const;
+export const AI_UNBUILT = [] as const;
 
-/** That one, where a type is what is wanted. */
+/** One of those, where a type is what is wanted — `never` while there are none. */
 type AiUnbuilt = (typeof AI_UNBUILT)[number];
 
 /**

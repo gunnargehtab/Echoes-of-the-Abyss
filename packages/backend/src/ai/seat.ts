@@ -144,6 +144,11 @@ export class AiSeat {
           this.match.orderFollowFloor(slot, id, command.active);
         }
         return;
+      case 'rally':
+        for (const id of command.structureIds) {
+          this.match.setRally(slot, id, command.x, command.y);
+        }
+        return;
       default: {
         // No silent gap. A variant the commander emits and this switch ignores
         // produces an AI that looks like it decided something and then did
