@@ -468,9 +468,9 @@ unchanged and `check.mjs` compares the layout to 1/4,096 of the sheet.
 
 **The sheet is the navy's, drawn not painted, and carries luminance only.** `drawTrimSheet`
 rasterises the four bands from the navy's numbers — two plates a wrap with half a plate of
-stagger on alternate strakes, a seam at **0.45** of the plate's light over 1.5 texels with 6
-of weathering beside it, a 0.08 patchwork between plates from an integer hash, a 0.015
-grain — so it is reproduced wherever the script runs and compared texel by texel. One sheet
+stagger on alternate strakes, seams, weathering beside them, a patchwork between plates from
+an integer hash, a 0.015 grain — so it is reproduced wherever the script runs and compared
+texel by texel. One sheet
 serves every model of its navy, so no GLB carries it: `tools/hull-models/sheets.mjs` draws
 each navy's table once into `packages/frontend/src/assets/trim/<navy>.png`, `check.mjs`
 holds that file to the draw, and a laid-out model carries only its UV0 and, on every solid
@@ -481,11 +481,31 @@ colour is the faction's ink, recoloured from the active palette at load (`roster
 gate 4), so hue is still the palette's and the sheet says only where a plate ends. It never
 reaches `emissive`, so gate 3 holds unaltered, and it adds no pass, call or triangle, so
 gates 6 and 8 are untouched. The sheet is held bright for the register the conn view puts a
-navy on (`CLADDING_CEILING`): the Consortium's reads a mean of **0.88** in linear light, so
-the Bulwark lands an eighth under it. Sorrowgate's triplanar surfaces
+navy on (`CLADDING_CEILING`): the Consortium's reads a mean of **0.85** in linear light, so
+its models land a seventh under it. Sorrowgate's triplanar surfaces
 ([visual-reboot.md](visual-reboot.md)) are kept: the laminate multiplies `diffuseColor`
 after three's `map_fragment`, so a Commune hull in the tutorial wears both, the sheet under
 the laminate, and `packages/frontend/test/trimSheet.test.ts` holds the chain.
+
+**A joint is drawn for the camera that reads it, in metres on both axes.** The sheet first
+gave its seam in texels, and a texel is 4.7 cm along a plate but 19 cm across a strake of
+the two-, four- and eight-strake bands, so its butts were 7 cm and its strake seams 28 cm. The conn view
+draws a hull at about 3 px/m, where the butts mipmapped away and a hull read as stripes,
+and the 0.08 patchwork, the one signal coarse enough to survive, moved a lit hull by a grey
+level or two. Since [#1107](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1107)
+a navy may give its joints in metres (`seamM`, `weatherM`), and the Consortium's are drawn
+as laps: a **0.25 m** seam at **0.4** of the plate on the plate's far end and the strake's
+top, a lit lip as wide on the near side, and **0.8 m** of weathering beside both, so a
+joint is a pixel's shadow beside a pixel's light at the conn view's range. Its patchwork is
+**0.12**, each plate ramped **±5 %** along its length, under **5 %** of grime in two octaves
+from 8 m, each a whole number of cells a wrap so the sheet still tiles. Its rivets are the
+lap's, **0.07 m** at a 0.6 m pitch 0.45 m in from each strake edge, read close in; the
+hero rivets stay geometry, a hung plate's 0.45 m parts. Each texel averages sixteen samples
+in linear light, so a seam or a rivet finer than a texel is drawn at its coverage. A table
+that names none of these keys draws what it drew before, texel for texel, and
+`tools/hull-models/test/trim.test.mjs` holds both. The sheet is filtered at four taps
+(`TRIM_SHEET.ANISOTROPY`, Sorrowgate's number), so a deck seen from the low camera keeps its
+plates; that is a sampler state, not a pass, call or texel more.
 
 Embedding the sheet in each file was the first cut and the owner's call to reverse: 31 KB a
 model that gzip cannot shrink, 2.9 MB over the 94 navy models were every navy given a sheet,
@@ -507,8 +527,8 @@ Its 162 parts lay 2,116 faces flat and 436 unrolled — 2,076 on the one-strake 
 two, 76 on four, 156 on eight — and split 80 vertices. `bulwark-bathyarch.glb` goes from
 324,608 to **331,428 bytes**: 2,560 the split vertices and the rest the glTF JSON naming
 them and the tags; the library goes from 19,738,720 to **19,745,540 raw bytes** and from
-2,564,136 to **2,567,479 gzipped**. The Consortium's sheet is **31,159 bytes** once, in the
-client's assets, and on the GPU three uploads it as RGBA8 with mipmaps, 1.33 MiB a navy
+2,564,136 to **2,567,479 gzipped**. The Consortium's sheet is **53,950 bytes** once, in the
+client's assets (31,159 before its laps, ramps and grime), and on the GPU three uploads it as RGBA8 with mipmaps, 1.33 MiB a navy
 present at 512², the line gate 6 holds the occlusion map to per model. Which hull is laid
 next is a call per hull, and cheap: a second Consortium script passes the same table and
 re-exports itself alone; another navy's plate starts in its own faction module, as a table

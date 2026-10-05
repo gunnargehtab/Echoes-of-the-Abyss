@@ -20,7 +20,7 @@ import {
   RepeatWrapping,
   SRGBColorSpace,
 } from 'three';
-import { Faction, UnitKind } from '@echoes/shared';
+import { Faction, TRIM_SHEET, UnitKind } from '@echoes/shared';
 import { buildTemplate } from '../src/game/rosterModels.ts';
 import { ACTIVE_PALETTE } from '../src/game/palette.ts';
 import { TRIM_SHEET_NAMES, trimSheet } from '../src/game/trimSheets.ts';
@@ -60,6 +60,9 @@ describe('the trim sheet on a roster model', () => {
     assert.equal(sheet.wrapS, RepeatWrapping);
     // v 0 is the sheet's first row, as the layout and glTF have it.
     assert.equal(sheet.flipY, false);
+    // Four taps, so a deck seen edge-on keeps its plates.
+    assert.equal(sheet.anisotropy, TRIM_SHEET.ANISOTROPY);
+    assert.equal(TRIM_SHEET.ANISOTROPY, 4);
     assert.equal(trimSheet('no-such-navy'), null);
   });
 
