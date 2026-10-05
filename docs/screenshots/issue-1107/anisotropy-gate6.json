@@ -1,0 +1,142 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "staged": "10 Consortium Bulwarks, ventfront-divide, UNPACED=1, QUEUE_STEPS=20000",
+  "runs": {
+    "a4-1": [
+      {
+        "camera": "home",
+        "avgGpuMs": 2.78,
+        "queuedGpuMs": 0.77,
+        "drawCalls": 53,
+        "triangles": 173660,
+        "hullsOnScreen": 10
+      },
+      {
+        "camera": "close",
+        "avgGpuMs": 2.42,
+        "queuedGpuMs": 0.95,
+        "drawCalls": 52,
+        "triangles": 173660,
+        "hullsOnScreen": 10
+      },
+      {
+        "camera": "low",
+        "avgGpuMs": 2.4,
+        "queuedGpuMs": 0.77,
+        "drawCalls": 53,
+        "triangles": 173660,
+        "hullsOnScreen": 10
+      },
+      {
+        "camera": "survey",
+        "avgGpuMs": 2.71,
+        "queuedGpuMs": 0.7,
+        "drawCalls": 53,
+        "triangles": 173620,
+        "hullsOnScreen": 10
+      }
+    ],
+    "a4-2": [
+      {
+        "camera": "home",
+        "avgGpuMs": 2.84,
+        "queuedGpuMs": 0.77,
+        "drawCalls": 53,
+        "triangles": 173660,
+        "hullsOnScreen": 10
+      },
+      {
+        "camera": "close",
+        "avgGpuMs": 2.45,
+        "queuedGpuMs": 0.95,
+        "drawCalls": 52,
+        "triangles": 173660,
+        "hullsOnScreen": 10
+      },
+      {
+        "camera": "low",
+        "avgGpuMs": 2.47,
+        "queuedGpuMs": 0.77,
+        "drawCalls": 53,
+        "triangles": 173660,
+        "hullsOnScreen": 10
+      },
+      {
+        "camera": "survey",
+        "avgGpuMs": 2.67,
+        "queuedGpuMs": 0.73,
+        "drawCalls": 53,
+        "triangles": 173620,
+        "hullsOnScreen": 10
+      }
+    ],
+    "a1-1": [
+      {
+        "camera": "home",
+        "avgGpuMs": 2.95,
+        "queuedGpuMs": 0.78,
+        "drawCalls": 53,
+        "triangles": 173660,
+        "hullsOnScreen": 10
+      },
+      {
+        "camera": "close",
+        "avgGpuMs": 2.53,
+        "queuedGpuMs": 0.94,
+        "drawCalls": 52,
+        "triangles": 173660,
+        "hullsOnScreen": 10
+      },
+      {
+        "camera": "low",
+        "avgGpuMs": 2.57,
+        "queuedGpuMs": 0.76,
+        "drawCalls": 53,
+        "triangles": 173660,
+        "hullsOnScreen": 10
+      },
+      {
+        "camera": "survey",
+        "avgGpuMs": 2.65,
+        "queuedGpuMs": 0.72,
+        "drawCalls": 53,
+        "triangles": 173620,
+        "hullsOnScreen": 10
+      }
+    ],
+    "a1-2": [
+      {
+        "camera": "home",
+        "avgGpuMs": 2.95,
+        "queuedGpuMs": 0.78,
+        "drawCalls": 53,
+        "triangles": 173660,
+        "hullsOnScreen": 10
+      },
+      {
+        "camera": "close",
+        "avgGpuMs": 2.37,
+        "queuedGpuMs": 0.96,
+        "drawCalls": 52,
+        "triangles": 173660,
+        "hullsOnScreen": 10
+      },
+      {
+        "camera": "low",
+        "avgGpuMs": 2.36,
+        "queuedGpuMs": 0.77,
+        "drawCalls": 53,
+        "triangles": 173660,
+        "hullsOnScreen": 10
+      },
+      {
+        "camera": "survey",
+        "avgGpuMs": 2.76,
+        "queuedGpuMs": 0.72,
+        "drawCalls": 53,
+        "triangles": 173620,
+        "hullsOnScreen": 10
+      }
+    ]
+  }
+}

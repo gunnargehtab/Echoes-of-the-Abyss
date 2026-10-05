@@ -505,7 +505,10 @@ in linear light, so a seam or a rivet finer than a texel is drawn at its coverag
 that names none of these keys draws what it drew before, texel for texel, and
 `tools/hull-models/test/trim.test.mjs` holds both. The sheet is filtered at four taps
 (`TRIM_SHEET.ANISOTROPY`, Sorrowgate's number), so a deck seen from the low camera keeps its
-plates; that is a sampler state, not a pass, call or texel more.
+plates; that is a sampler state, not a pass, call or texel more. On the GTX 1070, ten
+Bulwarks on screen at `capture.mjs`' four cameras, gate 6's queued GPU time reads 0.70 to
+0.96 ms at four taps and at one alike, within 0.02 ms a camera
+([readings](screenshots/issue-1107/anisotropy-gate6.json)).
 
 Embedding the sheet in each file was the first cut and the owner's call to reverse: 31 KB a
 model that gzip cannot shrink, 2.9 MB over the 94 navy models were every navy given a sheet,
