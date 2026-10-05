@@ -1247,6 +1247,17 @@ function assertOnlyKnown(command: AiCommand, known: Known): void {
     case 'disembark':
       owns(command.unitIds);
       return;
+    case 'rally':
+      // A yard's standing order: the yards are its own, as `produce`'s are,
+      // and the point is map ground, as `build`'s is.
+      for (const id of command.structureIds) {
+        assert.ok(
+          known.structureIds.has(id),
+          `rallied structure ${id}, which is not one of its own`
+        );
+      }
+      inBounds(command.x, command.y);
+      return;
     default: {
       // This audit is the acceptance criterion of the whole feature, and a
       // switch with no default audits nothing it forgot. A new variant used to
@@ -1332,6 +1343,9 @@ function applyTo(match: Match, slot: number, command: AiCommand): void {
       return;
     case 'followFloor':
       for (const id of command.unitIds) match.orderFollowFloor(slot, id, command.active);
+      return;
+    case 'rally':
+      for (const id of command.structureIds) match.setRally(slot, id, command.x, command.y);
       return;
     default: {
       const untranslated: never = command;
