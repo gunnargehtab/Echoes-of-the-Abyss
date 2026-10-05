@@ -56,7 +56,7 @@ ground at 0.80 — the rim, and the yards and the stalls cut under it — which 
 1,250 m and nothing below it.
 
 **The band is the doorway, and the Hollow guards doorways.** 1,800 m is the first metre of the
-Abyssal band ([systems-depth.md](systems-depth.md) §3), the overhangs either side of the axis stand
+Abyssal band ([systems-depth.md](systems-depth.md) §1), the overhangs either side of the axis stand
 at 2,150 m, and the Hollow works 1,700 m in a band of 1,250–2,150 ([bestiary.md](bestiary.md) §4).
 The animals that pay this row live on its walls, a kilometre and a half out, and the row starts the
 tide unable to hear one of them. Nobody in the water says any of this; it is the ground the mission

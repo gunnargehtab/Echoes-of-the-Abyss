@@ -92,7 +92,7 @@ export interface Doctrine {
   answersTorpedoesWithNoise: boolean;
   /**
    * Whether the army pays the loud descent to attack from under the
-   * thermocline (docs/systems-echo.md §3, docs/systems-depth.md §3).
+   * thermocline (docs/systems-echo.md §3, docs/systems-depth.md §1).
    *
    * An argument about sound, like every other field here. A pair straddling
    * 1,200 m is cut to 0.3×, so crossing is the cheapest hiding place in the
