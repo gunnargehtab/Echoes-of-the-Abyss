@@ -30,7 +30,7 @@ change to one of these rows.
 | What Tier 3 names | The hull and its flag, together. The Echo pass sets a contact's `kind` and `faction` from the same entity at Classification, so a Consortium Corvette classifies as a Consortium Corvette. The commons hide nothing a navy's own hull does not |
 | Whose a hull is | `Owner` carries two fields, `slot` and `faction`, and the systems ask them different questions. Orders, berths, refits and auras ask the slot. The Klaxon (`combat.ts`), the Veil's silent running and the Directorate's shallows (`movement.ts`, `pressure.ts`), the signature (`acoustics.ts`) and the pressure baseline (`pressureRatingFor` in `units.ts`) ask the flag. A seated commander's hulls all carry the seat's navy, so the two never disagree |
 | Game-controlled parties | One: the Drift, owned by `DRIFT_SLOT`, which is no player, and capped at 48 creatures (`DRIFT.MAX_POPULATION`) for the Echo pass's sake ([bestiary.md](bestiary.md)) |
-| Phantoms | A false return claims a hull of a navy on the map that is not the pinger's, and skips every slot above the seats, which today means the Drift (`conjurePhantoms`, [systems-echo.md](systems-echo.md) §3) |
+| Phantoms | A false return claims a hull of a navy on the map that is not the pinger's. The pool skips every slot past the pass's eight (`MAX_SLOTS`), which today means the Drift's (`conjurePhantoms`, [systems-echo.md](systems-echo.md) §3) |
 | Seats | Four at most, one navy each (`canChooseFaction`); AI seats are added in the ready room ([competitive.md](competitive.md) §1) |
 | The ceiling | Forty berths a commander, so a four-seat match is at most 160 hulls. That is the count the pass is budgeted at, and it already crosses 2 ms there ([tech-stack.md](tech-stack.md), "What keeps the pass inside 2 ms") |
 
@@ -47,7 +47,7 @@ can be made unidentifiable is something else, and §4 is that.
 ### Identity
 
 The moorages are crews without a power: hulls sailed by people who belong to none of the four,
-for a fee, in water none of the four will fight in. They own the commons and nothing else.
+for a fee, in water none of the four will fight in. They sail the commons and nothing else.
 The Light Scout, the Corvette and the Cruiser are the oldest patterns in the Rift, laid down
 when every navy was rebuilt around listening in 41 PC ([timeline.md](timeline.md)), and every
 navy's Foundry still builds them because nobody owns the drawings. A moorage owns the crews.
@@ -119,9 +119,8 @@ from it, so no seat is born nearer the hire. Its position is drawn for every pla
 first tick, like a vent's.
 
 - **It sounds like a Foundry:** **SIG 25** idle and **55 while its line runs**
-  ([units.md](units.md)). A hire being filled is heard by everyone in earshot of the moorage,
-  and at that loudness nobody can tell by ear whether a moorage is filling a hire or a
-  commander's Foundry nearby is building. The place tells them; the sound does not.
+  ([units.md](units.md)). The line runs to replace what it sold (§4), so every hire is heard
+  by everyone in earshot, at a Foundry's loudness, from a place every commander knows.
 - **It takes no damage**, as a vent takes none. A moorage that could be sunk would be sunk by
   whichever commander needed its hires least, and the rest of the match would have lost a
   third party to one commander's convenience.
@@ -182,7 +181,9 @@ for the buyer's side, sits on the buyer's team, takes the buyer's auras
 ("nothing lends a hull's aura away", `auras.ts`), and is hostile to everyone the buyer is.
 
 **Its flag is the moorage's.** Every system that asks the flag gets *unflagged*: no Klaxon, no
-Veil, no cone, no Listening, no shallow-water penalty. And its rating is the moorage's —
+Veil, no cone, no shallow-water penalty. Its ears are its own HYD, as every hull's are: the
+Listening is carried by the Directorate's hull figures, not by its flag
+([units.md](units.md)). And its rating is the moorage's —
 PR-2, lifted to it by the moorage's floor and held there by a cap that a refit, a Spire's grant
 or anything else that raises a rating does not pass. The Commune's refit is capped at PR-2 the
 same way ([systems-progression.md](systems-progression.md) §2).
@@ -207,8 +208,8 @@ for it is never resolved, so it is never sent.
 That is the Likeness, and it is bounded the way the Fields' lie is bounded
 ([systems-echo.md](systems-echo.md) §10): **the guard never leaves the moorage's water.** An
 unflagged hull outside it is working for somebody. In a duel that somebody is the other
-commander, or yourself. In a free-for-all it is one of three, and nothing but what the hull
-does next will say which. Near the moorage, an unflagged hull might be the guard — harmless
+commander, or yourself. In a free-for-all it is any of the other three, and nothing but what
+the hull does next will say which. Near the moorage, an unflagged hull might be the guard — harmless
 unless you fire — or a hire that is not; firing to find out gets you struck. That is dread
 with an answer: wait, or pay.
 
@@ -242,10 +243,10 @@ which no tier answers. The two questions do not overlap, so neither doctrine spe
 ## 6. What it costs the pass
 
 **One structure and three hulls.** Every hire is a hull inside its buyer's forty, so the
-ceiling of 160 hulls at four seats does not move for it; the guard is the only addition. That
-makes 164 hulls against a pass already over 2 ms at about 160
-([tech-stack.md](tech-stack.md)). The pass's cost grows roughly with the square of what it
-hears, so three hulls is about 5% more pairs. The moorage's side adds three listeners.
+ceiling of 160 hulls at four seats does not move for it; the moorage and its guard are the only
+additions. The pass's cost grows roughly with the square of what it hears, so four entities on
+a pass already over 2 ms at about 160 ([tech-stack.md](tech-stack.md)) is about 5% more pairs.
+The moorage's side adds three listeners.
 
 That is small, and it is not free. The build is gated on the bench measured at four seats
 with a guard, beside whatever [tech-stack.md](tech-stack.md) then records against the
