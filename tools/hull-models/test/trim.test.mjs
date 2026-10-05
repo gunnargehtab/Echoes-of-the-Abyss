@@ -173,6 +173,45 @@ test('a seam is as wide in metres along a plate as across a strake', () => {
     assert.ok(Math.abs(n * tex - SPEC.seamM) <= tex, `${n} texels of ${tex} m for ${SPEC.seamM} m`);
 });
 
+test('a rivet is drawn at its area in metres, not grown to fill its texels', () => {
+  const a = drawTrimSheet(SPEC);
+  const bare = drawTrimSheet({ ...SPEC, rivet: 0 });
+  const eight = band(8);
+  const strakeH = ((eight.v1 - eight.v0) * a.size) / 8;
+  const y0 = Math.floor(eight.v0 * a.size);
+  const texU = (PLATES * SPEC.plateM) / a.size;
+  const texV = SPEC.strakeM / strakeH;
+  const lin = (b) => {
+    const c = b / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  // One rivet of the first strake's foot row, near its first plate's middle:
+  // the texels it darkens, each by the share of it the disc covers.
+  const pitch = SPEC.rivetPitchM;
+  const centre = (Math.floor(SPEC.plateM / 2 / pitch) - 0.5) * pitch;
+  let covered = 0;
+  const rows = new Set();
+  const cols = new Set();
+  for (let y = y0; y < y0 + strakeH / 2; y++)
+    for (let x = Math.floor((centre - pitch / 2) / texU); x < (centre + pitch / 2) / texU; x++) {
+      const i = y * a.size + x;
+      const dark = lin(bare.pixels[i]) - lin(a.pixels[i]);
+      if (dark <= 0) continue;
+      covered += dark / (lin(bare.pixels[i]) * (1 - SPEC.rivet));
+      rows.add(y);
+      cols.add(x);
+    }
+  const disc = Math.PI * SPEC.rivetM ** 2;
+  const area = covered * texU * texV;
+  assert.ok(
+    Math.abs(area - disc) <= 0.25 * disc,
+    `${area.toFixed(4)} m² for a ${disc.toFixed(4)} m² disc`
+  );
+  // No wider than the disc on either axis, plus the texel it starts in.
+  assert.ok(rows.size <= Math.ceil((2 * SPEC.rivetM) / texV) + 1, `${rows.size} rows`);
+  assert.ok(cols.size <= Math.ceil((2 * SPEC.rivetM) / texU) + 1, `${cols.size} columns`);
+});
+
 test('a table with no metre keys draws what it drew before them', async () => {
   // The Consortium's table as #1005 shipped it, and the sha of the sheet it drew.
   const { createHash } = await import('node:crypto');

@@ -32,7 +32,7 @@
  * screen is still the palette's and the sheet says only where a plate ends.
  * It is written in linear light and encoded sRGB, as a base colour is read,
  * and held bright: its mean is reported, and the Consortium's reads
- * about 0.85 of white, so the register rosterModels.ts puts a navy on
+ * about 0.86 of white, so the register rosterModels.ts puts a navy on
  * (`CLADDING_CEILING`) moves by a seventh. Emissive is untouched, since
  * a base-colour map never reaches `emissive` (gate 3), and a lamp material
  * is not tagged at all: the layout lays every part, and the tag goes to the
@@ -136,6 +136,15 @@ export function bandsOf() {
 }
 
 /**
+ * What `layoutTrim` reads of a sheet — its bands and its wrap — without
+ * drawing the pixels, which at sixteen samples a texel take a second and a
+ * half that an export never looks at.
+ */
+export function sheetLayout({ plateM = 12 } = {}) {
+  return { bands: bandsOf(), wrapM: PLATES * plateM };
+}
+
+/**
  * Smooth noise in [0, 1) on a lattice of `cells` a wrap in u, so it tiles
  * the sheet's wrap as the plates do; `seed` picks the field.
  */
@@ -159,12 +168,13 @@ function valueNoise(xm, ym, cellM, cells, seed) {
  * A seam is given one of two ways. `seamPx` and `weatherPx` are texels of a
  * 512 sheet, a seam both sides of the joint — but a texel is 4.7 cm along a
  * plate and 19 cm across a strake of every band but the one-strake band, so
- * a seam in texels is four times wider across those strakes than along them. `seamM` and `weatherM`, when a navy
- * gives them, are metres on both axes (#1107), with the lap: a seam's shadow
- * falls on the plate's far end and the strake's top, and `lip`, when given,
- * is the light the overlapping edge catches on the near side. `ramp`,
- * `grime` and `rivet` are off at 0, so a table that names none of the
- * metre keys draws what it drew before them, texel for texel.
+ * a seam in texels is four times wider across those strakes than along them.
+ * `seamM` and `weatherM`, when a navy gives them, are metres on both axes
+ * (#1107), with the lap: a seam's shadow falls on the plate's far end and
+ * the strake's top, and `lip`, when given, is the light the overlapping edge
+ * catches on the near side. `ramp`, `grime` and `rivet` are off at 0
+ * (`rivetM` is a rivet's radius), so a table that names none of the metre
+ * keys draws what it drew before them, texel for texel.
  */
 export function drawTrimSheet({
   size = 512,
@@ -244,17 +254,12 @@ export function drawTrimSheet({
     );
     L *= 1 - weather * (1 - smoothstep(0, weatherM, past));
     // A row of rivets in from each strake edge, along the strake, stopping
-    // short of a butt. A rivet is narrower than a texel across the strake,
-    // so a sample takes it when it lies within half a texel of the disc.
+    // short of a butt: a disc of radius `rivetM` in metres, which the
+    // samples take at its coverage of the texel rather than grown to fill it.
     if (rivet && Math.min(a, 1 - a) * plateM > rivetInM) {
       const along = (((u * wrapM) % rivetPitchM) + rivetPitchM) % rivetPitchM;
-      const ru = Math.max(0, Math.abs(along - rivetPitchM / 2) - texU / 2);
-      const off = Math.min(
-        Math.abs(t * strakeM - rivetInM),
-        Math.abs((1 - t) * strakeM - rivetInM)
-      );
-      const rv = Math.max(0, off - texV / 2);
-      if (Math.hypot(ru, rv) < rivetM) L *= rivet;
+      const rv = Math.min(Math.abs(t * strakeM - rivetInM), Math.abs((1 - t) * strakeM - rivetInM));
+      if (Math.hypot(along - rivetPitchM / 2, rv) < rivetM) L *= rivet;
     }
     return L;
   };

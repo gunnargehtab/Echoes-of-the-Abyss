@@ -197,15 +197,15 @@ export const ink = {
  * with 0.8 m of weathering beside it, since a joint narrower than a pixel
  * there is mipmapped away; a 0.12 patchwork between plates, each ramped
  * ±5 % along its length, and 5 % of grime in two octaves from 8 m. Its
- * rivets are the lap's own, 0.07 m at a 0.6 m pitch 0.45 m in from each
- * strake edge, and read close in only. The hero rivets stay geometry, a
- * hung plate's own 0.45 m parts (`rivetRows`), six times the drawn ones.
- * The sheet's mean holds at 0.85 (trim.test.mjs), so the register the conn
- * view puts a navy on moves by a seventh. Hue is not here: the sheet
- * multiplies the ink rosterModels.ts recolours from the palette (gate 4).
- * `name` is the file
- * sheets.mjs draws (packages/frontend/src/assets/trim/bathyarch.png) and the
- * tag a laid-out material carries. The Bulwark is the first hull on it; a
+ * rivets are the lap's own, discs of 0.07 m radius at a 0.6 m pitch 0.45 m
+ * in from each strake edge, and read close in only. The hero rivets stay
+ * geometry, `rivetRows`' boxes 0.3 to 1 m across (the Bulwark's 0.9 and
+ * 1 m), two to seven times the drawn ones. The sheet's mean holds above 0.85
+ * (trim.test.mjs), so the register the conn view puts a navy on moves by a
+ * seventh. Hue is not here: the sheet multiplies the ink rosterModels.ts
+ * recolours from the palette (gate 4). `name` is the file sheets.mjs draws
+ * (packages/frontend/src/assets/trim/bathyarch.png) and the tag a laid-out
+ * material carries. The Bulwark is the first hull on it; a
  * second script passes the same table.
  */
 export const TRIM = {
