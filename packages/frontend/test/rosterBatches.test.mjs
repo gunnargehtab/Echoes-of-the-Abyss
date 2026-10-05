@@ -122,8 +122,13 @@ describe('own models drawn instanced (#1079)', () => {
     const restSig = 6;
     applyLiveGlow(quiet, 0, restSig);
     applyLiveGlow(loud, 60, restSig);
+    // What is drawn is what was last placed, which the lamp reading reports.
+    assert.equal(batches.glowAt(quiet), 1, 'not drawn until placed');
     batches.place(quiet);
     batches.place(loud);
+    assert.equal(batches.glowAt(quiet), Math.fround(glowFactor(0, restSig)));
+    assert.equal(batches.glowAt(loud), Math.fround(glowFactor(60, restSig)));
+    assert.equal(batches.glowAt(instantiate(built)), null, 'nothing drawn for one not attached');
     assert.ok(built.emissives.length > 0);
     assert.equal(quiet.emissives, loud.emissives, 'one set of lamps for the kind');
 

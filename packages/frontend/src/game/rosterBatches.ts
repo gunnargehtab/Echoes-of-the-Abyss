@@ -17,8 +17,8 @@
  *
  * A batch's bounds are recomputed after any of its slots moves, so a kind with
  * nothing on screen is still culled whole. The props and the ordnance turn
- * culling off instead (environmentLayer.ts); their instances never move or are
- * spent in seconds, and a hull's bounds are cheap to keep.
+ * culling off instead (environmentLayer.ts, ordnanceLayer.ts); their instances
+ * never move or are spent in seconds, and a hull's bounds are cheap to keep.
  */
 import {
   BufferGeometry,
@@ -126,6 +126,12 @@ class Batch {
         part.glow.needsUpdate = true;
       }
     }
+  }
+
+  /** The gate-3 factor a slot's lamps draw at, or null without a lamp. */
+  glowAt(index: number): number | null {
+    const lit = this.parts.find((part) => part.glow !== null);
+    return lit === undefined ? null : lit.glow!.getX(index);
   }
 
   dispose(): void {
@@ -262,6 +268,16 @@ export class RosterBatches {
   place(instance: RosterModelInstance): void {
     const slot = this.slots.get(instance);
     if (slot !== undefined) slot.batch.write(slot.index);
+  }
+
+  /**
+   * The gate-3 factor an instance's lamps are drawn at: what its slot holds,
+   * which is its `glow` as of the last `place`. Null when it is not attached
+   * or has no lamp. The lamp reading reports this, not the instance's own.
+   */
+  glowAt(instance: RosterModelInstance): number | null {
+    const slot = this.slots.get(instance);
+    return slot === undefined ? null : slot.batch.glowAt(slot.index);
   }
 
   /**

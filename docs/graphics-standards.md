@@ -416,8 +416,8 @@ cull, 308 k at close against 263 k, and never more than the whole force on scree
 the frame the 400 k budgets. The breach cost the CPU rather than the GPU: against the
 opening, queued GPU time rose 0.05–0.17 ms, `avgConnMs` 1.1–1.5 ms, and the unqueued
 bracket, the handover, 3.8–4.7 ms, at ratio 1 and 1.5. Those times are the uninstanced
-frame's, and the instanced frame's are still to be read on the named GPU. `capture.mjs`
-logs a breach instead of failing on it with `OVER_BUDGET=record`.
+frame's: the instanced frame has not been timed on the named GPU. `capture.mjs` logs a
+breach instead of failing on it with `OVER_BUDGET=record`.
 
 A classified animal drawn as stipple ([map-visuals.md](map-visuals.md) §8) is overlay
 ink, not conn geometry: it spends no draw call and no triangle here, it is priced in

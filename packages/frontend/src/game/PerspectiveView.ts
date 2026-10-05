@@ -2927,9 +2927,9 @@ export class PerspectiveView {
           exportIntensity:
             (material.userData.exportIntensity as number | undefined) ?? restIntensity,
           restIntensity,
-          // The strength it draws at: the material rests, the hull's glow
-          // scales it per instance (rosterBatches.ts).
-          intensity: restIntensity * model.glow,
+          // The strength it draws at: the material rests, and the factor is
+          // read back from the hull's slot in its batch (rosterBatches.ts).
+          intensity: restIntensity * (this.models.glowAt(model) ?? 0),
           afterToneMapping: keepsGlowOutsideToneMapping(material),
         })),
         screen: { x0: Math.floor(x0), y0: Math.floor(y0), x1: Math.ceil(x1), y1: Math.ceil(y1) },
