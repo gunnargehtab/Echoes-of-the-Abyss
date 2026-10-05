@@ -41,7 +41,13 @@ import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
 import { AdditiveBlending, ShaderMaterial, Vector3 } from 'three';
 import { Polygon, Texture, type GraphicsContext } from 'pixi.js';
-import { DRIFT_ROSTER, FaunaSpecies, faunaStatsFor, ResolutionTier } from '@echoes/shared';
+import {
+  DRIFT_ROSTER,
+  FaunaSpecies,
+  faunaStatsFor,
+  ResolutionTier,
+  TERRAIN_LIFT,
+} from '@echoes/shared';
 import {
   AGENT_DOT_DIAMETER_PX,
   AGENT_ZOOM_BUCKET_MAX,
@@ -74,7 +80,13 @@ import {
   strokesOf,
   type WeighedOutline,
 } from '../src/game/ladder.ts';
-import { BIOME_COLOR, PALETTE_NAMES, PALETTES, setActivePalette } from '../src/game/palette.ts';
+import {
+  BIOME_COLOR,
+  PALETTE_NAMES,
+  PALETTES,
+  scaleRgb,
+  setActivePalette,
+} from '../src/game/palette.ts';
 import type { Palette, PaletteName } from '../src/game/palette.ts';
 
 const SPECIES = Object.values(FaunaSpecies).filter(
@@ -94,12 +106,16 @@ const SILHOUETTE_REACH: Record<FaunaSpecies, number> = {
   [FaunaSpecies.Hollow]: 1,
 };
 
-/** The palest ground the map can draw, and the darkest (ladder.test.ts). */
+/**
+ * The palest fill, the palest pixel the ground draws — that fill lifted by the
+ * whole terrain cap (#1103) — and the darkest (ladder.test.ts).
+ */
 const PALEST_GROUND = Object.values(BIOME_COLOR).reduce((a, b) =>
   encodedLuminance(a) >= encodedLuminance(b) ? a : b
 );
+const LIFTED_GROUND = scaleRgb(PALEST_GROUND, 1 + TERRAIN_LIFT.MAX);
 const DARKEST_GROUND = 0x000000;
-const GROUNDS = [DARKEST_GROUND, PALEST_GROUND];
+const GROUNDS = [DARKEST_GROUND, PALEST_GROUND, LIFTED_GROUND];
 
 /** Where each dot of a pattern is: the centre of each hexagon it filled. */
 function centres(context: GraphicsContext): Array<[number, number]> {
@@ -426,7 +442,9 @@ describe('fauna agent stipple: the ladder (§5, rulings on #866)', () => {
     };
     for (const name of PALETTE_NAMES) {
       const palette = PALETTES[name];
-      GROUNDS.forEach((ground, i) => {
+      // The record's two grounds, as docs/map-visuals.md §10 prints them; the
+      // lifted fill is a hold's ground, not this record's.
+      [DARKEST_GROUND, PALEST_GROUND].forEach((ground, i) => {
         const measured = {
           furniture: peakLift(shoal, palette, ground),
           track: peakLift(AGENT_OUTLINES.faunaDotTier4!, palette, ground),

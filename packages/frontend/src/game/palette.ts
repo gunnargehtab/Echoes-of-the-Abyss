@@ -499,9 +499,10 @@ export const VENT_EMBER = 0xe06a2b;
 /**
  * The stone ramp, docs/style-neon-noir.md "The stone" (SPEC): ground that
  * admits no water renders hue-neutral, because rock has no propagation factor
- * for a hue to encode. `ROCK_FACE` is the brightness ceiling of every rock
- * pixel — deliberately below the palest biome fill, so ground you can enter
- * always speaks louder than ground you cannot — and `ROCK_SHADOW` is where the
+ * for a hue to encode. `ROCK_FACE` is the ramp's fill, which a lit crag lifts
+ * by at most `TERRAIN_LIFT.BAKE` and the silt detail by the rest of the cap —
+ * lifted, still below the palest biome fill, so ground you can enter always
+ * speaks louder than ground you cannot — and `ROCK_SHADOW` is where the
  * darken-only passes land at cliff lips and shadowed bases. Terrain colours,
  * like `BIOME_COLOR`, are identical across all four accessibility palettes:
  * the seafloor carries no hue-only meaning to move. Both moved with the fills,
@@ -562,9 +563,9 @@ function lightShade(dropX: number, dropY: number): number {
  * with the detail field under it. The step keeps `reliefShade`'s darken-only
  * shade; the detail adds what it changes about the light, signed. Its slopes
  * are a stationary noise's, so they average to nothing, and what is left is
- * the light's curvature: on flat or lit ground it averages a shade under the
- * fill, and on a step turned from the light a hair over the step's own
- * shadow, never near the fill. A lit face lifts by at most
+ * the light's curvature: on flat ground it averages a shade under the fill, on
+ * a lit step within a few ten-thousandths of it either way, and on a step turned
+ * from the light a hair over the step's own shadow, never near the fill. A lit face lifts by at most
  * `TERRAIN_LIFT.BAKE`, the bake's share of the cap.
  */
 export function reliefTextureGain(

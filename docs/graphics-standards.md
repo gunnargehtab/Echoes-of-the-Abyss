@@ -629,8 +629,8 @@ buffer, not by what is in frame: one copy and one draw of the whole frame.
   fight station of `stations.mjs` on Ventfront, at ratio 1 and 1.5.
 
 **Silt detail** ([art-direction.md](art-direction.md#silt-detail-and-seated-stones--spec),
-development-only behind `?seabed-detail=1` until a decision there promotes it). A patch on
-the terrain material the canvas already draws, and stones the prop layer already stands.
+in every match since #1103; `?seabed-detail=0` takes it out in a development build). A patch
+on the terrain material the canvas already draws, and stones the prop layer already stands.
 
 - **Passes, calls and triangles.** None. Ventfront reads 63–64 calls and 150,676–150,696
   triangles at capture.mjs's four cameras, and the fight 66–68 calls, on and off alike.

@@ -147,7 +147,7 @@ const RUNG_6_FLOOR_UNDER_RUNG_5_FLOOR: readonly PaletteName[] = [];
  *   no navy for ordnance, so it is drawn in the Track tier's colour.
  *
  * A classified animal's dot is not among them either. It is the fauna colour
- * at its tier's whole alpha, and clears rung 6's floor over both grounds in
+ * at its tier's whole alpha, and clears rung 6's floor over every ground in
  * every palette (faunaAgentStipple.test.ts weighs it against rung 5's too).
  */
 const RUNG_7_UNDER_RUNG_6_FLOOR: Record<PaletteName, readonly string[]> = {

@@ -256,7 +256,8 @@ describe('the baked ground (#1103)', () => {
     for (const [fill, { total, n }] of sums) {
       const mean = total / n;
       const own = luminance((fill >> 16) & 0xff, (fill >> 8) & 0xff, fill & 0xff);
-      // Half a code value of rounding, no more.
+      // Within a thousandth of the fill (invariant row 46), plus the bake's
+      // rounding to whole bytes: half a code value, no more.
       assert.ok(mean <= own + 0.5, `fill ${fill.toString(16)} averages ${mean}, over ${own}`);
     }
   });

@@ -605,7 +605,7 @@ them the ground averages to its fill, where the 5–10 % band was authored, rath
 - **No texture averages brighter than its fill.** Each texture pass is centred: a face turned
   to the key light lifts and one turned from it darkens. Over many of its own scale — dune
   cycles, ripples, the relief's and the mottle's wavelengths — it averages to the fill or
-  under it. So wherever the eye averages, the ground keeps its brightness, the fills keep the
+  under it, within a thousandth of the fill. So wherever the eye averages, the ground keeps its brightness, the fills keep the
   5–10 % band, and depth keeps reading as luminance.
 - **No pixel lifts past 0.15 of its fill** (`TERRAIN_LIFT`): the bake's texture takes 0.05
   of it and the silt detail the rest. The ladder sets the cap ([map-visuals.md](map-visuals.md)
@@ -696,15 +696,15 @@ without ripples, and rock admits no water at all.
   cycle, so a lit face as strong as the lee's shadow would tip the cycle bright: its lit side
   takes 0.44 of the strength, the most that keeps every cycle at or under the fill at any
   heading the meander gives it. A ripple is centred over its own 7 m, a scour on the
-  lattice's share of hollow, and grain on the lattice's mean byte. The detail lifts the bake's pixel by at most 0.095, so with the
-  bake's own 0.05 no pixel passes `TERRAIN_LIFT`'s 0.15 of its fill.
+  lattice's share of hollow, and grain on the lattice's mean byte. The detail lifts the
+  bake's pixel by at most 1.15 / 1.05 − 1, about 0.095, so with the bake's own 0.05 no pixel
+  passes `TERRAIN_LIFT`'s 0.15 of its fill.
 - **Dunes** run in crests 110 m apart, east–west, meandering over 420 m. The lee face is
   the south 30 % of each dune, down-current. They are hillshaded by the key light about
   flat ground: a face turned from it darkens by the whole strength, flat ground stays at
   the fill, and a face turned to it lifts by up to 0.44 of the strength, as far as the cap
-  lets it. The dunes read by
-  their lit faces as well as their shadows, the way a ridge does. A second field on the meander's 420 m lattice fades them in and out, down to a
-  quarter of their strength.
+  lets it. The dunes read by their lit faces as well as their shadows. A second field on
+  the meander's 420 m lattice fades them in and out, down to a quarter of their strength.
 - **Ripples** lie 7 m apart, parallel to the dunes and settled in their troughs. A
   ripple's lee darkens, and the rest of its 7 m lifts by as much in sum. A ripple draws
   while it spans 8 pixels and is gone at 3. **Scours** are hollows on a 38 m field,

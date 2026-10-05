@@ -423,9 +423,9 @@ describe('reliefShade', () => {
   });
 
   it('never returns anything brighter than it was given', () => {
-    // The authored biome fills are the ceiling of terrain's brightness — the
-    // same rule depthShade darkens-only for. A slope facing the light is not a
-    // licence to exceed it.
+    // An authored step is shape, not texture: a slope facing the light would
+    // read as shallower ground, the rule depthShade darkens-only for. The
+    // texture inside it lifts (reliefTextureGain); the step does not.
     for (let dropX = -2000; dropX <= 2000; dropX += 125) {
       for (let dropY = -2000; dropY <= 2000; dropY += 125) {
         const shaded = reliefShade(FILL, dropX, dropY);
@@ -531,6 +531,8 @@ describe('reliefTextureGain', () => {
         const gains = sample(relief, step);
         const mean = gains.reduce((a, b) => a + b, 0) / gains.length;
         const base = reliefTextureGain(step[0], step[1], step[0], step[1]);
+        // Within a thousandth (invariant row 46): on a lit step the light's
+        // curvature leaves the mean a few ten-thousandths either side of the fill.
         assert.ok(mean <= 1 + 1e-3, `texture over ${step} averages ${mean}, over the fill`);
         // On a step turned from the light the curvature leaves it a hair over
         // the step's own shadow, never near the fill.

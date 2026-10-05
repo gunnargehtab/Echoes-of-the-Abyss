@@ -58,9 +58,10 @@ detail and seated stones — SPEC". Its rules hold for any cosmetic on that mate
   texel centres on cell centres: the GPU does the bake's bilinear `lerp2` in one fetch, so
   the amount fades across a biome edge while the field stays continuous. A ground delta
   rewrites the touched texels.
-- **Bound it by construction, in the bake's units.** Each term is a fraction in [0, 1]
-  times a table strength, so the darkest pixel is the row's sum, and a test holds every
-  row against `RELIEF_DEPTH`. That constant scales encoded bytes, so the shader scales
+- **Bound it by construction, in the bake's units.** Each term is signed in [−1, 1] and
+  centred on its own mean, times a table strength, so the darkest pixel is the row's sum,
+  a test holds every row against `RELIEF_DEPTH`, and the lit side is cut at
+  `TERRAIN_LIFT`'s cap (#1103). That constant scales encoded bytes, so the shader scales
   encoded colour too (the survey ink's `surveyEncode`/`surveyDecode`); a linear multiply
   by the same number darkens ground near 20 of 255 about three quarters as much.
 - **Measure that it shows.** Ground sits near 20 of 255 at the home dolly, where a
