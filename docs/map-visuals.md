@@ -76,6 +76,14 @@ reference, the way `WATER_RAMP` is: the values are TUNABLE, the shape is not.
   1,800 m (Mid-Water / Abyssal), read from `DEPTH_BANDS` rather than restated. A stack of
   isobaths is how a cliff reads from 11 km. Where the lines fall closer than the eye can split
   them, they are drawn as their average, which is a band of ink along the scarp.
+- **The thermocline isobath** is a major line at the layer's depth, 1,200 m, read from
+  `THERMOCLINE.DEPTH_M`. The layer decides who can hear whom
+  ([systems-depth.md](systems-depth.md#depth-also-decides-who-can-hear-you)), so a player
+  who wants to sit under it must see which ground lies below it. It lies inside the
+  Mid-Water band rather than on its edge, so it is drawn as a **double rule**, two thin
+  strokes with a clear gap between them, and it is not read as a band boundary. It replaces
+  the minor line at its depth, which would fill that gap. "Reading the Water" still draws no
+  line at the layer *in the water*: this line is on the ground.
 - **Coastlines** are drawn **exactly on the cell edges** where the ground changes kind: solid
   where water meets rock, dashed where one biome meets another. The biome is the propagation
   factor, and a coastline that rounded a corner would draw a PF boundary that is not there.
@@ -90,7 +98,8 @@ Seven rules ride with the ink, and each is a review question:
    of every cell are public map data. Ink reads nothing else — no contact, no field, no veil.
 3. **Ink is hue-neutral.** One colour, near-grey with the canvas's blue memory, no more
    saturated than the stone ramp. Hue belongs to the biome, and a tinted line would be read as
-   one. The four kinds of line differ in strength and width, never in colour.
+   one. The five kinds of line differ in strength, width and pattern, never in colour: the
+   biome coast is dashed, the thermocline doubled, every other line solid.
 4. **Ink has a constant screen width.** Lines are measured in pixels at every zoom the camera
    allows, so the survey is as legible at 11 km as at 1 km. That is what makes it the V1 answer.
 5. **Ink is not drained by the veil.** The acoustic veil drains what a player can *hear*; the
@@ -535,10 +544,6 @@ Four choices a reviewer should see:
 
 ## 11. Open questions
 
-- **The thermocline isobath.** The 1,200 m layer decides who can hear whom, which makes it the
-  most tactical depth on the map. "Reading the Water" draws no line at it *in the water*, and
-  that stands. Whether the *ground* should carry a major isobath there is left open. Phase 1
-  draws band boundaries only.
 - **Coastline style under the colour-vision palettes.** The dash is the only thing telling a
   biome coast from a rock coast. It should hold, because the dash is shape rather than hue.
   It is unmeasured.

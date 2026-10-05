@@ -11,7 +11,8 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { Biome, DEPTH, DEPTH_BANDS, TERRAIN_LIFT } from '@echoes/shared';
+import { MeshBasicMaterial, ShaderLib } from 'three';
+import { Biome, DEPTH, DEPTH_BANDS, TERRAIN_LIFT, THERMOCLINE } from '@echoes/shared';
 import { BIOME_COLOR, PALETTE_NAMES, PALETTES, ROCK_FACE, scaleRgb } from '../src/game/palette.ts';
 import {
   encodedLuminance,
@@ -20,13 +21,18 @@ import {
   unselectedRingLift,
 } from '../src/game/ladder.ts';
 import {
+  installSurveyInk,
   MAJOR_ISOBATHS_M,
   MINOR_ISOBATH_M,
   patchSurveyCellClasses,
   ROCK_CLASS,
   SURVEY_ALPHA,
   SURVEY_INK_COLOR,
+  SURVEY_WIDTH_PX,
   surveyCellClasses,
+  surveyCellTexture,
+  THERMOCLINE_ISOBATH_M,
+  THERMOCLINE_RULE_GAP_PX,
 } from '../src/game/surveyInk.ts';
 import type { TerrainPayload } from '../src/net/GameClient.ts';
 
@@ -74,6 +80,40 @@ describe('survey ink levels', () => {
   it('draws a minor isobath every 100 m, and every major falls on one', () => {
     assert.equal(MINOR_ISOBATH_M, 100);
     for (const major of MAJOR_ISOBATHS_M) assert.equal(major % MINOR_ISOBATH_M, 0);
+  });
+
+  it("draws the thermocline's isobath at the layer, read from the ruleset (#1104)", () => {
+    // SPEC: §4 names 1,200 m and says it is THERMOCLINE.DEPTH_M's.
+    assert.equal(THERMOCLINE_ISOBATH_M, 1200);
+    assert.equal(THERMOCLINE_ISOBATH_M, THERMOCLINE.DEPTH_M);
+    assert.ok(THERMOCLINE_ISOBATH_M > 0 && THERMOCLINE_ISOBATH_M < DEPTH.MAX_M);
+    // It is drawn as a double rule *because* it is not a band edge. A layer
+    // moved onto one would lay a solid major across the rule's gap.
+    assert.ok(!MAJOR_ISOBATHS_M.includes(THERMOCLINE_ISOBATH_M));
+  });
+
+  it("keeps a clear gap inside the thermocline's double rule", () => {
+    // Each stroke's anti-aliased edge reaches half a pixel past its width, so
+    // the strokes stay apart only while the gap outruns a stroke and its AA.
+    const innerEdgePx = THERMOCLINE_RULE_GAP_PX / 2 - SURVEY_WIDTH_PX.thermocline / 2 - 0.5;
+    assert.ok(innerEdgePx >= 0.5, `the gap is ${2 * innerEdgePx} px clear`);
+  });
+
+  it("puts the thermocline's level into the ground's shader", () => {
+    const terrain: TerrainPayload = {
+      cols: 1,
+      rows: 1,
+      cellM: 250,
+      biomes: [Biome.OpenWater],
+      floor: [1000],
+      ceiling: [0],
+    };
+    const material = new MeshBasicMaterial();
+    installSurveyInk(material, terrain, surveyCellTexture(terrain, surveyCellClasses(terrain)));
+    const shader = { ...ShaderLib.basic, uniforms: {} };
+    material.onBeforeCompile(shader as never, {} as never);
+    assert.match(shader.fragmentShader, new RegExp(`d - ${THERMOCLINE.DEPTH_M}\\.0 `));
+    assert.match(shader.fragmentShader, /thermocline = surveyThermocline\( thermoPx \)/);
   });
 });
 
@@ -144,6 +184,8 @@ describe('the loudness ladder, rung 4 under rung 5', () => {
 
   it('ranks the ink within its rung: minor, then the band lines and borders, then rock', () => {
     assert.ok(SURVEY_ALPHA.minor < SURVEY_ALPHA.major);
+    // The thermocline is a major line in another pattern, not a louder one.
+    assert.equal(SURVEY_ALPHA.thermocline, SURVEY_ALPHA.major);
     assert.ok(SURVEY_ALPHA.major <= SURVEY_ALPHA.coast);
     assert.ok(SURVEY_ALPHA.border <= SURVEY_ALPHA.coast);
   });

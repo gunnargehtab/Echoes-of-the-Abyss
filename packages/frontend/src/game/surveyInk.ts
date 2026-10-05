@@ -8,6 +8,8 @@
  *
  * - **Isobaths** contour the authored floor — a minor line every 100 m and a
  *   major one at each depth-band boundary. A stack of them is a cliff.
+ * - **The thermocline isobath** is a major line at the layer's depth, drawn
+ *   as a double rule so it is not read as a band edge.
  * - **Coastlines** run on the cell edges where the ground changes kind: solid
  *   against rock, dashed between two biomes.
  *
@@ -26,14 +28,14 @@
  */
 
 import { type Material, DataTexture, NearestFilter, RedFormat, UnsignedByteType } from 'three';
-import { DEPTH, DEPTH_BANDS } from '@echoes/shared';
+import { DEPTH, DEPTH_BANDS, THERMOCLINE } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
 
 /**
  * The ink — SPEC by reference (docs/map-visuals.md §4), values TUNABLE. One
  * colour, the `survey-ink` token (docs/style-neon-noir.md "The ink"),
  * hue-neutral by construction — near-grey with the canvas's blue memory, the
- * stone ramp's rule (rule 3) — laid at four strengths.
+ * stone ramp's rule (rule 3) — told apart by strength, width and pattern.
  *
  * Strengths are alphas, blended in encoded space, which is how the mark
  * layer lays its strokes over the same ground. That is what makes the ladder
@@ -51,6 +53,8 @@ export const SURVEY_ALPHA = {
   minor: 0.08,
   /** A depth-band boundary: the Shelf's foot and the Abyssal's lip. */
   major: 0.09,
+  /** Each stroke of the thermocline's double rule: a major line by another pattern. */
+  thermocline: 0.09,
   /** A cell edge between two biomes — a propagation-factor boundary. Dashed. */
   border: 0.09,
   /**
@@ -66,6 +70,8 @@ export const SURVEY_ALPHA = {
 export const SURVEY_WIDTH_PX = {
   minor: 1,
   major: 1.5,
+  /** Each of the two strokes; `THERMOCLINE_RULE_GAP_PX` sets them apart. */
+  thermocline: 1,
   border: 1.5,
   coast: 1.75,
 } as const;
@@ -83,6 +89,21 @@ export const MAJOR_ISOBATHS_M: readonly number[] = Object.values(DEPTH_BANDS)
   .map((band) => band.min)
   .filter((depth) => depth > 0 && depth < DEPTH.MAX_M)
   .sort((a, b) => a - b);
+
+/**
+ * SPEC — docs/map-visuals.md §4: the thermocline's major isobath, read from
+ * the ruleset's layer rather than restated. It lies inside the Mid-Water
+ * band, not on its edge, so it is drawn as a double rule and never joins
+ * `MAJOR_ISOBATHS_M`: a third solid major would read as a third band edge.
+ */
+export const THERMOCLINE_ISOBATH_M = THERMOCLINE.DEPTH_M;
+
+/**
+ * TUNABLE — the double rule's two strokes, centre to centre, in device
+ * pixels. Wide enough that the gap between two 1 px strokes stays clear at
+ * every zoom; the minor line at the same depth is cut out of that gap.
+ */
+export const THERMOCLINE_RULE_GAP_PX = 4;
 
 /**
  * Levels are drawn half a metre below their number. A plain authored exactly
@@ -229,6 +250,16 @@ function fragmentPars(): string {
     '  return ink;',
     '}',
     '',
+    // Two strokes either side of the level, each the minor's width. Distance
+    // alone, so the rule holds on every curve: a dash would need an arc
+    // length the fragment does not have, and a dash already means a biome.
+    'float surveyThermoclinePx( float d, float perPx ) {',
+    `  return abs( d - ${glslFloat(THERMOCLINE_ISOBATH_M)} - ${glslFloat(LEVEL_OFFSET_M)} ) / perPx;`,
+    '}',
+    'float surveyThermocline( float px ) {',
+    `  return surveyLine( abs( px - ${glslFloat(THERMOCLINE_RULE_GAP_PX / 2)} ), ${glslFloat(SURVEY_WIDTH_PX.thermocline)} );`,
+    '}',
+    '',
     // One side of one cell edge. Each side draws half the line, so the whole
     // line is centred on the edge itself — the PF boundary, not near it.
     'void surveyEdge( float here, ivec2 n, ivec2 gridMax, float distM, float mPerPx, float along,',
@@ -261,10 +292,16 @@ const FRAGMENT_MAIN = [
   '  float here = surveyCell( cell );',
   '  float minor = 0.0;',
   '  float major = 0.0;',
+  '  float thermocline = 0.0;',
   // Rock has no floor to measure (rule 7).
   '  if ( here < 0.99 ) {',
-  '    minor = surveyIsobaths( vSurveyFloor, perPx );',
+  '    float thermoPx = surveyThermoclinePx( vSurveyFloor, perPx );',
+  // The minor at the layer's depth would fill the rule's gap and read as one
+  // thick line; a scarp's averaged band is cut there too, so the rule still
+  // shows as a clear seam across it.
+  `    minor = surveyIsobaths( vSurveyFloor, perPx ) * smoothstep( ${glslFloat(THERMOCLINE_RULE_GAP_PX / 2 - SURVEY_WIDTH_PX.thermocline)}, ${glslFloat(THERMOCLINE_RULE_GAP_PX / 2 - SURVEY_WIDTH_PX.thermocline / 2)}, thermoPx );`,
   '    major = surveyMajors( vSurveyFloor, perPx );',
+  '    thermocline = surveyThermocline( thermoPx );',
   '  }',
   '  float coast = 0.0;',
   '  float border = 0.0;',
@@ -276,6 +313,7 @@ const FRAGMENT_MAIN = [
   // a major isobath running along a coast is one line, not two.
   `  float ink = max( max( minor * ${glslFloat(SURVEY_ALPHA.minor)}, major * ${glslFloat(SURVEY_ALPHA.major)} ),`,
   `                   max( border * ${glslFloat(SURVEY_ALPHA.border)}, coast * ${glslFloat(SURVEY_ALPHA.coast)} ) );`,
+  `  ink = max( ink, thermocline * ${glslFloat(SURVEY_ALPHA.thermocline)} );`,
   '  if ( ink > 0.0 ) {',
   '    diffuseColor.rgb = surveyDecode( mix( surveyEncode( diffuseColor.rgb ), uSurveyInk, ink ) );',
   '  }',

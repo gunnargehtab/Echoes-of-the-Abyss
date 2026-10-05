@@ -126,7 +126,7 @@ A new prop takes an existing token, or a new row here first.
 ### The ink (the survey)
 
 The lines a survey drew on the ground — isobaths and coastlines — take one hue-neutral
-token, laid at four strengths rather than in four colours
+token, laid at different strengths and patterns rather than in different colours
 ([map-visuals.md](map-visuals.md) §4):
 
 | Token | Hex | Use |
