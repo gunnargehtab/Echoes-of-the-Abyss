@@ -19,7 +19,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { Biome, Faction, ResolutionTier, ResourceKind } from '@echoes/shared';
+import { Biome, Faction, ResolutionTier, ResourceKind, TERRAIN_LIFT } from '@echoes/shared';
 import {
   BIOME_COLOR,
   PALETTE_LABEL,
@@ -28,12 +28,21 @@ import {
   paletteFor,
   setActivePalette,
   reliefShade,
+  reliefTextureGain,
+  scaleRgb,
   TIER_STYLE,
   UI,
   sigColor,
   type Palette,
   type PaletteName,
 } from '../src/game/palette.ts';
+import {
+  BIOME_RELIEF,
+  detailM,
+  ROCK_RELIEF,
+  SEABED_PX_PER_CELL,
+  seabedSeed,
+} from '../src/game/seabed.ts';
 
 // --- The simulation ---------------------------------------------------------
 
@@ -342,9 +351,10 @@ describe('the ground palette', () => {
     // deliberately desaturated to 5–10 % luminance." This is the assertion the
     // sentence never had, and four of the six fills had drifted to 12.2–13.9%
     // without it — which is most of a frame, since the seabed is most of a
-    // frame. depthShade and reliefShade only ever darken, so an authored fill
-    // is the brightest that biome's ground can render: checking the constants
-    // checks every ground pixel in the game.
+    // frame. depthShade and reliefShade only ever darken, and every texture is
+    // centred on what they leave (#1103), so an authored fill is the brightest
+    // that biome's ground averages: checking the constants checks the band.
+    // A lit pixel may pass it by TERRAIN_LIFT.MAX, which the ladder tests weigh.
     for (const [biome, fill] of Object.entries(BIOME_COLOR)) {
       if (Number(biome) === Biome.AbyssalTrench) continue;
       const lum = encodedLuminance(fill);
@@ -413,9 +423,9 @@ describe('reliefShade', () => {
   });
 
   it('never returns anything brighter than it was given', () => {
-    // The authored biome fills are the ceiling of terrain's brightness — the
-    // same rule depthShade darkens-only for. A slope facing the light is not a
-    // licence to exceed it.
+    // An authored step is shape, not texture: a slope facing the light would
+    // read as shallower ground, the rule depthShade darkens-only for. The
+    // texture inside it lifts (reliefTextureGain); the step does not.
     for (let dropX = -2000; dropX <= 2000; dropX += 125) {
       for (let dropY = -2000; dropY <= 2000; dropY += 125) {
         const shaded = reliefShade(FILL, dropX, dropY);
@@ -452,5 +462,85 @@ describe('reliefShade', () => {
     const shaded = reliefShade(FILL, 800, 400);
     const ratio = (c: number, shift: number) => ((c >> shift) & 0xff) / ((FILL >> shift) & 0xff);
     assert.ok(Math.abs(ratio(shaded, 8) - ratio(shaded, 0)) < 0.05, 'channels drifted apart');
+  });
+});
+
+/**
+ * The relief's texture, centred on the authored step (#1103,
+ * docs/art-direction.md "Reading the Sea Floor"). The step keeps reliefShade's
+ * darken-only shade; the detail field under it lifts and darkens about it.
+ */
+describe('reliefTextureGain', () => {
+  const SEED = seabedSeed({ cols: 32, rows: 32, floor: new Array(32 * 32).fill(2600) });
+  const mPerPx = 250 / SEABED_PX_PER_CELL;
+  const dropScale = SEABED_PX_PER_CELL / 2;
+  const STEPS: readonly [number, number][] = [
+    [0, 0],
+    [-300, -300],
+    [-900, 0],
+    [300, 300],
+    [900, 900],
+  ];
+
+  /** The gain over a patch of a biome's own detail field, on an authored step. */
+  function sample(relief: (typeof BIOME_RELIEF)[Biome], [fx, fy]: readonly [number, number]) {
+    const h = (x: number, y: number) =>
+      detailM(x, y, SEED, relief.amplitudeM, relief.roughness, relief.blockiness);
+    const gains: number[] = [];
+    for (let i = 0; i < 200; i++) {
+      for (let j = 0; j < 200; j++) {
+        const x = i * 23.7 + 3;
+        const y = j * 19.3 + 5;
+        gains.push(
+          reliefTextureGain(
+            fx,
+            fy,
+            fx + (h(x + mPerPx, y) - h(x - mPerPx, y)) * dropScale,
+            fy + (h(x, y + mPerPx) - h(x, y - mPerPx)) * dropScale
+          )
+        );
+      }
+    }
+    return gains;
+  }
+
+  it("is the step's own darken-only shade where there is no texture", () => {
+    for (let dropX = -2000; dropX <= 2000; dropX += 250) {
+      for (let dropY = -2000; dropY <= 2000; dropY += 250) {
+        const gain = reliefTextureGain(dropX, dropY, dropX, dropY);
+        assert.ok(gain <= 1, `an authored step lifted to ${gain} at ${dropX},${dropY}`);
+        assert.equal(scaleRgb(0x0e2a22, gain), reliefShade(0x0e2a22, dropX, dropY));
+      }
+    }
+  });
+
+  it('lifts no pixel past the bake share of the cap', () => {
+    for (const relief of [...Object.values(BIOME_RELIEF), ROCK_RELIEF]) {
+      for (const step of STEPS) {
+        const most = Math.max(...sample(relief, step));
+        assert.ok(most <= 1 + TERRAIN_LIFT.BAKE + 1e-12, `lifted to ${most}`);
+      }
+    }
+    // And a lit face does lift: the texture is not darken-only any more.
+    assert.ok(Math.max(...sample(BIOME_RELIEF[Biome.ThermalVein], [0, 0])) > 1.04);
+  });
+
+  it('averages to the fill or under it, and near the step it sits on', () => {
+    for (const relief of [...Object.values(BIOME_RELIEF), ROCK_RELIEF]) {
+      for (const step of STEPS) {
+        const gains = sample(relief, step);
+        const mean = gains.reduce((a, b) => a + b, 0) / gains.length;
+        const base = reliefTextureGain(step[0], step[1], step[0], step[1]);
+        // Within a thousandth (invariant row 46): on a lit step the light's
+        // curvature leaves the mean a few ten-thousandths either side of the fill.
+        assert.ok(mean <= 1 + 1e-3, `texture over ${step} averages ${mean}, over the fill`);
+        // On a step turned from the light the curvature leaves it a hair over
+        // the step's own shadow, never near the fill.
+        assert.ok(
+          Math.abs(mean - base) < 0.012,
+          `texture over ${step} averages ${mean}, off ${base}`
+        );
+      }
+    }
   });
 });

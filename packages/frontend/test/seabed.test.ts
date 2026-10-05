@@ -10,7 +10,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { Biome } from '@echoes/shared';
+import { Biome, TERRAIN_LIFT } from '@echoes/shared';
 import {
   BIOME_RELIEF,
   detailM,
@@ -18,12 +18,20 @@ import {
   mottleFactor,
   rockDetailM,
   ROCK_RELIEF,
+  seabedRange,
   seabedSeed,
   SEABED_PX_PER_CELL,
+  shadeSeabed,
   VENT_EMBER_CAP,
   ventEmbers,
 } from '../src/game/seabed.ts';
-import { BIOME_COLOR, RELIEF_REFERENCE_M, ROCK_FACE, ROCK_SHADOW } from '../src/game/palette.ts';
+import {
+  BIOME_COLOR,
+  RELIEF_REFERENCE_M,
+  ROCK_FACE,
+  ROCK_SHADOW,
+  scaleRgb,
+} from '../src/game/palette.ts';
 
 const SEED = seabedSeed({ cols: 32, rows: 32, floor: new Array(32 * 32).fill(2600) });
 
@@ -164,15 +172,25 @@ describe('rock face', () => {
 });
 
 describe('albedo mottle', () => {
-  it('is a darken-only gain bounded by its biome strength, and deterministic', () => {
-    for (const { mottle } of Object.values(BIOME_RELIEF)) {
-      for (let i = 0; i < 2000; i++) {
-        const x = (i * 173.31) % 8000;
-        const y = (i * 89.17) % 8000;
+  it('is a gain centred on the fill, spanning its biome strength, and deterministic', () => {
+    // Texture since #1103: half the span over the fill and half under it, and
+    // averaging to the fill, so the mottle moves no ground's brightness.
+    for (const { mottle } of [...Object.values(BIOME_RELIEF), ROCK_RELIEF]) {
+      let total = 0;
+      const n = 40000;
+      for (let i = 0; i < n; i++) {
+        const x = (i * 173.31) % 16000;
+        const y = (i * 89.17) % 16000;
         const f = mottleFactor(x, y, SEED, mottle);
-        assert.ok(f <= 1 && f >= 1 - mottle, `${f} outside [${1 - mottle}, 1]`);
+        assert.ok(
+          f <= 1 + mottle / 2 && f >= 1 - mottle / 2,
+          `${f} outside [${1 - mottle / 2}, ${1 + mottle / 2}]`
+        );
         assert.equal(f, mottleFactor(x, y, SEED, mottle));
+        total += f;
       }
+      assert.ok(Math.abs(total / n - 1) < mottle / 50, `mottle ${mottle} averages ${total / n}`);
+      assert.ok(1 + mottle / 2 <= 1 + TERRAIN_LIFT.BAKE, `mottle ${mottle} lifts past the cap`);
     }
     // Zero strength is exactly the identity — most of a map must pass through
     // untouched rather than uniformly dimmed.
@@ -188,11 +206,60 @@ describe('albedo mottle', () => {
       const x = (i * 137.51) % 8000;
       const y = (i * 291.73) % 8000;
       const d = detailM(x, y, SEED, 60, 0.3, 0);
-      const m = mottleFactor(x, y, SEED, 0.1) - 0.95; // recentre around 0
+      const m = mottleFactor(x, y, SEED, 0.1) - 1; // centred on 1
       if (d > 0 === m > 0) sameSign++;
     }
     const agreement = sameSign / n;
     assert.ok(Math.abs(agreement - 0.5) < 0.08, `fields agree ${agreement} — correlated`);
+  });
+});
+
+describe('the baked ground (#1103)', () => {
+  it('lifts no pixel past the bake share of the cap, and averages each biome to its fill or under', () => {
+    // A flat map, so depthShade says nothing and every water pixel's fill is
+    // its biome's own: what moves a pixel is texture, a cliff's shadow or a scour.
+    const cols = 12;
+    const rows = 6;
+    const biomes = Array.from({ length: cols * rows }, (_, i) => Math.floor(i / 2) % 6);
+    const floor = new Array(cols * rows).fill(1200);
+    const ceiling = new Array(cols * rows).fill(0);
+    ceiling[cols * 3 + 6] = 3000; // one mesa, rock
+    const terrain = { cols, rows, cellM: 250, biomes, floor, ceiling };
+    const pixels = shadeSeabed(terrain, SEED, seabedRange(terrain), {
+      col0: 0,
+      row0: 0,
+      col1: cols - 1,
+      row1: rows - 1,
+    });
+    const luminance = (r: number, g: number, b: number) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    const sums = new Map<number, { total: number; n: number }>();
+    for (let py = 0; py < pixels.h; py++) {
+      for (let px = 0; px < pixels.w; px++) {
+        const index =
+          Math.floor(py / SEABED_PX_PER_CELL) * cols + Math.floor(px / SEABED_PX_PER_CELL);
+        const fill =
+          ceiling[index]! > floor[index]! ? ROCK_FACE : BIOME_COLOR[biomes[index] as Biome];
+        const ceilingColor = scaleRgb(fill, 1 + TERRAIN_LIFT.BAKE);
+        const j = (py * pixels.w + px) * 4;
+        for (const [k, shift] of [16, 8, 0].entries()) {
+          assert.ok(
+            pixels.data[j + k]! <= ((ceilingColor >> shift) & 0xff),
+            `pixel ${px},${py} lifts past the cap`
+          );
+        }
+        const entry = sums.get(fill) ?? { total: 0, n: 0 };
+        entry.total += luminance(pixels.data[j]!, pixels.data[j + 1]!, pixels.data[j + 2]!);
+        entry.n++;
+        sums.set(fill, entry);
+      }
+    }
+    for (const [fill, { total, n }] of sums) {
+      const mean = total / n;
+      const own = luminance((fill >> 16) & 0xff, (fill >> 8) & 0xff, fill & 0xff);
+      // Within a thousandth of the fill (invariant row 46), plus the bake's
+      // rounding to whole bytes: half a code value, no more.
+      assert.ok(mean <= own + 0.5, `fill ${fill.toString(16)} averages ${mean}, over ${own}`);
+    }
   });
 });
 

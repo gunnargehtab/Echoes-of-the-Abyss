@@ -25,7 +25,14 @@
  *   palette change bakes a new sprite instead of showing the old ink.
  */
 
-import { Biome, Faction, ResolutionTier, ResourceKind, SIG_BANDS } from '@echoes/shared';
+import {
+  Biome,
+  Faction,
+  ResolutionTier,
+  ResourceKind,
+  SIG_BANDS,
+  TERRAIN_LIFT,
+} from '@echoes/shared';
 
 /** The four palettes of docs/ui-ux.md §11. */
 export type PaletteName = 'standard' | 'deuteranopia' | 'protanopia' | 'tritanopia';
@@ -492,9 +499,10 @@ export const VENT_EMBER = 0xe06a2b;
 /**
  * The stone ramp, docs/style-neon-noir.md "The stone" (SPEC): ground that
  * admits no water renders hue-neutral, because rock has no propagation factor
- * for a hue to encode. `ROCK_FACE` is the brightness ceiling of every rock
- * pixel — deliberately below the palest biome fill, so ground you can enter
- * always speaks louder than ground you cannot — and `ROCK_SHADOW` is where the
+ * for a hue to encode. `ROCK_FACE` is the ramp's fill, which a lit crag lifts
+ * by at most `TERRAIN_LIFT.BAKE` and the silt detail by the rest of the cap —
+ * lifted, still below the palest biome fill, so ground you can enter always
+ * speaks louder than ground you cannot — and `ROCK_SHADOW` is where the
  * darken-only passes land at cliff lips and shadowed bases. Terrain colours,
  * like `BIOME_COLOR`, are identical across all four accessibility palettes:
  * the seafloor carries no hue-only meaning to move. Both moved with the fills,
@@ -521,20 +529,58 @@ export const RELIEF_DEPTH = 0.42;
  * metres. Depth counts downward, so a floor that deepens toward +x is a surface
  * descending to the right, whose normal tilts right: n = (dfloor/dx, dfloor/dy, 1).
  *
- * Darkens only, for the reason `depthShade` darkens only — the authored biome
- * fills are the ceiling of terrain's brightness, and a slope that happens to
- * face the light is not a licence to exceed it. A ridge reads by the shadow it
- * throws, which is enough, and it keeps the seabed quieter than any contact.
+ * Darkens only. An authored step is shape, not texture (docs/art-direction.md
+ * "Reading the Sea Floor"): a shelf edge turned to the light and drawn above
+ * its fill would read as shallower ground, and luminance is depth. A ridge
+ * reads by the shadow it throws, which is enough, and it keeps the seabed
+ * quieter than any contact. The texture inside a step lifts, centred on it:
+ * `reliefTextureGain`.
  */
 export function reliefShade(color: number, dropX: number, dropY: number): number {
+  return scaleRgb(
+    color,
+    1 - RELIEF_DEPTH * (1 - Math.min(1, Math.max(0, lightShade(dropX, dropY))))
+  );
+}
+
+/**
+ * The key light's diffuse term on a slope, over flat ground's: 1 on the flat,
+ * above 1 turned to the light, below it turned away. Unclamped.
+ */
+function lightShade(dropX: number, dropY: number): number {
   const nx = dropX / RELIEF_REFERENCE_M;
   const ny = dropY / RELIEF_REFERENCE_M;
   const length = Math.hypot(nx, ny, 1);
-  const diffuse = (nx * LIGHT_X + ny * LIGHT_Y + LIGHT_Z) / length;
   // Flat ground is the reference, not full brightness: normalising by LIGHT_Z
   // is what makes an unsloped cell come back untouched.
-  const shade = Math.min(1, Math.max(0, diffuse / LIGHT_Z));
-  return scaleRgb(color, 1 - RELIEF_DEPTH * (1 - shade));
+  return (nx * LIGHT_X + ny * LIGHT_Y + LIGHT_Z) / length / LIGHT_Z;
+}
+
+/**
+ * The relief's gain with its texture centred on the authored step (#1103).
+ *
+ * `floor*` is the drop of the authored floor alone and `total*` of the floor
+ * with the detail field under it. The step keeps `reliefShade`'s darken-only
+ * shade; the detail adds what it changes about the light, signed. Its slopes
+ * are a stationary noise's, so they average to nothing, and what is left is
+ * the light's curvature: on flat ground it averages a shade under the fill,
+ * on a lit step within a few ten-thousandths of it either way, and on a step
+ * turned from the light a hair over the step's own shadow, never near the
+ * fill. A lit face lifts by at most `TERRAIN_LIFT.BAKE`, the bake's share of
+ * the cap.
+ */
+export function reliefTextureGain(
+  floorX: number,
+  floorY: number,
+  totalX: number,
+  totalY: number
+): number {
+  const authored = lightShade(floorX, floorY);
+  const shade = Math.max(
+    0,
+    Math.min(1, Math.max(0, authored)) + lightShade(totalX, totalY) - authored
+  );
+  return Math.min(1 + TERRAIN_LIFT.BAKE, 1 - RELIEF_DEPTH * (1 - shade));
 }
 
 /**

@@ -12,12 +12,15 @@
  *
  * - **Render-only.** Nothing in the simulation reads it, and nothing here reads
  *   anything but the public cell grid: biome and rock.
- * - **Darken-only and hue-preserving.** Every term is a fraction in [0, 1]
- *   times a strength, and the three channels scale together, in encoded space
- *   as the bake's bytes do (the survey ink's own transfer). A row's strengths
- *   sum to at most `MAX_SUM`, so the darkest the detail leaves is still lighter
- *   than a full-strength authored face — a property of the table the tests
- *   hold, not of a picture.
+ * - **Centred, capped and hue-preserving** (#1103). Every term is signed, in
+ *   [-1, 1], times a strength: positive darkens and negative lifts. Each is
+ *   centred so that its mean over its own scale darkens or holds, never lifts,
+ *   and the gain is cut at `DETAIL_LIFT`, the silt's share of `TERRAIN_LIFT`.
+ *   The three channels scale together, in encoded space as the bake's bytes do
+ *   (the survey ink's own transfer). A row's strengths sum to at most
+ *   `MAX_SUM`, so the darkest the detail leaves is still lighter than a
+ *   full-strength authored face — a property of the table the tests hold, not
+ *   of a picture.
  * - **Deterministic.** The shader hashes nothing: its noise is a lattice of
  *   `propHash` bytes in one 128² texture, the same on every client. A shader
  *   hash such as `fract(sin(x) * k)` keeps few bits at map coordinates in
@@ -27,9 +30,8 @@
  *   and the whole layer is gone by `FADE_M_PER_PX[1]`, so the survey dolly
  *   reads the bake and the ink and nothing else.
  *
- * Gated: development only, behind `?seabed-detail=1` or `?dream-loop=1`, and on
- * the standard surfaces only. Promotion to every match is `seabedDetailEnabled`
- * and the decision the SPEC section records.
+ * In every match since #1103, on the standard surfaces only. A development
+ * build can turn it off with `?seabed-detail=0`, for an on/off pair.
  */
 import {
   DataTexture,
@@ -39,23 +41,22 @@ import {
   RGBAFormat,
   UnsignedByteType,
 } from 'three';
-import { Biome, SEABED_DETAIL } from '@echoes/shared';
+import { Biome, SEABED_DETAIL, TERRAIN_LIFT } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import { KEY_LIGHT } from './palette.ts';
 import { propHash } from './environment.ts';
 
 /**
- * Whether this page studies the silt detail. Development builds only, and only
- * on an explicit opt-in: its own flag, or #967's dream loop, which studies it
- * with the rest of the conn scene.
+ * Whether this page draws the silt detail: always, but for a development build
+ * opened with `?seabed-detail=0`, which is the off half of an on/off pair.
+ * No shipped build can turn it off (docs/art-direction.md "Silt detail and
+ * seated stones — SPEC", #1103).
  */
 export function seabedDetailEnabled(dev: boolean, search: string): boolean {
-  if (!dev) return false;
-  const params = new URLSearchParams(search);
-  return params.get('seabed-detail') === '1' || params.get('dream-loop') === '1';
+  return !(dev && new URLSearchParams(search).get('seabed-detail') === '0');
 }
 
-/** The predicate is the only gate: promoting the layer is a change to it alone. */
+/** The predicate is the only gate. */
 export const SEABED_DETAIL_ON = seabedDetailEnabled(
   import.meta.env?.DEV === true,
   typeof window === 'undefined' ? '' : window.location.search
@@ -66,6 +67,35 @@ export const SEABED_DETAIL_ON = seabedDetailEnabled(
  * stored row never sums above the table's own.
  */
 export const STRENGTH_SCALE = 0.25;
+
+/**
+ * The most the detail lifts the bake's pixel, as a gain over 1: what the cap
+ * leaves once the bake's own texture has taken its share, so the two together
+ * never lift a pixel past `TERRAIN_LIFT.MAX` of its fill.
+ */
+export const DETAIL_LIFT = (1 + TERRAIN_LIFT.MAX) / (1 + TERRAIN_LIFT.BAKE) - 1;
+
+/**
+ * The centres, derived and rounded toward dark; the tests recompute each and
+ * hold the mean it promises.
+ *
+ * A dune's hillshade saturates (`DUNE_CONTRAST`), and its two faces are not
+ * the same width: on a stoss 70 % of the cycle, a lift as strong as the lee's
+ * shadow would tip the cycle bright. So its lit side is scaled by the most
+ * that keeps every cycle's mean at or under the fill, at every heading and
+ * strength the meander can give it — 0.447, here 0.44.
+ */
+export const DUNE_LIT_SCALE = 0.44;
+/** A ripple's lee bump, sin over `RIPPLE_LEE` of the cycle, averages this over its 7 m. */
+export const RIPPLE_MEAN = (2 * SEABED_DETAIL.RIPPLE_LEE) / Math.PI;
+/** The share of hollow the scour's smoothstep takes off the lattice: 0.2001, here 0.199. */
+export const SCOUR_MEAN = 0.199;
+/**
+ * The lattice's mean byte in the grain's two channels, blue and alpha, as the
+ * GPU reads it (n / 255): 0.4962 and 0.4991. Value noise over the lattice
+ * averages its lattice points, so this is the grain's mean too.
+ */
+export const GRAIN_MEAN: readonly [number, number] = [0.496, 0.499];
 
 /** The strengths a cell's ground carries: dunes, ripples, scours, grain. */
 export function detailStrengths(
@@ -253,13 +283,14 @@ function fragmentMain(): string {
   float gSlope = gLee ? -6.0 * gFall * (1.0 - gFall) / ${f(d.DUNE_LEE)}
                       : 6.0 * gRise * (1.0 - gRise) / ${f(stoss)};
   float gPatch = mix(${f(d.PATCH_FLOOR)}, 1.0, gN1.g);
-  // A hillshade centred on flat ground: a face turned from the light (the
-  // ground rising toward it) runs to 1, one turned to it toward 0. Darken-only
-  // still, and twice the range a lee-only term had inside the same strength.
-  // DUNE_CONTRAST saturates it, so most of a lee reads dark and most of a
-  // stoss lit, rather than a thin line where the profile is steepest.
-  float gDune = 0.5 + 0.5 * clamp(${f(d.DUNE_CONTRAST)} * gPatch * gSlope *
-                                  dot(gCycleGrad, gLight) * ${f(leeNorm)}, -1.0, 1.0);
+  // A hillshade about flat ground: a face turned from the light (the ground
+  // rising toward it) runs to 1, one turned to it toward -1. DUNE_CONTRAST
+  // saturates it, so most of a lee reads dark and most of a stoss lit, rather
+  // than a thin line where the profile is steepest; the lit side is scaled so
+  // the wider face cannot tip the cycle bright (DUNE_LIT_SCALE).
+  float gDune = clamp(${f(d.DUNE_CONTRAST)} * gPatch * gSlope *
+                      dot(gCycleGrad, gLight) * ${f(leeNorm)}, -1.0, 1.0);
+  gDune = gDune < 0.0 ? ${f(DUNE_LIT_SCALE)} * gDune : gDune;
 
   // Scours: hollows the current took, drawn out along it, north-south. The
   // stretch comes first, so the noise stays isotropic in the stretched frame and
@@ -270,29 +301,33 @@ function fragmentMain(): string {
             (gp / vec2(${f(d.SCOUR_M)}, ${f(d.SCOUR_M * d.SCOUR_STRETCH)}));
   vec4 gS1 = groundNoise(gQ + gN1.b * 1.7);
   vec4 gS2 = groundNoise(gQ * 2.3 + 11.0);
-  float gScour = smoothstep(0.52, 0.78, 0.65 * gS1.r + 0.35 * gS2.g);
+  float gScour = smoothstep(0.52, 0.78, 0.65 * gS1.r + 0.35 * gS2.g) - ${f(SCOUR_MEAN)};
 
   // Ripples: the dunes' meander at their own spacing, lying in the troughs.
   float gRCycle = (gp.y + gWarp * ${f(d.DUNE_M)}) / ${f(d.RIPPLE_M)} + 0.6 * gS1.a;
   float gR = fract(gRCycle);
-  float gRLee = gR >= ${f(rippleStoss)} ? sin(PI * (gR - ${f(rippleStoss)}) / ${f(d.RIPPLE_LEE)}) : 0.0;
+  // Centred over its own cycle: the lee darkens and the rest lifts as much.
+  float gRLee = (gR >= ${f(rippleStoss)}
+                    ? sin(PI * (gR - ${f(rippleStoss)}) / ${f(d.RIPPLE_LEE)})
+                    : 0.0) - ${f(RIPPLE_MEAN)};
   float gAway = clamp(-dot(normalize(gCycleGrad), gLight), 0.0, 1.0);
   float gRipple = gRLee * gAway * (1.0 - gProfile) *
                   smoothstep(${f(d.RIPPLE_PX[0])}, ${f(d.RIPPLE_PX[1])}, ${f(d.RIPPLE_M)} / gMpp);
 
-  // Grain, two octaves, each gone before it can alias.
+  // Grain, two octaves, each centred on the lattice's mean and gone before it
+  // can alias.
   float gGrain =
-      0.6 * groundNoise(gp / ${f(d.GRAIN_M)} + 71.0).b *
+      1.2 * (groundNoise(gp / ${f(d.GRAIN_M)} + 71.0).b - ${f(GRAIN_MEAN[0])}) *
           smoothstep(${f(d.GRAIN_PX[0])}, ${f(d.GRAIN_PX[1])}, ${f(d.GRAIN_M)} / gMpp) +
-      0.4 * groundNoise(gp / ${f(d.GRAIN_FINE_M)} + 19.0).a *
+      0.8 * (groundNoise(gp / ${f(d.GRAIN_FINE_M)} + 19.0).a - ${f(GRAIN_MEAN[1])}) *
           smoothstep(${f(d.GRAIN_PX[0])}, ${f(d.GRAIN_PX[1])}, ${f(d.GRAIN_FINE_M)} / gMpp);
 
   // In encoded space, as the bake scales its bytes: a strength here is the
   // same gain as RELIEF_DEPTH there, so the bound compares like with like. The
-  // clamp is what makes the bound structural: no term past 1, whatever a later
-  // edit does to one.
-  vec4 gTerms = clamp(vec4(gDune, gRipple, gScour, gGrain), 0.0, 1.0);
-  float gGain = 1.0 - gFade * dot(gStrength, gTerms);
+  // clamp is what makes the dark bound structural: no term past 1, whatever a
+  // later edit does to one. The min is the lift's cap.
+  vec4 gTerms = clamp(vec4(gDune, gRipple, gScour, gGrain), -1.0, 1.0);
+  float gGain = min(1.0 - gFade * dot(gStrength, gTerms), ${f(1 + DETAIL_LIFT)});
   diffuseColor.rgb = surveyDecode(surveyEncode(diffuseColor.rgb) * gGain);
 }
 `;
@@ -330,7 +365,7 @@ export function installGroundDetail(
       .replace('#include <common>', `#include <common>\n${fragmentPars()}`)
       .replace('#include <color_fragment>', `#include <color_fragment>\n${fragmentMain()}`);
   };
-  material.customProgramCacheKey = () => `${key}:seabed-detail-2`;
+  material.customProgramCacheKey = () => `${key}:seabed-detail-3`;
   material.needsUpdate = true;
   return uniforms;
 }

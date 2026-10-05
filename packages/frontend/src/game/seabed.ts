@@ -22,17 +22,20 @@
  * - **Deterministic.** Seeded from the terrain payload itself, so every
  *   client, every reload and every screenshot of the same ground bakes the
  *   same pixels.
- * - **Darkens only**, through the same `depthShade` → `reliefShade` pair the
- *   cell pass used: the authored biome fill remains the ceiling of terrain's
- *   brightness, and the seabed stays quieter than any contact.
+ * - **Texture is centred; nothing else lifts** (docs/art-direction.md
+ *   "Reading the Sea Floor", #1103). Depth and the authored step's hillshade
+ *   darken only, through the `depthShade` → `reliefShade` pair the cell pass
+ *   used, and so do the cliff shadows and the scours. The detail relief and
+ *   the mottle are centred on what those leave, so they average no brighter
+ *   than it, and lift no pixel past `TERRAIN_LIFT.BAKE`.
  * - **Off the per-frame path.** Baked on terrain load and ground deltas, the
  *   same rebuild cadence `drawTerrain` already had.
  */
 
-import { Biome, SEABED_DETAIL } from '@echoes/shared';
+import { Biome, SEABED_DETAIL, TERRAIN_LIFT } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import type { StoneSeat } from './environment.ts';
-import { BIOME_COLOR, depthShade, reliefShade, ROCK_FACE, scaleRgb } from './palette.ts';
+import { BIOME_COLOR, depthShade, reliefTextureGain, ROCK_FACE, scaleRgb } from './palette.ts';
 
 /**
  * Bake density. 32 px across a 250 m cell is 7.8 m/px — enough for a ridge to
@@ -59,9 +62,9 @@ interface BiomeRelief {
   /** 0..1: sample the field on a snapped grid — "how geometric". */
   blockiness: number;
   /**
-   * 0..1: peak fractional darkening of the albedo mottle — sediment, growth,
-   * scatter. Luminance only, from an independent noise channel, under the
-   * same darken-only ceiling as everything else (docs/art-direction.md,
+   * 0..1: the albedo mottle's whole span — sediment, growth, scatter — half
+   * of it above the fill and half below. Luminance only, from an independent
+   * noise channel, under the same cap as every texture (docs/art-direction.md,
    * "Reading the Sea Floor").
    */
   mottle: number;
@@ -225,22 +228,23 @@ export function detailM(
 }
 
 /**
- * The albedo mottle at a world position: a luminance gain in [1 - mottle, 1].
+ * The albedo mottle at a world position: a luminance gain in
+ * [1 - mottle / 2, 1 + mottle / 2].
  *
  * A separate channel from the heightfield on purpose — this is what the
  * surface is *made of*, not what shape it has, so it must not correlate with
  * the relief shadows or the two read as one over-strong pass. Hue-preserving
- * because the caller scales all three channels by this one gain, and
- * darken-only for the same reason every terrain pass darkens only: the
- * authored biome fill is the ceiling.
+ * because the caller scales all three channels by this one gain, and centred
+ * on the fill because it is texture (#1103): value noise averages to nothing,
+ * so the mottle averages to the fill. The caller caps it with the relief.
  */
 export function mottleFactor(xM: number, yM: number, seed: number, mottle: number): number {
   const salt = seed ^ 0x5f356495;
   const n =
     0.65 * valueNoise(xM, yM, MOTTLE_WAVELENGTH_M, salt) +
     0.35 * valueNoise(xM, yM, MOTTLE_FAST_WAVELENGTH_M, salt ^ 0x2545f491);
-  // n is in [-1, 1]; map to [0, 1] then down from the ceiling.
-  return 1 - mottle * (0.5 + 0.5 * Math.max(-1, Math.min(1, n)));
+  // n is in [-1, 1] and averages 0: half the span either side of the fill.
+  return 1 - 0.5 * mottle * Math.max(-1, Math.min(1, n));
 }
 
 /** One vent ember: a lit point in a thermal field. World metres; phase 0..1. */
@@ -467,8 +471,10 @@ export function shadeSeabed(
   const ey1 = Math.min(h, y1 + 1);
   const ew = ex1 - ex0;
 
-  // Pass 1: the heightfield, so pass 2 can take gradients off it directly.
+  // Pass 1: the heightfield, so pass 2 can take gradients off it directly, and
+  // the authored floor alone beside it, whose slope stays darken-only.
   const height = new Float32Array(ew * (ey1 - ey0));
+  const ground = new Float32Array(ew * (ey1 - ey0));
   const mPerPx = cellM / SEABED_PX_PER_CELL;
   for (let py = ey0; py < ey1; py++) {
     // Continuous cell coordinate of this pixel's centre.
@@ -504,6 +510,7 @@ export function shadeSeabed(
         (b10[k] - b00[k]) * fx +
         (b01[k] + (b11[k] - b01[k]) * fx - b00[k] - (b10[k] - b00[k]) * fx) * fy;
 
+      ground[(py - ey0) * ew + (px - ex0)] = floor;
       height[(py - ey0) * ew + (px - ex0)] =
         floor +
         detailM(
@@ -569,9 +576,15 @@ export function shadeSeabed(
         const hR = rockDetailM(xM + mPerPx, yM, seed);
         const hU = rockDetailM(xM, yM - mPerPx, seed);
         const hD = rockDetailM(xM, yM + mPerPx, seed);
+        // The crag is all texture: rock has no authored step to keep dark.
+        const texture = Math.min(
+          1 + TERRAIN_LIFT.BAKE,
+          reliefTextureGain(0, 0, (hR - hL) * dropScale, (hD - hU) * dropScale) *
+            mottleFactor(xM, yM, seed, ROCK_RELIEF.mottle)
+        );
         color = scaleRgb(
-          reliefShade(ROCK_FACE, (hR - hL) * dropScale, (hD - hU) * dropScale),
-          mottleFactor(xM, yM, seed, ROCK_RELIEF.mottle) *
+          ROCK_FACE,
+          texture *
             // The rim: darkened toward ROCK_SHADOW where the mesa meets open
             // water, so a flat top reads as raised ground with an edge.
             edgeGain(oppositeDistM(xM, yM, row, col, false), ROCK_EDGE_M, ROCK_EDGE_GAIN)
@@ -582,6 +595,10 @@ export function shadeSeabed(
         const hR = height[i + (px < w - 1 ? 1 : 0)]!;
         const hU = height[i - (py > 0 ? ew : 0)]!;
         const hD = height[i + (py < h - 1 ? ew : 0)]!;
+        const gL = ground[i - (px > 0 ? 1 : 0)]!;
+        const gR = ground[i + (px < w - 1 ? 1 : 0)]!;
+        const gU = ground[i - (py > 0 ? ew : 0)]!;
+        const gD = ground[i + (py < h - 1 ? ew : 0)]!;
         const biome = terrain.biomes[index] as Biome;
         const base = BIOME_COLOR[biome] ?? BIOME_COLOR[Biome.OpenWater];
         const relief = BIOME_RELIEF[biome] ?? BIOME_RELIEF[Biome.OpenWater];
@@ -600,15 +617,21 @@ export function shadeSeabed(
             scour = Math.min(scour, stoneScourGain(xM, yM, seat, bounds));
           }
         }
-        color = scaleRgb(
-          reliefShade(
-            depthShade(base, height[i]!, shallowest, deepest),
+        // The shape the light finds, then what the surface is made of: both
+        // texture, centred on the step, and capped together. Each gain scales
+        // all three channels alike, so hue stays the biome's.
+        const texture = Math.min(
+          1 + TERRAIN_LIFT.BAKE,
+          reliefTextureGain(
+            (gR - gL) * dropScale,
+            (gD - gU) * dropScale,
             (hR - hL) * dropScale,
             (hD - hU) * dropScale
-          ),
-          // What the surface is made of, after what shape it has — the mottle
-          // gain scales all three channels alike, so hue stays the biome's.
-          mottleFactor(xM, yM, seed, relief.mottle) *
+          ) * mottleFactor(xM, yM, seed, relief.mottle)
+        );
+        color = scaleRgb(
+          depthShade(base, height[i]!, shallowest, deepest),
+          texture *
             // The wall's lee: open floor darkens where it meets a mesa, so
             // the rock reads as standing on the seabed, not pasted over it.
             edgeGain(oppositeDistM(xM, yM, row, col, true), CLIFF_SHADOW_M, CLIFF_SHADOW_GAIN) *

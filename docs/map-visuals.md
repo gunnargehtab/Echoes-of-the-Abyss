@@ -194,8 +194,11 @@ ground's hatch in the two red-green palettes, whose mid-SIG ring is amber. It li
 ground more than rung 5's four quiet outlines in all four. Rung 7's floor on the chart does not
 clear rung 6's: a Tier-3 contact's ring and glyph, in its navy's colour, lift some ground less
 than rung 6's floor in every palette. The tests pin where, and §10 records it. Rungs 1 to 3 are
-the ground every lift is measured over. What rung 7 draws in the conn view cannot be weighed
-without a GPU, and §10 says why.
+the ground every lift is measured over. Its palest pixel is the palest fill lifted by the
+terrain cap, 0.15 ([art-direction.md](art-direction.md) "Reading the Sea Floor"), and the tests
+weigh every rung over it beside the fill itself. The cap is set by this ladder: at 0.19 the
+unselected ring falls under rung 5's floor in tritanopia. What rung 7 draws in the conn view
+cannot be weighed without a GPU, and §10 says why.
 
 Two consequences worth naming:
 
@@ -388,7 +391,11 @@ What stays recorded, for the owner. The tests pin each break and fail if it move
   Hadron's deep blue and dark teal, sit at 0.17–0.19 luminance. At 0.33 the ring lifts the kelp
   fill by 0.024–0.030: under rung 6's floor there (0.065–0.103), and under the survey ink's
   coast (0.042). A Tier-4 contact's glyph and health bar fall under rung 6's floor too in the
-  three palettes that draw the Hadron dark, in tritanopia by less than 0.0001. Ordnance's disc
+  three palettes that draw the Hadron dark, in tritanopia by less than 0.0001. In the
+  standard palette they fall under it over lifted ground only, once a lit face lifts the
+  palest fill by 0.05 or more; the owner kept the 0.15 cap and recorded it (#1103). The ground
+  itself stays far under them: a lit face lifts that fill by 0.017, and the glyph lifts the
+  lifted pixel by 0.067. Ordnance's disc
   does not: the server names no navy for ordnance, so it wears the Track tier's colour. Nor
   does a classified animal. Phase 4 made it dots, weighed by one dot at its tier's alpha, and
   that clears rung 6's floor in every palette. A Tier-3 Sounder's halo fell under it in the two
@@ -398,10 +405,11 @@ What stays recorded, for the owner. The tests pin each break and fail if it move
   on a pixel depends on the lights, the texture and the view, and no number for it can be
   taken without a GPU. Gate 3 still sets a quiet hull near black. Tier 1 and Tier 2 contacts
   are the column, a haze, and stay unweighed by the #865 ruling.
-- **The palest ground is the palest fill.** The water ramp's shallowest stop, `#0C2A34`, is
-  paler (0.143 against 0.099), and the fog carries a far shallow floor toward it. Over it the
-  tritanopia ring lifts 0.054 and the dormant eruption rim 0.055. The tests take the fill, as
-  the owner's 0.266 was measured.
+- **The palest ground is the palest fill, and that fill lifted by the terrain cap.** A lit
+  face lifts the fill by up to 0.15 (#1103), to 0.116, and the tests weigh both: the
+  fill, as the owner's 0.266 was measured, and the lifted fill, as §5 says. The water ramp's
+  shallowest stop, `#0C2A34`, is paler still (0.143), and the fog carries a far shallow floor
+  toward it. Over it the tritanopia ring lifts 0.054 and the dormant eruption rim 0.055.
 - **The collar's halos are read as glow.** Gate 3's recipe draws the loudness collar's core at
   full opacity under two halo layers. The audit weighs the core and the dial, and reads the
   halos as the core's glow rather than as outlines of their own.

@@ -1,9 +1,10 @@
 /**
  * Silt detail — docs/art-direction.md "Silt detail and seated stones — SPEC" (#1083).
  *
- * What a GPU-less runner can hold: the opt-in, the table's bound against the
- * hillshade, the doc's table against the constants, the per-cell texture and
- * its ground-delta locality, and the shader text's order and hash. Whether it
+ * What a GPU-less runner can hold: the switch, the table's bound against the
+ * hillshade, the doc's table against the constants, each term's centre against
+ * the mean it promises (#1103), the per-cell texture and its ground-delta
+ * locality, and the shader text's order, cap and hash. Whether it
  * compiles and how it looks are the run-game frames in
  * docs/screenshots/issue-1083/.
  */
@@ -19,9 +20,12 @@ import {
   ShaderLib,
   UnsignedByteType,
 } from 'three';
-import { Biome, SEABED_DETAIL } from '@echoes/shared';
+import { Biome, SEABED_DETAIL, TERRAIN_LIFT } from '@echoes/shared';
 import {
+  DETAIL_LIFT,
   detailStrengths,
+  DUNE_LIT_SCALE,
+  GRAIN_MEAN,
   groundDetailCells,
   groundDetailTexture,
   groundNoisePixels,
@@ -29,6 +33,8 @@ import {
   installGroundDetail,
   NOISE_SIZE,
   patchGroundDetailCells,
+  RIPPLE_MEAN,
+  SCOUR_MEAN,
   seabedDetailEnabled,
   STRENGTH_SCALE,
 } from '../src/game/seabedDetail.ts';
@@ -57,20 +63,21 @@ function compile(material: MeshBasicMaterial) {
   return shader;
 }
 
-describe('the silt detail opt-in', () => {
-  it('runs only in a development build, behind its own flag or the dream loop', () => {
+describe('the silt detail switch', () => {
+  it('draws in every match, and only a development build can take it out', () => {
+    assert.equal(seabedDetailEnabled(false, ''), true);
+    assert.equal(seabedDetailEnabled(true, ''), true);
     assert.equal(seabedDetailEnabled(true, '?seabed-detail=1'), true);
     assert.equal(seabedDetailEnabled(true, '?dream-loop=1'), true);
-    assert.equal(seabedDetailEnabled(true, '?seabed-detail=0'), false);
-    assert.equal(seabedDetailEnabled(true, ''), false);
-    assert.equal(seabedDetailEnabled(false, '?seabed-detail=1'), false);
-    assert.equal(seabedDetailEnabled(false, '?dream-loop=1'), false);
+    assert.equal(seabedDetailEnabled(true, '?map=ventfront-divide&seabed-detail=0'), false);
+    // No shipped build can turn it off.
+    assert.equal(seabedDetailEnabled(false, '?seabed-detail=0'), true);
   });
 });
 
 describe('the strength table', () => {
   it('never lets the detail out-shade an authored step', () => {
-    // Every term is a fraction in [0, 1], so a pixel loses at most its row's
+    // Every term is signed in [-1, 1], so a pixel loses at most its row's
     // sum. The darkest it may leave is still lighter than a full-strength
     // authored face, 1 - RELIEF_DEPTH, in the same encoded units.
     assert.ok(1 - SEABED_DETAIL.MAX_SUM > 1 - RELIEF_DEPTH, 'MAX_SUM reaches a full face');
@@ -155,6 +162,118 @@ describe('the strength table', () => {
     ];
     for (const phrase of phrases) {
       assert.ok(prose.includes(phrase), `the SPEC no longer says "${phrase}"`);
+    }
+  });
+});
+
+/** The shader's dune slope over one cycle, `gSlope`, at t in [0, 1). */
+function duneSlope(t: number): number {
+  const lee = SEABED_DETAIL.DUNE_LEE;
+  const stoss = 1 - lee;
+  if (t >= stoss) {
+    const fall = (t - stoss) / lee;
+    return (-6 * fall * (1 - fall)) / lee;
+  }
+  const rise = t / stoss;
+  return (6 * rise * (1 - rise)) / stoss;
+}
+
+/** One lattice channel read as the shader's `groundNoise` reads it. */
+function latticeNoise(pixels: Uint8Array, channel: number) {
+  const at = (x: number, y: number) => {
+    const ix = ((x % NOISE_SIZE) + NOISE_SIZE) % NOISE_SIZE;
+    const iy = ((y % NOISE_SIZE) + NOISE_SIZE) % NOISE_SIZE;
+    return pixels[(iy * NOISE_SIZE + ix) * 4 + channel]! / 255;
+  };
+  const smooth = (t: number) => t * t * (3 - 2 * t);
+  return (x: number, y: number) => {
+    const ix = Math.floor(x);
+    const iy = Math.floor(y);
+    const tx = smooth(x - ix);
+    const ty = smooth(y - iy);
+    const top = at(ix, iy) + (at(ix + 1, iy) - at(ix, iy)) * tx;
+    const bottom = at(ix, iy + 1) + (at(ix + 1, iy + 1) - at(ix, iy + 1)) * tx;
+    return top + (bottom - top) * ty;
+  };
+}
+
+describe('the centred terms (#1103)', () => {
+  const d = SEABED_DETAIL;
+  const pixels = groundNoisePixels();
+
+  it('leaves the bake and the detail together inside the terrain cap', () => {
+    assert.ok((1 + TERRAIN_LIFT.BAKE) * (1 + DETAIL_LIFT) <= 1 + TERRAIN_LIFT.MAX + 1e-12);
+    assert.ok(DETAIL_LIFT > 0 && TERRAIN_LIFT.BAKE > 0, 'each pass keeps a share of the lift');
+  });
+
+  it('keeps every dune cycle at or under the fill, at every heading the meander gives it', () => {
+    // The term is DUNE_CONTRAST * patch * slope * (cycle gradient . light) *
+    // leeNorm. The meander's gradient is clamped at 3 / MEANDER_FINE_M, so the
+    // heading and patch fold into one scale a in [-A, A].
+    const leeNorm = (d.DUNE_M * d.DUNE_LEE) / 1.5;
+    const A = d.DUNE_CONTRAST * (1 / d.DUNE_M + 3 / d.MEANDER_FINE_M) * leeNorm;
+    const n = 512;
+    const cycleMean = (a: number, k: number) => {
+      let total = 0;
+      for (let i = 0; i < n; i++) {
+        const x = Math.max(-1, Math.min(1, a * duneSlope((i + 0.5) / n)));
+        total += x < 0 ? k * x : x;
+      }
+      return total / n;
+    };
+    const worst = (k: number) => {
+      let least = Infinity;
+      for (let j = 0; j <= 400; j++) least = Math.min(least, cycleMean(-A + (2 * A * j) / 400, k));
+      return least;
+    };
+    assert.ok(worst(DUNE_LIT_SCALE) >= 0, `a dune cycle averages bright: ${worst(DUNE_LIT_SCALE)}`);
+    // And no darker than it has to be: the scale is the most the bound allows.
+    assert.ok(worst(DUNE_LIT_SCALE + 0.01) < 0, 'DUNE_LIT_SCALE leaves lift on the table');
+  });
+
+  it('centres a ripple over its own cycle', () => {
+    const lee = d.RIPPLE_LEE;
+    const n = 100000;
+    let total = 0;
+    for (let i = 0; i < n; i++) {
+      const r = (i + 0.5) / n;
+      total += (r >= 1 - lee ? Math.sin((Math.PI * (r - (1 - lee))) / lee) : 0) - RIPPLE_MEAN;
+    }
+    assert.ok(Math.abs(total / n) < 1e-6, `a ripple averages ${total / n}`);
+  });
+
+  it('centres the scours on the lattice share of hollow, rounded toward dark', () => {
+    const red = latticeNoise(pixels, 0);
+    const green = latticeNoise(pixels, 1);
+    const smoothstep = (x: number) => {
+      const t = Math.max(0, Math.min(1, (x - 0.52) / (0.78 - 0.52)));
+      return t * t * (3 - 2 * t);
+    };
+    const m = 512;
+    let total = 0;
+    for (let i = 0; i < m; i++) {
+      for (let j = 0; j < m; j++) {
+        const u = ((i + 0.37) * NOISE_SIZE) / m;
+        const v = ((j + 0.61) * NOISE_SIZE) / m;
+        total += smoothstep(0.65 * red(u, v) + 0.35 * green(u * 2.3 + 11, v * 2.3 + 11));
+      }
+    }
+    const mean = total / (m * m);
+    assert.ok(mean >= SCOUR_MEAN, `SCOUR_MEAN ${SCOUR_MEAN} is past the mean ${mean}`);
+    assert.ok(mean - SCOUR_MEAN < 0.005, `SCOUR_MEAN ${SCOUR_MEAN} is far under ${mean}`);
+  });
+
+  it("centres the grain on the lattice's mean byte, rounded toward dark", () => {
+    // Value noise over a whole lattice period averages its lattice points.
+    for (const [k, channel] of [
+      [0, 2],
+      [1, 3],
+    ] as const) {
+      let total = 0;
+      for (let i = 0; i < NOISE_SIZE * NOISE_SIZE; i++) total += pixels[i * 4 + channel]! / 255;
+      const mean = total / (NOISE_SIZE * NOISE_SIZE);
+      assert.ok(mean >= GRAIN_MEAN[k], `GRAIN_MEAN[${k}] is past the mean ${mean}`);
+      assert.ok(mean - GRAIN_MEAN[k] < 0.002, `GRAIN_MEAN[${k}] is far under ${mean}`);
     }
   });
 });
@@ -265,7 +384,7 @@ describe('the silt detail shader', () => {
   const fragment = shader.fragmentShader;
 
   it('chains the survey ink, keeps its cells, and keys itself apart', () => {
-    assert.equal(material.customProgramCacheKey(), 'survey-ink:seabed-detail-2');
+    assert.equal(material.customProgramCacheKey(), 'survey-ink:seabed-detail-3');
     assert.equal((shader.uniforms.uSurveyCells as { value: unknown }).value, surveyCells);
     assert.equal((shader.uniforms.uGroundDetail as { value: unknown }).value, texture);
     assert.deepEqual((shader.uniforms.uGroundDetailSize as { value: unknown }).value, [1500, 1250]);
@@ -284,13 +403,18 @@ describe('the silt detail shader', () => {
     assert.ok(fog > ink, 'the fog must still fade both');
   });
 
-  it('darkens only, by one gain on all three channels, and fades with distance', () => {
-    // The clamp is the structural half of the bound: no term past 1.
+  it('moves all three channels by one gain, capped, and fades with distance', () => {
+    // The clamp is the structural half of the dark bound: no term past 1 either
+    // way. The min is the lift's cap.
     assert.match(
       fragment,
-      /vec4 gTerms = clamp\(vec4\(gDune, gRipple, gScour, gGrain\), 0\.0, 1\.0\);/
+      /vec4 gTerms = clamp\(vec4\(gDune, gRipple, gScour, gGrain\), -1\.0, 1\.0\);/
     );
-    assert.match(fragment, /float gGain = 1\.0 - gFade \* dot\(gStrength, gTerms\);/);
+    const cap = fragment.match(
+      /float gGain = min\(1\.0 - gFade \* dot\(gStrength, gTerms\), ([0-9.]+)\);/
+    );
+    assert.ok(cap !== null, 'the gain has lost its cap');
+    assert.ok(Math.abs(Number(cap[1]) - (1 + DETAIL_LIFT)) < 1e-12, `the cap is ${cap[1]}`);
     // Scaled in encoded space, as the bake scales its bytes: RELIEF_DEPTH's units.
     assert.match(fragment, /surveyDecode\(surveyEncode\(diffuseColor\.rgb\) \* gGain\)/);
     const [near, far] = SEABED_DETAIL.FADE_M_PER_PX;
@@ -298,11 +422,15 @@ describe('the silt detail shader', () => {
     for (const term of ['gDune', 'gRipple', 'gScour', 'gGrain']) {
       assert.match(fragment, new RegExp(`float ${term} =`), `${term} is never computed`);
     }
-    assert.match(
-      fragment,
-      /float gDune = 0\.5 \+ 0\.5 \* clamp\(/,
-      'the dune term must stay in [0, 1]'
+    assert.match(fragment, /float gDune = clamp\(/, 'the dune term must stay in [-1, 1]');
+    assert.ok(
+      fragment.includes(`gDune = gDune < 0.0 ? ${DUNE_LIT_SCALE} * gDune : gDune;`),
+      "the dune's lit side has lost its scale"
     );
+    const flat = fragment.replace(/\s+/g, ' ');
+    for (const centre of [RIPPLE_MEAN, SCOUR_MEAN, ...GRAIN_MEAN]) {
+      assert.ok(flat.includes(`- ${centre}`), `the centre ${centre} is not subtracted`);
+    }
   });
 
   it('hashes nothing, fetches seven times, and takes derivatives before any branch', () => {

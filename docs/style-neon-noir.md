@@ -68,16 +68,17 @@ factor to encode:
 
 | Token | Hex | Use |
 | --- | --- | --- |
-| `rock-face` | `#11161C` | Rock ceiling value — mesa tops, cliff lips; the brightness ceiling for every rock pixel |
+| `rock-face` | `#11161C` | Rock ceiling value — mesa tops, cliff lips; the ramp's fill, which a lit crag lifts by at most the terrain cap |
 | `rock-shadow` | `#080C12` | Cliff bases, the shadowed ring where a mesa meets open ground |
 
 Two rules ride with the ramp. It is **hue-neutral by construction** — near-grey with
 the canvas's blue memory, never a warm or green cast, because a tinted rock would
 read as a biome and biomes are what sound is priced by. And it never outshines open
 ground: `rock-face` sits below the palest biome fill, so ground you can enter always
-speaks louder than ground you cannot. Relief and mottle on rock follow the same
-darken-only law as everywhere else ([art-direction.md](art-direction.md) "Reading
-the Sea Floor"); `packages/frontend/src/game/seabed.ts` transcribes the ramp.
+speaks louder than ground you cannot. Relief and mottle on rock are texture, centred
+on the ramp under the same cap as every texture, which keeps a lit crag under the
+palest fill; rims and cliff shadows darken only ([art-direction.md](art-direction.md)
+"Reading the Sea Floor"). `packages/frontend/src/game/seabed.ts` transcribes the ramp.
 
 ### The props (the seabed's furniture)
 

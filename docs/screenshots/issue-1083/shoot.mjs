@@ -6,8 +6,9 @@
 //     --url 'http://localhost:5173/?map=ventfront-divide&seabed-detail=1' \
 //     --out <dir> --steps docs/screenshots/issue-1083/shoot.mjs
 //
-// Drop `&seabed-detail=1` for the shipped ground, or use `&dream-loop=1` for
-// #967's whole study. `home` is #967's locked frame (its shoot.mjs); `silt`
+// At #1083 the flag was opt-in, and dropping it gave the shipped ground. Since
+// #1103 the layer is in every match: `&seabed-detail=0` takes it out, and
+// `&dream-loop=1` adds #967's whole study. `home` is #967's locked frame (its shoot.mjs); `silt`
 // and `trench` stand over a seated boulder and a trench slab; `low` and
 // `survey` are where the layer must have faded out.
 import { writeFileSync } from 'node:fs';

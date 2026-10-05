@@ -153,8 +153,8 @@ The ground already has a shape; now it gets geometry.
   step, silt dunes, ripples and scours are shaded rather than displaced, and loose stone
   sits sunk partly into them ([art-direction.md](art-direction.md#silt-detail-and-seated-stones--spec)).
 - **Biome texturing carries the existing rules.** Hue belongs to the biome, depth is
-  luminance, albedo mottling stays hue-preserving and darken-only. Vent embers become true
-  emissive points, still `#E06A2B`, still stepping on the 5 Hz sonar cadence, still stateless.
+  luminance, albedo mottling stays hue-preserving and centred on the fill. Vent embers become
+  true emissive points, still `#E06A2B`, still stepping on the 5 Hz sonar cadence, still stateless.
 - **Where there is no seabed, there is dark.** A trench floor beyond the fog's reach renders
   as depth, not as geometry — the floor drops out of the light. That is the feedback's "deep
   areas with no seabed", and it is also the cheapest dread the new camera buys.

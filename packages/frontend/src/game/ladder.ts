@@ -45,9 +45,11 @@
  * the far end.
  *
  * The palest ground is the palest biome fill, which is where the owner's 0.266
- * for the ring was measured. The water ramp's shallowest stop is paler, and
- * the fog carries a far shallow floor toward it; the tests do not reach that
- * ground either (docs/map-visuals.md §10).
+ * for the ring was measured, and that fill lifted by the whole terrain cap,
+ * `TERRAIN_LIFT.MAX` (#1103): texture averages to the fill, but a lit face
+ * passes it, and the tests weigh both. The water ramp's shallowest stop is
+ * paler, and the fog carries a far shallow floor toward it; the tests do not
+ * reach that ground either (docs/map-visuals.md §10).
  *
  * Two blends are modelled, because the map draws with two (`Blend`).
  */

@@ -502,10 +502,11 @@ export class PerspectiveView {
   private surveyClasses: Uint8Array<ArrayBuffer> | null = null;
   private surveyCells: DataTexture | null = null;
   /**
-   * The silt detail's opt-in (seabedDetail.ts, docs/art-direction.md "Silt
-   * detail and seated stones — SPEC"): its per-cell strengths, the texture the
-   * terrain shader reads them through, and the seated stones the bake scours.
-   * Patched with the ground; all null while the study is off.
+   * The silt detail (seabedDetail.ts, docs/art-direction.md "Silt detail and
+   * seated stones — SPEC"): its per-cell strengths, the texture the terrain
+   * shader reads them through, and the seated stones the bake scours. Patched
+   * with the ground; all null on Sorrowgate's surface, or in a development
+   * build opened with `?seabed-detail=0`.
    */
   private readonly seabedDetail: boolean;
   private detailCells: Uint8Array<ArrayBuffer> | null = null;

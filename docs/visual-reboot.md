@@ -76,8 +76,9 @@ falls below the escorts' pressure rating. None of these relations comes from a t
 | Commit: Abyssal Trench | Pressure-eroded stone and the existing trench slabs/spires | The darker, deeper basin. No modelled Sounder or extra ambient fauna |
 | Ground after the arch collapse | Surface and props rebuilt from the received cells | Solid ground is still solid; the service lock remains the only northern opening |
 
-Terrain detail is deterministic, hue-preserving and darken-only. It runs beneath survey
-ink and the normal water treatment, never in place of them. At distance it fades out
+Terrain detail is deterministic, hue-preserving, and centred on the fill under a cap
+([art-direction.md](art-direction.md) "Reading the Sea Floor"). It runs beneath survey ink
+and the normal water treatment, never in place of them. At distance it fades out
 instead of becoming a second map grid. Relief, floors, ceilings, collision and PF remain
 the authored simulation's, and no surface reads enemy state or future mission beats.
 
