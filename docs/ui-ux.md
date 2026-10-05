@@ -338,7 +338,7 @@ never information.
 
 Not a map with markers on it. A scope.
 
-- **Sweep** — a slow rotating sweep line, one revolution per 4 s, purely cosmetic and clearly out of phase with the 5 Hz detection tick so no player ever believes the sweep is what finds things.
+- **Sweep** — a slow rotating sweep line, one revolution per 4 s, purely cosmetic and clearly out of phase with the 5 Hz detection tick so no player ever believes the sweep is what finds things. The line is inked at 42% and trails a wedge of phosphor 12° wide at 9%, as the committed scope mockup draws it (`docs/concept-art/hud-mockups/chrome.mjs`), and it sits with the rings under everything the player earned, so it never tints a hull or a return it passes. Line, wedge and rings all stop at the scope's edge: they are centred on the Bastion, which is rarely mid-map, and an instrument that draws past its own glass reads as a broken one (#1086).
 - **Range rings** — concentric, labelled at 900 m and 2,400 m, the ping's two radii. The two numbers that matter are permanently drawn.
 - **Terrain** — biome wash only, at the desaturated fills in `palette.ts`. No structures, no roads, no detail that competes with returns.
 - **Returns** — same tier fidelity as the world view, scaled down. A Tier-1 haze on the scope is a large soft smear, and a player must not be able to click one to select it.

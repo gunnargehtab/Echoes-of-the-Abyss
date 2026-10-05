@@ -677,6 +677,55 @@ describe('renderer smoke test: the chart', () => {
       world.teardown();
     }
   });
+
+  it('keeps the sweep and the range rings inside the scope, all the way round (#1086)', async () => {
+    const world = await boot();
+    const chart = world.chart as unknown as {
+      minimapOverlayG: Graphics;
+      minimapRect(): { size: number };
+    };
+    let nowMs = 0;
+    const clock = mock.method(performance, 'now', () => nowMs);
+    try {
+      // The canned Bastion stands 600 m into a 4 km map, so the 2,400 m ring
+      // reaches 1,800 m past two of the scope's edges, and a sweep as long as
+      // the scope is wide leaves it for most of a turn. Every canned return and
+      // hull sits well inside the frame, so anything the scope holds past it
+      // is one of those two.
+      for (const reduced of [false, true]) {
+        world.chart.setReducedMotion(reduced);
+        // Sixteen bearings, a quarter-second apart: one 4 s revolution.
+        for (let step = 0; step < 16; step++) {
+          nowMs = 100_000 + step * 250;
+          world.frame(1);
+          const { size } = chart.minimapRect();
+          // The geometry handed to Pixi, not its stroke-padded bounds: a miter
+          // on the camera box's corner pads further than any ink reaches.
+          let minX = Infinity;
+          let minY = Infinity;
+          let maxX = -Infinity;
+          let maxY = -Infinity;
+          for (const instruction of chart.minimapOverlayG.context.instructions) {
+            if (instruction.action !== 'fill' && instruction.action !== 'stroke') continue;
+            const extent = (instruction.data as { path: GraphicsPath }).path.bounds;
+            minX = Math.min(minX, extent.minX);
+            minY = Math.min(minY, extent.minY);
+            maxX = Math.max(maxX, extent.maxX);
+            maxY = Math.max(maxY, extent.maxY);
+          }
+          const where = `${reduced ? 'reduced motion' : `sweep at ${step * 22.5}°`}: ink spans `;
+          const span = `x ${minX.toFixed(1)}–${maxX.toFixed(1)}, y ${minY.toFixed(1)}–${maxY.toFixed(1)}`;
+          assert.ok(
+            minX >= -1e-6 && minY >= -1e-6 && maxX <= size + 1e-6 && maxY <= size + 1e-6,
+            `${where}${span} on a ${size} px scope`
+          );
+        }
+      }
+    } finally {
+      clock.mock.restore();
+      world.teardown();
+    }
+  });
 });
 
 /**

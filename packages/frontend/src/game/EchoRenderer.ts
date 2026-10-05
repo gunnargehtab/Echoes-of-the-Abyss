@@ -150,6 +150,7 @@ import {
   MARK_STYLE,
   newlyAudibleMarks,
 } from './echoMarks.ts';
+import { drawScopeRings, drawScopeSweep } from './scopeSweep.ts';
 import type { ContactAudioEntry, ContactAudioFrame } from '../audio/contactMixer.ts';
 import type { PingReturn, SelfAudioFrame } from '../audio/selfMixer.ts';
 import { TUNED, corridorFrom, type TunedInputs, type TunedNode } from '../audio/tunedBed.ts';
@@ -8063,15 +8064,37 @@ export class EchoRenderer {
     // Range rings at the ping's two radii — the two distances that decide
     // every use of the loudest button in the game, drawn permanently so the
     // decision never needs a mental conversion (docs/ui-ux.md §5).
+    // Cut at the scope's edge, because the anchor is rarely mid-map and a ring
+    // that bulges through the frame reads as a broken instrument (#1086).
     const centre = this.scopeAnchor();
     if (centre !== null) {
-      for (const radius of [ACTIVE_SONAR.REVEAL_RADIUS_M, ACTIVE_SONAR.SELF_REVEAL_RADIUS_M]) {
-        og.circle(centre.x * k, centre.y * k, radius * k).stroke({
-          width: 1,
-          color: UI.accent,
-          alpha: 0.18,
-        });
-      }
+      drawScopeRings(
+        og,
+        centre.x * k,
+        centre.y * k,
+        [ACTIVE_SONAR.REVEAL_RADIUS_M * k, ACTIVE_SONAR.SELF_REVEAL_RADIUS_M * k],
+        size,
+        { width: 1, color: UI.accent, alpha: 0.18 }
+      );
+    }
+
+    // The sweep. Cosmetic, and deliberately out of phase with the 5 Hz
+    // detection tick (4 s a revolution) so that no player ever comes to
+    // believe the sweep is what finds things. It ends at the scope's edge,
+    // trailing a faint wedge (`scopeSweep.ts`, #1086), and it is drawn with
+    // the rings, under everything the player earned: a cyan wash passing over
+    // a hull dot or a return would tint the one thing it is not allowed to.
+    //
+    // Under reduced motion it becomes a fixed cross-hair at the same anchor and
+    // the same alpha. That is not a removal: the rotation never carried
+    // information, but the point it rotates about does — it is where the range
+    // rings are measured from, and losing it would lose the one thing the
+    // sweep was actually saying (docs/ui-ux.md §11).
+    if (centre !== null) {
+      const angle = this.reducedMotion
+        ? null
+        : ((performance.now() % SCOPE_SWEEP_MS) / SCOPE_SWEEP_MS) * Math.PI * 2;
+      drawScopeSweep(og, centre.x * k, centre.y * k, angle, size, UI.accent);
     }
 
     // Echo Marks (§5): "a separate dimmer layer, drawn beneath returns, in a
@@ -8156,35 +8179,6 @@ export class EchoRenderer {
     // among the returns they answer to. Nothing in this pass points at an
     // enemy — a wedge is a bearing, a pulse is your own hull.
     this.drawScopeAttention(og, k, size, scopeNow);
-
-    // The sweep. Cosmetic, and deliberately out of phase with the 5 Hz
-    // detection tick (4 s a revolution) so that no player ever comes to
-    // believe the sweep is what finds things.
-    //
-    // Under reduced motion it becomes a fixed cross-hair at the same anchor and
-    // the same alpha. That is not a removal: the rotation never carried
-    // information, but the point it rotates about does — it is where the range
-    // rings are measured from, and losing it would lose the one thing the
-    // sweep was actually saying (docs/ui-ux.md §11).
-    if (centre !== null) {
-      const cx = centre.x * k;
-      const cy = centre.y * k;
-      const ink = { width: 1, color: UI.accent, alpha: 0.22 };
-      if (this.reducedMotion) {
-        const arm = size * 0.06;
-        og.moveTo(cx - arm, cy)
-          .lineTo(cx + arm, cy)
-          .stroke(ink);
-        og.moveTo(cx, cy - arm)
-          .lineTo(cx, cy + arm)
-          .stroke(ink);
-      } else {
-        const angle = ((performance.now() % SCOPE_SWEEP_MS) / SCOPE_SWEEP_MS) * Math.PI * 2;
-        og.moveTo(cx, cy)
-          .lineTo(cx + Math.cos(angle) * size, cy + Math.sin(angle) * size)
-          .stroke(ink);
-      }
-    }
 
     // Camera viewport, so the scope doubles as a navigator — and, since the
     // camera was freed, as the compass (docs/free-camera.md §5, docs/ui-ux.md
