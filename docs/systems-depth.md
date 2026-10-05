@@ -107,6 +107,8 @@ over a fight, open to anyone, holdable by no one. It stacks with the Directorate
 shallow penalty (§3) in the only way it can — a Directorate hull in the Lid is paying for
 its physiology and for the water at once, and chose both.
 
+## 3. Depth Access by Faction
+
 Depth access is one of the two axes (with sound) that every faction's mechanics are built from. See [factions.md](factions.md) for full doctrine.
 
 | Faction | Baseline PR | Depth Strategy |
