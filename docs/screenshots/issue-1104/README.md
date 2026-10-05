@@ -36,8 +36,11 @@ restored it. No console error occurred.
 
 ## Gate 6
 
-No draw call and no triangle are added, so no on − off `avgGpuMs` pair was taken. The ground's
-fragment gains about eight ALU operations and no texture fetch. At ratio 1.5 on 1920 × 1080
-that is about 37 million operations a frame if the ground fills the view, near 0.006 ms on
-the GeForce GTX 1070's 6.5 TFLOPS. Issue-1103's repeated runs agreed to 0.01 ms
-([README](../issue-1103/README.md)), so a pair could not resolve it.
+No draw call, triangle or texture fetch is added, so no on − off `avgGpuMs` pair was taken. The
+ground's fragment gains about 15–20 operations: two distance chains, two smoothsteps, and a
+multiply and a max. Over a full 1920 × 1080 view at ratio 1.5 that is near 0.02–0.03 ms on the
+GeForce GTX 1070. Issue-1103's paired runs at one station differ by up to 0.08 ms on − off
+([README](../issue-1103/README.md)), so a pair could not resolve it. The close camera at ratio
+1.5 already reads 1.82–1.84 ms, over the 1.7 ms line
+([#1114](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1114)), and this adds work
+below that resolution there.

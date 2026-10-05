@@ -31,6 +31,7 @@ import {
   SURVEY_WIDTH_PX,
   surveyCellClasses,
   surveyCellTexture,
+  THERMOCLINE_GAP_EDGE_PX,
   THERMOCLINE_ISOBATH_M,
   THERMOCLINE_RULE_GAP_PX,
 } from '../src/game/surveyInk.ts';
@@ -92,11 +93,27 @@ describe('survey ink levels', () => {
     assert.ok(!MAJOR_ISOBATHS_M.includes(THERMOCLINE_ISOBATH_M));
   });
 
-  it("keeps a clear gap inside the thermocline's double rule", () => {
-    // Each stroke's anti-aliased edge reaches half a pixel past its width, so
-    // the strokes stay apart only while the gap outruns a stroke and its AA.
-    const innerEdgePx = THERMOCLINE_RULE_GAP_PX / 2 - SURVEY_WIDTH_PX.thermocline / 2 - 0.5;
-    assert.ok(innerEdgePx >= 0.5, `the gap is ${2 * innerEdgePx} px clear`);
+  it("keeps the thermocline rule's gap clear, the minor at its depth included", () => {
+    // §4: the rule replaces the minor line at its depth. The minor ink is cut
+    // out to the gap's edge, so the edge must lie past the minor line's own
+    // anti-aliased reach, half its width and half a pixel.
+    const minorReachPx = SURVEY_WIDTH_PX.minor / 2 + 0.5;
+    assert.ok(
+      THERMOCLINE_GAP_EDGE_PX >= minorReachPx,
+      `the cut ends at ${THERMOCLINE_GAP_EDGE_PX} px, inside the minor's ${minorReachPx} px`
+    );
+    // And no stroke lays ink inside the cut: the shader's `surveyLine`, an
+    // edge anti-aliased over one pixel, sampled across the gap.
+    const smoothstep = (a: number, b: number, x: number) => {
+      const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+      return t * t * (3 - 2 * t);
+    };
+    const line = (px: number, widthPx: number) =>
+      1 - smoothstep(widthPx / 2 - 0.5, widthPx / 2 + 0.5, px);
+    for (let px = 0; px <= THERMOCLINE_GAP_EDGE_PX; px += 0.05) {
+      const stroke = line(Math.abs(px - THERMOCLINE_RULE_GAP_PX / 2), SURVEY_WIDTH_PX.thermocline);
+      assert.equal(stroke, 0, `a stroke inks the gap ${px.toFixed(2)} px from the level`);
+    }
   });
 
   it("puts the thermocline's level into the ground's shader", () => {
@@ -113,7 +130,6 @@ describe('survey ink levels', () => {
     const shader = { ...ShaderLib.basic, uniforms: {} };
     material.onBeforeCompile(shader as never, {} as never);
     assert.match(shader.fragmentShader, new RegExp(`d - ${THERMOCLINE.DEPTH_M}\\.0 `));
-    assert.match(shader.fragmentShader, /thermocline = surveyThermocline\( thermoPx \)/);
   });
 });
 

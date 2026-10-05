@@ -82,7 +82,8 @@ reference, the way `WATER_RAMP` is: the values are TUNABLE, the shape is not.
   who wants to sit under it must see which ground lies below it. It lies inside the
   Mid-Water band rather than on its edge, so it is drawn as a **double rule**, two thin
   strokes with a clear gap between them, and it is not read as a band boundary. It replaces
-  the minor line at its depth, which would fill that gap. "Reading the Water" still draws no
+  the minor line at its depth, which would fill that gap, and where a scarp's lines are drawn
+  as their average the gap cuts a seam through that band. "Reading the Water" still draws no
   line at the layer *in the water*: this line is on the ground.
 - **Coastlines** are drawn **exactly on the cell edges** where the ground changes kind: solid
   where water meets rock, dashed where one biome meets another. The biome is the propagation
@@ -544,6 +545,11 @@ Four choices a reviewer should see:
 
 ## 11. Open questions
 
+- **The thermocline rule on a packed scarp.** Where the minor lines stand 4–5 px apart, the
+  double rule's own spacing, it is not told apart from them: at the 4,000 m dolly on Abyssal
+  Rift's walls ([issue-1104](screenshots/issue-1104/README.md)). That is a camera at which a
+  player asks whether a plateau lies under the layer. A wider gap, or cutting the minors
+  further out, are the two answers; neither is measured.
 - **Coastline style under the colour-vision palettes.** The dash is the only thing telling a
   biome coast from a rock coast. It should hold, because the dash is shape rather than hue.
   It is unmeasured.

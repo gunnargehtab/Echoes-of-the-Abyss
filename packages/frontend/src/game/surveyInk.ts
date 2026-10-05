@@ -106,6 +106,15 @@ export const THERMOCLINE_ISOBATH_M = THERMOCLINE.DEPTH_M;
 export const THERMOCLINE_RULE_GAP_PX = 4;
 
 /**
+ * Derived — where the rule's gap ends: each stroke's inner edge, less the
+ * pixel it anti-aliases over. The minor ink is cut from the level out to
+ * here and comes back under the strokes, so the gap is clear. It must reach
+ * past the minor line's own anti-aliased edge, or that line shows in it.
+ */
+export const THERMOCLINE_GAP_EDGE_PX =
+  THERMOCLINE_RULE_GAP_PX / 2 - SURVEY_WIDTH_PX.thermocline / 2 - 0.5;
+
+/**
  * Levels are drawn half a metre below their number. A plain authored exactly
  * on a level — the Kelp Labyrinth is 1,800 m from edge to edge — has no
  * gradient, and an isobath evaluated *at* its depth would ink the whole plain
@@ -299,7 +308,7 @@ const FRAGMENT_MAIN = [
   // The minor at the layer's depth would fill the rule's gap and read as one
   // thick line; a scarp's averaged band is cut there too, so the rule still
   // shows as a clear seam across it.
-  `    minor = surveyIsobaths( vSurveyFloor, perPx ) * smoothstep( ${glslFloat(THERMOCLINE_RULE_GAP_PX / 2 - SURVEY_WIDTH_PX.thermocline)}, ${glslFloat(THERMOCLINE_RULE_GAP_PX / 2 - SURVEY_WIDTH_PX.thermocline / 2)}, thermoPx );`,
+  `    minor = surveyIsobaths( vSurveyFloor, perPx ) * smoothstep( ${glslFloat(THERMOCLINE_GAP_EDGE_PX)}, ${glslFloat(THERMOCLINE_RULE_GAP_PX / 2)}, thermoPx );`,
   '    major = surveyMajors( vSurveyFloor, perPx );',
   '    thermocline = surveyThermocline( thermoPx );',
   '  }',
