@@ -1508,7 +1508,7 @@ export class AiCommander implements AiPlayer {
     this.commandConstruction(snapshot, harvesters, raiders, purse, commands);
     this.commandProduction(snapshot, harvesters, army, purse, commands);
     this.commandScout(snapshot, scout, commands);
-    this.commandOrdnance(snapshot, commands);
+    this.commandOrdnance(snapshot, army, commands);
     this.commandCountermeasures(snapshot, commands);
     this.commandSiege(snapshot, army, commands);
     this.commandLayers(snapshot, commands);
@@ -3566,8 +3566,21 @@ export class AiCommander implements AiPlayer {
    *
    * Four branches, because the four hulls are four different arguments about
    * the weapon triangle and share only the hull that carries them.
+   *
+   * **And three of them sail with the fleet** (#1090). The Broadside, the
+   * Weaver and the Lance carry no gun, so they are not in `army` and the army
+   * pass never orders them — and until this pass did, nothing did: measured
+   * over ninety matches, every Broadside spent its life beside its yard,
+   * 540 m from home, firing at what came to the base, and no Weaver in a
+   * four-seat match laid a single decoy. So with nothing to spend on, each
+   * waits with the fleet on `commandSiege`'s terms (`keepWithFleet`). The
+   * Thurible has a gun and is the army's to move.
    */
-  private commandOrdnance(snapshot: EchoSnapshot, out: AiCommand[]): void {
+  private commandOrdnance(
+    snapshot: EchoSnapshot,
+    army: readonly OwnUnit[],
+    out: AiCommand[]
+  ): void {
     const kind = OWN_ORDNANCE[this.briefing.faction];
     for (const hull of snapshot.units) {
       if (hull.kind !== kind) continue;
@@ -3588,19 +3601,34 @@ export class AiCommander implements AiPlayer {
 
       switch (kind) {
         case UnitKind.Weaver: {
+          // Always with the fleet, fight or none: a screen is laid on the move
+          // ahead of an approach (docs/systems-combat.md §5), so a Weaver that
+          // stopped for its fight could never lay into it.
+          this.keepWithFleet(snapshot, hull, army, out);
           // Lay while the fight is close and the hull is moving: the screen is
           // the track it walked, so a Weaver standing still lays three decoys
           // on top of each other and has spent its magazine on one contact.
+          // Moving is read off the hull's own track, as `commandCountermeasures`
+          // reads it (`UNDER_WAY_M`); this branch used to ask only whether the
+          // hull was 700 m from home, so a Weaver launched inside that never
+          // laid, and one launched just past it stood there and laid every
+          // decoy it carried on one spot.
           if (best === null || bestD > SCREEN_RANGE_M) break;
           if (Math.hypot(hull.x - this.home.x, hull.y - this.home.y) < RANGE.ARRIVE_M) break;
+          const stood = this.stoodAt.get(hull.id);
+          if (stood === undefined || distance(hull, stood) < UNDER_WAY_M) break;
           out.push({ kind: 'layDecoy', unitId: hull.id });
           break;
         }
         case UnitKind.Broadside: {
           // Spend the magazine. There is no holding back a hull whose whole
           // argument is that it empties itself — and nothing to hold back
-          // *for*, since the rearm is a trip home either way.
-          if (best === null) break;
+          // *for*, since the rearm is a trip home either way. Nothing in
+          // reach, it goes where the fight will be.
+          if (best === null) {
+            this.keepWithFleet(snapshot, hull, army, out);
+            break;
+          }
           out.push({ kind: 'torpedo', unitId: hull.id, contactId: best.id });
           break;
         }
@@ -3609,7 +3637,10 @@ export class AiCommander implements AiPlayer {
           // checks the cone itself rather than firing and being refused: a
           // refused launch is a command in the replay that did nothing, and the
           // hull's own heading is in its snapshot, so the check is free.
-          if (best === null) break;
+          if (best === null) {
+            this.keepWithFleet(snapshot, hull, army, out);
+            break;
+          }
           const bearing = Math.atan2(best.y - hull.y, best.x - hull.x);
           let off = bearing - hull.heading;
           off = Math.abs(Math.atan2(Math.sin(off), Math.cos(off)));
@@ -3763,15 +3794,7 @@ export class AiCommander implements AiPlayer {
         // that never stands still long enough to fire. The fleet leaves out
         // the hulls the last observation posted — the tenders and the field's
         // holder — which stand where their post is, not where the army is.
-        if (snapshot.tick % (TICKS_PER_OBSERVATION * 25) < TICKS_PER_OBSERVATION) {
-          const fleet = army.filter(
-            (u) => u.kind !== kind && !this.tending.has(u.id) && u.id !== this.fieldHolder
-          );
-          const station = fleet.length > 0 ? centroid(fleet) : this.rallyPoint();
-          if (distance(hull, station) > RANGE.ARRIVE_M) {
-            out.push({ kind: 'move', unitIds: [hull.id], x: station.x, y: station.y });
-          }
-        }
+        this.keepWithFleet(snapshot, hull, army, out);
         continue;
       }
 
@@ -3817,6 +3840,33 @@ export class AiCommander implements AiPlayer {
           break;
         }
       }
+    }
+  }
+
+  /**
+   * Walk a hull the army pass does not order to wherever the army is.
+   *
+   * The fleet's centroid, less the hull itself, the siege hull and the hulls
+   * the last observation posted, or the rally point when there
+   * is no fleet. Re-issued on a five-second clock and only from outside
+   * `RANGE.ARRIVE_M`, so a hull that has arrived is left standing: one walked
+   * a few metres at every window never stands still long enough to fire.
+   */
+  private keepWithFleet(
+    snapshot: EchoSnapshot,
+    hull: OwnUnit,
+    army: readonly OwnUnit[],
+    out: AiCommand[]
+  ): void {
+    if (snapshot.tick % (TICKS_PER_OBSERVATION * 25) >= TICKS_PER_OBSERVATION) return;
+    const siege = OWN_SIEGE[this.briefing.faction];
+    const fleet = army.filter(
+      (u) =>
+        u.id !== hull.id && u.kind !== siege && !this.tending.has(u.id) && u.id !== this.fieldHolder
+    );
+    const station = fleet.length > 0 ? centroid(fleet) : this.rallyPoint();
+    if (distance(hull, station) > RANGE.ARRIVE_M) {
+      out.push({ kind: 'move', unitIds: [hull.id], x: station.x, y: station.y });
     }
   }
 

@@ -736,7 +736,12 @@ where the Commune is going; the Lance checks the cone itself from its own headin
 than firing and being refused, and comes about when the answer is no; the Thurible bombs the
 band it is not in, and only at a contact it has classified, because the depth it needs
 arrives at Tier 3 and nowhere earlier. One of each, bought behind the escort — ordnance is
-for a fight that exists.
+for a fight that exists. With nothing in reach, the Broadside and the Lance wait with the
+fleet, walked there on the siege hull's clock (#1090), and the Weaver keeps with it in a
+fight as well, since it lays only under way. None of the three has a gun, so the army pass
+never orders them, and before this nothing did: every Broadside in ninety measured matches
+spent its life beside its yard. A hull with its magazine spent still stays where it is while
+a contact is in reach, because the snapshot carries no magazine count.
 
 **And since #621 it answers one**, which is the same sentence read from the other side. Point
 defence was never missing — a gun takes an inbound round inside its terminal range without
