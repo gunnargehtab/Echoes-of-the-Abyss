@@ -426,7 +426,7 @@ The Committal
 
 Moorage
 
-- The mercenaries' site: one structure a map seats, on a map that authors one, in a skirmish room whose ready room switched it on — never in a mission. It takes no damage, sounds like a Foundry (SIG 25 idle, 55 while its line runs), and keeps three hulls of its own, the **guard**, inside its **water** of 600 m. A commander whose hull fires from or into that water is **struck** from its book for the match (mercenaries.md §3).
+- The mercenaries' site: one structure a map seats, on a map that authors one, in a skirmish room whose ready room switched it on — never in a mission. It takes no damage, sounds like a Foundry (SIG 25 idle, 55 while its line runs), and keeps three hulls of its own, the **guard**, inside its **water** of 600 m. A commander whose hull fires at another party's hull from or into that water is **struck** from its book for the match; a shot at a creature or at ordnance strikes nobody (mercenaries.md §3).
 - A commander **hires** a common hull there, in person, at the roster's price and against their own berths. The hull takes the buyer's orders and flies the moorage's flag (mercenaries.md §4). Designed and unbuilt.
 - Not a *yard*. units.md calls the Slipway the second yard, so the moorage never borrows the word.
 

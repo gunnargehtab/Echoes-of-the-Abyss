@@ -133,8 +133,10 @@ first tick, like a vent's.
   hold the moorage's water and never leave it, and they are never sold. A guard hull that dies
   is laid down again on the moorage's line, at the roster's build time. They are its only
   weapon.
-- **Its book.** A commander whose hull fires a weapon from or into the moorage's water is
-  **struck** for the rest of the match. A struck commander signs nothing, and the guard
+- **Its book.** A commander whose hull fires a weapon at another party's hull, from or into
+  the moorage's water, is **struck** for the rest of the match. The parties are the commanders
+  and the moorage. A shot at a creature, or at ordnance — a gun bringing down an inbound
+  torpedo — strikes nobody and draws no guard. A struck commander signs nothing, and the guard
   engages that commander's own-flag hulls inside the water. Hulls the commander already hired
   keep serving: they were paid for. Being struck is the moorage's whole power over a
   commander, and it matters exactly as much as that commander needed it.
@@ -161,10 +163,10 @@ commander without anyone choosing it. So the moorage brings a relation of its ow
   its fire the same way (`combat.ts`). So a strike is always a commander's order, never an idle
   hull's reflex. No mine is laid inside the water.
 - **The guard engages the struck, and never by employer.** Inside the water only, it engages a
-  struck commander's own-flag hulls, and any hull that itself fires there. It never engages an
-  unflagged hull for who employs it. A flag already names its seat at Tier 3 and a shot is
-  already heard, so the guard's fire tells a listener nothing the tiers did not. Fire at a
-  struck commander's hires would name their employer, which no tier does (§4).
+  struck commander's own-flag hulls, and any hull that itself fires at a party's hull there. It
+  never engages an unflagged hull for who employs it. A flag already names its seat at Tier 3
+  and a shot is already heard, so the guard's fire tells a listener nothing the tiers did not.
+  Fire at a struck commander's hires would name their employer, which no tier does (§4).
 
 **The moorage does not listen.** Its guard fights what is in its guns' range, as every gun
 does, and a gun's range sits inside the distance any combat hull is heard at (`combat.ts`). So
@@ -346,7 +348,7 @@ the asset was never there: the flag rides with the class at Tier 3.
 
 - **Nothing a commander holds acquires the moorage's slot by itself, guns hold inside the
   water unless ordered, and the guard engages a struck commander's own-flag hulls and any hull
-  that fires there** **(recommended, taken).** A strike is always an order, and the guard's
+  that fires at a party's hull there** **(recommended, taken).** A strike is always an order, and the guard's
   fire names no employer (§3).
 - **The same, with auto-fire left alone.** An idle hull drifting in strikes its commander by
   reflex, which teaches a player the moorage is arbitrary rather than dangerous.
