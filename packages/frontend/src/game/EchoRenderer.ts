@@ -150,7 +150,14 @@ import {
   MARK_STYLE,
   newlyAudibleMarks,
 } from './echoMarks.ts';
-import { drawScopeRings, drawScopeSweep } from './scopeSweep.ts';
+import {
+  drawScopeRings,
+  drawScopeSweep,
+  RING_FAR_ALPHA,
+  RING_LABEL_FONT_PX,
+  RING_NEAR_ALPHA,
+  ringLabelsInFrame,
+} from './scopeSweep.ts';
 import type { ContactAudioEntry, ContactAudioFrame } from '../audio/contactMixer.ts';
 import type { PingReturn, SelfAudioFrame } from '../audio/selfMixer.ts';
 import { TUNED, corridorFrom, type TunedInputs, type TunedNode } from '../audio/tunedBed.ts';
@@ -1463,6 +1470,8 @@ export class EchoRenderer {
    * belong in the band array.
    */
   private ductLabel!: Text;
+  /** The scope's two range-ring numbers, 900 m then 2,400 m (#1096). */
+  private scopeRingLabels: Text[] = [];
 
   private readonly infoGraphics = new Graphics();
   private infoName!: Text;
@@ -2142,6 +2151,24 @@ export class EchoRenderer {
       style: { ...mono, fontSize: 8, fill: UI.accent },
     });
     this.ductLabel.visible = false;
+
+    // The scope's ring numbers, from the constants so a ring and its label
+    // cannot disagree. Under the overlay, beside the terrain: a label is
+    // ground for the instrument, and the overlay holds everything the player
+    // earned, which no printed number may sit over (docs/ui-ux.md §5).
+    this.scopeRingLabels = [ACTIVE_SONAR.REVEAL_RADIUS_M, ACTIVE_SONAR.SELF_REVEAL_RADIUS_M].map(
+      (metres) => {
+        const label = new Text({
+          text: `${metres}m`,
+          style: { ...mono, fontSize: RING_LABEL_FONT_PX, letterSpacing: 0.6, fill: UI.textDim },
+        });
+        label.visible = false;
+        return label;
+      }
+    );
+    for (const label of this.scopeRingLabels) {
+      this.hud.addChildAt(label, this.hud.getChildIndex(this.minimapOverlayG));
+    }
 
     this.hud.addChild(
       this.sigLabel,
@@ -8059,6 +8086,7 @@ export class EchoRenderer {
     const og = this.minimapOverlayG;
     og.clear();
     og.position.set(x, y);
+    for (const label of this.scopeRingLabels) label.visible = false;
     if (terrain === null || k <= 0) return;
 
     // Range rings at the ping's two radii — the two distances that decide
@@ -8066,16 +8094,37 @@ export class EchoRenderer {
     // decision never needs a mental conversion (docs/ui-ux.md §5).
     // Cut at the scope's edge, because the anchor is rarely mid-map and a ring
     // that bulges through the frame reads as a broken instrument (#1086).
+    // Each carries its number, and the far one is threat-red: inside it, every
+    // enemy listener hears the ping (#1096).
     const centre = this.scopeAnchor();
     if (centre !== null) {
+      const radii = [ACTIVE_SONAR.REVEAL_RADIUS_M * k, ACTIVE_SONAR.SELF_REVEAL_RADIUS_M * k];
       drawScopeRings(
         og,
         centre.x * k,
         centre.y * k,
-        [ACTIVE_SONAR.REVEAL_RADIUS_M * k, ACTIVE_SONAR.SELF_REVEAL_RADIUS_M * k],
-        size,
-        { width: 1, color: UI.accent, alpha: 0.18 }
+        [
+          { radius: radii[0]!, ink: { width: 1, color: UI.accent, alpha: RING_NEAR_ALPHA } },
+          { radius: radii[1]!, ink: { width: 1, color: UI.threat, alpha: RING_FAR_ALPHA } },
+        ],
+        size
       );
+      const spots = ringLabelsInFrame(
+        centre.x * k,
+        centre.y * k,
+        this.scopeRingLabels.map((label, i) => ({
+          radius: radii[i]!,
+          width: label.width,
+          height: label.height,
+        })),
+        size
+      );
+      this.scopeRingLabels.forEach((label, i) => {
+        const spot = spots[i];
+        if (spot == null) return;
+        label.visible = true;
+        label.position.set(x + spot.x, y + spot.y);
+      });
     }
 
     // The sweep. Cosmetic, and deliberately out of phase with the 5 Hz

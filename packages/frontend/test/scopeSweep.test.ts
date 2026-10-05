@@ -9,7 +9,13 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { arcsInFrame, rayToFrame, sectorInFrame, SWEEP_TRAIL_RAD } from '../src/game/scopeSweep.ts';
+import {
+  arcsInFrame,
+  rayToFrame,
+  ringLabelsInFrame,
+  sectorInFrame,
+  SWEEP_TRAIL_RAD,
+} from '../src/game/scopeSweep.ts';
 
 const SIZE = 138;
 const TAU = Math.PI * 2;
@@ -154,6 +160,75 @@ describe('a range ring is cut to the arcs inside the scope', () => {
             inFrame(x, y),
             `anchor (${cx}, ${cy}), radius ${radius}, at ${step / 2}°: (${x.toFixed(2)}, ${y.toFixed(2)})`
           );
+        }
+      }
+    }
+  });
+});
+
+describe('each range ring carries its number, inside the scope (#1096)', () => {
+  // About the boxes '900m' and '2400m' measure at 7.5 px.
+  const label = (radius: number, width: number) => ({ radius, width, height: 9 });
+  /** The shipped 900 m and 2,400 m rings on 4, 6 and 12 km maps. */
+  const PAIRS: Array<[number, number]> = [
+    [31, 82.8],
+    [20.7, 55.2],
+    [10.4, 27.6],
+  ];
+
+  it('sits just above the top of a ring the scope shows whole', () => {
+    const c = SIZE / 2;
+    const [spot] = ringLabelsInFrame(c, c, [label(31, 18)], SIZE);
+    assert.deepEqual(spot, { x: c + 3, y: c - 31 - 2 - 9 });
+  });
+
+  it('comes in through the frame with a ring whose top is cut', () => {
+    // From (20.7, 20.7) the 900 m ring on a 4 km map leaves through the top
+    // edge at x = 20.7 + √(31² − 20.7²): the label goes just inside, there.
+    const [spot] = ringLabelsInFrame(20.7, 20.7, [label(31, 18)], SIZE);
+    assert.ok(spot !== null && spot !== undefined);
+    assert.ok(Math.abs(spot.x - (20.7 + Math.sqrt(31 ** 2 - 20.7 ** 2) + 3)) < 1e-9);
+    assert.ok(Math.abs(spot.y - 2) < 1e-9);
+  });
+
+  it('is absent exactly when its ring is, and never leaves the frame or overlaps', () => {
+    for (const [cx, cy] of ANCHORS) {
+      for (const [near, far] of PAIRS) {
+        const spots = ringLabelsInFrame(cx, cy, [label(near, 18), label(far, 22)], SIZE);
+        const boxes: Array<{ x: number; y: number; w: number }> = [];
+        for (const [i, radius] of [near, far].entries()) {
+          const where = `anchor (${cx}, ${cy}), ring ${radius}`;
+          const spot = spots[i];
+          const arcs = arcsInFrame(cx, cy, radius, SIZE);
+          assert.equal(spot === null, arcs.length === 0, `${where}: a label iff a ring`);
+          if (spot === null || spot === undefined) continue;
+          const w = i === 0 ? 18 : 22;
+          assert.ok(inFrame(spot.x, spot.y) && inFrame(spot.x + w, spot.y + 9), `${where}: framed`);
+          // Beside its own ring: the label is set 3 px right and 2 px clear of
+          // a visible point on it, so the box is within √13 px of the ring.
+          let nearest = Infinity;
+          for (const [start, end] of arcs) {
+            for (const t of [
+              end,
+              ...Array.from({ length: 2000 }, (_, n) => start + ((end - start) * n) / 2000),
+            ]) {
+              const x = cx + Math.cos(t) * radius;
+              const y = cy + Math.sin(t) * radius;
+              const dx = Math.max(spot.x - x, 0, x - (spot.x + w));
+              const dy = Math.max(spot.y - y, 0, y - (spot.y + 9));
+              nearest = Math.min(nearest, Math.hypot(dx, dy));
+            }
+          }
+          assert.ok(
+            nearest <= Math.hypot(3, 2) + 1e-6,
+            `${where}: ${nearest.toFixed(2)} px from its ring`
+          );
+          boxes.push({ x: spot.x, y: spot.y, w });
+        }
+        if (boxes.length === 2) {
+          const [a, b] = boxes as [(typeof boxes)[0], (typeof boxes)[0]];
+          const apart = a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + 9 <= b.y || b.y + 9 <= a.y;
+          assert.ok(apart, `anchor (${cx}, ${cy}), rings ${near}/${far}: labels overlap`);
         }
       }
     }

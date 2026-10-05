@@ -38,6 +38,25 @@ export const SWEEP_LINE_ALPHA = 0.42;
 export const SWEEP_TRAIL_ALPHA = 0.09;
 export const SWEEP_TRAIL_RAD = (12 * Math.PI) / 180;
 
+/**
+ * SPEC — docs/ui-ux.md §5, the range rings' ink, from the same mockup: the
+ * 900 m ring in the interface cyan at 30%, the 2,400 m ring threat-red at 32%.
+ * Red because docs/style-neon-noir.md gives neon-red to the ping's reveal
+ * radius, and that ring is the threat: every enemy listener inside it resolves
+ * the pinger to Tier 4 (docs/systems-echo.md §5).
+ */
+export const RING_NEAR_ALPHA = 0.3;
+export const RING_FAR_ALPHA = 0.32;
+
+/**
+ * SPEC — docs/ui-ux.md §5, the ring labels: text-dim at 7.5 px, 3 px right of
+ * where the label marks its ring and 2 px clear of the line, as the mockup
+ * sets them.
+ */
+export const RING_LABEL_FONT_PX = 7.5;
+const LABEL_OFFSET_X = 3;
+const LABEL_CLEAR_Y = 2;
+
 /** The cross-hair's arm under reduced motion, as a fraction of the scope. */
 const CROSS_HAIR_ARM = 0.06;
 
@@ -150,6 +169,12 @@ export function arcsInFrame(
   return arcs;
 }
 
+/** One range ring: its radius on the scope and the stroke it is drawn in. */
+export interface ScopeRing {
+  radius: number;
+  ink: { width: number; color: number; alpha: number };
+}
+
 /**
  * The range rings, each cut to the arcs inside the scope. A ring wholly inside
  * is still one circle, so the common case draws exactly what it always did.
@@ -158,11 +183,10 @@ export function drawScopeRings(
   g: Graphics,
   cx: number,
   cy: number,
-  radiiPx: readonly number[],
-  size: number,
-  ink: { width: number; color: number; alpha: number }
+  rings: readonly ScopeRing[],
+  size: number
 ): void {
-  for (const radius of radiiPx) {
+  for (const { radius, ink } of rings) {
     const arcs = arcsInFrame(cx, cy, radius, size);
     if (arcs.length === 0) continue;
     if (arcs.length === 1 && arcs[0]![1] - arcs[0]![0] >= TAU) {
@@ -181,6 +205,91 @@ export function drawScopeRings(
     }
     g.stroke(ink);
   }
+}
+
+/** Straight up the scope, in the screen bearings `arcsInFrame` returns. */
+const TOP = (3 * Math.PI) / 2;
+
+/** Bearings sampled along a visible arc, looking for room for a label. */
+const LABEL_STEPS = 48;
+
+/**
+ * The bearings a ring's label may mark it at, best first: the top of the ring
+ * when the scope shows it, which is where the mockup sets both, then outward
+ * along the visible arcs by how far each bearing is from the top. A ring whose
+ * top is cut starts where it comes in through the frame.
+ */
+function labelBearings(arcs: ReadonlyArray<[number, number]>): number[] {
+  const bearings: number[] = [];
+  for (const [start, end] of arcs) {
+    if (wrap(TOP - start) <= end - start) bearings.push(start + wrap(TOP - start));
+    for (let n = 0; n <= LABEL_STEPS; n++) bearings.push(start + ((end - start) * n) / LABEL_STEPS);
+  }
+  const gap = (at: number): number => {
+    const off = wrap(at - TOP);
+    return Math.min(off, TAU - off);
+  };
+  return bearings.sort((a, b) => gap(a) - gap(b));
+}
+
+/**
+ * Where each ring's label goes, as the top-left of a `width` × `height` box in
+ * scope pixels, or null for a ring the scope does not show — docs/ui-ux.md §5
+ * (#1096).
+ *
+ * A label sits 3 px right of a point on its ring and 2 px above the line, as
+ * the mockup sets the 900 m one; failing that below it, as the mockup tucks the
+ * 2,400 m one under a ring whose top is at the frame; failing that on the
+ * point's left. Every label is held inside the frame, because the scope is the
+ * instrument's glass (#1086) and a number printed off it reads as one belonging
+ * to the console. Rings are placed in order, and a later label moves along its
+ * ring rather than print over an earlier one: on a 12 km map the two rings are
+ * 17 px apart, and from a corner both come in through the same edge.
+ */
+export function ringLabelsInFrame(
+  cx: number,
+  cy: number,
+  labels: ReadonlyArray<{ radius: number; width: number; height: number }>,
+  size: number
+): Array<ScopePoint | null> {
+  const placed: Array<{ x: number; y: number; w: number; h: number }> = [];
+  const fits = (x: number, y: number, w: number, h: number): boolean =>
+    x >= 0 &&
+    y >= 0 &&
+    x + w <= size &&
+    y + h <= size &&
+    placed.every((o) => x + w <= o.x || o.x + o.w <= x || y + h <= o.y || o.y + o.h <= y);
+  return labels.map(({ radius, width, height }) => {
+    const arcs = arcsInFrame(cx, cy, radius, size);
+    if (arcs.length === 0) return null;
+    const bearings = labelBearings(arcs);
+    let spot: ScopePoint | null = null;
+    for (const bearing of bearings) {
+      const px = cx + Math.cos(bearing) * radius;
+      const py = cy + Math.sin(bearing) * radius;
+      for (const x of [px + LABEL_OFFSET_X, px - LABEL_OFFSET_X - width]) {
+        for (const y of [py - LABEL_CLEAR_Y - height, py + LABEL_CLEAR_Y]) {
+          if (fits(x, y, width, height)) spot = { x, y };
+          if (spot !== null) break;
+        }
+        if (spot !== null) break;
+      }
+      if (spot !== null) break;
+    }
+    // Nowhere fits: a scope too small for its own labels. Clamped beside the
+    // best bearing rather than dropped, because a ring without its number is
+    // the bug this fixes.
+    if (spot === null) {
+      const px = cx + Math.cos(bearings[0]!) * radius;
+      const py = cy + Math.sin(bearings[0]!) * radius;
+      spot = {
+        x: Math.max(0, Math.min(size - width, px + LABEL_OFFSET_X)),
+        y: Math.max(0, Math.min(size - height, py - LABEL_CLEAR_Y - height)),
+      };
+    }
+    placed.push({ x: spot.x, y: spot.y, w: width, h: height });
+    return spot;
+  });
 }
 
 /**

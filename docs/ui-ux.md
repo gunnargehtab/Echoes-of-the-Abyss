@@ -339,15 +339,15 @@ never information.
 Not a map with markers on it. A scope.
 
 - **Sweep** — a slow rotating sweep line, one revolution per 4 s, purely cosmetic and clearly out of phase with the 5 Hz detection tick so no player ever believes the sweep is what finds things. The line is inked at 42% and trails a wedge of phosphor 12° wide at 9%, as the committed scope mockup draws it (`docs/concept-art/hud-mockups/chrome.mjs`), and it sits with the rings under everything the player earned, so it never tints a hull or a return it passes. Line, wedge and rings all stop at the scope's edge: they are centred on the Bastion, which is rarely mid-map, and an instrument that draws past its own glass reads as a broken one (#1086).
-- **Range rings** — concentric, labelled at 900 m and 2,400 m, the ping's two radii. The two numbers that matter are permanently drawn.
+- **Range rings** — concentric, labelled at 900 m and 2,400 m, the ping's two radii. The two numbers that matter are permanently drawn. The 900 m ring is the interface cyan at 30%; the 2,400 m ring is threat-red at 32%, because every enemy listener inside it resolves the pinger ([style-neon-noir.md](style-neon-noir.md) gives neon-red the ping's reveal radius). Each number is text-dim at 7.5 px beside its ring's top, as the committed mockup sets them. A ring the frame cuts keeps its number inside the frame, beside where the ring comes in (#1096).
 - **Terrain** — biome wash only, at the desaturated fills in `palette.ts`. No structures, no roads, no detail that competes with returns.
 - **Returns** — same tier fidelity as the world view, scaled down. A Tier-1 haze on the scope is a large soft smear, and a player must not be able to click one to select it.
 - **Echo Marks** — a separate dimmer layer, drawn beneath returns, in a colder hue. Past and present must never share an ink.
 - **The camera box is the compass.** The scope stays north-up, always; the world camera does not ([free-camera.md](free-camera.md)). So the box — the view's true ground footprint, a trapezoid — turns with the camera, and its far edge is drawn heavier to say which way that is. This is where the correspondence the old yaw lock enforced now lives: the player reads their heading off the instrument built for measuring, rather than off a frame that can no longer be assumed.
 - **No fog.** There is no explored/unexplored state anywhere in this game. Terrain is always fully drawn; what is hidden is *occupancy*, and occupancy is drawn only as returns. Any "unexplored black" would be the wrong game. §4.5's acoustic veil is not a counter-example and is not drawn here: it is present tense rather than memory, it drains the ground rather than withholding it, and it stays in the world view — this instrument's promise is own force at full clarity, and a mark's own size already says how much to trust it.
 
-Implemented: terrain wash, tier-fidelity returns, the sweep, the two range rings, and the
-camera viewport. Returns are sized *inversely* to tier — a Tier-1 return is the largest and
+Implemented: terrain wash, tier-fidelity returns, the sweep, the two labelled range rings,
+and the camera viewport. Returns are sized *inversely* to tier — a Tier-1 return is the largest and
 softest mark on the scope, because its size is the uncertainty rather than the contact,
 while a Tier-4 track is a tight point. They were previously uniform dots, which drew a
 Tier-1 haze as crisply as a Tier-4 track: the scope asserting precision the server never
