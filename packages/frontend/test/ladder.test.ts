@@ -110,7 +110,13 @@ const RUNG_5_UNDER_ITS_FLOOR: Record<PaletteName, readonly string[]> = {
  * rung 4's. The same in every palette, because neither residue's colours nor
  * the ink's change with it.
  */
-const RESIDUE_AT_LEAST_PEAK_UNDER_INK: readonly string[] = ['border', 'coast', 'major', 'minor'];
+const RESIDUE_AT_LEAST_PEAK_UNDER_INK: readonly string[] = [
+  'border',
+  'coast',
+  'major',
+  'minor',
+  'thermocline',
+];
 
 /**
  * Which rung-6 outline is its floor in each palette. The unselected ring,

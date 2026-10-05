@@ -11,7 +11,8 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { Biome, DEPTH, DEPTH_BANDS, TERRAIN_LIFT } from '@echoes/shared';
+import { MeshBasicMaterial, ShaderLib } from 'three';
+import { Biome, DEPTH, DEPTH_BANDS, TERRAIN_LIFT, THERMOCLINE } from '@echoes/shared';
 import { BIOME_COLOR, PALETTE_NAMES, PALETTES, ROCK_FACE, scaleRgb } from '../src/game/palette.ts';
 import {
   encodedLuminance,
@@ -20,13 +21,19 @@ import {
   unselectedRingLift,
 } from '../src/game/ladder.ts';
 import {
+  installSurveyInk,
   MAJOR_ISOBATHS_M,
   MINOR_ISOBATH_M,
   patchSurveyCellClasses,
   ROCK_CLASS,
   SURVEY_ALPHA,
   SURVEY_INK_COLOR,
+  SURVEY_WIDTH_PX,
   surveyCellClasses,
+  surveyCellTexture,
+  THERMOCLINE_GAP_EDGE_PX,
+  THERMOCLINE_ISOBATH_M,
+  THERMOCLINE_RULE_GAP_PX,
 } from '../src/game/surveyInk.ts';
 import type { TerrainPayload } from '../src/net/GameClient.ts';
 
@@ -74,6 +81,55 @@ describe('survey ink levels', () => {
   it('draws a minor isobath every 100 m, and every major falls on one', () => {
     assert.equal(MINOR_ISOBATH_M, 100);
     for (const major of MAJOR_ISOBATHS_M) assert.equal(major % MINOR_ISOBATH_M, 0);
+  });
+
+  it("draws the thermocline's isobath at the layer, read from the ruleset (#1104)", () => {
+    // SPEC: §4 names 1,200 m and says it is THERMOCLINE.DEPTH_M's.
+    assert.equal(THERMOCLINE_ISOBATH_M, 1200);
+    assert.equal(THERMOCLINE_ISOBATH_M, THERMOCLINE.DEPTH_M);
+    assert.ok(THERMOCLINE_ISOBATH_M > 0 && THERMOCLINE_ISOBATH_M < DEPTH.MAX_M);
+    // It is drawn as a double rule *because* it is not a band edge. A layer
+    // moved onto one would lay a solid major across the rule's gap.
+    assert.ok(!MAJOR_ISOBATHS_M.includes(THERMOCLINE_ISOBATH_M));
+  });
+
+  it("keeps the thermocline rule's gap clear, the minor at its depth included", () => {
+    // §4: the rule replaces the minor line at its depth. The minor ink is cut
+    // out to the gap's edge, so the edge must lie past the minor line's own
+    // anti-aliased reach, half its width and half a pixel.
+    const minorReachPx = SURVEY_WIDTH_PX.minor / 2 + 0.5;
+    assert.ok(
+      THERMOCLINE_GAP_EDGE_PX >= minorReachPx,
+      `the cut ends at ${THERMOCLINE_GAP_EDGE_PX} px, inside the minor's ${minorReachPx} px`
+    );
+    // And no stroke lays ink inside the cut: the shader's `surveyLine`, an
+    // edge anti-aliased over one pixel, sampled across the gap.
+    const smoothstep = (a: number, b: number, x: number) => {
+      const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+      return t * t * (3 - 2 * t);
+    };
+    const line = (px: number, widthPx: number) =>
+      1 - smoothstep(widthPx / 2 - 0.5, widthPx / 2 + 0.5, px);
+    for (let px = 0; px <= THERMOCLINE_GAP_EDGE_PX; px += 0.05) {
+      const stroke = line(Math.abs(px - THERMOCLINE_RULE_GAP_PX / 2), SURVEY_WIDTH_PX.thermocline);
+      assert.equal(stroke, 0, `a stroke inks the gap ${px.toFixed(2)} px from the level`);
+    }
+  });
+
+  it("puts the thermocline's level into the ground's shader", () => {
+    const terrain: TerrainPayload = {
+      cols: 1,
+      rows: 1,
+      cellM: 250,
+      biomes: [Biome.OpenWater],
+      floor: [1000],
+      ceiling: [0],
+    };
+    const material = new MeshBasicMaterial();
+    installSurveyInk(material, terrain, surveyCellTexture(terrain, surveyCellClasses(terrain)));
+    const shader = { ...ShaderLib.basic, uniforms: {} };
+    material.onBeforeCompile(shader as never, {} as never);
+    assert.match(shader.fragmentShader, new RegExp(`d - ${THERMOCLINE.DEPTH_M}\\.0 `));
   });
 });
 
@@ -144,6 +200,8 @@ describe('the loudness ladder, rung 4 under rung 5', () => {
 
   it('ranks the ink within its rung: minor, then the band lines and borders, then rock', () => {
     assert.ok(SURVEY_ALPHA.minor < SURVEY_ALPHA.major);
+    // The thermocline is a major line in another pattern, not a louder one.
+    assert.equal(SURVEY_ALPHA.thermocline, SURVEY_ALPHA.major);
     assert.ok(SURVEY_ALPHA.major <= SURVEY_ALPHA.coast);
     assert.ok(SURVEY_ALPHA.border <= SURVEY_ALPHA.coast);
   });
