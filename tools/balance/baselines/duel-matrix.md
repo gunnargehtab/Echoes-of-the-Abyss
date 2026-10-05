@@ -73,6 +73,12 @@ node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --du
 > rates: the Directorate 77% (was 79%), the Commune 66% (63%), the Knights 27% (26%), the
 > Consortium 25% (28%).
 
+> **Refreshed on 5 Oct 2026 because a mechanic changed, not to reach a target** (#1092).
+> Same command, seeds and cap, run from `9193fb9`. No weight, price or TUNABLE moved. The
+> change: a depot rearms each hull to its own magazine, where it stopped at the roster's two.
+> No verdict, win rate or decided count moves; four of the yard's blocking counts move by one
+> observation.
+
 120 matches on `ventfront-divide`, seeds 4000–4009. 15 ended without a winner inside the time budget, on a median 0 of the 1 elimination a win needs.
 
 _12 seatings over 6 rosters, pooled. Each navy played more than one spawn *and* more than one opponent, so the per-faction column is about the doctrine rather than about the chair or the draw._
@@ -181,11 +187,11 @@ _The opening Bastion and Foundry are not counted: they are a gift, not a decisio
 | Reason | Consortium | Commune | Directorate | Knights |
 | --- | --- | --- | --- | --- |
 | Hull wanted | Broadside | Weaver | Thurible | Lance |
-| Observations reaching the want | 68681 | 66653 | 64873 | 74426 |
-| Blocked: not escorted | 35193 (51%) | 42085 (63%) | 37699 (58%) | 68676 (92%) |
+| Observations reaching the want | 68682 | 66653 | 64874 | 74426 |
+| Blocked: not escorted | 35194 (51%) | 42085 (63%) | 37699 (58%) | 68676 (92%) |
 | Blocked: no free yard | 17641 (26%) | 4268 (6%) | 17264 (27%) | 132 (0%) |
 | Blocked: no berth | 0 (0%) | 0 (0%) | 0 (0%) | 0 (0%) |
-| Blocked: cannot afford | 3284 (5%) | 13556 (20%) | 7530 (12%) | 5069 (7%) |
+| Blocked: cannot afford | 3284 (5%) | 13556 (20%) | 7531 (12%) | 5069 (7%) |
 | Already has one | 12543 (18%) | 6722 (10%) | 2370 (4%) | 546 (1%) |
 | **Bought** | 20 (0%) | 22 (0%) | 10 (0%) | 3 (0%) |
 
@@ -196,12 +202,12 @@ _The six reasons partition the want: every observation that reaches it increment
 | Reason | Consortium | Commune | Directorate | Knights |
 | --- | --- | --- | --- | --- |
 | Hull wanted | Gantry | Rootstock | Succentor | Offertory |
-| Observations reaching the want | 68639 | 66587 | 64859 | 74393 |
-| Blocked: not escorted | 40664 (59%) | 43327 (65%) | 38018 (59%) | 68646 (92%) |
+| Observations reaching the want | 68640 | 66587 | 64860 | 74393 |
+| Blocked: not escorted | 40665 (59%) | 43327 (65%) | 38018 (59%) | 68646 (92%) |
 | Blocked: no free yard | 18200 (27%) | 17614 (26%) | 17300 (27%) | 193 (0%) |
 | Blocked: no berth | 0 (0%) | 0 (0%) | 265 (0%) | 0 (0%) |
 | Yielded to the Sower or the Bower | 0 (0%) | 5646 (8%) | 0 (0%) | 0 (0%) |
-| Blocked: cannot afford | 9775 (14%) | 0 (0%) | 9276 (14%) | 5554 (7%) |
+| Blocked: cannot afford | 9775 (14%) | 0 (0%) | 9277 (14%) | 5554 (7%) |
 | Already has one | 0 (0%) | 0 (0%) | 0 (0%) | 0 (0%) |
 | **Bought** | 0 (0%) | 0 (0%) | 0 (0%) | 0 (0%) |
 | _Shut before the purse, with the price in it_ | 100 (0%) | 204 (0%) | 486 (1%) | 1 (0%) |
