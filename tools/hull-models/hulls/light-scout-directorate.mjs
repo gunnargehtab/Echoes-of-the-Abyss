@@ -176,4 +176,4 @@ directorate.photophoreDomes(root, photophore, {
 });
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
-await exportGlb(root, 'light-scout-directorate.glb');
+await exportGlb(root, 'light-scout-directorate.glb', { trim: directorate.TRIM });

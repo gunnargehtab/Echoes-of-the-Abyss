@@ -109,6 +109,30 @@ import { facetsFor, orbFacets, ringsOf, ORB_FLOOR, isSection } from '../facets.m
 const TAU = 2 * Math.PI;
 
 /**
+ * Overlapping chitin, not the Klaxon's patchwork (Block 2; art-direction.md,
+ * "UV layout and trim sheets"). Curved tergite lips and faint growth lines
+ * stay luminance-only; the asymmetric photophores are the model's, untouched.
+ * The Light Scout is the first layout. Every later hull shares this sheet.
+ */
+export const TRIM = {
+  name: 'directorate',
+  pattern: 'tergite',
+  size: 512,
+  strakeM: 6,
+  plateM: 8,
+  seamPx: 1.5,
+  weatherPx: 8,
+  light: 0.98,
+  seam: 0.45,
+  weather: 0.14,
+  tone: 0.04,
+  grain: 0.01,
+  archPx: 24,
+  growth: 0.035,
+  growthRings: 5,
+};
+
+/**
  * The Directorate's palette: one table, one factory a material *name*, so
  * that re-finishing the navy is one edit here (#888, Phase 6 of #540).
  *

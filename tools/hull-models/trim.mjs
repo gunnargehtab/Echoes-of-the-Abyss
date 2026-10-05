@@ -67,7 +67,9 @@
  * own tone from an integer hash, and a grain over all of it. Every number is
  * the navy's (factions/bathyarch.mjs `TRIM` is the first, and its `name` is
  * the sheet's file and tag), so the image is reproduced wherever the script
- * runs and compared texel by texel.
+ * runs and compared texel by texel. The Directorate's `tergite` pattern
+ * keeps the bands but curves their transverse seams, without the stagger
+ * or longitudinal grid: shadow under an overlap and growth along its curve.
  */
 import * as THREE from 'three';
 import { occludes } from './glb.mjs';
@@ -140,6 +142,7 @@ export function bandsOf() {
  * sRGB bytes, row 0 at v 0; `mean` the linear mean over the whole image.
  */
 export function drawTrimSheet({
+  pattern = 'plate',
   size = 512,
   plateM = 12,
   seamPx = 3,
@@ -149,6 +152,9 @@ export function drawTrimSheet({
   weather = 0.08,
   tone = 0.08,
   grain = 0.015,
+  archPx = 0,
+  growth = 0,
+  growthRings = 5,
 } = {}) {
   const bands = bandsOf();
   const pixels = new Uint8Array(size * size);
@@ -169,14 +175,27 @@ export function drawTrimSheet({
     const dv = Math.min(t, 1 - t) * strakeH;
     for (let x = 0; x < size; x++) {
       const u = (x + 0.5) / size;
-      const up = u * PLATES + (s % 2 ? 0.5 : 0);
+      // A tergite overlaps across the shell, not in staggered rectangular
+      // patches. The arch meets its neighbour at both strake edges; only
+      // the transverse seam is inked, never a grid around each patch.
+      const chitin = pattern === 'tergite';
+      const arch = chitin ? (archPx / 512) * PLATES * 4 * t * (1 - t) : 0;
+      const up = u * PLATES + (chitin ? arch : s % 2 ? 0.5 : 0);
       const p = Math.floor(up) % PLATES;
       const a = up - Math.floor(up);
       const du = Math.min(a, 1 - a) * plateW;
-      let L = light * (1 - tone * hash(band.rows, s, p));
-      const d = Math.min(du, dv);
+      let L = light * (1 - tone * hash(band.rows, chitin ? 0 : s, p));
+      const d = chitin ? du : Math.min(du, dv);
       if (d < seamT) L *= seam;
-      else L *= 1 - weather * (1 - smoothstep(seamT, seamT + weatherT, d));
+      else {
+        const wear = 1 - smoothstep(seamT, seamT + weatherT, d);
+        // Shadow under the overlapping lip, a clean edge above it. Growth
+        // follows that same curve and fades at the lip instead of crossing it.
+        L *= 1 - weather * wear * (chitin && a > 0.5 ? 0 : 1);
+        if (chitin)
+          L -=
+            growth * (0.5 + 0.5 * Math.cos(a * growthRings * Math.PI * 2)) * Math.sin(a * Math.PI);
+      }
       L += grain * (hash(x, y) - 0.5);
       L = Math.min(1, Math.max(0, L));
       sum += L;

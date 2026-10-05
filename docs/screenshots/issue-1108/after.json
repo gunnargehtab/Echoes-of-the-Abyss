@@ -1,0 +1,86 @@
+{
+  "viewport": {
+    "width": 1080,
+    "height": 675
+  },
+  "note": "SwiftShader visual capture only; standard 240-frame capture timed out. No timing claim.",
+  "errors": [],
+  "readings": [
+    {
+      "name": "home",
+      "drawCalls": 54,
+      "triangles": 148239,
+      "textures": 21,
+      "modelBacked": 6,
+      "environmentBytes": 344064,
+      "gpuTimer": "software",
+      "eye": {
+        "xM": 1344,
+        "zM": 4862,
+        "depthM": -21596
+      },
+      "focus": {
+        "xM": 1348,
+        "zM": 1417,
+        "depthM": null
+      }
+    },
+    {
+      "name": "close",
+      "drawCalls": 53,
+      "triangles": 148239,
+      "textures": 21,
+      "modelBacked": 6,
+      "environmentBytes": 344064,
+      "gpuTimer": "software",
+      "eye": {
+        "xM": 1350,
+        "zM": 2453,
+        "depthM": -5959
+      },
+      "focus": {
+        "xM": 1348,
+        "zM": 1417,
+        "depthM": null
+      }
+    },
+    {
+      "name": "low",
+      "drawCalls": 54,
+      "triangles": 148239,
+      "textures": 21,
+      "modelBacked": 6,
+      "environmentBytes": 344064,
+      "gpuTimer": "software",
+      "eye": {
+        "xM": 1345,
+        "zM": 4840,
+        "depthM": -2584
+      },
+      "focus": {
+        "xM": 1348,
+        "zM": 1417,
+        "depthM": null
+      }
+    },
+    {
+      "name": "survey",
+      "drawCalls": 54,
+      "triangles": 148193,
+      "textures": 21,
+      "modelBacked": 6,
+      "environmentBytes": 344064,
+      "gpuTimer": "software",
+      "eye": {
+        "xM": 1369,
+        "zM": 2009,
+        "depthM": -81040
+      },
+      "focus": {
+        "xM": 1348,
+        "zM": 1417,
+        "depthM": null
+      }
+    }
+  ]
+}
