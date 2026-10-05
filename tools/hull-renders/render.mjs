@@ -180,8 +180,7 @@ const server = createServer((req, res) => {
     // The name comes from the model's extras, so it may only ever name a sheet.
     const name = url.pathname.slice('/trim/'.length).replace(/\.png$/, '');
     if (/^[a-z0-9-]+$/.test(name)) file = join(repo, SHEET_DIR, `${name}.png`);
-  }
-  else if (url.pathname.startsWith('/props/')) {
+  } else if (url.pathname.startsWith('/props/')) {
     // Prop slugs come from the shot table, never from the request, so the
     // only thing a path can name is a file the table already chose.
     const slug = url.pathname.slice('/props/'.length).replace(/\.glb$/, '');

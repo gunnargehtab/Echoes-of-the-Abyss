@@ -210,7 +210,8 @@
       const hull = gltf.scene;
       // The sheet multiplies the plate's colour, as in the game, so it rides
       // the noir remap below rather than escaping it: it says where a plate
-      // ends and leaves the band where it was.
+      // ends, and darkens the band by its mean, about an eighth (0.88 linear
+      // for the Consortium's), rather than moving it.
       const trim = await attachTrimSheets(hull, (name) => `/trim/${name}.png`);
 
       // Canonicalise exactly as hull-intake does, so a render and a bake are
