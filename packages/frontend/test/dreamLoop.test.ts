@@ -139,15 +139,16 @@ describe('the view-bounded ground-cover study', () => {
 
     it('follows live lamp energy and transforms without turning a floodlit deck into a point', () => {
       const material = new MeshStandardMaterial({ emissive: 0xf2b233, emissiveIntensity: 1 });
-      const units = new Group();
       const root = new Group();
       root.add(new Mesh(new BoxGeometry(2, 2, 2), material));
       root.add(new Mesh(new BoxGeometry(50, 1, 50), material));
-      units.add(root);
-      const structures = new Group();
+      // The material rests, shared by every hull of a kind; the hull's own
+      // gate-3 factor is the model's (rosterBatches.ts).
+      const model = { root, glow: 1 };
+      const models = [model];
       const camera = cameraAt();
       const halos = new DreamLightHalos();
-      const update = () => halos.update(units, structures, camera, 4800, 1, 1400, 1, 1);
+      const update = () => halos.update(models, camera, 4800, 1, 1400, 1, 1);
       update();
       assert.equal(halos.points.geometry.drawRange.count, 1);
       const positions = halos.points.geometry.getAttribute('position');
@@ -160,22 +161,22 @@ describe('the view-bounded ground-cover study', () => {
       assert.equal(lights.filter((light) => light.intensity > 0).length, 1);
       const firstPower = lights.reduce((sum, light) => sum + light.intensity, 0);
       root.position.x = 30;
-      material.emissiveIntensity = 2;
+      model.glow = 2;
       update();
       assert.equal(positions.getX(0), 30);
       assert.ok(strength.getX(0) > first);
       assert.ok(lights.reduce((sum, light) => sum + light.intensity, 0) > firstPower);
       assert.equal(lights.find((light) => light.intensity > 0)!.position.x, 30);
       assert.equal(halos.points.geometry.getAttribute('position'), positions);
-      material.emissiveIntensity = 0;
+      model.glow = 0;
       update();
       assert.equal(halos.points.geometry.drawRange.count, 0);
       assert.equal(halos.points.visible, false);
       assert.ok(lights.every((light) => light.intensity === 0));
-      material.emissiveIntensity = 1;
+      model.glow = 1;
       update();
       assert.equal(halos.points.geometry.drawRange.count, 1);
-      units.remove(root);
+      models.pop();
       update();
       assert.equal(halos.points.visible, false);
       assert.equal(halos.points.material.depthTest, true);
@@ -184,19 +185,17 @@ describe('the view-bounded ground-cover study', () => {
     });
 
     it('caps the one point buffer and ignores non-emissive and hidden models', () => {
-      const units = new Group();
       const geometry = new BoxGeometry(2, 2, 2);
       const dark = new Mesh(geometry, new MeshStandardMaterial());
       const lamp = new MeshStandardMaterial({ emissive: 0xf2b233 });
       const hidden = new Mesh(geometry, lamp);
       hidden.visible = false;
-      units.add(dark, hidden);
+      const models = [dark, hidden].map((root) => ({ root, glow: 1 }));
       const halos = new DreamLightHalos();
-      const structures = new Group();
-      const update = () => halos.update(units, structures, cameraAt(), 4800, 1, 1400, 1, 1);
+      const update = () => halos.update(models, cameraAt(), 4800, 1, 1400, 1, 1);
       update();
       assert.equal(halos.points.geometry.drawRange.count, 0);
-      for (let i = 0; i < 300; i++) units.add(new Mesh(geometry, lamp));
+      for (let i = 0; i < 300; i++) models.push({ root: new Mesh(geometry, lamp), glow: 1 });
       update();
       const positions = halos.points.geometry.getAttribute('position');
       assert.equal(halos.points.geometry.drawRange.count, positions.count);

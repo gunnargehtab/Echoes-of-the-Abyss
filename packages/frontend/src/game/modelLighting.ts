@@ -100,3 +100,53 @@ export function keepGlowOutsideToneMapping(material: MeshStandardMaterial): void
 export function keepsGlowOutsideToneMapping(material: MeshStandardMaterial): boolean {
   return material.customProgramCacheKey().endsWith(GLOW_AFTER_TONE_KEY);
 }
+
+/**
+ * Gate 3's live half on an instanced draw. One lamp material serves every
+ * hull of a kind (rosterBatches.ts), so `emissiveIntensity` can only hold the
+ * resting strength they share; each hull's own factor along the curve
+ * (`glowFactor`, glow.ts) arrives as the `instanceGlow` attribute and scales
+ * the emission here, before anything reads it. That makes rest × factor what
+ * `keepGlowOutsideToneMapping` adds after the curve, exactly the strength one
+ * material per hull used to carry. A mesh drawn without instancing reads 1,
+ * since only the vertex stage knows USE_INSTANCING: the varying is declared in
+ * both stages either way, or the program would not link.
+ */
+export const INSTANCE_GLOW_VERTEX = `#ifdef USE_INSTANCING
+	vInstanceGlow = instanceGlow;
+#else
+	vInstanceGlow = 1.0;
+#endif`;
+
+const INSTANCE_GLOW_KEY = ':instance-glow-1';
+
+/** Chains onto any earlier patch; install it before `keepGlowOutsideToneMapping`. */
+export function installInstanceGlow(material: MeshStandardMaterial): void {
+  const before = material.onBeforeCompile;
+  const key = material.customProgramCacheKey();
+  material.onBeforeCompile = (shader, renderer) => {
+    before.call(material, shader, renderer);
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+#ifdef USE_INSTANCING
+attribute float instanceGlow;
+#endif
+varying float vInstanceGlow;`
+      )
+      .replace('#include <begin_vertex>', `#include <begin_vertex>\n${INSTANCE_GLOW_VERTEX}`);
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nvarying float vInstanceGlow;')
+      .replace(
+        '#include <emissivemap_fragment>',
+        '#include <emissivemap_fragment>\n\ttotalEmissiveRadiance *= vInstanceGlow;'
+      );
+  };
+  material.customProgramCacheKey = () => `${key}${INSTANCE_GLOW_KEY}`;
+}
+
+/** Whether `installInstanceGlow` patched this material, as the key says. */
+export function readsInstanceGlow(material: MeshStandardMaterial): boolean {
+  return material.customProgramCacheKey().includes(INSTANCE_GLOW_KEY);
+}

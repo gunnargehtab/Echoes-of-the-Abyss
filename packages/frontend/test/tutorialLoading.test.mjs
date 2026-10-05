@@ -266,8 +266,12 @@ describe('roster look and palette cache isolation', () => {
     const another = roster.rosterModelInstance(key, 'sorrowgate');
     assert.equal(cladding(another).material, cladding(tutorial).material);
     assert.equal(cladding(another).geometry, cladding(tutorial).geometry);
-    assert.notEqual(another.emissives[0].material, tutorial.emissives[0].material);
+    // Lamps are the template's too, and each instance dims them by its own
+    // glow, which the batch draws per instance (rosterBatches.ts).
+    assert.equal(another.emissives[0].material, tutorial.emissives[0].material);
     roster.applyLiveGlow(tutorial, 12, 6);
+    assert.ok(tutorial.glow > 1);
+    assert.equal(another.glow, 1);
     assert.equal(
       another.emissives[0].material.emissiveIntensity,
       another.emissives[0].restIntensity

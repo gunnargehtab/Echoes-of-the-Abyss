@@ -24,6 +24,17 @@ import { DREAM_LOOP_LIGHT_SPILL } from '@echoes/shared';
 import { lampSites } from './lampSites.ts';
 
 const HALO_CAP = 256;
+
+/**
+ * An own model as the halos read it: its root, which holds its lamp meshes,
+ * and gate 3's factor on their resting strength. The materials are shared by
+ * every instance of a kind (rosterBatches.ts), so the factor is the instance's.
+ */
+export interface DreamModel {
+  readonly root: Object3D;
+  readonly glow: number;
+}
+
 interface LampBinding {
   mesh: Mesh;
   material: MeshStandardMaterial;
@@ -105,8 +116,7 @@ export class DreamLightHalos {
   }
 
   update(
-    units: Group,
-    structures: Group,
+    models: readonly DreamModel[],
     camera: PerspectiveCamera,
     reachM: number,
     density: number,
@@ -119,8 +129,7 @@ export class DreamLightHalos {
       slot.priority = 0;
       slot.light.intensity = 0;
     }
-    this.append(units, readabilityScale, camera);
-    this.append(structures, readabilityScale, camera);
+    for (const model of models) this.append(model, readabilityScale, camera);
     this.uniforms.uReach.value = reachM;
     this.uniforms.uDensity.value = density;
     this.uniforms.uProjection.value.set(projectionScale, pixelRatio);
@@ -134,16 +143,16 @@ export class DreamLightHalos {
     this.points.layers.mask = camera.layers.mask;
   }
 
-  private append(group: Group, readabilityScale: number, camera: PerspectiveCamera): void {
-    group.updateWorldMatrix(true, true);
-    for (const child of group.children) {
-      if (!child.visible) continue;
+  private append(model: DreamModel, readabilityScale: number, camera: PerspectiveCamera): void {
+    const root = model.root;
+    root.updateWorldMatrix(true, true);
+    if (root.visible) {
       let bestPower = 0;
       let bestRadius = 0;
-      let bindings = this.bindings.get(child);
+      let bindings = this.bindings.get(root);
       if (bindings === undefined) {
         bindings = [];
-        child.traverse((part) => {
+        root.traverse((part) => {
           if (
             part instanceof Mesh &&
             part.material instanceof MeshStandardMaterial &&
@@ -156,13 +165,14 @@ export class DreamLightHalos {
             });
           }
         });
-        this.bindings.set(child, bindings);
+        this.bindings.set(root, bindings);
       }
       for (const { mesh, material, sites } of bindings) {
-        if (!mesh.visible || material.emissiveIntensity <= 0) continue;
+        const intensity = material.emissiveIntensity * model.glow;
+        if (!mesh.visible || intensity <= 0) continue;
         const scale = mesh.matrixWorld.getMaxScaleOnAxis();
         const ink = material.emissive;
-        const energy = Math.max(ink.r, ink.g, ink.b) * material.emissiveIntensity;
+        const energy = Math.max(ink.r, ink.g, ink.b) * intensity;
         for (const site of sites) {
           const radius = site.radius * scale;
           this.point.copy(site.center).applyMatrix4(mesh.matrixWorld);
