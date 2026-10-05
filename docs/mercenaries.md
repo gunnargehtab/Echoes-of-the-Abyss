@@ -28,8 +28,9 @@ change to one of these rows.
 | --- | --- |
 | The commons | The Light Scout, the Corvette and the Cruiser are on all four bars at one price. Wave 6 kept them as the floor a production cycle falls through to, and left one question open: who sells them ([roster-plan.md](roster-plan.md) §8) |
 | What Tier 3 names | The hull and its flag, together. The Echo pass sets a contact's `kind` and `faction` from the same entity at Classification, so a Consortium Corvette classifies as a Consortium Corvette. The commons hide nothing a navy's own hull does not |
-| Whose a hull is | `Owner` carries two fields, `slot` and `faction`, and the systems ask them different questions. Orders, berths, refits and auras ask the slot. The Klaxon (`combat.ts`), the Veil's silent running and the Directorate's shallows (`movement.ts`, `pressure.ts`), the signature (`acoustics.ts`) and the pressure baseline (`pressureRatingFor` in `units.ts`) ask the flag. A seated commander's hulls all carry the seat's navy, so the two never disagree |
-| Game-controlled parties | One: the Drift, owned by `DRIFT_SLOT`, which is no player, and capped at 48 creatures (`DRIFT.MAX_POPULATION`) for the Echo pass's sake ([bestiary.md](bestiary.md)) |
+| Whose a hull is | `Owner` carries two fields, `slot` and `faction`, and the systems ask them different questions. Orders, berths, refits and auras ask the slot. The flag is asked by, among others, the Klaxon (`combat.ts`), the Veil's silent running and the Directorate's shallows (`movement.ts`, `pressure.ts`), the signature (`acoustics.ts`), the Directorate's torpedo seeker (`ordnance.ts`), the Drift's ×0.4 for a Directorate hull (`fauna.ts`), the hazards (`hazards.ts`) and the pressure baseline (`effectivePressureRating` in `units.ts`). A seated commander's hulls all carry the seat's navy, so the two never disagree |
+| Hostility | `Owner.slot` and nothing else. An armed hull with nothing to do returns fire at the nearest hull of any other slot in its range, and that auto-engagement ignores the tiers (`combat.ts`). No party is neutral ([mission-shallow.md](mission-shallow.md) records the same finding) |
+| Parties no seat holds | In a skirmish room, one: the Drift, owned by `DRIFT_SLOT`, which lies past the pass's slots and is capped at 48 creatures (`DRIFT.MAX_POPULATION`) for the Echo pass's sake ([bestiary.md](bestiary.md)). A mission's scripted parties are the other kind, and never skirmish |
 | Phantoms | A false return claims a hull of a navy on the map that is not the pinger's. The pool skips every slot past the pass's eight (`MAX_SLOTS`), which today means the Drift's (`conjurePhantoms`, [systems-echo.md](systems-echo.md) §3) |
 | Seats | Four at most, one navy each (`canChooseFaction`); AI seats are added in the ready room ([competitive.md](competitive.md) §1) |
 | The ceiling | Forty berths a commander, so a four-seat match is at most 160 hulls. That is the count the pass is budgeted at, and it already crosses 2 ms there ([tech-stack.md](tech-stack.md), "What keeps the pass inside 2 ms") |
@@ -70,8 +71,8 @@ the four powers have each tried to charter them and been quoted a price.
 
 ### The crisis
 
-**The war might end.** The four crises of 214 PC are the best market the moorages have had in
-two centuries, and every one of them is heading somewhere final. The Consortium models a short
+**The war might end.** The four crises of 214 PC are the best market the moorages have ever
+had, and every one of them is heading somewhere final. The Consortium models a short
 war as cheaper than a slow collapse ([timeline.md](timeline.md)). A short war has a winner, and
 a winner is one buyer, and one buyer sets the price. The moorages need four.
 
@@ -94,10 +95,12 @@ exactly as for any hull. What no tier tells them is who is paying it (§4).
 
 Bare hulls. A moorage strips the colours off a hull it takes in and never paints another, so
 an unflagged hull is primer and old plate, with the scar of a previous navy's palette where the
-paint came off. The silhouettes are the commons' own and do not change. The ink a listener
-reads an unflagged contact in is not chosen here: it is a fifth ink beside four palettes and
-three colour-blind substitutions, and [art-direction.md](art-direction.md) and
-[ui-ux.md](ui-ux.md) §11 own that call.
+paint came off. Every navy draws its own model of each common today, four Corvettes in four
+shape languages (`docs/concept-art/models/`), because every faction must be recognisable at a
+glance ([art-direction.md](art-direction.md), "Silhouette Rules"). So the moorages need three
+bare models of their own, and an ink beside four palettes and three colour-blind
+substitutions. [art-direction.md](art-direction.md) and [ui-ux.md](ui-ux.md) §11 own both
+calls; this document chooses neither.
 
 There is no superweapon. A superweapon is a hazard a *commander* fires
 ([factions.md](factions.md), "What a superweapon is"), and a moorage is not one.
@@ -119,15 +122,17 @@ from it, so no seat is born nearer the hire. Its position is drawn for every pla
 first tick, like a vent's.
 
 - **It sounds like a Foundry:** **SIG 25** idle and **55 while its line runs**
-  ([units.md](units.md)). The line runs to replace what it sold (§4), so every hire is heard
-  by everyone in earshot, at a Foundry's loudness, from a place every commander knows.
+  ([units.md](units.md)). The line runs while any hire is being laid down (§4), so every hire
+  is heard by everyone in earshot, at a Foundry's loudness, from a place every commander
+  knows.
 - **It takes no damage**, as a vent takes none. A moorage that could be sunk would be sunk by
   whichever commander needed its hires least, and the rest of the match would have lost a
   third party to one commander's convenience.
 - **Its water** is everything within **600 m** of it. Nothing is built there.
 - **Its guard** is three hulls of its own: one Light Scout, one Corvette, one Cruiser. They
-  hold the moorage's water and never leave it. They are the stock a hire is filled from
-  (§4), and they are its only weapon.
+  hold the moorage's water and never leave it, and they are never sold. A guard hull that dies
+  is laid down again on the moorage's line, at the roster's build time. They are its only
+  weapon.
 - **Its book.** A commander whose hull fires a weapon from or into the moorage's water is
   **struck** for the rest of the match. A struck commander signs nothing, and the guard treats
   that commander's hulls inside the water as hostile. Hulls the commander already hired keep
@@ -135,13 +140,27 @@ first tick, like a vent's.
   and it matters exactly as much as that commander needed it.
 
 A ping inside the water is not violence and strikes nobody. A creature is not a commander
-and is struck from nothing; a guard hull a creature kills is replaced like any other.
+and is struck from nothing.
 
-**The moorage hears as a side.** The Echo pass resolves for its slot as it resolves for a
-mission's scripted party, and the guard acts on what that slot resolved. So it is deceived as a
-commander is: a struck hull silent at the edge of the water is a hull the guard has not heard.
-The skirmish AI's rule, that it observes the same snapshot a player does
-([systems-echo.md](systems-echo.md) §3), is the guard's rule too.
+### Neutral water
+
+The simulation has never had a neutral party: hostility is `Owner.slot` and nothing else, and an
+idle hull fires on any other slot in its range (§1). Left that way, the first hull to drift
+into the water would open fire on the guard, or on an enemy at the moorage, and strike its
+commander without anyone choosing it. So the moorage brings a relation of its own:
+
+- **Nothing acquires the moorage's slot by itself.** No gun auto-engages a guard hull, no
+  seeker homes on one, and no mine triggers on one. A commander reaches the guard only by an
+  order.
+- **Inside the water, guns hold unless ordered.** A hull inside the water, or one whose target
+  is, does not volunteer its fire. A hull running silent already holds its fire the same way
+  (`combat.ts`). So a strike is always a commander's order, never an idle hull's reflex. No
+  mine is laid inside the water.
+- **The guard engages only the struck**, and only inside the water.
+
+**The moorage does not listen.** Its guard fights what is in its guns' range, as every gun
+does, and a gun's range sits inside the distance any combat hull is heard at (`combat.ts`). So
+the pass resolves nothing for the moorage, and it adds no listener.
 
 ---
 
@@ -154,23 +173,37 @@ position of.
 
 - **What is sold:** the commons, and nothing else. Not the Abyssal Submersible, which is the
   crystal and the deep the moorages refuse; not the Harvester, because a moorage works no
-  ground; not the Chorister, which is a cohort's.
+  ground; not the Chorister, which is a cohort's. The matrix below says why no hull of the
+  moorages' own fills another row.
 - **The price** is the roster's: 50, 120 and 420 Nodules ([units.md](units.md)). The moorage
   charges what a Foundry costs, because the commons are priced the same for everyone and
   [roster-plan.md](roster-plan.md) §8 found no premium to charge. Nodules only, since the
   accounts are never exchanged ([economy.md](economy.md) §8).
 - **The berths** are the buyer's, against the buyer's forty, from the moment of signing. A
   commander at the ceiling cannot hire, exactly as they cannot queue.
-- **The hull** is the guard's hull of that kind, at once, if it stands at its post. It passes
-  to the buyer where it floats, and the moorage lays down its replacement on its line at the
-  roster's build time — 12, 30 or 90 s, at SIG 55. If the guard's hull of that kind is not at
-  its post, the hire waits on the line, first signed, first filled.
+- **The hull** is laid down on the moorage's line at signing and launched from the moorage
+  after the roster's build time: 12, 30 or 90 s. Every hire builds on its own. No hire waits on
+  another, so a signer learns nothing of what anybody else signed.
 - **For the match.** A hire does not expire and does not go home. It serves until it dies,
   and if its buyer is eliminated it scuttles with the buyer's force
   ([game-identity.md](game-identity.md), "Scuttling").
 
 So a hire is a second line outside a commander's base, heard by everyone near the moorage,
 and the hull it delivers flies the moorage's flag and none of the buyer's doctrine.
+
+### The roster, across the matrix
+
+[roster-plan.md](roster-plan.md) §3's rows, read for a party that fights only for whoever pays:
+
+| Role | The moorages | Why |
+| --- | --- | --- |
+| Scout, Line, Mid | Light Scout, Corvette, Cruiser | The commons, which the moorages already sail |
+| Heavy, Siege | none | A line to break and a wall to take are a war of one's own, and the moorages have none |
+| Support | none | Support carries a doctrine to an ally, and the moorages carry no doctrine |
+| Ordnance | none | The commons' own tubes are all the ordnance a hire needs; a hull built around them is a navy's argument |
+| Transport, Carrier, Deep | none | Each is a depth argument — a hold that carries hulls below their rating, a flight launched into a band, the crystal-locked Submersible — and the moorages refuse the deep |
+
+No new `UnitKind`, then, and no stat block: the commons keep the values they have.
 
 ### The flag and the orders
 
@@ -181,9 +214,10 @@ for the buyer's side, sits on the buyer's team, takes the buyer's auras
 ("nothing lends a hull's aura away", `auras.ts`), and is hostile to everyone the buyer is.
 
 **Its flag is the moorage's.** Every system that asks the flag gets *unflagged*: no Klaxon, no
-Veil, no cone, no shallow-water penalty. Its ears are its own HYD, as every hull's are: the
-Listening is carried by the Directorate's hull figures, not by its flag
-([units.md](units.md)). And its rating is the moorage's —
+Veil, no cone, no shallow-water penalty. Its ears are its own HYD, as every hull's are, because
+the Listening is carried by the Directorate's hull figures ([units.md](units.md)). Its
+torpedoes seek at the common 50, because the Directorate's seeker is keyed to the flag
+(`seekerHydFor`). And its rating is the moorage's —
 PR-2, lifted to it by the moorage's floor and held there by a cap that a refit, a Spire's grant
 or anything else that raises a rating does not pass. The Commune's refit is capped at PR-2 the
 same way ([systems-progression.md](systems-progression.md) §2).
@@ -194,8 +228,8 @@ each:
 | Navy | What a hire is to it |
 | --- | --- |
 | Consortium | The Consortium's own rating, and no Klaxon: a hired Cruiser cruises at SIG 65, over the Klaxon's 60, and is paid nothing for it. The price of a hull its Foundry did not have to build |
-| Commune | A hull in the Mid-Water from the moment it is signed, without the refit the Commune could only buy to PR-2 anyway. Paid for in the Veil: it runs silent at the common −45% speed, not the Commune's −20% |
-| Directorate | A hull that can work the Shelf without the poison above 400 m — and that cannot follow a cohort below 1,800 m. The Directorate hires for the water it hates |
+| Commune | A Light Scout rated for the Mid-Water from launch, where the Commune's own is PR-1 until a refit it can only buy to PR-2 anyway. The Corvette and the Cruiser are PR-2 on the hull already. Paid for in the Veil: a hire runs silent at the common −45% speed, not the Commune's −20% |
+| Directorate | A hull that can work the Shelf without the poison above 400 m, and cannot follow a cohort below 1,800 m. Its torpedoes seek at 50, not the Directorate's 70, and the Drift hears it at full weight, not the ×0.4 a Directorate hull gets. The Directorate hires for the water it hates |
 | Knights | A hull with no cone, loud from every bearing, and the one hull the Order can lose without losing a Knight |
 
 ### What a listener hears
@@ -246,7 +280,7 @@ which no tier answers. The two questions do not overlap, so neither doctrine spe
 ceiling of 160 hulls at four seats does not move for it; the moorage and its guard are the only
 additions. The pass's cost grows roughly with the square of what it hears, so four entities on
 a pass already over 2 ms at about 160 ([tech-stack.md](tech-stack.md)) is about 5% more pairs.
-The moorage's side adds three listeners.
+The moorage listens to nothing, so it adds no listener (§3).
 
 That is small, and it is not free. The build is gated on the bench measured at four seats
 with a guard, beside whatever [tech-stack.md](tech-stack.md) then records against the
@@ -257,7 +291,7 @@ one.
 
 ## 7. Decisions
 
-The three questions #543 left open, and one this document met on the way, each with the
+The three questions #543 left open, and four this document met on the way, each with the
 options it did not take. The owner answered the first before this document was written.
 
 **1. A navy or a third party?** A third party, game-controlled. The owner's decision on #543,
@@ -292,6 +326,31 @@ the asset was never there: the flag rides with the class at Tier 3.
   [roster-plan.md](roster-plan.md) §8 measured, and moves every navy's production cycle, which
   is inside the freeze.
 
+**5. What roster, across the matrix?**
+
+- **The commons only** **(recommended, taken).** A game-controlled party fills no production
+  cycle and serves no player's bar. It adds no `UnitKind` and no stat block (§4).
+- **The commons, plus moorage hulls in the empty rows.** New `UnitKind`s, stat blocks and
+  models: a sixth roster for a party nobody plays.
+- **The commons, plus one hull for a role no navy fills.** A sketch with no wave behind it.
+
+**6. How neutral is the moorage's water?**
+
+- **Nothing acquires the moorage's slot by itself, guns hold inside the water unless ordered,
+  and the guard engages only the struck** **(recommended, taken).** A strike is always an
+  order (§3).
+- **The same, with auto-fire left alone.** An idle hull drifting in strikes its commander by
+  reflex, which teaches a player the moorage is arbitrary rather than dangerous.
+- **No neutrality: the guard is hostile to all.** Nobody can sign in water that fires on
+  them, so this deletes the hire.
+
+**7. Does a hire come from stock?**
+
+- **Every hire is laid down at signing and built on its own; the guard is never sold**
+  **(recommended, taken).** Hires still leave from the moorage, so the Likeness holds there.
+- **The guard is the stock, and a hire waits when its kind is sold.** The wait tells a signer
+  that somebody else signed, which no tier resolved for them.
+
 ---
 
 ## 8. What building it changes
@@ -303,17 +362,19 @@ In order, because each step can be played before the next exists:
    faction gains a row, `FACTION_PRESSURE_BASELINE` among them, at PR-2, with the cap beside it.
 2. **The slot and the flag, audited.** Every reader of `Owner.faction` is asked whether it means
    *whose* or *what doctrine*, and every reader of a rating whether it passes the cap. The
-   phantom pool counts the moorage's own slot, which `conjurePhantoms` skips today as it skips
-   the Drift's.
+   phantom pool takes the fifth value into `NAVIES` and counts the moorage's own slot, which
+   lies past the pass's eight as the Drift's does and is skipped there today.
 3. **The moorage as a map literal** ([maps.md](maps.md)), on each archetype that can seat one
    at an equal distance from every spawn, and the ready-room switch.
-4. **The guard's brain and the book**, beside the Drift's, on the moorage's own slot.
+4. **Neutral water** (§3): the first party nothing acquires by itself, the hold on guns inside
+   the water, the guard's brain and the book, on the moorage's own slot.
 5. **The hire**, as a client message declared in `wire.ts`, with its shape. It is an in-match
    verb, so the commander either learns to say it or `AiUnbuilt` names it, and
    `aiVocabulary.test.ts` holds the count ([roster-plan.md](roster-plan.md) §2: the opponent
    has to know how to use it).
-6. **The ink and the HUD**: the fifth ink, and how a buyer's own screen marks a hull it hired
-   ([ui-ux.md](ui-ux.md)).
+6. **The look**: three bare models through [graphics-standards.md](graphics-standards.md)'s
+   gates and `npm run check:models`, the fifth ink, and how a buyer's own screen marks a hull
+   it hired ([ui-ux.md](ui-ux.md)).
 
 Nothing in this list moves a price, a yield or a build list.
 
