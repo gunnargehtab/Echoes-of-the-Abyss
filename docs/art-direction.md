@@ -528,6 +528,19 @@ first hull: its carapace and tail expose the sheet in the opening fleet, while i
 photophore domes keep their approved resting light. Other Directorate models remain
 unlaid. The sheet has the same 512² sRGB, mipmapped RGBA8 upload and page-lifetime ownership
 as the Consortium's: **1.33 MiB** once per navy present, no extra draw or triangle.
+The Light Scout's GLB grows from **60,388 to 68,612 bytes** (+8,224; gzip 8,598 to 13,173),
+with **32 parts and 468 triangles** unchanged; its layout splits 73 vertices and tags
+three cladding materials. The sheet is **37,757 bytes**, mean linear luminance **0.938**.
+Only the fallback albedo changes: normal, height and calibrated emissive intake maps
+remain byte-identical. [The hull comparison](screenshots/issue-1108/hull-review.png) shows
+the sheet, maps and bare-file shape check; [the close scout pair](screenshots/issue-1108/scout.png)
+and [four in-game views](screenshots/issue-1108/views.png) show the shipped material.
+The [before](screenshots/issue-1108/before.json) and [after](screenshots/issue-1108/after.json)
+counts stay at 53–54 draws and at most 148,239 triangles; textures rise from 20 to 21.
+These are Chrome/SwiftShader visual captures at 1080×675, not GPU timing evidence:
+the standard 240-frame capture timed out, so the four views were held for four seconds
+each. The offline intake, lit-table and roster-sheet harnesses accept
+`PLAYWRIGHT_CHANNEL=chrome` to use installed Chrome when bundled Chromium is absent.
 
 #### Ranked audit and remaining work
 
