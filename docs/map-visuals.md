@@ -405,10 +405,11 @@ What stays recorded, for the owner. The tests pin each break and fail if it move
   on a pixel depends on the lights, the texture and the view, and no number for it can be
   taken without a GPU. Gate 3 still sets a quiet hull near black. Tier 1 and Tier 2 contacts
   are the column, a haze, and stay unweighed by the #865 ruling.
-- **The palest ground is the palest fill.** The water ramp's shallowest stop, `#0C2A34`, is
-  paler (0.143 against 0.099), and the fog carries a far shallow floor toward it. Over it the
-  tritanopia ring lifts 0.054 and the dormant eruption rim 0.055. The tests take the fill, as
-  the owner's 0.266 was measured.
+- **The palest ground is the palest fill, and that fill lifted by the terrain cap.** A lit
+  face lifts the fill by up to 0.15 (#1103), to 0.116, and the tests weigh both: the
+  fill, as the owner's 0.266 was measured, and the lifted fill, as §5 says. The water ramp's
+  shallowest stop, `#0C2A34`, is paler still (0.143), and the fog carries a far shallow floor
+  toward it. Over it the tritanopia ring lifts 0.054 and the dormant eruption rim 0.055.
 - **The collar's halos are read as glow.** Gate 3's recipe draws the loudness collar's core at
   full opacity under two halo layers. The audit weighs the core and the dial, and reads the
   halos as the core's glow rather than as outlines of their own.

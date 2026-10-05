@@ -307,8 +307,9 @@ function fragmentMain(): string {
   float gRCycle = (gp.y + gWarp * ${f(d.DUNE_M)}) / ${f(d.RIPPLE_M)} + 0.6 * gS1.a;
   float gR = fract(gRCycle);
   // Centred over its own cycle: the lee darkens and the rest lifts as much.
-  float gRLee = (gR >= ${f(rippleStoss)} ? sin(PI * (gR - ${f(rippleStoss)}) / ${f(d.RIPPLE_LEE)}) : 0.0) -
-                ${f(RIPPLE_MEAN)};
+  float gRLee = (gR >= ${f(rippleStoss)}
+                    ? sin(PI * (gR - ${f(rippleStoss)}) / ${f(d.RIPPLE_LEE)})
+                    : 0.0) - ${f(RIPPLE_MEAN)};
   float gAway = clamp(-dot(normalize(gCycleGrad), gLight), 0.0, 1.0);
   float gRipple = gRLee * gAway * (1.0 - gProfile) *
                   smoothstep(${f(d.RIPPLE_PX[0])}, ${f(d.RIPPLE_PX[1])}, ${f(d.RIPPLE_M)} / gMpp);

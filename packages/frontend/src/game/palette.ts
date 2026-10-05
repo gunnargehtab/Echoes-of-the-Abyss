@@ -563,10 +563,11 @@ function lightShade(dropX: number, dropY: number): number {
  * with the detail field under it. The step keeps `reliefShade`'s darken-only
  * shade; the detail adds what it changes about the light, signed. Its slopes
  * are a stationary noise's, so they average to nothing, and what is left is
- * the light's curvature: on flat ground it averages a shade under the fill, on
- * a lit step within a few ten-thousandths of it either way, and on a step turned
- * from the light a hair over the step's own shadow, never near the fill. A lit face lifts by at most
- * `TERRAIN_LIFT.BAKE`, the bake's share of the cap.
+ * the light's curvature: on flat ground it averages a shade under the fill,
+ * on a lit step within a few ten-thousandths of it either way, and on a step
+ * turned from the light a hair over the step's own shadow, never near the
+ * fill. A lit face lifts by at most `TERRAIN_LIFT.BAKE`, the bake's share of
+ * the cap.
  */
 export function reliefTextureGain(
   floorX: number,

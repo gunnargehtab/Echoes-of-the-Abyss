@@ -605,8 +605,8 @@ them the ground averages to its fill, where the 5–10 % band was authored, rath
 - **No texture averages brighter than its fill.** Each texture pass is centred: a face turned
   to the key light lifts and one turned from it darkens. Over many of its own scale — dune
   cycles, ripples, the relief's and the mottle's wavelengths — it averages to the fill or
-  under it, within a thousandth of the fill. So wherever the eye averages, the ground keeps its brightness, the fills keep the
-  5–10 % band, and depth keeps reading as luminance.
+  under it, within a thousandth of the fill. So wherever the eye averages, the ground keeps
+  its brightness, the fills keep the 5–10 % band, and depth keeps reading as luminance.
 - **No pixel lifts past 0.15 of its fill** (`TERRAIN_LIFT`): the bake's texture takes 0.05
   of it and the silt detail the rest. The ladder sets the cap ([map-visuals.md](map-visuals.md)
   §5). Its tightest pair, tritanopia's unselected ring over rung 5's floor, ties once the
