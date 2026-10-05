@@ -782,7 +782,8 @@ in `seabed.ts`; the stops are TUNABLE, the shape is not.
   where the ramp puts its knee because below the column's one physical boundary the light
   story is over, and **3,000 m** is `UI.background` exactly — the deep end of the new ramp
   is the flat colour the game already had. Nothing about the abyss changed. No line is
-  drawn at the thermocline: it is an inflection, not a boundary.
+  drawn at the thermocline in the water: it is an inflection, not a boundary. The ground
+  carries it as survey ink instead ([map-visuals.md](map-visuals.md) §4).
 - **Distance fades into the water the thing is standing in.** The fog over geometry takes
   its colour from the *fragment's own depth*, so a trench and the shelf beside it are the
   same distance away and fade to different darknesses. That is the luminance rule governing
