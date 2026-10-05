@@ -76,7 +76,7 @@ node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --du
 > **Refreshed on 5 Oct 2026 because a mechanic changed, not to reach a target** (#1092).
 > Same command, seeds and cap, run from `9193fb9`. No weight, price or TUNABLE moved. The
 > change: a depot rearms each hull to its own magazine, where it stopped at the roster's two.
-> No verdict, win rate or decided count moves; four of the yard's blocking counts move by one
+> No verdict, win rate or decided count moves; a few cells of the two yard tables move by one
 > observation.
 
 120 matches on `ventfront-divide`, seeds 4000–4009. 15 ended without a winner inside the time budget, on a median 0 of the 1 elimination a win needs.
