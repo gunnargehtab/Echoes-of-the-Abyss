@@ -71,7 +71,8 @@ import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { LampHaloPass } from '../src/game/lampHaloPass.ts';
 import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
-import { FAUNA_COLOR, TIER_STYLE } from '../src/game/palette.ts';
+import { FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
+import { RING_FAR_ALPHA, RING_NEAR_ALPHA } from '../src/game/scopeSweep.ts';
 import { BufferAttribute, FogExp2, Mesh, Points, type Scene } from 'three';
 
 /** What the shell was told, in the order it was told. */
@@ -723,6 +724,45 @@ describe('renderer smoke test: the chart', () => {
       }
     } finally {
       clock.mock.restore();
+      world.teardown();
+    }
+  });
+
+  it('labels both range rings inside the scope, and inks the far one threat-red (#1096)', async () => {
+    const world = await boot();
+    const chart = world.chart as unknown as {
+      minimapOverlayG: Graphics;
+      scopeRingLabels: Text[];
+      minimapRect(): { x: number; y: number; size: number };
+    };
+    try {
+      world.frame(1);
+      // The canned Bastion stands 600 m from two edges, which cuts the top of
+      // both rings: both labels are ones that have to come in through the frame.
+      const { x, y, size } = chart.minimapRect();
+      assert.deepEqual(
+        chart.scopeRingLabels.map((label) => label.text),
+        ['900m', '2400m']
+      );
+      for (const label of chart.scopeRingLabels) {
+        assert.ok(label.visible, `${label.text} is drawn`);
+        const inside =
+          label.x >= x &&
+          label.y >= y &&
+          label.x + label.width <= x + size + 1e-6 &&
+          label.y + label.height <= y + size + 1e-6;
+        assert.ok(inside, `${label.text} at (${label.x}, ${label.y}) on the scope at (${x}, ${y})`);
+      }
+      const strokes = chart.minimapOverlayG.context.instructions
+        .filter((instruction) => instruction.action === 'stroke')
+        .map(
+          (instruction) => (instruction.data as { style: { color: number; alpha: number } }).style
+        );
+      const ink = (color: number, alpha: number): boolean =>
+        strokes.some((style) => style.color === color && Math.abs(style.alpha - alpha) < 1e-9);
+      assert.ok(ink(UI.accent, RING_NEAR_ALPHA), 'the 900 m ring is the interface cyan');
+      assert.ok(ink(UI.threat, RING_FAR_ALPHA), 'the 2,400 m ring is threat-red');
+    } finally {
       world.teardown();
     }
   });
