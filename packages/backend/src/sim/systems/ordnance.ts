@@ -75,7 +75,7 @@ import { suppressKelpAt } from './hazards.ts';
 const ordnanceEntities = defineQuery([Ordnance, Position, Owner, Health]);
 /** Everything a seeker could conceivably home on: anything that makes noise. */
 const audible = defineQuery([Position, Acoustic, Owner, Health]);
-const magazines = defineQuery([Magazine, Position, Owner]);
+const magazines = defineQuery([Magazine, Position, Owner, Unit]);
 const depots = defineQuery([Structure, Position, Owner]);
 const suites = defineQuery([Countermeasure]);
 /**
@@ -260,7 +260,12 @@ function rearmSystem(world: SimWorld): void {
 
   for (let i = 0; i < carriers.length; i++) {
     const eid = carriers[i]!;
-    if (Magazine.torpedoes[eid]! >= ORDNANCE.TORPEDO.MAGAZINE) {
+    // The hull's own magazine, not the roster's two: the Broadside's four and
+    // the Lance's one are what those hulls are bought for, and a rearm that
+    // stopped at two gave one half its tubes back and the other twice its one
+    // (#1092). `decoyMagazines` reads its rack the same way.
+    const full = statsFor(Unit.kind[eid] as UnitKind).torpedoMagazine ?? ORDNANCE.TORPEDO.MAGAZINE;
+    if (Magazine.torpedoes[eid]! >= full) {
       Magazine.rearmRemainingS[eid] = 0;
       continue;
     }

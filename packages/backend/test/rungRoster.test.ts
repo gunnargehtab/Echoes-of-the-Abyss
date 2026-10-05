@@ -909,6 +909,30 @@ describe('the Broadside — twelve seconds of ordnance', () => {
   });
 });
 
+describe('the rearm — each hull to its own magazine (#1092)', () => {
+  // The rearm used to stop at the roster's two whatever the hull carried, so
+  // a Broadside came home to half a magazine and a Lance to twice its one.
+  // Emptied by hand rather than by launching: the Lance's cone and the
+  // launches' noise are other tests' business, and this one is the depot's.
+  for (const [navy, kind] of [
+    [Faction.Bathyarch, UnitKind.Broadside],
+    [Faction.Hadron, UnitKind.Lance],
+  ] as const) {
+    it(`refills a ${UnitKind[kind]} at the Bastion to its magazine and no further`, () => {
+      const { match, bastion } = skirmish(navy);
+      const x = Position.x[bastion]! + 150;
+      const at = hull(match, navy, kind, x, Position.y[bastion]!);
+      const magazine = statsFor(kind).torpedoMagazine!;
+      Magazine.torpedoes[at] = 0;
+
+      advance(match, ORDNANCE.TORPEDO.REARM_TIME_S * magazine + 1);
+      assert.equal(Magazine.torpedoes[at], magazine, `${magazine} at 15 s a torpedo`);
+      advance(match, ORDNANCE.TORPEDO.REARM_TIME_S * 2);
+      assert.equal(Magazine.torpedoes[at], magazine, 'and not one past it');
+    });
+  }
+});
+
 /**
  * The siege hulls (#508) — docs/units.md, "The siege hulls";
  * docs/systems-combat.md §9, "A weapon that is not a weapon".

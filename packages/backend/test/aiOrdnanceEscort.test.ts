@@ -17,10 +17,14 @@ import assert from 'node:assert/strict';
 import {
   AiDifficulty,
   Faction,
+  ORDNANCE,
   ResolutionTier,
   SIM,
+  StructureKind,
   UnitKind,
   statsFor,
+  structureStatsFor,
+  unitRadiusM,
   type Contact,
   type EchoSnapshot,
   type OwnUnit,
@@ -29,7 +33,7 @@ import { AiCommander } from '../src/ai/commander.ts';
 import { AiSeat, briefingFor } from '../src/ai/seat.ts';
 import { Match } from '../src/sim/match.ts';
 import { spawnUnit } from '../src/sim/world.ts';
-import { MoveOrder } from '../src/sim/components.ts';
+import { Magazine, MoveOrder, Velocity } from '../src/sim/components.ts';
 import type { AiBriefing, AiCommand } from '../src/ai/types.ts';
 
 const SEED = 0x1090;
@@ -241,5 +245,156 @@ describe('the walk reaches the sim (#1090)', () => {
     assert.equal(MoveOrder.active[broadside], 1, 'the Broadside was never ordered anywhere');
     const west = home.x + 540 - MoveOrder.x[broadside]!;
     assert.ok(west > 1000, `the Broadside is bound only ${Math.round(west)} m toward the fleet`);
+  });
+});
+
+describe('a spent hull goes to a depot and fills (#1090)', () => {
+  // The other half of the Broadside's stat block, "then ninety of sailing
+  // home empty" (docs/units.md). Before this an empty hull with a contact in
+  // reach stood where it emptied and ordered launches the server refused.
+  const depotsOf = (base: EchoSnapshot) =>
+    base.structures.filter(
+      (s) => s.kind === StructureKind.Bastion || s.kind === StructureKind.Foundry
+    );
+  /**
+   * Is this a point a hull of `kind` can stand at and fill: inside a depot's
+   * 300 m, and outside the ring separation holds it at? A walk aimed inside
+   * that ring never finishes (#1094).
+   */
+  const isBerth = (base: EchoSnapshot, kind: UnitKind, at: { x: number; y: number }) =>
+    depotsOf(base).some((s) => {
+      const d = Math.hypot(s.x - at.x, s.y - at.y);
+      const ring = structureStatsFor(s.kind).radiusM + unitRadiusM(kind);
+      return d >= ring && d <= ORDNANCE.TORPEDO.REARM_RANGE_M;
+    });
+  /** Where separation puts a hull of `kind` against a depot: on its ring, east. */
+  const onRing = (depot: { kind: StructureKind; x: number; y: number }, kind: UnitKind) => ({
+    x: depot.x + structureStatsFor(depot.kind).radiusM + unitRadiusM(kind),
+    y: depot.y,
+  });
+  const spent = (kind: UnitKind, hull: OwnUnit, aboard: number): OwnUnit =>
+    kind === UnitKind.Weaver ? { ...hull, decoys: aboard } : { ...hull, torpedoes: aboard };
+  const magazineOf = (kind: UnitKind) =>
+    kind === UnitKind.Weaver
+      ? statsFor(kind).decoyMagazine!
+      : (statsFor(kind).torpedoMagazine ?? ORDNANCE.TORPEDO.MAGAZINE);
+
+  for (const [navy, kind] of [
+    [Faction.Bathyarch, UnitKind.Broadside],
+    [Faction.Pelagia, UnitKind.Weaver],
+    [Faction.Hadron, UnitKind.Lance],
+  ] as const) {
+    it(`walks an empty ${UnitKind[kind]} out of a fight to a depot, and spends nothing`, () => {
+      const { brief, base } = rig(navy);
+      assert.ok(depotsOf(base).length > 0, 'the rig has no depot to walk to');
+      const { fleet, middle } = fleetOut(brief);
+      const hull = spent(kind, own(201, kind, middle.x, middle.y), 0);
+      const orders = ordersFor(brief, base, () => [...fleet, hull], [enemyNear(middle, 1500)]);
+      const moves = movesOf(orders, 201);
+      assert.ok(moves.length > 0, `an empty ${UnitKind[kind]} was never sent to fill`);
+      for (const move of moves)
+        assert.ok(isBerth(base, kind, move), 'walked somewhere it cannot fill');
+      assert.equal(
+        orders.filter((o) => (o.kind === 'torpedo' || o.kind === 'layDecoy') && o.unitId === 201)
+          .length,
+        0,
+        'an empty hull ordered a launch the server refuses'
+      );
+    });
+  }
+
+  it('keeps a filling hull at the depot until it is full', () => {
+    // Half-filled is not done: the rearm only runs in range, so a hull that
+    // left at two of four would be back for the rest a minute later.
+    const { brief, base } = rig(Faction.Bathyarch);
+    const { fleet } = fleetOut(brief);
+    const depot = depotsOf(base)[0]!;
+    // On the ring, where the sim holds it: the walk used to aim inside it, and
+    // a hull placed there by hand was the only one that ever stood still.
+    const ring = onRing(depot, UnitKind.Broadside);
+    const at = own(201, UnitKind.Broadside, ring.x, ring.y);
+    const orders = ordersFor(brief, base, (i) => [
+      ...fleet,
+      spent(UnitKind.Broadside, at, i === 0 ? 0 : 2),
+    ]);
+    assert.equal(movesOf(orders, 201).length, 0, 'a half-filled Broadside left its depot');
+  });
+
+  it('sends a full one back to the fleet', () => {
+    const { brief, base } = rig(Faction.Bathyarch);
+    const { fleet, middle } = fleetOut(brief);
+    const depot = depotsOf(base)[0]!;
+    const ring = onRing(depot, UnitKind.Broadside);
+    const at = own(201, UnitKind.Broadside, ring.x, ring.y);
+    const full = magazineOf(UnitKind.Broadside);
+    const moves = movesOf(
+      ordersFor(brief, base, (i) => [...fleet, spent(UnitKind.Broadside, at, i === 0 ? 0 : full)]),
+      201
+    );
+    assert.ok(moves.length > 0, 'a full Broadside stayed at its depot');
+    for (const move of moves) {
+      assert.ok(Math.hypot(move.x - middle.x, move.y - middle.y) < 1, 'and not to the fleet');
+    }
+  });
+
+  it('fires a part-spent Broadside rather than sending it home', () => {
+    // The control: the trip starts at empty, not at the first launch.
+    const { brief, base } = rig(Faction.Bathyarch);
+    const { fleet, middle } = fleetOut(brief);
+    const hull = spent(UnitKind.Broadside, own(201, UnitKind.Broadside, middle.x, middle.y), 2);
+    const orders = ordersFor(brief, base, () => [...fleet, hull], [enemyNear(middle, 1500)]);
+    assert.ok(
+      orders.some((o) => o.kind === 'torpedo' && o.unitId === 201),
+      'held its fire'
+    );
+    assert.equal(movesOf(orders, 201).length, 0, 'and was walked off its fight');
+  });
+
+  it('takes a real empty Broadside to a depot and fills it standing, all four', () => {
+    const { match, brief } = rig(Faction.Bathyarch);
+    const seat = new AiSeat(match, brief);
+    const home = brief.spawns[brief.slot]!;
+    const at = { x: home.x - OUT_M, y: home.y };
+    for (const dy of [0, 200]) {
+      spawnUnit(match.world, {
+        kind: UnitKind.Corvette,
+        slot: 1,
+        faction: Faction.Bathyarch,
+        x: at.x,
+        y: at.y + dy,
+      });
+    }
+    const broadside = spawnUnit(match.world, {
+      kind: UnitKind.Broadside,
+      slot: 1,
+      faction: Faction.Bathyarch,
+      x: at.x,
+      y: at.y + 100,
+    });
+    Magazine.torpedoes[broadside] = 0;
+    const full = magazineOf(UnitKind.Broadside);
+    // Two and a half minutes: up to fifteen seconds before a five-second walk
+    // window lands on a Veteran's every-third-observation decision, about a
+    // minute of sailing at 40 m/s, and a minute of fill at 15 s a torpedo.
+    let filling = 0;
+    let fillingUnderWay = 0;
+    let most = 0;
+    for (let i = 0; i < SIM.TICK_HZ * 150 && most < full; i++) {
+      const snapshot = match.update(STEP_MS)?.get(1);
+      if (snapshot !== undefined) seat.observe(snapshot);
+      most = Math.max(most, Magazine.torpedoes[broadside]!);
+      if (Magazine.rearmRemainingS[broadside]! > 0) {
+        filling++;
+        if (Math.hypot(Velocity.x[broadside]!, Velocity.y[broadside]!) > 0.5) fillingUnderWay++;
+      }
+    }
+    assert.equal(most, full, `filled to ${most} of ${full}`);
+    // Standing, so at its idle SIG: the walk used to aim inside the depot's
+    // ring and hold the hull against it under orders for the whole fill. A
+    // little under way is the last metres into the berth after the 300 m line.
+    assert.ok(
+      fillingUnderWay < filling * 0.05,
+      `under way for ${fillingUnderWay} of ${filling} ticks of fill`
+    );
   });
 });
