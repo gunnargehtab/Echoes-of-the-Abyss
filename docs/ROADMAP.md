@@ -764,12 +764,16 @@ rates. The rest of the mode can be built and played unrated before then.
 
 | Work | Issue |
 | --- | --- |
-| A fifth navy of mercenaries, after release | [#543](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/543) |
+| Mercenaries, a game-controlled party, designed; its build is unfiled | [#543](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/543) |
 
 Wave 6 ([#510](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/510)) kept the three hulls every navy shares and left their fiction open: four
-navies at war build the same three hulls from nobody. The answer is a fifth navy that sells
-them — multiplayer only, with its own roster and storyline. It waits because it is a fifth
-seat's worth of entities in a detection pass that already breaks its budget at about 160.
+navies at war build the same three hulls from nobody. The answer is
+[mercenaries.md](mercenaries.md): the moorages, crews who sail the commons under no flag. No
+player commands them. A commander hires a common hull at a moorage on the map, in person and
+heard, and it takes the buyer's orders while flying the moorage's flag, so no tier names who
+pays it. Skirmish rooms only, never the campaign. It adds a structure and three hulls to a
+detection pass that already crosses its budget at about 160, so its build waits on that
+measurement and on release.
 
 ---
 

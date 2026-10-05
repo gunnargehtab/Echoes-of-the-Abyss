@@ -38,6 +38,8 @@ Two centuries in the same water produced a common culture before it produced fou
 
 There are four factions and five registers. A court is not a culture — Sorrowgate has no plateaus, no cohorts and no Board — and it has a voice anyway, because the other four cannot share a room without somebody in it who is not arguing.
 
+The moorages ([mercenaries.md](mercenaries.md)) are not a sixth. They have a manner — terms rather than arguments: *signed*, *owed*, *quit*, *the book*, *struck*, everything counted by the tide — and no voice on the speech bus, because no mission speaks in it. The campaign never hears them, so this section stays at five.
+
 ### Bathyarch Consortium — the language of instruments
 
 Consortium speech is **procedural, exact, and quietly euphemistic**. They talk about people using the vocabulary of assets and outcomes, not because they are hiding cruelty but because the vocabulary is genuinely how they think — Varr-Kest's confidence intervals are sincere ([characters.md](characters.md)).
@@ -176,6 +178,7 @@ Address is by title in all four cultures, and getting a title wrong is a real er
 
 - **[world.md](world.md)** — the setting, and the three cultural facts this expands
 - **[factions.md](factions.md)** — what each culture is defending
+- **[mercenaries.md](mercenaries.md)** — the moorages, who have a manner of speech and no register
 - **[habitats.md](habitats.md)** — dry as luxury and silence as debt, walked through city by city
 - **[characters.md](characters.md)** — twelve people who speak these four registers
 - **[timeline.md](timeline.md)** — the calendar, and the history everyone argues about

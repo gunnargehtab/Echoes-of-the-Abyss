@@ -17,11 +17,12 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 
 | Doc | What it covers |
 | --- | --- |
-| **[world.md](world.md)** | The front door to the setting: one valley holding everyone, the Collapse, the Lid, why nobody goes back, the four powers, the Drift, and the Mouth |
+| **[world.md](world.md)** | The front door to the setting: one valley holding everyone, the Collapse, the Lid, why nobody goes back, the four powers, the Drift, the moorages, and the Mouth |
 | **[timeline.md](timeline.md)** | Two centuries, from the Collapse to 214 PC, and the Mouth's anomaly log |
 | **[world-map.md](world-map.md)** | The Rift's geography: regions, the vertical order, every named place, and where the campaign happens |
 | **[habitats.md](habitats.md)** | Inside the cities: berths, light, air, the hush, and what each culture calls beautiful — the plateaus, the Holding, Sorrowgate, the chapter-houses, Sufficiency |
 | **[factions.md](factions.md)** | The four powers — doctrine, politics, weakness |
+| **[mercenaries.md](mercenaries.md)** | The moorages, designed and unbuilt: crews who sail the three commons under no flag, a game-controlled party a commander hires from in skirmish rooms, and never in the campaign (#543) |
 | **[characters.md](characters.md)** | Twelve commanders, the neutrals, and the campaign's secondary cast |
 | **[culture.md](culture.md)** | How the Rift speaks — five registers, names, rituals, writing guide |
 | **[campaign.md](campaign.md)** | 29 missions designed, four campaigns, four irreconcilable endings — the Consortium's seven, convergence and ending included, are specified and built, and all 29 now have a document of record |
