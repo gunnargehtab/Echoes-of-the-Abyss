@@ -1528,6 +1528,7 @@ export class AiCommander implements AiPlayer {
     this.commandEconomy(snapshot, harvesters, commands);
     this.commandConstruction(snapshot, harvesters, raiders, purse, commands);
     this.commandProduction(snapshot, harvesters, army, purse, commands);
+    this.commandRally(snapshot, commands);
     this.commandScout(snapshot, scout, commands);
     this.commandOrdnance(snapshot, army, commands);
     this.commandCountermeasures(snapshot, commands);
@@ -3453,6 +3454,37 @@ export class AiCommander implements AiPlayer {
       return structure;
     }
     return null;
+  }
+
+  /**
+   * Point every yard that launches a fighting hull at the muster point (#703).
+   *
+   * The standing order a player gives a yard once and forgets, and what it
+   * buys is the gap between a launch and the commander's next decision: a
+   * hull leaves the apron on the tick it is built (`production.ts`) rather
+   * than sitting there until the army pass sees it. That gap is the cadence —
+   * 0.6 s for a Veteran, 3 s for a Recruit — and it is all the verb buys,
+   * because every pass already orders the hulls it owns on the next
+   * observation. The army pass still walks a straggler to the same point.
+   *
+   * The Bastion is left alone: its one line is the Harvester, which the
+   * economy pass sends to a field, so a rally there would walk every new
+   * hauler toward the enemy before turning it round. The Foundry launches
+   * haulers and scouts too, and each pays the same one cadence the other
+   * way — the price of a rally a yard keeps for every hull it builds.
+   *
+   * Read back from the snapshot rather than remembered: a yard whose rally is
+   * already the muster point is told nothing, a new yard is told on its first
+   * observation, and the muster point moving with `enemyStarts` re-points
+   * every yard without a second rule.
+   */
+  private commandRally(snapshot: EchoSnapshot, out: AiCommand[]): void {
+    const muster = this.rallyPoint();
+    const yards = snapshot.structures
+      .filter((s) => PRODUCIBLE[s.kind]?.some((kind) => kind !== UnitKind.Harvester) === true)
+      .filter((s) => s.rally === undefined || distance(s.rally, muster) > 1)
+      .map((s) => s.id);
+    if (yards.length > 0) out.push({ kind: 'rally', structureIds: yards, ...muster });
   }
 
   // --- Scouting -------------------------------------------------------------
