@@ -528,11 +528,11 @@ two, 76 on four, 156 on eight — and split 80 vertices. `bulwark-bathyarch.glb`
 324,608 to **331,428 bytes**: 2,560 the split vertices and the rest the glTF JSON naming
 them and the tags; the library goes from 19,738,720 to **19,745,540 raw bytes** and from
 2,564,136 to **2,567,479 gzipped**. The Consortium's sheet is **53,950 bytes** once, in the
-client's assets (31,159 before its laps, ramps and grime), and on the GPU three uploads it as RGBA8 with mipmaps, 1.33 MiB a navy
-present at 512², the line gate 6 holds the occlusion map to per model. Which hull is laid
-next is a call per hull, and cheap: a second Consortium script passes the same table and
-re-exports itself alone; another navy's plate starts in its own faction module, as a table
-and a drawn sheet.
+client's assets (31,159 before its laps, ramps and grime), and on the GPU three uploads it
+as RGBA8 with mipmaps, 1.33 MiB a navy present at 512², the line gate 6 holds the occlusion
+map to per model. Which hull is laid next is a call per hull, and cheap: a second
+Consortium script passes the same table and re-exports itself alone; another navy's plate
+starts in its own faction module, as a table and a drawn sheet.
 
 #### Ranked audit and remaining work
 
