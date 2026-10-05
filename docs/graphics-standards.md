@@ -642,7 +642,12 @@ the terrain material the canvas already draws, and stones the prop layer already
   0.11–0.26 ms, the close camera the most ([issue-1083](screenshots/issue-1083/README.md)),
   and a first cut that hashed its noise per fragment 0.27–0.49 and 0.46–1.05 ms. With it on,
   the conn frame read 0.64–0.82 and 1.25–1.67 ms: under the halo's 1.2 and 1.7 ms, by
-  0.03 ms at the close camera at 1.5.
+  0.03 ms at the close camera at 1.5. Centred and promoted (#1103), it read 0.04–0.13 and
+  0.11–0.26 ms, and the frame 0.82–1.01 and 1.42–1.84 ms
+  ([issue-1103](screenshots/issue-1103/README.md)). **The close camera at 1.5 is over the
+  1.7 ms line**, at 1.82–1.84 ms: the frame without the layer drifted from 1.41 to 1.58 ms on
+  main since #1083. The owner promoted the layer over the line, and the drift is
+  [#1114](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1114).
 - **CPU time.** `avgConnMs`, on − off, read −0.16 to +0.13 ms: run-to-run spread, since the
   layer adds no per-frame work on the CPU.
 - **Stations.** capture.mjs's four cameras and the fight station of `stations.mjs`, staged

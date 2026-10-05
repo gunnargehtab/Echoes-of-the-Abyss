@@ -1,0 +1,70 @@
+{
+  "search": "?map=ventfront-divide&seabed-detail=0",
+  "readings": [
+    {
+      "name": "home",
+      "camera": {
+        "x": 1340,
+        "z": 1300,
+        "distance": 1500,
+        "pitchDeg": 55
+      },
+      "drawCalls": 57,
+      "triangles": 150696,
+      "props": 367,
+      "propTris": 99520
+    },
+    {
+      "name": "silt",
+      "camera": {
+        "x": 3182,
+        "z": 1664,
+        "distance": 420,
+        "pitchDeg": 50
+      },
+      "drawCalls": 22,
+      "triangles": 133435,
+      "props": 367,
+      "propTris": 99520
+    },
+    {
+      "name": "trench",
+      "camera": {
+        "x": 1825,
+        "z": 554,
+        "distance": 520,
+        "pitchDeg": 50
+      },
+      "drawCalls": 22,
+      "triangles": 133435,
+      "props": 367,
+      "propTris": 99520
+    },
+    {
+      "name": "low",
+      "camera": {
+        "x": 1340,
+        "z": 1300,
+        "distance": 3500,
+        "pitchDeg": 12
+      },
+      "drawCalls": 58,
+      "triangles": 150696,
+      "props": 367,
+      "propTris": 99520
+    },
+    {
+      "name": "survey",
+      "camera": {
+        "x": 1340,
+        "z": 1300,
+        "distance": 18000,
+        "pitchDeg": 88
+      },
+      "drawCalls": 57,
+      "triangles": 150676,
+      "props": 367,
+      "propTris": 99520
+    }
+  ]
+}

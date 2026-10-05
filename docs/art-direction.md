@@ -598,8 +598,9 @@ it is.
 [#1103](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1103) the fill was a
 ceiling. A darken-only texture can only draw shadows. At the home dolly the ground sits near
 20 of 255, so those shadows moved too few code values to read, and the silt detail below
-stayed at two fifths of #967's target. The owner lifted the ceiling on two conditions, which
-keep the ground exactly as quiet as before:
+stayed at two fifths of #967's target. The owner lifted the ceiling on two conditions. Under
+them the ground averages to its fill, where the 5–10 % band was authored, rather than the
+5 % or so under it where darken-only texture had held the home plateau:
 
 - **No texture averages brighter than its fill.** Each texture pass is centred: a face turned
   to the key light lifts and one turned from it darkens. Over many of its own scale — dune
@@ -727,7 +728,8 @@ without ripples, and rock admits no water at all.
   whole cap.
 - **Cost.** No pass, draw call or triangle. One RGBA8 texture of one texel a cell, 4 KiB
   on a 32 × 32 map, and the 64 KiB noise lattice, once a page. GPU time is read on the
-  named GPU (gate 6, [issue-1083](screenshots/issue-1083/README.md)).
+  named GPU (gate 6, [issue-1083](screenshots/issue-1083/README.md),
+  [issue-1103](screenshots/issue-1103/README.md)).
 
 **Seated stones.** The stone props stand sunk into the silt by a share of their own
 height: `env-open-boulder` 0.3 (1.8 of its 6 m), `env-vent-basalt` 0.15 (1.2 of 8 m) and
