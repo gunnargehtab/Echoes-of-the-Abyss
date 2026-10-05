@@ -3570,11 +3570,11 @@ export class AiCommander implements AiPlayer {
    * **And three of them sail with the fleet** (#1090). The Broadside, the
    * Weaver and the Lance carry no gun, so they are not in `army` and the army
    * pass never orders them — and until this pass did, nothing did: measured
-   * over ninety matches, every Broadside spent its life 540 m off its yard,
-   * firing at what came to the base, and no Weaver in a four-seat match laid
-   * a single decoy. So with nothing to spend on, each waits with the fleet on
-   * `commandSiege`'s terms (`keepWithFleet`). The Thurible has a gun and is
-   * the army's to move.
+   * over ninety matches, every Broadside spent its life beside its yard,
+   * 540 m from home, firing at what came to the base, and no Weaver in a
+   * four-seat match laid a single decoy. So with nothing to spend on, each
+   * waits with the fleet on `commandSiege`'s terms (`keepWithFleet`). The
+   * Thurible has a gun and is the army's to move.
    */
   private commandOrdnance(
     snapshot: EchoSnapshot,
@@ -3610,8 +3610,9 @@ export class AiCommander implements AiPlayer {
           // on top of each other and has spent its magazine on one contact.
           // Moving is read off the hull's own track, as `commandCountermeasures`
           // reads it (`UNDER_WAY_M`); this branch used to ask only whether the
-          // hull was 700 m from home, and a Weaver launched at a Foundry
-          // 650 m out stood there and laid every decoy it carried on one spot.
+          // hull was 700 m from home, so a Weaver launched inside that never
+          // laid, and one launched just past it stood there and laid every
+          // decoy it carried on one spot.
           if (best === null || bestD > SCREEN_RANGE_M) break;
           if (Math.hypot(hull.x - this.home.x, hull.y - this.home.y) < RANGE.ARRIVE_M) break;
           const stood = this.stoodAt.get(hull.id);
@@ -3845,8 +3846,8 @@ export class AiCommander implements AiPlayer {
   /**
    * Walk a hull the army pass does not order to wherever the army is.
    *
-   * The fleet's centroid, less the hull itself, the siege hull on its errand
-   * and the hulls the last observation posted, or the rally point when there
+   * The fleet's centroid, less the hull itself, the siege hull and the hulls
+   * the last observation posted, or the rally point when there
    * is no fleet. Re-issued on a five-second clock and only from outside
    * `RANGE.ARRIVE_M`, so a hull that has arrived is left standing: one walked
    * a few metres at every window never stands still long enough to fire.

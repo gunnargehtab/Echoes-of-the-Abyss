@@ -4,7 +4,7 @@
  * The Broadside, the Weaver and the Lance carry no gun, so they are not in the
  * commander's `army` and the army pass never orders them. Until
  * `keepWithFleet` did, nothing did: over ninety matches every Broadside spent
- * its life 540 m off its yard, and no Weaver in a four-seat match laid a
+ * its life beside its yard, 540 m from home, and no Weaver in a four-seat match laid a
  * decoy, because the screen's only gate was 700 m from home and a Weaver
  * launches 617–718 m out.
  *
