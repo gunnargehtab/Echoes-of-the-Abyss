@@ -265,7 +265,7 @@ is used four ways. Each wave is one pull request and one row in
 | 5 — line and anchor (done, #509) | Caisson, Reed, Bower | none | the Consortium and Commune doctrines stop buying Corvettes; the Bower is judged where the Slipway is reached (#518) |
 | 6 — the commons (done, #510) | none | none | a decision, from the harness: retire the Light Scout, Corvette and Cruiser from the bars, or keep them as the surplus market — **kept**, see §8 |
 | 7 — the mid-tier (#531) | Derrick, Responsory | guns that read SIG: acquire-by-loudness, and damage paid by the target's | the Cruiser's four dead entries become two hulls that are built, without the win rates spreading further than the composition bid already moved them |
-| 8 — the carriers (#838) | Gantry, Rootstock, Succentor, Offertory | a flight: craft built on a deck, launched into the carrier's band, fighting the carrier's target and dying with it | every navy fields a hull that never fires, and the flight's berths are paid by the deck rather than by the water |
+| 8 — the carriers (#838) | Gantry, Rootstock, Succentor, Offertory | a flight: craft built on a deck, launched into the carrier's band, fighting the carrier's target and dying with it | every navy fields a hull that never fires, and the flight's berths are paid by the deck rather than by the water — **unmet**, and waiting on §8's pricing question by the owner's ruling on #915 (§4) |
 
 **Wave 0** is the part that is not glamorous and cannot be skipped. It is issue #498, and it
 settled four things:
@@ -1001,6 +1001,16 @@ economy that never banks it. The Commune orders no deck in any row: its Sower's 
 is open at 13,796 of its 15,330 observations, and by the ruling on #839 the deck yields to
 both.
 
+**The ruling on #915: the order stays.** The owner took the call, as on #839, rather than
+leaving it to the freeze. The ordnance hull, the heavy and the siege hull are still bought
+before the deck. The Knights still save for the Spire before their rung, and the Commune's
+deck stays below its Sower and Bower. With the rung paying for fewer than one hull a navy a
+match, any order picks which wave's hull goes unbuilt. Putting the deck first trades the
+carriers for the Furnace and the Thurible; it does not field both. So wave 8's gate stays
+unmet, and both committed baselines read `Bought 0` in every column of the carrier table at
+the time of the ruling. What it waits on is §8's pricing question, not the commander. The
+repairs above were measured at `b8bf546` and were not re-run for the ruling.
+
 ### The gate, and what a duel actually says
 
 Issue #518's fourth option asked for a long-form duel *"and make **that** the gate for waves 4 and
@@ -1177,6 +1187,11 @@ And one the second half of #520 leaves open:
   the roster is deliberately a hull only a long match reaches, in which case these two should be
   the only never-built heavies and that is the design working, or they are priced against a bank
   no navy in this simulation has ever held.
+
+  **The carriers wait on the same question** (#915). The rung pays for fewer than one hull a
+  navy a match, so a carrier that is fourth in the order of purchase is never bought, and the
+  owner's ruling in §4 keeps it fourth. Whoever answers this question decides whether a match
+  can pay for a second rung hull. If one can, wave 8's gate is met with no change to the order.
 
 And two others, both on #495:
 
