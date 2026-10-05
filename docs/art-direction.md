@@ -528,8 +528,12 @@ pass the navy's sheet (`hull-intake` `bake.mjs --trim`, which `tools/hull-maps/b
 passes for a model named for a navy with one), so the Bulwark's baked sprite carries the
 same luminance detail at 4 px/m, which is gate 4 applied — the bake takes the albedo's
 luminance and recolours it — and its height and emissive maps are byte for byte what they
-were. The lit table (`tools/hull-renders/inspect.mjs`) and the portraits show the bare file,
-since neither attaches a sheet yet.
+were. The lit table (`tools/hull-renders/inspect.mjs`) and the portraits
+(`tools/hull-renders/render.mjs`) attach the sheet too, by the name each material carries, as
+`trimSheets.ts` does ([#1112](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1112),
+`tools/hull-renders/trimSheets.mjs`), so a reviewer judges the plates the conn view draws; an
+untagged model renders byte for byte as before. The lit table's `--before` column takes the
+sheet as it stood at that revision, so a change to the sheet itself shows in a before and after.
 
 The first hull is the Bulwark, the owner's choice where the issue asked for one hull, taken
 in the open in the pull request's Options: the hull #540 opened with, a slab with three tiers

@@ -27,6 +27,14 @@
  * (PerspectiveView.ts `applyCamera`) — a stern three-quarter, and a plan
  * with +Z at the foot of the frame, as the conn view has it.
  *
+ * A material the script laid out for its navy's trim sheet wears the sheet,
+ * as the conn view attaches it at load (trimSheets.mjs, #1112), so the plates
+ * a reviewer judges are the ones the game draws. The --before column takes
+ * the sheet as it stood at that revision, not this tree's: a navy's look is
+ * one table and one PNG, and a before that borrowed today's PNG would hide a
+ * change to the sheet itself. A model with no tag is photographed bare, as
+ * it was before the sheets.
+ *
  * Not a gate, like render.mjs: a picture informs a review and never passes
  * one. hull-intake and check.mjs measure; this shows.
  */
@@ -38,6 +46,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { basename, dirname, extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { SHEET_DIR } from '../hull-models/trim.mjs';
 import { spawn } from '../lib/spawn.mjs';
 import { CHROMIUM_ARGS, emptyFrame } from './chromium.mjs';
 
@@ -146,12 +155,49 @@ function loadPlaywright() {
   throw new Error('Could not load Playwright (`npm i -g playwright`).');
 }
 
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.glb': 'model/gltf-binary' };
+/**
+ * Where a model's sheet is read from: this tree's, or for the --before
+ * column the file as it stood at that revision, copied out of git once into
+ * the scratch directory. Null when there is none, which leaves the material
+ * bare on the page, as a sheet the build does not carry does in the game.
+ */
+const sheetAt = (modelId, name) => {
+  // The name comes from a file's extras, so it may only ever name a sheet.
+  if (!/^[a-z0-9-]+$/.test(name)) return null;
+  if (modelId !== 'before') return join(repo, SHEET_DIR, `${name}.png`);
+  const at = join(scratch, `before-trim-${name}.png`);
+  if (!existsSync(at)) {
+    try {
+      const blob = execFileSync('git', ['show', `${before}:${SHEET_DIR}/${name}.png`], {
+        cwd: repo,
+        stdio: ['ignore', 'pipe', 'ignore'],
+        maxBuffer: 1 << 26,
+      });
+      writeFileSync(at, blob);
+    } catch {
+      return null;
+    }
+  }
+  return at;
+};
+
+const MIME = {
+  '.html': 'text/html',
+  '.js': 'text/javascript',
+  '.mjs': 'text/javascript',
+  '.glb': 'model/gltf-binary',
+  '.png': 'image/png',
+};
 const server = createServer((req, res) => {
   const url = new URL(req.url, 'http://x');
   let path = null;
   if (url.pathname === '/inspect.html') path = join(here, 'inspect.html');
-  else if (url.pathname.startsWith('/model/')) {
+  else if (url.pathname === '/trimSheets.mjs') path = join(here, 'trimSheets.mjs');
+  else if (url.pathname.startsWith('/trim/')) {
+    const [modelId, file] = url.pathname.slice('/trim/'.length).split('/');
+    if (models.some((m) => m.id === modelId) && file?.endsWith('.png'))
+      path = sheetAt(modelId, file.slice(0, -'.png'.length));
+  } else if (url.pathname.startsWith('/model/')) {
     const m = models.find((x) => `/model/${x.id}.glb` === url.pathname);
     path = m?.file ?? null;
   } else if (url.pathname.startsWith('/deps/')) {
@@ -193,6 +239,16 @@ try {
   const empty = await page.evaluate(emptyFrame);
   if (empty) throw new Error(`empty frame: ${empty}`);
   const shots = await page.evaluate(() => window.__shots);
+  // Which columns wear a sheet: the picture alone cannot say whether bare
+  // plate is an untagged model or a tag with no sheet behind it.
+  const trims = await page.evaluate(() => window.__trims);
+  for (const m of models) {
+    const t = trims[m.id];
+    if (t.sheets.length > 0)
+      console.log(`${m.id}: trim sheet ${t.sheets.join(', ')} on ${t.materials} material(s)`);
+    if (t.missing.length > 0)
+      console.warn(`${m.id}: no sheet named ${t.missing.join(', ')}; left bare`);
+  }
   await page.close();
 
   // The sheet: one row a view, one column a model, labelled, as a page
