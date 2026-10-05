@@ -588,10 +588,35 @@ deterministic detail relief under the authored floor and lights it with the shar
 light, so a vent field reads as broken ground, the trench floor as pressure-eroded stone,
 and coral ruins as terraced right angles — "Environmental Shapes" below, become pixels.
 Its amplitude belongs to the biome (SPEC: the per-biome table lives in
-`packages/frontend/src/game/seabed.ts`, values TUNABLE), it only ever darkens the authored
-fill, and it is **render-only**: the simulation never reads it, no gameplay quantity —
-floors, collisions, PF, detection — may ever derive from it, and it must never out-shade an
-authored terrain step. It is what the ground looks like, never what it is.
+`packages/frontend/src/game/seabed.ts`, values TUNABLE), it is centred on the authored fill
+rather than drawn under it (below), and it is **render-only**: the simulation never reads it,
+no gameplay quantity — floors, collisions, PF, detection — may ever derive from it, and it
+must never out-shade an authored terrain step. It is what the ground looks like, never what
+it is.
+
+**Texture is centred on the fill, and capped under the ink.** Until
+[#1103](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1103) the fill was a
+ceiling. A darken-only texture can only draw shadows. At the home dolly the ground sits near
+20 of 255, so those shadows moved too few code values to read, and the silt detail below
+stayed at two fifths of #967's target. The owner lifted the ceiling on two conditions, which
+keep the ground exactly as quiet as before:
+
+- **No texture averages brighter than its fill.** Each texture pass is centred: a face turned
+  to the key light lifts and one turned from it darkens. Over the pass's own scale — a dune
+  cycle, a ripple, the relief's and the mottle's wavelengths — its mean sits at or under the
+  fill. So wherever the eye averages, the ground keeps its brightness, the fills keep the 5–10 %
+  band, and depth keeps reading as luminance.
+- **No pixel lifts past 0.15 of its fill** (`TERRAIN_LIFT`): the bake's texture takes 0.05
+  of it and the silt detail the rest. The ladder sets the cap ([map-visuals.md](map-visuals.md)
+  §5). Its tightest pair, tritanopia's unselected ring over rung 5's floor, ties once the
+  palest fill is lifted by 0.19. At 0.15, every rung the tests hold still clears the one below
+  it over the lifted ground, and a lit face lifts the palest fill less than the quietest line
+  of survey ink lifts it.
+
+What stays darken-only is everything that is not texture. `depthShade` does, because
+luminance is depth. An authored step's hillshade does, because a lit shelf edge would read
+as shallower ground. And the cliff shadows, a mesa's rim and a seated stone's scour do,
+because each is the shadow of something.
 
 Three further layers of the same texture-not-information rule:
 
@@ -599,17 +624,18 @@ Three further layers of the same texture-not-information rule:
   luminance-only variegation — sediment, growth, scatter — from an independent noise
   channel in the same bake. It is hue-preserving by construction (all three channels
   scale together, because hue belongs to the biome and the biome is what sound is
-  priced by), darken-only under the same ceiling as everything else, and its per-biome
+  priced by), centred on the fill under the same cap as every texture, and its per-biome
   strength lives in the `seabed.ts` table with the relief numbers.
 - **Rock speaks in stone.** Ground that admits no water — mesas, trench walls, the
   rock over a roofed passage — is the one ground with no propagation factor to
   encode, so it takes no biome fill: it renders in the hue-neutral stone ramp
   (`rock-face` / `rock-shadow`, [style-neon-noir.md](style-neon-noir.md) "The
-  stone"), with its own darken-only relief — jagged, cliff-lipped, shadowed at the
-  base where a mesa meets open ground. The ramp's ceiling sits below the palest
-  biome fill on purpose: ground you can enter always speaks louder than ground you
-  cannot, and the cyan blocked-ground overlay stays the only voice that says
-  "not for *this* hull".
+  stone"), with its own relief — jagged, cliff-lipped, shadowed at the base where a
+  mesa meets open ground. Its crags are texture, centred on `rock-face` like any other;
+  its rim and its cliff shadow darken only. The ramp sits below the palest biome fill on
+  purpose, and stays there lifted: 1.15 × `rock-face` is still under the palest fill. Ground
+  you can enter always speaks louder than ground you cannot, and the cyan blocked-ground
+  overlay stays the only voice that says "not for *this* hull".
 - **World light.** Terrain-owned light exists in exactly three families, spec'd and
   capped in [style-neon-noir.md](style-neon-noir.md) "World light": **vent ember**
   points in `#E06A2B` (SPEC — deliberately redder than Bathyarch's hazard amber),
@@ -624,18 +650,19 @@ Three further layers of the same texture-not-information rule:
 #### Silt detail and seated stones — SPEC
 
 *For [#1083](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1083): #967's dune
-study, made fit for every map. It is development-only until a decision written here
-promotes it.*
+study, made fit for every map, and promoted to every match on
+[#1103](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1103).*
 
 The bake draws the ground at 7.8 m a pixel, so at the home dolly, about a metre a pixel,
 the plain between two isobaths is one smooth wash. The target asks for low silt dunes and
 current ripples running east–west, shallow scours, and faceted stone half-buried in the
 silt ([issue-967](screenshots/issue-967/README.md), round 2). It is a fourth layer of
 texture, not information, and it obeys every rule above: render-only, deterministic,
-hue-preserving, darken-only, and quieter than any authored step.
+hue-preserving, centred on the fill under the cap, and quieter than any authored step.
 
-**Silt detail** is four terms shaded in the terrain's own fragment shader. Each is a
-fraction in [0, 1], and the biome's strength says how far it may darken a pixel:
+**Silt detail** is four terms shaded in the terrain's own fragment shader. Each is signed,
+in [−1, 1]: a positive term darkens and a negative one lifts. The biome's strength says how
+far either way it may move a pixel:
 
 | Ground | Dunes | Ripples | Scours | Grain | Sum |
 | --- | --- | --- | --- | --- | --- |
@@ -652,23 +679,31 @@ so open water carries the most. Kelp baffles the current, and a vent field is br
 basalt with no silt to ripple. The trench is still water over pressure-eroded stone, swells
 without ripples, and rock admits no water at all.
 
-- **Never out-shading a step is structural.** A term never exceeds 1, so a pixel loses at
+- **Never out-shading a step is structural.** No term exceeds 1, so a pixel loses at
   most its row's sum, an encoded-space gain like the bake's. No row may exceed **0.40**:
   a full-strength authored face darkens the fill to 0.58, and the detail at its worst holds
   0.60. The bound is a property of the table, which a test holds, not of a picture.
 - **Why so near a face.** The ground sits near 20 of 255 at the home dolly. Capped at half
   a face, 0.21, the layer moved one pixel in ten by a single code value, and its texture
-  read nothing; at 0.40 two pixels in five move and the dunes show. The target's silt is
-  about two and a half times livelier still, because its lit faces rise above the fill.
-  This SPEC does not license that ([issue-1083](screenshots/issue-1083/README.md)).
+  read nothing; at 0.40 two pixels in five move and the dunes show. Darken-only, that was
+  still two fifths of the target's liveliness, because the target's lit faces rise above
+  the fill ([issue-1083](screenshots/issue-1083/README.md)). Signed terms give the same
+  table twice the span, and the cap below bounds the lit half.
+- **Centred, and capped.** Each term is centred on its own mean, measured off the lattice
+  it reads, so a patch of silt averages at or under the fill. A dune is centred over its
+  cycle, offset by the least that keeps a saturated lee from tipping the mean bright. A
+  ripple is centred over its own 7 m, a scour on the lattice's share of hollow, and grain on
+  the lattice's mean byte. The detail lifts the bake's pixel by at most 0.095, so with the
+  bake's own 0.05 no pixel passes `TERRAIN_LIFT`'s 0.15 of its fill.
 - **Dunes** run in crests 110 m apart, east–west, meandering over 420 m. The lee face is
   the south 30 % of each dune, down-current. They are hillshaded by the key light about
-  flat ground: a face turned from it darkens by the whole strength, flat ground by half,
-  and a face turned to it not at all, so the dunes read by their shadows, the way a ridge
-  does. A second field on the meander's 420 m lattice fades them in and out, down to a
+  flat ground: a face turned from it darkens by the whole strength, flat ground stays at
+  the fill, and a face turned to it lifts, as far as the cap lets it. The dunes read by
+  their lit faces as well as their shadows, the way a ridge does. A second field on the meander's 420 m lattice fades them in and out, down to a
   quarter of their strength.
-- **Ripples** lie 7 m apart, parallel to the dunes and settled in their troughs. A ripple
-  draws while it spans 8 pixels and is gone at 3. **Scours** are hollows on a 38 m field,
+- **Ripples** lie 7 m apart, parallel to the dunes and settled in their troughs. A
+  ripple's lee darkens, and the rest of its 7 m lifts by as much in sum. A ripple draws
+  while it spans 8 pixels and is gone at 3. **Scours** are hollows on a 38 m field,
   drawn out 1.8 times longer north–south, along the current.
   **Grain** runs at 3 m and 1.3 m, each octave whole from 6 pixels and gone at 3.
 - **The layer fades with distance.** It is whole through 2 m a pixel and gone by 8, so the
@@ -684,7 +719,9 @@ without ripples, and rock admits no water at all.
   comes from its screen derivatives rather than more of them.
 - **Order.** It lands after the bake's colour and the veil's vertex colour, and before the
   survey ink and the fog. Ink lifts darker ground further, but the ladder already weighs
-  ink over black, the fully drained veil, so darkening cannot break it.
+  ink over black, the fully drained veil, so darkening cannot break it. Ink lifts paler
+  ground less, so the ladder's tests also weigh it over the palest fill lifted by the
+  whole cap.
 - **Cost.** No pass, draw call or triangle. One RGBA8 texture of one texel a cell, 4 KiB
   on a 32 × 32 map, and the 64 KiB noise lattice, once a page. GPU time is read on the
   named GPU (gate 6, [issue-1083](screenshots/issue-1083/README.md)).
@@ -703,12 +740,14 @@ the edge, like an ember's glow. A ground delta's rebake of the touched cells and
 then redraws every scour it moved. Being in the bake, it costs nothing per frame, and fog,
 veil and ink treat it as ground.
 
-**Gated until promoted.** The layer and the seated stones draw only in a development build
-opened with `?seabed-detail=1`, or with `?dream-loop=1`, which studies them alongside the
-rest of #967. It runs on the standard surfaces only: Sorrowgate keeps its own mission
-surface ([visual-reboot.md](visual-reboot.md) §5). Promotion to every match is one
-predicate, `seabedDetailEnabled` in `packages/frontend/src/game/seabedDetail.ts`, with
-the decision written here.
+**Promoted on #1103.** The layer and the seated stones draw in every match, on the
+standard surfaces only: Sorrowgate keeps its own mission surface
+([visual-reboot.md](visual-reboot.md) §5). The owner took promotion with the lift above,
+not without it: darken-only, the layer was one few players would notice, and
+floor-following asks them to pick ground they can see. A development build opened with
+`?seabed-detail=0` draws the ground without them, for an on/off pair; no shipped build can.
+The switch is one predicate, `seabedDetailEnabled` in
+`packages/frontend/src/game/seabedDetail.ts`.
 
 ### Reading the Water
 

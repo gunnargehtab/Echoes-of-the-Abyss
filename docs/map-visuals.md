@@ -194,8 +194,11 @@ ground's hatch in the two red-green palettes, whose mid-SIG ring is amber. It li
 ground more than rung 5's four quiet outlines in all four. Rung 7's floor on the chart does not
 clear rung 6's: a Tier-3 contact's ring and glyph, in its navy's colour, lift some ground less
 than rung 6's floor in every palette. The tests pin where, and §10 records it. Rungs 1 to 3 are
-the ground every lift is measured over. What rung 7 draws in the conn view cannot be weighed
-without a GPU, and §10 says why.
+the ground every lift is measured over. Its palest pixel is the palest fill lifted by the
+terrain cap, 0.15 ([art-direction.md](art-direction.md) "Reading the Sea Floor"), and the tests
+weigh every rung over it beside the fill itself. The cap is set by this ladder: at 0.19 the
+unselected ring falls under rung 5's floor in tritanopia. What rung 7 draws in the conn view
+cannot be weighed without a GPU, and §10 says why.
 
 Two consequences worth naming:
 
