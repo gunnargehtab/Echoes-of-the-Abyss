@@ -320,7 +320,8 @@ The conn view renders the world at runtime — the terrain heightfield and the p
 *own* roster models — inside the budgets the Phase-1 measurement pinned
 ([three-layer-ocean.md](three-layer-ocean.md)) and the berth ceiling restated (below):
 **≤ 150 draw calls** and **≤ 400 k triangles** on screen (`mergeByMaterial` collapses each
-model to one mesh per material),
+model to one mesh per material, and every own model of one template draws as one
+`InstancedMesh` per material, `rosterBatches.ts`),
 pixel ratio capped at 1.5, and the `__perspectiveProbe` frame-cost telemetry is how the
 number is checked rather than argued about. A frame that renders more than once is counted
 whole: every pass's draw calls, triangles and GPU time sum, a full-screen draw is a call
@@ -390,8 +391,8 @@ and a ring on the seabed canvas the join baked, on the seed and the depth ramp t
 set — so the arch falls and nothing else on the map re-textures.
 
 **The berth ceiling** ([#1027](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1027)).
-The force once budgeted was five hulls; a commander may hold forty berths, and a hull costs
-a call per material, up to six a berth in three navies. Read on the named GPU at
+The force once budgeted was five hulls; a commander may hold forty berths, and drawn one by
+one a hull cost a call per material, up to six a berth in three navies. Read on the named GPU at
 `capture.mjs`'s four cameras on Ventfront, where the opening is 63–64 calls and 151 k
 triangles ([issue-1027](screenshots/issue-1027/README.md)): forty Beacons and the four
 structures that grant the ceiling read 290–292 calls and 292 k triangles; with a dozen
@@ -402,12 +403,21 @@ touch a drawn triangle, so the force's triangles are budgeted rather than engine
 The dozen is a sample because nothing caps what a base builds. A base heavier in Foundries
 or Slipways can exceed the 400 k (a Bastion and eleven Pelagia Foundries count to about 457 k
 with those hulls), and that edge is recorded, not budgeted; the probe is the check. The **150
-calls stand**, and the ceiling breaches them until own models are instanced per kind
-([#1079](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1079)), which
-counts the 336 back to about 102. The breach costs the CPU rather than the GPU: against
-the opening, queued GPU time rose 0.05–0.17 ms, `avgConnMs` 1.1–1.5 ms, and the unqueued
-bracket, the handover, 3.8–4.7 ms, at ratio 1 and 1.5. `capture.mjs` logs a breach
-instead of failing on it with `OVER_BUDGET=record`.
+calls stand**, and the ceiling now holds them: since every own model of one template, its
+kind, navy, look and palette, draws as one `InstancedMesh` per material
+([#1079](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1079)), the forty
+Beacons and a dozen structures read 80 calls at the home, low and survey cameras and 63 at
+close, against 336 and 242 drawn one by one. Those are SwiftShader's counts, which for the
+uninstanced frame matched the named GPU's call for call and triangle for triangle
+([issue-1079](screenshots/issue-1079/README.md)). Each hull keeps its own gate-3 factor as a
+per-instance attribute on lamps its kind shares. A template is culled by one sphere round
+all of its instances, so a camera that frames part of the force draws triangles it used to
+cull, 308 k at close against 263 k, and never more than the whole force on screen, which is
+the frame the 400 k budgets. The breach cost the CPU rather than the GPU: against the
+opening, queued GPU time rose 0.05–0.17 ms, `avgConnMs` 1.1–1.5 ms, and the unqueued
+bracket, the handover, 3.8–4.7 ms, at ratio 1 and 1.5. Those times are the uninstanced
+frame's, and the instanced frame's are still to be read on the named GPU. `capture.mjs`
+logs a breach instead of failing on it with `OVER_BUDGET=record`.
 
 A classified animal drawn as stipple ([map-visuals.md](map-visuals.md) §8) is overlay
 ink, not conn geometry: it spends no draw call and no triangle here, it is priced in

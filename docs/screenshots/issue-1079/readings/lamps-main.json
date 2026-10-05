@@ -1,0 +1,399 @@
+{
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "software": true,
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "dpr": 1
+  },
+  "look": "standard",
+  "faction": 0,
+  "palette": "standard",
+  "curve": {
+    "efold": 14,
+    "min": 0.05,
+    "max": 6
+  },
+  "readings": [
+    {
+      "state": "rest",
+      "input": "none",
+      "frame": "02-rest-caisson.png",
+      "crop": "02-rest-caisson-crop.png",
+      "clip": {
+        "x": 587,
+        "y": 394,
+        "width": 263,
+        "height": 114
+      },
+      "unit": {
+        "id": 185,
+        "name": "Caisson",
+        "sig": 64,
+        "restSig": 64,
+        "silentRunning": false,
+        "engineOff": false
+      },
+      "factor": 1,
+      "curve": 1,
+      "lamps": [
+        {
+          "sitesPx": [
+            5.77,
+            5.7
+          ],
+          "areaPx": 95,
+          "hex": "#f2b233",
+          "exportIntensity": 0.4561274725146121,
+          "restIntensity": 0.4561274725146121,
+          "intensity": 0.4561274725146121,
+          "afterToneMapping": true
+        },
+        {
+          "sitesPx": [
+            16.35,
+            16.37,
+            16.39,
+            16.41,
+            16.03,
+            16.04,
+            16.06,
+            16.08,
+            50.37,
+            49.1
+          ],
+          "areaPx": 705.1,
+          "hex": "#f2b233",
+          "exportIntensity": 1.325461358491563,
+          "restIntensity": 1.1262236334021603,
+          "intensity": 1.1262236334021603,
+          "afterToneMapping": true
+        },
+        {
+          "sitesPx": [
+            2.68,
+            2.68,
+            2.68,
+            2.68,
+            2.61,
+            2.61,
+            2.61,
+            2.61,
+            3.34,
+            3.34,
+            3.34,
+            3.29,
+            3.29,
+            3.29,
+            2.39,
+            2.39,
+            2.4,
+            2.41,
+            4.14
+          ],
+          "areaPx": 259.7,
+          "hex": "#f2b233",
+          "exportIntensity": 1,
+          "restIntensity": 1,
+          "intensity": 1,
+          "afterToneMapping": true
+        }
+      ],
+      "camera": {
+        "distance": 500,
+        "pitchDeg": 55,
+        "hullScale": 1,
+        "waterReachM": 1600
+      },
+      "pixels": {
+        "n": 29982,
+        "maxV": 0.914,
+        "over05": 1851,
+        "over08": 661,
+        "clipped": 0,
+        "meanV": 0.2001,
+        "brightest1pc": {
+          "v": 0.91,
+          "saturation": 0.749,
+          "hueDeg": 39.7
+        },
+        "lampInk": {
+          "hueDeg": 39.9,
+          "saturation": 0.789
+        }
+      }
+    },
+    {
+      "state": "silent",
+      "input": "Space",
+      "frame": "03-silent-caisson.png",
+      "crop": "03-silent-caisson-crop.png",
+      "clip": {
+        "x": 587,
+        "y": 394,
+        "width": 263,
+        "height": 114
+      },
+      "unit": {
+        "id": 185,
+        "name": "Caisson",
+        "sig": 8,
+        "restSig": 64,
+        "silentRunning": true,
+        "engineOff": false
+      },
+      "factor": 0.05,
+      "curve": 0.01831563888873418,
+      "lamps": [
+        {
+          "sitesPx": [
+            5.77,
+            5.7
+          ],
+          "areaPx": 95.1,
+          "hex": "#f2b233",
+          "exportIntensity": 0.4561274725146121,
+          "restIntensity": 0.4561274725146121,
+          "intensity": 0.022806373625730608,
+          "afterToneMapping": true
+        },
+        {
+          "sitesPx": [
+            16.35,
+            16.37,
+            16.39,
+            16.41,
+            16.03,
+            16.04,
+            16.06,
+            16.08,
+            50.37,
+            49.1
+          ],
+          "areaPx": 705.5,
+          "hex": "#f2b233",
+          "exportIntensity": 1.325461358491563,
+          "restIntensity": 1.1262236334021603,
+          "intensity": 0.05631118167010801,
+          "afterToneMapping": true
+        },
+        {
+          "sitesPx": [
+            2.68,
+            2.68,
+            2.68,
+            2.68,
+            2.61,
+            2.61,
+            2.61,
+            2.61,
+            3.34,
+            3.34,
+            3.34,
+            3.29,
+            3.29,
+            3.29,
+            2.39,
+            2.39,
+            2.4,
+            2.41,
+            4.14
+          ],
+          "areaPx": 259.5,
+          "hex": "#f2b233",
+          "exportIntensity": 1,
+          "restIntensity": 1,
+          "intensity": 0.05,
+          "afterToneMapping": true
+        }
+      ],
+      "camera": {
+        "distance": 500,
+        "pitchDeg": 55,
+        "hullScale": 1,
+        "waterReachM": 1600
+      },
+      "pixels": {
+        "n": 29982,
+        "maxV": 0.388,
+        "over05": 0,
+        "over08": 0,
+        "clipped": 0,
+        "meanV": 0.1365,
+        "brightest1pc": {
+          "v": 0.347,
+          "saturation": 0.469,
+          "hueDeg": 43.2
+        },
+        "lampInk": {
+          "hueDeg": 39.9,
+          "saturation": 0.789
+        }
+      }
+    },
+    {
+      "state": "rest",
+      "input": "none",
+      "frame": "04-rest-light-scout.png",
+      "crop": "04-rest-light-scout-crop.png",
+      "clip": {
+        "x": 626,
+        "y": 402,
+        "width": 185,
+        "height": 93
+      },
+      "unit": {
+        "id": 184,
+        "name": "Light Scout",
+        "sig": 6,
+        "restSig": 6,
+        "silentRunning": false,
+        "engineOff": false
+      },
+      "factor": 1,
+      "curve": 1,
+      "lamps": [
+        {
+          "sitesPx": [
+            3.33,
+            3.28,
+            3.31,
+            10.38,
+            5.28
+          ],
+          "areaPx": 119.4,
+          "hex": "#f2b233",
+          "exportIntensity": 3.5,
+          "restIntensity": 1.1262236334021603,
+          "intensity": 1.1262236334021603,
+          "afterToneMapping": true
+        }
+      ],
+      "camera": {
+        "distance": 500,
+        "pitchDeg": 55,
+        "hullScale": 1,
+        "waterReachM": 1600
+      },
+      "pixels": {
+        "n": 17205,
+        "maxV": 0.91,
+        "over05": 125,
+        "over08": 65,
+        "clipped": 0,
+        "meanV": 0.1106,
+        "brightest1pc": {
+          "v": 0.671,
+          "saturation": 0.699,
+          "hueDeg": 41.9
+        },
+        "lampInk": {
+          "hueDeg": 39.9,
+          "saturation": 0.789
+        }
+      }
+    },
+    {
+      "state": "engine-off",
+      "input": "Q",
+      "frame": "05-engine-off-light-scout.png",
+      "crop": "05-engine-off-light-scout-crop.png",
+      "clip": {
+        "x": 626,
+        "y": 402,
+        "width": 185,
+        "height": 93
+      },
+      "unit": {
+        "id": 184,
+        "name": "Light Scout",
+        "sig": 1.75,
+        "restSig": 6,
+        "silentRunning": false,
+        "engineOff": true
+      },
+      "factor": 0.7381771603086269,
+      "curve": 0.7381771603086269,
+      "lamps": [
+        {
+          "sitesPx": [
+            3.33,
+            3.28,
+            3.31,
+            10.38,
+            5.28
+          ],
+          "areaPx": 119.5,
+          "hex": "#f2b233",
+          "exportIntensity": 3.5,
+          "restIntensity": 1.1262236334021603,
+          "intensity": 0.8313525635772707,
+          "afterToneMapping": true
+        }
+      ],
+      "camera": {
+        "distance": 500,
+        "pitchDeg": 55,
+        "hullScale": 1,
+        "waterReachM": 1600
+      },
+      "pixels": {
+        "n": 17205,
+        "maxV": 0.894,
+        "over05": 100,
+        "over08": 74,
+        "clipped": 0,
+        "meanV": 0.1091,
+        "brightest1pc": {
+          "v": 0.599,
+          "saturation": 0.689,
+          "hueDeg": 41.6
+        },
+        "lampInk": {
+          "hueDeg": 39.9,
+          "saturation": 0.789
+        }
+      }
+    }
+  ],
+  "pairs": [
+    {
+      "unit": "Caisson",
+      "louder": "rest",
+      "quieter": "silent",
+      "factorStep": 0.95,
+      "comparable": true,
+      "linearSum": [
+        1225.61,
+        668.15,
+        56.97
+      ],
+      "linearTotal": 1950.73,
+      "hueDeg": 31.4,
+      "saturation": 0.954,
+      "lampInkLinear": {
+        "hueDeg": 28.9,
+        "saturation": 0.963
+      }
+    },
+    {
+      "unit": "Light Scout",
+      "louder": "rest",
+      "quieter": "engine-off",
+      "factorStep": 0.2618,
+      "comparable": true,
+      "linearSum": [
+        17,
+        9.82,
+        2.43
+      ],
+      "linearTotal": 29.26,
+      "hueDeg": 30.4,
+      "saturation": 0.857,
+      "lampInkLinear": {
+        "hueDeg": 28.9,
+        "saturation": 0.963
+      }
+    }
+  ]
+}
