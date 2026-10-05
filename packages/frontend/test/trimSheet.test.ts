@@ -51,19 +51,38 @@ const materialsOf = (root: Group): MeshStandardMaterial[] => {
 };
 
 describe('the trim sheet on a roster model', () => {
-  it('ships the Consortium sheet, once, as a repeating sRGB texture', () => {
-    assert.ok(TRIM_SHEET_NAMES.includes('bathyarch'), `sheets: ${TRIM_SHEET_NAMES}`);
-    const sheet = trimSheet('bathyarch');
-    assert.ok(sheet);
-    assert.equal(trimSheet('bathyarch'), sheet, 'a second ask made a second texture');
-    assert.equal(sheet.colorSpace, SRGBColorSpace);
-    assert.equal(sheet.wrapS, RepeatWrapping);
-    // v 0 is the sheet's first row, as the layout and glTF have it.
-    assert.equal(sheet.flipY, false);
-    // Four taps, so a deck seen edge-on keeps its plates.
-    assert.equal(sheet.anisotropy, TRIM_SHEET.ANISOTROPY);
-    assert.equal(TRIM_SHEET.ANISOTROPY, 4);
-    assert.equal(trimSheet('no-such-navy'), null);
+  it('filters every sheet at four taps', () => assert.equal(TRIM_SHEET.ANISOTROPY, 4));
+
+  for (const name of ['bathyarch', 'directorate'])
+    it(`ships ${name}, once, as a repeating sRGB texture`, () => {
+      assert.ok(TRIM_SHEET_NAMES.includes(name), `sheets: ${TRIM_SHEET_NAMES}`);
+      const sheet = trimSheet(name);
+      assert.ok(sheet);
+      assert.equal(trimSheet(name), sheet, 'a second ask made a second texture');
+      assert.equal(sheet.colorSpace, SRGBColorSpace);
+      assert.equal(sheet.wrapS, RepeatWrapping);
+      // v 0 is the sheet's first row, as the layout and glTF have it.
+      assert.equal(sheet.flipY, false);
+      // Four taps, so a deck seen edge-on keeps its plates.
+      assert.equal(sheet.anisotropy, TRIM_SHEET.ANISOTROPY);
+      assert.equal(trimSheet('no-such-navy'), null);
+    });
+
+  it('keeps Directorate trim shared across templates and separate from lamps and other navies', () => {
+    const key = { unit: UnitKind.LightScout, faction: Faction.Directorate };
+    const bare = materialsOf(buildTemplate(hull('no-such-navy'), key).root);
+    const first = materialsOf(buildTemplate(hull('directorate'), key).root);
+    const second = materialsOf(buildTemplate(hull('directorate'), key).root);
+    assert.equal(first.length, bare.length, 'trim added a material bucket');
+    first.forEach((m, i) => {
+      assert.deepEqual(m.color, bare[i].color, 'trim changed the palette ink');
+      assert.deepEqual(m.emissive, bare[i].emissive);
+      assert.equal(m.emissiveIntensity, bare[i].emissiveIntensity);
+      assert.equal(m.emissiveMap, bare[i].emissiveMap);
+      assert.equal(m.map, second[i].map, 'a second template uploaded another sheet');
+      assert.equal(m.map, m.name === 'iron_grey' ? trimSheet('directorate') : null);
+    });
+    assert.notEqual(trimSheet('directorate'), trimSheet('bathyarch'));
   });
 
   it('attaches the tagged material to its sheet, under the faction ink, and never a lamp', () => {

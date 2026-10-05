@@ -67,7 +67,10 @@
  * tone from an integer hash, ramped along its length, under grime and a
  * grain. Every number is the navy's (factions/bathyarch.mjs `TRIM` is the
  * first, and its `name` is the sheet's file and tag), so the image is
- * reproduced wherever the script runs and compared texel by texel.
+ * reproduced wherever the script runs and compared texel by texel. The
+ * Directorate's `tergite` pattern keeps the bands but curves their
+ * transverse seams, without the stagger or longitudinal grid: shadow under
+ * an overlap and growth along its curve.
  */
 import * as THREE from 'three';
 import { occludes } from './glb.mjs';
@@ -177,6 +180,7 @@ function valueNoise(xm, ym, cellM, cells, seed) {
  * keys draws what it drew before them, texel for texel.
  */
 export function drawTrimSheet({
+  pattern = 'plate',
   size = 512,
   plateM = 12,
   strakeM = 6,
@@ -198,6 +202,9 @@ export function drawTrimSheet({
   rivetInM = 0.35,
   samples = 1,
   grain = 0.015,
+  archPx = 0,
+  growth = 0,
+  growthRings = 5,
 } = {}) {
   const bands = bandsOf();
   const pixels = new Uint8Array(size * size);
@@ -223,10 +230,15 @@ export function drawTrimSheet({
     const s = Math.min(band.rows - 1, Math.floor(span * band.rows));
     const t = span * band.rows - s;
     const strakeH = ((band.v1 - band.v0) * size) / band.rows;
-    const up = u * PLATES + (s % 2 ? 0.5 : 0);
+    // A tergite overlaps across the shell, not in staggered rectangular
+    // patches. The arch meets its neighbour at both strake edges; only
+    // the transverse seam is inked, never a grid around each patch.
+    const chitin = pattern === 'tergite';
+    const arch = chitin ? (archPx / 512) * PLATES * 4 * t * (1 - t) : 0;
+    const up = u * PLATES + (chitin ? arch : s % 2 ? 0.5 : 0);
     const p = Math.floor(up) % PLATES;
     const a = up - Math.floor(up);
-    let L = light * (1 - tone * hash(band.rows, s, p));
+    let L = light * (1 - tone * hash(band.rows, chitin ? 0 : s, p));
     // A plate is never quite flat: a slow ramp along it, its sign the plate's.
     if (ramp) L *= 1 + ramp * (hash(7, band.rows, s, p) < 0.5 ? -1 : 1) * (2 * a - 1);
     if (grime) {
@@ -237,10 +249,19 @@ export function drawTrimSheet({
         0.35 * valueNoise(xm, ym, wrapM / fine, fine, 13);
       L *= 1 - grime * smoothstep(0.35, 0.8, n);
     }
+    // Texel seams, the plate's or a tergite's; the metre keys below are the
+    // plate pattern's alone.
     if (!(seamM > 0)) {
-      const d = Math.min(Math.min(a, 1 - a) * plateW, Math.min(t, 1 - t) * strakeH);
+      const du = Math.min(a, 1 - a) * plateW;
+      const d = chitin ? du : Math.min(du, Math.min(t, 1 - t) * strakeH);
       if (d < seamT) return L * seam;
-      return L * (1 - weather * (1 - smoothstep(seamT, seamT + weatherT, d)));
+      const wear = 1 - smoothstep(seamT, seamT + weatherT, d);
+      // Shadow under the overlapping lip, a clean edge above it. Growth
+      // follows that same curve and fades at the lip instead of crossing it.
+      L *= 1 - weather * wear * (chitin && a > 0.5 ? 0 : 1);
+      if (chitin)
+        L -= growth * (0.5 + 0.5 * Math.cos(a * growthRings * Math.PI * 2)) * Math.sin(a * Math.PI);
+      return L;
     }
     const texV = strakeM / strakeH;
     const seamV = Math.max(seamM, texV);

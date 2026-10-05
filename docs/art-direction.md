@@ -513,9 +513,10 @@ camera keeps its plates; that is a sampler state, not a pass, call or texel more
 On the GTX 1070, with ten Bulwarks on screen at `capture.mjs`' four cameras on Ventfront,
 gate 6's queued GPU time reads 0.71 to 0.96 ms at pixel ratio 1 and 1.32 to 1.91 ms at 1.5,
 at four taps and at one alike within 0.03 ms a camera
-([readings](screenshots/issue-1107/anisotropy-gate6.json)). Sorrowgate and the fight
-station field no model laid out on a sheet until the Consortium's others are, and are read
-then.
+([readings](screenshots/issue-1107/anisotropy-gate6.json)). Sorrowgate's Consortium
+delegation and the fight station's opening fleet carry no laid-out Consortium model until
+the Consortium's others are, and are read then. The Directorate's sheet below takes the
+same four taps; its own GPU reading is the one #1108 leaves open.
 
 Embedding the sheet in each file was the first cut and the owner's call to reverse: 31 KB a
 model that gzip cannot shrink, 2.9 MB over the 94 navy models were every navy given a sheet,
@@ -543,6 +544,59 @@ as RGBA8 with mipmaps, 1.33 MiB a navy present at 512², the line gate 6 holds t
 map to per model. Which hull is laid next is a call per hull, and cheap: a second
 Consortium script passes the same table and re-exports itself alone; another navy's plate
 starts in its own faction module, as a table and a drawn sheet.
+
+The Directorate's sheet ([#1108](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1108))
+keeps that layout machinery, but not the Consortium's rectangular patchwork or its
+numbers above. Its substrate is segmented chitin: **8 m** tergites, **6 m** target strakes,
+two tergites per **16 m** wrap. The `tergite` draw mode curves each transverse seam by
+**24 texels** at 512², meeting the next strake's curve without a longitudinal grid.
+The **1.5 texel** seam sits at **0.45** of the shell's light; **8 texels** of shadow at
+**0.14** strength lie under the overlap, with a clean lip on the other side. Five faint
+growth lines follow each segment's curve at **0.035** strength, fading at the lip;
+**0.04** segment tone variation and **0.01** grain sit under a **0.98** light ceiling.
+These are surface marks, not new geometry, rivets or biolights. The Light Scout is the
+first hull: its carapace and tail expose the sheet in the opening fleet, while its three
+photophore domes keep their approved resting light. Other Directorate models remain
+unlaid. The sheet has the same 512² sRGB, mipmapped RGBA8 upload and page-lifetime ownership
+as the Consortium's: **1.33 MiB** once per navy present, no extra draw or triangle.
+The Light Scout's GLB grows from **60,388 to 68,612 bytes** (+8,224; gzip 8,598 to 13,173),
+with **32 parts and 468 triangles** unchanged; its layout splits 73 vertices and tags
+three cladding materials. The sheet is **37,757 bytes**, mean linear luminance **0.938**.
+Only the fallback albedo changes: normal, height and calibrated emissive intake maps
+remain byte-identical. [The hull comparison](screenshots/issue-1108/hull-review.png) shows
+the sheet, maps and bare-file shape check; [the close scout pair](screenshots/issue-1108/scout.png)
+and [four in-game views](screenshots/issue-1108/views.png) show the shipped material.
+The [before](screenshots/issue-1108/before.json) and [after](screenshots/issue-1108/after.json)
+counts stay at 53–54 draws and at most 148,239 triangles; textures rise from 20 to 21.
+These are Chrome/SwiftShader visual captures at 1080×675, not GPU timing evidence:
+the standard 240-frame capture timed out, so the four views were held for four seconds
+each. The offline intake, lit-table and roster-sheet harnesses accept
+`PLAYWRIGHT_CHANNEL=chrome` to use installed Chrome when bundled Chromium is absent.
+
+**Evidence follow-up (#1108).** Independent visual reviews now cover all three
+comparison sheets: the hull/maps, close scout and four-camera view. The four-camera
+review found no obvious silhouette, faction-colour, HUD or acoustic-overlay regression.
+Its cameras are comparable, not pixel-identical: small eye/focus offsets and different
+simulation states prevent attributing every changed pixel to the trim. Survey distance
+does not resolve the trim; the close scout pair, not the survey frame, shows its detail.
+Still images do not establish temporal stability while the camera moves.
+An independent code review of `d62ffa62` → `c720cfa6` also found no significant
+issues, covering the drawing branch, layout opt-in, tests and browser selection.
+This closes the review-coverage gap left by the unavailable automated review service;
+it is not a claim that the service itself recovered.
+
+**Still open: hardware measurement and motion.** The follow-up runner exposes only
+`hyperv_drm` on `/dev/dri/card1`, with no GPU render node. A longer SwiftShader capture
+cannot close the hardware timing gap, and the four-second captures above do not satisfy
+the standard 240-frame dwell. On a GPU-equipped desktop, compare the baseline `d62ffa62`
+and trimmed assets at the same camera and Directorate fleet state, using
+`tools/render-stack/capture.mjs` with a headed browser, `UNPACED=1` and `VIEW_DPR=1`,
+then `VIEW_DPR=1.5`. Retain the renderer identity, four views and `readings.json`;
+require `software: false`, `gpuTimer: timing`, at least 240 frames per camera and the
+queued load longer than the measured frame. Review a moving-camera pass for seam
+shimmer as well. Select the Directorate **before readying**: the stock `drive.mjs`
+readies its default navy before invoking `--steps`, so passing the capture module alone
+does not prove this navy was measured. No GPU-time or motion pass is claimed here.
 
 #### Ranked audit and remaining work
 
