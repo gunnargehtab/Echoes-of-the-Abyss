@@ -65,6 +65,7 @@ import {
   requiredPressureRating,
   statsFor,
   structureStatsFor,
+  unitRadiusM,
   ECONOMY_ACCOUNTS,
   affords,
   charge,
@@ -643,11 +644,16 @@ function atTheRung(kind: UnitKind): boolean {
 const ORDNANCE_REACH_M = 2200;
 
 /**
- * How close to a depot a spent ordnance hull is walked before it is left to
- * fill: well inside the 300 m the rearm runs at, as the Spinner's nursery is
- * inside the Bastion's, so a hull that stops a little short is still in it.
+ * Clearance past a depot's footprint at which a spent ordnance hull is berthed.
+ *
+ * Separation holds a hull at the structure's radius plus its own
+ * (`sim/systems/separation.ts`), so a walk aimed inside that ring never
+ * finishes: the hull is held at the edge under orders, at cruise SIG, for its
+ * whole fill. Ten metres out is a point it reaches and stops at, and inside
+ * the rearm's 300 m for every pairing in the roster — the widest, a Broadside
+ * at a Bastion, berths at 290.
  */
-const REARM_AT_M = ORDNANCE.TORPEDO.REARM_RANGE_M * 0.6;
+const REARM_BERTH_CLEARANCE_M = 10;
 
 /**
  * How far ahead of the push a Weaver lays, and how close an enemy has to be
@@ -3591,7 +3597,7 @@ export class AiCommander implements AiPlayer {
    * waits with the fleet on `commandSiege`'s terms (`keepWithFleet`). The
    * Thurible has a gun and is the army's to move.
    *
-   * **And a spent one goes home** (`rearmTrip`): an empty hull with a contact
+   * **And a spent one goes to a depot** (`rearmTrip`): an empty hull with a contact
    * in reach used to stand where it emptied, ordering launches the server
    * refused.
    */
@@ -3866,15 +3872,6 @@ export class AiCommander implements AiPlayer {
   }
 
   /**
-   * Walk a hull the army pass does not order to wherever the army is.
-   *
-   * The fleet's centroid, less the hull itself, the siege hull and the hulls
-   * the last observation posted, or the rally point when there
-   * is no fleet. Re-issued on a five-second clock and only from outside
-   * `RANGE.ARRIVE_M`, so a hull that has arrived is left standing: one walked
-   * a few metres at every window never stands still long enough to fire.
-   */
-  /**
    * Send a spent ordnance hull to a depot and keep it there until it is full.
    * True when the hull is on the trip, and this pass gives it no other order.
    *
@@ -3925,10 +3922,31 @@ export class AiCommander implements AiPlayer {
       this.keepWithFleet(snapshot, hull, army, out);
       return true;
     }
-    if (depotD > REARM_AT_M) this.walk(hull, depot, snapshot.tick, out);
+    // Already filling: left standing, so it fills at its idle SIG.
+    if (depotD <= ORDNANCE.TORPEDO.REARM_RANGE_M) return true;
+    const berth =
+      structureStatsFor(depot.kind).radiusM + unitRadiusM(hull.kind) + REARM_BERTH_CLEARANCE_M;
+    this.walk(
+      hull,
+      {
+        x: depot.x + ((hull.x - depot.x) / depotD) * berth,
+        y: depot.y + ((hull.y - depot.y) / depotD) * berth,
+      },
+      snapshot.tick,
+      out
+    );
     return true;
   }
 
+  /**
+   * Walk a hull the army pass does not order to wherever the army is.
+   *
+   * The fleet's centroid, less the hull itself, the siege hull and the hulls
+   * the last observation posted, or the rally point when there
+   * is no fleet. Re-issued on a five-second clock and only from outside
+   * `RANGE.ARRIVE_M`, so a hull that has arrived is left standing: one walked
+   * a few metres at every window never stands still long enough to fire.
+   */
   private keepWithFleet(
     snapshot: EchoSnapshot,
     hull: OwnUnit,

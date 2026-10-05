@@ -23,6 +23,8 @@ import {
   StructureKind,
   UnitKind,
   statsFor,
+  structureStatsFor,
+  unitRadiusM,
   type Contact,
   type EchoSnapshot,
   type OwnUnit,
@@ -31,7 +33,7 @@ import { AiCommander } from '../src/ai/commander.ts';
 import { AiSeat, briefingFor } from '../src/ai/seat.ts';
 import { Match } from '../src/sim/match.ts';
 import { spawnUnit } from '../src/sim/world.ts';
-import { Magazine, MoveOrder } from '../src/sim/components.ts';
+import { Magazine, MoveOrder, Velocity } from '../src/sim/components.ts';
 import type { AiBriefing, AiCommand } from '../src/ai/types.ts';
 
 const SEED = 0x1090;
@@ -254,8 +256,22 @@ describe('a spent hull goes to a depot and fills (#1090)', () => {
     base.structures.filter(
       (s) => s.kind === StructureKind.Bastion || s.kind === StructureKind.Foundry
     );
-  const nearDepot = (base: EchoSnapshot, at: { x: number; y: number }) =>
-    depotsOf(base).some((s) => Math.hypot(s.x - at.x, s.y - at.y) < 1);
+  /**
+   * Is this a point a hull of `kind` can stand at and fill: inside a depot's
+   * 300 m, and outside the ring separation holds it at? A walk aimed inside
+   * that ring never finishes (#1094).
+   */
+  const isBerth = (base: EchoSnapshot, kind: UnitKind, at: { x: number; y: number }) =>
+    depotsOf(base).some((s) => {
+      const d = Math.hypot(s.x - at.x, s.y - at.y);
+      const ring = structureStatsFor(s.kind).radiusM + unitRadiusM(kind);
+      return d >= ring && d <= ORDNANCE.TORPEDO.REARM_RANGE_M;
+    });
+  /** Where separation puts a hull of `kind` against a depot: on its ring, east. */
+  const onRing = (depot: { kind: StructureKind; x: number; y: number }, kind: UnitKind) => ({
+    x: depot.x + structureStatsFor(depot.kind).radiusM + unitRadiusM(kind),
+    y: depot.y,
+  });
   const spent = (kind: UnitKind, hull: OwnUnit, aboard: number): OwnUnit =>
     kind === UnitKind.Weaver ? { ...hull, decoys: aboard } : { ...hull, torpedoes: aboard };
   const magazineOf = (kind: UnitKind) =>
@@ -276,7 +292,8 @@ describe('a spent hull goes to a depot and fills (#1090)', () => {
       const orders = ordersFor(brief, base, () => [...fleet, hull], [enemyNear(middle, 1500)]);
       const moves = movesOf(orders, 201);
       assert.ok(moves.length > 0, `an empty ${UnitKind[kind]} was never sent to fill`);
-      for (const move of moves) assert.ok(nearDepot(base, move), 'walked somewhere but a depot');
+      for (const move of moves)
+        assert.ok(isBerth(base, kind, move), 'walked somewhere it cannot fill');
       assert.equal(
         orders.filter((o) => (o.kind === 'torpedo' || o.kind === 'layDecoy') && o.unitId === 201)
           .length,
@@ -292,7 +309,10 @@ describe('a spent hull goes to a depot and fills (#1090)', () => {
     const { brief, base } = rig(Faction.Bathyarch);
     const { fleet } = fleetOut(brief);
     const depot = depotsOf(base)[0]!;
-    const at = own(201, UnitKind.Broadside, depot.x + 100, depot.y);
+    // On the ring, where the sim holds it: the walk used to aim inside it, and
+    // a hull placed there by hand was the only one that ever stood still.
+    const ring = onRing(depot, UnitKind.Broadside);
+    const at = own(201, UnitKind.Broadside, ring.x, ring.y);
     const orders = ordersFor(brief, base, (i) => [
       ...fleet,
       spent(UnitKind.Broadside, at, i === 0 ? 0 : 2),
@@ -304,7 +324,8 @@ describe('a spent hull goes to a depot and fills (#1090)', () => {
     const { brief, base } = rig(Faction.Bathyarch);
     const { fleet, middle } = fleetOut(brief);
     const depot = depotsOf(base)[0]!;
-    const at = own(201, UnitKind.Broadside, depot.x + 100, depot.y);
+    const ring = onRing(depot, UnitKind.Broadside);
+    const at = own(201, UnitKind.Broadside, ring.x, ring.y);
     const full = magazineOf(UnitKind.Broadside);
     const moves = movesOf(
       ordersFor(brief, base, (i) => [...fleet, spent(UnitKind.Broadside, at, i === 0 ? 0 : full)]),
@@ -329,7 +350,7 @@ describe('a spent hull goes to a depot and fills (#1090)', () => {
     assert.equal(movesOf(orders, 201).length, 0, 'and was walked off its fight');
   });
 
-  it('turns a real empty Broadside for home', () => {
+  it('takes a real empty Broadside to a depot and fills it standing, all four', () => {
     const { match, brief } = rig(Faction.Bathyarch);
     const seat = new AiSeat(match, brief);
     const home = brief.spawns[brief.slot]!;
@@ -351,19 +372,28 @@ describe('a spent hull goes to a depot and fills (#1090)', () => {
       y: at.y + 100,
     });
     Magazine.torpedoes[broadside] = 0;
-    // Sixteen seconds, for the same clock the escort's real-match arm waits on.
-    let last: EchoSnapshot | undefined;
-    for (let i = 0; i < SIM.TICK_HZ * 16; i++) {
+    const full = magazineOf(UnitKind.Broadside);
+    // Two and a half minutes: up to fifteen seconds for the walk clock, about
+    // a minute of sailing at 40 m/s, and a minute of fill at 15 s a torpedo.
+    let filling = 0;
+    let fillingUnderWay = 0;
+    let most = 0;
+    for (let i = 0; i < SIM.TICK_HZ * 150 && most < full; i++) {
       const snapshot = match.update(STEP_MS)?.get(1);
-      if (snapshot === undefined) continue;
-      seat.observe(snapshot);
-      last = snapshot;
+      if (snapshot !== undefined) seat.observe(snapshot);
+      most = Math.max(most, Magazine.torpedoes[broadside]!);
+      if (Magazine.rearmRemainingS[broadside]! > 0) {
+        filling++;
+        if (Math.hypot(Velocity.x[broadside]!, Velocity.y[broadside]!) > 0.5) fillingUnderWay++;
+      }
     }
-    assert.equal(MoveOrder.active[broadside], 1, 'the empty Broadside was never ordered anywhere');
-    const bound = { x: MoveOrder.x[broadside]!, y: MoveOrder.y[broadside]! };
+    assert.equal(most, full, `filled to ${most} of ${full}`);
+    // Standing, so at its idle SIG: the walk used to aim inside the depot's
+    // ring and hold the hull against it under orders for the whole fill. A
+    // little under way is the last metres into the berth after the 300 m line.
     assert.ok(
-      nearDepot(last!, bound),
-      `bound for (${Math.round(bound.x)}, ${Math.round(bound.y)})`
+      fillingUnderWay < filling * 0.05,
+      `under way for ${fillingUnderWay} of ${filling} ticks of fill`
     );
   });
 });
