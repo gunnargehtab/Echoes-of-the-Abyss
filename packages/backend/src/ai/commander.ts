@@ -643,6 +643,13 @@ function atTheRung(kind: UnitKind): boolean {
 const ORDNANCE_REACH_M = 2200;
 
 /**
+ * How close to a depot a spent ordnance hull is walked before it is left to
+ * fill: well inside the 300 m the rearm runs at, as the Spinner's nursery is
+ * inside the Bastion's, so a hull that stops a little short is still in it.
+ */
+const REARM_AT_M = ORDNANCE.TORPEDO.REARM_RANGE_M * 0.6;
+
+/**
  * How far ahead of the push a Weaver lays, and how close an enemy has to be
  * before it bothers.
  *
@@ -1216,6 +1223,14 @@ export class AiCommander implements AiPlayer {
    * dead hulls fall out of it.
    */
   private readonly stoodAt = new Map<number, { x: number; y: number }>();
+  /**
+   * Ordnance hulls on a rearm trip, by id: in when the magazine reads empty,
+   * out when it reads full (`rearmTrip`). Held rather than read off the
+   * snapshot each time, because the count between those two is the same for
+   * a hull walking home empty-handed and one walking out half-filled, and
+   * only the first should be at the depot.
+   */
+  private readonly rearming = new Set<number>();
   /** Rotates a rejected build placement, since a refusal is silent. */
   private buildAttempt = 0;
   /** Which leg of the scouting route the scout is on. */
@@ -3575,6 +3590,10 @@ export class AiCommander implements AiPlayer {
    * four-seat match laid a single decoy. So with nothing to spend on, each
    * waits with the fleet on `commandSiege`'s terms (`keepWithFleet`). The
    * Thurible has a gun and is the army's to move.
+   *
+   * **And a spent one goes home** (`rearmTrip`): an empty hull with a contact
+   * in reach used to stand where it emptied, ordering launches the server
+   * refused.
    */
   private commandOrdnance(
     snapshot: EchoSnapshot,
@@ -3582,8 +3601,11 @@ export class AiCommander implements AiPlayer {
     out: AiCommand[]
   ): void {
     const kind = OWN_ORDNANCE[this.briefing.faction];
+    const alive = new Set(snapshot.units.map((u) => u.id));
+    for (const id of this.rearming) if (!alive.has(id)) this.rearming.delete(id);
     for (const hull of snapshot.units) {
       if (hull.kind !== kind) continue;
+      if (this.rearmTrip(snapshot, hull, army, out)) continue;
 
       // The nearest enemy this commander has actually resolved. Classification
       // is not required to shoot — §7 puts the gate at Tier 2, a bearing — but
@@ -3852,6 +3874,61 @@ export class AiCommander implements AiPlayer {
    * `RANGE.ARRIVE_M`, so a hull that has arrived is left standing: one walked
    * a few metres at every window never stands still long enough to fire.
    */
+  /**
+   * Send a spent ordnance hull to a depot and keep it there until it is full.
+   * True when the hull is on the trip, and this pass gives it no other order.
+   *
+   * "Twelve seconds of ordnance, then ninety of sailing home empty" is the
+   * Broadside's stat block (docs/units.md), and a Bastion or a Foundry is the
+   * only place a magazine refills (docs/systems-combat.md §5), for the
+   * Weaver's rack as for the tubes. Until this, an empty hull with a contact
+   * in reach stood where it emptied and ordered a launch at every decision
+   * that the server refused (#1090): the Lance after its one shot, the
+   * Broadside after its four.
+   *
+   * Full and not merely loaded, because the rearm only runs while the hull is
+   * in range (`rearmSystem`), and a hull that walked out at its first torpedo
+   * would be back for the second a minute later. The nearest depot rather
+   * than home, so a Foundry built forward is a shorter trip.
+   */
+  private rearmTrip(
+    snapshot: EchoSnapshot,
+    hull: OwnUnit,
+    army: readonly OwnUnit[],
+    out: AiCommand[]
+  ): boolean {
+    const stats = statsFor(hull.kind);
+    const [aboard, full] =
+      hull.kind === UnitKind.Weaver
+        ? [hull.decoys, stats.decoyMagazine ?? ORDNANCE.LAID_DECOY.MAGAZINE]
+        : [hull.torpedoes, stats.torpedoMagazine ?? ORDNANCE.TORPEDO.MAGAZINE];
+    // The Thurible: a rack on a cooldown, never spent.
+    if (aboard === undefined) return false;
+    if (aboard <= 0) this.rearming.add(hull.id);
+    else if (aboard >= full) this.rearming.delete(hull.id);
+    if (!this.rearming.has(hull.id)) return false;
+
+    let depot: OwnStructure | null = null;
+    let depotD = Infinity;
+    for (const s of snapshot.structures) {
+      if (s.kind !== StructureKind.Bastion && s.kind !== StructureKind.Foundry) continue;
+      const d = distance(hull, s);
+      if (d >= depotD) continue;
+      depotD = d;
+      depot = s;
+    }
+    if (depot === null) {
+      // Nowhere to fill. A part-filled hull fights with what it has; an empty
+      // one has nothing to order but its place in the fleet.
+      this.rearming.delete(hull.id);
+      if (aboard > 0) return false;
+      this.keepWithFleet(snapshot, hull, army, out);
+      return true;
+    }
+    if (depotD > REARM_AT_M) this.walk(hull, depot, snapshot.tick, out);
+    return true;
+  }
+
   private keepWithFleet(
     snapshot: EchoSnapshot,
     hull: OwnUnit,

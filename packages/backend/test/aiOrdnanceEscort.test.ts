@@ -17,8 +17,10 @@ import assert from 'node:assert/strict';
 import {
   AiDifficulty,
   Faction,
+  ORDNANCE,
   ResolutionTier,
   SIM,
+  StructureKind,
   UnitKind,
   statsFor,
   type Contact,
@@ -29,7 +31,7 @@ import { AiCommander } from '../src/ai/commander.ts';
 import { AiSeat, briefingFor } from '../src/ai/seat.ts';
 import { Match } from '../src/sim/match.ts';
 import { spawnUnit } from '../src/sim/world.ts';
-import { MoveOrder } from '../src/sim/components.ts';
+import { Magazine, MoveOrder } from '../src/sim/components.ts';
 import type { AiBriefing, AiCommand } from '../src/ai/types.ts';
 
 const SEED = 0x1090;
@@ -241,5 +243,127 @@ describe('the walk reaches the sim (#1090)', () => {
     assert.equal(MoveOrder.active[broadside], 1, 'the Broadside was never ordered anywhere');
     const west = home.x + 540 - MoveOrder.x[broadside]!;
     assert.ok(west > 1000, `the Broadside is bound only ${Math.round(west)} m toward the fleet`);
+  });
+});
+
+describe('a spent hull goes to a depot and fills (#1090)', () => {
+  // The other half of the Broadside's stat block, "then ninety of sailing
+  // home empty" (docs/units.md). Before this an empty hull with a contact in
+  // reach stood where it emptied and ordered launches the server refused.
+  const depotsOf = (base: EchoSnapshot) =>
+    base.structures.filter(
+      (s) => s.kind === StructureKind.Bastion || s.kind === StructureKind.Foundry
+    );
+  const nearDepot = (base: EchoSnapshot, at: { x: number; y: number }) =>
+    depotsOf(base).some((s) => Math.hypot(s.x - at.x, s.y - at.y) < 1);
+  const spent = (kind: UnitKind, hull: OwnUnit, aboard: number): OwnUnit =>
+    kind === UnitKind.Weaver ? { ...hull, decoys: aboard } : { ...hull, torpedoes: aboard };
+  const magazineOf = (kind: UnitKind) =>
+    kind === UnitKind.Weaver
+      ? statsFor(kind).decoyMagazine!
+      : (statsFor(kind).torpedoMagazine ?? ORDNANCE.TORPEDO.MAGAZINE);
+
+  for (const [navy, kind] of [
+    [Faction.Bathyarch, UnitKind.Broadside],
+    [Faction.Pelagia, UnitKind.Weaver],
+    [Faction.Hadron, UnitKind.Lance],
+  ] as const) {
+    it(`walks an empty ${UnitKind[kind]} out of a fight to a depot, and spends nothing`, () => {
+      const { brief, base } = rig(navy);
+      assert.ok(depotsOf(base).length > 0, 'the rig has no depot to walk to');
+      const { fleet, middle } = fleetOut(brief);
+      const hull = spent(kind, own(201, kind, middle.x, middle.y), 0);
+      const orders = ordersFor(brief, base, () => [...fleet, hull], [enemyNear(middle, 1500)]);
+      const moves = movesOf(orders, 201);
+      assert.ok(moves.length > 0, `an empty ${UnitKind[kind]} was never sent to fill`);
+      for (const move of moves) assert.ok(nearDepot(base, move), 'walked somewhere but a depot');
+      assert.equal(
+        orders.filter((o) => (o.kind === 'torpedo' || o.kind === 'layDecoy') && o.unitId === 201)
+          .length,
+        0,
+        'an empty hull ordered a launch the server refuses'
+      );
+    });
+  }
+
+  it('keeps a filling hull at the depot until it is full', () => {
+    // Half-filled is not done: the rearm only runs in range, so a hull that
+    // left at two of four would be back for the rest a minute later.
+    const { brief, base } = rig(Faction.Bathyarch);
+    const { fleet } = fleetOut(brief);
+    const depot = depotsOf(base)[0]!;
+    const at = own(201, UnitKind.Broadside, depot.x + 100, depot.y);
+    const orders = ordersFor(brief, base, (i) => [
+      ...fleet,
+      spent(UnitKind.Broadside, at, i === 0 ? 0 : 2),
+    ]);
+    assert.equal(movesOf(orders, 201).length, 0, 'a half-filled Broadside left its depot');
+  });
+
+  it('sends a full one back to the fleet', () => {
+    const { brief, base } = rig(Faction.Bathyarch);
+    const { fleet, middle } = fleetOut(brief);
+    const depot = depotsOf(base)[0]!;
+    const at = own(201, UnitKind.Broadside, depot.x + 100, depot.y);
+    const full = magazineOf(UnitKind.Broadside);
+    const moves = movesOf(
+      ordersFor(brief, base, (i) => [...fleet, spent(UnitKind.Broadside, at, i === 0 ? 0 : full)]),
+      201
+    );
+    assert.ok(moves.length > 0, 'a full Broadside stayed at its depot');
+    for (const move of moves) {
+      assert.ok(Math.hypot(move.x - middle.x, move.y - middle.y) < 1, 'and not to the fleet');
+    }
+  });
+
+  it('fires a part-spent Broadside rather than sending it home', () => {
+    // The control: the trip starts at empty, not at the first launch.
+    const { brief, base } = rig(Faction.Bathyarch);
+    const { fleet, middle } = fleetOut(brief);
+    const hull = spent(UnitKind.Broadside, own(201, UnitKind.Broadside, middle.x, middle.y), 2);
+    const orders = ordersFor(brief, base, () => [...fleet, hull], [enemyNear(middle, 1500)]);
+    assert.ok(
+      orders.some((o) => o.kind === 'torpedo' && o.unitId === 201),
+      'held its fire'
+    );
+    assert.equal(movesOf(orders, 201).length, 0, 'and was walked off its fight');
+  });
+
+  it('turns a real empty Broadside for home', () => {
+    const { match, brief } = rig(Faction.Bathyarch);
+    const seat = new AiSeat(match, brief);
+    const home = brief.spawns[brief.slot]!;
+    const at = { x: home.x - OUT_M, y: home.y };
+    for (const dy of [0, 200]) {
+      spawnUnit(match.world, {
+        kind: UnitKind.Corvette,
+        slot: 1,
+        faction: Faction.Bathyarch,
+        x: at.x,
+        y: at.y + dy,
+      });
+    }
+    const broadside = spawnUnit(match.world, {
+      kind: UnitKind.Broadside,
+      slot: 1,
+      faction: Faction.Bathyarch,
+      x: at.x,
+      y: at.y + 100,
+    });
+    Magazine.torpedoes[broadside] = 0;
+    // Sixteen seconds, for the same clock the escort's real-match arm waits on.
+    let last: EchoSnapshot | undefined;
+    for (let i = 0; i < SIM.TICK_HZ * 16; i++) {
+      const snapshot = match.update(STEP_MS)?.get(1);
+      if (snapshot === undefined) continue;
+      seat.observe(snapshot);
+      last = snapshot;
+    }
+    assert.equal(MoveOrder.active[broadside], 1, 'the empty Broadside was never ordered anywhere');
+    const bound = { x: MoveOrder.x[broadside]!, y: MoveOrder.y[broadside]! };
+    assert.ok(
+      nearDepot(last!, bound),
+      `bound for (${Math.round(bound.x)}, ${Math.round(bound.y)})`
+    );
   });
 });

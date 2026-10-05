@@ -740,8 +740,9 @@ for a fight that exists. With nothing in reach, the Broadside and the Lance wait
 fleet, walked there on the siege hull's clock (#1090), and the Weaver keeps with it in a
 fight as well, since it lays only under way. None of the three has a gun, so the army pass
 never orders them, and before this nothing did: every Broadside in ninety measured matches
-spent its life beside its yard. A hull with its magazine spent still stays where it is while
-a contact is in reach, because the snapshot carries no magazine count.
+spent its life beside its yard. And a hull that has spent its magazine — the snapshot carries
+the count — walks to the nearest Bastion or Foundry and stays until it is full, where it
+used to stand where it emptied and order launches the server refused.
 
 **And since #621 it answers one**, which is the same sentence read from the other side. Point
 defence was never missing — a gun takes an inbound round inside its terminal range without
