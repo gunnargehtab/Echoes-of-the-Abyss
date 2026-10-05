@@ -373,8 +373,9 @@ describe('a spent hull goes to a depot and fills (#1090)', () => {
     });
     Magazine.torpedoes[broadside] = 0;
     const full = magazineOf(UnitKind.Broadside);
-    // Two and a half minutes: up to fifteen seconds for the walk clock, about
-    // a minute of sailing at 40 m/s, and a minute of fill at 15 s a torpedo.
+    // Two and a half minutes: up to fifteen seconds before a five-second walk
+    // window lands on a Veteran's every-third-observation decision, about a
+    // minute of sailing at 40 m/s, and a minute of fill at 15 s a torpedo.
     let filling = 0;
     let fillingUnderWay = 0;
     let most = 0;
