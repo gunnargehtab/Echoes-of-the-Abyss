@@ -183,9 +183,10 @@ brightening the subject. The conn view's lamp halo is not this recipe: it is wor
 light from own lamps, every lamp summed in one field under one curve
 ([art-direction.md](art-direction.md#lamp-halo--spec)).
 
-The scope's own furniture is not a neon element either. Its sweep, the sweep's wedge and
-its range rings are flat `neon-cyan` hairlines below full opacity, with no halo, drawn under
-the returns ([ui-ux.md](ui-ux.md) §5), as the chosen console mockup draws them
+The scope's own furniture is not a neon element either. Its sweep is a flat `neon-cyan`
+hairline below full opacity, trailing a faint wedge of the same ink, and its range rings are
+flat hairlines. None takes a halo, and all are drawn under the returns
+([ui-ux.md](ui-ux.md) §5), as the chosen console mockup draws them
 (`docs/concept-art/hud-mockups/chrome.mjs`, `scopeFace`). A full-opacity haloed line turning
 every 4 s on a permanent instrument would be the brightest thing on the scope while carrying
 no information, which is bloom-everything by another route.
