@@ -1345,8 +1345,8 @@ describe('faction structure auras', () => {
     const scout = snapshots.get(0)!.units.find((u) => u.kind === UnitKind.LightScout)!;
 
     // Deep enough that the Knights' own baseline runs out. Their PR-2 covers
-    // Mid-Water on its own (docs/systems-depth.md §3), so 600 m stopped being
-    // a demonstration of anything the moment the baselines landed — and §3
+    // Mid-Water on its own (docs/systems-depth.md §1, §3), so 600 m stopped being
+    // a demonstration of anything the moment the baselines landed — and §4
     // says what the Spire is actually for: letting "a comparatively fragile
     // faction contest deep ground". That is the Abyssal, and this is it.
     Position.depth[scout.id] = 2000;

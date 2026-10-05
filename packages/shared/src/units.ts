@@ -1724,7 +1724,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     /** The office's ears, and the reason the deep is worth this navy holding. */
     hyd: 60,
     /**
-     * The Hadal band — the Dredge's water (docs/systems-depth.md §3). The
+     * The Hadal band — the Dredge's water (docs/units.md, Succentor). The
      * second PR-4 hull in the roster and the first whose *flight* is rated for
      * the band with it: a craft holds the band it was launched into, so a
      * Treble that was not PR-4 would crush on the tick it left the deck.
