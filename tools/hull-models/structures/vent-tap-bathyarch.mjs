@@ -241,5 +241,4 @@ if (Math.abs(Math.max(size.x, size.z) - DRAWN) > 1e-3)
   throw new Error(
     `${root.name}: drawn ${Math.max(size.x, size.z).toFixed(4)} across; the facet rule was asked at ${DRAWN}`
   );
-// Not on the Consortium's sheet until trim.mjs lays a yawed flat part in its own frame (#1124): the 45° exchanger bands get diagonal seams.
-await exportGlb(root, 'vent-tap-bathyarch.glb');
+await exportGlb(root, 'vent-tap-bathyarch.glb', { trim: bathyarch.TRIM });

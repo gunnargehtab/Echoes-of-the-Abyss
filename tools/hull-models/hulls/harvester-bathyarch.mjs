@@ -394,5 +394,5 @@ bathyarch.deckPlates(root, { black }, {
 });
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
-// Not on the Consortium's sheet until trim.mjs lays a yawed flat part in its own frame (#1124): the bow_apron's four-facet taper zig-zags.
+// Not on the Consortium's sheet until trim.mjs lays a four-facet taper flat (#1124): the bow_apron's zig-zags.
 await exportGlb(root, 'harvester-bathyarch.glb');

@@ -115,6 +115,53 @@ test('a round part unrolls at whole plates round its girth', () => {
   assert.ok(inBand(cap, 1), 'the cap is not on the one-strake band');
 });
 
+/** Each triangle corner's UV, in index order, so a layout reads the same whatever it split. */
+function cornerUvs(mesh) {
+  const g = mesh.geometry;
+  const uv = g.attributes.uv;
+  const count = g.index ? g.index.count : uv.count;
+  const out = [];
+  for (let k = 0; k < count; k++) {
+    const i = g.index ? g.index.getX(k) : k;
+    out.push(uv.getX(i), uv.getY(i));
+  }
+  return out;
+}
+
+/** The yard's slab alone, turned by `rotation` and moved off the origin. */
+function slabTurned([x, y, z]) {
+  const root = new THREE.Group();
+  const slab = new THREE.Mesh(new THREE.BoxGeometry(24, 14, 60), steel());
+  slab.rotation.set(x, y, z);
+  slab.position.set(40, -3, 17);
+  root.add(slab);
+  layoutTrim(root, drawTrimSheet(SPEC), SPEC);
+  return cornerUvs(slab);
+}
+
+const sameUvs = (a, b, what) => {
+  assert.equal(a.length, b.length, what);
+  const worst = Math.max(...a.map((u, i) => Math.abs(u - b[i])));
+  assert.ok(worst < 1e-6, `${what}: corners differ by up to ${worst}`);
+};
+
+// #1107: a box yawed 29° on the Sentinel Turret took its seams along the
+// world's axes, across its own edges. The frame is the world turned by the
+// part's rotation off the nearest axis, so a part square to the axes, or a
+// quarter turn off them, lays as it always did.
+test('a flat part turned off the axes lays as it would square to them', () => {
+  const square = slabTurned([0, 0, 0]);
+  const quarter = slabTurned([0, Math.PI / 2, 0]);
+  sameUvs(slabTurned([0, (29 * Math.PI) / 180, 0]), square, 'yawed 29°');
+  sameUvs(slabTurned([0, -Math.PI / 6, 0]), square, 'yawed −30°');
+  sameUvs(slabTurned([(20 * Math.PI) / 180, 0, (-12 * Math.PI) / 180]), square, 'tilted');
+  // Past 45° the nearest axis is the next one, so 60° lays as the quarter turn.
+  sameUvs(slabTurned([0, Math.PI / 3, 0]), quarter, 'yawed 60°');
+  // The quarter turn is square to the axes: its deck still runs 2.5 wraps.
+  const us = quarter.filter((_, i) => i % 2 === 0);
+  assert.ok(Math.abs(Math.max(...us) - Math.min(...us) - 2.5) < 1e-6, `quarter u ${us}`);
+});
+
 test('every corner gets a UV, no vertex moves, and two layouts are one', () => {
   const { root } = yard();
   const before = sceneParts(root).parts.map((p) => Float32Array.from(p.positions));

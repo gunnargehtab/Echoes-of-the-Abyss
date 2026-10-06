@@ -41,13 +41,18 @@
  * `map_fragment`, so on a Commune hull in the tutorial both apply, the
  * sheet under the laminate.
  *
- * **The layout is in metres, per part, per face.** Each triangle is
- * projected on the world plane its face normal is most along, with the
- * part's longer in-plane extent as the `along` axis — `u` runs along it at
- * one wrap of the sheet per `wrapM` metres from the part's own edge, so a
- * plate begins where the part does and a port part lays out as its
- * starboard twin — and the shorter as `cross`, spread over one of the
- * sheet's four bands. A band holds 1, 2, 4 or 8 strakes across its height,
+ * **The layout is in metres, per part, per face, in the part's own frame.**
+ * Each triangle is projected on the plane its face normal is most along, in
+ * the world turned by the part's rotation off the nearest signed axis
+ * permutation (`frameOf`, #1107, #1124): a part square to the axes, or a
+ * quarter or half turn off them, is laid in the world frame as it always
+ * was, and a box yawed 29° — the Sentinel Turret's — is laid as it would be
+ * square, where the world plane ran its seams across its own edges. That
+ * frame has the part's longer in-plane extent as the `along` axis — `u`
+ * runs along it at one wrap of the sheet per `wrapM` metres from the
+ * part's own edge, so a plate begins where the part does and a port part
+ * lays out as its starboard twin — and the shorter as `cross`, spread over
+ * one of the sheet's four bands. A band holds 1, 2, 4 or 8 strakes across its height,
  * and the face takes the band whose strakes come nearest `strakeM` over its
  * cross extent: a 60 m deck gets eight strakes of 7.5 m, a 14 m flank two
  * of 7, a rivet one. A round part — a three cylinder, lathe, sphere, torus
@@ -570,7 +575,16 @@ function least(a) {
  * left bare (#1109): a navy's sheet is its panelling, and a solid unlit
  * cladding that is not panelling — the Order's violet crystal — would wear
  * ceramic seams under it otherwise. The layout still lands on those parts,
- * so tagging one later is a table edit and not a re-layout. Returns
+ * so tagging one later is a table edit and not a re-layout. A flat part is
+ * laid in its own frame — the world turned back by the part's rotation off
+ * the nearest signed axis permutation (`frameOf`, #1107, #1124) — which is
+ * the world itself for every part square to the axes or a whole number of
+ * quarter turns off them, so the Bulwark and the Reed lay byte for byte as
+ * before, and the Responsory's tagged plate does — only the UVs of its three
+ * turned lamp boxes move, which nothing samples — and for a box yawed 29° is
+ * the box's own axes, since on the world plane it took its seams across its
+ * own edges. A round part finds its own axis already and is not turned.
+ * Returns
  * `{ parts, materials, flat, round, split, bands }`: `materials` the names
  * tagged, `flat` and `round` the triangles laid each way, `split` the
  * vertices added, `bands` how many faces took each band's rows.
@@ -617,17 +631,74 @@ export function layoutTrim(root, sheet, { strakeM = 6, name, untagged = [], mirr
   return { parts: meshes.length, materials, flat, round, split, bands: used };
 }
 
+/**
+ * The turn that lays a flat part in its own frame (#1107, #1124), or null
+ * where the world frame is that already. The part's rotation R is read off
+ * `matrixWorld` (three's `decompose`, so a scale on the part or its root is
+ * not in it) and snapped to the signed axis permutation P nearest it: each
+ * local axis to the world axis it is most along, with its sign, assigned
+ * greedily by magnitude so P is a true permutation, a tie to the lower
+ * axis — two magnitudes within 1e-9 are a tie, since on a part turned
+ * exactly 45° the cosine and the sine of π/4 differ in their last bit and a
+ * diagonal part's frame would otherwise hinge on it. The residual Q = R·Pᵀ
+ * is what the part is turned off the axes by. For a part square to them, or
+ * a whole number of quarter turns off, Q is the identity to the rounding in
+ * a cosine of π/2 and nothing is done, so every such part — the Bulwark's
+ * and the Reed's whole files — lays byte for byte as before; otherwise the
+ * corners are turned by Qᵀ, about the part's own centre so that under
+ * `mirror` it stays on its side of the keel and `beamU` reads its z there.
+ * A box yawed 29° on the world plane took its seams across its own edges;
+ * turned back it lays as it would square, and past 45° it lays as the next
+ * quarter turn.
+ */
+function frameOf(m) {
+  const q = new THREE.Quaternion();
+  m.decompose(new THREE.Vector3(), q, new THREE.Vector3());
+  const R = new THREE.Matrix3().setFromMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(q));
+  const r = R.elements; // column-major: r[col * 3 + row]
+  const cells = [];
+  for (let col = 0; col < 3; col++)
+    for (let row = 0; row < 3; row++) cells.push({ col, row, mag: Math.abs(r[col * 3 + row]) });
+  cells.sort((a, b) =>
+    Math.abs(a.mag - b.mag) < 1e-9 ? a.row - b.row || a.col - b.col : b.mag - a.mag
+  );
+  const P = new THREE.Matrix3().set(0, 0, 0, 0, 0, 0, 0, 0, 0);
+  const colTaken = [false, false, false];
+  const rowTaken = [false, false, false];
+  for (const { col, row } of cells) {
+    if (colTaken[col] || rowTaken[row]) continue;
+    colTaken[col] = rowTaken[row] = true;
+    P.elements[col * 3 + row] = r[col * 3 + row] < 0 ? -1 : 1;
+  }
+  const Q = R.clone().multiply(P.clone().transpose());
+  let off = 0;
+  for (let i = 0; i < 9; i++) off = Math.max(off, Math.abs(Q.elements[i] - (i % 4 === 0 ? 1 : 0)));
+  return off < 1e-9 ? null : Q.transpose();
+}
+
+/** The per-axis bounds of `count` corners in `pos`. */
+function extentsOf(pos, count) {
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
+  for (let k = 0; k < count; k++)
+    for (let a = 0; a < 3; a++) {
+      const c = pos[k * 3 + a];
+      if (c < min[a]) min[a] = c;
+      if (c > max[a]) max[a] = c;
+    }
+  return { min, max };
+}
+
 function layoutMesh(mesh, bands, wrapM, strakeM, mirror) {
   const g = mesh.geometry;
   const p = g.attributes.position;
   const idx = g.index;
   const count = idx ? idx.count : p.count;
   const m = mesh.matrixWorld;
+  const isRound = ROUND.has(g.type);
   const corner = new Uint32Array(count);
   const pos = new Float64Array(count * 3);
   const v = new THREE.Vector3();
-  const min = [Infinity, Infinity, Infinity];
-  const max = [-Infinity, -Infinity, -Infinity];
   for (let k = 0; k < count; k++) {
     const i = idx ? idx.getX(k) : k;
     corner[k] = i;
@@ -635,11 +706,21 @@ function layoutMesh(mesh, bands, wrapM, strakeM, mirror) {
     pos[k * 3] = v.x;
     pos[k * 3 + 1] = v.y;
     pos[k * 3 + 2] = v.z;
-    for (let a = 0; a < 3; a++) {
-      const c = pos[k * 3 + a];
-      if (c < min[a]) min[a] = c;
-      if (c > max[a]) max[a] = c;
+  }
+  let { min, max } = extentsOf(pos, count);
+  // A flat part turned off the axes is laid in its own frame (`frameOf`):
+  // its corners are turned square about its centre before anything below
+  // reads them. A round part finds its own axis and is left where it is.
+  const turn = isRound ? null : frameOf(m);
+  if (turn) {
+    const c = new THREE.Vector3((min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2);
+    for (let k = 0; k < count; k++) {
+      v.set(pos[k * 3], pos[k * 3 + 1], pos[k * 3 + 2]).sub(c).applyMatrix3(turn).add(c);
+      pos[k * 3] = v.x;
+      pos[k * 3 + 1] = v.y;
+      pos[k * 3 + 2] = v.z;
     }
+    ({ min, max } = extentsOf(pos, count));
   }
   const extent = [max[0] - min[0], max[1] - min[1], max[2] - min[2]];
   // Under `mirror`, a flat face laid along the beam measures `u` from the
@@ -685,7 +766,7 @@ function layoutMesh(mesh, bands, wrapM, strakeM, mirror) {
   let hMax = -Infinity;
   let rMax = 0;
   let plates = 1;
-  if (ROUND.has(g.type)) {
+  if (isRound) {
     axis = new THREE.Vector3().setFromMatrixColumn(m, roundAxis(g)).normalize();
     const u = new THREE.Vector3().crossVectors(axis, least(axis)).normalize();
     const w = new THREE.Vector3().crossVectors(axis, u);
