@@ -70,7 +70,12 @@
  * reproduced wherever the script runs and compared texel by texel. The
  * Directorate's `tergite` pattern keeps the bands but curves their
  * transverse seams, without the stagger or longitudinal grid: shadow under
- * an overlap and growth along its curve.
+ * an overlap and growth along its curve. The Order's `facet` pattern (#1109)
+ * keeps the bands and drops the stagger: an aligned grid of panels, each
+ * joint a hairline with a lit chamfer on both sides, and the panel tones
+ * mirrored about each band's middle, so a part laid port and starboard
+ * reads the same from either beam; nothing on it weathers, and `untagged`
+ * keeps the sheet off a cladding that is not panelling (`layoutTrim`).
  */
 import * as THREE from 'three';
 import { occludes } from './glb.mjs';
@@ -178,6 +183,17 @@ function valueNoise(xm, ym, cellM, cells, seed) {
  * catches on the near side. `ramp`, `grime` and `rivet` are off at 0
  * (`rivetM` is a rivet's radius), so a table that names none of the metre
  * keys draws what it drew before them, texel for texel.
+ *
+ * The `facet` pattern reads `seamM` as a hairline centred on the joint,
+ * half each side, and `chamferM` as a flat band of `chamfer` light beyond
+ * it on both sides (#1109): a plane's edge catches the key wherever the
+ * plane is, so no side is the shadow side. It reads no lap, lip, weather,
+ * ramp, grime, rivet, arch or growth, and its tone is keyed on the
+ * strake's distance from the band's middle rather than the strake, so the
+ * sheet is the same under v → v0 + v1 − v within every band — which is how
+ * `layoutMesh` lays the port face of a keel-centred part against its
+ * starboard face, and a port part against its twin. The plate and tergite
+ * patterns do not read the chamfer keys.
  */
 export function drawTrimSheet({
   pattern = 'plate',
@@ -192,6 +208,8 @@ export function drawTrimSheet({
   seam = 0.35,
   weather = 0.08,
   lip = 0,
+  chamferM = 0,
+  chamfer = 0,
   tone = 0.08,
   ramp = 0,
   grime = 0,
@@ -234,11 +252,35 @@ export function drawTrimSheet({
     // patches. The arch meets its neighbour at both strake edges; only
     // the transverse seam is inked, never a grid around each patch.
     const chitin = pattern === 'tergite';
+    // A facet grid is aligned: no stagger, and no arch.
+    const facet = pattern === 'facet';
     const arch = chitin ? (archPx / 512) * PLATES * 4 * t * (1 - t) : 0;
-    const up = u * PLATES + (chitin ? arch : s % 2 ? 0.5 : 0);
+    const up = u * PLATES + (facet ? 0 : chitin ? arch : s % 2 ? 0.5 : 0);
     const p = Math.floor(up) % PLATES;
     const a = up - Math.floor(up);
-    let L = light * (1 - tone * hash(band.rows, chitin ? 0 : s, p));
+    // A facet's tone is keyed on the strake's distance from the band's
+    // middle, so the strake at v and the strake at v0 + v1 − v are one tone:
+    // port and starboard land on the sheet as each other's reverse (the
+    // function's comment), and the Order mirrors or it is not the Order.
+    const row = facet ? Math.min(s, band.rows - 1 - s) : chitin ? 0 : s;
+    let L = light * (1 - tone * hash(band.rows, row, p));
+    if (facet) {
+      // The hairline is centred on the joint, half its width each side, and
+      // held to a texel on either axis as the lap is. It is a gap and not a
+      // plane, so it takes the sheet's light and not the panel's tone: the
+      // two halves of a butt are one value, and the wrap closes to the
+      // level. The chamfer runs on from it at its own light, the same on
+      // both sides, since a plane's edge catches the key from wherever the
+      // plane faces. Nothing ramps, grimes or rivets a polished plane, so
+      // the keys below are not read.
+      const texV = strakeM / strakeH;
+      const seamV = Math.max(seamM, texV);
+      const du = Math.min(a, 1 - a) * plateM;
+      const dv = Math.min(t, 1 - t) * strakeM;
+      if (du < seamU / 2 || dv < seamV / 2) return light * seam;
+      if (du < seamU / 2 + chamferM || dv < seamV / 2 + chamferM) return Math.max(L, chamfer);
+      return L;
+    }
     // A plate is never quite flat: a slow ramp along it, its sign the plate's.
     if (ramp) L *= 1 + ramp * (hash(7, band.rows, s, p) < 0.5 ? -1 : 1) * (2 * a - 1);
     if (grime) {
@@ -394,13 +436,18 @@ function least(a) {
 /**
  * Lay every mesh of `root` out on the sheet, writing `uv`, and tag each
  * solid unlit material with the sheet's `name` (`userData.trim`, the file's
- * `extras.trim`). Returns `{ parts, materials, flat, round, split, bands }`:
- * `materials` the names tagged, `flat` and `round` the triangles laid each
- * way, `split` the vertices added, `bands` how many faces took each band's
- * rows.
+ * `extras.trim`) — but for the names in `untagged`, which are laid out and
+ * left bare (#1109): a navy's sheet is its panelling, and a solid unlit
+ * cladding that is not panelling — the Order's violet crystal — would wear
+ * ceramic seams under it otherwise. The layout still lands on those parts,
+ * so tagging one later is a table edit and not a re-layout. Returns
+ * `{ parts, materials, flat, round, split, bands }`: `materials` the names
+ * tagged, `flat` and `round` the triangles laid each way, `split` the
+ * vertices added, `bands` how many faces took each band's rows.
  */
-export function layoutTrim(root, sheet, { strakeM = 6, name } = {}) {
+export function layoutTrim(root, sheet, { strakeM = 6, name, untagged = [] } = {}) {
   if (!name) throw new Error("layoutTrim: the sheet needs a name (the navy's TRIM.name)");
+  const bare = new Set(untagged);
   root.updateMatrixWorld(true);
   const { bands, wrapM } = sheet;
   const seen = new Set();
@@ -432,7 +479,7 @@ export function layoutTrim(root, sheet, { strakeM = 6, name } = {}) {
       alpha: m.transparent ? 'BLEND' : m.alphaTest > 0 ? 'MASK' : 'OPAQUE',
       opacity: m.opacity ?? 1,
     });
-    if (unlit && solid) {
+    if (unlit && solid && !bare.has(m.name)) {
       materials.add(m.name);
       m.userData.trim = name;
     }

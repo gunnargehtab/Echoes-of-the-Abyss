@@ -604,6 +604,42 @@ shimmer as well. Select the Directorate **before readying**: the stock `drive.mj
 readies its default navy before invoking `--steps`, so passing the capture module alone
 does not prove this navy was measured. No GPU-time or motion pass is claimed here.
 
+The Knights' sheet ([#1109](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1109))
+keeps the layout machinery and takes a third draw mode, `facet`, for a navy whose Block 2 brief
+is polished pale alloy and mirror facets and whose Responsory block is "fine ceramic panelling
+over the whole hull, seams tight ... no rivet": an aligned grid with no stagger, lap, rivet,
+grime or ramp. Panels are **4.5 m** by **4 m**, two a **9 m** wrap — the facet rule's own grain
+(Block 2c cuts a mirror facet at a 3 m chord), and the half metre over four is parity: a round
+part unrolls at whole plates round its girth, and between 4.3 and 5 m the Responsory's blade
+(19.4 m round), horn (17.4) and drive (8.1) come out at four, four and two, so a butt on one
+beam has its twin on the other. Each joint is a hairline **0.2 m** wide at **0.4** of the light,
+centred on the joint, under a flat chamfer **0.2 m** wide each side at **1.0**, brighter than
+any panel, so close in a joint is light-dark-light and at the conn view's 3 px/m the hairline
+takes 14 to 33 % off the pixel it crosses by where it falls; 0.15 m took 10 to 23 % and
+mipmapped to a rumour, and the Consortium's 0.25 m reads as plate. Panels sit at **0.96** under
+a **0.04** tone keyed on the strake's distance from its band's middle, so every band is the
+same turned over — which is how the layout lands a keel-centred part's port face against its
+starboard and a port part against its twin — and no grain, since a mirror has no tooth and the
+grain is the one mark that does not mirror; measured texel for texel, no band differs from
+itself turned over by a level and the wrap closes to the level. The table's `untagged` keeps
+the sheet off `resonance_crystal` and the lamp family's unlit finish `crystal_seam_unlit`:
+violet stone and a dark seam are not panelling, so both are laid out and left bare, and the
+lamps are never tagged. The Responsory is the first hull, the owner's choice: its 48 parts lay
+**584** faces flat and **572** unrolled — 856 on the one-strake band, 120 on two, 40 on four,
+140 on eight — split **138** vertices and tag two materials, `shadow_indigo` and `pale_alloy`.
+`responsory-hadron.glb` goes from **104,480 to 110,156 bytes** (gzip 12,606 to 14,950) with
+its 48 parts, 1,156 triangles and outline unchanged; no triangle moved, so a sprite rebake has
+nothing to change in the height or emissive map, and the bake is not run here. The sheet is
+**1,653 bytes**, flat fields compressing where plate and chitin do not, at a mean linear
+luminance of **0.899**: under the Directorate's 0.938, over the Consortium's 0.857, so a
+polished navy is not darker than riveted plate on the register the conn view puts it on. On
+the GPU it is the same 512² RGBA8 upload with mipmaps, **1.33 MiB** once per navy present, no
+draw or triangle more. Two things are the layout's and not this sheet's, shared by every navy
+on one: a round part at an odd plate count — the emitter barrel, 4.8 m round, at one — carries
+its butt on the starboard side alone, and a round part's end caps are laid from world position
+rather than the part's centre (`layoutMesh`), so a cap off the origin samples a band it was
+not given; both are noted for the pass that takes them.
+
 #### Ranked audit and remaining work
 
 The baseline is commit `1df288a` (28 September 2026), not the earlier #286 scene.

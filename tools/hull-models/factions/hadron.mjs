@@ -243,6 +243,73 @@ export const ink = {
 };
 
 /**
+ * The Order's panelling, as the trim sheet kit.mjs `exportGlb` lays a hull
+ * over (trim.mjs `facet`, #1109): "polished pale alloy with violet resonance
+ * crystal, mirror facets" (Block 2), and the Responsory's own "fine ceramic
+ * panelling over the whole hull, seams tight, everything faired — the Order
+ * builds nothing bare. No lattice, no stack, no louvre, no rivet", said in
+ * luminance alone. Not the Klaxon's plate: an aligned grid with no stagger,
+ * lap, rivet, grime or ramp, each joint a hairline with a lit chamfer on
+ * both sides, and a panel's tone keyed on its strake's distance from the
+ * band's middle, so every band reads the same turned over — which is how
+ * the layout lands a keel-centred part's port face against its starboard,
+ * and a port part against its twin — and the one navy with bilateral
+ * symmetry keeps it on its skin.
+ *
+ * Panels of 4.5 m by 4 m, two a wrap of 9 m: the facet rule's own grain
+ * (`facets` below cuts a mirror facet at a 3 m chord, `panels` centres a
+ * hull's seams on 3.9 m), so a panel is a facet and not a plate. The half
+ * metre over four is parity: a round part unrolls at whole plates round
+ * its girth, which the layout takes over triangle corners (trim.mjs
+ * `layoutMesh`), and on an odd count the butts fall on one beam and not
+ * the other — at 4 m the blade, 19.4 m round, took five. Between 4.3 and
+ * 5 m every tagged round on the Responsory's centreline comes even — the
+ * blade four, the horn at 17.4 m four, the drive at 8.1 m two — so a butt
+ * on either beam has its twin; the emitter barrel, 4.8 m round, is one
+ * plate at any size and keeps its butt on the starboard ridge alone. A
+ * later hull reads its own girths off `exportGlb`'s file before it trusts
+ * this. The layout's bands stop at eight strakes, so a lathe 77 m long
+ * carries 9.7 m strakes along it whatever this says; the wings' are
+ * 3.95 m. The joint is drawn for the conn view's ~3 px/m (#1107), where
+ * "seams tight" and "readable" pull apart: a hairline of 0.2 m at 0.4 of
+ * the light, which at that range takes 14 to 33 % off the pixel it crosses
+ * by where it falls — 0.15 m takes 10 to 23 % and mipmaps to a rumour, the
+ * Klaxon's 0.25 m reads as plate — and 0.2 m of chamfer each side at 1.0,
+ * brighter than any panel, so close in the joint is light-dark-light and
+ * at range the chamfers give a little of the seam's darkness back. Panels
+ * at 0.96 under a 0.04 tone; no grain, since a mirror has no tooth and the
+ * grain is the one mark on a sheet that does not mirror. The mean is 0.899
+ * in linear light (sheets.mjs reports it): under the Directorate's 0.938,
+ * over the Klaxon's 0.857, so a polished navy is not darker than riveted
+ * plate on the register the conn view puts it on (rosterModels.ts
+ * `CLADDING_CEILING`).
+ *
+ * `untagged` keeps the sheet off the crystal: `resonance_crystal` is violet
+ * stone and `crystal_seam_unlit` a lamp's base worn dark (`crystalSeamUnlit`),
+ * neither of them ceramic, so both are laid out and left bare; the lamps are
+ * never tagged (trim.mjs). `name` is the file sheets.mjs draws
+ * (packages/frontend/src/assets/trim/hadron.png) and the tag a laid-out
+ * material carries. The Responsory is the first hull on it; a second script
+ * passes the same table.
+ */
+export const TRIM = {
+  name: 'hadron',
+  pattern: 'facet',
+  size: 512,
+  strakeM: 4,
+  plateM: 4.5,
+  seamM: 0.2,
+  chamferM: 0.2,
+  light: 0.96,
+  seam: 0.4,
+  chamfer: 1,
+  tone: 0.04,
+  samples: 4,
+  grain: 0,
+  untagged: ['resonance_crystal', 'crystal_seam_unlit'],
+};
+
+/**
  * The Order's facet rule and panel bands (docs/asset-prompts-3d.md Block 2c,
  * #919; `tools/hull-models/facets.mjs` is the measure). A mirror facet is a
  * plane wide enough to hold one specular, and the Order cuts it at three
