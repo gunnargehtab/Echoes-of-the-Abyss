@@ -111,6 +111,39 @@
  * drive prism at 4.12 m over twenty-eight; no part moved, no lamp's plan
  * changed, and the outline is what it was. 42 parts and 1,084 triangles
  * become 48 and 1,156.
+ *
+ * TRIM (#1109). The first Order hull laid out on the navy's trim sheet:
+ * `exportGlb`'s `trim` takes the Order's panelling (factions/hadron.mjs
+ * `TRIM`, the `facet` pattern) and trim.mjs lays every part's UV0 in
+ * metres at export — 584 faces flat, 572 unrolled, 856 on the one-strake
+ * band, 120 on two, 40 on four, 140 on eight, 138 vertices split, no
+ * triangle moved — and tags `shadow_indigo` and `pale_alloy` for it.
+ * `resonance_crystal` is laid out and left bare (the table's `untagged`):
+ * the lip, the ring crystals, the drive ring, the inlay, the edge strips
+ * and the emitter are violet stone, not panelling, and the five lamps are
+ * never tagged. The table's `mirror` has every flat face laid along the
+ * beam measure its plates from the centreline out, so the wing seams, the
+ * panel seams, the cradle lips and the canards carry their joints at one
+ * |z| on both sides, where the first layout, measuring from each part's
+ * own low edge, put the port twin's elsewhere (the review of #1109); the
+ * flat skin differs from its mirror by under 3 sRGB levels through a
+ * 16-texel blur (docs/screenshots/issue-1109/mirror.mjs). The blade
+ * unrolls at four plates round its 19.4 m girth, the horn at four, the
+ * drive at two, so every butt on one beam has its twin on the other; the
+ * emitter barrel, 4.8 m round, is one plate with its joint on the crown
+ * ridge and mirrors within 3.7 levels. Two things do not mirror, both
+ * the unroll's: a joint that falls mid-facet on a tapering facet follows
+ * the triangle diagonal and kinks, 0.38 m on the drive prism's top flat,
+ * about a pixel at the conn view's 3 px/m, on the blade, the horn, the
+ * drive and the rings; and the ring stays, one plate round and laid as a
+ * pair, unroll from a basis the mirror turns over, so one carries its
+ * butt inboard and the other outboard. 4.2 % of the tagged area differs
+ * from its mirror by more than 8 levels, all of it there, and #746 takes
+ * both. `diff.mjs responsory-hadron 39cc1e41` reads the shape
+ * as unchanged; the outline, the height and emissive maps and gate 3 are
+ * untouched, and the file goes from 104,480 to 110,156 bytes (zlib 13,098
+ * to 15,676), the split vertices and the JSON naming the layout and the
+ * tags.
  */
 import { THREE, bothSides, add, box, seat, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -190,4 +223,4 @@ hadron.ceramicSeams(root, shadow, {
   ],
 });
 
-await exportGlb(root, 'responsory-hadron.glb');
+await exportGlb(root, 'responsory-hadron.glb', { trim: hadron.TRIM });

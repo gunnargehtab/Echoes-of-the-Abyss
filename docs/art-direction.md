@@ -604,6 +604,71 @@ shimmer as well. Select the Directorate **before readying**: the stock `drive.mj
 readies its default navy before invoking `--steps`, so passing the capture module alone
 does not prove this navy was measured. No GPU-time or motion pass is claimed here.
 
+The Knights' sheet ([#1109](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1109))
+keeps the layout machinery and takes a third draw mode, `facet`, for a navy whose Block 2 brief
+is polished pale alloy and mirror facets and whose Responsory block is "fine ceramic panelling
+over the whole hull, seams tight ... no rivet": an aligned grid with no stagger, lap, rivet,
+grime or ramp. Panels are **4.5 m** by **4 m**, two a **9 m** wrap — the facet rule's own grain
+(Block 2c cuts a mirror facet at a 3 m chord), and the half metre over four is parity: a round
+part unrolls at whole plates round its girth, and between 4.31 and 4.97 m the Responsory's blade
+(19.4 m round), horn (17.4) and drive (8.1) come out at four, four and two, so a butt on one
+beam has its twin on the other. Each joint is a hairline **0.2 m** wide at **0.4** of the light,
+centred on the joint, under a flat chamfer **0.2 m** wide each side at **1.0**, brighter than
+any panel, so close in a joint is light-dark-light and at the conn view's 3 px/m the hairline
+takes 14 to 33 % off the pixel it crosses by where it falls; 0.15 m took 10 to 23 % and
+mipmapped to a rumour, and the Consortium's 0.25 m reads as plate. Panels sit at **0.96** under
+a **0.04** tone keyed on the strake's distance from its band's middle, so every band is the
+same turned over — which is how the layout lands a keel-centred part's port face against its
+starboard and a port part against its twin — and no grain, since a mirror has no tooth and the
+grain is the one mark that does not mirror; measured texel for texel, no band differs from
+itself turned over by a level and the wrap closes to the level. The table's `mirror` key is
+the layout's half of that: a flat face laid along the beam measures its plates from the
+centreline out rather than from the part's own low edge — from the inboard edge on a part
+wholly to one side, and from z 0 on a part across the keel, set half a plate out so the
+centreline is mid-plate and a plate's index keeps its parity under the mirror, where a joint
+on the centreline would swap the tones — because that low edge is inboard on a starboard part
+and outboard on its twin, and the first layout put the port wing seams' joints at other
+distances from the keel than the starboard's. The Consortium's and the Directorate's tables do
+not set it, and their layouts and files are byte for byte what they were. The table's
+`untagged` keeps the sheet off `resonance_crystal` and the lamp family's unlit finish
+`crystal_seam_unlit`:
+violet stone and a dark seam are not panelling, so both are laid out and left bare, and the
+lamps are never tagged. The Responsory is the first hull, the owner's choice: its 48 parts lay
+**584** faces flat and **572** unrolled — 856 on the one-strake band, 120 on two, 40 on four,
+140 on eight — split **138** vertices and tag two materials, `shadow_indigo` and `pale_alloy`.
+`responsory-hadron.glb` goes from **104,480 to 110,156 bytes** (zlib's default gzip 13,098 to
+15,676, as `tools/render-stack/audit.mjs` measures) with
+its 48 parts, 1,156 triangles and outline unchanged; no triangle moved, so the sprite rebake
+changes the albedo alone (`responsory-albedo.png`, 7,191 to 19,047 bytes, the wings' butts drawn
+at 4 px/m) and the height and emissive maps are byte for byte what they were, the glow on its
+gate-3 target of 3.10. The sheet is
+**1,653 bytes**, flat fields compressing where plate and chitin do not, at a mean linear
+luminance of **0.899**: under the Directorate's 0.938, over the Consortium's 0.857, so a
+polished navy is not darker than riveted plate on the register the conn view puts it on. On
+the GPU it is the same 512² RGBA8 upload with mipmaps, **1.33 MiB** once per navy present, no
+draw or triangle more. With four staged Responsories on Ventfront, read on the GTX 1070 at
+`capture.mjs`' four cameras, calls and triangles are the same before and after (49–50 and
+143,656–143,756), textures go from 20 to 21, and gate 6's queued GPU time reads 0.70 to 0.82 ms
+at pixel ratio 1 and 1.29 to 1.68 ms at 1.5, within 0.02 ms a camera either side
+([readings](screenshots/issue-1109/gate6.json)). [The conn view](screenshots/issue-1109/conn-view.png)
+and [the lit table](screenshots/issue-1109/lit-table.png) show the panels; the GPU readings
+were taken on the first layout, which `mirror` moved in UV values alone. The skin's
+symmetry is measured by [the mirror measure](screenshots/issue-1109/mirror.mjs): the sheet at
+interior points of every tagged triangle against the sheet at the mirrored point, through a
+16-texel blur. The flat skin differs from its mirror by under **3** sRGB levels everywhere, where
+the first layout had up to 29 % of a wing or panel seam's samples over 8, and the emitter barrel,
+one plate round with its one joint on the crown ridge, by 3.7 at most. The other round parts do
+not mirror, two ways, both the unroll's. It sets `u` per corner from the angle, so a joint that
+falls mid-facet where the facet tapers follows the triangle's diagonal and kinks, **0.38 m** on
+the drive prism's top flat, about a pixel at the conn view's 3 px/m, on the blade, the horn, the
+drive and the resonator rings. And a round pair whose twin's axis is its own mirror image, a
+cylinder rolled either way about x as the ring stays are, unrolls from a basis the mirror turns
+over: at the stays' one plate their butt lies on the inboard face of one and the outboard face of
+the other. **4.2 %** of the tagged area (249 of 5,898 m²) differs from its mirror by more than 8
+levels, 4.7 % before `mirror`, all of it on those rounds. That, and a round part's end caps laid
+from world position rather than the part's centre (`layoutMesh`), are the layout's, and
+[#746](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/746) holds both.
+
 #### Ranked audit and remaining work
 
 The baseline is commit `1df288a` (28 September 2026), not the earlier #286 scene.
@@ -621,7 +686,7 @@ view's frame.
 | 3 | Bevel coverage and baked AO ([#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002)) | Both landed ("Bevels and baked occlusion — SPEC" above). Coverage measured: 30 of 190 extruded plates are bevelled, and plates are 3 % of 7,480 parts, so no primitive was added. The Knights' Bastion carries the first baked occlusion map, on its own UV set, read by the conn view alone, its silhouette unchanged; the next model is a call per model |
 | 4 | Vignette, chromatic split, camera sway ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)) | All three are built ([Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)). The vignette and the sway use no pass. The split is a colour copy and one full-screen draw after the halo, and gate 6 allocates both. Existing shader-driven kelp sway and water fog are different effects; do not duplicate them. Respect gate 8 and reduced motion |
 | 5 | GLB gzip ([#1004](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1004)) | Built. The nginx image's `mime.types` names no `glb`, so `packages/frontend/nginx.conf` names the type in the models' own location and gzips them at level 6. Delivery cost, not frame quality |
-| 6 | UV layout and trim sheets ([#1005](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1005)) | Landed on one hull ("UV layout and trim sheets — SPEC" above). 6,863 of 7,025 primitives carry UV0 and 13 carry `uvAlike`'s zeros, but attribute presence is not a layout: the Bulwark's 162 parts are laid out in metres by its script, and four materials are tagged for the Consortium's sheet, one PNG a navy attached at load, luminance only, hue still the palette's. Sorrowgate's triplanar surfaces are kept under it; the next hull is a call per hull |
+| 6 | UV layout and trim sheets ([#1005](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1005)) | Landed on one hull a navy for three navies: the Consortium's Bulwark, the Directorate's Light Scout ([#1108](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1108)) and the Knights' Responsory ([#1109](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1109)), each on its navy's sheet ("UV layout and trim sheets — SPEC" above); the Commune has none. At #1005, 6,863 of 7,025 primitives carry UV0 and 13 carry `uvAlike`'s zeros, but attribute presence is not a layout: the Bulwark's 162 parts are laid out in metres by its script, and four materials are tagged for the Consortium's sheet, one PNG a navy attached at load, luminance only, hue still the palette's. Sorrowgate's triplanar surfaces are kept under it; the next hull is a call per hull |
 | 7 | Shallow caustics ([#1006](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1006)) | Decided: none. The sunlit layer is the milky Lid, which scatters rather than focuses, and the water ramp already carries what light reaches the Shelf ("Shallow caustics — SPEC" above). Nothing to build |
 | 8 | WebGPU/TSL ([#1007](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1007)) | Defer migration until a separate feasibility decision. Water, survey, surface and sway shader patches depend on the current WebGL pipeline; this is not a renderer-constructor swap. The feasibility note is written ([webgpu-feasibility.md](webgpu-feasibility.md)): every patch has a TSL equivalent, but under r169 frame-wide tone mapping holds gate 3 only if every material carries its own curve, one-pixel points cost gate 6 triangles, and the halo's depth copy costs gate 6 a call or a target |
 

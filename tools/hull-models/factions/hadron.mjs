@@ -243,6 +243,94 @@ export const ink = {
 };
 
 /**
+ * The Order's panelling, as the trim sheet kit.mjs `exportGlb` lays a hull
+ * over (trim.mjs `facet`, #1109): "polished pale alloy with violet resonance
+ * crystal, mirror facets" (Block 2), and the Responsory's own "fine ceramic
+ * panelling over the whole hull, seams tight, everything faired — the Order
+ * builds nothing bare. No lattice, no stack, no louvre, no rivet", said in
+ * luminance alone. Not the Klaxon's plate: an aligned grid with no stagger,
+ * lap, rivet, grime or ramp, each joint a hairline with a lit chamfer on
+ * both sides, and a panel's tone keyed on its strake's distance from the
+ * band's middle, so every band reads the same turned over — which is how
+ * the layout lands a keel-centred part's port face against its starboard,
+ * and a port part against its twin. `mirror` is the other half of that: a
+ * flat face laid along the beam measures its plates from the centreline
+ * out rather than from the part's own low edge (trim.mjs `layoutMesh`),
+ * since that edge is inboard on a starboard part and outboard on its twin,
+ * and without it the port wing seams' joints landed at other distances
+ * from the keel than the starboard's (#1109, at review). So the flat skin
+ * is mirror-true to under 3 sRGB levels through a 16-texel blur
+ * (docs/screenshots/issue-1109/mirror.mjs is the measure). The round
+ * parts are not quite, two ways, both the unroll's: a joint that falls
+ * mid-facet where a facet tapers follows the triangle diagonal and kinks,
+ * 0.38 m on the drive prism's top flat, about a pixel at the conn view's
+ * 3 px/m, on the blade, the horn, the drive and the rings; and a round
+ * pair whose twin's axis is its own mirror image — a cylinder rolled
+ * either way about x, as the ring stays are — unrolls from a basis the
+ * mirror turns over, so at the stays' one plate their butt lies on the
+ * inboard face of one and the outboard face of the other (an odd count
+ * moves butts so, and four swaps tones on the one-strake band). 4.2 % of the
+ * Responsory's tagged area differs from its mirror by more than 8 levels,
+ * all of it on those rounds, and #746 takes both.
+ *
+ * Panels of 4.5 m by 4 m, two a wrap of 9 m: the facet rule's own grain
+ * (`facets` below cuts a mirror facet at a 3 m chord, `panels` centres a
+ * hull's seams on 3.9 m), so a panel is a facet and not a plate. The half
+ * metre over four is parity: a round part unrolls at whole plates round
+ * its girth, which the layout takes over triangle corners (trim.mjs
+ * `layoutMesh`), and on an odd count the butts fall on one beam and not
+ * the other — at 4 m the blade, 19.4 m round, took five. Between 4.31 and
+ * 4.97 m every multi-plate round on the Responsory's centreline comes
+ * even — the blade four, the horn at 17.4 m four, the drive at 8.1 m two
+ * — so a butt on either beam has its twin; the emitter barrel, 4.8 m
+ * round, is one plate at any size, its one joint on the crown ridge and
+ * the unroll's wrap mid-panel on the starboard ridge, so it mirrors
+ * within 3.7 levels. Where a round's joints lie is its unroll basis's,
+ * and the ring stays' do not mirror (above), so a later hull reads its
+ * own girths and butts off `exportGlb`'s file before it trusts this. The
+ * layout's bands stop at eight strakes, so a lathe 77 m long
+ * carries 9.7 m strakes along it whatever this says; the wings' are
+ * 3.95 m. The joint is drawn for the conn view's ~3 px/m (#1107), where
+ * "seams tight" and "readable" pull apart: a hairline of 0.2 m at 0.4 of
+ * the light, which at that range takes 14 to 33 % off the pixel it crosses
+ * by where it falls — 0.15 m takes 10 to 23 % and mipmaps to a rumour, the
+ * Klaxon's 0.25 m reads as plate — and 0.2 m of chamfer each side at 1.0,
+ * brighter than any panel, so close in the joint is light-dark-light and
+ * at range the chamfers give a little of the seam's darkness back. Panels
+ * at 0.96 under a 0.04 tone; no grain, since a mirror has no tooth and the
+ * grain is the one mark on a sheet that does not mirror. The mean is 0.899
+ * in linear light (sheets.mjs reports it): under the Directorate's 0.938,
+ * over the Klaxon's 0.857, so a polished navy is not darker than riveted
+ * plate on the register the conn view puts it on (rosterModels.ts
+ * `CLADDING_CEILING`).
+ *
+ * `untagged` keeps the sheet off the crystal: `resonance_crystal` is violet
+ * stone and `crystal_seam_unlit` a lamp's base worn dark (`crystalSeamUnlit`),
+ * neither of them ceramic, so both are laid out and left bare; the lamps are
+ * never tagged (trim.mjs). `name` is the file sheets.mjs draws
+ * (packages/frontend/src/assets/trim/hadron.png) and the tag a laid-out
+ * material carries. The Responsory is the first hull on it; a second script
+ * passes the same table.
+ */
+export const TRIM = {
+  name: 'hadron',
+  pattern: 'facet',
+  size: 512,
+  strakeM: 4,
+  plateM: 4.5,
+  seamM: 0.2,
+  chamferM: 0.2,
+  light: 0.96,
+  seam: 0.4,
+  chamfer: 1,
+  tone: 0.04,
+  samples: 4,
+  grain: 0,
+  mirror: true,
+  untagged: ['resonance_crystal', 'crystal_seam_unlit'],
+};
+
+/**
  * The Order's facet rule and panel bands (docs/asset-prompts-3d.md Block 2c,
  * #919; `tools/hull-models/facets.mjs` is the measure). A mirror facet is a
  * plane wide enough to hold one specular, and the Order cuts it at three

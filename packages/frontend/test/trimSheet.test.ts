@@ -53,7 +53,7 @@ const materialsOf = (root: Group): MeshStandardMaterial[] => {
 describe('the trim sheet on a roster model', () => {
   it('filters every sheet at four taps', () => assert.equal(TRIM_SHEET.ANISOTROPY, 4));
 
-  for (const name of ['bathyarch', 'directorate'])
+  for (const name of ['bathyarch', 'directorate', 'hadron'])
     it(`ships ${name}, once, as a repeating sRGB texture`, () => {
       assert.ok(TRIM_SHEET_NAMES.includes(name), `sheets: ${TRIM_SHEET_NAMES}`);
       const sheet = trimSheet(name);
@@ -83,6 +83,8 @@ describe('the trim sheet on a roster model', () => {
       assert.equal(m.map, m.name === 'iron_grey' ? trimSheet('directorate') : null);
     });
     assert.notEqual(trimSheet('directorate'), trimSheet('bathyarch'));
+    assert.notEqual(trimSheet('hadron'), trimSheet('bathyarch'));
+    assert.notEqual(trimSheet('hadron'), trimSheet('directorate'));
   });
 
   it('attaches the tagged material to its sheet, under the faction ink, and never a lamp', () => {

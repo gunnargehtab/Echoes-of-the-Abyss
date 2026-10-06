@@ -21,7 +21,8 @@ import { readGlb, sceneParts } from '../glb.mjs';
 import { stripImages } from '../images.mjs';
 import { TRIM } from '../factions/bathyarch.mjs';
 import { TRIM as DIRECTORATE } from '../factions/directorate.mjs';
-import { navyTrims, sheetPath } from '../sheets.mjs';
+import { TRIM as HADRON } from '../factions/hadron.mjs';
+import { navyTrims, repo, sheetPath } from '../sheets.mjs';
 
 /** The Klaxon's own sheet, as the navy draws it. */
 const SPEC = TRIM;
@@ -272,6 +273,186 @@ test('the Directorate layout changes only UVs and tags, never shape, finish or l
     delete finish.userData;
     assert.deepEqual(finish, finishes[i], `${m.name} finish changed`);
   });
+});
+
+test('the Knights draw a grey facet sheet, bright, and the same twice', async () => {
+  const trims = await navyTrims();
+  assert.equal(trims.get('hadron'), HADRON);
+  const sheet = drawTrimSheet(HADRON);
+  assert.deepEqual(sheet.png, drawTrimSheet(HADRON).png);
+  assert.deepEqual(sheet.png, readFileSync(sheetPath('hadron')));
+  assert.equal(sheet.png[25], 0, 'PNG must have one grey channel, not faction colour');
+  // Held bright for the register the conn view puts a navy on: a polished
+  // navy no darker than riveted plate.
+  assert.ok(sheet.mean >= drawTrimSheet(SPEC).mean && sheet.mean < 0.98, `mean ${sheet.mean}`);
+  assert.equal(sheet.wrapM, PLATES * HADRON.plateM);
+});
+
+test('a facet grid is aligned, and every band turned over is itself', () => {
+  const sheet = drawTrimSheet(HADRON);
+  const n = sheet.size;
+  const at = (x, y) => sheet.pixels[y * n + x];
+  for (const b of bandsOf()) {
+    // v -> v0 + v1 - v, which is how the layout lands port against starboard.
+    const y0 = b.v0 * n;
+    const y1 = b.v1 * n;
+    let worst = 0;
+    for (let y = y0; y < (y0 + y1) / 2; y++)
+      for (let x = 0; x < n; x++)
+        worst = Math.max(worst, Math.abs(at(x, y) - at(x, y0 + y1 - 1 - y)));
+    assert.ok(worst <= 1, `the ${b.rows}-strake band differs from itself turned over by ${worst}`);
+    // No stagger: every strake's butts are at the wrap's halves (u 0 and ½), none at its
+    // quarters.
+    const h = (y1 - y0) / b.rows;
+    for (let s = 0; s < b.rows; s++) {
+      const y = Math.floor(y0 + h * s + h / 2);
+      for (const x of [0, n / 2]) assert.ok(at(x, y) < 200, `no butt at ${x} on strake ${s}`);
+      for (const x of [n / 4, (3 * n) / 4]) assert.ok(at(x, y) > 240, `a butt at ${x}, ${s}`);
+    }
+  }
+  const mid = Math.floor(band(8).v0 * n + n / 32);
+  assert.ok(Math.abs(at(0, mid) - at(n - 1, mid)) <= 1, 'the horizontal wrap does not close');
+});
+
+test('a facet joint is a hairline lit on both sides, as wide in metres both ways', () => {
+  const sheet = drawTrimSheet(HADRON);
+  const n = sheet.size;
+  const at = (x, y) => sheet.pixels[y * n + x];
+  const eight = band(8);
+  const strakeH = ((eight.v1 - eight.v0) * n) / 8;
+  const y0 = eight.v0 * n;
+  const texU = sheet.wrapM / n;
+  const texV = HADRON.strakeM / strakeH;
+  const row = Math.floor(y0 + strakeH / 2);
+  const panel = at(n / 4, row);
+  const dark = (v) => v < panel - 40;
+  // Out from the butt at u 0.5 both ways along the strake's middle, and out
+  // from the first strake's top both ways down the first plate's middle.
+  const run = (x, y, dx, dy) => {
+    let k = 0;
+    while (dark(at(x + k * dx, y + k * dy))) k++;
+    return { k, past: at(x + k * dx, y + k * dy) };
+  };
+  const left = run(n / 2 - 1, row, -1, 0);
+  const right = run(n / 2, row, 1, 0);
+  const below = run(n / 4, y0 + strakeH - 1, 0, -1);
+  const above = run(n / 4, y0 + strakeH, 0, 1);
+  assert.ok(Math.abs(left.k - right.k) <= 1, `butt ${left.k} texels one side, ${right.k} other`);
+  assert.ok(Math.abs(below.k - above.k) <= 1, `strake seam ${below.k} below, ${above.k} above`);
+  for (const [k, tex] of [
+    [left.k + right.k, texU],
+    [below.k + above.k, texV],
+  ])
+    assert.ok(
+      Math.abs(k * tex - HADRON.seamM) <= tex,
+      `${k} texels of ${tex} m for ${HADRON.seamM}`
+    );
+  // The chamfer: past the hairline on every side, lighter than the panel.
+  for (const side of [left, right, below, above])
+    assert.ok(side.past > panel, `${side.past} past the seam, the panel ${panel}`);
+  // Between its chamfers a panel is one value: no grain, grime, ramp or rivet.
+  const inU = Math.ceil((HADRON.seamM / 2 + HADRON.chamferM) / texU) + 1;
+  const inV = Math.ceil((HADRON.seamM / 2 + HADRON.chamferM) / texV) + 1;
+  const values = new Set();
+  for (let y = y0 + inV; y < y0 + strakeH - inV; y++)
+    for (let x = inU; x < n / 2 - inU; x++) values.add(at(x, y));
+  assert.deepEqual([...values], [panel]);
+});
+
+test('the facet layout lays port as starboard turned over, not shifted', () => {
+  // Plates whose long side runs across the beam, where a layout measured
+  // from each part's own lowest z puts the port twin's joints at other
+  // distances from the keel (#1109): a starboard plate, its port twin, and
+  // one plate across the keel, 4 m wide so its face takes the one-strake
+  // band, the one band whose two plates differ in tone. There a joint on
+  // the centreline would swap the plates either side of it, and show.
+  const root = new THREE.Group();
+  const mat = steel();
+  const plate = (name, z0, z1, wide = 10) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(wide, 0.5, z1 - z0), mat);
+    m.name = name;
+    m.position.set(0, 0, (z0 + z1) / 2);
+    root.add(m);
+    return m;
+  };
+  const star = plate('seam_s', 3.5, 14.6);
+  const port = plate('seam_p', -14.6, -3.5);
+  const keel = plate('seam_0', -7.3, 7.3, 4);
+  const sheet = drawTrimSheet(HADRON);
+  layoutTrim(root, sheet, HADRON);
+  // A flat face's UV is affine in position, so one top triangle gives the
+  // whole top face's map.
+  const topMap = (mesh) => {
+    mesh.updateMatrixWorld(true);
+    const g = mesh.geometry;
+    const tri = [];
+    for (let k = 0; k < g.index.count && tri.length < 3; k += 3) {
+      const ids = [0, 1, 2].map((c) => g.index.getX(k + c));
+      if (ids.every((i) => g.attributes.normal.getY(i) > 0.9)) tri.push(...ids);
+    }
+    const p = tri.map((i) =>
+      new THREE.Vector3()
+        .fromBufferAttribute(g.attributes.position, i)
+        .applyMatrix4(mesh.matrixWorld)
+    );
+    const uv = tri.map((i) => [g.attributes.uv.getX(i), g.attributes.uv.getY(i)]);
+    // Solve [x z 1] · [a b c] = uv for each channel.
+    const m = new THREE.Matrix3().set(p[0].x, p[0].z, 1, p[1].x, p[1].z, 1, p[2].x, p[2].z, 1);
+    const inv = m.clone().invert();
+    const coef = (ch) => new THREE.Vector3(uv[0][ch], uv[1][ch], uv[2][ch]).applyMatrix3(inv);
+    const [cu, cv] = [coef(0), coef(1)];
+    return (x, z) => [cu.x * x + cu.y * z + cu.z, cv.x * x + cv.y * z + cv.z];
+  };
+  const texel = ([u, v]) => {
+    const n = sheet.size;
+    const x = Math.floor((((u % 1) + 1) % 1) * n);
+    const y = Math.min(n - 1, Math.max(0, Math.floor(v * n)));
+    return sheet.pixels[y * n + x];
+  };
+  const [s, p, k] = [star, port, keel].map(topMap);
+  let worst = 0;
+  let joints = 0;
+  const tones = new Set();
+  // An irrational step, so no sample sits on a texel's edge, and every
+  // sample on its plate: the twins' 10 by 11.1 m, the keel's 4 by 14.6.
+  for (let i = 0; i < 400; i++) {
+    const a = (i * 0.6180339887) % 1;
+    const b = (i * 0.7548776662) % 1;
+    const [x, z] = [-4.9 + a * 9.8, 3.6 + b * 10.9];
+    const [xk, zk] = [-1.95 + a * 3.9, 0.05 + b * 7.2];
+    const pair = [
+      [texel(s(x, z)), texel(p(x, -z))],
+      [texel(k(xk, zk)), texel(k(xk, -zk))],
+    ];
+    for (const [one, other] of pair) worst = Math.max(worst, Math.abs(one - other));
+    if (texel(s(x, z)) < 200) joints++;
+    const t = texel(k(xk, zk));
+    if (t > 230 && t < 255) tones.add(t);
+  }
+  assert.ok(joints > 0, 'no sample fell on a joint, so the pairs prove nothing');
+  assert.ok(tones.size > 1, `the keel plate's panels are one tone, ${[...tones]}: parity hides`);
+  assert.ok(worst <= 1, `a point and its mirror differ by ${worst} grey levels`);
+});
+
+test('`untagged` lays a cladding out and leaves it bare', () => {
+  const { root, slab, drum } = yard();
+  const stone = new THREE.MeshStandardMaterial();
+  stone.name = HADRON.untagged[0];
+  drum.material = stone;
+  const laid = layoutTrim(root, drawTrimSheet(HADRON), HADRON);
+  assert.deepEqual([...laid.materials], ['steel']);
+  assert.equal(slab.material.userData.trim, 'hadron');
+  assert.equal(stone.userData.trim, undefined);
+  const part = sceneParts(root).parts.find((p) => p.name === 'drum');
+  assert.ok(part.uv0 && part.uv0.length === part.tris * 6, 'the drum was not laid out');
+});
+
+test('the Responsory is on the Knights sheet with its crystal bare', () => {
+  const file = readGlb(join(repo, 'docs/concept-art/models/responsory-hadron.glb'));
+  assert.equal(file.trim.sheet, HADRON.name);
+  assert.deepEqual([...file.trim.materials].sort(), ['pale_alloy', 'shadow_indigo']);
+  assert.ok(file.parts.some((p) => p.material === 'resonance_crystal'), 'no crystal to keep bare');
+  for (const p of file.parts) assert.ok(p.uv0 && p.uv0.length === p.tris * 6, `${p.name} uv0`);
 });
 
 test('the export tags the solid unlit materials for the sheet, and glb.mjs reads it back', async () => {

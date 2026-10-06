@@ -1,0 +1,300 @@
+{
+  "issue": 1109,
+  "force": "Knights: 4 Responsories on Bastion, two Foundries and a Slipway (docs/screenshots/issue-1027/staging.patch, local, uncommitted)",
+  "map": "ventfront-divide",
+  "command": "UNPACED=1 VIEW_DPR=<1|1.5> node .claude/skills/run-game/scripts/drive.mjs --headed --channel msedge --steps tools/render-stack/capture.mjs",
+  "runs": [
+    {
+      "glb": "main 39cc1e41",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "software": false,
+      "unpaced": true,
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 1
+      },
+      "stations": [
+        {
+          "name": "home",
+          "drawCalls": 50,
+          "triangles": 143756,
+          "textures": 20,
+          "gpuTimer": "timing",
+          "gpuFrames": 242,
+          "avgGpuMs": 1.34,
+          "queuedGpuMs": 0.71,
+          "queueLoadMs": 3.58,
+          "onScreen": {
+            "units": 4,
+            "structures": 4
+          }
+        },
+        {
+          "name": "close",
+          "drawCalls": 49,
+          "triangles": 143756,
+          "textures": 20,
+          "gpuTimer": "timing",
+          "gpuFrames": 241,
+          "avgGpuMs": 1.17,
+          "queuedGpuMs": 0.8,
+          "queueLoadMs": 3.64,
+          "onScreen": {
+            "units": 4,
+            "structures": 4
+          }
+        },
+        {
+          "name": "low",
+          "drawCalls": 50,
+          "triangles": 143756,
+          "textures": 20,
+          "gpuTimer": "timing",
+          "gpuFrames": 240,
+          "avgGpuMs": 1.08,
+          "queuedGpuMs": 0.7,
+          "queueLoadMs": 3.59,
+          "onScreen": {
+            "units": 4,
+            "structures": 4
+          }
+        },
+        {
+          "name": "survey",
+          "drawCalls": 50,
+          "triangles": 143656,
+          "textures": 20,
+          "gpuTimer": "timing",
+          "gpuFrames": 240,
+          "avgGpuMs": 1.32,
+          "queuedGpuMs": 0.7,
+          "queueLoadMs": 3.61,
+          "onScreen": {
+            "units": 4,
+            "structures": 4
+          }
+        }
+      ]
+    },
+    {
+      "glb": "laid out (this branch)",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "software": false,
+      "unpaced": true,
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 1
+      },
+      "stations": [
+        {
+          "name": "home",
+          "drawCalls": 50,
+          "triangles": 143756,
+          "textures": 21,
+          "gpuTimer": "timing",
+          "gpuFrames": 241,
+          "avgGpuMs": 1.46,
+          "queuedGpuMs": 0.71,
+          "queueLoadMs": 3.65,
+          "onScreen": {
+            "units": 4,
+            "structures": 4
+          }
+        },
+        {
+          "name": "close",
+          "drawCalls": 49,
+          "triangles": 143756,
+          "textures": 21,
+          "gpuTimer": "timing",
+          "gpuFrames": 241,
+          "avgGpuMs": 1.32,
+          "queuedGpuMs": 0.82,
+          "queueLoadMs": 3.66,
+          "onScreen": {
+            "units": 4,
+            "structures": 4
+          }
+        },
+        {
+          "name": "low",
+          "drawCalls": 50,
+          "triangles": 143756,
+          "textures": 21,
+          "gpuTimer": "timing",
+          "gpuFrames": 242,
+          "avgGpuMs": 1.09,
+          "queuedGpuMs": 0.71,
+          "queueLoadMs": 3.69,
+          "onScreen": {
+            "units": 4,
+            "structures": 4
+          }
+        },
+        {
+          "name": "survey",
+          "drawCalls": 50,
+          "triangles": 143656,
+          "textures": 21,
+          "gpuTimer": "timing",
+          "gpuFrames": 241,
+          "avgGpuMs": 1.27,
+          "queuedGpuMs": 0.7,
+          "queueLoadMs": 3.65,
+          "onScreen": {
+            "units": 4,
+            "structures": 4
+          }
+        }
+      ]
+    },
+    {
+      "glb": "main 39cc1e41",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "software": false,
+      "unpaced": true,
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 1.5
+      },
+      "stations": [
+        {
+          "name": "home",
+          "drawCalls": 50,
+          "triangles": 143756,
+          "textures": 20,
+          "gpuTimer": "timing",
+          "gpuFrames": 242,
+          "avgGpuMs": 1.87,
+          "queuedGpuMs": 1.4,
+          "queueLoadMs": 3.69,
+          "onScreen": {
+            "units": 4,
+            "structures": 4
+          }
+        },
+        {
+          "name": "close",
+          "drawCalls": 49,
+          "triangles": 143756,
+          "textures": 20,
+          "gpuTimer": "timing",
+          "gpuFrames": 242,
+          "avgGpuMs": 1.78,
+          "queuedGpuMs": 1.67,
+          "queueLoadMs": 3.76,
+          "onScreen": {
+            "units": 4,
+            "structures": 4
+          }
+        },
+        {
+          "name": "low",
+          "drawCalls": 50,
+          "triangles": 143756,
+          "textures": 20,
+          "gpuTimer": "timing",
+          "gpuFrames": 241,
+          "avgGpuMs": 1.49,
+          "queuedGpuMs": 1.39,
+          "queueLoadMs": 3.78,
+          "onScreen": {
+            "units": 4,
+            "structures": 4
+          }
+        },
+        {
+          "name": "survey",
+          "drawCalls": 50,
+          "triangles": 143656,
+          "textures": 20,
+          "gpuTimer": "timing",
+          "gpuFrames": 241,
+          "avgGpuMs": 1.53,
+          "queuedGpuMs": 1.29,
+          "queueLoadMs": 3.74,
+          "onScreen": {
+            "units": 4,
+            "structures": 4
+          }
+        }
+      ]
+    },
+    {
+      "glb": "laid out (this branch)",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "software": false,
+      "unpaced": true,
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 1.5
+      },
+      "stations": [
+        {
+          "name": "home",
+          "drawCalls": 50,
+          "triangles": 143756,
+          "textures": 21,
+          "gpuTimer": "timing",
+          "gpuFrames": 240,
+          "avgGpuMs": 1.61,
+          "queuedGpuMs": 1.41,
+          "queueLoadMs": 3.76,
+          "onScreen": {
+            "units": 4,
+            "structures": 4
+          }
+        },
+        {
+          "name": "close",
+          "drawCalls": 49,
+          "triangles": 143756,
+          "textures": 21,
+          "gpuTimer": "timing",
+          "gpuFrames": 240,
+          "avgGpuMs": 1.74,
+          "queuedGpuMs": 1.68,
+          "queueLoadMs": 3.75,
+          "onScreen": {
+            "units": 4,
+            "structures": 4
+          }
+        },
+        {
+          "name": "low",
+          "drawCalls": 50,
+          "triangles": 143756,
+          "textures": 21,
+          "gpuTimer": "timing",
+          "gpuFrames": 243,
+          "avgGpuMs": 1.53,
+          "queuedGpuMs": 1.38,
+          "queueLoadMs": 3.75,
+          "onScreen": {
+            "units": 4,
+            "structures": 4
+          }
+        },
+        {
+          "name": "survey",
+          "drawCalls": 50,
+          "triangles": 143656,
+          "textures": 21,
+          "gpuTimer": "timing",
+          "gpuFrames": 241,
+          "avgGpuMs": 1.63,
+          "queuedGpuMs": 1.3,
+          "queueLoadMs": 3.79,
+          "onScreen": {
+            "units": 4,
+            "structures": 4
+          }
+        }
+      ]
+    }
+  ]
+}
