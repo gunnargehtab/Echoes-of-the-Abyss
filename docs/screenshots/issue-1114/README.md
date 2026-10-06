@@ -11,10 +11,8 @@ models, and the canvas pass carries all of it. The gate is
 
 | File | What it is |
 | --- | --- |
-| `bisect/<sha>-<run>.json` | `capture.mjs` at each revision, ratio 1.5, the silt detail off |
+| `readings.json` | Every reading below, a line a station a run: `bisect` (`capture.mjs` at each revision, ratio 1.5, the silt detail off), `split` and `gate6` (`capture.mjs` on Ventfront and Sorrowgate, and [`fight.mjs`](../issue-1083/fight.mjs)) |
 | `split.mjs` | A `run-game` steps module: the close camera's queued GPU time, each pass on its own, three windows of 240 frames |
-| `split/*.json` | What `split.mjs` read at each revision and variant |
-| `gate6/` | Gate 6's before and after: `capture.mjs` on Ventfront and Sorrowgate, and [`fight.mjs`](../issue-1083/fight.mjs) |
 
 ## How the readings were taken
 
