@@ -853,8 +853,8 @@ and with the Consortium's other twenty-two on its sheet (#1107) it counts 21,114
 byte for byte another's in the same file, since GLTFExporter shares one only between parts
 holding one geometry object. With each written once and both nodes pointing at it
 ([#1125](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1125), kit.mjs
-`shareAlike`), 90 files are re-exported with no part, UV or material changed, and the
-library counts **13,643,272 raw bytes** and **2,628,937 gzipped**; the raw fall is larger
+`shareAlike`), 90 files are re-exported, every part and UV bit for bit as before and every
+material equal at float32, and the library counts **13,643,272 raw bytes** and **2,628,937 gzipped**; the raw fall is larger
 than the duplicates because the JSON lists fewer accessors.
 Those are sums over the source library, not a browser's initial download: Vite hashes
 assets and the client loads them by need. A solo match on the default map, its build at
