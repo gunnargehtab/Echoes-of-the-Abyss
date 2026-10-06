@@ -143,7 +143,12 @@
  * as unchanged; the outline, the height and emissive maps and gate 3 are
  * untouched, and the file goes from 104,480 to 110,156 bytes (zlib 13,098
  * to 15,676), the split vertices and the JSON naming the layout and the
- * tags.
+ * tags. Since #1107 a flat part turned off the axes is laid in its own
+ * frame (trim.mjs `frameOf`), which here is the three lamp boxes seated on
+ * the hull's curve — `stern_mark`, `nav_mark_s`, `nav_mark_p` — and no
+ * tagged plate: a lamp is never tagged, so nothing samples the UVs that
+ * moved. The counts and the raw bytes above are unchanged, and zlib's
+ * gzip goes from 15,676 to 15,477.
  */
 import { THREE, bothSides, add, box, seat, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';

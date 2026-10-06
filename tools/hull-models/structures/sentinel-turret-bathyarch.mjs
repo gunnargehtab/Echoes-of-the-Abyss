@@ -241,4 +241,4 @@ bathyarch.baseLamp(
 }
 
 metreTrue(root, L, { drawn: DRAWN });
-await exportGlb(root, 'sentinel-turret-bathyarch.glb');
+await exportGlb(root, 'sentinel-turret-bathyarch.glb', { trim: bathyarch.TRIM });

@@ -18,8 +18,10 @@
  * The holdfast mat, the slab, its kerb, the six run lights and the three
  * intake arms are the kit's `reactorBed` and `reactorIntakeArm` — the
  * faction-neutral skeleton every navy bolts the same way (#608, #652) — in
- * the Klaxon's ink: rust for the holdfast, black for the slab, iron for the
- * kerb and the booms, amber for the run lights. What is the Klaxon's is the
+ * the Klaxon's ink: `ground_rust` for the holdfast — the rust's hex under
+ * the ground's own name, so the trim sheet leaves the kelp bare (#1107) —
+ * black for the slab, iron for the kerb and the booms, rust for the anchor
+ * feet, amber for the run lights. What is the Klaxon's is the
  * vessel: a riveted digester tank, banded, crowned and bolted, with the vent
  * stack off-centre on its roof and a square hopper on the end of the
  * outflow, from `factions/bathyarch.mjs`.
@@ -93,6 +95,7 @@ const OUTFLOW = -Math.PI / 6;
 const black = bathyarch.ink.hullBlack();
 const grey = bathyarch.ink.ironGrey();
 const rust = bathyarch.ink.oxideRust();
+const ground = bathyarch.ink.groundRust();
 const amber = bathyarch.ink.hazardAmber();
 const lampM = bathyarch.ink.amberLamp();
 const unlit = bathyarch.ink.amberLampUnlit();
@@ -100,8 +103,8 @@ const unlit = bathyarch.ink.amberLampUnlit();
 const root = new THREE.Group();
 root.name = 'bio_reactor_bathyarch';
 
-// The bed: the holdfast in rust, the slab in black, the kerb and its six run
-// lights in iron and amber.
+// The bed: the holdfast in ground rust (the rust's hex, left off the trim
+// sheet), the slab in black, the kerb and its six run lights in iron and amber.
 // Every round part of the bed at the Klaxon's count (#919, kit.mjs `asked`):
 // the mat and the slab fourteen-sided at 67 and 44 m, the kerb fourteen on a
 // tube of six. A fourteen-gon laid as the kit lays one already has a flat
@@ -114,7 +117,7 @@ root.name = 'bio_reactor_bathyarch';
 // the kerb's six-sided tube tops out lower than the file's five-sided one.
 reactorBed(
   root,
-  { holdfast: rust, slab: black, kerb: grey, lamp: lampM },
+  { holdfast: ground, slab: black, kerb: grey, lamp: lampM },
   {
     mat: { facets: cut.round },
     pad: { facets: cut.round, phase: 0 },
@@ -192,4 +195,4 @@ if (size.z > size.x)
   throw new Error(
     `${root.name}: drawn ${size.x.toFixed(2)} × ${size.z.toFixed(2)}; the arms' phase has to leave x the longer axis`
   );
-await exportGlb(root, 'bio-reactor-bathyarch.glb');
+await exportGlb(root, 'bio-reactor-bathyarch.glb', { trim: bathyarch.TRIM });

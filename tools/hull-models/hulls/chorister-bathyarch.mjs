@@ -225,4 +225,4 @@ bathyarch.deckPlates(root, { black, rust }, {
 });
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
-await exportGlb(root, 'chorister-bathyarch.glb');
+await exportGlb(root, 'chorister-bathyarch.glb', { trim: bathyarch.TRIM });

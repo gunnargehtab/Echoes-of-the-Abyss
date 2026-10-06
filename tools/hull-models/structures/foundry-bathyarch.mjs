@@ -368,4 +368,4 @@ bathyarch.plateSeams(root, rust, {
 });
 
 metreTrue(root, L, { drawn: DRAWN });
-await exportGlb(root, 'foundry-bathyarch.glb');
+await exportGlb(root, 'foundry-bathyarch.glb', { trim: bathyarch.TRIM });

@@ -397,4 +397,4 @@ bathyarch.bowLamp(root, lampM, { at: [65, HULL_TOP + 0.8, 0], size: [1.2, 0.8, 3
 const k = metreTrue(root, L, { drawn: L });
 if (Math.abs(k - 1) > 1e-6) throw new Error(`consortium_gantry: root scale ${k}, expected 1`);
 
-await exportGlb(root, 'gantry-bathyarch.glb');
+await exportGlb(root, 'gantry-bathyarch.glb', { trim: bathyarch.TRIM });

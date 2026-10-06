@@ -245,4 +245,4 @@ bathyarch.deckPlates(root, { black, rust }, {
 });
 bathyarch.deckHatches(root, { hatch: grey, wheel: rust }, { on: 'workshop_roof', ...HATCH, hatches: [['roof_hatch', [4, 6.5]]] });
 
-await exportGlb(root, 'tender-bathyarch.glb');
+await exportGlb(root, 'tender-bathyarch.glb', { trim: bathyarch.TRIM });

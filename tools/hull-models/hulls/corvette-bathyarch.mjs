@@ -334,4 +334,4 @@ bathyarch.plateSeams(root, rust, {
 });
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
-await exportGlb(root, 'corvette-bathyarch.glb');
+await exportGlb(root, 'corvette-bathyarch.glb', { trim: bathyarch.TRIM });

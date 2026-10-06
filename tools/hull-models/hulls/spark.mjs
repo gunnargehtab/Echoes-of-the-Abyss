@@ -212,4 +212,4 @@ bathyarch.bowLamp(root, lampM, { at: [8.4, 1.1, 0], size: [0.5, 0.25, 0.8] });
 const k = metreTrue(root, L, { drawn: L });
 if (Math.abs(k - 1) > 1e-6) throw new Error(`consortium_spark: root scale ${k}, expected 1`);
 
-await exportGlb(root, 'spark-bathyarch.glb');
+await exportGlb(root, 'spark-bathyarch.glb', { trim: bathyarch.TRIM });

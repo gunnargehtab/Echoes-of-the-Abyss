@@ -427,4 +427,4 @@ bathyarch.bowLamp(root, lampM, { at: [40, CROWN + 0.15, 0], size: [1.2, 0.8, 3] 
 const k = metreTrue(root, L, { drawn: L });
 if (Math.abs(k - 1) > 1e-6) throw new Error(`consortium_caisson: root scale ${k}, expected 1`);
 
-await exportGlb(root, 'caisson-bathyarch.glb');
+await exportGlb(root, 'caisson-bathyarch.glb', { trim: bathyarch.TRIM });
