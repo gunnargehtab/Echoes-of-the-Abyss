@@ -24,8 +24,9 @@ node .claude/skills/run-game/scripts/drive.mjs \
 ```
 
 The first capture found the Kelp Labyrinth's roof upside down. Every floor there is
-1,800 m or deeper, so the rock top fell below the 700 m ceiling. A roof now stands at
-least 150 m above its ceiling (`roofTopDepthM` in `passages.ts`).
+1,800 m or deeper, so the rock top fell below the 700 m ceiling. A roof's top now starts
+150 m above its ceiling, or at the surface if that is closer (`roofTopDepthM` in
+`passages.ts`), and never dips below the ceiling (`roofSurfaceDepthM`).
 
 Each roof is one draw call: two on each of these maps. A Kelp Labyrinth roof is about
 1,900 triangles against gate 6's 400 k.
