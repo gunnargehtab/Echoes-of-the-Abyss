@@ -587,7 +587,10 @@ its own frame (above): before it did, the Sentinel Turret's housing, the Bio-rea
 and the Bastion's quarters took seams across their own edges. The frame re-lays 21 of the
 Directorate's Light Scout's 32 parts too, its segments, tail plates, limbs and telson each a
 few degrees off the axes, and moves the UVs of three lamp boxes on the Knights' Responsory
-that nothing samples; the Reed is byte for byte. A part turned exactly 45° ties to
+that nothing samples. Both keep their raw bytes; zlib's gzip takes the Light Scout from
+13,173 to 11,677 and the Responsory from 15,676 to 15,477, and the Light Scout's sprite is
+rebaked, 4,213 to 4,280 bytes at the same luminance, where the Responsory's is byte for byte.
+The Reed is byte for byte. A part turned exactly 45° ties to
 the lower axis, so of four diagonal arms — the Vent Tap's exchangers, the Sentinel's feet,
 the Baffle Barge's emitter fins — two pairs lay alike, each pair the other turned end for
 end. The Harvester waits on
@@ -630,7 +633,7 @@ texture more, 21, the sheet; queued GPU time reads 0.85 to 0.98 ms at ratio 1 an
 does not move: 30 to 38 calls, 46,607 to 46,634 triangles and 11 to 17 textures before and
 after, and its GPU time within 0.02 ms, since its six own hulls are the court's
 ([mission-sorrowgate.md](mission-sorrowgate.md) §2). [The conn view](screenshots/issue-1107/conn-view.png)
-shows the opening's laid models close, main above and this below, and
+shows the opening's laid models close, main on the left and this on the right, and
 [the lit table](screenshots/issue-1107/lit-table.png) each laid model's conn row.
 
 The Directorate's sheet ([#1108](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1108))

@@ -147,7 +147,8 @@
  * frame (trim.mjs `frameOf`), which here is the three lamp boxes seated on
  * the hull's curve — `stern_mark`, `nav_mark_s`, `nav_mark_p` — and no
  * tagged plate: a lamp is never tagged, so nothing samples the UVs that
- * moved, and the counts and the byte count above are unchanged.
+ * moved. The counts and the raw bytes above are unchanged, and zlib's
+ * gzip goes from 15,676 to 15,477.
  */
 import { THREE, bothSides, add, box, seat, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
