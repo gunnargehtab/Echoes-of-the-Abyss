@@ -53,7 +53,7 @@ const materialsOf = (root: Group): MeshStandardMaterial[] => {
 describe('the trim sheet on a roster model', () => {
   it('filters every sheet at four taps', () => assert.equal(TRIM_SHEET.ANISOTROPY, 4));
 
-  for (const name of ['bathyarch', 'directorate', 'hadron'])
+  for (const name of ['bathyarch', 'directorate', 'hadron', 'pelagia'])
     it(`ships ${name}, once, as a repeating sRGB texture`, () => {
       assert.ok(TRIM_SHEET_NAMES.includes(name), `sheets: ${TRIM_SHEET_NAMES}`);
       const sheet = trimSheet(name);
@@ -85,6 +85,8 @@ describe('the trim sheet on a roster model', () => {
     assert.notEqual(trimSheet('directorate'), trimSheet('bathyarch'));
     assert.notEqual(trimSheet('hadron'), trimSheet('bathyarch'));
     assert.notEqual(trimSheet('hadron'), trimSheet('directorate'));
+    for (const other of ['bathyarch', 'directorate', 'hadron'])
+      assert.notEqual(trimSheet('pelagia'), trimSheet(other));
   });
 
   it('attaches the tagged material to its sheet, under the faction ink, and never a lamp', () => {
@@ -112,13 +114,13 @@ describe('the trim sheet on a roster model', () => {
 
   it('keeps the sheet under the Sorrowgate laminate on a Commune hull', () => {
     const template = buildTemplate(
-      hull('bathyarch'),
-      { unit: UnitKind.Bulwark, faction: Faction.Pelagia },
+      hull('pelagia'),
+      { unit: UnitKind.Reed, faction: Faction.Pelagia },
       'sorrowgate'
     );
     const plate = materialsOf(template.root).find((m) => m.name === 'iron_grey');
     assert.ok(plate);
-    assert.equal(plate.map, trimSheet('bathyarch'));
+    assert.equal(plate.map, trimSheet('pelagia'));
     assert.match(plate.customProgramCacheKey(), /sorrowgate-laminate-1$/);
   });
 });

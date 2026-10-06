@@ -22,6 +22,7 @@ import { stripImages } from '../images.mjs';
 import { TRIM } from '../factions/bathyarch.mjs';
 import { TRIM as DIRECTORATE } from '../factions/directorate.mjs';
 import { TRIM as HADRON } from '../factions/hadron.mjs';
+import { TRIM as PELAGIA } from '../factions/pelagia.mjs';
 import { navyTrims, repo, sheetPath } from '../sheets.mjs';
 
 /** The Klaxon's own sheet, as the navy draws it. */
@@ -434,6 +435,97 @@ test('the facet layout lays port as starboard turned over, not shifted', () => {
   assert.ok(worst <= 1, `a point and its mirror differ by ${worst} grey levels`);
 });
 
+/** The Commune's sheet as it ships, drawn once: sixteen samples a texel take seconds. */
+let grownSheet = null;
+const grown = () => (grownSheet ??= drawTrimSheet(PELAGIA));
+
+test('the Commune draws a grey grown sheet, bright, and the one sheets.mjs wrote', async () => {
+  const trims = await navyTrims();
+  assert.equal(trims.get('pelagia'), PELAGIA);
+  const sheet = grown();
+  // The committed file is an earlier draw, so this is the same sheet twice.
+  assert.deepEqual(sheet.png, readFileSync(sheetPath('pelagia')));
+  assert.equal(sheet.png[25], 0, 'PNG must have one grey channel, not faction colour');
+  // A matte grown skin: over riveted plate, under the Directorate's chitin,
+  // which carries one seam a tergite where this carries a line an increment.
+  assert.ok(sheet.mean >= 0.9 && sheet.mean < 0.93, `mean ${sheet.mean}`);
+  assert.equal(sheet.wrapM, PLATES * PELAGIA.plateM);
+});
+
+test('a grown sheet has rings along its strakes and no joint across them', () => {
+  // The lines alone: no grain, tone or mottle to blur what runs which way.
+  const bare = drawTrimSheet({ ...PELAGIA, tone: 0, mottle: 0, grain: 0, samples: 2 });
+  const n = bare.size;
+  const at = (x, y) => bare.pixels[y * n + x];
+  let along = 0;
+  let across = 0;
+  for (let y = 0; y < n - 1; y++)
+    for (let x = 0; x < n - 1; x++) {
+      along += Math.abs(at(x + 1, y) - at(x, y));
+      across += Math.abs(at(x, y + 1) - at(x, y));
+    }
+  assert.ok(across > 10 * along, `lines change ${across} across the strake, ${along} along it`);
+  // A butt is a column dark through its strake; here every column of a band
+  // crosses about as much line as every other.
+  for (const b of bandsOf()) {
+    const y0 = b.v0 * n;
+    const y1 = b.v1 * n;
+    const means = [];
+    for (let x = 0; x < n; x++) {
+      let sum = 0;
+      for (let y = y0; y < y1; y++) sum += at(x, y);
+      means.push(sum / (y1 - y0));
+    }
+    const spread = Math.max(...means) - Math.min(...means);
+    assert.ok(spread <= 8, `a column of the ${b.rows}-strake band stands ${spread} levels out`);
+  }
+  // As shipped, the wrap closes: the step from the last column to the first
+  // is no bigger than a step inside the sheet's own grain.
+  const sheet = grown();
+  let wrap = 0;
+  for (let y = 0; y < n; y++)
+    wrap = Math.max(wrap, Math.abs(sheet.pixels[y * n] - sheet.pixels[y * n + n - 1]));
+  assert.ok(wrap <= 2, `the horizontal wrap opens by ${wrap} levels`);
+});
+
+test('grown increments wander, space themselves unevenly, and come in two weights', () => {
+  const bare = drawTrimSheet({ ...PELAGIA, tone: 0, mottle: 0, grain: 0, samples: 2 });
+  const n = bare.size;
+  const at = (x, y) => bare.pixels[y * n + x];
+  /** Each dark run down column `x` of a band: its middle row and its darkest level. */
+  const lines = (x, b) => {
+    const out = [];
+    let start = -1;
+    let darkest = 255;
+    for (let y = b.v0 * n; y <= b.v1 * n; y++) {
+      const dark = y < b.v1 * n && at(x, y) < 245;
+      if (dark) {
+        if (start < 0) start = y;
+        darkest = Math.min(darkest, at(x, y));
+      } else if (start >= 0) {
+        out.push({ y: (start + y - 1) / 2, darkest });
+        start = -1;
+        darkest = 255;
+      }
+    }
+    return out;
+  };
+  const two = band(2);
+  const here = lines(0, two).map((l) => l.y);
+  const there = lines(n / 2, two).map((l) => l.y);
+  // Half a wrap along, a straight line would sit on the same row.
+  const moved = here.filter((y) => there.every((z) => Math.abs(z - y) > 1));
+  assert.ok(moved.length > 0, `every line at u 0 is at u ½ too: ${here} / ${there}`);
+  // A jig spaces its rings evenly; a grown strake does not.
+  const gaps = here.slice(1).map((y, i) => y - here[i]);
+  assert.ok(Math.max(...gaps) - Math.min(...gaps) > 2, `even gaps ${gaps}`);
+  // The checks are darker than the fine lines and fewer: two weights of line.
+  const all = bandsOf().flatMap((b) => lines(0, b));
+  const checks = all.filter((l) => l.darkest < 210);
+  const fine = all.filter((l) => l.darkest >= 215);
+  assert.ok(checks.length > 0 && fine.length > checks.length, `${checks.length} / ${fine.length}`);
+});
+
 test('`untagged` lays a cladding out and leaves it bare', () => {
   const { root, slab, drum } = yard();
   const stone = new THREE.MeshStandardMaterial();
@@ -452,6 +544,17 @@ test('the Responsory is on the Knights sheet with its crystal bare', () => {
   assert.equal(file.trim.sheet, HADRON.name);
   assert.deepEqual([...file.trim.materials].sort(), ['pale_alloy', 'shadow_indigo']);
   assert.ok(file.parts.some((p) => p.material === 'resonance_crystal'), 'no crystal to keep bare');
+  for (const p of file.parts) assert.ok(p.uv0 && p.uv0.length === p.tris * 6, `${p.name} uv0`);
+});
+
+test('the Reed is on the Commune sheet with its unlit vein bare', () => {
+  const file = readGlb(join(repo, 'docs/concept-art/models/reed-pelagia.glb'));
+  assert.equal(file.trim.sheet, PELAGIA.name);
+  assert.deepEqual(
+    [...file.trim.materials].sort(),
+    ['algae_membrane', 'chitin_hull', 'growth_ridge', 'spore_pod']
+  );
+  assert.ok(file.parts.some((p) => p.material === 'bio_vein_unlit'), 'no vein to keep bare');
   for (const p of file.parts) assert.ok(p.uv0 && p.uv0.length === p.tris * 6, `${p.name} uv0`);
 });
 
