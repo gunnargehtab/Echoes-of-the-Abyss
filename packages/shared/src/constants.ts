@@ -42,6 +42,15 @@ export const SORROWGATE_LOOK = {
 } as const;
 
 /**
+ * SPEC — docs/art-direction.md "UV layout and trim sheets — SPEC" (#1107).
+ * A navy's sheet is filtered at four taps, Sorrowgate's number, so a deck
+ * seen from the low camera keeps its plates. Presentation only.
+ */
+export const TRIM_SHEET = {
+  ANISOTROPY: 4,
+} as const;
+
+/**
  * Silt detail and seated stones — docs/art-direction.md "Silt detail and seated
  * stones — SPEC" (#1083). Every number of this block the section prints is
  * SPEC, and the frontend's seabedDetail test holds the prose to it; the rest

@@ -99,7 +99,7 @@ import { fileURLToPath } from 'node:url';
 import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { bakeOcclusion, occlusionImage } from './occlusion.mjs';
-import { drawTrimSheet, layoutTrim } from './trim.mjs';
+import { layoutTrim, sheetLayout } from './trim.mjs';
 import { embedImages } from './images.mjs';
 import {
   sceneParts,
@@ -1328,8 +1328,7 @@ export function census(root) {
  */
 export async function exportGlb(root, filename, { occlusion = null, trim = null } = {}) {
   const out = outputPath(filename);
-  const sheet = trim ? drawTrimSheet(trim) : null;
-  const laid = sheet ? layoutTrim(root, sheet, trim) : null;
+  const laid = trim ? layoutTrim(root, sheetLayout(trim), trim) : null;
   const ao = occlusion ? bakeOcclusion(root, occlusion) : null;
   const exported = await new GLTFExporter().parseAsync(root, { binary: true });
   const glb = ao ? embedImages(exported, [occlusionImage(ao)]) : Buffer.from(exported);
@@ -1352,10 +1351,10 @@ export async function exportGlb(root, filename, { occlusion = null, trim = null 
       `  primitives: ${kinds.join(', ')}\n` +
       `  plates: ${built.plates} extruded, ${built.bevelled} bevelled\n` +
       `  light: ${light.lit.length} lit parts, ${light.totalM2} m² facing up` +
-      (sheet
+      (laid
         ? `\n  trim: ${trim.name} on uv0, ${laid.flat} faces flat and ${laid.round} unrolled, ` +
           `${[...laid.bands].map(([rows, n]) => `${n} at ${rows}`).join(', ')} strakes, ` +
-          `${laid.split} vertices split, a wrap every ${sheet.wrapM} m, ` +
+          `${laid.split} vertices split, a wrap every ${sheetLayout(trim).wrapM} m, ` +
           `${laid.materials.size} materials tagged`
         : '') +
       (ao

@@ -190,13 +190,22 @@ export const ink = {
  * said in luminance alone. Strakes of 6 m and plates of 12 m: under the
  * Bulwark's own flank plates (`flankPlates`, 22 m at a 26 m pitch, 7 and
  * 9 m deep), so a hung plate reads as several welded ones rather than one
- * seam per part; a seam darkened to 0.45 of the plate with
- * 6 texels of weathering beside it, and a 0.08 patchwork between plates.
- * The rivets stay geometry — a plate's are its own parts (`rivetRows`) —
- * so none are drawn. Hue is not here: the sheet multiplies the ink
- * rosterModels.ts recolours from the palette (gate 4). `name` is the file
- * sheets.mjs draws (packages/frontend/src/assets/trim/bathyarch.png) and the
- * tag a laid-out material carries. The Bulwark is the first hull on it; a
+ * seam per part.
+ *
+ * The joints are drawn for the conn view's ~3 px/m (#1107): a lapped seam
+ * 0.25 m wide on both axes, at 0.4 of the plate, under a lit lip as wide,
+ * with 0.8 m of weathering beside it, since a joint narrower than a pixel
+ * there is mipmapped away; a 0.12 patchwork between plates, each ramped
+ * ±5 % along its length, and 5 % of grime in two octaves from 8 m. Its
+ * rivets are the lap's own, discs of 0.07 m radius at a 0.6 m pitch 0.45 m
+ * in from each strake edge, and read close in only. The hero rivets stay
+ * geometry, `rivetRows`' boxes 0.3 to 1 m across (the Bulwark's 0.9 and
+ * 1 m), two to seven times the drawn ones. The sheet's mean holds above 0.85
+ * (trim.test.mjs), so the register the conn view puts a navy on moves by a
+ * seventh. Hue is not here: the sheet multiplies the ink rosterModels.ts
+ * recolours from the palette (gate 4). `name` is the file sheets.mjs draws
+ * (packages/frontend/src/assets/trim/bathyarch.png) and the tag a laid-out
+ * material carries. The Bulwark is the first hull on it; a
  * second script passes the same table.
  */
 export const TRIM = {
@@ -204,12 +213,21 @@ export const TRIM = {
   size: 512,
   strakeM: 6,
   plateM: 12,
-  seamPx: 1.5,
-  weatherPx: 6,
-  light: 0.98,
-  seam: 0.45,
+  seamM: 0.25,
+  weatherM: 0.8,
+  light: 1,
+  seam: 0.4,
+  lip: 1,
   weather: 0.1,
-  tone: 0.08,
+  tone: 0.12,
+  ramp: 0.05,
+  grime: 0.05,
+  grimeM: 8,
+  rivet: 0.7,
+  rivetM: 0.07,
+  rivetPitchM: 0.6,
+  rivetInM: 0.45,
+  samples: 4,
   grain: 0.015,
 };
 

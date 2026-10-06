@@ -11,7 +11,7 @@
  * build output, so `npm run build:shared` runs before a render, as before any
  * workspace script.
  */
-export { Faction } from '@echoes/shared';
+export { Faction, TRIM_SHEET } from '@echoes/shared';
 export { PALETTES } from '../../packages/frontend/src/game/palette.ts';
 export { inkLamp } from '../../packages/frontend/src/game/lampInk.ts';
 export { keepGlowOutsideToneMapping } from '../../packages/frontend/src/game/modelLighting.ts';

@@ -23,7 +23,7 @@ import { TRIM } from '../factions/bathyarch.mjs';
 import { TRIM as DIRECTORATE } from '../factions/directorate.mjs';
 import { navyTrims, sheetPath } from '../sheets.mjs';
 
-/** The Klaxon's own sheet: the seam is given in texels, so a smaller one would not be it. */
+/** The Klaxon's own sheet, as the navy draws it. */
 const SPEC = TRIM;
 
 const steel = () => {
@@ -130,19 +130,99 @@ test('every corner gets a UV, no vertex moves, and two layouts are one', () => {
   sceneParts(again).parts.forEach((p, i) => assert.deepEqual(p.uv0, after[i].uv0));
 });
 
-test('the sheet is bright, seamed, and the same twice', () => {
+test('the sheet is bright, lapped, and the same twice', () => {
   const a = drawTrimSheet(SPEC);
   const b = drawTrimSheet(SPEC);
   assert.ok(a.mean >= 0.85, `mean ${a.mean}`);
   assert.deepEqual(a.pixels, b.pixels);
   assert.ok(a.png.equals(b.png));
-  // The eight-strake band: a strake's middle is lighter than its edge.
+  // The eight-strake band's first strake, down the middle of its first
+  // plate: the seam's shadow falls on the strake's top, and its foot is the
+  // lap's lit lip.
   const eight = band(8);
   const strakeH = ((eight.v1 - eight.v0) * a.size) / 8;
   const y0 = Math.floor(eight.v0 * a.size);
-  const mid = a.pixels[Math.floor(y0 + strakeH / 2) * a.size + Math.floor(a.size / 4)];
-  const edge = a.pixels[y0 * a.size + Math.floor(a.size / 4)];
-  assert.ok(mid > edge + 40, `strake middle ${mid}, edge ${edge}`);
+  const x = Math.floor(a.size / 4);
+  const at = (row) => a.pixels[row * a.size + x];
+  const mid = at(Math.floor(y0 + strakeH / 2));
+  const top = at(y0 + strakeH - 1);
+  const foot = at(y0);
+  assert.ok(mid > top + 40, `strake middle ${mid}, top ${top}`);
+  assert.ok(foot > mid, `lip ${foot}, middle ${mid}`);
+});
+
+test('a seam is as wide in metres along a plate as across a strake', () => {
+  const a = drawTrimSheet(SPEC);
+  const eight = band(8);
+  const strakeH = ((eight.v1 - eight.v0) * a.size) / 8;
+  const y0 = Math.floor(eight.v0 * a.size);
+  const texU = (PLATES * SPEC.plateM) / a.size;
+  const texV = SPEC.strakeM / strakeH;
+  // Texels darker than halfway between the plate and its seam, counted
+  // back from a joint: along the strake's middle row from the butt at
+  // u 0.5, and up the first plate's middle from the strake's top.
+  const plate = a.pixels[Math.floor(y0 + strakeH / 2) * a.size + Math.floor(a.size / 4)];
+  const dark = (v) => v < plate - 40;
+  let along = 0;
+  for (let x = a.size / 2 - 1; dark(a.pixels[Math.floor(y0 + strakeH / 2) * a.size + x]); x--)
+    along++;
+  let across = 0;
+  for (let y = y0 + strakeH - 1; dark(a.pixels[y * a.size + Math.floor(a.size / 4)]); y--) across++;
+  for (const [n, tex] of [
+    [along, texU],
+    [across, texV],
+  ])
+    assert.ok(Math.abs(n * tex - SPEC.seamM) <= tex, `${n} texels of ${tex} m for ${SPEC.seamM} m`);
+});
+
+test('a rivet is drawn at its area in metres, not grown to fill its texels', () => {
+  const a = drawTrimSheet(SPEC);
+  const bare = drawTrimSheet({ ...SPEC, rivet: 0 });
+  const eight = band(8);
+  const strakeH = ((eight.v1 - eight.v0) * a.size) / 8;
+  const y0 = Math.floor(eight.v0 * a.size);
+  const texU = (PLATES * SPEC.plateM) / a.size;
+  const texV = SPEC.strakeM / strakeH;
+  const lin = (b) => {
+    const c = b / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  // One rivet of the first strake's foot row, near its first plate's middle:
+  // the texels it darkens, each by the share of it the disc covers.
+  const pitch = SPEC.rivetPitchM;
+  const centre = (Math.floor(SPEC.plateM / 2 / pitch) - 0.5) * pitch;
+  let covered = 0;
+  const rows = new Set();
+  const cols = new Set();
+  for (let y = y0; y < y0 + strakeH / 2; y++)
+    for (let x = Math.floor((centre - pitch / 2) / texU); x < (centre + pitch / 2) / texU; x++) {
+      const i = y * a.size + x;
+      const dark = lin(bare.pixels[i]) - lin(a.pixels[i]);
+      if (dark <= 0) continue;
+      covered += dark / (lin(bare.pixels[i]) * (1 - SPEC.rivet));
+      rows.add(y);
+      cols.add(x);
+    }
+  const disc = Math.PI * SPEC.rivetM ** 2;
+  const area = covered * texU * texV;
+  assert.ok(
+    Math.abs(area - disc) <= 0.25 * disc,
+    `${area.toFixed(4)} m² for a ${disc.toFixed(4)} m² disc`
+  );
+  // No wider than the disc on either axis, plus the texel it starts in.
+  assert.ok(rows.size <= Math.ceil((2 * SPEC.rivetM) / texV) + 1, `${rows.size} rows`);
+  assert.ok(cols.size <= Math.ceil((2 * SPEC.rivetM) / texU) + 1, `${cols.size} columns`);
+});
+
+test('a table with no metre keys draws what it drew before them', async () => {
+  // The Consortium's table as #1005 shipped it, and the sha of the sheet it drew.
+  const { createHash } = await import('node:crypto');
+  const before = { size: 512, strakeM: 6, plateM: 12, seamPx: 1.5, weatherPx: 6 };
+  const sheet = drawTrimSheet({ ...before, light: 0.98, seam: 0.45, weather: 0.1, tone: 0.08 });
+  assert.equal(
+    createHash('sha256').update(sheet.png).digest('hex'),
+    '1a28249729f5caf96a5f8f4e1b24d2108ee9ba292e2a9dbebe3e40b9ec7818a7'
+  );
 });
 
 test('the Directorate draws repeatable grey chitin without changing the Consortium sheet', async () => {

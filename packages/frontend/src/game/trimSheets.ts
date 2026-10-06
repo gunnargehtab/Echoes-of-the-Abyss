@@ -18,6 +18,7 @@
  * its image never loads; what those tests hold is ownership, not pixels.
  */
 import { RepeatWrapping, SRGBColorSpace, Texture, TextureLoader } from 'three';
+import { TRIM_SHEET } from '@echoes/shared';
 
 /** Every sheet the build carries, by its file name without the extension. */
 const SHEET_URLS = import.meta.glob<string>('../assets/trim/*.png', {
@@ -47,6 +48,10 @@ export function trimSheet(name: string): Texture | null {
   texture.colorSpace = SRGBColorSpace;
   // `u` runs past one wrap along a long part; `v` stays inside its band.
   texture.wrapS = texture.wrapT = RepeatWrapping;
+  // A deck at the low camera is seen edge-on, where a mip chosen for its
+  // depth smears a plate into its neighbours (#1107). three clamps this to
+  // what the GPU offers when it uploads the texture.
+  texture.anisotropy = TRIM_SHEET.ANISOTROPY;
   // The layout puts v 0 on the sheet's first row, as glTF reads a texture
   // and as GLTFLoader sets a file's own; three's loader flips by default,
   // which would hand every face the wrong band.

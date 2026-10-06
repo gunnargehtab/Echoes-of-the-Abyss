@@ -32,8 +32,8 @@
  * screen is still the palette's and the sheet says only where a plate ends.
  * It is written in linear light and encoded sRGB, as a base colour is read,
  * and held bright: its mean is reported, and the Consortium's reads
- * about 0.88 of white, so the register rosterModels.ts puts a navy on
- * (`CLADDING_CEILING`) moves by an eighth. Emissive is untouched, since
+ * about 0.86 of white, so the register rosterModels.ts puts a navy on
+ * (`CLADDING_CEILING`) moves by a seventh. Emissive is untouched, since
  * a base-colour map never reaches `emissive` (gate 3), and a lamp material
  * is not tagged at all: the layout lays every part, and the tag goes to the
  * solid, unlit materials (glb.mjs `occludes`). Sorrowgate's triplanar
@@ -61,15 +61,16 @@
  *
  * **The sheet is drawn, not painted.** `drawTrimSheet` rasterises the bands
  * from the navy's numbers: `PLATES` plates a wrap, half a plate of stagger
- * on alternate strakes, a seam of `seamPx` texels at `seam` of the plate's
- * light with `weatherPx` texels of weathering beside it, both at 512² and
- * scaled with the sheet, each plate at its
- * own tone from an integer hash, and a grain over all of it. Every number is
- * the navy's (factions/bathyarch.mjs `TRIM` is the first, and its `name` is
- * the sheet's file and tag), so the image is reproduced wherever the script
- * runs and compared texel by texel. The Directorate's `tergite` pattern
- * keeps the bands but curves their transverse seams, without the stagger
- * or longitudinal grid: shadow under an overlap and growth along its curve.
+ * on alternate strakes, a seam at `seam` of the plate's light with
+ * weathering beside it — in texels of a 512² sheet, or in metres as a lap
+ * with a lit lip (#1107; `drawTrimSheet` says why) — each plate at its own
+ * tone from an integer hash, ramped along its length, under grime and a
+ * grain. Every number is the navy's (factions/bathyarch.mjs `TRIM` is the
+ * first, and its `name` is the sheet's file and tag), so the image is
+ * reproduced wherever the script runs and compared texel by texel. The
+ * Directorate's `tergite` pattern keeps the bands but curves their
+ * transverse seams, without the stagger or longitudinal grid: shadow under
+ * an overlap and growth along its curve.
  */
 import * as THREE from 'three';
 import { occludes } from './glb.mjs';
@@ -138,19 +139,68 @@ export function bandsOf() {
 }
 
 /**
+ * What `layoutTrim` reads of a sheet — its bands and its wrap — without
+ * drawing the pixels, which at sixteen samples a texel take a second and a
+ * half that an export never looks at.
+ */
+export function sheetLayout({ plateM = 12 } = {}) {
+  return { bands: bandsOf(), wrapM: PLATES * plateM };
+}
+
+/**
+ * Smooth noise in [0, 1) on a lattice of `cells` a wrap in u, so it tiles
+ * the sheet's wrap as the plates do; `seed` picks the field.
+ */
+function valueNoise(xm, ym, cellM, cells, seed) {
+  const gx = xm / cellM;
+  const gy = ym / cellM;
+  const ix = Math.floor(gx);
+  const iy = Math.floor(gy);
+  const sx = smoothstep(0, 1, gx - ix);
+  const sy = smoothstep(0, 1, gy - iy);
+  const at = (i, j) => hash(seed, ((i % cells) + cells) % cells, j);
+  const lo = at(ix, iy) + (at(ix + 1, iy) - at(ix, iy)) * sx;
+  const hi = at(ix, iy + 1) + (at(ix + 1, iy + 1) - at(ix, iy + 1)) * sx;
+  return lo + (hi - lo) * sy;
+}
+
+/**
  * Draw the sheet. `{ size, pixels, png, bands, wrapM, mean }`: `pixels`
  * sRGB bytes, row 0 at v 0; `mean` the linear mean over the whole image.
+ *
+ * A seam is given one of two ways. `seamPx` and `weatherPx` are texels of a
+ * 512 sheet, a seam both sides of the joint — but a texel is 4.7 cm along a
+ * plate and 19 cm across a strake of every band but the one-strake band, so
+ * a seam in texels is four times wider across those strakes than along them.
+ * `seamM` and `weatherM`, when a navy gives them, are metres on both axes
+ * (#1107), with the lap: a seam's shadow falls on the plate's far end and
+ * the strake's top, and `lip`, when given, is the light the overlapping edge
+ * catches on the near side. `ramp`, `grime` and `rivet` are off at 0
+ * (`rivetM` is a rivet's radius), so a table that names none of the metre
+ * keys draws what it drew before them, texel for texel.
  */
 export function drawTrimSheet({
   pattern = 'plate',
   size = 512,
   plateM = 12,
+  strakeM = 6,
   seamPx = 3,
   weatherPx = 8,
+  seamM = 0,
+  weatherM = 0,
   light = 0.98,
   seam = 0.35,
   weather = 0.08,
+  lip = 0,
   tone = 0.08,
+  ramp = 0,
+  grime = 0,
+  grimeM = 8,
+  rivet = 0,
+  rivetM = 0.07,
+  rivetPitchM = 0.6,
+  rivetInM = 0.35,
+  samples = 1,
   grain = 0.015,
   archPx = 0,
   growth = 0,
@@ -159,43 +209,93 @@ export function drawTrimSheet({
   const bands = bandsOf();
   const pixels = new Uint8Array(size * size);
   const plateW = size / PLATES;
+  const wrapM = PLATES * plateM;
   // The seam and its weathering are given in texels of a 512 sheet, so a
   // sheet drawn smaller keeps the same plate.
   const seamT = (seamPx * size) / 512;
   const weatherT = (weatherPx * size) / 512;
-  let sum = 0;
-  for (let y = 0; y < size; y++) {
-    const v = (y + 0.5) / size;
+  // A metre seam is never thinner than a texel on either axis, or a band
+  // would lose it between two texel centres.
+  const texU = wrapM / size;
+  const seamU = Math.max(seamM, texU);
+  // Grime's two octaves, each a whole number of cells a wrap so it tiles.
+  const coarse = Math.max(1, Math.round(wrapM / grimeM));
+  const fine = Math.max(1, Math.round((8 * wrapM) / (3 * grimeM)));
+
+  /** The plate's light at (u, v), before the grain. */
+  const shade = (u, v) => {
     const bi = bands.findIndex((b) => v < b.v1);
     const band = bands[bi === -1 ? bands.length - 1 : bi];
     const span = (v - band.v0) / (band.v1 - band.v0);
     const s = Math.min(band.rows - 1, Math.floor(span * band.rows));
     const t = span * band.rows - s;
     const strakeH = ((band.v1 - band.v0) * size) / band.rows;
-    const dv = Math.min(t, 1 - t) * strakeH;
-    for (let x = 0; x < size; x++) {
-      const u = (x + 0.5) / size;
-      // A tergite overlaps across the shell, not in staggered rectangular
-      // patches. The arch meets its neighbour at both strake edges; only
-      // the transverse seam is inked, never a grid around each patch.
-      const chitin = pattern === 'tergite';
-      const arch = chitin ? (archPx / 512) * PLATES * 4 * t * (1 - t) : 0;
-      const up = u * PLATES + (chitin ? arch : s % 2 ? 0.5 : 0);
-      const p = Math.floor(up) % PLATES;
-      const a = up - Math.floor(up);
+    // A tergite overlaps across the shell, not in staggered rectangular
+    // patches. The arch meets its neighbour at both strake edges; only
+    // the transverse seam is inked, never a grid around each patch.
+    const chitin = pattern === 'tergite';
+    const arch = chitin ? (archPx / 512) * PLATES * 4 * t * (1 - t) : 0;
+    const up = u * PLATES + (chitin ? arch : s % 2 ? 0.5 : 0);
+    const p = Math.floor(up) % PLATES;
+    const a = up - Math.floor(up);
+    let L = light * (1 - tone * hash(band.rows, chitin ? 0 : s, p));
+    // A plate is never quite flat: a slow ramp along it, its sign the plate's.
+    if (ramp) L *= 1 + ramp * (hash(7, band.rows, s, p) < 0.5 ? -1 : 1) * (2 * a - 1);
+    if (grime) {
+      const xm = u * wrapM;
+      const ym = (s + t) * strakeM;
+      const n =
+        0.65 * valueNoise(xm, ym, wrapM / coarse, coarse, 11) +
+        0.35 * valueNoise(xm, ym, wrapM / fine, fine, 13);
+      L *= 1 - grime * smoothstep(0.35, 0.8, n);
+    }
+    // Texel seams, the plate's or a tergite's; the metre keys below are the
+    // plate pattern's alone.
+    if (!(seamM > 0)) {
       const du = Math.min(a, 1 - a) * plateW;
-      let L = light * (1 - tone * hash(band.rows, chitin ? 0 : s, p));
-      const d = chitin ? du : Math.min(du, dv);
-      if (d < seamT) L *= seam;
-      else {
-        const wear = 1 - smoothstep(seamT, seamT + weatherT, d);
-        // Shadow under the overlapping lip, a clean edge above it. Growth
-        // follows that same curve and fades at the lip instead of crossing it.
-        L *= 1 - weather * wear * (chitin && a > 0.5 ? 0 : 1);
-        if (chitin)
-          L -=
-            growth * (0.5 + 0.5 * Math.cos(a * growthRings * Math.PI * 2)) * Math.sin(a * Math.PI);
-      }
+      const d = chitin ? du : Math.min(du, Math.min(t, 1 - t) * strakeH);
+      if (d < seamT) return L * seam;
+      const wear = 1 - smoothstep(seamT, seamT + weatherT, d);
+      // Shadow under the overlapping lip, a clean edge above it. Growth
+      // follows that same curve and fades at the lip instead of crossing it.
+      L *= 1 - weather * wear * (chitin && a > 0.5 ? 0 : 1);
+      if (chitin)
+        L -= growth * (0.5 + 0.5 * Math.cos(a * growthRings * Math.PI * 2)) * Math.sin(a * Math.PI);
+      return L;
+    }
+    const texV = strakeM / strakeH;
+    const seamV = Math.max(seamM, texV);
+    const near = Math.min((a * plateM) / seamU, (t * strakeM) / seamV);
+    const far = Math.min(((1 - a) * plateM) / seamU, ((1 - t) * strakeM) / seamV);
+    if (far < 1 || (!lip && near < 1)) return L * seam;
+    if (near < 1) return Math.max(L, lip);
+    const past = Math.min(
+      Math.min(a, 1 - a) * plateM - seamU,
+      Math.min(t, 1 - t) * strakeM - seamV
+    );
+    L *= 1 - weather * (1 - smoothstep(0, weatherM, past));
+    // A row of rivets in from each strake edge, along the strake, stopping
+    // short of a butt: a disc of radius `rivetM` in metres, which the
+    // samples take at its coverage of the texel rather than grown to fill it.
+    if (rivet && Math.min(a, 1 - a) * plateM > rivetInM) {
+      const along = (((u * wrapM) % rivetPitchM) + rivetPitchM) % rivetPitchM;
+      const rv = Math.min(Math.abs(t * strakeM - rivetInM), Math.abs((1 - t) * strakeM - rivetInM));
+      if (Math.hypot(along - rivetPitchM / 2, rv) < rivetM) L *= rivet;
+    }
+    return L;
+  };
+
+  let sum = 0;
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      // `samples` a side inside the texel, averaged in linear light, so a
+      // rivet finer than a texel is drawn at its coverage (a metre seam is
+      // held to a texel above, so it never is).
+      let L = 0;
+      for (let j = 0; j < samples; j++)
+        for (let i = 0; i < samples; i++)
+          L += shade((x + (i + 0.5) / samples) / size, (y + (j + 0.5) / samples) / size);
+      L /= samples * samples;
       L += grain * (hash(x, y) - 0.5);
       L = Math.min(1, Math.max(0, L));
       sum += L;
@@ -300,7 +400,7 @@ function least(a) {
  * rows.
  */
 export function layoutTrim(root, sheet, { strakeM = 6, name } = {}) {
-  if (!name) throw new Error('layoutTrim: the sheet needs a name (the navy\'s TRIM.name)');
+  if (!name) throw new Error("layoutTrim: the sheet needs a name (the navy's TRIM.name)");
   root.updateMatrixWorld(true);
   const { bands, wrapM } = sheet;
   const seen = new Set();
@@ -436,8 +536,7 @@ function layoutMesh(mesh, bands, wrapM, strakeM) {
         else if (th - a0 < -Math.PI) th += 2 * Math.PI;
         uv[k * 2] = (th / (2 * Math.PI)) * (plates / PLATES);
         uv[k * 2 + 1] =
-          band.v0 +
-          (hMax > hMin ? (height[k] - hMin) / (hMax - hMin) : 0.5) * (band.v1 - band.v0);
+          band.v0 + (hMax > hMin ? (height[k] - hMin) / (hMax - hMin) : 0.5) * (band.v1 - band.v0);
       }
       continue;
     }
@@ -453,8 +552,7 @@ function layoutMesh(mesh, bands, wrapM, strakeM) {
         const s = d.dot(basis[0]);
         const w = d.dot(basis[1]);
         uv[k * 2] = (s + rMax) / wrapM;
-        uv[k * 2 + 1] =
-          band.v0 + (rMax > 0 ? (w + rMax) / (2 * rMax) : 0.5) * (band.v1 - band.v0);
+        uv[k * 2 + 1] = band.v0 + (rMax > 0 ? (w + rMax) / (2 * rMax) : 0.5) * (band.v1 - band.v0);
       }
       continue;
     }
