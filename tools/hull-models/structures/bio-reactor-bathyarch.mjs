@@ -192,4 +192,4 @@ if (size.z > size.x)
   throw new Error(
     `${root.name}: drawn ${size.x.toFixed(2)} × ${size.z.toFixed(2)}; the arms' phase has to leave x the longer axis`
   );
-await exportGlb(root, 'bio-reactor-bathyarch.glb');
+await exportGlb(root, 'bio-reactor-bathyarch.glb', { trim: bathyarch.TRIM });

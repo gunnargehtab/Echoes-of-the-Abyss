@@ -429,4 +429,4 @@ bathyarch.deckHatches(root, { hatch: grey, wheel: rust }, {
 
 metreTrue(root, L, { drawn: DRAWN });
 holdCrown(root, CROWN, { tall: TALL });
-await exportGlb(root, 'bastion-bathyarch.glb');
+await exportGlb(root, 'bastion-bathyarch.glb', { trim: bathyarch.TRIM });

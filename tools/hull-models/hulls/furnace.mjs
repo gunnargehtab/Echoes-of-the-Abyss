@@ -417,4 +417,4 @@ bathyarch.bowLamp(root, lampM, { at: [31, 5.85, 5], size: [1.2, 0.8, 3] });
 const k = metreTrue(root, L, { drawn: L });
 if (Math.abs(k - 1) > 1e-6) throw new Error(`consortium_furnace: root scale ${k}, expected 1`);
 
-await exportGlb(root, 'furnace-bathyarch.glb');
+await exportGlb(root, 'furnace-bathyarch.glb', { trim: bathyarch.TRIM });

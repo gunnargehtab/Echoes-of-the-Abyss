@@ -282,4 +282,4 @@ bathyarch.rivetRows(root, black, { from: -56, to: 46, count: 16, y: -4.4, z: 16.
 bathyarch.bowStencil(root, amber, { at: [47, 5.75, 0], size: [6, 0.3, 1.3] });
 bathyarch.bowLamp(root, lampM, { at: [54, 5.85, 0], size: [1.2, 0.8, 3] });
 
-await exportGlb(root, 'broadside-bathyarch.glb');
+await exportGlb(root, 'broadside-bathyarch.glb', { trim: bathyarch.TRIM });

@@ -244,4 +244,4 @@ bothSides((side, sgn) => {
     add(root, `bridge_port_${side}${i}`, box(1.1, 1.2, 2.2), lampM, [-12.45, 18.1, sgn * (2.5 + i * 5)]);
 });
 
-await exportGlb(root, 'derrick-bathyarch.glb');
+await exportGlb(root, 'derrick-bathyarch.glb', { trim: bathyarch.TRIM });

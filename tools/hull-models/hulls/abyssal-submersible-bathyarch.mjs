@@ -351,4 +351,4 @@ bathyarch.deckHatches(root, { hatch: grey, wheel: black }, {
 });
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
-await exportGlb(root, 'abyssal-submersible-bathyarch.glb');
+await exportGlb(root, 'abyssal-submersible-bathyarch.glb', { trim: bathyarch.TRIM });

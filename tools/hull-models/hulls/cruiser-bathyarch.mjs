@@ -498,4 +498,4 @@ bathyarch.deckHatches(root, { hatch: grey, wheel: rust }, {
 });
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
-await exportGlb(root, 'cruiser-bathyarch.glb');
+await exportGlb(root, 'cruiser-bathyarch.glb', { trim: bathyarch.TRIM });

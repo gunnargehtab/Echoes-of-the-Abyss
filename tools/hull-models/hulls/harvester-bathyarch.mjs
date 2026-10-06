@@ -394,4 +394,4 @@ bathyarch.deckPlates(root, { black }, {
 });
 
 metreTrue(root, L, { drawn: DRAWN, datum: DATUM });
-await exportGlb(root, 'harvester-bathyarch.glb');
+await exportGlb(root, 'harvester-bathyarch.glb', { trim: bathyarch.TRIM });

@@ -387,4 +387,4 @@ if (Math.abs(size.x - DRAWN) > 1e-3)
   throw new Error(
     `${root.name}: drawn ${size.x.toFixed(4)} units across; the header says ${DRAWN}`
   );
-await exportGlb(root, 'refinery-bathyarch.glb');
+await exportGlb(root, 'refinery-bathyarch.glb', { trim: bathyarch.TRIM });

@@ -238,4 +238,4 @@ if (Math.abs(Math.max(size.x, size.z) - DRAWN) > 1e-3)
   throw new Error(
     `${root.name}: drawn ${Math.max(size.x, size.z).toFixed(4)} across; the facet rule was asked at ${DRAWN}`
   );
-await exportGlb(root, 'vent-tap-bathyarch.glb');
+await exportGlb(root, 'vent-tap-bathyarch.glb', { trim: bathyarch.TRIM });

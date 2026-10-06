@@ -406,4 +406,4 @@ bathyarch.deckHatches(root, { hatch: rust, wheel: grey }, {
   hatches: [['inspection_hatch_f', [22.5, -5.5]], ['inspection_hatch_a', [-28.5, 3.5]]],
 });
 
-await exportGlb(root, 'beacon-bathyarch.glb');
+await exportGlb(root, 'beacon-bathyarch.glb', { trim: bathyarch.TRIM });

@@ -222,4 +222,4 @@ bathyarch.rivetRows(root, black, { from: -64, to: 64, count: 16, y: -4.8, z: 37.
 bathyarch.bowStencil(root, amber, { at: [72.5, 9.75, 0], size: [10, 0.3, 2] });
 bathyarch.bowLamp(root, lampM, { at: [78.5, 9.8, 0], size: [1.2, 0.8, 3] });
 
-await exportGlb(root, 'freighter-bathyarch.glb');
+await exportGlb(root, 'freighter-bathyarch.glb', { trim: bathyarch.TRIM });

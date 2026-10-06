@@ -203,10 +203,17 @@ export const ink = {
  * 1 m), two to seven times the drawn ones. The sheet's mean holds above 0.85
  * (trim.test.mjs), so the register the conn view puts a navy on moves by a
  * seventh. Hue is not here: the sheet multiplies the ink rosterModels.ts
- * recolours from the palette (gate 4). `name` is the file sheets.mjs draws
+ * recolours from the palette (gate 4). `untagged` keeps the sheet off
+ * `baffle_foam`, the Baffle Barge's acoustic vanes and pads (`baffleFoam`),
+ * which are foam and not lapped, riveted plate, and off `amber_lamp_unlit`,
+ * the lamp family's base worn dark by a part the block lights in a later
+ * band (`amberLampUnlit`), as the Order leaves `crystal_seam_unlit` bare and
+ * the Commune `bio_vein_unlit`; both are laid out and left bare, and the
+ * lamps are never tagged (trim.mjs). `name` is the file sheets.mjs draws
  * (packages/frontend/src/assets/trim/bathyarch.png) and the tag a laid-out
- * material carries. The Bulwark is the first hull on it; a
- * second script passes the same table.
+ * material carries. The Bulwark was the first hull on it (#1005); since
+ * #1107 every Consortium model is laid on it, each script passing this one
+ * table.
  */
 export const TRIM = {
   name: 'bathyarch',
@@ -229,6 +236,7 @@ export const TRIM = {
   rivetInM: 0.45,
   samples: 4,
   grain: 0.015,
+  untagged: ['amber_lamp_unlit', 'baffle_foam'],
 };
 
 /**
