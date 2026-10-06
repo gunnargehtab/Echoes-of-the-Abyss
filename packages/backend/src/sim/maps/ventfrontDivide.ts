@@ -18,23 +18,37 @@ const W = VENTFRONT_DIVIDE_HEADER.widthM;
 const H = VENTFRONT_DIVIDE_HEADER.heightM;
 
 /**
- * Every rectangle below lands on the 250 m cell grid, so each paints exactly
- * the metres it reads (issue #157, docs/maps.md "How a map is written"). They
- * were re-stated that way when the centre rule landed: the cells this map
- * painted were the cells it had always played on, apart from the west
- * plateaus, which had quietly grown a column the east ones could not have —
- * the map edge clipped that same column on the far side, so a map that says it
- * is symmetric across both axes was 250 m of kelp wider on the west.
+ * Drawn in shapes since #1106. In rectangles this map read as a checkerboard
+ * from the survey dolly; the outlines below draw the same ground as places. The
+ * rift swells about its vents, each plateau turns a flank to the middle, the
+ * trench lips break at the corners and recede across the gaps, and the reefs
+ * reach out of the rift at either end.
  *
- * The four plateaus have since grown deliberately, all four at once, to close
- * the gutter their own bases stood in (#622). On the other axis: the #157
- * fault was a *column*, 250 m of extra kelp along x on the west pair, and this
- * was a *row* — the north pair took the cell row centred 1,125 and the south
- * pair its mirror centred 6,875, thirty-two cells in total. Read it as the
- * opposite of #157 rather than a repeat: one plateau growing is a bug, and all
- * four growing into their own mirror images is a map change with a price.
- * Symmetry is what tells the two apart, which is why it is asserted cell by
- * cell rather than trusted.
+ * The shapes moved outlines, not the water between seats. Every straight line
+ * from one spawn to another crosses the cells it always did, and kelp and vent
+ * kept their counts; the lip's notches gave eight cells of trench to open water
+ * and the reef tips took four of open water for coral. `maps.test.ts` counts
+ * both. A first draft cut trench bays into the row the bases stand on, which
+ * put the loudest water on the map between neighbouring seats and turned an
+ * eight-minute AI duel into a 272-second rout.
+ *
+ * Every number below is a whole 250 m cell (issue #157, docs/maps.md "How a
+ * map is written"). The rectangles before these were re-stated that way when
+ * the centre rule landed: the cells this map painted were the cells it had
+ * always played on, apart from the west plateaus, which had quietly grown a
+ * column the east ones could not have — the map edge clipped that same column
+ * on the far side, so a map that says it is symmetric across both axes was
+ * 250 m of kelp wider on the west.
+ *
+ * The four plateaus then grew deliberately, all four at once, to close the
+ * gutter their own bases stood in (#622). On the other axis: the #157 fault
+ * was a *column*, 250 m of extra kelp along x on the west pair, and this was a
+ * *row* — the north pair took the cell row centred 1,125 and the south pair
+ * its mirror centred 6,875, thirty-two cells in total. Read it as the opposite
+ * of #157 rather than a repeat: one plateau growing is a bug, and all four
+ * growing into their own mirror images is a map change with a price. Symmetry
+ * is what tells the two apart, which is why it is asserted cell by cell rather
+ * than trusted.
  */
 export const VENTFRONT_DIVIDE: MapDefinition = {
   ...VENTFRONT_DIVIDE_HEADER,
@@ -48,33 +62,121 @@ export const VENTFRONT_DIVIDE: MapDefinition = {
     // than a line: it has to be wide enough to hide an army in, or the map's
     // whole proposition collapses into a corridor fight.
     //
-    // 2,000 m, restated from the 1,600 m this used to read, because 2,000 m is
-    // what it has always painted and the width is the proposition. Eight cell
-    // rows, centred on the map's east-west axis; 1,600 m is 6.4 of them and
-    // could only ever be one or the other.
+    // 2,000 m across the reefs, eight cell rows centred on the map's east-west
+    // axis, which is what the rectangle before it always painted (the 1,600 m
+    // it once read was 6.4 rows and could only ever be one or the other). It
+    // swells to 2,500 m about its vents, where the plumes rise, and where it
+    // climbs into each plateau's flank; it narrows to 1,500 m where the
+    // plateaus press in at the map's edges and where the transit gaps reach
+    // down beside each reef.
     {
-      x: 0,
-      y: 3000,
-      widthM: W,
-      heightM: 2000,
+      shape: 'polygon',
+      points: [
+        [0, 3250],
+        [750, 3250],
+        [1000, 3000],
+        [1250, 3000],
+        [1250, 2750],
+        [1500, 2750],
+        [1750, 3000],
+        [2000, 3000],
+        [2000, 3250],
+        [2250, 3250],
+        [2250, 3000],
+        [3250, 3000],
+        [3500, 2750],
+        [W - 3500, 2750],
+        [W - 3250, 3000],
+        [W - 2250, 3000],
+        [W - 2250, 3250],
+        [W - 2000, 3250],
+        [W - 2000, 3000],
+        [W - 1750, 3000],
+        [W - 1500, 2750],
+        [W - 1250, 2750],
+        [W - 1250, 3000],
+        [W - 1000, 3000],
+        [W - 750, 3250],
+        [W, 3250],
+        [W, H - 3250],
+        [W - 750, H - 3250],
+        [W - 1000, H - 3000],
+        [W - 1250, H - 3000],
+        [W - 1250, H - 2750],
+        [W - 1500, H - 2750],
+        [W - 1750, H - 3000],
+        [W - 2000, H - 3000],
+        [W - 2000, H - 3250],
+        [W - 2250, H - 3250],
+        [W - 2250, H - 3000],
+        [W - 3250, H - 3000],
+        [W - 3500, H - 2750],
+        [3500, H - 2750],
+        [3250, H - 3000],
+        [2250, H - 3000],
+        [2250, H - 3250],
+        [2000, H - 3250],
+        [2000, H - 3000],
+        [1750, H - 3000],
+        [1500, H - 2750],
+        [1250, H - 2750],
+        [1250, H - 3000],
+        [1000, H - 3000],
+        [750, H - 3250],
+        [0, H - 3250],
+      ],
       biome: Biome.ThermalVein,
       note: 'The vent line. PF 0.45 — the quiet road, and the dangerous one.',
     },
-    // "North/South: Abyssal Trenches". The loud way round.
+    // "North/South: Abyssal Trenches". The loud way round, full width as ever.
+    // The lip bites into each plateau's far corner, beside the promontory the
+    // plateau pushes out over it, and falls back in two notches across the gap.
+    // It keeps off the row the bases stand on, which is the line between
+    // neighbouring seats.
     {
-      x: 0,
-      y: 0,
-      widthM: W,
-      heightM: 1000,
+      shape: 'polygon',
+      points: [
+        [0, 0],
+        [W, 0],
+        [W, 1250],
+        [W - 500, 1250],
+        [W - 500, 1000],
+        [W - 2750, 1000],
+        [W - 2750, 750],
+        [W - 3250, 750],
+        [W - 3250, 1000],
+        [3250, 1000],
+        [3250, 750],
+        [2750, 750],
+        [2750, 1000],
+        [500, 1000],
+        [500, 1250],
+        [0, 1250],
+      ],
       biome: Biome.AbyssalTrench,
       floorM: 2900,
       note: 'North trench — the deepest water on the map, and the loudest at PF 1.6',
     },
     {
-      x: 0,
-      y: H - 1000,
-      widthM: W,
-      heightM: 1000,
+      shape: 'polygon',
+      points: [
+        [0, H],
+        [W, H],
+        [W, H - 1250],
+        [W - 500, H - 1250],
+        [W - 500, H - 1000],
+        [W - 2750, H - 1000],
+        [W - 2750, H - 750],
+        [W - 3250, H - 750],
+        [W - 3250, H - 1000],
+        [3250, H - 1000],
+        [3250, H - 750],
+        [2750, H - 750],
+        [2750, H - 1000],
+        [500, H - 1000],
+        [500, H - 1250],
+        [0, H - 1250],
+      ],
       biome: Biome.AbyssalTrench,
       floorM: 2900,
       note: 'South trench',
@@ -87,14 +189,36 @@ export const VENTFRONT_DIVIDE: MapDefinition = {
     // spawns sit at y 1,200 and y 6,800 — one row inside that gutter, which no
     // region painted. So every Bastion and Foundry on the default map opened
     // in open water over the map's own 2,600 m seabed at PF 1.0, which is
-    // neither of the two things this rectangle claims to be, on all four seats
+    // neither of the two things this region claims to be, on all four seats
     // identically (#622). Symmetric, which is exactly why nothing ever looked
     // odd about it.
+    //
+    // Polygons since #1106, each holding the 64 cells its square did: a
+    // promontory pushed out over the trench beside a bay of it in the far
+    // corner, a shoulder past the home field, and a flank cut back toward the
+    // middle, so the transit gap opens on the rift. The south edge is the
+    // rift's north edge point for point, so nothing lies between them.
     {
-      x: 0,
-      y: 1000,
-      widthM: 2000,
-      heightM: 2000,
+      shape: 'polygon',
+      points: [
+        [0, 1250],
+        [500, 1250],
+        [500, 750],
+        [1000, 750],
+        [1000, 1000],
+        [2000, 1000],
+        [2000, 1250],
+        [2250, 1250],
+        [2250, 1750],
+        [2000, 1750],
+        [2000, 2000],
+        [1500, 2750],
+        [1250, 2750],
+        [1250, 3000],
+        [1000, 3000],
+        [750, 3250],
+        [0, 3250],
+      ],
       biome: Biome.KelpForest,
       // A plateau in the literal sense, and now under the bases as well. 700 m
       // clears the 600 m that structures and nodule fields are seated at, and
@@ -106,16 +230,78 @@ export const VENTFRONT_DIVIDE: MapDefinition = {
       note: 'West plateau',
     },
     {
-      x: W - 2000,
-      y: 1000,
-      widthM: 2000,
-      heightM: 2000,
+      shape: 'polygon',
+      points: [
+        [W, 1250],
+        [W - 500, 1250],
+        [W - 500, 750],
+        [W - 1000, 750],
+        [W - 1000, 1000],
+        [W - 2000, 1000],
+        [W - 2000, 1250],
+        [W - 2250, 1250],
+        [W - 2250, 1750],
+        [W - 2000, 1750],
+        [W - 2000, 2000],
+        [W - 1500, 2750],
+        [W - 1250, 2750],
+        [W - 1250, 3000],
+        [W - 1000, 3000],
+        [W - 750, 3250],
+        [W, 3250],
+      ],
       biome: Biome.KelpForest,
       floorM: 700,
       note: 'East plateau',
     },
-    { x: 0, y: 5000, widthM: 2000, heightM: 2000, biome: Biome.KelpForest, floorM: 700 },
-    { x: W - 2000, y: 5000, widthM: 2000, heightM: 2000, biome: Biome.KelpForest, floorM: 700 },
+    {
+      shape: 'polygon',
+      points: [
+        [0, H - 1250],
+        [500, H - 1250],
+        [500, H - 750],
+        [1000, H - 750],
+        [1000, H - 1000],
+        [2000, H - 1000],
+        [2000, H - 1250],
+        [2250, H - 1250],
+        [2250, H - 1750],
+        [2000, H - 1750],
+        [2000, H - 2000],
+        [1500, H - 2750],
+        [1250, H - 2750],
+        [1250, H - 3000],
+        [1000, H - 3000],
+        [750, H - 3250],
+        [0, H - 3250],
+      ],
+      biome: Biome.KelpForest,
+      floorM: 700,
+    },
+    {
+      shape: 'polygon',
+      points: [
+        [W, H - 1250],
+        [W - 500, H - 1250],
+        [W - 500, H - 750],
+        [W - 1000, H - 750],
+        [W - 1000, H - 1000],
+        [W - 2000, H - 1000],
+        [W - 2000, H - 1250],
+        [W - 2250, H - 1250],
+        [W - 2250, H - 1750],
+        [W - 2000, H - 1750],
+        [W - 2000, H - 2000],
+        [W - 1500, H - 2750],
+        [W - 1250, H - 2750],
+        [W - 1250, H - 3000],
+        [W - 1000, H - 3000],
+        [W - 750, H - 3250],
+        [W, H - 3250],
+      ],
+      biome: Biome.KelpForest,
+      floorM: 700,
+    },
     // The bloom gardens — docs/maps.md, Map Type 1, and the guard-rail that
     // sites them (docs/systems-echo.md §10, docs/economy.md §9): bloom-share is
     // anchored to *exposed Shelf plateaus*, so the quietest navy earns on the
@@ -177,13 +363,19 @@ export const VENTFRONT_DIVIDE: MapDefinition = {
       floorM: 380,
       note: 'South garden',
     },
-    // "Multiple narrow crossing points": coral pillars break the vent band up
+    // "Multiple narrow crossing points": coral reefs break the vent band up
     // so crossing it is a choice of lane rather than a straight line.
+    //
+    // Each is the ellipse in a frame a cell longer than the rift at either
+    // end, so a reef rounds off where it leaves the vents and its tip stands
+    // in the transit gap: 26 cells where the rectangle held 24, all three
+    // columns wide across the rift itself.
     {
+      shape: 'ellipse',
       x: 2250,
-      y: 3000,
+      y: 2750,
       widthM: 750,
-      heightM: 2000,
+      heightM: 2500,
       biome: Biome.CoralRuins,
       // Shelf-band ground, so the divider is something you rise over rather
       // than something you route around. It was only ever an acoustic shadow
@@ -191,7 +383,15 @@ export const VENTFRONT_DIVIDE: MapDefinition = {
       floorM: 380,
       note: 'Crossing divider — hard acoustic shadow, and ground',
     },
-    { x: 5000, y: 3000, widthM: 750, heightM: 2000, biome: Biome.CoralRuins, floorM: 380 },
+    {
+      shape: 'ellipse',
+      x: 5000,
+      y: 2750,
+      widthM: 750,
+      heightM: 2500,
+      biome: Biome.CoralRuins,
+      floorM: 380,
+    },
     // "Side tunnels for flanking" — the Layout Logic bullet that had nowhere to
     // live until ground could have a roof. Painted after the dividers, so they
     // bore through them rather than sitting beside them.
@@ -252,11 +452,13 @@ export const VENTFRONT_DIVIDE: MapDefinition = {
     // is lethal — and the crystal gets 200 m of clearance instead of sitting
     // inside both.
     //
-    // 900 m and not further: these fields have to stay inside the Thermal Vein
-    // band (y 3,000-5,000), which is what makes working them "quiet and
-    // dangerous at once" and is asserted a few tests above. The vein band is
-    // the constraint, the plume radius is the requirement, and 900 is the only
-    // round number that satisfies both.
+    // 900 m and not further, when they moved: these fields had to stay inside
+    // the Thermal Vein band, then y 3,000-5,000, which is what makes working
+    // them "quiet and dangerous at once" and is asserted a few tests above. The
+    // vein band was the constraint, the plume radius the requirement, and 900
+    // the only round number that satisfied both. The rift has since swelled to
+    // y 2,750-5,250 about them (#1106), which loosens the constraint and moves
+    // neither field.
     { x: 4000, y: 3100, kind: ResourceKind.Nodule, amount: 6000, note: 'Contested, in the vents' },
     { x: 4000, y: 4900, kind: ResourceKind.Nodule, amount: 6000 },
     {

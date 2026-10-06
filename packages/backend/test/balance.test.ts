@@ -251,7 +251,11 @@ describe('telemetry measures what it says it measures', () => {
     // these two minutes buying haulers and saving — for the Slipway as much as
     // for a Vent Tap (#706) — fields no army hull, is never escorted, and both
     // tallies file every observation under the same reason.
-    const result = runMatch({ seats: DUEL, seed: 60, maxMinutes: 2, fauna: true });
+    //
+    // Seed 61 since #1106 redrew the Ventfront: the premise is a seed's, held
+    // by 61 on the map before and after, where 60 lost it when the Drift seeded
+    // different water.
+    const result = runMatch({ seats: DUEL, seed: 61, maxMinutes: 2, fauna: true });
     for (const player of result.players) {
       const t = player.carrierWant;
       assert.ok(t.reached > 0, `slot ${player.slot} reached the carrier want at all`);

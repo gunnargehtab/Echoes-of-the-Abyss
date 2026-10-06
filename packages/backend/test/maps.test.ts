@@ -538,6 +538,50 @@ describe('Ventfront Divide', () => {
     );
   });
 
+  it('keeps the trenches off every line between two seats', () => {
+    // "The flanking routes are the loud ones" (this map's own comment): PF 1.6
+    // is the way round, never the way between. A first draft of the #1106
+    // reshape cut trench bays into the row the bases stand on, which put the
+    // loudest water on the map between neighbouring seats and turned an
+    // eight-minute AI duel into a 272-second rout.
+    const terrain = terrainFor(VENTFRONT_DIVIDE);
+    const spawns = VENTFRONT_DIVIDE.spawns;
+    for (const [a, from] of spawns.entries()) {
+      for (const to of spawns.slice(a + 1)) {
+        const steps = Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / 50);
+        for (let i = 0; i <= steps; i++) {
+          const x = from.x + ((to.x - from.x) * i) / steps;
+          const y = from.y + ((to.y - from.y) * i) / steps;
+          assert.notEqual(
+            terrain.biomeAt(x, y),
+            Biome.AbyssalTrench,
+            `the line from ${from.x},${from.y} to ${to.x},${to.y} crosses trench at ${x},${y}`
+          );
+        }
+      }
+    }
+  });
+
+  it('moved little ground between biomes when it was drawn in shapes (#1106)', () => {
+    // The rectangles painted 256 cells of trench, 264 of kelp, 248 of open
+    // water, 208 of vent and 48 of coral. A reshape is new content and never a
+    // balance lever (docs/maps.md, "How a map is written"), so kelp and vent
+    // keep their counts. The trench lip's notches gave eight cells to open
+    // water, and the reef tips, a cell past the rift at each end, took four.
+    const grid = terrainFor(VENTFRONT_DIVIDE).serialize();
+    const cells = (biome: Biome) => grid.biomes.filter((b) => b === biome).length;
+    assert.deepEqual(
+      {
+        trench: cells(Biome.AbyssalTrench),
+        kelp: cells(Biome.KelpForest),
+        open: cells(Biome.OpenWater),
+        vent: cells(Biome.ThermalVein),
+        coral: cells(Biome.CoralRuins),
+      },
+      { trench: 248, kelp: 264, open: 252, vent: 208, coral: 52 }
+    );
+  });
+
   it('masks its middle and carries sound on its flanks', () => {
     // "Center: Thermal Veins" (PF 0.45) with "North/South: Abyssal Trenches"
     // (PF 1.6). The map's whole proposition is that the contested ground is
