@@ -678,47 +678,59 @@ runs `v` along its axis, so the line is a ring round a stem, a pod or a `grownBo
 its sphere's type and unrolls), and a flat part runs `v` across its shorter extent, so the line
 runs along a leaf's or a fin's span. Four increments a **6 m** strake, a metre and a half each,
 the facet rule's own edge for the navy; each sits up to **0.3** of its pitch off its station by
-an integer hash and wanders **±0.5 m** across the strake on 4 m cells, because a
-line at a regular pitch reads as ruled paper and a ring at every station as the segmented worm
-`kit.mjs` `loft` warns of. A line is **0.15 m** at **0.84** of the light, and about one in four
-is a check, **0.3 m** at **0.55**, each varying by the line within ±30 % in width and ±10 % in
-depth: the Knights found 0.2 m survives the conn view's 3 px/m where 0.15 m mipmaps to a rumour,
-so the fine lines read close in and fade to a tone at range, and the checks are what survive.
-Both are held to a texel across the strake, as the lap is. **0.03** of tone is keyed on the
-increment, so the one step falls on a line and never on a strake's edge, under **0.04** of mottle
-in two octaves of 8 and 3.2 m cells and a **0.01** grain. Nothing on this sheet is a joint, so the
-plate, **16 m**, is two things only: the count a round part unrolls at, and the period of
-everything that varies along `u`, the wander's four cells and the mottle's two and five, each a
-whole number a plate. That period is what closes an unroll. A round part unrolls at whole plates,
-and one plate is half the **32 m** wrap, so a field repeating only every wrap met itself half a
-field out of phase at a one-plate part's unroll seam: the first sheet, at the Directorate's 8 m
-plate, left a row of dark diamonds down the Reed's port beam, one a ring, 51 levels off in the
-eight-strake band, where the fields a plate leave the two edges within the grain's 2. At 8 m with
-the fields a plate the coarse mottle would be one cell, flat along `u`, so the plate went to 16;
-a 16 m repeat is under one and a half periods along the 21.5 m starboard leaf. The pitch in metres is the part's, since the bands stop at eight
-strakes: the Reed's 60.5 m stem lays on the eight-strake band at 7.6 m a strake and 1.9 m an
-increment, and a 1.8 m ridge on the one-strake band at 0.45 m, a tone. The hero rings stay
-geometry (`growthRings`, `grownRings`, `drumRings`, ridges of 0.5 to 0.9 m), two to six times the
-drawn check, as the Consortium's `rivetRows` stand over its drawn rivets. `mirror` is off, since
-the Commune refuses a mirrored pair, and `untagged` leaves `bio_vein_unlit` bare, the vein
-family's unlit base and the Knights' `crystal_seam_unlit` precedent, and `grown_steel`, the
-structures' fitted collars and pipes and the one thing on a Commune model not grown. The sheet is
-**37,578 bytes** at a mean linear luminance of **0.903**: over the Consortium's 0.857, beside the
-Knights' 0.899 and under the Directorate's 0.938, whose chitin carries one seam a tergite where
-this carries a line an increment. On the GPU it is the same 512² RGBA8 upload with mipmaps,
-**1.33 MiB** once per navy present, no draw or triangle more. The Reed is the first hull, the
-owner's choice: two of the three hulls in the Commune's opening escort (`OPENING_ESCORT`), and its
-block names the surface, "growth rings at two nodes where the stem swells". Its 16 parts lay
-**1,149** faces flat and **897** unrolled (1,496 on the one-strake band, 90 on two, none on four,
-460 on eight), split **314** vertices and tag four materials, `chitin_hull`, `growth_ridge`,
-`algae_membrane` and `spore_pod`; `bio_vein_unlit` is laid out and bare, and the lamps are never
-tagged. `reed-pelagia.glb` goes from **122,148 to 132,652 bytes** (zlib's default gzip 37,407 to
-42,633) with its 16 parts, 2,046 triangles and outline unchanged, so the sprite rebake changes the
-albedo alone (`reed-albedo.png`, 3,623 to 7,662 bytes), the height and emissive maps byte for byte
-what they were and the glow on its gate-3 target of 1.06. [The lit table](screenshots/issue-1110/lit-table.png)
-shows the rings round the stem and the lines along the leaves. The Commune is Sorrowgate's navy,
-so this is the first sheet the tutorial's triplanar laminate meets in play: the laminate
-multiplies `diffuseColor` after `map_fragment`, the sheet under it.
+an integer hash and wanders **±0.5 m** across the strake on 4 m cells, because a line at a
+regular pitch reads as ruled paper and a ring at every station as the segmented worm `kit.mjs`
+`loft` warns of. A line is **0.15 m** at **0.84** of the light, and about one in four is a check,
+**0.5 m** at **0.25**, each varying by the line within ±30 % in width and ±10 % in depth; both are
+held to a texel across the strake, as the lap is. **0.03** of tone is keyed on the increment, so
+the one step falls on a line and never on a strake's edge, under **0.04** of mottle in two octaves
+of 8 and 3.2 m cells and a **0.01** grain. The pitch in metres is the part's, since the bands stop
+at eight strakes: the Reed's 60.5 m stem lays on the eight-strake band at 7.6 m a strake and
+1.9 m an increment, and a 1.8 m ridge on the one-strake band at 0.45 m, a tone. The hero rings
+stay geometry (`growthRings`, `grownRings`, `drumRings`, ridges of 0.5 to 0.9 m), as the
+Consortium's `rivetRows` stand over its drawn rivets. `mirror` is off, since the Commune refuses a
+mirrored pair, and `untagged` leaves `bio_vein_unlit` bare, the vein family's unlit base and the
+Knights' `crystal_seam_unlit` precedent, and `grown_steel`, the structures' fitted collars and
+pipes and the one thing on a Commune model not grown.
+
+Nothing on this sheet is a joint, so the plate, **16 m**, is two things only: the count a round
+part unrolls at, and the period of everything that varies along `u`, the wander's four cells and
+the mottle's two and five, each a whole number a plate. That period is what closes an unroll. A
+round part unrolls at whole plates, and one plate is half the **32 m** wrap, so a field repeating
+only every wrap met itself half a field out of phase at a one-plate part's unroll seam: the first
+sheet, at the Directorate's 8 m plate, left a row of dark diamonds down the Reed's port beam, one
+a ring, 51 levels off in the eight-strake band, where the fields a plate leave the two edges
+within the grain's 3. At 8 m with the fields a plate the coarse mottle would be one cell, flat
+along `u`, so the plate went to 16; a 16 m repeat is under one and a half periods along the
+21.5 m starboard leaf. The check is drawn for the camera that reads it, and the Commune's ink is
+what sets its depth: `chitin_hull` is nearly black at rest, and a sheet only darkens what the ink
+has. At the conn view's nearest zoom, about 5 px/m, a first check of 0.3 m at 0.55 moved 48
+pixels of a 50,700-pixel crop of the Reed by more than 16 levels and no ring read; at 0.5 m and
+0.25 it moves 123, and the rings read on the stem between its nodes and as lines along the
+leaves, the fine lines a tone ([the conn view](screenshots/issue-1110/conn-view.png), before and
+after, doubled). The sheet is **39,782 bytes** at a mean linear luminance of **0.875**: over the
+Consortium's 0.857, under the Knights' 0.899 and the Directorate's 0.938, a matte skin girdled by
+a dark ring every few metres, so the register the conn view puts a navy on moves by an eighth.
+
+The Reed is the first hull, the owner's choice: two of the three hulls in the Commune's opening
+escort (`OPENING_ESCORT`), and its block names the surface, "growth rings at two nodes where the
+stem swells". Its 16 parts lay **1,149** faces flat and **897** unrolled (1,496 on the one-strake
+band, 90 on two, none on four, 460 on eight), split **314** vertices and tag four materials,
+`chitin_hull`, `growth_ridge`, `algae_membrane` and `spore_pod`; `bio_vein_unlit` is laid out and
+bare, and the lamps are never tagged. `reed-pelagia.glb` goes from **122,148 to 132,652 bytes**
+(zlib's default gzip 37,407 to 42,633) with its 16 parts, 2,046 triangles and outline unchanged,
+so the sprite rebake changes the albedo alone (`reed-albedo.png`, 3,623 to 8,815 bytes), the
+height and emissive maps byte for byte what they were and the glow on its gate-3 target of 1.06.
+On the GPU the sheet is the same 512² RGBA8 upload with mipmaps, **1.33 MiB** once per navy
+present. With four staged Reeds on Ventfront, read on the GTX 1070 at `capture.mjs`' four
+cameras, calls and triangles are the same before and after (52–53 and 198,756–198,828), textures
+go from 19 to 20, and gate 6's queued GPU time reads 0.67 to 0.82 ms at pixel ratio 1 and 1.27 to
+1.71 ms at 1.5, within 0.02 ms a camera of main's
+([readings](screenshots/issue-1110/gate6.json)). [The lit table](screenshots/issue-1110/lit-table.png)
+shows the rings round the stem and the lines along the leaves close in. The Commune is
+Sorrowgate's navy, so this is the first sheet the tutorial's triplanar laminate meets in play:
+the laminate multiplies `diffuseColor` after `map_fragment`, the sheet under it, and
+`packages/frontend/test/trimSheet.test.ts` holds that chain on a Commune Reed.
 
 #### Ranked audit and remaining work
 
