@@ -26,22 +26,33 @@ import type {
   MapHeader,
   ResourceKind,
 } from '@echoes/shared';
+import type { EllipseShape, PolygonShape, RectShape } from '../terrain.ts';
 
 /**
- * A painted region. Rectangles only, and deliberately so: every layout in
- * docs/maps.md is corridors, plateaus, bands and quadrants, all of which are
- * rectangles or unions of them. A richer shape vocabulary would be more
- * expressive than anything the doc actually asks for.
+ * A painted region: a rectangle, an ellipse or a polygon (`Shape` in
+ * `terrain.ts` says how each is written).
+ *
+ * Rectangles were the whole vocabulary until #1106, on the argument that every
+ * layout in docs/maps.md is corridors, plateaus, bands and quadrants. That held
+ * for the layouts and failed for the map: from the survey dolly, ground drawn
+ * only in rectangles reads as a checkerboard, its plateaus, trenches and vent
+ * lines as authoring boxes rather than places. A shape is still data, and the
+ * simulation keeps its 250 m grid: a cell belongs to the region whose shape
+ * holds its centre, so an ellipse's edge steps at the cell like a rectangle's,
+ * and the plateau it draws is round all the same.
  *
  * Painted in array order, so a later region overwrites an earlier one where
  * they overlap. That is what makes a trench cutting *through* a vent line
  * expressible as two lines of data rather than four.
  */
-export interface MapRegion {
-  x: number;
-  y: number;
-  widthM: number;
-  heightM: number;
+export type MapRegion = MapRect | MapEllipse | MapPolygon;
+
+export interface MapRect extends RectShape, RegionGround {}
+export interface MapEllipse extends EllipseShape, RegionGround {}
+export interface MapPolygon extends PolygonShape, RegionGround {}
+
+/** What a region paints into the cells it claims, whatever its shape. */
+interface RegionGround {
   biome: Biome;
   /**
    * How deep the water goes here, in metres. Omitted inherits the map's
@@ -157,7 +168,7 @@ export interface MapHazardSite {
  * authored there and asserted against `spawns.length` in `maps.test.ts`,
  * because the spawn list is the ground truth for player count.
  */
-export interface MapDefinition extends MapHeader {
+export interface MapDefinition<Region extends MapRegion = MapRegion> extends MapHeader {
   /** The docs/maps.md section this transcribes, cited so drift is findable. */
   doc: string;
   cellM: number;
@@ -166,7 +177,14 @@ export interface MapDefinition extends MapHeader {
    * keeps the flat 3,000 m every map had before floors were authorable.
    */
   floorM?: number;
-  regions: MapRegion[];
+  /**
+   * `Region` narrows what these may be. A map drawn only in rectangles can
+   * say so with `MapDefinition<MapRect>`, and every mission map does, since
+   * its document's §11 table is written in rectangles. A test may then read a
+   * region's corner and size without asking its shape, and reshaping one is a
+   * type error until the table and its tests change with it.
+   */
+  regions: Region[];
   spawns: MapSpawn[];
   resources: MapResource[];
   /** Bloom-share nodes — see `MapBloom`. Omitted is none, and no map is owed any. */

@@ -16,9 +16,9 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition } from '../types.ts';
+import type { MapDefinition, MapRect } from '../types.ts';
 
-export const MOUTH_RIM: MapDefinition = {
+export const MOUTH_RIM: MapDefinition<MapRect> = {
   id: 'mouth-rim',
   name: 'The Rim',
   idealUse: 'The Ledger, mission six. The only candidate field, and everyone already on it.',

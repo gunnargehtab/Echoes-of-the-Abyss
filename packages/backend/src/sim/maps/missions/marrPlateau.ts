@@ -17,9 +17,9 @@
  */
 
 import { Biome, FaunaSpecies, TETHERJELLY_KELP_BAND } from '@echoes/shared';
-import type { MapDefinition } from '../types.ts';
+import type { MapDefinition, MapRect } from '../types.ts';
 
-export const MARR_PLATEAU: MapDefinition = {
+export const MARR_PLATEAU: MapDefinition<MapRect> = {
   id: 'marr-plateau',
   name: 'Marr Plateau',
   idealUse: 'The Second Seeding, mission one. A garden terrace, a working day, and a survey.',

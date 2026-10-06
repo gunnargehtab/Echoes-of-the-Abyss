@@ -57,9 +57,9 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition } from '../types.ts';
+import type { MapDefinition, MapRect } from '../types.ts';
 
-export const SHALLOW_BAND: MapDefinition = {
+export const SHALLOW_BAND: MapDefinition<MapRect> = {
   id: 'shallow-band',
   name: 'The Shallow Band',
   idealUse:

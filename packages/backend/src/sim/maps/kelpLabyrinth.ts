@@ -16,7 +16,7 @@
  */
 
 import { Biome, KELP_LABYRINTH_HEADER, ResourceKind } from '@echoes/shared';
-import type { MapDefinition } from './types.ts';
+import type { MapDefinition, MapRect } from './types.ts';
 
 const W = KELP_LABYRINTH_HEADER.widthM;
 const H = KELP_LABYRINTH_HEADER.heightM;
@@ -109,7 +109,7 @@ const MAZE: Array<[number, number, number, number]> = QUADRANT.flatMap(
  * the paint *is* the design, and a block quietly a column wider than its
  * literal is a corridor quietly a column narrower.
  */
-export const KELP_LABYRINTH: MapDefinition = {
+export const KELP_LABYRINTH: MapDefinition<MapRect> = {
   ...KELP_LABYRINTH_HEADER,
   doc: 'docs/maps.md — Map Type 2',
   cellM: 250,

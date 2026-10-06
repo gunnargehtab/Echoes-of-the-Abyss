@@ -47,12 +47,12 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition } from '../types.ts';
+import type { MapDefinition, MapRect } from '../types.ts';
 
 /** Solid rock, as a region: no depth satisfies ceiling <= D <= floor. */
 const ROCK = { floorM: 0, ceilingM: 1 } as const;
 
-export const FOURTH_FOOT: MapDefinition = {
+export const FOURTH_FOOT: MapDefinition<MapRect> = {
   id: 'fourth-foot',
   name: "The Fourth's Foot",
   idealUse:

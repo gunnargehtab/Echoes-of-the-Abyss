@@ -31,9 +31,9 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition } from '../types.ts';
+import type { MapDefinition, MapRect } from '../types.ts';
 
-export const BANDING_GROUND: MapDefinition = {
+export const BANDING_GROUND: MapDefinition<MapRect> = {
   id: 'banding-ground',
   name: 'The Banding Ground',
   idealUse:

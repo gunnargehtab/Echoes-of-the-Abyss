@@ -26,9 +26,9 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition } from '../types.ts';
+import type { MapDefinition, MapRect } from '../types.ts';
 
-export const KELL_SHOULDER: MapDefinition = {
+export const KELL_SHOULDER: MapDefinition<MapRect> = {
   id: 'kell-shoulder',
   name: 'The Kell Shoulder',
   idealUse: 'Thin Water, mission two. Four kilometres of bare rock and a corridor across it.',

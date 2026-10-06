@@ -23,9 +23,9 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition } from '../types.ts';
+import type { MapDefinition, MapRect } from '../types.ts';
 
-export const SORROWGATE: MapDefinition = {
+export const SORROWGATE: MapDefinition<MapRect> = {
   id: 'sorrowgate',
   name: 'Sorrowgate',
   idealUse: 'Prologue only. A court, a gate, and the water underneath it.',

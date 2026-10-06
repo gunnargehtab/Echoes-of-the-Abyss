@@ -17,9 +17,9 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition } from '../types.ts';
+import type { MapDefinition, MapRect } from '../types.ts';
 
-export const NINEFOLD_FACE_SIX: MapDefinition = {
+export const NINEFOLD_FACE_SIX: MapDefinition<MapRect> = {
   id: 'ninefold-face-six',
   name: 'Face Six',
   idealUse: 'The Ledger, mission one. A dying field, a fallen face, and a recovery writ.',

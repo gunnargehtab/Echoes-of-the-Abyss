@@ -42,7 +42,7 @@ import {
   terrainFor,
 } from '../src/sim/maps/index.ts';
 import { Match } from '../src/sim/match.ts';
-import { SOLID, Terrain } from '../src/sim/terrain.ts';
+import { SOLID, Terrain, shapeContains } from '../src/sim/terrain.ts';
 import type { MapDefinition, MapRegion } from '../src/sim/maps/index.ts';
 
 /** Step a match until it produces an Echo snapshot. */
@@ -101,7 +101,7 @@ function cellsClaimed(map: MapDefinition, region: MapRegion): number {
   const sentinel = region.biome === Biome.OpenWater ? Biome.AbyssalTrench : Biome.OpenWater;
   const terrain = new Terrain(map.widthM, map.heightM, map.cellM);
   terrain.fillRect(0, 0, map.widthM, map.heightM, sentinel);
-  terrain.fillRect(region.x, region.y, region.widthM, region.heightM, region.biome);
+  terrain.fillShape(region, region.biome);
   let claimed = 0;
   for (let y = map.cellM / 2; y < map.heightM; y += map.cellM) {
     for (let x = map.cellM / 2; x < map.widthM; x += map.cellM) {
@@ -109,6 +109,31 @@ function cellsClaimed(map: MapDefinition, region: MapRegion): number {
     }
   }
   return claimed;
+}
+
+/** How a failure names a region: its note, or its shape and where it starts. */
+function nameOf(region: MapRegion): string {
+  if (region.note !== undefined) return region.note;
+  if (region.shape !== 'polygon')
+    return `${region.shape ?? 'rectangle'} at ${region.x},${region.y}`;
+  const first = region.points[0];
+  return first === undefined ? 'a polygon with no points' : `polygon from ${first[0]},${first[1]}`;
+}
+
+/** Every number a region states about where it lies, by name, whatever its shape. */
+function placementOf(region: MapRegion): [string, number][] {
+  if (region.shape === 'polygon') {
+    return region.points.flatMap(([x, y], i): [string, number][] => [
+      [`points[${i}] x`, x],
+      [`points[${i}] y`, y],
+    ]);
+  }
+  return [
+    ['x', region.x],
+    ['y', region.y],
+    ['widthM', region.widthM],
+    ['heightM', region.heightM],
+  ];
 }
 
 /**
@@ -196,7 +221,12 @@ describe('the map catalogue', () => {
       for (const bloom of map.blooms ?? []) inside(bloom.x, bloom.y, 'bloom');
       for (const site of map.hazards) inside(site.x, site.y, 'hazard');
       for (const region of map.regions) {
-        assert.ok(region.widthM > 0 && region.heightM > 0, `${map.id}: empty region`);
+        assert.ok(
+          region.shape === 'polygon'
+            ? region.points.length >= 3
+            : region.widthM > 0 && region.heightM > 0,
+          `${map.id}: empty region "${nameOf(region)}"`
+        );
       }
     }
   });
@@ -355,9 +385,9 @@ describe('the map catalogue', () => {
 });
 
 describe('every map is authored on its own cell grid', () => {
-  // A cell belongs to the region whose rectangle contains its **centre**
-  // (#157, docs/maps.md "How a map is written"). Two things follow, and both
-  // are worth holding the maps to rather than trusting an author to remember.
+  // A cell belongs to the region whose shape contains its **centre** (#157,
+  // docs/maps.md "How a map is written"). Two things follow, and both are
+  // worth holding the maps to rather than trusting an author to remember.
   //
   // Mission maps are in scope here: this is a rule about authoring, not about
   // balance, and Sorrowgate's service lock is the narrowest rectangle anybody
@@ -368,20 +398,17 @@ describe('every map is authored on its own cell grid', () => {
       // the map file and the map agree by construction. One that is not is
       // asking for water the grid cannot hold: it gets the whole cells whose
       // centres fall inside it, which is a quieter map than the one the file
-      // describes and a difference nobody sees until PF is measured.
+      // describes and a difference nobody sees until PF is measured. An
+      // ellipse's frame and a polygon's points are held to the same grid
+      // (#1106), so an edge along a grid line paints exactly what it reads
+      // there too, and a reader can count cells from the numbers.
       for (const region of map.regions) {
-        const what = region.note ?? `${region.x},${region.y}`;
-        for (const [field, value] of [
-          ['x', region.x],
-          ['y', region.y],
-          ['widthM', region.widthM],
-          ['heightM', region.heightM],
-        ] as const) {
+        for (const [field, value] of placementOf(region)) {
           assert.equal(
             value % map.cellM,
             0,
-            `${map.name}: region "${what}" has ${field}=${value}, which is not a whole ` +
-              `${map.cellM} m cell — it will not paint the metres it reads`
+            `${map.name}: region "${nameOf(region)}" has ${field}=${value}, which is not a ` +
+              `whole ${map.cellM} m cell — it will not paint the metres it reads`
           );
         }
       }
@@ -389,15 +416,15 @@ describe('every map is authored on its own cell grid', () => {
 
     it(`${map.name} paints every region it authors`, () => {
       // The hazard the centre rule introduces, and the reason it is checked
-      // rather than commented: a rectangle thinner than a cell can fall
-      // between two centres and paint *nothing at all*, silently. A region
-      // that was authored and then vanished is worse than a mis-sized one,
-      // because the map still reads as though the ground is there.
+      // rather than commented: a shape thinner than a cell can fall between
+      // two centres and paint *nothing at all*, silently. A region that was
+      // authored and then vanished is worse than a mis-sized one, because the
+      // map still reads as though the ground is there.
       for (const region of map.regions) {
         assert.ok(
           cellsClaimed(map, region) > 0,
-          `${map.name}: the region at ${region.x},${region.y} (${region.widthM}x` +
-            `${region.heightM} m) claims no cell — it falls between cell centres`
+          `${map.name}: region "${nameOf(region)}" claims no cell — it falls between ` +
+            `cell centres`
         );
       }
     });
@@ -893,8 +920,8 @@ describe('every map has water where it seats things', () => {
    *   read as a small widening and would in fact be this guard switched off.
    */
   const shapesColumn = (r: MapRegion) => r.floorM !== undefined || r.ceilingM !== undefined;
-  const covers = (r: MapRegion, x: number, y: number) =>
-    x >= r.x && x < r.x + r.widthM && y >= r.y && y < r.y + r.heightM;
+  // The grid's own test, so a base and the cell under it never disagree.
+  const covers = shapeContains;
 
   /** Every Bastion and Foundry a map seats, as the guard reads them. */
   const placements = (map: MapDefinition) =>
