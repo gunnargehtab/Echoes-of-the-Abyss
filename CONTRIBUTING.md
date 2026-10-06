@@ -19,6 +19,9 @@ short contract every change is reviewed against.
 4. **Visual changes clear the gates** in
    [docs/graphics-standards.md](docs/graphics-standards.md), including a screenshot in
    the PR.
+   For new Gate 6 evidence, commit only the readings its README cites. If a harness writes
+   a full probe dump, extract those fields into a compact record instead of committing the
+   dump. Leave merged evidence folders unchanged.
 5. **Write short on GitHub.** Clear, simple, short sentences in every issue, PR, review
    comment and commit message. A PR body under 300 words, in three sections of at most
    three sentences each (Problem, Options, Solution), an issue under 200, a comment
