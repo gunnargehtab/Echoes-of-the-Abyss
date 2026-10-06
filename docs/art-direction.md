@@ -541,8 +541,8 @@ at four taps and at one alike within 0.03 ms a camera
 ([readings](screenshots/issue-1107/anisotropy-gate6.json)). The fight station's opening
 fleet is read below, once the Consortium's others were laid; Sorrowgate's Consortium
 delegation is contacts, which the conn view never draws as geometry, so it has no sheet to
-read. The Directorate's sheet below takes the same four taps; its own GPU reading is the one
-#1108 leaves open.
+read. The Directorate's sheet below takes the same four taps; its own GPU reading is the
+one #1108 leaves open.
 
 Embedding the sheet in each file was the first cut and the owner's call to reverse: 31 KB a
 model that gzip cannot shrink, 2.9 MB over the 94 navy models were every navy given a sheet,
