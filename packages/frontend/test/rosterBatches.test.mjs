@@ -240,6 +240,51 @@ describe('own models drawn instanced (#1079)', () => {
     batches.dispose();
   });
 
+  it('uploads a moved hull as one slot of one buffer, and a still one not at all (#1114)', async () => {
+    const built = await template(BEACON);
+    const batches = new RosterBatches();
+    const models = fleet(batches, built, 3);
+    const parts = batches.group.children;
+    const matrices = new Set(parts.map((part) => part.instanceMatrix));
+    // The Beacon's six materials merge at one transform (mergeByMaterial).
+    assert.equal(matrices.size, 1, "every part reads the batch's one matrix buffer");
+    const [buffer] = matrices;
+    const glows = new Set(
+      parts
+        .filter((p) => p.geometry.hasAttribute('instanceGlow'))
+        .map((p) => p.geometry.getAttribute('instanceGlow'))
+    );
+    assert.equal(glows.size, 1, "every lamp part reads the batch's one glow buffer");
+    const [glow] = glows;
+    const versions = () => [buffer.version, glow.version];
+    // What a draw's upload does with the ranges the attaches wrote.
+    buffer.clearUpdateRanges();
+    glow.clearUpdateRanges();
+
+    // The view places every own hull every frame, moved or not.
+    const still = versions();
+    for (const model of models) batches.place(model);
+    assert.deepEqual(versions(), still, 'nothing changed, nothing to upload');
+
+    models[1].root.position.x += 10;
+    batches.place(models[1]);
+    assert.equal(buffer.version, still[0] + 1, 'one upload for the moved hull');
+    const slot = findSlot(parts[0], meshesOf(models[1])[0]);
+    assert.deepEqual(
+      buffer.updateRanges,
+      [{ start: slot * 16, count: 16 }],
+      'of its own slot alone'
+    );
+    assertSlots(parts, models);
+
+    applyLiveGlow(models[2], 60, 6);
+    batches.place(models[2]);
+    assert.equal(glow.version, still[1] + 1, 'a louder hull uploads its glow once');
+    assert.equal(glow.updateRanges.length, 1);
+    assert.equal(batches.glowAt(models[2]), Math.fround(glowFactor(60, 6)));
+    batches.dispose();
+  });
+
   it('batches by template, so two kinds and a structure never share a draw', async () => {
     const batches = new RosterBatches();
     const beacons = fleet(batches, await template(BEACON), 2);
