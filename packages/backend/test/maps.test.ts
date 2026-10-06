@@ -136,6 +136,50 @@ function placementOf(region: MapRegion): [string, number][] {
   ];
 }
 
+type Corner = readonly [number, number];
+
+/**
+ * What is wrong with a polygon's outline, if anything. One that crosses or
+ * folds back on itself, or encloses no area, still paints — by even-odd
+ * parity, closed at the outline — but a shape nobody drew. Exact in whole
+ * metres, like the grid's own test.
+ */
+function outlineFault(points: readonly Corner[]): string | undefined {
+  const n = points.length;
+  const at = (i: number): Corner => points[((i % n) + n) % n]!;
+  const turn = (a: Corner, b: Corner, c: Corner) =>
+    Math.sign((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]));
+  // Is p on segment a–b, given the three are in line?
+  const on = (a: Corner, b: Corner, p: Corner) =>
+    Math.min(a[0], b[0]) <= p[0] &&
+    p[0] <= Math.max(a[0], b[0]) &&
+    Math.min(a[1], b[1]) <= p[1] &&
+    p[1] <= Math.max(a[1], b[1]);
+  let twiceArea = 0;
+  for (let i = 0; i < n; i++) twiceArea += at(i)[0] * at(i + 1)[1] - at(i + 1)[0] * at(i)[1];
+  if (twiceArea === 0) return 'encloses no area';
+  for (let i = 0; i < n; i++) {
+    const [a, b, c] = [at(i - 1), at(i), at(i + 1)];
+    const back = (b[0] - a[0]) * (c[0] - b[0]) + (b[1] - a[1]) * (c[1] - b[1]) < 0;
+    if (turn(a, b, c) === 0 && back) return `folds back at point ${i}`;
+    // Every pair of edges that do not share a corner must not meet at all.
+    for (let j = i + 2; j < (i === 0 ? n - 1 : n); j++) {
+      const [p, q, r, s] = [at(i), at(i + 1), at(j), at(j + 1)];
+      const [d1, d2, d3, d4] = [turn(r, s, p), turn(r, s, q), turn(p, q, r), turn(p, q, s)];
+      if (
+        (d1 * d2 < 0 && d3 * d4 < 0) ||
+        (d1 === 0 && on(r, s, p)) ||
+        (d2 === 0 && on(r, s, q)) ||
+        (d3 === 0 && on(p, q, r)) ||
+        (d4 === 0 && on(p, q, s))
+      ) {
+        return `has edges ${i} and ${j} meeting`;
+      }
+    }
+  }
+  return undefined;
+}
+
 /**
  * Is this map the same map from every seat? `mirror` maps a cell to the one it
  * must match. Compared on biome *and* the water column, because a map that is
@@ -386,12 +430,45 @@ describe('the map catalogue', () => {
 
 describe('every map is authored on its own cell grid', () => {
   // A cell belongs to the region whose shape contains its **centre** (#157,
-  // docs/maps.md "How a map is written"). Two things follow, and both are
-  // worth holding the maps to rather than trusting an author to remember.
+  // docs/maps.md "How a map is written"). What that asks of an author is
+  // worth holding the maps to rather than trusting anyone to remember.
   //
   // Mission maps are in scope here: this is a rule about authoring, not about
   // balance, and Sorrowgate's service lock is the narrowest rectangle anybody
   // has written.
+  it('refuses an outline that crosses itself, folds back or encloses nothing', () => {
+    // The controls for the polygon rule below, which no shipped map fails.
+    const bowTie: Corner[] = [
+      [0, 0],
+      [1000, 1000],
+      [1000, 0],
+      [0, 500],
+    ];
+    const line: Corner[] = [
+      [0, 0],
+      [500, 500],
+      [1000, 1000],
+    ];
+    const spur: Corner[] = [
+      [0, 0],
+      [1000, 0],
+      [1000, 1000],
+      [1000, 1500],
+      [1000, 500],
+      [0, 1000],
+    ];
+    for (const bad of [bowTie, line, spur]) assert.notEqual(outlineFault(bad), undefined);
+    assert.equal(
+      outlineFault([
+        [0, 0],
+        [1000, 0],
+        [500, 1000],
+      ]),
+      undefined,
+      'a plain triangle'
+    );
+  });
+
   for (const map of [...MAPS, ...MISSION_MAPS]) {
     it(`${map.name} states every region in whole cells`, () => {
       // A rectangle on cell boundaries paints exactly the metres it reads, so
@@ -411,6 +488,14 @@ describe('every map is authored on its own cell grid', () => {
               `whole ${map.cellM} m cell — it will not paint the metres it reads`
           );
         }
+      }
+    });
+
+    it(`${map.name} draws every polygon as one outline around ground`, () => {
+      for (const region of map.regions) {
+        if (region.shape !== 'polygon') continue;
+        const fault = outlineFault(region.points);
+        assert.equal(fault, undefined, `${map.name}: polygon "${nameOf(region)}" ${fault}`);
       }
     });
 
@@ -875,7 +960,7 @@ describe('every map has water where it seats things', () => {
   /**
    * docs/maps.md, "How a map is written": a spawn and its Foundry stand on
    * ground the map paints — and *paints* means shapes the water column. Some
-   * region containing the point sets `floorM` or `ceilingM`.
+   * region claiming the cell under it sets `floorM` or `ceilingM`.
    *
    * Deliberately not "a floor different from the map's own": the doc
    * sanctions a base on the base seabed inside an authored region, and that
@@ -920,8 +1005,20 @@ describe('every map has water where it seats things', () => {
    *   read as a small widening and would in fact be this guard switched off.
    */
   const shapesColumn = (r: MapRegion) => r.floorM !== undefined || r.ceilingM !== undefined;
-  // The grid's own test, so a base and the cell under it never disagree.
-  const covers = shapeContains;
+
+  /**
+   * Does a region claim the cell a point stands in? Asked of that cell's
+   * centre, which is what the grid paints by, and not of the point: a base
+   * inside an ellipse's outline can stand in a corner cell the ellipse does
+   * not claim, on ground nobody shaped. For a rectangle on the grid the two
+   * answers are the same, which is why the point served until #1106.
+   */
+  const covers = (map: MapDefinition, r: MapRegion, x: number, y: number) => {
+    const centre = (m: number, extentM: number) =>
+      (Math.min(Math.ceil(extentM / map.cellM) - 1, Math.max(0, Math.floor(m / map.cellM))) + 0.5) *
+      map.cellM;
+    return shapeContains(r, centre(x, map.widthM), centre(y, map.heightM));
+  };
 
   /** Every Bastion and Foundry a map seats, as the guard reads them. */
   const placements = (map: MapDefinition) =>
@@ -934,13 +1031,13 @@ describe('every map has water where it seats things', () => {
       },
     ]);
 
-  /** The rule: some region containing the point shapes the water column. */
+  /** The rule: some region claiming the cell under the point shapes the water column. */
   const paints = (map: MapDefinition, x: number, y: number) =>
-    map.regions.some((r) => covers(r, x, y) && shapesColumn(r));
+    map.regions.some((r) => covers(map, r, x, y) && shapesColumn(r));
 
   /** #622's predicate, kept because an exempt map is still held to it. */
   const contained = (map: MapDefinition, x: number, y: number) =>
-    map.regions.some((r) => covers(r, x, y));
+    map.regions.some((r) => covers(map, r, x, y));
 
   const failing = (map: MapDefinition, rule: (m: MapDefinition, x: number, y: number) => boolean) =>
     placements(map)
@@ -1017,7 +1114,10 @@ describe('every map has water where it seats things', () => {
     id: 'sham-ventfront',
     regions: [
       ...VENTFRONT_DIVIDE.regions.filter(
-        (r) => !placements(VENTFRONT_DIVIDE).some((p) => covers(r, p.x, p.y) && shapesColumn(r))
+        (r) =>
+          !placements(VENTFRONT_DIVIDE).some(
+            (p) => covers(VENTFRONT_DIVIDE, r, p.x, p.y) && shapesColumn(r)
+          )
       ),
       { x: 0, y: 1000, widthM: 8000, heightM: 250, biome: Biome.OpenWater },
       { x: 0, y: 6750, widthM: 8000, heightM: 250, biome: Biome.OpenWater },
@@ -1038,6 +1138,31 @@ describe('every map has water where it seats things', () => {
       placements(SHAM_VENTFRONT).length,
       'the sham map must fail the paint rule at every placement'
     );
+  });
+
+  it('reads the cell under a base, which an outline can hold without claiming (#1106)', () => {
+    // A 1,000 m plateau drawn as a circle, and a Bastion at 240,240: inside the
+    // outline, in the corner cell whose centre is not. The grid leaves that
+    // cell at the map's own seabed, so the base opens on ground nobody shaped,
+    // and a guard that asked the point would pass it.
+    const plateau: MapRegion = {
+      shape: 'ellipse',
+      x: 0,
+      y: 0,
+      widthM: 1000,
+      heightM: 1000,
+      biome: Biome.KelpForest,
+      floorM: 700,
+    };
+    const corner: MapDefinition = {
+      ...VENTFRONT_DIVIDE,
+      id: 'corner-base',
+      regions: [plateau],
+      spawns: [{ x: 240, y: 240, foundryOffsetX: 500, foundryOffsetY: 500 }],
+    };
+    assert.ok(shapeContains(plateau, 240, 240), 'the base is inside the outline');
+    assert.notEqual(terrainFor(corner).floorAt(240, 240), 700, 'and off the plateau');
+    assert.deepEqual(failing(corner, paints), ['corner-base: slot 0 Bastion at 240,240']);
   });
 
   for (const map of MAPS) {

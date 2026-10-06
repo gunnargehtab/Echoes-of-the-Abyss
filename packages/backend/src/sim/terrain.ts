@@ -151,15 +151,22 @@ export interface EllipseShape {
 
 export interface PolygonShape {
   shape: 'polygon';
-  /** The corners in order, as [x, y] in metres. The last joins back to the first. */
+  /**
+   * The corners in order, as [x, y] in metres. The last joins back to the
+   * first. An outline that crosses itself paints by even-odd parity, which is
+   * a shape nobody drew, so the map tests refuse one.
+   */
   points: readonly (readonly [number, number])[];
 }
 
 export type Shape = RectShape | EllipseShape | PolygonShape;
 
 /**
- * Is (x, y) inside the shape? The grid asks it of a cell's centre and the map
- * tests ask it of a base, so the two can never disagree about a point.
+ * Is (x, y) inside the shape? The grid asks it of each cell's centre, and that
+ * is what a region paints. Asked of any other point it answers for the
+ * outline, not the ground: a point inside an ellipse can stand in a corner
+ * cell the ellipse does not claim, so a test about the ground under a point
+ * asks it of that cell's centre.
  *
  * A rectangle is half-open: its west and north edges are in, and its east and
  * south edges belong to the next rectangle along, which is what lets adjacent
