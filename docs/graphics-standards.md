@@ -420,8 +420,9 @@ frame's, and the forty-berth frame has not been timed instanced. The opening has
 ([#1114](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1114)): instanced, it
 read 0.12–0.22 ms over the uninstanced frame at every camera at ratio 1.5, all of it canvas
 pass where the close camera was split by pass, for re-uploading every part's buffer for every
-hull every frame. A batch now uploads a slot only when it changes, and its parts share one
-buffer, which took 0.06–0.19 ms back on Ventfront ([issue-1114](screenshots/issue-1114/README.md)). `capture.mjs` logs a breach instead of
+hull every frame. A batch now uploads a slot only when it changes, and its parts at one
+transform share one buffer, which took 0.06–0.19 ms back on Ventfront
+([issue-1114](screenshots/issue-1114/README.md)). `capture.mjs` logs a breach instead of
 failing on it with `OVER_BUDGET=record`.
 
 A classified animal drawn as stipple ([map-visuals.md](map-visuals.md) §8) is overlay

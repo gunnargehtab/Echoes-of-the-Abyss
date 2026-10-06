@@ -61,7 +61,8 @@ The frame kept moving after `8851d622`, in smaller steps, with the silt detail o
 | `39cc1e41`, the Consortium's joints | 1.62, 1.62 ms |
 | `0e0582a5`, this branch's base | 1.60, 1.64 ms |
 
-None of those steps is larger than two runs of one revision differ by, 0.05 ms.
+None of those steps is larger than two runs of one revision differ by, up to 0.07 ms
+(`cb5cb822`).
 
 ## Where it lands
 
@@ -75,8 +76,8 @@ None of those steps is larger than two runs of one revision differ by, 0.05 ms.
 Every pass but the canvas reads the same to 0.01 ms. The canvas pass draws the own models,
 and `rosterBatches.ts` wrote each hull's slot into every part's buffer and flagged the whole
 buffer for upload, for every own hull, every frame. The view places every own hull every
-frame, moved or not: a counting build read four writes a frame at the opening, each one
-an upload a part.
+frame, moved or not: a counting build, not committed, read four writes a frame at the
+opening, each one an upload a part.
 
 ## The fix
 
@@ -92,7 +93,8 @@ With writes on change, five uploads a frame were left, the parts of what the ope
 moving, and no glow upload; sharing the buffer makes that one a moving hull. A variant that
 froze every slot after load read 0.00–0.05 ms under the first at home, low and survey, about
 what sharing saved; its close camera framed a frozen hull out of place and does not count.
-Static and dynamic buffer usage read the same, 1.52–1.53 ms at close.
+Static and dynamic buffer usage read the same, 1.52–1.53 ms at close. The counts here, and
+the freeze and static readings, came from scratch builds that were not committed.
 
 ## Gate 6, before and after
 
