@@ -27,18 +27,19 @@ const H = VENTFRONT_DIVIDE_HEADER.heightM;
  * The shapes moved outlines, not the water between seats. Every straight line
  * from one spawn to another crosses the cells it always did, and kelp and vent
  * kept their counts; the lip's notches gave eight cells of trench to open water
- * and the reef tips took four of open water for coral. `maps.test.ts` counts
- * both. A first draft cut trench bays into the row the bases stand on, which
- * put the loudest water on the map between neighbouring seats and turned an
- * eight-minute AI duel into a 272-second rout.
+ * and the reef tips took four of open water for coral. `maps.test.ts` keeps
+ * trench off those lines and pins the counts. A first draft cut trench bays
+ * into the row the bases stand on, which put the loudest water on the map
+ * between neighbouring seats and turned an eight-minute AI duel into a
+ * 272-second rout.
  *
- * Every number below is a whole 250 m cell (issue #157, docs/maps.md "How a
- * map is written"). The rectangles before these were re-stated that way when
- * the centre rule landed: the cells this map painted were the cells it had
- * always played on, apart from the west plateaus, which had quietly grown a
- * column the east ones could not have — the map edge clipped that same column
- * on the far side, so a map that says it is symmetric across both axes was
- * 250 m of kelp wider on the west.
+ * Every number a region below states is a whole 250 m cell (issue #157,
+ * docs/maps.md "How a map is written"). The rectangles before these were
+ * re-stated that way when the centre rule landed: the cells this map painted
+ * were the cells it had always played on, apart from the west plateaus, which
+ * had quietly grown a column the east ones could not have — the map edge
+ * clipped that same column on the far side, so a map that says it is
+ * symmetric across both axes was 250 m of kelp wider on the west.
  *
  * The four plateaus then grew deliberately, all four at once, to close the
  * gutter their own bases stood in (#622). On the other axis: the #157 fault
@@ -131,8 +132,9 @@ export const VENTFRONT_DIVIDE: MapDefinition = {
     // "North/South: Abyssal Trenches". The loud way round, full width as ever.
     // The lip bites into each plateau's far corner, beside the promontory the
     // plateau pushes out over it, and falls back in two notches across the gap.
-    // It keeps off the row the bases stand on, which is the line between
-    // neighbouring seats.
+    // It reaches the row the bases stand on only beyond the seats, so it keeps
+    // off the line between neighbouring seats, as it keeps off every line
+    // between two seats.
     {
       shape: 'polygon',
       points: [

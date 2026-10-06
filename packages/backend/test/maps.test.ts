@@ -562,12 +562,15 @@ describe('Ventfront Divide', () => {
     }
   });
 
-  it('moved little ground between biomes when it was drawn in shapes (#1106)', () => {
-    // The rectangles painted 256 cells of trench, 264 of kelp, 248 of open
-    // water, 208 of vent and 48 of coral. A reshape is new content and never a
-    // balance lever (docs/maps.md, "How a map is written"), so kelp and vent
-    // keep their counts. The trench lip's notches gave eight cells to open
-    // water, and the reef tips, a cell past the rift at each end, took four.
+  it('pins how many cells each biome holds, so an outline edit shows here (#1106)', () => {
+    // Biome is PF, so these counts are the map's PF landscape in five numbers,
+    // and an edit to an outline that moves them should be seen rather than
+    // pass. The rectangles painted 256 cells of trench, 264 of kelp, 248 of
+    // open water, 208 of vent and 48 of coral. The shapes keep kelp and vent;
+    // the trench lip's notches gave eight cells to open water, and the reef
+    // tips, a cell past the rift at each end, took four from it. These are net
+    // counts: 92 of the 1,024 cells changed biome, most of them trading places
+    // across an outline.
     const grid = terrainFor(VENTFRONT_DIVIDE).serialize();
     const cells = (biome: Biome) => grid.biomes.filter((b) => b === biome).length;
     assert.deepEqual(
