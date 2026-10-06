@@ -241,4 +241,5 @@ bathyarch.baseLamp(
 }
 
 metreTrue(root, L, { drawn: DRAWN });
-await exportGlb(root, 'sentinel-turret-bathyarch.glb', { trim: bathyarch.TRIM });
+// Not on the Consortium's sheet until trim.mjs lays a yawed flat part in its own frame (#1124): the 29° turret and 45° anchor feet get diagonal seams.
+await exportGlb(root, 'sentinel-turret-bathyarch.glb');

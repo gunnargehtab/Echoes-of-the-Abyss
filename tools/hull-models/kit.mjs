@@ -884,15 +884,18 @@ export function holdCrown(root, crownM, { tall = null, tolerance = 0.01 } = {}) 
  * mouth in it, the apron of scorched ground, the wellhead clamp and the draw
  * manifold over the mouth — "a basalt chimney at the centre with a wellhead
  * clamp and a draw manifold over its mouth" (docs/asset-prompts-3d.md,
- * STRUCTURE — Vent Tap). `rock` clads the chimney, its lobes, the apron and
- * the clamp; `steel` the manifold; `mouth` is the lit ember under it.
+ * STRUCTURE — Vent Tap). `rock` clads the chimney, its lobes and the apron,
+ * and the clamp too unless `clamp` is given — a navy whose ground is a
+ * finish of its own keeps the clamp on its steel that way (the Consortium's
+ * `ground_rust` under an `oxide_rust` clamp, #1107); `steel` the manifold;
+ * `mouth` is the lit ember under it.
  *
  * The chimney and both rings are lofts stood on end — lathed along X as every
  * kit body is, then turned upright on the node — which is how the approved
  * files carry them. The rings have a crown station so they read as a clamp
  * and a manifold rather than two washers.
  */
-export function ventWellhead(root, { rock, mouth, steel }, opts = {}) {
+export function ventWellhead(root, { rock, mouth, steel, clamp: clampMat = rock }, opts = {}) {
   // Each group is the files' numbers with a caller's laid over them, key by
   // key, so a navy's facet pass passes `{ facets }` and nothing else (#919,
   // `asked`); the counts are the approved files' own.
@@ -964,7 +967,7 @@ export function ventWellhead(root, { rock, mouth, steel }, opts = {}) {
       ],
       asked(facets, Math.max(r, crown))
     );
-  add(root, 'clamp_ring', ring(clamp), rock, [0, clamp.y, 0], upright);
+  add(root, 'clamp_ring', ring(clamp), clampMat, [0, clamp.y, 0], upright);
   add(root, 'manifold_ring', ring(manifold), steel, [0, manifold.y, 0], upright);
 }
 

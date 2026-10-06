@@ -87,6 +87,14 @@ export const ink = {
   ironGrey: () => clad('iron_grey', hex('#8C8378'), 0.32, 0.72),
   oxideRust: () => clad('oxide_rust', hex('#3D2B1F'), 0.1, 0.95),
   hazardAmber: () => clad('hazard_amber', hex('#F2B233'), 0.15, 0.6),
+  // `oxide_rust`'s hex and finish under a name of its own, as the Order's
+  // `alloy_white` is `pale_alloy`'s hex: the ground a structure stands on —
+  // the Bio-reactor's kelp holdfast mat, the Vent Tap's basalt chimney,
+  // lobes and apron — which is kelp and rock and not plate, so the trim
+  // sheet leaves it bare (`TRIM` `untagged`, #1107). The anchor feet, the
+  // clamp, the valves and the flanges bolted into it stay `oxide_rust` and
+  // keep their plate.
+  groundRust: () => clad('ground_rust', hex('#3D2B1F'), 0.1, 0.95),
   /**
    * The amber lamp: the token in `emissive` on the kit's near-black base —
    * the navy's plain amber fixture, on twenty-four models, hull or structure:
@@ -208,8 +216,11 @@ export const ink = {
  * which are foam and not lapped, riveted plate, and off `amber_lamp_unlit`,
  * the lamp family's base worn dark by a part the block lights in a later
  * band (`amberLampUnlit`), as the Order leaves `crystal_seam_unlit` bare and
- * the Commune `bio_vein_unlit`; both are laid out and left bare, and the
- * lamps are never tagged (trim.mjs). `name` is the file sheets.mjs draws
+ * the Commune `bio_vein_unlit`, and off `ground_rust`, the Bio-reactor's
+ * kelp holdfast and the Vent Tap's basalt (`groundRust`): ground, kelp and
+ * basalt are not plate, and under `oxide_rust`'s name they wore its rivets.
+ * All three are laid out and left bare, and the lamps are never tagged
+ * (trim.mjs). `name` is the file sheets.mjs draws
  * (packages/frontend/src/assets/trim/bathyarch.png) and the tag a laid-out
  * material carries. The Bulwark was the first hull on it (#1005); since
  * #1107 every Consortium model is laid on it, each script passing this one
@@ -236,7 +247,7 @@ export const TRIM = {
   rivetInM: 0.45,
   samples: 4,
   grain: 0.015,
-  untagged: ['amber_lamp_unlit', 'baffle_foam'],
+  untagged: ['amber_lamp_unlit', 'baffle_foam', 'ground_rust'],
 };
 
 /**

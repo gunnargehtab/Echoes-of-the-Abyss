@@ -94,6 +94,7 @@ const cut = bathyarch.cut(L / DRAWN);
 const black = bathyarch.ink.hullBlack();
 const grey = bathyarch.ink.ironGrey();
 const rust = bathyarch.ink.oxideRust();
+const ground = bathyarch.ink.groundRust();
 const amber = bathyarch.ink.hazardAmber();
 const lamp = bathyarch.ink.amberLamp();
 const vent = bathyarch.ink.amberVent();
@@ -102,7 +103,9 @@ const flood = bathyarch.ink.amberFlood();
 const root = new THREE.Group();
 root.name = 'vent_tap_bathyarch';
 
-// The wellhead in rust, the manifold in iron, the ember mouth flood-lit.
+// The wellhead's basalt — chimney, lobes and apron — in ground rust, the
+// rust's hex under the ground's own name so the trim sheet leaves it bare
+// (#1107); its clamp in rust, the manifold in iron, the ember mouth flood-lit.
 // The kit's skeleton at the Klaxon's counts (#919): every round part of it
 // asks the rule at its own radius — fourteen on the chimney, the apron and
 // the two rings, where the four files share ten and sixteen; the lobes
@@ -119,7 +122,7 @@ root.name = 'vent_tap_bathyarch';
 // — the Order's answer on its tap (vent-tap-hadron.mjs).
 ventWellhead(
   root,
-  { rock: rust, mouth: flood, steel: grey },
+  { rock: ground, clamp: rust, mouth: flood, steel: grey },
   {
     chimney: { facets: cut.round },
     lobes: { facets: cut.orb },
@@ -238,4 +241,5 @@ if (Math.abs(Math.max(size.x, size.z) - DRAWN) > 1e-3)
   throw new Error(
     `${root.name}: drawn ${Math.max(size.x, size.z).toFixed(4)} across; the facet rule was asked at ${DRAWN}`
   );
-await exportGlb(root, 'vent-tap-bathyarch.glb', { trim: bathyarch.TRIM });
+// Not on the Consortium's sheet until trim.mjs lays a yawed flat part in its own frame (#1124): the 45° exchanger bands get diagonal seams.
+await exportGlb(root, 'vent-tap-bathyarch.glb');
