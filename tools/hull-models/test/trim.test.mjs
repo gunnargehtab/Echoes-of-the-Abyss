@@ -298,7 +298,8 @@ test('a facet grid is aligned, and every band turned over is itself', () => {
     const y1 = b.v1 * n;
     let worst = 0;
     for (let y = y0; y < (y0 + y1) / 2; y++)
-      for (let x = 0; x < n; x++) worst = Math.max(worst, Math.abs(at(x, y) - at(x, y0 + y1 - 1 - y)));
+      for (let x = 0; x < n; x++)
+        worst = Math.max(worst, Math.abs(at(x, y) - at(x, y0 + y1 - 1 - y)));
     assert.ok(worst <= 1, `the ${b.rows}-strake band differs from itself turned over by ${worst}`);
     // No stagger: every strake's butts are at the wrap's quarters, none at its halves.
     const h = (y1 - y0) / b.rows;
@@ -341,7 +342,10 @@ test('a facet joint is a hairline lit on both sides, as wide in metres both ways
     [left.k + right.k, texU],
     [below.k + above.k, texV],
   ])
-    assert.ok(Math.abs(k * tex - HADRON.seamM) <= tex, `${k} texels of ${tex} m for ${HADRON.seamM}`);
+    assert.ok(
+      Math.abs(k * tex - HADRON.seamM) <= tex,
+      `${k} texels of ${tex} m for ${HADRON.seamM}`
+    );
   // The chamfer: past the hairline on every side, lighter than the panel.
   for (const side of [left, right, below, above])
     assert.ok(side.past > panel, `${side.past} past the seam, the panel ${panel}`);
@@ -358,11 +362,13 @@ test('the facet layout lays port as starboard turned over, not shifted', () => {
   // Plates whose long side runs across the beam, where a layout measured
   // from each part's own lowest z puts the port twin's joints at other
   // distances from the keel (#1109): a starboard plate, its port twin, and
-  // one plate across the keel.
+  // one plate across the keel, 4 m wide so its face takes the one-strake
+  // band, the one band whose two plates differ in tone. There a joint on
+  // the centreline would swap the plates either side of it, and show.
   const root = new THREE.Group();
   const mat = steel();
-  const plate = (name, z0, z1) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(10, 0.5, z1 - z0), mat);
+  const plate = (name, z0, z1, wide = 10) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(wide, 0.5, z1 - z0), mat);
     m.name = name;
     m.position.set(0, 0, (z0 + z1) / 2);
     root.add(m);
@@ -370,7 +376,7 @@ test('the facet layout lays port as starboard turned over, not shifted', () => {
   };
   const star = plate('seam_s', 3.5, 14.6);
   const port = plate('seam_p', -14.6, -3.5);
-  const keel = plate('seam_0', -7.3, 7.3);
+  const keel = plate('seam_0', -7.3, 7.3, 4);
   const sheet = drawTrimSheet(HADRON);
   layoutTrim(root, sheet, HADRON);
   // A flat face's UV is affine in position, so one top triangle gives the
@@ -384,7 +390,9 @@ test('the facet layout lays port as starboard turned over, not shifted', () => {
       if (ids.every((i) => g.attributes.normal.getY(i) > 0.9)) tri.push(...ids);
     }
     const p = tri.map((i) =>
-      new THREE.Vector3().fromBufferAttribute(g.attributes.position, i).applyMatrix4(mesh.matrixWorld)
+      new THREE.Vector3()
+        .fromBufferAttribute(g.attributes.position, i)
+        .applyMatrix4(mesh.matrixWorld)
     );
     const uv = tri.map((i) => [g.attributes.uv.getX(i), g.attributes.uv.getY(i)]);
     // Solve [x z 1] · [a b c] = uv for each channel.
@@ -403,18 +411,25 @@ test('the facet layout lays port as starboard turned over, not shifted', () => {
   const [s, p, k] = [star, port, keel].map(topMap);
   let worst = 0;
   let joints = 0;
-  // An irrational step, so no sample sits on a texel's edge.
+  const tones = new Set();
+  // An irrational step, so no sample sits on a texel's edge, and every
+  // sample on its plate: the twins' 10 by 11.1 m, the keel's 4 by 14.6.
   for (let i = 0; i < 400; i++) {
-    const x = -4.9 + ((i * 0.6180339887) % 1) * 9.8;
-    const z = 3.6 + ((i * 0.7548776662) % 1) * 10.9;
+    const a = (i * 0.6180339887) % 1;
+    const b = (i * 0.7548776662) % 1;
+    const [x, z] = [-4.9 + a * 9.8, 3.6 + b * 10.9];
+    const [xk, zk] = [-1.95 + a * 3.9, 0.05 + b * 7.2];
     const pair = [
       [texel(s(x, z)), texel(p(x, -z))],
-      [texel(k(x, z * 0.65)), texel(k(x, -z * 0.65))],
+      [texel(k(xk, zk)), texel(k(xk, -zk))],
     ];
-    for (const [a, b] of pair) worst = Math.max(worst, Math.abs(a - b));
+    for (const [one, other] of pair) worst = Math.max(worst, Math.abs(one - other));
     if (texel(s(x, z)) < 200) joints++;
+    const t = texel(k(xk, zk));
+    if (t > 230 && t < 255) tones.add(t);
   }
   assert.ok(joints > 0, 'no sample fell on a joint, so the pairs prove nothing');
+  assert.ok(tones.size > 1, `the keel plate's panels are one tone, ${[...tones]}: parity hides`);
   assert.ok(worst <= 1, `a point and its mirror differ by ${worst} grey levels`);
 });
 

@@ -76,9 +76,12 @@
  * mirrored about each band's middle, so a flat face laid port and
  * starboard reads the same from either beam once the table's `mirror` has
  * `u` along the beam measured from the centreline out (`layoutMesh`). A
- * faceted round part is not quite that: a joint that falls mid-facet where
- * the facet tapers follows the triangle diagonal and kinks, about a pixel
- * at the conn view's 3 px/m, which #746 takes. Nothing on it weathers, and
+ * round part is not quite that, two ways (#746): a joint that falls
+ * mid-facet where the facet tapers follows the triangle diagonal and
+ * kinks, about a pixel at the conn view's 3 px/m, and a one-plate round
+ * laid as a port and starboard pair unrolls from a basis the mirror turns
+ * over, so its one butt lies inboard on one and outboard on the other.
+ * Nothing on it weathers, and
  * `untagged` keeps the sheet off a cladding that is not panelling
  * (`layoutTrim`).
  */
@@ -199,8 +202,9 @@ function valueNoise(xm, ym, cellM, cells, seed) {
  * `layoutMesh` lays the port face of a keel-centred part against its
  * starboard face, and a port part against its twin — and the table's
  * `mirror` makes `u` along the beam the same on both sides. That is a
- * flat face's mirror; a round part unrolls by angle, and a joint mid-facet
- * on a tapering facet kinks (#746). The plate and tergite patterns do not
+ * flat face's mirror; a round part unrolls by angle from a basis of its
+ * own, and neither a joint mid-facet on a tapering facet nor a one-plate
+ * pair's butt mirrors (#746). The plate and tergite patterns do not
  * read the chamfer keys.
  */
 export function drawTrimSheet({
