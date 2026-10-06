@@ -66,6 +66,19 @@
  * layout is the kit's (docs/art-direction.md "UV layout and trim sheets —
  * SPEC").
  *
+ * OCCLUSION (#1111). The first hull to carry a baked occlusion map, the
+ * owner's choice for the issue's first hull: 150 m of tiers, turret and
+ * citadel standing on a slab, with plates, stacks and risers on it for a map
+ * to shade under. The bake is kit.mjs `exportGlb`'s `occlusion` at 512²,
+ * the rest its defaults (occlusion.mjs), run after the trim so a vertex it
+ * splits carries its layout: 1,025 charts filling 70 % of the atlas at 1.38
+ * texels a metre, 64 rays to 37.5 m, 57.4 s. The file grows from 331,428 to
+ * 587,556 bytes, 170,852 of them the PNG. Nothing moved: `diff.mjs
+ * bulwark-bathyarch` reads every part where it was, 162 parts and 2,552
+ * triangles on both sides, and `outlines.mjs` leaves
+ * hullOutlines.generated.ts unchanged. Nothing here changed for it but the
+ * export line (docs/art-direction.md "Bevels and baked occlusion — SPEC").
+ *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.
  *
@@ -219,4 +232,5 @@ bathyarch.bowStencil(root, amber, { at: [58, 9.2, 0], size: [10, 0.3, 2] });
 // The bow lamp stands on the foredeck at the bow's lip, over the plough (header).
 bathyarch.bowLamp(root, lampM, { at: [74.5, 7.5, 0], size: [1.5, 1, 4] });
 
-await exportGlb(root, 'bulwark-bathyarch.glb', { trim: bathyarch.TRIM });
+// OCCLUSION (#1111): the first hull baked, the header's OCCLUSION paragraph.
+await exportGlb(root, 'bulwark-bathyarch.glb', { trim: bathyarch.TRIM, occlusion: { size: 512 } });
