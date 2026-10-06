@@ -472,14 +472,20 @@ parameterisation, an extruded plate its outline's metres, a sweep zeros, and not
 any of them. A model opts in by one argument to its export (`tools/hull-models/kit.mjs`
 `exportGlb`'s `trim`, a navy's table such as `factions/bathyarch.mjs` `TRIM`), and
 `tools/hull-models/trim.mjs` lays every part at export, before the occlusion bake lays
-`uv1`: each triangle on the world plane its face is most along, plates running along the
-part's longer in-plane extent from the part's own edge at one wrap of the sheet per
+`uv1`: each triangle on the plane of the part's frame its face is most along, plates running
+along the part's longer in-plane extent from the part's own edge at one wrap of the sheet per
 **24 m**, and the shorter extent spread over one of four bands of **1, 2, 4 or 8** strakes,
 the band whose strakes come nearest **6 m** over it — a 60 m deck gets eight of 7.5 m, a 14 m
 flank two of 7, a rivet one. A round part (a cylinder, lathe, sphere, torus or capsule, by
 its geometry's type) is unrolled instead, whole 12 m plates round its girth, so the unroll's
 seam falls on a plate seam along the even strakes and mid-plate along the staggered ones,
-and its caps laid flat. No vertex moves: a vertex whose corners disagree
+and its caps laid flat. The part's frame is the world's, turned by whatever the part is
+yawed or tilted off the nearest axis, so a part square to the axes or a quarter turn off
+them lays on the world's planes, and a box the Sentinel Turret yaws 29° keeps its seams
+along its own edges rather than across them (#1107). A round part of four facets is still
+unrolled by angle, so the two triangles of a tapered facet can disagree;
+[#1124](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1124) holds that. No
+vertex moves: a vertex whose corners disagree
 is split, as the occlusion bake splits a chart's edge, so `diff.mjs` reads the file as
 unchanged and `check.mjs` compares the layout to 1/4,096 of the sheet.
 
@@ -532,10 +538,11 @@ more.
 On the GTX 1070, with ten Bulwarks on screen at `capture.mjs`' four cameras on Ventfront,
 gate 6's queued GPU time reads 0.71 to 0.96 ms at pixel ratio 1 and 1.32 to 1.91 ms at 1.5,
 at four taps and at one alike within 0.03 ms a camera
-([readings](screenshots/issue-1107/anisotropy-gate6.json)). Sorrowgate's Consortium
-delegation and the fight station's opening fleet carry no laid-out Consortium model until
-the Consortium's others are, and are read then. The Directorate's sheet below takes the
-same four taps; its own GPU reading is the one #1108 leaves open.
+([readings](screenshots/issue-1107/anisotropy-gate6.json)). The fight station's opening
+fleet is read below, once the Consortium's others were laid; Sorrowgate's Consortium
+delegation is contacts, which the conn view never draws as geometry, so it has no sheet to
+read. The Directorate's sheet below takes the same four taps; its own GPU reading is the one
+#1108 leaves open.
 
 Embedding the sheet in each file was the first cut and the owner's call to reverse: 31 KB a
 model that gzip cannot shrink, 2.9 MB over the 94 navy models were every navy given a sheet,
@@ -564,9 +571,67 @@ them and the tags; the library goes from 19,738,720 to **19,745,540 raw bytes** 
 2,564,136 to **2,567,479 gzipped**. The Consortium's sheet is **46,837 bytes** once, in the
 client's assets (31,159 before its laps, ramps and grime), and on the GPU three uploads it
 as RGBA8 with mipmaps, 1.33 MiB a navy present at 512², the line gate 6 holds the occlusion
-map to per model. Which hull is laid next is a call per hull, and cheap: a second
-Consortium script passes the same table and re-exports itself alone; another navy's plate
-starts in its own faction module, as a table and a drawn sheet.
+map to per model. A second Consortium script passes the same table and re-exports itself
+alone, which is how the rest of the navy was laid (below); another navy's plate starts in its
+own faction module, as a table and a drawn sheet.
+
+The rest of the Consortium ([#1107](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1107))
+is laid on that table: twenty-two of its other twenty-three models, fourteen hulls and eight
+structures, each script passing `bathyarch.TRIM` as the Bulwark's does. Their 3,103 parts lay
+**43,040** faces flat and **20,834** unrolled — 50,978 on the one-strake band, 5,854 on two,
+2,156 on four, 4,886 on eight — and split **7,556** vertices; no vertex moved, `diff.mjs`
+reading every shape unchanged, and the Bulwark re-exports byte for byte. Every file is
+metre-true, its length the design length, so a plate is 12 m in the water as in the script.
+Seventeen of the twenty-two carry a flat part turned off the axes, which the layout lays in
+its own frame (above): before it did, the Sentinel Turret's housing, the Bio-reactor's booms
+and the Bastion's quarters took seams across their own edges. The frame re-lays 21 of the
+Directorate's Light Scout's 32 parts too, its segments, tail plates, limbs and telson each a
+few degrees off the axes, and moves the UVs of three lamp boxes on the Knights' Responsory
+that nothing samples; the Reed is byte for byte. A part turned exactly 45° ties to
+the lower axis, so of four diagonal arms — the Vent Tap's exchangers, the Sentinel's feet,
+the Baffle Barge's emitter fins — two pairs lay alike, each pair the other turned end for
+end. The Harvester waits on
+[#1124](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1124): its bow apron is a
+four-facet taper, unrolled by angle, and its seams zig-zag where the facet's two triangles
+disagree.
+
+The sheet is on `hull_black`, `iron_grey`, `oxide_rust` and `hazard_amber` wherever a model
+carries them, and three finishes stay bare, the owner's calls. `baffle_foam`, the Baffle
+Barge's vanes and pads, is foam and not lapped plate. `amber_lamp_unlit`, the lamp family's
+base the Furnace and the Bio-reactor wear dark, stays bare as the Order's and the Commune's
+do. `ground_rust` is `oxide_rust`'s hex under a second name
+([asset-prompts-3d.md](asset-prompts-3d.md)) on the ground a structure stands in — the
+Bio-reactor's kelp holdfast and the Vent Tap's basalt chimney, lobes and apron — which under
+the rust's own name wore its rivets, while the feet, clamp and flanges bolted into it keep
+their plate (`ventWellhead` takes the clamp's finish apart from the rock's for that).
+
+The files grow more than the Bulwark's did, since the layout lays each part where it stands
+and gives a geometry two parts shared a copy each, with UVs of its own (`layoutTrim`); the
+Bulwark shared none. The twenty-two go from 6,041,688 to **7,129,644 bytes** raw and from
+445,186 to **605,182** gzipped, the Corvette from 132,708 to 301,128 as its 59 position
+buffers become 138; the library goes from 20,026,136 to **21,114,092 raw bytes** and from
+2,769,351 to **2,927,652 gzipped**, and 97 materials carry a trim tag where 13 did. The
+sprite rebake changes the albedo alone: twenty-two maps from 228,610 to **1,371,793 bytes**,
+the Bastion's from 45,554 to 319,791, since the sheet's grime and grain do not compress as
+flat ink did. The heights and emissives are byte for byte what they were, so every glow
+stays where gate 3 put it. Each sprite reads 0.83 to 0.87 of its old linear luminance, the
+Beacon the darkest, and the Bio-reactor and the Vent Tap 0.89 and 0.90 with their ground
+bare. Delivery is the cost: a Consortium opening on Ventfront — the Light Scout, two
+Caissons, a Harvester, the Bastion and a Foundry — fetches 36,311 gzipped bytes more model
+and 404,825 more sprite, the Bastion's map most of it.
+
+Gate 6 is read on the GTX 1070, unpaced and queued, main's files against these at pixel
+ratio 1 and 1.5 ([readings](screenshots/issue-1107/gate6.json)), with no staging, since the
+first client takes the Consortium by default. Ventfront's opening, four hulls and two
+structures on screen, draws the same 56 to 57 calls and 150,676 to 150,696 triangles and one
+texture more, 21, the sheet; queued GPU time reads 0.85 to 0.98 ms at ratio 1 and 1.48 to
+1.85 ms at 1.5, within 0.06 ms a camera of main's. The fight station draws 59 calls and
+150,984 triangles either side and reads 1.00 and 1.65 ms against 0.95 and 1.64. Sorrowgate
+does not move: 30 to 38 calls, 46,607 to 46,634 triangles and 11 to 17 textures before and
+after, and its GPU time within 0.02 ms, since its six own hulls are the court's
+([mission-sorrowgate.md](mission-sorrowgate.md) §2). [The conn view](screenshots/issue-1107/conn-view.png)
+shows the opening's laid models close, main above and this below, and
+[the lit table](screenshots/issue-1107/lit-table.png) each laid model's conn row.
 
 The Directorate's sheet ([#1108](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1108))
 keeps that layout machinery, but not the Consortium's rectangular patchwork or its
@@ -771,15 +836,17 @@ view's frame.
 | 3 | Bevel coverage and baked AO ([#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002)) | Both landed ("Bevels and baked occlusion — SPEC" above). Coverage measured: 30 of 190 extruded plates are bevelled, and plates are 3 % of 7,480 parts, so no primitive was added. The Knights' Bastion carries the first baked occlusion map and the Consortium's Bulwark the first hull's ([#1111](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1111)), each on its own UV set, read by the conn view alone, its silhouette unchanged; the next model is a call per model |
 | 4 | Vignette, chromatic split, camera sway ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)) | All three are built ([Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)). The vignette and the sway use no pass. The split is a colour copy and one full-screen draw after the halo, and gate 6 allocates both. Existing shader-driven kelp sway and water fog are different effects; do not duplicate them. Respect gate 8 and reduced motion |
 | 5 | GLB gzip ([#1004](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1004)) | Built. The nginx image's `mime.types` names no `glb`, so `packages/frontend/nginx.conf` names the type in the models' own location and gzips them at level 6. Delivery cost, not frame quality |
-| 6 | UV layout and trim sheets ([#1005](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1005)) | Landed on one hull a navy for all four navies: the Consortium's Bulwark, the Directorate's Light Scout ([#1108](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1108)), the Knights' Responsory ([#1109](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1109)) and the Commune's Reed ([#1110](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1110)), each on its navy's sheet ("UV layout and trim sheets — SPEC" above). At #1005, 6,863 of 7,025 primitives carry UV0 and 13 carry `uvAlike`'s zeros, but attribute presence is not a layout: the Bulwark's 162 parts are laid out in metres by its script, and four materials are tagged for the Consortium's sheet, one PNG a navy attached at load, luminance only, hue still the palette's. Sorrowgate's triplanar surfaces are kept under it; the next hull is a call per hull |
+| 6 | UV layout and trim sheets ([#1005](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1005)) | Landed on all four navies: the Consortium's Bulwark and, since [#1107](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1107), twenty-two of its other twenty-three models, the Harvester waiting on [#1124](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1124), and one hull a navy for the other three: the Directorate's Light Scout ([#1108](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1108)), the Knights' Responsory ([#1109](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1109)) and the Commune's Reed ([#1110](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1110)), each on its navy's sheet ("UV layout and trim sheets — SPEC" above). At #1005, 6,863 of 7,025 primitives carry UV0 and 13 carry `uvAlike`'s zeros, but attribute presence is not a layout: the Bulwark's 162 parts are laid out in metres by its script, and four materials are tagged for the Consortium's sheet, one PNG a navy attached at load, luminance only, hue still the palette's. Sorrowgate's triplanar surfaces are kept under it; the next hull in the other three navies is a call per hull |
 | 7 | Shallow caustics ([#1006](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1006)) | Decided: none. The sunlit layer is the milky Lid, which scatters rather than focuses, and the water ramp already carries what light reaches the Shelf ("Shallow caustics — SPEC" above). Nothing to build |
 | 8 | WebGPU/TSL ([#1007](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1007)) | Defer migration until a separate feasibility decision. Water, survey, surface and sway shader patches depend on the current WebGL pipeline; this is not a renderer-constructor swap. The feasibility note is written ([webgpu-feasibility.md](webgpu-feasibility.md)): every patch has a TSL equivalent, but under r169 frame-wide tone mapping holds gate 3 only if every material carries its own curve, one-pixel points cost gate 6 triangles, and the halo's depth copy costs gate 6 a call or a target |
 
 Over the model library as it stood at `1df288a`, `node tools/render-stack/audit.mjs`
 counts **17,819,812 raw bytes** and **2,211,283 gzip bytes** over 108 source GLBs with
 Node's default gzip settings. It reads the library as it stands, so the bytes move
-whenever a model does: with the Bastion's and the Bulwark's occlusion maps it counts
-20,026,136 and 2,769,351, and twelve materials with an occlusion texture ("Bevels and baked occlusion — SPEC" above).
+whenever a model does: with the Bastion's and the Bulwark's occlusion maps it counted
+20,026,136 and 2,769,351, and twelve materials with an occlusion texture ("Bevels and baked occlusion — SPEC" above),
+and with the Consortium's other twenty-two on its sheet (#1107) it counts 21,114,092 and
+2,927,652, and 97 materials with a trim tag.
 Those are sums over the source library, not a browser's initial download: Vite hashes
 assets and the client loads them by need. A solo match on the default map, its build at
 `c771ca8` served by nginx 1.24 through `nginx.conf` and the image's `http` settings, fetched
