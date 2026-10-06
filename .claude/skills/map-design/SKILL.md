@@ -13,10 +13,10 @@ The first slice's audited map is Sorrowgate in `docs/visual-reboot.md` §4.
 
 Record a top-down route reading and a vertical section. Name the start, destination,
 alternate route, floor, ceiling, acoustic boundary and irreversible commitment that
-matter to the player. Trace the authored rectangles into the actual 250 m cells.
+matter to the player. Trace the authored regions into the actual 250 m cells.
 
 For a visual-only slice, explicitly retain the map literal, spawns, resources, hazards,
-PF and traversal. Do not change a rectangle to improve a composition. For an approved
+PF and traversal. Do not change a region to improve a composition. For an approved
 mechanic change, amend the canonical table first and hold the painted cells in tests.
 
 ## Keep the two grounds apart

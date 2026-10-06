@@ -153,7 +153,7 @@ The sync point with [campaign.md](campaign.md): every mission block, placed. Mis
 ## 6. For Level Design
 
 - **Maps are cut from regions, not invented beside them.** Each skirmish archetype in [maps.md](maps.md) names the ground it is cut from (the Enclosure, Fivewell, the Fourth Trench, the Fields, the drowned city), so a map's biome mix is a fact about the world before it is a balance decision.
-- **Authoring rules live in [maps.md](maps.md)** — 250 m cell grid, rectangles painted in order, floors and ceilings per region. This document contributes the *where* and the names; it deliberately owns no cell-level numbers.
+- **Authoring rules live in [maps.md](maps.md)** — 250 m cell grid, rectangles, ellipses and polygons painted in order, floors and ceilings per region. This document contributes the *where* and the names; it deliberately owns no cell-level numbers.
 - **The north–south gradient is free asymmetry.** A map set on the west wall should be loud (vents, grid hum, high ambient SIG tolerance); one cut from the plateaus should be quiet enough that any noise is an event. Placing a map on this geography is choosing its acoustic politics.
 - **Neutral ground is ruined ground.** Sorrowgate establishes the pattern: the places factions share are the places none of them built. Coral Ruins is the campaign's home biome for exactly this reason ([campaign.md](campaign.md) §10).
 
