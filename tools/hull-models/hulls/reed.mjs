@@ -142,6 +142,36 @@
  * where they were ten, ten and eight; the vein stays five, the floor. 16
  * parts and 2,448 triangles become 16 and 2,046.
  *
+ * TRIM (#1110). The first Commune hull laid out on the navy's trim sheet:
+ * `exportGlb`'s `trim` takes the Commune's grown skin (factions/pelagia.mjs
+ * `TRIM`, the `grown` pattern) and trim.mjs lays every part's UV0 in
+ * metres before the export. The stem, its two rings, the nose, the nodes
+ * and their lips and seeds unroll — v along each one's axis, so the
+ * sheet's lines are rings round them, and each at one plate of the
+ * sheet's 16 m, half a wrap, which the pattern closes on itself since
+ * everything on it that varies along u repeats a plate (the review found
+ * the first draw's fields, a wrap long, meeting half out of phase down the
+ * port beam) — the two leaves lie flat with their lines along the span,
+ * the fluke flat with its lines along x, chordwise, since its 11.25 m
+ * along x is the longer of its extents against 10.9 up, and the vein, a
+ * `TubeGeometry` that trim.mjs does not count as round, is laid flat too,
+ * 400 of the flat faces, and left bare: 1,149 faces flat and 897 unrolled,
+ * 1,496 on the one-strake band, 90 on two, none on four and 460 on eight,
+ * which is the stem's 60.5 m (`PROFILE`, x −32.5 to 28) at 7.56 m a strake
+ * and 1.89 m an increment.
+ * 314 vertices split, no vertex moved, and four materials tagged —
+ * `chitin_hull`, `growth_ridge`, `algae_membrane`, `spore_pod` — with
+ * `bio_vein_unlit` laid out and left bare, since the table's `untagged`
+ * names it: the vein is a lamp's base worn dark, not skin. The marks are
+ * lamps and never tagged. The file goes from 122,148 to 132,652 bytes, the
+ * split vertices and the glTF JSON naming them and the tags; its 16 parts,
+ * 2,046 triangles, bounds and outline are what they were, which
+ * `diff.mjs reed-pelagia 6bc067ea` reads as the shape unchanged. The two
+ * rings above stay the hull's only geometry rings; the sheet's checks,
+ * a dark 0.5 m line about one increment in four, read between the nodes
+ * as growth marks on the stem's skin, the owner's call so the sheet reads
+ * at the conn view, and add no part.
+ *
  * The hand-drawn entry in silhouettes.ts stays until the kind is wired
  * (docs/models-plan.md §2). The generated outline is fifteen vertices and
  * reads the starboard leaf at +0.131 at x −0.05 and the port at −0.131 at
@@ -423,4 +453,4 @@ pelagia.navMarks(root, light, {
 });
 
 metreTrue(root, L, { drawn: L });
-await exportGlb(root, 'reed-pelagia.glb');
+await exportGlb(root, 'reed-pelagia.glb', { trim: pelagia.TRIM });

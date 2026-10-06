@@ -83,7 +83,18 @@
  * unrolls from a basis the mirror turns over, so at an odd plate count
  * its butts fall on other faces of each twin. Nothing on it
  * weathers, and `untagged` keeps the sheet off a cladding that is not
- * panelling (`layoutTrim`).
+ * panelling (`layoutTrim`). The Commune's `grown` pattern (#1110) keeps
+ * the bands and drops the plate altogether: a grown composite has no butt,
+ * lap or rivet, so it draws growth increments along each strake — lines of
+ * constant `v`, since the layout runs `v` along a round part's axis and
+ * across a flat part's shorter extent, so the same line is a ring round a
+ * pod or a stem and a vein along a leaf — each line jittered off its pitch,
+ * wandering as it goes round, about one in four a heavier check, under a
+ * faint mottle. Nothing on it is a joint, so a plate of the sheet is the
+ * period of what varies along `u` — the wander and the mottle, a whole
+ * number of cells each a plate — which is what closes a round part's
+ * unroll at any whole number of plates, one included, and the wrap is two
+ * of them.
  */
 import * as THREE from 'three';
 import { occludes } from './glb.mjs';
@@ -161,8 +172,10 @@ export function sheetLayout({ plateM = 12 } = {}) {
 }
 
 /**
- * Smooth noise in [0, 1) on a lattice of `cells` a wrap in u, so it tiles
- * the sheet's wrap as the plates do; `seed` picks the field.
+ * Smooth noise in [0, 1) on a lattice that wraps every `cells` cells in u
+ * — a wrap for the plate pattern's grime, so it tiles the sheet as the
+ * plates do, and a plate for the grown pattern's fields, so a one-plate
+ * unroll closes; `seed` picks the field.
  */
 function valueNoise(xm, ym, cellM, cells, seed) {
   const gx = xm / cellM;
@@ -207,6 +220,30 @@ function valueNoise(xm, ym, cellM, cells, seed) {
  * basis the mirror turns over keeps its butts on other faces (#746). The
  * plate and tergite patterns do not
  * read the chamfer keys.
+ *
+ * The `grown` pattern (#1110) draws no joint on either axis. Each strake
+ * carries `increments` growth lines along it, each sitting up to half of
+ * `jitter` of its pitch either way off its station by an integer hash, so
+ * no two strakes space theirs alike, and each wandering across the strake
+ * by `wanderM` as it goes along, on a noise of `wanderCellM` cells, a
+ * whole number of them a plate so the field repeats each plate, as the
+ * mottle's do: a round part unrolls at whole plates and a one-plate part
+ * spans half a wrap, so a field with the wrap's period met itself at the
+ * unroll's seam half a field out of phase (the review's 51 levels down the
+ * Reed's port beam). A straight line at a regular pitch reads as ruled
+ * paper, and a segmented worm is what a lathe stacked from drums reads
+ * as. A line
+ * is `ringM` wide at `ring` of the light, and about one in `checkEvery` is
+ * a heavier check, `checkM` at `check`, which is the mark that survives
+ * the conn view's 3 px/m where the fine lines mipmap to a tone; both vary
+ * a little in width and depth by the line, and both are held to a texel
+ * across the strake as a lap's seam is. `tone` is keyed on the increment a
+ * texel lies in rather than the strake, so the one step in tone falls on
+ * a line and never on the strake's edge, and `mottle` in two octaves from
+ * `mottleM` is the slow variation that reads at range. It reads none of
+ * the plate's seam, lap, lip, weather, ramp, grime, rivet, arch, growth or
+ * chamfer keys, and the other three patterns read none of these, so a
+ * table that does not say `pattern: 'grown'` draws what it drew.
  */
 export function drawTrimSheet({
   pattern = 'plate',
@@ -236,6 +273,17 @@ export function drawTrimSheet({
   archPx = 0,
   growth = 0,
   growthRings = 5,
+  increments = 4,
+  jitter = 0.6,
+  ringM = 0.15,
+  ring = 0.8,
+  checkM = 0.3,
+  check = 0.5,
+  checkEvery = 4,
+  wanderM = 0.5,
+  wanderCellM = 4,
+  mottle = 0,
+  mottleM = 8,
 } = {}) {
   const bands = bandsOf();
   const pixels = new Uint8Array(size * size);
@@ -261,6 +309,75 @@ export function drawTrimSheet({
     const s = Math.min(band.rows - 1, Math.floor(span * band.rows));
     const t = span * band.rows - s;
     const strakeH = ((band.v1 - band.v0) * size) / band.rows;
+    if (pattern === 'grown') {
+      // Growth increments along the strake (#1110): a line is named by its
+      // band, strake and index, and everything about it — its station off
+      // the pitch, its wander's field, whether it is a check, its width and
+      // depth — is hashed from that name, so a strake's lines never repeat
+      // its neighbour's and the draw is the same on every machine. The
+      // lines of the strakes either side are read too, since a line
+      // jittered and wandered toward the edge crosses it; past `reach` a
+      // line cannot touch the texel, so its wander is not computed, and it
+      // counts only as the increment the texel lies above.
+      // Every field that varies along u repeats each plate, not each wrap
+      // (#1110 review): a round part unrolls at whole plates, so a one-plate
+      // part spans half a wrap and its two unroll edges meet at u and
+      // u + ½, where a field with the wrap's period is half a field out of
+      // phase with itself — 51 levels in the eight-strake band, a row of
+      // dark diamonds down the Reed's port beam, one per ring. A whole
+      // number of cells a plate closes the lattice on every whole-plate
+      // unroll, odd or even, with `layoutMesh` untouched. At one cell a
+      // field is flat along u, so a navy's plate holds at least two of each.
+      const texV = strakeM / strakeH;
+      const xm = u * wrapM;
+      const tm = t * strakeM;
+      const pitch = strakeM / increments;
+      const cells = Math.max(1, Math.round(plateM / wanderCellM));
+      const reach = wanderM + 0.65 * Math.max(ringM, checkM);
+      let L = light;
+      let under = -Infinity;
+      let underId = null;
+      for (let ss = s - 1; ss <= s + 1; ss++) {
+        const k0 = ss < s ? Math.max(0, increments - 2) : 0;
+        const k1 = ss > s ? Math.min(1, increments - 1) : increments - 1;
+        for (let k = k0; k <= k1; k++) {
+          const id = [band.rows, ss, k];
+          const rest = (k + 0.5 + (hash(...id, 1) - 0.5) * jitter) * pitch + (ss - s) * strakeM;
+          const d0 = tm - rest;
+          if (Math.abs(d0) > reach) {
+            if (d0 > 0 && rest > under) {
+              under = rest;
+              underId = id;
+            }
+            continue;
+          }
+          const seed = 7 + 1000 * band.rows + 50 * (ss + 1) + k;
+          const y = rest + (valueNoise(xm, 0, plateM / cells, cells, seed) - 0.5) * 2 * wanderM;
+          const d = tm - y;
+          if (d > 0 && y > under) {
+            under = y;
+            underId = id;
+          }
+          const heavy = hash(...id, 2) < 1 / checkEvery;
+          const w = Math.max((heavy ? checkM : ringM) * (0.7 + 0.6 * hash(...id, 3)), texV);
+          if (Math.abs(d) < w / 2) {
+            const depth = Math.min(1, (heavy ? check : ring) * (0.9 + 0.2 * hash(...id, 4)));
+            L = Math.min(L, light * depth);
+          }
+        }
+      }
+      if (underId) L *= 1 - tone * hash(...underId, 5);
+      if (mottle) {
+        const coarseN = Math.max(1, Math.round(plateM / mottleM));
+        const fineN = Math.max(1, Math.round((8 * plateM) / (3 * mottleM)));
+        const ym = (s + t) * strakeM;
+        const n =
+          0.65 * valueNoise(xm, ym, plateM / coarseN, coarseN, 17) +
+          0.35 * valueNoise(xm, ym, plateM / fineN, fineN, 19);
+        L *= 1 - mottle * smoothstep(0.3, 0.8, n);
+      }
+      return L;
+    }
     // A tergite overlaps across the shell, not in staggered rectangular
     // patches. The arch meets its neighbour at both strake edges; only
     // the transverse seam is inked, never a grid around each patch.

@@ -231,6 +231,105 @@ export const ink = {
 };
 
 /**
+ * The Commune's skin, as the trim sheet kit.mjs `exportGlb` lays a hull
+ * over (trim.mjs `grown`, #1110): "grown chitin-and-algae composite hull
+ * with growth rings ... nothing is painted" (Block 2), said in luminance
+ * alone. There is no plate on it. A grown composite has no butt, lap or
+ * rivet, so the sheet draws growth increments along each strake — lines of
+ * constant v, which the layout runs along a round part's axis and across a
+ * flat part's shorter extent, so one line is a ring round a stem, a pod, a
+ * ridge or an orb (`grownBody` keeps its sphere's type and unrolls) and a
+ * vein along a leaf's span. Four a 6 m strake, the facet rule's own
+ * increment of a metre and a half (`facets` below), each up to 0.3 of its
+ * pitch either way off its station by hash (`jitter` 0.6 is the whole
+ * range) and wandering 0.5 m across the strake on 4 m
+ * cells — a line at a regular pitch is ruled paper, and a ring at every
+ * station is the segmented worm kit.mjs `loft` warns of — 0.15 m wide at
+ * 0.84 of the light, with about one in four a heavier check, 0.5 m at
+ * 0.25: the mark that has to read at the conn view, where the fine lines
+ * mipmap to a tone. It was 0.3 m at 0.55, the Order's 0.2 m hairline the
+ * measure, until the owner's close frames: at the view's nearest zoom,
+ * about 5 px/m, that moved 45 pixels of a 50,700-pixel crop of the Reed
+ * from above by over 16 levels of luma and no ring read, because `chitin_hull` is nearly
+ * black at rest (the block) and a sheet can only darken what the ink
+ * already has — on a dark ink a ratio buys half the levels it buys the
+ * Order's pale alloy. 0.5 m at 0.25 is two and a half pixels of ring cut
+ * to a quarter, 113 pixels over 16 levels, and the rings read on the stem
+ * between the nodes and as lines along the leaves, the fine lines still a
+ * tone (#1107: a mark is drawn for the camera that reads it;
+ * docs/screenshots/issue-1110/conn-view.png has the three frames). The pitch
+ * in metres is the part's, since
+ * the layout's bands stop at eight strakes: the Reed's 60.5 m stem carries
+ * 1.9 m increments and its two rings, 1.1 and 1.2 m along it, about
+ * 0.3 m, a tone. The hero rings stay geometry — `growthRings`,
+ * `grownRings`, `drumRings` — as the Klaxon's `rivetRows` stand over its
+ * drawn rivets: the Reed's two, on a 0.5 m tube, are over twice the drawn
+ * check, though the Runner's, on a 0.22 m tube, are finer than it. 0.03 of tone keyed on the
+ * increment, so the one step falls on a line and never on a strake's
+ * edge; 0.04 of mottle in two octaves from 8 m, the slow variation that
+ * reads at range; 0.01 of grain. The plate is 16 m and the wrap 32.
+ * Nothing on this sheet is a joint, so the plate is two things only: the
+ * count a round part unrolls at (every round part on the Reed is one
+ * plate, half a wrap) and the period of what varies along u — the
+ * wander's four cells of 4 m, the mottle's two of 8 m and five of 3.2 m —
+ * which is what closes a one-plate unroll on itself (trim.mjs `grown`).
+ * It was the Directorate's 8 m, with the fields repeating a wrap, until
+ * the review found the stem's unroll edges meeting half a field out of
+ * phase, 51 levels apart in the eight-strake band, a row of dark diamonds
+ * down the port beam; and at 8 m with the fields a plate the coarse mottle
+ * would be one cell, which `valueNoise` draws flat along u. Sixteen keeps
+ * every cell the size its key says, and a 16 m repeat is under one and a
+ * half periods along the 21.5 m starboard leaf.
+ *
+ * The mean is 0.875 in linear light (sheets.mjs reports it): over the
+ * Klaxon's riveted 0.857, under the Order's polished 0.899 and the
+ * Directorate's 0.938, which is where a skin that is nearly black at rest
+ * and girdled by a dark ring every few metres belongs on the register the
+ * conn view puts a navy on (rosterModels.ts `CLADDING_CEILING`) — a grown
+ * composite is matte, its checks cut deeper than the Klaxon's laps at 0.4
+ * and twice as wide, and nothing else on it is a joint. It was 0.903 at
+ * the shallower check; the drop is the checks alone, and the register
+ * moves by an eighth rather than a tenth. `mirror` is off: the Commune
+ * refuses a mirrored pair (the header), its leaves alternate and its wing
+ * is to starboard, so a
+ * layout that lands port as starboard turned over would be the Order's
+ * symmetry on a hull grown to have none, and nothing on the sheet is keyed
+ * on a band's middle. `untagged` keeps the sheet off `bio_vein_unlit`, the
+ * vein family's base worn by a lamp the block lights in a later band
+ * (`bioVeinUnlit`), as the Order leaves `crystal_seam_unlit` bare, and off
+ * `grown_steel`, the structures' fitted collars, pipes and tanks, the one
+ * thing on a Commune model that is not grown; the lamps are never tagged
+ * (trim.mjs) and `spore_haze` is blended. `name` is the file sheets.mjs
+ * draws (packages/frontend/src/assets/trim/pelagia.png) and the tag a
+ * laid-out material carries. The Reed is the first hull on it; a second
+ * script passes the same table.
+ */
+export const TRIM = {
+  name: 'pelagia',
+  pattern: 'grown',
+  size: 512,
+  strakeM: 6,
+  plateM: 16,
+  light: 0.98,
+  increments: 4,
+  jitter: 0.6,
+  ringM: 0.15,
+  ring: 0.84,
+  checkM: 0.5,
+  check: 0.25,
+  checkEvery: 4,
+  wanderM: 0.5,
+  wanderCellM: 4,
+  tone: 0.03,
+  mottle: 0.04,
+  mottleM: 8,
+  grain: 0.01,
+  samples: 4,
+  mirror: false,
+  untagged: ['bio_vein_unlit', 'grown_steel'],
+};
+
+/**
  * The Veil's facet rule and panel bands (docs/asset-prompts-3d.md Block 2c,
  * #919; `tools/hull-models/facets.mjs` is the measure). A grown thing adds
  * the same increment whatever its size — a growth ring is the width it is on

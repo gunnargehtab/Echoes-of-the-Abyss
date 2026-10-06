@@ -669,6 +669,74 @@ levels, 4.7 % before `mirror`, all of it on those rounds. That, and a round part
 from world position rather than the part's centre (`layoutMesh`), are the layout's, and
 [#746](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/746) holds both.
 
+The Commune's sheet ([#1110](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1110))
+keeps the layout machinery and takes a fourth draw mode, `grown`, for a navy whose Block 2 brief
+is "grown chitin-and-algae composite hull with growth rings ... nothing is painted": no plate at
+all, so no butt, lap, rivet, ramp, grime or stagger. It draws growth increments along each
+strake, lines of constant `v`, and the layout makes that one line two things: an unrolled part
+runs `v` along its axis, so the line is a ring round a stem, a pod or a `grownBody` orb (it keeps
+its sphere's type and unrolls), and a flat part runs `v` across its shorter extent, so the line
+runs along a leaf's or a fin's span. Four increments a **6 m** strake, a metre and a half each,
+the facet rule's own edge for the navy; each sits up to **0.3** of its pitch off its station by
+an integer hash and wanders **±0.5 m** across the strake on 4 m cells, because a line at a
+regular pitch reads as ruled paper and a ring at every station as the segmented worm `kit.mjs`
+`loft` warns of. A line is **0.15 m** at **0.84** of the light, and about one in four is a check,
+**0.5 m** at **0.25**, each varying by the line within ±30 % in width and ±10 % in depth; both are
+held to a texel across the strake, as the lap is. **0.03** of tone is keyed on the increment, so
+the one step falls on a line and never on a strake's edge, under **0.04** of mottle in two octaves
+of 8 and 3.2 m cells and a **0.01** grain. The pitch in metres is the part's, since the bands stop
+at eight strakes: the Reed's 60.5 m stem lays on the eight-strake band at 7.6 m a strake and
+1.9 m an increment, and its two rings, 1.1 and 1.2 m along it, on the one-strake band at about
+0.3 m, a tone. The hero rings stay geometry (`growthRings`, `grownRings`, `drumRings`), as the
+Consortium's `rivetRows` stand over its drawn rivets: the Reed's, on a 0.5 m tube, are over twice
+the drawn check, though the Runner's, on a 0.22 m tube, are finer than it. `mirror` is off, since the Commune refuses a
+mirrored pair, and `untagged` leaves `bio_vein_unlit` bare, the vein family's unlit base and the
+Knights' `crystal_seam_unlit` precedent, and `grown_steel`, the structures' fitted collars and
+pipes and the one thing on a Commune model not grown.
+
+Nothing on this sheet is a joint, so the plate, **16 m**, is two things only: the count a round
+part unrolls at, and the period of everything that varies along `u`, the wander's four cells and
+the mottle's two and five, each a whole number a plate. That period is what closes an unroll. A
+round part unrolls at whole plates, and one plate is half the **32 m** wrap, so a field repeating
+only every wrap met itself half a field out of phase at a one-plate part's unroll seam: the first
+sheet, at the Directorate's 8 m plate, left a row of dark diamonds down the Reed's port beam, one
+a ring, 51 levels off in the eight-strake band, where the fields a plate leave the two edges
+within the grain's 3. At 8 m with the fields a plate the coarse mottle would be one cell, flat
+along `u`, so the plate went to 16; a 16 m repeat is under one and a half periods along the
+21.5 m starboard leaf. The check is drawn for the camera that reads it, and the Commune's ink is
+what sets its depth: `chitin_hull` is nearly black at rest, and a sheet only darkens what the ink
+has. At the conn view's nearest zoom, about 5 px/m, a first check of 0.3 m at 0.55 moved 45
+pixels of a 50,700-pixel crop of the Reed from above by more than 16 levels of luma and no ring
+read; at 0.5 m and 0.25 it moves 113, and the rings read on the stem between its nodes and as
+lines along the leaves, the fine lines a tone ([the conn view](screenshots/issue-1110/conn-view.png):
+main, the first check and the final, the top row that crop's 390 by 130 pixels each doubled, the
+lower row a low camera for the look). The sheet is **39,782 bytes** at a mean linear luminance of **0.875**: over the
+Consortium's 0.857, under the Knights' 0.899 and the Directorate's 0.938, a matte skin girdled by
+a dark ring every few metres, so the register the conn view puts a navy on moves by an eighth.
+
+The Reed is the first hull, the owner's choice: two of the three hulls in the Commune's opening
+escort (`OPENING_ESCORT`), and its block names the surface, "growth rings at two nodes where the
+stem swells". Its 16 parts lay **1,149** faces flat and **897** unrolled (1,496 on the one-strake
+band, 90 on two, none on four, 460 on eight), split **314** vertices and tag four materials,
+`chitin_hull`, `growth_ridge`, `algae_membrane` and `spore_pod`; `bio_vein_unlit` is laid out and
+bare, and the lamps are never tagged. `reed-pelagia.glb` goes from **122,148 to 132,652 bytes**
+(zlib's default gzip 37,407 to 42,633) with its 16 parts, 2,046 triangles and outline unchanged,
+so the sprite rebake changes the albedo alone (`reed-albedo.png`, 3,623 to 8,815 bytes), the
+height and emissive maps byte for byte what they were and the glow on its gate-3 target of 1.06.
+On the GPU the sheet is the same 512² RGBA8 upload with mipmaps, **1.33 MiB** once per navy
+present. With four staged Reeds on Ventfront, read on the GTX 1070 at `capture.mjs`' four
+cameras, calls and triangles are the same before and after (52–53 and 198,756–198,828), textures
+go from 19 to 20, and gate 6's queued GPU time reads 0.67 to 0.82 ms at pixel ratio 1 and 1.27 to
+1.71 ms at 1.5, within 0.02 ms a camera of main's
+([readings](screenshots/issue-1110/gate6.json)). [The lit table](screenshots/issue-1110/lit-table.png)
+shows the rings round the stem and the lines along the leaves close in. The Commune is
+Sorrowgate's navy, so its sheet is the one the tutorial's triplanar laminate will meet, the
+laminate multiplying `diffuseColor` after `map_fragment` with the sheet under it; in play that
+waits on the Commune's Light Scout, the tutorial's only Commune hull
+([mission-sorrowgate.md](mission-sorrowgate.md) §5), and until it is laid out
+`packages/frontend/test/trimSheet.test.ts` holds the chain on a stand-in tagged `pelagia` and
+built as a Commune Reed.
+
 #### Ranked audit and remaining work
 
 The baseline is commit `1df288a` (28 September 2026), not the earlier #286 scene.
@@ -686,7 +754,7 @@ view's frame.
 | 3 | Bevel coverage and baked AO ([#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002)) | Both landed ("Bevels and baked occlusion — SPEC" above). Coverage measured: 30 of 190 extruded plates are bevelled, and plates are 3 % of 7,480 parts, so no primitive was added. The Knights' Bastion carries the first baked occlusion map, on its own UV set, read by the conn view alone, its silhouette unchanged; the next model is a call per model |
 | 4 | Vignette, chromatic split, camera sway ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)) | All three are built ([Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)). The vignette and the sway use no pass. The split is a colour copy and one full-screen draw after the halo, and gate 6 allocates both. Existing shader-driven kelp sway and water fog are different effects; do not duplicate them. Respect gate 8 and reduced motion |
 | 5 | GLB gzip ([#1004](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1004)) | Built. The nginx image's `mime.types` names no `glb`, so `packages/frontend/nginx.conf` names the type in the models' own location and gzips them at level 6. Delivery cost, not frame quality |
-| 6 | UV layout and trim sheets ([#1005](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1005)) | Landed on one hull a navy for three navies: the Consortium's Bulwark, the Directorate's Light Scout ([#1108](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1108)) and the Knights' Responsory ([#1109](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1109)), each on its navy's sheet ("UV layout and trim sheets — SPEC" above); the Commune has none. At #1005, 6,863 of 7,025 primitives carry UV0 and 13 carry `uvAlike`'s zeros, but attribute presence is not a layout: the Bulwark's 162 parts are laid out in metres by its script, and four materials are tagged for the Consortium's sheet, one PNG a navy attached at load, luminance only, hue still the palette's. Sorrowgate's triplanar surfaces are kept under it; the next hull is a call per hull |
+| 6 | UV layout and trim sheets ([#1005](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1005)) | Landed on one hull a navy for all four navies: the Consortium's Bulwark, the Directorate's Light Scout ([#1108](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1108)), the Knights' Responsory ([#1109](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1109)) and the Commune's Reed ([#1110](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1110)), each on its navy's sheet ("UV layout and trim sheets — SPEC" above). At #1005, 6,863 of 7,025 primitives carry UV0 and 13 carry `uvAlike`'s zeros, but attribute presence is not a layout: the Bulwark's 162 parts are laid out in metres by its script, and four materials are tagged for the Consortium's sheet, one PNG a navy attached at load, luminance only, hue still the palette's. Sorrowgate's triplanar surfaces are kept under it; the next hull is a call per hull |
 | 7 | Shallow caustics ([#1006](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1006)) | Decided: none. The sunlit layer is the milky Lid, which scatters rather than focuses, and the water ramp already carries what light reaches the Shelf ("Shallow caustics — SPEC" above). Nothing to build |
 | 8 | WebGPU/TSL ([#1007](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1007)) | Defer migration until a separate feasibility decision. Water, survey, surface and sway shader patches depend on the current WebGL pipeline; this is not a renderer-constructor swap. The feasibility note is written ([webgpu-feasibility.md](webgpu-feasibility.md)): every patch has a TSL equivalent, but under r169 frame-wide tone mapping holds gate 3 only if every material carries its own curve, one-pixel points cost gate 6 triangles, and the halo's depth copy costs gate 6 a call or a target |
 
