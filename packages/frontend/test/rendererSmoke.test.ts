@@ -69,11 +69,12 @@ import { EchoRenderer, type RendererCallbacks } from '../src/game/EchoRenderer.t
 import type { ReadoutBox } from '../src/game/readouts.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { LampHaloPass } from '../src/game/lampHaloPass.ts';
+import { ROOF_OPEN_OPACITY } from '../src/game/passages.ts';
 import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
 import { FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
 import { RING_FAR_ALPHA, RING_NEAR_ALPHA } from '../src/game/scopeSweep.ts';
-import { BufferAttribute, FogExp2, Mesh, Points, type Scene } from 'three';
+import { BufferAttribute, FogExp2, Mesh, MeshBasicMaterial, Points, type Scene } from 'three';
 
 /** What the shell was told, in the order it was told. */
 interface CallbackLog {
@@ -789,16 +790,18 @@ function loneListener(world: Booted): void {
 }
 
 /**
- * The one mesh in the conn scene carrying a vertex-colour attribute: the
+ * The one mesh in the conn scene carrying the survey's floor attribute: the
  * terrain. Found rather than reached for, because the view owns its own scene
  * graph and a test that indexed into `children` would break on any reorder.
+ * By `surveyFloor` and not by its vertex colour, since the roofs over a
+ * passage carry the veil as a vertex colour too (#1105).
  */
 function terrainMesh(scene: Scene | null): Mesh {
   assert.ok(scene !== null, 'the conn rendered at least once');
   let found: Mesh | null = null;
   scene.traverse((object) => {
     if (found !== null || !(object instanceof Mesh)) return;
-    if (object.geometry.getAttribute('color') !== undefined) found = object;
+    if (object.geometry.getAttribute('surveyFloor') !== undefined) found = object;
   });
   assert.ok(found !== null, 'the ground carries the veil as a vertex colour');
   return found;
@@ -915,6 +918,41 @@ describe('renderer smoke test: the conn view', () => {
       // whole, because it never held anything back from them.
       assert.equal(shadeAt(ground, shades, COLS * CELL_M - 200, COLS * CELL_M - 200), 1);
       assert.equal(shadeAt(ground, shades, 800, 900), 1);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it("turns a passage's roof to glass over an own hull, and only then (#1105)", async () => {
+    const world = await boot();
+    try {
+      world.frame(2);
+      // The canned passage: rows 5–6, columns 12–13, ceiling 1,600 m.
+      const roofs = (): Mesh[] => {
+        const found: Mesh[] = [];
+        world.gl.lastScene?.traverse((object) => {
+          if (!(object instanceof Mesh)) return;
+          const geometry = object.geometry;
+          if (geometry.getAttribute('color') === undefined) return;
+          if (geometry.getAttribute('surveyFloor') !== undefined) return;
+          found.push(object);
+        });
+        return found;
+      };
+      const opacity = () => (roofs()[0]!.material as MeshBasicMaterial).opacity;
+      assert.equal(roofs().length, 1, 'one passage, one roof');
+      assert.equal(opacity(), 1, 'closed while no own hull is under it');
+
+      const snapshot = cannedSnapshot(400);
+      const [lead, ...rest] = snapshot.units;
+      const at = (x: number, y: number, depth: number) => {
+        world.conn.applySnapshot({ ...snapshot, units: [{ ...lead!, x, y, depth }, ...rest] });
+        world.frame(1);
+      };
+      at(3250, 1500, 2000);
+      assert.equal(opacity(), ROOF_OPEN_OPACITY, 'glass with a hull inside');
+      at(2250, 1500, 2000);
+      assert.equal(opacity(), 1, 'stone again once it leaves');
     } finally {
       world.teardown();
     }

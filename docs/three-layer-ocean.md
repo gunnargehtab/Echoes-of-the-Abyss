@@ -159,9 +159,12 @@ The ground already has a shape; now it gets geometry.
   as depth, not as geometry — the floor drops out of the light. That is the feedback's "deep
   areas with no seabed", and it is also the cheapest dread the new camera buys.
 - **Roofed passages become real overhangs.** A tunnel mouth is now an actual hole under an
-  actual ridge. The chart rule — a passage is drawn as a route, public to everyone, occupancy
-  visible to no one — moves to the route overlay and the sonar scope, because in the world
-  view "invisible from above by construction" is finally literally true.
+  actual ridge: the roof is stone risen to the rock top, a lintel at the ceiling depth over
+  each mouth, and closed sides where the passage meets shallower ground. The chart rule — a
+  passage is drawn as a route, public to everyone, occupancy visible to no one — moves to a
+  route line drawn on the ridge and to the sonar scope, because in the world view "invisible
+  from above by construction" is finally literally true. The roof turns translucent only
+  over a passage holding one of your own hulls ([art-direction.md](art-direction.md#reading-the-sea-floor)).
 
 ## 6. Steering the bands
 

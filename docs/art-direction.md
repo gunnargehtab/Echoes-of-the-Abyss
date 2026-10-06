@@ -885,10 +885,19 @@ speak:
   ([style-neon-noir.md](style-neon-noir.md)) — never in threat-red. Being unable to cross a
   ridge is not danger; it is information, and the difference matters when the same screen has
   to show both.
-- **A roofed passage is drawn as a route, not as a hole.** A tunnel is the one piece of
-  terrain that is invisible from above by construction, so the map marks its line rather than
-  its opening. It is public map data like every other part of the ground: everyone can see
-  that the passage exists, and nobody can see who is in it.
+- **A roofed passage is a hole under a ridge, and its route is drawn on top.** The water
+  above a ceiling is no water at all ([systems-depth.md](systems-depth.md) §1), so the conn
+  view stands the roof up as stone, risen like a mesa, and bores the passage under it. Where
+  the passage meets water deeper than its ceiling, the stone ends in a lintel at the ceiling
+  depth and the mouth is open beneath it. Where it meets shallower ground, the side is closed
+  ([three-layer-ocean.md](three-layer-ocean.md) §5). A tunnel is still invisible from above
+  by construction, so its line is drawn on the ridge and on the sonar scope. The line runs
+  along the passage, mouth to mouth. It is public map data like every other part of the
+  ground: everyone can see that the passage exists, and nobody can see who is in it.
+- **Your own hull under a roof turns that roof to glass.** While one of your hulls is inside
+  a passage, its whole roof draws translucent, so the hull and its plumb line stay readable.
+  Only your own force opens a roof: the conn view holds no other hull's position, and a roof
+  that cleared for a contact would be a detection drawn in stone.
 
 The order matters. Terrain must stay quieter than contacts — "RTS readability > realism" —
 so none of this may compete with a return for attention. If a player cannot find the enemy
