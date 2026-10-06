@@ -610,7 +610,7 @@ is polished pale alloy and mirror facets and whose Responsory block is "fine cer
 over the whole hull, seams tight ... no rivet": an aligned grid with no stagger, lap, rivet,
 grime or ramp. Panels are **4.5 m** by **4 m**, two a **9 m** wrap — the facet rule's own grain
 (Block 2c cuts a mirror facet at a 3 m chord), and the half metre over four is parity: a round
-part unrolls at whole plates round its girth, and between 4.3 and 5 m the Responsory's blade
+part unrolls at whole plates round its girth, and between 4.31 and 4.97 m the Responsory's blade
 (19.4 m round), horn (17.4) and drive (8.1) come out at four, four and two, so a butt on one
 beam has its twin on the other. Each joint is a hairline **0.2 m** wide at **0.4** of the light,
 centred on the joint, under a flat chamfer **0.2 m** wide each side at **1.0**, brighter than
@@ -628,9 +628,10 @@ wholly to one side, and from z 0 on a part across the keel, set half a plate out
 centreline is mid-plate and a plate's index keeps its parity under the mirror, where a joint
 on the centreline would swap the tones — because that low edge is inboard on a starboard part
 and outboard on its twin, and the first layout put the port wing seams' joints at other
-distances from the keel than the starboard's. The Consortium's and the Directorate's tables do not set it, and their layouts
-and files are byte for byte what they were. The table's `untagged` keeps
-the sheet off `resonance_crystal` and the lamp family's unlit finish `crystal_seam_unlit`:
+distances from the keel than the starboard's. The Consortium's and the Directorate's tables do
+not set it, and their layouts and files are byte for byte what they were. The table's
+`untagged` keeps the sheet off `resonance_crystal` and the lamp family's unlit finish
+`crystal_seam_unlit`:
 violet stone and a dark seam are not panelling, so both are laid out and left bare, and the
 lamps are never tagged. The Responsory is the first hull, the owner's choice: its 48 parts lay
 **584** faces flat and **572** unrolled — 856 on the one-strake band, 120 on two, 40 on four,
@@ -656,15 +657,16 @@ symmetry is measured by [the mirror measure](screenshots/issue-1109/mirror.mjs):
 interior points of every tagged triangle against the sheet at the mirrored point, through a
 16-texel blur. The flat skin differs from its mirror by under **3** sRGB levels everywhere, where
 the first layout had up to 29 % of a wing or panel seam's samples over 8, and the emitter barrel,
-one plate round with its one joint on the crown ridge, by 3.7 at most. The round parts do not
-mirror, two ways, both the unroll's. It sets `u` per corner from the angle, so a joint that falls
-mid-facet where the facet tapers follows the triangle's diagonal and kinks, **0.38 m** on the
-drive prism's top flat, about a pixel at the conn view's 3 px/m, on the blade, the horn, the drive
-and the resonator rings. And a one-plate round laid as a port and starboard pair unrolls from a
-basis the mirror turns over, so the ring stays carry their one butt on the inboard face of one and
-the outboard face of the other. **4.2 %** of the tagged area (249 of 5,898 m²) differs from its
-mirror by more than 8 levels, 4.7 % before `mirror`, all of it on those rounds. That, and a round part's end caps laid from world
-position rather than the part's centre (`layoutMesh`), are the layout's, and
+one plate round with its one joint on the crown ridge, by 3.7 at most. The other round parts do
+not mirror, two ways, both the unroll's. It sets `u` per corner from the angle, so a joint that
+falls mid-facet where the facet tapers follows the triangle's diagonal and kinks, **0.38 m** on
+the drive prism's top flat, about a pixel at the conn view's 3 px/m, on the blade, the horn, the
+drive and the resonator rings. And a round pair whose twin's axis is its own mirror image, a
+cylinder rolled either way about x as the ring stays are, unrolls from a basis the mirror turns
+over: at the stays' one plate their butt lies on the inboard face of one and the outboard face of
+the other. **4.2 %** of the tagged area (249 of 5,898 m²) differs from its mirror by more than 8
+levels, 4.7 % before `mirror`, all of it on those rounds. That, and a round part's end caps laid
+from world position rather than the part's centre (`layoutMesh`), are the layout's, and
 [#746](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/746) holds both.
 
 #### Ranked audit and remaining work

@@ -301,7 +301,8 @@ test('a facet grid is aligned, and every band turned over is itself', () => {
       for (let x = 0; x < n; x++)
         worst = Math.max(worst, Math.abs(at(x, y) - at(x, y0 + y1 - 1 - y)));
     assert.ok(worst <= 1, `the ${b.rows}-strake band differs from itself turned over by ${worst}`);
-    // No stagger: every strake's butts are at the wrap's quarters, none at its halves.
+    // No stagger: every strake's butts are at the wrap's halves (u 0 and ½), none at its
+    // quarters.
     const h = (y1 - y0) / b.rows;
     for (let s = 0; s < b.rows; s++) {
       const y = Math.floor(y0 + h * s + h / 2);

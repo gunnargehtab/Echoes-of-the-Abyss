@@ -264,10 +264,12 @@ export const ink = {
  * parts are not quite, two ways, both the unroll's: a joint that falls
  * mid-facet where a facet tapers follows the triangle diagonal and kinks,
  * 0.38 m on the drive prism's top flat, about a pixel at the conn view's
- * 3 px/m, on the blade, the horn, the drive and the rings; and a
- * one-plate round laid as a port and starboard pair unrolls from a basis
- * the mirror turns over, so the ring stays carry their one butt on the
- * inboard face of one and the outboard face of the other. 4.2 % of the
+ * 3 px/m, on the blade, the horn, the drive and the rings; and a round
+ * pair whose twin's axis is its own mirror image — a cylinder rolled
+ * either way about x, as the ring stays are — unrolls from a basis the
+ * mirror turns over, so at the stays' one plate their butt lies on the
+ * inboard face of one and the outboard face of the other (an odd count
+ * moves butts so, and four swaps tones on the one-strake band). 4.2 % of the
  * Responsory's tagged area differs from its mirror by more than 8 levels,
  * all of it on those rounds, and #746 takes both.
  *
@@ -277,15 +279,16 @@ export const ink = {
  * metre over four is parity: a round part unrolls at whole plates round
  * its girth, which the layout takes over triangle corners (trim.mjs
  * `layoutMesh`), and on an odd count the butts fall on one beam and not
- * the other — at 4 m the blade, 19.4 m round, took five. Between 4.3 and
- * 5 m every tagged round on the Responsory's centreline comes even — the
- * blade four, the horn at 17.4 m four, the drive at 8.1 m two — so a butt
- * on either beam has its twin; the emitter barrel, 4.8 m round, is one
- * plate at any size, its one joint on the crown ridge and the unroll's
- * wrap mid-panel on the starboard ridge, so it mirrors within 3.7 levels;
- * where a one-plate round's joint lies is its unroll basis's, and the
- * ring stays' does not mirror (above). A later hull reads its own girths
- * and butts off `exportGlb`'s file before it trusts this. The layout's bands stop at eight strakes, so a lathe 77 m long
+ * the other — at 4 m the blade, 19.4 m round, took five. Between 4.31 and
+ * 4.97 m every multi-plate round on the Responsory's centreline comes
+ * even — the blade four, the horn at 17.4 m four, the drive at 8.1 m two
+ * — so a butt on either beam has its twin; the emitter barrel, 4.8 m
+ * round, is one plate at any size, its one joint on the crown ridge and
+ * the unroll's wrap mid-panel on the starboard ridge, so it mirrors
+ * within 3.7 levels. Where a round's joints lie is its unroll basis's,
+ * and the ring stays' do not mirror (above), so a later hull reads its
+ * own girths and butts off `exportGlb`'s file before it trusts this. The
+ * layout's bands stop at eight strakes, so a lathe 77 m long
  * carries 9.7 m strakes along it whatever this says; the wings' are
  * 3.95 m. The joint is drawn for the conn view's ~3 px/m (#1107), where
  * "seams tight" and "readable" pull apart: a hairline of 0.2 m at 0.4 of

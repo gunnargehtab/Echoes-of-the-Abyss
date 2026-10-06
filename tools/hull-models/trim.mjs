@@ -78,12 +78,12 @@
  * `u` along the beam measured from the centreline out (`layoutMesh`). A
  * round part is not quite that, two ways (#746): a joint that falls
  * mid-facet where the facet tapers follows the triangle diagonal and
- * kinks, about a pixel at the conn view's 3 px/m, and a one-plate round
- * laid as a port and starboard pair unrolls from a basis the mirror turns
- * over, so its one butt lies inboard on one and outboard on the other.
- * Nothing on it weathers, and
- * `untagged` keeps the sheet off a cladding that is not panelling
- * (`layoutTrim`).
+ * kinks, about a pixel at the conn view's 3 px/m, and a round pair whose
+ * twin's axis is its own mirror image (rolled either way about x)
+ * unrolls from a basis the mirror turns over, so at an odd plate count
+ * its butts fall on other faces of each twin. Nothing on it
+ * weathers, and `untagged` keeps the sheet off a cladding that is not
+ * panelling (`layoutTrim`).
  */
 import * as THREE from 'three';
 import { occludes } from './glb.mjs';
@@ -203,8 +203,9 @@ function valueNoise(xm, ym, cellM, cells, seed) {
  * starboard face, and a port part against its twin — and the table's
  * `mirror` makes `u` along the beam the same on both sides. That is a
  * flat face's mirror; a round part unrolls by angle from a basis of its
- * own, and neither a joint mid-facet on a tapering facet nor a one-plate
- * pair's butt mirrors (#746). The plate and tergite patterns do not
+ * own, so a joint mid-facet on a tapering facet kinks, and a pair whose
+ * basis the mirror turns over keeps its butts on other faces (#746). The
+ * plate and tergite patterns do not
  * read the chamfer keys.
  */
 export function drawTrimSheet({
