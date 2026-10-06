@@ -452,8 +452,8 @@ fill 70 % of the atlas at 1.38 texels a metre, 64 rays to 37.5 m. `bulwark-bathy
 goes from 331,428 to 587,556 bytes, 170,852 of them the PNG, and `audit.mjs` counts 7,027
 primitives either side. The library goes from 19,770,008 to **20,026,136 raw bytes** and from
 2,579,880 to **2,769,351 gzipped**, 1.3 % and 7.3 %, and twelve materials carry a map, seven
-of them the Bulwark's. A close conn-view frame of four staged Bulwarks draws 42 calls and
-149,434 triangles before and after, and 21 textures where it drew 20
+of them the Bulwark's. A close conn-view frame of one of four staged Bulwarks draws 42 calls
+and 149,434 triangles before and after, and 21 textures where it drew 20
 ([frames](screenshots/issue-1111/README.md)).
 
 Which model is baked next is a call per model, not a switch. Each costs a quarter to a third
