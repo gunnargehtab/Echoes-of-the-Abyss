@@ -93,6 +93,7 @@ globalThis.FileReader = class {
   }
 };
 
+import { createHash } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -1317,6 +1318,67 @@ export function census(root) {
 }
 
 /**
+ * Everything GLTFExporter writes from one geometry, as a digest: each
+ * attribute's name, type, width and bytes, the index, the groups and the
+ * `userData` it copies into the primitive's extras. Null for a geometry
+ * with morph targets or an interleaved attribute, which no script builds
+ * and which this would rather leave unshared than read wrong.
+ */
+function geometryDigest(geometry) {
+  if (Object.keys(geometry.morphAttributes).length > 0) return null;
+  const hash = createHash('sha256');
+  const feed = (label, attribute) => {
+    if (attribute.isInterleavedBufferAttribute) return false;
+    const { array } = attribute;
+    hash.update(`${label} ${array.constructor.name} ${attribute.itemSize} ${attribute.normalized};`);
+    hash.update(new Uint8Array(array.buffer, array.byteOffset, array.byteLength));
+    return true;
+  };
+  for (const name of Object.keys(geometry.attributes).sort()) {
+    if (!feed(name, geometry.attributes[name])) return null;
+  }
+  if (geometry.index && !feed('index', geometry.index)) return null;
+  hash.update(JSON.stringify(geometry.groups));
+  hash.update(JSON.stringify(geometry.userData));
+  return hash.digest('hex');
+}
+
+/**
+ * Point every part whose geometry is byte for byte an earlier part's at
+ * that earlier geometry, and return what puts the scene back (#1125).
+ *
+ * GLTFExporter shares a primitive only between meshes holding one
+ * geometry *object*, so two parts built alike — one `box` called twice, or
+ * two drums the trim layout split apart whose UVs came out the same — were
+ * written twice: 4,578,876 of the library's 21,114,092 bytes at #1125.
+ * Sharing the object makes the exporter write the accessors once, and one
+ * glTF mesh where the materials match too. The node keeps its name,
+ * transform and material, which is all `readGlb` takes from it, so the
+ * parts read back as they did; readers already met shared buffers in the
+ * parts a script built on one geometry. Run after the trim and the bake,
+ * since both lay UVs per part, and undone before the census and the light
+ * audit, which read the script's own geometries.
+ */
+function shareAlike(root) {
+  const first = new Map();
+  const swapped = [];
+  root.traverse((o) => {
+    if (!o.isMesh) return;
+    const digest = geometryDigest(o.geometry);
+    if (digest === null) return;
+    const kept = first.get(digest);
+    if (kept === undefined) first.set(digest, o.geometry);
+    else if (kept !== o.geometry) {
+      swapped.push([o, o.geometry]);
+      o.geometry = kept;
+    }
+  });
+  return () => {
+    for (const [mesh, geometry] of swapped) mesh.geometry = geometry;
+  };
+}
+
+/**
  * Write the GLB into docs/concept-art/models/ and report what it contains.
  * `occlusion`, when given, is `bakeOcclusion`'s options (occlusion.mjs:
  * `size`, `rays`, `reach`), and the file carries the baked map on every
@@ -1327,13 +1389,20 @@ export function census(root) {
  * sheets.mjs. Both run first, since they lay UV sets on the geometry the
  * exporter is about to write — the trim before the bake, so a vertex the
  * bake splits carries its layout — and the exporter runs with the
- * materials bare, since it cannot write an image (the header).
+ * materials bare, since it cannot write an image (the header). A part
+ * built exactly like an earlier one is written once (`shareAlike`).
  */
 export async function exportGlb(root, filename, { occlusion = null, trim = null } = {}) {
   const out = outputPath(filename);
   const laid = trim ? layoutTrim(root, sheetLayout(trim), trim) : null;
   const ao = occlusion ? bakeOcclusion(root, occlusion) : null;
-  const exported = await new GLTFExporter().parseAsync(root, { binary: true });
+  const unshare = shareAlike(root);
+  let exported;
+  try {
+    exported = await new GLTFExporter().parseAsync(root, { binary: true });
+  } finally {
+    unshare();
+  }
   const glb = ao ? embedImages(exported, [occlusionImage(ao)]) : Buffer.from(exported);
   writeFileSync(out, glb);
   let tris = 0;

@@ -849,7 +849,13 @@ Node's default gzip settings. It reads the library as it stands, so the bytes mo
 whenever a model does: with the Bastion's and the Bulwark's occlusion maps it counted
 20,026,136 and 2,769,351, and twelve materials with an occlusion texture ("Bevels and baked occlusion — SPEC" above),
 and with the Consortium's other twenty-two on its sheet (#1107) it counts 21,114,092 and
-2,927,652, and 97 materials with a trim tag.
+2,927,652, and 97 materials with a trim tag. Then 4,578,876 of those bytes were primitives
+byte for byte another's in the same file, since GLTFExporter shares one only between parts
+holding one geometry object. With each written once and both nodes pointing at it
+([#1125](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1125), kit.mjs
+`shareAlike`), 90 files are re-exported, every part and UV bit for bit as before and every
+material equal at float32, and the library counts **13,643,272 raw bytes** and **2,628,937 gzipped**; the raw fall is larger
+than the duplicates because the JSON lists fewer accessors.
 Those are sums over the source library, not a browser's initial download: Vite hashes
 assets and the client loads them by need. A solo match on the default map, its build at
 `c771ca8` served by nginx 1.24 through `nginx.conf` and the image's `http` settings, fetched
