@@ -43,10 +43,21 @@ const MATRIX = new Matrix4();
 /** One template mesh, drawn for every instance of the batch. */
 interface Part {
   readonly mesh: InstancedMesh;
-  /** The mesh's transform under its model's root, the same for every instance. */
+  /** The slots it draws from, which it shares with every part at its transform. */
+  readonly frame: Frame;
+  /** Whether it draws a lamp, and so reads the batch's glow. */
+  readonly lit: boolean;
+}
+
+/**
+ * Every instance's matrix for the parts at one transform under the model's
+ * root. `mergeByMaterial` leaves its merged parts at one transform, so a batch
+ * usually holds a single frame however many materials it draws.
+ */
+interface Frame {
+  /** The parts' transform under their model's root, the same for every instance. */
   readonly local: Matrix4;
-  /** Each instance's gate-3 factor, on a lamp part only. */
-  readonly glow: InstancedBufferAttribute | null;
+  readonly matrices: InstancedBufferAttribute;
 }
 
 /** What `markLamps` marks in the canvas stencil (lampHaloPass.ts `markLamp`). */
@@ -62,6 +73,9 @@ class Batch {
   /** The materials this batch draws its lamps with, which the stencil marks. */
   readonly lamps: readonly MeshStandardMaterial[];
   private parts: Part[] = [];
+  private frames: Frame[] = [];
+  /** Each instance's gate-3 factor, which every lamp part reads; null without a lamp. */
+  private glow: InstancedBufferAttribute | null = null;
   private capacity = FIRST_CAPACITY;
   private readonly materials: Map<Material, Material>;
 
@@ -111,27 +125,40 @@ class Batch {
     return moved;
   }
 
-  /** Write one slot from its instance's root and glow. */
+  /**
+   * Write one slot from its instance's root and glow, uploading only what
+   * changed. The view places every own hull every frame, and on the named GPU
+   * the uploads are canvas-pass time (#1114): a whole buffer a part a hull,
+   * every frame, read 0.13–0.20 ms over the per-entity frame at gate 6's close
+   * camera. So a slot that holds its value is not written, a written one sends
+   * its own bytes, and the parts at one transform share a buffer, so a hull
+   * that moves is usually one upload a frame, not one a material.
+   */
   write(index: number): void {
     const instance = this.instances[index]!;
     // The root has no parent, so this also brings its meshes' world matrices
     // up to date for the halo and the lamp reading, which read them after.
     instance.root.updateMatrixWorld(true);
-    for (const part of this.parts) {
-      part.mesh.setMatrixAt(index, MATRIX.multiplyMatrices(instance.root.matrixWorld, part.local));
-      part.mesh.instanceMatrix.needsUpdate = true;
-      part.mesh.boundingSphere = null;
-      if (part.glow !== null) {
-        part.glow.setX(index, instance.glow);
-        part.glow.needsUpdate = true;
-      }
+    for (const frame of this.frames) {
+      MATRIX.multiplyMatrices(instance.root.matrixWorld, frame.local);
+      const { matrices } = frame;
+      if (holds(matrices.array, index * 16, MATRIX.elements)) continue;
+      MATRIX.toArray(matrices.array, index * 16);
+      matrices.addUpdateRange(index * 16, 16);
+      matrices.needsUpdate = true;
+      for (const part of this.parts) if (part.frame === frame) part.mesh.boundingSphere = null;
+    }
+    const glow = this.glow;
+    if (glow !== null && glow.getX(index) !== Math.fround(instance.glow)) {
+      glow.setX(index, instance.glow);
+      glow.addUpdateRange(index, 1);
+      glow.needsUpdate = true;
     }
   }
 
   /** The gate-3 factor a slot's lamps draw at, or null without a lamp. */
   glowAt(index: number): number | null {
-    const lit = this.parts.find((part) => part.glow !== null);
-    return lit === undefined ? null : lit.glow!.getX(index);
+    return this.glow === null ? null : this.glow.getX(index);
   }
 
   dispose(): void {
@@ -154,26 +181,44 @@ class Batch {
       const drawn = materials.map((m) => this.materials.get(m) ?? m);
       const lit = materials.some((m) => this.materials.has(m));
       let geometry = child.geometry as BufferGeometry;
-      let glow: InstancedBufferAttribute | null = null;
       if (lit) {
         // The template's buffers, shared, and this batch's glow beside them.
         geometry = shareBuffers(geometry);
-        glow = new InstancedBufferAttribute(new Float32Array(this.capacity).fill(1), 1);
-        glow.setUsage(DynamicDrawUsage);
-        geometry.setAttribute('instanceGlow', glow);
+        if (this.glow === null) {
+          this.glow = new InstancedBufferAttribute(new Float32Array(this.capacity).fill(1), 1);
+          this.glow.setUsage(DynamicDrawUsage);
+        }
+        geometry.setAttribute('instanceGlow', this.glow);
       }
       const mesh = new InstancedMesh(
         geometry,
         Array.isArray(source) ? drawn : drawn[0]!,
         this.capacity
       );
-      mesh.instanceMatrix.setUsage(DynamicDrawUsage);
+      const frame = this.frameAt(localMatrix(root, child));
+      mesh.instanceMatrix = frame.matrices;
       mesh.name = `own_${child.name || 'part'}_${this.parts.length}`;
-      this.parts.push({ mesh, local: localMatrix(root, child), glow });
+      this.parts.push({ mesh, frame, lit });
       this.group.add(mesh);
     });
     for (let i = 0; i < this.instances.length; i++) this.write(i);
+    // New buffers go up whole on their first draw, so these writes need no
+    // ranges of their own; left, they would ride along with the next upload.
+    for (const { matrices } of this.frames) matrices.clearUpdateRanges();
+    this.glow?.clearUpdateRanges();
     this.setCount();
+  }
+
+  /** The frame for parts at `local`, made the first time a part needs it. */
+  private frameAt(local: Matrix4): Frame {
+    let frame = this.frames.find((f) => f.local.equals(local));
+    if (frame === undefined) {
+      const matrices = new InstancedBufferAttribute(new Float32Array(this.capacity * 16), 16);
+      matrices.setUsage(DynamicDrawUsage);
+      frame = { local, matrices };
+      this.frames.push(frame);
+    }
+    return frame;
   }
 
   private setCount(): void {
@@ -186,10 +231,10 @@ class Batch {
   }
 
   private clear(): void {
-    for (const { mesh, glow } of this.parts) {
+    for (const { mesh, lit } of this.parts) {
       this.group.remove(mesh);
       mesh.dispose();
-      if (glow !== null) {
+      if (lit) {
         // Only the glow is this batch's: let go of the shared buffers first,
         // or disposing the geometry would delete them under the template.
         const geometry = mesh.geometry;
@@ -201,7 +246,15 @@ class Batch {
       }
     }
     this.parts = [];
+    this.frames = [];
+    this.glow = null;
   }
+}
+
+/** Whether `array` holds `matrix` at `offset`, compared as the buffer stores it. */
+function holds(array: ArrayLike<number>, offset: number, matrix: ArrayLike<number>): boolean {
+  for (let i = 0; i < 16; i++) if (array[offset + i] !== Math.fround(matrix[i]!)) return false;
+  return true;
 }
 
 /** A geometry over another's index and attributes, for one more attribute. */
