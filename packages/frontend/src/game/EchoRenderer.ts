@@ -133,6 +133,7 @@ import {
   FURNITURE_OUTLINE_ALPHA,
   INSTRUMENT_OUTLINE_ALPHA,
 } from './ladder.ts';
+import { roofedPassages } from './passages.ts';
 import {
   actionFor,
   BUILD_ACTION_KIND,
@@ -8078,6 +8079,16 @@ export class EchoRenderer {
           color: RESOURCE_COLOR[node.kind],
           alpha: 0.8,
         });
+      }
+      // Roofed passages, by the route the conn view draws on their ridge
+      // (docs/art-direction.md, "Reading the Sea Floor"): a passage is public
+      // chart data, and the scope is where a player plans the route through.
+      for (const passage of roofedPassages(terrain).list) {
+        const [first, ...rest] = passage.route;
+        if (first === undefined) continue;
+        tg.moveTo(first.xM * k, first.yM * k);
+        for (const point of rest) tg.lineTo(point.xM * k, point.yM * k);
+        tg.stroke({ width: 1.5, color: UI.accent, alpha: FURNITURE_OUTLINE_ALPHA.tunnelRoute });
       }
       tg.rect(0, 0, size, size).stroke({ width: 1, color: UI.glassStroke });
     }

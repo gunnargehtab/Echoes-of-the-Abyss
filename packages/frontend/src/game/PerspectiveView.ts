@@ -4,8 +4,9 @@
  *
  * Since Phase 5 this is not a toggle beside the chart; it IS the world. The
  * authored ground renders as a real heightfield (perspectiveTerrain.ts)
- * wearing the seabed bake as its skin, roofed passages as route lines, the map
- * edge as a rim and a dark skirt; the player's own force sails as the approved
+ * wearing the seabed bake as its skin, roofed passages as stone over a hole
+ * with their route drawn on top (passages.ts), the map edge as a rim and a
+ * dark skirt; the player's own force sails as the approved
  * roster models (rosterModels.ts) at true depth, with the flat baked sprites
  * as the loading fallback. A WC3-lineage camera looks down and along at a
  * fixed 55° pitch; yaw is locked, per the no-rotation rule the revision kept.
@@ -108,6 +109,14 @@ import {
   type RosterModelKey,
 } from './rosterModels.ts';
 import { RosterBatches } from './rosterBatches.ts';
+import {
+  buildRoofGeometry,
+  roofedPassages,
+  roofOver,
+  roofSurfaceDepthM,
+  ROOF_OPEN_OPACITY,
+  type Passages,
+} from './passages.ts';
 import { OwnMotion } from './ownMotion.ts';
 import { OrdnanceLayer } from './ordnanceLayer.ts';
 import { EnvironmentLayer } from './environmentLayer.ts';
@@ -484,6 +493,13 @@ export class PerspectiveView {
   /** The bake's depth ramp, taken with the seed and held with it. */
   private seabedRange: SeabedRange = { shallowest: 0, deepest: 0 };
   private terrainMesh: Mesh | null = null;
+  /**
+   * The roofed passages and the stone over each (#1105), rebuilt with the
+   * dressing. `base` is each roof's stone in linear light before the veil,
+   * so a veil pass multiplies it rather than compounding on its own output.
+   */
+  private passages: Passages | null = null;
+  private roofs: { mesh: Mesh; material: MeshBasicMaterial; base: Float32Array }[] = [];
   /**
    * What `rebuildTerrain` made, kept so `applyGround` can patch it (#434): the
    * vertex grid the mesh's positions came from, and the canvas its texture
@@ -1100,7 +1116,11 @@ export class PerspectiveView {
     const raycaster = RAY_TMP;
     raycaster.setFromCamera(ndc, this.camera);
     if (this.terrainMesh !== null) {
-      const hit = raycaster.intersectObject(this.terrainMesh, false)[0];
+      // A closed roof is what the pointer is on, so it answers first; an
+      // open one is glass, and the click means the water it shows.
+      const targets: Mesh[] = [this.terrainMesh];
+      for (const roof of this.roofs) if (roof.material.opacity === 1) targets.push(roof.mesh);
+      const hit = raycaster.intersectObjects(targets, false)[0];
       if (hit !== undefined) {
         return {
           x: Math.min(terrain.cols * terrain.cellM, Math.max(0, hit.point.x)),
@@ -1542,29 +1562,75 @@ export class PerspectiveView {
   }
 
   /**
-   * The chart register the ground itself carries: roofed passages drawn as
-   * routes (public map data — everyone sees the passage, nobody sees who is
-   * in it), the map border as a rim line, and a dark skirt falling away from
+   * The chart register the ground itself carries: roofed passages as stone
+   * with their routes drawn on it (public map data — everyone sees the
+   * passage, nobody sees who is in it), the map border as a rim line, and a dark skirt falling away from
    * the edge so the world ends in deep water rather than in a void the fog
    * never explains.
    */
   private buildTerrainDressing(terrain: TerrainPayload, grid: HeightGrid): void {
-    const groundY = (xM: number, yM: number) => this.groundYAt(xM, yM);
-    const isRock = (i: number) => terrain.ceiling[i]! > terrain.floor[i]!;
+    // The roofs (#1105): stone over each passage, risen clear of its ceiling,
+    // a lintel over every mouth (passages.ts). Unlit like the ground they
+    // stand in, and translucent-capable, because a roof over one of your own
+    // hulls turns to glass (`openRoofs`). Rung 2, the stone.
+    for (const roof of this.roofs) {
+      roof.mesh.geometry.dispose();
+      roof.material.dispose();
+    }
+    this.roofs = [];
+    const passages = roofedPassages(terrain);
+    this.passages = passages;
+    const linear = new Color();
+    for (const passage of passages.list) {
+      const shape = buildRoofGeometry(terrain, passage, grid, this.groundSeed, this.groundRockTopM);
+      const base = new Float32Array(shape.colors.length);
+      for (let i = 0; i < base.length; i += 3) {
+        linear.setRGB(shape.colors[i]!, shape.colors[i + 1]!, shape.colors[i + 2]!, SRGBColorSpace);
+        base[i] = linear.r;
+        base[i + 1] = linear.g;
+        base[i + 2] = linear.b;
+      }
+      const geometry = new BufferGeometry();
+      geometry.setAttribute('position', new BufferAttribute(shape.positions, 3));
+      geometry.setAttribute('color', new BufferAttribute(base.slice(), 3));
+      geometry.setIndex(new BufferAttribute(shape.indices, 1));
+      // Double-sided: the underside is seen from inside a mouth, and the
+      // sides from either hand.
+      const material = new MeshBasicMaterial({
+        vertexColors: true,
+        toneMapped: false,
+        side: DoubleSide,
+        transparent: true,
+      });
+      const mesh = new Mesh(geometry, material);
+      this.terrainDressing.add(mesh);
+      this.roofs.push({ mesh, material, base });
+    }
+    this.shadeRoofs();
 
-    // Tunnel routes: a line across each roofed cell, lifted just off the
-    // ground. The mouth is invisible from above by construction; the line is
-    // what a player needs (docs/art-direction.md, "Reading the Sea Floor").
+    // Tunnel routes: one line per passage, mouth to mouth along it, drawn on
+    // the ridge — the floor it used to sit on is under the roof now
+    // (docs/art-direction.md, "Reading the Sea Floor"). Sampled at the
+    // heightfield's step so it rides the crag rather than cutting through it.
     // Rung 5, map furniture (docs/map-visuals.md §5), at the ladder's alpha.
     const routePoints: number[] = [];
-    for (let row = 0; row < terrain.rows; row++) {
-      for (let col = 0; col < terrain.cols; col++) {
-        const index = row * terrain.cols + col;
-        if (terrain.ceiling[index]! === 0 || isRock(index)) continue;
-        const y = (row + 0.5) * terrain.cellM;
-        const x0 = col * terrain.cellM;
-        const x1 = (col + 1) * terrain.cellM;
-        routePoints.push(x0, groundY(x0, y) + 10, y, x1, groundY(x1, y) + 10, y);
+    for (const passage of passages.list) {
+      const roofY = (xM: number, yM: number) =>
+        depthToWorldY(
+          roofSurfaceDepthM(terrain, passage, this.groundSeed, this.groundRockTopM, xM, yM)
+        ) + 12;
+      const route = passage.route;
+      for (let i = 1; i < route.length; i++) {
+        const a = route[i - 1]!;
+        const b = route[i]!;
+        const steps = Math.max(1, Math.ceil(Math.hypot(b.xM - a.xM, b.yM - a.yM) / grid.stepM));
+        for (let k = 0; k < steps; k++) {
+          const x0 = a.xM + ((b.xM - a.xM) * k) / steps;
+          const y0 = a.yM + ((b.yM - a.yM) * k) / steps;
+          const x1 = a.xM + ((b.xM - a.xM) * (k + 1)) / steps;
+          const y1 = a.yM + ((b.yM - a.yM) * (k + 1)) / steps;
+          routePoints.push(x0, roofY(x0, y0), y0, x1, roofY(x1, y1), y1);
+        }
       }
     }
     if (routePoints.length > 0) {
@@ -1771,6 +1837,59 @@ export class PerspectiveView {
       }
     }
     colors.needsUpdate = true;
+    this.shadeRoofs();
+  }
+
+  /**
+   * The roofs take the ground's veil: they are ground, and stone nobody is
+   * listening to goes as cold as the floor under it.
+   */
+  private shadeRoofs(): void {
+    const shade = this.veilColor;
+    for (const roof of this.roofs) {
+      const positions = roof.mesh.geometry.getAttribute('position') as BufferAttribute;
+      const colors = roof.mesh.geometry.getAttribute('color') as BufferAttribute;
+      const base = roof.base;
+      for (let i = 0; i < positions.count; i++) {
+        this.linearShadeAt(positions.getX(i), positions.getZ(i), shade);
+        colors.setXYZ(
+          i,
+          base[i * 3]! * shade.r,
+          base[i * 3 + 1]! * shade.g,
+          base[i * 3 + 2]! * shade.b
+        );
+      }
+      colors.needsUpdate = true;
+    }
+  }
+
+  /**
+   * Turn to glass every roof over one of your own hulls, and only those
+   * (docs/art-direction.md, "Reading the Sea Floor"). Asked of the own force
+   * alone: this view holds no other hull's position, and a roof that cleared
+   * for a contact would be a detection drawn in stone. Last snapshot's
+   * positions, while the drawn hull runs one Echo interval behind them
+   * (ownMotion.ts): a roof opens up to a tick before the hull is drawn
+   * inside, and closes up to a tick before it is drawn out — at worst a fifth
+   * of a second of hull under stone, at the exit.
+   */
+  private openRoofs(): void {
+    const terrain = this.terrain;
+    const passages = this.passages;
+    if (terrain === null || passages === null || this.roofs.length === 0) return;
+    const open = new Set<number>();
+    for (const unit of this.units) {
+      const id = roofOver(terrain, passages, unit.x, unit.y, unit.depth);
+      if (id !== -1) open.add(id);
+    }
+    for (let id = 0; id < this.roofs.length; id++) {
+      const material = this.roofs[id]!.material;
+      const opacity = open.has(id) ? ROOF_OPEN_OPACITY : 1;
+      if (material.opacity === opacity) continue;
+      material.opacity = opacity;
+      // Glass writes no depth, so what is under it draws as well as shows.
+      material.depthWrite = opacity === 1;
+    }
   }
 
   /**
@@ -2014,6 +2133,7 @@ export class PerspectiveView {
 
   private syncEntities(): void {
     if (this.terrain === null) return;
+    this.openRoofs();
 
     // Liveness by set, not by scan (#432): `some` per handle was quadratic.
     const liveUnits = new Set(this.units.map((u) => u.id));
