@@ -416,8 +416,13 @@ cull, 308 k at close against 263 k, and never more than the whole force on scree
 the frame the 400 k budgets. The breach cost the CPU rather than the GPU: against the
 opening, queued GPU time rose 0.05–0.17 ms, `avgConnMs` 1.1–1.5 ms, and the unqueued
 bracket, the handover, 3.8–4.7 ms, at ratio 1 and 1.5. Those times are the uninstanced
-frame's: the instanced frame has not been timed on the named GPU. `capture.mjs` logs a
-breach instead of failing on it with `OVER_BUDGET=record`.
+frame's, and the forty-berth frame has not been timed instanced. The opening has
+([#1114](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1114)): instanced, it
+read 0.12–0.22 ms over the uninstanced frame at every camera at ratio 1.5, all of it canvas
+pass where the close camera was split by pass, for re-uploading every part's buffer for every
+hull every frame. A batch now uploads a slot only when it changes, and its parts share one
+buffer, which took 0.06–0.19 ms back on Ventfront ([issue-1114](screenshots/issue-1114/README.md)). `capture.mjs` logs a breach instead of
+failing on it with `OVER_BUDGET=record`.
 
 A classified animal drawn as stipple ([map-visuals.md](map-visuals.md) §8) is overlay
 ink, not conn geometry: it spends no draw call and no triangle here, it is priced in
@@ -647,7 +652,11 @@ on the terrain material the canvas already draws, and stones the prop layer alre
   ([issue-1103](screenshots/issue-1103/README.md)). **The close camera at 1.5 is over the
   1.7 ms line**, at 1.82–1.84 ms: the frame without the layer drifted from 1.41 to 1.58 ms on
   main since #1083. The owner promoted the layer over the line, and the drift is
-  [#1114](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1114).
+  [#1114](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1114). Its bisect named
+  #1079's instanced own models, and their fix brought the close camera at 1.5 from
+  1.84–1.90 to 1.76 ms with the layer on ([issue-1114](screenshots/issue-1114/README.md)):
+  still over, by 0.06 ms that main gained in smaller steps after `8851d622` or that #1079
+  left, which two runs cannot separate. #1114 stays open for it.
 - **CPU time.** `avgConnMs`, on − off, read −0.16 to +0.13 ms: run-to-run spread, since the
   layer adds no per-frame work on the CPU.
 - **Stations.** capture.mjs's four cameras and the fight station of `stations.mjs`, staged

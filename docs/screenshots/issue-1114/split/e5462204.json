@@ -1,0 +1,143 @@
+[
+  {
+    "gpuMs": 1.45,
+    "loadMs": 3.74,
+    "parts": {
+      "canvas": {
+        "avgMs": 0.73,
+        "worstMs": 1.4,
+        "frames": 241
+      },
+      "halo-gather": {
+        "avgMs": 0,
+        "worstMs": 0.02,
+        "frames": 241
+      },
+      "depth-copy": {
+        "avgMs": 0.27,
+        "worstMs": 0.68,
+        "frames": 241
+      },
+      "halo-source": {
+        "avgMs": 0.02,
+        "worstMs": 0.5,
+        "frames": 241
+      },
+      "halo-spread": {
+        "avgMs": 0.17,
+        "worstMs": 0.19,
+        "frames": 241
+      },
+      "halo-composite": {
+        "avgMs": 0.1,
+        "worstMs": 0.54,
+        "frames": 241
+      },
+      "split-copy": {
+        "avgMs": 0.1,
+        "worstMs": 0.54,
+        "frames": 241
+      },
+      "split": {
+        "avgMs": 0.05,
+        "worstMs": 0.1,
+        "frames": 241
+      }
+    },
+    "calls": 63
+  },
+  {
+    "gpuMs": 1.46,
+    "loadMs": 3.69,
+    "parts": {
+      "canvas": {
+        "avgMs": 0.74,
+        "worstMs": 1.26,
+        "frames": 242
+      },
+      "halo-gather": {
+        "avgMs": 0,
+        "worstMs": 0.11,
+        "frames": 242
+      },
+      "depth-copy": {
+        "avgMs": 0.28,
+        "worstMs": 0.33,
+        "frames": 242
+      },
+      "halo-source": {
+        "avgMs": 0.02,
+        "worstMs": 0.08,
+        "frames": 242
+      },
+      "halo-spread": {
+        "avgMs": 0.17,
+        "worstMs": 0.23,
+        "frames": 242
+      },
+      "halo-composite": {
+        "avgMs": 0.11,
+        "worstMs": 0.53,
+        "frames": 242
+      },
+      "split-copy": {
+        "avgMs": 0.1,
+        "worstMs": 0.12,
+        "frames": 242
+      },
+      "split": {
+        "avgMs": 0.05,
+        "worstMs": 0.07,
+        "frames": 242
+      }
+    },
+    "calls": 63
+  },
+  {
+    "gpuMs": 1.47,
+    "loadMs": 3.73,
+    "parts": {
+      "canvas": {
+        "avgMs": 0.74,
+        "worstMs": 1.44,
+        "frames": 240
+      },
+      "halo-gather": {
+        "avgMs": 0,
+        "worstMs": 0,
+        "frames": 240
+      },
+      "depth-copy": {
+        "avgMs": 0.28,
+        "worstMs": 0.69,
+        "frames": 240
+      },
+      "halo-source": {
+        "avgMs": 0.02,
+        "worstMs": 0.09,
+        "frames": 240
+      },
+      "halo-spread": {
+        "avgMs": 0.17,
+        "worstMs": 0.66,
+        "frames": 240
+      },
+      "halo-composite": {
+        "avgMs": 0.11,
+        "worstMs": 0.53,
+        "frames": 240
+      },
+      "split-copy": {
+        "avgMs": 0.1,
+        "worstMs": 0.48,
+        "frames": 240
+      },
+      "split": {
+        "avgMs": 0.05,
+        "worstMs": 0.06,
+        "frames": 240
+      }
+    },
+    "calls": 63
+  }
+]

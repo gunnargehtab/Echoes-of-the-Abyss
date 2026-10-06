@@ -1,0 +1,30 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "dpr": 1.5
+  },
+  "search": "?map=ventfront-divide",
+  "queueSteps": 12000,
+  "queued": {
+    "queued": true,
+    "gpuMs": 1.67,
+    "worstGpuMs": 2.41,
+    "loadMs": 3.75,
+    "connMs": 0.88,
+    "calls": 59,
+    "triangles": 150984,
+    "halo": "drawn"
+  },
+  "unqueued": {
+    "queued": false,
+    "gpuMs": 2.99,
+    "worstGpuMs": 7.58,
+    "loadMs": null,
+    "connMs": 1,
+    "calls": 59,
+    "triangles": 150984,
+    "halo": "drawn"
+  }
+}
