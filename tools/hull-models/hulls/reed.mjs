@@ -145,12 +145,20 @@
  * TRIM (#1110). The first Commune hull laid out on the navy's trim sheet:
  * `exportGlb`'s `trim` takes the Commune's grown skin (factions/pelagia.mjs
  * `TRIM`, the `grown` pattern) and trim.mjs lays every part's UV0 in
- * metres before the export. The stem, its two rings, the nose, the nodes,
- * their lips and seeds and the vein unroll — v along each one's axis, so
- * the sheet's lines are rings round them — and the two leaves and the
- * fluke lie flat, their lines along the span: 1,149 faces flat and 897
- * unrolled, 1,496 on the one-strake band, 90 on two, none on four and 460
- * on eight, which is the stem at 8.75 m a strake and 2.2 m an increment.
+ * metres before the export. The stem, its two rings, the nose, the nodes
+ * and their lips and seeds unroll — v along each one's axis, so the
+ * sheet's lines are rings round them, and each at one plate of the
+ * sheet's 16 m, half a wrap, which the pattern closes on itself since
+ * everything on it that varies along u repeats a plate (the review found
+ * the first draw's fields, a wrap long, meeting half out of phase down the
+ * port beam) — the two leaves lie flat with their lines along the span,
+ * the fluke flat with its lines along x, chordwise, since its 11.2 m along
+ * x is the longer of its extents against 10.8 up, and the vein, a
+ * `TubeGeometry` that trim.mjs does not count as round, is laid flat too,
+ * 400 of the flat faces, and left bare: 1,149 faces flat and 897 unrolled,
+ * 1,496 on the one-strake band, 90 on two, none on four and 460 on eight,
+ * which is the stem's 60.5 m (`PROFILE`, x −32.5 to 28) at 7.56 m a strake
+ * and 1.89 m an increment.
  * 314 vertices split, no vertex moved, and four materials tagged —
  * `chitin_hull`, `growth_ridge`, `algae_membrane`, `spore_pod` — with
  * `bio_vein_unlit` laid out and left bare, since the table's `untagged`

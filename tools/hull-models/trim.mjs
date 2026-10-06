@@ -90,8 +90,11 @@
  * across a flat part's shorter extent, so the same line is a ring round a
  * pod or a stem and a vein along a leaf — each line jittered off its pitch,
  * wandering as it goes round, about one in four a heavier check, under a
- * faint mottle. A wrap of the sheet is then a scale for `u` and nothing on
- * it is an edge.
+ * faint mottle. Nothing on it is a joint, so a plate of the sheet is the
+ * period of what varies along `u` — the wander and the mottle, a whole
+ * number of cells each a plate — which is what closes a round part's
+ * unroll at any whole number of plates, one included, and the wrap is two
+ * of them.
  */
 import * as THREE from 'three';
 import { occludes } from './glb.mjs';
@@ -217,12 +220,17 @@ function valueNoise(xm, ym, cellM, cells, seed) {
  * read the chamfer keys.
  *
  * The `grown` pattern (#1110) draws no joint on either axis. Each strake
- * carries `increments` growth lines along it, each sitting `jitter` of its
- * pitch off its station by an integer hash, so no two strakes space theirs
- * alike, and each wandering across the strake by `wanderM` as it goes
- * along, on a noise of `wanderCellM` cells that tiles the wrap as the
- * mottle does — a straight line at a regular pitch reads as ruled paper,
- * and a segmented worm is what a lathe stacked from drums reads as. A line
+ * carries `increments` growth lines along it, each sitting up to half of
+ * `jitter` of its pitch either way off its station by an integer hash, so
+ * no two strakes space theirs alike, and each wandering across the strake
+ * by `wanderM` as it goes along, on a noise of `wanderCellM` cells, a
+ * whole number of them a plate so the field repeats each plate, as the
+ * mottle's do: a round part unrolls at whole plates and a one-plate part
+ * spans half a wrap, so a field with the wrap's period met itself at the
+ * unroll's seam half a field out of phase (the review's 51 levels down the
+ * Reed's port beam). A straight line at a regular pitch reads as ruled
+ * paper, and a segmented worm is what a lathe stacked from drums reads
+ * as. A line
  * is `ringM` wide at `ring` of the light, and about one in `checkEvery` is
  * a heavier check, `checkM` at `check`, which is the mark that survives
  * the conn view's 3 px/m where the fine lines mipmap to a tone; both vary
@@ -309,11 +317,20 @@ export function drawTrimSheet({
       // jittered and wandered toward the edge crosses it; past `reach` a
       // line cannot touch the texel, so its wander is not computed, and it
       // counts only as the increment the texel lies above.
+      // Every field that varies along u repeats each plate, not each wrap
+      // (#1110 review): a round part unrolls at whole plates, so a one-plate
+      // part spans half a wrap and its two unroll edges meet at u and
+      // u + ½, where a field with the wrap's period is half a field out of
+      // phase with itself — 51 levels in the eight-strake band, a row of
+      // dark diamonds down the Reed's port beam, one per ring. A whole
+      // number of cells a plate closes the lattice on every whole-plate
+      // unroll, odd or even, with `layoutMesh` untouched. At one cell a
+      // field is flat along u, so a navy's plate holds at least two of each.
       const texV = strakeM / strakeH;
       const xm = u * wrapM;
       const tm = t * strakeM;
       const pitch = strakeM / increments;
-      const cells = Math.max(1, Math.round(wrapM / wanderCellM));
+      const cells = Math.max(1, Math.round(plateM / wanderCellM));
       const reach = wanderM + 0.65 * Math.max(ringM, checkM);
       let L = light;
       let under = -Infinity;
@@ -333,7 +350,7 @@ export function drawTrimSheet({
             continue;
           }
           const seed = 7 + 1000 * band.rows + 50 * (ss + 1) + k;
-          const y = rest + (valueNoise(xm, 0, wrapM / cells, cells, seed) - 0.5) * 2 * wanderM;
+          const y = rest + (valueNoise(xm, 0, plateM / cells, cells, seed) - 0.5) * 2 * wanderM;
           const d = tm - y;
           if (d > 0 && y > under) {
             under = y;
@@ -349,12 +366,12 @@ export function drawTrimSheet({
       }
       if (underId) L *= 1 - tone * hash(...underId, 5);
       if (mottle) {
-        const coarseN = Math.max(1, Math.round(wrapM / mottleM));
-        const fineN = Math.max(1, Math.round((8 * wrapM) / (3 * mottleM)));
+        const coarseN = Math.max(1, Math.round(plateM / mottleM));
+        const fineN = Math.max(1, Math.round((8 * plateM) / (3 * mottleM)));
         const ym = (s + t) * strakeM;
         const n =
-          0.65 * valueNoise(xm, ym, wrapM / coarseN, coarseN, 17) +
-          0.35 * valueNoise(xm, ym, wrapM / fineN, fineN, 19);
+          0.65 * valueNoise(xm, ym, plateM / coarseN, coarseN, 17) +
+          0.35 * valueNoise(xm, ym, plateM / fineN, fineN, 19);
         L *= 1 - mottle * smoothstep(0.3, 0.8, n);
       }
       return L;

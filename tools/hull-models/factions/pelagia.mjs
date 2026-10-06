@@ -240,25 +240,35 @@ export const ink = {
  * flat part's shorter extent, so one line is a ring round a stem, a pod, a
  * ridge or an orb (`grownBody` keeps its sphere's type and unrolls) and a
  * vein along a leaf's span. Four a 6 m strake, the facet rule's own
- * increment of a metre and a half (`facets` below), each 0.6 of its pitch
- * off its station by hash and wandering 0.5 m across the strake on 4 m
+ * increment of a metre and a half (`facets` below), each up to 0.3 of its
+ * pitch either way off its station by hash (`jitter` 0.6 is the whole
+ * range) and wandering 0.5 m across the strake on 4 m
  * cells — a line at a regular pitch is ruled paper, and a ring at every
  * station is the segmented worm kit.mjs `loft` warns of — 0.15 m wide at
  * 0.84 of the light, with about one in four a heavier check, 0.3 m at
  * 0.55: the mark that survives the conn view's 3 px/m, where the fine
  * lines mipmap to a tone (the Order's 0.2 m hairline is the measure, and
  * 0.15 m mipmapped to a rumour). The pitch in metres is the part's, since
- * the layout's bands stop at eight strakes: a 70 m stem carries 2.2 m
- * increments and a 1.8 m ridge 0.45 m, a tone. The hero rings stay
+ * the layout's bands stop at eight strakes: the Reed's 60.5 m stem carries
+ * 1.9 m increments and a 1.8 m ridge 0.45 m, a tone. The hero rings stay
  * geometry — the ridges' 0.5–0.9 m tubes, `growthRings`, `grownRings`,
  * `drumRings` — two to six times the drawn check, as the Klaxon's
  * `rivetRows` stand over its drawn rivets. 0.03 of tone keyed on the
  * increment, so the one step falls on a line and never on a strake's
  * edge; 0.04 of mottle in two octaves from 8 m, the slow variation that
- * reads at range; 0.01 of grain. The plate is 8 m and the wrap 16, the
- * Directorate's: nothing on this sheet is an edge, so the plate is the
- * scale of `u` and the count a round part unrolls at, and no parity is
- * asked of it.
+ * reads at range; 0.01 of grain. The plate is 16 m and the wrap 32.
+ * Nothing on this sheet is a joint, so the plate is two things only: the
+ * count a round part unrolls at (every round part on the Reed is one
+ * plate, half a wrap) and the period of what varies along u — the
+ * wander's four cells of 4 m, the mottle's two of 8 m and five of 3.2 m —
+ * which is what closes a one-plate unroll on itself (trim.mjs `grown`).
+ * It was the Directorate's 8 m, with the fields repeating a wrap, until
+ * the review found the stem's unroll edges meeting half a field out of
+ * phase, 51 levels apart in the eight-strake band, a row of dark diamonds
+ * down the port beam; and at 8 m with the fields a plate the coarse mottle
+ * would be one cell, which `valueNoise` draws flat along u. Sixteen keeps
+ * every cell the size its key says, and a 16 m repeat is under one and a
+ * half periods along the 21.5 m starboard leaf.
  *
  * The mean is 0.903 in linear light (sheets.mjs reports it), in the
  * 0.90–0.93 a matte grown skin belongs in on the register the conn view
@@ -284,7 +294,7 @@ export const TRIM = {
   pattern: 'grown',
   size: 512,
   strakeM: 6,
-  plateM: 8,
+  plateM: 16,
   light: 0.98,
   increments: 4,
   jitter: 0.6,

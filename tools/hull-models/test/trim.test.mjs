@@ -452,7 +452,7 @@ test('the Commune draws a grey grown sheet, bright, and the one sheets.mjs wrote
   assert.equal(sheet.wrapM, PLATES * PELAGIA.plateM);
 });
 
-test('a grown sheet has rings along its strakes and no joint across them', () => {
+test('grown lines run along the strake, no joint crosses them, and every plate repeats', () => {
   // The lines alone: no grain, tone or mottle to blur what runs which way.
   const bare = drawTrimSheet({ ...PELAGIA, tone: 0, mottle: 0, grain: 0, samples: 2 });
   const n = bare.size;
@@ -479,6 +479,15 @@ test('a grown sheet has rings along its strakes and no joint across them', () =>
     const spread = Math.max(...means) - Math.min(...means);
     assert.ok(spread <= 8, `a column of the ${b.rows}-strake band stands ${spread} levels out`);
   }
+  // A round part unrolls at whole plates, one plate being half a wrap, so
+  // its unroll's two edges meet a plate apart in `u`: everything that varies
+  // along the strake repeats every plate, or a one-plate stem wears a seam
+  // down one beam (#1110, at review).
+  const plate = n / PLATES;
+  let apart = 0;
+  for (let y = 0; y < n; y++)
+    for (let x = 0; x < plate; x++) apart = Math.max(apart, Math.abs(at(x, y) - at(x + plate, y)));
+  assert.ok(apart <= 1, `a plate along, the sheet differs by ${apart} levels`);
   // As shipped, the wrap closes: the step from the last column to the first
   // is no bigger than a step inside the sheet's own grain.
   const sheet = grown();
@@ -512,10 +521,10 @@ test('grown increments wander, space themselves unevenly, and come in two weight
   };
   const two = band(2);
   const here = lines(0, two).map((l) => l.y);
-  const there = lines(n / 2, two).map((l) => l.y);
-  // Half a wrap along, a straight line would sit on the same row.
+  const there = lines(n / (2 * PLATES), two).map((l) => l.y);
+  // Half a plate along, a straight line would sit on the same row.
   const moved = here.filter((y) => there.every((z) => Math.abs(z - y) > 1));
-  assert.ok(moved.length > 0, `every line at u 0 is at u ½ too: ${here} / ${there}`);
+  assert.ok(moved.length > 0, `every line at u 0 is half a plate on too: ${here} / ${there}`);
   // A jig spaces its rings evenly; a grown strake does not.
   const gaps = here.slice(1).map((y, i) => y - here[i]);
   assert.ok(Math.max(...gaps) - Math.min(...gaps) > 2, `even gaps ${gaps}`);
