@@ -30,6 +30,12 @@ A geothermal battlefield split by erupting thermal veins.
 - **A kelp bed behind each base**, in the back corner of its plateau — the map's only ground
   that is Kelp Forest and deep enough to seat a structure, and so the only place on it a
   bio-reactor can stand
+- **Drawn as places, not boxes** (#1106): the vent line swells about its two vents and
+  narrows where the plateaus press in, each plateau turns a flank to the middle, the trench
+  lips break at the corners and recede across the gaps, and the coral reefs reach out of the
+  vents at either end. The shapes moved outlines, not the water between seats: every
+  straight line from one spawn to another crosses the cells it always did, and the trenches
+  stay off all of them, because the loud way is the way round
 
 ### Biome Distribution
 
