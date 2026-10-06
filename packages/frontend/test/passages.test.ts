@@ -4,7 +4,7 @@
  *
  * What these hold is the shape the two sections promise, not how it looks:
  * a passage is one route mouth to mouth along its own axis, its roof is stone
- * at the rock top, a mouth is a lintel stopping at the ceiling with the hole
+ * clear of its ceiling, a mouth is a lintel stopping at the ceiling with the hole
  * beneath it, a side against shallower ground is closed down to the
  * heightfield, and only a hull under the ceiling opens a roof. The picture is
  * the run-game screenshot's to review.
@@ -248,6 +248,27 @@ describe('the roof over a passage', () => {
       ...Array.from({ length: shape.positions.length / 3 }, (_, i) => shape.positions[i * 3 + 1]!)
     );
     assert.ok(highest > ceilingY + 20, 'and its top stands well clear of it');
+  });
+
+  it('never dips into the water it roofs, however shallow the ceiling', () => {
+    // A 30 m ceiling is shallower than the 150 m rise and the 45 m crag: the top
+    // clamps at the surface, and the crag would push it past the ceiling.
+    const shallow = wallTerrain();
+    const ceiling = shallow.ceiling.map((c) => (c === 700 ? 30 : c));
+    const lid = { ...shallow, ceiling };
+    const lidSeed = seabedSeed(lid);
+    const lidRock = rockTopDepthM(lid);
+    const shape = buildRoofGeometry(
+      lid,
+      roofedPassages(lid).list[0]!,
+      buildHeightGrid(lid, lidSeed, lidRock),
+      lidSeed,
+      lidRock
+    );
+    const ceilingY = depthToWorldY(30);
+    for (let i = 1; i < shape.positions.length; i += 3) {
+      assert.ok(shape.positions[i]! >= ceilingY - 1e-3, 'no part of the roof below its ceiling');
+    }
   });
 
   it('spends a few hundred triangles a cell, not thousands', () => {

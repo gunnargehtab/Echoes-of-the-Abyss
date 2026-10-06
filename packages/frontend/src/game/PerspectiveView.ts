@@ -87,7 +87,6 @@ import {
   buildHeightGrid,
   edgeRing,
   patchHeightGrid,
-  rockSurfaceDepthM,
   type HeightGrid,
   DEPTH_VISUAL_M_PER_M,
   depthToWorldY,
@@ -114,7 +113,7 @@ import {
   buildRoofGeometry,
   roofedPassages,
   roofOver,
-  roofTopDepthM,
+  roofSurfaceDepthM,
   ROOF_OPEN_OPACITY,
   type Passages,
 } from './passages.ts';
@@ -1570,10 +1569,10 @@ export class PerspectiveView {
    * never explains.
    */
   private buildTerrainDressing(terrain: TerrainPayload, grid: HeightGrid): void {
-    // The roofs (#1105): stone over each passage, risen to the rock top, a
-    // lintel over every mouth (passages.ts). Unlit like the ground they stand
-    // in, and translucent-capable, because a roof over one of your own hulls
-    // turns to glass (`openRoofs`). Rung 2, the stone.
+    // The roofs (#1105): stone over each passage, risen clear of its ceiling,
+    // a lintel over every mouth (passages.ts). Unlit like the ground they
+    // stand in, and translucent-capable, because a roof over one of your own
+    // hulls turns to glass (`openRoofs`). Rung 2, the stone.
     for (const roof of this.roofs) {
       roof.mesh.geometry.dispose();
       roof.material.dispose();
@@ -1616,9 +1615,10 @@ export class PerspectiveView {
     // Rung 5, map furniture (docs/map-visuals.md §5), at the ladder's alpha.
     const routePoints: number[] = [];
     for (const passage of passages.list) {
-      const roofTop = roofTopDepthM(terrain, passage, this.groundRockTopM);
       const roofY = (xM: number, yM: number) =>
-        depthToWorldY(rockSurfaceDepthM(this.groundSeed, roofTop, xM, yM)) + 12;
+        depthToWorldY(
+          roofSurfaceDepthM(terrain, passage, this.groundSeed, this.groundRockTopM, xM, yM)
+        ) + 12;
       const route = passage.route;
       for (let i = 1; i < route.length; i++) {
         const a = route[i - 1]!;
@@ -1868,8 +1868,10 @@ export class PerspectiveView {
    * (docs/art-direction.md, "Reading the Sea Floor"). Asked of the own force
    * alone: this view holds no other hull's position, and a roof that cleared
    * for a contact would be a detection drawn in stone. Last snapshot's
-   * positions, so a hull gliding through a mouth opens its roof up to one
-   * Echo tick late — at worst a fifth of a second of hull under stone.
+   * positions, while the drawn hull runs one Echo interval behind them
+   * (ownMotion.ts): a roof opens up to a tick before the hull is drawn
+   * inside, and closes up to a tick before it is drawn out — at worst a fifth
+   * of a second of hull under stone, at the exit.
    */
   private openRoofs(): void {
     const terrain = this.terrain;

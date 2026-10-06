@@ -5,8 +5,9 @@
  * A roofed cell is water between a ceiling and a floor, and the column above
  * the ceiling is no water at all (docs/systems-depth.md §1). The heightfield
  * draws the floor, which is the inside of the passage; this module stands the
- * roof up over it as stone, risen to the same rock top a mesa has, and says
- * where the route runs.
+ * roof up over it as stone, risen to the map's rock top or 150 m above the
+ * passage's ceiling, whichever is shallower (`roofTopDepthM`), and says where
+ * the route runs.
  *
  * Pure data, like perspectiveTerrain.ts: no three.js, so the shapes are
  * testable under node and the view stays a dumb consumer. Render-only by the
@@ -176,6 +177,28 @@ export function roofTopDepthM(terrain: Terrain, passage: Passage, rockTopM: numb
   return Math.max(0, Math.min(rockTopM, ceiling - ROCK_RISE_ABOVE_SHALLOWEST_M));
 }
 
+/**
+ * A roof's surface at a world position, in metres: its top plus the crag, the
+ * way a mesa's is (`rockSurfaceDepthM`), and never deeper than the shallowest
+ * ceiling it lids. The crag is 45 m against the 150 m rise, so the clamp binds
+ * only under a ceiling too shallow for the rise, where the stone would
+ * otherwise dip into the water it roofs. The roof and its route line both
+ * stand on this, so the line never sinks into the stone.
+ */
+export function roofSurfaceDepthM(
+  terrain: Terrain,
+  passage: Passage,
+  seed: number,
+  rockTopM: number,
+  xM: number,
+  yM: number
+): number {
+  let ceiling = Infinity;
+  for (const index of passage.cells) ceiling = Math.min(ceiling, terrain.ceiling[index]!);
+  const top = rockSurfaceDepthM(seed, roofTopDepthM(terrain, passage, rockTopM), xM, yM);
+  return Math.min(top, Math.max(0, ceiling - 1));
+}
+
 /** The roof's skin, in display (sRGB) terms; the view converts it to linear. */
 export interface RoofGeometry {
   positions: Float32Array;
@@ -234,8 +257,7 @@ export function buildRoofGeometry(
   };
   // a–b along one row, c–d the row after: two triangles.
   const quad = (a: number, b: number, c: number, d: number) => indices.push(a, c, b, b, c, d);
-  const roofTop = roofTopDepthM(terrain, passage, rockTopM);
-  const top = (x: number, z: number) => rockSurfaceDepthM(seed, roofTop, x, z);
+  const top = (x: number, z: number) => roofSurfaceDepthM(terrain, passage, seed, rockTopM, x, z);
   // The crag's light, as the bake reads it for a mesa: the rock detail's
   // drop across the step, scaled to metres per cell.
   const crag = (x: number, z: number) => {

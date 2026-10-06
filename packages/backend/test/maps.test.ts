@@ -42,7 +42,7 @@ import {
   terrainFor,
 } from '../src/sim/maps/index.ts';
 import { Match } from '../src/sim/match.ts';
-import { Terrain } from '../src/sim/terrain.ts';
+import { SOLID, Terrain } from '../src/sim/terrain.ts';
 import type { MapDefinition, MapRegion } from '../src/sim/maps/index.ts';
 
 /** Step a match until it produces an Echo snapshot. */
@@ -322,6 +322,23 @@ describe('the map catalogue', () => {
           ),
           `${map.id} re-homes ${faunaStatsFor(species).name} to a band §4 does not document`
         );
+      }
+    }
+  });
+
+  it("never leaves rock's 1 m ceiling over water a region floored (#1105)", () => {
+    // `SOLID` spells rock as a 1 m ceiling over a 0 m floor. A region cut into
+    // rock that sets only a floor keeps that ceiling, and the cell becomes a
+    // roofed passage nobody authored: the client stands stone over it from the
+    // surface down. A real roof says its ceiling.
+    for (const map of [...MAPS, ...MISSION_MAPS]) {
+      const grid = terrainFor(map).serialize();
+      for (let i = 0; i < grid.floor.length; i++) {
+        const ceiling = grid.ceiling[i]!;
+        if (ceiling !== SOLID.ceilingM || grid.floor[i]! <= ceiling) continue;
+        const col = i % grid.cols;
+        const row = Math.floor(i / grid.cols);
+        assert.fail(`${map.id}: cell (${col}, ${row}) is water under rock's 1 m ceiling`);
       }
     }
   });

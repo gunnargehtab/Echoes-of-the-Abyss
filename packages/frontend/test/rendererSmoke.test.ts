@@ -70,6 +70,7 @@ import type { ReadoutBox } from '../src/game/readouts.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { LampHaloPass } from '../src/game/lampHaloPass.ts';
 import { ROOF_OPEN_OPACITY } from '../src/game/passages.ts';
+import { FURNITURE_OUTLINE_ALPHA } from '../src/game/ladder.ts';
 import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
 import { FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
@@ -939,9 +940,19 @@ describe('renderer smoke test: the conn view', () => {
         });
         return found;
       };
-      const opacity = () => (roofs()[0]!.material as MeshBasicMaterial).opacity;
+      const material = () => roofs()[0]!.material as MeshBasicMaterial;
+      const opacity = () => material().opacity;
       assert.equal(roofs().length, 1, 'one passage, one roof');
       assert.equal(opacity(), 1, 'closed while no own hull is under it');
+
+      // The same passage is on the scope, as a route stroked in rung 5's ink.
+      const scope = (world.chart as unknown as { minimapTerrainG: Graphics }).minimapTerrainG;
+      const routed = scope.context.instructions.some((instruction) => {
+        if (instruction.action !== 'stroke') return false;
+        const style = (instruction.data as { style: { color: number; alpha: number } }).style;
+        return style.color === UI.accent && style.alpha === FURNITURE_OUTLINE_ALPHA.tunnelRoute;
+      });
+      assert.ok(routed, 'the scope strokes the passage route');
 
       const snapshot = cannedSnapshot(400);
       const [lead, ...rest] = snapshot.units;
@@ -951,8 +962,10 @@ describe('renderer smoke test: the conn view', () => {
       };
       at(3250, 1500, 2000);
       assert.equal(opacity(), ROOF_OPEN_OPACITY, 'glass with a hull inside');
+      assert.equal(material().depthWrite, false, 'and glass writes no depth');
       at(2250, 1500, 2000);
       assert.equal(opacity(), 1, 'stone again once it leaves');
+      assert.equal(material().depthWrite, true, 'and stone writes it again');
     } finally {
       world.teardown();
     }

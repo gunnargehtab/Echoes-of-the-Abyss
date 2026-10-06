@@ -107,7 +107,8 @@ export function seabedDepthAtM(
 /**
  * The top of a rock mass at a world position, in metres: the rock top plus
  * the crag, clamped at the surface. A mesa stands on it, and so does the roof
- * over a roofed passage (passages.ts), so the two meet without a seam.
+ * over a roofed passage (passages.ts) from its own top, so the two meet
+ * without a seam wherever they share one.
  */
 export function rockSurfaceDepthM(seed: number, rockTopM: number, xM: number, yM: number): number {
   return Math.max(0, rockTopM + rockDetailM(xM, yM, seed));

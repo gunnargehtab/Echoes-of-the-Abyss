@@ -88,7 +88,11 @@ export const FOURTH_TRENCH: MapDefinition = {
       widthM: 250,
       heightM: 250,
       biome: Biome.ThermalVein,
+      // Cut into the wall's rock, whose ceiling (1 m) would otherwise survive
+      // under the new floor and roof the pocket over: §11 gives a floor only
+      // (#1105).
       floorM: 1700,
+      ceilingM: 0,
       note: 'Lay-by One — the first chartered vent pocket, notched into the west wall. The northern station moors here',
     },
     {
@@ -98,6 +102,7 @@ export const FOURTH_TRENCH: MapDefinition = {
       heightM: 250,
       biome: Biome.ThermalVein,
       floorM: 1700,
+      ceilingM: 0,
       note: 'Lay-by Two — the second pocket, east wall. The southern station',
     },
     {

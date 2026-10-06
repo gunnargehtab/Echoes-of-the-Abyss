@@ -126,7 +126,11 @@ export const FOURTH_FOOT: MapDefinition = {
       widthM: 250,
       heightM: 250,
       biome: Biome.ThermalVein,
+      // Cut into the wall's rock, whose ceiling (1 m) would otherwise survive
+      // under the new floor and roof the pocket over: §11 gives a floor only
+      // (#1105).
       floorM: 1700,
+      ceilingM: 0,
       note: 'Lay-by One — the northern chartered pocket, notched into the west wall. `baffle-north` moors here, and the picket takes it off the chart at 13:00',
     },
     {
@@ -136,6 +140,7 @@ export const FOURTH_FOOT: MapDefinition = {
       heightM: 250,
       biome: Biome.ThermalVein,
       floorM: 1700,
+      ceilingM: 0,
       note: 'Lay-by Two — the southern pocket, east wall. `baffle-south`. Half the quiet water on the map, and the other half is the first one',
     },
     {
