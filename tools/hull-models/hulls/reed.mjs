@@ -152,8 +152,8 @@
  * everything on it that varies along u repeats a plate (the review found
  * the first draw's fields, a wrap long, meeting half out of phase down the
  * port beam) — the two leaves lie flat with their lines along the span,
- * the fluke flat with its lines along x, chordwise, since its 11.2 m along
- * x is the longer of its extents against 10.8 up, and the vein, a
+ * the fluke flat with its lines along x, chordwise, since its 11.25 m
+ * along x is the longer of its extents against 10.9 up, and the vein, a
  * `TubeGeometry` that trim.mjs does not count as round, is laid flat too,
  * 400 of the flat faces, and left bare: 1,149 faces flat and 897 unrolled,
  * 1,496 on the one-strake band, 90 on two, none on four and 460 on eight,
@@ -166,7 +166,11 @@
  * lamps and never tagged. The file goes from 122,148 to 132,652 bytes, the
  * split vertices and the glTF JSON naming them and the tags; its 16 parts,
  * 2,046 triangles, bounds and outline are what they were, which
- * `diff.mjs reed-pelagia 6bc067ea` reads as the shape unchanged.
+ * `diff.mjs reed-pelagia 6bc067ea` reads as the shape unchanged. The two
+ * rings above stay the hull's only geometry rings; the sheet's checks,
+ * a dark 0.5 m line about one increment in four, read between the nodes
+ * as growth marks on the stem's skin, the owner's call so the sheet reads
+ * at the conn view, and add no part.
  *
  * The hand-drawn entry in silhouettes.ts stays until the kind is wired
  * (docs/models-plan.md §2). The generated outline is fifteen vertices and

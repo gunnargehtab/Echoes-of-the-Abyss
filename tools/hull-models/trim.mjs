@@ -172,8 +172,10 @@ export function sheetLayout({ plateM = 12 } = {}) {
 }
 
 /**
- * Smooth noise in [0, 1) on a lattice of `cells` a wrap in u, so it tiles
- * the sheet's wrap as the plates do; `seed` picks the field.
+ * Smooth noise in [0, 1) on a lattice that wraps every `cells` cells in u
+ * — a wrap for the plate pattern's grime, so it tiles the sheet as the
+ * plates do, and a plate for the grown pattern's fields, so a one-plate
+ * unroll closes; `seed` picks the field.
  */
 function valueNoise(xm, ym, cellM, cells, seed) {
   const gx = xm / cellM;

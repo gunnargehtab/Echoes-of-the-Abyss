@@ -687,7 +687,7 @@ the one step falls on a line and never on a strake's edge, under **0.04** of mot
 of 8 and 3.2 m cells and a **0.01** grain. The pitch in metres is the part's, since the bands stop
 at eight strakes: the Reed's 60.5 m stem lays on the eight-strake band at 7.6 m a strake and
 1.9 m an increment, and a 1.8 m ridge on the one-strake band at 0.45 m, a tone. The hero rings
-stay geometry (`growthRings`, `grownRings`, `drumRings`, ridges of 0.5 to 0.9 m), as the
+stay geometry (`growthRings`, `grownRings`, `drumRings`, tubes 1 to 1.8 m across), as the
 Consortium's `rivetRows` stand over its drawn rivets. `mirror` is off, since the Commune refuses a
 mirrored pair, and `untagged` leaves `bio_vein_unlit` bare, the vein family's unlit base and the
 Knights' `crystal_seam_unlit` precedent, and `grown_steel`, the structures' fitted collars and
@@ -704,11 +704,11 @@ within the grain's 3. At 8 m with the fields a plate the coarse mottle would be 
 along `u`, so the plate went to 16; a 16 m repeat is under one and a half periods along the
 21.5 m starboard leaf. The check is drawn for the camera that reads it, and the Commune's ink is
 what sets its depth: `chitin_hull` is nearly black at rest, and a sheet only darkens what the ink
-has. At the conn view's nearest zoom, about 5 px/m, a first check of 0.3 m at 0.55 moved 48
-pixels of a 50,700-pixel crop of the Reed by more than 16 levels and no ring read; at 0.5 m and
-0.25 it moves 123, and the rings read on the stem between its nodes and as lines along the
-leaves, the fine lines a tone ([the conn view](screenshots/issue-1110/conn-view.png), before and
-after, doubled). The sheet is **39,782 bytes** at a mean linear luminance of **0.875**: over the
+has. At the conn view's nearest zoom, about 5 px/m, a first check of 0.3 m at 0.55 moved 45
+pixels of a 50,700-pixel crop of the Reed by more than 16 levels of luma and no ring read; at
+0.5 m and 0.25 it moves 113, and the rings read on the stem between its nodes and as lines along
+the leaves, the fine lines a tone ([the conn view](screenshots/issue-1110/conn-view.png): main,
+the first check and the final, that crop's 390 by 130 pixels each doubled). The sheet is **39,782 bytes** at a mean linear luminance of **0.875**: over the
 Consortium's 0.857, under the Knights' 0.899 and the Directorate's 0.938, a matte skin girdled by
 a dark ring every few metres, so the register the conn view puts a navy on moves by an eighth.
 
@@ -730,7 +730,8 @@ go from 19 to 20, and gate 6's queued GPU time reads 0.67 to 0.82 ms at pixel ra
 shows the rings round the stem and the lines along the leaves close in. The Commune is
 Sorrowgate's navy, so this is the first sheet the tutorial's triplanar laminate meets in play:
 the laminate multiplies `diffuseColor` after `map_fragment`, the sheet under it, and
-`packages/frontend/test/trimSheet.test.ts` holds that chain on a Commune Reed.
+`packages/frontend/test/trimSheet.test.ts` holds that chain on a stand-in tagged `pelagia` and
+built as a Commune Reed.
 
 #### Ranked audit and remaining work
 

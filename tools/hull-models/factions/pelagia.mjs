@@ -249,19 +249,21 @@ export const ink = {
  * 0.25: the mark that has to read at the conn view, where the fine lines
  * mipmap to a tone. It was 0.3 m at 0.55, the Order's 0.2 m hairline the
  * measure, until the owner's close frames: at the view's nearest zoom,
- * about 5 px/m, that moved 48 pixels of a 50,700-pixel crop of the Reed
- * by over 16 levels and no ring read, because `chitin_hull` is nearly
+ * about 5 px/m, that moved 45 pixels of a 50,700-pixel crop of the Reed
+ * by over 16 levels of luma and no ring read, because `chitin_hull` is nearly
  * black at rest (the block) and a sheet can only darken what the ink
  * already has — on a dark ink a ratio buys half the levels it buys the
  * Order's pale alloy. 0.5 m at 0.25 is two and a half pixels of ring cut
- * to a quarter, 123 pixels over 16 levels, and the rings read on the stem
+ * to a quarter, 113 pixels over 16 levels, and the rings read on the stem
  * between the nodes and as lines along the leaves, the fine lines still a
- * tone (#1107: a mark is drawn for the camera that reads it). The pitch
+ * tone (#1107: a mark is drawn for the camera that reads it;
+ * docs/screenshots/issue-1110/conn-view.png has the three frames). The pitch
  * in metres is the part's, since
  * the layout's bands stop at eight strakes: the Reed's 60.5 m stem carries
- * 1.9 m increments and a 1.8 m ridge 0.45 m, a tone. The hero rings stay
- * geometry — the ridges' 0.5–0.9 m tubes, `growthRings`, `grownRings`,
- * `drumRings` — two to six times the drawn check, as the Klaxon's
+ * 1.9 m increments and its two rings, 1.1 and 1.2 m along it, about
+ * 0.3 m, a tone. The hero rings stay geometry — the ridges' tubes, 0.5 to
+ * 0.9 m in radius and so 1 to 1.8 m across, `growthRings`, `grownRings`,
+ * `drumRings` — two to three and a half times the drawn check, as the Klaxon's
  * `rivetRows` stand over its drawn rivets. 0.03 of tone keyed on the
  * increment, so the one step falls on a line and never on a strake's
  * edge; 0.04 of mottle in two octaves from 8 m, the slow variation that
