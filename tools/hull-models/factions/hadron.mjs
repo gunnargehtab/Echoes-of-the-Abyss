@@ -253,8 +253,20 @@ export const ink = {
  * both sides, and a panel's tone keyed on its strake's distance from the
  * band's middle, so every band reads the same turned over — which is how
  * the layout lands a keel-centred part's port face against its starboard,
- * and a port part against its twin — and the one navy with bilateral
- * symmetry keeps it on its skin.
+ * and a port part against its twin. `mirror` is the other half of that: a
+ * flat face laid along the beam measures its plates from the centreline
+ * out rather than from the part's own low edge (trim.mjs `layoutMesh`),
+ * since that edge is inboard on a starboard part and outboard on its twin,
+ * and the wing seams' joints landed up to 4.2 m apart side to side without
+ * it (#1109, at review). So the flat skin is mirror-true to under 3 sRGB
+ * levels through a 16-texel blur (docs/screenshots/issue-1109/mirror.mjs
+ * is the measure); the faceted
+ * rounds are not quite — a joint that falls mid-facet where a facet
+ * tapers follows the triangle diagonal and kinks, 0.38 m on the drive
+ * prism's top flat, about a pixel at the conn view's 3 px/m — so 4.2 % of
+ * the Responsory's tagged area differs from its mirror by more than 8
+ * levels, all of it on the blade, the horn, the drive, the rings and
+ * their stays, and #746 takes that.
  *
  * Panels of 4.5 m by 4 m, two a wrap of 9 m: the facet rule's own grain
  * (`facets` below cuts a mirror facet at a 3 m chord, `panels` centres a
@@ -266,9 +278,10 @@ export const ink = {
  * 5 m every tagged round on the Responsory's centreline comes even — the
  * blade four, the horn at 17.4 m four, the drive at 8.1 m two — so a butt
  * on either beam has its twin; the emitter barrel, 4.8 m round, is one
- * plate at any size and keeps its butt on the starboard ridge alone. A
- * later hull reads its own girths off `exportGlb`'s file before it trusts
- * this. The layout's bands stop at eight strakes, so a lathe 77 m long
+ * plate at any size, its one joint on the crown ridge and the unroll's
+ * wrap mid-panel on the starboard ridge, so it mirrors too, within 3.7
+ * levels. A later hull reads its own girths off `exportGlb`'s file before
+ * it trusts this. The layout's bands stop at eight strakes, so a lathe 77 m long
  * carries 9.7 m strakes along it whatever this says; the wings' are
  * 3.95 m. The joint is drawn for the conn view's ~3 px/m (#1107), where
  * "seams tight" and "readable" pull apart: a hairline of 0.2 m at 0.4 of
@@ -306,6 +319,7 @@ export const TRIM = {
   tone: 0.04,
   samples: 4,
   grain: 0,
+  mirror: true,
   untagged: ['resonance_crystal', 'crystal_seam_unlit'],
 };
 

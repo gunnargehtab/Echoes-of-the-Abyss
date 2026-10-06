@@ -354,6 +354,70 @@ test('a facet joint is a hairline lit on both sides, as wide in metres both ways
   assert.deepEqual([...values], [panel]);
 });
 
+test('the facet layout lays port as starboard turned over, not shifted', () => {
+  // Plates whose long side runs across the beam, where a layout measured
+  // from each part's own lowest z puts the port twin's joints at other
+  // distances from the keel (#1109): a starboard plate, its port twin, and
+  // one plate across the keel.
+  const root = new THREE.Group();
+  const mat = steel();
+  const plate = (name, z0, z1) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(10, 0.5, z1 - z0), mat);
+    m.name = name;
+    m.position.set(0, 0, (z0 + z1) / 2);
+    root.add(m);
+    return m;
+  };
+  const star = plate('seam_s', 3.5, 14.6);
+  const port = plate('seam_p', -14.6, -3.5);
+  const keel = plate('seam_0', -7.3, 7.3);
+  const sheet = drawTrimSheet(HADRON);
+  layoutTrim(root, sheet, HADRON);
+  // A flat face's UV is affine in position, so one top triangle gives the
+  // whole top face's map.
+  const topMap = (mesh) => {
+    mesh.updateMatrixWorld(true);
+    const g = mesh.geometry;
+    const tri = [];
+    for (let k = 0; k < g.index.count && tri.length < 3; k += 3) {
+      const ids = [0, 1, 2].map((c) => g.index.getX(k + c));
+      if (ids.every((i) => g.attributes.normal.getY(i) > 0.9)) tri.push(...ids);
+    }
+    const p = tri.map((i) =>
+      new THREE.Vector3().fromBufferAttribute(g.attributes.position, i).applyMatrix4(mesh.matrixWorld)
+    );
+    const uv = tri.map((i) => [g.attributes.uv.getX(i), g.attributes.uv.getY(i)]);
+    // Solve [x z 1] · [a b c] = uv for each channel.
+    const m = new THREE.Matrix3().set(p[0].x, p[0].z, 1, p[1].x, p[1].z, 1, p[2].x, p[2].z, 1);
+    const inv = m.clone().invert();
+    const coef = (ch) => new THREE.Vector3(uv[0][ch], uv[1][ch], uv[2][ch]).applyMatrix3(inv);
+    const [cu, cv] = [coef(0), coef(1)];
+    return (x, z) => [cu.x * x + cu.y * z + cu.z, cv.x * x + cv.y * z + cv.z];
+  };
+  const texel = ([u, v]) => {
+    const n = sheet.size;
+    const x = Math.floor((((u % 1) + 1) % 1) * n);
+    const y = Math.min(n - 1, Math.max(0, Math.floor(v * n)));
+    return sheet.pixels[y * n + x];
+  };
+  const [s, p, k] = [star, port, keel].map(topMap);
+  let worst = 0;
+  let joints = 0;
+  // An irrational step, so no sample sits on a texel's edge.
+  for (let i = 0; i < 400; i++) {
+    const x = -4.9 + ((i * 0.6180339887) % 1) * 9.8;
+    const z = 3.6 + ((i * 0.7548776662) % 1) * 10.9;
+    const pair = [
+      [texel(s(x, z)), texel(p(x, -z))],
+      [texel(k(x, z * 0.65)), texel(k(x, -z * 0.65))],
+    ];
+    for (const [a, b] of pair) worst = Math.max(worst, Math.abs(a - b));
+    if (texel(s(x, z)) < 200) joints++;
+  }
+  assert.ok(joints > 0, 'no sample fell on a joint, so the pairs prove nothing');
+  assert.ok(worst <= 1, `a point and its mirror differ by ${worst} grey levels`);
+});
+
 test('`untagged` lays a cladding out and leaves it bare', () => {
   const { root, slab, drum } = yard();
   const stone = new THREE.MeshStandardMaterial();

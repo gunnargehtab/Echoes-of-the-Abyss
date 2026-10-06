@@ -621,15 +621,24 @@ a **0.04** tone keyed on the strake's distance from its band's middle, so every 
 same turned over — which is how the layout lands a keel-centred part's port face against its
 starboard and a port part against its twin — and no grain, since a mirror has no tooth and the
 grain is the one mark that does not mirror; measured texel for texel, no band differs from
-itself turned over by a level and the wrap closes to the level. The table's `untagged` keeps
+itself turned over by a level and the wrap closes to the level. The table's `mirror` key is
+the layout's half of that: a flat face laid along the beam measures its plates from the
+centreline out rather than from the part's own low edge — from the inboard edge on a part
+wholly to one side, and from z 0 on a part across the keel, set half a plate out so the
+centreline is mid-plate and a plate's index keeps its parity under the mirror, where a joint
+on the centreline would swap the tones — because that low edge is inboard on a starboard part
+and outboard on its twin, and the first layout put the wing seams' joints up to 4.2 m apart
+side to side. The Consortium's and the Directorate's tables do not set it, and their layouts
+and files are byte for byte what they were. The table's `untagged` keeps
 the sheet off `resonance_crystal` and the lamp family's unlit finish `crystal_seam_unlit`:
 violet stone and a dark seam are not panelling, so both are laid out and left bare, and the
 lamps are never tagged. The Responsory is the first hull, the owner's choice: its 48 parts lay
 **584** faces flat and **572** unrolled — 856 on the one-strake band, 120 on two, 40 on four,
 140 on eight — split **138** vertices and tag two materials, `shadow_indigo` and `pale_alloy`.
-`responsory-hadron.glb` goes from **104,480 to 110,156 bytes** (gzip 12,606 to 14,950) with
+`responsory-hadron.glb` goes from **104,480 to 110,156 bytes** (zlib's default gzip 13,098 to
+15,676, as `tools/render-stack/audit.mjs` measures) with
 its 48 parts, 1,156 triangles and outline unchanged; no triangle moved, so the sprite rebake
-changes the albedo alone (`responsory-albedo.png`, 7,191 to 19,070 bytes, the wings' butts drawn
+changes the albedo alone (`responsory-albedo.png`, 7,191 to 19,047 bytes, the wings' butts drawn
 at 4 px/m) and the height and emissive maps are byte for byte what they were, the glow on its
 gate-3 target of 3.10. The sheet is
 **1,653 bytes**, flat fields compressing where plate and chitin do not, at a mean linear
@@ -641,11 +650,20 @@ draw or triangle more. With four staged Responsories on Ventfront, read on the G
 143,656–143,756), textures go from 20 to 21, and gate 6's queued GPU time reads 0.70 to 0.82 ms
 at pixel ratio 1 and 1.29 to 1.68 ms at 1.5, within 0.02 ms a camera either side
 ([readings](screenshots/issue-1109/gate6.json)). [The conn view](screenshots/issue-1109/conn-view.png)
-and [the lit table](screenshots/issue-1109/lit-table.png) show the panels. Two things are the layout's and not this sheet's, shared by every navy
-on one: a round part at an odd plate count — the emitter barrel, 4.8 m round, at one — carries
-its butt on the starboard side alone, and a round part's end caps are laid from world position
-rather than the part's centre (`layoutMesh`), so a cap off the origin samples a band it was
-not given; both are noted for the pass that takes them.
+and [the lit table](screenshots/issue-1109/lit-table.png) show the panels; the GPU readings
+were taken on the first layout, which `mirror` moved in UV values alone. The skin's
+symmetry is measured by [the mirror measure](screenshots/issue-1109/mirror.mjs): the sheet at
+interior points of every tagged triangle against the sheet at the mirrored point, through a
+16-texel blur. The flat skin differs from its mirror by under **3** sRGB levels everywhere, where
+the first layout had 29 % of the wing and panel seams' samples over 8, and the emitter barrel,
+one plate round with its one joint on the crown ridge, by 3.7 at most. The faceted rounds do not
+mirror: the unroll sets `u` per corner from the angle, so a joint that falls mid-facet where the
+facet tapers follows the triangle's diagonal and kinks, **0.38 m** on the drive prism's top flat,
+about a pixel at the conn view's 3 px/m. **4.2 %** of the tagged area (249 of 5,898 m²) differs
+from its mirror by more than 8 levels, 4.7 % before `mirror`, all of it on the blade, the horn,
+the drive, the resonator rings and their stays. That, and a round part's end caps laid from world
+position rather than the part's centre (`layoutMesh`), are the layout's, and
+[#746](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/746) holds both.
 
 #### Ranked audit and remaining work
 

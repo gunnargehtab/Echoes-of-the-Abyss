@@ -73,9 +73,14 @@
  * an overlap and growth along its curve. The Order's `facet` pattern (#1109)
  * keeps the bands and drops the stagger: an aligned grid of panels, each
  * joint a hairline with a lit chamfer on both sides, and the panel tones
- * mirrored about each band's middle, so a part laid port and starboard
- * reads the same from either beam; nothing on it weathers, and `untagged`
- * keeps the sheet off a cladding that is not panelling (`layoutTrim`).
+ * mirrored about each band's middle, so a flat face laid port and
+ * starboard reads the same from either beam once the table's `mirror` has
+ * `u` along the beam measured from the centreline out (`layoutMesh`). A
+ * faceted round part is not quite that: a joint that falls mid-facet where
+ * the facet tapers follows the triangle diagonal and kinks, about a pixel
+ * at the conn view's 3 px/m, which #746 takes. Nothing on it weathers, and
+ * `untagged` keeps the sheet off a cladding that is not panelling
+ * (`layoutTrim`).
  */
 import * as THREE from 'three';
 import { occludes } from './glb.mjs';
@@ -192,8 +197,11 @@ function valueNoise(xm, ym, cellM, cells, seed) {
  * strake's distance from the band's middle rather than the strake, so the
  * sheet is the same under v → v0 + v1 − v within every band — which is how
  * `layoutMesh` lays the port face of a keel-centred part against its
- * starboard face, and a port part against its twin. The plate and tergite
- * patterns do not read the chamfer keys.
+ * starboard face, and a port part against its twin — and the table's
+ * `mirror` makes `u` along the beam the same on both sides. That is a
+ * flat face's mirror; a round part unrolls by angle, and a joint mid-facet
+ * on a tapering facet kinks (#746). The plate and tergite patterns do not
+ * read the chamfer keys.
  */
 export function drawTrimSheet({
   pattern = 'plate',
@@ -445,7 +453,7 @@ function least(a) {
  * tagged, `flat` and `round` the triangles laid each way, `split` the
  * vertices added, `bands` how many faces took each band's rows.
  */
-export function layoutTrim(root, sheet, { strakeM = 6, name, untagged = [] } = {}) {
+export function layoutTrim(root, sheet, { strakeM = 6, name, untagged = [], mirror = false } = {}) {
   if (!name) throw new Error("layoutTrim: the sheet needs a name (the navy's TRIM.name)");
   const bare = new Set(untagged);
   root.updateMatrixWorld(true);
@@ -468,7 +476,7 @@ export function layoutTrim(root, sheet, { strakeM = 6, name, untagged = [] } = {
   let round = 0;
   let split = 0;
   for (const mesh of meshes) {
-    const stats = layoutMesh(mesh, bands, wrapM, strakeM);
+    const stats = layoutMesh(mesh, bands, wrapM, strakeM, mirror);
     flat += stats.flat;
     round += stats.round;
     split += stats.split;
@@ -487,7 +495,7 @@ export function layoutTrim(root, sheet, { strakeM = 6, name, untagged = [] } = {
   return { parts: meshes.length, materials, flat, round, split, bands: used };
 }
 
-function layoutMesh(mesh, bands, wrapM, strakeM) {
+function layoutMesh(mesh, bands, wrapM, strakeM, mirror) {
   const g = mesh.geometry;
   const p = g.attributes.position;
   const idx = g.index;
@@ -512,6 +520,22 @@ function layoutMesh(mesh, bands, wrapM, strakeM) {
     }
   }
   const extent = [max[0] - min[0], max[1] - min[1], max[2] - min[2]];
+  // Under `mirror`, a flat face laid along the beam measures `u` from the
+  // centreline out instead of from the part's own low edge (#1109, at
+  // review): from the inboard edge on a part wholly to one side, so a port
+  // part's joints land at its starboard twin's |z| where the low edge was
+  // inboard on one and outboard on the other, and from z 0 on a part across
+  // the keel, set half a plate out so the centreline is mid-plate — under
+  // u → 0.5 − u a plate's index keeps its parity (⌊1 − 2u⌋ ≡ ⌊2u⌋ mod 2),
+  // so the tones keyed on it mirror too, where a joint on the centreline
+  // would swap them. Along x or y a face's `u` is already the same on both
+  // sides, and `v` across the beam is the sheet's own symmetry to keep.
+  const beamU = (z) =>
+    min[2] >= 0
+      ? (z - min[2]) / wrapM
+      : max[2] <= 0
+        ? (max[2] - z) / wrapM
+        : z / wrapM + 0.5 / PLATES;
   const e1 = new THREE.Vector3();
   const e2 = new THREE.Vector3();
   const face = new THREE.Vector3();
@@ -615,7 +639,10 @@ function layoutMesh(mesh, bands, wrapM, strakeM) {
     used.set(band.rows, used.get(band.rows) + 1);
     for (let c = 0; c < 3; c++) {
       const k = t * 3 + c;
-      uv[k * 2] = (pos[k * 3 + along] - min[along]) / wrapM;
+      uv[k * 2] =
+        mirror && along === 2
+          ? beamU(pos[k * 3 + 2])
+          : (pos[k * 3 + along] - min[along]) / wrapM;
       uv[k * 2 + 1] =
         band.v0 +
         (extent[cross] > 0 ? (pos[k * 3 + cross] - min[cross]) / extent[cross] : 0.5) *

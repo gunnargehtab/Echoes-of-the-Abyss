@@ -121,14 +121,27 @@
  * `resonance_crystal` is laid out and left bare (the table's `untagged`):
  * the lip, the ring crystals, the drive ring, the inlay, the edge strips
  * and the emitter are violet stone, not panelling, and the five lamps are
- * never tagged. The blade unrolls at four plates round its 19.4 m girth,
- * the horn at four, the drive at two, so every butt on one beam has its
- * twin on the other; the emitter barrel, 4.8 m round, is one plate and
- * carries its butt on the starboard ridge alone. `diff.mjs
- * responsory-hadron HEAD` reads the shape as unchanged; the outline, the
- * height and emissive maps and gate 3 are untouched, and the file goes from
- * 104,480 to 110,156 bytes, the split vertices and the JSON naming the
- * layout and the tags.
+ * never tagged. The table's `mirror` has every flat face laid along the
+ * beam measure its plates from the centreline out, so the wing seams, the
+ * panel seams, the cradle lips and the canards carry their joints at one
+ * |z| on both sides where the first layout, measuring from each part's
+ * own low edge, put them up to 4.2 m apart (the review of #1109); the
+ * flat skin differs from its mirror by under 3 sRGB levels through a
+ * 16-texel blur (docs/screenshots/issue-1109/mirror.mjs). The blade
+ * unrolls at four plates round its 19.4 m girth, the horn at four, the
+ * drive at two, so every butt on one beam has its twin on the other; the
+ * emitter barrel, 4.8 m round, is one plate with its joint on the crown
+ * ridge and mirrors within 3.7 levels. What does
+ * not mirror is the unroll's interpolation on a tapering facet — a joint
+ * that falls mid-facet follows the triangle diagonal and kinks, 0.38 m on
+ * the drive prism's top flat, about a pixel at the conn view's 3 px/m —
+ * so 4.2 % of the tagged area differs from its mirror by more than 8
+ * levels, on the blade, the horn, the drive, the rings and their stays,
+ * and #746 takes it. `diff.mjs responsory-hadron 39cc1e41` reads the shape
+ * as unchanged; the outline, the height and emissive maps and gate 3 are
+ * untouched, and the file goes from 104,480 to 110,156 bytes (zlib 13,098
+ * to 15,676), the split vertices and the JSON naming the layout and the
+ * tags.
  */
 import { THREE, bothSides, add, box, seat, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
