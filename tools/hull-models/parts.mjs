@@ -17,7 +17,11 @@
  * a script *is*: primitives placed by nodes. The Light Scout ports (#588)
  * read all of that by hand out of the JSON and the accessors, line by line;
  * this prints it, so the five shared kinds behind them (#540 Phase 3) can
- * audit a script line against the file instead of re-deriving it.
+ * audit a script line against the file instead of re-deriving it. Since
+ * #1125 the export writes any two parts built alike on one buffer (kit.mjs
+ * `shareAlike`), so two nodes sharing one in a file re-exported since may
+ * be two calls in its script; a script's note that a part is "its own
+ * buffer" speaks of the script and of the file it was ported from.
  *
  * Every number is the file's own — nothing is yawed, scaled or centred here.
  * A port passes them through kit.mjs `drawn` and `metreTrue`, which is where
