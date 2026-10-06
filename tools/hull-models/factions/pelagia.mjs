@@ -245,10 +245,19 @@ export const ink = {
  * range) and wandering 0.5 m across the strake on 4 m
  * cells — a line at a regular pitch is ruled paper, and a ring at every
  * station is the segmented worm kit.mjs `loft` warns of — 0.15 m wide at
- * 0.84 of the light, with about one in four a heavier check, 0.3 m at
- * 0.55: the mark that survives the conn view's 3 px/m, where the fine
- * lines mipmap to a tone (the Order's 0.2 m hairline is the measure, and
- * 0.15 m mipmapped to a rumour). The pitch in metres is the part's, since
+ * 0.84 of the light, with about one in four a heavier check, 0.5 m at
+ * 0.25: the mark that has to read at the conn view, where the fine lines
+ * mipmap to a tone. It was 0.3 m at 0.55, the Order's 0.2 m hairline the
+ * measure, until the owner's close frames: at the view's nearest zoom,
+ * about 5 px/m, that moved 48 pixels of a 50,700-pixel crop of the Reed
+ * by over 16 levels and no ring read, because `chitin_hull` is nearly
+ * black at rest (the block) and a sheet can only darken what the ink
+ * already has — on a dark ink a ratio buys half the levels it buys the
+ * Order's pale alloy. 0.5 m at 0.25 is two and a half pixels of ring cut
+ * to a quarter, 123 pixels over 16 levels, and the rings read on the stem
+ * between the nodes and as lines along the leaves, the fine lines still a
+ * tone (#1107: a mark is drawn for the camera that reads it). The pitch
+ * in metres is the part's, since
  * the layout's bands stop at eight strakes: the Reed's 60.5 m stem carries
  * 1.9 m increments and a 1.8 m ridge 0.45 m, a tone. The hero rings stay
  * geometry — the ridges' 0.5–0.9 m tubes, `growthRings`, `grownRings`,
@@ -270,13 +279,17 @@ export const ink = {
  * every cell the size its key says, and a 16 m repeat is under one and a
  * half periods along the 21.5 m starboard leaf.
  *
- * The mean is 0.903 in linear light (sheets.mjs reports it), in the
- * 0.90–0.93 a matte grown skin belongs in on the register the conn view
- * puts a navy on (rosterModels.ts `CLADDING_CEILING`): over the Klaxon's
- * riveted 0.857, beside the Order's polished 0.899, under the Directorate's
- * 0.938, whose chitin carries one seam a tergite where this carries a line
- * every increment. `mirror` is off: the Commune refuses a mirrored pair
- * (the header), its leaves alternate and its wing is to starboard, so a
+ * The mean is 0.875 in linear light (sheets.mjs reports it): over the
+ * Klaxon's riveted 0.857, under the Order's polished 0.899 and the
+ * Directorate's 0.938, which is where a skin that is nearly black at rest
+ * and girdled by a dark ring every few metres belongs on the register the
+ * conn view puts a navy on (rosterModels.ts `CLADDING_CEILING`) — a grown
+ * composite is matte, its checks cut deeper than the Klaxon's laps at 0.4
+ * and twice as wide, and nothing else on it is a joint. It was 0.903 at
+ * the shallower check; the drop is the checks alone, and the register
+ * moves by an eighth rather than a tenth. `mirror` is off: the Commune
+ * refuses a mirrored pair (the header), its leaves alternate and its wing
+ * is to starboard, so a
  * layout that lands port as starboard turned over would be the Order's
  * symmetry on a hull grown to have none, and nothing on the sheet is keyed
  * on a band's middle. `untagged` keeps the sheet off `bio_vein_unlit`, the
@@ -300,8 +313,8 @@ export const TRIM = {
   jitter: 0.6,
   ringM: 0.15,
   ring: 0.84,
-  checkM: 0.3,
-  check: 0.55,
+  checkM: 0.5,
+  check: 0.25,
   checkEvery: 4,
   wanderM: 0.5,
   wanderCellM: 4,

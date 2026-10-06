@@ -446,9 +446,12 @@ test('the Commune draws a grey grown sheet, bright, and the one sheets.mjs wrote
   // The committed file is an earlier draw, so this is the same sheet twice.
   assert.deepEqual(sheet.png, readFileSync(sheetPath('pelagia')));
   assert.equal(sheet.png[25], 0, 'PNG must have one grey channel, not faction colour');
-  // A matte grown skin: over riveted plate, under the Directorate's chitin,
-  // which carries one seam a tergite where this carries a line an increment.
-  assert.ok(sheet.mean >= 0.9 && sheet.mean < 0.93, `mean ${sheet.mean}`);
+  // A matte grown skin girdled by a dark check every few metres: over
+  // riveted plate, under the Order's polish, so the register the conn view
+  // puts a navy on still moves by under a seventh.
+  const plate = drawTrimSheet(SPEC).mean;
+  const polish = drawTrimSheet(HADRON).mean;
+  assert.ok(sheet.mean > plate && sheet.mean < polish, `mean ${sheet.mean}`);
   assert.equal(sheet.wrapM, PLATES * PELAGIA.plateM);
 });
 
@@ -465,8 +468,10 @@ test('grown lines run along the strake, no joint crosses them, and every plate r
       across += Math.abs(at(x, y + 1) - at(x, y));
     }
   assert.ok(across > 10 * along, `lines change ${across} across the strake, ${along} along it`);
-  // A butt is a column dark through its strake; here every column of a band
-  // crosses about as much line as every other.
+  // A butt is a column dark through its strake, about a hundred levels
+  // under its neighbours; here every column of a band crosses about as much
+  // line as every other, a check wandering over the one-strake band's edge
+  // the most a column's total moves.
   for (const b of bandsOf()) {
     const y0 = b.v0 * n;
     const y1 = b.v1 * n;
@@ -477,7 +482,7 @@ test('grown lines run along the strake, no joint crosses them, and every plate r
       means.push(sum / (y1 - y0));
     }
     const spread = Math.max(...means) - Math.min(...means);
-    assert.ok(spread <= 8, `a column of the ${b.rows}-strake band stands ${spread} levels out`);
+    assert.ok(spread <= 16, `a column of the ${b.rows}-strake band stands ${spread} levels out`);
   }
   // A round part unrolls at whole plates, one plate being half a wrap, so
   // its unroll's two edges meet a plate apart in `u`: everything that varies
