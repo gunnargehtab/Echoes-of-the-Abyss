@@ -142,6 +142,24 @@
  * where they were ten, ten and eight; the vein stays five, the floor. 16
  * parts and 2,448 triangles become 16 and 2,046.
  *
+ * TRIM (#1110). The first Commune hull laid out on the navy's trim sheet:
+ * `exportGlb`'s `trim` takes the Commune's grown skin (factions/pelagia.mjs
+ * `TRIM`, the `grown` pattern) and trim.mjs lays every part's UV0 in
+ * metres before the export. The stem, its two rings, the nose, the nodes,
+ * their lips and seeds and the vein unroll — v along each one's axis, so
+ * the sheet's lines are rings round them — and the two leaves and the
+ * fluke lie flat, their lines along the span: 1,149 faces flat and 897
+ * unrolled, 1,496 on the one-strake band, 90 on two, none on four and 460
+ * on eight, which is the stem at 8.75 m a strake and 2.2 m an increment.
+ * 314 vertices split, no vertex moved, and four materials tagged —
+ * `chitin_hull`, `growth_ridge`, `algae_membrane`, `spore_pod` — with
+ * `bio_vein_unlit` laid out and left bare, since the table's `untagged`
+ * names it: the vein is a lamp's base worn dark, not skin. The marks are
+ * lamps and never tagged. The file goes from 122,148 to 132,652 bytes, the
+ * split vertices and the glTF JSON naming them and the tags; its 16 parts,
+ * 2,046 triangles, bounds and outline are what they were, which
+ * `diff.mjs reed-pelagia 6bc067ea` reads as the shape unchanged.
+ *
  * The hand-drawn entry in silhouettes.ts stays until the kind is wired
  * (docs/models-plan.md §2). The generated outline is fifteen vertices and
  * reads the starboard leaf at +0.131 at x −0.05 and the port at −0.131 at
@@ -423,4 +441,4 @@ pelagia.navMarks(root, light, {
 });
 
 metreTrue(root, L, { drawn: L });
-await exportGlb(root, 'reed-pelagia.glb');
+await exportGlb(root, 'reed-pelagia.glb', { trim: pelagia.TRIM });
