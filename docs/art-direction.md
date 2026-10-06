@@ -628,13 +628,20 @@ lamps are never tagged. The Responsory is the first hull, the owner's choice: it
 **584** faces flat and **572** unrolled — 856 on the one-strake band, 120 on two, 40 on four,
 140 on eight — split **138** vertices and tag two materials, `shadow_indigo` and `pale_alloy`.
 `responsory-hadron.glb` goes from **104,480 to 110,156 bytes** (gzip 12,606 to 14,950) with
-its 48 parts, 1,156 triangles and outline unchanged; no triangle moved, so a sprite rebake has
-nothing to change in the height or emissive map, and the bake is not run here. The sheet is
+its 48 parts, 1,156 triangles and outline unchanged; no triangle moved, so the sprite rebake
+changes the albedo alone (`responsory-albedo.png`, 7,191 to 19,070 bytes, the wings' butts drawn
+at 4 px/m) and the height and emissive maps are byte for byte what they were, the glow on its
+gate-3 target of 3.10. The sheet is
 **1,653 bytes**, flat fields compressing where plate and chitin do not, at a mean linear
 luminance of **0.899**: under the Directorate's 0.938, over the Consortium's 0.857, so a
 polished navy is not darker than riveted plate on the register the conn view puts it on. On
 the GPU it is the same 512² RGBA8 upload with mipmaps, **1.33 MiB** once per navy present, no
-draw or triangle more. Two things are the layout's and not this sheet's, shared by every navy
+draw or triangle more. With four staged Responsories on Ventfront, read on the GTX 1070 at
+`capture.mjs`' four cameras, calls and triangles are the same before and after (49–50 and
+143,656–143,756), textures go from 20 to 21, and gate 6's queued GPU time reads 0.70 to 0.82 ms
+at pixel ratio 1 and 1.29 to 1.68 ms at 1.5, within 0.02 ms a camera either side
+([readings](screenshots/issue-1109/gate6.json)). [The conn view](screenshots/issue-1109/conn-view.png)
+and [the lit table](screenshots/issue-1109/lit-table.png) show the panels. Two things are the layout's and not this sheet's, shared by every navy
 on one: a round part at an odd plate count — the emitter barrel, 4.8 m round, at one — carries
 its butt on the starboard side alone, and a round part's end caps are laid from world position
 rather than the part's centre (`layoutMesh`), so a cap off the origin samples a band it was
@@ -657,7 +664,7 @@ view's frame.
 | 3 | Bevel coverage and baked AO ([#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002)) | Both landed ("Bevels and baked occlusion — SPEC" above). Coverage measured: 30 of 190 extruded plates are bevelled, and plates are 3 % of 7,480 parts, so no primitive was added. The Knights' Bastion carries the first baked occlusion map, on its own UV set, read by the conn view alone, its silhouette unchanged; the next model is a call per model |
 | 4 | Vignette, chromatic split, camera sway ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)) | All three are built ([Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)). The vignette and the sway use no pass. The split is a colour copy and one full-screen draw after the halo, and gate 6 allocates both. Existing shader-driven kelp sway and water fog are different effects; do not duplicate them. Respect gate 8 and reduced motion |
 | 5 | GLB gzip ([#1004](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1004)) | Built. The nginx image's `mime.types` names no `glb`, so `packages/frontend/nginx.conf` names the type in the models' own location and gzips them at level 6. Delivery cost, not frame quality |
-| 6 | UV layout and trim sheets ([#1005](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1005)) | Landed on one hull ("UV layout and trim sheets — SPEC" above). 6,863 of 7,025 primitives carry UV0 and 13 carry `uvAlike`'s zeros, but attribute presence is not a layout: the Bulwark's 162 parts are laid out in metres by its script, and four materials are tagged for the Consortium's sheet, one PNG a navy attached at load, luminance only, hue still the palette's. Sorrowgate's triplanar surfaces are kept under it; the next hull is a call per hull |
+| 6 | UV layout and trim sheets ([#1005](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1005)) | Landed on one hull a navy for three navies: the Consortium's Bulwark, the Directorate's Light Scout ([#1108](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1108)) and the Knights' Responsory ([#1109](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1109)), each on its navy's sheet ("UV layout and trim sheets — SPEC" above); the Commune has none. At #1005, 6,863 of 7,025 primitives carry UV0 and 13 carry `uvAlike`'s zeros, but attribute presence is not a layout: the Bulwark's 162 parts are laid out in metres by its script, and four materials are tagged for the Consortium's sheet, one PNG a navy attached at load, luminance only, hue still the palette's. Sorrowgate's triplanar surfaces are kept under it; the next hull is a call per hull |
 | 7 | Shallow caustics ([#1006](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1006)) | Decided: none. The sunlit layer is the milky Lid, which scatters rather than focuses, and the water ramp already carries what light reaches the Shelf ("Shallow caustics — SPEC" above). Nothing to build |
 | 8 | WebGPU/TSL ([#1007](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1007)) | Defer migration until a separate feasibility decision. Water, survey, surface and sway shader patches depend on the current WebGL pipeline; this is not a renderer-constructor swap. The feasibility note is written ([webgpu-feasibility.md](webgpu-feasibility.md)): every patch has a TSL equivalent, but under r169 frame-wide tone mapping holds gate 3 only if every material carries its own curve, one-pixel points cost gate 6 triangles, and the halo's depth copy costs gate 6 a call or a target |
 
