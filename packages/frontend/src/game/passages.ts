@@ -24,6 +24,7 @@ import {
   depthToWorldY,
   type HeightGrid,
   rockSurfaceDepthM,
+  ROCK_RISE_ABOVE_SHALLOWEST_M,
   VERTS_PER_CELL,
 } from './perspectiveTerrain.ts';
 import { ROCK_EDGE_GAIN } from './seabed.ts';
@@ -157,6 +158,24 @@ function routeOf(terrain: Terrain, cells: readonly number[]): RoutePoint[] {
   return route;
 }
 
+/**
+ * The depth a passage's roof tops out at, before the crag: the map's rock
+ * top, or `ROCK_RISE_ABOVE_SHALLOWEST_M` above the passage's shallowest
+ * ceiling, whichever is shallower.
+ *
+ * The rock top alone is not enough. It is measured from the shallowest
+ * *open floor*, and a map whose every floor lies deeper than a roof — the
+ * Kelp Labyrinth's are all 1,800 m or more over a 700 m ceiling — puts it
+ * below the ceiling, which drew the roof upside down on the passage floor.
+ * A roof is the water's lid, so it stands above the water it lids by the
+ * same rise a mesa stands above the floors.
+ */
+export function roofTopDepthM(terrain: Terrain, passage: Passage, rockTopM: number): number {
+  let ceiling = Infinity;
+  for (const index of passage.cells) ceiling = Math.min(ceiling, terrain.ceiling[index]!);
+  return Math.max(0, Math.min(rockTopM, ceiling - ROCK_RISE_ABOVE_SHALLOWEST_M));
+}
+
 /** The roof's skin, in display (sRGB) terms; the view converts it to linear. */
 export interface RoofGeometry {
   positions: Float32Array;
@@ -174,16 +193,17 @@ const rgb = (hex: number): [number, number, number] => [
 /**
  * The stone over one passage, as one indexed triangle list.
  *
- * - **The top** is the rock surface, `rockSurfaceDepthM`, at the
- *   heightfield's own vertex step: a roof is rock, and rock tops out where a
- *   mesa does (docs/style-neon-noir.md "The stone"). Shaded by the crag the
- *   way the bake shades a mesa, and darkened at a rim over open ground.
+ * - **The top** is the rock surface at `roofTopDepthM`, at the heightfield's
+ *   own vertex step: a roof is rock (docs/style-neon-noir.md "The stone"),
+ *   and on most maps it tops out exactly where a mesa does. Shaded by the
+ *   crag the way the bake shades a mesa, and darkened at its rim.
  * - **The sides**, one per cell edge the passage shares with open water. Over
  *   water deeper than the cell's ceiling the side is a **lintel**: it stops at
  *   the ceiling depth, and the mouth is the hole beneath it. Over shallower
- *   ground, or past the map edge, it is a **curtain** that falls to the
- *   heightfield, so the passage is closed where a hull could not enter it.
- *   An edge against rock draws nothing, since the mesa beside it is the wall.
+ *   ground, rock, or past the map edge, it is a **curtain** that falls to the
+ *   heightfield, so the passage is closed where a hull could not enter it. A
+ *   curtain never rises above the roof: against a mesa as high as the roof it
+ *   has no height at all.
  * - **The underside** at the ceiling depth, which a camera looking into a
  *   mouth sees as the passage's roof.
  *
@@ -214,7 +234,8 @@ export function buildRoofGeometry(
   };
   // a–b along one row, c–d the row after: two triangles.
   const quad = (a: number, b: number, c: number, d: number) => indices.push(a, c, b, b, c, d);
-  const top = (x: number, z: number) => rockSurfaceDepthM(seed, rockTopM, x, z);
+  const roofTop = roofTopDepthM(terrain, passage, rockTopM);
+  const top = (x: number, z: number) => rockSurfaceDepthM(seed, roofTop, x, z);
   // The crag's light, as the bake reads it for a mesa: the rock detail's
   // drop across the step, scaled to metres per cell.
   const crag = (x: number, z: number) => {
@@ -234,12 +255,13 @@ export function buildRoofGeometry(
     const z0 = row * cellM;
     const ceilingY = depthToWorldY(terrain.ceiling[index]!);
 
-    // What lies across each edge: 'none' (more of this roof, or rock),
-    // 'lintel' (water deeper than this ceiling), or 'curtain'.
+    // What lies across each edge: 'none' (more of this roof), 'lintel'
+    // (water deeper than this ceiling), or 'curtain'.
     const across = (r: number, c: number): 'none' | 'lintel' | 'curtain' => {
       if (r < 0 || r >= rows || c < 0 || c >= cols) return 'curtain';
       const other = r * cols + c;
-      if (member.has(other) || isRock(terrain, other)) return 'none';
+      if (member.has(other)) return 'none';
+      if (isRock(terrain, other)) return 'curtain';
       return terrain.floor[other]! > terrain.ceiling[index]! ? 'lintel' : 'curtain';
     };
     const north = across(row - 1, col);

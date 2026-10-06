@@ -18,12 +18,14 @@ import {
   isRoofed,
   roofedPassages,
   roofOver,
+  roofTopDepthM,
   ROOF_OPEN_OPACITY,
 } from '../src/game/passages.ts';
 import {
   buildHeightGrid,
   depthToWorldY,
   rockSurfaceDepthM,
+  ROCK_RISE_ABOVE_SHALLOWEST_M,
   rockTopDepthM,
   VERTS_PER_CELL,
 } from '../src/game/perspectiveTerrain.ts';
@@ -194,7 +196,7 @@ describe('the roof over a passage', () => {
     }
   });
 
-  it('draws nothing against rock, whose mesa is already the wall', () => {
+  it('closes a side against rock without rising above the roof', () => {
     const terrain2 = slotTerrain();
     const ceiling = [...terrain2.ceiling];
     const floor = [...terrain2.floor];
@@ -203,18 +205,49 @@ describe('the roof over a passage', () => {
       floor[1 * 8 + col] = 2000;
     }
     const rocky = { ...terrain2, ceiling, floor };
-    const rockyGrid = buildHeightGrid(rocky, seed, rockTop);
     const rockyRoof = buildRoofGeometry(
       rocky,
       roofedPassages(rocky).list[0]!,
-      rockyGrid,
+      buildHeightGrid(rocky, seed, rockTop),
       seed,
       rockTop
     );
-    assert.ok(
-      rockyRoof.indices.length < roof.indices.length,
-      'the north curtain is gone once rock stands there'
+    const highest = Math.max(
+      ...Array.from(
+        { length: rockyRoof.positions.length / 3 },
+        (_, i) => rockyRoof.positions[i * 3 + 1]!
+      )
     );
+    const topMax = Math.max(...vertices.map((v) => v.y));
+    assert.ok(highest <= topMax + 1e-3, 'nothing of the roof stands above its own top');
+  });
+
+  it('stands above its ceiling when every open floor is deeper still (the Kelp Labyrinth)', () => {
+    // The regression the first capture found: every floor at 1,800 m or more
+    // put the rock top at 1,650 m, below the 700 m ceiling, and the roof lay
+    // upside down on the passage floor with its route line under it.
+    const kelp = wallTerrain();
+    const kelpSeed = seabedSeed(kelp);
+    const kelpRock = rockTopDepthM(kelp);
+    assert.ok(kelpRock > 700, 'the premise: the map rock top is under the ceiling');
+    const kelpPassage = roofedPassages(kelp).list[0]!;
+    const roofTop = roofTopDepthM(kelp, kelpPassage, kelpRock);
+    assert.equal(roofTop, 700 - ROCK_RISE_ABOVE_SHALLOWEST_M);
+    const shape = buildRoofGeometry(
+      kelp,
+      kelpPassage,
+      buildHeightGrid(kelp, kelpSeed, kelpRock),
+      kelpSeed,
+      kelpRock
+    );
+    const ceilingY = depthToWorldY(700);
+    for (let i = 1; i < shape.positions.length; i += 3) {
+      assert.ok(shape.positions[i]! >= ceilingY - 1e-3, 'no part of the roof below its ceiling');
+    }
+    const highest = Math.max(
+      ...Array.from({ length: shape.positions.length / 3 }, (_, i) => shape.positions[i * 3 + 1]!)
+    );
+    assert.ok(highest > ceilingY + 20, 'and its top stands well clear of it');
   });
 
   it('spends a few hundred triangles a cell, not thousands', () => {

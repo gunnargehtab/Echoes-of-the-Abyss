@@ -114,6 +114,7 @@ import {
   buildRoofGeometry,
   roofedPassages,
   roofOver,
+  roofTopDepthM,
   ROOF_OPEN_OPACITY,
   type Passages,
 } from './passages.ts';
@@ -1613,10 +1614,11 @@ export class PerspectiveView {
     // (docs/art-direction.md, "Reading the Sea Floor"). Sampled at the
     // heightfield's step so it rides the crag rather than cutting through it.
     // Rung 5, map furniture (docs/map-visuals.md §5), at the ladder's alpha.
-    const roofY = (xM: number, yM: number) =>
-      depthToWorldY(rockSurfaceDepthM(this.groundSeed, this.groundRockTopM, xM, yM)) + 12;
     const routePoints: number[] = [];
     for (const passage of passages.list) {
+      const roofTop = roofTopDepthM(terrain, passage, this.groundRockTopM);
+      const roofY = (xM: number, yM: number) =>
+        depthToWorldY(rockSurfaceDepthM(this.groundSeed, roofTop, xM, yM)) + 12;
       const route = passage.route;
       for (let i = 1; i < route.length; i++) {
         const a = route[i - 1]!;

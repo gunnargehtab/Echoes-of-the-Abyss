@@ -887,9 +887,10 @@ speak:
   to show both.
 - **A roofed passage is a hole under a ridge, and its route is drawn on top.** The water
   above a ceiling is no water at all ([systems-depth.md](systems-depth.md) §1), so the conn
-  view stands the roof up as stone, risen like a mesa, and bores the passage under it. Where
+  view stands the roof up as stone, risen like a mesa and always clear of the ceiling it
+  lids, and bores the passage under it. Where
   the passage meets water deeper than its ceiling, the stone ends in a lintel at the ceiling
-  depth and the mouth is open beneath it. Where it meets shallower ground, the side is closed
+  depth and the mouth is open beneath it. Where it meets shallower ground or rock, the side is closed
   ([three-layer-ocean.md](three-layer-ocean.md) §5). A tunnel is still invisible from above
   by construction, so its line is drawn on the ridge and on the sonar scope. The line runs
   along the passage, mouth to mouth. It is public map data like every other part of the
