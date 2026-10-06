@@ -440,9 +440,26 @@ sibling's buffer and now carry their own (`audit.mjs` counts 7,010 primitives �
 library goes from 19,440,664 to **19,738,720 raw bytes** and from 2,366,027 to **2,564,136
 gzipped**, 1.5 % and 8.4 %. On the GPU three uploads the PNG as RGBA8 with mipmaps, 1.33 MiB
 a model at 512², which is the line gate 6 of [graphics-standards.md](graphics-standards.md)
-holds a model to. Which model is baked next is a call per model, not a switch: each costs a
-third of a megabyte raw and thirteen seconds in the round trip, and a hull drawn at 60 m has
-less for a map to say than a 440 m dome.
+holds a model to.
+
+The first hull is the Consortium's Bulwark
+([#1111](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1111)), the owner's choice
+where the issue named it a candidate, taken in the open in the pull request's Options: the
+longest of the four hulls on a trim sheet, 150 m of tiers, turret and citadel on a slab. It is
+the first file to carry both, the sheet's layout on UV0 and the map on `uv1`, and the layout
+runs first, so a vertex the bake splits keeps its place on the sheet. At 512², 1,025 charts
+fill 70 % of the atlas at 1.38 texels a metre, 64 rays to 37.5 m. `bulwark-bathyarch.glb`
+goes from 331,428 to 587,556 bytes, 170,852 of them the PNG, and `audit.mjs` counts 7,027
+primitives either side. The library goes from 19,770,008 to **20,026,136 raw bytes** and from
+2,579,880 to **2,769,351 gzipped**, 1.3 % and 7.3 %, and twelve materials carry a map, seven
+of them the Bulwark's. A close conn-view frame of one of four staged Bulwarks draws 42 calls
+and 149,434 triangles before and after, and 21 textures where it drew 20
+([frames](screenshots/issue-1111/README.md)).
+
+Which model is baked next is a call per model, not a switch. Each costs a quarter to a third
+of a megabyte raw and a bake on every `npm run check:models`: on one i7-6700K the Bastion's
+takes 13 s and the Bulwark's 57 s. A hull drawn at 60 m has less for a map to say than a
+150 m one.
 
 #### UV layout and trim sheets — SPEC
 
@@ -751,7 +768,7 @@ view's frame.
 | --- | --- | --- |
 | 1 | Shared rig, tone mapping, PMREM | Landed first ([#1008](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1008)). The tutorial rig promoted to every match, with ACES and the static PMREM above; no model edits or full-screen pass |
 | 2 | Lamp core, then a lamp halo ([#1001](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1001)) | The lamp core landed ([#1021](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1021), [#1029](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1029)). From #1001's readings the owner picked the full-screen route, drawn after the canvas over a depth-only copy of its depth; "Lamp halo — SPEC" above and gate 6's line specify it, on by default behind its setting since the owner approved its frames |
-| 3 | Bevel coverage and baked AO ([#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002)) | Both landed ("Bevels and baked occlusion — SPEC" above). Coverage measured: 30 of 190 extruded plates are bevelled, and plates are 3 % of 7,480 parts, so no primitive was added. The Knights' Bastion carries the first baked occlusion map, on its own UV set, read by the conn view alone, its silhouette unchanged; the next model is a call per model |
+| 3 | Bevel coverage and baked AO ([#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002)) | Both landed ("Bevels and baked occlusion — SPEC" above). Coverage measured: 30 of 190 extruded plates are bevelled, and plates are 3 % of 7,480 parts, so no primitive was added. The Knights' Bastion carries the first baked occlusion map and the Consortium's Bulwark the first hull's ([#1111](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1111)), each on its own UV set, read by the conn view alone, its silhouette unchanged; the next model is a call per model |
 | 4 | Vignette, chromatic split, camera sway ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)) | All three are built ([Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)). The vignette and the sway use no pass. The split is a colour copy and one full-screen draw after the halo, and gate 6 allocates both. Existing shader-driven kelp sway and water fog are different effects; do not duplicate them. Respect gate 8 and reduced motion |
 | 5 | GLB gzip ([#1004](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1004)) | Built. The nginx image's `mime.types` names no `glb`, so `packages/frontend/nginx.conf` names the type in the models' own location and gzips them at level 6. Delivery cost, not frame quality |
 | 6 | UV layout and trim sheets ([#1005](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1005)) | Landed on one hull a navy for all four navies: the Consortium's Bulwark, the Directorate's Light Scout ([#1108](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1108)), the Knights' Responsory ([#1109](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1109)) and the Commune's Reed ([#1110](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1110)), each on its navy's sheet ("UV layout and trim sheets — SPEC" above). At #1005, 6,863 of 7,025 primitives carry UV0 and 13 carry `uvAlike`'s zeros, but attribute presence is not a layout: the Bulwark's 162 parts are laid out in metres by its script, and four materials are tagged for the Consortium's sheet, one PNG a navy attached at load, luminance only, hue still the palette's. Sorrowgate's triplanar surfaces are kept under it; the next hull is a call per hull |
@@ -761,8 +778,8 @@ view's frame.
 Over the model library as it stood at `1df288a`, `node tools/render-stack/audit.mjs`
 counts **17,819,812 raw bytes** and **2,211,283 gzip bytes** over 108 source GLBs with
 Node's default gzip settings. It reads the library as it stands, so the bytes move
-whenever a model does: with the Bastion's occlusion map it counts 19,738,720 and 2,564,136,
-and five materials with an occlusion texture ("Bevels and baked occlusion — SPEC" above).
+whenever a model does: with the Bastion's and the Bulwark's occlusion maps it counts
+20,026,136 and 2,769,351, and twelve materials with an occlusion texture ("Bevels and baked occlusion — SPEC" above).
 Those are sums over the source library, not a browser's initial download: Vite hashes
 assets and the client loads them by need. A solo match on the default map, its build at
 `c771ca8` served by nginx 1.24 through `nginx.conf` and the image's `http` settings, fetched
