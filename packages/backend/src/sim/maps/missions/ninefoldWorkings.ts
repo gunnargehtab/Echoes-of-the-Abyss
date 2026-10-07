@@ -16,9 +16,9 @@
  */
 
 import { Biome, ResourceKind } from '@echoes/shared';
-import type { MapDefinition, MapRect } from '../types.ts';
+import type { MapDefinition } from '../types.ts';
 
-export const NINEFOLD_WORKINGS: MapDefinition<MapRect> = {
+export const NINEFOLD_WORKINGS: MapDefinition = {
   id: 'ninefold-workings',
   name: 'The Upper Workings',
   idealUse: 'The Ledger, mission two. A dying face, a filed audit, and one shift to thread them.',
@@ -29,8 +29,10 @@ export const NINEFOLD_WORKINGS: MapDefinition<MapRect> = {
   cellM: 250,
   floorM: 1100,
   // One row per row of §11's table, in the document's order. Later regions
-  // overwrite earlier ones; every rectangle lands on the 250 m cell grid and
-  // paints exactly the metres it reads.
+  // overwrite earlier ones; every number a shape states is a whole 250 m cell,
+  // and a cell is its region's when the shape holds its centre (#1142). Every
+  // spawn, field, hull and beat the mission places stands on the cell it stood
+  // on when these were all rectangles, and `missionShiftChange.test.ts` pins it.
   regions: [
     {
       x: 0,
@@ -41,6 +43,8 @@ export const NINEFOLD_WORKINGS: MapDefinition<MapRect> = {
       floorM: 1100,
       note: "The Field — the Vein's masked working ground. Painted first; everything else is cut into it",
     },
+    // A box, because it is built: and the mission's extract region is this same
+    // rectangle, so the berths the watches are counted in are the berths drawn.
     {
       x: 1500,
       y: 0,
@@ -50,6 +54,8 @@ export const NINEFOLD_WORKINGS: MapDefinition<MapRect> = {
       floorM: 850,
       note: 'The Rail Head — the Fivewell rail transfer: berths, registry office, the transfer point. Above the layer',
     },
+    // A box, because it is built: a graded freight road, and both passes walk
+    // its whole length on lines that cross every cell of it.
     {
       x: 0,
       y: 500,
@@ -59,29 +65,41 @@ export const NINEFOLD_WORKINGS: MapDefinition<MapRect> = {
       floorM: 950,
       note: "The High Road — the audit's ground: the freight road along the workings' shoulder, above the layer",
     },
+    // A basin rather than a band: its ends rise back to the Field's shoulder,
+    // and it dips south between the faces, where the refinery and the roads
+    // between them stand. Its northern rim never enters the shoulder row, so
+    // the climb to the road is as long as it was.
     {
+      shape: 'ellipse',
       x: 0,
       y: 1250,
       widthM: 4000,
-      heightM: 750,
+      heightM: 1000,
       biome: Biome.ThermalVein,
       floorM: 1300,
       note: 'The Downworks — the working level below the layer: the refinery, the roads between faces, and the pack',
     },
+    // An old cut, worked down the slope past the last seam.
     {
-      x: 500,
-      y: 2000,
-      widthM: 750,
-      heightM: 500,
+      shape: 'polygon',
+      points: [
+        [250, 2000],
+        [1250, 2000],
+        [1250, 2500],
+        [750, 2750],
+        [500, 2500],
+      ],
       biome: Biome.ThermalVein,
       floorM: 1350,
       note: 'Face Two — the dying face: the muster, the last seam, and the thin field',
     },
+    // A fresh, round working opening off the Downworks' dip.
     {
-      x: 2750,
+      shape: 'ellipse',
+      x: 2500,
       y: 2000,
-      widthM: 750,
-      heightM: 500,
+      widthM: 1250,
+      heightM: 750,
       biome: Biome.ThermalVein,
       floorM: 1350,
       note: 'Face Five — the producing face the quota leans on: the rich field',
