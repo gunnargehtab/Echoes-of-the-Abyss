@@ -573,8 +573,8 @@ at 1,750 m, the yards cut into the north wall under it at 1,850 m, and the axis 
 | The Rim | rect 0, 0, 5000, 750 | Coral Ruins | 1,750 | The worked rim — [mission-exposure.md](mission-exposure.md)'s worked ground, continuing east. Cut structure and hard acoustic shadow. A box because it is worked, cut to a line |
 | The Rendering Row | rect 750, 750, 3000, 500 | Coral Ruins | 1,850 | The yards, cut into the north wall under the rim: the plant, the dome and the grower, west to east, and the apron a grown hull is delivered onto. A box because it is built |
 | The Stalls | rect 3750, 750, 1000, 500 | Coral Ruins | 1,900 | The reassigned's berths, heard as maintenance. A box because it is built |
-| The West Overhang | polygon (0, 750) (750, 1250) (1250, 1250) (1250, 1750) (750, 2750) (0, 2750) | Abyssal Trench | 2,150 | Trench wall and overhang — Hollow country, and half the band's income. Its north end reaches up on a slant to meet the rim at the map's west edge, and its inner south corner is cut on a slant toward the axis |
-| The East Overhang | polygon (3750, 1250) (4750, 1250) (5000, 750) (5000, 2750) (4250, 2750) (3750, 1750) | Abyssal Trench | 2,150 | The other half, four kilometres from the first. Its south corner is the West Overhang's mirror image; its north end meets the rim only east of the stalls |
+| The West Overhang | polygon (0, 750) (750, 1250) (1250, 1250) (1250, 1750) (750, 2750) (0, 2750) | Abyssal Trench | 2,150 | Trench wall and overhang — Hollow country, and half the band's income. Its north end reaches north on a slant to meet the rim at the map's west edge, and its inner south corner is cut on a slant toward the axis |
+| The East Overhang | polygon (3750, 1250) (4750, 1250) (5000, 750) (5000, 2750) (4250, 2750) (3750, 1750) | Abyssal Trench | 2,150 | The other half, four kilometres from the first. Its south corner is the West Overhang's mirror image; its north end reaches north into one of the two cells beside the stalls, leaving the other, against the rim, to the First |
 | The Axis | rect 1250, 1250, 2500, 2750 | Abyssal Trench | 2,400 | The channel: freight water, and the colossus's corridor. A box because it paints the First's own biome and floor, clear of both overhangs, so its outline changes no cell |
 | The Sill | rect 2000, 3750, 1000, 250 | Abyssal Trench | 2,400 | Where the First leaves the map southward toward the Second. What is called comes through it. A box for the Axis's reason |
 
@@ -583,18 +583,19 @@ door has a name.
 
 Drawn in shapes since issue #1155, a box of #1139. Every number a shape states is a whole 250 m
 cell, and a cell is its region's when the shape holds the cell's centre ([maps.md](maps.md), "How
-a map is written"). Only the two overhangs changed. Each reaches north on a slant to meet the rim
-at the map's edge, so the First's water beside the row's west end is no longer a box: three of its
-six cells are the West Overhang's now, and one of the two beside the stalls is the East
-Overhang's. Each overhang's inner south corner is cut on a slant toward the axis, and the First's
-2,400 m shows there, four cells on each side.
+a map is written"). Only the two overhangs changed. The West Overhang reaches north on a slant to
+meet the rim at the map's west edge, so the First's water beside the row's west end is no longer a
+box: three of its six cells are the West Overhang's now. The East Overhang reaches north into one
+of the two cells beside the stalls, leaving the other, against the rim, to the First. Each
+overhang's inner south corner is cut on a slant toward the axis, and the First's 2,400 m shows
+there, four cells on each side.
 
 The reshape is new map content, never a balance lever. It moved 12 of the map's 320 cells, all
 Abyssal Trench before and after, so no cell's biome or PF changed: four from the First's 2,400 m to
 the overhangs' 2,150, and eight from the overhangs' 2,150 to the First's 2,400. Asked at every
 25 m of depth from the surface to 3,000 m, only those 12 cells admit a hull differently, and only
 between 2,150 and 2,400 m: a hull held there can now enter the eight cut corners and can no longer
-enter the four cells that reach the rim. A hull following the floor holds thirty metres off it, so
+enter the four cells the overhangs gained beside the row and the stalls. A hull following the floor holds thirty metres off it, so
 on the four it holds 2,120 m, 250 m higher than the 2,370 it held, and on the eight 2,370 m, 250 m
 lower than 2,120. At 2,370 m the eight join the axis's water and connect it to nothing it did not
 already reach; the First's water beside the row's west end, closed off at that depth by the rim,

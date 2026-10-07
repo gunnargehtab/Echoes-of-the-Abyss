@@ -363,7 +363,10 @@ describe('the ground the row stands on — §11, drawn in shapes (#1155)', () =>
     was.ceilingAt(x, y),
   ];
   const missions = MISSIONS.filter((mission) => mission.mapId === map.id);
-  /** The four cells the overhangs gained beside the rim, and the eight they gave the First. */
+  /**
+   * The four cells the overhangs gained beside the row and the stalls, and
+   * the eight they gave the First.
+   */
   const GAINED = ['125,875', '125,1125', '375,1125', '4875,1125'];
   const CUT = ['1125,2125', '1125,2375', '875,2625', '1125,2625'];
   const mirror = (cell: string) => {
@@ -454,8 +457,9 @@ describe('the ground the row stands on — §11, drawn in shapes (#1155)', () =>
 
   it('moves a hull following the floor 250 m on those cells and joins nothing new', () => {
     // §11: a hull following the floor holds thirty metres off it
-    // (systems/depth.ts, `followTheFloor`). On the four cells by the rim it
-    // holds 2,120 where it held 2,370; on the eight cut corners the reverse.
+    // (systems/depth.ts, `followTheFloor`). On the four cells the overhangs
+    // gained it holds 2,120 where it held 2,370; on the eight cut corners the
+    // reverse.
     const at = (cell: string) => cell.split(',').map(Number) as [number, number];
     for (const cell of GAINED) {
       assert.deepEqual([ground.floorAt(...at(cell)), was.floorAt(...at(cell))], [2150, 2400]);

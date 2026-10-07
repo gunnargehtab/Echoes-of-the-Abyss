@@ -120,9 +120,9 @@ export const SHALLOW_BAND: MapDefinition = {
       floorM: 1900,
       note: "The Stalls — the reassigned's berths, heard as maintenance. The emitter stands here, off the player's party",
     },
-    // Its north end reaches up on a slant to meet the rim at the map's west
-    // edge, so the overhang reaches the rim rather than leaving a box of the
-    // First's water beside the row's end; its inner south corner is cut on a
+    // Its north end reaches north on a slant to meet the rim at the map's west
+    // edge, rather than leaving a box of the First's water beside the row's
+    // end; its inner south corner is cut on a
     // slant toward the axis. Every Hollow on it stands on 2,150 m as before.
     {
       shape: 'polygon',
@@ -139,8 +139,9 @@ export const SHALLOW_BAND: MapDefinition = {
       note: "The West Overhang — trench wall and overhang. Hollow country, and half the band's income",
     },
     // The West Overhang's south corner mirrored across x 2,500. Its north end
-    // meets the rim only in the one column east of the stalls, because the
-    // stalls are built and reach to x 4,750.
+    // reaches north into one of the two cells beside the stalls, leaving the
+    // other, against the rim, to the First: the stalls are built and reach to
+    // x 4,750, so the slant has one column to run in.
     {
       shape: 'polygon',
       points: [
