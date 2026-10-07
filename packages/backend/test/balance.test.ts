@@ -180,9 +180,11 @@ describe('telemetry measures what it says it measures', () => {
     // miscount on either branch and the `bought` check was the vacuous
     // `0 >= 0`. A holder that never runs two of the five branches does not hold
     // invariant 14, which exists precisely because a miscounted branch still
-    // prints a perfectly well-formed table. Measured on this seed: two minutes
-    // reaches three branches, five reaches all five thinly (`alreadyHas` 8),
-    // eight reaches all five with room (`alreadyHas` 477).
+    // prints a perfectly well-formed table. Measured on this seed, on `main` at
+    // `f9d064c`: two minutes reaches two branches, five reaches three, and eight
+    // reaches all five — `alreadyHas` 136, but `bought` only 1, both from slot
+    // 0. The commit is named because a map or commander edit moves these:
+    // #1106's Ventfront took `alreadyHas` from 44 to 136.
     const result = runMatch({ seats: DUEL, seed: 59, maxMinutes: 8, fauna: false });
     for (const player of result.players) {
       const t = player.ordnanceWant;
@@ -208,14 +210,15 @@ describe('telemetry measures what it says it measures', () => {
     // hull is a satisfied want whether or not its army has dipped below the
     // massing floor — asking `escorted` first, which is what shipped in #714,
     // files those under `notEscorted` instead. Both orders leave all five
-    // branches live on this scenario (they differ by 41 observations, 548/436
-    // against 507/477), so the assertion above passes either way. Pinning those
-    // numbers would make this a change detector on every commander edit, and a
-    // scenario that separates the two orders decisively needs a navy holding
-    // its ordnance hull while permanently unescorted, which a two-seat duel
-    // does not reliably produce. The order is argued from a baseline-scale
-    // measurement on the pull request instead, and from the comment at the
-    // branch itself.
+    // branches live on this scenario, so the assertion above passes either way:
+    // on `main` at `f9d064c` they do not differ at all, `notEscorted` 483 and
+    // `alreadyHas` 136 under each, because no observation here holds the hull
+    // while unescorted. Pinning those numbers would make this a change
+    // detector on every commander edit, and a scenario that separates the two
+    // orders decisively needs a navy holding its ordnance hull while
+    // permanently unescorted, which a two-seat duel does not reliably produce.
+    // The order is argued from a baseline-scale measurement on the pull request
+    // instead, and from the comment at the branch itself.
     const union = { notEscorted: 0, alreadyHas: 0, noYard: 0, cannotAfford: 0, bought: 0 };
     for (const player of result.players) {
       for (const key of Object.keys(union) as (keyof typeof union)[]) {
