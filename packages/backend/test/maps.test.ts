@@ -786,6 +786,61 @@ describe('Abyssal Rift Corridor', () => {
     assert.ok(west!.x < east!.x);
     assert.equal(west!.y, east!.y, 'a 1v1 corridor should be symmetric across its long axis');
   });
+
+  it('keeps the ground the line between its seats crosses (#1138)', () => {
+    // A reshape is new content and never a balance lever (docs/maps.md, "How a
+    // map is written"), and this map's one seat-to-seat line runs down the
+    // trench by design, so drawing the rift as a canyon moved no cell on it.
+    // Floors are named too, because the apron and the chokes are both coral
+    // and only the water column tells them apart. Each run is a count of
+    // cells, read every 50 m along the line.
+    const terrain = terrainFor(ABYSSAL_RIFT_CORRIDOR);
+    const name: Partial<Record<Biome, string>> = {
+      [Biome.CoralRuins]: 'coral',
+      [Biome.AbyssalTrench]: 'trench',
+    };
+    const [west, east] = ABYSSAL_RIFT_CORRIDOR.spawns;
+    const runs: [string, number][] = [];
+    let cell = '';
+    const steps = Math.ceil((east!.x - west!.x) / 50);
+    for (let i = 0; i <= steps; i++) {
+      const x = west!.x + ((east!.x - west!.x) * i) / steps;
+      const y = west!.y;
+      const here = `${Math.floor(x / ABYSSAL_RIFT_CORRIDOR.cellM)}`;
+      if (here === cell) continue;
+      cell = here;
+      const ground = `${name[terrain.biomeAt(x, y)] ?? 'other'} ${terrain.floorAt(x, y)}`;
+      const last = runs[runs.length - 1];
+      if (last?.[0] === ground) last[1]++;
+      else runs.push([ground, 1]);
+    }
+    assert.equal(
+      runs.map(([ground, n]) => `${ground}×${n}`).join(', '),
+      'coral 700×5, trench 2900×5, coral 380×2, trench 2900×10, coral 380×2, trench 2900×5, ' +
+        'coral 700×5'
+    );
+  });
+
+  it('pins how many cells each biome holds, so an outline edit shows here (#1138)', () => {
+    // Biome is PF, so these counts are the map's PF landscape in five numbers.
+    // The rectangles painted 160 cells of trench, 316 of coral, 252 of open
+    // water, 132 of vent and 100 of resonance field. As shapes, 124 of the 960
+    // cells changed ground: the rift gave up 24 cells of its walls, 10 of them
+    // to the reefs, and took 12 for its basin; the vents' round fields hold 61
+    // cells each, the corners 24 and the aprons 72; the chokes kept every cell.
+    const grid = terrainFor(ABYSSAL_RIFT_CORRIDOR).serialize();
+    const cells = (biome: Biome) => grid.biomes.filter((b) => b === biome).length;
+    assert.deepEqual(
+      {
+        trench: cells(Biome.AbyssalTrench),
+        coral: cells(Biome.CoralRuins),
+        open: cells(Biome.OpenWater),
+        vent: cells(Biome.ThermalVein),
+        resonance: cells(Biome.ResonanceField),
+      },
+      { trench: 148, coral: 296, open: 298, vent: 122, resonance: 96 }
+    );
+  });
 });
 
 describe('Kelp Labyrinth', () => {
