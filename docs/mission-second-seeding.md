@@ -1096,8 +1096,8 @@ Anholt is *she* throughout, as [characters.md](characters.md) writes her;
 What exists against this document and what does not, continuing the list
 [mission-asset-recovery.md](mission-asset-recovery.md) §13 started. **This document is
 specified and built.** The literal is `packages/backend/src/sim/missions/secondSeeding.ts`,
-transcribed in #394 on `mouth-rim` unchanged, and `missionSecondSeeding.test.ts` plays it:
-forty-five tests, three of which run the whole tide out — the idle day that closes Lost on the
+transcribed in #394 on `mouth-rim` unchanged, and `missionSecondSeeding.test.ts` plays it,
+including three tests that run the whole tide out — the idle day that closes Lost on the
 keystone, the sown lip that rates the water and stands three PR-2 corvettes at 3,000 m, and the
 unsown lip that kills the same three guns before the tide. The row this ending stood behind —
 the region pressure grant — landed in #391, and it is the reason the literal could be written
