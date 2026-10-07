@@ -179,10 +179,11 @@ export interface MapDefinition<Region extends MapRegion = MapRegion> extends Map
   floorM?: number;
   /**
    * `Region` narrows what these may be. A map drawn only in rectangles can
-   * say so with `MapDefinition<MapRect>`, and every mission map does, since
-   * its document's §11 table is written in rectangles. A test may then read a
-   * region's corner and size without asking its shape, and reshaping one is a
-   * type error until the table and its tests change with it.
+   * say so with `MapDefinition<MapRect>`, and a mission map whose §11 table
+   * is still written in rectangles does (#1139 redraws them in shapes, one
+   * map at a time). A test may then read a region's corner and size without
+   * asking its shape, and reshaping one is a type error until the table and
+   * its tests change with it.
    */
   regions: Region[];
   spawns: MapSpawn[];

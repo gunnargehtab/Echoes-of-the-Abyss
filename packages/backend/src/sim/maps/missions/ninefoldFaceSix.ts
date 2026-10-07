@@ -18,7 +18,7 @@
  * Drawn in shapes since #1141 (#1139): in rectangles the field read as a
  * checkerboard from the survey dolly. The shapes moved outlines, not the
  * mission. Every placed hull, beat point, eruption site and the taps stand on
- * the cell they stood on, the road from the Rail Head to the fall crosses the
+ * the ground they stood on, the road from the Rail Head to the fall crosses the
  * same five grounds in the same order, and `missionAssetRecovery.test.ts`
  * holds both.
  */
