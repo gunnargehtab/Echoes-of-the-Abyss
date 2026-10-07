@@ -57,7 +57,7 @@ const run = (script) => ({ command: npm, args: ['run', script] });
  */
 const docsLint = {
   command: npx,
-  args: ['--no', 'markdownlint', 'docs/**/*.md', 'docs/*.md', '--ignore', 'node_modules'],
+  args: ['--no', '--', 'markdownlint', 'docs/**/*.md', 'docs/*.md', '--ignore', 'node_modules'],
 };
 
 /**
@@ -86,6 +86,7 @@ function docsLinks() {
 
   return spawn(npx, [
     '--no',
+    '--',
     'markdown-link-check',
     '--config',
     '.markdown-link-check.json',
