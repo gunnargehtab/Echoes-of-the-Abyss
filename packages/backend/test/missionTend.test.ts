@@ -659,7 +659,7 @@ describe('the ground both missions stand on — §11, drawn in shapes (#1148)', 
     // `Pathfinder` route, which ends at the reachable cell closest to the goal
     // when the goal is out of reach, so a reshape can move a route whose
     // segment it never touched. Probed from points along each leg, at every
-    // 25 m between the depth it starts at and the depth it is ordered to.
+    // 25 m from the depth it starts at, and at the depth it is ordered to.
     //
     // One probe enters a moved cell, and it is listed rather than excused:
     // Convocation's 03:30 order to row two, probed at 315 m, where the West
@@ -676,7 +676,10 @@ describe('the ground both missions stand on — §11, drawn in shapes (#1148)', 
       for (const leg of authored(mission).legs) {
         const a = leg.from.depthM!;
         const b = leg.to.depthM ?? a;
-        for (let depth = Math.min(a, b); depth <= Math.max(a, b); depth += 25) {
+        const depths: number[] = [];
+        for (let depth = Math.min(a, b); depth < Math.max(a, b); depth += 25) depths.push(depth);
+        depths.push(Math.max(a, b));
+        for (const depth of depths) {
           for (const [x, y] of along(leg.from.x, leg.from.y, leg.to.x, leg.to.y, 16)) {
             probes++;
             const points: [number, number][] = [[x, y]];

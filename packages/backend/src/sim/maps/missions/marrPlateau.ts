@@ -100,9 +100,10 @@ export const MARR_PLATEAU: MapDefinition = {
       note: "The Drop — the bare slope and the survey lane. Trench paint at the Shelf's edge: the drop carries",
     },
     // The bench's east end runs on a slant, so its north-east cell is the
-    // Drop's 900 m, trench like the bench, and open to water deeper than 600 m. Every other cell is held: the
-    // watch's edge in its north row, the sweep's lane along its south row, and
-    // the heavy's climb across its north-west corner.
+    // Drop's 900 m, trench like the bench, and open to water deeper than
+    // 600 m. Every other cell is held: the watch's edge in its north row, the
+    // sweep's lane along its south row, and the heavy's climb across its
+    // north-west corner.
     {
       shape: 'polygon',
       points: [
