@@ -30,15 +30,16 @@
  *   three minutes early, with two Hollows still loud in the doorway.
  *
  * **One thing this literal does not seat, and the document's own §13 is why.**
- * §3, §5 and §11 place a bloom-bed — a `SoundingSpire`-kind structure at
- * 1700, 2125 — and every one of those rows calls it an approximation held
+ * §3, §5 and §11 placed a bloom-bed — a `SoundingSpire`-kind structure at
+ * 1700, 2125 — and every one of those rows called it an approximation held
  * "until the row lands". The row has landed (`MissionRegion.pressureBonus`),
- * and §6 says in as many words that "the row that replaces it (§13) has no
- * hum, because a furrow is not a machine": a Spire whose grant is load-bearing
- * sings at 80 and hands the sill a Track on the garden at ratio 37.6, which is
- * §6's own account of what the sill would be hearing *of the format* rather
- * than of the water. So the garden is the region grant and nothing stands in
- * it, and §6's table is what the sill hears.
+ * those rows no longer stand one (§13), and §6 says in as many words that "the
+ * row that replaced it has no hum, because a furrow is not a machine": a Spire
+ * whose grant is load-bearing sings at 80 and hands the sill a Track on the
+ * garden at ratio 37.6, which is §6's own account of what the sill would be
+ * hearing *of the format* rather than of the water. So the garden is the
+ * region grant and nothing stands in it, and §6's table is what the sill
+ * hears.
  *
  * Two more things the document names and this literal deliberately does not
  * build, because §13 assigns them elsewhere: Anholt's Seeding ability, which
