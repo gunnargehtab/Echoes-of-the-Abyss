@@ -14,7 +14,7 @@
  * - **The line both arrivals run is the terrace's own floor** (§11, §13). At
  *   2,800 m a colossus crosses the Cantorate and reaches the head of the
  *   crossing; at the 3,000 m the plan carried and §13 rejects it stalls against
- *   the terrace's northern face at y 3,250 and never arrives — and it stalls
+ *   the terrace's southern face at y 3,250 and never arrives — and it stalls
  *   *silently*, because `Terrain.resolveStep` retries a blocked step on the x
  *   axis first and a due-north line has no x to retry. Both are driven here,
  *   because the difference between a mission and a colossus parked at a wall is
@@ -94,7 +94,7 @@ const AXIS = { x: 2500, y: 3625 };
 const DOME = { x: 1950, y: 3400, depthM: 2900 };
 /** §9 — the first arrival's line, and §13's rejected one. */
 const SILL = { x: 2025, y: 3875 };
-/** §11 — the Cantorate terrace's northern face: where a line too deep stops. */
+/** §11 — the Cantorate terrace's southern face: where a line too deep stops. */
 const TERRACE_FACE_Y = 3250;
 
 const player = ATTENDING_CONCLAVE.parties.find((party) => party.slot === PLAYER)!;
@@ -316,7 +316,11 @@ describe('The Upper Terraces, as docs/mission-conclave-attending.md §11 paints 
     // crossing, and it gets there because `admits` is inclusive of the floor.
     // One metre deeper is a wall.
     const terrain = terrainFor(UPPER_TERRACES);
-    assert.equal(terrain.floorAt(SILL.x, 3000), 2800, '§11: the Cantorate spans the chart');
+    assert.equal(
+      terrain.floorAt(SILL.x, 3000),
+      2800,
+      '§11: the Cantorate stands on the sill’s line'
+    );
     assert.equal(terrain.admits(SILL.x, 3000, 2800), true, 'the line the document authors');
     assert.equal(terrain.admits(SILL.x, 3000, 2801), false, 'and one metre under it');
     assert.equal(terrain.floorAt(AXIS.x, AXIS.y), 3400, "§11: the Ninth's channel");
@@ -1112,7 +1116,7 @@ describe('the arrivals, as docs/mission-conclave-attending.md §9 drives them', 
     assert.equal(crossed.y, SILL.y - 40 * SOUNDER.speed, '§9: full speed, the whole way');
     assert.ok(crossed.y < TERRACE_FACE_Y, 'and through the terrace');
     const stalled = driveNorth(3000, 40);
-    assert.equal(stalled.y, TERRACE_FACE_Y, '§13: stopped against the terrace’s northern face');
+    assert.equal(stalled.y, TERRACE_FACE_Y, '§13: stopped against the terrace’s southern face');
     assert.equal(stalled.depthM, 3000, 'and never lifted, because ground does not lift a creature');
   });
 

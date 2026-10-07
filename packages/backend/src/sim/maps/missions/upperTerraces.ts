@@ -150,9 +150,9 @@ export const UPPER_TERRACES: MapDefinition = {
       floorM: 2800,
       note: "The Cantorate — the south terrace, standing over the galleries: Ossary's seat, the cells, and where a calling is attended or is not. Its floor is the line both arrivals run, because it is the deepest one the terrace admits",
     },
-    // A box, because it is built, and the Axis cuts it into the mission's
-    // `galleries-west` and `galleries-east`, the rectangles the ground beats
-    // repaint.
+    // A box, because the Axis cuts it into the mission's `galleries-west` and
+    // `galleries-east`, the rectangles the ground beats repaint, so every cell
+    // of it is a cell one of those beats names.
     {
       x: 1250,
       y: 3250,
