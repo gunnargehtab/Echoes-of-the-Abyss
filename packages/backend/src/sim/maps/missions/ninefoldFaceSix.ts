@@ -14,12 +14,19 @@
  * mission id and nothing else. The Scar's trench paint at Mid-Water depth is
  * the same authoring freedom Sorrowgate's Commit uses in the other direction:
  * biome is acoustics, not band.
+ *
+ * Drawn in shapes since #1141 (#1139): in rectangles the field read as a
+ * checkerboard from the survey dolly. The shapes moved outlines, not the
+ * mission. Every placed hull, beat point, eruption site and the taps stand on
+ * the ground they stood on, the road from the Rail Head to the fall crosses the
+ * same five grounds in the same order, and `missionAssetRecovery.test.ts`
+ * holds both.
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition, MapRect } from '../types.ts';
+import type { MapDefinition } from '../types.ts';
 
-export const NINEFOLD_FACE_SIX: MapDefinition<MapRect> = {
+export const NINEFOLD_FACE_SIX: MapDefinition = {
   id: 'ninefold-face-six',
   name: 'Face Six',
   idealUse: 'The Ledger, mission one. A dying field, a fallen face, and a recovery writ.',
@@ -31,8 +38,9 @@ export const NINEFOLD_FACE_SIX: MapDefinition<MapRect> = {
   floorM: 1000,
   // One row per row of §11's table, in the document's order. Later regions
   // overwrite earlier ones, which is what lets the Field be painted whole and
-  // the wound cut into it — and the fall cut into the wound. Every rectangle
-  // lands on the 250 m cell grid and paints exactly the metres it reads.
+  // the wound cut into it — and the fall cut into the wound. Every number a
+  // shape states is a whole 250 m cell, and a cell is its region's when the
+  // shape holds its centre (docs/maps.md, "How a map is written").
   regions: [
     {
       x: 0,
@@ -41,7 +49,7 @@ export const NINEFOLD_FACE_SIX: MapDefinition<MapRect> = {
       heightM: 3000,
       biome: Biome.ThermalVein,
       floorM: 1000,
-      note: "The Field — the Vein's masked working ground. Painted first; everything else is cut into it",
+      note: "The Field — the Vein's masked working ground. Painted first; everything else is cut into it. A box because it is the whole map",
     },
     {
       x: 1500,
@@ -50,34 +58,63 @@ export const NINEFOLD_FACE_SIX: MapDefinition<MapRect> = {
       heightM: 500,
       biome: Biome.ThermalVein,
       floorM: 700,
-      note: "Staging, the writ's delivery point, the extraction point — the Rail Head",
+      note: "The Rail Head — staging, the writ's delivery point, the extraction point. A built yard, so a box, and the same box the writ counts deliveries in",
     },
     {
-      x: 0,
-      y: 500,
-      widthM: 4000,
-      heightM: 750,
+      shape: 'polygon',
+      points: [
+        [0, 750],
+        [250, 500],
+        [500, 500],
+        [750, 250],
+        [1250, 250],
+        [1500, 500],
+        [2500, 500],
+        [2750, 250],
+        [3250, 250],
+        [3500, 500],
+        [3750, 500],
+        [4000, 750],
+        [4000, 1000],
+        [3750, 1000],
+        [3250, 1500],
+        [750, 1500],
+        [250, 1000],
+        [0, 1000],
+      ],
       biome: Biome.ThermalVein,
       floorM: 850,
-      note: "The Terrace — the herd's feeding ground and the road's shallow shoulder. The vent line's two eruption sites sit on it",
+      note: "The Terrace — the herd's feeding ground and the road's shallow shoulder. It rises about each of the vent line's two eruption sites, sags into an apron below each, and thins to the map's edges",
     },
     {
-      x: 1250,
-      y: 1250,
-      widthM: 1500,
-      heightM: 750,
+      shape: 'polygon',
+      points: [
+        [1500, 1250],
+        [2500, 1250],
+        [2750, 1750],
+        [2750, 2000],
+        [1000, 2000],
+      ],
       biome: Biome.ThermalVein,
       floorM: 1100,
-      note: "The Works — the descent road. PF 0.45: the column's own ground protects it here, and nothing tells the player this",
+      note: "The Works — the descent road, leaving the Terrace's lip under the Rail Head and fanning west into the old workings where it meets the Scar. PF 0.45: the column's own ground protects it here, and nothing tells the player this",
     },
     {
-      x: 1000,
-      y: 2000,
-      widthM: 2000,
-      heightM: 750,
+      shape: 'polygon',
+      points: [
+        [1000, 2000],
+        [2500, 2000],
+        [3000, 2500],
+        [2500, 2750],
+        [2250, 2750],
+        [2250, 3000],
+        [1750, 3000],
+        [1750, 2750],
+        [1000, 2750],
+      ],
       biome: Biome.AbyssalTrench,
       floorM: 1150,
-      note: 'The Scar — the blowout channel. Raw rock, PF 1.6, the wound that carries. Trench paint at Mid-Water depth: biome is acoustics, not band',
+      note: "The Scar — the blowout channel, torn east to a point and down past the fall to the field's south edge, where the vent line under the face blew out. Raw rock, PF 1.6, the wound that carries. Trench paint at Mid-Water depth: biome is acoustics, not band",
     },
     {
       x: 1750,
@@ -86,7 +123,7 @@ export const NINEFOLD_FACE_SIX: MapDefinition<MapRect> = {
       heightM: 500,
       biome: Biome.CoralRuins,
       floorM: 1150,
-      note: 'Face Six — the fall itself: collapsed structure, hard acoustic shadows, the chamber inside. Cut into the Scar, painted after it',
+      note: 'Face Six — the fall itself: collapsed structure, hard acoustic shadows, the chamber inside. Cut into the Scar, painted after it. A box because the mission closes the fall as this rectangle (§8), and on four cells an ellipse paints the same four',
     },
   ],
   // One spawn, at the Rail Head. The offsets address a pre-built Foundry a
