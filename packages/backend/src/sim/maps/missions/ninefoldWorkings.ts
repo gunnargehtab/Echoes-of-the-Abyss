@@ -79,7 +79,7 @@ export const NINEFOLD_WORKINGS: MapDefinition = {
       floorM: 1300,
       note: 'The Downworks — the working level below the layer: the refinery, the roads between faces, and the pack',
     },
-    // An old cut, worked down the slope to the last seam at its foot.
+    // An old cut, worked down the slope past the last seam.
     {
       shape: 'polygon',
       points: [
