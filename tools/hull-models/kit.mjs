@@ -1371,8 +1371,10 @@ function geometryDigest(geometry) {
  * index is never shared with a vertex attribute, since its buffer view
  * carries the other target. The node keeps its name, transform and
  * material, which is all `readGlb` takes from it, so the parts read back as
- * they did; no reader edits a loaded attribute in place (the client clones
- * a geometry before it moves one, rosterModels.ts `mergeByMaterial`). Run
+ * they did. One accessor can now serve two parts, or two names in one
+ * part: 408 parts lie on the unit sphere, their corners their normals. So
+ * a reader that moves a loaded geometry clones it first, as the client does
+ * (rosterModels.ts `mergeByMaterial`), and none edits one in place. Run
  * after the trim and the bake, since both lay UVs per part, and undone
  * before the census and the light audit, which read the script's own
  * geometries.
@@ -1395,7 +1397,8 @@ function shareAlike(root) {
   // geometry carrying one keeps its own; no script builds one.
   const geometries = new Set();
   root.traverse((o) => {
-    if (o.isMesh && Object.keys(o.geometry.morphAttributes).length === 0) geometries.add(o.geometry);
+    if (o.isMesh && Object.keys(o.geometry.morphAttributes).length === 0)
+      geometries.add(o.geometry);
   });
   const firstAttribute = new Map();
   const relinked = [];
