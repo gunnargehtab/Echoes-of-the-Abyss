@@ -11,7 +11,7 @@
  *
  * Two decisions worth knowing:
  *
- * Failures do not stop the run. Fail-fast is right for CI, where four jobs run
+ * Failures do not stop the run. Fail-fast is right for CI, where the jobs run
  * in parallel and the first red one has already told you where to look; it is
  * wrong here, where the steps are sequential and a fail-fast run makes you pay
  * for lint twice to discover that the tests were also red. One pass reports
@@ -51,21 +51,18 @@ const spawn = (command, commandArgs, options = {}) =>
 const run = (script) => ({ command: npm, args: ['run', script] });
 
 /**
- * The doc gates come from `npx -y`, not from node_modules, so they are the three
- * steps that need the network — `docs:claude` reaches the same two tools the
- * same way. They are also what CI runs in a job with no
- * install at all, which is why they are last here: everything before them is
- * answerable offline.
+ * The doc tools are pinned in package-lock.json, shared with CI and docs:claude.
+ * Refuse to fetch a missing tool through npx. Only external link checks need
+ * the network once npm ci has completed.
  */
 const docsLint = {
   command: npx,
-  args: ['-y', 'markdownlint-cli', 'docs/**/*.md', 'docs/*.md', '--ignore', 'node_modules'],
+  args: ['--no', '--', 'markdownlint', 'docs/**/*.md', 'docs/*.md', '--ignore', 'node_modules'],
 };
 
 /**
- * CI spells this as `git ls-files -z | xargs -0 npx`. Here the file list is
- * gathered in-process and passed as arguments instead — same files, same single
- * invocation over all of them, without depending on a shell or on xargs. The
+ * CI and local gates share this tracked-file list and single invocation,
+ * without depending on a shell or on xargs. The
  * `:(glob)` pathspec is load-bearing: git pathspecs are fnmatch without
  * FNM_PATHNAME, so a bare docs/ double-star pattern matches nothing nested and
  * the gate silently checks zero files. The count is asserted below for exactly
@@ -88,7 +85,8 @@ function docsLinks() {
   }
 
   return spawn(npx, [
-    '-y',
+    '--no',
+    '--',
     'markdown-link-check',
     '--config',
     '.markdown-link-check.json',

@@ -22,7 +22,7 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    values and a part's normals included (#911), on any name
                    finishes.mjs finds at two values inside one navy, and on a
                    model file that is neither an env- prop nor named
-                   -<navy>.glb (#888); CI runs it in the build job. It reads
+                   -<navy>.glb (#888); CI runs it in the models job. It reads
                    uv1 and the occlusion map a script bakes (#1002), UV0 and the
                    trim tag one lays (trim.mjs, #1005), and each navy's sheet (sheets.mjs).
                    diff.mjs answers the one thing check.mjs cannot —
@@ -110,7 +110,7 @@ tools/invariants   check.mjs reads docs/invariants.md's table and asserts that
                    a test is exactly the text that survives a rename and would
                    keep the gate green on a holder that is gone. Liveness, not
                    correctness; see "Invariants live in exactly one place too" in
-                   the root CLAUDE.md. Runs in npm run gates and in CI's build job.
+                   the root CLAUDE.md. Runs in npm run gates and in CI's checks job.
 tools/claude-docs  markdownlint, a relative-link check, and a path check over
                    the prose this repository wrote about itself: the markdown
                    under .claude/, which was outside every glob in CI until
@@ -192,6 +192,6 @@ tools/*.mjs        The three scripts that sit at the top of the tree.
                    anyone has a working install.
 ```
 
-Related: `CLAUDE.md` (the root file — the gate list, CI's four jobs) ·
+Related: `CLAUDE.md` (the root file — the gate list and CI jobs) ·
 `CONTRIBUTING.md` (which gates block a merge) ·
 `.github/workflows/ci.yml` (the jobs each gate runs in)

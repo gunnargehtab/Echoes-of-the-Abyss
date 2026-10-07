@@ -152,9 +152,9 @@ design-side companion (SIG scale, biome PF, depth bands, doctrines).
 
 ## CI
 
-`.github/workflows/ci.yml` runs on every push to `main` and every pull request as four
-parallel jobs — `build`, two test shards and `docs` — and its comments carry the
-reasoning. All three doc gates block, so a dead link in `docs/` fails the build.
+`.github/workflows/ci.yml` runs on every push to `main` and every pull request: `checks`,
+`models`, two test shards and `docs` run in parallel; `build` requires checks and models
+to pass. All three doc gates block, so a dead link in `docs/` fails the build.
 `pages.yml`, `pr-body.yml` and `labels.yml` gate nothing; each header says what it does.
 
 ## Contributing
