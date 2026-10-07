@@ -656,23 +656,25 @@ shoulders' Resonance Field at 1,700 m to the Mouth's Abyssal Trench at 1,780 m, 
 A hull that strays onto either stands on trench water at 1.60, as it would on the Mouth beside
 it, and a line through either carries at 1.60 for that cell where it carried at 0.70. Of the
 51,040 pairs of cell centres, 971 are priced differently, and all 971 carry further, none less.
-625 end in one of the two cells, the largest rise +0.90, from 0.70 to 1.60 between (1,625, 3,625)
-and the fan's cell south of it. The other 346 pass through one, the largest rise +0.45, from 1.15
-to 1.60 over 500 m along the south edge. So a hull sounding on or across either cell is heard
-further than it was. No straight line from where the works are placed to where the column is seated or walks to
-crosses either cell, so none of those 224 lines is priced differently.
+625 end in one of the two cells, the largest rise +0.90, from 0.70 to 1.60 between (1,625,
+3,625) and the fan's cell south of it. The other 346 pass through one, the largest rise +0.45,
+from 1.15 to 1.60 over 500 m along the south edge. So a hull sounding on or across either cell
+is heard further than it was. No straight line from where the works are placed to where the
+column is seated or walks to crosses either cell, so none of those 224 lines is priced
+differently.
 
 A hull following the floor holds thirty metres off it, so on those two cells it holds 1,750 m
 where it held 1,670 m, and 1,780 m is still Mid-Water: PR-2 covers both. That costs a follower a
 way back. Measured with a works Corvette following the floor, fauna off, 120 s per leg: one that
 strays onto either cell from the shoulders beside or north of it drops to 1,750 m there, and is
-refused the way back. Ordered back, it stops at the cell's edge, at (1,501, 3,875) or
-(1,625, 3,751) for the west cell and (3,499, 3,875) or (3,375, 3,751) for the east. In rectangles
-it held 1,670 m on the cell and came back. Off either cell it can now go only into the Mouth, and
+refused the way back. Ordered back, it stops at the cell's edge, at (1,501, 3,875) or (1,625,
+3,751) for the west cell and (3,499, 3,875) or (3,375, 3,751) for the east. In rectangles it
+held 1,670 m on the cell and came back. Off either cell it can now go only into the Mouth, and
 from the Mouth at 1,750 m a follower could not go onto the shoulders in rectangles either. It
-gains the reverse: from the Mouth at 1,750 m it can now follow onto both cells and back, where the
-rectangles' 1,700 m floor stopped it at the Mouth's edge. A follower that skirts the west cell
-along the shoulders, measured the same way, keeps the track it kept in rectangles.
+gains the reverse: from the Mouth at 1,750 m it can now follow onto both cells and back, where
+the rectangles' 1,700 m floor stopped it at the Mouth's edge. A follower crossing the shoulders
+north of the west cell, from (1,375, 3,625) to (1,625, 3,500), measured the same way, keeps the
+track it kept in rectangles.
 
 Every authored point of the mission stands on the ground it stood on in rectangles, and so does
 every cell centre of the Fifth's and the Gallery's mission regions. Every leg of the column's walk
