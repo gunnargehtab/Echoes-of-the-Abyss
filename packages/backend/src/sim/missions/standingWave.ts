@@ -284,7 +284,12 @@ export const CHORD_STANDING_WAVE: MissionDefinition = {
    */
   works: { hullRadiusM: WORKS_RADIUS_M, onFloor: true },
 
-  /** §11's four regions, restated as the mission's own. */
+  /**
+   * Three of §11's four regions, restated as the mission's own, each the same
+   * rectangle the map draws. The South Mouth is not restated: it is drawn as a
+   * fan since #1159, a mission region is a rectangle, and nothing here reads
+   * it — no predicate, beat or marker names it.
+   */
   regions: [
     {
       id: 'shoulders',
@@ -309,14 +314,6 @@ export const CHORD_STANDING_WAVE: MissionDefinition = {
       widthM: 1500,
       heightM: 500,
       note: "The North Gallery — the spawn, the Bastion, and the region §8 extracts to. Above the corridor, in the sentence's sense",
-    },
-    {
-      id: 'south-mouth',
-      x: 1750,
-      y: 3500,
-      widthM: 1500,
-      heightM: 500,
-      note: "The South Mouth — trench water, PF 1.60 axial. The column's entrance, and where it turns",
     },
   ],
 
