@@ -1,6 +1,6 @@
 ---
 name: steward
-description: Repo-specific guidance for driving an open pull request to green — what to do on a CI failure, a merge conflict, or a review comment in this repository. Use this whenever a session is subscribed to a PR's activity here, whether it opened the PR or was asked to watch one. It assumes the generic drive-to-green rules and only says where this repository differs; the generic rules still bind wherever this file is silent.
+description: This repository's rules for driving an open pull request to green — a CI failure, a merge conflict or a review comment. Use whenever a session is subscribed to a PR's activity here, whether it opened the PR or watches one. It adds to the generic drive-to-green rules, which still bind wherever it is silent.
 ---
 
 # Stewarding a pull request here

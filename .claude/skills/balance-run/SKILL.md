@@ -1,6 +1,6 @@
 ---
 name: balance-run
-description: Run the balance harness and read what comes back — the thirty-match baselines in tools/balance/baselines/, and the before/after pair that justifies moving a TUNABLE constant. Use this whenever a change moves simulation numbers (fauna, economy, AI, tuning constants) and a baseline needs refreshing or a guard-rail needs re-reading. It covers what a run costs, what makes one reproducible, and the traps that make a batch lie.
+description: Run the balance harness and read what comes back — the thirty-match baselines in tools/balance/baselines/. Use when a mechanic change moves simulation numbers (fauna, economy, AI) and a baseline needs re-recording, or to hunt a correctness fault. Balance tuning is frozen. Covers what a run costs, what makes one reproducible, and the traps that make a batch lie.
 ---
 
 # Balance runs

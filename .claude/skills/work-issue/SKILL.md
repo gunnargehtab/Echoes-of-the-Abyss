@@ -1,6 +1,6 @@
 ---
 name: work-issue
-description: Pick one open issue off the backlog, work it end to end, and open a pull request — the unattended loop. When the work needs a design call, write the options, take the recommended one and keep going. When nothing is eligible, file the next sub-issues off an epic instead, so the following runs have work. Use this when asked to work the backlog, pick up an issue, make progress on open issues, or when a scheduled Routine fires with no human watching. Prefer this over improvising a selection rule; the claim check, the self-assignment and the open-PR cap are what keep two firings from colliding and what keep CI spend bounded.
+description: Pick one open issue off the backlog, claim it and take it to a pull request — the unattended loop. It takes design calls in the open, and files an epic's next sub-issues when nothing is eligible. Use when asked to work the backlog, pick up an issue or make progress on open issues, and whenever a scheduled Routine fires.
 ---
 
 # Working one issue, unattended

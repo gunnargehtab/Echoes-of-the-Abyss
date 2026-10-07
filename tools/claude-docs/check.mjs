@@ -77,9 +77,10 @@
  * gated document, `.claude/` included, because the rule is about prose naming
  * the tree and both scopes are that.
  *
- * **And every `CLAUDE.md` stays under 200 lines, since #899** — the only
- * documents here a session loads without asking. `lib/length.mjs` holds the
- * ceiling and the reason for it.
+ * **And every `CLAUDE.md` stays under 200 lines, since #899**, and every
+ * repo-authored skill's `description` within 60 words, since #1186 — the only
+ * prose here a session loads without asking. `lib/length.mjs` holds both
+ * ceilings and the reason for each.
  *
  *   node tools/claude-docs/check.mjs [--list]
  */
@@ -90,7 +91,12 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { spawn } from '../lib/spawn.mjs';
-import { CLAUDE_MD_LINE_LIMIT, overlongClaudeFiles } from './lib/length.mjs';
+import {
+  CLAUDE_MD_LINE_LIMIT,
+  SKILL_DESCRIPTION_WORD_LIMIT,
+  overlongClaudeFiles,
+  overlongSkillDescriptions,
+} from './lib/length.mjs';
 import { makeResolver, unresolvedPaths, unusedAllowances } from './lib/paths.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -419,6 +425,21 @@ if (overlong.length > 0) {
 }
 
 process.stdout.write(`CLAUDE.md files: all under ${CLAUDE_MD_LINE_LIMIT} lines\n`);
+
+const wordy = overlongSkillDescriptions(documents);
+if (wordy.length > 0) {
+  process.stderr.write(
+    `Skill description(s) over ${SKILL_DESCRIPTION_WORD_LIMIT} words, or not one readable line:\n${wordy
+      .map(({ file, words }) => `  ${file}: ${words ?? 'no single-line description'}`)
+      .join('\n')}\n` +
+      'Keep what the skill does and when to use it; move why it exists into the body.\n'
+  );
+  process.exit(1);
+}
+
+process.stdout.write(
+  `skill descriptions: all within ${SKILL_DESCRIPTION_WORD_LIMIT} words (vendored copies excepted)\n`
+);
 
 // Two lint runs, two configs: .claude/'s turns MD018 off for the register those
 // files use, and the root three neither need that nor should get it.

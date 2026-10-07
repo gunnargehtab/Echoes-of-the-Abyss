@@ -1,6 +1,6 @@
 ---
 name: material-design
-description: Develop runtime materials and textures for Echoes of the Abyss from an approved visual brief. Use for surface look development, roughness, normals, material families or texture budgets. Preserve faction ink, SIG emission, shader composition and the non-target rendering path.
+description: Develop runtime materials and textures for Echoes of the Abyss from an approved visual brief. Use for surface look development, roughness, normals, material families, texture budgets, and any onBeforeCompile shader patch. Preserve faction ink, SIG emission, shader composition and the non-target rendering path.
 ---
 
 # Developing a surface, not repainting an export
