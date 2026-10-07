@@ -379,12 +379,16 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     {
       slot: KNIGHTS,
       faction: Faction.Hadron,
-      // Parked in the Thermal Vein rather than spawned on the beat: PF 0.45
-      // masks her until she comes in, which is how a party can be present from
-      // tick zero and still *arrive* at 06:20. She is also the reason the West
-      // Approach is on the map at all, and nothing tells the player either
-      // thing (§11).
-      note: 'Voice Ren Kalliso, neither invited nor refused. Waiting out on the West Approach until she states her position',
+      // Seated at tick zero and silenced at 00:00, which is how a party can be
+      // present from the start and still *arrive* at 06:20. The silence order
+      // hides her, not her ground: she waits in Districts water (Coral Ruins,
+      // PF 0.80) north-west of the arch, 2,204 m from Escort One's seat, the
+      // flight's nearest. Measured in a no-input run without the order, the
+      // flight holds both hulls at Tier 2 on every Echo pass to 06:20, and
+      // with Thermal Vein painted under her seat it still does. Her first
+      // seat, 900,1750, is in the West Approach (Thermal Vein, PF 0.45, §11),
+      // and the flight reads her there at Tier 3 on the opening pass.
+      note: 'Voice Ren Kalliso, neither invited nor refused. Waiting silent north-west of the arch until she states her position',
       units: [
         {
           tag: 'kalliso-1',
@@ -561,9 +565,10 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     // 00:00 — the Knight is already out there, and already quiet.
     //
     // Silenced on the first tick rather than on arrival, because she spawns
-    // 1,650 m out and a Knight running open at that range is a solid Tier 3
-    // from the opening second — which tells the player, before anything has
-    // happened, exactly what §6 spends three minutes refusing to tell them.
+    // 2,204 m from Escort One's seat, and running open from there she and her
+    // second are a Tier 2 to the flight on every Echo pass to 06:20 (measured
+    // without these two beats) — a contact on the plot before §9 has her
+    // arrive at all.
     // Quiet from the start she is simply not there until she comes to the
     // interval, which is what "arrives" means (§9).
     { atTick: 0, kind: 'silent', tag: 'kalliso-1', active: true, note: 'Quiet on approach' },
@@ -691,20 +696,11 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     // **The interval is a measured distance, not a manner.** Measured on this
     // map, against the court's array, an open Corvette reads Tier 4 at 1,300 m,
     // Tier 3 from 1,500 to 1,900 m, and Tier 2 at 2,100 m; silent, she is
-    // simply not there at any of them. So she holds at about 2,150 m and runs
-    // silent, and the two flickers below drop the order for a few seconds
-    // each — which is the only way to produce §9's sentence with this Echo
-    // model: nothing, briefly Tier 2 as she turns, nothing.
-    // She has to sit in
-    // the narrow band where a silent Knight is a contact that will not resolve:
-    // measured against this map and the court's array, a silent Corvette reads
-    // Tier 4 at 280 m, Tier 2 at 870 m, is still heard at 1,100 m and is gone
-    // by 1,300 m. Anywhere inside a kilometre and the player simply watches
-    // her, which deletes the mission's third teaching beat (§10) and leaves
-    // Drenn pinging to grade a contact everyone can already see (§6). She holds
-    // at roughly 1,200 m — inside the band, close enough to its far edge that
-    // she flickers exactly as §9 describes: present, gone, briefly higher as
-    // she turns, gone again.
+    // simply not there at any of them. So she holds at 823,817, 2,098 m from
+    // Escort One's seat, the flight's nearest, and runs silent, and the two
+    // flickers below drop the order for a few seconds each — which is the
+    // only way to produce §9's sentence with this Echo model: nothing, briefly
+    // Tier 2 as she turns, nothing.
     {
       atTick: T(6, 20),
       kind: 'move',
