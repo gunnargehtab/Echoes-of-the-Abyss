@@ -314,7 +314,7 @@ acoustics.
 | The Slope | polygon (0, 750) (5000, 750) (5000, 1500) (4500, 1750) (2500, 1750) (2250, 1500) (0, 1500) | Open Water | 1,450 | The crossing: the layer passes through this band, and so does everything that matters. Its top row runs the map's whole width; its foot is ragged, with a spur running down south of the muster |
 | The Listening Ground | polygon (0, 2250) (0, 2000) (500, 2000) (750, 1500) (1250, 1500) (1500, 1000) (2000, 1000) (2500, 1750) (3500, 1750) (3750, 1250) (4250, 1250) (4500, 1750) (5000, 2000) (5000, 2250) | Open Water | 1,600 | Below the layer: the survey's working water, open and honest about it. A basin that reaches up the slope in two canyons, the western one opening beside the Hollow |
 | The Hollow | rect 750, 1500, 250, 250 | Thermal Vein | 1,600 | One vent pocket on the listening ground's edge — the survey's cover, PF 0.45, and the only masked water on the Directorate's side of the door. A box because it is one cell |
-| The Worked Ground | rect 0, 2250, 5000, 750 | Abyssal Trench | 1,750 | The rim: rendering row, freight axis, the six points, and the watch's beat. Trench paint at Mid-Water depth — the margin carries its own economy to anyone listening, which is the entire mission. A box because the watch's beat holds its northern row |
+| The Worked Ground | rect 0, 2250, 5000, 750 | Abyssal Trench | 1,750 | The rim: rendering row, freight axis, the six points, and the watch's beat. Trench paint at Mid-Water depth — the margin carries its own economy to anyone listening, which is the entire mission. A box because the watch's beat and its turn cross most of its northern row, and the rest is PF 1.6 water |
 
 One spawn, on the shelf lane: 2500, 375. **No resources** — a charter, not a works order. No
 hazard sites: the weather here is the roster.
@@ -327,22 +327,22 @@ western one opening beside the Hollow. At either end the listening ground pulls 
 map's edge, and the margin shows as a bench between it and the slope.
 
 Three regions besides the Margin stay boxes, each for a reason. The Shelf Lane is the region
-the return is counted in (§8), the same rectangle, so the water the record comes home to is
-the water drawn. The Hollow is one cell, and any shape drawn in that cell's frame paints it or
-nothing; a larger one would widen the only cover on this side of the door. The Worked Ground's northern
-row is held: the watch's beat, and its turn at the recall from anywhere along that beat, cross
-14 of its 20 cells, and moving the rim anywhere moves PF 1.6 water.
+the return is counted in (§8), the same rectangle, so the water the record comes home to is the
+water drawn. The Hollow is one cell, and any shape drawn in that cell's frame paints it or
+nothing; a larger one would widen the only cover on this side of the door. The Worked Ground's
+northern row is mostly held: the watch's beat, and its turn at the recall from anywhere along
+that beat, cross 14 of its 20 cells, and moving the rim anywhere moves PF 1.6 water.
 
-The reshape is new map content, never a balance lever. It moved 20 of the map's 240 cells,
-all Open Water before and after, so no cell's biome or PF changed. Eight cells of slope became
+The reshape is new map content, never a balance lever. It moved 20 of the map's 240 cells, all
+Open Water before and after, so no cell's biome or PF changed. Eight cells of slope became
 canyon at 1,600 m. Five of listening ground became slope at 1,450 m, four in the spur and one
 at the east end, and seven became the margin's bench at 1,500 m. Ten of those cells lie under
-the straight lines from the muster to the other parties: those lines carry sound as they did,
-and a hull that travels one finds the floor this table now gives it. Every spawn, hull,
-emitter, beat point and leg, the watch's turn from anywhere along its beat, and every cell of
-the shelf lane stand on the ground they stood on in rectangles. Down every column the floor
-still steps from the shelf lane through the slope to the listening ground and the rim, and
-never rises on the way south.
+the straight lines from the muster to every point the mission places or sends a hull or the
+pack: those lines carry sound as they did, and a hull that travels one finds the floor this
+table now gives it. Every spawn, hull, emitter, beat point and leg, the watch's turn from
+anywhere along its beat, and every cell of the shelf lane stand on the ground they stood on in
+rectangles. Down every column the floor still steps from the shelf lane through the slope to
+the listening ground and the rim, and never rises on the way south.
 
 The worked ground stops at 1,750 m — the First Trench's rim, fifty metres above the band that
 would open the crush ledger — so the survey transits everything on its rating and mission 5

@@ -270,31 +270,38 @@ describe('The Western Margin, as docs/mission-exposure.md §11 draws it (#1144)'
   };
 
   it('stands every authored point on the ground §11 names for it', () => {
-    const stands: [string, number, number, keyof typeof REGIONS][] = [
-      ['the spawn, on the shelf lane', 2500, 375, 'shelf'],
-      ['survey-1, at the muster', 2400, 350, 'shelf'],
-      ['survey-2, at the muster', 2500, 300, 'shelf'],
-      ['survey-3, at the muster', 2600, 350, 'shelf'],
-      ['watch-a, on its beat', 1300, 2400, 'worked'],
-      ['watch-b, on its beat', 1500, 2450, 'worked'],
-      ['the rendering row', 700, 2500, 'worked'],
-      ['the freight screws', 1600, 2400, 'worked'],
-      ['the intake stalls', 2400, 2550, 'worked'],
-      ['the draw plant', 3200, 2450, 'worked'],
-      ['the listening dome', 4000, 2500, 'worked'],
-      ['point six', 4600, 2650, 'worked'],
-      // §7: the watch turns onto the listening ground, the only water the
-      // survey can have been classified in.
-      ['watch-a, turned at the recall', 2500, 1800, 'listening'],
-      ['watch-b, turned at the recall', 2200, 1850, 'listening'],
-      // §5: the rim pack, driven along the rim.
-      ['pack-a, rising', 4500, 2800, 'worked'],
-      ['pack-a, driven to', 2500, 2700, 'worked'],
-      ['pack-b, rising', 4650, 2700, 'worked'],
-      ['pack-b, driven to', 2700, 2650, 'worked'],
-      ['pack-c, rising', 4400, 2900, 'worked'],
-      ['pack-c, driven to', 2300, 2750, 'worked'],
-    ];
+    // Read off the literal, so a point exposure.ts moves is asked of the
+    // ground it moved to; the counts keep a point from dropping out unasked.
+    const stands: [string, number, number, keyof typeof REGIONS][] = [];
+    for (const spawn of FIRST_TRENCH_MARGIN.spawns) {
+      stands.push(['the spawn, on the shelf lane', spawn.x, spawn.y, 'shelf']);
+    }
+    const survey = LEDGER_EXPOSURE.parties.find(
+      (party) => party.slot === LEDGER_EXPOSURE.playerSlot
+    )!;
+    for (const unit of survey.units)
+      stands.push([`${unit.tag}, at the muster`, unit.x, unit.y, 'shelf']);
+    for (const unit of watch.units)
+      stands.push([`${unit.tag}, on its beat`, unit.x, unit.y, 'worked']);
+    const emitters = LEDGER_EXPOSURE.parties.flatMap((party) => party.emitters ?? []);
+    for (const point of emitters) stands.push([point.tag, point.x, point.y, 'worked']);
+    // §7: the watch turns onto the listening ground, the only water the
+    // survey can have been classified in.
+    for (const beat of LEDGER_EXPOSURE.conditionalBeats ?? []) {
+      if (beat.kind === 'move')
+        stands.push([`${beat.tag}, turned at the recall`, beat.x, beat.y, 'listening']);
+    }
+    // §5: the rim pack, risen and driven along the rim.
+    for (const beat of LEDGER_EXPOSURE.beats) {
+      if (beat.kind !== 'creature') continue;
+      if (beat.spawnAt !== undefined) {
+        stands.push([`${beat.tag}, rising`, beat.spawnAt.x, beat.spawnAt.y, 'worked']);
+      }
+      stands.push([`${beat.tag}, driven to`, beat.driveTo.x, beat.driveTo.y, 'worked']);
+    }
+    // One spawn, three survey hulls, two watch hulls, six points, two turns,
+    // and three hounds risen and driven: §11, §2, §5, §6, §7.
+    assert.equal(stands.length, 1 + 3 + 2 + 6 + 2 + 6, 'every authored point is asked');
     for (const [what, x, y, region] of stands) {
       assert.deepEqual(at(x, y), REGIONS[region], `${what} at ${x},${y} stands in ${region}`);
     }
