@@ -458,7 +458,7 @@ describe('the packs come the way they came — §11, the dip taken out (#1171)',
   it('walks every hull and creature of an idle shift on the tracks the rectangles gave it', () => {
     // §11: the Downworks' ellipse dipped south between the faces, and the
     // Draymaw packs, driven at 00:00, came to the muster across the dip and
-    // killed a different hull first. The packs leave at about 90 s; played to
+    // killed a different hull first. Two of the packs leave at about 85 s; played to
     // the whistle, every 5 s, so a shape that moves anything is caught here.
     const before = play({ ...map, regions: RECTANGLES });
     const after = play(map);

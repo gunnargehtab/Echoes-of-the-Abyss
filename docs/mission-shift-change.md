@@ -332,15 +332,15 @@ residue live in the masked half of the map. No hazard sites: this field's weathe
 audit.
 
 Every number a shape states is a whole 250 m cell, and a cell is its region's when the shape
-holds its centre ([maps.md](maps.md), "How a map is written"). The regions were rectangles
-until issue #1142 redrew the Downworks and both faces in shapes (epic #1139). The redraw moved
-14 of the map's 192 cells and none that anything stands on: the muster, both fields, every
-hull, the refinery, the pack, the Rail Head's berths and every point of the audit's plan stand
-on the ground they stood on before. The Downworks' northern rim stays out of the shoulder
-between it and the road, so the climb is as long as it was. Its south edge is the rectangle's:
-an ellipse there dipped into the Field between the faces and changed how the Draymaw packs
-reach the muster, so the dip came back out (#1171). Played with no input, every hull and
-creature of the shift walks the track it walked on the rectangles, to the whistle.
+holds its centre ([maps.md](maps.md), "How a map is written"). The regions were rectangles until
+issue #1142 redrew the Downworks and both faces in shapes (epic #1139). The redraw moved 14 of
+the map's 192 cells and none that anything stands on: the muster, both fields, every hull, the
+refinery, the pack, the Rail Head's berths and every point of the audit's plan stand on the
+ground they stood on before. The Downworks' northern rim stays out of the shoulder between it
+and the road, so no column's climb is shorter than it was. Its south edge is the rectangle's: an
+ellipse there dipped into the Field between the faces and changed how the Draymaw packs reach
+the muster, so the dip came back out (#1171). Played with no input, every hull and creature of
+the shift walks the track it walked on the rectangles, to the whistle.
 
 The layer at 1,200 m is not authored — it is on every map — but this map is *placed* against
 it deliberately: floors above it north of the workings, floors below it south, and no region
