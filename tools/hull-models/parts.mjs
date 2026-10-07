@@ -21,7 +21,10 @@
  * #1125 the export writes any two parts built alike on one buffer (kit.mjs
  * `shareAlike`), so two nodes sharing one in a file re-exported since may
  * be two calls in its script; a script's note that a part is "its own
- * buffer" speaks of the script and of the file it was ported from.
+ * buffer" speaks of the script and of the file it was ported from. Since
+ * #1129 it shares each attribute alike on its own as well, so "buffer of"
+ * names the first node with the same corners and triangles, which is the
+ * shape a port transcribes; its normals or UVs may still be its own.
  *
  * Every number is the file's own — nothing is yawed, scaled or centred here.
  * A port passes them through kit.mjs `drawn` and `metreTrue`, which is where
@@ -491,7 +494,7 @@ json.nodes.forEach((n, i) => {
       const mat = prim.material !== undefined ? json.materials[prim.material].name : '-';
       const extent = [0, 1, 2].map((k) => pos.max[k] - pos.min[k]);
       const centre = [0, 1, 2].map((k) => (pos.max[k] + pos.min[k]) / 2);
-      const key = prim.attributes.POSITION;
+      const key = `${prim.attributes.POSITION}/${prim.indices}`;
       const shared = firstUse.get(key);
       if (!shared) firstUse.set(key, n.name);
       line +=
