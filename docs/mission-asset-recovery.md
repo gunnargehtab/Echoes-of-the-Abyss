@@ -348,24 +348,28 @@ What this mission deliberately does not teach:
 Thermal Vein ground with a wound in it. North is shallow and south is deep, as everywhere in
 the Rift ([world-map.md](world-map.md)); the mission is a descent, a hold, and a climb home.
 
-| Region | Rect (x, y, w, h) | Biome | Floor | What it is |
+| Region | Shape | Biome | Floor | What it is |
 | --- | --- | --- | --- | --- |
-| The Field | 0, 0, 4000, 3000 | Thermal Vein | 1,000 | The Vein's masked working ground. Painted first; everything else is cut into it |
-| The Rail Head | 1500, 0, 1000, 500 | Thermal Vein | 700 | Staging, the writ's delivery point, **the extraction point** |
-| The Terrace | 0, 500, 4000, 750 | Thermal Vein | 850 | The herd's feeding ground, and the road's shallow shoulder. Two eruption sites on the vent line, published intervals |
-| The Works | 1250, 1250, 1500, 750 | Thermal Vein | 1,100 | The descent road. PF 0.45 — the column's own ground protects it here, and nothing tells the player this |
-| The Scar | 1000, 2000, 2000, 750 | Abyssal Trench | 1,150 | The blowout channel. Raw rock, PF 1.6 — the wound that carries. Trench *paint*, Mid-Water depth; biome is acoustics, not band |
-| Face Six | 1750, 2250, 500, 500 | Coral Ruins | 1,150 | The fall itself: collapsed structure, hard acoustic shadows, the chamber inside. Cut into the Scar, painted after it |
+| The Field | rect 0, 0, 4000, 3000 | Thermal Vein | 1,000 | The Vein's masked working ground. Painted first; everything else is cut into it. A box because it is the whole map |
+| The Rail Head | rect 1500, 0, 1000, 500 | Thermal Vein | 700 | Staging, the writ's delivery point, **the extraction point**. A built yard, so a box, and the same box the writ counts deliveries in |
+| The Terrace | polygon (0, 750) (250, 500) (500, 500) (750, 250) (1250, 250) (1500, 500) (2500, 500) (2750, 250) (3250, 250) (3500, 500) (3750, 500) (4000, 750) (4000, 1000) (3750, 1000) (3250, 1500) (750, 1500) (250, 1000) (0, 1000) | Thermal Vein | 850 | The herd's feeding ground, and the road's shallow shoulder. It rises about each of the two eruption sites on the vent line, sags into an apron below each, and thins to the map's edges. Published intervals |
+| The Works | polygon (1500, 1250) (2500, 1250) (2750, 1750) (2750, 2000) (1000, 2000) | Thermal Vein | 1,100 | The descent road. It leaves the Terrace's lip under the Rail Head and fans west into the old workings where it meets the Scar. PF 0.45 — the column's own ground protects it here, and nothing tells the player this |
+| The Scar | polygon (1000, 2000) (2500, 2000) (3000, 2500) (2500, 2750) (2250, 2750) (2250, 3000) (1750, 3000) (1750, 2750) (1000, 2750) | Abyssal Trench | 1,150 | The blowout channel, torn east to a point and down past the fall to the field's south edge, where the vent line under the face blew out. Raw rock, PF 1.6 — the wound that carries. Trench *paint*, Mid-Water depth; biome is acoustics, not band |
+| Face Six | rect 1750, 2250, 500, 500 | Coral Ruins | 1,150 | The fall itself: collapsed structure, hard acoustic shadows, the chamber inside. Cut into the Scar, painted after it. A box because the fall closes as this rectangle (§8), and on four cells an ellipse paints the same four |
 
 One spawn, at the Rail Head: 2000, 250. **No resources** — a recovery writ, not a works order
 (§3). Two hazard sites, both geothermal, both on the Terrace's vent line, visible from the
 first frame ([maps.md](maps.md)).
 
-Every rectangle lands on the 250 m cell grid and paints exactly the metres it reads
-([maps.md](maps.md), "How a map is written"). The Scar's trench paint at Mid-Water depth is the
-same authoring freedom Sorrowgate's Commit uses in the other direction, and it is the mission's
-acoustic argument in map data: the Field masks, the Scar broadcasts, and the border between
-them is where the work is.
+The map is drawn in shapes, not rectangles (#1139, #1141). Every number a shape states is a
+whole 250 m cell, and a cell is its region's when the shape holds the cell's centre
+([maps.md](maps.md), "How a map is written"). The shapes moved outlines, not the mission: every
+placed hull, beat point, eruption site and the taps stand on the ground they stood on in
+rectangles, and the road from the Rail Head to the fall crosses the same five grounds in the
+same order. The Scar's trench paint at Mid-Water depth is the same authoring freedom
+Sorrowgate's Commit uses in the other direction, and it is the mission's acoustic argument in
+map data: the Field masks, the Scar broadcasts, and the border between them is where the work
+is.
 
 Fauna arrive by authored `creature` beats, not by seeding — the packs are placed at the
 workings and the herd on the terrace at 00:00, and the second pack enters at 08:30. A mission
