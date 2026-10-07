@@ -84,7 +84,7 @@
  *   at 01:00, and a released Sounder eats both watch hulls inside twelve
  *   seconds of every run — which takes the legs, the Watch-Speaker, the sweep
  *   and `the-count` with them. It is seated at (4,700, 2,700) instead: same
- *   rectangle, same depth, same x, and out of a Submersible's reach.
+ *   region, same depth, same x, and out of a Submersible's reach.
  */
 
 import {
@@ -179,7 +179,7 @@ const STATION = { one: { x: 4800, y: AXIS_Y }, two: { x: 4850, y: 2080 } };
  * and `the-count` can never be met, because the watch is the only observer on
  * the map that could classify anybody.
  *
- * So the basin is seated at the southern end of the same rectangle instead:
+ * So the basin is seated at the southern end of the same region instead:
  * still the Deep End, still 2,000 m, still x 4,700 so the transit still stands
  * under the Head at 18:00 (x ≈ 2,032). It is 646 m from the nearer of the two
  * station seats in three dimensions and never nearer than 628 m to any point

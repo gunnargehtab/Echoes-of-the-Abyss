@@ -32,10 +32,14 @@
  *   Watch-Speaker, the sweep and `the-count` with them. The literal seats it
  *   south instead and this file states the rule §11 needed and did not.
  *
- * Nothing here steps a match, and the row above is why that is a decision
- * rather than a policy: the seating rule is a *static* form of something only
- * a run showed, written as a distance because a distance is what an author can
- * check. The three claims that still need a run — that the sweep files, that a
+ * Two blocks step a match and nothing else does. The sweep block plays the
+ * watch for five minutes, because the bend it guards is a runtime behaviour a
+ * table cannot show; the #1157 block plays an idle committal on the shapes and
+ * on the old rectangles, because a reshape that keeps every point can still
+ * move a route. Everywhere else the row above is why not stepping is a
+ * decision rather than a policy: the seating rule is a *static* form of
+ * something only a run showed, written as a distance because a distance is
+ * what an author can check. The three claims that still need a run — that the sweep files, that a
  * wounded coil closes, that a lost carrier resets its ledger — belong to
  * systems with their own suites (`hollow.test.ts`, `missionIntake.test.ts`,
  * `missions.test.ts`). What is unique to this mission is a table of
@@ -54,6 +58,7 @@ import {
   DRIFT,
   DepthBand,
   FACTION_COMBAT,
+  FOLLOW_FLOOR,
   Faction,
   FaunaSpecies,
   MISSION,
@@ -77,8 +82,12 @@ import { defineQuery } from 'bitecs';
 import { Health, Owner, Position, Unit } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
 import { THE_REST, mapById, missionMapById, terrainFor } from '../src/sim/maps/index.ts';
+import type { MapDefinition, MapRect } from '../src/sim/maps/types.ts';
+import { MISSIONS } from '../src/sim/missions/index.ts';
 import { CHORD_NINETEEN } from '../src/sim/missions/nineteen.ts';
 import { isStanding } from '../src/sim/missions/predicates.ts';
+import { Pathfinder } from '../src/sim/pathfinding.ts';
+import { shapeContains } from '../src/sim/terrain.ts';
 
 const T = (minutes: number, seconds = 0): number => (minutes * 60 + seconds) * SIM.TICK_HZ;
 
@@ -263,6 +272,336 @@ describe('the Rest, as docs/mission-nineteen.md §11 gives it to the mission', (
         assert.equal(thermoclineFactor(a, b), 1, `${a} m against ${b} m is not one layer`);
       }
     }
+  });
+});
+
+describe('the ground the committal stands on — §11, drawn in shapes (#1157)', () => {
+  // The regions as 443bcb9b drew them, before #1157 redrew the Head, both
+  // walls and the Deep End in shapes: written out rather than read from the
+  // literal, so the reference cannot move with the map it checks.
+  const RECTANGLES: MapRect[] = [
+    { x: 0, y: 0, widthM: 5000, heightM: 4000, biome: Biome.ResonanceField, floorM: 1700 },
+    { x: 2000, y: 0, widthM: 1000, heightM: 750, biome: Biome.ResonanceField, floorM: 1600 },
+    { x: 0, y: 1000, widthM: 5000, heightM: 2000, biome: Biome.AbyssalTrench, floorM: 2150 },
+    { x: 0, y: 1000, widthM: 5000, heightM: 500, biome: Biome.AbyssalTrench, floorM: 2050 },
+    { x: 0, y: 2500, widthM: 5000, heightM: 500, biome: Biome.AbyssalTrench, floorM: 2050 },
+    { x: 4250, y: 1250, widthM: 750, heightM: 1500, biome: Biome.AbyssalTrench, floorM: 2400 },
+  ];
+  const map = THE_REST;
+  const boxes: MapDefinition = { ...map, regions: RECTANGLES };
+  const ground = terrainFor(map);
+  const was = terrainFor(boxes);
+  const cell = map.cellM;
+  type Point = { x: number; y: number };
+  const xy = (at: string) => at.split(',').map(Number) as [number, number];
+  /** Points from a to b, both ends included, no further apart than `stepM`. */
+  const along = (a: Point, b: Point, stepM: number): Point[] => {
+    const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / stepM));
+    const out: Point[] = [];
+    for (let i = 0; i <= n; i++) {
+      out.push({ x: a.x + ((b.x - a.x) * i) / n, y: a.y + ((b.y - a.y) * i) / n });
+    }
+    return out;
+  };
+  // Asked of the cell, never the point: a point inside a polygon can stand in
+  // a cell the polygon does not claim (terrain.ts, `shapeContains`).
+  const centre = (m: number) => (Math.floor(m / cell) + 0.5) * cell;
+  /** The region that painted the cell under a point: the last whose shape holds its centre. */
+  const regionAt = (x: number, y: number): string => {
+    let name = '';
+    for (const region of map.regions) {
+      if (shapeContains(region, centre(x), centre(y))) name = region.note!.split(' — ')[0]!;
+    }
+    return name;
+  };
+  const groundAt = (x: number, y: number): unknown[] => [
+    regionAt(x, y),
+    Biome[ground.biomeAt(x, y)],
+    ground.floorAt(x, y),
+    ground.ceilingAt(x, y),
+  ];
+  const groundWas = (x: number, y: number): unknown[] => [
+    Biome[was.biomeAt(x, y)],
+    was.floorAt(x, y),
+    was.ceilingAt(x, y),
+  ];
+  const cells = (): [number, number][] => {
+    const out: [number, number][] = [];
+    for (let y = cell / 2; y < map.heightM; y += cell) {
+      for (let x = cell / 2; x < map.widthM; x += cell) out.push([x, y]);
+    }
+    return out;
+  };
+  const missions = MISSIONS.filter((mission) => mission.mapId === map.id);
+
+  // §11's twelve moved cells, by centre: the Head's two southern corners, the
+  // six rim cells each wall's slant takes from the shoulder, and the four wall
+  // cells the Deep End's slants take.
+  const HEAD_CORNERS = ['2125,625', '2875,625'];
+  const RIM = ['4375,875', '4625,875', '4875,875', '4375,3125', '4625,3125', '4875,3125'];
+  const DEEP = ['4625,1125', '4875,1125', '4625,2875', '4875,2875'];
+
+  /**
+   * Every scripted move on the map, as a leg from where its mover stands to
+   * where it is sent, with the depths it holds: the watch's twelve and the
+   * basin's transit, read off the beats rather than restated.
+   */
+  const legs = () => {
+    const out: { what: string; from: Point; to: Point; depths: number[] }[] = [];
+    for (const mission of missions) {
+      const at = new Map<string, Point & { depthM: number }>();
+      for (const unit of mission.parties.flatMap((p) => p.units ?? [])) {
+        at.set(unit.tag!, { x: unit.x, y: unit.y, depthM: unit.depthM! });
+      }
+      for (const beat of mission.beats) {
+        if (beat.kind === 'move') {
+          const from = at.get(beat.tag)!;
+          out.push({
+            what: `${beat.tag} at ${beat.atTick}`,
+            from,
+            to: beat,
+            depths: [from.depthM],
+          });
+          at.set(beat.tag, { x: beat.x, y: beat.y, depthM: from.depthM });
+        } else if (beat.kind === 'creature') {
+          const from = beat.spawnAt ?? at.get(beat.tag!)!;
+          const to = beat.driveTo!;
+          const toDepth = to.depthM ?? from.depthM;
+          at.set(beat.tag!, { x: to.x, y: to.y, depthM: toDepth });
+          if (from.x === to.x && from.y === to.y) continue;
+          const depths: number[] = [];
+          const high = Math.max(from.depthM, toDepth);
+          for (let depthM = Math.min(from.depthM, toDepth); depthM <= high; depthM += 25) {
+            depths.push(depthM);
+          }
+          if (!depths.includes(toDepth)) depths.push(toDepth);
+          out.push({ what: `${beat.tag} at ${beat.atTick}`, from, to, depths });
+        }
+      }
+    }
+    return out;
+  };
+
+  it('is played by Nineteen alone, which authors no mission region', () => {
+    // Every block below reads its points off this one mission; a second
+    // mission on this map would need its own points pinned before it shipped.
+    assert.deepEqual(
+      missions.map((mission) => mission.id),
+      [CHORD_NINETEEN.id]
+    );
+    assert.equal(CHORD_NINETEEN.regions.length, 0, '§11: no mission region to pin');
+  });
+
+  it('seats every authored point of the mission on the ground §11 gives it', () => {
+    const HEAD = ['The Head', 'ResonanceField', 1600, 0];
+    const REST = ['The Rest', 'AbyssalTrench', 2150, 0];
+    const DEEP_END = ['The Deep End', 'AbyssalTrench', 2400, 0];
+    const trench = (x: number) => (x >= 4250 ? DEEP_END : REST);
+    const wall = (y: number) => [
+      y < 2000 ? 'The North Wall' : 'The South Wall',
+      'AbyssalTrench',
+      2050,
+      0,
+    ];
+    const points: [string, number, number, unknown[]][] = [];
+    for (const spawn of map.spawns) {
+      points.push(['the spawn', spawn.x, spawn.y, HEAD]);
+      const foundry = [spawn.x + spawn.foundryOffsetX, spawn.y + spawn.foundryOffsetY] as const;
+      points.push(['its Foundry', ...foundry, HEAD]);
+    }
+    for (const side of CHORD_NINETEEN.parties) {
+      const mine = side.slot === CHORD_NINETEEN.playerSlot;
+      for (const unit of side.units ?? []) {
+        points.push([unit.tag!, unit.x, unit.y, mine ? HEAD : trench(unit.x)]);
+      }
+      assert.equal((side.structures ?? []).length + (side.emitters ?? []).length, 0);
+    }
+    for (const sounding of soundings) {
+      points.push([sounding.id, sounding.x, sounding.y, trench(sounding.x)]);
+    }
+    for (const marker of CHORD_NINETEEN.markers ?? []) {
+      points.push([`the ${marker.id} marker`, marker.x, marker.y, REST]);
+    }
+    for (const beat of CHORD_NINETEEN.beats) {
+      if (beat.kind === 'move') points.push([beat.tag, beat.x, beat.y, trench(beat.x)]);
+      if (beat.kind !== 'creature') continue;
+      const hollow = beat.species === FaunaSpecies.Hollow;
+      for (const [how, at] of [
+        ['seated', beat.spawnAt],
+        ['driven', beat.driveTo],
+      ] as const) {
+        if (at === undefined) continue;
+        points.push([`${beat.tag} ${how}`, at.x, at.y, hollow ? wall(at.y) : trench(at.x)]);
+      }
+    }
+    assert.equal(points.length, 59, 'the mission grew or lost a point');
+    for (const [what, x, y, expected] of points) {
+      assert.deepEqual(groundAt(x, y), expected, `${what} at ${x},${y}`);
+      assert.deepEqual(groundAt(x, y).slice(1), groundWas(x, y), `${what} moved off its ground`);
+    }
+  });
+
+  it('moves the twelve cells §11 names, every one deeper, and changes biome on six', () => {
+    const moved: string[] = [];
+    for (const [x, y] of cells()) {
+      if (JSON.stringify(groundAt(x, y).slice(1)) === JSON.stringify(groundWas(x, y))) continue;
+      moved.push(`${x},${y}`);
+      assert.ok(ground.floorAt(x, y) > was.floorAt(x, y), `${x},${y} went shallower`);
+      const biomeMoved = ground.biomeAt(x, y) !== was.biomeAt(x, y);
+      assert.equal(biomeMoved, RIM.includes(`${x},${y}`), `${x},${y}: biome`);
+    }
+    assert.deepEqual(moved.sort(), [...HEAD_CORNERS, ...RIM, ...DEEP].sort());
+    const shoulder = ['The Shoulders', 'ResonanceField', 1700, 0];
+    for (const at of HEAD_CORNERS) assert.deepEqual(groundAt(...xy(at)), shoulder, at);
+    for (const at of RIM) {
+      assert.deepEqual(groundAt(...xy(at)).slice(1), ['AbyssalTrench', 2050, 0], at);
+      assert.deepEqual(groundWas(...xy(at)), shoulder.slice(1), at);
+    }
+    for (const at of DEEP) {
+      assert.deepEqual(groundAt(...xy(at)), ['The Deep End', 'AbyssalTrench', 2400, 0], at);
+    }
+  });
+
+  it('keeps both walls’ inner edges straight, 250 m in plan from each sounding row', () => {
+    // §1, §11: the offset is the number the mission turns on, so the row of
+    // cells beside each sounding row is the Rest's, or the Deep End's at the
+    // east, in every column, and the row beyond it is a wall's or the Deep End's.
+    for (let x = cell / 2; x < map.widthM; x += cell) {
+      for (const [inside, beyond] of [
+        [1625, 1375],
+        [2375, 2625],
+      ] as const) {
+        assert.ok(['The Rest', 'The Deep End'].includes(regionAt(x, inside)), `${x},${inside}`);
+        assert.ok(ground.floorAt(x, inside) >= 2150, `${x},${inside}`);
+        const wall = regionAt(x, beyond);
+        assert.ok(wall.endsWith(' Wall') || wall === 'The Deep End', `${x},${beyond}`);
+      }
+    }
+  });
+
+  it('admits a hull at more depths, never fewer, and only on the twelve cells', () => {
+    // §11, "What it costs a hull following the floor": every floor moved
+    // deeper and no ceiling moved, so no crossing is lost. Swept from the
+    // surface to the 3,000 m a depth order reaches.
+    const named = [...HEAD_CORNERS, ...RIM, ...DEEP];
+    for (const [x, y] of cells()) {
+      for (let depthM = 0; depthM <= DEPTH.MAX_M; depthM += 25) {
+        const now = ground.admits(x, y, depthM);
+        const then = was.admits(x, y, depthM);
+        if (now === then) continue;
+        const where = `${x},${y} at ${depthM} m`;
+        assert.ok(named.includes(`${x},${y}`), where);
+        assert.ok(now && depthM > was.floorAt(x, y) && depthM <= ground.floorAt(x, y), where);
+      }
+    }
+  });
+
+  it('moves a party hull following the floor only where §11 says it does', () => {
+    // §11: 1,670 m over the Head's lost corners where it held 1,570; the order
+    // dropped over the six rim cells, where it held 1,670; and dropped over
+    // the Deep End's four new cells before and after. A hull drops the order
+    // where the floor less the clearance would crush it (`systems/depth.ts`).
+    const rating = statsFor(UnitKind.Corvette).pressureRating;
+    assert.equal(statsFor(UnitKind.Cruiser).pressureRating, rating, '§3: one rating, PR-2');
+    const holds = (terrain: typeof ground, at: string): number | 'dropped' => {
+      const target = Math.min(terrain.floorAt(...xy(at)) - FOLLOW_FLOOR.CLEARANCE_M, DEPTH.MAX_M);
+      return crushAttritionPerSecond(rating, target) > 0 ? 'dropped' : target;
+    };
+    const pair = (at: string) => [holds(was, at), holds(ground, at)];
+    for (const at of HEAD_CORNERS) assert.deepEqual(pair(at), [1570, 1670], at);
+    for (const at of RIM) assert.deepEqual(pair(at), [1670, 'dropped'], at);
+    for (const at of DEEP) assert.deepEqual(pair(at), ['dropped', 'dropped'], at);
+  });
+
+  it('crosses no changed biome on a line from the party to anybody else', () => {
+    // §11: the six rim cells are the only biome that moved, and no straight
+    // line from a seat of the party to the watch, a coil, the basin, or a
+    // point every 25 m along an authored leg crosses one. Sampled every 10 m.
+    const others: Point[] = CHORD_NINETEEN.parties
+      .filter((side) => side.slot !== CHORD_NINETEEN.playerSlot)
+      .flatMap((side) => side.units ?? []);
+    for (const beat of CHORD_NINETEEN.beats) {
+      if (beat.kind === 'creature' && beat.spawnAt !== undefined) others.push(beat.spawnAt);
+    }
+    for (const { from, to } of legs()) others.push(...along(from, to, 25));
+    for (const hull of party.units) {
+      for (const other of others) {
+        const crossed = along(hull, other, 10).some(
+          (at) => ground.biomeAt(at.x, at.y) !== was.biomeAt(at.x, at.y)
+        );
+        assert.ok(!crossed, `${hull.tag} to ${other.x},${other.y} crosses a changed biome`);
+      }
+    }
+  });
+
+  it('routes every scripted move the way it was routed in rectangles', () => {
+    // A move whose straight line is refused takes a `findPath` route, and a
+    // partial route ends at the reachable cell nearest the goal, so each leg
+    // is asked from every 25 m of its length at every 25 m of the depths it
+    // spans, and every cell it crosses keeps its ground.
+    const scripted = legs();
+    assert.equal(scripted.length, 13, '§9: the watch’s twelve legs and the basin’s transit');
+    const pathfinder = new Pathfinder(ground.cols, ground.rows);
+    const route: number[] = [];
+    const before: number[] = [];
+    for (const { what, from, to, depths } of scripted) {
+      for (const at of along(from, to, 10)) {
+        assert.deepEqual(groundAt(at.x, at.y).slice(1), groundWas(at.x, at.y), `${what} crosses`);
+      }
+      for (const depthM of depths) {
+        for (const at of along(from, to, 25)) {
+          const where = `${what} from ${Math.round(at.x)},${Math.round(at.y)} at ${depthM} m`;
+          const straight = ground.segmentAdmits(at.x, at.y, to.x, to.y, depthM);
+          assert.equal(straight, was.segmentAdmits(at.x, at.y, to.x, to.y, depthM), where);
+          const reached = pathfinder.findPath(ground, at.x, at.y, to.x, to.y, depthM, route);
+          const reachedWas = pathfinder.findPath(was, at.x, at.y, to.x, to.y, depthM, before);
+          assert.equal(reached, reachedWas, where);
+          assert.deepEqual(route, before, where);
+        }
+      }
+    }
+  });
+
+  it('plays an idle committal on the tracks the rectangles gave it', () => {
+    // Every positioned entity every 5 s, with its depth and hit points, and
+    // every line the mission speaks, keyed by eid less the run's smallest:
+    // bitecs numbers entities across worlds, so the second run's eids start
+    // where the first's stopped. The whole eighteen minutes, because both runs
+    // together take a few seconds.
+    const positioned = defineQuery([Position]);
+    const replay = (on: MapDefinition) => {
+      const match = new Match(on, { mission: CHORD_NINETEEN, fauna: false, seed: 77 });
+      const tracks: string[][] = [];
+      const lines: string[] = [];
+      let base = -1;
+      for (let tick = 0; tick <= T(18, 30) && match.missionOver === null; tick++) {
+        match.update(1000 / SIM.TICK_HZ);
+        match.takeMissionView();
+        for (const line of match.takeMissionLines()) lines.push(`${tick} ${line.text}`);
+        if (tick % (5 * SIM.TICK_HZ) !== 0) continue;
+        const eids = [...positioned(match.world)].sort((a, b) => a - b);
+        if (base < 0) base = eids[0]!;
+        tracks.push(
+          eids.map((e) => {
+            const at = `${Position.x[e]},${Position.y[e]}@${Position.depth[e]}`;
+            return `${e - base} ${at} hp ${Health.hp[e]}`;
+          })
+        );
+      }
+      return { tracks, lines, over: match.missionOver };
+    };
+    const before = replay(boxes);
+    const after = replay(map);
+    assert.ok(after.over !== null, 'the committal never closed');
+    const last = after.tracks.at(-1)!;
+    assert.equal(last.length, 16, 'six hulls, the watch, seven coils and the basin');
+    assert.notDeepEqual(last, after.tracks[1], 'nothing moved, so the tracks prove nothing');
+    assert.equal(after.tracks.length, before.tracks.length, 'the committal ran a different length');
+    for (let i = 0; i < before.tracks.length; i++) {
+      assert.deepEqual(after.tracks[i], before.tracks[i], `the tracks part at ${i * 5}s`);
+    }
+    assert.deepEqual(after.lines, before.lines, 'the mission spoke differently');
+    assert.deepEqual(after.over, before.over, 'the committal closed differently');
   });
 });
 
@@ -907,12 +1246,22 @@ describe('the beat table, as docs/mission-nineteen.md §9 clocks it', () => {
     const runM = SOUNDER.speed * leadS;
     const legM = Math.hypot(drive.x - spawn.x, drive.y - spawn.y);
     const atCloseX = spawn.x + ((drive.x - spawn.x) * runM) / legM;
-    const head = THE_REST.regions.find((region) => region.floorM === 1600)!;
+    // The Head's span is read off the painted ground, every cell at its
+    // 1,600 m, because §11 draws it as a spur rather than a box (#1157).
+    const terrain = terrainFor(THE_REST);
+    const headColumns: number[] = [];
+    for (let y = THE_REST.cellM / 2; y < THE_REST.heightM; y += THE_REST.cellM) {
+      for (let x = THE_REST.cellM / 2; x < THE_REST.widthM; x += THE_REST.cellM) {
+        if (terrain.floorAt(x, y) === 1600) headColumns.push(x);
+      }
+    }
+    const headWest = Math.min(...headColumns) - THE_REST.cellM / 2;
+    const headEast = Math.max(...headColumns) + THE_REST.cellM / 2;
     assert.equal(Math.round(runM), 2700, '§9: ninety seconds at the roster’s 30 m/s');
     assert.ok(
-      atCloseX >= head.x && atCloseX <= head.x + head.widthM,
+      atCloseX >= headWest && atCloseX <= headEast,
       `§8: the basin is at x ${atCloseX.toFixed(0)} at 18:00, and the Head spans ` +
-        `${head.x}–${head.x + head.widthM}`
+        `${headWest}–${headEast}`
     );
     assert.equal(Math.round(atCloseX / 100) * 100, 2000, '§8: x ≈ 2,000');
     // §8: it takes the Voice and no Corvette. The footprint is a body plus a

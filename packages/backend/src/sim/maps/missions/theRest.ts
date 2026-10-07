@@ -50,9 +50,9 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition, MapRect } from '../types.ts';
+import type { MapDefinition } from '../types.ts';
 
-export const THE_REST: MapDefinition<MapRect> = {
+export const THE_REST: MapDefinition = {
   id: 'the-rest',
   name: 'The Rest',
   idealUse:
@@ -64,10 +64,15 @@ export const THE_REST: MapDefinition<MapRect> = {
   cellM: 250,
   floorM: 1700,
   // One row per row of §11's table, in the document's order: the walls and the
-  // Deep End cut into the trench, and the trench cuts into the shoulders. Every
-  // rectangle lands on the 250 m cell grid and paints exactly the metres it
-  // reads.
+  // Deep End cut into the trench, and the trench cuts into the shoulders.
+  // Later regions overwrite earlier ones; every number a shape states is a
+  // whole 250 m cell, and a cell is its region's when the shape holds its
+  // centre (#1157, a box of #1139). Every spawn, hull, coil, interval, leg and
+  // the basin stands on the ground it stood on when these were all
+  // rectangles, an idle committal plays the tracks it played on them, and
+  // `missionNineteen.test.ts` pins both.
   regions: [
+    // A box, because it is the whole map's base.
     {
       x: 0,
       y: 0,
@@ -77,15 +82,25 @@ export const THE_REST: MapDefinition<MapRect> = {
       floorM: 1700,
       note: 'The Shoulders — crystal country, PF 0.70. Painted first; the far shoulder south of the trench survives as this, and nobody has a reason to be on it',
     },
+    // A spur off the northern edge, narrowing toward the cut: its two southern
+    // corners are shoulder, and every hull of the party is seated inside it.
     {
-      x: 2000,
-      y: 0,
-      widthM: 1000,
-      heightM: 750,
+      shape: 'polygon',
+      points: [
+        [2000, 0],
+        [3000, 0],
+        [3000, 250],
+        [2750, 750],
+        [2250, 750],
+        [2000, 250],
+      ],
       biome: Biome.ResonanceField,
       floorM: 1600,
       note: "The Head — the spawn, and the bench the party climbs back to. The shallowest ground on the map, where the Order's 211 PC chart begins",
     },
+    // A box: what shows of it is the axis between the walls' inner edges, and
+    // those are straight because the sounding rows' 250 m from them is the
+    // number the mission turns on.
     {
       x: 0,
       y: 1000,
@@ -95,29 +110,47 @@ export const THE_REST: MapDefinition<MapRect> = {
       floorM: 2150,
       note: 'The Rest — the trench. PF 1.60 axial, "no secrets, only distances". The nineteen are on this floor and both sounding rows run 400 m above it',
     },
+    // The inner edge is the rectangle's, 250 m in plan from the northern row
+    // the whole way; the outer edge runs on a slant north over the last
+    // 1,250 m, and the ground it paints opens east over the last 750 m, the
+    // cells at x 4,250–5,000, toward the Deep End.
     {
-      x: 0,
-      y: 1000,
-      widthM: 5000,
-      heightM: 500,
+      shape: 'polygon',
+      points: [
+        [0, 1000],
+        [3750, 1000],
+        [5000, 750],
+        [5000, 1500],
+        [0, 1500],
+      ],
       biome: Biome.AbyssalTrench,
       floorM: 2050,
       note: 'The North Wall — Hollow ground. Four coil here at 1,700 m: the northern row runs 250 m clear of this wall in plan and fifty metres under the coils on it',
     },
+    // The North Wall's mirror image across the axis.
     {
-      x: 0,
-      y: 2500,
-      widthM: 5000,
-      heightM: 500,
+      shape: 'polygon',
+      points: [
+        [0, 2500],
+        [5000, 2500],
+        [5000, 3250],
+        [3750, 3000],
+        [0, 3000],
+      ],
       biome: Biome.AbyssalTrench,
       floorM: 2050,
       note: 'The South Wall — Hollow ground. The other three, on the same offset from the southern row',
     },
+    // Widening east: its west edge is the rectangle's, and its north and south
+    // edges run on a slant out into both walls toward the map's eastern edge.
     {
-      x: 4250,
-      y: 1250,
-      widthM: 750,
-      heightM: 1500,
+      shape: 'polygon',
+      points: [
+        [4250, 1250],
+        [5000, 1000],
+        [5000, 3000],
+        [4250, 2750],
+      ],
       biome: Biome.AbyssalTrench,
       floorM: 2400,
       note: "The Deep End — where the trench falls east toward Directorate country. The basin's water and the watch's station, and 650 m under the last three names",
