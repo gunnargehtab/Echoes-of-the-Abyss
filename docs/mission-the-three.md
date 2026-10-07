@@ -702,10 +702,14 @@ width.
 The reshape is new map content, never a balance lever. It moved 4 of the map's 192 cells, the
 two outermost of the Axis's north row at each end, from Abyssal Trench at 3,100 m to the foot's
 Resonance Field at 2,700 m. They carry at 0.70 where they carried at 1.60, so sound crossing them
-carries less than it did. Of the 18,336 lines between two cell centres, 1,110 are priced lower
-by the path integral and none higher. No line between two points the mission authors crosses
-one of the four, and none of those lines is priced differently. A hull following the floor
-holds 2,670 m on the four cells, 330 m higher than the 3,000 m it held there over the trench.
+carries less than it did. Of the 18,336 lines between two cell centres, 1,110 carry at a lower
+mean PF along the Echo Layer's path integral, and none at a higher, so a hull heard across the
+map's south-west and south-east corners is heard less than before. No line between two points
+the mission authors crosses one of the four, and none of those lines carries differently. A
+hull ordered deeper than 2,700 m, as the 2,900 m dive of the second way in is, is now refused on
+the four cells, while the trench's south row still carries it the map's whole width. A hull
+following the floor holds 2,670 m on the four cells, 330 m higher than the 3,000 m it held there
+over the trench.
 One in the trench beside them, at 3,000 m, no longer steps onto them; one on them, at 2,670 m,
 now steps north onto the foot, which it could not do at 3,000. Every one of the 192 cells is
 still one a following hull reaches from the seat by steps between side-by-side cells, as it
@@ -870,11 +874,12 @@ What exists against this document and what does not, continuing the list
 extended. **This document is built.** The literal is `theThree.ts` (#397), the water is `the-first`
 (#393, drawn in shapes in #1158), and `missionTheThree.test.ts` plays the tide out three times —
 once with nobody moving at all, once with a tender whose ears have left it, and once played
-straight to *Read, and kept* at twelve minutes. It was also **the cheapest literal in the bible**, exactly as this section claimed:
-it asked the format for nothing that had not already shipped, and **the transcription moved no
-figure in it**. Every number in §3, §4, §6, §7, §9 and §11 is re-derived from the shipped model in
-the test and every one of them holds — 3,596 and 2,028 for the dive, 2,618 and 2,032 for the house,
-7.6 and 5.3 under the button, 559 m across the room, 1,246 m for the Chord and 639 m for the axis.
+straight to *Read, and kept* at twelve minutes. It was also **the cheapest literal in the
+bible**, exactly as this section claimed: it asked the format for nothing that had not already
+shipped, and **the transcription moved no figure in it**. Every number in §3, §4, §6, §7, §9 and
+§11 is re-derived from the shipped model in the test and every one of them holds — 3,596 and 2,028
+for the dive, 2,618 and 2,032 for the house, 7.6 and 5.3 under the button, 559 m across the room,
+1,246 m for the Chord and 639 m for the axis.
 Where [mission-standing-wave.md](mission-standing-wave.md) §13 is a design agenda and
 [mission-conclave-chord.md](mission-conclave-chord.md) §13 is a list of edges, this one was almost
 entirely a build list and is now almost entirely a record. What is left below is one open finding
