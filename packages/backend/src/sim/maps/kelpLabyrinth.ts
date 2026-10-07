@@ -16,7 +16,7 @@
  */
 
 import { Biome, KELP_LABYRINTH_HEADER, ResourceKind } from '@echoes/shared';
-import type { MapDefinition, MapRect } from './types.ts';
+import type { MapDefinition } from './types.ts';
 
 const W = KELP_LABYRINTH_HEADER.widthM;
 const H = KELP_LABYRINTH_HEADER.heightM;
@@ -101,15 +101,113 @@ const MAZE: Array<[number, number, number, number]> = QUADRANT.flatMap(
   ]
 );
 
+type Point = readonly [number, number];
+
+/** An outline reflected across the north-south centre line, or the east-west one. */
+const mirrorX = (path: readonly Point[]): Point[] => path.map(([x, y]) => [W - x, y]);
+const mirrorY = (path: readonly Point[]): Point[] => path.map(([x, y]) => [x, H - y]);
+
 /**
- * Every rectangle in this file lands on the 250 m cell grid, so each paints
- * exactly the metres it reads (issue #157, docs/maps.md "How a map is
- * written"). They were re-stated that way when the centre rule landed, and the
- * cells this map paints are the cells it has always played on: on a maze map
- * the paint *is* the design, and a block quietly a column wider than its
- * literal is a corridor quietly a column narrower.
+ * The lagoon's rim through the north-west quarter, from the north centre line
+ * to the west centre line. Drawn in shapes since #1137: in rectangles the
+ * open ring was a square frame inside a square frame, and from the survey
+ * dolly the map read as a checkerboard.
+ *
+ * The coral bows in between the seats, the way a reef rim does, and leaves
+ * the lagoon's corners where they were:
+ *
+ * - **North and south, it shoulders the vent field**: a row of coral 1,000 m
+ *   long either side of each vent, and a second cell against each of its
+ *   ends. The vents stand in a coral bay rather than on a ruled line, and the
+ *   shared expansion beside each keeps the open water it is worked in.
+ * - **East and west, it reaches toward the outer gate**, inboard of the wall
+ *   tunnel: a cell in from y 2,500 to y 5,500, and a second over the 1,000 m
+ *   facing the gate. Coral is where ambushes start (the ring's own comment
+ *   below), so the shadow now stands a cell from the door into the maze, and
+ *   the ring road past it is the 250 m of open water between the two.
+ *
+ * What it could not move is what the seats stand on and look along. The
+ * corner of the lagoon in front of each seat holds the Foundry and the home
+ * field, and the line from a seat to each neighbour runs down the coral's
+ * last row and column before the lagoon. So the rim only advances, never
+ * recedes, and every straight line between two spawns crosses the cells it
+ * always did; `maps.test.ts` pins what each one crosses.
+ *
+ * The 45° steps are corners on the grid, and a centre on a slanted edge is
+ * inside the outline, so each slant keeps the cell it runs through in the
+ * lagoon.
  */
-export const KELP_LABYRINTH: MapDefinition<MapRect> = {
+const RIM: readonly Point[] = [
+  [W / 2, 1500],
+  [2750, 1500],
+  [2500, 1250],
+  [2000, 1250],
+  [1750, 1000],
+  [1000, 1000],
+  [1000, 2250],
+  [1250, 2500],
+  [1250, 3250],
+  [1500, 3500],
+  [1500, H / 2],
+];
+
+/**
+ * The rim all the way round, as one outline: each quarter is the north-west
+ * one reflected, and joins the next on a centre line, so the lagoon is
+ * symmetric for the same reason the maze is.
+ */
+const LAGOON: readonly Point[] = [
+  ...RIM,
+  ...mirrorY(RIM).reverse().slice(1),
+  ...mirrorX(mirrorY(RIM)).slice(1),
+  ...mirrorX(RIM).reverse().slice(1, -1),
+];
+
+/**
+ * The north-west corner pocket, drawn as a pit rather than a square (#1137).
+ *
+ * It was the three-cell square over the outer wall's corner, and three of its
+ * cells are on the diagonal from this seat to the far one, so they stay. Its
+ * two inner sides meet the wall's arms, which stay too: eating them would
+ * widen the door the pocket is. So it spreads the only way left, out into
+ * the lagoon: a cell pair north and west, cut on the slant facing the seat,
+ * which leaves the diagonal's own lagoon cell open. Thirteen cells where the
+ * square held nine.
+ */
+const POCKET: readonly Point[] = [
+  [2000, 1500],
+  [2250, 1500],
+  [2250, 1750],
+  [2500, 1750],
+  [2500, 2500],
+  [1750, 2500],
+  [1750, 2250],
+  [1500, 2250],
+  [1500, 2000],
+];
+
+const POCKETS: readonly (readonly Point[])[] = [
+  POCKET,
+  mirrorX(POCKET),
+  mirrorY(POCKET),
+  mirrorX(mirrorY(POCKET)),
+];
+
+/**
+ * Every number a region states in this file is a whole 250 m cell (issue
+ * #157, docs/maps.md "How a map is written"): a rectangle's corner and size,
+ * an outline's corners. The rectangles were re-stated that way when the
+ * centre rule landed, and the cells the maze paints are the cells it has
+ * always played on: on a maze map the paint *is* the design, and a block
+ * quietly a column wider than its literal is a corridor quietly a column
+ * narrower.
+ *
+ * The lagoon and the corner pockets moved cells when they became shapes
+ * (#1137): 52 of open water to coral and 16 to trench, all outside the maze.
+ * The maze and the central pocket kept every cell. The maze's corridors are
+ * the map, and the central pocket's corners stand on both diagonals.
+ */
+export const KELP_LABYRINTH: MapDefinition = {
   ...KELP_LABYRINTH_HEADER,
   doc: 'docs/maps.md — Map Type 2',
   cellM: 250,
@@ -120,14 +218,13 @@ export const KELP_LABYRINTH: MapDefinition<MapRect> = {
     // "Outer ring: Coral Ruins" — painted first, as the ground everything
     // else sits on. Hard shadows, so the ring is where ambushes start.
     { x: 0, y: 0, widthM: W, heightM: H, biome: Biome.CoralRuins, note: 'Outer ring' },
-    // The open expansion ring, cut out of the coral.
+    // The open expansion ring, cut out of the coral: the lagoon, whose rim
+    // `RIM` draws.
     {
-      x: 1000,
-      y: 1000,
-      widthM: W - 2000,
-      heightM: H - 2000,
+      shape: 'polygon',
+      points: LAGOON,
       biome: Biome.OpenWater,
-      note: '"Open outer ring for expansions" — the coral ring is the 1,000 m left outside it',
+      note: '"Open outer ring for expansions" — the coral ring is what is left outside it',
     },
     // "Center: Kelp Forest Plateaus" — the maze itself.
     ...MAZE.map(([x, y, widthM, heightM]) => ({
@@ -171,22 +268,20 @@ export const KELP_LABYRINTH: MapDefinition<MapRect> = {
     // that is the number to quote only if the metric is narrowed to corners —
     // the test measures every AbyssalTrench region, so it reads 4,384.
     //
-    // This equalises upward rather than down: every seat now has a pocket at
-    // 1,732 m and every crystal approach reads 1.1222. Removing the two would
-    // have equalised just as well and quieter, and would have deleted the
-    // doc's own Layout Logic bullet to do it — it says corners, plural, and
-    // now every corner has one.
-    { x: 1750, y: 1750, widthM: 750, heightM: 750, biome: Biome.AbyssalTrench, floorM: 2600 },
-    {
-      x: W - 2500,
-      y: H - 2500,
-      widthM: 750,
-      heightM: 750,
+    // This equalises upward rather than down: every seat had a pocket at
+    // 1,732 m, and every crystal approach reads the same PF. Removing the two
+    // would have equalised just as well and quieter, and would have deleted
+    // the doc's own Layout Logic bullet to do it — it says corners, plural,
+    // and now every corner has one.
+    //
+    // Pits since #1137, each `POCKET` reflected, so the middle of a pocket's
+    // box is 1,556 m from its seat and the nearest of its cells 1,215 m.
+    ...POCKETS.map((points) => ({
+      shape: 'polygon' as const,
+      points,
       biome: Biome.AbyssalTrench,
       floorM: 2600,
-    },
-    { x: W - 2500, y: 1750, widthM: 750, heightM: 750, biome: Biome.AbyssalTrench, floorM: 2600 },
-    { x: 1750, y: H - 2500, widthM: 750, heightM: 750, biome: Biome.AbyssalTrench, floorM: 2600 },
+    })),
     // "Hidden tunnels connecting corners" — the Layout Logic bullet this map
     // has carried since it was written, with no way to express it until ground
     // could have a roof.

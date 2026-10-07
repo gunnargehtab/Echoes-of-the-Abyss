@@ -816,9 +816,20 @@ describe('Kelp Labyrinth', () => {
 
     const beds = KELP_LABYRINTH.hazards.filter((h) => h.kind === 'kelp-entanglement');
     const cold = KELP_LABYRINTH.hazards.filter((h) => h.kind === 'cold-shock');
+    // A pocket's middle is the middle of the box it spans: its frame, or for
+    // a polygon the box its corners span. The corner pockets are polygons
+    // since #1137, and their boxes mirror as their outlines do.
     const deep = KELP_LABYRINTH.regions
       .filter((r) => r.biome === Biome.AbyssalTrench)
-      .map((r) => ({ x: r.x + r.widthM / 2, y: r.y + r.heightM / 2 }));
+      .map((r) => {
+        if (r.shape !== 'polygon') return { x: r.x + r.widthM / 2, y: r.y + r.heightM / 2 };
+        const xs = r.points.map(([x]) => x);
+        const ys = r.points.map(([, y]) => y);
+        return {
+          x: (Math.min(...xs) + Math.max(...xs)) / 2,
+          y: (Math.min(...ys) + Math.max(...ys)) / 2,
+        };
+      });
     const home = KELP_LABYRINTH.resources.filter(
       (r) => r.kind === ResourceKind.Nodule && r.amount === undefined
     );
@@ -892,6 +903,82 @@ describe('Kelp Labyrinth', () => {
       asymmetricCells(KELP_LABYRINTH, (col, row, cols, rows) => [cols - 1 - col, rows - 1 - row]),
       0,
       'the map does not match itself under a half turn'
+    );
+  });
+
+  it('keeps the ground every line between two seats crosses (#1137)', () => {
+    // A reshape is new content and never a balance lever (docs/maps.md, "How a
+    // map is written"), so drawing the lagoon and the corner pockets in shapes
+    // moved no cell on these lines. Neighbours look down the coral ring, past
+    // a vent field or along a roofed tunnel; opposite corners look across the
+    // lagoon, a corner pocket, the maze and the central pocket. Each run is a
+    // count of cells, read every 50 m along the line.
+    const terrain = terrainFor(KELP_LABYRINTH);
+    const name: Partial<Record<Biome, string>> = {
+      [Biome.CoralRuins]: 'coral',
+      [Biome.OpenWater]: 'open',
+      [Biome.AbyssalTrench]: 'trench',
+      [Biome.ThermalVein]: 'vent',
+      [Biome.KelpForest]: 'kelp',
+    };
+    const crossed = (from: { x: number; y: number }, to: { x: number; y: number }) => {
+      const runs: [string, number][] = [];
+      let cell = '';
+      const steps = Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / 50);
+      for (let i = 0; i <= steps; i++) {
+        const x = from.x + ((to.x - from.x) * i) / steps;
+        const y = from.y + ((to.y - from.y) * i) / steps;
+        const here = `${Math.floor(x / KELP_LABYRINTH.cellM)},${Math.floor(y / KELP_LABYRINTH.cellM)}`;
+        if (here === cell) continue;
+        cell = here;
+        const ground = `${name[terrain.biomeAt(x, y)]}${terrain.ceilingAt(x, y) > 0 ? ' roofed' : ''}`;
+        const last = runs[runs.length - 1];
+        if (last?.[0] === ground) last[1]++;
+        else runs.push([ground, 1]);
+      }
+      return runs.map(([ground, n]) => `${ground} ${n}`).join(', ');
+    };
+    const [nw, se, ne, sw] = KELP_LABYRINTH.spawns;
+    const across = 'coral 1, open 3, trench 3, open 4, trench 4, open 4, trench 3, open 3, coral 1';
+    assert.deepEqual(
+      {
+        'NW to NE': crossed(nw!, ne!),
+        'SW to SE': crossed(sw!, se!),
+        'NW to SW': crossed(nw!, sw!),
+        'NE to SE': crossed(ne!, se!),
+        'NW to SE': crossed(nw!, se!),
+        // One read lands on the map's centre point, which floors into the cell
+        // south-east of this line, so it counts a fifth cell of the pocket.
+        'NE to SW': crossed(ne!, sw!),
+      },
+      {
+        'NW to NE': 'coral 9, vent 8, coral 9',
+        'SW to SE': 'coral 9, vent 8, coral 9',
+        'NW to SW': 'coral 5, coral roofed 16, coral 5',
+        'NE to SE': 'coral 5, coral roofed 16, coral 5',
+        'NW to SE': across,
+        'NE to SW': across.replace('trench 4', 'trench 5'),
+      }
+    );
+  });
+
+  it('pins how many cells each biome holds, so an outline edit shows here (#1137)', () => {
+    // Biome is PF, so these counts are the map's PF landscape in five numbers.
+    // The rectangles painted 432 cells of coral, 332 of open water, 52 of
+    // trench, 160 of kelp and 48 of vent. The lagoon's rim gave 52 cells of
+    // open water to coral and the corner pockets took 16 for trench; the maze
+    // and the vents kept theirs.
+    const grid = terrainFor(KELP_LABYRINTH).serialize();
+    const cells = (biome: Biome) => grid.biomes.filter((b) => b === biome).length;
+    assert.deepEqual(
+      {
+        coral: cells(Biome.CoralRuins),
+        open: cells(Biome.OpenWater),
+        trench: cells(Biome.AbyssalTrench),
+        kelp: cells(Biome.KelpForest),
+        vent: cells(Biome.ThermalVein),
+      },
+      { coral: 484, open: 264, trench: 68, kelp: 160, vent: 48 }
     );
   });
 
