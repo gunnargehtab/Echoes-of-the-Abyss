@@ -631,22 +631,23 @@ What this mission deliberately does not teach:
 
 `mouth-rim` · **The Rim** · one seat · 6,000 × 4,000 m · cell 250 m · base floor 2,600 m.
 
-**Reused unchanged** — the literal is `packages/backend/src/sim/maps/missions/mouthRim.ts`, authored
-for [mission-prospect.md](mission-prospect.md) §11 and untouched by
+**Reused unchanged** — the literal is `packages/backend/src/sim/maps/missions/mouthRim.ts`,
+authored for [mission-prospect.md](mission-prospect.md) §11 and untouched by
 [mission-second-seeding.md](mission-second-seeding.md),
 [mission-first-arrival.md](mission-first-arrival.md) and
 [mission-rim-deposits.md](mission-rim-deposits.md). This is the map's fifth mission — four
-convergences and the one ending that stays on the same ground — and
-[campaign.md](campaign.md) §8's "the same terrain four times and never the same mission" applied
-literally: same rectangles, same floors, same biomes, same spawn.
+convergences and the one ending that stays on the same ground — and [campaign.md](campaign.md)
+§8's "the same terrain four times and never the same mission" applied literally: same shapes,
+same floors, same biomes, same spawn. [mission-prospect.md](mission-prospect.md) §11 drew the
+literal's Slopes in shapes in #1146, and this table follows it.
 
-| Region | Rect (x, y, w, h) | Biome | Floor | What it is |
+| Region | Shape | Biome | Floor | What it is |
 | --- | --- | --- | --- | --- |
-| The Deep Water | 0, 0, 6000, 4000 | Open Water | 2,600 | The base water. Painted first; everything else is cut into it |
-| The Staging | 0, 0, 6000, 1000 | Open Water | 1,500 | Below the layer, above the commitment. Where the Choirmaster waits |
-| The Slopes | 0, 1000, 6000, 1000 | Open Water | 2,200 | Two thousand metres of arriving, crossed once, at 1,750 m, in seventy-six seconds |
-| The Terraces | 0, 2000, 6000, 1000 | Resonance Field | 2,600 | The crystal came from here. The two nodes that are spent at sixteen stand on it |
-| The Lip | 0, 3000, 6000, 1000 | Abyssal Trench | 3,100 | Carries like a trench and points south. The Chord, the cohort, the dome, the attendants, the bed and the return are all on it |
+| The Deep Water | rect 0, 0, 6000, 4000 | Open Water | 2,600 | The base water. Painted first; everything else is cut into it. It shows where the slopes' foot is cut back, at the terraces' depth |
+| The Staging | rect 0, 0, 6000, 1000 | Open Water | 1,500 | Below the layer, above the commitment. Where the Choirmaster waits |
+| The Slopes | polygon (0, 1000) (6000, 1000) (6000, 1250) (5500, 2000) (2500, 2000) (2250, 1250) (1750, 1250) (1500, 2000) (1250, 2000) (750, 1500) (250, 1500) (0, 1750) | Open Water | 2,200 | Two thousand metres of arriving, crossed once, at 1,750 m, in seventy-six seconds |
+| The Terraces | rect 0, 2000, 6000, 1000 | Resonance Field | 2,600 | The crystal came from here. The two nodes that are spent at sixteen stand on it |
+| The Lip | rect 0, 3000, 6000, 1000 | Abyssal Trench | 3,100 | Carries like a trench and points south. The Chord, the cohort, the dome, the attendants, the bed and the return are all on it |
 
 The map's spawn is at 3000, 500 and is irrelevant: every party is seated. No resources, no hazard
 sites, `fauna: false`, and the one creature is a `creature` beat.
@@ -683,9 +684,10 @@ lattice that reaches it is exactly what has to be spent to buy it thirty seconds
 under it at 17:14 — **the interval at seventeen is not a line in a briefing, it is the distance
 divided by forty-five.**
 
-Every rectangle lands on the 250 m cell grid and paints exactly the metres it reads
-([maps.md](maps.md), "How a map is written"). **The Rim is a mission map and is not in the public
-catalogue.** One seat, no resources, not balanced, resolved by mission id and nothing else.
+Every number a shape states is a whole 250 m cell, and a cell is its region's when the shape
+holds the cell's centre ([maps.md](maps.md), "How a map is written"). **The Rim is a mission map
+and is not in the public catalogue.** One seat, no resources, not balanced, resolved by mission
+id and nothing else.
 
 ---
 
@@ -825,14 +827,15 @@ one breath, which is why she says it to nobody.
 What exists against this document and what does not, continuing the list
 [mission-asset-recovery.md](mission-asset-recovery.md) §13 started and the documents after it
 extended. **This mission is built** — the literal is `secondChord.ts` (#397), the water is
-`mouth-rim` reused unchanged for the fifth time, and `missionSecondChord.test.ts` plays the tide
-out at thirty-seven tests. It is the last of the fourteen, and it stays the one whose headline row
-is a superweapon that has never existed in code, and the one whose largest absence — a reply — it
-does not want filled. What the transcription found is below, and one of the six was a mission that
-could not be finished: the Directorate stood inside its own gun of the Chord and took the node down
-twenty seconds into every run, which made the keystone unreachable, because a PR-2 carrier is only
-rated for `chord-water` while the node is standing. This rim is now weapons-cold on every slot but
-the player's, which is the sentence §1 was already writing.
+`mouth-rim` reused unchanged for the fifth time (and drawn in shapes in #1146), and
+`missionSecondChord.test.ts` plays the tide out at thirty-eight tests. It is the last of the
+fourteen, and it stays the one whose headline row is a superweapon that has never existed in
+code, and the one whose largest absence — a reply — it does not want filled. What the
+transcription found is below, and one of the six was a mission that could not be finished: the
+Directorate stood inside its own gun of the Chord and took the node down twenty seconds into
+every run, which made the keystone unreachable, because a PR-2 carrier is only rated for
+`chord-water` while the node is standing. This rim is now weapons-cold on every slot but the
+player's, which is the sentence §1 was already writing.
 
 | Requirement | Status |
 | --- | --- |
