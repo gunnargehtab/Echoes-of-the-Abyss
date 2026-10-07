@@ -563,13 +563,13 @@ following the floor goes, thirty metres off it, so the 12 cells cost one: on the
 m where it held 2,120, 250 m lower; following the bench's floor at 2,220 m or the Upper Ninth's
 at 2,370 it can now cross onto them, where before they refused it; and following an overhang's
 at 2,120 it crosses onto them as it did, then sinks to 2,370 m on them, where its overhang and
-the bench refuse it, so it can no longer cross back onto either, as it could at 2,120. The
-spawn, all twelve hulls, the ascent's marker, all eight Hollows and both ends of the Sounder's
-line stand on the ground they stood on, and so does every cell centre of the three mission
-regions. The Sounder's line crosses no changed cell, and asked from every 125 m of either leg at
-every 25 m of depth to its 1,900 m, it routes as it did. Played with no input, every hull and
-every creature keeps the position and the hit points it kept in rectangles, sampled every five
-seconds, to the same reading and the same transcript.
+the bench refuse it; ordered back onto either, it reads the ground ahead and rises to cross, as
+every follower does (#1193). The spawn, all twelve hulls, the ascent's marker, all eight Hollows
+and both ends of the Sounder's line stand on the ground they stood on, and so does every cell
+centre of the three mission regions. The Sounder's line crosses no changed cell, and asked from
+every 125 m of either leg at every 25 m of depth to its 1,900 m, it routes as it did. Played
+with no input, every hull and every creature keeps the position and the hit points it kept in
+rectangles, sampled every five seconds, to the same reading and the same transcript.
 
 **The overhangs are the map's one piece of gameplay geometry and they are not a fence.** They
 stand at 2,150 m against a bench floor of 2,250 — a hundred metres of lift, which is nothing,
