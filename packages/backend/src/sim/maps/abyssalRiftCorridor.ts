@@ -24,9 +24,10 @@ type Point = readonly [number, number];
 
 /**
  * An outline turned half a turn about the map's centre: the symmetry that
- * makes this a fair 1v1 (`maps.test.ts`), so each outline below is written
- * once, for the western seat's side, and its partner is generated rather than
- * written down — the argument the Kelp Labyrinth makes for its quadrant.
+ * makes this a fair 1v1 (`maps.test.ts`), so each polygon below is written
+ * once, for one end, and its partner is generated rather than written down —
+ * the argument the Kelp Labyrinth makes for its quadrant. The south vents'
+ * frame is the north one turned.
  */
 const turn = (path: readonly Point[]): Point[] => path.map(([x, y]) => [W - x, H - y]);
 /** An outline reflected across the north-south centre line, for the corners. */
@@ -45,8 +46,9 @@ const mirrorX = (path: readonly Point[]): Point[] => path.map(([x, y]) => [W - x
  * - **It closes to a throat at each choke**, 1,250 m between the walls where
  *   the coral shelf crosses it.
  * - **It opens into a basin about the crystal**, 3,000 m across at the
- *   middle, inside the pressure zone's radius. The loudest place on the map is
- *   now also the widest, so it reads as a place rather than a stretch of bar.
+ *   middle, with every basin cell's centre inside the pressure zone's 1,400 m
+ *   radius. The loudest place on the map is now also the widest, so it reads
+ *   as a place rather than a stretch of bar.
  *
  * What it could not move is the line between the two seats, which runs down
  * the trench by design: every cell on y 3,000 from one spawn to the other is
@@ -107,8 +109,8 @@ const APRON: readonly Point[] = [
  * The north reef, a bank lying along the rift's rim rather than a box beside
  * it (#1138): narrow at its crown, broadest at its foot, and reaching down to
  * the lip where the east reach leans away from it, so the reach's north wall
- * is coral. It stops short of the east apron, so the plateau stays a place
- * of its own.
+ * is coral as far east as x 7,500. It stops short of the east apron there, so
+ * the plateau stays a place of its own.
  */
 const REEF: readonly Point[] = [
   [6500, 500],
