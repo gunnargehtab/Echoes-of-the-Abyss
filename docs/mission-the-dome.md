@@ -592,31 +592,48 @@ What this mission deliberately does not teach:
 
 **A new map, and it is *Baffle*'s chart a thousand metres longer.** Rows 2–8 of the table below
 are `fourth-trench`'s regions to the metre ([mission-baffle.md](mission-baffle.md) §11;
-`fourthTrench.ts`) — the same rectangles, biomes and floors — and row 1, the Margin, is the
-same rectangle run a thousand metres further south. The last three rows paint the ground
-*Baffle* never had a reason to draw: its margin's last 250 m becomes the head of the Fan, where
-that chart ran out of paper rather than water. North is shallow and south is deep, as
-everywhere in the Rift ([world-map.md](world-map.md)).
+`fourthTrench.ts`) — the same shapes, biomes and floors — and row 1, the Margin, is the same
+rectangle run a thousand metres further south. The last three rows paint the ground *Baffle*
+never had a reason to draw: its margin's last 250 m becomes the head of the Fan and the shelf
+either side of it, where that chart ran out of paper rather than water. North is shallow and
+south is deep, as everywhere in the Rift ([world-map.md](world-map.md)).
 
-| Region | Rect (x, y, w, h) | Biome | Floor | What it is |
+| Region | Shape | Biome | Floor | What it is |
 | --- | --- | --- | --- | --- |
-| The Margin | 0, 0, 3000, 6000 | Open Water | 1,450 | The base water. Painted first; everything else is cut into it |
-| The Staging | 0, 0, 3000, 750 | Thermal Vein | 1,100 | The north mouth — the grid's masked apron, above the layer's duct. The concern's muster |
-| The West Wall | 0, 750, 1250, 3500 | Open Water | rock | Solid. The trench is the only road |
-| The East Wall | 1750, 750, 1250, 3500 | Open Water | rock | Solid |
-| The Trench | 1250, 750, 500, 3500 | Abyssal Trench | 1,700 | The shortcut. PF 1.6, no secrets down its length, only distances |
-| Lay-by One | 1000, 1750, 250, 250 | Thermal Vein | 1,700 | The northern chartered pocket. `baffle-north` moors here |
-| Lay-by Two | 1750, 3000, 250, 250 | Thermal Vein | 1,700 | The southern pocket. `baffle-south` |
-| The Deep Yard | 750, 4250, 1500, 500 | Open Water | 1,650 | Berths, a failing plant, forty-one souls. The concern's, and not the inquiry's |
-| The Fan | 0, 4750, 3000, 1250 | Abyssal Trench | 2,000 | Where the shortcut meets the deep: the trench opens and falls away. The Call is sounded here |
-| The Foot | 750, 5250, 1500, 750 | Abyssal Trench | 2,400 | The last bench — the dome, the array, and what deep basins hold |
-| The Freight Galleries | 2250, 5000, 750, 1000 | Coral Ruins | 2,900 | The 4th Trench Cohort's berths, cut into the fan's east wall. Tessen's water ([habitats.md](habitats.md) §6) |
+| The Margin | rect 0, 0, 3000, 6000 | Open Water | 1,450 | The base water. Painted first; everything else is cut into it |
+| The Staging | rect 0, 0, 3000, 750 | Thermal Vein | 1,100 | The north mouth — the grid's masked apron, above the layer's duct. The concern's muster |
+| The West Wall | polygon (0, 750) (1250, 750) (1250, 4250) (1000, 4250) (0, 3250) | Open Water | rock | Solid. The trench is the only road |
+| The East Wall | polygon (1750, 750) (3000, 750) (3000, 3250) (2000, 4250) (1750, 4250) | Open Water | rock | Solid |
+| The Trench | rect 1250, 750, 500, 3500 | Abyssal Trench | 1,700 | The shortcut. PF 1.6, no secrets down its length, only distances |
+| Lay-by One | rect 1000, 1750, 250, 250 | Thermal Vein | 1,700 | The northern chartered pocket. `baffle-north` moors here |
+| Lay-by Two | rect 1750, 3000, 250, 250 | Thermal Vein | 1,700 | The southern pocket. `baffle-south` |
+| The Deep Yard | rect 750, 4250, 1500, 500 | Open Water | 1,650 | Berths, a failing plant, forty-one souls. The concern's, and not the inquiry's |
+| The Fan | polygon (750, 4750) (2250, 4750) (3000, 5250) (3000, 6000) (0, 6000) (0, 5250) | Abyssal Trench | 2,000 | Where the shortcut meets the deep: the trench opens and falls away. The Call is sounded here. A fan, spreading from the yard's mouth to the map's width |
+| The Foot | polygon (1000, 5250) (2000, 5250) (2250, 5750) (2250, 6000) (750, 6000) (750, 5750) | Abyssal Trench | 2,400 | The last bench — the dome, the array, and what deep basins hold. Its northern corners fall to the Fan |
+| The Freight Galleries | rect 2250, 5000, 750, 1000 | Coral Ruins | 2,900 | The 4th Trench Cohort's berths, cut into the fan's east wall. Tessen's water ([habitats.md](habitats.md) §6) |
 
 One spawn, at the mouth: 1500, 4000 — irrelevant, since every party is seated directly, and
 authored because a map needs one seat. **No resources, no hazard sites, and `fauna: false`**: a
-closure mines nothing, and every animal here is a `creature` beat. Every rectangle lands on the
-250 m cell grid and paints exactly the metres it reads ([maps.md](maps.md), "How a map is
-written").
+closure mines nothing, and every animal here is a `creature` beat.
+
+Drawn in shapes since issues #1143 and #1154, boxes of #1139, with rows 2–8 drawn once for both
+maps. Every number in the table is a whole 250 m cell, and a cell is its region's when the
+region's shape holds the cell's centre ([maps.md](maps.md), "How a map is written"). The walls
+end in slopes to the margin, the Fan spreads from the yard's mouth to the map's width by its
+third row, and the Foot is a bench whose northern corners fall to the Fan; its north edge stays
+on y 5,250, so it comes no nearer the berth. The Margin, the Staging, the Trench, both lay-bys
+and the Deep Yard stay boxes for [mission-baffle.md](mission-baffle.md) §11's reasons, and the
+Freight Galleries stay one because they are built.
+
+The reshape is new map content, never a balance lever. Nineteen of the 288 cells changed. Twelve
+at the walls' feet went from rock to the margin's open water at 1,450 m, at the same PF. Five at
+the Fan's head, two at each end of its first row and one at the west end of its second, went from trench
+water at 2,000 m to the margin's shelf at 1,450 m, PF 1.6 to 1.0: no straight line between two
+seats or ordered positions in either mission crosses them, and a hull deeper than 1,450 m can no
+longer enter them. Two at the Foot's northern corners went from 2,400 m to the Fan's 2,000 m in
+the same trench water, so the array at 2,300 m has two cells fewer to move in. Every hull,
+structure, emitter, order, creature and `the-mouth` stands on the ground it stood on in
+rectangles.
 
 **Mission regions and markers.** One mission region, `the-mouth` — 1250, 3500, 500, 500, the
 trench's last half-kilometre above the yard — and one marker, `mouth` at (1500, 3625) with a
@@ -864,7 +881,7 @@ Drift Health and the mix are the other two, and neither is this mission's to bui
 | The placed-and-not-driven Sounder | **Built by Intake's idiom, and a finding to record** — `driveTo` at the creature's own spawn with `untilTick: 0`, so the first pass finds the commitment expired and hands the animal to its own trigger model. It has never been used on a Sounder before; the ladder answers ratios rather than raw loudness, so the ambient reading of 14.6 against an Interest of 55 in §7 is the shipped model and not an authored quiet. **What the idiom also does is let the depth go**: `holdCommitments` restores `homeDepth` to the species' working depth when a commitment expires, and a Sounder's is 2,000 m, so the basin climbs the three hundred metres §7 seats it at in **25 seconds** at the Drift's 12 m/s. Nothing acoustic moves — the Echo Layer resolves on horizontal distance, and 2,300 and 2,000 are both inside the species' 1,300–2,700 m band — so §4's 14.6, 1,012 and 834 all still hold, and the drift is recorded rather than corrected because a live commitment would deafen the one animal §4's fourth movement needs awake |
 | `move` beats carrying a depth | **Built** — the `move` effect's optional `depthM` issues a depth order alongside the move, which is what lets the scripted convoy dive into the trench at 02:30 rather than skating over it at 1,000 m |
 | `attend` over exactly two attendable emitters | **Built** — `attend` counts emitters carrying a `reading` that this observer resolved at Bearing or better *while they were sounding*, and the test bounds `count` by the number of emitters that carry one. The literal's two are `yard-plant` and `call-a`, in that order, and the count is two, which means the row is met by a picket that hears both and by nobody else |
-| The map, eleven regions, seven of them another mission's to the metre | **Built** (#392, registered in `MISSION_MAPS` in #393). `fourth-foot` is one row of the literal per row of §11's table, in the document's paint order; rows 2–8 are `fourthTrench.ts`'s unchanged — asserted against that literal itself rather than against §11's numbers — and row 1 is its Margin run a thousand metres south. No new region shape, no new biome, no hazard site, no resource node, and nothing repaints mid-tide: this mission authors no `ground` beat at all. Two things the verifier corrected are the literal's and not this document's: the header said *Baffle*'s chart stopped a thousand metres below the berths, where in fact that chart's last 250 m are the head of the Fan here; and the two lay-bys keep the metre of rock the wall painted over them, because a pocket states a floor and no ceiling — `fourth-trench`'s own arrangement, inherited rather than tidied, and free here because the shallowest thing this mission seats is the muster at 1,000 m |
+| The map, eleven regions, seven of them another mission's to the metre | **Built** (#392, registered in `MISSION_MAPS` in #393). `fourth-foot` is one row of the literal per row of §11's table, in the document's paint order; rows 2–8 are `fourthTrench.ts`'s unchanged — asserted against that literal itself rather than against §11's numbers — and row 1 is its Margin run a thousand metres south. Drawn in shapes since #1143 and #1154 (§11); no new biome, no hazard site, no resource node, and nothing repaints mid-tide: this mission authors no `ground` beat at all. Two things the verifier corrected are the literal's and not this document's: the header said *Baffle*'s chart stopped a thousand metres below the berths, where in fact that chart's last 250 m are the head of the Fan here; and the two lay-bys keep the metre of rock the wall painted over them, because a pocket states a floor and no ceiling — `fourth-trench`'s own arrangement, inherited rather than tidied, and free here because the shallowest thing this mission seats is the muster at 1,000 m |
 | The mission definition `attending-the-dome` | **Built** (#394), **and it carries one flag this row said it did not need.** Four parties on slots 0, 2, 3 and 4 with slot 1 the empty court; ten player hulls in two roles plus one structure; `sigBudget: 28`, `arrayTag: 'dome'`, `silenceRole: 'watch'`, `silenceCeilingSig: 30`, `debtCapS: 30`, `escortRadiusM: 0`, `fauna: false` and no `startingNodules` — all as written. What this row got wrong is the last field: it asked for **no** `runsItsLength`, and the literal authors `runsItsLength: true`. Both terminal rows can be Met on the very pass `the-mouth` is revealed — `the-picket` is `survive` at three of four and true from tick zero, and `the-mouth` latches the moment `watch-three` and `watch-four` are found in the seats §11 already gives them, inside the region's north half — so without the flag the runtime resolves at T(19) and closes the mission a minute early, taking the pack's last sixty seconds, Korrin's 20:00 line and §8's "the close at 20:00 is **not** a conclusion" with it. The minute is exactly `MISSION.FAILURE_TELEGRAPH_S`. The document is the side that moved; the literal records the correction in its own header where a reviewer can overrule it, and the test plays the tide with the flag and without it so the minute is visible rather than argued |
 | Cross-mission Drift Health | **Built** (#379) — a map's damage carries to the next mission on it, which is [campaign.md](campaign.md) §2 rule 5 finally spent. It is the second of the three sibling keys `Progression` was shaped to receive (`packages/frontend/src/progression/store.ts`), after the seen-scene set and before a spent roster that has not landed, and the room now writes and reads it. Nothing is asked of this document: §11 states what this mission leaves behind, the mission itself still reads no cell — and the row two above corrects *which side* leaves it |
 | Campaign progression, and the briefing that reads it back | **Built**, including §12's paired closure briefing with [Baffle](mission-baffle.md). The common 04:00 `say` earns a side-specific scene stamp only when the line fires, beside the existing sweep-earned scenes; the close carries it independently of outcome. The existing seen-scene set and client-side `MissionHeader.briefingVariants` selector read the other side's stamp. The room is never told which briefing was read, and neither the sweep filing nor merely completing a mission counts as hearing this line |
