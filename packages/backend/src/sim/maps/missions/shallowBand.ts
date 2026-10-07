@@ -122,8 +122,8 @@ export const SHALLOW_BAND: MapDefinition = {
     },
     // Its north end reaches north on a slant to meet the rim at the map's west
     // edge, rather than leaving a box of the First's water beside the row's
-    // end; its inner south corner is cut on a
-    // slant toward the axis. Every Hollow on it stands on 2,150 m as before.
+    // end; its inner south corner is cut on a slant toward the axis. Every
+    // Hollow on it stands on 2,150 m as before.
     {
       shape: 'polygon',
       points: [

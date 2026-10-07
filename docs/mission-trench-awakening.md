@@ -591,16 +591,16 @@ overhang's inner south corner is cut on a slant toward the axis, and the First's
 there, four cells on each side.
 
 The reshape is new map content, never a balance lever. It moved 12 of the map's 320 cells, all
-Abyssal Trench before and after, so no cell's biome or PF changed: four from the First's 2,400 m to
-the overhangs' 2,150, and eight from the overhangs' 2,150 to the First's 2,400. Asked at every
-25 m of depth from the surface to 3,000 m, only those 12 cells admit a hull differently, and only
-between 2,150 and 2,400 m: a hull held there can now enter the eight cut corners and can no longer
-enter the four cells the overhangs gained beside the row and the stalls. A hull following the floor holds thirty metres off it, so
-on the four it holds 2,120 m, 250 m higher than the 2,370 it held, and on the eight 2,370 m, 250 m
-lower than 2,120. At 2,370 m the eight join the axis's water and connect it to nothing it did not
-already reach; the First's water beside the row's west end, closed off at that depth by the rim,
-the row and the West Overhang, is three cells where it was six, and beside the stalls one where it
-was two.
+Abyssal Trench before and after, so no cell's biome or PF changed: four from the First's 2,400 m
+to the overhangs' 2,150, and eight from the overhangs' 2,150 to the First's 2,400. Asked at
+every 25 m of depth from the surface to 3,000 m, only those 12 cells admit a hull differently,
+and only between 2,150 and 2,400 m: a hull held there can now enter the eight cut corners and
+can no longer enter the four cells the overhangs gained beside the row's west end and the
+stalls. A hull following the floor holds thirty metres off it, so on the four it holds 2,120 m,
+250 m higher than the 2,370 it held, and on the eight 2,370 m, 250 m lower than 2,120. At 2,370
+m the eight join the axis's water and connect it to nothing it did not already reach; the
+First's water beside the row's west end, closed off at that depth by the rim, the row and the
+West Overhang, is three cells where it was six, and beside the stalls one where it was two.
 
 Every hull, structure and emitter, the spawn, all six Hollows, and both colossi's spawns and drives
 stand on the ground they stood on in rectangles, and so do the apron and the two points the colossi

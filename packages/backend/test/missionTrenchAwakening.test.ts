@@ -364,8 +364,8 @@ describe('the ground the row stands on — §11, drawn in shapes (#1155)', () =>
   ];
   const missions = MISSIONS.filter((mission) => mission.mapId === map.id);
   /**
-   * The four cells the overhangs gained beside the row and the stalls, and
-   * the eight they gave the First.
+   * The four cells the overhangs gained beside the row's west end and the
+   * stalls, and the eight they gave the First.
    */
   const GAINED = ['125,875', '125,1125', '375,1125', '4875,1125'];
   const CUT = ['1125,2125', '1125,2375', '875,2625', '1125,2625'];
