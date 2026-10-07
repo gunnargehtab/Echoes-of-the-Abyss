@@ -76,6 +76,13 @@ A dense maze of kelp forests with hidden paths and stealth zones.
 - Hidden tunnels connecting corners
 - **Four-fold symmetric by construction.** The maze is authored as one quadrant and the
   other three are its mirror images, so every seat faces the same labyrinth
+- **Drawn as places, not boxes** (#1137): the open ring is a lagoon whose coral rim bows in
+  between the seats, shouldering the vent fields north and south and reaching a cell from the
+  outer gates east and west, and each corner pocket spreads out of the maze into the lagoon
+  as a pit. The shapes moved no cell on a line between two seats, so each neighbour still
+  looks down the coral ring and each opposite corner across the same water. The maze and
+  its central pocket stay boxes: the corridors are the map, and the pocket's corners stand
+  on both diagonals
 
 ### Biome Distribution
 
