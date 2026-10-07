@@ -632,14 +632,14 @@ metres above the shallowest ground, so the layer's factor is 1 on every pair and
 deliberate and both are [mission-aptitude.md](mission-aptitude.md) §11's: one system per mission
 means the other axes have to be given nothing to say.
 
-| Region | Rect (x, y, w, h) | Biome | Floor / Ceiling | What it is |
+| Region | Shape | Biome | Floor / Ceiling | What it is |
 | --- | --- | --- | --- | --- |
-| The Foot of the Fields | 0, 0, 4000, 3000 | Resonance Field | 2,700 | Crystal country's last ground before the trenches, PF 0.70. **Painted first; everything else is cut into it.** The party crosses it at 2,300 m |
-| The Approach | 1500, 750, 1000, 1250 | Resonance Field | 2,900 / **roof 2,600** | The roofed way in: water only from 2,600 to 2,900 m. Entered by a deliberate dive and by nothing else |
-| The Chord | 1500, 2000, 1000, 500 | Coral Ruins | 2,900 / **roof 2,700** | The hall at the formation's heart. Cut structure is Coral Ruins ([habitats.md](habitats.md) §8), PF 0.80 occluded. The First Chord stands here, and so does the hush |
-| The Hospice | 1000, 2000, 500, 500 | Coral Ruins | 2,900 / **roof 2,750** | Three cells off the chord. The Three |
-| The Sealed Room | 2500, 2000, 500, 500 | Coral Ruins | 2,900 / **roof 2,800** | The cut dry room. The deepest ceiling on the map, so it is the last dive |
-| The Axis | 0, 2500, 4000, 500 | Abyssal Trench | 3,100 | The trench the Chord is aimed down, PF 1.60. What is heard on it is heard from the south |
+| The Foot of the Fields | rect 0, 0, 4000, 3000 | Resonance Field | 2,700 | Crystal country's last ground before the trenches, PF 0.70. **Painted first; everything else is cut into it.** The party crosses it at 2,300 m. A box because it is the whole map's base |
+| The Approach | rect 1500, 750, 1000, 1250 | Resonance Field | 2,900 / **roof 2,600** | The roofed way in: water only from 2,600 to 2,900 m. Entered by a deliberate dive and by nothing else. A box because §6 and the mission's `the-approach` are this same rectangle |
+| The Chord | rect 1500, 2000, 1000, 500 | Coral Ruins | 2,900 / **roof 2,700** | The hall at the formation's heart. Cut structure is Coral Ruins ([habitats.md](habitats.md) §8), PF 0.80 occluded. The First Chord stands here, and so does the hush. A box because it is cut, and §6 and the mission's `the-chord` are this same rectangle |
+| The Hospice | rect 1000, 2000, 500, 500 | Coral Ruins | 2,900 / **roof 2,750** | Three cells off the chord. The Three. A box because it is cut, and §6 restates it as this same rectangle |
+| The Sealed Room | rect 2500, 2000, 500, 500 | Coral Ruins | 2,900 / **roof 2,800** | The cut dry room. The deepest ceiling on the map, so it is the last dive. A box because it is cut, and §6 and the mission's `sealed-room`, where the room is counted, are this same rectangle |
+| The Axis | polygon (0, 2750) (1000, 2500) (3000, 2500) (4000, 2750) (4000, 3000) (0, 3000) | Abyssal Trench | 3,100 | The trench the Chord is aimed down, PF 1.60. What is heard on it is heard from the south. Widest under the house: its north edge runs straight along the rooms' south side and runs out on a slant to the map's west and east edges |
 
 **One spawn, at the foot: 2000, 375**, foundry offsets 0, 0. No resources — *the First is finished* —
 no hazard sites, no blooms, and `fauna: false` with no `creature` beat authored, because below
@@ -688,10 +688,43 @@ anyone could do on this map, on the one bearing this house has spent thirty-six 
 The mission fences none of the three; the openings are named here so they read as deliberate, and
 §6's hospice is unentered because the escort declines to go in, not because the ground refused it.
 
-**Every rectangle lands on the 250 m cell grid and paints exactly the metres it reads**
-([maps.md](maps.md), "How a map is written"). **The First is a mission map and is not in the public
-catalogue** — one seat, no resources, not balanced, resolved by mission id and nothing else. The id
-is checked against `maps/index.ts`: no collision.
+Drawn in shapes since issue #1158, a box of #1139. Every number a shape states is a whole 250 m
+cell, and a cell is its region's when the shape holds the cell's centre ([maps.md](maps.md), "How
+a map is written"). Only the Axis changed shape. The Foot stays a box because it is the whole
+map's base. The four rooms stay boxes because §6 restates each as the same rectangle, and the
+mission restates three of them as `the-approach`, `the-chord` and `sealed-room`, so the room the
+extract counts is the room drawn. The Axis is a trench rather than a room, and it is drawn widest
+under the house it is aimed at. Its north edge runs straight along the rooms' south side from x
+1,000 to x 3,000, so it shares a column with all three rooms as before. West and east of them it
+runs out on a slant to y 2,750 at the map's edges, and its south row still runs the map's whole
+width.
+
+The reshape is new map content, never a balance lever. It moved 4 of the map's 192 cells, the
+two outermost of the Axis's north row at each end, from Abyssal Trench at 3,100 m to the foot's
+Resonance Field at 2,700 m. They carry at 0.70 where they carried at 1.60, so sound crossing them
+carries less than it did. Of the 18,336 lines between two cell centres, 1,110 carry at a lower
+mean PF along the Echo Layer's path integral, and none at a higher, so a hull heard across the
+map's south-west and south-east corners is heard less than before. No line between two points
+the mission authors crosses one of the four, and none of those lines carries differently. A
+hull ordered deeper than 2,700 m, as the 2,900 m dive of the second way in is, is now refused on
+the four cells, while the trench's south row still carries it the map's whole width. A hull
+following the floor holds 2,670 m on the four cells, 330 m higher than the 3,000 m it held there
+over the trench.
+One in the trench beside them, at 3,000 m, no longer steps onto them; one on them, at 2,670 m,
+now steps north onto the foot, which it could not do at 3,000. Every one of the 192 cells is
+still one a following hull reaches from the seat by steps between side-by-side cells, as it
+was.
+
+Every authored point stands on the ground it stood on in rectangles, and so does every cell
+centre of the mission's four regions. The Three scripts no move, and from each hull's seat, every
+place `missionTheThree.test.ts` sends a hull is routed to as it was in rectangles. Played with no
+input, the four hulls, the Chord and the five emitters stay where they were in rectangles, sampled
+every five seconds to the tide, to the same close and the same six lines
+(`missionTheThree.test.ts`).
+
+**The First is a mission map and is not in the public catalogue** — one seat, no resources, not
+balanced, resolved by mission id and nothing else. The id is checked against `maps/index.ts`: no
+collision.
 
 ---
 
@@ -839,13 +872,14 @@ opened for discussion, and the Directorate would have been forbidden to say at a
 What exists against this document and what does not, continuing the list
 [mission-asset-recovery.md](mission-asset-recovery.md) §13 started and the documents after it
 extended. **This document is built.** The literal is `theThree.ts` (#397), the water is `the-first`
-(#393), and `missionTheThree.test.ts` plays the tide out three times — once with nobody moving at
-all, once with a tender whose ears have left it, and once played straight to *Read, and kept* at
-twelve minutes. It was also **the cheapest literal in the bible**, exactly as this section claimed:
-it asked the format for nothing that had not already shipped, and **the transcription moved no
-figure in it**. Every number in §3, §4, §6, §7, §9 and §11 is re-derived from the shipped model in
-the test and every one of them holds — 3,596 and 2,028 for the dive, 2,618 and 2,032 for the house,
-7.6 and 5.3 under the button, 559 m across the room, 1,246 m for the Chord and 639 m for the axis.
+(#393, drawn in shapes in #1158), and `missionTheThree.test.ts` plays the tide out three times —
+once with nobody moving at all, once with a tender whose ears have left it, and once played
+straight to *Read, and kept* at twelve minutes. It was also **the cheapest literal in the
+bible**, exactly as this section claimed: it asked the format for nothing that had not already
+shipped, and **the transcription moved no figure in it**. Every number in §3, §4, §6, §7, §9 and
+§11 is re-derived from the shipped model in the test and every one of them holds — 3,596 and 2,028
+for the dive, 2,618 and 2,032 for the house, 7.6 and 5.3 under the button, 559 m across the room,
+1,246 m for the Chord and 639 m for the axis.
 Where [mission-standing-wave.md](mission-standing-wave.md) §13 is a design agenda and
 [mission-conclave-chord.md](mission-conclave-chord.md) §13 is a list of edges, this one was almost
 entirely a build list and is now almost entirely a record. What is left below is one open finding

@@ -32,6 +32,7 @@ import assert from 'node:assert/strict';
 import {
   Biome,
   DEPTH,
+  FOLLOW_FLOOR,
   Faction,
   MISSION,
   MissionOutcome,
@@ -50,10 +51,16 @@ import {
   structureStatsFor,
   type EchoSnapshot,
 } from '@echoes/shared';
+import { defineQuery } from 'bitecs';
+import { Position } from '../src/sim/components.ts';
 import { THE_FIRST, mapById, missionMapById, terrainFor } from '../src/sim/maps/index.ts';
-import { CHORD_THE_THREE } from '../src/sim/missions/index.ts';
+import type { MapDefinition, MapRect } from '../src/sim/maps/types.ts';
+import { CHORD_THE_THREE, MISSIONS } from '../src/sim/missions/index.ts';
 import { inRegion } from '../src/sim/missions/predicates.ts';
+import type { MissionDefinition } from '../src/sim/missions/types.ts';
 import { Match } from '../src/sim/match.ts';
+import { Pathfinder } from '../src/sim/pathfinding.ts';
+import { shapeContains } from '../src/sim/terrain.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const T = (minutes: number, seconds = 0): number => (minutes * 60 + seconds) * SIM.TICK_HZ;
@@ -1016,5 +1023,297 @@ describe('the tide, run out', () => {
       7,
       '§13: seven lines heard — six on the clock and one on a tally'
     );
+  });
+});
+
+describe('the ground The Three stands on — §11, drawn in shapes (#1158)', () => {
+  // The regions as 443bcb9b drew them, before #1158 redrew the Axis as a
+  // polygon: written out rather than read from the literal, so the reference
+  // cannot move with the map it checks.
+  const RECTANGLES: MapRect[] = [
+    rect(0, 0, 4000, 3000, Biome.ResonanceField, 2700, 0, 'The Foot of the Fields'),
+    rect(1500, 750, 1000, 1250, Biome.ResonanceField, 2900, 2600, 'The Approach'),
+    rect(1500, 2000, 1000, 500, Biome.CoralRuins, 2900, 2700, 'The Chord'),
+    rect(1000, 2000, 500, 500, Biome.CoralRuins, 2900, 2750, 'The Hospice'),
+    rect(2500, 2000, 500, 500, Biome.CoralRuins, 2900, 2800, 'The Sealed Room'),
+    rect(0, 2500, 4000, 500, Biome.AbyssalTrench, 3100, 0, 'The Axis'),
+  ];
+  function rect(
+    x: number,
+    y: number,
+    widthM: number,
+    heightM: number,
+    biome: Biome,
+    floorM: number,
+    ceilingM: number,
+    name: string
+  ): MapRect {
+    return { x, y, widthM, heightM, biome, floorM, ceilingM, note: `${name} — ` };
+  }
+  const map = THE_FIRST;
+  const boxes: MapDefinition = { ...map, regions: RECTANGLES };
+  const ground = terrainFor(map);
+  const was = terrainFor(boxes);
+  const cellM = map.cellM;
+  // Asked of the cell, never the point: a point inside a polygon can stand in
+  // a cell the polygon does not claim (terrain.ts, `shapeContains`).
+  const centre = (m: number) => (Math.floor(m / cellM) + 0.5) * cellM;
+  /** The region that painted the cell under a point: the last whose shape holds its centre. */
+  const regionAt = (on: MapDefinition, x: number, y: number): string => {
+    let name = '';
+    for (const r of on.regions) {
+      if (shapeContains(r, centre(x), centre(y))) name = r.note!.split(' — ')[0]!;
+    }
+    return name;
+  };
+  const groundOf = (on: ReturnType<typeof terrainFor>, x: number, y: number): unknown[] => [
+    Biome[on.biomeAt(x, y)],
+    on.floorAt(x, y),
+    on.ceilingAt(x, y),
+  ];
+  const changed = (x: number, y: number) =>
+    groundOf(ground, x, y).join() !== groundOf(was, x, y).join();
+  const missions = MISSIONS.filter((mission) => mission.mapId === map.id);
+
+  type Point = { what: string; x: number; y: number };
+  /** Every point a mission seats, sounds or marks, read off its literal. */
+  const pointsOf = (mission: MissionDefinition): Point[] => {
+    const points: Point[] = map.spawns.map((spawn) => ({ what: 'the spawn', ...spawn }));
+    for (const party of mission.parties) {
+      for (const thing of [...party.units, ...(party.structures ?? []), ...(party.emitters ?? [])])
+        points.push({ what: thing.tag, x: thing.x, y: thing.y });
+    }
+    for (const marker of mission.markers) points.push({ what: marker.id, ...marker });
+    return points;
+  };
+
+  it('is played by The Three alone', () => {
+    // Every block below reads its points off this list; a second mission on
+    // this map would be checked by them without being named here.
+    assert.deepEqual(
+      missions.map((mission) => mission.id),
+      ['chord-the-three']
+    );
+  });
+
+  it('gives four trench cells back to the foot, and changes nothing else', () => {
+    // §11: the Axis's north edge runs out on a slant west of x 1,000 and east
+    // of x 3,000, so the two outermost cells of its north row at each end are
+    // the foot's Resonance Field at 2,700 m where they were trench at 3,100.
+    const cells: Record<string, string[]> = {};
+    for (let y = cellM / 2; y < map.heightM; y += cellM) {
+      for (let x = cellM / 2; x < map.widthM; x += cellM) {
+        if (!changed(x, y)) continue;
+        assert.deepEqual(groundOf(was, x, y), ['AbyssalTrench', 3100, 0], `${x},${y} was trench`);
+        const now = `${regionAt(map, x, y)} ${groundOf(ground, x, y).join('/')}`;
+        (cells[now] ??= []).push(`${x},${y}`);
+      }
+    }
+    assert.deepEqual(cells, {
+      'The Foot of the Fields ResonanceField/2700/0': [
+        '125,2625',
+        '375,2625',
+        '3625,2625',
+        '3875,2625',
+      ],
+    });
+    // The south row still runs the map's whole width, and the north row still
+    // meets all three rooms from x 1,000 to x 3,000 (§11's second way in).
+    for (let x = cellM / 2; x < map.widthM; x += cellM) {
+      assert.equal(regionAt(map, x, 2875), 'The Axis', `${x},2875`);
+    }
+    for (let x = 1000 + cellM / 2; x < 3000; x += cellM) {
+      assert.equal(regionAt(map, x, 2625), 'The Axis', `${x},2625`);
+    }
+  });
+
+  it('stands every authored point on the ground it stood on', () => {
+    // The count keeps a point from dropping out unasked: the spawn, four
+    // hulls, the Chord, five emitters and the marker. §11's ground, by the
+    // region that paints it.
+    const SECTION_11: Record<string, unknown[]> = {
+      'The Foot of the Fields': ['ResonanceField', 2700, 0],
+      'The Chord': ['CoralRuins', 2900, 2700],
+      'The Hospice': ['CoralRuins', 2900, 2750],
+      'The Sealed Room': ['CoralRuins', 2900, 2800],
+      'The Axis': ['AbyssalTrench', 3100, 0],
+    };
+    const tally: Record<string, number> = {};
+    const points = missions.flatMap(pointsOf);
+    for (const { what, x, y } of points) {
+      const where = `${what} at ${x},${y}`;
+      const name = regionAt(map, x, y);
+      assert.deepEqual(groundOf(ground, x, y), SECTION_11[name], where);
+      assert.deepEqual(groundOf(ground, x, y), groundOf(was, x, y), where);
+      assert.equal(name, regionAt(boxes, x, y), where);
+      tally[name] = (tally[name] ?? 0) + 1;
+    }
+    assert.equal(points.length, 12);
+    assert.deepEqual(tally, {
+      'The Foot of the Fields': 5,
+      'The Chord': 2,
+      'The Hospice': 3,
+      'The Sealed Room': 1,
+      'The Axis': 1,
+    });
+  });
+
+  it('keeps every cell of every mission region on the ground it stood on', () => {
+    let cells = 0;
+    for (const mission of missions) {
+      for (const region of mission.regions) {
+        for (let y = cellM / 2; y < map.heightM; y += cellM) {
+          for (let x = cellM / 2; x < map.widthM; x += cellM) {
+            if (!shapeContains(region, x, y)) continue;
+            cells++;
+            const where = `${region.id} at ${x},${y}`;
+            assert.deepEqual(groundOf(ground, x, y), groundOf(was, x, y), where);
+            assert.equal(regionAt(map, x, y), regionAt(boxes, x, y), where);
+          }
+        }
+      }
+    }
+    // The sealed room, the chord, the approach and the foot: every cell centre.
+    assert.equal(cells, 4 + 8 + 20 + 48);
+  });
+
+  it('crosses no cell whose PF moved on a line between two authored points', () => {
+    // §11: the four cells carry at 0.70 where the trench's paint was 1.60.
+    // Every pair of points the mission authors, walked every ten metres, and
+    // priced by the Echo Layer's own path integral.
+    let pairs = 0;
+    for (const mission of missions) {
+      const points = pointsOf(mission);
+      for (let i = 0; i < points.length; i++) {
+        for (let j = i + 1; j < points.length; j++) {
+          pairs++;
+          const a = points[i]!;
+          const b = points[j]!;
+          const between = `${a.what} to ${b.what}`;
+          const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 10));
+          for (let k = 0; k <= n; k++) {
+            const x = a.x + ((b.x - a.x) * k) / n;
+            const y = a.y + ((b.y - a.y) * k) / n;
+            assert.equal(ground.biomeAt(x, y), was.biomeAt(x, y), `${between} at ${x},${y}`);
+          }
+          assert.equal(
+            ground.pathPropagation(a.x, a.y, b.x, b.y),
+            was.pathPropagation(a.x, a.y, b.x, b.y),
+            between
+          );
+        }
+      }
+    }
+    assert.equal(pairs, (12 * 11) / 2);
+  });
+
+  it('scripts no move, and routes every order this file gives as it did in rectangles', () => {
+    // A scripted move or drive whose straight segment is refused would take a
+    // `Pathfinder.findPath` route; The Three authors none, so the routes that
+    // can move are the ones a player orders. These are this file's own: every
+    // seat to every place its runs send a hull, asked from every 125 m of the
+    // line at every 25 m from the party's 2,300 m to `DEPTH.MAX_M`.
+    for (const mission of missions) {
+      const scripted = [...mission.beats, ...(mission.conditionalBeats ?? [])].filter(
+        (beat) => beat.kind === 'move' || beat.kind === 'creature'
+      );
+      assert.equal(scripted.length, 0, `${mission.id} scripts a move`);
+    }
+    const seats = CHORD_THE_THREE.parties.flatMap((party) => party.units);
+    const places = [
+      { x: 200, y: 200 },
+      ALONG_THE_FOOT,
+      IN_THE_APPROACH,
+      THE_CHORD,
+      THE_ROOM,
+      HALL_MOUTH,
+      HALL_SOUTH,
+    ];
+    const pathfinder = new Pathfinder(ground.cols, ground.rows);
+    const route: number[] = [];
+    const before: number[] = [];
+    let planned = 0;
+    for (const seat of seats) {
+      for (const to of places) {
+        const n = Math.max(1, Math.ceil(Math.hypot(to.x - seat.x, to.y - seat.y) / 125));
+        for (let depthM = seat.depthM; depthM <= DEPTH.MAX_M; depthM += 25) {
+          for (let i = 0; i <= n; i++) {
+            const x = seat.x + ((to.x - seat.x) * i) / n;
+            const y = seat.y + ((to.y - seat.y) * i) / n;
+            const where = `${seat.tag} to ${to.x},${to.y} from ${Math.round(x)},${Math.round(y)} at ${depthM} m`;
+            const straight = ground.segmentAdmits(x, y, to.x, to.y, depthM);
+            assert.equal(straight, was.segmentAdmits(x, y, to.x, to.y, depthM), where);
+            if (straight) continue;
+            planned++;
+            const reached = pathfinder.findPath(ground, x, y, to.x, to.y, depthM, route);
+            const reachedWas = pathfinder.findPath(was, x, y, to.x, to.y, depthM, before);
+            assert.equal(reached, reachedWas, where);
+            assert.deepEqual(route, before, `${where}: the route it took in rectangles`);
+          }
+        }
+      }
+    }
+    assert.ok(planned > 0, 'some order is refused its straight segment and planned');
+  });
+
+  it('holds a floor-following hull 330 m higher on the four cells, and nowhere else', () => {
+    // `followTheFloor` (systems/depth.ts) holds the floor less the clearance,
+    // never deeper than `DEPTH.MAX_M`: 3,000 m over the trench's 3,100, 2,670
+    // over the foot's 2,700. §11 states the difference.
+    const holds = (on: ReturnType<typeof terrainFor>, x: number, y: number) =>
+      Math.max(
+        on.ceilingAt(x, y),
+        Math.min(on.floorAt(x, y) - FOLLOW_FLOOR.CLEARANCE_M, DEPTH.MAX_M)
+      );
+    const moved: string[] = [];
+    for (let y = cellM / 2; y < map.heightM; y += cellM) {
+      for (let x = cellM / 2; x < map.widthM; x += cellM) {
+        if (holds(ground, x, y) === holds(was, x, y)) continue;
+        assert.deepEqual([holds(was, x, y), holds(ground, x, y)], [3000, 2670], `${x},${y}`);
+        moved.push(`${x},${y}`);
+      }
+    }
+    assert.deepEqual(moved, ['125,2625', '375,2625', '3625,2625', '3875,2625']);
+  });
+
+  it('plays The Three with no input on the tracks the rectangles gave it', () => {
+    // Every positioned entity every 5 s, and every line the mission speaks,
+    // keyed by eid less the run's smallest: bitecs numbers entities across
+    // worlds, so the second run's eids start where the first's stopped. To
+    // the tide, because a run plays in about a second.
+    const positioned = defineQuery([Position]);
+    const replay = (on: MapDefinition, mission: MissionDefinition) => {
+      const match = new Match(on, { mission, fauna: false, seed: 77 });
+      const tracks: string[][] = [];
+      const lines: string[] = [];
+      let base = -1;
+      for (let tick = 0; tick <= T(20) && match.missionOver === null; tick++) {
+        match.update(STEP_MS);
+        match.takeMissionView();
+        for (const line of match.takeMissionLines()) lines.push(`${tick} ${line.text}`);
+        if (tick % (5 * SIM.TICK_HZ) !== 0) continue;
+        const eids = [...positioned(match.world)].sort((a, b) => a - b);
+        if (base < 0) base = eids[0]!;
+        tracks.push(
+          eids.map((e) => `${e - base} ${Position.x[e]},${Position.y[e]}@${Position.depth[e]}`)
+        );
+      }
+      return { tracks, lines, over: match.missionOver };
+    };
+    for (const mission of missions) {
+      const before = replay(boxes, mission);
+      const after = replay(map, mission);
+      assert.ok(after.over !== null, `${mission.id} never ended`);
+      assert.equal(
+        after.tracks.length,
+        before.tracks.length,
+        `${mission.id} ran a different length`
+      );
+      for (let i = 0; i < before.tracks.length; i++) {
+        assert.deepEqual(after.tracks[i], before.tracks[i], `${mission.id} parts at ${i * 5}s`);
+      }
+      assert.deepEqual(after.lines, before.lines, `${mission.id} spoke differently`);
+      assert.deepEqual(after.over, before.over, `${mission.id} closed differently`);
+    }
   });
 });
