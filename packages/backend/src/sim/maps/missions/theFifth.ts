@@ -30,9 +30,9 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition, MapRect } from '../types.ts';
+import type { MapDefinition } from '../types.ts';
 
-export const THE_FIFTH: MapDefinition<MapRect> = {
+export const THE_FIFTH: MapDefinition = {
   id: 'the-fifth',
   name: 'The Fifth',
   idealUse:
@@ -45,9 +45,14 @@ export const THE_FIFTH: MapDefinition<MapRect> = {
   floorM: 1700,
   // One row per row of §11's table, in the document's order: the shoulders
   // are painted first and the three cut into them, so the Gallery and the
-  // Mouth overwrite the Fields the way docs/maps.md requires. Every rectangle
-  // lands on the 250 m cell grid and paints exactly the metres it reads.
+  // Mouth overwrite the Fields the way docs/maps.md requires. Every number a
+  // shape states is a whole 250 m cell, and a cell is its region's when the
+  // shape holds its centre. Only the Mouth is a shape (#1159): every point the
+  // mission places stands on the ground it stood on in rectangles, an idle run
+  // walks the tracks it walked on them, and `missionStandingWave.test.ts`
+  // pins both.
   regions: [
+    // A box: the whole map's base.
     {
       x: 0,
       y: 0,
@@ -57,6 +62,9 @@ export const THE_FIFTH: MapDefinition<MapRect> = {
       floorM: 1700,
       note: 'The southern shoulders — crystal country, painted first. PF 0.70, scattered; off the defile it is ground nobody in this mission has a reason to be on',
     },
+    // A box: it paints the shoulders' own biome and floor, so no outline of
+    // it paints a cell differently; and the mission restates it as
+    // `the-fifth`, this same rectangle, a kilometre wall to wall.
     {
       x: 2000,
       y: 500,
@@ -66,6 +74,9 @@ export const THE_FIFTH: MapDefinition<MapRect> = {
       floorM: 1700,
       note: 'The Fifth — the defile. A kilometre wall to wall, three kilometres long, and the only covered line between trench country and the northern slope',
     },
+    // A box: the mission restates it as `north-gallery`, this same
+    // rectangle, and §8's withdrawal counts the six in it, so the Gallery the
+    // six are counted in is the Gallery drawn.
     {
       x: 1750,
       y: 0,
@@ -75,11 +86,18 @@ export const THE_FIFTH: MapDefinition<MapRect> = {
       floorM: 1450,
       note: "The North Gallery — where the Fifth opens into the Third's country. The spawn, the Bastion, and the region §8 extracts to; 250 m above the defile",
     },
+    // A fan: the Mouth's north edge meets the defile where the rectangle's
+    // did, and its sides run on a slant out to the map's south edge, where it
+    // is 2,000 m across. Two cells at the south edge, one at each end, are
+    // trench where they were shoulders.
     {
-      x: 1750,
-      y: 3500,
-      widthM: 1500,
-      heightM: 500,
+      shape: 'polygon',
+      points: [
+        [1750, 3500],
+        [3250, 3500],
+        [3500, 4000],
+        [1500, 4000],
+      ],
       biome: Biome.AbyssalTrench,
       floorM: 1780,
       note: "The South Mouth — where crystal country breaks toward the trenches. PF 1.60 axial: the strip that carries, and the column's entrance",

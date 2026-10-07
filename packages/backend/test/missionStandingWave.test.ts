@@ -19,12 +19,17 @@
  * - **§8's three results are three results**, and the withdrawal is what
  *   separates the first two — a corridor with the works still in it is "closed
  *   and the works are not clear", read at 18:00 and not before.
+ *
+ * And one claim about the ground (§11, #1159): the South Mouth is drawn as a
+ * fan, and every point, region cell and route the mission authors stands where
+ * it stood in rectangles, and an idle run walks the same tracks to the close.
  */
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  Biome,
   Faction,
   MissionOutcome,
   ObjectiveStatus,
@@ -35,9 +40,12 @@ import {
   type EchoSnapshot,
   type MissionView,
 } from '@echoes/shared';
-import { hasComponent } from 'bitecs';
+import { defineQuery, hasComponent } from 'bitecs';
 import { Match } from '../src/sim/match.ts';
-import { missionMapById } from '../src/sim/maps/index.ts';
+import { Pathfinder } from '../src/sim/pathfinding.ts';
+import type { Terrain } from '../src/sim/terrain.ts';
+import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
+import type { MapDefinition, MapRect } from '../src/sim/maps/types.ts';
 import { CHORD_STANDING_WAVE, type MissionLine } from '../src/sim/missions/index.ts';
 import { Health, Owner, Position, Unit } from '../src/sim/components.ts';
 
@@ -374,5 +382,248 @@ describe('the party, as §3 fields it', () => {
     assert.ok(!CHORD_STANDING_WAVE.locks.some((lock) => lock.ability === 'construction'));
     assert.ok(CHORD_STANDING_WAVE.locks.some((lock) => lock.ability === 'activeSonar'));
     assert.equal(CHORD_STANDING_WAVE.sigBudget, 70, '§4: the construction site');
+  });
+});
+
+describe('The Fifth, as §11 draws it (#1159)', () => {
+  // The map is drawn in shapes since #1159, and a reshape is new content,
+  // never a lever: only the South Mouth changed, to a fan, and every place the
+  // mission seats, marks or walks stands on the ground it stood on in
+  // rectangles. Asked of the painted cells, because the cell is what a hull's
+  // floor and PF are read from. The regions as 443bcb9b drew them are written
+  // out rather than read from the literal, so the reference cannot move with
+  // the map it checks.
+  const map = missionMapById(CHORD_STANDING_WAVE.mapId)!;
+  const RECTANGLES: MapRect[] = [
+    { x: 0, y: 0, widthM: 5000, heightM: 4000, biome: Biome.ResonanceField, floorM: 1700 },
+    { x: 2000, y: 500, widthM: 1000, heightM: 3000, biome: Biome.ResonanceField, floorM: 1700 },
+    { x: 1750, y: 0, widthM: 1500, heightM: 500, biome: Biome.ResonanceField, floorM: 1450 },
+    { x: 1750, y: 3500, widthM: 1500, heightM: 500, biome: Biome.AbyssalTrench, floorM: 1780 },
+  ];
+  const boxes: MapDefinition = { ...map, regions: RECTANGLES };
+  const ground = terrainFor(map);
+  const was = terrainFor(boxes);
+  const at = (t: Terrain, x: number, y: number) => [
+    t.biomeAt(x, y),
+    t.floorAt(x, y),
+    t.ceilingAt(x, y),
+  ];
+  const cellM = map.cellM;
+  /** The two cells the fan paints that the rectangle did not: the south edge, one at each end. */
+  const FAN = ['1625,3875', '3375,3875'];
+
+  type Point = { what: string; x: number; y: number };
+  /** Every point the mission seats, marks or walks, read off its literal. */
+  const points: Point[] = [];
+  for (const spawn of map.spawns) {
+    points.push({ what: 'the spawn', ...spawn });
+    points.push({
+      what: 'its Foundry',
+      x: spawn.x + spawn.foundryOffsetX,
+      y: spawn.y + spawn.foundryOffsetY,
+    });
+  }
+  for (const party of CHORD_STANDING_WAVE.parties) {
+    for (const thing of [...party.units, ...(party.structures ?? [])]) {
+      points.push({ what: thing.tag, x: thing.x, y: thing.y });
+    }
+  }
+  for (const marker of CHORD_STANDING_WAVE.markers) {
+    points.push({ what: marker.id, x: marker.x, y: marker.y });
+  }
+  const walks = CHORD_STANDING_WAVE.beats.flatMap((beat) =>
+    beat.kind === 'transit' ? [beat] : []
+  );
+  const turns = (CHORD_STANDING_WAVE.conditionalBeats ?? []).flatMap((beat) =>
+    beat.kind === 'transit' ? [beat] : []
+  );
+  for (const beat of [...walks, ...turns]) {
+    for (const leg of beat.legs) points.push({ what: `${beat.tag}'s leg`, x: leg.x, y: leg.y });
+  }
+
+  type Leg = { what: string; from: Point; to: Point; depthM: number };
+  /**
+   * Every leg the column walks: from its seat through the walk north, and the
+   * turn south from every point of that walk, since the corridor decides
+   * where the turn starts and the clock does not.
+   */
+  const legs: Leg[] = [];
+  const column = CHORD_STANDING_WAVE.parties.find((p) => p.slot === COLUMN)!;
+  for (const unit of column.units) {
+    const walked: Point[] = [{ what: `${unit.tag}'s seat`, x: unit.x, y: unit.y }];
+    for (const beat of walks.filter((b) => b.tag === unit.tag)) {
+      for (const leg of beat.legs) {
+        const to = { what: `${unit.tag}'s walk`, x: leg.x, y: leg.y };
+        legs.push({ what: unit.tag, from: walked.at(-1)!, to, depthM: unit.depthM });
+        walked.push(to);
+      }
+    }
+    for (const beat of turns.filter((b) => b.tag === unit.tag)) {
+      for (const from of walked) {
+        for (const leg of beat.legs) {
+          const to = { what: 'the turn', x: leg.x, y: leg.y };
+          legs.push({ what: `${unit.tag}'s turn`, from, to, depthM: unit.depthM });
+        }
+      }
+    }
+  }
+
+  it('stands every authored point on the ground it stood on in rectangles', () => {
+    for (const { what, x, y } of points) {
+      assert.deepEqual(at(ground, x, y), at(was, x, y), `${what} at ${x},${y}`);
+    }
+    // The spawn and its Foundry, six hulls, the Bastion, seven column hulls,
+    // two markers, twenty-one legs of the walk and seven of the turn.
+    assert.equal(points.length, 2 + 6 + 1 + 7 + 2 + 21 + 7);
+    // §11's parties table: the works and the Bastion on the Gallery's 1,450 m,
+    // and the column seated in the Mouth's trench water at 1,780 m.
+    for (const party of CHORD_STANDING_WAVE.parties) {
+      for (const thing of [...party.units, ...(party.structures ?? [])]) {
+        const expected =
+          party.slot === PLAYER ? [Biome.ResonanceField, 1450, 0] : [Biome.AbyssalTrench, 1780, 0];
+        assert.deepEqual(at(ground, thing.x, thing.y), expected, thing.tag);
+      }
+    }
+  });
+
+  it('keeps the Fifth and the Gallery on their ground, and restates no Mouth', () => {
+    // The two regions a reader could address are the same rectangles the map
+    // draws, and every cell centre of both stands where it stood. The
+    // shoulders' region is the whole map, and only the fan's two cells in it
+    // moved. `south-mouth` is dropped: nothing the mission authors names it.
+    let cells = 0;
+    for (const region of CHORD_STANDING_WAVE.regions) {
+      for (let y = region.y + cellM / 2; y < region.y + region.heightM; y += cellM) {
+        for (let x = region.x + cellM / 2; x < region.x + region.widthM; x += cellM) {
+          cells++;
+          if (region.id === 'shoulders' && FAN.includes(`${x},${y}`)) continue;
+          assert.deepEqual(at(ground, x, y), at(was, x, y), `${region.id} at ${x},${y}`);
+        }
+      }
+    }
+    assert.deepEqual(
+      CHORD_STANDING_WAVE.regions.map((region) => region.id),
+      ['shoulders', 'the-fifth', 'north-gallery']
+    );
+    assert.equal(cells, 320 + 48 + 12);
+  });
+
+  it('fans the Mouth onto 2 cells, off every line between the works and the column', () => {
+    // §11: one cell at each end of the south edge goes from the shoulders'
+    // Resonance Field at 1,700 m to the Mouth's Abyssal Trench at 1,780 m.
+    const moved: string[] = [];
+    for (let y = cellM / 2; y < map.heightM; y += cellM) {
+      for (let x = cellM / 2; x < map.widthM; x += cellM) {
+        if (at(ground, x, y).join() === at(was, x, y).join()) continue;
+        moved.push(`${x},${y}`);
+        assert.deepEqual(at(was, x, y), [Biome.ResonanceField, 1700, 0], `${x},${y} was shoulders`);
+        assert.deepEqual(at(ground, x, y), [Biome.AbyssalTrench, 1780, 0], `${x},${y} is trench`);
+      }
+    }
+    assert.deepEqual(moved, FAN);
+    // No straight line from where the works are placed to where the column is
+    // seated or walks to crosses a cell whose biome moved, so the fan prices
+    // none of those lines differently.
+    const works = CHORD_STANDING_WAVE.parties.find((p) => p.slot === PLAYER)!;
+    const mine = [...map.spawns, ...works.units, ...(works.structures ?? [])];
+    const theirs = new Map<string, Point>();
+    for (const leg of legs) {
+      for (const p of [leg.from, leg.to]) theirs.set(`${p.x},${p.y}`, p);
+    }
+    // The spawn, six hulls and the Bastion; the column's seven seats, which
+    // are also where the turn ends, and the walk's twenty-one leg ends.
+    assert.equal(mine.length * theirs.size, 8 * 28);
+    for (const p of mine) {
+      for (const q of theirs.values()) {
+        const n = Math.ceil(Math.hypot(q.x - p.x, q.y - p.y) / 10);
+        for (let i = 0; i <= n; i++) {
+          const x = p.x + ((q.x - p.x) * i) / n;
+          const y = p.y + ((q.y - p.y) * i) / n;
+          assert.equal(ground.biomeAt(x, y), was.biomeAt(x, y), `${p.x},${p.y} to ${q.x},${q.y}`);
+        }
+        assert.equal(
+          ground.pathPropagation(p.x, p.y, q.x, q.y),
+          was.pathPropagation(p.x, p.y, q.x, q.y)
+        );
+      }
+    }
+  });
+
+  it('routes every leg of the column round the ground it was routed round in rectangles', () => {
+    // A transit orders its hull along the leg, and a move whose straight
+    // segment the ground refuses is planned by `Pathfinder.findPath`, a partial
+    // route ending at the reachable cell nearest the order. So every leg is
+    // asked from every 125 m of its length, at the column's 1,700 m and at
+    // every 25 m from the surface to 1,800 m, past the Mouth's 1,780 m floor.
+    const pathfinder = new Pathfinder(ground.cols, ground.rows);
+    const route: number[] = [];
+    const before: number[] = [];
+    let planned = 0;
+    const depths = [1700];
+    for (let depthM = 0; depthM <= 1800; depthM += 25) depths.push(depthM);
+    for (const { what, from, to, depthM: seated } of legs) {
+      assert.equal(seated, 1700, `${what} walks at the defile's floor`);
+      // The same biome under every 10 m of the leg, and the same answer at its depth.
+      const steps = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / 10));
+      for (let k = 0; k <= steps; k++) {
+        const x = from.x + ((to.x - from.x) * k) / steps;
+        const y = from.y + ((to.y - from.y) * k) / steps;
+        assert.equal(ground.biomeAt(x, y), was.biomeAt(x, y), `${what} at ${x},${y}`);
+        assert.equal(ground.admits(x, y, seated), was.admits(x, y, seated), `${what} at ${x},${y}`);
+      }
+      const n = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / 125));
+      for (const depthM of depths) {
+        for (let i = 0; i <= n; i++) {
+          const x = from.x + ((to.x - from.x) * i) / n;
+          const y = from.y + ((to.y - from.y) * i) / n;
+          const where = `${what} from ${Math.round(x)},${Math.round(y)} at ${depthM} m`;
+          const straight = ground.segmentAdmits(x, y, to.x, to.y, depthM);
+          assert.equal(straight, was.segmentAdmits(x, y, to.x, to.y, depthM), where);
+          if (straight) continue;
+          planned++;
+          const reached = pathfinder.findPath(ground, x, y, to.x, to.y, depthM, route);
+          const reachedBefore = pathfinder.findPath(was, x, y, to.x, to.y, depthM, before);
+          assert.equal(reached, reachedBefore, where);
+          assert.deepEqual(route, before, `${where}: the route it took in rectangles`);
+        }
+      }
+    }
+    assert.equal(legs.length, 7 * 3 + 7 * 4, 'three legs of the walk and four turns, per hull');
+    assert.ok(planned > 0, 'some leg is refused its straight segment and planned');
+  });
+
+  it('walks an idle mission on the tracks the rectangles gave it, to the close', () => {
+    // Every positioned entity every 5 s, with every line the mission speaks,
+    // played to 18:00. Keyed by eid less the run's smallest, because bitecs
+    // numbers entities across worlds.
+    const positioned = defineQuery([Position]);
+    function idle(on: MapDefinition) {
+      const match = new Match(on, { mission: CHORD_STANDING_WAVE, fauna: false, seed: 77 });
+      const tracks: string[][] = [];
+      const lines: string[] = [];
+      let base = -1;
+      for (let tick = 0; tick <= T(18, 10) && match.missionOver === null; tick++) {
+        match.update(STEP_MS);
+        match.takeMissionView();
+        for (const line of match.takeMissionLines()) lines.push(`${tick} ${line.text}`);
+        if (tick % (5 * SIM.TICK_HZ) !== 0) continue;
+        const eids = [...positioned(match.world)].sort((a, b) => a - b);
+        if (base < 0) base = eids[0]!;
+        tracks.push(
+          eids.map((e) => `${e - base} ${Position.x[e]},${Position.y[e]}@${Position.depth[e]}`)
+        );
+      }
+      return { tracks, lines, over: match.missionOver };
+    }
+    const before = idle(boxes);
+    const after = idle(map);
+    assert.ok(after.over !== null, 'the Ninth never read the Fifth');
+    assert.ok(after.lines.length > 0, 'the mission said nothing, so the lines prove nothing');
+    assert.equal(after.tracks.length, before.tracks.length, 'the mission ran a different length');
+    for (let i = 0; i < before.tracks.length; i++) {
+      assert.deepEqual(after.tracks[i], before.tracks[i], `the tracks part at ${i * 5}s`);
+    }
+    assert.deepEqual(after.lines, before.lines, 'the mission spoke differently');
+    assert.deepEqual(after.over, before.over, 'the Fifth closed differently');
   });
 });
