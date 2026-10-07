@@ -15,6 +15,10 @@
  * - **Silence stops the work** (§3; systems-echo.md §6): a carrier that goes
  *   silent mid-lift drops out of the authored floor and accrues nothing, and
  *   the cut resumes with the button.
+ * - **The ground stands where it stood** (§11, #1148): drawn in shapes, every
+ *   seat, marker, row, garden node, creature, order and mission region of
+ *   both missions on the map, Tend's and Convocation's, is pinned to the
+ *   §11 region under it.
  */
 
 import { describe, it } from 'node:test';
@@ -35,8 +39,10 @@ import {
 } from '@echoes/shared';
 import { hasComponent } from 'bitecs';
 import { Match } from '../src/sim/match.ts';
-import { missionMapById } from '../src/sim/maps/index.ts';
-import { SEEDING_TEND } from '../src/sim/missions/index.ts';
+import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
+import { SEEDING_CONVOCATION, SEEDING_TEND } from '../src/sim/missions/index.ts';
+import type { MissionDefinition } from '../src/sim/missions/index.ts';
+import { shapeContains } from '../src/sim/terrain.ts';
 import { Fauna, Position } from '../src/sim/components.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -51,6 +57,25 @@ const IN_THE_LANE = { x: 750, y: 1400 };
 function tendMatch(seed: number): Match {
   const map = missionMapById(SEEDING_TEND.mapId)!;
   return new Match(map, { mission: SEEDING_TEND, fauna: false, seed });
+}
+
+const MAP = missionMapById(SEEDING_TEND.mapId)!;
+const TERRAIN = terrainFor(MAP);
+
+/**
+ * The §11 region that painted the cell under a point: the last whose shape
+ * holds the cell's centre. Asked of the cell, never the point, because a
+ * point inside a polygon's bounds can stand in a cell the polygon does not
+ * claim (terrain.ts, `shapeContains`).
+ */
+function regionAt(x: number, y: number): string {
+  const cx = (Math.floor(x / MAP.cellM) + 0.5) * MAP.cellM;
+  const cy = (Math.floor(y / MAP.cellM) + 0.5) * MAP.cellM;
+  let name = '';
+  for (const region of MAP.regions) {
+    if (shapeContains(region, cx, cy)) name = region.note!.split(' — ')[0]!;
+  }
+  return name;
 }
 
 function runOut(
@@ -240,16 +265,10 @@ describe('silence stops the work — docs/mission-tend.md §3; systems-echo.md �
 });
 
 describe("the plateau's own Drift — docs/mission-tend.md §11; docs/bestiary.md §4", () => {
-  /** §11's rects, as the doc's table reads them. */
-  const GARDENS = { x: 500, y: 250, w: 1250, h: 750 };
-  const WEST_LANE = { x: 250, y: 1000, w: 1000, h: 750 };
   /** Convocation's row 3 — the head's cluster sits on it to the metre. */
   const LANE_HEAD = { x: 500, y: 1125 };
   /** Convocation's row 4 — the lane's foot, outside every cluster's reach. */
   const LANE_FOOT = { x: 1125, y: 1625 };
-
-  const inside = (r: { x: number; y: number; w: number; h: number }, x: number, y: number) =>
-    x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
 
   function drift(match: Match): { species: FaunaSpecies; eid: number }[] {
     const out: { species: FaunaSpecies; eid: number }[] = [];
@@ -272,7 +291,11 @@ describe("the plateau's own Drift — docs/mission-tend.md §11; docs/bestiary.m
 
     const shelf = faunaStatsFor(FaunaSpecies.Lampfry);
     for (const { eid } of shoals) {
-      assert.ok(inside(GARDENS, Position.x[eid]!, Position.y[eid]!), 'a shoal outside the Gardens');
+      assert.equal(
+        regionAt(Position.x[eid]!, Position.y[eid]!),
+        'The Gardens',
+        'a shoal outside the Gardens'
+      );
       assert.ok(
         Math.abs(Position.depth[eid]! - shelf.workingDepthM) <= shelf.seedSpreadM,
         `§4: a shoal at ${Position.depth[eid]} m is outside the Shelf band`
@@ -283,7 +306,11 @@ describe("the plateau's own Drift — docs/mission-tend.md §11; docs/bestiary.m
     // have. `homeDepth` is what the runtime holds a released animal at, so it
     // is the number that decides where a cluster actually lives.
     for (const { eid } of clusters) {
-      assert.ok(inside(WEST_LANE, Position.x[eid]!, Position.y[eid]!), 'a cluster off the lane');
+      assert.equal(
+        regionAt(Position.x[eid]!, Position.y[eid]!),
+        'The West Lane',
+        'a cluster off the lane'
+      );
       assert.ok(
         Math.abs(Position.depth[eid]! - TETHERJELLY_KELP_BAND.workingDepthM) <=
           TETHERJELLY_KELP_BAND.seedSpreadM,
@@ -329,5 +356,299 @@ describe("the plateau's own Drift — docs/mission-tend.md §11; docs/bestiary.m
         `a cluster drifted to ${Position.depth[eid]} m after release`
       );
     }
+  });
+});
+
+describe('the ground both missions stand on — §11, drawn in shapes (#1148)', () => {
+  // Marr Plateau is played by Tend and by Convocation, so this block pins both
+  // missions' authored ground to §11's regions. Every point is read off the
+  // mission literals and the map rather than retyped; what is stated here is
+  // only the region each kind of point stands on.
+  const MISSIONS_ON_MARR = [SEEDING_TEND, SEEDING_CONVOCATION];
+  /** §11's floor under each region. No region on the plateau has a ceiling. */
+  const FLOOR: Record<string, number> = {
+    'The Terrace': 320,
+    'The Gardens': 250,
+    'The Holdfast': 280,
+    'The West Lane': 300,
+    'The Drop': 900,
+    'The Face': 600,
+    "Teel's Landing": 400,
+  };
+  const groundAt = (x: number, y: number) => [
+    regionAt(x, y),
+    TERRAIN.floorAt(x, y),
+    TERRAIN.ceilingAt(x, y),
+  ];
+  const on = (region: string) => [region, FLOOR[region], 0];
+  /**
+   * Where each mission's markers, rows and regions stand: Tend's §11 prose and
+   * regions, and Convocation's §11 row table. That table names the Drop for
+   * the watch's edge; the literal has always painted it in the Face's north
+   * row, trench like the Drop around it.
+   */
+  const MARKED: Record<string, Record<string, string>> = {
+    [SEEDING_TEND.id]: {
+      holdfast: 'The Holdfast',
+      'west-lane': 'The West Lane',
+      landing: "Teel's Landing",
+      gardens: 'The Gardens',
+      ovens: 'The Holdfast',
+    },
+    [SEEDING_CONVOCATION.id]: {
+      'row-one': 'The Gardens',
+      'row-two': 'The Gardens',
+      'row-three': 'The West Lane',
+      'row-four': 'The West Lane',
+      'row-five': 'The Terrace',
+      'row-six': 'The Holdfast',
+      'row-seven': 'The Terrace',
+      'watch-edge': 'The Face',
+      holdfast: 'The Holdfast',
+    },
+  };
+  /** The Drift's three species, each in the water §11 places it. */
+  const HOME: Partial<Record<FaunaSpecies, string>> = {
+    [FaunaSpecies.Draymaw]: 'The Drop',
+    [FaunaSpecies.Lampfry]: 'The Gardens',
+    [FaunaSpecies.Tetherjelly]: 'The West Lane',
+  };
+
+  type Place = { what: string; x: number; y: number; depthM?: number; region: string };
+  type Leg = { what: string; from: Place; to: Place; depthM?: number };
+  /** Every authored point of a mission and every leg its beats drive, in order. */
+  function authored(mission: MissionDefinition): {
+    places: Place[];
+    player: Place[];
+    others: Place[];
+    legs: Leg[];
+  } {
+    const marked = MARKED[mission.id]!;
+    const player: Place[] = [];
+    const others: Place[] = [];
+    const legs: Leg[] = [];
+    const last = new Map<string, Place>();
+    for (const party of mission.parties) {
+      const mine = party.slot === mission.playerSlot;
+      for (const unit of party.units) {
+        // The player's hulls seat at the Holdfast, Teel's guns east of it on the
+        // open terrace; every other party waits on the drop.
+        const region = !mine ? 'The Drop' : unit.role === 'guns' ? 'The Terrace' : 'The Holdfast';
+        const place = { what: unit.tag, x: unit.x, y: unit.y, depthM: unit.depthM, region };
+        (mine ? player : others).push(place);
+        last.set(unit.tag, place);
+      }
+    }
+    for (const marker of mission.markers) {
+      player.push({
+        what: `marker ${marker.id}`,
+        x: marker.x,
+        y: marker.y,
+        region: marked[marker.id]!,
+      });
+    }
+    for (const row of mission.walk?.rows ?? []) {
+      player.push({ what: row.id, x: row.x, y: row.y, region: marked[row.id]! });
+    }
+    const ability = mission.commanderAbility;
+    if (ability !== undefined) {
+      player.push({
+        what: ability.id,
+        x: ability.x,
+        y: ability.y,
+        depthM: ability.depthM,
+        region: 'The Holdfast',
+      });
+    }
+    for (const beat of mission.beats) {
+      if (beat.kind !== 'creature' && beat.kind !== 'move') continue;
+      const when = `${beat.tag}@${beat.atTick / SIM.TICK_HZ / 60}`;
+      if (beat.kind === 'creature') {
+        const region = HOME[beat.species!]!;
+        if (beat.spawnAt !== undefined) {
+          const spawn = { what: `${when} spawn`, ...beat.spawnAt, region };
+          others.push(spawn);
+          last.set(beat.tag, spawn);
+        }
+        const from = last.get(beat.tag)!;
+        const to = { what: `${when} drive`, x: beat.driveTo.x, y: beat.driveTo.y, region };
+        others.push(to);
+        legs.push({ what: when, from, to, depthM: from.depthM });
+        last.set(beat.tag, { ...to, depthM: from.depthM });
+      } else {
+        // Convocation's orders all end on a row or on the Holdfast (§9); Tend's
+        // are the sweep's two passes along the drop lane (§6).
+        const ends = [...mission.markers, ...(mission.walk?.rows ?? [])].find(
+          (at) => at.x === beat.x && at.y === beat.y
+        );
+        const from = last.get(beat.tag)!;
+        const depthM = beat.depthM ?? from.depthM;
+        const to = {
+          what: `${when} order`,
+          x: beat.x,
+          y: beat.y,
+          depthM,
+          region: ends === undefined ? 'The Drop' : marked[ends.id]!,
+        };
+        others.push(to);
+        legs.push({ what: when, from, to, depthM: from.depthM === depthM ? depthM : undefined });
+        last.set(beat.tag, to);
+      }
+    }
+    const spawn = MAP.spawns[0]!;
+    player.push(
+      { what: 'the spawn', x: spawn.x, y: spawn.y, region: 'The Holdfast' },
+      {
+        what: 'its Foundry',
+        x: spawn.x + spawn.foundryOffsetX,
+        y: spawn.y + spawn.foundryOffsetY,
+        region: 'The Holdfast',
+      },
+      ...(MAP.blooms ?? []).map((bloom) => ({
+        what: `the garden node at ${bloom.x},${bloom.y}`,
+        x: bloom.x,
+        y: bloom.y,
+        region: 'The Gardens',
+      }))
+    );
+    return { places: [...player, ...others], player, others, legs };
+  }
+  /** Every cell centre a mission region holds. */
+  function cellsOf(mission: MissionDefinition, id: string): [number, number][] {
+    const region = mission.regions.find((r) => r.id === id)!;
+    const cells: [number, number][] = [];
+    for (let y = MAP.cellM / 2; y < MAP.heightM; y += MAP.cellM) {
+      for (let x = MAP.cellM / 2; x < MAP.widthM; x += MAP.cellM) {
+        if (shapeContains(region, x, y)) cells.push([x, y]);
+      }
+    }
+    return cells;
+  }
+  const along = (ax: number, ay: number, bx: number, by: number, n = 200): [number, number][] =>
+    Array.from({ length: n + 1 }, (_, i) => [ax + ((bx - ax) * i) / n, ay + ((by - ay) * i) / n]);
+
+  it('stands every authored point of both missions on the §11 ground it stood on', () => {
+    // 32 of Tend's own, 47 of Convocation's, and the spawn, its Foundry and the
+    // three garden nodes under each.
+    const counts = MISSIONS_ON_MARR.map((mission) => authored(mission).places.length);
+    assert.deepEqual(counts, [37, 52], 'an authored point appeared or dropped out');
+    for (const mission of MISSIONS_ON_MARR) {
+      for (const place of authored(mission).places) {
+        assert.deepEqual(
+          groundAt(place.x, place.y),
+          on(place.region),
+          `${mission.id}: ${place.what} at ${place.x},${place.y}`
+        );
+        if (place.depthM !== undefined) {
+          assert.ok(
+            TERRAIN.admits(place.x, place.y, place.depthM),
+            `${mission.id}: ${place.what} is in rock at ${place.depthM} m`
+          );
+        }
+      }
+    }
+  });
+
+  it('keeps every cell of every mission region on the region §11 paints under it', () => {
+    const sizes: number[] = [];
+    for (const mission of MISSIONS_ON_MARR) {
+      let cells = 0;
+      for (const region of mission.regions) {
+        for (const [x, y] of cellsOf(mission, region.id)) {
+          cells++;
+          const expected = MARKED[mission.id]![region.id]!;
+          assert.deepEqual(
+            groundAt(x, y),
+            on(expected),
+            `${mission.id}: ${region.id} at ${x},${y}`
+          );
+        }
+      }
+      sizes.push(cells);
+    }
+    assert.deepEqual(sizes, [36, 8], "a mission region's cells grew or shrank");
+  });
+
+  it('drives every authored leg over the grounds it crossed in rectangles', () => {
+    // The order of grounds along each leg that goes anywhere. A leg at one
+    // depth also admits that depth all the way: the sweep at 550 m, the pack
+    // at 890 m.
+    const CROSSES: Record<string, string> = {
+      'pack-a@0': 'The Drop',
+      'pack-b@0': 'The Drop',
+      'sweep-one@6': 'The Drop > The Face > The Drop',
+      'sweep-two@6': 'The Drop',
+      'sweep-one@11.5': 'The Drop > The Face > The Drop',
+      'sweep-two@11.5': 'The Drop',
+      'assert-one@3.5': 'The Drop > The West Lane > The Gardens',
+      'assert-two@3.5': 'The Drop > The West Lane',
+      'assert-one@6': 'The Gardens > The West Lane',
+      'assert-two@7.5': 'The West Lane > The Terrace',
+      'assert-heavy@9': 'The Drop > The Face > The Drop > The Terrace > The West Lane',
+      'assert-one@11': 'The West Lane > The Terrace',
+      'assert-two@11': 'The Terrace',
+      'assert-heavy@13': 'The West Lane > The Terrace > The Holdfast',
+    };
+    const seen: string[] = [];
+    for (const mission of MISSIONS_ON_MARR) {
+      for (const leg of authored(mission).legs) {
+        if (leg.from.x === leg.to.x && leg.from.y === leg.to.y) continue;
+        seen.push(leg.what);
+        const grounds: string[] = [];
+        for (const [x, y] of along(leg.from.x, leg.from.y, leg.to.x, leg.to.y)) {
+          if (grounds[grounds.length - 1] !== regionAt(x, y)) grounds.push(regionAt(x, y));
+          if (leg.depthM !== undefined) {
+            assert.ok(TERRAIN.admits(x, y, leg.depthM), `${leg.what} meets rock at ${x},${y}`);
+          }
+        }
+        assert.equal(grounds.join(' > '), CROSSES[leg.what], `${mission.id}: ${leg.what}`);
+      }
+    }
+    assert.equal(seen.length, 16, "the missions' authored legs grew or shrank");
+    assert.deepEqual(new Set(seen), new Set(Object.keys(CROSSES)));
+  });
+
+  it('keeps the edge cells whose biome moved off every line from the player to another party', () => {
+    // The four cells whose biome the reshape moved: the west edge column's two
+    // south of the West Lane went from drop to terrace, and the east edge
+    // column's two north of Teel's Landing from terrace to drop. No line from a
+    // place either mission seats, sends or holds the player to another party's
+    // authored position crosses them.
+    const moved = [
+      [125, 1875, 'The Terrace'],
+      [125, 2125, 'The Terrace'],
+      [3875, 1375, 'The Drop'],
+      [3875, 1625, 'The Drop'],
+    ] as const;
+    for (const [x, y, region] of moved) assert.deepEqual(groundAt(x, y), on(region), `${x},${y}`);
+    const key = (x: number, y: number) =>
+      `${Math.floor(x / MAP.cellM)},${Math.floor(y / MAP.cellM)}`;
+    const edge = new Set(moved.map(([x, y]) => key(x, y)));
+    for (const mission of MISSIONS_ON_MARR) {
+      const { player, others } = authored(mission);
+      const from: (readonly [number, number])[] = [
+        ...player.map((p) => [p.x, p.y] as const),
+        ...mission.regions.flatMap((region) => cellsOf(mission, region.id)),
+      ];
+      for (const [ax, ay] of from) {
+        for (const to of others) {
+          for (const [x, y] of along(ax, ay, to.x, to.y, 400)) {
+            assert.ok(
+              !edge.has(key(x, y)),
+              `${mission.id}: ${ax},${ay} to ${to.what} crosses ${key(x, y)}`
+            );
+          }
+        }
+      }
+    }
+    // Two cells each way, so the plateau keeps its Kelp Forest: the water an
+    // ambient cluster may seed in on this map.
+    let kelp = 0;
+    for (let y = MAP.cellM / 2; y < MAP.heightM; y += MAP.cellM) {
+      for (let x = MAP.cellM / 2; x < MAP.widthM; x += MAP.cellM) {
+        if (TERRAIN.biomeAt(x, y) === Biome.KelpForest) kelp++;
+      }
+    }
+    assert.equal(kelp, 116, "the plateau's Kelp Forest grew or shrank");
   });
 });
