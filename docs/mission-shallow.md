@@ -381,10 +381,10 @@ three, which is the argument for bringing the ears up the slope.
 
 **And the sixth row is the one that costs.** A Chorister directly beneath `marr-row-six`, at
 (1875, 1850), holds it at 1.62 — and stands 351 m from the western turret, at Classification,
-inside a 700 m gun that fires at Tier 2. The Chorister's water is the Vent Under-run's west edge,
-which enters the turret's path to it — a path mean of 0.725, against 1.000 from (1550, 1850) —
-but not its path to the row, 0.850 as under the other five. The mission never says not to. It
-prints the distance.
+inside a 700 m gun that fires at Tier 2. The mission never says not to. It prints the distance.
+The Chorister's water is the Vent Under-run's west edge, which enters the turret's path to it — a
+path mean of 0.725, against 1.000 from (1550, 1850) — but not its path to the row, 0.850 as under
+the other five.
 
 **The under-run is a route, not a hide.** Thermal Vein at PF 0.45 and 620 m of floor, lying
 *below* the corridor's middle: a silent Chorister at (2250, 2400) reads **0.53** to the Corvette
