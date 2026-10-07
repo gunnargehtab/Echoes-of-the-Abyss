@@ -609,7 +609,7 @@ layer's factor is 1 on every pair and says nothing, arranged as
 | The Shoulders | rect 0, 0, 5000, 4000 | Resonance Field | 1,700 | Crystal country, PF 0.70. Painted first; the far shoulder south of the trench survives as this and nobody has a reason to be on it. A box because it is the whole map's base |
 | The Head | polygon (2000, 0) (3000, 0) (3000, 250) (2750, 750) (2250, 750) (2000, 250) | Resonance Field | 1,600 | **The spawn**, and the bench the party climbs back to. Where the Order's 211 PC chart begins. A spur off the northern edge, narrowing toward the cut |
 | The Rest | rect 0, 1000, 5000, 2000 | Abyssal Trench | 2,150 | The trench. PF 1.60 axial — "no secrets, only distances". The nineteen are on this floor and the two sounding rows run above it at y 1,750 and y 2,250. A box because what shows of it lies between the walls' inner edges, and those are straight |
-| The North Wall | polygon (0, 1000) (3750, 1000) (5000, 750) (5000, 1500) (0, 1500) | Abyssal Trench | 2,050 | Hollow ground. Four coil here at 1,700 m. Its inner edge is straight; its outer edge runs on a slant north over the last 1,250 m, where the trench opens east |
+| The North Wall | polygon (0, 1000) (3750, 1000) (5000, 750) (5000, 1500) (0, 1500) | Abyssal Trench | 2,050 | Hollow ground. Four coil here at 1,700 m. Its inner edge is straight; its outer edge runs on a slant north over the last 1,250 m, and the ground opens east over the last 750 m |
 | The South Wall | polygon (0, 2500) (5000, 2500) (5000, 3250) (3750, 3000) (0, 3000) | Abyssal Trench | 2,050 | Hollow ground. Three coil here at 1,700 m. The North Wall's mirror image across the axis |
 | The Deep End | polygon (4250, 1250) (5000, 1000) (5000, 3000) (4250, 2750) | Abyssal Trench | 2,400 | Where the trench falls east toward Directorate country. The basin's water and the watch's station. Widening east: its north and south edges run on a slant out into both walls |
 
@@ -620,7 +620,7 @@ cutting anything today — no hazard sites, and `fauna: false`.
 
 | What | Where | Depth | Floor / ceiling under it | PR |
 | --- | --- | --- | --- | --- |
-| The party, at 00:00 | the Head, 2,200–2,800 × 300–550 | 1,600 m | 1,600 / 0 | PR-2 ✓ Mid-Water |
+| The party, at 00:00 | the Head, 2,260–2,740 × 375–540 | 1,600 m | 1,600 / 0 | PR-2 ✓ Mid-Water |
 | The party, working | the bench, y 1,750 and y 2,250 | 1,750 m | 2,150 under both rows, 2,400 over the Deep End | PR-2 ✓ — `requiredPressureRating(1750)` is 2, the band's last fifty metres, on purpose |
 | The seven coils | 750/1,375/2,000/3,250 at y 1,400; 1,500/2,750/4,000 at y 2,600 | 1,700 m | 2,050 / 0 | Drift; the species' working depth, band 1,250–2,150 ✓ |
 | The watch | (4,800, 2,000) and (4,850, 2,080), and every leg | 2,100 m | 2,400 on station, 2,150 on the axis | PR-3 ✓ |
@@ -655,8 +655,9 @@ public catalogue** — one seat, no resources, not balanced, resolved by mission
 else.
 
 Four regions changed. The Head narrows toward the cut: its two southern corner cells are shoulder
-now. The trench opens east over its last 1,250 m: each wall's outer edge runs on a slant out into
-the shoulder, and the Deep End widens between them into both walls. The Shoulders stay a box,
+now. Each wall's outer edge runs on a slant out into the shoulder over the trench's last 1,250 m,
+and the Deep End widens between them into both walls. The painted ground opens east over the last
+750 m, the cells at x 4,250–5,000; the slant west of that claims no cell. The Shoulders stay a box,
 because they are the whole map's base. The Rest stays a box, because it shows only between the
 walls' inner edges. Those edges stay straight, because 250 m in plan from each sounding row is the
 number the mission turns on.

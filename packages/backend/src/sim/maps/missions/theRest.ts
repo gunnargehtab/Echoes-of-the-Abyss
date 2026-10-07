@@ -112,7 +112,8 @@ export const THE_REST: MapDefinition = {
     },
     // The inner edge is the rectangle's, 250 m in plan from the northern row
     // the whole way; the outer edge runs on a slant north over the last
-    // 1,250 m, where the trench opens toward the Deep End.
+    // 1,250 m, and the ground it paints opens east over the last 750 m, the
+    // cells at x 4,250–5,000, toward the Deep End.
     {
       shape: 'polygon',
       points: [

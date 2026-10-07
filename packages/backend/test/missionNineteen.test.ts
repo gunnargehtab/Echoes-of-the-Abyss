@@ -32,10 +32,14 @@
  *   Watch-Speaker, the sweep and `the-count` with them. The literal seats it
  *   south instead and this file states the rule §11 needed and did not.
  *
- * Nothing here steps a match, and the row above is why that is a decision
- * rather than a policy: the seating rule is a *static* form of something only
- * a run showed, written as a distance because a distance is what an author can
- * check. The three claims that still need a run — that the sweep files, that a
+ * Two blocks step a match and nothing else does. The sweep block plays the
+ * watch for five minutes, because the bend it guards is a runtime behaviour a
+ * table cannot show; the #1157 block plays an idle committal on the shapes and
+ * on the old rectangles, because a reshape that keeps every point can still
+ * move a route. Everywhere else the row above is why not stepping is a
+ * decision rather than a policy: the seating rule is a *static* form of
+ * something only a run showed, written as a distance because a distance is
+ * what an author can check. The three claims that still need a run — that the sweep files, that a
  * wounded coil closes, that a lost carrier resets its ledger — belong to
  * systems with their own suites (`hollow.test.ts`, `missionIntake.test.ts`,
  * `missions.test.ts`). What is unique to this mission is a table of
