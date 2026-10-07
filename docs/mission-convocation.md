@@ -480,8 +480,9 @@ What this mission deliberately does not teach:
 `marr-plateau` · **Marr Plateau** · one seat · 4,000 × 2,500 m · cell 250 m · base floor 320 m.
 
 **The same map literal as [mission-tend.md](mission-tend.md) §11, unchanged.** Seven regions,
-the same rectangles, the same trench paint on the drop, the same Holdfast spawn at 2,625, 375.
-This is the document's most consequential scoping decision and it is made deliberately:
+drawn in shapes for both missions since #1148, the same trench paint on the drop, the same
+Holdfast spawn at 2,625, 375. This is the document's most consequential scoping decision and it
+is made deliberately:
 
 - **[habitats.md](habitats.md) §9 says the room is "the rows as the room"**, and *the rows* is
   *Tend*'s own word for Marr Plateau's farm terraces. Marr is the plateau Marr is named for and
@@ -510,7 +511,7 @@ the edge where the count is read. No new region, no new biome, no `ground` beat.
 | 5 | 1,875, 1,250 | The Terrace | Mid-terrace, between the lane and the Holdfast. Open, and there is nothing here to hide behind |
 | 6 | 2,625, 625 | The Holdfast | Home's own row. If this row cannot turn, the Holdfast is contested |
 | 7 | 3,375, 1,000 | The Terrace | The east rows, toward Teel's landing. The furthest from everything |
-| — | **2,000, 1,875** | The Drop | **The watch's edge**, where the count is read. Trench paint, PF 1.6, and the reason §7's last figure is 4,389 m |
+| — | **2,000, 1,875** | The Face | **The watch's edge**, where the count is read. Trench paint, PF 1.6, and the reason §7's last figure is 4,389 m |
 
 Row radius 400 m; hold sixty seconds; ceiling 26 SIG. The circuit — rows 1 through 7 and back
 to the first — is **6,579 m** of holdfast line against a force of nine hulls, four of which
@@ -661,7 +662,7 @@ all three are somebody else's (see below).
 | Requirement | Status |
 | --- | --- |
 | The mission format — beats, predicates, registry, private rooms | **Built** (#190). `say`, `objective`, `move`, `silent` and `resolve` cover most of §9's schedule |
-| The map, its seven regions, trench paint on the drop | **Built** — `marr-plateau` ships with `seeding-tend`, and this mission reuses it unchanged (§11). **Confirmed:** two mission ids resolve to one map literal and the registry needed nothing at all for it, which is what §11 predicted |
+| The map, its seven regions, trench paint on the drop | **Built** — `marr-plateau` ships with `seeding-tend`, and this mission reuses it unchanged (§11), drawn in shapes for both in #1148. **Confirmed:** two mission ids resolve to one map literal and the registry needed nothing at all for it, which is what §11 predicted |
 | Silent Running, its Commune multiplier, and the SIG floor | **Built** — `SILENT_RUNNING` in shared constants. §4's 0.8 → 1.0 → 1.25 is arithmetic over shipped numbers, not a proposal |
 | The Tetherjelly PF floor the third row leans on | **Built** (#306, #480) — the jelly masking is simulated, and the clusters are in the water: the same three `creature` beats [mission-tend.md](mission-tend.md) §11 authors, seeded again by this mission because the field is the map's and not the day's. Row 3 reads one cluster's −0.10 and every other row reads bare kelp, so "quiet on its own" is a measured fact rather than a promise |
 | The Draymaw pack held at depth, and the drop that carries | **Built** — the same beat `seeding-tend` already authors, in the same water |

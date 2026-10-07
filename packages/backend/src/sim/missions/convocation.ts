@@ -29,8 +29,10 @@
  *   SIG on the map.
  *
  * **The map is `marr-plateau`, unchanged** (§11) — the first time two missions
- * resolve to one map literal, which this file confirms rather than adds. What
- * the mission adds is markers, not geometry.
+ * resolve to one map literal, which this file confirms rather than adds. It
+ * was drawn in shapes for both in #1148, and `missionTend.test.ts` pins this
+ * mission's ground with Tend's. What the mission adds is markers, not
+ * geometry.
  *
  * Two things the document names and this literal deliberately does not build,
  * because §13 assigns them elsewhere: cross-mission Drift Health, and the
