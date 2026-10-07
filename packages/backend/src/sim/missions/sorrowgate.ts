@@ -698,7 +698,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     // Tier 3 from 1,500 to 1,900 m, and Tier 2 at 2,100 m; silent, she is
     // simply not there at any of them. So she holds at 823,817, 2,098 m from
     // Escort One's seat, the flight's nearest, and runs silent, and the two
-    // flickers below drop the order for a few seconds each — which is the
+    // flickers below drop the order for fifteen seconds each — which is the
     // only way to produce §9's sentence with this Echo model: nothing, briefly
     // Tier 2 as she turns, nothing.
     {
@@ -738,11 +738,11 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     // Tier 4 from there for the rest of the mission. Sixty metres is a hull
     // coming round; the loudness is the point, not the distance.
     //
-    // She stays silent through it, too. Dropping the order to make her audible
-    // put a Knight at cruise inside the array's circle, which does not flicker
-    // — it classifies her outright, and a graded contact is the one thing §6
-    // needs Drenn not to have. A silent hull under way is louder than a silent
-    // hull holding, and that difference is the whole of the flicker.
+    // The order drops for fifteen seconds each time, and that is the flicker:
+    // open at the interval she is a Tier 2 and no more (the distances above),
+    // and silent she is nothing. Measured in a no-input run (seed 77), the
+    // flight holds her at Tier 2 on every Echo pass from 450.2 to 465.0 s and
+    // her second from 500.2 to 515.0 s, and never higher.
     { atTick: T(7, 30), kind: 'silent', tag: 'kalliso-1', active: false, note: '' },
     {
       atTick: T(7, 30),
@@ -750,7 +750,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       tag: 'kalliso-1',
       x: 870,
       y: 860,
-      note: 'A second of Tier 2 as she comes round, without closing',
+      note: 'Fifteen seconds of Tier 2 as she comes round, without closing',
     },
     { atTick: T(7, 45), kind: 'silent', tag: 'kalliso-1', active: true, note: '' },
     { atTick: T(8, 20), kind: 'silent', tag: 'kalliso-2', active: false, note: '' },
