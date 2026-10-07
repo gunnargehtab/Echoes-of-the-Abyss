@@ -21,8 +21,10 @@
  *   and the works are not clear", read at 18:00 and not before.
  *
  * And one claim about the ground (§11, #1159): the South Mouth is drawn as a
- * fan, and every point, region cell and route the mission authors stands where
- * it stood in rectangles, and an idle run walks the same tracks to the close.
+ * fan. Every point the mission authors and every cell centre of the Fifth's
+ * and the Gallery's mission regions stands where it stood in rectangles, every
+ * leg the column walks is routed as it was, and an idle run walks the same
+ * tracks to the close.
  */
 
 import { describe, it } from 'node:test';
