@@ -63,8 +63,8 @@ palette, including the three colour-vision alternatives.
 
 ## 4. Map and world sheet
 
-The map literal and the [mission's map table](mission-sorrowgate.md#11-the-map) do not
-change. Top-down, the flight holds at the arch north of the chamber, with the service
+This slice changes neither the map literal nor the
+[mission's map table](mission-sorrowgate.md#11-the-map). Top-down, the flight holds at the arch north of the chamber, with the service
 lock to the west; the exit is the Upper Concourse to the north. In section, the chamber
 lies below the thermocline, the Descent and Concourse rise above it, and the Commit
 falls below the escorts' pressure rating. None of these relations comes from a texture.

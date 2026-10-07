@@ -477,13 +477,13 @@ and so, this time, is the noise.*
 ### The Descent's pack
 
 `the-descent-pack` — one Draymaw at 3375, 1375 at 900 m, in the Districts just east of the
-Descent's edge (the Descent's rectangle ends at x 3,250; the Districts' floor of 1,600 admits
-it): HYD 65, Interest 22, Commit 45, 58 m/s, 34 a second inside 160 m in three dimensions,
-pursuing within 500–1,300 m. **A pack is one entity here.** `spawnFauna` places one animal per
-`creature` beat and the roster's `groupSize` of 5 is read by nothing in the runtime (§13), so the
-tag is a pack in the fiction — [bestiary.md](bestiary.md) §4's four to six, working the Descent's
-leavings — and one hunter in the water, and every figure below is that animal's own. Through the
-city's 0.8:
+Descent's edge (the Descent's east flank slants away and ends at x 3,000 on its row; the
+Districts' floor of 1,600 admits it): HYD 65, Interest 22, Commit 45, 58 m/s, 34 a second
+inside 160 m in three dimensions, pursuing within 500–1,300 m. **A pack is one entity here.**
+`spawnFauna` places one animal per `creature` beat and the roster's `groupSize` of 5 is read by
+nothing in the runtime (§13), so the tag is a pack in the fiction — [bestiary.md](bestiary.md)
+§4's four to six, working the Descent's leavings — and one hunter in the water, and every
+figure below is that animal's own. Through the city's 0.8:
 
 | The column is | Interested from | Commits from | At 783 m, the third waypoint |
 | --- | --- | --- | --- |
@@ -799,15 +799,15 @@ What this mission deliberately does not teach:
 and the first that pairs a campaign mission with the prologue. North is shallow and the way
 home; south is the basin and the way to the rim.
 
-| Region | Rect (x, y, w, h) | Biome | Floor | What it is |
+| Region | Shape | Biome | Floor | What it is |
 | --- | --- | --- | --- | --- |
-| The Districts | 0, 0, 5000, 4000 | Coral Ruins | 1,600 | The drowned city. Painted first; everything else is cut into it. The pack's ground, east of the Descent |
-| The Upper Concourse | 1500, 0, 2000, 750 | Coral Ruins | **340** | The passenger terminus, above the layer. **The seat**, and the watch's whole world |
-| The Descent | 2000, 500, 1250, 1250 | Coral Ruins | 900 | The step between the Concourse and the city. Where 1,200 m is crossed, and the column's first dive |
-| The West Approach | 0, 1250, 1500, 1250 | Thermal Vein | 1,600 | PF 0.45. The prologue's one quiet road; the column does not take it, because the lock does not open onto it |
-| The Service Lock | 1750, 1750, 500, 750 | Coral Ruins | 1,500 / **roof 1,300** | Roofed water joining the chamber to the districts. The way the fourteen came out, and the way in |
-| The Gate | 2000, 2250, 1250, 1000 | Coral Ruins | 1,500 | The dome and the chamber, fallen. The last water the escort stands in for nothing, and the shallowest the colossus can rise into |
-| The Commit | 1500, 3000, 2000, 1000 | Abyssal Trench | **2,400** | The basin. PF 1.6, PR-3, the Hollows on its northern row and the colossus on its floor. Painted last, so the Gate's rectangle ends where this one begins: the arch's foot at y 3,000 stands on trench paint |
+| The Districts | rect 0, 0, 5000, 4000 | Coral Ruins | 1,600 | The drowned city. Painted first; everything else is cut into it. The pack's ground, east of the Descent |
+| The Upper Concourse | rect 1500, 0, 2000, 750 | Coral Ruins | **340** | The passenger terminus, above the layer. **The seat**, and the watch's whole world |
+| The Descent | polygon (2000, 500) (3250, 500) (3250, 750) (2750, 1750) (2000, 1750) | Coral Ruins | 900 | The step between the Concourse and the city. Where 1,200 m is crossed, and the column's first dive |
+| The West Approach | polygon (0, 2000) (1000, 1250) (1500, 1250) (1500, 2500) (500, 2500) (0, 2250) | Thermal Vein | 1,600 | PF 0.45. The prologue's one quiet road; the column does not take it, because the lock does not open onto it |
+| The Service Lock | rect 1750, 1750, 500, 750 | Coral Ruins | 1,500 / **roof 1,300** | Roofed water joining the chamber to the districts. The way the fourteen came out, and the way in |
+| The Gate | ellipse 1750, 2250, 1500, 1000 | Coral Ruins | 1,500 | The dome and the chamber, fallen. The last water the escort stands in for nothing, and the shallowest the colossus can rise into |
+| The Commit | rect 1500, 3000, 2000, 1000 | Abyssal Trench | **2,400** | The basin. PF 1.6, PR-3, the Hollows on its northern row and the colossus on its floor. Painted last, so it cuts the Gate's ellipse off at y 3,000: the arch's foot at y 3,000 stands on trench paint |
 
 One spawn per the literal, at 2550, 2150 — inside the row that goes solid at 00:00, and
 irrelevant: the mission seats its own order of battle. No resources, no hazard sites,
@@ -845,14 +845,14 @@ authored hull for the depth it is authored at"):
 | `escort-one`, `escort-two`, `escort-three` | 2250, 150 · 2500, 100 · 2750, 150 | 330 m | The Corvette's PR-2 |
 | `watch-one`, `watch-two` | 2000, 250 · 3000, 250 | 300 m | The Light Scout's PR-1 covers the Shelf, and 300 is in it |
 | Three Lampfry shoals | 2250, 725 · 2500, 725 · 2750, 725 | 250 m | The Concourse's 340; every seat more than 300 m from every shoal in three dimensions, so the shoals are whole at tick zero |
-| `the-descent-pack` | 3375, 1375 | 900 m | The Districts' 1,600 — the cell column at 3,250–3,500 lies east of the Descent's rectangle |
+| `the-descent-pack` | 3375, 1375 | 900 m | The Districts' 1,600 — the cell column at 3,250–3,500 lies east of the Descent |
 | `gate-hollow-west`, `gate-hollow-east` | 1750, 3100 · 3250, 3100 | 1,700 m | The Commit's 2,400, in its northern row |
 | `the-colossus` | 1750, 3650 | 2,000 m | The Commit's 2,400; the Sounder's own working depth |
 | `held` — `releaseTick` 01:00 | the four seed hulls | | A `release` beat on the same tick, authored before the first `move` |
 
-Every rectangle lands on the 250 m cell grid and paints exactly the metres it reads
-([maps.md](maps.md), "How a map is written"). Every creature arrives by authored `creature`
-beat and `fauna` is off, for [mission-intake.md](mission-intake.md) §13's reason: the seeder
+Every shape states whole 250 m cells, and every mission region's rectangle paints exactly the
+metres it reads ([maps.md](maps.md), "How a map is written"; the map is in shapes since #1140).
+Every creature arrives by authored `creature` beat and `fauna` is off, for [mission-intake.md](mission-intake.md) §13's reason: the seeder
 is a skirmish roster and cannot put a colossus where the prologue left one.
 
 **The argument the ground makes.** The route from the north shoulder to the far south is a
@@ -1072,7 +1072,7 @@ is unchanged.
 | **The thermocline, for a watch that cannot cross it** | **Built** — `THERMOCLINE`, pair factor 0.3 across; the span solid at every depth is what keeps the watch's whole water above the layer. **The instruction this row used to carry has been carried out** (#394): the test prices §7's second table from `THERMOCLINE.ACROSS` times the trench's PF rather than from the biome PF, and every figure in it holds — the pack at a name from the seat (3.2) and a Bearing from the span's edge (1.7), the basin inaudible from the seat and a Bearing from the edge (2.2), the calling voice a Track from the edge (4.8), and a scout at 12 across the layer inaudible to the barge past 1,167 m |
 | **PR-3 refits on the four seed hulls** | **Built** — `pressureRating: 3` authored on a Cruiser and three Harvesters (the roster's 2), because `requiredPressureRating(2300)` is 3 and the seat test reads the hull. The Cruiser is not a roster change: no hull carries a faction lock (`PRODUCIBLE`) and the Corvette in Commune hands is *Thin Water*'s precedent; *Commune-grown* is fiction, and the barge's 55 / 65 / 7.6 are the roster's figures and not a quieter cruiser. Authored on the hull and nowhere else (#394): `pressureRating: 3` on the four, no override on the escort or the watch, the roster's Cruiser and Harvester still PR-2, and no `pressureBonus` on any region or `ground` beat — the format grew one this batch (#391) and this mission refuses it, because nothing manufactures habitable water in a place that fell |
 | **The tender's figures** | **A roster gap, already recorded** ([mission-in-writing.md](mission-in-writing.md) §13). This document prices the tender at the roster's 18 idle / 40 cruise / 4.5 silent and the barge silent at 7.6 by `silentRunningSig`; the plan's *8* for a silent barge is `SILENT_RUNNING.SIG_MAX`, which the curve reaches only at an idle of 60 |
-| **The map, reused and not authored** | **Built, and untouched** — `sorrowgate.ts` is the prologue's own map literal (#190, last edited in #278) and no commit in this batch touches it; the maps written here (#392, #393) are other missions'. It now answers to two mission ids, `prologue-sorrowgate` and `seeding-radicals` (#394): `missionMapById` resolves it, `mapById` does not, and its seven regions still read as §11's table region for region — the Concourse at 340, the Descent at 900, the Lock at 1,500 under a roof at 1,300, the Gate at 1,500, the Commit at 2,400, and Thermal Vein on the West Approach. Still the only literal that pairs a campaign mission with the prologue. Two of the plan's mission regions are dropped because nothing addresses them, and the three that remain sit on the 250 m grid (§11) |
+| **The map, reused and not authored** | **Built, and untouched** — `sorrowgate.ts` is the prologue's own map literal (#190, last edited in #278 before this batch, and drawn in shapes in #1140) and no commit in this batch touches it; the maps written here (#392, #393) are other missions'. It now answers to two mission ids, `prologue-sorrowgate` and `seeding-radicals` (#394): `missionMapById` resolves it, `mapById` does not, and its seven regions still read as §11's table region for region — the Concourse at 340, the Descent at 900, the Lock at 1,500 under a roof at 1,300, the Gate at 1,500, the Commit at 2,400, and Thermal Vein on the West Approach. Still the only literal that pairs a campaign mission with the prologue. Two of the plan's mission regions are dropped because nothing addresses them, and the three that remain sit on the 250 m grid (§11) |
 | **`souls`** | **Documentation** — nothing in the runtime reads it ([mission-thin-water.md](mission-thin-water.md) §13); the epilogue carries thirty-three by hand, and *the-households*' met reading says the number; the literal authors 14, 6, 5 and 8 on the four hulls and no system reads the field (#394) |
 | **Briefing variants** | **Built** (#378, shipped in #395) — `MissionHeader.briefingVariants`, an ordered list of scene and briefing, first match wins, selected client-side off the progression record's seen scenes, so the room is never told which text was read ([campaign.md](campaign.md) §1). **This mission authors none, and cannot yet.** A scene is latched by a `sweep`'s filed reading and by nothing else in the runtime; the only one any shipped mission latches is `marr-plateau-filed`, off *Tend*'s sweep, and the two headers keyed on it are *Thin Water*'s and *Convocation*'s. The scene this briefing would key on is the count at the Concourse — Marr's *it's been said once by somebody who counted* reads differently to a player who was there — and [mission-convocation.md](mission-convocation.md)'s mission has no sweep to latch one with, so there is no id to key on and this document will not invent one. The row belongs to whichever mission grows the sweep that witnesses the count |
 | **Progression** — which plateaus turned in *Convocation*, the escorts' count from *Thin Water*, the sixteen from *In Writing* | **The record is built; this is not**, and [mission-deep-furrow.md](mission-deep-furrow.md) §13 states the split first. A per-mission history shipped with the campaign board (#371, `packages/frontend/src/progression/store.ts`): written once from the `missionOver` payload, keeping the best reading a mission has ever returned. What it keeps is an *outcome*, and what this row wants is mission-scoped — which plateaus turned, and how many corvettes are still Juno's — which is a sibling key beside `missions` in the same record and is not started ([campaign.md](campaign.md) §11). So the document authors the column whole and states what it assumes: a second seeding turned by the plateaus and not by Marr's, the rim and the week turned nowhere, three corvettes still standing after *Thin Water* and *In Writing*, and the four seed hulls out of the yard |

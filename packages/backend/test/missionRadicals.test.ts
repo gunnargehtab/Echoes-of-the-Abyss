@@ -56,7 +56,7 @@ import {
   type EchoSnapshot,
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
-import { SORROWGATE, mapById, missionMapById } from '../src/sim/maps/index.ts';
+import { SORROWGATE, mapById, missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { PROLOGUE_SORROWGATE, isStanding } from '../src/sim/missions/index.ts';
 import { SEEDING_RADICALS } from '../src/sim/missions/radicals.ts';
 
@@ -310,6 +310,69 @@ describe('Sorrowgate, reused as docs/mission-radicals.md §11 finds it', () => {
       2,
       "§3: the roof is Mid-Water, and the watch's PR-1 covers the Shelf"
     );
+  });
+
+  it('stands every authored point on the ground §11 names for it, in both missions (#1140)', () => {
+    // Sorrowgate is drawn in shapes since #1140, and a reshape is new content,
+    // never a lever: every place either mission seats, orders or drives a hull
+    // stands on the region it stood on in rectangles. Asked of the painted
+    // cells, because the cell is what a hull's floor and roof are read from.
+    // Two documented points are not here: §11 seats the shoals and §5 lays the
+    // first leg on "the Concourse's 340", and the Descent has always painted
+    // that row at 900 (#1161, found by #1140 and not settled by it).
+    const ground = terrainFor(SORROWGATE);
+    const regions = {
+      districts: [Biome.CoralRuins, 1600, 0],
+      concourse: [Biome.CoralRuins, 340, 0],
+      descent: [Biome.CoralRuins, 900, 0],
+      approach: [Biome.ThermalVein, 1600, 0],
+      lock: [Biome.CoralRuins, 1500, 1300],
+      gate: [Biome.CoralRuins, 1500, 0],
+      commit: [Biome.AbyssalTrench, 2400, 0],
+    } as const;
+    const stands: [string, number, number, keyof typeof regions][] = [
+      // The prologue (docs/mission-sorrowgate.md §5, §9).
+      ['the spawn, at the arch', 2550, 2150, 'districts'],
+      ['Escort One, west of the arch', 2400, 2200, 'districts'],
+      ['Escort Four, inside the chamber', 2550, 2330, 'gate'],
+      ['Tender One', 2420, 2900, 'gate'],
+      ['Tender Two', 2680, 2900, 'gate'],
+      ["the court's array", 2550, 2750, 'gate'],
+      ['Sende', 2550, 2950, 'gate'],
+      ['Drenn, holding the east', 3350, 2700, 'districts'],
+      ['the Commune, holding the west', 1700, 2600, 'districts'],
+      ['Kalliso, on the interval', 823, 817, 'districts'],
+      ['Drenn, at 04:00 in the chamber', 2880, 2620, 'gate'],
+      ['the Commune, at 04:00 in the chamber', 2220, 2600, 'gate'],
+      ['the Commune, at 10:40 on the vein', 1150, 2280, 'approach'],
+      ['Kalliso, at 10:40', 1600, 1350, 'districts'],
+      ['the colossus, rising in the basin', 3250, 3700, 'commit'],
+      ['the colossus, turning in the basin', 1900, 3700, 'commit'],
+      // Radicals (docs/mission-radicals.md §5, §6, §11).
+      ['the seat', SEAT.x, SEAT.y, 'concourse'],
+      ['the watch, at the span’s edge', SPAN_EDGE.x, SPAN_EDGE.y, 'districts'],
+      ['the pack, east of the Descent', PACK.x, PACK.y, 'districts'],
+      ['leg 2, the Descent', 2625, 1125, 'descent'],
+      ['leg 3, the Descent', 2625, 1600, 'descent'],
+      ["the Descent's foot, beside the lock's mouth", 2125, 1625, 'descent'],
+      ["leg 4, the Districts west of the Descent's foot", 1875, 1625, 'districts'],
+      ["leg 5, the lock's mouth", 2000, 1875, 'lock'],
+      ['leg 6, the lock where the span was cut back', 2000, 2375, 'lock'],
+      ['leg 7, the Gate', 2375, 2625, 'gate'],
+      ["leg 8, the arch's foot", 2625, 3000, 'commit'],
+      ['leg 10', 2500, 3650, 'commit'],
+      ['leg 11, the far water', 2500, 3900, 'commit'],
+      ['the western Hollow', HOLLOW_WEST.x, HOLLOW_WEST.y, 'commit'],
+      ['the eastern Hollow', HOLLOW_EAST.x, HOLLOW_EAST.y, 'commit'],
+      ['the colossus', COLOSSUS.x, COLOSSUS.y, 'commit'],
+    ];
+    for (const [what, x, y, region] of stands) {
+      assert.deepEqual(
+        [ground.biomeAt(x, y), ground.floorAt(x, y), ground.ceilingAt(x, y)],
+        regions[region],
+        `${what} at ${x},${y} stands in ${region}`
+      );
+    }
   });
 });
 
@@ -771,10 +834,29 @@ describe('the basin, as docs/mission-radicals.md §6 places it', () => {
       '§9: no second creature beat is needed at 13:30, and none is authored'
     );
     // §6: a decoy buys target rather than distance — the colossus lies 250 m
-    // from the Commit's western edge and 350 from its southern one.
-    const commit = SORROWGATE.regions[6]!;
-    assert.equal(COLOSSUS.x - commit.x, 250);
-    assert.equal(commit.y + commit.heightM - COLOSSUS.y, 350);
+    // from the Commit's western edge and 350 from its southern one, and the
+    // water past either is ground it does not fit under. Asked of the painted
+    // cells rather than of a rectangle (#1140): a region's shape is no longer
+    // its edge, and the edge the colossus meets is the cell it cannot enter.
+    const ground = terrainFor(SORROWGATE);
+    const cellM = SORROWGATE.cellM;
+    const basin = (x: number, y: number) =>
+      ground.biomeAt(x, y) === Biome.AbyssalTrench && ground.admits(x, y, SOUNDER.workingDepthM);
+    const centre = (m: number) => (Math.floor(m / cellM) + 0.5) * cellM;
+    let west = centre(COLOSSUS.x);
+    while (west - cellM > 0 && basin(west - cellM, centre(COLOSSUS.y))) west -= cellM;
+    assert.equal(COLOSSUS.x - (west - cellM / 2), 250, "§6: 250 m to the Commit's western edge");
+    assert.equal(
+      ground.admits(west - cellM, centre(COLOSSUS.y), SOUNDER.workingDepthM),
+      false,
+      '§6: and the water past it does not admit the colossus'
+    );
+    let south = centre(COLOSSUS.y);
+    while (south + cellM < SORROWGATE.heightM && basin(centre(COLOSSUS.x), south + cellM)) {
+      south += cellM;
+    }
+    assert.equal(south + cellM / 2, SORROWGATE.heightM, '§6: the basin runs to the map edge');
+    assert.equal(south + cellM / 2 - COLOSSUS.y, 350, "§6: 350 m to the Commit's southern edge");
   });
 });
 

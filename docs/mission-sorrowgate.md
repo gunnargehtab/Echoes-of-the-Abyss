@@ -541,26 +541,46 @@ Coral Ruins, per [campaign.md](campaign.md) §10 — the human biome, and this i
 ground in the setting. Built to the shape of [maps.md](maps.md) Map Type 5, *Sunken Metropolis*:
 multi-layered ruins, collapsed domes, a tunnel beneath the main lane.
 
-| Region | Rect (x, y, w, h) | Biome | Floor | Ceiling | What it is |
+| Region | Shape | Biome | Floor | Ceiling | What it is |
 | --- | --- | --- | --- | --- | --- |
-| The Districts | 0, 0, 5000, 4000 | Coral Ruins | 1,600 | — | The drowned city. Painted first; everything else is cut into it |
-| The Upper Concourse | 1500, 0, 2000, 750 | Coral Ruins | **340** | — | The passenger terminus, above the layer. **The extraction point** |
-| The Descent | 2000, 500, 1250, 1250 | Coral Ruins | 900 | — | The step between the Concourse and the city. Where 1,200 m is crossed |
-| The West Approach | 0, 1250, 1500, 1250 | Thermal Vein | 1,600 | — | PF 0.45. The one road where the flight can be loud and get away with it. Nothing tells the player this |
-| The Service Lock | 1750, 1750, 500, 750 | Coral Ruins | 1,500 | **1,300** | Roofed water joining the chamber to the districts. After the arch goes, the only way out. A route nobody can be watched taking |
-| The Gate | 2000, 2250, 1250, 1000 | Coral Ruins | 1,500 | — | The dome and the chamber. The court |
-| The Commit | 1500, 3000, 2000, 1000 | Abyssal Trench | **2,400** | — | The basin the city committed its dead into. PF 1.6 — which is how the ping got down there. Needs PR-3, and nothing the player owns is rated to follow it down (§3) |
+| The Districts | rect 0, 0, 5000, 4000 | Coral Ruins | 1,600 | — | The drowned city. Painted first; everything else is cut into it |
+| The Upper Concourse | rect 1500, 0, 2000, 750 | Coral Ruins | **340** | — | The passenger terminus, above the layer. **The extraction point** |
+| The Descent | polygon (2000, 500) (3250, 500) (3250, 750) (2750, 1750) (2000, 1750) | Coral Ruins | 900 | — | The step between the Concourse and the city. Where 1,200 m is crossed. A ramp, narrowing from under the Concourse to its foot at the lock's mouth |
+| The West Approach | polygon (0, 2000) (1000, 1250) (1500, 1250) (1500, 2500) (500, 2500) (0, 2250) | Thermal Vein | 1,600 | — | PF 0.45. The one road where the flight can be loud and get away with it. Nothing tells the player this. A vein that widens from the west edge toward the arch |
+| The Service Lock | rect 1750, 1750, 500, 750 | Coral Ruins | 1,500 | **1,300** | Roofed water joining the chamber to the districts. After the arch goes, the only way out. A route nobody can be watched taking |
+| The Gate | ellipse 1750, 2250, 1500, 1000 | Coral Ruins | 1,500 | — | The dome and the chamber. The court. The Commit, painted after it, cuts away its southern quarter |
+| The Commit | rect 1500, 3000, 2000, 1000 | Abyssal Trench | **2,400** | — | The basin the city committed its dead into. PF 1.6 — which is how the ping got down there. Needs PR-3, and nothing the player owns is rated to follow it down (§3) |
 
 One spawn, at the arch: 2550, 2150. No resources. No hazard sites. There is no economy in this
 mission and nothing to build.
 
-Every rectangle above lands on the 250 m cell grid, so each paints exactly the metres it reads
-([maps.md](maps.md), "How a map is written"). They were restated that way when issue #157
-replaced the touch rule with the centre rule: the water is the water this mission has always
-been played in, and it is the table that changed, to stop describing a chamber a cell narrower
-than the one the flight is actually in. The Service Lock reads 500 m rather than the 300 m it
-used to, for the same reason — two 250 m columns is what this grid can hold, and two columns is
-what it has always painted.
+Drawn in shapes since issue #1140, a box of #1139. Every number in the table is a whole
+250 m cell, and a cell is its region's when the region's shape holds the cell's centre
+([maps.md](maps.md), "How a map is written"). The Descent is a ramp, narrowing from its top row
+under the Concourse to its foot at the lock's mouth. The West Approach is a vein, widening from
+the west edge to the arch's row. The Gate is the dome, an ellipse whose southern quarter the
+basin cuts away.
+
+Four regions stay boxes, each for a reason. The Districts are the whole map, painted first. The
+Upper Concourse and the Service Lock are built: a terminus and a maintenance passage. Every
+cell centre of the Concourse also lies in the region the tenders' count is read in, and the Lock is
+the region the 10:40 beat cuts back through the span. The Commit is held on every side: the
+far water along its whole southern row, a Hollow near either end of its northern row, the
+colossus 250 m inside its western edge, and the colossus's 12:00 drive ending in its eastern
+column ([mission-radicals.md](mission-radicals.md) §6).
+
+The reshape is new map content, never a balance lever. Fourteen of the 320 cells changed. Seven
+cells of vein at the Approach's western end became city, PF 0.45 to 0.80. No line from a place
+either mission seats or orders the flight to any party crosses them, but a flight that strays
+into the vein's western end is now heard by Kalliso's seat through city water. Four cells of the Descent's east flank and one of the
+dome's north-east corner went to the city's 1,600 m floor; the dome took two cells of city on
+its west flank at 1,500 m. No biome changed anywhere else. Every spawn, hull, structure, order,
+creature and mission region in this mission and in [Radicals](mission-radicals.md) stands on
+the ground it stood on in rectangles.
+
+The cells under the boxes are the ones issue #157 restated when the centre rule replaced the
+touch rule. The Service Lock reads 500 m rather than the 300 m it used to: two 250 m columns is
+what this grid can hold, and two columns is what it has always painted.
 
 **Sorrowgate is a mission map and is not in the public catalogue.** It has one seat, no
 resources and no second spawn, so it is not an archetype, is not balanced, and is not
