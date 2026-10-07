@@ -166,6 +166,29 @@ describe('floor-following', () => {
     assert.equal(SilentRunning.active[eid], 1, 'and never dived, so never broke silence');
   });
 
+  it('holds under a roof ahead, not over it (#1193)', () => {
+    // A corridor of 1,700 m ground walled with rock north and south, with
+    // one roofed cell across it (ceiling 1,665 m, floor 1,690 m): the only way
+    // east. A follower at 1,670 m fits under that roof. Reading the roofed
+    // cell's floor alone would lift it to 1,660 m before the cell, above the
+    // roof, where the cell refuses it for good; it holds at the roof instead,
+    // passes under it, and reaches the order.
+    const m = match(1700);
+    for (const y of [2500, 3500]) {
+      m.world.terrain.fillGround(0, y, MAP_M, 500, { floorM: 100, ceilingM: 200 });
+    }
+    m.world.terrain.fillGround(3000, 3000, 250, 500, { floorM: 1690, ceilingM: 1665 });
+    const eid = seat(m, 1670);
+    Position.x[eid] = 2125;
+    Position.y[eid] = 3250;
+    m.orderFollowFloor(0, eid, true);
+    advance(m, 2);
+    m.orderMove(0, eid, 4125, 3250);
+    advance(m, 240);
+    assert.ok(Math.abs(Position.x[eid]! - 4125) <= 5, `reached the order, at x ${Position.x[eid]}`);
+    assert.ok(Math.abs(Position.depth[eid]! - (1700 - FOLLOW_FLOOR.CLEARANCE_M)) <= EPS);
+  });
+
   it('is replaced by a manual depth order — the newer instruction wins', () => {
     const m = match(1000);
     const eid = seat(m, 300);
