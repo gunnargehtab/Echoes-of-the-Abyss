@@ -172,7 +172,8 @@ const LAGOON: readonly Point[] = [
  * widen the door the pocket is. So it spreads the only way left, out into
  * the lagoon: a cell pair north and west, cut on the slant facing the seat,
  * which leaves the diagonal's own lagoon cell open. Thirteen cells where the
- * square held nine.
+ * square held nine. Its north pair meets the rim's shoulder across one cell,
+ * so the ring past it is 250 m of open water where it was 750 m.
  */
 const POCKET: readonly Point[] = [
   [2000, 1500],
