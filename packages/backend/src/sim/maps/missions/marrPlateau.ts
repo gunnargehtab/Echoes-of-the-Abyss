@@ -32,10 +32,9 @@ export const MARR_PLATEAU: MapDefinition = {
   // One row per row of §11's table, in the document's order. Later regions
   // overwrite earlier ones; every number a shape states is a whole 250 m cell,
   // and a cell is its region's when the shape holds its centre (#1148). The
-  // reshape is new content, never a lever: five cells moved, none under a
-  // place either mission seats, orders or bounds, and the plateau has as many
-  // Kelp Forest cells as it had. `missionTend.test.ts` pins both missions'
-  // ground.
+  // reshape is new content, never a lever: three cells moved, none under a
+  // place either mission seats, orders or bounds, and two of them went from
+  // trench to kelp. `missionTend.test.ts` pins both missions' ground.
   regions: [
     // A box because it is the whole map, painted first.
     {
@@ -82,19 +81,18 @@ export const MARR_PLATEAU: MapDefinition = {
       note: 'The West Lane — the jelly lane. The clusters have walked; the re-seat happens here',
     },
     // The lip runs on a slant to the west edge, so the terrace reaches two
-    // rows further south in the edge column, and the drop reaches two rows
-    // north up the east edge from Teel's Landing. No line from a place either
+    // rows further south in the edge column. No line from a place either
     // mission seats, sends or holds the player to another party's authored
-    // position crosses the four cells that changed biome, but a hull that
-    // strays into either edge column is now heard through different water.
+    // position crosses those two cells, but a hull that strays into them is
+    // now heard through kelp rather than trench, and water deeper than 320 m
+    // no longer reaches them.
     {
       shape: 'polygon',
       points: [
         [0, 2500],
         [250, 2000],
         [500, 1750],
-        [3750, 1750],
-        [4000, 1000],
+        [4000, 1750],
         [4000, 2500],
       ],
       biome: Biome.AbyssalTrench,
@@ -102,7 +100,7 @@ export const MARR_PLATEAU: MapDefinition = {
       note: "The Drop — the bare slope and the survey lane. Trench paint at the Shelf's edge: the drop carries",
     },
     // The bench's east end runs on a slant, so its north-east cell is the
-    // Drop's 900 m, trench like the bench. Every other cell is held: the
+    // Drop's 900 m, trench like the bench, and open to water deeper than 600 m. Every other cell is held: the
     // watch's edge in its north row, the sweep's lane along its south row, and
     // the heavy's climb across its north-west corner.
     {

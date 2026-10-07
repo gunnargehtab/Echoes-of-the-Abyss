@@ -349,7 +349,7 @@ luminance). North is shallow and south is the drop, as everywhere in the Rift.
 | The Gardens | rect 500, 250, 1250, 750 | Kelp Forest | 250 | The bloom nodes and the farm rows. The share's source |
 | The Holdfast | rect 2250, 250, 750, 500 | Kelp Forest | 280 | Home — named for what anchors kelp. **The spawn, and the share's delivery point** |
 | The West Lane | rect 250, 1000, 1000, 750 | Kelp Forest | 300 | The jelly lane. The clusters have walked; the re-seat happens here |
-| The Drop | polygon (0, 2500) (250, 2000) (500, 1750) (3750, 1750) (4000, 1000) (4000, 2500) | Abyssal Trench | 900 | The bare slope and the survey lane. Trench *paint* at Shelf's edge — biome is acoustics, not band ([mission-asset-recovery.md](mission-asset-recovery.md) §11): the drop carries, which is why the plateau hears a sweep four minutes out, and why a sweep hears a garden that forgets itself. Its lip runs on a slant to the west edge, and it reaches two rows north up the east edge from Teel's Landing |
+| The Drop | polygon (0, 2500) (250, 2000) (500, 1750) (4000, 1750) (4000, 2500) | Abyssal Trench | 900 | The bare slope and the survey lane. Trench *paint* at Shelf's edge — biome is acoustics, not band ([mission-asset-recovery.md](mission-asset-recovery.md) §11): the drop carries, which is why the plateau hears a sweep four minutes out, and why a sweep hears a garden that forgets itself. Its lip runs on a slant to the west edge |
 | The Face | polygon (1500, 1750) (2250, 1750) (2500, 2250) (1500, 2250) | Abyssal Trench | 600 | A nodule bench on the slope that two parties call theirs. Whether it is the prologue's face the campaign does not say; the Rift has more than one, which is the problem. Its east end runs on a slant |
 | Teel's Landing | rect 3500, 1750, 500, 500 | Kelp Forest | 400 | The neighbouring terrace's storm-bitten edge. **The gift's destination** |
 
@@ -362,8 +362,8 @@ its band all mission.
 Drawn in shapes since issue #1148, a box of #1139. Every number a shape in the table states is a
 whole 250 m cell, and a cell is its region's when the region's shape holds the cell's centre
 ([maps.md](maps.md), "How a map is written"). The Drop's lip runs on a slant to the west edge,
-so the terrace reaches two rows further south in the edge column, and the drop reaches two rows
-north up the east edge from Teel's Landing. The Face's east end runs on a slant.
+so the terrace reaches two rows further south in the edge column. The Face's east end runs on a
+slant.
 
 Five regions stay boxes, each for a reason. The Terrace is the whole map, painted first. The
 Gardens, the West Lane and Teel's Landing are where this mission works the share, re-seats the
@@ -373,16 +373,17 @@ inside it. The Face kept every cell but one because the others are held: the wat
 its north row, the sweep's lane along its south row, and the Cruiser's 09:00 leg in
 Convocation across its north-west corner.
 
-The reshape is new map content, never a balance lever. Five of the 160 cells changed. Two cells
-of drop in the west edge column became terrace, PF 1.6 to 0.55 and floor 900 to 320; two cells
-of terrace in the east edge column became drop, the other way; the plateau keeps its 116 Kelp
-Forest cells. The Face's north-east cell went to the drop's 900 m floor, trench either way. No
-line from a place either mission seats, sends or holds the player to another party's authored
-position crosses the four cells that changed biome, but a hull that strays into either edge
-column is now heard through different water, and the pack's water at 890 m trades the two
-west-edge cells for the Face's old corner. Every spawn, hull, marker, row, garden node,
-creature, order and mission region in this mission and in [Convocation](mission-convocation.md)
-stands on the ground it stood on in rectangles.
+The reshape is new map content, never a balance lever. Three of the 160 cells changed. Two cells
+of drop in the west edge column became terrace, PF 1.6 to 0.55 and floor 900 to 320, so the
+plateau has 118 Kelp Forest cells where it had 116. The Face's north-east cell went to the
+drop's 900 m floor, trench either way. No line from a place either mission seats, sends or holds
+the player to another party's authored position crosses the two cells that changed biome, but a
+hull that strays into them is now heard through kelp rather than trench. Water deeper than
+320 m loses those two cells, and water deeper than 600 m gains the Face's old corner. Probed at
+315 m, Convocation's 03:30 order to row two routes through the upper west-edge cell, as it did
+in rectangles; played through, no hull in either mission enters a cell that changed. Every
+spawn, hull, marker, row, garden node, creature, order and mission region in this mission and
+in [Convocation](mission-convocation.md) stands on the ground it stood on in rectangles.
 
 The plateau's ambient Drift is authored the same way, placed and not driven. Four Lampfry
 shoals sit on the Gardens' farm rows at the Shelf's 250 m, one over the first garden node, so

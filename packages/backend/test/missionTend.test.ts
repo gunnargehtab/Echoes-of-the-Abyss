@@ -42,6 +42,7 @@ import { Match } from '../src/sim/match.ts';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { SEEDING_CONVOCATION, SEEDING_TEND } from '../src/sim/missions/index.ts';
 import type { MissionDefinition } from '../src/sim/missions/index.ts';
+import { Pathfinder } from '../src/sim/pathfinding.ts';
 import { shapeContains } from '../src/sim/terrain.ts';
 import { Fauna, Position } from '../src/sim/components.ts';
 
@@ -383,9 +384,8 @@ describe('the ground both missions stand on — §11, drawn in shapes (#1148)', 
   const on = (region: string) => [region, FLOOR[region], 0];
   /**
    * Where each mission's markers, rows and regions stand: Tend's §11 prose and
-   * regions, and Convocation's §11 row table. That table names the Drop for
-   * the watch's edge; the literal has always painted it in the Face's north
-   * row, trench like the Drop around it.
+   * regions, and Convocation's §11 row table, which puts the watch's edge in
+   * the Face's north row, trench like the Drop around it.
    */
   const MARKED: Record<string, Record<string, string>> = {
     [SEEDING_TEND.id]: {
@@ -608,22 +608,24 @@ describe('the ground both missions stand on — §11, drawn in shapes (#1148)', 
     assert.deepEqual(new Set(seen), new Set(Object.keys(CROSSES)));
   });
 
-  it('keeps the edge cells whose biome moved off every line from the player to another party', () => {
-    // The four cells whose biome the reshape moved: the west edge column's two
-    // south of the West Lane went from drop to terrace, and the east edge
-    // column's two north of Teel's Landing from terrace to drop. No line from a
-    // place either mission seats, sends or holds the player to another party's
-    // authored position crosses them.
-    const moved = [
-      [125, 1875, 'The Terrace'],
-      [125, 2125, 'The Terrace'],
-      [3875, 1375, 'The Drop'],
-      [3875, 1625, 'The Drop'],
-    ] as const;
-    for (const [x, y, region] of moved) assert.deepEqual(groundAt(x, y), on(region), `${x},${y}`);
-    const key = (x: number, y: number) =>
-      `${Math.floor(x / MAP.cellM)},${Math.floor(y / MAP.cellM)}`;
-    const edge = new Set(moved.map(([x, y]) => key(x, y)));
+  /** The three cells the reshape moved, with the region each is painted now. */
+  const MOVED = [
+    [125, 1875, 'The Terrace'],
+    [125, 2125, 'The Terrace'],
+    [2375, 1875, 'The Drop'],
+  ] as const;
+  const key = (x: number, y: number) => `${Math.floor(x / MAP.cellM)},${Math.floor(y / MAP.cellM)}`;
+  const movedCells = new Set(MOVED.map(([x, y]) => key(x, y)));
+
+  it('keeps the cells whose biome moved off every line from the player to another party', () => {
+    // Two cells went from drop to terrace: the west edge column, the two rows
+    // below the West Lane's foot. No line from a place either mission seats,
+    // sends or holds the player to another party's authored position crosses
+    // them. The Face's old corner is trench either way, and lines do cross it.
+    for (const [x, y, region] of MOVED) assert.deepEqual(groundAt(x, y), on(region), `${x},${y}`);
+    const kelpNow = new Set(
+      MOVED.filter(([, , r]) => r === 'The Terrace').map(([x, y]) => key(x, y))
+    );
     for (const mission of MISSIONS_ON_MARR) {
       const { player, others } = authored(mission);
       const from: (readonly [number, number])[] = [
@@ -634,21 +636,69 @@ describe('the ground both missions stand on — §11, drawn in shapes (#1148)', 
         for (const to of others) {
           for (const [x, y] of along(ax, ay, to.x, to.y, 400)) {
             assert.ok(
-              !edge.has(key(x, y)),
+              !kelpNow.has(key(x, y)),
               `${mission.id}: ${ax},${ay} to ${to.what} crosses ${key(x, y)}`
             );
           }
         }
       }
     }
-    // Two cells each way, so the plateau keeps its Kelp Forest: the water an
-    // ambient cluster may seed in on this map.
+    // §11's biome budget: two cells of trench became kelp, and nothing else
+    // changed biome.
     let kelp = 0;
     for (let y = MAP.cellM / 2; y < MAP.heightM; y += MAP.cellM) {
       for (let x = MAP.cellM / 2; x < MAP.widthM; x += MAP.cellM) {
         if (TERRAIN.biomeAt(x, y) === Biome.KelpForest) kelp++;
       }
     }
-    assert.equal(kelp, 116, "the plateau's Kelp Forest grew or shrank");
+    assert.equal(kelp, 118, "the plateau's Kelp Forest grew or shrank");
+  });
+
+  it('keeps every scripted leg’s pathfinder route out of the cells that moved', () => {
+    // A leg whose straight segment the ground refuses is played as a
+    // `Pathfinder` route, which ends at the reachable cell closest to the goal
+    // when the goal is out of reach, so a reshape can move a route whose
+    // segment it never touched. Probed from points along each leg, at every
+    // 25 m between the depth it starts at and the depth it is ordered to.
+    //
+    // One probe enters a moved cell, and it is listed rather than excused:
+    // Convocation's 03:30 order to row two, probed at 315 m, where the West
+    // Lane's 300 m floor refuses it and the terrace's 320 m admits it, routes
+    // up the west edge through 0,7. That cell admitted 315 m as drop and
+    // admits it as terrace, so the route is the one it was in rectangles; only
+    // the water it crosses there changed, and in play no hull reaches it.
+    const ENTERS = ['seeding-convocation assert-one@3.5 315 m 0,7'];
+    const entered = new Set<string>();
+    const pathfinder = new Pathfinder(MAP.widthM / MAP.cellM, MAP.heightM / MAP.cellM);
+    const route: number[] = [];
+    let probes = 0;
+    for (const mission of MISSIONS_ON_MARR) {
+      for (const leg of authored(mission).legs) {
+        const a = leg.from.depthM!;
+        const b = leg.to.depthM ?? a;
+        for (let depth = Math.min(a, b); depth <= Math.max(a, b); depth += 25) {
+          for (const [x, y] of along(leg.from.x, leg.from.y, leg.to.x, leg.to.y, 16)) {
+            probes++;
+            const points: [number, number][] = [[x, y]];
+            if (!TERRAIN.segmentAdmits(x, y, leg.to.x, leg.to.y, depth)) {
+              pathfinder.findPath(TERRAIN, x, y, leg.to.x, leg.to.y, depth, route);
+              for (let i = 0; i < route.length; i += 2) points.push([route[i]!, route[i + 1]!]);
+            }
+            points.push([leg.to.x, leg.to.y]);
+            for (let i = 1; i < points.length; i++) {
+              const [px, py] = points[i - 1]!;
+              const [qx, qy] = points[i]!;
+              for (const [sx, sy] of along(px, py, qx, qy, 64)) {
+                if (movedCells.has(key(sx, sy))) {
+                  entered.add(`${mission.id} ${leg.what} ${depth} m ${key(sx, sy)}`);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    assert.ok(probes > 1000, `only ${probes} probes`);
+    assert.deepEqual([...entered], ENTERS, 'a scripted route enters a cell the reshape moved');
   });
 });

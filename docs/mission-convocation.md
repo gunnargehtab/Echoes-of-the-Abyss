@@ -511,7 +511,7 @@ the edge where the count is read. No new region, no new biome, no `ground` beat.
 | 5 | 1,875, 1,250 | The Terrace | Mid-terrace, between the lane and the Holdfast. Open, and there is nothing here to hide behind |
 | 6 | 2,625, 625 | The Holdfast | Home's own row. If this row cannot turn, the Holdfast is contested |
 | 7 | 3,375, 1,000 | The Terrace | The east rows, toward Teel's landing. The furthest from everything |
-| — | **2,000, 1,875** | The Drop | **The watch's edge**, where the count is read. Trench paint, PF 1.6, and the reason §7's last figure is 4,389 m |
+| — | **2,000, 1,875** | The Face | **The watch's edge**, where the count is read. Trench paint, PF 1.6, and the reason §7's last figure is 4,389 m |
 
 Row radius 400 m; hold sixty seconds; ceiling 26 SIG. The circuit — rows 1 through 7 and back
 to the first — is **6,579 m** of holdfast line against a force of nine hulls, four of which
