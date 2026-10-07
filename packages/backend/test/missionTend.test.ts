@@ -658,8 +658,8 @@ describe('the ground both missions stand on — §11, drawn in shapes (#1148)', 
     // A leg whose straight segment the ground refuses is played as a
     // `Pathfinder` route, which ends at the reachable cell closest to the goal
     // when the goal is out of reach, so a reshape can move a route whose
-    // segment it never touched. Probed from points along each leg, at every
-    // 25 m from the depth it starts at, and at the depth it is ordered to.
+    // segment it never touched. Probed from points along each leg, every
+    // 25 m down from the shallower of its two depths, and at the deeper one.
     //
     // One probe enters a moved cell, and it is listed rather than excused:
     // Convocation's 03:30 order to row two, probed at 315 m, where the West
