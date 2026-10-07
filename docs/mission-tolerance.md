@@ -277,25 +277,27 @@ aperture in the Underworks directly under the throat — are mission regions ove
 per the format. The roof at 1,900 m over a floor at 2,100 is the choice authored as terrain:
 the root cannot be reached by anything that has not crossed the line and started the ledger.
 
-Drawn in shapes since issue #1145, a box of #1139. Every number in the table is a whole 250 m
-cell, and a cell is its region's when the region's shape holds the cell's centre
+Drawn in shapes since issue #1145, a box of #1139. Every number a shape in the table states is a
+whole 250 m cell, and a cell is its region's when the region's shape holds the cell's centre
 ([maps.md](maps.md), "How a map is written"). The Upper Berths reach one row further down the
 wall under the frame's own three columns, and the Underworks' lip climbs one row up it across
 the five columns west of x 1,250. Under the frame, the open face between the city and the
 overhang is two rows deep; east of the yard it is four. Three regions stay boxes. The Face is
 the whole map, painted first. The Works Yard is built, and the mission's yard is the same
-rectangle. The Throat is the one opening in the overhang: a shape that painted other cells
-would move the dive, and one that did not would paint the same two.
+rectangle. The Throat is the one opening in the overhang: a shape that painted other cells would
+move the dive, and one that did not would paint the same two.
 
 The reshape is new map content, never a balance lever. Eight of the 192 cells changed. Three
 cells of the Face under Vayle's frame became berth: Thermal Vein both, floor 1,300 to 1,050.
 Five cells of the Face at the west end of the throat's row became Underworks: PF 0.45 to 0.80,
-and open water to 1,300 m became roofed water between 1,900 and 2,100. No straight line from
-the column's seats, a marker or a cell of the mission's three regions to the alarm, the
-complaint or a pack's authored position crosses those five. Every spawn, hull, emitter, marker,
-pack position, pack leg and mission region stands on the ground it stood on in rectangles. The
-throat's two cells are still the only water that opens into the works, and Vayle's frame is
-still reached from the yard in water with no roof over it.
+and open water to 1,300 m became roofed water between 1,900 and 2,100. No straight line from the
+column's seats, a marker or a cell of the mission's three regions to the alarm, the complaint or
+a pack's authored position crosses those five. A hull that strays into the face's south-west
+corner, though, now hears the complaint through ruin water and is heard that way from the packs'
+spawns, and at 1,050 to 1,300 m the open face has eight fewer cells to sail. Every spawn, hull,
+emitter, marker, pack position, pack leg and mission region stands on the ground it stood on in
+rectangles. The throat's two cells are still the only water that opens into the works, and
+Vayle's frame is still reached from the yard in water with no roof over it.
 
 **The Underworks is a mission map and is not in the public catalogue.** One seat, no
 resources, not balanced, resolved by mission id and nothing else ([maps.md](maps.md)).

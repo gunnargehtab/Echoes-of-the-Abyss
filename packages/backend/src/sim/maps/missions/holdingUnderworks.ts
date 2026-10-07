@@ -91,11 +91,11 @@ export const HOLDING_UNDERWORKS: MapDefinition = {
       note: "The Throat — the one open shaft into the Underworks: the dive, and the ledger's first page",
     },
     // The overhang's lip climbs a row up the wall across the five columns west
-    // of x 1,250, toward Vayle, and holds the throat's row from there east. The
-    // five cells it took were open Face at PF 0.45; no line from the column's
-    // seats, a marker or a mission region to the alarm, the complaint or a
-    // pack's authored position crosses them, and the throat is still the only
-    // water that opens into the works.
+    // of x 1,250, toward Vayle, and from there east runs under the throat's
+    // row, at 1,750 m. The five cells it took were open Face at PF 0.45; no
+    // line from the column's seats, a marker or a mission region to the alarm,
+    // the complaint or a pack's authored position crosses them, and the throat
+    // is still the only water that opens into the works.
     {
       shape: 'polygon',
       points: [
