@@ -88,10 +88,11 @@ Tidespeaker Ysolde Marr speaks the briefing on the lane at the cleft's mouth, to
 going down to carry it, because the furrow cannot hear her. She reads the count at the close
 when the watch brings it up. She orders nobody to do anything.
 
-**Engine bound, stated so nobody corrects it into a bug.** Two parties and a court slot:
-the furrow's people carry the Commune faction value, the Second Trench Cohort carries the
-Directorate's, and the court slot is reserved and empty, as every literal reserves it. The
-Drift is not a party. The map literal is `anholt-furrow`, *Deep Furrow*'s, unchanged, and drawn in shapes for both in #1153 (§11).
+**Engine bound, stated so nobody corrects it into a bug.** Two parties and a court slot: the
+furrow's people carry the Commune faction value, the Second Trench Cohort carries the
+Directorate's, and the court slot is reserved and empty, as every literal reserves it. The Drift
+is not a party. The map literal is `anholt-furrow`, *Deep Furrow*'s, unchanged, and drawn in
+shapes for both in #1153 (§11).
 
 ---
 
@@ -551,11 +552,12 @@ What this mission deliberately does not teach:
 1,100 m.
 
 **The same map literal as [mission-deep-furrow.md](mission-deep-furrow.md) §11, unchanged**,
-region for region, and drawn in shapes for both in #1153 — [campaign.md](campaign.md) §2 rule 5's second concrete pair, after Marr
-Plateau under *Tend* and *Convocation* ([mission-convocation.md](mission-convocation.md) §11),
-and for the same reason: a garden the player has not planted is not one they will hide under.
-What this mission adds is markers, structures, a `ground` beat at 00:00 and parties. Never
-geometry. North is shallow and home; south is the sill and the Directorate's water.
+region for region, and drawn in shapes for both in #1153 — [campaign.md](campaign.md) §2 rule 5's
+second concrete pair, after Marr Plateau under *Tend* and *Convocation*
+([mission-convocation.md](mission-convocation.md) §11), and for the same reason: a garden the
+player has not planted is not one they will hide under. What this mission adds is markers,
+structures, a `ground` beat at 00:00 and parties. Never geometry. North is shallow and home;
+south is the sill and the Directorate's water.
 
 | Region | Shape | Biome | Floor | What it is |
 | --- | --- | --- | --- | --- |

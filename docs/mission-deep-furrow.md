@@ -708,10 +708,10 @@ reads (`missions.test.ts`, "rates every authored hull for the depth it is author
 
 Drawn in shapes since issue #1153, a box of #1139. Every number a shape states is a whole 250 m
 cell, and a cell is its region's when the shape holds the cell's centre ([maps.md](maps.md), "How
-a map is written"). Only the two walls and the sill changed shape. Each wall's outer north corner is cut
-on a slant, so the lanes reach south along the map's west and east edges. Each wall's foot gives
-way on a slant to the sill, which is 2,000 m of water across its north row and 2,500 m across its
-south row, where it was the furrows' 1,500 m.
+a map is written"). Only the two walls and the sill changed shape. Each wall's outer north corner
+is cut on a slant, so the lanes reach south along the map's west and east edges. Each wall's foot
+gives way on a slant to the sill, which is 2,000 m of water across its north row and 2,500 m
+across its south row, where it was the furrows' 1,500 m.
 
 Five regions stay boxes, each for a reason. The Lanes are the whole map's base. Both missions
 restate the Foot as their `the-foot` region, the same rectangle, and this one restates the Furrow
@@ -723,15 +723,20 @@ wide the whole way down, and each Hollow is 100 m off its wall.
 The reshape is new map content, never a balance lever. It moved 12 of the map's 192 cells, all
 rock before. Six, three at each wall's outer north corner, are now the lanes' Open Water at
 1,100 m: the rock's own paint, so no cell's PF moved there. Six, three at each wall's foot, are
-now the sill's Abyssal Trench at 2,600 m, PF 1.6 where the rock's paint was 1.0. In neither
-mission does a line between two of its authored positions cross one of them. Each of the twelve
-admits a hull from the surface to its floor where the rock admitted none. Six open off the lanes
-and six off the sill, and none touches water the lanes or the sill did not already touch, so no
-new way opens: the cleft is still the only road. A
-hull following the floor holds thirty metres off it, so in the lanes it holds 1,070 m and can now
-follow onto the six cells at the walls' north corners at the same 1,070; on the sill it holds
-2,570 m and can now follow onto the six at the walls' feet at the same 2,570. No cell it reached
-in rectangles holds it at a different depth, and none is closed to it.
+now the sill's Abyssal Trench at 2,600 m, PF 1.6 where the rock's paint was 1.0. A hull that
+strays onto one of them stands on the sill's own 1.6, no louder than on the sill beside it. Every
+point either mission authors from the mouth southward lies between x 1,350 and 2,700, and the six
+lie wholly outside x 1,250 to 2,750; in neither mission does a line between two of its authored
+positions cross one of them. What moved is the path mean through a wall: of the 4,186 pairs of
+cell centres that were water in rectangles, six are priced differently, each from the lanes to
+the sill's west or east end, and the largest rise is +0.055, from 1.055 to 1.109 over 2,693 m.
+Each of the twelve admits a hull from the surface to its floor where the rock admitted none. Six
+open off the lanes and six off the sill, and none touches water the lanes or the sill did not
+already touch, so no new way opens: the cleft is still the only road. A hull following the floor
+holds thirty metres off it, so in the lanes it holds 1,070 m and can now follow onto the six
+cells at the walls' north corners at the same 1,070; on the sill it holds 2,570 m and can now
+follow onto the six at the walls' feet at the same 2,570. No cell it reached in rectangles holds
+it at a different depth, and none is closed to it.
 
 Every authored point of both missions stands on the ground it stood on in rectangles, and so
 does every cell centre of their mission regions. Every scripted move and drive crosses the same
@@ -752,9 +757,10 @@ fifty metres under the floor of the Hollow's band, so a garden at 2,200 m is the
 this cleft where a quiet hull is beyond the reach of everything that hunts.
 
 **The Furrow is reused unchanged by [mission-in-writing.md](mission-in-writing.md)** — the same
-literal, region for region, drawn in shapes for both in #1153, with the sown furrow restated by a ground beat at 00:00 because a
-map literal cannot carry a mission's repaint: [campaign.md](campaign.md) §2 rule 5's second
-concrete pair, and the carrying is §13's row, not this document's.
+literal, region for region, drawn in shapes for both in #1153, with the sown furrow restated by a
+ground beat at 00:00 because a map literal cannot carry a mission's repaint:
+[campaign.md](campaign.md) §2 rule 5's second concrete pair, and the carrying is §13's row, not
+this document's.
 
 **The Furrow is a mission map and is not in the public catalogue.** One seat, no resources, not
 balanced, resolved by mission id and nothing else ([maps.md](maps.md)).
