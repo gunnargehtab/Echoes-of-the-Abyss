@@ -36,10 +36,10 @@ import {
   type EchoSnapshot,
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
-import { missionMapById } from '../src/sim/maps/index.ts';
+import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { LEDGER_SHIFT_CHANGE, PROLOGUE_SORROWGATE } from '../src/sim/missions/index.ts';
 import { MissionRuntime, type MissionCommandSink } from '../src/sim/missions/runtime.ts';
-import { Terrain } from '../src/sim/terrain.ts';
+import { Terrain, shapeContains } from '../src/sim/terrain.ts';
 import { createSimWorld } from '../src/sim/world.ts';
 import type {
   EconomyAccount,
@@ -276,6 +276,120 @@ describe("the map's acoustic claims, under the real model — §1, §6", () => {
       ratio >= 1,
       `a barge under way past the road reads ${ratio.toFixed(2)} — the audit could never file`
     );
+  });
+});
+
+describe('the ground the shift stands on — §11, drawn in shapes (#1142)', () => {
+  // Asked of the cell, never the point: a point inside an ellipse can stand in
+  // a corner cell the ellipse does not claim (terrain.ts, `shapeContains`).
+  const map = missionMapById(LEDGER_SHIFT_CHANGE.mapId)!;
+  const terrain = terrainFor(map);
+  const centre = (m: number) => (Math.floor(m / map.cellM) + 0.5) * map.cellM;
+  /** The region that painted the cell under a point: the last whose shape holds its centre. */
+  const regionAt = (x: number, y: number): string => {
+    let name = '';
+    for (const region of map.regions) {
+      if (shapeContains(region, centre(x), centre(y))) name = region.note!.split(' — ')[0]!;
+    }
+    return name;
+  };
+  const groundAt = (x: number, y: number) => [regionAt(x, y), terrain.floorAt(x, y)];
+  const shift = LEDGER_SHIFT_CHANGE.parties.find((party) => party.slot === 0)!;
+  const audit = LEDGER_SHIFT_CHANGE.parties.find((party) => party.slot === 2)!;
+
+  it('musters the shift, its seat and its seam on Face Two, below the layer', () => {
+    const spawn = map.spawns[0]!;
+    const [seam, rich] = map.resources;
+    for (const [what, x, y] of [
+      ['the spawn', spawn.x, spawn.y],
+      ['its Foundry', spawn.x + spawn.foundryOffsetX, spawn.y + spawn.foundryOffsetY],
+      ['the last seam', seam!.x, seam!.y],
+      ...shift.units.map((unit) => [unit.tag, unit.x, unit.y] as const),
+    ] as const) {
+      assert.deepEqual(groundAt(x, y), ['Face Two', 1350], `${what} left Face Two's floor`);
+    }
+    assert.deepEqual(groundAt(rich!.x, rich!.y), ['Face Five', 1350], 'the rich field moved');
+  });
+
+  it('keeps the refinery and the pack on the Downworks, below the layer', () => {
+    const refinery = shift.structures!.find((s) => s.tag === 'refinery')!;
+    assert.deepEqual(groundAt(refinery.x, refinery.y), ['The Downworks', 1300]);
+    for (const beat of LEDGER_SHIFT_CHANGE.beats) {
+      if (beat.kind !== 'creature') continue;
+      assert.deepEqual(groundAt(beat.spawnAt!.x, beat.spawnAt!.y), ['The Downworks', 1300]);
+      assert.deepEqual(groundAt(beat.driveTo!.x, beat.driveTo!.y), ['The Downworks', 1300]);
+    }
+  });
+
+  it('walks the audit on the High Road, docks it at the Rail Head, and sends it off the Field', () => {
+    for (const unit of audit.units) {
+      assert.deepEqual(groundAt(unit.x, unit.y), ['The High Road', 950], unit.tag);
+    }
+    const legs = LEDGER_SHIFT_CHANGE.beats.flatMap((beat) => (beat.kind === 'move' ? [beat] : []));
+    assert.equal(legs.length, 20, 'the filed plan grew or shrank');
+    for (const leg of legs) {
+      const at = T(6, 30) === leg.atTick ? 'docked' : T(13) === leg.atTick ? 'departing' : 'pass';
+      const expected = {
+        pass: ['The High Road', 950],
+        docked: ['The Rail Head', 850],
+        departing: ['The Field', 1100],
+      }[at];
+      assert.deepEqual(groundAt(leg.x, leg.y), expected, `${leg.tag} at ${leg.atTick}`);
+    }
+  });
+
+  it('counts the berths on exactly the cells the Rail Head paints', () => {
+    const berths = LEDGER_SHIFT_CHANGE.regions.find((region) => region.id === 'railhead')!;
+    for (let y = map.cellM / 2; y < map.heightM; y += map.cellM) {
+      for (let x = map.cellM / 2; x < map.widthM; x += map.cellM) {
+        assert.equal(
+          shapeContains(berths, x, y),
+          regionAt(x, y) === 'The Rail Head',
+          `the cell at ${x},${y} is on one of the two and not the other`
+        );
+      }
+    }
+  });
+
+  it('keeps the shoulder between the road and the working level, so the climb is as long', () => {
+    // §1: everything that matters happens in the climb. The Downworks' rim
+    // rounds off the basin's ends and never enters the Field's row under the
+    // road, so no column of the map shortens it.
+    for (let x = map.cellM / 2; x < map.widthM; x += map.cellM) {
+      assert.deepEqual(groundAt(x, 1125), ['The Field', 1100], `the shoulder is cut at x=${x}`);
+    }
+  });
+
+  it('joins both faces and the refinery on the working level, without crossing the layer', () => {
+    // A harvester at its authored depth reaches the refinery and the rich
+    // field from the muster, cell by cell through water below the layer.
+    const depth = shift.units[0]!.depthM;
+    const key = (x: number, y: number) => `${x},${y}`;
+    const start = [centre(map.spawns[0]!.x), centre(map.spawns[0]!.y)] as const;
+    const seen = new Set([key(...start)]);
+    const queue: (readonly [number, number])[] = [start];
+    while (queue.length > 0) {
+      const [x, y] = queue.shift()!;
+      for (const [nx, ny] of [
+        [x + map.cellM, y],
+        [x - map.cellM, y],
+        [x, y + map.cellM],
+        [x, y - map.cellM],
+      ] as const) {
+        if (nx < 0 || ny < 0 || nx >= map.widthM || ny >= map.heightM) continue;
+        if (seen.has(key(nx, ny)) || !terrain.admits(nx, ny, depth)) continue;
+        seen.add(key(nx, ny));
+        queue.push([nx, ny]);
+      }
+    }
+    const refinery = shift.structures!.find((s) => s.tag === 'refinery')!;
+    const rich = map.resources[1]!;
+    assert.ok(seen.has(key(centre(refinery.x), centre(refinery.y))), 'the refinery is cut off');
+    assert.ok(seen.has(key(centre(rich.x), centre(rich.y))), 'Face Five is cut off');
+    for (const at of seen) {
+      const [x, y] = at.split(',').map(Number) as [number, number];
+      assert.ok(terrain.floorAt(x, y) > 1200, `the working level climbs past the layer at ${at}`);
+    }
   });
 });
 
