@@ -583,17 +583,18 @@ What this mission deliberately does not teach:
 
 **Reused unchanged** — the literal is `packages/backend/src/sim/maps/missions/mouthRim.ts`,
 authored for [mission-prospect.md](mission-prospect.md) §11 and untouched by this mission, as
-[mission-first-arrival.md](mission-first-arrival.md) §11 left it. [campaign.md](campaign.md) §8's
-"the same terrain four times and never the same mission" is applied literally: same rectangles,
-same floors, same biomes, same spawn.
+[mission-first-arrival.md](mission-first-arrival.md) §11 left it. [campaign.md](campaign.md)
+§8's "the same terrain four times and never the same mission" is applied literally: same shapes,
+same floors, same biomes, same spawn. [mission-prospect.md](mission-prospect.md) §11 drew the
+literal's Slopes in shapes in #1146, and this table follows it.
 
-| Region | Rect (x, y, w, h) | Biome | Floor | What it is |
+| Region | Shape | Biome | Floor | What it is |
 | --- | --- | --- | --- | --- |
-| The Deep Water | 0, 0, 6000, 4000 | Open Water | 2,600 | The base water. Painted first; everything else is cut into it |
-| The Staging | 0, 0, 6000, 1000 | Open Water | 1,500 | Below the layer, above the commitment. **The line the count is taken at** |
-| The Slopes | 0, 1000, 6000, 1000 | Open Water | 2,200 | Two thousand metres of arriving, and the only water on the raid's route a PR-2 hull crosses for free |
-| The Terraces | 0, 2000, 6000, 1000 | Resonance Field | 2,600 | The faces, the nodes, the correction, and bearings that lie a little |
-| The Lip | 0, 3000, 6000, 1000 | Abyssal Trench | 3,100 | Carries like a trench. The cohort, the dome, the attendants and the bed are on it |
+| The Deep Water | rect 0, 0, 6000, 4000 | Open Water | 2,600 | The base water. Painted first; everything else is cut into it. It shows where the slopes' foot is cut back, at the terraces' depth |
+| The Staging | rect 0, 0, 6000, 1000 | Open Water | 1,500 | Below the layer, above the commitment. **The line the count is taken at** |
+| The Slopes | polygon (0, 1000) (6000, 1000) (6000, 1250) (5500, 2000) (1250, 2000) (750, 1500) (250, 1500) (0, 1750) | Open Water | 2,200 | Two thousand metres of arriving, and the only water on the raid's route a PR-2 hull crosses for free |
+| The Terraces | rect 0, 2000, 6000, 1000 | Resonance Field | 2,600 | The faces, the nodes, the correction, and bearings that lie a little |
+| The Lip | rect 0, 3000, 6000, 1000 | Abyssal Trench | 3,100 | Carries like a trench. The cohort, the dome, the attendants and the bed are on it |
 
 The map's spawn is at 3000, 500 and is irrelevant: every party is seated. No resources — a map
 that would not carry minable crystal for the concern does not grow any for the Order, and the
@@ -630,9 +631,10 @@ forty seconds to arrive and arrives anyway. The western lip carries the bed to a
 western terraces and to nobody on the eastern faces. And the Staging is seventy-three seconds of
 silent climb away, during which a loaded cutter is a bearing to a dome and nothing else.
 
-Every rectangle lands on the 250 m cell grid and paints exactly the metres it reads
-([maps.md](maps.md), "How a map is written"). **The Rim is a mission map and is not in the public
-catalogue.** One seat, no resources, not balanced, resolved by mission id and nothing else.
+Every number a shape states is a whole 250 m cell, and a cell is its region's when the shape
+holds the cell's centre ([maps.md](maps.md), "How a map is written"). **The Rim is a mission map
+and is not in the public catalogue.** One seat, no resources, not balanced, resolved by mission
+id and nothing else.
 
 ---
 
@@ -783,7 +785,7 @@ player raise the node.
 | Requirement | Status |
 | --- | --- |
 | The mission format — beats, predicates, registry, private rooms | **Built** (#190). `extract` with `loaded`, standing `survive`, `tolerance`, `MissionLift`, the `creature` beat, `say`, `move` and `resolve` cover every row of §8 and §9 |
-| **The map, reused unchanged** | **Decided, not built — and now asserted** (#397). `mouth-rim` is `packages/backend/src/sim/maps/missions/mouthRim.ts`, authored for [mission-prospect.md](mission-prospect.md) §11 (#212) and left exactly as [mission-first-arrival.md](mission-first-arrival.md) §11 left it: this literal adds no region, moves no metre and paints no ground, and `missionRimDeposits.test.ts` asserts the identity — `missionMapById('mouth-rim')` is the object `prospect.ts` resolves, and `mapById` returns nothing — before reading §11's five rectangles, floors and biomes off it, so the claim fails the day either side moves. Five mission ids now resolve the one `MOUTH_RIM` object: `ledger-prospect`, `seeding-second-seeding`, `attending-first-arrival`, this one, and `chord-second-chord` on D+3, which is [campaign.md](campaign.md) §8's "the same terrain four times and never the same mission" costing a line each |
+| **The map, reused unchanged** | **Decided, not built — and now asserted** (#397). `mouth-rim` is `packages/backend/src/sim/maps/missions/mouthRim.ts`, authored for [mission-prospect.md](mission-prospect.md) §11 (#212) and left exactly as [mission-first-arrival.md](mission-first-arrival.md) §11 left it: this literal adds no region, moves no metre and paints no ground, and `missionRimDeposits.test.ts` asserts the identity — `missionMapById('mouth-rim')` is the object `prospect.ts` resolves, and `mapById` returns nothing — before reading §11's five shapes, floors and biomes off it (four boxes and, since #1146, the Slopes' polygon), so the claim fails the day either side moves. Five mission ids now resolve the one `MOUTH_RIM` object: `ledger-prospect`, `seeding-second-seeding`, `attending-first-arrival`, this one, and `chord-second-chord` on D+3, which is [campaign.md](campaign.md) §8's "the same terrain four times and never the same mission" costing a line each |
 | **The Sounding Spire's rented rating, and a node that sings while it is load-bearing** | **Built, and this is its first spender.** `STRUCTURE_AURAS.SOUNDING_SPIRE` is 600 m and PR+1; `auras.ts` grants it horizontally, to the owning slot only, and adds the Spire to `world.spireActive` when a hull inside it has `requiredPressureRating(depth) > Pressure.rating` — SIG 30 becomes 80 for exactly as long as that is true. [mission-standing-wave.md](mission-standing-wave.md) §3 called this the campaign-level gap [mission-aptitude.md](mission-aptitude.md) §10 flagged, and it is closed here without widening anything: the definition of *active* the code already ships is the definition the mission needs, and the ascent silencing both nodes is the raid's tell that it is over. **Spent here, and played rather than read** (#397): the test walks `cutter-a` south to the fourth face at the Staging's own 1,400 m, where `Pressure.bonus` is already 1 and `world.spireActive` is still empty because the grant is holding nobody up; takes it to 2,600 m, where `Pressure.rating + Pressure.bonus` is exactly `requiredPressureRating(2600)`, the hull takes no crush 800 m under its own certificate, and node-one sings; and climbs it to 1,750 m, where the node goes quiet on the tick the grant stops being load-bearing. §6's own worked example is the other half — a cutter on the fifth face's north-eastern quarter rents nothing from either node and bleeds 4 HP/s while both stand at thirty |
 | **Player-built structures at their true depth** | **Not built** — a player-raised structure sits at `CONSTRUCTION.WORKING_DEPTH_M`, 600 m, wherever the floor is ([mission-standing-wave.md](mission-standing-wave.md) §13). `MissionStructure.depthM` is fine, so the two nodes are prebuilt at 2,600 m and construction is locked with a reason in register. **The better mission is the one the format cannot build**: the player raising a 150-second site at SIG 70 on attended ground while the cohort walks. The smallest shape is a working depth resolved against the ground rather than a constant — a site takes the floor at its own cell, clamped to the builder's effective rating — and it is a change to construction, not to the mission format |
 | **Starting crystal** | **Not built** and moot here. `MissionDefinition` carries `startingNodules` and nothing else; nothing is bought in this mission, and the 240 is a sentence in [mission-the-three.md](mission-the-three.md) §3 that this document cites rather than a number the literal holds |

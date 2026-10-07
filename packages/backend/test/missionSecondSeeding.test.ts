@@ -197,16 +197,42 @@ describe('the Rim, as docs/mission-second-seeding.md §11 leaves it', () => {
     assert.deepEqual(MOUTH_RIM.resources, [], '§11: no resources');
     assert.deepEqual(MOUTH_RIM.hazards, [], '§11: the hazard is the address');
     assert.equal(SEEDING_SECOND_SEEDING.fauna, false, '§5, §11: the one creature is authored');
+    // Read off the painted cells (#1146): the slopes' foot is cut back in
+    // places, so a column's rows are the bands north to south, the deep water
+    // showing between the slopes and the terraces where the foot is cut.
+    const OPEN = Biome.OpenWater;
+    const deep = [OPEN, 2600];
+    const staging = [OPEN, 1500];
+    const slopes = [OPEN, 2200];
+    const terraces = [Biome.ResonanceField, 2600];
+    const lip = [Biome.AbyssalTrench, 3100];
+    const column = (x: number) =>
+      Array.from({ length: MOUTH_RIM.heightM / MOUTH_RIM.cellM }, (_, row) => {
+        const y = (row + 0.5) * MOUTH_RIM.cellM;
+        return [terrain.biomeAt(x, y), terrain.floorAt(x, y)];
+      });
     assert.deepEqual(
-      MOUTH_RIM.regions.map((region) => [region.y, region.heightM, region.biome, region.floorM]),
+      column(3000),
       [
-        [0, 4000, Biome.OpenWater, 2600],
-        [0, 1000, Biome.OpenWater, 1500],
-        [1000, 1000, Biome.OpenWater, 2200],
-        [2000, 1000, Biome.ResonanceField, 2600],
-        [3000, 1000, Biome.AbyssalTrench, 3100],
+        ...Array(4).fill(staging),
+        ...Array(4).fill(slopes),
+        ...Array(4).fill(terraces),
+        ...Array(4).fill(lip),
       ],
-      '§11: the deep water, the staging, the slopes, the terraces and the lip'
+      '§11: the staging, the slopes, the terraces and the lip, a kilometre each'
+    );
+    assert.deepEqual(
+      column(375),
+      [
+        ...Array(4).fill(staging),
+        slopes,
+        slopes,
+        deep,
+        deep,
+        ...Array(4).fill(terraces),
+        ...Array(4).fill(lip),
+      ],
+      '§11: and the deep water where the slopes’ foot is cut back'
     );
   });
 
