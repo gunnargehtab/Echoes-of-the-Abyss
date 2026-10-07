@@ -572,22 +572,54 @@ face. North is shallow and south is deep, as everywhere in the Rift
 fourteen hundred metres under the duct's floor — so the layer never enters into it and every path
 is priced by the biome alone.
 
-| Region | Rect (x, y, w, h) | Biome | Floor | What it is |
+| Region | Shape | Biome | Floor | What it is |
 | --- | --- | --- | --- | --- |
-| The Head | 0, 0, 5000, 4000 | Abyssal Trench | 3,400 | The head of the Ninth. PF 1.60, painted first; everything else is cut into it |
-| The Undermarshalcy | 1000, 0, 3000, 750 | Coral Ruins | 2,750 | The north terrace: command, the city's shallowest water, and where the called are seated |
-| The Crossing | 1000, 750, 3000, 1750 | Abyssal Trench | 3,400 | The open water between the terraces. A hull under way here is the only sound there is, the length of the trench |
-| The Cantorate | 1000, 2500, 3000, 750 | Coral Ruins | 2,800 | The south terrace, standing over the galleries: Ossary's seat, the cells, and where a calling is attended or is not |
-| The Attending Galleries | 1250, 3250, 2500, 500 | Coral Ruins | 3,000 | The stalls' benches and the dome — [Attendance](mission-attendance.md)'s room, from above |
-| The Axis | 2000, 3250, 1000, 750 | Abyssal Trench | 3,400 | The Ninth's channel, leaving south through the middle of the galleries' benches |
+| The Head | rect 0, 0, 5000, 4000 | Abyssal Trench | 3,400 | The head of the Ninth. PF 1.60, painted first; everything else is cut into it. A box because it is the whole map's base |
+| The Undermarshalcy | polygon (1000, 0) (4000, 0) (3750, 750) (1250, 750) | Coral Ruins | 2,750 | The north terrace: command, the city's shallowest water, and where the called are seated. Its outer ends run on a slant from its back wall to its face over the crossing |
+| The Crossing | rect 1000, 750, 3000, 1750 | Abyssal Trench | 3,400 | The open water between the terraces. A hull under way here is the only sound there is, the length of the trench. A box because it paints the Head's own biome and floor |
+| The Cantorate | polygon (1250, 2500) (3750, 2500) (4000, 3250) (1000, 3250) | Coral Ruins | 2,800 | The south terrace, standing over the galleries: Ossary's seat, the cells, and where a calling is attended or is not. The Undermarshalcy's mirror image across the crossing |
+| The Attending Galleries | rect 1250, 3250, 2500, 500 | Coral Ruins | 3,000 | The stalls' benches and the dome — [Attendance](mission-attendance.md)'s room, from above. A box because it is built, and the Axis cuts it into the two mission regions the ground beats repaint |
+| The Axis | rect 2000, 3250, 1000, 750 | Abyssal Trench | 3,400 | The Ninth's channel, leaving south through the middle of the galleries' benches. A box because the mission's `the-axis` is this same rectangle |
 
 One spawn, on the Undermarshalcy's terrace: 2500, 375 — irrelevant, because every party is seated
 directly. **No resources, no hazard sites, and `fauna` off**: both colossi are authored
 `creature` beats, for the reason [mission-intake.md](mission-intake.md) §13 states — the default
 seeder is a skirmish roster and cannot put an animal in a named place.
 
-Every rectangle lands on the 250 m cell grid and paints exactly the metres it reads
-([maps.md](maps.md), "How a map is written").
+Drawn in shapes since issue #1156, a box of #1139. Every number a shape states is a whole 250 m
+cell, and a cell is its region's when the shape holds the cell's centre ([maps.md](maps.md), "How
+a map is written"). Only the two terraces changed. Each terrace's outer ends run on a slant from
+its back wall to its face, so each face over the crossing is 2,500 m long rather than 3,000, and
+the Head's water reaches in at the four corners where a terrace meets the crossing.
+
+The reshape is new map content, never a balance lever. It moved four of the map's 320 cells, one
+at each end of each terrace, on the row against the crossing: 1125, 625 and 3875, 625 from the
+Undermarshalcy's Coral Ruins at 2,750 m, and 1125, 2625 and 3875, 2625 from the Cantorate's at
+2,800 m, all four to the Head's Abyssal Trench at 3,400 m. No ceiling changed. Those four cells
+now carry at the crossing's PF 1.60 rather than the terraces' 0.80, so a hull that strays into one
+is sounding through the crossing's water rather than through cut structure. Every party stands
+between x 1,500 and 3,700, and none of the 170 lines from a hull or the dome to a cell or to an
+arrival's spawn or drive point crosses a cell whose biome changed.
+
+The floor moved under a hull that follows it. Over the Undermarshalcy's two cells such a hull
+held 2,720 m and now holds 3,000 m, 280 m deeper; over the Cantorate's two it held 2,770 m and
+now holds 3,000 m, 230 m deeper. Those cells now admit a hull deeper than 2,750 or 2,800 m, down to
+the 3,000 m a hull can reach, where they refused it. They open no crossing: asked at every 25 m
+from the surface to 3,000 m, the water a hull may enter is one connected body in rectangles and in
+shapes, so the four cells join water that was already joined.
+
+The spawn, all sixteen seats, the dome, the six cells, the marker `axis` and both arrivals' spawn
+and drive points stand on the ground they stood on, and so does every cell centre of the three
+mission regions. Along both arrivals' drives every straight segment is admitted or refused, and
+every route planned, as it was in rectangles. Played with no input, every hull, the dome, every
+cell and both arrivals keep the positions they kept in rectangles, sampled every five seconds to
+20:00, with the same lines and the same close.
+
+Four regions stay boxes, each for a reason. The Head is the whole map's base. The Crossing paints
+the Head's own biome and floor, so a shape that kept off the Undermarshalcy would paint the same
+ground, and §4 prices it as the 1,750 m from y 750 to y 2,500. The galleries are built, and the
+Axis cuts them into the mission's `galleries-west` and `galleries-east`, the rectangles the
+ground beats repaint. The Axis is the mission's `the-axis`, the same rectangle.
 
 **Three mission regions**, restated because a predicate or a beat addresses them:
 
@@ -628,10 +660,10 @@ but rubble to raise.
 **The line both arrivals run, and why it is 2,800 m.** Ground refuses a driven creature exactly
 as it refuses a hull: `Terrain.resolveStep` tests the destination cell, a step into water the
 mover's own depth does not fit is not taken, and `faunaSystem` moves every creature through that
-call, driven or not. The Cantorate's terrace spans the chart at floor 2,800 and stands between
-the crossing and the axis, so **2,800 m is the deepest line that gets from the sill to the
-crossing at all** — a colossus authored at 3,000 would stall against the terrace's northern face
-at y 3,250 and never arrive. Both arrivals are driven at the terrace's own floor for that reason,
+call, driven or not. The Cantorate's terrace stands at floor 2,800 between the crossing and the
+axis, so **along the channel 2,800 m is the deepest line that gets from the sill to the crossing
+at all** — a colossus authored at 3,000 would stall against the terrace's southern face at
+y 3,250 and never arrive. Both arrivals are driven at the terrace's own floor for that reason,
 which also carries each of them across the cells' row at the cells' exact depth. Nothing comes of
 that, and the document says so rather than leaving it to be found: a transit's targets are
 structures and hulls of 95 m and over, and an emitter is neither.
@@ -807,7 +839,7 @@ no scene to key on — one carry between missions that it does ask for, and a mi
 | Emitters are not in a transit's target set | **Built**, and stated so nothing is discovered later. `transit` reads structures and hulls of 95 m and over and skips everything else, so the cells cannot be ground when the first arrival crosses their row at their own 2,800 m. A gun never *auto-acquires* an emitter either (`combat.ts`, the mine's argument: a thing inaudible at any range cannot be swung onto) — but an ordered shot at a resolved contact does land, and the cells carry 5,000 hit points because of it. A player who has crossed far enough to hear the second cohort can spend shells on it; nothing else on the map can touch it |
 | **The silence ledger measuring a dome that is down** | **A finding, and the document asks for nothing.** `applySilenceLedger` accrues and repays the debt *before* it looks for the array, and returns early when the tagged structure is gone. So after 10:58 the debt is still written, `debtText` still replaces the objective's line, and the withdrawal withdraws nothing. That is exactly the Directorate: the record keeps running when the instrument does not. If it is ever changed, the honest shape is to stop accruing when there is nothing to withdraw — and this document would rather it were not, and says so here so the choice is a choice. The literal changed nothing and asked for nothing, and the row is carried forward as it was written |
 | **A released colossus goes home** | **Built, and the departure is planned against it.** When a commitment lapses the runtime restores `Fauna.homeDepth` to the species' working depth, gives back `senseS` and clears `driven`, and leaves `homeX`/`homeY` at the beat's own point. So each arrival parks where the beat left it and rises eight hundred metres to 2,000 m at `DRIFT.VERTICAL_SPEED_MPS`' 12 m/s, seven hundred metres above the called, and comes back down only for a target and only to its band's edge, which is 2,700 m — the seat, to the metre. §6 prices it; nothing is asked for |
-| The map, its six regions and three mission regions | **Built** (#392) **and registered in `MISSION_MAPS`** (#393) — `upper-terraces`, one row of the literal per row of §11's table, in the document's order, and the axis painted last so the galleries become two benches. No new region shape, no roofed water, no hazard sites and no resource nodes; the only thing on it a shipped map has not carried is the pair of `ground` beats above. **The verifier pass that landed with the map corrected the literal and not this document:** `upperTerraces.ts` had stated the duct's floor from memory rather than from `THERMOCLINE`, which puts it at 1,300 m, and had conflated the shallowest floor the chart authors with the shallowest water any hull holds — 2,750 and 2,700 m, which mean different things. §11 had both right, and the code is the side that moved |
+| The map, its six regions and three mission regions | **Built** (#392) **and registered in `MISSION_MAPS`** (#393) — `upper-terraces`, one row of the literal per row of §11's table, in the document's order, and the axis painted last so the galleries become two benches; drawn in shapes in #1156, with the two terraces' outer ends slanted. No new region shape, no roofed water, no hazard sites and no resource nodes; the only thing on it a shipped map has not carried is the pair of `ground` beats above. **The verifier pass that landed with the map corrected the literal and not this document:** `upperTerraces.ts` had stated the duct's floor from memory rather than from `THERMOCLINE`, which puts it at 1,300 m, and had conflated the shallowest floor the chart authors with the shallowest water any hull holds — 2,750 and 2,700 m, which mean different things. §11 had both right, and the code is the side that moved |
 | `fauna: false` with two authored creatures | **Built** — the flag is [Attendance](mission-attendance.md)'s and the beat is Asset Recovery's, and the reason is [Intake](mission-intake.md) §13's: the default seeder is a skirmish roster that gates on the floor rather than on the species' band and cannot put an animal at a named sill at a named tick |
 | The written silence order at the terraces | **Built** — `arrayTag`, `silenceRole`, `silenceCeilingSig` 25, `debtCapS` 45, and the court slot the aura is parked on. Unchanged from [Attendance](mission-attendance.md) §5, which is the point: this is the same order, read one city higher, and the numbers do not move because the galleries did not amend them |
 | **The missing half as sound** | **Built** (#396, `MissionEmitter` with a `reading` pair), **and a finding.** A friendly scripted party carrying hulls is not authorable while auto-acquire fires on the nearest live enemy on any other slot, and every party is an enemy of every other. So "never assigned" cohorts have to be sounds — which is also the truer reading of [habitats.md](habitats.md) §6, and the row is a finding rather than a request because the design is better for the constraint. Six emitters, each with its own ordinal reading, and the close prints two objective readings with the six rows' own lines beneath them, which is where §5's argument about the count being a count survives contact with the runtime. A mission that genuinely needed a non-hostile second party of its own faction would want an alliance term on `MissionParty`, and this one does not |
