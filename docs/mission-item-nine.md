@@ -263,19 +263,31 @@ Underway itself — the one Coral Ruins chamber the Consortium owns, because it 
 piece of the city the Surface Age built ([world-map.md](world-map.md);
 [campaign.md](campaign.md) §10's biome rule, honoured by ancestry rather than exception).
 
-| Region | Rect (x, y, w, h) | Biome | Floor | What it is |
+| Region | Shape | Biome | Floor | What it is |
 | --- | --- | --- | --- | --- |
-| The Wall | 0, 0, 3000, 2500 | Thermal Vein | 1,350 | Board country's water — the grid's hum, at its deepest and most settled. Painted first |
-| The Registry | 0, 0, 1000, 750 | Thermal Vein | 1,250 | The open arrays and their watch — the ears that make a record a record |
-| The Underway | 1500, 1500, 1000, 750 | Coral Ruins | 1,350 | Asset 002: the Surface Age hull the concern was chartered inside. Occluded, honest, and listening |
+| The Wall | rect 0, 0, 3000, 2500 | Thermal Vein | 1,350 | Board country's water — the grid's hum, at its deepest and most settled. Painted first. A box because it is the whole map |
+| The Registry | rect 0, 0, 1000, 750 | Thermal Vein | 1,250 | The open arrays and their watch — the ears that make a record a record. A box because it is built: the array floor the open arrays stand on |
+| The Underway | ellipse 1250, 1500, 1500, 750 | Coral Ruins | 1,350 | Asset 002: the Surface Age hull the concern was chartered inside. Occluded, honest, and listening. The old hull's long hall, round at both ends, with the rail midway along it |
 
 One spawn, at the rail: 2000, 1900. **No resources, no hazards.** The whole map sits in the
 thermocline's duct and just beneath it — Board country's actual address — so the chamber's
 sounds carry the way the Board has relied on for two centuries: to everyone present, a
 little, and no further than the wall.
 
-Every rectangle lands on the 250 m cell grid and paints exactly the metres it reads
-([maps.md](maps.md)).
+Every number a shape states is a whole 250 m cell, and a cell is its region's when the shape
+holds its centre ([maps.md](maps.md), "How a map is written"). The regions were rectangles
+until issue #1147 redrew the Underway as an ellipse (epic #1139). Its frame is a cell longer at
+each end than the old box, and it holds every cell centre the box held. The Wall and the
+Registry stay boxes: the Wall is the whole map, painted first, and the Registry is built.
+
+The reshape is new map content, never a balance lever. Two of the map's 120 cells changed: one
+at each end of the hall's middle row, at x 1,250–1,500 and 2,500–2,750, from the Wall's
+Thermal Vein to Coral Ruins, PF 0.45 to 0.80, on the same 1,350 m floor. A hull that strays
+into either is now heard through ruin water. No straight line from the rail or the flight's
+three hulls to an item or to the registry watch crosses them. The spawn, every hull, every
+item, and every cell whose centre lies within the rail's 400 m stand on the ground they stood
+on in rectangles. No floor moved, so at every depth the mission authors, the water the flight
+can reach from the rail is the water it reached before.
 
 **Board Country is a mission map and is not in the public catalogue.** One seat, resolved by
 mission id and nothing else ([maps.md](maps.md)).
