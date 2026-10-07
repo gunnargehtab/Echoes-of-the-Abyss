@@ -317,9 +317,6 @@ describe('Sorrowgate, reused as docs/mission-radicals.md §11 finds it', () => {
     // never a lever: every place either mission seats, orders or drives a hull
     // stands on the region it stood on in rectangles. Asked of the painted
     // cells, because the cell is what a hull's floor and roof are read from.
-    // Two documented points are not here: §11 seats the shoals and §5 lays the
-    // first leg on "the Concourse's 340", and the Descent has always painted
-    // that row at 900 (#1161, found by #1140 and not settled by it).
     const ground = terrainFor(SORROWGATE);
     const regions = {
       districts: [Biome.CoralRuins, 1600, 0],
@@ -352,6 +349,12 @@ describe('Sorrowgate, reused as docs/mission-radicals.md §11 finds it', () => {
       ['the seat', SEAT.x, SEAT.y, 'concourse'],
       ['the watch, at the span’s edge', SPAN_EDGE.x, SPAN_EDGE.y, 'districts'],
       ['the pack, east of the Descent', PACK.x, PACK.y, 'districts'],
+      // The Concourse's southern edge, which the Descent's northern row is cut
+      // into: inside the Concourse's rectangle, on the Descent's 900 (#1161).
+      ['the western shoal', 2250, 725, 'descent'],
+      ['the middle shoal', 2500, 725, 'descent'],
+      ['the eastern shoal', 2750, 725, 'descent'],
+      ["leg 1, the Descent's northern row", 2500, 700, 'descent'],
       ['leg 2, the Descent', 2625, 1125, 'descent'],
       ['leg 3, the Descent', 2625, 1600, 'descent'],
       ["the Descent's foot, beside the lock's mouth", 2125, 1625, 'descent'],
