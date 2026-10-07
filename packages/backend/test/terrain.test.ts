@@ -18,7 +18,7 @@ import {
   UnitKind,
   maxAudibleRangeM,
 } from '@echoes/shared';
-import { Terrain } from '../src/sim/terrain.ts';
+import { Terrain, shapeContains, type Shape } from '../src/sim/terrain.ts';
 import { EchoLayer } from '../src/sim/systems/echoLayer.ts';
 import { Acoustic, Position } from '../src/sim/components.ts';
 import { createSimWorld, spawnUnit } from '../src/sim/world.ts';
@@ -246,6 +246,186 @@ describe('painting a rectangle onto the grid', () => {
       for (let x = CELL_M / 2; x < 4000; x += CELL_M) {
         const coral = t.biomeAt(x, y) === Biome.CoralRuins;
         assert.equal(t.floorAt(x, y) === 380, coral, `ground and biome disagree at ${x},${y}`);
+      }
+    }
+  });
+});
+
+describe('painting an ellipse or a polygon onto the grid (#1106)', () => {
+  // The same centre rule as a rectangle, asked of a shape that is not a box:
+  // the sim keeps its 250 m grid, so an edge still steps at the cell, but a
+  // plateau stops being a rectangle. What is new is the outline. A centre
+  // exactly on one is inside, so a mirrored map paints mirrored cells.
+  const CELL_M = 250;
+
+  /** Every cell centre on a grid that holds `biome`, as "x,y" in metres. */
+  const painted = (t: Terrain, biome: Biome): Set<string> => {
+    const cells = new Set<string>();
+    for (let y = CELL_M / 2; y < t.heightM; y += CELL_M) {
+      for (let x = CELL_M / 2; x < t.widthM; x += CELL_M) {
+        if (t.biomeAt(x, y) === biome) cells.add(`${x},${y}`);
+      }
+    }
+    return cells;
+  };
+
+  it('rounds a box off: an ellipse keeps the cells whose centres it holds', () => {
+    // Four cells by four, framed by the same numbers a rectangle would state.
+    // The rectangle paints all sixteen; the circle inscribed in it loses the
+    // four corners, whose centres sit 530 m from its centre on a 500 m radius.
+    const t = new Terrain(1000, 1000, CELL_M);
+    t.fillShape({ shape: 'ellipse', x: 0, y: 0, widthM: 1000, heightM: 1000 }, Biome.KelpForest);
+    const kelp = painted(t, Biome.KelpForest);
+    assert.equal(kelp.size, 12);
+    for (const corner of ['125,125', '875,125', '125,875', '875,875']) {
+      assert.ok(!kelp.has(corner), `the corner cell at ${corner} is outside the circle`);
+    }
+  });
+
+  it('puts a centre that lies exactly on an ellipse inside it', () => {
+    // A circle of 1,250 m about the cell centre 1375,1375. The cell centre
+    // 750 m east and 1,000 m south of it is exactly 1,250 m away, on the
+    // outline, and so is its mirror image across the circle's centre.
+    const t = new Terrain(3000, 3000, CELL_M);
+    t.fillShape(
+      { shape: 'ellipse', x: 125, y: 125, widthM: 2500, heightM: 2500 },
+      Biome.KelpForest
+    );
+    assert.equal(t.biomeAt(2125, 2375), Biome.KelpForest, 'on the outline, south-east');
+    assert.equal(t.biomeAt(625, 375), Biome.KelpForest, 'on the outline, north-west');
+    assert.equal(t.biomeAt(2375, 2375), Biome.OpenWater, 'one cell further out is not');
+  });
+
+  it('paints a 45° edge the same way from both sides of a mirror', () => {
+    // A right triangle and its mirror image across x = 1,000. The hypotenuse
+    // runs through four cell centres. Handing those to the shape on the east,
+    // as a rectangle's half-open edge would, gives the west triangle none of
+    // them and the east one all four: a symmetric map, asymmetric by four
+    // cells. A closed outline gives both triangles theirs.
+    const t = new Terrain(2000, 1000, CELL_M);
+    const west: Shape = {
+      shape: 'polygon',
+      points: [
+        [0, 0],
+        [1000, 0],
+        [0, 1000],
+      ],
+    };
+    const east: Shape = {
+      shape: 'polygon',
+      points: [
+        [2000, 0],
+        [1000, 0],
+        [2000, 1000],
+      ],
+    };
+    t.fillShape(west, Biome.KelpForest);
+    t.fillShape(east, Biome.CoralRuins);
+    const kelp = painted(t, Biome.KelpForest);
+    const coral = painted(t, Biome.CoralRuins);
+    // Ten cells under x + y <= 1,000, four of them on the line itself.
+    assert.equal(kelp.size, 10);
+    assert.ok(
+      kelp.has('875,125') && kelp.has('125,875'),
+      'the hypotenuse belongs to the west shape'
+    );
+    for (const cell of kelp) {
+      const [x, y] = cell.split(',').map(Number);
+      assert.ok(coral.has(`${2000 - x!},${y}`), `${cell} has no mirror image in the east`);
+    }
+    assert.equal(coral.size, kelp.size);
+  });
+
+  it('paints a rectangle written as four points exactly as the rectangle', () => {
+    // A rectangle is a polygon whose edges never meet a centre, so the closed
+    // outline and the half-open rectangle agree on every cell of the grid.
+    const asRect = new Terrain(3000, 3000, CELL_M);
+    asRect.fillRect(500, 750, 1500, 1000, Biome.ThermalVein);
+    const asPolygon = new Terrain(3000, 3000, CELL_M);
+    asPolygon.fillShape(
+      {
+        shape: 'polygon',
+        points: [
+          [500, 750],
+          [2000, 750],
+          [2000, 1750],
+          [500, 1750],
+        ],
+      },
+      Biome.ThermalVein
+    );
+    assert.deepEqual(painted(asPolygon, Biome.ThermalVein), painted(asRect, Biome.ThermalVein));
+    assert.equal(painted(asRect, Biome.ThermalVein).size, 24);
+  });
+
+  it('paints a concave outline by what it holds, not by its hull', () => {
+    // A U, opening north: the notch between its arms is outside the shape
+    // although it is inside every box drawn around it.
+    const t = new Terrain(1500, 1500, CELL_M);
+    t.fillShape(
+      {
+        shape: 'polygon',
+        points: [
+          [0, 0],
+          [500, 0],
+          [500, 1000],
+          [1000, 1000],
+          [1000, 0],
+          [1500, 0],
+          [1500, 1500],
+          [0, 1500],
+        ],
+      },
+      Biome.CoralRuins
+    );
+    assert.equal(t.biomeAt(750, 500), Biome.OpenWater, 'the notch');
+    assert.equal(t.biomeAt(250, 500), Biome.CoralRuins, 'the west arm');
+    assert.equal(t.biomeAt(1250, 500), Biome.CoralRuins, 'the east arm');
+    assert.equal(t.biomeAt(750, 1250), Biome.CoralRuins, 'the floor of the U');
+    // 36 cells, less the notch's two by four.
+    assert.equal(painted(t, Biome.CoralRuins).size, 28);
+  });
+
+  it('agrees with shapeContains at every centre, off the map edge too', () => {
+    // The grid searches only the cells near a shape's bounds; this is the
+    // check that the search never drops a cell the shape holds, here for an
+    // outline that runs off two edges of the map.
+    const shapes: Shape[] = [
+      {
+        shape: 'polygon',
+        points: [
+          [-500, 250],
+          [1750, -250],
+          [2250, 1500],
+          [750, 2250],
+        ],
+      },
+      { shape: 'ellipse', x: -750, y: 500, widthM: 2250, heightM: 1750 },
+    ];
+    for (const shape of shapes) {
+      const t = new Terrain(2000, 2000, CELL_M);
+      t.fillShape(shape, Biome.ResonanceField);
+      for (let y = CELL_M / 2; y < 2000; y += CELL_M) {
+        for (let x = CELL_M / 2; x < 2000; x += CELL_M) {
+          assert.equal(
+            t.biomeAt(x, y) === Biome.ResonanceField,
+            shapeContains(shape, x, y),
+            `${shape.shape} at ${x},${y}`
+          );
+        }
+      }
+    }
+  });
+
+  it('claims the same cells for ground as it does for biome', () => {
+    const t = new Terrain(3000, 3000, CELL_M, { floorM: 2000 });
+    const plateau: Shape = { shape: 'ellipse', x: 500, y: 250, widthM: 2000, heightM: 2500 };
+    t.fillShape(plateau, Biome.KelpForest);
+    t.fillGroundShape(plateau, { floorM: 700 });
+    for (let y = CELL_M / 2; y < 3000; y += CELL_M) {
+      for (let x = CELL_M / 2; x < 3000; x += CELL_M) {
+        const kelp = t.biomeAt(x, y) === Biome.KelpForest;
+        assert.equal(t.floorAt(x, y) === 700, kelp, `ground and biome disagree at ${x},${y}`);
       }
     }
   });

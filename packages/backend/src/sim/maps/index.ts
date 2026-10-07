@@ -132,15 +132,12 @@ export function missionMapById(id: string): MapDefinition | undefined {
 export function terrainFor(map: MapDefinition): Terrain {
   const terrain = new Terrain(map.widthM, map.heightM, map.cellM, { floorM: map.floorM });
   for (const region of map.regions) {
-    terrain.fillRect(region.x, region.y, region.widthM, region.heightM, region.biome);
+    terrain.fillShape(region, region.biome);
     // Ground is painted in the same pass and the same order as biome, so a
     // region that carves a trench through a vent line does both in one entry.
     // Regions that say nothing about the water column leave it as it was,
     // which is why a map can author one plateau without restating its seabed.
-    terrain.fillGround(region.x, region.y, region.widthM, region.heightM, {
-      floorM: region.floorM,
-      ceilingM: region.ceilingM,
-    });
+    terrain.fillGroundShape(region, { floorM: region.floorM, ceilingM: region.ceilingM });
   }
   return terrain;
 }

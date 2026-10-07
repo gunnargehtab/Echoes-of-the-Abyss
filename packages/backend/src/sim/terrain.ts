@@ -123,6 +123,111 @@ function covers(mod: PropagationModifier, wx: number, wy: number): boolean {
     : distanceToSegmentSquared(wx, wy, mod.x, mod.y, mod.x2, mod.y2) <= mod.radiusM * mod.radiusM;
 }
 
+/**
+ * A shape on the grid, in world metres: what a map region paints
+ * (docs/maps.md, "How a map is written").
+ *
+ * Three, since #1106 found a map drawn only in rectangles reading as a
+ * checkerboard. A rectangle is a corner and a size. An ellipse is the one
+ * inscribed in those same four numbers, so rounding a box off is one word. A
+ * polygon is its corners in order.
+ */
+export interface RectShape {
+  shape?: undefined;
+  x: number;
+  y: number;
+  widthM: number;
+  heightM: number;
+}
+
+export interface EllipseShape {
+  shape: 'ellipse';
+  /** The rectangle the ellipse is inscribed in, touching each side at its midpoint. */
+  x: number;
+  y: number;
+  widthM: number;
+  heightM: number;
+}
+
+export interface PolygonShape {
+  shape: 'polygon';
+  /**
+   * The corners in order, as [x, y] in metres. The last joins back to the
+   * first. An outline that crosses itself paints by even-odd parity, which is
+   * a shape nobody drew, so the map tests refuse one.
+   */
+  points: readonly (readonly [number, number])[];
+}
+
+export type Shape = RectShape | EllipseShape | PolygonShape;
+
+/**
+ * Is (x, y) inside the shape? The grid asks it of each cell's centre, and that
+ * is what a region paints. Asked of any other point it answers for the
+ * outline, not the ground: a point inside an ellipse can stand in a corner
+ * cell the ellipse does not claim, so a test about the ground under a point
+ * asks it of that cell's centre.
+ *
+ * A rectangle is half-open: its west and north edges are in, and its east and
+ * south edges belong to the next rectangle along, which is what lets adjacent
+ * rectangles tile (#157). An ellipse or a polygon is **closed**: a point on
+ * its outline is inside it. The half-open rule hands a point on a slanted edge
+ * to the shape east of it, so the mirror image of that shape loses the mirror
+ * image of that point, and a symmetric map stops being symmetric along every
+ * 45° edge. A rectangle on the grid never meets the question, since no cell
+ * centre lies on a cell boundary.
+ */
+export function shapeContains(shape: Shape, x: number, y: number): boolean {
+  switch (shape.shape) {
+    case 'ellipse':
+      return ellipseContains(shape, x, y);
+    case 'polygon':
+      return polygonContains(shape.points, x, y);
+    default:
+      return (
+        x >= shape.x && x < shape.x + shape.widthM && y >= shape.y && y < shape.y + shape.heightM
+      );
+  }
+}
+
+function ellipseContains(e: EllipseShape, x: number, y: number): boolean {
+  if (x < e.x || x > e.x + e.widthM || y < e.y || y > e.y + e.heightM) return false;
+  // Twice the offset from the centre, so a frame in whole metres keeps every
+  // term whole: (dx/w)² + (dy/h)² <= 1, multiplied through by w²h². Exact for
+  // any frame under 67 km², which is larger than every map, so a centre on the
+  // outline is on it rather than a rounding error to either side.
+  const w = e.widthM;
+  const h = e.heightM;
+  const dx = 2 * (x - e.x) - w;
+  const dy = 2 * (y - e.y) - h;
+  return dx * dx * h * h + dy * dy * w * w <= w * w * h * h;
+}
+
+function polygonContains(points: PolygonShape['points'], x: number, y: number): boolean {
+  let inside = false;
+  for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+    const [ax, ay] = points[j]!;
+    const [bx, by] = points[i]!;
+    // Twice the signed area of the triangle a, b, p: zero when p is on the
+    // line through the edge, and exact in whole metres, so a point on the
+    // outline is caught here rather than left to round either way below.
+    const cross = (bx - ax) * (y - ay) - (by - ay) * (x - ax);
+    if (
+      cross === 0 &&
+      x >= Math.min(ax, bx) &&
+      x <= Math.max(ax, bx) &&
+      y >= Math.min(ay, by) &&
+      y <= Math.max(ay, by)
+    ) {
+      return true;
+    }
+    // Even-odd: a ray from p toward +x crosses this edge when the edge spans
+    // p's row and passes east of p.
+    if (ay > y !== by > y && (by > ay ? cross > 0 : cross < 0)) inside = !inside;
+  }
+  return inside;
+}
+
 export class Terrain {
   readonly widthM: number;
   readonly heightM: number;
@@ -543,55 +648,76 @@ export class Terrain {
   }
 
   /**
-   * A cell belongs to a rectangle when its **centre** is inside it — the rule
-   * every paint on this grid obeys (issue #157, docs/maps.md "How a map is
-   * written").
+   * The cells a shape claims, row by row: a cell belongs to a shape when its
+   * **centre** is inside it, `shapeContains` deciding the centres that land on
+   * an outline. Every paint on this grid obeys it (issue #157, docs/maps.md
+   * "How a map is written").
    *
-   * The alternative, painting every cell the rectangle so much as grazes, was
+   * The alternative, painting every cell the shape so much as grazes, was
    * what this grid did until #157 and it was not a rounding detail: a band
    * authored 1,600 m wide on a 250 m grid painted 2,000 m of cells, a 25%
    * over-paint. Biome *is* PropagationFactor, so those cells carried sound at
    * a rate the map file did not describe, and every one of them was priced
    * into `pathPropagation` — the walk detection is built on.
    *
-   * Centres also make adjacent regions tile. Two bands meeting at 3,000 m each
-   * claim the cell they share under the touch rule, so which biome wins
+   * Centres also make adjacent rectangles tile. Two bands meeting at 3,000 m
+   * each claim the cell they share under the touch rule, so which biome wins
    * depends on paint order rather than on the geometry; under this rule the
-   * boundary is a boundary, and a region authored on cell boundaries paints
-   * exactly the metres it asks for.
+   * boundary is a boundary, and a rectangle authored on cell boundaries paints
+   * exactly the metres it asks for. A curve or a slant cannot: its edge steps
+   * at the cell, and the shape is still a shape rather than a box.
    *
-   * The half-open end is what makes that true: a centre exactly on the low
-   * edge is inside, a centre exactly on the high edge belongs to the next
-   * region along. A rectangle thinner than a cell that falls between two
-   * centres therefore paints *nothing* — which is a real authoring hazard and
-   * why `maps.test.ts` refuses a region that paints no cells at all.
+   * A shape thinner than a cell can fall between two centres and paint
+   * *nothing* — which is a real authoring hazard and why `maps.test.ts`
+   * refuses a region that paints no cells at all.
    */
-  private firstCentreFrom(m: number): number {
-    // Derived from the containing cell and corrected by one, rather than by
-    // `ceil(m / cellM - 0.5)`: the correction is a comparison in metres, so a
-    // float-dusted division cannot round a boundary the wrong way.
-    const cell = Math.floor(m / this.cellM);
-    return (cell + 0.5) * this.cellM >= m ? cell : cell + 1;
-  }
-
-  private lastCentreBefore(m: number): number {
-    const cell = Math.floor(m / this.cellM);
-    return (cell + 0.5) * this.cellM < m ? cell : cell - 1;
+  private cellsIn(shape: Shape): number[] {
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    if (shape.shape === 'polygon') {
+      for (const [px, py] of shape.points) {
+        minX = Math.min(minX, px);
+        minY = Math.min(minY, py);
+        maxX = Math.max(maxX, px);
+        maxY = Math.max(maxY, py);
+      }
+    } else {
+      minX = shape.x;
+      minY = shape.y;
+      maxX = shape.x + shape.widthM;
+      maxY = shape.y + shape.heightM;
+    }
+    // A cell wider than the bounds each way: membership is a comparison in
+    // metres, so a float-dusted division can widen the search but never move
+    // a boundary.
+    const x0 = Math.max(0, Math.floor(minX / this.cellM) - 1);
+    const y0 = Math.max(0, Math.floor(minY / this.cellM) - 1);
+    const x1 = Math.min(this.cols_ - 1, Math.floor(maxX / this.cellM) + 1);
+    const y1 = Math.min(this.rows_ - 1, Math.floor(maxY / this.cellM) + 1);
+    const cells: number[] = [];
+    for (let cy = y0; cy <= y1; cy++) {
+      const wy = (cy + 0.5) * this.cellM;
+      for (let cx = x0; cx <= x1; cx++) {
+        if (shapeContains(shape, (cx + 0.5) * this.cellM, wy)) cells.push(cy * this.cols_ + cx);
+      }
+    }
+    return cells;
   }
 
   /** Paint an axis-aligned rectangle of biome, in world metres. */
   fillRect(x: number, y: number, w: number, h: number, biome: Biome): void {
-    const x0 = Math.max(0, this.firstCentreFrom(x));
-    const y0 = Math.max(0, this.firstCentreFrom(y));
-    const x1 = Math.min(this.cols_ - 1, this.lastCentreBefore(x + w));
-    const y1 = Math.min(this.rows_ - 1, this.lastCentreBefore(y + h));
-    for (let cy = y0; cy <= y1; cy++) {
-      for (let cx = x0; cx <= x1; cx++) {
-        const index = cy * this.cols_ + cx;
-        this.biomes[index] = biome;
-        this.pf[index] = PROPAGATION_FACTOR[biome];
-        this.writeScatter(index, this.scatterAtCell(cx, cy, biome));
-      }
+    this.fillShape({ x, y, widthM: w, heightM: h }, biome);
+  }
+
+  /** Paint a shape of biome, in world metres: the authoring call a map region makes. */
+  fillShape(shape: Shape, biome: Biome): void {
+    for (const index of this.cellsIn(shape)) {
+      const cx = index % this.cols_;
+      this.biomes[index] = biome;
+      this.pf[index] = PROPAGATION_FACTOR[biome];
+      this.writeScatter(index, this.scatterAtCell(cx, (index - cx) / this.cols_, biome));
     }
     // Monotone rather than rescanned: this is authoring, a repaint that lowers
     // the loudest cell only leaves the bound conservative, and no biome can
@@ -601,27 +727,8 @@ export class Terrain {
   }
 
   /**
-   * Shape the water column over an axis-aligned rectangle, in world metres.
-   *
-   * Separate from `fillRect` because biome and ground are independent: a kelp
-   * bed is kelp whether it stands on a plateau or in a trench, and a tunnel is
-   * cut through whatever biome it passes under. Painting them together would
-   * force an author to restate one every time the other changed.
-   *
-   * Painted in call order, later over earlier, exactly like `fillRect` — which
-   * is what lets a tunnel be authored as a narrow strip laid across a plateau
-   * rather than as four rectangles around it. It claims cells by the same
-   * centre rule, so a region's biome and its ground always cover the same
-   * cells: a floor that reached a row the biome did not would be a shelf with
-   * no biome to explain it.
-   *
-   * **`biome` is the mid-match twin of `fillRect`** (#259). Every field here is
-   * optional and they stay independent — the argument above holds, and a caller
-   * that only lowers a floor still says nothing about the water. What this is
-   * not is a second call: a dome coming down and the water behind it turning to
-   * ruins are one event at one tick, and writing them together costs one change
-   * record per cell rather than two. `fillRect` remains the *authoring* call,
-   * because at build time there is no client to tell and no log worth keeping.
+   * Shape the water column over an axis-aligned rectangle, in world metres:
+   * `fillGroundShape` for the rectangle a mission beat names.
    */
   fillGround(
     x: number,
@@ -630,51 +737,76 @@ export class Terrain {
     h: number,
     ground: { floorM?: number; ceilingM?: number; biome?: Biome }
   ): void {
+    this.fillGroundShape({ x, y, widthM: w, heightM: h }, ground);
+  }
+
+  /**
+   * Shape the water column over a shape, in world metres.
+   *
+   * Separate from `fillShape` because biome and ground are independent: a kelp
+   * bed is kelp whether it stands on a plateau or in a trench, and a tunnel is
+   * cut through whatever biome it passes under. Painting them together would
+   * force an author to restate one every time the other changed.
+   *
+   * Painted in call order, later over earlier, exactly like `fillShape` — which
+   * is what lets a tunnel be authored as a narrow strip laid across a plateau
+   * rather than as four rectangles around it. It claims cells by the same
+   * centre rule, so a region's biome and its ground always cover the same
+   * cells: a floor that reached a row the biome did not would be a shelf with
+   * no biome to explain it.
+   *
+   * **`biome` is the mid-match twin of `fillShape`** (#259). Every field here is
+   * optional and they stay independent — the argument above holds, and a caller
+   * that only lowers a floor still says nothing about the water. What this is
+   * not is a second call: a dome coming down and the water behind it turning to
+   * ruins are one event at one tick, and writing them together costs one change
+   * record per cell rather than two. `fillShape` remains the *authoring* call,
+   * because at build time there is no client to tell and no log worth keeping.
+   */
+  fillGroundShape(
+    shape: Shape,
+    ground: { floorM?: number; ceilingM?: number; biome?: Biome }
+  ): void {
     if (ground.floorM === undefined && ground.ceilingM === undefined && ground.biome === undefined)
       return;
-    const x0 = Math.max(0, this.firstCentreFrom(x));
-    const y0 = Math.max(0, this.firstCentreFrom(y));
-    const x1 = Math.min(this.cols_ - 1, this.lastCentreBefore(x + w));
-    const y1 = Math.min(this.rows_ - 1, this.lastCentreBefore(y + h));
-    for (let cy = y0; cy <= y1; cy++) {
-      for (let cx = x0; cx <= x1; cx++) {
-        const index = cy * this.cols_ + cx;
-        const beforeFloor = this.floor[index]!;
-        const beforeCeiling = this.ceiling[index]!;
-        const beforeBiome = this.biomes[index]!;
-        if (ground.floorM !== undefined) this.floor[index] = ground.floorM;
-        if (ground.ceilingM !== undefined) this.ceiling[index] = ground.ceilingM;
-        if (ground.biome !== undefined) {
-          this.biomes[index] = ground.biome;
-          // Written here rather than left to the hazard pass. `pathPropagation`
-          // reads `pf`, and the only other writer of it runs on storm phase
-          // boundaries — so a ruin coming down on a map with no weather would
-          // keep its old PF indefinitely, and `propagationAt` would disagree
-          // with the biome the client is already drawing.
-          this.pf[index] = this.propagationAtCell(cx, cy, ground.biome);
-          this.writeScatter(index, this.scatterAtCell(cx, cy, ground.biome));
-        }
-        // Recorded only when the cell actually moved. A mission that repaints
-        // ground it has already painted — Sorrowgate re-cuts the service lock
-        // straight after collapsing the span across it — should cost the wire
-        // nothing for the cells that did not change.
-        if (
-          this.floor[index] !== beforeFloor ||
-          this.ceiling[index] !== beforeCeiling ||
-          this.biomes[index] !== beforeBiome
-        ) {
-          this.changes.push({
-            index,
-            floorM: this.floor[index]!,
-            ceilingM: this.ceiling[index]!,
-            biome: this.biomes[index] as Biome,
-          });
-          let digest = mixU32(this.digest, index);
-          digest = mixU32(digest, this.floor[index]!);
-          digest = mixU32(digest, this.ceiling[index]!);
-          digest = mixU32(digest, this.biomes[index]!);
-          this.digest = digest;
-        }
+    for (const index of this.cellsIn(shape)) {
+      const cx = index % this.cols_;
+      const cy = (index - cx) / this.cols_;
+      const beforeFloor = this.floor[index]!;
+      const beforeCeiling = this.ceiling[index]!;
+      const beforeBiome = this.biomes[index]!;
+      if (ground.floorM !== undefined) this.floor[index] = ground.floorM;
+      if (ground.ceilingM !== undefined) this.ceiling[index] = ground.ceilingM;
+      if (ground.biome !== undefined) {
+        this.biomes[index] = ground.biome;
+        // Written here rather than left to the hazard pass. `pathPropagation`
+        // reads `pf`, and the only other writer of it runs on storm phase
+        // boundaries — so a ruin coming down on a map with no weather would
+        // keep its old PF indefinitely, and `propagationAt` would disagree
+        // with the biome the client is already drawing.
+        this.pf[index] = this.propagationAtCell(cx, cy, ground.biome);
+        this.writeScatter(index, this.scatterAtCell(cx, cy, ground.biome));
+      }
+      // Recorded only when the cell actually moved. A mission that repaints
+      // ground it has already painted — Sorrowgate re-cuts the service lock
+      // straight after collapsing the span across it — should cost the wire
+      // nothing for the cells that did not change.
+      if (
+        this.floor[index] !== beforeFloor ||
+        this.ceiling[index] !== beforeCeiling ||
+        this.biomes[index] !== beforeBiome
+      ) {
+        this.changes.push({
+          index,
+          floorM: this.floor[index]!,
+          ceilingM: this.ceiling[index]!,
+          biome: this.biomes[index] as Biome,
+        });
+        let digest = mixU32(this.digest, index);
+        digest = mixU32(digest, this.floor[index]!);
+        digest = mixU32(digest, this.ceiling[index]!);
+        digest = mixU32(digest, this.biomes[index]!);
+        this.digest = digest;
       }
     }
     // A repaint can lower the cell that *was* the peak — a trench cut into

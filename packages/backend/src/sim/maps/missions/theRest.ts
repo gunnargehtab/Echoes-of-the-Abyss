@@ -50,9 +50,9 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition } from '../types.ts';
+import type { MapDefinition, MapRect } from '../types.ts';
 
-export const THE_REST: MapDefinition = {
+export const THE_REST: MapDefinition<MapRect> = {
   id: 'the-rest',
   name: 'The Rest',
   idealUse:

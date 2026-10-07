@@ -35,9 +35,9 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition } from '../types.ts';
+import type { MapDefinition, MapRect } from '../types.ts';
 
-export const OUTER_FORMATIONS: MapDefinition = {
+export const OUTER_FORMATIONS: MapDefinition<MapRect> = {
   id: 'outer-formations',
   name: "The Third's Outer Formations",
   idealUse:

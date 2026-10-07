@@ -74,9 +74,9 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition } from '../types.ts';
+import type { MapDefinition, MapRect } from '../types.ts';
 
-export const UPPER_TERRACES: MapDefinition = {
+export const UPPER_TERRACES: MapDefinition<MapRect> = {
   id: 'upper-terraces',
   name: 'The Upper Terraces',
   idealUse:

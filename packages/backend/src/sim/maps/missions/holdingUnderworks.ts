@@ -18,9 +18,9 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition } from '../types.ts';
+import type { MapDefinition, MapRect } from '../types.ts';
 
-export const HOLDING_UNDERWORKS: MapDefinition = {
+export const HOLDING_UNDERWORKS: MapDefinition<MapRect> = {
   id: 'holding-underworks',
   name: 'The Underworks',
   idealUse:

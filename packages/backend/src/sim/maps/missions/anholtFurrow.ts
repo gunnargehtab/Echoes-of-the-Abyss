@@ -52,12 +52,12 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition } from '../types.ts';
+import type { MapDefinition, MapRect } from '../types.ts';
 
 /** Solid rock, as a region: no depth satisfies ceiling <= D <= floor. */
 const ROCK = { floorM: 0, ceilingM: 1 } as const;
 
-export const ANHOLT_FURROW: MapDefinition = {
+export const ANHOLT_FURROW: MapDefinition<MapRect> = {
   id: 'anholt-furrow',
   name: 'The Furrow',
   idealUse:

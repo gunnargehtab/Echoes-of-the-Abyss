@@ -74,8 +74,9 @@ export type MissionTag = string;
 export type MissionRole = string;
 
 /**
- * A named rectangle. Rectangles only, for `sim/maps/types.ts`'s reason: every
- * place a mission needs to name is a chamber, a concourse or a lane.
+ * A named rectangle. Rectangles only, because every place a mission needs to
+ * name is a chamber, a concourse or a lane. A map's regions may also be
+ * ellipses and polygons (#1106); no mission has yet asked for one.
  */
 export interface MissionRegion {
   id: string;

@@ -18,9 +18,9 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition } from '../types.ts';
+import type { MapDefinition, MapRect } from '../types.ts';
 
-export const FIRST_TRENCH_MARGIN: MapDefinition = {
+export const FIRST_TRENCH_MARGIN: MapDefinition<MapRect> = {
   id: 'first-trench-margin',
   name: 'The Western Margin',
   idealUse: "The Ledger, mission four. Somebody else's economy, standing in the water.",

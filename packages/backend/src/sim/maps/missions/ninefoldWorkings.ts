@@ -16,9 +16,9 @@
  */
 
 import { Biome, ResourceKind } from '@echoes/shared';
-import type { MapDefinition } from '../types.ts';
+import type { MapDefinition, MapRect } from '../types.ts';
 
-export const NINEFOLD_WORKINGS: MapDefinition = {
+export const NINEFOLD_WORKINGS: MapDefinition<MapRect> = {
   id: 'ninefold-workings',
   name: 'The Upper Workings',
   idealUse: 'The Ledger, mission two. A dying face, a filed audit, and one shift to thread them.',

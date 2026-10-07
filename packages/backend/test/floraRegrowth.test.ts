@@ -449,7 +449,13 @@ describe('the Drift puts back what it loses', () => {
     const pack = countFaunaOf(m.world, FaunaSpecies.Draymaw);
     for (let i = 0; i < 8; i++) cull(m, FaunaSpecies.Ashgrazer);
     cull(m, FaunaSpecies.Draymaw);
-    m.world.terrain.fillGround(0, 3000, MAP_M, 2000, { biome: Biome.OpenWater });
+    // The rift's whole band: it swells to y 2,750-5,250 about its vents (#1106).
+    m.world.terrain.fillGround(0, 2750, MAP_M, 2500, { biome: Biome.OpenWater });
+    for (let y = 125; y < MAP_M; y += 250) {
+      for (let x = 125; x < MAP_M; x += 250) {
+        assert.notEqual(m.world.terrain.biomeAt(x, y), Biome.ThermalVein, `vent left at ${x},${y}`);
+      }
+    }
 
     advance(m, DRIFT.RESPAWN_INTERVAL_S * 6);
     assert.equal(countFaunaOf(m.world, FaunaSpecies.Draymaw), pack, 'the pack is restocked');

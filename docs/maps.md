@@ -30,6 +30,12 @@ A geothermal battlefield split by erupting thermal veins.
 - **A kelp bed behind each base**, in the back corner of its plateau — the map's only ground
   that is Kelp Forest and deep enough to seat a structure, and so the only place on it a
   bio-reactor can stand
+- **Drawn as places, not boxes** (#1106): the vent line swells about its two vents and
+  narrows where the plateaus press in, each plateau turns a flank to the middle, the trench
+  lips break at the corners and recede across the gaps, and the coral reefs reach out of the
+  vents at either end. The shapes moved outlines, not the water between seats: every
+  straight line from one spawn to another crosses the cells it always did, and the trenches
+  stay off all of them, because the loud way is the way round
 
 ### Biome Distribution
 
@@ -259,12 +265,15 @@ That count is a count of **archetypes**, which is the only thing this catalogue 
 
 Authored data, never generated. `Terrain.demo()`'s own comment makes the case and it still holds: "an RTS simulation must be reproducible, and a seeded generator is one refactor away from not being." A map is a literal — regions, spawns, resource fields, hazard sites — with no procedural step anywhere in it.
 
-Regions are rectangles, painted in order so a later one overwrites an earlier one. Every layout above is corridors, plateaus, bands and quadrants, all of which are rectangles or unions of them; a richer shape vocabulary would be more expressive than anything this document asks for.
+A region is a **rectangle**, an **ellipse** or a **polygon**, and regions are painted in order so a later one overwrites an earlier one. A rectangle states a corner and a size. An ellipse is the one inscribed in those same four numbers, so rounding a box off is one word. A polygon states its corners in order, and the last joins back to the first; its outline may not cross or fold back on itself, and the map tests refuse one that does.
 
-**A cell belongs to the region whose rectangle contains its centre.** The grid is 250 m, the rectangles are in metres, and that rule is what converts between them. It has two consequences an author should hold on to:
+Rectangles were the whole vocabulary until issue #1106, on the argument that every layout above is corridors, plateaus, bands and quadrants, all rectangles or unions of them. The argument held for the layouts and failed for the maps: from the survey dolly, ground drawn only in boxes reads as a checkerboard, and its plateaus, trenches and vent lines read as authoring boxes rather than places. A shape is data like a rectangle, and nothing procedural draws one. Reshaping a region that shipped moves cells between biomes, and biome is PropagationFactor, so a new shape is new map content and never a balance lever.
 
-- Adjacent regions tile. Two bands meeting at 3,000 m divide the grid between them exactly once, so which biome a boundary cell ends up with is a fact about the geometry rather than about paint order.
-- A rectangle laid on cell boundaries paints exactly the metres it reads, and every rectangle in `sim/maps/` is written that way. A rectangle that is not — one 1,600 m tall on a 250 m grid — is asking for something the grid cannot hold, and gets the whole cells whose centres are inside it: 1,500 m, not 1,600.
+**A cell belongs to the region whose shape contains its centre.** The grid is 250 m, the shapes are in metres, and that rule is what converts between them. The simulation keeps its grid — propagation reads a cell's PF, and the collision truth stays the cell grid ([three-layer-ocean.md](three-layer-ocean.md) §5) — so a curve or a slant still steps at 250 m. What a shape changes is the outline at the scale of the map, not the cell. The rule has three consequences an author should hold on to:
+
+- Adjacent rectangles tile. Two bands meeting at 3,000 m divide the grid between them exactly once, so which biome a boundary cell ends up with is a fact about the geometry rather than about paint order. A rectangle's west and north edges are inside it; its east and south edges belong to the next rectangle along.
+- A centre exactly on an ellipse's or a polygon's outline is inside it. Every 45° edge between two grid points runs through a diagonal of cell centres, and the rectangle's rule would hand them all to the shape on the east of the edge: a shape's mirror image would lose the mirror image of each, and a symmetric map would stop being symmetric along every slant. The cost is that two shapes sharing a slanted edge both claim the cells on it, and paint order decides, as it does wherever regions overlap.
+- Every number a region states is a whole cell: a rectangle's corner and size, an ellipse's frame, a polygon's corners. A rectangle laid on cell boundaries paints exactly the metres it reads, and so does an edge of any shape that runs along a grid line. Every region in `sim/maps/` is written that way, and the map tests refuse one that is not. A rectangle that is not — one 1,600 m tall on a 250 m grid — is asking for something the grid cannot hold, and gets the whole cells whose centres are inside it: 1,500 m, not 1,600.
 
 The rule the grid used until issue #157 was the other one: a cell was painted if the rectangle touched it *at all*. That is not a rounding detail, because biome is PropagationFactor. A band authored 1,600 m wide painted 2,000 m of cells — a 25% over-paint — and every over-painted cell carried sound at a rate no document described, priced into `pathPropagation` and therefore into detection. It also let the map edge clip a column on one flank that the opposite flank kept, which is how two maps that describe themselves as symmetric were not.
 
@@ -280,7 +289,7 @@ A map's **spawn list is its player count**, which is why the Abyssal Rift Corrid
 
 A mission map is the one carve-out, and it is not a counter-example. It carries a single spawn because the player commands a single force; every other party in the water is placed by the mission, with its own hulls and its own standing, and the map never hears about them. Reading a mission map's spawn list as a player count is therefore correct and tells you almost nothing about how crowded the water is.
 
-**A spawn and its Foundry stand on ground the map shaped.** Both seat at a fixed depth and cannot rise, so what is under a base is the author's statement about what that base opens on — and a statement about a base is a statement about the water column. Some region containing the point sets a floor or a ceiling. Deliberately not a floor that *differs* from the map's own: a base on the base seabed inside a region an author shaped is exactly what the paragraph above sanctions, and reading the rule that way condemns fourteen legitimate placements across four maps.
+**A spawn and its Foundry stand on ground the map shaped.** Both seat at a fixed depth and cannot rise, so what is under a base is the author's statement about what that base opens on — and a statement about a base is a statement about the water column. Some region claiming the cell under it sets a floor or a ceiling. Deliberately not a floor that *differs* from the map's own: a base on the base seabed inside a region an author shaped is exactly what the paragraph above sanctions, and reading the rule that way condemns fourteen legitimate placements across four maps.
 
 Containment in *some* rectangle was the test until the rule was measured, and it was too weak to enforce itself: a rectangle that sets neither floor nor ceiling says nothing whatever about the water, so a gutter closed with a biome-only rectangle satisfied the rule while putting a loiter position back under a base. The map tests now carry that map as a fixture and assert the rule red against it, because a rule that cannot reject the fault it was written for is not a weaker rule, it is no rule.
 

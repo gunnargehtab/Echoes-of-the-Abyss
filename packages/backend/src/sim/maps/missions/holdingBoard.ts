@@ -14,9 +14,9 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition } from '../types.ts';
+import type { MapDefinition, MapRect } from '../types.ts';
 
-export const HOLDING_BOARD: MapDefinition = {
+export const HOLDING_BOARD: MapDefinition<MapRect> = {
   id: 'holding-board',
   name: 'Board Country',
   idealUse: 'The Ledger, mission seven. Nine items, one chamber, and the ninth.',

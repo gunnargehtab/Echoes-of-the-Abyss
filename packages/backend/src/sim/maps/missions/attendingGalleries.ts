@@ -27,9 +27,9 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition } from '../types.ts';
+import type { MapDefinition, MapRect } from '../types.ts';
 
-export const ATTENDING_GALLERIES: MapDefinition = {
+export const ATTENDING_GALLERIES: MapDefinition<MapRect> = {
   id: 'attending-galleries',
   name: 'The Attending Galleries',
   idealUse: 'The Attending, mission one. A gallery of sleepers, and the Ninth aimed at the Mouth.',

@@ -67,9 +67,9 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition } from '../types.ts';
+import type { MapDefinition, MapRect } from '../types.ts';
 
-export const THE_FIRST: MapDefinition = {
+export const THE_FIRST: MapDefinition<MapRect> = {
   id: 'the-first',
   name: 'The First',
   idealUse: 'The Second Chord, mission five. A house in working order, and nothing in it is safe.',
