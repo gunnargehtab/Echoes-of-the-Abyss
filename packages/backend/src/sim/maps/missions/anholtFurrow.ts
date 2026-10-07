@@ -52,12 +52,12 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition, MapRect } from '../types.ts';
+import type { MapDefinition } from '../types.ts';
 
 /** Solid rock, as a region: no depth satisfies ceiling <= D <= floor. */
 const ROCK = { floorM: 0, ceilingM: 1 } as const;
 
-export const ANHOLT_FURROW: MapDefinition<MapRect> = {
+export const ANHOLT_FURROW: MapDefinition = {
   id: 'anholt-furrow',
   name: 'The Furrow',
   idealUse:
@@ -71,9 +71,14 @@ export const ANHOLT_FURROW: MapDefinition<MapRect> = {
   // One row per row of §11's table, in the document's order. Later regions
   // overwrite earlier ones, which is what lets the lanes be painted whole and
   // the Foot, the walls, the cleft, the furrows and the sill cut into them.
-  // Every rectangle lands on the 250 m cell grid and paints exactly the metres
-  // it reads.
+  // Every number a shape states is a whole 250 m cell, and a cell is its
+  // region's when the shape holds its centre (#1153). Only the walls and the
+  // sill are shapes, and they open twelve cells that were rock and close none.
+  // Every authored point and mission region of both missions stands on the
+  // ground it stood on when these were all rectangles, every scripted leg
+  // routes as it did, and `missionDeepFurrow.test.ts` pins both.
   regions: [
+    // A box, because it is the whole map's base.
     {
       x: 0,
       y: 0,
@@ -83,6 +88,8 @@ export const ANHOLT_FURROW: MapDefinition<MapRect> = {
       floorM: 1100,
       note: "The Lanes — the freight lanes Tend heard from above. Painted first; everything else is cut into them. The floor is the duct's top, so the lanes end where the layer begins",
     },
+    // A box, because both missions' `the-foot` is this same rectangle: home is
+    // the water drawn as home.
     {
       x: 1500,
       y: 0,
@@ -92,24 +99,40 @@ export const ANHOLT_FURROW: MapDefinition<MapRect> = {
       floorM: 900,
       note: "The Foot — the drop's foot, where the plateau's lane comes down. The seat, at 900 m, above the layer, and the region home means",
     },
+    // The face on the road is straight at x 1,250 from the mouth to the sill,
+    // so the road is 1,500 m wide the whole way and the Hollow is 100 m off it.
+    // The outer north corner is cut on a slant, letting the lanes reach south
+    // along the map's edge, and the foot gives way on a slant to the sill. The
+    // East Wall is its mirror image across x 2,000.
     {
-      x: 0,
-      y: 500,
-      widthM: 1250,
-      heightM: 2500,
+      shape: 'polygon',
+      points: [
+        [0, 1000],
+        [750, 500],
+        [1250, 500],
+        [1250, 2500],
+        [500, 3000],
+        [0, 3000],
+      ],
       biome: Biome.OpenWater,
       ...ROCK,
       note: 'The West Wall — solid. The cleft is the only road',
     },
     {
-      x: 2750,
-      y: 500,
-      widthM: 1250,
-      heightM: 2500,
+      shape: 'polygon',
+      points: [
+        [2750, 500],
+        [3250, 500],
+        [4000, 1000],
+        [4000, 3000],
+        [3500, 3000],
+        [2750, 2500],
+      ],
       biome: Biome.OpenWater,
       ...ROCK,
       note: 'The East Wall — solid',
     },
+    // A box, because its sides are the walls' straight faces.
     {
       x: 1250,
       y: 500,
@@ -119,6 +142,8 @@ export const ANHOLT_FURROW: MapDefinition<MapRect> = {
       floorM: 1800,
       note: 'The Cleft — the descent and the doorway. PF 1.6: it carries like a trench because it is one. Hollow country, with the duct at 1,200 across its upper water. 1,500 m wide, so the middle is 750 m from either wall and 650 from either Hollow',
     },
+    // A box, because the mission's `standing-furrow` is this same rectangle:
+    // the grant lands on the ground drawn.
     {
       x: 1250,
       y: 1750,
@@ -128,6 +153,8 @@ export const ANHOLT_FURROW: MapDefinition<MapRect> = {
       floorM: 2200,
       note: 'The Furrow — the 204 PC ground, ten years grown: a trench floor painted kelp, because seeded ground absorbs. The zone, and the bloom-bed stands in it',
     },
+    // A box, because `second-furrow`, which the ground beat repaints, is this
+    // same rectangle.
     {
       x: 2250,
       y: 1750,
@@ -137,11 +164,19 @@ export const ANHOLT_FURROW: MapDefinition<MapRect> = {
       floorM: 2200,
       note: "Second Furrow — bare rock at 00:00, and the sowing's ground. Repainted Kelp Forest by a mission ground beat, which is why it is trench paint here",
     },
+    // Where the cleft opens to the deep: its sides run out on a slant from the
+    // furrows' corners, so it is 2,000 m of water across its north row and
+    // 2,500 m across its south row. The six cells it opens at the walls' feet
+    // carry at 1.6 where the rock's paint was 1.0, and no line between two
+    // authored positions of either mission crosses one.
     {
-      x: 1250,
-      y: 2500,
-      widthM: 1500,
-      heightM: 500,
+      shape: 'polygon',
+      points: [
+        [1250, 2500],
+        [2750, 2500],
+        [3500, 3000],
+        [500, 3000],
+      ],
       biome: Biome.AbyssalTrench,
       floorM: 2600,
       note: "The Sill — where the cleft opens to the deep. The observer's station, and the line's seat. Nothing the plateaus own is rated for it",

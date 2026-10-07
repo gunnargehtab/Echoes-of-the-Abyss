@@ -57,7 +57,12 @@ import { Owner, Position, Pressure, Unit } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
 import { ANHOLT_FURROW } from '../src/sim/maps/missions/anholtFurrow.ts';
 import { mapById, missionMapById, terrainFor } from '../src/sim/maps/index.ts';
+import type { MapDefinition, MapRect } from '../src/sim/maps/types.ts';
 import { SEEDING_DEEP_FURROW } from '../src/sim/missions/deepFurrow.ts';
+import { MISSIONS } from '../src/sim/missions/index.ts';
+import type { MissionDefinition } from '../src/sim/missions/types.ts';
+import { Pathfinder } from '../src/sim/pathfinding.ts';
+import { shapeContains } from '../src/sim/terrain.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const PLAYER = SEEDING_DEEP_FURROW.playerSlot;
@@ -781,10 +786,15 @@ describe('the objective, as docs/mission-deep-furrow.md §8 chooses it', () => {
     // step — a hull at 2,200 m is below the cleft's 1,800 and cannot move
     // north until it has climbed, and it cannot enter the Foot's 900 m water
     // until it has climbed again.
-    const cleft = ANHOLT_FURROW.regions.find((r) => r.floorM === 1800)!;
-    assert.equal(cleft.heightM, 1250, '§11: the throat is the cleft’s own height');
+    // The throat's length is read off the painted ground down the road's
+    // middle: the run of cells on the cleft's 1,800 m floor.
+    let cleftM = 0;
+    for (let y = ANHOLT_FURROW.cellM / 2; y < ANHOLT_FURROW.heightM; y += ANHOLT_FURROW.cellM) {
+      if (terrain.floorAt(THROAT.x, y) === 1800) cleftM += ANHOLT_FURROW.cellM;
+    }
+    assert.equal(cleftM, 1250, '§11: the throat is the cleft’s own height');
     const climbGarden = (2200 - 1750) / DEPTH.ASCENT_RATE_MPS;
-    const throatRun = cleft.heightM / (HARVESTER.speed * SILENT_RUNNING.PELAGIA_SPEED_MULTIPLIER);
+    const throatRun = cleftM / (HARVESTER.speed * SILENT_RUNNING.PELAGIA_SPEED_MULTIPLIER);
     const climbThroat = (1750 - 900) / DEPTH.ASCENT_RATE_MPS;
     near(climbGarden, 30, 0.1, '§8: thirty seconds to the top of the garden’s water');
     near(throatRun, 39, 0.1, '§8: thirty-nine up the throat silent — the cleft’s own 1,250 m');
@@ -1014,22 +1024,41 @@ describe('the Furrow, as docs/mission-deep-furrow.md §11 paints it', () => {
     assert.equal(ANHOLT_FURROW.floorM, 1100, '§11: the base floor is the duct’s top');
   });
 
-  it('restates the mission’s four regions on the map’s own rectangles', () => {
+  it('restates the mission’s four regions on the ground the map paints', () => {
     // The mission regions are a second table and can drift from the map's; a
     // grant or a repaint on a rectangle that is not the ground it names would
-    // rate or repaint water the document never described.
-    const mapRegion = (index: number) => ANHOLT_FURROW.regions[index]!;
-    for (const [id, index] of [
-      ['the-foot', 1],
-      ['standing-furrow', 5],
-      ['second-furrow', 6],
+    // rate or repaint water the document never described. Asked of the painted
+    // cells: the cells a mission region holds are exactly the cells its map
+    // region was the last to paint.
+    const paintedBy = (name: string) => {
+      const cells: string[] = [];
+      for (let y = ANHOLT_FURROW.cellM / 2; y < ANHOLT_FURROW.heightM; y += ANHOLT_FURROW.cellM) {
+        for (let x = ANHOLT_FURROW.cellM / 2; x < ANHOLT_FURROW.widthM; x += ANHOLT_FURROW.cellM) {
+          const last = ANHOLT_FURROW.regions.filter((r) => shapeContains(r, x, y)).pop()!;
+          if (last.note!.startsWith(`${name} — `)) cells.push(`${x},${y}`);
+        }
+      }
+      return cells;
+    };
+    const held = (id: string) => {
+      const cells: string[] = [];
+      for (let y = ANHOLT_FURROW.cellM / 2; y < ANHOLT_FURROW.heightM; y += ANHOLT_FURROW.cellM) {
+        for (let x = ANHOLT_FURROW.cellM / 2; x < ANHOLT_FURROW.widthM; x += ANHOLT_FURROW.cellM) {
+          if (shapeContains(region(id), x, y)) cells.push(`${x},${y}`);
+        }
+      }
+      return cells;
+    };
+    for (const [id, name, count] of [
+      ['the-foot', 'The Foot', 8],
+      ['standing-furrow', 'The Furrow', 12],
+      ['second-furrow', 'Second Furrow', 6],
     ] as const) {
-      const mine = region(id);
-      const theirs = mapRegion(index);
+      assert.equal(held(id).length, count, `${id}: the region grew or shrank`);
       assert.deepEqual(
-        [mine.x, mine.y, mine.widthM, mine.heightM],
-        [theirs.x, theirs.y, theirs.widthM, theirs.heightM],
-        `${id}: the mission names a rectangle the map does not paint`
+        held(id),
+        paintedBy(name),
+        `${id}: the mission names ground the map does not paint`
       );
     }
     // `the-furrows` is the only one that is not a map region: it is both
@@ -1255,5 +1284,334 @@ describe('the day, run out — docs/mission-deep-furrow.md §4, §8, §9', () =>
     const status = new Map(over.objectives.map((o) => [o.id, o.status]));
     assert.equal(status.get('the-day'), ObjectiveStatus.Met);
     assert.equal(status.get('tended'), ObjectiveStatus.Pending, '§8: nobody slept below');
+  });
+});
+
+describe('the ground both missions stand on — §11, drawn in shapes (#1153)', () => {
+  // The regions as 4d80c700 drew them, before #1153 redrew both walls and the
+  // sill in shapes: written out rather than read from the literal, so the
+  // reference cannot move with the map it checks.
+  const RECTANGLES: MapRect[] = [
+    rect(0, 0, 4000, 3000, Biome.OpenWater, 1100, 0, 'The Lanes'),
+    rect(1500, 0, 1000, 500, Biome.OpenWater, 900, 0, 'The Foot'),
+    rect(0, 500, 1250, 2500, Biome.OpenWater, 0, 1, 'The West Wall'),
+    rect(2750, 500, 1250, 2500, Biome.OpenWater, 0, 1, 'The East Wall'),
+    rect(1250, 500, 1500, 1250, Biome.AbyssalTrench, 1800, 0, 'The Cleft'),
+    rect(1250, 1750, 1000, 750, Biome.KelpForest, 2200, 0, 'The Furrow'),
+    rect(2250, 1750, 500, 750, Biome.AbyssalTrench, 2200, 0, 'Second Furrow'),
+    rect(1250, 2500, 1500, 500, Biome.AbyssalTrench, 2600, 0, 'The Sill'),
+  ];
+  function rect(
+    x: number,
+    y: number,
+    widthM: number,
+    heightM: number,
+    biome: Biome,
+    floorM: number,
+    ceilingM: number,
+    name: string
+  ): MapRect {
+    return { x, y, widthM, heightM, biome, floorM, ceilingM, note: `${name} — ` };
+  }
+  const map = ANHOLT_FURROW;
+  const boxes: MapDefinition = { ...map, regions: RECTANGLES };
+  const ground = terrainFor(map);
+  const was = terrainFor(boxes);
+  const cellM = map.cellM;
+  // Asked of the cell, never the point: a point inside a polygon can stand in
+  // a cell the polygon does not claim (terrain.ts, `shapeContains`).
+  const centre = (m: number) => (Math.floor(m / cellM) + 0.5) * cellM;
+  /** The region that painted the cell under a point: the last whose shape holds its centre. */
+  const regionAt = (on: MapDefinition, x: number, y: number): string => {
+    let name = '';
+    for (const r of on.regions) {
+      if (shapeContains(r, centre(x), centre(y))) name = r.note!.split(' — ')[0]!;
+    }
+    return name;
+  };
+  const groundOf = (on: ReturnType<typeof terrainFor>, x: number, y: number): unknown[] => [
+    Biome[on.biomeAt(x, y)],
+    on.floorAt(x, y),
+    on.ceilingAt(x, y),
+  ];
+  const changed = (x: number, y: number) =>
+    groundOf(ground, x, y).join() !== groundOf(was, x, y).join();
+  const missions = MISSIONS.filter((mission) => mission.mapId === map.id);
+
+  type Point = { what: string; x: number; y: number; depthM?: number };
+  /** Every point a mission seats, marks, sounds, orders or drives, read off its literal. */
+  const pointsOf = (mission: MissionDefinition): Point[] => {
+    const points: Point[] = map.spawns.map((spawn) => ({ what: 'the spawn', ...spawn }));
+    for (const party of mission.parties) {
+      for (const thing of [...party.units, ...(party.structures ?? []), ...(party.emitters ?? [])])
+        points.push({ what: thing.tag, x: thing.x, y: thing.y, depthM: thing.depthM });
+    }
+    for (const marker of mission.markers) points.push({ what: marker.id, ...marker });
+    for (const sounding of mission.soundings ?? []) points.push({ what: sounding.id, ...sounding });
+    for (const beat of [...mission.beats, ...(mission.conditionalBeats ?? [])]) {
+      if (beat.kind === 'move') points.push({ what: `${beat.tag}'s move`, ...beat });
+      if (beat.kind === 'creature') {
+        if (beat.spawnAt !== undefined) points.push({ what: beat.tag, ...beat.spawnAt });
+        points.push({ what: `${beat.tag}, driven`, ...beat.driveTo });
+      }
+    }
+    return points;
+  };
+  type Leg = { what: string; from: Required<Point>; to: Required<Point> };
+  /** Every scripted leg: a hull's seat, then its moves in tick order; each creature's drives. */
+  const legsOf = (mission: MissionDefinition): Leg[] => {
+    const legs: Leg[] = [];
+    const where = new Map<string, Required<Point>>();
+    for (const party of mission.parties) {
+      for (const unit of party.units) where.set(unit.tag, { what: unit.tag, ...unit });
+    }
+    for (const beat of [...mission.beats].sort((a, b) => a.atTick - b.atTick)) {
+      if (beat.kind !== 'move' && beat.kind !== 'creature') continue;
+      const key = beat.kind === 'move' ? beat.tag : `creature ${beat.tag}`;
+      const from =
+        beat.kind === 'creature' && beat.spawnAt !== undefined
+          ? { what: beat.tag, ...beat.spawnAt }
+          : where.get(key)!;
+      const at = beat.kind === 'move' ? beat : beat.driveTo;
+      const to = { what: beat.tag, x: at.x, y: at.y, depthM: at.depthM ?? from.depthM };
+      legs.push({ what: `${beat.tag} at tick ${beat.atTick}`, from, to });
+      where.set(key, to);
+    }
+    return legs;
+  };
+
+  it('is played by Deep Furrow and In Writing', () => {
+    // Every block below reads its points off these two; a third mission on
+    // this map would be checked by them without being named here.
+    assert.deepEqual(
+      missions.map((mission) => mission.id),
+      ['seeding-deep-furrow', 'seeding-in-writing']
+    );
+  });
+
+  it('opens twelve cells that were rock, and changes nothing else', () => {
+    // §11: three at each wall's outer north corner, now the lanes' Open Water
+    // at 1,100 m, and three at each wall's foot, now the sill's Abyssal Trench
+    // at 2,600 m. A rock cell admits nothing, so none of the twelve closes a
+    // way a hull had.
+    const cells: Record<string, string[]> = {};
+    for (let y = cellM / 2; y < map.heightM; y += cellM) {
+      for (let x = cellM / 2; x < map.widthM; x += cellM) {
+        if (!changed(x, y)) continue;
+        assert.deepEqual(groundOf(was, x, y), ['OpenWater', 0, 1], `${x},${y} was rock`);
+        const now = `${regionAt(map, x, y)} ${groundOf(ground, x, y).join('/')}`;
+        (cells[now] ??= []).push(`${x},${y}`);
+      }
+    }
+    assert.deepEqual(cells, {
+      'The Lanes OpenWater/1100/0': [
+        '125,625',
+        '375,625',
+        '3625,625',
+        '3875,625',
+        '125,875',
+        '3875,875',
+      ],
+      'The Sill AbyssalTrench/2600/0': [
+        '1125,2625',
+        '2875,2625',
+        '875,2875',
+        '1125,2875',
+        '2875,2875',
+        '3125,2875',
+      ],
+    });
+  });
+
+  it('stands every authored point of both missions on the ground it stood on', () => {
+    // The counts keep a point from dropping out unasked: the spawn, every
+    // seat, structure, marker and sounding, and every move and creature point.
+    // §11's ground, by the region that paints it.
+    const SECTION_11: Record<string, unknown[]> = {
+      'The Lanes': ['OpenWater', 1100, 0],
+      'The Foot': ['OpenWater', 900, 0],
+      'The Cleft': ['AbyssalTrench', 1800, 0],
+      'The Furrow': ['KelpForest', 2200, 0],
+      'Second Furrow': ['AbyssalTrench', 2200, 0],
+      'The Sill': ['AbyssalTrench', 2600, 0],
+    };
+    const counts: Record<string, number> = {};
+    const regions: Record<string, Record<string, number>> = {};
+    for (const mission of missions) {
+      const points = pointsOf(mission);
+      counts[mission.id] = points.length;
+      const tally: Record<string, number> = {};
+      for (const { what, x, y } of points) {
+        const where = `${mission.id}: ${what} at ${x},${y}`;
+        const name = regionAt(map, x, y);
+        assert.deepEqual(groundOf(ground, x, y), SECTION_11[name], where);
+        assert.deepEqual(groundOf(ground, x, y), groundOf(was, x, y), where);
+        assert.equal(name, regionAt(boxes, x, y), where);
+        tally[name] = (tally[name] ?? 0) + 1;
+      }
+      regions[mission.id] = tally;
+    }
+    assert.deepEqual(counts, { 'seeding-deep-furrow': 25, 'seeding-in-writing': 106 });
+    assert.deepEqual(regions, {
+      'seeding-deep-furrow': {
+        'The Lanes': 2,
+        'The Foot': 6,
+        'The Cleft': 12,
+        'The Furrow': 1,
+        'Second Furrow': 2,
+        'The Sill': 2,
+      },
+      'seeding-in-writing': {
+        'The Lanes': 2,
+        'The Foot': 2,
+        'The Cleft': 15,
+        'The Furrow': 49,
+        'Second Furrow': 29,
+        'The Sill': 9,
+      },
+    });
+  });
+
+  it('keeps every cell of every mission region on the ground it stood on', () => {
+    let cells = 0;
+    for (const mission of missions) {
+      for (const region of mission.regions) {
+        for (let y = cellM / 2; y < map.heightM; y += cellM) {
+          for (let x = cellM / 2; x < map.widthM; x += cellM) {
+            if (!shapeContains(region, x, y)) continue;
+            cells++;
+            const where = `${mission.id}: ${region.id} at ${x},${y}`;
+            assert.deepEqual(groundOf(ground, x, y), groundOf(was, x, y), where);
+            assert.equal(regionAt(map, x, y), regionAt(boxes, x, y), where);
+          }
+        }
+      }
+    }
+    // Deep Furrow's Foot, both furrows, the standing furrow and the second;
+    // In Writing's Foot and second furrow: every cell centre.
+    assert.equal(cells, 8 + 18 + 12 + 6 + (8 + 6));
+  });
+
+  it('crosses no cell whose PF moved on a line between two authored points', () => {
+    // §11: the sill's six new cells carry at 1.6 where the rock's paint was
+    // 1.0, and the other six kept the rock's Open Water. Every pair of points
+    // either mission authors, walked every ten metres.
+    let pairs = 0;
+    for (const mission of missions) {
+      const points = pointsOf(mission);
+      for (let i = 0; i < points.length; i++) {
+        for (let j = i + 1; j < points.length; j++) {
+          pairs++;
+          const a = points[i]!;
+          const b = points[j]!;
+          const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 10));
+          for (let k = 0; k <= n; k++) {
+            const x = a.x + ((b.x - a.x) * k) / n;
+            const y = a.y + ((b.y - a.y) * k) / n;
+            const where = `${mission.id}: ${a.what} to ${b.what} at ${x},${y}`;
+            assert.equal(ground.biomeAt(x, y), was.biomeAt(x, y), where);
+          }
+        }
+      }
+    }
+    assert.equal(pairs, (25 * 24) / 2 + (106 * 105) / 2);
+  });
+
+  it('walks and routes every scripted leg as it did in rectangles', () => {
+    // A move or drive whose straight segment the ground refuses is planned by
+    // `Pathfinder.findPath`, and a partial route ends at the reachable cell
+    // nearest the order, so an opened cell could pull a hull off its track
+    // without its line crossing it. So every leg is walked every ten metres
+    // for its biome and what admits it, and asked from every 125 m of its
+    // line, at every 25 m of the depths it spans and at its end depth.
+    const pathfinder = new Pathfinder(ground.cols, ground.rows);
+    const route: number[] = [];
+    const before: number[] = [];
+    const counts: Record<string, number> = {};
+    let planned = 0;
+    for (const mission of missions) {
+      const legs = legsOf(mission);
+      counts[mission.id] = legs.length;
+      for (const { what, from, to } of legs) {
+        const shallowM = Math.min(from.depthM, to.depthM);
+        const deepestM = Math.max(from.depthM, to.depthM);
+        const depths: number[] = [];
+        for (let depthM = shallowM; depthM < deepestM; depthM += 25) depths.push(depthM);
+        depths.push(deepestM);
+        const walk = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / 10));
+        for (let i = 0; i <= walk; i++) {
+          const x = from.x + ((to.x - from.x) * i) / walk;
+          const y = from.y + ((to.y - from.y) * i) / walk;
+          const where = `${mission.id}: ${what} at ${Math.round(x)},${Math.round(y)}`;
+          assert.equal(ground.biomeAt(x, y), was.biomeAt(x, y), where);
+          for (const depthM of depths) {
+            assert.equal(
+              ground.admits(x, y, depthM),
+              was.admits(x, y, depthM),
+              `${where} ${depthM}`
+            );
+          }
+        }
+        const n = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / 125));
+        for (const depthM of depths) {
+          for (let i = 0; i <= n; i++) {
+            const x = from.x + ((to.x - from.x) * i) / n;
+            const y = from.y + ((to.y - from.y) * i) / n;
+            const where = `${mission.id}: ${what} from ${Math.round(x)},${Math.round(y)} at ${depthM} m`;
+            const straight = ground.segmentAdmits(x, y, to.x, to.y, depthM);
+            assert.equal(straight, was.segmentAdmits(x, y, to.x, to.y, depthM), where);
+            if (straight) continue;
+            planned++;
+            const reached = pathfinder.findPath(ground, x, y, to.x, to.y, depthM, route);
+            const reachedWas = pathfinder.findPath(was, x, y, to.x, to.y, depthM, before);
+            assert.equal(reached, reachedWas, where);
+            assert.deepEqual(route, before, `${where}: the route it took in rectangles`);
+          }
+        }
+      }
+    }
+    assert.deepEqual(counts, { 'seeding-deep-furrow': 9, 'seeding-in-writing': 75 });
+    assert.ok(planned > 0, 'some leg is refused its straight segment and planned');
+  });
+
+  it('plays both missions with no input on the tracks the rectangles gave them', () => {
+    // Every positioned entity every 5 s, and every line the mission speaks,
+    // keyed by eid less the run's smallest: bitecs numbers entities across
+    // worlds, so the second run's eids start where the first's stopped. To
+    // the tide, because each plays in a second or two.
+    const positioned = defineQuery([Position]);
+    const replay = (on: MapDefinition, mission: MissionDefinition) => {
+      const match = new Match(on, { mission, fauna: false, seed: 77 });
+      const tracks: string[][] = [];
+      const lines: string[] = [];
+      let base = -1;
+      for (let tick = 0; tick <= T(20) && match.missionOver === null; tick++) {
+        match.update(STEP_MS);
+        match.takeMissionView();
+        for (const line of match.takeMissionLines()) lines.push(`${tick} ${line.text}`);
+        if (tick % (5 * SIM.TICK_HZ) !== 0) continue;
+        const eids = [...positioned(match.world)].sort((a, b) => a - b);
+        if (base < 0) base = eids[0]!;
+        tracks.push(
+          eids.map((e) => `${e - base} ${Position.x[e]},${Position.y[e]}@${Position.depth[e]}`)
+        );
+      }
+      return { tracks, lines, over: match.missionOver };
+    };
+    for (const mission of missions) {
+      const before = replay(boxes, mission);
+      const after = replay(map, mission);
+      assert.ok(after.over !== null, `${mission.id} never ended`);
+      assert.equal(
+        after.tracks.length,
+        before.tracks.length,
+        `${mission.id} ran a different length`
+      );
+      for (let i = 0; i < before.tracks.length; i++) {
+        assert.deepEqual(after.tracks[i], before.tracks[i], `${mission.id} parts at ${i * 5}s`);
+      }
+      assert.deepEqual(after.lines, before.lines, `${mission.id} spoke differently`);
+      assert.deepEqual(after.over, before.over, `${mission.id} closed differently`);
+    }
   });
 });

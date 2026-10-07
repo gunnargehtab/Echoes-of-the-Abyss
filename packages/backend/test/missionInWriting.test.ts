@@ -147,17 +147,55 @@ describe('the Furrow, as docs/mission-in-writing.md §11 reuses it', () => {
     // ground beat and parties — never geometry, which is campaign.md §2 rule
     // 5's second concrete pair after Marr Plateau under Tend and Convocation.
     assert.equal(MISSION_DEF.mapId, 'anholt-furrow');
+    // Each row in §11's own form: a rectangle's four numbers, or a polygon's
+    // corners in order (both walls and the sill since #1153).
+    const shape = (r: (typeof ANHOLT_FURROW.regions)[number]) =>
+      r.shape === 'polygon'
+        ? ['polygon', ...r.points.flat()]
+        : [r.shape ?? 'rect', r.x, r.y, r.widthM, r.heightM];
     assert.deepEqual(
-      ANHOLT_FURROW.regions.map((r) => [r.x, r.y, r.widthM, r.heightM, r.biome, r.floorM]),
+      ANHOLT_FURROW.regions.map((r) => [...shape(r), r.biome, r.floorM]),
       [
-        [0, 0, 4000, 3000, Biome.OpenWater, 1100],
-        [1500, 0, 1000, 500, Biome.OpenWater, 900],
-        [0, 500, 1250, 2500, Biome.OpenWater, 0],
-        [2750, 500, 1250, 2500, Biome.OpenWater, 0],
-        [1250, 500, 1500, 1250, Biome.AbyssalTrench, 1800],
-        [1250, 1750, 1000, 750, Biome.KelpForest, 2200],
-        [2250, 1750, 500, 750, Biome.AbyssalTrench, 2200],
-        [1250, 2500, 1500, 500, Biome.AbyssalTrench, 2600],
+        ['rect', 0, 0, 4000, 3000, Biome.OpenWater, 1100],
+        ['rect', 1500, 0, 1000, 500, Biome.OpenWater, 900],
+        [
+          'polygon',
+          0,
+          1000,
+          750,
+          500,
+          1250,
+          500,
+          1250,
+          2500,
+          500,
+          3000,
+          0,
+          3000,
+          Biome.OpenWater,
+          0,
+        ],
+        [
+          'polygon',
+          2750,
+          500,
+          3250,
+          500,
+          4000,
+          1000,
+          4000,
+          3000,
+          3500,
+          3000,
+          2750,
+          2500,
+          Biome.OpenWater,
+          0,
+        ],
+        ['rect', 1250, 500, 1500, 1250, Biome.AbyssalTrench, 1800],
+        ['rect', 1250, 1750, 1000, 750, Biome.KelpForest, 2200],
+        ['rect', 2250, 1750, 500, 750, Biome.AbyssalTrench, 2200],
+        ['polygon', 1250, 2500, 2750, 2500, 3500, 3000, 500, 3000, Biome.AbyssalTrench, 2600],
       ],
       '§11: the eight rows of the table, in the document’s painting order'
     );
