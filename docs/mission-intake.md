@@ -545,8 +545,8 @@ Drawn in shapes since issue #1152, a box of #1139. Every number a shape states i
 cell, and a cell is its region's when the shape holds the cell's centre ([maps.md](maps.md), "How
 a map is written"). Only the two overhangs changed. Each one's two corners on the bench side are
 cut on a slant, so it narrows toward the bench and meets it across the middle 500 m of the bench's
-edge rather than all 1,500, and the Upper Ninth's 2,400 m now shows beside each of the bench's
-four corners.
+edge rather than all 1,500, and the Upper Ninth's 2,400 m now runs along the bench's west and east
+edges for the 500 m at each end.
 
 Six regions stay boxes, each for a reason. The Upper Ninth is the whole map's base. The Cohort
 Halls are built. The mission restates the ascent, the muster and the bench as its `the-ascent`,
@@ -562,7 +562,8 @@ below the 1,900 m that is the deepest this mission authors. That band is where a
 the floor goes, thirty metres off it, so the 12 cells cost one: on them it holds 2,370 m where it
 held 2,120, 250 m lower; following the bench's floor at 2,220 m or the Upper Ninth's at 2,370 it
 can now cross onto them, where before they refused it; and following an overhang's at 2,120 it
-crosses onto them as it did. The spawn, all twelve hulls, the ascent's marker, all eight Hollows
+crosses onto them as it did, then sinks to 2,370 m on them, where its overhang and the bench refuse
+it, so it can no longer cross back onto either, as it could at 2,120. The spawn, all twelve hulls, the ascent's marker, all eight Hollows
 and both ends of the Sounder's line stand on the ground they stood on, and so does every cell
 centre of the three mission regions. The Sounder's line crosses no changed cell, and
 asked from every 125 m of either leg at every 25 m of depth to its 1,900 m, it routes as it did.
@@ -571,8 +572,8 @@ in rectangles, sampled every five seconds, to the same reading and the same tran
 
 **The overhangs are the map's one piece of gameplay geometry and they are not a fence.** They
 stand at 2,150 m against a bench floor of 2,250 — a hundred metres of lift, which is nothing, and
-that is the point: nothing on this map stops the intake going anywhere. What separates the two
-overhangs is four kilometres of open bench, and four kilometres is the whole problem. Terrain may
+that is the point: nothing on this map stops the intake going anywhere. The outer Hollows on the
+two stand four kilometres apart, two of them open bench, and four kilometres is the whole problem. Terrain may
 raise a hull and may never lower one ([systems-depth.md](systems-depth.md) §2), and here it barely
 raises one. The map is not difficult. It is *large*, and the intake is twelve.
 

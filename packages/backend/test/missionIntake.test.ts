@@ -448,14 +448,31 @@ describe('the ground the intake stands on — §11, drawn in shapes (#1152)', ()
     assert.deepEqual([...differ].sort(), [...named].sort(), 'a named cell admits as it did');
     // §11's follow-floor cost, at the depths a hull following each floor holds:
     // the bench's 2,220 and the Ninth's 2,370 now cross onto the 12 cells, and
-    // an overhang's 2,120 crosses onto them as it did.
+    // an overhang's 2,120 crosses onto them as it did. And what it loses: on
+    // them it now holds 2,370, which every overhang or bench cell beside them
+    // refuses, so it cannot cross back onto either as it could at 2,120.
+    let neighbours = 0;
     for (const cell of named) {
       const [x, y] = cell.split(',').map(Number) as [number, number];
       const at = (depthM: number) => [was.admits(x, y, depthM), ground.admits(x, y, depthM)];
+      for (const [dx, dy] of [
+        [map.cellM, 0],
+        [-map.cellM, 0],
+        [0, map.cellM],
+        [0, -map.cellM],
+      ] as const) {
+        const [nx, ny] = [x + dx, y + dy];
+        if (![2150, 2250].includes(ground.floorAt(nx, ny))) continue;
+        neighbours++;
+        const beside = `${nx},${ny} beside ${cell}`;
+        assert.equal(ground.admits(nx, ny, 2120), true, `${beside} at 2,120 m`);
+        assert.equal(ground.admits(nx, ny, 2370), false, `${beside} at 2,370 m`);
+      }
       assert.deepEqual(at(2120), [true, true], `${cell} at 2,120 m`);
       assert.deepEqual(at(2220), [false, true], `${cell} at 2,220 m`);
       assert.deepEqual(at(2370), [false, true], `${cell} at 2,370 m`);
     }
+    assert.equal(neighbours, 24, 'an overhang or bench cell beside the 12 moved');
   });
 
   it('routes the Sounder up the line and back the way it was routed in rectangles', () => {

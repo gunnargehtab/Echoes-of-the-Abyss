@@ -15,8 +15,9 @@
  * **The overhangs are the map's one piece of gameplay geometry and they are
  * not a fence.** They stand at 2,150 m against a bench floor of 2,250 — a
  * hundred metres of lift, which is nothing, and that is the point: nothing on
- * this map stops the intake going anywhere. What separates the two overhangs
- * is four kilometres of open bench, and four kilometres is the whole problem.
+ * this map stops the intake going anywhere. The outer Hollows on the two stand
+ * four kilometres apart, two of them open bench, and four kilometres is the
+ * whole problem.
  * The map is not difficult. It is *large*, and the intake is twelve (§11).
  *
  * **Every useful move is upward.** The Hollows sit 200 m above the muster, the
@@ -108,7 +109,8 @@ export const BANDING_GROUND: MapDefinition = {
     },
     // Its two corners on the bench side are cut on a slant, so it narrows
     // toward the bench and meets it across the middle 500 m of the bench's
-    // edge, and the Ninth's 2,400 m shows beside the bench's corners. Every
+    // edge, and the Ninth's 2,400 m runs along the bench's edge for the 500 m
+    // at each end. Every
     // Hollow on it stands on a cell the cut leaves.
     {
       shape: 'polygon',
