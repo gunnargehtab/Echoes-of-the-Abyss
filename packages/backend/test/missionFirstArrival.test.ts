@@ -154,7 +154,7 @@ const cellOf = (x: number, y: number): string =>
 
 describe('the Rim, reused unchanged — docs/mission-first-arrival.md §11', () => {
   it('adds no region and moves no metre of the chart Prospect authored', () => {
-    // §11's whole claim: "same rectangles, same floors, same biomes, same
+    // §11's whole claim: "same shapes, same floors, same biomes, same
     // spawn", and campaign.md §8's "the same terrain four times and never the
     // same mission" applied literally. The mission's own rectangle is not a
     // new piece of ground — it is the map's Terraces row, restated because a
@@ -168,12 +168,26 @@ describe('the Rim, reused unchanged — docs/mission-first-arrival.md §11', () 
 
     assert.equal(M.regions.length, 1, '§11: the literal adds no region');
     const terraces = M.regions[0]!;
-    const painted = MOUTH_RIM.regions.find((region) => region.biome === Biome.ResonanceField)!;
-    assert.deepEqual(
-      [terraces.x, terraces.y, terraces.widthM, terraces.heightM],
-      [painted.x, painted.y, painted.widthM, painted.heightM],
-      '§8, §11: the hold is the map’s Terraces rectangle to the metre'
-    );
+    // Asked of the painted cells rather than of the region's corners (#1146):
+    // the map is drawn in shapes, and the hold is the Terraces when every cell
+    // centre it covers is crystal and every crystal cell on the chart is in it.
+    const ground = terrainFor(MOUTH_RIM);
+    const cellM = MOUTH_RIM.cellM;
+    const hold: string[] = [];
+    const crystal: string[] = [];
+    for (let y = cellM / 2; y < MOUTH_RIM.heightM; y += cellM) {
+      for (let x = cellM / 2; x < MOUTH_RIM.widthM; x += cellM) {
+        const inHold =
+          x >= terraces.x &&
+          x < terraces.x + terraces.widthM &&
+          y >= terraces.y &&
+          y < terraces.y + terraces.heightM;
+        if (inHold) hold.push(`${x},${y}`);
+        if (ground.biomeAt(x, y) === Biome.ResonanceField) crystal.push(`${x},${y}`);
+      }
+    }
+    assert.equal(hold.length, 96, 'the hold, every cell centre');
+    assert.deepEqual(crystal, hold, '§8, §11: the hold is the map’s Terraces, cell for cell');
     assert.equal(terraces.pressureBonus, undefined, '§11: the rim is not manufactured water');
   });
 

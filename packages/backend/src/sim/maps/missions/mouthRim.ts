@@ -16,9 +16,9 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition, MapRect } from '../types.ts';
+import type { MapDefinition } from '../types.ts';
 
-export const MOUTH_RIM: MapDefinition<MapRect> = {
+export const MOUTH_RIM: MapDefinition = {
   id: 'mouth-rim',
   name: 'The Rim',
   idealUse: 'The Ledger, mission six. The only candidate field, and everyone already on it.',
@@ -28,6 +28,12 @@ export const MOUTH_RIM: MapDefinition<MapRect> = {
   doc: 'docs/mission-prospect.md §11; docs/maps.md — Mission maps',
   cellM: 250,
   floorM: 2600,
+  // One row per row of §11's table, in the document's order. Later regions
+  // overwrite earlier ones; every number a shape states is a whole 250 m cell,
+  // and a cell is its region's when the shape holds its centre (#1146). Every
+  // point the five missions on this map seat, sound, order or drive, and every
+  // cell of their mission regions, stands on the ground it stood on when these
+  // were all rectangles, and `missionProspect.test.ts` pins it.
   regions: [
     {
       x: 0,
@@ -36,8 +42,10 @@ export const MOUTH_RIM: MapDefinition<MapRect> = {
       heightM: 4000,
       biome: Biome.OpenWater,
       floorM: 2600,
-      note: 'The Deep Water — the base water. Painted first; everything else is cut into it',
+      note: "The Deep Water — the base water. Painted first; everything else is cut into it. It shows where the slopes' foot is cut back, at the terraces' depth",
     },
+    // A box, because three missions restate it as a `staging` region, this
+    // same rectangle: the return line is the water drawn.
     {
       x: 0,
       y: 0,
@@ -47,15 +55,34 @@ export const MOUTH_RIM: MapDefinition<MapRect> = {
       floorM: 1500,
       note: 'The Staging — the approach and the way home: below the layer, above the commitment. The return line',
     },
+    // Its top row runs the map's whole width under the staging, so every way
+    // south from the return line crosses it. Its foot is cut back where no
+    // mission seats, sends or bounds anything: a bay at the west edge, a
+    // gully east of it, and the south-east corner, where the Deep Water shows
+    // at 2,600 m. From 2,500 to 5,500 m the foot stays straight: readers
+    // ordered to 2,500 m cross it, node-one's grant reaches into its last row,
+    // and First Arrival's reconnaissance and party stand on it in the east.
     {
-      x: 0,
-      y: 1000,
-      widthM: 6000,
-      heightM: 1000,
+      shape: 'polygon',
+      points: [
+        [0, 1000],
+        [6000, 1000],
+        [6000, 1250],
+        [5500, 2000],
+        [2500, 2000],
+        [2250, 1250],
+        [1750, 1250],
+        [1500, 2000],
+        [1250, 2000],
+        [750, 1500],
+        [250, 1500],
+        [0, 1750],
+      ],
       biome: Biome.OpenWater,
       floorM: 2200,
       note: "The Slopes — the descent's ground: two thousand metres of arriving",
     },
+    // A box, because First Arrival's hold is this same rectangle.
     {
       x: 0,
       y: 2000,
@@ -65,6 +92,9 @@ export const MOUTH_RIM: MapDefinition<MapRect> = {
       floorM: 2600,
       note: 'The Terraces — crystal country at the rim: the six faces, and the ring that never settles',
     },
+    // A box, because it is the whole southern kilometre at PF 1.60: moving
+    // its edge anywhere moves trench water, and all five missions seat or
+    // send something onto it.
     {
       x: 0,
       y: 3000,

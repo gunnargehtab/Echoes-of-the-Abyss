@@ -141,7 +141,7 @@ function stopsAt(tick: number): { tag: string; x: number; y: number; depthM?: nu
 }
 
 describe('the Rim, as docs/mission-rim-deposits.md §11 reuses it', () => {
-  it('is Prospect’s map, untouched — same rectangles, floors, biomes and spawn', () => {
+  it('is Prospect’s map, untouched — same shapes, floors, biomes and spawn', () => {
     // §11: "Reused unchanged — the literal is mouthRim.ts, authored for
     // Prospect §11 and untouched by this mission, as First Arrival left it."
     // campaign.md §8's "the same terrain four times and never the same
@@ -149,21 +149,42 @@ describe('the Rim, as docs/mission-rim-deposits.md §11 reuses it', () => {
     // about its own map is that it did not touch it.
     assert.equal(CHORD_RIM_DEPOSITS.mapId, 'mouth-rim');
     assert.equal(missionMapById(CHORD_RIM_DEPOSITS.mapId), MOUTH_RIM);
+    // Four boxes and, since #1146, the Slopes' polygon: read as §11 writes
+    // each row, its shape first.
     assert.deepEqual(
       MOUTH_RIM.regions.map((region) => [
-        region.x,
-        region.y,
-        region.widthM,
-        region.heightM,
+        region.shape === 'polygon'
+          ? ['polygon', region.points]
+          : [region.shape ?? 'rect', region.x, region.y, region.widthM, region.heightM],
         region.biome,
         region.floorM,
       ]),
       [
-        [0, 0, 6000, 4000, Biome.OpenWater, 2600],
-        [0, 0, 6000, 1000, Biome.OpenWater, 1500],
-        [0, 1000, 6000, 1000, Biome.OpenWater, 2200],
-        [0, 2000, 6000, 1000, Biome.ResonanceField, 2600],
-        [0, 3000, 6000, 1000, Biome.AbyssalTrench, 3100],
+        [['rect', 0, 0, 6000, 4000], Biome.OpenWater, 2600],
+        [['rect', 0, 0, 6000, 1000], Biome.OpenWater, 1500],
+        [
+          [
+            'polygon',
+            [
+              [0, 1000],
+              [6000, 1000],
+              [6000, 1250],
+              [5500, 2000],
+              [2500, 2000],
+              [2250, 1250],
+              [1750, 1250],
+              [1500, 2000],
+              [1250, 2000],
+              [750, 1500],
+              [250, 1500],
+              [0, 1750],
+            ],
+          ],
+          Biome.OpenWater,
+          2200,
+        ],
+        [['rect', 0, 2000, 6000, 1000], Biome.ResonanceField, 2600],
+        [['rect', 0, 3000, 6000, 1000], Biome.AbyssalTrench, 3100],
       ],
       '§11: the Deep Water, the Staging, the Slopes, the Terraces and the Lip'
     );
@@ -172,7 +193,11 @@ describe('the Rim, as docs/mission-rim-deposits.md §11 reuses it', () => {
     assert.equal(MOUTH_RIM.cellM, 250);
     assert.equal(MOUTH_RIM.floorM, 2600, '§11: base floor 2,600');
     for (const region of MOUTH_RIM.regions) {
-      for (const metres of [region.x, region.y, region.widthM, region.heightM]) {
+      const stated =
+        region.shape === 'polygon'
+          ? region.points.flat()
+          : [region.x, region.y, region.widthM, region.heightM];
+      for (const metres of stated) {
         assert.equal(metres % MOUTH_RIM.cellM, 0, `${region.note}: off the 250 m cell grid`);
       }
     }

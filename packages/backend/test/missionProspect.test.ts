@@ -12,17 +12,37 @@
  *   Partial: the column never left the staging, so the ascent reads met and
  *   the field does not, with the ledger's unheard line and both attendant
  *   gaps assembled beneath it.
+ *
+ * And the ground §11 draws in shapes since #1146, for all five missions on
+ * it: every authored point, leg and mission-region cell on the ground it
+ * stood on in rectangles, read off the painted cells.
  */
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { MissionOutcome, SIM, UnitKind, statsFor } from '@echoes/shared';
+import {
+  Biome,
+  MissionOutcome,
+  SIM,
+  STRUCTURE_AURAS,
+  StructureKind,
+  THERMOCLINE,
+  UnitKind,
+  statsFor,
+} from '@echoes/shared';
 import { defineQuery, hasComponent } from 'bitecs';
 import { Owner, Pressure, Unit, Weapon } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
-import { missionMapById } from '../src/sim/maps/index.ts';
-import { LEDGER_PROSPECT } from '../src/sim/missions/index.ts';
+import { MOUTH_RIM, missionMapById, terrainFor } from '../src/sim/maps/index.ts';
+import {
+  ATTENDING_FIRST_ARRIVAL,
+  CHORD_RIM_DEPOSITS,
+  CHORD_SECOND_CHORD,
+  LEDGER_PROSPECT,
+  SEEDING_SECOND_SEEDING,
+  type MissionDefinition,
+} from '../src/sim/missions/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const T = (minutes: number, seconds = 0): number => (minutes * 60 + seconds) * SIM.TICK_HZ;
@@ -81,5 +101,198 @@ describe('the writ, run out — docs/mission-prospect.md §2, §5, §6, §8', ()
     assert.match(result.epilogue, /classified, at length, by ears that keep records/);
     assert.match(result.epilogue, /western return was not resolved/);
     assert.match(result.epilogue, /file does not believe/);
+  });
+});
+
+describe('The Rim, as docs/mission-prospect.md §11 draws it (#1146)', () => {
+  // The map is drawn in shapes since #1146, and a reshape is new content,
+  // never a lever: every place the five missions on it seat, sound, order or
+  // drive stands on the ground it stood on in rectangles. Asked of the painted
+  // cells, because the cell is what a hull's floor and PF are read from. In
+  // rectangles §11's rows were four bands a kilometre deep each, so the ground
+  // a point stood on is its band's.
+  const ground = terrainFor(MOUTH_RIM);
+  const cellM = MOUTH_RIM.cellM;
+  const at = (x: number, y: number) => [
+    ground.biomeAt(x, y),
+    ground.floorAt(x, y),
+    ground.ceilingAt(x, y),
+  ];
+  const BANDS = {
+    staging: [Biome.OpenWater, 1500, 0],
+    slopes: [Biome.OpenWater, 2200, 0],
+    terraces: [Biome.ResonanceField, 2600, 0],
+    lip: [Biome.AbyssalTrench, 3100, 0],
+  } as const;
+  const DEEP = [Biome.OpenWater, 2600, 0];
+  const bandOf = (y: number) =>
+    BANDS[y < 1000 ? 'staging' : y < 2000 ? 'slopes' : y < 3000 ? 'terraces' : 'lip'];
+  const MISSIONS: readonly MissionDefinition[] = [
+    LEDGER_PROSPECT,
+    SEEDING_SECOND_SEEDING,
+    ATTENDING_FIRST_ARRIVAL,
+    CHORD_RIM_DEPOSITS,
+    CHORD_SECOND_CHORD,
+  ];
+  type Point = { what: string; x: number; y: number; depthM?: number };
+  /** Every point a mission seats, marks, sounds, orders or drives, read off its literal. */
+  const pointsOf = (mission: MissionDefinition): Point[] => {
+    const points: Point[] = MOUTH_RIM.spawns.map((spawn) => ({ what: 'the spawn', ...spawn }));
+    for (const party of mission.parties) {
+      for (const thing of [...party.units, ...(party.structures ?? []), ...(party.emitters ?? [])])
+        points.push({ what: thing.tag, x: thing.x, y: thing.y, depthM: thing.depthM });
+    }
+    for (const marker of mission.markers)
+      points.push({ what: marker.id, x: marker.x, y: marker.y });
+    for (const sounding of mission.soundings ?? [])
+      points.push({ what: sounding.id, x: sounding.x, y: sounding.y });
+    for (const row of mission.walk?.rows ?? []) points.push({ what: row.id, x: row.x, y: row.y });
+    if (mission.commanderAbility !== undefined) {
+      const { id, x, y } = mission.commanderAbility;
+      points.push({ what: id, x, y });
+    }
+    for (const beat of [...mission.beats, ...(mission.conditionalBeats ?? [])]) {
+      if (beat.kind === 'move') points.push({ what: `${beat.tag}'s move`, x: beat.x, y: beat.y });
+      if (beat.kind === 'transit') {
+        for (const leg of beat.legs) points.push({ what: `${beat.tag}'s leg`, x: leg.x, y: leg.y });
+      }
+      if (beat.kind === 'creature') {
+        if (beat.spawnAt !== undefined) points.push({ what: beat.tag, ...beat.spawnAt });
+        points.push({ what: `${beat.tag}, driven`, x: beat.driveTo.x, y: beat.driveTo.y });
+      }
+    }
+    return points;
+  };
+  type Leg = { what: string; from: Point; to: Point; deepestM: number };
+  /** Every scripted leg: a hull's seat, then its moves in tick order, and each creature's drive. */
+  const legsOf = (mission: MissionDefinition): Leg[] => {
+    const legs: Leg[] = [];
+    const where = new Map<string, Point>();
+    for (const party of mission.parties) {
+      for (const unit of party.units) where.set(unit.tag, { what: unit.tag, ...unit });
+    }
+    for (const beat of [...mission.beats].sort((a, b) => a.atTick - b.atTick)) {
+      if (beat.kind === 'move') {
+        const from = where.get(beat.tag)!;
+        const to = { what: beat.tag, x: beat.x, y: beat.y, depthM: beat.depthM ?? from.depthM };
+        legs.push({ what: beat.tag, from, to, deepestM: Math.max(from.depthM!, to.depthM!) });
+        where.set(beat.tag, to);
+      }
+      if (beat.kind === 'creature' && beat.spawnAt !== undefined) {
+        const from = { what: beat.tag, ...beat.spawnAt };
+        const to = { what: beat.tag, ...beat.driveTo };
+        legs.push({ what: beat.tag, from, to, deepestM: Math.max(from.depthM, to.depthM ?? 0) });
+      }
+    }
+    return legs;
+  };
+
+  it('stands every authored point of all five missions on the ground it stood on', () => {
+    // The counts keep a point from dropping out unasked: the spawn, every
+    // seat, emitter, marker and sounding, and every move and creature point.
+    const counts: Record<string, number> = {};
+    for (const mission of MISSIONS) {
+      const points = pointsOf(mission);
+      counts[mission.id] = points.length;
+      for (const { what, x, y } of points) {
+        assert.deepEqual(at(x, y), bandOf(y), `${mission.id}: ${what} at ${x},${y}`);
+      }
+    }
+    assert.deepEqual(counts, {
+      'ledger-prospect': 37,
+      'seeding-second-seeding': 59,
+      'attending-first-arrival': 48,
+      'chord-rim-deposits': 65,
+      'chord-second-chord': 98,
+    });
+  });
+
+  it('keeps every cell of every mission region on the ground it stood on', () => {
+    let cells = 0;
+    for (const mission of MISSIONS) {
+      for (const region of mission.regions) {
+        for (let y = region.y + cellM / 2; y < region.y + region.heightM; y += cellM) {
+          for (let x = region.x + cellM / 2; x < region.x + region.widthM; x += cellM) {
+            assert.deepEqual(at(x, y), bandOf(y), `${mission.id}: ${region.id} at ${x},${y}`);
+            cells++;
+          }
+        }
+      }
+    }
+    // Prospect's staging, the furrow, First Arrival's hold, the Rim
+    // Deposits' staging and three faces, and the Second Chord's staging,
+    // cache and node water: every cell centre.
+    assert.equal(cells, 96 + 4 + 96 + 108 + 104);
+  });
+
+  it('walks every scripted leg over the same water, held at the same depth', () => {
+    // Where the slopes' foot is cut back the floor is 2,600 m, not 2,200 m:
+    // Open Water both, so a leg crosses the same biome, and a hull is held at
+    // the same depth there unless its leg is ordered below 2,200 m.
+    let legs = 0;
+    for (const mission of MISSIONS) {
+      for (const leg of legsOf(mission)) {
+        legs++;
+        const { from, to, deepestM } = leg;
+        const n = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / 10));
+        for (let i = 0; i <= n; i++) {
+          const x = from.x + ((to.x - from.x) * i) / n;
+          const y = from.y + ((to.y - from.y) * i) / n;
+          const [biome, floorM] = bandOf(y);
+          const where = `${mission.id}: ${leg.what} at ${Math.round(x)},${Math.round(y)}`;
+          assert.equal(ground.biomeAt(x, y), biome, where);
+          assert.equal(Math.min(ground.floorAt(x, y), deepestM), Math.min(floorM, deepestM), where);
+        }
+      }
+    }
+    assert.equal(legs, 16 + 30 + 16 + 29 + 59, 'every leg of all five missions');
+  });
+
+  it('cuts the slopes back in 17 cells, to the deep water, out of every grant', () => {
+    // §11: the bay, the gully and the south-east corner, all Open Water at
+    // the Deep Water's 2,600 m, so no cell's biome or PF moved. No point of
+    // them lies within a Sounding Spire's six hundred metres, so a PR-2 hull
+    // below 1,800 m there is rated for none of it.
+    const spires = MISSIONS.flatMap((mission) =>
+      mission.parties.flatMap((party) =>
+        (party.structures ?? []).filter((s) => s.kind === StructureKind.SoundingSpire)
+      )
+    );
+    assert.equal(spires.length, 5, "the Rim Deposits' two nodes, and the Second Chord's three");
+    const cut: string[] = [];
+    for (let y = cellM / 2; y < MOUTH_RIM.heightM; y += cellM) {
+      for (let x = cellM / 2; x < MOUTH_RIM.widthM; x += cellM) {
+        if (at(x, y).join() === bandOf(y).join()) continue;
+        cut.push(`${x},${y}`);
+        assert.deepEqual(at(x, y), DEEP, `${x},${y} is the deep water`);
+        assert.equal(bandOf(y), BANDS.slopes, `${x},${y} is cut from the slopes`);
+        for (const spire of spires) {
+          const dx = Math.max(Math.abs(spire.x - x) - cellM / 2, 0);
+          const dy = Math.max(Math.abs(spire.y - y) - cellM / 2, 0);
+          assert.ok(
+            Math.hypot(dx, dy) > STRUCTURE_AURAS.SOUNDING_SPIRE.RADIUS_M,
+            `${x},${y} is inside ${spire.tag}'s grant`
+          );
+        }
+      }
+    }
+    assert.equal(cut.length, 17, 'six in the bay, eight in the gully, three in the corner');
+  });
+
+  it('steps the floor down every column, below the layer, and never up on the way south', () => {
+    const rows = MOUTH_RIM.heightM / cellM;
+    for (let x = cellM / 2; x < MOUTH_RIM.widthM; x += cellM) {
+      const floors = Array.from({ length: rows }, (_, r) => ground.floorAt(x, (r + 0.5) * cellM));
+      for (let r = 0; r < rows; r++) {
+        assert.ok(
+          floors[r]! > THERMOCLINE.DEPTH_M,
+          `the floor at ${x}, row ${r} is below the layer`
+        );
+        if (r > 0)
+          assert.ok(floors[r]! >= floors[r - 1]!, `the floor rises southward at ${x}, row ${r}`);
+      }
+      // §11: the slopes' top row runs the map's whole width under the staging.
+      assert.deepEqual(at(x, 1125), BANDS.slopes, `the slopes' top row at x ${x}`);
+    }
   });
 });

@@ -68,7 +68,7 @@ import {
 import { defineQuery } from 'bitecs';
 import { Health, Owner, Position, Pressure, Structure, Unit } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
-import { MOUTH_RIM, mapById, missionMapById } from '../src/sim/maps/index.ts';
+import { MOUTH_RIM, mapById, missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { CHORD_RIM_DEPOSITS, LEDGER_PROSPECT } from '../src/sim/missions/index.ts';
 import type { MissionBeat, MissionUnit } from '../src/sim/missions/index.ts';
 import { CHORD_SECOND_CHORD } from '../src/sim/missions/secondChord.ts';
@@ -152,7 +152,7 @@ const cohortTags = Array.from({ length: 12 }, (_, i) => `cohort-${i + 1}`);
 
 describe('the Rim, as docs/mission-second-chord.md §11 reuses it', () => {
   it('is Prospect’s map, untouched — the fifth mission on one chart', () => {
-    // §11: "same rectangles, same floors, same biomes, same spawn", and
+    // §11: "same shapes, same floors, same biomes, same spawn", and
     // campaign.md §8's "the same terrain four times and never the same mission"
     // applied literally, one tide past the fourth.
     assert.equal(M.mapId, 'mouth-rim');
@@ -170,22 +170,43 @@ describe('the Rim, as docs/mission-second-chord.md §11 reuses it', () => {
     assert.equal(MOUTH_RIM.floorM, 2600);
   });
 
-  it('transcribes §11’s five bands, floor for floor', () => {
+  it('transcribes §11’s five regions, floor for floor', () => {
+    // Four boxes and, since #1146, the Slopes' polygon: read as §11 writes
+    // each row, its shape first.
     assert.deepEqual(
       MOUTH_RIM.regions.map((region) => [
-        region.x,
-        region.y,
-        region.widthM,
-        region.heightM,
+        region.shape === 'polygon'
+          ? ['polygon', region.points]
+          : [region.shape ?? 'rect', region.x, region.y, region.widthM, region.heightM],
         region.biome,
         region.floorM,
       ]),
       [
-        [0, 0, 6000, 4000, Biome.OpenWater, 2600],
-        [0, 0, 6000, 1000, Biome.OpenWater, 1500],
-        [0, 1000, 6000, 1000, Biome.OpenWater, 2200],
-        [0, 2000, 6000, 1000, Biome.ResonanceField, 2600],
-        [0, 3000, 6000, 1000, Biome.AbyssalTrench, 3100],
+        [['rect', 0, 0, 6000, 4000], Biome.OpenWater, 2600],
+        [['rect', 0, 0, 6000, 1000], Biome.OpenWater, 1500],
+        [
+          [
+            'polygon',
+            [
+              [0, 1000],
+              [6000, 1000],
+              [6000, 1250],
+              [5500, 2000],
+              [2500, 2000],
+              [2250, 1250],
+              [1750, 1250],
+              [1500, 2000],
+              [1250, 2000],
+              [750, 1500],
+              [250, 1500],
+              [0, 1750],
+            ],
+          ],
+          Biome.OpenWater,
+          2200,
+        ],
+        [['rect', 0, 2000, 6000, 1000], Biome.ResonanceField, 2600],
+        [['rect', 0, 3000, 6000, 1000], Biome.AbyssalTrench, 3100],
       ],
       '§11: the Deep Water, the Staging, the Slopes, the Terraces and the Lip'
     );
@@ -771,11 +792,20 @@ describe('what is heard, as docs/mission-second-chord.md §7 prices it', () => {
     // than the depth the crossing is priced at, which is why every Order hull
     // is seated at 1,400 and takes 1,750 only once it is over the Slopes. The
     // three bands south of the Staging are the ones §6 enumerates, and they
-    // are the ones that admit it.
-    const [, staging, slopes, terraces, lip] = MOUTH_RIM.regions;
+    // are the ones that admit it — with the deep water where #1146 cut the
+    // Slopes' foot back, at 2,600 m, which admits it too.
+    const [deep, staging, slopes, terraces, lip] = MOUTH_RIM.regions;
     assert.ok(staging!.floorM! < 1750, '§11: the Staging does not admit the crossing depth');
-    for (const band of [slopes, terraces, lip]) {
+    for (const band of [slopes, terraces, lip, deep]) {
       assert.ok(band!.floorM! > 1750, '§6: the Slopes, the Terraces and the Lip all admit it');
+    }
+    // And asked of the painted cells: every cell centre south of the Staging
+    // admits the crossing depth, and none in it does.
+    const ground = terrainFor(MOUTH_RIM);
+    for (let y = MOUTH_RIM.cellM / 2; y < MOUTH_RIM.heightM; y += MOUTH_RIM.cellM) {
+      for (let x = MOUTH_RIM.cellM / 2; x < MOUTH_RIM.widthM; x += MOUTH_RIM.cellM) {
+        assert.equal(ground.admits(x, y, 1750), y > 1000, `the ground at ${x},${y} and 1,750 m`);
+      }
     }
     assert.equal(Math.round(CORVETTE.maxHp / 4), 105, '§4: 105 seconds for a Corvette');
     assert.equal(Math.round(CRUISER.maxHp / 4), 300, '§4: 300 for a Cruiser');
