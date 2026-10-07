@@ -668,16 +668,16 @@ to a sill. North is shallow and home; south is the sill and the Directorate's wa
 everywhere in the Rift ([world-map.md](world-map.md)). The base floor is the duct's top, so the
 lanes end where the layer begins.
 
-| Region | Rect (x, y, w, h) | Biome | Floor | What it is |
+| Region | Shape | Biome | Floor | What it is |
 | --- | --- | --- | --- | --- |
-| The Lanes | 0, 0, 4000, 3000 | Open Water | 1,100 | The freight lanes *Tend* heard from above. Painted first; everything else is cut into it |
-| The Foot | 1500, 0, 1000, 500 | Open Water | 900 | The drop's foot, where the plateau's lane comes down. **The seat**, at 900 m, above the layer, and the region *home* means |
-| The West Wall | 0, 500, 1250, 2500 | Open Water | rock | Solid — `{ floorM: 0, ceilingM: 1 }`, the Fourth Trench's spelling ([mission-baffle.md](mission-baffle.md) §11). The cleft is the only road |
-| The East Wall | 2750, 500, 1250, 2500 | Open Water | rock | Solid |
-| The Cleft | 1250, 500, 1500, 1250 | Abyssal Trench | 1,800 | The descent and the doorway. PF 1.6 — it carries like a trench because it is one. Hollow country, 1,250–2,150 m, with the duct at 1,200 across its upper water. 1,500 m wide, so the middle is 750 m from either wall and 650 from either Hollow |
-| The Furrow | 1250, 1750, 1000, 750 | Kelp Forest | 2,200 | The 204 PC ground, ten years grown: a trench floor painted kelp, because seeded ground absorbs. **The zone**, and `standing-furrow` is the grant that makes it one — nothing stands in it |
-| The Second Furrow | 2250, 1750, 500, 750 | Abyssal Trench | 2,200 | Bare rock at 00:00. **The sowing's ground**, repainted Kelp Forest by the ground beat when the hold completes |
-| The Sill | 1250, 2500, 1500, 500 | Abyssal Trench | 2,600 | Where the cleft opens to the deep. The observer's station. Nothing the plateaus own is rated for it |
+| The Lanes | rect 0, 0, 4000, 3000 | Open Water | 1,100 | The freight lanes *Tend* heard from above. Painted first; everything else is cut into it. A box because it is the whole map's base |
+| The Foot | rect 1500, 0, 1000, 500 | Open Water | 900 | The drop's foot, where the plateau's lane comes down. **The seat**, at 900 m, above the layer, and the region *home* means. A box because both missions' `the-foot` is this same rectangle |
+| The West Wall | polygon (0, 1000) (750, 500) (1250, 500) (1250, 2500) (500, 3000) (0, 3000) | Open Water | rock | Solid — `{ floorM: 0, ceilingM: 1 }`, the Fourth Trench's spelling ([mission-baffle.md](mission-baffle.md) §11). The cleft is the only road. Its face on the road is straight at x 1,250; its outer north corner and its foot are cut on a slant |
+| The East Wall | polygon (2750, 500) (3250, 500) (4000, 1000) (4000, 3000) (3500, 3000) (2750, 2500) | Open Water | rock | Solid. The West Wall's mirror image across x 2,000 |
+| The Cleft | rect 1250, 500, 1500, 1250 | Abyssal Trench | 1,800 | The descent and the doorway. PF 1.6 — it carries like a trench because it is one. Hollow country, 1,250–2,150 m, with the duct at 1,200 across its upper water. 1,500 m wide, so the middle is 750 m from either wall and 650 from either Hollow. A box because its sides are the walls' straight faces |
+| The Furrow | rect 1250, 1750, 1000, 750 | Kelp Forest | 2,200 | The 204 PC ground, ten years grown: a trench floor painted kelp, because seeded ground absorbs. **The zone**, and `standing-furrow` is the grant that makes it one — nothing stands in it. A box because `standing-furrow` is this same rectangle |
+| The Second Furrow | rect 2250, 1750, 500, 750 | Abyssal Trench | 2,200 | Bare rock at 00:00. **The sowing's ground**, repainted Kelp Forest by the ground beat when the hold completes. A box because `second-furrow`, which the beat repaints, is this same rectangle |
+| The Sill | polygon (1250, 2500) (2750, 2500) (3500, 3000) (500, 3000) | Abyssal Trench | 2,600 | Where the cleft opens to the deep, its sides running out on a slant toward the map's south edge. The observer's station. Nothing the plateaus own is rated for it |
 
 One spawn, at the Foot: 2000, 250. No resources — bloom-share nodes must stand on Shelf ground
 ([maps.md](maps.md), "Mission maps"; `maps.test.ts`) and there is none here, and the day earns
@@ -706,10 +706,41 @@ reads (`missions.test.ts`, "rates every authored hull for the depth it is author
 | `lanes-pack` | 500, 250 | 900 m | The lanes' floor is 1,100; a Draymaw's working depth, on the Foot's side of the layer |
 | The sowing point | 2625, 2125, radius 250 | | Bare rock; the hold's west edge is x 2,375 and the grant ends at x 2,250, so the whole radius is east of rated ground |
 
-Every rectangle lands on the 250 m cell grid and paints exactly the metres it reads
-([maps.md](maps.md), "How a map is written"). Every creature arrives by authored `creature`
-beat and `fauna` is off, for [mission-intake.md](mission-intake.md) §13's reason: the seeder is
-a skirmish roster and cannot put two ambushers on two named walls.
+Drawn in shapes since issue #1153, a box of #1139. Every number a shape states is a whole 250 m
+cell, and a cell is its region's when the shape holds the cell's centre ([maps.md](maps.md), "How
+a map is written"). Only the two walls and the sill changed shape. Each wall's outer north corner is cut
+on a slant, so the lanes reach south along the map's west and east edges. Each wall's foot gives
+way on a slant to the sill, which is 2,000 m of water across its north row and 2,500 m across its
+south row, where it was the furrows' 1,500 m.
+
+Five regions stay boxes, each for a reason. The Lanes are the whole map's base. Both missions
+restate the Foot as their `the-foot` region, the same rectangle, and this one restates the Furrow
+and the Second Furrow as `standing-furrow` and `second-furrow`, so the grant and the ground beat
+land on the ground drawn. The walls' faces on the road stay straight, at x 1,250 and x 2,750 from
+the mouth to the sill, so the Cleft and both furrows stay boxes between them: the road is 1,500 m
+wide the whole way down, and each Hollow is 100 m off its wall.
+
+The reshape is new map content, never a balance lever. It moved 12 of the map's 192 cells, all
+rock before. Six, three at each wall's outer north corner, are now the lanes' Open Water at
+1,100 m: the rock's own paint, so no cell's PF moved there. Six, three at each wall's foot, are
+now the sill's Abyssal Trench at 2,600 m, PF 1.6 where the rock's paint was 1.0. In neither
+mission does a line between two of its authored positions cross one of them. Each of the twelve
+admits a hull from the surface to its floor where the rock admitted none. Six open off the lanes
+and six off the sill, and none touches water the lanes or the sill did not already touch, so no
+new way opens: the cleft is still the only road. A
+hull following the floor holds thirty metres off it, so in the lanes it holds 1,070 m and can now
+follow onto the six cells at the walls' north corners at the same 1,070; on the sill it holds
+2,570 m and can now follow onto the six at the walls' feet at the same 2,570. No cell it reached
+in rectangles holds it at a different depth, and none is closed to it.
+
+Every authored point of both missions stands on the ground it stood on in rectangles, and so
+does every cell centre of their mission regions. Every scripted move and drive crosses the same
+biome along its line, is admitted at the same depths, and takes the route it took in rectangles.
+Played with no input, both missions keep every hull, creature and structure where it was in
+rectangles, sampled every five seconds to the tide, to the same reading and the same transcript
+(`missionDeepFurrow.test.ts`). Every creature arrives by authored `creature` beat and `fauna` is
+off, for [mission-intake.md](mission-intake.md) §13's reason: the seeder is a skirmish roster and
+cannot put two ambushers on two named walls.
 
 **The argument the ground makes.** The layer at 1,200 m lies across the cleft's upper water, so
 the Foot and the sill are on different maps until the day dives, and the plateau's whole way of
@@ -721,7 +752,7 @@ fifty metres under the floor of the Hollow's band, so a garden at 2,200 m is the
 this cleft where a quiet hull is beyond the reach of everything that hunts.
 
 **The Furrow is reused unchanged by [mission-in-writing.md](mission-in-writing.md)** — the same
-literal, region for region, with the sown furrow restated by a ground beat at 00:00 because a
+literal, region for region, drawn in shapes for both in #1153, with the sown furrow restated by a ground beat at 00:00 because a
 map literal cannot carry a mission's repaint: [campaign.md](campaign.md) §2 rule 5's second
 concrete pair, and the carrying is §13's row, not this document's.
 
@@ -919,7 +950,7 @@ against two older documents.
 | Silent Running stopping the sowing, broken by a dive, kept on a climb | **Built** — `holdingSounding` refuses a silent hull; `applyDepth` clears silence only for an order deeper than the hull; ascent adds no SIG; `PELAGIA_SPEED_MULTIPLIER` 0.8 |
 | Active sonar available; the five ordnance locks and the construction lock, with reasons | **Built** — `MissionAbility` is a lock list and this mission does not lock `activeSonar`; `FAUNA_AGGRO_MULTIPLIER` 3 is the price §3 states; the six locks are `AbilityLock` rows the HUD greys out with the reason attached ([ui-ux.md](ui-ux.md) §7) |
 | Briefing variants — a briefing that changes for a player who has already seen something | **Built** (#378, shipped in #395) **and this header authors none.** `MissionHeader.briefingVariants` is an ordered list of `{ scene, briefing }`, first match wins, chosen client-side off the progression record's scene set, so the room is never told which text was read — [campaign.md](campaign.md) §1's requirement exactly, and why a variant can never change the mission. Two headers author one, `seeding-thin-water` and `seeding-convocation`, both off `marr-plateau-filed`, the scene *Tend*'s sweep latches. This one authors none, and the reason is the layer. A variant keys on a scene the player has **already** witnessed, and nothing upstream of this mission witnesses anything about the Furrow: it is under the duct, no plateau has ever heard it, and §1's whole argument is that no lane had gone down it. The mission this one pairs with is *In Writing*, which is downstream and reads what this day left rather than the other way about. This document names no scene, and inventing one to fill the row would be the table asking for a mechanism it already has |
-| The map, eight regions, two of them rock, kelp on a trench floor | **Built** (#392) **and registered in `MISSION_MAPS`** (#393). `anholt-furrow` is one row of the literal per row of §11's table, painted in the document's order so the lanes go down whole and everything else is cut into them; rock is the Fourth Trench's `{ floorM: 0, ceilingM: 1 }`, Kelp Forest sits on a 2,200 m floor, the base floor is the duct's top at 1,100, and `resources` and `hazards` are both empty for §11's reasons. It is in neither `MAPS` nor `MAP_HEADERS`, so the skirmish screen cannot offer it. **It asked for nothing new and it got one thing this document did not write: an owner.** The literal is shared with *In Writing*, which reuses it region for region and adds only markers, structures, parties and a 00:00 ground beat, and its header states that where the two documents' tables could ever disagree this one is the owner and *In Writing* is the reuse. The test holds the mission's four regions to the map's own rectangles, because a grant or a repaint on a rectangle the map does not paint would rate or turn water no document describes |
+| The map, eight regions, two of them rock, kelp on a trench floor | **Built** (#392) **and registered in `MISSION_MAPS`** (#393). `anholt-furrow` is one row of the literal per row of §11's table, drawn in shapes in #1153, painted in the document's order so the lanes go down whole and everything else is cut into them; rock is the Fourth Trench's `{ floorM: 0, ceilingM: 1 }`, Kelp Forest sits on a 2,200 m floor, the base floor is the duct's top at 1,100, and `resources` and `hazards` are both empty for §11's reasons. It is in neither `MAPS` nor `MAP_HEADERS`, so the skirmish screen cannot offer it. **It asked for nothing new and it got one thing this document did not write: an owner.** The literal is shared with *In Writing*, which reuses it region for region and adds only markers, structures, parties and a 00:00 ground beat, and its header states that where the two documents' tables could ever disagree this one is the owner and *In Writing* is the reuse. The test holds the mission's three single-ground regions to the cells the map's own Foot and furrows paint, cell for cell, because a grant or a repaint on a rectangle the map does not paint would rate or turn water no document describes |
 | **The Harvester's rating in two built documents** | **A finding, not a request.** [mission-tend.md](mission-tend.md) §3 and [mission-thin-water.md](mission-thin-water.md) §3 print the tender as PR-1; `units.ts` gives the Harvester `pressureRating: 2`, with the comment that PR-1 killed every worker on Mid-Water ground in seventy-five seconds, and `effectivePressureRating` takes the greater of the hull and the Commune's baseline of 1. The constant is right and this document is written against it; the two documents are the side that moves (`CLAUDE.md`, "Constants live in exactly one place") |
 | **The Commune tender's figures** | **A roster gap already recorded, and this document is on the roster's side of it** ([mission-in-writing.md](mission-in-writing.md) §13). *Tend*, *Thin Water* and *Convocation* author the tender at 8 idle / 18 under way; `units.ts` and [units.md](units.md) give the Harvester 18 idle, 40 at cruise and 4.5 running silent by `silentRunningSig`, and `seeding-tend`'s header records the gap rather than reaching into hull stats. All four of the campaign's new documents — this one, *In Writing*, *Radicals* and *The Second Seeding* — price the same hull at the roster's figures, so §4, §6 and §7 are what the engine will resolve; the three older documents are the side that moves |
 | **The Furrow as new geography** | **A §1 row, not a code row.** The cleft is authored as a branch of the scar under Anholt's terrace, cited to [world-map.md](world-map.md) §1 and [timeline.md](timeline.md)'s 204 PC entry, and the cleft is now painted as well as written — `anholt-furrow` (#392) is the Furrow's geometry, and two missions are played on it. **The entry has landed** (#408). [world-map.md](world-map.md) §3's gazetteer carries the Furrow under the Plateaus at this document's depths — the Foot at 900 m, the floor at 2,200 — so the Rift's one 2,200 m branch under the shoulder is in the geography both cite as well as in the map literal |
