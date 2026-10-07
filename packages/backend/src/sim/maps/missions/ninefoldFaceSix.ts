@@ -19,7 +19,8 @@
  * checkerboard from the survey dolly. The shapes moved outlines, not the
  * mission. Every placed hull, beat point, eruption site and the taps stand on
  * the cell they stood on, the road from the Rail Head to the fall crosses the
- * same five grounds in the same order, and `maps.test.ts` holds both.
+ * same five grounds in the same order, and `missionAssetRecovery.test.ts`
+ * holds both.
  */
 
 import { Biome } from '@echoes/shared';
