@@ -1,6 +1,6 @@
 ---
 name: hull-intake
-description: Validate a 3D model export (GLB) — unit, structure, or environment prop — and bake the top-down review maps (albedo, normal, emissive, height) plus a report of what the export actually contains. Use this whenever a GLB or glTF model arrives (from Claude Design or anywhere else), when asked to check, inspect, convert, import, or "bring in" a 3D model, and for environment props via --category env. Prefer this over improvising a three.js/Blender setup by hand — there is no Blender in this container, and this harness is already verified against the repo's Playwright/Chromium setup.
+description: Validate a GLB export (unit, structure or environment prop) and bake its top-down review maps plus a report of what it contains. Use whenever a GLB or glTF arrives, or when asked to check, inspect, convert, import or "bring in" a 3D model. Prefer it over improvising a three.js or Blender setup — this container has no Blender.
 ---
 
 # Hull intake — from GLB export to repo assets
@@ -14,7 +14,9 @@ hulls and structures as meshes (`rosterModels.ts`) and environment props as
 instanced meshes (`environmentModels.ts`) — while the baked maps remain the
 loading fallback and the sonar scope's sprite language
 (`packages/frontend/src/game/hullTextures.ts`). Intake is the one gate both
-paths pass through (`docs/graphics-standards.md` gate 2).
+paths pass through (`docs/graphics-standards.md` gate 2). The harness runs in the
+Playwright Chromium this repository already verifies, so there is nothing to set up
+by hand.
 
 ## 1. Bake
 

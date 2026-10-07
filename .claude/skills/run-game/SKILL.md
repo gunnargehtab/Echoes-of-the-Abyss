@@ -1,6 +1,6 @@
 ---
 name: run-game
-description: Launch Echoes of the Abyss and drive it in a headless browser to see the game actually running — dev servers, a real match, and screenshots of the rendered Echo Layer. Use this whenever you need to run, start, launch, open, or play the game, take a screenshot of it, reproduce a gameplay bug, or confirm that a renderer, HUD, netcode, or simulation change works in the real client rather than only in tests. Prefer this over improvising a Vite/Playwright setup by hand.
+description: Launch Echoes of the Abyss and drive a real match in headless Chromium, with screenshots of the rendered Echo Layer. Use whenever you need to run, start, open or play the game, screenshot it, reproduce a gameplay bug, or confirm a renderer, HUD, netcode or simulation change in the real client. Prefer it over improvising a Vite/Playwright setup.
 ---
 
 # Running Echoes of the Abyss

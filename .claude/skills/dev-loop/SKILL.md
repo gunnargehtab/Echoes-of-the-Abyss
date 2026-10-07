@@ -1,6 +1,6 @@
 ---
 name: dev-loop
-description: Run one change as a closed loop — build against an authored target, validate with the gates, capture evidence, hand it to a fresh critic, refine, and stop on a written criterion. Use when a change is large enough that one pass will not get it right, when a session is asked to iterate or refine until something is correct, and as the inner loop work-issue runs once it has claimed an issue. Prefer this over open-ended iteration; the exit criteria and the stall rule are what stop a refine loop from running forever or from polishing a number nobody asked it to move.
+description: Run one change as a closed loop — build against an authored target, pass the gates, have a fresh critic grade it, refine, and stop on a written criterion. Use when one pass will not get a change right, when asked to iterate or refine until something is correct, and as work-issue's inner loop. Prefer it over open-ended iteration.
 ---
 
 # Running a change as a closed loop
