@@ -32,11 +32,12 @@
  * The shallowest floor authored is 2,750 m and the shallowest water any hull
  * holds is 2,700 — fourteen hundred metres under the duct's own floor, which
  * `THERMOCLINE` puts at 1,300 — so every pair is Below-to-Below and each path
- * is priced by the biome alone. And `DEPTH.MAX_M` refuses a hull below 3,000 m
- * rather than clamping it, so the head's 3,400 m is scenery with a number on it
- * — while the arrivals' 2,800 m is a hundred metres under the seat the called
- * hold, and is the one depth on this chart where the column and the thing in
- * the trench are in the same water.
+ * is priced by the biome alone. And `DEPTH.MAX_M` refuses a depth order below
+ * 3,000 m, and a hull following the floor stops there too (#1185), so the
+ * head's 3,400 m is scenery with a number on it — while the arrivals' 2,800 m
+ * is a hundred metres under the seat the called hold, and is the one depth on
+ * this chart where the column and the thing in the trench are in the same
+ * water.
  *
  * **The galleries are one region and two benches, and the axis is what makes
  * the difference.** §11 authors the stalls whole and carries the channel's head
@@ -74,9 +75,9 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition, MapRect } from '../types.ts';
+import type { MapDefinition } from '../types.ts';
 
-export const UPPER_TERRACES: MapDefinition<MapRect> = {
+export const UPPER_TERRACES: MapDefinition = {
   id: 'upper-terraces',
   name: 'The Upper Terraces',
   idealUse:
@@ -90,9 +91,15 @@ export const UPPER_TERRACES: MapDefinition<MapRect> = {
   // One row per row of §11's table, in the document's order. Later regions
   // overwrite earlier ones, which is what lets the galleries be painted whole
   // and the channel cut through the middle of them — the axis last, so the
-  // stalls become the two benches the ground beat addresses. Every rectangle
-  // lands on the 250 m cell grid and paints exactly the metres it reads.
+  // stalls become the two benches the ground beat addresses. Every number a
+  // shape states is a whole 250 m cell, and a cell is its region's when the
+  // shape holds its centre (#1156). Only the two terraces are shapes: they
+  // hand four cells, one at each terrace end on the row against the crossing,
+  // to the Head's trench, and every seat, the dome, every cell, both arrivals
+  // and all three mission regions stand on the ground they stood on when
+  // these were all rectangles — `missionConclaveAttending.test.ts` pins it.
   regions: [
+    // A box, because it is the whole map's base.
     {
       x: 0,
       y: 0,
@@ -102,15 +109,24 @@ export const UPPER_TERRACES: MapDefinition<MapRect> = {
       floorM: 3400,
       note: 'The Head — the head of the Ninth. PF 1.60, painted first; everything else is cut into it',
     },
+    // Its outer ends run on a slant from the back wall to the face, so the
+    // face over the crossing is 2,500 m long and the Head's water reaches in
+    // at both of its corners there. Every seat is between x 1,500 and 3,700.
     {
-      x: 1000,
-      y: 0,
-      widthM: 3000,
-      heightM: 750,
+      shape: 'polygon',
+      points: [
+        [1000, 0],
+        [4000, 0],
+        [3750, 750],
+        [1250, 750],
+      ],
       biome: Biome.CoralRuins,
       floorM: 2750,
       note: "The Undermarshalcy — the north terrace: command, the city's shallowest water, and where the called are seated",
     },
+    // A box, because it paints the Head's own biome and floor, so a shape
+    // that kept off the Undermarshalcy would paint the same ground; §4 prices
+    // the crossing as its 1,750 m from y 750 to y 2,500.
     {
       x: 1000,
       y: 750,
@@ -120,15 +136,23 @@ export const UPPER_TERRACES: MapDefinition<MapRect> = {
       floorM: 3400,
       note: "The Crossing — the open water between the terraces. It takes the head's own biome and floor and repaints nothing; it is on the chart because it is the water the mission is about, and a hull under way in it is the only sound there is, the length of the trench",
     },
+    // The Undermarshalcy's mirror image across the crossing. The cells and
+    // both arrivals' lines are between x 1,500 and 3,500, clear of the slants.
     {
-      x: 1000,
-      y: 2500,
-      widthM: 3000,
-      heightM: 750,
+      shape: 'polygon',
+      points: [
+        [1250, 2500],
+        [3750, 2500],
+        [4000, 3250],
+        [1000, 3250],
+      ],
       biome: Biome.CoralRuins,
       floorM: 2800,
       note: "The Cantorate — the south terrace, standing over the galleries: Ossary's seat, the cells, and where a calling is attended or is not. Its floor is the line both arrivals run, because it is the deepest one the terrace admits",
     },
+    // A box, because it is built, and the Axis cuts it into the mission's
+    // `galleries-west` and `galleries-east`, the rectangles the ground beats
+    // repaint.
     {
       x: 1250,
       y: 3250,
@@ -138,6 +162,7 @@ export const UPPER_TERRACES: MapDefinition<MapRect> = {
       floorM: 3000,
       note: "The Attending Galleries — the stalls' benches and the dome, Attendance's room seen from above. Painted whole and cut in two by the axis; this is the bench as it stood at 00:00, and the 11:00 ground beat is what takes each half to 2,900 and trench",
     },
+    // A box, because the mission's `the-axis` is this same rectangle.
     {
       x: 2000,
       y: 3250,

@@ -43,6 +43,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
+import { defineQuery } from 'bitecs';
+
 import {
   Biome,
   DRIFT,
@@ -65,10 +67,13 @@ import {
   structureStatsFor,
   type EchoSnapshot,
 } from '@echoes/shared';
-import { Fauna, Position } from '../src/sim/components.ts';
+import { Fauna, Health, Position } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
 import { UPPER_TERRACES, mapById, missionMapById, terrainFor } from '../src/sim/maps/index.ts';
-import { ATTENDING_CONCLAVE } from '../src/sim/missions/index.ts';
+import type { MapDefinition, MapRect } from '../src/sim/maps/types.ts';
+import { ATTENDING_CONCLAVE, MISSIONS } from '../src/sim/missions/index.ts';
+import { Pathfinder } from '../src/sim/pathfinding.ts';
+import { shapeContains } from '../src/sim/terrain.ts';
 import { spawnFauna } from '../src/sim/world.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -218,28 +223,50 @@ describe('The Upper Terraces, as docs/mission-conclave-attending.md §11 paints 
   it('transcribes §11 row for row, on the cell grid, in the table order', () => {
     // Painting order is load-bearing (`terrainFor` writes later regions over
     // earlier ones): the head first, and the axis last, which is what makes
-    // the galleries two benches for the ground beats to name.
+    // the galleries two benches for the ground beats to name. Four boxes and
+    // two polygons, since #1156 slanted the terraces' outer ends.
     assert.deepEqual(
       UPPER_TERRACES.regions.map((region) => [
-        region.x,
-        region.y,
-        region.widthM,
-        region.heightM,
+        region.shape === 'polygon'
+          ? region.points
+          : [region.x, region.y, region.widthM, region.heightM],
         region.biome,
         region.floorM,
       ]),
       [
-        [0, 0, 5000, 4000, Biome.AbyssalTrench, 3400],
-        [1000, 0, 3000, 750, Biome.CoralRuins, 2750],
-        [1000, 750, 3000, 1750, Biome.AbyssalTrench, 3400],
-        [1000, 2500, 3000, 750, Biome.CoralRuins, 2800],
-        [1250, 3250, 2500, 500, Biome.CoralRuins, 3000],
-        [2000, 3250, 1000, 750, Biome.AbyssalTrench, 3400],
+        [[0, 0, 5000, 4000], Biome.AbyssalTrench, 3400],
+        [
+          [
+            [1000, 0],
+            [4000, 0],
+            [3750, 750],
+            [1250, 750],
+          ],
+          Biome.CoralRuins,
+          2750,
+        ],
+        [[1000, 750, 3000, 1750], Biome.AbyssalTrench, 3400],
+        [
+          [
+            [1250, 2500],
+            [3750, 2500],
+            [4000, 3250],
+            [1000, 3250],
+          ],
+          Biome.CoralRuins,
+          2800,
+        ],
+        [[1250, 3250, 2500, 500], Biome.CoralRuins, 3000],
+        [[2000, 3250, 1000, 750], Biome.AbyssalTrench, 3400],
       ]
     );
     for (const region of UPPER_TERRACES.regions) {
-      for (const metres of [region.x, region.y, region.widthM, region.heightM]) {
-        assert.equal(metres % UPPER_TERRACES.cellM, 0, `${region.note}: off the 250 m cell grid`);
+      const metres =
+        region.shape === 'polygon'
+          ? region.points.flat()
+          : [region.x, region.y, region.widthM, region.heightM];
+      for (const value of metres) {
+        assert.equal(value % UPPER_TERRACES.cellM, 0, `${region.note}: off the 250 m cell grid`);
       }
     }
     assert.equal(UPPER_TERRACES.floorM, 3400, '§11: base floor 3,400');
@@ -299,6 +326,283 @@ describe('The Upper Terraces, as docs/mission-conclave-attending.md §11 paints 
     assert.equal(UPPER_TERRACES.seats, 1, '§11: one seat, not balanced');
     assert.equal(mapById('upper-terraces'), undefined, 'the skirmish screen would offer it');
     assert.equal(missionMapById('upper-terraces'), UPPER_TERRACES, 'resolved by mission id only');
+  });
+});
+
+describe('the ground the calling stands on — §11, drawn in shapes (#1156)', () => {
+  // The regions as 443bcb9b drew them, before #1156 slanted the terraces'
+  // outer ends: written out rather than read from the literal, so the
+  // reference cannot move with the map it checks.
+  const RECTANGLES: MapRect[] = [
+    { x: 0, y: 0, widthM: 5000, heightM: 4000, biome: Biome.AbyssalTrench, floorM: 3400 },
+    { x: 1000, y: 0, widthM: 3000, heightM: 750, biome: Biome.CoralRuins, floorM: 2750 },
+    { x: 1000, y: 750, widthM: 3000, heightM: 1750, biome: Biome.AbyssalTrench, floorM: 3400 },
+    { x: 1000, y: 2500, widthM: 3000, heightM: 750, biome: Biome.CoralRuins, floorM: 2800 },
+    { x: 1250, y: 3250, widthM: 2500, heightM: 500, biome: Biome.CoralRuins, floorM: 3000 },
+    { x: 2000, y: 3250, widthM: 1000, heightM: 750, biome: Biome.AbyssalTrench, floorM: 3400 },
+  ];
+  const map = missionMapById(ATTENDING_CONCLAVE.mapId)!;
+  const boxes: MapDefinition = { ...map, regions: RECTANGLES };
+  const ground = terrainFor(map);
+  const was = terrainFor(boxes);
+  // Asked of the cell, never the point: a point inside a polygon can stand in
+  // a cell the polygon does not claim (terrain.ts, `shapeContains`).
+  const centre = (m: number) => (Math.floor(m / map.cellM) + 0.5) * map.cellM;
+  /** The region that painted the cell under a point: the last whose shape holds its centre. */
+  const regionAt = (x: number, y: number): string => {
+    let name = '';
+    for (const region of map.regions) {
+      if (shapeContains(region, centre(x), centre(y))) name = region.note!.split(' — ')[0]!;
+    }
+    return name;
+  };
+  const groundAt = (x: number, y: number): unknown[] => [
+    regionAt(x, y),
+    Biome[ground.biomeAt(x, y)],
+    ground.floorAt(x, y),
+    ground.ceilingAt(x, y),
+  ];
+  const groundWas = (x: number, y: number): unknown[] => [
+    Biome[was.biomeAt(x, y)],
+    was.floorAt(x, y),
+    was.ceilingAt(x, y),
+  ];
+  const everyCell = (visit: (x: number, y: number) => void): void => {
+    for (let y = map.cellM / 2; y < map.heightM; y += map.cellM) {
+      for (let x = map.cellM / 2; x < map.widthM; x += map.cellM) visit(x, y);
+    }
+  };
+  const missions = MISSIONS.filter((mission) => mission.mapId === map.id);
+  const arrivals = ATTENDING_CONCLAVE.beats.flatMap((beat) =>
+    beat.kind === 'creature' ? [beat] : []
+  );
+  /** The four cells §11 names: one at each end of each terrace, against the crossing. */
+  const SLANTED = ['1125,625', '3875,625', '1125,2625', '3875,2625'];
+
+  it('is played by Conclave alone', () => {
+    // Every block below reads its points off this one mission; a second
+    // mission on this map would need its own points pinned before it shipped.
+    assert.deepEqual(
+      missions.map((mission) => mission.id),
+      [ATTENDING_CONCLAVE.id]
+    );
+  });
+
+  it('seats the called, the dome, the cells and both arrivals on the ground §11 gives them', () => {
+    const UNDERMARSHALCY = ['The Undermarshalcy', 'CoralRuins', 2750, 0];
+    const points: [string, number, number, unknown[]][] = [];
+    for (const spawn of map.spawns) {
+      points.push(['the spawn', spawn.x, spawn.y, UNDERMARSHALCY]);
+      const foundry = [spawn.x + spawn.foundryOffsetX, spawn.y + spawn.foundryOffsetY] as const;
+      points.push(['its Foundry', ...foundry, UNDERMARSHALCY]);
+    }
+    for (const party of ATTENDING_CONCLAVE.parties) {
+      for (const unit of party.units) points.push([unit.tag!, unit.x, unit.y, UNDERMARSHALCY]);
+      for (const site of party.structures ?? []) {
+        points.push([
+          site.tag!,
+          site.x,
+          site.y,
+          ['The Attending Galleries', 'CoralRuins', 3000, 0],
+        ]);
+      }
+      for (const emitter of party.emitters ?? []) {
+        points.push([emitter.tag, emitter.x, emitter.y, ['The Cantorate', 'CoralRuins', 2800, 0]]);
+      }
+    }
+    const axis = ['The Axis', 'AbyssalTrench', 3400, 0];
+    for (const marker of ATTENDING_CONCLAVE.markers) {
+      points.push([`the ${marker.id} marker`, marker.x, marker.y, axis]);
+    }
+    for (const beat of arrivals) {
+      points.push([`the ${beat.atTick} arrival's sill`, beat.spawnAt!.x, beat.spawnAt!.y, axis]);
+      const crossing = ['The Crossing', 'AbyssalTrench', 3400, 0];
+      points.push([`the ${beat.atTick} arrival's hold`, beat.driveTo.x, beat.driveTo.y, crossing]);
+    }
+    assert.equal(points.length, 30, 'the mission grew or lost a point');
+    for (const [what, x, y, expected] of points) {
+      assert.deepEqual(groundAt(x, y), expected, `${what} at ${x},${y}`);
+      assert.deepEqual(groundAt(x, y).slice(1), groundWas(x, y), `${what} moved off its ground`);
+    }
+  });
+
+  it('keeps every cell of the three mission regions on the ground it had in rectangles', () => {
+    // Both benches are the galleries' own cells either side of the Axis, and
+    // `the-axis` is the Axis's rectangle; the ground beats repaint the first
+    // two, so all three stay boxes.
+    let cells = 0;
+    for (const region of ATTENDING_CONCLAVE.regions) {
+      const painted = region.id === 'the-axis' ? 'The Axis' : 'The Attending Galleries';
+      everyCell((x, y) => {
+        if (!shapeContains(region, x, y)) return;
+        cells++;
+        assert.equal(regionAt(x, y), painted, `${region.id} at ${x},${y}`);
+        assert.deepEqual(groundAt(x, y).slice(1), groundWas(x, y), `${region.id} at ${x},${y}`);
+      });
+    }
+    assert.equal(cells, 24, 'the mission regions grew or shrank');
+  });
+
+  it('hands the Head four cells, one at each terrace end, and changes no other', () => {
+    // §11: each slant gives the trench the terrace's cell on the row against
+    // the crossing — 2,750 m and 2,800 m of cut structure become 3,400 m of
+    // trench, PF 0.80 to 1.60 — and no ceiling moves.
+    const changed: string[] = [];
+    everyCell((x, y) => {
+      if (groundAt(x, y).slice(1).join() === groundWas(x, y).join()) return;
+      changed.push(`${x},${y}`);
+      const terrace = y < 1625 ? 2750 : 2800;
+      assert.deepEqual(groundWas(x, y), ['CoralRuins', terrace, 0], `${x},${y} was terrace`);
+      assert.deepEqual(groundAt(x, y), ['The Head', 'AbyssalTrench', 3400, 0], `${x},${y}`);
+      // Deeper than the terrace's floor the cell now admits a hull it refused;
+      // at the terrace's floor and above it admits as it did.
+      for (let depthM = 0; depthM <= 3400; depthM += 25) {
+        const now = ground.admits(x, y, depthM);
+        assert.equal(now, true, `${x},${y} refuses ${depthM} m`);
+        assert.equal(was.admits(x, y, depthM), depthM <= terrace, `${x},${y} at ${depthM} m`);
+      }
+    });
+    assert.deepEqual(changed, SLANTED, 'a cell moved that §11 does not name');
+  });
+
+  it('crosses no slanted cell on a line from a hull or the dome to the far party', () => {
+    // §11: every party stands between x 1,500 and 3,700, so none of the lines
+    // the called and the dome hear the cells and the arrivals along meets a
+    // cell whose biome changed. Sampled every 10 m.
+    const player = ATTENDING_CONCLAVE.parties.find(
+      (p) => p.slot === ATTENDING_CONCLAVE.playerSlot
+    )!;
+    const ears = [...player.units, ...(player.structures ?? [])];
+    const far: { x: number; y: number }[] = ATTENDING_CONCLAVE.parties.flatMap((party) =>
+      party === player ? [] : [...party.units, ...(party.emitters ?? [])]
+    );
+    for (const beat of arrivals) far.push(beat.spawnAt!, beat.driveTo);
+    let lines = 0;
+    for (const from of ears) {
+      for (const to of far) {
+        lines++;
+        const steps = Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / 10);
+        for (let i = 0; i <= steps; i++) {
+          const x = from.x + ((to.x - from.x) * i) / steps;
+          const y = from.y + ((to.y - from.y) * i) / steps;
+          assert.equal(ground.biomeAt(x, y), was.biomeAt(x, y), `${x},${y} on a line`);
+        }
+        assert.equal(
+          ground.pathPropagation(from.x, from.y, to.x, to.y),
+          was.pathPropagation(from.x, from.y, to.x, to.y)
+        );
+      }
+    }
+    assert.equal(lines, 170, 'seventeen ears and ten far points');
+  });
+
+  it('joins the four cells to water that was already joined, at every depth a hull reaches', () => {
+    // §11: they open no crossing. Asked at every 25 m from the surface to the
+    // 3,000 m a depth order and a floor-following hull both stop at (#1179),
+    // the water a hull may enter is one body in rectangles and in shapes.
+    const bodies = (terrain: typeof ground, depthM: number): number => {
+      const seen = new Set<string>();
+      let count = 0;
+      everyCell((x0, y0) => {
+        if (seen.has(`${x0},${y0}`) || !terrain.admits(x0, y0, depthM)) return;
+        count++;
+        const queue = [[x0, y0] as const];
+        seen.add(`${x0},${y0}`);
+        while (queue.length > 0) {
+          const [x, y] = queue.pop()!;
+          for (const [nx, ny] of [
+            [x + map.cellM, y],
+            [x - map.cellM, y],
+            [x, y + map.cellM],
+            [x, y - map.cellM],
+          ] as const) {
+            if (nx < 0 || ny < 0 || nx >= map.widthM || ny >= map.heightM) continue;
+            if (seen.has(`${nx},${ny}`) || !terrain.admits(nx, ny, depthM)) continue;
+            seen.add(`${nx},${ny}`);
+            queue.push([nx, ny]);
+          }
+        }
+      });
+      return count;
+    };
+    for (let depthM = 0; depthM <= 3000; depthM += 25) {
+      assert.equal(bodies(was, depthM), 1, `the rectangles' water parts at ${depthM} m`);
+      assert.equal(bodies(ground, depthM), 1, `the shapes' water parts at ${depthM} m`);
+    }
+  });
+
+  it('drives both arrivals the way the rectangles drove them', () => {
+    // The mission authors no hull move; its scripted legs are the two
+    // arrivals, driven at 2,800 m from the sill. Each is asked from every
+    // 125 m of its leg, straight and planned, against the rectangles.
+    for (const mission of missions) {
+      assert.equal(mission.beats.filter((b) => b.kind === 'move').length, 0, 'a scripted move');
+    }
+    assert.equal(arrivals.length, 2);
+    const pathfinder = new Pathfinder(ground.cols, ground.rows);
+    const route: number[] = [];
+    const before: number[] = [];
+    for (const beat of arrivals) {
+      const from = beat.spawnAt!;
+      const to = beat.driveTo;
+      const depthM = to.depthM!;
+      assert.equal(from.depthM, depthM, 'a drive that changes depth needs every 25 m of it asked');
+      const n = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / 125));
+      for (let i = 0; i <= n; i++) {
+        const x = from.x + ((to.x - from.x) * i) / n;
+        const y = from.y + ((to.y - from.y) * i) / n;
+        const where = `the ${beat.atTick} arrival from ${x},${y}`;
+        const straight = ground.segmentAdmits(x, y, to.x, to.y, depthM);
+        assert.equal(straight, was.segmentAdmits(x, y, to.x, to.y, depthM), where);
+        const reached = pathfinder.findPath(ground, x, y, to.x, to.y, depthM, route);
+        const reachedWas = pathfinder.findPath(was, x, y, to.x, to.y, depthM, before);
+        assert.equal(reached, reachedWas, where);
+        assert.deepEqual(route, before, where);
+      }
+    }
+  });
+
+  it('plays an idle calling on the tracks the rectangles gave it', () => {
+    // Every positioned entity every 5 s, with its hit points, and every line
+    // the mission speaks, keyed by eid less the run's smallest: bitecs numbers
+    // entities across worlds, so the second run's eids start where the first's
+    // stopped. The whole twenty minutes, because it plays in about two seconds.
+    const positioned = defineQuery([Position]);
+    const replay = (on: MapDefinition) => {
+      const match = new Match(on, { mission: ATTENDING_CONCLAVE, fauna: false, seed: 77 });
+      const tracks: string[][] = [];
+      const lines: string[] = [];
+      let base = -1;
+      for (let tick = 0; tick <= T(20, 30) && match.missionOver === null; tick++) {
+        match.update(STEP_MS);
+        match.takeMissionView();
+        for (const line of match.takeMissionLines()) lines.push(`${tick} ${line.text}`);
+        if (tick % (5 * SIM.TICK_HZ) !== 0) continue;
+        const eids = [...positioned(match.world)].sort((a, b) => a - b);
+        if (base < 0) base = eids[0]!;
+        tracks.push(
+          eids.map((e) => {
+            const at = `${Position.x[e]},${Position.y[e]}@${Position.depth[e]}`;
+            return `${e - base} ${at} hp ${Health.hp[e]}`;
+          })
+        );
+      }
+      return { tracks, lines, over: match.missionOver };
+    };
+    const before = replay(boxes);
+    const after = replay(map);
+    assert.ok(after.over !== null, 'the calling never closed');
+    assert.equal(after.tracks[0]!.length, 23, 'sixteen hulls, the dome and six cells');
+    assert.ok(
+      after.tracks.some((sample) => sample.length > 23),
+      'no arrival took the water, so the tracks prove nothing about it'
+    );
+    assert.equal(after.tracks.length, before.tracks.length, 'the calling ran a different length');
+    for (let i = 0; i < before.tracks.length; i++) {
+      assert.deepEqual(after.tracks[i], before.tracks[i], `the tracks part at ${i * 5}s`);
+    }
+    assert.deepEqual(after.lines, before.lines, 'the mission spoke differently');
+    assert.deepEqual(after.over, before.over, 'the calling closed differently');
   });
 });
 
@@ -425,10 +729,20 @@ describe('the order, as docs/mission-conclave-attending.md §4 and §6 price it'
   });
 
   it('prices the crossing in seconds, and the bite in metres', () => {
-    // §4, §6: 1,750 m of the loudest water in the bible, four ways.
-    const crossing = UPPER_TERRACES.regions[2]!;
-    assert.equal(crossing.heightM, 1750, '§11: the crossing, y 750 to y 2,500');
-    const seconds = (speed: number): number => Math.round(crossing.heightM! / speed);
+    // §4, §6: 1,750 m of the loudest water in the bible, four ways. Measured
+    // on the painted ground down the axis's line, between the terraces: the
+    // trench cells north of the Cantorate's face that the Undermarshalcy does
+    // not claim.
+    const terrain = terrainFor(UPPER_TERRACES);
+    const cellM = UPPER_TERRACES.cellM;
+    let crossingM = 0;
+    for (let y = cellM / 2; y < TERRACE_FACE_Y; y += cellM) {
+      if (terrain.biomeAt(AXIS.x, y) === Biome.AbyssalTrench) crossingM += cellM;
+    }
+    assert.equal(crossingM, 1750, '§11: the crossing, y 750 to y 2,500');
+    assert.equal(terrain.biomeAt(AXIS.x, 750 - cellM / 2), Biome.CoralRuins, 'the north terrace');
+    assert.equal(terrain.biomeAt(AXIS.x, 2500), Biome.CoralRuins, 'the south terrace');
+    const seconds = (speed: number): number => Math.round(crossingM / speed);
     assert.equal(seconds(CHORISTER.speed), 44, '§4: forty-four seconds at cruise');
     assert.equal(
       seconds(CHORISTER.speed * SILENT_RUNNING.SPEED_MULTIPLIER),
