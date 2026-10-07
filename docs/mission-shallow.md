@@ -351,7 +351,9 @@ is not a lever here.
 **What the concern hears, and where the listening ground therefore is.** A row is at Bearing to a
 Chorister from y ≤ 1,900 and to a submersible from y ≤ 2,050 — a hundred and fifty metres of
 usable water south of a corridor whose southern edge is y 1,750, and three hundred for the ears.
-That sliver is `the-strip`, and it is overlooked from both ends. The gate's column is measured to
+Row six is the exception: the Vent Under-run's west edge lies beneath it and draws its two lines
+north, to y 1,863 and y 1,924 (§11). That sliver, to y 2,000, is `the-strip`, and it is
+overlooked from both ends. The gate's column is measured to
 `element-two` at (300, 1550), the nearer of the closure's two Corvettes, because a hull is held by
 the ear that hears it first:
 
