@@ -462,24 +462,49 @@ thermocline, so the layer never enters into it: a fleet at 3,000 m and a fleet a
 different maps ([systems-depth.md](systems-depth.md) §1), and this mission is entirely on the far
 one.
 
-| Region | Rect (x, y, w, h) | Biome | Floor | What it is |
+| Region | Shape | Biome | Floor | What it is |
 | --- | --- | --- | --- | --- |
-| The Ninth | 0, 0, 5000, 4000 | Abyssal Trench | 3,400 | The trench. PF 1.60, painted first; everything else is cut into it |
-| Sufficiency's Lower Rows | 0, 0, 5000, 750 | Coral Ruins | 2,750 | The city's lowest terraces. Cut structure and hard acoustic shadows — the same authoring the prologue's districts use, for a city that is not ruined |
-| The Attending Galleries | 1250, 750, 2500, 500 | Coral Ruins | 3,000 | The southern face: the stalls, open on the axis. **The spawn, and where the dome stands** |
-| The Step | 0, 1250, 5000, 750 | Abyssal Trench | 3,200 | The slope's last bench before the channel |
-| The West Bench | 0, 2000, 2000, 2000 | Abyssal Trench | 3,200 | The channel's shoulder |
-| The East Bench | 3000, 2000, 2000, 2000 | Abyssal Trench | 3,200 | The other shoulder |
-| The Axis | 2000, 1250, 1000, 2500 | Abyssal Trench | 4,100 | The Ninth's channel proper, aimed at the Mouth's approach, and cut north to the galleries' own edge so the first arrival reaches the stalls' water (§6 row 1). Every arrival is on this line |
-| The Sill | 2000, 3750, 1000, 250 | Abyssal Trench | 4,100 | Where the axis leaves the map southward. Everything arrives through it |
+| The Ninth | rect 0, 0, 5000, 4000 | Abyssal Trench | 3,400 | The trench. PF 1.60, painted first; everything else is cut into it. A box because it is the whole map's base |
+| Sufficiency's Lower Rows | rect 0, 0, 5000, 750 | Coral Ruins | 2,750 | The city's lowest terraces. Cut structure and hard acoustic shadows — the same authoring the prologue's districts use, for a city that is not ruined. A box because it is built |
+| The Attending Galleries | rect 1250, 750, 2500, 500 | Coral Ruins | 3,000 | The southern face: the stalls, open on the axis. **The spawn, and where the dome stands.** A box because it is built, and the mission's `galleries` region is this same rectangle |
+| The Step | polygon (0, 750) (1250, 1250) (3750, 1250) (5000, 750) (5000, 2000) (0, 2000) | Abyssal Trench | 3,200 | The slope's last bench before the channel. Its north edge runs on a slant from the galleries' lower corners out to the map's edges |
+| The West Bench | polygon (0, 2000) (2000, 2000) (2000, 4000) (1000, 4000) (0, 3000) | Abyssal Trench | 3,200 | The channel's shoulder, its south-west corner cut on a slant |
+| The East Bench | polygon (3000, 2000) (5000, 2000) (5000, 3000) (4000, 4000) (3000, 4000) | Abyssal Trench | 3,200 | The other shoulder, the West Bench's mirror image |
+| The Axis | rect 2000, 1250, 1000, 2500 | Abyssal Trench | 4,100 | The Ninth's channel proper, aimed at the Mouth's approach, and cut north to the galleries' own edge so the first arrival reaches the stalls' water (§6 row 1). Every arrival is on this line. A box because, with the Sill, it is the mission's `axis` region |
+| The Sill | rect 2000, 3750, 1000, 250 | Abyssal Trench | 4,100 | Where the axis leaves the map southward. Everything arrives through it. A box for the Axis's reason |
 
 One spawn, at the gallery face: 2500, 1000. The Cantor at 2500, 1000, depth 3,000. **No resources,
 no hazard sites, no second spawn, and `fauna` off** — the Drift is not seeded and there is no
 authored creature either, which makes this the first mission map in the bible with nothing alive
 on it but the player.
 
-Every rectangle lands on the 250 m cell grid and paints exactly the metres it reads
-([maps.md](maps.md), "How a map is written").
+Drawn in shapes since issue #1149, a box of #1139. Every number a shape states is a whole 250 m
+cell, and a cell is its region's when the shape holds the cell's centre ([maps.md](maps.md), "How
+a map is written"). Only the Step and the two benches changed. The Step's north edge runs on a
+slant out to the map's edges, so north of it the Ninth's 3,400 m shows only in a wedge beside each
+end of the galleries. Each bench's outer south corner is cut on a slant, and the Ninth's floor
+shows there, at the map's south-west and south-east corners.
+
+Five regions stay boxes, each for a reason. The Ninth is the whole map's base. The Lower Rows
+and the galleries are built. The mission restates the galleries as its `galleries` region, the
+same rectangle, so the stalls the watch is seated in are the stalls drawn; and it restates the
+Axis and the Sill together as its `axis` region, the same rectangle, with every arrival on its
+line at x 2,500.
+
+The reshape is new map content, never a balance lever. It moved 22 of the map's 320 cells, all
+Abyssal Trench before and after, so no cell's biome or PF changed: ten from the Ninth's 3,400 m
+to the Step's 3,200, and twelve from the benches' 3,200 to the Ninth's 3,400. Asked at every 25
+m of depth from the surface to 3,000 m, the deepest a depth order reaches, every cell admits a
+hull as it did in rectangles; to 4,075 m, only those 22 cells admit differently, and only
+between 3,200 and 3,400 m. That band is where a hull following the floor goes, thirty metres off
+the floor, so the 22 cells cost one: on the wedge it holds 3,170 m where it held 3,370, 200 m
+higher; on the bench corners 3,370 where it held 3,170, 200 m lower; and following the Ninth's
+floor at 3,370 m it can no longer cross onto the wedge's cells. The seats, the dome, the spawn,
+all nine arrivals and the `axis` marker stand on the ground they stood on, and so does every
+cell centre of both mission regions. No line from a seat or the dome to an arrival crosses a
+changed cell. The mission authors no move. Played with no input, every hull, the dome and every
+arrival keeps the position it kept in rectangles, sampled every five seconds, to the same
+reading and the same transcript.
 
 **The benches and the channel are the map's geometry, and none of it is a fence, or reachable.**
 The benches stand at 3,200 m and the channel at 4,100 against a ruleset ceiling of 3,000
@@ -604,7 +629,7 @@ what it was missing.
 | The Cantor's dome — +25 HYD, 1,200 m, cap 95 | **Built** — `STRUCTURE_AURAS.CANTOR`. The seven-per-cent finding in §5 is a consequence of the shipped cap and this document's hull, not a change to either |
 | Silent Running, and a dive breaking it | **Built, and no longer what the decision is made of** — the SIG floor of 72 on descent and the 45 m/s down against 15 up are in the engine ([systems-depth.md](systems-depth.md) §2), and this map has no water for them: every hull holds the 3,000 m ceiling (#421). The decision is made of §5's ceiling against the hull's own cruise, which is older still |
 | PR-3 across the Abyssal, with no floor under it | **Built** — `requiredPressureRating` is band-derived, so nothing on this map crushes a Directorate hull at any depth the map authors. Stated because a reader will ask what 4,100 m costs, and the answer is that no hull is ordered there (`DEPTH.MAX_M`): the channel is water the return comes up out of, and the watch hears it from 3,000 |
-| The map, its eight regions, the benches that lift | **Built** — `attending-galleries`, one row of the literal per row of §11's table, with one change recorded in that section: the channel is cut north to the galleries' own edge, because §6 row 1 has the first arrival reach the stalls' own water and a channel head a kilometre south of the stalls could not deliver that. The mission definition is `attending-attendance` |
+| The map, its eight regions, the benches that lift | **Built** — `attending-galleries`, one row of the literal per row of §11's table and drawn in shapes in #1149, with one change recorded in that section: the channel is cut north to the galleries' own edge, because §6 row 1 has the first arrival reach the stalls' own water and a channel head a kilometre south of the stalls could not deliver that. The mission definition is `attending-attendance` |
 | **The arrivals — an emitter that starts and stops at authored ticks** | **Built**, as the smaller of the two shapes this row offered: a `fromTick`/`untilTick` pair on the emitter. The window and the pattern compose — the pattern says what the sound does while it is sounding, the window says when that is — and an arrival is the case where they are the same length, so it is simply on for its twenty seconds |
 | **The attended count — a tally over the player's own resolution of an authored emitter** | **Built**, and exactly as this row scoped it: an `attend` predicate over a per-arrival tally at Tier 2, monotone, counted only while the arrival is sounding. The tier comes from the Echo Layer's own answer for the player's own slot, pre-bound so the runtime has no way to ask what anybody else resolved — the wall holds because there is no argument with which to breach it |
 | **A listening role** | **Built**, and the roles are authored per mission as this row asks: `MissionRole` is a mission's own word rather than a union in shared, and `silenceRole` names the set the ceiling measures — the watch here, the flight at Sorrowgate. What the union used to buy is bought instead by a test that holds every role a mission *names* to being one it *assigns*, which the union never checked |

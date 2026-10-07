@@ -599,13 +599,10 @@ Every rectangle lands on the 250 m cell grid and paints exactly the metres it re
 
 **A stated deviation from the chart [Attendance](mission-attendance.md) §11 built.** On
 `attending-galleries` the channel is cut north to the galleries' southern edge and does not run
-through them — the *literal* says so rather than the document: `attendingGalleries.ts` authors the
-axis at 2000, 1250, 1000, 2500 and its own comment gives the reason, that the first arrival has to
-reach the stalls' own water, while Attendance's §11 table still carries the earlier row starting
-the channel at y 2,000. Two of the three charts of this trench therefore disagree, and the pair
-that disagree are a document and its own code. This chart is the same place drawn from the
-terraces above rather than from
-the face, and it carries the channel's head the last five hundred metres *between* the two gallery
+through them: Attendance's §11 and `attendingGalleries.ts` both author the axis at 2000, 1250,
+1000, 2500, for the reason §11's row gives: the first arrival has to reach the stalls' own
+water. This chart is the same place drawn from the terraces above rather than from the face, and
+it carries the channel's head the last five hundred metres *between* the two gallery
 benches. It is the same choice made from the other side: the stalls are open on the axis
 ([mission-attendance.md](mission-attendance.md) §11), and from above, open on the axis means the
 axis goes between them. It is stated here rather than hidden, it is the reason the galleries are
