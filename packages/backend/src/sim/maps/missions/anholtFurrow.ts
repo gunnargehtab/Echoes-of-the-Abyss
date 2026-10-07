@@ -151,7 +151,7 @@ export const ANHOLT_FURROW: MapDefinition = {
       heightM: 750,
       biome: Biome.KelpForest,
       floorM: 2200,
-      note: 'The Furrow — the 204 PC ground, ten years grown: a trench floor painted kelp, because seeded ground absorbs. The zone, and the bloom-bed stands in it',
+      note: "The Furrow — the 204 PC ground, ten years grown: a trench floor painted kelp, because seeded ground absorbs. Deep Furrow's zone: `standing-furrow` is the grant that makes it one. The map seats nothing in it, and what stands in it is a mission's to seat",
     },
     // A box, because `second-furrow`, which the ground beat repaints, is this
     // same rectangle.
@@ -191,8 +191,10 @@ export const ANHOLT_FURROW: MapDefinition = {
   resources: [],
   // No bloom-share nodes, and not for want of a garden: a bloom must stand on
   // Shelf ground (docs/economy.md §6; maps.test.ts) and the shallowest water
-  // on this map is 900 m. The furrow's bloom-bed is a seated structure, which
-  // is a mission's business and not the map's.
+  // on this map is 900 m. Nor does the map seat anything in the Furrow. In
+  // Deep Furrow it is a grant, the mission region `standing-furrow`, and that
+  // mission seats no structure at all; In Writing seats Spore Veils in it.
+  // What stands there is a mission's business and not the map's.
   // No hazard sites: the weather here is the walls.
   hazards: [],
 };
