@@ -556,26 +556,28 @@ a name.
 
 The reshape is new map content, never a balance lever. It moved 12 of the map's 320 cells, six
 from each overhang, all Abyssal Trench before and after, so no cell's biome or PF changed: each
-went from the overhang's 2,150 m to the Upper Ninth's 2,400. Asked at every 25 m of depth from the
-surface to 4,000 m, only those 12 cells admit a hull differently, and only from 2,175 to 2,400 m,
-below the 1,900 m that is the deepest this mission authors. That band is where a hull following
-the floor goes, thirty metres off it, so the 12 cells cost one: on them it holds 2,370 m where it
-held 2,120, 250 m lower; following the bench's floor at 2,220 m or the Upper Ninth's at 2,370 it
-can now cross onto them, where before they refused it; and following an overhang's at 2,120 it
-crosses onto them as it did, then sinks to 2,370 m on them, where its overhang and the bench refuse
-it, so it can no longer cross back onto either, as it could at 2,120. The spawn, all twelve hulls, the ascent's marker, all eight Hollows
-and both ends of the Sounder's line stand on the ground they stood on, and so does every cell
-centre of the three mission regions. The Sounder's line crosses no changed cell, and
-asked from every 125 m of either leg at every 25 m of depth to its 1,900 m, it routes as it did.
-Played with no input, every hull and every creature keeps the position and the hit points it kept
-in rectangles, sampled every five seconds, to the same reading and the same transcript.
+went from the overhang's 2,150 m to the Upper Ninth's 2,400. Asked at every 25 m of depth from
+the surface to 4,000 m, only those 12 cells admit a hull differently, and only from 2,175 to
+2,400 m, below the 1,900 m that is the deepest this mission authors. That band is where a hull
+following the floor goes, thirty metres off it, so the 12 cells cost one: on them it holds 2,370
+m where it held 2,120, 250 m lower; following the bench's floor at 2,220 m or the Upper Ninth's
+at 2,370 it can now cross onto them, where before they refused it; and following an overhang's
+at 2,120 it crosses onto them as it did, then sinks to 2,370 m on them, where its overhang and
+the bench refuse it, so it can no longer cross back onto either, as it could at 2,120. The
+spawn, all twelve hulls, the ascent's marker, all eight Hollows and both ends of the Sounder's
+line stand on the ground they stood on, and so does every cell centre of the three mission
+regions. The Sounder's line crosses no changed cell, and asked from every 125 m of either leg at
+every 25 m of depth to its 1,900 m, it routes as it did. Played with no input, every hull and
+every creature keeps the position and the hit points it kept in rectangles, sampled every five
+seconds, to the same reading and the same transcript.
 
 **The overhangs are the map's one piece of gameplay geometry and they are not a fence.** They
-stand at 2,150 m against a bench floor of 2,250 — a hundred metres of lift, which is nothing, and
-that is the point: nothing on this map stops the intake going anywhere. The outer Hollows on the
-two stand four kilometres apart, two of them open bench, and four kilometres is the whole problem. Terrain may
-raise a hull and may never lower one ([systems-depth.md](systems-depth.md) §2), and here it barely
-raises one. The map is not difficult. It is *large*, and the intake is twelve.
+stand at 2,150 m against a bench floor of 2,250 — a hundred metres of lift, which is nothing,
+and that is the point: nothing on this map stops the intake going anywhere. The outer Hollows on
+the two stand four kilometres apart, two of them open bench, and four kilometres is the whole
+problem. Terrain may raise a hull and may never lower one ([systems-depth.md](systems-depth.md)
+§2), and here it barely raises one. The map is not difficult. It is *large*, and the intake is
+twelve.
 
 **And the direction of the expense is reversed from Attendance's.** That mission's decision was a
 dive — 45 m/s at a SIG floor of 72, the loudest thing its water had heard in a century. Here every

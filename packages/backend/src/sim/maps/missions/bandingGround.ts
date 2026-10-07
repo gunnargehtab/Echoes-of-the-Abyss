@@ -110,8 +110,7 @@ export const BANDING_GROUND: MapDefinition = {
     // Its two corners on the bench side are cut on a slant, so it narrows
     // toward the bench and meets it across the middle 500 m of the bench's
     // edge, and the Ninth's 2,400 m runs along the bench's edge for the 500 m
-    // at each end. Every
-    // Hollow on it stands on a cell the cut leaves.
+    // at each end. Every Hollow on it stands on a cell the cut leaves.
     {
       shape: 'polygon',
       points: [
