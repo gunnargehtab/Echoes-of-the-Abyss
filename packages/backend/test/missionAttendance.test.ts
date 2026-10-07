@@ -319,10 +319,11 @@ describe('the ground the watch stands on — §11, drawn in shapes (#1149)', () 
   });
 
   it('admits differently below that only on the 22 cells §11 names, between 3,200 and 3,400 m', () => {
-    // A hull following the floor holds thirty metres off it, past 3,000 m
-    // (systems/depth.ts, `followTheFloor`), so this is the band §11 prices:
-    // the Step's wedge beside each end of the galleries, and each bench's
-    // cut south corner. Swept to 4,075 m, past the 4,070 m a hull following the Axis holds.
+    // No hull reaches this band: depth orders and floor-following both stop
+    // at 3,000 m (#1179). The sweep pins it anyway, so a change that lets a
+    // hull deeper finds exactly the cells §11 names: the Step's wedge beside
+    // each end of the galleries, and each bench's cut south corner. Swept to
+    // 4,075 m, past the Axis's 4,100 m floor less the clearance.
     const WEDGE = ['125,875', '125,1125', '375,1125', '625,1125', '875,1125'];
     const CORNERS = ['125,3375', '125,3625', '375,3625', '125,3875', '375,3875', '625,3875'];
     const mirror = (cell: string) => {

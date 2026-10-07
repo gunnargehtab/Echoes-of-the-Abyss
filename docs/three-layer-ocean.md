@@ -182,11 +182,12 @@ Steering itself already works and is not touched.
   ([ui-ux.md](ui-ux.md) §8) — the thermocline at 1,200 m sits *inside* Mid-Water, so hugging
   the duct remains an in-band decision the two buttons deliberately do not flatten.
 - **Floor-following is an explicit mode.** A hull ordered to hug the seabed holds a set
-  clearance above the local floor and follows the ground — up for free (terrain already
-  raises hulls), down at the ordinary loud descent rate, and never below its own PR. The
-  standing rule that nothing may spend a descent the player never ordered survives because
-  floor-following *is* the order: entering the mode is the commitment, its dives are exactly
-  as loud as dives are, and the mode disengages where following would cross the hull's PR.
+  clearance above the local floor and follows the ground — up for free (terrain already raises
+  hulls), down at the ordinary loud descent rate, and never below its own PR or the 3,000 m a
+  depth order stops at. The standing rule that nothing may spend a descent the player never
+  ordered survives because floor-following *is* the order: entering the mode is the
+  commitment, its dives are exactly as loud as dives are, and the mode disengages where
+  following would cross the hull's PR.
 - **The band is readable at a glance.** Selection UI names the band; hulls in other bands are
   depth-cued by the scene itself — fog, luminance, scale — the way WC3 makes high ground read
   without a tooltip. The sonar scope keeps its existing depth presentation.
@@ -342,10 +343,10 @@ on the command bar step the three band stations plus the thermocline duct, `D`/`
 bound, and the readout speaks band names ([ui-ux.md](ui-ux.md) §8) — which also settled
 §10's naming question the way §3 recommended. What Phase 3 itself added:
 
-- **Floor-following, end to end.** The standing order of
-  [systems-depth.md](systems-depth.md) §2: `S` (and the squad bar's FOLLOW button) holds
-  the selection 30 m over whatever ground is under it — up for free, down as a real dive,
-  disengaging at the hull's PR edge, replaced by any manual depth order. The one server
+- **Floor-following, end to end.** The standing order of [systems-depth.md](systems-depth.md)
+  §2: `S` (and the squad bar's FOLLOW button) holds the selection 30 m over whatever ground is
+  under it — up for free, down as a real dive, disengaging at the hull's PR edge, stopping at
+  3,000 m as a depth order does (#1179), replaced by any manual depth order. The one server
   change the presentation track needed: an order mode beside `orderDepth`, in the replay
   record like every order, node-tested from grace to disengage.
 - **The conn view's first verb.** Right-click moves the picked hull, through the chart's
