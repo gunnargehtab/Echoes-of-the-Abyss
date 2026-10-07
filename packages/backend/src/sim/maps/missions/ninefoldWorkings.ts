@@ -32,7 +32,7 @@ export const NINEFOLD_WORKINGS: MapDefinition = {
   // overwrite earlier ones; every number a shape states is a whole 250 m cell,
   // and a cell is its region's when the shape holds its centre (#1142). Every
   // spawn, field, hull and beat the mission places stands on the cell it stood
-  // on when these were all rectangles, and `maps.test.ts` pins it.
+  // on when these were all rectangles, and `missionShiftChange.test.ts` pins it.
   regions: [
     {
       x: 0,
