@@ -31,8 +31,9 @@ export const NINEFOLD_WORKINGS: MapDefinition = {
   // One row per row of §11's table, in the document's order. Later regions
   // overwrite earlier ones; every number a shape states is a whole 250 m cell,
   // and a cell is its region's when the shape holds its centre (#1142). Every
-  // spawn, field, hull and beat the mission places stands on the cell it stood
-  // on when these were all rectangles, and `missionShiftChange.test.ts` pins it.
+  // spawn, field, hull and beat the mission places stands on the ground it
+  // stood on when these were all rectangles, an idle shift walks the tracks it
+  // walked on them (#1171), and `missionShiftChange.test.ts` pins both.
   regions: [
     {
       x: 0,
@@ -65,16 +66,23 @@ export const NINEFOLD_WORKINGS: MapDefinition = {
       floorM: 950,
       note: "The High Road — the audit's ground: the freight road along the workings' shoulder, above the layer",
     },
-    // A basin rather than a band: its ends rise back to the Field's shoulder,
-    // and it dips south between the faces, where the refinery and the roads
-    // between them stand. Its northern rim never enters the shoulder row, so
-    // the climb to the road is as long as it was.
+    // A basin rather than a band: its north edge draws back at both ends, and
+    // never enters the shoulder row, so the climb to the road is as long as it
+    // was. Its south edge is the rectangle's, straight along the faces' heads:
+    // an ellipse there dipped into the Field between the faces and changed how
+    // the packs reach the muster (#1171).
     {
-      shape: 'ellipse',
-      x: 0,
-      y: 1250,
-      widthM: 4000,
-      heightM: 1000,
+      shape: 'polygon',
+      points: [
+        [0, 1500],
+        [750, 1500],
+        [1000, 1250],
+        [3000, 1250],
+        [3250, 1500],
+        [4000, 1500],
+        [4000, 2000],
+        [0, 2000],
+      ],
       biome: Biome.ThermalVein,
       floorM: 1300,
       note: 'The Downworks — the working level below the layer: the refinery, the roads between faces, and the pack',
@@ -93,7 +101,7 @@ export const NINEFOLD_WORKINGS: MapDefinition = {
       floorM: 1350,
       note: 'Face Two — the dying face: the muster, the last seam, and the thin field',
     },
-    // A fresh, round working opening off the Downworks' dip.
+    // A fresh, round working opening off the Downworks' south edge.
     {
       shape: 'ellipse',
       x: 2500,
