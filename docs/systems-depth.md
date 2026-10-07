@@ -87,9 +87,9 @@ would be the seabed spending the player's hull on their behalf — the exact thi
 document forbids terrain to do. A disengaged hull holds its depth and says so.
 
 Nor does it ever take a hull deeper than a depth order may: over ground below 3,000 m
-(`DEPTH.MAX_M`; §6, *Map floor*) it stops at 3,000 m and holds there, still following, exactly where a
-depth order to that line would put it. A standing order is the player's order kept; it cannot
-reach water no order the player could give reaches (#1179).
+(`DEPTH.MAX_M`; §6, *Map floor*) it stops at 3,000 m and holds there, still following, exactly
+where a depth order to that line would put it. A standing order is the player's order kept; it
+cannot reach water no order the player could give reaches (#1179).
 
 ### The other end of the column: sour exposure
 
