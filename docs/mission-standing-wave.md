@@ -664,17 +664,15 @@ column is seated or walks to crosses either cell, so none of those 224 lines is 
 differently.
 
 A hull following the floor holds thirty metres off it, so on those two cells it holds 1,750 m
-where it held 1,670 m, and 1,780 m is still Mid-Water: PR-2 covers both. That costs a follower a
-way back. Measured with a works Corvette following the floor, fauna off, 120 s per leg: one that
-strays onto either cell from the shoulders beside or north of it drops to 1,750 m there, and is
-refused the way back. Ordered back, it stops at the cell's edge, at (1,501, 3,875) or (1,625,
-3,751) for the west cell and (3,499, 3,875) or (3,375, 3,751) for the east. In rectangles it
-held 1,670 m on the cell and came back. Off either cell it can now go only into the Mouth, and
-from the Mouth at 1,750 m a follower could not go onto the shoulders in rectangles either. It
-gains the reverse: from the Mouth at 1,750 m it can now follow onto both cells and back, where
-the rectangles' 1,700 m floor stopped it at the Mouth's edge. A follower crossing the shoulders
-north of the west cell, from (1,375, 3,625) to (1,625, 3,500), measured the same way, keeps the
-track it kept in rectangles.
+where it held 1,670 m, and 1,780 m is still Mid-Water: PR-2 covers both. That is the whole of
+what it costs a follower. Measured with a works Corvette following the floor, fauna off, 120 s
+per leg: one ordered onto either cell from the shoulders beside or north of it drops to 1,750 m
+there and, ordered back, rises before the edge and returns to where it started at 1,670 m; one
+ordered onto either cell from the Mouth at 1,750 m reaches it and returns; and one crossing the
+shoulders north of the west cell, from (1,375, 3,625) to (1,625, 3,500), keeps the track it kept
+in rectangles. Every one of those legs ends where it ended in rectangles, because a follower
+reads the ground ahead and rises before an edge rather than being refused at it
+([systems-depth.md](systems-depth.md) §2; #1193).
 
 Every authored point of the mission stands on the ground it stood on in rectangles, and so does
 every cell centre of the Fifth's and the Gallery's mission regions. Every leg of the column's walk

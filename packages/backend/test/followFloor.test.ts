@@ -122,6 +122,73 @@ describe('floor-following', () => {
     assert.equal(Pressure.unhealable[eid], 0, 'with no crush spent on the way');
   });
 
+  it('climbs out of a pit it followed into, toward where it is ordered (#1193)', () => {
+    // Ground at 1,700 m with a 1,750 m pit. A follower in the pit holds
+    // 1,720 m, which the ground beside it refuses; ordered out, it reads the
+    // ground ahead, rises to that ground's clearance before the edge, and
+    // crosses — "up for free" (docs/systems-depth.md §2). Before #1193 it
+    // was stopped at the pit's edge, holding 1,720 m.
+    const m = match(1700);
+    m.world.terrain.fillGround(1000, 3750, 500, 500, { floorM: 1750 });
+    const eid = seat(m, 1720);
+    Position.x[eid] = 1250;
+    Position.y[eid] = 4000;
+    m.orderFollowFloor(0, eid, true);
+    advance(m, 5);
+    assert.ok(Math.abs(Position.depth[eid]! - (1750 - FOLLOW_FLOOR.CLEARANCE_M)) <= EPS);
+    m.orderMove(0, eid, 2250, 4000);
+    advance(m, 120);
+    assert.ok(Math.abs(Position.x[eid]! - 2250) <= 5, `reached the order, at x ${Position.x[eid]}`);
+    assert.ok(Math.abs(Position.depth[eid]! - (1700 - FOLLOW_FLOOR.CLEARANCE_M)) <= EPS);
+    assert.equal(DepthOrder.follow[eid], 1, 'still following');
+  });
+
+  it('reads the ground on its route, not on the line to the order, and stays silent (#1193)', () => {
+    // A 1,000 m ridge across 1,700 m ground, between the hull and its order.
+    // The route at 1,670 m goes round the ridge's end, over 1,700 m ground the
+    // whole way, so a follower holds 1,670 m and never dives. Reading the
+    // straight line to the order instead lifted it beside the ridge and dived
+    // it back, breaking Silent Running over ground it never crossed.
+    const m = match(1700);
+    m.world.terrain.fillGround(2750, 2500, 500, 3000, { floorM: 1000 });
+    const eid = seat(m, 1670);
+    m.orderFollowFloor(0, eid, true);
+    m.setSilentRunning(0, eid, true);
+    advance(m, 1);
+    m.orderMove(0, eid, 5000, 4000);
+    let shallowest = Position.depth[eid]!;
+    for (let s = 0; s < 600 && Math.abs(Position.x[eid]! - 5000) > 5; s++) {
+      advance(m, 1);
+      shallowest = Math.min(shallowest, Position.depth[eid]!);
+    }
+    assert.ok(Math.abs(Position.x[eid]! - 5000) <= 5, `reached the order, at x ${Position.x[eid]}`);
+    assert.ok(shallowest >= 1670 - EPS, `held 1,670 m round the ridge, rose to ${shallowest}`);
+    assert.equal(SilentRunning.active[eid], 1, 'and never dived, so never broke silence');
+  });
+
+  it('holds under a roof ahead, not over it (#1193)', () => {
+    // A corridor of 1,700 m ground walled with rock north and south, with
+    // one roofed cell across it (ceiling 1,665 m, floor 1,690 m): the only way
+    // east. A follower at 1,670 m fits under that roof. Reading the roofed
+    // cell's floor alone would lift it to 1,660 m before the cell, above the
+    // roof, where the cell refuses it for good; it holds at the roof instead,
+    // passes under it, and reaches the order.
+    const m = match(1700);
+    for (const y of [2500, 3500]) {
+      m.world.terrain.fillGround(0, y, MAP_M, 500, { floorM: 100, ceilingM: 200 });
+    }
+    m.world.terrain.fillGround(3000, 3000, 250, 500, { floorM: 1690, ceilingM: 1665 });
+    const eid = seat(m, 1670);
+    Position.x[eid] = 2125;
+    Position.y[eid] = 3250;
+    m.orderFollowFloor(0, eid, true);
+    advance(m, 2);
+    m.orderMove(0, eid, 4125, 3250);
+    advance(m, 240);
+    assert.ok(Math.abs(Position.x[eid]! - 4125) <= 5, `reached the order, at x ${Position.x[eid]}`);
+    assert.ok(Math.abs(Position.depth[eid]! - (1700 - FOLLOW_FLOOR.CLEARANCE_M)) <= EPS);
+  });
+
   it('is replaced by a manual depth order — the newer instruction wins', () => {
     const m = match(1000);
     const eid = seat(m, 300);
