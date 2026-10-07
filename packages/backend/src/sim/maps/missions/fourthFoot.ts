@@ -70,17 +70,15 @@ export const FOURTH_FOOT: MapDefinition = {
   // else.
   //
   // Drawn in shapes since #1154, with rows 2–8 drawn once for both maps in
-  // #1143: the walls end in slopes to the margin, the Fan spreads from the
+  // #1143: the walls end on a slant to the margin, the Fan spreads from the
   // yard's mouth, and the Foot is a bench whose northern corners fall to the
   // Fan. Every number is a whole 250 m cell, and a cell is a region's when its
   // shape holds the cell's centre (#157). Every hull, structure, emitter,
   // order, creature and mission region stands on the ground it stood on, and
   // `missionTheDome.test.ts` pins it.
   //
-  // A pocket states a floor and no ceiling, so it keeps the metre of rock the
-  // wall painted over it — `fourth-trench`'s ground exactly, inherited rather
-  // than tidied. It costs nothing here: the shallowest thing this mission
-  // seats is the muster at 1,000 m, and a lay-by admits everything below 1 m.
+  // A pocket states `ceilingM: 0`, which clears the 1 m rock ceiling the wall
+  // painted over it (#1105) — `fourth-trench`'s ground exactly.
   regions: [
     // A box because it is the whole map, painted first: `fourth-trench`'s
     // Margin, a thousand metres taller.

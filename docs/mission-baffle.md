@@ -286,7 +286,7 @@ runs north–south, the walls are rock, and the only road is the one that carrie
 | --- | --- | --- | --- | --- |
 | The Margin | rect 0, 0, 3000, 5000 | Open Water | 1,450 | The base water. Painted first; everything else is cut into it |
 | The Staging | rect 0, 0, 3000, 750 | Thermal Vein | 1,100 | The north mouth — the grid's masked apron, the muster, above the layer's duct |
-| The West Wall | polygon (0, 750) (1250, 750) (1250, 4250) (1000, 4250) (0, 3250) | Open Water | rock | Solid. The trench is the only road. A ridge: its face runs the trench's whole length, and its seaward end slopes from the mouth back to the map edge |
+| The West Wall | polygon (0, 750) (1250, 750) (1250, 4250) (1000, 4250) (0, 3250) | Open Water | rock | Solid. The trench is the only road. A ridge: its face runs the trench's whole length, and its seaward end runs on a slant back to the map edge |
 | The East Wall | polygon (1750, 750) (3000, 750) (3000, 3250) (2000, 4250) (1750, 4250) | Open Water | rock | Solid. The west wall's mirror image about the trench's axis |
 | The Trench | rect 1250, 750, 500, 3500 | Abyssal Trench | 1,700 | The shortcut itself: PF 1.6, no secrets down its length, only distances. Trench paint at Mid-Water depth — biome is acoustics, not band |
 | Lay-by One | rect 1000, 1750, 250, 250 | Thermal Vein | 1,700 | The first chartered vent pocket, notched into the west wall. The northern station moors here |
@@ -298,8 +298,9 @@ hazard sites: the corridor's weather is the picket and the pack.
 
 Drawn in shapes since issue #1143, a box of #1139. Every number in the table is a whole
 250 m cell, and a cell is its region's when the region's shape holds the cell's centre
-([maps.md](maps.md), "How a map is written"). The two walls are ridges whose seaward ends slope
-away from the trench's mouth, so the margin rises along both flanks of the yard.
+([maps.md](maps.md), "How a map is written"). The two walls are ridges whose seaward ends run
+on a slant from the trench's mouth back to the map edge, so the margin reaches north along both
+flanks of the yard.
 
 Six regions stay boxes, each for a reason. The Margin is the whole map, painted first. The
 Staging's apron runs the whole north edge at 1,100 m, and any cell it gave up would be the
@@ -310,10 +311,9 @@ rectangle.
 
 The reshape is new map content, never a balance lever. Twelve of the 240 cells changed, all from
 rock to the margin's open water at 1,450 m: six at the foot of each wall, between y 3,500 and
-4,250. The
-walls are painted Open Water under their rock, so no cell's PF changed. The new water is off the
-road: a hull at 1,450 m or shallower can reach it from the yard, and nothing deeper can. Every
-spawn, hull, station, emitter, order and creature in this mission and in
+4,250. The walls are painted Open Water under their rock, so no cell's PF changed. The new water
+is off the road: a hull at 1,450 m or shallower can reach it from the yard, and nothing deeper
+can. Every spawn, hull, station, emitter, order and creature in this mission and in
 [The Dome](mission-the-dome.md) stands on the ground it stood on in rectangles, and the trench is
 still the only water joining the staging to the south.
 

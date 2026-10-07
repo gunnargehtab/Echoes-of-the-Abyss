@@ -709,10 +709,19 @@ describe('the ground the tide stands on — §11, drawn in shapes (#1143, #1154)
     }
     for (const at of seen) {
       const [x, y] = at.split(',').map(Number) as [number, number];
-      const region = regionAt(x, y);
-      assert.ok(['The Foot', 'The Freight Galleries'].includes(region), at);
-      if (region === 'The Foot') assert.ok(y > 5250, `the bench reaches ${at}, nearer the berth`);
+      assert.ok(['The Foot', 'The Freight Galleries'].includes(regionAt(x, y)), at);
     }
+    // The bench's first row is y 5,250–5,500, and on it the corners fell to
+    // the Fan: columns 4 to 7 are the Foot's, and no row north of it is.
+    const bench: string[] = [];
+    for (let y = cellM / 2; y < FOURTH_FOOT.heightM; y += cellM) {
+      for (let x = cellM / 2; x < FOURTH_FOOT.widthM; x += cellM) {
+        if (regionAt(x, y) !== 'The Foot') continue;
+        assert.ok(y > 5250, `the bench reaches ${x},${y}, nearer the berth`);
+        if (y < 5500) bench.push(`${x}`);
+      }
+    }
+    assert.deepEqual(bench, ['1125', '1375', '1625', '1875'], "the bench's first row");
   });
 });
 

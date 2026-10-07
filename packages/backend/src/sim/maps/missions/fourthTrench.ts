@@ -37,8 +37,8 @@ export const FOURTH_TRENCH: MapDefinition = {
   // painted after the walls they notch, which is what carves water back out
   // of rock — the same order-of-paint argument as everywhere else.
   //
-  // Drawn in shapes since #1143: the two walls end in slopes that fall away
-  // from the trench's mouth to the margin. Every number is a whole 250 m cell,
+  // Drawn in shapes since #1143: the two walls' seaward ends run on a slant
+  // from the trench's mouth back to the map edge. Every number is a whole 250 m cell,
   // and a cell is a region's when its shape holds the cell's centre (#157).
   // Twelve cells of wall became margin; every spawn, hull, station, emitter,
   // order and creature stands on the ground it stood on, and
@@ -68,7 +68,7 @@ export const FOURTH_TRENCH: MapDefinition = {
       note: "The Staging — the north mouth: the grid's masked apron, the muster, above the layer's duct",
     },
     // A ridge whose face along the trench runs its whole length, and whose
-    // seaward end slopes away from the mouth to the margin. Its north face and
+    // seaward end runs on a slant from the mouth back to the map edge. Its north face and
     // its outer edge stay on the apron and the map edge, so no water opens
     // between the staging and the south but the trench.
     {
