@@ -483,7 +483,7 @@ cell, and a cell is its region's when the shape holds the cell's centre ([maps.m
 a map is written"). Only the Step and the two benches changed. The Step's north edge runs on a
 slant out to the map's edges, so north of it the Ninth's 3,400 m shows only in a wedge beside each
 end of the galleries. Each bench's outer south corner is cut on a slant, and the Ninth's floor
-shows there beside the sill.
+shows there, at the map's south-west and south-east corners.
 
 Five regions stay boxes, each for a reason. The Ninth is the whole map's base. The Lower Rows
 and the galleries are built. The mission restates the galleries as its `galleries` region, the
@@ -494,8 +494,12 @@ line at x 2,500.
 The reshape is new map content, never a balance lever. It moved 22 of the map's 320 cells, all
 Abyssal Trench before and after, so no cell's biome or PF changed: ten from the Ninth's 3,400 m to
 the Step's 3,200, and twelve from the benches' 3,200 to the Ninth's 3,400. Asked at every 25 m of
-depth from the surface to 3,000 m, the deepest a hull can be ordered, every cell admits a hull as
-it did in rectangles. The seats, the dome, the spawn, all nine arrivals and the `axis` marker stand
+depth from the surface to 3,000 m, the deepest a depth order reaches, every cell admits a hull as
+it did in rectangles; to 4,075 m, only those 22 cells admit differently, and only between 3,200
+and 3,400 m. That band is where a hull following the floor goes, thirty metres off the floor, so
+the 22 cells cost one: on the wedge it holds 3,170 m where it held 3,370, 200 m higher; on the
+bench corners 3,370 where it held 3,170, 200 m lower; and following the Ninth's floor at 3,370 m
+it can no longer cross onto the wedge's cells. The seats, the dome, the spawn, all nine arrivals and the `axis` marker stand
 on the ground they stood on, and so does every cell centre of both mission regions. No line from a
 seat or the dome to an arrival crosses a changed cell. The mission authors no move. Played with no
 input, every hull, the dome and every arrival keeps the position it kept in rectangles, sampled

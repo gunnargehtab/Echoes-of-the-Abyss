@@ -98,7 +98,8 @@ export const ATTENDING_GALLERIES: MapDefinition = {
       note: "The Step — the slope's last bench before the channel",
     },
     // Each bench's outer south corner is cut on a slant, and the Ninth's floor
-    // shows there beside the sill. Both are mirror images across x 2,500.
+    // shows there, at the map's south-west and south-east corners. Both are
+    // mirror images across x 2,500.
     {
       shape: 'polygon',
       points: [

@@ -304,9 +304,9 @@ describe('the ground the watch stands on — §11, drawn in shapes (#1149)', () 
     assert.equal(cells, 64, 'the mission regions grew or shrank');
   });
 
-  it('admits a hull at every orderable depth exactly where the rectangles did', () => {
+  it('admits a hull at every depth a depth order reaches exactly where the rectangles did', () => {
     // §11: the reshape trades cells between 3,200 and 3,400 m of trench, both
-    // below the 3,000 m a hull can be ordered to, and changes no cell's biome.
+    // below the 3,000 m a depth order reaches, and changes no cell's biome.
     for (let y = map.cellM / 2; y < map.heightM; y += map.cellM) {
       for (let x = map.cellM / 2; x < map.widthM; x += map.cellM) {
         assert.equal(ground.biomeAt(x, y), was.biomeAt(x, y), `${x},${y} changed biome`);
@@ -316,6 +316,34 @@ describe('the ground the watch stands on — §11, drawn in shapes (#1149)', () 
         }
       }
     }
+  });
+
+  it('admits differently below that only on the 22 cells §11 names, between 3,200 and 3,400 m', () => {
+    // A hull following the floor holds thirty metres off it, past 3,000 m
+    // (systems/depth.ts, `followTheFloor`), so this is the band §11 prices:
+    // the Step's wedge beside each end of the galleries, and each bench's
+    // cut south corner. Swept to 4,075 m, the deepest a hull follows the Axis.
+    const WEDGE = ['125,875', '125,1125', '375,1125', '625,1125', '875,1125'];
+    const CORNERS = ['125,3375', '125,3625', '375,3625', '125,3875', '375,3875', '625,3875'];
+    const mirror = (cell: string) => {
+      const [x, y] = cell.split(',').map(Number) as [number, number];
+      return `${map.widthM - x},${y}`;
+    };
+    const westAndEast = (cells: string[]) => [...new Set([...cells, ...cells.map(mirror)])];
+    const named = new Set([...westAndEast(WEDGE), ...westAndEast(CORNERS)]);
+    assert.equal(named.size, 22);
+    const differ = new Set<string>();
+    for (let depthM = 0; depthM <= 4075; depthM += 25) {
+      for (let y = map.cellM / 2; y < map.heightM; y += map.cellM) {
+        for (let x = map.cellM / 2; x < map.widthM; x += map.cellM) {
+          if (ground.admits(x, y, depthM) === was.admits(x, y, depthM)) continue;
+          differ.add(`${x},${y}`);
+          assert.ok(named.has(`${x},${y}`), `${x},${y} admits differently at ${depthM} m`);
+          assert.ok(depthM > 3200 && depthM <= 3400, `${x},${y} differs at ${depthM} m`);
+        }
+      }
+    }
+    assert.deepEqual([...differ].sort(), [...named].sort(), 'a named cell admits as it did');
   });
 
   it('routes the watch down the channel the way it was routed in rectangles', () => {
