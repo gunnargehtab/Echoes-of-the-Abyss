@@ -67,9 +67,9 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition, MapRect } from '../types.ts';
+import type { MapDefinition } from '../types.ts';
 
-export const THE_FIRST: MapDefinition<MapRect> = {
+export const THE_FIRST: MapDefinition = {
   id: 'the-first',
   name: 'The First',
   idealUse: 'The Second Chord, mission five. A house in working order, and nothing in it is safe.',
@@ -83,10 +83,14 @@ export const THE_FIRST: MapDefinition<MapRect> = {
   // overwrite earlier ones, which is what lets the Fields be painted whole and
   // the house cut into them as four roofed rooms — every one of which is a
   // ceiling laid over water that was open a line earlier. The Axis is painted
-  // last and clears the foot's southern strip; it does not reach the rooms,
-  // which stop at y = 2500. Every rectangle lands on the 250 m cell grid and
-  // paints exactly the metres it reads.
+  // last and clears the foot's south edge; it does not reach the rooms, which
+  // stop at y = 2500. Every number a shape states is a whole 250 m cell, and a
+  // cell is its region's when the shape holds its centre (#1158). Every
+  // authored point and mission region stands on the ground it stood on when
+  // these were all rectangles, an idle tide plays the tracks it played on
+  // them, and `missionTheThree.test.ts` pins both.
   regions: [
+    // A box, because it is the whole map's base.
     {
       x: 0,
       y: 0,
@@ -96,6 +100,9 @@ export const THE_FIRST: MapDefinition<MapRect> = {
       floorM: 2700,
       note: "The Foot of the Fields — crystal country's last ground before the trenches, PF 0.70. Painted first; everything else is cut into it. The party crosses it at 2,300 m",
     },
+    // The four rooms are boxes, because §6 restates each as the same
+    // rectangle and the mission restates three of them; the sealed room is
+    // `sealed-room`, where the extract counts her in.
     {
       x: 1500,
       y: 750,
@@ -136,11 +143,23 @@ export const THE_FIRST: MapDefinition<MapRect> = {
       ceilingM: 2800,
       note: 'The Sealed Room — the cut dry room, off the east end of the chord. The deepest ceiling on the map, so it is the last dive',
     },
+    // The one shape on the map: a trench rather than a room, drawn widest
+    // under the house it is aimed at. Its north edge runs straight along the
+    // rooms' south side from x 1,000 to 3,000, so it still shares a column
+    // with all three, and runs out on a slant to y 2,750 at the map's west and
+    // east edges; its south row still runs the whole width. The four cells the
+    // slant gives back to the foot carry at 0.70 where they carried at 1.60,
+    // and hold a following hull at 2,670 m where it held 3,000; §11 states it.
     {
-      x: 0,
-      y: 2500,
-      widthM: 4000,
-      heightM: 500,
+      shape: 'polygon',
+      points: [
+        [0, 2750],
+        [1000, 2500],
+        [3000, 2500],
+        [4000, 2750],
+        [4000, 3000],
+        [0, 3000],
+      ],
       biome: Biome.AbyssalTrench,
       floorM: 3100,
       note: 'The Axis — the trench the Chord is aimed down, PF 1.60. What is heard on it is heard from the south, and its floor is a hundred metres below anywhere a hull can be ordered',
