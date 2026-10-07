@@ -604,14 +604,14 @@ below the thermocline duct — the shallowest ground is 1,600 m and the duct end
 layer's factor is 1 on every pair and says nothing, arranged as
 [mission-aptitude.md](mission-aptitude.md) §11 arranged it.
 
-| Region | Rect (x, y, w, h) | Biome | Floor / Ceiling | What it is |
+| Region | Shape | Biome | Floor / Ceiling | What it is |
 | --- | --- | --- | --- | --- |
-| The Shoulders | 0, 0, 5000, 4000 | Resonance Field | 1,700 | Crystal country, PF 0.70. Painted first; the far shoulder south of the trench survives as this and nobody has a reason to be on it |
-| The Head | 2000, 0, 1000, 750 | Resonance Field | 1,600 | **The spawn**, and the bench the party climbs back to. Where the Order's 211 PC chart begins |
-| The Rest | 0, 1000, 5000, 2000 | Abyssal Trench | 2,150 | The trench. PF 1.60 axial — "no secrets, only distances". The nineteen are on this floor and the two sounding rows run above it at y 1,750 and y 2,250 |
-| The North Wall | 0, 1000, 5000, 500 | Abyssal Trench | 2,050 | Hollow ground. Four coil here at 1,700 m |
-| The South Wall | 0, 2500, 5000, 500 | Abyssal Trench | 2,050 | Hollow ground. Three coil here at 1,700 m |
-| The Deep End | 4250, 1250, 750, 1500 | Abyssal Trench | 2,400 | Where the trench falls east toward Directorate country. The basin's water and the watch's station |
+| The Shoulders | rect 0, 0, 5000, 4000 | Resonance Field | 1,700 | Crystal country, PF 0.70. Painted first; the far shoulder south of the trench survives as this and nobody has a reason to be on it. A box because it is the whole map's base |
+| The Head | polygon (2000, 0) (3000, 0) (3000, 250) (2750, 750) (2250, 750) (2000, 250) | Resonance Field | 1,600 | **The spawn**, and the bench the party climbs back to. Where the Order's 211 PC chart begins. A spur off the northern edge, narrowing toward the cut |
+| The Rest | rect 0, 1000, 5000, 2000 | Abyssal Trench | 2,150 | The trench. PF 1.60 axial — "no secrets, only distances". The nineteen are on this floor and the two sounding rows run above it at y 1,750 and y 2,250. A box because what shows of it lies between the walls' inner edges, and those are straight |
+| The North Wall | polygon (0, 1000) (3750, 1000) (5000, 750) (5000, 1500) (0, 1500) | Abyssal Trench | 2,050 | Hollow ground. Four coil here at 1,700 m. Its inner edge is straight; its outer edge runs on a slant north over the last 1,250 m, where the trench opens east |
+| The South Wall | polygon (0, 2500) (5000, 2500) (5000, 3250) (3750, 3000) (0, 3000) | Abyssal Trench | 2,050 | Hollow ground. Three coil here at 1,700 m. The North Wall's mirror image across the axis |
+| The Deep End | polygon (4250, 1250) (5000, 1000) (5000, 3000) (4250, 2750) | Abyssal Trench | 2,400 | Where the trench falls east toward Directorate country. The basin's water and the watch's station. Widening east: its north and south edges run on a slant out into both walls |
 
 One spawn, at the Head: **2,500, 375**, foundry offsets 0, 0. No resources — the Order is not
 cutting anything today — no hazard sites, and `fauna: false`.
@@ -646,11 +646,50 @@ cutting anything today — no hazard sites, and `fauna: false`.
   Corvette, 300 for the Voice. The map neither asks for that order nor blocks it. It is simply
   there for eighteen minutes, being the reason the Order is playing tones instead of going down.
 
-**Every rectangle lands on the 250 m cell grid and paints exactly the metres it reads**
-([maps.md](maps.md), "How a map is written"), painted in the table's order so the walls and the
-Deep End cut into the trench and the trench cuts into the shoulders. The map id is checked against
-`missionMapById`: no collision. **The Rest is a mission map and is not in the public catalogue** —
-one seat, no resources, not balanced, resolved by mission id and nothing else.
+**Drawn in shapes since issue #1157, a box of #1139.** Every number a shape states is a whole
+250 m cell, and a cell is its region's when the shape holds the cell's centre
+([maps.md](maps.md), "How a map is written"). The regions are painted in the table's order, so
+the walls and the Deep End cut into the trench and the trench cuts into the shoulders. The map id
+is checked against `missionMapById`: no collision. **The Rest is a mission map and is not in the
+public catalogue** — one seat, no resources, not balanced, resolved by mission id and nothing
+else.
+
+Four regions changed. The Head narrows toward the cut: its two southern corner cells are shoulder
+now. The trench opens east over its last 1,250 m: each wall's outer edge runs on a slant out into
+the shoulder, and the Deep End widens between them into both walls. The Shoulders stay a box,
+because they are the whole map's base. The Rest stays a box, because it shows only between the
+walls' inner edges. Those edges stay straight, because 250 m in plan from each sounding row is the
+number the mission turns on.
+
+The reshape is new map content, never a balance lever. It moved 12 of the map's 320 cells, and
+every floor it moved went deeper:
+
+- **The Head's two southern corners**, at x 2,000–2,250 and 2,750–3,000, y 500–750: 1,600 m to
+  the Shoulders' 1,700, Resonance Field before and after.
+- **Six cells of the eastern rim**, three at y 750–1,000 and three at y 3,000–3,250, all at
+  x 4,250–5,000: the Shoulders' 1,700 m Resonance Field to a wall's 2,050 m Abyssal Trench. These
+  are the only cells whose biome changed. Sound crossing them is priced at PF 1.60 where it was
+  0.70, so a hull that strays onto the eastern rim is heard through trench water there.
+- **Four wall cells**, at x 4,500–5,000, y 1,000–1,250 and y 2,750–3,000: a wall's 2,050 m to the
+  Deep End's 2,400, Abyssal Trench before and after.
+
+The spawn, the six hulls, the watch's seats, the seven coils, the basin, all nineteen intervals,
+the marker and every end of every authored leg stand on the ground they stood on. Every cell a leg
+crosses keeps its ground, and admits the leg's hull as it did at every 25 m of the depths the leg
+spans. Every scripted move is routed as it was in rectangles, asked from every 25 m along its leg.
+No straight line from a party seat to the watch, a coil, the basin, or a point every 25 m along an
+authored leg crosses a cell whose biome changed. Played with no input, every hull and animal keeps
+the position it kept in rectangles, sampled every five seconds, to the same transcript and the
+same close.
+
+**What it costs a hull following the floor.** No cell admits a hull at fewer depths than it did,
+so no crossing is lost. Over the Head's two corners a party hull following the floor holds
+1,670 m, a hundred metres lower than the 1,570 it held. Over the six rim cells it now drops the
+order, as it does over every trench cell: the floor less thirty metres is 2,020 m, past a PR-2
+rating. On rectangles it held 1,670 m there. The four Deep End cells drop the order before and
+after. Crossings are only gained: the Head's corners now admit a hull from 1,600 to 1,700 m, the
+six rim cells from 1,700 to 2,050 m, and the four Deep End cells from 2,050 to 2,400 m. So the
+bench's 1,750 m reaches the eastern rim beyond x 4,250, where the shoulder refused it.
 
 **This mission authors no mission regions.** A mission restates only the places a predicate, a
 lift, a ground beat or a reader addresses, and nothing here addresses a place: no extraction, no
@@ -670,7 +709,7 @@ then address a dead tag, the Watch-Speaker's 04:00 line is read by a hull three 
 out of the water, §8's "the sweep files on every run" becomes never, and `the-count` can never be
 met, because the watch is the only observer on this map that could classify anybody.
 
-So the basin sits at the southern end of the same rectangle: still the Deep End, still 2,000 m,
+So the basin sits at the southern end of the same region: still the Deep End, still 2,000 m,
 still x 4,700, so the transit still stands under the Head at 18:00. It is 714 m from the station in
 three dimensions and never nearer than about 620 m to any authored leg, which is half as loud again
 as a Submersible under way can reach. The cost is that the 16:30 transit converges on the axis
@@ -852,7 +891,7 @@ remembered.**
 | **Nineteen authored names** | **New canon, owned here, and now spelled in the literal.** Sera, Fen, Perrin and Yorrick Tessaly; Ilar, Ottiline, Corin and Aled Orme; Wen, Hale, Neve and Sunniva Brannock; Marek, Ise, Talin and Roelle Vale; Ando, Emris and Deri Kalliso — nineteen `MissionSounding` ids, one per name, which is the closest the format comes to a roll. Five surnames across nineteen people because a chapter-house is a handful of surnames ([habitats.md](habitats.md) §5), and three Kallisos because the cadre was her house's ([characters.md](characters.md)). Nothing else in the bible names a rank-and-file Knight; if a later document wants more, it takes them from these five families or says why not |
 | **The trench's number, deliberately unauthored** | **Settled here, and it is a refusal rather than a gap.** [world-map.md](world-map.md) §4 carries all the geography this mission needs — the First and the trench country meet — and §3 counts the nine trenches downward from the First without saying which of them heads at the Fields' southern margin. Cohorts the bible numbers freely: the Fourth on *Baffle*'s picket ([mission-baffle.md](mission-baffle.md) §6, §12), the Ninth on the rim ([mission-rim-deposits.md](mission-rim-deposits.md) §5, [mission-second-chord.md](mission-second-chord.md) §5), the Second at the furrow ([mission-in-writing.md](mission-in-writing.md) §5). Numbering *this trench* inside a Knight document is the other act, and would author a Directorate fact from the wrong side of the water. The watch's cohort is unnumbered for the same reason, and the literal names it "the trench cohort's western watch" and stops |
 | **What took a hull** | **Not built, and deliberately not asked for.** There is no damage-source predicate — the union is `extract`, `survive`, `attend`, `sound`, `walk`, `quiet`, `endure`, `tolerance` and `deliver`, and every one of them is a state — so §8's named rows read the same sentence for a hull a Hollow struck, a hull the colossus ground and a hull that took four points a second below its rating. [mission-standing-wave.md](mission-standing-wave.md) §13 named this first and declined to propose a `struck` predicate on the grounds that it would be the union's first row about an event rather than a state; this document agrees, and observes that the Order would not enter the difference either |
-| The map, six regions, no resources | **Built** (#392, registered #393), **and it asked for nothing new.** `the-rest` is one row of the literal per row of §11's table, painted in the document's order so the walls and the Deep End cut into the trench and the trench cuts into the shoulders. Every rectangle lands on the 250 m cell grid; the shallowest floor is 1,600 m and the deepest 2,400, both inside `0 < floorM <= DEPTH.MAX_M`. `fauna: false`; no blooms, no hazards, no ceilings, no second spawn, and `regions: []` on the mission itself, because no predicate, lift, ground beat, reader or grant addresses a rectangle. It is in `MISSION_MAPS` and in neither `MAPS` nor `MAP_HEADERS`, so `mapById('the-rest')` returns undefined and the skirmish screen cannot offer a one-seat map that `resolveVictory` could never end — asserted, not assumed. The one figure that moved between §11 and the ground is the walls' 1,700 m, which the placed-creature row above owns |
+| The map, six regions, no resources | **Built** (#392, registered #393), **and it asked for nothing new.** `the-rest` is one row of the literal per row of §11's table, painted in the document's order so the walls and the Deep End cut into the trench and the trench cuts into the shoulders. Every rectangle landed on the 250 m cell grid, and the regions were drawn in shapes in #1157; the shallowest floor is 1,600 m and the deepest 2,400, both inside `0 < floorM <= DEPTH.MAX_M`. `fauna: false`; no blooms, no hazards, no ceilings, no second spawn, and `regions: []` on the mission itself, because no predicate, lift, ground beat, reader or grant addresses a rectangle. It is in `MISSION_MAPS` and in neither `MAPS` nor `MAP_HEADERS`, so `mapById('the-rest')` returns undefined and the skirmish screen cannot offer a one-seat map that `resolveVictory` could never end — asserted, not assumed. The one figure that moved between §11 and the ground is the walls' 1,700 m, which the placed-creature row above owns |
 | The Corvette's firing burst, +10 and not +25 | **Built, and one shipped document should still move.** `FACTION_COMBAT.ENERGY` gives the Knights `FIRING_SIG: 10`, replacing the hull's own burst rather than scaling it; [mission-aptitude.md](mission-aptitude.md) §3's hull table still prints the roster's kinetic "+25 firing burst" beside a Knight-rigged Corvette, which would make a firing Corvette 53 in the cone. This document's §3 carries 38, the literal's hull note carries 38, and the test derives it as `sigCruise + FIRING_SIG` — so the corrected figure now has three places and a gate, and Aptitude's cell is the only place the 53 could still be read off. Nothing in Aptitude's geometry depends on it — no distance in its §4 or §6 is quoted from a firing figure — so the correction remains one cell in one table, named here rather than made here |
 | A Knight hull in the roster | **Written, and not yet fielded here** (#401), unchanged from [mission-aptitude.md](mission-aptitude.md) §13 and [mission-standing-wave.md](mission-standing-wave.md) §13 — units.md's design note now reads "The Knights have a hull now, and it is solved from the multiplier rather than beside it". §3 still fields generic hulls with the term applied and says so, and the literal still seats a Cruiser and five Corvettes under Knight colours; mission 1 owns the decision to change that |
 | Resonance Field 0.70 as **scattered** | **Not built**, and this mission relies on it less than either of its predecessors: the Head and the shoulders are 0.70 and nothing is heard across them that matters, and every number in §4, §6 and §7 is quoted in the trench at 1.60. Named again so nobody adds false bearings and assumes the stand-off arithmetic survived |
@@ -860,7 +899,7 @@ remembered.**
 | Campaign progression | **The record is built** (#371, #374) **and has since grown its first sibling key** (#395): a per-mission history in `packages/frontend/src/progression/store.ts`, written from the `missionOver` payload and read by the campaign board, with `Progression.scenes` beside `missions` as a second collection written and read the same way. That is the pattern the first row above proposed, running — `Progression` is a container of collections precisely so that a spent roster arrives as a sibling key, which is what its own comment and [campaign.md](campaign.md) §11 both say, and an absent key reads as empty rather than as a migration. The other half has since landed (#380): `Progression.spent` is the second sibling key, written from `missionOver` and read back into the join, so the roster is carried by the record and not by prose. Sull's authorisation in mission 6 still stands on this tide having happened and is still carried by prose — a briefing that varied on the spent set would be the briefing-variant row's business, and nobody has asked for it |
 | In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line. Five `say` beats on the clock and three on standing rules, all of them hailed and read — the Watch-Speaker's two in the cohorts' ticks, the rest in the Order's note |
 | The mix — a trench that carries, seven silences on the walls, and one interval nineteen times | Not started ([audio-direction.md](audio-direction.md)). The Fields' pitched bed is [mission-aptitude.md](mission-aptitude.md) §13's problem restated at 1.60, with the hardest single cue in the campaign under it: a held tone at 80 that has to read as a rite rather than as a klaxon, nineteen times, without the nineteenth sounding like the first |
-| **The basin's seat, and the mission it was quietly costing** | **A finding this literal made and acted on, stated in both places.** §11 first seated the basin at (4,700, 2,000) — a hundred metres in plan and a hundred in depth from the watch's station, on the line the watch walks at 01:00. A placed Sounder is released to its own trigger model on the first pass, and at HYD 90 against an interest of 55 it commits from 298 m and kills at 220 a second: both watch hulls were gone by 00:12 of every run, which took the six legs, the Watch-Speaker's 04:00 line, the sweep's filing and `the-count` with them. `nineteen.ts` seats it at (4,700, 2,700) instead — same rectangle, same depth, same x — and is the one coordinate in the literal that does not transcribe §11. §11 now carries the reasoning and the cost: the 16:30 transit converges on the axis rather than running down it. Moving the watch instead would have cost §6's row 19, §9's six legs and §11's own row |
+| **The basin's seat, and the mission it was quietly costing** | **A finding this literal made and acted on, stated in both places.** §11 first seated the basin at (4,700, 2,000) — a hundred metres in plan and a hundred in depth from the watch's station, on the line the watch walks at 01:00. A placed Sounder is released to its own trigger model on the first pass, and at HYD 90 against an interest of 55 it commits from 298 m and kills at 220 a second: both watch hulls were gone by 00:12 of every run, which took the six legs, the Watch-Speaker's 04:00 line, the sweep's filing and `the-count` with them. `nineteen.ts` seats it at (4,700, 2,700) instead — same region, same depth, same x — and is the one coordinate in the literal that does not transcribe §11. §11 now carries the reasoning and the cost: the 16:30 transit converges on the axis rather than running down it. Moving the watch instead would have cost §6's row 19, §9's six legs and §11's own row |
 | **The sweep's bend, which was a re-aim** | **A finding this mission made against the runtime, and the runtime is the side that moved.** `MissionRuntime.file` answered a filing by ordering the sweeping hulls *to* the position they heard. The first window opens at 01:00, the pair hears the party from anywhere on this map, and both hulls then flew 2,800 m at 60 m/s toward the Head — off the axis, through the north wall's coils, and into six armed Knight hulls that auto-engage, because hostility is `Owner.slot` and nothing else. Played with no order given at all, the watch was dead by 02:30, which unmade §5's "it never fires, never closes and never names the Order", §7's walking watch, four of §9's six legs, the Watch-Speaker's 04:00 line and `the-count` itself — the watch is the only observer on this map that can classify anybody. No data fixed it: §3 needs the party's guns live for the walls, `weaponsCold` removes the `Weapon` component outright rather than only the auto-acquire, and §8 and §9 own the sweep and the legs. [mission-tend.md](mission-tend.md) §6 had specified the right behaviour all along — the course "bends a few degrees toward what it heard" — so the re-aim was never what the bible asked for. `file` now turns the leg by `MISSION.SWEEP_BEND_DEG` and keeps its range, and the next authored beat restores the chart. A sweep reports; it does not intercept |
 
 ---
