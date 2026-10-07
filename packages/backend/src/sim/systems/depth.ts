@@ -75,10 +75,12 @@ export function depthSystem(world: SimWorld): void {
 
 /**
  * The standing half of docs/systems-depth.md §2, "Steering along the ground":
- * hold the hull a fixed clearance above whatever ground is under it, by
- * rewriting its depth order from the local floor each tick and letting the
- * ordinary travel below do the moving — same rates, same `descending` flag,
- * and therefore exactly a dive's loudness when the ground falls away.
+ * hold the hull a fixed clearance above whatever ground is under it — and,
+ * under way, the ground one cell ahead toward where it is steering, so it
+ * rises before an edge (#1193) — by rewriting its depth order each tick and
+ * letting the ordinary travel below do the moving — same rates, same
+ * `descending` flag, and therefore exactly a dive's loudness when the ground
+ * falls away.
  *
  * Two rules from the doc, enforced here because this is the only writer:
  *
@@ -100,25 +102,42 @@ function followTheFloor(world: SimWorld, eid: number): void {
   const x = Position.x[eid]!;
   const y = Position.y[eid]!;
   const ceiling = terrain.ceilingAt(x, y);
-  let floor = terrain.floorAt(x, y);
+  let hold = terrain.floorAt(x, y) - FOLLOW_FLOOR.CLEARANCE_M;
 
   // Read the ground ahead too (#1193). Movement refuses a step onto ground
   // shallower than the hull, and terrain only lifts a hull already over such
   // ground, so a follower holding the clearance in a pit was stopped at its
   // edge for good — "up for free" never came. Holding the clearance over the
-  // shallower of this cell and the next one toward the order lets it rise
-  // before the edge instead, which is the promise. Only water counts: rock
-  // ahead is ground no clearance fits over, and the router goes round it.
+  // shallower of this cell and the next one toward where the hull is steering
+  // lets it rise before the edge instead, which is the promise.
+  //
+  // Toward the steering point, not the order: the next waypoint of a route
+  // built at this depth, else the order once the waypoints run out (which is
+  // where `steerPoint` aims too, so a route sealed at a pit's edge still looks
+  // over the rim). Reading the straight line to the order instead made a hull
+  // routed round a ridge rise beside it and dive back, loud, over ground it
+  // never crossed. Only water counts, and at its own ceiling: rock ahead is
+  // ground no clearance fits over, and a roof ahead is held under, not over.
   if (MoveOrder.active[eid]) {
-    const dx = MoveOrder.x[eid]! - x;
-    const dy = MoveOrder.y[eid]! - y;
+    let tx = MoveOrder.x[eid]!;
+    let ty = MoveOrder.y[eid]!;
+    const plan = world.paths.get(eid);
+    if (plan !== undefined && plan.index < plan.waypoints.length >> 1) {
+      tx = plan.waypoints[2 * plan.index]!;
+      ty = plan.waypoints[2 * plan.index + 1]!;
+    }
+    const dx = tx - x;
+    const dy = ty - y;
     const distance = Math.hypot(dx, dy);
     if (distance > 0) {
       const step = Math.min(terrain.cellM, distance);
       const ax = x + (dx / distance) * step;
       const ay = y + (dy / distance) * step;
       const aheadFloor = terrain.floorAt(ax, ay);
-      if (terrain.ceilingAt(ax, ay) < aheadFloor) floor = Math.min(floor, aheadFloor);
+      const aheadCeiling = terrain.ceilingAt(ax, ay);
+      if (aheadCeiling < aheadFloor) {
+        hold = Math.min(hold, Math.max(aheadCeiling, aheadFloor - FOLLOW_FLOOR.CLEARANCE_M));
+      }
     }
   }
 
@@ -126,7 +145,7 @@ function followTheFloor(world: SimWorld, eid: number): void {
   // the player could have ordered the hull to, and ground below `DEPTH.MAX_M`
   // is ground no order reaches, so the hull holds there, still following, as
   // a depth order to that line would.
-  const target = Math.max(ceiling, Math.min(floor - FOLLOW_FLOOR.CLEARANCE_M, DEPTH.MAX_M));
+  const target = Math.max(ceiling, Math.min(hold, DEPTH.MAX_M));
 
   if (hasComponent(world, Pressure, eid)) {
     const rating = Pressure.rating[eid]! + Pressure.bonus[eid]!;

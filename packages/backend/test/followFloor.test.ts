@@ -143,6 +143,29 @@ describe('floor-following', () => {
     assert.equal(DepthOrder.follow[eid], 1, 'still following');
   });
 
+  it('reads the ground on its route, not on the line to the order, and stays silent (#1193)', () => {
+    // A 1,000 m ridge across 1,700 m ground, between the hull and its order.
+    // The route at 1,670 m goes round the ridge's end, over 1,700 m ground the
+    // whole way, so a follower holds 1,670 m and never dives. Reading the
+    // straight line to the order instead lifted it beside the ridge and dived
+    // it back, breaking Silent Running over ground it never crossed.
+    const m = match(1700);
+    m.world.terrain.fillGround(2750, 2500, 500, 3000, { floorM: 1000 });
+    const eid = seat(m, 1670);
+    m.orderFollowFloor(0, eid, true);
+    m.setSilentRunning(0, eid, true);
+    advance(m, 1);
+    m.orderMove(0, eid, 5000, 4000);
+    let shallowest = Position.depth[eid]!;
+    for (let s = 0; s < 600 && Math.abs(Position.x[eid]! - 5000) > 5; s++) {
+      advance(m, 1);
+      shallowest = Math.min(shallowest, Position.depth[eid]!);
+    }
+    assert.ok(Math.abs(Position.x[eid]! - 5000) <= 5, `reached the order, at x ${Position.x[eid]}`);
+    assert.ok(shallowest >= 1670 - EPS, `held 1,670 m round the ridge, rose to ${shallowest}`);
+    assert.equal(SilentRunning.active[eid], 1, 'and never dived, so never broke silence');
+  });
+
   it('is replaced by a manual depth order — the newer instruction wins', () => {
     const m = match(1000);
     const eid = seat(m, 300);
