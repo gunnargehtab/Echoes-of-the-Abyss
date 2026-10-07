@@ -24,6 +24,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 # A superseded run is wasted money. Force-pushing an amended commit used to
 # leave the previous run grinding to completion for another twenty minutes;
 # now it is cancelled the moment its replacement starts.
@@ -35,37 +38,32 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
-# Four jobs where there was one, so the slow parts overlap instead of queueing.
-#
-# The single job was ~5 minutes, and it was three unrelated things in a line:
-# a minute of `npm ci`, two and a quarter minutes of tests, and a minute of
-# docs checks that need no install at all. The campaign missions are what
-# grew the middle — each mission test plays its mission out at the full 60 Hz,
-# so `missionSecondChord.test.ts` alone simulates eighteen minutes of match —
-# and that cost is the tests' value, not overhead to remove.
-#
-# Instead: the checks, the tests (in two shards) and the docs each run in
-# their own job, the install is restored from cache rather than repeated, and
-# the wall clock is bounded by the slowest shard rather than by the sum. Billed
-# minutes stay about level — GitHub rounds each job up to a whole minute, so
-# more jobs cost a little more per run than the seconds they save — which is
-# the number to watch given the incident above. The shard count is the one
-# knob: `strategy.job-total` feeds `--test-shard`, so changing the matrix is
-# the whole change.
+# Models and static checks overlap; both still feed the existing required build
+# check. The join job costs another rounded runner minute but avoids silently
+# dropping model validation from branch protection when moving it out of build.
+# Baseline run 37661465072: 198 s wall clock, 11 rounded Linux job-minutes.
+# Compare both measures on warm-cache runs, not just the fastest job.
 jobs:
-  # Static checks and the production build. Named `build` because that is the
-  # check name the repository has always reported.
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 2
+    needs: [checks, models]
+    if: always()
     steps:
-      - uses: actions/checkout@v4
+      - name: Require static checks and model validation
+        env:
+          CHECKS_RESULT: ${{ needs.checks.result }}
+          MODELS_RESULT: ${{ needs.models.result }}
+        run: test "$CHECKS_RESULT" = success && test "$MODELS_RESULT" = success
+
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
       - uses: ./.github/actions/setup
 
-      # packages/shared is compiled ahead of the others because both the
-      # frontend and backend import its build output, not its source.
-      - name: Build shared package
-        run: npm run build:shared
-
+      # The root command builds shared before its consumers; no separate build.
       - name: Type-check
         run: npm run type-check
 
@@ -76,15 +74,6 @@ jobs:
       # linted by markdownlint below rather than reformatted by Prettier.
       - name: Check formatting
         run: npm run format:check
-
-      # The hull scripts and their committed GLBs, and the models and their
-      # committed plan outlines, must agree (#540). Rebuilds every hull under
-      # tools/hull-models in a scratch directory — a few seconds, no browser —
-      # and diffs the parts against the file; a faction module edited without
-      # re-running the hulls it moves fails here rather than shipping a GLB the
-      # script no longer produces.
-      - name: Check hull models round-trip
-        run: npm run check:models
 
       # docs/invariants.md names, per row, the test that holds each invariant.
       # This asserts every holder still resolves — file present, test name still
@@ -97,8 +86,21 @@ jobs:
       - name: Build all packages
         run: npm run build
 
+  models:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: ./.github/actions/setup
+
+      # All hulls, structures, props, trim sheets and outlines, without filtering.
+      # A faction edit must not ship a GLB its script no longer produces.
+      - name: Check hull models round-trip
+        run: npm run check:models
+
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       # Both shards report; a failure in one should not hide the other's.
       fail-fast: false
@@ -106,26 +108,22 @@ jobs:
         shard: [1, 2]
     name: test (shard ${{ matrix.shard }})
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
       - uses: ./.github/actions/setup
 
       - name: Build shared package
         run: npm run build:shared
 
-      # The shared and frontend suites are ten seconds between them, so they
-      # ride along with a shard rather than earning a job of their own. The
-      # last shard, because `--test-shard` deals files out in name order and
-      # the heaviest mission files fall to the first: on the first run shard 1
-      # finished 38 s behind shard 2, and these ten seconds belong on the
-      # lighter side of that.
-      - name: Run shared, frontend and roadmap-site tests
+      # Run 37661465072: backend shards 74/57 s, client 65 s, tools 31 s.
+      # Put tools with the heavier backend shard and client with the lighter.
+      # npm test uses these same groups, including the prose-budget suite.
+      - name: Run tool tests
+        if: matrix.shard == 1
+        run: npm run test:tools
+
+      - name: Run shared and frontend tests
         if: matrix.shard == strategy.job-total
-        run: |
-          npm -w packages/shared run test
-          npm -w packages/frontend run test
-          npm run test:roadmap
-          npm run test:claude-docs
-          npm run test:hull-models
+        run: npm run test:client
 
       # `--test-shard` is node:test's own file-level partition — deterministic,
       # so the same file always lands in the same shard and a failure is
@@ -145,24 +143,17 @@ jobs:
   # authored, so a dead link in docs/ is now a real regression rather
   # than pre-existing content debt.
   #
-  # No gate here needs node_modules — the tools come from `npx -y`, and the
-  # .claude/ step reaches the same two through it — so this job skips the install
-  # and overlaps the whole of the code jobs.
+  # The documentation tools and their transitive dependencies are lockfile-pinned.
+  # Reuse the install cache rather than downloading floating npx releases.
   docs:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
+      - uses: actions/checkout@v7.0.1
+      - uses: ./.github/actions/setup
 
       - name: Run markdownlint on docs
-        # The previous glob "**/docs/**/*.md" also matched node_modules, so this
-        # was linting dependency documentation.
-        run: |
-          npx -y markdownlint-cli "docs/**/*.md" "docs/*.md" --ignore node_modules
+        run: npm run gates -- --only=docs:lint
 
       # Config for the link checker lives in .markdown-link-check.json:
       #
@@ -172,21 +163,9 @@ jobs:
       #     private, so unauthenticated requests to its issues and clone URL
       #     return 404 and every one of those links would fail forever.
       #
-      # The file list needs :(glob) magic. Git pathspecs are fnmatch without
-      # FNM_PATHNAME by default, so a bare 'docs/**/*.md' requires a second
-      # literal slash and therefore matched NOTHING under docs/ — the link
-      # check was silently running over zero files.
-      #
-      # One invocation for every file, not one per file. This used to loop
-      # `npx -y markdown-link-check` over each document, and with sixty-odd
-      # documents the sixty-odd npx start-ups were most of the step's minute;
-      # the links themselves are a few seconds. The tool takes many files at
-      # once, checks every one before exiting (the loop stopped at the first
-      # bad file), and exits non-zero if any link in any of them is dead.
+      # Use the local gate's tracked-file list and empty-list guard too.
       - name: Check markdown links in docs
-        run: |
-          git ls-files -z ':(glob)docs/**/*.md' \
-            | xargs -0 npx -y markdown-link-check --config .markdown-link-check.json
+        run: npm run gates -- --only=docs:links
 
       # The same two gates over the prose this repository wrote under .claude/,
       # which was outside every glob above until #748 and had already drifted.

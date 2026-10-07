@@ -36,7 +36,7 @@
  *
  * **MD018 is off, and that costs something.** These files open paragraphs with
  * issue numbers — "#709 has no clause for this" — seven times across five of
- * them (`npx -y markdownlint-cli --config .markdownlint.json $(node
+ * them (`npx --no markdownlint --config .markdownlint.json $(node
  * tools/claude-docs/check.mjs --list | grep '^.claude/')`), and markdownlint
  * reads every one as a heading missing its space. They
  * are false positives: CommonMark needs a space after the hash, so GitHub
@@ -445,17 +445,17 @@ process.stdout.write(
 // files use, and the root three neither need that nor should get it.
 const lintClaude = spawn(
   npx,
-  ['-y', 'markdownlint-cli', '--config', '.claude/.markdownlint.json', ...files],
+  ['--no', 'markdownlint', '--config', '.claude/.markdownlint.json', ...files],
   { cwd: repo }
 );
 const lintRoot = spawn(
   npx,
-  ['-y', 'markdownlint-cli', '--config', '.markdownlint.json', ...rootFiles],
+  ['--no', 'markdownlint', '--config', '.markdownlint.json', ...rootFiles],
   { cwd: repo }
 );
 const links = spawn(
   npx,
-  ['-y', 'markdown-link-check', '--config', '.claude/.markdown-link-check.json', ...gated],
+  ['--no', 'markdown-link-check', '--config', '.claude/.markdown-link-check.json', ...gated],
   { cwd: repo }
 );
 

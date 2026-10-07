@@ -113,10 +113,14 @@ format and the programmatic API.
 
 ## Docs and CI
 
-CI (`.github/workflows/ci.yml`) runs on every push and pull request: build
-shared, type-check, ESLint, Prettier check, tests, full build, then the
-documentation gates — markdownlint and a link check over `docs/`, and
-`npm run docs:claude` over the prose this repository wrote under `.claude/`.
+CI (`.github/workflows/ci.yml`) runs on pushes to `main` and pull requests.
+Static checks and the production build, model validation, two test shards, and
+documentation checks run in parallel. The existing required `build` check joins
+static checks and model validation, so both must pass.
+
+`npm test` and CI share `test:client` (shared and frontend) and `test:tools`
+(roadmap, prose-budget, documentation tooling and hull tooling). CI runs tools
+with backend shard 1 and client suites with shard 2; neither group is optional.
 
 **All three documentation gates are blocking.** In particular, linking a file that
 does not exist fails the build. Planned-but-unwritten documents belong in the
@@ -126,12 +130,15 @@ not as links.
 Run the doc gates locally exactly as CI does:
 
 ```bash
-npx -y markdownlint-cli "docs/**/*.md" "docs/*.md" --ignore node_modules
-git ls-files ':(glob)docs/**/*.md' | while read -r file; do
-  npx -y markdown-link-check --config .markdown-link-check.json "$file" || exit 1
-done
+npm ci
+npm run gates -- --only=docs:lint,docs:links
 npm run docs:claude
 ```
+
+The documentation tools and their dependencies are lockfile-pinned, including
+scoped security overrides for the linters' parsers and the link checker's FTP
+dependency. CI restores the same install cache as the code jobs; the gates do not
+download missing tools through `npx`.
 
 Prettier deliberately does not cover `docs/`. Design docs are authored prose and
 are linted by markdownlint instead of being reformatted.
