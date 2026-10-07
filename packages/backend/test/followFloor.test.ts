@@ -100,6 +100,28 @@ describe('floor-following', () => {
     assert.equal(Pressure.unhealable[eid], 0, 'not one metre of crush was spent for it');
   });
 
+  it('stops where a depth order stops: DEPTH.MAX_M, still engaged (#1179)', () => {
+    // Ground deeper than the deepest orderable depth. A hull rated for the
+    // Abyssal band follows it down to 3,000 m and holds there, as a depth
+    // order to 3,000 m would, rather than riding on to the floor less the
+    // clearance — the water every mission map below 3,000 m says nothing
+    // reaches.
+    const m = match(4000);
+    const eid = spawnUnit(m.world, {
+      kind: UnitKind.AbyssalSubmersible,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 1000,
+      y: 4000,
+      depth: 2600,
+    });
+    assert.equal(m.orderFollowFloor(0, eid, true), true);
+    advance(m, 30); // (3000 − 2600) / 45 ≈ 9 s of descent, then station
+    assert.ok(Math.abs(Position.depth[eid]! - DEPTH.MAX_M) <= EPS, 'held at DEPTH.MAX_M');
+    assert.equal(DepthOrder.follow[eid], 1, 'and still following, not disengaged');
+    assert.equal(Pressure.unhealable[eid], 0, 'with no crush spent on the way');
+  });
+
   it('is replaced by a manual depth order — the newer instruction wins', () => {
     const m = match(1000);
     const eid = seat(m, 300);

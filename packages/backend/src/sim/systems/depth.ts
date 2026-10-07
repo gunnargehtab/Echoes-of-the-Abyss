@@ -92,14 +92,19 @@ export function depthSystem(world: SimWorld): void {
  *   player's commitment and its dives are exactly as loud as dives are.
  *
  * In a roofed passage the clearance may not fit; the hull holds at the
- * ceiling rather than above it, because above it is rock.
+ * ceiling rather than above it, because above it is rock. And it never goes
+ * deeper than `DEPTH.MAX_M`, the line a depth order stops at.
  */
 function followTheFloor(world: SimWorld, eid: number): void {
   const x = Position.x[eid]!;
   const y = Position.y[eid]!;
   const floor = world.terrain.floorAt(x, y);
   const ceiling = world.terrain.ceilingAt(x, y);
-  const target = Math.max(ceiling, floor - FOLLOW_FLOOR.CLEARANCE_M);
+  // Never deeper than a depth order may go (#1179): the mode follows ground
+  // the player could have ordered the hull to, and ground below `DEPTH.MAX_M`
+  // is ground no order reaches, so the hull holds there, still following, as
+  // a depth order to that line would.
+  const target = Math.max(ceiling, Math.min(floor - FOLLOW_FLOOR.CLEARANCE_M, DEPTH.MAX_M));
 
   if (hasComponent(world, Pressure, eid)) {
     const rating = Pressure.rating[eid]! + Pressure.bonus[eid]!;
