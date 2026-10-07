@@ -261,23 +261,41 @@ floor 1,300 m.
 The Holding's wall face and the pre-Collapse works beneath it: the city above, the overhang
 below, and one throat of open water connecting them.
 
-| Region | Rect (x, y, w, h) | Biome | Floor / Ceiling | What it is |
+| Region | Shape | Biome | Floor / Ceiling | What it is |
 | --- | --- | --- | --- | --- |
-| The Face | 0, 0, 4000, 3000 | Thermal Vein | 1,300 | The wall — the grid's humming ground. Painted first; everything else is cut into it |
-| The Upper Berths | 0, 0, 4000, 750 | Thermal Vein | 1,050 | The city's lower berth band. Sector Vayle's frame stands here |
-| The Works Yard | 1500, 750, 1000, 500 | Thermal Vein | 1,200 | The casting yard: the pour, the muster, the tungsten |
-| The Throat | 1750, 1500, 500, 250 | Thermal Vein | 2,100 | The one open shaft into the Underworks — the dive, and the ledger's first page |
-| The Underworks | 0, 1750, 4000, 1250 | Coral Ruins | 2,100 / **roof 1,900** | The Surface Age's vent works under the city's overhang: water only between the roof and the floor, reached only by the throat, priced only in crush. Coral Ruins because that is what it is — the drowned works the Holding grew on ([environments.md](environments.md); [world-map.md](world-map.md)) |
+| The Face | rect 0, 0, 4000, 3000 | Thermal Vein | 1,300 | The wall — the grid's humming ground. Painted first; everything else is cut into it |
+| The Upper Berths | polygon (0, 0) (4000, 0) (4000, 750) (1500, 750) (1000, 1000) (750, 1000) (500, 750) (0, 750) | Thermal Vein | 1,050 | The city's lower berth band. Sector Vayle's frame stands here, and under the frame the sector hangs a row further down the wall than the band either side of it |
+| The Works Yard | rect 1500, 750, 1000, 500 | Thermal Vein | 1,200 | The casting yard: the pour, the muster, the tungsten. A box because it is built, and the yard the pour is held in is this same rectangle |
+| The Throat | rect 1750, 1500, 500, 250 | Thermal Vein | 2,100 | The one open shaft into the Underworks — the dive, and the ledger's first page. A box because it is a shaft two cells wide over the root aperture's two cells |
+| The Underworks | polygon (0, 1500) (1000, 1500) (1500, 1750) (4000, 1750) (4000, 3000) (0, 3000) | Coral Ruins | 2,100 / **roof 1,900** | The Surface Age's vent works under the city's overhang: water only between the roof and the floor, reached only by the throat, priced only in crush. Coral Ruins because that is what it is — the drowned works the Holding grew on ([environments.md](environments.md); [world-map.md](world-map.md)). West of the throat the overhang's lip climbs a row up the wall, toward Vayle |
 
 One spawn, at the works yard: 2000, 1000. **No resources** — a breach writ. No hazard sites:
 the hazard is the map.
 
 The mission's named rectangles — the yard, Vayle's frame at the berths' west end, the root
 aperture in the Underworks directly under the throat — are mission regions over this ground,
-per the format. Every rectangle lands on the 250 m cell grid and paints exactly the metres it
-reads ([maps.md](maps.md)). The roof at 1,900 m over a floor at 2,100 is the choice authored
-as terrain: the root cannot be reached by anything that has not crossed the line and started
-the ledger.
+per the format. The roof at 1,900 m over a floor at 2,100 is the choice authored as terrain:
+the root cannot be reached by anything that has not crossed the line and started the ledger.
+
+Drawn in shapes since issue #1145, a box of #1139. Every number in the table is a whole 250 m
+cell, and a cell is its region's when the region's shape holds the cell's centre
+([maps.md](maps.md), "How a map is written"). The Upper Berths reach one row further down the
+wall under the frame's own three columns, and the Underworks' lip climbs one row up it across
+the five columns west of x 1,250. Under the frame, the open face between the city and the
+overhang is two rows deep; east of the yard it is four. Three regions stay boxes. The Face is
+the whole map, painted first. The Works Yard is built, and the mission's yard is the same
+rectangle. The Throat is the one opening in the overhang: a shape that painted other cells
+would move the dive, and one that did not would paint the same two.
+
+The reshape is new map content, never a balance lever. Eight of the 192 cells changed. Three
+cells of the Face under Vayle's frame became berth: Thermal Vein both, floor 1,300 to 1,050.
+Five cells of the Face at the west end of the throat's row became Underworks: PF 0.45 to 0.80,
+and open water to 1,300 m became roofed water between 1,900 and 2,100. No straight line from
+the column's seats, a marker or a cell of the mission's three regions to the alarm, the
+complaint or a pack's authored position crosses those five. Every spawn, hull, emitter, marker,
+pack position, pack leg and mission region stands on the ground it stood on in rectangles. The
+throat's two cells are still the only water that opens into the works, and Vayle's frame is
+still reached from the yard in water with no roof over it.
 
 **The Underworks is a mission map and is not in the public catalogue.** One seat, no
 resources, not balanced, resolved by mission id and nothing else ([maps.md](maps.md)).
