@@ -515,7 +515,7 @@ export const SEEDING_RADICALS: MissionDefinition = {
       3375,
       1375,
       PACK_DEPTH_M,
-      "The Descent's schedule, working the leavings. The Districts' 1,600 m floor admits it; the Descent's rectangle ends at x 3,250"
+      "The Descent's schedule, working the leavings. The Districts' 1,600 m floor admits it; on this row the Descent ends at x 3,000"
     ),
 
     // 00:00 — the doorway, 1,500 m apart across the way into the basin. A
