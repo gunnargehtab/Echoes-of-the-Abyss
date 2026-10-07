@@ -88,10 +88,11 @@ Tidespeaker Ysolde Marr speaks the briefing on the lane at the cleft's mouth, to
 going down to carry it, because the furrow cannot hear her. She reads the count at the close
 when the watch brings it up. She orders nobody to do anything.
 
-**Engine bound, stated so nobody corrects it into a bug.** Two parties and a court slot:
-the furrow's people carry the Commune faction value, the Second Trench Cohort carries the
-Directorate's, and the court slot is reserved and empty, as every literal reserves it. The
-Drift is not a party. The map literal is `anholt-furrow`, *Deep Furrow*'s, unchanged (§11).
+**Engine bound, stated so nobody corrects it into a bug.** Two parties and a court slot: the
+furrow's people carry the Commune faction value, the Second Trench Cohort carries the
+Directorate's, and the court slot is reserved and empty, as every literal reserves it. The Drift
+is not a party. The map literal is `anholt-furrow`, *Deep Furrow*'s, unchanged, and drawn in
+shapes for both in #1153 (§11).
 
 ---
 
@@ -551,24 +552,30 @@ What this mission deliberately does not teach:
 1,100 m.
 
 **The same map literal as [mission-deep-furrow.md](mission-deep-furrow.md) §11, unchanged**,
-region for region — [campaign.md](campaign.md) §2 rule 5's second concrete pair, after Marr
-Plateau under *Tend* and *Convocation* ([mission-convocation.md](mission-convocation.md) §11),
-and for the same reason: a garden the player has not planted is not one they will hide under.
-What this mission adds is markers, structures, a `ground` beat at 00:00 and parties. Never
-geometry. North is shallow and home; south is the sill and the Directorate's water.
+region for region, and drawn in shapes for both in #1153 — [campaign.md](campaign.md) §2 rule 5's
+second concrete pair, after Marr Plateau under *Tend* and *Convocation*
+([mission-convocation.md](mission-convocation.md) §11), and for the same reason: a garden the
+player has not planted is not one they will hide under. What this mission adds is markers,
+structures, a `ground` beat at 00:00 and parties. Never geometry. North is shallow and home;
+south is the sill and the Directorate's water.
 
-| Region | Rect (x, y, w, h) | Biome | Floor | What it is |
+| Region | Shape | Biome | Floor | What it is |
 | --- | --- | --- | --- | --- |
-| The Lanes | 0, 0, 4000, 3000 | Open Water | 1,100 | The Mid-Water lanes below the plateaus' drop. Painted first; everything else is cut into it. The floor is the duct's top |
-| The Foot | 1500, 0, 1000, 500 | Open Water | 900 | The drop's foot where the plateau's lane comes down. Above the layer. **The extract region: home** |
-| The West Wall | 0, 500, 1250, 2500 | Open Water | rock | Solid. The cleft is the only road |
-| The East Wall | 2750, 500, 1250, 2500 | Open Water | rock | Solid |
-| The Cleft | 1250, 500, 1500, 1250 | Abyssal Trench | 1,800 | The descent and the doorway. PF 1.6; Hollow country on the walls; the duct at 1,200 m across its upper water, with the farmed jellies in it. 1,500 m wide |
-| The Furrow | 1250, 1750, 1000, 750 | Kelp Forest | 2,200 | The 204 PC ground, ten years grown; trench floor painted kelp because seeded ground absorbs |
-| The Second Furrow | 2250, 1750, 500, 750 | Abyssal Trench | 2,200 | Bare rock in the literal, sown three tides ago: **repainted Kelp Forest by this mission's `ground` beat at 00:00** |
-| The Sill | 1250, 2500, 1500, 500 | Abyssal Trench | 2,600 | Where the cleft opens to the deep. The line's seat; Sounder water |
+| The Lanes | rect 0, 0, 4000, 3000 | Open Water | 1,100 | The Mid-Water lanes below the plateaus' drop. Painted first; everything else is cut into it. The floor is the duct's top |
+| The Foot | rect 1500, 0, 1000, 500 | Open Water | 900 | The drop's foot where the plateau's lane comes down. Above the layer. **The extract region: home** |
+| The West Wall | polygon (0, 1000) (750, 500) (1250, 500) (1250, 2500) (500, 3000) (0, 3000) | Open Water | rock | Solid. The cleft is the only road. Its face on the road is straight at x 1,250 |
+| The East Wall | polygon (2750, 500) (3250, 500) (4000, 1000) (4000, 3000) (3500, 3000) (2750, 2500) | Open Water | rock | Solid. The West Wall's mirror image |
+| The Cleft | rect 1250, 500, 1500, 1250 | Abyssal Trench | 1,800 | The descent and the doorway. PF 1.6; Hollow country on the walls; the duct at 1,200 m across its upper water, with the farmed jellies in it. 1,500 m wide |
+| The Furrow | rect 1250, 1750, 1000, 750 | Kelp Forest | 2,200 | The 204 PC ground, ten years grown; trench floor painted kelp because seeded ground absorbs |
+| The Second Furrow | rect 2250, 1750, 500, 750 | Abyssal Trench | 2,200 | Bare rock in the literal, sown three tides ago: **repainted Kelp Forest by this mission's `ground` beat at 00:00** |
+| The Sill | polygon (1250, 2500) (2750, 2500) (3500, 3000) (500, 3000) | Abyssal Trench | 2,600 | Where the cleft opens to the deep, widening on a slant toward the map's south edge. The line's seat; Sounder water |
 
 One spawn at the Foot: 2000, 250. No resources, no hazard sites, `fauna: false`.
+
+What the shapes moved is [mission-deep-furrow.md](mission-deep-furrow.md) §11's to state: twelve
+cells, all rock before, opened at the walls' outer north corners and their feet. Every authored
+point of this mission stands on the ground it stood on in rectangles, every move and drive takes
+the route it took, and played with no input it keeps the same tracks, reading and transcript.
 
 **The sown furrow is restated, not spent.** *Deep Furrow*'s ground beat turned the Second
 Furrow to Kelp Forest when the sowing completed, a mission fact the map literal cannot carry.
@@ -764,7 +771,7 @@ declines, the carry between tides that nobody has started, and the mix.
 | Requirement | Status |
 | --- | --- |
 | The mission format — beats, predicates, registry, private rooms | **Built** (#190). `extract`, `survive`, `tolerance`, `ground`, `silent`, `move`, `lose`, `creature`, `say` and `resolve` cover §8 and §9; a conditional `say` on `tolerance` and on `extract` is Aptitude's and Thin Water's row (#282) |
-| **The map** — `anholt-furrow`, eight regions, reused unchanged | **Built** (#392; registered in `MISSION_MAPS` by #393), **and the reuse happened.** [mission-deep-furrow.md](mission-deep-furrow.md) §11 owns the literal; this mission adds two mission regions, one marker, three structures, two parties and one `ground` beat, and no geometry at all. `missionInWriting.test.ts` holds the eight rectangles to §11's own table to the metre, and holds the map to being a mission map from both ends — `mapById('anholt-furrow')` is undefined and `missionMapById` resolves it. [campaign.md](campaign.md) §2 rule 5's second concrete pair is a fact rather than a plan, and the literal names *Deep Furrow* the owner and this mission the reuse in its own header, so a future disagreement has a side that loses |
+| **The map** — `anholt-furrow`, eight regions, reused unchanged | **Built** (#392; registered in `MISSION_MAPS` by #393), **and the reuse happened.** [mission-deep-furrow.md](mission-deep-furrow.md) §11 owns the literal; this mission adds two mission regions, one marker, three structures, two parties and one `ground` beat, and no geometry at all. `missionInWriting.test.ts` holds the eight regions to §11's own table to the metre, drawn in shapes in #1153, and holds the map to being a mission map from both ends — `mapById('anholt-furrow')` is undefined and `missionMapById` resolves it. [campaign.md](campaign.md) §2 rule 5's second concrete pair is a fact rather than a plan, and the literal names *Deep Furrow* the owner and this mission the reuse in its own header, so a future disagreement has a side that loses |
 | **The Spore Veil, fielded** | **Built** (`STRUCTURE_AURAS.SPORE_VEIL`; `auras.ts`), symmetric, applied after the Cantor so a lent 95 is 5 inside a cloud — **and fielded here** (#394): three `MissionStructure` rows at 1,790 m, the first Spore Veils placed on any party in the game. A *player-built* Veil would sit at `CONSTRUCTION.WORKING_DEPTH_M`, 600 m, wherever the floor is — the finding [mission-standing-wave.md](mission-standing-wave.md) §13 carries — which is one more reason the beds are grown before the tide and not during it. **The cloud is horizontal** (`Math.hypot` on x and y), which this document leans on twice: the seat at 1,790 m is veiled exactly as the floor would be, and a scout cannot leave a cloud by climbing. The test measures both ends of that — every one of the eight hulls is inside 350 m of its own bed on x and y, the three clouds overlap into a band 1,700 m wide across furrows 1,500 m wide, and no hull opens the mission inside the 499 m at which the dome's 35 reaches ears blinded to 5 |
 | **The Cantor on a scripted party, granting its own slot** | **Built** — auras grant by `Structure.grantSlot`, the owner unless a mission lends it away. The dome lifts the line's 75 and the Submersibles' 85 to the 95 cap within 1,200 m; its own ears stay at 80, because the roster loop grants units and structures keep their spawned rating. **Placed** (#394): the test holds every cohort hull inside the dome's 1,200 m, so the lent 95 §7 prices everything against is resolved rather than assumed |
 | **The guns are tier-blind, and it moved the plan** | **Built, and a finding this document spends.** `combat.ts` auto-acquires the nearest live enemy inside weapon range in three dimensions, heard or not, on the licence that weapon ranges sit inside audibility; structures are targetables; a silent hull and a hull with a live move order hold fire. Three consequences, all in §6: the Choristers walk cold, because an armed line standing inside a cloud would have the bed itself inside 270 m and every bed down on the first stationary pass; a bed is no cover from a gun in range, so the dead-water spheres of 12:00 are priced by distance and not by the veil; and the doorway is priced by what two 650 m spheres cover, which is the duct band and not the water column. The plan armed the line and priced the doorway by Bearing at 1,024 m; the engine prices it by reach, and the bible's sentence is [systems-combat.md](systems-combat.md) §7's *in range implies heard*, read in the direction the roster reads it. **Spent** (#394): no `armed` flag on any of the eight, and the test computes the counterfactual off the 04:30 leg rather than restating it — three of the eight seats cover each outer bed and two cover the middle, so 900 HP at 13.3 hull a second per gun puts the slowest bed down 33.75 s into the leg, at 05:04, which is §6's *about 05:04* |
