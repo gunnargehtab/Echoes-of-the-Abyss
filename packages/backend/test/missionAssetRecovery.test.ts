@@ -18,17 +18,18 @@
  *
  * One idle run, memoised — nobody drives the column, which is itself the §8
  * failure case: eighteen minutes of warning, ignored, and the registry keeps
- * the number.
+ * the number. The last block needs no run: it holds every placed point on the
+ * ground §11 puts it on, since the map was drawn in shapes (#1141).
  */
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { MissionOutcome, SIM, type MissionView } from '@echoes/shared';
+import { Biome, MissionOutcome, SIM, type MissionView } from '@echoes/shared';
 import { defineQuery, hasComponent } from 'bitecs';
 import { Owner, Unit, Weapon } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
-import { missionMapById } from '../src/sim/maps/index.ts';
+import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { LEDGER_ASSET_RECOVERY } from '../src/sim/missions/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -145,5 +146,133 @@ describe('the writ, run out — docs/mission-asset-recovery.md §8, §9', () => 
     // open the mission already met.
     assert.deepEqual(run().firstViewIds, ['asset-114', 'asset-181', 'asset-200']);
     assert.deepEqual(run().lastViewIds, ['asset-114', 'asset-181', 'asset-200', 'column']);
+  });
+});
+
+/**
+ * §11 in shapes (#1141): the outlines moved, and the mission must not have.
+ * Every point the mission places, and every cell of a region it counts or
+ * closes, stands on the ground the document puts it on. The terrain answers
+ * for a point's whole cell, so asking it at the point asks the cell.
+ */
+describe('Face Six, drawn in shapes — docs/mission-asset-recovery.md §11', () => {
+  const map = missionMapById(LEDGER_ASSET_RECOVERY.mapId)!;
+  const terrain = terrainFor(map);
+  const groundAt = (x: number, y: number): string =>
+    `${Biome[terrain.biomeAt(x, y)]} ${terrain.floorAt(x, y)} m`;
+
+  const RAIL_HEAD = 'ThermalVein 700 m';
+  const TERRACE = 'ThermalVein 850 m';
+  const WORKS = 'ThermalVein 1100 m';
+  const SCAR = 'AbyssalTrench 1150 m';
+  const FACE = 'CoralRuins 1150 m';
+
+  /** The centre of every cell a mission region's rectangle holds. */
+  function cellsOf(id: string): [number, number][] {
+    const r = LEDGER_ASSET_RECOVERY.regions.find((region) => region.id === id)!;
+    const out: [number, number][] = [];
+    for (let y = r.y + map.cellM / 2; y < r.y + r.heightM; y += map.cellM) {
+      for (let x = r.x + map.cellM / 2; x < r.x + r.widthM; x += map.cellM) out.push([x, y]);
+    }
+    assert.ok(out.length > 0, `${id} holds no cell`);
+    return out;
+  }
+
+  /** Every point a creature beat places or drives a tag to. */
+  function creaturePoints(prefix: string): { x: number; y: number }[] {
+    const points = LEDGER_ASSET_RECOVERY.beats.flatMap((beat) =>
+      beat.kind === 'creature' && beat.tag.startsWith(prefix)
+        ? [beat.driveTo, ...(beat.spawnAt ? [beat.spawnAt] : [])]
+        : []
+    );
+    assert.ok(points.length > 0, `no beat places ${prefix}`);
+    return points;
+  }
+
+  function assertOn(points: Iterable<readonly [number, number]>, ground: string, what: string) {
+    for (const [x, y] of points) assert.equal(groundAt(x, y), ground, `${what} at ${x},${y}`);
+  }
+
+  it('seats the spawn and the column on the Rail Head, and counts deliveries there', () => {
+    assertOn(
+      map.spawns.map((s) => [s.x, s.y] as const),
+      RAIL_HEAD,
+      'the spawn'
+    );
+    const column = LEDGER_ASSET_RECOVERY.parties.find((p) => p.slot === PLAYER)!.units;
+    assertOn(
+      column.map((u) => [u.x, u.y] as const),
+      RAIL_HEAD,
+      'a column hull'
+    );
+    assertOn(cellsOf('railhead'), RAIL_HEAD, 'the extraction count');
+  });
+
+  it('puts both eruption sites and the whole herd, stampede included, on the Terrace', () => {
+    assertOn(
+      map.hazards.map((h) => [h.x, h.y] as const),
+      TERRACE,
+      'an eruption site'
+    );
+    assertOn(
+      creaturePoints('grazer').map((p) => [p.x, p.y] as const),
+      TERRACE,
+      'the herd'
+    );
+  });
+
+  it('places the first pack in the Works and brings the second up the Scar', () => {
+    assertOn(
+      creaturePoints('pack-one').map((p) => [p.x, p.y] as const),
+      WORKS,
+      'pack one'
+    );
+    assertOn(
+      creaturePoints('pack-two').map((p) => [p.x, p.y] as const),
+      SCAR,
+      'pack two'
+    );
+  });
+
+  it('keeps the taps, the cut and the closing fall on Face Six, inside the Scar', () => {
+    const taps = LEDGER_ASSET_RECOVERY.parties.flatMap((p) => p.emitters ?? []);
+    assertOn(
+      taps.map((e) => [e.x, e.y] as const),
+      FACE,
+      'the taps'
+    );
+    for (const id of ['face', 'face-cut', 'fall-stage']) assertOn(cellsOf(id), FACE, id);
+    // §1: "the Scar around the fallen face". Every cell beside the fall that
+    // is not the fall is the wound's raw rock, so whatever is worked at the
+    // face is heard through trench water on every side.
+    const face = cellsOf('face');
+    const isFace = (x: number, y: number) => face.some(([fx, fy]) => fx === x && fy === y);
+    for (const [x, y] of face) {
+      for (const [dx, dy] of [
+        [map.cellM, 0],
+        [-map.cellM, 0],
+        [0, map.cellM],
+        [0, -map.cellM],
+      ] as const) {
+        if (!isFace(x + dx, y + dy)) assertOn([[x + dx, y + dy]], SCAR, 'beside the fall');
+      }
+    }
+  });
+
+  it('descends from the Rail Head to the fall through the five grounds in order', () => {
+    // §9: the Rail Head at 700 m, over the Terrace's shoulder, down the
+    // Works' masked ground, across into the Scar, and into the fall where
+    // the taps are.
+    const taps = LEDGER_ASSET_RECOVERY.parties.flatMap((p) => p.emitters ?? [])[0]!;
+    const [from] = map.spawns;
+    const crossed: string[] = [];
+    for (let i = 0; i <= 100; i++) {
+      const g = groundAt(
+        from!.x + ((taps.x - from!.x) * i) / 100,
+        from!.y + ((taps.y - from!.y) * i) / 100
+      );
+      if (crossed.at(-1) !== g) crossed.push(g);
+    }
+    assert.deepEqual(crossed, [RAIL_HEAD, TERRACE, WORKS, SCAR, FACE]);
   });
 });
