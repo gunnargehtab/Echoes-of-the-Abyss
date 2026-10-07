@@ -477,13 +477,13 @@ and so, this time, is the noise.*
 ### The Descent's pack
 
 `the-descent-pack` — one Draymaw at 3375, 1375 at 900 m, in the Districts just east of the
-Descent's edge (the Descent's rectangle ends at x 3,250; the Districts' floor of 1,600 admits
-it): HYD 65, Interest 22, Commit 45, 58 m/s, 34 a second inside 160 m in three dimensions,
-pursuing within 500–1,300 m. **A pack is one entity here.** `spawnFauna` places one animal per
-`creature` beat and the roster's `groupSize` of 5 is read by nothing in the runtime (§13), so the
-tag is a pack in the fiction — [bestiary.md](bestiary.md) §4's four to six, working the Descent's
-leavings — and one hunter in the water, and every figure below is that animal's own. Through the
-city's 0.8:
+Descent's edge (the Descent's east flank slants away and ends at x 3,000 on its row; the
+Districts' floor of 1,600 admits it): HYD 65, Interest 22, Commit 45, 58 m/s, 34 a second
+inside 160 m in three dimensions, pursuing within 500–1,300 m. **A pack is one entity here.**
+`spawnFauna` places one animal per `creature` beat and the roster's `groupSize` of 5 is read by
+nothing in the runtime (§13), so the tag is a pack in the fiction — [bestiary.md](bestiary.md)
+§4's four to six, working the Descent's leavings — and one hunter in the water, and every
+figure below is that animal's own. Through the city's 0.8:
 
 | The column is | Interested from | Commits from | At 783 m, the third waypoint |
 | --- | --- | --- | --- |
@@ -799,15 +799,15 @@ What this mission deliberately does not teach:
 and the first that pairs a campaign mission with the prologue. North is shallow and the way
 home; south is the basin and the way to the rim.
 
-| Region | Rect (x, y, w, h) | Biome | Floor | What it is |
+| Region | Shape | Biome | Floor | What it is |
 | --- | --- | --- | --- | --- |
-| The Districts | 0, 0, 5000, 4000 | Coral Ruins | 1,600 | The drowned city. Painted first; everything else is cut into it. The pack's ground, east of the Descent |
-| The Upper Concourse | 1500, 0, 2000, 750 | Coral Ruins | **340** | The passenger terminus, above the layer. **The seat**, and the watch's whole world |
-| The Descent | 2000, 500, 1250, 1250 | Coral Ruins | 900 | The step between the Concourse and the city. Where 1,200 m is crossed, and the column's first dive |
-| The West Approach | 0, 1250, 1500, 1250 | Thermal Vein | 1,600 | PF 0.45. The prologue's one quiet road; the column does not take it, because the lock does not open onto it |
-| The Service Lock | 1750, 1750, 500, 750 | Coral Ruins | 1,500 / **roof 1,300** | Roofed water joining the chamber to the districts. The way the fourteen came out, and the way in |
-| The Gate | 2000, 2250, 1250, 1000 | Coral Ruins | 1,500 | The dome and the chamber, fallen. The last water the escort stands in for nothing, and the shallowest the colossus can rise into |
-| The Commit | 1500, 3000, 2000, 1000 | Abyssal Trench | **2,400** | The basin. PF 1.6, PR-3, the Hollows on its northern row and the colossus on its floor. Painted last, so the Gate's rectangle ends where this one begins: the arch's foot at y 3,000 stands on trench paint |
+| The Districts | rect 0, 0, 5000, 4000 | Coral Ruins | 1,600 | The drowned city. Painted first; everything else is cut into it. The pack's ground, east of the Descent |
+| The Upper Concourse | rect 1500, 0, 2000, 750 | Coral Ruins | **340** | The passenger terminus, above the layer. **The seat**, and the watch's whole world |
+| The Descent | polygon (2000, 500) (3250, 500) (3250, 750) (2750, 1750) (2000, 1750) | Coral Ruins | 900 | The step between the Concourse and the city. Where 1,200 m is crossed, and the column's first dive |
+| The West Approach | polygon (0, 2000) (1000, 1250) (1500, 1250) (1500, 2500) (500, 2500) (0, 2250) | Thermal Vein | 1,600 | PF 0.45. The prologue's one quiet road; the column does not take it, because the lock does not open onto it |
+| The Service Lock | rect 1750, 1750, 500, 750 | Coral Ruins | 1,500 / **roof 1,300** | Roofed water joining the chamber to the districts. The way the fourteen came out, and the way in |
+| The Gate | ellipse 1750, 2250, 1500, 1000 | Coral Ruins | 1,500 | The dome and the chamber, fallen. The last water the escort stands in for nothing, and the shallowest the colossus can rise into |
+| The Commit | rect 1500, 3000, 2000, 1000 | Abyssal Trench | **2,400** | The basin. PF 1.6, PR-3, the Hollows on its northern row and the colossus on its floor. Painted last, so it cuts the Gate's ellipse off at y 3,000: the arch's foot at y 3,000 stands on trench paint |
 
 One spawn per the literal, at 2550, 2150 — inside the row that goes solid at 00:00, and
 irrelevant: the mission seats its own order of battle. No resources, no hazard sites,
@@ -845,14 +845,14 @@ authored hull for the depth it is authored at"):
 | `escort-one`, `escort-two`, `escort-three` | 2250, 150 · 2500, 100 · 2750, 150 | 330 m | The Corvette's PR-2 |
 | `watch-one`, `watch-two` | 2000, 250 · 3000, 250 | 300 m | The Light Scout's PR-1 covers the Shelf, and 300 is in it |
 | Three Lampfry shoals | 2250, 725 · 2500, 725 · 2750, 725 | 250 m | The Concourse's 340; every seat more than 300 m from every shoal in three dimensions, so the shoals are whole at tick zero |
-| `the-descent-pack` | 3375, 1375 | 900 m | The Districts' 1,600 — the cell column at 3,250–3,500 lies east of the Descent's rectangle |
+| `the-descent-pack` | 3375, 1375 | 900 m | The Districts' 1,600 — the cell column at 3,250–3,500 lies east of the Descent |
 | `gate-hollow-west`, `gate-hollow-east` | 1750, 3100 · 3250, 3100 | 1,700 m | The Commit's 2,400, in its northern row |
 | `the-colossus` | 1750, 3650 | 2,000 m | The Commit's 2,400; the Sounder's own working depth |
 | `held` — `releaseTick` 01:00 | the four seed hulls | | A `release` beat on the same tick, authored before the first `move` |
 
-Every rectangle lands on the 250 m cell grid and paints exactly the metres it reads
-([maps.md](maps.md), "How a map is written"). Every creature arrives by authored `creature`
-beat and `fauna` is off, for [mission-intake.md](mission-intake.md) §13's reason: the seeder
+Every shape states whole 250 m cells, and every mission region's rectangle paints exactly the
+metres it reads ([maps.md](maps.md), "How a map is written"; the map is in shapes since #1140).
+Every creature arrives by authored `creature` beat and `fauna` is off, for [mission-intake.md](mission-intake.md) §13's reason: the seeder
 is a skirmish roster and cannot put a colossus where the prologue left one.
 
 **The argument the ground makes.** The route from the north shoulder to the far south is a
