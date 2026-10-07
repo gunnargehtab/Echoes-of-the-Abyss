@@ -590,12 +590,12 @@ not enter the mission either ([systems-echo.md](systems-echo.md) §3). Both are 
 both are [mission-aptitude.md](mission-aptitude.md) §11's argument reused: one system per mission
 means the other two axes have to be arranged to say nothing.
 
-| Region | Rect (x, y, w, h) | Biome | Floor | What it is |
+| Region | Shape | Biome | Floor | What it is |
 | --- | --- | --- | --- | --- |
-| The southern shoulders | 0, 0, 5000, 4000 | Resonance Field | 1,700 | Crystal country, painted first. PF 0.70, scattered — and off the defile it is ground nobody in this mission has a reason to be on |
-| The Fifth | 2000, 500, 1000, 3000 | Resonance Field | 1,700 | The defile. A kilometre wall to wall, three kilometres long, and the only covered line between trench country and the northern slope |
-| The North Gallery | 1750, 0, 1500, 500 | Resonance Field | 1,450 | Where the Fifth opens into the Third's country. **The spawn, the Bastion, and the region §8 extracts to** |
-| The South Mouth | 1750, 3500, 1500, 500 | Abyssal Trench | 1,780 | Where crystal country breaks toward the trenches ([world-map.md](world-map.md)). PF 1.60 axial — the strip that carries, and the column's entrance |
+| The southern shoulders | rect 0, 0, 5000, 4000 | Resonance Field | 1,700 | Crystal country, painted first. PF 0.70, scattered — and off the defile it is ground nobody in this mission has a reason to be on. A box because it is the whole map's base |
+| The Fifth | rect 2000, 500, 1000, 3000 | Resonance Field | 1,700 | The defile. A kilometre wall to wall, three kilometres long, and the only covered line between trench country and the northern slope. A box because it paints the shoulders' own biome and floor, and the mission restates it as `the-fifth`, the same rectangle |
+| The North Gallery | rect 1750, 0, 1500, 500 | Resonance Field | 1,450 | Where the Fifth opens into the Third's country. **The spawn, the Bastion, and the region §8 extracts to**. A box because the mission restates it as `north-gallery`, the same rectangle, and §8 counts the six in it |
+| The South Mouth | polygon (1750, 3500) (3250, 3500) (3500, 4000) (1500, 4000) | Abyssal Trench | 1,780 | Where crystal country breaks toward the trenches ([world-map.md](world-map.md)). PF 1.60 axial — the strip that carries, and the column's entrance. A fan: it meets the defile where the rectangle did and runs on a slant out to the map's south edge |
 
 **Four regions, and the third is the one doing the work.** The Gallery is not scenery: it is the
 Bastion's ground, the anchor every build radius is measured from, and the region the terminal
@@ -634,9 +634,45 @@ defile a kilometre wide, produces the whole decision space without anything bein
   longest corridor the rules describe is also the longest one that can be built. The mission was
   arranged to work under the smaller of the two numbers while they disagreed, and still does.
 
-**Every rectangle lands on the 250 m cell grid and paints exactly the metres it reads.** The
-shoulders are painted first and the three cut into them in the order of the table, so the Gallery
-and the Mouth overwrite the Fields the way [maps.md](maps.md) requires.
+**Drawn in shapes since issue #1159, a box of #1139.** The shoulders are painted first and the
+three cut into them in the order of the table, so the Gallery and the Mouth overwrite the Fields
+the way [maps.md](maps.md) requires. Every number a shape states is a whole 250 m cell, and a cell
+is its region's when the shape holds the cell's centre ([maps.md](maps.md), "How a map is
+written"). Only the South Mouth changed. Its north edge meets the defile where the rectangle's
+did, 1,500 m across, and its sides run on a slant out to the map's south edge, where it is
+2,000 m across.
+
+Three regions stay boxes, each for a reason. The shoulders are the whole map's base. The Fifth
+paints the shoulders' own biome and floor, so no outline of it paints a cell differently, and the
+mission restates it as its `the-fifth` region, the same rectangle. The mission restates the
+Gallery as `north-gallery`, the same rectangle, so the six §8 counts are counted in the Gallery
+drawn. The mission restated the Mouth as `south-mouth` too, and nothing in it named that region:
+no predicate, beat or marker. A mission region is a rectangle, so it is dropped rather than left
+to disagree with the fan.
+
+The reshape is new map content, never a balance lever. It moved 2 of the map's 320 cells, one at
+each end of the south edge, centred at (1,625, 3,875) and (3,375, 3,875). Both went from the
+shoulders' Resonance Field at 1,700 m to the Mouth's Abyssal Trench at 1,780 m, PF 0.70 to 1.60.
+A hull that strays onto either stands on trench water at 1.60, as it would on the Mouth beside
+it, and a line through either carries at 1.60 for that cell where it carried at 0.70. Of the
+51,040 pairs of cell centres, 971 are priced differently: 625 end in one of the two cells, and the
+other 346 pass through one, the largest rise +0.45, from 1.15 to 1.60 over 500 m along the south
+edge. No straight line from where the works are placed to where the column is seated or walks to
+crosses either cell, so none of those 224 lines is priced differently.
+
+A hull following the floor holds thirty metres off it, so on those two cells it holds 1,750 m
+where it held 1,670 m. Both floors only deepened, so no depth that crossed onto them before is
+refused now. A hull following the floor across the Mouth at 1,750 m can now follow onto them at
+the same 1,750 m, where a 1,700 m floor refused it. Their only other neighbours are the shoulders
+at 1,700 m, so no new way opens, and 1,780 m is still Mid-Water: PR-2 covers it.
+
+Every authored point of the mission stands on the ground it stood on in rectangles, and so does
+every cell centre of the Fifth's and the Gallery's mission regions. Every leg of the column's walk
+and turn crosses the same biome and is admitted at the same depths. Asked from every 125 m of the
+leg at the column's 1,700 m and at every 25 m from the surface to 1,800 m, it takes the route it
+took in rectangles. Played with no input, every hull and the Bastion keep the track they kept in
+rectangles, sampled every five seconds to 18:00, to the same reading and the same lines
+(`missionStandingWave.test.ts`).
 
 ---
 
