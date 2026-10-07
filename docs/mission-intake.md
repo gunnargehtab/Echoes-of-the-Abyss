@@ -520,16 +520,16 @@ everywhere in the Rift ([world-map.md](world-map.md)), and here the whole map si
 1,500 m at the ascent's foot to 2,400 m in the throat, which is the descent the Hollow guards
 rather than the basement it does not ([bestiary.md](bestiary.md) §4).
 
-| Region | Rect (x, y, w, h) | Biome | Floor | What it is |
+| Region | Shape | Biome | Floor | What it is |
 | --- | --- | --- | --- | --- |
-| The Upper Ninth | 0, 0, 5000, 4000 | Abyssal Trench | 2,400 | The trench. PF 1.60, painted first; everything else is cut into it |
-| The Cohort Halls | 1500, 0, 2000, 500 | Coral Ruins | 1,750 | The year's berths, cut into the north wall. Structure and hard acoustic shadow, for a place that is not ruined |
-| The Ascent | 2250, 0, 500, 250 | Coral Ruins | 1,500 | The stair north out of the map, toward the shallows. **The roll's region.** Its floor is the shallowest metre this mission authors and it is 1,100 m below mission 4's line |
-| The Muster | 1750, 500, 1500, 500 | Coral Ruins | 1,900 | The banding ground proper. **The spawn** |
-| The Bench | 1500, 1250, 2000, 1500 | Abyssal Trench | 2,250 | The open middle, and the Sounder's line |
-| The West Overhang | 250, 1250, 1250, 1500 | Abyssal Trench | 2,150 | Trench wall and overhang — Hollow country, and half the year's income |
-| The East Overhang | 3500, 1250, 1250, 1500 | Abyssal Trench | 2,150 | The other half, four kilometres from the first |
-| The Throat | 2000, 3250, 1000, 750 | Abyssal Trench | 2,400 | Where the Ninth leaves the map southward toward Sufficiency. The Sounder arrives through it |
+| The Upper Ninth | rect 0, 0, 5000, 4000 | Abyssal Trench | 2,400 | The trench. PF 1.60, painted first; everything else is cut into it. A box because it is the whole map's base |
+| The Cohort Halls | rect 1500, 0, 2000, 500 | Coral Ruins | 1,750 | The year's berths, cut into the north wall. Structure and hard acoustic shadow, for a place that is not ruined. A box because it is built |
+| The Ascent | rect 2250, 0, 500, 250 | Coral Ruins | 1,500 | The stair north out of the map, toward the shallows. **The roll's region.** Its floor is the shallowest metre this mission authors and it is 1,100 m below mission 4's line. A box because the mission's `the-ascent` region is this same rectangle |
+| The Muster | rect 1750, 500, 1500, 500 | Coral Ruins | 1,900 | The banding ground proper. **The spawn.** A box because the mission's `the-muster` region is this same rectangle |
+| The Bench | rect 1500, 1250, 2000, 1500 | Abyssal Trench | 2,250 | The open middle, and the Sounder's line. A box because the mission's `the-bench` region is this same rectangle |
+| The West Overhang | polygon (250, 1250) (750, 1250) (1500, 2000) (750, 2750) (250, 2750) | Abyssal Trench | 2,150 | Trench wall and overhang — Hollow country, and half the year's income. Its two corners on the bench side are cut on a slant, so it narrows toward the bench |
+| The East Overhang | polygon (4250, 1250) (4750, 1250) (4750, 2750) (4250, 2750) (3500, 2000) | Abyssal Trench | 2,150 | The other half, four kilometres from the first. The West Overhang's mirror image |
+| The Throat | rect 2000, 3250, 1000, 750 | Abyssal Trench | 2,400 | Where the Ninth leaves the map southward toward Sufficiency. The Sounder arrives through it. A box because it paints the Upper Ninth's own biome and floor, so any shape would paint the same ground; it is on the chart so the door has a name |
 
 One spawn, at the muster: 2500, 750, depth 1,900 m. **No resources, no hazard sites, no second
 spawn, and `fauna` off** — every creature on this map is authored, for Attendance's reason and one
@@ -541,15 +541,43 @@ The eight Hollows, at working depth 1,700 m:
 | --- | --- | --- |
 | | 500, 1500 · 750, 2250 · 1250, 1750 · 500, 2500 | 4500, 1500 · 4250, 2250 · 3750, 1750 · 4500, 2500 |
 
-Every rectangle lands on the 250 m cell grid and paints exactly the metres it reads
-([maps.md](maps.md), "How a map is written").
+Drawn in shapes since issue #1152, a box of #1139. Every number a shape states is a whole 250 m
+cell, and a cell is its region's when the shape holds the cell's centre ([maps.md](maps.md), "How
+a map is written"). Only the two overhangs changed. Each one's two corners on the bench side are
+cut on a slant, so it narrows toward the bench and meets it across the middle 500 m of the bench's
+edge rather than all 1,500, and the Upper Ninth's 2,400 m now runs along the bench's west and east
+edges for the 500 m at each end.
+
+Six regions stay boxes, each for a reason. The Upper Ninth is the whole map's base. The Cohort
+Halls are built. The mission restates the ascent, the muster and the bench as its `the-ascent`,
+`the-muster` and `the-bench` regions, each the same rectangle. The Throat paints the Upper Ninth's
+own biome and floor, so any shape would paint the same ground; it is on the chart so the door has
+a name.
+
+The reshape is new map content, never a balance lever. It moved 12 of the map's 320 cells, six
+from each overhang, all Abyssal Trench before and after, so no cell's biome or PF changed: each
+went from the overhang's 2,150 m to the Upper Ninth's 2,400. Asked at every 25 m of depth from
+the surface to 4,000 m, only those 12 cells admit a hull differently, and only from 2,175 to
+2,400 m, below the 1,900 m that is the deepest this mission authors. That band is where a hull
+following the floor goes, thirty metres off it, so the 12 cells cost one: on them it holds 2,370
+m where it held 2,120, 250 m lower; following the bench's floor at 2,220 m or the Upper Ninth's
+at 2,370 it can now cross onto them, where before they refused it; and following an overhang's
+at 2,120 it crosses onto them as it did, then sinks to 2,370 m on them, where its overhang and
+the bench refuse it, so it can no longer cross back onto either, as it could at 2,120. The
+spawn, all twelve hulls, the ascent's marker, all eight Hollows and both ends of the Sounder's
+line stand on the ground they stood on, and so does every cell centre of the three mission
+regions. The Sounder's line crosses no changed cell, and asked from every 125 m of either leg at
+every 25 m of depth to its 1,900 m, it routes as it did. Played with no input, every hull and
+every creature keeps the position and the hit points it kept in rectangles, sampled every five
+seconds, to the same reading and the same transcript.
 
 **The overhangs are the map's one piece of gameplay geometry and they are not a fence.** They
-stand at 2,150 m against a bench floor of 2,250 — a hundred metres of lift, which is nothing, and
-that is the point: nothing on this map stops the intake going anywhere. What separates the two
-overhangs is four kilometres of open bench, and four kilometres is the whole problem. Terrain may
-raise a hull and may never lower one ([systems-depth.md](systems-depth.md) §2), and here it barely
-raises one. The map is not difficult. It is *large*, and the intake is twelve.
+stand at 2,150 m against a bench floor of 2,250 — a hundred metres of lift, which is nothing,
+and that is the point: nothing on this map stops the intake going anywhere. The outer Hollows on
+the two stand four kilometres apart, two of them open bench, and four kilometres is the whole
+problem. Terrain may raise a hull and may never lower one ([systems-depth.md](systems-depth.md)
+§2), and here it barely raises one. The map is not difficult. It is *large*, and the intake is
+twelve.
 
 **And the direction of the expense is reversed from Attendance's.** That mission's decision was a
 dive — 45 m/s at a SIG floor of 72, the loudest thing its water had heard in a century. Here every
@@ -672,7 +700,7 @@ engine (#353).
 | **The region ledger under a rendering** | **Settled in the document, not the engine (#350).** §10 says Drift Health is mission 5's system and this mission never reads it out — true, and the ledger prices the mission anyway. `Match.driftTick` sums the raw SIG of everything a player owns in each Drift cell (`HEALTH_REGIONS` 4 × 4 over the map — 1,250 × 1,000 m here) against `DRIFT.HEALTH_SIG_THRESHOLD`'s 60, so three hulls cruising together are 84 and wear the cell they cross; a kill takes `HEALTH_PER_KILL` more; a rendering in a cell under `HEALTH_STRAINED` pays three quarters — 26.25, not 35 — and quiet ground recovers at 0.02 a second. Measured: a three-hull column that works the walls in order is paid 26.25 for the first, third and seventh rendering and 35 for the rest, banks 218.75 from seven, and answers the band from the eighth. Twelve hulls idling at the muster stand six either side of x = 2,500 — 132 of SIG in each of the muster's two cells, 72 over the threshold, 1.44 a second — and both cells are at 45 by 0:30, 2 by 1:00 and nothing by 1:02 — which, while the row above was open, is why the colossus killed there paid nothing. (These are the figures after #365, which slowed recovery from 0.06 a second to 0.02 and stopped it applying under the drain: the seventh rendering joined the first and third at the discount, seven banks 218.75 rather than 227.5, and the muster's cells die three seconds sooner. The decision below stands, and the eighth still answers.) **The decision is to say so and move nothing.** §3 and §9 now state that the band is seven of eight *spread*, and that a rendering is paid the roster's figure over ground the year has not worn. The ledger is the mechanism under a lesson §10 already lists — *the spread that the ground rewards* — and a mission whose thesis is that the intake is an array rather than a fleet is better priced by it than protected from it. The player is not told, per §10: mission 5 names the system, and a column paid 26 for a Hollow it was paid 35 for last time has been told something by the ground and not by the text, which is the register ([culture.md](culture.md) §3). What the other three would have cost, so the decision can be overruled: **authoring the band against the ledger** moves an authored number to fit a discount that depends on the route, so no band is right and the seven-of-eight sentence goes with it; **a `MissionDefinition` flag that pins Drift Health** would be the first format row to switch a simulation off rather than author what is in it, and campaign play carries Drift Health between missions on a map ([campaign.md](campaign.md) §2, rule 5), which a pinned mission would have to be excused from; **retuning the threshold** finds no figure a formation sits under that a base does not — twelve idle hulls are 264 and a base is more — and `drift.test.ts` pins the sum on purpose. While the row above was open, the last two would also have paid the colossus its 260 over the muster — the dead ground under the muster was, for a while, the only thing keeping that exploit from paying the band — and #349 has since closed that door from the other side, so the ledger no longer has to. `missionIntake.test.ts` states each figure — the discount, the seven that fall short, the eighth that answers, both muster cells dead inside the first minute under an intake that never moved — so a retune is noticed rather than discovered |
 | **The Hollows, placed and not driven** | **Built, with one seam.** `MissionBeatEffect`'s `creature` row carries a required `driveTo`, so an ambusher that must not be driven is authored with `driveTo` at its own spawn and `untilTick: 0` — the first pass finds the commitment already expired, hands the creature its ears back, and leaves it to its trigger model, coiled at SIG 3. That works and is the idiom the literal uses eight times; it is also the one place the format shows that it was written for creatures that arrive |
 | **`fauna: false` with eight authored creatures** | **Built** — the flag is Attendance's and the beat is Asset Recovery's. Stated because the reason differs: Attendance authored none, and this mission authors all of them **because the default seeder is a skirmish roster** — `match.ts`'s `seedFauna` places 2 Hollows, last, after 16 Ashgrazers and 15 Draymaws have taken most of `DRIFT.MAX_POPULATION` (48), and it gates on `floorAt >= workingDepthM` rather than on the species' band, so an all-Abyssal map would also carry mid-water species over deep ground. A mission that needs eight ambushers in named places cannot ask the Drift for them |
-| The map, its eight regions, the overhangs that barely lift | **Built** — `banding-ground`, one row of the literal per row of §11's table, in its order. No new region shape, no new biome, no hazard sites, no resource nodes; `missionIntake.test.ts` holds it to the table, to the 100 m lift, and to the ascent being the shallowest metre and 1,100 m under the Shelf line |
+| The map, its eight regions, the overhangs that barely lift | **Built** — `banding-ground`, one row of the literal per row of §11's table, in its order, and drawn in shapes in #1152. No new biome, no hazard sites, no resource nodes; `missionIntake.test.ts` holds it to the table, to the 100 m lift, and to the ascent being the shallowest metre and 1,100 m under the Shelf line |
 | The mission definition `attending-intake` | **Built**, with the three runtime rows below that this mission was the first to need, and the transit row above. Twelve hulls in one role, armed; the band, the muster and the finding in §12's order; §9's beats in its order, closing as a conclusion at 20:00 with the loud transit at 16:00 four times §10's sixty seconds ahead of it; §8's three readings verbatim. The literal's header states every authoring decision the document left open, including the transit's return leg — the same straight line, back down to the throat — which §6 does not describe |
 | **A shift that runs its length** | **Built for this mission** — `MissionDefinition.runsItsLength`. The runtime closes a mission the moment every terminal objective is met, which is right for a court that stops sitting once everybody is out and wrong here: the muster is met at tick zero, twelve being at least nine, so the seventh rendering would have closed the shift at 13:40 and robbed a year that searched well of exactly the five minutes §9 calls its reward. With the flag only the `resolve` beat closes the mission. Omitted is the court's rule, and every other literal omits it |
 | **A muster as a standing count** | **Corrected in the runtime** — `survive` is now a standing predicate (`isStanding`), re-derived every tick as the silence order is. It used to latch Met on the first pass, when twelve is trivially at least nine, and stay Met through every loss after it: the muster would have read "met" at the close beside six hulls. Aptitude's six voices and Thin Water's two escorts carry the same row and now read the same way, which is the reading their documents wanted |
