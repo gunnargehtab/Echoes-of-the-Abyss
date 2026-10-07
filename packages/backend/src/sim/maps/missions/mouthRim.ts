@@ -33,7 +33,8 @@ export const MOUTH_RIM: MapDefinition = {
   // and a cell is its region's when the shape holds its centre (#1146). Every
   // point the five missions on this map seat, sound, order or drive, and every
   // cell of their mission regions, stands on the ground it stood on when these
-  // were all rectangles, and `missionProspect.test.ts` pins it.
+  // were all rectangles, every scripted move is routed as it was, and
+  // `missionProspect.test.ts` pins both.
   regions: [
     {
       x: 0,
@@ -56,12 +57,14 @@ export const MOUTH_RIM: MapDefinition = {
       note: 'The Staging — the approach and the way home: below the layer, above the commitment. The return line',
     },
     // Its top row runs the map's whole width under the staging, so every way
-    // south from the return line crosses it. Its foot is cut back where no
-    // mission seats, sends or bounds anything: a bay at the west edge, a
-    // gully east of it, and the south-east corner, where the Deep Water shows
-    // at 2,600 m. From 2,500 to 5,500 m the foot stays straight: readers
-    // ordered to 2,500 m cross it, node-one's grant reaches into its last row,
-    // and First Arrival's reconnaissance and party stand on it in the east.
+    // south from the return line crosses it. Its foot is cut back in two
+    // places, where the Deep Water shows at 2,600 m: a bay at the west edge
+    // and the south-east corner. Between x 1,250 and x 5,500 m it stays
+    // straight. A gully there pulled the Second Seeding's 20:30 ascent off its
+    // route: a leg the ground refuses is planned toward the reachable cell
+    // nearest its order, and the gully's head was nearer (#1146). Further east
+    // readers ordered to 2,500 m cross it, node-one's grant reaches into its
+    // last row, and First Arrival's reconnaissance and party stand on it.
     {
       shape: 'polygon',
       points: [
@@ -69,10 +72,6 @@ export const MOUTH_RIM: MapDefinition = {
         [6000, 1000],
         [6000, 1250],
         [5500, 2000],
-        [2500, 2000],
-        [2250, 1250],
-        [1750, 1250],
-        [1500, 2000],
         [1250, 2000],
         [750, 1500],
         [250, 1500],

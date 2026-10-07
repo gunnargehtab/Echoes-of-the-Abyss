@@ -645,7 +645,7 @@ literal's Slopes in shapes in #1146, and this table follows it.
 | --- | --- | --- | --- | --- |
 | The Deep Water | rect 0, 0, 6000, 4000 | Open Water | 2,600 | The base water. Painted first; everything else is cut into it. It shows where the slopes' foot is cut back, at the terraces' depth |
 | The Staging | rect 0, 0, 6000, 1000 | Open Water | 1,500 | Below the layer, above the commitment. Where the Choirmaster waits |
-| The Slopes | polygon (0, 1000) (6000, 1000) (6000, 1250) (5500, 2000) (2500, 2000) (2250, 1250) (1750, 1250) (1500, 2000) (1250, 2000) (750, 1500) (250, 1500) (0, 1750) | Open Water | 2,200 | Two thousand metres of arriving, crossed once, at 1,750 m, in seventy-six seconds |
+| The Slopes | polygon (0, 1000) (6000, 1000) (6000, 1250) (5500, 2000) (1250, 2000) (750, 1500) (250, 1500) (0, 1750) | Open Water | 2,200 | Two thousand metres of arriving, crossed once, at 1,750 m, in seventy-six seconds |
 | The Terraces | rect 0, 2000, 6000, 1000 | Resonance Field | 2,600 | The crystal came from here. The two nodes that are spent at sixteen stand on it |
 | The Lip | rect 0, 3000, 6000, 1000 | Abyssal Trench | 3,100 | Carries like a trench and points south. The Chord, the cohort, the dome, the attendants, the bed and the return are all on it |
 

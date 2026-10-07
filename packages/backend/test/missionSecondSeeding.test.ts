@@ -222,11 +222,11 @@ describe('the Rim, as docs/mission-second-seeding.md §11 leaves it', () => {
       '§11: the staging, the slopes, the terraces and the lip, a kilometre each'
     );
     assert.deepEqual(
-      column(1875),
+      column(375),
       [
         ...Array(4).fill(staging),
         slopes,
-        deep,
+        slopes,
         deep,
         deep,
         ...Array(4).fill(terraces),

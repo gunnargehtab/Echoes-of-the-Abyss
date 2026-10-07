@@ -34,6 +34,7 @@ import {
 import { defineQuery, hasComponent } from 'bitecs';
 import { Owner, Pressure, Unit, Weapon } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
+import { Pathfinder } from '../src/sim/pathfinding.ts';
 import { MOUTH_RIM, missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import {
   ATTENDING_FIRST_ARRIVAL,
@@ -163,7 +164,7 @@ describe('The Rim, as docs/mission-prospect.md §11 draws it (#1146)', () => {
     }
     return points;
   };
-  type Leg = { what: string; from: Point; to: Point; deepestM: number };
+  type Leg = { what: string; from: Point; to: Point; deepestM: number; move: boolean };
   /** Every scripted leg: a hull's seat, then its moves in tick order, and each creature's drive. */
   const legsOf = (mission: MissionDefinition): Leg[] => {
     const legs: Leg[] = [];
@@ -175,13 +176,25 @@ describe('The Rim, as docs/mission-prospect.md §11 draws it (#1146)', () => {
       if (beat.kind === 'move') {
         const from = where.get(beat.tag)!;
         const to = { what: beat.tag, x: beat.x, y: beat.y, depthM: beat.depthM ?? from.depthM };
-        legs.push({ what: beat.tag, from, to, deepestM: Math.max(from.depthM!, to.depthM!) });
+        legs.push({
+          what: beat.tag,
+          from,
+          to,
+          deepestM: Math.max(from.depthM!, to.depthM!),
+          move: true,
+        });
         where.set(beat.tag, to);
       }
       if (beat.kind === 'creature' && beat.spawnAt !== undefined) {
         const from = { what: beat.tag, ...beat.spawnAt };
         const to = { what: beat.tag, ...beat.driveTo };
-        legs.push({ what: beat.tag, from, to, deepestM: Math.max(from.depthM, to.depthM ?? 0) });
+        legs.push({
+          what: beat.tag,
+          from,
+          to,
+          deepestM: Math.max(from.depthM, to.depthM ?? 0),
+          move: false,
+        });
       }
     }
     return legs;
@@ -248,11 +261,10 @@ describe('The Rim, as docs/mission-prospect.md §11 draws it (#1146)', () => {
     assert.equal(legs, 16 + 30 + 16 + 29 + 59, 'every leg of all five missions');
   });
 
-  it('cuts the slopes back in 17 cells, to the deep water, out of every grant', () => {
-    // §11: the bay, the gully and the south-east corner, all Open Water at
-    // the Deep Water's 2,600 m, so no cell's biome or PF moved. No point of
-    // them lies within a Sounding Spire's six hundred metres, so a PR-2 hull
-    // below 1,800 m there is rated for none of it.
+  it("cuts the slopes back in 9 cells, to the deep water, out of every seated Spire's grant", () => {
+    // §11: the bay and the south-east corner, all Open Water at the Deep
+    // Water's 2,600 m, so no cell's biome or PF moved. No point of them lies
+    // within the six hundred metres of a Sounding Spire the missions seat.
     const spires = MISSIONS.flatMap((mission) =>
       mission.parties.flatMap((party) =>
         (party.structures ?? []).filter((s) => s.kind === StructureKind.SoundingSpire)
@@ -276,7 +288,85 @@ describe('The Rim, as docs/mission-prospect.md §11 draws it (#1146)', () => {
         }
       }
     }
-    assert.equal(cut.length, 17, 'six in the bay, eight in the gully, three in the corner');
+    assert.equal(cut.length, 9, 'six in the bay, three in the corner');
+  });
+
+  it('routes every scripted move round the ground it was routed round in rectangles', () => {
+    // A move whose straight segment the ground refuses is planned by
+    // `Pathfinder.findPath`, and a partial route ends at the reachable cell
+    // nearest the order, so a cut cell can pull a hull off its scripted track
+    // without the segment ever crossing it (#1146: a gully at the slopes' foot
+    // did, for the Second Seeding's 20:30 ascent). So every move is asked from
+    // every 125 m of its leg, at every 25 m of the depths it spans, against
+    // the map as it was, with the Slopes the box they were.
+    const boxes = terrainFor({
+      ...MOUTH_RIM,
+      regions: MOUTH_RIM.regions.map((region, i) =>
+        i === 2
+          ? {
+              x: 0,
+              y: 1000,
+              widthM: 6000,
+              heightM: 1000,
+              biome: region.biome,
+              floorM: region.floorM,
+            }
+          : region
+      ),
+    });
+    const cut = (x: number, y: number) => at(x, y).join() !== bandOf(y).join();
+    const pathfinder = new Pathfinder(ground.cols, ground.rows);
+    const route: number[] = [];
+    const was: number[] = [];
+    let moves = 0;
+    let planned = 0;
+    for (const mission of MISSIONS) {
+      for (const leg of legsOf(mission)) {
+        if (!leg.move) continue;
+        moves++;
+        const { from, to } = leg;
+        const shallowM = Math.min(from.depthM!, to.depthM!);
+        const n = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / 125));
+        for (let depthM = shallowM; depthM <= leg.deepestM; depthM += 25) {
+          for (let i = 0; i <= n; i++) {
+            const x = from.x + ((to.x - from.x) * i) / n;
+            const y = from.y + ((to.y - from.y) * i) / n;
+            const where = `${mission.id}: ${leg.what} from ${Math.round(x)},${Math.round(y)} at ${depthM} m`;
+            const straight = ground.segmentAdmits(x, y, to.x, to.y, depthM);
+            assert.equal(straight, boxes.segmentAdmits(x, y, to.x, to.y, depthM), where);
+            if (straight) continue;
+            planned++;
+            pathfinder.findPath(ground, x, y, to.x, to.y, depthM, route);
+            pathfinder.findPath(boxes, x, y, to.x, to.y, depthM, was);
+            assert.deepEqual(route, was, `${where}: the route it took in rectangles`);
+            // And the route as steered — waypoint to waypoint, then straight
+            // at the order — never enters a cut cell at a depth the cut
+            // changed the answer for. At 2,200 m or shallower a cut cell
+            // admits a hull exactly as the slopes did: First Arrival's party
+            // is planned through the corner at 1,525 m, as it was.
+            if (depthM <= BANDS.slopes[1]) continue;
+            const corners = [x, y, ...route, to.x, to.y];
+            for (let c = 2; c < corners.length; c += 2) {
+              const [ax, ay, bx, by] = corners.slice(c - 2, c + 2) as [
+                number,
+                number,
+                number,
+                number,
+              ];
+              const steps = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / 10));
+              for (let k = 0; k <= steps; k++) {
+                const px = ax + ((bx - ax) * k) / steps;
+                const py = ay + ((by - ay) * k) / steps;
+                assert.ok(!cut(px, py), `${where}: its route enters the cut cell at ${px},${py}`);
+              }
+            }
+          }
+          if (leg.deepestM === shallowM) break;
+        }
+      }
+    }
+    assert.equal(moves, 15 + 29 + 15 + 28 + 58, 'every scripted move of all five missions');
+    assert.ok(planned > 0, 'some move is refused its straight segment and planned');
   });
 
   it('steps the floor down every column, below the layer, and never up on the way south', () => {

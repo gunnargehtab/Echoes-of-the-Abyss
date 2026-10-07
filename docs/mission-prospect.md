@@ -272,7 +272,7 @@ South of the map is the depression, and the map declines to author it.
 | --- | --- | --- | --- | --- |
 | The Deep Water | rect 0, 0, 6000, 4000 | Open Water | 2,600 | The base water. Painted first; everything else is cut into it. It shows where the slopes' foot is cut back, at the terraces' depth |
 | The Staging | rect 0, 0, 6000, 1000 | Open Water | 1,500 | The approach and the way home — below the layer, above the commitment. **The return line**. A box because three missions restate it as this same rectangle |
-| The Slopes | polygon (0, 1000) (6000, 1000) (6000, 1250) (5500, 2000) (2500, 2000) (2250, 1250) (1750, 1250) (1500, 2000) (1250, 2000) (750, 1500) (250, 1500) (0, 1750) | Open Water | 2,200 | The descent's ground: two thousand metres of arriving. Its top row runs the map's whole width; its foot is cut back in the west and at the south-east corner |
+| The Slopes | polygon (0, 1000) (6000, 1000) (6000, 1250) (5500, 2000) (1250, 2000) (750, 1500) (250, 1500) (0, 1750) | Open Water | 2,200 | The descent's ground: two thousand metres of arriving. Its top row runs the map's whole width; its foot is cut back in the west and at the south-east corner |
 | The Terraces | rect 0, 2000, 6000, 1000 | Resonance Field | 2,600 | Crystal country at the rim: the six faces, the ring that never settles, and bearings that lie a little ([environments.md](environments.md)). A box because First Arrival's hold is this same rectangle |
 | The Lip | rect 0, 3000, 6000, 1000 | Abyssal Trench | 3,100 | The depression's edge. It carries like a trench, because it is the beginning of one that has no far wall. The attendants are here. A box because it is the whole southern kilometre at PF 1.60 |
 
@@ -284,12 +284,14 @@ Drawn in shapes since issue #1146, a box of #1139. Every number a shape states i
 250 m cell, and a cell is its region's when the shape holds the cell's centre
 ([maps.md](maps.md), "How a map is written"). Only the Slopes changed. Its top row still
 runs the map's whole width under the staging, so every way south from the return line
-crosses it. Its foot is cut back in three places, and the Deep Water shows there at the
-terraces' 2,600 m: a bay at the west edge, a gully east of it that reaches north to 1,250 m,
-and the south-east corner. From 2,500 to 5,500 m the foot stays straight: [The Second
-Seeding](mission-second-seeding.md)'s readers cross it on their legs to and from their
-2,500 m stations, node-one's grant reaches into its last row, and First Arrival's
-reconnaissance and party stand on it in the east.
+crosses it. Its foot is cut back in two places, and the Deep Water shows there at the
+terraces' 2,600 m: a bay at the west edge and the south-east corner. Between x 1,250 and
+x 5,500 m the foot stays straight. A gully there was drawn and dropped: a leg the ground
+refuses is planned toward the reachable cell nearest its order, and the gully's head pulled
+[The Second Seeding](mission-second-seeding.md)'s 20:30 ascent off its route. Further east
+that mission's readers cross the foot on their legs to and from their 2,500 m stations,
+node-one's grant reaches into its last row, and First Arrival's reconnaissance and party
+stand on it.
 
 Four regions stay boxes, each for a reason. The Deep Water is the whole map's base. This
 mission, [The Rim Deposits](mission-rim-deposits.md) and
@@ -299,17 +301,20 @@ the same rectangle, so the return line is the water drawn. The Terraces are
 southern kilometre at PF 1.60: moving its edge anywhere moves trench water, and all five
 missions on this map seat or send something onto it.
 
-The reshape is new map content, never a balance lever. It moved 17 of the map's 384 cells,
+The reshape is new map content, never a balance lever. It moved 9 of the map's 384 cells,
 all from the Slopes' 2,200 m floor to the Deep Water's 2,600 m and all Open Water before and
-after, so no cell's biome or PF changed. Six are the bay, eight the gully and three the
-corner. In all five missions on this map, every spawn, seat, emitter, marker, sounding,
-move and creature point stands on the ground it stood on in rectangles, every cell centre
-of every mission region does too, and every scripted leg crosses the same biome and is held
-at the same depth in every cell it crosses. What a hull finds there is new: between 2,200
-and 2,600 m, water off the terraces now runs into those 17 cells, and no point of them lies
-within six hundred metres of any Sounding Spire the missions seat, so a PR-2 hull that
-strays there below 1,800 m bleeds. Down every column the floor still steps from the staging
-through the slopes to the terraces and the lip, and never rises on the way south.
+after, so no cell's biome or PF changed. Six are the bay and three the corner. In all five
+missions on this map, every spawn, seat, emitter, marker, sounding, move and creature point
+stands on the ground it stood on in rectangles, every cell centre of every mission region
+does too, and every scripted leg crosses the same biome and is held at the same depth in
+every cell it crosses. Asked from every 125 m of its leg at every 25 m of its depths, every
+scripted move whose straight segment the ground refuses is planned along the route it took
+in rectangles; and in one seeded run of each mission, played with no input and fauna off,
+every hull keeps the track it kept in rectangles, sampled every five seconds. What a
+hull finds there is new: between 2,200 and 2,600 m, water off the terraces now runs into
+those 9 cells, and no Sounding Spire the missions seat rates a hull there. Down every column
+the floor still steps from the staging through the slopes to the terraces and the lip, and
+never rises on the way south.
 
 The whole map lies below the thermocline — the campaign's first — so the expedition is
 acoustically alone from the first tick, per [systems-echo.md](systems-echo.md) §3's argument
