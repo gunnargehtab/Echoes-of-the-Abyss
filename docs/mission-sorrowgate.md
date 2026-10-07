@@ -563,19 +563,20 @@ basin cuts away.
 
 Four regions stay boxes, each for a reason. The Districts are the whole map, painted first. The
 Upper Concourse and the Service Lock are built: a terminus and a maintenance passage. Every
-cell of the Concourse also lies in the region the tenders' count is read in, and the Lock is
+cell centre of the Concourse also lies in the region the tenders' count is read in, and the Lock is
 the region the 10:40 beat cuts back through the span. The Commit is held on every side: the
 far water along its whole southern row, a Hollow near either end of its northern row, the
 colossus 250 m inside its western edge, and the colossus's 12:00 drive ending in its eastern
 column ([mission-radicals.md](mission-radicals.md) §6).
 
 The reshape is new map content, never a balance lever. Fourteen of the 320 cells changed. Seven
-cells of vein at the Approach's western end became city, PF 0.45 to 0.80, and no line between
-the flight and any party crosses them. Four cells of the Descent's east flank and one of the
+cells of vein at the Approach's western end became city, PF 0.45 to 0.80. No line from a place
+either mission seats or orders the flight to any party crosses them, but a flight that strays
+into the vein's western end is now heard by Kalliso's seat through city water. Four cells of the Descent's east flank and one of the
 dome's north-east corner went to the city's 1,600 m floor; the dome took two cells of city on
 its west flank at 1,500 m. No biome changed anywhere else. Every spawn, hull, structure, order,
 creature and mission region in this mission and in [Radicals](mission-radicals.md) stands on
-the cell it stood on in rectangles.
+the ground it stood on in rectangles.
 
 The cells under the boxes are the ones issue #157 restated when the centre rule replaced the
 touch rule. The Service Lock reads 500 m rather than the 300 m it used to: two 250 m columns is

@@ -43,9 +43,9 @@ export const SORROWGATE: MapDefinition = {
   // Drawn in shapes since #1140: the Descent is a ramp, the West Approach a
   // vein and the Gate a dome. Every number is a whole 250 m cell, and a cell is
   // a region's when its shape holds the cell's centre (issue #157). The
-  // reshape is new content, never a lever: fourteen cells moved, all off the
-  // ground either mission uses, and every spawn, hull, order, creature and
-  // mission region stands on the cell it stood on in rectangles. The
+  // reshape is new content, never a lever: fourteen cells moved, none under a
+  // place either mission seats or orders, and every spawn, hull, order,
+  // creature and mission region stands on the ground it stood on. The
   // radicals test pins those points against §11's regions.
   regions: [
     // A box because it is the whole map, painted first.
@@ -58,8 +58,8 @@ export const SORROWGATE: MapDefinition = {
       floorM: 1600,
       note: 'The Districts — the drowned city. Painted first; everything else is cut into it',
     },
-    // A box because it was built: a terminus. Every one of its cells also lies
-    // in the mission's `concourse` region, where the tenders are counted.
+    // A box because it was built: a terminus. Every one of its cell centres also
+    // lies in the mission's `concourse` region, where the tenders are counted.
     {
       x: 1500,
       y: 0,
@@ -91,8 +91,10 @@ export const SORROWGATE: MapDefinition = {
       note: 'The Descent — the step between the Concourse and the city',
     },
     // A vein widening from the west edge to the arch's row. The cells it gave
-    // back to the city are at its western end, where no line between the
-    // flight and another party runs, so no tier anyone is measured at moves.
+    // back to the city are at its western end. No line from a place either
+    // mission seats or orders the flight to another party crosses them, but a
+    // flight that strays into the vein's western end is now heard by Kalliso's
+    // seat through city water.
     {
       shape: 'polygon',
       points: [

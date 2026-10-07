@@ -319,7 +319,7 @@ describe('Sorrowgate, reused as docs/mission-radicals.md §11 finds it', () => {
     // cells, because the cell is what a hull's floor and roof are read from.
     // Two documented points are not here: §11 seats the shoals and §5 lays the
     // first leg on "the Concourse's 340", and the Descent has always painted
-    // that row at 900 (reported on #1140, not settled by it).
+    // that row at 900 (#1161, found by #1140 and not settled by it).
     const ground = terrainFor(SORROWGATE);
     const regions = {
       districts: [Biome.CoralRuins, 1600, 0],
