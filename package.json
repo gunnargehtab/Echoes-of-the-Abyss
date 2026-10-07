@@ -43,14 +43,14 @@
     "vite": "^6.4.3"
   },
   "overrides": {
-    "markdown-link-check": {
-      "basic-ftp": "6.2.2"
-    },
     "markdownlint-cli": {
       "js-yaml": "5.4.3",
       "katex": "0.18.2",
       "smol-toml": "1.9.0",
       "brace-expansion": "5.0.12"
+    },
+    "get-uri": {
+      "basic-ftp": "6.2.2"
     }
   }
 }
