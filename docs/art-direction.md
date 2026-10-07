@@ -854,8 +854,16 @@ byte for byte another's in the same file, since GLTFExporter shares one only bet
 holding one geometry object. With each written once and both nodes pointing at it
 ([#1125](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1125), kit.mjs
 `shareAlike`), 90 files are re-exported, every part and UV bit for bit as before and every
-material equal at float32, and the library counts **13,643,272 raw bytes** and **2,628,937 gzipped**; the raw fall is larger
-than the duplicates because the JSON lists fewer accessors.
+material equal at float32, and the library counts 13,643,272 raw bytes and 2,628,937 gzipped; the raw fall is larger
+than the duplicates because the JSON lists fewer accessors. Parts alike only in part still
+wrote 2,737,452 bytes of accessors twice: two boxes of different widths share their normals,
+UVs and index, and the Bathyarch submersible's reinforcement bands their corners but not
+their UVs. With each attribute and index
+alike written once as well ([#1129](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1129),
+the same function), 98 files are re-exported under the same readings, the Knights' Bastion
+now writing the occlusion strength of 1 its file had left to glTF's default. The files hold
+8,635 accessors rather than 16,225, and the library counts **9,517,896 raw bytes** and
+**2,457,017 gzipped**.
 Those are sums over the source library, not a browser's initial download: Vite hashes
 assets and the client loads them by need. A solo match on the default map, its build at
 `c771ca8` served by nginx 1.24 through `nginx.conf` and the image's `http` settings, fetched
