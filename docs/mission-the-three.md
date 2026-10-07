@@ -710,8 +710,9 @@ hull ordered deeper than 2,700 m, as the 2,900 m dive of the second way in is, i
 the four cells, while the trench's south row still carries it the map's whole width. A hull
 following the floor holds 2,670 m on the four cells, 330 m higher than the 3,000 m it held there
 over the trench.
-One in the trench beside them, at 3,000 m, no longer steps onto them; one on them, at 2,670 m,
-now steps north onto the foot, which it could not do at 3,000. Every one of the 192 cells is
+One in the trench beside them, at 3,000 m, is refused a step onto them until it rises, and
+ordered onto them it reads the ground ahead and does (#1193); one on them, at 2,670 m, now steps
+north onto the foot, which it could not do at 3,000. Every one of the 192 cells is
 still one a following hull reaches from the seat by steps between side-by-side cells, as it
 was.
 

@@ -121,6 +121,14 @@ A long trench map with brutal choke points and vertical depth gameplay.
 - Central trench corridor (long, narrow, deep)
 - Side plateaus for expansions
 - Vertical depth layers with fog separation
+- **Drawn as places, not boxes** (#1138): the rift is a canyon rather than a bar. It leaves
+  each apron narrow, leans its west reach toward the north vents and its east reach toward
+  the south ones, closes to a throat at each choke and opens into a basin about the crystal.
+  The vents are round fields on its lip, each reef lies along the rim as a bank that reaches
+  down where a reach leans away from it, the aprons round their shoulders and the corner
+  fields spread from the corners as quarter rounds. The shapes moved no cell on the line
+  between the two seats, which runs down the trench by design, and the chokes kept theirs:
+  they are the brutal choke points, and the rift now narrows into each
 
 ### Biome Distribution
 
