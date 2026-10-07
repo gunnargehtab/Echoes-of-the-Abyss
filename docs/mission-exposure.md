@@ -268,7 +268,6 @@ in the next watch's water with a spent story, and the file has a reading for tha
 | *(fired by the tally, not the clock)* | **At twenty seconds entered: the warning.** The Division's guidance, once (§4) |
 | *(fired by the tally, not the clock)* | **At thirty: the recall.** The charter is spent, the watch turns onto the survey's water, and the mission is an extraction (§4, §7) |
 | 16:45 | **The rim pack rises, loud** — the relief's wake, arriving ahead of it. The seventy-five seconds of warning begin |
-| 17:00 | The watch change signal: the relief is on the trench, a minute out and closing |
 | 18:00 | **The change.** Whatever is over the layer is the survey; whatever is not is in the next watch's water. The Division reads the file it received (§8) |
 
 The two condition-fired rows are printed in the table where their *typical* run lands, and
