@@ -450,7 +450,8 @@ describe('the ground the intake stands on — §11, drawn in shapes (#1152)', ()
     // the bench's 2,220 and the Ninth's 2,370 now cross onto the 12 cells, and
     // an overhang's 2,120 crosses onto them as it did. And what it loses: on
     // them it now holds 2,370, which every overhang or bench cell beside them
-    // refuses, so it cannot cross back onto either as it could at 2,120.
+    // refuses at that depth; ordered back, a follower reads the ground ahead
+    // and rises to cross (#1193), so what this pins is the refusal at 2,370.
     let neighbours = 0;
     for (const cell of named) {
       const [x, y] = cell.split(',').map(Number) as [number, number];

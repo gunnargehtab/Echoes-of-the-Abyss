@@ -122,6 +122,27 @@ describe('floor-following', () => {
     assert.equal(Pressure.unhealable[eid], 0, 'with no crush spent on the way');
   });
 
+  it('climbs out of a pit it followed into, toward where it is ordered (#1193)', () => {
+    // Ground at 1,700 m with a 1,750 m pit. A follower in the pit holds
+    // 1,720 m, which the ground beside it refuses; ordered out, it reads the
+    // ground ahead, rises to that ground's clearance before the edge, and
+    // crosses — "up for free" (docs/systems-depth.md §2). Before #1193 it
+    // was stopped at the pit's edge, holding 1,720 m.
+    const m = match(1700);
+    m.world.terrain.fillGround(1000, 3750, 500, 500, { floorM: 1750 });
+    const eid = seat(m, 1720);
+    Position.x[eid] = 1250;
+    Position.y[eid] = 4000;
+    m.orderFollowFloor(0, eid, true);
+    advance(m, 5);
+    assert.ok(Math.abs(Position.depth[eid]! - (1750 - FOLLOW_FLOOR.CLEARANCE_M)) <= EPS);
+    m.orderMove(0, eid, 2250, 4000);
+    advance(m, 120);
+    assert.ok(Math.abs(Position.x[eid]! - 2250) <= 5, `reached the order, at x ${Position.x[eid]}`);
+    assert.ok(Math.abs(Position.depth[eid]! - (1700 - FOLLOW_FLOOR.CLEARANCE_M)) <= EPS);
+    assert.equal(DepthOrder.follow[eid], 1, 'still following');
+  });
+
   it('is replaced by a manual depth order — the newer instruction wins', () => {
     const m = match(1000);
     const eid = seat(m, 300);

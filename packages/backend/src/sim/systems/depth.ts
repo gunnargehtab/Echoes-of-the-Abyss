@@ -25,7 +25,7 @@
 
 import { defineQuery, hasComponent } from 'bitecs';
 import { crushAttritionPerSecond, DEPTH, FOLLOW_FLOOR } from '@echoes/shared';
-import { DepthOrder, Position, Pressure, SilentRunning } from '../components.ts';
+import { DepthOrder, MoveOrder, Position, Pressure, SilentRunning } from '../components.ts';
 import type { SimWorld } from '../world.ts';
 
 const diving = defineQuery([Position, DepthOrder]);
@@ -96,10 +96,32 @@ export function depthSystem(world: SimWorld): void {
  * deeper than `DEPTH.MAX_M`, the line a depth order stops at.
  */
 function followTheFloor(world: SimWorld, eid: number): void {
+  const terrain = world.terrain;
   const x = Position.x[eid]!;
   const y = Position.y[eid]!;
-  const floor = world.terrain.floorAt(x, y);
-  const ceiling = world.terrain.ceilingAt(x, y);
+  const ceiling = terrain.ceilingAt(x, y);
+  let floor = terrain.floorAt(x, y);
+
+  // Read the ground ahead too (#1193). Movement refuses a step onto ground
+  // shallower than the hull, and terrain only lifts a hull already over such
+  // ground, so a follower holding the clearance in a pit was stopped at its
+  // edge for good — "up for free" never came. Holding the clearance over the
+  // shallower of this cell and the next one toward the order lets it rise
+  // before the edge instead, which is the promise. Only water counts: rock
+  // ahead is ground no clearance fits over, and the router goes round it.
+  if (MoveOrder.active[eid]) {
+    const dx = MoveOrder.x[eid]! - x;
+    const dy = MoveOrder.y[eid]! - y;
+    const distance = Math.hypot(dx, dy);
+    if (distance > 0) {
+      const step = Math.min(terrain.cellM, distance);
+      const ax = x + (dx / distance) * step;
+      const ay = y + (dy / distance) * step;
+      const aheadFloor = terrain.floorAt(ax, ay);
+      if (terrain.ceilingAt(ax, ay) < aheadFloor) floor = Math.min(floor, aheadFloor);
+    }
+  }
+
   // Never deeper than a depth order may go (#1179): the mode follows ground
   // the player could have ordered the hull to, and ground below `DEPTH.MAX_M`
   // is ground no order reaches, so the hull holds there, still following, as
