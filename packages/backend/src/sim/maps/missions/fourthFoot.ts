@@ -27,14 +27,14 @@
  *
  * **What it shares with `fourth-trench`, and what it does not.** Rows 2–8 —
  * the Staging, both walls, the Trench, both lay-bys and the Deep Yard — are
- * `fourthTrench.ts`'s rectangles, biomes and floors to the metre, and the
+ * `fourthTrench.ts`'s shapes, biomes and floors to the metre, and the
  * Margin is that map's base water run a thousand metres further south
  * (docs/mission-baffle.md §11). The last three regions are ground *Baffle*
  * never had a reason to draw: that chart's last 250 m are the head of the Fan
- * here, which is where it ran out of paper rather than out of water (§11). The
- * seat moves too — the spawn is at the mouth here, not at the staging, because
- * the staging is the convoy's muster and the convoy is somebody else's party in
- * this mission.
+ * and the shelf either side of it here, which is where it ran out of paper
+ * rather than out of water (§11). The seat moves too — the spawn is at the
+ * mouth here, not at the staging, because the staging is the convoy's muster
+ * and the convoy is somebody else's party in this mission.
  *
  * A second literal rather than a longer first one, deliberately: `fourth-trench`
  * is a shipped mission's ground, and growing it southward would move *Baffle*'s
@@ -47,12 +47,12 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { MapDefinition, MapRect } from '../types.ts';
+import type { MapDefinition } from '../types.ts';
 
 /** Solid rock, as a region: no depth satisfies ceiling <= D <= floor. */
 const ROCK = { floorM: 0, ceilingM: 1 } as const;
 
-export const FOURTH_FOOT: MapDefinition<MapRect> = {
+export const FOURTH_FOOT: MapDefinition = {
   id: 'fourth-foot',
   name: "The Fourth's Foot",
   idealUse:
@@ -67,14 +67,21 @@ export const FOURTH_FOOT: MapDefinition<MapRect> = {
   // painted after the walls they notch and the Foot after the Fan it stands
   // at the bottom of, which is what carves water back out of rock and the last
   // bench out of the slope — the same order-of-paint argument as everywhere
-  // else. Every rectangle lands on the 250 m cell grid and paints exactly the
-  // metres it reads.
+  // else.
   //
-  // A pocket states a floor and no ceiling, so it keeps the metre of rock the
-  // wall painted over it — `fourth-trench`'s ground exactly, inherited rather
-  // than tidied. It costs nothing here: the shallowest thing this mission
-  // seats is the muster at 1,000 m, and a lay-by admits everything below 1 m.
+  // Drawn in shapes since #1154, with rows 2–8 drawn once for both maps in
+  // #1143: the walls end on a slant to the margin, the Fan spreads from the
+  // yard's mouth, and the Foot is a bench whose northern corners fall to the
+  // Fan. Every number is a whole 250 m cell, and a cell is a region's when its
+  // shape holds the cell's centre (#157). Every hull, structure, emitter,
+  // order, creature and mission region stands on the ground it stood on, and
+  // `missionTheDome.test.ts` pins it.
+  //
+  // A pocket states `ceilingM: 0`, which clears the 1 m rock ceiling the wall
+  // painted over it (#1105) — `fourth-trench`'s ground exactly.
   regions: [
+    // A box because it is the whole map, painted first: `fourth-trench`'s
+    // Margin, a thousand metres taller.
     {
       x: 0,
       y: 0,
@@ -84,6 +91,8 @@ export const FOURTH_FOOT: MapDefinition<MapRect> = {
       floorM: 1450,
       note: "The Margin — the base water. Painted first; everything else is cut into it. Baffle's margin, run a thousand metres south",
     },
+    // Rows 2–8 are `fourthTrench.ts`'s, to the metre; that file says why each
+    // is the shape it is.
     {
       x: 0,
       y: 0,
@@ -94,19 +103,27 @@ export const FOURTH_FOOT: MapDefinition<MapRect> = {
       note: "The Staging — the north mouth: the grid's masked apron, above the layer's duct. The concern's muster, and the reason entering the trench is also a crossing",
     },
     {
-      x: 0,
-      y: 750,
-      widthM: 1250,
-      heightM: 3500,
+      shape: 'polygon',
+      points: [
+        [0, 750],
+        [1250, 750],
+        [1250, 4250],
+        [1000, 4250],
+        [0, 3250],
+      ],
       biome: Biome.OpenWater,
       ...ROCK,
       note: 'The West Wall — solid. The trench is the only road',
     },
     {
-      x: 1750,
-      y: 750,
-      widthM: 1250,
-      heightM: 3500,
+      shape: 'polygon',
+      points: [
+        [1750, 750],
+        [3000, 750],
+        [3000, 3250],
+        [2000, 4250],
+        [1750, 4250],
+      ],
       biome: Biome.OpenWater,
       ...ROCK,
       note: 'The East Wall — solid',
@@ -152,24 +169,41 @@ export const FOURTH_FOOT: MapDefinition<MapRect> = {
       floorM: 1650,
       note: "The Deep Yard — berths, a failing plant, forty-one souls. The concern's, and not the inquiry's. Its floor is the one place a hull is seated on the bottom rather than over it",
     },
+    // A fan, spreading from the yard's mouth to the map's width by its third
+    // row. The corners it leaves at its head stay the margin's shelf at
+    // 1,450 m, which runs on from the walls' feet down both flanks of the yard.
     {
-      x: 0,
-      y: 4750,
-      widthM: 3000,
-      heightM: 1250,
+      shape: 'polygon',
+      points: [
+        [750, 4750],
+        [2250, 4750],
+        [3000, 5250],
+        [3000, 6000],
+        [0, 6000],
+        [0, 5250],
+      ],
       biome: Biome.AbyssalTrench,
       floorM: 2000,
       note: 'The Fan — where the shortcut meets the deep: the trench opens and falls away. The walls have stopped, so this is the first water with no road in it. The Call is sounded here',
     },
+    // A bench whose northern corners fall to the Fan. Its north edge stays on
+    // y 5,250, so the bench comes no nearer the yard's berth than it did.
     {
-      x: 750,
-      y: 5250,
-      widthM: 1500,
-      heightM: 750,
+      shape: 'polygon',
+      points: [
+        [1000, 5250],
+        [2000, 5250],
+        [2250, 5750],
+        [2250, 6000],
+        [750, 6000],
+        [750, 5750],
+      ],
       biome: Biome.AbyssalTrench,
       floorM: 2400,
       note: 'The Foot — the last bench: the dome, the array, and what deep basins hold. Painted over the Fan because it is the bottom of it',
     },
+    // A box because it is built: the cohort's berths, cut square into the
+    // rock.
     {
       x: 2250,
       y: 5000,

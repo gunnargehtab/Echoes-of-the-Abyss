@@ -282,25 +282,45 @@ A corridor map, cut from the ground the Abyssal Rift Corridor archetype is cut f
 ([maps.md](maps.md); [world-map.md](world-map.md)) and authored for one convoy: the shortcut
 runs north–south, the walls are rock, and the only road is the one that carries everything.
 
-| Region | Rect (x, y, w, h) | Biome | Floor / Ceiling | What it is |
+| Region | Shape | Biome | Floor / Ceiling | What it is |
 | --- | --- | --- | --- | --- |
-| The Margin | 0, 0, 3000, 5000 | Open Water | 1,450 | The base water. Painted first; everything else is cut into it |
-| The Staging | 0, 0, 3000, 750 | Thermal Vein | 1,100 | The north mouth — the grid's masked apron, the muster, above the layer's duct |
-| The West Wall | 0, 750, 1250, 3500 | Open Water | rock | Solid. The trench is the only road |
-| The East Wall | 1750, 750, 1250, 3500 | Open Water | rock | Solid |
-| The Trench | 1250, 750, 500, 3500 | Abyssal Trench | 1,700 | The shortcut itself: PF 1.6, no secrets down its length, only distances. Trench paint at Mid-Water depth — biome is acoustics, not band |
-| Lay-by One | 1000, 1750, 250, 250 | Thermal Vein | 1,700 | The first chartered vent pocket, notched into the west wall. The northern station moors here |
-| Lay-by Two | 1750, 3000, 250, 250 | Thermal Vein | 1,700 | The second pocket, east wall. The southern station |
-| The Deep Yard | 750, 4250, 1500, 500 | Open Water | 1,650 | The yard: berths, the failing plant, forty-one souls, **the delivery point** |
+| The Margin | rect 0, 0, 3000, 5000 | Open Water | 1,450 | The base water. Painted first; everything else is cut into it |
+| The Staging | rect 0, 0, 3000, 750 | Thermal Vein | 1,100 | The north mouth — the grid's masked apron, the muster, above the layer's duct |
+| The West Wall | polygon (0, 750) (1250, 750) (1250, 4250) (1000, 4250) (0, 3250) | Open Water | rock | Solid. The trench is the only road. A ridge: its face runs the trench's whole length, and its seaward end runs on a slant back to the map edge |
+| The East Wall | polygon (1750, 750) (3000, 750) (3000, 3250) (2000, 4250) (1750, 4250) | Open Water | rock | Solid. The west wall's mirror image about the trench's axis |
+| The Trench | rect 1250, 750, 500, 3500 | Abyssal Trench | 1,700 | The shortcut itself: PF 1.6, no secrets down its length, only distances. Trench paint at Mid-Water depth — biome is acoustics, not band |
+| Lay-by One | rect 1000, 1750, 250, 250 | Thermal Vein | 1,700 | The first chartered vent pocket, notched into the west wall. The northern station moors here |
+| Lay-by Two | rect 1750, 3000, 250, 250 | Thermal Vein | 1,700 | The second pocket, east wall. The southern station |
+| The Deep Yard | rect 750, 4250, 1500, 500 | Open Water | 1,650 | The yard: berths, the failing plant, forty-one souls, **the delivery point** |
 
 One spawn, at the staging: 1500, 375. **No resources** — a relief writ, not a works order. No
 hazard sites: the corridor's weather is the picket and the pack.
 
-Every rectangle lands on the 250 m cell grid and paints exactly the metres it reads
-([maps.md](maps.md)). The trench floor stops at 1,700 m — Mid-Water's last hundred metres —
-so a PR-2 convoy transits it whole and the crush ledger stays shut until mission 5. The
-staging's 1,100 m floor holds the muster above the layer's duct, so entering the trench is
-also a crossing: the convoy leaves the half of the ocean its own grid can hear.
+Drawn in shapes since issue #1143, a box of #1139. Every number in the table is a whole
+250 m cell, and a cell is its region's when the region's shape holds the cell's centre
+([maps.md](maps.md), "How a map is written"). The two walls are ridges whose seaward ends run
+on a slant from the trench's mouth back to the map edge, so the margin reaches north along both
+flanks of the yard.
+
+Six regions stay boxes, each for a reason. The Margin is the whole map, painted first. The
+Staging's apron runs the whole north edge at 1,100 m, and any cell it gave up would be the
+margin's 1,450 m: water below the layer beside the muster. The Trench is the road, two columns
+from the apron to the yard, and the watches' legs and the pack's drive run in both. A lay-by is
+one cell. The Deep Yard is built, and the mission's `yard-berth` region is this same
+rectangle.
+
+The reshape is new map content, never a balance lever. Twelve of the 240 cells changed, all from
+rock to the margin's open water at 1,450 m: six at the foot of each wall, between y 3,500 and
+4,250. The walls are painted Open Water under their rock, so no cell's PF changed. The new water
+is off the road: a hull at 1,450 m or shallower can reach it from the yard, and nothing deeper
+can. Every spawn, hull, station, emitter, order and creature in this mission and in
+[The Dome](mission-the-dome.md) stands on the ground it stood on in rectangles, and the trench is
+still the only water joining the staging to the south.
+
+The trench floor stops at 1,700 m — Mid-Water's last hundred metres — so a PR-2 convoy
+transits it whole and the crush ledger stays shut until mission 5. The staging's 1,100 m floor
+holds the muster above the layer's duct, so entering the trench is also a crossing: the convoy
+leaves the half of the ocean its own grid can hear.
 
 **The Fourth Trench is a mission map and is not in the public catalogue.** One seat, no
 resources, not balanced, resolved by mission id and nothing else ([maps.md](maps.md)).

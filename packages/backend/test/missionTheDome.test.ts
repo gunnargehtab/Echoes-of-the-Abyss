@@ -108,6 +108,7 @@ import {
   type MissionDefinition,
 } from '../src/sim/missions/index.ts';
 import { Match } from '../src/sim/match.ts';
+import { shapeContains } from '../src/sim/terrain.ts';
 
 const T = (minutes: number, seconds = 0): number => (minutes * 60 + seconds) * SIM.TICK_HZ;
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -304,57 +305,97 @@ function peaceable(runsItsLength: boolean): MissionDefinition {
 describe("the Fourth's Foot, as docs/mission-the-dome.md §11 paints it", () => {
   it("is `fourth-trench`'s chart a thousand metres longer, row for row", () => {
     // §11: "Rows 2–8 of the table below are `fourth-trench`'s regions to the
-    // metre — the same rectangles, biomes and floors — and row 1, the Margin,
-    // is the same rectangle run a thousand metres further south."
+    // metre — the same shapes, biomes and floors — and row 1, the Margin, is
+    // the same rectangle run a thousand metres further south."
     const trimmed = (region: object) => without(region, 'note');
     assert.deepEqual(
       FOURTH_FOOT.regions.slice(1, 8).map(trimmed),
       FOURTH_TRENCH.regions.slice(1, 8).map(trimmed),
       '§11: the Staging, both walls, the Trench, both lay-bys and the Deep Yard, to the metre'
     );
+    // The Margin stays a rectangle in both (#1143, #1154): it is the whole
+    // map, so it is the one region whose frame is the chart's own.
     const margin = FOURTH_FOOT.regions[0]!;
     const baffleMargin = FOURTH_TRENCH.regions[0]!;
-    assert.equal(margin.x, baffleMargin.x);
-    assert.equal(margin.widthM, baffleMargin.widthM);
-    assert.equal(margin.biome, baffleMargin.biome);
-    assert.equal(margin.floorM, baffleMargin.floorM);
+    assert.ok(margin.shape === undefined && baffleMargin.shape === undefined, '§11: rect, both');
+    assert.deepEqual(without(margin, 'note', 'heightM'), without(baffleMargin, 'note', 'heightM'));
     assert.equal(margin.heightM - baffleMargin.heightM, 1000, '§11: a thousand metres south');
     assert.equal(FOURTH_FOOT.heightM - FOURTH_TRENCH.heightM, 1000);
+    // And to the metre on the ground too: the two maps paint every cell north
+    // of the Fan's head alike, the margin's flanks of the yard included.
+    const baffle = terrainFor(FOURTH_TRENCH);
+    for (let y = 125; y < FOURTH_TRENCH.heightM - 250; y += 250) {
+      for (let x = 125; x < FOURTH_TRENCH.widthM; x += 250) {
+        assert.deepEqual(
+          [FOOT.biomeAt(x, y), FOOT.floorAt(x, y), FOOT.ceilingAt(x, y)],
+          [baffle.biomeAt(x, y), baffle.floorAt(x, y), baffle.ceilingAt(x, y)],
+          `the cell at ${x},${y} differs between the two charts`
+        );
+      }
+    }
   });
 
   it('paints the last three regions the Ledger never had a reason to draw', () => {
     const [fan, foot, galleries] = FOURTH_FOOT.regions.slice(8);
     assert.deepEqual(
-      [fan!.x, fan!.y, fan!.widthM, fan!.heightM, fan!.biome, fan!.floorM],
-      [0, 4750, 3000, 1250, Biome.AbyssalTrench, 2000],
+      without(fan!, 'note'),
+      {
+        shape: 'polygon',
+        points: [
+          [750, 4750],
+          [2250, 4750],
+          [3000, 5250],
+          [3000, 6000],
+          [0, 6000],
+          [0, 5250],
+        ],
+        biome: Biome.AbyssalTrench,
+        floorM: 2000,
+      },
       '§11: the Fan — where the shortcut meets the deep'
     );
     assert.deepEqual(
-      [foot!.x, foot!.y, foot!.widthM, foot!.heightM, foot!.biome, foot!.floorM],
-      [750, 5250, 1500, 750, Biome.AbyssalTrench, 2400],
+      without(foot!, 'note'),
+      {
+        shape: 'polygon',
+        points: [
+          [1000, 5250],
+          [2000, 5250],
+          [2250, 5750],
+          [2250, 6000],
+          [750, 6000],
+          [750, 5750],
+        ],
+        biome: Biome.AbyssalTrench,
+        floorM: 2400,
+      },
       '§11: the Foot — the last bench'
     );
     assert.deepEqual(
-      [
-        galleries!.x,
-        galleries!.y,
-        galleries!.widthM,
-        galleries!.heightM,
-        galleries!.biome,
-        galleries!.floorM,
-      ],
-      [2250, 5000, 750, 1000, Biome.CoralRuins, 2900],
+      without(galleries!, 'note'),
+      { x: 2250, y: 5000, widthM: 750, heightM: 1000, biome: Biome.CoralRuins, floorM: 2900 },
       "§11: Tessen's water, cut into the fan's east wall"
     );
     // §11: the head of the Fan is where Baffle's chart ran out of paper. Its
-    // margin's last 250 m and this map's Fan meet at exactly that line.
-    assert.equal(fan!.y, FOURTH_TRENCH.heightM - 250);
+    // margin's last 250 m and this map's Fan meet at exactly that line, and
+    // that row is the Fan's head and the margin's shelf either side of it.
+    assert.ok(fan!.shape === 'polygon');
+    assert.equal(Math.min(...fan!.points.map(([, y]) => y)), FOURTH_TRENCH.heightM - 250);
+    const head = FOURTH_TRENCH.heightM - 125;
+    for (let x = 125; x < FOURTH_FOOT.widthM; x += 250) {
+      const want = x < 500 || x > 2500 ? [Biome.OpenWater, 1450] : [Biome.AbyssalTrench, 2000];
+      assert.deepEqual([FOOT.biomeAt(x, head), FOOT.floorAt(x, head)], want, `x=${x}`);
+    }
   });
 
-  it('lands every rectangle on the cell grid, mines nothing, and seats one spawn at the mouth', () => {
+  it('states every shape in whole cells, mines nothing, and seats one spawn at the mouth', () => {
     for (const region of FOURTH_FOOT.regions) {
-      for (const metres of [region.x, region.y, region.widthM, region.heightM]) {
-        assert.equal(metres % FOURTH_FOOT.cellM, 0, `${region.note}: off the 250 m cell grid`);
+      const metres =
+        region.shape === 'polygon'
+          ? region.points.flat()
+          : [region.x, region.y, region.widthM, region.heightM];
+      for (const value of metres) {
+        assert.equal(value % FOURTH_FOOT.cellM, 0, `${region.note}: off the 250 m cell grid`);
       }
     }
     assert.equal(FOURTH_FOOT.cellM, 250);
@@ -441,6 +482,246 @@ describe("the Fourth's Foot, as docs/mission-the-dome.md §11 paints it", () => 
       0.006,
       '§11: 0.006 a second — for the two seconds in eight the plant is loud'
     );
+  });
+});
+
+describe('the ground the tide stands on — §11, drawn in shapes (#1143, #1154)', () => {
+  // Asked of the cell, never the point: a point inside a polygon can stand in
+  // a cell the polygon does not claim (terrain.ts, `shapeContains`).
+  const cellM = FOURTH_FOOT.cellM;
+  const centre = (m: number) => (Math.floor(m / cellM) + 0.5) * cellM;
+  /** The region that painted the cell under a point: the last whose shape holds its centre. */
+  const regionAt = (x: number, y: number): string => {
+    let name = '';
+    for (const region of FOURTH_FOOT.regions) {
+      if (shapeContains(region, centre(x), centre(y))) name = region.note!.split(' — ')[0]!;
+    }
+    return name;
+  };
+  const groundAt = (x: number, y: number) => [regionAt(x, y), FOOT.floorAt(x, y)];
+  /** Every cell a straight line passes through, sampled every 5 m. */
+  const cellsOn = (a: { x: number; y: number }, b: { x: number; y: number }) => {
+    const n = Math.max(1, Math.ceil(dist(a, b) / 5));
+    const cells = new Map<number, readonly [number, number]>();
+    for (let i = 0; i <= n; i++) {
+      const x = a.x + ((b.x - a.x) * i) / n;
+      const y = a.y + ((b.y - a.y) * i) / n;
+      cells.set(FOOT.cellIndexAt(x, y), [centre(x), centre(y)]);
+    }
+    return [...cells.values()];
+  };
+  const parties = ATTENDING_THE_DOME.parties;
+  const moves = ATTENDING_THE_DOME.beats.flatMap((b) => (b.kind === 'move' ? [b] : []));
+  const creatures = ATTENDING_THE_DOME.beats.flatMap((b) => (b.kind === 'creature' ? [b] : []));
+
+  it('seats every hull, structure and emitter on the ground §11 gives it', () => {
+    // The picket by its role, the array by its, and the convoy — which carries
+    // none — at its muster.
+    const units = parties.flatMap((p) => p.units);
+    assert.equal(units.length, 14, 'the order of battle grew or shrank');
+    for (const unit of units) {
+      const want =
+        unit.role === 'watch'
+          ? ['The Trench', 1700]
+          : unit.role === 'array'
+            ? ['The Foot', 2400]
+            : ['The Staging', 1100];
+      assert.deepEqual(groundAt(unit.x, unit.y), want, unit.tag);
+    }
+    const placed = {
+      dome: ['The Foot', 2400],
+      'baffle-north': ['Lay-by One', 1700],
+      'baffle-south': ['Lay-by Two', 1700],
+      'yard-plant': ['The Deep Yard', 1650],
+    } as const;
+    for (const thing of parties.flatMap((p) => [...(p.structures ?? []), ...(p.emitters ?? [])])) {
+      const want = thing.tag.startsWith('call-') ? ['The Fan', 2000] : placed[thing.tag as 'dome'];
+      assert.deepEqual(groundAt(thing.x, thing.y), want, thing.tag);
+    }
+    const spawn = FOURTH_FOOT.spawns[0]!;
+    assert.deepEqual(
+      groundAt(spawn.x, spawn.y),
+      ['The Trench', 1700],
+      '§11: the spawn, at the mouth'
+    );
+  });
+
+  it('keeps every leg of the convoy on the road, and every creature on its own ground', () => {
+    // A leg is the line from where the hull stood to where it is sent. Every
+    // cell on it is the staging, the trench, a pocket or the yard — or, on a
+    // leg into or out of a pocket, the wall's rock whose corner the straight
+    // line cuts — and the water it is sent to admits the depth it is sent at.
+    const road = new Set([
+      'The Staging',
+      'The Trench',
+      'Lay-by One',
+      'Lay-by Two',
+      'The Deep Yard',
+    ]);
+    const pocket = (p: { x: number; y: number }) => regionAt(p.x, p.y).startsWith('Lay-by');
+    const walls = new Set(['The West Wall', 'The East Wall']);
+    const at = new Map(parties.flatMap((p) => p.units).map((u) => [u.tag, { x: u.x, y: u.y }]));
+    assert.equal(moves.length, 28, 'the convoy is four hulls on seven legs');
+    for (const leg of moves) {
+      const from = at.get(leg.tag)!;
+      const cuts = pocket(from) || pocket(leg);
+      for (const [x, y] of cellsOn(from, leg)) {
+        const region = regionAt(x, y);
+        assert.ok(
+          road.has(region) || (cuts && walls.has(region)),
+          `${leg.tag} at ${leg.atTick} crosses ${region}`
+        );
+      }
+      assert.ok(FOOT.admits(leg.x, leg.y, leg.depthM!), `${leg.tag} at ${leg.atTick}`);
+      at.set(leg.tag, leg);
+    }
+    for (const beat of creatures) {
+      const where = beat.tag === 'the-basin' ? 'The Foot' : 'The Trench';
+      for (const [x, y] of cellsOn(beat.spawnAt!, beat.driveTo)) {
+        assert.equal(regionAt(x, y), where, `${beat.tag} leaves ${where}`);
+      }
+      assert.ok(FOOT.admits(beat.spawnAt!.x, beat.spawnAt!.y, beat.spawnAt!.depthM), beat.tag);
+    }
+  });
+
+  it('counts at the mouth on trench water, every cell of it', () => {
+    const mouth = ATTENDING_THE_DOME.regions.find((r) => r.id === 'the-mouth')!;
+    let cells = 0;
+    for (let y = cellM / 2; y < FOURTH_FOOT.heightM; y += cellM) {
+      for (let x = cellM / 2; x < FOURTH_FOOT.widthM; x += cellM) {
+        if (!shapeContains(mouth, x, y)) continue;
+        cells++;
+        assert.deepEqual(groundAt(x, y), ['The Trench', 1700], `the mouth at ${x},${y}`);
+      }
+    }
+    assert.equal(cells, 4, '§11: the trench’s last half-kilometre above the yard');
+  });
+
+  it('walls the pipe, so the trench is the only road from the staging south', () => {
+    // §1, §11: the trench is a five-hundred-metre pipe. Its two columns have
+    // rock beside them on every row from the staging to the yard, but for the
+    // two pockets, which have rock on their other three sides.
+    const solid = (x: number, y: number) =>
+      [0, 1000, 1600, 1700, 2000, 2400].every((d) => !FOOT.admits(x, y, d));
+    for (let y = 875; y < 4250; y += cellM) {
+      for (const x of [1125, 1875]) {
+        const pocket = (x === 1125 && y === 1875) || (x === 1875 && y === 3125);
+        assert.equal(solid(x, y), !pocket, `the pipe's wall at ${x},${y}`);
+      }
+    }
+    for (const [x, y, out] of [
+      [1125, 1875, 875],
+      [1875, 3125, 2125],
+    ] as const) {
+      for (const [nx, ny] of [
+        [out, y],
+        [x, y - cellM],
+        [x, y + cellM],
+      ] as const) {
+        assert.ok(solid(nx, ny), `the pocket at ${x},${y} opens at ${nx},${ny}`);
+      }
+    }
+    // And at every depth, water reached from the staging without entering the
+    // pipe never leaves the staging's three rows.
+    for (let depth = 0; depth <= 3000; depth += 50) {
+      const seen = new Set<string>();
+      const queue: [number, number][] = [];
+      for (let x = cellM / 2; x < FOURTH_FOOT.widthM; x += cellM) {
+        if (FOOT.admits(x, cellM / 2, depth))
+          (seen.add(`${x},${cellM / 2}`), queue.push([x, cellM / 2]));
+      }
+      while (queue.length > 0) {
+        const [x, y] = queue.shift()!;
+        assert.ok(y < 750, `the staging leaks south at ${x},${y} at ${depth} m`);
+        for (const [nx, ny] of [
+          [x + cellM, y],
+          [x - cellM, y],
+          [x, y + cellM],
+          [x, y - cellM],
+        ] as const) {
+          if (nx < 0 || ny < 0 || nx >= FOURTH_FOOT.widthM || ny >= FOURTH_FOOT.heightM) continue;
+          if (seen.has(`${nx},${ny}`) || regionAt(nx, ny) === 'The Trench') continue;
+          if (!FOOT.admits(nx, ny, depth)) continue;
+          seen.add(`${nx},${ny}`);
+          queue.push([nx, ny]);
+        }
+      }
+    }
+  });
+
+  it("leaves the Fan's shelf corners off every line between two seats or orders", () => {
+    // §11: five cells at the Fan's head are the margin's shelf now, PF 1.0
+    // rather than 1.6, and no straight line between two places this mission
+    // seats or sends anything crosses one.
+    const shelf: string[] = [];
+    for (let y = 4875; y < FOURTH_FOOT.heightM; y += cellM) {
+      for (let x = cellM / 2; x < FOURTH_FOOT.widthM; x += cellM) {
+        if (regionAt(x, y) === 'The Margin') shelf.push(`${x},${y}`);
+      }
+    }
+    assert.deepEqual(shelf, ['125,4875', '375,4875', '2625,4875', '2875,4875', '125,5125']);
+    const places = [
+      ...parties.flatMap((p) => [...p.units, ...(p.structures ?? []), ...(p.emitters ?? [])]),
+      ...moves,
+      ...creatures.flatMap((b) => [b.spawnAt!, b.driveTo]),
+    ];
+    for (const a of places) {
+      for (const b of places) {
+        for (const [x, y] of cellsOn(a, b)) {
+          assert.ok(
+            !shelf.includes(`${x},${y}`),
+            `${a.x},${a.y} to ${b.x},${b.y} crosses the shelf`
+          );
+        }
+      }
+    }
+  });
+
+  it('keeps the bench south of y 5,250, and the array, the dome and the basin in one water', () => {
+    // §11: the Foot's north edge stays on y 5,250, so it comes no nearer the
+    // berth; its northern corners fell to the Fan, and the array at 2,300 m
+    // still reaches every seat on the bench and the basin's. The galleries'
+    // 2,900 m opens off the bench's east side at that depth, as it always did.
+    const array = unitsOf(ATTENDING_THE_DOME, PLAYER).filter((u) => u.role === 'array');
+    const depth = array[0]!.depthM;
+    const key = (x: number, y: number) => `${centre(x)},${centre(y)}`;
+    const start = [centre(array[0]!.x), centre(array[0]!.y)] as const;
+    const seen = new Set([key(...start)]);
+    const queue: (readonly [number, number])[] = [start];
+    while (queue.length > 0) {
+      const [x, y] = queue.shift()!;
+      for (const [nx, ny] of [
+        [x + cellM, y],
+        [x - cellM, y],
+        [x, y + cellM],
+        [x, y - cellM],
+      ] as const) {
+        if (nx < 0 || ny < 0 || nx >= FOURTH_FOOT.widthM || ny >= FOURTH_FOOT.heightM) continue;
+        if (seen.has(key(nx, ny)) || !FOOT.admits(nx, ny, depth)) continue;
+        seen.add(key(nx, ny));
+        queue.push([nx, ny]);
+      }
+    }
+    const basin = creatures.find((b) => b.tag === 'the-basin')!.spawnAt!;
+    const dome = structureByTag(ATTENDING_THE_DOME, 'dome');
+    for (const seat of [...array, dome, basin]) {
+      assert.ok(seen.has(key(seat.x, seat.y)), `${seat.x},${seat.y} is cut off at ${depth} m`);
+    }
+    for (const at of seen) {
+      const [x, y] = at.split(',').map(Number) as [number, number];
+      assert.ok(['The Foot', 'The Freight Galleries'].includes(regionAt(x, y)), at);
+    }
+    // The bench's first row is y 5,250–5,500, and on it the corners fell to
+    // the Fan: columns 4 to 7 are the Foot's, and no row north of it is.
+    const bench: string[] = [];
+    for (let y = cellM / 2; y < FOURTH_FOOT.heightM; y += cellM) {
+      for (let x = cellM / 2; x < FOURTH_FOOT.widthM; x += cellM) {
+        if (regionAt(x, y) !== 'The Foot') continue;
+        assert.ok(y > 5250, `the bench reaches ${x},${y}, nearer the berth`);
+        if (y < 5500) bench.push(`${x}`);
+      }
+    }
+    assert.deepEqual(bench, ['1125', '1375', '1625', '1875'], "the bench's first row");
   });
 });
 
