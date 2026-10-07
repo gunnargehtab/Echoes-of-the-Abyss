@@ -267,7 +267,7 @@ piece of the city the Surface Age built ([world-map.md](world-map.md);
 | --- | --- | --- | --- | --- |
 | The Wall | rect 0, 0, 3000, 2500 | Thermal Vein | 1,350 | Board country's water — the grid's hum, at its deepest and most settled. Painted first. A box because it is the whole map |
 | The Registry | rect 0, 0, 1000, 750 | Thermal Vein | 1,250 | The open arrays and their watch — the ears that make a record a record. A box because it is built: the array floor the open arrays stand on |
-| The Underway | ellipse 1250, 1500, 1500, 750 | Coral Ruins | 1,350 | Asset 002: the Surface Age hull the concern was chartered inside. Occluded, honest, and listening. The hall's long vault, round at both ends, with the rail midway along it |
+| The Underway | ellipse 1250, 1500, 1500, 750 | Coral Ruins | 1,350 | Asset 002: the Surface Age hull the concern was chartered inside. Occluded, honest, and listening. The old hull's long hall, round at both ends, with the rail midway along it |
 
 One spawn, at the rail: 2000, 1900. **No resources, no hazards.** The whole map sits in the
 thermocline's duct and just beneath it — Board country's actual address — so the chamber's

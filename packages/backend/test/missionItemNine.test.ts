@@ -98,6 +98,12 @@ describe('the ground the sitting stands on — §11, drawn in shapes (#1147)', (
     x: ((i % (map.widthM / cellM)) + 0.5) * cellM,
     y: (Math.floor(i / (map.widthM / cellM)) + 0.5) * cellM,
   }));
+  // §11: the frame is a cell longer at each end than the box it was, which
+  // was 1500, 1500, 1000, 750 until #1147. `added` is the cells it took.
+  const box = { x: 1500, y: 1500, widthM: 1000, heightM: 750 };
+  const underway = map.regions.find((region) => region.note!.startsWith('The Underway'))!;
+  const painted = cells.filter(({ x, y }) => shapeContains(underway, x, y));
+  const added = painted.filter(({ x, y }) => !shapeContains(box, x, y));
 
   it('stands every authored point on the ground §11 names for it', () => {
     // Read off the literal, so a point itemNine.ts moves is asked of the
@@ -144,12 +150,6 @@ describe('the ground the sitting stands on — §11, drawn in shapes (#1147)', (
   });
 
   it('holds every cell the box held, and adds one at each end of the middle row', () => {
-    // §11: the frame is a cell longer at each end than the box it was, which
-    // was 1500, 1500, 1000, 750 until #1147.
-    const box = { x: 1500, y: 1500, widthM: 1000, heightM: 750 };
-    const underway = map.regions.find((region) => region.note!.startsWith('The Underway'))!;
-    const painted = cells.filter(({ x, y }) => shapeContains(underway, x, y));
-    const added = painted.filter(({ x, y }) => !shapeContains(box, x, y));
     assert.equal(painted.length - added.length, 12, 'a cell of the box fell out of the hall');
     assert.deepEqual(added, [
       { x: 1375, y: 1875 },
@@ -161,7 +161,8 @@ describe('the ground the sitting stands on — §11, drawn in shapes (#1147)', (
   it('carries the flight to the items through ruin water, and to the watch from ruin into vein', () => {
     // §4: the decision's path. Every 10 m of every line from the flight's
     // hulls to the items and the watch, read as the run of biomes it crosses.
-    // The items sound in the hall; the watch listens from the arrays.
+    // The items sound in the hall; the watch listens from the arrays. No
+    // sample stands in a cell the reshape added, as §11 states.
     const others = LEDGER_ITEM_NINE.parties
       .filter((party) => party !== flight)
       .flatMap((party) => [
@@ -174,10 +175,15 @@ describe('the ground the sitting stands on — §11, drawn in shapes (#1147)', (
         const n = Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / 10);
         const run: Biome[] = [];
         for (let i = 0; i <= n; i++) {
-          const biome = ground.biomeAt(
-            from.x + ((to.x - from.x) * i) / n,
-            from.y + ((to.y - from.y) * i) / n
+          const x = from.x + ((to.x - from.x) * i) / n;
+          const y = from.y + ((to.y - from.y) * i) / n;
+          const cx = (Math.floor(x / cellM) + 0.5) * cellM;
+          const cy = (Math.floor(y / cellM) + 0.5) * cellM;
+          assert.ok(
+            !added.some((cell) => cell.x === cx && cell.y === cy),
+            `${from.tag} to ${to.tag} crosses the added cell at ${cx},${cy}`
           );
+          const biome = ground.biomeAt(x, y);
           if (run[run.length - 1] !== biome) run.push(biome);
         }
         assert.deepEqual(run, to.run, `${from.tag} to ${to.tag}`);

@@ -52,7 +52,7 @@ export const HOLDING_BOARD: MapDefinition = {
       floorM: 1250,
       note: 'The Registry — the open arrays and their watch: the ears that make a record a record',
     },
-    // The hall's long vault, round at both ends, with the rail midway along it.
+    // The old hull's long hall, round at both ends, with the rail midway along it.
     // Its frame is a cell longer at each end than the box it was, and holds
     // every cell centre the box held: the two it adds, at either end of its
     // middle row, were the Wall's Thermal Vein on the same floor, and no line
