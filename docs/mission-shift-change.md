@@ -321,9 +321,9 @@ the Rift; the mission is a working field below and a rail above, and the climb b
 | The Field | rect 0, 0, 4000, 3000 | Thermal Vein | 1,100 | The Vein's masked working ground. Painted first; everything else is cut into it |
 | The Rail Head | rect 1500, 0, 1000, 500 | Thermal Vein | 850 | The Fivewell rail transfer — berths, registry office, **the transfer point**. Above the layer. A box because it is built, and the berths the watches are counted in (§8) are this same rectangle |
 | The High Road | rect 0, 500, 4000, 500 | Thermal Vein | 950 | The audit's ground: the freight road along the workings' shoulder, above the layer, where the pair walks and listens. A box because it is a graded road, and both passes walk its whole length |
-| The Downworks | ellipse 0, 1250, 4000, 1000 | Thermal Vein | 1,300 | The working level below the layer — the refinery, the roads between faces, and the pack. A basin: its ends rise back to the Field, and it dips south between the faces |
+| The Downworks | polygon (0, 1500) (750, 1500) (1000, 1250) (3000, 1250) (3250, 1500) (4000, 1500) (4000, 2000) (0, 2000) | Thermal Vein | 1,300 | The working level below the layer — the refinery, the roads between faces, and the pack. A basin: its north edge draws back at both ends, and its south edge runs straight along the heads of the faces |
 | Face Two | polygon (250, 2000) (1250, 2000) (1250, 2500) (750, 2750) (500, 2500) | Thermal Vein | 1,350 | The dying face: the muster, the last seam, and the thin field. An old cut, worked down the slope past the last seam |
-| Face Five | ellipse 2500, 2000, 1250, 750 | Thermal Vein | 1,350 | The producing face the quota leans on: the rich field. A fresh, round working opening off the Downworks' dip |
+| Face Five | ellipse 2500, 2000, 1250, 750 | Thermal Vein | 1,350 | The producing face the quota leans on: the rich field. A fresh, round working opening off the Downworks' south edge |
 
 One spawn, at Face Two's muster: 875, 2250. **Two nodule fields** — thin at Face Two, rich at
 Face Five, because a dying face still reports and a shift makes its number where the number
@@ -334,10 +334,13 @@ audit.
 Every number a shape states is a whole 250 m cell, and a cell is its region's when the shape
 holds its centre ([maps.md](maps.md), "How a map is written"). The regions were rectangles
 until issue #1142 redrew the Downworks and both faces in shapes (epic #1139). The redraw moved
-20 of the map's 192 cells and none that anything stands on: the muster, both fields, every
+14 of the map's 192 cells and none that anything stands on: the muster, both fields, every
 hull, the refinery, the pack, the Rail Head's berths and every point of the audit's plan stand
-on the ground they stood on before. The Downworks' northern rim stays out of the shoulder between it
-and the road, so the climb is as long as it was.
+on the ground they stood on before. The Downworks' northern rim stays out of the shoulder
+between it and the road, so the climb is as long as it was. Its south edge is the rectangle's:
+an ellipse there dipped into the Field between the faces and changed how the Draymaw packs
+reach the muster, so the dip came back out (#1171). Played with no input, every hull and
+creature of the shift walks the track it walked on the rectangles, to the whistle.
 
 The layer at 1,200 m is not authored — it is on every map — but this map is *placed* against
 it deliberately: floors above it north of the workings, floors below it south, and no region

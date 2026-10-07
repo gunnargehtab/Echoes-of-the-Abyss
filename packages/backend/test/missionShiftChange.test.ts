@@ -26,7 +26,9 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
+import { defineQuery, hasComponent } from 'bitecs';
 import {
+  Biome,
   MissionOutcome,
   ObjectiveStatus,
   ResolutionTier,
@@ -35,8 +37,10 @@ import {
   thermoclineFactor,
   type EchoSnapshot,
 } from '@echoes/shared';
+import { Fauna, Health, Position } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
+import type { MapDefinition, MapRect } from '../src/sim/maps/types.ts';
 import { LEDGER_SHIFT_CHANGE, PROLOGUE_SORROWGATE } from '../src/sim/missions/index.ts';
 import { MissionRuntime, type MissionCommandSink } from '../src/sim/missions/runtime.ts';
 import { Terrain, shapeContains } from '../src/sim/terrain.ts';
@@ -352,11 +356,25 @@ describe('the ground the shift stands on — §11, drawn in shapes (#1142)', () 
   });
 
   it('keeps the shoulder between the road and the working level, so the climb is as long', () => {
-    // §1: everything that matters happens in the climb. The Downworks' rim
-    // rounds off the basin's ends and never enters the Field's row under the
-    // road, so no column of the map shortens it.
+    // §1: everything that matters happens in the climb. The Downworks' north
+    // edge draws back at the basin's ends and never enters the Field's row
+    // under the road, so no column of the map shortens it.
     for (let x = map.cellM / 2; x < map.widthM; x += map.cellM) {
       assert.deepEqual(groundAt(x, 1125), ['The Field', 1100], `the shoulder is cut at x=${x}`);
+    }
+  });
+
+  it("keeps the working level's south edge on the rectangle's, with no dip between the faces", () => {
+    // #1171: an ellipse here dipped into the Field's row below the Downworks
+    // and changed how the packs reach the muster. That row is the Field's or a
+    // face's, as it was when these were rectangles, in every column.
+    for (let x = map.cellM / 2; x < map.widthM; x += map.cellM) {
+      const [ground] = groundAt(x, 2125);
+      assert.ok(
+        ground === 'The Field' || ground === 'Face Two' || ground === 'Face Five',
+        `the Downworks dips into ${x},2125`
+      );
+      assert.deepEqual(groundAt(x, 1875), ['The Downworks', 1300], `the row above ${x},2125`);
     }
   });
 
@@ -390,6 +408,71 @@ describe('the ground the shift stands on — §11, drawn in shapes (#1142)', () 
       const [x, y] = at.split(',').map(Number) as [number, number];
       assert.ok(terrain.floorAt(x, y) > 1200, `the working level climbs past the layer at ${at}`);
     }
+  });
+});
+
+describe('the packs come the way they came — §11, the dip taken out (#1171)', () => {
+  // The regions as f9d064c4 drew them, before #1142 redrew three in shapes:
+  // written out rather than read from the literal, so the reference cannot
+  // move with the map it checks.
+  const RECTANGLES: MapRect[] = [
+    { x: 0, y: 0, widthM: 4000, heightM: 3000, floorM: 1100, note: 'The Field' },
+    { x: 1500, y: 0, widthM: 1000, heightM: 500, floorM: 850, note: 'The Rail Head' },
+    { x: 0, y: 500, widthM: 4000, heightM: 500, floorM: 950, note: 'The High Road' },
+    { x: 0, y: 1250, widthM: 4000, heightM: 750, floorM: 1300, note: 'The Downworks' },
+    { x: 500, y: 2000, widthM: 750, heightM: 500, floorM: 1350, note: 'Face Two' },
+    { x: 2750, y: 2000, widthM: 750, heightM: 500, floorM: 1350, note: 'Face Five' },
+  ].map((region) => ({ ...region, biome: Biome.ThermalVein }));
+  const map = missionMapById(LEDGER_SHIFT_CHANGE.mapId)!;
+  const positioned = defineQuery([Position]);
+
+  /**
+   * An idle shift, played to the whistle: every positioned entity every 5 s,
+   * with its hit points, and every line the mission speaks. Keyed by eid less
+   * the run's smallest, because bitecs numbers entities across worlds, so the
+   * second run's eids start where the first run's stopped.
+   */
+  function play(on: MapDefinition) {
+    const match = new Match(on, { mission: LEDGER_SHIFT_CHANGE, fauna: false, seed: 77 });
+    const tracks: string[][] = [];
+    const lines: string[] = [];
+    let base = -1;
+    for (let tick = 0; tick <= T(16, 30) && match.missionOver === null; tick++) {
+      match.update(STEP_MS);
+      match.takeMissionView();
+      for (const line of match.takeMissionLines()) lines.push(`${tick} ${line.text}`);
+      if (tick % (5 * SIM.TICK_HZ) !== 0) continue;
+      const eids = [...positioned(match.world)].sort((a, b) => a - b);
+      if (base < 0) base = eids[0]!;
+      tracks.push(
+        eids.map((e) => {
+          const what = hasComponent(match.world, Fauna, e) ? 'creature' : 'other';
+          const at = `${Position.x[e]},${Position.y[e]}@${Position.depth[e]}`;
+          return `${e - base} ${what} ${at} hp ${Health.hp[e]}`;
+        })
+      );
+    }
+    return { tracks, lines, over: match.missionOver };
+  }
+
+  it('walks every hull and creature of an idle shift on the tracks the rectangles gave it', () => {
+    // §11: the Downworks' ellipse dipped south between the faces, and the
+    // Draymaw packs, driven at 00:00, came to the muster across the dip and
+    // killed a different hull first. The packs leave at about 90 s; played to
+    // the whistle, every 5 s, so a shape that moves anything is caught here.
+    const before = play({ ...map, regions: RECTANGLES });
+    const after = play(map);
+    assert.ok(
+      before.tracks.some((sample) => sample.some((entity) => entity.includes(' creature '))),
+      'the pack never took the field, so the tracks prove nothing about it'
+    );
+    assert.ok(after.over !== null, 'the whistle never blew');
+    assert.equal(after.tracks.length, before.tracks.length, 'the shift ran a different length');
+    for (let i = 0; i < before.tracks.length; i++) {
+      assert.deepEqual(after.tracks[i], before.tracks[i], `the tracks part at ${i * 5}s`);
+    }
+    assert.deepEqual(after.lines, before.lines, 'the mission spoke differently');
+    assert.deepEqual(after.over, before.over, 'the shift closed differently');
   });
 });
 
