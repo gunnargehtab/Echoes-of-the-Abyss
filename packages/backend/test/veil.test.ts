@@ -143,9 +143,9 @@ describe('a Spore Veil blinds what is inside it, and lends nothing', () => {
   });
 
   it('muffles a Rasp feeding inside it, at its feeding figure', () => {
-    // The feeding write is the third place a creature's SIG is set, and the
-    // swarm's own noise stands in for the residue it eats (docs/bestiary.md
-    // §4) — through the cloud's cut like the rest.
+    // The feeding write sets a creature's SIG too, and the swarm's own noise
+    // stands in for the residue it eats (docs/bestiary.md §4) — through the
+    // cloud's cut like the rest.
     const { SIG_FACTOR } = STRUCTURE_AURAS.SPORE_VEIL;
     const feeding = (veiled: boolean): number => {
       const match = emptyMatch(47);
