@@ -177,10 +177,6 @@ describe('faction combat kits', () => {
       seekerHydFor(Faction.Directorate) > seekerHydFor(Faction.Bathyarch),
       'the Directorate seeker should be the sharper one'
     );
-    assert.ok(
-      seekerHydFor(Faction.Directorate) < 90,
-      'and must stay under the broadphase ceiling the Echo pass trusts'
-    );
 
     const acquires = (faction: Faction): boolean => {
       const match = emptyMatch(faction, Faction.Pelagia, 77);
