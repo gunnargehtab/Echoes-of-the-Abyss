@@ -3647,6 +3647,40 @@ describe('renderer smoke test: the free camera', () => {
     }
   });
 
+  /**
+   * A roof's sides stand on cell edges, so a click on one lands on the edge
+   * itself, and the cell grid's floor puts some of those clicks in the water
+   * across it, whose ceiling is the surface. Whichever side the arithmetic
+   * falls, the click is on the roof and means the water under it (§9).
+   */
+  it('reads a click on a roof wall as the water under that roof', async () => {
+    const world = await boot();
+    try {
+      world.frame(3);
+      world.conn.home();
+      // The canned passage covers rows 5–6 and columns 12–13 under a 1,600 m
+      // ceiling. Its south wall stands on y 1,750 m over water deeper than
+      // that ceiling, so it is a lintel, and it faces the home camera.
+      world.conn.focusWorld(3250, 2250);
+      for (const x of [3030, 3100, 3170, 3240, 3310, 3380, 3450]) {
+        const face = world.conn.projectPoint(x, 1750, 1560);
+        assert.ok(face.visible, `the lintel at x ${x} is on screen`);
+        const click = world.conn.resolveWater(face.x, face.y);
+        assert.ok(
+          Math.abs(click.y - 1750) < 1,
+          `the premise: the click at x ${x} hit the wall, not y ${click.y.toFixed(1)}`
+        );
+        assert.equal(
+          click.depthM,
+          1600,
+          `a click on the lintel at x ${x} ordered ${click.depthM} m`
+        );
+      }
+    } finally {
+      world.teardown();
+    }
+  });
+
   it('lets the focus leave the seabed, and keeps it in water', async () => {
     const world = await boot();
     try {
