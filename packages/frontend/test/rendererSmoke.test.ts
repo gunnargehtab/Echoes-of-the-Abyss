@@ -2460,6 +2460,23 @@ describe('renderer smoke test: input and teardown', () => {
       const rise = textSaying(world.app.stage, 'RISE');
       assert.ok(rise !== null, 'no climb preview in open water');
       assert.match(rise, /^RISE \d+s$/, `the preview read ${rise}`);
+
+      // A metre above the Corvette's own depth: a climb inside the arrival
+      // epsilon, which the depth system snaps to at once, so the move has no
+      // vertical part to price, and the readout says so rather than `RISE 0s`.
+      world.conn.raiseFocusBy(world.conn.focusDepth() - (corvette.depth - 1));
+      const own = world.conn.projectPoint(2000, 2000, world.conn.focusDepth());
+      hover(own.x, own.y);
+      const level = textSaying(world.app.stage, 'LEVEL');
+      assert.equal(level, 'LEVEL', `the preview at the hull's own depth read ${level}`);
+
+      // And a metre below it is a dive, however small: a deeper depth order
+      // breaks Silent Running, and `LEVEL` must never hide that.
+      world.conn.raiseFocusBy(-2);
+      const below = world.conn.projectPoint(2000, 2000, world.conn.focusDepth());
+      hover(below.x, below.y);
+      const deeper = textSaying(world.app.stage, 'DIVE');
+      assert.match(deeper ?? '', /^DIVE \d+ SIG$/, `a metre below the hull read ${deeper}`);
     } finally {
       world.teardown();
     }

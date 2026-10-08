@@ -455,13 +455,16 @@ chevron on the ribbon's right edge in the plain text ink: a camera reading, so n
 marker nor the cyan of a rule about the water. Holding `Alt` previews the click under the
 cursor: its depth, marked on the ribbon, and what getting there costs — `DIVE 72 SIG`, with
 `· CRUSH` when an open-water depth is below the selection's rating, or the climb's seconds for
-a rise, and `FLOOR` when the click is on the ground and will follow it. Over a floor below a
-selected hull's rating it adds `· PR EDGE`: following stops where the ground falls past the
-rating rather than crushing ([systems-depth.md](systems-depth.md) §2), so the mark is a depth
-that hull will not reach. The duct is one more depth the focus can be put at, which is how a
-player buys its 1.2× range now that no Dive rung stands there for them (#1132). The readout
-names the selection's own zone when it is somewhere other than the default: `DUCT` inside the
-layer, `UNDER` below it.
+a rise, or `LEVEL` when the click's depth is the lead hull's own or no more than 2 m above it,
+which a depth order reaches at once (any deeper reads as a dive, because a deeper depth order
+breaks Silent Running); and `FLOOR` when the click is on the ground and will follow it. The
+first word prices the mark against the lead hull's depth, not the way there, so `FLOOR` marks a
+path it does not price. Over a floor below a selected hull's rating the readout adds
+`· PR EDGE`: following stops where the ground falls past the rating rather than crushing
+([systems-depth.md](systems-depth.md) §2), so the mark is a depth that hull will not reach. The
+duct is one more depth the focus can be put at, which is how a player buys its 1.2× range now
+that no Dive rung stands there for them (#1132). The readout names the selection's own zone
+when it is somewhere other than the default: `DUCT` inside the layer, `UNDER` below it.
 
 The duct is a fixed 6.67% of the strip, so on a short window it collapses to a few pixels; below
 that it is drawn as its centre line alone rather than as a smear pretending to have width.
