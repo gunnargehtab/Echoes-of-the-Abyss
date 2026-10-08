@@ -2199,10 +2199,11 @@ export const PROPAGATION_MODEL = {
   /**
    * Ceiling used to size broadphase queries conservatively (#1222). 100 is the
    * top of the 0–100 domain the Echo pass's per-HYD tables are indexed over,
-   * and the pass clamps every listener's HYD to it, so a square sized at 100
-   * covers every HYD the pass can represent. The roster's best ears and the
-   * Cantor and Precentor dome caps reach 95; a Resonance Storm lifts some
-   * Hadron hulls past 100, which the pass hears at 100 (#1240). Not a
+   * and contact resolution clamps every listener's HYD to it, so a square
+   * sized at 100 covers every HYD the pair loop uses. The roster's best ears
+   * and the Cantor and Precentor dome caps reach 95; a Resonance Storm lifts
+   * some Hadron hulls past 100, whose contacts the pass resolves at 100
+   * (#1240). Not a
    * detection rule: a listener's true range is the radius times
    * `(hyd / ceiling)^(1/exponent)`, so the ceiling cancels out of every pair's
    * answer.

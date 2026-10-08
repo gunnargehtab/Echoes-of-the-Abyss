@@ -214,17 +214,19 @@ describe('echo pass', () => {
    * its range wherever the cells fell short.
    *
    * The geometry is chosen so they do fall short. The listener sits on the
-   * west and south edges of its hash cell, and idle Corvettes stand due west
-   * and due south of it from inside the HYD-90 radius (3,841 m at SIG 28) to
-   * past the HYD-95 range (3,973 m). A Corvette between the two is heard by the
-   * rules, and a query square sized for HYD 90 ends short of the listener's
-   * cell; the pass must resolve the lines as the all-pairs reference does.
+   * west edge of its hash cell, and idle Corvettes stand due west of it from
+   * inside the HYD-90 radius (3,841 m at SIG 28) to past the HYD-95 range
+   * (3,973 m). A Corvette between the two is heard by the rules, and a query
+   * square sized for HYD 90 ends short of the listener's cell; the pass must
+   * resolve the line as the all-pairs reference does. West, because a line due
+   * south ends among slot 1's own base, which hears it whatever the Precentor
+   * does.
    */
   it('and at the edge of the best ears in the game, HYD 95', () => {
     const ceiling = PROPAGATION_MODEL.MAX_EXPECTED_HYD;
     // Rated HYD, moving and stationary, and the dome cap. A Resonance Storm
-    // lifts some Hadron hulls past this ceiling; the pass hears them at it, a
-    // separate fault (#1240).
+    // lifts some Hadron hulls past this ceiling; the pass resolves their
+    // contacts at it, a separate fault (#1240).
     for (const stats of Object.values(UNIT_STATS)) {
       const rated = Math.max(stats.hyd, stats.hydStationary ?? 0);
       assert.ok(rated <= ceiling, `${UnitKind[stats.kind]}'s rated HYD is above the ceiling`);
@@ -247,23 +249,18 @@ describe('echo pass', () => {
       depth: 600,
     });
     assert.equal(6000 % SIM.SPATIAL_CELL_M, 0, 'the premise: the listener is on a cell edge');
-    const ring: number[] = [];
+    const line: number[] = [];
     for (const distance of [3800, 3860, 3900, 3940, 3960, 4000, 4040]) {
-      for (const [dx, dy] of [
-        [-1, 0],
-        [0, -1],
-      ] as const) {
-        ring.push(
-          spawnUnit(match.world, {
-            kind: UnitKind.Corvette,
-            slot: 0,
-            faction: Faction.Bathyarch,
-            x: 6000 + dx * distance,
-            y: 6000 + dy * distance,
-            depth: 600,
-          })
-        );
-      }
+      line.push(
+        spawnUnit(match.world, {
+          kind: UnitKind.Corvette,
+          slot: 0,
+          faction: Faction.Bathyarch,
+          x: 6000 - distance,
+          y: 6000,
+          depth: 600,
+        })
+      );
     }
     for (let i = 0; i < 120; i++) match.update(1000 / SIM.TICK_HZ);
     assert.equal(Acoustic.hyd[ear], 95, 'the premise: the listener hears at HYD 95');
@@ -274,10 +271,10 @@ describe('echo pass', () => {
     for (const contact of actual.contactsBySlot.get(1) ?? []) {
       got.set(`1:${match.echo.entityForHandle(1, contact.id)}`, contact.tier);
     }
-    const heard = ring.filter((eid) => expected.has(`1:${eid}`)).length;
+    const heard = line.filter((eid) => expected.has(`1:${eid}`)).length;
     assert.ok(
-      heard > 0 && heard < ring.length,
-      `the premise: the lines straddle the edge, ${heard} of ${ring.length} heard`
+      heard > 0 && heard < line.length,
+      `the premise: the line straddles the edge, ${heard} of ${line.length} heard`
     );
     assert.deepEqual([...got.entries()].sort(), [...expected.entries()].sort());
   });
