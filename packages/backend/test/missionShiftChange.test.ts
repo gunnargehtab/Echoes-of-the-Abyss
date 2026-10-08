@@ -29,15 +29,27 @@ import assert from 'node:assert/strict';
 import { defineQuery, hasComponent } from 'bitecs';
 import {
   Biome,
+  HarvestThrottle,
   MissionOutcome,
   ObjectiveStatus,
   ResolutionTier,
   SIM,
+  StructureKind,
   detectionRatio,
   thermoclineFactor,
   type EchoSnapshot,
 } from '@echoes/shared';
-import { Fauna, Health, Position } from '../src/sim/components.ts';
+import {
+  Fauna,
+  Harvester,
+  HarvestMode,
+  Health,
+  Owner,
+  Position,
+  ResourceNode,
+  Structure,
+  Unit,
+} from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import type { MapDefinition, MapRect } from '../src/sim/maps/types.ts';
@@ -457,9 +469,10 @@ describe('the packs come the way they came — §11, the dip taken out (#1171)',
 
   it('walks every hull and creature of an idle shift on the tracks the rectangles gave it', () => {
     // §11: the Downworks' ellipse dipped south between the faces, and the
-    // Draymaw packs, driven at 00:00, came to the muster across the dip and
-    // killed a different hull first. Two of the packs leave at about 85 s; played to
-    // the whistle, every 5 s, so a shape that moves anything is caught here.
+    // Draymaw packs, then driven to rest by the refinery, came to the muster
+    // across the dip and killed a different hull first. They rest at the
+    // Downworks' east end now (#1265); played to the whistle, every 5 s, so a
+    // shape that moves anything is still caught here.
     const before = play({ ...map, regions: RECTANGLES });
     const after = play(map);
     assert.ok(
@@ -498,5 +511,70 @@ describe('the shift, run out — docs/mission-shift-change.md §8, §9', () => {
     assert.match(result.epilogue, /The shortfall is entered\./);
     assert.match(result.epilogue, /The berthing lists are short\./);
     assert.doesNotMatch(result.epilogue, /audit's minute/);
+  });
+});
+
+describe('the pack, at rest — docs/mission-shift-change.md §7 (#1265)', () => {
+  /**
+   * One shift to the whistle, idle or with every harvester the watches have
+   * released sent to its nearest field at Standard; then the refinery, the
+   * player's hulls alive, what was banked, and on how many passes the
+   * player's hulls heard the pack at all. Driven to rest beside the refinery,
+   * the pack took it at 01:20 in every run, idle or working.
+   */
+  function shift(working: boolean) {
+    const map = missionMapById(LEDGER_SHIFT_CHANGE.mapId)!;
+    const match = new Match(map, { mission: LEDGER_SHIFT_CHANGE, fauna: false, seed: 41 });
+    const world = match.world;
+    const slot = LEDGER_SHIFT_CHANGE.playerSlot;
+    const refinery = defineQuery([Structure, Owner, Health])(world).find(
+      (eid) => Structure.kind[eid] === StructureKind.Refinery && Owner.slot[eid] === slot
+    )!;
+    const full = Health.hp[refinery]!;
+    const nodes = defineQuery([ResourceNode, Position])(world);
+    let heard = 0;
+    for (let tick = 0; tick <= T(16, 30) && match.missionOver === null; tick++) {
+      const own = match.update(STEP_MS)?.get(slot);
+      match.takeMissionView();
+      if (working && tick % (10 * SIM.TICK_HZ) === 0) {
+        for (const eid of defineQuery([Harvester, Owner, Health])(world)) {
+          if (Owner.slot[eid] !== slot || Harvester.mode[eid] !== HarvestMode.Idle) continue;
+          const away = (node: number) =>
+            Math.hypot(Position.x[node]! - Position.x[eid]!, Position.y[node]! - Position.y[eid]!);
+          const node = [...nodes].sort((a, b) => away(a) - away(b))[0];
+          if (node === undefined) continue;
+          match.orderHarvest(slot, eid, node);
+          match.setThrottle(slot, eid, HarvestThrottle.Standard);
+        }
+      }
+      const pack = (own?.contacts ?? []).some((contact) => {
+        const eid = match.echo.entityForHandle(slot, contact.id);
+        return eid !== undefined && hasComponent(world, Fauna, eid);
+      });
+      if (pack) heard++;
+    }
+    const hulls = defineQuery([Unit, Owner, Health])(world).filter(
+      (eid) => Owner.slot[eid] === slot
+    );
+    return {
+      refinery: Health.hp[refinery]! / full,
+      lost: hulls.filter((eid) => Health.hp[eid]! <= 0).length,
+      banked: world.economies.get(slot)?.nodules ?? 0,
+      heard,
+    };
+  }
+
+  it('commits to nothing in an idle shift, and is still there to be heard', () => {
+    const idle = shift(false);
+    assert.equal(idle.refinery, 1, 'the pack took the refinery');
+    assert.equal(idle.lost, 0, 'the pack took a hull');
+    assert.ok(idle.heard > 0, '§7: present, audible at the edge of hearing — it was never heard');
+  });
+
+  it('nor in a shift that works every field at Standard', () => {
+    const worked = shift(true);
+    assert.ok(worked.banked > 0, 'the premise: the shift banked something');
+    assert.equal(worked.refinery, 1, 'the pack took the refinery from a working field');
+    assert.equal(worked.lost, 0, 'the pack took a hull from a working field');
   });
 });
