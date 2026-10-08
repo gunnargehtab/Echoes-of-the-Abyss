@@ -399,6 +399,14 @@ function groundPlaneT(originY: number, directionY: number, groundY: number): num
 /** Far enough to leave any map, near enough to stay in single precision. */
 const HORIZON_T = 1e6;
 
+/**
+ * How far inside its own cell a click on a roof wall is drawn, metres. Not a
+ * tuning number: a wall stands on the edge between two cells, and a point
+ * exactly on it floors into whichever the arithmetic picks. A centimetre is
+ * far enough to settle it and too small for anything to see.
+ */
+const ROOF_INSET_M = 0.01;
+
 interface EntityHandle {
   mesh: Mesh;
   /** Its slot in the batched depth cues — the plumb line and ground shadow
@@ -1234,10 +1242,20 @@ export class PerspectiveView {
     const row = Math.min(terrain.rows - 1, Math.max(0, Math.floor(z / terrain.cellM)));
     let cell = row * terrain.cols + col;
     // A roof's sides stand on cell edges, so a hit on one floors into the water
-    // across the edge as often as into the roof's own cell, and that water's
-    // ceiling is the surface: read there, a click on a lintel ordered the hull
-    // up to `DEPTH.MIN_M`. The roof that was hit answers for its own water.
-    if (ground === 'roof' && hit !== undefined) cell = this.roofCellNear(hit.object, x, z, cell);
+    // across the edge as often as into the roof's own cell. That water is not
+    // what was pointed at: its ceiling is the surface, and its floor is not
+    // the passage's, so read there a click on a lintel ordered the hull up to
+    // `DEPTH.MIN_M`, and the server's follow test judged the wrong floor. The
+    // roof that was hit answers for the whole order: its cell gives the depth,
+    // and the point is drawn just inside that cell, so the server, the station
+    // it holds on arrival and the Alt preview all read the same water (§9).
+    if (ground === 'roof' && hit !== undefined) {
+      cell = this.roofCellNear(hit.object, x, z, cell);
+      const x0 = (cell % terrain.cols) * terrain.cellM;
+      const z0 = Math.floor(cell / terrain.cols) * terrain.cellM;
+      x = Math.min(x0 + terrain.cellM - ROOF_INSET_M, Math.max(x0 + ROOF_INSET_M, x));
+      z = Math.min(z0 + terrain.cellM - ROOF_INSET_M, Math.max(z0 + ROOF_INSET_M, z));
+    }
     const deepest = Math.min(terrain.floor[cell]!, DEPTH.MAX_M);
     const shallowest = Math.max(DEPTH.MIN_M, terrain.ceiling[cell]!);
     // Solid rock has no water between the two, and the floor is the answer:

@@ -3651,7 +3651,9 @@ describe('renderer smoke test: the free camera', () => {
    * A roof's sides stand on cell edges, so a click on one lands on the edge
    * itself, and the cell grid's floor puts some of those clicks in the water
    * across it, whose ceiling is the surface. Whichever side the arithmetic
-   * falls, the click is on the roof and means the water under it (§9).
+   * falls, the click is on the roof and means the water under it (§9): the
+   * depth, and the point too, which the server's follow test reads the floor
+   * under.
    */
   it('reads a click on a roof wall as the water under that roof', async () => {
     const world = await boot();
@@ -3674,6 +3676,11 @@ describe('renderer smoke test: the free camera', () => {
           click.depthM,
           1600,
           `a click on the lintel at x ${x} ordered ${click.depthM} m`
+        );
+        assert.equal(
+          Math.floor(click.y / CELL_M),
+          6,
+          `and the point at x ${x} lies in the roof's own row, not y ${click.y}`
         );
       }
     } finally {
@@ -3714,8 +3721,10 @@ describe('renderer smoke test: the free camera', () => {
   /**
    * A raised focus a pan has pushed onto shallower ground stays raised at that
    * depth and keeps its plane (docs/ui-ux.md §9). The pan leaves it exactly on
-   * the seabed there, and the left + right drag sends a step of nothing on
-   * every sideways move, so a zero step must not read as a landing.
+   * the seabed there. The left + right drag used to send a step of nothing on
+   * every sideways move; it now moves the focus only when the pointer moved
+   * up or down, and a zero step reading as no landing is the backstop behind
+   * that check.
    */
   it('keeps a raised focus that a pan pushed onto shallower ground', async () => {
     const world = await boot();
@@ -3728,8 +3737,8 @@ describe('renderer smoke test: the free camera', () => {
       assert.ok(raised !== null && raised > 2500, `the premise: a focus raised to ${raised} m`);
 
       // North-west onto the shelf, whose ground stands above that depth. The
-      // probe reads the focus back through the camera's world height, so it is
-      // held to the metre, as the test above holds its notches.
+      // probe rounds the focus to the metre, so it is held to the metre, as
+      // the test above holds its notches.
       world.conn.focusWorld(500, 500);
       const shelf = world.conn.seabedDepthAt(500, 500);
       assert.ok(shelf < raised, `the premise: the shelf's ${shelf} m is above the focus`);
