@@ -12,9 +12,9 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { defineQuery, hasComponent, removeComponent } from 'bitecs';
-import { FLIGHT, Faction, ORDNANCE, SIM, UnitKind } from '@echoes/shared';
+import { FLIGHT, Faction, ORDNANCE, SIM, StructureKind, UnitKind } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
-import { spawnUnit } from '../src/sim/world.ts';
+import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { missionMapById } from '../src/sim/maps/index.ts';
 import {
@@ -26,6 +26,7 @@ import {
 import { Health, Owner, Position, Spared, Structure, Unit } from '../src/sim/components.ts';
 import { spare, wakeSpared } from '../src/sim/systems/spared.ts';
 import { launchTorpedo } from '../src/sim/systems/ordnance.ts';
+import { seedSpore } from '../src/sim/systems/siege.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 
@@ -191,6 +192,33 @@ describe('a spared party — docs/systems-combat.md §4', () => {
     assert.ok(
       !hasComponent(match.world, Spared, struck) && !hasComponent(match.world, Spared, mate),
       'and the blast woke the whole party, the hull three kilometres off included'
+    );
+  });
+
+  it('wakes its whole party when a spore eats one of it', () => {
+    // The fourth blow, through the real path: a spore seeded by slot 0 on a
+    // spared structure takes hull off it on its first tick, and the hull far
+    // away loses the mark with it. No shipped mission reaches this today — a
+    // spore needs a Blight, a Commune hull, and the one spared structure is
+    // Second Chord's, whose player is the Order — so this is what holds it.
+    const match = water();
+    const node = spawnStructure(match.world, {
+      kind: StructureKind.SoundingSpire,
+      slot: 1,
+      faction: Faction.Directorate,
+      x: 6000,
+      y: 6000,
+      prebuilt: true,
+    });
+    spare(match.world, node, 0);
+    const mate = sparedHull(match, 9000, 6000);
+    const full = Health.hp[node]!;
+    assert.ok(seedSpore(match.world, node, 0), 'the premise: the spore takes');
+    advance(match, 1);
+    assert.ok(Health.hp[node]! < full, 'the premise: the spore ate hull');
+    assert.ok(
+      !hasComponent(match.world, Spared, node) && !hasComponent(match.world, Spared, mate),
+      'and the spore woke the whole party, the hull three kilometres off included'
     );
   });
 
