@@ -1,0 +1,73 @@
+{
+  "experiment": "1086-graphics",
+  "title": "Scope sweep inside the scope (#1086) — does pixijs-scene-graphics materially contribute?",
+  "skill": ".claude/skills/pixijs-scene-graphics",
+  "scope": ["packages/frontend/src/", "packages/frontend/test/"],
+  "traps": [
+    {
+      "id": "v7-fill-idiom",
+      "group": "drift",
+      "severity": "required",
+      "direction": "mustNotAppear",
+      "pattern": "\\.(beginFill|endFill)\\s*\\(",
+      "why": "The v7 set-style-then-draw idiom, the skill's first CRITICAL mistake and the reason it was vendored. It does not exist in v8."
+    },
+    {
+      "id": "v7-shape-names",
+      "group": "drift",
+      "severity": "required",
+      "direction": "mustNotAppear",
+      "pattern": "\\.(drawRect|drawCircle|drawEllipse|drawPolygon|drawRoundedRect|drawStar|drawRegularPolygon)\\s*\\(",
+      "why": "The v7 shape names the skill lists as CRITICAL; v8 spells them rect, circle, ellipse, poly, roundRect, star, regularPoly."
+    },
+    {
+      "id": "v7-linestyle",
+      "group": "drift",
+      "severity": "required",
+      "direction": "mustNotAppear",
+      "pattern": "\\.lineStyle\\s*\\(",
+      "why": "Removed in v8 in favour of stroke() after the shape. The skill's third CRITICAL mistake."
+    },
+    {
+      "id": "v7-holes",
+      "group": "drift",
+      "severity": "required",
+      "direction": "mustNotAppear",
+      "pattern": "\\.(beginHole|endHole)\\s*\\(",
+      "why": "v8 cuts holes with cut(). A clip-to-a-square task is exactly where an arm would reach for holes."
+    },
+    {
+      "id": "graphics-geometry",
+      "group": "drift",
+      "severity": "required",
+      "direction": "mustNotAppear",
+      "pattern": "\\bGraphicsGeometry\\b",
+      "why": "Replaced by GraphicsContext in v8. The skill's HIGH mistake on sharing geometry."
+    },
+    {
+      "id": "mask-introduced",
+      "group": "drift",
+      "severity": "tell",
+      "direction": "mustNotAppear",
+      "pattern": "\\.mask\\s*=|\\.setMask\\s*\\(",
+      "why": "A tell only. Masking is correct v8 API, but the skill's masking reference is not vendored, and a stencil mask on the HUD's Graphics breaks its batch every frame for a square known in closed form."
+    },
+    {
+      "id": "frontend-test-added",
+      "group": "criterion",
+      "severity": "required",
+      "direction": "mustAppear",
+      "pattern": "^\\s*(it|test)\\s*\\(",
+      "scope": ["packages/frontend/test/"],
+      "why": "Criterion 2: frontend tests hold the clipping geometry. Any new test case counts, so a fresh arm is not graded on the landed file name."
+    },
+    {
+      "id": "sweep-geometry-module",
+      "group": "criterion",
+      "severity": "required",
+      "direction": "fileAdded",
+      "path": "packages/frontend/src/game/scopeSweep.ts",
+      "why": "Anchored to the landed solution's module, which keeps the geometry testable without a renderer. Loosen this before grading a fresh arm."
+    }
+  ]
+}

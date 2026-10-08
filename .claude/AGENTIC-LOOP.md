@@ -107,11 +107,11 @@ anything it has not resolved.
 `npm run docs:claude` runs markdownlint and a relative-link check over the
 markdown this repository wrote under `.claude/`. It joins
 `npm run gates` and the CI `docs` job beside the two that have always covered
-`docs/`. The eleven vendored skills are excluded — they are upstream copies, and
+`docs/`. The ten vendored skills are excluded — they are upstream copies, and
 reformatting one destroys the only property that makes a re-sync cheap. What
 the gate holds there is the *list* — `check.mjs`'s array, `VENDORED-SKILLS.md`'s
 table and the directories on disk, failing on any two disagreeing. The spelled
-word "eleven" it does not read, here or anywhere else the number is written out,
+word "ten" it does not read, here or anywhere else the number is written out,
 which is why the convention below is the only thing keeping those sentences
 honest.
 

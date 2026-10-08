@@ -29,6 +29,11 @@ export const CLAUDE_MD_LINE_LIMIT = 200;
  * only once the body is open and belongs there. Sixty leaves room for a scope
  * line and a list of trigger phrases: the design skills sit near forty and say
  * both. Words rather than lines because a description is one line.
+ *
+ * The cap is also why those six stay six (#1187). Merged under `art-direction`
+ * they would save about 180 words a session, but one description would then
+ * carry six skills' triggers in sixty words, and "audit this map" or "texture
+ * budget" would be the first phrases cut.
  */
 export const SKILL_DESCRIPTION_WORD_LIMIT = 60;
 

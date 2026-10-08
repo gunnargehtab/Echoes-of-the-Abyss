@@ -14,7 +14,7 @@
  *
  * Two things this gate does that the `docs/` pair does not.
  *
- * **It lints only the files this repository wrote.** The eleven vendored skills
+ * **It lints only the files this repository wrote.** The ten vendored skills
  * are upstream copies, read-only by `CLAUDE.md`'s rule, and reformatting them
  * would destroy the one property that makes a re-sync cheap — that the file on
  * disk is the file upstream published. They are also not merely untidy: this
@@ -128,7 +128,6 @@ const REPO_AUTHORED_SKILLS = [
 const VENDORED_SKILLS = [
   'accessibility',
   'colyseus',
-  'pixijs',
   'pixijs-performance',
   'pixijs-scene-graphics',
   'pixijs-scene-text',
