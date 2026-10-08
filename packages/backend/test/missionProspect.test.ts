@@ -12,6 +12,9 @@
  *   Partial: the column never left the staging, so the ascent reads met and
  *   the field does not, with the ledger's unheard line and both attendant
  *   gaps assembled beneath it.
+ * - **The ascent is read where the hulls are** (§8): a survey that reads four
+ *   faces and stays on the rim is the rim's, and three hulls in the staging
+ *   are the column off it, whichever of the four read the faces (#1210).
  *
  * And the ground §11 draws in shapes since #1146, for all five missions on
  * it: every authored point, leg and mission-region cell on the ground it
@@ -24,12 +27,14 @@ import assert from 'node:assert/strict';
 import {
   Biome,
   MissionOutcome,
+  ObjectiveStatus,
   SIM,
   STRUCTURE_AURAS,
   StructureKind,
   THERMOCLINE,
   UnitKind,
   statsFor,
+  type EchoSnapshot,
 } from '@echoes/shared';
 import { defineQuery, hasComponent } from 'bitecs';
 import { Owner, Pressure, Unit, Weapon } from '../src/sim/components.ts';
@@ -42,6 +47,7 @@ import {
   CHORD_SECOND_CHORD,
   LEDGER_PROSPECT,
   SEEDING_SECOND_SEEDING,
+  inRegion,
   type MissionDefinition,
 } from '../src/sim/missions/index.ts';
 
@@ -103,7 +109,128 @@ describe('the writ, run out — docs/mission-prospect.md §2, §5, §6, §8', ()
     assert.match(result.epilogue, /western return was not resolved/);
     assert.match(result.epilogue, /file does not believe/);
   });
+
+  it('reads a column that proves the field and stays on the rim as kept (#1210)', () => {
+    // §8: the ascent is read where the hulls are. The issue's run: four faces
+    // read by 05:25 with the column on the slopes and terraces, which a
+    // latched ascent closed Complete on the fourth face.
+    const run = ascent('rim');
+    assert.ok(run.provedAtTick !== null, 'the survey never read four faces');
+    assert.equal(run.outcome, MissionOutcome.Lost, 'a survey the rim kept came off it');
+    assert.ok(run.closedAtTick >= T(22), 'the writ closed before the turn');
+    assert.equal(run.statusAtClose('the-field'), ObjectiveStatus.Met);
+    assert.equal(run.statusAtClose('the-ascent'), ObjectiveStatus.Pending);
+    assert.equal(run.inStagingAtClose, 0, 'a hull came home unordered');
+    assert.match(run.epilogue, /The rim keeps the survey/);
+  });
+
+  it('closes Complete on the pass a column that proved the field is back in the staging', () => {
+    // The positive control: the same run, sent home once the fourth face is
+    // read. It cannot close on that pass, with the column on the rim, and it
+    // closes the first pass three of the four are back in the staging.
+    const run = ascent('home');
+    assert.ok(run.provedAtTick !== null, 'the survey never read four faces');
+    assert.equal(run.outcome, MissionOutcome.Complete, 'the column came off and was not read');
+    assert.ok(run.closedAtTick > run.provedAtTick, 'it closed with the column on the rim');
+    assert.ok(run.closedAtTick < T(22), 'the column home did not close the writ');
+    assert.equal(run.statusAtClose('the-ascent'), ObjectiveStatus.Met);
+    assert.ok(run.inStagingAtClose >= 3, 'it closed with fewer than three hulls home');
+  });
+
+  it('counts any three hulls in the staging as the column off, whichever read the faces', () => {
+    // §8 asks three hulls of four, and §6 counts the faces for the whole
+    // survey, so three in the staging are the column off the rim while the
+    // eastern reader takes the last face. The writ closes on that face, with
+    // the reader still on the terraces — the call #1210 took, pinned so a
+    // change argues with it.
+    const run = ascent('last-face');
+    assert.equal(run.outcome, MissionOutcome.Complete, 'three hulls home were not the column off');
+    assert.equal(run.closedAtTick, run.provedAtTick, 'the writ waited for the last reader');
+    assert.equal(run.statusAtClose('the-field'), ObjectiveStatus.Met);
+    assert.equal(run.inStagingAtClose, 3, 'the last reader came home, or a held hull left');
+  });
 });
+
+/**
+ * §8's ascent, played over the issue's run (#1210). `rim` orders the flagship
+ * and the bunkerage to y 1,800 and the readers to faces three and four on the
+ * first snapshot, then two and five at 05:00, and leaves them there. `home`
+ * sends all four back to the staging on the pass the fourth face is read.
+ * `last-face` holds the flagship and the bunkerage at the staging and reads
+ * one face at a time: the western reader takes face three and goes home, then
+ * the eastern takes four, five and six.
+ */
+function ascent(plan: 'rim' | 'home' | 'last-face') {
+  const map = missionMapById(LEDGER_PROSPECT.mapId)!;
+  const match = new Match(map, { mission: LEDGER_PROSPECT, fauna: false, seed: 77 });
+  const player = LEDGER_PROSPECT.playerSlot;
+  const staging = LEDGER_PROSPECT.regions.find((region) => region.id === 'staging')!;
+  const faces = new Map((LEDGER_PROSPECT.soundings ?? []).map((s) => [s.id, s]));
+  const toFace = (id: number, face: string) =>
+    match.orderMove(player, id, faces.get(face)!.x, faces.get(face)!.y);
+  let column: { flagship: number; bunkerage: number; west: number; east: number } | null = null;
+  let last: EchoSnapshot | undefined;
+  let read = 0;
+  let provedAtTick: number | null = null;
+  for (let tick = 0; tick <= T(22, 30); tick++) {
+    const own = match.update(STEP_MS)?.get(player) as EchoSnapshot | undefined;
+    last = own ?? last;
+    if (own !== undefined && column === null) {
+      const of = (kind: UnitKind) => own.units.filter((u) => u.kind === kind);
+      const [west, east] = of(UnitKind.Corvette).sort((a, b) => a.x - b.x);
+      column = {
+        flagship: of(UnitKind.Cruiser)[0]!.id,
+        bunkerage: of(UnitKind.Harvester)[0]!.id,
+        west: west!.id,
+        east: east!.id,
+      };
+      if (plan === 'last-face') toFace(column.west, 'face-three');
+      else {
+        match.orderMove(player, column.flagship, 2900, 1800);
+        match.orderMove(player, column.bunkerage, 3100, 1800);
+        toFace(column.west, 'face-three');
+        toFace(column.east, 'face-four');
+      }
+    }
+    if (column !== null && plan !== 'last-face' && match.world.tick === T(5)) {
+      toFace(column.west, 'face-two');
+      toFace(column.east, 'face-five');
+    }
+    const view = match.takeMissionView();
+    const field = view?.objectives.find((o) => o.id === 'the-field');
+    const done = field?.progress?.done ?? read;
+    if (column !== null && plan === 'last-face' && done > read) {
+      // One face at a time, so each new count is the hull just ordered.
+      if (done === 1) {
+        match.orderMove(player, column.west, 2850, 350);
+        toFace(column.east, 'face-four');
+      }
+      if (done === 2) toFace(column.east, 'face-five');
+      if (done === 3) toFace(column.east, 'face-six');
+    }
+    read = done;
+    if (provedAtTick === null && field?.status === ObjectiveStatus.Met) {
+      provedAtTick = match.world.tick;
+      // Home to the staging, north of the slopes.
+      if (plan === 'home') {
+        for (const [i, id] of Object.values(column!).entries()) {
+          match.orderMove(player, id, 2700 + i * 200, 500);
+        }
+      }
+    }
+    if (match.missionOver !== null) break;
+  }
+  const over = match.missionOver;
+  assert.ok(over !== null, 'the writ never turned north');
+  return {
+    outcome: over.outcome,
+    epilogue: over.epilogue,
+    provedAtTick,
+    closedAtTick: match.world.tick,
+    inStagingAtClose: (last?.units ?? []).filter((u) => inRegion(staging, u.x, u.y)).length,
+    statusAtClose: (id: string) => over.objectives.find((o) => o.id === id)?.status,
+  };
+}
 
 describe('The Rim, as docs/mission-prospect.md §11 draws it (#1146)', () => {
   // The map is drawn in shapes since #1146, and a reshape is new content,

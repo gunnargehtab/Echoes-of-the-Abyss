@@ -194,6 +194,14 @@ back in the staging water when the writ closes. The record rides the readers, th
 ride the column, and a survey that stays on the rim is not a survey; the close treats it as
 exactly what the registry would.
 
+The ascent is read where the hulls are, not where they have been. The column is seated in
+the staging, so the row reads met until two hulls leave it. The mission closes on the first
+pass that finds four faces read and three hulls in the staging, or at the turn on whoever is
+in the staging then. A survey that reads four faces and stays on the rim has brought nothing
+off it (#1210). The three are any three hulls of the column, whichever of them read the
+faces, because the faces are one count for the whole survey (§6). Three hulls in the staging
+while one reader takes the last face close the writ on that face.
+
 **The ledger.** Sixty seconds of Classification or better, cumulative, across the writ — not
 a recall this time, and not a rule: a reading. The rim is crowded with the best ears in the
 Rift, the survey is loud by trade, and what the close enters is simply whether the concern's
