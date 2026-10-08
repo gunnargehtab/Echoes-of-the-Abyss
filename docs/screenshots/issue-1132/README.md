@@ -26,5 +26,5 @@ ground dived it at 45 m/s to 670 m, 30 m over the floor, and it held there, foll
 
 The first takes put the first point over the Foundry. A hull ordered over a structure never
 reaches the point, whatever its depth, because separation pushes it off the footprint in plan;
-the leg never ends, and nothing queued behind it begins. That predates this change and is
-#1214, filed against #746 rather than fixed here.
+the leg never ends, and nothing queued behind it begins. That predates this change and is filed
+as #1214 against #746 rather than fixed here.
