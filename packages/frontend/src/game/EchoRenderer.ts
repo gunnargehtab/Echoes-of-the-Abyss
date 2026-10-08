@@ -1344,44 +1344,14 @@ const BAND_STATION_DEPTH_M: Record<DepthBand, number> = {
 };
 
 /**
- * The rungs a depth order steps between, shallow to deep.
- *
- * One per band, plus the thermocline — which is a rung and not a band, and is
- * the reason this is a list rather than the band enum. Sound whose emitter and
- * listener are *both* inside the duct is multiplied by 1.2 and carries further
- * than open water (docs/glossary.md, docs/systems-echo.md §3), and until this
- * rung existed no order a player could give could park a hull there: the three
- * band stations are 200 / 1,000 / 2,400 m and the duct is 1,100–1,300 m. The
- * server never had that limit — `Match.orderDepth` accepts any depth in range
- * — so this was a client-side hole in the game's vocabulary, not a rule.
+ * The band a depth charge set from each band falls into — §8's "the band
+ * below", and the only step `Match.orderDepthCharge` accepts, since a charge
+ * set inside its dropper's own band is refused. The Abyssal has none.
  */
-const DEPTH_STATIONS_M: readonly number[] = [
-  BAND_STATION_DEPTH_M[DepthBand.Shelf],
-  BAND_STATION_DEPTH_M[DepthBand.MidWater],
-  THERMOCLINE.DEPTH_M,
-  BAND_STATION_DEPTH_M[DepthBand.Abyssal],
-];
-
-/** Which rung a depth counts as standing on. */
-const BAND_RUNG: Record<DepthBand, number> = {
-  [DepthBand.Shelf]: 0,
-  [DepthBand.MidWater]: 1,
-  [DepthBand.Abyssal]: 3,
+const BAND_BELOW: Partial<Record<DepthBand, DepthBand>> = {
+  [DepthBand.Shelf]: DepthBand.MidWater,
+  [DepthBand.MidWater]: DepthBand.Abyssal,
 };
-
-/**
- * The rung a hull at this depth is treated as occupying.
- *
- * Zone first, band second: a hull inside the duct is *on* the duct rung even
- * though the duct sits within Mid-Water, because the duct is what it is there
- * for. Everywhere else the ladder still steps band to band, so the only
- * behaviour change is that descending out of Mid-Water now stops at the layer
- * before continuing to the Abyssal.
- */
-function rungFor(depthM: number): number {
-  if (thermoclineZone(depthM) === ThermoclineZone.Duct) return 2;
-  return BAND_RUNG[depthBandFor(depthM)];
-}
 
 const BAND_LABEL: Record<DepthBand, string> = {
   [DepthBand.Shelf]: 'SHELF',
@@ -3451,8 +3421,7 @@ export class EchoRenderer {
         });
         buttons.push({
           label: 'CHARGE',
-          enabled:
-            this.stepDepthTarget(units, 1) !== null && this.missionLock('depthCharges') === null,
+          enabled: this.chargeDepth(units) !== null && this.missionLock('depthCharges') === null,
           active: false,
           action: () => this.commandDepthCharge(),
           yieldRank: YIELD.SITUATIONAL,
@@ -4134,24 +4103,22 @@ export class EchoRenderer {
   }
 
   /**
-   * The depth a step in `direction` would take the selection to (+1 deeper,
-   * -1 shallower), or null when the whole selection is already at the end of
-   * the stack. Rung to rung; see DEPTH_STATIONS_M.
+   * Where the selection's depth charge is set: the station of the band under
+   * the lead hull's own depth (§8), or null from the Abyssal.
    *
-   * Only the depth charge steps now — Dive and Rise went when a click took
-   * the depth over (#1132) — and "the band below" is still a rung away. The
-   * lead unit decides, so a mixed-depth squad drops one pattern rather than
-   * fanning it out across two bands.
+   * The hull's depth rather than the one it is headed for, and a band rather
+   * than a rung, because that is the test the server makes: a charge set
+   * inside its dropper's band is refused (`Match.orderDepthCharge`). Stepping
+   * rung to rung from the ordered depth sent a Mid-Water hull's charge to the
+   * duct's 1,200 m, inside its own band, and greyed the button on a hull still
+   * in Mid-Water but ordered to the Abyssal (#1260). The lead decides, so a
+   * mixed-depth squad drops one pattern rather than fanning it out.
    */
-  private stepDepthTarget(units: OwnUnit[], direction: 1 | -1): number | null {
+  private chargeDepth(units: OwnUnit[]): number | null {
     const lead = units[0];
     if (lead === undefined) return null;
-    // Step from where the hull is headed if it is already moving, so repeated
-    // presses queue deeper rather than re-issuing the same order.
-    const reference = lead.depthOrder ?? lead.depth;
-    const next = rungFor(reference) + direction;
-    if (next < 0 || next >= DEPTH_STATIONS_M.length) return null;
-    return DEPTH_STATIONS_M[next]!;
+    const below = BAND_BELOW[depthBandFor(lead.depth)];
+    return below === undefined ? null : BAND_STATION_DEPTH_M[below];
   }
 
   /** `0`: every hull that fights, wherever it is (§9). */
@@ -4267,15 +4234,15 @@ export class EchoRenderer {
    *
    * The band below rather than an arbitrary depth, because that is the decision
    * the weapon exists for: the hull under you is in the next band down, and
-   * getting a charge to it is the whole of the vertical argument. The one order
-   * that still steps rung to rung (`stepDepthTarget`), so "one band down" means
-   * what it meant when Dive did it too.
+   * getting a charge to it is the whole of the vertical argument. One band down
+   * from where the lead hull is (`chargeDepth`), which is the step the server
+   * accepts.
    */
   private commandDepthCharge(): void {
     if (this.refusedByMission('depthCharges')) return;
     const units = this.selectedUnits();
     if (units.length === 0) return;
-    const target = this.stepDepthTarget(units, 1);
+    const target = this.chargeDepth(units);
     if (target === null) return;
     this.callbacks.onDepthCharge(
       units.map((u) => u.id),

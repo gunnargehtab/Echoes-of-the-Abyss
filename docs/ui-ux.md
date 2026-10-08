@@ -560,7 +560,8 @@ point at its depth, with a plumb line to the ground below it.
 Nothing is left of Dive, Rise or the floor-following toggle, and `D`, `A` and `S` are unbound.
 A step order between rungs answered "how deep" with a list of four depths; a click answers it
 with the depth the player is looking at. The depth charge still drops into the band below
-([systems-combat.md](systems-combat.md) §8), so the rungs survive for that one order.
+([systems-combat.md](systems-combat.md) §8): the station of the band under the hull's own
+depth, wherever it is headed, since a charge set inside its dropper's band is refused.
 
 ### The one-handed layout
 

@@ -3172,6 +3172,39 @@ describe('the command card when it is offered more than it holds', () => {
   });
 
   /**
+   * #1260. CHARGE drops into the band below the hull's own depth — the test
+   * `Match.orderDepthCharge` makes — not one rung down from where the hull is
+   * headed. A Mid-Water hull's charge went to the duct's 1,200 m, inside its
+   * own band, and the server refused it; mid-dive, the rung came off the
+   * ordered depth.
+   */
+  it('sets a charge to the station of the band under the hull, wherever it is headed', async () => {
+    const world = await boot();
+    try {
+      const snapshot = cannedSnapshot();
+      const corvette = snapshot.units.find((unit) => unit.torpedoes !== undefined)!;
+      const charge = (depth: number, depthOrder?: number): unknown => {
+        corvette.depth = depth;
+        corvette.depthOrder = depthOrder;
+        world.chart.applySnapshot(snapshot);
+        world.conn.applySnapshot(snapshot);
+        world.frame(1);
+        selectHull(world, corvette);
+        world.log.calls.length = 0;
+        dispatchWindow('keydown', { code: 'KeyC' });
+        dispatchWindow('keyup', { code: 'KeyC' });
+        return world.log.first('onDepthCharge')?.[1];
+      };
+      assert.equal(charge(900), 2400, 'a Mid-Water hull charges the Abyssal, not the duct');
+      assert.equal(charge(300), 1000, 'a Shelf hull charges Mid-Water');
+      assert.equal(charge(900, 2400), 2400, 'mid-dive, from the band the hull is in');
+      assert.equal(charge(2400), undefined, 'and from the Abyssal there is no band below');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  /**
    * The selection §9 names, offering more than the card holds: a screen hull,
    * a transport and a harvester make thirteen entries, so one has to yield —
    * and it is the deselect, the one entry whose loss costs nothing (a click on
