@@ -180,7 +180,7 @@ const COLUMN_HULLS: readonly {
  * closer — 1.60 water to 0.70), and then the last leg in step: from the
  * narrows, 1,800 m out, into the Gallery beside the Bastion in one minute,
  * which is §8's sixty seconds and the only warning the mission gives. Each
- * hull walks the axis at its own offset, so the block arrives as a block.
+ * hull keeps its own offset, so the block arrives as a block.
  */
 function walkNorth(dx: number, dy: number): MissionLeg[] {
   return [

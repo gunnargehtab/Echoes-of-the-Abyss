@@ -105,12 +105,17 @@ carries one. This is the class the prototype already implements, and its rules s
   shoot it are different facts.
 - **Silent hulls hold fire.** A unit under Silent Running never fires on its own — the
   +40 spike is a decision the player makes, not one the AI volunteers.
-- **A spared party is never volunteered for.** A mission may mark a scripted party its
-  document says is never fought — the watch [mission-nineteen.md](mission-nineteen.md) walks,
-  the column [mission-standing-wave.md](mission-standing-wave.md) moves, the rim
+- **A spared party is never volunteered for, and volunteers nothing.** A mission may mark a
+  scripted party its document says is never fought — the watch
+  [mission-nineteen.md](mission-nineteen.md) walks, the column
+  [mission-standing-wave.md](mission-standing-wave.md) moves, the rim
   [mission-second-chord.md](mission-second-chord.md) attends. No gun swings onto one of its
-  own accord, and no deck launches at one (§15). An ordered attack still lands: shooting a
-  spared party is a decision the player makes, the way breaking silence is.
+  own accord and no deck launches at one (§15), and its own guns and decks hold the same way;
+  point defence still answers a round in the water. An ordered attack still lands, and the
+  first gun, torpedo, blast or spore from another slot to hit any of it wakes the whole
+  party: it loses the mark, and both sides fight as any two slots do. A corridor's bite, a
+  creature's and the water's are not fire and wake nothing. Shooting a spared party is a
+  decision the player makes, the way breaking silence is.
 - **Every discharge is loud** (+25 kinetic / +10 energy) and lays battle-site residue at
   the target ([systems-echo.md](systems-echo.md) §7).
 

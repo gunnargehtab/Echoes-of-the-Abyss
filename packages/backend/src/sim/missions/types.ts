@@ -252,8 +252,9 @@ export interface MissionParty {
    * A party the document says is never fought (docs/systems-combat.md §4,
    * #1239). Hostility is `Owner.slot`, so without it a player's idle guns
    * auto-acquire the party like any other slot and end it with no order
-   * given. Spared, no gun volunteers for it and no deck launches at it; an
-   * ordered attack still lands. Omitted is fair game.
+   * given. Spared, no gun volunteers for it or from it and no deck launches
+   * at it or from it; an ordered attack still lands, and the first blow
+   * somebody fires wakes the whole party (`wakeSpared`). Omitted is fair game.
    */
   spared?: true;
   note: string;

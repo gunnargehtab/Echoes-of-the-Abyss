@@ -69,6 +69,7 @@ import {
 } from '../components.ts';
 import { applyFiringSpike } from './acoustics.ts';
 import { creditWound, isDriven, wound } from './fauna.ts';
+import { wakeSpared } from './spared.ts';
 import { raiseSelfEvent, spawnOrdnance, type SimWorld } from '../world.ts';
 import { suppressKelpAt } from './hazards.ts';
 
@@ -228,6 +229,8 @@ function detonate(world: SimWorld, eid: number, target: number, destroyed: numbe
     // it but it does have an owner, and that is who rendered what it kills
     // (docs/systems-flora.md §5).
     creditWound(world, target, Owner.slot[eid]!);
+    // A spared party that has been hit answers (docs/systems-combat.md §4).
+    wakeSpared(world, target, Owner.slot[eid]!);
     // The blow is reported to its owner (docs/ui-ux.md §5), same as a gun's.
     raiseSelfEvent(world, { kind: SelfEventKind.Damaged, eid: target });
     if (Health.hp[target]! <= 0 && !destroyed.includes(target)) destroyed.push(target);
@@ -656,6 +659,8 @@ function blast(
     // A mine is laid by somebody, and what it kills is theirs to render
     // (docs/systems-flora.md §5). `slot` above is the ordnance's own owner.
     creditWound(world, other, slot);
+    // And a spared party a blast reached answers (docs/systems-combat.md §4).
+    wakeSpared(world, other, slot);
     // Every hull the blast reached is told (docs/ui-ux.md §5) — structures
     // included, since a base under mine attrition is exactly the off-screen
     // fight the alert exists for.

@@ -26,7 +26,7 @@
  * the `Math.random`/`Date` ban.
  */
 
-import { addComponent, hasComponent } from 'bitecs';
+import { hasComponent } from 'bitecs';
 import {
   DRIFT,
   FaunaSpecies,
@@ -61,7 +61,6 @@ import {
   Position,
   Pressure,
   SilentRunning,
-  Spared,
   StaticEmitter,
   Structure,
 } from '../components.ts';
@@ -83,6 +82,7 @@ import { directionalFactorFor } from '../directional.ts';
 import { dueConditionalBeats } from './conditional.ts';
 import { exposedAtLeast, inRegion, isMet, isStanding, peakSigOf } from './predicates.ts';
 import { pairedNodesOf } from '../systems/standingWave.ts';
+import { spare } from '../systems/spared.ts';
 import { rebuildPropagation } from '../systems/hazards.ts';
 import type {
   MissionBeatEffect,
@@ -521,7 +521,7 @@ export class MissionRuntime {
     economy.crystal = this.definition.startingCrystal ?? 0;
     economy.biomass = 0;
 
-    for (const party of this.definition.parties) {
+    for (const [index, party] of this.definition.parties.entries()) {
       for (const unit of party.units) {
         const eid = spawnUnit(world, {
           kind: unit.kind,
@@ -541,8 +541,8 @@ export class MissionRuntime {
         if (eid === 0) continue;
         this.register(world, unit.tag, eid);
         // A party its document says is never fought: no gun volunteers for it
-        // (docs/systems-combat.md §4, #1239).
-        if (party.spared === true) addComponent(world, Spared, eid);
+        // or from it until somebody fires (docs/systems-combat.md §4, #1239).
+        if (party.spared === true) spare(world, eid, index);
         if (unit.pressureRating !== undefined && hasComponent(world, Pressure, eid)) {
           // A court refit, not a roster change: the hull holds Mid-Water and
           // stops there, which is what makes depth a floor in this mission
@@ -571,7 +571,7 @@ export class MissionRuntime {
         });
         if (eid === 0) continue;
         this.register(world, structure.tag, eid);
-        if (party.spared === true) addComponent(world, Spared, eid);
+        if (party.spared === true) spare(world, eid, index);
       }
 
       for (const emitter of party.emitters ?? []) {

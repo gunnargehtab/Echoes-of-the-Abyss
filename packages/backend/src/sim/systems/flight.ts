@@ -360,6 +360,8 @@ export function flightSystem(world: SimWorld, destroyed: number[]): void {
     // has none: a silent hull volunteers nothing, and an order overrides it.
     const silent = hasComponent(world, SilentRunning, eid) && SilentRunning.active[eid] === 1;
     if (silent) continue;
+    // Nor does a spared party's deck, until somebody fires on it (§4, #1239).
+    if (hasComponent(world, Spared, eid)) continue;
     if (triggerFor(world, eid, coneGated) !== 0) launch(world, eid);
   }
 }

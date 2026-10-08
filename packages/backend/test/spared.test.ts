@@ -6,11 +6,12 @@
  * Nineteen says only counts, the column Standing Wave says only moves, the rim
  * Second Chord says only attends. A party its document says is never fought is
  * now marked `spared`: no gun swings onto it of its own accord and no deck
- * launches at it, while an ordered attack still lands.
+ * launches at it, its own guns and decks hold the same way, and an ordered
+ * attack still lands — the first blow wakes the whole party, which answers.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { addComponent, defineQuery, hasComponent, removeComponent } from 'bitecs';
+import { defineQuery, hasComponent, removeComponent } from 'bitecs';
 import { FLIGHT, Faction, SIM, UnitKind } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { spawnUnit } from '../src/sim/world.ts';
@@ -23,6 +24,7 @@ import {
   type MissionDefinition,
 } from '../src/sim/missions/index.ts';
 import { Health, Owner, Position, Spared, Structure, Unit } from '../src/sim/components.ts';
+import { spare, wakeSpared } from '../src/sim/systems/spared.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 
@@ -43,17 +45,17 @@ function water(): Match {
   return match;
 }
 
-/** A spared enemy hull, weapons-cold as every scripted party is unless armed. */
-function sparedHull(match: Match, x: number, y: number): number {
+/** A spared enemy hull of `party`, weapons-cold unless `armed`, as a mission seats one. */
+function sparedHull(match: Match, x: number, y: number, armed = false, party = 0): number {
   const eid = spawnUnit(match.world, {
     kind: UnitKind.Corvette,
     slot: 1,
     faction: Faction.Directorate,
     x,
     y,
-    weaponsCold: true,
+    weaponsCold: !armed,
   });
-  addComponent(match.world, Spared, eid);
+  spare(match.world, eid, party);
   return eid;
 }
 
@@ -87,6 +89,80 @@ describe('a spared party — docs/systems-combat.md §4', () => {
     match.orderAttackContact(0, gun, handleFor(match, quarry));
     advance(match, 6);
     assert.ok(Health.hp[quarry]! < full, 'an ordered attack lands: the decision is the player’s');
+  });
+
+  /**
+   * #1239's second half, the owner's call: Standing Wave's column is armed,
+   * and once the player's guns held it walked into the Gallery and shelled
+   * the Bastion unanswered. A spared party's own guns hold too, until somebody
+   * fires on it — and then the whole party answers.
+   */
+  it('holds its own fire, and wakes its whole party when fired on', () => {
+    const match = water();
+    const gun = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 6000,
+      y: 6000,
+    });
+    const struck = sparedHull(match, 6300, 6000, true);
+    const mate = sparedHull(match, 6300, 6150, true);
+    const full = Health.hp[gun]!;
+
+    advance(match, 6);
+    assert.equal(Health.hp[gun], full, 'two armed, spared hulls 300 m off held their fire');
+
+    match.orderAttackContact(0, gun, handleFor(match, struck));
+    advance(match, 6);
+    assert.ok(
+      !hasComponent(match.world, Spared, struck) && !hasComponent(match.world, Spared, mate),
+      'the blow woke the whole party, the hull it never touched included'
+    );
+    assert.ok(Health.hp[gun]! < full, 'and the party answered');
+  });
+
+  it('wakes only its own party, and only for a blow from another slot', () => {
+    const match = water();
+    const struck = sparedHull(match, 6000, 6000);
+    const mate = sparedHull(match, 6100, 6000);
+    const neighbour = sparedHull(match, 6200, 6000, false, 1);
+
+    wakeSpared(match.world, struck, 1);
+    assert.ok(hasComponent(match.world, Spared, struck), 'its own slot’s blow wakes nobody');
+
+    wakeSpared(match.world, struck, 0);
+    assert.ok(
+      !hasComponent(match.world, Spared, struck) && !hasComponent(match.world, Spared, mate)
+    );
+    assert.ok(hasComponent(match.world, Spared, neighbour), 'another party in the slot sleeps on');
+  });
+
+  it('keeps its own deck shut until it is fired on', () => {
+    const match = water();
+    const gantry = spawnUnit(match.world, {
+      kind: UnitKind.Gantry,
+      slot: 1,
+      faction: Faction.Directorate,
+      x: 6000,
+      y: 6000,
+    });
+    spare(match.world, gantry, 0);
+    spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 6000,
+      y: 6000 + FLIGHT.TETHER_M - 200,
+      weaponsCold: true,
+    });
+
+    advance(match, 3);
+    assert.equal([...(match.world.flights.get(gantry) ?? [])].length, 0, 'the deck stayed shut');
+
+    wakeSpared(match.world, gantry, 0);
+    advance(match, 1);
+    assert.ok([...(match.world.flights.get(gantry) ?? [])].length > 0, 'and opens once woken');
   });
 
   it('is never launched at by a deck', () => {

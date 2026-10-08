@@ -53,6 +53,7 @@ import {
 } from '../components.ts';
 import { applyFiringSpike } from './acoustics.ts';
 import { creditWound, isDriven, wound } from './fauna.ts';
+import { wakeSpared } from './spared.ts';
 import { isInterceptable } from './ordnance.ts';
 import { raiseSelfEvent } from '../world.ts';
 import type { SimWorld } from '../world.ts';
@@ -313,6 +314,10 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
     const slot = Owner.slot[eid]!;
     const isMobile = hasComponent(world, MoveOrder, eid);
     const silent = hasComponent(world, SilentRunning, eid) && SilentRunning.active[eid] === 1;
+    // A spared party volunteers nothing either (§4, #1239): its guns hold until
+    // somebody fires on it, and `wakeSpared` lifts the tag when they do. Point
+    // defence still answers a round in the water — ordnance is not a party.
+    const spared = hasComponent(world, Spared, eid);
     const posture = hasComponent(world, Posture, eid);
     // Attack-move (#435): bound somewhere, and fighting whatever it meets on
     // the way. Hold position: fighting whatever comes, and going nowhere.
@@ -368,7 +373,7 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
       // cannot see, which in this game is most of it.
       const busy = isMobile && MoveOrder.active[eid] === 1 && !engaging;
 
-      if (target === 0 && !silent && !busy) {
+      if (target === 0 && !silent && !spared && !busy) {
         let bestDistance = profile.rangeM;
         // Below every hull's SIG floor, so the first candidate that survives
         // the filters always beats it — a Derrick with one silent enemy in
@@ -407,7 +412,8 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
           // watch that only counts, the column that only moves, the rim that
           // only attends. Hostility is the slot, so without this a gun swung
           // onto them of its own accord and ended them with no order given. An
-          // ordered attack still lands: shooting one is the player's decision.
+          // ordered attack still lands, and wakes the party: shooting one is
+          // the player's decision.
           if (hasComponent(world, Spared, other)) continue;
           // Nor is a harmless ambient creature — the mine's argument a third
           // time. A Lampfry shoal glows at SIG 4 and is inaudible to any gun
@@ -562,6 +568,8 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
     // And the shot is a claim: whoever fired renders what they kill
     // (docs/systems-flora.md §5).
     creditWound(world, target, Owner.slot[eid]!);
+    // And a spared party that has been shot answers (§4, #1239).
+    wakeSpared(world, target, Owner.slot[eid]!);
     // The victim's owner is told a blow landed (docs/ui-ux.md §5). An event,
     // not an inference: a client watching its own hp could not tell a shell
     // from crush attrition, and §8 keeps those on different channels.
