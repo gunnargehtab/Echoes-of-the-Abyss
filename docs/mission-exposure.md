@@ -230,7 +230,9 @@ The return is read where the hulls are, not where they have been. The survey mus
 shelf lane, so the row reads met until two hulls leave it. The mission closes on the first
 pass that finds four points entered and two hulls on the lane, or at the change on whoever is
 on the lane then. A survey that takes four readings from below and stays there has brought
-nothing home (#1198).
+nothing home (#1198). The duplicate is any two survey hulls on the lane, whichever of them
+heard the points, because the readings are one count for the whole survey (§6). Two hulls
+held at the muster while a third reads below close the interval on its fourth entry.
 
 **The tolerance.** Thirty seconds, cumulative, at Classification or better — a budget, not a
 fail state. Spent, it recalls the charter and turns the watch; unspent, it is the one line in
