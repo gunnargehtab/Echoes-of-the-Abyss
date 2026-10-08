@@ -13,6 +13,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { hasComponent, removeEntity } from 'bitecs';
 import {
+  EchoMarkKind,
   Faction,
   FaunaSpecies,
   ORDNANCE,
@@ -117,18 +118,49 @@ describe('a Spore Veil blinds what is inside it, and lends nothing', () => {
     assert.equal(Acoustic.hyd[draymaw], ears, 'outside it, it hears with its own ears again');
   });
 
-  it('muffles a creature inside it, as it muffles a hull', () => {
-    const match = emptyMatch(47);
-    veil(match, 7000, 8000);
-    const inside = spawnFauna(match.world, { species: FaunaSpecies.Draymaw, x: 7000, y: 8100 });
-    const outside = spawnFauna(match.world, { species: FaunaSpecies.Draymaw, x: 12000, y: 8100 });
-    advance(match, 0.1);
-
+  it('muffles every creature inside it, as it muffles a hull', () => {
+    // Every species, because two of them never reach the step where the
+    // others' SIG is written: the ambient shoals skip it, and were left at
+    // full voice inside the cloud by the first version of this fix.
     const { SIG_FACTOR } = STRUCTURE_AURAS.SPORE_VEIL;
-    assert.ok(Acoustic.sig[outside]! > 0, 'the premise: a Draymaw is audible');
+    const species = Object.values(FaunaSpecies).filter(
+      (value): value is FaunaSpecies => typeof value === 'number'
+    );
+    assert.ok(species.length > 2, 'the premise: the bestiary has its species');
+    for (const kind of species) {
+      const match = emptyMatch(47);
+      veil(match, 7000, 8000);
+      const inside = spawnFauna(match.world, { species: kind, x: 7000, y: 8100 });
+      const outside = spawnFauna(match.world, { species: kind, x: 12000, y: 8100 });
+      advance(match, 0.1);
+      assert.ok(Acoustic.sig[outside]! > 0, `the premise: a ${FaunaSpecies[kind]} is audible`);
+      assert.ok(
+        Math.abs(Acoustic.sig[inside]! - Acoustic.sig[outside]! * SIG_FACTOR) < 1e-3,
+        `a ${FaunaSpecies[kind]} in the cloud emits ${Acoustic.sig[inside]} against ` +
+          `${Acoustic.sig[outside]} outside it`
+      );
+    }
+  });
+
+  it('muffles a Rasp feeding inside it, at its feeding figure', () => {
+    // The feeding write is the third place a creature's SIG is set, and the
+    // swarm's own noise stands in for the residue it eats (docs/bestiary.md
+    // §4) — through the cloud's cut like the rest.
+    const { SIG_FACTOR } = STRUCTURE_AURAS.SPORE_VEIL;
+    const feeding = (veiled: boolean): number => {
+      const match = emptyMatch(47);
+      if (veiled) veil(match, 7000, 8000);
+      const rasp = spawnFauna(match.world, { species: FaunaSpecies.Rasp, x: 7000, y: 8100 });
+      match.world.marks.add(EchoMarkKind.Battle, 7000, 8100, Position.depth[rasp]!, 1);
+      advance(match, 3);
+      return Acoustic.sig[rasp]!;
+    };
+    const open = feeding(false);
+    assert.equal(open, faunaStatsFor(FaunaSpecies.Rasp).sigActive, 'the premise: it feeds');
+    const veiled = feeding(true);
     assert.ok(
-      Math.abs(Acoustic.sig[inside]! - Acoustic.sig[outside]! * SIG_FACTOR) < 1e-3,
-      `inside the cloud it emits ${Acoustic.sig[inside]} against ${Acoustic.sig[outside]} outside`
+      Math.abs(veiled - open * SIG_FACTOR) < 1e-3,
+      `a feeding Rasp in the cloud emits ${veiled} against ${open} in open water`
     );
   });
 });

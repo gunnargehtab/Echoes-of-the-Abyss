@@ -179,11 +179,17 @@ export function faunaSystem(world: SimWorld, destroyed: number[]): void {
     // shoal is a place, not a predator — so the whole ladder is skipped, and
     // with it the per-candidate path integrals that make `listen` the
     // expensive half of the Drift.
+    //
+    // They skip `act` too, which is where every other creature's SIG is
+    // written, so theirs is written here: their one figure, through the Spore
+    // Veil's cut as every emitter's is (#1251).
     if (Fauna.species[eid] === FaunaSpecies.Lampfry) {
+      Acoustic.sig[eid] = stats.sigIdle * (Acoustic.sigFactor[eid]! || 1);
       lampfryTick(world, eid, dt, others);
       continue;
     }
     if (Fauna.species[eid] === FaunaSpecies.Tetherjelly) {
+      Acoustic.sig[eid] = stats.sigIdle * (Acoustic.sigFactor[eid]! || 1);
       jellyTick(world, eid, dt);
       continue;
     }
