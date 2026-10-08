@@ -1425,9 +1425,10 @@ describe('the tide, run out', () => {
    * Drop the sower's silence, which is the whole of what starting a sowing is.
    *
    * §3: "a sounding needs a hull that is neither silent nor engine-off
-   * (`holdingSounding`) — and the sower drops silence to plant". Nothing else is ordered — the hull is
-   * seated 112 m from the point with its bow inside the cone, so the sixty
-   * seconds are bought with one button and paid for in ears.
+   * (`holdingSounding`) — and the sower drops silence to plant". Nothing else
+   * is ordered — the hull is seated 112 m from the point with its bow inside
+   * the cone, so the sixty seconds are bought with one button and paid for in
+   * ears.
    */
   function sowFrom(tick: number) {
     return (match: Match, at: number): void => {

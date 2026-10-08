@@ -223,8 +223,9 @@ const COUNT_TICKS = 30 * SIM.TICK_HZ;
  * A hundred is the scale's ceiling and the loudest sustained thing the bible
  * has ever authored, and thirty seconds is thirty seconds: `accrueSounding`
  * resets a broken hold to zero, so a tone you interrupt is a tone you have not
- * played. Silent Running stops it outright (`holdingSounding`), which is why §3
- * says a player who reaches for the button in the last minute starts again.
+ * played. Silent Running stops it outright, as a drive cut does
+ * (`holdingSounding`), which is why §3 says a player who reaches for the
+ * button in the last minute starts again.
  */
 const TONE_TICKS = 30 * SIM.TICK_HZ;
 const TONE_SIG = 100;
