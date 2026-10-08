@@ -1088,10 +1088,8 @@ describe('the commander flies its deck', () => {
     const len = Math.hypot(back.x, back.y);
     const station = along(middle, { x: back.x / len, y: back.y / len }, TRAIL_M);
 
-    const on = ordersTo(
-      new AiCommander(brief).observe(snapshot(brief, 6000, { units })),
-      CARRIER_ID
-    );
+    const commander = new AiCommander(brief);
+    const on = ordersTo(commander.observe(snapshot(brief, 6000, { units })), CARRIER_ID);
     assert.deepEqual(
       on.map((c) => c.kind),
       ['move'],
@@ -1103,13 +1101,15 @@ describe('the commander flies its deck', () => {
       `${TRAIL_M} m behind the army's middle, toward home`
     );
 
-    // Off the cadence the order is not re-issued: every move re-plans the
-    // route, and the station drifts with the army on every observation.
-    const off = ordersTo(
-      new AiCommander(brief).observe(snapshot(brief, 6012, { units })),
-      CARRIER_ID
-    );
-    assert.deepEqual(off, [], 'off the cadence, nothing');
+    // Inside the window the order is not re-issued: every move re-plans the
+    // route, and the station drifts with the army on every observation. The
+    // commander's next decision is three observations on, at 6036, well
+    // inside the five seconds (#1253).
+    let off: AiCommand[] = [];
+    for (let tick = 6012; tick <= 6036; tick += 12) {
+      off = ordersTo(commander.observe(snapshot(brief, tick, { units })), CARRIER_ID);
+    }
+    assert.deepEqual(off, [], 'inside the window, nothing');
   });
 
   it('never opens the deck on a classified mine, or on a smudge away from home', () => {
