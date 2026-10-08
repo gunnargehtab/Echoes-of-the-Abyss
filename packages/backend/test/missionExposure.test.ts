@@ -340,7 +340,8 @@ describe('the voices, as docs/mission-exposure.md §12 writes them (#1200)', () 
         .map((line) => line.slice(2).trim())
         .join(' ')
     );
-    const said = (beat: { kind: string }): string => (beat as { text: string }).text;
+    const opening = LEDGER_EXPOSURE.beats.find((beat) => beat.kind === 'say');
+    assert.ok(opening?.kind === 'say', 'Tull no longer speaks at 01:00');
     const pointSix = LEDGER_EXPOSURE.parties
       .flatMap((party) => party.emitters ?? [])
       .find((emitter) => emitter.tag === 'point-six');
@@ -348,17 +349,13 @@ describe('the voices, as docs/mission-exposure.md §12 writes them (#1200)', () 
     const [warning, recall] = (LEDGER_EXPOSURE.conditionalBeats ?? []).filter(
       (beat) => beat.kind === 'say'
     );
+    assert.ok(warning?.kind === 'say' && recall?.kind === 'say', 'the tally no longer speaks');
     // §12's order: Tull at 01:00, the sixth point, the guidance at twenty
     // seconds, the recall at thirty. No slice, so a fifth quote with no line
     // behind it fails as loudly as a drifted one.
     assert.deepEqual(
       quoted,
-      [
-        said(LEDGER_EXPOSURE.beats.find((beat) => beat.kind === 'say')!),
-        pointSix.reading.entered,
-        said(warning),
-        said(recall),
-      ],
+      [opening.text, pointSix.reading.entered, warning.text, recall.text],
       '§12 and the literal have drifted — the doc is the source, so the literal is wrong'
     );
   });
