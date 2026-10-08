@@ -3711,6 +3711,45 @@ describe('renderer smoke test: the free camera', () => {
     }
   });
 
+  /**
+   * A raised focus a pan has pushed onto shallower ground stays raised at that
+   * depth and keeps its plane (docs/ui-ux.md §9). The pan leaves it exactly on
+   * the seabed there, and the left + right drag sends a step of nothing on
+   * every sideways move, so a zero step must not read as a landing.
+   */
+  it('keeps a raised focus that a pan pushed onto shallower ground', async () => {
+    const world = await boot();
+    try {
+      world.frame(3);
+      world.conn.home();
+      world.conn.focusWorld(3500, 3500);
+      world.conn.raiseFocusBy(400);
+      const raised = rig().focus.depthM;
+      assert.ok(raised !== null && raised > 2500, `the premise: a focus raised to ${raised} m`);
+
+      // North-west onto the shelf, whose ground stands above that depth. The
+      // probe reads the focus back through the camera's world height, so it is
+      // held to the metre, as the test above holds its notches.
+      world.conn.focusWorld(500, 500);
+      const shelf = world.conn.seabedDepthAt(500, 500);
+      assert.ok(shelf < raised, `the premise: the shelf's ${shelf} m is above the focus`);
+      const pushed = rig().focus.depthM;
+      assert.ok(
+        pushed !== null && Math.abs(pushed - shelf) <= 1,
+        `the ground raises the focus to its own depth, not ${pushed}`
+      );
+
+      world.conn.raiseFocusBy(0);
+      const after = rig().focus.depthM;
+      assert.ok(
+        after !== null && Math.abs(after - shelf) <= 1,
+        `a step of nothing leaves it there, not ${after}`
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
   it('sways by translation alone, and holds still under reduced motion (#1003)', async () => {
     const world = await boot();
     // The frame reads the clock once and applies the camera at it, so a held
