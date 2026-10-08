@@ -301,6 +301,11 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
       // The keystone: a survey that never comes back is exactly what the file
       // would call it, whatever it heard on the way down (§8).
       keystone: true,
+      // Read at the close and not latched (§8). The survey musters on the
+      // shelf lane, so a latched row was met on the first pass, and a survey
+      // that took four readings from below closed Complete with every hull
+      // still under the layer (#1198).
+      standing: true,
       predicate: { kind: 'extract', role: 'survey', region: 'shelf-lane', count: 2 },
     },
     {

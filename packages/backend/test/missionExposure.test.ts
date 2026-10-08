@@ -18,9 +18,11 @@
  *   log through the ordinary say channel.
  *
  * Plus the literal's own claims: the charter seals the array the campaign
- * just handed over, strikes the guns, and an idle survey is read as unpriced
- * — the keystone — with all six gap lines and the tolerance's unspent line
- * assembled beneath it.
+ * just handed over, strikes the guns, and an idle survey reads as a gap in
+ * the model, with all six gap lines and the tolerance's unspent line
+ * assembled beneath it. A survey that stays below reads as unpriced — the
+ * keystone — and two hulls on the lane are the record home, whichever of the
+ * three heard the points (#1198).
  *
  * And the ground §11 draws in shapes since #1144: every authored point, leg
  * and shelf-lane cell on the ground it stood on in rectangles, read off the
@@ -40,7 +42,7 @@ import {
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { FIRST_TRENCH_MARGIN, missionMapById, terrainFor } from '../src/sim/maps/index.ts';
-import { LEDGER_EXPOSURE, PROLOGUE_SORROWGATE } from '../src/sim/missions/index.ts';
+import { LEDGER_EXPOSURE, PROLOGUE_SORROWGATE, inRegion } from '../src/sim/missions/index.ts';
 import { MissionRuntime, type MissionCommandSink } from '../src/sim/missions/runtime.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { createSimWorld } from '../src/sim/world.ts';
@@ -222,7 +224,93 @@ describe('the charter, run out — docs/mission-exposure.md §3, §8', () => {
     assert.match(result.epilogue, /rendering row was not read/);
     assert.match(result.epilogue, /Point six was not read/);
   });
+
+  it('reads a survey that stays below as unpriced, however many points it entered (#1198)', () => {
+    // §8: the return is read where the hulls are. The issue's descent: every
+    // hull ordered under the layer at 00:00 enters four points in twelve
+    // seconds, and a latched return closed that Complete at 00:12 with the
+    // whole survey still below.
+    const run = survey('below');
+    assert.ok(run.enteredAtTick !== null, 'the survey never entered four points');
+    assert.equal(run.outcome, MissionOutcome.Lost, 'a record that stayed below came home');
+    assert.ok(run.closedAtTick >= T(18), 'the mission closed before the change');
+    assert.equal(run.statusAtClose('the-readings'), ObjectiveStatus.Met);
+    assert.equal(run.statusAtClose('the-return'), ObjectiveStatus.Pending);
+    assert.match(run.epilogue, /No record returns/);
+  });
+
+  it('closes Complete on the pass a survey that entered four points is home in duplicate', () => {
+    // The positive control: the same descent, sent home once the fourth
+    // point is entered. It cannot close on that pass, with the hulls below,
+    // and it closes the first pass two of them are back on the lane.
+    const run = survey('home');
+    assert.ok(run.enteredAtTick !== null, 'the survey never entered four points');
+    assert.equal(run.outcome, MissionOutcome.Complete, 'the record came home and was not read');
+    assert.ok(run.closedAtTick > run.enteredAtTick, 'it closed with the survey below');
+    assert.ok(run.closedAtTick < T(18), 'the record home did not close the interval');
+    assert.equal(run.statusAtClose('the-return'), ObjectiveStatus.Met);
+    assert.ok(run.onLaneAtClose >= 2, 'it closed with fewer than two hulls home');
+  });
+
+  it('counts any two hulls on the lane as the record home, whichever heard the points', () => {
+    // §8 and §12 count hulls home, and §6 counts the readings for the whole
+    // survey, so two hulls held at the muster are the duplicate while one
+    // reads below. The interval closes on that hull's fourth entry, with it
+    // still off the lane — the call #1198 took, pinned so a change argues with it.
+    const run = survey('scout');
+    assert.equal(run.outcome, MissionOutcome.Complete, 'two hulls home were not the record home');
+    assert.equal(run.closedAtTick, run.enteredAtTick, 'the interval waited for the scout');
+    assert.equal(run.statusAtClose('the-readings'), ObjectiveStatus.Met);
+    assert.equal(run.onLaneAtClose, 2, 'the scout came home, or a held hull left');
+  });
 });
+
+/**
+ * §8's return, played over the issue's run (#1198): hulls ordered to y 2,000
+ * at 1,500 m on the first snapshot. `below` sends all three and leaves them,
+ * `home` sends them back to the lane on the pass the fourth point is entered,
+ * and `scout` sends one and holds two at the muster.
+ */
+function survey(plan: 'below' | 'home' | 'scout') {
+  const map = missionMapById(LEDGER_EXPOSURE.mapId)!;
+  const match = new Match(map, { mission: LEDGER_EXPOSURE, fauna: false, seed: 77 });
+  const player = LEDGER_EXPOSURE.playerSlot;
+  const lane = LEDGER_EXPOSURE.regions.find((region) => region.id === 'shelf-lane')!;
+  const send = (ids: number[], y: number, depthM: number) =>
+    ids.forEach((id, i) => {
+      match.orderMove(player, id, 2400 + i * 100, y);
+      match.orderDepth(player, id, depthM);
+    });
+  let ids: number[] = [];
+  let last: EchoSnapshot | undefined;
+  let enteredAtTick: number | null = null;
+  for (let tick = 0; tick <= T(18, 30); tick++) {
+    const own = match.update(STEP_MS)?.get(player) as EchoSnapshot | undefined;
+    last = own ?? last;
+    if (own !== undefined && ids.length === 0) {
+      ids = own.units.map((u) => u.id).sort((a, b) => a - b);
+      send(plan === 'scout' ? ids.slice(0, 1) : ids, 2000, 1500);
+    }
+    const view = match.takeMissionView();
+    const readings = view?.objectives.find((o) => o.id === 'the-readings');
+    if (enteredAtTick === null && readings?.status === ObjectiveStatus.Met) {
+      enteredAtTick = match.world.tick;
+      // Home to the muster's own water: the shelf lane, above the layer.
+      if (plan === 'home') send(ids, 375, 900);
+    }
+    if (match.missionOver !== null) break;
+  }
+  const over = match.missionOver;
+  assert.ok(over !== null, 'the watch never changed');
+  return {
+    outcome: over.outcome,
+    epilogue: over.epilogue,
+    enteredAtTick,
+    closedAtTick: match.world.tick,
+    onLaneAtClose: (last?.units ?? []).filter((u) => inRegion(lane, u.x, u.y)).length,
+    statusAtClose: (id: string) => over.objectives.find((o) => o.id === id)?.status,
+  };
+}
 
 describe('The Western Margin, as docs/mission-exposure.md §11 draws it (#1144)', () => {
   // The map is drawn in shapes since #1144, and a reshape is new content,
