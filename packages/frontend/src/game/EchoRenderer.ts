@@ -845,7 +845,7 @@ interface BarButton {
  * keys, so the thing that decides rank is whether the *card* is the only
  * route — not whether a keyboard has a second one.
  */
-const YIELD = {
+export const YIELD = {
   /** A click on empty water does the same thing (`resolveSelection`). */
   DESELECT: 0,
   /** Reached for occasionally, and never in the same breath as a move order. */
@@ -855,6 +855,27 @@ const YIELD = {
   /** Nothing but this button reaches it. Yields only to another of its own. */
   ONLY_ROUTE: 3,
 } as const;
+
+/**
+ * The entries a card shows when it is offered more than `cells` — §9, "What
+ * yields when the card is full". Lowest rank goes first, and within a rank the
+ * later entry goes, so the authored order still decides among equals; the
+ * survivors keep that order, so a cell moves only when something above it
+ * actually left. Exported so the order can be held over a list whose push
+ * order disagrees with its ranks, which no page the card is offered today does.
+ */
+export function yieldToCells<T extends { yieldRank?: number }>(
+  model: readonly T[],
+  cells: number
+): readonly T[] {
+  if (model.length <= cells) return model;
+  return model
+    .map((entry, i) => ({ entry, i, rank: entry.yieldRank ?? YIELD.CORE }))
+    .sort((a, b) => b.rank - a.rank || a.i - b.i)
+    .slice(0, cells)
+    .sort((a, b) => a.i - b.i)
+    .map((held) => held.entry);
+}
 
 /** Command panel geometry, CSS px. docs/art-direction.md "HUD Layout". */
 const TAB_HEIGHT = 24;
@@ -2218,9 +2239,9 @@ export class EchoRenderer {
 
   /**
    * The point in the water a click there would order (docs/ui-ux.md §9): the
-   * first of the ground and the focus plane, at its depth. Null before the
-   * conn view exists. A place-only order — a rally, a structure's site — keeps
-   * `screenToWorld`.
+   * first of the ground and — with the focus raised — the focus plane, at its
+   * depth. Null before the conn view exists. A place-only order — a rally, a
+   * structure's site — keeps `screenToWorld`.
    */
   private screenToWater(
     clientX: number,
@@ -3936,16 +3957,7 @@ export class EchoRenderer {
     // Lowest rank goes first, and within a rank the later entry goes, so the
     // authored order still decides among equals. Survivors keep that order, so
     // a cell moves only when something above it actually left.
-    const cells = COLS * ROWS;
-    const shown =
-      model.length <= cells
-        ? model
-        : model
-            .map((entry, i) => ({ entry, i, rank: entry.yieldRank ?? YIELD.CORE }))
-            .sort((a, b) => b.rank - a.rank || a.i - b.i)
-            .slice(0, cells)
-            .sort((a, b) => a.i - b.i)
-            .map((held) => held.entry);
+    const shown = yieldToCells(model, COLS * ROWS);
     const buttons = shown.map((entry, i) => {
       const col = i % COLS;
       const row = Math.floor(i / COLS);
@@ -4298,22 +4310,17 @@ export class EchoRenderer {
     const water = this.screenToWater(clientX, clientY);
 
     // A yard and nothing else selected: the right click is its rally point —
-    // where every hull it launches goes first (§9, #435).
-    if (unitIds.length === 0 && water !== null) {
+    // where every hull it launches goes first (§9, #435). A place alone, with
+    // no depth, so it is the ground under the cursor and the focus plane has
+    // no say in where it lands.
+    if (unitIds.length === 0) {
+      const place = this.screenToWorld(clientX, clientY);
       const yards = this.structures
         .filter((st) => this.selected.has(st.id) && (PRODUCIBLE[st.kind]?.length ?? 0) > 0)
         .map((st) => st.id);
-      if (yards.length > 0) {
-        // A rally is a place alone (§9), at the place the click landed; the
-        // ring still acknowledges the click where it was.
-        this.callbacks.onRallyOrder(yards, water.x, water.y);
-        this.orderMarkers.push({
-          kind: 'move',
-          x: water.x,
-          y: water.y,
-          depth: water.depthM,
-          atMs: performance.now(),
-        });
+      if (yards.length > 0 && place !== null) {
+        this.callbacks.onRallyOrder(yards, place.x, place.y);
+        this.orderMarkers.push({ kind: 'move', x: place.x, y: place.y, atMs: performance.now() });
         this.ordersSeq++;
       }
       return;
@@ -7803,14 +7810,17 @@ export class EchoRenderer {
    *
    * The floor test is the server's own (`onTheGround`), on the same public
    * grid. A move onto the ground ends at the clearance over the floor there,
-   * and never crushes: following the floor stops at a hull's rating
-   * (docs/systems-depth.md §2). Null off the water or before a conn view.
+   * and never crushes: following the floor stops where the ground falls past a
+   * hull's rating (docs/systems-depth.md §2). So over a floor below a selected
+   * hull's rating the mark is a depth that hull will not reach, and
+   * `stopsShort` is what says so. Null off the water or before a conn view.
    */
   private clickPreview(selected: readonly OwnUnit[]): {
     depthM: number;
     follows: boolean;
     dives: boolean;
     crushes: boolean;
+    stopsShort: boolean;
     seconds: number;
   } | null {
     const lead = selected[0];
@@ -7825,9 +7835,12 @@ export class EchoRenderer {
       ? Math.max(0, Math.min(floor - FOLLOW_FLOOR.CLEARANCE_M, DEPTH.MAX_M))
       : water.depthM;
     const dives = depthM > lead.depth;
-    const crushes = !follows && selected.some((unit) => this.wouldCrush(unit, depthM));
+    const rated = (unit: OwnUnit) => !this.wouldCrush(unit, depthM);
+    const crushes = !follows && !selected.every(rated);
+    const stopsShort = follows && !selected.every(rated);
     const rate = dives ? DEPTH.DESCENT_RATE_MPS : DEPTH.ASCENT_RATE_MPS;
-    return { depthM, follows, dives, crushes, seconds: Math.abs(depthM - lead.depth) / rate };
+    const seconds = Math.abs(depthM - lead.depth) / rate;
+    return { depthM, follows, dives, crushes, stopsShort, seconds };
   }
 
   /** Screen y for a depth, inside the ribbon's vertical span. */
@@ -8049,7 +8062,9 @@ export class EchoRenderer {
         ? `${lead.depth.toFixed(0)}m${zoneTag}`
         : (preview.dives
             ? `DIVE ${DEPTH.DESCENT_SIG} SIG${preview.crushes ? ' · CRUSH' : ''}`
-            : `RISE ${preview.seconds.toFixed(0)}s`) + (preview.follows ? ' · FLOOR' : '');
+            : `RISE ${preview.seconds.toFixed(0)}s`) +
+          (preview.follows ? ' · FLOOR' : '') +
+          (preview.stopsShort ? ' · PR EDGE' : '');
     this.ribbonReadout.style.fill =
       preview === null
         ? this.isCrushing(lead)

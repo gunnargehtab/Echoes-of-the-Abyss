@@ -140,7 +140,7 @@ into water through the shared conn camera:
 | Input | Effect | Needs a selection? |
 | --- | --- | --- |
 | Left click | Select nearest owned unit or structure (shift adds) — **unless a build is armed, which swallows the click to place it** | no |
-| Right click | Context order — move, or attack/harvest a contact under the cursor. Given on release; a move lands at a depth too, on the ground (and follows it) or on the camera's focus plane (#1132) | yes |
+| Right click | Context order — move, or attack/harvest a contact under the cursor. Given on release; a move lands at a depth too, on the ground (and follows it) or, with the focus raised, on the camera's focus plane (#1132) | yes |
 | Middle drag | Pan | no |
 | Left + right drag | Camera: across pans sideways, up and down sinks and raises the focus — the depth an open-water click orders | no |
 | Wheel | Zoom (dolly) about the cursor; `Shift` + wheel moves the focus 150 m a notch | no |

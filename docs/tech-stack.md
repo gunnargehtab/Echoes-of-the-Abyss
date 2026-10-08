@@ -1041,7 +1041,7 @@ in-match client messages** — `ability` and `sow` are the difference, and `foll
 both sides together (#1132) — and the reason this
 paragraph can state them is that both directions are now checked rather than asserted (#621). `wire.ts` declares `LOBBY_MSG` beside `CLIENT_MSG`, so
 the five phase-gated names are a type rather than a comment and the in-match set can be
-subtracted; `ai/types.ts` carries an `Exclude<>` assertion against it, and a 28th in-match
+subtracted; `ai/types.ts` carries an `Exclude<>` assertion against it, and a 27th in-match
 message fails `npm run type-check` until someone writes the verb or names it as an exception
 with the issue that fills it. `Exclude<>` and not the `Exact<>` that polices the wire, because
 `Exact<>` reports only `Type 'true' is not assignable to type 'never'` while `Exclude<>` quotes

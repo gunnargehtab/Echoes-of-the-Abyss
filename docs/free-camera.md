@@ -95,11 +95,12 @@ focus rise and sink means the camera can sit *with* the fleet, at its depth, and
 falls away below it. That is F1 delivered: not a shaded plan with a depth readout, but water
 you are inside.
 
-**Since #1132 the focus depth is also where an order goes.** A click into open water lands on
-the plane at the focus depth ([ui-ux.md](ui-ux.md) §9), so moving the focus is how a commander
-picks the depth of the next move, and there is no separate depth order left to give. The
-camera still commits nothing: it chooses where a click *would* land, and the click is the
-player's.
+**Since #1132 the focus depth is also where an order goes.** Raised into the column, the
+focus is a plane a click into open water lands on ([ui-ux.md](ui-ux.md) §9), so moving the
+focus is how a commander picks the depth of the next move, and there is no separate depth
+order left to give. On the seabed there is no plane, and a click is on the ground under the
+cursor. The camera still commits nothing: it chooses where a click *would* land, and the
+click is the player's.
 
 **One hard clamp, and only one: the eye never goes below the seabed.** It stays at least
 **25 m of water** (TUNABLE) above the local floor, because a camera under the ground renders
@@ -190,8 +191,8 @@ The old rule carried four loads. Each moves; none is dropped.
   the camera is.
 - **What you click is what the simulation collides.** Picking resolves through the same
   camera, so it follows it for free. An order lands on the first thing the cursor's ray
-  meets, the ground or the plane at the focus depth, so a click on a ridge face is on the
-  ridge rather than in the water behind it ([ui-ux.md](ui-ux.md) §9).
+  meets, the ground or — with the focus raised — the plane at the focus depth, so a click on
+  a ridge face is on the ridge rather than in the water behind it ([ui-ux.md](ui-ux.md) §9).
 - **Every cost in the water column.** Crush, sour, PR, the thermocline — none of them is a
   camera rule, and the camera going somewhere is not a hull going there.
 

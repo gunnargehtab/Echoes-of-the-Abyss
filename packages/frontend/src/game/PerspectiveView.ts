@@ -1161,6 +1161,12 @@ export class PerspectiveView {
    * click past it, over deeper water, hangs at the focus depth rather than
    * falling through to the floor of the trench.
    *
+   * The plane is there only while the focus is raised. On the seabed — the
+   * home frame, or a focus sunk back to it — a plane at the seabed under the
+   * screen's centre would catch every click over deeper ground and hang it at
+   * the centre's depth, so there the click is the ground pick alone and a move
+   * there follows the floor wherever the cursor points.
+   *
    * The depth is then held to the water at the point, read off the cell grid
    * the server's floor test reads (`onTheGround`) rather than the drawn relief:
    * no shallower than the cell's ceiling or the surface, no deeper than its
@@ -1182,9 +1188,11 @@ export class PerspectiveView {
     const raycaster = RAY_TMP;
     raycaster.setFromCamera(ndc, this.camera);
     const { origin, direction } = raycaster.ray;
-    // How far along the ray the focus plane is; not positive when it lies
-    // behind the eye or the ray runs level with it.
-    const toPlane = Math.abs(direction.y) < 1e-6 ? -1 : (this.focusY() - origin.y) / direction.y;
+    // How far along the ray the focus plane is; not positive when there is
+    // no plane, when it lies behind the eye, or when the ray runs level with it.
+    const planeless = this.focusDepthM === null;
+    const toPlane =
+      planeless || Math.abs(direction.y) < 1e-6 ? -1 : (this.focusY() - origin.y) / direction.y;
 
     let ground: 'floor' | 'roof' | null = null;
     let x: number;
@@ -1203,6 +1211,14 @@ export class PerspectiveView {
       ground = hit.object === this.terrainMesh ? 'floor' : 'roof';
       x = hit.point.x;
       z = hit.point.z;
+    } else if (planeless) {
+      // No ground under the ray and no plane to catch it: `resolveGround`'s own
+      // fallback, the focus's ground plane or a point far out along the ray,
+      // and still a click on the ground once the clamp below has placed it.
+      ground = 'floor';
+      const along = groundPlaneT(origin.y, direction.y, this.focusY());
+      x = origin.x + direction.x * along;
+      z = origin.z + direction.z * along;
     } else {
       // The plane, or — where the ray never meets it — a point far out along
       // the ray's heading, which the map clamp below brings to the edge.

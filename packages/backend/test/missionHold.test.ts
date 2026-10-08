@@ -702,8 +702,9 @@ function alongsideHarness(mission: MissionDefinition, added: UnitKind): Alongsid
  *
  * Every case here is a **pair** — the refusal while the hull is held, then the
  * same call going through once it is free. The second half is not politeness:
- * a move is refused for an unowned hull and for one with no `DepthOrder` too, so
- * a lone mode left off would read as the hold's answer whatever produced it.
+ * a move is refused for an unowned hull, and its depth does nothing to a hull
+ * with no `DepthOrder`, so a lone mode left off would read as the hold's answer
+ * whatever produced it.
  * That is the vacuous `0 >= 0` the ordnance-want partition's holder warns about
  * (`balance.test.ts`, #698), and it is the failure mode a refusal test is most
  * prone to.

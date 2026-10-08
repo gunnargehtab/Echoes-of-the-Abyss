@@ -444,7 +444,7 @@ The vertical axis needs permanent, glanceable representation ([systems-depth.md]
 - **Descent and ascent** — descending shows the SIG cost as a live spike on the meter; ascending shows a time-to-surface estimate, because the ascent is the part players underestimate.
 - **The Lid is drawn as what it is** — the ribbon's top 150 m carries a threat-red hatch ([systems-depth.md](systems-depth.md) §2, [world.md](world.md)): sour water, priced for everyone. A selected hull inside it shows its sour state on the card — `SOUR 12s` counting down the grace in amber, then `SOUR — BLEEDING` in threat red once the water starts keeping the hull. The countdown is the player's own timer on their own hull; it reveals nothing about anyone else.
 - **Floor-following reads as a mode, not a depth** — a hull following the floor (§9: any move onto the ground) shows `FOLLOWING FLOOR` on its card and keeps its ribbon marker, because the marker reports where the hull *is* while the mode explains why that keeps changing. Disengaging at the PR edge (§2's rule) flips the card to the PR badge's warning register, so a hull that stopped following says why it stopped.
-- **The next order's depth is on the ribbon before it is given** — a tick at the camera's focus depth, which is where a click into open water lands (§9). Depth is ordered with the click now, so the depth a click would give has to be readable without giving it.
+- **The next order's depth is on the ribbon before it is given** — a tick at the camera's focus depth, which is where a click into open water lands once the focus is raised (§9); on the seabed it marks the seabed under the screen's centre, and a click there is on the ground. Depth is ordered with the click now, so the depth a click would give has to be readable without giving it.
 
 Implemented in the client scaffold: the ribbon runs down the left edge with a marker per
 selected hull and a ghost marker at its ordered depth; the PR badge sits in the selection
@@ -454,8 +454,11 @@ what distinguishes it, so it survives colour-vision differences (§11). The focu
 chevron on the ribbon's right edge in the plain text ink: a camera reading, so neither a hull's
 marker nor the cyan of a rule about the water. Holding `Alt` previews the click under the
 cursor: its depth, marked on the ribbon, and what getting there costs — `DIVE 72 SIG`, with
-`· CRUSH` when the depth is below the selection's rating, or the climb's seconds for a rise,
-and `FLOOR` when the click is on the ground and will follow it. The duct is one more depth the focus can be put at, which is how a
+`· CRUSH` when an open-water depth is below the selection's rating, or the climb's seconds for
+a rise, and `FLOOR` when the click is on the ground and will follow it. Over a floor below a
+selected hull's rating it adds `· PR EDGE`: following stops where the ground falls past the
+rating rather than crushing ([systems-depth.md](systems-depth.md) §2), so the mark is a depth
+that hull will not reach. The duct is one more depth the focus can be put at, which is how a
 player buys its 1.2× range now that no Dive rung stands there for them (#1132). The readout
 names the selection's own zone when it is somewhere other than the default: `DUCT` inside the
 layer, `UNDER` below it.
@@ -522,20 +525,25 @@ quietly changed meaning, with nothing to press and notice.
 
 Depth is ordered with the click rather than beside it (#1132). The cursor's ray is followed
 into the scene, and a move lands on the first thing it meets: the **ground** — the seabed, or
-a closed roof — or the **plane at the camera's focus depth** ([free-camera.md](free-camera.md)
-§4). Its depth is then held to the water at that point, between the ceiling and the floor and
-no deeper than `DEPTH.MAX_M`.
+a closed roof — or, once the focus is raised into the column, the **plane at the camera's
+focus depth** ([free-camera.md](free-camera.md) §4). Its depth is then held to the water at
+that point, between the ceiling and the floor and no deeper than `DEPTH.MAX_M`.
 
-- **On the ground**, the move follows it: the hull holds 30 m over whatever floor is under it,
+- **On the seabed**, the move follows it: the hull holds 30 m over whatever floor is under it,
   all the way there ([systems-depth.md](systems-depth.md) §2). So does a point in the water
   within 100 m of the floor.
+- **On a closed roof**, the move holds the water just under the roof, and follows the floor
+  only if that water is within 100 m of it. The rock is what the player pointed at, and a
+  passage's floor can lie far below it.
 - **In open water**, the move holds the plane's depth, and ends any floor-following the hull
   was doing.
 
-At the home frame the focus sits on the seabed, so a click on the ground is a floor-following
-move. Cruising at a depth starts with raising the focus — the left + right drag, or `Shift` +
-wheel — until §8's focus tick sits where the hull should go. Attack-move lands the same way,
-and a queued leg keeps the depth it was given. A rally point stays a place on the map.
+While the focus is on the seabed — the home frame, or a focus sunk back to it — there is no
+plane: a click is on the ground under the cursor, wherever the cursor points, so every move
+from the home frame follows the floor. Cruising at a depth starts with raising the focus — the
+left + right drag, or `Shift` + wheel — until §8's focus tick sits where the hull should go.
+Attack-move lands the same way, and a queued leg keeps the depth it was given. A rally point
+stays a place on the map: the ground under the cursor, whatever the focus.
 
 The right button acts on **release**, not on press, and so does a left click that an armed
 attack-move or a pending build is waiting for, so that a press can still become the left +

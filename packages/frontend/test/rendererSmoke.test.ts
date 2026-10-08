@@ -28,6 +28,7 @@ import {
   DEPTH,
   DRIFT_ROSTER,
   Faction,
+  FOLLOW_FLOOR,
   FaunaSpecies,
   MovementHoldReason,
   onTheGround,
@@ -67,7 +68,12 @@ import {
   COLS,
   ROWS,
 } from './support/cannedMatch.ts';
-import { EchoRenderer, type RendererCallbacks } from '../src/game/EchoRenderer.ts';
+import {
+  EchoRenderer,
+  YIELD,
+  yieldToCells,
+  type RendererCallbacks,
+} from '../src/game/EchoRenderer.ts';
 import type { ReadoutBox } from '../src/game/readouts.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { LampHaloPass } from '../src/game/lampHaloPass.ts';
@@ -2396,6 +2402,68 @@ describe('renderer smoke test: input and teardown', () => {
     }
   });
 
+  /**
+   * Holding `Alt` previews the click under the cursor (docs/ui-ux.md §8): a
+   * climb into open water says how long it takes, and a click on ground below a
+   * selected hull's rating says the hull will stop short of it — following
+   * stops where the ground falls past the rating, and never crushes
+   * (docs/systems-depth.md §2).
+   */
+  it('previews the click under Alt, and says where following stops short of the floor', async () => {
+    const world = await boot();
+    try {
+      // The Corvette, PR-2 through the Consortium's baseline, at 1,200 m.
+      const corvette = cannedSnapshot().units.find((unit) => unit.id === 11)!;
+      world.chart.focusOn(corvette.x, corvette.y);
+      world.frame(2);
+      const canvas = world.app.canvas;
+      const at = world.conn.projectPoint(corvette.x, corvette.y, corvette.depth);
+      for (const type of ['pointerdown', 'pointerup']) {
+        canvas.dispatch(type, {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x,
+          clientY: at.y,
+        });
+      }
+      world.frame(1);
+      dispatchWindow('keydown', { code: 'AltLeft' });
+      const hover = (x: number, y: number) => {
+        canvas.dispatch('pointermove', {
+          button: -1,
+          buttons: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: x,
+          clientY: y,
+        });
+        world.frame(1);
+      };
+
+      // Home, over the trench: 3,200 m ground the Corvette is not rated for.
+      world.conn.home();
+      world.conn.focusWorld(3500, 3500);
+      const trench = world.conn.projectPoint(3500, 3500, null);
+      hover(trench.x, trench.y);
+      const dive = textSaying(world.app.stage, 'DIVE');
+      assert.ok(dive !== null, 'no dive preview over the trench');
+      assert.match(dive, /FLOOR · PR EDGE/, `the preview read ${dive}`);
+      assert.doesNotMatch(dive, /CRUSH/, 'following stops at the rating; it never crushes');
+
+      // Raised into open water above the Corvette: a climb, and its seconds.
+      world.conn.focusWorld(2000, 2000);
+      world.conn.raiseFocusBy(1500);
+      const centre = world.conn.projectPoint(2000, 2000, world.conn.focusDepth());
+      hover(centre.x, centre.y);
+      const rise = textSaying(world.app.stage, 'RISE');
+      assert.ok(rise !== null, 'no climb preview in open water');
+      assert.match(rise, /^RISE \d+s$/, `the preview read ${rise}`);
+    } finally {
+      world.teardown();
+    }
+  });
+
   it('detaches every listener it attached', async () => {
     const before = windowListenerCount();
     const world = await boot();
@@ -2672,13 +2740,13 @@ describe('renderer smoke test: the strip explains itself', () => {
     const boxes = booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!
       .args[0] as ReadoutBox[];
 
-    // §2 sets the console's height by §11's 44 px touch floor — "a console row
-    // is a touch target" — and the strip's drawn glyphs are 11-13 px tall. The
+    // §2 sets the console's height by §11's 44 px target floor — "a console row
+    // is a pointer target" — and the strip's drawn glyphs are 11-13 px tall. The
     // strip holds two rows in 52 px, so 44 apiece cannot be had without the
     // rows overlapping; half the floor is what is reachable, and it is what is
     // asserted. The bar is in CSS pixels, which is what a finger is measured in.
     for (const box of boxes) {
-      assert.ok(box.height >= 26, `${box.key} is ${box.height} px tall — not a touch target`);
+      assert.ok(box.height >= 26, `${box.key} is ${box.height} px tall — not a pointer target`);
     }
 
     booted.teardown();
@@ -2982,8 +3050,8 @@ describe('the console drops its blocks in §2’s order', () => {
  * #815 — the card is offered more than its twelve cells hold, and what went
  * used to be whatever `buildBarModel` pushed last. For any hull carrying
  * torpedoes — ten of them, the Corvette and the Cruiser among them — that was
- * the depth charge, and on a touchscreen the card is the only route to an
- * order at all (docs/ui-ux.md §2).
+ * the depth charge, and the card is the mouse's route to every order
+ * (docs/ui-ux.md §2).
  *
  * The two halves of the fix are asserted together because either alone leaves
  * the Corvette one cell over: the torpedo count is a readout and leaves the
@@ -3054,6 +3122,81 @@ describe('the command card when it is offered more than it holds', () => {
     } finally {
       world.teardown();
     }
+  });
+
+  /**
+   * The selection §9 names, offering more than the card holds: a screen hull,
+   * a transport and a harvester make thirteen entries, so one has to yield —
+   * and it is the deselect, the one entry whose loss costs nothing (a click on
+   * empty water does the same), while `SCREEN` and `LAND`, which nothing but
+   * the card reaches, both stay. Since Dive, Rise and Follow left the page
+   * (#1132) a torpedo hull alone fits with room, so this is the case that
+   * still makes the yield order decide anything.
+   */
+  it('yields the deselect and keeps every only-route entry when a selection offers thirteen', async () => {
+    const world = await boot();
+    try {
+      const snapshot = cannedSnapshot();
+      const [screen, transport, harvester] = [11, 12, 13].map((id) =>
+        snapshot.units.find((unit) => unit.id === id)!
+      );
+      // The Corvette carries a magazine of decoys, the scout a hold: the two
+      // only-route entries, on the canned match's own hulls.
+      screen!.decoys = 3;
+      transport!.hold = { used: 0, berths: 4 };
+      transport!.holding = false;
+      world.chart.applySnapshot(snapshot);
+      world.conn.applySnapshot(snapshot);
+      world.frame(1);
+      selectHull(world, screen!);
+      selectHull(world, transport!, true);
+      selectHull(world, harvester!, true);
+
+      const lines = textContents(world.app.stage);
+      for (const label of ['SCREEN 3', 'LAND 0/4', 'THR', 'DECOY', 'MINE', 'CHARGE']) {
+        assert.ok(
+          lines.some((line) => line.includes(label)),
+          `${label} is not on the card — the yield order dropped the wrong entry`
+        );
+      }
+      assert.ok(
+        !lines.some((line) => line.trim() === '✕'),
+        'the deselect is still on a card that was offered thirteen'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  /**
+   * The order itself, over a list whose push order disagrees with its ranks —
+   * which no page the card is offered today does, since the most a page holds
+   * is thirteen and the deselect is both last and lowest. Fourteen offers with
+   * the two only-route entries pushed last: a card that kept whatever was
+   * pushed first would drop both.
+   */
+  it('yields lowest rank first, and the later of two equals, whatever the push order', () => {
+    const entry = (label: string, yieldRank?: number) => ({ label, yieldRank });
+    const model = [
+      entry('situational, first', YIELD.SITUATIONAL),
+      ...Array.from({ length: 9 }, (_, i) => entry(`core ${i}`)),
+      entry('deselect', YIELD.DESELECT),
+      entry('situational, second', YIELD.SITUATIONAL),
+      entry('screen', YIELD.ONLY_ROUTE),
+      entry('land', YIELD.ONLY_ROUTE),
+    ];
+    assert.deepEqual(
+      yieldToCells(model, 12).map((kept) => kept.label),
+      model
+        .map((offered) => offered.label)
+        .filter((label) => label !== 'deselect' && label !== 'situational, second'),
+      'the deselect goes first, then the later situational entry, and the rest keep their order'
+    );
+    assert.equal(
+      yieldToCells(model.slice(0, 12), 12).length,
+      12,
+      'a card that fits yields nothing'
+    );
   });
 
   /**
@@ -3467,6 +3610,38 @@ describe('renderer smoke test: the free camera', () => {
       const atHome = world.conn.resolveWater(centre.x, centre.y);
       assert.equal(atHome.depthM, DEPTH.MAX_M, 'the trench floor, held to the column');
       assert.ok(onTheGround(floorAt(atHome.x, atHome.y), atHome.depthM));
+
+      // On the seabed there is no plane: a click at home on ground 270 m below
+      // the seabed under the focus is on that ground, where a plane at the
+      // focus's depth would have caught it short of the cursor and hung it in
+      // open water.
+      world.conn.focusWorld(2000, 1500);
+      const southward = world.conn.projectPoint(2000, 2400, null);
+      assert.ok(southward.visible, 'the deeper ground south of the focus is on screen');
+      const deeper = world.conn.resolveWater(southward.x, southward.y);
+      assert.ok(
+        Math.hypot(deeper.x - 2000, deeper.y - 2400) < 20,
+        `the click landed ${Math.hypot(deeper.x - 2000, deeper.y - 2400).toFixed(0)} m short`
+      );
+      assert.ok(
+        deeper.depthM > world.conn.focusDepth() + FOLLOW_FLOOR.ENGAGE_WITHIN_M,
+        `the premise: ground well below the focus's ${world.conn.focusDepth()} m`
+      );
+      assert.ok(onTheGround(floorAt(deeper.x, deeper.y), deeper.depthM), 'and the move follows it');
+
+      // A closed roof stops the ray, and the move holds the water just under it:
+      // the canned passage's 1,600 m ceiling over a 2,600 m floor, too tall a
+      // passage for that water to count as the floor's.
+      world.conn.focusWorld(3250, 1500);
+      const lid = world.conn.projectPoint(3250, 1500, 1500);
+      assert.ok(lid.visible, 'the passage is on screen');
+      const onRoof = world.conn.resolveWater(lid.x, lid.y);
+      assert.equal(onRoof.depthM, 1600, 'the water just under the roof');
+      assert.equal(
+        onTheGround(floorAt(onRoof.x, onRoof.y), onRoof.depthM),
+        false,
+        'which is open water, a thousand metres over the passage floor'
+      );
     } finally {
       world.teardown();
     }

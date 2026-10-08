@@ -695,7 +695,7 @@ classified fauna draw as stipple, and the composited frame is timed on a real GP
 | Ladder audit — every map layer names its rung | [#866](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/866) |
 | Tetherjelly and Lampfry as stipple | [#867](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/867) |
 | Classified fauna as stipple, denser at Tier 4 | [#868](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/868) |
-| Frame time on a real GPU and on Termux | [#286](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/286) |
+| Frame time on a real GPU (the Termux half retired with touch, #1132) | [#286](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/286) |
 
 ---
 

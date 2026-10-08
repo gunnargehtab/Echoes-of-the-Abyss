@@ -188,6 +188,10 @@ Steering itself already works and is not touched.
   ordered survives because floor-following *is* the order: entering the mode is the
   commitment, its dives are exactly as loud as dives are, and the mode disengages where
   following would cross the hull's PR.
+
+  Both verbs were superseded by #1132: a click orders a depth as well as a place, a move onto
+  the ground follows it, and no Dive, Rise or floor-following toggle remains
+  ([ui-ux.md](ui-ux.md) §9, [systems-depth.md](systems-depth.md) §2).
 - **The band is readable at a glance.** Selection UI names the band; hulls in other bands are
   depth-cued by the scene itself — fog, luminance, scale — the way WC3 makes high ground read
   without a tooltip. The sonar scope keeps its existing depth presentation.
