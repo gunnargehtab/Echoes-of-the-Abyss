@@ -1183,6 +1183,41 @@ describe('the mid-tier — guns that read SIG', () => {
     assert.ok(Health.hp[shooter]! > 0, 'the shooter is alive to have done it');
   });
 
+  it('and only inside its range, however loud the water beyond it (#1219)', () => {
+    const { match } = skirmish(Faction.Bathyarch);
+    const shooter = hull(match, Faction.Bathyarch, UnitKind.Derrick, 6000, 6000);
+    const range = statsFor(UnitKind.Derrick).attackRangeM;
+
+    // A Corvette inside the gun, and a Cruiser louder than it four ranges
+    // off: "the loudest live enemy inside its weapon range" (§11.5) is the
+    // Corvette. An unordered gun does not chase, so a rule that took the
+    // Cruiser would fire at nothing.
+    const inside = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 6000 + range * 0.7,
+      y: 6000,
+    });
+    const beyond = spawnUnit(match.world, {
+      kind: UnitKind.Cruiser,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 6000 - range * 4,
+      y: 6000,
+    });
+    advance(match, 0.2);
+    assert.ok(
+      Acoustic.sig[beyond]! > Acoustic.sig[inside]!,
+      `the premise: the out-of-range hull is the loud one, ${Acoustic.sig[beyond]} against ${Acoustic.sig[inside]}`
+    );
+
+    const insideHp = Health.hp[inside]!;
+    advance(match, 6);
+    assert.ok(Health.hp[inside]! < insideHp, 'the Derrick fires on the hull its gun can reach');
+    assert.ok(Health.hp[shooter]! > 0, 'the shooter is alive to have done it');
+  });
+
   it('the Responsory hits a loud hull harder than a quiet one with the same plate', () => {
     const threshold = statsFor(UnitKind.Responsory).loudTargetSigThreshold!;
     // Two identical Caissons, one under way and one with its drive cut. Same

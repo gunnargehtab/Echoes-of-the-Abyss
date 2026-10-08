@@ -430,7 +430,14 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
           //
           // Ties go to the lower entity id, as the distance rule's `<=` does —
           // ordered from the same query, so a replay agrees with itself.
+          //
+          // The nearest-first branch gets its range bound from `bestDistance`
+          // starting at the gun's reach; this one has to say it (#1219).
+          // Without it the loudest hull on the map won, out of reach, and an
+          // unordered gun does not chase, so the Derrick held it and fired at
+          // nothing while an enemy stood inside its range.
           if (byLoudness) {
+            if (d > profile.rangeM) continue;
             const sig = Acoustic.sig[other]!;
             if (sig > bestSig) {
               bestSig = sig;
