@@ -226,9 +226,9 @@ describe('the charter, run out — docs/mission-exposure.md §3, §8', () => {
   });
 
   it('reads a survey that stays below as unpriced, however many points it entered (#1198)', () => {
-    // §8: the return is read where the hulls are. The issue's own run: every
-    // hull ordered under the layer at 00:00 enters four points in ten
-    // seconds, and a latched return closed that Complete at 00:10 with the
+    // §8: the return is read where the hulls are. The issue's descent: every
+    // hull ordered under the layer at 00:00 enters four points in twelve
+    // seconds, and a latched return closed that Complete at 00:12 with the
     // whole survey still below.
     const run = survey('below');
     assert.ok(run.enteredAtTick !== null, 'the survey never entered four points');
@@ -259,7 +259,7 @@ describe('the charter, run out — docs/mission-exposure.md §3, §8', () => {
     // still off the lane — the call #1198 took, pinned so a change argues with it.
     const run = survey('scout');
     assert.equal(run.outcome, MissionOutcome.Complete, 'two hulls home were not the record home');
-    assert.ok(run.closedAtTick < T(1), 'the interval waited for the scout');
+    assert.equal(run.closedAtTick, run.enteredAtTick, 'the interval waited for the scout');
     assert.equal(run.statusAtClose('the-readings'), ObjectiveStatus.Met);
     assert.equal(run.onLaneAtClose, 2, 'the scout came home, or a held hull left');
   });
