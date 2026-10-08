@@ -164,6 +164,32 @@ three criteria traps passed (renderer callback plus the two added files).
 **Decision:** keep `pixijs-scene-text` for now. One clean probe says this issue did not
 need that API surface, but it does not yet show redundancy across repeated text tasks.
 
+### A skill-eval probe on `pixijs-scene-graphics` (#1086, #1187)
+
+`#1086` (the scope's sweep drew past the minimap) is the newest change in reach that drew
+through `Graphics` from scratch: `scopeSweep.ts` cuts the sweep, its trail and the range
+rings to the scope's square. The probe is `.claude/skill-eval/1086-graphics/`, scored
+against the landed range `164f2f9..4a97c96`:
+
+```bash
+node .claude/skill-eval/score.mjs --experiment 1086-graphics --selftest
+node .claude/skill-eval/score.mjs --experiment 1086-graphics --range 164f2f9..4a97c96
+```
+
+Result: **0 blocking, 0 tell, 8 clean of 8.** No v7 idiom (`beginFill`, `drawRect`,
+`lineStyle`, `beginHole`, `GraphicsGeometry`), no stencil mask, and both criteria met. The
+tree agrees: `grep -rnE '\.(beginFill|endFill|lineStyle|drawRect|drawCircle)\(' packages/frontend/src`
+finds nothing at `2598de0`, against about 200 v8 shape calls.
+
+One of the skill's rules runs against this client on purpose. It calls clearing and
+redrawing a `Graphics` every frame a [HIGH] mistake, and `drawHud` does exactly that, on
+the frame cadence #432 chose. Nobody has measured what it costs, and nothing here should
+change on the skill's say-so.
+
+**Decision:** keep `pixijs-scene-graphics`. Its guard is the v7 idiom, which is cheap to
+carry and fatal when it fires, and like #724's probe this one graded a session that had the
+skill on offer, so it cannot show the skill redundant.
+
 ## Rules
 
 - **Do not edit a vendored skill.** Five exceptions exist, each marked `LOCAL`
