@@ -2813,9 +2813,9 @@ button.objectives-row:hover {
   flex-direction: column;
   justify-content: center;
   gap: 0.15rem;
-  /* §11's 44 px touch floor. The slot stopped drawing its line (§14) and
-     collapsed to 31 px, which is a target a finger misses; the board has the
-     room now, so it spends it here rather than on prose it no longer shows. */
+  /* §11's 44 px target floor. The slot stopped drawing its line (§14) and
+     collapsed to 31 px, which is a target an unsteady hand misses; the board has
+     the room now, so it spends it here rather than on prose it no longer shows. */
   min-height: 44px;
   padding: 0.38rem 0.5rem;
   border: 1px solid color-mix(in srgb, var(--neon-magenta) 45%, transparent);

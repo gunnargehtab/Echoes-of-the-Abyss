@@ -291,7 +291,7 @@ describe('the strip explains itself: the surface', () => {
     await click(view, 'BERTHS 3/6');
     assert.equal(expanded(), true, 'a click pins it open — no hover, and no key named');
     await click(view, 'BERTHS 3/6');
-    assert.equal(expanded(), false, 'and the next tap closes it');
+    assert.equal(expanded(), false, 'and the next click closes it');
     await view.unmount();
   });
 
@@ -345,11 +345,11 @@ describe('the strip explains itself: the surface', () => {
     assert.ok(blurred, 'blurring is what closes the focus route');
     assert.ok(stopped, 'and the press is spent on the line');
 
-    // 2 — pinned by a tap, with the focus arrived by pointer. Still closes.
+    // 2 — pinned by a click, with the focus arrived by pointer. Still closes.
     await blurAway();
     await focusBy(false);
     await click(view, 'BERTHS 3/6');
-    assert.equal(expanded(), true, 'a tap pins it open');
+    assert.equal(expanded(), true, 'a click pins it open');
     await escape();
     assert.equal(expanded(), false, 'the pin is released');
     assert.ok(stopped, 'and that press is spent too');

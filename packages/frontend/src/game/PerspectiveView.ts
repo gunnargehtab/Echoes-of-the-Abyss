@@ -1161,11 +1161,13 @@ export class PerspectiveView {
    * click past it, over deeper water, hangs at the focus depth rather than
    * falling through to the floor of the trench.
    *
-   * The plane is there only while the focus is raised. On the seabed — the
-   * home frame, or a focus sunk back to it — a plane at the seabed under the
-   * screen's centre would catch every click over deeper ground and hang it at
-   * the centre's depth, so there the click is the ground pick alone and a move
-   * there follows the floor wherever the cursor points.
+   * The plane is there only while the focus is raised. Attached to the seabed
+   * (`focusDepthM` null: the home frame, a fit to the map, or a focus sunk back
+   * to it) a plane at the seabed under the screen's centre would catch every
+   * click over deeper ground and hang it at the centre's depth, so there the
+   * click is the ground pick alone: a move onto the seabed follows the floor
+   * wherever the cursor points, and one on a closed roof holds under it. A
+   * raised focus a pan has clamped onto shallower ground keeps its plane.
    *
    * The depth is then held to the water at the point, read off the cell grid
    * the server's floor test reads (`onTheGround`) rather than the drawn relief:

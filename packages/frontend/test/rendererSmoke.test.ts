@@ -2744,7 +2744,7 @@ describe('renderer smoke test: the strip explains itself', () => {
     // is a pointer target" — and the strip's drawn glyphs are 11-13 px tall. The
     // strip holds two rows in 52 px, so 44 apiece cannot be had without the
     // rows overlapping; half the floor is what is reachable, and it is what is
-    // asserted. The bar is in CSS pixels, which is what a finger is measured in.
+    // asserted. The bar is in CSS pixels, which is what a pointer target is measured in.
     for (const box of boxes) {
       assert.ok(box.height >= 26, `${box.key} is ${box.height} px tall — not a pointer target`);
     }
