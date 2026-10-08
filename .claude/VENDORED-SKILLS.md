@@ -1,6 +1,6 @@
 # Vendored skills
 
-Eleven of the skills in `.claude/skills/` were not written here. They are copies
+Ten of the skills in `.claude/skills/` were not written here. They are copies
 of public Agent Skills, taken from the marketplaces indexed by
 [skills.sh](https://skills.sh), and they sit beside this repository's own workflows.
 The authoritative authored/vendor split is in `tools/claude-docs/check.mjs`; the
@@ -14,7 +14,8 @@ twenty-six skills, and several of its descriptions run to a hundred and fifty
 words of trigger keywords. Installing it as a plugin is all-or-nothing — both
 `pixijs/pixijs-skills` and `addyosmani/web-quality-skills` declare a single
 plugin covering their whole tree — so the only way to take the five that match
-this codebase and leave the other twenty-one is to copy them.
+this codebase and leave the other twenty-one is to copy them. #1187 dropped the
+router, so four remain.
 
 The selection rule was **what the code actually imports**, not what looked
 useful. `packages/frontend` imports exactly five names from `pixi.js`
@@ -32,7 +33,6 @@ are repo-authored, in the `material-design` skill.
 
 | Skill | Upstream | Commit | Licence |
 | --- | --- | --- | --- |
-| `pixijs` (router) | `pixijs/pixijs-skills` | `6aae70d` | MIT |
 | `pixijs-scene-graphics` | `pixijs/pixijs-skills` | `6aae70d` | MIT |
 | `pixijs-scene-text` | `pixijs/pixijs-skills` | `6aae70d` | MIT |
 | `pixijs-performance` | `pixijs/pixijs-skills` | `6aae70d` | MIT |
@@ -177,31 +177,57 @@ node .claude/skill-eval/score.mjs --experiment 1086-graphics --range 164f2f9..4a
 ```
 
 Result: **0 blocking, 0 tell, 8 clean of 8.** No v7 idiom (`beginFill`, `drawRect`,
-`lineStyle`, `beginHole`, `GraphicsGeometry`), no stencil mask, and both criteria met. The
-tree agrees: `grep -rnE '\.(beginFill|endFill|lineStyle|drawRect|drawCircle)\(' packages/frontend/src`
-finds nothing at `2598de0`, against about 200 v8 shape calls.
+`lineStyle`, `beginHole`, `GraphicsGeometry`), no stencil mask, and both criteria met.
 
-One of the skill's rules runs against this client on purpose. It calls clearing and
-redrawing a `Graphics` every frame a [HIGH] mistake, and `drawHud` does exactly that, on
-the frame cadence #432 chose. Nobody has measured what it costs, and nothing here should
-change on the skill's say-so.
+**The session that wrote it never loaded a PixiJS skill.** Its transcript, read for #1187
+(519 assistant events), invokes `work-issue` and `dev-loop` and nothing else, reads no file
+under `.claude/skills/pixijs*`, and fetches no PixiJS docs. It checked its one Pixi claim,
+that a mask would cost the HUD stencil passes, against `pixi.js` in `node_modules`. So
+unlike #724's probe this one is an unguarded arm, and it came back clean. The tree agrees:
+`grep -rnE '\.(beginFill|endFill|lineStyle|drawRect|drawCircle)\(' packages/frontend/src`
+finds nothing at `2598de0`, against about 200 v8 shape calls to copy from.
 
-**Decision:** keep `pixijs-scene-graphics`. Its guard is the v7 idiom, which is cheap to
-carry and fatal when it fires, and like #724's probe this one graded a session that had the
-skill on offer, so it cannot show the skill redundant.
+What the skill still guards is narrower than its labels. `pixi.js` 8.19 keeps `beginFill`,
+`endFill`, `drawRect` and `lineStyle` as `@deprecated` shims, and no ESLint rule here
+reads the tag, so a v7 call passes type-check, lint and every gate and runs with a console
+warning. `beginHole` and `GraphicsGeometry` are gone, and type-check catches those.
+
+One of its rules runs against this client on purpose. It calls clearing and redrawing a
+`Graphics` every frame a [HIGH] mistake, and `drawHud` does exactly that, on the frame
+cadence #432 chose. Nobody has measured what it costs, and nothing should change on the
+skill's say-so.
+
+**Decision:** keep `pixijs-scene-graphics`, for the deprecated shims no gate sees. One
+clean unguarded arm is evidence against it, not yet proof; a second Graphics task that also
+never loads it would make dropping it the honest call.
+
+### Dropping the `pixijs` router (#1187)
+
+The router was the costliest description here, 105 words in every session, and it told a
+session to load it "first for ANY PixiJS v8 task". #1086 was such a task and it did not
+fire. What it routed to:
+
+- **Four skills that carry their own descriptions**, so a session can select each directly.
+- **Twenty-one that are not on disk**, which its `LOCAL NOTE` told the reader to skip.
+- **The `llms.txt` fallback** at `pixijs.download`, its one unique asset. A cloud session
+  cannot reach it: on 8 October the agent proxy refused the host with a 403 and WebFetch
+  could not resolve it. On the owner's machine a personal install wins over a project copy
+  (Rules, below), so the project copy never served there.
+
+So it was deleted. The four sub-skills keep their `pixijs-skills` licence, and none names
+the router. Their "Related skills" lines point at absent skills, as they always did; only
+the router's note said so, and a session that loaded a sub-skill directly never read it.
 
 ## Rules
 
-- **Do not edit a vendored skill.** Five exceptions exist, each marked `LOCAL`
-  in place. The `pixijs` router carries a `LOCAL NOTE` block saying which five
-  of its twenty-six rows exist on disk, because the rest of its router table and
-  all of `references/index.md` point at skills this repository did not take. The
-  `accessibility` skill has one reference row repointed at its upstream sibling
-  `web-quality-audit`, which is not vendored here. Since #974, `threejs-postprocessing`,
-  `threejs-loaders` and `threejs-materials` each open with a `LOCAL NOTE` on where
-  this repository departs from their samples: a composer moves tone mapping, an
-  environment belongs to the view that bakes it, and a lamp's emission goes after
-  the curve. Each points at the `material-design` skill.
+- **Do not edit a vendored skill.** Four exceptions exist, each marked `LOCAL`
+  in place. The `accessibility` skill has one reference row repointed at its
+  upstream sibling `web-quality-audit`, which is not vendored here. Since #974,
+  `threejs-postprocessing`, `threejs-loaders` and `threejs-materials` each open
+  with a `LOCAL NOTE` on where this repository departs from their samples: a
+  composer moves tone mapping, an environment belongs to the view that bakes it,
+  and a lamp's emission goes after the curve. Each points at the `material-design`
+  skill.
 - **A personal copy wins.** Claude Code prefers a personal skill
   (`~/.claude/skills/`) to a project skill of the same name, and `skillOverrides`
   matches names only, so it cannot choose between them. On a machine that also
