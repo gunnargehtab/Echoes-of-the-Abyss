@@ -679,6 +679,18 @@ export const StaticEmitter = defineComponent({
 });
 
 /**
+ * A scripted party its mission says is never fought — docs/systems-combat.md
+ * §4 (#1239). No gun auto-acquires a spared hull or structure and no deck
+ * launches at one, and its own guns and decks volunteer nothing either. An
+ * ordered attack still lands, and the first blow somebody fires wakes the
+ * whole party (`wakeSpared`): shooting one is the player's decision rather
+ * than the guns'. Set on a party's units and structures at install, from
+ * `MissionParty.spared`; `party` is the party's index in its mission, so a
+ * wake reaches the party and no further.
+ */
+export const Spared = defineComponent({ party: Types.ui8 });
+
+/**
  * A transport's hold — docs/systems-echo.md §3, docs/units.md "The
  * transports". `berths` is the capacity the stat block lists; `used` is the
  * berths of hull aboard, and is what acoustics prices the load at

@@ -805,6 +805,9 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
     {
       slot: PLATEAUS,
       faction: Faction.Pelagia,
+      // "The only guns in this water are the Order's, they are aimed at
+      // nothing" (§4): no gun volunteers for this party (#1239).
+      spared: true,
       note: 'The plateaus — the charting pair at the seats First Arrival left them on, weapons-cold, and the bed on the western lip from D onward (§5). Home water, and a garden. Two hulls that have asked nothing of anyone',
       units: [
         {
@@ -840,6 +843,9 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
     {
       slot: DIRECTORATE,
       faction: Faction.Directorate,
+      // "The only guns in this water are the Order's, they are aimed at
+      // nothing" (§4): no gun volunteers for this party (#1239).
+      spared: true,
       note: "Those below — the watch, the 9th Trench Cohort, the dome and the twelve Choristers, on one slot for the engine's reason (§2, §13). Attending, and not policing (§4, §13), and weapons-cold to the last hull: the correction this rank files is a position and a sentence, because the format has no way to author a hull that answers hulls and leaves a node alone (finding 1)",
       units: [
         // §11 — the twelve at First Arrival's seats, inherited to the metre:

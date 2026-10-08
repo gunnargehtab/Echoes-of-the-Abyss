@@ -79,6 +79,8 @@ interface Run {
   /** Highest y the dome reached — how far south it went back, if it turned. */
   domeYMax: number;
   survivors: number;
+  /** The works' Bastion as the player last saw it, as a fraction of whole; 0 once gone. */
+  bastion: number;
 }
 
 type Drive = (
@@ -103,6 +105,7 @@ function play(drive: Drive, untilTick = T(18, 10)): Run {
   let dome = 0;
   let domeYMax = 0;
   let survivors = 0;
+  let bastion = 0;
   let lastView: MissionView | null = null;
   const spoken: MissionLine[] = [];
 
@@ -110,6 +113,8 @@ function play(drive: Drive, untilTick = T(18, 10)): Run {
     const own = match.update(STEP_MS)?.get(PLAYER) as EchoSnapshot | undefined;
     if (own !== undefined) {
       survivors = own.units.length;
+      const seat = own.structures.find((s) => s.kind === StructureKind.Bastion);
+      bastion = seat === undefined ? 0 : seat.hp / seat.maxHp;
       if (byTag.size === 0) {
         for (const unit of party.units) {
           const seated = own.units.find(
@@ -146,6 +151,7 @@ function play(drive: Drive, untilTick = T(18, 10)): Run {
     domeY: dome !== 0 && hasComponent(match.world, Position, dome) ? Position.y[dome]! : NaN,
     domeYMax,
     survivors,
+    bastion,
   };
 }
 
@@ -296,8 +302,17 @@ describe('the Fifth, open', () => {
       '§9, 03:00 — the column states what it heard'
     );
     assert.ok(
-      run.domeY < 500 || Number.isNaN(run.domeY),
+      run.domeY < 500,
       `§9, 17:30: the column is at the North Gallery (dome at y=${run.domeY.toFixed(0)})`
+    );
+    // §5: "the mission never lets it become one". The column is spared and
+    // armed, and it arrives beside the Bastion: it holds its fire as the works
+    // hold theirs, so nobody is struck and all six come home (#1239).
+    assert.equal(run.bastion, 1, '§5: the column never attacked the Bastion');
+    assert.equal(run.survivors, 6, '§5: and the works never fought the column');
+    assert.ok(
+      run.lines.some((line) => line.startsWith('Six went and six are back')),
+      `§8: the untouched reading, not ${JSON.stringify(run.lines)}`
     );
     const interval = run.view?.objectives.find((o) => o.id === 'the-interval');
     assert.equal(interval?.text, 'The Fifth is open. No voice stands.');

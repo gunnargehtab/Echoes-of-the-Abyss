@@ -59,6 +59,7 @@ import {
   Owner,
   Position,
   SilentRunning,
+  Spared,
   StaticEmitter,
   Unit,
   UnderConstruction,
@@ -105,6 +106,8 @@ export function forgetCraft(world: SimWorld, eid: number): void {
 function worthLaunchingAt(world: SimWorld, eid: number): boolean {
   if (hasComponent(world, Ordnance, eid)) return false;
   if (hasComponent(world, StaticEmitter, eid)) return false;
+  // A party its mission says is never fought (§4, #1239), as for a gun.
+  if (hasComponent(world, Spared, eid)) return false;
   if (
     hasComponent(world, Fauna, eid) &&
     !Number.isFinite(faunaStatsFor(Fauna.species[eid] as FaunaSpecies).commit)
@@ -357,6 +360,8 @@ export function flightSystem(world: SimWorld, destroyed: number[]): void {
     // has none: a silent hull volunteers nothing, and an order overrides it.
     const silent = hasComponent(world, SilentRunning, eid) && SilentRunning.active[eid] === 1;
     if (silent) continue;
+    // Nor does a spared party's deck, until somebody fires on it (§4, #1239).
+    if (hasComponent(world, Spared, eid)) continue;
     if (triggerFor(world, eid, coneGated) !== 0) launch(world, eid);
   }
 }

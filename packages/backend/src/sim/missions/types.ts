@@ -248,6 +248,15 @@ export interface MissionParty {
   structures?: readonly MissionStructure[];
   /** Placed periodic sound sources — see `MissionEmitter`. Omitted is none. */
   emitters?: readonly MissionEmitter[];
+  /**
+   * A party the document says is never fought (docs/systems-combat.md §4,
+   * #1239). Hostility is `Owner.slot`, so without it a player's idle guns
+   * auto-acquire the party like any other slot and end it with no order
+   * given. Spared, no gun volunteers for it or from it and no deck launches
+   * at it or from it; an ordered attack still lands, and the first blow
+   * somebody fires wakes the whole party (`wakeSpared`). Omitted is fair game.
+   */
+  spared?: true;
   note: string;
 }
 
@@ -620,6 +629,15 @@ export interface MissionLeg {
   y: number;
   /** Ticks from the end of the previous leg — or the beat firing — to arrival. */
   ticks: number;
+  /**
+   * The depth this leg is walked at, ordered while it is walked; absent keeps
+   * the hull's own. A route into water shallower than the depth the hull
+   * travels at needs one, because movement refuses a step onto ground above
+   * the hull: Standing Wave's column parked at the North Gallery's rim, 100 m
+   * short of the region its arrival is read in, until its last leg climbed
+   * (#1239).
+   */
+  depthM?: number;
 }
 
 /**

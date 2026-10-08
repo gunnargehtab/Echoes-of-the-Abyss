@@ -592,6 +592,9 @@ export const CHORD_NINETEEN: MissionDefinition = {
     {
       slot: WATCH,
       faction: Faction.Directorate,
+      // "The watch is right, and the mission never lets it become an attack"
+      // (§5): no gun volunteers for it (#1239).
+      spared: true,
       note: "The trench cohort's western watch — two hulls on a filed patrol of water that is theirs, weapons-cold, announcing the law once in the passive and entering what they hear (§5)",
       units: [
         {

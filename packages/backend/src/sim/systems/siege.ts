@@ -24,6 +24,7 @@ import {
 import { Health, Position, Seeder, Song, Spore, Structure, Unit } from '../components.ts';
 import type { SimWorld } from '../world.ts';
 import { creditWound } from './fauna.ts';
+import { wakeSpared } from './spared.ts';
 
 const spored = defineQuery([Spore, Structure, Health]);
 const singers = defineQuery([Song, Position, Unit]);
@@ -113,6 +114,9 @@ export function siegeSystem(world: SimWorld, destroyed: number[]): void {
     // somebody (docs/systems-flora.md §5). No `wound`: the silence is the
     // weapon, and telling a Hollow what is eating it would be a tell.
     creditWound(world, eid, Spore.slot[eid]!);
+    // A spore is fired, if silently, so a spared party it eats answers
+    // (docs/systems-combat.md §4).
+    wakeSpared(world, eid, Spore.slot[eid]!);
 
     // And nothing touches `Acoustic.sig`. Stated as a line rather than left as
     // an absence, because the silence *is* the weapon (§9) and the next person
