@@ -21,6 +21,10 @@ and that is a pre-registerable, machine-checkable event rather than a judgement.
 Issue #627 puts an arm directly onto that surface: `onUncaughtException`, `onLeave`,
 the `Room` generic and 32 message handlers.
 
+> **Dated 2026-10-08.** That pin held at this experiment's base, `f7bf3f5`. Since #962
+> (27 September) the backend runs `@colyseus/core` `^0.18.17`, so the skill now
+> describes this tree rather than running ahead of it.
+
 ## The finding that shapes the arm list
 
 **The repository's own engineering prose already carries the guard**, in the Colyseus
@@ -289,6 +293,9 @@ That is an argument for dropping it, not proof it is worthless: the drift it doc
 real, and a project actually on 0.17 or 0.18 would be a different test. If it stays, it
 should stay as a deliberate insurance premium with the price written down, not as an
 assumption that it helps.
+
+Since #962 this repository is that project. These readings priced the skill as a guard
+against drift; none has measured it as the 0.18 reference `VENDORED-SKILLS.md` now keeps.
 
 ## What this cannot tell you
 
