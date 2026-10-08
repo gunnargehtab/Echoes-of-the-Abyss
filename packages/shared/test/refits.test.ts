@@ -24,6 +24,7 @@ import {
   REFIT_TERMS,
   RefitKind,
   StructureKind,
+  UNIT_STATS,
   UnitKind,
   effectivePressureRating,
   priceOf,
@@ -126,6 +127,21 @@ describe('the refits', () => {
     // band past the table.
     const born = effectivePressureRating(UnitKind.Harvester, Faction.Directorate);
     assert.equal(refittedPressureRating(born, Faction.Directorate), born);
+  });
+
+  it('never lowers a hull’s rating: the ceiling caps the gain, it takes nothing (#1221)', () => {
+    // §2 sells a step up. The Commune's ceiling is 2, and the Submersible, the
+    // Verger, the Thurible and the Lure are born PR-3 for it; a bare
+    // `min(ceiling, rating + 1)` handed all four crush at 2,400 m.
+    for (const faction of FACTIONS) {
+      for (const kind of Object.keys(UNIT_STATS).map(Number) as UnitKind[]) {
+        const rating = effectivePressureRating(kind, faction);
+        assert.ok(
+          refittedPressureRating(rating, faction) >= rating,
+          `${Faction[faction]}'s refit lowers the ${UnitKind[kind]} from PR-${rating}`
+        );
+      }
+    }
   });
 
   it('keeps the list at the five §2 wrote, and no more', () => {
