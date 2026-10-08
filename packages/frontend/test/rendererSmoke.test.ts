@@ -2468,6 +2468,14 @@ describe('renderer smoke test: input and teardown', () => {
       hover(own.x, own.y);
       const level = textSaying(world.app.stage, 'LEVEL');
       assert.equal(level, 'LEVEL', `the preview at the hull's own depth read ${level}`);
+
+      // And a metre below it is a dive, however small: a deeper depth order
+      // breaks Silent Running, and `LEVEL` must never hide that.
+      world.conn.raiseFocusBy(-2);
+      const below = world.conn.projectPoint(2000, 2000, world.conn.focusDepth());
+      hover(below.x, below.y);
+      const deeper = textSaying(world.app.stage, 'DIVE');
+      assert.match(deeper ?? '', /^DIVE \d+ SIG$/, `a metre below the hull read ${deeper}`);
     } finally {
       world.teardown();
     }

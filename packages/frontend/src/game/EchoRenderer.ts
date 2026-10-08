@@ -7851,10 +7851,11 @@ export class EchoRenderer {
         )
       : water.depthM;
     const dives = depthM > lead.depth;
-    // A move with no vertical part to price (§8, `LEVEL`): the lead hull's own
-    // depth, or a climb inside the arrival epsilon, which the depth system
-    // snaps to at once. Never a dive however small: any deeper target breaks
-    // Silent Running (`setDepthTarget`), and the readout must not hide that.
+    // `LEVEL` (§8): the lead hull's own depth, or a climb inside the arrival
+    // epsilon, which the depth system snaps to at once. It prices where the
+    // lead hull's move ends, as `DIVE` and `RISE` do, not a floor-follow's path.
+    // Never a dive however small: any deeper depth order breaks Silent Running
+    // (`setDepthTarget`), and the readout must not hide that.
     const level = !dives && lead.depth - depthM <= DEPTH.ARRIVAL_EPSILON_M;
     const rated = (unit: OwnUnit) => !this.wouldCrush(unit, depthM);
     const crushes = !follows && !selected.every(rated);
