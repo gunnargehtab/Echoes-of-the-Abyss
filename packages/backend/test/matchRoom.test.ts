@@ -254,8 +254,8 @@ describe('a client that drops before its join completes', () => {
     const record = (reason: unknown): void => {
       unhandled.push(reason);
     };
-    // A listener also stops Node turning the rejection into a throw, so a
-    // regression fails this assertion rather than the whole test file.
+    // node:test already fails a test on an unhandled rejection it caused;
+    // the listener and the assertion below state that intent outright.
     process.on('unhandledRejection', record);
     try {
       const [joining] = startPlaying(room);
