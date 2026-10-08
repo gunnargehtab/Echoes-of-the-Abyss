@@ -437,7 +437,7 @@ export const ATTENDING_SHALLOW: MissionDefinition = {
       y: 1750,
       widthM: 2000,
       heightM: 250,
-      note: "The strip — the shoulder's water directly beneath Marr's outer rows, between the closure's southern edge and the last metre from which a row is at Bearing. Named for the reader and addressed by no predicate (§11)",
+      note: "The strip — the water directly beneath Marr's outer rows, from the closure's southern edge to y 2,000, which falls between §7's two Bearing lines: y 1,900 for a Chorister and 2,050 for a submersible. Its first seven cells, x 0 to 1,750, are the shoulder's Open Water at 340 m and PF 1.00. The last, under the sixth row, is the Vent Under-run's west edge, Thermal Vein at 620 m and PF 0.45, and directly beneath that row it draws both lines north, to y 1,863 and y 1,924. Named for the reader and addressed by no predicate (§11)",
     },
   ],
 

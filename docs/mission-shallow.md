@@ -351,7 +351,9 @@ is not a lever here.
 **What the concern hears, and where the listening ground therefore is.** A row is at Bearing to a
 Chorister from y ≤ 1,900 and to a submersible from y ≤ 2,050 — a hundred and fifty metres of
 usable water south of a corridor whose southern edge is y 1,750, and three hundred for the ears.
-That sliver is `the-strip`, and it is overlooked from both ends. The gate's column is measured to
+Row six is the exception: the Vent Under-run's west edge lies beneath it and draws its two lines
+north, to y 1,863 and y 1,924 (§11). That sliver, to y 2,000, is `the-strip`, and it is
+overlooked from both ends. The gate's column is measured to
 `element-two` at (300, 1550), the nearer of the closure's two Corvettes, because a hull is held by
 the ear that hears it first:
 
@@ -382,6 +384,9 @@ three, which is the argument for bringing the ears up the slope.
 **And the sixth row is the one that costs.** A Chorister directly beneath `marr-row-six`, at
 (1875, 1850), holds it at 1.62 — and stands 351 m from the western turret, at Classification,
 inside a 700 m gun that fires at Tier 2. The mission never says not to. It prints the distance.
+The Chorister's water is the Vent Under-run's west edge, which enters the turret's path to it — a
+path mean of 0.725, against 1.000 from (1550, 1850) — but not its path to the row, 0.850 as under
+the other five.
 
 **The under-run is a route, not a hide.** Thermal Vein at PF 0.45 and 620 m of floor, lying
 *below* the corridor's middle: a silent Chorister at (2250, 2400) reads **0.53** to the Corvette
@@ -640,7 +645,7 @@ it reads ([maps.md](maps.md), "How a map is written").
 | --- | --- | --- |
 | `grid-spur` | 0, 1250, 5000, 500 | The posted closure. The first asking keys on it |
 | `kell-slope` | 0, 2500, 5000, 500 | The withdrawal. `the-slope` and `the-ears` count into it |
-| `the-strip` | 0, 1750, 2000, 250 | The shoulder's water directly beneath Marr's outer rows, between the closure's southern edge and the last metre from which a row is at Bearing. **Named for the reader and addressed by no predicate** |
+| `the-strip` | 0, 1750, 2000, 250 | The water directly beneath Marr's outer rows, from the closure's southern edge to y 2,000, which falls between §7's two Bearing lines: y 1,900 for a Chorister and 2,050 for a submersible. Its first seven cells, x 0 to 1,750, are the shoulder's Open Water at 340 m and PF 1.00. The last, under the sixth row, is the Vent Under-run's west edge, Thermal Vein at 620 m and PF 0.45, and directly beneath that row it draws both lines north, to y 1,863 and y 1,924. **Named for the reader and addressed by no predicate** |
 
 One marker: `slope`, at 2500, 2750, radius 1,000, named by `the-slope` and `the-ears` and shipped
 only once they are revealed.
