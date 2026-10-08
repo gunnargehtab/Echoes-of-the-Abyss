@@ -330,7 +330,9 @@ describe('Sorrowgate, reused as docs/mission-radicals.md §11 finds it', () => {
     const stands: [string, number, number, keyof typeof regions][] = [
       // The prologue (docs/mission-sorrowgate.md §5, §9).
       ['the spawn, at the arch', 2550, 2150, 'districts'],
-      ['Escort One, west of the arch', 2400, 2200, 'districts'],
+      ['Escort One, west of the arch', 2400, 2280, 'gate'],
+      ['Escort Two, under the arch', 2550, 2430, 'gate'],
+      ['Escort Three, east of the arch', 2700, 2280, 'gate'],
       ['Escort Four, inside the chamber', 2550, 2330, 'gate'],
       ['Tender One', 2420, 2900, 'gate'],
       ['Tender Two', 2680, 2900, 'gate'],

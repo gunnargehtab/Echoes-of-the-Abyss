@@ -42,19 +42,19 @@ describe('Sorrowgate, with nobody at the helm', () => {
       return { tag: seat.tag, eid, depthM: seat.depthM, full: Health.hp[eid]! };
     });
 
-    let shallowest = Infinity;
+    const shallowest = new Map(flight.map((hull) => [hull.eid, Infinity]));
     for (let tick = 0; tick < 20 * 60 * SIM.TICK_HZ && match.missionOver === null; tick++) {
       match.update(STEP_MS);
       match.takeMissionView();
-      for (const hull of flight) shallowest = Math.min(shallowest, Position.depth[hull.eid]!);
+      for (const hull of flight) {
+        shallowest.set(hull.eid, Math.min(shallowest.get(hull.eid)!, Position.depth[hull.eid]!));
+      }
     }
 
     for (const hull of flight) {
       assert.equal(Health.hp[hull.eid], hull.full, `${hull.tag} was hurt with nobody at the helm`);
+      const rose = hull.depthM - shallowest.get(hull.eid)!;
+      assert.ok(rose < 1, `the ground lifted ${hull.tag} ${rose.toFixed(0)} m off its seat`);
     }
-    assert.ok(
-      shallowest > 1000,
-      `the ground lifted an escort to ${shallowest.toFixed(0)} m, into the Lid's water`
-    );
   });
 });

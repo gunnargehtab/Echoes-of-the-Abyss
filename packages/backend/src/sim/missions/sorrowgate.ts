@@ -572,7 +572,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     // 00:00 — the Knight is already out there, and already quiet.
     //
     // Silenced on the first tick rather than on arrival, because she spawns
-    // 2,204 m from Escort One's seat, and running open from there she and her
+    // 2,257 m from Escort One's seat, and running open from there she and her
     // second are a Tier 2 to the flight on every Echo pass to 06:20 (measured
     // without these two beats) — a contact on the plot before §9 has her
     // arrive at all.
@@ -703,7 +703,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     // **The interval is a measured distance, not a manner.** Measured on this
     // map, against the court's array, an open Corvette reads Tier 4 at 1,300 m,
     // Tier 3 from 1,500 to 1,900 m, and Tier 2 at 2,100 m; silent, she is
-    // simply not there at any of them. So she holds at 823,817, 2,098 m from
+    // simply not there at any of them. So she holds at 823,817, 2,151 m from
     // Escort One's seat, the flight's nearest, and runs silent, and the two
     // flickers below drop the order for fifteen seconds each — which is the
     // only way to produce §9's sentence with this Echo model: nothing, briefly
