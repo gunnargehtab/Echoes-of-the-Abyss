@@ -3647,6 +3647,40 @@ describe('renderer smoke test: the free camera', () => {
     }
   });
 
+  /**
+   * A roof's sides stand on cell edges, so a click on one lands on the edge
+   * itself, and the cell grid's floor puts some of those clicks in the water
+   * across it, whose ceiling is the surface. Whichever side the arithmetic
+   * falls, the click is on the roof and means the water under it (§9).
+   */
+  it('reads a click on a roof wall as the water under that roof', async () => {
+    const world = await boot();
+    try {
+      world.frame(3);
+      world.conn.home();
+      // The canned passage covers rows 5–6 and columns 12–13 under a 1,600 m
+      // ceiling. Its south wall stands on y 1,750 m over water deeper than
+      // that ceiling, so it is a lintel, and it faces the home camera.
+      world.conn.focusWorld(3250, 2250);
+      for (const x of [3030, 3100, 3170, 3240, 3310, 3380, 3450]) {
+        const face = world.conn.projectPoint(x, 1750, 1560);
+        assert.ok(face.visible, `the lintel at x ${x} is on screen`);
+        const click = world.conn.resolveWater(face.x, face.y);
+        assert.ok(
+          Math.abs(click.y - 1750) < 1,
+          `the premise: the click at x ${x} hit the wall, not y ${click.y.toFixed(1)}`
+        );
+        assert.equal(
+          click.depthM,
+          1600,
+          `a click on the lintel at x ${x} ordered ${click.depthM} m`
+        );
+      }
+    } finally {
+      world.teardown();
+    }
+  });
+
   it('lets the focus leave the seabed, and keeps it in water', async () => {
     const world = await boot();
     try {
@@ -3672,6 +3706,45 @@ describe('renderer smoke test: the free camera', () => {
       // equal the seabed here and stops equalling it the moment the camera pans.
       world.conn.raiseFocusBy(-20_000);
       assert.equal(rig().focus.depthM, null, 'and lands on the seabed');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  /**
+   * A raised focus a pan has pushed onto shallower ground stays raised at that
+   * depth and keeps its plane (docs/ui-ux.md §9). The pan leaves it exactly on
+   * the seabed there, and the left + right drag sends a step of nothing on
+   * every sideways move, so a zero step must not read as a landing.
+   */
+  it('keeps a raised focus that a pan pushed onto shallower ground', async () => {
+    const world = await boot();
+    try {
+      world.frame(3);
+      world.conn.home();
+      world.conn.focusWorld(3500, 3500);
+      world.conn.raiseFocusBy(400);
+      const raised = rig().focus.depthM;
+      assert.ok(raised !== null && raised > 2500, `the premise: a focus raised to ${raised} m`);
+
+      // North-west onto the shelf, whose ground stands above that depth. The
+      // probe reads the focus back through the camera's world height, so it is
+      // held to the metre, as the test above holds its notches.
+      world.conn.focusWorld(500, 500);
+      const shelf = world.conn.seabedDepthAt(500, 500);
+      assert.ok(shelf < raised, `the premise: the shelf's ${shelf} m is above the focus`);
+      const pushed = rig().focus.depthM;
+      assert.ok(
+        pushed !== null && Math.abs(pushed - shelf) <= 1,
+        `the ground raises the focus to its own depth, not ${pushed}`
+      );
+
+      world.conn.raiseFocusBy(0);
+      const after = rig().focus.depthM;
+      assert.ok(
+        after !== null && Math.abs(after - shelf) <= 1,
+        `a step of nothing leaves it there, not ${after}`
+      );
     } finally {
       world.teardown();
     }

@@ -55,6 +55,7 @@ import {
   Vector2,
   Vector3,
   WebGLRenderer,
+  type Intersection,
   type Material,
   type Object3D,
   type WebGLRenderTarget,
@@ -1108,6 +1109,34 @@ export class PerspectiveView {
   // from ever disagreeing about where the water is.
 
   /**
+   * Aim `RAY_TMP` through a pointer from this camera. False before the
+   * renderer exists, when there is no canvas to measure the pointer against.
+   */
+  private castPointer(clientX: number, clientY: number): boolean {
+    const canvas = this.renderer?.domElement;
+    if (canvas === undefined || canvas === null) return false;
+    const rect = canvas.getBoundingClientRect();
+    const ndc = NDC_TMP.set(
+      ((clientX - rect.left) / rect.width) * 2 - 1,
+      -((clientY - rect.top) / rect.height) * 2 + 1
+    );
+    RAY_TMP.setFromCamera(ndc, this.camera);
+    return true;
+  }
+
+  /**
+   * The first ground `RAY_TMP` meets: the terrain mesh, or a closed roof. A
+   * closed roof is what the pointer is on, so it answers first; an open one
+   * is glass, and the click means the water it shows.
+   */
+  private groundHit(): Intersection | undefined {
+    if (this.terrainMesh === null) return undefined;
+    const targets: Mesh[] = [this.terrainMesh];
+    for (const roof of this.roofs) if (roof.material.opacity === 1) targets.push(roof.mesh);
+    return RAY_TMP.intersectObjects(targets, false)[0];
+  }
+
+  /**
    * The water under a pointer. Raycast against the real terrain mesh, so a
    * click on a ridge face lands on the ridge; a ray that misses the mesh
    * (over the void past the map edge) falls back to the target's ground
@@ -1116,27 +1145,14 @@ export class PerspectiveView {
    */
   resolveGround(clientX: number, clientY: number): { x: number; y: number } {
     const terrain = this.terrain;
-    const canvas = this.renderer?.domElement;
-    if (terrain === null || canvas === undefined || canvas === null) return { x: 0, y: 0 };
-    const rect = canvas.getBoundingClientRect();
-    const ndc = NDC_TMP.set(
-      ((clientX - rect.left) / rect.width) * 2 - 1,
-      -((clientY - rect.top) / rect.height) * 2 + 1
-    );
+    if (terrain === null || !this.castPointer(clientX, clientY)) return { x: 0, y: 0 };
     const raycaster = RAY_TMP;
-    raycaster.setFromCamera(ndc, this.camera);
-    if (this.terrainMesh !== null) {
-      // A closed roof is what the pointer is on, so it answers first; an
-      // open one is glass, and the click means the water it shows.
-      const targets: Mesh[] = [this.terrainMesh];
-      for (const roof of this.roofs) if (roof.material.opacity === 1) targets.push(roof.mesh);
-      const hit = raycaster.intersectObjects(targets, false)[0];
-      if (hit !== undefined) {
-        return {
-          x: Math.min(terrain.cols * terrain.cellM, Math.max(0, hit.point.x)),
-          y: Math.min(terrain.rows * terrain.cellM, Math.max(0, hit.point.z)),
-        };
-      }
+    const hit = this.groundHit();
+    if (hit !== undefined) {
+      return {
+        x: Math.min(terrain.cols * terrain.cellM, Math.max(0, hit.point.x)),
+        y: Math.min(terrain.rows * terrain.cellM, Math.max(0, hit.point.z)),
+      };
     }
     const groundY = this.groundYAt(this.target.x, this.target.z);
     const direction = raycaster.ray.direction;
@@ -1178,18 +1194,10 @@ export class PerspectiveView {
    */
   resolveWater(clientX: number, clientY: number): { x: number; y: number; depthM: number } {
     const terrain = this.terrain;
-    const canvas = this.renderer?.domElement;
-    if (terrain === null || canvas === undefined || canvas === null) {
+    if (terrain === null || !this.castPointer(clientX, clientY)) {
       return { x: 0, y: 0, depthM: 0 };
     }
-    const rect = canvas.getBoundingClientRect();
-    const ndc = NDC_TMP.set(
-      ((clientX - rect.left) / rect.width) * 2 - 1,
-      -((clientY - rect.top) / rect.height) * 2 + 1
-    );
-    const raycaster = RAY_TMP;
-    raycaster.setFromCamera(ndc, this.camera);
-    const { origin, direction } = raycaster.ray;
+    const { origin, direction } = RAY_TMP.ray;
     // How far along the ray the focus plane is; not positive when there is
     // no plane, when it lies behind the eye, or when the ray runs level with it.
     const planeless = this.focusDepthM === null;
@@ -1199,16 +1207,7 @@ export class PerspectiveView {
     let ground: 'floor' | 'roof' | null = null;
     let x: number;
     let z: number;
-    const hit =
-      this.terrainMesh === null
-        ? undefined
-        : raycaster.intersectObjects(
-            [
-              this.terrainMesh,
-              ...this.roofs.filter((roof) => roof.material.opacity === 1).map((roof) => roof.mesh),
-            ],
-            false
-          )[0];
+    const hit = this.groundHit();
     if (hit !== undefined && (toPlane <= 0 || hit.distance <= toPlane)) {
       ground = hit.object === this.terrainMesh ? 'floor' : 'roof';
       x = hit.point.x;
@@ -1233,7 +1232,12 @@ export class PerspectiveView {
 
     const col = Math.min(terrain.cols - 1, Math.max(0, Math.floor(x / terrain.cellM)));
     const row = Math.min(terrain.rows - 1, Math.max(0, Math.floor(z / terrain.cellM)));
-    const cell = row * terrain.cols + col;
+    let cell = row * terrain.cols + col;
+    // A roof's sides stand on cell edges, so a hit on one floors into the water
+    // across the edge as often as into the roof's own cell, and that water's
+    // ceiling is the surface: read there, a click on a lintel ordered the hull
+    // up to `DEPTH.MIN_M`. The roof that was hit answers for its own water.
+    if (ground === 'roof' && hit !== undefined) cell = this.roofCellNear(hit.object, x, z, cell);
     const deepest = Math.min(terrain.floor[cell]!, DEPTH.MAX_M);
     const shallowest = Math.max(DEPTH.MIN_M, terrain.ceiling[cell]!);
     // Solid rock has no water between the two, and the floor is the answer:
@@ -1245,6 +1249,33 @@ export class PerspectiveView {
           ? Math.min(shallowest, deepest)
           : Math.min(deepest, Math.max(shallowest, this.focusDepth()));
     return { x, y: z, depthM };
+  }
+
+  /**
+   * The cell of the roof `object` nearest a point on it: `cell` itself when it
+   * is one of that roof's, else whichever of the roof's cells lies closest.
+   * `this.roofs` is built in `passages.list` order, so a roof's index is its
+   * passage's.
+   */
+  private roofCellNear(object: Object3D, x: number, z: number, cell: number): number {
+    const terrain = this.terrain;
+    const passages = this.passages;
+    const id = this.roofs.findIndex((roof) => roof.mesh === object);
+    if (terrain === null || passages === null || id < 0 || passages.of[cell] === id) return cell;
+    const { cols, cellM } = terrain;
+    let nearest = cell;
+    let nearestD = Infinity;
+    for (const index of passages.list[id]!.cells) {
+      const x0 = (index % cols) * cellM;
+      const z0 = Math.floor(index / cols) * cellM;
+      const dx = Math.max(x0 - x, 0, x - (x0 + cellM));
+      const dz = Math.max(z0 - z, 0, z - (z0 + cellM));
+      if (dx * dx + dz * dz < nearestD) {
+        nearestD = dx * dx + dz * dz;
+        nearest = index;
+      }
+    }
+    return nearest;
   }
 
   /**
@@ -1353,8 +1384,15 @@ export class PerspectiveView {
    * under a pan as it does from `home()` (#1132). Without that the drag could
    * never give back the frame where a click on the ground below the focus is a
    * click on the ground, short of `Home` taking the angles with it.
+   *
+   * A zero step changes nothing. A pan onto shallower ground clamps a raised
+   * focus to exactly the seabed (`clampTarget`), and read as a landing, a
+   * still step there would drop the plane the docs say that focus keeps
+   * (docs/ui-ux.md §9) — which the left + right drag did on every sideways
+   * move across a plateau.
    */
   raiseFocusBy(metres: number): void {
+    if (metres === 0) return;
     const seabed = this.seabedDepthAt(this.target.x, this.target.z);
     const next = (this.focusDepthM ?? seabed) - metres;
     this.focusDepthM = next >= seabed ? null : next;

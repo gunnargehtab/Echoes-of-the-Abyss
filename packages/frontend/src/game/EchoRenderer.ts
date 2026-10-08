@@ -2562,8 +2562,10 @@ export class EchoRenderer {
         // Across pans sideways; up and down moves the focus. Both move the
         // water with the hand, as the middle drag does, so dragging up lifts
         // the water past the eye and sinks the focus (free-camera.md §4).
-        this.conn?.panBy(e.clientX - lastX, 0);
-        this.conn?.raiseFocusBy((e.clientY - lastY) * FOCUS_DRAG_M_PER_PX);
+        const dx = e.clientX - lastX;
+        const dy = e.clientY - lastY;
+        if (dx !== 0) this.conn?.panBy(dx, 0);
+        if (dy !== 0) this.conn?.raiseFocusBy(dy * FOCUS_DRAG_M_PER_PX);
         lastX = e.clientX;
         lastY = e.clientY;
         return;
@@ -3368,8 +3370,9 @@ export class EchoRenderer {
         // without this the player armed the mode, clicked the water, and only
         // then heard why — the "refusal delivered afterwards" §10.5 says
         // teaches nothing. A run north that is mostly a climb
-        // (docs/mission-sorrowgate.md §8) is where that bit first (#708). The prologue hides this by accident, its tenders
-        // being Harvesters and so not `fighters`; *Radicals* holds a Cruiser.
+        // (docs/mission-sorrowgate.md §8) is where that bit first (#708). The
+        // prologue hides this by accident, its tenders being Harvesters and so
+        // not `fighters`; *Radicals* holds a Cruiser.
         //
         // The weapons lock is the refusal's second source. Twelve missions
         // strike weapons, and the button greyed under every one of them with
@@ -3690,9 +3693,10 @@ export class EchoRenderer {
    *
    * Two bands of 44 px chips over a census line. §11 puts the target floor at
    * 44 px, and the chips are the pointer's way to recall a control group beside
-   * the digits §9 keeps fixed. Four rows of 44 px do not fit a block this tall, which is why the groups are
-   * chips laid across the width rather than a list: it is both denser and
-   * reachable, where a list of 15 px rows was neither.
+   * the digits §9 keeps fixed. Four rows of 44 px do not fit a block this
+   * tall, which is why the groups are chips laid across the width rather than
+   * a list: it is both denser and reachable, where a list of 15 px rows was
+   * neither.
    *
    * The census counts hulls and structures the player owns. A hostile total
    * here would be docs/ui-ux.md §10.5's maphack in a numeral — the map-wide
@@ -6320,12 +6324,19 @@ export class EchoRenderer {
     }
   }
 
+  /** The terrain grid's index for a point, clamped onto the map. 0 before a map. */
+  private terrainCell(x: number, y: number): number {
+    const terrain = this.terrain;
+    if (terrain === null) return 0;
+    const col = Math.min(terrain.cols - 1, Math.max(0, Math.floor(x / terrain.cellM)));
+    const row = Math.min(terrain.rows - 1, Math.max(0, Math.floor(y / terrain.cellM)));
+    return row * terrain.cols + col;
+  }
+
   private biomeAt(x: number, y: number): Biome {
     const terrain = this.terrain;
     if (terrain === null) return Biome.OpenWater;
-    const col = Math.min(terrain.cols - 1, Math.max(0, Math.floor(x / terrain.cellM)));
-    const row = Math.min(terrain.rows - 1, Math.max(0, Math.floor(y / terrain.cellM)));
-    return terrain.biomes[row * terrain.cols + col] as Biome;
+    return terrain.biomes[this.terrainCell(x, y)] as Biome;
   }
 
   private propagationAt(x: number, y: number): number {
@@ -7827,12 +7838,16 @@ export class EchoRenderer {
     const terrain = this.terrain;
     const water = this.screenToWater(this.pointerClient.x, this.pointerClient.y);
     if (lead === undefined || terrain === null || water === null) return null;
-    const col = Math.min(terrain.cols - 1, Math.max(0, Math.floor(water.x / terrain.cellM)));
-    const row = Math.min(terrain.rows - 1, Math.max(0, Math.floor(water.y / terrain.cellM)));
-    const floor = terrain.floor[row * terrain.cols + col] ?? 0;
+    const cell = this.terrainCell(water.x, water.y);
+    const floor = terrain.floor[cell] ?? 0;
     const follows = onTheGround(floor, water.depthM);
+    // The follow mode's own station (`followTheFloor`): the clearance over the
+    // floor, held under a roof the clearance does not fit beneath.
     const depthM = follows
-      ? Math.max(0, Math.min(floor - FOLLOW_FLOOR.CLEARANCE_M, DEPTH.MAX_M))
+      ? Math.max(
+          terrain.ceiling[cell] ?? 0,
+          Math.min(floor - FOLLOW_FLOOR.CLEARANCE_M, DEPTH.MAX_M)
+        )
       : water.depthM;
     const dives = depthM > lead.depth;
     const rated = (unit: OwnUnit) => !this.wouldCrush(unit, depthM);
