@@ -3195,10 +3195,38 @@ describe('the command card when it is offered more than it holds', () => {
         dispatchWindow('keyup', { code: 'KeyC' });
         return world.log.first('onDepthCharge')?.[1];
       };
-      assert.equal(charge(900), 2400, 'a Mid-Water hull charges the Abyssal, not the duct');
-      assert.equal(charge(300), 1000, 'a Shelf hull charges Mid-Water');
+      assert.equal(charge(900), 2400, "a Mid-Water hull's charge is set to 2,400 m, not the duct");
+      assert.equal(charge(300), 1000, "a Shelf hull's charge is set to Mid-Water's 1,000 m");
       assert.equal(charge(900, 2400), 2400, 'mid-dive, from the band the hull is in');
       assert.equal(charge(2400), undefined, 'and from the Abyssal there is no band below');
+
+      // The button greys on the same test: pressed mid-dive it fires, and
+      // from the Abyssal it does nothing.
+      const pressed = (depth: number, depthOrder?: number): unknown => {
+        corvette.depth = depth;
+        corvette.depthOrder = depthOrder;
+        world.chart.applySnapshot(snapshot);
+        world.conn.applySnapshot(snapshot);
+        world.frame(1);
+        selectHull(world, corvette);
+        world.log.calls.length = 0;
+        const cell = barLabel(world.app, 'CHARGE');
+        world.app.canvas.dispatch('pointerdown', {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: cell.x,
+          clientY: cell.y,
+        });
+        world.frame(1);
+        return world.log.first('onDepthCharge')?.[1];
+      };
+      assert.equal(
+        pressed(900, 2400),
+        2400,
+        'the button fires mid-dive, from the band the hull is in'
+      );
+      assert.equal(pressed(2400), undefined, 'and is grey from the Abyssal');
     } finally {
       world.teardown();
     }

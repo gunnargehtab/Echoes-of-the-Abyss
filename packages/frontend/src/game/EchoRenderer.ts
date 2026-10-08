@@ -1329,13 +1329,10 @@ const RIBBON_BOTTOM_PAD = 16;
 const RIBBON_DUCT_MIN_PX = 6;
 
 /**
- * Where a hull sits when ordered into a band.
- *
- * Depth orders step band to band rather than metre to metre, because the bands
- * are what the player reasons about — docs/ui-ux.md §8 puts the boundaries on
- * the ribbon, not the absolute figure. These are the working depths inside
- * each band, kept clear of the boundaries so a unit is never ambiguously "at"
- * two bands at once.
+ * The depth a depth charge is set to in each band (docs/systems-combat.md §8):
+ * the band's working depth, kept clear of its boundaries so the set depth is
+ * never ambiguously in two bands at once. CHARGE is its one reader since a
+ * click took depth orders over from the band steps (#1132).
  */
 const BAND_STATION_DEPTH_M: Record<DepthBand, number> = {
   [DepthBand.Shelf]: 200,
@@ -1344,9 +1341,9 @@ const BAND_STATION_DEPTH_M: Record<DepthBand, number> = {
 };
 
 /**
- * The band a depth charge set from each band falls into — §8's "the band
- * below", and the only step `Match.orderDepthCharge` accepts, since a charge
- * set inside its dropper's own band is refused. The Abyssal has none.
+ * The band CHARGE sets a depth charge into from each band — docs/systems-combat.md
+ * §8's "the band below". `Match.orderDepthCharge` accepts any band but its
+ * dropper's own; the button offers the one below. The Abyssal has none.
  */
 const BAND_BELOW: Partial<Record<DepthBand, DepthBand>> = {
   [DepthBand.Shelf]: DepthBand.MidWater,
@@ -4104,7 +4101,8 @@ export class EchoRenderer {
 
   /**
    * Where the selection's depth charge is set: the station of the band under
-   * the lead hull's own depth (§8), or null from the Abyssal.
+   * the lead hull's own depth (docs/systems-combat.md §8), or null from the
+   * Abyssal.
    *
    * The hull's depth rather than the one it is headed for, and a band rather
    * than a rung, because that is the test the server makes: a charge set
@@ -4112,7 +4110,10 @@ export class EchoRenderer {
    * rung to rung from the ordered depth sent a Mid-Water hull's charge to the
    * duct's 1,200 m, inside its own band, and greyed the button on a hull still
    * in Mid-Water but ordered to the Abyssal (#1260). The lead decides, so a
-   * mixed-depth squad drops one pattern rather than fanning it out.
+   * mixed-depth squad drops one pattern rather than fanning it out. A charge
+   * carries its dropper's rating, so a PR-2 hull's charge set to 2,400 m
+   * implodes at 1,800 m on the way down; whether CHARGE should say so first is
+   * #1268.
    */
   private chargeDepth(units: OwnUnit[]): number | null {
     const lead = units[0];
@@ -4230,13 +4231,13 @@ export class EchoRenderer {
   }
 
   /**
-   * Drop a charge into the band below — §8.
+   * Drop a charge into the band below — docs/systems-combat.md §8.
    *
    * The band below rather than an arbitrary depth, because that is the decision
    * the weapon exists for: the hull under you is in the next band down, and
    * getting a charge to it is the whole of the vertical argument. One band down
-   * from where the lead hull is (`chargeDepth`), which is the step the server
-   * accepts.
+   * from where the lead hull is (`chargeDepth`), which the server accepts, as
+   * it accepts any band but the dropper's own.
    */
   private commandDepthCharge(): void {
     if (this.refusedByMission('depthCharges')) return;
