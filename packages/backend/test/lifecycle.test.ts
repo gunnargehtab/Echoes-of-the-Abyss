@@ -262,10 +262,12 @@ describe('a contact handle does not outlive what it named', () => {
     // by scanning it. bitecs reissues entity ids once enough have been freed —
     // routine now that short-lived ordnance exists — so a handle minted for a
     // torpedo that died minutes ago comes to name whatever inherits that id.
-    // `orderAttackContact` gates on owner and hp, never on current detection,
+    // `orderAttackContact` gated on owner and hp, not on current detection,
     // so the player could order an attack on a live hull they had never
-    // detected, and combat republishes an ordered target's position every tick.
-    // A dead contact turns into a permanent tracker on a fresh one.
+    // detected, and combat republished an ordered target's position every tick.
+    // A dead contact turned into a permanent tracker on a fresh one. #1247 now
+    // asks for a current resolution and chases only what the slot was shown,
+    // and pruning still keeps an old handle off a new hull the slot can hear.
     //
     // Asserted on `Weapon.orderedTargetEid` rather than on the snapshot,
     // because that field IS the tracker: if it ever holds the recycled entity,

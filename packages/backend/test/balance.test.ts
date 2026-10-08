@@ -184,13 +184,14 @@ describe('telemetry measures what it says it measures', () => {
     // minutes reaches two branches, five reaches three, and eight reaches all
     // five — `alreadyHas` 136, but `bought` only 1, both from slot 0.
     //
-    // A map or commander edit moves these. #1106's Ventfront took `alreadyHas`
-    // from 44 to 136; refusing an attack order on a Tier-1 smudge (#1247) moved
-    // the one purchase past eight minutes; and re-issuing walks on the
-    // commander's own decisions (#1253) ends this duel at five, before either
-    // navy buys its ordnance hull. So the branches are read over a second duel
-    // as well, the Consortium against Hadron, which reaches all five on its own
-    // under each of those edits — no single edit can empty a branch now.
+    // A map, sim or commander edit moves these. #1106's Ventfront took
+    // `alreadyHas` from 44 to 136; refusing an attack order on a Tier-1 smudge
+    // (#1247) moved the one purchase past eight minutes; and re-issuing walks on
+    // the commander's own decisions (#1253) ends this duel at five, before
+    // either navy buys its ordnance hull. So the branches are read over a second
+    // duel as well, the Consortium against Hadron, which reaches all five on its
+    // own under each of those edits. Neither #1247 nor #1253 empties a branch;
+    // each duel buys one ordnance hull, so an edit that delayed both could.
     const results = [
       runMatch({ seats: DUEL, seed: 59, maxMinutes: 10, fauna: false }),
       runMatch({

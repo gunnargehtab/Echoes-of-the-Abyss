@@ -40,6 +40,7 @@ import {
   Posture,
   Weapon,
 } from '../src/sim/components.ts';
+import { orderTarget } from '../src/sim/systems/chase.ts';
 import { launchTorpedo } from '../src/sim/systems/ordnance.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 
@@ -135,10 +136,11 @@ describe('countermeasures', () => {
     });
     advance(match, 0.2);
 
-    // Written to the field rather than ordered through `Match`, which wants a
+    // Written to the state rather than ordered through `Match`, which wants a
     // contact handle the defender has not been given: what is under test is the
-    // state `combatSystem` reads, not the path that sets it.
-    Weapon.orderedTargetEid[prey] = launcher;
+    // state `combatSystem` reads, not the path that sets it — the target and
+    // the point it is chased to (#1247), here where it lies.
+    orderTarget(prey, launcher, Position.x[launcher]!, Position.y[launcher]!);
 
     const torpedo = launchTorpedo(match.world, launcher, 5500, 6000);
     advance(match, 1);
@@ -320,10 +322,11 @@ describe('countermeasures', () => {
         y: 6000,
       });
       advance(match, 0.2);
-      // Written to the field rather than ordered through `Match`, which wants a
+      // Written to the state rather than ordered through `Match`, which wants a
       // contact handle the defender has not been given: what is under test is
-      // the state `combatSystem` reads, not the path that sets it.
-      if (ordered) Weapon.orderedTargetEid[defender] = quarry;
+      // the state `combatSystem` reads, not the path that sets it — the target
+      // and the point it is chased to (#1247), here where it lies.
+      if (ordered) orderTarget(defender, quarry, Position.x[quarry]!, Position.y[quarry]!);
 
       launchTorpedo(match.world, launcher, 4000, 6000);
       advance(match, 10);

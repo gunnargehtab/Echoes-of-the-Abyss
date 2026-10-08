@@ -46,6 +46,13 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * 28: an attack order is held to the firing table (#1247). An `attack` on a
+ * contact the slot holds below Bearing, or no longer resolves, is refused,
+ * and a hull chases the point its slot was shown rather than its target's own
+ * position — a point the fingerprint now mixes beside the ordered target. A
+ * v27 file's attacks on smudges and lapsed handles replay as refusals, and its
+ * checkpoints are hashes of a world without the chase point.
+ *
  * 27: a click is a point in the water (#1132). `move` and `attackMove` carry
  * the depth they were given, and floor-following is a move onto the ground
  * rather than an order of its own, so `followFloor` is gone from the stream. A
@@ -286,7 +293,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 27;
+export const REPLAY_FORMAT_VERSION = 28;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =

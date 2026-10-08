@@ -711,8 +711,9 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
   });
 
   it('sends the hull to where the phantom was reported, rather than nowhere', () => {
-    // An unqueued attack on a real target is a chase: combat.ts republishes
-    // the target's position into MoveOrder for as long as it is out of range.
+    // An unqueued attack on a real target is a chase: combat.ts moves the hull
+    // to where its slot was last shown the target, for as long as it is out of
+    // range (#1247).
     // A hull that simply stood still would be the same tell in the position
     // field, so the order goes to the point the player was shown.
     const { match, pinger, phantoms } = ping(fieldsMap());

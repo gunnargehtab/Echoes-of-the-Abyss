@@ -48,7 +48,8 @@ import { AiCommander } from '../src/ai/commander.ts';
 import { AiSeat, briefingFor } from '../src/ai/seat.ts';
 import { Match } from '../src/sim/match.ts';
 import { spawnUnit } from '../src/sim/world.ts';
-import { MoveOrder, Weapon } from '../src/sim/components.ts';
+import { MoveOrder, Position, Weapon } from '../src/sim/components.ts';
+import { orderTarget } from '../src/sim/systems/chase.ts';
 import type { AiBriefing, AiCommand } from '../src/ai/types.ts';
 
 const SEED = 0x946;
@@ -243,7 +244,8 @@ describe('recalling the massing army (#946)', () => {
       y: rally.y + 10500,
     });
     match.setEngineOff(0, quarry, true);
-    Weapon.orderedTargetEid[chaser] = quarry;
+    // The target and the point it is chased to (#1247), here where it lies.
+    orderTarget(chaser, quarry, Position.x[quarry]!, Position.y[quarry]!);
 
     for (let i = 0; i < SIM.TICK_HZ * 3; i++) {
       const own = match.update(STEP_MS)?.get(1);

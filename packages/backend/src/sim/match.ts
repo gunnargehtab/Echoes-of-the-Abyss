@@ -3075,9 +3075,10 @@ export class Match {
    *
    * At Bearing or better only: a Tier-1 report is the listener's own position
    * and says nothing about the target. A target the slot no longer resolves
-   * keeps the last point it was shown at, so the hull goes there and looks, as
-   * it would for a phantom. Once a pass, beside the pass, so the chase is as
-   * fresh as the picture and no fresher.
+   * keeps the last point it was shown at, so the hull goes there and looks;
+   * unlike a phantom's, the order stands until the target dies or is heard
+   * again. Once a pass, beside the pass, so the chase is as fresh as the
+   * picture and no fresher.
    */
   private refreshChases(): void {
     const guns = this.armedOwners(this.world);

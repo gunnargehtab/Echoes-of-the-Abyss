@@ -462,7 +462,8 @@ describe('an attack order, held to the same table — #1247', () => {
     match.orderAttackContact(0, hunter, handle);
     advance(match, 1);
     // One tick past the pass, so the gun has steered by the newest ghost: the
-    // blur is drawn afresh each pass, and the pass runs after combat.
+    // blur is a fraction of the range, so the ghost moves as the hunter
+    // closes, and the pass runs after combat.
     match.update(STEP_MS);
     const shown = match.echo.firingSolution(0, prey)!;
     assert.equal(shown.tier, ResolutionTier.Bearing, 'the premise: still a bearing');
@@ -485,6 +486,29 @@ describe('an attack order, held to the same table — #1247', () => {
     assert.ok(
       Math.hypot(MoveOrder.x[hunter]! - last.x, MoveOrder.y[hunter]! - last.y) < 1,
       'the hunter makes for where it was last shown the Cruiser, not for where it went'
+    );
+  });
+
+  it('chases a queued attack from the point it was queued at, once its leg begins', () => {
+    // The fourth writer of a chase point: `orderQueue.ts` starts the leg with
+    // the anchor the slot was shown, and a pass that no longer resolves the
+    // target leaves it there.
+    const { match, hunter, prey, handle } = hunt(ResolutionTier.Bearing);
+    match.orderMove(0, hunter, 3000, 7950);
+    match.orderAttackContact(0, hunter, handle, true);
+    const queued = match.world.orderQueues.get(hunter) ?? [];
+    assert.equal(queued.length, 1, 'the premise: the attack waits behind the move');
+    const anchor = queued[0] as { x: number; y: number };
+    vanish(match, prey);
+    for (let i = 0; i < 30 * SIM.TICK_HZ; i++) {
+      if ((match.world.orderQueues.get(hunter)?.length ?? 0) === 0) break;
+      match.update(STEP_MS);
+    }
+    assert.equal(match.world.orderQueues.get(hunter)?.length ?? 0, 0, 'the premise: the leg began');
+    match.update(STEP_MS);
+    assert.ok(
+      Math.hypot(MoveOrder.x[hunter]! - anchor.x, MoveOrder.y[hunter]! - anchor.y) < 1,
+      'the leg chases the point it was queued at'
     );
   });
 
