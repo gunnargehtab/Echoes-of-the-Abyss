@@ -734,7 +734,10 @@ function act(
     Fauna.species[eid] === FaunaSpecies.Hollow
       ? stage === FaunaStage.Committed
       : stage !== FaunaStage.Ambient;
-  Acoustic.sig[eid] = roused ? stats.sigActive : stats.sigIdle;
+  // Through the Spore Veil's cut, as every other emitter's SIG is: "everything
+  // inside — friend or foe alike — emits at 40% SIG" (docs/units.md), and
+  // `aurasSystem` has set the factor for this tick already (#1251).
+  Acoustic.sig[eid] = (roused ? stats.sigActive : stats.sigIdle) * (Acoustic.sigFactor[eid]! || 1);
 
   let toX = Fauna.homeX[eid]!;
   let toY = Fauna.homeY[eid]!;
@@ -771,7 +774,7 @@ function act(
         // The trade §4 names: the quiet evidence is eaten roughly four times
         // faster, and the swarm's own feeding SIG stands in its place.
         world.marks.strip(mark.id, DRIFT.SCAVENGE_STRIP_FACTOR, dt);
-        Acoustic.sig[eid] = stats.sigActive;
+        Acoustic.sig[eid] = stats.sigActive * (Acoustic.sigFactor[eid]! || 1);
       }
     }
   }
