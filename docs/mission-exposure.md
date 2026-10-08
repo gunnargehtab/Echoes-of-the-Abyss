@@ -275,7 +275,7 @@ in the next watch's water with a spent story, and the file has a reading for tha
 | ~07:00 | The sixth point resolves for whoever goes far enough east to hear it, and the mission changes shape without changing a rule (§6). Tull's second line (§12) |
 | *(fired by the tally, not the clock)* | **At twenty seconds entered: the warning.** The Division's guidance, once (§4) |
 | *(fired by the tally, not the clock)* | **At thirty: the recall.** The charter is spent, the watch turns onto the survey's water, and the mission is an extraction (§4, §7) |
-| 16:45 | **The rim pack rises, loud** — the relief's wake, arriving ahead of it. The seventy-five seconds of warning begin |
+| 16:45 | **The rim pack, loud** — the relief's wake, arriving ahead of it, run along the rim at 1,700 m to the change (§5). The seventy-five seconds of warning begin |
 | 18:00 | **The change.** Whatever is over the layer is the survey; whatever is not is in the next watch's water. The Division reads the file it received (§8) |
 
 The two condition-fired rows are printed in the table where their *typical* run lands, and
@@ -442,7 +442,7 @@ What exists against this document and what does not, continuing the Ledger's lis
 | The watch — authored transits, armed, on their own clock | **Built** (#190's `move` beats; hostility is `Owner.slot`) |
 | In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
 | **Where Halvard is** | **A finding against this document, and this document moved** (#408). §2 and the Related list said Halvard was *two trenches west*; the gazetteer puts it on the west wall at 1,600 m ([world-map.md](world-map.md) §3), and the trenches are counted downward, not laterally. The literal's seating note on the lead hull now says the same. **Whose salvor Tull's father was** is settled the same way (#424): Halvard imploded in 14 PC and is entered by nobody, so *Halvard salvor* is the concern's standing trade name for its deep-recovery crews and not a claim to have worked the wreck — §1 reads it that way, and the line in [characters.md](characters.md) survives as spoken |
-| **A pack under its band** | **Landed** (#420) — `exposure.ts` drives the rim pack at 1,700 m against the Draymaw's 500–1,300 m band in [bestiary.md](bestiary.md) §4, under that section's rider: the band is where the Drift lives, not where a beat may send it. §5's roster row says so, and nothing in the literal moves |
+| **A pack under its band** | **Landed** (#420, #1199) — `exposure.ts` spawns the rim pack at 1,700 m and drives it there to the change, against the Draymaw's 500–1,300 m band in [bestiary.md](bestiary.md) §4, under that section's rider: the band is where the Drift lives, not where a beat may send it. §5's roster row says so. Until #1199 the drive named no depth, so the pack climbed to the species' 900 m and crossed the layer at 17:40, and the drive ended at 17:45. It runs to 18:00 now, because a pack released at 1,700 m beside the watch hears its guns and fights it to the whistle |
 
 ---
 
