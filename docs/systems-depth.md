@@ -86,8 +86,8 @@ Three things end it. A move into open water replaces it, because the newer instr
 player's current mind, and the hull takes that move's depth instead. So does a task that keeps
 a depth of its own: an attack on a contact, which chases at the depth the hull is on rather
 than down the seabed after it, and a harvest, whose loop orders its own descents and climbs
-([economy.md](economy.md) §7). A hull leaving the mode either way finishes the climb or descent
-it is already making, and holds there. And ground that falls away below the hull's Pressure
+([economy.md](economy.md) §7). Left for a task, the mode lets the hull finish the climb or
+descent it is already making, and hold there. And ground that falls away below the hull's Pressure
 Rating **disengages it**: the mode will ride a hull down to the edge of what it is rated for
 and not one metre past, because a standing order that could feed a hull into crush attrition
 would be the seabed spending the player's hull on their behalf — the exact thing this

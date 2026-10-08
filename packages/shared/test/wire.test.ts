@@ -36,7 +36,7 @@ function duplicates(map: Record<string, string>): string[] {
 describe('the message contract', () => {
   it('gives every client message its own name on the wire', () => {
     assert.deepEqual(duplicates(CLIENT_MSG), [], 'two keys sharing a wire name collapse silently');
-    assert.equal(Object.keys(CLIENT_MSG).length, 32, 'the orders a client may send');
+    assert.equal(Object.keys(CLIENT_MSG).length, 31, 'the orders a client may send');
   });
 
   it('gives every server message its own name on the wire', () => {
@@ -49,7 +49,7 @@ describe('the message contract', () => {
     // what `ai/types.ts` holds the commander's vocabulary against (#621). The
     // subtraction happens in the type system, where a name that is in neither
     // tuple is simply absent rather than wrong — so the runtime half is here:
-    // every lobby name is a real key, and the remainder is the 27 a seated
+    // every lobby name is a real key, and the remainder is the 26 a seated
     // commander may send.
     for (const name of LOBBY_MSG) {
       assert.ok(name in CLIENT_MSG, `${name} is a client message`);
@@ -57,7 +57,7 @@ describe('the message contract', () => {
     assert.equal(LOBBY_MSG.length, 5, 'the names a room answers only before the match starts');
     assert.equal(
       Object.keys(CLIENT_MSG).filter((k) => !(LOBBY_MSG as readonly string[]).includes(k)).length,
-      27,
+      26,
       'the orders a seated commander may send'
     );
   });

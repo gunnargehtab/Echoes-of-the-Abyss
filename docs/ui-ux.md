@@ -453,10 +453,9 @@ unrecoverable portion of the health bar is hatched, and its texture rather than 
 what distinguishes it, so it survives colour-vision differences (§11). The focus tick is a
 chevron on the ribbon's right edge in the plain text ink: a camera reading, so neither a hull's
 marker nor the cyan of a rule about the water. Holding `Alt` previews the click under the
-cursor: its depth, marked on the ribbon,
-and what getting there costs — `DIVE 72 SIG`, with `· CRUSH` when the depth is below the
-selection's rating, or the climb's seconds for a rise, and `FLOOR` when the click is on the
-ground and will follow it. The duct is one more depth the focus can be put at, which is how a
+cursor: its depth, marked on the ribbon, and what getting there costs — `DIVE 72 SIG`, with
+`· CRUSH` when the depth is below the selection's rating, or the climb's seconds for a rise,
+and `FLOOR` when the click is on the ground and will follow it. The duct is one more depth the focus can be put at, which is how a
 player buys its 1.2× range now that no Dive rung stands there for them (#1132). The readout
 names the selection's own zone when it is somewhere other than the default: `DUCT` inside the
 layer, `UNDER` below it.
@@ -538,9 +537,10 @@ move. Cruising at a depth starts with raising the focus — the left + right dra
 wheel — until §8's focus tick sits where the hull should go. Attack-move lands the same way,
 and a queued leg keeps the depth it was given. A rally point stays a place on the map.
 
-The right button acts on **release**, not on press, so that a press can still become the
-left + right drag. The order goes to where the press was, with the press's modifiers. What
-the click asked for is drawn where it asked (§12): the ring that acknowledges it closes on the
+The right button acts on **release**, not on press, and so does a left click that an armed
+attack-move or a pending build is waiting for, so that a press can still become the left +
+right drag. The order goes to where the press was, with the press's modifiers. What the
+click asked for is drawn where it asked (§12): the ring that acknowledges it closes on the
 point at its depth, with a plumb line to the ground below it.
 
 Nothing is left of Dive, Rise or the floor-following toggle, and `D`, `A` and `S` are unbound.
@@ -1057,7 +1057,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | The loudness collar (§3.5) | Implemented — a gauge on every own hull and every own structure, its track the full circle and its sweep `SIG / 100` of a turn from 12 o'clock, inked on §3's stops. It replaces a tick whose radius was `6 + sig × 0.35` metres on a hull and `10 + sig × 0.35` on a structure: a made-up distance in a view where every other radius is a real one, drawn at alpha 0.25 where nothing could read it, and a *radius* for a quantity that is not a distance at all |
 | Ping preview rings, ping commit | Implemented (hold `Alt`, `P`) |
 | Silent-running dimming | Implemented |
-| Depth ribbon, PR badge, unrecoverable-hull hatching | Implemented (`D` dive, `A` rise; hold `Alt` to preview the dive cost) |
+| Depth ribbon, PR badge, unrecoverable-hull hatching | Implemented (the focus tick, and a click's depth since #1132; hold `Alt` to preview the click's cost) |
 | Thermocline on the ribbon, duct as a depth rung | Implemented — cyan line at 1,200 m, duct shaded, `DUCT` / `UNDER` in the readout |
 | Sonar-scope minimap | Implemented — terrain, tier-fidelity returns, Echo Marks under them, sweep, range rings |
 | Contact log | Implemented — DOM, live region, click-to-focus, every row including `MARK` (#214) |

@@ -79,9 +79,9 @@ describe('a selection the mission holds whole says so before the press', () => {
   });
 
   it('says nothing for a mixed selection, which still has somewhere to go', () => {
-    // The flight is in this selection, so DIVE, RISE and FOLLOW are live
-    // buttons and the hint bar owes the player its bindings. Greying them here
-    // would refuse an order the server would have taken (§10.5).
+    // The flight is in this selection, so ENGAGE is a live button and the
+    // hint bar owes the player its bindings. Greying it here would refuse
+    // an order the server would have taken (§10.5).
     assert.equal(heldWholly(HOLDS, [1, 7]), null);
     assert.equal(heldWholly(HOLDS, [7, 2, 9]), null);
   });
