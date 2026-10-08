@@ -267,7 +267,7 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
           hp: 600,
           reading: {
             entered:
-              'Point six returns the survey’s own machinery noise, shifted, on a period the model has no column for. It is entered. The model can be embarrassed later; the record cannot be taken twice. — B.T.',
+              "Point six returns the survey's own machinery noise at us, shifted, on a period the model has no column for. It is entered. The model can be embarrassed later; the record cannot be taken twice. — B.T.",
             gap: 'Point six was not read. The chart carries a mark the Division cannot gloss, and the interval closes around a silence the model will inherit.',
           },
           note: 'Not in the model (§6). The campaign turning, in a ledger entry',
