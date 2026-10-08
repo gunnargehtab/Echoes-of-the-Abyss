@@ -217,9 +217,15 @@ export function refitLineTimeS(kind: RefitKind, faction: Faction): number {
  * `effectivePressureRating`, which has already resolved the faction baseline:
  * the refit is a step up from where a navy *starts*, capped where its own row
  * says it stops.
+ *
+ * The cap holds back the gain and never takes rating away (#1221): a step up
+ * is what §2 sells. The Commune's ceiling is 2, and four of its hulls are
+ * born PR-3, so a bare `min(ceiling, rating + bonus)` demoted the
+ * Submersible, the Verger, the Thurible and the Lure into crush at 2,400 m.
  */
 export function refittedPressureRating(rating: number, faction: Faction): number {
   const terms = REFIT_TERMS[faction];
   if (!terms.offered) return rating;
-  return Math.min(terms.pressureCeiling, rating + REFIT_STATS[RefitKind.Pressure].pressureBonus);
+  const stepped = rating + REFIT_STATS[RefitKind.Pressure].pressureBonus;
+  return Math.max(rating, Math.min(terms.pressureCeiling, stepped));
 }
