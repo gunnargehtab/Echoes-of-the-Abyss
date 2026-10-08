@@ -7852,8 +7852,8 @@ export class EchoRenderer {
       : water.depthM;
     const dives = depthM > lead.depth;
     // `LEVEL` (§8): the lead hull's own depth, or a climb inside the arrival
-    // epsilon, which the depth system snaps to at once. It prices where the
-    // lead hull's move ends, as `DIVE` and `RISE` do, not a floor-follow's path.
+    // epsilon, which the depth system snaps to at once. Like `DIVE` and `RISE`
+    // it prices the mark against the lead hull's depth, not the way there.
     // Never a dive however small: any deeper depth order breaks Silent Running
     // (`setDepthTarget`), and the readout must not hide that.
     const level = !dives && lead.depth - depthM <= DEPTH.ARRIVAL_EPSILON_M;
