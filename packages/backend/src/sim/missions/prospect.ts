@@ -308,6 +308,11 @@ export const LEDGER_PROSPECT: MissionDefinition = {
       // The keystone: the record rides the readers and the readers ride the
       // column; a survey the rim keeps proves nothing the Board can bank (§8).
       keystone: true,
+      // Read at the close and not latched (§8). The column is seated in the
+      // staging, so a latched row was met on the first pass, and a survey that
+      // read four faces from the rim closed Complete with every hull still on
+      // it (#1210).
+      standing: true,
       predicate: { kind: 'extract', role: 'column', region: 'staging', count: 3 },
     },
     {
