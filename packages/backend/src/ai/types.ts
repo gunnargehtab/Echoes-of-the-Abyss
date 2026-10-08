@@ -14,7 +14,7 @@
  * Not a resemblance — "the AI plays through the interface a player plays
  * through" has to be literally true or it is decoration.
  *
- * Today it is true with **two named exceptions**: 25 variants against the 27
+ * Today it is true with **two named exceptions**: 24 variants against the 26
  * in-match client messages, the difference listed and justified in
  * `AiExempt` below — two verbs an AI seat provably cannot use, and none
  * nobody has written a rule for (`AiUnbuilt`). That is a narrower claim than
@@ -29,7 +29,7 @@
  * switch (`seat.ts`), which has caught that direction since `depth`. A client
  * message with no variant was invisible to it — there is nothing in the union
  * for a switch to fail on — and is caught by the `Exclude<>` assertion just
- * beneath the union below. Adding a 28th in-match message now fails
+ * beneath the union below. Adding a 27th in-match message now fails
  * `npm run type-check` until someone writes the verb or names it as a gap.
  *
  * **The three numbers at the top of this comment are checked too, and were
@@ -130,7 +130,13 @@ export interface AiBriefing {
  * anyone who did not earn it, so an AI cannot name a hull it has not heard.
  */
 export type AiCommand =
-  | { kind: 'move'; unitIds: number[]; x: number; y: number }
+  /**
+   * Go there. With `depthM`, go there in three dimensions as a player's click
+   * does (#1132): a depth within `FOLLOW_FLOOR.ENGAGE_WITHIN_M` of the floor is
+   * a move onto the ground and follows it (docs/systems-depth.md §2). Without,
+   * a place alone.
+   */
+  | { kind: 'move'; unitIds: number[]; x: number; y: number; depthM?: number }
   /** Attack-move: go there and fight what you meet (#435). The push order. */
   | { kind: 'attackMove'; unitIds: number[]; x: number; y: number }
   | { kind: 'stop'; unitIds: number[] }
@@ -205,15 +211,6 @@ export type AiCommand =
    */
   | { kind: 'hold'; unitIds: number[]; active: boolean }
   /**
-   * The floor-following standing order (docs/systems-depth.md §2): keep 30 m
-   * over whatever ground is under the hull, down at the loud descent rate.
-   *
-   * It disengages where the ground falls below the hull's rating, which is
-   * why the commander gives it to the one hull whose rating no floor on any
-   * map exceeds, and to no other — see `commandField`.
-   */
-  | { kind: 'followFloor'; unitIds: number[]; active: boolean }
-  /**
    * A yard's rally point: where every hull it launches goes first. Names
    * structures, like the client message, because it is a standing order on a
    * yard and moves no hull that already exists — which is why it is not the
@@ -259,7 +256,9 @@ export type AiCommand =
  * - `hold` and `followFloor` left together, by one rule that needs both:
  *   `commandField` posts the Dredge on the crystal field that docs/units.md
  *   says the Directorate is meant to *hold*, on the floor it says the hull is
- *   for. Neither was converted from an existing caller. The watch post still
+ *   for. Neither was converted from an existing caller. `followFloor` has
+ *   since left the wire (#1132): a move onto the ground follows it, so the
+ *   Dredge's walk is now a `move` with the field's floor for its depth. The watch post still
  *   cuts its drive: `engineOffSig` is half the hull's *Silent Running* figure,
  *   which parks an Acolyte near SIG 2 where a hold leaves it at its idle 10,
  *   and that is the trade this game is about.

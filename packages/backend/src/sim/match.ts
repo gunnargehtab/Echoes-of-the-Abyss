@@ -111,7 +111,7 @@ import { aurasSystem } from './systems/auras.ts';
 import { standingWaveSystem } from './systems/standingWave.ts';
 import { combatSystem } from './systems/combat.ts';
 import { constructionSystem } from './systems/construction.ts';
-import { depthSystem } from './systems/depth.ts';
+import { depthSystem, leaveFloor, orderDepthAt, setDepthTarget } from './systems/depth.ts';
 import { separationSystem } from './systems/separation.ts';
 import { clearQueue, enqueue, orderQueueSystem, queueView } from './systems/orderQueue.ts';
 import {
@@ -288,6 +288,15 @@ const FAUNA_SEARCH_STEP_M = 50;
  * would find ground no draw can reach, and the census would wait on it.
  */
 const FAUNA_EDGE_MARGIN_M = 400;
+
+/**
+ * Is this a depth an order may name? The ruleset's column, not the map's
+ * floor: a depth below the seabed is water the move then follows the floor to
+ * (docs/systems-depth.md §2), while one outside the column is not water at all.
+ */
+function depthInMap(depthM: number): boolean {
+  return Number.isFinite(depthM) && depthM >= DEPTH.MIN_M && depthM <= DEPTH.MAX_M;
+}
 
 export class Match {
   readonly world: SimWorld;
@@ -1156,7 +1165,21 @@ export class Match {
     return this.missionRuntime?.denies(slot, ability) === true;
   }
 
-  orderMove(slot: number, eid: number, x: number, y: number, queued = false): void {
+  /**
+   * Go there — and, with a depth, go there in three dimensions (#1132): a
+   * click is a point in the water (docs/ui-ux.md §9), and a move onto the
+   * ground follows it (docs/systems-depth.md §2). Without one the move is a
+   * place alone and the hull keeps its depth, which is how the commander walks
+   * and a mission's beats move.
+   */
+  orderMove(
+    slot: number,
+    eid: number,
+    x: number,
+    y: number,
+    queued = false,
+    depthM?: number
+  ): void {
     this.recordCommand({
       tick: this.world.tick,
       type: 'move',
@@ -1165,20 +1188,28 @@ export class Match {
       x,
       y,
       queued,
+      ...(depthM === undefined ? {} : { depth: depthM }),
     });
     // A mission may be holding this hull still — the court's tenders do not
     // move before they are loaded, and do not move at all without an escort
     // close enough to hear for them. Refused after the recording, like every
     // other refusal on this path.
     if (this.missionRuntime?.holdsMovement(slot, eid) === true) return;
-    this.applyMove(slot, eid, x, y, queued);
+    this.applyMove(slot, eid, x, y, queued, depthM);
   }
 
   /**
    * Attack-move (#435; docs/ui-ux.md §9): go there, and fight whatever you
    * meet on the way. The order a force advances into unheard water on.
    */
-  orderAttackMove(slot: number, eid: number, x: number, y: number, queued = false): void {
+  orderAttackMove(
+    slot: number,
+    eid: number,
+    x: number,
+    y: number,
+    queued = false,
+    depthM?: number
+  ): void {
     this.recordCommand({
       tick: this.world.tick,
       type: 'attackMove',
@@ -1187,26 +1218,34 @@ export class Match {
       x,
       y,
       queued,
+      ...(depthM === undefined ? {} : { depth: depthM }),
     });
     if (this.missionRuntime?.holdsMovement(slot, eid) === true) return;
     if (this.missionDenies(slot, 'weapons')) {
       // Weapons struck: the order falls through to the move it can still be,
       // exactly as a refused attack does at the client (docs/ui-ux.md §7).
-      this.applyMove(slot, eid, x, y, queued);
+      this.applyMove(slot, eid, x, y, queued, depthM);
       return;
     }
     if (!this.owns(slot, eid) || !hasComponent(this.world, MoveOrder, eid)) return;
     if (!hasComponent(this.world, Weapon, eid)) {
       // A hull with nothing to fight with can only go there.
-      this.applyMove(slot, eid, x, y, queued);
+      this.applyMove(slot, eid, x, y, queued, depthM);
       return;
     }
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    if (depthM !== undefined && !depthInMap(depthM)) return;
     x = this.world.terrain.clampXM(x);
     y = this.world.terrain.clampYM(y);
 
     if (queued) {
-      enqueue(this.world, eid, { kind: 'attackMove', x, y });
+      enqueue(
+        this.world,
+        eid,
+        depthM === undefined
+          ? { kind: 'attackMove', x, y }
+          : { kind: 'attackMove', x, y, depth: depthM }
+      );
       return;
     }
     clearQueue(this.world, eid);
@@ -1224,6 +1263,7 @@ export class Match {
       Harvester.idleReason[eid] = 0;
     }
     cancelEmbark(this.world, eid);
+    if (depthM !== undefined) orderDepthAt(this.world, eid, x, y, depthM);
   }
 
   /**
@@ -1308,9 +1348,22 @@ export class Match {
    * Splitting the method is what makes that mistake unavailable: the runtime is
    * handed a sink of `apply*` and has no path to the recorder at all.
    */
-  private applyMove(slot: number, eid: number, x: number, y: number, queued: boolean): void {
+  private applyMove(
+    slot: number,
+    eid: number,
+    x: number,
+    y: number,
+    queued: boolean,
+    depthM?: number
+  ): void {
     if (!this.owns(slot, eid) || !hasComponent(this.world, MoveOrder, eid)) return;
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    // The depth half is refused rather than clamped, as `orderDepth` refuses
+    // one, and it takes the place with it: a half-applied order is a worse
+    // answer than none (`isValidClientMessage`). Unlike the place — a click
+    // past the edge still says which way to go — a depth outside the map
+    // names water that is not there.
+    if (depthM !== undefined && !depthInMap(depthM)) return;
 
     // Clamped rather than rejected, unlike orderDepth. A click past the edge
     // of the map is a legible instruction — go as far that way as the water
@@ -1323,7 +1376,11 @@ export class Match {
     y = this.world.terrain.clampYM(y);
 
     if (queued) {
-      enqueue(this.world, eid, { kind: 'move', x, y });
+      enqueue(
+        this.world,
+        eid,
+        depthM === undefined ? { kind: 'move', x, y } : { kind: 'move', x, y, depth: depthM }
+      );
       return;
     }
 
@@ -1345,6 +1402,8 @@ export class Match {
       Harvester.idleReason[eid] = 0;
     }
     cancelEmbark(this.world, eid);
+    // After the plan, so the floor the rule reads is the clamped point's.
+    if (depthM !== undefined) orderDepthAt(this.world, eid, x, y, depthM);
   }
 
   /**
@@ -1431,6 +1490,12 @@ export class Match {
     // twenty seconds on one right-click (#708).
     if (this.missionRuntime?.holdsMovement(slot, eid) === true) return;
     if (!this.owns(slot, eid) || !hasComponent(this.world, Weapon, eid)) return;
+    // An attack keeps a depth of its own: it chases at the depth the hull is on
+    // rather than down the seabed after its target (docs/systems-depth.md §2).
+    // Before the target is resolved, not after the refusals below, so whether
+    // the hull stops following says nothing about what the handle named.
+    // Queued, the leg ends it as it begins (`orderQueue.ts`).
+    if (!queued) leaveFloor(this.world, eid);
     const target = this.echo.entityForHandle(slot, contactHandle);
     // A phantom's handle names no entity by construction, and refusing it here
     // was the same leak, one terrain over. The Fields' whole charge for the
@@ -1705,6 +1770,9 @@ export class Match {
     Harvester.mode[eid] = HarvestMode.ToNode;
     Harvester.idleReason[eid] = 0;
     cancelEmbark(this.world, eid);
+    // The loop orders its own descents and climbs from here
+    // (docs/systems-depth.md §2; `systems/harvest.ts`).
+    leaveFloor(this.world, eid);
   }
 
   /** docs/economy.md §3 — how loud am I willing to be paid. */
@@ -1797,46 +1865,12 @@ export class Match {
   /** The unrecorded half of `orderDepth` — see `applyMove`. */
   private applyDepth(slot: number, eid: number, depthM: number): boolean {
     if (!this.owns(slot, eid) || !hasComponent(this.world, DepthOrder, eid)) return false;
-    if (!Number.isFinite(depthM)) return false;
     // Rejected rather than clamped: a client asking for the impossible is told
     // no, instead of quietly being given something it did not ask for.
-    if (depthM < DEPTH.MIN_M || depthM > DEPTH.MAX_M) return false;
-
-    DepthOrder.targetM[eid] = depthM;
-    DepthOrder.active[eid] = 1;
-    // A manual depth order replaces the floor-following standing order: the
+    if (!depthInMap(depthM)) return false;
+    // A depth alone ends floor-following, as a move into open water does: the
     // newer instruction is the player's current mind (docs/systems-depth.md §2).
-    DepthOrder.follow[eid] = 0;
-    // Diving is not something you do quietly, for the same reason pinging is
-    // not: the descent itself is the noise. Ascending keeps its silence.
-    if (depthM > Position.depth[eid]!) SilentRunning.active[eid] = 0;
-    return true;
-  }
-
-  /**
-   * The standing order — docs/systems-depth.md §2, "Steering along the
-   * ground". This only arms or disarms the mode; the depth system owns the
-   * per-tick retargeting, the PR disengage, and the dive loudness. Validated
-   * like `orderDepth`, recorded like every order, and refused under a mission
-   * movement hold for the same reason a dive is: a hold that let a hull
-   * *drift* down a slope would not be a hold.
-   */
-  orderFollowFloor(slot: number, eid: number, active: boolean): boolean {
-    this.recordCommand({
-      tick: this.world.tick,
-      type: 'followFloor',
-      slot,
-      unit: this.localId(eid),
-      active,
-    });
-    if (this.missionRuntime?.holdsMovement(slot, eid) === true) return false;
-    if (!this.owns(slot, eid) || !hasComponent(this.world, DepthOrder, eid)) return false;
-
-    const was = DepthOrder.follow[eid] === 1;
-    DepthOrder.follow[eid] = active ? 1 : 0;
-    // Disengaging holds the hull where it is — but only cancels a leg the
-    // mode itself ordered, never a manual order already in flight.
-    if (!active && was) DepthOrder.active[eid] = 0;
+    setDepthTarget(this.world, eid, depthM);
     return true;
   }
 
@@ -3223,7 +3257,11 @@ export class Match {
       };
       const queue = queueView(this.world, eid);
       if (queue !== undefined) {
-        unit.queuedOrders = queue.map((order) => ({ kind: order.kind, x: order.x, y: order.y }));
+        unit.queuedOrders = queue.map((order) =>
+          'depth' in order && order.depth !== undefined
+            ? { kind: order.kind, x: order.x, y: order.y, depth: order.depth }
+            : { kind: order.kind, x: order.x, y: order.y }
+        );
       }
       if (Posture.hold[eid] === 1) unit.holding = true;
       if (Posture.engage[eid] === 1) {

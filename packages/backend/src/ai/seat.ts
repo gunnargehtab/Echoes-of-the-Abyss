@@ -63,7 +63,9 @@ export class AiSeat {
     const slot = this.slot;
     switch (command.kind) {
       case 'move':
-        for (const id of command.unitIds) this.match.orderMove(slot, id, command.x, command.y);
+        for (const id of command.unitIds) {
+          this.match.orderMove(slot, id, command.x, command.y, false, command.depthM);
+        }
         return;
       case 'attackMove':
         for (const id of command.unitIds) {
@@ -138,11 +140,6 @@ export class AiSeat {
         return;
       case 'hold':
         for (const id of command.unitIds) this.match.orderHold(slot, id, command.active);
-        return;
-      case 'followFloor':
-        for (const id of command.unitIds) {
-          this.match.orderFollowFloor(slot, id, command.active);
-        }
         return;
       case 'rally':
         for (const id of command.structureIds) {

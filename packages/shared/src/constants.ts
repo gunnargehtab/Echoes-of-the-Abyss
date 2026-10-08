@@ -566,14 +566,22 @@ export const LID = {
 export const LID_GRACE_RECOVERY_PER_S = LID.GRACE_S / LID.RECOVERY_S;
 
 /**
- * SPEC — docs/systems-depth.md §2 "Steering along the ground". The standing
- * order's held clearance above the local floor. Comfortably above
- * DEPTH.ARRIVAL_EPSILON_M so station keeping cannot chatter against the
- * arrival snap.
+ * SPEC — docs/systems-depth.md §2 "Steering along the ground". Floor-following
+ * is engaged by a move that ends on the ground (#1132): how near the floor its
+ * depth must be to count, and the clearance held above the local floor once it
+ * does. The clearance sits comfortably above DEPTH.ARRIVAL_EPSILON_M so station
+ * keeping cannot chatter against the arrival snap.
  */
 export const FOLLOW_FLOOR = {
   /** TUNABLE — metres held above the seabed while following. */
   CLEARANCE_M: 30,
+  /**
+   * TUNABLE — a move whose depth is within this many metres of the floor at
+   * its point is a move onto the ground, and follows it. A click on the ground
+   * orders the floor itself; this is what lets a click on the focus plane just
+   * above it mean the same thing.
+   */
+  ENGAGE_WITHIN_M: 100,
 } as const;
 
 /**

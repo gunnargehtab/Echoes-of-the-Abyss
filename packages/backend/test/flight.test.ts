@@ -20,6 +20,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { hasComponent } from 'bitecs';
 import {
+  DEPTH,
   FLIGHT,
   Faction,
   SIM,
@@ -251,7 +252,11 @@ describe('the craft — the three bounds §15 puts on one', () => {
     assert.equal(match.orderDepth(0, treble, 300), false, 'and refuses the column');
     advance(match, 10);
     assert.equal(Position.depth[treble], deep, 'still where it was launched');
-    assert.equal(match.orderFollowFloor(0, treble, true), false, 'and the floor, too');
+    // Nor does a move onto the ground, which is how a hull is told to follow
+    // the floor since #1132: `owns` refuses a craft before either half runs.
+    match.orderMove(0, treble, 6000, 6000, false, DEPTH.MAX_M);
+    advance(match, 10);
+    assert.equal(Position.depth[treble], deep, 'and the floor, too');
   });
 
   it('takes the carrier’s ordered target, and nothing of its own', () => {

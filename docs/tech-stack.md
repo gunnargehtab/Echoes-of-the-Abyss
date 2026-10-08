@@ -138,7 +138,7 @@ the seat assignment, the mission view. That is not an optimisation, it is the fi
 model — a fact that differs by who is asking cannot live in shared state without leaking.
 
 Both directions of the message channel are declared once, in
-`packages/shared/src/wire.ts`: 32 names a client may send — 27 in a match and five only in
+`packages/shared/src/wire.ts`: 31 names a client may send — 26 in a match and five only in
 the lobby — 11 the room may send, and the payload of each. Neither package writes a message
 name as a string literal, and each side reaches the wire through a thin generic wrapper that
 takes the name and infers the payload from the same map. The result is that a message
@@ -1036,8 +1036,9 @@ the seat ignores no longer reads as a commander that chose not to act.
 **That check only ever held one of the two directions**, and the arithmetic above went stale
 while nobody noticed. A client message with *no* variant is invisible to a `never` on a switch,
 because there is nothing in the union for the switch to fail on; five more verbs accumulated
-behind `depth` in exactly that blind spot. The counts today are **25 variants against 27
-in-match client messages** — `ability` and `sow` are the difference — and the reason this
+behind `depth` in exactly that blind spot. The counts today are **24 variants against 26
+in-match client messages** — `ability` and `sow` are the difference, and `followFloor` left
+both sides together (#1132) — and the reason this
 paragraph can state them is that both directions are now checked rather than asserted (#621). `wire.ts` declares `LOBBY_MSG` beside `CLIENT_MSG`, so
 the five phase-gated names are a type rather than a comment and the in-match set can be
 subtracted; `ai/types.ts` carries an `Exclude<>` assertion against it, and a 28th in-match

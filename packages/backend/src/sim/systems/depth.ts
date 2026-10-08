@@ -8,8 +8,9 @@
  * question "is what's down there worth what it costs to get back" is always on
  * the table (§5).
  *
- * This system owns only the travel. Two consequences are enforced elsewhere,
- * deliberately:
+ * This system owns the travel, and the one rule that turns a move's depth into
+ * an order — follow the floor, or hold a depth (`orderDepthAt`). Two
+ * consequences are enforced elsewhere, deliberately:
  *   - the *noise* of a descent is applied by the acoustics system, which reads
  *     the `descending` flag written here — SIG is derived state and has exactly
  *     one author;
@@ -74,6 +75,73 @@ export function depthSystem(world: SimWorld): void {
 }
 
 /**
+ * The depth half of a move — docs/systems-depth.md §2, "Steering along the
+ * ground" (#1132).
+ *
+ * A move carries a depth, and the one question here is whether that depth is
+ * on the ground. Within `FOLLOW_FLOOR.ENGAGE_WITHIN_M` of the floor at the
+ * order's point — the floor read no deeper than `DEPTH.MAX_M`, since that is
+ * as deep as a click there can order — the move follows the floor. Anywhere
+ * else it holds the depth it was given, and following ends.
+ *
+ * One function for both places a move gets its depth: `Match` as the order is
+ * given, and the order queue as a leg begins. So a queued leg is decided by
+ * the rule an immediate one is, against the ground as it stands when the leg
+ * starts. Validation is the caller's: `depthM` is finite and inside the map.
+ */
+export function orderDepthAt(
+  world: SimWorld,
+  eid: number,
+  x: number,
+  y: number,
+  depthM: number
+): void {
+  if (!hasComponent(world, DepthOrder, eid)) return;
+  const reach = Math.min(world.terrain.floorAt(x, y), DEPTH.MAX_M);
+  if (depthM < reach - FOLLOW_FLOOR.ENGAGE_WITHIN_M) {
+    setDepthTarget(world, eid, depthM);
+    return;
+  }
+  // Already following: the leg in flight is the mode's own, and dropping it
+  // would stall the descent for a tick every time a walk is re-given.
+  if (DepthOrder.follow[eid] === 1) return;
+  DepthOrder.follow[eid] = 1;
+  // A leg that is not the mode's is dropped. The mode retargets only past the
+  // arrival epsilon, so a dive under way to some other depth would otherwise
+  // run on until the hull had drifted that far — a few ticks, but a few ticks
+  // descending are a few ticks at a dive's SIG, for a dive nobody now wants.
+  DepthOrder.active[eid] = 0;
+  DepthOrder.descending[eid] = 0;
+}
+
+/**
+ * A depth of the hull's own: go to `depthM` and hold it. It ends
+ * floor-following, because the newer instruction is the player's current mind
+ * (docs/systems-depth.md §2). A dive is not something done quietly, for the
+ * reason a ping is not — the descent itself is the noise — so ordering one
+ * breaks Silent Running; a climb keeps its silence.
+ */
+export function setDepthTarget(world: SimWorld, eid: number, depthM: number): void {
+  DepthOrder.targetM[eid] = depthM;
+  DepthOrder.active[eid] = 1;
+  DepthOrder.follow[eid] = 0;
+  if (depthM > Position.depth[eid]! && hasComponent(world, SilentRunning, eid)) {
+    SilentRunning.active[eid] = 0;
+  }
+}
+
+/**
+ * End floor-following for a task that keeps a depth of its own: an attack,
+ * which chases at the depth the hull is on, and a harvest, whose loop orders
+ * its own legs (docs/systems-depth.md §2). The leg in flight is kept, so the
+ * hull finishes the climb or descent it is on and holds there rather than
+ * hanging wherever the order caught it.
+ */
+export function leaveFloor(world: SimWorld, eid: number): void {
+  if (hasComponent(world, DepthOrder, eid)) DepthOrder.follow[eid] = 0;
+}
+
+/**
  * The standing half of docs/systems-depth.md §2, "Steering along the ground":
  * hold the hull a fixed clearance above whatever ground is under it — and,
  * under way, the ground one cell ahead toward where it is steering, so it
@@ -89,9 +157,9 @@ export function depthSystem(world: SimWorld): void {
  *   hull on their behalf — the exact thing this file's other half exists to
  *   prevent. The hull holds its depth and the mode switches off; the payload
  *   flag disappearing is how the card says why it stopped.
- * - **A follow descent is a dive.** It breaks Silent Running the way a manual
- *   dive order does (`Match.applyDepth`), because entering the mode was the
- *   player's commitment and its dives are exactly as loud as dives are.
+ * - **A follow descent is a dive.** It breaks Silent Running the way an
+ *   ordered dive does (`setDepthTarget`), because the move onto the ground was
+ *   the player's commitment and its dives are exactly as loud as dives are.
  *
  * In a roofed passage the clearance may not fit; the hull holds at the
  * ceiling rather than above it, because above it is rock. And it never goes

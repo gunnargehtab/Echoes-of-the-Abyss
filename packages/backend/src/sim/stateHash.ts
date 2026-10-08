@@ -443,6 +443,13 @@ export function hashWorld(world: SimWorld): number {
       h = mixFloat(h, order.y);
       if (order.kind === 'attack') h = mixU32(h, ordinalOf.get(order.target) ?? -1);
       if (order.kind === 'harvest') h = mixU32(h, ordinalOf.get(order.node) ?? -1);
+      // A leg's depth decides where it goes as much as its place does (#1132):
+      // two plans to one point, one along the floor and one in mid-water,
+      // agree until the leg begins and part company the tick it does.
+      if (order.kind === 'move' || order.kind === 'attackMove') {
+        h = mixU32(h, order.depth === undefined ? 0 : 1);
+        if (order.depth !== undefined) h = mixFloat(h, order.depth);
+      }
     }
   }
 
