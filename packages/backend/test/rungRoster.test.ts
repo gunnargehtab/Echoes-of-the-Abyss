@@ -1058,6 +1058,43 @@ describe('the Blight — a spore, and silence', () => {
       'a spored wall must sound exactly like an unspored one'
     );
   });
+
+  it('reseeds once its cooldown has run, through the order a player gives (#1226)', () => {
+    // docs/units.md, the Blight: "reseedable every 45 s". Through
+    // `Match.seedSpore`, where the clock lives, rather than the strain alone.
+    const { match } = skirmish(Faction.Pelagia);
+    const blight = hull(match, Faction.Pelagia, UnitKind.Blight, 6000, 6000);
+    const wall = (x: number): number =>
+      spawnStructure(match.world, {
+        kind: StructureKind.Refinery,
+        slot: 1,
+        faction: Faction.Directorate,
+        x,
+        y: 6000,
+        prebuilt: true,
+      });
+    const [first, second] = [wall(6200), wall(5800)];
+    // The order names a wall by its handle, so each is found in what the
+    // Blight's own side hears of it.
+    const handleOf = (target: number): number => {
+      let best: { id: number; d: number } | undefined;
+      for (const contact of snapshotOf(match).contacts) {
+        const d = Math.hypot(contact.x - Position.x[target]!, contact.y - Position.y[target]!);
+        if (best === undefined || d < best.d) best = { id: contact.id, d };
+      }
+      assert.ok(best !== undefined && best.d < 50, 'the premise: the Blight hears the wall');
+      return best.id;
+    };
+
+    assert.ok(match.seedSpore(0, blight, handleOf(first)), 'the first wall takes a strain');
+    assert.equal(
+      match.seedSpore(0, blight, handleOf(second)),
+      false,
+      'the second waits out the cooldown'
+    );
+    advance(match, HULL_EFFECTS.BLIGHT.COOLDOWN_S + 1);
+    assert.ok(match.seedSpore(0, blight, handleOf(second)), 'and takes one once it has run');
+  });
 });
 
 describe('the Lure — a song, and the Drift', () => {

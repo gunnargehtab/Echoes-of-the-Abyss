@@ -615,6 +615,17 @@ export const Song = defineComponent({
 });
 
 /**
+ * The Blight's reseed clock — docs/units.md, the Blight: "reseedable every
+ * 45 s". Its own component (#1226): the cooldown used to borrow the decoy
+ * suite's store, `Countermeasure`, which an unarmed hull is never given, so
+ * nothing counted it down and a Blight seeded one spore in its life.
+ */
+export const Seeder = defineComponent({
+  /** Seconds until this hull may seed another wall. */
+  cooldownS: Types.f32,
+});
+
+/**
  * Grown mines aboard a hull that carries more than the roster's one — the
  * Spinner (docs/units.md). A magazine and not a cooldown, for the torpedo's
  * reason: the decision is "is this worth one of my four", and the regrowth

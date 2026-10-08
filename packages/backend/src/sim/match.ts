@@ -97,6 +97,7 @@ import {
   Posture,
   Pressure,
   ResourceNode,
+  Seeder,
   SilentRunning,
   Structure,
   UnderConstruction,
@@ -1926,7 +1927,7 @@ export class Match {
     });
     if (!this.owns(slot, eid) || !hasComponent(this.world, Unit, eid)) return false;
     if (statsFor(Unit.kind[eid] as UnitKind).kind !== UnitKind.Blight) return false;
-    if (Countermeasure.cooldownRemainingS[eid]! > 0) return false;
+    if (!hasComponent(this.world, Seeder, eid) || Seeder.cooldownS[eid]! > 0) return false;
 
     const target = this.echo.entityForHandle(slot, contactHandle);
     if (target === undefined) return false;
@@ -1940,7 +1941,7 @@ export class Match {
     if (dx * dx + dy * dy > reach * reach) return false;
 
     if (!seedSpore(this.world, target, slot)) return false;
-    Countermeasure.cooldownRemainingS[eid] = HULL_EFFECTS.BLIGHT.COOLDOWN_S;
+    Seeder.cooldownS[eid] = HULL_EFFECTS.BLIGHT.COOLDOWN_S;
     return true;
   }
 
