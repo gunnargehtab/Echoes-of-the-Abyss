@@ -455,7 +455,8 @@ chevron on the ribbon's right edge in the plain text ink: a camera reading, so n
 marker nor the cyan of a rule about the water. Holding `Alt` previews the click under the
 cursor: its depth, marked on the ribbon, and what getting there costs — `DIVE 72 SIG`, with
 `· CRUSH` when an open-water depth is below the selection's rating, or the climb's seconds for
-a rise, and `FLOOR` when the click is on the ground and will follow it. Over a floor below a
+a rise, or `LEVEL` when the click is at the lead hull's own depth and the move has no vertical
+part to price; and `FLOOR` when the click is on the ground and will follow it. Over a floor below a
 selected hull's rating it adds `· PR EDGE`: following stops where the ground falls past the
 rating rather than crushing ([systems-depth.md](systems-depth.md) §2), so the mark is a depth
 that hull will not reach. The duct is one more depth the focus can be put at, which is how a

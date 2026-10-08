@@ -7816,8 +7816,8 @@ export class EchoRenderer {
   /**
    * What the click under the cursor would order, for the Alt preview (§8):
    * the depth the selection would end at, whether that is on the ground and
-   * follows it, whether it is a dive, whether it would crush a hull in the
-   * selection, and how long the lead hull's climb or descent takes.
+   * follows it, whether it is a dive or level, whether it would crush a hull
+   * in the selection, and how long the lead hull's climb or descent takes.
    *
    * The floor test is the server's own (`onTheGround`), on the same public
    * grid. A move onto the ground ends at the clearance over the floor there,
@@ -7830,6 +7830,7 @@ export class EchoRenderer {
     depthM: number;
     follows: boolean;
     dives: boolean;
+    level: boolean;
     crushes: boolean;
     stopsShort: boolean;
     seconds: number;
@@ -7850,12 +7851,17 @@ export class EchoRenderer {
         )
       : water.depthM;
     const dives = depthM > lead.depth;
+    // A move with no vertical part to price (§8, `LEVEL`): the lead hull's own
+    // depth, or a climb inside the arrival epsilon, which the depth system
+    // snaps to at once. Never a dive however small: any deeper target breaks
+    // Silent Running (`setDepthTarget`), and the readout must not hide that.
+    const level = !dives && lead.depth - depthM <= DEPTH.ARRIVAL_EPSILON_M;
     const rated = (unit: OwnUnit) => !this.wouldCrush(unit, depthM);
     const crushes = !follows && !selected.every(rated);
     const stopsShort = follows && !selected.every(rated);
     const rate = dives ? DEPTH.DESCENT_RATE_MPS : DEPTH.ASCENT_RATE_MPS;
     const seconds = Math.abs(depthM - lead.depth) / rate;
-    return { depthM, follows, dives, crushes, stopsShort, seconds };
+    return { depthM, follows, dives, level, crushes, stopsShort, seconds };
   }
 
   /** Screen y for a depth, inside the ribbon's vertical span. */
@@ -8077,7 +8083,9 @@ export class EchoRenderer {
         ? `${lead.depth.toFixed(0)}m${zoneTag}`
         : (preview.dives
             ? `DIVE ${DEPTH.DESCENT_SIG} SIG${preview.crushes ? ' · CRUSH' : ''}`
-            : `RISE ${preview.seconds.toFixed(0)}s`) +
+            : preview.level
+              ? 'LEVEL'
+              : `RISE ${preview.seconds.toFixed(0)}s`) +
           (preview.follows ? ' · FLOOR' : '') +
           (preview.stopsShort ? ' · PR EDGE' : '');
     this.ribbonReadout.style.fill =
