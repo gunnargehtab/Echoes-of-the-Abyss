@@ -3724,6 +3724,28 @@ describe('renderer smoke test: the free camera', () => {
           `and the point at y ${z} lies in the roof's own column, not x ${click.x}`
         );
       }
+
+      // The west wall, on x 3,000 m over column 11's deeper water, seen with
+      // the camera turned to face east at it. Here the hit floors into the
+      // roof's own cell already, so it is the inset alone that keeps a hull
+      // arriving short of the point under the roof.
+      aim(2250, 1500, undefined, { yawDeg: 270 });
+      for (const z of [1300, 1400, 1500, 1600, 1700]) {
+        const face = world.conn.projectPoint(3000, z, 1560);
+        assert.ok(face.visible, `the west lintel at y ${z} is on screen`);
+        const click = world.conn.resolveWater(face.x, face.y);
+        const inside = click.x - 3000;
+        assert.ok(
+          inside >= 0 && inside <= inset + 1,
+          `the premise: the click at y ${z} hit the west wall, not x ${click.x.toFixed(1)}`
+        );
+        assert.equal(click.depthM, 1600, `a click on the west lintel ordered ${click.depthM} m`);
+        assert.equal(Math.floor(click.x / CELL_M), 12, `the west click lies in column 12`);
+        assert.ok(
+          inside > MOVEMENT.ARRIVAL_EPSILON_M,
+          `far enough in from the west wall: ${inside} m`
+        );
+      }
     } finally {
       world.teardown();
     }
