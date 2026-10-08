@@ -2464,6 +2464,35 @@ describe('renderer smoke test: input and teardown', () => {
     }
   });
 
+  /**
+   * The digits are the game's (docs/ui-ux.md §9): `1`–`9` recall a group,
+   * `Ctrl` + digit assigns one, and `0` selects the army. The browser binds
+   * the same chords to switching tabs and resetting the zoom, so a digit the
+   * renderer handled must cancel the browser's default (#1220).
+   */
+  it('cancels the browser default on every digit it handles', async () => {
+    const world = await boot();
+    try {
+      world.frame(2);
+      let prevented = 0;
+      const cancels = (code: string, held: Record<string, boolean> = {}): boolean => {
+        const before = prevented;
+        const preventDefault = (): void => {
+          prevented += 1;
+        };
+        dispatchWindow('keydown', { code, ...held, preventDefault });
+        dispatchWindow('keyup', { code, ...held });
+        return prevented > before;
+      };
+      assert.ok(cancels('Digit2', { ctrlKey: true }), 'Ctrl + 2 assigns, and keeps the tab');
+      assert.ok(cancels('Digit2', { metaKey: true }), 'so does Cmd + 2 on a Mac');
+      assert.ok(cancels('Digit2'), 'a recall is the game’s too');
+      assert.ok(cancels('Digit0', { ctrlKey: true }), 'Ctrl + 0 selects the army, not the zoom');
+    } finally {
+      world.teardown();
+    }
+  });
+
   it('detaches every listener it attached', async () => {
     const before = windowListenerCount();
     const world = await boot();

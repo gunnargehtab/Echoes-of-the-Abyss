@@ -2680,13 +2680,20 @@ export class EchoRenderer {
       // used to produce units; production keeps its command-bar buttons, and
       // the doc's binding wins because control groups have no alternative
       // route while production does. Also unbindable, for that reason.
+      //
+      // Handled here, so the browser's own meaning is cancelled (#1220): it
+      // binds Ctrl + 1–8 to switching tabs, Ctrl + 9 to the last tab and
+      // Ctrl + 0 to resetting the zoom, and assigning a group must not also
+      // take the player out of the match.
       const digit = DIGIT_KEYS[e.code];
       if (digit !== undefined) {
+        e.preventDefault();
         this.controlGroup(digit, e.ctrlKey || e.metaKey, e.shiftKey);
         return;
       }
       // `0` is the tenth group nobody has to assign: every hull that fights.
       if (e.code === 'Digit0') {
+        e.preventDefault();
         this.selectArmy();
         return;
       }
