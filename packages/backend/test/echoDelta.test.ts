@@ -30,7 +30,8 @@ const STEP_MS = 1000 / SIM.TICK_HZ;
  * The two ends hold different things, as they do live (#1224). The server
  * diffs against the snapshot object it sent last (`MatchRoom.echoWireFor`);
  * the client keeps what it rebuilt from what crossed the socket (`GameClient`),
- * so each wire message is passed through JSON here as the socket passes it.
+ * so each wire message is serialised and parsed here, JSON standing in for the
+ * socket's MessagePack, and the client never holds the server's object.
  * Diffing against the client's copy instead hid a server snapshot that changed
  * after it was sent, which left every patch empty of contacts and marks.
  */
@@ -147,6 +148,8 @@ describe('the Echo delta on a live match', () => {
       );
       if (phantom) phantomPasses++;
     });
-    assert.ok(phantomPasses > 0, 'the premise: the ping returned a phantom');
+    // More than the keyframe: a phantom present on a later pass is one a patch
+    // carried, which is what the array-only copy loses.
+    assert.ok(phantomPasses > 1, 'the premise: a patch carried a phantom');
   });
 });
