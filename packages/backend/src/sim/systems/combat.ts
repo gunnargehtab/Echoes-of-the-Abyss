@@ -42,6 +42,7 @@ import {
   Owner,
   Position,
   SilentRunning,
+  Spared,
   StaticEmitter,
   Structure,
   Velocity,
@@ -402,6 +403,12 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
           // may spend shells on struck iron — and refusing the order instead
           // would unmask it, the Noisemaker lesson above.
           if (hasComponent(world, StaticEmitter, other)) continue;
+          // Nor is a party its mission says is never fought (§4, #1239): the
+          // watch that only counts, the column that only moves, the rim that
+          // only attends. Hostility is the slot, so without this a gun swung
+          // onto them of its own accord and ended them with no order given. An
+          // ordered attack still lands: shooting one is the player's decision.
+          if (hasComponent(world, Spared, other)) continue;
           // Nor is a harmless ambient creature — the mine's argument a third
           // time. A Lampfry shoal glows at SIG 4 and is inaudible to any gun
           // at any range it could shoot from, so a turret swinging onto one

@@ -26,7 +26,7 @@
  * the `Math.random`/`Date` ban.
  */
 
-import { hasComponent } from 'bitecs';
+import { addComponent, hasComponent } from 'bitecs';
 import {
   DRIFT,
   FaunaSpecies,
@@ -61,6 +61,7 @@ import {
   Position,
   Pressure,
   SilentRunning,
+  Spared,
   StaticEmitter,
   Structure,
 } from '../components.ts';
@@ -539,6 +540,9 @@ export class MissionRuntime {
         });
         if (eid === 0) continue;
         this.register(world, unit.tag, eid);
+        // A party its document says is never fought: no gun volunteers for it
+        // (docs/systems-combat.md §4, #1239).
+        if (party.spared === true) addComponent(world, Spared, eid);
         if (unit.pressureRating !== undefined && hasComponent(world, Pressure, eid)) {
           // A court refit, not a roster change: the hull holds Mid-Water and
           // stops there, which is what makes depth a floor in this mission
@@ -565,7 +569,9 @@ export class MissionRuntime {
           depth: structure.depthM,
           prebuilt: true,
         });
-        if (eid !== 0) this.register(world, structure.tag, eid);
+        if (eid === 0) continue;
+        this.register(world, structure.tag, eid);
+        if (party.spared === true) addComponent(world, Spared, eid);
       }
 
       for (const emitter of party.emitters ?? []) {
@@ -1200,6 +1206,10 @@ export class MissionRuntime {
       let fromX = transit.startX;
       let fromY = transit.startY;
       let target: { x: number; y: number } | null = null;
+      // The depth of the leg in hand, or of the last one once every leg is
+      // walked: ordered with the move, so a route can climb into water its
+      // hull could not otherwise enter (`MissionLeg.depthM`, #1239).
+      let depthM: number | undefined;
       for (const leg of transit.legs) {
         const legEndTick = legStartTick + leg.ticks;
         if (world.tick + ECHO_TICK_INTERVAL < legEndTick) {
@@ -1208,12 +1218,15 @@ export class MissionRuntime {
             Math.max(0, (world.tick + ECHO_TICK_INTERVAL - legStartTick) / Math.max(1, leg.ticks))
           );
           target = { x: fromX + (leg.x - fromX) * t, y: fromY + (leg.y - fromY) * t };
+          depthM = leg.depthM;
           break;
         }
         legStartTick = legEndTick;
         fromX = leg.x;
         fromY = leg.y;
+        depthM = leg.depthM;
       }
+      if (depthM !== undefined) sink.applyDepth(Owner.slot[eid]!, eid, depthM);
       if (target === null) {
         // Every leg is walked. The last point is ordered once more so a hull
         // that was idling short of it finishes, and the route is forgotten.

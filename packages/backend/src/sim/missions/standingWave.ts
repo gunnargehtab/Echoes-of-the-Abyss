@@ -90,6 +90,15 @@ const MOUTH_Y = 3900;
 const FIFTH_Y = 3500;
 const NARROWS_Y = 2300;
 const GALLERY_Y = 500;
+/**
+ * Where the block stands at the Gallery (#1239): inside the region §8 reads
+ * its arrival in, and west of the works' Bastion, whose 220 m footprint sits
+ * on the axis at the Gallery's mouth and holds any hull out of it. The works
+ * are seated east of it, so the column comes in west: 450 m off the axis and
+ * 200 m into the Gallery, every offset more than 350 m from the Bastion.
+ */
+const ARRIVAL_X = AXIS_X - 450;
+const ARRIVAL_Y = GALLERY_Y - 200;
 
 /**
  * §8 — a site needs the works beside it. The sounding radius of
@@ -168,16 +177,22 @@ const COLUMN_HULLS: readonly {
  * doctrine and does not spread out. Four hundred metres of trench water in
  * five minutes twenty (the last time the column is easy to hear), twelve
  * hundred metres of the defile in ten and a half (getting quieter as it gets
- * closer — 1.60 water to 0.70), and then the last leg in step: eighteen
- * hundred metres in one minute, at the narrows, 1,800 m out, which is §8's
- * sixty seconds and the only warning the mission gives. Each hull walks the
- * axis at its own offset, so the block arrives as a block.
+ * closer — 1.60 water to 0.70), and then the last leg in step: from the
+ * narrows, 1,800 m out, into the Gallery beside the Bastion in one minute,
+ * which is §8's sixty seconds and the only warning the mission gives. Each
+ * hull walks the axis at its own offset, so the block arrives as a block.
  */
 function walkNorth(dx: number, dy: number): MissionLeg[] {
   return [
     { x: AXIS_X + dx, y: FIFTH_Y + dy, ticks: T(5, 20) },
     { x: AXIS_X + dx, y: NARROWS_Y + dy, ticks: T(10, 30) },
-    { x: AXIS_X + dx, y: GALLERY_Y + dy, ticks: T(1) },
+    // Climbing to the Gallery's floor as it goes, and coming in beside the
+    // Bastion rather than onto it (#1239). Walked at the defile's 1,700 m
+    // onto the axis, the block parked against the footprint at the Gallery's
+    // rim, short of the region its arrival is read in. Fifteen metres a
+    // second takes the 250 m in under twenty, and the 2,050 m leg runs at 34
+    // m/s against the Cruisers' 45, inside the minute.
+    { x: ARRIVAL_X + dx, y: ARRIVAL_Y + dy, ticks: T(1), depthM: GALLERY_DEPTH_M },
   ];
 }
 
@@ -385,6 +400,9 @@ export const CHORD_STANDING_WAVE: MissionDefinition = {
     {
       slot: COLUMN,
       faction: Faction.Directorate,
+      // "The column is not an attack and the mission never lets it become
+      // one" (§5): no gun volunteers for it (#1239).
+      spared: true,
       note: 'The column — a transit under Cohort-Prime Adze, on a route order filed before the works order existed (§5). Not an attack, and the mission never lets it become one',
       units: COLUMN_HULLS.map((h) => columnAt(h.dx, h.dy, h.kind, h.tag, h.note)),
     },
