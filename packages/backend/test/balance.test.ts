@@ -174,19 +174,33 @@ describe('telemetry measures what it says it measures', () => {
     // table, and the reading taken off it ("82% of the Order's observations
     // are stopped by the escort gate") would be wrong in a way nothing else
     // would catch.
-    // **Eight minutes, not two, and the length is the assertion.** The first
-    // version of this test ran a two-minute duel, in which `alreadyHas` and
-    // `bought` are zero for both seats — so the sum below could not see a
-    // miscount on either branch and the `bought` check was the vacuous
-    // `0 >= 0`. A holder that never runs two of the five branches does not hold
-    // invariant 14, which exists precisely because a miscounted branch still
-    // prints a perfectly well-formed table. Measured on this seed, on `main` at
-    // `f9d064c`: two minutes reaches two branches, five reaches three, and eight
-    // reaches all five — `alreadyHas` 136, but `bought` only 1, both from slot
-    // 0. The commit is named because a map or commander edit moves these:
-    // #1106's Ventfront took `alreadyHas` from 44 to 136.
-    const result = runMatch({ seats: DUEL, seed: 59, maxMinutes: 8, fauna: false });
-    for (const player of result.players) {
+    // **Two duels, and their length is the assertion.** The first version of
+    // this test ran one two-minute duel, in which `alreadyHas` and `bought` are
+    // zero for both seats — so the sum below could not see a miscount on either
+    // branch and the `bought` check was the vacuous `0 >= 0`. A holder that
+    // never runs two of the five branches does not hold invariant 14, which
+    // exists precisely because a miscounted branch still prints a perfectly
+    // well-formed table. Measured on this seed, on `main` at `f9d064c`: two
+    // minutes reaches two branches, five reaches three, and eight reaches all
+    // five — `alreadyHas` 136, but `bought` only 1, both from slot 0.
+    //
+    // A map or commander edit moves these. #1106's Ventfront took `alreadyHas`
+    // from 44 to 136; refusing an attack order on a Tier-1 smudge (#1247) moved
+    // the one purchase past eight minutes; and re-issuing walks on the
+    // commander's own decisions (#1253) ends this duel at five, before either
+    // navy buys its ordnance hull. So the branches are read over a second duel
+    // as well, the Consortium against Hadron, which reaches all five on its own
+    // under each of those edits — no single edit can empty a branch now.
+    const results = [
+      runMatch({ seats: DUEL, seed: 59, maxMinutes: 10, fauna: false }),
+      runMatch({
+        seats: [DUEL[0]!, { slot: 1, faction: Faction.Hadron, difficulty: AiDifficulty.Veteran }],
+        seed: 59,
+        maxMinutes: 8,
+        fauna: false,
+      }),
+    ];
+    for (const player of results.flatMap((result) => result.players)) {
       const t = player.ordnanceWant;
       assert.ok(t.reached > 0, `slot ${player.slot} reached the ordnance want at all`);
       assert.equal(
@@ -220,7 +234,7 @@ describe('telemetry measures what it says it measures', () => {
     // The order is argued from a baseline-scale measurement on the pull request
     // instead, and from the comment at the branch itself.
     const union = { notEscorted: 0, alreadyHas: 0, noYard: 0, cannotAfford: 0, bought: 0 };
-    for (const player of result.players) {
+    for (const player of results.flatMap((result) => result.players)) {
       for (const key of Object.keys(union) as (keyof typeof union)[]) {
         union[key] += player.ordnanceWant[key];
       }
@@ -234,7 +248,7 @@ describe('telemetry measures what it says it measures', () => {
     // the two differ by whatever is still in the queue when the match ends —
     // never the other way about, which is the direction that would say the
     // navy fielded a hull this branch never ordered.
-    const summary = summarise([result]);
+    const summary = summarise(results);
     for (const faction of summary.factions) {
       const hull = OWN_ORDNANCE[faction.faction];
       const built = (faction.buildsPerMatchByKind[hull] ?? 0) * faction.matches;
