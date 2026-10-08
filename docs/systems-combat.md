@@ -387,6 +387,13 @@ The ping's accuracy role in [systems-echo.md](systems-echo.md) §10 is realised 
 this table: a ping buys Tier-4 solutions for its 3-second window, which is worth more than
 any flat buff. Ping *late, briefly, and just before committing* remains the skill.
 
+**An attack order is held to the same table.** A gun in range fires without asking (§4), but
+an order sends a hull *after* a contact, and a hull can only be sent where its slot was told.
+Below Bearing there is nowhere to send it, and the order is refused. At Tier 2 the hull chases
+the ghost, at Tier 3 and above the truth, and once the slot stops hearing the target it makes
+for the last point it was shown. It never chases the target itself: that would hand the player
+a live fix their ears never made.
+
 ---
 
 ## 8. Vertical Combat
@@ -807,7 +814,7 @@ what exists or assumes what does not. The combat loop lives in
 
 | Doc concept | Prototype today | Implementation note |
 | --- | --- | --- |
-| Guns (§4) | **Implemented** | Hitscan with cooldown; chase on ordered targets, auto-return-fire, silent hulls hold fire; every discharge spikes SIG and lays battle residue |
+| Guns (§4) | **Implemented** | Hitscan with cooldown; chase on ordered targets, to the point the slot was shown (§7, #1247), auto-return-fire, silent hulls hold fire; every discharge spikes SIG and lays battle residue |
 | Ordnance acoustics (§3) | **Implemented** | The `ORDNANCE` group in `packages/shared/src/constants.ts` carries the §3 table |
 | Torpedoes (§5) | **Implemented** | `Ordnance` entities with their own SIG; seekers run the standard propagation model in `sim/systems/ordnance.ts` |
 | Countermeasures (§5) | **Implemented** | Noisemaker decoys, and point defence as a target priority inside the terminal range in `sim/systems/combat.ts`; a mine astern falls out of §6's trigger set |

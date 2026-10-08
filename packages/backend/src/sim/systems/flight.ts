@@ -67,6 +67,7 @@ import {
 } from '../components.ts';
 import { applyFiringSpike } from './acoustics.ts';
 import { clearQueue } from './orderQueue.ts';
+import { orderTarget } from './chase.ts';
 import { raiseSelfEvent, spawnUnit } from '../world.ts';
 import type { SimWorld } from '../world.ts';
 
@@ -276,7 +277,11 @@ export function flightSystem(world: SimWorld, destroyed: number[]): void {
     }
 
     if (inReach) {
-      if (hasComponent(world, Weapon, eid)) Weapon.orderedTargetEid[eid] = ordered;
+      // Chased to the point the carrier's slot was shown, as the carrier
+      // would chase it (#1247).
+      if (hasComponent(world, Weapon, eid)) {
+        orderTarget(eid, ordered, Weapon.chaseX[carrier]!, Weapon.chaseY[carrier]!);
+      }
       continue;
     }
 

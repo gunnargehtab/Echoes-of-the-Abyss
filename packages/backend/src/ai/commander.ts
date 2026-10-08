@@ -1624,7 +1624,7 @@ export class AiCommander implements AiPlayer {
     for (const contact of contacts) {
       if (contact.fauna !== undefined) continue;
       // Classified or nothing (#440). An explicit attack order chases the
-      // *entity* behind the handle, and on seed 4000 every commander spent
+      // contact behind the handle, and on seed 4000 every commander spent
       // the match — 1,233 of one commander's 1,976 attack orders, 1,828 of
       // another's 2,181 — chasing Tier-1 smudges inside a gun's reach, which
       // with the Drift in the water are grazers. What is genuinely in range
@@ -1634,6 +1634,14 @@ export class AiCommander implements AiPlayer {
       // The one caller allowed past this is home defence, whose watch has
       // already confirmed the contact is *closing* on the Bastion — evidence
       // of intent a grazer rarely supplies, and the alarm is cheap.
+      //
+      // Never below Bearing, home defence included (#1247). A Tier-1 smudge is
+      // reported at the listener's own position, `orderAttackContact` refuses
+      // it as docs/systems-combat.md §7 does, and a refused order here would
+      // hold the whole army still for the decision. It used to be taken, and
+      // the chase then walked the army onto the true emitter, kilometres past
+      // anything the watch had heard.
+      if (contact.tier < ResolutionTier.Bearing) continue;
       if (!allowUnclassified && contact.tier < ResolutionTier.Classification) continue;
       if (best === null || priority(contact) > priority(best)) best = contact;
     }

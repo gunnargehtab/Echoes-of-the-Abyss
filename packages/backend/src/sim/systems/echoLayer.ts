@@ -587,8 +587,8 @@ export class EchoLayer {
    * added makes crossing that threshold routine — so a handle minted for a
    * torpedo that died minutes ago could come to name a *live hull the player
    * had never detected*. `orderAttackContact` would accept it, and combat.ts
-   * republishes an ordered target's position into MoveOrder every tick, which
-   * turns a stale handle into a permanent tracker.
+   * then republished an ordered target's position into MoveOrder every tick
+   * (until #1247), which turned a stale handle into a permanent tracker.
    *
    * Called from `Match.reap` for every death, which is the one place the
    * simulation makes a death real.

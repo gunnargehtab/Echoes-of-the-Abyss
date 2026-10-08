@@ -490,9 +490,14 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
       // Only an explicit order chases; auto-acquired targets were in range by
       // construction. Turrets have no MoveOrder and simply wait, and so does
       // a hull holding position — it was told to.
+      //
+      // To where the slot was shown the target, never to the target (#1247):
+      // the ghost at Tier 2, the truth at Tier 3 and above, and nowhere newer
+      // once the slot stops hearing it (`orderTarget`, chase.ts). Chasing
+      // `Position` steered a hull at a fix its slot never had.
       if (ordered && isMobile && !holding) {
-        MoveOrder.x[eid] = Position.x[target]!;
-        MoveOrder.y[eid] = Position.y[target]!;
+        MoveOrder.x[eid] = Weapon.chaseX[eid]!;
+        MoveOrder.y[eid] = Weapon.chaseY[eid]!;
         MoveOrder.active[eid] = 1;
       }
       continue;

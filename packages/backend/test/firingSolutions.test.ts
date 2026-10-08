@@ -17,6 +17,10 @@
  * Guns are deliberately untouched by any of this: their range sits inside the
  * distance at which a hull is audible, so "in range implies heard" and a tier
  * gate on them would tax the baseline weapon for nothing.
+ *
+ * An attack *order* is not a gun in range, though: it sends a hull after a
+ * contact, and the table holds it as it holds a launch (#1247). No order below
+ * Bearing, and the hull chases the point its slot was shown — never the truth.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -32,7 +36,16 @@ import {
 import { hasComponent, removeEntity } from 'bitecs';
 import { Match } from '../src/sim/match.ts';
 import { spawnUnit } from '../src/sim/world.ts';
-import { Health, Ordnance, Owner, Position, Structure, Unit } from '../src/sim/components.ts';
+import {
+  Health,
+  MoveOrder,
+  Ordnance,
+  Owner,
+  Position,
+  Structure,
+  Unit,
+  Weapon,
+} from '../src/sim/components.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -399,5 +412,90 @@ describe('firing solutions', () => {
       before,
       "a borrowed handle must never turn into a torpedo aimed at its owner's own hull"
     );
+  });
+});
+
+describe('an attack order, held to the same table — #1247', () => {
+  /** A Corvette on slot 0, and a stationary Cruiser it holds at exactly `tier`. */
+  function hunt(tier: ResolutionTier, seed = 29) {
+    const match = openWaterMatch(seed);
+    const hunter = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 3000,
+      y: 8000,
+    });
+    const prey = spawnUnit(match.world, {
+      kind: UnitKind.Cruiser,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 3000 + rangeForTier(tier),
+      y: 8000,
+    });
+    const { handle, tier: held } = contactOn(match, 3);
+    assert.equal(held, tier, `the premise: the hunter holds the Cruiser at tier ${tier}`);
+    return { match, hunter, prey, handle };
+  }
+
+  /** Somewhere no Corvette on this board can hear a Cruiser from. */
+  function vanish(match: Match, prey: number): void {
+    Position.x[prey] = 15500;
+    Position.y[prey] = 500;
+    advance(match, 1);
+    assert.equal(match.echo.firingSolution(0, prey), undefined, 'the premise: the slot lost it');
+  }
+
+  it('refuses one on a contact resolved no better than Tier 1', () => {
+    // A smudge is reported at the listener's own position, so the order had
+    // nowhere honest to go — and the chase took the hull along the true
+    // bearing to the emitter instead.
+    const { match, hunter, handle } = hunt(ResolutionTier.Contact, 13);
+    match.orderAttackContact(0, hunter, handle);
+    assert.equal(Weapon.orderedTargetEid[hunter], 0, 'a Tier-1 smudge is nothing to send a gun at');
+    advance(match, 5);
+    assert.ok(Math.abs(Position.x[hunter]! - 3000) < 1, 'and the hunter took no bearing from it');
+  });
+
+  it('chases the ghost it was shown, not the truth', () => {
+    const { match, hunter, prey, handle } = hunt(ResolutionTier.Bearing);
+    match.orderAttackContact(0, hunter, handle);
+    advance(match, 1);
+    // One tick past the pass, so the gun has steered by the newest ghost: the
+    // blur is drawn afresh each pass, and the pass runs after combat.
+    match.update(STEP_MS);
+    const shown = match.echo.firingSolution(0, prey)!;
+    assert.equal(shown.tier, ResolutionTier.Bearing, 'the premise: still a bearing');
+    assert.ok(
+      Math.hypot(shown.x - Position.x[prey]!, shown.y - Position.y[prey]!) > 1,
+      'the premise: the ghost lies'
+    );
+    assert.ok(
+      Math.hypot(MoveOrder.x[hunter]! - shown.x, MoveOrder.y[hunter]! - shown.y) < 1,
+      'the hunter steers at the ghost'
+    );
+  });
+
+  it('makes for the last point it was shown once its slot stops hearing the target', () => {
+    const { match, hunter, prey, handle } = hunt(ResolutionTier.Bearing);
+    match.orderAttackContact(0, hunter, handle);
+    advance(match, 1);
+    const last = match.echo.firingSolution(0, prey)!;
+    vanish(match, prey);
+    assert.ok(
+      Math.hypot(MoveOrder.x[hunter]! - last.x, MoveOrder.y[hunter]! - last.y) < 1,
+      'the hunter makes for where it was last shown the Cruiser, not for where it went'
+    );
+  });
+
+  it('refuses one on a handle its slot no longer hears, queued or not', () => {
+    // Anchored at the truth, a queued attack drew a once-heard target's
+    // position back on demand, for as long as its handle lived.
+    const { match, hunter, prey, handle } = hunt(ResolutionTier.Bearing);
+    vanish(match, prey);
+    match.orderAttackContact(0, hunter, handle, true);
+    assert.equal(match.world.orderQueues.get(hunter)?.length ?? 0, 0, 'nothing queued to draw');
+    match.orderAttackContact(0, hunter, handle);
+    assert.equal(Weapon.orderedTargetEid[hunter], 0, 'and nothing ordered to chase');
   });
 });
