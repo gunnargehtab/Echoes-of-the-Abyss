@@ -538,7 +538,7 @@ describe('difficulty is decision quality, not information', () => {
    * ticks 12 + 180k, which never does, so it never told its scout anything;
    * a Veteran, on 12 + 36k, did every fifteen seconds.
    */
-  it('re-issues a standing walk every six seconds at most, at either cadence', () => {
+  it('re-issues a standing walk every five to six seconds, at either cadence', () => {
     for (const difficulty of [AiDifficulty.Recruit, AiDifficulty.Veteran]) {
       const match = new Match(undefined, { fauna: false, seed: SEED });
       match.addPlayer(0, Faction.Bathyarch);
@@ -561,9 +561,16 @@ describe('difficulty is decision quality, not information', () => {
         `${AiDifficulty[difficulty]} told its scout ${told.length} times`
       );
       for (let i = 1; i < told.length; i++) {
+        const gap = told[i]! - told[i - 1]!;
         assert.ok(
-          told[i]! - told[i - 1]! <= 6 * SIM.TICK_HZ,
-          `${AiDifficulty[difficulty]} waited ${told[i]! - told[i - 1]!} ticks to tell its scout again`
+          gap <= 6 * SIM.TICK_HZ,
+          `${AiDifficulty[difficulty]} waited ${gap} ticks to tell its scout again`
+        );
+        // And no oftener: a move re-issued every decision resets the hull's
+        // plan forever, which is what the window is for.
+        assert.ok(
+          gap >= 5 * SIM.TICK_HZ,
+          `${AiDifficulty[difficulty]} told its scout again after only ${gap} ticks`
         );
       }
     }

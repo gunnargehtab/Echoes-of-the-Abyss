@@ -1224,7 +1224,11 @@ export class AiCommander implements AiPlayer {
    * Veteran, on 12 + 36k, did every fifteen seconds rather than five.
    */
   private reissueDue = false;
-  /** The tick `reissueDue` was last true on. */
+  /**
+   * The tick `reissueDue` was last true on. Minus infinity, so the first
+   * decision opens it: a hull that has never been told has nothing to wait
+   * five seconds before being told.
+   */
   private lastReissueTick = -Infinity;
   /**
    * Sim tick the next active sonar transmission is allowed on.
