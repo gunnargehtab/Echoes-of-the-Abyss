@@ -52,8 +52,9 @@ const TOLERANCE_TICKS = 30 * SIM.TICK_HZ;
 /**
  * §5 — the rim pack runs the rim at 1,700 m, under the Draymaw's band. Said on
  * the drive as well as the spawn: a drive without a depth holds the species'
- * 900 m (types.ts, `driveTo`), and the pack crossed the layer at 17:40, so the
- * last of §8's telegraph reached a survey still below as a Bearing (#1199).
+ * 900 m (types.ts, `driveTo`), and the pack cleared the layer's duct at 17:35,
+ * so the last of §8's telegraph reached a survey still below as a Bearing
+ * (#1199).
  */
 const RIM_PACK_M = 1700;
 /**

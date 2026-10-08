@@ -25,7 +25,8 @@
  * three heard the points (#1198).
  *
  * The rim pack holds §5's 1,700 m for all seventy-five seconds of the
- * telegraph, under the layer, and fights nothing on the way (#1199).
+ * telegraph, under the layer, and gives and takes no hull on the way: the
+ * watch's guns fire on it throughout, and a driven creature gives none (#1199).
  *
  * And the ground §11 draws in shapes since #1144: every authored point, leg
  * and shelf-lane cell on the ground it stood on in rectangles, read off the
@@ -338,10 +339,11 @@ describe('the rim pack, as docs/mission-exposure.md §5 drives it (#1199)', () =
     }
   });
 
-  it('holds the rim under the layer to the whistle, and fights nothing on the way', () => {
+  it('holds the rim under the layer to the whistle, and gives and takes no hull', () => {
     // An idle run, read every five seconds of the seventy-five. Before #1199
-    // the pack climbed to 900 m and crossed the layer at 17:40; held at
-    // 1,700 m but released at 17:45, it fought the watch to the change.
+    // the pack climbed to 900 m and cleared the layer's duct at 17:35; held at
+    // 1,700 m but released at 17:45, it fought the watch to the change. The
+    // watch fires on the driven pack either way, so hull is what is asked.
     const map = missionMapById(LEDGER_EXPOSURE.mapId)!;
     const match = new Match(map, { mission: LEDGER_EXPOSURE, fauna: false, seed: 77 });
     const hounds = defineQuery([Fauna, Position, Health]);
