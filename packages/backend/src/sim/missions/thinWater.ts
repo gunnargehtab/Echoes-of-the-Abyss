@@ -91,12 +91,14 @@ const T = (minutes: number, seconds = 0): number => (minutes * 60 + seconds) * S
 const PLAYER = 0;
 /** Reserved and empty, as Tend reserves it: no court, no ledger, no array. */
 const COURT = 1;
-/** The works party — the tension frame, its turrets and the spur's housings (§5). */
-const WORKS = 2;
-/** The corridor escort — Rell's, standing off the frame in Klaxon posture (§5). */
-const CORRIDOR = 3;
-/** The second element — the closure, west along the spur (§5, §7). */
-const ELEMENT = 4;
+/**
+ * The closure: the works party, the corridor escort and the second element —
+ * "one closure under one order" (§13), so one slot. Hostility is `Owner.slot`,
+ * and on three slots the three treated each other as enemies: the element and
+ * the corridor's second Corvette were dead by 00:10 in an idle run, and the
+ * corridor and the frame's turrets fought out the rest by 04:45 (#1269).
+ */
+const CLOSURE = 2;
 
 /**
  * The challenge's condition, in ticks of cumulative Bearing (§9, §6).
@@ -476,7 +478,7 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
     },
 
     {
-      slot: WORKS,
+      slot: CLOSURE,
       faction: Faction.Bathyarch,
       note: 'The works party — a line re-tensioning under a filed order, the least interesting document the concern produces in a year (§6). Loud, stationary, and not hunting anybody',
       units: [
@@ -553,7 +555,7 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
     },
 
     {
-      slot: CORRIDOR,
+      slot: CLOSURE,
       faction: Faction.Bathyarch,
       note: "Corridor Warden Anse Rell's escort, standing off the frame in Klaxon posture — audible for four minutes before it is anywhere, which is the Consortium's stated weakness handed to the player whole (§5, §7)",
       units: [
@@ -588,9 +590,13 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
     },
 
     {
-      slot: ELEMENT,
+      slot: CLOSURE,
       faction: Faction.Bathyarch,
       note: 'The second element — never engaged, and the reason the mission ends (§5). It is heard only as the housings it passes going quiet',
+      // "Never engaged" (§5), so spared (docs/systems-combat.md §4): its 07:30
+      // drop onto the spur's east end puts it about 550 m from the column's
+      // armed escorts, whose idle guns took it before the closure (#1269).
+      spared: true,
       /**
        * Standing north of the spur, mid-map, and the position is measured
        * rather than placed: the element used to wait at the north-east corner,
