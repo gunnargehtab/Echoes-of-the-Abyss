@@ -21,9 +21,13 @@ import { hasComponent } from 'bitecs';
 import {
   ACTIVE_SONAR,
   Faction,
+  PROPAGATION_MODEL,
   ResolutionTier,
   SIM,
+  STRUCTURE_AURAS,
   THERMOCLINE,
+  UNIT_STATS,
+  UnitKind,
   detectionRatio,
   directionalFactor,
   thermoclineFactor,
@@ -31,6 +35,7 @@ import {
   tierFromRatio,
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
+import { Terrain } from '../src/sim/terrain.ts';
 import { spawnUnit } from '../src/sim/world.ts';
 import { Acoustic, ActivePing, Heading, Owner, Position } from '../src/sim/components.ts';
 import type { SimWorld } from '../src/sim/world.ts';
@@ -200,5 +205,76 @@ describe('echo pass', () => {
 
     // Without this the test could pass by resolving nothing at all.
     assert.ok(compared > 200, `expected a substantial contact set, compared ${compared}`);
+  });
+
+  /**
+   * #1222. The broadphase sizes each emitter's query for the sharpest ears it
+   * expects, and a listener above that ceiling hears past the square: the
+   * Precentor's HYD 95 against a ceiling of 90 lost the outer few percent of
+   * its range wherever the cells fell short.
+   *
+   * The geometry is chosen so they do fall short. The listener sits on the
+   * west and south edges of its hash cell, and idle Corvettes stand due west
+   * and due south of it from inside the HYD-90 radius (3,841 m at SIG 28) to
+   * past the HYD-95 range (3,973 m). A Corvette between the two is heard by the
+   * rules, and a query square sized for HYD 90 ends short of the listener's
+   * cell; the pass must resolve the lines as the all-pairs reference does.
+   */
+  it('and at the edge of the best ears in the game, HYD 95', () => {
+    const ceiling = PROPAGATION_MODEL.MAX_EXPECTED_HYD;
+    for (const stats of Object.values(UNIT_STATS)) {
+      assert.ok(stats.hyd <= ceiling, `${UnitKind[stats.kind]} hears above the broadphase ceiling`);
+    }
+    assert.ok(STRUCTURE_AURAS.CANTOR.HYD_CAP <= ceiling, 'a dome lifts ears above the ceiling');
+
+    const match = new Match(undefined, {
+      fauna: false,
+      seed: 5,
+      terrain: new Terrain(12000, 12000, 250, { floorM: 2600 }),
+    });
+    match.addPlayer(0, Faction.Bathyarch);
+    match.addPlayer(1, Faction.Directorate);
+    const ear = spawnUnit(match.world, {
+      kind: UnitKind.Precentor,
+      slot: 1,
+      faction: Faction.Directorate,
+      x: 6000,
+      y: 6000,
+      depth: 600,
+    });
+    assert.equal(6000 % SIM.SPATIAL_CELL_M, 0, 'the premise: the listener is on a cell edge');
+    const ring: number[] = [];
+    for (const distance of [3800, 3860, 3900, 3940, 3960, 4000, 4040]) {
+      for (const [dx, dy] of [
+        [-1, 0],
+        [0, -1],
+      ] as const) {
+        ring.push(
+          spawnUnit(match.world, {
+            kind: UnitKind.Corvette,
+            slot: 0,
+            faction: Faction.Bathyarch,
+            x: 6000 + dx * distance,
+            y: 6000 + dy * distance,
+            depth: 600,
+          })
+        );
+      }
+    }
+    for (let i = 0; i < 120; i++) match.update(1000 / SIM.TICK_HZ);
+    assert.equal(Acoustic.hyd[ear], 95, 'the premise: the listener hears at HYD 95');
+
+    const expected = bruteForce(match.world, [1]);
+    const actual = match.echo.run(match.world, [1]);
+    const got = new Map<string, ResolutionTier>();
+    for (const contact of actual.contactsBySlot.get(1) ?? []) {
+      got.set(`1:${match.echo.entityForHandle(1, contact.id)}`, contact.tier);
+    }
+    const heard = ring.filter((eid) => expected.has(`1:${eid}`)).length;
+    assert.ok(
+      heard > 0 && heard < ring.length,
+      `the premise: the lines straddle the edge, ${heard} of ${ring.length} heard`
+    );
+    assert.deepEqual([...got.entries()].sort(), [...expected.entries()].sort());
   });
 });
