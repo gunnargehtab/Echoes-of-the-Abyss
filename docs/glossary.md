@@ -83,7 +83,7 @@ Carrier
 
 Engine Off
 
-- The posture below Silent Running (systems-echo.md §6): no thrust, and SIG at half the hull's Silent Running figure, floored at 1. Silent Running trades weapons for quiet; this trades movement. Weapons still work, and firing costs the usual spike. A hull with its drive cut rides a cold shock current if one runs and travels no other way — except the Glider, which keeps steerage and coasts at a third of its speed (units.md, "The scouts").
+- The posture below Silent Running (systems-echo.md §6): no thrust, and SIG at half the hull's Silent Running figure, floored at 1. Silent Running trades weapons for quiet; this trades movement. Weapons still work, and firing costs the usual spike. Work stops as it does under Silent Running: no mining, sowing, kelp cutting, mission lift, sounding or bloom share, while an effect or siege hull keeps working at its own figure. A hull with its drive cut rides a cold shock current if one runs and travels no other way — except the Glider, which keeps steerage and coasts at a third of its speed (units.md, "The scouts").
 
 Cadence Ping
 
@@ -190,7 +190,7 @@ Sowing
 
 Bloom-share
 
-- The Commune's income: a bed pays them continuously while a live, non-silent hull of theirs tends it, and stops the tick it is untended — held is *tended*, not possessed. It is bounded by what the bed regrows, so it takes the interest and never the principal, and it pays Biomass. Anchored to Shelf-band plateau ground, which is the guard-rail: the quietest navy earns on the most reachable water.
+- The Commune's income: a bed pays them continuously while a live hull of theirs, neither silent nor engine-off, tends it, and stops the tick it is untended — held is *tended*, not possessed. It is bounded by what the bed regrows, so it takes the interest and never the principal, and it pays Biomass. Anchored to Shelf-band plateau ground, which is the guard-rail: the quietest navy earns on the most reachable water.
 
 Lamp halo
 

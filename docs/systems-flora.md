@@ -96,8 +96,9 @@ finally given an economy instead of only a speed penalty avoided.
 
 The Commune already earns by **bloom-share**: *"plateau blooms yield continuously, without a
 harvester loop, provided the plateau is theirs"* ([economy.md](economy.md) §6, built in
-issue #243). A node pays while a live, non-silent Commune hull tends it within 400 m **from
-Shelf water**, and stops the tick it is untended — held is *tended*, not possessed.
+issue #243). A node pays while a live Commune hull, neither silent nor engine-off, tends it
+within 400 m **from Shelf water**, and stops the tick it is untended — held is *tended*, not
+possessed.
 
 That mechanism is kept exactly, and re-founded on the crop: **a bloom node is a bed**, and
 what it yields is Biomass. The rule that makes it different from every other mode is the one
@@ -283,7 +284,7 @@ account it lands in is not.
 | Cutter rate | 20 Biomass/min of crop | Pinned by §2's own three clauses: above the reactor's 12 so it "eats it quickest", and 40% of it is below 12 so it stays "worst-paid" |
 | What the region is charged | the whole cut, not the banked share | §3 charges for "crop taken out of a field", so a cutter wrecks the water two and a half times as fast per Biomass earned. That is the arithmetic behind the word *wasteful* |
 | Bloom-share yield | The bed's regrowth, scaled by the canopy standing — 9.6 Biomass/min per whole bed in Healthy water | The interest and never the principal, which is what makes it endless. Scaled by the crop because §2 promises a raid takes the income *and* the cover; see below |
-| Bloom-share tend radius / bed radius / state | 400 m · 400 m · live, not silent, and in the Shelf band | Unchanged from #243, except that the tend radius is now the bed's own — a garden is the ground you stand in — and that the tender's own depth is read as well as its position (#577), because a bed may overhang its plateau and the exposure is the mechanic |
+| Bloom-share tend radius / bed radius / state | 400 m · 400 m · live, neither silent nor engine-off, and in the Shelf band | Unchanged from #243, except that the tend radius is now the bed's own — a garden is the ground you stand in — that the tender's own depth is read as well as its position (#577), because a bed may overhang its plateau and the exposure is the mechanic, and that a cut drive stops the work as silence does (#1237) |
 | Sow time / SIG / restore | 45 s · SIG 18 · +25% crop over 2 min | Their harvest signature, and a quarter of a field per act |
 | Regrowth | 4%/min, by the §6 health band | A stripped field returns in one match, in healthy water only |
 | Drift Health cost | Per Biomass taken, at the rendered-fauna rate | Harvesting flora and rendering fauna wear a region the same way |
@@ -381,7 +382,7 @@ order:
 5. **The cutter's 40%**, on the burn mechanic that already exists. *Built (#565).* A
    Consortium hull standing in a bed takes 20 Biomass of crop a minute out of it and banks
    8 — and the region is charged for all 20, which is the difference between harvesting a
-   bed and destroying one. Silence stops the work, and one field pays one share however many
+   bed and destroying one. Silence or a cut drive stops the work, and one field pays one share however many
    hulls stand in it.
 6. **Bloom-share re-founded on the crop.** *Built (#568).* A map's bloom nodes are seeded as
    full kelp beds at the tend radius, and the share is the bed's regrowth in Biomass, scaled

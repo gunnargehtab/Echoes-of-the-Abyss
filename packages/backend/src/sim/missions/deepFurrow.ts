@@ -14,11 +14,11 @@
  *   because `standing-furrow` carries `pressureBonus: 1`. That is the whole
  *   system, introduced by the ground doing it before anybody says a word.
  * - **The sowing writes the same grant onto bare rock** (§4.3). Sixty seconds
- *   inside 250 m of 2625, 2125, bow on, not silent, at SIG 45, on ground that
- *   costs four a second — and when the hold completes the `ground` beat turns
- *   the second furrow Kelp Forest *and* grants it the band. One beat, both
- *   halves, on one tick: the campaign's one biome spend, and the only repaint
- *   in the bible that makes ground better.
+ *   inside 250 m of 2625, 2125, bow on, neither silent nor engine-off, at SIG
+ *   45, on ground that costs four a second — and when the hold completes the
+ *   `ground` beat turns the second furrow Kelp Forest *and* grants it the
+ *   band. One beat, both halves, on one tick: the campaign's one biome spend,
+ *   and the only repaint in the bible that makes ground better.
  * - **The layer is the other wall** (§4.4). The base floor is the duct's top,
  *   so home and the sill are on different maps until the day dives. Nothing in
  *   this literal enforces that; `THERMOCLINE` does, and §6 and §7's whole

@@ -153,8 +153,8 @@ const sowers = defineQuery([Sowing, Position, Owner, Health]);
  *   grow cover on open water would be editing the map's acoustics at will,
  *   which §2 rules out in as many words.
  * - **Alive, and working.** Silence stops the work, and so does a drive cut
- *   (docs/systems-echo.md §6) — the clause that stops a bloom-share, and for
- *   silence a thermal cutter too.
+ *   (docs/systems-echo.md §6) — the clause that stops a bloom-share and a
+ *   thermal cutter too.
  */
 export function canSow(world: SimWorld, eid: number): boolean {
   if (!hasComponent(world, Unit, eid)) return false;

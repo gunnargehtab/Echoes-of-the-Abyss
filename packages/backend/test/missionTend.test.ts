@@ -14,7 +14,8 @@
  *   freely.
  * - **Silence stops the work** (§3; systems-echo.md §6): a carrier that goes
  *   silent mid-lift drops out of the authored floor and accrues nothing, and
- *   the cut resumes with the button.
+ *   the cut resumes with the button. A drive cut stops it the same way (§6,
+ *   #1237).
  * - **The ground stands where it stood** (§11, #1148): drawn in shapes, every
  *   seat, marker, row, garden node, creature, order and mission region of
  *   both missions on the map, Tend's and Convocation's, is pinned to the
@@ -216,53 +217,67 @@ describe('the sweep — docs/mission-tend.md §6, §8', () => {
 });
 
 describe('silence stops the work — docs/mission-tend.md §3; systems-echo.md §6', () => {
-  it('pauses a cut and lifts its floor while the carrier runs silent', () => {
-    // The jelly lift is the legible case: the watch scout idles at six and
-    // cuts at forty-five, so the floor is visible on its own meter — and the
-    // button drops it to single digits, which is §3's sentence on the wire.
-    const match = tendMatch(37);
-    let scout = 0;
-    let cuttingSig = 0;
-    let silentSig = 100;
-    let resumedSig = 0;
-    let toggledOn = false;
-    let toggledOff = false;
+  // And a drive cut stops it as silence does (systems-echo.md §6, #1237).
+  const postures = [
+    {
+      what: 'runs silent',
+      set: (match: Match, eid: number, on: boolean) => match.setSilentRunning(PLAYER, eid, on),
+    },
+    {
+      what: 'cuts its drive',
+      set: (match: Match, eid: number, on: boolean) => match.setEngineOff(PLAYER, eid, on),
+    },
+  ];
 
-    // Sampled over windows rather than at exact ticks, because the snapshot
-    // lands on the Echo cadence and the cut has its own arrival time. The
-    // scout is ordered in on the first snapshot; the cut needs ninety held
-    // seconds, so every window below sits inside it.
-    for (let tick = 0; tick <= T(3); tick++) {
-      const own = match.update(STEP_MS)?.get(PLAYER);
-      match.takeMissionView();
-      if (own === undefined) continue;
-      if (scout === 0) {
-        scout = own.units.find((u) => u.kind === UnitKind.LightScout)?.id ?? 0;
-        if (scout !== 0) match.orderMove(PLAYER, scout, IN_THE_LANE.x, IN_THE_LANE.y);
-        continue;
-      }
-      const unit = own.units.find((u) => u.id === scout);
-      if (unit === undefined) continue;
-      if (tick >= T(1) && tick <= T(1, 15)) cuttingSig = Math.max(cuttingSig, unit.sig);
-      if (tick > T(1, 15) && !toggledOn) {
-        toggledOn = true;
-        match.setSilentRunning(PLAYER, scout, true);
-      }
-      if (tick >= T(1, 35) && tick <= T(1, 50)) silentSig = Math.min(silentSig, unit.sig);
-      if (tick > T(1, 50) && !toggledOff) {
-        toggledOff = true;
-        match.setSilentRunning(PLAYER, scout, false);
-      }
-      if (tick >= T(2, 10) && tick <= T(2, 25)) resumedSig = Math.max(resumedSig, unit.sig);
-    }
+  for (const { what, set } of postures) {
+    it(`pauses a cut and lifts its floor while the carrier ${what}`, () => {
+      // The jelly lift is the legible case: the watch scout idles at six and
+      // cuts at forty-five, so the floor is visible on its own meter — and the
+      // button drops it to single digits, which is §3's sentence on the wire.
+      const match = tendMatch(37);
+      let scout = 0;
+      let cuttingSig = 0;
+      let quietSig = 100;
+      let resumedSig = 0;
+      let toggledOn = false;
+      let toggledOff = false;
 
-    assert.ok(cuttingSig >= 45, `mid-cut the scout read ${cuttingSig}, under the authored 45`);
-    assert.ok(
-      silentSig < 10,
-      `silent, the scout still read ${silentSig} — the floor held through the button`
-    );
-    assert.ok(resumedSig >= 45, `the cut did not resume with the button — ${resumedSig}`);
-  });
+      // Sampled over windows rather than at exact ticks, because the snapshot
+      // lands on the Echo cadence and the cut has its own arrival time. The
+      // scout is ordered in on the first snapshot; the cut needs ninety held
+      // seconds, so every window below sits inside it.
+      for (let tick = 0; tick <= T(3); tick++) {
+        const own = match.update(STEP_MS)?.get(PLAYER);
+        match.takeMissionView();
+        if (own === undefined) continue;
+        if (scout === 0) {
+          scout = own.units.find((u) => u.kind === UnitKind.LightScout)?.id ?? 0;
+          if (scout !== 0) match.orderMove(PLAYER, scout, IN_THE_LANE.x, IN_THE_LANE.y);
+          continue;
+        }
+        const unit = own.units.find((u) => u.id === scout);
+        if (unit === undefined) continue;
+        if (tick >= T(1) && tick <= T(1, 15)) cuttingSig = Math.max(cuttingSig, unit.sig);
+        if (tick > T(1, 15) && !toggledOn) {
+          toggledOn = true;
+          set(match, scout, true);
+        }
+        if (tick >= T(1, 35) && tick <= T(1, 50)) quietSig = Math.min(quietSig, unit.sig);
+        if (tick > T(1, 50) && !toggledOff) {
+          toggledOff = true;
+          set(match, scout, false);
+        }
+        if (tick >= T(2, 10) && tick <= T(2, 25)) resumedSig = Math.max(resumedSig, unit.sig);
+      }
+
+      assert.ok(cuttingSig >= 45, `mid-cut the scout read ${cuttingSig}, under the authored 45`);
+      assert.ok(
+        quietSig < 10,
+        `as the carrier ${what}, the scout still read ${quietSig} — the floor held through it`
+      );
+      assert.ok(resumedSig >= 45, `the cut did not resume with the button — ${resumedSig}`);
+    });
+  }
 });
 
 describe("the plateau's own Drift — docs/mission-tend.md §11; docs/bestiary.md §4", () => {

@@ -240,8 +240,9 @@ tenders.
 *Convocation*'s lesson ([mission-convocation.md](mission-convocation.md) §4): a question has to
 be carried by hand, and no order the player is given does it for them. The sowing is the
 sounding of [mission-deep-furrow.md](mission-deep-furrow.md) §4 further down — the sower within
-250 m of 1250, 3250, bow on, not silent, sixty seconds at 45, a broken hold resetting to zero —
-on a PR-3 hull that pays no crush for the rock, so the only price is ears. And the ears walk.
+250 m of 1250, 3250, bow on, neither silent nor engine-off, sixty seconds at 45, a broken hold
+resetting to zero — on a PR-3 hull that pays no crush for the rock, so the only price is ears.
+And the ears walk.
 
 The watch walks the lip to 1,160 m from the bed between 09:20 and 14:00 and has a veiled
 sowing at Track (ratio 6.60) the whole time. The concern's western reader works face-one from a

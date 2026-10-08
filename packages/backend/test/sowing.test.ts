@@ -204,6 +204,20 @@ describe('and the ways a sowing is broken', () => {
     assert.equal(field.sownRemaining, 0);
   });
 
+  it('and the moment its drive is cut', () => {
+    // A drive cut stops the work as silence does (docs/systems-echo.md §6,
+    // #1237): the sowing under way breaks, rather than finishing at the
+    // engine-off floor. The break is the pass's, not the order's refusal.
+    const { m, field, eid } = thinnedBed();
+    assert.ok(m.sow(SLOT, eid));
+    advance(m, 5);
+    m.setEngineOff(SLOT, eid, true);
+    advance(m, 1);
+    assert.ok(!hasComponent(m.world, Sowing, eid), 'the sowing is off');
+    advance(m, FLORA.SOW_TIME_S);
+    assert.equal(field.sownRemaining, 0, 'and the bed was owed nothing');
+  });
+
   it('does not restart a sowing already under way', () => {
     // A player leaning on the key would otherwise hold a hull at forty-four
     // seconds forever, paying SIG 18 the whole time and never finishing.

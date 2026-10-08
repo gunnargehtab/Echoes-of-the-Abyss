@@ -20,7 +20,8 @@
  *   The run below holds three seconds of a five-second sounding, turns away,
  *   turns back and holds three more. A lift would have finished. This does not.
  * - **Silence stops it outright.** §4's whole argument arrives as a rule here:
- *   a hull that runs silent to take a sounding quietly loses the sounding.
+ *   a hull that runs silent to take a sounding quietly loses the sounding. A
+ *   drive cut stops it the same way (docs/systems-echo.md §6, #1237).
  *
  * The bow is steered the way a player steers it — by ordering a short leg and
  * letting the hull arrive. `Heading` carries the *ordered* course and is never
@@ -183,6 +184,8 @@ interface Run {
   afterFirst: Sample;
   /** Bow on the far formation, running silent for longer than the hold. */
   silentAtSecond: Sample;
+  /** The same standing with the drive cut instead, for as long again. */
+  cutAtSecond: Sample;
   outcome: MissionOutcome | null;
   epilogue: string | null;
   finalDone: number;
@@ -288,8 +291,15 @@ function run(): Run {
   settle(8);
   const silentAtSecond = sample();
 
-  // And with it up again, the same standing reads the formation.
-  match.setSilentRunning(PLAYER, hull, false);
+  // A drive cut stops the work as silence does (docs/systems-echo.md §6,
+  // #1237). Cutting the drive lifts silence, so this is the posture alone:
+  // eight more seconds bow-on, still reading nothing.
+  match.setEngineOff(PLAYER, hull, true);
+  settle(8);
+  const cutAtSecond = sample();
+
+  // And with it turning again, the same standing reads the formation.
+  match.setEngineOff(PLAYER, hull, false);
   settle(HOLD_S + 2);
   const finalDone = sample().done;
 
@@ -301,6 +311,7 @@ function run(): Run {
     sounded,
     afterFirst,
     silentAtSecond,
+    cutAtSecond,
     outcome: match.missionOver?.outcome ?? null,
     epilogue: match.missionOver?.epilogue ?? null,
     finalDone,
@@ -366,6 +377,10 @@ describe('silence stops the work', () => {
     // silent to take a sounding quietly loses the sounding, and turning around
     // was always the cheaper number.
     assert.equal(run().silentAtSecond.done, 1, 'a sounding was taken with the button down');
+  });
+
+  it('nor from a hull with its drive cut', () => {
+    assert.equal(run().cutAtSecond.done, 1, 'a sounding was taken with the drive cut');
   });
 
   it('closes the mission once both formations are read', () => {

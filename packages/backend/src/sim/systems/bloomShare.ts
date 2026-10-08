@@ -35,7 +35,8 @@
  * "Held" is tended, not possessed — docs/mission-tend.md §4's own words. A
  * hull driven off or killed stops the share on the tick; so does Silent
  * Running, because silence stops the work (docs/systems-echo.md §6, and
- * mission-tend §3: "SIG falls to single digits, the share stops accruing").
+ * mission-tend §3: "SIG falls to single digits, the share stops accruing"),
+ * and so does a drive cut (§6, #1237).
  * That is the whole counter-play: you do not have to kill the gardeners,
  * only make them leave or make them hide — and the guard-rail
  * (docs/systems-echo.md §10) puts the gardens on the most reachable ground
@@ -101,8 +102,8 @@ export function bloomShareSystem(world: SimWorld): void {
       const eid = candidates[i]!;
       if (Owner.faction[eid] !== Faction.Pelagia) continue;
       if (Health.hp[eid]! <= 0) continue;
-      // Silence stops the work, and so does a drive cut — docs/systems-echo.md
-      // §6, and mission-tend.md §3's "the share stops accruing".
+      // Silence stops the work — mission-tend.md §3's "the share stops
+      // accruing" — and so does a drive cut, docs/systems-echo.md §6 (#1237).
       if (postureStopsWork(world, eid)) continue;
       // And depth stops it too, past the rim of a bed that overhangs its
       // plateau. `depthBandFor` rather than the 400 m line written out, so
