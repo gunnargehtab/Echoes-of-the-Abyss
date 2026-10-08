@@ -899,7 +899,14 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     }
 
     player.connected = false;
-    this.allowReconnection(client, LIFECYCLE.RECONNECT_GRACE_S);
+    // Not awaited, as Colyseus's own examples write it, but never left
+    // unhandled (#1218). A client that drops before acknowledging its join is
+    // refused with a promise that is already rejected ("not joined"; a room
+    // that is disposing answers the same way), and an unhandled rejection
+    // reaches the process's `uncaughtException` hook, which disposes every room
+    // on the box: #627's blast radius by another door. Colyseus calls
+    // `onLeave` next in that case, and `onLeave` forfeits the seat.
+    this.allowReconnection(client, LIFECYCLE.RECONNECT_GRACE_S).catch(() => {});
   }
 
   override onReconnect(client: Client): void {
