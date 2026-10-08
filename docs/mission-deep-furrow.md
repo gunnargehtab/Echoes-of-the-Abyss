@@ -167,13 +167,13 @@ lower it. The constant is right, and the two built documents are the side that m
    The button is on the panel anyway.
 
 **Silent Running is present, and this mission prices it in both directions.** It **stops the
-sowing outright**: a sounding needs a hull that is not silent (`runtime.ts`, `holdingSounding`),
-so a sower that goes quiet on the rock loses the hold and keeps paying for the rock. On the dive
-it is the wrong button and does nothing: an order deeper than the hull clears silence
-(`match.ts`, `applyDepth`) and the descent floors SIG at 72 regardless. On the climb it is the
-right button and costs only speed: a shallower order leaves silence standing, ascent adds no SIG,
-and the Commune's multiplier is 0.8 — a silent tender climbs the doorway at 32 m/s reading 4.5
-by the shipped curve, a silent scout at 96 reading 3.5.
+sowing outright**: a sounding needs a hull that is neither silent nor engine-off (`runtime.ts`,
+`holdingSounding`), so a sower that goes quiet on the rock loses the hold and keeps paying for
+the rock. On the dive it is the wrong button and does nothing: an order deeper than the hull
+clears silence (`match.ts`, `applyDepth`) and the descent floors SIG at 72 regardless. On the
+climb it is the right button and costs only speed: a shallower order leaves silence standing,
+ascent adds no SIG, and the Commune's multiplier is 0.8 — a silent tender climbs the doorway at
+32 m/s reading 4.5 by the shipped curve, a silent scout at 96 reading 3.5.
 
 ---
 
@@ -226,13 +226,13 @@ plateau's hush is partly grown ([mission-tend.md](mission-tend.md) §4); this is
 ### 3. The sowing writes both
 
 The second furrow is bare rock at 00:00 — Abyssal Trench, 1.6, PR-3 water. It is sown by a
-**sounding**: the sower holds within 250 m of the point 2625, 2125, bow on it, not silent, for
-**sixty seconds at SIG 45** — the working figure of a Standard cut ([economy.md](economy.md)
-§3), the figure the jelly lift was authored at in [mission-tend.md](mission-tend.md) §9 — and a
-broken hold resets to zero (`accrueSounding`). The point is chosen so that the hold's whole
-radius lies outside the standing furrow's grant: the sower stands at x ≥ 2,375 and the grant
-ends at x 2,250. Every second of the sowing is paid for on unseeded ground at four points of
-hull.
+**sounding**: the sower holds within 250 m of the point 2625, 2125, bow on it, neither silent
+nor engine-off, for **sixty seconds at SIG 45** — the working figure of a Standard cut
+([economy.md](economy.md) §3), the figure the jelly lift was authored at in
+[mission-tend.md](mission-tend.md) §9 — and a broken hold resets to zero (`accrueSounding`).
+The point is chosen so that the hold's whole radius lies outside the standing furrow's grant:
+the sower stands at x ≥ 2,375 and the grant ends at x 2,250. Every second of the sowing is paid
+for on unseeded ground at four points of hull.
 
 The arithmetic, said here so nobody does it for the first time on the rock:
 
@@ -593,7 +593,7 @@ carries `silenceCeilingSig: 100` and `debtCapS: 0`, Asset Recovery's posture, an
 | 03:00 | **Anholt:** ten years, one furrow (§12) |
 | 05:00 | **The observer:** *Three and two, at the band's depth, at the plateaus' figure* (§12) |
 | *(fired by the seed, not the clock)* | **Ottilie Marr**, as the sower goes out onto the bare rock: seventy-five seconds of hull, and she has done the sum (§12) |
-| *[~09:00 — player-paced]* | **The sowing.** Sixty seconds inside 250 m of 2625, 2125, bow on, not silent, at 45, on rock that costs four a second. A broken hold resets to zero and the hull does not |
+| *[~09:00 — player-paced]* | **The sowing.** Sixty seconds inside 250 m of 2625, 2125, bow on, neither silent nor engine-off, at 45, on rock that costs four a second. A broken hold resets to zero and the hull does not |
 | *(fired by the sowing, not the clock)* | **The ground turns.** The second furrow's water goes from Abyssal Trench to Kelp Forest on one tick — the campaign's one biome spend — and, once the row lands, holds a PR-2 hull. Anholt says what it sounds like when it is anybody's; the observer enters it (§12) |
 | **13:00** | **The observer goes below.** From 2000, 2750 to 2000, 2950 at 2,400 m — down the sill, not up it. The watch says it did not need to hear any more |
 | **15:00** | **The cleft wakes.** Both Hollows driven off the walls to the throat's centre — 1900, 900 and 2100, 900 at 1,700 m — until 15:30, `loud: true`, at 60 through 1.6: heard under the layer from 7,090 m and from home water at Track. The loud beat the close is measured from |

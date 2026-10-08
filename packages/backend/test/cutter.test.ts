@@ -212,6 +212,22 @@ describe('and who may do it', () => {
     assert.ok(bed(m).crop > cut, 'and the canopy grows back over a hull that has gone quiet');
   });
 
+  it('and the moment its drive is cut', () => {
+    // A drive cut is machinery shut down as well (docs/systems-echo.md §6,
+    // #1237), so the cutters stop with it and nothing is banked.
+    const m = match();
+    const eid = inTheBed(m);
+    advance(m, 30);
+    const banked = biomass(m);
+    const cut = bed(m).crop;
+    assert.ok(banked > 0, 'it was cutting');
+
+    m.setEngineOff(0, eid, true);
+    advance(m, 30);
+    assert.equal(biomass(m), banked, 'a cut drive banks nothing');
+    assert.ok(bed(m).crop > cut, 'and the canopy grows back over a hull that has stopped');
+  });
+
   it('pays one share per field however many hulls stand in it', () => {
     // A garden pays for being tended, not per gardener (#243). Massing
     // cutters on one bed buys nothing but a louder cluster of targets.

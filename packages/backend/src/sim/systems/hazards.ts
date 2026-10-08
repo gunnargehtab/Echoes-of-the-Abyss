@@ -45,7 +45,6 @@ import {
   Health,
   Owner,
   Position,
-  SilentRunning,
   Structure,
   Unit,
   Velocity,
@@ -53,6 +52,7 @@ import {
 import type { PropagationModifier } from '../terrain.ts';
 import { economyFor, type SimWorld } from '../world.ts';
 import { corridorModifiers } from './standingWave.ts';
+import { postureStopsWork } from './work.ts';
 
 /**
  * Everything a hazard can act on.
@@ -257,18 +257,20 @@ function hasHadronWatcher(world: SimWorld, hazard: Hazard): boolean {
  *   bed it renders would otherwise cut it too, at 20 a minute on top of the 12
  *   it was already taking, and hold that bed open the whole time it ran.
  *   Thermal cutters are something a hull carries.
- * - **Not on Silent Running.** A hull that has shut its systems down is not
- *   running industrial machinery, which is bloom-share's rule (#243, "silence
- *   stops the work") applied to the one navy whose answer to kelp is to
- *   destroy it. It is also the only way a Consortium hull can be quiet in
- *   kelp, which doc §4's "a hull sitting still in kelp is silent, and hidden"
- *   promises every navy and the unconditional cutter SIG used to deny theirs.
+ * - **Not on Silent Running, nor with its drive cut.** A hull that has shut
+ *   its systems down is not running industrial machinery, which is
+ *   bloom-share's rule (#243, "silence stops the work") applied to the one
+ *   navy whose answer to kelp is to destroy it, and since #1237 a drive cut
+ *   stops it as silence does (docs/systems-echo.md §6). Either posture is
+ *   how a Consortium hull can be quiet in kelp, which doc §4's "a hull
+ *   sitting still in kelp is silent, and hidden" promises every navy and the
+ *   unconditional cutter SIG used to deny theirs.
  */
 function isCutting(world: SimWorld, eid: number): boolean {
   if (Owner.faction[eid] !== Faction.Bathyarch) return false;
   if (Health.hp[eid]! <= 0) return false;
   if (!hasComponent(world, Unit, eid)) return false;
-  return !(hasComponent(world, SilentRunning, eid) && SilentRunning.active[eid] === 1);
+  return !postureStopsWork(world, eid);
 }
 
 /**

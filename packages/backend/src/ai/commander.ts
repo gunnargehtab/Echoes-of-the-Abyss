@@ -4563,10 +4563,10 @@ export class AiCommander implements AiPlayer {
   /**
    * The gardens — docs/systems-flora.md §2, docs/economy.md §6.
    *
-   * Bloom-share pays while a live, non-silent Commune hull stands within
-   * `BLOOM_SHARE.TEND_RADIUS_M` of a bed, and stops the tick it does not. So
-   * the whole opinion a commander needs about it is *somebody stand there*,
-   * and the whole cost is the hull that is standing.
+   * Bloom-share pays while a live Commune hull, neither silent nor with its
+   * drive cut, stands within `BLOOM_SHARE.TEND_RADIUS_M` of a bed, and stops
+   * the tick it does not. So the whole opinion a commander needs about it is
+   * *somebody stand there*, and the whole cost is the hull that is standing.
    *
    * One hull per garden and no more, because the share is per bed and never
    * per gardener: a second tender on the same node buys nothing but a louder
@@ -4756,10 +4756,13 @@ export class AiCommander implements AiPlayer {
       }
       // Standing in the circle is one clause of three, and this branch used to
       // order only that one. `bloomShare.ts` pays a hull inside the bed *and*
-      // in the Shelf band *and* not running silent, so a tender holding either
-      // of the other two wrong is a hull parked on a garden for nothing — and
-      // a hull claimed here is out of the army list, so nothing else in the
-      // commander is addressing its state any more.
+      // in the Shelf band *and* neither running silent nor with its drive cut,
+      // so a tender holding either of the other two wrong is a hull parked on
+      // a garden for nothing — and a hull claimed here is out of the army
+      // list, so nothing else in the commander is addressing its state any
+      // more. (The drive cut never arises: the commander cuts only its
+      // scout's drive, and a tender is drawn from the army, which never holds
+      // the scout.)
       //
       // The silence is the one that measured, and it is a leak rather than a
       // decision. `setSilent` keeps one flag for the whole army and only ever

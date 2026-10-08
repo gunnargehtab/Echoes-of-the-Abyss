@@ -271,7 +271,7 @@ them.** The chart is Prospect's, taken from the reconnaissance's own reading of 
 
 Each load is a `MissionLift`: four minutes of held presence inside the region at a SIG floor of
 65, progress paused while the hull is elsewhere and resumed when it returns, stopped outright by
-Silent Running. Three cutters and five loads is deliberate arithmetic — **two of the three stand
+Silent Running or a cut drive. Three cutters and five loads is deliberate arithmetic — **two of the three stand
 on their face and take two loads off it** — and the two are not a sequence.
 `MissionRuntime.applyLifts` walks the whole lift table on every pass and accrues each lift whose
 carrier is standing inside its region, independently: one progress counter per lift id, and no

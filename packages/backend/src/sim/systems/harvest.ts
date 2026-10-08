@@ -39,6 +39,7 @@ import {
   UnderConstruction,
 } from '../components.ts';
 import { economyFor, raiseSelfEvent, type SimWorld } from '../world.ts';
+import { postureStopsWork } from './work.ts';
 
 const harvesters = defineQuery([Harvester, Position, MoveOrder, Owner]);
 
@@ -227,6 +228,10 @@ export function harvestSystem(world: SimWorld): void {
       // wait the contact out (docs/economy.md §3). Falling through with a hold
       // of zero would read as "full" and start a delivery loop hauling nothing.
       if (capacity <= 0) continue;
+      // Silence, or a drive cut, stops the cutters (docs/systems-echo.md §6).
+      // The harvester holds over the field and picks up where it left off the
+      // moment the posture lifts; acoustics already prices it at the posture.
+      if (postureStopsWork(world, eid)) continue;
       // A hold that shrank under a mid-trip downshift is already over its new
       // limit. Bank it — mining a negative amount would put cargo back in the
       // field.

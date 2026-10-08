@@ -60,7 +60,6 @@ import {
   Owner,
   Position,
   Pressure,
-  SilentRunning,
   StaticEmitter,
   Structure,
 } from '../components.ts';
@@ -75,6 +74,7 @@ import {
   spawnUnit,
   type SimWorld,
 } from '../world.ts';
+import { postureStopsWork } from '../systems/work.ts';
 import { accrueSounding, soundingHolds } from './sounding.ts';
 import { accrueRowHold, accrueStall, insideRow } from './walk.ts';
 import { projectMissionView, type MissionState } from './view.ts';
@@ -1434,12 +1434,11 @@ export class MissionRuntime {
       }
       // Silence stops the work — docs/systems-echo.md §6's cannot-work price,
       // as docs/mission-tend.md §3 states it: "SIG falls to single digits,
-      // the share stops accruing". A silent carrier neither accrues cut nor
-      // holds the authored floor, or the stillness could not stop the work
-      // and going quiet would cost nothing — the trade the button *is*.
-      if (hasComponent(world, SilentRunning, eid) && SilentRunning.active[eid] === 1) {
-        continue;
-      }
+      // the share stops accruing" — and so does a drive cut (§6, #1237). A
+      // carrier in either neither accrues cut nor holds the authored floor, or
+      // the stillness could not stop the work and going quiet would cost
+      // nothing — the trade the button *is*.
+      if (postureStopsWork(world, eid)) continue;
       this.liftProgress.set(lift.id, (this.liftProgress.get(lift.id) ?? 0) + ECHO_TICK_INTERVAL);
       world.liftCutSig.set(eid, lift.cutSig);
     }
@@ -1499,13 +1498,14 @@ export class MissionRuntime {
    * any more than it can be driven to one.
    *
    * **Silence stops the work**, as it stops a cut and for the same words —
-   * docs/systems-echo.md §6's cannot-work price. Here it costs the hold
-   * outright rather than pausing it, and that is docs/mission-aptitude.md §4's
-   * arithmetic arriving as a rule: a hull that runs silent to take a sounding
-   * quietly loses the sounding, and turning around was always the better trade.
+   * docs/systems-echo.md §6's cannot-work price, which a drive cut pays too
+   * (#1237). Here it costs the hold outright rather than pausing it, and that
+   * is docs/mission-aptitude.md §4's arithmetic arriving as a rule: a hull
+   * that runs silent to take a sounding quietly loses the sounding, and
+   * turning around was always the better trade.
    */
   private holdingSounding(world: SimWorld, eid: number, sounding: MissionSounding): boolean {
-    if (hasComponent(world, SilentRunning, eid) && SilentRunning.active[eid] === 1) return false;
+    if (postureStopsWork(world, eid)) return false;
     if (!hasComponent(world, Heading, eid)) return false;
     return soundingHolds(sounding, Heading.rad[eid]!, Position.x[eid]!, Position.y[eid]!);
   }

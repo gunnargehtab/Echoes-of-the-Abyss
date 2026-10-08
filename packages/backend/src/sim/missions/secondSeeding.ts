@@ -602,9 +602,9 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
 
   /**
    * §4.2, §8 — the sowing. Sixty seconds inside 250 m of 1250, 3250, bow on,
-   * not silent, at 45, veiled to 18. A broken hold resets to zero
-   * (`accrueSounding`) and `holdingSounding` refuses a silent hull, which is
-   * why the sower must stop being quiet. A PR-3 hull on this rock pays nothing
+   * neither silent nor engine-off, at 45, veiled to 18. A broken hold resets
+   * to zero (`accrueSounding`) and `holdingSounding` refuses a silent or
+   * engine-off hull, which is why the sower must stop being quiet. A PR-3 hull on this rock pays nothing
    * for it but ears — and the ears walk.
    */
   soundings: [

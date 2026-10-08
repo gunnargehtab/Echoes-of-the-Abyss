@@ -272,8 +272,8 @@ export type AbilityMessage = Record<string, never>;
  *
  * No position: a sowing is served where the hull already is, and the server
  * will not take the client's word for which field that is. Whether the hull
- * may sow at all — Commune, alive, not silent, standing in a bed — is the
- * server's question too.
+ * may sow at all — Commune, alive, neither silent nor engine-off, standing in
+ * a bed — is the server's question too.
  */
 export interface SowMessage {
   unitIds: number[];
