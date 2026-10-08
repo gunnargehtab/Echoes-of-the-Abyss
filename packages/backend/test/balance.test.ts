@@ -174,7 +174,7 @@ describe('telemetry measures what it says it measures', () => {
     // table, and the reading taken off it ("82% of the Order's observations
     // are stopped by the escort gate") would be wrong in a way nothing else
     // would catch.
-    // **Eight minutes, not two, and the length is the assertion.** The first
+    // **Ten minutes, not two, and the length is the assertion.** The first
     // version of this test ran a two-minute duel, in which `alreadyHas` and
     // `bought` are zero for both seats — so the sum below could not see a
     // miscount on either branch and the `bought` check was the vacuous
@@ -184,8 +184,10 @@ describe('telemetry measures what it says it measures', () => {
     // `f9d064c`: two minutes reaches two branches, five reaches three, and eight
     // reaches all five — `alreadyHas` 136, but `bought` only 1, both from slot
     // 0. The commit is named because a map or commander edit moves these:
-    // #1106's Ventfront took `alreadyHas` from 44 to 136.
-    const result = runMatch({ seats: DUEL, seed: 59, maxMinutes: 8, fauna: false });
+    // #1106's Ventfront took `alreadyHas` from 44 to 136, and #1247, refusing an
+    // attack order on a Tier-1 smudge, moved the one purchase past eight
+    // minutes — ten reaches all five again, `alreadyHas` 165 and `bought` 1.
+    const result = runMatch({ seats: DUEL, seed: 59, maxMinutes: 10, fauna: false });
     for (const player of result.players) {
       const t = player.ordnanceWant;
       assert.ok(t.reached > 0, `slot ${player.slot} reached the ordnance want at all`);

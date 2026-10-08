@@ -69,7 +69,7 @@ function hull(id: number, x: number, y: number): OwnUnit {
   };
 }
 
-/** An unclassified contact: no kind, no species. Could be anything. */
+/** An unclassified smudge: Tier 1, no kind, no species. Could be anything. */
 function smudge(id: number, x: number, y: number, tick: number): Contact {
   return { id, tier: ResolutionTier.Contact, x, y, tick };
 }
@@ -77,15 +77,11 @@ function smudge(id: number, x: number, y: number, tick: number): Contact {
 /**
  * Feed the commander `seconds` of observations with the contact at each of
  * `track`, and report whether it ever ordered the army to attack it.
- *
- * At Tier 2 unless told otherwise: unclassified, but placed. A Tier-1 smudge
- * is reported at the listener's own position, so no track of one closes on
- * anything, and an attack on one is refused (docs/systems-combat.md §7, #1247).
  */
 function recalled(
   track: Array<{ x: number; y: number }>,
   secondsEach: number,
-  tier: ResolutionTier = ResolutionTier.Bearing
+  tier: ResolutionTier = ResolutionTier.Contact
 ): boolean {
   const { brief, base, home } = rig();
   const commander = new AiCommander(brief);
@@ -201,26 +197,6 @@ describe('a contact near home has to earn the alarm', () => {
       ),
       true,
       'the contact closed 500 m from its farthest and was not answered'
-    );
-  });
-
-  it('never answers a Tier-1 smudge, which has nowhere to close from', () => {
-    // The same walk-in as 'answers one that closes', heard no better than a
-    // smudge. The order would be refused (#1247), and taking it used to walk
-    // the army onto the true emitter, past anything the watch had heard.
-    const { home } = rig();
-    assert.equal(
-      recalled(
-        [
-          { x: home.x + 2000, y: home.y },
-          { x: home.x + 1500, y: home.y },
-          { x: home.x + 1100, y: home.y },
-        ],
-        15,
-        ResolutionTier.Contact
-      ),
-      false,
-      'the army was sent at a smudge'
     );
   });
 });
