@@ -261,11 +261,16 @@ describe('the Pressure Refit', () => {
   it('stops the Commune at PR-2, which is why the Sower exists', () => {
     const { match, yard } = withYard(Faction.Pelagia, StructureKind.Slipway);
     const hulls = hullsOf(match, 0);
+    const before = hulls.map((eid) => Pressure.rating[eid]!);
     assert.equal(match.refit(0, yard, RefitKind.Pressure), true, 'they may buy one');
     advance(match, refitLineTimeS(RefitKind.Pressure, Faction.Pelagia) + 1);
-    for (const eid of hulls) {
+    for (let i = 0; i < hulls.length; i++) {
+      const after = Pressure.rating[hulls[i]!]!;
+      // The ceiling caps the gain and takes nothing (#1221): a hull born PR-3
+      // keeps it, and no refit carries a lower one past PR-2.
+      assert.ok(after >= before[i]!, `a Commune refit lowered a hull from PR-${before[i]}`);
       assert.ok(
-        Pressure.rating[eid]! <= 2,
+        after <= Math.max(2, before[i]!),
         'no Commune refit reaches PR-3: the Abyssal is Deepbloom’s, not a thicker hull’s'
       );
     }
