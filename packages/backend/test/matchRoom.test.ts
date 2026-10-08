@@ -240,3 +240,36 @@ describe('a simulation step that throws', () => {
     }
   });
 });
+
+describe('a client that drops before its join completes', () => {
+  /**
+   * #1218. Colyseus refuses to hold a seat for a client that never acknowledged
+   * its join, and says so with a promise that is already rejected. A rejection
+   * nobody handles reaches the process's `uncaughtException` hook, which ends
+   * every room on the box, so the drop must leave none behind.
+   */
+  it('leaves no unhandled rejection for the process to die of', async () => {
+    const room = await bootRoom();
+    const unhandled: unknown[] = [];
+    const record = (reason: unknown): void => {
+      unhandled.push(reason);
+    };
+    // node:test already fails a test on an unhandled rejection it caused;
+    // the listener and the assertion below state that intent outright.
+    process.on('unhandledRejection', record);
+    try {
+      const [joining] = startPlaying(room);
+      // How Colyseus marks a client whose JOIN_ROOM it has not had
+      // acknowledged: the queue it holds that client's early messages in.
+      Object.assign(joining!, { _enqueuedMessages: [] });
+      room.onDrop(joining as unknown as Parameters<typeof room.onDrop>[0]);
+      // A rejection is reported once the microtask queue has drained.
+      await new Promise((resolve) => setImmediate(resolve));
+      await new Promise((resolve) => setImmediate(resolve));
+      assert.deepEqual(unhandled, []);
+    } finally {
+      process.off('unhandledRejection', record);
+      await shutdown(room);
+    }
+  });
+});
