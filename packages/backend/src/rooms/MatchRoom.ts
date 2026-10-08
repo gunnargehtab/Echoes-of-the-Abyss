@@ -332,8 +332,16 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
       for (const unitId of message.unitIds) {
         // Shape is checked in `onClientMessage` against the table in
         // `wire.ts`; ownership is re-checked inside the sim, because the
-        // client is never trusted to only send units it owns.
-        this.match.orderMove(slot, unitId, message.x, message.y, message.queued === true);
+        // client is never trusted to only send units it owns. The depth is
+        // range-checked there too, and refuses the whole move when it is bad.
+        this.match.orderMove(
+          slot,
+          unitId,
+          message.x,
+          message.y,
+          message.queued === true,
+          message.depth
+        );
       }
     });
 
@@ -363,14 +371,6 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
       }
     });
 
-    this.onClientMessage(CLIENT_MSG.followFloor, (client, message) => {
-      const slot = this.commandSlot(client);
-      if (slot === undefined) return;
-      for (const unitId of message.unitIds) {
-        this.match.orderFollowFloor(slot, unitId, Boolean(message.active));
-      }
-    });
-
     this.onClientMessage(CLIENT_MSG.ping, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined) return;
@@ -390,7 +390,14 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
       const slot = this.commandSlot(client);
       if (slot === undefined) return;
       for (const unitId of message.unitIds) {
-        this.match.orderAttackMove(slot, unitId, message.x, message.y, message.queued === true);
+        this.match.orderAttackMove(
+          slot,
+          unitId,
+          message.x,
+          message.y,
+          message.queued === true,
+          message.depth
+        );
       }
     });
 
@@ -1033,7 +1040,7 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     const tick = this.match === undefined ? 'no match' : `tick ${this.match.tick}`;
     const phase =
       this.state === undefined ? 'no state' : (MatchPhase[this.state.phase] ?? 'unknown');
-    // The message name is the one fact that says which of the 32 handlers this
+    // The message name is the one fact that says which of the 31 handlers this
     // was, and it is only carried by the `onMessage` exception.
     const where =
       error instanceof OnMessageException ? `${methodName} ${String(error.type)}` : methodName;

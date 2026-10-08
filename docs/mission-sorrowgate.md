@@ -452,8 +452,7 @@ The first is the **gesture**. No line says how to select a hull or how to order 
 because the register cannot form the sentence — see above. The beats establish that the four
 hulls are the flight's, that the water inside the arch is theirs to choose and what choosing
 costs; the *how* stays on the command bar and the hint line under the selection —
-[ui-ux.md](ui-ux.md) §9 for the bindings, §2 for where they are on the screen — which is also
-where a touch player reaches them. A player who never
+[ui-ux.md](ui-ux.md) §9 for the bindings, §2 for where they are on the screen. A player who never
 works out the gesture is not stuck — §8's adjournment closes the record either way — but they
 are also not taught it here, and this document should not pretend otherwise.
 

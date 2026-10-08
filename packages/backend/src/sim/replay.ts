@@ -46,6 +46,12 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * 27: a click is a point in the water (#1132). `move` and `attackMove` carry
+ * the depth they were given, and floor-following is a move onto the ground
+ * rather than an order of its own, so `followFloor` is gone from the stream. A
+ * v26 file's floor toggles have no case here, and its moves replay as places
+ * alone where the client that recorded them now sends a depth.
+ *
  * 26: the fingerprint stops being a hand-kept list (#620). Every field of
  * `SimWorld` is now named on one of three unions at the foot of
  * `sim/stateHash.ts` — hashed, covered by something the hash already mixes, or
@@ -280,7 +286,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 26;
+export const REPLAY_FORMAT_VERSION = 27;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
@@ -292,9 +298,10 @@ export type ReplayCommand =
       x: number;
       y: number;
       queued: boolean;
+      /** The depth the move was given (#1132); absent for a place alone. */
+      depth?: number;
     }
   | { tick: number; type: 'depth'; slot: number; unit: number; depth: number }
-  | { tick: number; type: 'followFloor'; slot: number; unit: number; active: boolean }
   | {
       tick: number;
       type: 'attackMove';
@@ -303,6 +310,7 @@ export type ReplayCommand =
       x: number;
       y: number;
       queued: boolean;
+      depth?: number;
     }
   | { tick: number; type: 'stop'; slot: number; unit: number }
   | { tick: number; type: 'hold'; slot: number; unit: number; active: boolean }
@@ -359,7 +367,6 @@ export type ReplayCommand =
 export const REPLAY_COMMAND_TYPES = [
   'move',
   'depth',
-  'followFloor',
   'attackMove',
   'stop',
   'hold',
@@ -612,16 +619,27 @@ function applyCommand(match: Match, command: ReplayCommand): void {
 
   switch (command.type) {
     case 'move':
-      match.orderMove(command.slot, eid(command.unit), command.x, command.y, command.queued);
+      match.orderMove(
+        command.slot,
+        eid(command.unit),
+        command.x,
+        command.y,
+        command.queued,
+        command.depth
+      );
       break;
     case 'depth':
       match.orderDepth(command.slot, eid(command.unit), command.depth);
       break;
-    case 'followFloor':
-      match.orderFollowFloor(command.slot, eid(command.unit), command.active);
-      break;
     case 'attackMove':
-      match.orderAttackMove(command.slot, eid(command.unit), command.x, command.y, command.queued);
+      match.orderAttackMove(
+        command.slot,
+        eid(command.unit),
+        command.x,
+        command.y,
+        command.queued,
+        command.depth
+      );
       break;
     case 'stop':
       match.orderStop(command.slot, eid(command.unit));

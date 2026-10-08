@@ -140,16 +140,15 @@ into water through the shared conn camera:
 | Input | Effect | Needs a selection? |
 | --- | --- | --- |
 | Left click | Select nearest owned unit or structure (shift adds) — **unless a build is armed, which swallows the click to place it** | no |
-| Right click | Context order — move, or attack/harvest a contact under the cursor | yes |
+| Right click | Context order — move, or attack/harvest a contact under the cursor. Given on release; a move lands at a depth too: on the seabed (and follows it), just under a closed roof, or, with the focus raised, on the camera's focus plane (#1132) | yes |
 | Middle drag | Pan | no |
-| Wheel | Zoom (dolly) about the cursor | no |
+| Left + right drag | Camera: across pans sideways, up and down sinks and raises the focus — the depth an open-water click orders | no |
+| Wheel | Zoom (dolly) about the cursor; `Shift` + wheel moves the focus 150 m a notch | no |
 | `R` / `F` / `T` | Arm a refinery / foundry / turret, then left click to place | no |
-| `D` / `A` | Dive / rise one band station | yes |
-| `S` | Toggle floor-following | yes |
 | `P` | Active sonar ping | yes |
 | `Space` | Toggle silent running | yes |
 | `V` | Cycle harvest throttle | yes |
-| Hold `Alt` | Preview what a ping would cost you | yes |
+| Hold `Alt` | Preview what a ping, and the click under the cursor, would cost you | yes |
 | `Escape` | Cancel a pending build — handled before every other key, so it is safe to press unconditionally | no |
 
 Unit production has no keys — the digits are control groups — so producing a
@@ -231,9 +230,9 @@ counts so a short station is visible rather than assumed.
 The only rasteriser here is SwiftShader, and a drive of the five stations shows
 why: the composited frame runs ~170 ms while both CPU halves inside it total
 under 3 ms. The draw-call and triangle columns are real; the millisecond columns
-are the software rasteriser. Real numbers need a real GPU, and gate 6 still owes a
-Termux row (docs/graphics-standards.md gate 6); render-stack work is accepted on the
-named desktop GPU without one ("Abyss Render Stack increment"). Even there the conn
+are the software rasteriser. Real numbers need a real GPU, and a desktop one is gate 6's
+floor since the phone retired (#1132, docs/graphics-standards.md gate 6); render-stack work
+is accepted on the named desktop GPU ("Abyss Render Stack increment"). Even there the conn
 and overlay columns are CPU time, conn being entity sync plus the GL submit. The gpu
 column is the conn view's GPU time, every pass summed, from a timer query: a dev build
 reads it on a GPU and refuses it on a software rasteriser, and the probe's `gpuTimer`
@@ -258,12 +257,10 @@ STATION_SECONDS=8 node .claude/skills/run-game/scripts/drive.mjs --headed --chan
   --out /tmp/stations --steps .claude/skills/run-game/scripts/stations.mjs
 ```
 
-Where Playwright cannot reach — Chrome on a phone under Termux — paste
-`scripts/stations-console.js` whole into the page's console instead, reached from a PC
-through `edge://inspect/#devices` with USB debugging on. It walks the same five stations
-through the mouse path (touch has no marquee, so a touch drive would ring one hull and
-under-price `marquee`), prints the table, and copies the result as JSON to the inspecting
-PC's clipboard. `window.__stationSeconds` shortens its fifteen-second dwell.
+Where Playwright cannot reach — a browser on a machine with no Playwright install — paste
+`scripts/stations-console.js` whole into the page's console instead. It walks the same five
+stations through the mouse path, prints the table, and copies the result as JSON to the
+clipboard. `window.__stationSeconds` shortens its fifteen-second dwell.
 
 The table's `renderer:` line names the rasteriser, and a software one is flagged. **Run
 nothing else while it drives.** A build rewrites `@echoes/shared/dist`, the backend's

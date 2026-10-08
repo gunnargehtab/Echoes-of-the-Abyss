@@ -1152,6 +1152,14 @@ function assertOnlyKnown(command: AiCommand, known: Known): void {
     case 'attackMove':
       owns(command.unitIds);
       inBounds(command.x, command.y);
+      // A move's depth is read off the briefing's terrain, which is public,
+      // so the audit asks only that it names water an order may name.
+      if (command.kind === 'move' && command.depthM !== undefined) {
+        assert.ok(
+          command.depthM >= DEPTH.MIN_M && command.depthM <= DEPTH.MAX_M,
+          `move ordered ${command.depthM} m, outside the column`
+        );
+      }
       return;
     case 'stop':
       owns(command.unitIds);
@@ -1171,10 +1179,8 @@ function assertOnlyKnown(command: AiCommand, known: Known): void {
     case 'silent':
     case 'engineOff':
     case 'hold':
-    case 'followFloor':
       // Postures over own hulls. The hold names no target — the `attack`
-      // beside it does, and is audited as one — and the floor is whatever
-      // ground is under the hull, which the briefing's terrain already is.
+      // beside it does, and is audited as one.
       owns(command.unitIds);
       return;
     case 'ping':
@@ -1273,7 +1279,9 @@ function assertOnlyKnown(command: AiCommand, known: Known): void {
 function applyTo(match: Match, slot: number, command: AiCommand): void {
   switch (command.kind) {
     case 'move':
-      for (const id of command.unitIds) match.orderMove(slot, id, command.x, command.y);
+      for (const id of command.unitIds) {
+        match.orderMove(slot, id, command.x, command.y, false, command.depthM);
+      }
       return;
     case 'attackMove':
       for (const id of command.unitIds) match.orderAttackMove(slot, id, command.x, command.y);
@@ -1340,9 +1348,6 @@ function applyTo(match: Match, slot: number, command: AiCommand): void {
       return;
     case 'hold':
       for (const id of command.unitIds) match.orderHold(slot, id, command.active);
-      return;
-    case 'followFloor':
-      for (const id of command.unitIds) match.orderFollowFloor(slot, id, command.active);
       return;
     case 'rally':
       for (const id of command.structureIds) match.setRally(slot, id, command.x, command.y);

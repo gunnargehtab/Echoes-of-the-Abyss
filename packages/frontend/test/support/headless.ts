@@ -467,26 +467,6 @@ let nextFrameHandle = 1;
 let installed = false;
 
 /**
- * Whether the stub window reports a touchscreen.
- *
- * `EchoRenderer.isTouch` is a field initialiser reading
- * `matchMedia('(pointer: coarse)')`, so it is fixed at construction and the
- * flag has to be set *before* the renderer is built. Module-level rather than
- * an option on the stub, because `installHeadlessDom` runs once per process
- * while a test wants the pointer to differ per case — and default `false`
- * keeps every existing test on the desktop branch it was written against.
- *
- * Only the coarse-pointer query answers to it. `prefers-reduced-motion` and
- * the rest keep their `false`, which is what they had.
- */
-let coarsePointer = false;
-
-/** Report a touchscreen (or stop). Set it before booting the renderer. */
-export function setCoarsePointer(on: boolean): void {
-  coarsePointer = on;
-}
-
-/**
  * Put the stub browser on `globalThis`, once per process.
  *
  * Called at import time rather than from a test body: the renderers read
@@ -559,10 +539,10 @@ export function installHeadlessDom(): void {
       search: '',
       hash: '',
     },
-    matchMedia: (query: string) => ({
-      matches: coarsePointer && query.includes('pointer: coarse'),
-      media: query,
-    }),
+    // Every query answers false: the client is keyboard and mouse only since
+    // #1132, so no test has a touchscreen to report, and `prefers-reduced-motion`
+    // and the rest keep the `false` they always had.
+    matchMedia: (query: string) => ({ matches: false, media: query }),
     addEventListener: (type: string, fn: Listener) => windowElement.addEventListener(type, fn),
     removeEventListener: (type: string, fn: Listener) =>
       windowElement.removeEventListener(type, fn),

@@ -30,6 +30,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  DEPTH,
   MovementHoldReason,
   SIM,
   UnitKind,
@@ -39,6 +40,7 @@ import {
 import { defineQuery, hasComponent } from 'bitecs';
 import { Match } from '../src/sim/match.ts';
 import {
+  DepthOrder,
   Embarking,
   MoveOrder,
   Owner,
@@ -676,7 +678,9 @@ function alongsideHarness(mission: MissionDefinition, added: UnitKind): Alongsid
 
 /**
  * Follow-floor — the last of the three verbs both rows named and no mission test
- * reached — #722.
+ * reached — #722. Since #1132 it is not a verb of its own but a move onto the
+ * ground, so the case below gives the held hull a move whose depth is the floor
+ * under it, and reads the mode rather than a return value.
  *
  * Attack-move is held beside the attack-contact case above, on *The Second
  * Chord*, because that verb needs guns and that is the mission that ships them.
@@ -698,28 +702,34 @@ function alongsideHarness(mission: MissionDefinition, added: UnitKind): Alongsid
  *
  * Every case here is a **pair** — the refusal while the hull is held, then the
  * same call going through once it is free. The second half is not politeness:
- * `orderFollowFloor` returns `false` for an unowned hull and for one with no
- * `DepthOrder` too, so a lone `false` would read as the hold's answer whatever
- * produced it. That is the vacuous `0 >= 0` the ordnance-want partition's
- * holder warns about (`balance.test.ts`, #698), and it is the failure mode a
- * refusal test is most prone to.
+ * a move is refused for an unowned hull, and its depth does nothing to a hull
+ * with no `DepthOrder`, so a lone mode left off would read as the hold's answer
+ * whatever produced it.
+ * That is the vacuous `0 >= 0` the ordnance-want partition's holder warns about
+ * (`balance.test.ts`, #698), and it is the failure mode a refusal test is most
+ * prone to.
  */
-describe('the hold refuses follow-floor, which no mission test reached', () => {
-  it('refuses follow-floor, because a hold that let a hull drift down a slope is not one', () => {
+describe('the hold refuses a move onto the ground, which no mission test reached', () => {
+  it('refuses a move onto the ground, because a hold that let a hull drift down a slope is not one', () => {
     const h = harness();
     assert.equal(h.heldReason(), UNRELEASED);
-    assert.equal(
-      h.match.orderFollowFloor(PLAYER, h.tenderId(), true),
-      false,
-      'a held hull took a standing order to hug the seabed'
-    );
+    const tender = h.tenderId();
+    const onTheGround = () => {
+      const x = Position.x[tender]!;
+      const y = Position.y[tender]!;
+      const floor = Math.min(h.match.world.terrain.floorAt(x, y), DEPTH.MAX_M);
+      h.match.orderMove(PLAYER, tender, x, y, false, floor);
+    };
+    onTheGround();
+    assert.equal(DepthOrder.follow[tender], 0, 'a held hull was put on the seabed');
 
     // The control. Same call, same hull, once the clock has run out and the
-    // ears are in range: a `true` here is what makes the `false` above the
-    // hold's answer rather than the ownership check's.
+    // ears are in range: the mode engaging here is what makes it staying off
+    // above the hold's answer rather than the ownership check's.
     h.settle(4, 'close');
     assert.equal(h.heldReason(), null, 'the tender has its ears back before the control');
-    assert.equal(h.match.orderFollowFloor(PLAYER, h.tenderId(), true), true);
+    onTheGround();
+    assert.equal(DepthOrder.follow[tender], 1);
   });
 });
 

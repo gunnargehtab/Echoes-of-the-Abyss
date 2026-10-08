@@ -59,6 +59,7 @@ import {
   depthBandFor,
   effectivePressureRating,
   mineCapFor,
+  onTheGround,
   refitOfferedTo,
   refitPriceFor,
   refittedPressureRating,
@@ -4312,10 +4313,20 @@ export class AiCommander implements AiPlayer {
    * the same wall-clock five seconds at either difficulty — a Recruit's slower
    * cadence is meant to make its decisions worse, not its walking.
    */
-  private walk(unit: OwnUnit, to: { x: number; y: number }, tick: number, out: AiCommand[]): void {
+  private walk(
+    unit: OwnUnit,
+    to: { x: number; y: number },
+    tick: number,
+    out: AiCommand[],
+    depthM?: number
+  ): void {
     const window = TICKS_PER_OBSERVATION * MINE_WALL.REISSUE_OBSERVATIONS;
     if (tick % window >= TICKS_PER_OBSERVATION) return;
-    out.push({ kind: 'move', unitIds: [unit.id], x: to.x, y: to.y });
+    out.push(
+      depthM === undefined
+        ? { kind: 'move', unitIds: [unit.id], x: to.x, y: to.y }
+        : { kind: 'move', unitIds: [unit.id], x: to.x, y: to.y, depthM }
+    );
   }
 
   /**
@@ -4412,18 +4423,18 @@ export class AiCommander implements AiPlayer {
    * every navy raids it; the Directorate is meant to *hold* it." Until this
    * branch the commander bought the hull and marched it with the army, which
    * spent a PR-4 hull on the one kind of water every other hull can reach.
-   * It is the only branch that says two of the client's verbs, and it needs
-   * both:
+   * It is the only branch that walks a hull along the floor, and the only
+   * one that holds:
    *
-   * - **`followFloor`, from the moment of the claim.** The mode rides a hull
-   *   down to the edge of its rating and disengages there
-   *   (docs/systems-depth.md §2), which is why no other pass uses it: every
-   *   other hull would be left at whatever depth the ground happened to fall
-   *   past its rating. The Dredge has no edge — PR-4, and nothing below the
-   *   Abyssal floor crushes it — so for this hull alone the standing order is
-   *   unconditional. It walks out under the layer as soon as the ground
-   *   allows, and the dive off the plateau is loud, as a dive is whoever asked
-   *   for it.
+   * - **A walk onto the field's floor.** A move onto the ground follows it
+   *   (docs/systems-depth.md §2, #1132), and the mode rides a hull down to the
+   *   edge of its rating and disengages there, which is why no other pass
+   *   walks this way: every other hull would be left at whatever depth the
+   *   ground happened to fall past its rating. The Dredge has no edge — PR-4,
+   *   and nothing below the Abyssal floor crushes it — so for this hull alone
+   *   the floor is unconditional. It walks out under the layer as soon as the
+   *   ground allows, and the dive off the plateau is loud, as a dive is
+   *   whoever asked for it.
    * - **`hold`, on the post, with an `attack` beside it.** A stopped hull
    *   already fires at whatever enters its reach, so a hold alone would buy
    *   nothing. What it buys is an ordered target the hull does not chase: an
@@ -4474,16 +4485,23 @@ export class AiCommander implements AiPlayer {
       this.fieldOrder = null;
     }
 
-    // Read off the hull rather than remembered: the mode comes back in the
-    // snapshot while it stands, so a mode the server refused is asked again.
-    if (holder.followFloor !== true) {
-      out.push({ kind: 'followFloor', unitIds: [holder.id], active: true });
-    }
-
     // Off the post, neither the hold nor an order: an unheld hull chases what
-    // it is ordered on, and a move would release the hold anyway.
-    if (distance(holder, field) > FIELD_HOLD.STATION_M) {
-      this.walk(holder, field, snapshot.tick, out);
+    // it is ordered on, and a move would release the hold anyway. The walk's
+    // depth is the field's floor, no deeper than an order may name, so it is a
+    // move onto the ground and follows it down — the toggle it used to be
+    // given beside the walk is gone from the vocabulary (#1132).
+    //
+    // The post is the floor as well as the place. The toggle used to be said
+    // from the claim, so a Dredge already over the field went down; the walk
+    // is said only off the post, so a Dredge over the field but still above
+    // the ground is off it too. "On the ground" is the simulation's own
+    // reading (`onTheGround`), and it is read off the hull rather than
+    // remembered.
+    const ground = this.floorAt(field.x, field.y);
+    const floor = Math.min(ground, DEPTH.MAX_M);
+    const grounded = onTheGround(ground, holder.depth);
+    if (distance(holder, field) > FIELD_HOLD.STATION_M || !grounded) {
+      this.walk(holder, field, snapshot.tick, out, floor);
       return claimed;
     }
 

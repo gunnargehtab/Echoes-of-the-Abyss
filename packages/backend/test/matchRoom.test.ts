@@ -61,7 +61,7 @@ async function capturingErrors(body: () => Promise<void>): Promise<string[]> {
 }
 
 describe('the containment gate', () => {
-  it('defines the hook, which is what wraps all 32 handlers and the interval', async () => {
+  it('defines the hook, which is what wraps all 31 handlers and the interval', async () => {
     const room = await bootRoom();
     try {
       // The gate itself. Colyseus reads this once, in its constructor, and
@@ -77,7 +77,7 @@ describe('the containment gate', () => {
       // arity, which is what this counts.
       const registered = internals(room).onMessageEvents.events;
       const names = Object.values(CLIENT_MSG);
-      assert.equal(names.length, 32);
+      assert.equal(names.length, 31);
       for (const name of names) {
         const handler = registered[name]?.[0];
         assert.ok(handler !== undefined, `${name} has no handler`);

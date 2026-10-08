@@ -180,16 +180,13 @@ tools/lib          spawn.mjs, the one way a gate or a hull tool's npm install is
                    one without a shell returns status: null with error set rather
                    than throwing, which made every gate FAIL in 0.0s printing
                    nothing. Extracted when claude-docs became its second caller.
-tools/*.mjs        The three scripts that sit at the top of the tree.
+tools/*.mjs        The two scripts that sit at the top of the tree.
                    gates.mjs is every blocking gate in one pass — see the root
                    CLAUDE.md's Commands section. preflight-deps.mjs is the presence
                    check that dev, build and test run first, so a stale node_modules
                    fails at the front door instead of ten seconds into Vite (#301).
-                   android-check.mjs is the on-device smoke check for the Termux
-                   deployment (SETUP-ANDROID.md): build, tests, and a real server
-                   boot probed on both ports. All three are plain Node with no
-                   dependencies — the last two because they have to run before
-                   anyone has a working install.
+                   Both are plain Node with no dependencies — preflight-deps
+                   because it has to run before anyone has a working install.
 ```
 
 Related: `CLAUDE.md` (the root file — the gate list and CI jobs) ·

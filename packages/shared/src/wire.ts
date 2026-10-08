@@ -69,7 +69,6 @@ export const CLIENT_MSG = {
   disembark: 'disembark',
   attack: 'attack',
   depth: 'depth',
-  followFloor: 'followFloor',
   silent: 'silent',
   engineOff: 'engineOff',
   ping: 'ping',
@@ -118,7 +117,7 @@ export const LOBBY_MSG = ['faction', 'ready', 'addAi', 'removeAi', 'aiDifficulty
 export type LobbyClientMessageKey = (typeof LOBBY_MSG)[number];
 
 /**
- * A key of `CLIENT_MSG` a seated commander may send — 27 of the 32.
+ * A key of `CLIENT_MSG` a seated commander may send — 26 of the 31.
  *
  * A **key**, deliberately, not a `ClientMessageName`. The two differ in one
  * place: `depthCharge` travels as `depthcharge` (above), so anything keyed on
@@ -131,6 +130,15 @@ export interface MoveMessage {
   unitIds: number[];
   x: number;
   y: number;
+  /**
+   * The depth to hold there, in metres (#1132): a click is a point in the
+   * water (docs/ui-ux.md §9). Within `FOLLOW_FLOOR.ENGAGE_WITHIN_M` of the
+   * floor it is a move onto the ground, and follows it
+   * (docs/systems-depth.md §2). Absent, the move is a place alone and the
+   * hull keeps its depth — the commander's walks and a mission's beats.
+   * Range-checked in the sim, which refuses the whole move for a bad one.
+   */
+  depth?: number;
   /** Append to the unit's plan instead of replacing it. */
   queued?: boolean;
 }
@@ -140,6 +148,8 @@ export interface AttackMoveMessage {
   unitIds: number[];
   x: number;
   y: number;
+  /** As `MoveMessage.depth`: an attack-move lands in the water the same way. */
+  depth?: number;
   queued?: boolean;
 }
 
@@ -182,16 +192,16 @@ export interface AttackMessage {
   queued?: boolean;
 }
 
+/**
+ * A depth alone, with no place. The client stopped sending it when depth moved
+ * onto the click (#1132, `MoveMessage.depth`); it stays because the skirmish
+ * commander says it, and every verb the commander says has to be one a client
+ * could send (`packages/backend/src/ai/types.ts`).
+ */
 export interface DepthMessage {
   unitIds: number[];
   /** Ordered depth in metres. Validated and range-checked in the sim. */
   depth: number;
-}
-
-export interface FollowFloorMessage {
-  unitIds: number[];
-  /** Arm or disarm the standing order (docs/systems-depth.md §2). */
-  active: boolean;
 }
 
 export interface SilentRunningMessage {
@@ -356,7 +366,6 @@ export interface ClientMessages {
   disembark: DisembarkMessage;
   attack: AttackMessage;
   depth: DepthMessage;
-  followFloor: FollowFloorMessage;
   silent: SilentRunningMessage;
   engineOff: EngineOffMessage;
   ping: PingMessage;
@@ -467,8 +476,8 @@ const IDS: FieldShape = { type: 'idList', max: WIRE.MAX_IDS };
  * and a missing one would say nobody had thought about it.
  */
 export const CLIENT_SHAPE: { readonly [K in keyof ClientMessages]: ShapeOf<ClientMessages[K]> } = {
-  move: { unitIds: IDS, x: NUM, y: NUM, queued: OPTIONAL_FLAG },
-  attackMove: { unitIds: IDS, x: NUM, y: NUM, queued: OPTIONAL_FLAG },
+  move: { unitIds: IDS, x: NUM, y: NUM, depth: OPTIONAL_NUM, queued: OPTIONAL_FLAG },
+  attackMove: { unitIds: IDS, x: NUM, y: NUM, depth: OPTIONAL_NUM, queued: OPTIONAL_FLAG },
   stop: { unitIds: IDS },
   hold: { unitIds: IDS, active: FLAG },
   rally: { structureIds: IDS, x: NUM, y: NUM },
@@ -476,7 +485,6 @@ export const CLIENT_SHAPE: { readonly [K in keyof ClientMessages]: ShapeOf<Clien
   disembark: { unitIds: IDS },
   attack: { unitIds: IDS, contactId: NUM, queued: OPTIONAL_FLAG },
   depth: { unitIds: IDS, depth: NUM },
-  followFloor: { unitIds: IDS, active: FLAG },
   silent: { unitIds: IDS, active: FLAG },
   engineOff: { unitIds: IDS, active: FLAG },
   ping: { unitId: NUM },

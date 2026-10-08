@@ -78,10 +78,11 @@ describe('the strip explains itself: what each line claims', () => {
     }
   });
 
-  it('names no key, on any line — a touchscreen has none to press', () => {
-    // #722 §4 is the open bug for the other half of this: a held harvester line
-    // that named `V throttle` on a device with no keyboard. A line that is
-    // reachable by tap may not tell the player to press something.
+  it('names no key, on any line — a rebind would make it false', () => {
+    // #722 §4 was the other half of this: a held harvester line that named
+    // `V throttle` to a player who could not press it. The bindings are data a
+    // player edits (docs/ui-ux.md §9), so a line that named a key would tell
+    // the player to press one that may no longer do anything.
     for (const line of EVERY_LINE) {
       assert.doesNotMatch(line, /\bpress\b|\bkey\b/i, `names a key: ${line}`);
       // A bound key as the HUD writes one — `hold Alt`, `V throttle`, `P` —
@@ -282,15 +283,15 @@ describe('the strip explains itself: the surface', () => {
     await view.unmount();
   });
 
-  it('opens on a tap and closes on the next one, which is the route touch has', async () => {
+  it('opens on a click and closes on the next one, for a line the reader wants to keep', async () => {
     const view = await mount([box()]);
     const expanded = () =>
       (view.button('BERTHS 3/6').props as { 'aria-expanded'?: boolean })['aria-expanded'];
     assert.equal(expanded(), false, 'shut to begin with');
     await click(view, 'BERTHS 3/6');
-    assert.equal(expanded(), true, 'a tap pins it open — no hover, and no key named');
+    assert.equal(expanded(), true, 'a click pins it open — no hover, and no key named');
     await click(view, 'BERTHS 3/6');
-    assert.equal(expanded(), false, 'and the next tap closes it');
+    assert.equal(expanded(), false, 'and the next click closes it');
     await view.unmount();
   });
 
@@ -344,11 +345,11 @@ describe('the strip explains itself: the surface', () => {
     assert.ok(blurred, 'blurring is what closes the focus route');
     assert.ok(stopped, 'and the press is spent on the line');
 
-    // 2 — pinned by a tap, with the focus arrived by pointer. Still closes.
+    // 2 — pinned by a click, with the focus arrived by pointer. Still closes.
     await blurAway();
     await focusBy(false);
     await click(view, 'BERTHS 3/6');
-    assert.equal(expanded(), true, 'a tap pins it open');
+    assert.equal(expanded(), true, 'a click pins it open');
     await escape();
     assert.equal(expanded(), false, 'the pin is released');
     assert.ok(stopped, 'and that press is spent too');

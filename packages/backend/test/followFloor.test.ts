@@ -1,20 +1,21 @@
 /**
- * Floor-following — docs/systems-depth.md §2 "Steering along the ground",
- * Phase 3 of docs/three-layer-ocean.md.
+ * Floor-following — docs/systems-depth.md §2 "Steering along the ground".
  *
- * The standing order's promises: it holds the clearance, it follows the ground
- * down at a dive's rate and loudness (and breaks Silent Running the way a dive
- * order does), it rides the ground back up, it disengages at the hull's PR
- * edge rather than feeding it into crush, and any manual depth order replaces
- * it. Engaging is the commitment; everything after is the ground's shape.
+ * Since #1132 there is no order to follow the floor: a move onto the ground is
+ * one. A move whose depth is within `FOLLOW_FLOOR.ENGAGE_WITHIN_M` of the floor
+ * at its point engages it; a move into open water, a depth alone, an attack and
+ * a harvest end it. Once engaged the promises are the old standing order's: it
+ * holds the clearance, follows the ground down at a dive's rate and loudness
+ * (and breaks Silent Running the way a dive does), rides the ground back up,
+ * and disengages at the hull's PR edge rather than feeding it into crush.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { DEPTH, Faction, FOLLOW_FLOOR, SIM, UnitKind } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
-import { spawnUnit } from '../src/sim/world.ts';
-import { DepthOrder, Position, Pressure, SilentRunning } from '../src/sim/components.ts';
+import { spawnResourceNode, spawnUnit } from '../src/sim/world.ts';
+import { DepthOrder, MoveOrder, Position, Pressure, SilentRunning } from '../src/sim/components.ts';
 import { VENTFRONT_DIVIDE, type MapDefinition } from '../src/sim/maps/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -48,21 +49,60 @@ function seat(m: Match, depth: number): number {
   });
 }
 
+/** A click on the ground under the hull: a move to where it stands, at the floor. */
+function onTheGround(m: Match, eid: number, floorM: number): void {
+  m.orderMove(0, eid, Position.x[eid]!, Position.y[eid]!, false, floorM);
+}
+
 describe('floor-following', () => {
-  it('settles at the clearance above the ground and station-keeps there', () => {
+  it('is engaged by a move onto the ground, and settles at the clearance', () => {
     const m = match(1000);
     const eid = seat(m, 300);
-    assert.equal(m.orderFollowFloor(0, eid, true), true);
+    onTheGround(m, eid, 1000);
+    assert.equal(DepthOrder.follow[eid], 1, 'the move is the engagement');
     advance(m, 20); // (970 − 300) / 45 ≈ 15 s of descent
     assert.ok(Math.abs(Position.depth[eid]! - (1000 - FOLLOW_FLOOR.CLEARANCE_M)) <= EPS);
     // Settled means settled: no order churn once on station.
     assert.equal(DepthOrder.active[eid], 0);
   });
 
+  it('counts a move within ENGAGE_WITHIN_M of the floor as the ground, and no further', () => {
+    const m = match(1000);
+    const near = seat(m, 300);
+    const far = seat(m, 300);
+    m.orderMove(0, near, 1000, 4000, false, 1000 - FOLLOW_FLOOR.ENGAGE_WITHIN_M + 1);
+    m.orderMove(0, far, 1000, 4000, false, 1000 - FOLLOW_FLOOR.ENGAGE_WITHIN_M - 1);
+    assert.equal(DepthOrder.follow[near], 1, 'just inside the band follows the floor');
+    assert.equal(DepthOrder.follow[far], 0, 'just outside it is open water');
+    assert.equal(DepthOrder.targetM[far], 1000 - FOLLOW_FLOOR.ENGAGE_WITHIN_M - 1);
+  });
+
+  it('is ended by a move into open water, which holds that move’s depth', () => {
+    const m = match(1000);
+    const eid = seat(m, 300);
+    onTheGround(m, eid, 1000);
+    advance(m, 20);
+    m.orderMove(0, eid, 3000, 4000, false, 600);
+    assert.equal(DepthOrder.follow[eid], 0, 'the newer instruction wins');
+    advance(m, 60);
+    assert.ok(Math.abs(Position.x[eid]! - 3000) <= 5, `reached the order, at x ${Position.x[eid]}`);
+    assert.ok(Math.abs(Position.depth[eid]! - 600) <= EPS, 'and held the depth it was given');
+  });
+
+  it('keeps following under a move that is a place alone', () => {
+    // The commander's walks and a mission's beats name no depth; the mode the
+    // hull is in is not theirs to end.
+    const m = match(1000);
+    const eid = seat(m, 970);
+    onTheGround(m, eid, 1000);
+    m.orderMove(0, eid, 3000, 4000);
+    assert.equal(DepthOrder.follow[eid], 1);
+  });
+
   it('follows the ground down as a dive — loud, and never silently', () => {
     const m = match(1000);
     const eid = seat(m, 300);
-    m.orderFollowFloor(0, eid, true);
+    onTheGround(m, eid, 1000);
     advance(m, 20);
     m.setSilentRunning(0, eid, true);
     advance(m, 1);
@@ -80,7 +120,7 @@ describe('floor-following', () => {
   it('rides the ground back up, at the ascent rate', () => {
     const m = match(1600);
     const eid = seat(m, 300);
-    m.orderFollowFloor(0, eid, true);
+    onTheGround(m, eid, 1600);
     advance(m, 35);
     assert.ok(Math.abs(Position.depth[eid]! - (1600 - FOLLOW_FLOOR.CLEARANCE_M)) <= EPS);
 
@@ -93,19 +133,20 @@ describe('floor-following', () => {
   it('disengages at the PR edge instead of riding into crush', () => {
     const m = match(2600); // Abyssal ground; a PR-2 hull is not rated for it
     const eid = seat(m, 300);
-    m.orderFollowFloor(0, eid, true);
+    onTheGround(m, eid, 2600);
     advance(m, 5);
-    assert.equal(DepthOrder.follow[eid], 0, 'the standing order stood down');
+    assert.equal(DepthOrder.follow[eid], 0, 'the mode stood down');
     assert.ok(Math.abs(Position.depth[eid]! - 300) <= EPS, 'and the hull held its depth');
     assert.equal(Pressure.unhealable[eid], 0, 'not one metre of crush was spent for it');
   });
 
   it('stops where a depth order stops: DEPTH.MAX_M, still engaged (#1179)', () => {
-    // Ground deeper than the deepest orderable depth. A hull rated for the
-    // Abyssal band follows it down to 3,000 m and holds there, as a depth
-    // order to 3,000 m would, rather than riding on to the floor less the
-    // clearance — the water every mission map below 3,000 m says nothing
-    // reaches.
+    // Ground deeper than the deepest orderable depth. A click on it orders
+    // DEPTH.MAX_M, which is on the ground there by the rule's own reading, and
+    // a hull rated for the Abyssal band follows it down to 3,000 m and holds,
+    // as a depth order to 3,000 m would — rather than riding on to the floor
+    // less the clearance, the water every mission map below 3,000 m says
+    // nothing reaches.
     const m = match(4000);
     const eid = spawnUnit(m.world, {
       kind: UnitKind.AbyssalSubmersible,
@@ -115,11 +156,54 @@ describe('floor-following', () => {
       y: 4000,
       depth: 2600,
     });
-    assert.equal(m.orderFollowFloor(0, eid, true), true);
+    onTheGround(m, eid, DEPTH.MAX_M);
+    assert.equal(DepthOrder.follow[eid], 1, 'MAX_M over deeper ground is the ground');
     advance(m, 30); // (3000 − 2600) / 45 ≈ 9 s of descent, then station
     assert.ok(Math.abs(Position.depth[eid]! - DEPTH.MAX_M) <= EPS, 'held at DEPTH.MAX_M');
     assert.equal(DepthOrder.follow[eid], 1, 'and still following, not disengaged');
     assert.equal(Pressure.unhealable[eid], 0, 'with no crush spent on the way');
+  });
+
+  it('refuses a move whose depth is outside the column, place and all', () => {
+    const m = match(1000);
+    const eid = seat(m, 300);
+    m.orderMove(0, eid, 3000, 4000, false, DEPTH.MAX_M + 1);
+    m.orderMove(0, eid, 3000, 4000, false, Number.NaN);
+    assert.equal(MoveOrder.active[eid], 0, 'no half of the order ran');
+    assert.equal(DepthOrder.active[eid], 0);
+    assert.equal(DepthOrder.follow[eid], 0);
+  });
+
+  it('decides a queued leg’s depth as the leg begins', () => {
+    const m = match(1000);
+    const eid = seat(m, 300);
+    m.orderMove(0, eid, 1500, 4000, false, 600);
+    m.orderMove(0, eid, 2000, 4000, true, 1000);
+    assert.equal(DepthOrder.follow[eid], 0, 'the queued leg has not begun');
+    advance(m, 60);
+    assert.ok(Math.abs(Position.x[eid]! - 2000) <= 5, `walked both legs, at x ${Position.x[eid]}`);
+    assert.equal(DepthOrder.follow[eid], 1, 'and the second, on the ground, follows it');
+    assert.ok(Math.abs(Position.depth[eid]! - (1000 - FOLLOW_FLOOR.CLEARANCE_M)) <= EPS);
+  });
+
+  it('drops a leg in flight that is not its own when it engages', () => {
+    // A dive to the seabed has just been ordered when a click lands on the
+    // ground under a hull still at the clearance. The mode retargets only past
+    // the arrival epsilon and the hull has not moved, so without the drop the
+    // dive runs on — loud — until the hull has sunk that far into the
+    // clearance. With it, nothing runs at all.
+    const m = match(1000);
+    const eid = seat(m, 1000 - FOLLOW_FLOOR.CLEARANCE_M);
+    m.orderDepth(0, eid, 1000);
+    onTheGround(m, eid, 1000);
+    let descended = false;
+    for (let tick = 0; tick < 12; tick++) {
+      m.update(STEP_MS);
+      if (DepthOrder.descending[eid] === 1) descended = true;
+    }
+    assert.equal(descended, false, 'not one tick at a dive’s SIG');
+    assert.equal(Position.depth[eid], 1000 - FOLLOW_FLOOR.CLEARANCE_M, 'held where it stood');
+    assert.equal(DepthOrder.follow[eid], 1);
   });
 
   it('climbs out of a pit it followed into, toward where it is ordered (#1193)', () => {
@@ -133,10 +217,10 @@ describe('floor-following', () => {
     const eid = seat(m, 1720);
     Position.x[eid] = 1250;
     Position.y[eid] = 4000;
-    m.orderFollowFloor(0, eid, true);
+    onTheGround(m, eid, 1750);
     advance(m, 5);
     assert.ok(Math.abs(Position.depth[eid]! - (1750 - FOLLOW_FLOOR.CLEARANCE_M)) <= EPS);
-    m.orderMove(0, eid, 2250, 4000);
+    m.orderMove(0, eid, 2250, 4000, false, 1700);
     advance(m, 120);
     assert.ok(Math.abs(Position.x[eid]! - 2250) <= 5, `reached the order, at x ${Position.x[eid]}`);
     assert.ok(Math.abs(Position.depth[eid]! - (1700 - FOLLOW_FLOOR.CLEARANCE_M)) <= EPS);
@@ -152,10 +236,10 @@ describe('floor-following', () => {
     const m = match(1700);
     m.world.terrain.fillGround(2750, 2500, 500, 3000, { floorM: 1000 });
     const eid = seat(m, 1670);
-    m.orderFollowFloor(0, eid, true);
+    onTheGround(m, eid, 1700);
     m.setSilentRunning(0, eid, true);
     advance(m, 1);
-    m.orderMove(0, eid, 5000, 4000);
+    m.orderMove(0, eid, 5000, 4000, false, 1700);
     let shallowest = Position.depth[eid]!;
     for (let s = 0; s < 600 && Math.abs(Position.x[eid]! - 5000) > 5; s++) {
       advance(m, 1);
@@ -181,34 +265,67 @@ describe('floor-following', () => {
     const eid = seat(m, 1670);
     Position.x[eid] = 2125;
     Position.y[eid] = 3250;
-    m.orderFollowFloor(0, eid, true);
+    onTheGround(m, eid, 1700);
     advance(m, 2);
-    m.orderMove(0, eid, 4125, 3250);
+    m.orderMove(0, eid, 4125, 3250, false, 1700);
     advance(m, 240);
     assert.ok(Math.abs(Position.x[eid]! - 4125) <= 5, `reached the order, at x ${Position.x[eid]}`);
     assert.ok(Math.abs(Position.depth[eid]! - (1700 - FOLLOW_FLOOR.CLEARANCE_M)) <= EPS);
   });
 
-  it('is replaced by a manual depth order — the newer instruction wins', () => {
+  it('is replaced by a depth alone — the newer instruction wins', () => {
     const m = match(1000);
     const eid = seat(m, 300);
-    m.orderFollowFloor(0, eid, true);
+    onTheGround(m, eid, 1000);
     advance(m, 5);
     m.orderDepth(0, eid, 400);
     assert.equal(DepthOrder.follow[eid], 0);
     advance(m, 15);
-    assert.ok(Math.abs(Position.depth[eid]! - 400) <= EPS, 'the manual order is what ran');
+    assert.ok(Math.abs(Position.depth[eid]! - 400) <= EPS, 'the depth order is what ran');
   });
 
-  it('disarming holds the hull where it is', () => {
+  it('is ended by an attack, whatever its handle names, and the leg in flight is finished', () => {
+    // A handle no contact answers to: the attack is refused further in, and
+    // the floor is let go of before that, so whether a hull stops following
+    // says nothing about what the handle named.
     const m = match(1000);
     const eid = seat(m, 300);
-    m.orderFollowFloor(0, eid, true);
-    advance(m, 5); // mid-descent
-    const midway = Position.depth[eid]!;
-    assert.ok(midway > 300 + EPS, 'the descent had begun');
-    m.orderFollowFloor(0, eid, false);
-    advance(m, 5);
-    assert.ok(Math.abs(Position.depth[eid]! - midway) <= EPS, 'held, not carried on');
+    onTheGround(m, eid, 1000);
+    advance(m, 5); // mid-descent, on the mode's own leg to 970 m
+    assert.ok(Position.depth[eid]! > 300 + EPS, 'the descent had begun');
+    m.orderAttackContact(0, eid, 987_654);
+    assert.equal(DepthOrder.follow[eid], 0, 'an attack keeps a depth of its own');
+    advance(m, 20);
+    assert.ok(
+      Math.abs(Position.depth[eid]! - (1000 - FOLLOW_FLOOR.CLEARANCE_M)) <= EPS,
+      'the descent it was on is finished, and held'
+    );
+  });
+
+  it('is ended by a harvest, whose loop orders its own depth', () => {
+    const m = match(1000);
+    const node = spawnResourceNode(m.world, 1200, 4000);
+    const eid = spawnUnit(m.world, {
+      kind: UnitKind.Harvester,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 1000,
+      y: 4000,
+      depth: 300,
+    });
+    onTheGround(m, eid, 1000);
+    assert.equal(DepthOrder.follow[eid], 1);
+    m.orderHarvest(0, eid, node);
+    assert.equal(DepthOrder.follow[eid], 0);
+  });
+
+  it('is left standing by stop and by hold position', () => {
+    const m = match(1000);
+    const eid = seat(m, 970);
+    onTheGround(m, eid, 1000);
+    m.orderStop(0, eid);
+    assert.equal(DepthOrder.follow[eid], 1, 'stop halts the course, not the station');
+    m.orderHold(0, eid, true);
+    assert.equal(DepthOrder.follow[eid], 1, 'and so does hold position');
   });
 });

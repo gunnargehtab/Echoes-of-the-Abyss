@@ -241,15 +241,6 @@ nobody runs.
 remote session starts, so an agent container arrives with the gates above already
 runnable. It is a no-op in a local checkout, which manages its own `node_modules`.
 
-## Verifying on Android
-
-The whole game runs on-device in Termux ([SETUP-ANDROID.md](SETUP-ANDROID.md)). One
-command proves a phone can run it, and doubles as a pass/fail gate after a `git pull`:
-
-```bash
-node tools/android-check.mjs
-```
-
 ## Related
 
 - [CLAUDE.md](CLAUDE.md) — architecture, build order, and the reasoning behind these rules

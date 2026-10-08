@@ -610,10 +610,10 @@ export interface OwnUnit {
    */
   depthOrder?: number;
   /**
-   * True while the hull is under the floor-following standing order
-   * (docs/systems-depth.md §2). The player's own mode coming back to them:
-   * the ribbon marker reports where the hull is, this explains why that
-   * keeps changing.
+   * True while the hull is following the floor — engaged by a move onto the
+   * ground (docs/systems-depth.md §2, #1132). The player's own mode coming
+   * back to them: the ribbon marker reports where the hull is, this explains
+   * why that keeps changing.
    */
   followFloor?: boolean;
   /**
@@ -767,6 +767,11 @@ export interface QueuedOrderView {
   /** Where the order pointed when it was given. */
   x: number;
   y: number;
+  /**
+   * The depth a queued move or attack-move was given (#1132), so the plan is
+   * drawn where each leg asked to go. Absent for a leg that is a place alone.
+   */
+  depth?: number;
 }
 
 /** A structure the player owns. Always full detail — it is theirs. */

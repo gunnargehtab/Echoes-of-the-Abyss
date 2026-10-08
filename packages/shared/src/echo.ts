@@ -17,7 +17,9 @@ import {
   PROPAGATION_MODEL,
   TIER_THRESHOLD_MULTIPLIER,
   BEARING_BLUR_FRACTION,
+  DEPTH,
   DEPTH_BANDS,
+  FOLLOW_FLOOR,
   THERMOCLINE_DUCT_TOP_M,
   THERMOCLINE_DUCT_BOTTOM_M,
   THERMOCLINE_PAIR_FACTOR,
@@ -453,6 +455,19 @@ export function thermoclineZone(depthM: number): ThermoclineZone {
  */
 export function thermoclineFactor(depthA: number, depthB: number): number {
   return THERMOCLINE_PAIR_FACTOR[thermoclineZone(depthA) * 3 + thermoclineZone(depthB)]!;
+}
+
+/**
+ * Is an order's depth on the ground — docs/systems-depth.md §2, #1132?
+ *
+ * Within `FOLLOW_FLOOR.ENGAGE_WITHIN_M` of the floor at the order's point, the
+ * floor read no deeper than `DEPTH.MAX_M` because that is as deep as a click on
+ * that ground can order. A move whose depth is on the ground follows it. The
+ * server decides with this (`orderDepthAt`); the client previews the same
+ * answer with it, from the same public terrain, so the two cannot disagree.
+ */
+export function onTheGround(floorM: number, depthM: number): boolean {
+  return depthM >= Math.min(floorM, DEPTH.MAX_M) - FOLLOW_FLOOR.ENGAGE_WITHIN_M;
 }
 
 /**

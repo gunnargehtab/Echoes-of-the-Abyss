@@ -53,6 +53,7 @@ import {
   effectivePressureRating,
   Faction,
   FACTION_STRUCTURE,
+  FOLLOW_FLOOR,
   faunaStatsFor,
   HarvestIdleReason,
   HarvestThrottle,
@@ -61,6 +62,7 @@ import {
   LID,
   maxAudibleRangeM,
   MissionOutcome,
+  onTheGround,
   ORDNANCE,
   OrdnanceKind,
   PERSISTENCE,
@@ -207,7 +209,7 @@ import {
   paintAgentStipple,
 } from './faunaAgentStipple.ts';
 import type { MapPayload, TerrainPayload } from '../net/GameClient.ts';
-import { FOCUS_STEP_M } from './PerspectiveView.ts';
+import { FOCUS_DRAG_M_PER_PX, FOCUS_STEP_M } from './PerspectiveView.ts';
 import type { PerspectiveView, ProjectedPoint } from './PerspectiveView.ts';
 import {
   COLUMN_RIBBONS,
@@ -229,6 +231,8 @@ interface PendingOrder {
   kind: QueuedOrderView['kind'];
   x: number;
   y: number;
+  /** The depth the click gave it (#1132); absent for an order on a contact or a field. */
+  depth?: number;
   queued: boolean;
   /** The snapshot count when the order was given. */
   seq: number;
@@ -239,6 +243,8 @@ interface OrderMarker {
   kind: QueuedOrderView['kind'];
   x: number;
   y: number;
+  /** Where in the column the point is; absent, the ring sits on the ground. */
+  depth?: number;
   atMs: number;
 }
 
@@ -267,9 +273,13 @@ interface TrackedContact {
 }
 
 export interface RendererCallbacks {
-  onMoveOrder(unitIds: number[], x: number, y: number, queued: boolean): void;
+  /**
+   * Go there. `depth` is the click's (#1132): a click is a point in the water
+   * (docs/ui-ux.md §9), and absent only where the order is a place alone.
+   */
+  onMoveOrder(unitIds: number[], x: number, y: number, queued: boolean, depth?: number): void;
   /** Attack-move (§9, #435): go there and fight what you meet on the way. */
-  onAttackMoveOrder(unitIds: number[], x: number, y: number, queued: boolean): void;
+  onAttackMoveOrder(unitIds: number[], x: number, y: number, queued: boolean, depth?: number): void;
   onStopOrder(unitIds: number[]): void;
   onHoldOrder(unitIds: number[], active: boolean): void;
   /** Board a friendly transport (docs/systems-echo.md §3): the hulls close on the carrier. */
@@ -297,9 +307,6 @@ export interface RendererCallbacks {
   onProduce(structureId: number, kind: UnitKind): void;
   /** Buy a fleet-wide refit at a yard (docs/systems-progression.md §2). */
   onRefit(structureId: number, kind: RefitKind): void;
-  onDepthOrder(unitIds: number[], depth: number): void;
-  /** Arm or disarm floor-following for the selection (docs/systems-depth.md §2). */
-  onFollowFloor(unitIds: number[], active: boolean): void;
   /** A new detection event, for the contact log. */
   onContactEvent(entry: ContactLogEntry): void;
   /**
@@ -833,13 +840,13 @@ interface BarButton {
  * The card's yield order — §2's block-drop order applied one level down, and
  * for its reason: "the order is what each costs to lose".
  *
- * A key is not what makes an entry cheap to lose. §2 says the command card is
- * "how a touchscreen reaches any order at all", and a touchscreen has no keys
- * at all, so the thing that decides rank is whether the *card* is the only
+ * A key is not what makes an entry cheap to lose. §2 makes the command card
+ * the mouse's route to every order, and a hand on the mouse is not on the
+ * keys, so the thing that decides rank is whether the *card* is the only
  * route — not whether a keyboard has a second one.
  */
-const YIELD = {
-  /** A tap on empty water does the same thing (`onPointerUp`). */
+export const YIELD = {
+  /** A click on empty water does the same thing (`resolveSelection`). */
   DESELECT: 0,
   /** Reached for occasionally, and never in the same breath as a move order. */
   SITUATIONAL: 1,
@@ -848,6 +855,27 @@ const YIELD = {
   /** Nothing but this button reaches it. Yields only to another of its own. */
   ONLY_ROUTE: 3,
 } as const;
+
+/**
+ * The entries a card shows when it is offered more than `cells` — §9, "What
+ * yields when the card is full". Lowest rank goes first, and within a rank the
+ * later entry goes, so the authored order still decides among equals; the
+ * survivors keep that order, so a cell moves only when something above it
+ * actually left. Exported so the order can be held over a list whose push
+ * order disagrees with its ranks, which no page the card is offered today does.
+ */
+export function yieldToCells<T extends { yieldRank?: number }>(
+  model: readonly T[],
+  cells: number
+): readonly T[] {
+  if (model.length <= cells) return model;
+  return model
+    .map((entry, i) => ({ entry, i, rank: entry.yieldRank ?? YIELD.CORE }))
+    .sort((a, b) => b.rank - a.rank || a.i - b.i)
+    .slice(0, cells)
+    .sort((a, b) => a.i - b.i)
+    .map((held) => held.entry);
+}
 
 /** Command panel geometry, CSS px. docs/art-direction.md "HUD Layout". */
 const TAB_HEIGHT = 24;
@@ -864,7 +892,7 @@ const TAB_HEIGHT = 24;
  * 208 is a *pixel* height rather than a fraction, like the bar it replaces, so
  * a short window gives up proportionally more of itself — 19% of a 1080p frame
  * and 23% of a 900px one. That is inherent to a console whose rows have a
- * minimum size (§11's 44 px touch floor is what sets it), and `uiScale` is the
+ * minimum size (§11's 44 px target floor is what sets it), and `uiScale` is the
  * knob for wanting it bigger rather than the window height.
  */
 const CONSOLE_HEIGHT = 208;
@@ -903,7 +931,7 @@ const TOP_BAR_HEIGHT = 52;
  * crossing the strip would then never be over nothing, and every readout's
  * line would hand straight over to the next one's.
  */
-const TOUCH_PAD_PX = 6;
+const TARGET_PAD_PX = 6;
 
 /**
  * The SIG meter, to docs/ui-ux.md §3 — "240 x 12 px at 1080p, above a two-line
@@ -1830,9 +1858,6 @@ export class EchoRenderer {
   private lastClick = { at: 0, x: 0, y: 0 };
   /** Non-null while the next left-click places this structure. */
   private pendingBuild: StructureKind | null = null;
-  /** Coarse pointer = phone/tablet: hints speak gestures, not keys. */
-  private readonly isTouch =
-    typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
   /** The camera opens on the player's own base exactly once. */
   private cameraCentered = false;
   /** Contact handle to the moment it reached Tier 4, for the lock brackets. */
@@ -2212,6 +2237,19 @@ export class EchoRenderer {
     return this.conn?.resolveGround(clientX, clientY) ?? null;
   }
 
+  /**
+   * The point in the water a click there would order (docs/ui-ux.md §9): the
+   * first of the ground and — with the focus raised — the focus plane, at its
+   * depth. Null before the conn view exists. A place-only order — a rally, a
+   * structure's site — keeps `screenToWorld`.
+   */
+  private screenToWater(
+    clientX: number,
+    clientY: number
+  ): { x: number; y: number; depthM: number } | null {
+    return this.conn?.resolveWater(clientX, clientY) ?? null;
+  }
+
   /** A world point as screen pixels, or null before the conn view exists. */
   private project(xM: number, yM: number, depthM: number | null): ProjectedPoint | null {
     if (this.conn === null) return null;
@@ -2365,33 +2403,33 @@ export class EchoRenderer {
 
   private attachInput(): void {
     const canvas = this.app.canvas;
-    // Two input dialects share this handler. Mouse keeps the classic RTS
-    // bindings (LMB select, RMB order, MMB pan, wheel zoom) and adds the
-    // camera verbs docs/free-camera.md §4 spec'd: Shift + MMB orbits, Shift +
-    // wheel moves the focus through the column, Home puts the frame back.
-    // Touch gets one vocabulary a phone can actually speak: tap =
-    // select-or-order, drag = pan, pinch = zoom, twist = yaw; everything else
-    // lives on the command bar.
+    // One dialect: keyboard and mouse (#1132 made the client desktop-only).
+    // The classic RTS bindings — LMB select, RMB order, MMB pan, wheel zoom —
+    // and the camera verbs docs/free-camera.md §4 spec'd: Shift + MMB orbits,
+    // Shift + wheel and the left + right drag move the focus through the
+    // column, Home puts the frame back.
     let panning = false;
     /** True while a middle drag is orbiting rather than panning — decided at
      * press, because a modifier picked up mid-drag would swap the gesture
      * under the player's hand. */
     let orbiting = false;
+    /**
+     * True from the moment the left and the right button are both down until
+     * the last of them comes up: the pointer is the camera (§9). Either may
+     * land first, at any interval — §11 forbids a timing-critical chord — and
+     * once both are down neither click fires.
+     */
+    let chord = false;
     let lastX = 0;
     let lastY = 0;
-
-    /** Live touch points, for one-finger pan and two-finger pinch. */
-    const touches = new Map<number, { x: number; y: number }>();
-    /** Candidate tap: cleared the moment the finger travels or a second lands. */
-    let tapPointerId: number | null = null;
-    let tapStartX = 0;
-    let tapStartY = 0;
-    /** Finger travel below this many CSS px still counts as a tap. */
-    const TAP_SLOP_PX = 12;
-    let pinchDistance = 0;
-    /** Bearing between the two live touches, for twist-to-yaw. NaN until two
-     * fingers are down, so the first frame of a pinch contributes no turn. */
-    let pinchAngle = Number.NaN;
+    /**
+     * A right press waiting for its release. The order is given on release so
+     * that the press can still become the chord, and it goes to where the
+     * press was, with the press's modifiers (docs/ui-ux.md §9).
+     */
+    let pendingRight: { x: number; y: number; queued: boolean; torpedo: boolean } | null = null;
+    /** A left press aimed by an armed attack-move or a pending build, likewise. */
+    let pendingAim: { x: number; y: number; queued: boolean } | null = null;
 
     const onContextMenu = (e: Event) => e.preventDefault();
 
@@ -2417,15 +2455,35 @@ export class EchoRenderer {
      * camera under a menu that promised it would not.
      */
     const endGesture = (e: PointerEvent) => {
-      touches.delete(e.pointerId);
-      tapPointerId = null;
-      pinchDistance = 0;
       minimapDrag = false;
       panning = false;
       orbiting = false;
-      pinchAngle = Number.NaN;
+      chord = false;
+      pendingRight = null;
+      pendingAim = null;
       this.marquee = null;
       if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+    };
+
+    /** The left and the right button together, read off the event's mask. */
+    const bothDown = (e: PointerEvent) => (e.buttons & 3) === 3;
+
+    /**
+     * Both buttons down: the pointer becomes the camera, and every click the
+     * two presses were about to make is dropped — the marquee, the waiting
+     * order, the aimed placement. Nothing they would have done has happened
+     * yet, which is what giving them on release buys.
+     */
+    const beginChord = (e: PointerEvent) => {
+      chord = true;
+      panning = false;
+      orbiting = false;
+      pendingRight = null;
+      pendingAim = null;
+      this.marquee = null;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      capture(e.pointerId);
     };
 
     const onPointerDown = (e: PointerEvent) => {
@@ -2433,32 +2491,21 @@ export class EchoRenderer {
         endGesture(e);
         return;
       }
-      // The sonar scope and the command bar swallow presses from every
-      // pointer type before any world interpretation happens.
+      // A browser that reports a second button as its own press lands here;
+      // one that follows Pointer Events' chorded buttons lands in the move
+      // handler instead. Either way the chord wins over the press.
+      if (bothDown(e)) {
+        beginChord(e);
+        return;
+      }
+      // The sonar scope and the command bar swallow presses before any world
+      // interpretation happens.
       if (e.button === 0 && this.pressMinimap(e.clientX, e.clientY)) {
         minimapDrag = true;
         capture(e.pointerId);
         return;
       }
       if (e.button === 0 && this.pressBarButton(e.clientX, e.clientY)) return;
-
-      if (e.pointerType === 'touch') {
-        touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
-        capture(e.pointerId);
-        if (touches.size === 1) {
-          tapPointerId = e.pointerId;
-          tapStartX = e.clientX;
-          tapStartY = e.clientY;
-        } else {
-          // A second finger is a gesture, never a tap.
-          tapPointerId = null;
-          if (touches.size === 2) {
-            const [a, b] = [...touches.values()];
-            pinchDistance = Math.hypot(a!.x - b!.x, a!.y - b!.y);
-          }
-        }
-        return;
-      }
 
       if (e.button === 1) {
         // Shift makes the middle drag an orbit (§9). Held at press, read once:
@@ -2474,20 +2521,23 @@ export class EchoRenderer {
       }
 
       if (e.button === 2) {
-        // Shift queues the order behind whatever the unit is already doing.
-        this.handleContextOrder(e.clientX, e.clientY, e.shiftKey, e.ctrlKey || e.metaKey);
+        // Shift queues the order behind whatever the unit is already doing,
+        // and Ctrl makes it the launch. Both are read here, at the press.
+        pendingRight = {
+          x: e.clientX,
+          y: e.clientY,
+          queued: e.shiftKey,
+          torpedo: e.ctrlKey || e.metaKey,
+        };
+        capture(e.pointerId);
         return;
       }
 
-      // Left click with attack-move armed: that is the point.
-      if (this.pendingAttackMove) {
-        this.commandAttackMove(e.clientX, e.clientY, e.shiftKey);
-        return;
-      }
-
-      // Left click while a build is pending: place it.
-      if (this.pendingBuild !== null) {
-        this.commandPlace(e.clientX, e.clientY);
+      // Left click with attack-move armed, or a build pending: that is the
+      // point, on release like the right button and for its reason.
+      if (this.pendingAttackMove || this.pendingBuild !== null) {
+        pendingAim = { x: e.clientX, y: e.clientY, queued: e.shiftKey };
+        capture(e.pointerId);
         return;
       }
 
@@ -2499,12 +2549,23 @@ export class EchoRenderer {
     };
 
     const onPointerMove = (e: PointerEvent) => {
-      // Where the pointer rests, for edge scrolling; a touch never rests.
+      // Where the pointer rests, for edge scrolling and the Alt preview.
       this.pointerClient.x = e.clientX;
       this.pointerClient.y = e.clientY;
-      this.pointerOverWater = e.pointerType !== 'touch';
+      this.pointerOverWater = true;
       if (this.menuOpen) {
         endGesture(e);
+        return;
+      }
+      if (!chord && !minimapDrag && bothDown(e)) beginChord(e);
+      if (chord) {
+        // Across pans sideways; up and down moves the focus. Both move the
+        // water with the hand, as the middle drag does, so dragging up lifts
+        // the water past the eye and sinks the focus (free-camera.md §4).
+        this.conn?.panBy(e.clientX - lastX, 0);
+        this.conn?.raiseFocusBy((e.clientY - lastY) * FOCUS_DRAG_M_PER_PX);
+        lastX = e.clientX;
+        lastY = e.clientY;
         return;
       }
       if (minimapDrag) {
@@ -2515,53 +2576,6 @@ export class EchoRenderer {
       if (this.marquee !== null) {
         this.marquee.x1 = e.clientX;
         this.marquee.y1 = e.clientY;
-        return;
-      }
-
-      if (e.pointerType === 'touch') {
-        const prev = touches.get(e.pointerId);
-        if (prev === undefined) return;
-
-        if (touches.size === 1) {
-          if (
-            tapPointerId === e.pointerId &&
-            Math.hypot(e.clientX - tapStartX, e.clientY - tapStartY) > TAP_SLOP_PX
-          ) {
-            tapPointerId = null;
-          }
-          // One finger down and moving: pan. Harmless during a would-be tap —
-          // sub-slop movement pans invisibly little.
-          this.conn?.panBy(e.clientX - prev.x, e.clientY - prev.y);
-        }
-
-        prev.x = e.clientX;
-        prev.y = e.clientY;
-
-        if (touches.size === 2) {
-          const [a, b] = [...touches.values()];
-          const distance = Math.hypot(a!.x - b!.x, a!.y - b!.y);
-          if (pinchDistance > 0 && distance > 0) {
-            this.conn?.zoomAt((a!.x + b!.x) / 2, (a!.y + b!.y) / 2, distance / pinchDistance);
-          }
-          pinchDistance = distance;
-
-          // Twist yaws (docs/free-camera.md §4). The same two fingers already
-          // pinching: a phone has no Shift and no wheel, and the bearing
-          // between the touches is a turn the hand is already making.
-          const angle = Math.atan2(b!.y - a!.y, b!.x - a!.x);
-          if (Number.isFinite(pinchAngle)) {
-            // Shortest way round, so a twist across the atan2 seam does not
-            // spin the camera a full turn in one frame.
-            let delta = angle - pinchAngle;
-            if (delta > Math.PI) delta -= Math.PI * 2;
-            if (delta < -Math.PI) delta += Math.PI * 2;
-            // Negated: the fingers turn the water, and the camera turns the
-            // other way to make that true — the twist equivalent of the pan's
-            // ground-follows-the-hand rule.
-            this.conn?.yawBy(-delta);
-          }
-          pinchAngle = angle;
-        }
         return;
       }
 
@@ -2583,33 +2597,41 @@ export class EchoRenderer {
         endGesture(e);
         return;
       }
-      if (minimapDrag) {
-        minimapDrag = false;
-        if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+      if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+      // A pointerup arrives once, when the last button comes up; a button let
+      // go while another is held is a move. So whatever this was ends here.
+      if (chord) {
+        chord = false;
         return;
       }
-
-      if (e.pointerType === 'touch') {
-        if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
-        const wasTap = e.type === 'pointerup' && tapPointerId === e.pointerId;
-        touches.delete(e.pointerId);
-        tapPointerId = null;
-        pinchDistance = 0;
-        if (wasTap) this.handleTap(e.clientX, e.clientY);
+      if (minimapDrag) {
+        minimapDrag = false;
+        return;
+      }
+      // A cancelled pointer — a gesture the browser took — gives no order.
+      const released = e.type === 'pointerup';
+      if (pendingRight !== null) {
+        const press = pendingRight;
+        pendingRight = null;
+        if (released) this.handleContextOrder(press.x, press.y, press.queued, press.torpedo);
+        return;
+      }
+      if (pendingAim !== null) {
+        const press = pendingAim;
+        pendingAim = null;
+        if (!released) return;
+        if (this.pendingAttackMove) this.commandAttackMove(press.x, press.y, press.queued);
+        else if (this.pendingBuild !== null) this.commandPlace(press.x, press.y);
         return;
       }
 
       if (this.marquee !== null) {
         const box = this.marquee;
         this.marquee = null;
-        if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
         this.resolveSelection(box, e.shiftKey, e.ctrlKey || e.metaKey, e.altKey);
         return;
       }
 
-      if ((panning || orbiting) && canvas.hasPointerCapture(e.pointerId)) {
-        canvas.releasePointerCapture(e.pointerId);
-      }
       panning = false;
       orbiting = false;
     };
@@ -2788,18 +2810,6 @@ export class EchoRenderer {
         case 'depthCharge':
           this.commandDepthCharge();
           return;
-        case 'dive':
-          // Dive is down and rise is up. Mnemonic beats convention here: the
-          // camera is on the middle mouse button and the wheel, so WASD is not
-          // spoken for.
-          this.commandDepthStep(1);
-          return;
-        case 'rise':
-          this.commandDepthStep(-1);
-          return;
-        case 'followFloor':
-          this.commandFollowFloor();
-          return;
       }
     };
 
@@ -2816,8 +2826,8 @@ export class EchoRenderer {
     canvas.addEventListener('pointerdown', onPointerDown);
     canvas.addEventListener('pointermove', onPointerMove);
     canvas.addEventListener('pointerup', onPointerUp);
-    // A stolen gesture (browser navigation, notification shade) must clear
-    // touch state or the next finger inherits a phantom pinch.
+    // A gesture the browser takes must end what the press began — a chord,
+    // a waiting order, a marquee — and give nothing on the way out.
     canvas.addEventListener('pointercancel', onPointerUp);
     canvas.addEventListener('wheel', onWheel, { passive: false });
     canvas.addEventListener('pointerleave', onPointerLeave);
@@ -3069,7 +3079,7 @@ export class EchoRenderer {
     //   on the hull itself.
     //
     // Scope and commands never go. One is the only view of the whole map, and
-    // the other is how a touchscreen reaches any order at all.
+    // the other is the mouse's route to every order.
     //
     // So a block is kept only when every block that outlasts it fits too: each
     // test below adds its own cost to theirs. Testing a block against the room
@@ -3222,8 +3232,9 @@ export class EchoRenderer {
 
   /**
    * What the panel offers depends on the open tab — the C&C sidebar as one
-   * contextual row under a tab strip. Every action here also has a keyboard
-   * binding; the panel exists so a touchscreen can reach them at all.
+   * contextual row under a tab strip. Most actions here also have a keyboard
+   * binding; the panel is the route for the hand on the mouse, and the only
+   * route for the ones that have none (§9's yield table).
    */
   private buildBarModel(): Array<Omit<BarButton, 'x' | 'y' | 'w' | 'h'>> {
     const buttons: Array<Omit<BarButton, 'x' | 'y' | 'w' | 'h'>> = [];
@@ -3344,48 +3355,20 @@ export class EchoRenderer {
         active: false,
         action: () => this.commandPing(),
       });
-      // The vertical half of the movement hold, on the same terms as the locks
-      // above. `Match.orderDepth` and `orderFollowFloor` both refuse a held
-      // hull, so all three of these were live buttons the server threw away —
-      // and §10.5 is stricter here than for an ability, not looser: the player
-      // "learns the rule before pressing, because a refusal delivered
-      // afterwards teaches nothing". A run north that is mostly a climb
-      // (docs/mission-sorrowgate.md §8) is exactly where that bites (#708).
+      // No DIVE, RISE or FOLLOW: depth is the click's now (§9, #1132), and a
+      // move onto the ground is the one that follows it.
       const heldAll = this.heldSelection(units);
-      buttons.push({
-        label: 'DIVE',
-        enabled: units.length > 0 && heldAll === null && this.stepDepthTarget(units, 1) !== null,
-        active: units.some((u) => u.depthOrder !== undefined && u.depthOrder > u.depth),
-        action: () => this.commandDepthStep(1),
-        refusal: heldAll ?? undefined,
-      });
-      buttons.push({
-        label: 'RISE',
-        enabled: units.length > 0 && heldAll === null && this.stepDepthTarget(units, -1) !== null,
-        active: units.some((u) => u.depthOrder !== undefined && u.depthOrder < u.depth),
-        action: () => this.commandDepthStep(-1),
-        refusal: heldAll ?? undefined,
-      });
-      buttons.push({
-        // The standing order (docs/systems-depth.md §2): hug the seabed at
-        // station keeping. Lit while any of the selection is following, so a
-        // squad that half-disengaged at a PR edge is visible as exactly that.
-        label: 'FOLLOW',
-        enabled: units.length > 0 && heldAll === null,
-        active: units.some((u) => u.followFloor === true),
-        action: () => this.commandFollowFloor(),
-        refusal: heldAll ?? undefined,
-      });
       // The three standing orders (§9, #435). ENGAGE arms an attack-move the
-      // way a build button arms a placement; on a touchscreen it is the only
-      // way to give one. HOLD is lit while the selection holds.
+      // way a build button arms a placement, and it is the pointer's way to
+      // give one. HOLD is lit while the selection holds.
       const fighters = units.some((u) => u.throttle === undefined);
       buttons.push({
-        // Held too, and for the same reason as DIVE: ENGAGE arms an
+        // Refused while the mission holds the selection: ENGAGE arms an
         // attack-move, `Match.orderAttackMove` refuses a held hull, and
         // without this the player armed the mode, clicked the water, and only
         // then heard why — the "refusal delivered afterwards" §10.5 says
-        // teaches nothing. The prologue hides this by accident, its tenders
+        // teaches nothing. A run north that is mostly a climb
+        // (docs/mission-sorrowgate.md §8) is where that bit first (#708). The prologue hides this by accident, its tenders
         // being Harvesters and so not `fighters`; *Radicals* holds a Cruiser.
         //
         // The weapons lock is the refusal's second source. Twelve missions
@@ -3705,10 +3688,9 @@ export class EchoRenderer {
    * The fleet block: what is in hand, what is assigned, and what the player
    * owns — all of it own force, and none of it anybody else's.
    *
-   * Two bands of 44 px chips over a census line. §11 puts the touch floor at
-   * 44 px and §9 makes the digits unrebindable, so on a touchscreen — which has
-   * no digits — these chips are the *only* way to recall a control group. Four
-   * rows of 44 px do not fit a block this tall, which is why the groups are
+   * Two bands of 44 px chips over a census line. §11 puts the target floor at
+   * 44 px, and the chips are the pointer's way to recall a control group beside
+   * the digits §9 keeps fixed. Four rows of 44 px do not fit a block this tall, which is why the groups are
    * chips laid across the width rather than a list: it is both denser and
    * reachable, where a list of 15 px rows was neither.
    *
@@ -3929,9 +3911,9 @@ export class EchoRenderer {
       tabX += w + 4;
     }
 
-    // §9.5's menu, reachable by a finger. Esc is the keyboard's door, and a
-    // touchscreen has no Esc — the bar is how a touchscreen reaches anything
-    // at all, so the way out sits on it like everything else does.
+    // §9.5's menu, reachable by the pointer. Esc is the keyboard's door, and a
+    // hand on the mouse should not have to go looking for a key to leave the
+    // water, so the way out sits on the bar like every other order does.
     const menuW = 'MENU'.length * 7.5 + 22;
     tabButtons.push({
       x: screenWidth - 10 - menuW,
@@ -3949,7 +3931,7 @@ export class EchoRenderer {
     const card = blocks.commands;
 
     // The command card: a grid rather than a row, which is what buys the
-    // touch floor. The old row gave every button 40 px of height and as much
+    // target floor (§11). The old row gave every button 40 px of height and as much
     // width as its label wanted, so a long roster ran off a narrow screen and
     // the fix was to truncate the labels. A grid spends the console's height
     // instead — four columns of equal cells, three rows deep — so a cell is
@@ -3975,16 +3957,7 @@ export class EchoRenderer {
     // Lowest rank goes first, and within a rank the later entry goes, so the
     // authored order still decides among equals. Survivors keep that order, so
     // a cell moves only when something above it actually left.
-    const cells = COLS * ROWS;
-    const shown =
-      model.length <= cells
-        ? model
-        : model
-            .map((entry, i) => ({ entry, i, rank: entry.yieldRank ?? YIELD.CORE }))
-            .sort((a, b) => b.rank - a.rank || a.i - b.i)
-            .slice(0, cells)
-            .sort((a, b) => a.i - b.i)
-            .map((held) => held.entry);
+    const shown = yieldToCells(model, COLS * ROWS);
     const buttons = shown.map((entry, i) => {
       const col = i % COLS;
       const row = Math.floor(i / COLS);
@@ -4152,10 +4125,12 @@ export class EchoRenderer {
   /**
    * The depth a step in `direction` would take the selection to (+1 deeper,
    * -1 shallower), or null when the whole selection is already at the end of
-   * the stack. Orders step rung to rung; see DEPTH_STATIONS_M.
+   * the stack. Rung to rung; see DEPTH_STATIONS_M.
    *
-   * The lead unit decides the target so a mixed-depth squad moves as one
-   * formation rather than fanning out across two bands.
+   * Only the depth charge steps now — Dive and Rise went when a click took
+   * the depth over (#1132) — and "the band below" is still a rung away. The
+   * lead unit decides, so a mixed-depth squad drops one pattern rather than
+   * fanning it out across two bands.
    */
   private stepDepthTarget(units: OwnUnit[], direction: 1 | -1): number | null {
     const lead = units[0];
@@ -4166,20 +4141,6 @@ export class EchoRenderer {
     const next = rungFor(reference) + direction;
     if (next < 0 || next >= DEPTH_STATIONS_M.length) return null;
     return DEPTH_STATIONS_M[next]!;
-  }
-
-  private commandDepthStep(direction: 1 | -1): void {
-    const units = this.selectedUnits();
-    if (units.length === 0) return;
-    const target = this.stepDepthTarget(units, direction);
-    if (target === null) return;
-    // The vertical half of the same hold: `Match.orderDepth` refuses a held
-    // hull's dive for the reason it refuses its move, and a run north that is
-    // mostly a climb would otherwise leave the player pressing a key that did
-    // nothing (docs/mission-sorrowgate.md §8).
-    const ids = this.movable(units.map((u) => u.id));
-    if (ids.length === 0) return;
-    this.callbacks.onDepthOrder(ids, target);
   }
 
   /** `0`: every hull that fights, wherever it is (§9). */
@@ -4194,12 +4155,13 @@ export class EchoRenderer {
   private commandAttackMove(clientX: number, clientY: number, queued: boolean): void {
     this.pendingAttackMove = false;
     const units = this.selectedUnits();
-    const water = this.screenToWorld(clientX, clientY);
+    // A point in the water, as a move's is (§9): an attack-move lands the same way.
+    const water = this.screenToWater(clientX, clientY);
     if (units.length === 0 || water === null) return;
     const ids = this.movable(units.map((u) => u.id));
     if (ids.length === 0) return;
-    this.callbacks.onAttackMoveOrder(ids, water.x, water.y, queued);
-    this.noteOrder(ids, 'attackMove', water.x, water.y, queued);
+    this.callbacks.onAttackMoveOrder(ids, water.x, water.y, queued, water.depthM);
+    this.noteOrder(ids, 'attackMove', water.x, water.y, queued, water.depthM);
   }
 
   private commandStop(): void {
@@ -4231,21 +4193,6 @@ export class EchoRenderer {
       units.map((u) => u.id),
       engage
     );
-  }
-
-  /**
-   * The standing order (docs/systems-depth.md §2). Engage when any of the
-   * selection is not yet following, disarm only when all are — the same
-   * converge-then-toggle shape a mixed silent squad gets, so one press means
-   * one thing for the whole selection.
-   */
-  private commandFollowFloor(): void {
-    const units = this.selectedUnits();
-    if (units.length === 0) return;
-    const engage = !units.every((u) => u.followFloor === true);
-    const ids = this.movable(units.map((u) => u.id));
-    if (ids.length === 0) return;
-    this.callbacks.onFollowFloor(ids, engage);
   }
 
   /**
@@ -4309,8 +4256,9 @@ export class EchoRenderer {
    *
    * The band below rather than an arbitrary depth, because that is the decision
    * the weapon exists for: the hull under you is in the next band down, and
-   * getting a charge to it is the whole of the vertical argument. Reuses the
-   * same band stepping the dive order uses, so "one band down" means one thing.
+   * getting a charge to it is the whole of the vertical argument. The one order
+   * that still steps rung to rung (`stepDepthTarget`), so "one band down" means
+   * what it meant when Dive did it too.
    */
   private commandDepthCharge(): void {
     if (this.refusedByMission('depthCharges')) return;
@@ -4336,30 +4284,11 @@ export class EchoRenderer {
   }
 
   /**
-   * A touch tap collapses select and order into one gesture: tapping an own
-   * entity selects it; tapping anywhere else with a selection issues the same
-   * context order a right-click would. Deselection lives on the command bar,
-   * because "tap empty water" already means "move there".
-   */
-  private handleTap(clientX: number, clientY: number): void {
-    if (this.pendingBuild !== null) {
-      this.commandPlace(clientX, clientY);
-      return;
-    }
-    const hit = this.nearestOwnEntityAt(clientX, clientY);
-    if (hit !== null) {
-      this.selected.clear();
-      this.selected.add(hit);
-      this.onSelectionChanged();
-      return;
-    }
-    if (this.selected.size > 0) this.handleContextOrder(clientX, clientY, false);
-  }
-
-  /**
    * Right click is the classic RTS context order: a nodule field sends
    * harvesters to work, a heard contact is an attack order, open water is a
-   * move. The server re-validates everything; this is only intent.
+   * move — a move to a point in the water, at the depth the click landed on
+   * (§9, `resolveWater`). The server re-validates everything, and decides
+   * whether that depth is on the ground; this is only intent.
    */
   private handleContextOrder(
     clientX: number,
@@ -4378,17 +4307,20 @@ export class EchoRenderer {
     }
     const selectedUnits = this.units.filter((u) => this.selected.has(u.id));
     const unitIds = selectedUnits.map((u) => u.id);
-    const water = this.screenToWorld(clientX, clientY);
+    const water = this.screenToWater(clientX, clientY);
 
     // A yard and nothing else selected: the right click is its rally point —
-    // where every hull it launches goes first (§9, #435).
-    if (unitIds.length === 0 && water !== null) {
+    // where every hull it launches goes first (§9, #435). A place alone, with
+    // no depth, so it is the ground under the cursor and the focus plane has
+    // no say in where it lands.
+    if (unitIds.length === 0) {
+      const place = this.screenToWorld(clientX, clientY);
       const yards = this.structures
         .filter((st) => this.selected.has(st.id) && (PRODUCIBLE[st.kind]?.length ?? 0) > 0)
         .map((st) => st.id);
-      if (yards.length > 0) {
-        this.callbacks.onRallyOrder(yards, water.x, water.y);
-        this.orderMarkers.push({ kind: 'move', x: water.x, y: water.y, atMs: performance.now() });
+      if (yards.length > 0 && place !== null) {
+        this.callbacks.onRallyOrder(yards, place.x, place.y);
+        this.orderMarkers.push({ kind: 'move', x: place.x, y: place.y, atMs: performance.now() });
         this.ordersSeq++;
       }
       return;
@@ -4413,8 +4345,8 @@ export class EchoRenderer {
       // Everything else in the selection escorts the harvesters.
       const rest = unitIds.filter((id) => !harvesterIds.includes(id) && free.has(id));
       if (rest.length > 0 && water !== null) {
-        this.callbacks.onMoveOrder(rest, water.x, water.y, queued);
-        this.noteOrder(rest, 'move', water.x, water.y, queued);
+        this.callbacks.onMoveOrder(rest, water.x, water.y, queued, water.depthM);
+        this.noteOrder(rest, 'move', water.x, water.y, queued, water.depthM);
       }
       return;
     }
@@ -4459,8 +4391,8 @@ export class EchoRenderer {
     if (unitIds.length > 0 && water !== null) {
       const moving = this.movable(unitIds);
       if (moving.length === 0) return;
-      this.callbacks.onMoveOrder(moving, water.x, water.y, queued);
-      this.noteOrder(moving, 'move', water.x, water.y, queued);
+      this.callbacks.onMoveOrder(moving, water.x, water.y, queued, water.depthM);
+      this.noteOrder(moving, 'move', water.x, water.y, queued, water.depthM);
     }
   }
 
@@ -7050,7 +6982,7 @@ export class EchoRenderer {
    * Record one readout's *drawn* glyphs — where the number actually is.
    *
    * Pass one of two. Nothing is judged here: the box is the `Text`'s own, with
-   * no touch band, no pad and no bound, because pass two has to be able to ask
+   * no target band, no pad and no bound, because pass two has to be able to ask
    * "does this control cover a number that is not its own" about every readout
    * the strip drew, including the ones it is about to refuse a control to.
    *
@@ -7082,9 +7014,9 @@ export class EchoRenderer {
    * Pass two: turn the drawn readouts into controls, and refuse the ones that
    * would answer for the wrong number.
    *
-   * Each control is grown to §11's touch floor as far as a 52 px strip can
+   * Each control is grown to §11's target floor as far as a 52 px strip can
    * carry it. §2 sets the console's height by that floor — "a console row is a
-   * touch target" — and the drawn glyphs are 11-13 px tall, which is not one.
+   * pointer target" — and the drawn glyphs are 11-13 px tall, which is not one.
    * The strip holds two rows in TOP_BAR_HEIGHT, so 44 apiece is arithmetically
    * impossible without the rows overlapping each other; what is reachable is
    * the whole of a readout's own row band, plus the gaps either side. That is a
@@ -7144,8 +7076,8 @@ export class EchoRenderer {
         y = middle < band ? 0 : band;
         height = band;
       }
-      x = Math.max(0, x - TOUCH_PAD_PX);
-      width += TOUCH_PAD_PX * 2;
+      x = Math.max(0, x - TARGET_PAD_PX);
+      width += TARGET_PAD_PX * 2;
 
       // No `x < 0` clause: the pad above already clamped it, so such a test
       // would read as a bound being enforced while never being true.
@@ -7709,9 +7641,14 @@ export class EchoRenderer {
     kind: QueuedOrderView['kind'],
     x: number,
     y: number,
-    queued: boolean
+    queued: boolean,
+    depth?: number
   ): void {
-    this.orderMarkers.push({ kind, x, y, atMs: performance.now() });
+    this.orderMarkers.push(
+      depth === undefined
+        ? { kind, x, y, atMs: performance.now() }
+        : { kind, x, y, depth, atMs: performance.now() }
+    );
     this.ordersSeq++;
     for (const id of unitIds) {
       let pending = this.pendingOrders.get(id);
@@ -7722,8 +7659,29 @@ export class EchoRenderer {
       // An unqueued order replaces the whole plan, exactly as it does on the
       // server (Match.applyMove).
       if (!queued) pending.length = 0;
-      pending.push({ kind, x, y, queued, seq: this.snapshotSeq });
+      pending.push(
+        depth === undefined
+          ? { kind, x, y, queued, seq: this.snapshotSeq }
+          : { kind, x, y, depth, queued, seq: this.snapshotSeq }
+      );
     }
+  }
+
+  /**
+   * A plumb line from a point in the water down to the ground under it: what
+   * makes an order's depth readable at a glance, as a hull's own plumb line
+   * does in the conn view (depthCues.ts). Nothing for a point on the ground.
+   */
+  private plumbTo(g: Graphics, x: number, y: number, depthM: number): boolean {
+    const at = this.project(x, y, depthM);
+    if (at === null || !at.visible) return false;
+    const ax = at.x;
+    const ay = at.y;
+    const foot = this.project(x, y, null);
+    if (foot === null || !foot.visible) return false;
+    if (Math.hypot(foot.x - ax, foot.y - ay) < 2) return false;
+    g.moveTo(ax, ay).lineTo(foot.x, foot.y);
+    return true;
   }
 
   /**
@@ -7770,7 +7728,14 @@ export class EchoRenderer {
         if (this.traceLine(g, fromX, fromY, order.x, order.y, null)) {
           g.stroke({ width: 1.5, color: UI.accent, alpha: INSTRUMENT_OUTLINE_ALPHA.orderRoute });
         }
-        const p = this.project(order.x, order.y, null);
+        // The route stays a course on the chart floor; a leg given a depth
+        // stands its ring at that depth on a plumb line from the course, so
+        // the plan reads in three dimensions as the click did (§9, #1132).
+        const depth = order.depth ?? null;
+        if (depth !== null && this.plumbTo(g, order.x, order.y, depth)) {
+          g.stroke({ width: 1, color: UI.accent, alpha: INSTRUMENT_OUTLINE_ALPHA.orderRoute });
+        }
+        const p = this.project(order.x, order.y, depth);
         if (p !== null && p.visible) {
           const marker = order.kind === 'move' ? 7 : 11;
           const hostile = order.kind === 'attack' || order.kind === 'attackMove';
@@ -7794,13 +7759,21 @@ export class EchoRenderer {
       const t = (now - marker.atMs) / ORDER_MARKER_MS;
       if (t >= 1) continue;
       this.orderMarkers[keep++] = marker;
-      const p = this.project(marker.x, marker.y, null);
+      const color =
+        marker.kind === 'attack' || marker.kind === 'attackMove' ? UI.threat : UI.accent;
+      const alpha = INSTRUMENT_OUTLINE_ALPHA.orderAckPeak * (1 - t);
+      // At its depth, on a plumb line to the ground below it (§9): a click is
+      // a point in the water, and the ring says which point.
+      if (marker.depth !== undefined && this.plumbTo(g, marker.x, marker.y, marker.depth)) {
+        g.stroke({ width: 1 * this.uiScale, color, alpha });
+      }
+      const p = this.project(marker.x, marker.y, marker.depth ?? null);
       if (p === null || !p.visible) continue;
       const radius = this.reducedMotion ? 9 : 16 - 11 * t;
       g.circle(p.x, p.y, radius * this.uiScale).stroke({
         width: 1.5 * this.uiScale,
-        color: marker.kind === 'attack' || marker.kind === 'attackMove' ? UI.threat : UI.accent,
-        alpha: INSTRUMENT_OUTLINE_ALPHA.orderAckPeak * (1 - t),
+        color,
+        alpha,
       });
     }
     this.orderMarkers.length = keep;
@@ -7829,6 +7802,47 @@ export class EchoRenderer {
     return this.wouldCrush(unit, unit.depth);
   }
 
+  /**
+   * What the click under the cursor would order, for the Alt preview (§8):
+   * the depth the selection would end at, whether that is on the ground and
+   * follows it, whether it is a dive, whether it would crush a hull in the
+   * selection, and how long the lead hull's climb or descent takes.
+   *
+   * The floor test is the server's own (`onTheGround`), on the same public
+   * grid. A move onto the ground ends at the clearance over the floor there,
+   * and never crushes: following the floor stops where the ground falls past a
+   * hull's rating (docs/systems-depth.md §2). So over a floor below a selected
+   * hull's rating the mark is a depth that hull will not reach, and
+   * `stopsShort` is what says so. Null off the water or before a conn view.
+   */
+  private clickPreview(selected: readonly OwnUnit[]): {
+    depthM: number;
+    follows: boolean;
+    dives: boolean;
+    crushes: boolean;
+    stopsShort: boolean;
+    seconds: number;
+  } | null {
+    const lead = selected[0];
+    const terrain = this.terrain;
+    const water = this.screenToWater(this.pointerClient.x, this.pointerClient.y);
+    if (lead === undefined || terrain === null || water === null) return null;
+    const col = Math.min(terrain.cols - 1, Math.max(0, Math.floor(water.x / terrain.cellM)));
+    const row = Math.min(terrain.rows - 1, Math.max(0, Math.floor(water.y / terrain.cellM)));
+    const floor = terrain.floor[row * terrain.cols + col] ?? 0;
+    const follows = onTheGround(floor, water.depthM);
+    const depthM = follows
+      ? Math.max(0, Math.min(floor - FOLLOW_FLOOR.CLEARANCE_M, DEPTH.MAX_M))
+      : water.depthM;
+    const dives = depthM > lead.depth;
+    const rated = (unit: OwnUnit) => !this.wouldCrush(unit, depthM);
+    const crushes = !follows && !selected.every(rated);
+    const stopsShort = follows && !selected.every(rated);
+    const rate = dives ? DEPTH.DESCENT_RATE_MPS : DEPTH.ASCENT_RATE_MPS;
+    const seconds = Math.abs(depthM - lead.depth) / rate;
+    return { depthM, follows, dives, crushes, stopsShort, seconds };
+  }
+
   /** Screen y for a depth, inside the ribbon's vertical span. */
   private ribbonY(depthM: number, top: number, height: number): number {
     const t = Math.max(0, Math.min(1, depthM / RIBBON_MAX_DEPTH_M));
@@ -7851,9 +7865,11 @@ export class EchoRenderer {
    * nowhere in the world view. Drawing it reveals nothing: the boundary is a
    * published constant, identical on every map.
    *
-   * While Alt is held it also previews the dive: the rung a descent would take
-   * the selection to, and what that descent would cost in SIG. Same bargain as
-   * the ping preview — see the price before you pay it.
+   * It always carries the camera's focus depth, which is where a click into
+   * open water lands (#1132), and while Alt is held it previews the click
+   * under the cursor: the depth it would order and what getting there costs
+   * in SIG and in rating. Same bargain as the ping preview — see the price
+   * before you pay it.
    */
   private drawDepthRibbon(): void {
     const g = this.ribbonGraphics;
@@ -7997,21 +8013,34 @@ export class EchoRenderer {
       });
     }
 
-    // Dive preview: where the next band down is, and what getting there costs.
-    // The cost is two things, and until now the ribbon only showed one of them:
-    // the descent is loud, *and* it may be deeper than the hull is rated for.
-    // docs/systems-combat.md §8 asks for the second warning before the order,
-    // not after — "the bait should beat the inattentive, never the uninformed".
-    // It stays a warning and never a refusal, because renting depth you cannot
-    // survive is the mechanic (Match.orderDepth deliberately does not check).
-    const previewTarget = this.previewPing ? this.stepDepthTarget(selected, 1) : null;
-    const previewCrushes =
-      previewTarget !== null && selected.some((unit) => this.wouldCrush(unit, previewTarget));
-    if (previewTarget !== null) {
-      const targetY = this.ribbonY(previewTarget, top, height);
+    // The focus tick (§8, #1132): the depth a click into open water would
+    // order, on the ribbon before the click is given. A chevron at the strip's
+    // right edge in the plain text ink, because it is a camera reading — not a
+    // hull's marker, and not the cyan of a rule about the water.
+    const focusDepth = this.conn?.focusDepth();
+    if (focusDepth !== undefined) {
+      const fy = this.ribbonY(focusDepth, top, height);
+      const tip = RIBBON_X + RIBBON_WIDTH + 1;
+      g.poly([tip, fy, tip + 6, fy - 4, tip + 6, fy + 4]).fill({ color: UI.text, alpha: 0.85 });
+    }
+
+    // The click preview, while Alt is held: the depth the click under the
+    // cursor would order, and what getting there costs. The cost is two things
+    // — a descent is loud, *and* it may be deeper than the hull is rated for —
+    // and docs/systems-combat.md §8 asks for the second warning before the
+    // order, not after: "the bait should beat the inattentive, never the
+    // uninformed". A warning and never a refusal, because renting depth you
+    // cannot survive is the mechanic (`Match.applyMove` does not check it).
+    const preview = this.previewPing && this.pointerOverWater ? this.clickPreview(selected) : null;
+    if (preview !== null) {
+      const targetY = this.ribbonY(preview.depthM, top, height);
       g.rect(RIBBON_X - 4, targetY - 2, RIBBON_WIDTH + 8, 4).fill({
-        color: previewCrushes ? UI.threat : sigColor(DEPTH.DESCENT_SIG),
-        alpha: previewCrushes ? 1 : 0.8,
+        color: preview.crushes
+          ? UI.threat
+          : preview.dives
+            ? sigColor(DEPTH.DESCENT_SIG)
+            : UI.accent,
+        alpha: preview.crushes ? 1 : 0.8,
       });
     }
 
@@ -8028,18 +8057,24 @@ export class EchoRenderer {
     const zone = thermoclineZone(lead.depth);
     const zoneTag =
       zone === ThermoclineZone.Duct ? ' · DUCT' : zone === ThermoclineZone.Below ? ' · UNDER' : '';
-    this.ribbonReadout.text = this.previewPing
-      ? previewCrushes
-        ? `DIVE ${DEPTH.DESCENT_SIG} SIG · CRUSH`
-        : `DIVE ${DEPTH.DESCENT_SIG} SIG`
-      : `${lead.depth.toFixed(0)}m${zoneTag}`;
-    this.ribbonReadout.style.fill = this.previewPing
-      ? previewCrushes
-        ? UI.threat
-        : sigColor(DEPTH.DESCENT_SIG)
-      : this.isCrushing(lead)
-        ? UI.threat
-        : UI.accent;
+    this.ribbonReadout.text =
+      preview === null
+        ? `${lead.depth.toFixed(0)}m${zoneTag}`
+        : (preview.dives
+            ? `DIVE ${DEPTH.DESCENT_SIG} SIG${preview.crushes ? ' · CRUSH' : ''}`
+            : `RISE ${preview.seconds.toFixed(0)}s`) +
+          (preview.follows ? ' · FLOOR' : '') +
+          (preview.stopsShort ? ' · PR EDGE' : '');
+    this.ribbonReadout.style.fill =
+      preview === null
+        ? this.isCrushing(lead)
+          ? UI.threat
+          : UI.accent
+        : preview.crushes
+          ? UI.threat
+          : preview.dives
+            ? sigColor(DEPTH.DESCENT_SIG)
+            : UI.accent;
     this.ribbonReadout.position.set(RIBBON_X + RIBBON_WIDTH + 6, bottom - 14);
   }
 
@@ -8339,7 +8374,7 @@ export class EchoRenderer {
     }
   }
 
-  /** Selected-entity readout, wide screens only; phones keep the hint line. */
+  /** Selected-entity readout, wide screens only; a narrow one keeps the hint line. */
   private drawInfoPanel(): void {
     const g = this.infoGraphics;
     g.clear();
@@ -8406,7 +8441,7 @@ export class EchoRenderer {
     this.infoLine1.visible = true;
     // The torpedo count rides here rather than on a command cell (#815): it is
     // a number about this hull, not an order, and the card's twelve cells are
-    // the only route a touchscreen has to an order.
+    // for orders the pointer gives.
     const aboard = unit?.torpedoes;
     this.infoLine1.text =
       `HULL ${any.hp.toFixed(0)}/${any.maxHp.toFixed(0)}   SIG ${any.sig.toFixed(0)}` +
@@ -8523,29 +8558,25 @@ export class EchoRenderer {
     if (this.refusal !== null && performance.now() - this.refusal.atMs < REFUSAL_MS) {
       return this.refusal.reason;
     }
-    // Touch players get gesture words; everything else is on the bar.
     if (this.pendingBuild !== null) {
       const stats = structureStatsFor(this.pendingBuild);
       const price = priceWords(priceOf(stats));
-      return this.isTouch
-        ? `placing ${stats.name} (${price})  ·  tap to place`
-        : `placing ${stats.name} (${price})  ·  LMB place  ·  ESC cancel`;
+      return `placing ${stats.name} (${price})  ·  LMB place  ·  ESC cancel`;
     }
     // The build keys are not advertised where they will not work. A hint bar
     // naming a binding the mission refuses is the same silent lie as a dead
     // button (§7) — worse, because a hint reads as instruction.
     const canBuild = this.missionLock('construction') === null;
     if (this.selected.size === 0) {
-      if (this.isTouch) return 'tap select  ·  drag pan  ·  pinch zoom';
       return canBuild
-        ? `LMB drag select  ·  MMB pan  ·  ${this.buildKeyHint()} build  ·  1-9 groups  ·  wheel zoom`
-        : 'LMB drag select  ·  MMB pan  ·  1-9 groups  ·  wheel zoom';
+        ? `LMB drag select  ·  MMB pan  ·  L+R drag depth  ·  ${this.buildKeyHint()} build  ·  1-9 groups  ·  wheel zoom`
+        : 'LMB drag select  ·  MMB pan  ·  L+R drag depth  ·  1-9 groups  ·  wheel zoom';
     }
     const structure = this.structures.find((s) => this.selected.has(s.id));
     if (structure !== undefined) {
       const queue = structure.queue.length > 0 ? `  ·  queue ${structure.queue.length}` : '';
       const name = structureStatsFor(structure.kind).name;
-      if (this.isTouch || !canBuild) return `${name}${queue}`;
+      if (!canBuild) return `${name}${queue}`;
       // Not "UNITS tab to produce" any more: selecting a yard *is* what opens
       // its page (§9), so by the time this line is read the roster is already
       // on the card. Naming a tab the strip no longer carries would send a
@@ -8573,44 +8604,27 @@ export class EchoRenderer {
       const state = `transport [HOLD ${transport.hold!.used}/${transport.hold!.berths}]`;
       // Boarding is `orderEmbark`, which the hold does refuse; landing is not.
       if (heldAll !== null) return `${state}  ·  ${heldAll}  ·  LAND to unload`;
-      return this.isTouch
-        ? `${state}  ·  select hulls, tap the transport to board  ·  LAND to unload`
-        : `${state}  ·  select hulls, RMB the transport to board  ·  LAND to unload  ·  RMB move`;
+      return `${state}  ·  select hulls, RMB the transport to board  ·  LAND to unload  ·  RMB move`;
     }
     const harvester = this.units.find((u) => this.selected.has(u.id) && u.throttle !== undefined);
     if (harvester !== undefined) {
       const throttle = THROTTLE_LABEL[harvester.throttle!];
       const state = `harvester [${throttle}] ${harvester.cargo?.toFixed(0) ?? 0} cargo`;
-      // Split for touch like every other line here, which this one skipped:
-      // `V throttle` is a key a touch player cannot press, and the comment
-      // above calls a bar that hides a working key a silent lie. Naming a dead
-      // one is the same lie the other way round, and §7 is about what the
-      // player in front of *this* screen can actually do. The throttle is
-      // reachable on a touchscreen — it is the `THR` button on the command bar
-      // — so the line points at the affordance that exists rather than going
-      // quiet, which is what the transport line above already does with
-      // `LAND to unload` (#722).
-      if (heldAll !== null) {
-        return this.isTouch
-          ? `${state}  ·  ${heldAll}  ·  THR to throttle`
-          : `${state}  ·  ${heldAll}  ·  V throttle`;
-      }
-      return this.isTouch
-        ? `${state}  ·  tap a field`
-        : `${state}  ·  RMB node/move  ·  V throttle`;
+      if (heldAll !== null) return `${state}  ·  ${heldAll}  ·  V throttle`;
+      return `${state}  ·  RMB node/move  ·  V throttle`;
     }
     if (heldAll !== null) {
       // What is left of the generic line once every way to move is off it.
-      return this.isTouch
-        ? `${this.selected.size} selected  ·  ${heldAll}`
-        : `${this.selected.size} selected  ·  ${heldAll}  ·  X stop  ·  H hold  ·  ` +
-            `CTRL+RMB torpedo  ·  SPACE silent  ·  P ping`;
+      return (
+        `${this.selected.size} selected  ·  ${heldAll}  ·  X stop  ·  H hold  ·  ` +
+        `CTRL+RMB torpedo  ·  SPACE silent  ·  P ping`
+      );
     }
-    return this.isTouch
-      ? `${this.selected.size} selected  ·  tap map to order`
-      : this.pendingAttackMove
-        ? `${this.selected.size} selected  ·  ATTACK-MOVE armed: click the water (SHIFT queues, ESC cancels)`
-        : `${this.selected.size} selected  ·  RMB move (SHIFT queue)  ·  W attack-move  ·  X stop  ·  H hold  ·  CTRL+RMB torpedo  ·  SPACE silent  ·  P ping  ·  D dive  ·  A rise`;
+    // No `D dive · A rise` any more: a right click carries its depth, and the
+    // left + right drag is how the depth it carries is chosen (§9, #1132).
+    return this.pendingAttackMove
+      ? `${this.selected.size} selected  ·  ATTACK-MOVE armed: click the water (SHIFT queues, ESC cancels)`
+      : `${this.selected.size} selected  ·  RMB move (SHIFT queue)  ·  L+R drag depth  ·  W attack-move  ·  X stop  ·  H hold  ·  CTRL+RMB torpedo  ·  SPACE silent  ·  P ping`;
   }
 
   destroy(): void {

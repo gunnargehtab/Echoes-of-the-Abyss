@@ -6,17 +6,19 @@
  * `followFloor` were two of the three client messages `AiUnbuilt` listed, and
  * #703's second criterion is that neither is built without a rule that spends
  * it and a test that shows it spent — the shape `aiCountermeasures.test.ts`
- * sets. This file is that test, and it holds four things:
+ * sets. Since #1132 the floor is not a message: a move onto the ground follows
+ * it, so the Dredge's walk carries the field's floor as its depth. This file
+ * holds four things:
  *
  *   - the verbs reach the simulation, through the seat and the same
- *     `Match.orderFollowFloor` and `Match.orderHold` a player's messages reach;
+ *     `Match.orderMove` and `Match.orderHold` a player's messages reach;
  *   - the hold is load-bearing rather than decoration: the same ordered
  *     target is chased by a hull that is not held and waited for by one that
  *     is, which is the whole of what the verb buys a hull that is already
  *     stopped;
- *   - when each is said — the floor from the claim, and the hold and the
- *     attack only on the post, never on the walk out, where an unheld order
- *     is a chase;
+ *   - when each is said — the walk onto the floor until the Dredge stands
+ *     on it, and the hold and the attack only there, never on the walk out,
+ *     where an unheld order is a chase;
  *   - what the holder is ordered on: a classified hull at the node, a hauler
  *     first, and never a hull merely passing over the field at cruise depth.
  */
@@ -25,6 +27,7 @@ import assert from 'node:assert/strict';
 
 import {
   AiDifficulty,
+  DEPTH,
   Faction,
   ResolutionTier,
   ResourceKind,
@@ -46,7 +49,6 @@ import { DepthOrder, Health, Position, Posture, Weapon } from '../src/sim/compon
 
 const SEED = 0x703;
 const STEP_MS = 1000 / SIM.TICK_HZ;
-const ECHO_EVERY = SIM.TICK_HZ / SIM.ECHO_HZ;
 
 function briefing(faction = Faction.Directorate): AiBriefing {
   const match = new Match(undefined, { fauna: false, seed: SEED });
@@ -140,6 +142,12 @@ function snapshot(units: OwnUnit[], overrides: Partial<EchoSnapshot> = {}): Echo
   };
 }
 
+/** The seabed under a point, read off the briefing's public terrain grid. */
+function floorOf(brief: AiBriefing, at: { x: number; y: number }): number {
+  const { cols, cellM, floor } = brief.terrain;
+  return floor[Math.floor(at.y / cellM) * cols + Math.floor(at.x / cellM)]!;
+}
+
 /** Commands naming `id`, in the order the commander emitted them. */
 function forHull(commands: readonly AiCommand[], id: number): AiCommand[] {
   return commands.filter((c) =>
@@ -153,6 +161,8 @@ describe('the Dredge holds the crystal field (#703)', () => {
     // standing over the field at the depth it was built at — so the only way
     // the mode and the posture get set is the seat translating what the
     // commander said into the two `Match` methods a player's messages reach.
+    // Over the field but above its floor is off the post, so the commander
+    // walks it down first and holds it once it stands there.
     const match = new Match(undefined, { fauna: false, seed: SEED });
     match.addPlayer(0, Faction.Bathyarch);
     match.addPlayer(1, Faction.Directorate);
@@ -171,20 +181,15 @@ describe('the Dredge holds the crystal field (#703)', () => {
     assert.equal(DepthOrder.follow[dredge], 0, 'the premise: built with no standing order');
     assert.equal(Posture.hold[dredge], 0, 'the premise: built unheld');
 
-    for (let i = 0; i < ECHO_EVERY * 4; i++) {
-      const own = match.update(STEP_MS)?.get(1);
-      if (own !== undefined) seat.observe(own);
-    }
-    assert.equal(DepthOrder.follow[dredge], 1, 'the commander put its Dredge on the floor');
-    assert.equal(Posture.hold[dredge], 1, 'and, standing on the field, held it there');
-
-    // And the floor is where it goes: the mode retargets to the local seabed
-    // less its clearance, which on this map is deeper than the node itself.
+    // The floor is where it goes: the mode retargets to the local seabed less
+    // its clearance, which on this map is deeper than the node itself.
     const floor = match.world.terrain.floorAt(field.x, field.y);
-    for (let i = 0; i < SIM.TICK_HZ * 60; i++) {
+    for (let i = 0; i < SIM.TICK_HZ * 90; i++) {
       const own = match.update(STEP_MS)?.get(1);
       if (own !== undefined) seat.observe(own);
     }
+    assert.equal(DepthOrder.follow[dredge], 1, 'the walk put the Dredge on the floor');
+    assert.equal(Posture.hold[dredge], 1, 'and, standing on it, the commander held it there');
     assert.ok(
       Position.depth[dredge]! > field.depth,
       `the Dredge is at ${Position.depth[dredge]} m, above a node at ${field.depth} m`
@@ -262,7 +267,7 @@ describe('the Dredge holds the crystal field (#703)', () => {
     assert.equal(Weapon.orderedTargetEid[held], raider, 'and the held order still stands');
   });
 
-  it('floors the Dredge from the claim, walks it out, and holds only on the post', () => {
+  it('walks the Dredge out onto the field’s floor, and holds only on the post', () => {
     const brief = briefing();
     const field = crystalOf(brief.nodes);
     const home = brief.spawns[brief.slot]!;
@@ -274,25 +279,30 @@ describe('the Dredge holds the crystal field (#703)', () => {
       snapshot([dredge], { contacts: [enemy(6, UnitKind.Harvester, field, field.depth)] })
     );
     const said = forHull(walking, 71);
-    assert.ok(
-      said.some((c) => c.kind === 'followFloor' && c.active),
-      'the floor is ordered at the claim, so the walk out goes under the layer'
-    );
     const move = said.find((c) => c.kind === 'move');
     assert.ok(move?.kind === 'move', 'the Dredge is walked');
     assert.ok(Math.hypot(move.x - field.x, move.y - field.y) < 1, 'to the field itself');
+    assert.equal(
+      move.depthM,
+      Math.min(floorOf(brief, field), DEPTH.MAX_M),
+      'onto its floor, so the walk follows the ground down under the layer'
+    );
     assert.ok(
       !said.some((c) => c.kind === 'hold' || c.kind === 'attack'),
       'nothing is held or ordered on while it is still walking'
     );
 
-    // The mode came back on the hull: it is not asked for twice.
-    const floored = { ...dredge, followFloor: true };
-    const again = forHull(new AiCommander(brief).observe(snapshot([floored])), 71);
-    assert.ok(!again.some((c) => c.kind === 'followFloor'), 'the standing order is not re-sent');
+    // Over the field but still above its floor is not the post.
+    const over = { ...dredge, x: field.x + 40, y: field.y, followFloor: true };
+    const above = forHull(new AiCommander(brief).observe(snapshot([over])), 71);
+    assert.deepEqual(
+      above.map((c) => c.kind),
+      ['move'],
+      'a Dredge over the field at 600 m is walked down, not held'
+    );
 
     // On the post: held, and nothing else asked of it with nobody there.
-    const posted = { ...floored, x: field.x + 40, y: field.y, depth: 2570 };
+    const posted = { ...over, depth: 2570 };
     const onPost = forHull(new AiCommander(brief).observe(snapshot([posted])), 71);
     assert.deepEqual(
       onPost.map((c) => c.kind),
@@ -318,8 +328,8 @@ describe('the Dredge holds the crystal field (#703)', () => {
     assert.ok(rally.unitIds.includes(72), 'with the second Dredge in it');
     assert.ok(!rally.unitIds.includes(71), 'and without the holder');
     assert.ok(
-      !commands.some((c) => c.kind === 'followFloor' && c.unitIds.includes(72)),
-      'only the holder is put on the floor'
+      !commands.some((c) => c.kind === 'move' && c.unitIds.includes(72) && c.depthM !== undefined),
+      'only the holder is walked onto the floor'
     );
   });
 
@@ -456,8 +466,8 @@ describe('the Dredge holds the crystal field (#703)', () => {
     let later: AiCommand[] = [];
     for (let i = 0; i < 3; i++) later = commander.observe(snapshot([incumbent, newcomer]));
     assert.ok(
-      !later.some((c) => c.kind === 'followFloor' && c.unitIds.includes(40)),
-      'the newcomer was put on the floor, so it was made the holder'
+      !later.some((c) => c.kind === 'move' && c.unitIds.includes(40) && c.depthM !== undefined),
+      'the newcomer was walked onto the floor, so it was made the holder'
     );
     assert.ok(
       later.some((c) => c.kind === 'move' && c.unitIds.includes(40) && !c.unitIds.includes(80)),
@@ -468,7 +478,7 @@ describe('the Dredge holds the crystal field (#703)', () => {
     // And once the incumbent is gone, the newcomer is the holder.
     for (let i = 0; i < 3; i++) later = commander.observe(snapshot([newcomer]));
     assert.ok(
-      later.some((c) => c.kind === 'followFloor' && c.unitIds.includes(40)),
+      later.some((c) => c.kind === 'move' && c.unitIds.includes(40) && c.depthM !== undefined),
       'the next Dredge takes the post'
     );
   });
@@ -487,7 +497,7 @@ describe('the Dredge holds the crystal field (#703)', () => {
       snapshot(units, { contacts: [enemy(6, UnitKind.Harvester, field, field.depth)] })
     );
     assert.ok(
-      !said.some((c) => c.kind === 'hold' || c.kind === 'followFloor'),
+      !said.some((c) => c.kind === 'hold' || (c.kind === 'move' && c.depthM !== undefined)),
       'the verbs were spent on hulls the rule is not about'
     );
   });

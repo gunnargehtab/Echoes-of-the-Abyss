@@ -129,11 +129,12 @@ export const DepthOrder = defineComponent({
    */
   descending: Types.ui8,
   /**
-   * 1 while the hull is under the floor-following standing order
-   * (docs/systems-depth.md §2, "Steering along the ground"). While set, the
-   * depth system retargets `targetM` from the local floor each tick; a manual
-   * depth order clears it, because the newer instruction is the player's
-   * current mind.
+   * 1 while the hull is following the floor (docs/systems-depth.md §2,
+   * "Steering along the ground"), which a move onto the ground engages
+   * (`orderDepthAt`, #1132). While set, the depth system retargets `targetM`
+   * from the local floor each tick; a move into open water or a depth order
+   * clears it, because the newer instruction is the player's current mind, and
+   * so do an attack and a harvest, which keep a depth of their own.
    */
   follow: Types.ui8,
 });

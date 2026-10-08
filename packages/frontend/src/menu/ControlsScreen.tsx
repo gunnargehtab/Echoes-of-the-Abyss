@@ -42,7 +42,7 @@ export interface ControlsScreenProps {
   onBack(): void;
 }
 
-const GROUP_ORDER: ActionSpec['group'][] = ['fleet', 'depth', 'ordnance', 'build'];
+const GROUP_ORDER: ActionSpec['group'][] = ['fleet', 'ordnance', 'build'];
 
 export function ControlsScreen({ onBack }: ControlsScreenProps) {
   const [settings, setSettings] = useState<Settings>(() => loadSettings());

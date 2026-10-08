@@ -191,7 +191,8 @@ export const roughEdges = {
   286: {
     question: 'How does it run on a real PC or phone?',
     text: 'Unmeasured. Every frame-rate number so far comes from a software renderer in a test container, never from real hardware.',
-    fixed: 'Measured. The game has now been timed on a real graphics card and on a phone.',
+    fixed:
+      'Measured on a real graphics card. Phones are no longer a target: the game is played with keyboard and mouse.',
   },
 };
 

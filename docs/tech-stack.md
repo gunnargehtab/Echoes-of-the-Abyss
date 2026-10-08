@@ -138,7 +138,7 @@ the seat assignment, the mission view. That is not an optimisation, it is the fi
 model — a fact that differs by who is asking cannot live in shared state without leaking.
 
 Both directions of the message channel are declared once, in
-`packages/shared/src/wire.ts`: 32 names a client may send — 27 in a match and five only in
+`packages/shared/src/wire.ts`: 31 names a client may send — 26 in a match and five only in
 the lobby — 11 the room may send, and the payload of each. Neither package writes a message
 name as a string literal, and each side reaches the wire through a thin generic wrapper that
 takes the name and infers the payload from the same map. The result is that a message
@@ -1036,11 +1036,12 @@ the seat ignores no longer reads as a commander that chose not to act.
 **That check only ever held one of the two directions**, and the arithmetic above went stale
 while nobody noticed. A client message with *no* variant is invisible to a `never` on a switch,
 because there is nothing in the union for the switch to fail on; five more verbs accumulated
-behind `depth` in exactly that blind spot. The counts today are **25 variants against 27
-in-match client messages** — `ability` and `sow` are the difference — and the reason this
+behind `depth` in exactly that blind spot. The counts today are **24 variants against 26
+in-match client messages** — `ability` and `sow` are the difference, and `followFloor` left
+both sides together (#1132) — and the reason this
 paragraph can state them is that both directions are now checked rather than asserted (#621). `wire.ts` declares `LOBBY_MSG` beside `CLIENT_MSG`, so
 the five phase-gated names are a type rather than a comment and the in-match set can be
-subtracted; `ai/types.ts` carries an `Exclude<>` assertion against it, and a 28th in-match
+subtracted; `ai/types.ts` carries an `Exclude<>` assertion against it, and a 27th in-match
 message fails `npm run type-check` until someone writes the verb or names it as an exception
 with the issue that fills it. `Exclude<>` and not the `Exact<>` that polices the wire, because
 `Exact<>` reports only `Type 'true' is not assignable to type 'never'` while `Exclude<>` quotes
@@ -1097,13 +1098,15 @@ currently one. Worth knowing if the roster or the baselines move again.
 existed, every committed baseline was measured against commanders that spent whole matches in
 one acoustic zone, and nothing in the harness could report that.
 
-**The Dredge holds the crystal field**, and that one rule is where `hold` and `followFloor`
-are said (#703). [units.md](units.md) gives the hull its role — "the hull for the floor of the
-map", on a field "the Directorate is meant to *hold*" — so `commandField` takes the navy's
-first Dredge out of the army, walks it to the field under the floor-following order, and
-holds it once it stands there. The floor is the Dredge's alone because the mode disengages at
-a hull's Pressure Rating ([systems-depth.md](systems-depth.md) §2), and PR-4 is the one rating
-no floor exceeds: any other hull would be left wherever the ground fell past its rating.
+**The Dredge holds the crystal field**, and that one rule is where `hold` is said and where the
+commander's one walk along the floor is (#703, #1132). [units.md](units.md) gives the hull its
+role — "the hull for the floor of the map", on a field "the Directorate is meant to *hold*" —
+so `commandField` takes the navy's first Dredge out of the army, walks it to the field on a
+move to the floor there, which follows the ground down as any move onto the ground does, and
+holds it once it stands there. The floor is the Dredge's alone because following it
+disengages at a hull's Pressure Rating ([systems-depth.md](systems-depth.md) §2), and PR-4 is
+the one rating no floor exceeds: any other hull would be left wherever the ground fell past
+its rating.
 
 The hold earns its place beside an `attack`. A stopped hull fires at whatever enters its reach
 either way; what differs is an ordered target, which an unheld hull chases for as long as it

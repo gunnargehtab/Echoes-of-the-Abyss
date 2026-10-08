@@ -25,16 +25,19 @@ import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
 import { CanvasTextMetrics, Container, Graphics, Text, type GraphicsPath } from 'pixi.js';
 import {
+  DEPTH,
   DRIFT_ROSTER,
   Faction,
+  FOLLOW_FLOOR,
   FaunaSpecies,
   MovementHoldReason,
+  onTheGround,
   ResolutionTier,
   SIM,
   StructureKind,
   type Contact,
 } from '@echoes/shared';
-import { FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
+import { FOCUS_DRAG_M_PER_PX, FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
 import { swayAt } from '../src/game/cameraSway.ts';
 import {
   createHost,
@@ -46,7 +49,6 @@ import {
   HeadlessGL,
   HeadlessWebGLRenderer,
   pumpAnimationFrames,
-  setCoarsePointer,
   textContents,
   textCount,
   textRasterisations,
@@ -64,8 +66,14 @@ import {
   cannedTerrain,
   CELL_M,
   COLS,
+  ROWS,
 } from './support/cannedMatch.ts';
-import { EchoRenderer, type RendererCallbacks } from '../src/game/EchoRenderer.ts';
+import {
+  EchoRenderer,
+  YIELD,
+  yieldToCells,
+  type RendererCallbacks,
+} from '../src/game/EchoRenderer.ts';
 import type { ReadoutBox } from '../src/game/readouts.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { LampHaloPass } from '../src/game/lampHaloPass.ts';
@@ -1931,29 +1939,35 @@ describe('renderer smoke test: input and teardown', () => {
         // one for a hull that is going nowhere.
         const node = cannedNodes()[0]!;
         const onField = world.conn.projectPoint(node.x, node.y, node.depth);
-        canvas.dispatch('pointerdown', {
-          button: 2,
-          pointerId: 1,
-          pointerType: 'mouse',
-          clientX: onField.x,
-          clientY: onField.y,
-          shiftKey: false,
-          ctrlKey: false,
-          metaKey: false,
-        });
+        // A right click is a press and a release: the order is given on release
+        // (docs/ui-ux.md §9), so the press can still become the left + right drag.
+        for (const type of ['pointerdown', 'pointerup']) {
+          canvas.dispatch(type, {
+            button: 2,
+            pointerId: 1,
+            pointerType: 'mouse',
+            clientX: onField.x,
+            clientY: onField.y,
+            shiftKey: false,
+            ctrlKey: false,
+            metaKey: false,
+          });
+        }
 
         // Right-click open water, the same screen offset the plain move-order
         // case below uses to clear this very node.
-        canvas.dispatch('pointerdown', {
-          button: 2,
-          pointerId: 1,
-          pointerType: 'mouse',
-          clientX: at.x + 120,
-          clientY: at.y + 40,
-          shiftKey: false,
-          ctrlKey: false,
-          metaKey: false,
-        });
+        for (const type of ['pointerdown', 'pointerup']) {
+          canvas.dispatch(type, {
+            button: 2,
+            pointerId: 1,
+            pointerType: 'mouse',
+            clientX: at.x + 120,
+            clientY: at.y + 40,
+            shiftKey: false,
+            ctrlKey: false,
+            metaKey: false,
+          });
+        }
 
         return world.log.names();
       } finally {
@@ -2048,14 +2062,18 @@ describe('renderer smoke test: input and teardown', () => {
         const reason = textSaying(world.app.stage, 'held — not released yet');
 
         // The water, left button: the one thing an armed mode does.
-        canvas.dispatch('pointerdown', {
-          button: 0,
-          pointerId: 1,
-          pointerType: 'mouse',
-          clientX: at.x + 140,
-          clientY: at.y + 60,
-          shiftKey: false,
-        });
+        // Press and release: an armed click is given on release, as a right
+        // click is, so the press can still become the left + right drag (§9).
+        for (const type of ['pointerdown', 'pointerup']) {
+          canvas.dispatch(type, {
+            button: 0,
+            pointerId: 1,
+            pointerType: 'mouse',
+            clientX: at.x + 140,
+            clientY: at.y + 60,
+            shiftKey: false,
+          });
+        }
         return { ordered: world.log.first('onAttackMoveOrder') !== undefined, bar, reason };
       } finally {
         world.teardown();
@@ -2144,14 +2162,18 @@ describe('renderer smoke test: input and teardown', () => {
         const bar = textSaying(world.app.stage, 'ATTACK-MOVE armed');
         const said = textSaying(world.app.stage, reason);
 
-        canvas.dispatch('pointerdown', {
-          button: 0,
-          pointerId: 1,
-          pointerType: 'mouse',
-          clientX: at.x + 140,
-          clientY: at.y + 60,
-          shiftKey: false,
-        });
+        // Press and release: an armed click is given on release, as a right
+        // click is, so the press can still become the left + right drag (§9).
+        for (const type of ['pointerdown', 'pointerup']) {
+          canvas.dispatch(type, {
+            button: 0,
+            pointerId: 1,
+            pointerType: 'mouse',
+            clientX: at.x + 140,
+            clientY: at.y + 60,
+            shiftKey: false,
+          });
+        }
         return {
           ordered: world.log.first('onAttackMoveOrder') !== undefined,
           bar,
@@ -2176,62 +2198,6 @@ describe('renderer smoke test: input and teardown', () => {
       assert.equal(locked.ordered, false, `${route}: armed an attack-move under a weapons lock`);
       assert.equal(locked.bar, null, `${route}: the bar announced a mode that should not arm`);
       assert.equal(locked.reason, reason, `${route}: the refused press never said why`);
-    }
-  });
-
-  /**
-   * The held harvester's line named a key on a touchscreen — #722.
-   *
-   * Every other line in `hintLine` splits on `isTouch`; this one returned
-   * before the split, so a touch player read `held — not released yet · V
-   * throttle` and had no `V` to press. The comment above that block argues a
-   * bar hiding a working key is a silent lie; naming a dead one is the same
-   * lie the other way, and §7's "with a reason attached, never silently" is
-   * about what the player in front of this screen can actually do.
-   *
-   * The throttle is not gone on touch — it is the `THR` button on the command
-   * bar — so the line points there, as the transport line one branch up
-   * already does with `LAND to unload`.
-   */
-  it('names no keyboard key on a touchscreen, on the one held line that did', async () => {
-    setCoarsePointer(true);
-    try {
-      const world = await boot();
-      try {
-        const snapshot = cannedSnapshot();
-        const harvester = snapshot.units.find((unit) => unit.throttle !== undefined);
-        assert.ok(harvester !== undefined, 'the canned match has no harvester to hold');
-        world.chart.setMissionHolds([
-          { unitId: harvester.id, reason: MovementHoldReason.Unreleased },
-        ]);
-        world.chart.focusOn(harvester.x, harvester.y);
-        world.frame(2);
-
-        const canvas = world.app.canvas;
-        const at = world.conn.projectPoint(harvester.x, harvester.y, harvester.depth);
-        assert.ok(at.visible, 'the camera is looking at the hull we are about to select');
-        for (const type of ['pointerdown', 'pointerup']) {
-          canvas.dispatch(type, {
-            button: 0,
-            pointerId: 1,
-            pointerType: 'touch',
-            clientX: at.x,
-            clientY: at.y,
-          });
-        }
-        world.frame(1);
-
-        const line = textSaying(world.app.stage, 'harvester [');
-        assert.ok(line !== null, 'the hint bar never described the held harvester');
-        assert.ok(!/\bV throttle\b/.test(line), `a touchscreen was told to press a key: ${line}`);
-        // And not silent either: §7 wants the affordance that exists named,
-        // which is the command bar's own button.
-        assert.match(line, /THR/);
-      } finally {
-        world.teardown();
-      }
-    } finally {
-      setCoarsePointer(false);
     }
   });
 
@@ -2263,16 +2229,20 @@ describe('renderer smoke test: input and teardown', () => {
       });
       world.frame(1);
 
-      canvas.dispatch('pointerdown', {
-        button: 2,
-        pointerId: 1,
-        pointerType: 'mouse',
-        clientX: at.x + 120,
-        clientY: at.y + 40,
-        shiftKey: false,
-        ctrlKey: false,
-        metaKey: false,
-      });
+      // A right click is a press and a release: the order is given on release
+      // (docs/ui-ux.md §9), so the press can still become the left + right drag.
+      for (const type of ['pointerdown', 'pointerup']) {
+        canvas.dispatch(type, {
+          button: 2,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x + 120,
+          clientY: at.y + 40,
+          shiftKey: false,
+          ctrlKey: false,
+          metaKey: false,
+        });
+      }
 
       const order = world.log.first('onMoveOrder');
       assert.ok(order !== undefined, `expected a move order, saw ${world.log.names().join(', ')}`);
@@ -2281,6 +2251,214 @@ describe('renderer smoke test: input and teardown', () => {
         [hull.id],
         'the hull that was clicked is the hull that was ordered'
       );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  /**
+   * A right click is given on release — docs/ui-ux.md §9, "A click is a point
+   * in the water" (#1132). On release, so the press can still become the left
+   * + right drag; from where it was pressed, with the press's modifiers, so a
+   * hand that drifts or lets go of Shift before letting go of the button does
+   * not move the order.
+   */
+  it('gives a right click on release, from the press, at the depth it landed on', async () => {
+    const world = await boot();
+    try {
+      const hull = cannedSnapshot().units[0]!;
+      world.chart.focusOn(hull.x, hull.y);
+      world.frame(2);
+      const canvas = world.app.canvas;
+      const at = world.conn.projectPoint(hull.x, hull.y, hull.depth);
+      assert.ok(at.visible, 'the camera is looking at the hull we are about to click');
+      for (const type of ['pointerdown', 'pointerup']) {
+        canvas.dispatch(type, {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x,
+          clientY: at.y,
+        });
+      }
+      world.frame(1);
+
+      const press = { x: at.x + 120, y: at.y + 40 };
+      canvas.dispatch('pointerdown', {
+        button: 2,
+        buttons: 2,
+        pointerId: 1,
+        pointerType: 'mouse',
+        clientX: press.x,
+        clientY: press.y,
+        shiftKey: true,
+        ctrlKey: false,
+        metaKey: false,
+      });
+      assert.equal(world.log.first('onMoveOrder'), undefined, 'nothing is ordered on the press');
+
+      canvas.dispatch('pointerup', {
+        button: 2,
+        buttons: 0,
+        pointerId: 1,
+        pointerType: 'mouse',
+        clientX: press.x + 30,
+        clientY: press.y - 20,
+        shiftKey: false,
+        ctrlKey: false,
+        metaKey: false,
+      });
+      const order = world.log.first('onMoveOrder');
+      assert.ok(order !== undefined, `expected a move order, saw ${world.log.names().join(', ')}`);
+      const water = world.conn.resolveWater(press.x, press.y);
+      assert.deepEqual(
+        order,
+        [[hull.id], water.x, water.y, true, water.depthM],
+        'the press’s point, its depth and its Shift — not the release’s'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  /**
+   * The left + right drag is the camera, and the chord is not timing-critical
+   * (docs/ui-ux.md §9, §11): either button may land first. A browser reports
+   * the second button as a move whose `buttons` mask holds both, which is how
+   * this drives it. Neither click the presses were about to make is given.
+   */
+  it('turns a left + right press into the camera, in either order, and gives no click', async () => {
+    const rig = (): { focus: { xM: number; zM: number; depthM: number | null } } =>
+      (
+        globalThis as unknown as {
+          window: { __perspectiveProbe: () => Record<string, unknown> };
+        }
+      ).window.__perspectiveProbe() as never;
+
+    for (const first of [0, 2] as const) {
+      const world = await boot();
+      try {
+        const hull = cannedSnapshot().units[0]!;
+        world.chart.focusOn(hull.x, hull.y);
+        world.frame(2);
+        const canvas = world.app.canvas;
+        const at = world.conn.projectPoint(hull.x, hull.y, hull.depth);
+        for (const type of ['pointerdown', 'pointerup']) {
+          canvas.dispatch(type, {
+            button: 0,
+            pointerId: 1,
+            pointerType: 'mouse',
+            clientX: at.x,
+            clientY: at.y,
+          });
+        }
+        world.frame(1);
+        world.log.calls.length = 0;
+        const before = rig().focus;
+        assert.equal(before.depthM, null, 'the premise: the focus starts on the seabed');
+
+        const x = at.x + 120;
+        const y = at.y + 40;
+        const press = (type: string, button: number, buttons: number, dx = 0, dy = 0) =>
+          canvas.dispatch(type, {
+            button,
+            buttons,
+            pointerId: 1,
+            pointerType: 'mouse',
+            clientX: x + dx,
+            clientY: y + dy,
+            shiftKey: false,
+            ctrlKey: false,
+            metaKey: false,
+          });
+        press('pointerdown', first, first === 0 ? 1 : 2);
+        press('pointermove', first === 0 ? 2 : 0, 3); // the other button joins
+        press('pointermove', -1, 3, 40, 60); // across 40 px, and 60 px down
+        press('pointermove', first, first === 0 ? 2 : 1, 40, 60); // one lets go
+        press('pointerup', first === 0 ? 2 : 0, 0, 40, 60); // then the other
+
+        world.frame(1);
+        const after = rig().focus;
+        assert.ok(after.xM < before.xM, `first ${first}: the drag across did not pan sideways`);
+        assert.ok(after.depthM !== null, `first ${first}: the drag down did not raise the focus`);
+        // Off the seabed under where the pan left the focus, which is where the
+        // rise was measured from.
+        const seabed = world.conn.seabedDepthAt(after.xM, after.zM);
+        assert.ok(
+          Math.abs(after.depthM - (seabed - 60 * FOCUS_DRAG_M_PER_PX)) <= 1,
+          `first ${first}: 60 px down is ${60 * FOCUS_DRAG_M_PER_PX} m up, not ` +
+            `${(seabed - after.depthM).toFixed(0)}`
+        );
+        for (const name of ['onMoveOrder', 'onAttackOrder', 'onHarvestOrder', 'onRallyOrder']) {
+          assert.equal(world.log.first(name), undefined, `first ${first}: a click gave ${name}`);
+        }
+        assert.ok(
+          textSaying(world.app.stage, '1 selected') !== null,
+          `first ${first}: the left press resolved as a marquee and changed the selection`
+        );
+      } finally {
+        world.teardown();
+      }
+    }
+  });
+
+  /**
+   * Holding `Alt` previews the click under the cursor (docs/ui-ux.md §8): a
+   * climb into open water says how long it takes, and a click on ground below a
+   * selected hull's rating says the hull will stop short of it — following
+   * stops where the ground falls past the rating, and never crushes
+   * (docs/systems-depth.md §2).
+   */
+  it('previews the click under Alt, and says where following stops short of the floor', async () => {
+    const world = await boot();
+    try {
+      // The Corvette, PR-2 through the Consortium's baseline, at 1,200 m.
+      const corvette = cannedSnapshot().units.find((unit) => unit.id === 11)!;
+      world.chart.focusOn(corvette.x, corvette.y);
+      world.frame(2);
+      const canvas = world.app.canvas;
+      const at = world.conn.projectPoint(corvette.x, corvette.y, corvette.depth);
+      for (const type of ['pointerdown', 'pointerup']) {
+        canvas.dispatch(type, {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x,
+          clientY: at.y,
+        });
+      }
+      world.frame(1);
+      dispatchWindow('keydown', { code: 'AltLeft' });
+      const hover = (x: number, y: number) => {
+        canvas.dispatch('pointermove', {
+          button: -1,
+          buttons: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: x,
+          clientY: y,
+        });
+        world.frame(1);
+      };
+
+      // Home, over the trench: 3,200 m ground the Corvette is not rated for.
+      world.conn.home();
+      world.conn.focusWorld(3500, 3500);
+      const trench = world.conn.projectPoint(3500, 3500, null);
+      hover(trench.x, trench.y);
+      const dive = textSaying(world.app.stage, 'DIVE');
+      assert.ok(dive !== null, 'no dive preview over the trench');
+      assert.match(dive, /FLOOR · PR EDGE/, `the preview read ${dive}`);
+      assert.doesNotMatch(dive, /CRUSH/, 'following stops at the rating; it never crushes');
+
+      // Raised into open water above the Corvette: a climb, and its seconds.
+      world.conn.focusWorld(2000, 2000);
+      world.conn.raiseFocusBy(1500);
+      const centre = world.conn.projectPoint(2000, 2000, world.conn.focusDepth());
+      hover(centre.x, centre.y);
+      const rise = textSaying(world.app.stage, 'RISE');
+      assert.ok(rise !== null, 'no climb preview in open water');
+      assert.match(rise, /^RISE \d+s$/, `the preview read ${rise}`);
     } finally {
       world.teardown();
     }
@@ -2562,13 +2740,13 @@ describe('renderer smoke test: the strip explains itself', () => {
     const boxes = booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!
       .args[0] as ReadoutBox[];
 
-    // §2 sets the console's height by §11's 44 px touch floor — "a console row
-    // is a touch target" — and the strip's drawn glyphs are 11-13 px tall. The
+    // §2 sets the console's height by §11's 44 px target floor — "a console row
+    // is a pointer target" — and the strip's drawn glyphs are 11-13 px tall. The
     // strip holds two rows in 52 px, so 44 apiece cannot be had without the
     // rows overlapping; half the floor is what is reachable, and it is what is
-    // asserted. The bar is in CSS pixels, which is what a finger is measured in.
+    // asserted. The bar is in CSS pixels, which is what a pointer target is measured in.
     for (const box of boxes) {
-      assert.ok(box.height >= 26, `${box.key} is ${box.height} px tall — not a touch target`);
+      assert.ok(box.height >= 26, `${box.key} is ${box.height} px tall — not a pointer target`);
     }
 
     booted.teardown();
@@ -2872,8 +3050,8 @@ describe('the console drops its blocks in §2’s order', () => {
  * #815 — the card is offered more than its twelve cells hold, and what went
  * used to be whatever `buildBarModel` pushed last. For any hull carrying
  * torpedoes — ten of them, the Corvette and the Cruiser among them — that was
- * the depth charge, and on a touchscreen the card is the only route to an
- * order at all (docs/ui-ux.md §2).
+ * the depth charge, and the card is the mouse's route to every order
+ * (docs/ui-ux.md §2).
  *
  * The two halves of the fix are asserted together because either alone leaves
  * the Corvette one cell over: the torpedo count is a readout and leaves the
@@ -2911,20 +3089,19 @@ describe('the command card when it is offered more than it holds', () => {
       selectHull(world, corvette);
 
       const lines = textContents(world.app.stage);
-      // The squad page's twelve orders. CHARGE is the one #815 lost.
+      // The squad page's nine orders. CHARGE is the one #815 lost; since Dive,
+      // Rise and Follow left the page (#1132) the deselect fits beside them.
       for (const label of [
         'SILENT',
         'DRIVE OFF',
         'PING',
-        'DIVE',
-        'RISE',
-        'FOLLOW',
         'ENGAGE',
         'STOP',
         'HOLD',
         'DECOY',
         'MINE',
         'CHARGE',
+        '✕',
       ]) {
         assert.ok(
           lines.some((line) => line.includes(label)),
@@ -2945,6 +3122,81 @@ describe('the command card when it is offered more than it holds', () => {
     } finally {
       world.teardown();
     }
+  });
+
+  /**
+   * The selection §9 names, offering more than the card holds: a screen hull,
+   * a transport and a harvester make thirteen entries, so one has to yield —
+   * and it is the deselect, the one entry whose loss costs nothing (a click on
+   * empty water does the same), while `SCREEN` and `LAND`, which nothing but
+   * the card reaches, both stay. Since Dive, Rise and Follow left the page
+   * (#1132) a torpedo hull alone fits with room, so this is the case that
+   * still makes the yield order decide anything.
+   */
+  it('yields the deselect and keeps every only-route entry when a selection offers thirteen', async () => {
+    const world = await boot();
+    try {
+      const snapshot = cannedSnapshot();
+      const [screen, transport, harvester] = [11, 12, 13].map((id) =>
+        snapshot.units.find((unit) => unit.id === id)!
+      );
+      // The Corvette carries a magazine of decoys, the scout a hold: the two
+      // only-route entries, on the canned match's own hulls.
+      screen!.decoys = 3;
+      transport!.hold = { used: 0, berths: 4 };
+      transport!.holding = false;
+      world.chart.applySnapshot(snapshot);
+      world.conn.applySnapshot(snapshot);
+      world.frame(1);
+      selectHull(world, screen!);
+      selectHull(world, transport!, true);
+      selectHull(world, harvester!, true);
+
+      const lines = textContents(world.app.stage);
+      for (const label of ['SCREEN 3', 'LAND 0/4', 'THR', 'DECOY', 'MINE', 'CHARGE']) {
+        assert.ok(
+          lines.some((line) => line.includes(label)),
+          `${label} is not on the card — the yield order dropped the wrong entry`
+        );
+      }
+      assert.ok(
+        !lines.some((line) => line.trim() === '✕'),
+        'the deselect is still on a card that was offered thirteen'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  /**
+   * The order itself, over a list whose push order disagrees with its ranks —
+   * which no page the card is offered today does, since the most a page holds
+   * is thirteen and the deselect is both last and lowest. Fourteen offers with
+   * the two only-route entries pushed last: a card that kept whatever was
+   * pushed first would drop both.
+   */
+  it('yields lowest rank first, and the later of two equals, whatever the push order', () => {
+    const entry = (label: string, yieldRank?: number) => ({ label, yieldRank });
+    const model = [
+      entry('situational, first', YIELD.SITUATIONAL),
+      ...Array.from({ length: 9 }, (_, i) => entry(`core ${i}`)),
+      entry('deselect', YIELD.DESELECT),
+      entry('situational, second', YIELD.SITUATIONAL),
+      entry('screen', YIELD.ONLY_ROUTE),
+      entry('land', YIELD.ONLY_ROUTE),
+    ];
+    assert.deepEqual(
+      yieldToCells(model, 12).map((kept) => kept.label),
+      model
+        .map((offered) => offered.label)
+        .filter((label) => label !== 'deselect' && label !== 'situational, second'),
+      'the deselect goes first, then the later situational entry, and the rest keep their order'
+    );
+    assert.equal(
+      yieldToCells(model.slice(0, 12), 12).length,
+      12,
+      'a card that fits yields nothing'
+    );
   });
 
   /**
@@ -3295,6 +3547,106 @@ describe('renderer smoke test: the free camera', () => {
     }
   });
 
+  /**
+   * A click is a point in the water — docs/ui-ux.md §9 (#1132): the first of
+   * the ground and the plane at the focus depth, along the cursor's ray, at a
+   * depth held to the cell's water. Measured on the canned ground, whose floor
+   * falls from a 1,100 m shelf in the north-west to a 3,200 m trench in the
+   * south-east.
+   */
+  it('lands a click on the first thing its ray meets: the ground, or the focus plane', async () => {
+    const world = await boot();
+    try {
+      world.frame(3);
+      world.conn.home();
+      const terrain = cannedTerrain();
+      const floorAt = (x: number, y: number): number =>
+        terrain.floor[
+          Math.min(ROWS - 1, Math.floor(y / CELL_M)) * COLS +
+            Math.min(COLS - 1, Math.floor(x / CELL_M))
+        ]!;
+
+      // Over the trench, with the focus lifted 400 m into the water above it.
+      world.conn.focusWorld(3500, 3500);
+      world.conn.raiseFocusBy(400);
+      const plane = world.conn.focusDepth();
+      assert.ok(plane > 2450 && plane < DEPTH.MAX_M, `the premise: a plane at ${plane} m`);
+
+      // Ground deeper than the plane is behind it: the click hangs at the focus
+      // depth, in open water, rather than falling to the trench floor.
+      const trench = world.conn.projectPoint(3500, 3500, null);
+      assert.ok(trench.visible, 'the trench floor is on screen');
+      const overTrench = world.conn.resolveWater(trench.x, trench.y);
+      assert.ok(
+        Math.abs(overTrench.depthM - plane) < 1,
+        `a click over the trench ordered ${overTrench.depthM} m, not the plane's ${plane}`
+      );
+      assert.equal(
+        onTheGround(floorAt(overTrench.x, overTrench.y), overTrench.depthM),
+        false,
+        'and that is open water, so the move holds it'
+      );
+
+      // Ground shallower than the plane is in front of it: a click on the
+      // 2,450 m ground north of the trench is on that ground, at its floor.
+      const rise = world.conn.projectPoint(3125, 2375, null);
+      assert.ok(rise.visible, 'the ground north of the trench is on screen');
+      const onRise = world.conn.resolveWater(rise.x, rise.y);
+      // On it, not behind it: the plane alone would carry the click on past
+      // the ground to where the ray crosses the focus depth, and clamp it back
+      // to a floor tens of metres further north.
+      assert.ok(
+        Math.hypot(onRise.x - 3125, onRise.y - 2375) < 20,
+        `the click landed ${Math.hypot(onRise.x - 3125, onRise.y - 2375).toFixed(0)} m from the ground it was on`
+      );
+      assert.equal(onRise.depthM, floorAt(onRise.x, onRise.y), 'the floor of the cell it hit');
+      assert.ok(onRise.depthM < plane, 'which the plane is below');
+      assert.ok(onTheGround(floorAt(onRise.x, onRise.y), onRise.depthM), 'so the move follows it');
+
+      // Home puts the focus back on the seabed: a click there is on the ground,
+      // and over ground deeper than an order may name it orders DEPTH.MAX_M.
+      world.conn.home();
+      const centre = world.conn.projectPoint(3500, 3500, null);
+      const atHome = world.conn.resolveWater(centre.x, centre.y);
+      assert.equal(atHome.depthM, DEPTH.MAX_M, 'the trench floor, held to the column');
+      assert.ok(onTheGround(floorAt(atHome.x, atHome.y), atHome.depthM));
+
+      // On the seabed there is no plane: a click at home on ground 270 m below
+      // the seabed under the focus is on that ground, where a plane at the
+      // focus's depth would have caught it short of the cursor and hung it in
+      // open water.
+      world.conn.focusWorld(2000, 1500);
+      const southward = world.conn.projectPoint(2000, 2400, null);
+      assert.ok(southward.visible, 'the deeper ground south of the focus is on screen');
+      const deeper = world.conn.resolveWater(southward.x, southward.y);
+      assert.ok(
+        Math.hypot(deeper.x - 2000, deeper.y - 2400) < 20,
+        `the click landed ${Math.hypot(deeper.x - 2000, deeper.y - 2400).toFixed(0)} m short`
+      );
+      assert.ok(
+        deeper.depthM > world.conn.focusDepth() + FOLLOW_FLOOR.ENGAGE_WITHIN_M,
+        `the premise: ground well below the focus's ${world.conn.focusDepth()} m`
+      );
+      assert.ok(onTheGround(floorAt(deeper.x, deeper.y), deeper.depthM), 'and the move follows it');
+
+      // A closed roof stops the ray, and the move holds the water just under it:
+      // the canned passage's 1,600 m ceiling over a 2,600 m floor, too tall a
+      // passage for that water to count as the floor's.
+      world.conn.focusWorld(3250, 1500);
+      const lid = world.conn.projectPoint(3250, 1500, 1500);
+      assert.ok(lid.visible, 'the passage is on screen');
+      const onRoof = world.conn.resolveWater(lid.x, lid.y);
+      assert.equal(onRoof.depthM, 1600, 'the water just under the roof');
+      assert.equal(
+        onTheGround(floorAt(onRoof.x, onRoof.y), onRoof.depthM),
+        false,
+        'which is open water, a thousand metres over the passage floor'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
   it('lets the focus leave the seabed, and keeps it in water', async () => {
     const world = await boot();
     try {
@@ -3315,23 +3667,11 @@ describe('renderer smoke test: the free camera', () => {
       // looking makes sense.
       world.conn.raiseFocusBy(10_000);
       assert.equal(rig().focus.depthM, 0, 'the focus stops at the surface');
+      // Sunk to the seabed it lands there, back to following the ground the
+      // way it does from Home (#1132) — `null`, not a number that happens to
+      // equal the seabed here and stops equalling it the moment the camera pans.
       world.conn.raiseFocusBy(-20_000);
-      assert.equal(rig().focus.depthM, Math.round(seabed), 'and on the seabed');
-    } finally {
-      world.teardown();
-    }
-  });
-
-  it('turns on a twist without knowing what a pixel of drag is worth', async () => {
-    const world = await boot();
-    try {
-      world.frame(3);
-      world.conn.home();
-      // The touch dialect has no Shift and no wheel, so the yaw arrives as an
-      // angle off two fingers.
-      world.conn.yawBy(Math.PI / 2);
-      assert.equal(rig().yawDeg, 90, 'a quarter turn is a quarter turn');
-      assert.equal(rig().pitchDeg, HOME_PITCH_DEG, 'and a twist is not a tilt');
+      assert.equal(rig().focus.depthM, null, 'and lands on the seabed');
     } finally {
       world.teardown();
     }

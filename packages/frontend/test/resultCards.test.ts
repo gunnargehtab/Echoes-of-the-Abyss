@@ -611,8 +611,9 @@ describe('the mission result: a mission’s words cannot carry the counter out',
  * shipped sheet and this component's own rendered markup: at 1440x900 the
  * panel's content box is 560.0 px and an 80-character token takes the
  * paragraph to 573.1 px and the card to 7 px of scroll, 100 characters to
- * 716.3 px and 78 px; at a 360 px phone width (SETUP-ANDROID.md) the content
- * box is 306.8 px and 64 characters already overruns it by 76 px. Take that
+ * 716.3 px and 78 px; at a 360 px width (a phone's, when the client still
+ * spoke touch) the content box is 306.8 px and 64 characters already overruns
+ * it by 76 px. Take that
  * content box off the border box: `clientWidth` is an integer and reports it
  * 0.19 px narrow at 1440.
  * `break-word` reproduces every one of those to the decimal, at 75%, 100% and

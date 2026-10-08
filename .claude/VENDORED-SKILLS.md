@@ -140,8 +140,8 @@ every frame — a clock in milliseconds, a frame counter, a continuously interpo
 readout — puts the HUD back on the skill's premise, and `BitmapText` becomes the right
 answer for that label. The budget in `rendererSmoke.test.ts` fails the moment that
 happens, so the decision is re-opened by a red test rather than by anyone remembering
-this paragraph. The other trigger is #286: a real reading on the Termux floor, where a
-texture upload is priced very differently from a desktop GPU.
+this paragraph. The other trigger was #286's reading on the Termux floor, where a texture
+upload is priced very differently from a desktop GPU; it retired with the phone (#1132).
 
 ### A skill-eval probe on `pixijs-scene-text` (#724)
 

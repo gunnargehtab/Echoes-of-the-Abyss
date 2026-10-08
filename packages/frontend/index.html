@@ -3,8 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <!-- user-scalable=no: pinch belongs to the game camera, not the browser;
-         viewport-fit=cover: draw under phone notches rather than beside them. -->
+    <!-- The standard mobile viewport line. Desktop browsers, the only ones this client
+         targets since #1132, ignore it: a trackpad pinch over the canvas arrives as a
+         ctrl + wheel event, which EchoRenderer's wheel handler takes. -->
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"

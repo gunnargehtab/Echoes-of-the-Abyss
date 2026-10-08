@@ -63,7 +63,9 @@ function recordCalls(room: MatchRoom): string[] {
 /** One malformed payload per in-match message, each wrong in its own way. */
 const MALFORMED: Record<string, unknown> = {
   move: { unitIds: [1], x: Number.NaN, y: 0 },
-  attackMove: { unitIds: [1], x: 0, y: Infinity },
+  // The depth a move gained in #1132 is optional, and an optional field is
+  // still one a client may not fill with anything.
+  attackMove: { unitIds: [1], x: 0, y: 0, depth: 'deep' },
   stop: { unitIds: 'all' },
   hold: { unitIds: [1] },
   rally: { structureIds: [1], x: 0 },
@@ -71,7 +73,6 @@ const MALFORMED: Record<string, unknown> = {
   disembark: { unitIds: { length: 1 } },
   attack: { unitIds: [1], contactId: null },
   depth: { unitIds: [1], depth: Number.NaN },
-  followFloor: { unitIds: [1], active: 1 },
   silent: { unitIds: [1], active: 'on' },
   engineOff: { unitIds: [1] },
   ping: { unitId: 'three' },
@@ -109,8 +110,9 @@ describe('the room refuses a malformed payload before the simulation sees it', (
     // The point of the loop. Before #628 this was twenty-seven independent
     // decisions by twenty-seven authors, and #609 is what that cost; the whole
     // claim of the change is that it is now one decision, so the test that
-    // holds it has to be one assertion over all twenty-seven.
-    assert.equal(inMatchNames.length, 27, 'the orders a seated commander may send');
+    // holds it has to be one assertion over all of them — twenty-six since
+    // #1132 folded the floor toggle into the move.
+    assert.equal(inMatchNames.length, 26, 'the orders a seated commander may send');
     const room = await bootRoom();
     try {
       const [client] = startPlaying(room);

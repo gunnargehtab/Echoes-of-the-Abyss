@@ -1374,8 +1374,8 @@ Classic command layout, three bands:
 - **Bottom right** — the selected-entity panel: name, hull, SIG, and state (silent
   running, throttle, cargo, production queue), with the unit's command buttons.
 
-On phones the same bands compress: the scope shrinks, the info panel folds to a
-status line, and the command panel keeps full-size touch targets.
+On a narrow window the same bands compress: the scope shrinks, the info panel folds to a
+status line, and the command panel keeps its full-size targets ([ui-ux.md](ui-ux.md) §11).
 
 ### Fonts
 
@@ -1414,7 +1414,8 @@ the instrument layer drawn over it.
 
 The world renders in perspective through a 40° vertical field of view, from a rig that is
 a **focus point anywhere in the water column**, a yaw, a pitch and a dolly distance. Pan
-slides the focus across the plan, `Shift` + wheel raises and sinks it through the column,
+slides the focus across the plan, a left + right drag or `Shift` + wheel raises and sinks it
+through the column, where a click into open water then lands ([ui-ux.md](ui-ux.md) §9),
 orbit turns and tilts the camera about it, and zoom dollies about the cursor. One camera
 serves both canvases — the GL world and the Pixi mark layer project through it
 (`EchoRenderer.setConn`) — so the two painters cannot disagree about where the water is.
@@ -1557,7 +1558,7 @@ What the rule is careful about:
   *reports* the heading, with its far edge drawn heavier to say which way that is. `Home`
   restores north, 55° and the seabed in one press, which is the frame the old rule made
   permanent.
-- **Zoom about the cursor** (wheel / pinch), taken from WC3 rather than C&C. The dolly
+- **Zoom about the cursor** (wheel), taken from WC3 rather than C&C. The dolly
   band is TUNABLE and lives in `PerspectiveView.ts`; whatever the band, every gate in
   [graphics-standards.md](graphics-standards.md) is judged "at every zoom the camera
   allows" — and now at every **angle** it allows, which is the honest price of the

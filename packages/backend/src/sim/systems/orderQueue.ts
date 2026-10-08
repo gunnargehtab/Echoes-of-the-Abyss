@@ -30,15 +30,19 @@ import {
   Weapon,
 } from '../components.ts';
 import type { SimWorld } from '../world.ts';
+import { leaveFloor, orderDepthAt } from './depth.ts';
 
 // `Position`, so a hull in a hold (systems/carrying.ts) never pops a leg it
 // cannot walk; its queue is cleared when it boards, and this is the backstop.
 const ordered = defineQuery([Unit, MoveOrder, Position]);
 
-/** One pending order. `x`/`y` are where it pointed when it was issued. */
+/**
+ * One pending order. `x`/`y` are where it pointed when it was issued, and a
+ * move's `depth` the depth it was given (#1132) — absent for a place alone.
+ */
 export type QueuedOrder =
-  | { kind: 'move'; x: number; y: number }
-  | { kind: 'attackMove'; x: number; y: number }
+  | { kind: 'move'; x: number; y: number; depth?: number }
+  | { kind: 'attackMove'; x: number; y: number; depth?: number }
   | { kind: 'attack'; x: number; y: number; target: number }
   | { kind: 'harvest'; x: number; y: number; node: number };
 
@@ -77,6 +81,9 @@ function begin(world: SimWorld, eid: number, order: QueuedOrder): void {
         Harvester.mode[eid] = HarvestMode.Idle;
         Harvester.idleReason[eid] = 0;
       }
+      // Decided as the leg begins, by the rule an immediate move is
+      // (docs/systems-depth.md §2), against the ground as it stands now.
+      if (order.depth !== undefined) orderDepthAt(world, eid, order.x, order.y, order.depth);
       break;
     case 'attackMove':
       MoveOrder.x[eid] = order.x;
@@ -86,8 +93,13 @@ function begin(world: SimWorld, eid: number, order: QueuedOrder): void {
       Posture.engageX[eid] = order.x;
       Posture.engageY[eid] = order.y;
       Posture.hold[eid] = 0;
+      if (order.depth !== undefined) orderDepthAt(world, eid, order.x, order.y, order.depth);
       break;
     case 'attack':
+      // An attack keeps a depth of its own (docs/systems-depth.md §2), and the
+      // leg ends floor-following whatever its target turns out to be, so the
+      // hull's depth says nothing about whether the handle named anything.
+      leaveFloor(world, eid);
       // The target may have died while the order waited its turn. Dropping it
       // is right: a queue is a plan, and part of a plan becoming moot is
       // ordinary rather than exceptional.
@@ -100,6 +112,8 @@ function begin(world: SimWorld, eid: number, order: QueuedOrder): void {
         Harvester.nodeEid[eid] = order.node;
         Harvester.mode[eid] = HarvestMode.ToNode;
         Harvester.idleReason[eid] = 0;
+        // The loop orders its own descents and climbs from here.
+        leaveFloor(world, eid);
       }
       break;
   }

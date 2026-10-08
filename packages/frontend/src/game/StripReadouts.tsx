@@ -18,10 +18,10 @@
  *   strip left to right and `:focus-visible` shows the same line. The focus ring
  *   is drawn rather than suppressed: it is the only thing on the glass that says
  *   where the keyboard is.
- * - **Touch** — a tap pins the line open and a second tap closes it, which is
- *   the route a touchscreen actually has. Nothing here names a key, because
- *   §7's promise is about what the player in front of the screen can do, and
- *   #722 §4 is the open bug filed for the case where one line forgot that.
+ * - **Click** — a click pins the line open and a second click closes it, for
+ *   a player who wants the line to stay while they read it. Nothing here names
+ *   a key, because §7's promise is about what the player in front of the screen
+ *   can do, and #722 §4 is the bug filed for the case where one line forgot it.
  *
  * The line is always in the accessible tree via `aria-describedby`, open or
  * shut — it is clipped when shut, not `display: none`, which would take it out
@@ -32,7 +32,7 @@
  * the only pixels this takes away from the canvas are the readouts themselves.
  * Over those, two gestures are genuinely lost and are not worth the machinery
  * to forward: a right-click *move order*, which is issued from the canvas's
- * `pointerdown` rather than from the context menu, and the *start* of a
+ * own pointer events rather than from the context menu, and the *start* of a
  * marquee, which would need the whole pointer sequence and a capture to follow
  * it. Both are over opaque chrome at the top of the screen with no world
  * visible through it. The browser context menu and the wheel are handed back

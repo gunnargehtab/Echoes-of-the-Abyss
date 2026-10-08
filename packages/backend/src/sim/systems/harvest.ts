@@ -127,8 +127,14 @@ function holdFor(kind: ResourceKind, cargoMultiplier: number): number {
  * it is what turns a crystal field into docs/economy.md §7's "round trip with
  * a clock on it": the descent to the field is loud, and the climb home with a
  * full hold is slow.
+ *
+ * A working leg ends floor-following first, ahead of both early returns: the
+ * loop owns this hull's depth while it works (docs/systems-depth.md §2), and a
+ * hull already at the field's depth would otherwise be walked off it by the
+ * mode a tick later, and ordered back, every tick.
  */
 function orderDepth(eid: number, depthM: number): void {
+  DepthOrder.follow[eid] = 0;
   if (DepthOrder.active[eid] === 1 && Math.abs(DepthOrder.targetM[eid]! - depthM) < 1) return;
   if (Math.abs(Position.depth[eid]! - depthM) <= CRYSTAL.WORKING_DEPTH_TOLERANCE_M) return;
   DepthOrder.targetM[eid] = depthM;

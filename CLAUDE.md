@@ -127,7 +127,7 @@ Copying an import line between packages will break it.
 
 ## The wire
 
-Every message that crosses the socket — 32 a client may send, 11 the room may send — is
+Every message that crosses the socket — 31 a client may send, 11 the room may send — is
 declared once in `packages/shared/src/wire.ts`: the name, the payload, and for a client
 message its runtime **shape** in `CLIENT_SHAPE`. No message name is a string literal
 anywhere else, and adding one is all three edits — the assertions at the foot of `wire.ts`
@@ -190,6 +190,5 @@ The critic has no `Edit` and no `Write`: **a generator that also grades itself i
 gate** (#540). And **a change gets three rounds, a cap a person sets**: reaching it is a
 stall, and the pull request stays open with its findings listed in the body.
 
-Related: `README.md` · `CONTRIBUTING.md` · `SETUP.md` · `SETUP-ANDROID.md` (Termux, the
-whole game on-device) · `docs/README.md` · `docs/DEVELOPER_QUICKSTART.md` ·
-`.github/copilot-instructions.md`
+Related: `README.md` · `CONTRIBUTING.md` · `SETUP.md` · `docs/README.md` ·
+`docs/DEVELOPER_QUICKSTART.md` · `.github/copilot-instructions.md`

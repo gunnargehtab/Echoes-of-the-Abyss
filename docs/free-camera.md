@@ -38,7 +38,7 @@ is "this shipped, and here is the file".
 | Goal | What the build already has | Where |
 | --- | --- | --- |
 | F1 — a volume | Continuous depth 0–3,000 m. Every cell carries a **floor and a ceiling**, so the map can say "there is rock above this water" — tunnels, overhangs, cavern mouths. A thermocline at 1,200 m that splits the column acoustically in two | [systems-depth.md](systems-depth.md) §1, `DEPTH` / `DEPTH_BANDS` in shared constants |
-| F2 — hulls go anywhere | `Match.orderDepth()` takes any depth in the map. Movement resolves against the water column each step, routes around ground that will not admit the hull at its depth, and slides along ground it grazes. Floor-following is a standing order | [systems-depth.md](systems-depth.md) §2, §6; `sim/systems/depth.ts`, `sim/pathfinding.ts` |
+| F2 — hulls go anywhere | A move takes any depth in the map (`Match.orderMove()`, a click's depth since #1132). Movement resolves against the water column each step, routes around ground that will not admit the hull at its depth, and slides along ground it grazes. A move onto the ground follows it | [systems-depth.md](systems-depth.md) §2, §6; `sim/systems/depth.ts`, `sim/pathfinding.ts` |
 | F2 — what *does* limit it | Crush attrition below a hull's Pressure Rating, sour bleed inside the Lid, and terrain that raises a hull but never lowers it. Every one is a **priced cost**, not a rail | [systems-depth.md](systems-depth.md) §2–§3 |
 | F3 — the camera | **This is the gap.** Pitch pinned at 55°, yaw locked to north, the focus glued to the seabed, dolly the only freedom | [art-direction.md](art-direction.md) "Camera & Projection", `PerspectiveView.ts` |
 | F4 — vast | Maps are 8,000 × 8,000 m and 10,000 × 6,000 m by 3,000 m deep. Large; finite, and finite on purpose | [maps.md](maps.md), `MAP_HEADERS` in shared |
@@ -95,6 +95,14 @@ focus rise and sink means the camera can sit *with* the fleet, at its depth, and
 falls away below it. That is F1 delivered: not a shaded plan with a depth readout, but water
 you are inside.
 
+**Since #1132 the focus depth is also where an order goes.** Raised into the column, the
+focus is a plane a click into open water lands on ([ui-ux.md](ui-ux.md) §9), so moving the
+focus is how a commander picks the depth of the next move, and there is no separate depth
+order left to give. Attached to the seabed — from `Home` or a fit to the map, or sunk back
+to it — the focus makes no plane, and a click is on the ground under the cursor. The camera
+still commits nothing: it chooses where a click *would* land, and the
+click is the player's.
+
 **One hard clamp, and only one: the eye never goes below the seabed.** It stays at least
 **25 m of water** (TUNABLE) above the local floor, because a camera under the ground renders
 the inside of the terrain shell and reads as a bug in every case and a feature in none. The
@@ -107,18 +115,26 @@ it, and none of the column's costs are the camera's to pay.
 
 | Verb | Input | Notes |
 | --- | --- | --- |
-| Pan | Middle drag, arrows, screen edge | Unchanged in feel, **yaw-aware** in fact: the ground still follows the pointer, whatever direction the camera faces |
-| Zoom | Wheel / pinch, about the cursor | Unchanged |
-| **Orbit** | `Shift` + middle drag — horizontal yaws, vertical pitches | Two-finger twist yaws on touch |
-| **Rise / sink the focus** | `Shift` + wheel, **150 m** per notch (TUNABLE) | Clamped to the water column under the focus |
+| Pan | Middle drag, arrows, screen edge; sideways, the horizontal half of a left + right drag | Unchanged in feel, **yaw-aware** in fact: the ground still follows the pointer, whatever direction the camera faces |
+| Zoom | Wheel, about the cursor | Unchanged |
+| **Orbit** | `Shift` + middle drag — horizontal yaws, vertical pitches | Pitch held inside the 10°–88° band |
+| **Rise / sink the focus** | Left + right drag, vertically, **5 m** per pixel (TUNABLE); `Shift` + wheel, **150 m** per notch (TUNABLE) | Clamped to the water column under the focus. Sunk to the seabed, the focus lands on it and follows the ground again, as it does from `Home` |
 | **Home** | `Home` | Yaw to north, pitch to 55°, focus back to the seabed. One key, always |
 
-`Shift` + wheel takes a gesture that zooms today, and the reassignment is deliberate rather
-than incidental: it is recorded here because [ui-ux.md](ui-ux.md) §9's rule about rebinding
-is that the interaction a player loses must never be a *mouse* interaction that silently
-changes meaning. This one changes meaning and is therefore written down, in the controls
-table and in the Controls screen, where a player meets it. Unmodified wheel still zooms, and
-zoom is the gesture nobody may lose.
+`Shift` + wheel takes a gesture that zoomed before the camera was freed, and the reassignment
+is deliberate rather than incidental: it is recorded here because [ui-ux.md](ui-ux.md) §9's
+rule about rebinding is that the interaction a player loses must never be a *mouse*
+interaction that silently changes meaning. This one changes meaning and is therefore written
+down, in the controls table and in the Controls screen, where a player meets it. Unmodified
+wheel still zooms, and zoom is the gesture nobody may lose.
+
+**The left + right drag is the column's continuous verb (#1132).** Holding both buttons turns
+the pointer into the camera: across, it pans sideways; up and down, it moves the focus through
+the water column. Both halves move the water with the hand, as the middle drag does, so
+dragging up lifts the water past the eye and sinks the focus. It is a chord of buttons, and
+not a timing-critical one: either may land first, at any interval, and once both are down
+neither click fires. `Shift` + wheel stays beside it as the route that needs one button,
+which [ui-ux.md](ui-ux.md) §11 owes a player who cannot hold two.
 
 `Home` is what makes the rest safe, and it is not a convenience. A free camera's failure mode
 is a disoriented player who cannot find their fleet, and the answer is a key that always
@@ -175,7 +191,9 @@ The old rule carried four loads. Each moves; none is dropped.
 - **Glow is loudness.** Gate 3's `E(SIG)` curve is a material property and does not know where
   the camera is.
 - **What you click is what the simulation collides.** Picking resolves through the same
-  camera, so it follows it for free.
+  camera, so it follows it for free. An order lands on the first thing the cursor's ray
+  meets, the ground or — with the focus raised — the plane at the focus depth, so a click on
+  a ridge face is on the ridge rather than in the water behind it ([ui-ux.md](ui-ux.md) §9).
 - **Every cost in the water column.** Crush, sour, PR, the thermocline — none of them is a
   camera rule, and the camera going somewhere is not a hull going there.
 
@@ -200,8 +218,9 @@ rather than a rendering one:
 - `DEPTH.MAX_M` is already marked TUNABLE and temporary — it belongs to map data rather than
   to the ruleset ([ROADMAP.md](ROADMAP.md), Phase 3). A deeper column is that migration's to
   give, not this document's.
-- The floor is a phone running the whole game in Termux ([SETUP-ANDROID](../SETUP-ANDROID.md)),
-  which is what decides how much map is affordable at all.
+- The floor is the desktop of [graphics-standards.md](graphics-standards.md) gate 6, which is
+  what decides how much map is affordable at all. The phone that set it before is no longer a
+  platform: the client is keyboard and mouse only (#1132).
 
 None of that is camera work, and doing it under cover of a camera change would be the wrong
 shape. It is named here so the feedback's fourth goal has an address.
@@ -225,9 +244,9 @@ shape. It is named here so the feedback's fourth goal has an address.
 | --- | --- | --- |
 | **D — Docs** | This document. [art-direction.md](art-direction.md) "Camera & Projection" rewritten to §4–§5, [graphics-standards.md](graphics-standards.md) gate 8, [three-layer-ocean.md](three-layer-ocean.md) §4's yaw-lock line marked superseded, [ui-ux.md](ui-ux.md) §9 controls | docs only |
 | **1 — The rig** | The camera itself: focus depth, free yaw, free pitch, yaw-aware pan, the eye clamp, `Home`. The probe reports the new state so the harness can frame a shot at any angle | frontend |
-| **2 — The verbs** | Input wiring — orbit, focus depth, reset, touch twist — the Controls screen rows, and the scope camera box's heavy far edge | frontend |
+| **2 — The verbs** | Input wiring — orbit, focus depth, reset, touch twist (gone with touch, #1132) — the Controls screen rows, and the scope camera box's heavy far edge | frontend |
 | **3 — The angles** | Gates 6 and 7 re-measured across the pitch band; readability and draw-call budgets restated per angle if the numbers ask for it | frontend, docs |
-| **4 — Pitch on touch** | The two freedoms the twist gesture does not cover, on a surface with no `Shift` and no wheel | frontend |
+| **4 — Pitch on touch** | Retired by #1132: the client is keyboard and mouse only, so no surface lacks `Shift` and a wheel | — |
 | **5 — The water** | F1's other half: a depth-graded medium where the frame used to be void — the ramp, the fog that reads it, the backdrop, marine snow, and the setting §11 owes a contrast reduction | frontend, docs |
 
 Phases 1 and 2 are one increment in practice — a rig with no verb bound to it is not

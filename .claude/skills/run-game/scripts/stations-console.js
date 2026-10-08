@@ -1,23 +1,19 @@
 /**
  * The gate-6 review drive for a browser Playwright cannot reach (#286).
  *
- * The Termux floor is the case: Chrome on the phone, the server in the same
- * device's userspace, and nothing to run stations.mjs from. So this is the same
- * five stations as a paste into the page's own console — reached from a PC
- * through edge://inspect/#devices (or chrome://inspect) with USB debugging on.
+ * The case is a browser with nothing to run stations.mjs from: a machine with
+ * no Playwright install, or one whose GPU is the point of the reading. So this
+ * is the same five stations as a paste into the page's own console.
  *
- * It drives the stations with the *mouse* path, not touch, and that is
- * deliberate rather than a desktop habit: touch has no marquee and no
- * select-all, so a touch-driven `marquee` would ring one hull and read as a
- * cheaper station than the desktop row it is compared against. EchoRenderer's
- * listeners sit on the Pixi canvas and branch on `pointerType`, and its
- * pointer capture is try-wrapped, so synthetic events take the real path.
+ * It drives the stations with the mouse path, the only one the client has
+ * (#1132). EchoRenderer's listeners sit on the Pixi canvas, and its pointer
+ * capture is try-wrapped, so synthetic events take the real path.
  *
  * Paste it whole with the match live (past Ready), the screen on, and hands
- * off the device for about ninety seconds. It prints a table and copies the
- * result to the inspecting PC's clipboard. `window.__stationSeconds` shortens
- * the dwell; the default of fifteen covers the 240-frame average window at
- * twenty frames a second, which is the floor this exists to measure.
+ * off the mouse for about ninety seconds. It prints a table and copies the
+ * result to the clipboard. `window.__stationSeconds` shortens the dwell; the
+ * default of fifteen covers the 240-frame average window at twenty frames a
+ * second, the slowest machine this has been asked to measure.
  */
 (async () => {
   const S = window.__stationSeconds ?? 15;
