@@ -37,6 +37,7 @@ import { seedSpore, songWeightAt } from '../src/sim/systems/siege.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import {
   Acoustic,
+  Countermeasure,
   Health,
   Weapon,
   HullEffect,
@@ -1086,13 +1087,25 @@ describe('the Blight — a spore, and silence', () => {
       return best.id;
     };
 
+    // The bytes a recycled entity id keeps: a dead armed hull's decoy suite
+    // left cold. The Blight's clock is its own now, so they decide nothing.
+    Countermeasure.cooldownRemainingS[blight] = HULL_EFFECTS.BLIGHT.COOLDOWN_S;
+
     assert.ok(match.seedSpore(0, blight, handleOf(first)), 'the first wall takes a strain');
     assert.equal(
       match.seedSpore(0, blight, handleOf(second)),
       false,
       'the second waits out the cooldown'
     );
-    advance(match, HULL_EFFECTS.BLIGHT.COOLDOWN_S + 1);
+    // Held to the clause's 45 s on both sides. Each `handleOf` waits for the
+    // next Echo pass, a fifth of a second, which both margins absorb.
+    advance(match, HULL_EFFECTS.BLIGHT.COOLDOWN_S - 1);
+    assert.equal(
+      match.seedSpore(0, blight, handleOf(second)),
+      false,
+      'still cold a second short of the cooldown'
+    );
+    advance(match, 2);
     assert.ok(match.seedSpore(0, blight, handleOf(second)), 'and takes one once it has run');
   });
 });
