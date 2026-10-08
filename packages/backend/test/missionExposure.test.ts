@@ -27,11 +27,15 @@
  * The rim pack holds §5's 1,700 m for all seventy-five seconds of the
  * telegraph, under the layer, and fights nothing on the way (#1199).
  *
+ * §12's four voices are the literal's own lines, character for character: the
+ * doc is the source, and point six's entry drifted from it unread (#1200).
+ *
  * And the ground §11 draws in shapes since #1144: every authored point, leg
  * and shelf-lane cell on the ground it stood on in rectangles, read off the
  * painted cells rather than off a region's outline.
  */
 
+import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { defineQuery } from 'bitecs';
@@ -318,6 +322,47 @@ function survey(plan: 'below' | 'home' | 'scout') {
     statusAtClose: (id: string) => over.objectives.find((o) => o.id === id)?.status,
   };
 }
+
+describe('the voices, as docs/mission-exposure.md §12 writes them (#1200)', () => {
+  it('is §12’s text, and not a paraphrase of it', () => {
+    // Point six's entry lost §12's "at us" in the commit that wrote both, and
+    // nothing held either side, because the line is read only at the close.
+    // The Sorrowgate idiom (missionRuntime.test.ts): pull the subsection's
+    // block quotes in order and hold each to the line the literal speaks.
+    const doc = readFileSync(new URL('../../../docs/mission-exposure.md', import.meta.url), 'utf8');
+    // Bounded at the rule before §13, so a block quote there cannot drift in.
+    const section = doc.split('### The voices on the channel')[1]?.split('\n---')[0];
+    assert.ok(section !== undefined, '§12 no longer has the subsection this reads');
+    const quoted = [...section.matchAll(/(?:^> .*\n)+/gm)].map((match) =>
+      match[0]
+        .split('\n')
+        .filter((line) => line.startsWith('> '))
+        .map((line) => line.slice(2).trim())
+        .join(' ')
+    );
+    const said = (beat: { kind: string }): string => (beat as { text: string }).text;
+    const pointSix = LEDGER_EXPOSURE.parties
+      .flatMap((party) => party.emitters ?? [])
+      .find((emitter) => emitter.tag === 'point-six');
+    assert.ok(pointSix?.reading !== undefined, 'point six no longer carries a reading');
+    const [warning, recall] = (LEDGER_EXPOSURE.conditionalBeats ?? []).filter(
+      (beat) => beat.kind === 'say'
+    );
+    // §12's order: Tull at 01:00, the sixth point, the guidance at twenty
+    // seconds, the recall at thirty. No slice, so a fifth quote with no line
+    // behind it fails as loudly as a drifted one.
+    assert.deepEqual(
+      quoted,
+      [
+        said(LEDGER_EXPOSURE.beats.find((beat) => beat.kind === 'say')!),
+        pointSix.reading.entered,
+        said(warning),
+        said(recall),
+      ],
+      '§12 and the literal have drifted — the doc is the source, so the literal is wrong'
+    );
+  });
+});
 
 describe('the rim pack, as docs/mission-exposure.md §5 drives it (#1199)', () => {
   const pack = LEDGER_EXPOSURE.beats.flatMap((beat) => (beat.kind === 'creature' ? [beat] : []));
