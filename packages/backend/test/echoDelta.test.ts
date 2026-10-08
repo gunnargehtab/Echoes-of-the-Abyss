@@ -43,6 +43,13 @@ describe('the Echo delta on a live match', () => {
     for (const eid of raiders) match.orderAttackMove(0, eid, 6200, 6200);
 
     let seq = 0;
+    // The two ends hold different things, as they do live (#1224). The server
+    // diffs against the snapshot object it sent last (`MatchRoom.echoWireFor`);
+    // the client keeps what it reconstructed (`GameClient`). Diffing against
+    // the client's copy instead hid a server snapshot that changed after it
+    // was sent, which left every patch empty of contacts and marks.
+    let sent: EchoSnapshot | null = null;
+    let sentJson = '';
     let last: { seq: number; snapshot: EchoSnapshot } | null = null;
     let fullBytes = 0;
     let wireBytes = 0;
@@ -51,14 +58,19 @@ describe('the Echo delta on a live match', () => {
       const snapshots = match.update(STEP_MS);
       if (snapshots === null) continue;
       const next = snapshots.get(0)!;
+      // A snapshot is a value: the pass after it must not have rewritten it.
+      if (sent !== null) {
+        assert.equal(JSON.stringify(sent), sentJson, `pass ${seq} changed after it was sent`);
+      }
       seq++;
-      const wire = encodeEcho(last?.snapshot ?? null, next, seq);
+      const wire = encodeEcho(sent, next, seq);
       const got = applyEchoWire(last, wire);
       assert.ok(got !== null, `pass ${seq} applied`);
       assert.ok(wireEqual(got, next), `pass ${seq} reconstructs the snapshot exactly`);
       fullBytes += JSON.stringify(next).length;
       wireBytes += JSON.stringify(wire).length;
-      // The client keeps what it reconstructed, never the server's object.
+      sent = next;
+      sentJson = JSON.stringify(next);
       last = { seq, snapshot: got };
       passes++;
     }
