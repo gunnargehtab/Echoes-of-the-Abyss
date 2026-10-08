@@ -1021,10 +1021,6 @@ export const FACTION_COMBAT = {
   /**
    * SPEC — §11: the Directorate's torpedoes carry "the best mobile ears in the
    * game, miniaturised".
-   *
-   * Kept under `PROPAGATION_MODEL.MAX_EXPECTED_HYD` (100), which the Echo
-   * broadphase trusts as a hard ceiling — a faction that exceeded it would
-   * quietly break the bound that keeps detection off an all-pairs comparison.
    */
   SEEKER_HYD: {
     [Faction.Directorate]: 70,
@@ -2201,14 +2197,15 @@ export const PROPAGATION_MODEL = {
   /** HYD at which BASE_THRESHOLD applies; higher HYD lowers the threshold. */
   BASELINE_HYD,
   /**
-   * Ceiling used to size broadphase queries conservatively: every listener's
-   * HYD must sit at or under it, or the outer edge of that listener's range
-   * falls outside the square each emitter queries (#1222). 100 is the top of
-   * the 0–100 domain the Echo pass's per-HYD tables are indexed over, so no
-   * listener can pass it; the roster's best ears, and the caps of the Cantor
-   * and Precentor domes, reach 95. Not a detection rule: a listener's true
-   * range is the radius times `(hyd / ceiling)^(1/exponent)`, so the ceiling
-   * cancels out of every pair's answer.
+   * Ceiling used to size broadphase queries conservatively (#1222). 100 is the
+   * top of the 0–100 domain the Echo pass's per-HYD tables are indexed over,
+   * and the pass clamps every listener's HYD to it, so a square sized at 100
+   * covers every HYD the pass can represent. The roster's best ears and the
+   * Cantor and Precentor dome caps reach 95; a Resonance Storm lifts some
+   * Hadron hulls past 100, which the pass hears at 100 (#1240). Not a
+   * detection rule: a listener's true range is the radius times
+   * `(hyd / ceiling)^(1/exponent)`, so the ceiling cancels out of every pair's
+   * answer.
    */
   MAX_EXPECTED_HYD: 100,
 } as const;

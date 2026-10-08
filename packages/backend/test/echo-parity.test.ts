@@ -222,8 +222,12 @@ describe('echo pass', () => {
    */
   it('and at the edge of the best ears in the game, HYD 95', () => {
     const ceiling = PROPAGATION_MODEL.MAX_EXPECTED_HYD;
+    // Rated HYD, moving and stationary, and the dome cap. A Resonance Storm
+    // lifts some Hadron hulls past this ceiling; the pass hears them at it, a
+    // separate fault (#1240).
     for (const stats of Object.values(UNIT_STATS)) {
-      assert.ok(stats.hyd <= ceiling, `${UnitKind[stats.kind]} hears above the broadphase ceiling`);
+      const rated = Math.max(stats.hyd, stats.hydStationary ?? 0);
+      assert.ok(rated <= ceiling, `${UnitKind[stats.kind]}'s rated HYD is above the ceiling`);
     }
     assert.ok(STRUCTURE_AURAS.CANTOR.HYD_CAP <= ceiling, 'a dome lifts ears above the ceiling');
 
