@@ -30,7 +30,6 @@ import {
   Health,
   Owner,
   Position,
-  SilentRunning,
   Sowing,
   Structure,
   UnderConstruction,
@@ -39,6 +38,7 @@ import {
 } from '../components.ts';
 import { economyFor, type SimWorld } from '../world.ts';
 import { bedAt, setKelpCrop } from './hazards.ts';
+import { postureStopsWork } from './work.ts';
 
 const plants = defineQuery([Structure, Position, Owner, Health]);
 
@@ -152,15 +152,15 @@ const sowers = defineQuery([Sowing, Position, Owner, Health]);
  *   there must already be a field under the hull. A skirmish player who could
  *   grow cover on open water would be editing the map's acoustics at will,
  *   which §2 rules out in as many words.
- * - **Alive, and not silent.** Silence stops the work
- *   (docs/systems-echo.md §6) — the same clause that stops a bloom-share and
- *   a thermal cutter.
+ * - **Alive, and working.** Silence stops the work, and so does a drive cut
+ *   (docs/systems-echo.md §6) — the clause that stops a bloom-share, and for
+ *   silence a thermal cutter too.
  */
 export function canSow(world: SimWorld, eid: number): boolean {
   if (!hasComponent(world, Unit, eid)) return false;
   if (Owner.faction[eid] !== Faction.Pelagia) return false;
   if (Health.hp[eid]! <= 0) return false;
-  if (SilentRunning.active[eid] === 1) return false;
+  if (postureStopsWork(world, eid)) return false;
   return bedAt(world, Position.x[eid]!, Position.y[eid]!) !== undefined;
 }
 
