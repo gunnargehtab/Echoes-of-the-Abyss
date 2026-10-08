@@ -387,8 +387,10 @@ export function GameCanvas({
 
       const activeRenderer = new EchoRenderer(
         {
-          onMoveOrder: (unitIds, x, y, queued) => client?.moveTo(unitIds, x, y, queued),
-          onAttackMoveOrder: (unitIds, x, y, queued) => client?.attackMoveTo(unitIds, x, y, queued),
+          onMoveOrder: (unitIds, x, y, queued, depth) =>
+            client?.moveTo(unitIds, x, y, queued, depth),
+          onAttackMoveOrder: (unitIds, x, y, queued, depth) =>
+            client?.attackMoveTo(unitIds, x, y, queued, depth),
           onStopOrder: (unitIds) => client?.stop(unitIds),
           onHoldOrder: (unitIds, active) => client?.setHoldPosition(unitIds, active),
           onEmbarkOrder: (unitIds, carrierId) => client?.embark(unitIds, carrierId),
@@ -409,8 +411,6 @@ export function GameCanvas({
           onBuild: (kind, x, y) => client?.build(kind, x, y),
           onProduce: (structureId, kind) => client?.produce(structureId, kind),
           onRefit: (structureId, kind) => client?.refit(structureId, kind),
-          onDepthOrder: (unitIds, depth) => client?.setDepth(unitIds, depth),
-          onFollowFloor: (unitIds, active) => client?.setFollowFloor(unitIds, active),
           // Contacts, reduced to what the mix is allowed to know. Buffered by
           // the engine and applied on the tick, so the cost is measured and the
           // mix never moves between ticks (docs/audio-direction.md §12).

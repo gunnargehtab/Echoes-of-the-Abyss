@@ -35,7 +35,6 @@ import {
   EchoMarkKind,
   FACTION_STRUCTURE,
   FLIGHT,
-  FOLLOW_FLOOR,
   Faction,
   HAZARDS,
   BLOOM_SHARE,
@@ -60,6 +59,7 @@ import {
   depthBandFor,
   effectivePressureRating,
   mineCapFor,
+  onTheGround,
   refitOfferedTo,
   refitPriceFor,
   refittedPressureRating,
@@ -4494,11 +4494,12 @@ export class AiCommander implements AiPlayer {
     // The post is the floor as well as the place. The toggle used to be said
     // from the claim, so a Dredge already over the field went down; the walk
     // is said only off the post, so a Dredge over the field but still above
-    // the ground is off it too. "On the ground" is the simulation's reading,
-    // within `FOLLOW_FLOOR.ENGAGE_WITHIN_M` of the floor, and it is read off
-    // the hull rather than remembered.
-    const floor = Math.min(this.floorAt(field.x, field.y), DEPTH.MAX_M);
-    const grounded = holder.depth >= floor - FOLLOW_FLOOR.ENGAGE_WITHIN_M;
+    // the ground is off it too. "On the ground" is the simulation's own
+    // reading (`onTheGround`), and it is read off the hull rather than
+    // remembered.
+    const ground = this.floorAt(field.x, field.y);
+    const floor = Math.min(ground, DEPTH.MAX_M);
+    const grounded = onTheGround(ground, holder.depth);
     if (distance(holder, field) > FIELD_HOLD.STATION_M || !grounded) {
       this.walk(holder, field, snapshot.tick, out, floor);
       return claimed;

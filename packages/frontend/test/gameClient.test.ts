@@ -128,9 +128,19 @@ const ORDERS: Array<[string, (client: GameClient) => void, SentMessage]> = [
     { type: 'move', payload: { unitIds: [11], x: 100, y: 200, queued: true } },
   ],
   [
+    'moveTo, at a depth',
+    (c) => c.moveTo([11], 100, 200, false, 1250),
+    { type: 'move', payload: { unitIds: [11], x: 100, y: 200, depth: 1250, queued: false } },
+  ],
+  [
     'attackMoveTo',
     (c) => c.attackMoveTo([11], 100, 200, false),
     { type: 'attackMove', payload: { unitIds: [11], x: 100, y: 200, queued: false } },
+  ],
+  [
+    'attackMoveTo, at a depth',
+    (c) => c.attackMoveTo([11], 100, 200, true, 640),
+    { type: 'attackMove', payload: { unitIds: [11], x: 100, y: 200, depth: 640, queued: true } },
   ],
   ['stop', (c) => c.stop([11]), { type: 'stop', payload: { unitIds: [11] } }],
   [
@@ -147,16 +157,6 @@ const ORDERS: Array<[string, (client: GameClient) => void, SentMessage]> = [
     'setSilentRunning',
     (c) => c.setSilentRunning([11], true),
     { type: 'silent', payload: { unitIds: [11], active: true } },
-  ],
-  [
-    'setDepth',
-    (c) => c.setDepth([11], 1800),
-    { type: 'depth', payload: { unitIds: [11], depth: 1800 } },
-  ],
-  [
-    'setFollowFloor',
-    (c) => c.setFollowFloor([11], true),
-    { type: 'followFloor', payload: { unitIds: [11], active: true } },
   ],
   ['activeSonar', (c) => c.activeSonar(11), { type: 'ping', payload: { unitId: 11 } }],
   ['commanderAbility', (c) => c.commanderAbility(), { type: 'ability', payload: {} }],

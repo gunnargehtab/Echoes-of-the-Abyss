@@ -32,9 +32,6 @@ export type BindableAction =
   | 'engineOff'
   | 'ping'
   | 'pingPreview'
-  | 'dive'
-  | 'rise'
-  | 'followFloor'
   | 'throttle'
   | 'noisemaker'
   | 'mine'
@@ -58,7 +55,7 @@ export interface ActionSpec {
    */
   hold?: boolean;
   /** Grouping in the rebinder, so the list reads like §9's table. */
-  group: 'fleet' | 'depth' | 'ordnance' | 'build';
+  group: 'fleet' | 'ordnance' | 'build';
 }
 
 /**
@@ -106,14 +103,6 @@ export const ACTIONS: readonly ActionSpec[] = [
     group: 'fleet',
   },
   { action: 'throttle', label: 'Harvest throttle', hint: 'Cycle the dredge rate', group: 'fleet' },
-  { action: 'dive', label: 'Dive', hint: 'Down one depth band', group: 'depth' },
-  { action: 'rise', label: 'Rise', hint: 'Up one depth band', group: 'depth' },
-  {
-    action: 'followFloor',
-    label: 'Follow floor',
-    hint: 'Hug the seabed at station keeping',
-    group: 'depth',
-  },
   { action: 'noisemaker', label: 'Noisemaker', hint: 'Deploy a decoy', group: 'ordnance' },
   { action: 'mine', label: 'Mine', hint: 'Lay at the hull position', group: 'ordnance' },
   {
@@ -136,7 +125,6 @@ export const ACTIONS: readonly ActionSpec[] = [
 
 export const GROUP_LABEL: Record<ActionSpec['group'], string> = {
   fleet: 'The fleet',
-  depth: 'Depth',
   ordnance: 'Ordnance',
   build: 'Construction',
 };
@@ -145,9 +133,10 @@ export type Bindings = Record<BindableAction, string>;
 
 /** §9's table, exactly. Changing one of these changes the document first. */
 export const DEFAULT_BINDINGS: Bindings = {
-  // Attack-move is `W` rather than the genre's `A` because `A` is *rise*
-  // (§9: dive and rise sit on D and A, mnemonic over convention). `W` is
-  // "weapons free", and it sits under the same finger.
+  // Attack-move is `W` rather than the genre's `A`. `A` was *rise* until a
+  // click took over the depth (#1132), and moving a key players have already
+  // learned would cost them more than the convention buys. `W` is "weapons
+  // free", and it sits under the same finger.
   attackMove: 'KeyW',
   stop: 'KeyX',
   holdPosition: 'KeyH',
@@ -158,9 +147,6 @@ export const DEFAULT_BINDINGS: Bindings = {
   ping: 'KeyP',
   pingPreview: 'AltLeft',
   throttle: 'KeyV',
-  dive: 'KeyD',
-  rise: 'KeyA',
-  followFloor: 'KeyS',
   noisemaker: 'KeyN',
   mine: 'KeyM',
   depthCharge: 'KeyC',
@@ -178,7 +164,7 @@ export const DEFAULT_BINDINGS: Bindings = {
  * sit under a right hand that is on the mouse, which for a player using one
  * hand means the binding may as well not exist. This moves those five and the
  * three they displace on the way — `X` to the mine, `V` to the signature
- * structure, `Q` to the ping — and leaves the other eleven alone, because a
+ * structure, `Q` to the ping — and leaves the other eight alone, because a
  * layout that also shuffles the keys a player already knows is a worse
  * layout.
  *
@@ -264,6 +250,11 @@ export const FIXED_CONTROLS: readonly { label: string; keys: string; why: string
   { label: 'Select by class', keys: 'Alt + click', why: 'Or double-click' },
   { label: 'Pan', keys: 'Middle drag', why: 'Wheel zooms about the cursor' },
   {
+    label: 'Move the camera',
+    keys: 'Left + right drag',
+    why: 'Across pans sideways; up sinks the focus, down raises it — where open water clicks land',
+  },
+  {
     label: 'Orbit the camera',
     keys: 'Shift + middle drag',
     why: 'Across yaws, up and down pitches — 10° to 88°',
@@ -271,7 +262,7 @@ export const FIXED_CONTROLS: readonly { label: string; keys: string; why: string
   {
     label: 'Camera depth',
     keys: 'Shift + wheel',
-    why: 'Raises and sinks the focus through the water column',
+    why: 'Raises and sinks the focus 150 m a notch — the one-button route',
   },
   {
     label: 'Home the camera',

@@ -15,13 +15,7 @@ import { DEPTH, Faction, FOLLOW_FLOOR, SIM, UnitKind } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnResourceNode, spawnUnit } from '../src/sim/world.ts';
-import {
-  DepthOrder,
-  MoveOrder,
-  Position,
-  Pressure,
-  SilentRunning,
-} from '../src/sim/components.ts';
+import { DepthOrder, MoveOrder, Position, Pressure, SilentRunning } from '../src/sim/components.ts';
 import { VENTFRONT_DIVIDE, type MapDefinition } from '../src/sim/maps/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;

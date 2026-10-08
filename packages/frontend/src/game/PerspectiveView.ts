@@ -229,6 +229,16 @@ const EYE_CLEARANCE_M = 25;
  */
 export const FOCUS_STEP_M = 150;
 
+/**
+ * TUNABLE — docs/free-camera.md §4: metres of column a pixel of the left +
+ * right drag moves the focus (#1132). Fixed rather than scaled by the dolly,
+ * because the drag is how a commander picks the depth of the next order, and
+ * the same hand movement should mean the same depth at every zoom: 600 px is
+ * the whole column, and the 100 m that tells the ground from open water is
+ * twenty of them.
+ */
+export const FOCUS_DRAG_M_PER_PX = 5;
+
 /** Radians per pixel of orbit drag. TUNABLE — a full turn in about 640 px of
  * yaw, and the pitch band crossed in about 280 px. */
 const ORBIT_YAW_PER_PX = (Math.PI * 2) / 640;
@@ -1141,6 +1151,85 @@ export class PerspectiveView {
   }
 
   /**
+   * A click as a point in the water — docs/ui-ux.md §9, "A click is a point
+   * in the water" (#1132).
+   *
+   * The ray is followed to the first thing it meets: the ground — the terrain
+   * mesh, or a closed roof, as `resolveGround` reads it — or the horizontal
+   * plane at the focus depth, which is the depth the camera is working at
+   * (docs/free-camera.md §4). So a click on a ridge face is on the ridge, and a
+   * click past it, over deeper water, hangs at the focus depth rather than
+   * falling through to the floor of the trench.
+   *
+   * The depth is then held to the water at the point, read off the cell grid
+   * the server's floor test reads (`onTheGround`) rather than the drawn relief:
+   * no shallower than the cell's ceiling or the surface, no deeper than its
+   * floor or `DEPTH.MAX_M`. A floor hit orders the floor itself; a roof hit,
+   * the water just under the roof. Always answers, clamped onto the map, for
+   * `resolveGround`'s reason.
+   */
+  resolveWater(clientX: number, clientY: number): { x: number; y: number; depthM: number } {
+    const terrain = this.terrain;
+    const canvas = this.renderer?.domElement;
+    if (terrain === null || canvas === undefined || canvas === null) {
+      return { x: 0, y: 0, depthM: 0 };
+    }
+    const rect = canvas.getBoundingClientRect();
+    const ndc = NDC_TMP.set(
+      ((clientX - rect.left) / rect.width) * 2 - 1,
+      -((clientY - rect.top) / rect.height) * 2 + 1
+    );
+    const raycaster = RAY_TMP;
+    raycaster.setFromCamera(ndc, this.camera);
+    const { origin, direction } = raycaster.ray;
+    // How far along the ray the focus plane is; not positive when it lies
+    // behind the eye or the ray runs level with it.
+    const toPlane = Math.abs(direction.y) < 1e-6 ? -1 : (this.focusY() - origin.y) / direction.y;
+
+    let ground: 'floor' | 'roof' | null = null;
+    let x: number;
+    let z: number;
+    const hit =
+      this.terrainMesh === null
+        ? undefined
+        : raycaster.intersectObjects(
+            [
+              this.terrainMesh,
+              ...this.roofs.filter((roof) => roof.material.opacity === 1).map((roof) => roof.mesh),
+            ],
+            false
+          )[0];
+    if (hit !== undefined && (toPlane <= 0 || hit.distance <= toPlane)) {
+      ground = hit.object === this.terrainMesh ? 'floor' : 'roof';
+      x = hit.point.x;
+      z = hit.point.z;
+    } else {
+      // The plane, or — where the ray never meets it — a point far out along
+      // the ray's heading, which the map clamp below brings to the edge.
+      const along = toPlane > 0 ? toPlane : HORIZON_T;
+      x = origin.x + direction.x * along;
+      z = origin.z + direction.z * along;
+    }
+    x = Math.min(terrain.cols * terrain.cellM, Math.max(0, x));
+    z = Math.min(terrain.rows * terrain.cellM, Math.max(0, z));
+
+    const col = Math.min(terrain.cols - 1, Math.max(0, Math.floor(x / terrain.cellM)));
+    const row = Math.min(terrain.rows - 1, Math.max(0, Math.floor(z / terrain.cellM)));
+    const cell = row * terrain.cols + col;
+    const deepest = Math.min(terrain.floor[cell]!, DEPTH.MAX_M);
+    const shallowest = Math.max(DEPTH.MIN_M, terrain.ceiling[cell]!);
+    // Solid rock has no water between the two, and the floor is the answer:
+    // the order is on the ground, which is what the click was on.
+    const depthM =
+      ground === 'floor'
+        ? deepest
+        : ground === 'roof'
+          ? Math.min(shallowest, deepest)
+          : Math.min(deepest, Math.max(shallowest, this.focusDepth()));
+    return { x, y: z, depthM };
+  }
+
+  /**
    * Water to pixels. `depthM` places the point in the column; null means "on
    * the seabed here", which is what chart-flat geometry (blocked cells, node
    * fields, hazard sites) projects through. `pxPerM` is the local scale, so
@@ -1234,16 +1323,6 @@ export class PerspectiveView {
   }
 
   /**
-   * Turn the camera by an angle rather than by a drag — the touch twist,
-   * which arrives as radians off two fingers and has no business knowing what
-   * a pixel of orbit is worth.
-   */
-  yawBy(radians: number): void {
-    this.yaw = (this.yaw + radians) % (Math.PI * 2);
-    this.applyCamera();
-  }
-
-  /**
    * Raise or sink the focus through the water column — docs/free-camera.md §4.
    * Positive rises (toward the surface), because that is what a wheel pushed
    * away from the player should do to a thing in front of them.
@@ -1251,12 +1330,27 @@ export class PerspectiveView {
    * The first call is what takes the focus off the seabed: until then it is
    * `null`, and the step has to start from where the ground actually is or the
    * focus would jump to 0 m on the first notch.
+   *
+   * Sunk to the seabed, it lands there: `null` again, following the ground
+   * under a pan as it does from `home()` (#1132). Without that the drag could
+   * never give back the frame where a click on the ground below the focus is a
+   * click on the ground, short of `Home` taking the angles with it.
    */
   raiseFocusBy(metres: number): void {
-    const from = this.focusDepthM ?? this.seabedDepthAt(this.target.x, this.target.z);
-    this.focusDepthM = from - metres;
+    const seabed = this.seabedDepthAt(this.target.x, this.target.z);
+    const next = (this.focusDepthM ?? seabed) - metres;
+    this.focusDepthM = next >= seabed ? null : next;
     this.clampTarget();
     this.applyCamera();
+  }
+
+  /**
+   * The depth the focus sits at, metres: where a click into open water lands
+   * (docs/ui-ux.md §9), and what the depth ribbon's focus tick reads (§8). On
+   * the seabed, the drawn seabed under it.
+   */
+  focusDepth(): number {
+    return this.focusDepthM ?? this.seabedDepthAt(this.target.x, this.target.z);
   }
 
   /**

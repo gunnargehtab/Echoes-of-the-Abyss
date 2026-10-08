@@ -692,15 +692,26 @@ export class GameClient {
 
   // --- Intents -------------------------------------------------------------
 
-  moveTo(unitIds: number[], x: number, y: number, queued = false): void {
+  /**
+   * Go there, at a depth when the click gave one (#1132): a click is a point in
+   * the water (docs/ui-ux.md §9). The server decides whether that depth is on
+   * the ground and follows it, and refuses one outside the column whole.
+   */
+  moveTo(unitIds: number[], x: number, y: number, queued = false, depth?: number): void {
     if (unitIds.length === 0) return;
-    this.order(CLIENT_MSG.move, { unitIds, x, y, queued });
+    this.order(
+      CLIENT_MSG.move,
+      depth === undefined ? { unitIds, x, y, queued } : { unitIds, x, y, depth, queued }
+    );
   }
 
   /** Attack-move (#435): go there, and fight whatever is met on the way. */
-  attackMoveTo(unitIds: number[], x: number, y: number, queued = false): void {
+  attackMoveTo(unitIds: number[], x: number, y: number, queued = false, depth?: number): void {
     if (unitIds.length === 0) return;
-    this.order(CLIENT_MSG.attackMove, { unitIds, x, y, queued });
+    this.order(
+      CLIENT_MSG.attackMove,
+      depth === undefined ? { unitIds, x, y, queued } : { unitIds, x, y, depth, queued }
+    );
   }
 
   stop(unitIds: number[]): void {
@@ -745,25 +756,6 @@ export class GameClient {
   setEngineOff(unitIds: number[], active: boolean): void {
     if (unitIds.length === 0) return;
     this.order(CLIENT_MSG.engineOff, { unitIds, active });
-  }
-
-  /**
-   * Order a depth change. Descent is fast and loud, ascent slow and silent —
-   * the server owns both rates and refuses a depth outside the map's range.
-   */
-  setDepth(unitIds: number[], depth: number): void {
-    if (unitIds.length === 0) return;
-    this.order(CLIENT_MSG.depth, { unitIds, depth });
-  }
-
-  /**
-   * Arm or disarm floor-following — the standing order of
-   * docs/systems-depth.md §2. The server owns the retargeting, the PR
-   * disengage, and the dive loudness; this only speaks the mode.
-   */
-  setFollowFloor(unitIds: number[], active: boolean): void {
-    if (unitIds.length === 0) return;
-    this.order(CLIENT_MSG.followFloor, { unitIds, active });
   }
 
   /** The big red button. Cost is previewed in the HUD before this is called. */

@@ -140,16 +140,15 @@ into water through the shared conn camera:
 | Input | Effect | Needs a selection? |
 | --- | --- | --- |
 | Left click | Select nearest owned unit or structure (shift adds) — **unless a build is armed, which swallows the click to place it** | no |
-| Right click | Context order — move, or attack/harvest a contact under the cursor | yes |
+| Right click | Context order — move, or attack/harvest a contact under the cursor. Given on release; a move lands at a depth too, on the ground (and follows it) or on the camera's focus plane (#1132) | yes |
 | Middle drag | Pan | no |
-| Wheel | Zoom (dolly) about the cursor | no |
+| Left + right drag | Camera: across pans sideways, up and down sinks and raises the focus — the depth an open-water click orders | no |
+| Wheel | Zoom (dolly) about the cursor; `Shift` + wheel moves the focus 150 m a notch | no |
 | `R` / `F` / `T` | Arm a refinery / foundry / turret, then left click to place | no |
-| `D` / `A` | Dive / rise one band station | yes |
-| `S` | Toggle floor-following | yes |
 | `P` | Active sonar ping | yes |
 | `Space` | Toggle silent running | yes |
 | `V` | Cycle harvest throttle | yes |
-| Hold `Alt` | Preview what a ping would cost you | yes |
+| Hold `Alt` | Preview what a ping, and the click under the cursor, would cost you | yes |
 | `Escape` | Cancel a pending build — handled before every other key, so it is safe to press unconditionally | no |
 
 Unit production has no keys — the digits are control groups — so producing a

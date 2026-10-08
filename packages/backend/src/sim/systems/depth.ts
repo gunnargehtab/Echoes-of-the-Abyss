@@ -25,7 +25,7 @@
  */
 
 import { defineQuery, hasComponent } from 'bitecs';
-import { crushAttritionPerSecond, DEPTH, FOLLOW_FLOOR } from '@echoes/shared';
+import { crushAttritionPerSecond, DEPTH, FOLLOW_FLOOR, onTheGround } from '@echoes/shared';
 import { DepthOrder, MoveOrder, Position, Pressure, SilentRunning } from '../components.ts';
 import type { SimWorld } from '../world.ts';
 
@@ -97,8 +97,7 @@ export function orderDepthAt(
   depthM: number
 ): void {
   if (!hasComponent(world, DepthOrder, eid)) return;
-  const reach = Math.min(world.terrain.floorAt(x, y), DEPTH.MAX_M);
-  if (depthM < reach - FOLLOW_FLOOR.ENGAGE_WITHIN_M) {
+  if (!onTheGround(world.terrain.floorAt(x, y), depthM)) {
     setDepthTarget(world, eid, depthM);
     return;
   }
