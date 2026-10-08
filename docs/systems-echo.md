@@ -394,11 +394,13 @@ Silent Running trades **weapons** for quiet. There is a state below it that trad
 - Weapons, unlike Silent Running, still work. Firing costs the usual spike, and a spike is
   enormous relative to a floor: an engine-off ambush is the quietest one available and the
   most conspicuous the instant it opens.
-- It stops work, as Silent Running does: an engine-off hull cannot mine, sow, burn kelp
-  with its thermal cutters, work a mission's lift or hold a sounding, and a Commune hull
-  takes no bloom share. A drive cut is machinery shut down, and every one of those is
-  machinery. An effect or siege hull's work is a role rather than a yield, and goes on with
-  the drive cut as its weapons do.
+- It stops the work Silent Running stops, save one kind: an engine-off hull cannot mine,
+  sow, burn kelp with its thermal cutters, work a mission's lift or hold a sounding, and a
+  Commune hull takes no bloom share.
+- Unlike silence, it leaves an effect hull at work — the Sower's bloom, the Cantus's song
+  and the Tender's repair. That work is a role in a fight, as a weapon is, and it is heard
+  at its working figure; a siege hull's cycle is a weapon outright, and works on under
+  either posture.
 - It cannot quieten a hull that is loud for another reason. Descent, laying and an effect or
   siege hull's working figure are floors applied over the whole posture chain — a hull
   cannot dive with its engine off any more than it can dive silently.

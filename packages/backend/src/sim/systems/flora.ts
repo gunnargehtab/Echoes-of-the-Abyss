@@ -144,7 +144,7 @@ const sowers = defineQuery([Sowing, Position, Owner, Health]);
  *
  * Everything the order is refused for, in one place, because the room and the
  * tests both have to ask the same question. The rules are the doc's two
- * limits plus the one every worked act in this game shares:
+ * limits plus the posture rule mining, the share and the cutter share:
  *
  * - **Commune only.** §6 gives sowing to the one navy whose doctrine is cover;
  *   it is the only entry in that table that puts something back.
@@ -186,10 +186,10 @@ export function startSowing(world: SimWorld, eid: number): boolean {
  * Serve the sowings in progress — docs/systems-flora.md §2.
  *
  * Forty-five seconds on station, and *on station* is the load-bearing half:
- * moving breaks it, going silent breaks it, dying breaks it, and a broken
- * sowing credits nothing at all. That is what makes it a commitment to a
- * piece of water rather than a button — the cutter's burn at seven times the
- * length and a third of the noise.
+ * moving breaks it, going silent or cutting the drive breaks it, dying breaks
+ * it, and a broken sowing credits nothing at all. That is what makes it a
+ * commitment to a piece of water rather than a button — the cutter's burn at
+ * seven times the length and a third of the noise.
  *
  * What it buys is not applied here. The bed is *owed* a quarter of a canopy
  * and lays it down over the two minutes that follow (`hazardsSystem`), so the

@@ -167,13 +167,13 @@ lower it. The constant is right, and the two built documents are the side that m
    The button is on the panel anyway.
 
 **Silent Running is present, and this mission prices it in both directions.** It **stops the
-sowing outright**: a sounding needs a hull that is not silent (`runtime.ts`, `holdingSounding`),
-so a sower that goes quiet on the rock loses the hold and keeps paying for the rock. On the dive
-it is the wrong button and does nothing: an order deeper than the hull clears silence
-(`match.ts`, `applyDepth`) and the descent floors SIG at 72 regardless. On the climb it is the
-right button and costs only speed: a shallower order leaves silence standing, ascent adds no SIG,
-and the Commune's multiplier is 0.8 — a silent tender climbs the doorway at 32 m/s reading 4.5
-by the shipped curve, a silent scout at 96 reading 3.5.
+sowing outright**: a sounding needs a hull that is neither silent nor engine-off (`runtime.ts`,
+`holdingSounding`), so a sower that goes quiet on the rock loses the hold and keeps paying for
+the rock. On the dive it is the wrong button and does nothing: an order deeper than the hull
+clears silence (`match.ts`, `applyDepth`) and the descent floors SIG at 72 regardless. On the
+climb it is the right button and costs only speed: a shallower order leaves silence standing,
+ascent adds no SIG, and the Commune's multiplier is 0.8 — a silent tender climbs the doorway at
+32 m/s reading 4.5 by the shipped curve, a silent scout at 96 reading 3.5.
 
 ---
 

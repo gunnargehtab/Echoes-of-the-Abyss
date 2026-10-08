@@ -1960,8 +1960,8 @@ export class Match {
    * Sow — docs/systems-flora.md §2. The bed the hull is standing in, which is
    * why there is nothing to name and nothing to resolve.
    *
-   * Returns false when the hull is not a live, non-silent Commune hull over a
-   * standing bed, or is already sowing. Refusal is silent, like the Lure's:
+   * Returns false when the hull is not a live Commune hull, neither silent nor
+   * engine-off, over a standing bed, or is already sowing. Refusal is silent, like the Lure's:
    * the client learns the answer from the hull's own SIG a tick later.
    */
   sow(slot: number, eid: number): boolean {

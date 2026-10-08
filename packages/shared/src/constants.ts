@@ -1205,9 +1205,10 @@ export const HADRON = {
  * (docs/mission-tend.md §13): no drive-mine-haul-deposit cycle, no throttle,
  * no cargo — a bed pays while a live Commune hull *tends* it, and stops the
  * tick it is untended. "Held" is tended, not possessed (docs/mission-tend.md
- * §4): a hull driven off, killed, or running silent stops the share, because
- * Silent Running stops the work (docs/systems-echo.md §6 — "SIG falls to
- * single digits, the share stops accruing", docs/mission-tend.md §3).
+ * §4): a hull driven off, killed, running silent or with its drive cut stops
+ * the share, because either posture stops the work (docs/systems-echo.md §6;
+ * for silence, docs/mission-tend.md §3: "SIG falls to single digits, the
+ * share stops accruing").
  *
  * **There is no rate here, and that is the point of the fold.** Bloom-share
  * paid a flat 0.8 nodules a second out of authored map data with no supply

@@ -254,8 +254,8 @@ export const SEEDING_DEEP_FURROW: MissionDefinition = {
   ],
 
   /**
-   * §4.3 — the sowing. Sixty seconds inside 250 m of the point, bow on it, not
-   * silent, at 45, on rock that costs four a second.
+   * §4.3 — the sowing. Sixty seconds inside 250 m of the point, bow on it,
+   * neither silent nor engine-off, at 45, on rock that costs four a second.
    *
    * The point is chosen so the hold's whole radius lies outside the standing
    * furrow's grant: the sower stands at x ≥ 2,375 and the grant ends at

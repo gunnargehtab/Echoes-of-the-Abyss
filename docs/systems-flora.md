@@ -397,7 +397,7 @@ order:
 7. **Sowing**, and the commander's opinion about all of it. *Built (#576, #582).* Sowing is
    forty-five seconds on station at the Commune's own 18, and the bed is owed a quarter of a
    canopy which it lays down over the two minutes after — so the hull that bought the cover is
-   gone before it arrives. Moving, going silent or dying breaks it and credits nothing; two
+   gone before it arrives. Moving, going silent, cutting the drive or dying breaks it and credits nothing; two
    hulls on one bed owe it half a canopy; a full bed forgives the seed rather than banking it.
    The two limits above hold in the code: `orderSow` needs a standing bed under the hull, so
    ground is never created, and only the Commune may sow at all.

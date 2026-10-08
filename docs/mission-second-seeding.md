@@ -192,14 +192,14 @@ replace ([mission-in-writing.md](mission-in-writing.md) §4). A tender silent un
 4.5 × 0.4 = 1.8 through 1.6, which is nothing to a submersible's 85 past 894 m; the same tender
 idling is 7.2, a Classification from 1,200 m; the barge silent is 3.0, a Contact from 1,239;
 the barge idling is 22, a Track from 1,798. The watch's western station is 1,160 m from the
-bed. So a column that is silent is a smudge to the watch for five minutes of the concern's
-day, and a column that forgot to be silent is a Cruiser, named, with its heading. Silence
-costs the Commune the difference between 40 m/s and 32, and there is nowhere to go, so it
-costs nothing until the sowing — a sounding needs a hull that is not silent (`holdingSounding`)
-— and the sower drops silence to plant. Dropping silence is not firing: `applyFiringSpike` is
-the only place the +40 spike is applied, so a sower that stops being quiet goes 1.8 → 7.2 →
-18 under the bed and nothing louder, which is a finding this document states because the plan
-for it assumed a spike (§13).
+bed. So a column that is silent is a smudge to the watch for five minutes of the concern's day,
+and a column that forgot to be silent is a Cruiser, named, with its heading. Silence costs the
+Commune the difference between 40 m/s and 32, and there is nowhere to go, so it costs nothing
+until the sowing — a sounding needs a hull that is neither silent nor engine-off
+(`holdingSounding`) — and the sower drops silence to plant. Dropping silence is not firing:
+`applyFiringSpike` is the only place the +40 spike is applied, so a sower that stops being
+quiet goes 1.8 → 7.2 → 18 under the bed and nothing louder, which is a finding this document
+states because the plan for it assumed a spike (§13).
 
 ---
 

@@ -112,8 +112,8 @@ export interface MapResource {
  *
  * Ground, not a stockpile: it carries no `kind` and no `amount`, and tending
  * it takes nothing off it. It pays the Commune the bed's own regrowth while a
- * live, non-silent Pelagia hull stands inside the same radius
- * (`bloomShare.ts`), and pays nothing otherwise.
+ * live Pelagia hull, neither silent nor engine-off, stands inside the same
+ * radius (`bloomShare.ts`), and pays nothing otherwise.
  *
  * Authored on *surface plateau* ground only — Shelf band, per the balance
  * guard-rail (docs/systems-echo.md §10): the exposure is the mechanic, and
