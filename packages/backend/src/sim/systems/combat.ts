@@ -433,7 +433,7 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
           //
           // The nearest-first branch gets its range bound from `bestDistance`
           // starting at the gun's reach; this one has to say it (#1219).
-          // Without it the loudest hull on the map won, out of reach, and an
+          // Without it the loudest enemy on the map won, out of reach, and an
           // unordered gun does not chase, so the Derrick held it and fired at
           // nothing while an enemy stood inside its range.
           if (byLoudness) {

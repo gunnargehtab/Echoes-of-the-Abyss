@@ -1177,7 +1177,7 @@ describe('the mid-tier — guns that read SIG', () => {
     advance(match, 6);
     assert.ok(
       Health.hp[far]! < farHp,
-      'the Derrick fires on the loudest thing it can hear, however far'
+      'the Derrick fires on the loudest hull in range, though it is the farther one'
     );
     assert.equal(Health.hp[near]!, nearHp, 'and leaves the quiet hull standing closer alone');
     assert.ok(Health.hp[shooter]! > 0, 'the shooter is alive to have done it');
