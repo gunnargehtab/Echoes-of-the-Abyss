@@ -2470,13 +2470,31 @@ describe('renderer smoke test: input and teardown', () => {
       const level = textSaying(world.app.stage, 'LEVEL');
       assert.equal(level, 'LEVEL', `the preview at the hull's own depth read ${level}`);
 
-      // And a metre below it is a dive, however small: a deeper depth order
-      // breaks Silent Running, and `LEVEL` must never hide that.
+      // A metre below it snaps too, so it is never charged the descent's SIG,
+      // and a hull that is not silent pays nothing for it (#1246).
       world.conn.raiseFocusBy(-2);
       const below = world.conn.projectPoint(2000, 2000, world.conn.focusDepth());
       hover(below.x, below.y);
+      const shallow = textSaying(world.app.stage, 'LEVEL');
+      assert.equal(shallow, 'LEVEL', `a metre below a hull that is not silent read ${shallow}`);
+
+      // Silent, the same metre costs the silence a deeper depth order breaks,
+      // and the readout names that rather than a SIG it will not pay.
+      const silent = cannedSnapshot();
+      silent.units.find((unit) => unit.id === 11)!.silentRunning = true;
+      world.chart.applySnapshot(silent);
+      world.conn.applySnapshot(silent);
+      world.frame(1);
+      hover(below.x, below.y);
+      const breaks = textSaying(world.app.stage, 'DIVE');
+      assert.equal(breaks, 'DIVE · BREAKS SILENCE', `a metre below a silent hull read ${breaks}`);
+
+      // Past the snap it is a dive, charged as one.
+      world.conn.raiseFocusBy(-10);
+      const past = world.conn.projectPoint(2000, 2000, world.conn.focusDepth());
+      hover(past.x, past.y);
       const deeper = textSaying(world.app.stage, 'DIVE');
-      assert.match(deeper ?? '', /^DIVE \d+ SIG$/, `a metre below the hull read ${deeper}`);
+      assert.match(deeper ?? '', /^DIVE \d+ SIG$/, `eleven metres below the hull read ${deeper}`);
     } finally {
       world.teardown();
     }
