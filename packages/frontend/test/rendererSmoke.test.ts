@@ -30,6 +30,7 @@ import {
   Faction,
   FOLLOW_FLOOR,
   FaunaSpecies,
+  MOVEMENT,
   MovementHoldReason,
   onTheGround,
   ResolutionTier,
@@ -3653,13 +3654,16 @@ describe('renderer smoke test: the free camera', () => {
    * across it, whose ceiling is the surface. Whichever side the arithmetic
    * falls, the click is on the roof and means the water under it (§9): the
    * depth, and the point too, which the server's follow test reads the floor
-   * under.
+   * under. The point is drawn deeper into the roof's cell than a hull's arrival
+   * tolerance, because a hull that stops short of it from the open side is the
+   * one whose station reads the cell it stopped in (#1227).
    */
   it('reads a click on a roof wall as the water under that roof', async () => {
     const world = await boot();
     try {
       world.frame(3);
       world.conn.home();
+      const inset = 2 * MOVEMENT.ARRIVAL_EPSILON_M;
       // The canned passage covers rows 5–6 and columns 12–13 under a 1,600 m
       // ceiling. Its south wall stands on y 1,750 m over water deeper than
       // that ceiling, so it is a lintel, and it faces the home camera.
@@ -3668,8 +3672,9 @@ describe('renderer smoke test: the free camera', () => {
         const face = world.conn.projectPoint(x, 1750, 1560);
         assert.ok(face.visible, `the lintel at x ${x} is on screen`);
         const click = world.conn.resolveWater(face.x, face.y);
+        const inside = 1750 - click.y;
         assert.ok(
-          Math.abs(click.y - 1750) < 1,
+          inside >= 0 && inside <= inset + 1,
           `the premise: the click at x ${x} hit the wall, not y ${click.y.toFixed(1)}`
         );
         assert.equal(
@@ -3681,6 +3686,42 @@ describe('renderer smoke test: the free camera', () => {
           Math.floor(click.y / CELL_M),
           6,
           `and the point at x ${x} lies in the roof's own row, not y ${click.y}`
+        );
+        assert.ok(
+          inside > MOVEMENT.ARRIVAL_EPSILON_M,
+          `far enough in that a hull arriving short of it is under the roof: ${inside} m`
+        );
+      }
+
+      // The east wall, on x 3,500 m over the same deeper water, seen with the
+      // camera turned to face west at it.
+      const aim = (
+        globalThis as unknown as {
+          window: {
+            __perspectiveCamera: (
+              x: number,
+              z: number,
+              d?: number,
+              a?: { yawDeg?: number }
+            ) => void;
+          };
+        }
+      ).window.__perspectiveCamera;
+      aim(4250, 1500, undefined, { yawDeg: 90 });
+      for (const z of [1300, 1400, 1500, 1600, 1700]) {
+        const face = world.conn.projectPoint(3500, z, 1560);
+        assert.ok(face.visible, `the east lintel at y ${z} is on screen`);
+        const click = world.conn.resolveWater(face.x, face.y);
+        const inside = 3500 - click.x;
+        assert.ok(
+          inside >= 0 && inside <= inset + 1,
+          `the premise: the click at y ${z} hit the east wall, not x ${click.x.toFixed(1)}`
+        );
+        assert.equal(click.depthM, 1600, `a click on the east lintel ordered ${click.depthM} m`);
+        assert.equal(
+          Math.floor(click.x / CELL_M),
+          13,
+          `and the point at y ${z} lies in the roof's own column, not x ${click.x}`
         );
       }
     } finally {

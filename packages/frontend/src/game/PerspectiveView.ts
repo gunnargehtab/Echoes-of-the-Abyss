@@ -64,6 +64,7 @@ import {
   DEPTH,
   Faction,
   MODEL_LIGHTING,
+  MOVEMENT,
   statsFor,
   structureStatsFor,
   type EchoSnapshot,
@@ -400,12 +401,16 @@ function groundPlaneT(originY: number, directionY: number, groundY: number): num
 const HORIZON_T = 1e6;
 
 /**
- * How far inside its own cell a click on a roof wall is drawn, metres. Not a
- * tuning number: a wall stands on the edge between two cells, and a point
- * exactly on it floors into whichever the arithmetic picks. A centimetre is
- * far enough to settle it and too small for anything to see.
+ * How far inside the roof's own cell a click on a roof wall is drawn, metres.
+ * Derived, not tuned: a hull counts as arrived anywhere within
+ * `MOVEMENT.ARRIVAL_EPSILON_M` of its point, and following the floor reads the
+ * cell the hull stopped in (`followTheFloor`). Twice that keeps a hull coming
+ * from the open side of a lintel stopping under the roof, so it holds over the
+ * roof's floor rather than the one beyond the wall (#1227). A hull pressed
+ * against a curtain it cannot pass under never arrives, which is how any move
+ * to water out of reach at its depth already ends.
  */
-const ROOF_INSET_M = 0.01;
+const ROOF_INSET_M = 2 * MOVEMENT.ARRIVAL_EPSILON_M;
 
 interface EntityHandle {
   mesh: Mesh;
@@ -1247,8 +1252,9 @@ export class PerspectiveView {
     // the passage's, so read there a click on a lintel ordered the hull up to
     // `DEPTH.MIN_M`, and the server's follow test judged the wrong floor. The
     // roof that was hit answers for the whole order: its cell gives the depth,
-    // and the point is drawn just inside that cell, so the server, the station
-    // it holds on arrival and the Alt preview all read the same water (§9).
+    // and the point is drawn `ROOF_INSET_M` inside that cell, so the server,
+    // the station it holds on arrival and the Alt preview all read the same
+    // water (§9).
     if (ground === 'roof' && hit !== undefined) {
       cell = this.roofCellNear(hit.object, x, z, cell);
       const x0 = (cell % terrain.cols) * terrain.cellM;
