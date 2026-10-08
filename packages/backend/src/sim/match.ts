@@ -3150,7 +3150,14 @@ export class Match {
         units,
         structures,
         ordnance: this.collectOwnOrdnance(slot),
-        contacts: result.contactsBySlot.get(slot) ?? [],
+        // Contacts and marks are copied, entries and all (#1224). The Echo
+        // pass empties and refills these same arrays on its next run, and
+        // rewrites held marks and phantoms in place, so a snapshot holding
+        // them would change after it was handed out. The room diffs each
+        // patch against the snapshot it sent last, and that one already read
+        // like the new pass, so no patch carried a contact or a mark. Both
+        // entry types are flat, so a spread is a whole copy.
+        contacts: (result.contactsBySlot.get(slot) ?? []).map((contact) => ({ ...contact })),
         peakSig,
         nodules: economyFor(this.world, slot).nodules,
         crystal: economyFor(this.world, slot).crystal,
@@ -3159,7 +3166,7 @@ export class Match {
           trackedCount: 0,
         },
         selfEvents: eventsBySlot.get(slot) ?? [],
-        marks: result.marksBySlot.get(slot) ?? [],
+        marks: (result.marksBySlot.get(slot) ?? []).map((mark) => ({ ...mark })),
         // Public, unlike everything else here: docs/maps.md requires hazard
         // telegraphing, and a telegraph only one player can read is not one.
         hazards,
