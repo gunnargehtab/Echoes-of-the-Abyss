@@ -333,7 +333,7 @@ waypoint stands over, and the dive column is the loud part of the leg.
 
 | Leg | Ordered | Waypoint | Depth | Ground | The loud part |
 | --- | --- | --- | --- | --- | --- |
-| 1 | 01:00, 01:30 | 2500, 700 | 330 m | The Concourse's southern edge, floor 340 | None. The first metre south scatters the middle shoal |
+| 1 | 01:00, 01:30 | 2500, 700 | 330 m | The Descent's northern row, cut into the Concourse's southern edge, floor 900 | None. The first metre south scatters the middle shoal |
 | 2 | 02:00, 02:30 | 2625, 1125 | **850 m** | The Descent, floor 900 | **The first dive**, 330 → 850, 11.6 s at 72, taken on the move; 791 m from the pack |
 | 3 | 03:00, 03:30 | 2625, 1600 | 850 m | The Descent | None. 783 m from the pack, the closest the lane comes |
 | 4 | 04:00, 04:30 | 1875, 1625 | **1,475 m** | The Districts west of the Descent's foot, floor 1,600 — the only water beside the lock's mouth deep enough to go under its roof | **The second dive.** Held at the Descent's 900 m floor until the hull is over Districts water, then 900 → 1,475, 12.8 s at 72, at the lock's mouth |
@@ -844,7 +844,7 @@ authored hull for the depth it is authored at"):
 | `seed-one`, `seed-two`, `seed-three` | 2350, 300 · 2650, 300 · 2500, 225 | 330 m | As the barge; `pressureRating: 3` on the Harvester's 2 |
 | `escort-one`, `escort-two`, `escort-three` | 2250, 150 · 2500, 100 · 2750, 150 | 330 m | The Corvette's PR-2 |
 | `watch-one`, `watch-two` | 2000, 250 · 3000, 250 | 300 m | The Light Scout's PR-1 covers the Shelf, and 300 is in it |
-| Three Lampfry shoals | 2250, 725 · 2500, 725 · 2750, 725 | 250 m | The Concourse's 340; every seat more than 300 m from every shoal in three dimensions, so the shoals are whole at tick zero |
+| Three Lampfry shoals | 2250, 725 · 2500, 725 · 2750, 725 | 250 m | The Descent's 900, in the northern row it cuts into the Concourse's southern edge (#1161); every seat more than 300 m from every shoal in three dimensions, so the shoals are whole at tick zero |
 | `the-descent-pack` | 3375, 1375 | 900 m | The Districts' 1,600 — the cell column at 3,250–3,500 lies east of the Descent |
 | `gate-hollow-west`, `gate-hollow-east` | 1750, 3100 · 3250, 3100 | 1,700 m | The Commit's 2,400, in its northern row |
 | `the-colossus` | 1750, 3650 | 2,000 m | The Commit's 2,400; the Sounder's own working depth |
