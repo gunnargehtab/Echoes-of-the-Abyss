@@ -38,6 +38,7 @@ import {
   Pressure,
   ResourceNode,
   EngineOff,
+  Seeder,
   SilentRunning,
   Song,
   Spore,
@@ -207,6 +208,9 @@ export function hashWorld(world: SimWorld): number {
       h = mixFloat(h, Song.x[eid]!);
       h = mixFloat(h, Song.y[eid]!);
     }
+    // A reseed clock decides whether the next wall takes a strain, so two runs
+    // that disagree about it have diverged before any wall says so.
+    if (hasComponent(world, Seeder, eid)) h = mixFloat(h, Seeder.cooldownS[eid]!);
     if (hasComponent(world, Pressure, eid)) {
       h = mixU32(h, Pressure.rating[eid]!);
       h = mixU32(h, Pressure.bonus[eid]!);

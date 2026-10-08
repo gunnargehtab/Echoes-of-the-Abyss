@@ -21,12 +21,13 @@ import {
   type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
-import { Health, Position, Song, Spore, Structure, Unit } from '../components.ts';
+import { Health, Position, Seeder, Song, Spore, Structure, Unit } from '../components.ts';
 import type { SimWorld } from '../world.ts';
 import { creditWound } from './fauna.ts';
 
 const spored = defineQuery([Spore, Structure, Health]);
 const singers = defineQuery([Song, Position, Unit]);
+const seeders = defineQuery([Seeder]);
 
 /**
  * Seed a structure. Returns false when the target already carries a strain.
@@ -135,6 +136,14 @@ export function siegeSystem(world: SimWorld, destroyed: number[]): void {
       if (working !== undefined) world.siegeWorkSig.set(eid, working);
     }
     if (Song.cooldownS[eid]! > 0) Song.cooldownS[eid] = Math.max(0, Song.cooldownS[eid]! - dt);
+  }
+
+  // The Blight's reseed clock: "reseedable every 45 s" (docs/units.md).
+  const blights = seeders(world);
+  for (let i = 0; i < blights.length; i++) {
+    const eid = blights[i]!;
+    if (Seeder.cooldownS[eid]! > 0)
+      Seeder.cooldownS[eid] = Math.max(0, Seeder.cooldownS[eid]! - dt);
   }
 }
 

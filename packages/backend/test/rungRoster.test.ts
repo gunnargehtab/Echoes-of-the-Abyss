@@ -37,6 +37,7 @@ import { seedSpore, songWeightAt } from '../src/sim/systems/siege.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import {
   Acoustic,
+  Countermeasure,
   Health,
   Weapon,
   HullEffect,
@@ -1057,6 +1058,55 @@ describe('the Blight — a spore, and silence', () => {
       before,
       'a spored wall must sound exactly like an unspored one'
     );
+  });
+
+  it('reseeds once its cooldown has run, through the order a player gives (#1226)', () => {
+    // docs/units.md, the Blight: "reseedable every 45 s". Through
+    // `Match.seedSpore`, where the clock lives, rather than the strain alone.
+    const { match } = skirmish(Faction.Pelagia);
+    const blight = hull(match, Faction.Pelagia, UnitKind.Blight, 6000, 6000);
+    const wall = (x: number): number =>
+      spawnStructure(match.world, {
+        kind: StructureKind.Refinery,
+        slot: 1,
+        faction: Faction.Directorate,
+        x,
+        y: 6000,
+        prebuilt: true,
+      });
+    const [first, second] = [wall(6200), wall(5800)];
+    // The order names a wall by its handle, so each is found in what the
+    // Blight's own side hears of it.
+    const handleOf = (target: number): number => {
+      let best: { id: number; d: number } | undefined;
+      for (const contact of snapshotOf(match).contacts) {
+        const d = Math.hypot(contact.x - Position.x[target]!, contact.y - Position.y[target]!);
+        if (best === undefined || d < best.d) best = { id: contact.id, d };
+      }
+      assert.ok(best !== undefined && best.d < 50, 'the premise: the Blight hears the wall');
+      return best.id;
+    };
+
+    // The bytes a recycled entity id keeps: a dead armed hull's decoy suite
+    // left cold. The Blight's clock is its own now, so they decide nothing.
+    Countermeasure.cooldownRemainingS[blight] = HULL_EFFECTS.BLIGHT.COOLDOWN_S;
+
+    assert.ok(match.seedSpore(0, blight, handleOf(first)), 'the first wall takes a strain');
+    assert.equal(
+      match.seedSpore(0, blight, handleOf(second)),
+      false,
+      'the second waits out the cooldown'
+    );
+    // Held to the clause's 45 s on both sides. Each `handleOf` waits for the
+    // next Echo pass, a fifth of a second, which both margins absorb.
+    advance(match, HULL_EFFECTS.BLIGHT.COOLDOWN_S - 1);
+    assert.equal(
+      match.seedSpore(0, blight, handleOf(second)),
+      false,
+      'still cold a second short of the cooldown'
+    );
+    advance(match, 2);
+    assert.ok(match.seedSpore(0, blight, handleOf(second)), 'and takes one once it has run');
   });
 });
 

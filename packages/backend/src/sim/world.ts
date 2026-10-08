@@ -54,6 +54,7 @@ import {
   DecoyMagazine,
   EngineOff,
   PingCadence,
+  Seeder,
   Song,
   SilentRunning,
   StaticEmitter,
@@ -1164,6 +1165,14 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
     Song.cooldownS[eid] = 0;
     Song.x[eid] = 0;
     Song.y[eid] = 0;
+  }
+
+  // The Blight's reseed clock (docs/units.md, the Blight). Its own component:
+  // the decoy suite's store it used to borrow is never given to an unarmed
+  // hull, so the clock never ran (#1226).
+  if (opts.kind === UnitKind.Blight) {
+    addComponent(world, Seeder, eid);
+    Seeder.cooldownS[eid] = 0;
   }
 
   // A grown magazine, full at launch — the Spinner leaves the yard with its
