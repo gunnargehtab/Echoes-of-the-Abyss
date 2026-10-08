@@ -24,6 +24,9 @@
  * keystone — and two hulls on the lane are the record home, whichever of the
  * three heard the points (#1198).
  *
+ * The rim pack holds §5's 1,700 m for all seventy-five seconds of the
+ * telegraph, under the layer, and fights nothing on the way (#1199).
+ *
  * And the ground §11 draws in shapes since #1144: every authored point, leg
  * and shelf-lane cell on the ground it stood on in rectangles, read off the
  * painted cells rather than off a region's outline.
@@ -31,15 +34,19 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { defineQuery } from 'bitecs';
 
 import {
   Biome,
+  FaunaSpecies,
   MissionOutcome,
   ObjectiveStatus,
   ResolutionTier,
   SIM,
+  faunaStatsFor,
   type EchoSnapshot,
 } from '@echoes/shared';
+import { Fauna, Health, Owner, Position } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
 import { FIRST_TRENCH_MARGIN, missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { LEDGER_EXPOSURE, PROLOGUE_SORROWGATE, inRegion } from '../src/sim/missions/index.ts';
@@ -311,6 +318,60 @@ function survey(plan: 'below' | 'home' | 'scout') {
     statusAtClose: (id: string) => over.objectives.find((o) => o.id === id)?.status,
   };
 }
+
+describe('the rim pack, as docs/mission-exposure.md §5 drives it (#1199)', () => {
+  const pack = LEDGER_EXPOSURE.beats.flatMap((beat) => (beat.kind === 'creature' ? [beat] : []));
+  const change = LEDGER_EXPOSURE.beats.find((beat) => beat.kind === 'resolve')!.atTick;
+
+  it("drives every hound at 1,700 m rather than at the species' own, to the change", () => {
+    // The trap `types.ts` names: a drive without a depth holds the species'
+    // working depth, and a Draymaw's is 900 m, above the layer.
+    assert.equal(faunaStatsFor(FaunaSpecies.Draymaw).workingDepthM, 900);
+    assert.equal(pack.length, 3, '§5: one pack');
+    for (const beat of pack) {
+      assert.equal(beat.species, FaunaSpecies.Draymaw);
+      assert.equal(beat.spawnAt?.depthM, 1700, `${beat.tag}, spawned on the rim`);
+      assert.equal(beat.driveTo.depthM, 1700, `${beat.tag}, and held there`);
+      assert.equal(change - beat.atTick, 75 * SIM.TICK_HZ, '§8: seventy-five seconds of warning');
+      assert.equal(beat.untilTick, change, `${beat.tag}, driven to the change`);
+      assert.equal(beat.loud, true, '§8: the telegraph');
+    }
+  });
+
+  it('holds the rim under the layer to the whistle, and fights nothing on the way', () => {
+    // An idle run, read every five seconds of the seventy-five. Before #1199
+    // the pack climbed to 900 m and crossed the layer at 17:40; held at
+    // 1,700 m but released at 17:45, it fought the watch to the change.
+    const map = missionMapById(LEDGER_EXPOSURE.mapId)!;
+    const match = new Match(map, { mission: LEDGER_EXPOSURE, fauna: false, seed: 77 });
+    const hounds = defineQuery([Fauna, Position, Health]);
+    const watch = defineQuery([Owner, Health]);
+    const hpOf = (eids: Iterable<number>) => [...eids].map((eid) => Health.hp[eid]!);
+    const watchHulls = () => [...watch(match.world)].filter((eid) => Owner.slot[eid] === 2);
+    let samples = 0;
+    let houndHp: number[] = [];
+    let watchHp: number[] = [];
+    for (let tick = 0; tick <= T(18, 30) && match.missionOver === null; tick++) {
+      match.update(STEP_MS);
+      match.takeMissionView();
+      const since = match.world.tick - T(16, 45);
+      if (since <= 0 || since % (5 * SIM.TICK_HZ) !== 0) continue;
+      const alive = [...hounds(match.world)];
+      const at = `${(since / SIM.TICK_HZ).toFixed(0)} s into the telegraph`;
+      assert.equal(alive.length, 3, `every hound alive ${at}`);
+      for (const eid of alive) assert.equal(Position.depth[eid], 1700, `a hound's depth ${at}`);
+      if (samples++ === 0) {
+        houndHp = hpOf(alive);
+        watchHp = hpOf(watchHulls());
+      }
+    }
+    assert.equal(match.world.tick, change, 'the change closed the mission');
+    assert.equal(samples, 15, 'from 16:50 to the change');
+    assert.equal(watchHp.length, 2, '§5: the watch is two hulls');
+    assert.deepEqual(hpOf(hounds(match.world)), houndHp, 'the watch holed a hound');
+    assert.deepEqual(hpOf(watchHulls()), watchHp, 'the pack bit the watch');
+  });
+});
 
 describe('The Western Margin, as docs/mission-exposure.md §11 draws it (#1144)', () => {
   // The map is drawn in shapes since #1144, and a reshape is new content,
