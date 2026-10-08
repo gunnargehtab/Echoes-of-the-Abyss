@@ -326,7 +326,7 @@ function survey(plan: 'below' | 'home' | 'scout') {
 describe('the voices, as docs/mission-exposure.md §12 writes them (#1200)', () => {
   it('is §12’s text, and not a paraphrase of it', () => {
     // Point six's entry lost §12's "at us" in the commit that wrote both, and
-    // nothing held either side, because the line is read only at the close.
+    // no test held Exposure's §12 to the literal, as one holds Sorrowgate's.
     // The Sorrowgate idiom (missionRuntime.test.ts): pull the subsection's
     // block quotes in order and hold each to the line the literal speaks.
     const doc = readFileSync(new URL('../../../docs/mission-exposure.md', import.meta.url), 'utf8');
