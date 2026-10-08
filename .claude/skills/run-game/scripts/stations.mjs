@@ -6,8 +6,8 @@
  *
  * Every conn-view frame-time number in the Phase 1/2/5 records measures
  * SwiftShader in a container, which is the software rasteriser and not the
- * scene. The numbers gate 6 actually wants come from a machine with a real GPU
- * and from an Android device under Termux, and they are read **per station**:
+ * scene. The numbers gate 6 actually wants come from a machine with a real GPU,
+ * and they are read **per station**:
  * the shipped frame is composited from two painters, and the remedies gate 6
  * might reach for act on one of them.
  *
@@ -17,15 +17,14 @@
  * docs/graphics-standards.md and docs/three-layer-ocean.md.
  *
  * Dwell defaults to six seconds — 240 frames at 60 fps is four, and the
- * average's window is 240 — and `STATION_SECONDS` raises it, which the Termux
- * floor needs: at 20 fps a windowful is twelve seconds, and a station that
+ * average's window is 240 — and `STATION_SECONDS` raises it, which a slow
+ * machine needs: at 20 fps a windowful is twelve seconds, and a station that
  * ends early reports an average over fewer frames than it looks like. The
  * table prints `frames` and `avg over` side by side so that is visible rather
  * than assumed.
  *
- * On a device where Playwright will not run — which includes most Termux
- * setups — paste stations-console.js beside this file into the page's console
- * instead. It is these five stations, driven the same way, reading the same
+ * On a machine where Playwright will not run, paste stations-console.js beside
+ * this file into the page's console instead. It is these five stations, driven the same way, reading the same
  * two calls:
  *
  *   window.__perspectiveStation('marquee');   // begin, zeroing the counters

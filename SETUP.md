@@ -82,41 +82,33 @@ npm -w packages/frontend run dev # Vite dev server
 Point the client at a non-default server with `VITE_SERVER_URL`. To reach the
 dev server from another device on the same network, add `--host` to the Vite
 script — the client derives its WebSocket endpoint from whatever host served
-the page, so no further configuration is needed. See
-[SETUP-ANDROID.md](SETUP-ANDROID.md) for playing on a phone.
+the page, so no further configuration is needed.
 
 ## Controls
 
 A match is the classic RTS loop — harvest, build, produce, destroy the enemy
-Bastion — so the client speaks both mouse-and-keyboard and touch. Every command
-reachable by keyboard is also on the bottom command panel, which is what makes
-the game playable on a phone.
-
-### Mouse and keyboard
+Bastion — played with keyboard and mouse; the client has no touch input (#1132).
+The full table, and which keys may be rebound, is
+[docs/ui-ux.md](docs/ui-ux.md) §9, and the Controls screen shows the bindings as
+they stand. The ones a first match needs:
 
 | Input | Action |
 | --- | --- |
-| Left click | Select own unit or structure (shift to add) |
-| Right click | Context order — nodule field harvests, heard contact attacks, open water moves |
-| Middle drag | Pan |
-| Wheel | Zoom at cursor |
-| `1`–`5` | Queue Scout / Corvette / Cruiser / Submersible / Harvester |
+| Left click / drag | Select own units and structures (`Shift` adds, `Ctrl` subtracts) |
+| Right click | Context order — nodule field harvests, heard contact attacks, open water moves. A move lands at a depth too: on the ground it follows the floor, in open water it takes the camera's focus depth |
+| Middle drag | Pan; `Shift` + middle drag orbits |
+| Left + right drag | Pan sideways, and raise or sink the camera's focus through the water column |
+| Wheel | Zoom at the cursor; `Shift` + wheel raises or sinks the focus |
+| `Home` | Home the camera: north, 55°, focus on the seabed |
+| `1`–`9` | Control groups (`Ctrl` assigns) |
 | `R` / `F` / `T` | Build Refinery / Foundry / Sentinel Turret, then click a site |
-| `Esc` | Cancel a pending build |
+| `Esc` | Cancel a pending build; with nothing pending, open the menu |
 | `Space` | Toggle Silent Running |
 | `V` | Cycle harvest throttle — idle, trickle, standard, overburden |
 | `P` | Active sonar ping |
-| Hold `Shift` | Preview ping cost — 900 m reveal, 2,400 m self-reveal |
+| Hold `Alt` | Preview what a ping, and the click under the cursor, would cost |
 
-### Touch
-
-| Gesture | Action |
-| --- | --- |
-| Tap | Select; with a selection, tap the map to issue the context order |
-| Drag / pinch | Pan / zoom |
-| Tap the sonar scope | Jump the camera; drag to scrub |
-| BUILD / UNITS / SQUAD tabs | Structures, production, and per-unit commands |
-| `✕` | Clear the selection — tapping open water is a move order, not a deselect |
+Production is on the command card's yard pages: select a yard to open its page.
 
 ## Build, test, lint
 
@@ -144,8 +136,7 @@ GET to `/rooms/match`, so this decides whether a browser can reach the server at
 all:
 
 - **Unset outside production** — loopback origins only, on any port. That covers
-  `npm run dev`, a second Vite instance on 5174, and the on-device Termux setup,
-  and it covers nothing else.
+  `npm run dev` and a second Vite instance on 5174, and it covers nothing else.
 - **Unset with `NODE_ENV=production`** — the server prints why and exits 1. This
   is deliberate. Wide-open CORS is invisible when it is wrong: the server comes
   up, serves happily, and nothing tells you it is answering strangers.
@@ -302,7 +293,6 @@ for finished work:
 
 ## Related
 
-- [SETUP-ANDROID.md](SETUP-ANDROID.md) — running the whole game on a phone
 - [docs/systems-echo.md](docs/systems-echo.md) — the Echo Layer design
 - [docs/systems-depth.md](docs/systems-depth.md) — depth and Pressure Rating
 - [docs/economy.md](docs/economy.md) — the harvest loop and why income is loud

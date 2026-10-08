@@ -376,7 +376,7 @@ a.pill { text-decoration: none; }
       <div class="plate answer">
         <span class="q">Is there room?</span>
         <span class="a room">Yes, on desktop</span>
-        <p>44 of 150 draw calls and 2.4 of 16.7 ms on a GTX 1070. The Android floor has not been measured.</p>
+        <p>44 of 150 draw calls and 2.4 of 16.7 ms on a GTX 1070. There is no phone floor: the client is keyboard and mouse only since #1132.</p>
       </div>
     </div>
     <aside class="plate since" aria-labelledby="since-h">
@@ -588,9 +588,9 @@ a.pill { text-decoration: none; }
         <div class="bar-scale"><span>0</span><span>8.3</span><span>16.7 ms</span></div>
       </div>
       <div class="plate meter wide">
-        <div class="top"><span class="label">Android · Termux floor</span><span class="label" style="color: var(--amber)">Owed</span></div>
-        <span class="big" style="color: var(--amber)">Unmeasured</span>
-        <div class="bar unknown" role="img" aria-label="Not measured"></div>
+        <div class="top"><span class="label">Android · Termux floor</span><span class="label">Retired</span></div>
+        <span class="big">Not a platform</span>
+        <div class="bar unknown" role="img" aria-label="Retired by #1132"></div>
         <p class="muted" style="font-size: 14px">Any post-processing needs a quality setting whose Off matches today's frame.</p>
       </div>
       <div class="plate meter wide">
@@ -745,7 +745,7 @@ a.pill { text-decoration: none; }
       <div><h3>Blender</h3><p>Hand-edited files end the script-to-GLB check. Its useful jobs fit in <code>kit.mjs</code>.</p></div>
       <div><h3>Gaussian splats</h3><p>Built to capture real scenes. Splats can't be recoloured per faction or lit by SIG.</p></div>
       <div><h3>AI mesh generators</h3><p>The output is a file, not a script, so it skips the pipeline of record. Useful as reference only.</p></div>
-      <div><h3>Ray tracing</h3><p>Far beyond an RTS frame budget, and the Android floor is still unmeasured.</p></div>
+      <div><h3>Ray tracing</h3><p>Far beyond an RTS frame budget on the desktop floor.</p></div>
     </div>
   </section>
 

@@ -61,7 +61,7 @@ the bar `CONTRIBUTING.md` sets for the first tag.
 | --- | --- | --- |
 | Does a skirmish finish? | **29 of 30** baseline matches decide, at a median 1,003 s | [#440](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/440) |
 | Does the Echo pass hold its budget? | The 2 ms budget breaks at about 160 entities | [#430](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/430) |
-| Is the frame time real? | Nothing timed on a real GPU or on Termux yet | [#286](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/286) |
+| Is the frame time real? | Timed on one desktop GPU ([graphics-standards.md](graphics-standards.md) gate 6); the phone floor retired with touch (#1132) | [#286](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/286) |
 
 The first row is the one that matters. A game "you can sit down and play alone" — the phrase
 earlier revisions of this document used — is a game whose matches end, and the harness's own
@@ -474,8 +474,7 @@ measurement, and it is the one this phase did not settle: every frame-time numbe
 phase records
 prices SwiftShader in a container, and the budgets stay container-shaped until the composited
 two-canvas frame is timed on the hardware the game actually promises to run on. It needs a
-desktop with a GPU and an Android device under Termux, which is why an unattended run cannot
-take it.
+desktop with a GPU, which is why an unattended run cannot take it.
 
 ---
 
@@ -688,8 +687,7 @@ loudness ladder, then public fauna as stipple, then classified fauna — and the
 measured on the hardware the game promises, because the visual pass is what changes it.
 
 **Done when:** every map layer names its loudness rung with a test holding it, public and
-classified fauna draw as stipple, and the composited frame is timed on a real GPU and on
-Termux.
+classified fauna draw as stipple, and the composited frame is timed on a real GPU.
 
 | Work | Issue |
 | --- | --- |

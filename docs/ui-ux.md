@@ -64,7 +64,7 @@ lose: the fleet block first, since the hulls in hand are also on the selection c
 groups are also the digits; then production, reluctantly, since its being visible without a
 tab is the console's whole argument; then selection, since the world view carries a hull's
 state on the hull. The scope and the command card never go — one is the only view of the
-whole map, the other is how a touchscreen reaches any order at all.
+whole map, the other is the mouse's route to every order.
 
 **Nothing scrolls except a text box.** A panel is not a page. An objective under the fold
 is an objective the player has not been given, and a screen that runs off the bottom hides
@@ -82,7 +82,7 @@ the briefing and the record's pages (§14) — and each scrolls inside its own b
 screen around it does not. The objectives panel (§10.5) is deliberately not one: it states
 what is being asked *now*, and every row of it has to be on screen at once.
 
-**A console row is a touch target.** §11's 44 px floor is what sets the console's height
+**A console row is a pointer target.** §11's 44 px floor is what sets the console's height
 rather than taste: a command cell is four columns wide and three rows deep so that a cell
 clears the floor at any width the console itself fits on, and a production row is 44 px for
 the same reason. That is why the command card is a grid rather than the row it replaced —
@@ -443,17 +443,23 @@ The vertical axis needs permanent, glanceable representation ([systems-depth.md]
 - **Hull the deep keeps must not look like damage.** Crush attrition below a unit's Pressure Rating, and the shallow-water poisoning that costs the Directorate 15% above 400 m, both ignore repair, so they render differently: the lost portion of the health bar is hatched and does not refill, making the permanence visible rather than discovered later. One hatch for both, because the player asks one question of it — how much of this bar is gone for good.
 - **Descent and ascent** — descending shows the SIG cost as a live spike on the meter; ascending shows a time-to-surface estimate, because the ascent is the part players underestimate.
 - **The Lid is drawn as what it is** — the ribbon's top 150 m carries a threat-red hatch ([systems-depth.md](systems-depth.md) §2, [world.md](world.md)): sour water, priced for everyone. A selected hull inside it shows its sour state on the card — `SOUR 12s` counting down the grace in amber, then `SOUR — BLEEDING` in threat red once the water starts keeping the hull. The countdown is the player's own timer on their own hull; it reveals nothing about anyone else.
-- **Floor-following reads as a mode, not a depth** — a hull under the standing order shows `FOLLOWING FLOOR` on its card and keeps its ribbon marker, because the marker reports where the hull *is* while the mode explains why that keeps changing. Disengaging at the PR edge (§2's rule) flips the card to the PR badge's warning register, so a hull that stopped following says why it stopped.
+- **Floor-following reads as a mode, not a depth** — a hull following the floor (§9: any move onto the ground) shows `FOLLOWING FLOOR` on its card and keeps its ribbon marker, because the marker reports where the hull *is* while the mode explains why that keeps changing. Disengaging at the PR edge (§2's rule) flips the card to the PR badge's warning register, so a hull that stopped following says why it stopped.
+- **The next order's depth is on the ribbon before it is given** — a tick at the camera's focus depth, which is where a click into open water lands (§9). Depth is ordered with the click now, so the depth a click would give has to be readable without giving it.
 
 Implemented in the client scaffold: the ribbon runs down the left edge with a marker per
 selected hull and a ghost marker at its ordered depth; the PR badge sits in the selection
 card and shows a Sounding Spire's grant as `PR2+1` so a rented rating reads as rented; the
 unrecoverable portion of the health bar is hatched, and its texture rather than its hue is
-what distinguishes it, so it survives colour-vision differences (§11). Depth orders step rung to
-rung — `D` dives, `A` rises — and the rungs are the three band stations plus the thermocline,
-because sound with both ends inside the duct carries 1.2× further than open water and until the
-duct became a rung no order a player could give could buy it. The readout names the selection's
-own zone when it is somewhere other than the default: `DUCT` inside the layer, `UNDER` below it.
+what distinguishes it, so it survives colour-vision differences (§11). The focus tick is a
+chevron on the ribbon's right edge in the plain text ink: a camera reading, so neither a hull's
+marker nor the cyan of a rule about the water. Holding `Alt` previews the click under the
+cursor: its depth, marked on the ribbon,
+and what getting there costs — `DIVE 72 SIG`, with `· CRUSH` when the depth is below the
+selection's rating, or the climb's seconds for a rise, and `FLOOR` when the click is on the
+ground and will follow it. The duct is one more depth the focus can be put at, which is how a
+player buys its 1.2× range now that no Dive rung stands there for them (#1132). The readout
+names the selection's own zone when it is somewhere other than the default: `DUCT` inside the
+layer, `UNDER` below it.
 
 The duct is a fixed 6.67% of the strip, so on a short window it collapses to a few pixels; below
 that it is drawn as its centre line alone rather than as a smear pretending to have width.
@@ -469,28 +475,27 @@ Implemented in the client scaffold today (`packages/frontend/src/game/EchoRender
 | Left click | Select nearest own unit; `Shift` adds, `Ctrl` subtracts |
 | Left drag | Box select own units; `Shift` adds, `Ctrl` subtracts |
 | Double click | Select every visible unit of that class (`Alt`-click does the same) |
-| Right click | Context order — move, attack a contact, or work a field. With a yard and nothing else selected: its rally point, where every hull it launches goes first |
+| Right click | Context order — move, attack a contact, or work a field — given on release. A move lands at a depth as well as a place (below). With a yard and nothing else selected: its rally point, where every hull it launches goes first |
 | `Shift` + right click | Queue the order behind the unit's current plan |
 | `W`, then click | Attack-move: go there, and stop to fight whatever is met on the way, then carry on. The one order that advances a force into water it cannot hear — which is most of it. `Esc` disarms; `Shift` + click queues it |
-| `X` | Stop: drop the plan, the route, the chase and the posture, and stand. A depth order is a commitment and is left alone |
+| `X` | Stop: drop the plan, the route, the chase and the posture, and stand. Depth is a commitment and is left alone, floor-following included |
 | `H` | Hold position: fire at what comes into range, chase nothing, go nowhere. Any move releases it |
 | `1`–`9` | Recall control group; `Ctrl` + digit assigns; `Shift` + digit adds the selection; recall twice to centre |
 | `0` | Select the army — every hull that fights, wherever it is |
 | Middle drag | Pan |
+| Left + right drag | Move the camera: across pans sideways, up and down raises and sinks the focus through the water column, the water moving with the hand. Either button may land first, and once both are down neither click fires ([free-camera.md](free-camera.md) §4) |
 | Arrows, screen edge | Pan. Edge scrolling is a setting (§14), because a trackpad makes the edge a place the pointer lands by accident |
 | Wheel | Zoom about the cursor |
 | `Shift` + middle drag | Orbit the camera — horizontal yaws, vertical pitches, within 10°–88° ([free-camera.md](free-camera.md) §4) |
-| `Shift` + wheel | Raise / sink the camera's focus through the water column, 150 m a notch. **This gesture zoomed before the camera was freed**, and the reassignment is written down here because a mouse interaction that silently changes meaning is the one thing §9 will not do |
+| `Shift` + wheel | Raise / sink the camera's focus through the water column, 150 m a notch: the one-button route beside the left + right drag. **This gesture zoomed before the camera was freed**, and the reassignment is written down here because a mouse interaction that silently changes meaning is the one thing §9 will not do |
 | `Home` | Home the camera — north, 55°, focus back on the seabed. The frame every match opens on, one press away from anywhere |
 | `Space` | Toggle Silent Running for the selection |
 | `Q` | Toggle Engine Off — cut the drive. Quieter than silence and stopped ([systems-echo.md](systems-echo.md) §6) |
 | `P` | Active sonar ping from the first selected unit |
-| `D` / `A` | Dive / rise one depth band |
-| `S` | Toggle floor-following — hug the seabed at station keeping ([systems-depth.md](systems-depth.md) §2) |
 | `V` | Harvest throttle — cycle the dredge rate ([economy.md](economy.md) §3) |
 | `N` / `M` / `C` | Noisemaker, mine, depth charge — a decoy, laid at the hull, dropped into the band below |
 | `R` / `F` / `T` / `G` / `B` | Arm a Refinery / Foundry / Turret / Vent Tap / faction structure |
-| Hold `Alt` | Ping-cost preview rings |
+| Hold `Alt` | Ping-cost preview rings, and what the click under the cursor would cost (§8) |
 
 Still planned: a repeat-last-order binding, and ping-at-cursor — which needs a key that is
 not `F`, since that arms the Foundry.
@@ -514,6 +519,35 @@ The point is not tidiness. Each of those loses to a *mouse* interaction, so a pl
 rebound one would not find a key that stopped working — they would find that clicking had
 quietly changed meaning, with nothing to press and notice.
 
+### A click is a point in the water
+
+Depth is ordered with the click rather than beside it (#1132). The cursor's ray is followed
+into the scene, and a move lands on the first thing it meets: the **ground** — the seabed, or
+a closed roof — or the **plane at the camera's focus depth** ([free-camera.md](free-camera.md)
+§4). Its depth is then held to the water at that point, between the ceiling and the floor and
+no deeper than `DEPTH.MAX_M`.
+
+- **On the ground**, the move follows it: the hull holds 30 m over whatever floor is under it,
+  all the way there ([systems-depth.md](systems-depth.md) §2). So does a point in the water
+  within 100 m of the floor.
+- **In open water**, the move holds the plane's depth, and ends any floor-following the hull
+  was doing.
+
+At the home frame the focus sits on the seabed, so a click on the ground is a floor-following
+move. Cruising at a depth starts with raising the focus — the left + right drag, or `Shift` +
+wheel — until §8's focus tick sits where the hull should go. Attack-move lands the same way,
+and a queued leg keeps the depth it was given. A rally point stays a place on the map.
+
+The right button acts on **release**, not on press, so that a press can still become the
+left + right drag. The order goes to where the press was, with the press's modifiers. What
+the click asked for is drawn where it asked (§12): the ring that acknowledges it closes on the
+point at its depth, with a plumb line to the ground below it.
+
+Nothing is left of Dive, Rise or the floor-following toggle, and `D`, `A` and `S` are unbound.
+A step order between rungs answered "how deep" with a list of four depths; a click answers it
+with the depth the player is looking at. The depth charge still drops into the band below
+([systems-combat.md](systems-combat.md) §8), so the rungs survive for that one order.
+
 ### The one-handed layout
 
 §11 owes a one-handed layout, and the default is not one: `P`, `N`, `M`, `B` and `H` sit under
@@ -533,7 +567,7 @@ player knows is a worse layout.
 | Mine | `M` | `X` |
 | Faction structure | `B` | `V` |
 
-Everything else — `Space`, `W`, `A`, `D`, `S`, `C`, `R`, `F`, `T`, `G` and `Alt` — is unchanged.
+Everything else — `Space`, `W`, `C`, `R`, `F`, `T`, `G` and `Alt` — is unchanged.
 Control groups are the one thing this cannot fix: the digits are fixed for the reason above,
 and `6`–`9` are out of reach. That is a real limitation of playing one-handed rather than
 something the layout is hiding.
@@ -598,21 +632,21 @@ rather than going quiet.
 ### What yields when the card is full
 
 A squad page can be offered more than twelve entries too, without a roster in sight: a mixed
-selection holding a screen hull, a transport and a harvester offers sixteen. **Which entries yield
+selection holding a screen hull, a transport and a harvester offers thirteen. **Which entries yield
 is written here**, rather than being whatever the model happened to push last. That was the bug
 in #815 — the depth charge went on every hull carrying torpedoes, which is ten of them, because
 the torpedo readout made them the thirteenth and the charge was pushed after it.
 
 This is §2's block-drop order one level down, and for §2's reason: *the order is what each costs to
 lose*. What it is **not** is an order sorted by whether a key reaches the same action. §2 makes this
-card "how a touchscreen reaches any order at all", and a touchscreen has no keys — so a binding buys
+card the mouse's route to every order, and a hand on the mouse is not on the keys — so a binding buys
 an entry nothing here. What decides rank is whether the card is the only route.
 
 Lowest yields first:
 
 | Rank | What it holds | What it costs to lose |
 | --- | --- | --- |
-| Deselect | `✕` | Nothing: a tap on empty water clears the selection |
+| Deselect | `✕` | Nothing: a click on empty water clears the selection |
 | Situational | `DECOY`, `MINE`, `CHARGE`, the harvest throttle | An order reached for occasionally, never in the same breath as a move |
 | Core | Every other order on the page | An order given all match |
 | Only route | `SCREEN`, `LAND`, and every production button | The action itself — no key and no gesture reaches it |
@@ -623,8 +657,8 @@ that order, so a cell moves only when something above it actually left.
 **A readout is not an order, and does not hold a cell.** The torpedo count used to. It sits on the
 selection block's stat line now, beside `HULL` and `SIG`, where this hull's other numbers already
 are — and a launch was never on the card anyway, being `Ctrl` + right-click on a contact. That one
-move is what makes a torpedo hull's squad page fit its twelve exactly, with the deselect the only
-thing yielding.
+move is what made a torpedo hull's squad page fit its twelve, with the deselect the only thing
+yielding. Since Dive, Rise and Follow left the page (#1132) it fits with two cells to spare.
 
 ---
 
@@ -642,10 +676,10 @@ to the nearest thing that can be gotten out of. Inside the menu the same key ste
 way it came: controls to settings, settings to the menu, the menu to the water. A player
 mashing `Esc` ends up in the water with nothing pending, never somewhere surprising.
 
-**The key is a door, not the door.** A touchscreen has no `Esc`, and this client plays on
-one ([SETUP-ANDROID.md](../SETUP-ANDROID.md)) — so the command bar carries a `MENU` button
-at its far end, because the bar is how a finger reaches anything at all. Same menu, two
-doors, and neither is the menu's name for itself.
+**The key is a door, not the door.** The command bar carries a `MENU` button at its far
+end, because a hand on the mouse should not have to go looking for a key to leave the water,
+and the bar is where the pointer already reaches every other order. Same menu, two doors, and
+neither is the menu's name for itself.
 
 **There is no pause.** The simulation is one shared clock on the server
 ([tech-stack.md](tech-stack.md)), and a menu that stopped it for one commander would have
@@ -903,7 +937,8 @@ Audio carries primary information, so accessibility here is a correctness requir
   a reader still gets type about 1.4x the size at 200%, and the panel holds roughly twice the
   rows, which is what makes it fit. A panel is never allowed past the console to buy the
   difference; the console is not the water, but it is not spare room either.
-- **Full rebinding**, including a one-handed layout, and no timing-critical chords.
+- **Full rebinding**, including a one-handed layout, and no timing-critical chords. The left + right camera drag (§9) is a chord of buttons rather than of keys, and not a timing-critical one: either button may land first, at any interval. `Shift` + wheel moves the same focus with one button, for a player who cannot hold two.
+- **A 44 px target floor.** The console's controls — a command cell, a production row, a fleet chip — are at least 44 px on the short side at 100% UI scale, because a target sized to its label is one a player with an unsteady hand misses, and §2's console is laid out from it. The strip's readouts cannot clear it at the strip's height, and each is grown toward it as far as its own row allows.
 - **Motion and flash limits** — a reduced-motion mode replaces the sonar sweep, screen-edge exposure flash and meter pulse with static equivalents that carry the same information.
 - **The acoustic veil is a slider, 0–100%.** §4.5 drains contrast over the ground, and a contrast-reduced overlay owes a control the same way the colour-vision palettes do. It is the one setting here that can reach *off* without argument: the veil hides no information, so a player at 0% and a player at 100% are looking at the same facts.
 - **Water density is a slider, 0–100%.** The water is a medium now ([art-direction.md](art-direction.md), "Reading the Water"), and distance fading into it is a contrast reduction, so it owes a control on the same terms the veil does. It reaches *off* without argument for a stronger reason than the veil's: the only things distance hides are the player's own hulls and the ground they stand on, so turning it down can only ever show more. What does not move with it is the depth ramp — water at 2,000 m is the same colour at every setting, because depth-is-luminance is a reading rather than an effect.
@@ -961,7 +996,7 @@ they understand it, and a player at −18 dB of master has to be able to *read* 
 - Own hulls are drawn **interpolated, one Echo interval behind the server**: each glides from its previous reported position to its latest, arriving as the next snapshot is due (`ownMotion.ts`). The conn view and every chart mark about a hull — selection ring, SIG tick, health bar, route — read the same interpolated position, so nothing drifts off the hull it captions. A jump no hull can make in one interval (a mission lift, a respawn) snaps rather than glides. Interpolation rather than extrapolation on purpose: a predicted hull has to be walked back after a stop the client did not see coming, and a hull that reverses is a lie the interpolated one never tells.
 - The client **never** extrapolates or interpolates a contact. Not for smoothness, not for feel.
 - Detection arrives at 5 Hz and the UI shows that rhythm rather than hiding it. Freshness fade is permitted because it represents decaying confidence; positional smoothing of a contact is not, because it represents knowledge.
-- Order feedback is immediate and local while the result is server-confirmed: a right-click paints a contracting ring at the point ordered, and the route line to it, before the server has heard the order; the server's own plan replaces the local one within two snapshots. Input latency is never traded for information honesty — the marker says what was *asked*, and only the snapshot says what the hull is doing.
+- Order feedback is immediate and local while the result is server-confirmed: a right-click paints a contracting ring at the point ordered — at its depth, since a click is a point in the water (§9) — and the route line to it, before the server has heard the order; the server's own plan replaces the local one within two snapshots. Input latency is never traded for information honesty — the marker says what was *asked*, and only the snapshot says what the hull is doing.
 
 ---
 
@@ -1054,7 +1089,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | The console (§2) | Implemented — the 80 px bar is a 208 px console of four blocks: scope, selection, a 4 × 3 command card, and production. Production is no longer behind a tab at all; the block reads the player's own yards, one row per yard because a yard is one build line, and its estimate is divided by the Thermal Draw's satisfaction so a starved line's slip is visible rather than silent. The selection card moved inside its block, which is what ends its collision with the hint line |
 | The strip's readouts, explained (§2, §7) | Implemented (#724) — each readout on the permanent strip carries a line in §7's register: the quantity, what it is measured against, and what moves it. DOM rather than Pixi, for §10 and §11's reason — canvas text reaches no screen reader — so the renderer reports where each readout ended up and one transparent control is laid over each, reached by hover, by Tab and by a tap. The lines quote no figure of their own: the grants are `BERTHS`, the stops are `SIG_BANDS`, the deficit is the draw report's own satisfaction, and the spoken name is the string the strip drew. Reported only when the strip changes, so the surface costs the frame nothing. A control takes its whole row band rather than the height of its glyphs — §11's 44 px floor is not reachable inside a 52 px strip holding two rows, and half of it is what is. A readout the strip has laid out off the canvas, or on top of another, is given no control at all — so the surface is silent about a number rather than wrong about it. Until #743 that happened well inside §11's range for a reason that was not the layout's: the rule dropping the map name and the clock measured the *second* row's right edge while the row that collided was the stockpile row, so the two readouts the strip permits to yield — an order authored in `EchoRenderer.drawHud` rather than here, §2 having a drop order for the console's blocks and none for this strip — were printed over the stockpile row rather than yielding. Since #743 the rule measures the row it governs — the first row's own right edge, the last draw segment included. Re-swept in a live match on the Ventfront Divide, on the 1,440 px canvas the browser drive opens, where nine readouts are on the strip: all nine are explained from 75% to **135%**, the map name goes at **150%** and the clock goes at **200%**. One residual the refusal could not see, because it was not a readout, is closed since #757: the draw meter's segments are `Graphics` rather than a recorded number, nothing recorded them, and so `acceptStrip` could refuse nothing for them — at 200% they print through the contact count, which kept a control over glyphs reading `███ontacts`, in the committed frame's 200% pair, before and after alike. The bar is part of the `DRAW` readout's own box now, the way §3's meter is part of the SIG readout's and for the same reason — [economy.md](economy.md) §2 makes the draw a rate that is never banked and the bar is how it says so — so the existing comparison sees it. Two consequences, both the rule this surface already had rather than a new one: a hover anywhere on the bar answers for the rate it belongs to, and where the bar and another readout are laid over each other **both** are refused, so the sweep's earlier clause — every readout still on the strip keeping its control at every scale — no longer holds at the scales where the strip overruns itself. On the 1,280 px canned strip of `rendererSmoke.test.ts`, where `DRAW 40/34` carries twelve segments, that is 150%; which scale it starts at is a fact about the fixture rather than about the product, as below. The same sweep before the change kept both readouts to 150% and then lost the explanations instead — six readouts at 175% and four at 200%, the rest drawn on top of one another. Which readouts are present at all is a fact about the fixture rather than about the product — `BIOMASS`, `CRYSTAL` and `TRACKED` each render only conditionally — so a fuller strip is wider than this one, and on an eleven-readout fixture the first row still overruns a 1,280 px canvas at 200%. **What a strip that cannot fit its own first row should give up, once the map name and the clock are both gone, is still a design call about a permanent instrument.** It is recorded and left, with frames under `docs/screenshots/issue-724/` and `docs/screenshots/issue-743/` |
 | The plate VI card, in match | Implemented — one `plate()` draws glass, one bevel, one halo, the header rule and corner registration ticks, and the top strip, console, blocks, selection card and ribbon all go through it. Rule 5's diagonal texture is one layer over the whole HUD, rebuilt only when the viewport or the palette changes |
-| The fleet block (§2) | Implemented — the console's fifth block. Two bands of 44 px chips over a census line: the hulls in hand when there are any and the control groups when there are not, so the block is never a grid of empty squares. Groups are chips rather than a list because four 44 px rows do not fit the block, and the floor is what matters — §9 makes the digits unrebindable, so on a touchscreen these chips are the only way to recall a group. The census counts own hulls and structures and nothing else |
+| The fleet block (§2) | Implemented — the console's fifth block. Two bands of 44 px chips over a census line: the hulls in hand when there are any and the control groups when there are not, so the block is never a grid of empty squares. Groups are chips rather than a list because four 44 px rows do not fit the block, and the floor is what matters — the chips are the pointer's route to a group, beside the digits §9 keeps fixed. The census counts own hulls and structures and nothing else |
 | The acoustic veil | Implemented (§4.5, #472) — a min-audible-SIG field over the player's own hulls and structures, shading the seabed, its props and its embers as a vertex colour on the mesh that was already there, so the effect spends no draw call and no triangle. World view only; the scope keeps §5's promise. A slider in Settings (§14) |
 | The scatter envelope on a contact reported from crystal (§4) | Not implemented — the rule it draws shipped server-side with #438 (two ears at 30° tell the truth); the wedge and its collapse are the client's half and are owed |
 | Priced buttons, and the reason a greyed one gives | Implemented (#351) — a button carries its whole price from the sum the server charges (`SUB 260+80c`), greys when any account falls short, and a press on it says which — *Abyssal Submersible: 80 crystal short* — on the hint bar, the way a locked key does (§7). Biomass is the third column ([economy.md](economy.md) §8), and it is spent like the other two now — seven hulls carry a `biomassCost` and `Match.produce` refuses a hull short in Biomass alone exactly as it refuses one short in Nodules |
@@ -1211,9 +1246,9 @@ what the screen *is* for one player and not another.
 
 **Narrow, the instrument turns sideways.** Under 880 px the column becomes a strip across
 the top, the time gutter goes with it — five seconds of history has nothing worth labelling
-— and the lockup and the entries take the full width beneath. The shell runs on a phone
-([SETUP-ANDROID.md](../SETUP-ANDROID.md)) and the menu is the half that has to survive; the
-instrument is dress, and dress yields first.
+— and the lockup and the entries take the full width beneath. A narrow window is still one
+the shell has to fit, and the menu is the half that has to survive it; the instrument is
+dress, and dress yields first.
 
 **The entries lose the plate VI card here.** They are rules with a name on them and a small
 port square at the near end. The card is the in-match voice, and this screen is not the

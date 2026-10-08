@@ -247,9 +247,9 @@ Downstream:
   budgets a reviewer can check: triangle and texture caps per hull class, instanced rendering
   for rosters, chunked static terrain, a scene-wide draw-call budget — numbers to be set by
   Phase-1 measurement and recorded in [graphics-standards.md](graphics-standards.md). The
-  floor this protects is real: this game runs on phones in Termux
-  ([SETUP-ANDROID](../SETUP-ANDROID.md)), so the sprite path is retained as the documented
-  low-spec fallback, which it already knows how to be.
+  floor this protected was real when it was written — the game then ran on phones in
+  Termux, until #1132 made the client keyboard and mouse only — so the sprite path is
+  retained as the documented low-spec fallback, which it already knows how to be.
 - **Gate 8 is rewritten to the new spec.** Fixed-pitch perspective, locked yaw, rings as
   world-space decals, sonar scope stays plan view, atmosphere stays screen-space. (The
   first two clauses were retired by [free-camera.md](free-camera.md), and the sway moves
@@ -357,6 +357,10 @@ Review screenshots live in `docs/screenshots/three-layer-phase34/`, shared with 
 the squad bar's FOLLOW lit with the card reading station keeping at floor-minus-30, and
 the ribbon's Lid hatch.
 
+**Superseded by #1132.** DIVE, RISE, FOLLOW and their keys are gone: a click orders a depth
+as well as a place, and a move onto the ground follows it ([ui-ux.md](ui-ux.md) §9,
+[systems-depth.md](systems-depth.md) §2). The record above is what Phase 3 shipped.
+
 ### Phase 4 — landed
 
 The Lid is a mechanic. [world.md](world.md) and [glossary.md](glossary.md) flipped their
@@ -421,8 +425,8 @@ What the phase settled:
   no-GL path, and it no longer exists; a browser that refuses a context gets a hard stop
   with the reason, not a black screen wearing a working HUD. The low-spec fallback is the
   conn view's own sprite path — baked billboards inside the 3D scene until models decode,
-  and the pixel-ratio cap — which is what [SETUP-ANDROID](../SETUP-ANDROID.md)'s floor
-  runs on.
+  and the pixel-ratio cap — which is what the phone floor of the day ran on (retired with
+  touch, #1132).
 
 Review screenshots live in `docs/screenshots/three-layer-phase5/`: the default view with
 the HUD over the world, a squad's detection rings conforming over a ridge, the ping
@@ -539,7 +543,8 @@ by the scene, and nothing on the remedy list is demanded. The table is in
 [graphics-standards.md](graphics-standards.md) gate 6.
 
 Debts still carried: the sour-exposure audio cue, and the Termux half of the wall-clock
-validation, where the floor this debt protects actually is.
+validation, where the floor this debt protects actually is. (The second has since been
+retired: #974 dropped the phone as a target, and #1132 dropped it as a platform.)
 
 ## 10. Open questions
 

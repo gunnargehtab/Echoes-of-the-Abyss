@@ -72,24 +72,35 @@ The consequence is that a roofed passage is enterable only by a deliberate dive.
 
 ### Steering along the ground
 
-Beside the depth order sits one standing order: **floor-following**. A hull ordered to
-follow the floor holds a fixed clearance — 30 m (TUNABLE) — above whatever ground is under
-it, and keeps holding it as the ground changes: up for free, because terrain already raises
-hulls, and down at the ordinary loud descent rate, because a dive is a dive whoever asked
-for it. Entering the mode *is* the order — the rule that nothing may spend a descent the
-player never made survives because the player made this one, standing, when they engaged it.
+A move is an order in three dimensions: a point on the map and a depth to hold there
+([ui-ux.md](ui-ux.md) §9 says how one click picks both). When that point lies on the ground —
+within **100 m** (TUNABLE) of the floor beneath it — the move is also **floor-following**. The
+hull holds a fixed clearance, 30 m (TUNABLE), above whatever ground is under it, all the way
+there and once it arrives, and keeps holding it as the ground changes: up for free, because
+terrain already raises hulls, and down at the ordinary loud descent rate, because a dive is a
+dive whoever asked for it. Pointing at the ground *is* the order. The rule that nothing may
+spend a descent the player never made survives because the player made this one: they sent
+the hull along the floor rather than through the water above it.
 
-Two things end it. A manual depth order replaces it, because the newer instruction is the
-player's current mind. And ground that falls away below the hull's Pressure Rating
-**disengages it**: the mode will ride a hull down to the edge of what it is rated for and
-not one metre past, because a standing order that could feed a hull into crush attrition
+Three things end it. A move into open water replaces it, because the newer instruction is the
+player's current mind, and the hull takes that move's depth instead. So does a task that keeps
+a depth of its own: an attack on a contact, which chases at the depth the hull is on rather
+than down the seabed after it, and a harvest, whose loop orders its own descents and climbs
+([economy.md](economy.md) §7). A hull leaving the mode either way finishes the climb or descent
+it is already making, and holds there. And ground that falls away below the hull's Pressure
+Rating **disengages it**: the mode will ride a hull down to the edge of what it is rated for
+and not one metre past, because a standing order that could feed a hull into crush attrition
 would be the seabed spending the player's hull on their behalf — the exact thing this
 document forbids terrain to do. A disengaged hull holds its depth and says so.
 
-Nor does it ever take a hull deeper than a depth order may: over ground below 3,000 m
+Stop and hold position leave it standing. They halt the hull's course, not its station over
+the ground.
+
+Nor does it ever take a hull deeper than an order may: over ground below 3,000 m
 (`DEPTH.MAX_M`; §6, *Map floor*) it stops at 3,000 m and holds there, still following, exactly
-where a depth order to that line would put it. A standing order is the player's order kept; it
-cannot reach water no order the player could give reaches (#1179).
+where a move to that line would put it. A move counts as on the ground there when it is within
+100 m of that line, since 3,000 m is as deep as a click on that ground can order. The mode is
+the player's order kept; it cannot reach water no order the player could give reaches (#1179).
 
 "Up for free" needs the ground ahead as well as the ground below. A hull is refused a step onto
 ground shallower than it is, and terrain lifts only a hull already over such ground, so a
@@ -197,7 +208,7 @@ what exists or assumes what does not. Constants live in `DEPTH` in
 | --- | --- | --- |
 | Depth bands (§1) | **Implemented** | `DEPTH_BANDS`, and `depthBandFor()` in the shared echo module |
 | Pressure Rating (§2) | **Implemented** | Per-unit `pressureRating`; crush attrition applied directly to hull so no future repair system can undo it |
-| Depth as an order (§2) | **Implemented** | `Match.orderDepth()`, validated server-side; a depth outside the map is refused, not clamped |
+| Depth as an order (§2) | **Implemented** | A move carries its depth (#1132): `Match.orderMove()` and `orderAttackMove()` take the click's ([ui-ux.md](ui-ux.md) §9), and a queued leg keeps its own. `Match.orderDepth()` is a depth alone, which the skirmish commander and the missions still give. Validated server-side; a depth outside the map is refused, not clamped, and a move carrying one is refused whole |
 | Descent is fast and deafening (§2) | **Implemented** | 45 m/s, and a SIG floor of 72 — above every cruise SIG in the roster, below the ping's 95. Ordering a dive breaks Silent Running, and re-asserting it mid-dive does not buy quiet |
 | Ascent is slow and silent (§2) | **Implemented** | 15 m/s, one third of the descent rate, and no SIG contribution at all. Compatible with Silent Running |
 | Baseline PR per faction (§3) | **Implemented** | `FACTION_PRESSURE_BASELINE`, applied at spawn as a **floor** on the hull's own rating — a hull rated higher keeps it. Without it the Directorate's PR-3 line was prose, and a Directorate PR-1 hull had no depth in the water column where it was neither crushing nor poisoned |
@@ -210,7 +221,7 @@ what exists or assumes what does not. Constants live in `DEPTH` in
 | Ground you do not fit through (§2) | **Implemented** | `movementSystem` routes around it: a hull whose straight course crosses ground that will not admit it at its depth searches the terrain grid (`pathfinding.ts`, A* over cells with `Terrain.admitsCell` as the one question) and follows the waypoints; each step is still resolved against the water column and slides along ground it grazes. A route is re-read on the Echo beat, when the ground changes, and when the hull's depth moves enough to change what admits it. An order the ground seals off is walked to the reachable cell nearest it |
 | Thermocline (§1) | **Implemented** | Depth-dependent multiplier on detection, applied to contacts, Echo Marks and fauna hearing alike. `THERMOCLINE` in shared constants; the layer sits at 1,200 m and is not terrain, because it depends on both ends of a listening pair rather than on any cell |
 | Terrain raises, never lowers (§2) | **Implemented** | `depthSystem` holds a hull no deeper than the ground allows, at the ascent rate, without touching its depth order. Fauna get the horizontal refusal only — they carry no depth order, so nothing would lift them again |
-| Floor-following (§2) | **Implemented** | `Match.orderFollowFloor()`; the depth system retargets the hull each tick to the shallower of the local floor and the floor one cell ahead toward where it is steering (its next waypoint, else its order), minus `FOLLOW_FLOOR.CLEARANCE_M`, never deeper than `DEPTH.MAX_M`, through the ordinary descent/ascent rates and the descent's SIG. Disengages at the hull's effective PR edge; cancelled by any manual depth order |
+| Floor-following (§2) | **Implemented** | Engaged by a move whose depth is within `FOLLOW_FLOOR.ENGAGE_WITHIN_M` of the floor at its point, that floor read no deeper than `DEPTH.MAX_M` — `orderDepthAt` in the depth system, for an order as it is given and for a queued leg as it begins. Ended by a move into open water and by `Match.orderDepth()`, each of which sets a depth of its own; by an attack (`Match.orderAttack()`), which keeps the leg in flight; and by a harvest — `Match.orderHarvest()`, and every depth leg the harvest loop gives itself (`systems/harvest.ts`). The depth system retargets the hull each tick to the shallower of the local floor and the floor one cell ahead toward where it is steering (its next waypoint, else its order), minus `FOLLOW_FLOOR.CLEARANCE_M`, never deeper than `DEPTH.MAX_M`, through the ordinary descent/ascent rates and the descent's SIG. Disengages at the hull's effective PR edge, where the leg is dropped |
 | Sour exposure under the Lid (§2) | **Implemented** | `LID` in shared constants; a third pass in `pressureSystem` on the crush ledger. Universal, faction-blind, and lethal; grace and recovery per this document. Hulls only — fauna are of the Drift, ordnance is in the water for seconds, and no map floor reaches the Lid for a structure to stand in |
 
 The descent and ascent *rates* are TUNABLE — this document pins the asymmetry, not the

@@ -2145,9 +2145,10 @@ button.objectives-row:hover {
    rendered markup, with a token injected into an excerpt of Thin Water's
    Partial reading. At 1440x900 the panel's content box is 560.0 px, and the
    paragraph's box goes to 573.1 px at 80 characters (7 px of card scroll) and
-   716.3 px at 100 (78 px). The game also runs on a phone (SETUP-ANDROID.md),
-   and at 360 px the content box is 306.8 px and the fault fires at 64
-   characters already: 458.5 px and 76 px of scroll, rising to 205 px at 100.
+   716.3 px at 100 (78 px). A phone was the narrow case when this was read
+   (the client is keyboard and mouse only since #1132), and at 360 px the
+   content box is 306.8 px and the fault fires at 64 characters already:
+   458.5 px and 76 px of scroll, rising to 205 px at 100.
 
    Take that content box off the border box rather than off `clientWidth`,
    which is an integer: at 1440 it rounds 611.1875 down to 611 and reports the

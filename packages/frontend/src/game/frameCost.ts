@@ -11,7 +11,7 @@
  *   a class rather than two fields.
  * - **An average must say how many frames it averaged.** A fixed window is
  *   honest only while the observer holds still for a windowful — 4 s at 60 fps,
- *   and considerably longer on the Termux floor, which is exactly where the
+ *   and considerably longer on a slow machine, which is exactly where the
  *   window is widest and the temptation to move on is greatest. `frames`
  *   (window) and `count` (station) are both reported so a blended average is
  *   visible rather than inferred.

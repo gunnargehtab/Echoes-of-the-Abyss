@@ -436,8 +436,8 @@ the GL pass and silent about the rest of the shipped frame. Since the Phase-5 sw
 frame is composited from two painters — the three.js world, and a transparent Pixi overlay
 that re-projects every ring vertex, symbol and route through the same camera on the CPU —
 and the second one spends no draw calls and no triangles. It is priced in milliseconds or
-not at all. The floor that pricing protects is real: [SETUP-ANDROID](../SETUP-ANDROID.md)
-promises the whole game, server included, on-device in Termux.
+not at all. The floor that pricing protects is a desktop's: #974 made the desktop the required
+target, and since #1132 the client is keyboard and mouse only.
 
 So the probe reports the frame three ways, per **station**:
 
@@ -475,9 +475,8 @@ The drive is five stations, chosen because each loads a different part of the fr
 
 `.claude/skills/run-game/scripts/stations.mjs` walks all five and prints the table
 (`drive.mjs --steps`, `STATION_SECONDS` to lengthen the dwell). Where Playwright will not
-run — which includes most Termux setups — `.claude/skills/run-game/scripts/stations-console.js`
-is the same five as a paste into the page's own console, reached from a PC over USB
-debugging, and it reads the same two calls.
+run, `.claude/skills/run-game/scripts/stations-console.js` is the same five as a paste into
+the page's own console, and it reads the same two calls.
 
 **None of the figures in the Phase-1/2/5 records are candidates.** Every one of them was
 taken under SwiftShader in a container, which is the software rasteriser rather than the
@@ -514,9 +513,8 @@ over 500 ms as a hidden tab, and a three-second stall in plain view was reported
 station whose worst frame was 17.7 ms. It now drops an interval only when the page actually
 went hidden, and [invariants.md](invariants.md) lists that as the conn probe's rule.
 
-**The Termux row is still owed.** It belongs here and in the Phase-5 record
-([three-layer-ocean.md](three-layer-ocean.md)) once taken, and until then this gate bounds
-the desktop frame and says out loud that it does not bound the floor.
+**There is no Termux row, and none is owed.** #974 retired the phone as an acceptance
+target and #1132 retired it as a platform, so the desktop frame this gate bounds is the floor.
 
 #### Abyss Render Stack increment
 
@@ -670,7 +668,8 @@ time, not isolated GPU execution time.
 
 For #974 and subsequent render-stack upgrades, desktop is the required hardware
 target; the issue explicitly retires Termux as an acceptance requirement. The old
-phone observations above remain historical, not an outstanding gate for this stack.
+phone observations above remain historical, not an outstanding gate for this stack, and
+since #1132 the phone is not a platform at all: the client is keyboard and mouse only.
 
 ### 7. Readability outranks richness
 

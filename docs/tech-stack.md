@@ -1097,13 +1097,15 @@ currently one. Worth knowing if the roster or the baselines move again.
 existed, every committed baseline was measured against commanders that spent whole matches in
 one acoustic zone, and nothing in the harness could report that.
 
-**The Dredge holds the crystal field**, and that one rule is where `hold` and `followFloor`
-are said (#703). [units.md](units.md) gives the hull its role — "the hull for the floor of the
-map", on a field "the Directorate is meant to *hold*" — so `commandField` takes the navy's
-first Dredge out of the army, walks it to the field under the floor-following order, and
-holds it once it stands there. The floor is the Dredge's alone because the mode disengages at
-a hull's Pressure Rating ([systems-depth.md](systems-depth.md) §2), and PR-4 is the one rating
-no floor exceeds: any other hull would be left wherever the ground fell past its rating.
+**The Dredge holds the crystal field**, and that one rule is where `hold` is said and where the
+commander's one walk along the floor is (#703, #1132). [units.md](units.md) gives the hull its
+role — "the hull for the floor of the map", on a field "the Directorate is meant to *hold*" —
+so `commandField` takes the navy's first Dredge out of the army, walks it to the field on a
+move to the floor there, which follows the ground down as any move onto the ground does, and
+holds it once it stands there. The floor is the Dredge's alone because following it
+disengages at a hull's Pressure Rating ([systems-depth.md](systems-depth.md) §2), and PR-4 is
+the one rating no floor exceeds: any other hull would be left wherever the ground fell past
+its rating.
 
 The hold earns its place beside an `attack`. A stopped hull fires at whatever enters its reach
 either way; what differs is an ordered target, which an unheld hull chases for as long as it

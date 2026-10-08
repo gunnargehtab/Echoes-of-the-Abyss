@@ -498,7 +498,7 @@ const SNOW_SINK_PER_S = 0.002;
  *
  * Wrapping, sinking, fading and sizing all happen in the vertex shader, so a
  * frame costs three uniform writes rather than three thousand — which is what
- * keeps this off the Termux floor's CPU budget as well as gate 6's.
+ * keeps this off the CPU budget gate 6 prices.
  */
 export class MarineSnow {
   readonly points: Points;

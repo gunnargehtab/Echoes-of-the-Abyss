@@ -2,9 +2,10 @@
    Chrome colours transcribe docs/style-neon-noir.md — change the doc first. */
 
 /* The display voice — style-neon-noir.md "Typography", carried by the logo
-   (docs/naming.md). Vendored rather than linked: the whole game runs offline
-   on-device (SETUP-ANDROID.md), so a fonts.googleapis.com request is a face
-   that never arrives. One variable file covers every weight the shell uses. */
+   (docs/naming.md). Vendored rather than linked: the game is served from the
+   player's own machine and may have no internet, so a fonts.googleapis.com
+   request is a face that may never arrive. One variable file covers every
+   weight the shell uses. */
 @font-face {
   font-family: 'Big Shoulders Display';
   font-style: normal;

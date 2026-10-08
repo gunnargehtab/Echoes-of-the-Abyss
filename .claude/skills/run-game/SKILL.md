@@ -231,9 +231,9 @@ counts so a short station is visible rather than assumed.
 The only rasteriser here is SwiftShader, and a drive of the five stations shows
 why: the composited frame runs ~170 ms while both CPU halves inside it total
 under 3 ms. The draw-call and triangle columns are real; the millisecond columns
-are the software rasteriser. Real numbers need a real GPU, and gate 6 still owes a
-Termux row (docs/graphics-standards.md gate 6); render-stack work is accepted on the
-named desktop GPU without one ("Abyss Render Stack increment"). Even there the conn
+are the software rasteriser. Real numbers need a real GPU, and a desktop one is gate 6's
+floor since the phone retired (#1132, docs/graphics-standards.md gate 6); render-stack work
+is accepted on the named desktop GPU ("Abyss Render Stack increment"). Even there the conn
 and overlay columns are CPU time, conn being entity sync plus the GL submit. The gpu
 column is the conn view's GPU time, every pass summed, from a timer query: a dev build
 reads it on a GPU and refuses it on a software rasteriser, and the probe's `gpuTimer`
@@ -258,12 +258,10 @@ STATION_SECONDS=8 node .claude/skills/run-game/scripts/drive.mjs --headed --chan
   --out /tmp/stations --steps .claude/skills/run-game/scripts/stations.mjs
 ```
 
-Where Playwright cannot reach — Chrome on a phone under Termux — paste
-`scripts/stations-console.js` whole into the page's console instead, reached from a PC
-through `edge://inspect/#devices` with USB debugging on. It walks the same five stations
-through the mouse path (touch has no marquee, so a touch drive would ring one hull and
-under-price `marquee`), prints the table, and copies the result as JSON to the inspecting
-PC's clipboard. `window.__stationSeconds` shortens its fifteen-second dwell.
+Where Playwright cannot reach — a browser on a machine with no Playwright install — paste
+`scripts/stations-console.js` whole into the page's console instead. It walks the same five
+stations through the mouse path, prints the table, and copies the result as JSON to the
+clipboard. `window.__stationSeconds` shortens its fifteen-second dwell.
 
 The table's `renderer:` line names the rasteriser, and a software one is flagged. **Run
 nothing else while it drives.** A build rewrites `@echoes/shared/dist`, the backend's

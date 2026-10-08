@@ -149,6 +149,5 @@ Contribution workflow
 
 More
 - Developer-focused quickstart: docs/DEVELOPER_QUICKSTART.md
-- Playing on Android, entirely on-device: SETUP-ANDROID.md
 - CI workflow: .github/workflows/ci.yml
 
