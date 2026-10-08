@@ -49,6 +49,20 @@ const GROUND = 3;
 /** §4 — the charter's budget: thirty seconds, cumulative, and the warning at twenty. */
 const WARNING_TICKS = 20 * SIM.TICK_HZ;
 const TOLERANCE_TICKS = 30 * SIM.TICK_HZ;
+/**
+ * §5 — the rim pack runs the rim at 1,700 m, under the Draymaw's band. Said on
+ * the drive as well as the spawn: a drive without a depth holds the species'
+ * 900 m (types.ts, `driveTo`), and the pack crossed the layer at 17:40, so the
+ * last of §8's telegraph reached a survey still below as a Bearing (#1199).
+ */
+const RIM_PACK_M = 1700;
+/**
+ * §8 — the drive holds to the change, all seventy-five seconds of it. At
+ * 1,700 m the pack shares the watch's water, and a pack released at 17:45
+ * hears the watch's guns, commits, and fights it to the whistle: one hound
+ * dead and both hulls holed, in a fight no section authors (#1199).
+ */
+const RIM_PACK_UNTIL = T(18);
 
 export const LEDGER_EXPOSURE: MissionDefinition = {
   ...LEDGER_EXPOSURE_HEADER,
@@ -350,16 +364,17 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
     { atTick: T(14), kind: 'move', tag: 'watch-a', x: 2600, y: 2450, note: 'The beat, returning' },
     { atTick: T(14), kind: 'move', tag: 'watch-b', x: 2800, y: 2500, note: '' },
 
-    // 16:45 — the rim pack rises, loud, on the relief's wake: seventy-five
-    // seconds of warning in front of the change (§8; campaign.md §10).
+    // 16:45 — the rim pack, loud, on the relief's wake, run along the rim at
+    // 1,700 m to the change: seventy-five seconds of warning in front of it
+    // (§5, §8; campaign.md §10).
     {
       atTick: T(16, 45),
       kind: 'creature',
       tag: 'pack-a',
       species: FaunaSpecies.Draymaw,
-      spawnAt: { x: 4500, y: 2800, depthM: 1700 },
-      driveTo: { x: 2500, y: 2700 },
-      untilTick: T(17, 45),
+      spawnAt: { x: 4500, y: 2800, depthM: RIM_PACK_M },
+      driveTo: { x: 2500, y: 2700, depthM: RIM_PACK_M },
+      untilTick: RIM_PACK_UNTIL,
       loud: true,
       note: "The relief's wake, arriving ahead of it",
     },
@@ -368,9 +383,9 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
       kind: 'creature',
       tag: 'pack-b',
       species: FaunaSpecies.Draymaw,
-      spawnAt: { x: 4650, y: 2700, depthM: 1700 },
-      driveTo: { x: 2700, y: 2650 },
-      untilTick: T(17, 45),
+      spawnAt: { x: 4650, y: 2700, depthM: RIM_PACK_M },
+      driveTo: { x: 2700, y: 2650, depthM: RIM_PACK_M },
+      untilTick: RIM_PACK_UNTIL,
       loud: true,
       note: '',
     },
@@ -379,9 +394,9 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
       kind: 'creature',
       tag: 'pack-c',
       species: FaunaSpecies.Draymaw,
-      spawnAt: { x: 4400, y: 2900, depthM: 1700 },
-      driveTo: { x: 2300, y: 2750 },
-      untilTick: T(17, 45),
+      spawnAt: { x: 4400, y: 2900, depthM: RIM_PACK_M },
+      driveTo: { x: 2300, y: 2750, depthM: RIM_PACK_M },
+      untilTick: RIM_PACK_UNTIL,
       loud: true,
       note: '',
     },
