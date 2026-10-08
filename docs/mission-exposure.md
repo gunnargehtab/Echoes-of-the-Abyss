@@ -226,6 +226,12 @@ because the Division does not accept single sourcing: two of the three hulls hom
 record home. A reading unreturned is a reading unpriced, and the close treats a survey that
 never comes back as exactly what the file would call it.
 
+The return is read where the hulls are, not where they have been. The survey musters on the
+shelf lane, so the row reads met until two hulls leave it. The mission closes on the first
+pass that finds four points entered and two hulls on the lane, or at the change on whoever is
+on the lane then. A survey that takes four readings from below and stays there has brought
+nothing home (#1198).
+
 **The tolerance.** Thirty seconds, cumulative, at Classification or better — a budget, not a
 fail state. Spent, it recalls the charter and turns the watch; unspent, it is the one line in
 the file the Division reads twice.

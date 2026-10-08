@@ -222,7 +222,71 @@ describe('the charter, run out — docs/mission-exposure.md §3, §8', () => {
     assert.match(result.epilogue, /rendering row was not read/);
     assert.match(result.epilogue, /Point six was not read/);
   });
+
+  it('reads a survey that stays below as unpriced, however many points it entered (#1198)', () => {
+    // §8: the return is read where the hulls are. The issue's own run: every
+    // hull ordered under the layer at 00:00 enters four points in ten
+    // seconds, and a latched return closed that Complete at 00:10 with the
+    // whole survey still below.
+    const run = survey(false);
+    assert.ok(run.enteredAtTick !== null, 'the survey never entered four points');
+    assert.equal(run.outcome, MissionOutcome.Lost, 'a record that stayed below came home');
+    assert.ok(run.closedAtTick >= T(18), 'the mission closed before the change');
+    assert.equal(run.statusAtClose('the-readings'), ObjectiveStatus.Met);
+    assert.equal(run.statusAtClose('the-return'), ObjectiveStatus.Pending);
+    assert.match(run.epilogue, /No record returns/);
+  });
+
+  it('closes Complete on the pass a survey that entered four points is home in duplicate', () => {
+    // The positive control: the same descent, sent home once the fourth
+    // point is entered. It cannot close on that pass, with the hulls below,
+    // and it closes the first pass two of them are back on the lane.
+    const run = survey(true);
+    assert.ok(run.enteredAtTick !== null, 'the survey never entered four points');
+    assert.equal(run.outcome, MissionOutcome.Complete, 'the record came home and was not read');
+    assert.ok(run.closedAtTick > run.enteredAtTick, 'it closed with the survey below');
+    assert.ok(run.closedAtTick < T(18), 'the record home did not close the interval');
+    assert.equal(run.statusAtClose('the-return'), ObjectiveStatus.Met);
+  });
 });
+
+/** §8's return, played over the issue's run (#1198): every hull ordered to y 2,000 at 1,500 m. */
+function survey(comeHome: boolean) {
+  const map = missionMapById(LEDGER_EXPOSURE.mapId)!;
+  const match = new Match(map, { mission: LEDGER_EXPOSURE, fauna: false, seed: 77 });
+  const player = LEDGER_EXPOSURE.playerSlot;
+  const send = (ids: number[], y: number, depthM: number) =>
+    ids.forEach((id, i) => {
+      match.orderMove(player, id, 2400 + i * 100, y);
+      match.orderDepth(player, id, depthM);
+    });
+  let ids: number[] = [];
+  let enteredAtTick: number | null = null;
+  for (let tick = 0; tick <= T(18, 30); tick++) {
+    const own = match.update(STEP_MS)?.get(player) as EchoSnapshot | undefined;
+    if (own !== undefined && ids.length === 0) {
+      ids = own.units.map((u) => u.id).sort((a, b) => a - b);
+      send(ids, 2000, 1500);
+    }
+    const view = match.takeMissionView();
+    const readings = view?.objectives.find((o) => o.id === 'the-readings');
+    if (enteredAtTick === null && readings?.status === ObjectiveStatus.Met) {
+      enteredAtTick = match.world.tick;
+      // Home to the muster's own water: the shelf lane, above the layer.
+      if (comeHome) send(ids, 375, 900);
+    }
+    if (match.missionOver !== null) break;
+  }
+  const over = match.missionOver;
+  assert.ok(over !== null, 'the watch never changed');
+  return {
+    outcome: over.outcome,
+    epilogue: over.epilogue,
+    enteredAtTick,
+    closedAtTick: match.world.tick,
+    statusAtClose: (id: string) => over.objectives.find((o) => o.id === id)?.status,
+  };
+}
 
 describe('The Western Margin, as docs/mission-exposure.md §11 draws it (#1144)', () => {
   // The map is drawn in shapes since #1144, and a reshape is new content,
