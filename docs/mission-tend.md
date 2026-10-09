@@ -206,7 +206,7 @@ tells the player to watch how everybody does it anyway.
 
 The pair runs the lane at 300 m, the plateau's own water, so §1's depth rule keeps the
 instrument out of the pack's reach as it keeps the gardens. At 550 m the pack below the lane
-took both corvettes before the first pass was done, and the second pass never ran (#1284).
+took both corvettes at the lane's west end before 07:00, and the second pass never ran (#1284).
 
 **The stillness is the silence order's older, softer sibling** — the court counts silence in
 seconds because Sorrowgate is where the Rift's courtesy became procedure

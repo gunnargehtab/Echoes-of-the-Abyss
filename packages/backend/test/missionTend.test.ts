@@ -6,8 +6,8 @@
  *
  * - **Tend cannot be failed** (§8). An untouched day resolves at 16:00 as a
  *   conclusion — the turning's reading always lands first — and is read with
- *   Marr's spent-day sentence, never as a loss. And an idle plateau is quiet
- *   enough: the sweep passes twice and files nothing.
+ *   Marr's spent-day sentence, never as a loss. An idle plateau is not quiet
+ *   enough: the sweep passes twice and files it.
  * - **The sweep files a working garden** (§6, §8): a tender parked on the
  *   drop lane during a pass latches *filed*, and the reading arrives with the
  *   tide — both sentences, because filed and unfiled cross with the work
@@ -635,7 +635,7 @@ describe('the ground both missions stand on — §11, drawn in shapes (#1148)', 
 
   it('drives every authored leg over the grounds it crossed in rectangles', () => {
     // The order of grounds along each leg that goes anywhere. A leg at one
-    // depth also admits that depth all the way: the sweep at 550 m, the pack
+    // depth also admits that depth all the way: the sweep at 300 m, the pack
     // at 890 m.
     const CROSSES: Record<string, string> = {
       'pack-a@0': 'The Drop',
