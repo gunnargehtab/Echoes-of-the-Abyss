@@ -473,6 +473,42 @@ describe('the hold — a hull aboard is nobody’s target (#1318)', () => {
     assert.notEqual(Ordnance.targetEid[torpedo], corvette, 'the shot still holds a hull in a hold');
   });
 
+  it("drops a carrier's order on a hull that boards, and sends no craft when it lands", () => {
+    // A carrier has no gun, so combat never ruled on its order: the order held
+    // the plan behind it for good, and the flight went after the same hull the
+    // moment the hold opened. The deck lets it go now.
+    const match = water(Faction.Bathyarch, Faction.Hadron);
+    const { freighter, corvette } = prey(match);
+    Health.hp[freighter] = 1e7; // the hold has to survive the craft to open
+    const gantry = enemy(match, UnitKind.Gantry, 6900, 6000);
+    orderTarget(gantry, corvette, Position.x[gantry]!, Position.y[gantry]!);
+    enqueue(match.world, gantry, { kind: 'move', x: 9000, y: 9000 });
+    load(match, freighter, [corvette]);
+    advance(match, 0.5);
+    assert.equal(Weapon.orderedTargetEid[gantry], 0, 'the carrier still holds a hull in a hold');
+    assert.equal(MoveOrder.x[gantry], 9000, 'and its plan waited behind it');
+
+    match.orderDisembark(0, freighter);
+    advance(match, 3);
+    assert.ok(hasComponent(match.world, Position, corvette), 'the premise: the hull has landed');
+    const sent = (match.world.flights.get(gantry) ?? []).filter(
+      (craft) => Weapon.orderedTargetEid[craft] === corvette
+    );
+    assert.deepEqual(sent, [], 'the flight went after the landed hull on the old order');
+  });
+
+  it('drops a queued attack on a hull already aboard when its turn comes', () => {
+    const match = water(Faction.Bathyarch, Faction.Hadron);
+    const { freighter, corvette } = prey(match);
+    const gantry = enemy(match, UnitKind.Gantry, 6900, 6000);
+    load(match, freighter, [corvette]);
+    enqueue(match.world, gantry, { kind: 'attack', x: 6060, y: 6000, target: corvette });
+    enqueue(match.world, gantry, { kind: 'move', x: 9000, y: 9000 });
+    advance(match, 0.5);
+    assert.equal(Weapon.orderedTargetEid[gantry], 0, 'the attack was taken up on a hull aboard');
+    assert.equal(MoveOrder.x[gantry], 9000, 'and the plan moved on past it');
+  });
+
   it('moves a plan on past an attack whose target boarded', () => {
     const match = water(Faction.Bathyarch, Faction.Hadron);
     const { freighter, corvette } = prey(match);
