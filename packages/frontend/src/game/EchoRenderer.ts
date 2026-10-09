@@ -2992,7 +2992,7 @@ export class EchoRenderer {
     let n = 0;
     for (const id of members) {
       // A hull in a hold is reported at its carrier, which is where it is, so
-      // a group wholly aboard centres on its transport (#1337).
+      // it counts there when the group is centred (#1337).
       const entity =
         this.units.find((u) => u.id === id) ??
         this.cargo.find((u) => u.id === id) ??

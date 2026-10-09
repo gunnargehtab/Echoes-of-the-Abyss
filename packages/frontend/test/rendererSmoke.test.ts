@@ -4236,8 +4236,8 @@ describe('a control group keeps its hulls through a hold (#1337)', () => {
       dispatchWindow('keydown', { code: 'Digit0' });
       dispatchWindow('keydown', { code: 'Digit1', ctrlKey: true });
 
-      // Aboard, as the server sends it: the carrier holds them, and each is
-      // reported at the carrier, which is where it is.
+      // Aboard: the carrier holds them, and each hull is reported at its
+      // carrier, as the server reports it.
       world.chart.applySnapshot({
         ...cannedSnapshot(1012),
         units: units.map((unit) =>
