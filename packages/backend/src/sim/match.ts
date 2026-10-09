@@ -384,6 +384,19 @@ export class Match {
   private readonly owners = defineQuery([Owner]);
   private readonly emitters = defineQuery([Acoustic, Owner, Position]);
   private readonly faunaQuery = defineQuery([Fauna, Health, Position]);
+  /**
+   * Match-local id -> the id a shoal or jelly cluster goes out under on the
+   * public tell layers (#1297).
+   *
+   * They went out under their match-local id, and every spawn in the match
+   * draws on that counter — hulls, torpedoes, decoys — so the gap between a
+   * restocked shoal and the last one counted what every navy had spawned in
+   * between, on a layer every player reads. A counter of their own counts only
+   * what the layers already show. Minted the first time a creature is listed,
+   * so the order is the deterministic one the collectors walk in.
+   */
+  private readonly tellIds = new Map<number, number>();
+  private nextTellId = 0;
   private readonly ordnanceOwners = defineQuery([Ordnance, Owner]);
   private readonly armedOwners = defineQuery([Weapon, Owner]);
   /** Scratch for `ascending`, so an Echo pass sorts into one array it already owns. */
@@ -3256,13 +3269,24 @@ export class Match {
     return snapshots;
   }
 
+  /** The public id a shoal or jelly cluster is listed under. */
+  private tellIdOf(eid: number): number {
+    const local = localIdOf(this.world, eid) ?? -eid;
+    let id = this.tellIds.get(local);
+    if (id === undefined) {
+      id = ++this.nextTellId;
+      this.tellIds.set(local, id);
+    }
+    return id;
+  }
+
   /**
    * Every living Lampfry shoal, for the public tell layer.
    *
    * The one place fauna state crosses the wire outside the contact path, and
    * it carries exactly what docs/bestiary.md §4 discloses: where the glow is,
-   * and whether it is scattered. Match-local ids, like everything the wire
-   * speaks.
+   * and whether it is scattered. Under an id of the layers' own (`tellIds`),
+   * never the match-local one, which counts every spawn in the match.
    */
   private collectShoals(): ShoalTell[] {
     const out: ShoalTell[] = [];
@@ -3272,7 +3296,7 @@ export class Match {
       if (Fauna.species[eid] !== FaunaSpecies.Lampfry) continue;
       if (Health.hp[eid]! <= 0) continue;
       out.push({
-        id: localIdOf(this.world, eid) ?? 0,
+        id: this.tellIdOf(eid),
         x: Position.x[eid]!,
         y: Position.y[eid]!,
         depth: Position.depth[eid]!,
@@ -3291,7 +3315,7 @@ export class Match {
       if (Fauna.species[eid] !== FaunaSpecies.Tetherjelly) continue;
       if (Health.hp[eid]! <= 0) continue;
       out.push({
-        id: localIdOf(this.world, eid) ?? 0,
+        id: this.tellIdOf(eid),
         x: Position.x[eid]!,
         y: Position.y[eid]!,
         depth: Position.depth[eid]!,

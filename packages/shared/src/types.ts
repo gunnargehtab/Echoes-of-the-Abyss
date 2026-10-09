@@ -1126,9 +1126,11 @@ export interface EchoSnapshot {
  * One Lampfry shoal, as every player sees it.
  *
  * Deliberately not a `Contact`: a contact is the resolved product of
- * listening, per player, and a shoal is a public landmark. The id is the
- * creature's match-local id — stable for the shoal's life, and it names
- * nothing the Echo Layer would withhold.
+ * listening, per player, and a shoal is a public landmark. The id is the public
+ * layers' own (`Match.tellIds`, #1297), shared with `JellyCluster`: minted the
+ * first time the creature is listed, never reused, and counting only shoals and
+ * jellies. It used to be the match-local id, and every spawn in the match draws
+ * on that counter, so the gap between two shoals counted every navy's launches.
  */
 export interface ShoalTell {
   id: number;
@@ -1143,7 +1145,8 @@ export interface ShoalTell {
  * One Tetherjelly cluster — living terrain, public chart data like biomes and
  * hazards (docs/bestiary.md §4): a mask you cannot see is confusion, not
  * dread. Position only; the −0.10 PF and 250 m radius are constants the
- * client already holds.
+ * client already holds. Its id is drawn from the same public ids as
+ * `ShoalTell`'s.
  */
 export interface JellyCluster {
   id: number;
