@@ -79,7 +79,7 @@ import type { ReadoutBox } from '../src/game/readouts.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { LampHaloPass } from '../src/game/lampHaloPass.ts';
 import { ROOF_OPEN_OPACITY } from '../src/game/passages.ts';
-import { FURNITURE_OUTLINE_ALPHA } from '../src/game/ladder.ts';
+import { FURNITURE_OUTLINE_ALPHA, INSTRUMENT_OUTLINE_ALPHA } from '../src/game/ladder.ts';
 import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
 import { FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
@@ -4215,5 +4215,35 @@ describe('renderer smoke test: the halo frame reading (#1001, development only)'
     }
     const probes = (globalThis as unknown as { window: Probes }).window;
     assert.equal(probes.__perspectiveSeabedM, undefined);
+  });
+});
+
+describe('the ping preview rings the hull that pings (#1330)', () => {
+  it('rings one hull however many are selected', async () => {
+    // docs/ui-ux.md §6: "two rings on the terrain at the emitting unit", and P
+    // sends one ping. The preview used to ring every selected hull, so five
+    // self-reveals promised a cost the ping did not pay, or not where shown.
+    const world = await boot();
+    try {
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.frame(1);
+      const chart = world.chart as unknown as { selected: Set<number>; ringLayer: Graphics };
+      assert.ok(chart.selected.size >= 2, 'the premise: several hulls selected');
+      dispatchWindow('keydown', { code: 'AltLeft' });
+      world.frame(2);
+      // Counted by the reveal ring, whose alpha nothing else on the layer
+      // shares; the self-reveal is drawn beside it on the same hull.
+      const reveals = chart.ringLayer.context.instructions.filter(
+        (instruction) =>
+          instruction.action === 'stroke' &&
+          (instruction.data as { style?: { alpha?: number } }).style?.alpha ===
+            INSTRUMENT_OUTLINE_ALPHA.pingReveal
+      );
+      assert.equal(reveals.length, 1, 'one hull pings, so one hull is ringed');
+    } finally {
+      dispatchWindow('keyup', { code: 'AltLeft' });
+      world.teardown();
+    }
   });
 });

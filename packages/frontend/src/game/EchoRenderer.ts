@@ -4095,9 +4095,19 @@ export class EchoRenderer {
       this.previewPing = false;
       return;
     }
-    const units = this.selectedUnits();
-    if (units.length > 0) this.callbacks.onPing(units[0]!.id);
+    const pinger = this.pinger();
+    if (pinger !== undefined) this.callbacks.onPing(pinger.id);
     this.previewPing = false;
+  }
+
+  /**
+   * The hull P pings: one, the first of the selection. The preview rings it
+   * alone, docs/ui-ux.md §6's "two rings on the terrain at the emitting unit",
+   * so the cost the player commits on is the ping's own. It used to ring every
+   * selected hull while one pinged (#1330).
+   */
+  private pinger(): OwnUnit | undefined {
+    return this.selectedUnits()[0];
   }
 
   /**
@@ -5775,6 +5785,7 @@ export class EchoRenderer {
     // any of them: an arc is kept only where no *other* own hull already hears
     // into that water, so the whole set is the input to each ring.
     const ringed: Array<{ unit: OwnUnit; selected: boolean; disc: ReachDisc }> = [];
+    const pingerId = this.previewPing ? this.pinger()?.id : undefined;
 
     for (const unit of this.units) {
       const isSelected = this.selected.has(unit.id);
@@ -5813,15 +5824,15 @@ export class EchoRenderer {
       ringed.push({ unit, selected: isSelected, disc: { x: d.x, y: d.y, radiusM: range } });
 
       // Hold the preview key to see exactly how badly a ping would expose you.
-      // Selection only, and not the §3.5 gate: a ping is an order, and the
-      // hulls an order would reach are the ones the player has in hand.
+      // The pinger only, and not the §3.5 gate: a ping is an order, and it
+      // reaches the one hull `commandPing` sends it from (#1330).
       //
       // Outside the envelope too, and deliberately: a ping's radius is a fixed
       // fact about the transmission rather than this hull's own reach, so it
       // is not one of the discs the union is taken over and is not hidden by
       // one. It is also the answer to a question the player asked by holding
       // a key, which is the one thing that always earns its own line.
-      if (this.previewPing && isSelected) {
+      if (unit.id === pingerId) {
         if (this.traceCircle(g, d.x, d.y, ACTIVE_SONAR.REVEAL_RADIUS_M, null)) {
           g.stroke({
             width: 2 * this.uiScale,
