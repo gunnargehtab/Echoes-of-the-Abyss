@@ -507,7 +507,9 @@ Still planned: a repeat-last-order binding, and ping-at-cursor — which needs a
 not `F`, since that arms the Foundry.
 
 A held key acts once: the keyboard's repeat is not a second press, so holding `Space` does not
-flip Silent Running back and forth, and holding `M` does not empty the mine rack (#1348).
+flip Silent Running back and forth, holding `M` does not lay mines until the magazine runs out,
+and holding `Esc` does not open and close the menu. The two holds are holds by design: `Alt`
+keeps the ping preview up and the arrows pan for as long as they are down (#1348).
 
 **Every key in that table is a default, not a fact.** §11 owes full rebinding, and the
 bindings are data (`packages/frontend/src/input/bindings.ts`) that the Controls screen

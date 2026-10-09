@@ -1913,6 +1913,30 @@ describe('a held key acts once (#1348)', () => {
       world.teardown();
     }
   });
+
+  it('takes no second recall from a held digit, nor a second menu from a held Esc', async () => {
+    // A repeat lands inside the double tap's window, so a held digit centred
+    // the camera; and a held Esc opened the menu on every repeat.
+    const world = await boot();
+    try {
+      const conn = world.conn as unknown as { target: { x: number; z: number } };
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      dispatchWindow('keydown', { code: 'Digit1', ctrlKey: true });
+      world.chart.focusOn(500, 500);
+      dispatchWindow('keydown', { code: 'Digit1' });
+      const at = { x: conn.target.x, z: conn.target.z };
+      for (let i = 0; i < 3; i++) dispatchWindow('keydown', { code: 'Digit1', repeat: true });
+      assert.deepEqual({ x: conn.target.x, z: conn.target.z }, at, 'a held digit centred');
+
+      const menus = () => world.log.calls.filter((call) => call.name === 'onOpenMenu').length;
+      dispatchWindow('keydown', { code: 'Escape' });
+      for (let i = 0; i < 3; i++) dispatchWindow('keydown', { code: 'Escape', repeat: true });
+      assert.equal(menus(), 1, 'a held Esc opened the menu again');
+    } finally {
+      world.teardown();
+    }
+  });
 });
 
 describe('renderer smoke test: input and teardown', () => {
