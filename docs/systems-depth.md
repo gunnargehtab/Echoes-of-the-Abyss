@@ -70,6 +70,8 @@ The asymmetry is the one stated just above, applied to terrain. Ascent is slow a
 
 The consequence is that a roofed passage is enterable only by a deliberate dive. A tunnel is not a shortcut you fall into; it is a route you have to read the map to find, and pay the loud descent to use. That is the right price for a path nobody can watch you take.
 
+A roof holds a climb the way the seabed holds a dive. A hull rising under one stops at the ceiling, its depth order kept, and rises the rest of the way once it is out from under the roof: a tunnel is left by one of its ends, never through its roof. A hull already inside rock, because a span closed over it, is not pushed down into the water below, since terrain never lowers a hull; it is let out sideways, as any hull inside ground is (#1334).
+
 ### Steering along the ground
 
 A move is an order in three dimensions: a point on the map and a depth to hold there
