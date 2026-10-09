@@ -54,16 +54,6 @@ const spires = defineQuery([Structure, Position, Owner, Health]);
 /** What a line can hurt: hulls and creatures. Structures and ordnance stand outside it. */
 const inTheWater = defineQuery([Position, Health, Owner]);
 
-/**
- * Hulls that were inside a corridor on the last tick, so the blow the mixer
- * is told about is the one on entry rather than sixty a second. A blow on the
- * hull is audible once per engagement (docs/audio-direction.md §12), and
- * walking into a kill-line is one engagement. Module scratch, rebuilt whole
- * every tick, for `auras.ts`'s reason — the set is single digits.
- */
-let struckLastTick = new Set<number>();
-let struckThisTick = new Set<number>();
-
 /** The live entity behind a node's match-local id, or 0 once it has fallen. */
 function nodeEid(world: SimWorld, local: number): number {
   const eid = eidOfLocalId(world, local);
@@ -174,8 +164,12 @@ export function standingWaveSystem(world: SimWorld, destroyed: number[]): boolea
     changed = true;
   }
 
+  // A blow on the hull is audible once per engagement
+  // (docs/audio-direction.md §12), and walking into a kill-line is one
+  // engagement: what the lines struck last tick is told nothing this tick.
+  const struck = world.corridorStruck;
   if (world.corridors.length === 0) {
-    struckLastTick.clear();
+    struck.last.clear();
     return changed;
   }
 
@@ -185,7 +179,7 @@ export function standingWaveSystem(world: SimWorld, destroyed: number[]): boolea
   const bite = STANDING_WAVE.CORRIDOR_DAMAGE_PER_S * dt;
   const half2 = STANDING_WAVE.CORRIDOR_HALF_WIDTH_M * STANDING_WAVE.CORRIDOR_HALF_WIDTH_M;
   const things = inTheWater(world);
-  struckThisTick.clear();
+  struck.next.clear();
   for (const corridor of world.corridors) {
     const a = nodeEid(world, corridor.a);
     const b = nodeEid(world, corridor.b);
@@ -209,18 +203,18 @@ export function standingWaveSystem(world: SimWorld, destroyed: number[]): boolea
         continue;
       }
       Health.hp[eid] = Health.hp[eid]! - bite;
-      struckThisTick.add(eid);
+      struck.next.add(eid);
       // The owner is told on the way in, and once — a client watching its own
       // hp could not tell the line from crush, and §8 keeps those apart.
-      if (!struckLastTick.has(eid) && hasComponent(world, Unit, eid)) {
+      if (!struck.last.has(eid) && hasComponent(world, Unit, eid)) {
         raiseSelfEvent(world, { kind: SelfEventKind.Damaged, eid });
       }
       if (Health.hp[eid]! <= 0 && !destroyed.includes(eid)) destroyed.push(eid);
     }
   }
-  const swap = struckLastTick;
-  struckLastTick = struckThisTick;
-  struckThisTick = swap;
+  const swap = struck.last;
+  struck.last = struck.next;
+  struck.next = swap;
   return changed;
 }
 
