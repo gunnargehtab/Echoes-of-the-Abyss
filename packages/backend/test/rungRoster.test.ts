@@ -805,6 +805,25 @@ describe('the Weaver — a screen, laid', () => {
     // apart could tell a decoy from a hull.
     assert.equal(Ordnance.kind[screen], Ordnance.kind[reflex]);
   });
+
+  it('keeps the laid decoy at 45 for its whole life, not only at the lay (#1314)', () => {
+    // `ordnanceSystem` writes every piece of ordnance's SIG each tick, and read
+    // off the kind a laid decoy is a countermeasure: 45 at the lay, 70 from
+    // the first tick on, for the 25 s a screen is meant to pass for a hull.
+    const { match } = skirmish(Faction.Pelagia);
+    const weaver = hull(match, Faction.Pelagia, UnitKind.Weaver, 3000, 3000);
+    const screen = match.layDecoy(0, weaver);
+    assert.ok(screen > 0);
+    for (const seconds of [1 / SIM.TICK_HZ, 1, 18]) {
+      advance(match, seconds);
+      assert.ok(Ordnance.remainingS[screen]! > 0, 'the premise: the screen is still in the water');
+      assert.equal(
+        Acoustic.sig[screen],
+        ORDNANCE.LAID_DECOY.SIG,
+        `${Ordnance.remainingS[screen]} s left`
+      );
+    }
+  });
 });
 
 describe('the Lance — one shot, and only at what it faces', () => {

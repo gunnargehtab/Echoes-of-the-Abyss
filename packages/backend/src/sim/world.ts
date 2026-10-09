@@ -882,8 +882,11 @@ export function spawnOrdnance(world: SimWorld, opts: SpawnOrdnanceOptions): numb
   Position.y[eid] = opts.y;
   Position.depth[eid] = opts.depth;
 
+  // A laid decoy is the countermeasure's emitter at a quieter figure
+  // (docs/systems-combat.md §5, "A screen, laid").
+  const sig = opts.laid === true ? ORDNANCE.LAID_DECOY.SIG : stats.sig;
   addComponent(world, Acoustic, eid);
-  Acoustic.sig[eid] = opts.laid === true ? ORDNANCE.LAID_DECOY.SIG : stats.sig;
+  Acoustic.sig[eid] = sig;
   // Deaf to the Echo Layer by construction — see the note above.
   Acoustic.hyd[eid] = 0;
   Acoustic.pfFactor[eid] = 1;
@@ -945,6 +948,7 @@ export function spawnOrdnance(world: SimWorld, opts: SpawnOrdnanceOptions): numb
   Ordnance.detonatingS[eid] = 0;
   Ordnance.targetDepthM[eid] = opts.targetDepthM ?? opts.depth;
   Ordnance.locked[eid] = opts.locked === true ? 1 : 0;
+  Ordnance.baseSig[eid] = sig;
 
   return eid;
 }

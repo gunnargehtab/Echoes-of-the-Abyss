@@ -817,10 +817,13 @@ export function ordnanceSystem(world: SimWorld, destroyed: number[]): void {
     // Ordnance is not in the acoustics query — it carries no Unit or Structure
     // component, which is exactly what keeps it out of every hull system — so
     // its live SIG is maintained here. Constant, and deliberately: neither a
-    // running torpedo nor a screaming decoy has a quiet mode. The veil factor
-    // still applies, because a Spore Veil is symmetric about everything inside.
+    // running torpedo nor a screaming decoy has a quiet mode. Constant at the
+    // figure it was launched at, not its kind's: a laid decoy is a Noisemaker
+    // at 45, and read off the kind it screamed at 70 from its first tick
+    // (#1314). The veil factor still applies, because a Spore Veil is
+    // symmetric about everything inside.
     const ringing = Ordnance.detonatingS[eid]! > 0;
-    const sig = ringing ? detonationSig(kind) : ordnanceStatsFor(kind).sig;
+    const sig = ringing ? detonationSig(kind) : Ordnance.baseSig[eid]!;
     Acoustic.sig[eid] = sig * (Acoustic.sigFactor[eid]! || 1);
 
     if (ringing) {
