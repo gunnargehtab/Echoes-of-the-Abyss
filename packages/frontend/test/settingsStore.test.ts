@@ -10,6 +10,12 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { LAMP_HALOS_DEFAULT } from '../src/game/lampHalo.ts';
 import {
+  conflictsIn,
+  ONE_HANDED_BINDINGS,
+  resolveBindings,
+  type Bindings,
+} from '../src/input/bindings.ts';
+import {
   DEFAULT_SETTINGS,
   loadSettings,
   saveSettings,
@@ -165,6 +171,29 @@ describe('the settings store', () => {
       JSON.stringify({ version: 1, lampHalos: 'yes', lampHalosChosen: true })
     );
     assert.equal(loadSettings().lampHalos, LAMP_HALOS_DEFAULT);
+  });
+
+  it('fills an action a one-handed record never heard of from that layout (#1343)', () => {
+    // A record from before Engine Off: the one-handed table whole, less that
+    // action. Filled from the standard table, Engine Off took the `Q` this
+    // layout gives the ping, and `Q` cut the drive while the ping had no key.
+    const older: Partial<Bindings> = { ...ONE_HANDED_BINDINGS };
+    delete older.engineOff;
+    backing.set(
+      'echoes.settings',
+      JSON.stringify({ version: 1, bindingLayout: 'oneHanded', bindings: older })
+    );
+    const loaded = loadSettings();
+    assert.equal(
+      loaded.bindings.engineOff,
+      ONE_HANDED_BINDINGS.engineOff,
+      'Engine Off took the standard key'
+    );
+    assert.deepEqual(
+      conflictsIn(resolveBindings(loaded.bindingLayout, loaded.bindings)),
+      [],
+      'two actions loaded on one key'
+    );
   });
 
   it('clamps the UI scale to the range §11 specifies', () => {
