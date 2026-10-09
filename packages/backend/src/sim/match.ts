@@ -3198,14 +3198,6 @@ export class Match {
     return snapshots;
   }
 
-  /**
-   * Every living Lampfry shoal, for the public tell layer.
-   *
-   * The one place fauna state crosses the wire outside the contact path, and
-   * it carries exactly what docs/bestiary.md §4 discloses: where the glow is,
-   * and whether it is scattered. Under an id of the layers' own (`tellIds`),
-   * never the match-local one, which counts every spawn in the match.
-   */
   /** The public id a shoal or jelly cluster is listed under. */
   private tellIdOf(eid: number): number {
     const local = localIdOf(this.world, eid) ?? -eid;
@@ -3217,6 +3209,14 @@ export class Match {
     return id;
   }
 
+  /**
+   * Every living Lampfry shoal, for the public tell layer.
+   *
+   * The one place fauna state crosses the wire outside the contact path, and
+   * it carries exactly what docs/bestiary.md §4 discloses: where the glow is,
+   * and whether it is scattered. Under an id of the layers' own (`tellIds`),
+   * never the match-local one, which counts every spawn in the match.
+   */
   private collectShoals(): ShoalTell[] {
     const out: ShoalTell[] = [];
     const creatures = this.ascending(this.faunaQuery(this.world));

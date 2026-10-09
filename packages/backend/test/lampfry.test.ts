@@ -152,11 +152,16 @@ describe('lampfry shoals', () => {
       match.deployNoisemaker(1, hull);
     }
     spawnFauna(match.world, { species: FaunaSpecies.Lampfry, x: 6500, y: 6500 });
-    const after = advance(match, 1)!
-      .get(0)!
-      .shoals.map((s) => s.id)
-      .sort((a, b) => a - b);
+    // A jelly cluster beside it draws on the same public ids, after the shoals.
+    spawnFauna(match.world, { species: FaunaSpecies.Tetherjelly, x: 6600, y: 6500 });
+    const own = advance(match, 1)!.get(0)!;
+    const after = own.shoals.map((s) => s.id).sort((a, b) => a - b);
     assert.deepEqual(after, [before[0]!, before[0]! + 1], 'the enemy spawns left a gap');
+    assert.deepEqual(
+      own.jellies.map((j) => j.id),
+      [before[0]! + 2],
+      'the jelly took an id from elsewhere'
+    );
   });
 
   it('never commit, whatever stands beside them', () => {
