@@ -359,8 +359,8 @@ describe('and the commander actually does it', () => {
 describe('a tender is put in the state the share is actually paid for', () => {
   /**
    * #706. `bloomShare.ts` pays a hull that is inside the bed *and* in the
-   * Shelf band *and* not running silent, and this branch used to order only
-   * the first of the three. A tender is claimed out of the army list, so
+   * Shelf band *and* neither running silent nor with its drive cut, and this
+   * branch used to order only the first of the three. A tender is claimed out of the army list, so
    * nothing else in the commander addresses its state afterwards — a hull
    * silenced on an approach and made a gardener next observation is outside
    * every list that could ever lift the silence again, and stands in the kelp

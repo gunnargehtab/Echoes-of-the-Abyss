@@ -324,7 +324,7 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
           1150,
           3200,
           6,
-          "Radicals' seed-one, the same hull and the same six. Ottilie Marr is among them, because the seed is Kell seed. It takes the sounding, and `holdingSounding` refuses a silent hull — so the sower drops silence to plant, and goes 1.8 → 7.2 → 18 and nothing louder (§3)"
+          "Radicals' seed-one, the same hull and the same six. Ottilie Marr is among them, because the seed is Kell seed. It takes the sounding, and `holdingSounding` refuses a silent or engine-off hull — so the sower drops silence to plant, and goes 1.8 → 7.2 → 18 and nothing louder (§3)"
         ),
         seed('seed-two', UnitKind.Harvester, 1350, 3200, 5, ''),
         seed(
