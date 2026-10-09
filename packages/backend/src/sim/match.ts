@@ -14,7 +14,14 @@
  * Bastion standing wins.
  */
 
-import { addComponent, defineQuery, hasComponent, removeEntity } from 'bitecs';
+import {
+  addComponent,
+  defineQuery,
+  deleteWorld,
+  getAllEntities,
+  hasComponent,
+  removeEntity,
+} from 'bitecs';
 import {
   ACTIVE_SONAR,
   HULL_EFFECTS,
@@ -387,6 +394,8 @@ export class Match {
    */
   private readonly factionBySlot = new Map<number, Faction>();
   private accumulator = 0;
+  /** Set by `dispose`; the world is gone and nothing may step it. */
+  private disposed = false;
   /** Snapshots produced by an Echo pass inside `step`, collected by `update`. */
   private pendingSnapshots: Map<number, EchoSnapshot> | null = null;
   /** Rolling worst-case Echo pass cost, for budget checks. */
@@ -538,6 +547,33 @@ export class Match {
 
   get tick(): number {
     return this.world.tick;
+  }
+
+  /**
+   * Give the world back (#1278). The room calls this when it is disposed and
+   * before a rematch builds the next world. The balance harness needs no call:
+   * it runs each match in a process of its own (`balance/batch.ts`).
+   *
+   * bitecs keeps every world in a module-global list, and an id returns to
+   * its queue only when its entity is removed. A room that merely dropped its
+   * Match kept the whole world reachable, 1.4 MB a two-player match, and spent
+   * its ids for good: about 68 a match, until past id 100,000 `addEntity`
+   * threw "max entities reached" in every room of the process. So every
+   * entity is removed, which queues its id for a later match, and the world
+   * leaves the list. Recycled ids are routine from here, which is what
+   * docs/invariants.md's "A spawn writes every field of its component" is for.
+   *
+   * Id 0 is never handed back: it is the "none" sentinel `createSimWorld`
+   * burns, and an entity seated on it could never be targeted. Read anything
+   * the room logs before calling this; the world's fields go with it.
+   */
+  dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true;
+    for (const eid of getAllEntities(this.world)) {
+      if (eid !== 0) removeEntity(this.world, eid);
+    }
+    deleteWorld(this.world);
   }
 
   get worstEchoPassMs(): number {
@@ -2307,6 +2343,7 @@ export class Match {
    * Returns per-slot snapshots on ticks where the Echo Layer ran, otherwise null.
    */
   update(deltaMs: number): Map<number, EchoSnapshot> | null {
+    if (this.disposed) return null;
     this.accumulator += deltaMs / 1000;
     this.pendingSnapshots = null;
 

@@ -21,7 +21,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { CLIENT_MSG, MatchPhase } from '@echoes/shared';
+import { CLIENT_MSG, MatchPhase, SIM } from '@echoes/shared';
 
 // The boot and delivery harness, shared with `wireValidation.test.ts` since
 // #628 rather than written out twice — see the head of that file.
@@ -270,6 +270,44 @@ describe('a client that drops before its join completes', () => {
     } finally {
       process.off('unhandledRejection', record);
       await shutdown(room);
+    }
+  });
+});
+
+describe('a room giving its world back', () => {
+  /**
+   * #1278. bitecs holds every world in a module-global list and takes an id
+   * back only from a removed entity, so a room that merely dropped its match
+   * kept the world and spent its ids for good. A disposed match steps no
+   * further, and one the room only dropped still would, which is what this
+   * reads: a live one hands back a snapshot within two Echo periods of ticks.
+   */
+  it('disposes the old match before a rematch, and the last when the room ends', async () => {
+    const steps = (match: { update: (deltaMs: number) => unknown }): boolean => {
+      for (let tick = 0; tick < 2 * (SIM.TICK_HZ / SIM.ECHO_HZ); tick++) {
+        if (match.update(1000 / SIM.TICK_HZ) !== null) return true;
+      }
+      return false;
+    };
+    const room = await bootRoom();
+    let ended = false;
+    try {
+      const clients = startPlaying(room);
+      const first = internals(room).match;
+      // A result, as `endMatch` leaves the room: Ended, and nobody ready.
+      room.state.phase = MatchPhase.Ended;
+      for (const player of room.state.players.values()) player.ready = false;
+      for (const client of clients) deliver(room, CLIENT_MSG.ready, client, { ready: true });
+      const second = internals(room).match;
+      assert.notEqual(second, first, 'the rematch should build a new world');
+      assert.equal(steps(first), false, 'the rematch left the first world standing');
+
+      assert.ok(steps(second), 'the premise: the rematch is live');
+      await shutdown(room);
+      ended = true;
+      assert.equal(steps(second), false, 'the ended room left its world standing');
+    } finally {
+      if (!ended) await shutdown(room);
     }
   });
 });
