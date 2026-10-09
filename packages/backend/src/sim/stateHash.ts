@@ -618,9 +618,10 @@ export type DerivedWorldState =
   // cleared. Anything that could make two runs raise different self-events has
   // already diverged in something above.
   | 'selfEvents'
-  // What the corridors struck last tick, read only to raise a `selfEvents`
-  // entry on the way in: a function of the last tick's hashed positions,
-  // health and corridors.
+  // One tick of memory: replaced whole on every tick a corridor stands and
+  // cleared on every tick none does. It decides only whether a `selfEvents`
+  // entry is raised, which nothing in the simulation reads, so two runs
+  // cannot differ in it without first differing in something above.
   | 'corridorStruck';
 
 /**

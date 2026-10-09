@@ -338,7 +338,8 @@ export interface SimWorld extends IWorld {
    * times a second (`standingWaveSystem`). On the world rather than in the
    * module, because module state is every match's in the process: a second
    * room with no corridor cleared it between this room's ticks, and the blow
-   * was told again every Echo pass (#1308).
+   * was told again every Echo pass (#1308). By entity id, which is safe for
+   * one tick: bitecs reissues a freed id only once a thousand are queued.
    */
   corridorStruck: { last: Set<number>; next: Set<number> };
   /**
