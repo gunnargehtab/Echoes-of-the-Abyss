@@ -1,13 +1,55 @@
 # Roadmap site
 
-`docs/ROADMAP.md` rendered against live GitHub issue state, for GitHub Pages — the public
-face of the project until there is more to show than the roadmap.
+`docs/ROADMAP.md` rendered against live GitHub issue state, in two cuts: a **public** one for
+GitHub Pages — the public face of the project until there is more to show than the roadmap —
+and a **private** one with everything the tracker knows (#1357).
 
 ```bash
-node tools/roadmap/build.mjs --out dist/roadmap
+node tools/roadmap/build.mjs                                   # public cut, dist/roadmap
+node tools/roadmap/build.mjs --private dist/roadmap-private    # private cut, as well or alone
 open dist/roadmap/index.html
 npm run test:roadmap
 ```
+
+## The two cuts
+
+The repository is private and a Pages site is not, so one build reads GitHub once and
+writes the page twice:
+
+| On the page | Public cut | Private cut |
+| --- | --- | --- |
+| Phases, rows, progress, done or planned, rough edges | yes | yes |
+| Issue numbers, links and titles | no | yes |
+| The unplaced and unrecorded counts | no | yes |
+| The render-stack audit, and the link to the repository | no | yes |
+| Where it goes | GitHub Pages, once [switched on](#publishing-is-off-by-default) | the `roadmap-private` workflow artifact, and [a claude.ai artifact](#the-claudeai-artifact) |
+
+`lib/render.mjs` makes the cut. Its `audience` option is `public` or `private`, and
+`public` nulls the repository every tracker link is built from. `test/audience.test.mjs`
+renders the real roadmap both ways, and fails if the public cut holds a GitHub link, an
+issue title, or an issue number a reader can see. A bare build writes only the public cut,
+so a forgotten flag never puts the private one where Pages looks.
+
+### The claude.ai artifact
+
+The private cut is also a private claude.ai artifact,
+<https://claude.ai/artifact/GYxbhiaeGmGxdd4yNeU8fW>, which only its owner can open. The
+Routine "Republish the private roadmap artifact", on the owner's account, keeps it current.
+The artifact is the page alone. `--single-file` puts the font, icon and pictures
+inside it as data URIs, since an artifact cannot load a file beside it. It leaves out the
+audit, a second page; the workflow artifact has that.
+
+A workflow cannot publish it. No public API publishes an artifact, and the GitHub Action
+cannot use the Artifact tool. So the Routine runs daily at 06:47 UTC, from `main`:
+
+```bash
+NODE_USE_ENV_PROXY=1 node tools/roadmap/build.mjs --private <dir> --single-file
+```
+
+Then it republishes `<dir>/index.html` to the artifact's URL. A scheduled run may do that
+unattended only when the publish is the page alone, which is the other reason for
+`--single-file` ([routines](https://code.claude.com/docs/en/routines)). An API-fired run is
+not on that list, so `pages.yml` does not fire the Routine.
 
 ## What is on the page
 
@@ -35,7 +77,8 @@ neon-noir register of `docs/style-neon-noir.md` under the Mouth lockup from `doc
   that navy's Cruiser photographed in the water it lives in, then **the fleet, as it renders
   today** — the roster contact sheet.
 - **What you can play today**, then **Known rough edges** — the doc's status table, each
-  row in player terms and linked to the issue that tracks it, with that issue's live state.
+  row in player terms with the live state of the issue that tracks it, and in the private
+  cut a link to that issue.
   A rough edge whose issue has closed reads as fixed, never as current.
 - **What is next** — the phase the doc marks **Now** and the one marked **Next**, each with
   its **Done when** test, as a collapsible card with a player-facing title, its dates (Now
@@ -46,9 +89,9 @@ neon-noir register of `docs/style-neon-noir.md` under the Mouth lockup from `doc
   fifty-six struck-through rows was mostly answering a question nobody asked. Nothing is
   lost: the roll opens, the Done filter opens every roll, a search opens the ones that
   match, and the card's count and bar say the number either way. Filter by planned or done,
-  search, expand all; `#phase-N` deep-links open the phase. Above the phases, one line
-  counts the open issues the roadmap has not placed in any row yet, so the page never
-  presents the rows as the whole of the work when they are not.
+  search, expand all; `#phase-N` deep-links open the phase. In the private cut, one line
+  above the phases counts the open issues the roadmap has not placed in any row yet, so the
+  page never presents the rows as the whole of the work when they are not.
 - **Later** — the doc's `## Later` section: parked and unscheduled work, grouped, and undated
   by definition, because a "since" date there would claim work that is not happening.
 - **The road so far** — the finished phases, folded, then the milestone record. Nothing is
@@ -64,7 +107,7 @@ footer says when the first issue on the whole roadmap was filed.
 ## The second page
 
 `render-stack.html` is the **Abyss Render Stack**: #974's graphics audit, as the owner
-published it on 27 Sep 2026. It says what draws the game, where the frame falls short of
+published it on 27 Sep 2026. It is in the private cut only (#1357). It says what draws the game, where the frame falls short of
 the concept art, and ranks eight upgrades by look per unit of work. The roadmap links it
 under the fleet and in the footer.
 
@@ -145,8 +188,8 @@ Each thing on the page has one owner, and each owner has a check:
 | Each upgrade's state | the GitHub API at build time, for the issue `UPGRADES` names | `pages.yml` rebuilds on issue events; `test/renderStack.test.mjs` fails if a card loses its tag |
 | The render-stack frames | `FRAMES`: Plate V, the Bathyarch Cruiser's portrait, #836's 12° Ventfront frame | `pages.yml` rebuilds when one changes; the test fails if any is missing |
 | The dates each phase ran | issue `created_at` / `closed_at`, at build time | nothing to drift — no date is typed anywhere, and a phase with open rows says *since* rather than guessing an end |
-| Open issues with no row | the GitHub API against the doc | the build log names them, and the page counts them; epics and `routine-log` ledgers are not counted, being containers and records rather than missing work. An issue under an epic that has a row counts as placed — the doc gives an epic one row, not one per sub-issue |
-| Closed work with no row | the same, for closed issues | the build log names them and "The road so far" counts them, so the record says how much it leaves out; duplicates and issues closed as not planned are not work done |
+| Open issues with no row | the GitHub API against the doc | the build log names them, and the private cut counts them; epics and `routine-log` ledgers are not counted, being containers and records rather than missing work. An issue under an epic that has a row counts as placed — the doc gives an epic one row, not one per sub-issue |
+| Closed work with no row | the same, for closed issues | the build log names them and the private cut's "The road so far" counts them, so the record says how much it leaves out; duplicates and issues closed as not planned are not work done |
 
 Two things stay on people. **A new issue is not a row until somebody adds one** — the build
 names every open issue the doc does not place, and the ones it does not mention at all are
@@ -174,8 +217,8 @@ proxy and needs nothing.
 
 The repository is private; a Pages site is not. Merging a workflow should never be the
 thing that decides to make part of a private repository public, so
-`.github/workflows/pages.yml` builds and uploads an artifact on every relevant change and
-**skips the deploy** until someone knowingly turns it on:
+`.github/workflows/pages.yml` builds both cuts and uploads each as an artifact on every
+relevant change, and **skips the deploy** until someone knowingly turns it on:
 
 1. **Settings → Pages → Source:** *GitHub Actions*
 2. **Settings → Secrets and variables → Actions → Variables:** add `PUBLISH_ROADMAP` = `true`
@@ -188,15 +231,13 @@ deploy says why in its log.
 
 ## What gets published
 
-Only what is already in `docs/ROADMAP.md`, the titles, numbers and open/close dates of the
-issues it links,
+The public cut, and only that: what is already in `docs/ROADMAP.md`, the open or closed
+state and the open/close dates of the issues it links (never their numbers or titles),
 the player-facing copy in `lib/content.mjs` (itself transcribed from the design docs), the
 mission and map counts, the dive's depths and the five species it draws (from
 `lib/ocean.mjs`, likewise transcribed), the roster contact sheet, one hull portrait per
-navy, a count of open issues not yet on the roadmap, the render-stack audit and its three
-frames, the logo, and the display font. No source, no design bible, and no internal notes
-but the one below. Worth re-reading before enabling, because that is the moment it becomes
-public.
+navy, the logo, and the display font. No source, no design bible, and no internal notes.
+Worth re-reading before enabling, because that is the moment it becomes public.
 
 **The roster sheet is public on purpose** — decided, so it does not have to be re-argued
 the next time somebody reads this list. The page ships the baked top-down picture and
@@ -210,10 +251,10 @@ what a Bulwark looks like.
 same approved models, rendered: the page ships four frames, one Cruiser per navy, and not the
 other sixteen renders beside them or the scene that made them.
 
-**So is the render-stack audit**, at the owner's request when it was added. It is the one
-page that names source files, line numbers and frame-budget readings: internal notes by
-this list's own measure, published by choice. It ships the audit and the three frames it
-was written around, Plate V among them, and nothing behind them.
+**The render-stack audit is not**, by the owner's decision in #1357. It was public at
+their request when it was added, but it is the one page that names source files, line
+numbers and frame-budget readings: internal notes by this list's own measure. It ships in
+the private cut only, with the three frames it was written around.
 
 Gameplay footage and lore are for later; the page's footer says so, and the sections are
 laid out so they can take them.

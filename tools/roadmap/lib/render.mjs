@@ -6,6 +6,12 @@
  *
  * The look transcribes docs/style-neon-noir.md — darkness as the default
  * state, cyan tells you, magenta asks you, glow only where it carries data.
+ *
+ * Two audiences, one page. The private cut is the whole page. The public cut
+ * is the same page with nothing that reaches into the tracker: the repository
+ * is private, so an issue link is a 404 that still names the issue, and an
+ * issue's own title is engineering notes. Inside this module that is one
+ * convention: a `repo` of null means "link nothing on GitHub".
  */
 
 import { firstFiled, formatSpan, span } from './dates.mjs';
@@ -23,6 +29,8 @@ export const escape = (text) =>
  * Relative links (to other design docs) become plain text — the site has
  * nowhere to send them, and the repository is private. Bare `#123` becomes a
  * link to that issue, which is where the page's every number comes from.
+ * With no `repo` (the public cut) neither links: every GitHub link the doc
+ * holds is to one of its issues.
  */
 export function inline(text, repo) {
   let html = escape(text);
@@ -30,9 +38,11 @@ export function inline(text, repo) {
   html = html.replace(/~~(.+?)~~/g, '<s>$1</s>');
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/(^|[\s(])\*([^*]+)\*(?=[\s).,;:]|$)/g, '$1<em>$2</em>');
+  if (repo === null) html = html.replace(/\[([^\]]+)\]\(https:\/\/github\.com\/[^)]+\)/g, '$1');
   html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2">$1</a>');
   html = html.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
   html = html.replace(/&lt;(https?:\/\/[^&]+)&gt;/g, '<a href="$1">$1</a>');
+  if (repo === null) return html;
   html = html.replace(
     /(^|[^\w"/>])#(\d+)\b/g,
     (_, before, n) =>
@@ -40,6 +50,13 @@ export function inline(text, repo) {
   );
   return html;
 }
+
+/**
+ * A picture, linked to its full-size file. A data URI is not linked: browsers
+ * refuse to navigate to one, and the link would put the bytes in the page twice.
+ */
+const zoomable = (href, img) =>
+  href.startsWith('data:') ? img : `<a href="${escape(href)}">${img}</a>`;
 
 const fmt = (n) => (typeof n === 'number' ? n.toLocaleString('en-US') : '—');
 
@@ -66,11 +83,14 @@ function itemRow(item, states, repo, content, openLabel = 'planned') {
   const href = known?.url ?? `https://github.com/${repo}/issues/${item.number}`;
   const label = { closed: 'done', open: openLabel, unknown: 'unknown' }[state];
   const copy = content.items[item.number];
+  const ref =
+    repo === null
+      ? ''
+      : `\n  <a class="ref" href="${escape(href)}" title="${escape(known?.title ?? `Issue #${item.number}`)}">#${item.number}</a>`;
   return `<li class="item ${state}" data-state="${state}">
   <span class="mark" aria-hidden="true"></span>
   <span class="work">${copy ? escape(copy) : inline(item.work, repo)}</span>
-  <span class="state-tag">${label}</span>
-  <a class="ref" href="${escape(href)}" title="${escape(known?.title ?? `Issue #${item.number}`)}">#${item.number}</a>
+  <span class="state-tag">${label}</span>${ref}
 </li>`;
 }
 
@@ -181,6 +201,17 @@ function phaseCard(phase, states, repo, content, open) {
 </details>`;
 }
 
+/** The footer's way out: the audit and the repository, whichever this cut has. */
+function footerLinks(renderStackHref, repo, content) {
+  const links = [
+    renderStackHref === null
+      ? null
+      : `<a href="${escape(renderStackHref)}">${escape(content.renderStack.footer)}</a>`,
+    repo === null ? null : `<a href="https://github.com/${repo}">The project on GitHub</a>`,
+  ].filter((l) => l !== null);
+  return links.length === 0 ? '' : `<p>${links.join(' · ')}</p>`;
+}
+
 const fill = (text, counts) =>
   text.replace(/\{(\w+)\}/g, (_, key) => (key in counts ? String(counts[key]) : `{${key}}`));
 
@@ -192,12 +223,26 @@ export function render({
   repo,
   generatedAt,
   fontHref,
+  iconHref = 'favicon.svg',
   sheet = null,
   unplaced = 0,
   unrecorded = 0,
   portraits = {},
   renderStackHref = null,
+  audience = 'private',
 }) {
+  // The public cut: no tracker links, no tracker counts, no audit. Every
+  // site below that links into the repository reads `repo`, so nulling it
+  // is the whole switch; the two counts and the audit link are the rest.
+  if (audience !== 'private' && audience !== 'public') {
+    throw new Error(`audience is 'public' or 'private', not ${JSON.stringify(audience)}`);
+  }
+  if (audience === 'public') {
+    repo = null;
+    unplaced = 0;
+    unrecorded = 0;
+    renderStackHref = null;
+  }
   const all = roadmap.phases.flatMap((phase) => phase.items);
   const overall = progress(all, states);
   const haveState = states.size > 0;
@@ -229,7 +274,7 @@ export function render({
     const p = portraits[f.navy];
     if (!p) return '';
     return `<figure class="portrait">
-    <a href="${escape(p.href)}"><img src="${escape(p.href)}" width="${p.width}" height="${p.height}" loading="lazy" decoding="async" alt="${escape(f.portrait)}"></a>
+    ${zoomable(p.href, `<img src="${escape(p.href)}" width="${p.width}" height="${p.height}" loading="lazy" decoding="async" alt="${escape(f.portrait)}">`)}
     <figcaption>${escape(p.caption)}</figcaption>
   </figure>`;
   };
@@ -257,14 +302,21 @@ export function render({
       const copy = q.number === null ? null : content.roughEdges[q.number];
       const state = q.number === null ? 'unknown' : stateOf(states, q.number);
       const href =
-        q.number === null
+        q.number === null || repo === null
           ? null
           : (states.get(q.number)?.url ?? `https://github.com/${repo}/issues/${q.number}`);
       const label = { closed: 'fixed', open: 'being worked on', unknown: 'unknown' }[state];
+      // The public cut still says whether it is fixed, just not which issue.
+      const tag =
+        href !== null
+          ? `<a class="ref-line" href="${escape(href)}"><span class="mark" aria-hidden="true"></span> <span class="state-tag">${label}</span> · #${q.number}</a>`
+          : q.number === null
+            ? ''
+            : `<span class="ref-line"><span class="mark" aria-hidden="true"></span> <span class="state-tag">${label}</span></span>`;
       return `<article class="card status ${state}">
   <h3>${copy ? escape(copy.question) : inline(q.question, repo)}</h3>
   <p>${copy ? escape(state === 'closed' && copy.fixed ? copy.fixed : copy.text) : inline(q.reading, repo)}</p>
-  ${href ? `<a class="ref-line" href="${escape(href)}"><span class="mark" aria-hidden="true"></span> <span class="state-tag">${label}</span> · #${q.number}</a>` : ''}
+  ${tag}
 </article>`;
     })
     .join('\n');
@@ -305,7 +357,7 @@ export function render({
       : `      <h3 class="subhead" id="fleet">${escape(content.roster.title)}</h3>
       <p class="lede">${escape(content.roster.text)}</p>
       <figure class="sheet reveal">
-        <a href="${escape(sheet.href)}"><img src="${escape(sheet.href)}" width="${sheet.width}" height="${sheet.height}" loading="lazy" decoding="async" alt="${escape(content.roster.alt)}"></a>
+        ${zoomable(sheet.href, `<img src="${escape(sheet.href)}" width="${sheet.width}" height="${sheet.height}" loading="lazy" decoding="async" alt="${escape(content.roster.alt)}">`)}
         <figcaption>${escape(content.roster.caption)}</figcaption>
       </figure>`;
 
@@ -360,7 +412,7 @@ export function render({
 <meta name="theme-color" content="#03080e">
 <meta property="og:title" content="Echoes of the Abyss — Roadmap">
 <meta property="og:description" content="Where the build stands, phase by phase, read live from the issue tracker.">
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="${escape(iconHref)}" type="image/svg+xml">
 <style>
 @font-face {
   font-family: 'Big Shoulders Display';
@@ -371,6 +423,9 @@ export function render({
 }
 /* docs/style-neon-noir.md — tokens, not suggestions. */
 :root {
+  /* A dark page by design, so the browser's own parts (scrollbars, the search
+     box) are drawn dark too, wherever the page is hosted. */
+  color-scheme: dark;
   --abyss-void: #03080e;
   --abyss-floor: #070e1a;
   --abyss-panel: #0a1424;
@@ -873,7 +928,7 @@ ${sprints}
     <div class="wrap">
       <p class="note">${escape(content.footer.note)}</p>
       <p class="${haveState ? 'stamp' : 'warn'}">${provenance}</p>
-      <p>${renderStackHref === null ? '' : `<a href="${escape(renderStackHref)}">${escape(content.renderStack.footer)}</a> · `}<a href="https://github.com/${repo}">The project on GitHub</a></p>
+      ${footerLinks(renderStackHref, repo, content)}
     </div>
   </footer>
 </main>

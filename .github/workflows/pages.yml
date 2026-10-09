@@ -1,6 +1,14 @@
 # The roadmap site — docs/ROADMAP.md rendered against live issue state, and
 # beside it the Abyss Render Stack, #974's graphics audit (render-stack.html).
 #
+# Two cuts from one build (#1357). The **public** cut is the only thing Pages
+# is given: no issue numbers, links or titles, no tracker counts, no audit.
+# The **private** cut is the whole page and the audit; it is uploaded as the
+# `roadmap-private` workflow artifact, which only people who can read this
+# repository can download. A claude.ai artifact of the private cut is kept by
+# a Routine on the owner's account, not here: nothing a workflow holds can
+# publish one (tools/roadmap/README.md, "The private cut").
+#
 # Publishing is **opt-in and off by default**, which is deliberate. This
 # repository is private; a Pages site is not. Merging a workflow should never
 # be the thing that decides to make part of a private repository public, so the
@@ -17,7 +25,7 @@
 # evaluated before that binding exists. The job logs print what the check
 # saw, so a skipped deploy says why.
 #
-# Until the variable is set this workflow builds the site, uploads it as an
+# Until the variable is set this workflow builds both cuts, uploads each as an
 # artifact you can download and open locally, and skips the deploy. It stays
 # green either way, so an un-enabled Pages setup is not a red X on every push.
 name: Roadmap site
@@ -76,16 +84,23 @@ jobs:
           node-version: 22
       # No install step: the generator is dependency-free by design, so the
       # site cannot fail to build because of something in node_modules.
-      - name: Build the site
+      # One run, both cuts: the issue reads are the slow, rate-limited part, and
+      # a second build would make every one of them twice.
+      - name: Build both cuts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node tools/roadmap/build.mjs --out dist/roadmap
+        run: node tools/roadmap/build.mjs --public dist/roadmap --private dist/roadmap-private
       - uses: actions/upload-artifact@v4
         with:
-          name: roadmap-site
+          name: roadmap-public
           path: dist/roadmap
+      - uses: actions/upload-artifact@v4
+        with:
+          name: roadmap-private
+          path: dist/roadmap-private
       # The Pages artifact is uploaded unconditionally: uploading is not
-      # publishing, and the deploy job below is the only thing that is.
+      # publishing, and the deploy job below is the only thing that is. It is
+      # the public cut's directory and nothing else.
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist/roadmap
