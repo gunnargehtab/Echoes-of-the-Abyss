@@ -1211,6 +1211,26 @@ export class AiCommander implements AiPlayer {
   /** Observations seen, which is the commander's only clock for cadence. */
   private observations = -1;
   /**
+   * Whether this decision may re-issue a standing order — a walk, the scout's
+   * leg, a carrier's station (#1253). True on the first decision at least
+   * `MINE_WALL.REISSUE_OBSERVATIONS` observations, five seconds, after the
+   * last one it was true on, so the interval holds at either cadence to
+   * within one decision.
+   *
+   * Kept on the commander's own decisions because the gate it replaces read
+   * the tick's phase, `tick % 300 < 12`, and opened only when a decision
+   * happened to land in a window's first observation. A Recruit decides on
+   * ticks 12 + 180k, which never does, so it never re-issued anything; a
+   * Veteran, on 12 + 36k, did every fifteen seconds rather than five.
+   */
+  private reissueDue = false;
+  /**
+   * The tick `reissueDue` was last true on. Minus infinity, so the first
+   * decision opens it: a hull that has never been told has nothing to wait
+   * five seconds before being told.
+   */
+  private lastReissueTick = -Infinity;
+  /**
    * Sim tick the next active sonar transmission is allowed on.
    *
    * Starts at one full doctrine interval rather than at zero, which is a bug
@@ -1466,6 +1486,9 @@ export class AiCommander implements AiPlayer {
     if (this.observations % this.tuning.cadenceTicks !== 0) return [];
     // Eliminated, or not spawned yet. Nothing to command either way.
     if (snapshot.units.length === 0 && snapshot.structures.length === 0) return [];
+    const window = TICKS_PER_OBSERVATION * MINE_WALL.REISSUE_OBSERVATIONS;
+    this.reissueDue = snapshot.tick - this.lastReissueTick >= window;
+    if (this.reissueDue) this.lastReissueTick = snapshot.tick;
 
     const commands: AiCommand[] = [];
     const harvesters = snapshot.units.filter((u) => u.kind === UnitKind.Harvester);
@@ -1540,7 +1563,7 @@ export class AiCommander implements AiPlayer {
     // Before the lift, and claimed the same way: a tender is a hull the army
     // does not have, and one that had been ordered aboard a transport in the
     // same observation would be walked off the garden it is paying for.
-    const tending = this.commandGardens(snapshot, army, commands);
+    const tending = this.commandGardens(army, commands);
     this.releaseTenders(tending, commands);
     // The field's holder is claimed the same way and for the same reason: a
     // Dredge the lift ordered aboard, or the army walked to the rally, is a
@@ -3521,7 +3544,7 @@ export class AiCommander implements AiPlayer {
     // patrolling Acolyte is a slow Light Scout with worse ears. It walks to one
     // watch post and stays there.
     if (scout.kind === UnitKind.Acolyte) {
-      this.commandWatchPost(snapshot, scout, out);
+      this.commandWatchPost(scout, out);
       return;
     }
 
@@ -3575,7 +3598,7 @@ export class AiCommander implements AiPlayer {
     if (canHide && !scout.silentRunning && this.tuning.usesSilentRunning) {
       out.push({ kind: 'silent', unitIds: [scout.id], active: true });
     }
-    if (snapshot.tick % (TICKS_PER_OBSERVATION * 25) < TICKS_PER_OBSERVATION) {
+    if (this.reissueDue) {
       out.push({ kind: 'move', unitIds: [scout.id], x: leg.x, y: leg.y });
     }
   }
@@ -3589,11 +3612,11 @@ export class AiCommander implements AiPlayer {
    * using (it is not going anywhere and has no gun) and buys the quietest
    * posture in the game on the hull with the best stationary ears in it.
    */
-  private commandWatchPost(snapshot: EchoSnapshot, scout: OwnUnit, out: AiCommand[]): void {
+  private commandWatchPost(scout: OwnUnit, out: AiCommand[]): void {
     const post = this.scoutRoute()[0] ?? this.home;
     if (distance(scout, post) >= RANGE.ARRIVE_M) {
       if (scout.engineOff) out.push({ kind: 'engineOff', unitIds: [scout.id], active: false });
-      if (snapshot.tick % (TICKS_PER_OBSERVATION * 25) < TICKS_PER_OBSERVATION) {
+      if (this.reissueDue) {
         out.push({ kind: 'move', unitIds: [scout.id], x: post.x, y: post.y });
       }
       return;
@@ -3665,7 +3688,7 @@ export class AiCommander implements AiPlayer {
           // Always with the fleet, fight or none: a screen is laid on the move
           // ahead of an approach (docs/systems-combat.md §5), so a Weaver that
           // stopped for its fight could never lay into it.
-          this.keepWithFleet(snapshot, hull, army, out);
+          this.keepWithFleet(hull, army, out);
           // Lay while the fight is close and the hull is moving: the screen is
           // the track it walked, so a Weaver standing still lays three decoys
           // on top of each other and has spent its magazine on one contact.
@@ -3687,7 +3710,7 @@ export class AiCommander implements AiPlayer {
           // *for*, since the rearm is a trip home either way. Nothing in
           // reach, it goes where the fight will be.
           if (best === null) {
-            this.keepWithFleet(snapshot, hull, army, out);
+            this.keepWithFleet(hull, army, out);
             break;
           }
           out.push({ kind: 'torpedo', unitId: hull.id, contactId: best.id });
@@ -3699,7 +3722,7 @@ export class AiCommander implements AiPlayer {
           // refused launch is a command in the replay that did nothing, and the
           // hull's own heading is in its snapshot, so the check is free.
           if (best === null) {
-            this.keepWithFleet(snapshot, hull, army, out);
+            this.keepWithFleet(hull, army, out);
             break;
           }
           const bearing = Math.atan2(best.y - hull.y, best.x - hull.x);
@@ -3855,7 +3878,7 @@ export class AiCommander implements AiPlayer {
         // that never stands still long enough to fire. The fleet leaves out
         // the hulls the last observation posted — the tenders and the field's
         // holder — which stand where their post is, not where the army is.
-        this.keepWithFleet(snapshot, hull, army, out);
+        this.keepWithFleet(hull, army, out);
         continue;
       }
 
@@ -3868,7 +3891,7 @@ export class AiCommander implements AiPlayer {
             out.push({ kind: 'seedSpore', unitId: hull.id, contactId: wall.id });
             out.push({ kind: 'move', unitIds: [hull.id], ...this.rallyPoint() });
           } else {
-            this.walkToWall(snapshot, hull, wall, HULL_EFFECTS.BLIGHT.RANGE_M, out);
+            this.walkToWall(hull, wall, HULL_EFFECTS.BLIGHT.RANGE_M, out);
           }
           break;
         }
@@ -3880,7 +3903,7 @@ export class AiCommander implements AiPlayer {
           if (bestD <= HULL_EFFECTS.LURE.RADIUS_M) {
             out.push({ kind: 'sing', unitId: hull.id });
           } else {
-            this.walkToWall(snapshot, hull, wall, HULL_EFFECTS.LURE.RADIUS_M, out);
+            this.walkToWall(hull, wall, HULL_EFFECTS.LURE.RADIUS_M, out);
           }
           break;
         }
@@ -3894,7 +3917,7 @@ export class AiCommander implements AiPlayer {
           // nothing.
           const reach = statsFor(kind).attackRangeM;
           if (bestD > reach) {
-            this.walkToWall(snapshot, hull, wall, reach, out);
+            this.walkToWall(hull, wall, reach, out);
           } else {
             out.push({ kind: 'attack', unitIds: [hull.id], contactId: wall.id });
           }
@@ -3952,7 +3975,7 @@ export class AiCommander implements AiPlayer {
       // one has nothing to order but its place in the fleet.
       this.rearming.delete(hull.id);
       if (aboard > 0) return false;
-      this.keepWithFleet(snapshot, hull, army, out);
+      this.keepWithFleet(hull, army, out);
       return true;
     }
     // Already filling: left standing, so it fills at its idle SIG.
@@ -3965,7 +3988,6 @@ export class AiCommander implements AiPlayer {
         x: depot.x + ((hull.x - depot.x) / depotD) * berth,
         y: depot.y + ((hull.y - depot.y) / depotD) * berth,
       },
-      snapshot.tick,
       out
     );
     return true;
@@ -3980,13 +4002,8 @@ export class AiCommander implements AiPlayer {
    * `RANGE.ARRIVE_M`, so a hull that has arrived is left standing: one walked
    * a few metres at every window never stands still long enough to fire.
    */
-  private keepWithFleet(
-    snapshot: EchoSnapshot,
-    hull: OwnUnit,
-    army: readonly OwnUnit[],
-    out: AiCommand[]
-  ): void {
-    if (snapshot.tick % (TICKS_PER_OBSERVATION * 25) >= TICKS_PER_OBSERVATION) return;
+  private keepWithFleet(hull: OwnUnit, army: readonly OwnUnit[], out: AiCommand[]): void {
+    if (!this.reissueDue) return;
     const siege = OWN_SIEGE[this.briefing.faction];
     const fleet = army.filter(
       (u) =>
@@ -4007,13 +4024,12 @@ export class AiCommander implements AiPlayer {
    * own range and `SIEGE_STANDOFF_M`.
    */
   private walkToWall(
-    snapshot: EchoSnapshot,
     hull: EchoSnapshot['units'][number],
     wall: EchoSnapshot['contacts'][number],
     reachM: number,
     out: AiCommand[]
   ): void {
-    if (snapshot.tick % (TICKS_PER_OBSERVATION * 25) >= TICKS_PER_OBSERVATION) return;
+    if (!this.reissueDue) return;
     const dx = wall.x - hull.x;
     const dy = wall.y - hull.y;
     const d = Math.hypot(dx, dy) || 1;
@@ -4103,7 +4119,7 @@ export class AiCommander implements AiPlayer {
       // the route itself (`Match.orderAttackContact`), so a move beside it
       // costs nothing more, and it is the half that keeps the target inside
       // the tether.
-      if (snapshot.tick % (TICKS_PER_OBSERVATION * 25) >= TICKS_PER_OBSERVATION) continue;
+      if (!this.reissueDue) continue;
       const station = this.deckStation(army);
       if (distance(carrier, station) > DECK.SLACK_M) {
         out.push({ kind: 'move', unitIds: [carrier.id], x: station.x, y: station.y });
@@ -4240,7 +4256,7 @@ export class AiCommander implements AiPlayer {
       if (mines <= 0) {
         this.layerPlan.delete(layer.id);
         if (distance(layer, this.home) > MINE_WALL.NURSERY_M) {
-          this.walk(layer, this.home, snapshot.tick, out);
+          this.walk(layer, this.home, out);
         }
         continue;
       }
@@ -4255,7 +4271,7 @@ export class AiCommander implements AiPlayer {
       const spot = spots[plan.spot % spots.length]!;
 
       if (distance(layer, spot) > MINE_WALL.ARRIVE_M) {
-        this.walk(layer, spot, snapshot.tick, out);
+        this.walk(layer, spot, out);
         continue;
       }
       if (snapshot.tick < plan.nextLayTick) continue;
@@ -4309,19 +4325,17 @@ export class AiCommander implements AiPlayer {
    * The scout's rule (`commandScout`) generalised, and paced off the same
    * clock: a move order re-issued at 5 Hz resets the hull's plan forever, and
    * a hull that has stopped short of where it was sent needs telling again.
-   * Read off the tick rather than off the decision counter so the interval is
-   * the same wall-clock five seconds at either difficulty — a Recruit's slower
-   * cadence is meant to make its decisions worse, not its walking.
+   * `reissueDue` measures the five seconds against the tick, so the interval
+   * is the same at either difficulty — a Recruit's slower cadence is meant to
+   * make its decisions worse, not its walking.
    */
   private walk(
     unit: OwnUnit,
     to: { x: number; y: number },
-    tick: number,
     out: AiCommand[],
     depthM?: number
   ): void {
-    const window = TICKS_PER_OBSERVATION * MINE_WALL.REISSUE_OBSERVATIONS;
-    if (tick % window >= TICKS_PER_OBSERVATION) return;
+    if (!this.reissueDue) return;
     out.push(
       depthM === undefined
         ? { kind: 'move', unitIds: [unit.id], x: to.x, y: to.y }
@@ -4370,7 +4384,7 @@ export class AiCommander implements AiPlayer {
       const spare = held.sort((a, b) => a.id - b.id).slice(grant.armyKeeps);
       for (const hull of spare) {
         if (distance(hull, field) > CRYSTAL_RUN.SEED_ARRIVE_M) {
-          this.walk(hull, field, snapshot.tick, out);
+          this.walk(hull, field, out);
           continue;
         }
         // Over the field and stopped. The dive is re-asked rather than latched
@@ -4411,7 +4425,7 @@ export class AiCommander implements AiPlayer {
       .sort((a, b) => a.id - b.id);
     for (const hull of anchors) {
       if (distance(hull, rally) > HULL_EFFECTS.BOWER.VEIL_RADIUS_M) {
-        this.walk(hull, rally, snapshot.tick, out);
+        this.walk(hull, rally, out);
       }
     }
   }
@@ -4501,7 +4515,7 @@ export class AiCommander implements AiPlayer {
     const floor = Math.min(ground, DEPTH.MAX_M);
     const grounded = onTheGround(ground, holder.depth);
     if (distance(holder, field) > FIELD_HOLD.STATION_M || !grounded) {
-      this.walk(holder, field, snapshot.tick, out, floor);
+      this.walk(holder, field, out, floor);
       return claimed;
     }
 
@@ -4590,11 +4604,7 @@ export class AiCommander implements AiPlayer {
    * Returns the ids it claimed, for `observe` to keep out of the army branch,
    * exactly as the lift does.
    */
-  private commandGardens(
-    snapshot: EchoSnapshot,
-    army: readonly OwnUnit[],
-    out: AiCommand[]
-  ): Set<number> {
+  private commandGardens(army: readonly OwnUnit[], out: AiCommand[]): Set<number> {
     const claimed = new Set<number>();
     if (this.briefing.faction !== Faction.Pelagia) return claimed;
     const gardens = this.briefing.blooms;
@@ -4752,7 +4762,7 @@ export class AiCommander implements AiPlayer {
       // being told to arrive never stops moving, and a moving hull is a
       // louder hull.
       if (distance(hull, garden) > arrivedM) {
-        this.walk(hull, garden, snapshot.tick, out);
+        this.walk(hull, garden, out);
       }
       // Standing in the circle is one clause of three, and this branch used to
       // order only that one. `bloomShare.ts` pays a hull inside the bed *and*
@@ -4896,7 +4906,7 @@ export class AiCommander implements AiPlayer {
     if (this.lift.phase === 'loading') {
       if (found) return claimed;
       if (distance(transport, rally) > RANGE.ARRIVE_M) {
-        this.walk(transport, rally, tick, out);
+        this.walk(transport, rally, out);
         return claimed;
       }
       // Gathered hulls first by id, so the same hulls are asked every time
@@ -4960,7 +4970,7 @@ export class AiCommander implements AiPlayer {
       this.lift = { transportId: transport.id, phase: 'loading', sinceTick: tick };
       return claimed;
     }
-    this.walk(transport, drop, tick, out);
+    this.walk(transport, drop, out);
     return claimed;
   }
 

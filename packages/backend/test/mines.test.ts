@@ -42,8 +42,8 @@ import {
   Position,
   Structure,
   Unit,
-  Weapon,
 } from '../src/sim/components.ts';
+import { orderTarget } from '../src/sim/systems/chase.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -749,10 +749,11 @@ describe('mines', () => {
           y: 6000,
           depth: 400,
         });
-        // Written to the field rather than ordered through `Match`, which wants
+        // Written to the state rather than ordered through `Match`, which wants
         // a contact handle the prey has not been given: what is under test is
-        // the state `combatSystem` reads, not the path that sets it.
-        Weapon.orderedTargetEid[prey] = quarry;
+        // the state `combatSystem` reads, not the path that sets it — the
+        // target and the point it is chased to (#1247), here where it lies.
+        orderTarget(prey, quarry, 11000, 6000);
       }
       const mine = match.layMine(1, prey);
       assert.notEqual(mine, 0, 'the drop should be accepted');

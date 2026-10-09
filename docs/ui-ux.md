@@ -453,13 +453,14 @@ unrecoverable portion of the health bar is hatched, and its texture rather than 
 what distinguishes it, so it survives colour-vision differences (§11). The focus tick is a
 chevron on the ribbon's right edge in the plain text ink: a camera reading, so neither a hull's
 marker nor the cyan of a rule about the water. Holding `Alt` previews the click under the
-cursor: its depth, marked on the ribbon, and what getting there costs — `DIVE 72 SIG`, with
-`· CRUSH` when an open-water depth is below the selection's rating, or the climb's seconds for
-a rise, or `LEVEL` when the click's depth is the lead hull's own or no more than 2 m above it,
-which a depth order reaches at once (any deeper reads as a dive, because a deeper depth order
-breaks Silent Running); and `FLOOR` when the click is on the ground and will follow it. The
-first word prices the mark against the lead hull's depth, not the way there, so `FLOOR` marks a
-path it does not price. Over a floor below a selected hull's rating the readout adds
+cursor: its depth, marked on the ribbon, and what getting there costs — `DIVE 72 SIG`, or the
+climb's seconds for a rise, or `LEVEL` when the click's depth is within 2 m of the lead hull's
+own, which a depth order reaches at once and so never charges the descent —
+`DIVE · BREAKS SILENCE` instead when that mark is in open water, deeper, and the lead hull is
+running silent, since a deeper open-water order breaks Silent Running. Whichever first word it
+reads, the readout adds `· CRUSH` when an open-water depth is below the selection's rating, and
+`FLOOR` when the click is on the ground and will follow it. The first word prices the mark
+against the lead hull's depth, not the way there, so `FLOOR` marks a path it does not price. Over a floor below a selected hull's rating the readout adds
 `· PR EDGE`: following stops where the ground falls past the rating rather than crushing
 ([systems-depth.md](systems-depth.md) §2), so the mark is a depth that hull will not reach. The
 duct is one more depth the focus can be put at, which is how a player buys its 1.2× range now
@@ -560,7 +561,9 @@ point at its depth, with a plumb line to the ground below it.
 Nothing is left of Dive, Rise or the floor-following toggle, and `D`, `A` and `S` are unbound.
 A step order between rungs answered "how deep" with a list of four depths; a click answers it
 with the depth the player is looking at. The depth charge still drops into the band below
-([systems-combat.md](systems-combat.md) §8), so the rungs survive for that one order.
+([systems-combat.md](systems-combat.md) §8): 1,000 m from the Shelf and 2,400 m from Mid-Water,
+read off the hull's own depth wherever it is headed, since a charge set inside its dropper's band
+is refused.
 
 ### The one-handed layout
 
@@ -1072,7 +1075,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | Ping preview rings, ping commit | Implemented (hold `Alt`, `P`) |
 | Silent-running dimming | Implemented |
 | Depth ribbon, PR badge, unrecoverable-hull hatching | Implemented (the focus tick, and a click's depth since #1132; hold `Alt` to preview the click's cost) |
-| Thermocline on the ribbon, duct as a depth rung | Implemented — cyan line at 1,200 m, duct shaded, `DUCT` / `UNDER` in the readout |
+| Thermocline on the ribbon, and the duct as a depth the focus can be put at (§8, #1132) | Implemented — cyan line at 1,200 m, duct shaded, `DUCT` / `UNDER` in the readout |
 | Sonar-scope minimap | Implemented — terrain, tier-fidelity returns, Echo Marks under them, sweep, range rings |
 | Contact log | Implemented — DOM, live region, click-to-focus, every row including `MARK` (#214) |
 | Contact voices, per-tier | Implemented — pan authority by tier, biome voicing, faction timbre at Tier 3+. The **timbre is off by default** pending #731: the §8 families are built and do not yet sound like the materials §8 names, so a classified contact keeps the tier's thump and stops saying what it is. Everything the tiers carry besides identity — pan, range, freshness, the Tier-4 lock tone — is unchanged, and the class was never audio-only (§11's table) |

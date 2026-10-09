@@ -179,11 +179,17 @@ export function faunaSystem(world: SimWorld, destroyed: number[]): void {
     // shoal is a place, not a predator — so the whole ladder is skipped, and
     // with it the per-candidate path integrals that make `listen` the
     // expensive half of the Drift.
+    //
+    // They skip `act` too, which is where every other creature's SIG is
+    // written, so theirs is written here: their one figure, through the Spore
+    // Veil's cut as every emitter's is (#1251).
     if (Fauna.species[eid] === FaunaSpecies.Lampfry) {
+      Acoustic.sig[eid] = stats.sigIdle * (Acoustic.sigFactor[eid]! || 1);
       lampfryTick(world, eid, dt, others);
       continue;
     }
     if (Fauna.species[eid] === FaunaSpecies.Tetherjelly) {
+      Acoustic.sig[eid] = stats.sigIdle * (Acoustic.sigFactor[eid]! || 1);
       jellyTick(world, eid, dt);
       continue;
     }
@@ -734,7 +740,10 @@ function act(
     Fauna.species[eid] === FaunaSpecies.Hollow
       ? stage === FaunaStage.Committed
       : stage !== FaunaStage.Ambient;
-  Acoustic.sig[eid] = roused ? stats.sigActive : stats.sigIdle;
+  // Through the Spore Veil's cut, as every other emitter's SIG is: "everything
+  // inside — friend or foe alike — emits at 40% SIG" (docs/units.md), and
+  // `aurasSystem` has set the factor for this tick already (#1251).
+  Acoustic.sig[eid] = (roused ? stats.sigActive : stats.sigIdle) * (Acoustic.sigFactor[eid]! || 1);
 
   let toX = Fauna.homeX[eid]!;
   let toY = Fauna.homeY[eid]!;
@@ -771,7 +780,7 @@ function act(
         // The trade §4 names: the quiet evidence is eaten roughly four times
         // faster, and the swarm's own feeding SIG stands in its place.
         world.marks.strip(mark.id, DRIFT.SCAVENGE_STRIP_FACTOR, dt);
-        Acoustic.sig[eid] = stats.sigActive;
+        Acoustic.sig[eid] = stats.sigActive * (Acoustic.sigFactor[eid]! || 1);
       }
     }
   }

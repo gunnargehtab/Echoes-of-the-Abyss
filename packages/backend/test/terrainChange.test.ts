@@ -80,8 +80,8 @@ function authoredGround(): Terrain {
 
 describe('the arch, going', () => {
   it('is open water before the transit and rock after it', () => {
-    // A cell in the span, east of the lock and north of the chamber. This is
-    // the water the flight was admitted over at 00:00.
+    // A cell in the span, east of the lock and north of the chamber: the row
+    // of the map's spawn, at the arch the flight is seated under.
     const arch = centreOf(10, 8);
 
     const before = new Match(missionMapById(PROLOGUE_SORROWGATE.mapId), {

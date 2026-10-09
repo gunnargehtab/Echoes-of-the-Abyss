@@ -197,6 +197,24 @@ function barLabel(app: HeadlessApplication, label: string): { x: number; y: numb
   return found[0]!;
 }
 
+/** Is a command-card cell drawn grey, as a cell that is not enabled is? */
+function barGrey(app: HeadlessApplication, label: string): boolean {
+  const found: Text[] = [];
+  const walk = (node: Container): void => {
+    for (const child of node.children) {
+      if (!child.visible) continue;
+      if (child instanceof Text) {
+        if (child.text === label) found.push(child);
+      } else {
+        walk(child as Container);
+      }
+    }
+  };
+  walk(app.stage as unknown as Container);
+  assert.equal(found.length, 1, `${label} is not on the command card exactly once`);
+  return found[0]!.style.fill === UI.textDim;
+}
+
 /** `TOP_BAR_HEIGHT` in EchoRenderer, restated so a change to it fails here. */
 const TOP_BAR_HEIGHT_PX = 52;
 
@@ -2470,13 +2488,64 @@ describe('renderer smoke test: input and teardown', () => {
       const level = textSaying(world.app.stage, 'LEVEL');
       assert.equal(level, 'LEVEL', `the preview at the hull's own depth read ${level}`);
 
-      // And a metre below it is a dive, however small: a deeper depth order
-      // breaks Silent Running, and `LEVEL` must never hide that.
+      // A metre below it snaps too, so it is never charged the descent's SIG,
+      // and a hull that is not silent pays nothing for it (#1246).
       world.conn.raiseFocusBy(-2);
       const below = world.conn.projectPoint(2000, 2000, world.conn.focusDepth());
       hover(below.x, below.y);
+      const shallow = textSaying(world.app.stage, 'LEVEL');
+      assert.equal(shallow, 'LEVEL', `a metre below a hull that is not silent read ${shallow}`);
+
+      // Silent, the same metre costs the silence a deeper depth order breaks,
+      // and the readout names that rather than a SIG it will not pay.
+      const silent = cannedSnapshot();
+      silent.units.find((unit) => unit.id === 11)!.silentRunning = true;
+      world.chart.applySnapshot(silent);
+      world.conn.applySnapshot(silent);
+      world.frame(1);
+      hover(below.x, below.y);
+      const breaks = textSaying(world.app.stage, 'DIVE');
+      assert.equal(breaks, 'DIVE · BREAKS SILENCE', `a metre below a silent hull read ${breaks}`);
+
+      // A metre above it keeps the silence: only a deeper order breaks it.
+      world.conn.raiseFocusBy(2);
+      const above = world.conn.projectPoint(2000, 2000, world.conn.focusDepth());
+      hover(above.x, above.y);
+      const kept = textSaying(world.app.stage, 'LEVEL');
+      assert.equal(kept, 'LEVEL', `a metre above a silent hull read ${kept}`);
+
+      // Past the snap it is a dive, charged as one.
+      world.conn.raiseFocusBy(-12);
+      const past = world.conn.projectPoint(2000, 2000, world.conn.focusDepth());
+      hover(past.x, past.y);
       const deeper = textSaying(world.app.stage, 'DIVE');
-      assert.match(deeper ?? '', /^DIVE \d+ SIG$/, `a metre below the hull read ${deeper}`);
+      assert.match(deeper ?? '', /^DIVE \d+ SIG$/, `eleven metres below the hull read ${deeper}`);
+
+      // On the ground, a follow mark inside the snap breaks nothing, silent or
+      // not: the follow mode holds its station without a depth order
+      // (`depth.ts`). The silent Corvette a metre above the trench's follow
+      // depth, which is the deepest a hull may be ordered.
+      const deep = cannedSnapshot();
+      const sunk = deep.units.find((unit) => unit.id === 11)!;
+      sunk.silentRunning = true;
+      sunk.depth = DEPTH.MAX_M - 1;
+      world.chart.applySnapshot(deep);
+      world.conn.applySnapshot(deep);
+      world.frame(1);
+      world.conn.home();
+      world.conn.focusWorld(3500, 3500);
+      const ground = world.conn.projectPoint(3500, 3500, null);
+      hover(ground.x, ground.y);
+      const held = textSaying(world.app.stage, 'LEVEL');
+      assert.equal(held, 'LEVEL · FLOOR · PR EDGE', `a follow mark a metre down read ${held}`);
+
+      // And a climb that ends below the rating still says so (§8): `CRUSH`
+      // follows every first word, as the threat colour does.
+      world.conn.raiseFocusBy(world.conn.focusDepth() - 2500);
+      const climb = world.conn.projectPoint(3500, 3500, world.conn.focusDepth());
+      hover(climb.x, climb.y);
+      const crushed = textSaying(world.app.stage, 'RISE');
+      assert.match(crushed ?? '', /^RISE \d+s · CRUSH$/, `a climb to 2,500 m read ${crushed}`);
     } finally {
       world.teardown();
     }
@@ -3165,6 +3234,72 @@ describe('the command card when it is offered more than it holds', () => {
       assert.ok(
         !lines.some((line) => line.trim().startsWith('TORP ')),
         'TORP is still holding a command cell'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  /**
+   * #1260. CHARGE drops into the band below the hull's own depth — the test
+   * `Match.orderDepthCharge` makes — not one rung down from where the hull is
+   * headed. A Mid-Water hull's charge went to the duct's 1,200 m, inside its
+   * own band, and the server refused it; mid-dive, the rung came off the
+   * ordered depth.
+   */
+  it('sets a charge to the station of the band under the hull, wherever it is headed', async () => {
+    const world = await boot();
+    try {
+      const snapshot = cannedSnapshot();
+      const corvette = snapshot.units.find((unit) => unit.torpedoes !== undefined)!;
+      const charge = (depth: number, depthOrder?: number): unknown => {
+        corvette.depth = depth;
+        corvette.depthOrder = depthOrder;
+        world.chart.applySnapshot(snapshot);
+        world.conn.applySnapshot(snapshot);
+        world.frame(1);
+        selectHull(world, corvette);
+        world.log.calls.length = 0;
+        dispatchWindow('keydown', { code: 'KeyC' });
+        dispatchWindow('keyup', { code: 'KeyC' });
+        return world.log.first('onDepthCharge')?.[1];
+      };
+      assert.equal(charge(900), 2400, "a Mid-Water hull's charge is set to 2,400 m, not the duct");
+      assert.equal(charge(300), 1000, "a Shelf hull's charge is set to Mid-Water's 1,000 m");
+      assert.equal(charge(900, 2400), 2400, 'mid-dive, from the band the hull is in');
+      assert.equal(charge(2400), undefined, 'and from the Abyssal there is no band below');
+
+      // The button greys on the same test: lit mid-dive, where a press fires,
+      // and grey from the Abyssal, where a press does nothing.
+      const pressed = (depth: number, depthOrder?: number): { grey: boolean; set: unknown } => {
+        corvette.depth = depth;
+        corvette.depthOrder = depthOrder;
+        world.chart.applySnapshot(snapshot);
+        world.conn.applySnapshot(snapshot);
+        world.frame(1);
+        selectHull(world, corvette);
+        world.log.calls.length = 0;
+        const grey = barGrey(world.app, 'CHARGE');
+        const cell = barLabel(world.app, 'CHARGE');
+        world.app.canvas.dispatch('pointerdown', {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: cell.x,
+          clientY: cell.y,
+        });
+        world.frame(1);
+        return { grey, set: world.log.first('onDepthCharge')?.[1] };
+      };
+      assert.deepEqual(
+        pressed(900, 2400),
+        { grey: false, set: 2400 },
+        'the button is lit and fires mid-dive, from the band the hull is in'
+      );
+      assert.deepEqual(
+        pressed(2400),
+        { grey: true, set: undefined },
+        'and is grey from the Abyssal, where a press does nothing'
       );
     } finally {
       world.teardown();

@@ -529,6 +529,53 @@ describe('difficulty is decision quality, not information', () => {
     );
   });
 
+  /**
+   * #1253. A standing walk — here the scout's leg — is told again every five
+   * seconds or so, which `walk` promises at either cadence: "a Recruit's
+   * slower cadence is meant to make its decisions worse, not its walking".
+   * The window used to read the tick's phase and open only when a decision
+   * landed in a 300-tick window's first observation. A Recruit decides on
+   * ticks 12 + 180k, which never does, so it never told its scout anything;
+   * a Veteran, on 12 + 36k, did every fifteen seconds.
+   */
+  it('re-issues a standing walk every five to six seconds, at either cadence', () => {
+    for (const difficulty of [AiDifficulty.Recruit, AiDifficulty.Veteran]) {
+      const match = new Match(undefined, { fauna: false, seed: SEED });
+      match.addPlayer(0, Faction.Bathyarch);
+      match.addPlayer(1, Faction.Pelagia);
+      const commander = new AiCommander(briefingFor(match, 1, Faction.Pelagia, difficulty));
+      // The orders are not applied, so the scout stays put and every
+      // re-issue is the window opening, not the leg changing.
+      const told: number[] = [];
+      for (let tick = 0; tick < 60 * SIM.TICK_HZ; tick++) {
+        const own = match.update(1000 / SIM.TICK_HZ)?.get(1);
+        if (own === undefined) continue;
+        for (const command of commander.observe(own)) {
+          if (command.kind !== 'move' || command.unitIds.length !== 1) continue;
+          const hull = own.units.find((u) => u.id === command.unitIds[0]);
+          if (hull?.kind === UnitKind.LightScout) told.push(own.tick);
+        }
+      }
+      assert.ok(
+        told.length >= 2,
+        `${AiDifficulty[difficulty]} told its scout ${told.length} times`
+      );
+      for (let i = 1; i < told.length; i++) {
+        const gap = told[i]! - told[i - 1]!;
+        assert.ok(
+          gap <= 6 * SIM.TICK_HZ,
+          `${AiDifficulty[difficulty]} waited ${gap} ticks to tell its scout again`
+        );
+        // And no oftener: a move re-issued every decision resets the hull's
+        // plan forever, which is what the window is for.
+        assert.ok(
+          gap >= 5 * SIM.TICK_HZ,
+          `${AiDifficulty[difficulty]} told its scout again after only ${gap} ticks`
+        );
+      }
+    }
+  });
+
   it('has no tuning field that could widen what the AI perceives', () => {
     // Structural rather than behavioural, and deliberately: the promise is
     // that a harder AI never hears more, and the way to keep that promise is

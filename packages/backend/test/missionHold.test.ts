@@ -92,9 +92,9 @@ const TENDER_2 = PLAYER_PARTY.units.find((unit) => unit.tag === 'tender-2')!;
  * "the flight" and mean one hull, the scripted parties are dropped because
  * nothing here is about them, and the silence ceiling is opened to 100 so the
  * array is never withdrawn mid-run for a rule this file is not testing. The
- * positions are the authored ones: the escort sits on the arch at 2,200 and the
- * tender in the chamber at 2,900, which is 700 m apart and so *outside* the
- * 400 m radius — the state the mission opens in.
+ * positions are the authored ones: the escort sits under the arch at 2,280 and
+ * the tender in the chamber at 2,900, which is 620 m apart and so *outside*
+ * the 400 m radius — the state the mission opens in.
  */
 const HOLD_MISSION: MissionDefinition = {
   ...PROLOGUE_SORROWGATE,

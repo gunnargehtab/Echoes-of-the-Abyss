@@ -586,9 +586,12 @@ export class EchoLayer {
    * once a thousand have been freed, and the short-lived ordnance this epic
    * added makes crossing that threshold routine — so a handle minted for a
    * torpedo that died minutes ago could come to name a *live hull the player
-   * had never detected*. `orderAttackContact` would accept it, and combat.ts
-   * republishes an ordered target's position into MoveOrder every tick, which
-   * turns a stale handle into a permanent tracker.
+   * had never detected*. `orderAttackContact` accepted it then, and combat.ts
+   * republished an ordered target's position into MoveOrder every tick, which
+   * turned a stale handle into a permanent tracker. Since #1247 an order needs
+   * the slot to resolve its target now, and the chase follows what the slot
+   * was shown; pruning is still what keeps an old handle from naming a new
+   * hull the slot happens to hear.
    *
    * Called from `Match.reap` for every death, which is the one place the
    * simulation makes a death real.

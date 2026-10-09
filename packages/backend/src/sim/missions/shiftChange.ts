@@ -286,13 +286,20 @@ export const LEDGER_SHIFT_CHANGE: MissionDefinition = {
     // edge of hearing, and uninterested in a field that is merely working
     // (§7). It commits to nothing; it is here so the player's ears learn what
     // a pack at rest sounds like.
+    //
+    // At the Downworks' east end, about 1.5 km off the refinery and 600 m off
+    // Face Five's field, so a shift hears it at rest from Five and not from
+    // the muster, the seam or the refinery (§7). Driven to rest 220 m from
+    // the refinery, the pack heard its hum on release, took the depot at
+    // 01:20 and three hulls by 02:00 in every run, and nothing more could be
+    // banked after (#1265).
     {
       atTick: 0,
       kind: 'creature',
       tag: 'pack-a',
       species: FaunaSpecies.Draymaw,
-      spawnAt: { x: 2300, y: 1700, depthM: 1250 },
-      driveTo: { x: 2400, y: 1650 },
+      spawnAt: { x: 3600, y: 1650, depthM: 1250 },
+      driveTo: { x: 3650, y: 1600 },
       untilTick: T(0, 20),
       loud: false,
       note: 'The pack that shadows every producing face on the Vein — the weather, at rest',
@@ -302,8 +309,8 @@ export const LEDGER_SHIFT_CHANGE: MissionDefinition = {
       kind: 'creature',
       tag: 'pack-b',
       species: FaunaSpecies.Draymaw,
-      spawnAt: { x: 2450, y: 1800, depthM: 1250 },
-      driveTo: { x: 2500, y: 1750 },
+      spawnAt: { x: 3750, y: 1800, depthM: 1250 },
+      driveTo: { x: 3800, y: 1750 },
       untilTick: T(0, 20),
       loud: false,
       note: '',
@@ -313,8 +320,8 @@ export const LEDGER_SHIFT_CHANGE: MissionDefinition = {
       kind: 'creature',
       tag: 'pack-c',
       species: FaunaSpecies.Draymaw,
-      spawnAt: { x: 2200, y: 1850, depthM: 1250 },
-      driveTo: { x: 2250, y: 1800 },
+      spawnAt: { x: 3500, y: 1850, depthM: 1250 },
+      driveTo: { x: 3550, y: 1800 },
       untilTick: T(0, 20),
       loud: false,
       note: '',

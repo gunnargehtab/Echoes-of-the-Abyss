@@ -197,11 +197,18 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
         // refit rates them for Mid-Water and stops there. They cannot enter the
         // basin, which needs PR 3. That floor is the mission's, and it is
         // authored rather than incidental.
+        //
+        // Seated under the arch's south face, below the span row and not in
+        // it: the span goes solid at 10:40 with its floor at the surface, the
+        // seabed lifts any hull inside it at the ascent rate (systems-depth.md
+        // §2), and three escorts seated in it rose into the Lid and died by
+        // 14:15 in an idle run (#1262). §3: nothing here is trying to destroy
+        // the flight.
         {
           tag: 'escort-1',
           kind: UnitKind.LightScout,
           x: 2400,
-          y: 2200,
+          y: 2280,
           depthM: 1450,
           role: 'escort',
           pressureRating: 2,
@@ -211,17 +218,17 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
           tag: 'escort-2',
           kind: UnitKind.LightScout,
           x: 2550,
-          y: 2150,
+          y: 2430,
           depthM: 1450,
           role: 'escort',
           pressureRating: 2,
-          note: 'Escort Two, on the arch',
+          note: 'Escort Two, under the arch',
         },
         {
           tag: 'escort-3',
           kind: UnitKind.LightScout,
           x: 2700,
-          y: 2200,
+          y: 2280,
           depthM: 1450,
           role: 'escort',
           pressureRating: 2,
@@ -382,7 +389,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       // Seated at tick zero and silenced at 00:00, which is how a party can be
       // present from the start and still *arrive* at 06:20. The silence order
       // hides her, not her ground: she waits in Districts water (Coral Ruins,
-      // PF 0.80) north-west of the arch, 2,204 m from Escort One's seat, the
+      // PF 0.80) north-west of the arch, 2,257 m from Escort One's seat, the
       // flight's nearest. Measured in a no-input run without the order, the
       // flight holds both hulls at Tier 2 on every Echo pass to 06:20, and
       // with Thermal Vein painted under her seat it still does. Her first
@@ -565,7 +572,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     // 00:00 — the Knight is already out there, and already quiet.
     //
     // Silenced on the first tick rather than on arrival, because she spawns
-    // 2,204 m from Escort One's seat, and running open from there she and her
+    // 2,257 m from Escort One's seat, and running open from there she and her
     // second are a Tier 2 to the flight on every Echo pass to 06:20 (measured
     // without these two beats) — a contact on the plot before §9 has her
     // arrive at all.
@@ -696,7 +703,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     // **The interval is a measured distance, not a manner.** Measured on this
     // map, against the court's array, an open Corvette reads Tier 4 at 1,300 m,
     // Tier 3 from 1,500 to 1,900 m, and Tier 2 at 2,100 m; silent, she is
-    // simply not there at any of them. So she holds at 823,817, 2,098 m from
+    // simply not there at any of them. So she holds at 823,817, 2,151 m from
     // Escort One's seat, the flight's nearest, and runs silent, and the two
     // flickers below drop the order for fifteen seconds each — which is the
     // only way to produce §9's sentence with this Echo model: nothing, briefly

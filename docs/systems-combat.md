@@ -111,8 +111,8 @@ carries one. This is the class the prototype already implements, and its rules s
   [mission-standing-wave.md](mission-standing-wave.md) moves, the rim
   [mission-second-chord.md](mission-second-chord.md) attends, the second element
   [mission-thin-water.md](mission-thin-water.md) never engages. No gun swings onto one of its
-  own accord and no deck launches at one (§15), and its own guns and decks hold the same way;
-  point defence still answers a round in the water. An ordered attack still lands, and the
+  own accord and no deck launches at one (§15), and its own guns, point defence included, and
+  its decks hold the same way, as a silent hull's do. An ordered attack still lands, and the
   first gun, torpedo, blast or spore from another slot to hit any of it wakes the whole
   party: it loses the mark, and both sides fight as any two slots do. A corridor's bite, a
   creature's and the water's are not fire and wake nothing. Shooting a spared party is a
@@ -398,6 +398,13 @@ the 2,400 m disclosure, or **shoot on bearing** and accept that ghosts lie.
 The ping's accuracy role in [systems-echo.md](systems-echo.md) §10 is realised through
 this table: a ping buys Tier-4 solutions for its 3-second window, which is worth more than
 any flat buff. Ping *late, briefly, and just before committing* remains the skill.
+
+**An attack order is held to the same table.** A gun in range fires without asking (§4), but
+an order sends a hull *after* a contact, and a hull can only be sent where its slot was told.
+Below Bearing there is nowhere to send it, and the order is refused. At Tier 2 the hull chases
+the ghost, at Tier 3 and above the truth, and once the slot stops hearing the target it makes
+for the last point it was shown. It never chases the target itself: that would hand the player
+a live fix their ears never made.
 
 ---
 
@@ -742,9 +749,9 @@ One craft leaves the deck at a time, at most one every 4 s, when all of these ho
 - a craft is aboard;
 - there is a live enemy within the **tether**, 1,200 m of the carrier — the same licence §4's
   auto-acquire runs on, that at the ranges a gun reaches, in range implies heard;
-- the carrier is not running silent, **unless** the player ordered the attack. A launch is
-  loud and a silent hull volunteers nothing, which is §4's rule for guns applied to the one
-  hull that has no gun. An order overrides it, as an order always does;
+- the carrier is not running silent or spared (§4), **unless** the player ordered the attack.
+  A launch is loud and a silent hull volunteers nothing, which is §4's rule for guns applied
+  to the one hull that has no gun. An order overrides it, as an order always does;
 - for the Offertory alone, the enemy that triggered the launch is inside the hull's own
   forward cone (§5, the Lance's gate).
 
@@ -820,7 +827,7 @@ what exists or assumes what does not. The combat loop lives in
 
 | Doc concept | Prototype today | Implementation note |
 | --- | --- | --- |
-| Guns (§4) | **Implemented** | Hitscan with cooldown; chase on ordered targets, auto-return-fire, silent hulls hold fire; every discharge spikes SIG and lays battle residue |
+| Guns (§4) | **Implemented** | Hitscan with cooldown; chase on ordered targets, to the point the slot was shown (§7, #1247), auto-return-fire, silent hulls hold fire; every discharge spikes SIG and lays battle residue |
 | Ordnance acoustics (§3) | **Implemented** | The `ORDNANCE` group in `packages/shared/src/constants.ts` carries the §3 table |
 | Torpedoes (§5) | **Implemented** | `Ordnance` entities with their own SIG; seekers run the standard propagation model in `sim/systems/ordnance.ts` |
 | Countermeasures (§5) | **Implemented** | Noisemaker decoys, and point defence as a target priority inside the terminal range in `sim/systems/combat.ts`; a mine astern falls out of §6's trigger set |
