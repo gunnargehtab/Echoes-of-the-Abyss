@@ -2686,6 +2686,15 @@ export class EchoRenderer {
 
       const action = actionFor(this.bindings, e.code);
       if (action === null) return;
+      // A held key's auto-repeat is not another press (docs/ui-ux.md §9). The
+      // toggles read the selection off the last snapshot, so a held Space
+      // flipped Silent Running at the snapshot rate, and a held M laid mines
+      // until the magazine refused (#1348). The ping preview, the one hold,
+      // needs only its first keydown.
+      if (e.repeat) {
+        e.preventDefault();
+        return;
+      }
 
       // Construction arms before the selection check: §9 gives the build keys
       // no selection requirement, and a player with nothing selected still
