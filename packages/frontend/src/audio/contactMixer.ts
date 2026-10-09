@@ -60,7 +60,11 @@ export interface ContactAudioEntry {
    * contact is.
    */
   freshness: number;
-  /** Azimuth from the listener, radians. Absent at Tier 1 — there is none. */
+  /**
+   * Azimuth from the listener, radians, turned with the camera so its cosine
+   * is the screen's right (`screenPan.ts`, #1324). Absent at Tier 1 — there
+   * is none.
+   */
   bearing?: number;
   /** Range in metres. Absent at Tier 1 — the server sent no position. */
   rangeM?: number;

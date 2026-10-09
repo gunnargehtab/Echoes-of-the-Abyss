@@ -221,6 +221,17 @@ describe('reading a corridor off what the wire carries', () => {
     assert.ok(Math.abs(north.pan) < 1e-9);
   });
 
+  it('turns the line with the camera, so it sounds where it is drawn (#1324)', () => {
+    const east: TunedNode[] = [
+      { x: 1000, y: 0, hpFraction: 1 },
+      { x: 2000, y: 0, hpFraction: 1 },
+    ];
+    // Turned round, east is drawn on the left; a quarter turn draws it below
+    // the focus, toward the viewer, which is dead centre.
+    assert.ok(Math.abs(corridorFrom(east, EAR, Math.PI)!.pan + 1) < 1e-9, 'turned round: left');
+    assert.ok(Math.abs(corridorFrom(east, EAR, Math.PI / 2)!.pan) < 1e-9, 'a quarter turn: centre');
+  });
+
   it('picks the flattest line, then the nearest', () => {
     // Three pairs in range. The failing one wins wherever it is: the question
     // the sound answers is "is a line failing".

@@ -77,6 +77,8 @@ import {
 } from '../src/game/EchoRenderer.ts';
 import type { ReadoutBox } from '../src/game/readouts.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
+import { panFor } from '../src/audio/contactVoice.ts';
+import type { ContactAudioFrame } from '../src/audio/contactMixer.ts';
 import { LampHaloPass } from '../src/game/lampHaloPass.ts';
 import { ROOF_OPEN_OPACITY } from '../src/game/passages.ts';
 import { FURNITURE_OUTLINE_ALPHA } from '../src/game/ladder.ts';
@@ -4215,5 +4217,46 @@ describe('renderer smoke test: the halo frame reading (#1001, development only)'
     }
     const probes = (globalThis as unknown as { window: Probes }).window;
     assert.equal(probes.__perspectiveSeabedM, undefined);
+  });
+});
+
+describe('the ear turns with the camera (#1324)', () => {
+  it('pans a contact where it is drawn, so east sounds left with the camera turned round', async () => {
+    // docs/audio-direction.md §3 matches spatialisation to the rendered
+    // position. Turned round, a contact east of the ear is drawn on the left of
+    // the screen, and it used to sound on the right.
+    type Camera = {
+      __perspectiveCamera: (
+        x: number,
+        z: number,
+        distance: number,
+        aim: { yawDeg?: number; pitchDeg?: number }
+      ) => void;
+    };
+    const world = await boot();
+    try {
+      const probes = (globalThis as unknown as { window: Camera }).window;
+      const template = cannedSnapshot().contacts.find((c) => c.tier === ResolutionTier.Track)!;
+      let tick = 1000;
+      const panAt = (yawDeg: number): number => {
+        probes.__perspectiveCamera(2000, 2000, 1500, { yawDeg, pitchDeg: HOME_PITCH_DEG });
+        world.frame(2);
+        world.log.calls.length = 0;
+        tick += 12;
+        world.chart.applySnapshot({
+          ...cannedSnapshot(tick),
+          contacts: [{ ...template, id: 7777, x: 2600, y: 2000 }],
+        });
+        const sent = world.log.calls.filter((call) => call.name === 'onContactAudio').at(-1);
+        assert.ok(sent !== undefined, 'the snapshot reached the mix');
+        const entry = (sent.args[0] as ContactAudioFrame).entries.find((e) => e.id === 7777);
+        assert.ok(entry !== undefined && entry.bearing !== undefined, 'the contact has a bearing');
+        return panFor(ResolutionTier.Track, entry.bearing);
+      };
+      assert.ok(panAt(0) > 0.8, 'facing the top of the map, east is right');
+      assert.ok(panAt(180) < -0.8, 'turned round, east is drawn left and sounds left');
+    } finally {
+      world.teardown();
+    }
   });
 });

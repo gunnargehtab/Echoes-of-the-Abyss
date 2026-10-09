@@ -39,6 +39,7 @@
  */
 
 import { STANDING_WAVE } from '@echoes/shared';
+import { screenPan } from './screenPan.ts';
 
 /**
  * SPEC — docs/audio-direction.md §9, "Tuned water".
@@ -226,7 +227,9 @@ export interface TunedNode {
  */
 export function corridorFrom(
   nodes: readonly TunedNode[],
-  ear: { x: number; y: number }
+  ear: { x: number; y: number },
+  /** The conn camera's turn, radians clockwise from north (#1324). */
+  yawRad = 0
 ): CorridorReading | null {
   let best: CorridorReading | null = null;
   for (let i = 0; i < nodes.length; i++) {
@@ -238,11 +241,10 @@ export function corridorFrom(
       const dy = (a.y + b.y) / 2 - ear.y;
       const rangeM = Math.hypot(dx, dy);
       const reading: CorridorReading = {
-        // dx over range is cos(azimuth) — `contactVoice.panFor`'s "cos, not
-        // sin", written without the round trip through atan2. Full authority,
-        // because a corridor's ends are an own structure or a Tier-4 track and
-        // both are exact.
-        pan: rangeM > 0 ? Math.max(-1, Math.min(1, dx / rangeM)) : 0,
+        // On the screen's axis, as every pan is (`screenPan.ts`, #1324). Full
+        // authority, because a corridor's ends are an own structure or a
+        // Tier-4 track and both are exact.
+        pan: screenPan(dx, dy, yawRad),
         rangeM,
         hpFraction: Math.min(a.hpFraction, b.hpFraction),
       };

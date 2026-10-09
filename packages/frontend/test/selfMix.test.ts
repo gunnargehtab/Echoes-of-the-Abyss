@@ -62,6 +62,7 @@ function frame(over: Partial<SelfAudioFrame> = {}): SelfAudioFrame {
     sourS: 0,
     events: [],
     returns: [],
+    yawRad: 0,
     ...over,
   };
 }
@@ -582,5 +583,24 @@ describe('the sour bite', () => {
     assert.equal(sourMixes[0]!.gain, 0);
     assert.ok(sourMixes[1]!.gain > 0 && !sourMixes[1]!.bleeding);
     assert.equal(sourMixes[2]!.bleeding, true);
+  });
+});
+
+describe('the strike on the screen’s axis (#1324)', () => {
+  it('pans the strike where its bearing is drawn, which turns with the camera', () => {
+    // A strike from due east: on the right facing the map's top, on the left
+    // turned round, where the flash on that bearing is drawn.
+    const { sink } = recorder();
+    const pans: number[] = [];
+    sink.exposure = (_at, pan) => pans.push(pan);
+    const mixer = new SelfMixer(sink);
+    mixer.update(frame({ tick: 4, events: [event(SelfEventKind.Exposed, 1, 0)] }), 0);
+    mixer.update(
+      frame({ tick: 5, yawRad: Math.PI, events: [event(SelfEventKind.Exposed, 2, 0)] }),
+      1
+    );
+    assert.equal(pans.length, 2);
+    assert.ok(Math.abs(pans[0]! - 1) < 1e-9, 'facing the top of the map, east is right');
+    assert.ok(Math.abs(pans[1]! + 1) < 1e-9, 'turned round, east is left');
   });
 });

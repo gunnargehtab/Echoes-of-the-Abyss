@@ -164,6 +164,7 @@ import {
 import type { ContactAudioEntry, ContactAudioFrame } from '../audio/contactMixer.ts';
 import type { PingReturn, SelfAudioFrame } from '../audio/selfMixer.ts';
 import { TUNED, corridorFrom, type TunedInputs, type TunedNode } from '../audio/tunedBed.ts';
+import { screenBearing, screenPan } from '../audio/screenPan.ts';
 import {
   PRECEDENCE_MS,
   markOpacity,
@@ -4979,6 +4980,7 @@ export class EchoRenderer {
       sourS: worstSour,
       events: snapshot.selfEvents,
       returns: this.pingReturns(now),
+      yawRad: this.earYawRad(),
     };
   }
 
@@ -4998,6 +5000,7 @@ export class EchoRenderer {
     }
 
     const out: PingReturn[] = [];
+    const yaw = this.earYawRad();
     for (const entry of this.tracked.values()) {
       const contact = entry.contact;
       if (contact.tier < ResolutionTier.Track) continue;
@@ -5005,7 +5008,7 @@ export class EchoRenderer {
       const dy = contact.y - ping.y;
       const rangeM = Math.hypot(dx, dy);
       if (rangeM > ACTIVE_SONAR.REVEAL_RADIUS_M) continue;
-      out.push({ rangeM, pan: rangeM === 0 ? 0 : dx / rangeM });
+      out.push({ rangeM, pan: screenPan(dx, dy, yaw) });
     }
     // Returns are only scheduled on the tick the sweep goes out; after that
     // the same contacts are still resolved, and replaying them every tick
@@ -5031,6 +5034,15 @@ export class EchoRenderer {
   }
 
   /**
+   * Which way the ear faces: the conn camera's turn, radians clockwise from
+   * north, or north with no conn view. The ear turns with the picture, so a
+   * contact drawn on the left sounds on the left (`screenPan.ts`, #1324).
+   */
+  private earYawRad(): number {
+    return this.conn?.headingRad ?? 0;
+  }
+
+  /**
    * The contact picture as the mix is allowed to hear it.
    *
    * Two things this method exists to guarantee, both from
@@ -5048,11 +5060,13 @@ export class EchoRenderer {
    *
    * Bearing is measured from the camera centre, because the Tier-4 row of §3's
    * table asks for spatialisation "matched to the rendered position" — the ear
-   * is where the player is looking.
+   * is where the player is looking — and turned with the camera, because the
+   * rendered position turns with it (#1324).
    */
   private contactAudioFrame(tick: number, now: number): ContactAudioFrame {
     const decayMs = PERSISTENCE.GHOST_MARKER_DECAY_S * 1000;
     const ear = this.earPosition();
+    const yaw = this.earYawRad();
 
     const entries: ContactAudioEntry[] = [];
     for (const entry of this.tracked.values()) {
@@ -5080,7 +5094,7 @@ export class EchoRenderer {
       if (contact.tier >= ResolutionTier.Bearing) {
         const dx = contact.x - ear.x;
         const dy = contact.y - ear.y;
-        audio.bearing = Math.atan2(dy, dx);
+        audio.bearing = screenBearing(Math.atan2(dy, dx), yaw);
         audio.rangeM = Math.hypot(dx, dy);
       }
       entries.push(audio);
@@ -5167,8 +5181,9 @@ export class EchoRenderer {
       tracked.push({ x: contact.x, y: contact.y, hpFraction: contact.hp / contact.maxHp });
     }
 
-    const mine = corridorFrom(own, ear);
-    const theirs = corridorFrom(tracked, ear);
+    const yaw = this.earYawRad();
+    const mine = corridorFrom(own, ear, yaw);
+    const theirs = corridorFrom(tracked, ear, yaw);
     const corridor =
       mine === null
         ? theirs
