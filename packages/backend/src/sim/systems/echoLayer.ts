@@ -13,6 +13,13 @@
 
 import { defineQuery, hasComponent } from 'bitecs';
 import {
+  DEPTH,
+  DEPTH_BANDS,
+  DepthBand,
+  FOLLOW_FLOOR,
+  LID,
+  deliveryDepthM,
+  effectivePressureRating,
   THERMOCLINE_PAIR_FACTOR,
   THERMOCLINE_ZONE_MAX,
   thermoclineZone,
@@ -121,6 +128,50 @@ const PHANTOM_SALT_BEARING = 14;
 const PHANTOM_SALT_RANGE = 15;
 const PHANTOM_SALT_HEADING = 16;
 const PHANTOM_SALT_NAVY = 17;
+const PHANTOM_SALT_DEPTH = 18;
+
+/**
+ * The depth a phantom reports (#1294), or `null` where the hull it claims
+ * could hold none there: the attempt is then re-rolled like any other bad
+ * placement, never given a depth in rock or past its rating.
+ *
+ * The depth that hull is delivered at (`deliveryDepthM`, the rule `spawnUnit`
+ * delivers by) wherever the water admits it, because that is where unordered
+ * hulls hold and new ones arrive; otherwise a whole metre drawn from what the
+ * water admits: below the Lid and any roof, the follow-floor clearance off
+ * the seabed, and shallower than the band its rating ends at, as
+ * `depthBandFor` counts it. Whole metres, because a true depth goes out
+ * floored to the metre too (`run`), and a draw at float precision beside
+ * depths stored as f32 was a tell of its own. It used to be the pinger's own
+ * depth, which the pinger knows exactly, so every return at it was a lie
+ * (docs/systems-echo.md §3).
+ *
+ * The rating is the kind's own for its navy, never a refit or an aura: those
+ * are the enemy's hidden state, and a phantom that carried them would
+ * announce them. What that leaves is a return only a true hull could make —
+ * deeper than its kind's own band, or off its delivered depth in water that
+ * admits it, as a refitted navy's Shelf hulls arrive at 600 m — and such a
+ * return is vouched true, as a solved contact is. A scattered ping whose
+ * returns are all vouched but one points at that one.
+ */
+export function phantomDepthM(
+  terrain: Terrain,
+  x: number,
+  y: number,
+  kind: UnitKind,
+  faction: Faction,
+  roll: number
+): number | null {
+  const rating = effectivePressureRating(kind, faction);
+  const band = Math.min(Math.max(rating, 1), DepthBand.Abyssal + 1) - 1;
+  const rated = Math.min(DEPTH_BANDS[band as DepthBand].max, DEPTH.MAX_M + 1);
+  const top = Math.ceil(Math.max(LID.DEPTH_M, terrain.ceilingAt(x, y)));
+  const bottom = Math.min(rated - 1, Math.floor(terrain.floorAt(x, y) - FOLLOW_FLOOR.CLEARANCE_M));
+  if (bottom < top) return null;
+  const delivered = deliveryDepthM(rating);
+  if (delivered >= top && delivered <= bottom) return delivered;
+  return top + Math.floor(roll * (bottom - top + 1));
+}
 
 const NAVIES: readonly Faction[] = [
   Faction.Bathyarch,
@@ -933,7 +984,8 @@ export class EchoLayer {
    * and the tick the transmission began, so a replay conjures the same
    * phantoms in the same water. Placement is rejection-sampled: plausible
    * bearings and ranges inside the reveal, clear of the pinger, clear of
-   * anything real the ping lit, and on the map. A phantom that finds no such
+   * anything real the ping lit, on the map, and in water the claimed hull
+   * could hold (`phantomDepthM`). A phantom that finds no such
    * place in `PHANTOM_PLACEMENT_TRIES` is not placed — one fewer lie, never
    * a lie on top of a truth.
    *
@@ -977,7 +1029,6 @@ export class EchoLayer {
       SCATTER.PHANTOMS_MIN + Math.floor(stableUnit(seed, key, PHANTOM_SALT_COUNT, began) * span);
     const terrain = world.terrain;
     const clearance2 = SCATTER.PHANTOM_CLEARANCE_M * SCATTER.PHANTOM_CLEARANCE_M;
-    const depth = Position.depth[pinger]!;
 
     const contacts: Contact[] = [];
     const anchors: PhantomAnchor[] = [];
@@ -1013,6 +1064,17 @@ export class EchoLayer {
         const hulls = PHANTOM_HULLS_BY_NAVY.get(faction)!;
         const kind =
           hulls[Math.floor(stableUnit(seed, key, PHANTOM_SALT_KIND, step) * hulls.length)]!;
+        const depth = phantomDepthM(
+          terrain,
+          x,
+          y,
+          kind,
+          faction,
+          stableUnit(seed, key, PHANTOM_SALT_DEPTH, step)
+        );
+        // No water here that hull could hold: a lie in rock, or past its
+        // rating, is one the pinger could see through.
+        if (depth === null) continue;
         contacts.push({
           id: this.mintHandle(slot),
           tier: ResolutionTier.Track,
@@ -1757,7 +1819,10 @@ export class EchoLayer {
             // same wall that names a hull, exactly like a creature's species.
             contact.ordnance = Ordnance.kind[eid] as OrdnanceKind;
           }
-          contact.depth = Position.depth[eid]!;
+          // To the metre (#1294): a phantom's depth is a whole metre, and a
+          // true one beside it at f32 precision was a tell. Floored, so a
+          // depth keeps its band: 399.6 m is still the Shelf.
+          contact.depth = Math.floor(Position.depth[eid]!);
         }
 
         if (resolved.tier >= ResolutionTier.Track) {

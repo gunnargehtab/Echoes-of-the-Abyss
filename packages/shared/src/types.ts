@@ -333,7 +333,14 @@ export interface Contact {
   /** World position in metres. Blurred at Tier 2, exact at Tier 3+. */
   x: number;
   y: number;
-  /** Depth in metres. Only present at Tier 3+. */
+  /**
+   * Depth in whole metres, floored (#1294), and only present at Tier 3+. A
+   * phantom's is drawn in whole metres, so a fraction would sort the truth
+   * from it. The floor keeps every band edge, the Lid and the Directorate's
+   * shallows on their side; the thermocline's lower edge it does not, since
+   * `thermoclineZone` counts below it from past 1,300 m, so a hull at
+   * 1,300.4 m reports the duct's 1,300.
+   */
   depth?: number;
   /** Only known at Tier 3+ (classification). Exactly one of kind/structure. */
   kind?: UnitKind;
