@@ -28,6 +28,7 @@ import {
   StructureKind,
   UnitKind,
   statsFor,
+  deliveryDepthM,
   effectivePressureRating,
   structureStatsFor,
 } from '@echoes/shared';
@@ -1028,7 +1029,7 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
     world.refits.get(opts.slot)?.has(RefitKind.Pressure) === true
       ? refittedPressureRating(effectivePressureRating(opts.kind, opts.faction), opts.faction)
       : effectivePressureRating(opts.kind, opts.faction);
-  Position.depth[eid] = opts.depth ?? (rating >= 2 ? 600 : 300);
+  Position.depth[eid] = opts.depth ?? deliveryDepthM(rating);
 
   addComponent(world, Velocity, eid);
   Velocity.x[eid] = 0;

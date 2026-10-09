@@ -18,6 +18,7 @@ import {
   DepthBand,
   FOLLOW_FLOOR,
   LID,
+  deliveryDepthM,
   effectivePressureRating,
   THERMOCLINE_PAIR_FACTOR,
   THERMOCLINE_ZONE_MAX,
@@ -133,23 +134,26 @@ const PHANTOM_SALT_DEPTH = 18;
  * could hold none there: the attempt is then re-rolled like any other bad
  * placement, never given a depth in rock or past its rating.
  *
- * The depth that hull is delivered at (`spawnUnit`: 300 m at rating 1, 600 m
- * above it) wherever the water admits it, because that is where unordered
- * hulls hold and new ones arrive all match long; otherwise a whole metre
- * drawn from what the water admits: below the Lid and any roof, the
- * follow-floor clearance off the seabed, and shallower than the band its
- * rating ends at, as `depthBandFor` counts it. Whole metres, because a true
- * depth goes out floored to the metre too (`run`), and a draw at float
- * precision beside depths stored as f32 was a tell of its own. It used to be
- * the pinger's own depth, which the pinger knows exactly, so every return at
- * it was a lie (docs/systems-echo.md §3).
+ * The depth that hull is delivered at (`deliveryDepthM`, the rule `spawnUnit`
+ * delivers by) wherever the water admits it, because that is where unordered
+ * hulls hold and new ones arrive; otherwise a whole metre drawn from what the
+ * water admits: below the Lid and any roof, the follow-floor clearance off
+ * the seabed, and shallower than the band its rating ends at, as
+ * `depthBandFor` counts it. Whole metres, because a true depth goes out
+ * floored to the metre too (`run`), and a draw at float precision beside
+ * depths stored as f32 was a tell of its own. It used to be the pinger's own
+ * depth, which the pinger knows exactly, so every return at it was a lie
+ * (docs/systems-echo.md §3).
  *
- * The rating is the hull's own for its navy, never a refit or an aura: those
+ * The rating is the kind's own for its navy, never a refit or an aura: those
  * are the enemy's hidden state, and a phantom that carried them would
- * announce them. So a return deeper than its kind's own band is real, which
- * vouches for a truth and singles out no lie, as a solved contact does.
+ * announce them. What that leaves is a return only a true hull could make —
+ * deeper than its kind's own band, or off its delivered depth in water that
+ * admits it, as a refitted navy's Shelf hulls arrive at 600 m — and such a
+ * return is vouched true, as a solved contact is. A scattered ping whose
+ * returns are all vouched but one points at that one.
  */
-function phantomDepthM(
+export function phantomDepthM(
   terrain: Terrain,
   x: number,
   y: number,
@@ -163,7 +167,7 @@ function phantomDepthM(
   const top = Math.ceil(Math.max(LID.DEPTH_M, terrain.ceilingAt(x, y)));
   const bottom = Math.min(rated - 1, Math.floor(terrain.floorAt(x, y) - FOLLOW_FLOOR.CLEARANCE_M));
   if (bottom < top) return null;
-  const delivered = rating >= 2 ? 600 : 300;
+  const delivered = deliveryDepthM(rating);
   if (delivered >= top && delivered <= bottom) return delivered;
   return top + Math.floor(roll * (bottom - top + 1));
 }

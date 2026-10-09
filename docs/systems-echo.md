@@ -213,10 +213,16 @@ counter a real contact's comes from, Tier 4, a hull one of the enemy navies on t
 field — drawn from that navy's roster, its own locked hulls included, so the class is never the
 tell — with full health, a heading and a depth, and no entity behind it. The depth is the one
 that hull is delivered at, 300 m at rating 1 and 600 m above it, wherever the water there admits
-it, because unordered hulls hold there and new ones arrive there all match. Elsewhere it is a
-whole metre the hull could hold there: below the Lid and any roof, 30 m off the seabed, and
-shallower than the band its rating ends at. Where it could hold none, the phantom is placed
-elsewhere. Every depth a contact reports, true or false, is told to the metre, floored, so its
+it, because unordered hulls hold there and new ones arrive there. Elsewhere it is a whole metre
+the hull could hold there: below the Lid and any roof, the follow-floor clearance (30 m,
+TUNABLE) off the seabed, and shallower than the band its rating ends at. Where it could hold
+none, it is drawn again, and one with nowhere to go is not placed. The rating is its kind's own
+for its navy, never a refit or an aura, because a phantom that carried the enemy's hidden
+purchases would announce them. So a return only a true hull could make — deeper than its kind's
+own band, or off its delivered depth in water that admits it, as a refitted navy's Shelf hulls
+arrive at 600 m — is vouched true, as a solved contact is, and the rule is a skirmish's: a
+mission that seats its hulls at authored depths does not move its phantoms off delivery depths
+(#1319). Every depth a contact reports, true or false, is told to the metre, floored, so its
 precision sorts nothing. The depth was once the pinger's own, which the pinger knows exactly, and
 that made every return at it a lie (#1294). The counter is not what goes on
 the wire: a handle is a per-match, per-observer permutation of it, and a slot's contacts are

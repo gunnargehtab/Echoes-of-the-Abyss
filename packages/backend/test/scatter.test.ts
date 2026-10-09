@@ -31,6 +31,7 @@ import { fileURLToPath } from 'node:url';
 import {
   ACTIVE_SONAR,
   Biome,
+  DEPTH,
   DEPTH_BANDS,
   DepthBand,
   Faction,
@@ -49,6 +50,7 @@ import {
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnUnit } from '../src/sim/world.ts';
+import { phantomDepthM } from '../src/sim/systems/echoLayer.ts';
 import {
   ActivePing,
   Magazine,
@@ -569,10 +571,6 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
     return { match, enemies, contacts, phantoms };
   }
 
-  /** The depth `spawnUnit` delivers a hull of this kind at, for its navy. */
-  const deliveredM = (kind: UnitKind, faction: Faction): number =>
-    effectivePressureRating(kind, faction) >= 2 ? 600 : 300;
-
   it('claims the depth its hull is delivered at, where the water admits it', () => {
     for (const seed of [31, 32, 33]) {
       const { match, enemies, contacts, phantoms } = pingAt(fieldsMap(), seed, 873.4, [
@@ -580,11 +578,18 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
       ]);
       assert.ok(phantoms.length > 0, `the premise: seed ${seed} returns phantoms`);
       for (const phantom of phantoms) {
-        // Where unordered hulls hold and new ones arrive, all match long, so
-        // the depth sorts nothing; never the pinger's.
+        // Where a true hull of that kind arrives, read off `spawnUnit` itself
+        // so the claim cannot drift from the delivery; never the pinger's.
+        const arrived = spawnUnit(match.world, {
+          kind: phantom.kind!,
+          slot: 1,
+          faction: phantom.faction!,
+          x: 1000,
+          y: 1000,
+        });
         assert.equal(
           phantom.depth,
-          deliveredM(phantom.kind!, phantom.faction!),
+          Position.depth[arrived],
           `seed ${seed}: a ${UnitKind[phantom.kind!]} reported at ${phantom.depth} m`
         );
       }
@@ -605,8 +610,8 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
 
   it('claims only a depth its hull could hold under a roof, or is not placed', () => {
     // Water from 2,600 m to 2,900 m everywhere: no hull is delivered there, and
-    // only a hull rated for the Abyssal band can hold it. A phantom used to
-    // take the roof's depth whatever it claimed to be, past its rating.
+    // only a hull rated for the Abyssal band can hold it. On main a phantom
+    // took the pinger's own depth here, 2,700 m, past most ratings.
     const roofed = () => {
       const terrain = fieldsMap();
       terrain.fillGround(0, 0, MAP_M, MAP_M, { ceilingM: 2600, floorM: 2900 });
@@ -630,6 +635,25 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
       }
     }
     assert.ok(placed > 0, 'the premise: hulls rated for the water are claimed');
+  });
+
+  it('draws no deeper than the band its rating ends at, at the top of the roll', () => {
+    // A roof below each delivered depth, so the draw is the only answer and
+    // the rating, not the floor, bounds it: the band's last whole metre, never
+    // its edge, which `depthBandFor` counts in the next band (#1294).
+    const kinds = Object.values(UnitKind).filter((k): k is UnitKind => typeof k === 'number');
+    for (const [roofM, rating, edgeM] of [
+      [350, 1, 400],
+      [1700, 2, 1800],
+    ] as const) {
+      const kind = kinds.find((k) => effectivePressureRating(k, Faction.Pelagia) === rating);
+      assert.ok(kind !== undefined, `the premise: a Pelagia hull rated ${rating}`);
+      const terrain = new Terrain(MAP_M, MAP_M, 250);
+      terrain.fillGround(0, 0, MAP_M, MAP_M, { ceilingM: roofM, floorM: DEPTH.MAX_M });
+      const at = (roll: number) => phantomDepthM(terrain, 4000, 4000, kind, Faction.Pelagia, roll);
+      assert.equal(at(1 - Number.EPSILON), edgeM - 1, `rating ${rating}, the top of the roll`);
+      assert.equal(at(0), roofM, `rating ${rating}, the bottom of the roll`);
+    }
   });
 
   it('places no phantom where no hull could hold below the Lid', () => {
