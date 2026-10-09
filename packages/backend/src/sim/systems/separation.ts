@@ -265,9 +265,11 @@ const edge = { x: 0, y: 0 };
 
 /**
  * A hull put out of a footprint that its order point lies inside is sent for
- * the footprint's edge nearest that point, and the move ends there (#1214).
- * An attack-move's destination is moved the same way, since combat sends a
- * hull back to it and `busy()` holds the queue until it is reached.
+ * the footprint's edge nearest that point, and the move ends on arriving there
+ * (#1214). An attack-move's destination is moved the same way, since combat
+ * sends a hull back to it and `busy()` holds the queue until it is reached.
+ * Not every edge is reachable: one against the map's edge, or within a hull's
+ * width of a neighbouring footprint, can still hold the hull off its point.
  *
  * The footprint holds a hull out at every depth. The sim reads no height for
  * a structure: its footprint is a column, whatever height the art draws it at

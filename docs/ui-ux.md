@@ -561,8 +561,10 @@ A structure's footprint holds every hull out at every depth: the simulation give
 to pass over or under, whatever height the art draws it at (#1214). So the water above a
 structure is a point the hull cannot reach, and a move or an attack-move there is taken to the
 footprint's edge nearest the point, where it ends. A hull coming straight through the centre
-is taken a few tens of metres to one side of the point, so it has a side to go round. The
-depth order still runs from the edge, and a leg queued behind the move begins.
+is taken 0.1 rad (17 m for a Light Scout at a Refinery) to one side of the point, so it has a
+side to go round. The depth order still runs from the edge, and a leg queued behind the move
+begins. An edge against the map's edge, or within a hull's width of another footprint, can
+still hold the hull off its point.
 
 The right button acts on **release**, not on press, and so does a left click that an armed
 attack-move or a pending build is waiting for, so that a press can still become the left +

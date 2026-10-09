@@ -448,9 +448,9 @@ describe('separation', () => {
 
     it('goes round when its course runs dead through the centre to the point', () => {
       // Straight through the middle: the push out and the course cancel, and
-      // the hull sat pinned at the near edge with its move active. `fromTheWest`
-      // is exactly on the axis, so there is no side to slide to until the tie
-      // is broken (`SEPARATION.OPPOSITE_TIE_RAD`).
+      // the hull sat pinned at the near edge with its move active. `setup`
+      // puts the hull exactly on the axis, so there is no side to slide to
+      // until the tie is broken (`SEPARATION.OPPOSITE_TIE_RAD`).
       const { match, refinery, hull, clear } = setup(35);
       match.orderMove(0, hull, SITE.x + 60, SITE.y);
       advance(match, 60);
