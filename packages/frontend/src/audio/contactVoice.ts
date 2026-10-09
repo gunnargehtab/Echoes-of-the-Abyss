@@ -353,9 +353,11 @@ const PAN_AUTHORITY: Record<ResolutionTier, number> = {
  * to protect (§3, "Panning is information"), and a rule that matters that much
  * should be assertable without an AudioContext.
  *
- * cos, not sin: the azimuth is measured from world +x, and stereo is the
- * *horizontal* axis of the rendered scene. sin would pan a contact due east to
- * dead centre — the mix reporting a bearing the player can see is wrong.
+ * cos, not sin: the azimuth is measured from the screen's right — a world
+ * bearing turned with the camera (`screenPan.ts`, #1324) — and stereo is the
+ * *horizontal* axis of the rendered scene. sin would pan a contact drawn to
+ * the right to dead centre — the mix reporting a bearing the player can see is
+ * wrong.
  */
 export function panFor(tier: ResolutionTier, bearing: number | undefined): number {
   const authority = PAN_AUTHORITY[tier] ?? 0;
@@ -366,7 +368,8 @@ export function panFor(tier: ResolutionTier, bearing: number | undefined): numbe
 export interface VoiceInputs {
   tier: ResolutionTier;
   /**
-   * Azimuth from the listener in radians, atan2(dy, dx), or undefined when
+   * Azimuth from the listener in radians, measured from the screen's right:
+   * atan2(dy, dx) turned with the camera (`screenPan.ts`), or undefined when
    * unearned. Undefined is not "unknown, assume zero" — it is the server
    * having sent no position, and the voice treats it as such.
    */

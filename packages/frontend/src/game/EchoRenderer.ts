@@ -5034,9 +5034,10 @@ export class EchoRenderer {
   }
 
   /**
-   * Which way the ear faces: the conn camera's turn, radians clockwise from
-   * north, or north with no conn view. The ear turns with the picture, so a
-   * contact drawn on the left sounds on the left (`screenPan.ts`, #1324).
+   * Which way the ear faces: the conn camera's turn, radians anticlockwise
+   * from north (`screenPan.ts` says which way), or north with no conn view.
+   * The ear turns with the picture, so a contact drawn on the left sounds on
+   * the left (#1324).
    */
   private earYawRad(): number {
     return this.conn?.headingRad ?? 0;
@@ -6249,8 +6250,13 @@ export class EchoRenderer {
       const alpha = this.reducedMotion ? 0.45 : Math.pow(1 - t, 2) * 0.55;
       const cx = width / 2;
       const cy = height / 2;
-      const dx = Math.cos(flash.bearing);
-      const dy = Math.sin(flash.bearing);
+      // On the screen's axes, turned with the camera as the strike's pan is,
+      // so a strike heard on the left flashes on the left (#1324). Turned here
+      // rather than when the flash is pushed, because the scope's wedge reads
+      // the same entry on a north-up instrument and must not turn.
+      const onScreen = screenBearing(flash.bearing, this.earYawRad());
+      const dx = Math.cos(onScreen);
+      const dy = Math.sin(onScreen);
       // Where a ray on this bearing leaves the screen. Scaling by the larger
       // of the two axis ratios lands it on the nearer edge either way.
       const scale = Math.min(

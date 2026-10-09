@@ -67,8 +67,9 @@ export interface SelfAudioFrame {
   /** Echoes from the player's own ping, if one is resolving. */
   returns: PingReturn[];
   /**
-   * The conn camera's turn, radians clockwise from north, so an event's world
-   * bearing pans on the screen's axis (`screenPan.ts`, #1324).
+   * The conn camera's turn, radians anticlockwise from north (`screenPan.ts`
+   * says which way), so an event's world bearing pans on the screen's axis
+   * (#1324).
    */
   yawRad: number;
 }

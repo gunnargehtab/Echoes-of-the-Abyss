@@ -8,9 +8,12 @@
  * turned to face south, a contact drawn on the left sounded on the right
  * (#1324).
  *
- * World x runs east and world y runs south, and the camera's yaw is radians
- * clockwise from north (`PerspectiveView.headingRad`), so the screen's right is
- * (cos yaw, −sin yaw) in world terms.
+ * World x runs east and world y runs south. The camera's yaw
+ * (`PerspectiveView.headingRad`) turns anticlockwise from north, seen from
+ * above: at yaw 0 the eye is south of the focus, and in general at
+ * (sin yaw, cos yaw) from it, looking back along that line. So the screen's
+ * right is (cos yaw, −sin yaw) in world terms, and its down, toward the eye,
+ * is (sin yaw, cos yaw).
  */
 
 /** The pan, -1 to 1, of a sound `dx`, `dy` metres from the ear. */

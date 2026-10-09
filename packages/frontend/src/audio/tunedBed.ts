@@ -228,7 +228,7 @@ export interface TunedNode {
 export function corridorFrom(
   nodes: readonly TunedNode[],
   ear: { x: number; y: number },
-  /** The conn camera's turn, radians clockwise from north (#1324). */
+  /** The conn camera's turn, radians anticlockwise from north (`screenPan.ts`, #1324). */
   yawRad = 0
 ): CorridorReading | null {
   let best: CorridorReading | null = null;
