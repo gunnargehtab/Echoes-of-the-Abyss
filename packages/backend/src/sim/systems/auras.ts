@@ -21,16 +21,19 @@
 
 import { defineQuery, hasComponent } from 'bitecs';
 import {
+  type FaunaSpecies,
   HULL_EFFECTS,
   STRUCTURE_AURAS,
   StructureKind,
   UnitKind,
+  faunaStatsFor,
   requiredPressureRating,
   statsFor,
   structureStatsFor,
 } from '@echoes/shared';
 import {
   Acoustic,
+  Fauna,
   Health,
   HullEffect,
   LandingGrant,
@@ -131,6 +134,10 @@ export function aurasSystem(world: SimWorld): void {
 
   // Baseline: everything emits through unmodified terrain PF at full SIG,
   // and structures listen at their spawned rating (units get theirs below).
+  // So does a creature, with its species' ears: rebuilt here rather than left
+  // as spawned, or the veil below — the one thing that lowers a creature's
+  // hearing — would keep it deaf for life after it drifted through (#1251).
+  // Ordnance and authored emitters are deaf by construction and stay at 0.
   const all = emitters(world);
   for (let i = 0; i < all.length; i++) {
     const eid = all[i]!;
@@ -138,6 +145,8 @@ export function aurasSystem(world: SimWorld): void {
     Acoustic.sigFactor[eid] = 1;
     if (hasComponent(world, Structure, eid)) {
       Acoustic.hyd[eid] = structureStatsFor(Structure.kind[eid] as StructureKind).hyd;
+    } else if (hasComponent(world, Fauna, eid)) {
+      Acoustic.hyd[eid] = faunaStatsFor(Fauna.species[eid] as FaunaSpecies).hyd;
     }
   }
 
@@ -294,7 +303,12 @@ export function aurasSystem(world: SimWorld): void {
       }
       if (!veiled) continue;
       Acoustic.sigFactor[eid] = SIG_FACTOR;
-      Acoustic.hyd[eid] = BLIND_HYD;
+      // Blind, never lent ears: "hydrophone-blind (effective HYD 5)"
+      // (docs/units.md) is a ceiling. Written as a plain 5 it raised whatever
+      // listens at less, and a mine — deaf by construction, and never rebuilt
+      // by the baseline above — kept HYD 5 for life once it armed in a cloud,
+      // listening for its owner across the minefield (#1251).
+      Acoustic.hyd[eid] = Math.min(Acoustic.hyd[eid]!, BLIND_HYD);
     }
   }
 }
