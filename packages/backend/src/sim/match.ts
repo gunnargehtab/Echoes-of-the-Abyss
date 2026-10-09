@@ -14,7 +14,14 @@
  * Bastion standing wins.
  */
 
-import { addComponent, defineQuery, hasComponent, removeEntity } from 'bitecs';
+import {
+  addComponent,
+  defineQuery,
+  deleteWorld,
+  getAllEntities,
+  hasComponent,
+  removeEntity,
+} from 'bitecs';
 import {
   ACTIVE_SONAR,
   HULL_EFFECTS,
@@ -389,6 +396,8 @@ export class Match {
    */
   private readonly factionBySlot = new Map<number, Faction>();
   private accumulator = 0;
+  /** Set by `dispose`; the world is gone and nothing may step it. */
+  private disposed = false;
   /** Snapshots produced by an Echo pass inside `step`, collected by `update`. */
   private pendingSnapshots: Map<number, EchoSnapshot> | null = null;
   /** Rolling worst-case Echo pass cost, for budget checks. */
@@ -540,6 +549,37 @@ export class Match {
 
   get tick(): number {
     return this.world.tick;
+  }
+
+  /**
+   * Give the world back (#1278). The room calls this when it is disposed and
+   * before a rematch builds the next world. The balance harness needs no call:
+   * it runs each match in a process of its own (`balance/batch.ts`).
+   *
+   * bitecs keeps every world in a module-global list, and an id returns to
+   * its queue only when its entity is removed. A room that merely dropped its
+   * Match kept the whole world reachable and spent its ids for good: for a
+   * two-second two-player match, 1.4 MB and about 68 ids, so past id 100,000
+   * `addEntity` threw "max entities reached" in every room of the process
+   * within some 1,470 such matches, and sooner with real ones. So every
+   * entity is removed, which queues its id for a later match, and the world
+   * leaves the list. Recycled ids are routine from here, which is what
+   * docs/invariants.md's "A spawn writes every field of its component" is
+   * for; #1273 is where hulls and creatures broke it, and a match on recycled
+   * ids still reads differently (#1279).
+   *
+   * Id 0 is never handed back: the process's first world burned it as the
+   * "none" sentinel, so no later world may be given it. A later world's
+   * burned id is ordinary and goes back with the rest. Read anything the room
+   * logs before calling this; the world's fields go with it.
+   */
+  dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true;
+    for (const eid of getAllEntities(this.world)) {
+      if (eid !== 0) removeEntity(this.world, eid);
+    }
+    deleteWorld(this.world);
   }
 
   get worstEchoPassMs(): number {
@@ -2314,6 +2354,7 @@ export class Match {
    * Returns per-slot snapshots on ticks where the Echo Layer ran, otherwise null.
    */
   update(deltaMs: number): Map<number, EchoSnapshot> | null {
+    if (this.disposed) return null;
     this.accumulator += deltaMs / 1000;
     this.pendingSnapshots = null;
 
