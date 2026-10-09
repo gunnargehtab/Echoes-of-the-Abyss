@@ -593,10 +593,11 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
       slot: CLOSURE,
       faction: Faction.Bathyarch,
       note: 'The second element — never engaged, and the reason the mission ends (§5). It is heard only as the housings it passes going quiet',
-      // "Never engaged" (§5), so spared (docs/systems-combat.md §4): its 09:00
-      // step west brings it about 500 m from the column's escorts at the face,
-      // inside their 550 m guns, which took it at 09:20 of an idle run before
-      // the mark (#1269).
+      // "Never engaged" (§5), so spared (docs/systems-combat.md §4). Unmarked,
+      // element-two killed tender-five from its 07:30 station (08:09 of an idle
+      // run) and the watch (09:09) before escort-one killed it at 09:20
+      // (#1269). The mark holds its own guns too, so the west end fires on
+      // nothing at 13:00 unless the player fires first (#1281).
       spared: true,
       /**
        * Standing north of the spur, mid-map, and the position is measured
@@ -817,7 +818,9 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
     // 13:00 — the corridor closes. Any tender still south of the spur is cut
     // off, and its share of the terminal count fails by simply not arriving:
     // §8 needs no predicate for this, because a hull that cannot reach the
-    // gate does not reach the gate.
+    // gate does not reach the gate. Not quite true since the element is
+    // spared: the west end holds its guns, and a tender already at the
+    // crossing can make the gate before the 14:00 count (#1281).
     {
       atTick: T(13),
       kind: 'say',
@@ -833,7 +836,7 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
       tag: 'corridor-cruiser',
       x: 2600,
       y: 1500,
-      note: 'The east end. A corridor with a heavy at each end is what §8 means by cut off',
+      note: 'The east end. §8 wants a Cruiser at each end; the west end is the spared element, which holds its guns (#1281)',
     },
 
     // 13:30 — the pack comes up the Kell slope for the noise, and stays for
