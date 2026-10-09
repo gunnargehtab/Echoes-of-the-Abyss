@@ -264,3 +264,46 @@ describe('the passive exposure rows', () => {
     }
   });
 });
+
+describe('the ping row, with one bearing per ping (#1290)', () => {
+  it('writes one row with no bearing for hulls lit later in a ping', async () => {
+    const world = await boot();
+    try {
+      world.rows.length = 0;
+      // The side's one bearing went out on an earlier pass. These hulls are
+      // told they were lit, once, as the mix strikes once for them, and the
+      // row says no more than the events did: no bearing was sent.
+      world.send(1, {
+        selfEvents: [
+          { kind: SelfEventKind.Exposed, unitId: 11 },
+          { kind: SelfEventKind.Exposed, unitId: 12 },
+        ],
+        exposure: exposureAt(ResolutionTier.Track, 1),
+      });
+      assert.deepEqual(labels(world.rows), ['you were pinged']);
+      assert.equal(world.rows[0]!.bearingDeg, undefined, 'the log prints "bearing unknown"');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('writes only the bearing row on a tick that carries the bearing', async () => {
+    const world = await boot();
+    try {
+      world.rows.length = 0;
+      // The bearing last, as the server may send it: it rides on whichever
+      // lit hull is nearest, wherever that falls in the list.
+      world.send(1, {
+        selfEvents: [
+          { kind: SelfEventKind.Exposed, unitId: 12 },
+          { kind: SelfEventKind.Exposed, unitId: 11, bearing: Math.PI },
+        ],
+        exposure: exposureAt(ResolutionTier.Track, 1),
+      });
+      assert.deepEqual(labels(world.rows), ['you were pinged']);
+      assert.equal(world.rows[0]!.bearingDeg, 270);
+    } finally {
+      world.teardown();
+    }
+  });
+});

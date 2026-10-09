@@ -104,6 +104,10 @@ export class SelfMixer {
   private readonly underFireTick = new Map<number, number>();
   /** The tick the Lid last bit on, so a simultaneous crossing sounds once. */
   private sourBiteTick = -1;
+  /** Whether this tick's events carry an exposure bearing (#1290). */
+  private tickHasBearing = false;
+  /** The tick an unpanned exposure strike last sounded on. */
+  private bareStrikeTick = -1;
   /** §4's world-bus figure from the last frame, for `applyChain` to multiply. */
   private worldGain = 1;
 
@@ -144,10 +148,16 @@ export class SelfMixer {
 
     if (this.loudest !== null && now >= this.loudestUntil) this.loudest = null;
 
+    this.tickHasBearing = frame.events.some(
+      (event) => event.kind === SelfEventKind.Exposed && event.bearing !== undefined
+    );
     for (const event of frame.events) {
       // Keyed by tick as well as unit: the same unit breaking silence twice in
-      // one match is two events, but one event redelivered is not two.
-      const key = `${frame.tick}:${event.kind}:${event.unitId}`;
+      // one match is two events, but one event redelivered is not two. And by
+      // bearing: two pings can light one hull on one tick, one leaving it bare
+      // and one giving it that ping's bearing, and the bare one must not
+      // swallow the bearing's strike (#1290).
+      const key = `${frame.tick}:${event.kind}:${event.unitId}:${event.bearing ?? ''}`;
       if (this.played.has(key)) continue;
       this.played.add(key);
       // Counted only when a cue actually sounded: a Damaged event folded into
@@ -226,9 +236,20 @@ export class SelfMixer {
         this.raise('self', now, 2);
         return true;
       case SelfEventKind.Exposed:
-        // cos, for the same reason the contact voices use it: the bearing is
-        // measured from world +x and stereo is the horizontal axis.
-        this.sink.exposure(now, event.bearing === undefined ? 0 : Math.cos(event.bearing));
+        if (event.bearing === undefined) {
+          // A unit lit without its side's one bearing (#1290). The ping's
+          // strike is the one that carries the bearing, panned; centred copies
+          // beside it on the same tick would drag the image to the middle, so
+          // an unpanned strike sounds only on a tick with no bearing at all —
+          // a hull lit later in the ping — and only once.
+          if (this.tickHasBearing || this.bareStrikeTick === tick) return false;
+          this.bareStrikeTick = tick;
+          this.sink.exposure(now, 0);
+        } else {
+          // cos, for the same reason the contact voices use it: the bearing is
+          // measured from world +x and stereo is the horizontal axis.
+          this.sink.exposure(now, Math.cos(event.bearing));
+        }
         this.raise('self-exposure', now, 2);
         return true;
       case SelfEventKind.Damaged: {
@@ -285,6 +306,7 @@ export class SelfMixer {
     this.fired.clear();
     this.underFireTick.clear();
     this.sourBiteTick = -1;
+    this.bareStrikeTick = -1;
     this.loudest = null;
     this.loudestUntil = 0;
   }
