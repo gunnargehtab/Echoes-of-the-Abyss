@@ -12,7 +12,13 @@
  * cannot boot because JSON.parse threw is a bug.
  */
 
-import { ACTIONS, DEFAULT_BINDINGS, type Bindings, type LayoutName } from '../input/bindings.ts';
+import {
+  ACTIONS,
+  DEFAULT_BINDINGS,
+  LAYOUTS,
+  type Bindings,
+  type LayoutName,
+} from '../input/bindings.ts';
 import { PALETTES, type PaletteName } from '../game/palette.ts';
 import { LAMP_HALOS_DEFAULT } from '../game/lampHalo.ts';
 import type { TrimBus } from '../audio/engine.ts';
@@ -214,11 +220,8 @@ function sanitise(raw: unknown): Settings {
         : 0,
     mono: record.mono === true,
     visualFirst: record.visualFirst === true,
-    bindingLayout:
-      record.bindingLayout === 'oneHanded' || record.bindingLayout === 'custom'
-        ? record.bindingLayout
-        : 'default',
-    bindings: sanitiseBindings(record.bindings),
+    bindingLayout: layoutOf(record.bindingLayout),
+    bindings: sanitiseBindings(record.bindings, layoutOf(record.bindingLayout)),
     palette:
       typeof record.palette === 'string' && record.palette in PALETTES
         ? (record.palette as PaletteName)
@@ -261,6 +264,11 @@ function defaults(): Settings {
   };
 }
 
+/** A stored layout name, or the standard layout for anything else. */
+function layoutOf(raw: unknown): LayoutName {
+  return raw === 'oneHanded' || raw === 'custom' ? raw : 'default';
+}
+
 /**
  * Coerce a stored binding table.
  *
@@ -270,10 +278,15 @@ function defaults(): Settings {
  * see is missing. Non-string values are simply ignored: storage is a place
  * other code writes to, and a number where a code belongs should cost the
  * player one binding, not the whole settings record.
+ *
+ * The default is the record's own layout's, and the standard table's only for
+ * `custom`. A one-handed record from before Engine Off existed was given the
+ * standard `Q`, which that layout gives to the ping, and `Q` cut the drive
+ * while the ping had no key (#1343).
  */
-function sanitiseBindings(raw: unknown): Bindings {
+function sanitiseBindings(raw: unknown, layout: LayoutName): Bindings {
   const stored = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>;
-  const merged = { ...DEFAULT_BINDINGS };
+  const merged = { ...(layout === 'custom' ? DEFAULT_BINDINGS : LAYOUTS[layout]) };
   for (const { action } of ACTIONS) {
     const code = stored[action];
     if (typeof code === 'string' && code.length > 0) merged[action] = code;
