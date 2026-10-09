@@ -130,7 +130,7 @@ describe('lampfry shoals', () => {
     // nothing about what caused it.
   });
 
-  it('carry an id that counts shoals, never what else the match spawned', () => {
+  it('carry an id that counts shoals and jellies, never what else the match spawned', () => {
     // Public ids used to be match-local ids, which every spawn draws on, so the
     // gap between a restocked shoal and the last one counted the hulls and
     // decoys every navy had launched in between (#1297). Here twelve enemy
