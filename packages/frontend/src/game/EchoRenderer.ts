@@ -2702,7 +2702,7 @@ export class EchoRenderer {
         if (this.refusedByMission('construction')) return;
         const stats = structureStatsFor(buildKind);
         if (this.refusedByPrice(stats.name, priceOf(stats))) return;
-        this.pendingBuild = buildKind;
+        this.armBuild(buildKind);
         return;
       }
       // A faction with no signature structure has nothing to arm, and the key
@@ -3471,9 +3471,7 @@ export class EchoRenderer {
           label: `${STRUCTURE_SHORT[kind]} ${priceTag(price)}`,
           enabled: affords(stockpile, price),
           active: false,
-          action: () => {
-            this.pendingBuild = kind;
-          },
+          action: () => this.armBuild(kind),
           refusal: shortfallLine(stats.name, stockpile, price) ?? undefined,
         });
       }
@@ -3988,6 +3986,17 @@ export class EchoRenderer {
       };
     }
     return this.selectedUnitsCache.units;
+  }
+
+  /**
+   * Arm a placement. One click is armed at a time (docs/ui-ux.md §9), and the
+   * latest armed is the one it gives: an armed attack-move goes, as arming one
+   * drops a pending build. It used to stay, and won the click the hint bar
+   * promised the build (#1335).
+   */
+  private armBuild(kind: StructureKind): void {
+    this.pendingAttackMove = false;
+    this.pendingBuild = kind;
   }
 
   /**
