@@ -219,7 +219,7 @@ layer's duct and over the working level rather than on it. A pack at rest is the
 Drift climbs home to its working depth when a beat lets it go, so this is the only depth the
 shift's pack keeps. Rested at 1,250 m, it would share the duct with the refinery at 1,300 m,
 where sound carries at 1.2× ([systems-echo.md](systems-echo.md) §3), and the refinery would hear
-it from 00:27 to 01:05 of an idle shift (#1212).
+it from its seating until it settles at 01:05 of an idle shift (#1212).
 
 [mission-tend.md](mission-tend.md) §8 established that a mission whose only threat is a ledger
 has no failure to make audible — it has outcomes, and the close is a conclusion rather than a

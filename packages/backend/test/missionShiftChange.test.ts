@@ -530,10 +530,10 @@ describe('the pack, at rest — docs/mission-shift-change.md §7 (#1265)', () =>
    * One shift to the whistle, idle or with every harvester the watches have
    * released sent to its nearest field at Standard. Then the refinery, how
    * many of the player's hulls were lost, what was banked, on how many passes
-   * after the release the player heard the pack, on how many a pack member
-   * was interested or committed, and how shallow and deep the pack went from
-   * its seating to the whistle. Driven to rest beside the refinery,
-   * the pack took it at 01:20 in every run, idle or working.
+   * from its seating the player heard the pack, on how many after its release
+   * a pack member was interested or committed, and how shallow and deep the
+   * pack went from its seating to the whistle. Driven to rest beside the
+   * refinery, the pack took it at 01:20 in every run, idle or working.
    */
   function shift(working: boolean) {
     const map = missionMapById(LEDGER_SHIFT_CHANGE.mapId)!;
@@ -577,18 +577,21 @@ describe('the pack, at rest — docs/mission-shift-change.md §7 (#1265)', () =>
         shallowest = Math.min(shallowest, Position.depth[eid]!);
         deepest = Math.max(deepest, Position.depth[eid]!);
       }
-      if (tick <= RELEASED) continue;
-      const stirred = (eid: number) =>
-        hasComponent(world, Fauna, eid) &&
-        (Fauna.stage[eid] === FaunaStage.Interested || Fauna.stage[eid] === FaunaStage.Committed);
-      if (pack.some(stirred)) roused++;
-      // Heard through the player's own resolved contacts, as the player hears it.
+      // Heard through the player's own resolved contacts, as the player hears
+      // it, from the seating on: seated at 1,250 m, in the duct beside the
+      // refinery, the pack was heard there from 00:00 to 00:12 (#1212).
       const contacts = own?.contacts ?? [];
       const it = contacts.some((contact) => {
         const eid = match.echo.entityForHandle(slot, contact.id);
         return eid !== undefined && hasComponent(world, Fauna, eid);
       });
       if (it) heard++;
+      // Stirring only from the release, because the drive holds it Committed.
+      if (tick <= RELEASED) continue;
+      const stirred = (eid: number) =>
+        hasComponent(world, Fauna, eid) &&
+        (Fauna.stage[eid] === FaunaStage.Interested || Fauna.stage[eid] === FaunaStage.Committed);
+      if (pack.some(stirred)) roused++;
     }
     assert.ok(match.missionOver !== null, 'the premise: the shift ran to the whistle');
     assert.equal(pack.length, 3, 'the premise: the pack of three was on the field');

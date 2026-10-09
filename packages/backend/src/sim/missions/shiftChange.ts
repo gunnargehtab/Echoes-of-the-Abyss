@@ -58,8 +58,8 @@ const QUOTA = 3600;
  * species' working figure (runtime.ts, `holdCommitments`). Spawned at 1,250 m
  * under the layer, the pack climbed through it unordered by 00:05 and rested
  * at 900 m from 00:30 anyway (#1212). Rested at 1,250 m, it would share the
- * duct with the refinery, and the refinery would hear it from 00:27 to 01:05
- * of an idle shift, which §7 says it does not.
+ * duct with the refinery, and the refinery would hear it from its seating
+ * until it settles at 01:05 of an idle shift, which §7 says it does not.
  */
 const PACK_M = faunaStatsFor(FaunaSpecies.Draymaw).workingDepthM;
 
