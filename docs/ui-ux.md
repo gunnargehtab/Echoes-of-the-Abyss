@@ -554,7 +554,7 @@ stays a place on the map: the ground under the cursor, whatever the focus.
 
 The right button acts on **release**, not on press, and so does a left click that an armed
 attack-move or a pending build is waiting for, so that a press can still become the left +
-right drag. One click is armed at a time, the last one armed: a build key disarms an
+right drag. One click is armed at a time, the last one armed: a build key or button disarms an
 attack-move, and `W` drops a pending build (#1335). The order goes to where the press was, with
 the press's modifiers. What the click asked for is drawn where it asked (§12): the ring that
 acknowledges it closes on the point at its depth, with a plumb line to the ground below it.
