@@ -753,6 +753,25 @@ export class AudioEngine {
     this.pendingFrame = frame;
   }
 
+  /**
+   * The picture is gone: the match ended, or the signal dropped (#1326).
+   *
+   * The mix hears contacts only on a snapshot, so with none coming every voice
+   * held its last level under the result card or the reconnect overlay, long
+   * after the ghosts it mirrors had faded off the chart. An empty picture stops
+   * them as a frame that leaves a contact out stops it, and the residue beds
+   * go quiet with them. The next snapshot, after a reconnection, brings back
+   * whatever it holds.
+   */
+  releasePicture(): void {
+    this.pendingFrame = null;
+    this.pendingMarks = null;
+    const context = this.context;
+    if (context === null) return;
+    this.mixer?.update({ tick: 0, entries: [] }, context.currentTime);
+    this.markBed?.update(new Map(), context.currentTime);
+  }
+
   /** Hand the mix the residue the player can currently read (§6). */
   applyMarks(intensityByKind: Map<EchoMarkKind, number>): void {
     this.pendingMarks = intensityByKind;

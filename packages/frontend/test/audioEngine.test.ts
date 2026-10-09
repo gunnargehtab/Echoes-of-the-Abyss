@@ -567,6 +567,26 @@ describe('the audio engine: what a tick costs', () => {
     }
   });
 
+  it('lets the picture go when the match ends or the signal drops (#1326)', () => {
+    const { engine } = boot();
+    try {
+      engine.applyContacts(contactFrame(5));
+      engine.onEchoTick();
+      assert.equal(engine.activeContactVoices, 5, 'the premise: five voices sounding');
+      // No snapshot follows a result or a lost signal, so no frame would ever
+      // leave these contacts out: the shell lets the picture go instead.
+      engine.releasePicture();
+      assert.equal(engine.activeContactVoices, 0, 'a voice held its last level');
+      // A reconnection's first snapshot brings back what it holds.
+      engine.applyContacts(contactFrame(2, 200));
+      engine.onEchoTick();
+      assert.equal(engine.activeContactVoices, 2);
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+
   it('holds the voice cap however many contacts arrive', () => {
     const { engine } = boot();
     try {

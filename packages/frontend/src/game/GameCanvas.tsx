@@ -508,7 +508,12 @@ export function GameCanvas({
             // not send.
             audio.onEchoTick();
           },
-          onGameOver: (payload) => activeRenderer.setGameOver(payload),
+          onGameOver: (payload) => {
+            activeRenderer.setGameOver(payload);
+            // No snapshot follows a result, and the mix only hears one: the
+            // picture it holds is let go here (#1326).
+            audio.releasePicture();
+          },
           onMission: (view) => {
             underSilenceOrder = view.debtS > 0;
             setMission(view);
@@ -534,6 +539,7 @@ export function GameCanvas({
           onMissionOver: (payload) => {
             setMissionOver(payload);
             activeRenderer.setMissionOver(payload);
+            audio.releasePicture();
             // The one write of the progression record (docs/campaign.md §11).
             // Here rather than inside `MissionResult`, because this is the
             // moment the result *arrives* and a render is not a moment — a
@@ -589,6 +595,9 @@ export function GameCanvas({
             setStatus(next);
             setDetail(why ?? '');
             activeRenderer.setStatus(next);
+            // Nor does one arrive while the signal is lost; a reconnection's
+            // first snapshot brings the picture back (#1326).
+            if (next !== 'connected') audio.releasePicture();
             // A lost signal closes the menu: the reconnect overlay is
             // information the player must see, and the menu would otherwise sit
             // invisible but clickable beneath its wash — one blind click from

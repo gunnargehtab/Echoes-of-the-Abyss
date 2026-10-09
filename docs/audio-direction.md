@@ -54,6 +54,8 @@ This is the rule the whole section exists to protect. Stereo position is the pla
 
 Ghost markers decay over 20 s. Their voices decay with them: level falls on the same curve as marker alpha, and the loop's period lengthens by up to 40% so a fading contact audibly slows rather than simply thinning. Contacts refreshed by a new detection snap back to full level in 80 ms — the return of a sound that was dying is itself a warning.
 
+**A picture that stops is let go.** The mix hears contacts only on a snapshot, so when none will come — the match is over, or the signal is lost — every contact voice and residue bed stops at once rather than holding its last level. The chart's ghosts fade on their own clock, so the screen says more than the ear for those seconds and never less, which is the direction §11 allows; a reconnection's first snapshot brings back whatever it holds (#1326).
+
 ---
 
 ## 4. Your Own Loudness

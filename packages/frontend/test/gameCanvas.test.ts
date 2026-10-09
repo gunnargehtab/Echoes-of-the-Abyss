@@ -31,6 +31,7 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import {
   Faction,
   MatchPhase,
+  MissionOutcome,
   ObjectiveStatus,
   encodeEcho,
   SERVER_MSG,
@@ -459,6 +460,37 @@ describe('the shell: what it wires to what', () => {
       );
     } finally {
       await world.unmount();
+    }
+  });
+
+  it('lets the mix go of the picture at a result and at a lost signal (#1326)', async () => {
+    // The mix hears contacts only on a snapshot, and none follows a result or
+    // arrives while the signal is lost: every voice used to hold its last
+    // level under the result card and the reconnect overlay.
+    type Probe = { window: { __audioProbe: () => { contactVoices: number } } };
+    const g = globalThis as unknown as Probe;
+    for (const end of ['result', 'mission', 'drop'] as const) {
+      const world = await mount();
+      try {
+        await joinMatch(world);
+        await firstGesture(world);
+        world.room.emit(SERVER_MSG.echo, encodeEcho(null, cannedSnapshot(100), 0));
+        await world.settle();
+        assert.ok(g.window.__audioProbe().contactVoices > 0, `${end}: the premise, voices`);
+        if (end === 'result') world.room.emit(SERVER_MSG.gameOver, { winnerSlot: 1 });
+        else if (end === 'mission') {
+          world.room.emit(SERVER_MSG.missionOver, {
+            missionId: 'test-mission',
+            outcome: MissionOutcome.Complete,
+            epilogue: '',
+            objectives: [],
+          });
+        } else world.room.drop();
+        await world.settle();
+        assert.equal(g.window.__audioProbe().contactVoices, 0, `${end}: a voice held on`);
+      } finally {
+        await world.unmount();
+      }
     }
   });
 
