@@ -662,6 +662,11 @@ export function spawnFauna(
   Acoustic.hyd[eid] = stats.hyd;
   Acoustic.pfFactor[eid] = 1;
   Acoustic.sigFactor[eid] = 1;
+  // Nothing sounds a creature's spike today, only a hull's and a structure's,
+  // but a spawn writes every field of its component (docs/invariants.md): a
+  // hull that died inside its spike leaves it under the id (#1273).
+  Acoustic.spikeRemainingS[eid] = 0;
+  Acoustic.spikeAmount[eid] = 0;
   Acoustic.loud[eid] = 0;
 
   addComponent(world, Health, eid);
@@ -1040,13 +1045,23 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   addComponent(world, Heading, eid);
   Heading.rad[eid] = opts.heading ?? 0;
 
+  // Every field of every component below, every time: bitecs hands ids back
+  // with the dead entity's bytes still under them (the note in
+  // `spawnOrdnance`). A yard hull born on a hull that died following the floor
+  // inherited `follow` and dived unordered, at the descent's SIG, carrying the
+  // dead hull's Lid exposure and both of its order points (#1273). Held by
+  // test/spawnRecycled.test.ts over every kind, not by this comment.
   addComponent(world, MoveOrder, eid);
   MoveOrder.active[eid] = 0;
+  MoveOrder.x[eid] = 0;
+  MoveOrder.y[eid] = 0;
 
   // Every hull has a posture, so the order paths need no component check.
   addComponent(world, Posture, eid);
   Posture.hold[eid] = 0;
   Posture.engage[eid] = 0;
+  Posture.engageX[eid] = 0;
+  Posture.engageY[eid] = 0;
 
   // Units carry a depth order from birth; structures never get one. The
   // component is what makes a hull orderable vertically at all, so the
@@ -1055,6 +1070,7 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   DepthOrder.active[eid] = 0;
   DepthOrder.descending[eid] = 0;
   DepthOrder.targetM[eid] = Position.depth[eid]!;
+  DepthOrder.follow[eid] = 0;
 
   addComponent(world, Acoustic, eid);
   Acoustic.sig[eid] = stats.sigIdle;
@@ -1069,6 +1085,7 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   Pressure.rating[eid] = rating;
   Pressure.bonus[eid] = 0;
   Pressure.unhealable[eid] = 0;
+  Pressure.sourS[eid] = 0;
 
   addComponent(world, Health, eid);
   Health.hp[eid] = stats.maxHp;
@@ -1213,6 +1230,7 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
     // Fresh, not stalled: a hull awaiting its first order raises no notice.
     Harvester.idleReason[eid] = 0;
     Harvester.cargo[eid] = 0;
+    Harvester.cargoKind[eid] = ResourceKind.Nodule;
     Harvester.nodeEid[eid] = 0;
     Harvester.depotEid[eid] = 0;
     Harvester.throttle[eid] = HarvestThrottle.Standard;
