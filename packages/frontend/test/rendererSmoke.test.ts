@@ -2602,20 +2602,6 @@ describe('renderer smoke test: input and teardown', () => {
   });
 });
 
-/**
- * The top strip's explanations (#724) — docs/ui-ux.md §2, §7.
- *
- * The strip is Pixi text and its explanation is DOM, so the renderer's half of
- * the arrangement is reporting *where each readout is and what it says*. Two
- * properties matter and neither is visible from the component's side: that the
- * value a screen reader will speak is the string the strip actually drew, and
- * that reporting it does not cost a frame.
- *
- * The second is a counted assertion in this file's sense — calls made over a
- * known number of frames, never a stopwatch. A hover surface that republished
- * every frame would re-render the React shell at 60 Hz, which is the one thing
- * `GameCanvas`'s own header says it must never do.
- */
 describe('one click is armed at a time (#1335)', () => {
   it('gives the click to a build armed over an armed attack-move', async () => {
     // docs/ui-ux.md §9: the last one armed. `W` already dropped a pending
@@ -2650,6 +2636,20 @@ describe('one click is armed at a time (#1335)', () => {
   });
 });
 
+/**
+ * The top strip's explanations (#724) — docs/ui-ux.md §2, §7.
+ *
+ * The strip is Pixi text and its explanation is DOM, so the renderer's half of
+ * the arrangement is reporting *where each readout is and what it says*. Two
+ * properties matter and neither is visible from the component's side: that the
+ * value a screen reader will speak is the string the strip actually drew, and
+ * that reporting it does not cost a frame.
+ *
+ * The second is a counted assertion in this file's sense — calls made over a
+ * known number of frames, never a stopwatch. A hover surface that republished
+ * every frame would re-render the React shell at 60 Hz, which is the one thing
+ * `GameCanvas`'s own header says it must never do.
+ */
 describe('renderer smoke test: the strip explains itself', () => {
   it('reports every readout the strip drew, with the strip’s own text', async () => {
     const booted = await boot();
