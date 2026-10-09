@@ -12,6 +12,7 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { hasComponent } from 'bitecs';
 import {
   ACTIVE_SONAR,
   BERTHS,
@@ -38,6 +39,7 @@ import { Terrain } from '../src/sim/terrain.ts';
 import {
   Acoustic,
   Countermeasure,
+  DecoyMagazine,
   Health,
   Weapon,
   HullEffect,
@@ -47,6 +49,7 @@ import {
   Ordnance,
   Position,
   Pressure,
+  UnderConstruction,
   Velocity,
 } from '../src/sim/components.ts';
 
@@ -805,6 +808,25 @@ describe('the Weaver — a screen, laid', () => {
     // apart could tell a decoy from a hull.
     assert.equal(Ordnance.kind[screen], Ordnance.kind[reflex]);
   });
+
+  it('keeps the laid decoy at 45 for its whole life, not only at the lay (#1314)', () => {
+    // `ordnanceSystem` writes every piece of ordnance's SIG each tick, and read
+    // off the kind a laid decoy is a countermeasure: 45 at the lay, 70 from
+    // the first tick on, for the 25 s a screen is meant to pass for a hull.
+    const { match } = skirmish(Faction.Pelagia);
+    const weaver = hull(match, Faction.Pelagia, UnitKind.Weaver, 3000, 3000);
+    const screen = match.layDecoy(0, weaver);
+    assert.ok(screen > 0);
+    for (const seconds of [1 / SIM.TICK_HZ, 1, 18]) {
+      advance(match, seconds);
+      assert.ok(Ordnance.remainingS[screen]! > 0, 'the premise: the screen is still in the water');
+      assert.equal(
+        Acoustic.sig[screen],
+        ORDNANCE.LAID_DECOY.SIG,
+        `${Ordnance.remainingS[screen]} s left`
+      );
+    }
+  });
 });
 
 describe('the Lance — one shot, and only at what it faces', () => {
@@ -932,6 +954,59 @@ describe('the rearm — each hull to its own magazine (#1092)', () => {
       assert.equal(Magazine.torpedoes[at], magazine, 'and not one past it');
     });
   }
+});
+
+describe('the rearm — only at a depot that stands (#1316)', () => {
+  // A Foundry site rearmed torpedoes and decoys from the moment it was placed,
+  // as a finished one does: a forward rearm point for the price of a site.
+  // Far from the Bastion, so the Foundry is the only depot in reach.
+  it('rearms nothing beside a Foundry site, and rearms once it is built', () => {
+    const { match } = skirmish(Faction.Pelagia);
+    const foundry = spawnStructure(match.world, {
+      kind: StructureKind.Foundry,
+      slot: 0,
+      faction: Faction.Pelagia,
+      x: 6000,
+      y: 6000,
+    });
+    const corvette = hull(match, Faction.Pelagia, UnitKind.Corvette, 6100, 6000);
+    const weaver = hull(match, Faction.Pelagia, UnitKind.Weaver, 6000, 6100);
+    Magazine.torpedoes[corvette] = 0;
+    DecoyMagazine.decoys[weaver] = 0;
+
+    advance(match, ORDNANCE.TORPEDO.REARM_TIME_S * 2 + 1);
+    assert.ok(hasComponent(match.world, UnderConstruction, foundry), 'the premise: still a site');
+    assert.equal(Magazine.torpedoes[corvette], 0, 'a site rearmed a torpedo');
+    assert.equal(DecoyMagazine.decoys[weaver], 0, 'a site racked a decoy');
+
+    for (let s = 0; hasComponent(match.world, UnderConstruction, foundry); s++) {
+      assert.ok(s < structureStatsFor(StructureKind.Foundry).buildTimeS * 4, 'it never finished');
+      advance(match, 1);
+    }
+    advance(match, ORDNANCE.TORPEDO.REARM_TIME_S + 1);
+    assert.equal(Magazine.torpedoes[corvette], 1, 'the built Foundry rearms');
+    assert.equal(DecoyMagazine.decoys[weaver], 1, 'and racks decoys');
+  });
+
+  it('starts no rearm at a depot destroyed this tick, though the reap has not come', () => {
+    // Combat runs before the rearm in a step and the reap after both, so a
+    // depot shot down this tick is still in the world at 0 hp when the rearm
+    // looks for one. Set by hand, as combat would leave it.
+    const { match } = skirmish(Faction.Pelagia);
+    const foundry = spawnStructure(match.world, {
+      kind: StructureKind.Foundry,
+      slot: 0,
+      faction: Faction.Pelagia,
+      x: 6000,
+      y: 6000,
+      prebuilt: true,
+    });
+    const corvette = hull(match, Faction.Pelagia, UnitKind.Corvette, 6100, 6000);
+    Magazine.torpedoes[corvette] = 0;
+    Health.hp[foundry] = 0;
+    advance(match, 1 / SIM.TICK_HZ);
+    assert.equal(Magazine.rearmRemainingS[corvette], 0, 'the rearm began at a dead depot');
+  });
 });
 
 /**

@@ -25,6 +25,7 @@ import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
 import { CanvasTextMetrics, Container, Graphics, Text, type GraphicsPath } from 'pixi.js';
 import {
+  ACTIVE_SONAR,
   DEPTH,
   DRIFT_ROSTER,
   Faction,
@@ -38,6 +39,7 @@ import {
   SelfEventKind,
   StructureKind,
   type Contact,
+  type OwnUnit,
 } from '@echoes/shared';
 import { FOCUS_DRAG_M_PER_PX, FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
 import { swayAt } from '../src/game/cameraSway.ts';
@@ -84,6 +86,7 @@ import type { SelfAudioFrame } from '../src/audio/selfMixer.ts';
 import { LampHaloPass } from '../src/game/lampHaloPass.ts';
 import { ROOF_OPEN_OPACITY } from '../src/game/passages.ts';
 import { FURNITURE_OUTLINE_ALPHA } from '../src/game/ladder.ts';
+import { ONE_HANDED_BINDINGS } from '../src/input/bindings.ts';
 import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
 import { FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
@@ -1899,6 +1902,50 @@ describe('renderer smoke test: classified fauna (#868)', () => {
   });
 });
 
+describe('a held key acts once (#1348)', () => {
+  it('takes no second toggle from a held key', async () => {
+    // docs/ui-ux.md §9. Auto-repeat ran the action again on every repeat, and
+    // the toggles read the selection off the last snapshot: a held Space flipped
+    // Silent Running at the snapshot rate and ended wherever the release landed.
+    const world = await boot();
+    try {
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      const toggles = () => world.log.calls.filter((call) => call.name === 'onToggleSilent').length;
+      dispatchWindow('keydown', { code: 'Space', repeat: false });
+      assert.equal(toggles(), 1, 'the premise: a press toggles');
+      for (let i = 0; i < 3; i++) dispatchWindow('keydown', { code: 'Space', repeat: true });
+      assert.equal(toggles(), 1, 'the key, held, toggled again');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('takes no second recall from a held digit, nor a second menu from a held Esc', async () => {
+    // A repeat lands inside the double tap's window, so a held digit centred
+    // the camera; and a held Esc opened the menu on every repeat.
+    const world = await boot();
+    try {
+      const conn = world.conn as unknown as { target: { x: number; z: number } };
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      dispatchWindow('keydown', { code: 'Digit1', ctrlKey: true });
+      world.chart.focusOn(500, 500);
+      dispatchWindow('keydown', { code: 'Digit1' });
+      const at = { x: conn.target.x, z: conn.target.z };
+      for (let i = 0; i < 3; i++) dispatchWindow('keydown', { code: 'Digit1', repeat: true });
+      assert.deepEqual({ x: conn.target.x, z: conn.target.z }, at, 'a held digit centred');
+
+      const menus = () => world.log.calls.filter((call) => call.name === 'onOpenMenu').length;
+      dispatchWindow('keydown', { code: 'Escape' });
+      for (let i = 0; i < 3; i++) dispatchWindow('keydown', { code: 'Escape', repeat: true });
+      assert.equal(menus(), 1, 'a held Esc opened the menu again');
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
 describe('renderer smoke test: input and teardown', () => {
   /**
    * The mission hold, through the input path rather than through the predicate.
@@ -2606,6 +2653,40 @@ describe('renderer smoke test: input and teardown', () => {
   });
 });
 
+describe('one click is armed at a time (#1335)', () => {
+  it('gives the click to a build armed over an armed attack-move', async () => {
+    // docs/ui-ux.md §9: the last one armed. `W` already dropped a pending
+    // build, but a build key left an armed attack-move standing, and the click
+    // the hint bar promised the Refinery went out as an attack-move.
+    const world = await boot();
+    try {
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      dispatchWindow('keydown', { code: 'KeyW' });
+      world.frame(1);
+      assert.ok(textSaying(world.app.stage, 'ATTACK-MOVE armed') !== null, 'the premise: armed');
+      dispatchWindow('keydown', { code: 'KeyR' });
+      world.frame(1);
+      assert.ok(textSaying(world.app.stage, 'placing ') !== null, 'the premise: a build armed');
+
+      // The water, pressed and released: an armed click is given on release.
+      for (const type of ['pointerdown', 'pointerup']) {
+        world.app.canvas.dispatch(type, {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: 700,
+          clientY: 400,
+        });
+      }
+      assert.equal(world.log.first('onAttackMoveOrder'), undefined, 'the click attack-moved');
+      assert.equal(world.log.first('onBuild')?.[0], StructureKind.Refinery, 'and placed nothing');
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
 /**
  * The top strip's explanations (#724) — docs/ui-ux.md §2, §7.
  *
@@ -3106,6 +3187,76 @@ describe('renderer smoke test: the strip explains itself', () => {
   });
 });
 
+describe('a control group keeps its hulls through a hold (#1337)', () => {
+  it('keeps a hull aboard a transport in its group, and has it in hand when it lands', async () => {
+    // docs/ui-ux.md §9. The recall pruned every member missing from the map's
+    // hulls as dead, and a hull aboard is not on the map: a group recalled
+    // while its hulls were aboard was deleted, and gone when they landed.
+    const world = await boot();
+    try {
+      type Chart = { selected: Set<number>; controlGroups: Map<number, number[]> };
+      const chart = world.chart as unknown as Chart;
+      const conn = world.conn as unknown as { target: { x: number; z: number } };
+      const units = cannedSnapshot().units;
+      const army = units.filter((unit) => unit.throttle === undefined).map((unit) => unit.id);
+      const carrier = units.find((unit) => unit.throttle !== undefined)!;
+      assert.ok(army.length > 0 && carrier !== undefined, 'the premise: hulls and a carrier');
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      dispatchWindow('keydown', { code: 'Digit1', ctrlKey: true });
+
+      // Aboard: the carrier holds them, and each hull is reported at its
+      // carrier, as the server reports it.
+      world.chart.applySnapshot({
+        ...cannedSnapshot(1012),
+        units: units.map((unit) =>
+          unit.id === carrier.id
+            ? { ...unit, hold: { berths: 6, used: army.length } }
+            : army.includes(unit.id)
+              ? { ...unit, aboard: carrier.id, x: carrier.x, y: carrier.y, depth: carrier.depth }
+              : unit
+        ),
+      });
+      dispatchWindow('keydown', { code: 'Digit1' });
+      assert.deepEqual(
+        [...(chart.controlGroups.get(1) ?? [])].sort(),
+        [...army].sort(),
+        'the group lost the hulls in the hold'
+      );
+      // Recalled twice, a group wholly aboard centres on its carrier.
+      world.chart.focusOn(carrier.x + 1500, carrier.y + 1500);
+      dispatchWindow('keydown', { code: 'Digit1' });
+      dispatchWindow('keydown', { code: 'Digit1' });
+      assert.deepEqual(
+        { x: conn.target.x, y: conn.target.z },
+        { x: carrier.x, y: carrier.y },
+        'recalled twice, the group centred nowhere'
+      );
+
+      // Landed, and recalled again over another selection: the carrier alone.
+      world.chart.applySnapshot(cannedSnapshot(1024));
+      world.chart.focusOn(carrier.x, carrier.y);
+      world.frame(2);
+      const at = world.conn.projectPoint(carrier.x, carrier.y, carrier.depth);
+      for (const type of ['pointerdown', 'pointerup']) {
+        world.app.canvas.dispatch(type, {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x,
+          clientY: at.y,
+        });
+      }
+      world.frame(1);
+      assert.deepEqual([...chart.selected], [carrier.id], 'the premise: another selection');
+      dispatchWindow('keydown', { code: 'Digit1' });
+      assert.deepEqual([...chart.selected].sort(), [...army].sort(), 'the group came back short');
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
 /**
  * The console's drop order — docs/ui-ux.md §2 (#957).
  *
@@ -3160,6 +3311,57 @@ describe('the console drops its blocks in §2’s order', () => {
         ['', 'FLEET PRODUCTION SELECTION', 'PRODUCTION SELECTION', 'SELECTION'],
         'the sweep did not pass through every step of the drop order'
       );
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
+describe('the hint bar names the keys the player has (#1340)', () => {
+  it('names the bound keys, not the defaults, after a layout change', async () => {
+    // docs/ui-ux.md §9: "Every key in that table is a default, not a fact."
+    // The bar named the defaults whatever the bindings, and on the one-handed
+    // layout told the player `X stop` where `X` lays a mine.
+    const world = await boot();
+    try {
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.frame(1);
+      assert.ok(textSaying(world.app.stage, 'X stop') !== null, 'the premise: the defaults');
+
+      world.chart.setBindings(ONE_HANDED_BINDINGS);
+      world.frame(1);
+      const army = '`' + ' stop  ·  TAB hold  ·  CTRL+RMB torpedo  ·  SPACE silent  ·  Q ping';
+      assert.ok(textSaying(world.app.stage, army) !== null, 'the army line named the defaults');
+      assert.equal(textSaying(world.app.stage, 'X stop'), null, 'and still offered X as stop');
+      // The one-handed layout leaves `W` and `Space` where they are, so those
+      // two names are read off a rebind of their own.
+      world.chart.setBindings({
+        ...ONE_HANDED_BINDINGS,
+        attackMove: 'KeyK',
+        silentRunning: 'KeyL',
+      });
+      world.frame(1);
+      assert.ok(textSaying(world.app.stage, 'K attack-move') !== null, 'attack-move named W');
+      assert.ok(textSaying(world.app.stage, 'L silent') !== null, 'silent named SPACE');
+      assert.equal(textSaying(world.app.stage, 'W attack-move'), null, 'and still offered W');
+
+      // A harvester's line names its throttle key too.
+      const harvester = cannedSnapshot().units.find((unit) => unit.throttle !== undefined)!;
+      world.chart.focusOn(harvester.x, harvester.y);
+      world.frame(2);
+      const at = world.conn.projectPoint(harvester.x, harvester.y, harvester.depth);
+      for (const type of ['pointerdown', 'pointerup']) {
+        world.app.canvas.dispatch(type, {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x,
+          clientY: at.y,
+        });
+      }
+      world.frame(1);
+      assert.ok(textSaying(world.app.stage, 'E throttle') !== null, 'the throttle named V');
     } finally {
       world.teardown();
     }
@@ -4258,6 +4460,41 @@ describe('renderer smoke test: the free camera', () => {
   });
 });
 
+describe('the wheel reads the axis it turned on (#1338)', () => {
+  it('moves the focus with Shift + wheel sent sideways, and zooms on no sideways scroll', async () => {
+    // docs/ui-ux.md §9: Shift + wheel raises and sinks the focus, the wheel
+    // zooms. macOS sends Shift + wheel on `deltaX` with `deltaY` at 0, which
+    // read as down whichever way the wheel turned; a sideways swipe zoomed out.
+    const world = await boot();
+    try {
+      world.frame(2);
+      const canvas = world.app.canvas;
+      const conn = world.conn as unknown as { distance: number };
+      const wheel = (init: Record<string, unknown>) =>
+        canvas.dispatch('wheel', { clientX: 640, clientY: 360, deltaX: 0, deltaY: 0, ...init });
+      const seabed = world.conn.focusDepth();
+
+      wheel({ shiftKey: true, deltaX: -100 });
+      assert.equal(world.conn.focusDepth(), seabed - FOCUS_STEP_M, 'a notch up raises the focus');
+      wheel({ shiftKey: true, deltaX: 100 });
+      assert.equal(world.conn.focusDepth(), seabed, 'and a notch down sinks it back');
+      // And the same gesture sent on its own axis, as everywhere but macOS.
+      wheel({ shiftKey: true, deltaY: -100 });
+      assert.equal(world.conn.focusDepth(), seabed - FOCUS_STEP_M, 'a vertical notch up raises it');
+      wheel({ shiftKey: true, deltaY: 100 });
+      assert.equal(world.conn.focusDepth(), seabed, 'and a vertical notch down sinks it back');
+
+      const distance = conn.distance;
+      wheel({ deltaX: 100 });
+      assert.equal(conn.distance, distance, 'a sideways scroll zoomed');
+      wheel({ deltaY: -100 });
+      assert.ok(conn.distance < distance, 'the premise: the wheel itself still zooms');
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
 describe('renderer smoke test: the queued GPU reading (gate 6, #1001)', () => {
   it('draws its load outside the frame: no call, triangle or pass of the frame is its', async () => {
     type Probes = {
@@ -4365,5 +4602,80 @@ describe('renderer smoke test: the halo frame reading (#1001, development only)'
     }
     const probes = (globalThis as unknown as { window: Probes }).window;
     assert.equal(probes.__perspectiveSeabedM, undefined);
+  });
+});
+
+describe('the ping preview rings the hull that pings (#1330)', () => {
+  it('rings the hull P pings from and no other, however many are selected', async () => {
+    // docs/ui-ux.md §6: "two rings on the terrain at the emitting unit", and P
+    // sends one ping. The preview used to ring every selected hull, so five
+    // self-reveals promised a cost the ping did not pay, or not where shown.
+    const world = await boot();
+    try {
+      type Chart = {
+        selected: Set<number>;
+        units: OwnUnit[];
+        drawnPosition(unit: OwnUnit): { x: number; y: number };
+        drawRings(): void;
+        traceCircle(
+          g: Graphics,
+          cx: number,
+          cy: number,
+          radiusM: number,
+          ...rest: unknown[]
+        ): boolean;
+      };
+      const chart = world.chart as unknown as Chart;
+      // Every circle the latest ring pass traced, by centre and radius, and
+      // only that pass's: hazards and fauna trace circles of their own in the
+      // same frame. The real pass runs; this only reads what it asked for.
+      const traced: Array<{ x: number; y: number; radiusM: number }> = [];
+      let inRingPass = false;
+      const drawRings = chart.drawRings.bind(chart);
+      const traceCircle = chart.traceCircle.bind(chart);
+      chart.drawRings = () => {
+        traced.length = 0;
+        inRingPass = true;
+        try {
+          drawRings();
+        } finally {
+          inRingPass = false;
+        }
+      };
+      chart.traceCircle = (g, cx, cy, radiusM, ...rest) => {
+        if (inRingPass) traced.push({ x: cx, y: cy, radiusM });
+        return traceCircle(g, cx, cy, radiusM, ...rest);
+      };
+
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.frame(1);
+      assert.ok(chart.selected.size >= 2, 'the premise: several hulls selected');
+      dispatchWindow('keydown', { code: 'AltLeft' });
+      world.frame(2);
+      const ringsOf = (radiusM: number) => traced.filter((circle) => circle.radiusM === radiusM);
+      const rings = {
+        reveal: ringsOf(ACTIVE_SONAR.REVEAL_RADIUS_M),
+        'self-reveal': ringsOf(ACTIVE_SONAR.SELF_REVEAL_RADIUS_M),
+      };
+      dispatchWindow('keyup', { code: 'AltLeft' });
+
+      // The hull the ping actually goes out from.
+      dispatchWindow('keydown', { code: 'KeyP' });
+      const pinger = chart.units.find((unit) => unit.id === world.log.first('onPing')?.[0]);
+      assert.ok(pinger !== undefined, 'the premise: P pinged a selected hull');
+      const at = chart.drawnPosition(pinger);
+      for (const [name, drawn] of Object.entries(rings)) {
+        assert.equal(drawn.length, 1, `one hull pings, so one ${name} ring is drawn`);
+        assert.deepEqual(
+          { x: drawn[0]!.x, y: drawn[0]!.y },
+          { x: at.x, y: at.y },
+          `the ${name} ring is round the hull P pings from`
+        );
+      }
+    } finally {
+      dispatchWindow('keyup', { code: 'AltLeft' });
+      world.teardown();
+    }
   });
 });

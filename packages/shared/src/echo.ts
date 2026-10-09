@@ -221,6 +221,13 @@ const HANDLE_INDEX_MASK = 0x3fffffff;
 const HANDLE_ROUNDS = 4;
 /** Separates this key schedule from every other `mix` chain off the seed. */
 const HANDLE_SALT = 0x5bf03635;
+/**
+ * The same for Echo marks' handles (#1292). Marks and contacts each count from
+ * one, so under one key a slot's nth mark and nth contact would share a value,
+ * and a client holding n marks could read off the mint order of its first n
+ * contact handles — the order §3's phantoms hide in.
+ */
+const MARK_HANDLE_SALT = 0x2c1b3f97;
 
 /**
  * The opaque handle a slot's `index`-th minted contact is published under.
@@ -251,7 +258,22 @@ const HANDLE_SALT = 0x5bf03635;
  * so a replay issues the identical handles.
  */
 export function contactHandle(seed: number, slot: number, index: number): number {
-  const key = mix((seed >>> 0) ^ HANDLE_SALT, slot | 0);
+  return keyedHandle(seed, slot, index, HANDLE_SALT);
+}
+
+/**
+ * The opaque handle a slot's `index`-th heard Echo mark is published under
+ * (#1292): `contactHandle`'s permutation under a key of its own, so a slot's
+ * mark handles say nothing about how many marks it never heard, and nothing
+ * about its contact handles either.
+ */
+export function markHandle(seed: number, slot: number, index: number): number {
+  return keyedHandle(seed, slot, index, MARK_HANDLE_SALT);
+}
+
+/** The keyed permutation both handle spaces are drawn from. */
+function keyedHandle(seed: number, slot: number, index: number, salt: number): number {
+  const key = mix((seed >>> 0) ^ salt, slot | 0);
   const n = index & HANDLE_INDEX_MASK;
   let left = (n >>> HANDLE_HALF_BITS) & HANDLE_HALF_MASK;
   let right = n & HANDLE_HALF_MASK;

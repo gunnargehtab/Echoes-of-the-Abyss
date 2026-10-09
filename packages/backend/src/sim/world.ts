@@ -28,6 +28,7 @@ import {
   StructureKind,
   UnitKind,
   statsFor,
+  deliveryDepthM,
   effectivePressureRating,
   structureStatsFor,
 } from '@echoes/shared';
@@ -300,6 +301,15 @@ export interface SimWorld extends IWorld {
    */
   commanderSilentImmune: Set<number>;
   /**
+   * Hulls a mission's escort hold is keeping still this pass
+   * (docs/mission-sorrowgate.md §8): `liftCutSig`'s arrangement, written by
+   * the mission runtime and cleared and rebuilt whole on every pass. The order
+   * queue reads it so a held hull's plan waits where it is, drawn and hashed,
+   * rather than popping a leg into the hold each pass until only its last was
+   * left to give back (#1322). Empty in every skirmish.
+   */
+  movementHeld: Set<number>;
+  /**
    * Standing Wave corridors — docs/systems-echo.md §7, and the mission that
    * teaches them (docs/mission-standing-wave.md §4).
    *
@@ -332,6 +342,16 @@ export interface SimWorld extends IWorld {
    * thirty years ago hums at 30 all tide.
    */
   nodeSites: Set<number>;
+  /**
+   * What a standing corridor struck on the last tick, and the set it fills on
+   * this one, so the owner is told of the blow on entry rather than sixty
+   * times a second (`standingWaveSystem`). On the world rather than in the
+   * module, because module state is every match's in the process: a second
+   * room with no corridor cleared it between this room's ticks, and the blow
+   * was told again every Echo pass (#1308). By entity id, which is safe for
+   * one tick: bitecs reissues a freed id only once a thousand are queued.
+   */
+  corridorStruck: { last: Set<number>; next: Set<number> };
   /**
    * The simulation's only source of randomness. Seeded per match and part of
    * simulation state — see sim/rng.ts. Nothing in sim/ may call Math.random().
@@ -554,9 +574,11 @@ export function createSimWorld(
   world.regionPressureBonus = [];
   world.commanderHaste = new Map();
   world.commanderSilentImmune = new Set();
+  world.movementHeld = new Set();
   world.corridors = [];
   world.pairedNodes = new Set();
   world.nodeSites = new Set();
+  world.corridorStruck = { last: new Set(), next: new Set() };
   world.rng = new Rng(seed);
   world.localOfEid = new Map();
   world.eidOfLocal = new Map();
@@ -882,8 +904,11 @@ export function spawnOrdnance(world: SimWorld, opts: SpawnOrdnanceOptions): numb
   Position.y[eid] = opts.y;
   Position.depth[eid] = opts.depth;
 
+  // A laid decoy is the countermeasure's emitter at a quieter figure
+  // (docs/systems-combat.md §5, "A screen, laid").
+  const sig = opts.laid === true ? ORDNANCE.LAID_DECOY.SIG : stats.sig;
   addComponent(world, Acoustic, eid);
-  Acoustic.sig[eid] = opts.laid === true ? ORDNANCE.LAID_DECOY.SIG : stats.sig;
+  Acoustic.sig[eid] = sig;
   // Deaf to the Echo Layer by construction — see the note above.
   Acoustic.hyd[eid] = 0;
   Acoustic.pfFactor[eid] = 1;
@@ -945,6 +970,7 @@ export function spawnOrdnance(world: SimWorld, opts: SpawnOrdnanceOptions): numb
   Ordnance.detonatingS[eid] = 0;
   Ordnance.targetDepthM[eid] = opts.targetDepthM ?? opts.depth;
   Ordnance.locked[eid] = opts.locked === true ? 1 : 0;
+  Ordnance.baseSig[eid] = sig;
 
   return eid;
 }
@@ -1033,7 +1059,7 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
     world.refits.get(opts.slot)?.has(RefitKind.Pressure) === true
       ? refittedPressureRating(effectivePressureRating(opts.kind, opts.faction), opts.faction)
       : effectivePressureRating(opts.kind, opts.faction);
-  Position.depth[eid] = opts.depth ?? (rating >= 2 ? 600 : 300);
+  Position.depth[eid] = opts.depth ?? deliveryDepthM(rating);
 
   addComponent(world, Velocity, eid);
   Velocity.x[eid] = 0;

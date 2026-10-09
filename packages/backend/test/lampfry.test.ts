@@ -130,6 +130,40 @@ describe('lampfry shoals', () => {
     // nothing about what caused it.
   });
 
+  it('carry an id that counts shoals and jellies, never what else the match spawned', () => {
+    // Public ids used to be match-local ids, which every spawn draws on, so the
+    // gap between a restocked shoal and the last one counted the hulls and
+    // decoys every navy had launched in between (#1297). Here twelve enemy
+    // hulls and twelve decoys come between two shoals, out of anyone's hearing.
+    const match = emptyMatch(7, 2);
+    spawnFauna(match.world, { species: FaunaSpecies.Lampfry, x: 6000, y: 6000 });
+    const before = advance(match, 1)!
+      .get(0)!
+      .shoals.map((s) => s.id);
+    assert.equal(before.length, 1, 'the premise: one shoal on the chart');
+    for (let i = 0; i < 12; i++) {
+      const hull = spawnUnit(match.world, {
+        kind: UnitKind.LightScout,
+        slot: 1,
+        faction: Faction.Bathyarch,
+        x: 7500,
+        y: 300 + i * 200,
+      });
+      match.deployNoisemaker(1, hull);
+    }
+    spawnFauna(match.world, { species: FaunaSpecies.Lampfry, x: 6500, y: 6500 });
+    // A jelly cluster beside it draws on the same public ids, after the shoals.
+    spawnFauna(match.world, { species: FaunaSpecies.Tetherjelly, x: 6600, y: 6500 });
+    const own = advance(match, 1)!.get(0)!;
+    const after = own.shoals.map((s) => s.id).sort((a, b) => a - b);
+    assert.deepEqual(after, [before[0]!, before[0]! + 1], 'the enemy spawns left a gap');
+    assert.deepEqual(
+      own.jellies.map((j) => j.id),
+      [before[0]! + 2],
+      'the jelly took an id from elsewhere'
+    );
+  });
+
   it('never commit, whatever stands beside them', () => {
     const match = emptyMatch(94);
     const shoal = spawnFauna(match.world, { species: FaunaSpecies.Lampfry, x: 5000, y: 5000 });

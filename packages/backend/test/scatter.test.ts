@@ -31,7 +31,13 @@ import { fileURLToPath } from 'node:url';
 import {
   ACTIVE_SONAR,
   Biome,
+  DEPTH,
+  DEPTH_BANDS,
+  DepthBand,
   Faction,
+  FOLLOW_FLOOR,
+  LID,
+  effectivePressureRating,
   ResolutionTier,
   SCATTER,
   SIM,
@@ -44,6 +50,7 @@ import {
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnUnit } from '../src/sim/world.ts';
+import { phantomDepthM } from '../src/sim/systems/echoLayer.ts';
 import {
   ActivePing,
   Magazine,
@@ -530,6 +537,139 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
       .contactsBySlot.get(0)!
       .map((c) => c.id);
     assert.equal(new Set(handles).size, handles.length, 'every handle distinct');
+  });
+
+  /**
+   * A pinger at a depth nothing else holds, and one enemy hull of each navy
+   * given, all in the water the caller paints (#1294). Every phantom used to
+   * carry the pinger's own depth, which the pinger knows exactly, so each
+   * return at it was a lie.
+   */
+  function pingAt(terrain: Terrain, seed: number, depthM: number, navies: readonly Faction[]) {
+    const match = new Match(VENTFRONT_DIVIDE, { fauna: false, seed, terrain });
+    const pinger = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 4000,
+      y: 4000,
+      depth: depthM,
+    });
+    const enemies = navies.map((faction, i) =>
+      spawnUnit(match.world, {
+        kind: UnitKind.Cruiser,
+        slot: 1 + i,
+        faction,
+        x: 4700,
+        y: 4000 + i * 300,
+        depth: depthM + 0.7,
+      })
+    );
+    match.activeSonar(0, pinger);
+    const contacts = match.echo.run(match.world, [0, 1]).contactsBySlot.get(0) ?? [];
+    const phantoms = contacts.filter((c) => match.echo.entityForHandle(0, c.id) === undefined);
+    return { match, enemies, contacts, phantoms };
+  }
+
+  it('claims the depth its hull is delivered at, where the water admits it', () => {
+    for (const seed of [31, 32, 33]) {
+      const { match, enemies, contacts, phantoms } = pingAt(fieldsMap(), seed, 873.4, [
+        Faction.Pelagia,
+      ]);
+      assert.ok(phantoms.length > 0, `the premise: seed ${seed} returns phantoms`);
+      for (const phantom of phantoms) {
+        // Where a true hull of that kind arrives, read off `spawnUnit` itself
+        // so the claim cannot drift from the delivery; never the pinger's.
+        const arrived = spawnUnit(match.world, {
+          kind: phantom.kind!,
+          slot: 1,
+          faction: phantom.faction!,
+          x: 1000,
+          y: 1000,
+        });
+        assert.equal(
+          phantom.depth,
+          Position.depth[arrived],
+          `seed ${seed}: a ${UnitKind[phantom.kind!]} reported at ${phantom.depth} m`
+        );
+      }
+      // Every depth to the metre, the true one floored: a draw in whole metres
+      // beside a stored f32 depth would be a precision tell.
+      const truth = contacts.find((c) => match.echo.entityForHandle(0, c.id) === enemies[0]);
+      assert.equal(
+        truth?.depth,
+        Math.floor(Position.depth[enemies[0]!]!),
+        'the true return, floored'
+      );
+      assert.ok(
+        contacts.every((c) => Number.isInteger(c.depth)),
+        `seed ${seed}: a fractional depth`
+      );
+    }
+  });
+
+  it('claims only a depth its hull could hold under a roof, or is not placed', () => {
+    // Water from 2,600 m to 2,900 m everywhere: no hull is delivered there, and
+    // only a hull rated for the Abyssal band can hold it. On main a phantom
+    // took the pinger's own depth here, 2,700 m, past most ratings.
+    const roofed = () => {
+      const terrain = fieldsMap();
+      terrain.fillGround(0, 0, MAP_M, MAP_M, { ceilingM: 2600, floorM: 2900 });
+      return terrain;
+    };
+    let placed = 0;
+    for (let seed = 31; seed <= 40; seed++) {
+      const { phantoms } = pingAt(roofed(), seed, 2700, [Faction.Pelagia, Faction.Directorate]);
+      for (const phantom of phantoms) {
+        placed++;
+        const depth = phantom.depth!;
+        const rating = effectivePressureRating(phantom.kind!, phantom.faction!);
+        const band = (Math.min(rating, DepthBand.Abyssal + 1) - 1) as DepthBand;
+        const at = `seed ${seed}: a ${UnitKind[phantom.kind!]} reported at ${depth} m`;
+        assert.ok(Number.isInteger(depth), at);
+        assert.ok(
+          depth >= 2600 && depth <= 2900 - FOLLOW_FLOOR.CLEARANCE_M,
+          `${at}, outside the water`
+        );
+        assert.ok(depth < DEPTH_BANDS[band].max, `${at}, past its rating`);
+      }
+    }
+    assert.ok(placed > 0, 'the premise: hulls rated for the water are claimed');
+  });
+
+  it('draws no deeper than the band its rating ends at, at the top of the roll', () => {
+    // A roof below each delivered depth, so the draw is the only answer and
+    // the rating, not the floor, bounds it: the band's last whole metre, never
+    // its edge, which `depthBandFor` counts in the next band (#1294).
+    const kinds = Object.values(UnitKind).filter((k): k is UnitKind => typeof k === 'number');
+    for (const [roofM, rating, edgeM] of [
+      [350, 1, 400],
+      [1700, 2, 1800],
+    ] as const) {
+      const kind = kinds.find((k) => effectivePressureRating(k, Faction.Pelagia) === rating);
+      assert.ok(kind !== undefined, `the premise: a Pelagia hull rated ${rating}`);
+      const terrain = new Terrain(MAP_M, MAP_M, 250);
+      terrain.fillGround(0, 0, MAP_M, MAP_M, { ceilingM: roofM, floorM: DEPTH.MAX_M });
+      const at = (roll: number) => phantomDepthM(terrain, 4000, 4000, kind, Faction.Pelagia, roll);
+      assert.equal(at(1 - Number.EPSILON), edgeM - 1, `rating ${rating}, the top of the roll`);
+      assert.equal(at(0), roofM, `rating ${rating}, the bottom of the roll`);
+    }
+  });
+
+  it('places no phantom where no hull could hold below the Lid', () => {
+    // A floor at 120 m leaves no water below the Lid's 150 m with room off the
+    // seabed: one fewer lie, never a lie in rock.
+    const shallow = () => {
+      const terrain = fieldsMap();
+      terrain.fillGround(0, 0, MAP_M, MAP_M, { floorM: 120 });
+      return terrain;
+    };
+    assert.ok(LID.DEPTH_M > 120 - FOLLOW_FLOOR.CLEARANCE_M, 'the premise: no admissible depth');
+    for (const seed of [31, 32, 33]) {
+      const { contacts, phantoms } = pingAt(shallow(), seed, 100, [Faction.Pelagia]);
+      assert.equal(contacts.length - phantoms.length, 1, 'the premise: the ping lights the enemy');
+      assert.equal(phantoms.length, 0, `seed ${seed}: a phantom in rock`);
+    }
   });
 
   /**

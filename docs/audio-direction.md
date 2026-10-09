@@ -56,6 +56,8 @@ This is the rule the whole section exists to protect. Stereo position is the pla
 
 Ghost markers decay over 20 s. Their voices decay with them: level falls on the same curve as marker alpha, and the loop's period lengthens by up to 40% so a fading contact audibly slows rather than simply thinning. Contacts refreshed by a new detection snap back to full level in 80 ms — the return of a sound that was dying is itself a warning.
 
+**A picture that stops is let go.** The mix hears contacts only on a snapshot, and a voice stops only on one that leaves its contact out, so when the picture ends — the match is over, or the signal is lost — every contact voice fades out as a contact leaving does, and the residue beds begin §6's slow fade, rather than holding their last level. A snapshot can follow the result — the deciding tick's, after every mission result and after a skirmish result reached on an Echo tick: the chart draws it, and the mix lets it go. The chart's ghosts fade on their own clock, for up to 20 s, so the screen says more than the ear for that time and never less, which is the direction §11 allows. A reconnection's first snapshot brings back whatever the chart still tracks, and a rematch's first is heard as the new match's (#1326).
+
 ---
 
 ## 4. Your Own Loudness
@@ -683,7 +685,12 @@ The one thing deliberately withheld is the pinger's **position**. The victim get
 which is what §11's screen-edge flash asks for. A ping resolves by hard radius while the
 pinger's own self-reveal travels by propagation, so in a masking biome a player can be lit
 by something they cannot hear back — sending coordinates would close that gap on their
-behalf.
+behalf. So a side gets **one bearing per ping**, from the nearest of its units the ping first
+lights, and its other lit units are told they were lit without one: two bearings are two rays
+that meet on the pinger, which is coordinates by another route (#1290). Only a unit or a
+structure is told: ordnance has no ears. The mix strikes once per bearing, panned, and once
+unpanned on a tick that carries none, so the panned strike keeps its image. That unpanned
+strike's visual half is one contact-log row, `bearing unknown`; its edge flash is owed (#1306).
 
 **The self bed follows fleet SIG, not `peakSig`.** The HUD number folds in structures, and a
 base six kilometres away would pin the bed at "full plant" for the whole match, making the

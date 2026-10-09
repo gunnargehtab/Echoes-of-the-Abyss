@@ -509,6 +509,14 @@ export const Ordnance = defineComponent({
    * the case a committed shot is bought for.
    */
   locked: Types.ui8,
+  /**
+   * The SIG it sounds at, short of a veil and of its detonation: its kind's,
+   * or a laid decoy's quieter figure (#1314). Kept here because the kind
+   * cannot say it — a laid decoy is a `Noisemaker`, and must be, or a seeker
+   * could tell it from a countermeasure — and `ordnanceSystem` rewrites the
+   * live SIG from it every tick.
+   */
+  baseSig: Types.f32,
 });
 
 /**

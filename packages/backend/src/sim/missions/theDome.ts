@@ -901,18 +901,19 @@ export const ATTENDING_THE_DOME: MissionDefinition = {
       note: 'Born at 2,900 m, in the galleries cut into the fan’s east wall (habitats.md §6)',
     },
 
-    // 18:30 — the pack. *Baffle*'s three beats, inherited whole, wart and all:
-    // `driveTo` with no `depthM` leaves a driven Draymaw climbing toward its
-    // species' 900 m as it runs the axis. That is *Baffle*'s literal as it
-    // stands, and a document that quietly fixed another mission's water would
-    // break the seam it exists to keep (§13).
+    // 18:30 — the pack. *Baffle*'s three beats, inherited whole: driven up the
+    // axis at 1,600 m to 19:30. Until #1212 *Baffle*'s drive named no depth,
+    // so a driven Draymaw climbed toward its species' 900 m as it ran the
+    // axis, and this literal kept the climb, because a document that quietly
+    // fixed another mission's water would break the seam it exists to keep
+    // (§13). *Baffle* moved first, and this follows it.
     {
       atTick: T(18, 30),
       kind: 'creature',
       tag: 'pack-a',
       species: FaunaSpecies.Draymaw,
       spawnAt: { x: 1450, y: 4000, depthM: WATCH_DEPTH_M },
-      driveTo: { x: 1450, y: 2500 },
+      driveTo: { x: 1450, y: 2500, depthM: WATCH_DEPTH_M },
       untilTick: T(19, 30),
       loud: true,
       note: 'The telegraph — ninety seconds in front of the close, on the exact line the count is taken across',
@@ -923,7 +924,7 @@ export const ATTENDING_THE_DOME: MissionDefinition = {
       tag: 'pack-b',
       species: FaunaSpecies.Draymaw,
       spawnAt: { x: 1550, y: 3950, depthM: WATCH_DEPTH_M },
-      driveTo: { x: 1500, y: 2600 },
+      driveTo: { x: 1500, y: 2600, depthM: WATCH_DEPTH_M },
       untilTick: T(19, 30),
       loud: true,
       note: '',
@@ -934,7 +935,7 @@ export const ATTENDING_THE_DOME: MissionDefinition = {
       tag: 'pack-c',
       species: FaunaSpecies.Draymaw,
       spawnAt: { x: 1500, y: 4050, depthM: WATCH_DEPTH_M },
-      driveTo: { x: 1550, y: 2550 },
+      driveTo: { x: 1550, y: 2550, depthM: WATCH_DEPTH_M },
       untilTick: T(19, 30),
       loud: true,
       note: '',

@@ -160,6 +160,25 @@ describe('the esc menu: Escape steps back the way it came', () => {
   });
 });
 
+describe('the esc menu: a held Esc steps back once (#1348)', () => {
+  it('takes no step from a repeat of the Esc that opened it', async () => {
+    // docs/ui-ux.md §9: a held key acts once. The press that opened the menu
+    // went on repeating, and each repeat stepped the menu back to the water,
+    // where the next opened it again.
+    const { view, doors } = await escMenu();
+    try {
+      await view.act(() => {
+        dispatchWindow('keydown', { code: 'Escape', repeat: true, preventDefault() {} });
+      });
+      assert.equal(doors.resumes, 0, 'a repeat closed the menu');
+      await escape(view);
+      assert.equal(doors.resumes, 1, 'the premise: a press does');
+    } finally {
+      await view.unmount();
+    }
+  });
+});
+
 describe('the esc menu: a seat left on purpose is not held', () => {
   it('arms the leave entry rather than taking it', async () => {
     // §1.5 and §9.5: "the first press names the cost, the second one pays it".

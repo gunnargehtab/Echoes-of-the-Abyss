@@ -79,6 +79,9 @@ export function EscMenu({ ended, onResume, onExit }: EscMenuProps) {
     const onKey = (event: KeyboardEvent) => {
       if (event.code !== 'Escape') return;
       event.preventDefault();
+      // A held Esc steps back once, not a level per repeat: the water's own
+      // listener opened the menu again on the next one (docs/ui-ux.md §9, #1348).
+      if (event.repeat) return;
       if (view === 'controls') {
         setView('settings');
         return;

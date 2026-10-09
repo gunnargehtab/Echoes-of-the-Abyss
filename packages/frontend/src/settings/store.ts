@@ -12,7 +12,12 @@
  * cannot boot because JSON.parse threw is a bug.
  */
 
-import { ACTIONS, DEFAULT_BINDINGS, type Bindings, type LayoutName } from '../input/bindings.ts';
+import {
+  DEFAULT_BINDINGS,
+  resolveBindings,
+  type Bindings,
+  type LayoutName,
+} from '../input/bindings.ts';
 import { PALETTES, type PaletteName } from '../game/palette.ts';
 import { LAMP_HALOS_DEFAULT } from '../game/lampHalo.ts';
 import type { TrimBus } from '../audio/engine.ts';
@@ -43,7 +48,11 @@ export interface Settings {
    * everyone who never edited it.
    */
   bindingLayout: LayoutName;
-  /** Bindings that differ from the layout. Merged over it, never replacing it. */
+  /**
+   * Every action's binding: a save writes the whole table. An action a stored
+   * record lacks is filled on load from `bindingLayout`'s table, the standard
+   * one for `custom` (#1343).
+   */
   bindings: Bindings;
   /** Colour-vision palette (ui-ux.md §11, tables in style-neon-noir.md). */
   palette: PaletteName;
@@ -59,6 +68,13 @@ export interface Settings {
    * once written, an explicit `false` is honoured over the OS.
    */
   reducedMotion: boolean;
+  /**
+   * Whether the player set `reducedMotion` themselves, on `lampHalosChosen`'s
+   * pattern. Every save writes the whole record, so a stored value alone could
+   * not tell a choice from the OS's answer it was saved at, and any slider
+   * moved here pinned the setting to it (#1344).
+   */
+  reducedMotionChosen: boolean;
   /**
    * The acoustic veil's strength in the conn view, 0-1 (docs/ui-ux.md §4.5
    * and §11).
@@ -101,6 +117,11 @@ export interface Settings {
    * explicit `false` is honoured over the device.
    */
   speakerProfile: boolean;
+  /**
+   * Whether the player set `speakerProfile` themselves, as `lampHalosChosen`,
+   * migration included (#1344).
+   */
+  speakerProfileChosen: boolean;
   /**
    * Whether a classified contact is heard as *what it is* — §8's timbre
    * families (docs/audio-direction.md §8, docs/ui-ux.md §14, #731).
@@ -164,10 +185,12 @@ export const DEFAULT_SETTINGS: Settings = {
   palette: 'standard',
   uiScale: 1,
   reducedMotion: false,
+  reducedMotionChosen: false,
   acousticVeil: 1,
   waterDensity: 1,
   edgeScroll: true,
   speakerProfile: false,
+  speakerProfileChosen: false,
   contactTimbre: false,
   lampHalos: LAMP_HALOS_DEFAULT,
   lampHalosChosen: false,
@@ -194,6 +217,13 @@ function sanitise(raw: unknown): Settings {
   const record = raw as Record<string, unknown>;
   if (record.version !== 1) return defaults();
   const buses = (record.busVolumes ?? {}) as Record<string, unknown>;
+  // A record from before the flag (#1344): its stored `true` counts as chosen,
+  // since reduced motion keeps every fact on screen (docs/ui-ux.md §11) and a
+  // player who turned it on must not get the motion back; its `false` follows
+  // the OS, since every save wrote one whether or not anyone chose it.
+  const motionChosen =
+    record.reducedMotionChosen === true ||
+    (record.reducedMotionChosen === undefined && record.reducedMotion === true);
   return {
     version: 1,
     profileName: typeof record.profileName === 'string' ? record.profileName : '',
@@ -214,11 +244,8 @@ function sanitise(raw: unknown): Settings {
         : 0,
     mono: record.mono === true,
     visualFirst: record.visualFirst === true,
-    bindingLayout:
-      record.bindingLayout === 'oneHanded' || record.bindingLayout === 'custom'
-        ? record.bindingLayout
-        : 'default',
-    bindings: sanitiseBindings(record.bindings),
+    bindingLayout: layoutOf(record.bindingLayout),
+    bindings: sanitiseBindings(record.bindings, layoutOf(record.bindingLayout)),
     palette:
       typeof record.palette === 'string' && record.palette in PALETTES
         ? (record.palette as PaletteName)
@@ -227,13 +254,22 @@ function sanitise(raw: unknown): Settings {
       typeof record.uiScale === 'number' && Number.isFinite(record.uiScale)
         ? Math.min(UI_SCALE_MAX, Math.max(UI_SCALE_MIN, record.uiScale))
         : 1,
+    // The OS's answer unless the player chose, as the lamp halos below are the
+    // build's: a value saved beside some other setting is not a choice, bar a
+    // pre-flag on, read above.
+    reducedMotionChosen: motionChosen,
     reducedMotion:
-      typeof record.reducedMotion === 'boolean' ? record.reducedMotion : prefersReducedMotion(),
+      motionChosen && typeof record.reducedMotion === 'boolean'
+        ? record.reducedMotion
+        : prefersReducedMotion(),
     acousticVeil: clamp01(record.acousticVeil, DEFAULT_SETTINGS.acousticVeil),
     waterDensity: clamp01(record.waterDensity, DEFAULT_SETTINGS.waterDensity),
     edgeScroll: typeof record.edgeScroll === 'boolean' ? record.edgeScroll : true,
+    speakerProfileChosen: record.speakerProfileChosen === true,
     speakerProfile:
-      typeof record.speakerProfile === 'boolean' ? record.speakerProfile : prefersSpeakerProfile(),
+      record.speakerProfileChosen === true && typeof record.speakerProfile === 'boolean'
+        ? record.speakerProfile
+        : prefersSpeakerProfile(),
     // No device default to fall back on, unlike the two above: a record
     // written before this field existed loads it off, which is where a build
     // that has never offered the control would have left it anyway.
@@ -261,6 +297,11 @@ function defaults(): Settings {
   };
 }
 
+/** A stored layout name, or the standard layout for anything else. */
+function layoutOf(raw: unknown): LayoutName {
+  return raw === 'oneHanded' || raw === 'custom' ? raw : 'default';
+}
+
 /**
  * Coerce a stored binding table.
  *
@@ -270,15 +311,20 @@ function defaults(): Settings {
  * see is missing. Non-string values are simply ignored: storage is a place
  * other code writes to, and a number where a code belongs should cost the
  * player one binding, not the whole settings record.
+ *
+ * The default is the record's own layout's — the fill `resolveBindings` does,
+ * so there is one copy of it to disagree with. A one-handed record from before
+ * Engine Off existed was given the standard `Q`, which that layout gives to the
+ * ping, and `Q` cut the drive while the ping had no key (#1343).
+ *
+ * A `custom` record takes the standard table's, because it does not store the
+ * layout it started from. So a custom table that started one-handed can still
+ * load a new action onto a key it uses; the Controls screen shows that clash
+ * rather than preventing it (#1352).
  */
-function sanitiseBindings(raw: unknown): Bindings {
-  const stored = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>;
-  const merged = { ...DEFAULT_BINDINGS };
-  for (const { action } of ACTIONS) {
-    const code = stored[action];
-    if (typeof code === 'string' && code.length > 0) merged[action] = code;
-  }
-  return merged;
+function sanitiseBindings(raw: unknown, layout: LayoutName): Bindings {
+  const stored = (typeof raw === 'object' && raw !== null ? raw : {}) as Partial<Bindings>;
+  return resolveBindings(layout, stored);
 }
 
 export function loadSettings(): Settings {
@@ -292,8 +338,13 @@ export function loadSettings(): Settings {
 }
 
 export function saveSettings(patch: Partial<Omit<Settings, 'version'>>): Settings {
-  // A patch that names the halo is the player choosing it.
-  const chosen = patch.lampHalos === undefined ? {} : { lampHalosChosen: true };
+  // A patch that names a setting with a default of its own is the player
+  // choosing it.
+  const chosen = {
+    ...(patch.lampHalos === undefined ? {} : { lampHalosChosen: true }),
+    ...(patch.reducedMotion === undefined ? {} : { reducedMotionChosen: true }),
+    ...(patch.speakerProfile === undefined ? {} : { speakerProfileChosen: true }),
+  };
   const next: Settings = sanitise({ ...loadSettings(), ...patch, ...chosen, version: 1 });
   try {
     globalThis.localStorage?.setItem(STORAGE_KEY, JSON.stringify(next));

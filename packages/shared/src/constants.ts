@@ -470,6 +470,16 @@ export const DEPTH = {
    * when authored maps land (see docs/ROADMAP.md, Phase 3).
    */
   MAX_M: 3000,
+  /**
+   * TUNABLE — docs/systems-echo.md §3, which quotes both figures twice: the
+   * phantom paragraph and "Where the layer sits". The depth a hull is
+   * delivered at when its spawn names none, by `deliveryDepthM`: the Shelf for
+   * a hull rated only for the Shelf, so a PR-1 scout is not born crushing, and
+   * Mid-Water for anything rated deeper. A phantom return claims the same
+   * figure (#1294), so it lives here once; a retune moves §3's quotes with it.
+   */
+  DELIVERED_SHELF_M: 300,
+  DELIVERED_M: 600,
 } as const;
 
 /**

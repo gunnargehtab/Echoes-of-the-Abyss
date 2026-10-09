@@ -19,6 +19,7 @@ import {
   Faction,
   PROPAGATION_FACTOR,
   SIM,
+  SelfEventKind,
   STANDING_WAVE,
   StructureKind,
   UnitKind,
@@ -288,5 +289,43 @@ describe('what a standing corridor does', () => {
     );
     assert.equal(Health.hp[beside], full, 'a hull two cells off the line is untouched');
     assert.ok(Position.x[inside]! > 0, 'and the hull is still there to be hurt again');
+  });
+});
+
+describe('a blow told once on entry, whatever else the server runs (#1308)', () => {
+  it('tells the owner once, though a second match steps between its ticks', () => {
+    const match = knightMatch();
+    const bastion = bastionOf(match);
+    fund(match, 2);
+    const ax = bastion.x + 300;
+    const ay = bastion.y + 900;
+    assert.ok(match.build(0, StructureKind.SoundingSpire, ax, ay));
+    assert.ok(match.build(0, StructureKind.SoundingSpire, ax + 900, ay));
+    advance(match, SPIRE.buildTimeS + 1);
+    assert.equal(match.world.corridors.length, 1, 'the premise: one standing line');
+
+    const inside = spawnUnit(match.world, {
+      kind: UnitKind.Cruiser,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: ax + 450,
+      y: ay,
+      depth: 600,
+      weaponsCold: true,
+    });
+    // A second room, with no corridor of its own, stepping between this
+    // match's ticks as Colyseus interleaves rooms. The struck set used to be
+    // module state, which it cleared on every one of its ticks.
+    const other = knightMatch(4);
+    let told = 0;
+    for (let i = 0; i < 2 * SIM.TICK_HZ; i++) {
+      const own = match.update(STEP_MS)?.get(1);
+      told += (own?.selfEvents ?? []).filter(
+        (event) => event.kind === SelfEventKind.Damaged && event.unitId === inside
+      ).length;
+      other.update(STEP_MS);
+    }
+    assert.ok(Health.hp[inside]! < statsFor(UnitKind.Cruiser).maxHp, 'the premise: it is struck');
+    assert.equal(told, 1, 'walking into a kill-line is one engagement');
   });
 });

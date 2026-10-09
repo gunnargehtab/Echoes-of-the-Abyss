@@ -13,6 +13,13 @@
 
 import { defineQuery, hasComponent } from 'bitecs';
 import {
+  DEPTH,
+  DEPTH_BANDS,
+  DepthBand,
+  FOLLOW_FLOOR,
+  LID,
+  deliveryDepthM,
+  effectivePressureRating,
   THERMOCLINE_PAIR_FACTOR,
   THERMOCLINE_ZONE_MAX,
   thermoclineZone,
@@ -29,6 +36,7 @@ import {
   maxAudibleRangeM,
   scatterContact,
   contactHandle,
+  markHandle,
   stableUnit,
   tierFromRatio,
   unitAvailableTo,
@@ -120,6 +128,50 @@ const PHANTOM_SALT_BEARING = 14;
 const PHANTOM_SALT_RANGE = 15;
 const PHANTOM_SALT_HEADING = 16;
 const PHANTOM_SALT_NAVY = 17;
+const PHANTOM_SALT_DEPTH = 18;
+
+/**
+ * The depth a phantom reports (#1294), or `null` where the hull it claims
+ * could hold none there: the attempt is then re-rolled like any other bad
+ * placement, never given a depth in rock or past its rating.
+ *
+ * The depth that hull is delivered at (`deliveryDepthM`, the rule `spawnUnit`
+ * delivers by) wherever the water admits it, because that is where unordered
+ * hulls hold and new ones arrive; otherwise a whole metre drawn from what the
+ * water admits: below the Lid and any roof, the follow-floor clearance off
+ * the seabed, and shallower than the band its rating ends at, as
+ * `depthBandFor` counts it. Whole metres, because a true depth goes out
+ * floored to the metre too (`run`), and a draw at float precision beside
+ * depths stored as f32 was a tell of its own. It used to be the pinger's own
+ * depth, which the pinger knows exactly, so every return at it was a lie
+ * (docs/systems-echo.md §3).
+ *
+ * The rating is the kind's own for its navy, never a refit or an aura: those
+ * are the enemy's hidden state, and a phantom that carried them would
+ * announce them. What that leaves is a return only a true hull could make —
+ * deeper than its kind's own band, or off its delivered depth in water that
+ * admits it, as a refitted navy's Shelf hulls arrive at 600 m — and such a
+ * return is vouched true, as a solved contact is. A scattered ping whose
+ * returns are all vouched but one points at that one.
+ */
+export function phantomDepthM(
+  terrain: Terrain,
+  x: number,
+  y: number,
+  kind: UnitKind,
+  faction: Faction,
+  roll: number
+): number | null {
+  const rating = effectivePressureRating(kind, faction);
+  const band = Math.min(Math.max(rating, 1), DepthBand.Abyssal + 1) - 1;
+  const rated = Math.min(DEPTH_BANDS[band as DepthBand].max, DEPTH.MAX_M + 1);
+  const top = Math.ceil(Math.max(LID.DEPTH_M, terrain.ceilingAt(x, y)));
+  const bottom = Math.min(rated - 1, Math.floor(terrain.floorAt(x, y) - FOLLOW_FLOOR.CLEARANCE_M));
+  if (bottom < top) return null;
+  const delivered = deliveryDepthM(rating);
+  if (delivered >= top && delivered <= bottom) return delivered;
+  return top + Math.floor(roll * (bottom - top + 1));
+}
 
 const NAVIES: readonly Faction[] = [
   Faction.Bathyarch,
@@ -161,6 +213,12 @@ const PHANTOM_HULLS_BY_NAVY: ReadonlyMap<Faction, readonly UnitKind[]> = new Map
       .map((stats) => stats.kind),
   ])
 );
+
+/** One unit or structure an enemy ping lit, with its side's one bearing if it holds it. */
+export interface LitEntry {
+  unitId: number;
+  bearing?: number;
+}
 
 /**
  * The false returns one transmission conjured — docs/systems-echo.md §3,
@@ -282,10 +340,10 @@ export interface EchoResult {
    */
   exposureBySlot: Map<number, ExposureReport>;
   /**
-   * Slot -> the entities of theirs an enemy ping lit this tick, each with the
-   * bearing toward the emitter that lit it.
+   * Slot -> the units and structures of theirs an enemy ping lit this tick.
+   * One of them per ping carries the bearing toward the emitter (#1290).
    */
-  litBySlot: Map<number, { unitId: number; bearing: number }[]>;
+  litBySlot: Map<number, LitEntry[]>;
   /**
    * Acoustic residue each slot can currently read, keyed by slot.
    *
@@ -369,6 +427,21 @@ export class EchoLayer {
   /** What each slot currently holds, by mark id. Persists between sweeps. */
   private readonly markState = new Map<number, Map<number, EchoMarkInfo>>();
   /**
+   * Slot -> mark id -> the handle that slot holds the mark under (#1292).
+   *
+   * A mark's id is the layer's, one counter per match, and it used to go out
+   * as it was: a slot that heard one new mark read off its id how many it had
+   * never heard, which is the map-wide total contacts' handles exist to deny.
+   * So a mark goes out under a handle minted from a per-slot count of the
+   * marks that slot has heard, through `markHandle`'s keyed permutation, and
+   * held for the mark's life, so a mark heard again keeps its handle. The key
+   * is the marks' own: under the contacts' key a slot's nth mark and nth
+   * contact shared a value, and its marks decoded its contacts' mint order,
+   * which is where §3's phantoms hide.
+   */
+  private readonly markHandles = new Map<number, Map<number, number>>();
+  private readonly nextMarkHandle = new Map<number, number>();
+  /**
    * Mark id to its index in the layer, rebuilt each pass.
    *
    * An index and not a copy: holding `{x, y, intensity}` per mark allocated
@@ -408,7 +481,7 @@ export class EchoLayer {
   get contactPathWalksLastPass(): number {
     return this.contactWalks;
   }
-  private readonly lit = new Map<number, { unitId: number; bearing: number }[]>();
+  private readonly lit = new Map<number, LitEntry[]>();
   /**
    * Pinger -> the entities its current transmission has already lit.
    *
@@ -423,6 +496,21 @@ export class EchoLayer {
    * it is still told, which is correct: it was just lit.
    */
   private readonly litAlready = new Map<number, Set<number>>();
+  /**
+   * Pinger -> the slots its current transmission has already given a bearing.
+   *
+   * One bearing per ping per side, from the nearest of that side's units the
+   * ping first lights (#1290). Every lit unit's bearing used to go out, and
+   * two of them are two rays that meet on the pinger: a direction became a
+   * location, which `SelfEvent.bearing` exists not to send. Dropped with
+   * `litAlready`.
+   */
+  private readonly bearingGiven = new Map<number, Set<number>>();
+  /** Scratch for one pinger's pass: each side's lit unit nearest it so far. */
+  private readonly nearestLit = new Map<
+    number,
+    { entry: LitEntry; distance: number; x: number; y: number }
+  >();
   /** Pinger -> the phantoms its current transmission returned. */
   private readonly phantoms = new Map<number, PhantomReturns>();
   /**
@@ -605,6 +693,7 @@ export class EchoLayer {
     }
     for (const slotBest of this.best.values()) slotBest.delete(eid);
     this.litAlready.delete(eid);
+    this.bearingGiven.delete(eid);
     this.dropPhantoms(eid);
   }
 
@@ -624,6 +713,23 @@ export class EchoLayer {
     if (index === undefined) return;
     for (const contact of returns.contacts) index.delete(contact.id);
     if (index.size === 0) this.phantomByHandle.delete(returns.slot);
+  }
+
+  /** The handle a slot holds a mark under, minted the first time it hears it. */
+  private markHandleFor(slot: number, markId: number): number {
+    let slotHandles = this.markHandles.get(slot);
+    if (slotHandles === undefined) {
+      slotHandles = new Map();
+      this.markHandles.set(slot, slotHandles);
+    }
+    let handle = slotHandles.get(markId);
+    if (handle === undefined) {
+      const index = (this.nextMarkHandle.get(slot) ?? 0) + 1;
+      this.nextMarkHandle.set(slot, index);
+      handle = markHandle(this.seed, slot, index);
+      slotHandles.set(markId, handle);
+    }
+    return handle;
   }
 
   private handleFor(slot: number, eid: number): number {
@@ -878,7 +984,8 @@ export class EchoLayer {
    * and the tick the transmission began, so a replay conjures the same
    * phantoms in the same water. Placement is rejection-sampled: plausible
    * bearings and ranges inside the reveal, clear of the pinger, clear of
-   * anything real the ping lit, and on the map. A phantom that finds no such
+   * anything real the ping lit, on the map, and in water the claimed hull
+   * could hold (`phantomDepthM`). A phantom that finds no such
    * place in `PHANTOM_PLACEMENT_TRIES` is not placed — one fewer lie, never
    * a lie on top of a truth.
    *
@@ -922,7 +1029,6 @@ export class EchoLayer {
       SCATTER.PHANTOMS_MIN + Math.floor(stableUnit(seed, key, PHANTOM_SALT_COUNT, began) * span);
     const terrain = world.terrain;
     const clearance2 = SCATTER.PHANTOM_CLEARANCE_M * SCATTER.PHANTOM_CLEARANCE_M;
-    const depth = Position.depth[pinger]!;
 
     const contacts: Contact[] = [];
     const anchors: PhantomAnchor[] = [];
@@ -958,6 +1064,17 @@ export class EchoLayer {
         const hulls = PHANTOM_HULLS_BY_NAVY.get(faction)!;
         const kind =
           hulls[Math.floor(stableUnit(seed, key, PHANTOM_SALT_KIND, step) * hulls.length)]!;
+        const depth = phantomDepthM(
+          terrain,
+          x,
+          y,
+          kind,
+          faction,
+          stableUnit(seed, key, PHANTOM_SALT_DEPTH, step)
+        );
+        // No water here that hull could hold: a lie in rock, or past its
+        // rating, is one the pinger could see through.
+        if (depth === null) continue;
         contacts.push({
           id: this.mintHandle(slot),
           tier: ResolutionTier.Track,
@@ -1047,6 +1164,12 @@ export class EchoLayer {
         if (!this.liveMarkIds.has(id)) held.delete(id);
       }
     }
+    // A mark's handle goes with the mark, heard or not this sweep.
+    for (const slotHandles of this.markHandles.values()) {
+      for (const id of slotHandles.keys()) {
+        if (!this.liveMarkIds.has(id)) slotHandles.delete(id);
+      }
+    }
 
     if (marks.length > 0) {
       // Listeners that clear the HYD wall. Most of a force does not — a
@@ -1090,7 +1213,7 @@ export class EchoLayer {
             this.markHeard[slot] = 1;
             remaining--;
             held.set(mark.id, {
-              id: mark.id,
+              id: this.markHandleFor(slot, mark.id),
               x: mark.x,
               y: mark.y,
               kind: mark.kind,
@@ -1114,13 +1237,13 @@ export class EchoLayer {
       const out = this.markResults.get(slot)!;
       const held = this.markState.get(slot);
       if (held === undefined) continue;
-      for (const info of held.values()) {
+      for (const [markId, info] of held) {
         // Refreshed from the live mark rather than emitted as stored, so a
         // held reading *fades* with the thing it describes instead of freezing
         // at whatever it was when the sweep last touched it. Position too: a
         // reinforced battle site drifts, and a client watching one mark should
         // see it drift.
-        const index = this.liveMarkIds.get(info.id);
+        const index = this.liveMarkIds.get(markId);
         if (index === undefined) continue;
         const live = marks[index]!;
         info.x = live.x;
@@ -1459,6 +1582,7 @@ export class EchoLayer {
         hasComponent(world, ActivePing, pinger) && ActivePing.remainingS[pinger]! > 0;
       if (!stillPinging) {
         this.litAlready.delete(pinger);
+        this.bearingGiven.delete(pinger);
         // The phantoms go with the transmission that conjured them. Nothing
         // re-sends them after this tick, so on the client they fade exactly
         // as a real hull the ping lit and then lost.
@@ -1497,6 +1621,14 @@ export class EchoLayer {
         this.conjurePhantoms(world, pinger, pingerSlot, px, py, radiusM, revealed, entities);
       }
 
+      // The victim's side of the same event. Only a unit or a structure is
+      // told: ordnance has no ears. Each side gets one bearing per ping, from
+      // the nearest of its units the ping first lights, and its other lit
+      // units are told without one (#1290) — see SelfEvent.bearing for why a
+      // direction and never a location.
+      let given = this.bearingGiven.get(pinger);
+      const nearest = this.nearestLit;
+      nearest.clear();
       for (let j = 0; j < revealed.length; j++) {
         const target = revealed[j]!;
         const targetSlot = Owner.slot[target]!;
@@ -1507,13 +1639,25 @@ export class EchoLayer {
         if (distance > radiusM) continue;
         this.record(pingerSlot, target, ResolutionTier.Track, px, py);
 
-        // The victim's side of the same event. Bearing only, from their hull
-        // toward the emitter — see SelfEvent.bearing for why not a position.
         const litForSlot = this.lit.get(targetSlot);
-        if (litForSlot !== undefined && !alreadyLit.has(target)) {
-          alreadyLit.add(target);
-          litForSlot.push({ unitId: target, bearing: Math.atan2(py - ty, px - tx) });
+        if (litForSlot === undefined || alreadyLit.has(target)) continue;
+        if (!hasComponent(world, Unit, target) && !hasComponent(world, Structure, target)) continue;
+        alreadyLit.add(target);
+        const entry: LitEntry = { unitId: target };
+        litForSlot.push(entry);
+        if (given?.has(targetSlot) === true) continue;
+        const best = nearest.get(targetSlot);
+        if (best === undefined || distance < best.distance) {
+          nearest.set(targetSlot, { entry, distance, x: tx, y: ty });
         }
+      }
+      for (const [slot, best] of nearest) {
+        best.entry.bearing = Math.atan2(py - best.y, px - best.x);
+        if (given === undefined) {
+          given = new Set();
+          this.bearingGiven.set(pinger, given);
+        }
+        given.add(slot);
       }
     }
 
@@ -1675,7 +1819,10 @@ export class EchoLayer {
             // same wall that names a hull, exactly like a creature's species.
             contact.ordnance = Ordnance.kind[eid] as OrdnanceKind;
           }
-          contact.depth = Position.depth[eid]!;
+          // To the metre (#1294): a phantom's depth is a whole metre, and a
+          // true one beside it at f32 precision was a tell. Floored, so a
+          // depth keeps its band: 399.6 m is still the Shelf.
+          contact.depth = Math.floor(Position.depth[eid]!);
         }
 
         if (resolved.tier >= ResolutionTier.Track) {

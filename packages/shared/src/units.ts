@@ -12,7 +12,7 @@
  */
 
 import { Faction, UnitKind } from './types.js';
-import { FACTION_COMBAT, FACTION_PRESSURE_BASELINE, HULL_EFFECTS } from './constants.js';
+import { DEPTH, FACTION_COMBAT, FACTION_PRESSURE_BASELINE, HULL_EFFECTS } from './constants.js';
 
 /**
  * A carrier's deck — docs/systems-combat.md §15.
@@ -1972,4 +1972,15 @@ export const MAX_UNIT_RADIUS_M =
  */
 export function effectivePressureRating(kind: UnitKind, faction: Faction): number {
   return Math.max(UNIT_STATS[kind].pressureRating, FACTION_PRESSURE_BASELINE[faction]);
+}
+
+/**
+ * The depth a hull rated `rating` is delivered at when its spawn names none
+ * (`DEPTH.DELIVERED_SHELF_M`, `DEPTH.DELIVERED_M`). `spawnUnit` delivers at
+ * it, and a phantom return claims it (#1294): one rule, so the depth a phantom
+ * claims for a kind cannot drift from the depth `spawnUnit` delivers an
+ * unrefitted hull of that kind at.
+ */
+export function deliveryDepthM(rating: number): number {
+  return rating >= 2 ? DEPTH.DELIVERED_M : DEPTH.DELIVERED_SHELF_M;
 }

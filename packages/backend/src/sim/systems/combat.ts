@@ -194,6 +194,10 @@ function profileFor(world: SimWorld, eid: number): WeaponProfile {
  */
 function targetAlive(world: SimWorld, eid: number): boolean {
   if (eid === 0 || !hasComponent(world, Health, eid) || Health.hp[eid]! <= 0) return false;
+  // Aboard a transport: alive, but out of the water (systems/carrying.ts), so
+  // no gun can reach it. Held, the order held the gun on nothing for good,
+  // since an ordered target overrides acquisition (#1318).
+  if (!hasComponent(world, Position, eid)) return false;
   if (hasComponent(world, Ordnance, eid) && !isInterceptable(Ordnance.kind[eid] as OrdnanceKind)) {
     return false;
   }
@@ -411,10 +415,11 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
           if (hasComponent(world, StaticEmitter, other)) continue;
           // Nor is a party its mission says is never fought (§4, #1239): the
           // watch that only counts, the column that only moves, the rim that
-          // only attends. Hostility is the slot, so without this a gun swung
-          // onto them of its own accord and ended them with no order given. An
-          // ordered attack still lands, and wakes the party: shooting one is
-          // the player's decision.
+          // only attends, the element that is never engaged (#1269).
+          // Hostility is the slot, so without this a gun swung onto them of
+          // its own accord and ended them with no order given. An ordered
+          // attack still lands, and wakes the party: shooting one is the
+          // player's decision.
           if (hasComponent(world, Spared, other)) continue;
           // Nor is a harmless ambient creature — the mine's argument a third
           // time. A Lampfry shoal glows at SIG 4 and is inaudible to any gun

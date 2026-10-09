@@ -14,9 +14,17 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { Faction, ResolutionTier, SelfEventKind, SIM, UnitKind } from '@echoes/shared';
+import {
+  Faction,
+  OrdnanceKind,
+  ResolutionTier,
+  SelfEventKind,
+  SIM,
+  UnitKind,
+  type SelfEvent,
+} from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
-import { spawnUnit } from '../src/sim/world.ts';
+import { spawnOrdnance, spawnUnit } from '../src/sim/world.ts';
 import { Owner, Position } from '../src/sim/components.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -293,5 +301,136 @@ describe('being lit is an event, not a state', () => {
     // victim is entitled to be told again.
     match.activeSonar(0, mine);
     assert.equal(litCount(), 1);
+  });
+});
+
+describe('one bearing per ping (#1290)', () => {
+  /**
+   * Every lit unit used to carry its own exact bearing to the pinger, and two
+   * bearings are two rays that meet on it: two Light Scouts 670 m apart put
+   * an enemy pinger within 0.1 m. `SelfEvent.bearing` is a direction and
+   * never a location, so a side gets one bearing per ping, from the nearest
+   * of its units the ping first lights, and is told of the rest without one.
+   */
+  function lit(match: Match, slot: number): SelfEvent[] {
+    const events: SelfEvent[] = [];
+    for (let i = 0; i < SIM.TICK_HZ * 4; i++) {
+      const snapshots = match.update(STEP_MS);
+      if (snapshots === null) continue;
+      events.push(
+        ...snapshots.get(slot)!.selfEvents.filter((e) => e.kind === SelfEventKind.Exposed)
+      );
+    }
+    return events;
+  }
+
+  it('gives a side one bearing, from its lit unit nearest the pinger', () => {
+    // Three hulls, each in a broadphase cell of its own, so the reveal lists
+    // them in spawn order and the nearest is neither its first nor its last:
+    // the bearing is chosen by distance, not by the order units come back in.
+    const { match, mine, theirs: farther } = twoSides(600);
+    const nearer = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 4000,
+      y: 4300,
+    });
+    const farthest = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 4000,
+      y: 3300,
+    });
+    match.activeSonar(0, mine);
+    const events = lit(match, 1);
+
+    assert.deepEqual(
+      events.map((e) => e.unitId).sort((a, b) => a - b),
+      [farther, nearer, farthest].sort((a, b) => a - b),
+      'every lit hull is told it was lit'
+    );
+    const bearings = events.filter((e) => e.bearing !== undefined);
+    assert.equal(bearings.length, 1, 'one bearing for the ping, so nothing to triangulate');
+    assert.equal(bearings[0]!.unitId, nearer, 'and it is the nearer hull’s');
+    // The pinger sits 300 m off the nearer hull along -y.
+    assert.ok(Math.abs(bearings[0]!.bearing! + Math.PI / 2) < 1e-6);
+  });
+
+  it('tells a mine or a decoy nothing: neither has ears', () => {
+    const { match, mine, theirs } = twoSides(300);
+    const field = spawnOrdnance(match.world, {
+      kind: OrdnanceKind.Mine,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 4100,
+      y: 4000,
+      depth: 300,
+      pressureRating: 3,
+    });
+    const decoy = spawnOrdnance(match.world, {
+      kind: OrdnanceKind.Noisemaker,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 4000,
+      y: 4100,
+      depth: 300,
+      pressureRating: 3,
+      laid: true,
+    });
+    match.activeSonar(0, mine);
+    const events = lit(match, 1);
+
+    assert.ok(
+      events.every((e) => e.unitId !== field && e.unitId !== decoy),
+      'a mine or a decoy was told it was lit'
+    );
+    // The mine and the decoy are both nearer the pinger than the hull, and
+    // the bearing is still the hull's.
+    assert.deepEqual(
+      events.map((e) => [e.unitId, e.bearing !== undefined]),
+      [[theirs, true]]
+    );
+  });
+
+  it('tells a unit lit later in the same ping without a bearing', () => {
+    // The bearing is the ping's, not the pass's: a hull that comes into the
+    // radius after its side was given one is told it was lit, and no more.
+    const { match, mine, theirs } = twoSides(300);
+    const late = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 4000,
+      y: 6000,
+    });
+    match.activeSonar(0, mine);
+    const first = nextSnapshot(match)
+      .get(1)!
+      .selfEvents.filter((e) => e.kind === SelfEventKind.Exposed);
+    assert.deepEqual(
+      first.map((e) => [e.unitId, e.bearing !== undefined]),
+      [[theirs, true]]
+    );
+    Position.y[late] = 4500;
+    const events = lit(match, 1);
+    assert.deepEqual(
+      events.map((e) => [e.unitId, e.bearing !== undefined]),
+      [[late, false]]
+    );
+  });
+
+  it('gives the next transmission its own bearing', () => {
+    const { match, mine, theirs } = twoSides(300);
+    match.activeSonar(0, mine);
+    assert.equal(lit(match, 1).filter((e) => e.bearing !== undefined).length, 1);
+    // The reveal has lapsed: a second ping is a second event, with its own.
+    match.activeSonar(0, mine);
+    const again = lit(match, 1);
+    assert.deepEqual(
+      again.map((e) => [e.unitId, e.bearing !== undefined]),
+      [[theirs, true]]
+    );
   });
 });

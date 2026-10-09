@@ -167,8 +167,21 @@ describe('the parties a mission seats', () => {
         assert.ok(party.slot >= 0 && party.slot < MAX_SLOTS, `${mission.id}: slot ${party.slot}`);
         assert.notEqual(party.slot, DRIFT_SLOT, `${mission.id}: a delegation on the Drift's slot`);
       }
-      const slots = mission.parties.map((party) => party.slot);
-      assert.equal(new Set(slots).size, slots.length, `${mission.id}: two parties on one slot`);
+      // One slot, one navy. Parties share a slot only as one force — Thin
+      // Water's works party, corridor and second element are "one closure
+      // under one order" (docs/mission-thin-water.md §13), and on three slots
+      // they fought each other (#1269) — so a slot's parties must be one
+      // navy, and the player's slot holds the player's party alone, since the
+      // roster reads it by slot.
+      const navies = new Map<number, Set<number>>();
+      for (const party of mission.parties) {
+        navies.set(party.slot, (navies.get(party.slot) ?? new Set()).add(party.faction));
+      }
+      for (const [slot, on] of navies) {
+        assert.equal(on.size, 1, `${mission.id}: two navies on slot ${slot}`);
+      }
+      const players = mission.parties.filter((party) => party.slot === mission.playerSlot);
+      assert.equal(players.length, 1, `${mission.id}: a second party on the player's slot`);
     }
   });
 

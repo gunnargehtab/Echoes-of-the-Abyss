@@ -269,6 +269,9 @@ export function hashWorld(world: SimWorld): number {
       h = mixFloat(h, Ordnance.detonatingS[eid]!);
       h = mixFloat(h, Ordnance.targetDepthM[eid]!);
       h = mixFloat(h, Ordnance.heading[eid]!);
+      // The figure its next tick's SIG is taken from, short of a veil and a
+      // detonation; a laid decoy does not take it from its kind (#1314).
+      h = mixFloat(h, Ordnance.baseSig[eid]!);
       // Ordinal, not the raw eid, for the reason the whole function exists:
       // two identical worlds must hash alike whichever process built them.
       h = mixU32(h, ordinalOf.get(Ordnance.targetEid[eid]!) ?? -1);
@@ -614,10 +617,16 @@ export type DerivedWorldState =
   | 'regionPressureBonus'
   | 'commanderHaste'
   | 'commanderSilentImmune'
+  | 'movementHeld'
   // An outbound channel, not a store: drained into the Echo snapshot and
   // cleared. Anything that could make two runs raise different self-events has
   // already diverged in something above.
-  | 'selfEvents';
+  | 'selfEvents'
+  // One tick of memory: replaced whole on every tick a corridor stands and
+  // cleared on every tick none does. It decides only whether a `selfEvents`
+  // entry is raised, which nothing in the simulation reads, so two runs
+  // cannot differ in it without first differing in something above.
+  | 'corridorStruck';
 
 /**
  * Every field of the world is classified, and no field is classified twice.

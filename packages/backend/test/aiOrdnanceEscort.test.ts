@@ -398,3 +398,33 @@ describe('a spent hull goes to a depot and fills (#1090)', () => {
     );
   });
 });
+
+describe('the ordnance hulls aim only at what they can fire on (#1341)', () => {
+  it('fires the Broadside past a Tier-1 smudge on its own hull, at a bearing beyond it', () => {
+    // docs/systems-combat.md §7 gates a launch at Tier 2. A Tier-1 contact is a
+    // smudge the server reports at the listener's own position — here, on the
+    // hull itself — so it was the nearest, and every launch ordered at it was
+    // refused.
+    const { brief, base } = rig(Faction.Bathyarch);
+    const home = brief.spawns[brief.slot]!;
+    const { fleet } = fleetOut(brief);
+    const hull = own(201, UnitKind.Broadside, home.x + 540, home.y);
+    const smudge: Contact = { id: 8, tier: ResolutionTier.Contact, x: hull.x, y: hull.y, tick: 0 };
+    // A bearing as the layer sends one: a place, and nothing it was classified as.
+    const bearing: Contact = {
+      id: 7,
+      tier: ResolutionTier.Bearing,
+      x: hull.x + 1500,
+      y: hull.y,
+      tick: 0,
+    };
+    const torpedoes = ordersFor(brief, base, () => [...fleet, hull], [smudge, bearing]).filter(
+      (o): o is Extract<AiCommand, { kind: 'torpedo' }> => o.kind === 'torpedo' && o.unitId === 201
+    );
+    assert.ok(torpedoes.length > 0, 'the Broadside held its fire at a bearing inside its reach');
+    assert.ok(
+      torpedoes.every((o) => o.contactId === bearing.id),
+      'a launch was ordered at the smudge'
+    );
+  });
+});

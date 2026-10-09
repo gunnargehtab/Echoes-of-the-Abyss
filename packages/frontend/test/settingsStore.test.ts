@@ -10,6 +10,12 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { LAMP_HALOS_DEFAULT } from '../src/game/lampHalo.ts';
 import {
+  conflictsIn,
+  ONE_HANDED_BINDINGS,
+  resolveBindings,
+  type Bindings,
+} from '../src/input/bindings.ts';
+import {
   DEFAULT_SETTINGS,
   loadSettings,
   saveSettings,
@@ -167,6 +173,29 @@ describe('the settings store', () => {
     assert.equal(loadSettings().lampHalos, LAMP_HALOS_DEFAULT);
   });
 
+  it('fills an action a one-handed record never heard of from that layout (#1343)', () => {
+    // A record from before Engine Off: the one-handed table whole, less that
+    // action. Filled from the standard table, Engine Off took the `Q` this
+    // layout gives the ping, and `Q` cut the drive while the ping had no key.
+    const older: Partial<Bindings> = { ...ONE_HANDED_BINDINGS };
+    delete older.engineOff;
+    backing.set(
+      'echoes.settings',
+      JSON.stringify({ version: 1, bindingLayout: 'oneHanded', bindings: older })
+    );
+    const loaded = loadSettings();
+    assert.equal(
+      loaded.bindings.engineOff,
+      ONE_HANDED_BINDINGS.engineOff,
+      'Engine Off took the standard key'
+    );
+    assert.deepEqual(
+      conflictsIn(resolveBindings(loaded.bindingLayout, loaded.bindings)),
+      [],
+      'two actions loaded on one key'
+    );
+  });
+
   it('clamps the UI scale to the range §11 specifies', () => {
     for (const [stored, expected] of [
       [5, UI_SCALE_MAX],
@@ -210,6 +239,64 @@ describe('the settings store', () => {
       media(false);
       backing.delete('echoes.settings');
       assert.equal(loadSettings().reducedMotion, false);
+    } finally {
+      delete (globalThis as { matchMedia?: unknown }).matchMedia;
+    }
+  });
+
+  it('keeps following the OS after a save that names neither device default (#1344)', () => {
+    // Every save writes the whole record, and a stored answer used to win: one
+    // slider moved here pinned reduced motion and the speaker profile to
+    // whatever the OS and the device said at that moment.
+    let reduce = false;
+    let phone = false;
+    (globalThis as { matchMedia?: unknown }).matchMedia = (query: string) => ({
+      matches: query.includes('reduce') ? reduce : query.includes('coarse') && phone,
+    });
+    try {
+      saveSettings({ masterVolume: 0.5 });
+      reduce = true;
+      phone = true;
+      const loaded = loadSettings();
+      assert.equal(loaded.reducedMotion, true, 'a volume change pinned reduced motion off');
+      assert.equal(loaded.speakerProfile, true, 'a volume change pinned the speaker profile off');
+
+      // The player's own answer still outranks the OS, in either direction.
+      saveSettings({ reducedMotion: false, speakerProfile: false });
+      assert.equal(loadSettings().reducedMotion, false, 'the choice of reduced motion was lost');
+      assert.equal(loadSettings().speakerProfile, false, 'the choice of profile was lost');
+      reduce = false;
+      phone = false;
+      saveSettings({ reducedMotion: true, speakerProfile: true });
+      assert.equal(loadSettings().reducedMotion, true, 'reduced motion chosen on was lost');
+      assert.equal(loadSettings().speakerProfile, true, 'the profile chosen on was lost');
+
+      // And the other way: a save made while the OS asks for reduced motion
+      // writes it on, and that is not a choice either.
+      backing.delete('echoes.settings');
+      reduce = true;
+      saveSettings({ masterVolume: 0.5 });
+      reduce = false;
+      assert.equal(loadSettings().reducedMotion, false, 'a volume change pinned reduced motion on');
+    } finally {
+      delete (globalThis as { matchMedia?: unknown }).matchMedia;
+    }
+  });
+
+  it('keeps a pre-flag reduced motion on, and lets a pre-flag off follow (#1344)', () => {
+    // docs/ui-ux.md §11: reduced motion keeps every fact on screen, so a stored
+    // `true` from before the flag is kept as the player's; a stored `false`,
+    // which any save wrote unasked, follows the OS.
+    let reduce = false;
+    (globalThis as { matchMedia?: unknown }).matchMedia = (query: string) => ({
+      matches: query.includes('reduce') && reduce,
+    });
+    try {
+      backing.set('echoes.settings', JSON.stringify({ version: 1, reducedMotion: true }));
+      assert.equal(loadSettings().reducedMotion, true, 'an old record lost its reduced motion');
+      reduce = true;
+      backing.set('echoes.settings', JSON.stringify({ version: 1, reducedMotion: false }));
+      assert.equal(loadSettings().reducedMotion, true, 'an old off pinned the OS out');
     } finally {
       delete (globalThis as { matchMedia?: unknown }).matchMedia;
     }

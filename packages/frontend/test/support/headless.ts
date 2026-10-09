@@ -484,20 +484,31 @@ export function installHeadlessDom(): void {
   // constructors at all, so without this the forwarding throws — which is the
   // right failure, and exactly the kind of thing this file exists to supply
   // rather than to let a test route around. Carries only what the renderer's
-  // handler reads: `deltaY` and the client coordinates.
+  // handler reads: both deltas, Shift and the client coordinates.
   if ((globalThis as { WheelEvent?: unknown }).WheelEvent === undefined) {
     (globalThis as { WheelEvent?: unknown }).WheelEvent = class {
       readonly type: string;
+      readonly deltaX: number;
       readonly deltaY: number;
+      readonly shiftKey: boolean;
       readonly clientX: number;
       readonly clientY: number;
       readonly cancelable: boolean;
       constructor(
         type: string,
-        init: { deltaY?: number; clientX?: number; clientY?: number; cancelable?: boolean } = {}
+        init: {
+          deltaX?: number;
+          deltaY?: number;
+          shiftKey?: boolean;
+          clientX?: number;
+          clientY?: number;
+          cancelable?: boolean;
+        } = {}
       ) {
         this.type = type;
+        this.deltaX = init.deltaX ?? 0;
         this.deltaY = init.deltaY ?? 0;
+        this.shiftKey = init.shiftKey ?? false;
         this.clientX = init.clientX ?? 0;
         this.clientY = init.clientY ?? 0;
         this.cancelable = init.cancelable ?? false;

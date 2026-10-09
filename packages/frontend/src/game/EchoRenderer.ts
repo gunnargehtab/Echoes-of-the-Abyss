@@ -141,6 +141,7 @@ import {
   BUILD_ACTION_KIND,
   DEFAULT_BINDINGS,
   keyLabel,
+  type BindableAction,
   type Bindings,
 } from '../input/bindings.ts';
 import { FACTION_NAME } from './factions.ts';
@@ -1544,9 +1545,10 @@ export class EchoRenderer {
   private units: OwnUnit[] = [];
   /**
    * Own hulls aboard a carrier (docs/systems-echo.md §3). Kept apart from
-   * `units`: they are not in the water, so nothing draws them, nothing
-   * selects them and no order reaches them — the carrier's inspector says
-   * what it holds, and that is the whole of their presence on the scope.
+   * `units`: they are not in the water, so nothing draws them and no order
+   * reaches them — the carrier's inspector says what it holds, and that is the
+   * whole of their presence on the scope. The selection and a control group
+   * keep them, so they are in hand again when they land (#1337).
    */
   private cargo: OwnUnit[] = [];
   private ordnance: OwnOrdnance[] = [];
@@ -2614,10 +2616,18 @@ export class EchoRenderer {
       // the camera was freed; the reassignment is deliberate, is written into
       // §9's controls table, and leaves the unmodified wheel — the gesture
       // nobody may lose — on zoom.
+      //
+      // macOS turns Shift + wheel into a sideways scroll, so there the notch
+      // arrives on `deltaX` with `deltaY` at 0 — which read as down, and sank
+      // the focus whichever way the wheel turned (#1338).
       if (e.shiftKey) {
-        this.conn?.raiseFocusBy(e.deltaY < 0 ? FOCUS_STEP_M : -FOCUS_STEP_M);
+        const notch = e.deltaY !== 0 ? e.deltaY : e.deltaX;
+        if (notch !== 0) this.conn?.raiseFocusBy(notch < 0 ? FOCUS_STEP_M : -FOCUS_STEP_M);
         return;
       }
+      // A sideways scroll is not a zoom: a trackpad's sideways swipe has
+      // `deltaY` at 0, and zoomed out (#1338).
+      if (e.deltaY === 0) return;
       this.conn?.zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.1 : 1 / 1.1);
     };
 
@@ -2629,6 +2639,10 @@ export class EchoRenderer {
       // way out of a pending build, and a way out you have to aim for is not
       // one. `RESERVED_CODES` is what stops a rebinder taking it.
       if (e.code === 'Escape') {
+        // Held, it acts once like every other key: its repeats opened the menu
+        // and the menu's own listener closed it again, until the release
+        // (#1348).
+        if (e.repeat) return;
         if (this.pendingAttackMove) {
           this.pendingAttackMove = false;
           return;
@@ -2657,12 +2671,16 @@ export class EchoRenderer {
       const digit = DIGIT_KEYS[e.code];
       if (digit !== undefined) {
         e.preventDefault();
+        // A repeat lands inside the double tap's window, so a held digit
+        // re-centred the camera until the release (#1348).
+        if (e.repeat) return;
         this.controlGroup(digit, e.ctrlKey || e.metaKey, e.shiftKey);
         return;
       }
       // `0` is the tenth group nobody has to assign: every hull that fights.
       if (e.code === 'Digit0') {
         e.preventDefault();
+        if (e.repeat) return;
         this.selectArmy();
         return;
       }
@@ -2681,12 +2699,22 @@ export class EchoRenderer {
       // not being lost in place.
       if (e.code === 'Home') {
         e.preventDefault();
+        if (e.repeat) return;
         this.conn?.home();
         return;
       }
 
       const action = actionFor(this.bindings, e.code);
       if (action === null) return;
+      // A held key's auto-repeat is not another press (docs/ui-ux.md §9). The
+      // toggles read the selection off the last snapshot, so a held Space
+      // flipped Silent Running at the snapshot rate, and a held M laid mines
+      // until the cap or the magazine refused (#1348). The ping preview, the
+      // one bound hold, needs only its first keydown.
+      if (e.repeat) {
+        e.preventDefault();
+        return;
+      }
 
       // Construction arms before the selection check: §9 gives the build keys
       // no selection requirement, and a player with nothing selected still
@@ -2703,7 +2731,7 @@ export class EchoRenderer {
         if (this.refusedByMission('construction')) return;
         const stats = structureStatsFor(buildKind);
         if (this.refusedByPrice(stats.name, priceOf(stats))) return;
-        this.pendingBuild = buildKind;
+        this.armBuild(buildKind);
         return;
       }
       // A faction with no signature structure has nothing to arm, and the key
@@ -2958,9 +2986,14 @@ export class EchoRenderer {
     const members = this.controlGroups.get(group);
     if (members === undefined) return;
     // Dead units are pruned on recall rather than on death: the snapshot is
-    // the only place the client learns a hull is gone.
+    // the only place the client learns a hull is gone. A hull in a hold is not
+    // gone, as the selection's own prune says: the group keeps it, and has it
+    // in hand again when it lands (#1337).
     const alive = members.filter(
-      (id) => this.units.some((u) => u.id === id) || this.structures.some((st) => st.id === id)
+      (id) =>
+        this.units.some((u) => u.id === id) ||
+        this.cargo.some((u) => u.id === id) ||
+        this.structures.some((st) => st.id === id)
     );
     if (alive.length === 0) {
       this.controlGroups.delete(group);
@@ -2986,8 +3019,12 @@ export class EchoRenderer {
     let sy = 0;
     let n = 0;
     for (const id of members) {
+      // A hull in a hold is reported at its carrier, which is where it is, so
+      // it counts there when the group is centred (#1337).
       const entity =
-        this.units.find((u) => u.id === id) ?? this.structures.find((st) => st.id === id);
+        this.units.find((u) => u.id === id) ??
+        this.cargo.find((u) => u.id === id) ??
+        this.structures.find((st) => st.id === id);
       if (entity === undefined) continue;
       sx += entity.x;
       sy += entity.y;
@@ -3472,9 +3509,7 @@ export class EchoRenderer {
           label: `${STRUCTURE_SHORT[kind]} ${priceTag(price)}`,
           enabled: affords(stockpile, price),
           active: false,
-          action: () => {
-            this.pendingBuild = kind;
-          },
+          action: () => this.armBuild(kind),
           refusal: shortfallLine(stats.name, stockpile, price) ?? undefined,
         });
       }
@@ -3511,7 +3546,17 @@ export class EchoRenderer {
       this.bindings.buildVentTap,
     ];
     if (FACTION_STRUCTURE[this.faction] !== undefined) codes.push(this.bindings.buildSignature);
-    return codes.map(keyLabel).join('/');
+    return codes.map((code) => keyLabel(code).toUpperCase()).join('/');
+  }
+
+  /**
+   * The key an action is bound to, as the hint bar names it. Read off the live
+   * bindings like the build keys above, because every key in §9's table is a
+   * default, not a fact: the bar named the defaults, and on the one-handed
+   * layout told the player `X stop` where `X` lays a mine (#1340).
+   */
+  private keyHint(action: BindableAction): string {
+    return keyLabel(this.bindings[action]).toUpperCase();
   }
 
   /**
@@ -3992,6 +4037,17 @@ export class EchoRenderer {
   }
 
   /**
+   * Arm a placement. One click is armed at a time (docs/ui-ux.md §9), and the
+   * latest armed is the one it gives: an armed attack-move goes, as arming one
+   * drops a pending build. It used to stay, and won the click the hint bar
+   * promised the build (#1335).
+   */
+  private armBuild(kind: StructureKind): void {
+    this.pendingAttackMove = false;
+    this.pendingBuild = kind;
+  }
+
+  /**
    * Place the armed structure at a screen point.
    *
    * The server rejects illegal sites; the client does not pre-simulate
@@ -4096,9 +4152,19 @@ export class EchoRenderer {
       this.previewPing = false;
       return;
     }
-    const units = this.selectedUnits();
-    if (units.length > 0) this.callbacks.onPing(units[0]!.id);
+    const pinger = this.pinger();
+    if (pinger !== undefined) this.callbacks.onPing(pinger.id);
     this.previewPing = false;
+  }
+
+  /**
+   * The hull P pings: one, the first of the selection. The preview rings it
+   * alone, docs/ui-ux.md §6's "two rings on the terrain at the emitting unit",
+   * so the cost the player commits on is the ping's own. It used to ring every
+   * selected hull while one pinged (#1330).
+   */
+  private pinger(): OwnUnit | undefined {
+    return this.selectedUnits()[0];
   }
 
   /**
@@ -4865,10 +4931,17 @@ export class EchoRenderer {
    * shows, because §11 makes an audible fact with no visual equivalent a bug —
    * and the exposure strike is the one cue in the game the doc admits has "no
    * visual equivalent that arrives sooner". Sooner is not the same as never:
-   * it gets a screen-edge flash on the same bearing, arriving with the sound
-   * rather than before it.
+   * a strike that carries a bearing gets a screen-edge flash on it, arriving
+   * with the sound rather than before it. One with none gets its log row, and
+   * its flash is owed (#1306).
    */
   private selfAudioFrame(snapshot: EchoSnapshot, now: number): SelfAudioFrame {
+    // A ping gives a side one bearing (#1290), so a tick whose exposures carry
+    // none is hulls lit later in a ping. The mix strikes once for them,
+    // unpanned, and the log writes that one strike's row.
+    let bareRowDue = !snapshot.selfEvents.some(
+      (event) => event.kind === SelfEventKind.Exposed && event.bearing !== undefined
+    );
     for (const event of snapshot.selfEvents) {
       switch (event.kind) {
         case SelfEventKind.Ping: {
@@ -4891,6 +4964,17 @@ export class EchoRenderer {
               fresh: true,
               label: 'you were pinged',
               bearingDeg: compassDeg(event.bearing),
+            });
+          } else if (bareRowDue) {
+            // Lit, and nothing about from where: the log prints "bearing
+            // unknown". Its edge flash is not specified yet (#1306).
+            bareRowDue = false;
+            this.callbacks.onContactEvent({
+              id: `own:${this.ownRowSeq++}`,
+              tick: snapshot.tick,
+              tier: ResolutionTier.Silent,
+              fresh: true,
+              label: 'you were pinged',
             });
           }
           break;
@@ -5791,6 +5875,7 @@ export class EchoRenderer {
     // any of them: an arc is kept only where no *other* own hull already hears
     // into that water, so the whole set is the input to each ring.
     const ringed: Array<{ unit: OwnUnit; selected: boolean; disc: ReachDisc }> = [];
+    const pingerId = this.previewPing ? this.pinger()?.id : undefined;
 
     for (const unit of this.units) {
       const isSelected = this.selected.has(unit.id);
@@ -5829,15 +5914,15 @@ export class EchoRenderer {
       ringed.push({ unit, selected: isSelected, disc: { x: d.x, y: d.y, radiusM: range } });
 
       // Hold the preview key to see exactly how badly a ping would expose you.
-      // Selection only, and not the §3.5 gate: a ping is an order, and the
-      // hulls an order would reach are the ones the player has in hand.
+      // The pinger only, and not the §3.5 gate: a ping is an order, and it
+      // reaches the one hull `commandPing` sends it from (#1330).
       //
       // Outside the envelope too, and deliberately: a ping's radius is a fixed
       // fact about the transmission rather than this hull's own reach, so it
       // is not one of the discs the union is taken over and is not hidden by
       // one. It is also the answer to a question the player asked by holding
       // a key, which is the one thing that always earns its own line.
-      if (this.previewPing && isSelected) {
+      if (unit.id === pingerId) {
         if (this.traceCircle(g, d.x, d.y, ACTIVE_SONAR.REVEAL_RADIUS_M, null)) {
           g.stroke({
             width: 2 * this.uiScale,
@@ -8644,21 +8729,23 @@ export class EchoRenderer {
     if (harvester !== undefined) {
       const throttle = THROTTLE_LABEL[harvester.throttle!];
       const state = `harvester [${throttle}] ${harvester.cargo?.toFixed(0) ?? 0} cargo`;
-      if (heldAll !== null) return `${state}  ·  ${heldAll}  ·  V throttle`;
-      return `${state}  ·  RMB node/move  ·  V throttle`;
+      const throttleKey = `${this.keyHint('throttle')} throttle`;
+      if (heldAll !== null) return `${state}  ·  ${heldAll}  ·  ${throttleKey}`;
+      return `${state}  ·  RMB node/move  ·  ${throttleKey}`;
     }
+    const standing =
+      `${this.keyHint('stop')} stop  ·  ${this.keyHint('holdPosition')} hold  ·  ` +
+      `CTRL+RMB torpedo  ·  ${this.keyHint('silentRunning')} silent  ·  ${this.keyHint('ping')} ping`;
     if (heldAll !== null) {
       // What is left of the generic line once every way to move is off it.
-      return (
-        `${this.selected.size} selected  ·  ${heldAll}  ·  X stop  ·  H hold  ·  ` +
-        `CTRL+RMB torpedo  ·  SPACE silent  ·  P ping`
-      );
+      return `${this.selected.size} selected  ·  ${heldAll}  ·  ${standing}`;
     }
     // No `D dive · A rise` any more: a right click carries its depth, and the
     // left + right drag is how the depth it carries is chosen (§9, #1132).
     return this.pendingAttackMove
       ? `${this.selected.size} selected  ·  ATTACK-MOVE armed: click the water (SHIFT queues, ESC cancels)`
-      : `${this.selected.size} selected  ·  RMB move (SHIFT queue)  ·  L+R drag depth  ·  W attack-move  ·  X stop  ·  H hold  ·  CTRL+RMB torpedo  ·  SPACE silent  ·  P ping`;
+      : `${this.selected.size} selected  ·  RMB move (SHIFT queue)  ·  L+R drag depth  ·  ` +
+          `${this.keyHint('attackMove')} attack-move  ·  ${standing}`;
   }
 
   destroy(): void {

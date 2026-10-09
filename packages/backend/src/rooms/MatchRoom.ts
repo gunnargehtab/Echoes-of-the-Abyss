@@ -825,7 +825,9 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
       // rebuilt rather than reset, because a Match owns an ECS world and
       // unwinding one in place is how stale entities survive into game two.
       // The new world builds fresh terrain, so the ground's change log starts
-      // over too and every client is re-sent the whole grid below.
+      // over too and every client is re-sent the whole grid below. The old
+      // world is given back first, or its ids are spent for good (#1278).
+      this.match.dispose();
       this.match = this.newMatch();
       this.sentGroundRevision = 0;
     }
@@ -985,6 +987,8 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
           ? ''
           : `; worst mission pass ${this.match.worstMissionMsCost.toFixed(3)} ms`)
     );
+    // After the line above, which reads the world's tick (#1278).
+    this.match.dispose();
   }
 
   /**

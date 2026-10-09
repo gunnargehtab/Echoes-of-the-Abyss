@@ -29,7 +29,7 @@ import {
   type DrawReport,
 } from '@echoes/shared';
 import { defineQuery, hasComponent } from 'bitecs';
-import { Health, Owner, Position, Structure, UnderConstruction } from '../components.ts';
+import { Health, Owner, Position, Structure, UnderConstruction, Unit } from '../components.ts';
 import type { SimWorld } from '../world.ts';
 
 const structures = defineQuery([Structure, Owner, Health]);
@@ -88,13 +88,19 @@ export function thermalSystem(world: SimWorld): void {
   }
 }
 
-/** Which slot, if any, has a Consortium hull holding this vent. */
+/**
+ * Which slot, if any, has a Consortium hull or structure holding this vent.
+ * A creature (faction 0 is the Consortium's) and ordnance are nobody's
+ * presence, `anyFactionWithin`'s rule (#1304): the Drift's slot was credited
+ * draw for animals on a vent.
+ */
 function bathyarchHolding(world: SimWorld, x: number, y: number, radiusM: number): number | null {
   const entities = holders(world);
   for (let i = 0; i < entities.length; i++) {
     const eid = entities[i]!;
     if (Owner.faction[eid] !== Faction.Bathyarch) continue;
     if (Health.hp[eid]! <= 0) continue;
+    if (!hasComponent(world, Unit, eid) && !hasComponent(world, Structure, eid)) continue;
     const dx = Position.x[eid]! - x;
     const dy = Position.y[eid]! - y;
     if (dx * dx + dy * dy <= radiusM * radiusM) return Owner.slot[eid]!;

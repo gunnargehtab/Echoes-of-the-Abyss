@@ -333,7 +333,14 @@ export interface Contact {
   /** World position in metres. Blurred at Tier 2, exact at Tier 3+. */
   x: number;
   y: number;
-  /** Depth in metres. Only present at Tier 3+. */
+  /**
+   * Depth in whole metres, floored (#1294), and only present at Tier 3+. A
+   * phantom's is drawn in whole metres, so a fraction would sort the truth
+   * from it. The floor keeps every band edge, the Lid and the Directorate's
+   * shallows on their side; the thermocline's lower edge it does not, since
+   * `thermoclineZone` counts below it from past 1,300 m, so a hull at
+   * 1,300.4 m reports the duct's 1,300.
+   */
   depth?: number;
   /** Only known at Tier 3+ (classification). Exactly one of kind/structure. */
   kind?: UnitKind;
@@ -910,7 +917,9 @@ export interface SelfEvent {
   unitId: number;
   /**
    * `Exposed` only: bearing in radians from your unit toward the emitter that
-   * lit it.
+   * lit it — on one lit unit per ping, the nearest of those the ping first
+   * lights, and on no other (#1290). Every lit unit used to carry its own, and
+   * two bearings are two rays that meet on the pinger.
    *
    * A bearing and not a position, deliberately. docs/audio-direction.md §11
    * asks for a screen-edge flash "on the bearing of the pinging emitter", and
@@ -1117,9 +1126,11 @@ export interface EchoSnapshot {
  * One Lampfry shoal, as every player sees it.
  *
  * Deliberately not a `Contact`: a contact is the resolved product of
- * listening, per player, and a shoal is a public landmark. The id is the
- * creature's match-local id — stable for the shoal's life, and it names
- * nothing the Echo Layer would withhold.
+ * listening, per player, and a shoal is a public landmark. The id is the public
+ * layers' own (`Match.tellIds`, #1297), shared with `JellyCluster`: minted the
+ * first time the creature is listed, never reused, and counting only shoals and
+ * jellies. It used to be the match-local id, and every spawn in the match draws
+ * on that counter, so the gap between two shoals counted every navy's launches.
  */
 export interface ShoalTell {
   id: number;
@@ -1134,7 +1145,8 @@ export interface ShoalTell {
  * One Tetherjelly cluster — living terrain, public chart data like biomes and
  * hazards (docs/bestiary.md §4): a mask you cannot see is confusion, not
  * dread. Position only; the −0.10 PF and 250 m radius are constants the
- * client already holds.
+ * client already holds. Its id is drawn from the same public ids as
+ * `ShoalTell`'s.
  */
 export interface JellyCluster {
   id: number;

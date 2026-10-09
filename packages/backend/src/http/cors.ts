@@ -18,7 +18,7 @@
 
 /** How the server decides whether a browser origin may talk to it. */
 export type CorsPolicy =
-  /** Explicitly opted out of the lock: every origin is answered with `*`. */
+  /** Explicitly opted out of the lock: every origin is answered, its own echoed back. */
   | { kind: 'any' }
   /** The development default: loopback on any port, and nothing else. */
   | { kind: 'loopback' }
@@ -115,6 +115,35 @@ function isLoopbackOrigin(origin: string): boolean {
   }
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
   return LOOPBACK_HOSTS.has(url.hostname);
+}
+
+/**
+ * The CORS headers this server decides for one request under `policy` (#1301).
+ *
+ * The one decision, taken for every request: Colyseus prepends a listener to
+ * the HTTP server that asks for it through `matchMaker.controller.getCorsHeaders`
+ * (`index.ts`), merges it over its own Allow-Methods, Allow-Headers and
+ * Max-Age defaults, sets the lot on every response, express routes included,
+ * and answers every preflight itself before express runs. An allowed origin
+ * is echoed with credentials, because the SDK fetches with credentials and a
+ * browser refuses `*` on such a request; `any` echoes every origin the same
+ * way. An origin the policy refuses gets no allow-origin: a browser sends
+ * only the preflight of a request that needs one, and withholds the answer to
+ * one that does not, though the server still acts on that one (#1310). A
+ * request with no `Origin` is not a cross-origin browser request, and gets
+ * none either. Every answer depends on the `Origin`, so every answer says so
+ * in `Vary`, and a cache never hands one origin's answer to another.
+ */
+export function corsHeadersFor(
+  policy: CorsPolicy,
+  origin: string | null | undefined
+): Record<string, string> {
+  if (typeof origin !== 'string' || !isOriginAllowed(policy, origin)) return { Vary: 'Origin' };
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Credentials': 'true',
+    Vary: 'Origin',
+  };
 }
 
 /** One line for the startup log, so an operator can see what was applied. */

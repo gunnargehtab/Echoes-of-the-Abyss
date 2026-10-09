@@ -568,6 +568,36 @@ describe('the audio engine: what a tick costs', () => {
     }
   });
 
+  it('lets the picture go when the match ends or the signal drops (#1326)', () => {
+    const { engine } = boot();
+    try {
+      const world = engine.graph!.world as unknown as StubGainNode;
+      engine.applySelf(selfFrame({ fleetSig: 10 }));
+      engine.applyContacts(contactFrame(5));
+      engine.onEchoTick();
+      assert.equal(engine.activeContactVoices, 5, 'the premise: five voices sounding');
+      // A voice stops only on a frame that leaves its contact out, and the mix
+      // hears none at a result or while the signal is lost: the shell lets the
+      // picture go instead.
+      engine.releasePicture();
+      assert.equal(engine.activeContactVoices, 0, 'a voice held its last level');
+      // §13 ducks the water under a contact only while it sounds, so the duck
+      // lifts with the voices rather than at a tick that may never come.
+      const water = world.gain.writes.at(-1)!.value;
+      assert.ok(
+        Math.abs(water - selfMixFor(10, false).worldGain) < 1e-9,
+        `the water stayed at ${water}, ducked under contacts that had stopped`
+      );
+      // A reconnection's first snapshot brings back what the chart tracks.
+      engine.applyContacts(contactFrame(2, 200));
+      engine.onEchoTick();
+      assert.equal(engine.activeContactVoices, 2);
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+
   it('holds the voice cap however many contacts arrive', () => {
     const { engine } = boot();
     try {

@@ -257,6 +257,7 @@ function followTheFloor(world: SimWorld, eid: number): void {
  * someone who chose to dive into it.
  */
 function holdAgainstGround(world: SimWorld, eid: number, dt: number, wasAtM: number): void {
+  holdUnderRoof(world, eid, wasAtM);
   const depth = Position.depth[eid]!;
   const floor = world.terrain.floorAt(Position.x[eid]!, Position.y[eid]!);
   if (depth <= floor) return;
@@ -279,4 +280,22 @@ function holdAgainstGround(world: SimWorld, eid: number, dt: number, wasAtM: num
   // a hull pressed against the seabed is not blowing ballast, and should not
   // sound like it is.
   if (Position.depth[eid]! <= wasAtM) DepthOrder.descending[eid] = 0;
+}
+
+/**
+ * The roof's half of the same veto: **a roof holds a climb** (docs/systems-depth.md
+ * §2, #1334). A hull fits only between the ceiling and the floor (§1), so one
+ * rising under a roof stops at the ceiling, and its order, left alone as the
+ * seabed leaves it, carries it on up once it is out from under the roof. It
+ * used to rise straight through into the rock, where `resolveStep` lets a hull
+ * step anywhere so that closing ground cannot entomb it — and a tunnel could
+ * be left through its roof.
+ *
+ * Only a hull that started the tick in the water is held. One already inside
+ * the rock, because a span closed over it, stays where it is: holding it would
+ * mean pushing it down to the water below, and terrain never lowers a hull.
+ */
+function holdUnderRoof(world: SimWorld, eid: number, wasAtM: number): void {
+  const ceiling = world.terrain.ceilingAt(Position.x[eid]!, Position.y[eid]!);
+  if (Position.depth[eid]! < ceiling && wasAtM >= ceiling) Position.depth[eid] = ceiling;
 }

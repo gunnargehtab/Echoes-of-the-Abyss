@@ -46,6 +46,13 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * 29: a laid decoy holds its quieter figure (#1314). `ordnanceSystem` rewrote
+ * every piece of ordnance's SIG from its kind each tick, so a screen laid at
+ * 45 sounded at a countermeasure's 70 from its first tick; it now keeps the
+ * figure each piece was launched at, and the fingerprint mixes that figure. A
+ * v28 file's lays replay quieter, and its checkpoints are hashes of a world
+ * without it.
+ *
  * 28: an attack order is held to the firing table (#1247). An `attack` on a
  * contact the slot holds below Bearing, or no longer resolves, is refused,
  * and a hull chases the point its slot was shown rather than its target's own
@@ -293,7 +300,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 28;
+export const REPLAY_FORMAT_VERSION = 29;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =

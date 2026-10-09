@@ -486,7 +486,7 @@ Implemented in the client scaffold today (`packages/frontend/src/game/EchoRender
 | `W`, then click | Attack-move: go there, and stop to fight whatever is met on the way, then carry on. The one order that advances a force into water it cannot hear — which is most of it. `Esc` disarms; `Shift` + click queues it |
 | `X` | Stop: drop the plan, the route, the chase and the posture, and stand. Depth is a commitment and is left alone, floor-following included |
 | `H` | Hold position: fire at what comes into range, chase nothing, go nowhere. Any move releases it |
-| `1`–`9` | Recall control group; `Ctrl` + digit assigns; `Shift` + digit adds the selection; recall twice to centre |
+| `1`–`9` | Recall control group; `Ctrl` + digit assigns; `Shift` + digit adds the selection; recall twice to centre. A hull aboard a transport stays in its group, and is in hand again when it lands; it counts at its transport when the group is centred (#1337) |
 | `0` | Select the army — every hull that fights, wherever it is |
 | Middle drag | Pan |
 | Left + right drag | Move the camera: across pans sideways, up and down raises and sinks the focus through the water column, the water moving with the hand. Either button may land first, and once both are down neither click fires ([free-camera.md](free-camera.md) §4) |
@@ -505,6 +505,11 @@ Implemented in the client scaffold today (`packages/frontend/src/game/EchoRender
 
 Still planned: a repeat-last-order binding, and ping-at-cursor — which needs a key that is
 not `F`, since that arms the Foundry.
+
+A held key acts once: the keyboard's repeat is not a second press, so holding `Space` does not
+flip Silent Running back and forth, holding `M` does not lay mines until the magazine runs out,
+and holding `Esc` does not open and close the menu. The two holds are holds by design: `Alt`
+keeps the ping preview up and the arrows pan for as long as they are down (#1348).
 
 **Every key in that table is a default, not a fact.** §11 owes full rebinding, and the
 bindings are data (`packages/frontend/src/input/bindings.ts`) that the Controls screen
@@ -554,9 +559,10 @@ stays a place on the map: the ground under the cursor, whatever the focus.
 
 The right button acts on **release**, not on press, and so does a left click that an armed
 attack-move or a pending build is waiting for, so that a press can still become the left +
-right drag. The order goes to where the press was, with the press's modifiers. What the
-click asked for is drawn where it asked (§12): the ring that acknowledges it closes on the
-point at its depth, with a plumb line to the ground below it.
+right drag. One click is armed at a time, the last one armed: a build key or button disarms an
+attack-move, and `W` drops a pending build (#1335). The order goes to where the press was, with
+the press's modifiers. What the click asked for is drawn where it asked (§12): the ring that
+acknowledges it closes on the point at its depth, with a plumb line to the ground below it.
 
 Nothing is left of Dive, Rise or the floor-following toggle, and `D`, `A` and `S` are unbound.
 A step order between rungs answered "how deep" with a list of four depths; a click answers it
@@ -772,7 +778,7 @@ a log that sharpened its own history when a better resolution arrived would let 
 reconstruct positions they never earned, and would destroy what the log is for.
 
 The `you were pinged` row is implemented (#206, alongside the own-force rows it shares a
-shape with): it writes from the server-sent exposure flag at the fidelity sent — a bearing, never a position — under the `---` tier the log
+shape with): it writes from the server-sent exposure flag at the fidelity sent — a bearing, never a position, and, on a tick that carries no bearing, one `bearing unknown` row for the hulls a ping lit after its one bearing went out (#1290) — under the `---` tier the log
 reserves for events that are not detections. The log also carries the own-force rows §5
 licenses, in the same form: `Corvette under fire`, `Harvester idle — mined out`, each
 focusable because the hull is the player's own. Tier-3 rows currently name the hull and
@@ -978,6 +984,7 @@ The parity table. Every row is a claim that the mix tells the player nothing the
 | The world bus giving way to your own noise | `– masking` beside that label: you are drowning yourself out, and it says so |
 | Silent Running's inversion — the world opening up | `SILENT RUNNING – open`, and the dimmed hulls already drawn for the mode |
 | **Exposure strike** — you have been lit | **Screen-edge flash on the bearing of the emitter**, decaying over the same two seconds as the tail |
+| Unpanned exposure strike — hulls a ping lit after its one bearing went out (#1290) | A `you were pinged` row reading `bearing unknown`; its edge flash is owed (#1306) |
 | Being tracked, continuously | `TRACKED ×n` in the top bar — how well you are seen, never by whom |
 | Breaking silence to fire | An expanding ring on the hull that broke it, so the player knows *which* one gave the ambush away |
 | Active sonar transmit and its returns | The ping wavefront already drawn, expanding on the same clock |
@@ -1080,7 +1087,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | Contact log | Implemented — DOM, live region, click-to-focus, every row including `MARK` (#214) |
 | Contact voices, per-tier | Implemented — pan authority by tier, biome voicing, faction timbre at Tier 3+. The **timbre is off by default** pending #731: the §8 families are built and do not yet sound like the materials §8 names, so a classified contact keeps the tier's thump and stops saying what it is. Everything the tiers carry besides identity — pan, range, freshness, the Tier-4 lock tone — is unchanged, and the class was never audio-only (§11's table) |
 | Self-noise bed, SIG band label, masking readout | Implemented — server-sent, never inferred |
-| Exposure strike and screen-edge flash | Implemented — fires from `EchoSnapshot.selfEvents`, bearing only |
+| Exposure strike and screen-edge flash | Implemented — fires from `EchoSnapshot.selfEvents`, bearing only. A strike with no bearing (#1290) has its log row; its edge flash is owed (#1306) |
 | Active sonar transmit, returns ordered by range | Implemented |
 | Break-silence transient and its per-hull ring | Implemented |
 | Precedence Law — mark fade-in, ducking chain | Implemented — the visual-first preset is a settings toggle (§14) |

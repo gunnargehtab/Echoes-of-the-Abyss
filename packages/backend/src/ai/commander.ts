@@ -2692,6 +2692,16 @@ export class AiCommander implements AiPlayer {
       // are never reached again: measured as a Directorate that stopped
       // buying Slipways and Vent Taps entirely.
       if (this.floorAt(bed.x, bed.y) < CONSTRUCTION.WORKING_DEPTH_M) continue;
+      // And within `CONSTRUCTION.BUILD_RADIUS_M` of a structure this navy
+      // owns, standing or rising: the anchor `Match.build` applies, as
+      // `nearestVent` does. Missing, it was the floor test's lock-up over
+      // again — on kelp-labyrinth the Commune's nearest bed is 3,830 m out,
+      // and it asked for that reactor whenever it could pay for one and never
+      // reached its Slipway (#1286).
+      const anchored = snapshot.structures.some(
+        (structure) => distance(structure, bed) <= CONSTRUCTION.BUILD_RADIUS_M
+      );
+      if (!anchored) continue;
       return { x: bed.x, y: bed.y };
     }
     return null;
@@ -3673,10 +3683,17 @@ export class AiCommander implements AiPlayer {
       // is not required to shoot — §7 puts the gate at Tier 2, a bearing — but
       // fauna are excluded where the tier names them, because spending a
       // magazine of four on a Lampfry is not an alpha strike.
+      //
+      // And a Tier-1 contact is skipped, as that gate says. It is a smudge the
+      // server reports at the listener's own position, so it was nearly always
+      // the nearest: the Broadside ordered launches at it that were refused,
+      // the Lance came round to face its own hull, and the Thurible found no
+      // depth to bomb with a classified contact in reach (#1341).
       let best: EchoSnapshot['contacts'][number] | null = null;
       let bestD = ORDNANCE_REACH_M;
       for (const contact of snapshot.contacts) {
         if (contact.fauna !== undefined) continue;
+        if (contact.tier < ResolutionTier.Bearing) continue;
         const d = distance(hull, contact);
         if (d >= bestD) continue;
         bestD = d;

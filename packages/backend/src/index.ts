@@ -12,8 +12,8 @@ import { MatchRoom } from './rooms/MatchRoom.ts';
 import {
   CorsConfigError,
   type CorsPolicy,
+  corsHeadersFor,
   describeCorsPolicy,
-  isOriginAllowed,
   resolveCorsPolicy,
 } from './http/cors.ts';
 
@@ -37,6 +37,20 @@ function loadCorsPolicy(): CorsPolicy {
 
 const corsPolicy = loadCorsPolicy();
 
+// The one CORS decision. Colyseus prepends a request listener to the HTTP
+// server that, on every request and before express sees it, sets
+// `DEFAULT_CORS_HEADERS` merged with `controller.getCorsHeaders` and answers
+// every preflight itself. Its defaults allow origin `*` with credentials, and
+// its `getCorsHeaders` echoed whatever Origin the request carried, so the lock
+// the express middleware used to apply never held on any route, `/matchmake`
+// included (#1301). The controller asks the policy now, and its defaults
+// carry no origin of their own.
+const colyseusDefaults = matchMaker.controller.DEFAULT_CORS_HEADERS as Record<string, string>;
+delete colyseusDefaults['Access-Control-Allow-Origin'];
+delete colyseusDefaults['Access-Control-Allow-Credentials'];
+matchMaker.controller.getCorsHeaders = (headers) =>
+  corsHeadersFor(corsPolicy, headers.get('origin'));
+
 export const server = defineServer({
   rooms: {
     // Filtered by map and mission so matchmaking cannot put a player in the
@@ -45,27 +59,6 @@ export const server = defineServer({
   },
   transport: new WebSocketTransport(),
   express: (app) => {
-    /**
-     * CORS for HTTP matchmaking and listing requests. A disallowed origin gets
-     * no allow-origin header, so the browser reports the blocked origin.
-     */
-    app.use((req, res, next) => {
-      const origin = req.headers.origin;
-      if (corsPolicy.kind === 'any') {
-        res.header('Access-Control-Allow-Origin', '*');
-      } else if (typeof origin === 'string' && isOriginAllowed(corsPolicy, origin)) {
-        res.header('Access-Control-Allow-Origin', origin);
-        res.header('Vary', 'Origin');
-      }
-      res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-      if (req.method === 'OPTIONS') {
-        res.sendStatus(204);
-        return;
-      }
-      next();
-    });
-
     app.get('/', (_req, res) => {
       res.send('Echoes of the Abyss - Server running');
     });
