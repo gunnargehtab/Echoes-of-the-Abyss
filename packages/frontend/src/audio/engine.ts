@@ -772,9 +772,9 @@ export class AudioEngine {
    * the result card or the reconnect overlay, long after the ghosts it mirrors
    * had faded off the chart. An empty picture fades every voice out as that
    * frame would, lifts the contact duck with them, and starts the residue beds
-   * on their slow §6 fade. The room sends the deciding tick's snapshot just
-   * after a result, so the shell lets that one go as well; a reconnection's
-   * first snapshot brings back whatever the chart still tracks.
+   * on their slow §6 fade. The deciding tick's snapshot can follow a result,
+   * so the shell lets that one go as well; a reconnection's first snapshot
+   * brings back whatever the chart still tracks.
    */
   releasePicture(): void {
     this.pendingFrame = null;

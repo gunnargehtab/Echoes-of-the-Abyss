@@ -368,9 +368,10 @@ export function GameCanvas({
     let anyHullSilent = false;
 
     /**
-     * Set by a result, cleared by a rematch. The room sends the deciding
-     * tick's snapshot just after the result, so a mix that let the picture go
-     * at the result would hear it again a moment later and hold it under the
+     * Set by a result, cleared by a rematch. The deciding tick's snapshot can
+     * follow the result — after every mission result, and after a skirmish
+     * result reached on an Echo tick — so a mix that let the picture go at the
+     * result alone would hear it again a moment later and hold it under the
      * result card until the room closes (#1326).
      */
     let matchOver = false;
@@ -511,8 +512,9 @@ export function GameCanvas({
             );
             activeRenderer.applySnapshot(snapshot);
             perspective.applySnapshot(snapshot);
-            // The chart draws the deciding tick's snapshot under the result
-            // card; the mix lets it go before the tick can voice it (#1326).
+            // A snapshot after a result is the deciding tick's: the chart draws
+            // it under the result card, and the mix lets it go before the tick
+            // can voice it (#1326).
             if (matchOver) audio.releasePicture();
             // Audio work happens on the tick contacts arrive on, never per
             // frame: anything smoother would imply knowledge the server did

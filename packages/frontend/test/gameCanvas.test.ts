@@ -466,10 +466,11 @@ describe('the shell: what it wires to what', () => {
   it('lets the mix go of the picture at a result and at a lost signal (#1326)', async () => {
     // A voice stops only on a frame that leaves its contact out, and the mix
     // hears frames only on a snapshot: every voice used to hold its last level
-    // under the result card and the reconnect overlay. The room sends the
-    // deciding tick's snapshot just after the result, so the result cases send
-    // one too, in that order — the order a first fix that let go at the result
-    // alone never met.
+    // under the result card and the reconnect overlay. The deciding tick's
+    // snapshot can follow the result — after every mission result, and after
+    // a skirmish result reached on an Echo tick — so the result cases send one
+    // too, in that order: the order a first fix that let go at the result alone
+    // never met.
     type Probe = { window: { __audioProbe: () => { contactVoices: number } } };
     const g = globalThis as unknown as Probe;
     for (const end of ['result', 'mission', 'drop'] as const) {
