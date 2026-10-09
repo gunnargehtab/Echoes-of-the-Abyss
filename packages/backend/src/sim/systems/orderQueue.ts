@@ -60,7 +60,9 @@ function busy(world: SimWorld, eid: number): boolean {
   if (hasComponent(world, Weapon, eid)) {
     const target = Weapon.orderedTargetEid[eid]!;
     // A target aboard a transport is out of reach, so the plan moves on
-    // (#1318). Combat clears a gun's order on one; a carrier has no gun.
+    // (#1318). Combat lets a gun's order go and the deck a carrier's
+    // (flight.ts); this backs both up, and moves a stationary-only gun's plan
+    // on the tick it stops, one tick before combat rules on it.
     if (
       target !== 0 &&
       hasComponent(world, Health, target) &&
