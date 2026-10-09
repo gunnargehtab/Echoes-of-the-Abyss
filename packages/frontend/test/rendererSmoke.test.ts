@@ -2489,12 +2489,45 @@ describe('renderer smoke test: input and teardown', () => {
       const breaks = textSaying(world.app.stage, 'DIVE');
       assert.equal(breaks, 'DIVE · BREAKS SILENCE', `a metre below a silent hull read ${breaks}`);
 
+      // A metre above it keeps the silence: only a deeper order breaks it.
+      world.conn.raiseFocusBy(2);
+      const above = world.conn.projectPoint(2000, 2000, world.conn.focusDepth());
+      hover(above.x, above.y);
+      const kept = textSaying(world.app.stage, 'LEVEL');
+      assert.equal(kept, 'LEVEL', `a metre above a silent hull read ${kept}`);
+
       // Past the snap it is a dive, charged as one.
-      world.conn.raiseFocusBy(-10);
+      world.conn.raiseFocusBy(-12);
       const past = world.conn.projectPoint(2000, 2000, world.conn.focusDepth());
       hover(past.x, past.y);
       const deeper = textSaying(world.app.stage, 'DIVE');
       assert.match(deeper ?? '', /^DIVE \d+ SIG$/, `eleven metres below the hull read ${deeper}`);
+
+      // On the ground, a follow mark inside the snap breaks nothing, silent or
+      // not: the follow mode holds its station without a depth order
+      // (`depth.ts`). The silent Corvette a metre above the trench's follow
+      // depth, which is the deepest a hull may be ordered.
+      const deep = cannedSnapshot();
+      const sunk = deep.units.find((unit) => unit.id === 11)!;
+      sunk.silentRunning = true;
+      sunk.depth = DEPTH.MAX_M - 1;
+      world.chart.applySnapshot(deep);
+      world.conn.applySnapshot(deep);
+      world.frame(1);
+      world.conn.home();
+      world.conn.focusWorld(3500, 3500);
+      const ground = world.conn.projectPoint(3500, 3500, null);
+      hover(ground.x, ground.y);
+      const held = textSaying(world.app.stage, 'LEVEL');
+      assert.equal(held, 'LEVEL · FLOOR · PR EDGE', `a follow mark a metre down read ${held}`);
+
+      // And a climb that ends below the rating still says so (§8): `CRUSH`
+      // follows every first word, as the threat colour does.
+      world.conn.raiseFocusBy(world.conn.focusDepth() - 2500);
+      const climb = world.conn.projectPoint(3500, 3500, world.conn.focusDepth());
+      hover(climb.x, climb.y);
+      const crushed = textSaying(world.app.stage, 'RISE');
+      assert.match(crushed ?? '', /^RISE \d+s · CRUSH$/, `a climb to 2,500 m read ${crushed}`);
     } finally {
       world.teardown();
     }

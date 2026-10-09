@@ -7861,13 +7861,16 @@ export class EchoRenderer {
     // A depth order inside the arrival epsilon snaps at once and never
     // descends (`depth.ts`), so it is never charged the descent's SIG, either
     // way (§8, #1246). Like `DIVE` and `RISE` it prices the mark against the
-    // lead hull's depth, not the way there. Deeper, its one cost is the silence
-    // `setDepthTarget` breaks, which the readout names for a silent lead hull;
-    // otherwise it is `LEVEL`, as the hull's own depth and a short climb are.
+    // lead hull's depth, not the way there. A deeper open-water mark's one cost
+    // is the silence `setDepthTarget` breaks, which the readout names for a
+    // silent lead hull. A follow mark inside the snap costs nothing: the
+    // follow mode holds its station without a depth order and leaves the
+    // silence alone. Otherwise it is `LEVEL`, as the hull's own depth and a
+    // short climb are.
     const deeper = depthM > lead.depth;
     const snaps = Math.abs(depthM - lead.depth) <= DEPTH.ARRIVAL_EPSILON_M;
     const dives = deeper && !snaps;
-    const breaksSilence = deeper && snaps && lead.silentRunning;
+    const breaksSilence = deeper && snaps && !follows && lead.silentRunning;
     const level = snaps && !breaksSilence;
     const rated = (unit: OwnUnit) => !this.wouldCrush(unit, depthM);
     const crushes = !follows && !selected.every(rated);
@@ -8095,12 +8098,15 @@ export class EchoRenderer {
       preview === null
         ? `${lead.depth.toFixed(0)}m${zoneTag}`
         : (preview.dives
-            ? `DIVE ${DEPTH.DESCENT_SIG} SIG${preview.crushes ? ' · CRUSH' : ''}`
+            ? `DIVE ${DEPTH.DESCENT_SIG} SIG`
             : preview.breaksSilence
-              ? `DIVE · BREAKS SILENCE${preview.crushes ? ' · CRUSH' : ''}`
+              ? 'DIVE · BREAKS SILENCE'
               : preview.level
-                ? `LEVEL${preview.crushes ? ' · CRUSH' : ''}`
+                ? 'LEVEL'
                 : `RISE ${preview.seconds.toFixed(0)}s`) +
+          // After every first word, as the threat colour is: the warning is
+          // about the depth, not the way there (§8).
+          (preview.crushes ? ' · CRUSH' : '') +
           (preview.follows ? ' · FLOOR' : '') +
           (preview.stopsShort ? ' · PR EDGE' : '');
     this.ribbonReadout.style.fill =

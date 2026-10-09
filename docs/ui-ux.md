@@ -453,14 +453,14 @@ unrecoverable portion of the health bar is hatched, and its texture rather than 
 what distinguishes it, so it survives colour-vision differences (§11). The focus tick is a
 chevron on the ribbon's right edge in the plain text ink: a camera reading, so neither a hull's
 marker nor the cyan of a rule about the water. Holding `Alt` previews the click under the
-cursor: its depth, marked on the ribbon, and what getting there costs — `DIVE 72 SIG`, with
-`· CRUSH` when an open-water depth is below the selection's rating, or the climb's seconds for
-a rise, or `LEVEL` when the click's depth is within 2 m of the lead hull's own, which a depth
-order reaches at once and so never charges the descent — `DIVE · BREAKS SILENCE` instead when
-that mark is deeper and the lead hull is running silent, since a deeper depth order breaks
-Silent Running; and `FLOOR` when the click is on the ground and will follow it. The
-first word prices the mark against the lead hull's depth, not the way there, so `FLOOR` marks a
-path it does not price. Over a floor below a selected hull's rating the readout adds
+cursor: its depth, marked on the ribbon, and what getting there costs — `DIVE 72 SIG`, or the
+climb's seconds for a rise, or `LEVEL` when the click's depth is within 2 m of the lead hull's
+own, which a depth order reaches at once and so never charges the descent —
+`DIVE · BREAKS SILENCE` instead when that mark is in open water, deeper, and the lead hull is
+running silent, since a deeper open-water order breaks Silent Running. Whichever first word it
+reads, the readout adds `· CRUSH` when an open-water depth is below the selection's rating, and
+`FLOOR` when the click is on the ground and will follow it. The first word prices the mark
+against the lead hull's depth, not the way there, so `FLOOR` marks a path it does not price. Over a floor below a selected hull's rating the readout adds
 `· PR EDGE`: following stops where the ground falls past the rating rather than crushing
 ([systems-depth.md](systems-depth.md) §2), so the mark is a depth that hull will not reach. The
 duct is one more depth the focus can be put at, which is how a player buys its 1.2× range now
