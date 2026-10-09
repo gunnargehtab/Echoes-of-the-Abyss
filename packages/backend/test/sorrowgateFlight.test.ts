@@ -51,6 +51,7 @@ describe('Sorrowgate, with nobody at the helm', () => {
       }
     }
 
+    assert.equal(match.world.tick, 20 * 60 * SIM.TICK_HZ, 'the premise: the court sat to 20:00');
     for (const hull of flight) {
       assert.equal(Health.hp[hull.eid], hull.full, `${hull.tag} was hurt with nobody at the helm`);
       const rose = hull.depthM - shallowest.get(hull.eid)!;
