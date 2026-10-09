@@ -64,6 +64,7 @@ import {
   Pressure,
   SilentRunning,
   Structure,
+  UnderConstruction,
   Unit,
   Velocity,
 } from '../components.ts';
@@ -273,21 +274,7 @@ function rearmSystem(world: SimWorld): void {
       continue;
     }
 
-    const x = Position.x[eid]!;
-    const y = Position.y[eid]!;
-    const slot = Owner.slot[eid]!;
-    let atDepot = false;
-    for (let j = 0; j < bases.length; j++) {
-      const depot = bases[j]!;
-      if (Owner.slot[depot] !== slot) continue;
-      if (!isRearmDepot(Structure.kind[depot]!)) continue;
-      const d = Math.hypot(Position.x[depot]! - x, Position.y[depot]! - y);
-      if (d <= ORDNANCE.TORPEDO.REARM_RANGE_M) {
-        atDepot = true;
-        break;
-      }
-    }
-    if (!atDepot) continue;
+    if (!atRearmDepot(world, bases, eid)) continue;
 
     if (Magazine.rearmRemainingS[eid]! <= 0) {
       Magazine.rearmRemainingS[eid] = ORDNANCE.TORPEDO.REARM_TIME_S;
@@ -305,6 +292,30 @@ const decoyRacks = defineQuery([DecoyMagazine, Position, Owner, Unit, Health]);
 /** The two structures §5 names as able to put torpedoes back in a hull. */
 function isRearmDepot(kind: number): boolean {
   return kind === StructureKind.Bastion || kind === StructureKind.Foundry;
+}
+
+/**
+ * Is this hull within `REARM_RANGE_M` of one of its own depots — a Bastion or
+ * a Foundry that is built and standing (docs/systems-combat.md §5)?
+ *
+ * Built, because a site is not a Foundry yet: `thermal.ts` holds the same line
+ * for draw, and a site placed at the front rearmed torpedoes and decoys from
+ * the moment it was placed (#1316). Standing, because one destroyed this tick
+ * is only waiting for the reap.
+ */
+function atRearmDepot(world: SimWorld, bases: readonly number[], hull: number): boolean {
+  const slot = Owner.slot[hull]!;
+  const x = Position.x[hull]!;
+  const y = Position.y[hull]!;
+  for (let j = 0; j < bases.length; j++) {
+    const depot = bases[j]!;
+    if (Owner.slot[depot] !== slot) continue;
+    if (!isRearmDepot(Structure.kind[depot]!)) continue;
+    if (hasComponent(world, UnderConstruction, depot) || Health.hp[depot]! <= 0) continue;
+    const d = Math.hypot(Position.x[depot]! - x, Position.y[depot]! - y);
+    if (d <= ORDNANCE.TORPEDO.REARM_RANGE_M) return true;
+  }
+  return false;
 }
 
 /** Decoy suites recharging. Unlike rearming, this needs no depot. */
@@ -432,21 +443,7 @@ function decoyMagazines(world: SimWorld): void {
       continue;
     }
 
-    const x = Position.x[eid]!;
-    const y = Position.y[eid]!;
-    const slot = Owner.slot[eid]!;
-    let atDepot = false;
-    for (let j = 0; j < bases.length; j++) {
-      const depot = bases[j]!;
-      if (Owner.slot[depot] !== slot) continue;
-      if (!isRearmDepot(Structure.kind[depot]!)) continue;
-      const d = Math.hypot(Position.x[depot]! - x, Position.y[depot]! - y);
-      if (d <= ORDNANCE.TORPEDO.REARM_RANGE_M) {
-        atDepot = true;
-        break;
-      }
-    }
-    if (!atDepot) continue;
+    if (!atRearmDepot(world, bases, eid)) continue;
 
     if (DecoyMagazine.rearmRemainingS[eid]! <= 0) {
       DecoyMagazine.rearmRemainingS[eid] = ORDNANCE.TORPEDO.REARM_TIME_S;
