@@ -13,6 +13,12 @@
 
 import { defineQuery, hasComponent } from 'bitecs';
 import {
+  DEPTH,
+  DEPTH_BANDS,
+  DepthBand,
+  FOLLOW_FLOOR,
+  LID,
+  effectivePressureRating,
   THERMOCLINE_PAIR_FACTOR,
   THERMOCLINE_ZONE_MAX,
   thermoclineZone,
@@ -120,6 +126,31 @@ const PHANTOM_SALT_BEARING = 14;
 const PHANTOM_SALT_RANGE = 15;
 const PHANTOM_SALT_HEADING = 16;
 const PHANTOM_SALT_NAVY = 17;
+const PHANTOM_SALT_DEPTH = 18;
+
+/**
+ * The depth a phantom reports: one the hull it claims could be holding at its
+ * point (#1294). Anywhere in the water there below the Lid, and no deeper
+ * than its navy rates that hull for, so nothing about the number sets it
+ * apart from a true return's. It used to be the pinger's own, which the
+ * pinger knows to the centimetre: every return at that depth was a lie, a
+ * second tell beside the one docs/systems-echo.md §3 calls "the whole of it".
+ */
+function phantomDepthM(
+  terrain: Terrain,
+  x: number,
+  y: number,
+  kind: UnitKind,
+  faction: Faction,
+  roll: number
+): number {
+  const rating = effectivePressureRating(kind, faction);
+  const band = Math.min(Math.max(rating, 1), DepthBand.Abyssal + 1) - 1;
+  const rated = Math.min(DEPTH_BANDS[band as DepthBand].max, DEPTH.MAX_M);
+  const top = Math.max(LID.DEPTH_M, terrain.ceilingAt(x, y));
+  const bottom = Math.min(rated, terrain.floorAt(x, y) - FOLLOW_FLOOR.CLEARANCE_M);
+  return bottom > top ? top + roll * (bottom - top) : top;
+}
 
 const NAVIES: readonly Faction[] = [
   Faction.Bathyarch,
@@ -919,7 +950,6 @@ export class EchoLayer {
       SCATTER.PHANTOMS_MIN + Math.floor(stableUnit(seed, key, PHANTOM_SALT_COUNT, began) * span);
     const terrain = world.terrain;
     const clearance2 = SCATTER.PHANTOM_CLEARANCE_M * SCATTER.PHANTOM_CLEARANCE_M;
-    const depth = Position.depth[pinger]!;
 
     const contacts: Contact[] = [];
     const anchors: PhantomAnchor[] = [];
@@ -955,6 +985,14 @@ export class EchoLayer {
         const hulls = PHANTOM_HULLS_BY_NAVY.get(faction)!;
         const kind =
           hulls[Math.floor(stableUnit(seed, key, PHANTOM_SALT_KIND, step) * hulls.length)]!;
+        const depth = phantomDepthM(
+          terrain,
+          x,
+          y,
+          kind,
+          faction,
+          stableUnit(seed, key, PHANTOM_SALT_DEPTH, step)
+        );
         contacts.push({
           id: this.mintHandle(slot),
           tier: ResolutionTier.Track,

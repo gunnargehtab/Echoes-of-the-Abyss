@@ -31,7 +31,12 @@ import { fileURLToPath } from 'node:url';
 import {
   ACTIVE_SONAR,
   Biome,
+  DEPTH,
+  DEPTH_BANDS,
+  DepthBand,
   Faction,
+  LID,
+  effectivePressureRating,
   ResolutionTier,
   SCATTER,
   SIM,
@@ -592,6 +597,51 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
    * is able to say and a single pass is not. Both counts stood at 40/40 before
    * this landed and the assertions below fail on that code.
    */
+  it("reports a depth of its own, never the pinger's, and one its hull could hold", () => {
+    // Every phantom used to carry the pinger's own depth, which the pinger
+    // knows to the centimetre, so each return at it was a lie (#1294). The
+    // pinger here holds a depth nothing else on the map does, which makes
+    // that equality the whole tell if it survives.
+    for (const seed of [31, 32, 33]) {
+      const match = new Match(VENTFRONT_DIVIDE, { fauna: false, seed, terrain: fieldsMap() });
+      const pinger = spawnUnit(match.world, {
+        kind: UnitKind.Corvette,
+        slot: 0,
+        faction: Faction.Bathyarch,
+        x: 4000,
+        y: 4000,
+        depth: 873.4,
+      });
+      spawnUnit(match.world, {
+        kind: UnitKind.Cruiser,
+        slot: 1,
+        faction: Faction.Pelagia,
+        x: 4700,
+        y: 4000,
+      });
+      match.activeSonar(0, pinger);
+      const contacts = match.echo.run(match.world, [0, 1]).contactsBySlot.get(0) ?? [];
+      const phantoms = contacts.filter((c) => match.echo.entityForHandle(0, c.id) === undefined);
+      assert.ok(phantoms.length > 0, `the premise: seed ${seed} returns phantoms`);
+      for (const phantom of phantoms) {
+        assert.notEqual(
+          phantom.depth,
+          Position.depth[pinger],
+          `seed ${seed}: at the pinger's depth`
+        );
+        // Where the hull it claims could be holding: below the Lid, and no
+        // deeper than its navy rates it for.
+        const rating = effectivePressureRating(phantom.kind!, phantom.faction!);
+        const band = (Math.min(rating, DepthBand.Abyssal + 1) - 1) as DepthBand;
+        const rated = Math.min(DEPTH_BANDS[band].max, DEPTH.MAX_M);
+        assert.ok(
+          phantom.depth! >= LID.DEPTH_M && phantom.depth! <= rated,
+          `seed ${seed}: a ${UnitKind[phantom.kind!]} reported at ${phantom.depth} m`
+        );
+      }
+    }
+  });
+
   it('does not sort the lies to one end of the pass, by handle or by position', () => {
     const SEEDS = 40;
     const LIMIT = 10;

@@ -211,7 +211,9 @@ player's ears earned twice over. §9 says what the HUD may draw from that.
 transmission ([audio-direction.md](audio-direction.md) §5), each with a handle from the same
 counter a real contact's comes from, Tier 4, a hull one of the enemy navies on the map could
 field — drawn from that navy's roster, its own locked hulls included, so the class is never the
-tell — with full health and a heading, and no entity behind it. The counter is not what goes on
+tell — with full health, a heading, and a depth of its own that the hull could be holding there,
+below the Lid and within its rating, and no entity behind it. The depth was once the pinger's,
+which the pinger knows exactly, and that made every return at it a lie (#1294). The counter is not what goes on
 the wire: a handle is a per-match, per-observer permutation of it, and a slot's contacts are
 listed in handle order, so neither a handle's value nor its place in the list says when it was
 issued. It must not, because the mint order is not arbitrary — a ping's phantoms are minted
