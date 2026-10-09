@@ -291,7 +291,7 @@ export const LEDGER_SHIFT_CHANGE: MissionDefinition = {
     // Face Five's field, so a shift hears it at rest from Five and not from
     // the muster, the seam or the refinery (§7). Driven to rest 220 m from
     // the refinery, the pack heard its hum on release, took the depot at
-    // 01:20 and three harvesters by 02:00 in every run, and nothing could be
+    // 01:20 and three hulls by 02:00 in every run, and nothing more could be
     // banked after (#1265).
     {
       atTick: 0,

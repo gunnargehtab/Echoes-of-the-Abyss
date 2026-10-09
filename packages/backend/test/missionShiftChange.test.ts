@@ -472,8 +472,8 @@ describe('the packs come the way they came — §11, the dip taken out (#1171)',
     // §11: the Downworks' ellipse dipped south between the faces, and the
     // Draymaw packs, then driven to rest by the refinery, came to the muster
     // across the dip and killed a different hull first. They rest at the
-    // Downworks' east end now (#1265), and an idle shift moves nothing on the
-    // Downworks after 00:20, so the south-edge test above is #1171's guard;
+    // Downworks' east end now (#1265), and in an idle shift nothing crosses
+    // the Downworks after 00:20, so the south-edge test above is #1171's guard;
     // this one still catches a shape that moves the audit or the pack's drive.
     const before = play({ ...map, regions: RECTANGLES });
     const after = play(map);
@@ -585,12 +585,12 @@ describe('the pack, at rest — docs/mission-shift-change.md §7 (#1265)', () =>
     };
   }
 
-  it('commits to nothing in an idle shift, out of earshot of the muster', () => {
+  it('commits to nothing in an idle shift, out of earshot of the muster and the refinery', () => {
     const idle = shift(false);
     assert.equal(idle.refinery, 1, 'the pack took the refinery');
     assert.equal(idle.lost, 0, 'the pack took a hull');
     assert.equal(idle.roused, 0, '§7: it commits to nothing, and stirred');
-    assert.equal(idle.heard, 0, '§7: heard at rest from the muster, which is not its edge');
+    assert.equal(idle.heard, 0, '§7: heard at rest from the muster or the refinery');
   });
 
   it('nor in a shift that works every field at Standard, and is heard from Face Five', () => {
