@@ -162,6 +162,12 @@ const PHANTOM_HULLS_BY_NAVY: ReadonlyMap<Faction, readonly UnitKind[]> = new Map
   ])
 );
 
+/** One unit or structure an enemy ping lit, with its side's one bearing if it holds it. */
+export interface LitEntry {
+  unitId: number;
+  bearing?: number;
+}
+
 /**
  * The false returns one transmission conjured — docs/systems-echo.md §3,
  * docs/audio-direction.md §5.
@@ -171,12 +177,6 @@ const PHANTOM_HULLS_BY_NAVY: ReadonlyMap<Faction, readonly UnitKind[]> = new Map
  * real hull the ping lit and then lost: the ghost-marker decay does the rest.
  * Keyed by pinger, beside `litAlready`, and dropped on the same tick it is.
  */
-/** One unit or structure an enemy ping lit, with its side's one bearing if it holds it. */
-export interface LitEntry {
-  unitId: number;
-  bearing?: number;
-}
-
 interface PhantomReturns {
   slot: number;
   contacts: Contact[];
@@ -1516,11 +1516,11 @@ export class EchoLayer {
         this.conjurePhantoms(world, pinger, pingerSlot, px, py, radiusM, revealed, entities);
       }
 
-      // The victim's side of the same event, for a unit or structure: a mine
-      // or a decoy has no ears to be told with. Each side gets one bearing
-      // per ping, from its lit unit nearest the pinger, and its other lit
-      // units are told without one (#1290) — see SelfEvent.bearing for why
-      // a direction and never a location.
+      // The victim's side of the same event. Only a unit or a structure is
+      // told: ordnance has no ears. Each side gets one bearing per ping, from
+      // the nearest of its units the ping first lights, and its other lit
+      // units are told without one (#1290) — see SelfEvent.bearing for why a
+      // direction and never a location.
       let given = this.bearingGiven.get(pinger);
       const nearest = this.nearestLit;
       nearest.clear();

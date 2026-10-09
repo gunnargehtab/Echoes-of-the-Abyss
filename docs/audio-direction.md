@@ -681,10 +681,11 @@ The one thing deliberately withheld is the pinger's **position**. The victim get
 which is what §11's screen-edge flash asks for. A ping resolves by hard radius while the
 pinger's own self-reveal travels by propagation, so in a masking biome a player can be lit
 by something they cannot hear back — sending coordinates would close that gap on their
-behalf. So a side gets **one bearing per ping**, from its lit unit nearest the pinger, and
-its other lit units are told they were lit without one: two bearings are two rays that meet
-on the pinger, which is coordinates by another route (#1290). A mine or a decoy has no ears
-and is told nothing.
+behalf. So a side gets **one bearing per ping**, from the nearest of its units the ping first
+lights, and its other lit units are told they were lit without one: two bearings are two rays
+that meet on the pinger, which is coordinates by another route (#1290). Only a unit or a
+structure is told: ordnance has no ears. The mix strikes once per bearing, panned, and once
+unpanned on a tick that carries none, so the panned strike keeps its image.
 
 **The self bed follows fleet SIG, not `peakSig`.** The HUD number folds in structures, and a
 base six kilometres away would pin the bed at "full plant" for the whole match, making the

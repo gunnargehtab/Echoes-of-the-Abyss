@@ -584,3 +584,38 @@ describe('the sour bite', () => {
     assert.equal(sourMixes[2]!.bleeding, true);
   });
 });
+
+describe('the exposure strike, with one bearing per ping (#1290)', () => {
+  /** A recorder that keeps the pan each exposure strike was voiced at. */
+  function panRecorder() {
+    const { sink } = recorder();
+    const pans: number[] = [];
+    sink.exposure = (_now, pan) => pans.push(pan);
+    return { sink, pans };
+  }
+
+  it('strikes once, panned, when one of the lit hulls carries the bearing', () => {
+    // A ping lights three hulls of a group on one pass, and only the nearest
+    // is sent the bearing. Centred copies beside the panned strike would pull
+    // its image to the middle, which is the precision the owner kept.
+    const { sink, pans } = panRecorder();
+    const mixer = new SelfMixer(sink);
+    const lit = [
+      event(SelfEventKind.Exposed, 1, Math.PI),
+      event(SelfEventKind.Exposed, 2),
+      event(SelfEventKind.Exposed, 3),
+    ];
+    mixer.update(frame({ tick: 4, events: lit }), 0);
+    assert.deepEqual(pans, [-1]);
+  });
+
+  it('strikes once, unpanned, for hulls lit later in the ping', () => {
+    // No bearing on the tick at all: the side's bearing went out on an earlier
+    // pass. The hulls are still told, once, at no position.
+    const { sink, pans } = panRecorder();
+    const mixer = new SelfMixer(sink);
+    const late = [event(SelfEventKind.Exposed, 2), event(SelfEventKind.Exposed, 3)];
+    mixer.update(frame({ tick: 9, events: late }), 0);
+    assert.deepEqual(pans, [0]);
+  });
+});
