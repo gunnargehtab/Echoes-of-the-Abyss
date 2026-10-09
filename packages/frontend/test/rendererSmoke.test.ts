@@ -4241,17 +4241,24 @@ describe('the ping preview rings the hull that pings (#1330)', () => {
         ): boolean;
       };
       const chart = world.chart as unknown as Chart;
-      // Every circle the latest ring pass traced, by centre and radius. The
-      // real pass runs; this only reads what it asked to be drawn.
+      // Every circle the latest ring pass traced, by centre and radius, and
+      // only that pass's: hazards and fauna trace circles of their own in the
+      // same frame. The real pass runs; this only reads what it asked for.
       const traced: Array<{ x: number; y: number; radiusM: number }> = [];
+      let inRingPass = false;
       const drawRings = chart.drawRings.bind(chart);
       const traceCircle = chart.traceCircle.bind(chart);
       chart.drawRings = () => {
         traced.length = 0;
-        drawRings();
+        inRingPass = true;
+        try {
+          drawRings();
+        } finally {
+          inRingPass = false;
+        }
       };
       chart.traceCircle = (g, cx, cy, radiusM, ...rest) => {
-        traced.push({ x: cx, y: cy, radiusM });
+        if (inRingPass) traced.push({ x: cx, y: cy, radiusM });
         return traceCircle(g, cx, cy, radiusM, ...rest);
       };
 
