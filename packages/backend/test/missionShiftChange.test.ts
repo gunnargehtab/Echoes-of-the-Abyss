@@ -29,15 +29,28 @@ import assert from 'node:assert/strict';
 import { defineQuery, hasComponent } from 'bitecs';
 import {
   Biome,
+  FaunaStage,
+  HarvestThrottle,
   MissionOutcome,
   ObjectiveStatus,
   ResolutionTier,
   SIM,
+  StructureKind,
   detectionRatio,
   thermoclineFactor,
   type EchoSnapshot,
 } from '@echoes/shared';
-import { Fauna, Health, Position } from '../src/sim/components.ts';
+import {
+  Fauna,
+  Harvester,
+  HarvestMode,
+  Health,
+  Owner,
+  Position,
+  ResourceNode,
+  Structure,
+  Unit,
+} from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import type { MapDefinition, MapRect } from '../src/sim/maps/types.ts';
@@ -457,9 +470,11 @@ describe('the packs come the way they came — §11, the dip taken out (#1171)',
 
   it('walks every hull and creature of an idle shift on the tracks the rectangles gave it', () => {
     // §11: the Downworks' ellipse dipped south between the faces, and the
-    // Draymaw packs, driven at 00:00, came to the muster across the dip and
-    // killed a different hull first. Two of the packs leave at about 85 s; played to
-    // the whistle, every 5 s, so a shape that moves anything is caught here.
+    // Draymaw packs, then driven to rest by the refinery, came to the muster
+    // across the dip and killed a different hull first. They rest at the
+    // Downworks' east end now (#1265), and in an idle shift nothing crosses
+    // the Downworks after 00:20, so the south-edge test above is #1171's guard;
+    // this one still catches a shape that moves the audit or the pack's drive.
     const before = play({ ...map, regions: RECTANGLES });
     const after = play(map);
     assert.ok(
@@ -498,5 +513,92 @@ describe('the shift, run out — docs/mission-shift-change.md §8, §9', () => {
     assert.match(result.epilogue, /The shortfall is entered\./);
     assert.match(result.epilogue, /The berthing lists are short\./);
     assert.doesNotMatch(result.epilogue, /audit's minute/);
+  });
+});
+
+describe('the pack, at rest — docs/mission-shift-change.md §7 (#1265)', () => {
+  /** The pack's release from its drive to rest (`runtime.ts` holds it until then). */
+  const RELEASED = T(0, 20);
+
+  /**
+   * One shift to the whistle, idle or with every harvester the watches have
+   * released sent to its nearest field at Standard. Then the refinery, how
+   * many of the player's hulls were lost, what was banked, on how many passes
+   * after the release the player heard the pack, and on how many a pack
+   * member was interested or committed. Driven to rest beside the refinery,
+   * the pack took it at 01:20 in every run, idle or working.
+   */
+  function shift(working: boolean) {
+    const map = missionMapById(LEDGER_SHIFT_CHANGE.mapId)!;
+    const match = new Match(map, { mission: LEDGER_SHIFT_CHANGE, fauna: false, seed: 41 });
+    const world = match.world;
+    const slot = LEDGER_SHIFT_CHANGE.playerSlot;
+    const refinery = defineQuery([Structure, Owner, Health])(world).find(
+      (eid) => Structure.kind[eid] === StructureKind.Refinery && Owner.slot[eid] === slot
+    )!;
+    const full = Health.hp[refinery]!;
+    // A lost hull is reaped, so the player's force is counted by who is still
+    // there at the whistle, not by who reads zero hull.
+    const seated = defineQuery([Unit, Owner])(world).filter((eid) => Owner.slot[eid] === slot);
+    // Seated by the 00:00 beat, so read once it has fired.
+    const creatures = defineQuery([Fauna]);
+    let pack: number[] = [];
+    const nodes = defineQuery([ResourceNode, Position])(world);
+    let heard = 0;
+    let roused = 0;
+    for (let tick = 0; tick <= T(16, 30) && match.missionOver === null; tick++) {
+      const own = match.update(STEP_MS)?.get(slot);
+      match.takeMissionView();
+      if (working && tick % (10 * SIM.TICK_HZ) === 0) {
+        for (const eid of defineQuery([Harvester, Owner, Health])(world)) {
+          if (Owner.slot[eid] !== slot || Harvester.mode[eid] !== HarvestMode.Idle) continue;
+          const away = (node: number) =>
+            Math.hypot(Position.x[node]! - Position.x[eid]!, Position.y[node]! - Position.y[eid]!);
+          const node = [...nodes].sort((a, b) => away(a) - away(b))[0];
+          if (node === undefined) continue;
+          match.orderHarvest(slot, eid, node);
+          match.setThrottle(slot, eid, HarvestThrottle.Standard);
+        }
+      }
+      if (tick <= RELEASED) continue;
+      if (pack.length === 0) pack = [...creatures(world)];
+      const stirred = (eid: number) =>
+        hasComponent(world, Fauna, eid) &&
+        (Fauna.stage[eid] === FaunaStage.Interested || Fauna.stage[eid] === FaunaStage.Committed);
+      if (pack.some(stirred)) roused++;
+      // Heard through the player's own resolved contacts, as the player hears it.
+      const contacts = own?.contacts ?? [];
+      const it = contacts.some((contact) => {
+        const eid = match.echo.entityForHandle(slot, contact.id);
+        return eid !== undefined && hasComponent(world, Fauna, eid);
+      });
+      if (it) heard++;
+    }
+    assert.ok(match.missionOver !== null, 'the premise: the shift ran to the whistle');
+    assert.equal(pack.length, 3, 'the premise: the pack of three was on the field');
+    return {
+      refinery: hasComponent(world, Structure, refinery) ? Health.hp[refinery]! / full : 0,
+      lost: seated.filter((eid) => !hasComponent(world, Unit, eid)).length,
+      banked: world.economies.get(slot)?.nodules ?? 0,
+      heard,
+      roused,
+    };
+  }
+
+  it('commits to nothing in an idle shift, out of earshot of the muster and the refinery', () => {
+    const idle = shift(false);
+    assert.equal(idle.refinery, 1, 'the pack took the refinery');
+    assert.equal(idle.lost, 0, 'the pack took a hull');
+    assert.equal(idle.roused, 0, '§7: it commits to nothing, and stirred');
+    assert.equal(idle.heard, 0, '§7: heard at rest from the muster or the refinery');
+  });
+
+  it('nor in a shift that works every field at Standard, and is heard from Face Five', () => {
+    const worked = shift(true);
+    assert.ok(worked.banked > 0, 'the premise: the shift banked something');
+    assert.equal(worked.refinery, 1, 'the pack took the refinery from a working field');
+    assert.equal(worked.lost, 0, 'the pack took a hull from a working field');
+    assert.equal(worked.roused, 0, '§7: it commits to nothing, and stirred at a working field');
+    assert.ok(worked.heard > 0, '§7: a shift at Face Five hears the pack at rest, and never did');
   });
 });
