@@ -7806,6 +7806,7 @@ export class EchoRenderer {
     depthM: number;
     follows: boolean;
     dives: boolean;
+    breaksSilence: boolean;
     level: boolean;
     crushes: boolean;
     stopsShort: boolean;
@@ -7826,19 +7827,26 @@ export class EchoRenderer {
           Math.min(floor - FOLLOW_FLOOR.CLEARANCE_M, DEPTH.MAX_M)
         )
       : water.depthM;
-    const dives = depthM > lead.depth;
-    // `LEVEL` (§8): the lead hull's own depth, or a climb inside the arrival
-    // epsilon, which the depth system snaps to at once. Like `DIVE` and `RISE`
-    // it prices the mark against the lead hull's depth, not the way there.
-    // Never a dive however small: any deeper depth order breaks Silent Running
-    // (`setDepthTarget`), and the readout must not hide that.
-    const level = !dives && lead.depth - depthM <= DEPTH.ARRIVAL_EPSILON_M;
+    // A depth order inside the arrival epsilon snaps at once and never
+    // descends (`depth.ts`), so it is never charged the descent's SIG, either
+    // way (§8, #1246). Like `DIVE` and `RISE` it prices the mark against the
+    // lead hull's depth, not the way there. A deeper open-water mark's one cost
+    // is the silence `setDepthTarget` breaks, which the readout names for a
+    // silent lead hull. A follow mark inside the snap costs nothing: the
+    // follow mode holds its station without a depth order and leaves the
+    // silence alone. Otherwise it is `LEVEL`, as the hull's own depth and a
+    // short climb are.
+    const deeper = depthM > lead.depth;
+    const snaps = Math.abs(depthM - lead.depth) <= DEPTH.ARRIVAL_EPSILON_M;
+    const dives = deeper && !snaps;
+    const breaksSilence = deeper && snaps && !follows && lead.silentRunning;
+    const level = snaps && !breaksSilence;
     const rated = (unit: OwnUnit) => !this.wouldCrush(unit, depthM);
     const crushes = !follows && !selected.every(rated);
     const stopsShort = follows && !selected.every(rated);
     const rate = dives ? DEPTH.DESCENT_RATE_MPS : DEPTH.ASCENT_RATE_MPS;
     const seconds = Math.abs(depthM - lead.depth) / rate;
-    return { depthM, follows, dives, level, crushes, stopsShort, seconds };
+    return { depthM, follows, dives, breaksSilence, level, crushes, stopsShort, seconds };
   }
 
   /** Screen y for a depth, inside the ribbon's vertical span. */
@@ -8059,10 +8067,15 @@ export class EchoRenderer {
       preview === null
         ? `${lead.depth.toFixed(0)}m${zoneTag}`
         : (preview.dives
-            ? `DIVE ${DEPTH.DESCENT_SIG} SIG${preview.crushes ? ' · CRUSH' : ''}`
-            : preview.level
-              ? 'LEVEL'
-              : `RISE ${preview.seconds.toFixed(0)}s`) +
+            ? `DIVE ${DEPTH.DESCENT_SIG} SIG`
+            : preview.breaksSilence
+              ? 'DIVE · BREAKS SILENCE'
+              : preview.level
+                ? 'LEVEL'
+                : `RISE ${preview.seconds.toFixed(0)}s`) +
+          // After every first word, as the threat colour is: the warning is
+          // about the depth, not the way there (§8).
+          (preview.crushes ? ' · CRUSH' : '') +
           (preview.follows ? ' · FLOOR' : '') +
           (preview.stopsShort ? ' · PR EDGE' : '');
     this.ribbonReadout.style.fill =
