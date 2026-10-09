@@ -2,10 +2,10 @@
  * What every spawn owes a recycled entity id (#1273): docs/invariants.md's "A spawn
  * writes every field of its component".
  *
- * `ordnanceSpawn.test.ts` holds the row for `spawnOrdnance`, where it was first
- * paid for (#617). The other spawns owed the same, and two were short:
- * `spawnUnit` left five fields to whatever last held the id and `spawnFauna`
- * two. The five were not idle bytes. A yard hull handed the id of a hull that
+ * `ordnanceSpawn.test.ts` holds the `Ordnance` store and #617's behaviour,
+ * where the row was first paid for. The other spawns owed the same, and two
+ * were short: `spawnUnit` left seven fields to whatever last held the id and
+ * `spawnFauna` two. The seven were not idle bytes. A yard hull handed the id of a hull that
  * died following the floor came out of the yard still following it: it dived
  * unordered at the descent's SIG, with the dead hull's Lid exposure and both of
  * its order points.
@@ -22,6 +22,7 @@ import {
   DEPTH,
   Faction,
   FaunaSpecies,
+  OrdnanceKind,
   ResourceKind,
   SIM,
   StructureKind,
@@ -43,6 +44,7 @@ import {
   createSimWorld,
   spawnEmitter,
   spawnFauna,
+  spawnOrdnance,
   spawnResourceNode,
   spawnStructure,
   spawnUnit,
@@ -62,6 +64,14 @@ const STORES = Object.entries(components as Record<string, unknown>).filter(
     const fields = Object.values(entry[1] as object);
     return fields.length > 0 && fields.every((field) => ArrayBuffer.isView(field));
   }
+);
+/**
+ * What the filter above leaves out, which must be no component. A field typed
+ * `[Types.f32, n]` is an array of views rather than one, so a component that
+ * grew one would drop out of the poisoning silently, and pass.
+ */
+const NOT_STORES = Object.keys(components).filter(
+  (name) => !STORES.some(([store]) => store === name)
 );
 
 /** What a typed array actually holds once `value` is written into it. */
@@ -105,7 +115,7 @@ describe('a yard hull handed a dead hull’s id (#1273)', () => {
     // The reproduction, with the real queue rather than a poisoned store, so it
     // runs first: nothing is removed in this process before the dead hull is.
     // Every id is held back while the scene is set, then the next spawn is
-    // handed the newest removal, which is the dead hull's.
+    // handed the front of bitecs' queue, which holds only the dead hull's id.
     setRemovedRecycleThreshold(1e9);
     try {
       const match = new Match(undefined, {
@@ -154,6 +164,34 @@ describe('a yard hull handed a dead hull’s id (#1273)', () => {
 });
 
 describe('every spawn against a recycled id', () => {
+  it('poisons every component in components.ts', () => {
+    assert.deepEqual(NOT_STORES, ['HarvestMode'], 'an export the poisoning skips');
+  });
+
+  it('spawnOrdnance writes every field it adds, for every kind, fired or laid', () => {
+    for (const kind of numbers(OrdnanceKind)) {
+      for (const laid of [false, true]) {
+        const missed = missedFields((world) =>
+          spawnOrdnance(world, {
+            kind,
+            slot: 0,
+            faction: Faction.Bathyarch,
+            x: 3000,
+            y: 3000,
+            depth: 600,
+            pressureRating: 3,
+            laid,
+          })
+        );
+        assert.deepEqual(
+          missed,
+          [],
+          `spawnOrdnance(${OrdnanceKind[kind]}, laid ${laid}) left ${missed.join(', ')}`
+        );
+      }
+    }
+  });
+
   it('spawnUnit writes every field it adds, for every kind', () => {
     for (const kind of numbers(UnitKind)) {
       const missed = missedFields((world) =>

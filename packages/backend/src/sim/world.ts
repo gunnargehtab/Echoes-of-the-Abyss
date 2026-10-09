@@ -662,7 +662,7 @@ export function spawnFauna(
   Acoustic.hyd[eid] = stats.hyd;
   Acoustic.pfFactor[eid] = 1;
   Acoustic.sigFactor[eid] = 1;
-  // Nothing reads a creature's spike today, only a hull's and a structure's,
+  // Nothing sounds a creature's spike today, only a hull's and a structure's,
   // but a spawn writes every field of its component (docs/invariants.md): a
   // hull that died inside its spike leaves it under the id (#1273).
   Acoustic.spikeRemainingS[eid] = 0;
