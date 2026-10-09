@@ -325,27 +325,29 @@ describe('one bearing per ping (#1290)', () => {
   }
 
   it('gives a side one bearing, from its lit unit nearest the pinger', () => {
-    const { match, mine, theirs } = twoSides(300);
-    const farther = spawnUnit(match.world, {
+    // The nearer hull is spawned second, so the reveal does not list it first:
+    // the bearing is chosen by distance, not by the order units come back in.
+    const { match, mine, theirs: farther } = twoSides(600);
+    const nearer = spawnUnit(match.world, {
       kind: UnitKind.Corvette,
       slot: 1,
       faction: Faction.Pelagia,
       x: 4000,
-      y: 4600,
+      y: 4300,
     });
     match.activeSonar(0, mine);
     const events = lit(match, 1);
 
     assert.deepEqual(
       events.map((e) => e.unitId).sort((a, b) => a - b),
-      [theirs, farther].sort((a, b) => a - b),
+      [farther, nearer].sort((a, b) => a - b),
       'both lit hulls are told they were lit'
     );
     const bearings = events.filter((e) => e.bearing !== undefined);
     assert.equal(bearings.length, 1, 'one bearing for the ping, so nothing to triangulate');
-    assert.equal(bearings[0]!.unitId, theirs, 'and it is the nearer hull’s');
-    // The pinger sits due west of the nearer hull.
-    assert.ok(Math.abs(Math.abs(bearings[0]!.bearing!) - Math.PI) < 1e-6);
+    assert.equal(bearings[0]!.unitId, nearer, 'and it is the nearer hull’s');
+    // The pinger sits 300 m off the nearer hull along -y.
+    assert.ok(Math.abs(bearings[0]!.bearing! + Math.PI / 2) < 1e-6);
   });
 
   it('tells a mine or a decoy nothing: neither has ears', () => {

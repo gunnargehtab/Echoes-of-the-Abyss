@@ -4895,8 +4895,9 @@ export class EchoRenderer {
    * shows, because §11 makes an audible fact with no visual equivalent a bug —
    * and the exposure strike is the one cue in the game the doc admits has "no
    * visual equivalent that arrives sooner". Sooner is not the same as never:
-   * it gets a screen-edge flash on the same bearing, arriving with the sound
-   * rather than before it.
+   * a strike that carries a bearing gets a screen-edge flash on it, arriving
+   * with the sound rather than before it. One with none gets its log row, and
+   * its flash is owed (#1306).
    */
   private selfAudioFrame(snapshot: EchoSnapshot, now: number): SelfAudioFrame {
     // A ping gives a side one bearing (#1290), so a tick whose exposures carry
