@@ -334,6 +334,16 @@ export interface SimWorld extends IWorld {
    */
   nodeSites: Set<number>;
   /**
+   * What a standing corridor struck on the last tick, and the set it fills on
+   * this one, so the owner is told of the blow on entry rather than sixty
+   * times a second (`standingWaveSystem`). On the world rather than in the
+   * module, because module state is every match's in the process: a second
+   * room with no corridor cleared it between this room's ticks, and the blow
+   * was told again every Echo pass (#1308). By entity id, which is safe for
+   * one tick: bitecs reissues a freed id only once a thousand are queued.
+   */
+  corridorStruck: { last: Set<number>; next: Set<number> };
+  /**
    * The simulation's only source of randomness. Seeded per match and part of
    * simulation state — see sim/rng.ts. Nothing in sim/ may call Math.random().
    */
@@ -558,6 +568,7 @@ export function createSimWorld(
   world.corridors = [];
   world.pairedNodes = new Set();
   world.nodeSites = new Set();
+  world.corridorStruck = { last: new Set(), next: new Set() };
   world.rng = new Rng(seed);
   world.localOfEid = new Map();
   world.eidOfLocal = new Map();
