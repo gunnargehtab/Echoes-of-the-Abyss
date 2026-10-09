@@ -256,21 +256,47 @@ describe('the pack, as docs/mission-baffle.md §5 drives it (#1212)', () => {
     };
     const map = missionMapById(mission.mapId)!;
     const match = new Match(map, { mission, fauna: false, seed: 31 });
-    const escort = () =>
-      [...hulls(match.world)]
-        .filter(
-          (eid) => Owner.slot[eid] === mission.playerSlot && hasComponent(match.world, Weapon, eid)
-        )
-        .reduce((sum, eid) => sum + Health.hp[eid]!, 0);
+    const armed = () =>
+      [...hulls(match.world)].filter(
+        (eid) => Owner.slot[eid] === mission.playerSlot && hasComponent(match.world, Weapon, eid)
+      );
+    const escort = () => armed().reduce((sum, eid) => sum + Health.hp[eid]!, 0);
+    const reach = faunaStatsFor(FaunaSpecies.Draymaw).attackRangeM;
+    const apart = (a: number, b: number) =>
+      Math.hypot(
+        Position.x[a]! - Position.x[b]!,
+        Position.y[a]! - Position.y[b]!,
+        Position.depth[a]! - Position.depth[b]!
+      );
     const full = escort();
     let released = 0;
+    let inReachDriven = false;
+    let climbing: number[] = [];
+    let outOfReach = false;
     while (match.missionOver === null) {
       match.update(STEP_MS);
       match.takeMissionView();
+      if (match.world.tick === T(19, 29)) {
+        inReachDriven = [...hounds(match.world)].some((hound) =>
+          armed().some((eid) => apart(hound, eid) <= reach)
+        );
+      }
       if (match.world.tick === T(19, 30)) released = escort();
+      if (match.world.tick === T(19, 41)) {
+        climbing = [...hounds(match.world)];
+        outOfReach = climbing.every((hound) => armed().every((eid) => apart(hound, eid) > reach));
+      }
     }
+    assert.ok(inReachDriven, 'the premise: the driven pack sat within a bite of the escort');
     assert.equal(released, full, 'the driven pack, or the picket, took hull before 19:30');
     assert.ok(escort() < released, 'the released pack never bit the escort beside it');
+    // Bounded by the climb: eleven seconds up at 12 m/s, a hound still alive
+    // is out of a bite of hulls at 1,650 m, and a released pack pursues
+    // nothing below its band (`fauna.ts`). Released, it can also be shot, and
+    // here the escort finishes it a few seconds later.
+    assert.ok(climbing.length > 0, 'the premise: a hound still alive at 19:41');
+    assert.ok(outOfReach, 'by 19:41 the climb home had not carried the pack out of reach');
+    assert.equal(armed().length, 3, 'the released pack took an escort hull');
   });
 });
 
