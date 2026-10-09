@@ -91,12 +91,14 @@ const T = (minutes: number, seconds = 0): number => (minutes * 60 + seconds) * S
 const PLAYER = 0;
 /** Reserved and empty, as Tend reserves it: no court, no ledger, no array. */
 const COURT = 1;
-/** The works party — the tension frame, its turrets and the spur's housings (§5). */
-const WORKS = 2;
-/** The corridor escort — Rell's, standing off the frame in Klaxon posture (§5). */
-const CORRIDOR = 3;
-/** The second element — the closure, west along the spur (§5, §7). */
-const ELEMENT = 4;
+/**
+ * The closure: the works party, the corridor escort and the second element —
+ * "one closure under one order" (§13), so one slot. Hostility is `Owner.slot`,
+ * and on three slots the three treated each other as enemies: the element and
+ * the corridor's second Corvette were dead by 00:10 in an idle run, and the
+ * corridor and the frame's turrets fought out the rest by 04:45 (#1269).
+ */
+const CLOSURE = 2;
 
 /**
  * The challenge's condition, in ticks of cumulative Bearing (§9, §6).
@@ -476,7 +478,7 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
     },
 
     {
-      slot: WORKS,
+      slot: CLOSURE,
       faction: Faction.Bathyarch,
       note: 'The works party — a line re-tensioning under a filed order, the least interesting document the concern produces in a year (§6). Loud, stationary, and not hunting anybody',
       units: [
@@ -553,7 +555,7 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
     },
 
     {
-      slot: CORRIDOR,
+      slot: CLOSURE,
       faction: Faction.Bathyarch,
       note: "Corridor Warden Anse Rell's escort, standing off the frame in Klaxon posture — audible for four minutes before it is anywhere, which is the Consortium's stated weakness handed to the player whole (§5, §7)",
       units: [
@@ -588,9 +590,15 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
     },
 
     {
-      slot: ELEMENT,
+      slot: CLOSURE,
       faction: Faction.Bathyarch,
       note: 'The second element — never engaged, and the reason the mission ends (§5). It is heard only as the housings it passes going quiet',
+      // "Never engaged" (§5), so spared (docs/systems-combat.md §4). Unmarked,
+      // element-two killed tender-five from its 07:30 station (08:09 of an idle
+      // run) and the watch (09:09) before escort-one killed it at 09:20
+      // (#1269). The mark holds its own guns too, so the west end fires on
+      // nothing at 13:00 unless the player fires first (#1281).
+      spared: true,
       /**
        * Standing north of the spur, mid-map, and the position is measured
        * rather than placed: the element used to wait at the north-east corner,
@@ -810,7 +818,9 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
     // 13:00 — the corridor closes. Any tender still south of the spur is cut
     // off, and its share of the terminal count fails by simply not arriving:
     // §8 needs no predicate for this, because a hull that cannot reach the
-    // gate does not reach the gate.
+    // gate does not reach the gate. Not quite true since the element is
+    // spared: the west end holds its guns, and a tender already at the
+    // crossing can make the gate before the 14:00 count (#1281).
     {
       atTick: T(13),
       kind: 'say',
@@ -826,7 +836,7 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
       tag: 'corridor-cruiser',
       x: 2600,
       y: 1500,
-      note: 'The east end. A corridor with a heavy at each end is what §8 means by cut off',
+      note: 'The east end. §8 wants a Cruiser at each end; the west end is the spared element, which holds its guns (#1281)',
     },
 
     // 13:30 — the pack comes up the Kell slope for the noise, and stays for

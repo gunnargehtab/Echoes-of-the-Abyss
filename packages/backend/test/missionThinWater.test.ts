@@ -38,6 +38,8 @@ import {
   detectionRatio,
   type EchoSnapshot,
 } from '@echoes/shared';
+import { defineQuery, hasComponent } from 'bitecs';
+import { Health, Owner, Position, Structure, Unit } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
 import { KELL_SHOULDER, mapById, missionMapById } from '../src/sim/maps/index.ts';
 import {
@@ -756,5 +758,49 @@ describe('withdrawal under contact, run out — docs/mission-thin-water.md §4, 
     // Even the empty count is a reading rather than a fail screen — the whole
     // reason the close is authored as a conclusion.
     assert.match(run.epilogue, /sit with the names until morning/);
+  });
+});
+
+describe('the closure, left alone — docs/mission-thin-water.md §5, §13 (#1269)', () => {
+  it('never fights itself, and leaves the second element to the closure', () => {
+    // "One closure under one order" (§13), so one slot. On three, the three
+    // took each other for enemies: the second element and the corridor's
+    // second Corvette traded fire from 00:01.9 and were dead by 00:10, and
+    // the corridor and the frame's turrets fought out the rest by 04:45.
+    // Held whole and unhurt to 13:00: the element, which §5 says is never
+    // engaged, comes inside the column's escorts' guns at 09:05 and is spared,
+    // and the corridor's 06:30 pass stops well short of them.
+    const match = thinWaterMatch(77);
+    const world = match.world;
+    const closure = defineQuery([Owner, Health])(world).filter(
+      (eid) =>
+        Owner.slot[eid] !== PLAYER &&
+        (hasComponent(world, Unit, eid) || hasComponent(world, Structure, eid))
+    );
+    assert.ok(closure.length >= 8, `the premise: the closure is seated (${closure.length})`);
+    // The element stands north of the spur, the only hulls seated there.
+    const element = closure.filter(
+      (eid) => hasComponent(world, Unit, eid) && Position.y[eid]! < 400
+    );
+    assert.equal(element.length, 2, 'the premise: the second element is two hulls');
+    const full = new Map(closure.map((eid) => [eid, Health.hp[eid]!]));
+    const run = (until: number) => {
+      while (world.tick < until && match.missionOver === null) {
+        match.update(STEP_MS);
+        match.takeMissionView();
+        match.takeMissionLines();
+      }
+    };
+
+    run(T(13));
+    assert.equal(world.tick, T(13), 'the premise: the shift ran to 13:00');
+    // A lost hull is reaped, so presence is read before hull.
+    const unhurt = (eid: number) =>
+      hasComponent(world, Health, eid) && Health.hp[eid]! >= full.get(eid)!;
+    for (const eid of element) {
+      assert.ok(unhurt(eid), '§5: the second element is never engaged, and took fire');
+    }
+    const hurt = closure.filter((eid) => !unhurt(eid));
+    assert.equal(hurt.length, 0, `${hurt.length} of the closure were hurt or lost by 13:00`);
   });
 });
