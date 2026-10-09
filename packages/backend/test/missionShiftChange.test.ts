@@ -578,8 +578,9 @@ describe('the pack, at rest — docs/mission-shift-change.md §7 (#1265)', () =>
         deepest = Math.max(deepest, Position.depth[eid]!);
       }
       // Heard through the player's own resolved contacts, as the player hears
-      // it, from the seating on: seated at 1,250 m, in the duct beside the
-      // refinery, the pack was heard there from 00:00 to 00:12 (#1212).
+      // it, from the seating on: seated at 1,250 m, in the duct with the
+      // refinery about 1.5 km off it, the pack was heard there from 00:00 to
+      // 00:12 (#1212).
       const contacts = own?.contacts ?? [];
       const it = contacts.some((contact) => {
         const eid = match.echo.entityForHandle(slot, contact.id);
