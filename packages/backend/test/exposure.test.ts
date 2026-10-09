@@ -304,13 +304,13 @@ describe('being lit is an event, not a state', () => {
   });
 });
 
-describe('one bearing per ping, never a fix (#1290)', () => {
+describe('one bearing per ping (#1290)', () => {
   /**
    * Every lit unit used to carry its own exact bearing to the pinger, and two
    * bearings are two rays that meet on it: two Light Scouts 670 m apart put
    * an enemy pinger within 0.1 m. `SelfEvent.bearing` is a direction and
-   * never a location, so a side gets one bearing per ping, from its lit unit
-   * nearest the pinger, and is told of the rest without one.
+   * never a location, so a side gets one bearing per ping, from the nearest
+   * of its units the ping first lights, and is told of the rest without one.
    */
   function lit(match: Match, slot: number): SelfEvent[] {
     const events: SelfEvent[] = [];

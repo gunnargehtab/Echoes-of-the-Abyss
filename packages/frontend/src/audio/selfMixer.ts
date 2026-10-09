@@ -153,8 +153,11 @@ export class SelfMixer {
     );
     for (const event of frame.events) {
       // Keyed by tick as well as unit: the same unit breaking silence twice in
-      // one match is two events, but one event redelivered is not two.
-      const key = `${frame.tick}:${event.kind}:${event.unitId}`;
+      // one match is two events, but one event redelivered is not two. And by
+      // bearing: two pings can light one hull on one tick, one leaving it bare
+      // and one giving it that ping's bearing, and the bare one must not
+      // swallow the bearing's strike (#1290).
+      const key = `${frame.tick}:${event.kind}:${event.unitId}:${event.bearing ?? ''}`;
       if (this.played.has(key)) continue;
       this.played.add(key);
       // Counted only when a cue actually sounded: a Damaged event folded into
@@ -303,6 +306,7 @@ export class SelfMixer {
     this.fired.clear();
     this.underFireTick.clear();
     this.sourBiteTick = -1;
+    this.bareStrikeTick = -1;
     this.loudest = null;
     this.loudestUntil = 0;
   }

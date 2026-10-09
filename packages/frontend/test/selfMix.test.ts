@@ -596,17 +596,35 @@ describe('the exposure strike, with one bearing per ping (#1290)', () => {
 
   it('strikes once, panned, when one of the lit hulls carries the bearing', () => {
     // A ping lights three hulls of a group on one pass, and only the nearest
-    // is sent the bearing. Centred copies beside the panned strike would pull
-    // its image to the middle, which is the precision the owner kept.
+    // is sent the bearing, wherever it falls in the list. Centred copies
+    // beside the panned strike would pull its image to the middle, which is
+    // the precision the owner kept.
+    const { sink, pans } = panRecorder();
+    const mixer = new SelfMixer(sink);
+    const lit = [
+      event(SelfEventKind.Exposed, 2),
+      event(SelfEventKind.Exposed, 3),
+      event(SelfEventKind.Exposed, 1, Math.PI),
+    ];
+    mixer.update(frame({ tick: 4, events: lit }), 0);
+    assert.deepEqual(pans, [-1]);
+  });
+
+  it('strikes once for each ping on the tick, though both lit the same hull', () => {
+    // Two pingers transmit on one tick. The first gives hull 1 its bearing and
+    // leaves hull 2 bare; the second gives hull 2 a bearing of its own. Each
+    // ping keeps its strike, and the bare event takes neither, redelivered or
+    // not.
     const { sink, pans } = panRecorder();
     const mixer = new SelfMixer(sink);
     const lit = [
       event(SelfEventKind.Exposed, 1, Math.PI),
       event(SelfEventKind.Exposed, 2),
-      event(SelfEventKind.Exposed, 3),
+      event(SelfEventKind.Exposed, 2, 0),
     ];
-    mixer.update(frame({ tick: 4, events: lit }), 0);
-    assert.deepEqual(pans, [-1]);
+    mixer.update(frame({ tick: 6, events: lit }), 0);
+    mixer.update(frame({ tick: 6, events: lit }), 0.05);
+    assert.deepEqual(pans, [-1, 1]);
   });
 
   it('strikes once, unpanned, for hulls lit later in the ping', () => {

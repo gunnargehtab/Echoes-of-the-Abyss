@@ -769,7 +769,7 @@ a log that sharpened its own history when a better resolution arrived would let 
 reconstruct positions they never earned, and would destroy what the log is for.
 
 The `you were pinged` row is implemented (#206, alongside the own-force rows it shares a
-shape with): it writes from the server-sent exposure flag at the fidelity sent — a bearing, never a position — under the `---` tier the log
+shape with): it writes from the server-sent exposure flag at the fidelity sent — a bearing, never a position, and `bearing unknown` once for hulls a ping lit after its one bearing went out (#1290) — under the `---` tier the log
 reserves for events that are not detections. The log also carries the own-force rows §5
 licenses, in the same form: `Corvette under fire`, `Harvester idle — mined out`, each
 focusable because the hull is the player's own. Tier-3 rows currently name the hull and

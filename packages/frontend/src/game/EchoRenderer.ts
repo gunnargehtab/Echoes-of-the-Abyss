@@ -4899,6 +4899,12 @@ export class EchoRenderer {
    * rather than before it.
    */
   private selfAudioFrame(snapshot: EchoSnapshot, now: number): SelfAudioFrame {
+    // A ping gives a side one bearing (#1290), so a tick whose exposures carry
+    // none is hulls lit later in a ping. The mix strikes once for them,
+    // unpanned, and the log writes that one strike's row.
+    let bareRowDue = !snapshot.selfEvents.some(
+      (event) => event.kind === SelfEventKind.Exposed && event.bearing !== undefined
+    );
     for (const event of snapshot.selfEvents) {
       switch (event.kind) {
         case SelfEventKind.Ping: {
@@ -4921,6 +4927,17 @@ export class EchoRenderer {
               fresh: true,
               label: 'you were pinged',
               bearingDeg: compassDeg(event.bearing),
+            });
+          } else if (bareRowDue) {
+            // Lit, and nothing about from where: the log prints "bearing
+            // unknown". Its edge flash is not specified yet (#1306).
+            bareRowDue = false;
+            this.callbacks.onContactEvent({
+              id: `own:${this.ownRowSeq++}`,
+              tick: snapshot.tick,
+              tier: ResolutionTier.Silent,
+              fresh: true,
+              label: 'you were pinged',
             });
           }
           break;

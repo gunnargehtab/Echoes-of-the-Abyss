@@ -432,10 +432,11 @@ export class EchoLayer {
   /**
    * Pinger -> the slots its current transmission has already given a bearing.
    *
-   * One bearing per ping per side, from that side's lit unit nearest the
-   * pinger (#1290). Every lit unit's bearing used to go out, and two of them
-   * are two rays that meet on the pinger: a direction became a location,
-   * which `SelfEvent.bearing` exists not to send. Dropped with `litAlready`.
+   * One bearing per ping per side, from the nearest of that side's units the
+   * ping first lights (#1290). Every lit unit's bearing used to go out, and
+   * two of them are two rays that meet on the pinger: a direction became a
+   * location, which `SelfEvent.bearing` exists not to send. Dropped with
+   * `litAlready`.
    */
   private readonly bearingGiven = new Map<number, Set<number>>();
   /** Scratch for one pinger's pass: each side's lit unit nearest it so far. */
