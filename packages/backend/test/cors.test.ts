@@ -16,6 +16,8 @@ import assert from 'node:assert/strict';
 
 import {
   CorsConfigError,
+  type CorsPolicy,
+  corsHeadersFor,
   describeCorsPolicy,
   isOriginAllowed,
   resolveCorsPolicy,
@@ -90,6 +92,35 @@ describe('origin matching', () => {
     assert.equal(isOriginAllowed(policy, 'null'), false);
     assert.equal(isOriginAllowed(policy, ''), false);
     assert.equal(isOriginAllowed(policy, 'file://localhost'), false);
+  });
+});
+
+describe('the headers a request gets (#1301)', () => {
+  const locked: CorsPolicy = { kind: 'list', origins: ['https://play.example.com'] };
+
+  it('echoes an allowed origin with credentials, as the SDK needs', () => {
+    assert.deepEqual(corsHeadersFor(locked, 'https://play.example.com'), {
+      'Access-Control-Allow-Origin': 'https://play.example.com',
+      'Access-Control-Allow-Credentials': 'true',
+      Vary: 'Origin',
+    });
+  });
+
+  it('gives a refused origin no allow-origin at all, so the browser blocks it', () => {
+    assert.deepEqual(corsHeadersFor(locked, 'https://evil.example'), {});
+    assert.deepEqual(corsHeadersFor({ kind: 'loopback' }, 'https://evil.example'), {});
+  });
+
+  it('gives a request with no Origin nothing: it is not a cross-origin browser request', () => {
+    assert.deepEqual(corsHeadersFor(locked, undefined), {});
+    assert.deepEqual(corsHeadersFor(locked, null), {});
+  });
+
+  it('echoes every origin under the wildcard', () => {
+    assert.equal(
+      corsHeadersFor({ kind: 'any' }, 'https://anywhere.example')['Access-Control-Allow-Origin'],
+      'https://anywhere.example'
+    );
   });
 });
 

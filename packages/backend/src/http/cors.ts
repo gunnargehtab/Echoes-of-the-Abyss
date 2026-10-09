@@ -117,6 +117,29 @@ function isLoopbackOrigin(origin: string): boolean {
   return LOOPBACK_HOSTS.has(url.hostname);
 }
 
+/**
+ * The CORS headers one request gets under `policy` (#1301).
+ *
+ * The one decision both paths take: the express middleware for the server's
+ * own routes, and Colyseus's matchmaking controller, which answers
+ * `/matchmake` itself before any middleware runs. An allowed browser origin is
+ * echoed with credentials, as the SDK's matchmaking request needs; an origin
+ * the policy refuses, or a request with no `Origin` at all, gets no
+ * allow-origin header, so a browser blocks the page that sent it. `any` allows
+ * every origin by the same echo.
+ */
+export function corsHeadersFor(
+  policy: CorsPolicy,
+  origin: string | null | undefined
+): Record<string, string> {
+  if (typeof origin !== 'string' || !isOriginAllowed(policy, origin)) return {};
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Credentials': 'true',
+    Vary: 'Origin',
+  };
+}
+
 /** One line for the startup log, so an operator can see what was applied. */
 export function describeCorsPolicy(policy: CorsPolicy): string {
   switch (policy.kind) {
