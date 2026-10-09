@@ -1895,6 +1895,26 @@ describe('renderer smoke test: classified fauna (#868)', () => {
   });
 });
 
+describe('a held key acts once (#1348)', () => {
+  it('takes no second toggle from a held key', async () => {
+    // docs/ui-ux.md §9. Auto-repeat ran the action again on every repeat, and
+    // the toggles read the selection off the last snapshot: a held Space flipped
+    // Silent Running at the snapshot rate and ended wherever the release landed.
+    const world = await boot();
+    try {
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      const toggles = () => world.log.calls.filter((call) => call.name === 'onToggleSilent').length;
+      dispatchWindow('keydown', { code: 'Space', repeat: false });
+      assert.equal(toggles(), 1, 'the premise: a press toggles');
+      for (let i = 0; i < 3; i++) dispatchWindow('keydown', { code: 'Space', repeat: true });
+      assert.equal(toggles(), 1, 'the key, held, toggled again');
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
 describe('renderer smoke test: input and teardown', () => {
   /**
    * The mission hold, through the input path rather than through the predicate.
@@ -4215,25 +4235,5 @@ describe('renderer smoke test: the halo frame reading (#1001, development only)'
     }
     const probes = (globalThis as unknown as { window: Probes }).window;
     assert.equal(probes.__perspectiveSeabedM, undefined);
-  });
-});
-
-describe('a held key acts once (#1348)', () => {
-  it('takes no second toggle from a held key', async () => {
-    // docs/ui-ux.md §9. Auto-repeat ran the action again on every repeat, and
-    // the toggles read the selection off the last snapshot: a held Space flipped
-    // Silent Running at the snapshot rate and ended wherever the release landed.
-    const world = await boot();
-    try {
-      world.frame(2);
-      dispatchWindow('keydown', { code: 'Digit0' });
-      const toggles = () => world.log.calls.filter((call) => call.name === 'onToggleSilent').length;
-      dispatchWindow('keydown', { code: 'Space', repeat: false });
-      assert.equal(toggles(), 1, 'the premise: a press toggles');
-      for (let i = 0; i < 3; i++) dispatchWindow('keydown', { code: 'Space', repeat: true });
-      assert.equal(toggles(), 1, 'the key, held, toggled again');
-    } finally {
-      world.teardown();
-    }
   });
 });
