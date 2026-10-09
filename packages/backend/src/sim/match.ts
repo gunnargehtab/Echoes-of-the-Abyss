@@ -556,16 +556,20 @@ export class Match {
    *
    * bitecs keeps every world in a module-global list, and an id returns to
    * its queue only when its entity is removed. A room that merely dropped its
-   * Match kept the whole world reachable, 1.4 MB a two-player match, and spent
-   * its ids for good: about 68 a match, until past id 100,000 `addEntity`
-   * threw "max entities reached" in every room of the process. So every
+   * Match kept the whole world reachable and spent its ids for good: for a
+   * two-second two-player match, 1.4 MB and about 68 ids, so past id 100,000
+   * `addEntity` threw "max entities reached" in every room of the process
+   * within some 1,470 such matches, and sooner with real ones. So every
    * entity is removed, which queues its id for a later match, and the world
    * leaves the list. Recycled ids are routine from here, which is what
-   * docs/invariants.md's "A spawn writes every field of its component" is for.
+   * docs/invariants.md's "A spawn writes every field of its component" is
+   * for; it does not yet hold for hulls and creatures (#1273), and a match on
+   * recycled ids still reads differently (#1279).
    *
-   * Id 0 is never handed back: it is the "none" sentinel `createSimWorld`
-   * burns, and an entity seated on it could never be targeted. Read anything
-   * the room logs before calling this; the world's fields go with it.
+   * Id 0 is never handed back: the process's first world burned it as the
+   * "none" sentinel, so no later world may be given it. A later world's
+   * burned id is ordinary and goes back with the rest. Read anything the room
+   * logs before calling this; the world's fields go with it.
    */
   dispose(): void {
     if (this.disposed) return;

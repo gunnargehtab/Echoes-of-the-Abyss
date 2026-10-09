@@ -3,13 +3,14 @@
  *
  * bitecs keeps every world in a module-global list, and an id returns to its
  * queue only when its entity is removed. A room that merely dropped its Match
- * kept the whole world reachable, 1.4 MB a two-player match, and spent its ids
- * for good: about 68 a match, until past id 100,000 `addEntity` threw "max
- * entities reached" in every room of the process, roughly 1,470 matches in.
- * Held here by the ids, which are counted, and by what the world held, which
- * a full collection must be able to take.
+ * kept the whole world reachable and spent its ids for good: for a two-second
+ * two-player match, 1.4 MB and about 68 ids, so past id 100,000 `addEntity`
+ * threw "max entities reached" in every room of the process within some 1,470
+ * such matches, and sooner with real ones. Held here by the ids, which are
+ * counted, and by what the world held, which a full collection must be able
+ * to take.
  *
- * Its own file: both tests read bitecs' process-wide id queue, which every
+ * Its own file: the id test reads bitecs' process-wide id queue, which every
  * other match built in the same process would also be feeding.
  */
 import { describe, it } from 'node:test';
