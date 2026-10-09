@@ -29,6 +29,7 @@ import {
   maxAudibleRangeM,
   scatterContact,
   contactHandle,
+  markHandle,
   stableUnit,
   tierFromRatio,
   unitAvailableTo,
@@ -375,10 +376,11 @@ export class EchoLayer {
    * as it was: a slot that heard one new mark read off its id how many it had
    * never heard, which is the map-wide total contacts' handles exist to deny.
    * So a mark goes out under a handle minted from a per-slot count of the
-   * marks that slot has heard, through `contactHandle`'s keyed permutation, and
-   * held for the mark's life, so a mark heard again keeps its handle. Marks and
-   * contacts are separate lists on the wire, so one of each may share a value;
-   * neither names the other.
+   * marks that slot has heard, through `markHandle`'s keyed permutation, and
+   * held for the mark's life, so a mark heard again keeps its handle. The key
+   * is the marks' own: under the contacts' key a slot's nth mark and nth
+   * contact shared a value, and its marks decoded its contacts' mint order,
+   * which is where §3's phantoms hide.
    */
   private readonly markHandles = new Map<number, Map<number, number>>();
   private readonly nextMarkHandle = new Map<number, number>();
@@ -648,7 +650,7 @@ export class EchoLayer {
     if (handle === undefined) {
       const index = (this.nextMarkHandle.get(slot) ?? 0) + 1;
       this.nextMarkHandle.set(slot, index);
-      handle = contactHandle(this.seed, slot, index);
+      handle = markHandle(this.seed, slot, index);
       slotHandles.set(markId, handle);
     }
     return handle;
