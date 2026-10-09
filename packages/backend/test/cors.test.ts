@@ -106,14 +106,18 @@ describe('the headers a request gets (#1301)', () => {
     });
   });
 
+  // Only `Vary`: the refusal depends on the Origin as much as the welcome does,
+  // and a cache that missed it could hand the refusal to the allowed origin.
   it('gives a refused origin no allow-origin at all, so the browser blocks it', () => {
-    assert.deepEqual(corsHeadersFor(locked, 'https://evil.example'), {});
-    assert.deepEqual(corsHeadersFor({ kind: 'loopback' }, 'https://evil.example'), {});
+    assert.deepEqual(corsHeadersFor(locked, 'https://evil.example'), { Vary: 'Origin' });
+    assert.deepEqual(corsHeadersFor({ kind: 'loopback' }, 'https://evil.example'), {
+      Vary: 'Origin',
+    });
   });
 
-  it('gives a request with no Origin nothing: it is not a cross-origin browser request', () => {
-    assert.deepEqual(corsHeadersFor(locked, undefined), {});
-    assert.deepEqual(corsHeadersFor(locked, null), {});
+  it('gives a request with no Origin no allow-origin: it is not a cross-origin browser request', () => {
+    assert.deepEqual(corsHeadersFor(locked, undefined), { Vary: 'Origin' });
+    assert.deepEqual(corsHeadersFor(locked, null), { Vary: 'Origin' });
   });
 
   it('echoes every origin under the wildcard', () => {

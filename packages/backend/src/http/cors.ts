@@ -18,7 +18,7 @@
 
 /** How the server decides whether a browser origin may talk to it. */
 export type CorsPolicy =
-  /** Explicitly opted out of the lock: every origin is answered with `*`. */
+  /** Explicitly opted out of the lock: every origin is answered, its own echoed back. */
   | { kind: 'any' }
   /** The development default: loopback on any port, and nothing else. */
   | { kind: 'loopback' }
@@ -120,19 +120,22 @@ function isLoopbackOrigin(origin: string): boolean {
 /**
  * The CORS headers one request gets under `policy` (#1301).
  *
- * The one decision both paths take: the express middleware for the server's
- * own routes, and Colyseus's matchmaking controller, which answers
- * `/matchmake` itself before any middleware runs. An allowed browser origin is
- * echoed with credentials, as the SDK's matchmaking request needs; an origin
- * the policy refuses, or a request with no `Origin` at all, gets no
- * allow-origin header, so a browser blocks the page that sent it. `any` allows
- * every origin by the same echo.
+ * The one decision, taken for every request: Colyseus prepends a listener to
+ * the HTTP server that asks for it through `matchMaker.controller.getCorsHeaders`
+ * (`index.ts`), sets it on every response, express routes included, and
+ * answers every preflight itself before express runs. An allowed origin is
+ * echoed with credentials, because the SDK fetches with credentials and a
+ * browser refuses `*` on such a request; `any` echoes every origin the same
+ * way. An origin the policy refuses, or a request with no `Origin` at all, gets
+ * no allow-origin header, so a browser blocks the page that sent it. Every
+ * answer depends on the `Origin`, so every answer says so in `Vary`, and a
+ * cache never hands one origin's answer to another.
  */
 export function corsHeadersFor(
   policy: CorsPolicy,
   origin: string | null | undefined
 ): Record<string, string> {
-  if (typeof origin !== 'string' || !isOriginAllowed(policy, origin)) return {};
+  if (typeof origin !== 'string' || !isOriginAllowed(policy, origin)) return { Vary: 'Origin' };
   return {
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Credentials': 'true',
