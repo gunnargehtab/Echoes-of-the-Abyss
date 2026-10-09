@@ -563,8 +563,8 @@ export class Match {
    * entity is removed, which queues its id for a later match, and the world
    * leaves the list. Recycled ids are routine from here, which is what
    * docs/invariants.md's "A spawn writes every field of its component" is
-   * for; it does not yet hold for hulls and creatures (#1273), and a match on
-   * recycled ids still reads differently (#1279).
+   * for; #1273 is where hulls and creatures broke it, and a match on recycled
+   * ids still reads differently (#1279).
    *
    * Id 0 is never handed back: the process's first world burned it as the
    * "none" sentinel, so no later world may be given it. A later world's
