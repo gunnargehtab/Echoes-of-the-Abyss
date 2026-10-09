@@ -80,6 +80,7 @@ import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { LampHaloPass } from '../src/game/lampHaloPass.ts';
 import { ROOF_OPEN_OPACITY } from '../src/game/passages.ts';
 import { FURNITURE_OUTLINE_ALPHA } from '../src/game/ladder.ts';
+import { ONE_HANDED_BINDINGS } from '../src/input/bindings.ts';
 import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
 import { FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
@@ -4215,5 +4216,45 @@ describe('renderer smoke test: the halo frame reading (#1001, development only)'
     }
     const probes = (globalThis as unknown as { window: Probes }).window;
     assert.equal(probes.__perspectiveSeabedM, undefined);
+  });
+});
+
+describe('the hint bar names the keys the player has (#1340)', () => {
+  it('names the bound keys, not the defaults, after a layout change', async () => {
+    // docs/ui-ux.md §9: "Every key in that table is a default, not a fact."
+    // The bar named the defaults whatever the bindings, and on the one-handed
+    // layout told the player `X stop` where `X` lays a mine.
+    const world = await boot();
+    try {
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.frame(1);
+      assert.ok(textSaying(world.app.stage, 'X stop') !== null, 'the premise: the defaults');
+
+      world.chart.setBindings(ONE_HANDED_BINDINGS);
+      world.frame(1);
+      const army = '`' + ' stop  ·  TAB hold  ·  CTRL+RMB torpedo  ·  SPACE silent  ·  Q ping';
+      assert.ok(textSaying(world.app.stage, army) !== null, 'the army line named the defaults');
+      assert.equal(textSaying(world.app.stage, 'X stop'), null, 'and still offered X as stop');
+
+      // A harvester's line names its throttle key too.
+      const harvester = cannedSnapshot().units.find((unit) => unit.throttle !== undefined)!;
+      world.chart.focusOn(harvester.x, harvester.y);
+      world.frame(2);
+      const at = world.conn.projectPoint(harvester.x, harvester.y, harvester.depth);
+      for (const type of ['pointerdown', 'pointerup']) {
+        world.app.canvas.dispatch(type, {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x,
+          clientY: at.y,
+        });
+      }
+      world.frame(1);
+      assert.ok(textSaying(world.app.stage, 'E throttle') !== null, 'the throttle named V');
+    } finally {
+      world.teardown();
+    }
   });
 });

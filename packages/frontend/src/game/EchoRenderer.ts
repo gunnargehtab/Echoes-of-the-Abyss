@@ -141,6 +141,7 @@ import {
   BUILD_ACTION_KIND,
   DEFAULT_BINDINGS,
   keyLabel,
+  type BindableAction,
   type Bindings,
 } from '../input/bindings.ts';
 import { FACTION_NAME } from './factions.ts';
@@ -3511,6 +3512,16 @@ export class EchoRenderer {
     ];
     if (FACTION_STRUCTURE[this.faction] !== undefined) codes.push(this.bindings.buildSignature);
     return codes.map(keyLabel).join('/');
+  }
+
+  /**
+   * The key an action is bound to, as the hint bar names it. Read off the live
+   * bindings like the build keys above, because every key in §9's table is a
+   * default, not a fact: the bar named the defaults, and on the one-handed
+   * layout told the player `X stop` where `X` lays a mine (#1340).
+   */
+  private keyHint(action: BindableAction): string {
+    return keyLabel(this.bindings[action]).toUpperCase();
   }
 
   /**
@@ -8623,21 +8634,23 @@ export class EchoRenderer {
     if (harvester !== undefined) {
       const throttle = THROTTLE_LABEL[harvester.throttle!];
       const state = `harvester [${throttle}] ${harvester.cargo?.toFixed(0) ?? 0} cargo`;
-      if (heldAll !== null) return `${state}  ·  ${heldAll}  ·  V throttle`;
-      return `${state}  ·  RMB node/move  ·  V throttle`;
+      const throttleKey = `${this.keyHint('throttle')} throttle`;
+      if (heldAll !== null) return `${state}  ·  ${heldAll}  ·  ${throttleKey}`;
+      return `${state}  ·  RMB node/move  ·  ${throttleKey}`;
     }
+    const standing =
+      `${this.keyHint('stop')} stop  ·  ${this.keyHint('holdPosition')} hold  ·  ` +
+      `CTRL+RMB torpedo  ·  ${this.keyHint('silentRunning')} silent  ·  ${this.keyHint('ping')} ping`;
     if (heldAll !== null) {
       // What is left of the generic line once every way to move is off it.
-      return (
-        `${this.selected.size} selected  ·  ${heldAll}  ·  X stop  ·  H hold  ·  ` +
-        `CTRL+RMB torpedo  ·  SPACE silent  ·  P ping`
-      );
+      return `${this.selected.size} selected  ·  ${heldAll}  ·  ${standing}`;
     }
     // No `D dive · A rise` any more: a right click carries its depth, and the
     // left + right drag is how the depth it carries is chosen (§9, #1132).
     return this.pendingAttackMove
       ? `${this.selected.size} selected  ·  ATTACK-MOVE armed: click the water (SHIFT queues, ESC cancels)`
-      : `${this.selected.size} selected  ·  RMB move (SHIFT queue)  ·  L+R drag depth  ·  W attack-move  ·  X stop  ·  H hold  ·  CTRL+RMB torpedo  ·  SPACE silent  ·  P ping`;
+      : `${this.selected.size} selected  ·  RMB move (SHIFT queue)  ·  L+R drag depth  ·  ` +
+          `${this.keyHint('attackMove')} attack-move  ·  ${standing}`;
   }
 
   destroy(): void {
