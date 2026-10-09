@@ -3163,17 +3163,6 @@ describe('the console drops its blocks in §2’s order', () => {
   });
 });
 
-/**
- * #815 — the card is offered more than its twelve cells hold, and what went
- * used to be whatever `buildBarModel` pushed last. For any hull carrying
- * torpedoes — ten of them, the Corvette and the Cruiser among them — that was
- * the depth charge, and the card is the mouse's route to every order
- * (docs/ui-ux.md §2).
- *
- * The two halves of the fix are asserted together because either alone leaves
- * the Corvette one cell over: the torpedo count is a readout and leaves the
- * order grid, and what remains yields in the order §9 writes down.
- */
 describe('the hint bar names the keys the player has (#1340)', () => {
   it('names the bound keys, not the defaults, after a layout change', async () => {
     // docs/ui-ux.md §9: "Every key in that table is a default, not a fact."
@@ -3225,6 +3214,17 @@ describe('the hint bar names the keys the player has (#1340)', () => {
   });
 });
 
+/**
+ * #815 — the card is offered more than its twelve cells hold, and what went
+ * used to be whatever `buildBarModel` pushed last. For any hull carrying
+ * torpedoes — ten of them, the Corvette and the Cruiser among them — that was
+ * the depth charge, and the card is the mouse's route to every order
+ * (docs/ui-ux.md §2).
+ *
+ * The two halves of the fix are asserted together because either alone leaves
+ * the Corvette one cell over: the torpedo count is a readout and leaves the
+ * order grid, and what remains yields in the order §9 writes down.
+ */
 describe('the command card when it is offered more than it holds', () => {
   /** Click a hull on the conn view, the way the attack-move tests do. */
   const selectHull = (
