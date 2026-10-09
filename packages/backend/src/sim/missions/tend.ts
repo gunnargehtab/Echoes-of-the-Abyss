@@ -364,12 +364,19 @@ export const SEEDING_TEND: MissionDefinition = {
         // in this simulation an armed hull returns fire on its own, and the
         // sweep does not shoot — it files. Cold weapons are how "irrelevant"
         // is spelled in the ECS, and the observable behaviour is the document's.
+        //
+        // At 300 m, the plateau's own water, and out of the pack's reach by the
+        // rule §1 keeps the gardens with (§6). The pack below the lane pursues
+        // as shallow as about 500 m and bites 160 m in three dimensions, so at
+        // 550 m it killed both corvettes before 07:00 of an idle run, and the
+        // first pass never ended (#1284). Hearing is unchanged: the Echo pass
+        // reads depth only across the 1,200 m layer.
         {
           tag: 'sweep-one',
           kind: UnitKind.Corvette,
           x: 3300,
           y: 2200,
-          depthM: 550,
+          depthM: 300,
           note: 'Hydrophones out, holding the east end of the lane until the chart says go',
         },
         {
@@ -377,7 +384,7 @@ export const SEEDING_TEND: MissionDefinition = {
           kind: UnitKind.Corvette,
           x: 3350,
           y: 2350,
-          depthM: 550,
+          depthM: 300,
           note: '',
         },
       ],

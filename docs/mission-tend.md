@@ -204,6 +204,10 @@ The plateau's answer, practised for two centuries, is the **stillness**: work st
 hulls drift, and the hum decays before the instruments arrive. Nobody orders it. The briefing
 tells the player to watch how everybody does it anyway.
 
+The pair runs the lane at 300 m, the plateau's own water, so §1's depth rule keeps the
+instrument out of the pack's reach as it keeps the gardens. At 550 m the pack below the lane
+took both corvettes before the first pass was done, and the second pass never ran (#1284).
+
 **The stillness is the silence order's older, softer sibling** — the court counts silence in
 seconds because Sorrowgate is where the Rift's courtesy became procedure
 ([mission-sorrowgate.md](mission-sorrowgate.md) §4); the plateaus never wrote it down. The

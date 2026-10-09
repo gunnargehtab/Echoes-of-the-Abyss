@@ -38,14 +38,14 @@ import {
   faunaStatsFor,
   type EchoSnapshot,
 } from '@echoes/shared';
-import { hasComponent } from 'bitecs';
+import { defineQuery, hasComponent } from 'bitecs';
 import { Match } from '../src/sim/match.ts';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { SEEDING_CONVOCATION, SEEDING_TEND } from '../src/sim/missions/index.ts';
 import type { MissionDefinition } from '../src/sim/missions/index.ts';
 import { Pathfinder } from '../src/sim/pathfinding.ts';
 import { shapeContains } from '../src/sim/terrain.ts';
-import { Fauna, Position } from '../src/sim/components.ts';
+import { Fauna, Health, Owner, Position, Unit } from '../src/sim/components.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const PLAYER = SEEDING_TEND.playerSlot;
@@ -150,6 +150,54 @@ describe('the tide, run out untouched — docs/mission-tend.md §8', () => {
 });
 
 describe('the sweep — docs/mission-tend.md §6, §8', () => {
+  it("runs both passes out of the pack's reach, so both happen", () => {
+    // The pack below the lane pursues as shallow as about 500 m and bites
+    // 160 m in three dimensions. Seated at 550 m the pair was in reach, and in
+    // an idle run the pack killed both before 07:00: the first pass never
+    // reached the lane's west end, and the second never ran (#1284). At the
+    // plateau's own 300 m (§6) both run, each ending where the sweep's ears
+    // bent it rather than on its authored point.
+    const match = tendMatch(77);
+    const world = match.world;
+    const survey = SEEDING_TEND.parties.find((party) =>
+      party.units.some((unit) => unit.tag === 'sweep-one')
+    )!;
+    const hulls = defineQuery([Unit, Owner, Health])(world);
+    const sweep = survey.units.map((seat) => {
+      const eid = hulls.find(
+        (e) =>
+          Owner.slot[e] === survey.slot &&
+          Math.hypot(Position.x[e]! - seat.x, Position.y[e]! - seat.y) < 1
+      );
+      assert.ok(eid !== undefined, `${seat.tag} is seated where the literal puts it`);
+      return { tag: seat.tag, eid, full: Health.hp[eid]! };
+    });
+    const west = new Set<string>();
+    const east = new Set<string>();
+    runOut(match, (tick) => {
+      for (const hull of sweep) {
+        if (!hasComponent(world, Health, hull.eid)) continue;
+        const x = Position.x[hull.eid]!;
+        if (tick < T(11, 30) && x < 1000) west.add(hull.tag);
+        if (tick >= T(11, 30) && x > 2800) east.add(hull.tag);
+      }
+    });
+    for (const hull of sweep) {
+      const whole = hasComponent(world, Health, hull.eid) && Health.hp[hull.eid]! >= hull.full;
+      assert.ok(whole, `${hull.tag} was hurt or lost on the lane`);
+    }
+    assert.deepEqual(
+      [...west].sort(),
+      ['sweep-one', 'sweep-two'],
+      'the first pass reached the west end'
+    );
+    assert.deepEqual(
+      [...east].sort(),
+      ['sweep-one', 'sweep-two'],
+      'the second pass came back east'
+    );
+  });
+
   it('files a garden that forgets itself, and the reading arrives with the tide', () => {
     // One tender is parked on the drop lane just before the first pass and
     // left there — the one sound on a charted lane. The day is read with both
