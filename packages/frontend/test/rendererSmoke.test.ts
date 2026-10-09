@@ -25,6 +25,7 @@ import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
 import { CanvasTextMetrics, Container, Graphics, Text, type GraphicsPath } from 'pixi.js';
 import {
+  ACTIVE_SONAR,
   DEPTH,
   DRIFT_ROSTER,
   Faction,
@@ -37,6 +38,7 @@ import {
   SIM,
   StructureKind,
   type Contact,
+  type OwnUnit,
 } from '@echoes/shared';
 import { FOCUS_DRAG_M_PER_PX, FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
 import { swayAt } from '../src/game/cameraSway.ts';
@@ -4215,5 +4217,80 @@ describe('renderer smoke test: the halo frame reading (#1001, development only)'
     }
     const probes = (globalThis as unknown as { window: Probes }).window;
     assert.equal(probes.__perspectiveSeabedM, undefined);
+  });
+});
+
+describe('the ping preview rings the hull that pings (#1330)', () => {
+  it('rings the hull P pings from and no other, however many are selected', async () => {
+    // docs/ui-ux.md §6: "two rings on the terrain at the emitting unit", and P
+    // sends one ping. The preview used to ring every selected hull, so five
+    // self-reveals promised a cost the ping did not pay, or not where shown.
+    const world = await boot();
+    try {
+      type Chart = {
+        selected: Set<number>;
+        units: OwnUnit[];
+        drawnPosition(unit: OwnUnit): { x: number; y: number };
+        drawRings(): void;
+        traceCircle(
+          g: Graphics,
+          cx: number,
+          cy: number,
+          radiusM: number,
+          ...rest: unknown[]
+        ): boolean;
+      };
+      const chart = world.chart as unknown as Chart;
+      // Every circle the latest ring pass traced, by centre and radius, and
+      // only that pass's: hazards and fauna trace circles of their own in the
+      // same frame. The real pass runs; this only reads what it asked for.
+      const traced: Array<{ x: number; y: number; radiusM: number }> = [];
+      let inRingPass = false;
+      const drawRings = chart.drawRings.bind(chart);
+      const traceCircle = chart.traceCircle.bind(chart);
+      chart.drawRings = () => {
+        traced.length = 0;
+        inRingPass = true;
+        try {
+          drawRings();
+        } finally {
+          inRingPass = false;
+        }
+      };
+      chart.traceCircle = (g, cx, cy, radiusM, ...rest) => {
+        if (inRingPass) traced.push({ x: cx, y: cy, radiusM });
+        return traceCircle(g, cx, cy, radiusM, ...rest);
+      };
+
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.frame(1);
+      assert.ok(chart.selected.size >= 2, 'the premise: several hulls selected');
+      dispatchWindow('keydown', { code: 'AltLeft' });
+      world.frame(2);
+      const ringsOf = (radiusM: number) => traced.filter((circle) => circle.radiusM === radiusM);
+      const rings = {
+        reveal: ringsOf(ACTIVE_SONAR.REVEAL_RADIUS_M),
+        'self-reveal': ringsOf(ACTIVE_SONAR.SELF_REVEAL_RADIUS_M),
+      };
+      dispatchWindow('keyup', { code: 'AltLeft' });
+
+      // The hull the ping actually goes out from.
+      dispatchWindow('keydown', { code: 'KeyP' });
+      const pinger = chart.units.find((unit) => unit.id === world.log.first('onPing')?.[0]);
+      assert.ok(pinger !== undefined, 'the premise: P pinged a selected hull');
+      const at = chart.drawnPosition(pinger);
+      for (const [name, drawn] of Object.entries(rings)) {
+        assert.equal(drawn.length, 1, `one hull pings, so one ${name} ring is drawn`);
+        assert.deepEqual(
+          { x: drawn[0]!.x, y: drawn[0]!.y },
+          { x: at.x, y: at.y },
+          `the ${name} ring is round the hull P pings from`
+        );
+      }
+    } finally {
+      dispatchWindow('keyup', { code: 'AltLeft' });
+      world.teardown();
+    }
   });
 });

@@ -469,7 +469,7 @@ The drive is five stations, chosen because each loads a different part of the fr
 | --- | --- |
 | `base` | The opening view. The floor every other station is read against |
 | `marquee` | The fleet selected: a signature ring per hull, conforming to the terrain |
-| `ping-preview` | Alt held — two more projected rings per selected hull, the polyline worst case |
+| `ping-preview` | Alt held — two more projected rings, round the hull P pings from (#1330) |
 | `survey-zoom` | Dollied out, where `CIRCLE_SEGMENTS` is spent on rings a few pixels across |
 | `fight` | Own ordnance in the water and hulls under orders, so the force layer is on the frame cadence rather than held by its layer stamps |
 
@@ -495,6 +495,9 @@ a station, against the dev build with the server on the same machine:
 | `ping-preview` | 57.1 | 17.53 / 23.7 | 0.63 / 1.3 | 1.68 / 3.1 | 42 | 140,920 |
 | `survey-zoom` | 57.0 | 17.52 / 24.6 | 0.62 / 1.0 | 1.64 / 2.5 | 42 | 140,920 |
 | `fight` | 57.0 | 17.54 / 25.5 | 0.68 / 1.3 | 1.74 / 3.0 | 44 | 141,208 |
+
+The `ping-preview` row predates #1330: Alt then ringed every selected hull, where it now rings
+one.
 
 What it says: both painters together spend **under 2.5 ms on average** at every station,
 and their worst cases sum to under 4.5 ms, against a 16.7 ms display interval. The overlay

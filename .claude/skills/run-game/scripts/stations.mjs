@@ -106,10 +106,10 @@ export default async ({ page, shot }) => {
   await station(page, 'marquee', 'fleet selected, signature rings conforming', () => marquee(page));
   await shot('station-marquee');
 
-  // 3. The ping preview. The worst case for projected polylines: Alt adds the
-  //    900 m reveal and the 2,400 m self-reveal to every selected hull, so the
-  //    ring count roughly triples while the key is down.
-  await station(page, 'ping-preview', 'Alt held: two extra rings per selected hull', async () => {
+  // 3. The ping preview. Alt adds the 900 m reveal and the 2,400 m self-reveal
+  //    round the hull P pings from (#1330): two more projected polylines over
+  //    the marquee's rings while the key is down.
+  await station(page, 'ping-preview', 'Alt held: two rings round the pinging hull', async () => {
     await page.keyboard.down('Alt');
     await page.waitForTimeout(400);
   });
