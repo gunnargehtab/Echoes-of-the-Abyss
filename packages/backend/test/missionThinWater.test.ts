@@ -766,11 +766,10 @@ describe('the closure, left alone — docs/mission-thin-water.md §5, §13 (#126
     // "One closure under one order" (§13), so one slot. On three, the three
     // took each other for enemies: the second element and the corridor's
     // second Corvette traded fire from 00:01.9 and were dead by 00:10, and
-    // the corridor and the frame's turrets fought out the rest by 04:45. The
-    // corridor still meets the column's own escorts later in an idle run —
-    // that is §4's withdrawal under contact — so what is held here is the
-    // first five minutes, before anybody but the closure is near it, and the
-    // element, which §5 says is never engaged.
+    // the corridor and the frame's turrets fought out the rest by 04:45.
+    // Held whole and unhurt to 13:00: the element, which §5 says is never
+    // engaged, comes inside the column's escorts' guns at 09:05 and is spared,
+    // and the corridor's 06:30 pass stops well short of them.
     const match = thinWaterMatch(77);
     const world = match.world;
     const closure = defineQuery([Owner, Health])(world).filter(
@@ -793,17 +792,15 @@ describe('the closure, left alone — docs/mission-thin-water.md §5, §13 (#126
       }
     };
 
-    run(T(5));
-    const hurt = closure.filter((eid) => Health.hp[eid]! < full.get(eid)!);
-    assert.equal(
-      hurt.length,
-      0,
-      `${hurt.length} of the closure took fire from the closure by 05:00`
-    );
-
     run(T(13));
+    assert.equal(world.tick, T(13), 'the premise: the shift ran to 13:00');
+    // A lost hull is reaped, so presence is read before hull.
+    const unhurt = (eid: number) =>
+      hasComponent(world, Health, eid) && Health.hp[eid]! >= full.get(eid)!;
     for (const eid of element) {
-      assert.ok(Health.hp[eid]! > 0, '§5: the second element is never engaged, and was lost');
+      assert.ok(unhurt(eid), '§5: the second element is never engaged, and took fire');
     }
+    const hurt = closure.filter((eid) => !unhurt(eid));
+    assert.equal(hurt.length, 0, `${hurt.length} of the closure were hurt or lost by 13:00`);
   });
 });

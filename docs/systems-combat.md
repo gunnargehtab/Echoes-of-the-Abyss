@@ -109,7 +109,8 @@ carries one. This is the class the prototype already implements, and its rules s
   scripted party its document says is never fought — the watch
   [mission-nineteen.md](mission-nineteen.md) walks, the column
   [mission-standing-wave.md](mission-standing-wave.md) moves, the rim
-  [mission-second-chord.md](mission-second-chord.md) attends. No gun swings onto one of its
+  [mission-second-chord.md](mission-second-chord.md) attends, the second element
+  [mission-thin-water.md](mission-thin-water.md) never engages. No gun swings onto one of its
   own accord and no deck launches at one (§15), and its own guns and decks hold the same way;
   point defence still answers a round in the water. An ordered attack still lands, and the
   first gun, torpedo, blast or spore from another slot to hit any of it wakes the whole

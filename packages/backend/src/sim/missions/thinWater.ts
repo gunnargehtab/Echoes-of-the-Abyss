@@ -593,9 +593,10 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
       slot: CLOSURE,
       faction: Faction.Bathyarch,
       note: 'The second element — never engaged, and the reason the mission ends (§5). It is heard only as the housings it passes going quiet',
-      // "Never engaged" (§5), so spared (docs/systems-combat.md §4): its 07:30
-      // drop onto the spur's east end puts it about 550 m from the column's
-      // armed escorts, whose idle guns took it before the closure (#1269).
+      // "Never engaged" (§5), so spared (docs/systems-combat.md §4): its 09:00
+      // step west brings it about 500 m from the column's escorts at the face,
+      // inside their 550 m guns, which took it at 09:20 of an idle run before
+      // the mark (#1269).
       spared: true,
       /**
        * Standing north of the spur, mid-map, and the position is measured

@@ -4,7 +4,8 @@
  * Hostility is `Owner.slot`, so before #1239 a player's idle guns auto-acquired
  * any scripted party in range and ended it with no order given: the watch
  * Nineteen says only counts, the column Standing Wave says only moves, the rim
- * Second Chord says only attends. A party its document says is never fought is
+ * Second Chord says only attends, and Thin Water's second element, which its
+ * document says is never engaged (#1269). A party its document says is never fought is
  * now marked `spared`: no gun swings onto it of its own accord and no deck
  * launches at it, its own guns and decks hold the same way, and an ordered
  * attack still lands — the first blow wakes the whole party, which answers.
@@ -21,6 +22,7 @@ import {
   CHORD_NINETEEN,
   CHORD_SECOND_CHORD,
   CHORD_STANDING_WAVE,
+  SEEDING_THIN_WATER,
   type MissionDefinition,
 } from '../src/sim/missions/index.ts';
 import { Health, Owner, Position, Spared, Structure, Unit } from '../src/sim/components.ts';
@@ -186,34 +188,45 @@ describe('a spared party — docs/systems-combat.md §4', () => {
   });
 
   /**
-   * The three documents name the parties, and the runtime marks every hull and
-   * structure of them at install; the player's own force is never spared.
+   * The four documents name the parties, and the runtime marks every hull and
+   * structure of them at install, keyed by the party rather than the slot: Thin
+   * Water's spared element shares its slot with two parties that are not
+   * (#1269). The player's own force is never spared.
    */
-  it('marks the parties Second Chord, Standing Wave and Nineteen say are never fought', () => {
+  it('marks the parties Second Chord, Standing Wave, Nineteen and Thin Water say are never fought', () => {
     const named: Array<[MissionDefinition, number]> = [
       [CHORD_SECOND_CHORD, 2],
       [CHORD_STANDING_WAVE, 1],
       [CHORD_NINETEEN, 1],
+      [SEEDING_THIN_WATER, 1],
     ];
     const things = defineQuery([Owner, Health]);
     for (const [mission, parties] of named) {
-      const spared = mission.parties.filter((party) => party.spared === true);
-      assert.equal(spared.length, parties, `${mission.id}: the parties its document names`);
+      // Party index to the hulls and structures it seats, for the parties
+      // marked spared: what `Spared.party` must count, and nothing else.
+      const seated = new Map<number, number>();
+      mission.parties.forEach((party, index) => {
+        if (party.spared !== true) return;
+        seated.set(index, party.units.length + (party.structures?.length ?? 0));
+      });
+      assert.equal(seated.size, parties, `${mission.id}: the parties its document names`);
       const match = new Match(missionMapById(mission.mapId)!, { mission, fauna: false, seed: 4 });
       const world = match.world;
-      const slots = new Set(spared.map((party) => party.slot));
-      let marked = 0;
+      const marked = new Map<number, number>();
       for (const eid of things(world)) {
         if (!hasComponent(world, Unit, eid) && !hasComponent(world, Structure, eid)) continue;
-        const slot = Owner.slot[eid]!;
-        if (slots.has(slot)) {
-          assert.ok(hasComponent(world, Spared, eid), `${mission.id}: slot ${slot} left unmarked`);
-          marked++;
-        } else if (slot === mission.playerSlot) {
+        if (Owner.slot[eid] === mission.playerSlot) {
           assert.equal(hasComponent(world, Spared, eid), false, `${mission.id}: the player spared`);
         }
+        if (!hasComponent(world, Spared, eid)) continue;
+        const party = Spared.party[eid]!;
+        marked.set(party, (marked.get(party) ?? 0) + 1);
       }
-      assert.ok(marked > 0, `${mission.id}: the premise, a spared party was seated`);
+      assert.deepEqual(
+        marked,
+        seated,
+        `${mission.id}: every piece of a spared party, and no other`
+      );
     }
   });
 
