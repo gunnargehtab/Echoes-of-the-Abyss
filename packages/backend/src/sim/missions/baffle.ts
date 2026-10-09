@@ -47,6 +47,17 @@ const PICKET = 2;
 /** The Deep Yard — forty-one souls, whose only asset in the water is a sound. */
 const YARD = 3;
 
+/**
+ * §5 — the pack is driven up the axis at 1,600 m, under the Draymaw's band.
+ * Said on the drive as well as the spawn: a drive without a depth holds the
+ * species' 900 m (types.ts, `driveTo`), and the pack climbed through the
+ * layer at 19:03 (#1212). The drive still ends at 19:30, because §9's pack
+ * then commits to the loudest hull in reach, and a driven creature never
+ * listens; released, it climbs home at 12 m/s and is still under the layer
+ * at the whistle.
+ */
+const PACK_M = 1600;
+
 export const LEDGER_BAFFLE: MissionDefinition = {
   ...LEDGER_BAFFLE_HEADER,
   doc: 'docs/mission-baffle.md',
@@ -363,8 +374,8 @@ export const LEDGER_BAFFLE: MissionDefinition = {
       kind: 'creature',
       tag: 'pack-a',
       species: FaunaSpecies.Draymaw,
-      spawnAt: { x: 1450, y: 4000, depthM: 1600 },
-      driveTo: { x: 1450, y: 2500 },
+      spawnAt: { x: 1450, y: 4000, depthM: PACK_M },
+      driveTo: { x: 1450, y: 2500, depthM: PACK_M },
       untilTick: T(19, 30),
       loud: true,
       note: 'The bill for twenty minutes of gunfire and transmission, arriving',
@@ -374,8 +385,8 @@ export const LEDGER_BAFFLE: MissionDefinition = {
       kind: 'creature',
       tag: 'pack-b',
       species: FaunaSpecies.Draymaw,
-      spawnAt: { x: 1550, y: 3950, depthM: 1600 },
-      driveTo: { x: 1500, y: 2600 },
+      spawnAt: { x: 1550, y: 3950, depthM: PACK_M },
+      driveTo: { x: 1500, y: 2600, depthM: PACK_M },
       untilTick: T(19, 30),
       loud: true,
       note: '',
@@ -385,8 +396,8 @@ export const LEDGER_BAFFLE: MissionDefinition = {
       kind: 'creature',
       tag: 'pack-c',
       species: FaunaSpecies.Draymaw,
-      spawnAt: { x: 1500, y: 4050, depthM: 1600 },
-      driveTo: { x: 1550, y: 2550 },
+      spawnAt: { x: 1500, y: 4050, depthM: PACK_M },
+      driveTo: { x: 1550, y: 2550, depthM: PACK_M },
       untilTick: T(19, 30),
       loud: true,
       note: '',

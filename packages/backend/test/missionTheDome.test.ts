@@ -1288,7 +1288,7 @@ describe('the count, as docs/mission-the-dome.md §6 takes it', () => {
     assert.deepEqual(
       ourPack.map((b) => JSON.stringify({ ...b, note: '' })),
       theirPack.map((b) => JSON.stringify({ ...b, note: '' })),
-      "§13: *Baffle*'s three beats, inherited whole — `driveTo` with no depth included"
+      "§13: *Baffle*'s three beats, inherited whole — the drive's depth included (#1212)"
     );
   });
 

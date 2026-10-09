@@ -16,14 +16,24 @@
  *   never out of the corridor.
  * - **The ground, drawn in shapes** (§11, #1143): every seat, leg, pocket and
  *   the berth on the ground §11 gives it, and the trench the only road.
+ * - **The pack runs the axis at 1,600 m** (§5, #1212): held there for its
+ *   drive, under the layer to the whistle, and fighting nothing on the way.
  */
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { Biome, FOURTH_CLOSURE_CONVOY, MissionOutcome, SIM } from '@echoes/shared';
+import {
+  Biome,
+  FaunaSpecies,
+  FOURTH_CLOSURE_CONVOY,
+  MissionOutcome,
+  SIM,
+  THERMOCLINE,
+  faunaStatsFor,
+} from '@echoes/shared';
 import { defineQuery, hasComponent } from 'bitecs';
-import { Owner, Structure, Unit, Weapon } from '../src/sim/components.ts';
+import { Fauna, Health, Owner, Position, Structure, Unit, Weapon } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { LEDGER_BAFFLE } from '../src/sim/missions/index.ts';
@@ -34,6 +44,8 @@ const T = (minutes: number, seconds = 0): number => (minutes * 60 + seconds) * S
 
 const hulls = defineQuery([Unit, Owner]);
 const moored = defineQuery([Structure, Owner]);
+const hounds = defineQuery([Fauna, Position, Health]);
+const whole = defineQuery([Owner, Health]);
 
 interface Run {
   playerArmed: number;
@@ -46,6 +58,10 @@ interface Run {
   epilogue: string | null;
   scenes: readonly string[];
   lines: { tick: number; text: string }[];
+  /** Every hound, read every five seconds from the pack's arrival to the close. */
+  pack: { tick: number; depths: number[]; driven: boolean[]; hp: number[] }[];
+  /** Every hull, structure and emitter that lost hull, or was lost, from the pack's arrival on. */
+  hurt: string[];
 }
 
 let memo: Run | null = null;
@@ -80,14 +96,37 @@ function run(): Run {
   let stationsAfter = stationsBefore;
   let resolvedAtTick = 0;
   const lines: Run['lines'] = [];
+  const pack: Run['pack'] = [];
+  const arrival = new Map<number, number>();
+  const hurt: string[] = [];
   for (let tick = 0; tick <= T(20, 30); tick++) {
     match.update(STEP_MS);
     lines.push(...match.takeMissionLines());
     if (tick === T(13, 10)) stationsAfter = stations();
+    const now = match.world.tick;
+    if (now === T(18, 30)) {
+      for (const eid of whole(match.world)) {
+        if (!hasComponent(match.world, Fauna, eid)) arrival.set(eid, Health.hp[eid]!);
+      }
+    }
+    if (now >= T(18, 30) && (now - T(18, 30)) % (5 * SIM.TICK_HZ) === 0) {
+      const alive = [...hounds(match.world)];
+      pack.push({
+        tick: now,
+        depths: alive.map((eid) => Position.depth[eid]!),
+        driven: alive.map((eid) => Fauna.driven[eid] === 1),
+        hp: alive.map((eid) => Health.hp[eid]!),
+      });
+    }
     if (match.missionOver !== null) {
-      resolvedAtTick = match.world.tick;
+      resolvedAtTick = now;
       break;
     }
+  }
+  for (const [eid, hp] of arrival) {
+    // A lost hull is reaped, so it is counted by its absence.
+    const left = hasComponent(match.world, Health, eid) ? Health.hp[eid]! : 0;
+    if (left < hp) hurt.push(`slot ${Owner.slot[eid]}'s ${eid}: ${hp} to ${left}`);
   }
 
   memo = {
@@ -101,6 +140,8 @@ function run(): Run {
     epilogue: match.missionOver?.epilogue ?? null,
     scenes: match.missionOver?.scenes ?? [],
     lines,
+    pack,
+    hurt,
   };
   return memo;
 }
@@ -139,6 +180,57 @@ describe('the writ, run out — docs/mission-baffle.md §7, §8, §9', () => {
     assert.deepEqual(run().scenes, [FOURTH_CLOSURE_CONVOY]);
     const line = run().lines.find((line) => line.text.startsWith('The trench is closed'));
     assert.equal(line?.tick, T(4));
+  });
+});
+
+describe('the pack, as docs/mission-baffle.md §5 drives it (#1212)', () => {
+  const pack = LEDGER_BAFFLE.beats.flatMap((beat) => (beat.kind === 'creature' ? [beat] : []));
+
+  it("drives every hound at 1,600 m rather than at the species' own, to 19:30", () => {
+    // The trap `types.ts` names: a drive without a depth holds the species'
+    // working depth, and a Draymaw's is 900 m, above the layer.
+    assert.equal(faunaStatsFor(FaunaSpecies.Draymaw).workingDepthM, 900);
+    assert.equal(pack.length, 3, '§5: one pack');
+    for (const beat of pack) {
+      assert.equal(beat.species, FaunaSpecies.Draymaw);
+      assert.equal(beat.atTick, T(18, 30), '§9: the pack arrives at 18:30');
+      assert.equal(beat.spawnAt?.depthM, 1600, `${beat.tag}, spawned on the axis`);
+      assert.equal(beat.driveTo.depthM, 1600, `${beat.tag}, and held there`);
+      // Released before the whistle, because §9's pack commits to the loudest
+      // hull in reach, and a driven creature never listens (`runtime.ts`).
+      assert.equal(beat.untilTick, T(19, 30), `${beat.tag}, released at 19:30`);
+      assert.equal(beat.loud, true, '§8: the telegraph');
+    }
+  });
+
+  it('holds the axis under the layer to the whistle, and fights nothing on the way', () => {
+    // An idle convoy, read every five seconds. Before #1212 the pack climbed
+    // toward 900 m from the moment it was driven, and crossed the layer at 19:03.
+    const { pack: samples, hurt } = run();
+    assert.equal(samples.at(0)?.tick, T(18, 30), 'the premise: read from the arrival');
+    assert.equal(samples.at(-1)?.tick, T(20), 'the premise: read to the whistle');
+    for (const { tick, depths, driven, hp } of samples) {
+      const s = tick / SIM.TICK_HZ;
+      const at = `at ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+      assert.equal(depths.length, 3, `every hound alive ${at}`);
+      assert.ok(
+        hp.every((left) => left === faunaStatsFor(FaunaSpecies.Draymaw).maxHp),
+        `a hound took hull ${at}`
+      );
+      if (tick <= T(19, 30)) {
+        assert.deepEqual(depths, [1600, 1600, 1600], `the pack's depth ${at}`);
+      } else {
+        // Released: the rider's climb home, still under the layer.
+        assert.ok(
+          driven.every((held) => !held),
+          `the pack is still driven ${at}`
+        );
+        for (const depth of depths) {
+          assert.ok(depth < 1600 && depth > THERMOCLINE.DEPTH_M, `a hound at ${depth} m ${at}`);
+        }
+      }
+    }
+    assert.deepEqual(hurt, [], 'a hull lost hull between the pack arriving and the whistle');
   });
 });
 
@@ -198,7 +290,7 @@ describe('the ground the writ stands on — §11, drawn in shapes (#1143)', () =
         const x = spawnAt!.x + ((driveTo.x - spawnAt!.x) * i) / 100;
         const y = spawnAt!.y + ((driveTo.y - spawnAt!.y) * i) / 100;
         assert.equal(regionAt(x, y), 'The Trench', `${beat.tag} leaves the trench at ${x},${y}`);
-        assert.ok(terrain.admits(x, y, spawnAt!.depthM), `${beat.tag} at ${x},${y}`);
+        assert.ok(terrain.admits(x, y, driveTo.depthM!), `${beat.tag} at ${x},${y}`);
       }
     }
   });
