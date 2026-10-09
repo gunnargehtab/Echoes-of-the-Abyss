@@ -319,6 +319,22 @@ export function flightSystem(world: SimWorld, destroyed: number[]): void {
     // rule, and it can only be reached by a mission seating one.
     if (hasComponent(world, UnderConstruction, eid)) continue;
 
+    // A carrier has no gun, so `combatSystem` never rules on its order as it
+    // rules on a gun's: a target dead or aboard a transport is let go here
+    // (#1318). Held, the order kept any plan behind it waiting for good and
+    // sent the flight after the hull again the moment it landed.
+    if (hasComponent(world, Weapon, eid)) {
+      const ordered = Weapon.orderedTargetEid[eid]!;
+      if (
+        ordered !== 0 &&
+        (!hasComponent(world, Health, ordered) ||
+          Health.hp[ordered]! <= 0 ||
+          !hasComponent(world, Position, ordered))
+      ) {
+        Weapon.orderedTargetEid[eid] = 0;
+      }
+    }
+
     const deck = statsFor(Unit.kind[eid] as UnitKind).flight!;
     const flight = world.flights.get(eid);
     const alive = flight === undefined ? 0 : flight.length;

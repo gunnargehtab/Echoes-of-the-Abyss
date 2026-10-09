@@ -59,7 +59,18 @@ function busy(world: SimWorld, eid: number): boolean {
 
   if (hasComponent(world, Weapon, eid)) {
     const target = Weapon.orderedTargetEid[eid]!;
-    if (target !== 0 && hasComponent(world, Health, target) && Health.hp[target]! > 0) return true;
+    // A target aboard a transport is out of reach, so the plan moves on
+    // (#1318). Combat lets a gun's order go and the deck a carrier's
+    // (flight.ts); this backs both up, and moves a stationary-only gun's plan
+    // on the tick it stops, one tick before combat rules on it.
+    if (
+      target !== 0 &&
+      hasComponent(world, Health, target) &&
+      Health.hp[target]! > 0 &&
+      hasComponent(world, Position, target)
+    ) {
+      return true;
+    }
   }
 
   if (hasComponent(world, Harvester, eid) && Harvester.mode[eid] !== HarvestMode.Idle) return true;
@@ -101,10 +112,14 @@ function begin(world: SimWorld, eid: number, order: QueuedOrder): void {
       // leg ends floor-following whatever its target turns out to be, so the
       // hull's depth says nothing about whether the handle named anything.
       leaveFloor(world, eid);
-      // The target may have died while the order waited its turn. Dropping it
-      // is right: a queue is a plan, and part of a plan becoming moot is
-      // ordinary rather than exceptional.
-      if (hasComponent(world, Health, order.target) && Health.hp[order.target]! > 0) {
+      // The target may have died, or boarded a transport, while the order
+      // waited its turn. Dropping it is right: a queue is a plan, and part of
+      // a plan becoming moot is ordinary rather than exceptional.
+      if (
+        hasComponent(world, Health, order.target) &&
+        Health.hp[order.target]! > 0 &&
+        hasComponent(world, Position, order.target)
+      ) {
         // Chased from the anchor, the point the slot was shown when the order
         // was queued, until a pass shows it again (#1247).
         orderTarget(eid, order.target, order.x, order.y);

@@ -873,7 +873,15 @@ export function ordnanceSystem(world: SimWorld, destroyed: number[]): void {
     }
 
     let target = Ordnance.targetEid[eid]!;
-    if (target !== 0 && (!hasComponent(world, Health, target) || Health.hp[target]! <= 0)) {
+    // Dead, or aboard a transport with no position left to steer at: a held
+    // target that boarded steered a locked shot at (0, 0) until it expired
+    // (#1318). Dropped, a locked shot re-acquires as it does after a kill.
+    if (
+      target !== 0 &&
+      (!hasComponent(world, Health, target) ||
+        Health.hp[target]! <= 0 ||
+        !hasComponent(world, Position, target))
+    ) {
       Ordnance.targetEid[eid] = 0;
       target = 0;
     }

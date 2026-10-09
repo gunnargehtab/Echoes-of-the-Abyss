@@ -7,6 +7,9 @@
  * simulation requires one, losing the component is what takes it out of the
  * world — it cannot move, shoot, be shot, be heard, or hear, as a property of
  * the component signature rather than of a flag every system has to check.
+ * That holds for queries; a reference held across ticks — an ordered target,
+ * a seeker's lock, a carrier's order — skips them, and must ask for
+ * `Position` itself (#1318).
  * It keeps `Unit`, `Owner` and `Health`, so it still counts against the berths
  * (`Match.berthsFor` walks units by owner) and still dies (reap walks health
  * by owner), which is exactly the pair of facts the doc asks for: a hold is
