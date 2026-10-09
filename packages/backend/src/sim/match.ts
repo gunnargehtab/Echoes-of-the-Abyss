@@ -111,6 +111,7 @@ import { acousticsSystem } from './systems/acoustics.ts';
 import { aurasSystem } from './systems/auras.ts';
 import { standingWaveSystem } from './systems/standingWave.ts';
 import { combatSystem } from './systems/combat.ts';
+import { orderTarget } from './systems/chase.ts';
 import { constructionSystem } from './systems/construction.ts';
 import { depthSystem, leaveFloor, orderDepthAt, setDepthTarget } from './systems/depth.ts';
 import { separationSystem } from './systems/separation.ts';
@@ -377,6 +378,7 @@ export class Match {
   private readonly emitters = defineQuery([Acoustic, Owner, Position]);
   private readonly faunaQuery = defineQuery([Fauna, Health, Position]);
   private readonly ordnanceOwners = defineQuery([Ordnance, Owner]);
+  private readonly armedOwners = defineQuery([Weapon, Owner]);
   /** Scratch for `ascending`, so an Echo pass sorts into one array it already owns. */
   private readonly ascendingScratch: number[] = [];
   /**
@@ -1510,11 +1512,23 @@ export class Match {
     // as it does for a contact that died between the resolve and the click.
     const phantom =
       target === undefined ? this.echo.resolvePhantom(slot, contactHandle) : undefined;
+    // What the slot holds on the target, which is all an order on it may use.
+    let shown: { x: number; y: number } | undefined;
     if (target === undefined) {
       if (phantom === undefined) return;
     } else {
       if (!hasComponent(this.world, Owner, target) || Owner.slot[target] === slot) return;
       if (!hasComponent(this.world, Health, target) || Health.hp[target]! <= 0) return;
+      // docs/systems-combat.md §7: no fire below Bearing, the torpedo path's
+      // gate and for its reason — a Tier-1 smudge is reported at the
+      // listener's own position, so there is nowhere honest to send the hull.
+      // A handle the slot no longer resolves at all is refused the same way:
+      // its target is wherever it went since, which the slot was never told
+      // (#1247). Neither refusal says anything the client was not shown: it
+      // holds each contact's tier, and sees a contact leave its picture.
+      const solution = this.echo.firingSolution(slot, target);
+      if (solution === undefined || solution.tier < ResolutionTier.Bearing) return;
+      shown = solution;
     }
     // Deliberately NOT refused here when the target is ordnance with no hull to
     // shoot off. That check lives in combat.ts's `targetAlive`, because
@@ -1532,34 +1546,27 @@ export class Match {
       // point back to the client, so anchoring at `Position` would hand a
       // player who queued an attack on a lie the one thing the lie withheld.
       // It is never refreshed afterwards, so the drawn plan cannot become a
-      // live feed of an enemy position either. A handle can outlive the
-      // resolution that issued it (a ghost marker the player attacks after
-      // the contact went silent); with nothing reported this pass the anchor
-      // falls back to the truth, which is the pre-existing behaviour and a
-      // smaller disclosure than it looks — the hull is being ordered there.
+      // live feed of an enemy position either. A handle that has outlived its
+      // resolution is refused above rather than anchored at the truth, which
+      // located a once-heard target on demand, re-sent for each new fix (#1247).
       if (phantom !== undefined) {
         enqueue(this.world, eid, { kind: 'attack', x: phantom.x, y: phantom.y, target: 0 });
         return;
       }
-      const shown = this.echo.firingSolution(slot, target!);
-      enqueue(this.world, eid, {
-        kind: 'attack',
-        x: shown?.x ?? Position.x[target!]!,
-        y: shown?.y ?? Position.y[target!]!,
-        target: target!,
-      });
+      enqueue(this.world, eid, { kind: 'attack', x: shown!.x, y: shown!.y, target: target! });
       return;
     }
     clearQueue(this.world, eid);
     this.world.paths.delete(eid);
-    Weapon.orderedTargetEid[eid] = target ?? 0;
+    if (phantom !== undefined) orderTarget(eid, 0, phantom.x, phantom.y);
+    else orderTarget(eid, target!, shown!.x, shown!.y);
     cancelEmbark(this.world, eid);
     if (phantom !== undefined && hasComponent(this.world, MoveOrder, eid)) {
-      // A real ordered target is chased: combat.ts republishes its position
-      // into `MoveOrder` every tick while it is out of range. A hull that
-      // simply stood still would be the same tell in another field, so the
-      // order becomes what it looks like from the outside — go to where the
-      // contact was reported. It gets there and finds water.
+      // A real ordered target is chased: combat.ts moves the hull to where its
+      // slot was last shown the target, every tick it is out of range. A hull
+      // that simply stood still would be the same tell in another field, so
+      // the order becomes what it looks like from the outside — go to where
+      // the contact was reported. It gets there and finds water.
       MoveOrder.x[eid] = phantom.x;
       MoveOrder.y[eid] = phantom.y;
       MoveOrder.active[eid] = 1;
@@ -3063,9 +3070,34 @@ export class Match {
     return out;
   }
 
+  /**
+   * Move each ordered gun's chase point to where its slot was shown the
+   * target this pass — docs/systems-combat.md §7, #1247.
+   *
+   * At Bearing or better only: a Tier-1 report is the listener's own position
+   * and says nothing about the target. A target the slot no longer resolves
+   * keeps the last point it was shown at, so the hull goes there and looks;
+   * unlike a phantom's, the order stands until the target dies or is heard
+   * again. Once a pass, beside the pass, so the chase is as fresh as the
+   * picture and no fresher.
+   */
+  private refreshChases(): void {
+    const guns = this.armedOwners(this.world);
+    for (let i = 0; i < guns.length; i++) {
+      const eid = guns[i]!;
+      const target = Weapon.orderedTargetEid[eid]!;
+      if (target === 0) continue;
+      const shown = this.echo.firingSolution(Owner.slot[eid]!, target);
+      if (shown === undefined || shown.tier < ResolutionTier.Bearing) continue;
+      Weapon.chaseX[eid] = shown.x;
+      Weapon.chaseY[eid] = shown.y;
+    }
+  }
+
   private resolveEcho(): Map<number, EchoSnapshot> {
     const result = this.echo.run(this.world, this.slots, this.echoObservers());
     if (result.elapsedMs > this.worstEchoMs) this.worstEchoMs = result.elapsedMs;
+    this.refreshChases();
 
     // Self-events, bucketed by whoever they happened to. Drained here rather
     // than at the end of the tick because the Echo snapshot is the only thing

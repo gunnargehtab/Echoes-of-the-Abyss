@@ -31,6 +31,7 @@ import {
 } from '../components.ts';
 import type { SimWorld } from '../world.ts';
 import { leaveFloor, orderDepthAt } from './depth.ts';
+import { orderTarget } from './chase.ts';
 
 // `Position`, so a hull in a hold (systems/carrying.ts) never pops a leg it
 // cannot walk; its queue is cleared when it boards, and this is the backstop.
@@ -104,7 +105,9 @@ function begin(world: SimWorld, eid: number, order: QueuedOrder): void {
       // is right: a queue is a plan, and part of a plan becoming moot is
       // ordinary rather than exceptional.
       if (hasComponent(world, Health, order.target) && Health.hp[order.target]! > 0) {
-        Weapon.orderedTargetEid[eid] = order.target;
+        // Chased from the anchor, the point the slot was shown when the order
+        // was queued, until a pass shows it again (#1247).
+        orderTarget(eid, order.target, order.x, order.y);
       }
       break;
     case 'harvest':

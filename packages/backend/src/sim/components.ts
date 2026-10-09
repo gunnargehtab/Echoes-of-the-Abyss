@@ -419,6 +419,16 @@ export const Weapon = defineComponent({
   cooldownRemainingS: Types.f32,
   /** Explicit attack order from the player; cleared when the target dies. */
   orderedTargetEid: Types.eid,
+  /**
+   * Where an ordered target was last shown to this hull's slot, which is where
+   * the hull chases it while it is out of range — never the target's own
+   * position (#1247). Written with the target by `orderTarget`, and moved by
+   * `Match` after each Echo pass the slot still resolves it at Bearing or
+   * better: the ghost at Tier 2, the truth at Tier 3 and above
+   * (docs/systems-combat.md §7).
+   */
+  chaseX: Types.f32,
+  chaseY: Types.f32,
 });
 
 /**
