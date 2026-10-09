@@ -82,6 +82,7 @@ import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { LampHaloPass } from '../src/game/lampHaloPass.ts';
 import { ROOF_OPEN_OPACITY } from '../src/game/passages.ts';
 import { FURNITURE_OUTLINE_ALPHA } from '../src/game/ladder.ts';
+import { ONE_HANDED_BINDINGS } from '../src/input/bindings.ts';
 import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
 import { FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
@@ -3262,6 +3263,57 @@ describe('the console drops its blocks in §2’s order', () => {
         ['', 'FLEET PRODUCTION SELECTION', 'PRODUCTION SELECTION', 'SELECTION'],
         'the sweep did not pass through every step of the drop order'
       );
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
+describe('the hint bar names the keys the player has (#1340)', () => {
+  it('names the bound keys, not the defaults, after a layout change', async () => {
+    // docs/ui-ux.md §9: "Every key in that table is a default, not a fact."
+    // The bar named the defaults whatever the bindings, and on the one-handed
+    // layout told the player `X stop` where `X` lays a mine.
+    const world = await boot();
+    try {
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.frame(1);
+      assert.ok(textSaying(world.app.stage, 'X stop') !== null, 'the premise: the defaults');
+
+      world.chart.setBindings(ONE_HANDED_BINDINGS);
+      world.frame(1);
+      const army = '`' + ' stop  ·  TAB hold  ·  CTRL+RMB torpedo  ·  SPACE silent  ·  Q ping';
+      assert.ok(textSaying(world.app.stage, army) !== null, 'the army line named the defaults');
+      assert.equal(textSaying(world.app.stage, 'X stop'), null, 'and still offered X as stop');
+      // The one-handed layout leaves `W` and `Space` where they are, so those
+      // two names are read off a rebind of their own.
+      world.chart.setBindings({
+        ...ONE_HANDED_BINDINGS,
+        attackMove: 'KeyK',
+        silentRunning: 'KeyL',
+      });
+      world.frame(1);
+      assert.ok(textSaying(world.app.stage, 'K attack-move') !== null, 'attack-move named W');
+      assert.ok(textSaying(world.app.stage, 'L silent') !== null, 'silent named SPACE');
+      assert.equal(textSaying(world.app.stage, 'W attack-move'), null, 'and still offered W');
+
+      // A harvester's line names its throttle key too.
+      const harvester = cannedSnapshot().units.find((unit) => unit.throttle !== undefined)!;
+      world.chart.focusOn(harvester.x, harvester.y);
+      world.frame(2);
+      const at = world.conn.projectPoint(harvester.x, harvester.y, harvester.depth);
+      for (const type of ['pointerdown', 'pointerup']) {
+        world.app.canvas.dispatch(type, {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x,
+          clientY: at.y,
+        });
+      }
+      world.frame(1);
+      assert.ok(textSaying(world.app.stage, 'E throttle') !== null, 'the throttle named V');
     } finally {
       world.teardown();
     }
