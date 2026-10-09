@@ -1279,6 +1279,7 @@ export class Match {
     this.recordCommand({ tick: this.world.tick, type: 'stop', slot, unit: this.localId(eid) });
     if (!this.owns(slot, eid) || !hasComponent(this.world, MoveOrder, eid)) return;
     clearQueue(this.world, eid);
+    this.missionRuntime?.dropHeldRoute(eid);
     this.world.paths.delete(eid);
     MoveOrder.active[eid] = 0;
     Posture.engage[eid] = 0;
@@ -1308,6 +1309,7 @@ export class Match {
     Posture.hold[eid] = active ? 1 : 0;
     if (!active) return;
     clearQueue(this.world, eid);
+    this.missionRuntime?.dropHeldRoute(eid);
     this.world.paths.delete(eid);
     MoveOrder.active[eid] = 0;
     Posture.engage[eid] = 0;

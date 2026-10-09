@@ -614,6 +614,7 @@ export type DerivedWorldState =
   | 'regionPressureBonus'
   | 'commanderHaste'
   | 'commanderSilentImmune'
+  | 'movementHeld'
   // An outbound channel, not a store: drained into the Echo snapshot and
   // cleared. Anything that could make two runs raise different self-events has
   // already diverged in something above.

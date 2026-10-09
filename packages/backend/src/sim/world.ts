@@ -300,6 +300,15 @@ export interface SimWorld extends IWorld {
    */
   commanderSilentImmune: Set<number>;
   /**
+   * Hulls a mission's escort hold is keeping still this pass
+   * (docs/mission-sorrowgate.md §8): `liftCutSig`'s arrangement, written by
+   * the mission runtime and cleared and rebuilt whole on every pass. The order
+   * queue reads it so a held hull's plan waits where it is, drawn and hashed,
+   * rather than popping a leg into the hold each pass until only its last was
+   * left to give back (#1322). Empty in every skirmish.
+   */
+  movementHeld: Set<number>;
+  /**
    * Standing Wave corridors — docs/systems-echo.md §7, and the mission that
    * teaches them (docs/mission-standing-wave.md §4).
    *
@@ -554,6 +563,7 @@ export function createSimWorld(
   world.regionPressureBonus = [];
   world.commanderHaste = new Map();
   world.commanderSilentImmune = new Set();
+  world.movementHeld = new Set();
   world.corridors = [];
   world.pairedNodes = new Set();
   world.nodeSites = new Set();

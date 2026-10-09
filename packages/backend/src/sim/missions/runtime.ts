@@ -75,7 +75,6 @@ import {
   type SimWorld,
 } from '../world.ts';
 import { postureStopsWork } from '../systems/work.ts';
-import type { QueuedOrder } from '../systems/orderQueue.ts';
 import { accrueSounding, soundingHolds } from './sounding.ts';
 import { accrueRowHold, accrueStall, insideRow } from './walk.ts';
 import { projectMissionView, type MissionState } from './view.ts';
@@ -209,13 +208,6 @@ interface SuspendedOrder {
   move: { x: number; y: number } | null;
   /** The depth it was flying, or null when it held station. */
   depthM: number | null;
-  /**
-   * The plan queued behind the leg, or null when there was none. Taken off
-   * with the leg, because the queue pops its next order the moment the leg
-   * reads idle: each pass of the hold then saved that order over the last,
-   * and a held tender's plan drained to its final leg (#1322).
-   */
-  queue: QueuedOrder[] | null;
 }
 
 /** A creature being driven somewhere by a beat, re-asserted until `untilTick`. */
@@ -1283,6 +1275,7 @@ export class MissionRuntime {
     const disabled = this.definition.escortRadiusM <= 0;
     const escorts = this.idsFor('escort');
     const held: MovementHold[] = [];
+    world.movementHeld.clear();
     for (const party of this.definition.parties) {
       if (party.slot !== this.definition.playerSlot) continue;
       for (const unit of party.units) {
@@ -1307,6 +1300,7 @@ export class MissionRuntime {
         else this.lastEscorted.delete(unit.tag);
         if (unreleased || !escortedNow) {
           this.suspend(world, unit.tag, eid);
+          world.movementHeld.add(eid);
           held.push({
             unitId: eid,
             reason: unreleased ? MovementHoldReason.Unreleased : MovementHoldReason.Unescorted,
@@ -1320,25 +1314,35 @@ export class MissionRuntime {
   }
 
   /**
+   * Stop, or Hold, given to a hull the escort hold is keeping: the route the
+   * hold is saving for it goes too, or the hull would come out of the hold on
+   * an order the player had just stopped (#1322). Its depth stays, as Stop
+   * leaves a hull's depth alone; its plan is the queue's, which Stop and Hold
+   * already clear.
+   */
+  dropHeldRoute(eid: number): void {
+    const tag = this.tagOfTender(eid);
+    if (tag === null) return;
+    const saved = this.suspended.get(tag);
+    if (saved !== undefined) saved.move = null;
+  }
+
+  /**
    * Take the hull's orders off it, remembering them.
    *
    * Written on every pass the hold is in force rather than only on its leading
    * edge, because the order can be re-asserted underneath it: a `transit` beat
    * drives a scripted hull through `applyMove`, which is the sink's path and
    * so is not refused. That writes a fresher order than the one this is
-   * holding, and the fresher one is the one to give back. The queue goes with
-   * the leg, or it pops its next order the moment the leg reads idle (#1322).
+   * holding, and the fresher one is the one to give back. The order queue does
+   * not pop under the hold: `world.movementHeld` keeps the plan waiting where
+   * it is (#1322).
    */
   private suspend(world: SimWorld, tag: MissionTag, eid: number): void {
     let saved = this.suspended.get(tag);
     if (saved === undefined) {
-      saved = { move: null, depthM: null, queue: null };
+      saved = { move: null, depthM: null };
       this.suspended.set(tag, saved);
-    }
-    const queue = world.orderQueues.get(eid);
-    if (queue !== undefined) {
-      saved.queue = saved.queue === null ? queue : [...saved.queue, ...queue];
-      world.orderQueues.delete(eid);
     }
     if (MoveOrder.active[eid] === 1) {
       saved.move = { x: MoveOrder.x[eid]!, y: MoveOrder.y[eid]! };
@@ -1362,16 +1366,10 @@ export class MissionRuntime {
     const saved = this.suspended.get(tag);
     if (saved === undefined) return;
     this.suspended.delete(tag);
-    // The plan comes back with its leg, and on the same courtesy: a newer
-    // order, or a newer plan, is the player's more recent word.
-    const newer = MoveOrder.active[eid] === 1 || world.orderQueues.has(eid);
-    if (saved.move !== null && !newer) {
+    if (saved.move !== null && MoveOrder.active[eid] === 0) {
       MoveOrder.x[eid] = saved.move.x;
       MoveOrder.y[eid] = saved.move.y;
       MoveOrder.active[eid] = 1;
-    }
-    if (saved.queue !== null && saved.queue.length > 0 && !newer) {
-      world.orderQueues.set(eid, saved.queue);
     }
     if (
       saved.depthM !== null &&
