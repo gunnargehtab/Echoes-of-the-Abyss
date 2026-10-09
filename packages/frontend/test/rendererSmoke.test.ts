@@ -4217,3 +4217,58 @@ describe('renderer smoke test: the halo frame reading (#1001, development only)'
     assert.equal(probes.__perspectiveSeabedM, undefined);
   });
 });
+
+describe('a control group keeps its hulls through a hold (#1337)', () => {
+  it('keeps a hull aboard a transport in its group, and has it in hand when it lands', async () => {
+    // docs/ui-ux.md §9. The recall pruned every member missing from the map's
+    // hulls as dead, and a hull aboard is not on the map: a group recalled
+    // while its hulls were aboard was deleted, and gone when they landed.
+    const world = await boot();
+    try {
+      type Chart = { selected: Set<number>; controlGroups: Map<number, number[]> };
+      const chart = world.chart as unknown as Chart;
+      const units = cannedSnapshot().units;
+      const army = units.filter((unit) => unit.throttle === undefined).map((unit) => unit.id);
+      const transport = units.find((unit) => unit.throttle !== undefined)!;
+      assert.ok(army.length > 0 && transport !== undefined, 'the premise: hulls and a hold');
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      dispatchWindow('keydown', { code: 'Digit1', ctrlKey: true });
+
+      // Aboard, and recalled there.
+      world.chart.applySnapshot({
+        ...cannedSnapshot(1012),
+        units: units.map((unit) =>
+          army.includes(unit.id) ? { ...unit, aboard: transport.id } : unit
+        ),
+      });
+      dispatchWindow('keydown', { code: 'Digit1' });
+      assert.deepEqual(
+        [...(chart.controlGroups.get(1) ?? [])].sort(),
+        [...army].sort(),
+        'the group lost the hulls in the hold'
+      );
+
+      // Landed, and recalled again over another selection: the transport alone.
+      world.chart.applySnapshot(cannedSnapshot(1024));
+      world.chart.focusOn(transport.x, transport.y);
+      world.frame(2);
+      const at = world.conn.projectPoint(transport.x, transport.y, transport.depth);
+      for (const type of ['pointerdown', 'pointerup']) {
+        world.app.canvas.dispatch(type, {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x,
+          clientY: at.y,
+        });
+      }
+      world.frame(1);
+      assert.deepEqual([...chart.selected], [transport.id], 'the premise: another selection');
+      dispatchWindow('keydown', { code: 'Digit1' });
+      assert.deepEqual([...chart.selected].sort(), [...army].sort(), 'the group came back short');
+    } finally {
+      world.teardown();
+    }
+  });
+});

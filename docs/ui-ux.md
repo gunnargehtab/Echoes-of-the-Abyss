@@ -486,7 +486,7 @@ Implemented in the client scaffold today (`packages/frontend/src/game/EchoRender
 | `W`, then click | Attack-move: go there, and stop to fight whatever is met on the way, then carry on. The one order that advances a force into water it cannot hear — which is most of it. `Esc` disarms; `Shift` + click queues it |
 | `X` | Stop: drop the plan, the route, the chase and the posture, and stand. Depth is a commitment and is left alone, floor-following included |
 | `H` | Hold position: fire at what comes into range, chase nothing, go nowhere. Any move releases it |
-| `1`–`9` | Recall control group; `Ctrl` + digit assigns; `Shift` + digit adds the selection; recall twice to centre |
+| `1`–`9` | Recall control group; `Ctrl` + digit assigns; `Shift` + digit adds the selection; recall twice to centre. A hull aboard a transport stays in its group, and is in hand again when it lands (#1337) |
 | `0` | Select the army — every hull that fights, wherever it is |
 | Middle drag | Pan |
 | Left + right drag | Move the camera: across pans sideways, up and down raises and sinks the focus through the water column, the water moving with the hand. Either button may land first, and once both are down neither click fires ([free-camera.md](free-camera.md) §4) |

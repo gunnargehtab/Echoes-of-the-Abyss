@@ -2957,9 +2957,14 @@ export class EchoRenderer {
     const members = this.controlGroups.get(group);
     if (members === undefined) return;
     // Dead units are pruned on recall rather than on death: the snapshot is
-    // the only place the client learns a hull is gone.
+    // the only place the client learns a hull is gone. A hull in a hold is not
+    // gone, as the selection's own prune says: the group keeps it, and has it
+    // in hand again when it lands (#1337).
     const alive = members.filter(
-      (id) => this.units.some((u) => u.id === id) || this.structures.some((st) => st.id === id)
+      (id) =>
+        this.units.some((u) => u.id === id) ||
+        this.cargo.some((u) => u.id === id) ||
+        this.structures.some((st) => st.id === id)
     );
     if (alive.length === 0) {
       this.controlGroups.delete(group);
