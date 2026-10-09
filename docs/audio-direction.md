@@ -50,6 +50,8 @@ Each tier gets a **voice** — a looping or one-shot sound bound to that contact
 
 This is the rule the whole section exists to protect. Stereo position is the player's ear reporting a bearing, and at Tier 1 the server has not given them one. A Tier-1 voice is therefore **mono, centred, and level-locked**, and it is the only sound in the game with that treatment — which makes it instantly identifiable as *"something is out there and I do not know where."*
 
+**The ear faces the way the camera faces.** The right ear is the screen's right, not world east, so a sound is heard on the side its contact, flash or line is drawn, however the camera is turned ([free-camera.md](free-camera.md) §4). Every pan in the mix used to be measured from world east, which matched the screen only with the camera facing the top of the map: turned round, a contact drawn on the left sounded on the right (#1324).
+
 ### Decay
 
 Ghost markers decay over 20 s. Their voices decay with them: level falls on the same curve as marker alpha, and the loop's period lengthens by up to 40% so a fading contact audibly slows rather than simply thinning. Contacts refreshed by a new detection snap back to full level in 80 ms — the return of a sound that was dying is itself a warning.

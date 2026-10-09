@@ -1447,8 +1447,12 @@ export class PerspectiveView {
     this.applyCamera();
   }
 
-  /** The heading the camera is facing, radians clockwise from north. For the
-   * scope's camera box, which is the compass now (§5). */
+  /**
+   * The camera's turn about its focus, radians anticlockwise from north seen
+   * from above: at 0 the eye is south of the focus, and in general at
+   * (sin yaw, cos yaw) from it. Read by the mix, which turns the ear with the
+   * picture (`audio/screenPan.ts`, #1324).
+   */
   get headingRad(): number {
     return this.yaw;
   }

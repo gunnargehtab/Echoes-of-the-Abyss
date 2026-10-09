@@ -82,6 +82,7 @@ function selfFrame(over: Partial<SelfAudioFrame> = {}): SelfAudioFrame {
     sourS: 0,
     events: [],
     returns: [],
+    yawRad: 0,
     ...over,
   };
 }

@@ -17,6 +17,7 @@ import { PERSISTENCE, SIM, SelfEventKind, type SelfEvent } from '@echoes/shared'
 import { PING_RETURN_WINDOW_S } from './selfVoice.ts';
 import { SOUR_BITE_S, selfMixFor, sourMixFor, type SelfMix, type SourMix } from './selfNoise.ts';
 import { duckFor, louderRung, type BusRung } from './precedence.ts';
+import { screenBearing } from './screenPan.ts';
 
 /**
  * How long one engagement lasts, in simulation ticks — the same window the
@@ -65,6 +66,12 @@ export interface SelfAudioFrame {
   events: SelfEvent[];
   /** Echoes from the player's own ping, if one is resolving. */
   returns: PingReturn[];
+  /**
+   * The conn camera's turn, radians anticlockwise from north (`screenPan.ts`
+   * says which way), so an event's world bearing pans on the screen's axis
+   * (#1324).
+   */
+  yawRad: number;
 }
 
 /** The Web Audio side, injected so the decisions above can be tested alone. */
@@ -110,6 +117,8 @@ export class SelfMixer {
   private bareStrikeTick = -1;
   /** §4's world-bus figure from the last frame, for `applyChain` to multiply. */
   private worldGain = 1;
+  /** The camera's turn on the frame being voiced: `SelfAudioFrame.yawRad`. */
+  private yawRad = 0;
 
   constructor(private readonly sink: SelfSink) {}
 
@@ -151,6 +160,7 @@ export class SelfMixer {
     this.tickHasBearing = frame.events.some(
       (event) => event.kind === SelfEventKind.Exposed && event.bearing !== undefined
     );
+    this.yawRad = frame.yawRad;
     for (const event of frame.events) {
       // Keyed by tick as well as unit: the same unit breaking silence twice in
       // one match is two events, but one event redelivered is not two. And by
@@ -246,9 +256,9 @@ export class SelfMixer {
           this.bareStrikeTick = tick;
           this.sink.exposure(now, 0);
         } else {
-          // cos, for the same reason the contact voices use it: the bearing is
-          // measured from world +x and stereo is the horizontal axis.
-          this.sink.exposure(now, Math.cos(event.bearing));
+          // cos of the bearing turned with the camera, for the contact voices'
+          // reason: stereo is the screen's horizontal axis, not world east (#1324).
+          this.sink.exposure(now, Math.cos(screenBearing(event.bearing, this.yawRad)));
         }
         this.raise('self-exposure', now, 2);
         return true;
