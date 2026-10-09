@@ -38,15 +38,22 @@ import { spawnUnit } from '../src/sim/world.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { hashWorld } from '../src/sim/stateHash.ts';
 import { REPLAY_FORMAT_VERSION, playReplay } from '../src/sim/replay.ts';
+import { orderTarget } from '../src/sim/systems/chase.ts';
+import { launchTorpedo } from '../src/sim/systems/ordnance.ts';
+import { enqueue } from '../src/sim/systems/orderQueue.ts';
 import {
   Acoustic,
   Carried,
   Embarking,
+  Heading,
   Health,
   Hold,
   LandingGrant,
+  MoveOrder,
+  Ordnance,
   Position,
   Pressure,
+  Weapon,
 } from '../src/sim/components.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -425,5 +432,57 @@ describe('the hold — determinism', () => {
     assert.notEqual(afloat, whole, 'boarding changed the world');
     assert.notEqual(hurt, whole, 'and a carried hull’s health is still the world’s');
     void playReplay;
+  });
+});
+
+describe('the hold — a hull aboard is nobody’s target (#1318)', () => {
+  // Boarding takes a hull's `Position` and leaves its health, and two paths
+  // asked only whether a target lived: a gun held its order on a hull in a
+  // hold for good, with any plan waiting behind it, and a locked torpedo
+  // steered at the hull's zeroed position, the map's corner.
+  function prey(match: Match) {
+    const freighter = hull(match, Faction.Bathyarch, UnitKind.Freighter, 6000, 6000);
+    const corvette = hull(match, Faction.Bathyarch, UnitKind.Corvette, 6060, 6000);
+    return { freighter, corvette };
+  }
+  const enemy = (match: Match, kind: UnitKind, x: number, y: number) =>
+    spawnUnit(match.world, { kind, slot: 1, faction: Faction.Hadron, x, y });
+
+  it("drops a gun's order on a hull that boards", () => {
+    const match = water(Faction.Bathyarch, Faction.Hadron);
+    const { freighter, corvette } = prey(match);
+    const hunter = enemy(match, UnitKind.Corvette, 7600, 6400);
+    // The order as the order path leaves it (#1247): the target, and the
+    // point its slot was shown.
+    orderTarget(hunter, corvette, 6060, 6000);
+    load(match, freighter, [corvette]);
+    assert.equal(Weapon.orderedTargetEid[hunter], 0, 'the gun still holds a hull in a hold');
+  });
+
+  it('lets a locked torpedo give up a hull that boards, not run for the corner', () => {
+    const match = water(Faction.Bathyarch, Faction.Hadron);
+    const { freighter, corvette } = prey(match);
+    const lance = enemy(match, UnitKind.Lance, 8000, 6000);
+    Heading.rad[lance] = Math.PI; // facing the prey, along -x
+    const torpedo = launchTorpedo(match.world, lance, 6060, 6000);
+    assert.ok(torpedo > 0 && Ordnance.locked[torpedo] === 1, 'the premise: a committed shot');
+    advance(match, 1);
+    assert.equal(Ordnance.targetEid[torpedo], corvette, 'the premise: it holds the hull');
+
+    load(match, freighter, [corvette]);
+    assert.notEqual(Ordnance.targetEid[torpedo], corvette, 'the shot still holds a hull in a hold');
+  });
+
+  it('moves a plan on past an attack whose target boarded', () => {
+    const match = water(Faction.Bathyarch, Faction.Hadron);
+    const { freighter, corvette } = prey(match);
+    const hunter = enemy(match, UnitKind.Corvette, 7600, 6400);
+    // Chased to where the hull already is, so the order alone keeps it busy.
+    orderTarget(hunter, corvette, Position.x[hunter]!, Position.y[hunter]!);
+    enqueue(match.world, hunter, { kind: 'move', x: 9000, y: 9000 });
+    load(match, freighter, [corvette]);
+    advance(match, 0.5);
+    assert.equal(MoveOrder.x[hunter], 9000, 'the plan waited behind an order on a hull in a hold');
+    assert.equal(MoveOrder.active[hunter], 1);
   });
 });

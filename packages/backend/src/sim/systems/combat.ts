@@ -194,6 +194,10 @@ function profileFor(world: SimWorld, eid: number): WeaponProfile {
  */
 function targetAlive(world: SimWorld, eid: number): boolean {
   if (eid === 0 || !hasComponent(world, Health, eid) || Health.hp[eid]! <= 0) return false;
+  // Aboard a transport: alive, but out of the water (systems/carrying.ts), so
+  // no gun can reach it. Held, the order held the gun on nothing for good,
+  // since an ordered target overrides acquisition (#1318).
+  if (!hasComponent(world, Position, eid)) return false;
   if (hasComponent(world, Ordnance, eid) && !isInterceptable(Ordnance.kind[eid] as OrdnanceKind)) {
     return false;
   }
