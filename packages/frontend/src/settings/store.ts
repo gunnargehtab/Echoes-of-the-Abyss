@@ -108,7 +108,10 @@ export interface Settings {
    * explicit `false` is honoured over the device.
    */
   speakerProfile: boolean;
-  /** Whether the player set `speakerProfile` themselves, as `reducedMotionChosen` (#1344). */
+  /**
+   * Whether the player set `speakerProfile` themselves, as `lampHalosChosen`,
+   * migration included (#1344).
+   */
   speakerProfileChosen: boolean;
   /**
    * Whether a classified contact is heard as *what it is* — §8's timbre
@@ -246,7 +249,8 @@ function sanitise(raw: unknown): Settings {
         ? Math.min(UI_SCALE_MAX, Math.max(UI_SCALE_MIN, record.uiScale))
         : 1,
     // The OS's answer unless the player chose, as the lamp halos below are the
-    // build's: a value saved beside some other setting is not a choice.
+    // build's: a value saved beside some other setting is not a choice, bar a
+    // pre-flag on, read above.
     reducedMotionChosen: motionChosen,
     reducedMotion:
       motionChosen && typeof record.reducedMotion === 'boolean'
