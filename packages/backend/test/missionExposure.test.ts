@@ -25,8 +25,10 @@
  * three heard the points (#1198).
  *
  * The rim pack holds §5's 1,700 m for all seventy-five seconds of the
- * telegraph, under the layer, and gives and takes no hull on the way: the
- * watch's guns open on it at 17:03, and a driven creature gives none (#1199).
+ * telegraph, under the layer, and is neither holed nor bites on the way. The
+ * watch's guns open on it at 17:03, but a driven creature's hull does not give
+ * to a shell (`isDriven`, #349), and the drive leaves it no target to bite
+ * (`runtime.ts`, `holdCommitments`; #1199).
  *
  * §12's four voices are the literal's own lines, character for character: the
  * doc is the source, and point six's entry drifted from it unread (#1200).
@@ -381,7 +383,7 @@ describe('the rim pack, as docs/mission-exposure.md §5 drives it (#1199)', () =
     }
   });
 
-  it('holds the rim under the layer to the whistle, and gives and takes no hull', () => {
+  it('holds the rim under the layer to the whistle, and is neither holed nor bites', () => {
     // An idle run, read every five seconds of the seventy-five. Before #1199
     // the pack climbed to 900 m and cleared the layer's duct at 17:35; held at
     // 1,700 m but released at 17:45, it fought the watch to the change. The
