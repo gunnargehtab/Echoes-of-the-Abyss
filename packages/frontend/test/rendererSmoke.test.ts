@@ -3543,15 +3543,6 @@ describe('the command card when it is offered more than it holds', () => {
   });
 });
 
-/**
- * The free camera — docs/free-camera.md.
- *
- * The rig is the one piece of this renderer with no pixels in it: a focus, a
- * yaw, a pitch and a dolly, resolved into a camera position by arithmetic.
- * That makes it the part of the revision a headless test can hold whole, and
- * the part it most needs to — the retired no-rotation rule was protecting real
- * things, and what replaced each one is a property rather than a look.
- */
 describe('the ear turns with the camera (#1324)', () => {
   it('pans a contact where it is drawn, so east sounds left with the camera turned round', async () => {
     // docs/audio-direction.md §3 matches spatialisation to the rendered
@@ -3698,6 +3689,15 @@ describe('the ear turns with the camera (#1324)', () => {
   });
 });
 
+/**
+ * The free camera — docs/free-camera.md.
+ *
+ * The rig is the one piece of this renderer with no pixels in it: a focus, a
+ * yaw, a pitch and a dolly, resolved into a camera position by arithmetic.
+ * That makes it the part of the revision a headless test can hold whole, and
+ * the part it most needs to — the retired no-rotation rule was protecting real
+ * things, and what replaced each one is a property rather than a look.
+ */
 describe('renderer smoke test: the free camera', () => {
   /** The rig's own state, off the harness probe. */
   const rig = (): {
