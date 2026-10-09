@@ -2616,6 +2616,40 @@ describe('renderer smoke test: input and teardown', () => {
  * every frame would re-render the React shell at 60 Hz, which is the one thing
  * `GameCanvas`'s own header says it must never do.
  */
+describe('one click is armed at a time (#1335)', () => {
+  it('gives the click to a build armed over an armed attack-move', async () => {
+    // docs/ui-ux.md §9: the last one armed. `W` already dropped a pending
+    // build, but a build key left an armed attack-move standing, and the click
+    // the hint bar promised the Refinery went out as an attack-move.
+    const world = await boot();
+    try {
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      dispatchWindow('keydown', { code: 'KeyW' });
+      world.frame(1);
+      assert.ok(textSaying(world.app.stage, 'ATTACK-MOVE armed') !== null, 'the premise: armed');
+      dispatchWindow('keydown', { code: 'KeyR' });
+      world.frame(1);
+      assert.ok(textSaying(world.app.stage, 'placing ') !== null, 'the premise: a build armed');
+
+      // The water, pressed and released: an armed click is given on release.
+      for (const type of ['pointerdown', 'pointerup']) {
+        world.app.canvas.dispatch(type, {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: 700,
+          clientY: 400,
+        });
+      }
+      assert.equal(world.log.first('onAttackMoveOrder'), undefined, 'the click attack-moved');
+      assert.equal(world.log.first('onBuild')?.[0], StructureKind.Refinery, 'and placed nothing');
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
 describe('renderer smoke test: the strip explains itself', () => {
   it('reports every readout the strip drew, with the strip’s own text', async () => {
     const booted = await boot();
@@ -4215,39 +4249,5 @@ describe('renderer smoke test: the halo frame reading (#1001, development only)'
     }
     const probes = (globalThis as unknown as { window: Probes }).window;
     assert.equal(probes.__perspectiveSeabedM, undefined);
-  });
-});
-
-describe('one click is armed at a time (#1335)', () => {
-  it('gives the click to a build armed over an armed attack-move', async () => {
-    // docs/ui-ux.md §9: the last one armed. `W` already dropped a pending
-    // build, but a build key left an armed attack-move standing, and the click
-    // the hint bar promised the Refinery went out as an attack-move.
-    const world = await boot();
-    try {
-      world.frame(2);
-      dispatchWindow('keydown', { code: 'Digit0' });
-      dispatchWindow('keydown', { code: 'KeyW' });
-      world.frame(1);
-      assert.ok(textSaying(world.app.stage, 'ATTACK-MOVE armed') !== null, 'the premise: armed');
-      dispatchWindow('keydown', { code: 'KeyR' });
-      world.frame(1);
-      assert.ok(textSaying(world.app.stage, 'placing ') !== null, 'the premise: a build armed');
-
-      // The water, pressed and released: an armed click is given on release.
-      for (const type of ['pointerdown', 'pointerup']) {
-        world.app.canvas.dispatch(type, {
-          button: 0,
-          pointerId: 1,
-          pointerType: 'mouse',
-          clientX: 700,
-          clientY: 400,
-        });
-      }
-      assert.equal(world.log.first('onAttackMoveOrder'), undefined, 'the click attack-moved');
-      assert.equal(world.log.first('onBuild')?.[0], StructureKind.Refinery, 'and placed nothing');
-    } finally {
-      world.teardown();
-    }
   });
 });
