@@ -325,7 +325,8 @@ describe('one bearing per ping (#1290)', () => {
   }
 
   it('gives a side one bearing, from its lit unit nearest the pinger', () => {
-    // The nearer hull is spawned second, so the reveal does not list it first:
+    // Three hulls, each in a broadphase cell of its own, so the reveal lists
+    // them in spawn order and the nearest is neither its first nor its last:
     // the bearing is chosen by distance, not by the order units come back in.
     const { match, mine, theirs: farther } = twoSides(600);
     const nearer = spawnUnit(match.world, {
@@ -335,13 +336,20 @@ describe('one bearing per ping (#1290)', () => {
       x: 4000,
       y: 4300,
     });
+    const farthest = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 4000,
+      y: 3300,
+    });
     match.activeSonar(0, mine);
     const events = lit(match, 1);
 
     assert.deepEqual(
       events.map((e) => e.unitId).sort((a, b) => a - b),
-      [farther, nearer].sort((a, b) => a - b),
-      'both lit hulls are told they were lit'
+      [farther, nearer, farthest].sort((a, b) => a - b),
+      'every lit hull is told it was lit'
     );
     const bearings = events.filter((e) => e.bearing !== undefined);
     assert.equal(bearings.length, 1, 'one bearing for the ping, so nothing to triangulate');
