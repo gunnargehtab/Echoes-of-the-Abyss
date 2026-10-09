@@ -2638,6 +2638,10 @@ export class EchoRenderer {
       // way out of a pending build, and a way out you have to aim for is not
       // one. `RESERVED_CODES` is what stops a rebinder taking it.
       if (e.code === 'Escape') {
+        // Held, it acts once like every other key: its repeats opened the menu
+        // and the menu's own listener closed it again, until the release
+        // (#1348).
+        if (e.repeat) return;
         if (this.pendingAttackMove) {
           this.pendingAttackMove = false;
           return;
@@ -2666,12 +2670,16 @@ export class EchoRenderer {
       const digit = DIGIT_KEYS[e.code];
       if (digit !== undefined) {
         e.preventDefault();
+        // A repeat lands inside the double tap's window, so a held digit
+        // re-centred the camera until the release (#1348).
+        if (e.repeat) return;
         this.controlGroup(digit, e.ctrlKey || e.metaKey, e.shiftKey);
         return;
       }
       // `0` is the tenth group nobody has to assign: every hull that fights.
       if (e.code === 'Digit0') {
         e.preventDefault();
+        if (e.repeat) return;
         this.selectArmy();
         return;
       }
@@ -2690,12 +2698,22 @@ export class EchoRenderer {
       // not being lost in place.
       if (e.code === 'Home') {
         e.preventDefault();
+        if (e.repeat) return;
         this.conn?.home();
         return;
       }
 
       const action = actionFor(this.bindings, e.code);
       if (action === null) return;
+      // A held key's auto-repeat is not another press (docs/ui-ux.md §9). The
+      // toggles read the selection off the last snapshot, so a held Space
+      // flipped Silent Running at the snapshot rate, and a held M laid mines
+      // until the cap or the magazine refused (#1348). The ping preview, the
+      // one bound hold, needs only its first keydown.
+      if (e.repeat) {
+        e.preventDefault();
+        return;
+      }
 
       // Construction arms before the selection check: §9 gives the build keys
       // no selection requirement, and a player with nothing selected still

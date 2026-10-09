@@ -1898,6 +1898,50 @@ describe('renderer smoke test: classified fauna (#868)', () => {
   });
 });
 
+describe('a held key acts once (#1348)', () => {
+  it('takes no second toggle from a held key', async () => {
+    // docs/ui-ux.md §9. Auto-repeat ran the action again on every repeat, and
+    // the toggles read the selection off the last snapshot: a held Space flipped
+    // Silent Running at the snapshot rate and ended wherever the release landed.
+    const world = await boot();
+    try {
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      const toggles = () => world.log.calls.filter((call) => call.name === 'onToggleSilent').length;
+      dispatchWindow('keydown', { code: 'Space', repeat: false });
+      assert.equal(toggles(), 1, 'the premise: a press toggles');
+      for (let i = 0; i < 3; i++) dispatchWindow('keydown', { code: 'Space', repeat: true });
+      assert.equal(toggles(), 1, 'the key, held, toggled again');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('takes no second recall from a held digit, nor a second menu from a held Esc', async () => {
+    // A repeat lands inside the double tap's window, so a held digit centred
+    // the camera; and a held Esc opened the menu on every repeat.
+    const world = await boot();
+    try {
+      const conn = world.conn as unknown as { target: { x: number; z: number } };
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      dispatchWindow('keydown', { code: 'Digit1', ctrlKey: true });
+      world.chart.focusOn(500, 500);
+      dispatchWindow('keydown', { code: 'Digit1' });
+      const at = { x: conn.target.x, z: conn.target.z };
+      for (let i = 0; i < 3; i++) dispatchWindow('keydown', { code: 'Digit1', repeat: true });
+      assert.deepEqual({ x: conn.target.x, z: conn.target.z }, at, 'a held digit centred');
+
+      const menus = () => world.log.calls.filter((call) => call.name === 'onOpenMenu').length;
+      dispatchWindow('keydown', { code: 'Escape' });
+      for (let i = 0; i < 3; i++) dispatchWindow('keydown', { code: 'Escape', repeat: true });
+      assert.equal(menus(), 1, 'a held Esc opened the menu again');
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
 describe('renderer smoke test: input and teardown', () => {
   /**
    * The mission hold, through the input path rather than through the predicate.

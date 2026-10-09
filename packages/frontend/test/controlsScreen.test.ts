@@ -81,6 +81,27 @@ describe('the controls screen: §11 full rebinding', () => {
     }
   });
 
+  it('takes no key from a held key’s repeat (#1348)', async () => {
+    // §9: a held key acts once. The Enter that armed a row, held past the
+    // repeat delay, bound the action to Enter.
+    const view = await controls();
+    try {
+      await arm(view, REBINDABLE.label);
+      await view.act(() => {
+        dispatchWindow('keydown', { code: 'Enter', repeat: true });
+      });
+      assert.equal(
+        stored()[REBINDABLE.action],
+        DEFAULT_BINDINGS[REBINDABLE.action],
+        'a repeat was bound'
+      );
+      await press(view, 'KeyJ');
+      assert.equal(stored()[REBINDABLE.action], 'KeyJ', 'the premise: the capture still listens');
+    } finally {
+      await view.unmount();
+    }
+  });
+
   it('does not listen until a row is armed', async () => {
     const view = await controls();
     try {
