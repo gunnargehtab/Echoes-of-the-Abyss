@@ -299,6 +299,16 @@ function nearestCutter(world: SimWorld, hazard: Hazard): number {
   return best;
 }
 
+/**
+ * Does a navy have a hull or structure within `radiusM` of this hazard?
+ *
+ * A unit or a structure only (#1304). A creature is spawned with faction 0,
+ * which is the Consortium's, and ordnance carries its owner's faction though
+ * it is nobody's presence — the Echo pass's own rule: "ordnance carries an
+ * Owner but no honest faction, and a creature belongs to nobody". Counting
+ * them stabilised every vent animals grazed near, with no Consortium player in
+ * the match.
+ */
 function anyFactionWithin(
   world: SimWorld,
   hazard: Hazard,
@@ -310,6 +320,7 @@ function anyFactionWithin(
     const eid = entities[i]!;
     if (Owner.faction[eid] !== faction) continue;
     if (Health.hp[eid]! <= 0) continue;
+    if (!hasComponent(world, Unit, eid) && !hasComponent(world, Structure, eid)) continue;
     const dx = Position.x[eid]! - hazard.x;
     const dy = Position.y[eid]! - hazard.y;
     if (dx * dx + dy * dy <= radiusM * radiusM) return true;
