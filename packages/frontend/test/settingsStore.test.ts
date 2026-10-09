@@ -236,6 +236,30 @@ describe('the settings store', () => {
       saveSettings({ reducedMotion: false, speakerProfile: false });
       assert.equal(loadSettings().reducedMotion, false, 'the choice of reduced motion was lost');
       assert.equal(loadSettings().speakerProfile, false, 'the choice of profile was lost');
+      reduce = false;
+      phone = false;
+      saveSettings({ reducedMotion: true, speakerProfile: true });
+      assert.equal(loadSettings().reducedMotion, true, 'reduced motion chosen on was lost');
+      assert.equal(loadSettings().speakerProfile, true, 'the profile chosen on was lost');
+    } finally {
+      delete (globalThis as { matchMedia?: unknown }).matchMedia;
+    }
+  });
+
+  it('keeps a reduced motion stored on before the flag existed, and lets an off follow (#1344)', () => {
+    // docs/ui-ux.md §11: reduced motion keeps every fact on screen, so a stored
+    // `true` from before the flag is kept as the player's; a stored `false`,
+    // which every save wrote, follows the OS.
+    let reduce = false;
+    (globalThis as { matchMedia?: unknown }).matchMedia = (query: string) => ({
+      matches: query.includes('reduce') && reduce,
+    });
+    try {
+      backing.set('echoes.settings', JSON.stringify({ version: 1, reducedMotion: true }));
+      assert.equal(loadSettings().reducedMotion, true, 'an old record lost its reduced motion');
+      reduce = true;
+      backing.set('echoes.settings', JSON.stringify({ version: 1, reducedMotion: false }));
+      assert.equal(loadSettings().reducedMotion, true, 'an old off pinned the OS out');
     } finally {
       delete (globalThis as { matchMedia?: unknown }).matchMedia;
     }

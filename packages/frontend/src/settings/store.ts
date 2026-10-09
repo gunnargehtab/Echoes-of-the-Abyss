@@ -205,6 +205,13 @@ function sanitise(raw: unknown): Settings {
   const record = raw as Record<string, unknown>;
   if (record.version !== 1) return defaults();
   const buses = (record.busVolumes ?? {}) as Record<string, unknown>;
+  // A record from before the flag (#1344): its stored `true` counts as chosen,
+  // since reduced motion keeps every fact on screen (docs/ui-ux.md §11) and a
+  // player who turned it on must not get the motion back; its `false` follows
+  // the OS, since every save wrote one whether or not anyone chose it.
+  const motionChosen =
+    record.reducedMotionChosen === true ||
+    (record.reducedMotionChosen === undefined && record.reducedMotion === true);
   return {
     version: 1,
     profileName: typeof record.profileName === 'string' ? record.profileName : '',
@@ -240,9 +247,9 @@ function sanitise(raw: unknown): Settings {
         : 1,
     // The OS's answer unless the player chose, as the lamp halos below are the
     // build's: a value saved beside some other setting is not a choice.
-    reducedMotionChosen: record.reducedMotionChosen === true,
+    reducedMotionChosen: motionChosen,
     reducedMotion:
-      record.reducedMotionChosen === true && typeof record.reducedMotion === 'boolean'
+      motionChosen && typeof record.reducedMotion === 'boolean'
         ? record.reducedMotion
         : prefersReducedMotion(),
     acousticVeil: clamp01(record.acousticVeil, DEFAULT_SETTINGS.acousticVeil),
