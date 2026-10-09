@@ -23,8 +23,13 @@ describe('the origin lock, as a browser meets it', () => {
   before(async () => {
     const previousPort = process.env.PORT;
     const previousCorsOrigin = process.env.CORS_ORIGIN;
+    const previousSeatS = process.env.COLYSEUS_SEAT_RESERVATION_TIME;
     process.env.PORT = '0';
     process.env.CORS_ORIGIN = ALLOWED;
+    // The matchmaking POST below reserves a seat nobody takes, and Colyseus's
+    // shutdown leaves that seat's timer running: at the default 15 s it held
+    // the file open long after its last test. Read when Colyseus loads.
+    process.env.COLYSEUS_SEAT_RESERVATION_TIME = '1';
     try {
       server = (await import('../src/index.ts')).server;
     } finally {
@@ -32,6 +37,8 @@ describe('the origin lock, as a browser meets it', () => {
       else process.env.PORT = previousPort;
       if (previousCorsOrigin === undefined) delete process.env.CORS_ORIGIN;
       else process.env.CORS_ORIGIN = previousCorsOrigin;
+      if (previousSeatS === undefined) delete process.env.COLYSEUS_SEAT_RESERVATION_TIME;
+      else process.env.COLYSEUS_SEAT_RESERVATION_TIME = previousSeatS;
     }
     const address = server.transport.server?.address();
     assert.ok(address !== undefined && address !== null && typeof address === 'object');
@@ -75,7 +82,7 @@ describe('the origin lock, as a browser meets it', () => {
 
   it("refuses a foreign origin the server's own routes too", async () => {
     const response = await fetch(`${base}/rooms/match`, { headers: { Origin: FOREIGN } });
-    assert.equal(response.status, 200, 'the request itself is answered; the browser blocks it');
+    assert.equal(response.status, 200, 'the request itself is answered; the browser withholds it');
     assert.equal(response.headers.get('access-control-allow-origin'), null);
   });
 });

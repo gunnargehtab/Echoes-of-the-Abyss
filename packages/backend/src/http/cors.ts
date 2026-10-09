@@ -127,9 +127,9 @@ function isLoopbackOrigin(origin: string): boolean {
  * and answers every preflight itself before express runs. An allowed origin
  * is echoed with credentials, because the SDK fetches with credentials and a
  * browser refuses `*` on such a request; `any` echoes every origin the same
- * way. An origin the policy refuses gets no allow-origin: a browser never
- * sends its page a request that needs a preflight, and withholds the answer
- * to one that does not, though the server still acts on that one (#1310). A
+ * way. An origin the policy refuses gets no allow-origin: a browser sends
+ * only the preflight of a request that needs one, and withholds the answer to
+ * one that does not, though the server still acts on that one (#1310). A
  * request with no `Origin` is not a cross-origin browser request, and gets
  * none either. Every answer depends on the `Origin`, so every answer says so
  * in `Vary`, and a cache never hands one origin's answer to another.
