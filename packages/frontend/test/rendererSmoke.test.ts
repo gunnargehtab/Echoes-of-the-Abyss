@@ -3552,6 +3552,152 @@ describe('the command card when it is offered more than it holds', () => {
  * the part it most needs to — the retired no-rotation rule was protecting real
  * things, and what replaced each one is a property rather than a look.
  */
+describe('the ear turns with the camera (#1324)', () => {
+  it('pans a contact where it is drawn, so east sounds left with the camera turned round', async () => {
+    // docs/audio-direction.md §3 matches spatialisation to the rendered
+    // position. Turned round, a contact east of the ear is drawn on the left of
+    // the screen, and it used to sound on the right.
+    type Camera = {
+      __perspectiveCamera: (
+        x: number,
+        z: number,
+        distance: number,
+        aim: { yawDeg?: number; pitchDeg?: number }
+      ) => void;
+    };
+    const world = await boot();
+    try {
+      const probes = (globalThis as unknown as { window: Camera }).window;
+      const template = cannedSnapshot().contacts.find((c) => c.tier === ResolutionTier.Track)!;
+      let tick = 1000;
+      const panAt = (yawDeg: number, at = { x: 2600, y: 2000 }): number => {
+        probes.__perspectiveCamera(2000, 2000, 1500, { yawDeg, pitchDeg: HOME_PITCH_DEG });
+        world.frame(2);
+        world.log.calls.length = 0;
+        tick += 12;
+        world.chart.applySnapshot({
+          ...cannedSnapshot(tick),
+          contacts: [{ ...template, id: 7777, x: at.x, y: at.y }],
+        });
+        const sent = world.log.calls.filter((call) => call.name === 'onContactAudio').at(-1);
+        assert.ok(sent !== undefined, 'the snapshot reached the mix');
+        const entry = (sent.args[0] as ContactAudioFrame).entries.find((e) => e.id === 7777);
+        assert.ok(entry !== undefined && entry.bearing !== undefined, 'the contact has a bearing');
+        return panFor(ResolutionTier.Track, entry.bearing);
+      };
+      assert.ok(panAt(0) > 0.8, 'facing the top of the map, east is right');
+      assert.ok(panAt(180) < -0.8, 'turned round, east is drawn left and sounds left');
+      // A quarter turn is the case that pins which way the yaw runs: a turned
+      // and an unturned sign agree at 0 and 180 for a contact due east.
+      assert.ok(panAt(90, { x: 2000, y: 2600 }) < -0.8, 'a quarter turn: south is drawn left');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('pans a ping return where its contact is drawn, turned with the camera', async () => {
+    // §5's returns are ranged from the hull that pinged, and panned like every
+    // other sound in the mix: on the screen's axis, not world east's.
+    type Camera = {
+      __perspectiveCamera: (
+        x: number,
+        z: number,
+        distance: number,
+        aim: { yawDeg?: number; pitchDeg?: number }
+      ) => void;
+    };
+    const world = await boot();
+    try {
+      const probes = (globalThis as unknown as { window: Camera }).window;
+      const template = cannedSnapshot().contacts.find((c) => c.tier === ResolutionTier.Track)!;
+      const own = cannedSnapshot().units[0]!;
+      let tick = 1000;
+      const returnPan = (yawDeg: number, dx: number, dy: number): number => {
+        probes.__perspectiveCamera(2000, 2000, 1500, { yawDeg, pitchDeg: HOME_PITCH_DEG });
+        world.frame(2);
+        world.log.calls.length = 0;
+        tick += 12;
+        world.chart.applySnapshot({
+          ...cannedSnapshot(tick),
+          contacts: [{ ...template, id: 7777, x: own.x + dx, y: own.y + dy }],
+          selfEvents: [{ kind: SelfEventKind.Ping, unitId: own.id }],
+        });
+        const sent = world.log.calls.filter((call) => call.name === 'onSelfAudio').at(-1);
+        assert.ok(sent !== undefined, 'the snapshot reached the mix');
+        // Picked out by its range: a ghost from an earlier snapshot is still
+        // tracked, and returns as well.
+        const echo = (sent.args[0] as SelfAudioFrame).returns.find(
+          (r) => Math.abs(r.rangeM - Math.hypot(dx, dy)) < 1e-6
+        );
+        assert.ok(echo !== undefined, 'the ping returned off the contact');
+        return echo.pan;
+      };
+      assert.ok(returnPan(0, 600, 0) > 0.8, 'facing the top of the map, east returns right');
+      assert.ok(returnPan(180, 600, 0) < -0.8, 'turned round, east returns left');
+      assert.ok(returnPan(90, 0, 650) < -0.8, 'a quarter turn: south returns left');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('flashes a strike on the edge it is heard from, turned with the camera', async () => {
+    // §11: the strike "also renders as a screen-edge flash on the bearing of
+    // the pinging emitter". Its pan turns with the camera, so the flash must:
+    // turned round, a strike from due east flashes on the left edge.
+    type Camera = {
+      __perspectiveCamera: (
+        x: number,
+        z: number,
+        distance: number,
+        aim: { yawDeg?: number; pitchDeg?: number }
+      ) => void;
+    };
+    const probes = (globalThis as unknown as { window: Camera }).window;
+    const flashAt = async (yawDeg: number): Promise<{ x: number; y: number }> => {
+      const world = await boot();
+      try {
+        probes.__perspectiveCamera(2000, 2000, 1500, { yawDeg, pitchDeg: HOME_PITCH_DEG });
+        world.frame(2);
+        const own = cannedSnapshot().units[0]!;
+        world.chart.applySnapshot({
+          ...cannedSnapshot(1012),
+          selfEvents: [{ kind: SelfEventKind.Exposed, unitId: own.id, bearing: 0 }],
+        });
+        world.frame(1);
+        // The flash is the largest disc the HUD draws, at the edge it points to.
+        const hud = (world.chart as unknown as { hudGraphics: Graphics }).hudGraphics;
+        let widest = { x: Number.NaN, y: Number.NaN, r: -1 };
+        for (const instruction of hud.context.instructions) {
+          if (instruction.action !== 'fill') continue;
+          const path = (instruction.data as { path?: GraphicsPath }).path;
+          for (const step of path?.instructions ?? []) {
+            if (step.action !== 'circle') continue;
+            const [x, y, r] = step.data as number[];
+            if (r! > widest.r) widest = { x: x!, y: y!, r: r! };
+          }
+        }
+        assert.ok(widest.r > 0, 'the premise: a flash was drawn');
+        return { x: widest.x, y: widest.y };
+      } finally {
+        world.teardown();
+      }
+    };
+    const facingTop = (await flashAt(0)).x;
+    const turnedRound = (await flashAt(180)).x;
+    assert.ok(
+      turnedRound < facingTop / 4,
+      `turned round, east flashes on the left edge (${turnedRound} against ${facingTop})`
+    );
+    // A half turn cannot tell which way the yaw runs, and reads one axis. With
+    // the camera a quarter turn round, facing west, east is the screen's foot.
+    const quarter = await flashAt(90);
+    assert.ok(
+      quarter.y > 720 * 0.75 && Math.abs(quarter.x - 640) < 160,
+      `a quarter turn: east flashes on the bottom edge, not at (${quarter.x}, ${quarter.y})`
+    );
+  });
+});
+
 describe('renderer smoke test: the free camera', () => {
   /** The rig's own state, off the harness probe. */
   const rig = (): {
@@ -4219,151 +4365,5 @@ describe('renderer smoke test: the halo frame reading (#1001, development only)'
     }
     const probes = (globalThis as unknown as { window: Probes }).window;
     assert.equal(probes.__perspectiveSeabedM, undefined);
-  });
-});
-
-describe('the ear turns with the camera (#1324)', () => {
-  it('pans a contact where it is drawn, so east sounds left with the camera turned round', async () => {
-    // docs/audio-direction.md §3 matches spatialisation to the rendered
-    // position. Turned round, a contact east of the ear is drawn on the left of
-    // the screen, and it used to sound on the right.
-    type Camera = {
-      __perspectiveCamera: (
-        x: number,
-        z: number,
-        distance: number,
-        aim: { yawDeg?: number; pitchDeg?: number }
-      ) => void;
-    };
-    const world = await boot();
-    try {
-      const probes = (globalThis as unknown as { window: Camera }).window;
-      const template = cannedSnapshot().contacts.find((c) => c.tier === ResolutionTier.Track)!;
-      let tick = 1000;
-      const panAt = (yawDeg: number, at = { x: 2600, y: 2000 }): number => {
-        probes.__perspectiveCamera(2000, 2000, 1500, { yawDeg, pitchDeg: HOME_PITCH_DEG });
-        world.frame(2);
-        world.log.calls.length = 0;
-        tick += 12;
-        world.chart.applySnapshot({
-          ...cannedSnapshot(tick),
-          contacts: [{ ...template, id: 7777, x: at.x, y: at.y }],
-        });
-        const sent = world.log.calls.filter((call) => call.name === 'onContactAudio').at(-1);
-        assert.ok(sent !== undefined, 'the snapshot reached the mix');
-        const entry = (sent.args[0] as ContactAudioFrame).entries.find((e) => e.id === 7777);
-        assert.ok(entry !== undefined && entry.bearing !== undefined, 'the contact has a bearing');
-        return panFor(ResolutionTier.Track, entry.bearing);
-      };
-      assert.ok(panAt(0) > 0.8, 'facing the top of the map, east is right');
-      assert.ok(panAt(180) < -0.8, 'turned round, east is drawn left and sounds left');
-      // A quarter turn is the case that pins which way the yaw runs: a turned
-      // and an unturned sign agree at 0 and 180 for a contact due east.
-      assert.ok(panAt(90, { x: 2000, y: 2600 }) < -0.8, 'a quarter turn: south is drawn left');
-    } finally {
-      world.teardown();
-    }
-  });
-
-  it('pans a ping return where its contact is drawn, turned with the camera', async () => {
-    // §5's returns are ranged from the hull that pinged, and panned like every
-    // other sound in the mix: on the screen's axis, not world east's.
-    type Camera = {
-      __perspectiveCamera: (
-        x: number,
-        z: number,
-        distance: number,
-        aim: { yawDeg?: number; pitchDeg?: number }
-      ) => void;
-    };
-    const world = await boot();
-    try {
-      const probes = (globalThis as unknown as { window: Camera }).window;
-      const template = cannedSnapshot().contacts.find((c) => c.tier === ResolutionTier.Track)!;
-      const own = cannedSnapshot().units[0]!;
-      let tick = 1000;
-      const returnPan = (yawDeg: number, dx: number, dy: number): number => {
-        probes.__perspectiveCamera(2000, 2000, 1500, { yawDeg, pitchDeg: HOME_PITCH_DEG });
-        world.frame(2);
-        world.log.calls.length = 0;
-        tick += 12;
-        world.chart.applySnapshot({
-          ...cannedSnapshot(tick),
-          contacts: [{ ...template, id: 7777, x: own.x + dx, y: own.y + dy }],
-          selfEvents: [{ kind: SelfEventKind.Ping, unitId: own.id }],
-        });
-        const sent = world.log.calls.filter((call) => call.name === 'onSelfAudio').at(-1);
-        assert.ok(sent !== undefined, 'the snapshot reached the mix');
-        // Picked out by its range: a ghost from an earlier snapshot is still
-        // tracked, and returns as well.
-        const echo = (sent.args[0] as SelfAudioFrame).returns.find(
-          (r) => Math.abs(r.rangeM - Math.hypot(dx, dy)) < 1e-6
-        );
-        assert.ok(echo !== undefined, 'the ping returned off the contact');
-        return echo.pan;
-      };
-      assert.ok(returnPan(0, 600, 0) > 0.8, 'facing the top of the map, east returns right');
-      assert.ok(returnPan(180, 600, 0) < -0.8, 'turned round, east returns left');
-      assert.ok(returnPan(90, 0, 650) < -0.8, 'a quarter turn: south returns left');
-    } finally {
-      world.teardown();
-    }
-  });
-
-  it('flashes a strike on the edge it is heard from, turned with the camera', async () => {
-    // §11: the strike "also renders as a screen-edge flash on the bearing of
-    // the pinging emitter". Its pan turns with the camera, so the flash must:
-    // turned round, a strike from due east flashes on the left edge.
-    type Camera = {
-      __perspectiveCamera: (
-        x: number,
-        z: number,
-        distance: number,
-        aim: { yawDeg?: number; pitchDeg?: number }
-      ) => void;
-    };
-    const probes = (globalThis as unknown as { window: Camera }).window;
-    const flashAt = async (yawDeg: number): Promise<{ x: number; y: number }> => {
-      const world = await boot();
-      try {
-        probes.__perspectiveCamera(2000, 2000, 1500, { yawDeg, pitchDeg: HOME_PITCH_DEG });
-        world.frame(2);
-        const own = cannedSnapshot().units[0]!;
-        world.chart.applySnapshot({
-          ...cannedSnapshot(1012),
-          selfEvents: [{ kind: SelfEventKind.Exposed, unitId: own.id, bearing: 0 }],
-        });
-        world.frame(1);
-        // The flash is the largest disc the HUD draws, at the edge it points to.
-        const hud = (world.chart as unknown as { hudGraphics: Graphics }).hudGraphics;
-        let widest = { x: Number.NaN, y: Number.NaN, r: -1 };
-        for (const instruction of hud.context.instructions) {
-          if (instruction.action !== 'fill') continue;
-          const path = (instruction.data as { path?: GraphicsPath }).path;
-          for (const step of path?.instructions ?? []) {
-            if (step.action !== 'circle') continue;
-            const [x, y, r] = step.data as number[];
-            if (r! > widest.r) widest = { x: x!, y: y!, r: r! };
-          }
-        }
-        assert.ok(widest.r > 0, 'the premise: a flash was drawn');
-        return { x: widest.x, y: widest.y };
-      } finally {
-        world.teardown();
-      }
-    };
-    const facingTop = (await flashAt(0)).x;
-    const turnedRound = (await flashAt(180)).x;
-    assert.ok(
-      turnedRound < facingTop / 4,
-      `turned round, east flashes on the left edge (${turnedRound} against ${facingTop})`
-    );
-    // A half turn cannot tell which way the yaw runs, and reads one axis. With
-    // the camera a quarter turn round, facing west, east is the screen's foot.
-    const quarter = await flashAt(90);
-    assert.ok(
-      quarter.y > 720 * 0.75 && Math.abs(quarter.x - 640) < 160,
-      `a quarter turn: east flashes on the bottom edge, not at (${quarter.x}, ${quarter.y})`
-    );
   });
 });
