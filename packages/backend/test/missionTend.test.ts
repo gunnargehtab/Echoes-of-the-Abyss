@@ -11,7 +11,8 @@
  * - **The sweep files a working garden** (§6, §8): a tender parked on the
  *   drop lane during a pass latches *filed*, and the reading arrives with the
  *   tide — both sentences, because filed and unfiled cross with the work
- *   freely.
+ *   freely. And both passes run, the pair out of the pack's reach at the
+ *   plateau's own depth (§6, #1284).
  * - **Silence stops the work** (§3; systems-echo.md §6): a carrier that goes
  *   silent mid-lift drops out of the authored floor and accrues nothing, and
  *   the cut resumes with the button. A drive cut stops it the same way (§6,
@@ -153,10 +154,10 @@ describe('the sweep — docs/mission-tend.md §6, §8', () => {
   it("runs both passes out of the pack's reach, so both happen", () => {
     // The pack below the lane pursues as shallow as about 500 m and bites
     // 160 m in three dimensions. Seated at 550 m the pair was in reach, and in
-    // an idle run the pack killed both before 07:00: the first pass never
-    // reached the lane's west end, and the second never ran (#1284). At the
-    // plateau's own 300 m (§6) both run, each ending where the sweep's ears
-    // bent it rather than on its authored point.
+    // an idle run the pack killed both at the lane's west end before 07:00,
+    // so the second pass never ran (#1284): the hull and east checks are what
+    // fail there. At the plateau's own 300 m (§6) both run, each ending where
+    // the sweep's ears bent it rather than on its authored point.
     const match = tendMatch(77);
     const world = match.world;
     const survey = SEEDING_TEND.parties.find((party) =>
