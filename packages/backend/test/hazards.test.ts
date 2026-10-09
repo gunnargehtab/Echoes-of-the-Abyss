@@ -22,14 +22,17 @@ import {
   DepthBand,
   ECONOMY,
   Faction,
+  FaunaSpecies,
   HAZARDS,
   HazardPhase,
   MAX_MODIFIED_PROPAGATION_FACTOR,
+  OrdnanceKind,
   MAX_PROPAGATION_FACTOR,
   PROPAGATION_FACTOR,
   ResolutionTier,
   SIM,
   StructureKind,
+  THERMAL_DRAW,
   UNIT_STATS,
   UnitKind,
   RESOURCE,
@@ -41,7 +44,8 @@ import {
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
-import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
+import { spawnFauna, spawnOrdnance, spawnStructure, spawnUnit } from '../src/sim/world.ts';
+import { DRIFT_SLOT } from '../src/sim/systems/fauna.ts';
 import { Acoustic, Health, Position, Unit } from '../src/sim/components.ts';
 import {
   ABYSSAL_RIFT_CORRIDOR,
@@ -437,6 +441,63 @@ describe('geothermal vent eruptions', () => {
     assert.ok(
       dormantFor(Faction.Bathyarch) > dormantFor(Faction.Hadron),
       'a Consortium hull on the vent holds it back'
+    );
+  });
+
+  it('counts no creature and no ordnance as a navy on the vent', () => {
+    // A creature is spawned with faction 0, the Consortium's, and ordnance
+    // carries its owner's (#1304). Counted, animals held back every vent they
+    // grazed near with no Consortium hull in the match, and the Drift's slot
+    // was paid Thermal Draw for it.
+    const dormantWith = (place: (match: Match) => void) => {
+      const match = matchWith(hazardMap('geothermal-eruption'));
+      place(match);
+      const ticks = runUntilPhase(match, HazardPhase.Warning);
+      return { ticks, driftDraw: match.world.draw.get(DRIFT_SLOT)?.capacity ?? 0 };
+    };
+    const bare = dormantWith(() => {});
+    const grazed = dormantWith((match) => {
+      for (let i = 0; i < 3; i++) {
+        spawnFauna(match.world, { species: FaunaSpecies.Ashgrazer, x: 3900 + i * 100, y: 4000 });
+      }
+    });
+    const mined = dormantWith((match) => {
+      spawnOrdnance(match.world, {
+        kind: OrdnanceKind.Mine,
+        slot: 0,
+        faction: Faction.Bathyarch,
+        x: 4000,
+        y: 4000,
+        depth: 600,
+        pressureRating: 3,
+      });
+    });
+    assert.equal(grazed.ticks, bare.ticks, 'creatures on the vent held it back');
+    assert.equal(grazed.driftDraw, 0, 'the Drift was paid draw for its animals');
+    assert.equal(mined.ticks, bare.ticks, 'a Consortium mine on the vent held it back');
+  });
+
+  it("pays a held vent's draw to the navy holding it, never the Drift", () => {
+    // Creatures first, so a presence test that counts them finds them before
+    // the hull: the draw went to the Drift's slot and the Consortium was paid
+    // nothing for the vent it was holding (#1304).
+    const match = matchWith(hazardMap('geothermal-eruption'));
+    for (let i = 0; i < 3; i++) {
+      spawnFauna(match.world, { species: FaunaSpecies.Ashgrazer, x: 3900 + i * 100, y: 4000 });
+    }
+    spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 4000,
+      y: 4000,
+    });
+    for (let i = 0; i < 5 * SIM.TICK_HZ; i++) match.update(STEP_MS);
+    assert.ok(match.world.hazards[0]!.stabilisedS > 0, 'the premise: the hull holds the vent');
+    assert.equal(match.world.draw.get(DRIFT_SLOT)?.capacity ?? 0, 0, 'the Drift was paid');
+    assert.ok(
+      (match.world.draw.get(0)?.capacity ?? 0) >= THERMAL_DRAW.STABILISE_CAPACITY,
+      'the Consortium was not paid for the vent it held'
     );
   });
 
