@@ -52,7 +52,7 @@ import { economyFor, spawnUnit, type SimWorld } from '../src/sim/world.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const PLAYER = PROLOGUE_SORROWGATE.playerSlot;
-/** The arch, where the flight is admitted. Any water in the chamber will do. */
+/** The arch, the map's spawn, beside the flight's seats. Any water in the chamber will do. */
 const ARCH = { x: 2550, y: 2150, depth: 1450 };
 
 function missionMatch(): Match {
