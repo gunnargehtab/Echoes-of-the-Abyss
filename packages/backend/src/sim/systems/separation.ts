@@ -23,13 +23,14 @@ import { defineQuery, hasComponent } from 'bitecs';
 import {
   MAX_STRUCTURE_RADIUS_M,
   MAX_UNIT_RADIUS_M,
+  MOVEMENT,
   SEPARATION,
   structureStatsFor,
   unitRadiusM,
   type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
-import { Craft, Position, Structure, Unit } from '../components.ts';
+import { Craft, MoveOrder, Position, Structure, Unit, Velocity } from '../components.ts';
 import { localIdOf, type SimWorld } from '../world.ts';
 import type { Terrain } from '../terrain.ts';
 
@@ -237,6 +238,7 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
       if (d2 < SEPARATION.COINCIDENT_EPSILON_M * SEPARATION.COINCIDENT_EPSILON_M) {
         // Dead centre of a footprint: leave along +X, deterministically.
         settle(terrain, a, sx + minD, Position.y[a]!);
+        reachFootprintEdge(world, a, sx, sy, minD);
         continue;
       }
       const d = Math.sqrt(d2);
@@ -253,6 +255,60 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
       // pushed off the map is not. Sliding along the boundary instead is real
       // contact resolution, which is terrain passability's problem (#150).
       settle(terrain, a, sx + (dx / d) * minD, sy + (dy / d) * minD);
+      reachFootprintEdge(world, a, sx, sy, minD);
     }
   }
+}
+
+/**
+ * A hull put out of a footprint that its order point lies inside is sent for
+ * the footprint's edge nearest that point, where the move ends (#1214).
+ *
+ * The footprint holds a hull out at every depth — nothing here reads one, and
+ * no document gives a structure a height to pass over or under — so a point in
+ * the water over a structure is not reachable. `movementSystem` ends a move
+ * only within `MOVEMENT.ARRIVAL_EPSILON_M` of the point in plan: left alone,
+ * the hull steered in and was pushed out every tick, the move never cleared,
+ * and `busy()` in `orderQueue.ts` held every leg queued behind it. The depth
+ * order is not touched; the hull goes on to it from the edge.
+ *
+ * The edge *nearest the point*, not the one the hull met first. Stopping at
+ * first contact strands a hull on the wrong side of the building: the Fifth's
+ * "home" point lies inside the works' Bastion, and the six it is counted from
+ * reach the Gallery side only by sliding round the footprint toward it.
+ *
+ * The new point sits half the arrival tolerance outside the footprint, so a
+ * hull held at the edge is within `ARRIVAL_EPSILON_M` of it and arrives the
+ * ordinary way. A point at the exact centre has no nearer side: the hull stays
+ * on the edge it was put on, and the move ends.
+ *
+ * Only a point inside `minD` is touched. An order a system re-asserts every
+ * tick (a harvester's run to its depot, a chase) is set again by
+ * `harvestSystem` or `combatSystem` ahead of the next movement step, so this
+ * changes where it reads, not where the hull steers.
+ */
+function reachFootprintEdge(
+  world: SimWorld,
+  eid: number,
+  sx: number,
+  sy: number,
+  minD: number
+): void {
+  if (!MoveOrder.active[eid]) return;
+  const tx = MoveOrder.x[eid]! - sx;
+  const ty = MoveOrder.y[eid]! - sy;
+  const t2 = tx * tx + ty * ty;
+  if (t2 >= minD * minD) return;
+  // The route to the old point is stale either way.
+  world.paths.delete(eid);
+  if (t2 < SEPARATION.COINCIDENT_EPSILON_M * SEPARATION.COINCIDENT_EPSILON_M) {
+    // What `movementSystem` does on arrival.
+    MoveOrder.active[eid] = 0;
+    Velocity.x[eid] = 0;
+    Velocity.y[eid] = 0;
+    return;
+  }
+  const k = (minD + MOVEMENT.ARRIVAL_EPSILON_M / 2) / Math.sqrt(t2);
+  MoveOrder.x[eid] = sx + tx * k;
+  MoveOrder.y[eid] = sy + ty * k;
 }
