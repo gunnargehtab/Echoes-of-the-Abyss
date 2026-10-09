@@ -4217,3 +4217,33 @@ describe('renderer smoke test: the halo frame reading (#1001, development only)'
     assert.equal(probes.__perspectiveSeabedM, undefined);
   });
 });
+
+describe('the wheel reads the axis it turned on (#1338)', () => {
+  it('moves the focus with Shift + wheel sent sideways, and zooms on no sideways scroll', async () => {
+    // docs/ui-ux.md §9: Shift + wheel raises and sinks the focus, the wheel
+    // zooms. macOS sends Shift + wheel on `deltaX` with `deltaY` at 0, which
+    // read as down whichever way the wheel turned; a sideways swipe zoomed out.
+    const world = await boot();
+    try {
+      world.frame(2);
+      const canvas = world.app.canvas;
+      const conn = world.conn as unknown as { distance: number };
+      const wheel = (init: Record<string, unknown>) =>
+        canvas.dispatch('wheel', { clientX: 640, clientY: 360, deltaX: 0, deltaY: 0, ...init });
+      const seabed = world.conn.focusDepth();
+
+      wheel({ shiftKey: true, deltaX: -100 });
+      assert.equal(world.conn.focusDepth(), seabed - FOCUS_STEP_M, 'a notch up raises the focus');
+      wheel({ shiftKey: true, deltaX: 100 });
+      assert.equal(world.conn.focusDepth(), seabed, 'and a notch down sinks it back');
+
+      const distance = conn.distance;
+      wheel({ deltaX: 100 });
+      assert.equal(conn.distance, distance, 'a sideways scroll zoomed');
+      wheel({ deltaY: -100 });
+      assert.ok(conn.distance < distance, 'the premise: the wheel itself still zooms');
+    } finally {
+      world.teardown();
+    }
+  });
+});

@@ -243,12 +243,17 @@ function box(over: Partial<ReadoutBox> = {}): ReadoutBox {
  */
 function stubHost(): {
   host: { current: HTMLElement | null };
-  dispatched: Array<{ type: string; deltaY: number }>;
+  dispatched: Array<{ type: string; deltaX: number; deltaY: number; shiftKey: boolean }>;
 } {
-  const dispatched: Array<{ type: string; deltaY: number }> = [];
+  const dispatched: Array<{ type: string; deltaX: number; deltaY: number; shiftKey: boolean }> = [];
   const canvas = {
     dispatchEvent: (event: WheelEvent) => {
-      dispatched.push({ type: event.type, deltaY: event.deltaY });
+      dispatched.push({
+        type: event.type,
+        deltaX: event.deltaX,
+        deltaY: event.deltaY,
+        shiftKey: event.shiftKey,
+      });
       return true;
     },
   };
@@ -393,12 +398,23 @@ describe('the strip explains itself: the surface', () => {
     // And the wheel is forwarded rather than swallowed, at the host the shell
     // handed over rather than at a sibling found by selector.
     await view.act(() => {
-      layer.onWheel({ deltaY: -240, clientX: 40, clientY: 20 });
+      layer.onWheel({ deltaX: 0, deltaY: -240, shiftKey: false, clientX: 40, clientY: 20 });
     });
     assert.deepEqual(
       dispatched,
-      [{ type: 'wheel', deltaY: -240 }],
+      [{ type: 'wheel', deltaX: 0, deltaY: -240, shiftKey: false }],
       'the zoom reaches the canvas, carrying the delta that was scrolled'
+    );
+    // And Shift + wheel, as macOS sends it: sideways, on the other axis. Over
+    // the strip it used to arrive as a plain wheel and zoom (#1338).
+    dispatched.length = 0;
+    await view.act(() => {
+      layer.onWheel({ deltaX: -240, deltaY: 0, shiftKey: true, clientX: 40, clientY: 20 });
+    });
+    assert.deepEqual(
+      dispatched,
+      [{ type: 'wheel', deltaX: -240, deltaY: 0, shiftKey: true }],
+      'Shift + wheel reaches the canvas as the gesture it was'
     );
 
     await view.unmount();
