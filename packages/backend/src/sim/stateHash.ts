@@ -269,8 +269,8 @@ export function hashWorld(world: SimWorld): number {
       h = mixFloat(h, Ordnance.detonatingS[eid]!);
       h = mixFloat(h, Ordnance.targetDepthM[eid]!);
       h = mixFloat(h, Ordnance.heading[eid]!);
-      // What it sounds at next tick, which a laid decoy does not take from its
-      // kind (#1314).
+      // The figure its next tick's SIG is taken from, short of a veil and a
+      // detonation; a laid decoy does not take it from its kind (#1314).
       h = mixFloat(h, Ordnance.baseSig[eid]!);
       // Ordinal, not the raw eid, for the reason the whole function exists:
       // two identical worlds must hash alike whichever process built them.
