@@ -71,6 +71,11 @@ export function ControlsScreen({ onBack }: ControlsScreenProps) {
     const onKey = (event: KeyboardEvent) => {
       event.preventDefault();
       event.stopPropagation();
+      // A held key acts once (docs/ui-ux.md §9): the Enter that armed this row
+      // and was held past the repeat delay used to bind the action to itself.
+      // After the two calls above, so the repeat's own click cannot cancel the
+      // capture either (#1348).
+      if (event.repeat) return;
       if (event.code === 'Escape') {
         setCapturing(null);
         setRefusal('');
