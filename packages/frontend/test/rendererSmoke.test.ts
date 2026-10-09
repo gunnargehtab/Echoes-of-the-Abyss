@@ -3102,18 +3102,6 @@ describe('renderer smoke test: the strip explains itself', () => {
   });
 });
 
-/**
- * The console's drop order — docs/ui-ux.md §2 (#957).
- *
- * A block is dropped rather than squeezed, and §2 names the order: the fleet
- * block first, then production, then selection, while the scope and the
- * command card never go. Held as two properties over a sweep of widths rather
- * than as the thresholds, which are arithmetic on `BLOCK_W` and would only
- * restate it: a block is on the glass only while every block §2 drops after it
- * is too, and widening the window never takes a block away. The layout this
- * replaced broke both — selection went before production, and the fleet came
- * back once selection had gone.
- */
 describe('a control group keeps its hulls through a hold (#1337)', () => {
   it('keeps a hull aboard a transport in its group, and has it in hand when it lands', async () => {
     // docs/ui-ux.md §9. The recall pruned every member missing from the map's
@@ -3184,6 +3172,18 @@ describe('a control group keeps its hulls through a hold (#1337)', () => {
   });
 });
 
+/**
+ * The console's drop order — docs/ui-ux.md §2 (#957).
+ *
+ * A block is dropped rather than squeezed, and §2 names the order: the fleet
+ * block first, then production, then selection, while the scope and the
+ * command card never go. Held as two properties over a sweep of widths rather
+ * than as the thresholds, which are arithmetic on `BLOCK_W` and would only
+ * restate it: a block is on the glass only while every block §2 drops after it
+ * is too, and widening the window never takes a block away. The layout this
+ * replaced broke both — selection went before production, and the fleet came
+ * back once selection had gone.
+ */
 describe('the console drops its blocks in §2’s order', () => {
   /** §2's order, first to go first. */
   const DROP_ORDER = ['FLEET', 'PRODUCTION', 'SELECTION'] as const;
