@@ -1543,9 +1543,10 @@ export class EchoRenderer {
   private units: OwnUnit[] = [];
   /**
    * Own hulls aboard a carrier (docs/systems-echo.md §3). Kept apart from
-   * `units`: they are not in the water, so nothing draws them, nothing
-   * selects them and no order reaches them — the carrier's inspector says
-   * what it holds, and that is the whole of their presence on the scope.
+   * `units`: they are not in the water, so nothing draws them and no order
+   * reaches them — the carrier's inspector says what it holds, and that is the
+   * whole of their presence on the scope. The selection and a control group
+   * keep them, so they are in hand again when they land (#1337).
    */
   private cargo: OwnUnit[] = [];
   private ordnance: OwnOrdnance[] = [];
@@ -2990,8 +2991,12 @@ export class EchoRenderer {
     let sy = 0;
     let n = 0;
     for (const id of members) {
+      // A hull in a hold is reported at its carrier, which is where it is, so
+      // a group wholly aboard centres on its transport (#1337).
       const entity =
-        this.units.find((u) => u.id === id) ?? this.structures.find((st) => st.id === id);
+        this.units.find((u) => u.id === id) ??
+        this.cargo.find((u) => u.id === id) ??
+        this.structures.find((st) => st.id === id);
       if (entity === undefined) continue;
       sx += entity.x;
       sy += entity.y;

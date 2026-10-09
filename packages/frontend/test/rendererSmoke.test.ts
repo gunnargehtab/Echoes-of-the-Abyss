@@ -4227,19 +4227,25 @@ describe('a control group keeps its hulls through a hold (#1337)', () => {
     try {
       type Chart = { selected: Set<number>; controlGroups: Map<number, number[]> };
       const chart = world.chart as unknown as Chart;
+      const conn = world.conn as unknown as { target: { x: number; z: number } };
       const units = cannedSnapshot().units;
       const army = units.filter((unit) => unit.throttle === undefined).map((unit) => unit.id);
-      const transport = units.find((unit) => unit.throttle !== undefined)!;
-      assert.ok(army.length > 0 && transport !== undefined, 'the premise: hulls and a hold');
+      const carrier = units.find((unit) => unit.throttle !== undefined)!;
+      assert.ok(army.length > 0 && carrier !== undefined, 'the premise: hulls and a carrier');
       world.frame(2);
       dispatchWindow('keydown', { code: 'Digit0' });
       dispatchWindow('keydown', { code: 'Digit1', ctrlKey: true });
 
-      // Aboard, and recalled there.
+      // Aboard, as the server sends it: the carrier holds them, and each is
+      // reported at the carrier, which is where it is.
       world.chart.applySnapshot({
         ...cannedSnapshot(1012),
         units: units.map((unit) =>
-          army.includes(unit.id) ? { ...unit, aboard: transport.id } : unit
+          unit.id === carrier.id
+            ? { ...unit, hold: { berths: 6, used: army.length } }
+            : army.includes(unit.id)
+              ? { ...unit, aboard: carrier.id, x: carrier.x, y: carrier.y, depth: carrier.depth }
+              : unit
         ),
       });
       dispatchWindow('keydown', { code: 'Digit1' });
@@ -4248,12 +4254,21 @@ describe('a control group keeps its hulls through a hold (#1337)', () => {
         [...army].sort(),
         'the group lost the hulls in the hold'
       );
+      // Recalled twice, a group wholly aboard centres on its carrier.
+      world.chart.focusOn(carrier.x + 1500, carrier.y + 1500);
+      dispatchWindow('keydown', { code: 'Digit1' });
+      dispatchWindow('keydown', { code: 'Digit1' });
+      assert.deepEqual(
+        { x: conn.target.x, y: conn.target.z },
+        { x: carrier.x, y: carrier.y },
+        'recalled twice, the group centred nowhere'
+      );
 
-      // Landed, and recalled again over another selection: the transport alone.
+      // Landed, and recalled again over another selection: the carrier alone.
       world.chart.applySnapshot(cannedSnapshot(1024));
-      world.chart.focusOn(transport.x, transport.y);
+      world.chart.focusOn(carrier.x, carrier.y);
       world.frame(2);
-      const at = world.conn.projectPoint(transport.x, transport.y, transport.depth);
+      const at = world.conn.projectPoint(carrier.x, carrier.y, carrier.depth);
       for (const type of ['pointerdown', 'pointerup']) {
         world.app.canvas.dispatch(type, {
           button: 0,
@@ -4264,7 +4279,7 @@ describe('a control group keeps its hulls through a hold (#1337)', () => {
         });
       }
       world.frame(1);
-      assert.deepEqual([...chart.selected], [transport.id], 'the premise: another selection');
+      assert.deepEqual([...chart.selected], [carrier.id], 'the premise: another selection');
       dispatchWindow('keydown', { code: 'Digit1' });
       assert.deepEqual([...chart.selected].sort(), [...army].sort(), 'the group came back short');
     } finally {
