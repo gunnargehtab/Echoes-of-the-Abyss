@@ -23,13 +23,14 @@ import { defineQuery, hasComponent } from 'bitecs';
 import {
   MAX_STRUCTURE_RADIUS_M,
   MAX_UNIT_RADIUS_M,
+  MOVEMENT,
   SEPARATION,
   structureStatsFor,
   unitRadiusM,
   type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
-import { Craft, Position, Structure, Unit } from '../components.ts';
+import { Craft, MoveOrder, Position, Posture, Structure, Unit } from '../components.ts';
 import { localIdOf, type SimWorld } from '../world.ts';
 import type { Terrain } from '../terrain.ts';
 
@@ -237,6 +238,7 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
       if (d2 < SEPARATION.COINCIDENT_EPSILON_M * SEPARATION.COINCIDENT_EPSILON_M) {
         // Dead centre of a footprint: leave along +X, deterministically.
         settle(terrain, a, sx + minD, Position.y[a]!);
+        reachFootprintEdge(world, a, sx, sy, minD);
         continue;
       }
       const d = Math.sqrt(d2);
@@ -253,6 +255,123 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
       // pushed off the map is not. Sliding along the boundary instead is real
       // contact resolution, which is terrain passability's problem (#150).
       settle(terrain, a, sx + (dx / d) * minD, sy + (dy / d) * minD);
+      reachFootprintEdge(world, a, sx, sy, minD);
     }
   }
+}
+
+/** Reused across hulls and ticks: `nearestEdge` writes here rather than allocating. */
+const edge = { x: 0, y: 0 };
+
+/**
+ * A hull put out of a footprint that its order point lies inside is sent for
+ * the footprint's edge nearest that point, and the move ends on arriving there
+ * (#1214). An attack-move's destination is moved the same way, since combat
+ * sends a hull back to it and `busy()` holds the queue until it is reached.
+ * Not every edge is reachable: one against the map's edge, or within a hull's
+ * width of a neighbouring footprint, can still hold the hull off its point.
+ *
+ * The footprint holds a hull out at every depth. The sim reads no height for
+ * a structure: its footprint is a column, whatever height the art draws it at
+ * (docs/asset-prompts-3d.md, "A Bastion is low as well as wide", is the view's
+ * scale, not a sim number). So a point in the water over a structure is not
+ * reachable. `movementSystem` ends a move only within `ARRIVAL_EPSILON_M` of
+ * the point in plan: left alone, the hull steered in and was pushed out every
+ * tick, the move never cleared, and `busy()` in `orderQueue.ts` held every leg
+ * queued behind it. The depth order is not touched; the hull goes on to it
+ * from the edge.
+ *
+ * The edge *nearest the point*, not the one the hull met first. Stopping at
+ * first contact strands a hull on the wrong side of the building: the Fifth's
+ * "home" point lies inside the works' Bastion, and the six it is counted from
+ * reach the Gallery side only by sliding round the footprint toward it.
+ *
+ * Only a point inside `minD` is touched, and only where it reads: nothing is
+ * ended and no velocity or route is cleared here. An order a system re-asserts
+ * every tick (a harvester's run to its depot, a chase) is set again by
+ * `harvestSystem` or `combatSystem` ahead of the next movement step, so the
+ * hull steers exactly as it did, and a hauler pinned at its depot's edge still
+ * reads as under way to the acoustics pass.
+ */
+function reachFootprintEdge(
+  world: SimWorld,
+  eid: number,
+  sx: number,
+  sy: number,
+  minD: number
+): void {
+  const hx = Position.x[eid]!;
+  const hy = Position.y[eid]!;
+  if (
+    MoveOrder.active[eid] &&
+    nearestEdge(sx, sy, minD, MoveOrder.x[eid]!, MoveOrder.y[eid]!, hx, hy)
+  ) {
+    MoveOrder.x[eid] = edge.x;
+    MoveOrder.y[eid] = edge.y;
+  }
+  if (
+    hasComponent(world, Posture, eid) &&
+    Posture.engage[eid] &&
+    nearestEdge(sx, sy, minD, Posture.engageX[eid]!, Posture.engageY[eid]!, hx, hy)
+  ) {
+    Posture.engageX[eid] = edge.x;
+    Posture.engageY[eid] = edge.y;
+  }
+}
+
+/**
+ * Where on the footprint's edge a hull ordered to (tx, ty) should be taken, in
+ * `edge`; false when the point is outside `minD` and needs nothing.
+ *
+ * The point sits half the arrival tolerance beyond `minD`, the distance a
+ * hull's centre is held at, so a hull held at the edge is within
+ * `ARRIVAL_EPSILON_M` of it and arrives the ordinary way.
+ *
+ * Two points have no nearer side. The exact centre: the hull's own side is
+ * taken, and it is already there. And a point dead opposite the hull, straight
+ * through the centre, where the push out cancels the course and the hull would
+ * sit pinned for ever: it is turned until it is `SEPARATION.OPPOSITE_TIE_RAD`
+ * off opposite, further to the side it already leans and counter-clockwise
+ * when it leans neither. Further off than that the push leaves part of the
+ * course, and the slide round grows from it.
+ */
+function nearestEdge(
+  sx: number,
+  sy: number,
+  minD: number,
+  tx: number,
+  ty: number,
+  hx: number,
+  hy: number
+): boolean {
+  const px = tx - sx;
+  const py = ty - sy;
+  const p2 = px * px + py * py;
+  if (p2 >= minD * minD) return false;
+
+  // From the centre toward the hull, which `settle` has just put on the edge.
+  const hdx = hx - sx;
+  const hdy = hy - sy;
+  const hd = Math.sqrt(hdx * hdx + hdy * hdy);
+  const ux = hd > 0 ? hdx / hd : 1;
+  const uy = hd > 0 ? hdy / hd : 0;
+
+  let wx = ux;
+  let wy = uy;
+  if (p2 >= SEPARATION.COINCIDENT_EPSILON_M * SEPARATION.COINCIDENT_EPSILON_M) {
+    const p = Math.sqrt(p2);
+    wx = px / p;
+    wy = py / p;
+    const cross = ux * wy - uy * wx;
+    const off = Math.PI - Math.abs(Math.atan2(cross, ux * wx + uy * wy));
+    if (off < SEPARATION.OPPOSITE_TIE_RAD) {
+      const turn = (cross < 0 ? -1 : 1) * (Math.PI - SEPARATION.OPPOSITE_TIE_RAD);
+      wx = ux * Math.cos(turn) - uy * Math.sin(turn);
+      wy = ux * Math.sin(turn) + uy * Math.cos(turn);
+    }
+  }
+  const reach = minD + MOVEMENT.ARRIVAL_EPSILON_M / 2;
+  edge.x = sx + wx * reach;
+  edge.y = sy + wy * reach;
+  return true;
 }

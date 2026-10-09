@@ -2316,6 +2316,17 @@ export const SEPARATION = {
   COINCIDENT_EPSILON_M: 0.01,
   /** Spatial-hash cell for the separation query. A few hull lengths. */
   CELL_M: 200,
+  /**
+   * How far off dead opposite a hull the edge point it is sent to is kept,
+   * radians (#1214). A move to a point inside a footprint is sent to the edge
+   * nearest it; with the hull on the far side, straight through the centre,
+   * the push out and the course cancel and the hull never turns. A point
+   * closer than this to dead opposite is turned until it is this far off,
+   * further to the side it already leans and counter-clockwise on an exact
+   * tie, so the hull has a side to slide to. An arc along the edge of 17 m for
+   * a Light Scout at a Refinery, and 30 m for a Bulwark at a Bastion.
+   */
+  OPPOSITE_TIE_RAD: 0.1,
 } as const;
 
 /** TUNABLE — Tier 2 reports position blurred by this fraction. SPEC says 15%. */
