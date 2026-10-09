@@ -464,9 +464,12 @@ describe('the shell: what it wires to what', () => {
   });
 
   it('lets the mix go of the picture at a result and at a lost signal (#1326)', async () => {
-    // The mix hears contacts only on a snapshot, and none follows a result or
-    // arrives while the signal is lost: every voice used to hold its last
-    // level under the result card and the reconnect overlay.
+    // A voice stops only on a frame that leaves its contact out, and the mix
+    // hears frames only on a snapshot: every voice used to hold its last level
+    // under the result card and the reconnect overlay. The room sends the
+    // deciding tick's snapshot just after the result, so the result cases send
+    // one too, in that order — the order a first fix that let go at the result
+    // alone never met.
     type Probe = { window: { __audioProbe: () => { contactVoices: number } } };
     const g = globalThis as unknown as Probe;
     for (const end of ['result', 'mission', 'drop'] as const) {
@@ -486,11 +489,41 @@ describe('the shell: what it wires to what', () => {
             objectives: [],
           });
         } else world.room.drop();
+        if (end !== 'drop') {
+          world.room.emit(SERVER_MSG.echo, encodeEcho(null, cannedSnapshot(112), 1));
+        }
         await world.settle();
         assert.equal(g.window.__audioProbe().contactVoices, 0, `${end}: a voice held on`);
       } finally {
         await world.unmount();
       }
+    }
+  });
+
+  it('hears a rematch after letting the last match go (#1326)', async () => {
+    // What keeps the deciding tick's snapshot silent must not keep the next
+    // match's: a rematch reuses the room, and Ended → Playing is its mark.
+    type Probe = { window: { __audioProbe: () => { contactVoices: number } } };
+    const g = globalThis as unknown as Probe;
+    const world = await mount();
+    try {
+      await joinMatch(world);
+      await firstGesture(world);
+      world.room.changeState({ phase: MatchPhase.Playing });
+      world.room.emit(SERVER_MSG.echo, encodeEcho(null, cannedSnapshot(100), 0));
+      await world.settle();
+      world.room.emit(SERVER_MSG.gameOver, { winnerSlot: 1 });
+      world.room.emit(SERVER_MSG.echo, encodeEcho(null, cannedSnapshot(112), 1));
+      world.room.changeState({ phase: MatchPhase.Ended });
+      await world.settle();
+      assert.equal(g.window.__audioProbe().contactVoices, 0, 'the premise: the result let go');
+
+      world.room.changeState({ phase: MatchPhase.Playing });
+      world.room.emit(SERVER_MSG.echo, encodeEcho(null, cannedSnapshot(12), 2));
+      await world.settle();
+      assert.ok(g.window.__audioProbe().contactVoices > 0, 'the rematch played in silence');
+    } finally {
+      await world.unmount();
     }
   });
 

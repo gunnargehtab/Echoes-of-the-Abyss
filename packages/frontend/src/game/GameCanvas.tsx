@@ -367,6 +367,14 @@ export function GameCanvas({
     let underSilenceOrder = false;
     let anyHullSilent = false;
 
+    /**
+     * Set by a result, cleared by a rematch. The room sends the deciding
+     * tick's snapshot just after the result, so a mix that let the picture go
+     * at the result would hear it again a moment later and hold it under the
+     * result card until the room closes (#1326).
+     */
+    let matchOver = false;
+
     const start = async () => {
       // The world first: the conn view mounts for the whole match, and the
       // Pixi glass above it cannot draw a single world mark without it.
@@ -503,6 +511,9 @@ export function GameCanvas({
             );
             activeRenderer.applySnapshot(snapshot);
             perspective.applySnapshot(snapshot);
+            // The chart draws the deciding tick's snapshot under the result
+            // card; the mix lets it go before the tick can voice it (#1326).
+            if (matchOver) audio.releasePicture();
             // Audio work happens on the tick contacts arrive on, never per
             // frame: anything smoother would imply knowledge the server did
             // not send.
@@ -510,8 +521,10 @@ export function GameCanvas({
           },
           onGameOver: (payload) => {
             activeRenderer.setGameOver(payload);
-            // No snapshot follows a result, and the mix only hears one: the
+            // The mix hears contacts only on a snapshot, and a frame leaving
+            // one out is all that stops its voice: with the match over, the
             // picture it holds is let go here (#1326).
+            matchOver = true;
             audio.releasePicture();
           },
           onMission: (view) => {
@@ -539,6 +552,7 @@ export function GameCanvas({
           onMissionOver: (payload) => {
             setMissionOver(payload);
             activeRenderer.setMissionOver(payload);
+            matchOver = true;
             audio.releasePicture();
             // The one write of the progression record (docs/campaign.md §11).
             // Here rather than inside `MissionResult`, because this is the
@@ -584,6 +598,10 @@ export function GameCanvas({
               }
               return view;
             });
+            // Out here, not in the updater, which React runs when it renders.
+            // Only a rematch takes an ended room back to Playing, so its first
+            // snapshot is heard (#1326).
+            if (view.phase === MatchPhase.Playing) matchOver = false;
             setSessionId(client?.sessionId ?? null);
             // Same rule as the mission's ending: a resolved match must be seen,
             // so the menu does not stay open over the result card.
@@ -595,8 +613,9 @@ export function GameCanvas({
             setStatus(next);
             setDetail(why ?? '');
             activeRenderer.setStatus(next);
-            // Nor does one arrive while the signal is lost; a reconnection's
-            // first snapshot brings the picture back (#1326).
+            // No snapshot arrives while the signal is lost, so the picture is
+            // let go here too; a reconnection's first snapshot brings back
+            // whatever the chart still tracks (#1326).
             if (next !== 'connected') audio.releasePicture();
             // A lost signal closes the menu: the reconnect overlay is
             // information the player must see, and the menu would otherwise sit

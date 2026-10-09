@@ -686,42 +686,10 @@ export class AudioEngine {
       this.pendingSpeech = [];
     }
 
-    // The rest of the chain. `world` is still set *by* the self mixer, because
-    // it also carries §4's own-noise attenuation, but it is written from here
-    // like the others so every bus on the chain moves on the same tick.
-    //
-    // Three independent claims now, not two. A line still being read while
-    // nothing else sounds ducks the score on its own; an own cue is the self
-    // mixer's; and a live contact is the contact mixer's — which until #707
-    // was claimed by nobody, so `DUCK_TABLE`'s whole `contact` row was
-    // unreachable and a contact ducked neither the water nor the score. The
-    // rung written is the loudest of the three.
-    //
-    // Written every tick rather than only when a self frame arrived, because
-    // a line's start and end — and a contact's — are events of those buses
-    // and not of that one.
-    if (buses !== null && this.context !== null) {
-      const now = this.context.currentTime;
-      const speaking: BusRung | null = now < this.speechUntil ? 'speech' : null;
-      const contact = this.mixer?.activeRung ?? null;
-      const rung = louderRung(louderRung(selfMixer?.activeRung ?? null, speaking), contact);
-      // The world bus takes the contact rung but never the speech one: §13
-      // puts the world's cell under a line at 1 deliberately, and `applyChain`
-      // says why folding it in would be wrong.
-      selfMixer?.applyChain(contact, now);
-      // Two independent claims on the contact bus, and they multiply: what the
-      // Precedence Law says should be quiet right now, and how much of the bus
-      // the voices currently on it are entitled to between them. Same shape as
-      // the world bus's pair in selfMixer, and for the same reason — a bus
-      // written by whichever rule ran last is a bus with a bug in it.
-      buses.contact.gain.setTargetAtTime(
-        duckFor('contact', rung) * crowdGain(this.voices.size),
-        now,
-        0.15
-      );
-      buses.speech.gain.setTargetAtTime(duckFor('speech', rung), now, 0.15);
-      buses.music.gain.setTargetAtTime(duckFor('music', rung), now, 0.25);
-    }
+    // The rest of the chain. Written every tick rather than only when a self
+    // frame arrived, because a line's start and end — and a contact's — are
+    // events of those buses and not of that one.
+    this.writeChain();
 
     const analyser = this.contactAnalyser;
     const duck = this.duckGain;
@@ -744,6 +712,49 @@ export class AudioEngine {
   }
 
   /**
+   * The rest of the chain. `world` is still set *by* the self mixer, because
+   * it also carries §4's own-noise attenuation, but it is written from here
+   * like the others so every bus on the chain moves on the same tick.
+   *
+   * Three independent claims now, not two. A line still being read while
+   * nothing else sounds ducks the score on its own; an own cue is the self
+   * mixer's; and a live contact is the contact mixer's — which until #707 was
+   * claimed by nobody, so `DUCK_TABLE`'s whole `contact` row was unreachable
+   * and a contact ducked neither the water nor the score. The rung written is
+   * the loudest of the three.
+   *
+   * `releasePicture` writes it too: §13 ducks under a contact only while it
+   * sounds, so letting every voice go lifts the contact rung with them, as a
+   * frame that leaves every contact out does (#1326).
+   */
+  private writeChain(): void {
+    const buses = this.buses;
+    const context = this.context;
+    if (buses === null || context === null) return;
+    const now = context.currentTime;
+    const selfMixer = this.selfMixer;
+    const speaking: BusRung | null = now < this.speechUntil ? 'speech' : null;
+    const contact = this.mixer?.activeRung ?? null;
+    const rung = louderRung(louderRung(selfMixer?.activeRung ?? null, speaking), contact);
+    // The world bus takes the contact rung but never the speech one: §13 puts
+    // the world's cell under a line at 1 deliberately, and `applyChain` says
+    // why folding it in would be wrong.
+    selfMixer?.applyChain(contact, now);
+    // Two independent claims on the contact bus, and they multiply: what the
+    // Precedence Law says should be quiet right now, and how much of the bus
+    // the voices currently on it are entitled to between them. Same shape as
+    // the world bus's pair in selfMixer, and for the same reason — a bus
+    // written by whichever rule ran last is a bus with a bug in it.
+    buses.contact.gain.setTargetAtTime(
+      duckFor('contact', rung) * crowdGain(this.voices.size),
+      now,
+      0.15
+    );
+    buses.speech.gain.setTargetAtTime(duckFor('speech', rung), now, 0.15);
+    buses.music.gain.setTargetAtTime(duckFor('music', rung), now, 0.25);
+  }
+
+  /**
    * Hand the mix the contact picture resolved on this tick.
    *
    * Separate from `onEchoTick` so the caller cannot accidentally mix on a
@@ -756,12 +767,14 @@ export class AudioEngine {
   /**
    * The picture is gone: the match ended, or the signal dropped (#1326).
    *
-   * The mix hears contacts only on a snapshot, so with none coming every voice
-   * held its last level under the result card or the reconnect overlay, long
-   * after the ghosts it mirrors had faded off the chart. An empty picture stops
-   * them as a frame that leaves a contact out stops it, and the residue beds
-   * go quiet with them. The next snapshot, after a reconnection, brings back
-   * whatever it holds.
+   * A voice stops only on a frame that leaves its contact out, and the mix
+   * hears frames only on a snapshot, so every voice held its last level under
+   * the result card or the reconnect overlay, long after the ghosts it mirrors
+   * had faded off the chart. An empty picture fades every voice out as that
+   * frame would, lifts the contact duck with them, and starts the residue beds
+   * on their slow §6 fade. The room sends the deciding tick's snapshot just
+   * after a result, so the shell lets that one go as well; a reconnection's
+   * first snapshot brings back whatever the chart still tracks.
    */
   releasePicture(): void {
     this.pendingFrame = null;
@@ -770,6 +783,7 @@ export class AudioEngine {
     if (context === null) return;
     this.mixer?.update({ tick: 0, entries: [] }, context.currentTime);
     this.markBed?.update(new Map(), context.currentTime);
+    this.writeChain();
   }
 
   /** Hand the mix the residue the player can currently read (§6). */
