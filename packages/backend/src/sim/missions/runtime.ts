@@ -1275,6 +1275,7 @@ export class MissionRuntime {
     const disabled = this.definition.escortRadiusM <= 0;
     const escorts = this.idsFor('escort');
     const held: MovementHold[] = [];
+    world.movementHeld.clear();
     for (const party of this.definition.parties) {
       if (party.slot !== this.definition.playerSlot) continue;
       for (const unit of party.units) {
@@ -1299,6 +1300,7 @@ export class MissionRuntime {
         else this.lastEscorted.delete(unit.tag);
         if (unreleased || !escortedNow) {
           this.suspend(world, unit.tag, eid);
+          world.movementHeld.add(eid);
           held.push({
             unitId: eid,
             reason: unreleased ? MovementHoldReason.Unreleased : MovementHoldReason.Unescorted,
@@ -1312,14 +1314,29 @@ export class MissionRuntime {
   }
 
   /**
+   * Stop, or Hold, given to a hull the escort hold is keeping: the route the
+   * hold is saving for it goes too, or the hull would come out of the hold on
+   * an order the player had just stopped (#1322). Its depth stays, as Stop
+   * leaves a hull's depth alone; its plan is the queue's, which Stop and Hold
+   * already clear.
+   */
+  dropHeldRoute(eid: number): void {
+    const tag = this.tagOfTender(eid);
+    if (tag === null) return;
+    const saved = this.suspended.get(tag);
+    if (saved !== undefined) saved.move = null;
+  }
+
+  /**
    * Take the hull's orders off it, remembering them.
    *
    * Written on every pass the hold is in force rather than only on its leading
    * edge, because the order can be re-asserted underneath it: a `transit` beat
    * drives a scripted hull through `applyMove`, which is the sink's path and
-   * so is not refused, and the order queue pops the next leg the moment
-   * `MoveOrder.active` reads 0. Both write a fresher order than the one this
-   * is holding, and the fresher one is the one to give back.
+   * so is not refused. That writes a fresher order than the one this is
+   * holding, and the fresher one is the one to give back. The order queue does
+   * not pop under the hold: `world.movementHeld` keeps the plan waiting where
+   * it is (#1322).
    */
   private suspend(world: SimWorld, tag: MissionTag, eid: number): void {
     let saved = this.suspended.get(tag);
@@ -1340,10 +1357,12 @@ export class MissionRuntime {
   /**
    * Give them back, if the hull is not already doing something newer.
    *
-   * The `active === 0` guard is the whole of the courtesy: a player who
-   * ordered the tender somewhere else in the interval between the ears
-   * returning and this pass has said the more recent thing, and a resumed
-   * route that overwrote it would be the hold arguing with the player.
+   * The `active === 0` guard is half the courtesy: a player who ordered the
+   * tender somewhere else in the interval between the ears returning and this
+   * pass has said the more recent thing, and a resumed route that overwrote it
+   * would be the hold arguing with the player. A Stop or a Hold leaves
+   * `active` at 0, which the guard cannot tell from the hold's own pause, so
+   * `dropHeldRoute` is the other half.
    */
   private resume(world: SimWorld, tag: MissionTag, eid: number): void {
     const saved = this.suspended.get(tag);

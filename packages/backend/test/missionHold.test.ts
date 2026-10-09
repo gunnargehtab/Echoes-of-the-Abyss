@@ -50,6 +50,7 @@ import {
   Weapon,
 } from '../src/sim/components.ts';
 import { missionMapById } from '../src/sim/maps/index.ts';
+import { queueView } from '../src/sim/systems/orderQueue.ts';
 import {
   CHORD_SECOND_CHORD,
   LEDGER_SHIFT_CHANGE,
@@ -279,6 +280,70 @@ describe('the escort hold pauses a route rather than cancelling it', () => {
       tenderAt(h).y > resumed.y + 50,
       `the tender took the order it was last given (y ${tenderAt(h).y.toFixed(0)}, was ${resumed.y.toFixed(0)})`
     );
+  });
+});
+
+describe('the escort hold keeps the plan behind the route (#1322)', () => {
+  // A tender sent to A with B and C queued, then left unescorted. The queue
+  // used to pop its next leg the moment the held leg read idle, so each pass
+  // of the hold saved a later leg over the last, and the tender came back
+  // holding C alone.
+  const b = { x: NORTH.x + 150, y: NORTH.y };
+  const c = { x: NORTH.x + 150, y: NORTH.y + 150 };
+  function plannedAndHeld() {
+    const h = harness();
+    h.settle(3, 'close');
+    const tender = h.tenderId();
+    h.match.orderMove(PLAYER, tender, NORTH.x, NORTH.y);
+    h.match.orderMove(PLAYER, tender, b.x, b.y, true);
+    h.match.orderMove(PLAYER, tender, c.x, c.y, true);
+    const plan = () => (queueView(h.match.world, tender) ?? []).map(({ x, y }) => ({ x, y }));
+    h.settle(1, 'close');
+    assert.deepEqual(plan(), [b, c], 'the premise: two legs queued behind the first');
+    h.settle(6, 'away');
+    assert.equal(h.heldReason(), UNESCORTED, 'the premise: held');
+    return { h, tender, plan };
+  }
+  /** Back, and read on the pass that frees it, before a leg can finish. */
+  function freed(h: Harness) {
+    for (let s = 0; h.heldReason() !== null; s++) {
+      assert.ok(s < 150, 'the tender was never freed');
+      h.settle(0.2, 'close');
+    }
+  }
+
+  it('gives back the leg and the queued legs behind it, as they were', () => {
+    const { h, tender, plan } = plannedAndHeld();
+    // A pause says so: the plan stays queued, and drawn, while the hold lasts.
+    assert.deepEqual(plan(), [b, c], 'the plan drained into the hold');
+    freed(h);
+    assert.deepEqual(
+      { x: MoveOrder.x[tender], y: MoveOrder.y[tender], active: MoveOrder.active[tender] },
+      { x: NORTH.x, y: NORTH.y, active: 1 },
+      'the leg it was on'
+    );
+    assert.deepEqual(plan(), [b, c], 'and the plan behind it');
+    // And the plan runs again: the leg ends and the next pops, which it could
+    // not under a hold that never let the tender go.
+    for (let s = 0; plan().length === 2; s++) {
+      assert.ok(s < 150, 'the plan never ran after the hold let go');
+      h.settle(0.2, 'close');
+    }
+  });
+
+  it('lets a Stop or a Hold given during the hold drop the leg and the plan alike', () => {
+    // Stop is "drop the plan, the route, the chase and the posture, and
+    // stand", and Hold is "go nowhere" (docs/ui-ux.md §9); both reach a held
+    // tender. The route the hold was saving has to go with the plan, or the
+    // freed tender would resume what the player had just stopped.
+    for (const order of ['stop', 'hold'] as const) {
+      const { h, tender, plan } = plannedAndHeld();
+      if (order === 'stop') h.match.orderStop(PLAYER, tender);
+      else h.match.orderHold(PLAYER, tender, true);
+      freed(h);
+      assert.equal(MoveOrder.active[tender], 0, `${order}: the freed tender went back to its leg`);
+      assert.deepEqual(plan(), [], `${order}: and its plan`);
+    }
   });
 });
 

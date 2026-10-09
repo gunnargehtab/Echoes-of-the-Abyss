@@ -54,6 +54,10 @@ export type QueuedOrder =
  */
 function busy(world: SimWorld, eid: number): boolean {
   if (MoveOrder.active[eid] === 1) return true;
+  // Held by a mission's escort hold: waiting, not done. The hold zeroes the
+  // leg every pass, and read as idle that popped the next leg into the hold
+  // each time, until only the last was left to give back (#1322).
+  if (world.movementHeld.has(eid)) return true;
   // An attack-move that has stopped to fight is still on its way.
   if (hasComponent(world, Posture, eid) && Posture.engage[eid] === 1) return true;
 
