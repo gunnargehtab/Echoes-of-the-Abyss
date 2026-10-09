@@ -57,7 +57,7 @@ const BITECS_REUSE_THRESHOLD = 0.01;
 type Store = Record<string, ArrayLike<number> & { fill(value: number): unknown }>;
 
 /** Every component in components.ts, by name, as bitecs stores of typed arrays. */
-const STORES: [string, Store][] = Object.entries(components).filter(
+const STORES = Object.entries(components as Record<string, unknown>).filter(
   (entry): entry is [string, Store] => {
     const fields = Object.values(entry[1] as object);
     return fields.length > 0 && fields.every((field) => ArrayBuffer.isView(field));
