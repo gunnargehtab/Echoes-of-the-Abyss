@@ -197,6 +197,24 @@ function barLabel(app: HeadlessApplication, label: string): { x: number; y: numb
   return found[0]!;
 }
 
+/** Is a command-card cell drawn grey, as a cell that is not enabled is? */
+function barGrey(app: HeadlessApplication, label: string): boolean {
+  const found: Text[] = [];
+  const walk = (node: Container): void => {
+    for (const child of node.children) {
+      if (!child.visible) continue;
+      if (child instanceof Text) {
+        if (child.text === label) found.push(child);
+      } else {
+        walk(child as Container);
+      }
+    }
+  };
+  walk(app.stage as unknown as Container);
+  assert.equal(found.length, 1, `${label} is not on the command card exactly once`);
+  return found[0]!.style.fill === UI.textDim;
+}
+
 /** `TOP_BAR_HEIGHT` in EchoRenderer, restated so a change to it fails here. */
 const TOP_BAR_HEIGHT_PX = 52;
 
@@ -3200,9 +3218,9 @@ describe('the command card when it is offered more than it holds', () => {
       assert.equal(charge(900, 2400), 2400, 'mid-dive, from the band the hull is in');
       assert.equal(charge(2400), undefined, 'and from the Abyssal there is no band below');
 
-      // The button greys on the same test: pressed mid-dive it fires, and
-      // from the Abyssal it does nothing.
-      const pressed = (depth: number, depthOrder?: number): unknown => {
+      // The button greys on the same test: lit mid-dive, where a press fires,
+      // and grey from the Abyssal, where a press does nothing.
+      const pressed = (depth: number, depthOrder?: number): { grey: boolean; set: unknown } => {
         corvette.depth = depth;
         corvette.depthOrder = depthOrder;
         world.chart.applySnapshot(snapshot);
@@ -3210,6 +3228,7 @@ describe('the command card when it is offered more than it holds', () => {
         world.frame(1);
         selectHull(world, corvette);
         world.log.calls.length = 0;
+        const grey = barGrey(world.app, 'CHARGE');
         const cell = barLabel(world.app, 'CHARGE');
         world.app.canvas.dispatch('pointerdown', {
           button: 0,
@@ -3219,14 +3238,18 @@ describe('the command card when it is offered more than it holds', () => {
           clientY: cell.y,
         });
         world.frame(1);
-        return world.log.first('onDepthCharge')?.[1];
+        return { grey, set: world.log.first('onDepthCharge')?.[1] };
       };
-      assert.equal(
+      assert.deepEqual(
         pressed(900, 2400),
-        2400,
-        'the button fires mid-dive, from the band the hull is in'
+        { grey: false, set: 2400 },
+        'the button is lit and fires mid-dive, from the band the hull is in'
       );
-      assert.equal(pressed(2400), undefined, 'and is grey from the Abyssal');
+      assert.deepEqual(
+        pressed(2400),
+        { grey: true, set: undefined },
+        'and is grey from the Abyssal, where a press does nothing'
+      );
     } finally {
       world.teardown();
     }

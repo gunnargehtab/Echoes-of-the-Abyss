@@ -1329,10 +1329,10 @@ const RIBBON_BOTTOM_PAD = 16;
 const RIBBON_DUCT_MIN_PX = 6;
 
 /**
- * The depth a depth charge is set to in each band (docs/systems-combat.md §8):
- * the band's working depth, kept clear of its boundaries so the set depth is
- * never ambiguously in two bands at once. CHARGE is its one reader since a
- * click took depth orders over from the band steps (#1132).
+ * The depth a depth charge is set to in each band (docs/ui-ux.md §9 states the
+ * 1,000 m and 2,400 m): the band's working depth, kept clear of its boundaries
+ * so the set depth is never ambiguously in two bands at once. CHARGE is its one
+ * reader since a click took depth orders over from the band steps (#1132).
  */
 const BAND_STATION_DEPTH_M: Record<DepthBand, number> = {
   [DepthBand.Shelf]: 200,
@@ -1341,9 +1341,10 @@ const BAND_STATION_DEPTH_M: Record<DepthBand, number> = {
 };
 
 /**
- * The band CHARGE sets a depth charge into from each band — docs/systems-combat.md
- * §8's "the band below". `Match.orderDepthCharge` accepts any band but its
- * dropper's own; the button offers the one below. The Abyssal has none.
+ * The band CHARGE sets a depth charge into from each band — docs/ui-ux.md §9's
+ * "the band below", one of docs/systems-combat.md §8's "band above or below".
+ * `Match.orderDepthCharge` accepts any band but its dropper's own; the button
+ * offers the one below. The Abyssal has none.
  */
 const BAND_BELOW: Partial<Record<DepthBand, DepthBand>> = {
   [DepthBand.Shelf]: DepthBand.MidWater,
