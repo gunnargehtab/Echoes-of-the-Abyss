@@ -34,6 +34,7 @@ import {
   SIM,
   StructureKind,
   UnitKind,
+  faunaStatsFor,
 } from '@echoes/shared';
 
 import type { MissionDefinition } from './types.ts';
@@ -49,6 +50,18 @@ const AUDIT = 2;
 
 /** §8 — four harvesters' standard tide with weather in it. */
 const QUOTA = 3600;
+
+/**
+ * §7, §11 — the pack's water: the Draymaw's own working depth, above the
+ * layer's duct, over the Downworks' east end. It is the only depth a pack at
+ * rest keeps, because a released commitment sets `Fauna.homeDepth` to the
+ * species' working figure (runtime.ts, `holdCommitments`). Spawned at 1,250 m
+ * under the layer, the pack climbed through it unordered by 00:05 and rested
+ * at 900 m from 00:30 anyway (#1212). Rested at 1,250 m, it would share the
+ * duct with the refinery, and the refinery would hear it from its seating
+ * until it settles at 01:05 of an idle shift, which §7 says it does not.
+ */
+const PACK_M = faunaStatsFor(FaunaSpecies.Draymaw).workingDepthM;
 
 export const LEDGER_SHIFT_CHANGE: MissionDefinition = {
   ...LEDGER_SHIFT_CHANGE_HEADER,
@@ -282,24 +295,24 @@ export const LEDGER_SHIFT_CHANGE: MissionDefinition = {
    * ordered anywhere; the watches stand down and the rest is the shift's.
    */
   beats: [
-    // 00:00 — the pack on the Downworks, at rest. Present, audible at the
+    // 00:00 — the pack over the Downworks, at rest. Present, audible at the
     // edge of hearing, and uninterested in a field that is merely working
     // (§7). It commits to nothing; it is here so the player's ears learn what
     // a pack at rest sounds like.
     //
-    // At the Downworks' east end, about 1.5 km off the refinery and 600 m off
-    // Face Five's field, so a shift hears it at rest from Five and not from
-    // the muster, the seam or the refinery (§7). Driven to rest 220 m from
-    // the refinery, the pack heard its hum on release, took the depot at
-    // 01:20 and three hulls by 02:00 in every run, and nothing more could be
-    // banked after (#1265).
+    // Over the Downworks' east end at `PACK_M`, about 1.5 km off the refinery
+    // and 600 m off Face Five's field, so a shift hears it at rest from Five
+    // and not from the muster, the seam or the refinery (§7). Driven to rest
+    // 220 m from the refinery, the pack heard its hum on release, took the
+    // depot at 01:20 and three hulls by 02:00 in every run, and nothing more
+    // could be banked after (#1265).
     {
       atTick: 0,
       kind: 'creature',
       tag: 'pack-a',
       species: FaunaSpecies.Draymaw,
-      spawnAt: { x: 3600, y: 1650, depthM: 1250 },
-      driveTo: { x: 3650, y: 1600 },
+      spawnAt: { x: 3600, y: 1650, depthM: PACK_M },
+      driveTo: { x: 3650, y: 1600, depthM: PACK_M },
       untilTick: T(0, 20),
       loud: false,
       note: 'The pack that shadows every producing face on the Vein — the weather, at rest',
@@ -309,8 +322,8 @@ export const LEDGER_SHIFT_CHANGE: MissionDefinition = {
       kind: 'creature',
       tag: 'pack-b',
       species: FaunaSpecies.Draymaw,
-      spawnAt: { x: 3750, y: 1800, depthM: 1250 },
-      driveTo: { x: 3800, y: 1750 },
+      spawnAt: { x: 3750, y: 1800, depthM: PACK_M },
+      driveTo: { x: 3800, y: 1750, depthM: PACK_M },
       untilTick: T(0, 20),
       loud: false,
       note: '',
@@ -320,8 +333,8 @@ export const LEDGER_SHIFT_CHANGE: MissionDefinition = {
       kind: 'creature',
       tag: 'pack-c',
       species: FaunaSpecies.Draymaw,
-      spawnAt: { x: 3500, y: 1850, depthM: 1250 },
-      driveTo: { x: 3550, y: 1800 },
+      spawnAt: { x: 3500, y: 1850, depthM: PACK_M },
+      driveTo: { x: 3550, y: 1800, depthM: PACK_M },
       untilTick: T(0, 20),
       loud: false,
       note: '',

@@ -208,11 +208,18 @@ in this mission gets loud enough to invite it. It is on the field so the player'
 what a pack at rest sounds like, and so the player who overburdens Face Five spends the
 mission glancing at it. The glancing is the design.
 
-It rests at the Downworks' east end, about 1.5 km off the refinery and 600 m off Face Five's
+It rests over the Downworks' east end, about 1.5 km off the refinery and 600 m off Face Five's
 field. From 220 m the refinery's hum drew it on release, and it took the depot at 01:20 in
 every run (#1265). From the east end, the edge of hearing is Face Five's: a shift working there
 hears the pack at rest, and the muster, the seam and the refinery do not. The seam is thin
 (§11), so a shift that makes its number works Five, and hears it.
+
+It rests at 900 m, the Draymaw's own working depth ([bestiary.md](bestiary.md) §4), above the
+layer's duct and over the working level rather than on it. A pack at rest is the Drift's, and the
+Drift climbs home to its working depth when a beat lets it go, so this is the only depth the
+shift's pack keeps. Rested at 1,250 m, it would share the duct with the refinery at 1,300 m,
+where sound carries at 1.2× ([systems-echo.md](systems-echo.md) §3), and the refinery would hear
+it from its seating until it settles at 01:05 of an idle shift (#1212).
 
 [mission-tend.md](mission-tend.md) §8 established that a mission whose only threat is a ledger
 has no failure to make audible — it has outcomes, and the close is a conclusion rather than a
@@ -270,7 +277,7 @@ just not the one Osk was working for.
 
 | Time | Beat |
 | --- | --- |
-| 00:00 | The shift opens. The audit's transit plan is on the board — two road passes, docked between. The pack is on the Downworks, at rest. The hum starts building from the first delivery |
+| 00:00 | The shift opens. The audit's transit plan is on the board — two road passes, docked between. The pack is over the Downworks, at rest. The hum starts building from the first delivery |
 | 01:00 | Osk, on the channel: the shift briefing that is not in the minutes (§12) |
 | 03:00 | **First watch stands down.** Barge One is released from the muster. The audit is not yet on the road; the first crossing is the free one, and the player learns the climb — slow, silent, and long enough to respect |
 | 04:00 | **Pass one.** The pair enters the High Road, listening. Whatever is above the layer and under way is theirs to resolve |
@@ -327,7 +334,7 @@ the Rift; the mission is a working field below and a rail above, and the climb b
 | The Field | rect 0, 0, 4000, 3000 | Thermal Vein | 1,100 | The Vein's masked working ground. Painted first; everything else is cut into it |
 | The Rail Head | rect 1500, 0, 1000, 500 | Thermal Vein | 850 | The Fivewell rail transfer — berths, registry office, **the transfer point**. Above the layer. A box because it is built, and the berths the watches are counted in (§8) are this same rectangle |
 | The High Road | rect 0, 500, 4000, 500 | Thermal Vein | 950 | The audit's ground: the freight road along the workings' shoulder, above the layer, where the pair walks and listens. A box because it is a graded road, and both passes walk its whole length |
-| The Downworks | polygon (0, 1500) (750, 1500) (1000, 1250) (3000, 1250) (3250, 1500) (4000, 1500) (4000, 2000) (0, 2000) | Thermal Vein | 1,300 | The working level below the layer — the refinery, the roads between faces, and the pack. A basin: its north edge draws back at both ends, and its south edge runs straight along the heads of the faces |
+| The Downworks | polygon (0, 1500) (750, 1500) (1000, 1250) (3000, 1250) (3250, 1500) (4000, 1500) (4000, 2000) (0, 2000) | Thermal Vein | 1,300 | The working level below the layer — the refinery and the roads between faces, with the pack above the layer over its east end (§7). A basin: its north edge draws back at both ends, and its south edge runs straight along the heads of the faces |
 | Face Two | polygon (250, 2000) (1250, 2000) (1250, 2500) (750, 2750) (500, 2500) | Thermal Vein | 1,350 | The dying face: the muster, the last seam, and the thin field. An old cut, worked down the slope past the last seam |
 | Face Five | ellipse 2500, 2000, 1250, 750 | Thermal Vein | 1,350 | The producing face the quota leans on: the rich field. A fresh, round working opening off the Downworks' south edge |
 

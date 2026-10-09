@@ -85,7 +85,7 @@ export const NINEFOLD_WORKINGS: MapDefinition = {
       ],
       biome: Biome.ThermalVein,
       floorM: 1300,
-      note: 'The Downworks — the working level below the layer: the refinery, the roads between faces, and the pack',
+      note: 'The Downworks — the working level below the layer: the refinery and the roads between faces, with the pack above the layer over its east end',
     },
     // An old cut, worked down the slope past the last seam.
     {

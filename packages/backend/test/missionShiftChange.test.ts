@@ -36,6 +36,7 @@ import {
   ResolutionTier,
   SIM,
   StructureKind,
+  THERMOCLINE_DUCT_TOP_M,
   detectionRatio,
   thermoclineFactor,
   type EchoSnapshot,
@@ -328,13 +329,18 @@ describe('the ground the shift stands on — §11, drawn in shapes (#1142)', () 
     assert.deepEqual(groundAt(rich!.x, rich!.y), ['Face Five', 1350], 'the rich field moved');
   });
 
-  it('keeps the refinery and the pack on the Downworks, below the layer', () => {
+  it('keeps the refinery on the Downworks, below the layer, and the pack over it, above', () => {
     const refinery = shift.structures!.find((s) => s.tag === 'refinery')!;
     assert.deepEqual(groundAt(refinery.x, refinery.y), ['The Downworks', 1300]);
     for (const beat of LEDGER_SHIFT_CHANGE.beats) {
       if (beat.kind !== 'creature') continue;
       assert.deepEqual(groundAt(beat.spawnAt!.x, beat.spawnAt!.y), ['The Downworks', 1300]);
       assert.deepEqual(groundAt(beat.driveTo!.x, beat.driveTo!.y), ['The Downworks', 1300]);
+      // §7: at the Draymaw's own 900 m, above the duct, the one depth a pack
+      // at rest keeps; seated under the layer, it climbed through it (#1212).
+      assert.equal(beat.spawnAt!.depthM, 900, `${beat.tag} is seated off its working depth`);
+      assert.equal(beat.driveTo.depthM, 900, `${beat.tag} is driven off its working depth`);
+      assert.ok(beat.spawnAt!.depthM < THERMOCLINE_DUCT_TOP_M, `${beat.tag} is in the duct`);
     }
   });
 
@@ -524,9 +530,10 @@ describe('the pack, at rest — docs/mission-shift-change.md §7 (#1265)', () =>
    * One shift to the whistle, idle or with every harvester the watches have
    * released sent to its nearest field at Standard. Then the refinery, how
    * many of the player's hulls were lost, what was banked, on how many passes
-   * after the release the player heard the pack, and on how many a pack
-   * member was interested or committed. Driven to rest beside the refinery,
-   * the pack took it at 01:20 in every run, idle or working.
+   * from its seating the player heard the pack, on how many after its release
+   * a pack member was interested or committed, and how shallow and deep the
+   * pack went from its seating to the whistle. Driven to rest beside the
+   * refinery, the pack took it at 01:20 in every run, idle or working.
    */
   function shift(working: boolean) {
     const map = missionMapById(LEDGER_SHIFT_CHANGE.mapId)!;
@@ -546,6 +553,10 @@ describe('the pack, at rest — docs/mission-shift-change.md §7 (#1265)', () =>
     const nodes = defineQuery([ResourceNode, Position])(world);
     let heard = 0;
     let roused = 0;
+    // The pack's water, read every tick from its seating on: §7 rests it at
+    // 900 m, and seated at 1,250 m it climbed through the layer by 00:05.
+    let shallowest = Infinity;
+    let deepest = -Infinity;
     for (let tick = 0; tick <= T(16, 30) && match.missionOver === null; tick++) {
       const own = match.update(STEP_MS)?.get(slot);
       match.takeMissionView();
@@ -560,19 +571,28 @@ describe('the pack, at rest — docs/mission-shift-change.md §7 (#1265)', () =>
           match.setThrottle(slot, eid, HarvestThrottle.Standard);
         }
       }
-      if (tick <= RELEASED) continue;
       if (pack.length === 0) pack = [...creatures(world)];
-      const stirred = (eid: number) =>
-        hasComponent(world, Fauna, eid) &&
-        (Fauna.stage[eid] === FaunaStage.Interested || Fauna.stage[eid] === FaunaStage.Committed);
-      if (pack.some(stirred)) roused++;
-      // Heard through the player's own resolved contacts, as the player hears it.
+      for (const eid of pack) {
+        if (!hasComponent(world, Fauna, eid)) continue;
+        shallowest = Math.min(shallowest, Position.depth[eid]!);
+        deepest = Math.max(deepest, Position.depth[eid]!);
+      }
+      // Heard through the player's own resolved contacts, as the player hears
+      // it, from the seating on: seated at 1,250 m, in the duct with the
+      // refinery about 1.5 km off it, the pack was heard there from 00:00 to
+      // 00:12 (#1212).
       const contacts = own?.contacts ?? [];
       const it = contacts.some((contact) => {
         const eid = match.echo.entityForHandle(slot, contact.id);
         return eid !== undefined && hasComponent(world, Fauna, eid);
       });
       if (it) heard++;
+      // Stirring only from the release, because the drive holds it Committed.
+      if (tick <= RELEASED) continue;
+      const stirred = (eid: number) =>
+        hasComponent(world, Fauna, eid) &&
+        (Fauna.stage[eid] === FaunaStage.Interested || Fauna.stage[eid] === FaunaStage.Committed);
+      if (pack.some(stirred)) roused++;
     }
     assert.ok(match.missionOver !== null, 'the premise: the shift ran to the whistle');
     assert.equal(pack.length, 3, 'the premise: the pack of three was on the field');
@@ -582,6 +602,7 @@ describe('the pack, at rest — docs/mission-shift-change.md §7 (#1265)', () =>
       banked: world.economies.get(slot)?.nodules ?? 0,
       heard,
       roused,
+      depth: { shallowest, deepest },
     };
   }
 
@@ -591,6 +612,7 @@ describe('the pack, at rest — docs/mission-shift-change.md §7 (#1265)', () =>
     assert.equal(idle.lost, 0, 'the pack took a hull');
     assert.equal(idle.roused, 0, '§7: it commits to nothing, and stirred');
     assert.equal(idle.heard, 0, '§7: heard at rest from the muster or the refinery');
+    assert.deepEqual(idle.depth, { shallowest: 900, deepest: 900 }, '§7: off its 900 m');
   });
 
   it('nor in a shift that works every field at Standard, and is heard from Face Five', () => {
@@ -600,5 +622,6 @@ describe('the pack, at rest — docs/mission-shift-change.md §7 (#1265)', () =>
     assert.equal(worked.lost, 0, 'the pack took a hull from a working field');
     assert.equal(worked.roused, 0, '§7: it commits to nothing, and stirred at a working field');
     assert.ok(worked.heard > 0, '§7: a shift at Face Five hears the pack at rest, and never did');
+    assert.deepEqual(worked.depth, { shallowest: 900, deepest: 900 }, '§7: off its 900 m');
   });
 });
