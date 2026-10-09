@@ -617,7 +617,11 @@ export type DerivedWorldState =
   // An outbound channel, not a store: drained into the Echo snapshot and
   // cleared. Anything that could make two runs raise different self-events has
   // already diverged in something above.
-  | 'selfEvents';
+  | 'selfEvents'
+  // What the corridors struck last tick, read only to raise a `selfEvents`
+  // entry on the way in: a function of the last tick's hashed positions,
+  // health and corridors.
+  | 'corridorStruck';
 
 /**
  * Every field of the world is classified, and no field is classified twice.
