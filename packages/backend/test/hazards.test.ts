@@ -452,8 +452,20 @@ describe('geothermal vent eruptions', () => {
     const dormantWith = (place: (match: Match) => void) => {
       const match = matchWith(hazardMap('geothermal-eruption'));
       place(match);
-      const ticks = runUntilPhase(match, HazardPhase.Warning);
-      return { ticks, driftDraw: match.world.draw.get(DRIFT_SLOT)?.capacity ?? 0 };
+      // Draw is paid only while the vent is dormant, and `thermalSystem` runs
+      // after `hazardsSystem`, so the tick the warning begins already reads it
+      // unpaid: the most any slot was paid over the dormancy is the figure.
+      let ticks = 0;
+      let drift = 0;
+      let own = 0;
+      for (; match.world.hazards[0]!.phase !== HazardPhase.Warning; ticks++) {
+        assert.ok(ticks < 200 * SIM.TICK_HZ, 'the vent never warned');
+        match.update(STEP_MS);
+        if (match.world.hazards[0]!.phase !== HazardPhase.Dormant) continue;
+        drift = Math.max(drift, match.world.draw.get(DRIFT_SLOT)?.capacity ?? 0);
+        own = Math.max(own, match.world.draw.get(0)?.capacity ?? 0);
+      }
+      return { ticks, drift, own };
     };
     const bare = dormantWith(() => {});
     const grazed = dormantWith((match) => {
@@ -473,32 +485,73 @@ describe('geothermal vent eruptions', () => {
       });
     });
     assert.equal(grazed.ticks, bare.ticks, 'creatures on the vent held it back');
-    assert.equal(grazed.driftDraw, 0, 'the Drift was paid draw for its animals');
+    assert.equal(grazed.drift, 0, 'the Drift was paid draw for its animals');
     assert.equal(mined.ticks, bare.ticks, 'a Consortium mine on the vent held it back');
+    assert.equal(mined.own, bare.own, 'the Consortium was paid draw for its mine');
   });
 
   it("pays a held vent's draw to the navy holding it, never the Drift", () => {
     // Creatures first, so a presence test that counts them finds them before
     // the hull: the draw went to the Drift's slot and the Consortium was paid
     // nothing for the vent it was holding (#1304).
-    const match = matchWith(hazardMap('geothermal-eruption'));
-    for (let i = 0; i < 3; i++) {
-      spawnFauna(match.world, { species: FaunaSpecies.Ashgrazer, x: 3900 + i * 100, y: 4000 });
-    }
-    spawnUnit(match.world, {
-      kind: UnitKind.Corvette,
-      slot: 0,
-      faction: Faction.Bathyarch,
-      x: 4000,
-      y: 4000,
-    });
-    for (let i = 0; i < 5 * SIM.TICK_HZ; i++) match.update(STEP_MS);
+    const held = (hull: boolean) => {
+      const match = matchWith(hazardMap('geothermal-eruption'));
+      for (let i = 0; i < 3; i++) {
+        spawnFauna(match.world, { species: FaunaSpecies.Ashgrazer, x: 3900 + i * 100, y: 4000 });
+      }
+      if (hull) {
+        spawnUnit(match.world, {
+          kind: UnitKind.Corvette,
+          slot: 0,
+          faction: Faction.Bathyarch,
+          x: 4000,
+          y: 4000,
+        });
+      }
+      for (let i = 0; i < 5 * SIM.TICK_HZ; i++) match.update(STEP_MS);
+      return match;
+    };
+    // What slot 0 draws with no hull on the vent: its Bastion's own capacity.
+    const baseline = held(false).world.draw.get(0)?.capacity ?? 0;
+    const match = held(true);
     assert.ok(match.world.hazards[0]!.stabilisedS > 0, 'the premise: the hull holds the vent');
     assert.equal(match.world.draw.get(DRIFT_SLOT)?.capacity ?? 0, 0, 'the Drift was paid');
-    assert.ok(
-      (match.world.draw.get(0)?.capacity ?? 0) >= THERMAL_DRAW.STABILISE_CAPACITY,
+    assert.equal(
+      match.world.draw.get(0)?.capacity ?? 0,
+      baseline + THERMAL_DRAW.STABILISE_CAPACITY,
       'the Consortium was not paid for the vent it held'
     );
+  });
+
+  it('gives a longer warning to Hadron ears, never to a Hadron mine', () => {
+    // §1's "resonance sensors" are a listener's, and ordnance is deaf by
+    // construction: a Hadron mine by the vent bought every player a longer
+    // warning while `anyFactionWithin` counted it (#1304).
+    const warningWith = (place: (match: Match) => void) => {
+      const match = matchWith(hazardMap('geothermal-eruption'));
+      match.addPlayer(1, Faction.Hadron);
+      place(match);
+      runUntilPhase(match, HazardPhase.Warning);
+      let ticks = 0;
+      while (match.world.hazards[0]!.phase === HazardPhase.Warning) {
+        match.update(STEP_MS);
+        ticks++;
+      }
+      return ticks;
+    };
+    const unwatched = warningWith(() => {});
+    const mined = warningWith((match) => {
+      spawnOrdnance(match.world, {
+        kind: OrdnanceKind.Mine,
+        slot: 1,
+        faction: Faction.Hadron,
+        x: 4300,
+        y: 4000,
+        depth: 600,
+        pressureRating: 3,
+      });
+    });
+    assert.equal(mined, unwatched, 'a Hadron mine bought a longer warning');
   });
 
   it('stabilising is a delay, not a cancellation', () => {
