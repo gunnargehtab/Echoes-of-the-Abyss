@@ -315,8 +315,9 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
     const isMobile = hasComponent(world, MoveOrder, eid);
     const silent = hasComponent(world, SilentRunning, eid) && SilentRunning.active[eid] === 1;
     // A spared party volunteers nothing either (§4, #1239): its guns hold until
-    // somebody fires on it, and `wakeSpared` lifts the tag when they do. Point
-    // defence still answers a round in the water — ordnance is not a party.
+    // somebody fires on it, point defence included, as silence holds it — or
+    // a torpedo fired at the party would be shot down and never land, and the
+    // party never wake (#1254). `wakeSpared` lifts the tag when a blow lands.
     const spared = hasComponent(world, Spared, eid);
     const posture = hasComponent(world, Posture, eid);
     // Attack-move (#435): bound somewhere, and fighting whatever it meets on
@@ -353,7 +354,7 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
     // cruise, and at 250 m it is not merely audible but deafening. The
     // header's "in range implies heard" licence holds here for real.
     const intercept =
-      !silent && inbound.length > 0
+      !silent && !spared && inbound.length > 0
         ? nearestInboundOrdnance(world, eid, slot, profile.rangeM, inbound)
         : 0;
     // A gun choosing, not a mode switch: the order is not cancelled, and on

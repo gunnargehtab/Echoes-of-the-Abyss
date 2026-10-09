@@ -12,9 +12,9 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { defineQuery, hasComponent, removeComponent } from 'bitecs';
-import { FLIGHT, Faction, SIM, UnitKind } from '@echoes/shared';
+import { FLIGHT, Faction, ORDNANCE, SIM, StructureKind, UnitKind } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
-import { spawnUnit } from '../src/sim/world.ts';
+import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { missionMapById } from '../src/sim/maps/index.ts';
 import {
@@ -25,6 +25,8 @@ import {
 } from '../src/sim/missions/index.ts';
 import { Health, Owner, Position, Spared, Structure, Unit } from '../src/sim/components.ts';
 import { spare, wakeSpared } from '../src/sim/systems/spared.ts';
+import { launchTorpedo } from '../src/sim/systems/ordnance.ts';
+import { seedSpore } from '../src/sim/systems/siege.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 
@@ -120,6 +122,104 @@ describe('a spared party — docs/systems-combat.md §4', () => {
       'the blow woke the whole party, the hull it never touched included'
     );
     assert.ok(Health.hp[gun]! < full, 'and the party answered');
+  });
+
+  /**
+   * #1254. Its point defence holds too, as a silent hull's does: a spared
+   * hull's gun used to shoot down the torpedo fired at it, 248 m out, so the
+   * party never woke — Standing Wave's column, of all of them, could not be
+   * started on with a torpedo. Now the round lands, and the blow wakes it.
+   */
+  it('holds its point defence too, so a torpedo fired at it lands and wakes the party', () => {
+    const match = water();
+    const launcher = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 6000,
+      y: 6000,
+      depth: 800,
+    });
+    const armedAt = (x: number, y: number) => {
+      const eid = spawnUnit(match.world, {
+        kind: UnitKind.AbyssalSubmersible,
+        slot: 1,
+        faction: Faction.Directorate,
+        x,
+        y,
+        depth: 800,
+      });
+      spare(match.world, eid, 0);
+      return eid;
+    };
+    const struck = armedAt(6900, 6000);
+    const mate = armedAt(6900, 6150);
+    const full = Health.hp[struck]! + Health.hp[mate]!;
+
+    const torpedo = launchTorpedo(match.world, launcher, 6900, 6000);
+    assert.notEqual(torpedo, 0, 'the premise: the tube fires');
+    for (let i = 0; i < 20 * SIM.TICK_HZ && Health.hp[torpedo]! > 0; i++) match.update(STEP_MS);
+    assert.ok(
+      Health.hp[struck]! + Health.hp[mate]! < full,
+      'the torpedo landed: nothing shot it down'
+    );
+    assert.ok(
+      !hasComponent(match.world, Spared, struck) && !hasComponent(match.world, Spared, mate),
+      'and the blow woke the whole party'
+    );
+  });
+
+  it('wakes its whole party when a mine goes off under one of it', () => {
+    // The blast's wake, through the real path: a slot-0 mine, armed, and a
+    // spared hull that strays onto it while its mate is far away.
+    const match = water();
+    const layer = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 6000,
+      y: 6000,
+    });
+    advance(match, 0.2);
+    assert.notEqual(match.layMine(0, layer), 0, 'the premise: a mine is laid');
+    advance(match, ORDNANCE.MINE.ARMING_S + 0.5);
+
+    const struck = sparedHull(match, 6000, 6050);
+    const mate = sparedHull(match, 9000, 6000);
+    const full = Health.hp[struck]!;
+    advance(match, 3);
+    assert.ok(Health.hp[struck]! < full, 'the premise: the mine went off under it');
+    assert.ok(
+      !hasComponent(match.world, Spared, struck) && !hasComponent(match.world, Spared, mate),
+      'and the blast woke the whole party, the hull three kilometres off included'
+    );
+  });
+
+  it('wakes its whole party when a spore eats one of it', () => {
+    // The fourth blow, through the real path: a spore seeded by slot 0 on a
+    // spared structure takes hull off it on its first tick, and the hull far
+    // away loses the mark with it. No shipped mission reaches this today — a
+    // spore needs a Blight, a Commune hull, and the one spared structure is
+    // Second Chord's, whose player is the Order — so this is what holds it.
+    const match = water();
+    const node = spawnStructure(match.world, {
+      kind: StructureKind.SoundingSpire,
+      slot: 1,
+      faction: Faction.Directorate,
+      x: 6000,
+      y: 6000,
+      prebuilt: true,
+    });
+    spare(match.world, node, 0);
+    const mate = sparedHull(match, 9000, 6000);
+    const full = Health.hp[node]!;
+    assert.ok(seedSpore(match.world, node, 0), 'the premise: the spore takes');
+    advance(match, 1);
+    assert.ok(Health.hp[node]! < full, 'the premise: the spore ate hull');
+    assert.ok(
+      !hasComponent(match.world, Spared, node) && !hasComponent(match.world, Spared, mate),
+      'and the spore woke the whole party, the hull three kilometres off included'
+    );
   });
 
   it('wakes only its own party, and only for a blow from another slot', () => {

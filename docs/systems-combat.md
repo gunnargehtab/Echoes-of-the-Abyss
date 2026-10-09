@@ -110,8 +110,8 @@ carries one. This is the class the prototype already implements, and its rules s
   [mission-nineteen.md](mission-nineteen.md) walks, the column
   [mission-standing-wave.md](mission-standing-wave.md) moves, the rim
   [mission-second-chord.md](mission-second-chord.md) attends. No gun swings onto one of its
-  own accord and no deck launches at one (§15), and its own guns and decks hold the same way;
-  point defence still answers a round in the water. An ordered attack still lands, and the
+  own accord and no deck launches at one (§15), and its own guns, point defence included, and
+  its decks hold the same way, as a silent hull's do. An ordered attack still lands, and the
   first gun, torpedo, blast or spore from another slot to hit any of it wakes the whole
   party: it loses the mark, and both sides fight as any two slots do. A corridor's bite, a
   creature's and the water's are not fire and wake nothing. Shooting a spared party is a
@@ -748,9 +748,9 @@ One craft leaves the deck at a time, at most one every 4 s, when all of these ho
 - a craft is aboard;
 - there is a live enemy within the **tether**, 1,200 m of the carrier — the same licence §4's
   auto-acquire runs on, that at the ranges a gun reaches, in range implies heard;
-- the carrier is not running silent, **unless** the player ordered the attack. A launch is
-  loud and a silent hull volunteers nothing, which is §4's rule for guns applied to the one
-  hull that has no gun. An order overrides it, as an order always does;
+- the carrier is not running silent or spared (§4), **unless** the player ordered the attack.
+  A launch is loud and a silent hull volunteers nothing, which is §4's rule for guns applied
+  to the one hull that has no gun. An order overrides it, as an order always does;
 - for the Offertory alone, the enemy that triggered the launch is inside the hull's own
   forward cone (§5, the Lance's gate).
 
