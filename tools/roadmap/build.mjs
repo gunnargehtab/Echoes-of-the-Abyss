@@ -18,7 +18,18 @@
  * So: read the doc, ask the API what state each issue is in, render. Nothing
  * about progress is stored anywhere.
  *
- *   node tools/roadmap/build.mjs [--out dist/roadmap]
+ *   node tools/roadmap/build.mjs [--public dist/roadmap] [--private <dir>]
+ *                                [--single-file]
+ *
+ * Two cuts, from one set of reads. **public** is what GitHub Pages may show:
+ * no issue numbers, links or titles, no tracker counts, no render-stack audit.
+ * **private** is the whole page and the audit beside it. A bare run writes
+ * the public cut to dist/roadmap, so a forgotten flag never puts the private
+ * one where Pages looks. `--out` is the old spelling of `--public`.
+ *
+ * `--single-file` writes index.html alone, its font, icon and pictures inside
+ * it as data URIs, and no audit page: the shape a claude.ai artifact takes
+ * (lib/inline.mjs says why).
  *
  * Without a token it still builds — every item renders as "unknown" and the
  * page says so. That keeps the generator runnable locally by anyone, and means
@@ -28,13 +39,21 @@
  * cannot fail to build because of something in node_modules.
  */
 
-import { copyFileSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import {
+  copyFileSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import * as content from './lib/content.mjs';
 import { driftReport } from './lib/drift.mjs';
 import { fetchAllIssues, fetchIssueStates } from './lib/github.mjs';
+import { artifactPage, fileUri } from './lib/inline.mjs';
 import { parseRoadmap } from './lib/parse.mjs';
 import { render } from './lib/render.mjs';
 import * as renderStack from './lib/renderStack.mjs';
@@ -61,7 +80,8 @@ const ASSETS = [
       'fonts',
       'big-shoulders-display-latin.woff2'
     ),
-    to: join('fonts', 'big-shoulders-display-latin.woff2'),
+    // A URL path, so forward slashes on every platform: it is an href too.
+    to: 'fonts/big-shoulders-display-latin.woff2',
   },
   { from: join(repoRoot, 'packages', 'frontend', 'public', 'favicon.svg'), to: 'favicon.svg' },
 ];
@@ -71,7 +91,12 @@ function arg(name, fallback) {
   return i === -1 || i === process.argv.length - 1 ? fallback : process.argv[i + 1];
 }
 
-const out = arg('out', 'dist/roadmap');
+// Where each cut goes, or null for a cut not asked for.
+const outs = { public: arg('public', arg('out', null)), private: arg('private', null) };
+if (outs.public === null && outs.private === null) outs.public = 'dist/roadmap';
+const singleFile = process.argv.includes('--single-file');
+// The audit is private, and a single file has no second page to put it on.
+const withStack = outs.private !== null && !singleFile;
 const markdown = readFileSync(join(repoRoot, 'docs', 'ROADMAP.md'), 'utf8');
 const roadmap = parseRoadmap(markdown);
 
@@ -100,7 +125,8 @@ if (TOKEN === '') {
 // rather than silently absent from both.
 // Closed work too: the history phases are a record, and the page says how
 // much of what was done no row records.
-const tracker = await fetchAllIssues(REPO, TOKEN);
+// The public cut shows neither count, so it does not ask.
+const tracker = outs.private !== null ? await fetchAllIssues(REPO, TOKEN) : [];
 const drift = driftReport({
   markdown,
   roadmap,
@@ -153,16 +179,21 @@ for (const p of Object.values(portraits.found)) ASSETS.push({ from: p.path, to: 
 // repository already owns, copied rather than embedded, and each ranked
 // upgrade's tag reads the state of the issue that tracks it. A state map of
 // its own, so nothing the roadmap counts or dates includes these issues.
-const frames = renderStack.findFrames(repoRoot);
+const frames = withStack ? renderStack.findFrames(repoRoot) : { found: {}, missing: [] };
 if (frames.missing.length > 0) {
   console.error(`No render-stack frame at: ${frames.missing.join(', ')}`);
 }
-for (const f of Object.values(frames.found)) ASSETS.push({ from: f.path, to: f.href });
-const stackStates = await fetchIssueStates(
-  REPO,
-  renderStack.UPGRADES.map((u) => u.issue),
-  TOKEN
-);
+const stackStates = withStack
+  ? await fetchIssueStates(
+      REPO,
+      renderStack.UPGRADES.map((u) => u.issue),
+      TOKEN
+    )
+  : new Map();
+
+// Where the page finds each asset: beside it, or inside it.
+const src = new Map(ASSETS.map((a) => [a.to, singleFile ? fileUri(a.from) : a.to]));
+const fontHref = src.get('fonts/big-shoulders-display-latin.woff2');
 
 // The numbers on the stat tiles are counted from the repository rather than
 // typed in, so a new mission or map shows up without anyone editing the site.
@@ -186,48 +217,69 @@ if (uncovered.length > 0) {
 }
 
 const generatedAt = new Date().toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
-const html = render({
+const page = {
   roadmap,
   states,
   content,
   counts,
   repo: REPO,
   generatedAt,
-  fontHref: 'fonts/big-shoulders-display-latin.woff2',
-  sheet,
+  fontHref,
+  iconHref: src.get('favicon.svg'),
+  sheet: sheet === null ? null : { ...sheet, href: src.get(sheet.href) },
   unplaced: drift.unplaced.length,
   unrecorded: drift.unrecorded.length,
-  portraits: portraits.found,
-  renderStackHref: renderStack.PAGE,
-});
-const stackHtml = renderStack.renderStackPage({
-  states: stackStates,
-  repo: REPO,
-  generatedAt,
-  fontHref: 'fonts/big-shoulders-display-latin.woff2',
-  frames: frames.found,
-});
+  portraits: Object.fromEntries(
+    Object.entries(portraits.found).map(([navy, p]) => [navy, { ...p, href: src.get(p.href) }])
+  ),
+  renderStackHref: withStack ? renderStack.PAGE : null,
+};
 
-// Respect an absolute --out. Joining it to the repo root silently wrote the
-// site *inside the working tree* at a path that looked absolute in the log.
-const target = isAbsolute(out) ? out : join(repoRoot, out);
-mkdirSync(join(target, 'fonts'), { recursive: true });
-mkdirSync(join(target, 'renders'), { recursive: true });
-mkdirSync(join(target, 'render-stack'), { recursive: true });
-writeFileSync(join(target, 'index.html'), html);
-writeFileSync(join(target, renderStack.PAGE), stackHtml);
-for (const asset of ASSETS) copyFileSync(asset.from, join(target, asset.to));
-// GitHub Pages runs Jekyll over the artifact unless told not to, and Jekyll
-// drops anything it considers a hidden or special path.
-writeFileSync(join(target, '.nojekyll'), '');
+const copy = (from, target, to) => {
+  mkdirSync(dirname(join(target, to)), { recursive: true });
+  copyFileSync(from, join(target, to));
+};
+for (const [audience, out] of Object.entries(outs)) {
+  if (out === null) continue;
+  // Respect an absolute path. Joining it to the repo root silently wrote the
+  // site *inside the working tree* at a path that looked absolute in the log.
+  const target = isAbsolute(out) ? out : join(repoRoot, out);
+  mkdirSync(target, { recursive: true });
+  const html = render({ ...page, audience });
+  // One file is the artifact's shape, and there the title is the gallery name.
+  const name = `Echoes of the Abyss ${audience === 'private' ? 'Private Roadmap' : 'Roadmap'}`;
+  writeFileSync(join(target, 'index.html'), singleFile ? artifactPage(html, name) : html);
+  if (!singleFile) {
+    for (const asset of ASSETS) copy(asset.from, target, asset.to);
+    // GitHub Pages runs Jekyll over the artifact unless told not to, and Jekyll
+    // drops anything it considers a hidden or special path.
+    writeFileSync(join(target, '.nojekyll'), '');
+  }
+  if (audience === 'private' && withStack) {
+    const stackHtml = renderStack.renderStackPage({
+      states: stackStates,
+      repo: REPO,
+      generatedAt,
+      fontHref,
+      frames: frames.found,
+    });
+    writeFileSync(join(target, renderStack.PAGE), stackHtml);
+    for (const f of Object.values(frames.found)) copy(f.path, target, f.href);
+  }
+  const mib = (statSync(join(target, 'index.html')).size / 2 ** 20).toFixed(1);
+  console.error(`Wrote the ${audience} cut to ${join(target, 'index.html')} (${mib} MiB).`);
+}
 
 console.error(
-  `Wrote ${join(target, 'index.html')} — ${roadmap.phases.length} phases, ${numbers.length} items, ` +
+  `${singleFile ? 'One file each' : 'Built'} — ` +
+    `${roadmap.phases.length} phases, ${numbers.length} items, ` +
     `${states.size} states resolved, ${counts.missions} missions, ${counts.maps} maps, ` +
     `${roadmap.sprints.length} sprints, ${drift.unplaced.length} open issues unplaced, ` +
     `${drift.unrecorded.length} closed issues unrecorded, ` +
     `roster sheet ${sheetFile === null ? 'missing' : 'baked'}, ` +
     `${Object.keys(portraits.found).length} of ${content.factions.length} navy portraits, ` +
-    `render stack with ${Object.keys(frames.found).length} of ${renderStack.FRAMES.length} frames ` +
-    `and ${stackStates.size} of ${renderStack.UPGRADES.length} upgrade states.`
+    (withStack
+      ? `render stack with ${Object.keys(frames.found).length} of ${renderStack.FRAMES.length} frames ` +
+        `and ${stackStates.size} of ${renderStack.UPGRADES.length} upgrade states.`
+      : 'no render stack.')
 );
