@@ -118,18 +118,21 @@ function isLoopbackOrigin(origin: string): boolean {
 }
 
 /**
- * The CORS headers one request gets under `policy` (#1301).
+ * The CORS headers this server decides for one request under `policy` (#1301).
  *
  * The one decision, taken for every request: Colyseus prepends a listener to
  * the HTTP server that asks for it through `matchMaker.controller.getCorsHeaders`
- * (`index.ts`), sets it on every response, express routes included, and
- * answers every preflight itself before express runs. An allowed origin is
- * echoed with credentials, because the SDK fetches with credentials and a
+ * (`index.ts`), merges it over its own Allow-Methods, Allow-Headers and
+ * Max-Age defaults, sets the lot on every response, express routes included,
+ * and answers every preflight itself before express runs. An allowed origin
+ * is echoed with credentials, because the SDK fetches with credentials and a
  * browser refuses `*` on such a request; `any` echoes every origin the same
- * way. An origin the policy refuses, or a request with no `Origin` at all, gets
- * no allow-origin header, so a browser blocks the page that sent it. Every
- * answer depends on the `Origin`, so every answer says so in `Vary`, and a
- * cache never hands one origin's answer to another.
+ * way. An origin the policy refuses gets no allow-origin: a browser never
+ * sends its page a request that needs a preflight, and withholds the answer
+ * to one that does not, though the server still acts on that one (#1310). A
+ * request with no `Origin` is not a cross-origin browser request, and gets
+ * none either. Every answer depends on the `Origin`, so every answer says so
+ * in `Vary`, and a cache never hands one origin's answer to another.
  */
 export function corsHeadersFor(
   policy: CorsPolicy,

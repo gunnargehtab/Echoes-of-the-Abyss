@@ -60,6 +60,19 @@ describe('the origin lock, as a browser meets it', () => {
     assert.equal(response.headers.get('access-control-allow-credentials'), 'true');
   });
 
+  it('lets a foreign page read nothing of a matchmaking POST, the seat included', async () => {
+    // A bodyless POST needs no preflight, so the preflight's refusal never
+    // stops it: the browser sends it, and only the missing allow-origin keeps
+    // the reservation from the page. The server still acts on it (#1310).
+    const response = await fetch(`${base}/matchmake/joinOrCreate/match`, {
+      method: 'POST',
+      headers: { Origin: FOREIGN },
+    });
+    assert.equal(response.status, 200, 'the request itself is answered; the browser withholds it');
+    assert.equal(response.headers.get('access-control-allow-origin'), null);
+    assert.equal(response.headers.get('access-control-allow-credentials'), null);
+  });
+
   it("refuses a foreign origin the server's own routes too", async () => {
     const response = await fetch(`${base}/rooms/match`, { headers: { Origin: FOREIGN } });
     assert.equal(response.status, 200, 'the request itself is answered; the browser blocks it');
