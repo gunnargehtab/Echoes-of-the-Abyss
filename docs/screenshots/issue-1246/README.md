@@ -8,8 +8,8 @@ held over open water ([ui-ux.md](../../ui-ux.md) §8).
 
 | Frame | Shows |
 | --- | --- |
-| [ribbons](ribbons.png) | The ribbon and its readout, three times. A metre down with the scout open: `LEVEL`, in the accent. The same metre with the scout silent: `DIVE · BREAKS SILENCE`, in the accent, since no SIG is charged. Eleven metres down: `DIVE 72 SIG`, in the descent's colour, and the target bar with it |
-| [breaks-silence](breaks-silence.png) | The whole frame behind the second: the scout selected, its card reading `SILENT RUNNING · 450m` at SIG 4 |
+| [ribbons](ribbons.png) | Crops of the ribbon and its readout from the `level`, `breaks-silence` and `dive` frames, side by side. A metre down with the scout open: `LEVEL`, in the accent. The same metre with the scout silent: `DIVE · BREAKS SILENCE`, in the accent, since no descent is charged. Eleven metres down: `DIVE 72 SIG`, in the descent's colour, and the target bar with it |
+| [breaks-silence](breaks-silence.png) | The whole 1440×900 frame behind the second crop: the scout selected, its card reading `SILENT RUNNING · 450m` at SIG 4 |
 
 ```bash
 node .claude/skills/run-game/scripts/drive.mjs --out <dir> \
