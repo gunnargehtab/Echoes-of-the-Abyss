@@ -557,10 +557,12 @@ left + right drag, or `Shift` + wheel — until §8's focus tick sits where the 
 Attack-move lands the same way, and a queued leg keeps the depth it was given. A rally point
 stays a place on the map: the ground under the cursor, whatever the focus.
 
-A structure's footprint holds every hull out at every depth: it has no height to pass over
-or under (#1214). So the water above a structure is a point the hull cannot reach, and a move
-there is taken to the footprint's edge nearest the point, where it ends. The depth order still
-runs from the edge, and a leg queued behind the move begins.
+A structure's footprint holds every hull out at every depth: the simulation gives it no height
+to pass over or under, whatever height the art draws it at (#1214). So the water above a
+structure is a point the hull cannot reach, and a move or an attack-move there is taken to the
+footprint's edge nearest the point, where it ends. A hull coming straight through the centre
+is taken a few tens of metres to one side of the point, so it has a side to go round. The
+depth order still runs from the edge, and a leg queued behind the move begins.
 
 The right button acts on **release**, not on press, and so does a left click that an armed
 attack-move or a pending build is waiting for, so that a press can still become the left +

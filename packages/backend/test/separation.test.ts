@@ -28,7 +28,9 @@ import {
   MoveOrder,
   Ordnance,
   Position,
+  Posture,
   SilentRunning,
+  Velocity,
   Weapon,
 } from '../src/sim/components.ts';
 
@@ -365,10 +367,12 @@ describe('separation', () => {
     // A structure holds a hull out at any depth: separation reads plan distance
     // alone. So a point over a footprint is water the hull cannot reach, and a
     // move to it used to steer in and be pushed back out every tick, never
-    // within `ARRIVAL_EPSILON_M`, holding every leg queued behind it.
-    const REFINERY = { x: 5000, y: 5000 };
+    // within `ARRIVAL_EPSILON_M`, holding every leg queued behind it. In open
+    // water, since the default ground refuses the north of (5000, 5000) at the
+    // depths used here.
+    const SITE = { x: 2500, y: 6500 };
 
-    function setup(seed: number, at = REFINERY) {
+    function setup(seed: number, kind: UnitKind = UnitKind.LightScout) {
       const match = new Match(undefined, { fauna: false, seed });
       match.addPlayer(0, Faction.Bathyarch);
       advance(match, 0.5);
@@ -376,92 +380,151 @@ describe('separation', () => {
         kind: StructureKind.Refinery,
         slot: 0,
         faction: Faction.Bathyarch,
-        x: at.x,
-        y: at.y,
+        x: SITE.x,
+        y: SITE.y,
         prebuilt: true,
       });
-      const scout = spawnUnit(match.world, {
-        kind: UnitKind.LightScout,
+      const hull = spawnUnit(match.world, {
+        kind,
         slot: 0,
         faction: Faction.Bathyarch,
-        x: at.x - 1200,
-        y: at.y,
+        x: SITE.x - 1200,
+        y: SITE.y,
       });
-      const clear =
-        unitRadiusM(UnitKind.LightScout) + structureStatsFor(StructureKind.Refinery).radiusM;
-      return { match, refinery, scout, clear };
+      const clear = unitRadiusM(kind) + structureStatsFor(StructureKind.Refinery).radiusM;
+      return { match, refinery, hull, clear };
+    }
+
+    /** Put the hull 1,200 m south of the site, 40 m off its axis. */
+    function fromTheSouth(hull: number): void {
+      Position.x[hull] = SITE.x + 40;
+      Position.y[hull] = SITE.y + 1200;
+    }
+
+    function outFrom(hull: number, refinery: number): number {
+      return Math.hypot(
+        Position.x[hull]! - Position.x[refinery]!,
+        Position.y[hull]! - Position.y[refinery]!
+      );
     }
 
     it('ends at the footprint edge, at whatever depth the point was ordered', () => {
-      const { match, refinery, scout, clear } = setup(31);
+      const { match, refinery, hull, clear } = setup(31);
       // 494 m is not the refinery's 600 m, which is the point: the edge is
       // the same at every depth, so the order is not one that reaches.
-      match.orderMove(0, scout, REFINERY.x, REFINERY.y, false, 494);
+      match.orderMove(0, hull, SITE.x, SITE.y, false, 494);
       advance(match, 60);
 
-      assert.equal(MoveOrder.active[scout], 0, 'the move ended rather than circling the footprint');
-      const d = Math.hypot(
-        Position.x[scout]! - Position.x[refinery]!,
-        Position.y[scout]! - Position.y[refinery]!
-      );
+      assert.equal(MoveOrder.active[hull], 0, 'the move ended rather than circling the footprint');
+      const d = outFrom(hull, refinery);
       assert.ok(
         d >= clear * 0.85 && d <= clear + 15,
         `hull stopped ${d.toFixed(1)}m out, at the edge, which is about ${clear.toFixed(0)}m`
       );
-      assert.ok(Position.x[scout]! < REFINERY.x, 'on the side it came from');
+      assert.ok(Position.x[hull]! < SITE.x, 'on the side it came from');
     });
 
     it('goes round to the edge nearest the point, not the one it met first', () => {
       // The Fifth's "home" point lies inside the works' Bastion, and the six
       // are counted on the far side of it: a hull stopped at first contact
       // would be on the wrong one. Off the axis by 40 m, so the slide round
-      // the footprint has a side to take; dead on it, the push and the course
-      // cancel and nothing here would turn the hull. In open water, since the
-      // default ground refuses the north of (5000, 5000) at this depth.
-      const at = { x: 2500, y: 6500 };
-      const { match, refinery, scout, clear } = setup(34, at);
-      Position.x[scout] = at.x + 40;
-      Position.y[scout] = at.y + 1200;
-      match.orderMove(0, scout, at.x, at.y - 100);
+      // the footprint has a side to take.
+      const { match, refinery, hull, clear } = setup(34);
+      fromTheSouth(hull);
+      match.orderMove(0, hull, SITE.x, SITE.y - 100);
       advance(match, 40);
 
-      assert.equal(MoveOrder.active[scout], 0, 'the move ended');
-      const d = Math.hypot(
-        Position.x[scout]! - Position.x[refinery]!,
-        Position.y[scout]! - Position.y[refinery]!
-      );
+      assert.equal(MoveOrder.active[hull], 0, 'the move ended');
+      const d = outFrom(hull, refinery);
       assert.ok(
         d >= clear * 0.85 && d <= clear + 15,
         `hull stopped ${d.toFixed(1)}m out, at the edge, which is about ${clear.toFixed(0)}m`
       );
       assert.ok(
-        Position.y[scout]! < at.y - clear * 0.8,
-        `on the side the point is on, not the side it came from (y=${Position.y[scout]!.toFixed(0)})`
+        Position.y[hull]! < SITE.y - clear * 0.8,
+        `on the side the point is on, not the side it came from (y=${Position.y[hull]!.toFixed(0)})`
       );
     });
 
-    it('begins the leg queued behind it', () => {
-      const { match, scout } = setup(32);
-      const next = { x: REFINERY.x - 1200, y: REFINERY.y - 1500 };
-      match.orderMove(0, scout, REFINERY.x, REFINERY.y, false, 494);
-      match.orderMove(0, scout, next.x, next.y, true);
-      // 3 km at 120 m/s is 25 s. Not longer: a parked hull drifts after a
-      // minute or two of standing, which is no part of this test.
-      advance(match, 40);
+    it('goes round when its course runs dead through the centre to the point', () => {
+      // Straight through the middle: the push out and the course cancel, and
+      // the hull sat pinned at the near edge with its move active. `fromTheWest`
+      // is exactly on the axis, so there is no side to slide to until the tie
+      // is broken (`SEPARATION.OPPOSITE_TIE_RAD`).
+      const { match, refinery, hull, clear } = setup(35);
+      match.orderMove(0, hull, SITE.x + 60, SITE.y);
+      advance(match, 60);
 
-      const left = Math.hypot(Position.x[scout]! - next.x, Position.y[scout]! - next.y);
+      assert.equal(MoveOrder.active[hull], 0, 'the move ended');
+      assert.ok(
+        Position.x[hull]! > SITE.x + clear * 0.8,
+        `on the far side, where the point is (x=${Position.x[hull]!.toFixed(0)})`
+      );
+      const d = outFrom(hull, refinery);
+      assert.ok(d >= clear * 0.85 && d <= clear + 15, `at the edge, ${d.toFixed(1)}m out`);
+    });
+
+    it('begins the leg queued behind it', () => {
+      const { match, hull } = setup(32);
+      const next = { x: SITE.x + 1200, y: SITE.y + 200 };
+      fromTheSouth(hull);
+      match.orderMove(0, hull, SITE.x, SITE.y - 100, false, 494);
+      match.orderMove(0, hull, next.x, next.y, true);
+      // About 2.7 km at 120 m/s is 23 s. Not much longer: a parked hull drifts
+      // after a minute or two of standing, which is no part of this test.
+      advance(match, 45);
+
+      const left = Math.hypot(Position.x[hull]! - next.x, Position.y[hull]! - next.y);
       assert.ok(left < 10, `the queued leg ran to its point, ${left.toFixed(0)}m short`);
     });
 
+    it('carries an attack-move to the edge as well, and begins the leg behind it', () => {
+      // Combat sends an attack-moving hull back to its destination whenever
+      // the move is idle, and `busy()` holds the queue until it is reached: a
+      // move rewritten and a destination left inside the footprint was the
+      // same fault again, one order over.
+      const { match, hull } = setup(36, UnitKind.Corvette);
+      const next = { x: SITE.x + 1000, y: SITE.y + 200 };
+      fromTheSouth(hull);
+      match.orderAttackMove(0, hull, SITE.x, SITE.y - 100);
+      match.orderMove(0, hull, next.x, next.y, true);
+      advance(match, 90);
+
+      assert.equal(Posture.engage[hull], 0, 'the attack-move was spent');
+      const left = Math.hypot(Position.x[hull]! - next.x, Position.y[hull]! - next.y);
+      assert.ok(left < 10, `the queued leg ran to its point, ${left.toFixed(0)}m short`);
+    });
+
+    it('leaves an order a system keeps re-asserting steering as it did', () => {
+      // A harvester's run to its depot points at the depot's exact centre,
+      // every tick, from `harvestSystem`. Nothing here may end it or zero the
+      // hull's velocity: the acoustics pass reads that velocity, and a hauler
+      // pinned at its depot's edge must read as under way, not as idle.
+      const { match, hull, clear } = setup(37);
+      Position.x[hull] = SITE.x - clear - 5;
+      Position.y[hull] = SITE.y;
+      for (let tick = 0; tick < 3 * SIM.TICK_HZ; tick++) {
+        MoveOrder.x[hull] = SITE.x;
+        MoveOrder.y[hull] = SITE.y;
+        MoveOrder.active[hull] = 1;
+        match.update(STEP_MS);
+        assert.equal(MoveOrder.active[hull], 1, `tick ${tick}: the order was ended`);
+        assert.ok(
+          Math.hypot(Velocity.x[hull]!, Velocity.y[hull]!) > 0,
+          `tick ${tick}: the hull's velocity was zeroed`
+        );
+      }
+    });
+
     it('still reaches a point just outside the footprint', () => {
-      // The control: the rule ends moves the footprint makes unreachable and
-      // no others, so a point a hull's width clear of it is still arrived at.
-      const { match, scout, clear } = setup(33);
-      const point = { x: REFINERY.x - clear - 40, y: REFINERY.y };
-      match.orderMove(0, scout, point.x, point.y);
+      // The control: the rule moves only points the footprint makes
+      // unreachable, so a point a hull's width clear of it is still arrived at.
+      const { match, hull, clear } = setup(33);
+      const point = { x: SITE.x - clear - 40, y: SITE.y };
+      match.orderMove(0, hull, point.x, point.y);
       advance(match, 60);
 
-      const left = Math.hypot(Position.x[scout]! - point.x, Position.y[scout]! - point.y);
+      const left = Math.hypot(Position.x[hull]! - point.x, Position.y[hull]! - point.y);
       assert.ok(left < 10, `the hull arrived, ${left.toFixed(1)}m from its point`);
     });
   });

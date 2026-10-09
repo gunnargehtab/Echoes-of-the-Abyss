@@ -2316,6 +2316,16 @@ export const SEPARATION = {
   COINCIDENT_EPSILON_M: 0.01,
   /** Spatial-hash cell for the separation query. A few hull lengths. */
   CELL_M: 200,
+  /**
+   * How far off dead opposite a hull's course round a footprint is turned,
+   * radians (#1214). A move to a point inside a footprint is sent to the edge
+   * nearest it; with the hull on the far side, straight through the centre,
+   * the push out and the course cancel and the hull never turns. The point is
+   * moved this far round, further to the side it already leans and
+   * counter-clockwise on an exact tie, so the hull has a side to slide to.
+   * About 17 m on a Refinery's edge and 25 m on a Bastion's.
+   */
+  OPPOSITE_TIE_RAD: 0.1,
 } as const;
 
 /** TUNABLE — Tier 2 reports position blurred by this fraction. SPEC says 15%. */
