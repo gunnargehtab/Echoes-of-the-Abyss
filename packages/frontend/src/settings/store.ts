@@ -13,9 +13,8 @@
  */
 
 import {
-  ACTIONS,
   DEFAULT_BINDINGS,
-  LAYOUTS,
+  resolveBindings,
   type Bindings,
   type LayoutName,
 } from '../input/bindings.ts';
@@ -49,7 +48,11 @@ export interface Settings {
    * everyone who never edited it.
    */
   bindingLayout: LayoutName;
-  /** Bindings that differ from the layout. Merged over it, never replacing it. */
+  /**
+   * Every action's binding: a save writes the whole table. An action a stored
+   * record lacks is filled on load from `bindingLayout`'s table, the standard
+   * one for `custom` (#1343).
+   */
   bindings: Bindings;
   /** Colour-vision palette (ui-ux.md §11, tables in style-neon-noir.md). */
   palette: PaletteName;
@@ -279,19 +282,19 @@ function layoutOf(raw: unknown): LayoutName {
  * other code writes to, and a number where a code belongs should cost the
  * player one binding, not the whole settings record.
  *
- * The default is the record's own layout's, and the standard table's only for
- * `custom`. A one-handed record from before Engine Off existed was given the
- * standard `Q`, which that layout gives to the ping, and `Q` cut the drive
- * while the ping had no key (#1343).
+ * The default is the record's own layout's — the fill `resolveBindings` does,
+ * so there is one copy of it to disagree with. A one-handed record from before
+ * Engine Off existed was given the standard `Q`, which that layout gives to the
+ * ping, and `Q` cut the drive while the ping had no key (#1343).
+ *
+ * A `custom` record takes the standard table's, because it does not store the
+ * layout it started from. So a custom table that started one-handed can still
+ * load a new action onto a key it uses; the Controls screen shows that clash
+ * rather than preventing it (#1352).
  */
 function sanitiseBindings(raw: unknown, layout: LayoutName): Bindings {
-  const stored = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>;
-  const merged = { ...(layout === 'custom' ? DEFAULT_BINDINGS : LAYOUTS[layout]) };
-  for (const { action } of ACTIONS) {
-    const code = stored[action];
-    if (typeof code === 'string' && code.length > 0) merged[action] = code;
-  }
-  return merged;
+  const stored = (typeof raw === 'object' && raw !== null ? raw : {}) as Partial<Bindings>;
+  return resolveBindings(layout, stored);
 }
 
 export function loadSettings(): Settings {
