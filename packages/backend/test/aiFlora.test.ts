@@ -354,6 +354,84 @@ describe('and the commander actually does it', () => {
     );
     assert.ok(standing, `a reactor at ${site!.x},${site!.y} stands in no bed`);
   });
+
+  it('never asks for a reactor on a bed nothing of its own stands near', () => {
+    // #1286. `Match.build` refuses a site farther than
+    // `CONSTRUCTION.BUILD_RADIUS_M` from every structure the navy owns, and
+    // the branch returns on the request it makes, so a commander that asked
+    // for an unanchored bed asked on every observation and never reached the
+    // builds below it. The test above, with the Refinery standing mid-map,
+    // where no bed is within the radius of it: every seat has one in reach.
+    const brief = briefing(Faction.Directorate);
+    const commander = new AiCommander(brief);
+    const beds = VENTFRONT_DIVIDE.hazards.filter((h) => h.kind === 'kelp-entanglement');
+    const far = { x: VENTFRONT_DIVIDE.widthM / 2, y: VENTFRONT_DIVIDE.heightM / 2 };
+    assert.ok(
+      beds.every((bed) => Math.hypot(far.x - bed.x, far.y - bed.y) > CONSTRUCTION.BUILD_RADIUS_M),
+      'the premise: no bed within the radius of the map centre'
+    );
+
+    const asked: { x: number; y: number }[] = [];
+    for (let i = 0; i < 8; i++) {
+      const commands = commander.observe({
+        tick: i * 12,
+        nodules: 900,
+        crystal: 0,
+        biomass: 0,
+        power: { demand: 0, capacity: 6 },
+        draw: { demand: 0, capacity: 6 },
+        berths: { used: 1, granted: 40 },
+        units: [
+          {
+            id: 1,
+            kind: UnitKind.Harvester,
+            x: far.x,
+            y: far.y,
+            depth: 300,
+            hp: 400,
+            maxHp: 400,
+            sig: 30,
+          },
+        ],
+        structures: [
+          {
+            id: 20,
+            kind: StructureKind.Refinery,
+            x: far.x,
+            y: far.y,
+            depth: CONSTRUCTION.WORKING_DEPTH_M,
+            hp: 1200,
+            maxHp: 1200,
+            sig: 40,
+            buildProgress: 1,
+            queue: [],
+            queueProgress: 0,
+          },
+        ],
+        contacts: [],
+        marks: [],
+        hazards: beds.map((bed, id) => ({
+          id: id + 1,
+          kind: bed.kind,
+          x: bed.x,
+          y: bed.y,
+          radiusM: bed.radiusM,
+          phase: HazardPhase.Active,
+          progress: 0,
+          remainingS: 0,
+        })),
+        residue: [],
+        refits: [],
+        exposure: { tier: 0, trackedCount: 0 },
+      } as never);
+      for (const command of commands) {
+        if (command.kind === 'build' && command.structure === StructureKind.BioReactor) {
+          asked.push({ x: command.x, y: command.y });
+        }
+      }
+    }
+    assert.deepEqual(asked, [], 'it asked for a reactor the server refuses');
+  });
 });
 
 describe('a tender is put in the state the share is actually paid for', () => {

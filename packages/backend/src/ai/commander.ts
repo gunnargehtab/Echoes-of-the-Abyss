@@ -2669,6 +2669,16 @@ export class AiCommander implements AiPlayer {
       // are never reached again: measured as a Directorate that stopped
       // buying Slipways and Vent Taps entirely.
       if (this.floorAt(bed.x, bed.y) < CONSTRUCTION.WORKING_DEPTH_M) continue;
+      // And within reach of something already built, which is the server's
+      // third test and `nearestVent`'s rule: a new site rises within
+      // `CONSTRUCTION.BUILD_RADIUS_M` of a structure this navy owns. Missing,
+      // it was the floor test's lock-up over again — on kelp-labyrinth the
+      // Commune's nearest bed is 3,830 m out, and it asked for that reactor
+      // on every observation and never reached its Slipway (#1286).
+      const anchored = snapshot.structures.some(
+        (structure) => distance(structure, bed) <= CONSTRUCTION.BUILD_RADIUS_M
+      );
+      if (!anchored) continue;
       return { x: bed.x, y: bed.y };
     }
     return null;
