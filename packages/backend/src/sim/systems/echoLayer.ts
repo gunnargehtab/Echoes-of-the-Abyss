@@ -171,6 +171,12 @@ const PHANTOM_HULLS_BY_NAVY: ReadonlyMap<Faction, readonly UnitKind[]> = new Map
  * real hull the ping lit and then lost: the ghost-marker decay does the rest.
  * Keyed by pinger, beside `litAlready`, and dropped on the same tick it is.
  */
+/** One unit or structure an enemy ping lit, with its side's one bearing if it holds it. */
+export interface LitEntry {
+  unitId: number;
+  bearing?: number;
+}
+
 interface PhantomReturns {
   slot: number;
   contacts: Contact[];
@@ -282,10 +288,10 @@ export interface EchoResult {
    */
   exposureBySlot: Map<number, ExposureReport>;
   /**
-   * Slot -> the entities of theirs an enemy ping lit this tick, each with the
-   * bearing toward the emitter that lit it.
+   * Slot -> the units and structures of theirs an enemy ping lit this tick.
+   * One of them per ping carries the bearing toward the emitter (#1290).
    */
-  litBySlot: Map<number, { unitId: number; bearing: number }[]>;
+  litBySlot: Map<number, LitEntry[]>;
   /**
    * Acoustic residue each slot can currently read, keyed by slot.
    *
@@ -408,7 +414,7 @@ export class EchoLayer {
   get contactPathWalksLastPass(): number {
     return this.contactWalks;
   }
-  private readonly lit = new Map<number, { unitId: number; bearing: number }[]>();
+  private readonly lit = new Map<number, LitEntry[]>();
   /**
    * Pinger -> the entities its current transmission has already lit.
    *
@@ -423,6 +429,20 @@ export class EchoLayer {
    * it is still told, which is correct: it was just lit.
    */
   private readonly litAlready = new Map<number, Set<number>>();
+  /**
+   * Pinger -> the slots its current transmission has already given a bearing.
+   *
+   * One bearing per ping per side, from that side's lit unit nearest the
+   * pinger (#1290). Every lit unit's bearing used to go out, and two of them
+   * are two rays that meet on the pinger: a direction became a location,
+   * which `SelfEvent.bearing` exists not to send. Dropped with `litAlready`.
+   */
+  private readonly bearingGiven = new Map<number, Set<number>>();
+  /** Scratch for one pinger's pass: each side's lit unit nearest it so far. */
+  private readonly nearestLit = new Map<
+    number,
+    { entry: LitEntry; distance: number; x: number; y: number }
+  >();
   /** Pinger -> the phantoms its current transmission returned. */
   private readonly phantoms = new Map<number, PhantomReturns>();
   /**
@@ -602,6 +622,7 @@ export class EchoLayer {
     }
     for (const slotBest of this.best.values()) slotBest.delete(eid);
     this.litAlready.delete(eid);
+    this.bearingGiven.delete(eid);
     this.dropPhantoms(eid);
   }
 
@@ -1456,6 +1477,7 @@ export class EchoLayer {
         hasComponent(world, ActivePing, pinger) && ActivePing.remainingS[pinger]! > 0;
       if (!stillPinging) {
         this.litAlready.delete(pinger);
+        this.bearingGiven.delete(pinger);
         // The phantoms go with the transmission that conjured them. Nothing
         // re-sends them after this tick, so on the client they fade exactly
         // as a real hull the ping lit and then lost.
@@ -1494,6 +1516,14 @@ export class EchoLayer {
         this.conjurePhantoms(world, pinger, pingerSlot, px, py, radiusM, revealed, entities);
       }
 
+      // The victim's side of the same event, for a unit or structure: a mine
+      // or a decoy has no ears to be told with. Each side gets one bearing
+      // per ping, from its lit unit nearest the pinger, and its other lit
+      // units are told without one (#1290) — see SelfEvent.bearing for why
+      // a direction and never a location.
+      let given = this.bearingGiven.get(pinger);
+      const nearest = this.nearestLit;
+      nearest.clear();
       for (let j = 0; j < revealed.length; j++) {
         const target = revealed[j]!;
         const targetSlot = Owner.slot[target]!;
@@ -1504,13 +1534,25 @@ export class EchoLayer {
         if (distance > radiusM) continue;
         this.record(pingerSlot, target, ResolutionTier.Track, px, py);
 
-        // The victim's side of the same event. Bearing only, from their hull
-        // toward the emitter — see SelfEvent.bearing for why not a position.
         const litForSlot = this.lit.get(targetSlot);
-        if (litForSlot !== undefined && !alreadyLit.has(target)) {
-          alreadyLit.add(target);
-          litForSlot.push({ unitId: target, bearing: Math.atan2(py - ty, px - tx) });
+        if (litForSlot === undefined || alreadyLit.has(target)) continue;
+        if (!hasComponent(world, Unit, target) && !hasComponent(world, Structure, target)) continue;
+        alreadyLit.add(target);
+        const entry: LitEntry = { unitId: target };
+        litForSlot.push(entry);
+        if (given?.has(targetSlot) === true) continue;
+        const best = nearest.get(targetSlot);
+        if (best === undefined || distance < best.distance) {
+          nearest.set(targetSlot, { entry, distance, x: tx, y: ty });
         }
+      }
+      for (const [slot, best] of nearest) {
+        best.entry.bearing = Math.atan2(py - best.y, px - best.x);
+        if (given === undefined) {
+          given = new Set();
+          this.bearingGiven.set(pinger, given);
+        }
+        given.add(slot);
       }
     }
 

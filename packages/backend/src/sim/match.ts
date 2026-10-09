@@ -3105,11 +3105,9 @@ export class Match {
       const bucket = eventsBySlot.get(slot);
       if (bucket === undefined) continue;
       for (const hit of hits) {
-        bucket.push({
-          kind: SelfEventKind.Exposed,
-          unitId: hit.unitId,
-          bearing: hit.bearing,
-        });
+        const event: SelfEvent = { kind: SelfEventKind.Exposed, unitId: hit.unitId };
+        if (hit.bearing !== undefined) event.bearing = hit.bearing;
+        bucket.push(event);
       }
     }
 

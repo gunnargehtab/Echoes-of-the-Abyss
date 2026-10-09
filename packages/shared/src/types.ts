@@ -910,7 +910,9 @@ export interface SelfEvent {
   unitId: number;
   /**
    * `Exposed` only: bearing in radians from your unit toward the emitter that
-   * lit it.
+   * lit it — on one lit unit per ping, the one nearest the pinger, and on no
+   * other (#1290). Every lit unit used to carry its own, and two bearings are
+   * two rays that meet on the pinger.
    *
    * A bearing and not a position, deliberately. docs/audio-direction.md §11
    * asks for a screen-edge flash "on the bearing of the pinging emitter", and
