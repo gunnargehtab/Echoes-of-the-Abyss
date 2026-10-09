@@ -60,6 +60,13 @@ export interface Settings {
    */
   reducedMotion: boolean;
   /**
+   * Whether the player set `reducedMotion` themselves, on `lampHalosChosen`'s
+   * pattern. Every save writes the whole record, so a stored value alone could
+   * not tell a choice from the OS's answer it was saved at, and any slider
+   * moved here pinned the setting to it (#1344).
+   */
+  reducedMotionChosen: boolean;
+  /**
    * The acoustic veil's strength in the conn view, 0-1 (docs/ui-ux.md §4.5
    * and §11).
    *
@@ -101,6 +108,8 @@ export interface Settings {
    * explicit `false` is honoured over the device.
    */
   speakerProfile: boolean;
+  /** Whether the player set `speakerProfile` themselves, as `reducedMotionChosen` (#1344). */
+  speakerProfileChosen: boolean;
   /**
    * Whether a classified contact is heard as *what it is* — §8's timbre
    * families (docs/audio-direction.md §8, docs/ui-ux.md §14, #731).
@@ -164,10 +173,12 @@ export const DEFAULT_SETTINGS: Settings = {
   palette: 'standard',
   uiScale: 1,
   reducedMotion: false,
+  reducedMotionChosen: false,
   acousticVeil: 1,
   waterDensity: 1,
   edgeScroll: true,
   speakerProfile: false,
+  speakerProfileChosen: false,
   contactTimbre: false,
   lampHalos: LAMP_HALOS_DEFAULT,
   lampHalosChosen: false,
@@ -227,13 +238,21 @@ function sanitise(raw: unknown): Settings {
       typeof record.uiScale === 'number' && Number.isFinite(record.uiScale)
         ? Math.min(UI_SCALE_MAX, Math.max(UI_SCALE_MIN, record.uiScale))
         : 1,
+    // The OS's answer unless the player chose, as the lamp halos below are the
+    // build's: a value saved beside some other setting is not a choice.
+    reducedMotionChosen: record.reducedMotionChosen === true,
     reducedMotion:
-      typeof record.reducedMotion === 'boolean' ? record.reducedMotion : prefersReducedMotion(),
+      record.reducedMotionChosen === true && typeof record.reducedMotion === 'boolean'
+        ? record.reducedMotion
+        : prefersReducedMotion(),
     acousticVeil: clamp01(record.acousticVeil, DEFAULT_SETTINGS.acousticVeil),
     waterDensity: clamp01(record.waterDensity, DEFAULT_SETTINGS.waterDensity),
     edgeScroll: typeof record.edgeScroll === 'boolean' ? record.edgeScroll : true,
+    speakerProfileChosen: record.speakerProfileChosen === true,
     speakerProfile:
-      typeof record.speakerProfile === 'boolean' ? record.speakerProfile : prefersSpeakerProfile(),
+      record.speakerProfileChosen === true && typeof record.speakerProfile === 'boolean'
+        ? record.speakerProfile
+        : prefersSpeakerProfile(),
     // No device default to fall back on, unlike the two above: a record
     // written before this field existed loads it off, which is where a build
     // that has never offered the control would have left it anyway.
@@ -292,8 +311,13 @@ export function loadSettings(): Settings {
 }
 
 export function saveSettings(patch: Partial<Omit<Settings, 'version'>>): Settings {
-  // A patch that names the halo is the player choosing it.
-  const chosen = patch.lampHalos === undefined ? {} : { lampHalosChosen: true };
+  // A patch that names a setting with a default of its own is the player
+  // choosing it.
+  const chosen = {
+    ...(patch.lampHalos === undefined ? {} : { lampHalosChosen: true }),
+    ...(patch.reducedMotion === undefined ? {} : { reducedMotionChosen: true }),
+    ...(patch.speakerProfile === undefined ? {} : { speakerProfileChosen: true }),
+  };
   const next: Settings = sanitise({ ...loadSettings(), ...patch, ...chosen, version: 1 });
   try {
     globalThis.localStorage?.setItem(STORAGE_KEY, JSON.stringify(next));

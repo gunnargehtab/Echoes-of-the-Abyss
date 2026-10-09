@@ -215,6 +215,32 @@ describe('the settings store', () => {
     }
   });
 
+  it('keeps following the OS after a save that names neither device default (#1344)', () => {
+    // Every save writes the whole record, and a stored answer used to win: one
+    // slider moved here pinned reduced motion and the speaker profile to
+    // whatever the OS and the device said at that moment.
+    let reduce = false;
+    let phone = false;
+    (globalThis as { matchMedia?: unknown }).matchMedia = (query: string) => ({
+      matches: query.includes('reduce') ? reduce : query.includes('coarse') && phone,
+    });
+    try {
+      saveSettings({ masterVolume: 0.5 });
+      reduce = true;
+      phone = true;
+      const loaded = loadSettings();
+      assert.equal(loaded.reducedMotion, true, 'a volume change pinned reduced motion off');
+      assert.equal(loaded.speakerProfile, true, 'a volume change pinned the speaker profile off');
+
+      // The player's own answer still outranks the OS, in either direction.
+      saveSettings({ reducedMotion: false, speakerProfile: false });
+      assert.equal(loadSettings().reducedMotion, false, 'the choice of reduced motion was lost');
+      assert.equal(loadSettings().speakerProfile, false, 'the choice of profile was lost');
+    } finally {
+      delete (globalThis as { matchMedia?: unknown }).matchMedia;
+    }
+  });
+
   it('survives a browser that throws on matchMedia instead of answering', () => {
     (globalThis as { matchMedia?: unknown }).matchMedia = () => {
       throw new Error('blocked');
