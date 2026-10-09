@@ -3511,7 +3511,7 @@ export class EchoRenderer {
       this.bindings.buildVentTap,
     ];
     if (FACTION_STRUCTURE[this.faction] !== undefined) codes.push(this.bindings.buildSignature);
-    return codes.map(keyLabel).join('/');
+    return codes.map((code) => keyLabel(code).toUpperCase()).join('/');
   }
 
   /**

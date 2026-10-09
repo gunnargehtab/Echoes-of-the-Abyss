@@ -4236,6 +4236,17 @@ describe('the hint bar names the keys the player has (#1340)', () => {
       const army = '`' + ' stop  ·  TAB hold  ·  CTRL+RMB torpedo  ·  SPACE silent  ·  Q ping';
       assert.ok(textSaying(world.app.stage, army) !== null, 'the army line named the defaults');
       assert.equal(textSaying(world.app.stage, 'X stop'), null, 'and still offered X as stop');
+      // The one-handed layout leaves `W` and `Space` where they are, so those
+      // two names are read off a rebind of their own.
+      world.chart.setBindings({
+        ...ONE_HANDED_BINDINGS,
+        attackMove: 'KeyK',
+        silentRunning: 'KeyL',
+      });
+      world.frame(1);
+      assert.ok(textSaying(world.app.stage, 'K attack-move') !== null, 'attack-move named W');
+      assert.ok(textSaying(world.app.stage, 'L silent') !== null, 'silent named SPACE');
+      assert.equal(textSaying(world.app.stage, 'W attack-move'), null, 'and still offered W');
 
       // A harvester's line names its throttle key too.
       const harvester = cannedSnapshot().units.find((unit) => unit.throttle !== undefined)!;
