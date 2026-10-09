@@ -1,0 +1,31 @@
+{
+  "hull": {
+    "id": 120,
+    "name": "Light Scout",
+    "depthM": 600
+  },
+  "level": {
+    "hullDepthM": 450,
+    "focus": {
+      "xM": 1046,
+      "zM": 1548,
+      "depthM": 451
+    }
+  },
+  "breaks-silence": {
+    "hullDepthM": 450,
+    "focus": {
+      "xM": 1046,
+      "zM": 1548,
+      "depthM": 451
+    }
+  },
+  "dive": {
+    "hullDepthM": 450,
+    "focus": {
+      "xM": 1046,
+      "zM": 1548,
+      "depthM": 461
+    }
+  }
+}
