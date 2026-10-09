@@ -464,6 +464,63 @@ describe('ground stops hulls', () => {
     );
   });
 
+  /**
+   * A ridge across deep water with a tunnel bored through it: water from 800 m
+   * to 1,600 m under rock, and a hull inside it at 1,200 m, ordered up to 300.
+   */
+  function climbingInATunnel(): { match: Match; hull: number } {
+    const terrain = new Terrain(MAP_M, MAP_M, 250, { floorM: 2600 });
+    terrain.fillGround(0, 3000, MAP_M, 2000, { floorM: 400 });
+    terrain.fillGround(3500, 3000, 1000, 2000, { ceilingM: 800, floorM: 1600 });
+    const match = new Match(undefined, { fauna: false, seed: 14, terrain });
+    match.addPlayer(0, Faction.Bathyarch);
+    advance(match, 0.5);
+    const hull = hullAt(match, 4000, 4000, 1200);
+    match.orderDepth(0, hull, 300);
+    // 400 m of climbing at the ascent rate is 27 s; the rest is the roof's.
+    advance(match, 40);
+    return { match, hull };
+  }
+
+  it('holds a hull climbing under a roof at the ceiling, and keeps its order (#1334)', () => {
+    // §2: a roof holds a climb as the seabed holds a dive. The hull used to
+    // rise through the roof into the rock, where a hull may step anywhere.
+    const { hull } = climbingInATunnel();
+    assert.equal(Position.depth[hull], 800, 'a climb under a roof stops at the ceiling');
+    assert.equal(DepthOrder.targetM[hull], 300, 'terrain must not rewrite a depth order');
+    assert.ok(DepthOrder.active[hull], 'nor cancel it');
+  });
+
+  it('lets a climb a roof held carry on once the hull is out from under it (#1334)', () => {
+    const { match, hull } = climbingInATunnel();
+    const terrain = match.world.terrain;
+    // Out by the tunnel's south end into open water, through water all the way:
+    // a hull in the rock would be let step anywhere, the ridge included.
+    match.orderMove(0, hull, 4000, 7000);
+    for (let t = 0; t < 60 * 60; t++) {
+      match.update(1000 / 60);
+      const x = Position.x[hull]!;
+      const y = Position.y[hull]!;
+      assert.ok(
+        terrain.admits(x, y, Position.depth[hull]!),
+        `the hull was in rock at (${x.toFixed(0)}, ${y.toFixed(0)}), ` +
+          `depth ${Position.depth[hull]!.toFixed(0)}`
+      );
+    }
+    assert.ok(Position.y[hull]! > 5000, 'the premise: out from under the ridge');
+    assert.equal(Position.depth[hull], 300, 'and up to the depth it was ordered to');
+  });
+
+  it('leaves a hull already inside a roof where it is, rather than lowering it (#1334)', () => {
+    // Inside the rock over a tunnel, as a span closing over a hull leaves it.
+    // Holding it at the ceiling would push it 500 m down, and terrain never
+    // lowers a hull.
+    const { match } = climbingInATunnel();
+    const hull = hullAt(match, 4000, 3500, 300);
+    advance(match, 2);
+    assert.equal(Position.depth[hull], 300, 'a hull in the rock was lowered to the ceiling');
+  });
+
   it('refuses to seat a structure on ground that cannot hold it', () => {
     const match = barredMatch();
     // A structure cannot rise, so shallow ground is a refusal rather than a
