@@ -2,9 +2,9 @@
  * The origin lock.
  *
  * These are the rules that decide whether a browser anywhere on the internet
- * can drive this server's matchmaking, so they are tested as pure functions
- * rather than through a live listener: what matters is the decision, and a
- * bound port would only test express's header plumbing.
+ * can drive this server's matchmaking, held here as pure functions.
+ * `corsLive.test.ts` holds that the live server applies them, which it did
+ * not while they sat in a middleware Colyseus answers ahead of (#1301).
  *
  * The case worth protecting is the production one. Wide-open CORS was the old
  * default and it is invisible when it is wrong — the server comes up, serves
@@ -16,6 +16,8 @@ import assert from 'node:assert/strict';
 
 import {
   CorsConfigError,
+  type CorsPolicy,
+  corsHeadersFor,
   describeCorsPolicy,
   isOriginAllowed,
   resolveCorsPolicy,
@@ -90,6 +92,39 @@ describe('origin matching', () => {
     assert.equal(isOriginAllowed(policy, 'null'), false);
     assert.equal(isOriginAllowed(policy, ''), false);
     assert.equal(isOriginAllowed(policy, 'file://localhost'), false);
+  });
+});
+
+describe('the headers a request gets (#1301)', () => {
+  const locked: CorsPolicy = { kind: 'list', origins: ['https://play.example.com'] };
+
+  it('echoes an allowed origin with credentials, as the SDK needs', () => {
+    assert.deepEqual(corsHeadersFor(locked, 'https://play.example.com'), {
+      'Access-Control-Allow-Origin': 'https://play.example.com',
+      'Access-Control-Allow-Credentials': 'true',
+      Vary: 'Origin',
+    });
+  });
+
+  // Only `Vary`: the refusal depends on the Origin as much as the welcome does,
+  // and a cache that missed it could hand the refusal to the allowed origin.
+  it('gives a refused origin no allow-origin at all, so its page reads no answer', () => {
+    assert.deepEqual(corsHeadersFor(locked, 'https://evil.example'), { Vary: 'Origin' });
+    assert.deepEqual(corsHeadersFor({ kind: 'loopback' }, 'https://evil.example'), {
+      Vary: 'Origin',
+    });
+  });
+
+  it('gives a request with no Origin no allow-origin: it is not a cross-origin browser request', () => {
+    assert.deepEqual(corsHeadersFor(locked, undefined), { Vary: 'Origin' });
+    assert.deepEqual(corsHeadersFor(locked, null), { Vary: 'Origin' });
+  });
+
+  it('echoes every origin under the wildcard', () => {
+    assert.equal(
+      corsHeadersFor({ kind: 'any' }, 'https://anywhere.example')['Access-Control-Allow-Origin'],
+      'https://anywhere.example'
+    );
   });
 });
 
