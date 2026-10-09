@@ -17,7 +17,8 @@
  * - **The ground, drawn in shapes** (§11, #1143): every seat, leg, pocket and
  *   the berth on the ground §11 gives it, and the trench the only road.
  * - **The pack runs the axis at 1,600 m** (§5, #1212): held there for its
- *   drive, under the layer to the whistle, and fighting nothing on the way.
+ *   drive, under the layer to the whistle, and fighting nothing on the way in
+ *   an idle run. Released at that depth, it bites an escort waiting there.
  */
 
 import { describe, it } from 'node:test';
@@ -231,6 +232,45 @@ describe('the pack, as docs/mission-baffle.md §5 drives it (#1212)', () => {
       }
     }
     assert.deepEqual(hurt, [], 'a hull lost hull between the pack arriving and the whistle');
+  });
+
+  it('bites an escort waiting where it is released, and only once it is released', () => {
+    // The price of releasing it at depth. Driven, the pack never listens;
+    // released at 1,600 m beside hulls at 1,650 m, it bites them until its
+    // climb home carries it out of a Draymaw's 160 m reach, about ten seconds.
+    // Climbing toward 900 m, as before #1212, it could not reach them at all.
+    const seats = new Map([
+      ['flagship', { x: 1500, y: 2620 }],
+      ['corvette-1', { x: 1450, y: 2600 }],
+      ['corvette-2', { x: 1550, y: 2600 }],
+    ]);
+    const mission = {
+      ...LEDGER_BAFFLE,
+      parties: LEDGER_BAFFLE.parties.map((party) => ({
+        ...party,
+        units: party.units.map((unit) => {
+          const seat = seats.get(unit.tag);
+          return seat === undefined ? unit : { ...unit, ...seat, depthM: 1650 };
+        }),
+      })),
+    };
+    const map = missionMapById(mission.mapId)!;
+    const match = new Match(map, { mission, fauna: false, seed: 31 });
+    const escort = () =>
+      [...hulls(match.world)]
+        .filter(
+          (eid) => Owner.slot[eid] === mission.playerSlot && hasComponent(match.world, Weapon, eid)
+        )
+        .reduce((sum, eid) => sum + Health.hp[eid]!, 0);
+    const full = escort();
+    let released = 0;
+    while (match.missionOver === null) {
+      match.update(STEP_MS);
+      match.takeMissionView();
+      if (match.world.tick === T(19, 30)) released = escort();
+    }
+    assert.equal(released, full, 'the driven pack, or the picket, took hull before 19:30');
+    assert.ok(escort() < released, 'the released pack never bit the escort beside it');
   });
 });
 

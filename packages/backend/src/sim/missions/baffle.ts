@@ -54,7 +54,9 @@ const YARD = 3;
  * layer at 19:03 (#1212). The drive still ends at 19:30, because §9's pack
  * then commits to the loudest hull in reach, and a driven creature never
  * listens; released, it climbs home at 12 m/s and is still under the layer
- * at the whistle.
+ * at the whistle. The price of releasing it at this depth: a hull waiting
+ * where it is released is bitten until the climb carries the pack out of a
+ * Draymaw's 160 m reach, where a pack climbing toward 900 m never reached it.
  */
 const PACK_M = 1600;
 
