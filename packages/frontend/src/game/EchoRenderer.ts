@@ -2622,8 +2622,8 @@ export class EchoRenderer {
         if (notch !== 0) this.conn?.raiseFocusBy(notch < 0 ? FOCUS_STEP_M : -FOCUS_STEP_M);
         return;
       }
-      // A sideways scroll is not a zoom: a trackpad's swipe has `deltaY` at 0,
-      // and zoomed out (#1338).
+      // A sideways scroll is not a zoom: a trackpad's sideways swipe has
+      // `deltaY` at 0, and zoomed out (#1338).
       if (e.deltaY === 0) return;
       this.conn?.zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.1 : 1 / 1.1);
     };

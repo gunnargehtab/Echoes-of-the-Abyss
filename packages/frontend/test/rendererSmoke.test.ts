@@ -4236,6 +4236,11 @@ describe('the wheel reads the axis it turned on (#1338)', () => {
       assert.equal(world.conn.focusDepth(), seabed - FOCUS_STEP_M, 'a notch up raises the focus');
       wheel({ shiftKey: true, deltaX: 100 });
       assert.equal(world.conn.focusDepth(), seabed, 'and a notch down sinks it back');
+      // And the same gesture sent on its own axis, as everywhere but macOS.
+      wheel({ shiftKey: true, deltaY: -100 });
+      assert.equal(world.conn.focusDepth(), seabed - FOCUS_STEP_M, 'a vertical notch up raises it');
+      wheel({ shiftKey: true, deltaY: 100 });
+      assert.equal(world.conn.focusDepth(), seabed, 'and a vertical notch down sinks it back');
 
       const distance = conn.distance;
       wheel({ deltaX: 100 });
