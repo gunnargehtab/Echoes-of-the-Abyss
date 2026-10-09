@@ -154,13 +154,17 @@ export function StripReadouts({
       onContextMenu={(event) => event.preventDefault()}
       // The wheel is forwarded rather than merely swallowed: zoom is a
       // continuous gesture and losing it over a rectangle in the corner reads
-      // as the game stuttering. The canvas handler takes `clientX/Y` and
-      // `deltaY` and captures nothing, so a synthetic event is enough.
+      // as the game stuttering. The canvas handler takes `clientX/Y`, both
+      // deltas and `shiftKey`, and captures nothing, so a synthetic event is
+      // enough. It used to carry `deltaY` alone, and Shift + wheel zoomed over
+      // the strip rather than moving the focus (#1338).
       onWheel={(event) => {
         const canvas = host.current?.querySelector('canvas');
         canvas?.dispatchEvent(
           new WheelEvent('wheel', {
+            deltaX: event.deltaX,
             deltaY: event.deltaY,
+            shiftKey: event.shiftKey,
             clientX: event.clientX,
             clientY: event.clientY,
             cancelable: true,

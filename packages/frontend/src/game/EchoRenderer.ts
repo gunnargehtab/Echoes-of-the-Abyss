@@ -2614,10 +2614,18 @@ export class EchoRenderer {
       // the camera was freed; the reassignment is deliberate, is written into
       // §9's controls table, and leaves the unmodified wheel — the gesture
       // nobody may lose — on zoom.
+      //
+      // macOS turns Shift + wheel into a sideways scroll, so there the notch
+      // arrives on `deltaX` with `deltaY` at 0 — which read as down, and sank
+      // the focus whichever way the wheel turned (#1338).
       if (e.shiftKey) {
-        this.conn?.raiseFocusBy(e.deltaY < 0 ? FOCUS_STEP_M : -FOCUS_STEP_M);
+        const notch = e.deltaY !== 0 ? e.deltaY : e.deltaX;
+        if (notch !== 0) this.conn?.raiseFocusBy(notch < 0 ? FOCUS_STEP_M : -FOCUS_STEP_M);
         return;
       }
+      // A sideways scroll is not a zoom: a trackpad's sideways swipe has
+      // `deltaY` at 0, and zoomed out (#1338).
+      if (e.deltaY === 0) return;
       this.conn?.zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.1 : 1 / 1.1);
     };
 
