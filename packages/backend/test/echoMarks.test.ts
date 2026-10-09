@@ -586,3 +586,103 @@ describe('marks in a match', () => {
     assert.ok(layer.count <= ECHO_MARKS.MAX_MARKS, `${layer.count} marks exceeds the cap`);
   });
 });
+
+describe("a mark goes out under the slot's own handle (#1292)", () => {
+  /**
+   * A mark's id is one counter per match, and it used to go out as it was: a
+   * scout that heard one new battle read off its id how many battles, wrecks
+   * and working fields it had never heard, anywhere on the map. Contacts go
+   * out under handles no slot can count into a map-wide total, and so must
+   * this.
+   */
+  function scene(unheard: number): { match: Match; scout: number } {
+    const match = new Match(undefined, {
+      fauna: false,
+      seed: 6,
+      terrain: new Terrain(12000, 12000, 200),
+    });
+    match.addPlayer(0, Faction.Bathyarch);
+    match.addPlayer(1, Faction.Pelagia);
+    const scout = spawnUnit(match.world, {
+      kind: UnitKind.LightScout,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 3000,
+      y: 6000,
+      depth: D,
+    });
+    advance(match, 0.5);
+    // Fights the scout cannot hear, across the map, then one beside it.
+    for (let i = 0; i < unheard; i++) {
+      match.world.marks.add(EchoMarkKind.Battle, 11500, 1000 + i * 1500, D, 1);
+    }
+    match.world.marks.add(EchoMarkKind.Battle, 3150, 6000, D, 1);
+    return { match, scout };
+  }
+
+  const heard = (match: Match, seconds: number) =>
+    advance(match, seconds)!
+      .get(0)!
+      .marks.map((mark) => ({ id: mark.id, x: Math.round(mark.x) }));
+
+  it('does not count the marks a slot never heard', () => {
+    const alone = heard(scene(0).match, 3);
+    assert.equal(alone.length, 1, 'the premise: the scout hears the one mark beside it');
+    assert.deepEqual(
+      heard(scene(7).match, 3),
+      alone,
+      "seven unheard marks moved the heard mark's handle"
+    );
+  });
+
+  it('keeps a mark under one handle from pass to pass', () => {
+    const { match } = scene(3);
+    const first = heard(match, 2);
+    assert.equal(first.length, 1, 'the premise: the scout hears the one mark beside it');
+    assert.deepEqual(heard(match, 2), first, 'a held mark changed its handle between passes');
+  });
+
+  it('keeps a mark under its handle when the slot loses it and hears it again', () => {
+    // Held for the mark's life, not for the slot's hearing of it: a client logs
+    // a mark once per handle, so a new handle on every re-hearing would turn the
+    // log into a proximity meter.
+    const { match, scout } = scene(0);
+    const first = heard(match, 2);
+    assert.equal(first.length, 1, 'the premise: the scout hears the one mark beside it');
+    Position.x[scout] = 11500;
+    assert.deepEqual(heard(match, 2), [], 'the premise: out of earshot, the mark is dropped');
+    Position.x[scout] = 3000;
+    assert.deepEqual(heard(match, 2), first, 'a mark heard again came back under a new handle');
+  });
+
+  it("shares no value with the slot's contact handles", () => {
+    // Marks and contacts each count from one. Under one key a slot's nth mark
+    // and nth contact shared a value, so its marks decoded its contacts' mint
+    // order, which is where docs/systems-echo.md §3 hides a ping's phantoms.
+    const { match } = scene(0);
+    // Two more battles in earshot, each beyond the merge radius of the others.
+    match.world.marks.add(EchoMarkKind.Battle, 3000, 6400, D, 1);
+    match.world.marks.add(EchoMarkKind.Battle, 3000, 5600, D, 1);
+    // Cold, so they do not sink the scout before it can listen.
+    for (let i = 0; i < 4; i++) {
+      spawnUnit(match.world, {
+        kind: UnitKind.Corvette,
+        slot: 1,
+        faction: Faction.Pelagia,
+        x: 3400 + i * 100,
+        y: 6200,
+        depth: D,
+        weaponsCold: true,
+      });
+    }
+    const own = advance(match, 3)!.get(0)!;
+    assert.ok(
+      own.marks.length >= 3,
+      `the premise: the scout hears three marks (${own.marks.length})`
+    );
+    assert.ok(own.contacts.length >= 3, `the premise: and holds contacts (${own.contacts.length})`);
+    const marks = new Set(own.marks.map((mark) => mark.id));
+    const shared = own.contacts.filter((contact) => marks.has(contact.id));
+    assert.deepEqual(shared, [], 'a contact handle is also a mark handle');
+  });
+});

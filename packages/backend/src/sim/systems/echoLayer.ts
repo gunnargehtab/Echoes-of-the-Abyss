@@ -29,6 +29,7 @@ import {
   maxAudibleRangeM,
   scatterContact,
   contactHandle,
+  markHandle,
   stableUnit,
   tierFromRatio,
   unitAvailableTo,
@@ -375,6 +376,21 @@ export class EchoLayer {
   /** What each slot currently holds, by mark id. Persists between sweeps. */
   private readonly markState = new Map<number, Map<number, EchoMarkInfo>>();
   /**
+   * Slot -> mark id -> the handle that slot holds the mark under (#1292).
+   *
+   * A mark's id is the layer's, one counter per match, and it used to go out
+   * as it was: a slot that heard one new mark read off its id how many it had
+   * never heard, which is the map-wide total contacts' handles exist to deny.
+   * So a mark goes out under a handle minted from a per-slot count of the
+   * marks that slot has heard, through `markHandle`'s keyed permutation, and
+   * held for the mark's life, so a mark heard again keeps its handle. The key
+   * is the marks' own: under the contacts' key a slot's nth mark and nth
+   * contact shared a value, and its marks decoded its contacts' mint order,
+   * which is where §3's phantoms hide.
+   */
+  private readonly markHandles = new Map<number, Map<number, number>>();
+  private readonly nextMarkHandle = new Map<number, number>();
+  /**
    * Mark id to its index in the layer, rebuilt each pass.
    *
    * An index and not a copy: holding `{x, y, intensity}` per mark allocated
@@ -646,6 +662,23 @@ export class EchoLayer {
     if (index === undefined) return;
     for (const contact of returns.contacts) index.delete(contact.id);
     if (index.size === 0) this.phantomByHandle.delete(returns.slot);
+  }
+
+  /** The handle a slot holds a mark under, minted the first time it hears it. */
+  private markHandleFor(slot: number, markId: number): number {
+    let slotHandles = this.markHandles.get(slot);
+    if (slotHandles === undefined) {
+      slotHandles = new Map();
+      this.markHandles.set(slot, slotHandles);
+    }
+    let handle = slotHandles.get(markId);
+    if (handle === undefined) {
+      const index = (this.nextMarkHandle.get(slot) ?? 0) + 1;
+      this.nextMarkHandle.set(slot, index);
+      handle = markHandle(this.seed, slot, index);
+      slotHandles.set(markId, handle);
+    }
+    return handle;
   }
 
   private handleFor(slot: number, eid: number): number {
@@ -1069,6 +1102,12 @@ export class EchoLayer {
         if (!this.liveMarkIds.has(id)) held.delete(id);
       }
     }
+    // A mark's handle goes with the mark, heard or not this sweep.
+    for (const slotHandles of this.markHandles.values()) {
+      for (const id of slotHandles.keys()) {
+        if (!this.liveMarkIds.has(id)) slotHandles.delete(id);
+      }
+    }
 
     if (marks.length > 0) {
       // Listeners that clear the HYD wall. Most of a force does not — a
@@ -1112,7 +1151,7 @@ export class EchoLayer {
             this.markHeard[slot] = 1;
             remaining--;
             held.set(mark.id, {
-              id: mark.id,
+              id: this.markHandleFor(slot, mark.id),
               x: mark.x,
               y: mark.y,
               kind: mark.kind,
@@ -1136,13 +1175,13 @@ export class EchoLayer {
       const out = this.markResults.get(slot)!;
       const held = this.markState.get(slot);
       if (held === undefined) continue;
-      for (const info of held.values()) {
+      for (const [markId, info] of held) {
         // Refreshed from the live mark rather than emitted as stored, so a
         // held reading *fades* with the thing it describes instead of freezing
         // at whatever it was when the sweep last touched it. Position too: a
         // reinforced battle site drifts, and a client watching one mark should
         // see it drift.
-        const index = this.liveMarkIds.get(info.id);
+        const index = this.liveMarkIds.get(markId);
         if (index === undefined) continue;
         const live = marks[index]!;
         info.x = live.x;
