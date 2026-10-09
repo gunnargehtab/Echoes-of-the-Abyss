@@ -50,6 +50,7 @@ import {
   Weapon,
 } from '../src/sim/components.ts';
 import { missionMapById } from '../src/sim/maps/index.ts';
+import { queueView } from '../src/sim/systems/orderQueue.ts';
 import {
   CHORD_SECOND_CHORD,
   LEDGER_SHIFT_CHANGE,
@@ -279,6 +280,39 @@ describe('the escort hold pauses a route rather than cancelling it', () => {
       tenderAt(h).y > resumed.y + 50,
       `the tender took the order it was last given (y ${tenderAt(h).y.toFixed(0)}, was ${resumed.y.toFixed(0)})`
     );
+  });
+});
+
+describe('the escort hold keeps the plan behind the route (#1322)', () => {
+  it('gives back the leg and the queued legs behind it, as they were', () => {
+    // The queue pops its next leg the moment the held leg reads idle, so each
+    // pass of the hold saved a later leg over the last: a tender sent to A
+    // with B and C queued came back holding C alone.
+    const h = harness();
+    h.settle(3, 'close');
+    const tender = h.tenderId();
+    const b = { x: NORTH.x + 150, y: NORTH.y };
+    const c = { x: NORTH.x + 150, y: NORTH.y + 150 };
+    h.match.orderMove(PLAYER, tender, NORTH.x, NORTH.y);
+    h.match.orderMove(PLAYER, tender, b.x, b.y, true);
+    h.match.orderMove(PLAYER, tender, c.x, c.y, true);
+    const plan = () => (queueView(h.match.world, tender) ?? []).map(({ x, y }) => ({ x, y }));
+    h.settle(1, 'close');
+    assert.deepEqual(plan(), [b, c], 'the premise: two legs queued behind the first');
+
+    h.settle(6, 'away');
+    assert.equal(h.heldReason(), UNESCORTED, 'the premise: held');
+    // Back, and read on the pass that frees it, before the leg can finish.
+    for (let s = 0; h.heldReason() !== null; s++) {
+      assert.ok(s < 150, 'the tender was never freed');
+      h.settle(0.2, 'close');
+    }
+    assert.deepEqual(
+      { x: MoveOrder.x[tender], y: MoveOrder.y[tender], active: MoveOrder.active[tender] },
+      { x: NORTH.x, y: NORTH.y, active: 1 },
+      'the leg it was on'
+    );
+    assert.deepEqual(plan(), [b, c], 'and the plan behind it');
   });
 });
 

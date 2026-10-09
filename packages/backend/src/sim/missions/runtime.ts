@@ -75,6 +75,7 @@ import {
   type SimWorld,
 } from '../world.ts';
 import { postureStopsWork } from '../systems/work.ts';
+import type { QueuedOrder } from '../systems/orderQueue.ts';
 import { accrueSounding, soundingHolds } from './sounding.ts';
 import { accrueRowHold, accrueStall, insideRow } from './walk.ts';
 import { projectMissionView, type MissionState } from './view.ts';
@@ -208,6 +209,13 @@ interface SuspendedOrder {
   move: { x: number; y: number } | null;
   /** The depth it was flying, or null when it held station. */
   depthM: number | null;
+  /**
+   * The plan queued behind the leg, or null when there was none. Taken off
+   * with the leg, because the queue pops its next order the moment the leg
+   * reads idle: each pass of the hold then saved that order over the last,
+   * and a held tender's plan drained to its final leg (#1322).
+   */
+  queue: QueuedOrder[] | null;
 }
 
 /** A creature being driven somewhere by a beat, re-asserted until `untilTick`. */
@@ -1317,15 +1325,20 @@ export class MissionRuntime {
    * Written on every pass the hold is in force rather than only on its leading
    * edge, because the order can be re-asserted underneath it: a `transit` beat
    * drives a scripted hull through `applyMove`, which is the sink's path and
-   * so is not refused, and the order queue pops the next leg the moment
-   * `MoveOrder.active` reads 0. Both write a fresher order than the one this
-   * is holding, and the fresher one is the one to give back.
+   * so is not refused. That writes a fresher order than the one this is
+   * holding, and the fresher one is the one to give back. The queue goes with
+   * the leg, or it pops its next order the moment the leg reads idle (#1322).
    */
   private suspend(world: SimWorld, tag: MissionTag, eid: number): void {
     let saved = this.suspended.get(tag);
     if (saved === undefined) {
-      saved = { move: null, depthM: null };
+      saved = { move: null, depthM: null, queue: null };
       this.suspended.set(tag, saved);
+    }
+    const queue = world.orderQueues.get(eid);
+    if (queue !== undefined) {
+      saved.queue = saved.queue === null ? queue : [...saved.queue, ...queue];
+      world.orderQueues.delete(eid);
     }
     if (MoveOrder.active[eid] === 1) {
       saved.move = { x: MoveOrder.x[eid]!, y: MoveOrder.y[eid]! };
@@ -1349,10 +1362,16 @@ export class MissionRuntime {
     const saved = this.suspended.get(tag);
     if (saved === undefined) return;
     this.suspended.delete(tag);
-    if (saved.move !== null && MoveOrder.active[eid] === 0) {
+    // The plan comes back with its leg, and on the same courtesy: a newer
+    // order, or a newer plan, is the player's more recent word.
+    const newer = MoveOrder.active[eid] === 1 || world.orderQueues.has(eid);
+    if (saved.move !== null && !newer) {
       MoveOrder.x[eid] = saved.move.x;
       MoveOrder.y[eid] = saved.move.y;
       MoveOrder.active[eid] = 1;
+    }
+    if (saved.queue !== null && saved.queue.length > 0 && !newer) {
+      world.orderQueues.set(eid, saved.queue);
     }
     if (
       saved.depthM !== null &&
