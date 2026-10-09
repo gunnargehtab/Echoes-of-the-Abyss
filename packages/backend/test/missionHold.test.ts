@@ -323,6 +323,12 @@ describe('the escort hold keeps the plan behind the route (#1322)', () => {
       'the leg it was on'
     );
     assert.deepEqual(plan(), [b, c], 'and the plan behind it');
+    // And the plan runs again: the leg ends and the next pops, which it could
+    // not under a hold that never let the tender go.
+    for (let s = 0; plan().length === 2; s++) {
+      assert.ok(s < 150, 'the plan never ran after the hold let go');
+      h.settle(0.2, 'close');
+    }
   });
 
   it('lets a Stop or a Hold given during the hold drop the leg and the plan alike', () => {

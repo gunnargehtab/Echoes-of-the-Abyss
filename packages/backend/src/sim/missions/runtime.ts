@@ -1357,10 +1357,12 @@ export class MissionRuntime {
   /**
    * Give them back, if the hull is not already doing something newer.
    *
-   * The `active === 0` guard is the whole of the courtesy: a player who
-   * ordered the tender somewhere else in the interval between the ears
-   * returning and this pass has said the more recent thing, and a resumed
-   * route that overwrote it would be the hold arguing with the player.
+   * The `active === 0` guard is half the courtesy: a player who ordered the
+   * tender somewhere else in the interval between the ears returning and this
+   * pass has said the more recent thing, and a resumed route that overwrote it
+   * would be the hold arguing with the player. A Stop or a Hold leaves
+   * `active` at 0, which the guard cannot tell from the hold's own pause, so
+   * `dropHeldRoute` is the other half.
    */
   private resume(world: SimWorld, tag: MissionTag, eid: number): void {
     const saved = this.suspended.get(tag);
