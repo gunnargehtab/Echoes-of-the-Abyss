@@ -460,11 +460,15 @@ describe('the Dredge holds the crystal field (#703)', () => {
       holding: true,
       depth: 2570,
     });
-    commander.observe(snapshot([incumbent]));
+    // 108 ticks an observation, so each Veteran decision — every third — is
+    // more than five seconds after the last and may re-issue a walk (#1253).
+    let tick = 6000 - 108;
+    const next = (units: OwnUnit[]) => snapshot(units, { tick: (tick += 108) });
+    commander.observe(next([incumbent]));
 
     const newcomer = hull(40, UnitKind.Dredge, home);
     let later: AiCommand[] = [];
-    for (let i = 0; i < 3; i++) later = commander.observe(snapshot([incumbent, newcomer]));
+    for (let i = 0; i < 3; i++) later = commander.observe(next([incumbent, newcomer]));
     assert.ok(
       !later.some((c) => c.kind === 'move' && c.unitIds.includes(40) && c.depthM !== undefined),
       'the newcomer was walked onto the floor, so it was made the holder'
@@ -476,7 +480,7 @@ describe('the Dredge holds the crystal field (#703)', () => {
     assert.equal(forHull(later, 80).length, 0, 'the incumbent was told something');
 
     // And once the incumbent is gone, the newcomer is the holder.
-    for (let i = 0; i < 3; i++) later = commander.observe(snapshot([newcomer]));
+    for (let i = 0; i < 3; i++) later = commander.observe(next([newcomer]));
     assert.ok(
       later.some((c) => c.kind === 'move' && c.unitIds.includes(40) && c.depthM !== undefined),
       'the next Dredge takes the post'
