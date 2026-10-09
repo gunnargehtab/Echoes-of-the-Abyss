@@ -205,12 +205,14 @@ The pack that shadows the Downworks is the same pack that shadows every producin
 Vein — present, audible at the edge of hearing, and uninterested in a field that is merely
 working ([bestiary.md](bestiary.md) §4). It commits to nothing in this mission, because nothing
 in this mission gets loud enough to invite it. It is on the field so the player's ears learn
-what a pack at rest sounds like, and so the player who overburdens the last seam spends the
+what a pack at rest sounds like, and so the player who overburdens Face Five spends the
 mission glancing at it. The glancing is the design.
 
-It rests at the Downworks' east end, about 1.5 km off the refinery and 1.1 km off Face Five,
-which is what "the edge of hearing" costs in metres: from 220 m the refinery's hum drew it on
-release, and it took the depot at 01:20 in every run (#1265).
+It rests at the Downworks' east end, about 1.5 km off the refinery and 600 m off Face Five's
+field. From 220 m the refinery's hum drew it on release, and it took the depot at 01:20 in
+every run (#1265). From the east end, the edge of hearing is Face Five's: a shift working there
+hears the pack at rest, and the muster, the seam and the refinery do not. The seam is thin
+(§11), so a shift that makes its number works Five, and hears it.
 
 [mission-tend.md](mission-tend.md) §8 established that a mission whose only threat is a ledger
 has no failure to make audible — it has outcomes, and the close is a conclusion rather than a

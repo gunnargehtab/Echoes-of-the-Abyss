@@ -29,6 +29,7 @@ import assert from 'node:assert/strict';
 import { defineQuery, hasComponent } from 'bitecs';
 import {
   Biome,
+  FaunaStage,
   HarvestThrottle,
   MissionOutcome,
   ObjectiveStatus,
@@ -471,8 +472,9 @@ describe('the packs come the way they came — §11, the dip taken out (#1171)',
     // §11: the Downworks' ellipse dipped south between the faces, and the
     // Draymaw packs, then driven to rest by the refinery, came to the muster
     // across the dip and killed a different hull first. They rest at the
-    // Downworks' east end now (#1265); played to the whistle, every 5 s, so a
-    // shape that moves anything is still caught here.
+    // Downworks' east end now (#1265), and an idle shift moves nothing on the
+    // Downworks after 00:20, so the south-edge test above is #1171's guard;
+    // this one still catches a shape that moves the audit or the pack's drive.
     const before = play({ ...map, regions: RECTANGLES });
     const after = play(map);
     assert.ok(
@@ -515,11 +517,15 @@ describe('the shift, run out — docs/mission-shift-change.md §8, §9', () => {
 });
 
 describe('the pack, at rest — docs/mission-shift-change.md §7 (#1265)', () => {
+  /** The pack's release from its drive to rest (`runtime.ts` holds it until then). */
+  const RELEASED = T(0, 20);
+
   /**
    * One shift to the whistle, idle or with every harvester the watches have
-   * released sent to its nearest field at Standard; then the refinery, the
-   * player's hulls alive, what was banked, and on how many passes the
-   * player's hulls heard the pack at all. Driven to rest beside the refinery,
+   * released sent to its nearest field at Standard. Then the refinery, how
+   * many of the player's hulls were lost, what was banked, on how many passes
+   * after the release the player heard the pack, and on how many a pack
+   * member was interested or committed. Driven to rest beside the refinery,
    * the pack took it at 01:20 in every run, idle or working.
    */
   function shift(working: boolean) {
@@ -531,8 +537,15 @@ describe('the pack, at rest — docs/mission-shift-change.md §7 (#1265)', () =>
       (eid) => Structure.kind[eid] === StructureKind.Refinery && Owner.slot[eid] === slot
     )!;
     const full = Health.hp[refinery]!;
+    // A lost hull is reaped, so the player's force is counted by who is still
+    // there at the whistle, not by who reads zero hull.
+    const seated = defineQuery([Unit, Owner])(world).filter((eid) => Owner.slot[eid] === slot);
+    // Seated by the 00:00 beat, so read once it has fired.
+    const creatures = defineQuery([Fauna]);
+    let pack: number[] = [];
     const nodes = defineQuery([ResourceNode, Position])(world);
     let heard = 0;
+    let roused = 0;
     for (let tick = 0; tick <= T(16, 30) && match.missionOver === null; tick++) {
       const own = match.update(STEP_MS)?.get(slot);
       match.takeMissionView();
@@ -547,34 +560,45 @@ describe('the pack, at rest — docs/mission-shift-change.md §7 (#1265)', () =>
           match.setThrottle(slot, eid, HarvestThrottle.Standard);
         }
       }
-      const pack = (own?.contacts ?? []).some((contact) => {
+      if (tick <= RELEASED) continue;
+      if (pack.length === 0) pack = [...creatures(world)];
+      const stirred = (eid: number) =>
+        hasComponent(world, Fauna, eid) &&
+        (Fauna.stage[eid] === FaunaStage.Interested || Fauna.stage[eid] === FaunaStage.Committed);
+      if (pack.some(stirred)) roused++;
+      // Heard through the player's own resolved contacts, as the player hears it.
+      const contacts = own?.contacts ?? [];
+      const it = contacts.some((contact) => {
         const eid = match.echo.entityForHandle(slot, contact.id);
         return eid !== undefined && hasComponent(world, Fauna, eid);
       });
-      if (pack) heard++;
+      if (it) heard++;
     }
-    const hulls = defineQuery([Unit, Owner, Health])(world).filter(
-      (eid) => Owner.slot[eid] === slot
-    );
+    assert.ok(match.missionOver !== null, 'the premise: the shift ran to the whistle');
+    assert.equal(pack.length, 3, 'the premise: the pack of three was on the field');
     return {
-      refinery: Health.hp[refinery]! / full,
-      lost: hulls.filter((eid) => Health.hp[eid]! <= 0).length,
+      refinery: hasComponent(world, Structure, refinery) ? Health.hp[refinery]! / full : 0,
+      lost: seated.filter((eid) => !hasComponent(world, Unit, eid)).length,
       banked: world.economies.get(slot)?.nodules ?? 0,
       heard,
+      roused,
     };
   }
 
-  it('commits to nothing in an idle shift, and is still there to be heard', () => {
+  it('commits to nothing in an idle shift, out of earshot of the muster', () => {
     const idle = shift(false);
     assert.equal(idle.refinery, 1, 'the pack took the refinery');
     assert.equal(idle.lost, 0, 'the pack took a hull');
-    assert.ok(idle.heard > 0, '§7: present, audible at the edge of hearing — it was never heard');
+    assert.equal(idle.roused, 0, '§7: it commits to nothing, and stirred');
+    assert.equal(idle.heard, 0, '§7: heard at rest from the muster, which is not its edge');
   });
 
-  it('nor in a shift that works every field at Standard', () => {
+  it('nor in a shift that works every field at Standard, and is heard from Face Five', () => {
     const worked = shift(true);
     assert.ok(worked.banked > 0, 'the premise: the shift banked something');
     assert.equal(worked.refinery, 1, 'the pack took the refinery from a working field');
     assert.equal(worked.lost, 0, 'the pack took a hull from a working field');
+    assert.equal(worked.roused, 0, '§7: it commits to nothing, and stirred at a working field');
+    assert.ok(worked.heard > 0, '§7: a shift at Face Five hears the pack at rest, and never did');
   });
 });
