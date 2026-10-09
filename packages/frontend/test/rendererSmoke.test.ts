@@ -3138,6 +3138,76 @@ describe('renderer smoke test: the strip explains itself', () => {
   });
 });
 
+describe('a control group keeps its hulls through a hold (#1337)', () => {
+  it('keeps a hull aboard a transport in its group, and has it in hand when it lands', async () => {
+    // docs/ui-ux.md §9. The recall pruned every member missing from the map's
+    // hulls as dead, and a hull aboard is not on the map: a group recalled
+    // while its hulls were aboard was deleted, and gone when they landed.
+    const world = await boot();
+    try {
+      type Chart = { selected: Set<number>; controlGroups: Map<number, number[]> };
+      const chart = world.chart as unknown as Chart;
+      const conn = world.conn as unknown as { target: { x: number; z: number } };
+      const units = cannedSnapshot().units;
+      const army = units.filter((unit) => unit.throttle === undefined).map((unit) => unit.id);
+      const carrier = units.find((unit) => unit.throttle !== undefined)!;
+      assert.ok(army.length > 0 && carrier !== undefined, 'the premise: hulls and a carrier');
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      dispatchWindow('keydown', { code: 'Digit1', ctrlKey: true });
+
+      // Aboard: the carrier holds them, and each hull is reported at its
+      // carrier, as the server reports it.
+      world.chart.applySnapshot({
+        ...cannedSnapshot(1012),
+        units: units.map((unit) =>
+          unit.id === carrier.id
+            ? { ...unit, hold: { berths: 6, used: army.length } }
+            : army.includes(unit.id)
+              ? { ...unit, aboard: carrier.id, x: carrier.x, y: carrier.y, depth: carrier.depth }
+              : unit
+        ),
+      });
+      dispatchWindow('keydown', { code: 'Digit1' });
+      assert.deepEqual(
+        [...(chart.controlGroups.get(1) ?? [])].sort(),
+        [...army].sort(),
+        'the group lost the hulls in the hold'
+      );
+      // Recalled twice, a group wholly aboard centres on its carrier.
+      world.chart.focusOn(carrier.x + 1500, carrier.y + 1500);
+      dispatchWindow('keydown', { code: 'Digit1' });
+      dispatchWindow('keydown', { code: 'Digit1' });
+      assert.deepEqual(
+        { x: conn.target.x, y: conn.target.z },
+        { x: carrier.x, y: carrier.y },
+        'recalled twice, the group centred nowhere'
+      );
+
+      // Landed, and recalled again over another selection: the carrier alone.
+      world.chart.applySnapshot(cannedSnapshot(1024));
+      world.chart.focusOn(carrier.x, carrier.y);
+      world.frame(2);
+      const at = world.conn.projectPoint(carrier.x, carrier.y, carrier.depth);
+      for (const type of ['pointerdown', 'pointerup']) {
+        world.app.canvas.dispatch(type, {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x,
+          clientY: at.y,
+        });
+      }
+      world.frame(1);
+      assert.deepEqual([...chart.selected], [carrier.id], 'the premise: another selection');
+      dispatchWindow('keydown', { code: 'Digit1' });
+      assert.deepEqual([...chart.selected].sort(), [...army].sort(), 'the group came back short');
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
 /**
  * The console's drop order — docs/ui-ux.md §2 (#957).
  *
