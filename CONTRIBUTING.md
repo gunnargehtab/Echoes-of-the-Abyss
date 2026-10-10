@@ -185,6 +185,11 @@ the issue never closes. Like `needs-hardware` and `wontfix`, it is a statement a
 work rather than about a run, so it is **a person's to apply and a person's to remove** —
 and removing it means the citations need somewhere else to point first.
 
+**`finding`** is the loop's own and takes nothing off its list. It marks a defect a firing
+verified while working something else (`work-issue` §4), filed as an ordinary issue that
+a later firing may take. It replaced the epic #746 on 10 October, when #746 reached
+GitHub's limit of 100 sub-issues: a label has no cap.
+
 ## Code conventions
 
 The code conventions are stated once, each with the runtime gotcha behind it — in

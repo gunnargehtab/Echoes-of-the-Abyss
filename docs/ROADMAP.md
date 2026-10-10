@@ -708,11 +708,12 @@ phase is planned around it.
 
 | Work | Issue |
 | --- | --- |
-| Epic — defects the loop finds | [#746](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/746) |
+| Defects the loop finds | [the `finding` label](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues?q=is%3Aissue+is%3Aopen+label%3Afinding) |
 | Epic — feature and improvement ideas | [#833](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/833) |
 
-Both stay open by design: each is where a new issue lands when it has no other home. Their
-sub-issues get rows in the phase that schedules them.
+Each is where a new issue lands when it has no other home. The loop's findings take a label
+rather than an epic since #746 reached GitHub's 100 sub-issues on 9 October. Their issues
+get rows in the phase that schedules them.
 
 **Parked under the balance freeze**
 

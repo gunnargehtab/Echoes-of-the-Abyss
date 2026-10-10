@@ -146,16 +146,18 @@ In the epic comment, list every open issue you considered and why each was
 excluded, a line each. From outside, a correct skip and a broken rule look the
 same; only this list tells them apart.
 
-### A finding of your own goes to #746
+### A finding of your own takes the `finding` label
 
 A defect found while working something else — a doc claim the code contradicts, a
-rule here that failed in a run — is filed against #746, at the end of the run that
-found it. Verify it against code at a named commit and cite file, line and commit;
-never file from the prose describing the code. Filing is not taking: do not work
-it. A finding inside the balance freeze stays in the run log.
+rule here that failed in a run — is filed as its own issue labelled **`finding`**,
+at the end of the run that found it. It joins no epic: #746 held findings until it
+reached GitHub's 100 sub-issues, and a label has no cap. Verify it against code at a
+named commit and cite file, line and commit; never file from the prose describing
+the code. Filing is not taking: do not work it. A finding inside the balance freeze
+stays in the run log.
 
 A decision too wide for the pull request that needed it (§7) is the second kind:
-file it against #746 with its options and recommendation, and do not take it.
+file it labelled `finding`, with its options and recommendation, and do not take it.
 
 ## 5. Claim it, then work it through `dev-loop`
 
@@ -283,7 +285,7 @@ and your recommendation to the person at the keyboard and take their answer.
    `git log --first-parent --grep='## Options'` lists every call the loop took.
 
 A decision rides the pull request that needed it. One that would widen the change
-beyond the issue is filed against #746 with its options instead.
+beyond the issue is filed labelled `finding`, with its options, instead.
 
 **The loop never decides:**
 
@@ -337,7 +339,7 @@ nothing, or stood down at once. Under 100 words:
 > Needs a person: a stale claim, a `needs-decision` you applied and what it waits
 > on, a label you would propose, a branch left behind — or "nothing". Each also
 > goes on the issue it concerns.
-> Found: a defect filed against #746, or an unverified lead, or "nothing".
+> Found: a `finding` issue filed, or an unverified lead, or "nothing".
 
 **The rounds line is never omitted.** When the critic cannot run, `dev-loop`
 degrades to self-review with no error: the gates pass and the pull request reads

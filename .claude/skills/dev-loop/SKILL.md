@@ -173,7 +173,7 @@ keyboard may grant a fourth; unattended, three is the end.
 
 - **One increment per round.** A diff reaching beyond the round's target is split.
 - **Never widen the change to satisfy a finding.** A finding about code the change
-  does not touch goes to #746.
+  does not touch goes in an issue labelled `finding` (`work-issue` §4).
 - **Push at every self-contained step.** An unpushed round is lost with the
   container.
 

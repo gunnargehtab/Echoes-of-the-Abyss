@@ -163,10 +163,12 @@ is a record and not a queue, and eight sat there across seven entries.
 
 Two things close that, decided on 15 September:
 
-- **#746** is the epic a firing files a verified finding against when the finding
+- **A `finding` issue** is what a firing files for a verified finding that
   belongs to no other epic — a defect found while reading code for something
   else, a doc claim the code contradicts, or a rule in these files that did not
-  survive a run. `work-issue` §4 carries the bar: verified against code at a
+  survive a run. It was a sub-issue of epic #746 until 10 October, when #746
+  reached GitHub's 100 sub-issues and the owner chose a label, which has no cap
+  and is found the way the run log is. `work-issue` §4 carries the bar: verified against code at a
   named commit, never against the prose describing it, and never inside the
   balance freeze.
 - **A firing may edit its own rules, except the ones that bound it.** The list

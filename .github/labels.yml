@@ -90,6 +90,10 @@
   color: 4c5c63
   description: The unattended loop writes here — a ledger, never a work item
 
+- name: finding
+  color: a2595f
+  description: A defect the loop verified while working something else — ordinary work, open to any firing
+
 - name: standing
   color: 7a8b99
   description: Open by design — a permanent citation target the tree points at, never a work item
