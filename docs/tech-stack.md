@@ -578,9 +578,19 @@ announcing anything**: an announcement would be a twelfth server message and a n
 match can end, which is a decision about this section rather than a patch to the room. A
 closed socket is what a client already handles for a server that went away.
 
-The four methods Colyseus re-raises from — `onCreate`, `onAuth`, `onJoin`, `onLeave` — still
-report to the caller exactly as they did, so an unknown mission and a full lobby are refused
-the way they always were. What changed is that those refusals are now visible in the server
+A **departure that throws frees the seat, and ends the room if the match is playing.**
+Colyseus re-raises from the room's leave hook into callers with no try/catch of their own:
+once a drop's grace window runs out, it calls the hook from a promise nobody awaits, so a
+throw handed back there reached the process hook all the same (#1244). The room catches that
+throw itself, with the seat already released, and Colyseus then frees its own count of the
+seat as it does for any departure. Mid-match a departure does its work in `Match.resign`, a
+world mutation, so a throw there leaves the half-changed world a throwing step does, and the
+room ends the same way. A throw that lands in the lobby or after a result is logged, and the
+room carries on as it does past a dropped message.
+
+The other methods Colyseus re-raises from — `onCreate`, `onAuth`, `onJoin`, `onDrop` and
+`onReconnect` — still report to the caller exactly as they did, so an unknown mission and a
+full lobby are refused the way they always were. What changed is that those refusals are now visible in the server
 log, which they were not. Every line carries the room id, the tick, the phase, the method,
 the client message name where there is one, and what became of the throw.
 

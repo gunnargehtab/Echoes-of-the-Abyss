@@ -21,6 +21,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { ClientState, CloseCode, type Client } from '@colyseus/core';
 import { CLIENT_MSG, MatchPhase, SIM } from '@echoes/shared';
 
 // The boot and delivery harness, shared with `wireValidation.test.ts` since
@@ -58,6 +59,29 @@ async function capturingErrors(body: () => Promise<void>): Promise<string[]> {
     console.log = log;
   }
   return lines;
+}
+
+/**
+ * Run `body` with a listener for unhandled rejections, and return them.
+ *
+ * node:test already fails a test on an unhandled rejection it caused; the
+ * listener and the assertions on what it returns state that intent outright.
+ */
+async function recordingUnhandled(body: () => Promise<void>): Promise<unknown[]> {
+  const unhandled: unknown[] = [];
+  const record = (reason: unknown): void => {
+    unhandled.push(reason);
+  };
+  process.on('unhandledRejection', record);
+  try {
+    await body();
+    // A rejection is reported once the microtask queue has drained.
+    await new Promise((resolve) => setImmediate(resolve));
+    await new Promise((resolve) => setImmediate(resolve));
+  } finally {
+    process.off('unhandledRejection', record);
+  }
+  return unhandled;
 }
 
 describe('the containment gate', () => {
@@ -250,25 +274,125 @@ describe('a client that drops before its join completes', () => {
    */
   it('leaves no unhandled rejection for the process to die of', async () => {
     const room = await bootRoom();
-    const unhandled: unknown[] = [];
-    const record = (reason: unknown): void => {
-      unhandled.push(reason);
-    };
-    // node:test already fails a test on an unhandled rejection it caused;
-    // the listener and the assertion below state that intent outright.
-    process.on('unhandledRejection', record);
     try {
-      const [joining] = startPlaying(room);
-      // How Colyseus marks a client whose JOIN_ROOM it has not had
-      // acknowledged: the queue it holds that client's early messages in.
-      Object.assign(joining!, { _enqueuedMessages: [] });
-      room.onDrop(joining as unknown as Parameters<typeof room.onDrop>[0]);
-      // A rejection is reported once the microtask queue has drained.
-      await new Promise((resolve) => setImmediate(resolve));
-      await new Promise((resolve) => setImmediate(resolve));
+      const unhandled = await recordingUnhandled(async () => {
+        const [joining] = startPlaying(room);
+        // How Colyseus marks a client whose JOIN_ROOM it has not had
+        // acknowledged: the queue it holds that client's early messages in.
+        Object.assign(joining!, { _enqueuedMessages: [] });
+        room.onDrop(joining as unknown as Client);
+      });
       assert.deepEqual(unhandled, []);
     } finally {
-      process.off('unhandledRejection', record);
+      await shutdown(room);
+    }
+  });
+});
+
+describe('a leave that throws', () => {
+  /**
+   * #1244. After a drop's grace runs out, Colyseus calls `onLeave` from
+   * `#_onAfterLeave`, outside `_onLeave`'s try/catch and in a promise nobody
+   * awaits, and the #627 wrapper re-raises for `onLeave`. So a throw there was
+   * an unhandled rejection, and the process's `uncaughtException` hook ends
+   * every room on the box. Driven through Colyseus's own leave path, since the
+   * fault is in how that path calls the room, not in the room alone.
+   */
+  it('mid-match, after a drop, ends that room and frees the seat', async () => {
+    const room = await bootRoom();
+    try {
+      const [leaving] = startPlaying(room);
+      // A mid-match leave does its work in `resign`, a world mutation, so the
+      // throw is put where it would tear the world.
+      internals(room).match.resign = (): never => {
+        throw new Error('the resignation tore');
+      };
+      // The seat as Colyseus holds it: in the client list, with a token the
+      // grace window is filed under.
+      const client = Object.assign(leaving!, {
+        reconnectionToken: 'token-one',
+        state: ClientState.JOINED,
+      }) as unknown as Client;
+      room.clients.push(client);
+
+      let logged: string[] = [];
+      const unhandled = await recordingUnhandled(async () => {
+        logged = await capturingErrors(async () => {
+          // A drop, not a consented leave: Colyseus routes it to `onDrop`,
+          // which holds the seat open for the grace window.
+          await internals(room)._onLeave(client, CloseCode.ABNORMAL_CLOSURE);
+          const grace = internals(room)._reconnections['token-one'];
+          assert.ok(grace !== undefined, 'the premise: the drop opened a grace window');
+          // The window running out, without waiting the 90 s for it.
+          clearTimeout(internals(room)._reservedSeatTimeouts[client.sessionId]);
+          grace[1].reject(false);
+          await until(
+            () => internals(room)._internalState === DISPOSING,
+            'the room to end after the leave threw'
+          );
+        });
+      });
+
+      assert.deepEqual(unhandled, []);
+      assert.equal(room.state.players.has(client.sessionId), false, 'the seat was not freed');
+      assert.equal(internals(room)._simulationInterval, undefined);
+      assert.equal(logged.length, 1, 'the throw should have been logged once');
+      assert.match(logged[0] ?? '', /onLeave/);
+      assert.match(logged[0] ?? '', /seat released, ending this room/);
+      assert.match(logged[0] ?? '', /the resignation tore/);
+    } finally {
+      await shutdown(room);
+    }
+  });
+
+  it('after a result, frees the seat and keeps the room', async () => {
+    const room = await bootRoom();
+    try {
+      const [leaving] = startPlaying(room);
+      // A result, as `endMatch` leaves the room. A leave now releases the seat
+      // and asks whether everyone left is ready, and that is where it throws:
+      // nothing in the world is half-changed, so the room has no reason to end.
+      room.state.phase = MatchPhase.Ended;
+      Object.assign(room, {
+        startIfEveryoneIsReady: (): never => {
+          throw new Error('the rematch check went wrong');
+        },
+      });
+
+      const logged = await capturingErrors(async () => {
+        assert.doesNotThrow(() => room.onLeave(leaving as unknown as Client));
+      });
+
+      assert.equal(room.state.players.has(leaving!.sessionId), false, 'the seat was not freed');
+      assert.notEqual(internals(room)._internalState, DISPOSING);
+      assert.equal(logged.length, 1, 'the throw should have been logged once');
+      assert.match(logged[0] ?? '', /onLeave/);
+      assert.match(logged[0] ?? '', /phase Ended/);
+      assert.match(logged[0] ?? '', /seat released:/);
+    } finally {
+      await shutdown(room);
+    }
+  });
+});
+
+describe('a lock the matchmaker refuses', () => {
+  /**
+   * #1244. `LocalDriver` cannot reject the listing write `lock()` makes, and a
+   * networked driver can. The room's own flag is set before that write, so a
+   * refusal costs nothing but the rejection, which must not reach the process.
+   */
+  it('leaves no unhandled rejection, and the match starts', async () => {
+    const room = await bootRoom();
+    try {
+      Object.assign(room, {
+        lock: (): Promise<void> => Promise.reject(new Error('the driver refused')),
+      });
+      const unhandled = await recordingUnhandled(async () => {
+        startPlaying(room);
+      });
+      assert.deepEqual(unhandled, []);
+      assert.equal(room.state.phase, MatchPhase.Playing);
+    } finally {
       await shutdown(room);
     }
   });
