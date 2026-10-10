@@ -28,6 +28,7 @@ import assert from 'node:assert/strict';
 import {
   AiDifficulty,
   DEPTH,
+  FOLLOW_FLOOR,
   Faction,
   ResolutionTier,
   ResourceKind,
@@ -309,6 +310,58 @@ describe('the Dredge holds the crystal field (#703)', () => {
       onPost.map((c) => c.kind),
       ['hold'],
       'standing on the field, the Dredge is held and nothing more'
+    );
+  });
+
+  it('judges the post by the ground under the Dredge, not the field’s centre (#1228)', () => {
+    // Synthetic uneven ground. The default map's field is flat, so one cell
+    // inside the post is raised into a rise and another dug into a hollow.
+    // Following the floor holds a hull its clearance over the ground beneath
+    // it, wherever it stopped — which is the depth each holder here is given.
+    const brief = briefing();
+    const field = crystalOf(brief.nodes);
+    const centre = floorOf(brief, field);
+    const { cols, cellM, floor } = brief.terrain;
+    const cellOf = (at: { x: number; y: number }) =>
+      Math.floor(at.y / cellM) * cols + Math.floor(at.x / cellM);
+    const riseAt = { x: field.x - 100, y: field.y };
+    const hollowAt = { x: field.x, y: field.y - 100 };
+    assert.equal(new Set([field, riseAt, hollowAt].map(cellOf)).size, 3, 'three cells');
+    floor[cellOf(riseAt)] = centre - 300;
+    floor[cellOf(hollowAt)] = Math.min(centre + 300, DEPTH.MAX_M);
+    const following = (at: { x: number; y: number }, depth: number) =>
+      hull(71, UnitKind.Dredge, at, { followFloor: true, depth });
+    const said = (dredge: OwnUnit) =>
+      forHull(new AiCommander(brief).observe(snapshot([dredge])), 71);
+
+    // On a rise 300 m above the centre's floor, standing on its own ground:
+    // held. Judged against the centre it read as off the post, and was walked.
+    const onRise = following(riseAt, floorOf(brief, riseAt) - FOLLOW_FLOOR.CLEARANCE_M);
+    assert.deepEqual(
+      said(onRise).map((c) => c.kind),
+      ['hold'],
+      'a Dredge standing on a rise inside the post is held'
+    );
+
+    // Over the hollow at the centre's standing depth is above its own ground.
+    const overHollow = following(hollowAt, centre - FOLLOW_FLOOR.CLEARANCE_M);
+    const walked = said(overHollow);
+    assert.deepEqual(
+      walked.map((c) => c.kind),
+      ['move'],
+      'a Dredge hanging over a hollow is walked, not held'
+    );
+    assert.ok(
+      walked[0]!.kind === 'move' && walked[0]!.depthM === Math.min(centre, DEPTH.MAX_M),
+      'onto the field’s floor, the order’s point, as any walk out is'
+    );
+
+    // And on the hollow's own floor, it is on the post.
+    const inHollow = following(hollowAt, floorOf(brief, hollowAt) - FOLLOW_FLOOR.CLEARANCE_M);
+    assert.deepEqual(
+      said(inHollow).map((c) => c.kind),
+      ['hold'],
+      'down in the hollow, held'
     );
   });
 

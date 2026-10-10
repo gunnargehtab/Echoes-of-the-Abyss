@@ -4528,9 +4528,16 @@ export class AiCommander implements AiPlayer {
     // the ground is off it too. "On the ground" is the simulation's own
     // reading (`onTheGround`), and it is read off the hull rather than
     // remembered.
-    const ground = this.floorAt(field.x, field.y);
-    const floor = Math.min(ground, DEPTH.MAX_M);
-    const grounded = onTheGround(ground, holder.depth);
+    //
+    // Against the floor under the hull, not the field's centre (#1228). The
+    // walk's depth is the centre's, because the server reads a move's depth
+    // against the floor at the order's point (`orderDepthAt`). But following
+    // holds the hull over whatever ground it stops above, so a holder stopped
+    // on a rise inside the post, higher than the centre's floor by more than
+    // `FOLLOW_FLOOR.ENGAGE_WITHIN_M` less its clearance (70 m), read as off
+    // it and was walked rather than held.
+    const floor = Math.min(this.floorAt(field.x, field.y), DEPTH.MAX_M);
+    const grounded = onTheGround(this.floorAt(holder.x, holder.y), holder.depth);
     if (distance(holder, field) > FIELD_HOLD.STATION_M || !grounded) {
       this.walk(holder, field, out, floor);
       return claimed;
