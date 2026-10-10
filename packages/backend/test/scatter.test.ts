@@ -37,6 +37,7 @@ import {
   Faction,
   FOLLOW_FLOOR,
   LID,
+  MOVEMENT,
   effectivePressureRating,
   ResolutionTier,
   SCATTER,
@@ -865,6 +866,55 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
     // `MoveOrder` is a Float32 store, so the round trip is the comparison.
     assert.equal(MoveOrder.x[pinger], Math.fround(phantom.x), 'to the reported point');
     assert.equal(MoveOrder.y[pinger], Math.fround(phantom.y));
+  });
+
+  it('begins a queued attack on a phantom as the unqueued one, holding the plan behind it', () => {
+    // The enqueue-time test above reads the plan before the attack's leg
+    // begins. This one reads it after: a phantom's leg used to set nothing, so
+    // the hull stayed idle and the plan moved straight on, while a true
+    // return's leg held the plan behind the chase (#1264).
+    const probe = (pick: 'phantom' | 'real') => {
+      const { match, pinger, phantoms, real } = ping(fieldsMap());
+      match.addPlayer(0, Faction.Bathyarch);
+      match.addPlayer(1, Faction.Pelagia);
+      const contact = pick === 'phantom' ? phantoms[0]! : real[0]!;
+      // Copied now: each pass retells the lie, so the contact read later
+      // reports somewhere newer than the point the order was given.
+      const shown = { x: contact.x, y: contact.y };
+      match.orderAttackContact(0, pinger, contact.id, true);
+      match.orderMove(0, pinger, 7500, 7500, true);
+      return { match, pinger, shown, unit: nextOwnUnit(match, pinger) };
+    };
+
+    const lie = probe('phantom');
+    const truth = probe('real');
+    assert.deepEqual(
+      lie.unit.queuedOrders?.map((o) => o.kind),
+      ['move'],
+      'the attack leg has begun and the move still waits behind it'
+    );
+    assert.deepEqual(
+      lie.unit.queuedOrders?.map((o) => o.kind),
+      truth.unit.queuedOrders?.map((o) => o.kind),
+      'the same plan for both'
+    );
+
+    const { match, pinger, shown } = lie;
+    assert.equal(Weapon.orderedTargetEid[pinger], 0, 'nothing is behind it to engage');
+    assert.equal(MoveOrder.active[pinger], 1, 'but the hull is under way');
+    assert.equal(MoveOrder.x[pinger], Math.fround(shown.x), 'to the reported point');
+    assert.equal(MoveOrder.y[pinger], Math.fround(shown.y));
+
+    // It gets there, finds water, and the plan moves on.
+    for (let i = 0; i < 180 * SIM.TICK_HZ && match.world.orderQueues.has(pinger); i++) {
+      match.update(STEP_MS);
+    }
+    assert.ok(!match.world.orderQueues.has(pinger), 'the move behind it begins');
+    const off = Math.hypot(Position.x[pinger]! - shown.x, Position.y[pinger]! - shown.y);
+    assert.ok(
+      off <= MOVEMENT.ARRIVAL_EPSILON_M,
+      `and only once the hull reached the anchor, ${off.toFixed(1)} m off`
+    );
   });
 
   it('forgets a phantom handle with the transmission that minted it', () => {
