@@ -695,9 +695,9 @@ export interface OwnUnit {
    * (docs/systems-combat.md §5, "A screen, laid"). Absent on every hull without
    * a rack, which is every hull but the Weaver.
    *
-   * Separate from `decoyCooldownS`, which is the countermeasure suite: a Weaver
-   * has both, and a HUD that showed one number would be hiding whichever the
-   * player was about to use.
+   * Separate from `decoyCooldownS`, which is the countermeasure suite, and only
+   * a hull with a gun carries one. A Weaver has no gun, so only its rack is
+   * sent.
    */
   decoys?: number;
   decoyLayCooldownS?: number;

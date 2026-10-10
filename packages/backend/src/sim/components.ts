@@ -592,8 +592,9 @@ export const Sowing = defineComponent({
  * "A screen, laid"). Only the Weaver has one.
  *
  * Separate from `Countermeasure`, which every armed hull carries and which is
- * one decoy on a suite cooldown. A Weaver has both, and they are different
- * weapons: the suite saves the hull, the magazine tells the lie.
+ * one decoy on a suite cooldown. They are different weapons: the suite saves
+ * the hull, the magazine tells the lie. A Weaver has no gun, so it carries the
+ * magazine alone.
  */
 export const DecoyMagazine = defineComponent({
   decoys: Types.ui8,
