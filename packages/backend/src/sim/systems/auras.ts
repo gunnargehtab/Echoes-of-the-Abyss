@@ -23,6 +23,7 @@ import { defineQuery, hasComponent } from 'bitecs';
 import {
   type FaunaSpecies,
   HULL_EFFECTS,
+  HYD_MAX,
   STRUCTURE_AURAS,
   StructureKind,
   UnitKind,
@@ -215,7 +216,11 @@ export function aurasSystem(world: SimWorld): void {
       hyd += PRECENTOR.HYD_BONUS;
       lent = true;
     }
-    Acoustic.hyd[eid] = lent ? Math.min(CANTOR.HYD_CAP, hyd) : hyd;
+    // Lent or not, a hull meets the top of the scale (docs/units.md: "HYD:
+    // Hydrophone Rating, 0–100"). A Resonance Storm alone lifts a parked
+    // Acolyte's 85 to 110, and the Echo pass's per-HYD tables stop at 100, so
+    // an uncapped 110 resolved contacts at 100 and read residue at 110 (#1240).
+    Acoustic.hyd[eid] = Math.min(lent ? CANTOR.HYD_CAP : HYD_MAX, hyd);
 
     if (hasComponent(world, Pressure, eid)) {
       let bonus = 0;

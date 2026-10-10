@@ -2198,6 +2198,14 @@ export const MINE_TRIGGER_LOUDNESS =
   ORDNANCE.MINE.TRIGGER_REFERENCE_SIG *
   Math.pow(REFERENCE_DISTANCE_M / ORDNANCE.MINE.TRIGGER_RADIUS_M, ATTENUATION_EXPONENT);
 
+/**
+ * SPEC — the top of the HYD scale (docs/units.md: "HYD: Hydrophone Rating,
+ * 0–100"). Every built HYD meets it, in `auras.ts`, whatever lifted it there:
+ * a Resonance Storm adds 25 to a Hadron hull's own ears, and unless a dome
+ * lends HYD as well, no other cap applies to that sum (#1240).
+ */
+export const HYD_MAX = 100;
+
 export const PROPAGATION_MODEL = {
   /** Distance at which SIG is taken at face value, metres. */
   REFERENCE_DISTANCE_M,
@@ -2208,18 +2216,16 @@ export const PROPAGATION_MODEL = {
   /** HYD at which BASE_THRESHOLD applies; higher HYD lowers the threshold. */
   BASELINE_HYD,
   /**
-   * Ceiling used to size broadphase queries conservatively (#1222). 100 is the
-   * top of the 0–100 domain the Echo pass's per-HYD tables are indexed over,
-   * and contact resolution clamps every listener's HYD to it, so a square
-   * sized at 100 covers every HYD the pair loop uses. The roster's best ears
-   * and the Cantor and Precentor dome caps reach 95; a Resonance Storm lifts
-   * some Hadron hulls past 100, whose contacts the pass resolves at 100
-   * (#1240). Not a
-   * detection rule: a listener's true range is the radius times
-   * `(hyd / ceiling)^(1/exponent)`, so the ceiling cancels out of every pair's
-   * answer.
+   * Ceiling used to size broadphase queries conservatively (#1222). It is
+   * `HYD_MAX`, the top of the scale: the aura pass caps every built HYD there
+   * and the Echo pass's per-HYD tables are indexed up to it, so a square sized
+   * at it covers every listener. The roster's best ears and the Cantor and
+   * Precentor dome caps reach 95, and a Resonance Storm lifts some Hadron
+   * hulls to the cap (#1240). Not a detection rule: a listener's true range is
+   * the radius times `(hyd / ceiling)^(1/exponent)`, so the ceiling cancels
+   * out of every pair's answer.
    */
-  MAX_EXPECTED_HYD: 100,
+  MAX_EXPECTED_HYD: HYD_MAX,
 } as const;
 
 /**
