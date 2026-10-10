@@ -163,10 +163,12 @@ is a record and not a queue, and eight sat there across seven entries.
 
 Two things close that, decided on 15 September:
 
-- **#746** is the epic a firing files a verified finding against when the finding
+- **A `finding` issue** is what a firing files for a verified finding that
   belongs to no other epic — a defect found while reading code for something
   else, a doc claim the code contradicts, or a rule in these files that did not
-  survive a run. `work-issue` §4 carries the bar: verified against code at a
+  survive a run. It was a sub-issue of epic #746 until 10 October, when #746
+  reached GitHub's 100 sub-issues and the owner chose a label, which has no cap
+  and is found the way the run log is. `work-issue` §4 carries the bar: verified against code at a
   named commit, never against the prose describing it, and never inside the
   balance freeze.
 - **A firing may edit its own rules, except the ones that bound it.** The list
@@ -198,17 +200,21 @@ it is allowed to select.
 - **The scheduled firing already exists, and needs nothing.** This list used to
   say the Routine was owed as account configuration. It is not: `Work one issue
   from the backlog` (`trig_0188TRMLkmwkoArLR7DZ3RGR`) has fired since 27 August
-  in a fresh session per firing — every four hours on
-  `13 */4 * * *` until 15 September, and every six on `13 */6 * * *` since. The
-  cadence moved because the loop's open-PR cap now binds on review throughput
-  rather than on backlog supply: the 04:15 firing on 15 September was the first
-  to find two of its own pull requests open, green and unmerged, and to stop at
-  step 2 without selecting anything. It clones `main` at the start of every run
-  and invokes `/work-issue`, whose §5 hands the work to `dev-loop` — so a firing
-  picks up the rounds and the critic **from the clone**, with no change to the
-  Routine at all. That took effect when these files merged on 13 September: the
-  firing that landed #738 ran five rounds with a fresh critic each, four of them
-  `revise`, and the one that landed #742 ran three.
+  in a fresh session per firing — every four hours on `13 */4 * * *` until
+  15 September, every six on `13 */6 * * *` until 10 October, and every two on
+  `13 */2 * * *` since. It slowed first because the loop's open-PR cap bound on
+  review throughput rather than on backlog supply: the 04:15 firing on
+  15 September was the first to find two of its own pull requests open, green
+  and unmerged, and to stop at step 2 without selecting anything. It sped up on
+  10 October, set by the repository owner, because supply bound instead: twenty
+  issues were eligible, the loop's pull requests merged a median 55 minutes after
+  opening, and a firing ends well inside two hours. Overnight, when nothing
+  merges, the cap still stops it after two. It clones `main` at the start of
+  every run and invokes `/work-issue`, whose §5 hands the work to `dev-loop` —
+  so a firing picks up the rounds and the critic **from the clone**, with no
+  change to the Routine at all. That took effect when these files merged on
+  13 September: the firing that landed #738 ran five rounds with a fresh critic
+  each, four of them `revise`, and the one that landed #742 ran three.
 
   **The cap is three rounds rather than ten since 18 September**, set by the
   repository owner for efficiency. A round cap bounds an unattended firing, so it
@@ -229,7 +235,7 @@ it is allowed to select.
   settings, like the round cap.
 
   Its prompt is 54 words since 26 September (`wc -w` on the trigger's prompt): it
-  names the six-hour interval, invokes `/work-issue`, says the file wins any
+  names the interval, invokes `/work-issue`, says the file wins any
   disagreement, and makes a missing skill a stop. It used to restate the run log,
   the gates and when a run opens no pull request, all of which `work-issue` already
   carried, so the two could only drift. The two rules it alone held, reporting a
