@@ -70,9 +70,15 @@ function hull(id: number, x: number, y: number): OwnUnit {
   };
 }
 
-/** An unclassified smudge: Tier 1, no kind, no species. Could be anything. */
-function smudge(id: number, x: number, y: number, tick: number): Contact {
-  return { id, tier: ResolutionTier.Contact, x, y, tick };
+/**
+ * An unclassified bearing: Tier 2, no kind, no species. Could be anything.
+ *
+ * A bearing, not a Tier-1 smudge: the layer reports a smudge at its
+ * listener's own position, so one that "closes" is a listener walking home,
+ * and the watch ignores it (#1256). The last case says so.
+ */
+function heard(id: number, x: number, y: number, tick: number): Contact {
+  return { id, tier: ResolutionTier.Bearing, x, y, tick };
 }
 
 /**
@@ -82,7 +88,7 @@ function smudge(id: number, x: number, y: number, tick: number): Contact {
 function recalled(
   track: Array<{ x: number; y: number }>,
   secondsEach: number,
-  tier: ResolutionTier = ResolutionTier.Contact
+  tier: ResolutionTier = ResolutionTier.Bearing
 ): boolean {
   const { brief, base, home } = rig();
   const commander = new AiCommander(brief);
@@ -99,7 +105,7 @@ function recalled(
         ...base,
         tick,
         units: army,
-        contacts: [{ ...smudge(77, at.x, at.y, tick), tier }],
+        contacts: [{ ...heard(77, at.x, at.y, tick), tier }],
       };
       for (const command of commander.observe(snapshot) as AiCommand[]) {
         if (command.kind === 'attack') attacked = true;
@@ -123,7 +129,7 @@ describe('a contact near home has to earn the alarm', () => {
   });
 
   it('answers one that closes on the Bastion', () => {
-    // The same smudge, walking in. A raid closes; that is what makes it a raid.
+    // The same contact, walking in. A raid closes; that is what makes it a raid.
     const { home } = rig();
     assert.equal(
       recalled(
@@ -151,17 +157,17 @@ describe('a contact near home has to earn the alarm', () => {
     );
   });
 
-  it('does not answer a smudge on the doorstep at once', () => {
-    // Inside the Bastion's own ears nothing that is somebody's stays a smudge
-    // for long, so an unclassified contact this close is what a grazer looks
-    // like on the doorstep — and it used to recall the army from wherever it
-    // was, every observation, for as long as it grazed (#440). It earns the
-    // alarm the way anything farther out does: by closing.
+  it('does not answer an unclassified contact on the doorstep at once', () => {
+    // Inside the Bastion's own ears nothing that is somebody's stays
+    // unclassified for long, so an unclassified contact this close is what a
+    // grazer looks like on the doorstep — and it used to recall the army from
+    // wherever it was, every observation, for as long as it grazed (#440). It
+    // earns the alarm the way anything farther out does: by closing.
     const { home } = rig();
     assert.equal(
       recalled([{ x: home.x + 400, y: home.y }], 1),
       false,
-      'a smudge on the doorstep recalled the army at once'
+      'an unclassified contact on the doorstep recalled the army at once'
     );
   });
 
@@ -198,6 +204,27 @@ describe('a contact near home has to earn the alarm', () => {
       ),
       true,
       'the contact closed 500 m from its farthest and was not answered'
+    );
+  });
+
+  it('never watches a Tier-1 smudge, which closes only as its listener does', () => {
+    // #1256. The layer reports a smudge at its listener's own position, so a
+    // hauler walking home with a faint emitter in its ears is a smudge
+    // closing on the Bastion, wherever the emitter is. The track that recalls
+    // the army for a bearing above recalls nothing at Tier 1.
+    const { home } = rig();
+    assert.equal(
+      recalled(
+        [
+          { x: home.x + 2000, y: home.y },
+          { x: home.x + 1500, y: home.y },
+          { x: home.x + 1100, y: home.y },
+        ],
+        15,
+        ResolutionTier.Contact
+      ),
+      false,
+      'a smudge walked home with its listener and recalled the army'
     );
   });
 });
