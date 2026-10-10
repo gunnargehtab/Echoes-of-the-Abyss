@@ -21,6 +21,9 @@ import { hasComponent } from 'bitecs';
 import {
   ACTIVE_SONAR,
   Faction,
+  HAZARDS,
+  HYD_MAX,
+  HazardPhase,
   PROPAGATION_MODEL,
   ResolutionTier,
   SIM,
@@ -30,6 +33,7 @@ import {
   UnitKind,
   detectionRatio,
   directionalFactor,
+  statsFor,
   thermoclineFactor,
   thermoclineZone,
   tierFromRatio,
@@ -37,6 +41,7 @@ import {
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnUnit } from '../src/sim/world.ts';
+import { VENTFRONT_DIVIDE } from '../src/sim/maps/index.ts';
 import { Acoustic, ActivePing, Heading, Owner, Position } from '../src/sim/components.ts';
 import type { SimWorld } from '../src/sim/world.ts';
 
@@ -225,8 +230,8 @@ describe('echo pass', () => {
   it('and at the edge of the best ears in the game, HYD 95', () => {
     const ceiling = PROPAGATION_MODEL.MAX_EXPECTED_HYD;
     // Rated HYD, moving and stationary, and the dome cap. A Resonance Storm
-    // lifts some Hadron hulls past this ceiling; the pass resolves their
-    // contacts at it, a separate fault (#1240).
+    // lifts some Hadron hulls to this ceiling and no further: the case below
+    // (#1240).
     for (const stats of Object.values(UNIT_STATS)) {
       const rated = Math.max(stats.hyd, stats.hydStationary ?? 0);
       assert.ok(rated <= ceiling, `${UnitKind[stats.kind]}'s rated HYD is above the ceiling`);
@@ -264,6 +269,78 @@ describe('echo pass', () => {
     }
     for (let i = 0; i < 120; i++) match.update(1000 / SIM.TICK_HZ);
     assert.equal(Acoustic.hyd[ear], 95, 'the premise: the listener hears at HYD 95');
+
+    const expected = bruteForce(match.world, [1]);
+    const actual = match.echo.run(match.world, [1]);
+    const got = new Map<string, ResolutionTier>();
+    for (const contact of actual.contactsBySlot.get(1) ?? []) {
+      got.set(`1:${match.echo.entityForHandle(1, contact.id)}`, contact.tier);
+    }
+    const heard = line.filter((eid) => expected.has(`1:${eid}`)).length;
+    assert.ok(
+      heard > 0 && heard < line.length,
+      `the premise: the line straddles the edge, ${heard} of ${line.length} heard`
+    );
+    assert.deepEqual([...got.entries()].sort(), [...expected.entries()].sort());
+  });
+
+  /**
+   * #1240. A Resonance Storm adds 25 to a Hadron hull's HYD, and a parked
+   * Acolyte's 85 became 110: past the top of the scale, where the pass's
+   * per-HYD tables stop. The pass resolved it at 100 and the rules at 110, so
+   * a Corvette between the two ranges was a contact to one and silence to the
+   * other. Built HYD now meets `HYD_MAX`, and the two must agree in a live
+   * storm.
+   *
+   * The line stands due west inside the storm, where PF is 0.35, from inside
+   * the HYD-100 range to past where HYD 110 would reach, as #1222's line does.
+   */
+  it('and in a Resonance Storm, which lifts Hadron ears to the top of the scale', () => {
+    const match = new Match(
+      {
+        ...VENTFRONT_DIVIDE,
+        id: 'test-echo-storm',
+        regions: [],
+        // A bloom is a kelp bed seeded into `world.hazards`, so "one storm"
+        // has to say so about both lists, as hazards.test.ts does.
+        blooms: [],
+        hazards: [{ x: 6000, y: 6000, radiusM: 3000, kind: 'resonance-storm' }],
+      },
+      { fauna: false, seed: 5, terrain: new Terrain(12000, 12000, 250, { floorM: 2600 }) }
+    );
+    match.addPlayer(0, Faction.Bathyarch);
+    match.addPlayer(1, Faction.Hadron);
+    const ear = spawnUnit(match.world, {
+      kind: UnitKind.Acolyte,
+      slot: 1,
+      faction: Faction.Hadron,
+      x: 6000,
+      y: 6000,
+      depth: 600,
+    });
+    const line: number[] = [];
+    for (const distance of [2050, 2100, 2150, 2200, 2250, 2300, 2350]) {
+      line.push(
+        spawnUnit(match.world, {
+          kind: UnitKind.Corvette,
+          slot: 0,
+          faction: Faction.Bathyarch,
+          x: 6000 - distance,
+          y: 6000,
+          depth: 600,
+        })
+      );
+    }
+    const storm = match.world.hazards[0]!;
+    for (let i = 0; i < 200 * SIM.TICK_HZ && storm.phase !== HazardPhase.Active; i++) {
+      match.update(1000 / SIM.TICK_HZ);
+    }
+    for (let i = 0; i < 5; i++) match.update(1000 / SIM.TICK_HZ);
+    assert.equal(storm.phase, HazardPhase.Active, 'the premise: the storm is up');
+
+    const lifted = statsFor(UnitKind.Acolyte).hydStationary! + HAZARDS.STORM.HADRON_HYD_BONUS;
+    assert.ok(lifted > HYD_MAX, `the premise: the storm alone lifts a parked Acolyte to ${lifted}`);
+    assert.equal(Acoustic.hyd[ear], HYD_MAX, 'and the Acolyte hears at the top of the scale');
 
     const expected = bruteForce(match.world, [1]);
     const actual = match.echo.run(match.world, [1]);
