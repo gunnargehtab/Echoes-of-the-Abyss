@@ -40,6 +40,7 @@ const ordered = defineQuery([Unit, MoveOrder, Position]);
 /**
  * One pending order. `x`/`y` are where it pointed when it was issued, and a
  * move's `depth` the depth it was given (#1132) — absent for a place alone.
+ * An attack's `target` is 0 for a phantom, which has no entity behind it.
  */
 export type QueuedOrder =
   | { kind: 'move'; x: number; y: number; depth?: number }
@@ -116,6 +117,19 @@ function begin(world: SimWorld, eid: number, order: QueuedOrder): void {
       // leg ends floor-following whatever its target turns out to be, so the
       // hull's depth says nothing about whether the handle named anything.
       leaveFloor(world, eid);
+      if (order.target === 0) {
+        // A phantom: `Match.orderAttackContact` queues one with no entity
+        // behind it (eid 0 is burned, world.ts). A leg that set nothing left
+        // the hull idle and the plan moving straight on, while a true return's
+        // leg went after it, so the queue sorted the lies from the truth
+        // (#1264, docs/systems-echo.md §3). It begins as the unqueued order
+        // does: a move to where the contact was reported, and it finds water.
+        orderTarget(eid, 0, order.x, order.y);
+        MoveOrder.x[eid] = order.x;
+        MoveOrder.y[eid] = order.y;
+        MoveOrder.active[eid] = 1;
+        break;
+      }
       // The target may have died, or boarded a transport, while the order
       // waited its turn. Dropping it is right: a queue is a plan, and part of
       // a plan becoming moot is ordinary rather than exceptional.

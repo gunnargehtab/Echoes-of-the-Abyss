@@ -1605,6 +1605,8 @@ export class Match {
       // resolution is refused above rather than anchored at the truth, which
       // located a once-heard target on demand, re-sent for each new fix (#1247).
       if (phantom !== undefined) {
+        // Its leg begins as the unqueued order below does, a move to the
+        // anchor (`orderQueue.ts`, #1264).
         enqueue(this.world, eid, { kind: 'attack', x: phantom.x, y: phantom.y, target: 0 });
         return;
       }
