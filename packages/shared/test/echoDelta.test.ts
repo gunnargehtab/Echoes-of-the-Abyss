@@ -32,6 +32,7 @@ function hull(id: number, x: number, y: number, extra: Partial<OwnUnit> = {}): O
     sig: 28,
     silentRunning: false,
     engineOff: false,
+    pressureRating: 2,
     pressureBonus: 0,
     unhealableDamage: 0,
     ...extra,

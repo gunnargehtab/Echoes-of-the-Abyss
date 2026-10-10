@@ -94,6 +94,7 @@ function hull(id: number, x: number, y: number, kind = UnitKind.Corvette): OwnUn
     sig: stats.sigIdle,
     silentRunning: false,
     engineOff: false,
+    pressureRating: stats.pressureRating,
     pressureBonus: 0,
     unhealableDamage: 0,
   };

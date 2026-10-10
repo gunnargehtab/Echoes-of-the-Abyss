@@ -35,8 +35,10 @@ import {
   SIM,
   StructureKind,
   UnitKind,
+  effectivePressureRating,
   refitLineTimeS,
   refitPriceFor,
+  refittedPressureRating,
   requiredPressureRating,
   statsFor,
   structureStatsFor,
@@ -273,6 +275,37 @@ describe('the Pressure Refit', () => {
         after <= Math.max(2, before[i]!),
         'no Commune refit reaches PR-3: the Abyssal is Deepbloom’s, not a thicker hull’s'
       );
+    }
+  });
+
+  it('tells its owner the band each hull now owns, and rents it nothing (#1245)', () => {
+    // The HUD's PR badge and crush warning read this number. The roster cannot
+    // rebuild it: `effectivePressureRating` knows the hull and the navy, never
+    // the purchase.
+    const { match, yard } = withYard(Faction.Hadron, StructureKind.Bastion);
+    const own = () => advance(match, 0.4)!.get(0)!.units;
+    const before = own();
+    assert.ok(before.length > 0, 'the opening kit is in the water');
+    for (const unit of before) {
+      assert.equal(unit.pressureRating, effectivePressureRating(unit.kind, Faction.Hadron));
+    }
+
+    assert.equal(match.refit(0, yard, RefitKind.Pressure), true);
+    const after = own();
+    assert.ok(
+      after.some(
+        (unit) => unit.pressureRating > effectivePressureRating(unit.kind, Faction.Hadron)
+      ),
+      'a hull of the kit reads a band the roster does not give it'
+    );
+    for (const unit of after) {
+      assert.equal(unit.pressureRating, Pressure.rating[unit.id], 'the server’s own number');
+      assert.equal(
+        unit.pressureRating,
+        refittedPressureRating(effectivePressureRating(unit.kind, Faction.Hadron), Faction.Hadron),
+        `${UnitKind[unit.kind]} reads its refitted band`
+      );
+      assert.equal(unit.pressureBonus, 0, 'bought, not rented');
     }
   });
 

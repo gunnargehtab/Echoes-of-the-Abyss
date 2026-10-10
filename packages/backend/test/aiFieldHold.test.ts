@@ -83,6 +83,7 @@ function hull(
     sig: stats.sigIdle,
     silentRunning: false,
     engineOff: false,
+    pressureRating: stats.pressureRating,
     pressureBonus: 0,
     unhealableDamage: 0,
     ...extra,

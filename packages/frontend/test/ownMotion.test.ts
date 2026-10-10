@@ -28,6 +28,7 @@ function hull(id: number, x: number, y: number, depth = 600): OwnUnit {
     sig: 40,
     silentRunning: false,
     engineOff: false,
+    pressureRating: 2,
     pressureBonus: 0,
     unhealableDamage: 0,
   };
