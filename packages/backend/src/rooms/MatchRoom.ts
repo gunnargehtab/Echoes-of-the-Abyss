@@ -119,7 +119,7 @@ interface MatchRoomMetadata extends MatchListingMetadata {
 /**
  * What actually happened to a throw the room caught, for the log line.
  *
- * Colyseus's wrapper re-raises for the lifecycle methods and swallows for
+ * Colyseus's wrapper re-raises for six lifecycle methods and swallows for
  * everything else, so "caught" is the only word true of all of them, and the
  * clause after it is what a reader actually needs: a refused join is a room
  * doing its job and a thrown message handler is not. Written as a table

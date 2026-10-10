@@ -590,9 +590,9 @@ room carries on as it does past a dropped message.
 
 The other methods Colyseus re-raises from — `onCreate`, `onAuth`, `onJoin`, `onDrop` and
 `onReconnect` — still report to the caller exactly as they did, so an unknown mission and a
-full lobby are refused the way they always were. What changed is that those refusals are now visible in the server
-log, which they were not. Every line carries the room id, the tick, the phase, the method,
-the client message name where there is one, and what became of the throw.
+full lobby are refused the way they always were. What changed is that those refusals are now
+visible in the server log, which they were not. Every line carries the room id, the tick, the
+phase, the method, the client message name where there is one, and what became of the throw.
 
 ### Spectators
 
