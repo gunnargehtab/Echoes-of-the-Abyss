@@ -15,7 +15,13 @@
 // __exportStar, which Node's static CJS export detection cannot see, so
 // `import { Room } from 'colyseus'` failed at runtime under an unbundled ESM
 // loader (the dev server) while working fine once bundled.
-import { OnMessageException, Room, type Client, type RoomException } from '@colyseus/core';
+import {
+  OnLeaveException,
+  OnMessageException,
+  Room,
+  type Client,
+  type RoomException,
+} from '@colyseus/core';
 import {
   AiDifficulty,
   Faction,
@@ -113,19 +119,26 @@ interface MatchRoomMetadata extends MatchListingMetadata {
 /**
  * What actually happened to a throw the room caught, for the log line.
  *
- * Colyseus's wrapper re-raises for the four lifecycle methods and swallows for
+ * Colyseus's wrapper re-raises for six lifecycle methods and swallows for
  * everything else, so "caught" is the only word true of all of them, and the
  * clause after it is what a reader actually needs: a refused join is a room
  * doing its job and a thrown message handler is not. Written as a table
  * because the `never` at the foot is what fails the build if Colyseus ever
  * hands this hook a method name it does not know about.
  */
-const outcomeOf = (methodName: Parameters<MatchRoom['onUncaughtException']>[1]): string => {
+const outcomeOf = (
+  methodName: Parameters<MatchRoom['onUncaughtException']>[1],
+  midMatch: boolean
+): string => {
   switch (methodName) {
     case 'setTimestep':
     case 'setFixedTimestep':
       // A torn world, so the room is over; see the hook's own comment.
       return 'ending this room';
+    case 'onLeave':
+      // Caught by `onLeave` itself rather than re-raised (#1244), with the
+      // seat already released. Mid-match the hook ends the room too.
+      return midMatch ? 'seat released, ending this room' : 'seat released';
     case 'onMessage':
       return 'message dropped';
     case 'onCreate':
@@ -133,7 +146,6 @@ const outcomeOf = (methodName: Parameters<MatchRoom['onUncaughtException']>[1]):
     case 'onJoin':
     case 'onDrop':
     case 'onReconnect':
-    case 'onLeave':
       // Re-raised by the wrapper, so the client is already being told. These
       // are how the room refuses an unknown mission or a full lobby, and they
       // were invisible in the server log until this hook existed.
@@ -870,7 +882,11 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     this.postMatchTimeout = null;
     // Nobody joins a match in progress. Unlocked again only if the room
     // returns to a lobby, which today it does not — a rematch keeps its roster.
-    this.lock();
+    // Not awaited, but never left unhandled (#1244): a networked driver can
+    // refuse the listing write, and the rejection would reach the process's
+    // `uncaughtException` hook. The room's own flag is set before that write,
+    // and `onJoin` refuses a late arrival whatever the listing says.
+    this.lock().catch(() => {});
 
     for (const client of this.clients) {
       // The whole grid, not a delta: a rematch is new ground, and a client
@@ -924,26 +940,46 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
   }
 
   override onLeave(client: Client): void {
-    const player = this.state.players.get(client.sessionId);
-    if (player === undefined) return;
-    player.connected = false;
+    // Caught here rather than left to the #627 wrapper, which re-raises for
+    // `onLeave`, because one caller has no try/catch of its own: once a drop's
+    // grace runs out, Colyseus calls this from `#_onAfterLeave` in a promise
+    // nobody awaits, and a throw there reached the process's
+    // `uncaughtException` hook and every room on the box (#1244). Returning
+    // normally is also what lets Colyseus go on to free its own count of the
+    // seat. The hook logs the throw and decides whether the room survives it.
+    try {
+      const player = this.state.players.get(client.sessionId);
+      if (player === undefined) return;
+      player.connected = false;
 
-    if (this.state.phase !== MatchPhase.Playing) {
-      this.releasePlayer(client.sessionId);
-      this.startIfEveryoneIsReady();
-      return;
+      if (this.state.phase !== MatchPhase.Playing) {
+        this.releasePlayer(client.sessionId);
+        this.startIfEveryoneIsReady();
+        return;
+      }
+
+      // A consented departure or an expired reconnect grace period both abandon
+      // the fleet. Neither may leave the opponent waiting on an empty roster.
+      this.forfeit(client.sessionId);
+    } catch (cause) {
+      const error = cause instanceof Error ? cause : new Error(String(cause));
+      this.onUncaughtException(
+        new OnLeaveException<this>(error, error.message, client, undefined),
+        'onLeave'
+      );
     }
-
-    // A consented departure or an expired reconnect grace period both abandon
-    // the fleet. Neither may leave the opponent waiting on an empty roster.
-    this.forfeit(client.sessionId);
   }
 
   /** Give up a slot's match and clear its seat. */
   private forfeit(sessionId: string): void {
     const slot = this.slotBySession.get(sessionId);
-    if (slot !== undefined) this.match.resign(slot);
-    this.releasePlayer(sessionId);
+    // The seat goes whether or not the resignation completes: a player who has
+    // left must not read as one still seated, and `onLeave` contains the throw.
+    try {
+      if (slot !== undefined) this.match.resign(slot);
+    } finally {
+      this.releasePlayer(sessionId);
+    }
   }
 
   /**
@@ -1009,7 +1045,7 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
    * edge around one simulation — and this is what makes the blast radius match
    * the claim.
    *
-   * The two halves are deliberately asymmetric:
+   * The cases are deliberately asymmetric:
    *
    * - **A handler throws: drop that message, keep the room.** Every other
    *   server-side refusal here is a silent `return` after a failed guard, and
@@ -1022,6 +1058,10 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
    *   a match whose divergence surfaces minutes later as something else
    *   entirely. Stopping is the honest answer, and it stops *before* the next
    *   tick rather than after the asynchronous disconnect settles.
+   * - **A departure throws: free the seat, and end the room mid-match.**
+   *   `onLeave` catches its own throw and reports it here (#1244). Mid-match
+   *   its work is `Match.resign`, a world mutation, so the world is as torn
+   *   as after a throwing step; in the lobby or after a result it is not.
    *
    * The room ends without announcing anything, and that is a decision rather
    * than an omission: an announcement would be a twelfth `SERVER_MSG` and a
@@ -1051,6 +1091,7 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     const tick = this.match === undefined ? 'no match' : `tick ${this.match.tick}`;
     const phase =
       this.state === undefined ? 'no state' : (MatchPhase[this.state.phase] ?? 'unknown');
+    const midMatch = this.state !== undefined && this.state.phase === MatchPhase.Playing;
     // The message name is the one fact that says which of the 31 handlers this
     // was, and it is only carried by the `onMessage` exception.
     const where =
@@ -1062,11 +1103,15 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     const cause = (error as { cause?: unknown }).cause;
     console.error(
       `[MatchRoom ${this.roomId}] caught a throw in ${where} at ${tick}, ` +
-        `phase ${phase}; ${outcomeOf(methodName)}: ` +
+        `phase ${phase}; ${outcomeOf(methodName, midMatch)}: ` +
         (cause instanceof Error ? (cause.stack ?? cause.message) : String(cause))
     );
 
-    if (methodName !== 'setTimestep' && methodName !== 'setFixedTimestep') return;
+    const torn =
+      methodName === 'setTimestep' ||
+      methodName === 'setFixedTimestep' ||
+      (methodName === 'onLeave' && midMatch);
+    if (!torn) return;
 
     // Cleared before the disconnect is awaited, because `disconnect()` only
     // clears the interval once its dispose has settled — and a torn world must

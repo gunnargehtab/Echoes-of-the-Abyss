@@ -76,7 +76,16 @@ export interface RoomInternals {
     events: Record<string, Array<(client: Client, payload: unknown) => void> | undefined>;
   };
   /** The room's own simulation. Private, and the only way to tear a step. */
-  match: { update: (deltaMs: number) => unknown; tick: number };
+  match: { update: (deltaMs: number) => unknown; resign: (slot: number) => void; tick: number };
+  /**
+   * How Colyseus takes a client out of a room, drop or consented leave alike.
+   * Reached directly because no socket exists here to close.
+   */
+  _onLeave: (client: Client, code: number) => Promise<void>;
+  /** The grace window a drop holds open, by reconnection token. */
+  _reconnections: Record<string, [string, { reject: (reason: unknown) => void }] | undefined>;
+  /** The real timer that closes that window, by session id. */
+  _reservedSeatTimeouts: Record<string, NodeJS.Timeout | undefined>;
 }
 
 export const internals = (room: MatchRoom): RoomInternals => room as unknown as RoomInternals;
