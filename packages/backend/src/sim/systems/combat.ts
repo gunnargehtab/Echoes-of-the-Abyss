@@ -447,8 +447,11 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
           // So a hull that just fired is loud here, and one running silent is
           // not, which is the whole of what the gun is for.
           //
-          // Ties go to the lower entity id, as the distance rule's `<=` does —
-          // ordered from the same query, so a replay agrees with itself.
+          // A tie goes to the candidate met first, since `>` keeps the one it
+          // holds, where the distance rule's `<=` hands its ties to the one met
+          // last. "First" is query order: the order entities entered the
+          // query, a removal moving the last into its gap — not entity id. The
+          // same match builds the same order, so a replay agrees with itself.
           //
           // The nearest-first branch gets its range bound from `bestDistance`
           // starting at the gun's reach; this one has to say it (#1219).
