@@ -561,7 +561,7 @@ graceful shutdown, which disposes every room on the box and exits — so one thr
 ended every concurrent match with it. A room is already the boundary this architecture claims:
 one network edge around one simulation. The blast radius now matches the claim.
 
-The two halves are asymmetric on purpose.
+The cases are asymmetric on purpose.
 
 A **message handler that throws loses that message and nothing else.** Every other
 server-side refusal in the room is a silent return after a failed guard, and a throw is the
@@ -579,14 +579,14 @@ match can end, which is a decision about this section rather than a patch to the
 closed socket is what a client already handles for a server that went away.
 
 A **departure that throws frees the seat, and ends the room if the match is playing.**
-Colyseus re-raises from the room's leave hook into callers with no try/catch of their own:
-once a drop's grace window runs out, it calls the hook from a promise nobody awaits, so a
-throw handed back there reached the process hook all the same (#1244). The room catches that
-throw itself, with the seat already released, and Colyseus then frees its own count of the
-seat as it does for any departure. Mid-match a departure does its work in `Match.resign`, a
-world mutation, so a throw there leaves the half-changed world a throwing step does, and the
-room ends the same way. A throw that lands in the lobby or after a result is logged, and the
-room carries on as it does past a dropped message.
+Colyseus re-raises from the room's leave hook, and one caller has no try/catch of its own:
+once a drop's grace window runs out, it calls the hook from `#_onAfterLeave`, in a promise
+nobody awaits, so a throw handed back there reached the process hook all the same (#1244).
+The room catches that throw itself, with the seat already released, and Colyseus then frees
+its own count of the seat as it does for any departure. Mid-match a departure does its work
+in `Match.resign`, a world mutation, so a throw there leaves the half-changed world a throwing
+step does, and the room ends the same way. A throw that lands in the lobby or after a result
+is logged, and the room carries on as it does past a dropped message.
 
 The other methods Colyseus re-raises from — `onCreate`, `onAuth`, `onJoin`, `onDrop` and
 `onReconnect` — still report to the caller exactly as they did, so an unknown mission and a

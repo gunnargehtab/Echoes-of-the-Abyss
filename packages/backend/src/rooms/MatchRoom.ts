@@ -941,7 +941,7 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
 
   override onLeave(client: Client): void {
     // Caught here rather than left to the #627 wrapper, which re-raises for
-    // `onLeave` into callers with no try/catch of their own: once a drop's
+    // `onLeave`, because one caller has no try/catch of its own: once a drop's
     // grace runs out, Colyseus calls this from `#_onAfterLeave` in a promise
     // nobody awaits, and a throw there reached the process's
     // `uncaughtException` hook and every room on the box (#1244). Returning
@@ -1045,7 +1045,7 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
    * edge around one simulation — and this is what makes the blast radius match
    * the claim.
    *
-   * The two halves are deliberately asymmetric:
+   * The cases are deliberately asymmetric:
    *
    * - **A handler throws: drop that message, keep the room.** Every other
    *   server-side refusal here is a silent `return` after a failed guard, and
