@@ -62,15 +62,17 @@ import {
   structureStatsFor,
 } from '@echoes/shared';
 import { defineQuery } from 'bitecs';
-import { Health, Owner, Position, Pressure, Unit } from '../src/sim/components.ts';
+import { Health, Owner, Position, Pressure, SilentRunning, Unit } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
 import { MOUTH_RIM, mapById, missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { LEDGER_PROSPECT } from '../src/sim/missions/prospect.ts';
 import { SEEDING_SECOND_SEEDING } from '../src/sim/missions/secondSeeding.ts';
 import { inRegion } from '../src/sim/missions/predicates.ts';
-import type { MissionBeat } from '../src/sim/missions/types.ts';
+import type { MissionBeat, MissionDefinition } from '../src/sim/missions/types.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
+/** One Echo pass, in sim ticks: the mission runtime's cadence. */
+const PASS = Math.round(SIM.TICK_HZ / SIM.ECHO_HZ);
 const T = (minutes: number, seconds = 0): number => (minutes * 60 + seconds) * SIM.TICK_HZ;
 const PLAYER = SEEDING_SECOND_SEEDING.playerSlot;
 const RELEASE = T(20, 30);
@@ -1472,6 +1474,49 @@ describe('the tide, run out', () => {
       );
       assert.equal(Position.depth[eid], DEPTH.MAX_M);
     }
+  });
+
+  it('rigs the Kell seed on the first pass, with the sower still silent', () => {
+    // §8 and §13: the seed is aboard from the first pass, as §1 has the column
+    // "silent, with the Kell seed aboard", because `applyLifts` rigs a load at
+    // cut time zero before it reads the posture (#1249). The seed is in no
+    // predicate, so this test reads the load through a probe row of its own,
+    // added to a copy and never to the literal.
+    const probe: MissionDefinition = {
+      ...SEEDING_SECOND_SEEDING,
+      objectives: [
+        ...SEEDING_SECOND_SEEDING.objectives,
+        {
+          id: 'probe-seed-aboard',
+          text: 'The seed is aboard.',
+          initial: ObjectiveStatus.Pending,
+          terminal: false,
+          predicate: {
+            kind: 'extract',
+            role: 'seed',
+            region: 'the-rim-furrow',
+            count: 1,
+            loaded: 'kell-seed',
+          },
+        },
+      ],
+    };
+    const map = missionMapById(SEEDING_SECOND_SEEDING.mapId)!;
+    const match = new Match(map, { mission: probe, fauna: false, seed: 77 });
+    let aboardAt = -1;
+    for (let tick = 0; tick < SIM.TICK_HZ * 5 && aboardAt < 0; tick++) {
+      match.update(STEP_MS);
+      const row = match.missionView?.objectives.find((o) => o.id === 'probe-seed-aboard');
+      if (row?.status === ObjectiveStatus.Met) aboardAt = match.world.tick;
+    }
+    assert.ok(aboardAt >= 0, 'the seed never went aboard');
+    assert.equal(aboardAt, PASS, 'aboard on the first pass');
+    const sower = nearest(match, UnitKind.Harvester, unit('the-sower'));
+    assert.ok(
+      inRegion(furrow, Position.x[sower]!, Position.y[sower]!),
+      'the sower is in the furrow'
+    );
+    assert.equal(SilentRunning.active[sower], 1, 'and still silent: the posture does not hold it');
   });
 
   it('reads an idle day as the rim exactly as it was, and closes on the keystone', () => {
