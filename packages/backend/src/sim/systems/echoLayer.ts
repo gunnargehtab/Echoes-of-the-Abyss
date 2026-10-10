@@ -17,6 +17,7 @@ import {
   DEPTH_BANDS,
   DepthBand,
   FOLLOW_FLOOR,
+  HYD_MAX,
   LID,
   deliveryDepthM,
   effectivePressureRating,
@@ -541,10 +542,10 @@ export class EchoLayer {
    * listener's detection threshold. Typed arrays rather than Maps because
    * the pair loop reads both tens of thousands of times per pass.
    */
-  private readonly rangeScaleByHyd = new Float64Array(101);
+  private readonly rangeScaleByHyd = new Float64Array(HYD_MAX + 1);
   /** rangeScaleByHyd squared, so the distance prune needs no extra multiply. */
-  private readonly rangeScaleSqByHyd = new Float64Array(101);
-  private readonly thresholdByHyd = new Float64Array(101);
+  private readonly rangeScaleSqByHyd = new Float64Array(HYD_MAX + 1);
+  private readonly thresholdByHyd = new Float64Array(HYD_MAX + 1);
   /**
    * Best tier each slot has resolved for the emitter currently being walked.
    * Reset per emitter; mirrors what `record` holds, but as a flat array read
@@ -579,7 +580,7 @@ export class EchoLayer {
   private terrain: Terrain | undefined;
 
   constructor() {
-    for (let h = 0; h <= 100; h++) {
+    for (let h = 0; h <= HYD_MAX; h++) {
       this.rangeScaleByHyd[h] = Math.pow(
         Math.max(h, 1) / PROPAGATION_MODEL.MAX_EXPECTED_HYD,
         1 / PROPAGATION_MODEL.ATTENUATION_EXPONENT
@@ -867,7 +868,7 @@ export class EchoLayer {
         const dy = ey - ly;
         const distance = Math.hypot(dx, dy);
         const hyd = Acoustic.hyd[listener]! | 0;
-        const clamped = hyd > 100 ? 100 : hyd;
+        const clamped = hyd > HYD_MAX ? HYD_MAX : hyd;
         const k = THERMOCLINE_PAIR_FACTOR[eRow + thermoclineZone(Position.depth[listener]!)]!;
         const dirFactor = directional
           ? directionalSectorFactor(bowX * -dx + bowY * -dy, distance)
@@ -1461,7 +1462,7 @@ export class EchoLayer {
           // radius by r^(1/exponent), which is `ratioScale` below, computed
           // once at construction.
           const hyd = Acoustic.hyd[listener]! | 0;
-          const clamped = hyd > 100 ? 100 : hyd;
+          const clamped = hyd > HYD_MAX ? HYD_MAX : hyd;
           const bestTier = this.bestTierThisEmitter[listenerSlot]!;
           const cutoff2 = range2 * this.rangeScaleSqByHyd[clamped]! * RATIO_SCALE_SQ[bestTier]!;
           if (d2 > cutoff2) {

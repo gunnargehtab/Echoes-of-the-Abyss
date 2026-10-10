@@ -2200,9 +2200,10 @@ export const MINE_TRIGGER_LOUDNESS =
 
 /**
  * SPEC — the top of the HYD scale (docs/units.md: "HYD: Hydrophone Rating,
- * 0–100"). Every built HYD meets it, in `auras.ts`, whatever lifted it there:
- * a Resonance Storm adds 25 to a Hadron hull's own ears, and unless a dome
- * lends HYD as well, no other cap applies to that sum (#1240).
+ * 0–100"). Every hull's built HYD meets it, in `auras.ts`, whatever lifted it
+ * there: a Resonance Storm alone would lift a parked Acolyte's 85 to 110
+ * (#1240). Structures and creatures are rated at or below it and nothing lifts
+ * theirs.
  */
 export const HYD_MAX = 100;
 
@@ -2217,13 +2218,13 @@ export const PROPAGATION_MODEL = {
   BASELINE_HYD,
   /**
    * Ceiling used to size broadphase queries conservatively (#1222). It is
-   * `HYD_MAX`, the top of the scale: the aura pass caps every built HYD there
-   * and the Echo pass's per-HYD tables are indexed up to it, so a square sized
-   * at it covers every listener. The roster's best ears and the Cantor and
-   * Precentor dome caps reach 95, and a Resonance Storm lifts some Hadron
-   * hulls to the cap (#1240). Not a detection rule: a listener's true range is
-   * the radius times `(hyd / ceiling)^(1/exponent)`, so the ceiling cancels
-   * out of every pair's answer.
+   * `HYD_MAX`, the top of the scale: no listener's built HYD is above it, and
+   * the Echo pass's per-HYD tables are indexed up to it and clamp to it, so a
+   * square sized at it covers every listener. The roster's best ears and the
+   * Cantor and Precentor dome caps reach 95, and a Resonance Storm lifts some
+   * Hadron hulls to the cap (#1240). Not a detection rule: a listener's true
+   * range is the radius times `(hyd / ceiling)^(1/exponent)`, so the ceiling
+   * cancels out of every pair's answer.
    */
   MAX_EXPECTED_HYD: HYD_MAX,
 } as const;
