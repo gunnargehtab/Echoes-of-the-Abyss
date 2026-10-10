@@ -71,6 +71,7 @@ function own(id: number, kind: UnitKind, x: number, y: number): OwnUnit {
     sig: stats.sigIdle,
     silentRunning: false,
     engineOff: false,
+    pressureRating: stats.pressureRating,
     pressureBonus: 0,
     unhealableDamage: 0,
   };

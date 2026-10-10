@@ -631,6 +631,14 @@ export interface OwnUnit {
    */
   sourS?: number;
   /**
+   * The hull's own Pressure Rating: its band or the navy's baseline, then
+   * whatever the navy bought (docs/systems-progression.md §2) or a mission
+   * seated it with. The server's number, because the client cannot rebuild
+   * it: `effectivePressureRating` knows the roster and not the refit, so a
+   * refitted hull read one band low until #1245. Own hulls only.
+   */
+  pressureRating: number;
+  /**
    * Pressure Rating currently granted by an aura, on top of the hull's own
    * (docs/systems-depth.md §3, the Sounding Spire). Sent so the HUD can show
    * a rented rating as rented — it vanishes the moment the unit leaves.

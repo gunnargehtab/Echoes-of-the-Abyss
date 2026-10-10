@@ -50,7 +50,6 @@ import {
   depthBandFor,
   DRIFT,
   EchoMarkKind,
-  effectivePressureRating,
   Faction,
   FACTION_STRUCTURE,
   FOLLOW_FLOOR,
@@ -7872,9 +7871,16 @@ export class EchoRenderer {
     this.orderMarkers.length = keep;
   }
 
-  /** Effective Pressure Rating: what the hull owns plus what it is renting. */
+  /**
+   * Effective Pressure Rating: what the hull owns plus what it is renting.
+   *
+   * What it owns is the server's `pressureRating`, never the roster's
+   * `effectivePressureRating`: the roster cannot know a bought refit, and a
+   * refitted hull read one band low, with a crush warning at depths it holds
+   * (#1245).
+   */
   private effectivePr(unit: OwnUnit): number {
-    return effectivePressureRating(unit.kind, this.faction) + unit.pressureBonus;
+    return unit.pressureRating + unit.pressureBonus;
   }
 
   /**
@@ -8570,7 +8576,8 @@ export class EchoRenderer {
     // PR badge. A rented rating is drawn as rented — it evaporates the moment
     // the hull leaves the aura that granted it (docs/systems-depth.md §3).
     if (unit !== undefined) {
-      const base = effectivePressureRating(unit.kind, this.faction);
+      // A refit is owned, not rented, so it reads in the base: `PR3`.
+      const base = unit.pressureRating;
       const crushing = this.isCrushing(unit);
       const badgeW = 44;
       const badgeH = 16;

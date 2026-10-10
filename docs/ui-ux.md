@@ -448,8 +448,9 @@ The vertical axis needs permanent, glanceable representation ([systems-depth.md]
 
 Implemented in the client scaffold: the ribbon runs down the left edge with a marker per
 selected hull and a ghost marker at its ordered depth; the PR badge sits in the selection
-card and shows a Sounding Spire's grant as `PR2+1` so a rented rating reads as rented; the
-unrecoverable portion of the health bar is hatched, and its texture rather than its hue is
+card and shows a Sounding Spire's grant as `PR2+1` so a rented rating reads as rented,
+while a bought Pressure Refit is owned and reads in the base, `PR3`, as the server rates
+the hull; the unrecoverable portion of the health bar is hatched, and its texture rather than its hue is
 what distinguishes it, so it survives colour-vision differences (§11). The focus tick is a
 chevron on the ribbon's right edge in the plain text ink: a camera reading, so neither a hull's
 marker nor the cyan of a rule about the water. Holding `Alt` previews the click under the

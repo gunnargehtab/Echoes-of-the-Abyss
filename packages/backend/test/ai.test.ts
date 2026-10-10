@@ -197,6 +197,7 @@ describe('production does not deadlock', () => {
       sig: 30,
       silentRunning: false,
       engineOff: false,
+      pressureRating: statsFor(kind).pressureRating,
       pressureBonus: 0,
       unhealableDamage: 0,
       ...(kind === UnitKind.Harvester ? { cargo: 0, throttle: HarvestThrottle.Standard } : {}),
@@ -1082,6 +1083,7 @@ function exposedSnapshot(): EchoSnapshot {
         sig: 40,
         silentRunning: false,
         engineOff: false,
+        pressureRating: statsFor(UnitKind.Harvester).pressureRating,
         pressureBonus: 0,
         unhealableDamage: 0,
         cargo: 0,
@@ -1134,6 +1136,7 @@ function armySnapshot(contacts: Contact[], tick = 6000): EchoSnapshot {
     sig: 30,
     silentRunning: false,
     engineOff: false,
+    pressureRating: statsFor(UnitKind.Corvette).pressureRating,
     pressureBonus: 0,
     unhealableDamage: 0,
   });
