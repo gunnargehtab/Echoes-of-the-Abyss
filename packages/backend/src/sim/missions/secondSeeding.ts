@@ -584,10 +584,12 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
    * at zero, the gift run's shape and the gift run's two zeroes
    * (docs/mission-tend.md §13).
    *
-   * Rigged on the first pass the sower is not silent, because a lift accrues
-   * nothing under Silent Running — which on this literal means the seed goes
-   * aboard the moment the sower stops being quiet to plant. It is in no
-   * predicate; it is how the document says the seed is aboard.
+   * Rigged on the first pass the sower stands in the furrow, silent or not —
+   * which on this literal is the first pass of the day, the column seated
+   * "silent, with the Kell seed aboard" (§1). `applyLifts` rigs a load at cut
+   * time zero before it reads the posture: silence or a drive cut stops a
+   * cut, and this load has none to stop (#1249). It is in no predicate; it is
+   * how the document says the seed is aboard.
    */
   lifts: [
     {

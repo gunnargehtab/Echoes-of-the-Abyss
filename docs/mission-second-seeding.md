@@ -630,10 +630,10 @@ decided by whether a gun came down.
 `deliver` row, no `survive` row: a plateau at 3,000 m under a bed on the concern's day is not
 counted in what it lost, because on D nothing on this rim fires and the one thing that kills is
 the water, and the water is what the sowing is for. The Kell seed rides the sower as a lift at
-cut time zero and cut SIG zero in `the-rim-furrow`, rigged on the first pass the sower is not
-silent — the gift run's shape and the gift run's two zeroes
-([mission-tend.md](mission-tend.md) §13) — and is in no predicate; it is how the document says
-the seed is aboard.
+cut time zero and cut SIG zero in `the-rim-furrow`, rigged on the first pass the sower stands in
+it, silent or not, so it is aboard from the day's first pass as §1 has it — the gift run's shape
+and the gift run's two zeroes ([mission-tend.md](mission-tend.md) §13) — and is in no predicate;
+it is how the document says the seed is aboard.
 
 **One row the union cannot carry, said here rather than left to §13.** The ending's other half
 — *the watch heard the bed and entered it* — is a fact about somebody else's account, and every
@@ -1133,7 +1133,7 @@ beat the document counts as three — are marked as findings rather than as requ
 | **The concern's terrace seat** | **A design call, made here and stated so it can be reversed** (§5): the flagship at 3000, 2750 and the bunkerage at 3000, 2850, 250 and 300 m south of the plan's, so that Prospect's fixed 07:00 leg idles the pair at a Bearing to the heavy rather than a Track, and the ledger reads the sowing rather than the chart. Nothing Prospect fixes moves |
 | **The escorts' descent, repriced at two ears that had weighed anchor** | **A finding against this document, now answered in the sections that carried it.** The 20:30 beat that releases Teel's element is the same beat that sends the concern north, so fifteen seconds into a descent that takes thirty-three the flagship has left 3000, 2750 and the western reader has left the third face. §4 and §7 priced both at the seats they keep through the day and dated the reading to a moment at which neither is there; the other three ears they name — the watch at home, the Order withdrawn, the pair in home water — do stand still, and their figures were exact and are unchanged. The literal was not the place to fix it, because its beats are §9's to the tick and §9 is right, so the document moved: both sections now price the descent at 3000, 2069 and 2681, 2001, where a match run to the tick puts the two hulls, and the reading is a **Track** to each — 4.16 and 4.22 — rather than the Classification (3.01, 3.80) the standing seats give. `missionSecondSeeding.test.ts` still pins the standing-seat arithmetic **and** the two `move` beats that move the ear; those assertions now hold the counterfactual §7 names rather than the figure it prints |
 | **The first five minutes, unfenced** | **A design call, stated** — see the question below, which the literal keeps open and the test now plays: the Complete run sows at 02:00, in the first quiet window, and closes with *the-ledger* unmet |
-| **The Kell seed as a lift at cut time zero** | **Built** (#239), rigged on the first pass the sower is not silent, because a lift accrues nothing under Silent Running (`runtime.ts`); in no predicate, and the document says so |
+| **The Kell seed as a lift at cut time zero** | **Built** (#239), rigged on the first pass the sower stands in `the-rim-furrow`, silent or not: `applyLifts` (`runtime.ts`) rigs a load at cut time zero before it reads the posture, because silence or a drive cut stops a cut and this load has none to stop (#1249). In no predicate, and the document says so |
 | **The sowing as a `MissionSounding`** — 250 m, sixty seconds, SIG 45, bow on, a broken hold resetting | **Built** (#275). The figures are Deep Furrow's, one mission further down; `holdingSounding` refuses a silent or engine-off hull, which is why the sower must stop being quiet, and `accrueSounding` resets |
 | **Six locks with a reason in register; active sonar available** | **Built** — `AbilityLock` is continuous state the HUD greys out with the reason attached ([ui-ux.md](ui-ux.md) §7); `weapons`, `torpedoes`, `mines`, `depthCharges`, `noisemakers`, `construction`. `activeSonar` is not in the list, and §3 prices it, including the one thing it does not do: interest the riser (19 against 55) |
 | **Scripted parties' ears, resolved** | **Built** (#323) — the concern, the watch, the reconnaissance and the attendants' party are all installed as observers, and the first three of them hear: an emitter is spawned at HYD 0 and is deaf (`world.ts`), so the attendants' slot resolves nothing back, which is what makes the ledger a reading of three navies and not of four |
