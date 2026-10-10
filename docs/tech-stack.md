@@ -731,7 +731,7 @@ off. A Glider cuts its drive for the last four hundred metres of every leg and c
 its floor, which is the one thing in the roster that arrives quieter than it travelled. An
 Acolyte runs no route at all — its ears are worth a tier only while it is stopped, so it
 walks to the first contested node and parks with its drive cut. And a Herald turns for home
-the moment anything it holds a bearing on comes inside seven hundred metres, because its
+the moment anything its navy holds a bearing on comes inside seven hundred metres, because its
 protection is its wake and a wake only helps a hull already pointed away.
 
 **It spends its navy's ordnance, which is the first time it has spent any.** Until wave 3

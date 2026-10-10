@@ -3636,7 +3636,7 @@ export class AiCommander implements AiPlayer {
     if (!scout.engineOff) out.push({ kind: 'engineOff', unitIds: [scout.id], active: true });
   }
 
-  /** Is anything the commander can see inside `radiusM` of this hull? */
+  /** Is anything held at a bearing or better inside `radiusM` of this hull? */
   private nearestContactWithin(snapshot: EchoSnapshot, of: OwnUnit, radiusM: number): boolean {
     for (const contact of snapshot.contacts) {
       // From a bearing up. A Tier-1 contact is reported at its listener's own

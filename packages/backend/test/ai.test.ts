@@ -867,7 +867,7 @@ describe('it pings and hides for reasons', () => {
   it('does not transmit at a Tier-1 smudge, which sits on the hull that heard it', () => {
     // #1256. The layer reports a smudge at its listener's own position, here
     // an army hull's, so its range to the army says nothing about the
-    // emitter's. A bearing at the same point is the positive case above.
+    // emitter's. A bearing 200 m off is the positive case above.
     assert.equal(
       pingsAt(fielded(), [contact({ tier: ResolutionTier.Contact, x: 2400, y: 2000 })]),
       false

@@ -308,22 +308,26 @@ describe('a force with the numbers is a committed force', () => {
     assert.equal(chases.length, 0, 'it chased a smudge it could not reach');
   });
 
-  it('still recalls the army for a classified contact on the doorstep, and not for a smudge', () => {
+  it('still recalls the army for a classified contact on the doorstep, and not for a bearing', () => {
     const { home, enemyStarts } = rig();
     const forward = {
       x: home.x + (enemyStarts[0]!.x - home.x) * 0.5,
       y: home.y + (enemyStarts[0]!.y - home.y) * 0.5,
     };
-    const forSmudge = commands({
+    const forBearing = commands({
       seconds: 20,
       at: forward,
       size: 8,
-      contacts: (tick) => [smudge(41, home.x + 300, home.y, tick)],
+      // A bearing, not a smudge: since #1256 the watch drops a Tier-1 contact
+      // before the urgent ring, so a smudge here would not test #440's rule.
+      contacts: (tick) => [
+        { ...smudge(41, home.x + 300, home.y, tick), tier: ResolutionTier.Bearing },
+      ],
     });
     assert.equal(
-      forSmudge.filter((c) => c.kind === 'attack').length,
+      forBearing.filter((c) => c.kind === 'attack').length,
       0,
-      'a smudge inside the urgent ring recalled the army'
+      'an unclassified bearing inside the urgent ring recalled the army'
     );
     const forRaid = commands({
       seconds: 20,
