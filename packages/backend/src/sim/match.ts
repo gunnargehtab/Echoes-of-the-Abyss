@@ -3357,6 +3357,7 @@ export class Match {
         sig: Acoustic.sig[eid]!,
         silentRunning: SilentRunning.active[eid] === 1,
         engineOff: EngineOff.active[eid] === 1,
+        pressureRating: Pressure.rating[eid]!,
         pressureBonus: Pressure.bonus[eid]!,
         unhealableDamage: Pressure.unhealable[eid]!,
       };

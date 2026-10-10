@@ -2603,6 +2603,68 @@ describe('renderer smoke test: input and teardown', () => {
   });
 
   /**
+   * The PR badge and the crush warning read the band the server says the hull
+   * owns (docs/ui-ux.md §8). A bought refit is that band
+   * (docs/systems-progression.md §2), and the roster alone read a refitted
+   * hull one band low, with `PR EDGE` over ground its rating holds (#1245).
+   */
+  it("reads a refitted hull's own band, and rents nothing it owns (#1245)", async () => {
+    const world = await boot();
+    try {
+      // The Corvette is PR-2 on the roster, at 1,200 m; refitted, it owns PR-3.
+      const refitted = cannedSnapshot();
+      const corvette = refitted.units.find((unit) => unit.id === 11)!;
+      corvette.pressureRating = 3;
+      world.chart.applySnapshot(refitted);
+      world.conn.applySnapshot(refitted);
+      world.chart.focusOn(corvette.x, corvette.y);
+      world.frame(2);
+      const canvas = world.app.canvas;
+      const at = world.conn.projectPoint(corvette.x, corvette.y, corvette.depth);
+      for (const type of ['pointerdown', 'pointerup']) {
+        canvas.dispatch(type, {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x,
+          clientY: at.y,
+        });
+      }
+      world.frame(1);
+      const badge = () => textContents(world.app.stage).filter((line) => /^PR\d/.test(line));
+      assert.deepEqual(badge(), ['PR3'], 'owned, so it reads in the base and not as PR2+1');
+
+      // Over the trench's 3,200 m ground the PR-2 Corvette stops short; the
+      // refitted one follows the floor all the way down.
+      dispatchWindow('keydown', { code: 'AltLeft' });
+      world.conn.home();
+      world.conn.focusWorld(3500, 3500);
+      const trench = world.conn.projectPoint(3500, 3500, null);
+      canvas.dispatch('pointermove', {
+        button: -1,
+        buttons: 0,
+        pointerId: 1,
+        pointerType: 'mouse',
+        clientX: trench.x,
+        clientY: trench.y,
+      });
+      world.frame(1);
+      const dive = textSaying(world.app.stage, 'DIVE');
+      assert.ok(dive !== null, 'no dive preview over the trench');
+      assert.match(dive, /· FLOOR$/, `the refitted Corvette's preview read ${dive}`);
+
+      // A Spire's grant on top is still rented, and still reads as rented.
+      corvette.pressureBonus = 1;
+      world.chart.applySnapshot(refitted);
+      world.conn.applySnapshot(refitted);
+      world.frame(1);
+      assert.deepEqual(badge(), ['PR3+1'], 'the owned band, then the rented one');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  /**
    * The digits are the game's (docs/ui-ux.md §9): `1`–`9` recall a group,
    * `Ctrl` + digit assigns one, and `0` selects the army. The browser binds
    * the same chords to switching tabs and resetting the zoom, so a digit the

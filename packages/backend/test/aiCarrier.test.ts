@@ -157,6 +157,7 @@ function hull(
     heading: 0,
     sig: stats.sigIdle,
     silentRunning: false,
+    pressureRating: stats.pressureRating,
     pressureBonus: 0,
     unhealableDamage: 0,
     ...(kind === UnitKind.Harvester ? { cargo: 0, throttle: HarvestThrottle.Standard } : {}),

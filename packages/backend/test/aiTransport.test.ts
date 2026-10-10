@@ -115,6 +115,7 @@ function hull(
     sig: 14,
     silentRunning: false,
     engineOff: false,
+    pressureRating: statsFor(kind).pressureRating,
     pressureBonus: 0,
     unhealableDamage: 0,
     ...(kind === UnitKind.Harvester ? { cargo: 0, throttle: HarvestThrottle.Standard } : {}),
