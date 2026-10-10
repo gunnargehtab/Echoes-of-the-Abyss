@@ -317,7 +317,8 @@ describe('the Dredge holds the crystal field (#703)', () => {
     // Synthetic uneven ground. The default map's field is flat, so one cell
     // inside the post is raised into a rise and another dug into a hollow.
     // Following the floor holds a hull its clearance over the ground beneath
-    // it, wherever it stopped — which is the depth each holder here is given.
+    // it, wherever it stopped — the depth the holders on the rise and in the
+    // hollow are given.
     const brief = briefing();
     const field = crystalOf(brief.nodes);
     const centre = floorOf(brief, field);
