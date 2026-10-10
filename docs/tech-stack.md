@@ -731,8 +731,8 @@ off. A Glider cuts its drive for the last four hundred metres of every leg and c
 its floor, which is the one thing in the roster that arrives quieter than it travelled. An
 Acolyte runs no route at all — its ears are worth a tier only while it is stopped, so it
 walks to the first contested node and parks with its drive cut. And a Herald turns for home
-the moment anything comes inside seven hundred metres, because its protection is its wake
-and a wake only helps a hull already pointed away.
+the moment anything it holds a bearing on comes inside seven hundred metres, because its
+protection is its wake and a wake only helps a hull already pointed away.
 
 **It spends its navy's ordnance, which is the first time it has spent any.** Until wave 3
 (#507) the commander had no torpedo order at all — every torpedo in every baseline was
@@ -928,10 +928,15 @@ The commander is not told which it is — that is the game. It does what a playe
 watches, and it acts on the one thing that separates them, which is that **a raid closes and
 a grazer does not**. A contact earns the alarm by having come nearer than the farthest this
 commander has seen it, after being watched long enough for that to mean something; anything
-already on the doorstep skips the deliberation entirely, because being wrong about a grazer
+classified on the doorstep skips the deliberation entirely, because being wrong about a grazer
 costs a wasted trip and being wrong about a raid costs the match. Measured against its
 farthest position rather than its first, so a hull that runs silent, drifts out and returns
 is approaching on the way back.
+
+The watch starts at a bearing (#1256). A Tier-1 contact is reported at its listener's own
+position, so a hauler walking home with a faint emitter in its ears read as a contact closing
+on the Bastion, and the army was recalled for it. The same floor holds for the transport's
+landing, the Herald's turn and the ping trigger, as it does for ordnance (#1341).
 
 **It decides for itself when waiting has stopped paying.** The doctrine's massing size is a
 rule about the opening — do not walk at a base with three hulls — and it used to be the only

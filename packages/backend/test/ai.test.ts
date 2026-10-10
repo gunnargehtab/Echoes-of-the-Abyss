@@ -468,7 +468,7 @@ describe('production does not deadlock', () => {
    * because the phantom Vent Tap above it reserved the purse first and the
    * turret was never actually paid for.
    */
-  function turretsFor(range: number, tier = ResolutionTier.Contact): StructureKind[] {
+  function turretsFor(range: number, tier = ResolutionTier.Bearing): StructureKind[] {
     const brief = { ...briefing(AiDifficulty.Veteran), faction: Faction.Bathyarch };
     const home = brief.spawns[brief.slot]!;
     const commander = new AiCommander(brief);
@@ -501,9 +501,9 @@ describe('production does not deadlock', () => {
 
   it('does fortify against something already on the Bastion', () => {
     // Classified: inside the Bastion's own ears nothing that is somebody's
-    // stays a smudge, so a smudge on the doorstep is a grazer until a ping
-    // says otherwise (#440), and a turret aimed at it is a turret aimed at a
-    // fish, however close the fish.
+    // stays unclassified, so an unclassified contact on the doorstep is a
+    // grazer until a ping says otherwise (#440), and a turret aimed at it is
+    // a turret aimed at a fish, however close the fish.
     assert.ok(
       turretsFor(400, ResolutionTier.Classification).includes(StructureKind.SentinelTurret),
       'it left the doorstep to whatever was standing on it'
@@ -858,10 +858,20 @@ describe('it pings and hides for reasons', () => {
     return false;
   }
 
-  it('transmits to classify a smudge sitting next to its army', () => {
+  it('transmits to classify a bearing sitting next to its army', () => {
     // The one situation active sonar buys something a hydrophone will not:
     // the thing is already known to be there, and the question is what it is.
-    assert.ok(pingsAt(fielded(), [contact({ tier: ResolutionTier.Contact, x: 2600, y: 2000 })]));
+    assert.ok(pingsAt(fielded(), [contact({ tier: ResolutionTier.Bearing, x: 2600, y: 2000 })]));
+  });
+
+  it('does not transmit at a Tier-1 smudge, which sits on the hull that heard it', () => {
+    // #1256. The layer reports a smudge at its listener's own position, here
+    // an army hull's, so its range to the army says nothing about the
+    // emitter's. A bearing at the same point is the positive case above.
+    assert.equal(
+      pingsAt(fielded(), [contact({ tier: ResolutionTier.Contact, x: 2400, y: 2000 })]),
+      false
+    );
   });
 
   it('does not transmit from its own doorstep at what is merely drifting past', () => {
@@ -871,15 +881,15 @@ describe('it pings and hides for reasons', () => {
     // opening force — and naming it cost 2,400 m of self-reveal to identify
     // a fish. A force that has not deployed has nothing to learn.
     //
-    // Still true of a smudge that is only *near*: 1,400 m out is inside the
+    // Still true of a bearing that is only *near*: 1,400 m out is inside the
     // watch around the Bastion and outside the ring that recalls the army
     // without debate, and one that holds its range never earns the alarm. The
     // commander has nothing to gain by naming it and pays 2,400 m to do it.
     const commander = fielded();
     const home = briefing(AiDifficulty.Veteran).spawns[1]!;
-    const smudge = [contact({ tier: ResolutionTier.Contact, x: home.x + 1400, y: home.y })];
+    const heard = [contact({ tier: ResolutionTier.Bearing, x: home.x + 1400, y: home.y })];
     const atHome = (): EchoSnapshot => {
-      const snapshot = armySnapshot(smudge);
+      const snapshot = armySnapshot(heard);
       return { ...snapshot, units: snapshot.units.map((u) => ({ ...u, x: home.x, y: home.y })) };
     };
 
@@ -905,9 +915,9 @@ describe('it pings and hides for reasons', () => {
     // not have to stay.
     const commander = fielded();
     const home = briefing(AiDifficulty.Veteran).spawns[1]!;
-    const smudge = [contact({ tier: ResolutionTier.Contact, x: home.x + 200, y: home.y })];
+    const heard = [contact({ tier: ResolutionTier.Bearing, x: home.x + 200, y: home.y })];
     const atHome = (): EchoSnapshot => {
-      const snapshot = armySnapshot(smudge);
+      const snapshot = armySnapshot(heard);
       return { ...snapshot, units: snapshot.units.map((u) => ({ ...u, x: home.x, y: home.y })) };
     };
 
@@ -924,10 +934,10 @@ describe('it pings and hides for reasons', () => {
     // The other half. Even deployed, a commander waits one doctrine interval
     // before its first ping, so an opening cannot be given away for free.
     const commander = fielded();
-    const smudge = [contact({ tier: ResolutionTier.Contact, x: 2600, y: 2000 })];
+    const heard = [contact({ tier: ResolutionTier.Bearing, x: 2600, y: 2000 })];
     let pinged = false;
     for (let i = 0; i < 12; i++) {
-      for (const command of commander.observe(armySnapshot(smudge, 60))) {
+      for (const command of commander.observe(armySnapshot(heard, 60))) {
         if (command.kind === 'ping') pinged = true;
       }
     }
@@ -952,7 +962,7 @@ describe('it pings and hides for reasons', () => {
   it('never transmits at a Recruit difficulty', () => {
     assert.equal(
       pingsAt(fielded(AiDifficulty.Recruit), [
-        contact({ tier: ResolutionTier.Contact, x: 2600, y: 2000 }),
+        contact({ tier: ResolutionTier.Bearing, x: 2600, y: 2000 }),
       ]),
       false
     );
@@ -1003,6 +1013,68 @@ describe('it pings and hides for reasons', () => {
       }
     }
     assert.ok(recalled, 'the army should have come home');
+  });
+});
+
+describe('a Herald turns for home from a contact it can place', () => {
+  /**
+   * A Hadron commander whose Herald is halfway to the enemy start, with one
+   * contact in its ears: does it order the Herald home?
+   */
+  function turnsHome(tier: ResolutionTier, offsetM: number): boolean {
+    const match = new Match(undefined, { fauna: false, seed: SEED });
+    match.addPlayer(0, Faction.Pelagia);
+    match.addPlayer(1, Faction.Hadron);
+    const brief = briefingFor(match, 1, Faction.Hadron, AiDifficulty.Veteran);
+    const home = brief.spawns[1]!;
+    const enemy = brief.spawns[0]!;
+    const at = { x: (home.x + enemy.x) / 2, y: (home.y + enemy.y) / 2 };
+    const herald: EchoSnapshot['units'][number] = {
+      id: 8,
+      kind: UnitKind.Herald,
+      ...at,
+      depth: 300,
+      hp: statsFor(UnitKind.Herald).maxHp,
+      maxHp: statsFor(UnitKind.Herald).maxHp,
+      heading: 0,
+      sig: statsFor(UnitKind.Herald).sigCruise,
+      silentRunning: false,
+      engineOff: false,
+      pressureRating: statsFor(UnitKind.Herald).pressureRating,
+      pressureBonus: 0,
+      unhealableDamage: 0,
+    };
+    const commander = new AiCommander(brief);
+    const snapshot: EchoSnapshot = {
+      ...exposedSnapshot(),
+      tick: 6000,
+      exposure: { tier: ResolutionTier.Silent, trackedCount: 0 },
+      units: [herald],
+      contacts: [contact({ tier, x: at.x + offsetM, y: at.y })],
+    };
+    for (let i = 0; i < 12; i++) {
+      for (const command of commander.observe(snapshot)) {
+        if (
+          command.kind === 'move' &&
+          command.unitIds.includes(herald.id) &&
+          command.x === home.x &&
+          command.y === home.y
+        ) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  it('turns from a bearing inside seven hundred metres', () => {
+    assert.equal(turnsHome(ResolutionTier.Bearing, 300), true);
+  });
+
+  it('holds its leg for a Tier-1 smudge, which sits on the hull that heard it', () => {
+    // #1256. The layer reports a smudge at its listener's own position, so a
+    // smudge the Herald heard itself was 0 m off it, wherever the emitter was.
+    assert.equal(turnsHome(ResolutionTier.Contact, 0), false);
   });
 });
 

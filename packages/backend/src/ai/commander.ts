@@ -100,15 +100,15 @@ const RANGE = {
   /** The watch around the Bastion. A contact inside it is *considered*. */
   DEFEND_M: 2200,
   /**
-   * Inside this, nothing is debated: a contact this close to the Bastion
-   * recalls the army immediately, whatever it turns out to be. The cost of
+   * Inside this, nothing is debated: a classified contact this close to the
+   * Bastion recalls the army immediately (`approachingHome`). The cost of
    * being wrong about a grazer on your doorstep is a wasted trip; the cost of
    * being wrong about a raid is the match.
    */
   DEFEND_URGENT_M: 900,
   /** How near a waypoint counts as reached. */
   ARRIVE_M: 700,
-  /** An unclassified contact this close to the army is worth a ping. */
+  /** A bearing this close to the army is worth a ping (`commandSonar`). */
   PING_CLASSIFY_M: 1600,
   /**
    * The army's leash, massing or pushing.
@@ -179,7 +179,9 @@ const DEPTH_PLAN = {
  * The commander cannot be handed the answer — that is the game. What it can do
  * is what a player does: watch. A grazer wanders and a raid *closes*, so a
  * contact earns the alarm by having got nearer since it was first seen, and by
- * having been watched long enough for that to mean something.
+ * having been watched long enough for that to mean something. From a bearing
+ * up: a Tier-1 smudge is reported where its listener is, so what "closed" was
+ * the listener (#1256, `approachingHome`).
  */
 const DEFEND_WATCH = {
   /** Seconds a contact must be under observation before its trend is read. */
@@ -3637,6 +3639,10 @@ export class AiCommander implements AiPlayer {
   /** Is anything the commander can see inside `radiusM` of this hull? */
   private nearestContactWithin(snapshot: EchoSnapshot, of: OwnUnit, radiusM: number): boolean {
     for (const contact of snapshot.contacts) {
+      // From a bearing up. A Tier-1 contact is reported at its listener's own
+      // position, so a smudge the Herald heard itself sat 0 m off it, and it
+      // turned home whatever the emitter's true range (#1256).
+      if (contact.tier < ResolutionTier.Bearing) continue;
       if (distance(of, contact) < radiusM) return true;
     }
     return false;
@@ -4921,10 +4927,16 @@ export class AiCommander implements AiPlayer {
     // afloat; a hold that filled and emptied every time a scout drifted past
     // the rally was the harness's first reading of this branch. Underway, it
     // is where the hold lands: a transport under fire puts what it has in the
-    // water rather than sailing on with it.
+    // water rather than sailing on with it. From a bearing up: a Tier-1
+    // contact sits where the own hull or structure that heard it sits, so a
+    // smudge heard by the transport, or by a hull beside it, landed the hold
+    // in open water (#1256).
     const rally = this.rallyPoint();
     const found = snapshot.contacts.some(
-      (c) => c.fauna === undefined && distance(transport, c) < RANGE.PUSH_ENGAGE_M
+      (c) =>
+        c.fauna === undefined &&
+        c.tier >= ResolutionTier.Bearing &&
+        distance(transport, c) < RANGE.PUSH_ENGAGE_M
     );
 
     if (this.lift.phase === 'loading') {
@@ -5336,8 +5348,8 @@ export class AiCommander implements AiPlayer {
   /**
    * The contacts near the Bastion that have earned the alarm.
    *
-   * Everything inside DEFEND_URGENT_M qualifies outright. Beyond that a
-   * contact has to have *closed* — got at least CLOSED_M nearer than the
+   * A classified contact inside DEFEND_URGENT_M qualifies outright. Anything
+   * else has to have *closed* — got at least CLOSED_M nearer than the
    * farthest this commander has seen it while watching — and to have been
    * watched for CONFIRM_S first, so a single noisy fix cannot start a recall.
    *
@@ -5349,20 +5361,28 @@ export class AiCommander implements AiPlayer {
    * quiet for twenty seconds and reappears nearer is the exact thing this is
    * for, and forgetting it the moment it drops below threshold would hand it
    * a fresh baseline every time it ran silent.
+   *
+   * A Tier-1 contact is not watched at all (#1256). The layer reports it at
+   * the listener's own position, so its range is the listener's: a hauler
+   * walking home with a faint emitter in its ears read as a contact closing
+   * on the Bastion, and #1256 counted 1,016 of 1,023 recalls on
+   * ventfront-divide, seed 4000, onto emitters beyond DEFEND_M. The watch
+   * starts at a bearing.
    */
   private approachingHome(snapshot: EchoSnapshot): Contact[] {
     const out: Contact[] = [];
 
     for (const contact of snapshot.contacts) {
+      if (contact.tier < ResolutionTier.Bearing) continue;
       const range = distance(contact, this.home);
       if (range >= RANGE.DEFEND_M) continue;
 
       if (range < RANGE.DEFEND_URGENT_M) {
         // Nothing this close to a Bastion's own ears (HYD 60) stays
-        // unclassified for long, so a smudge inside the ring is what a
+        // unclassified for long, so a bearing inside the ring is what a
         // grazer looks like on the doorstep, and it used to recall the whole
         // army from wherever it was (#440). A classified contact recalls it
-        // at once; a smudge waits for the watch below like anything else.
+        // at once; a bearing waits for the watch below like anything else.
         if (contact.tier >= ResolutionTier.Classification) {
           out.push(contact);
           continue;
@@ -5420,10 +5440,14 @@ export class AiCommander implements AiPlayer {
   /**
    * Ping to find out *what* something is, never to find out whether it exists.
    *
-   * The trigger is an unresolved contact — Tier 1 or 2 — near a force that has
-   * actually deployed. That is the one situation where active sonar buys
-   * something a hydrophone will not: the smudge is already known to be there,
-   * and the question is whether it is a cruiser or a grazer.
+   * The trigger is an unresolved contact at Tier 2, a bearing, near a force
+   * that has actually deployed. That is the one situation where active sonar
+   * buys something a hydrophone will not: the contact is already known to be
+   * there, and the question is whether it is a cruiser or a grazer.
+   *
+   * Not at Tier 1 (#1256). The layer reports a smudge at its listener's own
+   * position, so its range to the army was the listener's range, not the
+   * emitter's: "near" was true of anything an army hull heard.
    *
    * Two conditions guard it, and both were learned the same way — by measuring.
    * Pinging into empty water pays the whole cost, 2,400 m of self-reveal, for
@@ -5462,13 +5486,13 @@ export class AiCommander implements AiPlayer {
     // (#440). Naming one is how it learns it does not have to go home.
     //
     // Since the urgent ring recalls only for a *classified* contact (#440,
-    // `approachingHome`), a smudge on the doorstep is the one thing there the
+    // `approachingHome`), a bearing on the doorstep is the one thing there the
     // commander must name to act on at all — so it is pinged whether or not
     // the watch has made a raider of it yet.
     const atHome = distance(centre, this.home) < RANGE.RALLY_M;
     const ambiguous = snapshot.contacts.find(
       (c) =>
-        c.tier <= ResolutionTier.Bearing &&
+        c.tier === ResolutionTier.Bearing &&
         distance(centre, c) < RANGE.PING_CLASSIFY_M &&
         (!atHome ||
           raiders.some((r) => r.id === c.id) ||

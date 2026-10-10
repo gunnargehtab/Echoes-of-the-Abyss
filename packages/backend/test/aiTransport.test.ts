@@ -299,6 +299,38 @@ describe('the lift', () => {
     );
   });
 
+  it('lands under way for a bearing, never for a smudge it heard itself', () => {
+    // #1256. Under way, something heard within a gun's reach is where the
+    // hold lands. A Tier-1 contact is reported at its listener's own
+    // position, so a smudge the Freighter heard sat on it and landed the hold
+    // in open water. A bearing at the same point is somebody there.
+    const landsUnder = (tier: ResolutionTier): boolean => {
+      const { commander, home, rally, enemy } = commanderFor(Faction.Bathyarch);
+      const harvesters = [5, 6, 7, 8].map((id) => hull(id, UnitKind.Harvester, home));
+      const spare = hull(4, UnitKind.Corvette, rally);
+      const full = (at: { x: number; y: number }): EchoSnapshot['units'][number] =>
+        hull(9, UnitKind.Freighter, at, { hold: { berths: 6, used: 6 } });
+      const aboard = (at: { x: number; y: number }): EchoSnapshot['units'] =>
+        [1, 2, 3].map((id) => hull(id, UnitKind.Corvette, at, { aboard: 9 }));
+      // A full hold at the rally sails on this decision.
+      decide(commander, snapshot([...aboard(rally), spare, ...harvesters, full(rally)]));
+      // Halfway: clear of the rally's gather ring, short of the drop point.
+      const at = { x: (rally.x + enemy.x) / 2, y: (rally.y + enemy.y) / 2 };
+      assert.ok(Math.hypot(at.x - rally.x, at.y - rally.y) > 1400, 'clear of the gather ring');
+      assert.ok(Math.hypot(at.x - enemy.x, at.y - enemy.y) > 900 + 700, 'short of the drop');
+      const out = decide(
+        commander,
+        snapshot([...aboard(at), spare, ...harvesters, full(at)], {
+          tick: 6012,
+          contacts: [{ id: 50, tier, x: at.x, y: at.y, tick: 6012 }],
+        })
+      );
+      return out.some((c) => c.kind === 'disembark' && c.unitIds[0] === 9);
+    };
+    assert.equal(landsUnder(ResolutionTier.Bearing), true, 'a bearing on it lands the hold');
+    assert.equal(landsUnder(ResolutionTier.Contact), false, 'a smudge on it landed the hold');
+  });
+
   it('takes the Directorate’s Verger under the layer on the way', () => {
     const { commander, home, rally } = commanderFor(Faction.Directorate);
     const harvesters = [5, 6, 7, 8, 10].map((id) => hull(id, UnitKind.Harvester, home));
