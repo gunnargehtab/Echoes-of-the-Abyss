@@ -22,7 +22,8 @@
  * since a slot with no Bastion is being scuttled anyway.
  */
 
-import { defineQuery, hasComponent } from 'bitecs';
+import { hasComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import { Faction, HADRON, StructureKind } from '@echoes/shared';
 import { Owner, Structure, UnderConstruction } from '../components.ts';
 import { economyFor, type SimWorld } from '../world.ts';

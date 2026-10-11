@@ -38,7 +38,8 @@ import {
   type HazardState,
   type UnitKind,
 } from '@echoes/shared';
-import { defineQuery, hasComponent } from 'bitecs';
+import { hasComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import {
   Acoustic,
   Fauna,
@@ -511,6 +512,8 @@ export function rebuildPropagation(world: SimWorld): void {
   }
   // Living terrain: each surviving cluster subtracts its delta (§4's additive
   // −0.10 — see PropagationModifier for why it is not a scale factor).
+  // Id order is safe here, though spawn order is the rule (#1279): every
+  // delta is the same constant, so the order cannot change a sum's bits.
   for (let eid = 0; eid <= world.maxEid; eid++) {
     if (!hasComponent(world, Fauna, eid)) continue;
     if (Fauna.species[eid] !== FaunaSpecies.Tetherjelly) continue;

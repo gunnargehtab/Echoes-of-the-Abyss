@@ -28,7 +28,8 @@ import {
   structureStatsFor,
   type DrawReport,
 } from '@echoes/shared';
-import { defineQuery, hasComponent } from 'bitecs';
+import { hasComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import { Health, Owner, Position, Structure, UnderConstruction, Unit } from '../components.ts';
 import type { SimWorld } from '../world.ts';
 

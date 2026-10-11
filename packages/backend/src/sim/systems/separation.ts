@@ -19,7 +19,8 @@
  * pairs, and does no square roots on pairs that are not actually overlapping.
  */
 
-import { defineQuery, hasComponent } from 'bitecs';
+import { hasComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import {
   MAX_STRUCTURE_RADIUS_M,
   MAX_UNIT_RADIUS_M,
@@ -95,6 +96,7 @@ function separateHulls(world: SimWorld, units: ArrayLike<number>): void {
   for (let i = 0; i < units.length; i++) {
     const a = units[i]!;
     const ra = unitRadiusM(Unit.kind[a] as UnitKind);
+    const spawnedA = localIdOf(world, a) ?? -1;
 
     const neighbours = grid.queryRadius(
       Position.x[a]!,
@@ -105,11 +107,14 @@ function separateHulls(world: SimWorld, units: ArrayLike<number>): void {
 
     for (let j = 0; j < neighbours.length; j++) {
       const b = neighbours[j]!;
-      // Each pair is resolved once, by the lower id, and both hulls move —
-      // except a craft and its own carrier, below, where only the craft does.
-      // Without this the pair would be pushed apart twice per tick, at double
-      // the intended stiffness.
-      if (b <= a) continue;
+      // Each pair is resolved once, by the hull spawned first, and both hulls
+      // move — except a craft and its own carrier, below, where only the craft
+      // does. Without this the pair would be pushed apart twice per tick, at
+      // double the intended stiffness. Spawned first, not lower id (#1279):
+      // the hull that resolves a pair is the order corrections land in, and
+      // on recycled ids the lower id is whichever was freed first.
+      const spawnedB = localIdOf(world, b) ?? -1;
+      if (spawnedB < spawnedA || (spawnedB === spawnedA && b <= a)) continue;
 
       // Both positions are re-read per pair rather than hoisted. A hull in a
       // crowd is corrected once per overlapping neighbour, and each correction

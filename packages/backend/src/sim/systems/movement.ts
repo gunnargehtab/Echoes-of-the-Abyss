@@ -17,7 +17,8 @@
  * is then resolved against the water column and slides along ground it grazes.
  */
 
-import { defineQuery, hasComponent } from 'bitecs';
+import { hasComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import {
   DIRECTORATE_SHALLOW,
   Faction,

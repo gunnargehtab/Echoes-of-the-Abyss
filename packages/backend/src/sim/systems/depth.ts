@@ -24,7 +24,8 @@
  * mechanic, not a mistake to be prevented.
  */
 
-import { defineQuery, hasComponent } from 'bitecs';
+import { hasComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import { crushAttritionPerSecond, DEPTH, FOLLOW_FLOOR, onTheGround } from '@echoes/shared';
 import { DepthOrder, MoveOrder, Position, Pressure, SilentRunning } from '../components.ts';
 import type { SimWorld } from '../world.ts';

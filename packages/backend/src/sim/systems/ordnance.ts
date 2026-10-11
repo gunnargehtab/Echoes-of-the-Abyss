@@ -24,7 +24,8 @@
  * Echo pass and the residue read already use.
  */
 
-import { addComponent, defineQuery, hasComponent } from 'bitecs';
+import { addComponent, hasComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import {
   DEPTH,
   DIRECTIONAL_SIGNATURE,

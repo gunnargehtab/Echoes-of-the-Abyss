@@ -35,7 +35,8 @@
  * where they are and nobody else.
  */
 
-import { addComponent, defineQuery, hasComponent, removeComponent } from 'bitecs';
+import { addComponent, hasComponent, removeComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import { HOLD, HULL_EFFECTS, UnitKind, statsFor, unitRadiusM } from '@echoes/shared';
 import {
   Acoustic,
