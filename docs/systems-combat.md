@@ -423,6 +423,11 @@ Combat argues about depth too, or it is only half the game
   is SPEC). This is the shallow factions' answer to the PR-3 sanctuary: the Directorate
   below is safe from guns, not from ordnance that falls. A descending pattern is fast and
   audible; the defender hears the attack coming down on them — dread, again, by design.
+  A charge is ordnance, so it carries its dropper's rating, refits counted and a rented aura
+  not: an order whose charge would fall or float through water that rating cannot carry is
+  refused, as one set inside the dropper's own band is, rather than dropped to implode on the
+  way. To bomb the sanctuary, a
+  shallow navy brings a hull rated for the water the charge must reach.
 - **Crush-baiting is intended play.** Luring a pursuer below its PR and letting unhealable
   attrition fight for you costs nothing but positioning. The systems already permit it;
   this document blesses it — with one obligation: the UI must warn when a pursuit or

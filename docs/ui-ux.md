@@ -579,7 +579,8 @@ A step order between rungs answered "how deep" with a list of four depths; a cli
 with the depth the player is looking at. The depth charge still drops into the band below
 ([systems-combat.md](systems-combat.md) §8): 1,000 m from the Shelf and 2,400 m from Mid-Water,
 read off the hull's own depth wherever it is headed, since a charge set inside its dropper's band
-is refused.
+is refused. So is one its dropper's rating cannot carry there, and CHARGE greys with that reason
+when no selected hull's charge would be taken.
 
 ### The one-handed layout
 

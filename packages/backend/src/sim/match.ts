@@ -63,6 +63,7 @@ import {
   HazardPhase,
   OrdnanceKind,
   depthBandFor,
+  depthChargeCarries,
   mineCapFor,
   ResolutionTier,
   SelfEventKind,
@@ -1793,6 +1794,12 @@ export class Match {
     // instant, uncounterable 200-damage area attack centred on a hull that
     // could not be hurt by it. Refused rather than clamped, matching orderDepth.
     if (depthBandFor(depthM) === depthBandFor(Position.depth[eid]!)) return 0;
+    // And it must arrive. A charge carries its dropper's rating (§8), so one
+    // set past that rating imploded on the way, having spent the rack, the
+    // launch burst and Silent Running on nothing (#1268). `Pressure.rating`
+    // counts a bought refit and not a rented aura, which is what the charge
+    // itself carries (`dropDepthCharge`).
+    if (!depthChargeCarries(Pressure.rating[eid]!, Position.depth[eid]!, depthM)) return 0;
     return dropDepthCharge(this.world, eid, depthM);
   }
 

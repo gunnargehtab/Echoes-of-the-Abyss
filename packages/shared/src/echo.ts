@@ -501,6 +501,23 @@ export function requiredPressureRating(depthM: number): number {
 }
 
 /**
+ * Does a depth charge dropped at `fromM` reach `toM` whole?
+ * docs/systems-combat.md §8: a charge carries its dropper's own rating (`rating`,
+ * refits counted, a rented aura not), and implodes in any water that rating
+ * cannot carry. It falls or floats through every depth between, so the deeper
+ * end is the one that decides — a hull already below its rating floats nothing
+ * up either.
+ *
+ * The server refuses a charge this says no to (`Match.orderDepthCharge`), and
+ * the client greys CHARGE on the same answer, so the two cannot disagree. The
+ * refusal is the point: an imploding charge still cost the rack, the launch
+ * burst and Silent Running, for nothing (#1268).
+ */
+export function depthChargeCarries(rating: number, fromM: number, toM: number): boolean {
+  return requiredPressureRating(Math.max(fromM, toM)) <= rating;
+}
+
+/**
  * Unhealable crush attrition per second for a unit below its Pressure Rating.
  * Zero when the unit is rated for the depth it is at. docs/systems-depth.md §2.
  *
