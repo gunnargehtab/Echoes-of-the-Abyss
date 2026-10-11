@@ -16,13 +16,24 @@
 import { addComponent, defineQuery, hasComponent, removeComponent } from 'bitecs';
 import {
   HULL_EFFECTS,
+  SelfEventKind,
   statsFor,
   structureStatsFor,
   type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
-import { Health, Position, Seeder, Song, Spore, Structure, Unit } from '../components.ts';
-import type { SimWorld } from '../world.ts';
+import {
+  Health,
+  Position,
+  Seeder,
+  SilentRunning,
+  Song,
+  Spore,
+  Structure,
+  Unit,
+} from '../components.ts';
+import { raiseSelfEvent, type SimWorld } from '../world.ts';
+import { applyFiringSpike } from './acoustics.ts';
 import { creditWound } from './fauna.ts';
 import { wakeSpared } from './spared.ts';
 
@@ -53,10 +64,23 @@ export function seedSpore(world: SimWorld, structure: number, slot: number): boo
   return true;
 }
 
-/** Start a song at the hull's own position. Returns false while it is cold. */
+/**
+ * Start a song at the hull's own position. Returns false while it is cold.
+ *
+ * A song breaks Silent Running as an ordered shot does, +40 spike included
+ * (docs/systems-echo.md §6). Without it a silent Lure sang at 55 with the
+ * posture still set, and came back to silence the moment the song ended: the
+ * one siege hull that could have the wall and the silence both.
+ */
 export function startSong(world: SimWorld, hull: number): boolean {
   if (!hasComponent(world, Song, hull)) return false;
   if (Song.remainingS[hull]! > 0 || Song.cooldownS[hull]! > 0) return false;
+  // Only when silent: the song's own noise is the `sigWorking` floor, so a
+  // spike of nothing would just stretch whatever spike the hull already had.
+  // No weapon figure on top of the +40 for the same reason.
+  if (SilentRunning.active[hull] && applyFiringSpike(hull, 0)) {
+    raiseSelfEvent(world, { kind: SelfEventKind.BreakSilence, eid: hull });
+  }
   Song.remainingS[hull] = HULL_EFFECTS.LURE.SONG_S;
   Song.cooldownS[hull] = HULL_EFFECTS.LURE.COOLDOWN_S + HULL_EFFECTS.LURE.SONG_S;
   Song.x[hull] = Position.x[hull]!;

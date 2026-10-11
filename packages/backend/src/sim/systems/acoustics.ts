@@ -239,8 +239,9 @@ export function acousticsSystem(world: SimWorld): void {
     // cut's and the sounding's reasons: it never quietens an already-louder
     // hull, and it survives an order to run silent — not because the floor
     // overrides the posture, but because the next cycle *breaks* the silence
-    // (docs/systems-combat.md §6) and the floor is simply still there when it
-    // does. You may have the wall or the silence, never both.
+    // (docs/systems-echo.md §6) and the floor is simply still there when it
+    // does: a shot for the Furnace and the Tocsin, the song for the Lure
+    // (`startSong`). You may have the wall or the silence, never both.
     //
     // The Blight is the exception that proves the rule and needs no branch: it
     // has no `sigWorking` at all, and its spore is the one siege with no sound.
