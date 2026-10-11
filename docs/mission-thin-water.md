@@ -369,7 +369,8 @@ subtraction rather than by an alarm.
 At the closure, any tender still south of the spur is cut off: its route home is inside a
 corridor with the Cruiser at its east end and the second element at its west, and its share of
 the terminal count fails on the beat. The closure strikes it from the count, and the player is
-shown the strike: the hull's inspector reads *struck from the count*. A struck tender still
+shown the strike: the hull's inspector line says it is struck, unless a depth or hull-loss line
+outranks it. A struck tender still
 moves, and one that reaches the gate afterwards arrives uncounted, because the second element is
 spared (§5) and holds its guns, so a close tender could otherwise make the gate by 14:00. "South
 of the spur" is everything not yet across it: a tender inside the spur at 13:00 is inside the

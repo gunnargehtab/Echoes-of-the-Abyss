@@ -207,7 +207,8 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
 
   /**
    * §11's table, as the places the mission needs to name. The map paints all
-   * seven; these are the ones a predicate, a marker or a reader addresses.
+   * seven; these are the ones a predicate, a marker or a reader addresses,
+   * plus `behind-the-closure`, which §8 reads and §11 does not paint.
    */
   regions: [
     {

@@ -8686,7 +8686,9 @@ export class EchoRenderer {
       // to learn the rule *before* pressing, because "a refusal delivered
       // afterwards teaches nothing". Below crush and sour, which are hull loss
       // and outrank it, and above every steady-state line, because a hull that
-      // is not taking orders is the most important thing about it (#478).
+      // is not taking orders is the most important thing about it (#478). A
+      // struck hull rides the same line though it takes orders: the count no
+      // longer waits for it, which outranks its cargo and throttle (#1281).
       this.infoLine2.text = hold.toUpperCase();
     } else if (unit !== undefined && unit.landingGrantS !== undefined) {
       // A countdown the player has to act inside (docs/units.md, Antiphon):
