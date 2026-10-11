@@ -145,6 +145,7 @@ import {
   type Bindings,
 } from '../input/bindings.ts';
 import { FACTION_NAME } from './factions.ts';
+import { DREDGE_STRUCK_TEXT, dredgeStruck, fights } from './dredge.ts';
 import { heldWholly, missionLineFor, movableIn } from './movementHolds.ts';
 import { priceTag, priceWords, shortfallLine } from './price.ts';
 import {
@@ -3377,7 +3378,7 @@ export class EchoRenderer {
       // The three standing orders (§9, #435). ENGAGE arms an attack-move the
       // way a build button arms a placement, and it is the pointer's way to
       // give one. HOLD is lit while the selection holds.
-      const fighters = units.some((u) => u.throttle === undefined);
+      const fighters = units.some(fights);
       buttons.push({
         // Refused while the mission holds the selection: ENGAGE arms an
         // attack-move, `Match.orderAttackMove` refuses a held hull, and
@@ -4216,7 +4217,8 @@ export class EchoRenderer {
 
   /** `0`: every hull that fights, wherever it is (§9). */
   private selectArmy(): void {
-    const army = this.units.filter((u) => u.throttle === undefined);
+    // By kind, not by a missing throttle: a struck dredge is no gun (#1283).
+    const army = this.units.filter(fights);
     if (army.length === 0) return;
     this.selected.clear();
     for (const unit of army) this.selected.add(unit.id);
@@ -8699,6 +8701,10 @@ export class EchoRenderer {
       const manifest =
         aboard.length === 0 ? 'empty' : aboard.map((c) => UNIT_SHORT[c.kind]).join(' ');
       this.infoLine2.text = `HOLD ${unit.hold.used}/${unit.hold.berths} · ${manifest} · ${unit.depth.toFixed(0)}m`;
+    } else if (unit !== undefined && dredgeStruck(unit)) {
+      // Said on the card as well as the bar: the absent throttle row is
+      // otherwise the only sign this hull will not work a field (#1283).
+      this.infoLine2.text = `${DREDGE_STRUCK_TEXT.toUpperCase()} · ${unit.depth.toFixed(0)}m`;
     } else if (unit !== undefined && unit.followFloor === true && unit.throttle === undefined) {
       this.infoLine2.text = `FOLLOWING FLOOR · ${unit.depth.toFixed(0)}m`;
     } else if (unit !== undefined && unit.throttle !== undefined) {
@@ -8776,6 +8782,18 @@ export class EchoRenderer {
       const throttleKey = `${this.keyHint('throttle')} throttle`;
       if (heldAll !== null) return `${state}  ·  ${heldAll}  ·  ${throttleKey}`;
       return `${state}  ·  RMB node/move  ·  ${throttleKey}`;
+    }
+    // A Harvester hull with its dredge struck says so where a harvester's line
+    // offers the field, before the press rather than after it (§10.5, #1283):
+    // a right click on a field is a plain move for it, and it has no gun.
+    const crew = this.selectedUnits();
+    if (crew.length > 0 && crew.every(dredgeStruck)) {
+      const bearing =
+        `${this.keyHint('stop')} stop  ·  ${this.keyHint('holdPosition')} hold  ·  ` +
+        `${this.keyHint('silentRunning')} silent  ·  ${this.keyHint('ping')} ping`;
+      const state = `${this.selected.size} selected  ·  ${DREDGE_STRUCK_TEXT}`;
+      if (heldAll !== null) return `${state}  ·  ${heldAll}  ·  ${bearing}`;
+      return `${state}  ·  RMB move  ·  ${bearing}`;
     }
     const standing =
       `${this.keyHint('stop')} stop  ·  ${this.keyHint('holdPosition')} hold  ·  ` +

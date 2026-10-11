@@ -350,9 +350,11 @@ through the layer to mine, and worked in the half of the map this section says i
 Seated at the working level, the seven hulls working every field at Standard banked about
 4,700 by the whistle against the 3,600 quota, with the pack on the field; at 600 m they banked
 about 2,800 (seed 41). That was with the barges mining, which §3 strikes. With the dredge struck
-(#1283) the four harvesters bank about 2,800 at Standard and about 3,760 at Overburden, so the
-quota is made only by running loud. The figures are recorded, not tuned to: the quota is inside
-the balance freeze, and the owner's to move.
+(#1283) the four harvesters bank about 2,800 at Standard, the "works every field at Standard"
+case in `missionShiftChange.test.ts`, and about 3,760 with that fixture's throttle set to
+Overburden. So the quota is made only by running loud, which §8's "four harvesters' standard
+tide" no longer says. The figures are recorded, not tuned to: the quota is inside the balance
+freeze, and the owner's to move (#1392).
 
 Every number a shape states is a whole 250 m cell, and a cell is its region's when the shape
 holds its centre ([maps.md](maps.md), "How a map is written"). The regions were rectangles until
