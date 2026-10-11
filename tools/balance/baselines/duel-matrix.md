@@ -122,13 +122,13 @@ node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --du
 > Same command, seeds and cap, run from `a544134`; the before figures are the previous file,
 > which the same command at `main`'s `d5f3400` reproduces. No weight, price or TUNABLE moved.
 > The change: a creature no longer takes a target it could never bite, one deeper or
-> shallower than its working depth by more than its band plus its bite
-> ([bestiary.md](../../../docs/bestiary.md) §4).
+> shallower than its home depth by more than its band plus its bite, unless it is within a
+> bite of the depth the creature holds now ([bestiary.md](../../../docs/bestiary.md) §4).
 >
 > What it moved, recorded and left: 98 of 120 matches differ and 34 change their result,
 > 18 of them changing hands. One-navy stays **breached**, now the Consortium 69% (was the
 > Commune 59%); quiet economies goes from **breached** to **held** (the Commune 47%, was 59%).
-> Biomass stays **breached**; the other rails are unchanged. Win rates: the Consortium 69%,
+> Biomass stays **breached**; the other rails are unchanged. Win rates: the Consortium 69% (55%),
 > the Directorate 51% (52%), the Commune 47%, the Knights 33% (34%).
 
 120 matches on `ventfront-divide`, seeds 4000–4009. 13 ended without a winner inside the time budget, on a median 0 of the 1 elimination a win needs.

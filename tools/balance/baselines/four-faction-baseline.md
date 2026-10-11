@@ -139,8 +139,8 @@ node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --ma
 > Same command, seeds and cap, run from `a544134`; the before figures are the previous file,
 > which the same command at `main`'s `d5f3400` reproduces. No weight, price or TUNABLE moved.
 > The change: a creature no longer takes a target it could never bite, one deeper or
-> shallower than its working depth by more than its band plus its bite
-> ([bestiary.md](../../../docs/bestiary.md) §4).
+> shallower than its home depth by more than its band plus its bite, unless it is within a
+> bite of the depth the creature holds now ([bestiary.md](../../../docs/bestiary.md) §4).
 >
 > What it moved, recorded and left: all 30 matches differ and 15 change their result. Eight
 > wins become draws, five draws become wins and two wins change hands, so 8 matches are

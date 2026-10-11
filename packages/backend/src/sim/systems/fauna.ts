@@ -250,10 +250,11 @@ function listen(
   // home. Measured from `homeDepth`, where `act` measures the band from.
   //
   // Or within a bite of where it is now. For a creature inside its band that
-  // adds nothing; it is the creature a beat left *below* its band that needs
-  // it — Baffle's released pack bites the hull waiting beside it until the
-  // climb home carries it out of reach (docs/mission-baffle.md, "A pack under
-  // its band"), and then lets go, because by then neither test holds.
+  // adds nothing; it is a creature held outside its band — a beat's release,
+  // or ground too shallow for it — that needs it. Baffle's released pack
+  // bites the hull waiting beside it until the climb home carries it out of
+  // reach (docs/mission-baffle.md, "A pack under its band"), and then lets
+  // go, because by then neither test holds.
   const home = Fauna.homeDepth[eid]!;
   const depthReach = stats.depthBandM + stats.attackRangeM;
 
