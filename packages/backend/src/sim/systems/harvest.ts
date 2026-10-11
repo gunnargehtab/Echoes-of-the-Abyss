@@ -9,7 +9,8 @@
  * (docs/economy.md §4). Income has a detection cost, paid continuously.
  */
 
-import { defineQuery, hasComponent, removeEntity } from 'bitecs';
+import { hasComponent, removeEntity } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import {
   CRYSTAL,
   ECHO_MARKS,

@@ -19,7 +19,8 @@
  * tick `hullEffectsSystem` says it moved.
  */
 
-import { defineQuery, hasComponent } from 'bitecs';
+import { hasComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import {
   type FaunaSpecies,
   HULL_EFFECTS,

@@ -7,7 +7,8 @@
  * announcement lasting the whole build time — which is the point.
  */
 
-import { defineQuery, removeComponent } from 'bitecs';
+import { removeComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import { CONSTRUCTION } from '@echoes/shared';
 import { Health, Structure, UnderConstruction } from '../components.ts';
 import type { SimWorld } from '../world.ts';

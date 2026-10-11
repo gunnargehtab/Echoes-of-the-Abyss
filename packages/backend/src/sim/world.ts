@@ -535,6 +535,17 @@ export function localIdOf(world: SimWorld, eid: number): number | undefined {
   return world.localOfEid.get(eid);
 }
 
+/**
+ * Order two entities by when they were spawned: by match-local id, which
+ * `registerEntity` hands out in spawn order (#1279). Raw id order is the same
+ * only on fresh ids; a match seated on ids a disposed one handed back holds
+ * them in the order they were freed. Id 0, the burned sentinel, is the one
+ * unregistered id, and sorts first.
+ */
+export function compareSpawnOrder(world: SimWorld, a: number, b: number): number {
+  return (world.localOfEid.get(a) ?? -1) - (world.localOfEid.get(b) ?? -1) || a - b;
+}
+
 /** Entity for a match-local id, or 0 — which every command path rejects. */
 export function eidOfLocalId(world: SimWorld, local: number): number {
   return world.eidOfLocal.get(local) ?? 0;

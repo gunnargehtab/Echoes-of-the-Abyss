@@ -71,7 +71,7 @@
  * return is the whole cost until one does.
  */
 
-import { defineQuery } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import { BLOOM_SHARE, DepthBand, FLORA, Faction, depthBandFor } from '@echoes/shared';
 import { Health, Owner, Position, SilentRunning, Unit } from '../components.ts';
 import { economyFor, type SimWorld } from '../world.ts';

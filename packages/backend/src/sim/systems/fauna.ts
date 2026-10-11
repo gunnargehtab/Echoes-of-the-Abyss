@@ -42,7 +42,8 @@ import {
   thermoclineFactor,
   thermoclineZone,
 } from '@echoes/shared';
-import { defineQuery, hasComponent } from 'bitecs';
+import { hasComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import {
   Acoustic,
   ActivePing,

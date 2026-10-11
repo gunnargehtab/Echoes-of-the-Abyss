@@ -13,7 +13,8 @@
  * Drift arriving.
  */
 
-import { addComponent, defineQuery, hasComponent, removeComponent } from 'bitecs';
+import { addComponent, hasComponent, removeComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import {
   HULL_EFFECTS,
   SelfEventKind,

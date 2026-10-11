@@ -28,7 +28,7 @@
  * a healer could reverse.
  */
 
-import { defineQuery } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import {
   crushAttritionPerSecond,
   directorateShallowAttritionPerSecond,

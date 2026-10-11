@@ -38,7 +38,8 @@ import {
   type HazardState,
   type UnitKind,
 } from '@echoes/shared';
-import { defineQuery, hasComponent } from 'bitecs';
+import { hasComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import {
   Acoustic,
   Fauna,
@@ -50,7 +51,7 @@ import {
   Velocity,
 } from '../components.ts';
 import type { PropagationModifier } from '../terrain.ts';
-import { economyFor, type SimWorld } from '../world.ts';
+import { compareSpawnOrder, economyFor, type SimWorld } from '../world.ts';
 import { corridorModifiers } from './standingWave.ts';
 import { postureStopsWork } from './work.ts';
 
@@ -511,10 +512,17 @@ export function rebuildPropagation(world: SimWorld): void {
   }
   // Living terrain: each surviving cluster subtracts its delta (§4's additive
   // −0.10 — see PropagationModifier for why it is not a scale factor).
+  // In spawn order rather than id order, so overlapping deltas sum the same
+  // way on recycled ids as on fresh ones (#1279).
+  const jellies: number[] = [];
   for (let eid = 0; eid <= world.maxEid; eid++) {
     if (!hasComponent(world, Fauna, eid)) continue;
     if (Fauna.species[eid] !== FaunaSpecies.Tetherjelly) continue;
     if (Health.hp[eid]! <= 0) continue;
+    jellies.push(eid);
+  }
+  jellies.sort((a, b) => compareSpawnOrder(world, a, b));
+  for (const eid of jellies) {
     mods.push({
       x: Position.x[eid]!,
       y: Position.y[eid]!,

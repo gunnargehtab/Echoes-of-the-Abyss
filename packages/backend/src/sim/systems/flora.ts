@@ -25,7 +25,8 @@
  */
 
 import { FLORA, Faction, StructureKind } from '@echoes/shared';
-import { addComponent, defineQuery, hasComponent, removeComponent } from 'bitecs';
+import { addComponent, hasComponent, removeComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import {
   Health,
   Owner,

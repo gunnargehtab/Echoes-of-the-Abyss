@@ -36,7 +36,8 @@
  * and knows nothing of pairs, and before `acousticsSystem`, which reads it.
  */
 
-import { defineQuery, hasComponent } from 'bitecs';
+import { hasComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import { STANDING_WAVE, SelfEventKind, StructureKind } from '@echoes/shared';
 import {
   Fauna,

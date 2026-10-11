@@ -15,7 +15,7 @@
  * end of raiding.
  */
 
-import { defineQuery } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import { refittedPressureRating, RefitKind, type Faction } from '@echoes/shared';
 import { Health, Owner, Pressure, Unit } from '../components.ts';
 import type { SimWorld } from '../world.ts';

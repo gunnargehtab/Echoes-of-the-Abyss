@@ -14,14 +14,8 @@
  * Bastion standing wins.
  */
 
-import {
-  addComponent,
-  defineQuery,
-  deleteWorld,
-  getAllEntities,
-  hasComponent,
-  removeEntity,
-} from 'bitecs';
+import { addComponent, deleteWorld, getAllEntities, hasComponent, removeEntity } from 'bitecs';
+import { defineQuery } from './query.ts';
 import {
   ACTIVE_SONAR,
   HULL_EFFECTS,
@@ -175,6 +169,7 @@ import {
   ambientBandFor,
   createSimWorld,
   economyFor,
+  compareSpawnOrder,
   localIdOf,
   spawnResourceNode,
   spawnFauna,
@@ -377,10 +372,11 @@ export class Match {
    * three times per slot on every Echo pass and once per 60 Hz tick in
    * `driftTick`. A query is proportional to what actually exists.
    *
-   * Wire lists are still emitted in ascending entity order (`ascending`):
-   * bitecs returns a query in insertion order, which diverges from id order
-   * the moment an id is recycled, and the order of a snapshot's `units` is
-   * something tests and the client have always been allowed to rely on.
+   * Wire lists are still emitted in a fixed order (`inSpawnOrder`): bitecs
+   * returns a query in insertion order, which diverges from spawn order the
+   * moment an entity leaves one, and the order of a snapshot's `units` is
+   * something tests and the client have always been allowed to rely on. It
+   * was ascending id until #1279, which is the same order only on fresh ids.
    */
   private readonly owners = defineQuery([Owner]);
   private readonly emitters = defineQuery([Acoustic, Owner, Position]);
@@ -400,8 +396,8 @@ export class Match {
   private nextTellId = 0;
   private readonly ordnanceOwners = defineQuery([Ordnance, Owner]);
   private readonly armedOwners = defineQuery([Weapon, Owner]);
-  /** Scratch for `ascending`, so an Echo pass sorts into one array it already owns. */
-  private readonly ascendingScratch: number[] = [];
+  /** Scratch for `inSpawnOrder`, so an Echo pass sorts into one array it already owns. */
+  private readonly spawnOrderScratch: number[] = [];
   /**
    * Faction per seated slot, recorded at `addPlayer`. `factionOf` used to
    * find it by scanning for any entity the slot owned; the map answers the
@@ -2359,15 +2355,21 @@ export class Match {
   }
 
   /**
-   * A query's entities in ascending id order, in a scratch array this match
-   * owns. Sorting a few hundred ids is microseconds; the `maxEid` walk it
-   * replaces touched every id ever allocated, twice, per slot, per pass.
+   * A query's entities in spawn order, in a scratch array this match owns.
+   * Sorting a few hundred ids is microseconds; the `maxEid` walk it replaces
+   * touched every id ever allocated, twice, per slot, per pass.
+   *
+   * Spawn order is the match-local id's, not the raw id's (#1279). The two
+   * agree on fresh ids, but a match seated on ids a disposed one handed back
+   * gets them in whatever order they were freed, and the snapshot lists its
+   * hulls in that order: a commander taking the first yard that fits queued at
+   * a different one than the same match on fresh ids.
    */
-  private ascending(entities: ArrayLike<number>): number[] {
-    const out = this.ascendingScratch;
+  private inSpawnOrder(entities: ArrayLike<number>): number[] {
+    const out = this.spawnOrderScratch;
     out.length = entities.length;
     for (let i = 0; i < entities.length; i++) out[i] = entities[i]!;
-    out.sort((a, b) => a - b);
+    out.sort((a, b) => compareSpawnOrder(this.world, a, b));
     return out;
   }
 
@@ -3050,7 +3052,7 @@ export class Match {
     if (this.eliminated.has(slot)) return;
     this.eliminated.add(slot);
     // Copied before the loop: removing an entity edits the query's own list.
-    const owned = this.ascending(this.owners(this.world));
+    const owned = this.inSpawnOrder(this.owners(this.world));
     for (let i = 0; i < owned.length; i++) {
       const eid = owned[i]!;
       if (Owner.slot[eid] !== slot) continue;
@@ -3301,7 +3303,7 @@ export class Match {
    */
   private collectShoals(): ShoalTell[] {
     const out: ShoalTell[] = [];
-    const creatures = this.ascending(this.faunaQuery(this.world));
+    const creatures = this.inSpawnOrder(this.faunaQuery(this.world));
     for (let i = 0; i < creatures.length; i++) {
       const eid = creatures[i]!;
       if (Fauna.species[eid] !== FaunaSpecies.Lampfry) continue;
@@ -3320,7 +3322,7 @@ export class Match {
   /** Every living Tetherjelly cluster — chart data, same argument as shoals. */
   private collectJellies(): JellyCluster[] {
     const out: JellyCluster[] = [];
-    const creatures = this.ascending(this.faunaQuery(this.world));
+    const creatures = this.inSpawnOrder(this.faunaQuery(this.world));
     for (let i = 0; i < creatures.length; i++) {
       const eid = creatures[i]!;
       if (Fauna.species[eid] !== FaunaSpecies.Tetherjelly) continue;
@@ -3342,7 +3344,7 @@ export class Match {
     // that a query was dearer than a bounded walk. It was, for a dozen hulls
     // in a fresh world; it was not once `maxEid` had climbed through a match's
     // worth of torpedoes and the walk ran fourteen times per Echo pass (#430).
-    const hulls = this.ascending(this.unitOwners(this.world));
+    const hulls = this.inSpawnOrder(this.unitOwners(this.world));
     for (let i = 0; i < hulls.length; i++) {
       const eid = hulls[i]!;
       if (Owner.slot[eid] !== slot) continue;
@@ -3451,7 +3453,7 @@ export class Match {
    */
   private collectOwnOrdnance(slot: number): OwnOrdnance[] {
     const out: OwnOrdnance[] = [];
-    const shots = this.ascending(this.ordnanceOwners(this.world));
+    const shots = this.inSpawnOrder(this.ordnanceOwners(this.world));
     for (let i = 0; i < shots.length; i++) {
       const eid = shots[i]!;
       if (Owner.slot[eid] !== slot) continue;
@@ -3472,7 +3474,7 @@ export class Match {
 
   private collectOwnStructures(slot: number): OwnStructure[] {
     const out: OwnStructure[] = [];
-    const yards = this.ascending(this.structureOwners(this.world));
+    const yards = this.inSpawnOrder(this.structureOwners(this.world));
     for (let i = 0; i < yards.length; i++) {
       const eid = yards[i]!;
       if (Owner.slot[eid] !== slot) continue;

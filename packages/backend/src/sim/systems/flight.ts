@@ -36,7 +36,8 @@
  *   takes no order of its own, exactly as a hull in a hold does not.
  */
 
-import { addComponent, defineQuery, hasComponent } from 'bitecs';
+import { addComponent, hasComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import {
   DIRECTIONAL_SIGNATURE,
   FLIGHT,

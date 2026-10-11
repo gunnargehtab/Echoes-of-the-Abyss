@@ -17,7 +17,8 @@
  * silent mid-route must not eat the rest of the plan.
  */
 
-import { defineQuery, hasComponent } from 'bitecs';
+import { hasComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import {
   Harvester,
   HarvestMode,

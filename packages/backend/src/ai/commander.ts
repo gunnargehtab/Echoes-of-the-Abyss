@@ -1450,6 +1450,19 @@ export class AiCommander implements AiPlayer {
    */
   private refitted = false;
 
+  /**
+   * Each own hull's place in the snapshot's list, which the server sends in
+   * spawn order. The tie-breaks that pick "the same hull every time" read
+   * this rather than the id (#1279): an own hull's id is its entity id, and a
+   * match seated on ids a disposed one handed back holds them in the order
+   * they were freed, so "lowest id" picked a different hull than the same
+   * match on fresh ids. On fresh ids the two orders agree.
+   */
+  private readonly spawnRank = new Map<number, number>();
+  private readonly bySpawn = (a: OwnUnit, b: OwnUnit): number =>
+    (this.spawnRank.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
+      (this.spawnRank.get(b.id) ?? Number.MAX_SAFE_INTEGER) || a.id - b.id;
+
   constructor(briefing: AiBriefing) {
     this.briefing = briefing;
     this.slot = briefing.slot;
@@ -1489,6 +1502,8 @@ export class AiCommander implements AiPlayer {
     if (this.observations % this.tuning.cadenceTicks !== 0) return [];
     // Eliminated, or not spawned yet. Nothing to command either way.
     if (snapshot.units.length === 0 && snapshot.structures.length === 0) return [];
+    this.spawnRank.clear();
+    snapshot.units.forEach((unit, rank) => this.spawnRank.set(unit.id, rank));
     const window = TICKS_PER_OBSERVATION * MINE_WALL.REISSUE_OBSERVATIONS;
     this.reissueDue = snapshot.tick - this.lastReissueTick >= window;
     if (this.reissueDue) this.lastReissueTick = snapshot.tick;
@@ -1806,9 +1821,9 @@ export class AiCommander implements AiPlayer {
 
     // An empty hold only, and the same reason the raid gives: a hauler sent
     // mid-haul carries its nodules to the field, discovers a hold cannot mix
-    // two resources, and turns straight round. By id after that, so the same
-    // hull is chosen on the next observation if this one does not take.
-    const pick = harvesters.filter((h) => (h.cargo ?? 0) <= 0).sort((a, b) => a.id - b.id)[0];
+    // two resources, and turns straight round. By spawn order after that, so
+    // the same hull is chosen on the next observation if this one does not take.
+    const pick = harvesters.filter((h) => (h.cargo ?? 0) <= 0).sort(this.bySpawn)[0];
     if (pick === undefined) return;
 
     this.nodeByHarvester.set(pick.id, field.id);
@@ -3527,7 +3542,7 @@ export class AiCommander implements AiPlayer {
   // --- Scouting -------------------------------------------------------------
 
   /**
-   * The navy's own scout if it has one, else the Light Scout — lowest id
+   * The navy's own scout if it has one, else the Light Scout — first spawned
    * within whichever, so the choice is stable across observations.
    *
    * Preferring the navy's own is what makes wave 2's gate measurable: the
@@ -3541,9 +3556,9 @@ export class AiCommander implements AiPlayer {
     let common: OwnUnit | null = null;
     for (const unit of units) {
       if (unit.kind === OWN_SCOUT[this.briefing.faction]) {
-        if (own === null || unit.id < own.id) own = unit;
+        if (own === null || this.bySpawn(unit, own) < 0) own = unit;
       } else if (unit.kind === UnitKind.LightScout) {
-        if (common === null || unit.id < common.id) common = unit;
+        if (common === null || this.bySpawn(unit, common) < 0) common = unit;
       }
     }
     return own ?? common;
@@ -4405,11 +4420,11 @@ export class AiCommander implements AiPlayer {
     for (const grant of GRANT_HULLS) {
       const held = snapshot.units.filter((u) => u.kind === grant.kind);
       // Whatever the doctrine already promised the army stays with it, and the
-      // rest is sent. Sorted by id so the *same* hull is sent every time: the
+      // rest is sent. In spawn order so the *same* hull is sent every time: the
       // seed clock resets on any horizontal movement, so a branch that changed
       // its mind about which hull was spare would keep two of them walking and
       // neither of them singing.
-      const spare = held.sort((a, b) => a.id - b.id).slice(grant.armyKeeps);
+      const spare = held.sort(this.bySpawn).slice(grant.armyKeeps);
       for (const hull of spare) {
         if (distance(hull, field) > CRYSTAL_RUN.SEED_ARRIVE_M) {
           this.walk(hull, field, out);
@@ -4445,12 +4460,10 @@ export class AiCommander implements AiPlayer {
    */
   private commandAnchor(snapshot: EchoSnapshot, out: AiCommand[]): void {
     const rally = this.rallyPoint();
-    // By id, so the same hull is asked every time — `commandSeeders`' rule, and
+    // In spawn order, so the same hull is asked every time — `commandSeeders`' rule, and
     // for the same reason: a branch that changed its mind about which anchor
     // was the anchor would keep both walking and neither grown out.
-    const anchors = snapshot.units
-      .filter((u) => u.kind === UnitKind.Bower)
-      .sort((a, b) => a.id - b.id);
+    const anchors = snapshot.units.filter((u) => u.kind === UnitKind.Bower).sort(this.bySpawn);
     for (const hull of anchors) {
       if (distance(hull, rally) > HULL_EFFECTS.BOWER.VEIL_RADIUS_M) {
         this.walk(hull, rally, out);
@@ -4492,7 +4505,7 @@ export class AiCommander implements AiPlayer {
    * work it and climb out, so one 120-damage round is the whole of denying
    * the trip.
    *
-   * One holder, kept while it lives and chosen by lowest id when there is
+   * One holder, kept while it lives and chosen by spawn order when there is
    * none, as `commandSeeders` picks its spare; a second Dredge stays with the
    * army. The holder is not recalled to defend home:
    * the field is its post, and at speed 35 it would arrive after the fight. It
@@ -4513,7 +4526,7 @@ export class AiCommander implements AiPlayer {
       holder = army.find((u) => u.id === this.fieldHolder && u.kind === FIELD_HOLD.KIND) ?? null;
       for (const unit of holder === null ? army : []) {
         if (unit.kind !== FIELD_HOLD.KIND) continue;
-        if (holder === null || unit.id < holder.id) holder = unit;
+        if (holder === null || this.bySpawn(unit, holder) < 0) holder = unit;
       }
     }
     if (field === null || holder === null) {
@@ -4619,7 +4632,7 @@ export class AiCommander implements AiPlayer {
    *
    * One hull per garden and no more, because the share is per bed and never
    * per gardener: a second tender on the same node buys nothing but a louder
-   * cluster of targets. Claimed by id like the anchors, and the claim is kept
+   * cluster of targets. Claimed in spawn order like the anchors, and the claim is kept
    * in `gardenByTender` rather than re-derived — a branch that changed its
    * mind about which hull was the tender kept both walking and neither
    * earning, which is what it did until #706.
@@ -4780,7 +4793,7 @@ export class AiCommander implements AiPlayer {
         .filter((g) => !taken.has(g.index))
         .sort((a, b) => distance(this.home, a.garden) - distance(this.home, b.garden))
         .slice(0, openings);
-      const available = [...army].sort((a, b) => a.id - b.id);
+      const available = [...army].sort(this.bySpawn);
       for (const { garden, index } of free) {
         const hull = available.find((u) => !this.gardenByTender.has(u.id));
         if (hull === undefined) break;
@@ -4911,9 +4924,7 @@ export class AiCommander implements AiPlayer {
     out: AiCommand[]
   ): Set<number> {
     const claimed = new Set<number>();
-    const transport = snapshot.units
-      .filter((u) => u.hold !== undefined)
-      .sort((a, b) => a.id - b.id)[0];
+    const transport = snapshot.units.filter((u) => u.hold !== undefined).sort(this.bySpawn)[0];
     if (transport === undefined) {
       this.lift = null;
       return claimed;
@@ -4950,13 +4961,13 @@ export class AiCommander implements AiPlayer {
         this.walk(transport, rally, out);
         return claimed;
       }
-      // Gathered hulls first by id, so the same hulls are asked every time
+      // Gathered hulls first in spawn order, so the same hulls are asked every time
       // and a half-issued load does not reshuffle. What is already closing
       // on the transport has its berths spoken for.
       const closing = snapshot.units.filter((u) => u.embarking === transport.id);
       let room = hold.berths - hold.used - closing.reduce((n, u) => n + statsFor(u.kind).berths, 0);
       const boarding: number[] = [];
-      for (const unit of [...army].sort((a, b) => a.id - b.id)) {
+      for (const unit of [...army].sort(this.bySpawn)) {
         if (distance(unit, transport) > LIFT.GATHER_M) continue;
         const berths = statsFor(unit.kind).berths;
         if (berths > room) continue;

@@ -19,7 +19,8 @@
  * Not hashed, unlike most durable state: a wake happens on the tick a blow
  * lands, and the blow's hit points are already in the fingerprint then.
  */
-import { addComponent, defineQuery, hasComponent, removeComponent } from 'bitecs';
+import { addComponent, hasComponent, removeComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import { Owner, Spared } from '../components.ts';
 import type { SimWorld } from '../world.ts';
 

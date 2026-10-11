@@ -16,7 +16,8 @@
  * shot of an ambush is the loudest (docs/systems-echo.md §6).
  */
 
-import { defineQuery, hasComponent } from 'bitecs';
+import { hasComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import {
   EchoMarkKind,
   Faction,

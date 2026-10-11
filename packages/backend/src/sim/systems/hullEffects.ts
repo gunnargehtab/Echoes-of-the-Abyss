@@ -25,7 +25,8 @@
  * velocity, and the grants that depend on it must be this tick's too.
  */
 
-import { defineQuery, hasComponent } from 'bitecs';
+import { hasComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import { HULL_EFFECTS, STRUCTURE_AURAS, StructureKind, UnitKind, statsFor } from '@echoes/shared';
 import {
   Health,

@@ -47,7 +47,7 @@ import {
   Weapon,
 } from './components.ts';
 import { FNV_OFFSET, mixFloat, mixString, mixU32 } from './fnv.ts';
-import { economyFor, type SimWorld } from './world.ts';
+import { compareSpawnOrder, economyFor, type SimWorld } from './world.ts';
 
 /**
  * Hash the simulation's observable state.
@@ -83,8 +83,11 @@ export function hashWorld(world: SimWorld): number {
     h = mixU32(h, world.rng.streams.get(key)!.snapshot());
   }
 
-  // The world's own entities, ascending. Index in this list is the identity
-  // the hash uses; see the note above.
+  // The world's own entities, in spawn order. Index in this list is the
+  // identity the hash uses; see the note above. Spawn order rather than id
+  // order (#1279): the two agree on fresh ids, but a match seated on ids a
+  // disposed one handed back holds them in the order they were freed, and
+  // would hash differently from the same match on fresh ids.
   const live: number[] = [];
   for (let eid = 0; eid <= world.maxEid; eid++) {
     // A hull in a hold has no Position and is still the world's: its health,
@@ -92,6 +95,7 @@ export function hashWorld(world: SimWorld): number {
     // that landed a different force would hash the same as one that did not.
     if (hasComponent(world, Position, eid) || hasComponent(world, Carried, eid)) live.push(eid);
   }
+  live.sort((a, b) => compareSpawnOrder(world, a, b));
   const ordinalOf = new Map<number, number>();
   live.forEach((eid, index) => ordinalOf.set(eid, index));
 
@@ -403,11 +407,12 @@ export function hashWorld(world: SimWorld): number {
   // Production queues, likewise: same hulls on the map, different things
   // coming off the line, is a divergence that would otherwise surface minutes
   // later as an army that should not exist.
-  const lines = [...world.production.keys()].sort((a, b) => a - b);
+  const lines = [...world.production.keys()].sort((a, b) => compareSpawnOrder(world, a, b));
   for (const eid of lines) {
     const line = world.production.get(eid)!;
     // Ordinal again, for the same reason: a queue belongs to the nth structure
-    // in this world, not to a process-global id.
+    // in this world, not to a process-global id. Walked in spawn order, which
+    // is the ordinals' order, so the lines go in the same way on any ids.
     h = mixU32(h, ordinalOf.get(eid) ?? -1);
     h = mixFloat(h, line.remainingS);
     for (const kind of line.queue) h = mixU32(h, kind);
@@ -425,7 +430,7 @@ export function hashWorld(world: SimWorld): number {
 
   // Rally points, by ordinal like the lines: same yards, different places
   // their hulls walk off to, is an army in a different place a minute later.
-  const rallied = [...world.rallies.keys()].sort((a, b) => a - b);
+  const rallied = [...world.rallies.keys()].sort((a, b) => compareSpawnOrder(world, a, b));
   for (const eid of rallied) {
     const rally = world.rallies.get(eid)!;
     h = mixU32(h, ordinalOf.get(eid) ?? -1);
@@ -442,7 +447,7 @@ export function hashWorld(world: SimWorld): number {
   // later and agree on every other field until the first one pops. The
   // owning hull and both entity references inside an order go in by ordinal,
   // for the reason the whole function exists.
-  const planned = [...world.orderQueues.keys()].sort((a, b) => a - b);
+  const planned = [...world.orderQueues.keys()].sort((a, b) => compareSpawnOrder(world, a, b));
   for (const eid of planned) {
     const queue = world.orderQueues.get(eid)!;
     h = mixU32(h, ordinalOf.get(eid) ?? -1);

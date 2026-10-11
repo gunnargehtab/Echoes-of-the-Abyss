@@ -9,7 +9,8 @@
  * it sells its enemy a schedule.
  */
 
-import { defineQuery, addComponent, hasComponent } from 'bitecs';
+import { addComponent, hasComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import { CADENCE_PING, SelfEventKind, statsFor, type UnitKind } from '@echoes/shared';
 import {
   ActivePing,
