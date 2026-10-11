@@ -197,6 +197,32 @@ describe('depth is cover from part of the Drift', () => {
     );
   });
 
+  it('does not take a target it could never bite, and takes one just inside', () => {
+    // #1288: the band clamped the chase but not the choice, so a pack kept a
+    // hull its band plus its bite could never close on and trailed it along
+    // the band's edge for as long as it was heard. The same hull, either side
+    // of that line by 20 m, is the whole of the rule.
+    const stats = faunaStatsFor(FaunaSpecies.Draymaw);
+    const edge = stats.workingDepthM - stats.depthBandM - stats.attackRangeM;
+    const targetAt = (depth: number) => {
+      const m = match();
+      const creature = spawnFauna(m.world, { species: FaunaSpecies.Draymaw, x: 4000, y: 4000 });
+      const prey = spawnUnit(m.world, {
+        kind: UnitKind.Harvester,
+        slot: 0,
+        faction: Faction.Bathyarch,
+        x: 4150,
+        y: 4000,
+        depth,
+      });
+      advance(m, 2);
+      return { target: Fauna.targetEid[creature], prey };
+    };
+    const inside = targetAt(edge + 20);
+    assert.equal(inside.target, inside.prey, `a hull at ${edge + 20} m is in reach and heard`);
+    assert.equal(targetAt(edge - 20).target, 0, `a hull at ${edge - 20} m is out of reach`);
+  });
+
   it('but the crystal field has its own predator', () => {
     // Depth is not a hiding place, it is a *different* set of teeth. 2,400 m is
     // inside the Sounder's band, which is the point of giving it one.

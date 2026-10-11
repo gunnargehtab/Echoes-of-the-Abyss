@@ -424,6 +424,46 @@ describe("the plateau's own Drift — docs/mission-tend.md §11; docs/bestiary.m
   });
 });
 
+describe('the pack at the foot of the drop — docs/mission-tend.md §7; docs/bestiary.md §4', () => {
+  it('holds its 900 m all day and lets go of what it can never bite', () => {
+    // §7's pack is "audible all day, physically unable to climb". Before
+    // #1288 an idle run had both Draymaws on a survey hull at 300 m from
+    // their 00:20 release to the close, held at their band's 500 m edge and
+    // trailing it from x 578 to x 3,190: unable to climb, but never letting go.
+    const match = tendMatch(77);
+    const world = match.world;
+    const { workingDepthM, depthBandM, attackRangeM } = faunaStatsFor(FaunaSpecies.Draymaw);
+    let heard = 0;
+    let outOfReach = 0;
+    let shallowest = Number.POSITIVE_INFINITY;
+    let west = Number.POSITIVE_INFINITY;
+    let east = Number.NEGATIVE_INFINITY;
+    runOut(match, (tick) => {
+      if (tick < T(0, 20)) return;
+      for (let eid = 0; eid <= world.maxEid; eid++) {
+        if (!hasComponent(world, Fauna, eid) || Fauna.species[eid] !== FaunaSpecies.Draymaw) {
+          continue;
+        }
+        heard++;
+        const target = Fauna.targetEid[eid]!;
+        if (
+          target !== 0 &&
+          Math.abs(Position.depth[target]! - Fauna.homeDepth[eid]!) > depthBandM + attackRangeM
+        ) {
+          outOfReach++;
+        }
+        shallowest = Math.min(shallowest, Position.depth[eid]!);
+        west = Math.min(west, Position.x[eid]!);
+        east = Math.max(east, Position.x[eid]!);
+      }
+    });
+    assert.ok(heard > 0, 'no Draymaw was in the water after its release');
+    assert.equal(outOfReach, 0, 'the pack held a target beyond its band and its bite');
+    assert.equal(shallowest, workingDepthM, `the pack climbed to ${shallowest} m`);
+    assert.ok(east - west < 500, `the pack ranged ${Math.round(east - west)} m along the drop`);
+  });
+});
+
 describe('the ground both missions stand on — §11, drawn in shapes (#1148)', () => {
   // Marr Plateau is played by Tend and by Convocation, so this block pins both
   // missions' authored ground to §11's regions. Every point is read off the
