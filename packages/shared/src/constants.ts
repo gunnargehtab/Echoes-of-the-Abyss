@@ -576,6 +576,18 @@ export const LID = {
 export const LID_GRACE_RECOVERY_PER_S = LID.GRACE_S / LID.RECOVERY_S;
 
 /**
+ * SPEC — docs/systems-depth.md §2, docs/mission-sorrowgate.md §9 (#1271): how
+ * far below the Lid closing rock keeps its floor, metres. Rock is a ceiling
+ * below its floor, and a hull inside it deeper than the floor is lifted at the
+ * ascent rate; with the floor at the surface that lift carried a hull caught
+ * under a closing span into the Lid and killed it.
+ */
+export const SOLID_LID_MARGIN_M = 50;
+
+/** Derived — the floor closing rock keeps: 200 m, below the Lid's 150 m. */
+export const SOLID_FLOOR_M = LID.DEPTH_M + SOLID_LID_MARGIN_M;
+
+/**
  * SPEC — docs/systems-depth.md §2 "Steering along the ground". Floor-following
  * is engaged by a move that ends on the ground (#1132): how near the floor its
  * depth must be to count, and the clearance held above the local floor once it

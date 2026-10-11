@@ -42,7 +42,7 @@ import {
   terrainFor,
 } from '../src/sim/maps/index.ts';
 import { Match } from '../src/sim/match.ts';
-import { SOLID, Terrain, shapeContains } from '../src/sim/terrain.ts';
+import { Terrain, shapeContains } from '../src/sim/terrain.ts';
 import type { MapDefinition, MapRegion } from '../src/sim/maps/index.ts';
 
 /** Step a match until it produces an Echo snapshot. */
@@ -401,15 +401,18 @@ describe('the map catalogue', () => {
   });
 
   it("never leaves rock's 1 m ceiling over water a region floored (#1105)", () => {
-    // `SOLID` spells rock as a 1 m ceiling over a 0 m floor. A region cut into
-    // rock that sets only a floor keeps that ceiling, and the cell becomes a
-    // roofed passage nobody authored: the client stands stone over it from the
-    // surface down. A real roof says its ceiling.
+    // A map literal spells rock as a 1 m ceiling over a 0 m floor (the mission
+    // maps' own `ROCK`; `SOLID` is the beats' spelling and sits below the Lid
+    // since #1271). A region cut into rock that sets only a
+    // floor keeps that ceiling, and the cell becomes a roofed passage nobody
+    // authored: the client stands stone over it from the surface down. A real
+    // roof says its ceiling.
+    const rockCeilingM = 1;
     for (const map of [...MAPS, ...MISSION_MAPS]) {
       const grid = terrainFor(map).serialize();
       for (let i = 0; i < grid.floor.length; i++) {
         const ceiling = grid.ceiling[i]!;
-        if (ceiling !== SOLID.ceilingM || grid.floor[i]! <= ceiling) continue;
+        if (ceiling !== rockCeilingM || grid.floor[i]! <= ceiling) continue;
         const col = i % grid.cols;
         const row = Math.floor(i / grid.cols);
         assert.fail(`${map.id}: cell (${col}, ${row}) is water under rock's 1 m ceiling`);

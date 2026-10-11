@@ -26,6 +26,7 @@ import {
   MIN_PROPAGATION_FACTOR,
   PROPAGATION_FACTOR,
   SCATTERED_BIOME,
+  SOLID_FLOOR_M,
 } from '@echoes/shared';
 import { FNV_OFFSET, mixU32 } from './fnv.ts';
 
@@ -59,9 +60,15 @@ export interface TerrainCellChange {
  *
  * `admits` asks for a depth between the ceiling and the floor, so a ceiling
  * *below* the floor leaves an empty interval. Named rather than written out at
- * the call site because `{ floorM: 0, ceilingM: 1 }` reads like a mistake.
+ * the call site because a ceiling one metre under its floor reads like a
+ * mistake.
+ *
+ * The floor sits below the Lid rather than at the surface (#1271). A span that
+ * closes over a hull leaves it deeper than the floor, and the seabed's veto
+ * lifts it there: from a floor of 0 m that lift ran into the Lid and killed a
+ * hull nothing in the mission meant to touch.
  */
-export const SOLID = { floorM: 0, ceilingM: 1 } as const;
+export const SOLID = { floorM: SOLID_FLOOR_M, ceilingM: SOLID_FLOOR_M + 1 } as const;
 
 /**
  * One area effect on the PF grid. Three kinds, composed in a fixed order
