@@ -576,6 +576,16 @@ export const LID = {
 export const LID_GRACE_RECOVERY_PER_S = LID.GRACE_S / LID.RECOVERY_S;
 
 /**
+ * Derived — the floor closing rock keeps, metres (docs/systems-depth.md §2,
+ * #1271). Rock is a ceiling below its floor, and a hull inside it deeper than
+ * the floor is lifted at the ascent rate; with the floor at the surface that
+ * lift carried a hull caught under a closing span into the Lid and killed it.
+ * Below the Lid, the lift ends in clean water. The 50 m margin is TUNABLE: it
+ * only has to keep the lifted hull clear of the boundary.
+ */
+export const SOLID_FLOOR_M = LID.DEPTH_M + 50;
+
+/**
  * SPEC — docs/systems-depth.md §2 "Steering along the ground". Floor-following
  * is engaged by a move that ends on the ground (#1132): how near the floor its
  * depth must be to count, and the clearance held above the local floor once it

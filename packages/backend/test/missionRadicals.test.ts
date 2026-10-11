@@ -57,6 +57,7 @@ import {
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { SORROWGATE, mapById, missionMapById, terrainFor } from '../src/sim/maps/index.ts';
+import { SOLID } from '../src/sim/terrain.ts';
 import { PROLOGUE_SORROWGATE, isStanding } from '../src/sim/missions/index.ts';
 import { SEEDING_RADICALS } from '../src/sim/missions/radicals.ts';
 
@@ -264,10 +265,10 @@ describe('Sorrowgate, reused as docs/mission-radicals.md §11 finds it', () => {
         beat.kind === 'ground' ? beat.ceilingM : NaN,
       ]),
       [
-        [0, 'arch-span', 0, 1],
+        [0, 'arch-span', SOLID.floorM, SOLID.ceilingM],
         [0, 'service-lock', 1500, 1300],
       ],
-      "§9: the span goes solid, and the lock is cut back through it — SOLID's floor 0 / ceiling 1"
+      '§9: the span goes solid, and the lock is cut back through it'
     );
     assert.deepEqual(
       prologue.map((beat) => [

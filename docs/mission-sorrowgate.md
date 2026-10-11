@@ -501,7 +501,10 @@ untouched — the Consortium scatters at the chamber's own depth and never cross
 **Ground that closes over a hull does not hold it.** A hull caught in the span at 10:40 can
 still move out, because the ground stops a step being taken *into* it and not a hull already
 inside. Without that a flight parked on the arch would be entombed for the remaining nine
-minutes, with nothing on screen to say why.
+minutes, with nothing on screen to say why. Nor does the rock lift it into the Lid: closing
+rock keeps its floor at 200 m, below the Lid's 150 m, so the seabed's veto
+([systems-depth.md](systems-depth.md) §2) raises a hull deeper than that to 200 m and stops,
+and a hull already shallower stays where it was (#1271).
 
 ---
 
