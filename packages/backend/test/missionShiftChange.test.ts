@@ -687,14 +687,15 @@ describe('the barges, dredge struck — docs/mission-shift-change.md §3 (#1283)
     // A second of the loop, ending on an Echo pass, which is what carries a
     // snapshot at all.
     for (let i = 0; i < SIM.TICK_HZ; i++) match.update(STEP_MS);
-    let snapshot: EchoSnapshot | undefined;
-    while (snapshot === undefined) snapshot = match.update(STEP_MS)?.get(slot);
+    let pass: EchoSnapshot | undefined;
+    while (pass === undefined) pass = match.update(STEP_MS)?.get(slot);
+    const snapshot: EchoSnapshot = pass;
     for (const unit of barges) {
       const eid = at(unit.tag);
       assert.ok(!hasComponent(match.world, Harvester, eid), `${unit.tag} carries a dredge`);
       // The shell keys the harvest gesture and the throttle key on this field,
       // so its absence is the refusal shown before the press.
-      const shown = snapshot?.units.find((u) => u.id === eid);
+      const shown = snapshot.units.find((u) => u.id === eid);
       assert.ok(shown !== undefined, `the premise: ${unit.tag} is in its own snapshot`);
       assert.equal(shown.throttle, undefined, `${unit.tag} offers the shell a throttle`);
     }
