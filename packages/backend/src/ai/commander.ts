@@ -57,6 +57,7 @@ import {
   UnitKind,
   crushAttritionPerSecond,
   depthBandFor,
+  depthChargeCarries,
   effectivePressureRating,
   mineCapFor,
   onTheGround,
@@ -3768,6 +3769,10 @@ export class AiCommander implements AiPlayer {
           // arriving by a different road. No classification, no charge.
           if (best?.depth === undefined) break;
           if (depthBandFor(best.depth) === depthBandFor(hull.depth)) break;
+          // Nor past its own rating: the server refuses a charge that would
+          // implode on the way (#1268), and a refused drop is a command in the
+          // replay that did nothing.
+          if (!depthChargeCarries(hull.pressureRating, hull.depth, best.depth)) break;
           out.push({ kind: 'depthCharge', unitId: hull.id, depthM: best.depth });
           break;
         }

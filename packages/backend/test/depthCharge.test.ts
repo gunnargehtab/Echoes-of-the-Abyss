@@ -20,14 +20,17 @@ import { Match } from '../src/sim/match.ts';
 import { spawnUnit } from '../src/sim/world.ts';
 import {
   Acoustic,
+  Countermeasure,
   Health,
   Ordnance,
   Owner,
   Position,
+  Pressure,
   Structure,
   Unit,
 } from '../src/sim/components.ts';
 import { Terrain } from '../src/sim/terrain.ts';
+import { dropDepthCharge } from '../src/sim/systems/ordnance.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 
@@ -184,9 +187,53 @@ describe('depth charges', () => {
     );
   });
 
-  it('implodes rather than reaching past its launcher’s rating', () => {
+  it('refuses a charge its launcher’s rating cannot carry, and spends nothing on it', () => {
     // The envelope, from the other side: a PR-2 hull cannot bomb the Abyssal
-    // band by proxy any more than its torpedoes can chase into it.
+    // band by proxy any more than its torpedoes can chase into it. The charge
+    // would implode at 1,800 m, so the order is refused before it costs the
+    // rack, the launch burst or Silent Running (#1268).
+    const match = emptyMatch();
+    const shallow = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 6000,
+      y: 6000,
+      depth: 600,
+    });
+    advance(match, 0.2);
+    assert.equal(Pressure.rating[shallow], 2, 'the Corvette is PR-2');
+
+    assert.equal(match.orderDepthCharge(0, shallow, 2400), 0, 'the Abyssal is refused');
+    assert.equal(Countermeasure.cooldownRemainingS[shallow], 0, 'and the rack is not spent');
+    assert.equal(liveCharges(match).length, 0, 'and nothing was dropped');
+
+    // A bought refit is the dropper's own rating, so it carries the charge.
+    Pressure.rating[shallow] = 3;
+    assert.notEqual(match.orderDepthCharge(0, shallow, 2400), 0, 'refitted, it is accepted');
+  });
+
+  it('refuses a charge floated up from water its launcher is already crushed in', () => {
+    // A PR-2 hull below its rating would float a charge that imploded on the
+    // first tick: the deeper end of the trip decides, not only the set depth.
+    const match = emptyMatch();
+    const sinking = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 6000,
+      y: 6000,
+      depth: 2400,
+    });
+    advance(match, 0.2);
+    assert.equal(match.orderDepthCharge(0, sinking, 1000), 0, 'refused');
+    assert.equal(liveCharges(match).length, 0, 'and nothing was dropped');
+  });
+
+  it('still implodes past its rating, should one ever be dropped there', () => {
+    // The order refuses it; the ordnance system keeps its own envelope, so a
+    // charge that bypassed the order (`dropDepthCharge` directly) cannot reach
+    // past its rating either.
     const match = emptyMatch();
     const shallow = spawnUnit(match.world, {
       kind: UnitKind.Corvette,
@@ -206,7 +253,7 @@ describe('depth charges', () => {
     });
     advance(match, 0.2);
 
-    assert.notEqual(match.orderDepthCharge(0, shallow, 2400), 0, 'the order is accepted');
+    assert.notEqual(dropDepthCharge(match.world, shallow, 2400), 0, 'dropped');
     advance(match, (2400 - 600) / DEPTH.DESCENT_RATE_MPS + 2);
 
     assert.equal(

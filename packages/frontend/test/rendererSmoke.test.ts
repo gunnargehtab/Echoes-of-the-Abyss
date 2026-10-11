@@ -3520,6 +3520,9 @@ describe('the command card when it is offered more than it holds', () => {
     try {
       const snapshot = cannedSnapshot();
       const corvette = snapshot.units.find((unit) => unit.torpedoes !== undefined)!;
+      // Refitted to PR-3, so the rating carries every charge below and this
+      // test asks only where the charge is set; #1268's case is the next one.
+      corvette.pressureRating = 3;
       const charge = (depth: number, depthOrder?: number): unknown => {
         corvette.depth = depth;
         corvette.depthOrder = depthOrder;
@@ -3568,6 +3571,59 @@ describe('the command card when it is offered more than it holds', () => {
         pressed(2400),
         { grey: true, set: undefined },
         'and is grey from the Abyssal, where a press does nothing'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  /**
+   * #1268. A charge carries its dropper's rating, and the server refuses one
+   * set past it, so CHARGE greys on the same shared test (`depthChargeCarries`)
+   * and says why. The rating is the server's, refits counted: the same hull
+   * refitted to PR-3 drops.
+   */
+  it("greys CHARGE where the hull's rating cannot carry the charge, and says why", async () => {
+    const world = await boot();
+    try {
+      const snapshot = cannedSnapshot();
+      const corvette = snapshot.units.find((unit) => unit.torpedoes !== undefined)!;
+      assert.equal(corvette.pressureRating, 2, 'the canned Corvette is PR-2');
+      const pressed = (depth: number, rating: number): { grey: boolean; set: unknown } => {
+        corvette.depth = depth;
+        corvette.pressureRating = rating;
+        world.chart.applySnapshot(snapshot);
+        world.conn.applySnapshot(snapshot);
+        world.frame(1);
+        selectHull(world, corvette);
+        world.log.calls.length = 0;
+        const grey = barGrey(world.app, 'CHARGE');
+        dispatchWindow('keydown', { code: 'KeyC' });
+        dispatchWindow('keyup', { code: 'KeyC' });
+        world.frame(1);
+        return { grey, set: world.log.first('onDepthCharge')?.[1] };
+      };
+
+      assert.deepEqual(
+        pressed(900, 2),
+        { grey: true, set: undefined },
+        "a PR-2 hull's charge into the Abyssal is greyed, and the key sends nothing"
+      );
+      assert.ok(
+        textContents(world.app.stage).some((line) =>
+          line.includes('CHARGE: a PR-2 charge implodes before 2,400 m')
+        ),
+        'the refusal names the rating and the depth'
+      );
+      assert.deepEqual(
+        pressed(300, 2),
+        { grey: false, set: 1000 },
+        'the same hull on the Shelf still drops into Mid-Water, which it is rated for'
+      );
+      assert.deepEqual(
+        pressed(900, 3),
+        { grey: false, set: 2400 },
+        'and refitted to PR-3 it drops into the Abyssal'
       );
     } finally {
       world.teardown();

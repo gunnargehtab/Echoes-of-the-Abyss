@@ -48,6 +48,7 @@ import {
   DEPTH_BANDS,
   DepthBand,
   depthBandFor,
+  depthChargeCarries,
   DRIFT,
   EchoMarkKind,
   Faction,
@@ -1344,8 +1345,8 @@ const BAND_STATION_DEPTH_M: Record<DepthBand, number> = {
 /**
  * The band CHARGE sets a depth charge into from each band — docs/ui-ux.md §9's
  * "the band below", one of docs/systems-combat.md §8's "band above or below".
- * `Match.orderDepthCharge` accepts any band but its dropper's own; the button
- * offers the one below. The Abyssal has none.
+ * `Match.orderDepthCharge` accepts any band but its dropper's own that its
+ * rating carries; the button offers the one below. The Abyssal has none.
  */
 const BAND_BELOW: Partial<Record<DepthBand, DepthBand>> = {
   [DepthBand.Shelf]: DepthBand.MidWater,
@@ -3456,9 +3457,10 @@ export class EchoRenderer {
         });
         buttons.push({
           label: 'CHARGE',
-          enabled: this.chargeDepth(units) !== null && this.missionLock('depthCharges') === null,
+          enabled: this.missionLock('depthCharges') === null && this.chargeRefusal(units) === null,
           active: false,
           action: () => this.commandDepthCharge(),
+          refusal: this.missionLock('depthCharges') ?? this.chargeRefusal(units) ?? undefined,
           yieldRank: YIELD.SITUATIONAL,
         });
       }
@@ -4177,16 +4179,38 @@ export class EchoRenderer {
    * rung to rung from the ordered depth sent a Mid-Water hull's charge to the
    * duct's 1,200 m, inside its own band, and greyed the button on a hull still
    * in Mid-Water but ordered to the Abyssal (#1260). The lead decides, so a
-   * mixed-depth squad drops one pattern rather than fanning it out. A charge
-   * carries its dropper's rating, so a PR-2 hull's charge set to 2,400 m
-   * implodes at 1,800 m on the way down; whether CHARGE should say so first is
-   * #1268.
+   * mixed-depth squad drops one pattern rather than fanning it out. Whether
+   * the charge survives the trip is `chargeRefusal`'s question.
    */
   private chargeDepth(units: OwnUnit[]): number | null {
     const lead = units[0];
     if (lead === undefined) return null;
     const below = BAND_BELOW[depthBandFor(lead.depth)];
     return below === undefined ? null : BAND_STATION_DEPTH_M[below];
+  }
+
+  /**
+   * Why CHARGE would drop nothing, or null while some selected hull's charge
+   * would be taken.
+   *
+   * The server's own two tests, asked per hull: the set depth must lie outside
+   * the dropper's band, and inside what its rating carries
+   * (`depthChargeCarries`, refits counted). A PR-2 hull's charge set to the
+   * Abyssal imploded at 1,800 m having cost the rack, the launch burst and
+   * Silent Running; the server now refuses it, and the button says so before
+   * the press rather than after (#1268, docs/ui-ux.md §7). Any hull rather than
+   * the lead, because the server takes each hull's drop on its own: a PR-3 hull
+   * in the squad still drops when its PR-2 lead cannot.
+   */
+  private chargeRefusal(units: OwnUnit[]): string | null {
+    const target = this.chargeDepth(units);
+    if (target === null) return 'CHARGE: no band below the Abyssal';
+    const band = depthBandFor(target);
+    const taken = units.some(
+      (u) => depthBandFor(u.depth) !== band && depthChargeCarries(u.pressureRating, u.depth, target)
+    );
+    if (taken) return null;
+    return `CHARGE: a PR-${units[0]!.pressureRating} charge implodes before ${target.toLocaleString('en-US')} m`;
   }
 
   /** `0`: every hull that fights, wherever it is (§9). */
@@ -4303,15 +4327,19 @@ export class EchoRenderer {
    * The band below rather than an arbitrary depth, because that is the decision
    * the weapon exists for: the hull under you is in the next band down, and
    * getting a charge to it is the whole of the vertical argument. One band down
-   * from where the lead hull is (`chargeDepth`), which the server accepts, as
-   * it accepts any band but the dropper's own.
+   * from where the lead hull is (`chargeDepth`), refused here on the server's
+   * own tests (`chargeRefusal`).
    */
   private commandDepthCharge(): void {
     if (this.refusedByMission('depthCharges')) return;
     const units = this.selectedUnits();
     if (units.length === 0) return;
-    const target = this.chargeDepth(units);
-    if (target === null) return;
+    const refused = this.chargeRefusal(units);
+    if (refused !== null) {
+      this.refuse(refused);
+      return;
+    }
+    const target = this.chargeDepth(units)!;
     this.callbacks.onDepthCharge(
       units.map((u) => u.id),
       target
