@@ -478,6 +478,22 @@ describe('the beat schedule', () => {
           );
           continue;
         }
+        if (beat.kind === 'strike') {
+          // A strike names a role and a region rather than a hull, and a
+          // misspelt either strikes nothing: the count is read as if the
+          // closure never happened, and nothing on screen says so (#1281).
+          assert.ok(
+            mission.regions.some((region) => region.id === beat.region),
+            `${mission.id}: a strike beat names region "${beat.region}", which is not authored`
+          );
+          assert.ok(
+            mission.parties
+              .filter((party) => party.slot === mission.playerSlot)
+              .some((party) => party.units.some((unit) => unit.role === beat.role)),
+            `${mission.id}: a strike beat names role "${beat.role}", which no player hull fills`
+          );
+          continue;
+        }
         // `bell` names nothing either: a bell belongs to a row, and the walk
         // states where the rows are (types.ts, `bell`).
         if (beat.kind === 'resolve' || beat.kind === 'say' || beat.kind === 'bell') continue;
@@ -2051,6 +2067,13 @@ describe('a beat fired by a condition, as docs/mission-aptitude.md §13 asks for
           assert.ok(
             regions.has(beat.region),
             `${mission.id}: a conditional ground beat names region "${beat.region}"`
+          );
+          continue;
+        }
+        if (beat.kind === 'strike') {
+          assert.ok(
+            regions.has(beat.region),
+            `${mission.id}: a conditional strike beat names region "${beat.region}"`
           );
           continue;
         }

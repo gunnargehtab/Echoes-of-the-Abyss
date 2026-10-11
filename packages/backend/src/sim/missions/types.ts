@@ -988,6 +988,21 @@ export type MissionBeatEffect =
   | { kind: 'lose'; tag: MissionTag; note: string }
   | { kind: 'release'; tag: MissionTag; note: string }
   /**
+   * Strike from the count every hull of a role standing in a region on the
+   * tick this fires — docs/mission-thin-water.md §8's closure: "its share of
+   * the terminal count fails on the beat" (#1281).
+   *
+   * The hull is not killed, held or moved. It leaves its role for the rest of
+   * the mission, so every predicate keyed on the role stops counting it, and
+   * one that reaches the gate afterwards reaches it uncounted. A beat rather
+   * than a predicate field because the strike is an event at an authored tick:
+   * a hull that leaves the region after it is still struck, and one that
+   * enters it after it is not. Own-force state twice over — the role names
+   * the player's own hulls and the region is authored map data — so the view
+   * may say which hulls were struck without saying anything else.
+   */
+  | { kind: 'strike'; role: MissionRole; region: string; note: string }
+  /**
    * Drive one scripted hull along a route at the route's own pace — the
    * "legs and windows" docs/mission-standing-wave.md §6 authors the column's
    * walk as, and the beat the `move` beat could not be for it.

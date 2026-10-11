@@ -804,3 +804,66 @@ describe('the closure, left alone — docs/mission-thin-water.md §5, §13 (#126
     assert.equal(hurt.length, 0, `${hurt.length} of the closure were hurt or lost by 13:00`);
   });
 });
+
+describe('the closure strikes the count — docs/mission-thin-water.md §8 (#1281)', () => {
+  /**
+   * Runs an idle column to `until`, then puts every tender at the gate, as a
+   * column at the crossing would be by 14:00. A placement rather than a drive,
+   * because the case is about the count and not about the route: since #1270
+   * the spared element holds its guns, so nothing at the west end stops a
+   * tender that is close enough.
+   */
+  function gateAfter(until: number): { run: Run; struck: readonly number[] } {
+    const match = thinWaterMatch();
+    let struck: readonly number[] = [];
+    let placed = false;
+    const run = runOut(match, (own, m) => {
+      const view = m.missionView;
+      if (view?.struck !== undefined) struck = view.struck;
+      if (placed || own.tick < until) return;
+      for (const unit of own.units.filter((u) => u.kind === UnitKind.Harvester)) {
+        Position.x[unit.id] = THE_GATE.x;
+        Position.y[unit.id] = THE_GATE.y;
+      }
+      placed = true;
+    });
+    return { run, struck };
+  }
+
+  it('strikes every tender not across the corridor, and the gate does not count them', () => {
+    const { run, struck } = gateAfter(T(13, 5));
+    assert.equal(struck.length, 10, '§8: an idle column is south of the spur at 13:00');
+    assert.equal(
+      run.outcome,
+      MissionOutcome.Lost,
+      '§8: their share of the count fails on the beat'
+    );
+    assert.equal(run.resolvedAtTick, T(14), '§9: the count is still read at 14:00');
+  });
+
+  it('leaves a tender already across the corridor in the count', () => {
+    // The region's north edge is the spur's (§11): a tender a hundred metres
+    // north of it is out of the corridor and is not cut off.
+    const match = thinWaterMatch();
+    let struck: readonly number[] = [];
+    let across = 0;
+    runOut(match, (own, m) => {
+      const view = m.missionView;
+      if (view?.struck !== undefined) struck = view.struck;
+      if (across !== 0 || own.tick < T(12, 50)) return;
+      across = own.units.find((u) => u.kind === UnitKind.Harvester)!.id;
+      Position.x[across] = 750;
+      Position.y[across] = 1150;
+    });
+    assert.equal(struck.length, 9, 'nine left behind, one across');
+    assert.ok(!struck.includes(across), 'the tender across the spur still counts');
+  });
+
+  it('counts the same column when it is home before the closure', () => {
+    // The positive control: the placement itself is not what fails the count.
+    const { run, struck } = gateAfter(T(12, 50));
+    assert.equal(struck.length, 0, 'nothing is struck before 13:00');
+    assert.equal(run.outcome, MissionOutcome.Complete);
+    assert.ok(run.resolvedAtTick < T(13));
+  });
+});

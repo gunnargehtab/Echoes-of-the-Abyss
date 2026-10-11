@@ -38,6 +38,29 @@ export function holdReasonFor(holds: readonly MovementHold[], unitId: number): s
 }
 
 /**
+ * The shell's words for a hull the mission has struck from its count — Thin
+ * Water's closure (docs/mission-thin-water.md §8, #1281). Not a hold: the hull
+ * still moves, and nothing refuses its orders, so it never reaches the hint
+ * bar. It is continuous state about the hull, which is the inspector's.
+ */
+export const STRUCK_TEXT = 'struck from the count';
+
+/**
+ * The inspector's mission line for one hull: its hold, its strike, both, or
+ * null. Both is a real case — a struck tender left without an escort is held
+ * as well — and the hold leads, because it is the one the player can act on.
+ */
+export function missionLineFor(
+  holds: readonly MovementHold[],
+  struck: readonly number[],
+  unitId: number
+): string | null {
+  const hold = holdReasonFor(holds, unitId);
+  if (!struck.includes(unitId)) return hold;
+  return hold === null ? STRUCK_TEXT : `${hold} · ${STRUCK_TEXT}`;
+}
+
+/**
  * The one hold a selection is *wholly* under, or null while any of it would go.
  *
  * The steady-state half of the same rule, and the reason it is whole-selection

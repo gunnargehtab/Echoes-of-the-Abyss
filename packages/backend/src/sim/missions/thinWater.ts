@@ -207,7 +207,8 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
 
   /**
    * §11's table, as the places the mission needs to name. The map paints all
-   * seven; these are the ones a predicate, a marker or a reader addresses.
+   * seven; these are the ones a predicate, a marker or a reader addresses,
+   * plus `behind-the-closure`, which §8 reads and §11 does not paint.
    */
   regions: [
     {
@@ -257,6 +258,21 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
       widthM: 1000,
       heightM: 250,
       note: 'The Holdfast Gate — the extraction region. The count is taken here',
+    },
+    {
+      /**
+       * Not one of §11's rows: the water the 13:00 strike reads (§8, #1281).
+       * Everything not yet across the corridor — the spur itself and the
+       * shoulder south of it — because a tender inside the spur at the
+       * closure is inside the corridor it closes, and "at the crossing" is
+       * the case #1281 named.
+       */
+      id: 'behind-the-closure',
+      x: 0,
+      y: 1250,
+      widthM: 5000,
+      heightM: 1750,
+      note: 'Behind the closure — the spur and everything south of it. A tender here at 13:00 is struck from the count',
     },
   ],
 
@@ -816,17 +832,23 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
     ...walkWest(T(12), 600, 'Past the last housing. Sixty seconds'),
 
     // 13:00 — the corridor closes. Any tender still south of the spur is cut
-    // off, and its share of the terminal count fails by simply not arriving:
-    // §8 needs no predicate for this, because a hull that cannot reach the
-    // gate does not reach the gate. Not quite true since the element is
-    // spared: the west end holds its guns, and a tender already at the
-    // crossing can make the gate before the 14:00 count (#1281).
+    // off, and its share of the terminal count fails on the beat. Struck,
+    // not stopped: the spared element holds its guns, so a tender at the
+    // crossing could still make the gate before 14:00, and it would arrive
+    // uncounted (#1281).
     {
       atTick: T(13),
       kind: 'say',
       speaker: 'Corridor Warden Anse Rell',
       text: 'The corridor is closed and the order is discharged. Whatever entered it is a matter for the registry now, and the registry is patient.',
       note: "Rell's fourth speech and his last. He never learns what he closed the line on",
+    },
+    {
+      atTick: T(13),
+      kind: 'strike',
+      role: 'tender',
+      region: 'behind-the-closure',
+      note: 'The owner’s call on #1281: every tender not across the corridor leaves the count, and the inspector says so',
     },
     { atTick: T(13), kind: 'move', tag: 'element-one', x: 300, y: 1400, note: 'The west end' },
     { atTick: T(13), kind: 'move', tag: 'element-two', x: 300, y: 1550, note: '' },
@@ -836,7 +858,7 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
       tag: 'corridor-cruiser',
       x: 2600,
       y: 1500,
-      note: 'The east end. §8 wants a Cruiser at each end; the west end is the spared element, which holds its guns (#1281)',
+      note: 'The east end. The west end is the spared element, which holds its guns; the strike, not the guns, is what closes the count (#1281)',
     },
 
     // 13:30 — the pack comes up the Kell slope for the noise, and stays for

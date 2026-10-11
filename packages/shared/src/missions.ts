@@ -1665,6 +1665,13 @@ export interface MissionView {
    * Empty in every mission that holds nothing, which is most of them.
    */
   held: readonly MovementHold[];
+  /**
+   * The player's own hulls the mission has struck from its count — Thin
+   * Water's closure (docs/mission-thin-water.md §8). They still move and still
+   * fight; an `extract` no longer counts them. Absent while nothing is struck,
+   * which is every mission but one.
+   */
+  struck?: readonly number[];
   /** docs/campaign.md §10 metadata, labelled as a budget and never as a ceiling (ui-ux.md §10.5). */
   sigBudget: number;
   /** Seconds of silence-debt owed. 0 while compliant (docs/mission-sorrowgate.md §4). */

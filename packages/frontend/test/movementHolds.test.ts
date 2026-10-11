@@ -13,7 +13,13 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { MovementHoldReason, type MovementHold } from '@echoes/shared';
-import { heldWholly, holdReasonFor, movableIn } from '../src/game/movementHolds.ts';
+import {
+  STRUCK_TEXT,
+  heldWholly,
+  holdReasonFor,
+  missionLineFor,
+  movableIn,
+} from '../src/game/movementHolds.ts';
 
 const UNESCORTED = 'held — no ears in range';
 const UNRELEASED = 'held — not released yet';
@@ -94,5 +100,22 @@ describe('a selection the mission holds whole says so before the press', () => {
   it('reads the selection in its own order, as the refusal does', () => {
     assert.equal(heldWholly(HOLDS, [9, 7]), UNRELEASED);
     assert.equal(heldWholly(HOLDS, [7, 9]), UNESCORTED);
+  });
+});
+
+describe('a hull struck from the count (docs/mission-thin-water.md §8, #1281)', () => {
+  it('says so in the inspector, beside a hold when it has one', () => {
+    assert.equal(missionLineFor(HOLDS, [3], 3), STRUCK_TEXT);
+    assert.equal(missionLineFor(HOLDS, [7], 7), `${UNESCORTED} · ${STRUCK_TEXT}`);
+    assert.equal(missionLineFor(HOLDS, [3], 7), UNESCORTED, 'a hold alone reads as before');
+    assert.equal(missionLineFor(HOLDS, [3], 1), null);
+  });
+
+  it('still moves, because a strike refuses nothing', () => {
+    // The strike is out of the holds list by construction: the server sends it
+    // as its own field, and the order path never reads that field.
+    const { ids, refused } = movableIn(HOLDS, [1, 3]);
+    assert.deepEqual(ids, [1, 3]);
+    assert.equal(refused, null);
   });
 });

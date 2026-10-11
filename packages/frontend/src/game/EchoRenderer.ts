@@ -145,7 +145,7 @@ import {
   type Bindings,
 } from '../input/bindings.ts';
 import { FACTION_NAME } from './factions.ts';
-import { heldWholly, holdReasonFor, movableIn } from './movementHolds.ts';
+import { heldWholly, missionLineFor, movableIn } from './movementHolds.ts';
 import { priceTag, priceWords, shortfallLine } from './price.ts';
 import {
   drawScopeEchoMarks,
@@ -1759,6 +1759,7 @@ export class EchoRenderer {
    * mission that holds nothing.
    */
   private missionHolds: readonly MovementHold[] = [];
+  private missionStruck: readonly number[] = [];
   /**
    * The last refused press, and when: a locked key pressed anyway, or a
    * priced button the player could not cover. The orders panel carries the
@@ -4683,6 +4684,11 @@ export class EchoRenderer {
     this.missionHolds = held;
   }
 
+  /** The player's own hulls the mission has struck from its count (#1281). */
+  setMissionStruck(struck: readonly number[]): void {
+    this.missionStruck = struck;
+  }
+
   setMissionOver(payload: MissionResultPayload): void {
     this.missionOver = payload;
   }
@@ -4704,9 +4710,9 @@ export class EchoRenderer {
     return true;
   }
 
-  /** Why the mission will not move this hull, or null while it will. */
+  /** Why the mission will not move this hull, or no longer counts it; null for neither. */
   private movementHold(unitId: number): string | null {
-    return holdReasonFor(this.missionHolds, unitId);
+    return missionLineFor(this.missionHolds, this.missionStruck, unitId);
   }
 
   /**
@@ -4783,6 +4789,7 @@ export class EchoRenderer {
     // banner over live water for the rest of the session.
     this.missionLocks = [];
     this.missionHolds = [];
+    this.missionStruck = [];
     this.refusal = null;
     this.missionOver = null;
     this.units = [];
@@ -8679,7 +8686,9 @@ export class EchoRenderer {
       // to learn the rule *before* pressing, because "a refusal delivered
       // afterwards teaches nothing". Below crush and sour, which are hull loss
       // and outrank it, and above every steady-state line, because a hull that
-      // is not taking orders is the most important thing about it (#478).
+      // is not taking orders is the most important thing about it (#478). A
+      // struck hull rides the same line though it takes orders: the count no
+      // longer waits for it, which outranks its cargo and throttle (#1281).
       this.infoLine2.text = hold.toUpperCase();
     } else if (unit !== undefined && unit.landingGrantS !== undefined) {
       // A countdown the player has to act inside (docs/units.md, Antiphon):
