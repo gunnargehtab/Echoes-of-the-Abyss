@@ -1361,9 +1361,7 @@ export function spawnResourceNode(
   // field elsewhere; the harvest loop reads the field's depth, not the kind's.
   Position.depth[eid] =
     depthM ??
-    (kind === ResourceKind.ResonanceCrystal
-      ? CRYSTAL.FIELD_DEPTH_M
-      : ECONOMY.NODULE_FIELD_DEPTH_M);
+    (kind === ResourceKind.ResonanceCrystal ? CRYSTAL.FIELD_DEPTH_M : ECONOMY.NODULE_FIELD_DEPTH_M);
   addComponent(world, ResourceNode, eid);
   ResourceNode.remaining[eid] = amount;
   ResourceNode.kind[eid] = kind;
