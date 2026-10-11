@@ -392,7 +392,7 @@ A mission map is authored the same way — a literal, regions painted in order �
 
 Every mission map the bible specifies now exists. The last to land was Standing Wave's `the-fifth` (#382), whose §13 was a design agenda before it was a build list. The table above gives all twenty literals a row each, under the document that owns the map. The nine missions that reuse another mission's map unchanged have no row of their own: each one's §11 names the map it reuses and the document that owns it.
 
-Sorrowgate is cut from Map Type 5's shape, which is what that archetype's *Ideal Use* line asks of it; it is not a Sunken Metropolis, and Map Type 5 stays *Not yet* in the archetype table, because ticking it would promise a four-seat competitive layout that nobody has written. The three that followed it are cut from no archetype at all — a mission map answers to its mission, and none of these four could be offered to a player choosing a map.
+Sorrowgate is cut from Map Type 5's shape, which is what that archetype's *Ideal Use* line asks of it; it is not a Sunken Metropolis, and Map Type 5 stays *Not yet* in the archetype table, because ticking it would promise a four-seat competitive layout that nobody has written. It is the only one of the twenty cut from an archetype's shape. The other nineteen are authored to their missions: The Furrow says in its header that it is cut from no archetype, and The Fourth Trench, with The Fourth's Foot that extends it, shares only the corridor ground the Abyssal Rift Corridor is cut from ([mission-baffle.md](mission-baffle.md) §11), not that archetype's two-seat layout. A mission map answers to its mission, and none of the twenty could be offered to a player choosing a map.
 
 ### Three authoring faults the tests caught
 
