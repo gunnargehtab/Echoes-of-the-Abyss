@@ -344,6 +344,13 @@ is. The refinery stands in the Downworks between them, below the layer, so the h
 residue live in the masked half of the map. No hazard sites: this field's weather is the
 audit.
 
+Both fields lie at 1,300 m, the refinery's own working level, 50 m off the faces' floor. The
+default nodule depth is 600 m, and until #1282 the fields sat there: every harvester climbed
+through the layer to mine, and worked in the half of the map this section says is not masked.
+Seated at the working level, a shift that works every field at Standard, with the pack on the
+field, banks about 4,700 by the whistle against the 3,600 quota; at 600 m it banked about
+2,800. That figure is recorded, not tuned to.
+
 Every number a shape states is a whole 250 m cell, and a cell is its region's when the shape
 holds its centre ([maps.md](maps.md), "How a map is written"). The regions were rectangles until
 issue #1142 redrew the Downworks and both faces in shapes (epic #1139). The redraw moved 14 of

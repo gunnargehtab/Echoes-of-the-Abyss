@@ -420,6 +420,23 @@ describe('the map catalogue', () => {
     }
   });
 
+  it('seats every field a map places in the column above its own floor', () => {
+    // `depthM` is the author's word against the default (#1282). A field
+    // seated under the seabed would be ore in the rock: a harvester ordered
+    // to it dives at the floor and never reaches the working depth.
+    for (const map of [...MAPS, ...MISSION_MAPS]) {
+      const terrain = terrainFor(map);
+      for (const node of map.resources) {
+        if (node.depthM === undefined) continue;
+        const floor = terrain.floorAt(node.x, node.y);
+        assert.ok(
+          node.depthM > 0 && node.depthM < floor,
+          `${map.id}: field at ${node.x},${node.y} seated at ${node.depthM} m over ${floor} m ground`
+        );
+      }
+    }
+  });
+
   it('gives every map at least one field per spawn', () => {
     for (const map of MAPS) {
       const nodules = map.resources.filter((r) => r.kind === ResourceKind.Nodule);

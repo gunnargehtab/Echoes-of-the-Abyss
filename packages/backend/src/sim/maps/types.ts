@@ -98,6 +98,14 @@ export interface MapResource {
   kind: ResourceKind;
   /** Omitted takes the default field size for the kind. */
   amount?: number;
+  /**
+   * Where the field lies in the column, metres. Omitted takes the kind's
+   * default (`ECONOMY.NODULE_FIELD_DEPTH_M`, `CRYSTAL.FIELD_DEPTH_M`), so no
+   * map moves unless it says so. A map that places its economy against the
+   * layer seats it here rather than fighting the default (#1282); `maps.test.ts`
+   * refuses a field below its own floor.
+   */
+  depthM?: number;
   note?: string;
 }
 

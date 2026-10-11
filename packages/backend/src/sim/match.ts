@@ -758,7 +758,7 @@ export class Match {
       const amount =
         node.amount ??
         (node.kind === ResourceKind.ResonanceCrystal ? CRYSTAL.FIELD_STARTING_AMOUNT : undefined);
-      this.addNode(node.x, node.y, amount, node.kind);
+      this.addNode(node.x, node.y, amount, node.kind, node.depthM);
     }
   }
 
@@ -1083,8 +1083,14 @@ export class Match {
     return regions;
   }
 
-  private addNode(x: number, y: number, amount?: number, kind = ResourceKind.Nodule): void {
-    const eid = spawnResourceNode(this.world, x, y, amount, kind);
+  private addNode(
+    x: number,
+    y: number,
+    amount?: number,
+    kind = ResourceKind.Nodule,
+    depthM?: number
+  ): void {
+    const eid = spawnResourceNode(this.world, x, y, amount, kind, depthM);
     this.nodes.push({
       id: eid,
       x,

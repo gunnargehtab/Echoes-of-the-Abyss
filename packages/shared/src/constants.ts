@@ -2449,6 +2449,13 @@ export const ECONOMY = {
   DEPOSIT_RANGE_M: 60,
   /** Nodules in a field at match start. */
   NODE_STARTING_AMOUNT: 3000,
+  /**
+   * Working depth of a nodule field a map does not seat itself: Mid-Water,
+   * where docs/economy.md §2 puts the density and a PR-2 hull is at home. A
+   * map's `depthM` overrides it — Shift Change's fields lie at the working
+   * level below the layer (docs/mission-shift-change.md §11, #1282).
+   */
+  NODULE_FIELD_DEPTH_M: 600,
 } as const;
 
 /**

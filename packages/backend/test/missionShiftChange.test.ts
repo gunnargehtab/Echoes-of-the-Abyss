@@ -36,6 +36,7 @@ import {
   ResolutionTier,
   SIM,
   StructureKind,
+  THERMOCLINE,
   THERMOCLINE_DUCT_TOP_M,
   detectionRatio,
   thermoclineFactor,
@@ -327,6 +328,16 @@ describe('the ground the shift stands on — §11, drawn in shapes (#1142)', () 
       assert.deepEqual(groundAt(x, y), ['Face Two', 1350], `${what} left Face Two's floor`);
     }
     assert.deepEqual(groundAt(rich!.x, rich!.y), ['Face Five', 1350], 'the rich field moved');
+    // §11 puts both fields below the layer, at the working level the refinery
+    // is seated on. At the default 600 m every harvester climbed through the
+    // layer to mine (#1282). 1,300 m is the duct's lower edge, as the
+    // refinery's seat is, so the haul between them never changes zone.
+    const refinery = shift.structures!.find((s) => s.tag === 'refinery')!;
+    for (const field of [seam!, rich!]) {
+      assert.equal(field.depthM, refinery.depthM, `${field.note} is off the working level`);
+      assert.ok(field.depthM! > THERMOCLINE.DEPTH_M, `${field.note} is above the layer`);
+      assert.ok(field.depthM! < 1350, `${field.note} is under the face's floor`);
+    }
   });
 
   it('keeps the refinery on the Downworks, below the layer, and the pack over it, above', () => {

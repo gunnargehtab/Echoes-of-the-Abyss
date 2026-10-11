@@ -1342,19 +1342,13 @@ export function spawnStructure(world: SimWorld, opts: SpawnStructureOptions): nu
   return eid;
 }
 
-/**
- * Working depth of a nodule field: Mid-Water, where §7 puts the density and
- * where a PR-2 hull is at home. Named rather than inline so the contrast with
- * CRYSTAL.FIELD_DEPTH_M is legible.
- */
-const NODULE_FIELD_DEPTH_M = 600;
-
 export function spawnResourceNode(
   world: SimWorld,
   x: number,
   y: number,
   amount: number = ECONOMY.NODE_STARTING_AMOUNT,
-  kind: ResourceKind = ResourceKind.Nodule
+  kind: ResourceKind = ResourceKind.Nodule,
+  depthM?: number
 ): number {
   const eid = addEntity(world);
   registerEntity(world, eid);
@@ -1363,9 +1357,13 @@ export function spawnResourceNode(
   Position.y[eid] = y;
   // Crystal lies in the Abyssal band, which is the entire point of it: the
   // field cannot be worked without committing to the descent, and the descent
-  // is loud and the return is slow (docs/economy.md §7).
+  // is loud and the return is slow (docs/economy.md §7). A map may seat a
+  // field elsewhere; the harvest loop reads the field's depth, not the kind's.
   Position.depth[eid] =
-    kind === ResourceKind.ResonanceCrystal ? CRYSTAL.FIELD_DEPTH_M : NODULE_FIELD_DEPTH_M;
+    depthM ??
+    (kind === ResourceKind.ResonanceCrystal
+      ? CRYSTAL.FIELD_DEPTH_M
+      : ECONOMY.NODULE_FIELD_DEPTH_M);
   addComponent(world, ResourceNode, eid);
   ResourceNode.remaining[eid] = amount;
   ResourceNode.kind[eid] = kind;

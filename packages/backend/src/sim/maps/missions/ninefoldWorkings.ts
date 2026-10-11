@@ -120,9 +120,28 @@ export const NINEFOLD_WORKINGS: MapDefinition = {
   // shift makes its number where the number is (§11). Both amounts clear the
   // quota with weather in them, and Two's is authored thin on purpose: the
   // seam is done, and a player who works only the seam runs it out.
+  //
+  // Seated at the working level, the refinery's 1,300 m, 50 m off the faces'
+  // floor. At the default 600 m every harvester climbed through the layer to
+  // mine, and the half of the map §4 says is masked was the half the shift
+  // was not working in (#1282).
   resources: [
-    { x: 875, y: 2250, kind: ResourceKind.Nodule, amount: 1800, note: "Face Two's last seam" },
-    { x: 3125, y: 2250, kind: ResourceKind.Nodule, amount: 6000, note: "Face Five's rich field" },
+    {
+      x: 875,
+      y: 2250,
+      kind: ResourceKind.Nodule,
+      amount: 1800,
+      depthM: 1300,
+      note: "Face Two's last seam",
+    },
+    {
+      x: 3125,
+      y: 2250,
+      kind: ResourceKind.Nodule,
+      amount: 6000,
+      depthM: 1300,
+      note: "Face Five's rich field",
+    },
   ],
   // No hazard sites: this field's weather is the audit (§11).
   hazards: [],
