@@ -668,7 +668,7 @@ describe('the Convocation literal, against its document', () => {
 
 describe('the assertion, left alone — docs/mission-convocation.md §5, §6 (#1289)', () => {
   it('fires on nothing, and nothing on the terrace volunteers fire on it', () => {
-    // §6: "Nothing in the concern's force fires on a row, a berth or a
+    // §6: "Nothing in the concern's force fires first on a row, a berth or a
     // tender". Armed and unmarked, its guns auto-acquired like any slot's: in
     // an idle run on seed 77 the corvettes killed both Draymaws inside four
     // minutes, the Cruiser killed watch-one and tender-one from the Holdfast

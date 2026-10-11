@@ -21,7 +21,7 @@
  *   The assertion's transits are authored beats rather than patrol AI, and what
  *   it will answer is obstruction. An armed hull in this simulation does not
  *   wait for that on its own — it takes the nearest enemy in range — so the
- *   party is spared: its guns hold, and nobody's volunteer for it, until a
+ *   party is spared: its guns hold, and nobody's guns volunteer for it, until a
  *   blow is fired at it (#1289). Cold weapons would have been the wrong lie
  *   here; Tend's sweep was cold because it files rather than fights.
  * - **The tide's end is a conclusion and the Holdfast is the failure** (§8).
