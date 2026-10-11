@@ -208,7 +208,8 @@ export function faunaSystem(world: SimWorld, destroyed: number[]): void {
 }
 
 /**
- * Find the loudest thing this creature can hear, and how loud it is.
+ * Find the loudest thing this creature can hear and could reach, and how loud
+ * it is.
  *
  * "Loudest", emphatically, not "nearest" — the target is chosen by perceived
  * loudness at the creature's own position, which folds in distance and terrain
@@ -240,6 +241,15 @@ function listen(
   const peakPf = world.terrain.peakPf;
   const reach = maxAudibleRangeM(100, peakPf * THERMOCLINE_ZONE_MAX[fZone]!, hyd);
   const reach2 = reach * reach;
+  // How far from its working depth this creature can ever close a bite: the
+  // band it will chase within, plus the reach of the bite at the band's edge.
+  // A body outside that is one `act` would trail along the band's edge for as
+  // long as it is heard, and never touch (#1288) — a pack "gives up on one
+  // that dives for the crystal" (docs/bestiary.md §4), so it is not a
+  // candidate at all, and the loudest *reachable* body wins or the pack goes
+  // home. Measured from `homeDepth`, where `act` measures the band from.
+  const home = Fauna.homeDepth[eid]!;
+  const depthReach = stats.depthBandM + stats.attackRangeM;
 
   let bestEid = 0;
   let bestHeard = 0;
@@ -250,6 +260,7 @@ function listen(
     // Fauna do not hunt each other. The Drift is not a food web simulation.
     if (Owner.slot[other] === DRIFT_SLOT) continue;
     if (Health.hp[other]! <= 0) continue;
+    if (Math.abs(Position.depth[other]! - home) > depthReach) continue;
 
     const dx = Position.x[other]! - fx;
     const dy = Position.y[other]! - fy;
@@ -340,7 +351,6 @@ function listen(
 
   Fauna.targetEid[eid] = bestEid;
   Fauna.heard[eid] = bestHeard;
-  void stats;
 }
 
 /**
