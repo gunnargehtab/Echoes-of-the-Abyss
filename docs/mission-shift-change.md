@@ -349,7 +349,8 @@ default nodule depth is 600 m, and until #1282 the fields sat there: every harve
 through the layer to mine, and worked in the half of the map this section says is not masked.
 Seated at the working level, a shift that works every field at Standard, with the pack on the
 field, banks about 4,700 by the whistle against the 3,600 quota; at 600 m it banked about
-2,800. That figure is recorded, not tuned to.
+2,800 (seed 41, the "works every field at Standard" case in `missionShiftChange.test.ts`). The
+figure is recorded, not tuned to.
 
 Every number a shape states is a whole 250 m cell, and a cell is its region's when the shape
 holds its centre ([maps.md](maps.md), "How a map is written"). The regions were rectangles until
