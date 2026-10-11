@@ -23,7 +23,9 @@ import {
   Faction,
   HULL_EFFECTS,
   ORDNANCE,
+  SILENT_RUNNING,
   SIM,
+  SelfEventKind,
   STRUCTURE_AURAS,
   StructureKind,
   UnitKind,
@@ -49,6 +51,7 @@ import {
   Ordnance,
   Position,
   Pressure,
+  SilentRunning,
   UnderConstruction,
   Velocity,
 } from '../src/sim/components.ts';
@@ -1223,6 +1226,56 @@ describe('the Lure — a song, and the Drift', () => {
     assert.ok(match.sing(0, lure));
     advance(match, HULL_EFFECTS.LURE.SONG_S + 1);
     assert.equal(songWeightAt(match.world, 4000, 4000), 1);
+  });
+
+  it('breaks silence to sing, +40 spike and all (#1272)', () => {
+    const { match } = skirmish(Faction.Directorate);
+    const lure = hull(match, Faction.Directorate, UnitKind.Lure, 4000, 4000);
+    const song = statsFor(UnitKind.Lure).sigWorking!;
+    match.setSilentRunning(0, lure, true);
+    advance(match, 3);
+    const quiet = Acoustic.sig[lure]!;
+    assert.ok(quiet <= 8, `the premise: a silent Lure, got ${quiet.toFixed(1)}`);
+
+    assert.ok(match.sing(0, lure), 'the song starts');
+    assert.equal(SilentRunning.active[lure], 0, 'and the posture is gone with it');
+    // Watched over the spike's own window, so the event and the peak are
+    // caught wherever the next Echo pass falls.
+    let broke = false;
+    let peak = 0;
+    for (let i = 0; i < SIM.TICK_HZ * SILENT_RUNNING.BREAK_SILENCE_DURATION_S; i++) {
+      const snapshots = match.update(STEP_MS);
+      peak = Math.max(peak, Acoustic.sig[lure]!);
+      broke ||=
+        snapshots
+          ?.get(0)
+          ?.selfEvents.some((e) => e.kind === SelfEventKind.BreakSilence && e.unitId === lure) ??
+        false;
+    }
+    assert.ok(broke, 'the break is reported, as a shot is');
+    assert.ok(
+      peak >= Math.min(100, song + SILENT_RUNNING.BREAK_SILENCE_SIG_SPIKE) - 1,
+      `the first bar is the loudest, got ${peak.toFixed(1)}`
+    );
+
+    advance(match, HULL_EFFECTS.LURE.SONG_S);
+    assert.ok(
+      Acoustic.sig[lure]! > quiet + 1,
+      `and the silence does not come back when the song ends, got ${Acoustic.sig[lure]!.toFixed(1)}`
+    );
+  });
+
+  it('pays no spike when it was not silent', () => {
+    const { match } = skirmish(Faction.Directorate);
+    const lure = hull(match, Faction.Directorate, UnitKind.Lure, 4000, 4000);
+    advance(match, 1);
+    assert.ok(match.sing(0, lure));
+    advance(match, 1);
+    assert.equal(Acoustic.spikeAmount[lure], 0, 'no spike: there was no silence to break');
+    assert.ok(
+      Acoustic.sig[lure]! >= statsFor(UnitKind.Lure).sigWorking!,
+      'and it is heard at the song all the same'
+    );
   });
 });
 

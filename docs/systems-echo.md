@@ -391,6 +391,8 @@ Any unit can toggle **Silent Running**:
 
 A silent-running force is functionally invisible and functionally harmless. It is a **bet on position** — you are spending time and offence to buy surprise. Breaking silence to fire produces a **SIG spike of +40 for 2 seconds** on top of the weapon's normal value: the first shot of an ambush is always the loudest, and always tells the whole map that an ambush happened.
 
+A siege hull's work breaks silence the same way, spike included: the Furnace's cut, the Tocsin's bell and the Lure's song are each a discharge. A silent Lure that sings is no longer silent, and is heard at the song's 55 for as long as it lasts. You may have the wall or the silence, never both.
+
 ### Engine off — the state below silence
 
 Silent Running trades **weapons** for quiet. There is a state below it that trades
