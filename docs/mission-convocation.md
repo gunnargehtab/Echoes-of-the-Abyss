@@ -285,7 +285,7 @@ cruelty.
 ## 6. The Assertion
 
 **Two Consortium corvettes come over the lip at 03:30 and stand on the rows. A Cruiser joins
-them at 09:00. Nothing in the concern's force fires on a row, a berth or a tender, and the
+them at 09:00. Nothing in the concern's force fires first on a row, a berth or a tender, and the
 reason is not mercy.**
 
 The concern's model, in 214 PC, is that a short war is cheaper than a slow collapse
@@ -310,8 +310,11 @@ the frame in which a plateau's assent is a document.
 **Why they do not shoot the gardens, and why that is worse.** An asset the concern intends to
 enter in a ledger is worth nothing burnt. The restraint is economic rather than moral, which is
 the coldest sentence in this document and the truest thing in it. What the assertion *will* fire
-on is a hull that obstructs it — Teel's element, if it engages, and a tender caught interposing
-— because obstruction of a served assertion is the one thing the writ makes lawful. *Thin Water*
+on is a hull that obstructs it, because obstruction of a served assertion is the one thing the
+writ makes lawful — and the first shot anybody fires on it is that obstruction. Until then its
+guns hold, and nothing on the terrace volunteers fire on it either: a spared party
+([systems-combat.md](systems-combat.md) §4). After it, the concern fights as any armed force
+does, at every hull of the plateau's in its guns' reach, tenders included. *Thin Water*
 established the shape ([mission-thin-water.md](mission-thin-water.md) §6): the concern's guns
 answer a question the Commune asked.
 
