@@ -144,7 +144,8 @@ export const LEDGER_SHIFT_CHANGE: MissionDefinition = {
           note: '',
         },
         // The watches. Deaf, slow, and carrying everything this mission is
-        // actually about (§3). Held to the shift's clock, released in order.
+        // actually about (§3). Held to the shift's clock, released in order,
+        // and with the dredge struck, so they carry and never mine (#1283).
         {
           tag: 'barge-one',
           kind: UnitKind.Harvester,
@@ -152,6 +153,7 @@ export const LEDGER_SHIFT_CHANGE: MissionDefinition = {
           y: 2250,
           depthM: 1300,
           role: 'crew',
+          dredgeStruck: true,
           releaseTick: T(3),
           souls: 26,
           note: 'First watch — twenty-six names, standing down at the first bell',
@@ -163,6 +165,7 @@ export const LEDGER_SHIFT_CHANGE: MissionDefinition = {
           y: 2350,
           depthM: 1300,
           role: 'crew',
+          dredgeStruck: true,
           releaseTick: T(8),
           souls: 25,
           note: 'Second watch — twenty-five names',
@@ -174,6 +177,7 @@ export const LEDGER_SHIFT_CHANGE: MissionDefinition = {
           y: 2150,
           depthM: 1300,
           role: 'crew',
+          dredgeStruck: true,
           releaseTick: T(11),
           souls: 20,
           note: 'Third watch — twenty names, the watch that works to the whistle',
