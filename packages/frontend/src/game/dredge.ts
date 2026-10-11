@@ -20,11 +20,6 @@ import { UnitKind, type OwnUnit } from '@echoes/shared';
 /** The shell's words for a struck dredge, in docs/ui-ux.md §7's form. */
 export const DREDGE_STRUCK_TEXT = 'dredge struck';
 
-/** Takes a harvest order and a throttle: the server sent it a throttle. */
-export function dredges(unit: OwnUnit): boolean {
-  return unit.throttle !== undefined;
-}
-
 /** A Harvester hull the server sent without its harvest loop. */
 export function dredgeStruck(unit: OwnUnit): boolean {
   return unit.kind === UnitKind.Harvester && unit.throttle === undefined;

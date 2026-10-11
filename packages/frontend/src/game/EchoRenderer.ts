@@ -8778,7 +8778,11 @@ export class EchoRenderer {
     const harvester = this.units.find((u) => this.selected.has(u.id) && u.throttle !== undefined);
     if (harvester !== undefined) {
       const throttle = THROTTLE_LABEL[harvester.throttle!];
-      const state = `harvester [${throttle}] ${harvester.cargo?.toFixed(0) ?? 0} cargo`;
+      // A barge in the selection escorts rather than dredges (`handleContextOrder`'s
+      // harvest branch), and the bar says so before the press (#1283).
+      const struck = this.selectedUnits().filter(dredgeStruck).length;
+      const crew = struck > 0 ? `  ·  ${struck} ${DREDGE_STRUCK_TEXT}` : '';
+      const state = `harvester [${throttle}] ${harvester.cargo?.toFixed(0) ?? 0} cargo${crew}`;
       const throttleKey = `${this.keyHint('throttle')} throttle`;
       if (heldAll !== null) return `${state}  ·  ${heldAll}  ·  ${throttleKey}`;
       return `${state}  ·  RMB node/move  ·  ${throttleKey}`;
