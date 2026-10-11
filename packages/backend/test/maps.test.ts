@@ -401,9 +401,9 @@ describe('the map catalogue', () => {
   });
 
   it("never leaves rock's 1 m ceiling over water a region floored (#1105)", () => {
-    // A map literal spells rock as a 1 m ceiling over a 0 m floor (`ROCK` in
-    // `fourthFoot.ts` and `anholtFurrow.ts`; `SOLID` is the beats' spelling and
-    // sits below the Lid since #1271). A region cut into rock that sets only a
+    // A map literal spells rock as a 1 m ceiling over a 0 m floor (the mission
+    // maps' own `ROCK`; `SOLID` is the beats' spelling and sits below the Lid
+    // since #1271). A region cut into rock that sets only a
     // floor keeps that ceiling, and the cell becomes a roofed passage nobody
     // authored: the client stands stone over it from the surface down. A real
     // roof says its ceiling.
