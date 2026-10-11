@@ -209,7 +209,8 @@ it is allowed to select.
   10 October, set by the repository owner, because supply bound instead: twenty
   issues were eligible, the loop's pull requests merged a median 55 minutes after
   opening, and a firing ends well inside two hours. Overnight, when nothing
-  merges, the cap still stops it after two. It clones `main` at the start of
+  merges, the cap still stops it after five (two until 11 October, when the owner
+  raised it). It clones `main` at the start of
   every run and invokes `/work-issue`, whose §5 hands the work to `dev-loop` —
   so a firing picks up the rounds and the critic **from the clone**, with no
   change to the Routine at all. That took effect when these files merged on
