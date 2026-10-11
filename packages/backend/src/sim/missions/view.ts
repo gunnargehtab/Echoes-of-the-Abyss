@@ -89,6 +89,12 @@ export interface MissionState {
    * beside it is a rule the mission has already told them.
    */
   held: readonly MovementHold[];
+  /**
+   * The player's own hulls a `strike` beat took out of the count — see
+   * types.ts, `strike`. Own-force state for `held`'s reason: every id is one
+   * of this observer's hulls, struck under a rule the mission authored.
+   */
+  struck?: ReadonlySet<number>;
   debtS: number;
 }
 
@@ -141,6 +147,12 @@ export function projectMissionView(
     // every pass, and a payload that aliased it would change under a client
     // that had not been sent anything.
     held: state.held.map((hold): MovementHold => ({ ...hold })),
+    // Absent until something is struck, `ability`'s arrangement: every mission
+    // but one never strikes, and its view should not grow a field to say so.
+    // Sorted so the change key does not move with set order.
+    ...(state.struck === undefined || state.struck.size === 0
+      ? {}
+      : { struck: [...state.struck].sort((a, b) => a - b) }),
     sigBudget: definition.sigBudget,
     debtS: state.debtS,
     ...(state.ability === undefined ? {} : { ability: state.ability }),

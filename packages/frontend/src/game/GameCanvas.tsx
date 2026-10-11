@@ -540,6 +540,9 @@ export function GameCanvas({
             // for the same reason: the key that does nothing owes an answer, and
             // so does the right-click (#478, docs/ui-ux.md §10.5).
             activeRenderer.setMissionHolds(view.held);
+            // And which it has struck from the count, which the inspector
+            // says beside the hold (docs/mission-thin-water.md §8, #1281).
+            activeRenderer.setMissionStruck(view.struck ?? []);
           },
           onMissionLine: (line) => {
             // Heard when its beat fires and never earlier: the hail is queued

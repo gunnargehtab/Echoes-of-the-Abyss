@@ -145,7 +145,7 @@ import {
   type Bindings,
 } from '../input/bindings.ts';
 import { FACTION_NAME } from './factions.ts';
-import { heldWholly, holdReasonFor, movableIn } from './movementHolds.ts';
+import { heldWholly, missionLineFor, movableIn } from './movementHolds.ts';
 import { priceTag, priceWords, shortfallLine } from './price.ts';
 import {
   drawScopeEchoMarks,
@@ -1759,6 +1759,7 @@ export class EchoRenderer {
    * mission that holds nothing.
    */
   private missionHolds: readonly MovementHold[] = [];
+  private missionStruck: readonly number[] = [];
   /**
    * The last refused press, and when: a locked key pressed anyway, or a
    * priced button the player could not cover. The orders panel carries the
@@ -4683,6 +4684,11 @@ export class EchoRenderer {
     this.missionHolds = held;
   }
 
+  /** The player's own hulls the mission has struck from its count (#1281). */
+  setMissionStruck(struck: readonly number[]): void {
+    this.missionStruck = struck;
+  }
+
   setMissionOver(payload: MissionResultPayload): void {
     this.missionOver = payload;
   }
@@ -4704,9 +4710,9 @@ export class EchoRenderer {
     return true;
   }
 
-  /** Why the mission will not move this hull, or null while it will. */
+  /** Why the mission will not move this hull, or no longer counts it; null for neither. */
   private movementHold(unitId: number): string | null {
-    return holdReasonFor(this.missionHolds, unitId);
+    return missionLineFor(this.missionHolds, this.missionStruck, unitId);
   }
 
   /**
@@ -4783,6 +4789,7 @@ export class EchoRenderer {
     // banner over live water for the rest of the session.
     this.missionLocks = [];
     this.missionHolds = [];
+    this.missionStruck = [];
     this.refusal = null;
     this.missionOver = null;
     this.units = [];

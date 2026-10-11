@@ -260,6 +260,13 @@ export class MissionRuntime {
   private readonly roleTags = new Map<MissionRole, Set<MissionTag>>();
   /** The live entity ids behind those tags, rebuilt on each tick. */
   private readonly roleIds = new Map<MissionRole, Set<number>>();
+  /**
+   * Hulls a `strike` beat took out of their role, by tag, for good — and
+   * their live ids, rebuilt beside `roleIds` in the snapshot's id space, so
+   * the view can say which of the player's own hulls no longer count.
+   */
+  private readonly struckTags = new Set<MissionTag>();
+  private readonly struckIds = new Set<number>();
   /** Tenders held until their release beat. */
   private readonly heldUntil = new Map<MissionTag, number>();
   /** Every tender tag, so an order can be matched to one without a scan. */
@@ -997,6 +1004,28 @@ export class MissionRuntime {
       case 'release':
         this.heldUntil.delete(beat.tag);
         return;
+      case 'strike': {
+        const region = this.definition.regions.find((candidate) => candidate.id === beat.region);
+        // `ground`'s reason: a misspelt region is the mission test's to catch,
+        // and mid-flight the count simply stands as it was.
+        if (region === undefined) return;
+        const tags = this.tagsFor(beat.role);
+        const ids = this.idsFor(beat.role);
+        for (const tag of [...tags]) {
+          const eid = this.eidOf(world, tag);
+          if (eid === 0 || !inRegion(region, Position.x[eid]!, Position.y[eid]!)) continue;
+          // Out of the role, not just out of this tick's ids: `resolveRoleIds`
+          // rebuilds from the tags, and a struck hull that later reaches the
+          // gate must still read as nobody the count is waiting for. The id
+          // goes too, so a conditional strike — fired after this tick's
+          // rebuild — is in the objectives derived on the same pass.
+          tags.delete(tag);
+          ids.delete(eid);
+          this.struckTags.add(tag);
+          this.struckIds.add(eid);
+        }
+        return;
+      }
       case 'transit': {
         const eid = this.eidOf(world, beat.tag);
         if (eid === 0) return;
@@ -2401,6 +2430,7 @@ export class MissionRuntime {
       sounded: this.soundedIds.size,
       paired: this.pairedIds,
       held: this.held,
+      struck: this.struckIds,
       debtS: this.debtS,
     };
     if (this.definition.walk !== undefined) {
@@ -2465,6 +2495,11 @@ export class MissionRuntime {
         const eid = this.eidOf(world, tag);
         if (eid !== 0) ids.add(eid);
       }
+    }
+    this.struckIds.clear();
+    for (const tag of this.struckTags) {
+      const eid = this.eidOf(world, tag);
+      if (eid !== 0) this.struckIds.add(eid);
     }
   }
 
