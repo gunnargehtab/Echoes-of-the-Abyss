@@ -41,7 +41,7 @@ const STEP_MS = 1000 / SIM.TICK_HZ;
  *
  * Two fingerprints a step. The state hash covers the world; the snapshots
  * cover the Echo Layer, which is resolved per observer and never hashed, and
- * where a query walked in id order first showed, at tick 60. A snapshot names
+ * where a query walked in id order first showed in a fully scrambled process. A snapshot names
  * own hulls by entity id, so each id is written as the order it was first
  * seen in, which is the same in two runs of one match on any ids.
  */
