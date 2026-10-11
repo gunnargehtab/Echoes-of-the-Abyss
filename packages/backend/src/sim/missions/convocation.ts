@@ -19,8 +19,10 @@
  *   together. §13 asks for both or neither.
  * - **The concern never fires first, and its hulls are armed anyway** (§6).
  *   The assertion's transits are authored beats rather than patrol AI, and what
- *   it will answer is obstruction — which is what an armed hull in this
- *   simulation does on its own. Cold weapons would have been the wrong lie
+ *   it will answer is obstruction. An armed hull in this simulation does not
+ *   wait for that on its own — it takes the nearest enemy in range — so the
+ *   party is spared: its guns hold, and nobody's volunteer for it, until a
+ *   blow is fired at it (#1289). Cold weapons would have been the wrong lie
  *   here; Tend's sweep was cold because it files rather than fights.
  * - **The tide's end is a conclusion and the Holdfast is the failure** (§8).
  *   A count that does not close is a plateau that is still turning, which the
@@ -92,8 +94,17 @@ const BELL_TICKS = T(0, 6);
  * `mission-tend.md`'s day is.
  */
 const PLATEAU_DEPTH_M = 240;
-/** The drop, where the concern waits and where it is heard from (§6). */
-const DROP_DEPTH_M = 550;
+/**
+ * The drop, where the concern waits and where it is heard from (§6).
+ *
+ * At 300 m, over the drop's deep floor but out of the pack's reach, which is
+ * Tend's sweep's figure for Tend's reason (#1284): a Draymaw pursues as
+ * shallow as about 500 m and bites 160 m in three dimensions. At 550 m the
+ * pack took all three hulls inside two minutes of an idle run once the party
+ * stopped shooting it (#1289). Hearing is unchanged — 300 m and 550 m sit on
+ * the same side of the thermocline.
+ */
+const DROP_DEPTH_M = 300;
 
 export const SEEDING_CONVOCATION: MissionDefinition = {
   ...SEEDING_CONVOCATION_HEADER,
@@ -409,6 +420,14 @@ export const SEEDING_CONVOCATION: MissionDefinition = {
       slot: CONCERN,
       faction: Faction.Bathyarch,
       note: 'The assertion — never given a commander’s name (§5). An instrument with a schedule, serving an interest under grid law and holding the ground it concerns until a decision is produced',
+      // Never fires first, and is never fired on unasked (§6), so spared
+      // (docs/systems-combat.md §4). Armed and unmarked, its guns took the
+      // nearest enemy in range like any slot's: an idle run killed the pack
+      // §5 hears all mission by 04:00, then watch-one and tender-one from the
+      // Holdfast at 13:49, before gun-one killed the Cruiser (#1289). The
+      // first blow anybody fires wakes it, which is the obstruction §6 says
+      // the writ makes lawful to answer.
+      spared: true,
       units: [
         {
           tag: 'assert-one',

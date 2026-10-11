@@ -35,7 +35,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { defineQuery } from 'bitecs';
+import { defineQuery, hasComponent } from 'bitecs';
 import {
   COMMANDER_ABILITY,
   Faction,
@@ -53,7 +53,15 @@ import {
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { missionMapById } from '../src/sim/maps/index.ts';
-import { Acoustic, Owner, Position, StaticEmitter, Unit } from '../src/sim/components.ts';
+import {
+  Acoustic,
+  Fauna,
+  Health,
+  Owner,
+  Position,
+  StaticEmitter,
+  Unit,
+} from '../src/sim/components.ts';
 import { SEEDING_CONVOCATION, SEEDING_TEND } from '../src/sim/missions/index.ts';
 import type { MissionDefinition } from '../src/sim/missions/index.ts';
 
@@ -61,6 +69,8 @@ const STEP_MS = 1000 / SIM.TICK_HZ;
 const SEED = 47;
 const PLAYER = 0;
 const CONCERN = 2;
+/** The tide turns at 19:00 (§9). */
+const T_END = 19 * 60 * SIM.TICK_HZ;
 
 /** §4's ceiling, and the two hulls the document picks it to sit between. */
 const CEILING_SIG = 26;
@@ -653,5 +663,54 @@ describe('the Convocation literal, against its document', () => {
     const resolve = SEEDING_CONVOCATION.beats.find((beat) => beat.kind === 'resolve');
     assert.equal(resolve?.atTick, 19 * 60 * SIM.TICK_HZ);
     assert.equal(resolve?.kind === 'resolve' && resolve.conclusion, true);
+  });
+});
+
+describe('the assertion, left alone — docs/mission-convocation.md §5, §6 (#1289)', () => {
+  it('fires on nothing, and nothing on the terrace volunteers fire on it', () => {
+    // §6: "Nothing in the concern's force fires on a row, a berth or a
+    // tender". Armed and unmarked, its guns auto-acquired like any slot's: in
+    // an idle run on seed 77 the corvettes killed both Draymaws inside four
+    // minutes, the Cruiser killed watch-one and tender-one from the Holdfast
+    // at 13:49, and gun-one then killed the Cruiser. Spared, and waiting at
+    // 300 m rather than in the pack's water at 550 m, every hull and the pack
+    // §5 hears "all mission" are whole when the Holdfast is taken.
+    const map = missionMapById(SEEDING_CONVOCATION.mapId)!;
+    const match = new Match(map, { mission: SEEDING_CONVOCATION, fauna: false, seed: 77 });
+    const world = match.world;
+    const seated = defineQuery([Owner, Health])(world).filter(
+      (eid) =>
+        hasComponent(world, Unit, eid) ||
+        (hasComponent(world, Fauna, eid) && Fauna.species[eid] === FaunaSpecies.Draymaw)
+    );
+    const full = new Map(seated.map((eid) => [eid, Health.hp[eid]!]));
+    // The creatures are beats, and beats fire on the first Echo tick.
+    for (let tick = 0; tick < SIM.TICK_HZ; tick++) match.update(STEP_MS);
+    for (const eid of defineQuery([Fauna, Health])(world)) {
+      if (Fauna.species[eid] === FaunaSpecies.Draymaw) full.set(eid, Health.hp[eid]!);
+    }
+    assert.equal(
+      [...full.keys()].filter((eid) => hasComponent(world, Fauna, eid)).length,
+      2,
+      'the premise: the pack is two Draymaws'
+    );
+    assert.equal(full.size, 14, 'the premise: nine hulls, three of the concern, two Draymaws');
+
+    while (world.tick < T_END && match.missionOver === null) {
+      match.update(STEP_MS);
+      match.takeMissionView();
+      match.takeMissionLines();
+    }
+    // An idle plateau loses the Holdfast to the Cruiser: §8's one failure,
+    // taken by standing, which is the mission's point.
+    assert.equal(match.missionOver?.outcome, MissionOutcome.Lost, 'the premise: the Holdfast fell');
+    const hurt = [...full].filter(
+      ([eid, hp]) => !hasComponent(world, Health, eid) || Health.hp[eid]! < hp
+    );
+    assert.equal(
+      hurt.length,
+      0,
+      `${hurt.length} hulls or creatures were hurt or lost by the close`
+    );
   });
 });

@@ -310,8 +310,11 @@ the frame in which a plateau's assent is a document.
 **Why they do not shoot the gardens, and why that is worse.** An asset the concern intends to
 enter in a ledger is worth nothing burnt. The restraint is economic rather than moral, which is
 the coldest sentence in this document and the truest thing in it. What the assertion *will* fire
-on is a hull that obstructs it — Teel's element, if it engages, and a tender caught interposing
-— because obstruction of a served assertion is the one thing the writ makes lawful. *Thin Water*
+on is a hull that obstructs it — Teel's element, if it engages, and once anybody has fired on it a
+tender caught interposing — because obstruction of a served assertion is the one thing the writ
+makes lawful. Until that first shot its guns hold, and nothing on the terrace volunteers fire on
+it either: a spared party ([systems-combat.md](systems-combat.md) §4), so the first blow is the
+player's decision and the obstruction the writ was waiting for. *Thin Water*
 established the shape ([mission-thin-water.md](mission-thin-water.md) §6): the concern's guns
 answer a question the Commune asked.
 

@@ -725,13 +725,10 @@ describe('the ground both missions stand on — §11, drawn in shapes (#1148)', 
     // segment it never touched. Probed from points along each leg, every
     // 25 m down from the shallower of its two depths, and at the deeper one.
     //
-    // One probe enters a moved cell, and it is listed rather than excused:
-    // Convocation's 03:30 order to row two, probed at 315 m, where the West
-    // Lane's 300 m floor refuses it and the terrace's 320 m admits it, routes
-    // up the west edge through 0,7. That cell admitted 315 m as drop and
-    // admits it as terrace, so the route is the one it was in rectangles; only
-    // the water it crosses there changed, and in play no hull reaches it.
-    const ENTERS = ['seeding-convocation assert-one@3.5 315 m 0,7'];
+    // None enters one. Convocation's 03:30 order to row two used to, probed
+    // at 315 m on its climb from 550 m: the concern now waits at 300 m, out
+    // of the pack's reach (#1289), so no leg of it is probed below 300 m.
+    const ENTERS: string[] = [];
     const entered = new Set<string>();
     const pathfinder = new Pathfinder(MAP.widthM / MAP.cellM, MAP.heightM / MAP.cellM);
     const route: number[] = [];
@@ -765,7 +762,9 @@ describe('the ground both missions stand on — §11, drawn in shapes (#1148)', 
         }
       }
     }
-    assert.ok(probes > 1000, `only ${probes} probes`);
+    // About 630 since the concern's legs start at 300 m rather than 550 m
+    // (#1289): a climb of 60 m is probed at four depths, where 310 m was fourteen.
+    assert.ok(probes > 500, `only ${probes} probes`);
     assert.deepEqual([...entered], ENTERS, 'a scripted route enters a cell the reshape moved');
   });
 });
