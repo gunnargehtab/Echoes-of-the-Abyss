@@ -20,6 +20,7 @@ import {
   DEPTH,
   DEPTH_BANDS,
   DepthBand,
+  ECONOMY,
   Faction,
   MAP_HEADERS,
   PROPAGATION_FACTOR,
@@ -416,6 +417,23 @@ describe('the map catalogue', () => {
         const col = i % grid.cols;
         const row = Math.floor(i / grid.cols);
         assert.fail(`${map.id}: cell (${col}, ${row}) is water under rock's 1 m ceiling`);
+      }
+    }
+  });
+
+  it('seats every field a map places in the column above its own floor', () => {
+    // `depthM` is the author's word against the default (#1282). A field
+    // seated under the seabed or a roof would be ore in the rock: a harvester
+    // ordered to it never reaches the working depth. Mission maps included.
+    for (const map of [...MAPS, ...MISSION_MAPS]) {
+      const terrain = terrainFor(map);
+      for (const node of map.resources) {
+        if (node.depthM === undefined) continue;
+        const floor = terrain.floorAt(node.x, node.y);
+        assert.ok(
+          node.depthM > 0 && terrain.admits(node.x, node.y, node.depthM),
+          `${map.id}: field at ${node.x},${node.y} seated at ${node.depthM} m over ${floor} m ground`
+        );
       }
     }
   });
@@ -1143,11 +1161,11 @@ describe('every map has water where it seats things', () => {
   // so a shallow floor is a cost to a fleet and a fatal authoring error to a
   // refinery. These invariants are the difference between the two.
   //
-  // world.ts seats structures at 600 m and nodule fields at 600 m; crystal
-  // fields sit at CRYSTAL.FIELD_DEPTH_M. None of them consult the seabed, so
-  // nothing but this test stands between a map and a Bastion inside a plateau.
+  // world.ts seats structures at 600 m; a field lies at its map's `depthM`,
+  // else at ECONOMY.NODULE_FIELD_DEPTH_M or CRYSTAL.FIELD_DEPTH_M. None of
+  // them consult the seabed, so nothing but this test stands between a map
+  // and a Bastion inside a plateau.
   const STRUCTURE_DEPTH_M = CONSTRUCTION.WORKING_DEPTH_M;
-  const NODULE_DEPTH_M = CONSTRUCTION.WORKING_DEPTH_M;
 
   /**
    * docs/maps.md, "How a map is written": a spawn and its Foundry stand on
@@ -1380,7 +1398,10 @@ describe('every map has water where it seats things', () => {
         const terrain = terrainFor(map);
         for (const node of map.resources) {
           const depth =
-            node.kind === ResourceKind.ResonanceCrystal ? CRYSTAL.FIELD_DEPTH_M : NODULE_DEPTH_M;
+            node.depthM ??
+            (node.kind === ResourceKind.ResonanceCrystal
+              ? CRYSTAL.FIELD_DEPTH_M
+              : ECONOMY.NODULE_FIELD_DEPTH_M);
           assert.ok(
             terrain.admits(node.x, node.y, depth),
             `${map.name}: a ${node.kind} field at ${node.x},${node.y} works at ${depth}m, ` +
