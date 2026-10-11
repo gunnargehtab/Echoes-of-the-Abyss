@@ -426,8 +426,8 @@ Combat argues about depth too, or it is only half the game
   A charge is ordnance, so it carries its dropper's rating, refits counted and a rented aura
   not: an order whose charge would fall or float through water that rating cannot carry is
   refused, as one set inside the dropper's own band is, rather than dropped to implode on the
-  way. To bomb the sanctuary, a
-  shallow navy brings a hull rated for the water the charge must reach.
+  way. To bomb the sanctuary, a shallow navy brings a hull rated for the water the charge must
+  reach.
 - **Crush-baiting is intended play.** Luring a pursuer below its PR and letting unhealable
   attrition fight for you costs nothing but positioning. The systems already permit it;
   this document blesses it — with one obligation: the UI must warn when a pursuit or
@@ -838,7 +838,7 @@ what exists or assumes what does not. The combat loop lives in
 | Countermeasures (§5) | **Implemented** | Noisemaker decoys, and point defence as a target priority inside the terminal range in `sim/systems/combat.ts`; a mine astern falls out of §6's trigger set |
 | Mines (§6) | **Implemented** | `MINE_TRIGGER_LOUDNESS`, solved from the two SPEC behaviours; caps, arming noise and blast falloff in `sim/systems/ordnance.ts`; `tripsMines` is the ordnance a mine hears and a blast spends |
 | Firing solutions (§7) | **Implemented** | `EchoLayer.firingSolution` gates launches at Tier 2 and hands over the same ghost the contact payload carried |
-| Vertical combat (§8) | **Implemented** | Ordnance inherits launcher PR and implodes; depth charges fall at `DEPTH`'s rates with a volumetric blast; the depth ribbon warns before a dive that would crush |
+| Vertical combat (§8) | **Implemented** | Ordnance inherits launcher PR and implodes, and a charge its dropper's rating cannot carry is refused (#1268); depth charges fall at `DEPTH`'s rates with a volumetric blast; the depth ribbon warns before a dive that would crush |
 | TTK bands (§9) | **Implemented** | Weapon damage solved from the bands; `test/ttkBands.test.ts` holds every one, including under the Klaxon |
 | The beat (§9.5) | **Measured** | `test/combatBeat.test.ts` plays each gun band and the torpedo run out at 60 Hz and counts the Echo snapshots between first hit and kill; the mine astern is held in `test/mines.test.ts` against a live seeker, at 900 m and at 300 m, and the decoy in `test/countermeasures.test.ts` |
 | Retreat dynamics (§10) | Emergent | Falls out of the existing ascent/descent and Silent Running rules, now that seekers exist to be starved |
