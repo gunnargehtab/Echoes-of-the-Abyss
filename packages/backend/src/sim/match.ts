@@ -575,8 +575,9 @@ export class Match {
    * entity is removed, which queues its id for a later match, and the world
    * leaves the list. Recycled ids are routine from here, which is what
    * docs/invariants.md's "A spawn writes every field of its component" is
-   * for; #1273 is where hulls and creatures broke it, and a match on recycled
-   * ids still reads differently (#1279).
+   * for; #1273 is where hulls and creatures broke it. Where an id sorts is
+   * the other half: every read that orders entities orders them by spawn,
+   * never by raw id, so a match on recycled ids reads as on fresh (#1279).
    *
    * Id 0 is never handed back: the process's first world burned it as the
    * "none" sentinel, so no later world may be given it. A later world's
@@ -2551,7 +2552,9 @@ export class Match {
     // Query order rather than id order, and that is safe: two runs of one
     // command sequence add and remove the same entities in the same order, so
     // the query walks them in the same order and the per-region float sums
-    // land on the same bits. The state hash proves it (test/determinism).
+    // land on the same bits. The state hash proves it (test/determinism). On
+    // any ids, too: `sim/query.ts` admits the entities alive at a query's
+    // first call in spawn order, where bitecs admits them in id order (#1279).
     const loud = this.emitters(this.world);
     for (let i = 0; i < loud.length; i++) {
       const eid = loud[i]!;

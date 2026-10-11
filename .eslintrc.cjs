@@ -60,6 +60,29 @@ module.exports = {
       }
     },
     {
+      // A query must not list a world's entities in raw id order (#1279):
+      // bitecs admits those alive at a query's first call in ascending id,
+      // which is spawn order only on fresh ids. sim/query.ts admits them in
+      // spawn order, so a match on recycled ids reads as one on fresh.
+      files: ['packages/backend/src/**/*.ts'],
+      excludedFiles: ['packages/backend/src/sim/query.ts'],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            paths: [
+              {
+                name: 'bitecs',
+                importNames: ['defineQuery'],
+                message:
+                  'Import defineQuery from sim/query.ts, which admits entities in spawn order rather than id order.'
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       // The skirmish AI must play the game the player plays. Its only inputs
       // are the map briefing it is handed once and the per-slot EchoSnapshot
       // it is handed each Echo tick — the same resolved payload a human
