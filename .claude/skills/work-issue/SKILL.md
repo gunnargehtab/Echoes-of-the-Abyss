@@ -68,10 +68,10 @@ Three kinds of claim, strongest first:
   Do not use `git merge-base --is-ancestor`: squash-merged work is unreachable
   from `main` and would read as live.
 
-## 2. Stop if the loop already has two pull requests open
+## 2. Stop if the loop already has five pull requests open
 
 Count open pull requests carrying the `routine` label, which §6 puts on every pull
-request this loop opens. **Two or more: end the run** and say so. Do not fall
+request this loop opens. **Five or more: end the run** and say so. Do not fall
 through to §4.
 
 An open pull request without the label is somebody else's and does not count.
@@ -79,7 +79,8 @@ Only when the label itself is unavailable, count `claude/issue-` head refs inste
 and say so in the run log; that count is too broad, which only stops the loop
 early.
 
-This cap bounds unattended CI spend. Raising it is a person's decision.
+This cap bounds unattended CI spend. Raising it is a person's decision; the owner
+raised it from two to five on 11 October.
 
 ## 3. Choose one issue
 
