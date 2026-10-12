@@ -90,10 +90,12 @@ export function thermalSystem(world: SimWorld): void {
 }
 
 /**
- * Which slot, if any, has a Consortium hull or structure holding this vent.
+ * Which slot, if any, has a Consortium hull holding this vent.
  * A creature (faction 0 is the Consortium's) and ordnance are nobody's
- * presence, `anyFactionWithin`'s rule (#1304): the Drift's slot was credited
- * draw for animals on a vent.
+ * presence, `anyHullWithin`'s rule (#1304): the Drift's slot was credited
+ * draw for animals on a vent. A structure is not a hull (#1311): "a Consortium
+ * hull stabilising a vent earns draw capacity" (docs/economy.md §8), and a
+ * half-built one was paid for a vent nobody stood on.
  */
 function bathyarchHolding(world: SimWorld, x: number, y: number, radiusM: number): number | null {
   const entities = holders(world);
@@ -101,7 +103,7 @@ function bathyarchHolding(world: SimWorld, x: number, y: number, radiusM: number
     const eid = entities[i]!;
     if (Owner.faction[eid] !== Faction.Bathyarch) continue;
     if (Health.hp[eid]! <= 0) continue;
-    if (!hasComponent(world, Unit, eid) && !hasComponent(world, Structure, eid)) continue;
+    if (!hasComponent(world, Unit, eid)) continue;
     const dx = Position.x[eid]! - x;
     const dy = Position.y[eid]! - y;
     if (dx * dx + dy * dy <= radiusM * radiusM) return Owner.slot[eid]!;
