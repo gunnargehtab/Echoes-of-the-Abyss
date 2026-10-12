@@ -1038,6 +1038,8 @@ export class MissionRuntime {
       }
       case 'transit': {
         const eid = this.eidOf(world, beat.tag);
+        // Dropped, not deferred, for a hull in a hold: it has no point to
+        // walk the route from (docs/systems-echo.md §3).
         if (eid === 0 || !inWater(world, eid)) return;
         // Replaces, never joins — the `creature` beat's rule, and the whole
         // point: a conditional transit south is how a scheduled walk north is
