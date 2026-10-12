@@ -25,7 +25,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { Biome, MissionOutcome, SIM, type MissionView } from '@echoes/shared';
+import { Biome, HazardPhase, MissionOutcome, SIM, type MissionView } from '@echoes/shared';
 import { defineQuery, hasComponent } from 'bitecs';
 import { Owner, Unit, Weapon } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
@@ -35,6 +35,11 @@ import { LEDGER_ASSET_RECOVERY } from '../src/sim/missions/index.ts';
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const PLAYER = LEDGER_ASSET_RECOVERY.playerSlot;
 const T = (minutes: number, seconds = 0): number => (minutes * 60 + seconds) * SIM.TICK_HZ;
+
+/** The tick the herd is driven across the Terrace (§7), read from the literal. */
+const STAMPEDE_TICK = LEDGER_ASSET_RECOVERY.beats.find(
+  (beat) => beat.kind === 'creature' && beat.tag === 'grazer-a' && beat.loud
+)!.atTick;
 
 /** Inside the fall-stage rectangle the 11:30 beat closes. */
 const STAGE = { x: 2125, y: 2625, depthM: 1100 };
@@ -52,6 +57,8 @@ interface Run {
   firstViewIds: string[];
   lastViewIds: string[];
   resolvedAtTick: number;
+  /** Ticks on which a vent turned Active, from a minute before the stampede to one after. */
+  eruptionTicks: number[];
   outcome: MissionOutcome | null;
   epilogue: string | null;
 }
@@ -80,9 +87,19 @@ function run(): Run {
   let lastView: MissionView | null = null;
   let stageOpenAfter = stageOpenBefore;
   let resolvedAtTick = 0;
+  const eruptionTicks: number[] = [];
+  const phases = match.world.hazards.map((h) => h.phase);
 
   for (let tick = 0; tick <= T(18, 30); tick++) {
     match.update(STEP_MS);
+    if (Math.abs(match.world.tick - STAMPEDE_TICK) <= T(1)) {
+      match.world.hazards.forEach((h, i) => {
+        if (h.phase === HazardPhase.Active && phases[i] !== HazardPhase.Active) {
+          eruptionTicks.push(match.world.tick);
+        }
+        phases[i] = h.phase;
+      });
+    }
     const view = match.takeMissionView();
     if (view !== null) {
       if (firstView === null) firstView = view;
@@ -105,6 +122,7 @@ function run(): Run {
     firstViewIds: firstView?.objectives.map((o) => o.id) ?? [],
     lastViewIds: lastView?.objectives.map((o) => o.id) ?? [],
     resolvedAtTick,
+    eruptionTicks,
     outcome: match.missionOver?.outcome ?? null,
     epilogue: match.missionOver?.epilogue ?? null,
   };
@@ -137,6 +155,21 @@ describe('the writ, run out — docs/mission-asset-recovery.md §8, §9', () => 
   it('closes a stage of Face Six at eleven-thirty, on the clock', () => {
     assert.ok(run().stageOpenBefore, 'the stage was rock before the fall shifted');
     assert.ok(!run().stageOpenAfter, 'the fall shifted and the water stayed');
+  });
+
+  it('meets the stampede with an eruption, as §7 hangs it on one', () => {
+    // A vent's phase is public and its cycle is fixed, so the timeline can only
+    // promise an eruption at 07:30 if a vent is phased to one: the positional
+    // stagger met the beat by accident, and lost it when creatures stopped
+    // counting as a Consortium hold (#1305, #1312). A second of slack, because
+    // each phase change in the run-up lands a tick late.
+    assert.equal(STAMPEDE_TICK, T(7, 30));
+    const near = run().eruptionTicks.filter((tick) => Math.abs(tick - STAMPEDE_TICK) <= T(0, 1));
+    assert.equal(
+      near.length,
+      1,
+      `vents went Active at ${run().eruptionTicks.map((t) => (t / SIM.TICK_HZ).toFixed(1))}s`
+    );
   });
 
   it('shows every reading at the writ, and the haul home only when it begins', () => {

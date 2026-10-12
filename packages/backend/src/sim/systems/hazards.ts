@@ -209,6 +209,44 @@ export function dormantSecondsFor(kind: HazardKind): number {
 }
 
 /**
+ * Where in its cycle a site starts the match so that one Active phase begins
+ * `activeAtS` seconds in: the phase and the seconds already spent in it. It
+ * lands a tick late per phase change before it, because a phase change
+ * restarts the clock at zero; not compensated here, so map data does not
+ * carry the system's rounding.
+ *
+ * For a mission that hangs a beat on an eruption (#1312). The match is phased,
+ * not the cycle stretched, so the vent keeps its published interval before and
+ * after the pinned eruption. The positional stagger cannot do this: it moves
+ * whenever a cycle constant or a site does, and a fixed beat then meets a
+ * dormant vent. A Consortium hold still delays it (doc §1), as it would any
+ * eruption.
+ *
+ * Undefined for a kind with no cycle.
+ */
+export function phaseFor(
+  kind: HazardKind,
+  activeAtS: number
+): { phase: HazardPhase; elapsedS: number } | undefined {
+  const cycle = CYCLES[kind];
+  if (cycle === undefined) return undefined;
+  const periodS = cycle.dormantS + cycle.warningS + cycle.activeS + cycle.decayS;
+  // Position in the cycle at 0 s, measured from the start of a dormancy.
+  let atS = (((cycle.dormantS + cycle.warningS - activeAtS) % periodS) + periodS) % periodS;
+  const phases: Array<[HazardPhase, number]> = [
+    [HazardPhase.Dormant, cycle.dormantS],
+    [HazardPhase.Warning, cycle.warningS],
+    [HazardPhase.Active, cycle.activeS],
+    [HazardPhase.Decay, cycle.decayS],
+  ];
+  for (const [phase, spanS] of phases) {
+    if (atS < spanS) return { phase, elapsedS: atS };
+    atS -= spanS;
+  }
+  return { phase: HazardPhase.Dormant, elapsedS: 0 };
+}
+
+/**
  * How long the current phase lasts for this hazard, right now.
  *
  * Not a constant, because a Consortium presence lengthens a vent's dormancy

@@ -158,6 +158,7 @@ import {
   hazardsSystem,
   isPermanent,
   isSimulated,
+  phaseFor,
   rebuildPropagation,
   standingCropOf,
   type Hazard,
@@ -776,6 +777,7 @@ export class Match {
     for (const site of this.map.hazards) {
       if (!isSimulated(site.kind)) continue;
       const stagger = (Math.abs(Math.round(site.x * 7 + site.y * 13)) % 97) / 97;
+      const pinned = site.activeAtS === undefined ? undefined : phaseFor(site.kind, site.activeAtS);
       this.world.hazards.push({
         id: id++,
         kind: site.kind,
@@ -784,7 +786,7 @@ export class Match {
         radiusM: site.radiusM,
         // Kelp has no cycle to wait in — it begins the match gripping
         // (docs/hazards.md §4). Everything else telegraphs first.
-        phase: isPermanent(site.kind) ? HazardPhase.Active : HazardPhase.Dormant,
+        phase: isPermanent(site.kind) ? HazardPhase.Active : (pinned?.phase ?? HazardPhase.Dormant),
         // Every bed starts with its canopy whole (docs/systems-flora.md §1).
         // Full crop is the no-op case throughout — no PF modifier is listed
         // and the grip is the one §4 always specified — so a map nobody
@@ -794,7 +796,8 @@ export class Match {
         // wait already spent, so a site with a large stagger fires sooner —
         // and a span borrowed from another kind bunches every hazard of the
         // longer-waiting kinds into the back half of their own cycle.
-        elapsedS: stagger * dormantSecondsFor(site.kind),
+        // A pinned site takes its place in the cycle from the beat it serves.
+        elapsedS: pinned?.elapsedS ?? stagger * dormantSecondsFor(site.kind),
         // Authored in degrees and stored in radians: docs/hazards.md §8 makes a
         // current's direction map data, and the per-tick path should never pay
         // for the conversion. A site that forgets it does not flow at all,
