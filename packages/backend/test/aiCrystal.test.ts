@@ -816,9 +816,12 @@ describe('the commander saves for what it cannot buy out of pocket', () => {
     const commander = new AiCommander(brief);
     const veil = FACTION_STRUCTURE[Faction.Pelagia]!;
     const price = priceOf(structureStatsFor(veil));
+    // The Slipway at home, so the rally point is in build radius of something
+    // this navy owns: a site nothing anchors is never asked for (#1296).
+    const home = brief.spawns[brief.slot]!;
     const sent = commander.observe(
       snapshot(fleet(brief, DOCTRINE[Faction.Pelagia].harvesterTarget), {
-        structures: [...yards(), structure(22, StructureKind.Slipway)],
+        structures: [...yards(), { ...structure(22, StructureKind.Slipway), x: home.x, y: home.y }],
         nodules: price.nodules,
         crystal: price.crystal,
       })
