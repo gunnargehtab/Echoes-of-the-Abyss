@@ -16,6 +16,9 @@
  * report of a stranger in a lobby.
  */
 
+import type { IncomingMessage, RequestListener, Server, ServerResponse } from 'node:http';
+import type { Server as HttpsServer } from 'node:https';
+
 /** How the server decides whether a browser origin may talk to it. */
 export type CorsPolicy =
   /** Explicitly opted out of the lock: every origin is answered, its own echoed back. */
@@ -129,7 +132,8 @@ function isLoopbackOrigin(origin: string): boolean {
  * browser refuses `*` on such a request; `any` echoes every origin the same
  * way. An origin the policy refuses gets no allow-origin: a browser sends
  * only the preflight of a request that needs one, and withholds the answer to
- * one that does not, though the server still acts on that one (#1310). A
+ * one that does not. Withholding the answer is not refusing the request, so
+ * `guardOrigins` turns that one away before anything acts on it (#1310). A
  * request with no `Origin` is not a cross-origin browser request, and gets
  * none either. Every answer depends on the `Origin`, so every answer says so
  * in `Vary`, and a cache never hands one origin's answer to another.
@@ -144,6 +148,58 @@ export function corsHeadersFor(
     'Access-Control-Allow-Credentials': 'true',
     Vary: 'Origin',
   };
+}
+
+/**
+ * Methods that read, and so are left to the browser's read lock. Anything else
+ * can act — the matchmaking POST makes a room — and is refused outright.
+ */
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+/**
+ * Whether a request must be refused before the server acts on it (#1310).
+ *
+ * CORS only stops a page *reading* an answer. A POST that needs no preflight —
+ * a form, or one with no body — is still sent from a refused origin, and
+ * Colyseus's matchmaking acted on it: three foreign POSTs made three rooms.
+ * So a refused `Origin` on a method that can act is answered 403. The
+ * test is by method rather than by the `/matchmake` path so a path spelled
+ * another way, or a POST route added later, cannot slip past it. A request
+ * with no `Origin` is not a browser cross-origin request and carries no
+ * authority an anonymous `curl` lacks (`MatchRoom` has no `onAuth`), so it
+ * passes, as do reads and preflights, which `corsHeadersFor` already locks.
+ */
+export function refusesRequest(
+  policy: CorsPolicy,
+  method: string | undefined,
+  origin: string | string[] | undefined
+): boolean {
+  if (typeof origin !== 'string') return false;
+  if (SAFE_METHODS.has((method ?? 'GET').toUpperCase())) return false;
+  return !isOriginAllowed(policy, origin);
+}
+
+/**
+ * Put `refusesRequest` in front of every request listener `server` holds.
+ *
+ * Not a listener of its own: Node calls every `request` listener in turn, so
+ * one more could answer 403 but not stop Colyseus's — prepended in
+ * `bindRouterToTransport`, during `listen` — from making the room anyway. The
+ * listeners are taken off and called from one wrapper instead, so it must run
+ * after `listen` has bound them; `index.ts` calls it once `listen` resolves,
+ * in the same turn, before any request event can be delivered.
+ */
+export function guardOrigins(server: Server | HttpsServer, policy: CorsPolicy): void {
+  const listeners = server.listeners('request') as RequestListener[];
+  server.removeAllListeners('request');
+  server.on('request', (req: IncomingMessage, res: ServerResponse) => {
+    if (refusesRequest(policy, req.method, req.headers.origin)) {
+      res.writeHead(403, { 'Content-Type': 'application/json', Vary: 'Origin' });
+      res.end(JSON.stringify({ error: 'origin not allowed' }));
+      return;
+    }
+    for (const listener of listeners) listener.call(server, req, res);
+  });
 }
 
 /** One line for the startup log, so an operator can see what was applied. */

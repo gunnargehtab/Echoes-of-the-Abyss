@@ -133,7 +133,8 @@ npm run lint
 `CORS_ORIGIN` is the one to understand. The WebSocket upgrade is not subject to
 CORS, but `@colyseus/sdk` POSTs to `/matchmake/` first, and the lobby list is a
 GET to `/rooms/match`, so this decides whether a browser can reach the server at
-all:
+all. A page from a refused origin cannot read either answer, and its POST is
+answered 403 before matchmaking makes a room for it:
 
 - **Unset outside production** — loopback origins only, on any port. That covers
   `npm run dev` and a second Vite instance on 5174, and it covers nothing else.

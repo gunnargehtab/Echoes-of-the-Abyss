@@ -20,6 +20,7 @@ import {
   corsHeadersFor,
   describeCorsPolicy,
   isOriginAllowed,
+  refusesRequest,
   resolveCorsPolicy,
 } from '../src/http/cors.ts';
 
@@ -136,5 +137,30 @@ describe('startup log line', () => {
       describeCorsPolicy({ kind: 'list', origins: ['https://a.example'] }),
       'https://a.example'
     );
+  });
+});
+
+describe('refusing a request before it acts (#1310)', () => {
+  const policy: CorsPolicy = { kind: 'list', origins: ['https://play.example.com'] };
+
+  it('refuses a refused origin on any method that can act', () => {
+    for (const method of ['POST', 'post', 'PUT', 'DELETE', 'PATCH']) {
+      assert.equal(refusesRequest(policy, method, 'https://evil.example'), true, method);
+    }
+  });
+
+  it('leaves reads and preflights to the read lock', () => {
+    for (const method of ['GET', 'HEAD', 'OPTIONS', undefined]) {
+      assert.equal(refusesRequest(policy, method, 'https://evil.example'), false, method);
+    }
+  });
+
+  it('passes an allowed origin, and a request with no Origin', () => {
+    assert.equal(refusesRequest(policy, 'POST', 'https://play.example.com'), false);
+    assert.equal(refusesRequest(policy, 'POST', undefined), false);
+  });
+
+  it('refuses nothing under the explicit wildcard', () => {
+    assert.equal(refusesRequest({ kind: 'any' }, 'POST', 'https://evil.example'), false);
   });
 });
