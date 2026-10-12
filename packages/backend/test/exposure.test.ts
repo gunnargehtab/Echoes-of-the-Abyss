@@ -414,7 +414,15 @@ describe('one bearing per ping (#1290)', () => {
       first.map((e) => [e.unitId, e.bearing !== undefined]),
       [[theirs, true]]
     );
-    Position.y[late] = 4500;
+    Position.y[late] = 4800;
+    // The pinger still resolves it: only the victim's side is kept silent.
+    const seen = nextSnapshot(match)
+      .get(0)!
+      .contacts.some(
+        (c) =>
+          c.tier >= ResolutionTier.Track && Math.abs(c.x - 4000) < 1 && Math.abs(c.y - 4800) < 1
+      );
+    assert.ok(seen, 'the pinger lost the late hull');
     assert.deepEqual(lit(match, 1), [], 'the late hull was told it was lit');
   });
 

@@ -1098,7 +1098,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | Contact log | Implemented — DOM, live region, click-to-focus, every row including `MARK` (#214) |
 | Contact voices, per-tier | Implemented — pan authority by tier, biome voicing, faction timbre at Tier 3+. The **timbre is off by default** pending #731: the §8 families are built and do not yet sound like the materials §8 names, so a classified contact keeps the tier's thump and stops saying what it is. Everything the tiers carry besides identity — pan, range, freshness, the Tier-4 lock tone — is unchanged, and the class was never audio-only (§11's table) |
 | Self-noise bed, SIG band label, masking readout | Implemented — server-sent, never inferred |
-| Exposure strike and screen-edge flash | Implemented — fires from `EchoSnapshot.selfEvents`, bearing only. A strike with no bearing (#1290) has its log row; its edge flash is owed (#1306) |
+| Exposure strike and screen-edge flash | Implemented — fires from `EchoSnapshot.selfEvents`, bearing only. A strike with no bearing has its log row, a fallback no server tick reaches since #1300, so #1306's edge flash has nothing to mark |
 | Active sonar transmit, returns ordered by range | Implemented |
 | Break-silence transient and its per-hull ring | Implemented |
 | Precedence Law — mark fade-in, ducking chain | Implemented — the visual-first preset is a settings toggle (§14) |
