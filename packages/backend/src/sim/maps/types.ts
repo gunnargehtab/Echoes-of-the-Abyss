@@ -166,6 +166,16 @@ export interface MapHazardSite {
    * refuses it.
    */
   flowDeg?: number;
+  /**
+   * The match second one of this site's Active phases begins on, for a site
+   * with a cycle.
+   *
+   * For a mission whose timeline hangs a beat on an eruption (#1312): the
+   * site is phased so that eruption lands on the beat, and keeps its interval
+   * either side of it. Without one, `Match.seedHazards` staggers the site by
+   * its position, which moves whenever a cycle constant does.
+   */
+  activeAtS?: number;
   note?: string;
 }
 

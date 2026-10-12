@@ -134,10 +134,11 @@ export const NINEFOLD_FACE_SIX: MapDefinition = {
   resources: [],
   // Two geothermal sites on the Terrace's vent line, visible from the first
   // frame and erupting on the published interval — the 07:30 stampede is hung
-  // on one of them (§7, docs/hazards.md). The plume radius is the roster's
-  // standard 700 m, the figure the telegraph was sized against.
+  // on the east one, phased so one of its eruptions lands on the beat (§7,
+  // docs/hazards.md, #1312). The plume radius is the roster's standard 700 m,
+  // the figure the telegraph was sized against.
   hazards: [
     { x: 1000, y: 875, radiusM: 700, kind: 'geothermal-eruption' },
-    { x: 3000, y: 875, radiusM: 700, kind: 'geothermal-eruption' },
+    { x: 3000, y: 875, radiusM: 700, kind: 'geothermal-eruption', activeAtS: 7 * 60 + 30 },
   ],
 };
