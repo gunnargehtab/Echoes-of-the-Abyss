@@ -628,9 +628,9 @@ describe('the exposure strike, with one bearing per ping (#1290)', () => {
     assert.deepEqual(pans, [-1, 1]);
   });
 
-  it('strikes once, unpanned, for hulls lit later in the ping', () => {
-    // No bearing on the tick at all: the side's bearing went out on an earlier
-    // pass. The hulls are still told, once, at no position.
+  it('strikes once, unpanned, on a tick that carries no bearing', () => {
+    // The server sends no such tick since #1300, so this is the fallback: the
+    // hulls are still told, once, at no position.
     const { sink, pans } = panRecorder();
     const mixer = new SelfMixer(sink);
     const late = [event(SelfEventKind.Exposed, 2), event(SelfEventKind.Exposed, 3)];

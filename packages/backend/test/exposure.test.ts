@@ -310,7 +310,7 @@ describe('one bearing per ping (#1290)', () => {
    * bearings are two rays that meet on it: two Light Scouts 670 m apart put
    * an enemy pinger within 0.1 m. `SelfEvent.bearing` is a direction and
    * never a location, so a side gets one bearing per ping, from the nearest
-   * of its units the ping first lights, and is told of the rest without one.
+   * of its units the ping lights, and is told of the rest without one.
    */
   function lit(match: Match, slot: number): SelfEvent[] {
     const events: SelfEvent[] = [];
@@ -394,9 +394,10 @@ describe('one bearing per ping (#1290)', () => {
     );
   });
 
-  it('tells a unit lit later in the same ping without a bearing', () => {
-    // The bearing is the ping's, not the pass's: a hull that comes into the
-    // radius after its side was given one is told it was lit, and no more.
+  it('tells a unit lit later in the same ping nothing (#1300)', () => {
+    // The radius is published, so the pass on which a hull crosses it puts
+    // the pinger on a circle and the side's one bearing puts it on that
+    // circle. A transmission tells its lit hulls on its first pass only.
     const { match, mine, theirs } = twoSides(300);
     const late = spawnUnit(match.world, {
       kind: UnitKind.Corvette,
@@ -413,12 +414,27 @@ describe('one bearing per ping (#1290)', () => {
       first.map((e) => [e.unitId, e.bearing !== undefined]),
       [[theirs, true]]
     );
-    Position.y[late] = 4500;
-    const events = lit(match, 1);
-    assert.deepEqual(
-      events.map((e) => [e.unitId, e.bearing !== undefined]),
-      [[late, false]]
-    );
+    Position.y[late] = 4800;
+    // The pinger still resolves it: only the victim's side is kept silent.
+    const seen = nextSnapshot(match)
+      .get(0)!
+      .contacts.some(
+        (c) =>
+          c.tier >= ResolutionTier.Track && Math.abs(c.x - 4000) < 1 && Math.abs(c.y - 4800) < 1
+      );
+    assert.ok(seen, 'the pinger lost the late hull');
+    assert.deepEqual(lit(match, 1), [], 'the late hull was told it was lit');
+  });
+
+  it('keys the silence per transmission, not per side', () => {
+    // A side with nothing in the radius on the first pass is not owed a
+    // bearing when its first hull sails in: that is the same leak.
+    const { match, mine, theirs } = twoSides(300);
+    Position.y[theirs] = 6000;
+    match.activeSonar(0, mine);
+    nextSnapshot(match);
+    Position.y[theirs] = 4300;
+    assert.deepEqual(lit(match, 1), [], 'a side first lit late was told');
   });
 
   it('gives the next transmission its own bearing', () => {

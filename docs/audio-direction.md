@@ -109,7 +109,7 @@ The ping is the game's signature decision ([systems-echo.md](systems-echo.md) §
 
 - **Transmit** — a 1.5 s outgoing sweep, dry, loud, unmistakably *yours*. It is a commitment sound: it must feel like slamming a door.
 - **Return** — echoes arriving over the following 3 s, ordered by range so near contacts return first. The player literally hears the sweep resolve the map. In a **Resonance Field** the returns arrive from wrong bearings and one to three of them are false ([environments.md](environments.md)) — audibly wrong, so the terrain teaches its own rule. Both are *sent*, not synthesised: the server reports the scattered bearing and the phantom as contacts ([systems-echo.md](systems-echo.md) §3, "Scattered water"), so the mix renders them exactly as it renders a true return and has nothing to add.
-- **Exposure** — what an *enemy* ping sounds like when it resolves you: a hard, close, panned strike, followed by a two-second tail. There is no visual equivalent that arrives sooner. **If you have been lit, you know.**
+- **Exposure** — what an *enemy* ping sounds like when it resolves you: a hard, close, panned strike, followed by a two-second tail. There is no visual equivalent that arrives sooner. **If you have been lit, you know.** A hull is lit by the transmission's first pass, the pulse going out: one that sails into the radius later in the same ping is resolved by the pinger like any other but told nothing, since the pass on which it crosses the published radius would place the pinger (#1300).
 
 Every unit that pings also triples its fauna aggro contribution ([bestiary.md](bestiary.md) §2). The Sounder's answering call is a distinct, extremely low, non-directional sound that plays before any fauna contact resolves — the only sound in the game that means *you have made a mistake that is now coming.*
 
@@ -685,12 +685,14 @@ The one thing deliberately withheld is the pinger's **position**. The victim get
 which is what §11's screen-edge flash asks for. A ping resolves by hard radius while the
 pinger's own self-reveal travels by propagation, so in a masking biome a player can be lit
 by something they cannot hear back — sending coordinates would close that gap on their
-behalf. So a side gets **one bearing per ping**, from the nearest of its units the ping first
-lights, and its other lit units are told they were lit without one: two bearings are two rays
-that meet on the pinger, which is coordinates by another route (#1290). Only a unit or a
-structure is told: ordnance has no ears. The mix strikes once per bearing, panned, and once
-unpanned on a tick that carries none, so the panned strike keeps its image. That unpanned
-strike's visual half is one contact-log row, `bearing unknown`; its edge flash is owed (#1306).
+behalf. So a side gets **one bearing per ping**, from the nearest of its units the ping lights, and
+its other lit units are told they were lit without one: two bearings are two rays that meet on
+the pinger, which is coordinates by another route (#1290). Only a unit or a
+structure is told: ordnance has no ears. The mix strikes once per bearing, panned, and adds
+no centred copy beside it, so the panned strike keeps its image. Every lit hull is told on the
+ping's first pass (below), so a tick that tells a side it was lit always carries that side's
+bearing (#1300). The mix's unpanned strike for a tick with none, and its one `bearing unknown`
+row, are a fallback no server tick now reaches, which leaves #1306's edge flash nothing to mark.
 
 **The self bed follows fleet SIG, not `peakSig`.** The HUD number folds in structures, and a
 base six kilometres away would pin the bed at "full plant" for the whole match, making the
@@ -700,9 +702,13 @@ statements are true.
 
 **Being lit is an event, not a state.** A ping reveals for three seconds, which is fifteen
 Echo ticks; the first implementation fired the strike on every one of them, measured at 42
-strikes for a single ping. The pass now tracks which hulls a given transmission has already
-lit, so a hull is told once — and a hull that enters the radius part-way through is still
-told, because it was just lit.
+strikes for a single ping. The pass now tells a transmission's lit hulls on its first pass and
+never again, so a hull is told once. A hull that enters the radius part-way through is told
+nothing (#1300): the radius is published, 900 m for the button and 808 for a picket, so the
+pass on which a hull crosses it, with the side's one bearing, fixes the pinger to within
+metres. Keyed per transmission, not per side, since a side first lit late would leak the
+same way. The pinger still resolves the late hull, and the ping's own noise still reaches it
+by propagation like any other listener; only the strike is withheld.
 
 **Where fidelity is enforced.** The renderer assembles the contact picture the mix is
 allowed to hear and *withholds* bearing and range at Tier 1 rather than blurring them —

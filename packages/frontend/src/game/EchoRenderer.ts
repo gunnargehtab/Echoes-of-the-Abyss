@@ -4968,13 +4968,14 @@ export class EchoRenderer {
    * and the exposure strike is the one cue in the game the doc admits has "no
    * visual equivalent that arrives sooner". Sooner is not the same as never:
    * a strike that carries a bearing gets a screen-edge flash on it, arriving
-   * with the sound rather than before it. One with none gets its log row, and
-   * its flash is owed (#1306).
+   * with the sound rather than before it. One with none gets its log row: a
+   * fallback no server tick reaches since #1300, so #1306 has nothing to mark.
    */
   private selfAudioFrame(snapshot: EchoSnapshot, now: number): SelfAudioFrame {
-    // A ping gives a side one bearing (#1290), so a tick whose exposures carry
-    // none is hulls lit later in a ping. The mix strikes once for them,
-    // unpanned, and the log writes that one strike's row.
+    // A ping gives a side one bearing (#1290), on the same pass as every hull
+    // it tells (#1300), so no server tick carries exposures without one. The
+    // fallback stays: the mix strikes once, unpanned, and the log writes that
+    // one strike's row.
     let bareRowDue = !snapshot.selfEvents.some(
       (event) => event.kind === SelfEventKind.Exposed && event.bearing !== undefined
     );
@@ -5003,7 +5004,7 @@ export class EchoRenderer {
             });
           } else if (bareRowDue) {
             // Lit, and nothing about from where: the log prints "bearing
-            // unknown". Its edge flash is not specified yet (#1306).
+            // unknown". A fallback no server tick reaches since #1300.
             bareRowDue = false;
             this.callbacks.onContactEvent({
               id: `own:${this.ownRowSeq++}`,

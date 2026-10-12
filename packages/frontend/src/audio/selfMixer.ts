@@ -250,8 +250,9 @@ export class SelfMixer {
           // A unit lit without its side's one bearing (#1290). The ping's
           // strike is the one that carries the bearing, panned; centred copies
           // beside it on the same tick would drag the image to the middle, so
-          // an unpanned strike sounds only on a tick with no bearing at all —
-          // a hull lit later in the ping — and only once.
+          // an unpanned strike sounds only on a tick with no bearing at all,
+          // and only once. The server sends no such tick since #1300: every
+          // lit hull is told on the ping's first pass, beside the bearing.
           if (this.tickHasBearing || this.bareStrikeTick === tick) return false;
           this.bareStrikeTick = tick;
           this.sink.exposure(now, 0);
