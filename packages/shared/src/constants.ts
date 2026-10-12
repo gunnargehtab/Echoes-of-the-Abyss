@@ -1378,7 +1378,7 @@ export const DRIFT = {
   /** SPEC — §2. "Fresh kill or wreck within 800 m: +15 flat." */
   WRECK_RADIUS_M: 800,
   WRECK_AGGRO_BONUS: 15,
-  /** SPEC — §2. "Target is a Directorate unit: ×0.4." They taste worse. */
+  /** SPEC — §2. "Target is anything the Directorate puts in the water: ×0.4." */
   DIRECTORATE_AGGRO_MULTIPLIER: 0.4,
 
   /**

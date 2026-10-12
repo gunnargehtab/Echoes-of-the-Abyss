@@ -37,7 +37,7 @@ Modifiers, additive to perceived loudness:
 | Sustained mining or refining in one place | ×1.5 after 60 s |
 | Fresh kill or wreck within 800 m | +15 flat, decaying over 90 s |
 | Breaking Silent Running to fire | +40 spike, as the SIG spike itself |
-| Target is a Directorate unit | ×0.4 — the Directorate smell wrong and taste worse |
+| Target is anything the Directorate puts in the water — hull, structure, torpedo, mine, depth charge, decoy, a mission's emitter | ×0.4 — the Directorate smell wrong and taste worse |
 
 **Fauna attack the loudest thing, not the nearest.** This single rule is what makes the Drift a strategic object: a Consortium column can pull a swarm off a Commune harvester simply by existing nearby, and both players know it.
 
@@ -267,7 +267,7 @@ None of this is announced. §2 rule 5 ends "and nobody tells them why", so there
 | --- | --- |
 | **Bathyarch Consortium** | Harvest remains for rare compounds. Stabilised vents displace Ashgrazer herds. Loudest faction in the game and therefore the most-attacked — the Klaxon Doctrine tacitly includes *being bitten* |
 | **Pelagia Commune** | Pacify rather than kill: bloom-scent lowers Interest thresholds by 30% in a radius. Farm Tetherjelly. Take a reputational and mechanical hit from any Drift Health they cause to fall |
-| **Abyssal Directorate** | Harvest for Biomass, and can hold one megafauna at Interested state without commitment for 45 s. Fauna aggro against Directorate units is ×0.4 |
+| **Abyssal Directorate** | Harvest for Biomass, and can hold one megafauna at Interested state without commitment for 45 s. Fauna aggro against anything the Directorate puts in the water is ×0.4 (§2) |
 | **Hadron Knights** | Repel with directional pulses — a 90° cone that pushes Committed fauna back to Interested. Precise, expensive, and useless against a Sounder already in transit |
 
 ---
