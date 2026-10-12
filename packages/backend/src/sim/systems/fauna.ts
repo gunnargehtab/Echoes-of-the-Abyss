@@ -124,7 +124,11 @@ const creatures = defineQuery([Fauna, Position, Acoustic, Health]);
 
 /** Reused scratch for terrain step resolution — see movement.ts. */
 const faunaStep = { x: 0, y: 0 };
-/** Everything a creature can hear: players' hulls and buildings. */
+/**
+ * Everything a creature can hear: anything owned that makes a sound and can be
+ * hurt — hulls and structures, and ordnance and mission emitters too. The
+ * Drift's own creatures are in it and skipped by slot.
+ */
 const audible = defineQuery([Position, Acoustic, Owner, Health]);
 /**
  * What a Sounder can grind through: anything owned with a body and hull points.
@@ -328,8 +332,9 @@ function listen(
     if (hasComponent(world, ActivePing, other) && ActivePing.remainingS[other]! > 0) {
       heard *= ACTIVE_SONAR.FAUNA_AGGRO_MULTIPLIER;
     }
-    // "Target is a Directorate unit: x0.4 — the Directorate smell wrong and
-    // taste worse."
+    // "Target is anything the Directorate puts in the water: x0.4 — the
+    // Directorate smell wrong and taste worse." By faction, so a Directorate
+    // torpedo, mine, decoy or mission emitter is discounted with its hulls.
     if (Owner.faction[other] === Faction.Directorate) {
       heard *= DRIFT.DIRECTORATE_AGGRO_MULTIPLIER;
     }
