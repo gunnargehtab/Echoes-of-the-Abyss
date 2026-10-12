@@ -112,10 +112,13 @@ export function aurasSystem(world: SimWorld): void {
   world.spireActive.clear();
 
   // A construction site projects nothing — the aura arrives with commission.
+  // Nor does a structure destroyed this tick: the reap runs after this pass,
+  // and the hull-borne sources below make the same check (#1321).
   const sites = structures(world);
   for (let i = 0; i < sites.length; i++) {
     const eid = sites[i]!;
     if (hasComponent(world, UnderConstruction, eid)) continue;
+    if (Health.hp[eid]! <= 0) continue;
     const kind = Structure.kind[eid] as StructureKind;
     const list =
       kind === StructureKind.BaffleBarge

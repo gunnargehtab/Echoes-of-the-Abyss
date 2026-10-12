@@ -31,6 +31,7 @@ import {
   structureStatsFor,
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
+import { aurasSystem } from '../src/sim/systems/auras.ts';
 import { VENTFRONT_DIVIDE, type MapDefinition } from '../src/sim/maps/index.ts';
 import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
 import {
@@ -1300,6 +1301,33 @@ describe('faction structure auras', () => {
       'ally inside should be masked'
     );
     assert.equal(Acoustic.pfFactor[theirs.id], 1, 'enemy inside must not be masked');
+  });
+
+  it('a Baffle Barge destroyed this tick masks nothing on it (#1321)', () => {
+    // The reap runs after the auras, so a barge killed in combat is still in
+    // the query at 0 hp when this pass reads it. Run the pass alone, as the
+    // step would between the two.
+    const match = twoPlayerMatch();
+    advance(match, 0.5);
+    const mine = advance(match, 0.2)!.get(0)!.units[0]!;
+    const barge = spawnStructure(match.world, {
+      kind: StructureKind.BaffleBarge,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: Position.x[mine.id]!,
+      y: Position.y[mine.id]!,
+      prebuilt: true,
+    });
+    const { PF_FACTOR } = STRUCTURE_AURAS.BAFFLE_BARGE;
+    aurasSystem(match.world);
+    assert.ok(
+      Math.abs(Acoustic.pfFactor[mine.id]! - PF_FACTOR) < 1e-6,
+      'control: standing, it masks'
+    );
+
+    Health.hp[barge] = 0;
+    aurasSystem(match.world);
+    assert.equal(Acoustic.pfFactor[mine.id], 1, 'a barge at 0 hp still masked its ally');
   });
 
   it('a Cantor dome lends allied ears the bonus, capped', () => {

@@ -27,6 +27,7 @@ import {
   unitRadiusM,
   type Contact,
   type EchoSnapshot,
+  type OwnStructure,
   type OwnUnit,
 } from '@echoes/shared';
 import { AiCommander } from '../src/ai/commander.ts';
@@ -301,6 +302,49 @@ describe('a spent hull goes to a depot and fills (#1090)', () => {
         0,
         'an empty hull ordered a launch the server refuses'
       );
+    });
+  }
+
+  for (const [built, label] of [
+    [0.5, 'past a nearer Foundry site to a built depot'],
+    [1, 'to a nearer Foundry once it is built'],
+  ] as const) {
+    it(`walks an empty Broadside ${label} (#1321)`, () => {
+      // A site rearms nothing (`atRearmDepot`), so a walk to one parks the
+      // hull beside a depot that refuses it. The built case is the control:
+      // the same Foundry, finished, is where the walk goes.
+      const { brief, base } = rig(Faction.Bathyarch);
+      const { fleet, middle } = fleetOut(brief);
+      const foundry: OwnStructure = {
+        id: 301,
+        kind: StructureKind.Foundry,
+        x: middle.x + 500,
+        y: middle.y,
+        depth: 600,
+        hp: 1,
+        maxHp: 1,
+        sig: 0,
+        buildProgress: built,
+        queue: [],
+        queueProgress: 0,
+      };
+      const withSite = { ...base, structures: [...base.structures, foundry] };
+      const hull = spent(UnitKind.Broadside, own(201, UnitKind.Broadside, middle.x, middle.y), 0);
+      const moves = movesOf(
+        ordersFor(brief, withSite, () => [...fleet, hull]),
+        201
+      );
+      assert.ok(moves.length > 0, 'an empty Broadside was never sent to fill');
+      const toFoundry = (m: { x: number; y: number }) =>
+        Math.hypot(m.x - foundry.x, m.y - foundry.y) <= ORDNANCE.TORPEDO.REARM_RANGE_M;
+      for (const move of moves) {
+        if (built < 1) {
+          assert.ok(isBerth(base, UnitKind.Broadside, move), 'walked somewhere it cannot fill');
+          assert.ok(!toFoundry(move), 'walked to a Foundry still being built');
+        } else {
+          assert.ok(toFoundry(move), 'passed a nearer built Foundry');
+        }
+      }
     });
   }
 

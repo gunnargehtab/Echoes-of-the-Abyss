@@ -25,7 +25,7 @@
 import { hasComponent } from 'bitecs';
 import { defineQuery } from '../query.ts';
 import { Faction, HADRON, StructureKind } from '@echoes/shared';
-import { Owner, Structure, UnderConstruction } from '../components.ts';
+import { Health, Owner, Structure, UnderConstruction } from '../components.ts';
 import { economyFor, type SimWorld } from '../world.ts';
 
 const structures = defineQuery([Structure, Owner]);
@@ -45,6 +45,9 @@ export function titheSystem(world: SimWorld): void {
     // A site under construction is not yet a seat of anything. The opening
     // Bastion is pre-built, so this only matters if one is ever rebuilt.
     if (hasComponent(world, UnderConstruction, eid)) continue;
+    // Standing, too: this pass runs after combat and before the reap, so a
+    // Bastion destroyed this tick is still in the query at 0 hp (#1321).
+    if (Health.hp[eid]! <= 0) continue;
     paid.add(Owner.slot[eid]!);
   }
 
