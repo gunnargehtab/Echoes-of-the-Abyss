@@ -51,7 +51,11 @@ function seated(faction: Faction): Match {
   return match;
 }
 
-/** Where the commander's rally point is: 1,200 m from home toward seat 0. */
+/**
+ * Where the commander's rally point is: 1,200 m from home toward seat 0.
+ * Mirrors `RANGE.RALLY_M`, the commander's private tuning; if that moves, so
+ * must this, or the premise test checks a point nobody asks for.
+ */
 function rallyPoint(): { x: number; y: number } {
   const home = KELP_LABYRINTH.spawns[SEAT]!;
   const toward = KELP_LABYRINTH.spawns[0]!;

@@ -821,7 +821,7 @@ describe('the commander saves for what it cannot buy out of pocket', () => {
     const home = brief.spawns[brief.slot]!;
     const sent = commander.observe(
       snapshot(fleet(brief, DOCTRINE[Faction.Pelagia].harvesterTarget), {
-        structures: [...yards(), { ...structure(22, StructureKind.Slipway), ...home }],
+        structures: [...yards(), { ...structure(22, StructureKind.Slipway), x: home.x, y: home.y }],
         nodules: price.nodules,
         crystal: price.crystal,
       })
