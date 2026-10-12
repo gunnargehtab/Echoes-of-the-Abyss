@@ -143,6 +143,16 @@ const RANGE = {
 } as const;
 
 /**
+ * How far `signatureSite` walks from the rally point when the point itself
+ * will not hold a building: rings this far apart, out to this many. TUNABLE.
+ * 600 m clears the roofed column under kelp-labyrinth's seat 3 (#1296). The
+ * outer rings reach past `CONSTRUCTION.BUILD_RADIUS_M` of the Bastion, which
+ * is why each site is held to the anchor rule rather than trusted.
+ */
+const SIGNATURE_RING_M = 150;
+const SIGNATURE_RINGS = 4;
+
+/**
  * The two depths the army has words for.
  *
  * Depth is the axis of commitment (docs/systems-depth.md §5), so the commander
@@ -1263,6 +1273,11 @@ export class AiCommander implements AiPlayer {
   private readonly rearming = new Set<number>();
   /** Rotates a rejected build placement, since a refusal is silent. */
   private buildAttempt = 0;
+  /**
+   * The same, for the signature structure alone (`signatureSite`), so its
+   * first ask is the rally point itself whatever was built before it.
+   */
+  private signatureAttempt = 0;
   /** Which leg of the scouting route the scout is on. */
   private scoutLeg = 0;
   /** The last place it had any reason to think an enemy was. */
@@ -2562,10 +2577,17 @@ export class AiCommander implements AiPlayer {
     const signature = FACTION_STRUCTURE[this.briefing.faction];
     for (const kind of [StructureKind.Slipway, signature]) {
       if (kind === undefined || has(kind)) continue;
+      // A signature structure with nowhere to stand is not one to save for:
+      // asking for it would spend this observation's budget on a refusal,
+      // and holding the purse against it would starve the yards for a build
+      // that never comes (#1296).
+      const site = kind === StructureKind.Slipway ? null : this.signatureSite(kind, snapshot);
+      if (kind !== StructureKind.Slipway && site === null) continue;
       if (this.afford(kind, purse)) {
         // Placement differs, and for a reason each. A yard goes *away* from
         // the enemy, like the Slipway always did. The signature structure goes
-        // to the rally point, because three of the four are arguments about
+        // to the rally point, or the nearest ground to it that holds a
+        // building (`signatureSite`), because three of the four are arguments about
         // the approach and the fourth does not mind: the Barge hides what
         // stands in it, the Veil blinds both ways *and* is where a Spinner
         // regrows its magazine (`HULL_EFFECTS.SPINNER`), and the Cantor's
@@ -2579,9 +2601,10 @@ export class AiCommander implements AiPlayer {
                 x: 2 * this.home.x - (this.enemyStarts[0]?.x ?? this.home.x),
                 y: 2 * this.home.y - (this.enemyStarts[0]?.y ?? this.home.y),
               })
-            : this.rallyPoint();
+            : site!;
         out.push({ kind: 'build', structure: kind, ...where });
         this.buildAttempt++;
+        if (kind !== StructureKind.Slipway) this.signatureAttempt++;
         return;
       }
 
@@ -2652,6 +2675,62 @@ export class AiCommander implements AiPlayer {
       x: clamp(this.home.x + Math.cos(angle) * reach, 200, this.briefing.widthM - 200),
       y: clamp(this.home.y + Math.sin(angle) * reach, 200, this.briefing.heightM - 200),
     };
+  }
+
+  /**
+   * Where to stand the signature structure: the rally point, or the nearest
+   * ground around it that will hold one.
+   *
+   * The rally point is one fixed spot, and on kelp-labyrinth seat 3's lies
+   * under a roof (floor 1,800 m, ceiling 700 m), which refuses a structure at
+   * `CONSTRUCTION.WORKING_DEPTH_M` for every navy. Asked there, the commander
+   * asked whenever it could pay and never built it (#1296). So the site walks
+   * rings around the rally point, as `nearHome` walks its spiral, and keeps
+   * only sites the public map admits and that stand within
+   * `CONSTRUCTION.BUILD_RADIUS_M` of a structure this navy owns — the two
+   * refusals `Match.build` makes that the briefing can predict. A footprint
+   * or a nodule field it cannot see is still a silent refusal, so each ask
+   * moves on to the next site the way `buildAttempt` turns `nearHome`.
+   *
+   * Null when no ring holds a site: nothing to ask for, so nothing to save.
+   */
+  private signatureSite(
+    kind: StructureKind,
+    snapshot: EchoSnapshot
+  ): { x: number; y: number } | null {
+    const rally = this.rallyPoint();
+    const margin = structureStatsFor(kind).radiusM;
+    const sites: { x: number; y: number }[] = [];
+    for (let ring = 0; ring <= SIGNATURE_RINGS; ring++) {
+      const count = ring === 0 ? 1 : 8 * ring;
+      for (let i = 0; i < count; i++) {
+        const angle = (i / count) * 2 * Math.PI;
+        const x = rally.x + Math.cos(angle) * ring * SIGNATURE_RING_M;
+        const y = rally.y + Math.sin(angle) * ring * SIGNATURE_RING_M;
+        if (x < margin || y < margin) continue;
+        if (x > this.briefing.widthM - margin || y > this.briefing.heightM - margin) continue;
+        if (!this.holdsStructure(x, y)) continue;
+        const anchored = snapshot.structures.some(
+          (structure) => distance(structure, { x, y }) <= CONSTRUCTION.BUILD_RADIUS_M
+        );
+        if (!anchored) continue;
+        sites.push({ x, y });
+      }
+    }
+    if (sites.length === 0) return null;
+    return sites[this.signatureAttempt % sites.length]!;
+  }
+
+  /**
+   * Does the public map admit a structure here — `Terrain.admits` at
+   * `CONSTRUCTION.WORKING_DEPTH_M`, read off the briefing's grid?
+   */
+  private holdsStructure(x: number, y: number): boolean {
+    const cell = this.cellAt(x, y);
+    if (cell === null) return false;
+    const { floor, ceiling } = this.briefing.terrain;
+    const depth = CONSTRUCTION.WORKING_DEPTH_M;
+    return depth >= ceiling[cell]! && depth <= floor[cell]!;
   }
 
   private busiestNode(): ResourceNodeInfo | null {
