@@ -1158,9 +1158,9 @@ export function hazardStatesFor(
 
 /**
  * Has this slot a living Hadron hull or structure within `radiusM` of the
- * hazard? `anyHullWithin`'s presence rule (#1304), widened to structures,
- * since a listening post hears as a hull does, and narrowed to one slot, since
- * a prediction is told to the navy whose sensors made it.
+ * hazard? `anyHullWithin`'s presence rule (#1304), widened to structures, as
+ * docs/hazards.md §1 has it ("A Hadron hull or structure"), and narrowed to one
+ * slot, since a prediction is told to the navy whose sensors made it.
  */
 function slotListensWithin(
   world: SimWorld,
