@@ -210,7 +210,10 @@ export function dormantSecondsFor(kind: HazardKind): number {
 
 /**
  * Where in its cycle a site starts the match so that one Active phase begins
- * `activeAtS` seconds in: the phase and the seconds already spent in it.
+ * `activeAtS` seconds in: the phase and the seconds already spent in it. It
+ * lands a tick late per phase change before it, because a phase change
+ * restarts the clock at zero; not compensated here, so map data does not
+ * carry the system's rounding.
  *
  * For a mission that hangs a beat on an eruption (#1312). The match is phased,
  * not the cycle stretched, so the vent keeps its published interval before and
