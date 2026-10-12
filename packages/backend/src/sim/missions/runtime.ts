@@ -1022,7 +1022,8 @@ export class MissionRuntime {
         const ids = this.idsFor(beat.role);
         for (const tag of [...tags]) {
           const eid = this.eidOf(world, tag);
-          if (eid === 0 || !inRegion(region, Position.x[eid]!, Position.y[eid]!)) continue;
+          if (eid === 0 || !inWater(world, eid)) continue;
+          if (!inRegion(region, Position.x[eid]!, Position.y[eid]!)) continue;
           // Out of the role, not just out of this tick's ids: `resolveRoleIds`
           // rebuilds from the tags, and a struck hull that later reaches the
           // gate must still read as nobody the count is waiting for. The id
@@ -1037,7 +1038,7 @@ export class MissionRuntime {
       }
       case 'transit': {
         const eid = this.eidOf(world, beat.tag);
-        if (eid === 0) return;
+        if (eid === 0 || !inWater(world, eid)) return;
         // Replaces, never joins — the `creature` beat's rule, and the whole
         // point: a conditional transit south is how a scheduled walk north is
         // cancelled (types.ts, `transit`).
@@ -1321,7 +1322,7 @@ export class MissionRuntime {
         // A hull the mission holds by neither rule is not the wire's business.
         if (!tender && unit.releaseTick === undefined) continue;
         const eid = this.eidOf(world, unit.tag);
-        if (eid === 0 || !hasComponent(world, MoveOrder, eid)) continue;
+        if (eid === 0 || !hasComponent(world, MoveOrder, eid) || !inWater(world, eid)) continue;
 
         const unreleased = world.tick < (this.heldUntil.get(unit.tag) ?? 0);
         if (!tender) {
@@ -1495,7 +1496,7 @@ export class MissionRuntime {
       if (eid === 0) continue;
       const region = this.definition.regions.find((candidate) => candidate.id === lift.region);
       if (region === undefined) continue;
-      if (!inRegion(region, Position.x[eid]!, Position.y[eid]!)) continue;
+      if (!inWater(world, eid) || !inRegion(region, Position.x[eid]!, Position.y[eid]!)) continue;
       if ((this.liftProgress.get(lift.id) ?? 0) >= lift.cutTicks) {
         this.loadedLifts.add(lift.id);
         this.loadedIds.add(eid);
@@ -1576,7 +1577,7 @@ export class MissionRuntime {
    */
   private holdingSounding(world: SimWorld, eid: number, sounding: MissionSounding): boolean {
     if (postureStopsWork(world, eid)) return false;
-    if (!hasComponent(world, Heading, eid)) return false;
+    if (!hasComponent(world, Heading, eid) || !inWater(world, eid)) return false;
     return soundingHolds(sounding, Heading.rad[eid]!, Position.x[eid]!, Position.y[eid]!);
   }
 
@@ -1791,7 +1792,7 @@ export class MissionRuntime {
       if (party.slot === this.definition.playerSlot) continue;
       for (const unit of party.units) {
         const eid = this.eidOf(world, unit.tag);
-        if (eid === 0) continue;
+        if (eid === 0 || !inWater(world, eid)) continue;
         if (inside(Position.x[eid]!, Position.y[eid]!)) return true;
       }
     }
@@ -1876,7 +1877,7 @@ export class MissionRuntime {
       if (party.slot !== this.definition.playerSlot) continue;
       for (const unit of party.units) {
         const eid = this.eidOf(world, unit.tag);
-        if (eid === 0) continue;
+        if (eid === 0 || !inWater(world, eid)) continue;
         const dx = Position.x[eid]! - ability.x;
         const dy = Position.y[eid]! - ability.y;
         if (Math.hypot(dx, dy) > ability.radiusM) continue;
@@ -1982,7 +1983,7 @@ export class MissionRuntime {
 
     for (const tag of sweep.tags) {
       const listener = this.eidOf(world, tag);
-      if (listener === 0) continue;
+      if (listener === 0 || !inWater(world, listener)) continue;
       const hyd = Acoustic.hyd[listener]!;
       if (hyd <= 0) continue;
       const lx = Position.x[listener]!;
@@ -1993,7 +1994,7 @@ export class MissionRuntime {
         if (party.slot !== this.definition.playerSlot) continue;
         for (const unit of party.units) {
           const hull = this.eidOf(world, unit.tag);
-          if (hull === 0) continue;
+          if (hull === 0 || !inWater(world, hull)) continue;
           // The bow, on the same argument as the Drift's hearing
           // (docs/systems-echo.md §8): the sweep is a listener resolving a
           // player hull, which is the one question this term answers.
@@ -2045,7 +2046,7 @@ export class MissionRuntime {
     const bend = (MISSION.SWEEP_BEND_DEG * Math.PI) / 180;
     for (const tag of this.definition.sweep?.tags ?? []) {
       const eid = this.eidOf(world, tag);
-      if (eid === 0) continue;
+      if (eid === 0 || !inWater(world, eid)) continue;
       const px = Position.x[eid]!;
       const py = Position.y[eid]!;
       // The leg it is flying, or the bow it is holding if it is not flying one.
@@ -2527,4 +2528,15 @@ export class MissionRuntime {
     if (eid === 0 || !hasComponent(world, Owner, eid)) return 0;
     return localIdOf(world, eid) === local ? eid : 0;
   }
+}
+
+/**
+ * Whether a tagged entity is in the water — not aboard a transport. A hull in a
+ * hold keeps its tag, its `Owner` and its health, so `eidOf` still finds it and
+ * the mission still counts it alive; it has no `Position` (systems/carrying.ts),
+ * and the zeroed array reads as a hull at (0, 0). Every position this runtime
+ * reads off a tag asks here first (#1328).
+ */
+function inWater(world: SimWorld, eid: number): boolean {
+  return hasComponent(world, Position, eid);
 }

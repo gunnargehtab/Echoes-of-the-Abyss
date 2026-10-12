@@ -206,7 +206,16 @@ export function faunaSystem(world: SimWorld, destroyed: number[]): void {
       if (Fauna.species[eid] === FaunaSpecies.Rasp) scavengeSense(world, eid);
     }
 
-    advanceStage(eid, stats, dt);
+    // A target held between listens can board a transport in the gap, and
+    // one aboard keeps its health but not its `Position` (systems/carrying.ts):
+    // read anyway, it is a hull at (0, 0), which the creature would steer for
+    // and bite at until the next listen. Out of the water is out of reach, so
+    // the hold reads as losing it — the next listen finds what is still there
+    // (#1328, as #1318 did for guns and seekers).
+    const held = Fauna.targetEid[eid]!;
+    if (held !== 0 && !hasComponent(world, Position, held)) Fauna.targetEid[eid] = 0;
+
+    advanceStage(world, eid, stats, dt);
     act(world, eid, stats, dt, destroyed);
   }
 }
@@ -596,6 +605,7 @@ function wreckBonus(world: SimWorld, x: number, y: number): number {
  * with an audible tell"; the doc prices that with ground instead of time.
  */
 function hollowStage(
+  world: SimWorld,
   eid: number,
   stats: ReturnType<typeof faunaStatsFor>,
   dt: number,
@@ -621,7 +631,14 @@ function hollowStage(
   // next listen keeps a target. A creature that cannot hear its shooter
   // cannot hunt it, and half a second of lunge is what that is worth.
   if (wounded) {
-    if (Fauna.targetEid[eid] === 0 && woundedBy !== 0 && Health.hp[woundedBy]! > 0) {
+    // A shooter that has since boarded a transport is out of the water, and
+    // pointing at it would aim the lunge at (0, 0) (#1328).
+    if (
+      Fauna.targetEid[eid] === 0 &&
+      woundedBy !== 0 &&
+      Health.hp[woundedBy]! > 0 &&
+      hasComponent(world, Position, woundedBy)
+    ) {
       Fauna.targetEid[eid] = woundedBy;
     }
     // A wound is loud enough to reset the quiet clock: a Hollow that had
@@ -679,7 +696,12 @@ function hollowStage(
 }
 
 /** §2's ladder: Ambient -> Interested -> Committed -> Cooling. */
-function advanceStage(eid: number, stats: ReturnType<typeof faunaStatsFor>, dt: number): void {
+function advanceStage(
+  world: SimWorld,
+  eid: number,
+  stats: ReturnType<typeof faunaStatsFor>,
+  dt: number
+): void {
   const heard = Fauna.heard[eid]!;
   const stage = Fauna.stage[eid] as FaunaStage;
 
@@ -700,7 +722,7 @@ function advanceStage(eid: number, stats: ReturnType<typeof faunaStatsFor>, dt: 
   Fauna.struckBy[eid] = 0;
 
   if (stats.species === FaunaSpecies.Hollow) {
-    hollowStage(eid, stats, dt, wounded, woundedBy);
+    hollowStage(world, eid, stats, dt, wounded, woundedBy);
     return;
   }
 

@@ -26,6 +26,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { hasComponent } from 'bitecs';
 
 import {
   Faction,
@@ -40,6 +41,8 @@ import { Match } from '../src/sim/match.ts';
 import { missionMapById } from '../src/sim/maps/index.ts';
 import { PROLOGUE_SORROWGATE } from '../src/sim/missions/index.ts';
 import type { MissionDefinition } from '../src/sim/missions/index.ts';
+import { spawnUnit } from '../src/sim/world.ts';
+import { Carried, Owner, Unit } from '../src/sim/components.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const SEED = 11;
@@ -319,5 +322,72 @@ describe('the delivery', () => {
     assert.equal(run().finalProgress?.done, 2, 'the manifest never filled');
     assert.equal(run().outcome, MissionOutcome.Complete);
     assert.equal(run().epilogue, LIFT_MISSION.epilogue[MissionOutcome.Complete]);
+  });
+});
+
+describe('a hull in a hold', () => {
+  it('cuts no lift from inside a transport, whose hull reads (0, 0)', () => {
+    // Aboard, a hull keeps its tag and loses its `Position` (systems/carrying.ts),
+    // so a region read off the zeroed array placed it at the map's corner. A
+    // lift authored over that corner is the case where it shows (#1328).
+    const corner: MissionDefinition = {
+      ...LIFT_MISSION,
+      id: 'test-lift-in-a-hold',
+      regions: [{ id: 'corner', x: 0, y: 0, widthM: 500, heightM: 500, note: 'Over (0, 0)' }],
+      lifts: [
+        {
+          id: 'asset',
+          tag: 'lift-one',
+          region: 'corner',
+          cutTicks: CUT_TICKS,
+          cutSig: CUT_SIG,
+          note: 'A cut no hull in the water is near',
+        },
+      ],
+      parties: [
+        {
+          ...LIFT_MISSION.parties[0]!,
+          units: [
+            {
+              tag: 'lift-one',
+              kind: UnitKind.Corvette,
+              x: AT_FALL.x,
+              y: AT_FALL.y,
+              depthM: 50,
+              role: 'escort',
+              note: 'Shallow enough to board a Freighter',
+            },
+          ],
+        },
+      ],
+      objectives: [],
+    };
+    const match = new Match(missionMapById(PROLOGUE_SORROWGATE.mapId)!, {
+      mission: corner,
+      fauna: false,
+      seed: SEED,
+    });
+    let corvette = 0;
+    for (let eid = 1; eid <= match.world.maxEid; eid++) {
+      if (!hasComponent(match.world, Unit, eid) || Owner.slot[eid] !== PLAYER) continue;
+      if (Unit.kind[eid] === UnitKind.Corvette) corvette = eid;
+    }
+    assert.notEqual(corvette, 0, 'the premise: the tagged hull is fielded');
+    const freighter = spawnUnit(match.world, {
+      kind: UnitKind.Freighter,
+      slot: PLAYER,
+      faction: Faction.Bathyarch,
+      x: AT_FALL.x + 60,
+      y: AT_FALL.y,
+      depth: 50,
+    });
+    match.orderEmbark(PLAYER, corvette, freighter);
+    let cut = false;
+    for (let tick = 0; tick < SIM.TICK_HZ * 3; tick++) {
+      match.update(STEP_MS);
+      if (match.world.liftCutSig.has(corvette)) cut = true;
+    }
+    assert.ok(hasComponent(match.world, Carried, corvette), 'the premise: it boarded');
+    assert.ok(!cut, 'the hull aboard was cutting the lift at the corner');
   });
 });
