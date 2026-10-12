@@ -57,11 +57,14 @@ import {
   Magazine,
   MoveOrder,
   Ordnance,
+  Owner,
   Position,
+  Unit,
   Weapon,
 } from '../src/sim/components.ts';
-import { VENTFRONT_DIVIDE } from '../src/sim/maps/index.ts';
-import { hasComponent } from 'bitecs';
+import { VENTFRONT_DIVIDE, missionMapById } from '../src/sim/maps/index.ts';
+import { CHORD_CONCLAVE } from '../src/sim/missions/conclaveChord.ts';
+import { defineQuery, hasComponent } from 'bitecs';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const MAP_M = 8000;
@@ -1294,5 +1297,44 @@ describe('the budget — docs/systems-echo.md, the 2 ms pass', () => {
         `${contacts} contacts scattered, ${match.worstEchoPassMs.toFixed(3)} ms ` +
         `(budget ${SIM.ECHO_BUDGET_MS} ms)`
     );
+  });
+});
+
+/**
+ * #1319 in Conclave's Fields, where the ping is the player's. The works party
+ * is seated at 1,700 m on the Fields' 1,700 m floor, inside the follow-floor
+ * clearance; a seat held to that clearance would place no phantom anywhere in
+ * the Fields, and every return there would be vouched true.
+ */
+describe("a mission's phantoms in Conclave's Fields — docs/systems-echo.md §3", () => {
+  it('claims a works seat at its seat depth, on the Fields floor', () => {
+    const survey = CHORD_CONCLAVE.parties.find((p) => p.slot !== CHORD_CONCLAVE.playerSlot)!;
+    const seated = new Set(survey.units.map((u) => u.kind));
+    const map = missionMapById(CHORD_CONCLAVE.mapId)!;
+    const hulls = defineQuery([Unit, Owner, Position]);
+    const player = CHORD_CONCLAVE.playerSlot;
+    let seen = 0;
+    for (const seed of [1, 2, 3, 4, 5]) {
+      const match = new Match(map, { mission: CHORD_CONCLAVE, seed, fauna: false });
+      const terrain = match.world.terrain;
+      const pinger = hulls(match.world).find(
+        (e) => Owner.slot[e] === player && Unit.kind[e] === UnitKind.Cruiser
+      )!;
+      // The Fields, 750 m east of the works.
+      Position.x[pinger] = 900;
+      Position.y[pinger] = 2000;
+      assert.ok(terrain.scatterAt(900, 2000), 'the premise: the pinger is in the Fields');
+      match.activeSonar(player, pinger);
+      const slots = CHORD_CONCLAVE.parties.map((p) => p.slot);
+      const contacts = match.echo.run(match.world, slots).contactsBySlot.get(player) ?? [];
+      for (const c of contacts) {
+        if (match.echo.entityForHandle(player, c.id) !== undefined) continue;
+        seen++;
+        assert.equal(c.faction, survey.faction, `seed ${seed}: the works' navy`);
+        assert.ok(seated.has(c.kind!), `seed ${seed}: a seated hull, was ${UnitKind[c.kind!]}`);
+        assert.equal(c.depth, 1700, `seed ${seed}: the works' seat depth`);
+      }
+    }
+    assert.ok(seen > 0, 'the Fields still return phantoms');
   });
 });

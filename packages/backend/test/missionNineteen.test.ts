@@ -1465,8 +1465,8 @@ describe('the sweep bends and does not intercept — docs/mission-tend.md §6', 
  * hull. The Rest is crystal country (§11) and §3 unlocks the ping, so the
  * Voice's returns from the Shoulders carry phantoms; the only other party
  * seats two Abyssal Submersibles at 2,100 m, and that is the only thing a
- * phantom here may claim. On main every one claimed a hull from the roster at
- * its delivery depth: a Corvette or a Chorister at 600 m, which no party fields.
+ * phantom here may claim. On main they claimed hulls from the roster at their
+ * delivery depth, a Corvette or a Chorister at 600 m among them, which no party fields.
  */
 describe('phantoms claim the order of battle — docs/systems-echo.md §3, #1319', () => {
   const hulls = defineQuery([Unit, Owner, Position]);
@@ -1520,9 +1520,9 @@ describe('phantoms claim the order of battle — docs/systems-echo.md §3, #1319
 
   it('places none from the Head, where no water in reach holds 2,100 m', () => {
     // The Voice's own seat at 1,600 m. Every water within the ping's reach is
-    // the Shoulders, the Head or the North Wall, none deeper than 2,020 m once
-    // the follow-floor clearance is off it: a Submersible there is a lie the
-    // mission file disproves, so it is redrawn and then not placed.
+    // the Shoulders, the Head or the North Wall, none with a floor deeper than
+    // 2,050 m: a Submersible there is a lie the mission file disproves, so it
+    // is redrawn and then not placed.
     for (const seed of [1, 2, 3, 4, 5]) assert.deepEqual(ping(seed, null), [], `seed ${seed}`);
   });
 

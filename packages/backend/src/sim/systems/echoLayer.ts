@@ -193,16 +193,20 @@ export interface PhantomSeat {
 /**
  * The depth a mission phantom reports: its seat's authored depth, floored to
  * the metre as a true depth goes out, or `null` where the water here could
- * not hold it — the same water `phantomDepthM` admits, below the Lid and any
- * roof and the follow-floor clearance off the seabed. A seat's depth is never
- * moved to fit: a phantom off its seat's depth is the tell #1319 closes, so
- * the placement is re-rolled instead.
+ * not hold it — below the Lid and any roof, and no deeper than the seabed. A
+ * seat's depth is never moved to fit: a phantom off its seat's depth is the
+ * tell #1319 closes, so the placement is re-rolled instead.
+ *
+ * The seabed itself and not `phantomDepthM`'s follow-floor clearance off it,
+ * because missions seat hulls inside that clearance: Aptitude and Conclave
+ * seat their enemy at 1,700 m on the Fields' 1,700 m floor. Holding a seat to
+ * a clearance its own mission file breaks would place no phantom anywhere in
+ * those Fields, and a return there would be vouched true.
  */
 export function seatDepthM(terrain: Terrain, x: number, y: number, depthM: number): number | null {
   const depth = Math.floor(depthM);
   const top = Math.ceil(Math.max(LID.DEPTH_M, terrain.ceilingAt(x, y)));
-  const bottom = Math.floor(terrain.floorAt(x, y) - FOLLOW_FLOOR.CLEARANCE_M);
-  return depth >= top && depth <= bottom ? depth : null;
+  return depth >= top && depth <= terrain.floorAt(x, y) ? depth : null;
 }
 
 const NAVIES: readonly Faction[] = [
