@@ -4087,6 +4087,9 @@ export class AiCommander implements AiPlayer {
     let depotD = Infinity;
     for (const s of snapshot.structures) {
       if (s.kind !== StructureKind.Bastion && s.kind !== StructureKind.Foundry) continue;
+      // A site rearms nothing (`atRearmDepot` in ordnance.ts); walking to one
+      // would park the hull beside a depot that refuses it.
+      if (s.buildProgress < 1 || s.hp <= 0) continue;
       const d = distance(hull, s);
       if (d >= depotD) continue;
       depotD = d;

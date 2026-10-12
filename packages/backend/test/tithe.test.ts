@@ -21,6 +21,7 @@ import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { Harvester, Health, Owner, Structure } from '../src/sim/components.ts';
 import { economyFor, spawnStructure } from '../src/sim/world.ts';
+import { titheSystem } from '../src/sim/systems/tithe.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 
@@ -137,11 +138,10 @@ describe('the tithe does not scale with map control', () => {
     advance(match, 1);
     idleHarvesters(match, 0);
 
-    // Through resign(), not by zeroing the Bastion's hp. Deaths only become
-    // real in reap(), and reap only sees what a *system* reported destroyed —
-    // so a hand-zeroed Bastion sits there at 0 hp, still standing, still
-    // tithing, and the test passes for the wrong reason. resign() is the real
-    // path: it eliminates the slot and scuttles everything it owned.
+    // Through resign(), not by zeroing the Bastion's hp: since #1321 a Bastion
+    // at 0 hp stops tithing on its own, so zeroing would pass without testing
+    // the fall. resign() is the real path: it eliminates the slot and scuttles
+    // everything it owned.
     assert.doesNotThrow(() => firstStructure(match, 0, StructureKind.Bastion));
     match.resign(0);
     advance(match, 1);
@@ -149,6 +149,25 @@ describe('the tithe does not scale with map control', () => {
     const after = economyFor(match.world, 0).nodules;
     advance(match, 30);
     assert.equal(economyFor(match.world, 0).nodules, after, 'no Bastion, no tithe');
+  });
+
+  it('does not pay on the tick the Bastion dies (#1321)', () => {
+    // The tithe runs after combat and before the reap, so a Bastion destroyed
+    // this tick is still in its query at 0 hp. Run the pass alone, as the
+    // step would between the two.
+    const match = quietMatch();
+    match.addPlayer(0, Faction.Hadron);
+    advance(match, 1);
+    const bastion = firstStructure(match, 0, StructureKind.Bastion);
+
+    const standing = economyFor(match.world, 0).nodules;
+    titheSystem(match.world);
+    assert.ok(economyFor(match.world, 0).nodules > standing, 'control: standing, it pays');
+
+    Health.hp[bastion] = 0;
+    const dying = economyFor(match.world, 0).nodules;
+    titheSystem(match.world);
+    assert.equal(economyFor(match.world, 0).nodules, dying, 'a Bastion at 0 hp paid its tithe');
   });
 });
 
