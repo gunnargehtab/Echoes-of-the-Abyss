@@ -154,6 +154,7 @@ import { countFauna, countFaunaOf, DRIFT_SLOT, faunaSystem } from './systems/fau
 import {
   dormantSecondsFor,
   hazardStates,
+  hazardStatesFor,
   hazardsSystem,
   isPermanent,
   isSimulated,
@@ -3229,7 +3230,8 @@ export class Match {
     // anyway (#430): hazard telegraphing is public (docs/maps.md — a telegraph
     // only one player can read is not one) and Drift Health is chart data.
     // One array each, shared by reference across every snapshot; nothing
-    // downstream writes to either.
+    // downstream writes to either. The hazards are copied only for a Hadron
+    // slot with a vent it can foresee, which `hazardStatesFor` overlays.
     const hazards = hazardStates(this.world);
     const driftHealth = this.world.drift.snapshot();
 
@@ -3276,7 +3278,9 @@ export class Match {
         marks: (result.marksBySlot.get(slot) ?? []).map((mark) => ({ ...mark })),
         // Public, unlike everything else here: docs/maps.md requires hazard
         // telegraphing, and a telegraph only one player can read is not one.
-        hazards,
+        // A Hadron slot's copy also carries its own early warnings, which are
+        // its sensors' and nobody else's (docs/hazards.md §1, #1303).
+        hazards: hazardStatesFor(this.world, slot, this.factionOf(slot), hazards),
         draw: { ...drawFor(this.world, slot) },
         biomass: economyFor(this.world, slot).biomass,
         berths: this.berthsFor(slot),
