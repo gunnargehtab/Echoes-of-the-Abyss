@@ -37,7 +37,7 @@ Modifiers, additive to perceived loudness:
 | Sustained mining or refining in one place | ×1.5 after 60 s |
 | Fresh kill or wreck within 800 m | +15 flat, decaying over 90 s |
 | Breaking Silent Running to fire | +40 spike, as the SIG spike itself |
-| Target is anything the Directorate puts in the water — hull, structure, torpedo, mine, decoy, a mission's emitter | ×0.4 — the Directorate smell wrong and taste worse |
+| Target is anything the Directorate puts in the water — hull, structure, torpedo, mine, depth charge, decoy, a mission's emitter | ×0.4 — the Directorate smell wrong and taste worse |
 
 **Fauna attack the loudest thing, not the nearest.** This single rule is what makes the Drift a strategic object: a Consortium column can pull a swarm off a Commune harvester simply by existing nearby, and both players know it.
 

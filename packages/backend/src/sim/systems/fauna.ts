@@ -334,7 +334,7 @@ function listen(
     }
     // "Target is anything the Directorate puts in the water: x0.4 — the
     // Directorate smell wrong and taste worse." By faction, so a Directorate
-    // torpedo, mine, decoy or mission emitter is discounted with its hulls.
+    // torpedo, mine, depth charge, decoy or mission emitter is discounted too.
     if (Owner.faction[other] === Faction.Directorate) {
       heard *= DRIFT.DIRECTORATE_AGGRO_MULTIPLIER;
     }
