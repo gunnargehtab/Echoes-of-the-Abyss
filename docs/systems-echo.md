@@ -220,9 +220,12 @@ none, it is drawn again, and one with nowhere to go is not placed. The rating is
 for its navy, never a refit or an aura, because a phantom that carried the enemy's hidden
 purchases would announce them. So a return only a true hull could make — deeper than its kind's
 own band, or off its delivered depth in water that admits it, as a refitted navy's Shelf hulls
-arrive at 600 m — is vouched true, as a solved contact is, and the rule is a skirmish's: a
-mission that seats its hulls at authored depths does not move its phantoms off delivery depths
-(#1319). Health and the bow are vouched the same way. A phantom claims full health, as most hulls
+arrive at 600 m — is vouched true, as a solved contact is. That rule is a skirmish's. A mission
+seats its parties from an authored order of battle, so there a phantom claims one of its seats
+instead: the navy, the hull and the authored depth of a hull another side's party seats, read
+from the mission file and never from the map, so it tells nothing the file does not and goes on
+claiming a seat whose hull is gone. Where the water at its point could not hold that depth it is
+drawn again (#1319). Health and the bow are vouched the same way. A phantom claims full health, as most hulls
 on the map have it, so a hurt return is a hull; and it all but never draws a bow of exactly zero,
 the one a hull keeps from its yard until it first moves. Every heading a contact reports, true or
 false, is told as a bow is stored, single precision in the half turn either side of zero, so its

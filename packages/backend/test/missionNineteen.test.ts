@@ -78,7 +78,7 @@ import {
   thermoclineFactor,
 } from '@echoes/shared';
 
-import { defineQuery } from 'bitecs';
+import { defineQuery, removeEntity } from 'bitecs';
 import { Health, Owner, Position, Unit } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
 import { THE_REST, mapById, missionMapById, terrainFor } from '../src/sim/maps/index.ts';
@@ -1457,5 +1457,76 @@ describe('the sweep bends and does not intercept — docs/mission-tend.md §6', 
       );
     }
     assert.ok(MISSION.SWEEP_BEND_DEG > 0 && MISSION.SWEEP_BEND_DEG <= 15, '§6: a few degrees');
+  });
+});
+
+/**
+ * #1319 — a phantom claims a seat from the order of battle, never a skirmish's
+ * hull. The Rest is crystal country (§11) and §3 unlocks the ping, so the
+ * Voice's returns from the Shoulders carry phantoms; the only other party
+ * seats two Abyssal Submersibles at 2,100 m, and that is the only thing a
+ * phantom here may claim. On main every one claimed a hull from the roster at
+ * its delivery depth: a Corvette or a Chorister at 600 m, which no party fields.
+ */
+describe('phantoms claim the order of battle — docs/systems-echo.md §3, #1319', () => {
+  const hulls = defineQuery([Unit, Owner, Position]);
+  /** Shoulder water beside the Deep End: scattered, and within a ping of 2,100 m water. */
+  const SHOULDER = { x: 4800, y: 600 };
+
+  function ping(seed: number, at: { x: number; y: number } | null, withoutWatch = false) {
+    const match = new Match(THE_REST, { mission: CHORD_NINETEEN, seed, fauna: false });
+    const player = CHORD_NINETEEN.playerSlot;
+    const all = hulls(match.world);
+    const voice = all.find((e) => Owner.slot[e] === player && Unit.kind[e] === UnitKind.Cruiser)!;
+    if (withoutWatch) {
+      for (const eid of all) if (Owner.slot[eid] !== player) removeEntity(match.world, eid);
+    }
+    if (at !== null) {
+      Position.x[voice] = at.x;
+      Position.y[voice] = at.y;
+    }
+    assert.ok(
+      match.world.terrain.scatterAt(Position.x[voice]!, Position.y[voice]!),
+      'the premise: the Voice pings from scattered water'
+    );
+    match.activeSonar(player, voice);
+    const contacts = match.echo.run(match.world, match.slots).contactsBySlot.get(player) ?? [];
+    return contacts.filter((c) => match.echo.entityForHandle(player, c.id) === undefined);
+  }
+
+  function assertSeats(phantoms: ReturnType<typeof ping>, seed: number): void {
+    for (const phantom of phantoms) {
+      assert.equal(phantom.faction, Faction.Directorate, `seed ${seed}: the watch's navy`);
+      assert.equal(phantom.kind, UnitKind.AbyssalSubmersible, `seed ${seed}: the watch's hull`);
+      assert.equal(phantom.depth, WATCH_DEPTH_M, `seed ${seed}: the watch's seat depth`);
+    }
+  }
+
+  it('claims only the watch, at its seat depth, from the Shoulders', () => {
+    let seen = 0;
+    for (const seed of [1, 2, 3, 4, 5]) {
+      const phantoms = ping(seed, SHOULDER);
+      seen += phantoms.length;
+      assertSeats(phantoms, seed);
+    }
+    assert.ok(seen > 0, 'the premise: the Shoulders beside the Deep End return phantoms');
+  });
+
+  it('places none from the Head, where no water in reach holds 2,100 m', () => {
+    // The Voice's own seat at 1,600 m. Every water within the ping's reach is
+    // the Shoulders, the Head or the North Wall, none deeper than 2,020 m once
+    // the follow-floor clearance is off it: a Submersible there is a lie the
+    // mission file disproves, so it is redrawn and then not placed.
+    for (const seed of [1, 2, 3, 4, 5]) assert.deepEqual(ping(seed, null), [], `seed ${seed}`);
+  });
+
+  it('reads the mission file, not the map: the seats outlive the watch', () => {
+    let seen = 0;
+    for (const seed of [1, 2, 3, 4, 5]) {
+      const phantoms = ping(seed, SHOULDER, true);
+      seen += phantoms.length;
+      assertSeats(phantoms, seed);
+    }
+    assert.ok(seen > 0, 'a watch gone from the water is still in the order of battle');
   });
 });

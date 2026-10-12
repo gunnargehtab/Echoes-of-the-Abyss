@@ -175,6 +175,36 @@ export function phantomDepthM(
   return top + Math.floor(roll * (bottom - top + 1));
 }
 
+/**
+ * One hull a mission's order of battle seats: what a phantom may claim to be
+ * in that mission (#1319, docs/systems-echo.md §3).
+ *
+ * The authored literal, never the live entity. A phantom drawn from what is
+ * on the map announces what is no longer on it; one drawn from the mission
+ * file reveals nothing the file does not already say.
+ */
+export interface PhantomSeat {
+  slot: number;
+  faction: Faction;
+  kind: UnitKind;
+  depthM: number;
+}
+
+/**
+ * The depth a mission phantom reports: its seat's authored depth, floored to
+ * the metre as a true depth goes out, or `null` where the water here could
+ * not hold it — the same water `phantomDepthM` admits, below the Lid and any
+ * roof and the follow-floor clearance off the seabed. A seat's depth is never
+ * moved to fit: a phantom off its seat's depth is the tell #1319 closes, so
+ * the placement is re-rolled instead.
+ */
+export function seatDepthM(terrain: Terrain, x: number, y: number, depthM: number): number | null {
+  const depth = Math.floor(depthM);
+  const top = Math.ceil(Math.max(LID.DEPTH_M, terrain.ceilingAt(x, y)));
+  const bottom = Math.floor(terrain.floorAt(x, y) - FOLLOW_FLOOR.CLEARANCE_M);
+  return depth >= top && depth <= bottom ? depth : null;
+}
+
 const NAVIES: readonly Faction[] = [
   Faction.Bathyarch,
   Faction.Pelagia,
@@ -568,6 +598,11 @@ export class EchoLayer {
   /** Furthest-off-the-reference first — see `secondEarPass` for why. */
   private readonly byRelDescending = (a: number, b: number): number =>
     Math.abs(this.deferredRel[b]!) - Math.abs(this.deferredRel[a]!);
+  /**
+   * The running mission's order of battle, or null for a skirmish — what a
+   * phantom claims in a mission (`seatOrderOfBattle`).
+   */
+  private orderOfBattle: readonly PhantomSeat[] | null = null;
   /** Whether the grid in hand has any scattered water — hoisted per pass. */
   private scatterPass = false;
   private terrain: Terrain | undefined;
@@ -581,6 +616,17 @@ export class EchoLayer {
       this.rangeScaleSqByHyd[h] = this.rangeScaleByHyd[h]! * this.rangeScaleByHyd[h]!;
       this.thresholdByHyd[h] = detectionThreshold(Math.max(h, 1));
     }
+  }
+
+  /**
+   * Hand the layer a mission's order of battle: every hull its parties seat,
+   * as authored (#1319). From then on a phantom claims one of those seats —
+   * its navy, its kind and its depth — and never reads the live map, so it
+   * says nothing the mission file does not. A skirmish never calls this and
+   * keeps the roster rule.
+   */
+  seatOrderOfBattle(seats: readonly PhantomSeat[]): void {
+    this.orderOfBattle = seats;
   }
 
   /**
@@ -985,7 +1031,9 @@ export class EchoLayer {
    * The hull it claims to be is one an *enemy* navy builds: each phantom
    * picks a navy from those with something on the map, and a hull from what
    * that navy could field. With no enemy left on the map there is no
-   * plausible hull to fake, and no phantom.
+   * plausible hull to fake, and no phantom. In a mission it is instead one
+   * hull another side's party seats, at its seat's depth, read from the
+   * order of battle rather than the map (`seatOrderOfBattle`, #1319).
    */
   private conjurePhantoms(
     world: SimWorld,
@@ -1003,16 +1051,25 @@ export class EchoLayer {
     // carries an Owner but no honest faction, and a creature belongs to
     // nobody. A bitmask, then the navies in enum order, so the navy die below
     // reads the same list whatever order the query returned the entities in.
-    let present = 0;
-    for (let i = 0; i < entities.length; i++) {
-      const eid = entities[i]!;
-      const owner = Owner.slot[eid]!;
-      if (owner === slot || owner >= MAX_SLOTS) continue;
-      if (!hasComponent(world, Unit, eid) && !hasComponent(world, Structure, eid)) continue;
-      present |= 1 << Owner.faction[eid]!;
+    //
+    // A mission reads none of that: its phantoms claim the seats its order of
+    // battle authors for every other side (#1319), alive or not.
+    const seats = this.orderOfBattle?.filter((seat) => seat.slot !== slot) ?? null;
+    let enemies: readonly Faction[] = [];
+    if (seats === null) {
+      let present = 0;
+      for (let i = 0; i < entities.length; i++) {
+        const eid = entities[i]!;
+        const owner = Owner.slot[eid]!;
+        if (owner === slot || owner >= MAX_SLOTS) continue;
+        if (!hasComponent(world, Unit, eid) && !hasComponent(world, Structure, eid)) continue;
+        present |= 1 << Owner.faction[eid]!;
+      }
+      if (present === 0) return;
+      enemies = NAVIES.filter((navy) => (present & (1 << navy)) !== 0);
+    } else if (seats.length === 0) {
+      return;
     }
-    if (present === 0) return;
-    const enemies = NAVIES.filter((navy) => (present & (1 << navy)) !== 0);
 
     const seed = world.rng.seed;
     const key = localIdOf(world, pinger) ?? pinger;
@@ -1052,19 +1109,29 @@ export class EchoLayer {
         }
         if (!clear) continue;
 
-        const faction =
-          enemies[Math.floor(stableUnit(seed, key, PHANTOM_SALT_NAVY, step) * enemies.length)]!;
-        const hulls = PHANTOM_HULLS_BY_NAVY.get(faction)!;
-        const kind =
-          hulls[Math.floor(stableUnit(seed, key, PHANTOM_SALT_KIND, step) * hulls.length)]!;
-        const depth = phantomDepthM(
-          terrain,
-          x,
-          y,
-          kind,
-          faction,
-          stableUnit(seed, key, PHANTOM_SALT_DEPTH, step)
-        );
+        let faction: Faction;
+        let kind: UnitKind;
+        let depth: number | null;
+        if (seats !== null) {
+          const seat =
+            seats[Math.floor(stableUnit(seed, key, PHANTOM_SALT_KIND, step) * seats.length)]!;
+          faction = seat.faction;
+          kind = seat.kind;
+          depth = seatDepthM(terrain, x, y, seat.depthM);
+        } else {
+          faction =
+            enemies[Math.floor(stableUnit(seed, key, PHANTOM_SALT_NAVY, step) * enemies.length)]!;
+          const hulls = PHANTOM_HULLS_BY_NAVY.get(faction)!;
+          kind = hulls[Math.floor(stableUnit(seed, key, PHANTOM_SALT_KIND, step) * hulls.length)]!;
+          depth = phantomDepthM(
+            terrain,
+            x,
+            y,
+            kind,
+            faction,
+            stableUnit(seed, key, PHANTOM_SALT_DEPTH, step)
+          );
+        }
         // No water here that hull could hold: a lie in rock, or past its
         // rating, is one the pinger could see through.
         if (depth === null) continue;
