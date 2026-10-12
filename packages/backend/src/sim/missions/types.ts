@@ -138,6 +138,15 @@ export interface MissionUnit {
    * not changed the Light Scout (docs/mission-sorrowgate.md §3).
    */
   pressureRating?: number;
+  /**
+   * A Harvester hull refitted to carry rather than dredge: spawned without the
+   * harvest loop, so it takes no harvest order and no throttle, and the shell
+   * offers neither. A mission fact, like a refit, and never a roster one: Shift
+   * Change's crew barges are "Harvester hull, dredge struck, berths rigged"
+   * (docs/mission-shift-change.md §3), and a barge that mines is a hull the
+   * watches are not on (#1283).
+   */
+  dredgeStruck?: true;
   /** Held by the runtime until this tick, whatever the player orders. */
   releaseTick?: number;
   /** Authored, and read out at the close. "Nine are out." */

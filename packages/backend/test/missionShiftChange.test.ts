@@ -538,8 +538,9 @@ describe('the pack, at rest — docs/mission-shift-change.md §7 (#1265)', () =>
   const RELEASED = T(0, 20);
 
   /**
-   * One shift to the whistle, idle or with every harvester the watches have
-   * released sent to its nearest field at Standard. Then the refinery, how
+   * One shift to the whistle, idle or with every harvester sent to its nearest
+   * field at Standard — the four on the face, since the barges' dredge is
+   * struck (§3, #1283). Then the refinery, how
    * many of the player's hulls were lost, what was banked, on how many passes
    * from its seating the player heard the pack, on how many after its release
    * a pack member was interested or committed, and how shallow and deep the
@@ -634,5 +635,73 @@ describe('the pack, at rest — docs/mission-shift-change.md §7 (#1265)', () =>
     assert.equal(worked.roused, 0, '§7: it commits to nothing, and stirred at a working field');
     assert.ok(worked.heard > 0, '§7: a shift at Face Five hears the pack at rest, and never did');
     assert.deepEqual(worked.depth, { shallowest: 900, deepest: 900 }, '§7: off its 900 m');
+  });
+});
+
+describe('the barges, dredge struck — docs/mission-shift-change.md §3 (#1283)', () => {
+  const party = LEDGER_SHIFT_CHANGE.parties.find((p) => p.slot === LEDGER_SHIFT_CHANGE.playerSlot)!;
+  const barges = party.units.filter((unit) => unit.role === 'crew');
+  const harvesters = party.units.filter((unit) => unit.role === undefined);
+
+  it('authors every crew hull, and only the crew hulls, with the dredge struck', () => {
+    assert.equal(barges.length, 3, 'the premise: three watches, three barges');
+    for (const unit of party.units) {
+      assert.equal(unit.dredgeStruck === true, unit.role === 'crew', `${unit.tag}'s dredge`);
+    }
+  });
+
+  /**
+   * The shift seated, past the last bell so every watch is released, each
+   * authored hull found where its literal seats it.
+   */
+  function seated() {
+    const map = missionMapById(LEDGER_SHIFT_CHANGE.mapId)!;
+    const match = new Match(map, { mission: LEDGER_SHIFT_CHANGE, fauna: false, seed: 41 });
+    const slot = LEDGER_SHIFT_CHANGE.playerSlot;
+    match.update(STEP_MS);
+    const own = defineQuery([Unit, Owner, Position])(match.world).filter(
+      (eid) => Owner.slot[eid] === slot
+    );
+    // Found once, on the seating tick, because a hull that moves is no longer
+    // where its literal put it.
+    const byTag = new Map(
+      party.units.map((unit) => [
+        unit.tag,
+        own.find((eid) => Math.hypot(Position.x[eid]! - unit.x, Position.y[eid]! - unit.y) < 1)!,
+      ])
+    );
+    const at = (tag: string) => byTag.get(tag)!;
+    while (match.world.tick < T(11, 1)) match.update(STEP_MS);
+    return { match, slot, at };
+  }
+
+  it('refuses a released barge a harvest order and a throttle, and still works a harvester', () => {
+    const { match, slot, at } = seated();
+    const node = defineQuery([ResourceNode])(match.world)[0]!;
+    for (const unit of [...barges, harvesters[0]!]) {
+      const eid = at(unit.tag);
+      assert.ok(eid !== undefined, `the premise: ${unit.tag} is seated`);
+      match.orderHarvest(slot, eid, node);
+      match.setThrottle(slot, eid, HarvestThrottle.Overburden);
+    }
+    // A second of the loop, ending on an Echo pass, which is what carries a
+    // snapshot at all.
+    for (let i = 0; i < SIM.TICK_HZ; i++) match.update(STEP_MS);
+    let pass: EchoSnapshot | undefined;
+    while (pass === undefined) pass = match.update(STEP_MS)?.get(slot);
+    const snapshot: EchoSnapshot = pass;
+    for (const unit of barges) {
+      const eid = at(unit.tag);
+      assert.ok(!hasComponent(match.world, Harvester, eid), `${unit.tag} carries a dredge`);
+      // The shell keys the harvest gesture and the throttle key on this field,
+      // so its absence is the refusal shown before the press.
+      const shown = snapshot.units.find((u) => u.id === eid);
+      assert.ok(shown !== undefined, `the premise: ${unit.tag} is in its own snapshot`);
+      assert.equal(shown.throttle, undefined, `${unit.tag} offers the shell a throttle`);
+    }
+    // The positive control: the same order, the same tick, to a harvester.
+    const harvester = at(harvesters[0]!.tag);
+    assert.notEqual(Harvester.mode[harvester], HarvestMode.Idle, 'a harvester refused the field');
+    assert.equal(Harvester.throttle[harvester], HarvestThrottle.Overburden);
   });
 });

@@ -347,10 +347,14 @@ audit.
 Both fields lie at 1,300 m, the refinery's own working level, 50 m off the faces' floor. The
 default nodule depth is 600 m, and until #1282 the fields sat there: every harvester climbed
 through the layer to mine, and worked in the half of the map this section says is not masked.
-Seated at the working level, a shift that works every field at Standard, with the pack on the
-field, banks about 4,700 by the whistle against the 3,600 quota; at 600 m it banked about
-2,800 (seed 41, the "works every field at Standard" case in `missionShiftChange.test.ts`). The
-figure is recorded, not tuned to.
+Seated at the working level, the seven hulls working every field at Standard banked about
+4,700 by the whistle against the 3,600 quota, with the pack on the field; at 600 m they banked
+about 2,800 (seed 41). That was with the barges mining, which §3 strikes. With the dredge struck
+(#1283) the four harvesters bank about 2,800 at Standard, the "works every field at Standard"
+case in `missionShiftChange.test.ts`, and about 3,760 with that fixture's throttle set to
+Overburden. So the quota is made only by running loud, which §8's "four harvesters' standard
+tide" no longer says. The figures are recorded, not tuned to: the quota is inside the balance
+freeze, and the owner's to move (#1392).
 
 Every number a shape states is a whole 250 m cell, and a cell is its region's when the shape
 holds its centre ([maps.md](maps.md), "How a map is written"). The regions were rectangles until
@@ -457,6 +461,7 @@ is two rows, both built for it.
 | **The number — a predicate over the player's own banked stockpile** | **Built for this mission**: the `deliver` predicate, the union's first economic row. A query over the observer's own economy — the stockpile the server already answers affordability from — so it reports a number the player's own HUD carries and can name nobody else's anything. The counter is the objective, exactly as `sound`'s is. Since generalised over the economy record's three accounts for [mission-intake.md](mission-intake.md) §13 (#330): this mission's quota is authored as `account: 'nodules'` with the same figure, and nothing about the shift changed |
 | **Readings per objective — an epilogue that assembles** | **Built for this mission**: an objective may author a met and an unmet reading, and the close appends the lines in authored order beneath the outcome's reading, the transcript arrangement of [mission-attendance.md](mission-attendance.md) §13 extended from emitters to objectives. §8's results table needs it: "half the business" is one outcome with two possible columns filled, and a close that could not say which would read a run it did not see |
 | A working economy inside a mission — fields, deposits, the loop | **Built** — the map authors two nodule fields and the mission seats the refinery; the harvest loop neither knows nor cares that the match is a mission |
+| The barges' struck dredge (§3) | **Built** (#1283) — a mission unit authored `dredgeStruck` is seated without the harvest loop, so the server takes no harvest order or throttle for it and the shell offers neither |
 | In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
 
 ---

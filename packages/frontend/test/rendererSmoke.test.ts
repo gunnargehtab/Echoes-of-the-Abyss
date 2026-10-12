@@ -39,6 +39,7 @@ import {
   SelfEventKind,
   StructureKind,
   type Contact,
+  UnitKind,
   type OwnUnit,
 } from '@echoes/shared';
 import { FOCUS_DRAG_M_PER_PX, FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
@@ -4793,6 +4794,85 @@ describe('the ping preview rings the hull that pings (#1330)', () => {
       }
     } finally {
       dispatchWindow('keyup', { code: 'AltLeft' });
+      world.teardown();
+    }
+  });
+});
+
+/**
+ * A Harvester hull with its dredge struck — *Shift Change*'s crew barges
+ * (docs/mission-shift-change.md §3, #1283). The server seats them without the
+ * harvest loop, so they arrive with no throttle, and the shell used to read
+ * "no throttle" as "a hull that fights": `0` gathered the crew into the army.
+ * Driven through the real renderer, on the canned match with its one
+ * harvester's dredge struck, against the same gestures a player makes.
+ */
+describe('a hull with its dredge struck (#1283)', () => {
+  it('says so before the press, takes a field click as a move, and is no part of `0`', async () => {
+    const world = await boot();
+    try {
+      const snapshot = cannedSnapshot();
+      const harvesters = snapshot.units.filter((unit) => unit.kind === UnitKind.Harvester);
+      assert.equal(harvesters.length, 1, 'the premise: the canned match fields one harvester');
+      const { throttle: _t, cargo: _c, cargoKind: _k, ...barge } = harvesters[0]!;
+      const struck = {
+        ...snapshot,
+        units: snapshot.units.map((unit) => (unit.id === barge.id ? barge : unit)),
+      };
+      world.chart.applySnapshot(struck);
+      world.conn.applySnapshot(struck);
+      world.chart.focusOn(barge.x, barge.y);
+      world.frame(2);
+
+      const canvas = world.app.canvas;
+      const at = world.conn.projectPoint(barge.x, barge.y, barge.depth);
+      assert.ok(at.visible, 'the camera is looking at the hull we are about to select');
+      for (const type of ['pointerdown', 'pointerup']) {
+        canvas.dispatch(type, {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x,
+          clientY: at.y,
+        });
+      }
+      world.frame(1);
+      const bar = textSaying(world.app.stage, 'dredge struck');
+      assert.ok(bar !== null, 'nothing on screen says the dredge is struck');
+      assert.ok(!bar.includes('RMB node'), `the bar still offers the field: ${bar}`);
+      assert.ok(!bar.includes('torpedo'), `the bar offers a gunless hull a torpedo: ${bar}`);
+
+      // A right click on the field is a move for it, never a harvest order.
+      const node = cannedNodes()[0]!;
+      const onField = world.conn.projectPoint(node.x, node.y, node.depth);
+      for (const type of ['pointerdown', 'pointerup']) {
+        canvas.dispatch(type, {
+          button: 2,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: onField.x,
+          clientY: onField.y,
+          shiftKey: false,
+          ctrlKey: false,
+          metaKey: false,
+        });
+      }
+      const sent = world.log.names();
+      assert.ok(!sent.includes('onHarvestOrder'), 'a struck dredge was sent to work a field');
+      assert.ok(
+        sent.includes('onMoveOrder'),
+        `the field click went nowhere, saw ${sent.join(', ')}`
+      );
+
+      // `0`: every hull that fights, which is every hull here but the barge.
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.frame(1);
+      const army = `${struck.units.length - 1} selected`;
+      assert.ok(
+        textSaying(world.app.stage, army) !== null,
+        `\`0\` took the barge into the army, or left a fighter out: wanted ${army}`
+      );
+    } finally {
       world.teardown();
     }
   });

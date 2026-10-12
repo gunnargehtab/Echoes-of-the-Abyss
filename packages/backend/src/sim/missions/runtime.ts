@@ -26,7 +26,7 @@
  * the `Math.random`/`Date` ban.
  */
 
-import { hasComponent } from 'bitecs';
+import { hasComponent, removeComponent } from 'bitecs';
 import {
   DRIFT,
   FaunaSpecies,
@@ -55,6 +55,7 @@ import {
   DepthOrder,
   Fauna,
   Heading,
+  Harvester,
   Health,
   MoveOrder,
   Owner,
@@ -555,6 +556,14 @@ export class MissionRuntime {
           // stops there, which is what makes depth a floor in this mission
           // rather than a bleed.
           Pressure.rating[eid] = unit.pressureRating;
+        }
+        // The dredge struck off the hull, not refused at the order: every path
+        // that works a field — the order, the throttle, the loop, the idle
+        // notice, the snapshot's throttle the shell keys the harvest gesture on
+        // — is already gated on this component, so one removal closes them all
+        // and the shell shows the refusal before the press (#1283).
+        if (unit.dredgeStruck === true && hasComponent(world, Harvester, eid)) {
+          removeComponent(world, Harvester, eid);
         }
         // A role is only ever given to a hull of the player's own party, which
         // is what lets a predicate address a role without being able to name
