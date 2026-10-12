@@ -138,11 +138,10 @@ describe('the tithe does not scale with map control', () => {
     advance(match, 1);
     idleHarvesters(match, 0);
 
-    // Through resign(), not by zeroing the Bastion's hp. Deaths only become
-    // real in reap(), and reap only sees what a *system* reported destroyed —
-    // so a hand-zeroed Bastion sits there at 0 hp, never reaped, and the test
-    // reads the tick-of-death check below rather than the fall. resign() is
-    // the real path: it eliminates the slot and scuttles everything it owned.
+    // Through resign(), not by zeroing the Bastion's hp: since #1321 a Bastion
+    // at 0 hp stops tithing on its own, so zeroing would pass without testing
+    // the fall. resign() is the real path: it eliminates the slot and scuttles
+    // everything it owned.
     assert.doesNotThrow(() => firstStructure(match, 0, StructureKind.Bastion));
     match.resign(0);
     advance(match, 1);
