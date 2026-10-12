@@ -789,7 +789,7 @@ a log that sharpened its own history when a better resolution arrived would let 
 reconstruct positions they never earned, and would destroy what the log is for.
 
 The `you were pinged` row is implemented (#206, alongside the own-force rows it shares a
-shape with): it writes from the server-sent exposure flag at the fidelity sent — a bearing, never a position, and, on a tick that carries no bearing, one `bearing unknown` row for the hulls a ping lit after its one bearing went out (#1290) — under the `---` tier the log
+shape with): it writes from the server-sent exposure flag at the fidelity sent — a bearing, never a position, and, on a tick that carries no bearing, one `bearing unknown` row — a fallback, since every tick that tells a side it was lit now carries its one bearing (#1290, #1300) — under the `---` tier the log
 reserves for events that are not detections. The log also carries the own-force rows §5
 licenses, in the same form: `Corvette under fire`, `Harvester idle — mined out`, each
 focusable because the hull is the player's own. Tier-3 rows currently name the hull and
@@ -995,7 +995,7 @@ The parity table. Every row is a claim that the mix tells the player nothing the
 | The world bus giving way to your own noise | `– masking` beside that label: you are drowning yourself out, and it says so |
 | Silent Running's inversion — the world opening up | `SILENT RUNNING – open`, and the dimmed hulls already drawn for the mode |
 | **Exposure strike** — you have been lit | **Screen-edge flash on the bearing of the emitter**, decaying over the same two seconds as the tail |
-| Unpanned exposure strike — hulls a ping lit after its one bearing went out (#1290) | A `you were pinged` row reading `bearing unknown`; its edge flash is owed (#1306) |
+| Unpanned exposure strike — a tick with no bearing, which no server tick sends since #1300 | A `you were pinged` row reading `bearing unknown`; #1306's edge flash has nothing to mark |
 | Being tracked, continuously | `TRACKED ×n` in the top bar — how well you are seen, never by whom |
 | Breaking silence to fire | An expanding ring on the hull that broke it, so the player knows *which* one gave the ambush away |
 | Active sonar transmit and its returns | The ping wavefront already drawn, expanding on the same clock |

@@ -266,13 +266,13 @@ describe('the passive exposure rows', () => {
 });
 
 describe('the ping row, with one bearing per ping (#1290)', () => {
-  it('writes one row with no bearing for hulls lit later in a ping', async () => {
+  it('writes one row with no bearing for a tick that carries none', async () => {
     const world = await boot();
     try {
       world.rows.length = 0;
-      // The side's one bearing went out on an earlier pass. These hulls are
-      // told they were lit, once, as the mix strikes once for them, and the
-      // row says no more than the events did: no bearing was sent.
+      // A fallback the server no longer sends (#1300). These hulls are told
+      // they were lit, once, as the mix strikes once for them, and the row
+      // says no more than the events did: no bearing was sent.
       world.send(1, {
         selfEvents: [
           { kind: SelfEventKind.Exposed, unitId: 11 },

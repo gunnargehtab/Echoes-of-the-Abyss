@@ -229,7 +229,7 @@ export interface LitEntry {
  * Held for the life of the transmission so the client sees one contact under
  * one handle for three seconds and then nothing, exactly as it would for a
  * real hull the ping lit and then lost: the ghost-marker decay does the rest.
- * Keyed by pinger, beside `litAlready`, and dropped on the same tick it is.
+ * Keyed by pinger, beside `transmitting`, and dropped on the same tick it is.
  */
 interface PhantomReturns {
   slot: number;
@@ -485,29 +485,21 @@ export class EchoLayer {
   }
   private readonly lit = new Map<number, LitEntry[]>();
   /**
-   * Pinger -> the entities its current transmission has already lit.
+   * The pingers whose current transmission has had its first pass.
    *
    * A ping reveals for three seconds, which is fifteen Echo ticks, but being
    * lit is an *event* and not a state: docs/audio-direction.md §5 makes it "a
    * hard, close, panned strike", and a strike that repeats fifteen times is a
-   * drone. Without this the loudest cue in the game fires once per lit hull
-   * per tick — measured at 42 strikes for a single ping in the headless
-   * client, which is what led to this map existing.
+   * drone — measured at 42 strikes for a single ping in the headless client.
+   * So a transmission tells its lit hulls on its first pass and never again.
    *
-   * A hull that enters the radius part-way through is still new to the set, so
-   * it is still told, which is correct: it was just lit.
+   * A hull that enters the radius part-way through is told nothing (#1300).
+   * The radius is published, so the pass on which a hull crosses it puts the
+   * pinger on a circle, and the side's one bearing puts it on that circle:
+   * 2.7 m for a hull closing at 12 m/s. Keyed per transmission rather than
+   * per side, since a side first lit late leaks the same way.
    */
-  private readonly litAlready = new Map<number, Set<number>>();
-  /**
-   * Pinger -> the slots its current transmission has already given a bearing.
-   *
-   * One bearing per ping per side, from the nearest of that side's units the
-   * ping first lights (#1290). Every lit unit's bearing used to go out, and
-   * two of them are two rays that meet on the pinger: a direction became a
-   * location, which `SelfEvent.bearing` exists not to send. Dropped with
-   * `litAlready`.
-   */
-  private readonly bearingGiven = new Map<number, Set<number>>();
+  private readonly transmitting = new Set<number>();
   /** Scratch for one pinger's pass: each side's lit unit nearest it so far. */
   private readonly nearestLit = new Map<
     number,
@@ -694,8 +686,7 @@ export class EchoLayer {
       this.byHandle.get(slot)?.delete(handle);
     }
     for (const slotBest of this.best.values()) slotBest.delete(eid);
-    this.litAlready.delete(eid);
-    this.bearingGiven.delete(eid);
+    this.transmitting.delete(eid);
     this.dropPhantoms(eid);
   }
 
@@ -1579,12 +1570,11 @@ export class EchoLayer {
     // already handled above — SIG 95 is calibrated to reach exactly 2,400 m.
     // Drop the bookkeeping for transmissions that have finished, so the next
     // ping from the same hull is a new event rather than a suppressed one.
-    for (const pinger of this.litAlready.keys()) {
+    for (const pinger of this.transmitting) {
       const stillPinging =
         hasComponent(world, ActivePing, pinger) && ActivePing.remainingS[pinger]! > 0;
       if (!stillPinging) {
-        this.litAlready.delete(pinger);
-        this.bearingGiven.delete(pinger);
+        this.transmitting.delete(pinger);
         // The phantoms go with the transmission that conjured them. Nothing
         // re-sends them after this tick, so on the client they fade exactly
         // as a real hull the ping lit and then lost.
@@ -1597,12 +1587,8 @@ export class EchoLayer {
       if (!hasComponent(world, ActivePing, pinger)) continue;
       if (ActivePing.remainingS[pinger]! <= 0) continue;
 
-      let alreadyLit = this.litAlready.get(pinger);
-      const firstTick = alreadyLit === undefined;
-      if (alreadyLit === undefined) {
-        alreadyLit = new Set();
-        this.litAlready.set(pinger, alreadyLit);
-      }
+      const firstTick = !this.transmitting.has(pinger);
+      this.transmitting.add(pinger);
 
       const px = Position.x[pinger]!;
       const py = Position.y[pinger]!;
@@ -1624,11 +1610,11 @@ export class EchoLayer {
       }
 
       // The victim's side of the same event. Only a unit or a structure is
-      // told: ordnance has no ears. Each side gets one bearing per ping, from
-      // the nearest of its units the ping first lights, and its other lit
-      // units are told without one (#1290) — see SelfEvent.bearing for why a
-      // direction and never a location.
-      let given = this.bearingGiven.get(pinger);
+      // told: ordnance has no ears, and only on the first pass (#1300, see
+      // `transmitting`). Each side gets one bearing per ping, from the nearest
+      // of its units the ping lights, and its other lit units are told without
+      // one (#1290) — see SelfEvent.bearing for why a direction and never a
+      // location.
       const nearest = this.nearestLit;
       nearest.clear();
       for (let j = 0; j < revealed.length; j++) {
@@ -1641,25 +1627,19 @@ export class EchoLayer {
         if (distance > radiusM) continue;
         this.record(pingerSlot, target, ResolutionTier.Track, px, py);
 
+        if (!firstTick) continue;
         const litForSlot = this.lit.get(targetSlot);
-        if (litForSlot === undefined || alreadyLit.has(target)) continue;
+        if (litForSlot === undefined) continue;
         if (!hasComponent(world, Unit, target) && !hasComponent(world, Structure, target)) continue;
-        alreadyLit.add(target);
         const entry: LitEntry = { unitId: target };
         litForSlot.push(entry);
-        if (given?.has(targetSlot) === true) continue;
         const best = nearest.get(targetSlot);
         if (best === undefined || distance < best.distance) {
           nearest.set(targetSlot, { entry, distance, x: tx, y: ty });
         }
       }
-      for (const [slot, best] of nearest) {
+      for (const best of nearest.values()) {
         best.entry.bearing = Math.atan2(py - best.y, px - best.x);
-        if (given === undefined) {
-          given = new Set();
-          this.bearingGiven.set(pinger, given);
-        }
-        given.add(slot);
       }
     }
 
