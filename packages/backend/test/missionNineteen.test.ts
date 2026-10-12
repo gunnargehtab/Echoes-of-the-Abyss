@@ -1490,7 +1490,13 @@ describe('phantoms claim the order of battle — docs/systems-echo.md §3, #1319
       'the premise: the Voice pings from scattered water'
     );
     match.activeSonar(player, voice);
-    const contacts = match.echo.run(match.world, match.slots).contactsBySlot.get(player) ?? [];
+    const contacts =
+      match.echo
+        .run(
+          match.world,
+          CHORD_NINETEEN.parties.map((p) => p.slot)
+        )
+        .contactsBySlot.get(player) ?? [];
     return contacts.filter((c) => match.echo.entityForHandle(player, c.id) === undefined);
   }
 
