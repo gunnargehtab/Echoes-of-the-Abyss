@@ -520,10 +520,26 @@ export class Match {
     // Fielded through the record first: a hull the campaign has spent is not
     // in the party the runtime installs, so nothing downstream — roles,
     // soundings, the six named rows — ever learns it was authored.
-    this.missionRuntime =
+    const fielded =
       options.mission === undefined
-        ? null
-        : new MissionRuntime(fieldDefinition(options.mission, options.spent ?? new Set()));
+        ? undefined
+        : fieldDefinition(options.mission, options.spent ?? new Set());
+    this.missionRuntime = fielded === undefined ? null : new MissionRuntime(fielded);
+    // What a phantom may claim in this mission: the seats as fielded, never
+    // the live hulls (#1319, docs/systems-echo.md §3). Fielded, so a spent
+    // hull is no more claimable than it is seated.
+    if (fielded !== undefined) {
+      this.echo.seatOrderOfBattle(
+        fielded.parties.flatMap((party) =>
+          party.units.map((unit) => ({
+            slot: party.slot,
+            faction: party.faction,
+            kind: unit.kind,
+            depthM: unit.depthM,
+          }))
+        )
+      );
+    }
     this.missionRuntime?.install(
       this.world,
       (slot) => {
