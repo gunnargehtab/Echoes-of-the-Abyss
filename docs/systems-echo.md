@@ -223,14 +223,14 @@ own band, or off its delivered depth in water that admits it, as a refitted navy
 arrive at 600 m — is vouched true, as a solved contact is, and the rule is a skirmish's: a
 mission that seats its hulls at authored depths does not move its phantoms off delivery depths
 (#1319). Health and the bow are vouched the same way. A phantom claims full health, as most hulls
-on the map have it, so a hurt return is a hull; and it never draws a bow of exactly zero, the one a
-hull keeps from its yard until it first moves. Every heading a contact reports, true or false, is
-told as a bow is stored, single precision in the half turn either side of zero, so its precision
-and its range sort nothing (#1307). Every depth a contact reports, true or false, is told to the
-metre, floored, so its precision sorts nothing. The depth was once the pinger's own, which the pinger knows exactly, and
-that made every return at it a lie (#1294). The counter is not what goes on
-the wire: a handle is a per-match, per-observer permutation of it, and a slot's contacts are
-listed in handle order, so neither a handle's value nor its place in the list says when it was
+on the map have it, so a hurt return is a hull; and it all but never draws a bow of exactly zero,
+the one a hull keeps from its yard until it first moves. Every heading a contact reports, true or
+false, is told as a bow is stored, single precision in the half turn either side of zero, so its
+precision and its range sort nothing (#1307). Every depth a contact reports, true or false, is
+told to the metre, floored, so its precision sorts nothing. The depth was once the pinger's own,
+which the pinger knows exactly, and that made every return at it a lie (#1294). The counter is not
+what goes on the wire: a handle is a per-match, per-observer permutation of it, and a slot's
+contacts are listed in handle order, so neither a handle's value nor its place in the list says when it was
 issued. It must not, because the mint order is not arbitrary — a ping's phantoms are minted
 before the pass resolves its true returns, so a counter published raw sorted the lies to the
 front of the list for free, from a stock client, with no order given and nothing spent. Each is conjured
