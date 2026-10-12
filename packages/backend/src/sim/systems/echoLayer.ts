@@ -1082,7 +1082,13 @@ export class EchoLayer {
           depth,
           hp: UNIT_STATS[kind].maxHp,
           maxHp: UNIT_STATS[kind].maxHp,
-          heading: stableUnit(seed, key, PHANTOM_SALT_HEADING, step) * Math.PI * 2,
+          // As a true hull's bow is told (#1307): the turn about zero `atan2`
+          // reports, at the f32 precision `Heading.rad` stores. A draw over
+          // [0, 2π) as a double sorted every phantom by `Math.fround(h) !== h`
+          // alone, and half of them again by a heading past π.
+          heading: Math.fround(
+            (stableUnit(seed, key, PHANTOM_SALT_HEADING, step) * 2 - 1) * Math.PI
+          ),
         });
         anchors.push({
           x,
@@ -1818,7 +1824,9 @@ export class EchoLayer {
           if (hasComponent(world, Heading, eid)) {
             contact.heading = Heading.rad[eid]!;
           } else if (hasComponent(world, Velocity, eid)) {
-            contact.heading = Math.atan2(Velocity.y[eid]!, Velocity.x[eid]!);
+            // At the f32 precision a bow is stored at (#1307), so every
+            // heading on the wire has one precision and none sorts by it.
+            contact.heading = Math.fround(Math.atan2(Velocity.y[eid]!, Velocity.x[eid]!));
           }
         }
 
