@@ -1737,7 +1737,11 @@ export const HAZARDS = {
     PELAGIA_DAMAGE_MULTIPLIER: 1.5,
     /** Directorate "units resist knockback" — doc §1. */
     DIRECTORATE_KNOCKBACK_MULTIPLIER: 0.25,
-    /** Hadron "can predict eruptions via resonance sensors" — doc §1. */
+    /**
+     * Hadron "can predict eruptions via resonance sensors" — doc §1. How early a
+     * Hadron listener's own telegraph turns to warning; the vent erupts on the
+     * same tick for everyone (#1303).
+     */
     HADRON_WARNING_BONUS_S: 6,
     /** Bathyarch "can stabilize vents for energy boosts" — doc §1. */
     BATHYARCH_STABILISE_S: 30,

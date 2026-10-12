@@ -461,6 +461,8 @@ export enum HazardPhase {
  * docs/maps.md's core principles require hazard telegraphing — "players must
  * see danger before entering" — and a telegraph only one player can read is
  * not a telegraph. Hazards are terrain that moves, and terrain is public.
+ * The one addition is a Hadron slot's own early warning on a vent it is
+ * listening to (docs/hazards.md §1), which only that slot is sent.
  */
 export interface HazardState {
   id: number;
@@ -469,9 +471,16 @@ export interface HazardState {
   y: number;
   radiusM: number;
   phase: HazardPhase;
-  /** 0-1 through the current phase, so the client can animate a countdown. */
+  /**
+   * 0-1 through the current phase, so the client can animate a countdown.
+   * Zero on a dormant vent, whose clock a Consortium hull can move
+   * (docs/hazards.md §1, #1303).
+   */
   progress: number;
-  /** Seconds left in the current phase — the number the HUD can show. */
+  /**
+   * Seconds left in the current phase — the number the HUD can show. Zero on
+   * a dormant vent, for the same reason.
+   */
   remainingS: number;
   /**
    * Which way a current flows, in radians, for `cold-shock` hazards.

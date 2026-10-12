@@ -37,7 +37,6 @@ import {
   Faction,
   HULL_EFFECTS,
   HarvestThrottle,
-  HAZARDS,
   ResolutionTier,
   ResourceKind,
   StructureKind,
@@ -96,7 +95,7 @@ function plumes(field: ResourceNodeInfo): HazardState[] {
     radiusM: 700,
     phase: 0,
     progress: 0,
-    remainingS: HAZARDS.ERUPTION.DORMANT_S,
+    remainingS: 0,
   }));
 }
 

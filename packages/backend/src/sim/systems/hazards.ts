@@ -211,19 +211,20 @@ export function dormantSecondsFor(kind: HazardKind): number {
 /**
  * How long the current phase lasts for this hazard, right now.
  *
- * Not a constant, because §1's Hadron interaction — "can predict eruptions via
- * resonance sensors" — is implemented as a *longer warning* for the player who
- * has a listener nearby. Prediction that only tells you what you were going to
- * find out anyway is not prediction; extra time to act is.
+ * Not a constant, because a Consortium presence lengthens a vent's dormancy
+ * (doc §1). The warning is the nominal one for every player: a Hadron listener
+ * used to lengthen it too, and the public ring jumped back the moment one came
+ * near, which told everybody a Hadron hull was there (#1303). Hadron's
+ * prediction is now its own early telegraph, `hazardStatesFor`.
  */
-function phaseDuration(world: SimWorld, hazard: Hazard): number {
+function phaseDuration(hazard: Hazard): number {
   const cycle = CYCLES[hazard.kind];
   if (cycle === undefined) return Infinity;
   switch (hazard.phase) {
     case HazardPhase.Dormant:
       return cycle.dormantS + hazard.stabilisedS;
     case HazardPhase.Warning:
-      return cycle.warningS + (hasHadronWatcher(world, hazard) ? hadronBonus(hazard) : 0);
+      return cycle.warningS;
     case HazardPhase.Active:
       return cycle.activeS;
     case HazardPhase.Decay:
@@ -231,13 +232,12 @@ function phaseDuration(world: SimWorld, hazard: Hazard): number {
   }
 }
 
-function hadronBonus(hazard: Hazard): number {
+/**
+ * How far ahead a Hadron listener hears this hazard stir, in seconds: §1's
+ * "can predict eruptions via resonance sensors". Vents only.
+ */
+function hadronForesightS(hazard: Hazard): number {
   return hazard.kind === 'geothermal-eruption' ? HAZARDS.ERUPTION.HADRON_WARNING_BONUS_S : 0;
-}
-
-/** Does a Hadron listener have this vent in range of its resonance sensors? */
-function hasHadronWatcher(world: SimWorld, hazard: Hazard): boolean {
-  return anyFactionWithin(world, hazard, Faction.Hadron, hazard.radiusM * 3);
 }
 
 /**
@@ -347,7 +347,16 @@ export function hazardsSystem(world: SimWorld, destroyed: number[]): void {
 
     // Bathyarch stabilisation, doc §1. Applied while dormant only: once a vent
     // is warming up, nobody is holding it back.
-    if (hazard.phase === HazardPhase.Dormant && hazard.kind === 'geothermal-eruption') {
+    //
+    // Not within Hadron's foresight of stirring, either (doc §1, "What the
+    // telegraph tells whom"): a Hadron listener has already been told this
+    // vent warns in so many seconds, and a hold that moved it then would jump
+    // that ring, telling Hadron a Consortium hull had arrived unheard.
+    if (
+      hazard.phase === HazardPhase.Dormant &&
+      hazard.kind === 'geothermal-eruption' &&
+      phaseDuration(hazard) - hazard.elapsedS > hadronForesightS(hazard)
+    ) {
       if (anyFactionWithin(world, hazard, Faction.Bathyarch, hazard.radiusM)) {
         hazard.stabilisedS = Math.min(
           HAZARDS.ERUPTION.BATHYARCH_STABILISE_S,
@@ -449,7 +458,7 @@ export function hazardsSystem(world: SimWorld, destroyed: number[]): void {
     }
 
     hazard.elapsedS += dt;
-    const duration = phaseDuration(world, hazard);
+    const duration = phaseDuration(hazard);
     if (hazard.elapsedS >= duration) {
       hazard.elapsedS = 0;
       const before = hazard.phase;
@@ -1053,7 +1062,14 @@ export function stormModifiers(
   return none;
 }
 
-/** The public view of a hazard — every client gets all of them. */
+/**
+ * The public view of a hazard — every client gets all of them.
+ *
+ * Only timing no hull moves (doc §1, "What the telegraph tells whom", #1303).
+ * A dormant vent's clock is stretched by a Consortium hull standing on it, so
+ * a dormant vent ships no clock at all: its phase, and zeroes. A storm's or a
+ * current's dormancy is the water's own, so theirs still ships.
+ */
 export function hazardStates(world: SimWorld): HazardState[] {
   const out: HazardState[] = [];
   for (const hazard of world.hazards) {
@@ -1063,7 +1079,8 @@ export function hazardStates(world: SimWorld): HazardState[] {
     // suppression countdown, which is the only number about it worth showing:
     // how long until the kelp closes again.
     const permanent = isPermanent(hazard.kind);
-    const duration = permanent ? 0 : phaseDuration(world, hazard);
+    const hidden = hazard.kind === 'geothermal-eruption' && hazard.phase === HazardPhase.Dormant;
+    const duration = permanent ? 0 : phaseDuration(hazard);
     out.push({
       id: hazard.id,
       kind: hazard.kind,
@@ -1071,10 +1088,91 @@ export function hazardStates(world: SimWorld): HazardState[] {
       y: hazard.y,
       radiusM: hazard.radiusM,
       phase: hazard.phase,
-      progress: permanent ? 0 : duration === 0 ? 1 : Math.min(1, hazard.elapsedS / duration),
-      remainingS: permanent ? hazard.suppressedS : Math.max(0, duration - hazard.elapsedS),
+      progress:
+        permanent || hidden ? 0 : duration === 0 ? 1 : Math.min(1, hazard.elapsedS / duration),
+      remainingS: permanent
+        ? hazard.suppressedS
+        : hidden
+          ? 0
+          : Math.max(0, duration - hazard.elapsedS),
       ...(hazard.kind === 'cold-shock' ? { flowRad: hazard.flowRad } : {}),
     });
   }
   return out;
+}
+
+/**
+ * The hazards as one slot sees them: the public list, with §1's Hadron
+ * prediction laid over the vents this slot is listening to.
+ *
+ * A Hadron hull or structure within three radii of a vent hears it stir
+ * `HADRON_WARNING_BONUS_S` early. Its telegraph turns to warning that much
+ * before anyone else's and closes over the longer window, ending on the same
+ * tick the public one does: foresight, not a different eruption. The vent
+ * itself keeps one clock, so nothing here can tell another player anything.
+ *
+ * Returns `shared` itself when nothing differs, which is every non-Hadron slot
+ * and most Hadron ones, so the one public array stays shared by reference.
+ */
+export function hazardStatesFor(
+  world: SimWorld,
+  slot: number,
+  faction: Faction,
+  shared: HazardState[]
+): HazardState[] {
+  if (faction !== Faction.Hadron) return shared;
+  let out: HazardState[] | null = null;
+  let index = -1;
+  for (const hazard of world.hazards) {
+    if (!isSimulated(hazard.kind)) continue;
+    index++;
+    const foresight = hadronForesightS(hazard);
+    if (foresight <= 0) continue;
+    const cycle = CYCLES[hazard.kind]!;
+    // Seconds until the vent erupts, while it is still possible to foresee it.
+    let untilActive: number;
+    if (hazard.phase === HazardPhase.Warning) {
+      untilActive = Math.max(0, cycle.warningS - hazard.elapsedS);
+    } else if (hazard.phase === HazardPhase.Dormant) {
+      const dormantLeft = phaseDuration(hazard) - hazard.elapsedS;
+      if (dormantLeft > foresight) continue;
+      untilActive = Math.max(0, dormantLeft) + cycle.warningS;
+    } else {
+      continue;
+    }
+    if (!slotListensWithin(world, hazard, slot, hazard.radiusM * 3)) continue;
+    const window = cycle.warningS + foresight;
+    out ??= [...shared];
+    out[index] = {
+      ...shared[index]!,
+      phase: HazardPhase.Warning,
+      progress: Math.min(1, Math.max(0, 1 - untilActive / window)),
+      remainingS: untilActive,
+    };
+  }
+  return out ?? shared;
+}
+
+/**
+ * Has this slot a living Hadron hull or structure within `radiusM` of the
+ * hazard? `anyFactionWithin`'s presence rule (#1304), narrowed to one slot,
+ * since a prediction is told to the navy whose sensors made it.
+ */
+function slotListensWithin(
+  world: SimWorld,
+  hazard: Hazard,
+  slot: number,
+  radiusM: number
+): boolean {
+  const entities = affected(world);
+  for (let i = 0; i < entities.length; i++) {
+    const eid = entities[i]!;
+    if (Owner.slot[eid] !== slot || Owner.faction[eid] !== Faction.Hadron) continue;
+    if (Health.hp[eid]! <= 0) continue;
+    if (!hasComponent(world, Unit, eid) && !hasComponent(world, Structure, eid)) continue;
+    const dx = Position.x[eid]! - hazard.x;
+    const dy = Position.y[eid]! - hazard.y;
+    if (dx * dx + dy * dy <= radiusM * radiusM) return true;
+  }
+  return false;
 }

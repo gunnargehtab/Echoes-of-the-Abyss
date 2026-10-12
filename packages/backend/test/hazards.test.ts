@@ -155,12 +155,14 @@ describe('the hazard lifecycle', () => {
   it('publishes its phase to every player, because a telegraph must be public', () => {
     const match = matchWith(hazardMap('geothermal-eruption'));
     match.addPlayer(1, Faction.Pelagia);
+    runUntilPhase(match, HazardPhase.Warning);
     let snapshots = null;
     for (let i = 0; i < SIM.TICK_HZ && snapshots === null; i++) snapshots = match.update(STEP_MS);
 
     for (const snapshot of snapshots!.values()) {
       assert.equal(snapshot.hazards.length, 1);
       assert.equal(snapshot.hazards[0]!.kind, 'geothermal-eruption');
+      assert.equal(snapshot.hazards[0]!.phase, HazardPhase.Warning);
       assert.ok(snapshot.hazards[0]!.remainingS > 0, 'a countdown the HUD can show');
     }
   });
@@ -395,33 +397,125 @@ describe('geothermal vent eruptions', () => {
     );
   });
 
-  it('gives Hadron a longer warning, per doc §1', () => {
-    // "Can predict eruptions via resonance sensors." Prediction that tells you
-    // only what you would have found out anyway is not prediction; more time
-    // to act is.
+  it('tells a Hadron listener the warning early, in its own telegraph only, per doc §1', () => {
+    // "Can predict eruptions via resonance sensors." Hadron's sensors buy
+    // Hadron time to act, and nobody else learns anything from them (#1303):
+    // the vent keeps one clock, and the foresight is in Hadron's snapshot.
+    const match = matchWith(hazardMap('geothermal-eruption'));
+    match.addPlayer(1, Faction.Hadron);
+    spawnUnit(match.world, {
+      kind: UnitKind.LightScout,
+      slot: 1,
+      faction: Faction.Hadron,
+      x: 4300,
+      y: 4000,
+    });
+    let hadronWarnedAt = -1;
+    let publicWarnedAt = -1;
+    let simWarnedAt = -1;
+    let lastProgress = -1;
+    for (let tick = 0; tick < 200 * SIM.TICK_HZ; tick++) {
+      const snapshots = match.update(STEP_MS);
+      const phase = match.world.hazards[0]!.phase;
+      if (simWarnedAt < 0 && phase === HazardPhase.Warning) simWarnedAt = tick;
+      if (phase === HazardPhase.Active) {
+        assert.ok(
+          lastProgress > 0.9,
+          `Hadron's ring stood at ${lastProgress} when the vent erupted`
+        );
+        break;
+      }
+      if (snapshots === null) continue;
+      const own = snapshots.get(1)!.hazards[0]!;
+      const theirs = snapshots.get(0)!.hazards[0]!;
+      if (hadronWarnedAt < 0 && own.phase === HazardPhase.Warning) hadronWarnedAt = tick;
+      if (publicWarnedAt < 0 && theirs.phase === HazardPhase.Warning) publicWarnedAt = tick;
+      if (own.phase === HazardPhase.Warning) {
+        assert.ok(own.progress >= lastProgress, 'the Hadron ring jumped back');
+        lastProgress = own.progress;
+      }
+    }
+    const earlyS = (publicWarnedAt - hadronWarnedAt) / SIM.TICK_HZ;
+    const foresight = HAZARDS.ERUPTION.HADRON_WARNING_BONUS_S;
+    assert.ok(
+      Math.abs(earlyS - foresight) <= 0.25,
+      `Hadron heard it ${earlyS} s early, not ${foresight}`
+    );
+    assert.ok(Math.abs(publicWarnedAt - simWarnedAt) <= SIM.TICK_HZ / SIM.ECHO_HZ);
+  });
+
+  it('runs the same public clock whoever is listening (#1303)', () => {
+    // A warning a Hadron hull lengthened, or a ring that jumped when one came
+    // near, told every player a Hadron hull was there that nobody had heard.
     const warningFor = (faction: Faction) => {
       const match = matchWith(hazardMap('geothermal-eruption'));
       match.addPlayer(1, faction);
-      spawnUnit(match.world, {
-        kind: UnitKind.LightScout,
-        slot: 1,
-        faction,
-        x: 4300,
-        y: 4000,
-      });
-      runUntilPhase(match, HazardPhase.Warning);
-      let ticks = 0;
-      while (match.world.hazards[0]!.phase === HazardPhase.Warning) {
-        match.update(STEP_MS);
-        ticks++;
-      }
-      return ticks;
+      spawnUnit(match.world, { kind: UnitKind.LightScout, slot: 1, faction, x: 4300, y: 4000 });
+      const start = runUntilPhase(match, HazardPhase.Warning);
+      return runUntilPhase(match, HazardPhase.Active) + start;
     };
+    assert.equal(warningFor(Faction.Hadron), warningFor(Faction.Pelagia));
+  });
 
-    assert.ok(
-      warningFor(Faction.Hadron) > warningFor(Faction.Pelagia),
-      'a Hadron listener sees it coming sooner'
-    );
+  it('shows no dormant clock, so a held vent looks like any other (#1303)', () => {
+    // Stabilising lengthens the dormancy, so a dormant countdown was a
+    // Consortium presence in disguise.
+    const publicView = (held: boolean) => {
+      const match = matchWith(hazardMap('geothermal-eruption'));
+      match.addPlayer(1, Faction.Pelagia);
+      if (held) {
+        spawnUnit(match.world, {
+          kind: UnitKind.Corvette,
+          slot: 0,
+          faction: Faction.Bathyarch,
+          x: 4000,
+          y: 4000,
+        });
+      }
+      const seen: string[] = [];
+      for (let i = 0; i < 10 * SIM.TICK_HZ; i++) {
+        const snapshots = match.update(STEP_MS);
+        if (snapshots !== null) seen.push(JSON.stringify(snapshots.get(1)!.hazards));
+      }
+      if (held) assert.ok(match.world.hazards[0]!.stabilisedS > 0, 'the premise: the vent is held');
+      assert.equal(
+        match.world.hazards[0]!.phase,
+        HazardPhase.Dormant,
+        'the premise: still dormant'
+      );
+      // Distinct views only: how often a snapshot is cut is not under test.
+      return [...new Set(seen)];
+    };
+    const held = publicView(true);
+    assert.deepEqual(held, publicView(false));
+    assert.equal(held.length, 1, 'the dormant telegraph changed over the dormancy');
+    const first = JSON.parse(held[0]!)[0];
+    assert.equal(first.phase, HazardPhase.Dormant);
+    assert.equal(first.remainingS, 0);
+    assert.equal(first.progress, 0);
+  });
+
+  it('cannot hold back a vent within Hadron foresight of stirring', () => {
+    // Otherwise a Consortium hull arriving late would jump a ring Hadron had
+    // already been shown, which tells Hadron it is there.
+    const match = matchWith(hazardMap('geothermal-eruption'));
+    const hazard = match.world.hazards[0]!;
+    while (
+      HAZARDS.ERUPTION.DORMANT_S - hazard.elapsedS >
+      HAZARDS.ERUPTION.HADRON_WARNING_BONUS_S - 1
+    ) {
+      match.update(STEP_MS);
+    }
+    assert.equal(hazard.phase, HazardPhase.Dormant);
+    spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 4000,
+      y: 4000,
+    });
+    for (let i = 0; i < SIM.TICK_HZ / 2; i++) match.update(STEP_MS);
+    assert.equal(hazard.stabilisedS, 0);
   });
 
   it('lets a Bathyarch presence stabilise the vent, per doc §1', () => {
@@ -523,35 +617,30 @@ describe('geothermal vent eruptions', () => {
     );
   });
 
-  it('gives a longer warning to Hadron ears, never to a Hadron mine', () => {
+  it('tells Hadron ears early, never a Hadron mine', () => {
     // §1's "resonance sensors" are a listener's, and ordnance is deaf by
-    // construction: a Hadron mine by the vent bought every player a longer
-    // warning while `anyFactionWithin` counted it (#1304).
-    const warningWith = (place: (match: Match) => void) => {
-      const match = matchWith(hazardMap('geothermal-eruption'));
-      match.addPlayer(1, Faction.Hadron);
-      place(match);
-      runUntilPhase(match, HazardPhase.Warning);
-      let ticks = 0;
-      while (match.world.hazards[0]!.phase === HazardPhase.Warning) {
-        match.update(STEP_MS);
-        ticks++;
-      }
-      return ticks;
-    };
-    const unwatched = warningWith(() => {});
-    const mined = warningWith((match) => {
-      spawnOrdnance(match.world, {
-        kind: OrdnanceKind.Mine,
-        slot: 1,
-        faction: Faction.Hadron,
-        x: 4300,
-        y: 4000,
-        depth: 600,
-        pressureRating: 3,
-      });
+    // construction: a Hadron mine by the vent bought a longer warning while
+    // `anyFactionWithin` counted it (#1304).
+    const match = matchWith(hazardMap('geothermal-eruption'));
+    match.addPlayer(1, Faction.Hadron);
+    spawnOrdnance(match.world, {
+      kind: OrdnanceKind.Mine,
+      slot: 1,
+      faction: Faction.Hadron,
+      x: 4300,
+      y: 4000,
+      depth: 600,
+      pressureRating: 3,
     });
-    assert.equal(mined, unwatched, 'a Hadron mine bought a longer warning');
+    while (match.world.hazards[0]!.phase === HazardPhase.Dormant) {
+      const snapshots = match.update(STEP_MS);
+      if (snapshots === null) continue;
+      assert.equal(
+        snapshots.get(1)!.hazards[0]!.phase,
+        HazardPhase.Dormant,
+        'a Hadron mine heard the vent stir'
+      );
+    }
   });
 
   it('stabilising is a delay, not a cancellation', () => {

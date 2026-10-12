@@ -25,6 +25,17 @@ Dynamic, readable, faction-flavored threats that shape strategy.
 - Abyssal units resist knockback
 - Hadron can predict eruptions via resonance sensors
 
+### What the telegraph tells whom
+
+The telegraph is public, so no countdown on it moves with a hull. Two of the lines above move a vent's clock, and a public clock that moved with them would tell every player a hull was there that nobody had heard (#1303).
+
+- **A dormant vent shows no countdown.** Stabilising lengthens its dormancy, so its clock is a Consortium presence in disguise. Every player sees the site and its phase; nobody sees how long it will sleep.
+- **The warning is the nominal 25 s, for everyone.** A Hadron listener no longer lengthens it.
+- **Hadron's prediction is Hadron's own.** A Hadron hull or structure within three radii of a vent sees that vent turn to warning 6 s before it does for anyone else, its ring closing over 31 s rather than 25 s. The foresight is in its telegraph alone: the vent erupts on the same tick for every player.
+- **A vent within 6 s of stirring cannot be held back.** Stabilising accrues only while more than that is left of the dormancy, so a Consortium hull arriving late cannot move a vent a Hadron listener has already called.
+
+What this does not close: the dormancy is still 55 s by nature, and the start of it is public. A held vent therefore still stirs late, and a player keeping time can read a hold once the nominal dormancy has run out, though no longer the moment the hull arrives. Kelp is the other open case: a cutter opening a field turns its public phase, and a blast sets its public suppression clock (§4).
+
 ## 2. Toxic Brine Clouds
 
 ### Visual Cues
@@ -256,6 +267,7 @@ This does **not** break Silent Running. It is a load, not an event: SIG is added
 - Color coding per hazard type
 - Distinct particle FX
 - Predictable timing (except storms)
+- No public countdown moves with a hull (§1, "What the telegraph tells whom")
 
 ### Balance
 
