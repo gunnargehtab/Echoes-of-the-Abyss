@@ -285,6 +285,48 @@ describe('vents and taps together', () => {
     assert.ok(best > baseline, `capacity ${baseline} -> ${best} while stabilising`);
   });
 
+  it('pays a hull for holding a vent, never a structure', () => {
+    // "A Consortium hull stabilising a vent earns draw capacity" (economy.md
+    // §8), and the Lance's price is "a Consortium hull standing in the vein
+    // band". A building, finished or half-built, commits nobody to stand
+    // there, yet both held the vent back and drew from it (#1311).
+    for (const prebuilt of [true, false]) {
+      const map: MapDefinition = {
+        ...VENTFRONT_DIVIDE,
+        id: 'test-structure-holds',
+        regions: [],
+        hazards: [{ x: 4000, y: 4000, radiusM: 700, kind: 'geothermal-eruption' }],
+      };
+      const match = new Match(map, { fauna: false, seed: 61, terrain: veinTerrain() });
+      match.addPlayer(0, Faction.Bathyarch);
+      const baseline = advance(match, 1)!.get(0)!.draw.capacity;
+      spawnStructure(match.world, {
+        kind: StructureKind.VentTap,
+        slot: 0,
+        faction: Faction.Bathyarch,
+        x: 4000,
+        y: 4000,
+        prebuilt,
+      });
+      const tap = prebuilt ? structureStatsFor(StructureKind.VentTap).drawCapacity! : 0;
+      for (let i = 0; i < SIM.TICK_HZ * 5; i++) {
+        const snapshots = match.update(STEP_MS);
+        if (snapshots === null) continue;
+        assert.equal(
+          snapshots.get(0)!.draw.capacity,
+          baseline + tap,
+          `a ${prebuilt ? 'built' : 'half-built'} tap was paid for the vent`
+        );
+      }
+      assert.equal(match.world.hazards[0]!.phase, HazardPhase.Dormant, 'the premise: dormant');
+      assert.equal(
+        match.world.hazards[0]!.stabilisedS,
+        0,
+        `a ${prebuilt ? 'built' : 'half-built'} tap held the vent back`
+      );
+    }
+  });
+
   it('lets an eruption destroy the tap sitting on it', () => {
     // The interaction the issue asks to get right. The best tap sites are in
     // the vein band, which is exactly where vents erupt: a tap is a raid

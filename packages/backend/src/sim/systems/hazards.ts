@@ -301,16 +301,19 @@ function nearestCutter(world: SimWorld, hazard: Hazard): number {
 }
 
 /**
- * Does a navy have a hull or structure within `radiusM` of this hazard?
+ * Does a navy have a hull within `radiusM` of this hazard?
  *
- * A unit or a structure only (#1304). A creature is spawned with faction 0,
- * which is the Consortium's, and ordnance carries its owner's faction though
- * it is nobody's presence — the Echo pass's own rule: "ordnance carries an
- * Owner but no honest faction, and a creature belongs to nobody". Counting
- * them stabilised every vent animals grazed near, with no Consortium player in
- * the match.
+ * A unit only. A creature is spawned with faction 0, which is the
+ * Consortium's, and ordnance carries its owner's faction though it is nobody's
+ * presence — the Echo pass's own rule: "ordnance carries an Owner but no
+ * honest faction, and a creature belongs to nobody" (#1304). Counting them
+ * stabilised every vent animals grazed near, with no Consortium player in the
+ * match. A structure is presence but not a hull: stabilising is "a Consortium
+ * hull standing in the vein band" (docs/factions.md, the Thermal Lance), a
+ * commitment a building cannot make, and a half-built one held the vent
+ * back with nothing on station (#1311).
  */
-function anyFactionWithin(
+function anyHullWithin(
   world: SimWorld,
   hazard: Hazard,
   faction: Faction,
@@ -321,7 +324,7 @@ function anyFactionWithin(
     const eid = entities[i]!;
     if (Owner.faction[eid] !== faction) continue;
     if (Health.hp[eid]! <= 0) continue;
-    if (!hasComponent(world, Unit, eid) && !hasComponent(world, Structure, eid)) continue;
+    if (!hasComponent(world, Unit, eid)) continue;
     const dx = Position.x[eid]! - hazard.x;
     const dy = Position.y[eid]! - hazard.y;
     if (dx * dx + dy * dy <= radiusM * radiusM) return true;
@@ -357,7 +360,7 @@ export function hazardsSystem(world: SimWorld, destroyed: number[]): void {
       hazard.kind === 'geothermal-eruption' &&
       phaseDuration(hazard) - hazard.elapsedS > hadronForesightS(hazard)
     ) {
-      if (anyFactionWithin(world, hazard, Faction.Bathyarch, hazard.radiusM)) {
+      if (anyHullWithin(world, hazard, Faction.Bathyarch, hazard.radiusM)) {
         hazard.stabilisedS = Math.min(
           HAZARDS.ERUPTION.BATHYARCH_STABILISE_S,
           hazard.stabilisedS + dt
@@ -1155,8 +1158,9 @@ export function hazardStatesFor(
 
 /**
  * Has this slot a living Hadron hull or structure within `radiusM` of the
- * hazard? `anyFactionWithin`'s presence rule (#1304), narrowed to one slot,
- * since a prediction is told to the navy whose sensors made it.
+ * hazard? `anyHullWithin`'s presence rule (#1304), widened to structures,
+ * since a listening post hears as a hull does, and narrowed to one slot, since
+ * a prediction is told to the navy whose sensors made it.
  */
 function slotListensWithin(
   world: SimWorld,
