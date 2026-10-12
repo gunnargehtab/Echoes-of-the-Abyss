@@ -14,6 +14,7 @@ import {
   type CorsPolicy,
   corsHeadersFor,
   describeCorsPolicy,
+  guardOrigins,
   resolveCorsPolicy,
 } from './http/cors.ts';
 
@@ -102,6 +103,12 @@ export const server = defineServer({
 });
 
 await server.listen(PORT);
+// The headers above stop a refused page reading an answer; they do not stop
+// the server acting on a POST that needed no preflight (#1310). Colyseus binds
+// its request listener inside `listen`, so the guard wraps it only now.
+const httpServer = server.transport.server;
+if (httpServer === undefined) throw new Error('The WebSocket transport has no HTTP server.');
+guardOrigins(httpServer, corsPolicy);
 console.log(`Echoes of the Abyss server listening on :${PORT}`);
 console.log(`  simulation ${SIM.TICK_HZ} Hz | Echo Layer ${SIM.ECHO_HZ} Hz`);
 console.log(`  origins: ${describeCorsPolicy(corsPolicy)}`);

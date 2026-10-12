@@ -6,10 +6,13 @@
  * request's CORS itself, ahead of express, from `controller.getCorsHeaders`,
  * and its default echoed whatever Origin a request carried, with credentials:
  * a server started with the production lock answered every page on the
- * internet, `/matchmake` included. Booted for real, on a port of its own.
+ * internet, `/matchmake` included. And a refused page that cannot read an
+ * answer could still make a room with a POST that needs no preflight (#1310).
+ * Booted for real, on a port of its own.
  */
 import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
+import { matchMaker } from '@colyseus/core';
 
 type MatchServer = typeof import('../src/index.ts').server;
 
@@ -67,17 +70,45 @@ describe('the origin lock, as a browser meets it', () => {
     assert.equal(response.headers.get('access-control-allow-credentials'), 'true');
   });
 
-  it('lets a foreign page read nothing of a matchmaking POST, the seat included', async () => {
-    // A bodyless POST needs no preflight, so the preflight's refusal never
-    // stops it: the browser sends it, and only the missing allow-origin keeps
-    // the reservation from the page. The server still acts on it (#1310).
-    const response = await fetch(`${base}/matchmake/joinOrCreate/match`, {
+  const post = (origin: string | undefined, init: RequestInit = {}) =>
+    fetch(`${base}/matchmake/create/match`, {
+      ...init,
       method: 'POST',
-      headers: { Origin: FOREIGN },
+      headers: { ...(origin === undefined ? {} : { Origin: origin }), ...init.headers },
     });
-    assert.equal(response.status, 200, 'the request itself is answered; the browser withholds it');
-    assert.equal(response.headers.get('access-control-allow-origin'), null);
-    assert.equal(response.headers.get('access-control-allow-credentials'), null);
+
+  const matchRooms = async () => (await matchMaker.query({ name: 'match' })).length;
+
+  it('refuses a foreign matchmaking POST before it makes a room (#1310)', async () => {
+    // A POST needing no preflight is sent whatever the preflight said, so the
+    // missing allow-origin only kept the seat from the page: each one still
+    // made a room. Bodyless, form and JSON, as the issue measured them.
+    const before = await matchRooms();
+    for (const init of [
+      {},
+      {
+        body: 'mapId=x',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      },
+      { body: '{}', headers: { 'Content-Type': 'application/json' } },
+    ]) {
+      const response = await post(FOREIGN, init);
+      assert.equal(response.status, 403);
+      assert.equal(response.headers.get('access-control-allow-origin'), null);
+      assert.equal(response.headers.get('access-control-allow-credentials'), null);
+      assert.equal(response.headers.get('vary'), 'Origin');
+    }
+    assert.equal(await matchRooms(), before, 'no room was made');
+  });
+
+  it('still seats the allowed origin, and a request with no Origin', async () => {
+    // The positive control: the guard refuses an origin, not matchmaking.
+    for (const origin of [ALLOWED, undefined]) {
+      const response = await post(origin);
+      assert.equal(response.status, 200);
+      const reservation = (await response.json()) as { roomId?: string };
+      assert.equal(typeof reservation.roomId, 'string');
+    }
   });
 
   it("refuses a foreign origin the server's own routes too", async () => {
