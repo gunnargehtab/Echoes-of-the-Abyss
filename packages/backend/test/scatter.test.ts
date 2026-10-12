@@ -439,7 +439,7 @@ describe('two ears solve the Fields — docs/systems-echo.md §3, "Two ears"', (
 
 describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.md §5', () => {
   /** A pinger in the water the caller paints, and one enemy hull far off. */
-  function ping(terrain: Terrain, seed = 31) {
+  function ping(terrain: Terrain, seed = 31, enemyHeading?: number) {
     const match = new Match(VENTFRONT_DIVIDE, { fauna: false, seed, terrain });
     const pinger = spawnUnit(match.world, {
       kind: UnitKind.Corvette,
@@ -456,6 +456,7 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
       faction: Faction.Pelagia,
       x: 4000 + 700,
       y: 4000,
+      heading: enemyHeading,
     });
     match.activeSonar(0, pinger);
     const result = match.echo.run(match.world, [0, 1]);
@@ -538,6 +539,30 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
       .contactsBySlot.get(0)!
       .map((c) => c.id);
     assert.equal(new Set(handles).size, handles.length, 'every handle distinct');
+  });
+
+  it('tells every heading at one precision and in one range, so neither sorts a phantom', () => {
+    // A true bow is `Heading.rad`, an f32 written from `atan2`. A phantom's
+    // was a double over [0, 2π): `Math.fround(h) !== h` sorted every one, and
+    // a heading past π half of them again (#1307).
+    const limit = Math.fround(Math.PI);
+    let phantoms = 0;
+    let behind = 0;
+    for (let seed = 1; seed <= 40; seed++) {
+      const fields = ping(fieldsMap(), seed, -2.2);
+      assert.equal(fields.real[0]?.heading, Math.fround(-2.2), `seed ${seed}: the true bow`);
+      for (const contact of fields.contacts) {
+        const h = contact.heading!;
+        const at = `seed ${seed}: heading ${h}`;
+        assert.equal(Math.fround(h), h, `${at}, not single precision`);
+        assert.ok(h >= -limit && h <= limit, `${at}, outside the half turn either side of zero`);
+      }
+      phantoms += fields.phantoms.length;
+      behind += fields.phantoms.filter((c) => c.heading! < 0).length;
+    }
+    assert.ok(phantoms > 40, `the premise: the seeds conjure phantoms, ${phantoms}`);
+    // The draw spans the turn: both signs, roughly evenly.
+    assert.ok(behind > phantoms / 4 && behind < (phantoms * 3) / 4, `${behind} of ${phantoms}`);
   });
 
   /**
