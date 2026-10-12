@@ -37,7 +37,6 @@ import {
   Faction,
   HULL_EFFECTS,
   HarvestThrottle,
-  HAZARDS,
   ResolutionTier,
   ResourceKind,
   StructureKind,
