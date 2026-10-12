@@ -161,8 +161,8 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
  *
  * CORS only stops a page *reading* an answer. A POST that needs no preflight —
  * a form, or one with no body — is still sent from a refused origin, and
- * Colyseus's matchmaking acted on it: three foreign page loads made three
- * rooms. So a refused `Origin` on a method that can act is answered 403. The
+ * Colyseus's matchmaking acted on it: three foreign POSTs made three rooms.
+ * So a refused `Origin` on a method that can act is answered 403. The
  * test is by method rather than by the `/matchmake` path so a path spelled
  * another way, or a POST route added later, cannot slip past it. A request
  * with no `Origin` is not a browser cross-origin request and carries no

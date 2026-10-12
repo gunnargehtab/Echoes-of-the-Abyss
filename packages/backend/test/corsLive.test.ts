@@ -12,7 +12,6 @@
  */
 import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
-import { matchMaker } from '@colyseus/core';
 
 type MatchServer = typeof import('../src/index.ts').server;
 
@@ -77,12 +76,16 @@ describe('the origin lock, as a browser meets it', () => {
       headers: { ...(origin === undefined ? {} : { Origin: origin }), ...init.headers },
     });
 
-  const matchRooms = async () => (await matchMaker.query({ name: 'match' })).length;
+  // Imported here, not at the top: Colyseus reads the seat timeout `before()`
+  // sets when it loads, and a static import would load it first.
+  const matchRooms = async () =>
+    (await (await import('@colyseus/core')).matchMaker.query({ name: 'match' })).length;
 
   it('refuses a foreign matchmaking POST before it makes a room (#1310)', async () => {
-    // A POST needing no preflight is sent whatever the preflight said, so the
-    // missing allow-origin only kept the seat from the page: each one still
-    // made a room. Bodyless, form and JSON, as the issue measured them.
+    // A bodyless or form POST needs no preflight, so it is sent whatever the
+    // preflight said, and the missing allow-origin only kept the seat from the
+    // page: each one still made a room. JSON is checked too, since the server
+    // parsed it as readily.
     const before = await matchRooms();
     for (const init of [
       {},
