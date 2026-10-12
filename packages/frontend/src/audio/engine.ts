@@ -567,8 +567,8 @@ export class AudioEngine {
       sourBite: (at) => playSourBite(context, self, at),
       world: (gain, now) => world.gain.setTargetAtTime(gain, now, 0.2),
       transmit: (at) => playPingTransmit(context, self, at),
-      ret: (at, pan) => playPingReturn(context, self, at, pan),
-      exposure: (at, pan) => playExposure(context, self, at, pan),
+      ret: (at, pan) => playPingReturn(context, self, at, this.heardPan(pan)),
+      exposure: (at, pan) => playExposure(context, self, at, this.heardPan(pan)),
       breakSilence: (at) => playBreakSilence(context, self, at),
       underFire: (at) => playUnderFire(context, self, at),
       // The interface's own voice: the one producer the ui bus has, and the
@@ -652,7 +652,8 @@ export class AudioEngine {
     const tuned = this.pendingTuned;
     this.pendingTuned = null;
     if (tunedBed !== null && tuned !== null && this.context !== null) {
-      const mix = tunedMixFor(tuned);
+      const resolved = tunedMixFor(tuned);
+      const mix = { ...resolved, corridorPan: this.heardPan(resolved.corridorPan) };
       this.lastTuned = mix;
       tunedBed.update(mix, this.context.currentTime);
     }
@@ -854,6 +855,18 @@ export class AudioEngine {
   setSpatialisation(mode: Spatialisation): void {
     this.spatialisation = mode;
     this.mixer?.setSpatialisation(mode);
+  }
+
+  /**
+   * A pan as the chosen mode renders it. The contact mixer applies the mode
+   * itself; every other panned voice — the ping's returns, the exposure
+   * strike, the tuned bed's corridor — passes through here, so mono centres
+   * them too rather than leaving the one listener who chose it hearing those
+   * off-centre (#1329). Read when the sound is placed, so a toggle mid-match
+   * takes effect on the next strike and the next Echo tick.
+   */
+  private heardPan(pan: number): number {
+    return this.spatialisation === 'mono' ? 0 : pan;
   }
 
   get spatialisationMode(): Spatialisation {
