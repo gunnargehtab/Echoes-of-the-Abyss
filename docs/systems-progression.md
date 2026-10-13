@@ -223,13 +223,13 @@ close enough to know everything.
 
 **The Pressure Refit is built; the other four refits, rank and its guard-rails are not.**
 Constants land only after this section exists ([CLAUDE.md](../CLAUDE.md), *Constants live
-in exactly one place*). The refit runs on the Slipway's line, transcribed in #461
-(`StructureKind.Slipway` in `packages/shared/src/structures.ts`), so a refit takes a yard
-that already runs at 70 rather than a new yard.
+in exactly one place*). Two navies buy the refit on the Slipway's line, transcribed
+in #461 (`StructureKind.Slipway` in `packages/shared/src/structures.ts`), so it takes a yard
+that already runs at 70 rather than a new yard; the Knights strike theirs at the Bastion.
 
 | Doc concept | Prototype today | Where it would land |
 | --- | --- | --- |
-| Refits (§2) | **Partly built** — the **Pressure Refit** only; Plate, Drive, Magazine and Hold are designed and not built | `REFIT_STATS` in `packages/shared/src/refits.ts`, priced through the same `priceOf`, `affords` and `charge` as a hull (economy.md §8). `Match.refit` takes it onto the Slipway's line; `grantRefit` in `packages/backend/src/sim/systems/refit.ts` applies it to every hull afloat, and `world.refits`, a per-player set, refits each later launch and adds its SIG. `test/refit.test.ts` covers it |
+| Refits (§2) | **Partly built** — the **Pressure Refit** only; Plate, Drive, Magazine and Hold are designed and not built | `REFIT_STATS` and `refitPriceFor` in `packages/shared/src/refits.ts`, priced through the same `priceOf`, `affords` and `charge` as a hull (economy.md §8). `Match.refit` takes it onto the Slipway's line; `grantRefit` in `packages/backend/src/sim/systems/refit.ts` applies it to every hull afloat, and `world.refits`, a per-player set, refits each later launch and adds its SIG. `test/refit.test.ts` covers it |
 | Pressure Refit's faction rules (§2) | **Built** | `REFIT_TERMS` and `refittedPressureRating` in `packages/shared/src/refits.ts`: each navy's rates, the Commune's PR-2 cap and the Directorate's refusal. The Knights' instant, sounded variant is struck at the Bastion by `Match.refit`, at SIG 80 for 15 s |
 | Rank (§3) | **Not built** | A component on the entity: experience and rank, written by `sim/systems/combat.ts` where damage is applied, read by the same file where damage is dealt. Rank crosses the wire as own-force hull data and inside a Tier-4 contact only |
 | Guard-rails (§4) | **Not built** | `test/ttkBands.test.ts` grows a rank-3 row per band |
