@@ -41,7 +41,8 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    `panels` tables and is advisory, not a gate (#919).
                    test/facets.test.mjs holds its reading to its rule, under
                    npm run test:hull-models. contacts.mjs lists every pair of
-                   parts that meet and every part under the model's y 0, testing
+                   parts that meet or sit within --near (1 mm, #1370) and every
+                   part under the model's y 0, testing
                    only pairs whose boxes overlap, so a sweep is under a
                    second. A contact is a question, mount or clip, and not a
                    verdict, so it is advisory too. It keeps the sweep #947's

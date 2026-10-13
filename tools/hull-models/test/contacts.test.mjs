@@ -79,3 +79,15 @@ test('a part under the seabed is named with its depth, a claw point is not', () 
     [['buried', -2]]
   );
 });
+
+test('a part seated a rounding off its plate is listed, and one a centimetre clear is not', () => {
+  // kit.mjs `seat` lands a part a float32 rounding above its plate: the
+  // light scout's spine patch stands 4.8e-7 m clear and was never listed (#1370).
+  const parts = scene([
+    { name: 'plate', size: [10, 1, 10], at: [0, 0, 0] },
+    { name: 'patch', size: [2, 0.2, 2], at: [0, 0.6 + 5e-7, 0] },
+    { name: 'lamp', size: [1, 1, 1], at: [3, 1.01, 3] },
+  ]);
+  assert.deepEqual(names(contactsOf(parts)), ['patch · plate']);
+  assert.deepEqual(contactsOf(parts, { near: 0 }), []);
+});
