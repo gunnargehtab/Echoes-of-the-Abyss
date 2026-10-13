@@ -529,6 +529,119 @@ describe('separation', () => {
     });
   });
 
+  describe('a move between two footprints closer than a hull is wide (#1361)', () => {
+    // `Match.build` allows a 40 m gap, and a Light Scout is 60 m across, so
+    // the two clearances overlap and close the water between them into a
+    // notch on each side. A hull ordered into the gap from the north was
+    // pinned in the north notch, its move active at 120 s; from the south the
+    // move ended at 10 s.
+    const A = { x: 2500, y: 6500 };
+
+    function pair(seed: number, gapM: number, fromY: number) {
+      const match = new Match(undefined, { fauna: false, seed });
+      match.addPlayer(0, Faction.Bathyarch);
+      advance(match, 0.5);
+      const r = structureStatsFor(StructureKind.Refinery).radiusM;
+      const b = { x: A.x + 2 * r + gapM, y: A.y };
+      const refineries = [A, b].map((at) =>
+        spawnStructure(match.world, {
+          kind: StructureKind.Refinery,
+          slot: 0,
+          faction: Faction.Bathyarch,
+          x: at.x,
+          y: at.y,
+          prebuilt: true,
+        })
+      );
+      const hull = spawnUnit(match.world, {
+        kind: UnitKind.LightScout,
+        slot: 0,
+        faction: Faction.Bathyarch,
+        x: A.x + 100,
+        y: fromY,
+      });
+      const clear = unitRadiusM(UnitKind.LightScout) + r;
+      return { match, refineries, hull, clear, gapX: (A.x + b.x) / 2 };
+    }
+
+    /** Seconds until the move ends, or Infinity if it is still under way at `limit`. */
+    function untilEnded(match: Match, hull: number, limit: number): number {
+      for (let tick = 0; tick < limit * SIM.TICK_HZ; tick++) {
+        if (!MoveOrder.active[hull]) return tick / SIM.TICK_HZ;
+        match.update(STEP_MS);
+      }
+      return Infinity;
+    }
+
+    for (const [side, fromY] of [
+      ['north', A.y - 1200],
+      ['south', A.y + 1200],
+    ] as const) {
+      it(`ends the move from the ${side}, held out of both footprints`, () => {
+        const { match, refineries, hull, clear } = pair(41, 40, fromY);
+        match.orderMove(0, hull, A.x + 100, A.y + 1);
+
+        const ended = untilEnded(match, hull, 60);
+        assert.ok(ended < 20, `the move ended, at ${ended}s`);
+        for (const s of refineries) {
+          const d = Math.hypot(
+            Position.x[hull]! - Position.x[s]!,
+            Position.y[hull]! - Position.y[s]!
+          );
+          assert.ok(d >= clear * 0.95, `out of each footprint, ${d.toFixed(1)}m from its centre`);
+        }
+        assert.ok(
+          Math.sign(Position.y[hull]! - A.y) === Math.sign(fromY - A.y),
+          `held on the side it came from (y=${Position.y[hull]!.toFixed(0)})`
+        );
+      });
+    }
+
+    it('begins the leg queued behind it', () => {
+      const { match, hull } = pair(42, 40, A.y - 1200);
+      const next = { x: A.x - 600, y: A.y - 900 };
+      match.orderMove(0, hull, A.x + 100, A.y + 1);
+      match.orderMove(0, hull, next.x, next.y, true);
+      advance(match, 30);
+
+      const left = Math.hypot(Position.x[hull]! - next.x, Position.y[hull]! - next.y);
+      assert.ok(left < 10, `the queued leg ran to its point, ${left.toFixed(0)}m short`);
+    });
+
+    it('ends a move aimed past the pair at a slant, once it slides into the notch', () => {
+      // Aimed south-west beyond the pair from the north-east, the course
+      // presses into the western footprint and away from the eastern one: the
+      // hull slid along the eastern one into the notch and was held there,
+      // under way at 120 s. Its point is in open water; the move still ends.
+      const { match, refineries, hull, clear } = pair(44, 40, A.y - 1200);
+      Position.x[hull] = 3377;
+      Position.y[hull] = 5746;
+      match.orderMove(0, hull, 2230, 6861);
+
+      const ended = untilEnded(match, hull, 60);
+      assert.ok(ended < 20, `the move ended, at ${ended}s`);
+      for (const s of refineries) {
+        const d = Math.hypot(
+          Position.x[hull]! - Position.x[s]!,
+          Position.y[hull]! - Position.y[s]!
+        );
+        assert.ok(d >= clear * 0.95, `out of each footprint, ${d.toFixed(1)}m from its centre`);
+      }
+    });
+
+    it('still runs through a gap a hull is narrower than', () => {
+      // The control: 80 m is wider than the Scout's 60, so there is no notch,
+      // and a point beyond the gap is arrived at, not stopped short of.
+      const { match, hull, gapX } = pair(43, 80, A.y - 1200);
+      const point = { x: gapX, y: A.y + 600 };
+      match.orderMove(0, hull, point.x, point.y);
+      advance(match, 40);
+
+      const left = Math.hypot(Position.x[hull]! - point.x, Position.y[hull]! - point.y);
+      assert.ok(left < 10, `the hull went through and arrived, ${left.toFixed(1)}m short`);
+    });
+  });
+
   it('does not change what movement was already for', () => {
     // Separation is a correction, not a replacement: a lone unit must still
     // arrive exactly where it was sent, and silent running must still be slow.
