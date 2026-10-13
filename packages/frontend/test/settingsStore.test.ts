@@ -11,6 +11,7 @@ import assert from 'node:assert/strict';
 import { LAMP_HALOS_DEFAULT } from '../src/game/lampHalo.ts';
 import {
   conflictsIn,
+  DEFAULT_BINDINGS,
   ONE_HANDED_BINDINGS,
   resolveBindings,
   type Bindings,
@@ -194,6 +195,23 @@ describe('the settings store', () => {
       [],
       'two actions loaded on one key'
     );
+  });
+
+  it('fills a custom table that started one-handed off the keys it uses (#1352)', () => {
+    // A one-handed player from before Engine Off who moved one key: `custom`,
+    // the ping still on `Q`. Filled from the standard table, Engine Off took
+    // `Q` too, and in a match the ping was lost.
+    const older: Partial<Bindings> = { ...ONE_HANDED_BINDINGS, mine: 'KeyJ' };
+    delete older.engineOff;
+    assert.equal(older.ping, DEFAULT_BINDINGS.engineOff, 'the clash this guards needs Q');
+    backing.set(
+      'echoes.settings',
+      JSON.stringify({ version: 1, bindingLayout: 'custom', bindings: older })
+    );
+    const loaded = loadSettings();
+    assert.equal(loaded.bindings.ping, 'KeyQ', 'the ping kept its key');
+    assert.equal(loaded.bindings.engineOff, ONE_HANDED_BINDINGS.engineOff);
+    assert.deepEqual(conflictsIn(resolveBindings(loaded.bindingLayout, loaded.bindings)), []);
   });
 
   it('clamps the UI scale to the range §11 specifies', () => {

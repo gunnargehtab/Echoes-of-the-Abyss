@@ -374,19 +374,46 @@ export function keyLabel(code: string): string {
  * Partial on purpose: a build that adds an action should give it its default
  * binding rather than leaving it unbound, and a stored table from an older
  * build knows nothing about it.
+ *
+ * A `custom` table does not store the layout it started from, so an action it
+ * lacks takes the standard key if the table leaves that free, else the
+ * one-handed key if free, else the standard key anyway (#1352). A one-handed
+ * player who moved one key is `custom`, and the standard fill put a new action
+ * on a key they already used: Engine Off landed on the `Q` that layout gives
+ * the ping. The last resort leaves a clash the Controls screen shows, rather
+ * than an action with no key at all.
  */
 export function resolveBindings(
   layout: LayoutName,
   overrides: Partial<Bindings> | undefined
 ): Bindings {
-  const base = layout === 'custom' ? DEFAULT_BINDINGS : LAYOUTS[layout];
-  if (overrides === undefined) return { ...base };
-  const merged = { ...base };
-  for (const { action } of ACTIONS) {
-    const code = overrides[action];
-    if (typeof code === 'string' && code.length > 0) merged[action] = code;
+  if (layout !== 'custom') {
+    const merged = { ...LAYOUTS[layout] };
+    for (const { action } of ACTIONS) {
+      const code = overrides?.[action];
+      if (typeof code === 'string' && code.length > 0) merged[action] = code;
+    }
+    return merged;
   }
-  return merged;
+
+  const merged: Partial<Bindings> = {};
+  const missing: BindableAction[] = [];
+  for (const { action } of ACTIONS) {
+    const code = overrides?.[action];
+    if (typeof code === 'string' && code.length > 0) merged[action] = code;
+    else missing.push(action);
+  }
+  // Filled in `ACTIONS` order, each fill taking its key before the next looks,
+  // so two new actions cannot both claim one free key.
+  const taken = new Set(Object.values(merged));
+  for (const action of missing) {
+    const standard = DEFAULT_BINDINGS[action];
+    const oneHanded = ONE_HANDED_BINDINGS[action];
+    const code = !taken.has(standard) || taken.has(oneHanded) ? standard : oneHanded;
+    merged[action] = code;
+    taken.add(code);
+  }
+  return merged as Bindings;
 }
 
 /** The action a code fires, or null. Ties resolve in `ACTIONS` order. */
