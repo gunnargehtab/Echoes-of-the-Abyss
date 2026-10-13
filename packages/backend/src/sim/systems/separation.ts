@@ -31,7 +31,7 @@ import {
   type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
-import { Craft, MoveOrder, Position, Posture, Structure, Unit } from '../components.ts';
+import { Craft, MoveOrder, Position, Posture, Structure, Unit, Velocity } from '../components.ts';
 import { localIdOf, type SimWorld } from '../world.ts';
 import type { Terrain } from '../terrain.ts';
 
@@ -229,6 +229,11 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
       buffer
     );
 
+    // How many footprints put this hull out this tick, and whether its course
+    // ran into every one of them (`endIfWedged`).
+    let held = 0;
+    let pressing = true;
+
     for (let j = 0; j < near.length; j++) {
       const s = near[j]!;
       const sx = Position.x[s]!;
@@ -242,11 +247,15 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
 
       if (d2 < SEPARATION.COINCIDENT_EPSILON_M * SEPARATION.COINCIDENT_EPSILON_M) {
         // Dead centre of a footprint: leave along +X, deterministically.
+        held++;
+        pressing &&= Velocity.x[a]! < 0;
         settle(terrain, a, sx + minD, Position.y[a]!);
         reachFootprintEdge(world, a, sx, sy, minD);
         continue;
       }
       const d = Math.sqrt(d2);
+      held++;
+      pressing &&= Velocity.x[a]! * dx + Velocity.y[a]! * dy < 0;
       // Pushed clear in one step rather than a fraction of it: a hull inside a
       // structure is a state the player can see is wrong, and easing out of it
       // looks like the building is chewing the hull.
@@ -262,6 +271,40 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
       settle(terrain, a, sx + (dx / d) * minD, sy + (dy / d) * minD);
       reachFootprintEdge(world, a, sx, sy, minD);
     }
+    if (held >= 2 && pressing) endIfWedged(world, a);
+  }
+}
+
+/**
+ * A hull put out of two footprints in one tick, its course running into both,
+ * is wedged where their clearances overlap, and its move ends there (#1361).
+ *
+ * `Match.build` allows footprints closer than a hull's width, so two of them
+ * can close the water between them into a notch. Out of one footprint a hull
+ * slides round, since the push leaves the part of its course along the edge;
+ * in the notch each push sends it into the other, and nothing is left to
+ * slide on. Measured: a Light Scout ordered between two Refineries 40 m apart
+ * was still under way at 120 s from the north, while from the south the same
+ * move ended at 10 s. `reachFootprintEdge` cannot help: the edge nearest the
+ * point is the notch on the far side, and going round to it is routing, which
+ * the slide is not.
+ *
+ * So the move point, and an attack-move's destination, are put where the hull
+ * is, and `movementSystem` ends the move the ordinary way next tick. Like
+ * `reachFootprintEdge` it only writes the point: an order a system re-asserts
+ * every tick (a hauler's run to its depot) is set again ahead of the next
+ * movement step and steers as it did. A course along the notch, or out of it,
+ * does not press into both and is left alone; and footprints a hull's width
+ * apart or more have no notch, so their gap is never a wedge.
+ */
+function endIfWedged(world: SimWorld, eid: number): void {
+  if (MoveOrder.active[eid]) {
+    MoveOrder.x[eid] = Position.x[eid]!;
+    MoveOrder.y[eid] = Position.y[eid]!;
+  }
+  if (hasComponent(world, Posture, eid) && Posture.engage[eid]) {
+    Posture.engageX[eid] = Position.x[eid]!;
+    Posture.engageY[eid] = Position.y[eid]!;
   }
 }
 
@@ -273,8 +316,9 @@ const edge = { x: 0, y: 0 };
  * the footprint's edge nearest that point, and the move ends on arriving there
  * (#1214). An attack-move's destination is moved the same way, since combat
  * sends a hull back to it and `busy()` holds the queue until it is reached.
- * Not every edge is reachable: one against the map's edge, or within a hull's
- * width of a neighbouring footprint, can still hold the hull off its point.
+ * Not every edge is reachable: one against the map's edge can still hold the
+ * hull off its point, and one within a hull's width of a neighbouring
+ * footprint ends the move in the notch between them (`endIfWedged`).
  *
  * The footprint holds a hull out at every depth. The sim reads no height for
  * a structure: its footprint is a column, whatever height the art draws it at
