@@ -549,6 +549,10 @@ export function GameCanvas({
             // from the same message that writes the log row, so the two are one
             // event. The whisper rule is read as the line lands (§13).
             audio.say(line, underSilenceOrder || anyHullSilent);
+            // The deciding tick's line arrives after that tick's snapshot, and
+            // no snapshot follows a result, so it is hailed here with its row
+            // rather than at a rematch's first tick (#1333).
+            if (matchOver) audio.hailNow();
             setMissionLines((previous) => {
               const next = [...previous, line];
               return next.length > MAX_LOG_ENTRIES ? next.slice(-MAX_LOG_ENTRIES) : next;
@@ -600,6 +604,9 @@ export function GameCanvas({
                 setMission(null);
                 setMissionLines([]);
                 setMissionOver(null);
+                // And the mix's queue with them: a line the last run never
+                // hailed is not the new run's to speak (#1333).
+                audio.dropSpeech();
               }
               return view;
             });

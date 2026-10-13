@@ -668,23 +668,7 @@ export class AudioEngine {
     // *next* tick time: the buffering above already put them on the Echo
     // cadence, and a further 200 ms would open a gap between the log row and
     // the sound that §13 says are one event.
-    const buses = this.buses;
-    if (buses !== null && this.context !== null && this.pendingSpeech.length > 0) {
-      const now = this.context.currentTime;
-      for (const line of this.pendingSpeech) {
-        const readingS = readingSeconds(line.text, line.whisper);
-        const occupied = playHail(this.context, buses.speech, line, now, {
-          whisper: line.whisper,
-          readingS,
-        });
-        // Two lines on one tick overlap rather than queue — the log shows
-        // both rows at once too — and the rung is held for whichever runs
-        // longer.
-        this.speechUntil = Math.max(this.speechUntil, now + occupied);
-        this.speechFired++;
-      }
-      this.pendingSpeech = [];
-    }
+    this.hailPending();
 
     // The rest of the chain. Written every tick rather than only when a self
     // frame arrived, because a line's start and end — and a contact's — are
@@ -823,6 +807,52 @@ export class AudioEngine {
       text: line.text,
       whisper,
     });
+  }
+
+  /**
+   * Hail a queued line now, off the Echo cadence (#1333).
+   *
+   * For a line no snapshot will follow: the room stops stepping once a match
+   * is over, so the deciding tick's line reaches the client after that tick's
+   * snapshot and would otherwise wait for one that never comes, while its log
+   * row sits under the result card. Hailed on arrival it is still one event
+   * with its row (§13); the chain is rewritten so the rung holds for it.
+   */
+  hailNow(): void {
+    this.hailPending();
+    this.writeChain();
+  }
+
+  /**
+   * Forget every line not yet hailed (#1333).
+   *
+   * A rematch is a new run, and a line queued in the last one — before the
+   * first gesture opened the device, say — would otherwise be hailed by the
+   * rematch's first tick, under a log the shell has just cleared.
+   */
+  dropSpeech(): void {
+    this.pendingSpeech = [];
+  }
+
+  /** Hail every queued line now, holding the speech rung for the longest. */
+  private hailPending(): void {
+    const buses = this.buses;
+    if (buses !== null && this.context !== null && this.pendingSpeech.length > 0) {
+      const now = this.context.currentTime;
+      for (const line of this.pendingSpeech) {
+        const readingS = readingSeconds(line.text, line.whisper);
+        const occupied = playHail(this.context, buses.speech, line, now, {
+          whisper: line.whisper,
+          readingS,
+        });
+        // Two lines on one tick overlap rather than queue — the log shows
+        // both rows at once too — and the rung is held for whichever runs
+        // longer.
+        this.speechUntil = Math.max(this.speechUntil, now + occupied);
+        this.speechFired++;
+      }
+      this.pendingSpeech = [];
+    }
   }
 
   /** How many lines this session has hailed. */
