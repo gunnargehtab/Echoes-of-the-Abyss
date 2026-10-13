@@ -529,9 +529,12 @@ function windingNormal(part, t) {
  * The inside test is ray parity straight up, which is right for a closed
  * primitive and undefined for an open shell — a cowl, an open rim — where
  * a vertex under it counts as inside and its lamp as resting. That is the
- * lamp-under-a-deck case, which `topDown` already names.
+ * lamp-under-a-deck case, which `topDown` already names. `closedOnly` skips
+ * the test against a part that is not closed (`isClosed`), so an open shell
+ * is measured by its surface alone: contacts.mjs asks it, since a dome under
+ * a curved plate read as meeting the plate 0.44 m above it (#1373).
  */
-export function gapBetween(part, parts, { skip = part } = {}) {
+export function gapBetween(part, parts, { skip = part, closedOnly = false } = {}) {
   const { min, max } = boundsOf(part);
   const a = part.positions;
   let best = Infinity;
@@ -547,6 +550,7 @@ export function gapBetween(part, parts, { skip = part } = {}) {
         a[i] >= qb.min[0] && a[i] <= qb.max[0] &&
         a[i + 2] >= qb.min[2] && a[i + 2] <= qb.max[2] &&
         a[i + 1] >= qb.min[1] && a[i + 1] <= qb.max[1] &&
+        (!closedOnly || isClosed(q)) &&
         inside(b, a[i], a[i + 1], a[i + 2])
       )
         return 0;
@@ -607,6 +611,34 @@ function segmentHits(px, py, pz, qx, qy, qz, b, u) {
   if (w < 0 || v + w > 1) return false;
   const s = (e2x * cx + e2y * cy + e2z * cz) * inv;
   return s >= 0 && s <= 1;
+}
+
+const closedCache = new WeakMap();
+
+/**
+ * Whether a part's surface is closed: every edge, its ends welded to a
+ * hundredth of a millimetre, shared by exactly two triangles. A primitive's
+ * seams and cap rims repeat a vertex at one place, so the weld is by
+ * position, not index; an open-ended tube, a shell or a ring reads open.
+ */
+export function isClosed(part) {
+  const a = part.positions;
+  if (closedCache.has(a)) return closedCache.get(a);
+  const key = (i) =>
+    `${Math.round(a[i] * 1e5)},${Math.round(a[i + 1] * 1e5)},${Math.round(a[i + 2] * 1e5)}`;
+  const edges = new Map();
+  for (let t = 0; t < a.length; t += 9)
+    for (let e = 0; e < 3; e++) {
+      const u = key(t + e * 3);
+      const v = key(t + ((e + 1) % 3) * 3);
+      if (u === v) continue; // a degenerate triangle's collapsed edge
+      const k = u < v ? `${u}|${v}` : `${v}|${u}`;
+      edges.set(k, (edges.get(k) ?? 0) + 1);
+    }
+  let yes = edges.size > 0;
+  for (const n of edges.values()) if (n !== 2) yes = false;
+  closedCache.set(a, yes);
+  return yes;
 }
 
 /** Ray parity straight up from (x, y, z) through the triangles of `b`. */
