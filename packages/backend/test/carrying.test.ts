@@ -25,6 +25,8 @@ import {
   DEPTH_BANDS,
   DepthBand,
   Faction,
+  FaunaSpecies,
+  FaunaStage,
   HOLD,
   HULL_EFFECTS,
   SIM,
@@ -34,17 +36,19 @@ import {
   type EchoSnapshot,
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
-import { spawnUnit } from '../src/sim/world.ts';
+import { spawnFauna, spawnUnit } from '../src/sim/world.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { hashWorld } from '../src/sim/stateHash.ts';
 import { REPLAY_FORMAT_VERSION, playReplay } from '../src/sim/replay.ts';
 import { orderTarget } from '../src/sim/systems/chase.ts';
 import { launchTorpedo } from '../src/sim/systems/ordnance.ts';
 import { enqueue } from '../src/sim/systems/orderQueue.ts';
+import { wound } from '../src/sim/systems/fauna.ts';
 import {
   Acoustic,
   Carried,
   Embarking,
+  Fauna,
   Heading,
   Health,
   Hold,
@@ -520,5 +524,51 @@ describe('the hold — a hull aboard is nobody’s target (#1318)', () => {
     advance(match, 0.5);
     assert.equal(MoveOrder.x[hunter], 9000, 'the plan waited behind an order on a hull in a hold');
     assert.equal(MoveOrder.active[hunter], 1);
+  });
+});
+
+describe('the hold — a hull aboard is no creature’s prey (#1328)', () => {
+  // A creature holds its target between listens, and a hull that boards in
+  // the gap kept its health and lost its `Position`: the creature steered for
+  // the zeroed position, the map's corner, until it next listened. A Hollow's
+  // wound pointed it at a shooter checked for health alone.
+  function prey(match: Match) {
+    const freighter = hull(match, Faction.Bathyarch, UnitKind.Freighter, 6000, 6000);
+    const corvette = hull(match, Faction.Bathyarch, UnitKind.Corvette, 6060, 6000);
+    return { freighter, corvette };
+  }
+  /** A creature 1.5 km north of the prey, deaf until the test is done. */
+  function creature(match: Match, species: FaunaSpecies): number {
+    const eid = spawnFauna(match.world, { species, x: 6000, y: 7500 });
+    Fauna.senseS[eid] = 1e6;
+    return eid;
+  }
+
+  it('lets a committed creature give up a hull that boards, not swim for the corner', () => {
+    const match = water(Faction.Bathyarch);
+    const { freighter, corvette } = prey(match);
+    const draymaw = creature(match, FaunaSpecies.Draymaw);
+    Fauna.targetEid[draymaw] = corvette;
+    Fauna.stage[draymaw] = FaunaStage.Committed;
+    const fromCorner = Math.hypot(Position.x[draymaw]!, Position.y[draymaw]!);
+
+    load(match, freighter, [corvette]);
+    assert.notEqual(Fauna.targetEid[draymaw], corvette, 'the creature still holds a hull aboard');
+    assert.ok(
+      Math.hypot(Position.x[draymaw]!, Position.y[draymaw]!) >= fromCorner - 1,
+      'and swam toward (0, 0)'
+    );
+  });
+
+  it("does not point a Hollow's lunge at a shooter that has since boarded", () => {
+    const match = water(Faction.Bathyarch);
+    const { freighter, corvette } = prey(match);
+    const hollow = creature(match, FaunaSpecies.Hollow);
+    load(match, freighter, [corvette]);
+    Fauna.targetEid[hollow] = 0;
+
+    wound(match.world, hollow, corvette);
+    advance(match, STEP_MS / 1000);
+    assert.notEqual(Fauna.targetEid[hollow], corvette, 'the wound aimed it at a hull aboard');
   });
 });
