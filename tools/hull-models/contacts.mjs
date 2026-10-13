@@ -18,7 +18,11 @@
  * and `--with <re>` those parts' partners; both match the node's name. The
  * test is glb.mjs `gapBetween`, the light audit's resting measure, run only
  * where two parts' boxes overlap, so a full sweep over a model's hundred and
- * fifty parts is seconds rather than minutes. A model is authored standing
+ * fifty parts is seconds rather than minutes. Both tests allow `--near`
+ * metres (0.001 by default): kit.mjs `seat` lands a part a float32 rounding
+ * off its plate, 4.8e-7 m on the light scout's spine, and an exact test read
+ * every such mount as meeting nothing (#1370). `--near 0` asks for a true
+ * touch. A model is authored standing
  * on y 0, and the conn view stands a structure's y 0 at its working depth
  * (rosterModels.ts `standingY`, #955), so a part under y 0 is in the seabed
  * wherever the floor meets that depth. An anchor, a root or a slab means to
@@ -40,15 +44,19 @@ const MODELS = resolve(here, '../../docs/concept-art/models');
 /**
  * Every pair of `parts` that meets, `[a, b]` by name, where `a` matches
  * `part` and `b` matches `withPart` (both regular expressions, or null for
- * any). A pair is listed once. A part that does not occlude — a haze, a
- * sheath — meets nothing, as the light audit reads it.
+ * any). A pair is listed once. Two parts meet when they stand within `near`
+ * metres of each other, so a part seated flush is listed as well as one
+ * passing through. A part that does not occlude — a haze, a sheath — meets
+ * nothing, as the light audit reads it.
  */
-export function contactsOf(parts, { part = null, withPart = null } = {}) {
+export function contactsOf(parts, { part = null, withPart = null, near = 0.001 } = {}) {
   const solid = parts.filter((p) => occludes(p.finish));
   const boxes = new Map(solid.map((p) => [p, boundsOf(p)]));
   const overlap = (a, b) => {
     const [p, q] = [boxes.get(a), boxes.get(b)];
-    return p.min.every((c, i) => c <= q.max[i]) && q.min.every((c, i) => c <= p.max[i]);
+    return (
+      p.min.every((c, i) => c <= q.max[i] + near) && q.min.every((c, i) => c <= p.max[i] + near)
+    );
   };
   const left = part ? solid.filter((p) => part.test(p.name)) : solid;
   const right = withPart ? solid.filter((p) => withPart.test(p.name)) : solid;
@@ -60,7 +68,7 @@ export function contactsOf(parts, { part = null, withPart = null } = {}) {
       const key = [a.name, b.name].sort().join('\u0000');
       if (seen.has(key)) continue;
       seen.add(key);
-      if (gapBetween(a, [b]) === 0) out.push([a.name, b.name]);
+      if (gapBetween(a, [b]) <= near) out.push([a.name, b.name]);
     }
   return out;
 }
@@ -81,7 +89,9 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   };
   const target = args.find((a, i) => !a.startsWith('--') && !args[i - 1]?.startsWith('--'));
   if (!target) {
-    console.error('usage: contacts.mjs <slug|file.glb> [--part <re>] [--with <re>] [--sink <m>]');
+    console.error(
+      'usage: contacts.mjs <slug|file.glb> [--part <re>] [--with <re>] [--near <m>] [--sink <m>]'
+    );
     process.exit(1);
   }
   const file = target.endsWith('.glb') ? resolve(target) : join(MODELS, `${target}.glb`);
@@ -91,7 +101,11 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   }
   const re = (s) => (s ? new RegExp(s) : null);
   const { parts } = readGlb(file);
-  const pairs = contactsOf(parts, { part: re(flag('--part')), withPart: re(flag('--with')) });
+  const pairs = contactsOf(parts, {
+    part: re(flag('--part')),
+    withPart: re(flag('--with')),
+    near: Number(flag('--near') ?? 0.001),
+  });
   const low = Math.min(...parts.map((p) => boundsOf(p).min[1]));
   const under = underOf(parts, { sink: Number(flag('--sink') ?? 0.05) });
   console.log(`${basename(file)}: ${parts.length} parts, ${pairs.length} pair(s) meet`);
