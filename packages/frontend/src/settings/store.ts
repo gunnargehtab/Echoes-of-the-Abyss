@@ -42,16 +42,19 @@ export interface Settings {
   /** Visual-first preset — marks arrive at ≤ 30 ms, audio follows (§11). */
   visualFirst: boolean;
   /**
-   * Which of §11's layouts the player started from. `custom` means they have
-   * moved something; the layouts themselves are kept as names rather than as
-   * a snapshot so a build that retunes the default layout retunes it for
-   * everyone who never edited it.
+   * Which of §11's layouts the player started from, or `custom` once they
+   * have moved something. It names the table rather than holding it, but every
+   * save — of any setting — writes the whole table to `bindings`, so a build
+   * that retunes a layout reaches nobody whose settings were ever saved. Only
+   * an action the stored table lacks takes its layout's key, or for `custom`
+   * the fill `resolveBindings` describes.
    */
   bindingLayout: LayoutName;
   /**
    * Every action's binding: a save writes the whole table. An action a stored
-   * record lacks is filled on load from `bindingLayout`'s table, the standard
-   * one for `custom` (#1343).
+   * record lacks is filled on load from `bindingLayout`'s table; for `custom`,
+   * from whichever of the standard and one-handed keys the table leaves free
+   * (`resolveBindings`, #1343, #1352).
    */
   bindings: Bindings;
   /** Colour-vision palette (ui-ux.md §11, tables in style-neon-noir.md). */
@@ -305,7 +308,7 @@ function layoutOf(raw: unknown): LayoutName {
 /**
  * Coerce a stored binding table.
  *
- * Every action falls back to its default independently, so a record written
+ * Every missing action falls back to a default, so a record written
  * before an action existed gains that action's default rather than leaving it
  * unbound — an unbound action is a control the player cannot reach and cannot
  * see is missing. Non-string values are simply ignored: storage is a place
@@ -317,10 +320,10 @@ function layoutOf(raw: unknown): LayoutName {
  * Engine Off existed was given the standard `Q`, which that layout gives to the
  * ping, and `Q` cut the drive while the ping had no key (#1343).
  *
- * A `custom` record takes the standard table's, because it does not store the
- * layout it started from. So a custom table that started one-handed can still
- * load a new action onto a key it uses; the Controls screen shows that clash
- * rather than preventing it (#1352).
+ * A `custom` record does not store the layout it started from, so its fill
+ * takes the standard key if the table leaves it free, else the one-handed key
+ * if free, else the standard key; each fill counts the keys earlier fills took
+ * (#1352).
  */
 function sanitiseBindings(raw: unknown, layout: LayoutName): Bindings {
   const stored = (typeof raw === 'object' && raw !== null ? raw : {}) as Partial<Bindings>;

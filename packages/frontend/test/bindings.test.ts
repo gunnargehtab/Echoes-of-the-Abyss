@@ -197,6 +197,24 @@ describe('resolving a stored table', () => {
     assert.equal(resolved.ping, DEFAULT_BINDINGS.ping);
   });
 
+  it('fills a custom table standard first, then one-handed, then standard anyway (#1352)', () => {
+    // Standard key free: taken.
+    const free = { ...DEFAULT_BINDINGS } as Partial<Bindings>;
+    delete free.stop;
+    assert.equal(resolveBindings('custom', free).stop, DEFAULT_BINDINGS.stop);
+
+    // Standard key used, one-handed free: the one-handed key.
+    const used = { ...ONE_HANDED_BINDINGS } as Partial<Bindings>;
+    delete used.engineOff;
+    assert.equal(resolveBindings('custom', used).engineOff, ONE_HANDED_BINDINGS.engineOff);
+
+    // Both used: the standard key, and the clash shows rather than no key.
+    const both = { ...used, mine: ONE_HANDED_BINDINGS.engineOff };
+    const resolved = resolveBindings('custom', both);
+    assert.equal(resolved.engineOff, DEFAULT_BINDINGS.engineOff);
+    assert.ok(conflictsIn(resolved).some((c) => c.actions.includes('engineOff')));
+  });
+
   it('takes the one-handed layout whole when nothing is overridden', () => {
     assert.deepEqual(resolveBindings('oneHanded', undefined), ONE_HANDED_BINDINGS);
   });

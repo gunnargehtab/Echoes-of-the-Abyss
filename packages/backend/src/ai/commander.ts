@@ -3789,7 +3789,8 @@ export class AiCommander implements AiPlayer {
       // server reports at the listener's own position, so it was nearly always
       // the nearest: the Broadside ordered launches at it that were refused,
       // the Lance came round to face its own hull, and the Thurible found no
-      // depth to bomb with a classified contact in reach (#1341).
+      // depth to bomb with a classified contact in reach (#1341). The Thurible
+      // now runs its own search below, for a contact that carries a depth.
       let best: EchoSnapshot['contacts'][number] | null = null;
       let bestD = ORDNANCE_REACH_M;
       for (const contact of snapshot.contacts) {
@@ -3861,13 +3862,26 @@ export class AiCommander implements AiPlayer {
           // legal, and the depth only exists on the contact at Tier 3 — which
           // is the same gate §7 puts on knowing what you are shooting at,
           // arriving by a different road. No classification, no charge.
-          if (best?.depth === undefined) break;
-          if (depthBandFor(best.depth) === depthBandFor(hull.depth)) break;
+          //
+          // So the Thurible's target is the nearest contact that *carries* a
+          // depth, not `best`: a nearer Tier-2 bearing has none, and taking it
+          // held the charge from a classified contact in reach (#1351).
+          let mark: EchoSnapshot['contacts'][number] | null = null;
+          let markD = ORDNANCE_REACH_M;
+          for (const contact of snapshot.contacts) {
+            if (contact.fauna !== undefined || contact.depth === undefined) continue;
+            const d = distance(hull, contact);
+            if (d >= markD) continue;
+            markD = d;
+            mark = contact;
+          }
+          if (mark?.depth === undefined) break;
+          if (depthBandFor(mark.depth) === depthBandFor(hull.depth)) break;
           // Nor past its own rating: the server refuses a charge that would
           // implode on the way (#1268), and a refused drop is a command in the
           // replay that did nothing.
-          if (!depthChargeCarries(hull.pressureRating, hull.depth, best.depth)) break;
-          out.push({ kind: 'depthCharge', unitId: hull.id, depthM: best.depth });
+          if (!depthChargeCarries(hull.pressureRating, hull.depth, mark.depth)) break;
+          out.push({ kind: 'depthCharge', unitId: hull.id, depthM: mark.depth });
           break;
         }
         default:

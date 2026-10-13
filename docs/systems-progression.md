@@ -221,17 +221,16 @@ close enough to know everything.
 
 ## 5. Prototype Mapping
 
-**Designed here; nothing below is implemented.** Constants land only after this section
-exists ([CLAUDE.md](../CLAUDE.md), *Constants live in exactly one place*). The line the
-refits need does exist: the Slipway and its four hulls were transcribed in #461
-(`StructureKind.Slipway` in `packages/shared/src/structures.ts`, with the per-yard
-`PRODUCIBLE` table that decides what its line may build), so a refit is a new kind of
-producible on a yard that already runs at 70, not a new yard.
+**The Pressure Refit is built; the other four refits, rank and its guard-rails are not.**
+Constants land only after this section exists ([CLAUDE.md](../CLAUDE.md), *Constants live
+in exactly one place*). Two navies buy the refit on the Slipway's line, transcribed
+in #461 (`StructureKind.Slipway` in `packages/shared/src/structures.ts`), so it takes a yard
+that already runs at 70 rather than a new yard; the Knights strike theirs at the Bastion.
 
 | Doc concept | Prototype today | Where it would land |
 | --- | --- | --- |
-| Refits (§2) | **Not built** | A `Priced` roster entry each, so `priceOf`, `affords` and `charge` in `packages/shared/src/economy.ts` refuse and debit them exactly as they do a hull — no new account, no new path (economy.md §8). Produced through `Match.produce` on the Slipway beside its `PRODUCIBLE` hulls, applied as a per-player set the stat readers consult |
-| Pressure Refit's faction rules (§2) | **Not built** | The rate and the Commune's cap beside `FACTION_COMBAT` in `packages/shared/src/constants.ts`; the Knights' instant, sounded variant is a Bastion emission for 15 s at 80 |
+| Refits (§2) | **Partly built** — the **Pressure Refit** only; Plate, Drive, Magazine and Hold are designed and not built | `REFIT_STATS` and `refitPriceFor` in `packages/shared/src/refits.ts`, priced through the same `priceOf`, `affords` and `charge` as a hull (economy.md §8). `Match.refit` takes it onto the Slipway's line; `grantRefit` in `packages/backend/src/sim/systems/refit.ts` applies it to every hull afloat, and `world.refits`, a per-player set, refits each later launch and adds its SIG. `test/refit.test.ts` covers it |
+| Pressure Refit's faction rules (§2) | **Built** | `REFIT_TERMS` and `refittedPressureRating` in `packages/shared/src/refits.ts`: each navy's rates, the Commune's PR-2 cap and the Directorate's refusal. The Knights' instant, sounded variant is struck at the Bastion by `Match.refit`, at SIG 80 for 15 s |
 | Rank (§3) | **Not built** | A component on the entity: experience and rank, written by `sim/systems/combat.ts` where damage is applied, read by the same file where damage is dealt. Rank crosses the wire as own-force hull data and inside a Tier-4 contact only |
 | Guard-rails (§4) | **Not built** | `test/ttkBands.test.ts` grows a rank-3 row per band |
 

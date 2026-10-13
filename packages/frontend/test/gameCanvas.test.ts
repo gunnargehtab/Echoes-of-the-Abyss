@@ -556,6 +556,83 @@ describe('the shell: what it wires to what', () => {
     }
   });
 
+  it('hails the deciding tick’s line at the result, not at a rematch (#1333)', async () => {
+    // The room sends a result before that tick's snapshot and its lines after
+    // it, and steps no further, so the line lands with nothing behind it. The
+    // order here is the wire's (MatchRoom.update); the fix this replaced
+    // waited for a snapshot this order never sends.
+    type Probe = { window: { __audioProbe: () => { speechCues: number } } };
+    const g = globalThis as unknown as Probe;
+    const world = await mount();
+    try {
+      await joinMatch(world);
+      await firstGesture(world);
+      world.room.changeState({ phase: MatchPhase.Playing });
+      world.room.emit(SERVER_MSG.echo, encodeEcho(null, cannedSnapshot(100), 0));
+      world.room.emit(SERVER_MSG.missionOver, {
+        missionId: 'test-mission',
+        outcome: MissionOutcome.Complete,
+        epilogue: '',
+        objectives: [],
+      });
+      world.room.emit(SERVER_MSG.echo, encodeEcho(null, cannedSnapshot(112), 1));
+      world.room.emit(SERVER_MSG.missionLine, {
+        tick: 112,
+        speaker: 'Marr',
+        text: 'That is the last of them.',
+        voice: 'concern',
+        speakerId: 'marr',
+      });
+      world.room.changeState({ phase: MatchPhase.Ended });
+      await world.settle();
+      assert.equal(g.window.__audioProbe().speechCues, 1, 'the line was hailed with its row');
+
+      world.room.changeState({ phase: MatchPhase.Playing });
+      world.room.emit(SERVER_MSG.echo, encodeEcho(null, cannedSnapshot(12), 2));
+      await world.settle();
+      assert.equal(g.window.__audioProbe().speechCues, 1, 'and the rematch did not hail it again');
+    } finally {
+      await world.unmount();
+    }
+  });
+
+  it('speaks nothing the last match queued at a rematch’s start (#1333)', async () => {
+    // A line that reached the shell before the first gesture opened the
+    // device waits in the mix's queue; the rematch clears its log, and must
+    // clear that queue too, or its first tick hails a line from the last run.
+    type Probe = { window: { __audioProbe: () => { speechCues: number } } };
+    const g = globalThis as unknown as Probe;
+    const world = await mount();
+    try {
+      await joinMatch(world);
+      world.room.changeState({ phase: MatchPhase.Playing });
+      world.room.emit(SERVER_MSG.missionLine, {
+        tick: 60,
+        speaker: 'Marr',
+        text: 'Hold your depth.',
+        voice: 'concern',
+        speakerId: 'marr',
+      });
+      world.room.emit(SERVER_MSG.missionOver, {
+        missionId: 'test-mission',
+        outcome: MissionOutcome.Lost,
+        epilogue: '',
+        objectives: [],
+      });
+      world.room.changeState({ phase: MatchPhase.Ended });
+      await world.settle();
+
+      world.room.changeState({ phase: MatchPhase.Playing });
+      await world.settle();
+      await firstGesture(world);
+      world.room.emit(SERVER_MSG.echo, encodeEcho(null, cannedSnapshot(12), 0));
+      await world.settle();
+      assert.equal(g.window.__audioProbe().speechCues, 0, 'a line from the last run was hailed');
+    } finally {
+      await world.unmount();
+    }
+  });
+
   it('carries the silence order’s reading from the Echo tick to the panel', async () => {
     // #623 criterion 8. The reading rides the Echo snapshot and the rest of the
     // panel rides the mission view, so the two reach this shell on different

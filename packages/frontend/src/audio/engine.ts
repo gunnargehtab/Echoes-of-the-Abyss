@@ -569,8 +569,8 @@ export class AudioEngine {
       sourBite: (at) => playSourBite(context, self, at),
       world: (gain, now) => world.gain.setTargetAtTime(gain, now, 0.2),
       transmit: (at) => playPingTransmit(context, self, at),
-      ret: (at, pan) => playPingReturn(context, self, at, pan),
-      exposure: (at, pan) => playExposure(context, self, at, pan),
+      ret: (at, pan) => playPingReturn(context, self, at, this.heardPan(pan)),
+      exposure: (at, pan) => playExposure(context, self, at, this.heardPan(pan)),
       breakSilence: (at) => playBreakSilence(context, self, at),
       underFire: (at) => playUnderFire(context, self, at),
       // The interface's own voice: the one producer the ui bus has, and the
@@ -668,23 +668,7 @@ export class AudioEngine {
     // *next* tick time: the buffering above already put them on the Echo
     // cadence, and a further 200 ms would open a gap between the log row and
     // the sound that §13 says are one event.
-    const buses = this.buses;
-    if (buses !== null && this.context !== null && this.pendingSpeech.length > 0) {
-      const now = this.context.currentTime;
-      for (const line of this.pendingSpeech) {
-        const readingS = readingSeconds(line.text, line.whisper);
-        const occupied = playHail(this.context, buses.speech, line, now, {
-          whisper: line.whisper,
-          readingS,
-        });
-        // Two lines on one tick overlap rather than queue — the log shows
-        // both rows at once too — and the rung is held for whichever runs
-        // longer.
-        this.speechUntil = Math.max(this.speechUntil, now + occupied);
-        this.speechFired++;
-      }
-      this.pendingSpeech = [];
-    }
+    this.hailPending();
 
     // The rest of the chain. Written every tick rather than only when a self
     // frame arrived, because a line's start and end — and a contact's — are
@@ -802,7 +786,8 @@ export class AudioEngine {
 
   /** Move the tuned bed to `inputs`, and remember both for the probe and a release. */
   private driveTuned(tunedBed: TunedBed, inputs: TunedInputs, now: number): void {
-    const mix = tunedMixFor(inputs);
+    const resolved = tunedMixFor(inputs);
+    const mix = { ...resolved, corridorPan: this.heardPan(resolved.corridorPan) };
     this.lastTunedInputs = inputs;
     this.lastTuned = mix;
     tunedBed.update(mix, now);
@@ -847,6 +832,52 @@ export class AudioEngine {
     });
   }
 
+  /**
+   * Hail a queued line now, off the Echo cadence (#1333).
+   *
+   * For a line no snapshot will follow: the room stops stepping once a match
+   * is over, so the deciding tick's line reaches the client after that tick's
+   * snapshot and would otherwise wait for one that never comes, while its log
+   * row sits under the result card. Hailed on arrival it is still one event
+   * with its row (§13); the chain is rewritten so the rung holds for it.
+   */
+  hailNow(): void {
+    this.hailPending();
+    this.writeChain();
+  }
+
+  /**
+   * Forget every line not yet hailed (#1333).
+   *
+   * A rematch is a new run, and a line queued in the last one — before the
+   * first gesture opened the device, say — would otherwise be hailed by the
+   * rematch's first tick, under a log the shell has just cleared.
+   */
+  dropSpeech(): void {
+    this.pendingSpeech = [];
+  }
+
+  /** Hail every queued line now, holding the speech rung for the longest. */
+  private hailPending(): void {
+    const buses = this.buses;
+    if (buses !== null && this.context !== null && this.pendingSpeech.length > 0) {
+      const now = this.context.currentTime;
+      for (const line of this.pendingSpeech) {
+        const readingS = readingSeconds(line.text, line.whisper);
+        const occupied = playHail(this.context, buses.speech, line, now, {
+          whisper: line.whisper,
+          readingS,
+        });
+        // Two lines on one tick overlap rather than queue — the log shows
+        // both rows at once too — and the rung is held for whichever runs
+        // longer.
+        this.speechUntil = Math.max(this.speechUntil, now + occupied);
+        this.speechFired++;
+      }
+      this.pendingSpeech = [];
+    }
+  }
+
   /** How many lines this session has hailed. */
   get speechCuesFired(): number {
     return this.speechFired;
@@ -876,6 +907,18 @@ export class AudioEngine {
   setSpatialisation(mode: Spatialisation): void {
     this.spatialisation = mode;
     this.mixer?.setSpatialisation(mode);
+  }
+
+  /**
+   * A pan as the chosen mode renders it. The contact mixer applies the mode
+   * itself; every other panned voice — the ping's returns, the exposure
+   * strike, the tuned bed's corridor — passes through here, so mono centres
+   * them too rather than leaving the one listener who chose it hearing those
+   * off-centre (#1329). Read when the sound is placed, so a toggle mid-match
+   * takes effect on the next strike and the next Echo tick.
+   */
+  private heardPan(pan: number): number {
+    return this.spatialisation === 'mono' ? 0 : pan;
   }
 
   get spatialisationMode(): Spatialisation {
