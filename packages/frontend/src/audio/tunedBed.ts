@@ -267,6 +267,16 @@ export interface TunedInputs {
   riseM: number;
   /** The corridor the bed is voicing, or null when none is resolvable. */
   corridor: CorridorReading | null;
+  /**
+   * The best corridor among the player's own nodes alone, or null.
+   *
+   * Carried beside the winner because the two halves outlive a picture
+   * differently. Own structures are the player's to know with nothing ticking;
+   * a tracked corridor is read off Tier-4 tracks, which fade off the chart. So
+   * when the picture is let go (`AudioEngine.releasePicture`, #1332) the bed
+   * falls back to this one and says no more than the chart.
+   */
+  ownCorridor: CorridorReading | null;
 }
 
 /** What the four voices are doing. Linear gains, and cents for the flat. */
@@ -318,7 +328,7 @@ export const BED_HZ = {
  * un-scatters its cells") — water that has been tuned by hand, which is
  * exactly as loud wherever it was laid.
  */
-export function tunedMixFor(inputs: TunedInputs): TunedMix {
+export function tunedMixFor(inputs: Omit<TunedInputs, 'ownCorridor'>): TunedMix {
   const crystal = clamp01(inputs.crystal);
   const bed = TUNED.CEILING * crystal;
   const chord = clamp01(inputs.riseM / TUNED.CHORD_FULL_RISE_M);

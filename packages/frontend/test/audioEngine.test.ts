@@ -598,6 +598,49 @@ describe('the audio engine: what a tick costs', () => {
     }
   });
 
+  it("drops a tracked corridor at a release and keeps the crystal and the player's own (#1332)", () => {
+    const { engine } = boot();
+    try {
+      const theirs = { pan: -0.5, rangeM: 800, hpFraction: 0.9 };
+      const mine = { pan: 0.75, rangeM: 2000, hpFraction: 1 };
+      const tracked = { crystal: 1, riseM: 0, corridor: theirs, ownCorridor: null };
+      engine.applyTuned(tracked);
+      engine.onEchoTick();
+      assert.ok(engine.tunedMix!.corridor > 0, 'the premise: a tracked corridor sounding');
+      const water = engine.tunedMix!.root;
+
+      // A result: the tracks fade off the chart, so the corridor read off them
+      // goes; the crystal is the ground and stays.
+      engine.releasePicture();
+      assert.equal(engine.tunedMix!.corridor, 0, 'a tracked corridor held under the result');
+      assert.equal(engine.tunedMix!.root, water, 'the crystal went with it');
+
+      // The deciding tick's snapshot after the result: the shell releases
+      // before the tick, and the tick may not voice the tracked half again.
+      engine.applyTuned(tracked);
+      engine.releasePicture();
+      engine.onEchoTick();
+      assert.equal(engine.tunedMix!.corridor, 0, 'the deciding tick brought it back');
+
+      // A nearer tracked line outranks the player's own while ticks run; at a
+      // drop the bed falls back to the player's own line, not to silence.
+      engine.applyTuned({ crystal: 1, riseM: 0, corridor: theirs, ownCorridor: mine });
+      engine.onEchoTick();
+      assert.equal(engine.tunedMix!.corridorPan, theirs.pan, 'the premise: the nearer line wins');
+      engine.releasePicture();
+      assert.equal(engine.tunedMix!.corridorPan, mine.pan, "the player's own line was dropped");
+      assert.ok(engine.tunedMix!.corridor > 0);
+
+      // A reconnection's first snapshot brings back what the chart tracks.
+      engine.applyTuned(tracked);
+      engine.onEchoTick();
+      assert.equal(engine.tunedMix!.corridorPan, theirs.pan);
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+
   it('holds the voice cap however many contacts arrive', () => {
     const { engine } = boot();
     try {

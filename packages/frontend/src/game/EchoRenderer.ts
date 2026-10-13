@@ -5244,7 +5244,7 @@ export class EchoRenderer {
    */
   private tunedAudioFrame(now: number): TunedInputs {
     const terrain = this.terrain;
-    if (terrain === null) return { crystal: 0, riseM: 0, corridor: null };
+    if (terrain === null) return { crystal: 0, riseM: 0, corridor: null, ownCorridor: null };
     const ear = this.earPosition();
 
     const cellM = terrain.cellM;
@@ -5315,7 +5315,7 @@ export class EchoRenderer {
             ? mine
             : theirs;
 
-    return { crystal, riseM, corridor };
+    return { crystal, riseM, corridor, ownCorridor: mine };
   }
 
   /**
