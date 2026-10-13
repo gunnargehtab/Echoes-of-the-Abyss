@@ -1,6 +1,7 @@
 /**
- * Which parts of a model meet which: every pair that touches or passes
- * through the other, and every part that dips under the seabed.
+ * Which parts of a model meet which: every pair that touches, passes
+ * through the other or stands within `--near` of it, and every part that
+ * dips under the seabed.
  *
  *   node tools/hull-models/contacts.mjs refinery-directorate
  *   node tools/hull-models/contacts.mjs refinery-directorate --part maw_tooth --with conveyor_
@@ -88,7 +89,10 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     return i >= 0 ? args[i + 1] : null;
   };
   const target = args.find((a, i) => !a.startsWith('--') && !args[i - 1]?.startsWith('--'));
-  if (!target) {
+  // A --near that is no number would compare false with every gap and print
+  // a clean sweep, the silent zero #1370 was about, so it is refused.
+  const near = Number(flag('--near') ?? 0.001);
+  if (!target || !(near >= 0)) {
     console.error(
       'usage: contacts.mjs <slug|file.glb> [--part <re>] [--with <re>] [--near <m>] [--sink <m>]'
     );
@@ -104,7 +108,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const pairs = contactsOf(parts, {
     part: re(flag('--part')),
     withPart: re(flag('--with')),
-    near: Number(flag('--near') ?? 0.001),
+    near,
   });
   const low = Math.min(...parts.map((p) => boundsOf(p).min[1]));
   const under = underOf(parts, { sink: Number(flag('--sink') ?? 0.05) });
