@@ -608,6 +608,27 @@ describe('separation', () => {
       assert.ok(left < 10, `the queued leg ran to its point, ${left.toFixed(0)}m short`);
     });
 
+    it('ends a move aimed past the pair at a slant, once it slides into the notch', () => {
+      // Aimed south-west beyond the pair from the north-east, the course
+      // presses into the western footprint and away from the eastern one: the
+      // hull slid along the eastern one into the notch and was held there,
+      // under way at 120 s. Its point is in open water; the move still ends.
+      const { match, refineries, hull, clear } = pair(44, 40, A.y - 1200);
+      Position.x[hull] = 3377;
+      Position.y[hull] = 5746;
+      match.orderMove(0, hull, 2230, 6861);
+
+      const ended = untilEnded(match, hull, 60);
+      assert.ok(ended < 20, `the move ended, at ${ended}s`);
+      for (const s of refineries) {
+        const d = Math.hypot(
+          Position.x[hull]! - Position.x[s]!,
+          Position.y[hull]! - Position.y[s]!
+        );
+        assert.ok(d >= clear * 0.95, `out of each footprint, ${d.toFixed(1)}m from its centre`);
+      }
+    });
+
     it('still runs through a gap a hull is narrower than', () => {
       // The control: 80 m is wider than the Scout's 60, so there is no notch,
       // and a point beyond the gap is arrived at, not stopped short of.

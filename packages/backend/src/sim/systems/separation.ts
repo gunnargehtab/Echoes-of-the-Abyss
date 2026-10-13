@@ -229,10 +229,12 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
       buffer
     );
 
-    // How many footprints put this hull out this tick, and whether its course
-    // ran into every one of them (`endIfWedged`).
-    let held = 0;
-    let pressing = true;
+    // The first footprint to put this hull out this tick, by the direction it
+    // pushed, and whether a later one closed the notch on it (`wedgedBetween`).
+    let held = false;
+    let firstX = 0;
+    let firstY = 0;
+    let wedged = false;
 
     for (let j = 0; j < near.length; j++) {
       const s = near[j]!;
@@ -247,15 +249,21 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
 
       if (d2 < SEPARATION.COINCIDENT_EPSILON_M * SEPARATION.COINCIDENT_EPSILON_M) {
         // Dead centre of a footprint: leave along +X, deterministically.
-        held++;
-        pressing &&= Velocity.x[a]! < 0;
+        if (!held) {
+          held = true;
+          firstX = 1;
+          firstY = 0;
+        } else wedged ||= wedgedBetween(a, firstX, firstY, 1, 0);
         settle(terrain, a, sx + minD, Position.y[a]!);
         reachFootprintEdge(world, a, sx, sy, minD);
         continue;
       }
       const d = Math.sqrt(d2);
-      held++;
-      pressing &&= Velocity.x[a]! * dx + Velocity.y[a]! * dy < 0;
+      if (!held) {
+        held = true;
+        firstX = dx / d;
+        firstY = dy / d;
+      } else wedged ||= wedgedBetween(a, firstX, firstY, dx / d, dy / d);
       // Pushed clear in one step rather than a fraction of it: a hull inside a
       // structure is a state the player can see is wrong, and easing out of it
       // looks like the building is chewing the hull.
@@ -271,13 +279,37 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
       settle(terrain, a, sx + (dx / d) * minD, sy + (dy / d) * minD);
       reachFootprintEdge(world, a, sx, sy, minD);
     }
-    if (held >= 2 && pressing) endIfWedged(world, a);
+    if (wedged) endIfWedged(world, a);
   }
 }
 
 /**
- * A hull put out of two footprints in one tick, its course running into both,
- * is wedged where their clearances overlap, and its move ends there (#1361).
+ * Whether a hull pushed out of two footprints along (ax, ay) and (bx, by),
+ * both unit, is steering into the notch between them: its course reversed
+ * lies between the two pushes, so each push sends it into the other and
+ * neither leaves it any course to slide along (#1361).
+ *
+ * Into the notch, not merely into both footprints: a course aimed past the
+ * pair at a slant presses into one and away from the other, and is held all
+ * the same, since the first push turns it into the second. Measured: a Light
+ * Scout ordered south-west past two Refineries 40 m apart slid along one into
+ * the notch and was still under way at 120 s. A course out of the notch has
+ * its reverse outside the two pushes and is left alone.
+ */
+function wedgedBetween(eid: number, ax: number, ay: number, bx: number, by: number): boolean {
+  const wx = -Velocity.x[eid]!;
+  const wy = -Velocity.y[eid]!;
+  if (wx === 0 && wy === 0) return false;
+  // The pushes' order round the turn, and the course reversed on the same
+  // side of each. Pushes dead opposite have no notch between them.
+  const turn = ax * by - ay * bx;
+  if (turn === 0) return false;
+  return (ax * wy - ay * wx) * turn >= 0 && (wx * by - wy * bx) * turn >= 0;
+}
+
+/**
+ * A hull put out of two footprints in one tick, steering into the notch where
+ * their clearances overlap (`wedgedBetween`), ends its move there (#1361).
  *
  * `Match.build` allows footprints closer than a hull's width, so two of them
  * can close the water between them into a notch. Out of one footprint a hull
@@ -286,16 +318,17 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
  * slide on. Measured: a Light Scout ordered between two Refineries 40 m apart
  * was still under way at 120 s from the north, while from the south the same
  * move ended at 10 s. `reachFootprintEdge` cannot help: the edge nearest the
- * point is the notch on the far side, and going round to it is routing, which
- * the slide is not.
+ * point is the notch on the far side, and going round to it is routing. The
+ * route `movementSystem` steers by (#431) is round ground the hull does not
+ * fit, and a footprint is not ground.
  *
  * So the move point, and an attack-move's destination, are put where the hull
  * is, and `movementSystem` ends the move the ordinary way next tick. Like
  * `reachFootprintEdge` it only writes the point: an order a system re-asserts
  * every tick (a hauler's run to its depot) is set again ahead of the next
- * movement step and steers as it did. A course along the notch, or out of it,
- * does not press into both and is left alone; and footprints a hull's width
- * apart or more have no notch, so their gap is never a wedge.
+ * movement step and steers as it did. A course out of the notch is left
+ * alone, and footprints a hull's width apart or more have no notch, so their
+ * gap is never a wedge.
  */
 function endIfWedged(world: SimWorld, eid: number): void {
   if (MoveOrder.active[eid]) {
