@@ -663,7 +663,8 @@ Foundry's launch mouth keep their pentagon tubes while their rings go to the rul
 1,477 rings, all one reading: the capsule meridians of the Verger's, the Bastion's and the
 Foundry's ballast tanks, the Foundry's hull in progress and the turret's pod, where the
 rule's half-turn share is odd and a capsule draws an even count, built a segment over as the
-Order's are; read cap by cap since #1371, only the Verger's two are named. What the coarser rounds left standing off was reseated through the builders:
+Order's are; read cap by cap since #1371, only the Verger's two are named.
+What the coarser rounds left standing off was reseated through the builders:
 the Cantor's forty-two hydrophone spines rooted on its dome (`shellSpines` `on`), its
 twenty-two photophores grown from shell and foot (`on`), its second ballast pipe stood on the
 collar (`standpipes` `on`, 4 m out along its bearing, its inboard side let up to 1.6 m into a
@@ -854,7 +855,7 @@ part-turn arcs the measure reads a turn at a time. The Directorate's leaves eigh
 1,589, every one a capsule meridian on the odd share (the Directorate paragraph), and the
 navy carries seventeen distinct counts a turn where it carried twenty-four. Since the
 measure reads a capsule cap by cap (#1371), the Order's pods read on the rule and the
-Directorate's eight are two, the Verger's tanks, whose caps of three are a step over a
+Directorate's eight capsule meridians are two, the Verger's tanks, whose caps of three are a step over a
 quarter-turn share of two.
 Outside the bands, before the panel pass: eight Consortium hulls (the five shared kinds, the Chorister
 and the Tender at 2.2–3.9 m — the Corvette's 2.3 was 2.2 once the facet pass thinned its
