@@ -33,8 +33,10 @@
  *   approved model was not, so the whole hull is expected to move by one
  *   uniform factor (`hulls/sower.mjs` documents its 0.947). Reporting that as
  *   47 changed parts buries the one part that really moved. The factor is
- *   measured off the whole-model extents and divided out; what survives is
- *   shape.
+ *   read two ways — the median of the parts' extent ratios, and the
+ *   whole-model bounds — and the reading that leaves fewer parts moved is
+ *   divided out (`frame`); what survives is shape. A `basis` line says when
+ *   the bounds won, as they do across a facet pass (#1372).
  * - **Canonicalise as the bake and the runtime do, then subtract the one
  *   translation too.** Both yaw a Z-long export onto +X and centre it on its
  *   bounding box before anything reads it (`rosterModels.ts`,
@@ -169,9 +171,15 @@ function surface(part, scale = [1, 1, 1]) {
   let sum = 0;
   const c = [0, 0, 0];
   for (let t = 0; t < a.length; t += 9) {
-    const ux = a[t + 3] - a[t], uy = a[t + 4] - a[t + 1], uz = a[t + 5] - a[t + 2];
-    const vx = a[t + 6] - a[t], vy = a[t + 7] - a[t + 1], vz = a[t + 8] - a[t + 2];
-    const cx = uy * vz - uz * vy, cy = uz * vx - ux * vz, cz = ux * vy - uy * vx;
+    const ux = a[t + 3] - a[t],
+      uy = a[t + 4] - a[t + 1],
+      uz = a[t + 5] - a[t + 2];
+    const vx = a[t + 6] - a[t],
+      vy = a[t + 7] - a[t + 1],
+      vz = a[t + 8] - a[t + 2];
+    const cx = uy * vz - uz * vy,
+      cy = uz * vx - ux * vz,
+      cz = ux * vy - uy * vx;
     const tri = Math.sqrt(cx * cx + cy * cy + cz * cz) / 2;
     sum += tri;
     for (let d = 0; d < 3; d++) c[d] += (tri * (a[t + d] + a[t + 3 + d] + a[t + 6 + d])) / 3;
@@ -198,7 +206,11 @@ function triangleDiff(p, q, scale, shift) {
   const grid = new Map();
   const a = p.positions;
   for (let i = 0; i < a.length; i += 3) {
-    const v = [a[i] * scale[0] + shift[0], a[i + 1] * scale[1] + shift[1], a[i + 2] * scale[2] + shift[2]];
+    const v = [
+      a[i] * scale[0] + shift[0],
+      a[i + 1] * scale[1] + shift[1],
+      a[i + 2] * scale[2] + shift[2],
+    ];
     const id = nearest(v);
     if (id !== -1) continue;
     const n = verts.push(v) - 1;
@@ -209,7 +221,9 @@ function triangleDiff(p, q, scale, shift) {
   function nearest([x, y, z]) {
     let best = -1;
     let bestD = TOL;
-    const cx = Math.floor(x / CELL), cy = Math.floor(y / CELL), cz = Math.floor(z / CELL);
+    const cx = Math.floor(x / CELL),
+      cy = Math.floor(y / CELL),
+      cz = Math.floor(z / CELL);
     for (let dx = -1; dx <= 1; dx++)
       for (let dy = -1; dy <= 1; dy++)
         for (let dz = -1; dz <= 1; dz++) {
@@ -231,7 +245,9 @@ function triangleDiff(p, q, scale, shift) {
   let minSep = Infinity;
   for (let id = 0; id < verts.length; id++) {
     const [x, y, z] = verts[id];
-    const cx = Math.floor(x / CELL), cy = Math.floor(y / CELL), cz = Math.floor(z / CELL);
+    const cx = Math.floor(x / CELL),
+      cy = Math.floor(y / CELL),
+      cz = Math.floor(z / CELL);
     for (let dx = -2; dx <= 2; dx++)
       for (let dy = -2; dy <= 2; dy++)
         for (let dz = -2; dz <= 2; dz++)
@@ -246,13 +262,18 @@ function triangleDiff(p, q, scale, shift) {
     const sorted = [...ids].sort((u, v) => u - v);
     const [v0, v1] = ids;
     // The parity of the cyclic order relative to the sorted order tells the winding.
-    const even = v0 === sorted[0] ? v1 === sorted[1] : v0 === sorted[1] ? v1 === sorted[2] : v1 === sorted[0];
+    const even =
+      v0 === sorted[0] ? v1 === sorted[1] : v0 === sorted[1] ? v1 === sorted[2] : v1 === sorted[0];
     return { set: sorted.join('|'), even };
   };
   const beforeTris = new Map();
   for (let i = 0; i < a.length; i += 9) {
     const ids = [0, 1, 2].map((k) =>
-      nearest([a[i + 3 * k] * scale[0] + shift[0], a[i + 3 * k + 1] * scale[1] + shift[1], a[i + 3 * k + 2] * scale[2] + shift[2]])
+      nearest([
+        a[i + 3 * k] * scale[0] + shift[0],
+        a[i + 3 * k + 1] * scale[1] + shift[1],
+        a[i + 3 * k + 2] * scale[2] + shift[2],
+      ])
     );
     const t = tri(ids);
     beforeTris.set(t.set, t.even);
@@ -397,19 +418,9 @@ function isSquare(parts) {
   return Math.abs(x - z) <= 1e-3 * Math.max(x, z);
 }
 
-/** How many parts of `after` differ from `before` beyond scale and shift — the tie-break for a square plan. */
-function moverCount(before, after) {
+/** How many parts of `after` differ from `before` beyond a given scale and shift. */
+function moverCount(before, after, scale, shift) {
   const afterByName = new Map(after.map((p) => [p.key, p]));
-  const scale = rootScale(before, after);
-  const shift = medianAxis(
-    before
-      .filter((p) => afterByName.has(p.key))
-      .map((p) => {
-        const a = box(p).centre;
-        const b = box(afterByName.get(p.key)).centre;
-        return [0, 1, 2].map((i) => b[i] - a[i] * scale[i]);
-      })
-  );
   let n = 0;
   for (const p of before) {
     const q = afterByName.get(p.key);
@@ -425,6 +436,44 @@ function moverCount(before, after) {
   return n;
 }
 
+/**
+ * The scale and shift to divide out, and which reading gave them.
+ *
+ * Two readings, and the one with fewer movers is taken. The parts' median
+ * (`rootScale`) survives one part reaching further, which the whole-model
+ * bounds do not. The whole-model bounds survive a change to every round
+ * part's extents, which the median does not: a facet pass re-cuts each drum
+ * at a new count, so its box grows or shrinks on the axes the cut reaches
+ * while the hull's own bounds hold to the millimetre. The Commune Corvette
+ * across #1044 read 0.8883 1.0000 0.9848 off its parts and moved all 33 of
+ * them; off its bounds it is 1 1 1 and only the re-cut parts move (#1372).
+ * A tie keeps the median, the reading this tool has always printed.
+ */
+function frame(before, after) {
+  const afterByName = new Map(after.map((p) => [p.key, p]));
+  const shared = before.filter((p) => afterByName.has(p.key));
+  const medianScale = rootScale(before, after);
+  const medianShift = medianAxis(
+    shared.map((p) => {
+      const a = box(p).centre;
+      const b = box(afterByName.get(p.key)).centre;
+      return [0, 1, 2].map((i) => b[i] - a[i] * medianScale[i]);
+    })
+  );
+  const median = { basis: 'parts', scale: medianScale, shift: medianShift };
+  median.n = moverCount(before, after, median.scale, median.shift);
+  const wa = box(before);
+  const wb = box(after);
+  const wholeScale = [0, 1, 2].map((i) => (wa.extent[i] > 0 ? wb.extent[i] / wa.extent[i] : 1));
+  const whole = {
+    basis: 'bounds',
+    scale: wholeScale,
+    shift: [0, 1, 2].map((i) => wb.centre[i] - wa.centre[i] * wholeScale[i]),
+  };
+  whole.n = moverCount(before, after, whole.scale, whole.shift);
+  return whole.n < median.n ? { ...whole, other: median } : { ...median, other: whole };
+}
+
 function report(beforePath, afterPath, label) {
   const rawBefore = readGlb(beforePath).parts;
   const rawAfter = readGlb(afterPath).parts;
@@ -438,16 +487,19 @@ function report(beforePath, afterPath, label) {
   if (isSquare(rawBefore) || isSquare(rawAfter)) {
     // Every relative orientation the bake's coin toss can produce: either
     // file as it stands or turned the quarter the bake would have added.
-    const alts = (raw, cur) => [cur, cur.yawed ? { parts: raw, yawed: false } : yawOntoX(raw, true)];
+    const alts = (raw, cur) => [
+      cur,
+      cur.yawed ? { parts: raw, yawed: false } : yawOntoX(raw, true),
+    ];
     let best = null;
     for (const b of alts(rawBefore, b0))
       for (const a of alts(rawAfter, a0)) {
         const kb = keyed(b.parts);
         const ka = keyed(a.parts);
-        const n = moverCount(kb, ka);
+        const { n } = frame(kb, ka);
         if (!best || n < best.n) best = { n, b, a, kb, ka };
       }
-    const asIs = moverCount(before, after);
+    const asIs = frame(before, after).n;
     if (best.n < asIs) {
       b0 = best.b;
       a0 = best.a;
@@ -459,7 +511,7 @@ function report(beforePath, afterPath, label) {
       squareNote = `square plan — no other yaw agrees better (${asIs} movers as compared)`;
     }
   }
-  const scale = rootScale(before, after);
+  const { scale, shift, basis, n: movers, other } = frame(before, after);
   const uniform = Math.max(...scale) / Math.min(...scale) - 1;
 
   console.log(label);
@@ -478,6 +530,11 @@ function report(beforePath, afterPath, label) {
       ? '(uniform — divided out below)'
       : `⚠ not uniform, ${(uniform * 100).toFixed(2)}% apart: reproportioned, not rescaled`;
   console.log(`  scale   ${scale.map((v) => v.toFixed(4)).join('  ')}  ${scaleNote}`);
+  if (basis === 'bounds')
+    console.log(
+      `  basis   whole-model bounds (${movers} movers); the parts' median read` +
+        ` ${other.scale.map((v) => v.toFixed(4)).join('  ')} (${other.n} movers)`
+    );
 
   const beforeByName = new Map(before.map((p) => [p.key, p]));
   const afterByName = new Map(after.map((p) => [p.key, p]));
@@ -485,15 +542,7 @@ function report(beforePath, afterPath, label) {
   // The one translation the whole hull moved by — a port that centres a hull
   // the approved export left off-centre moves every part by the same vector,
   // which the bake and the runtime undo and which is therefore not shape.
-  const shift = medianAxis(
-    before
-      .filter((p) => afterByName.has(p.key))
-      .map((p) => {
-        const a = box(p).centre;
-        const b = box(afterByName.get(p.key)).centre;
-        return [0, 1, 2].map((i) => b[i] - a[i] * scale[i]);
-      })
-  );
+  // `frame` measured it beside the scale, off the same basis.
   if (shift.some((v) => Math.abs(v) > 0.005))
     console.log(
       `  shift   ${shift.map((v) => v.toFixed(3)).join('  ')}  (whole hull, m — divided out below)`
@@ -565,11 +614,12 @@ function report(beforePath, afterPath, label) {
     const sb = surface(q);
     const areaA = sa.area;
     const areaPct = areaA > 0 ? ((sb.area - areaA) / areaA) * 100 : 0;
-    if (Math.abs(areaPct) > 0.25)
-      note.push(`area ${areaPct > 0 ? '+' : ''}${areaPct.toFixed(1)}%`);
+    if (Math.abs(areaPct) > 0.25) note.push(`area ${areaPct > 0 ? '+' : ''}${areaPct.toFixed(1)}%`);
     // The surface centroid, under the same scale and shift as the bounds. A
     // move here beyond what the bounds moved is a part re-laid inside its box.
-    const cd = Math.max(...[0, 1, 2].map((i) => Math.abs(sb.centroid[i] - shift[i] - sa.centroid[i])));
+    const cd = Math.max(
+      ...[0, 1, 2].map((i) => Math.abs(sb.centroid[i] - shift[i] - sa.centroid[i]))
+    );
     if (cd > 0.005 && cd > d + 0.005) note.push(`centroid ${cd.toFixed(3)} m`);
     // Only a part that has not moved is worth reading at the triangle: a moved
     // part's triangles are all elsewhere, and the move is the finding.
@@ -579,7 +629,8 @@ function report(beforePath, afterPath, label) {
       if (t.reversed) reversed.push(`${p.key} ${t.reversed}/${t.total}`);
       if (t.minSep < 4 * t.floor) fine.push(`${p.key} ${(t.minSep * 1000).toFixed(1)} mm`);
     }
-    if (d > 0.005 || note.length) moved.push({ name: p.key, d: Math.max(d, cd), note: note.join(', ') });
+    if (d > 0.005 || note.length)
+      moved.push({ name: p.key, d: Math.max(d, cd), note: note.join(', ') });
   }
   moved.sort((x, y) => y.d - x.d);
 
@@ -602,7 +653,9 @@ function report(beforePath, afterPath, label) {
     console.log('  shape   unchanged beyond the root scale and shift — every part is where it was');
     return;
   }
-  console.log(`  shape   ${moved.length} of ${before.length} parts differ beyond the root scale and shift:`);
+  console.log(
+    `  shape   ${moved.length} of ${before.length} parts differ beyond the root scale and shift:`
+  );
   for (const m of moved)
     console.log(`    ${m.name.padEnd(22)} ${m.d.toFixed(3)} m${m.note ? `  ${m.note}` : ''}`);
   console.log(
