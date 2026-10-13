@@ -17,8 +17,11 @@
  * - **The ground, drawn in shapes** (§11, #1143): every seat, leg, pocket and
  *   the berth on the ground §11 gives it, and the trench the only road.
  * - **The pack runs the axis at 1,600 m** (§5, #1212): held there for its
- *   drive, under the layer to the whistle, and fighting nothing on the way in
- *   an idle run. Released at that depth, it bites an escort waiting there.
+ *   drive, under the layer to the whistle, and neither holed nor biting on the
+ *   way in an idle run. The picket's guns open on it at 18:30, but a driven
+ *   creature's hull does not give to a shell (`isDriven`, #349), and the drive
+ *   leaves it no target to bite (`runtime.ts`, `holdCommitments`). Released at
+ *   that depth, it bites an escort waiting there.
  */
 
 import { describe, it } from 'node:test';
@@ -204,9 +207,11 @@ describe('the pack, as docs/mission-baffle.md §5 drives it (#1212)', () => {
     }
   });
 
-  it('holds the axis under the layer to the whistle, and fights nothing on the way', () => {
+  it('holds the axis under the layer to the whistle, and is neither holed nor bites', () => {
     // An idle convoy, read every five seconds. Before #1212 the pack climbed
-    // toward 900 m from the moment it was driven, and crossed the layer at 19:03.
+    // toward 900 m from the moment it was driven, and crossed the layer at
+    // 19:03.3. The picket fires 14 rounds on it from 18:30.0 to 18:46.3, so
+    // this asks hull, not a fight (#1356).
     const { pack: samples, hurt } = run();
     assert.equal(samples.at(0)?.tick, T(18, 30), 'the premise: read from the arrival');
     assert.equal(samples.at(-1)?.tick, T(20), 'the premise: read to the whistle');
