@@ -376,6 +376,9 @@ export function GameCanvas({
      */
     let matchOver = false;
 
+    /** The phase the last lobby view carried, so a rematch is told apart (#1333). */
+    let lastPhase: MatchPhase | null = null;
+
     const start = async () => {
       // The world first: the conn view mounts for the whole match, and the
       // Pixi glass above it cannot draw a single world mark without it.
@@ -550,8 +553,8 @@ export function GameCanvas({
             // event. The whisper rule is read as the line lands (§13).
             audio.say(line, underSilenceOrder || anyHullSilent);
             // The deciding tick's line arrives after that tick's snapshot, and
-            // no snapshot follows a result, so it is hailed here with its row
-            // rather than at a rematch's first tick (#1333).
+            // no later snapshot follows a result, so it is hailed here with its
+            // row rather than at a rematch's first tick (#1333).
             if (matchOver) audio.hailNow();
             setMissionLines((previous) => {
               const next = [...previous, line];
@@ -604,9 +607,6 @@ export function GameCanvas({
                 setMission(null);
                 setMissionLines([]);
                 setMissionOver(null);
-                // And the mix's queue with them: a line the last run never
-                // hailed is not the new run's to speak (#1333).
-                audio.dropSpeech();
               }
               return view;
             });
@@ -614,6 +614,13 @@ export function GameCanvas({
             // Only a rematch takes an ended room back to Playing, so its first
             // snapshot is heard (#1326).
             if (view.phase === MatchPhase.Playing) matchOver = false;
+            // And the mix's queue goes with the last run's log: a line it never
+            // hailed is not the new run's to speak. Out here for the same
+            // reason, so the drop lands before the rematch's first tick (#1333).
+            if (lastPhase === MatchPhase.Ended && view.phase === MatchPhase.Playing) {
+              audio.dropSpeech();
+            }
+            lastPhase = view.phase;
             setSessionId(client?.sessionId ?? null);
             // Same rule as the mission's ending: a resolved match must be seen,
             // so the menu does not stay open over the result card.
