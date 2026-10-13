@@ -15,7 +15,7 @@
  * a GL context to instantiate and this does not.
  */
 
-import { UnitKind, type OwnUnit } from '@echoes/shared';
+import { UnitKind, statsFor, type OwnUnit } from '@echoes/shared';
 
 /** The shell's words for a struck dredge, in docs/ui-ux.md §7's form. */
 export const DREDGE_STRUCK_TEXT = 'dredge struck';
@@ -29,3 +29,18 @@ export function dredgeStruck(unit: OwnUnit): boolean {
 export function fights(unit: OwnUnit): boolean {
   return unit.kind !== UnitKind.Harvester;
 }
+
+/**
+ * Carries the noisemaker suite: the server's own gate, a hull with a gun
+ * (`spawnUnit`'s `attackDamage > 0`, docs/systems-combat.md §5). Not `fights`:
+ * a Weaver or a tender is in the army and has no gun. A missing
+ * `decoyCooldownS` read as "ready" for both, so DECOY lit for a hull the server
+ * refuses without a word (#1363). By kind, as `fights` is, since no refit arms
+ * a hull.
+ */
+export function carriesDecoy(unit: OwnUnit): boolean {
+  return statsFor(unit.kind).attackDamage > 0;
+}
+
+/** The hint bar's words for a DECOY no selected hull can drop (docs/ui-ux.md §7). */
+export const NO_DECOY_TEXT = 'DECOY: no armed hull selected — only a gun carries the suite';

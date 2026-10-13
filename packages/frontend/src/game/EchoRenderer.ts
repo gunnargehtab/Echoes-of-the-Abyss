@@ -145,7 +145,7 @@ import {
   type Bindings,
 } from '../input/bindings.ts';
 import { FACTION_NAME } from './factions.ts';
-import { DREDGE_STRUCK_TEXT, dredgeStruck, fights } from './dredge.ts';
+import { DREDGE_STRUCK_TEXT, NO_DECOY_TEXT, carriesDecoy, dredgeStruck, fights } from './dredge.ts';
 import { heldWholly, missionLineFor, movableIn } from './movementHolds.ts';
 import { priceTag, priceWords, shortfallLine } from './price.ts';
 import {
@@ -3424,12 +3424,19 @@ export class EchoRenderer {
       // selection block's own stat line now, beside HULL and SIG, which is
       // where this hull's other numbers already live.
       if (units.length > 0) {
-        const cooling = first?.decoyCooldownS;
+        // The cooldown is read off the first hull that has the suite: an
+        // absent one means "ready" only there, and "no suite" on a gunless
+        // hull, which a press would send for the server to drop (#1363).
+        const suite = units.find(carriesDecoy);
+        const cooling = suite?.decoyCooldownS;
+        const noDecoy = suite === undefined ? NO_DECOY_TEXT : null;
         buttons.push({
           label: cooling === undefined ? 'DECOY' : `DECOY ${Math.ceil(cooling)}`,
-          enabled: cooling === undefined && this.missionLock('noisemakers') === null,
+          enabled:
+            noDecoy === null && cooling === undefined && this.missionLock('noisemakers') === null,
           active: false,
           action: () => this.commandNoisemaker(),
+          refusal: noDecoy ?? this.missionLock('noisemakers') ?? undefined,
           yieldRank: YIELD.SITUATIONAL,
         });
         // The screen, for the one hull that carries a magazine of decoys
@@ -4294,7 +4301,12 @@ export class EchoRenderer {
     // order strikes it with the tubes rather than leaving it as the one loud
     // thing a stripped hull can still do (docs/mission-sorrowgate.md §3).
     if (this.refusedByMission('noisemakers')) return;
-    const units = this.selectedUnits().filter((u) => u.decoyCooldownS === undefined);
+    const armed = this.selectedUnits().filter(carriesDecoy);
+    if (armed.length === 0) {
+      if (this.selectedUnits().length > 0) this.refuse(NO_DECOY_TEXT);
+      return;
+    }
+    const units = armed.filter((u) => u.decoyCooldownS === undefined);
     if (units.length === 0) return;
     this.callbacks.onDeployNoisemaker(units.map((u) => u.id));
   }
