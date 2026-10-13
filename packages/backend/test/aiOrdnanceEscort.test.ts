@@ -472,4 +472,43 @@ describe('the ordnance hulls aim only at what they can fire on (#1341)', () => {
       'a launch was ordered at the smudge'
     );
   });
+
+  it("drops the Thurible's charge on a classified contact past a nearer bearing (#1351)", () => {
+    // A depth crosses the wire only at Tier 3, and a charge needs one. A nearer
+    // Tier-2 bearing carries none, so taking the nearest contact at Bearing or
+    // better held the charge from the classified hull in reach.
+    const { brief, base } = rig(Faction.Directorate);
+    const home = brief.spawns[brief.slot]!;
+    const { fleet } = fleetOut(brief);
+    const hull = own(201, UnitKind.Thurible, home.x - OUT_M + 100, home.y + 100);
+    const bearing: Contact = {
+      id: 7,
+      tier: ResolutionTier.Bearing,
+      x: hull.x + 200,
+      y: hull.y,
+      tick: 0,
+    };
+    // In the Shelf, a band above the hull's 600 m: a legal drop.
+    const classified: Contact = {
+      id: 9,
+      tier: ResolutionTier.Classification,
+      x: hull.x + 600,
+      y: hull.y,
+      depth: 200,
+      tick: 0,
+    };
+    const drops = (contacts: Contact[]) =>
+      ordersFor(brief, base, () => [...fleet, hull], contacts).filter(
+        (o): o is Extract<AiCommand, { kind: 'depthCharge' }> =>
+          o.kind === 'depthCharge' && o.unitId === 201
+      );
+    // The control: the classified contact alone is a charge.
+    assert.ok(drops([classified]).length > 0, 'no charge at a classified contact alone');
+    const past = drops([bearing, classified]);
+    assert.ok(past.length > 0, 'the nearer bearing held the charge');
+    assert.ok(
+      past.every((o) => o.depthM === classified.depth),
+      'a charge was set for a depth the bearing never carried'
+    );
+  });
 });
