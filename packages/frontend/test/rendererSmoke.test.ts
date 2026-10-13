@@ -88,6 +88,7 @@ import { LampHaloPass } from '../src/game/lampHaloPass.ts';
 import { ROOF_OPEN_OPACITY } from '../src/game/passages.ts';
 import { FURNITURE_OUTLINE_ALPHA } from '../src/game/ladder.ts';
 import { ONE_HANDED_BINDINGS } from '../src/input/bindings.ts';
+import { NO_DECOY_TEXT } from '../src/game/dredge.ts';
 import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
 import { FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
@@ -3625,6 +3626,79 @@ describe('the command card when it is offered more than it holds', () => {
         pressed(900, 3),
         { grey: false, set: 2400 },
         'and refitted to PR-3 it drops into the Abyssal'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  /**
+   * #1363. Only a hull with a gun carries the noisemaker suite (`spawnUnit`'s
+   * `attackDamage > 0`), and a missing `decoyCooldownS` read as "ready" for a
+   * hull without one, so DECOY lit for a Harvester or a Weaver and the press
+   * sent what the server drops without a word. §7 wants it greyed with a
+   * reason; the Corvette is the control, and a mixed selection sends only the
+   * hull that has the suite.
+   */
+  it('greys DECOY with a reason when no selected hull carries the suite', async () => {
+    const world = await boot();
+    try {
+      const snapshot = cannedSnapshot();
+      const [corvette, weaver, harvester] = [11, 12, 13].map((id) =>
+        snapshot.units.find((unit) => unit.id === id)!
+      );
+      weaver!.kind = UnitKind.Weaver;
+      weaver!.silentRunning = false;
+      world.chart.applySnapshot(snapshot);
+      world.conn.applySnapshot(snapshot);
+      world.frame(1);
+
+      const pressed = (
+        hulls: Array<{ x: number; y: number; depth: number }>
+      ): { grey: boolean; sent: unknown; said: boolean } => {
+        hulls.forEach((hull, i) => selectHull(world, hull, i > 0));
+        world.log.calls.length = 0;
+        const grey = barGrey(world.app, 'DECOY');
+        const cell = barLabel(world.app, 'DECOY');
+        world.app.canvas.dispatch('pointerdown', {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: cell.x,
+          clientY: cell.y,
+        });
+        world.frame(1);
+        const said = textSaying(world.app.stage, NO_DECOY_TEXT) !== null;
+        const sent = world.log.first('onDeployNoisemaker')?.[0];
+        return { grey, sent, said };
+      };
+
+      for (const [name, hull] of [
+        ['a Harvester', harvester!],
+        ['a Weaver', weaver!],
+      ] as const) {
+        assert.deepEqual(
+          pressed([hull]),
+          { grey: true, sent: undefined, said: true },
+          `DECOY is live for ${name}, or its press said nothing`
+        );
+        // The key is the same refusal, not a second route around it.
+        world.log.calls.length = 0;
+        dispatchWindow('keydown', { code: 'KeyN' });
+        dispatchWindow('keyup', { code: 'KeyN' });
+        assert.equal(world.log.first('onDeployNoisemaker'), undefined, `N sent ${name}'s decoy`);
+      }
+      // The hint bar holds a refusal for a few seconds of wall clock, so the
+      // lit presses below are read by what they send, not by what it says.
+      assert.deepEqual(
+        { ...pressed([corvette!]), said: undefined },
+        { grey: false, sent: [11], said: undefined },
+        "the Corvette's suite is ready, and the press drops it"
+      );
+      assert.deepEqual(
+        { ...pressed([harvester!, corvette!]), said: undefined },
+        { grey: false, sent: [11], said: undefined },
+        'a mixed selection lights DECOY and sends only the hull with the suite'
       );
     } finally {
       world.teardown();
