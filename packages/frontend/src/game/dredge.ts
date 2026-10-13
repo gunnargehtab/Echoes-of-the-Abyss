@@ -31,8 +31,10 @@ export function fights(unit: OwnUnit): boolean {
 }
 
 /**
- * Carries the noisemaker suite: the server's own gate, a hull with a gun
- * (`spawnUnit`'s `attackDamage > 0`, docs/systems-combat.md §5). Not `fights`:
+ * Carries the noisemaker suite: a hull with a gun, `spawnUnit`'s
+ * `attackDamage > 0` (docs/systems-combat.md §5). That is the server's gate
+ * but for a mission's weapons-cold hulls, which `OwnUnit` cannot tell apart
+ * from armed ones. Not `fights`:
  * a Weaver or a tender is in the army and has no gun. A missing
  * `decoyCooldownS` read as "ready" for both, so DECOY lit for a hull the server
  * refuses without a word (#1363). By kind, as `fights` is, since no refit arms
