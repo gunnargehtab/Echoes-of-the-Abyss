@@ -46,7 +46,8 @@ export interface Settings {
    * have moved something. It names the table rather than holding it, but every
    * save — of any setting — writes the whole table to `bindings`, so a build
    * that retunes a layout reaches nobody whose settings were ever saved. Only
-   * an action the stored table lacks takes the new layout's key.
+   * an action the stored table lacks takes its layout's key, or for `custom`
+   * the fill `resolveBindings` describes.
    */
   bindingLayout: LayoutName;
   /**
@@ -307,7 +308,7 @@ function layoutOf(raw: unknown): LayoutName {
 /**
  * Coerce a stored binding table.
  *
- * Every action falls back to its default independently, so a record written
+ * Every missing action falls back to a default, so a record written
  * before an action existed gains that action's default rather than leaving it
  * unbound — an unbound action is a control the player cannot reach and cannot
  * see is missing. Non-string values are simply ignored: storage is a place
@@ -321,6 +322,7 @@ function layoutOf(raw: unknown): LayoutName {
  *
  * A `custom` record does not store the layout it started from, so its fill
  * takes the standard key if the table leaves it free, else the one-handed key
+ * if free, else the standard key; each fill counts the keys earlier fills took
  * (#1352).
  */
 function sanitiseBindings(raw: unknown, layout: LayoutName): Bindings {
