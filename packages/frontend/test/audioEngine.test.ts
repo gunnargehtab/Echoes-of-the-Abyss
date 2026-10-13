@@ -29,6 +29,7 @@ import {
   installHeadlessAudio,
   uninstallHeadlessAudio,
   StubBiquadFilterNode,
+  StubStereoPannerNode,
   type StubAudioNode,
   type StubGainNode,
 } from './support/headlessAudio.ts';
@@ -903,6 +904,57 @@ describe('the audio engine: the Precedence Law and the trims', () => {
       void engine.destroy();
       uninstallHeadlessAudio();
     }
+  });
+});
+
+describe('the audio engine: mono centres every pan, not just the contacts', () => {
+  /**
+   * docs/ui-ux.md §11: mono collapses every pan to centre. The mode used to
+   * reach the contact mixer and nothing else, so the exposure strike, the
+   * ping's returns and the tuned corridor still panned for the one listener
+   * who had asked them not to (#1329). Each of those three is handed a hard
+   * pan here, and every panner the engine builds outside the contact mixer
+   * is read back.
+   */
+  function pansHeard(mode: 'mono' | 'stereo'): number[] {
+    const { engine, context } = boot();
+    try {
+      engine.setSpatialisation(mode);
+      engine.applySelf(
+        selfFrame({
+          // Bearing 0 at yaw 0 is cos 0: hard right.
+          events: [{ kind: SelfEventKind.Exposed, unitId: 11, bearing: 0 }],
+          returns: [{ rangeM: 900, pan: -1 }],
+        })
+      );
+      engine.applyTuned({
+        crystal: 1,
+        riseM: 0,
+        corridor: { pan: 1, rangeM: 400, hpFraction: 1 },
+      });
+      engine.onEchoTick();
+      const pans = context.nodes
+        .filter((node): node is StubStereoPannerNode => node instanceof StubStereoPannerNode)
+        .map((panner) => panner.pan.target);
+      if (mode === 'mono') assert.equal(engine.tunedMix?.corridorPan, 0, 'the mix reports it');
+      return pans;
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  }
+
+  it('pans the strike, the return and the corridor in stereo — the control', () => {
+    const pans = pansHeard('stereo');
+    // The strike and the corridor hard right, the return hard left.
+    assert.equal(pans.filter((pan) => pan === 1).length, 2, `pans were ${pans.join(', ')}`);
+    assert.equal(pans.filter((pan) => pan === -1).length, 1, `pans were ${pans.join(', ')}`);
+  });
+
+  it('centres all three in mono', () => {
+    const pans = pansHeard('mono');
+    assert.equal(pans.length, 3, `one panner each, not ${pans.length}`);
+    for (const pan of pans) assert.equal(pan, 0, `a voice sat at ${pan} in mono`);
   });
 });
 
