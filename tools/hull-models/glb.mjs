@@ -627,14 +627,17 @@ export function isClosed(part) {
   const key = (i) =>
     `${Math.round(a[i] * 1e5)},${Math.round(a[i + 1] * 1e5)},${Math.round(a[i + 2] * 1e5)}`;
   const edges = new Map();
-  for (let t = 0; t < a.length; t += 9)
+  for (let t = 0; t < a.length; t += 9) {
+    const ks = [key(t), key(t + 3), key(t + 6)];
+    // A pole's triangle collapses to a line: its two live edges lie on a
+    // real one, and counted they would read every capsule and lathe open.
+    if (ks[0] === ks[1] || ks[1] === ks[2] || ks[2] === ks[0]) continue;
     for (let e = 0; e < 3; e++) {
-      const u = key(t + e * 3);
-      const v = key(t + ((e + 1) % 3) * 3);
-      if (u === v) continue; // a degenerate triangle's collapsed edge
+      const [u, v] = [ks[e], ks[(e + 1) % 3]];
       const k = u < v ? `${u}|${v}` : `${v}|${u}`;
       edges.set(k, (edges.get(k) ?? 0) + 1);
     }
+  }
   let yes = edges.size > 0;
   for (const n of edges.values()) if (n !== 2) yes = false;
   closedCache.set(a, yes);

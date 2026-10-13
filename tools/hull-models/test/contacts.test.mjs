@@ -133,3 +133,17 @@ test('a part sunk whole in its partner meets it, whichever side is named', () =>
   assert.deepEqual(names(contactsOf(parts, { part: /hull/ })), ['hull · rivet']);
   assert.deepEqual(names(contactsOf(parts, { part: /rivet/ })), ['hull · rivet']);
 });
+
+test('a capsule is closed, and a part sunk whole in one meets it', () => {
+  // A pole's triangles collapse to a line, and counting their edges read
+  // every capsule open, so a box buried in a ballast tank met nothing.
+  const parts = meshes([
+    { name: 'tank', geometry: new THREE.CapsuleGeometry(2, 6, 8, 16), at: [0, 0, 0] },
+    // Off the axis: a ray up the axis runs down the pole's seams, where
+    // parity counts two faces at one crossing.
+    { name: 'core', geometry: new THREE.BoxGeometry(0.3, 0.3, 0.3), at: [0.37, 0.5, 0.23] },
+  ]);
+  assert.equal(isClosed(parts[0]), true);
+  assert.deepEqual(names(contactsOf(parts, { part: /tank/ })), ['core · tank']);
+  assert.deepEqual(names(contactsOf(parts, { part: /core/ })), ['core · tank']);
+});
