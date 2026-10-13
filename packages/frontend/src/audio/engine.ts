@@ -346,6 +346,8 @@ export class AudioEngine {
   private pendingTuned: TunedInputs | null = null;
   /** The last mix the tuned bed was driven to — the harness's "does it ring". */
   private lastTuned: TunedMix | null = null;
+  /** What `lastTuned` was mixed from, so a release can narrow it (#1332). */
+  private lastTunedInputs: TunedInputs | null = null;
   private pendingSelf: SelfAudioFrame | null = null;
   /**
    * Lines spoken since the last tick, each with the whisper rule as it stood
@@ -652,10 +654,7 @@ export class AudioEngine {
     const tuned = this.pendingTuned;
     this.pendingTuned = null;
     if (tunedBed !== null && tuned !== null && this.context !== null) {
-      const resolved = tunedMixFor(tuned);
-      const mix = { ...resolved, corridorPan: this.heardPan(resolved.corridorPan) };
-      this.lastTuned = mix;
-      tunedBed.update(mix, this.context.currentTime);
+      this.driveTuned(tunedBed, tuned, this.context.currentTime);
     }
 
     const selfMixer = this.selfMixer;
@@ -760,15 +759,38 @@ export class AudioEngine {
    * on their slow §6 fade. The deciding tick's snapshot can follow a result,
    * so the shell lets that one go as well; a reconnection's first snapshot
    * brings back whatever the chart still tracks.
+   *
+   * The tuned bed is not let go, only narrowed (#1332). The crystal and the
+   * player's own corridor are true with nothing ticking, so they keep
+   * sounding; a corridor read off tracked Spires is dropped, because its
+   * tracks fade off the chart and the bed may say no more than the chart.
    */
   releasePicture(): void {
     this.pendingFrame = null;
     this.pendingMarks = null;
+    const tuned = this.pendingTuned ?? this.lastTunedInputs;
+    this.pendingTuned = null;
     const context = this.context;
     if (context === null) return;
     this.mixer?.update({ tick: 0, entries: [] }, context.currentTime);
     this.markBed?.update(new Map(), context.currentTime);
+    if (this.tunedBed !== null && tuned !== null) {
+      this.driveTuned(
+        this.tunedBed,
+        { ...tuned, corridor: tuned.ownCorridor },
+        context.currentTime
+      );
+    }
     this.writeChain();
+  }
+
+  /** Move the tuned bed to `inputs`, and remember both for the probe and a release. */
+  private driveTuned(tunedBed: TunedBed, inputs: TunedInputs, now: number): void {
+    const resolved = tunedMixFor(inputs);
+    const mix = { ...resolved, corridorPan: this.heardPan(resolved.corridorPan) };
+    this.lastTunedInputs = inputs;
+    this.lastTuned = mix;
+    tunedBed.update(mix, now);
   }
 
   /** Hand the mix the residue the player can currently read (§6). */
@@ -1008,6 +1030,7 @@ export class AudioEngine {
     this.tunedBed = null;
     this.pendingTuned = null;
     this.lastTuned = null;
+    this.lastTunedInputs = null;
     this.selfBed?.stop(this.context?.currentTime ?? 0);
     this.selfBed = null;
     this.sourBed?.stop(this.context?.currentTime ?? 0);
