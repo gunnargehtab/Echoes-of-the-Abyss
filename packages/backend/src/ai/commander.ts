@@ -3789,7 +3789,8 @@ export class AiCommander implements AiPlayer {
       // server reports at the listener's own position, so it was nearly always
       // the nearest: the Broadside ordered launches at it that were refused,
       // the Lance came round to face its own hull, and the Thurible found no
-      // depth to bomb with a classified contact in reach (#1341).
+      // depth to bomb with a classified contact in reach (#1341). The Thurible
+      // now runs its own search below, for a contact that carries a depth.
       let best: EchoSnapshot['contacts'][number] | null = null;
       let bestD = ORDNANCE_REACH_M;
       for (const contact of snapshot.contacts) {
