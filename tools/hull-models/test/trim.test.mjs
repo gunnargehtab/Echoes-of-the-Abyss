@@ -666,26 +666,18 @@ test('the Responsory is on the Knights sheet with its crystal bare', () => {
   const file = readGlb(join(repo, 'docs/concept-art/models/responsory-hadron.glb'));
   assert.equal(file.trim.sheet, HADRON.name);
   assert.deepEqual([...file.trim.materials].sort(), ['pale_alloy', 'shadow_indigo']);
-  assert.ok(
-    file.parts.some((p) => p.material === 'resonance_crystal'),
-    'no crystal to keep bare'
-  );
+  assert.ok(file.parts.some((p) => p.material === 'resonance_crystal'), 'no crystal to keep bare');
   for (const p of file.parts) assert.ok(p.uv0 && p.uv0.length === p.tris * 6, `${p.name} uv0`);
 });
 
 test('the Reed is on the Commune sheet with its unlit vein bare', () => {
   const file = readGlb(join(repo, 'docs/concept-art/models/reed-pelagia.glb'));
   assert.equal(file.trim.sheet, PELAGIA.name);
-  assert.deepEqual([...file.trim.materials].sort(), [
-    'algae_membrane',
-    'chitin_hull',
-    'growth_ridge',
-    'spore_pod',
-  ]);
-  assert.ok(
-    file.parts.some((p) => p.material === 'bio_vein_unlit'),
-    'no vein to keep bare'
+  assert.deepEqual(
+    [...file.trim.materials].sort(),
+    ['algae_membrane', 'chitin_hull', 'growth_ridge', 'spore_pod']
   );
+  assert.ok(file.parts.some((p) => p.material === 'bio_vein_unlit'), 'no vein to keep bare');
   for (const p of file.parts) assert.ok(p.uv0 && p.uv0.length === p.tris * 6, `${p.name} uv0`);
 });
 
