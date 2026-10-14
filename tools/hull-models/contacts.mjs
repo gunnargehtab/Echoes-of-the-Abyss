@@ -53,8 +53,9 @@ const MODELS = resolve(here, '../../docs/concept-art/models');
  *
  * A label is the part's name, and a name the model repeats carries the
  * part's index in `parts` too, `gantry_leg_s #27`: pairs were once keyed by
- * name, so of a repeated name only the first two instances were tested, and
- * the Hadron Slipway's hall never met the gantry leg it stands on (#1374).
+ * name, so of each pair of names only the first pair of instances whose
+ * boxes overlapped was tested, and the Hadron Slipway's hall never met the
+ * gantry leg it stands on (#1374).
  */
 export function contactsOf(parts, { part = null, withPart = null, near = 0.001 } = {}) {
   const solid = parts.filter((p) => occludes(p.finish));
