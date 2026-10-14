@@ -82,6 +82,7 @@ function tending(posture: Posture): { share: number; sowed: boolean } {
     stabilisedS: 0,
     suppressedS: 0,
     burnedS: 0,
+    burnHeld: false,
     sownRemaining: 0,
   };
   match.world.hazards.push(bed);

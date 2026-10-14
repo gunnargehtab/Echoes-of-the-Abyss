@@ -133,6 +133,17 @@ export interface Hazard {
    */
   burnedS: number;
   /**
+   * Whether a cutter's burn is holding this field open. Kelp only.
+   *
+   * Set when `burnedS` reaches `BATHYARCH_BURN_S` and cleared when it bleeds
+   * back to zero, so a canopy the cutters opened stays open while it closes
+   * (#1425, docs/hazards.md §4: "closes just as slowly once they go"). Without
+   * it the field shut on the first tick below full, and `burnedS` alone cannot
+   * say which way it is moving: three seconds in is a canopy half cut on the
+   * way up and half grown back on the way down.
+   */
+  burnHeld: boolean;
+  /**
    * Standing crop, 0 to 1 — docs/systems-flora.md §1. Kelp only; 1 for every
    * other kind, which is harmless because nothing else reads it.
    *
@@ -457,6 +468,8 @@ export function hazardsSystem(world: SimWorld, destroyed: number[]): void {
         cutter >= 0
           ? Math.min(HAZARDS.KELP.BATHYARCH_BURN_S, hazard.burnedS + dt)
           : Math.max(0, hazard.burnedS - dt);
+      if (hazard.burnedS >= HAZARDS.KELP.BATHYARCH_BURN_S) hazard.burnHeld = true;
+      else if (hazard.burnedS <= 0) hazard.burnHeld = false;
       // And what comes off the canopy is worth something (#565,
       // docs/systems-flora.md §2). The burn has always opened a field without
       // *taking* anything; after wave 1 there is a crop to take, so cutting
@@ -490,10 +503,7 @@ export function hazardsSystem(world: SimWorld, destroyed: number[]): void {
       // (docs/systems-flora.md §1) — so an empty canopy opens the field on the
       // same terms a blast or a cutter does, and closes it again as the bed
       // regrows.
-      const open =
-        hazard.burnedS >= HAZARDS.KELP.BATHYARCH_BURN_S ||
-        hazard.suppressedS > 0 ||
-        standingCrop(hazard.crop) <= 0;
+      const open = hazard.burnHeld || hazard.suppressedS > 0 || standingCrop(hazard.crop) <= 0;
       hazard.phase = open ? HazardPhase.Dormant : HazardPhase.Active;
       continue;
     }

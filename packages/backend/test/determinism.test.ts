@@ -498,12 +498,13 @@ describe('the fingerprint covers what it certifies', () => {
   });
 
   it('follows every mutable field of a hazard, not the site it sits on', () => {
-    // The seven that move. A hazard's site comes from the map and never
-    // changes; its phase and its timers are the match's, and `crop` and
-    // `sownRemaining` in particular are what the sow command writes — the
-    // thing REPLAY_FORMAT_VERSION 24 was bumped for and the checker could not
-    // see. Listed by key so a new mutable field arriving with a new hazard
-    // kind fails the length assertion rather than slipping past unhashed.
+    // The seven numbers that move, and `burnHeld` below. A hazard's site
+    // comes from the map and never changes; its phase and its timers are the
+    // match's, and `crop` and `sownRemaining` in particular are what the sow
+    // command writes — the thing REPLAY_FORMAT_VERSION 24 was bumped for and
+    // the checker could not see. Listed by key so a new mutable field arriving
+    // with a new hazard kind fails the length assertion rather than slipping
+    // past unhashed.
     const match = twoPlayers(new Match(undefined, { fauna: false, seed: SEED }));
     const hazard = match.world.hazards[0];
     assert.ok(hazard !== undefined, 'the default map has to author a hazard at all');
@@ -517,7 +518,7 @@ describe('the fingerprint covers what it certifies', () => {
       'sownRemaining',
       'stabilisedS',
     ] as const;
-    assert.equal(mutable.length, 7, 'seven fields of a Hazard are simulation state');
+    assert.equal(mutable.length, 7, 'seven numeric fields of a Hazard are simulation state');
 
     for (const field of mutable) {
       const held = hazard[field];
@@ -534,6 +535,21 @@ describe('the fingerprint covers what it certifies', () => {
         `a bed whose ${field} differs is not the same bed`
       );
     }
+    // And the one that is a flag rather than a number (#1425): a canopy the
+    // cutters are holding open and one they are not are different beds.
+    const held = hazard.burnHeld;
+    assert.ok(
+      moved(
+        match,
+        () => {
+          hazard.burnHeld = !held;
+        },
+        () => {
+          hazard.burnHeld = held;
+        }
+      ),
+      'a bed whose burnHeld differs is not the same bed'
+    );
   });
 
   it('follows every region of the Drift Health grid', () => {
