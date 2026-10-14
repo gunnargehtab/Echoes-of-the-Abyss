@@ -33,8 +33,10 @@
  *   approved model was not, so the whole hull is expected to move by one
  *   uniform factor (`hulls/sower.mjs` documents its 0.947). Reporting that as
  *   47 changed parts buries the one part that really moved. The factor is
- *   measured off the whole-model extents and divided out; what survives is
- *   shape.
+ *   read two ways — the median of the parts' extent ratios, and the
+ *   whole-model bounds — and the reading that leaves fewer parts moved is
+ *   divided out (`frame`); what survives is shape. A `basis` line says when
+ *   the bounds won, as they do across a facet pass (#1372).
  * - **Canonicalise as the bake and the runtime do, then subtract the one
  *   translation too.** Both yaw a Z-long export onto +X and centre it on its
  *   bounding box before anything reads it (`rosterModels.ts`,
@@ -42,8 +44,9 @@
  *   the four Light Scouts were drawn along Z, off-centre, at four arbitrary
  *   scales (#588) — has changed nothing either of them can see. Each file is
  *   yawed here the same way when its Z extent is the longer, and the
- *   whole-hull shift is measured as the per-axis median of the parts' centre
- *   moves, for the reason the scale is a median, and divided out. Both are
+ *   whole-hull shift is measured off the same reading as the scale — the
+ *   per-axis median of the parts' centre moves, or the difference of the two
+ *   whole-model box centres — and divided out. Both are
  *   printed, because a yaw or a shift is still worth a sentence in the PR.
  *
  * - **Compare surface area as well as bounds.** A drum and a frustum of the
@@ -397,19 +400,9 @@ function isSquare(parts) {
   return Math.abs(x - z) <= 1e-3 * Math.max(x, z);
 }
 
-/** How many parts of `after` differ from `before` beyond scale and shift — the tie-break for a square plan. */
-function moverCount(before, after) {
+/** How many parts of `after` differ from `before` beyond a given scale and shift. */
+function moverCount(before, after, scale, shift) {
   const afterByName = new Map(after.map((p) => [p.key, p]));
-  const scale = rootScale(before, after);
-  const shift = medianAxis(
-    before
-      .filter((p) => afterByName.has(p.key))
-      .map((p) => {
-        const a = box(p).centre;
-        const b = box(afterByName.get(p.key)).centre;
-        return [0, 1, 2].map((i) => b[i] - a[i] * scale[i]);
-      })
-  );
   let n = 0;
   for (const p of before) {
     const q = afterByName.get(p.key);
@@ -423,6 +416,44 @@ function moverCount(before, after) {
     if (d > 0.005) n++;
   }
   return n;
+}
+
+/**
+ * The scale and shift to divide out, and which reading gave them.
+ *
+ * Two readings, and the one with fewer movers is taken. The parts' median
+ * (`rootScale`) survives one part reaching further, which the whole-model
+ * bounds do not. The whole-model bounds survive a change to every round
+ * part's extents, which the median does not: a facet pass re-cuts each drum
+ * at a new count, so its box grows or shrinks on the axes the cut reaches
+ * while the hull's own bounds hold to the millimetre. The Commune Corvette
+ * across #1044 read 0.8883 1.0000 0.9848 off its parts and moved all 33 of
+ * them; off its bounds it is 1 1 1 and only the re-cut parts move (#1372).
+ * A tie keeps the median, the reading this tool has always printed.
+ */
+function frame(before, after) {
+  const afterByName = new Map(after.map((p) => [p.key, p]));
+  const shared = before.filter((p) => afterByName.has(p.key));
+  const medianScale = rootScale(before, after);
+  const medianShift = medianAxis(
+    shared.map((p) => {
+      const a = box(p).centre;
+      const b = box(afterByName.get(p.key)).centre;
+      return [0, 1, 2].map((i) => b[i] - a[i] * medianScale[i]);
+    })
+  );
+  const median = { basis: 'parts', scale: medianScale, shift: medianShift };
+  median.n = moverCount(before, after, median.scale, median.shift);
+  const wa = box(before);
+  const wb = box(after);
+  const wholeScale = [0, 1, 2].map((i) => (wa.extent[i] > 0 ? wb.extent[i] / wa.extent[i] : 1));
+  const whole = {
+    basis: 'bounds',
+    scale: wholeScale,
+    shift: [0, 1, 2].map((i) => wb.centre[i] - wa.centre[i] * wholeScale[i]),
+  };
+  whole.n = moverCount(before, after, whole.scale, whole.shift);
+  return whole.n < median.n ? { ...whole, other: median } : { ...median, other: whole };
 }
 
 function report(beforePath, afterPath, label) {
@@ -444,10 +475,10 @@ function report(beforePath, afterPath, label) {
       for (const a of alts(rawAfter, a0)) {
         const kb = keyed(b.parts);
         const ka = keyed(a.parts);
-        const n = moverCount(kb, ka);
+        const { n } = frame(kb, ka);
         if (!best || n < best.n) best = { n, b, a, kb, ka };
       }
-    const asIs = moverCount(before, after);
+    const asIs = frame(before, after).n;
     if (best.n < asIs) {
       b0 = best.b;
       a0 = best.a;
@@ -459,7 +490,7 @@ function report(beforePath, afterPath, label) {
       squareNote = `square plan — no other yaw agrees better (${asIs} movers as compared)`;
     }
   }
-  const scale = rootScale(before, after);
+  const { scale, shift, basis, n: movers, other } = frame(before, after);
   const uniform = Math.max(...scale) / Math.min(...scale) - 1;
 
   console.log(label);
@@ -478,6 +509,11 @@ function report(beforePath, afterPath, label) {
       ? '(uniform — divided out below)'
       : `⚠ not uniform, ${(uniform * 100).toFixed(2)}% apart: reproportioned, not rescaled`;
   console.log(`  scale   ${scale.map((v) => v.toFixed(4)).join('  ')}  ${scaleNote}`);
+  if (basis === 'bounds')
+    console.log(
+      `  basis   whole-model bounds (${movers} movers); the parts' median read` +
+        ` ${other.scale.map((v) => v.toFixed(4)).join('  ')} (${other.n} movers)`
+    );
 
   const beforeByName = new Map(before.map((p) => [p.key, p]));
   const afterByName = new Map(after.map((p) => [p.key, p]));
@@ -485,15 +521,7 @@ function report(beforePath, afterPath, label) {
   // The one translation the whole hull moved by — a port that centres a hull
   // the approved export left off-centre moves every part by the same vector,
   // which the bake and the runtime undo and which is therefore not shape.
-  const shift = medianAxis(
-    before
-      .filter((p) => afterByName.has(p.key))
-      .map((p) => {
-        const a = box(p).centre;
-        const b = box(afterByName.get(p.key)).centre;
-        return [0, 1, 2].map((i) => b[i] - a[i] * scale[i]);
-      })
-  );
+  // `frame` measured it beside the scale, off the same basis.
   if (shift.some((v) => Math.abs(v) > 0.005))
     console.log(
       `  shift   ${shift.map((v) => v.toFixed(3)).join('  ')}  (whole hull, m — divided out below)`
