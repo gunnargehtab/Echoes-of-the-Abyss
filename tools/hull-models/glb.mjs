@@ -509,10 +509,12 @@ export function topAt(parts, x, z) {
  * on the side `sgn` (+1 starboard, -1 port), or null when the line passes
  * none of them: `topAt` turned on its side. What a fixture hung on a flank
  * rests on — a rivet, a plate-edge lamp — keeping its station on the row
- * where the nearest facet would slide it along the pitch (#1369).
+ * where the nearest facet would slide it along the pitch (#1369). A hit at
+ * or across the centreline is not on that side and does not count, so a
+ * port plate handed to a starboard call is never seated on from inside.
  */
 export function beamAt(parts, x, y, sgn) {
-  let best = -Infinity;
+  let best = 0;
   let hit = null;
   for (const part of Array.isArray(parts) ? parts : [parts]) {
     if (!occludes(part.finish)) continue;

@@ -733,8 +733,12 @@ export function lightAudit(root, { ppm = 4, minM2 = 0.25, minGapM = 0.2 } = {}) 
  *
  * The named parts must already be in `root`; a seed that reaches none of
  * them is an error, not a lamp left where it was — unless `optional` is
- * set, when it returns null, for a rank whose stations run past what
- * backs them and leaves out the rivets with nothing behind them.
+ * set, when it returns null (under `drop` as under `beam`), for a rank
+ * whose stations run past what backs them and leaves out the rivets with
+ * nothing behind them. A name missing from `root` throws either way.
+ *
+ * `drop` and `beam` cast along the world's Y and Z, so they assume a root
+ * that is not turned: every model root here is scaled, never yawed.
  *
  * Everything is in `root`'s own frame — the seed, `stand`, `sink` and the
  * placement returned — so a script hands over the numbers it would have

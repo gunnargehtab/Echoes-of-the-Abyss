@@ -133,7 +133,7 @@
  * upper rivets at the waist (x -4..20) were buried inside the slab, whose
  * flank is at z 37.2 there. `flankPlates` seats each rivet on what is
  * behind its station on the beam line now, and leaves out a station with
- * nothing behind it: the upper row's fourteen sit on the slab — ten on the
+ * nothing behind it: the upper row's fourteen sit on the slab — nine on the
  * parallel flank at z 24, three on the waist at 37.2, one on its shoulder at
  * 35 and one on the bow's taper at 22 — and the lower row keeps five a
  * side, two on the aft plate and three on the forward one. Every rivet
