@@ -267,6 +267,44 @@ describe('something can clear it', () => {
     assert.equal(m.world.hazards[0]!.phase, HazardPhase.Active, 'and it closes once they leave');
   });
 
+  it('closes as slowly as it opened, not on the tick the cutter leaves', () => {
+    // Doc §4: the canopy "holds open while they stay, and closes just as
+    // slowly once they go" (#1425). Open it fully, walk the cutter clear, and
+    // the field stays open until the burn has bled all the way back to zero.
+    const m = match();
+    const cutter = spawnUnit(m.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 4000,
+      y: 4000,
+    });
+    advance(m, HAZARDS.KELP.BATHYARCH_BURN_S + 1);
+    assert.equal(m.world.hazards[0]!.phase, HazardPhase.Dormant, 'it was open');
+
+    Position.x[cutter] = 7500;
+    advance(m, HAZARDS.KELP.BATHYARCH_BURN_S - 1);
+    assert.equal(
+      m.world.hazards[0]!.phase,
+      HazardPhase.Dormant,
+      'a second short of the burn time after they left, the canopy is still open'
+    );
+    advance(m, 2);
+    assert.equal(m.world.hazards[0]!.phase, HazardPhase.Active, 'and then it has closed');
+
+    // And a half-cut canopy the cutter abandons never opened, so it does not
+    // open on the way back down either.
+    Position.x[cutter] = 4000;
+    advance(m, HAZARDS.KELP.BATHYARCH_BURN_S / 2);
+    Position.x[cutter] = 7500;
+    advance(m, 1 / 60);
+    assert.equal(
+      m.world.hazards[0]!.phase,
+      HazardPhase.Active,
+      'a burn that never reached full holds nothing open as it bleeds'
+    );
+  });
+
   it('makes cutting loud, so clearing the maze core announces itself', () => {
     // The sound argument for the Consortium's interaction, and what stops
     // burning being a free counter to the map: thermal cutters are industrial

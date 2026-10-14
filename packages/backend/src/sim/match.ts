@@ -822,6 +822,7 @@ export class Match {
         stabilisedS: 0,
         suppressedS: 0,
         burnedS: 0,
+        burnHeld: false,
         sownRemaining: 0,
       });
     }
@@ -865,6 +866,7 @@ export class Match {
         stabilisedS: 0,
         suppressedS: 0,
         burnedS: 0,
+        burnHeld: false,
         sownRemaining: 0,
       };
       this.world.hazards.push(bed);

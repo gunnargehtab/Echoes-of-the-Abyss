@@ -388,6 +388,7 @@ export function hashWorld(world: SimWorld): number {
     h = mixFloat(h, hazard.flowRad);
     h = mixFloat(h, hazard.suppressedS);
     h = mixFloat(h, hazard.burnedS);
+    h = mixU32(h, hazard.burnHeld ? 1 : 0);
     h = mixFloat(h, hazard.crop);
     h = mixFloat(h, hazard.sownRemaining);
     h = mixFloat(h, hazard.stabilisedS);

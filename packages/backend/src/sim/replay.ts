@@ -46,6 +46,12 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * 31: a burned canopy closes as slowly as it opened (#1425). A field the
+ * cutters opened stayed open only while `burnedS` sat at full, so it shut on
+ * the tick they left; it now stays open until the burn bleeds back to zero,
+ * and the fingerprint mixes the latch that says so. A v30 file's canopies
+ * replay open for up to six seconds longer.
+ *
  * 30: a chase ends where the slot's picture ends (#1381). An ordered hull
  * that reaches a point no pass has shown its target at since drops the order
  * there, as a leg on a phantom does, and the fingerprint mixes whether the
@@ -306,7 +312,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 30;
+export const REPLAY_FORMAT_VERSION = 31;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
