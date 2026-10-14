@@ -504,6 +504,40 @@ export function topAt(parts, x, z) {
   return { point: hit.point, normal: windingNormal(hit.part, hit.t), part: hit.part };
 }
 
+/**
+ * The outermost solid point of `parts` on the beam line through `(x, y)`,
+ * on the side `sgn` (+1 starboard, -1 port), or null when the line passes
+ * none of them: `topAt` turned on its side. What a fixture hung on a flank
+ * rests on — a rivet, a plate-edge lamp — keeping its station on the row
+ * where the nearest facet would slide it along the pitch (#1369).
+ */
+export function beamAt(parts, x, y, sgn) {
+  let best = -Infinity;
+  let hit = null;
+  for (const part of Array.isArray(parts) ? parts : [parts]) {
+    if (!occludes(part.finish)) continue;
+    const a = part.positions;
+    for (let t = 0; t < a.length; t += 9) {
+      const x0 = a[t], y0 = a[t + 1], z0 = a[t + 2];
+      const x1 = a[t + 3], y1 = a[t + 4], z1 = a[t + 5];
+      const x2 = a[t + 6], y2 = a[t + 7], z2 = a[t + 8];
+      const det = (x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0);
+      if (Math.abs(det) < 1e-12) continue;
+      const l1 = ((x - x0) * (y2 - y0) - (x2 - x0) * (y - y0)) / det;
+      const l2 = ((x1 - x0) * (y - y0) - (x - x0) * (y1 - y0)) / det;
+      const l0 = 1 - l1 - l2;
+      if (l0 < -1e-9 || l1 < -1e-9 || l2 < -1e-9) continue;
+      const z = l0 * z0 + l1 * z1 + l2 * z2;
+      if (sgn * z > best) {
+        best = sgn * z;
+        hit = { part, t, point: [x, y, z] };
+      }
+    }
+  }
+  if (!hit) return null;
+  return { point: hit.point, normal: windingNormal(hit.part, hit.t), part: hit.part };
+}
+
 /** A triangle's unit normal by its winding, turned back on a mirrored part. */
 function windingNormal(part, t) {
   const a = part.positions;

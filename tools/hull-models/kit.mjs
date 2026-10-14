@@ -108,6 +108,7 @@ import {
   boundsOf,
   closestPoint,
   topAt,
+  beamAt,
   gapBetween,
   occludes,
 } from './glb.mjs';
@@ -723,9 +724,17 @@ export function lightAudit(root, { ppm = 4, minM2 = 0.25, minGapM = 0.2 } = {}) 
  *   plate wants: from a station a metre over a shoulder the nearest facet
  *   is downhill of it, and a rank of plate-edge lamps would slide outboard
  *   by as much. A station over none of the named parts is an error.
+ * - **`beam: ±1`** is `drop` turned on its side (glb.mjs `beamAt`): the
+ *   seed keeps its station and its height and takes the outermost surface
+ *   on its beam line, on the starboard (+1) or port (-1) side. A rivet rank
+ *   along a flank wants it: on the Derrick the nearest facet of a waist
+ *   that faces 20° off the beam slid one 0.6 m along its pitch (#919), and
+ *   a row's z is one number where the slab's flank is not (#1369).
  *
  * The named parts must already be in `root`; a seed that reaches none of
- * them is an error, not a lamp left where it was.
+ * them is an error, not a lamp left where it was — unless `optional` is
+ * set, when it returns null, for a rank whose stations run past what
+ * backs them and leaves out the rivets with nothing behind them.
  *
  * Everything is in `root`'s own frame — the seed, `stand`, `sink` and the
  * placement returned — so a script hands over the numbers it would have
@@ -737,7 +746,12 @@ export function lightAudit(root, { ppm = 4, minM2 = 0.25, minGapM = 0.2 } = {}) 
  * metres, the surface's direction and how far the seed stood from it, for
  * the record.
  */
-export function seat(root, on, centre, { stand = 0, sink = 0, drop = false, yaw = 0 } = {}) {
+export function seat(
+  root,
+  on,
+  centre,
+  { stand = 0, sink = 0, drop = false, beam = 0, yaw = 0, optional = false } = {}
+) {
   const names = Array.isArray(on) ? on : [on];
   const { parts } = sceneParts(root);
   const surfaces = parts.filter((p) => names.includes(p.name));
@@ -749,9 +763,16 @@ export function seat(root, on, centre, { stand = 0, sink = 0, drop = false, yaw 
   // carries here, and `stand` is in its units as the part's height is.
   const scale = root.getWorldScale(new THREE.Vector3()).x;
   const seed = root.localToWorld(new THREE.Vector3(...centre));
-  const hit = drop ? topAt(surfaces, seed.x, seed.z) : closestPoint(surfaces, seed.toArray());
+  const hit = drop
+    ? topAt(surfaces, seed.x, seed.z)
+    : beam
+      ? beamAt(surfaces, seed.x, seed.y, Math.sign(beam))
+      : closestPoint(surfaces, seed.toArray());
+  if (!hit && optional) return null;
   if (!hit)
-    throw new Error(`seat: nothing solid among ${names}${drop ? ' under the station' : ''}`);
+    throw new Error(
+      `seat: nothing solid among ${names}${drop ? ' under the station' : beam ? ' on the beam line' : ''}`
+    );
   const n = new THREE.Vector3(...hit.normal);
   const off = (stand - sink) * scale;
   const at = root.worldToLocal(new THREE.Vector3(...hit.point).addScaledVector(n, off));
@@ -759,7 +780,11 @@ export function seat(root, on, centre, { stand = 0, sink = 0, drop = false, yaw 
   q.premultiply(root.getWorldQuaternion(new THREE.Quaternion()).invert());
   q.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw));
   const rot = new THREE.Euler().setFromQuaternion(q).toArray().slice(0, 3);
-  const gap = drop ? Math.abs(seed.y - hit.point[1]) : hit.distance;
+  const gap = drop
+    ? Math.abs(seed.y - hit.point[1])
+    : beam
+      ? Math.abs(seed.z - hit.point[2])
+      : hit.distance;
   return { at: at.toArray(), rot, normal: n.toArray(), gap };
 }
 
