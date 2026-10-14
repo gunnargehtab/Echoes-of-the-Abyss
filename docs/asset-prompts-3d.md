@@ -355,7 +355,10 @@ the rule's count, so a sphere's meridians are the rule's count at its radius ove
 turn and its round the rule's count at the widest ring those meridians draw (`orbFacets` in
 `tools/hull-models/facets.mjs`), never under three's floors of three and two — never the
 `(32, 16)` three.js defaults to — and an odd rule does not call every orb wrong for closing
-its meridians in half a turn.
+its meridians in half a turn. A capsule's meridian is its two caps, each a quarter turn of one
+count, so it is held to the rule's share of a quarter turn, cap by cap: read over the half
+turn both make, its count is always even and an odd half-turn share named every capsule
+(#1371).
 A part scaled flat is read at the radius its widest facet is a chord of, so a squashed
 tergite is judged as the wide thing it is — and a part pressed by its root, a Bastion held
 under the drawn surface (#960), the same: each navy's `cut` takes the press and prices the
@@ -656,11 +659,13 @@ every six and eight that was a builder's default — limbs, hydrophones, booms, 
 guns, collars, ducts, the Slipway's legs, pylons and launch mandibles — goes to the rule; the
 fives stay, the torus tubes' among them (`torusOf`, and the kit's `launchMouth` for the
 Foundry's mouth: the Bastion's seam rings, lips, pipes and flanges, the turret's collar and the
-Foundry's launch mouth keep their pentagon tubes while their rings go to the rule). The measure names eight of the navy's
-1,477 rings, all one reading: the capsule meridians of the Verger's, the Bastion's and the
-Foundry's ballast tanks, the Foundry's hull in progress and the turret's pod, where the
-rule's half-turn share is odd and a capsule draws an even count, built a segment over as the
-Order's are. What the coarser rounds left standing off was reseated through the builders:
+Foundry's launch mouth keep their pentagon tubes while their rings go to the rule). The
+measure named eight of the navy's 1,477 rings, all one reading: the capsule meridians of the
+Verger's, the Bastion's and the Foundry's ballast tanks, the Foundry's hull in progress and
+the turret's pod, where the rule's half-turn share is odd and a capsule draws an even count,
+built a segment over as the Order's are; read cap by cap since #1371, only the Verger's two
+are named.
+What the coarser rounds left standing off was reseated through the builders:
 the Cantor's forty-two hydrophone spines rooted on its dome (`shellSpines` `on`), its
 twenty-two photophores grown from shell and foot (`on`), its second ballast pipe stood on the
 collar (`standpipes` `on`, 4 m out along its bearing, its inboard side let up to 1.6 m into a
@@ -849,7 +854,10 @@ Commune paragraph), and the navy carries eighteen distinct counts a turn where i
 thirty-five, every ring from 4 m of radius up on sixteen a turn but the tables' and the
 part-turn arcs the measure reads a turn at a time. The Directorate's leaves eight of its
 1,589, every one a capsule meridian on the odd share (the Directorate paragraph), and the
-navy carries seventeen distinct counts a turn where it carried twenty-four.
+navy carries seventeen distinct counts a turn where it carried twenty-four. Since the
+measure reads a capsule cap by cap (#1371), the Order's pods read on the rule and the
+Directorate's eight capsule meridians are two, the Verger's tanks, whose caps of three
+are a step over a quarter-turn share of two.
 Outside the bands, before the panel pass: eight Consortium hulls (the five shared kinds, the Chorister
 and the Tender at 2.2–3.9 m — the Corvette's 2.3 was 2.2 once the facet pass thinned its
 drums — and the Beacon at 0.5) and five structures (the Vent Tap at 6.2 m, the Turret at

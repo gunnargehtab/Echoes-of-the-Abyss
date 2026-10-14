@@ -41,13 +41,13 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    `panels` tables and is advisory, not a gate (#919).
                    test/facets.test.mjs holds its reading to its rule, under
                    npm run test:hull-models. contacts.mjs lists every pair of
-                   parts that meet or sit within --near (1 mm, #1370) and every
-                   part under the model's y 0, testing
-                   only pairs whose boxes overlap, so a sweep is under a
-                   second. A contact is a question, mount or clip, and not a
-                   verdict, so it is advisory too. It keeps the sweep #947's
-                   reviews wrote by hand to find four clips no gate asks
-                   about (#953); test/contacts.test.mjs holds it.
+                   parts that meet or sit within --near (1 mm, #1370), both
+                   ways round and inside only a closed part (#1373), and every
+                   part under the model's y 0, testing only pairs whose boxes
+                   overlap, so a sweep is under a second. A contact is a
+                   question, mount or clip, so it is advisory too: #947's hand
+                   sweep for clips no gate asks about, kept (#953) and held by
+                   test/contacts.test.mjs.
 tools/hull-maps    The committed outputs of the approved models: build.mjs bakes
                    the sprite maps (Chromium), all 94 or the slugs named (#1055),
                    then outlines.mjs writes hullOutlines.generated.ts (no browser)

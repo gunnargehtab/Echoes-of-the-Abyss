@@ -83,9 +83,10 @@ const TAU = 2 * Math.PI;
  * segments are the arc's share of it, at least one. `keeps` reads a ring
  * back through the same call, so a part built here reads as on the rule;
  * before it did, a builder prorating by hand and a reader rounding a turn
- * could disagree on any odd count. A capsule's meridian is twice its cap
- * segments over π, so a rule whose half-turn share is odd is one a capsule
- * meets a segment over or under.
+ * could disagree on any odd count. A capsule's meridian is two caps of one
+ * count, each a quarter turn, so it is read as a cap over π/2: a half-turn
+ * share it could only meet when even, a quarter-turn share any capsule can
+ * meet (#1371).
  */
 export function facetsFor({ chordM, min, max, step = 1, offset = 0 }, radiusM, arc = TAU) {
   const x = (2 * Math.PI * radiusM) / chordM;
@@ -234,8 +235,10 @@ export function ringsOf(mesh) {
   if (!p) return [];
   // The kit's capsule is a plain buffer in r184's layout (kit.mjs `capsule`):
   // rows up from the bottom pole, `radialSegments + 1` a row. Its round rings
-  // are the rows; its meridian is the two caps' quarter turns, a half turn in
-  // all, and the straight side between them is no ring at all.
+  // are the rows; its meridian is the two caps, each a quarter turn of the
+  // same count, and the straight side between them is no ring at all. One cap
+  // is the ring: read as the half turn both make, it carries twice the cap
+  // and is even, so an odd half-turn share named every such capsule (#1371).
   if (p.capSegments !== undefined) {
     const n = p.radialSegments;
     const cap = p.capSegments;
@@ -255,7 +258,7 @@ export function ringsOf(mesh) {
         );
     return [
       ring('capsule round', n, TAU, round),
-      ring('capsule meridian', 2 * cap, Math.PI, meridian),
+      ring('capsule meridian', cap, Math.PI / 2, meridian),
     ].filter(Boolean);
   }
   switch (g.type) {

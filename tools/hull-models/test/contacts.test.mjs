@@ -8,7 +8,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { sceneParts } from '../glb.mjs';
+import { sceneParts, isClosed } from '../glb.mjs';
 import { contactsOf, underOf } from '../contacts.mjs';
 
 function scene(parts) {
@@ -103,4 +103,60 @@ test('every instance of a repeated name is tested, and named by its index', () =
     { name: 'leg', size: [1, 1, 1], at: [2.4, 0, 0] },
   ]);
   assert.deepEqual(names(contactsOf(parts)), ['hall · leg #2']);
+});
+
+function meshes(list) {
+  const root = new THREE.Group();
+  for (const { name, geometry, at } of list) {
+    const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial());
+    mesh.name = name;
+    mesh.position.set(...at);
+    root.add(mesh);
+  }
+  return sceneParts(root).parts;
+}
+
+test('a part under an open shell is not inside it, whichever side is named', () => {
+  // Ray parity is undefined for an open shell: a dome under the Cantor's
+  // curved plate read as meeting a plate 0.44 m above it (#1373).
+  const parts = meshes([
+    { name: 'shell', geometry: new THREE.CylinderGeometry(4, 4, 2, 12, 1, true), at: [0, 3, 0] },
+    {
+      name: 'cap',
+      geometry: new THREE.SphereGeometry(4, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2),
+      at: [0, 4.4, 0],
+    },
+    { name: 'core', geometry: new THREE.BoxGeometry(2, 5, 2), at: [0, 3, 0] },
+  ]);
+  const [shell, cap, core] = parts;
+  assert.equal(isClosed(shell), false);
+  assert.equal(isClosed(cap), false);
+  assert.equal(isClosed(core), true);
+  assert.deepEqual(contactsOf(parts, { part: /core/ }), []);
+  assert.deepEqual(contactsOf(parts, { part: /shell|cap/, withPart: /core/ }), []);
+});
+
+test('a part sunk whole in its partner meets it, whichever side is named', () => {
+  // `gapBetween` asks only whether the first part's vertices are inside the
+  // second, so a rivet buried in a hull met it one way round only (#1373).
+  const parts = scene([
+    { name: 'hull', size: [10, 4, 4], at: [0, 0, 0] },
+    { name: 'rivet', size: [0.5, 0.5, 0.5], at: [0, 1, 0] },
+  ]);
+  assert.deepEqual(names(contactsOf(parts, { part: /hull/ })), ['hull · rivet']);
+  assert.deepEqual(names(contactsOf(parts, { part: /rivet/ })), ['hull · rivet']);
+});
+
+test('a capsule is closed, and a part sunk whole in one meets it', () => {
+  // A pole's triangles collapse to a line, and counting their edges read
+  // every capsule open, so a box buried in a ballast tank met nothing.
+  const parts = meshes([
+    { name: 'tank', geometry: new THREE.CapsuleGeometry(2, 6, 8, 16), at: [0, 0, 0] },
+    // Off the axis: a ray up the axis runs down the pole's seams, where
+    // parity counts two faces at one crossing.
+    { name: 'core', geometry: new THREE.BoxGeometry(0.3, 0.3, 0.3), at: [0.37, 0.5, 0.23] },
+  ]);
+  assert.equal(isClosed(parts[0]), true);
+  assert.deepEqual(names(contactsOf(parts, { part: /tank/ })), ['core · tank']);
+  assert.deepEqual(names(contactsOf(parts, { part: /core/ })), ['core · tank']);
 });

@@ -20,7 +20,10 @@
  * name the model repeats is printed with its part index. The
  * test is glb.mjs `gapBetween`, the light audit's resting measure, run only
  * where two parts' boxes overlap, so a full sweep over a model's hundred and
- * fifty parts is seconds rather than minutes. Both tests allow `--near`
+ * fifty parts is seconds rather than minutes. It runs both ways round, and
+ * asks the inside test only of a closed partner: an open shell's parity is
+ * undefined, and a dome under the Cantor's curved plate read as meeting it
+ * from 0.44 m off (#1373). Both tests allow `--near`
  * metres (0.001 by default): kit.mjs `seat` lands a part a float32 rounding
  * off its plate, 4.8e-7 m on the light scout's spine, and an exact test read
  * every such mount as meeting nothing (#1370). `--near 0` asks for a true
@@ -81,7 +84,14 @@ export function contactsOf(parts, { part = null, withPart = null, near = 0.001 }
       const key = i < j ? `${i},${j}` : `${j},${i}`;
       if (seen.has(key)) continue;
       seen.add(key);
-      if (gapBetween(a, [b]) <= near) out.push([label(a), label(b)]);
+      // Both ways round: `gapBetween` asks only whether `a`'s vertices are
+      // inside `b`, so a part sunk whole in its partner met it one way only,
+      // and which way depended on which side `--part` named (#1373).
+      if (
+        gapBetween(a, [b], { closedOnly: true }) <= near ||
+        gapBetween(b, [a], { closedOnly: true }) <= near
+      )
+        out.push([label(a), label(b)]);
     }
   return out;
 }

@@ -482,6 +482,68 @@ test('the facet layout lays port as starboard turned over, not shifted', () => {
   assert.ok(worst <= 1, `a point and its mirror differ by ${worst} grey levels`);
 });
 
+test('the facet layout unrolls a round twin as its mirror, and a keel drum onto itself', () => {
+  // #1375: a stay rolled one way to starboard and the other way to port, as
+  // the Responsory's ring stays are, one plate round, and a drum on the keel
+  // at four plates. Before, the twins unrolled from bases the mirror turns
+  // over and the drum's mirror sent a plate to its neighbour.
+  const root = new THREE.Group();
+  const mat = steel();
+  const stay = (name, sgn) => {
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 4, 6), mat);
+    m.name = name;
+    m.position.set(3, 2, sgn * 9);
+    m.rotation.set(sgn * 0.3, 0, 0);
+    root.add(m);
+    return m;
+  };
+  const star = stay('stay_s', 1);
+  const port = stay('stay_p', -1);
+  const drum = new THREE.Mesh(new THREE.CylinderGeometry(2.9, 2.9, 20, 8), mat);
+  drum.rotation.z = Math.PI / 2;
+  root.add(drum);
+  const { round } = layoutTrim(root, drawTrimSheet(HADRON), HADRON);
+  assert.ok(round > 0, 'nothing unrolled');
+  // Every UV a corner takes, by where it stands, z turned over on request.
+  const corners = (mesh, flip, side) => {
+    mesh.updateMatrixWorld(true);
+    const g = mesh.geometry;
+    const out = new Map();
+    const v = new THREE.Vector3();
+    const n = new THREE.Vector3();
+    for (let i = 0; i < g.attributes.position.count; i++) {
+      n.fromBufferAttribute(g.attributes.normal, i).transformDirection(mesh.matrixWorld);
+      if (side && Math.abs(n.x) > 0.5) continue;
+      v.fromBufferAttribute(g.attributes.position, i).applyMatrix4(mesh.matrixWorld);
+      const key = [v.x, v.y, flip ? -v.z : v.z].map((c) => Math.round(c * 1000) + 0).join(',');
+      if (!out.has(key)) out.set(key, []);
+      out.get(key).push([g.attributes.uv.getX(i), g.attributes.uv.getY(i)]);
+    }
+    return out;
+  };
+  const s = corners(star, false);
+  const p = corners(port, true);
+  assert.equal(s.size, p.size, 'the twins do not stand on each other');
+  for (const [key, uvs] of s) {
+    const set = (list) => [...new Set(list.map((uv) => uv.map((c) => c.toFixed(4)).join('/')))];
+    const [own, twin] = [set(uvs).sort(), set(p.get(key) ?? []).sort()];
+    assert.deepEqual(own, twin, `the twins' corner at ${key}`);
+  }
+  // On the keel the mirror sends u to 0.5 − u, a plate to itself, mod a wrap.
+  const k = corners(drum, false, true);
+  const m = corners(drum, true, true);
+  const off = (x) => Math.abs(x - Math.round(x));
+  for (const [key, uvs] of k) {
+    const other = m.get(key);
+    assert.ok(other, `no mirror corner for ${key}`);
+    for (const [u, v] of uvs)
+      assert.ok(
+        other.some(([u2, v2]) => Math.abs(v - v2) < 1e-6 && off(u + u2 - 0.5) < 1e-5),
+        `the drum's corner at ${key}: u ${u} against ${other.map(([x]) => x)}`
+      );
+  }
+});
+
 /** The Commune's sheet as it ships, drawn once: sixteen samples a texel take seconds. */
 let grownSheet = null;
 const grown = () => (grownSheet ??= drawTrimSheet(PELAGIA));
