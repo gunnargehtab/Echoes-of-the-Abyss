@@ -48,7 +48,7 @@ const COURT = 1;
 /** The Board's audit pair — Risk & Actuarial, on a filed transit plan. */
 const AUDIT = 2;
 
-/** §8 — four harvesters' standard tide with weather in it. */
+/** §8 — more than four harvesters make at Standard: the quota is made loud. */
 const QUOTA = 3600;
 
 /**
