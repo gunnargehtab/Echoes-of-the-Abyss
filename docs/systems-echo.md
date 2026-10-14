@@ -248,7 +248,8 @@ sliding, and only a true return can ever be solved, which is this section's own 
 a new one. An order that
 resolves a phantom's handle is *taken*, not refused: the plan is replaced exactly as it would be
 for a true return, the hull is sent to the point the phantom was reported at, and it arrives to
-find water. Refusing at the order was the mistake — the refusal returned before the plan was
+find water. A chase after a true return the slot has since lost ends the same way, on arrival
+([systems-combat.md](systems-combat.md) §7), so the plan moves on behind both alike. Refusing at the order was the mistake — the refusal returned before the plan was
 touched, and a plan is published back to its owner, so a single click sorted the lies from the
 truth for free. A torpedo launched at a phantom is *spent*: the round leaves the
 tube, swims to the point the phantom was reported at, and finds water. Refusing it left a magazine

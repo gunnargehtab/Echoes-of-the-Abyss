@@ -1166,6 +1166,7 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
     // Recycled ids keep a dead gun's chase point, and the fingerprint mixes it.
     Weapon.chaseX[eid] = 0;
     Weapon.chaseY[eid] = 0;
+    Weapon.chaseHeard[eid] = 0;
   }
 
   if (stats.carriesTorpedoes && opts.weaponsCold !== true) {
@@ -1337,6 +1338,7 @@ export function spawnStructure(world: SimWorld, opts: SpawnStructureOptions): nu
     // Recycled ids keep a dead gun's chase point, and the fingerprint mixes it.
     Weapon.chaseX[eid] = 0;
     Weapon.chaseY[eid] = 0;
+    Weapon.chaseHeard[eid] = 0;
   }
 
   return eid;

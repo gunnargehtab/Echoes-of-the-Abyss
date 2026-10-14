@@ -54,6 +54,7 @@ import { spawnUnit } from '../src/sim/world.ts';
 import { phantomDepthM } from '../src/sim/systems/echoLayer.ts';
 import {
   ActivePing,
+  Health,
   Magazine,
   MoveOrder,
   Ordnance,
@@ -943,6 +944,52 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
       off <= MOVEMENT.ARRIVAL_EPSILON_M,
       `and only once the hull reached the anchor, ${off.toFixed(1)} m off`
     );
+  });
+
+  it('ends a chase after a lost true return on arrival, as a phantom leg ends', () => {
+    // Once the ping fades the slot no longer hears the Cruiser, so its leg
+    // chases a point nothing refreshes. That chase used to stand while the
+    // target lived: the plan sat behind the truth and moved on behind the
+    // lie (#1381, docs/systems-combat.md §7). Arrival now ends both.
+    const probe = (pick: 'phantom' | 'real') => {
+      const { match, pinger, enemy, phantoms, real } = ping(fieldsMap());
+      match.addPlayer(0, Faction.Bathyarch);
+      match.addPlayer(1, Faction.Pelagia);
+      const contact = pick === 'phantom' ? phantoms[0]! : real[0]!;
+      const shown = { x: contact.x, y: contact.y };
+      match.orderAttackContact(0, pinger, contact.id, true);
+      match.orderMove(0, pinger, 7500, 7500, true);
+      // The truth slips out of hearing; the lie has nothing to slip.
+      Position.x[enemy] = 500;
+      Position.y[enemy] = 7500;
+      // Ticks from the hull first standing inside the arrival radius to the
+      // plan moving on. The two hulls steer at two points, so the trips
+      // differ; this is the part that must not.
+      let arrived = -1;
+      let tick = 0;
+      for (; tick < 180 * SIM.TICK_HZ && match.world.orderQueues.has(pinger); tick++) {
+        const off = Math.hypot(Position.x[pinger]! - shown.x, Position.y[pinger]! - shown.y);
+        if (arrived < 0 && off <= MOVEMENT.ARRIVAL_EPSILON_M) arrived = tick;
+        match.update(STEP_MS);
+      }
+      return { match, pinger, enemy, arrived, wait: tick - arrived };
+    };
+
+    const truth = probe('real');
+    const { match, pinger, enemy } = truth;
+    assert.equal(
+      match.echo.firingSolution(0, enemy),
+      undefined,
+      'the premise: the slot no longer hears what it chased'
+    );
+    assert.ok(Health.hp[enemy]! > 0, 'the premise: and it lives');
+    assert.ok(!match.world.orderQueues.has(pinger), 'the move behind the truth begins');
+    assert.equal(Weapon.orderedTargetEid[pinger], 0, 'and the chase is over');
+    assert.ok(truth.arrived >= 0, 'only once the hull reached the point it was shown');
+
+    const lie = probe('phantom');
+    assert.ok(lie.arrived >= 0, 'the premise: the phantom leg reaches its point');
+    assert.equal(truth.wait, lie.wait, 'arrival reads the same: the plan moves on as promptly');
   });
 
   it('forgets a phantom handle with the transmission that minted it', () => {

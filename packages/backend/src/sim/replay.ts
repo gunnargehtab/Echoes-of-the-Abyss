@@ -46,6 +46,12 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * 30: a chase ends where the slot's picture ends (#1381). An ordered hull
+ * that reaches a point no pass has shown its target at since drops the order
+ * there, as a leg on a phantom does, and the fingerprint mixes whether the
+ * chase point is heard. A v29 file's lost chases replay as ended, and its
+ * checkpoints are hashes of a world without the flag.
+ *
  * 29: a laid decoy holds its quieter figure (#1314). `ordnanceSystem` rewrote
  * every piece of ordnance's SIG from its kind each tick, so a screen laid at
  * 45 sounded at a countermeasure's 70 from its first tick; it now keeps the
@@ -300,7 +306,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 29;
+export const REPLAY_FORMAT_VERSION = 30;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
