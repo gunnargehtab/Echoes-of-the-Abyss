@@ -398,11 +398,11 @@ export const panels = { hull: [2, 6], structure: [5.5, 16] };
  *
  * `round(radius, arc)` is a cylinder's, a lathe's, a torus's ring or tube;
  * `orb(radius, window)` a sphere's `[round, down]`; `capsule(radius)` the
- * kit capsule's `[cap, round]`. A capsule's meridian is twice its cap
- * segments over a half turn, so where the rule's half-turn share is odd —
- * ten a turn, five over π — no capsule draws it, and the cap takes the
- * segment over: the Sentinel Turret's pods, at 5.12 m, are the navy's one
- * case, and the measure names their meridians for it.
+ * kit capsule's `[cap, round]`. A capsule's two caps are one count over a
+ * half turn, so where the rule's half-turn share is odd — ten a turn, five
+ * over π — the cap takes the segment over: the Sentinel Turret's pods, at
+ * 5.12 m, are the navy's one case. The measure reads a cap over its own
+ * quarter turn (#1371), where ten's share is three, so they read on it.
  *
  * A section is not asked here. Four and six are shapes the Order cuts at
  * any size — the diamond and the hexagonal prism — and a builder that draws
@@ -1940,8 +1940,8 @@ export function railGun(parent, { steel, dim, vane, pip }, opts) {
  * of each mirroring the `_r` placement in x. At the turret's 5.12 m that is
  * ten round, where the file had seven, and three-step caps as the file had:
  * the rule's half-turn share there is five, which no capsule's two caps
- * draw, so the caps keep the step over and the measure names the two
- * meridians (`cut`).
+ * draw, so the caps keep the step over — the quarter-turn share the
+ * measure reads them by (#1371), so neither meridian is named (`cut`).
  */
 export function magazine(root, steel, { pods, pipe, cut: rule = METRE }) {
   pair((tag, sgn) =>

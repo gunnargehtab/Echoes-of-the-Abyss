@@ -410,8 +410,9 @@ export const panels = { hull: [1.5, 5], structure: [4, 13.5] };
  * torus as the kit's `torus` takes them, a count for the rest. `capsule` is
  * the Order's: the kit's capsule draws its meridian as two quarter turns of
  * one count, so where the rule's half-turn share is odd no capsule meets it
- * and the cap takes the segment over — the measure names those, and Block
- * 2c says how many. No section is asked, because the Commune has none.
+ * and the cap takes the segment over, which the measure reads on the rule
+ * wherever the quarter-turn share it reads a cap by agrees (#1371, Block
+ * 2c). No section is asked, because the Commune has none.
  */
 export function cut(m = 1, { press = 1 } = {}) {
   const round = (radius, arc) => facetsFor(facets, radius * m, arc);

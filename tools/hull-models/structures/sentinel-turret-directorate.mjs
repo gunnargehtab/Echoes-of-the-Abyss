@@ -85,10 +85,11 @@
  * 4 × 8 → 5 × 15, 5 × 15 and 5 × 11, the segments 6 → 15, 15 and 9, the feed
  * 6 → 7 with its flange 4 × 9 → 5 × 11, the pod capsule 3 × 7 → 4 × 15, the
  * antennae 4 → 5, the marks and the pip 5 × 4 → 5 × 3; the five-sided claws,
- * tip and counter-spike keep their section. `facets.mjs` names one of its 52
- * rings: the ammo pod's meridian, a capsule whose half-turn share of fifteen
- * is seven, odd, so the capsule takes the segment over: eight a half turn,
- * sixteen a turn (Block 2c, the capsule reading).
+ * tip and counter-spike keep their section. The ammo pod's meridian is a
+ * capsule whose half-turn share of fifteen is seven, odd, so the capsule
+ * takes the segment over: eight a half turn, sixteen a turn. `facets.mjs`
+ * named it, one of 52 rings, until #1371; read a cap over its quarter turn,
+ * where the share is four, it is on the rule (Block 2c).
  * Triangles 1,435 → 2,725. `DRAWN` is 7.9707 since the pass (7.9822 before:
  * the scutes' boxes moved with their counts). The two flank marks are grown
  * from their scutes now (`on`): read at the heights taken off the

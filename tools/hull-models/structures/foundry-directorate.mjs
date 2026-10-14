@@ -160,10 +160,11 @@
  * drum 9 → 15, the ballast tanks 3 × 8 → 4 × 15, the graft pipes 7 → 11 with
  * flanges 5 × 10 → 5 × 15, and the ten flank photophores 5 × 4 → 5 × 3 (one
  * 7 × 4); the spine spikes, the two mandibles and the five claws keep their
- * sections. `facets.mjs` names three of its 118 rings: the hull in progress
- * and the two ballast tanks, capsules whose half-turn share of fifteen is
- * seven, odd, so the capsule takes the segment over: eight a half turn,
- * sixteen a turn (Block 2c, the capsule reading). Triangles
+ * sections. The hull in progress and the two ballast tanks are capsules
+ * whose half-turn share of fifteen is seven, odd, so the capsule takes the
+ * segment over: eight a half turn, sixteen a turn. `facets.mjs` named those
+ * three of its 118 rings until #1371; it reads a cap over its quarter turn
+ * now, where the share is four, and names none (Block 2c). Triangles
  * 3,884 → 4,714; `DRAWN` 17.4421, where the file measured 17.5184. The ten
  * flank photophores are grown from their plates now (`on`, below).
  *

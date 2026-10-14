@@ -98,11 +98,12 @@
  * ballast capsules go to nine round for ten, and their caps are the two
  * rings the measure still names: the rule's half-turn share at 2.8 m is
  * five segments, a capsule draws its two caps to an even count, and the
- * pass builds a segment over (six, twelve a turn) — the Order's turret
- * pods are named the same way. 58 parts and 3,232 triangles become 58 and
- * 3,908. The plates meet as before but for the first and third, which no
- * longer graze each other through the second (1.2 m), and the rostrum,
- * rooted in the bow plate, no longer grazes the one behind it.
+ * pass builds a segment over (six, twelve a turn). Read a cap at a time
+ * since #1371, the share is two and the cap three, so they stay named.
+ * 58 parts and 3,232 triangles become 58 and 3,908. The plates meet as
+ * before but for the first and third, which no longer graze each other
+ * through the second (1.2 m), and the rostrum, rooted in the bow plate, no
+ * longer grazes the one behind it.
  *
  * PANELS (#919). The Directorate's band for a hull is 1–3 m on a side, the
  * median unlit part from above (facets.mjs `panelsOf`; Block 2c), and this

@@ -125,10 +125,11 @@
  * flanges 5 × 10 → 5 × 15, the ballast tanks 3 × 9 → 4 × 15, and the sixteen
  * photophores 6 × 5 → 7, 9 or 11 round by their radii over 4 or 5 down; the
  * crown spines, the rib spikes, the claws and the four mandibles keep their
- * sections. `facets.mjs` names two of its 96 rings, the two ballast tanks'
- * meridians — capsules whose half-turn share of fifteen is seven, odd, so
- * the capsule takes the segment over: eight a half turn, sixteen a turn
- * (Block 2c, the capsule reading). Triangles 3,634 → 4,539;
+ * sections. The two ballast tanks' meridians are capsules whose half-turn
+ * share of fifteen is seven, odd, so the capsule takes the segment over:
+ * eight a half turn, sixteen a turn. `facets.mjs` named those two of its 96
+ * rings until #1371; it reads a cap over its quarter turn now, where the
+ * share is four, and names none (Block 2c). Triangles 3,634 → 4,539;
  * the fit 17.7998, where the ten-sided tiers measured 17.8096. The rounder
  * tiers reach further out at the ribs' bearings: six rib plates that stood
  * 0.8–4.4 m off their tiers meet them now and sink 0.5–2.1 m in, and

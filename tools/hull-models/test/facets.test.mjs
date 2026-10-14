@@ -94,8 +94,27 @@ test('a lathe is its widest rim, a tube its facets, a capsule its rows and its c
   );
   assert.equal(round.n, 9);
   near(round.radiusM, 0.8);
-  assert.equal(meridian.n, 8);
+  // One cap is the meridian ring: four segments over a quarter turn.
+  assert.equal(meridian.n, 4);
+  near(meridian.arc, Math.PI / 2);
   assert.equal(meridian.turn, 16);
+});
+
+test('a capsule meets a rule whose half-turn share is odd (#1371)', () => {
+  // Fifteen a turn is seven and a half over π, which no capsule's two caps
+  // can draw; over a cap's quarter turn it is four, which one can.
+  const f = RULES.directorate;
+  const r = (15 * f.chordM) / TAU;
+  assert.equal(facetsFor(f, r), 15);
+  const caps = facetsFor(f, r, Math.PI / 2);
+  assert.equal(caps, 4);
+  const { 'capsule meridian': on } = byKind(ringsOf(meshOf(capsule(r, 3 * r, caps, 15, 1))));
+  assert.ok(keeps(f, on), `${on.n} over ${on.arc.toFixed(3)} at r ${on.radiusM.toFixed(3)}`);
+  // And a cap a segment over is still named.
+  const { 'capsule meridian': over } = byKind(
+    ringsOf(meshOf(capsule(r, 3 * r, caps + 1, 15, 1)))
+  );
+  assert.equal(keeps(f, over), false);
 });
 
 test('a box, a plate and a polyhedron carry no ring', () => {
