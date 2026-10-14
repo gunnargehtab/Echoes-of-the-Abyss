@@ -753,7 +753,7 @@ describe('mines', () => {
         // a contact handle the prey has not been given: what is under test is
         // the state `combatSystem` reads, not the path that sets it — the
         // target and the point it is chased to (#1247), here where it lies.
-        orderTarget(prey, quarry, 11000, 6000);
+        orderTarget(prey, quarry, 11000, 6000, true);
       }
       const mine = match.layMine(1, prey);
       assert.notEqual(mine, 0, 'the drop should be accepted');

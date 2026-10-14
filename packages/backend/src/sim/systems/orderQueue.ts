@@ -125,7 +125,7 @@ function begin(world: SimWorld, eid: number, order: QueuedOrder): void {
         // leg went after it, so the queue sorted the lies from the truth
         // (#1264, docs/systems-echo.md §3). It begins as the unqueued order
         // does: a move to where the contact was reported, and it finds water.
-        orderTarget(eid, 0, order.x, order.y);
+        orderTarget(eid, 0, order.x, order.y, false);
         MoveOrder.x[eid] = order.x;
         MoveOrder.y[eid] = order.y;
         MoveOrder.active[eid] = 1;
@@ -140,8 +140,10 @@ function begin(world: SimWorld, eid: number, order: QueuedOrder): void {
         hasComponent(world, Position, order.target)
       ) {
         // Chased from the anchor, the point the slot was shown when the order
-        // was queued, until a pass shows it again (#1247).
-        orderTarget(eid, order.target, order.x, order.y);
+        // was queued, until a pass shows it again (#1247). Unheard until then:
+        // the anchor is an old fix, and a leg that reaches it with nothing
+        // newer ends there, as a phantom's does (#1381).
+        orderTarget(eid, order.target, order.x, order.y, false);
       }
       break;
     case 'harvest':

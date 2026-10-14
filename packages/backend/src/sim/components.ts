@@ -429,6 +429,13 @@ export const Weapon = defineComponent({
    */
   chaseX: Types.f32,
   chaseY: Types.f32,
+  /**
+   * 1 while the chase point is a fix the slot holds now: set by an order
+   * given on one, and by each pass that shows the target again. 0 once a
+   * pass does not, or for a queued leg's anchor until one does. A chase to
+   * a point at 0 ends on arrival, as a phantom's leg does (#1381).
+   */
+  chaseHeard: Types.ui8,
 });
 
 /**

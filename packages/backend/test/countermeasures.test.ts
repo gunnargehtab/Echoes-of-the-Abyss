@@ -140,7 +140,7 @@ describe('countermeasures', () => {
     // contact handle the defender has not been given: what is under test is the
     // state `combatSystem` reads, not the path that sets it — the target and
     // the point it is chased to (#1247), here where it lies.
-    orderTarget(prey, launcher, Position.x[launcher]!, Position.y[launcher]!);
+    orderTarget(prey, launcher, Position.x[launcher]!, Position.y[launcher]!, true);
 
     const torpedo = launchTorpedo(match.world, launcher, 5500, 6000);
     advance(match, 1);
@@ -326,7 +326,7 @@ describe('countermeasures', () => {
       // contact handle the defender has not been given: what is under test is
       // the state `combatSystem` reads, not the path that sets it — the target
       // and the point it is chased to (#1247), here where it lies.
-      if (ordered) orderTarget(defender, quarry, Position.x[quarry]!, Position.y[quarry]!);
+      if (ordered) orderTarget(defender, quarry, Position.x[quarry]!, Position.y[quarry]!, true);
 
       launchTorpedo(match.world, launcher, 4000, 6000);
       advance(match, 10);

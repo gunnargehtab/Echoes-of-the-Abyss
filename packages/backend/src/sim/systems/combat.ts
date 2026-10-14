@@ -519,6 +519,23 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
       // once the slot stops hearing it (`orderTarget`, chase.ts). Chasing
       // `Position` steered a hull at a fix its slot never had.
       if (ordered && isMobile && !holding) {
+        // Arrived at a point no pass has shown the target at since: the chase
+        // ends here and finds water, as a phantom's leg does, and the plan
+        // moves on (#1381). Ahead of `movementSystem`, by its own test, so a
+        // leg on a lost truth ends on the very tick one on a lie would; an
+        // order that stood until the target died held the plan behind the
+        // truth and sorted the two for the price of a trip.
+        if (
+          Weapon.chaseHeard[eid] === 0 &&
+          Math.hypot(
+            Weapon.chaseX[eid]! - Position.x[eid]!,
+            Weapon.chaseY[eid]! - Position.y[eid]!
+          ) <= MOVEMENT.ARRIVAL_EPSILON_M
+        ) {
+          Weapon.orderedTargetEid[eid] = 0;
+          MoveOrder.active[eid] = 0;
+          continue;
+        }
         MoveOrder.x[eid] = Weapon.chaseX[eid]!;
         MoveOrder.y[eid] = Weapon.chaseY[eid]!;
         MoveOrder.active[eid] = 1;

@@ -11,12 +11,21 @@
  * slot is shown the target again (`Match`, after each Echo pass).
  *
  * Set together, and only here, so no writer can give a hull a target without
- * a point to chase it to.
+ * a point to chase it to. `heard` says whether that point is a fix the slot
+ * holds now, or one nothing has refreshed since: a chase to the second ends
+ * on arrival (`combatSystem`, #1381).
  */
 import { Weapon } from '../components.ts';
 
-export function orderTarget(eid: number, target: number, x: number, y: number): void {
+export function orderTarget(
+  eid: number,
+  target: number,
+  x: number,
+  y: number,
+  heard: boolean
+): void {
   Weapon.orderedTargetEid[eid] = target;
   Weapon.chaseX[eid] = x;
   Weapon.chaseY[eid] = y;
+  Weapon.chaseHeard[eid] = heard ? 1 : 0;
 }

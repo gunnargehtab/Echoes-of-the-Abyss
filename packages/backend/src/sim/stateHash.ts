@@ -248,6 +248,8 @@ export function hashWorld(world: SimWorld): number {
       // Where an ordered gun will chase next (#1247): state the next tick reads.
       h = mixFloat(h, Weapon.chaseX[eid]!);
       h = mixFloat(h, Weapon.chaseY[eid]!);
+      // Whether that point ends the chase on arrival (#1381).
+      h = mixU32(h, Weapon.chaseHeard[eid]!);
     }
     if (hasComponent(world, DepthOrder, eid)) {
       h = mixU32(h, DepthOrder.active[eid]!);

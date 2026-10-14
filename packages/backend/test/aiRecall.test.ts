@@ -246,7 +246,7 @@ describe('recalling the massing army (#946)', () => {
     });
     match.setEngineOff(0, quarry, true);
     // The target and the point it is chased to (#1247), here where it lies.
-    orderTarget(chaser, quarry, Position.x[quarry]!, Position.y[quarry]!);
+    orderTarget(chaser, quarry, Position.x[quarry]!, Position.y[quarry]!, true);
 
     for (let i = 0; i < SIM.TICK_HZ * 3; i++) {
       const own = match.update(STEP_MS)?.get(1);

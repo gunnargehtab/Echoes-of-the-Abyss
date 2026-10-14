@@ -458,7 +458,7 @@ describe('the hold — a hull aboard is nobody’s target (#1318)', () => {
     const hunter = enemy(match, UnitKind.Corvette, 7600, 6400);
     // The order as the order path leaves it (#1247): the target, and the
     // point its slot was shown.
-    orderTarget(hunter, corvette, 6060, 6000);
+    orderTarget(hunter, corvette, 6060, 6000, true);
     load(match, freighter, [corvette]);
     assert.equal(Weapon.orderedTargetEid[hunter], 0, 'the gun still holds a hull in a hold');
   });
@@ -485,7 +485,7 @@ describe('the hold — a hull aboard is nobody’s target (#1318)', () => {
     const { freighter, corvette } = prey(match);
     Health.hp[freighter] = 1e7; // the hold has to survive the craft to open
     const gantry = enemy(match, UnitKind.Gantry, 6900, 6000);
-    orderTarget(gantry, corvette, Position.x[gantry]!, Position.y[gantry]!);
+    orderTarget(gantry, corvette, Position.x[gantry]!, Position.y[gantry]!, true);
     enqueue(match.world, gantry, { kind: 'move', x: 9000, y: 9000 });
     load(match, freighter, [corvette]);
     advance(match, 0.5);
@@ -518,7 +518,7 @@ describe('the hold — a hull aboard is nobody’s target (#1318)', () => {
     const { freighter, corvette } = prey(match);
     const hunter = enemy(match, UnitKind.Corvette, 7600, 6400);
     // Chased to where the hull already is, so the order alone keeps it busy.
-    orderTarget(hunter, corvette, Position.x[hunter]!, Position.y[hunter]!);
+    orderTarget(hunter, corvette, Position.x[hunter]!, Position.y[hunter]!, true);
     enqueue(match.world, hunter, { kind: 'move', x: 9000, y: 9000 });
     load(match, freighter, [corvette]);
     advance(match, 0.5);

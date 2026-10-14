@@ -284,7 +284,13 @@ export function flightSystem(world: SimWorld, destroyed: number[]): void {
       // Chased to the point the carrier's slot was shown, as the carrier
       // would chase it (#1247).
       if (hasComponent(world, Weapon, eid)) {
-        orderTarget(eid, ordered, Weapon.chaseX[carrier]!, Weapon.chaseY[carrier]!);
+        orderTarget(
+          eid,
+          ordered,
+          Weapon.chaseX[carrier]!,
+          Weapon.chaseY[carrier]!,
+          Weapon.chaseHeard[carrier] === 1
+        );
       }
       continue;
     }

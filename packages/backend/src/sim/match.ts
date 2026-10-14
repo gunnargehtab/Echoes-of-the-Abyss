@@ -1639,8 +1639,8 @@ export class Match {
     }
     clearQueue(this.world, eid);
     this.world.paths.delete(eid);
-    if (phantom !== undefined) orderTarget(eid, 0, phantom.x, phantom.y);
-    else orderTarget(eid, target!, shown!.x, shown!.y);
+    if (phantom !== undefined) orderTarget(eid, 0, phantom.x, phantom.y, false);
+    else orderTarget(eid, target!, shown!.x, shown!.y, true);
     cancelEmbark(this.world, eid);
     if (phantom !== undefined && hasComponent(this.world, MoveOrder, eid)) {
       // A real ordered target is chased: combat.ts moves the hull to where its
@@ -3172,10 +3172,10 @@ export class Match {
    *
    * At Bearing or better only: a Tier-1 report is the listener's own position
    * and says nothing about the target. A target the slot no longer resolves
-   * keeps the last point it was shown at, so the hull goes there and looks;
-   * unlike a phantom's, the order stands until the target dies, boards a
-   * transport (#1318) or is heard again. Once a pass, beside the pass, so the
-   * chase is as fresh as the picture and no fresher.
+   * keeps the last point it was shown at, marked unheard, so the hull goes
+   * there and looks, and the order ends on arrival as a phantom's does
+   * (#1381) unless a pass hears the target first. Once a pass, beside the
+   * pass, so the chase is as fresh as the picture and no fresher.
    */
   private refreshChases(): void {
     const guns = this.armedOwners(this.world);
@@ -3184,9 +3184,13 @@ export class Match {
       const target = Weapon.orderedTargetEid[eid]!;
       if (target === 0) continue;
       const shown = this.echo.firingSolution(Owner.slot[eid]!, target);
-      if (shown === undefined || shown.tier < ResolutionTier.Bearing) continue;
+      if (shown === undefined || shown.tier < ResolutionTier.Bearing) {
+        Weapon.chaseHeard[eid] = 0;
+        continue;
+      }
       Weapon.chaseX[eid] = shown.x;
       Weapon.chaseY[eid] = shown.y;
+      Weapon.chaseHeard[eid] = 1;
     }
   }
 

@@ -405,7 +405,13 @@ an order sends a hull *after* a contact, and a hull can only be sent where its s
 Below Bearing there is nowhere to send it, and the order is refused. At Tier 2 the hull chases
 the ghost, at Tier 3 and above the truth, and once the slot stops hearing the target it makes
 for the last point it was shown. It never chases the target itself: that would hand the player
-a live fix their ears never made.
+a live fix their ears never made. **A chase ends where the slot's picture ends**: a hull that
+reaches a point it has not been shown the target at since finds water, the order is over and
+its plan moves on, queued or not — as a hull sent at a phantom does
+([systems-echo.md](systems-echo.md) §3). An order that stood there until the target died
+held the plan behind a lost true return and moved it on behind a lie, so where the plan went
+next sorted the two for the price of a trip (#1381). A pass that hears the target again
+before the hull arrives moves the point, and the chase goes on.
 
 ---
 
