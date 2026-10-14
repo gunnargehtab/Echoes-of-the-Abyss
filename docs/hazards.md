@@ -34,7 +34,10 @@ The telegraph is public, so no countdown on it moves with a hull. Two of the lin
 - **Hadron's prediction is Hadron's own.** A Hadron hull or structure within three radii of a vent sees that vent turn to warning 6 s before it does for anyone else, its ring closing over 31 s rather than 25 s. The foresight is in its telegraph alone: the vent erupts on the same tick for every player.
 - **A vent within 6 s of stirring cannot be held back.** Stabilising accrues only while more than that is left of the dormancy, so a Consortium hull arriving late cannot move a vent a Hadron listener has already called.
 
-What this does not close: the dormancy is still 55 s by nature, and the start of it is public. A held vent therefore still stirs late, and a player keeping time can read a hold once the nominal dormancy has run out, though no longer the moment the hull arrives. Kelp is the other open case: a cutter opening a field turns its public phase, and a blast sets its public suppression clock (§4).
+What this keeps, on purpose (#1396). Two public telegraphs still move with a hull, and both stay:
+
+- **A held vent stirs late.** The dormancy is 55 s by nature and its start is public, so a vent still asleep past that tells a player keeping time that a Consortium hull is holding it. The tell is slow and coarse: it arrives no sooner than 55 s into the dormancy (49 s for a Hadron listener, whose ring expects warning 6 s early), never says which hull or when it came, and a hold buys at most 30 s. It is also no secret worth hiding: the vent is a public site, and holding one means standing a hull on it. Hiding the start of dormancy would cost every player the plume's end, and a seeded spread of dormancies is a mechanic change, not a telegraph fix.
+- **Kelp's public phase turns under a cutter and a blast** (§4). A canopy opens after 6 s of a Bathyarch hull running its cutters, which add 40 SIG to that hull; a blast opens one for 12 s; and a bed cut bare stays open until it regrows (§4). Cutting and blasting are not quiet, so the turned phase tells a distant player what a near one hears. What it tells is where the canopy is open, which is the counter-play §4 builds the field around.
 
 ## 2. Toxic Brine Clouds
 
