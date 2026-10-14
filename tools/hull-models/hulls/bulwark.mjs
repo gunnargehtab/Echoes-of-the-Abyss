@@ -70,8 +70,9 @@
  * tier's at x 52, where the barrels overhead (y 16.2–19.8, z ±2.7..6.3) are
  * the only thing over it; the after patch on the second tier's after deck
  * at x −56..−42, z ±9, abaft the third tier's after face at x −40, in the
- * alley between the stack pairs, whose drums stand at z 9.2–14.8 and feet
- * at y 14, and clear of the two risers at x −40.9..−39.1. It is 18 m wide
+ * alley between the stack pairs, whose drums stand at z 9.2–14.8 and bands
+ * reach z 9.0–15.0, feet at y 14, and clear of the two risers at
+ * x −40.9..−39.1. It is 18 m wide
  * where it was 26, since 26 straddled the stacks; its length is the file's.
  * The forward patch's new station is the stencil's (`stencil_bow`, x 53–63
  * at y 9.05–9.35), so the stencil rises 0.3 m to lie on the patch, its
