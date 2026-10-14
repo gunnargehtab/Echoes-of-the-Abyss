@@ -724,11 +724,11 @@ not set it, and their layouts and files are byte for byte what they were. The ta
 violet stone and a dark seam are not panelling, so both are laid out and left bare, and the
 lamps are never tagged. The Responsory is the first hull, the owner's choice: its 48 parts lay
 **584** faces flat and **572** unrolled — 856 on the one-strake band, 120 on two, 40 on four,
-140 on eight — split **138** vertices and tag two materials, `shadow_indigo` and `pale_alloy`.
+140 on eight — split **138** vertices (140 since #1375) and tag two materials, `shadow_indigo` and `pale_alloy`.
 `responsory-hadron.glb` goes from **104,480 to 110,156 bytes** (zlib's default gzip 13,098 to
 15,676, as `tools/render-stack/audit.mjs` measures) with
 its 48 parts, 1,156 triangles and outline unchanged; no triangle moved, so the sprite rebake
-changes the albedo alone (`responsory-albedo.png`, 7,191 to 19,047 bytes, the wings' butts drawn
+changes the albedo alone (`responsory-albedo.png`, 7,191 to 19,047 bytes, 21,963 since #1375, the wings' butts drawn
 at 4 px/m) and the height and emissive maps are byte for byte what they were, the glow on its
 gate-3 target of 3.10. The sheet is
 **1,653 bytes**, flat fields compressing where plate and chitin do not, at a mean linear
