@@ -464,6 +464,20 @@ describe('separation', () => {
       assert.ok(d >= clear * 0.85 && d <= clear + 15, `at the edge, ${d.toFixed(1)}m out`);
     });
 
+    it('goes round to open water beyond when its course runs dead through the centre (#1413)', () => {
+      // A point beyond the footprint is never rewritten, so `nearestEdge`'s
+      // tie-break never reached it: on the axis the push out cancelled the
+      // whole course, and the hull sat on the near edge at 120 s.
+      const { match, hull } = setup(38);
+      const point = { x: SITE.x + 1200, y: SITE.y };
+      match.orderMove(0, hull, point.x, point.y);
+      advance(match, 60);
+
+      assert.equal(MoveOrder.active[hull], 0, 'the move ended');
+      const left = Math.hypot(Position.x[hull]! - point.x, Position.y[hull]! - point.y);
+      assert.ok(left < 10, `the hull arrived, ${left.toFixed(1)}m from its point`);
+    });
+
     it('begins the leg queued behind it', () => {
       const { match, hull } = setup(32);
       const next = { x: SITE.x + 1200, y: SITE.y + 200 };

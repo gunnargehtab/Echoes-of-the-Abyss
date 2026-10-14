@@ -165,7 +165,10 @@ describe('routing around ground', () => {
     });
     match.addPlayer(0, Faction.Bathyarch);
     advance(match, 0.5);
-    const hull = hullAt(match, 1000, 1000, 900);
+    // Past slot 0's Bastion at (1200, 1200), which a start at (1000, 1000)
+    // put dead on the course: the hull sat pinned on its edge (#1413), and
+    // this test passed on the pinned hull being on the diagonal.
+    const hull = hullAt(match, 2000, 2000, 900);
     match.orderMove(0, hull, 6000, 6000);
     advance(match, 2);
     const plan = match.world.paths.get(hull);

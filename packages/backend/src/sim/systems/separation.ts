@@ -276,8 +276,13 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
       // two failures: a hull pinned against a wall is reachable, and a hull
       // pushed off the map is not. Sliding along the boundary instead is real
       // contact resolution, which is terrain passability's problem (#150).
+      // Read before `reachFootprintEdge`, which moves a point inside the
+      // footprint just outside it: only a point that was beyond it to begin
+      // with is one the hull has to get round to.
+      const beyond = orderBeyond(a, sx, sy, minD);
       settle(terrain, a, sx + (dx / d) * minD, sy + (dy / d) * minD);
       reachFootprintEdge(world, a, sx, sy, minD);
+      if (beyond) slideOffAxis(world, a, sx, sy);
     }
     if (wedged) endIfWedged(world, a);
   }
@@ -456,4 +461,54 @@ function nearestEdge(
   edge.x = sx + wx * reach;
   edge.y = sy + wy * reach;
   return true;
+}
+
+/** Whether `eid` is under way to a point outside the footprint at (sx, sy). */
+function orderBeyond(eid: number, sx: number, sy: number, minD: number): boolean {
+  if (!MoveOrder.active[eid]) return false;
+  const px = MoveOrder.x[eid]! - sx;
+  const py = MoveOrder.y[eid]! - sy;
+  return px * px + py * py >= minD * minD;
+}
+
+/**
+ * A hull steering for open water beyond a footprint, its course within
+ * `SEPARATION.OPPOSITE_TIE_RAD` of dead through the centre, is slid along the
+ * edge as if its course were that far off (#1413).
+ *
+ * Off the axis the push out leaves the part of the course along the edge, and
+ * the hull slides round on it; the further round, the larger that part grows.
+ * Dead on the axis there is no such part: the push cancels the whole course,
+ * and the hull sat on the near edge with its move active, holding every leg
+ * queued behind it, as #1214's point inside a footprint did. `nearestEdge`
+ * breaks that tie by turning the point, but a point beyond the footprint is
+ * one the hull can reach and is never rewritten, so the tie is broken here,
+ * on the slide itself: further to the side the course already leans, and
+ * counter-clockwise when it leans neither.
+ *
+ * Only for a point beyond the footprint. A harvester's run to its depot
+ * points at the centre every tick; nudged, it would circle the depot for ever
+ * instead of waiting at its edge.
+ */
+function slideOffAxis(world: SimWorld, eid: number, sx: number, sy: number): void {
+  const vx = Velocity.x[eid]!;
+  const vy = Velocity.y[eid]!;
+  const speed = Math.hypot(vx, vy);
+  if (speed === 0) return;
+  const rx = Position.x[eid]! - sx;
+  const ry = Position.y[eid]! - sy;
+  const r = Math.hypot(rx, ry);
+  if (r === 0) return;
+
+  // The angle between the outward normal and the course; dead in is pi.
+  const cross = rx * vy - ry * vx;
+  const off = Math.PI - Math.abs(Math.atan2(cross, rx * vx + ry * vy));
+  if (off >= SEPARATION.OPPOSITE_TIE_RAD) return;
+
+  // The slide the course would have left at the tie angle, less what it left.
+  const arc = speed * world.dt * (Math.sin(SEPARATION.OPPOSITE_TIE_RAD) - Math.sin(off));
+  const turn = ((cross < 0 ? -1 : 1) * arc) / r;
+  const c = Math.cos(turn);
+  const s = Math.sin(turn);
+  settle(world.terrain, eid, sx + rx * c - ry * s, sy + rx * s + ry * c);
 }

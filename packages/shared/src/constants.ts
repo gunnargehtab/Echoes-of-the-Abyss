@@ -2347,7 +2347,9 @@ export const SEPARATION = {
    * closer than this to dead opposite is turned until it is this far off,
    * further to the side it already leans and counter-clockwise on an exact
    * tie, so the hull has a side to slide to. An arc along the edge of 17 m for
-   * a Light Scout at a Refinery, and 30 m for a Bulwark at a Bastion.
+   * a Light Scout at a Refinery, and 30 m for a Bulwark at a Bastion. A point
+   * beyond the footprint is not moved; a course this close to dead through the
+   * centre is slid along the edge as if it were this far off instead (#1413).
    */
   OPPOSITE_TIE_RAD: 0.1,
 } as const;
