@@ -214,8 +214,8 @@ Sounding Spire, the Cantus, and the Sower. The Order's is a 400-nodule Foundry h
 opens the deep whenever it likes. The Commune's was a Slipway hull at 80 crystal behind a
 yard at 120, so the navy whose entire doctrine is *changing* deep water needed the crystal to
 buy the key to the crystal. The Consortium has no source at all: its route is the Pressure
-Refit ([systems-progression.md](systems-progression.md) §2), which is designed and not built
-and would be produced on that same Slipway line. Two of four navies could not reach the
+Refit ([systems-progression.md](systems-progression.md) §2), which was then designed and not
+built, and is now bought on that same Slipway line. Two of four navies could not reach the
 Abyssal band by any implemented means, and none of them ever built a second yard — measured
 across every map (#491).
 
