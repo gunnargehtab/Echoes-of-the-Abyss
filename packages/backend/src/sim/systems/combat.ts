@@ -534,6 +534,7 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
         ) {
           Weapon.orderedTargetEid[eid] = 0;
           MoveOrder.active[eid] = 0;
+          world.paths.delete(eid);
           continue;
         }
         MoveOrder.x[eid] = Weapon.chaseX[eid]!;

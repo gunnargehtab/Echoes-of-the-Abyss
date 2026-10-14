@@ -954,7 +954,8 @@ Below half the doctrine's number it keeps waiting regardless, because that is no
 going in, it is a hull being posted.
 
 **And while it waits, it calls back what it sent chasing.** An attack order pursues its target
-until the target dies, however far it runs, so the reach the commander checks before giving
+for as long as its slot hears it, however far it runs, and ends only where the picture does
+([systems-combat.md](systems-combat.md) §7), so the reach the commander checks before giving
 one holds only at the moment it is given. The waiting used to walk the army to the rally point
 only while none of it was there, so once the first hull arrived the rest were left on whatever
 order they last had. Measured over six seeds of twenty minutes, all four navies: of 5,027

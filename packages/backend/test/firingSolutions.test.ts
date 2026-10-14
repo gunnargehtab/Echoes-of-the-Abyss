@@ -26,6 +26,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   BEARING_BLUR_FRACTION,
+  MOVEMENT,
   Faction,
   ResolutionTier,
   SIM,
@@ -487,6 +488,25 @@ describe('an attack order, held to the same table — #1247', () => {
       Math.hypot(MoveOrder.x[hunter]! - last.x, MoveOrder.y[hunter]! - last.y) < 1,
       'the hunter makes for where it was last shown the Cruiser, not for where it went'
     );
+  });
+
+  it('ends an unqueued chase on arrival at the last point it was shown', () => {
+    // A lost true return's order used to stand there until the target died,
+    // where one on a phantom ended on arrival (#1381). Unqueued, the order
+    // starts heard, so this is the pass clearing the flag that ends it.
+    const { match, hunter, prey, handle } = hunt(ResolutionTier.Bearing);
+    match.orderAttackContact(0, hunter, handle);
+    advance(match, 1);
+    const last = match.echo.firingSolution(0, prey)!;
+    vanish(match, prey);
+    for (let i = 0; i < 120 * SIM.TICK_HZ && Weapon.orderedTargetEid[hunter] !== 0; i++) {
+      match.update(STEP_MS);
+    }
+    assert.ok(Health.hp[prey]! > 0, 'the premise: the Cruiser lives');
+    assert.equal(Weapon.orderedTargetEid[hunter], 0, 'the chase is over');
+    assert.equal(MoveOrder.active[hunter], 0, 'and the hull stands where it looked');
+    const off = Math.hypot(Position.x[hunter]! - last.x, Position.y[hunter]! - last.y);
+    assert.ok(off <= MOVEMENT.ARRIVAL_EPSILON_M, `at the point, ${off.toFixed(1)} m off`);
   });
 
   it('chases a queued attack from the point it was queued at, once its leg begins', () => {
