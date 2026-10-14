@@ -478,6 +478,28 @@ describe('separation', () => {
       assert.ok(left < 10, `the hull arrived, ${left.toFixed(1)}m from its point`);
     });
 
+    for (const lean of [5, -5]) {
+      it(`rounds on the side a course ${lean} m off the axis leans to (#1413)`, () => {
+        // Inside the tie but off it: the slide takes the hull's own side, so
+        // a hull a few metres north goes round the north.
+        const { match, hull, refinery } = setup(39);
+        Position.y[hull] = SITE.y + lean;
+        const point = { x: SITE.x + 1200, y: SITE.y + lean };
+        match.orderMove(0, hull, point.x, point.y);
+        let passed = false;
+        for (let tick = 0; tick < 60 * SIM.TICK_HZ && MoveOrder.active[hull]; tick++) {
+          match.update(STEP_MS);
+          if (Math.abs(Position.x[hull]! - Position.x[refinery]!) < 10) {
+            passed = true;
+            assert.equal(Math.sign(Position.y[hull]! - SITE.y), Math.sign(lean), 'its own side');
+          }
+        }
+        assert.ok(passed, 'it went round');
+        const left = Math.hypot(Position.x[hull]! - point.x, Position.y[hull]! - point.y);
+        assert.ok(left < 10, `the hull arrived, ${left.toFixed(1)}m from its point`);
+      });
+    }
+
     it('begins the leg queued behind it', () => {
       const { match, hull } = setup(32);
       const next = { x: SITE.x + 1200, y: SITE.y + 200 };
