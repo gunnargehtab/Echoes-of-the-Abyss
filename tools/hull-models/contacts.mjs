@@ -16,7 +16,8 @@
  * sweep runs again after every one; this is the sweep, kept.
  *
  * `--part <re>` limits the report to pairs with a matching part on one side,
- * and `--with <re>` those parts' partners; both match the node's name. The
+ * and `--with <re>` those parts' partners; both match the node's name, and a
+ * name the model repeats is printed with its part index. The
  * test is glb.mjs `gapBetween`, the light audit's resting measure, run only
  * where two parts' boxes overlap, so a full sweep over a model's hundred and
  * fifty parts is seconds rather than minutes. It runs both ways round, and
@@ -46,12 +47,18 @@ const here = dirname(fileURLToPath(import.meta.url));
 const MODELS = resolve(here, '../../docs/concept-art/models');
 
 /**
- * Every pair of `parts` that meets, `[a, b]` by name, where `a` matches
+ * Every pair of `parts` that meets, `[a, b]` by label, where `a` matches
  * `part` and `b` matches `withPart` (both regular expressions, or null for
- * any). A pair is listed once. Two parts meet when they stand within `near`
- * metres of each other, so a part seated flush is listed as well as one
- * passing through. A part that does not occlude — a haze, a sheath — meets
- * nothing, as the light audit reads it.
+ * any). A pair of parts is listed once. Two parts meet when they stand within
+ * `near` metres of each other, so a part seated flush is listed as well as
+ * one passing through. A part that does not occlude — a haze, a sheath —
+ * meets nothing, as the light audit reads it.
+ *
+ * A label is the part's name, and a name the model repeats carries the
+ * part's index in `parts` too, `gantry_leg_s #27`: pairs were once keyed by
+ * name, so of each pair of names only the first pair of instances whose
+ * boxes overlapped was tested, and the Hadron Slipway's hall never met the
+ * gantry leg it stands on (#1374).
  */
 export function contactsOf(parts, { part = null, withPart = null, near = 0.001 } = {}) {
   const solid = parts.filter((p) => occludes(p.finish));
@@ -64,12 +71,17 @@ export function contactsOf(parts, { part = null, withPart = null, near = 0.001 }
   };
   const left = part ? solid.filter((p) => part.test(p.name)) : solid;
   const right = withPart ? solid.filter((p) => withPart.test(p.name)) : solid;
+  const index = new Map(parts.map((p, i) => [p, i]));
+  const count = new Map();
+  for (const p of parts) count.set(p.name, (count.get(p.name) ?? 0) + 1);
+  const label = (p) => (count.get(p.name) > 1 ? `${p.name} #${index.get(p)}` : p.name);
   const seen = new Set();
   const out = [];
   for (const a of left)
     for (const b of right) {
       if (a === b || !overlap(a, b)) continue;
-      const key = [a.name, b.name].sort().join('\u0000');
+      const [i, j] = [index.get(a), index.get(b)];
+      const key = i < j ? `${i},${j}` : `${j},${i}`;
       if (seen.has(key)) continue;
       seen.add(key);
       // Both ways round: `gapBetween` asks only whether `a`'s vertices are
@@ -79,7 +91,7 @@ export function contactsOf(parts, { part = null, withPart = null, near = 0.001 }
         gapBetween(a, [b], { closedOnly: true }) <= near ||
         gapBetween(b, [a], { closedOnly: true }) <= near
       )
-        out.push([a.name, b.name]);
+        out.push([label(a), label(b)]);
     }
   return out;
 }
