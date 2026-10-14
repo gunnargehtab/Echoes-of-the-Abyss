@@ -5266,8 +5266,9 @@ export class AiCommander implements AiPlayer {
     //
     // Every hull that is not there yet, rather than the army while none of it
     // is — the massing branch's gap (#946), in the push (#950). An `attack`
-    // from the branches above chases until its target dies, so once the front
-    // stood on the objective a chaser was never told again. It stands there
+    // from the branches above chases for as long as the slot hears its target
+    // (docs/systems-combat.md §7), so once the front stood on the objective a
+    // chaser was never told again. It stands there
     // rarely: within PUSH_ENGAGE_M of what it walked at, the in-reach branch
     // usually has the army first. It gets here when that contact has gone
     // quiet, since `remembered` outlives it by MEMORY_S — on the four-faction
