@@ -260,18 +260,18 @@ export const ink = {
  * and without it the port wing seams' joints landed at other distances
  * from the keel than the starboard's (#1109, at review). So the flat skin
  * is mirror-true to under 3 sRGB levels through a 16-texel blur
- * (docs/screenshots/issue-1109/mirror.mjs is the measure). The round
- * parts are not quite, two ways, both the unroll's: a joint that falls
- * mid-facet where a facet tapers follows the triangle diagonal and kinks,
- * 0.38 m on the drive prism's top flat, about a pixel at the conn view's
- * 3 px/m, on the blade, the horn, the drive and the rings; and a round
- * pair whose twin's axis is its own mirror image — a cylinder rolled
- * either way about x, as the ring stays are — unrolls from a basis the
- * mirror turns over, so at the stays' one plate their butt lies on the
- * inboard face of one and the outboard face of the other (an odd count
- * moves butts so, and four swaps tones on the one-strake band). 4.2 % of the
+ * (docs/screenshots/issue-1109/mirror.mjs is the measure). Under `mirror`
+ * a round part mirrors at every corner as well (#1375): a port part
+ * unrolls as its starboard twin turned over, so a cylinder rolled either
+ * way about x, as the ring stays are, carries its butt on the inboard
+ * face of both, and a part on the keel unrolls from its crown half a plate
+ * on, so the mirror takes each plate to itself at any count. Between the
+ * corners the rounds are not quite: a joint that falls mid-facet where a
+ * facet tapers follows the triangle diagonal and kinks, about a pixel at
+ * the conn view's 3 px/m, and the mirror of a diagonal is the other one,
+ * on the blade, the horn, the drive and the rings. 4.1 % of the
  * Responsory's tagged area differs from its mirror by more than 8 levels,
- * all of it on those rounds, and #746 takes both.
+ * all of it there, and #1124 takes it.
  *
  * Panels of 4.5 m by 4 m, two a wrap of 9 m: the facet rule's own grain
  * (`facets` below cuts a mirror facet at a 3 m chord, `panels` centres a
@@ -283,11 +283,11 @@ export const ink = {
  * 4.97 m every multi-plate round on the Responsory's centreline comes
  * even — the blade four, the horn at 17.4 m four, the drive at 8.1 m two
  * — so a butt on either beam has its twin; the emitter barrel, 4.8 m
- * round, is one plate at any size, its one joint on the crown ridge and
- * the unroll's wrap mid-panel on the starboard ridge, so it mirrors
- * within 3.7 levels. Where a round's joints lie is its unroll basis's,
- * and the ring stays' do not mirror (above), so a later hull reads its
- * own girths and butts off `exportGlb`'s file before it trusts this. The
+ * round, is one plate at any size, its joint and the unroll's wrap on the
+ * keel line, so it mirrors within 3.7 levels. Since #1375 a keel round's
+ * crown is mid-plate, so the count no longer decides whether it mirrors,
+ * only where its butts lie; a later hull reads its own girths and butts
+ * off `exportGlb`'s file before it trusts this. The
  * layout's bands stop at eight strakes, so a lathe 77 m long
  * carries 9.7 m strakes along it whatever this says; the wings' are
  * 3.95 m. The joint is drawn for the conn view's ~3 px/m (#1107), where
