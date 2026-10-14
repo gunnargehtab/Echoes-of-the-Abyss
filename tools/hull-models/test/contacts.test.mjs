@@ -91,3 +91,16 @@ test('a part seated a rounding off its plate is listed, and one a centimetre cle
   assert.deepEqual(names(contactsOf(parts)), ['patch · plate']);
   assert.deepEqual(contactsOf(parts, { near: 0 }), []);
 });
+
+test('every instance of a repeated name is tested, and named by its index', () => {
+  // Pairs were keyed by name: the Hadron Slipway's hall was tested against
+  // the first `gantry_leg_s`, 0.056 m off, and never the one it stands on (#1374).
+  // The first leg leans across the hall's corner: its box overlaps the
+  // hall's and it stands 1.7 m clear, so it took the name's one test.
+  const parts = scene([
+    { name: 'hall', size: [4, 4, 4], at: [0, 0, 0] },
+    { name: 'leg', size: [4, 1, 0.2], at: [3.3, 0, 3.3], yaw: Math.PI / 4 },
+    { name: 'leg', size: [1, 1, 1], at: [2.4, 0, 0] },
+  ]);
+  assert.deepEqual(names(contactsOf(parts)), ['hall · leg #2']);
+});
