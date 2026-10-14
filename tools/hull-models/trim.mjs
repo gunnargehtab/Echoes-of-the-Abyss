@@ -81,12 +81,12 @@
  * mirrored about each band's middle, so a flat face laid port and
  * starboard reads the same from either beam once the table's `mirror` has
  * `u` along the beam measured from the centreline out (`layoutMesh`). A
- * round part is not quite that, two ways (#746): a joint that falls
- * mid-facet where the facet tapers follows the triangle diagonal and
- * kinks, about a pixel at the conn view's 3 px/m, and a round pair whose
- * twin's axis is its own mirror image (rolled either way about x)
- * unrolls from a basis the mirror turns over, so at an odd plate count
- * its butts fall on other faces of each twin. Nothing on it
+ * round part mirrors at its corners too (#1375): a port part unrolls as
+ * its starboard twin turned over, from the inboard line, and a part on
+ * the keel from its crown, half a plate on. Between the corners it does
+ * not quite: a joint that falls mid-facet where the facet tapers follows
+ * the triangle diagonal and kinks, about a pixel at the conn view's
+ * 3 px/m, and the mirror of that diagonal is the other one (#1124). Nothing on it
  * weathers, and `untagged` keeps the sheet off a cladding that is not
  * panelling (`layoutTrim`). The Commune's `grown` pattern (#1110) keeps
  * the bands and drops the plate altogether: a grown composite has no butt,
@@ -219,11 +219,9 @@ function valueNoise(xm, ym, cellM, cells, seed) {
  * sheet is the same under v → v0 + v1 − v within every band — which is how
  * `layoutMesh` lays the port face of a keel-centred part against its
  * starboard face, and a port part against its twin — and the table's
- * `mirror` makes `u` along the beam the same on both sides. That is a
- * flat face's mirror; a round part unrolls by angle from a basis of its
- * own, so a joint mid-facet on a tapering facet kinks, and a pair whose
- * basis the mirror turns over keeps its butts on other faces (#746). The
- * plate and tergite patterns do not
+ * `mirror` makes `u` along the beam the same on both sides, a flat face's
+ * and a round part's alike (#1375), though a joint mid-facet on a
+ * tapering facet still kinks (#1124). The plate and tergite patterns do not
  * read the chamfer keys.
  *
  * The `grown` pattern (#1110) draws no joint on either axis. Each strake
@@ -713,9 +711,16 @@ function layoutMesh(mesh, bands, wrapM, strakeM, mirror) {
   // reads them. A round part finds its own axis and is left where it is.
   const turn = isRound ? null : frameOf(m);
   if (turn) {
-    const c = new THREE.Vector3((min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2);
+    const c = new THREE.Vector3(
+      (min[0] + max[0]) / 2,
+      (min[1] + max[1]) / 2,
+      (min[2] + max[2]) / 2
+    );
     for (let k = 0; k < count; k++) {
-      v.set(pos[k * 3], pos[k * 3 + 1], pos[k * 3 + 2]).sub(c).applyMatrix3(turn).add(c);
+      v.set(pos[k * 3], pos[k * 3 + 1], pos[k * 3 + 2])
+        .sub(c)
+        .applyMatrix3(turn)
+        .add(c);
       pos[k * 3] = v.x;
       pos[k * 3 + 1] = v.y;
       pos[k * 3 + 2] = v.z;
@@ -766,9 +771,44 @@ function layoutMesh(mesh, bands, wrapM, strakeM, mirror) {
   let hMax = -Infinity;
   let rMax = 0;
   let plates = 1;
+  let origin = 0;
   if (isRound) {
     axis = new THREE.Vector3().setFromMatrixColumn(m, roundAxis(g)).normalize();
-    const u = new THREE.Vector3().crossVectors(axis, least(axis)).normalize();
+    let u;
+    // Under `mirror` a round part to one side of the keel is unrolled as its
+    // starboard self (#1375): a port part's corners are turned over z → −z
+    // first, so it and its twin are one set of corners and lay to the same
+    // UVs, butt for butt, whatever their rotations did to the basis. The
+    // axis then takes its sign from the shape rather than the matrix, since
+    // a twin rolled the other way about x has its column reversed and would
+    // run `v` backwards, and the angle starts inboard (−z), the centreline,
+    // where `least` picked a world axis the mirror could turn over. A part
+    // on the keel is its own twin and keeps the basis it had.
+    const cz = (min[2] + max[2]) / 2;
+    if (mirror && Math.abs(cz) > 1e-6) {
+      if (cz < 0) {
+        for (let k = 0; k < count; k++) pos[k * 3 + 2] = -pos[k * 3 + 2];
+        ({ min, max } = extentsOf(pos, count));
+        axis.z = -axis.z;
+      }
+      const lead = [axis.x, axis.y, axis.z].reduce(
+        (b, c) => (Math.abs(c) > Math.abs(b) + 1e-9 ? c : b),
+        0
+      );
+      if (lead < 0) axis.negate();
+      const from = (r) => r.addScaledVector(axis, -r.dot(axis));
+      u = from(new THREE.Vector3(0, 0, -1));
+      if (u.lengthSq() < 1e-12) u = from(new THREE.Vector3(0, 1, 0));
+      u.normalize();
+    } else if (mirror) {
+      const from = (r) => r.addScaledVector(axis, -r.dot(axis));
+      u = from(new THREE.Vector3(0, 1, 0));
+      if (u.lengthSq() < 1e-12) u = from(new THREE.Vector3(1, 0, 0));
+      u.normalize();
+      origin = 0.5 / PLATES;
+    } else {
+      u = new THREE.Vector3().crossVectors(axis, least(axis)).normalize();
+    }
     const w = new THREE.Vector3().crossVectors(axis, u);
     basis = [u, w];
     const centre = new THREE.Vector3(
@@ -803,12 +843,29 @@ function layoutMesh(mesh, bands, wrapM, strakeM, mirror) {
       const band = bandFor(bands, hMax - hMin, strakeM);
       used.set(band.rows, used.get(band.rows) + 1);
       const a0 = angle[t * 3];
+      // A triangle across the unroll's seam is closed toward its first
+      // corner, which is the file's order and not the shape's, so under
+      // `mirror` it is closed toward its own middle instead, the circular
+      // mean of its corners' angles (#1375): a twin's triangles are the
+      // same triangles under another numbering, and the mirror of a
+      // triangle on the keel closes toward the mirror of its middle. At an
+      // odd plate count the two ways round differ by a plate.
+      let mid = a0;
+      if (mirror) {
+        let sin = 0;
+        let cos = 0;
+        for (let c = 0; c < 3; c++) {
+          sin += Math.sin(angle[t * 3 + c]);
+          cos += Math.cos(angle[t * 3 + c]);
+        }
+        mid = Math.atan2(sin, cos);
+      }
       for (let c = 0; c < 3; c++) {
         const k = t * 3 + c;
         let th = angle[k];
-        if (th - a0 > Math.PI) th -= 2 * Math.PI;
-        else if (th - a0 < -Math.PI) th += 2 * Math.PI;
-        uv[k * 2] = (th / (2 * Math.PI)) * (plates / PLATES);
+        if (th - mid > Math.PI) th -= 2 * Math.PI;
+        else if (th - mid < -Math.PI) th += 2 * Math.PI;
+        uv[k * 2] = (th / (2 * Math.PI)) * (plates / PLATES) + origin;
         uv[k * 2 + 1] =
           band.v0 + (hMax > hMin ? (height[k] - hMin) / (hMax - hMin) : 0.5) * (band.v1 - band.v0);
       }
@@ -843,9 +900,7 @@ function layoutMesh(mesh, bands, wrapM, strakeM, mirror) {
     for (let c = 0; c < 3; c++) {
       const k = t * 3 + c;
       uv[k * 2] =
-        mirror && along === 2
-          ? beamU(pos[k * 3 + 2])
-          : (pos[k * 3 + along] - min[along]) / wrapM;
+        mirror && along === 2 ? beamU(pos[k * 3 + 2]) : (pos[k * 3 + along] - min[along]) / wrapM;
       uv[k * 2 + 1] =
         band.v0 +
         (extent[cross] > 0 ? (pos[k * 3 + cross] - min[cross]) / extent[cross] : 0.5) *
