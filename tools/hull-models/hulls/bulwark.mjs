@@ -31,9 +31,9 @@
  *   running part count; `rivetRows` does the same, so the run lands at
  *   96 … 159 without a constant.
  * - **The light is where it can be counted.** SIG 70 goes on three flat
- *   flood patches on the tiers and a lit strip with eight lamps along each
- *   deck edge, all facing up, and the citadel's fourteen ports show their
- *   top edges. The last housing of each deck-edge rank stood past its
+ *   flood patches on open deck (PATCHES, below) and a lit strip with eight
+ *   lamps along each deck edge, all facing up, and the citadel's fourteen
+ *   ports show their top edges. The last housing of each deck-edge rank stood past its
  *   strip's end, 0.23 m over `armour_tier_1` (#894's resting measure);
  *   since #907 the two are dropped onto the tier at their stations
  *   (`floodStrips` `on`, kit.mjs `seat`), the other fourteen sitting into
@@ -56,6 +56,32 @@
  *   lamp to y 7.5, standing on the foredeck at the bow's lip over the
  *   plough, at its station and size. Neither family moves in plan, so the
  *   outline is where it was.
+ *
+ * PATCHES (#1123). The approved file laid two of its three flood patches
+ * under the blocks standing on their tiers. `flood_deck_fwd` lay on
+ * `armour_tier_1` at x 40–52, which is `armour_tier_2`'s footprint but its
+ * chamfered forward corners, so 10.9 of its 314 m² showed from above;
+ * `flood_deck_aft` lay on `armour_tier_3` at x −29..−15, z ±13, under the
+ * `citadel` (x −35..−9, z ±12), and showed 19.3 of 318 m² as two 0.9 m
+ * strips along the block's flanks. Both now lie on open deck, at the file's
+ * height over their tier (the patch's underside 0.05 m over the plate):
+ * the forward patch on the first tier's foredeck at x 53–65, z ±15, a metre
+ * short of the tier's forward face at x 66 and a metre abaft the second
+ * tier's at x 52, where the barrels overhead (y 16.2–19.8, z ±2.7..6.3) are
+ * the only thing over it; the after patch on the second tier's after deck
+ * at x −56..−42, z ±9, abaft the third tier's after face at x −40, in the
+ * alley between the stack pairs, whose drums stand at z 9.2–14.8 and feet
+ * at y 14, and clear of the two risers at x −40.9..−39.1. It is 18 m wide
+ * where it was 26, since 26 straddled the stacks; its length is the file's.
+ * The forward patch's new station is the stencil's (`stencil_bow`, x 53–63
+ * at y 9.05–9.35), so the stencil rises 0.3 m to lie on the patch, its
+ * underside at the patch's top. `flood_deck_mid` was on open deck already
+ * and does not move. None of the four leaves its tier's plan, so
+ * hullOutlines.generated.ts is unchanged; `contacts.mjs` lists neither
+ * patch inside a block any more, `armour_tier_2 · flood_deck_fwd` and
+ * `citadel · flood_deck_aft` gone and `flood_deck_fwd · stencil_bow` the
+ * one pair added; `diff.mjs` lists the three parts moved and the one
+ * resized.
  *
  * TRIM (#1005). The first hull laid out on a trim sheet: `exportGlb`'s
  * `trim` takes the Klaxon's plate (factions/bathyarch.mjs `TRIM`) and
@@ -192,13 +218,14 @@ bathyarch.engineVents(root, vent, {
   x: -73.5, y: 5.5, z: [-17.5, -10.5, -3.5, 3.5, 10.5, 17.5], size: [2.2, 5, 4],
 });
 
-// The resting light: three flat flood patches, one a tier, and the strip and
-// eight lamps along each deck edge.
+// The resting light: three flat flood patches on open deck (header, PATCHES),
+// and the strip and eight lamps along each deck edge. Each patch hovers 0.05 m
+// over its tier, as the approved file laid them.
 bathyarch.floodDecks(root, flood, {
   patches: [
-    ['fwd', [46, 9.2, 0], [12, 0.3, 30]],
+    ['fwd', [59, 9.2, 0], [12, 0.3, 30]],
     ['mid', [8, 12.2, 0], [8, 0.3, 34]],
-    ['aft', [-22, 14.7, 0], [14, 0.3, 26]],
+    ['aft', [-49, 12.2, 0], [14, 0.3, 18]],
   ],
 });
 bathyarch.floodStrips(root, { flood, lampM }, {
@@ -228,7 +255,9 @@ bathyarch.rudder(root, grey, { at: [-78, -8, 0], size: [8, 10, 1.5] });
 // side along the second's, numbered from 96 by their place in the file.
 bathyarch.rivetRows(root, grey, { from: -50, to: 50, count: 20, y: 9.1, z: 27.2, size: [1, 0.6, 1] });
 bathyarch.rivetRows(root, black, { from: -44, to: 38, count: 12, y: 12.1, z: 20.5, size: [0.9, 0.54, 0.9] });
-bathyarch.bowStencil(root, amber, { at: [58, 9.2, 0], size: [10, 0.3, 2] });
+// The stencil lies on the forward flood patch, which now covers its station
+// (header, PATCHES): its underside at the patch's top, y 9.35.
+bathyarch.bowStencil(root, amber, { at: [58, 9.5, 0], size: [10, 0.3, 2] });
 // The bow lamp stands on the foredeck at the bow's lip, over the plough (header).
 bathyarch.bowLamp(root, lampM, { at: [74.5, 7.5, 0], size: [1.5, 1, 4] });
 
