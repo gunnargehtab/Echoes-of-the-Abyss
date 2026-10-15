@@ -486,19 +486,29 @@ export function hullSlab(root, { black, grey, amber }, { outline, lengthM, depth
  * its parallel flank about the origin, and the Furnace's runs from x 30
  * aft, so a seam centred on 0 stood 7 m past its bow corner with nothing
  * behind it (#786 review).
+ *
+ * A rivet row is fourteen stations along the seam at one height, and each
+ * rivet sits on what is behind its station: the outermost of the plates,
+ * the seam and `hull_slab` on its beam line (kit `seat` with `beam`), its
+ * centre on that face as the files had it on a plate's. A station with
+ * none of the three behind it gets no rivet. Before #1369 the whole rank
+ * lay on the plates' outer face, and the Derrick's plates back a third of
+ * its seam: nineteen of its twenty-eight a side hung up to 1.6 m clear in
+ * open water, and four more of the upper row were buried inside the slab's
+ * waist. The upper row at y 3.6 is above every plate and the seam, so it
+ * seats on the slab the length of the seam, out onto the waist and in on
+ * the bow's taper; the lower row at y -3.2 is under the slab, and keeps
+ * the five a side the two deeper plates back. Each rivet keeps its station
+ * on the pitch: #919 found that seating the fifth upper rivet by the
+ * nearest facet slid it 0.6 m along the waist's 20° shoulder, which the
+ * beam line does not do.
  */
 export function flankPlates(root, { grey, rust }, opts) {
   const { z, plates, plateT = 1.2, seamLength, seam = {}, rivets = [], cut: rule = METRE } = opts;
-  // The rule's orb (#919; the files' six by four). The rank's z is the
-  // files' and stays: the Derrick's fifth rivet of the upper row lies
-  // between two plates on the slab's waist and kissed its flank by the
-  // six-by-four orb's equator row, which the six-by-three orb has no vertex
-  // on, so it stands 0.04 m clear; seating it slid it 0.6 m off the pitch,
-  // and moving it in z alone would put it 0.13 m deeper than its
-  // neighbours, since the waist's flank there faces 20° off the beam. A
-  // rivet off its line or sunk past its rank is the worse fault.
+  // The rule's orb (#919; the files' six by four).
   const rivet = new THREE.SphereGeometry(0.45, ...rule.orb(0.45));
   const { x: seamX = 0, y: seamY = 2.2, h: seamH = 0.5, t: seamT = 1.4, z: seamZ = z } = seam;
+  const slab = root.children.some((p) => p.name === 'hull_slab') ? ['hull_slab'] : [];
   bothSides((side, sgn) => {
     plates.forEach(([x, len, h, y, old], i) =>
       add(root, `flank_plate_${side}${i}`, box(len, h, plateT), old ? rust : grey, [x, y, sgn * z])
@@ -508,10 +518,12 @@ export function flankPlates(root, { grey, rust }, opts) {
       seamY,
       sgn * seamZ,
     ]);
+    const backing = [...slab, ...plates.map((_, i) => `flank_plate_${side}${i}`), `flank_seam_${side}`];
     for (const [tag, y] of rivets) {
       for (let i = 0; i < 14; i++) {
         const x = seamX - seamLength / 2 + 4 + ((seamLength - 8) * i) / 13;
-        add(root, `rivet_${side}${tag}_${i}`, rivet, grey, [x, y, sgn * (z + 0.6)]);
+        const hit = seat(root, backing, [x, y, sgn * (z + 0.6)], { beam: sgn, optional: true });
+        if (hit) add(root, `rivet_${side}${tag}_${i}`, rivet, grey, hit.at);
       }
     }
   });

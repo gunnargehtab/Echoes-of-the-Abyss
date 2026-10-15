@@ -123,6 +123,22 @@
  * hydrophone drums six and their cables six, where they were ten and five;
  * the fifty-six flank rivets orbs of six by three, where they were six by
  * four. 161 parts and 4,164 triangles become 161 and 3,164.
+ *
+ * RIVETS (#1369). The rank lay on the plates' outer face, z 25.2, the
+ * length of the seam, and the plates are under it for 60 m of its 112 and
+ * behind the lower row for 46 — the upper row at y 3.6 clears every plate's
+ * top: nineteen of the twenty-eight a side hung clear of everything, the
+ * upper row 0.7 m off the slab's flank and the lower 1.0–1.6 m under the
+ * plates' bottom edges and the slab's, and the four
+ * upper rivets at the waist (x -4..20) were buried inside the slab, whose
+ * flank is at z 37.2 there. `flankPlates` seats each rivet on what is
+ * behind its station on the beam line now, and leaves out a station with
+ * nothing behind it: the upper row's fourteen sit on the slab — nine on the
+ * parallel flank at z 24, three on the waist at 37.2, one on its shoulder at
+ * 35 and one on the bow's taper at 22 — and the lower row keeps five a
+ * side, two on the aft plate and three on the forward one. Every rivet
+ * keeps its x on the pitch. 161 parts and 3,164 triangles become 143 and
+ * 2,732; `contacts.mjs --part ^rivet` lists 38 pairs where it listed 18.
  */
 import { THREE, add, box, cyl, strut, bothSides, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
