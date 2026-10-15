@@ -576,7 +576,8 @@ attack-move, and `W` drops a pending build (#1335). The order goes to where the 
 the press's modifiers. What the click asked for is drawn where it asked (§12): the ring that
 acknowledges it closes on the point at its depth, with a plumb line to the ground below it.
 
-Nothing is left of Dive, Rise or the floor-following toggle, and `D`, `A` and `S` are unbound.
+Nothing is left of Dive, Rise or the floor-following toggle. `D` and `S` are unbound, and `A`
+is bound only in the one-handed layout below, where it cuts the drive.
 A step order between rungs answered "how deep" with a list of four depths; a click answers it
 with the depth the player is looking at. The depth charge still drops into the band below
 ([systems-combat.md](systems-combat.md) §8): 1,000 m from the Shelf and 2,400 m from Mid-Water,
@@ -597,7 +598,7 @@ player knows is a worse layout.
 | Stop | `X` | `` ` `` — `X` is the mine's in this layout |
 | Hold position | `H` | `Tab` |
 | Active sonar | `P` | `Q` |
-| Engine off | `Q` | `B` — `Q` is the ping's in this layout, and `B` is the structure's old key |
+| Engine off | `Q` | `A` — `Q` is the ping's in this layout, and `A` sits beside it |
 | Harvest throttle | `V` | `E` |
 | Noisemaker | `N` | `Z` |
 | Mine | `M` | `X` |

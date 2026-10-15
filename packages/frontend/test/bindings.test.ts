@@ -55,7 +55,8 @@ describe('the shipped layouts', () => {
   it('keeps the one-handed layout inside a left hand', () => {
     // §11's commitment is not "a different layout", it is *one-handed*. A key
     // on the right half of the board is one this layout cannot reach, and
-    // shipping it would meet the letter of the promise and none of it.
+    // shipping it would meet the letter of the promise and none of it. `B` is
+    // out: §9 puts it under a right hand that is on the mouse (#1436).
     const leftHand = new Set([
       'Space',
       'AltLeft',
@@ -75,7 +76,6 @@ describe('the shipped layouts', () => {
       'KeyX',
       'KeyC',
       'KeyV',
-      'KeyB',
       'Digit1',
       'Digit2',
       'Digit3',
@@ -102,9 +102,8 @@ describe('the shipped layouts', () => {
     // `engineOff` is the second of those, and the reason the claim above is
     // worded as it is rather than as "exactly the right-hand bindings": `Q` is
     // a left-hand key and the standard's engine off sits on it, but the ping
-    // moved to `Q` here because `P` was out of reach. By the time engine off
-    // landed (#506) no left-hand key was free in *both* layouts, so it takes
-    // the `B` the signature structure vacated.
+    // moved to `Q` here because `P` was out of reach. So engine off takes the
+    // `A` beside it, which nothing in either layout wants since #1132 (#1436).
     assert.deepEqual(moved.sort(), [
       'buildSignature',
       'engineOff',
