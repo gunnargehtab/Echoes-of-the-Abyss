@@ -125,9 +125,10 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Cruiser]: 'cruiser',
   [UnitKind.AbyssalSubmersible]: 'abyssal-submersible',
   // The Chorister carries no faction lock, so a navy rendering for one
-  // resolves chorister-<its faction>.glb: only the Directorate's exists, and
-  // the others stay on the recoloured sprite (graphics-standards.md, gate 1)
-  // until a variant passes intake — the Submersible's rule.
+  // resolves chorister-<its faction>.glb — the Submersible's rule. All four
+  // variants exist. A navy whose variant is missing stays on the recoloured
+  // sprite (graphics-standards.md, gate 1), and rosterScale.test.mjs lists
+  // every such pair with its issue (#1442).
   [UnitKind.Chorister]: 'chorister',
   [UnitKind.Clarion]: 'clarion',
   [UnitKind.Harvester]: 'harvester',
@@ -144,8 +145,7 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   // The transports (#501), script-built in #783: one model a navy. The
   // Verger carries no lock, so a navy rendering for one resolves
   // verger-<its faction>.glb — only the Directorate's exists, and the others
-  // stay on the recoloured sprite until a variant passes intake, as the
-  // Chorister's do.
+  // stay on the recoloured sprite until a variant passes intake.
   [UnitKind.Freighter]: 'freighter',
   [UnitKind.Drifter]: 'drifter',
   [UnitKind.Verger]: 'verger',
@@ -154,7 +154,7 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   // carries no lock, so a navy rendering for one resolves
   // acolyte-<its faction>.glb — only the Directorate's exists, and the others
   // stay on the recoloured sprite until a variant passes intake, as the
-  // Chorister's and the Verger's do.
+  // Verger's do.
   [UnitKind.Beacon]: 'beacon',
   [UnitKind.Glider]: 'glider',
   [UnitKind.Acolyte]: 'acolyte',
@@ -163,7 +163,7 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   // Thurible carries no lock, so a navy rendering for one resolves
   // thurible-<its faction>.glb — only the Directorate's exists, and the
   // others stay on the recoloured sprite until a variant passes intake, as
-  // the Chorister's, the Verger's and the Acolyte's do.
+  // the Verger's and the Acolyte's do.
   [UnitKind.Broadside]: 'broadside',
   [UnitKind.Weaver]: 'weaver',
   [UnitKind.Thurible]: 'thurible',
@@ -171,8 +171,8 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   // The siege hulls (#508), script-built in #786: one model a navy. The Lure
   // carries no lock, so a navy rendering for one resolves lure-<its
   // faction>.glb — only the Directorate's exists, and the others stay on the
-  // recoloured sprite until a variant passes intake, as the Chorister's, the
-  // Verger's, the Acolyte's and the Thurible's do.
+  // recoloured sprite until a variant passes intake, as the Verger's, the
+  // Acolyte's and the Thurible's do.
   [UnitKind.Furnace]: 'furnace',
   [UnitKind.Blight]: 'blight',
   [UnitKind.Lure]: 'lure',

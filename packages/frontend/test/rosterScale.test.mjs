@@ -54,7 +54,8 @@ const KEYS = kinds(Faction).flatMap((faction) =>
 /**
  * Every key a navy can field or build, committed or not: the units
  * `unitAvailableTo` admits and the structures whose faction lock lets it build
- * them, the rule `Match` enforces. `KEYS` starts from the files that exist, so
+ * them, the rule `Match` enforces. The Bastion is not constructible but every
+ * navy opens with one, so it counts. `KEYS` starts from the files that exist, so
  * on its own it cannot see a hull that was never made (#1442).
  */
 const FIELDED = kinds(Faction).flatMap((faction) => [
