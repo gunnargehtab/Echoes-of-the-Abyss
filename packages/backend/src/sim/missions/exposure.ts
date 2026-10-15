@@ -393,7 +393,7 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
         { x: 4200, y: 2500, atTick: T(11) },
         { x: 2600, y: 2450, atTick: T(14) },
       ]),
-      note: 'The beat, westward to the east end and returning',
+      note: 'The beat: west at 02:00, the east end at 11:00, returning at 14:00',
     },
     {
       atTick: 0,

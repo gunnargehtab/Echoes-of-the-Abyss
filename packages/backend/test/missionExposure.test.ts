@@ -569,6 +569,10 @@ describe('The Western Margin, as docs/mission-exposure.md §11 draws it (#1144)'
     assert.equal(control.recalledAt, null, 'an unclassified survey was recalled');
     for (const hull of control.watch) {
       assert.deepEqual(at(hull.x, hull.y), REGIONS.worked, 'the watch left its beat unrecalled');
+      // Both stations are on the worked ground too, so a beat that never
+      // walked would pass the line above. At 14:30 the hull is coming back
+      // from the east end, well east of where it stood at 00:00.
+      assert.ok(hull.x > 2000, `the watch never walked its beat: x ${Math.round(hull.x)}`);
     }
   });
 
