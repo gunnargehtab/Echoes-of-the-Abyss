@@ -131,9 +131,12 @@
  * unrolls at four plates round its 19.4 m girth, the horn at four, the
  * drive at two, so every butt on one beam has its twin on the other; the
  * emitter barrel, four facets at 4.8 m round, is laid flat since #1124
- * (trim.mjs `PRISM`), each facet on its own plane from the keel line, and
- * mirrors within 2.7 levels where its unroll had 3.7 and a kink of 11
- * texels at every facet's diagonal. Since #1375 every round part mirrors
+ * (trim.mjs `PRISM`), its four facets on the plan — their y/z tie goes to
+ * y (trim.mjs `TIE`), plates along its length and one strake chine to
+ * chine — and mirrors within 2.7 levels where its unroll had 3.7 and a
+ * kink of 11 texels at every facet's diagonal; the share of its samples
+ * more than 2 levels off its mirror rose from 2 % to 5 % (the whole model
+ * 7.1 % to 7.2 %). Since #1375 every round part mirrors
  * at its corners: the ring stays, one plate round and laid as a pair,
  * both carry their butt inboard, and each keel round unrolls from its
  * crown half a plate on (138 vertices split became 140; the barrel laid

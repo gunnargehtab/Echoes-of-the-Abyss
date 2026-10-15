@@ -286,8 +286,11 @@ export const ink = {
  * 4.97 m every multi-plate round on the Responsory's centreline comes
  * even — the blade four, the horn at 17.4 m four, the drive at 8.1 m two
  * — so a butt on either beam has its twin; the emitter barrel, four facets
- * at 4.8 m round, is laid flat since #1124, each facet on its own plane
- * from the keel line, so it mirrors within 2.7 levels. Since #1375 a keel round's
+ * at 4.8 m round, is laid flat since #1124, its four facets on the plan
+ * (their y/z tie goes to y, trim.mjs `TIE`), plates along its length and
+ * one strake chine to chine, so it mirrors within 2.7 levels where its
+ * unroll had 3.7, though the share of its samples more than 2 levels off
+ * its mirror rose from 2 % to 5 %. Since #1375 a keel round's
  * crown is mid-plate, so the count no longer decides whether it mirrors,
  * only where its butts lie; a later hull reads its own girths and butts
  * off `exportGlb`'s file before it trusts this. The
