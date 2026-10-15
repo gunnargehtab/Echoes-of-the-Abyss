@@ -183,8 +183,8 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Caisson]: 'caisson',
   [UnitKind.Reed]: 'reed',
   [UnitKind.Bower]: 'bower',
-  // The mid-tier (#531). No model yet; the procedural bake is gate 1's
-  // sanctioned state until one clears intake, and the slug is where it lands.
+  // The mid-tier (#531): one model a kind, both faction-locked, so no navy
+  // resolves a variant that does not exist.
   [UnitKind.Derrick]: 'derrick',
   [UnitKind.Responsory]: 'responsory',
   // The carriers and their craft (#838), script-built in #840: one pair a

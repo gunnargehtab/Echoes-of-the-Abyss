@@ -25,7 +25,14 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 // A baked model's occlusion map (#1002) is an image three's loader can decode
 // only in a browser; nothing here measures it, so the parse goes without it.
 import { stripImages } from '../../../tools/hull-models/images.mjs';
-import { CONSTRUCTION, Faction, StructureKind, UnitKind } from '@echoes/shared';
+import {
+  CONSTRUCTION,
+  Faction,
+  StructureKind,
+  structureStatsFor,
+  UnitKind,
+  unitAvailableTo,
+} from '@echoes/shared';
 
 import { STRUCTURES, UNITS } from '../../../tools/hull-maps/models.mjs';
 import { buildTemplate, slugFor, standingY } from '../src/game/rosterModels.ts';
@@ -43,6 +50,35 @@ const KEYS = kinds(Faction).flatMap((faction) =>
     ...kinds(StructureKind).map((structure) => ({ structure, faction })),
   ].filter((key) => existsSync(new URL(`${slugFor(key)}.glb`, MODELS)))
 );
+
+/**
+ * Every key a navy can field or build, committed or not: the units
+ * `unitAvailableTo` admits and the structures whose faction lock lets it build
+ * them, the rule `Match` enforces. `KEYS` starts from the files that exist, so
+ * on its own it cannot see a hull that was never made (#1442).
+ */
+const FIELDED = kinds(Faction).flatMap((faction) => [
+  ...kinds(UnitKind)
+    .filter((unit) => unitAvailableTo(unit, faction))
+    .map((unit) => ({ unit, faction })),
+  ...kinds(StructureKind)
+    .filter((structure) => (structureStatsFor(structure).faction ?? faction) === faction)
+    .map((structure) => ({ structure, faction })),
+]);
+
+/**
+ * The fielded pairs still on the recoloured sprite, each with the issue that
+ * builds its model (graphics-standards.md, gate 1). The list only shrinks: a
+ * variant that lands must leave it, and a gap not listed fails.
+ */
+const PENDING = new Map([
+  ...['bathyarch', 'pelagia', 'hadron'].flatMap((navy) => [
+    [`verger-${navy}.glb`, 1438],
+    [`acolyte-${navy}.glb`, 1439],
+    [`thurible-${navy}.glb`, 1440],
+    [`lure-${navy}.glb`, 1441],
+  ]),
+]);
 
 /** Intake's design length for a file, by the table the bake reads. */
 const LENGTH_M = new Map([...UNITS, ...STRUCTURES].map((row) => [row.model, row.lengthM]));
@@ -76,6 +112,15 @@ const close = (actual, expected, what) =>
     Math.abs(actual - expected) <= 1e-4 * Math.max(1, Math.abs(expected)),
     `${what}: ${actual} against ${expected}`
   );
+
+describe('roster coverage', () => {
+  it('has a model for every hull and structure a navy can field, or names its issue', () => {
+    const missing = FIELDED.map((key) => `${slugFor(key)}.glb`)
+      .filter((file) => !existsSync(new URL(file, MODELS)))
+      .sort();
+    assert.deepEqual(missing, [...PENDING.keys()].sort());
+  });
+});
 
 describe('roster scale', () => {
   it('covers every committed hull and structure intake reviews', () => {
