@@ -172,7 +172,8 @@ const TIE = 1e-6;
  * or null where the type has none to read. The count is the one the unroll
  * turns through: a torus's `tubularSegments` round the ring, not the tube's,
  * since `roundAxis` finds the ring's axis; a sphere's meridians; a capsule's
- * `radialSegments`, three's or kit.mjs's by its `capSegments`.
+ * `radialSegments`, by its `capSegments` (kit.mjs's capsule is a plain
+ * BufferGeometry, not a `ROUND` type, and is laid flat already).
  */
 function facetsOf(g) {
   const p = g.parameters;

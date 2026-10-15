@@ -236,7 +236,7 @@ test('a round part of four facets lays each facet on one map', () => {
   ]);
   assert.ok(facetDisagreement(wedge) < sheet, `wedge ${facetDisagreement(wedge)}`);
   // The Responsory's barrel: a diamond laid along x, every facet on the y/z tie.
-  const diamond = laidAlone(new THREE.CylinderGeometry(2, 2, 12, 4), [0, 0, Math.PI / 2]);
+  const diamond = laidAlone(new THREE.CylinderGeometry(0.85, 1.0, 22, 4), [0, 0, Math.PI / 2]);
   assert.ok(facetDisagreement(diamond) < sheet, `diamond ${facetDisagreement(diamond)}`);
   // Twelve facets are still a curve and still unrolled, kink and all (#1447):
   // a gentle taper, since one as steep as the wedge is all caps (`SIDE`).
