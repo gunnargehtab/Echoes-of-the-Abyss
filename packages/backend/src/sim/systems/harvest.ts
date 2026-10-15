@@ -151,13 +151,19 @@ function nodeAlive(world: SimWorld, eid: number): boolean {
   return eid !== 0 && hasComponent(world, ResourceNode, eid) && ResourceNode.remaining[eid]! > 0;
 }
 
+/**
+ * The cached depot still is one. `acceptsDeposits` is checked here as well as
+ * in `nearestDepot` because bitecs recycles ids: a dead Refinery's id can come
+ * back as the owner's own turret, which passes every other test (#1435).
+ */
 function depotAlive(world: SimWorld, slot: number, eid: number): boolean {
   return (
     eid !== 0 &&
     hasComponent(world, Structure, eid) &&
     hasComponent(world, Owner, eid) &&
     Owner.slot[eid] === slot &&
-    !hasComponent(world, UnderConstruction, eid)
+    !hasComponent(world, UnderConstruction, eid) &&
+    structureStatsFor(Structure.kind[eid] as StructureKind).acceptsDeposits
   );
 }
 
