@@ -162,6 +162,88 @@ test('a flat part turned off the axes lays as it would square to them', () => {
   assert.ok(Math.abs(Math.max(...us) - Math.min(...us) - 2.5) < 1e-6, `quarter u ${us}`);
 });
 
+/**
+ * The worst disagreement, in sheet units, between two triangles of one
+ * plane that share an edge: the first's map from position to UV carried to
+ * the second's far corner, against the UV that corner was given.
+ */
+function facetDisagreement(mesh) {
+  mesh.updateMatrixWorld(true);
+  const g = mesh.geometry;
+  const p = g.attributes.position;
+  const uv = g.attributes.uv;
+  const count = g.index ? g.index.count : p.count;
+  const tris = [];
+  for (let k = 0; k < count; k += 3) {
+    const corners = [0, 1, 2].map((c) => {
+      const i = g.index ? g.index.getX(k + c) : k + c;
+      return {
+        p: new THREE.Vector3().fromBufferAttribute(p, i).applyMatrix4(mesh.matrixWorld),
+        uv: [uv.getX(i), uv.getY(i)],
+      };
+    });
+    const n = new THREE.Vector3()
+      .subVectors(corners[1].p, corners[0].p)
+      .cross(new THREE.Vector3().subVectors(corners[2].p, corners[0].p));
+    if (n.lengthSq() > 1e-12) tris.push({ corners, n: n.normalize() });
+  }
+  const at = (a, b) => a.p.distanceTo(b.p) < 1e-6;
+  let worst = 0;
+  for (const a of tris) {
+    for (const b of tris) {
+      if (a === b || a.n.dot(b.n) < 1 - 1e-9) continue;
+      const far = b.corners.filter((c) => !a.corners.some((d) => at(c, d)));
+      if (far.length !== 1) continue;
+      // The far corner as p0 + s·e1 + t·e2 on a's plane, by the normal equations.
+      const [c0, c1, c2] = a.corners;
+      const e1 = new THREE.Vector3().subVectors(c1.p, c0.p);
+      const e2 = new THREE.Vector3().subVectors(c2.p, c0.p);
+      const d = new THREE.Vector3().subVectors(far[0].p, c0.p);
+      const [a11, a12, a22] = [e1.dot(e1), e1.dot(e2), e2.dot(e2)];
+      const det = a11 * a22 - a12 * a12;
+      const s = (a22 * d.dot(e1) - a12 * d.dot(e2)) / det;
+      const t = (a11 * d.dot(e2) - a12 * d.dot(e1)) / det;
+      for (let j = 0; j < 2; j++) {
+        const want = c0.uv[j] + s * (c1.uv[j] - c0.uv[j]) + t * (c2.uv[j] - c0.uv[j]);
+        worst = Math.max(worst, Math.abs(want - far[0].uv[j]));
+      }
+    }
+  }
+  return worst;
+}
+
+/** One round part alone, laid on the sheet. */
+function laidAlone(geometry, rotation = [0, 0, 0]) {
+  const root = new THREE.Group();
+  const mesh = new THREE.Mesh(geometry, steel());
+  mesh.rotation.set(...rotation);
+  root.add(mesh);
+  layoutTrim(root, drawTrimSheet(SPEC), SPEC);
+  return mesh;
+}
+
+// #1124: a round part of four facets was unrolled by angle at each corner,
+// so the two triangles of a tapering facet took two maps and a joint
+// mid-facet zig-zagged at the diagonal — the Harvester's bow apron, a
+// `squareWedge`. Laid flat, each facet is one plane projected, one map.
+test('a round part of four facets lays each facet on one map', () => {
+  const sheet = 1 / 512;
+  // The bow apron's taper: a square section turned to stand on its faces.
+  const wedge = laidAlone(new THREE.CylinderGeometry(1.4, 7.8, 5, 4, 1, false, Math.PI / 4), [
+    Math.PI / 2,
+    0,
+    0,
+  ]);
+  assert.ok(facetDisagreement(wedge) < sheet, `wedge ${facetDisagreement(wedge)}`);
+  // The Responsory's barrel: a diamond laid along x, every facet on the y/z tie.
+  const diamond = laidAlone(new THREE.CylinderGeometry(0.85, 1.0, 22, 4), [0, 0, Math.PI / 2]);
+  assert.ok(facetDisagreement(diamond) < sheet, `diamond ${facetDisagreement(diamond)}`);
+  // Twelve facets are still a curve and still unrolled, kink and all (#1447):
+  // a gentle taper, since one as steep as the wedge is all caps (`SIDE`).
+  const cone = laidAlone(new THREE.CylinderGeometry(2, 3, 10, 12, 1));
+  assert.ok(facetDisagreement(cone) > sheet, 'a twelve-facet taper is no longer unrolled');
+});
+
 test('every corner gets a UV, no vertex moves, and two layouts are one', () => {
   const { root } = yard();
   const before = sceneParts(root).parts.map((p) => Float32Array.from(p.positions));

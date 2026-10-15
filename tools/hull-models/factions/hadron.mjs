@@ -271,7 +271,10 @@ export const ink = {
  * the conn view's 3 px/m, and the mirror of a diagonal is the other one,
  * on the blade, the horn, the drive and the rings. 4.1 % of the
  * Responsory's tagged area differs from its mirror by more than 8 levels,
- * all of it there, and #1124 takes it.
+ * all of it there. #1124 took the four-facet parts out of the unroll —
+ * here the emitter barrel, laid flat as the plates it is (trim.mjs
+ * `PRISM`), which left that figure where it was — and the kink on the
+ * many-facet tapers remains (#1447).
  *
  * Panels of 4.5 m by 4 m, two a wrap of 9 m: the facet rule's own grain
  * (`facets` below cuts a mirror facet at a 3 m chord, `panels` centres a
@@ -282,9 +285,12 @@ export const ink = {
  * the other — at 4 m the blade, 19.4 m round, took five. Between 4.31 and
  * 4.97 m every multi-plate round on the Responsory's centreline comes
  * even — the blade four, the horn at 17.4 m four, the drive at 8.1 m two
- * — so a butt on either beam has its twin; the emitter barrel, 4.8 m
- * round, is one plate at any size, its joint and the unroll's wrap on the
- * keel line, so it mirrors within 3.7 levels. Since #1375 a keel round's
+ * — so a butt on either beam has its twin; the emitter barrel, four facets
+ * at 4.8 m round, is laid flat since #1124, its four facets on the plan
+ * (their y/z tie goes to y, trim.mjs `TIE`), plates along its length and
+ * one strake chine to chine, so it mirrors within 2.7 levels where its
+ * unroll had 3.7, though the share of its samples more than 2 levels off
+ * its mirror rose from 2 % to 5 %. Since #1375 a keel round's
  * crown is mid-plate, so the count no longer decides whether it mirrors,
  * only where its butts lie; a later hull reads its own girths and butts
  * off `exportGlb`'s file before it trusts this. The
