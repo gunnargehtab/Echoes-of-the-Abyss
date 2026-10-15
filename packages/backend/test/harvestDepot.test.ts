@@ -24,7 +24,7 @@ function advance(match: Match, seconds: number): void {
   for (let i = 0; i < seconds * SIM.TICK_HZ; i++) match.update(STEP_MS);
 }
 
-function first(match: Match, test: (eid: number) => boolean): number {
+function first(test: (eid: number) => boolean): number {
   for (let eid = 0; eid < Owner.slot.length; eid++) if (test(eid)) return eid;
   assert.fail('no such entity');
 }
@@ -43,16 +43,12 @@ function dockAt(kind: StructureKind): { banked: number; depot: number; bastion: 
   advance(match, 1);
   const world = match.world;
   const bastion = first(
-    match,
     (eid) =>
       hasComponent(world, Structure, eid) &&
       Owner.slot[eid] === 0 &&
       Structure.kind[eid] === StructureKind.Bastion
   );
-  const hauler = first(
-    match,
-    (eid) => hasComponent(world, Harvester, eid) && Owner.slot[eid] === 0
-  );
+  const hauler = first((eid) => hasComponent(world, Harvester, eid) && Owner.slot[eid] === 0);
   // Far enough from the Bastion that two seconds cannot reach it.
   const x = Position.x[bastion]! + 2000;
   const y = Position.y[bastion]!;
