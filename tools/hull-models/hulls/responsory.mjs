@@ -130,17 +130,21 @@
  * 16-texel blur (docs/screenshots/issue-1109/mirror.mjs). The blade
  * unrolls at four plates round its 19.4 m girth, the horn at four, the
  * drive at two, so every butt on one beam has its twin on the other; the
- * emitter barrel, 4.8 m round, is one plate with its joint on the keel
- * line and mirrors within 3.7 levels. Since #1375 every round part mirrors
+ * emitter barrel, four facets at 4.8 m round, is laid flat since #1124
+ * (trim.mjs `PRISM`), each facet on its own plane from the keel line, and
+ * mirrors within 2.7 levels where its unroll had 3.7 and a kink of 11
+ * texels at every facet's diagonal. Since #1375 every round part mirrors
  * at its corners: the ring stays, one plate round and laid as a pair,
  * both carry their butt inboard, and each keel round unrolls from its
- * crown half a plate on (138 vertices split become 140). One thing does
+ * crown half a plate on (138 vertices split became 140; the barrel laid
+ * flat makes them 138 again). One thing does
  * not mirror, the unroll's: a joint that falls mid-facet on a tapering
  * facet follows the triangle diagonal and kinks, about a pixel at the
  * conn view's 3 px/m, on the blade, the horn, the drive and the rings,
  * and the mirror of a diagonal is the other one. 4.1 % of the tagged area
- * differs from its mirror by more than 8 levels, all of it there, and
- * #1124 takes it. `diff.mjs responsory-hadron 39cc1e41` reads the shape
+ * differs from its mirror by more than 8 levels, all of it there, read
+ * again after #1124 and unchanged (242.7 m²); #1447 holds it.
+ * `diff.mjs responsory-hadron 39cc1e41` reads the shape
  * as unchanged; the outline, the height and emissive maps and gate 3 are
  * untouched, and the file goes from 104,480 to 110,156 bytes (zlib 13,098
  * to 15,676), the split vertices and the JSON naming the layout and the

@@ -56,13 +56,24 @@
  * and the face takes the band whose strakes come nearest `strakeM` over its
  * cross extent: a 60 m deck gets eight strakes of 7.5 m, a 14 m flank two
  * of 7, a rivet one. A round part — a three cylinder, lathe, sphere, torus
- * or capsule, read by its geometry's type — is unrolled instead: the axis
+ * or capsule, read by its geometry's type, with more than `PRISM` facets
+ * round its axis — is unrolled instead: the axis
  * is the local axis its vertices stay most evenly round, `u` is the arc at
  * whole plates round the mean girth, so the unroll's seam falls on a plate
  * seam along the even strakes and mid-plate along the staggered ones, and
- * `v` runs the length; its caps are projected flat. Nothing moves: a vertex
- * whose corners want two UVs is split, as occlusion.mjs splits a chart's
- * edge, so an indexed box gains vertices and no triangle.
+ * `v` runs the length; its caps are projected flat. Four facets or fewer is
+ * not a curve but plate cut and welded (factions/bathyarch.mjs
+ * `squareWedge`), and is laid flat as the box it is (#1124): the unroll set
+ * `u` by angle at each corner, so on a facet that tapers its two triangles
+ * took two maps and a joint falling mid-facet zig-zagged at the diagonal —
+ * 95 texels of the sheet on the Harvester's bow apron, which kept the one
+ * Consortium model off its sheet — where a plane projected is one map and
+ * the joint runs straight. The rule reads the count alone (`facetsOf`) and
+ * not the taper, so a straight cable and a wedge of one section lay by one
+ * rule and a taper added to a part does not move it between the two; a
+ * tapering facet of more than four still kinks (#1447). Nothing moves: a
+ * vertex whose corners want two UVs is split, as occlusion.mjs splits a
+ * chart's edge, so an indexed box gains vertices and no triangle.
  *
  * **The sheet is drawn, not painted.** `drawTrimSheet` rasterises the bands
  * from the navy's numbers: `PLATES` plates a wrap, half a plate of stagger
@@ -86,7 +97,9 @@
  * the keel from its crown, half a plate on. Between the corners it does
  * not quite: a joint that falls mid-facet where the facet tapers follows
  * the triangle diagonal and kinks, about a pixel at the conn view's
- * 3 px/m, and the mirror of that diagonal is the other one (#1124). Nothing on it
+ * 3 px/m, and the mirror of that diagonal is the other one. #1124 took a
+ * four-facet part out of the unroll (`PRISM`); on the many-facet tapers the
+ * kink remains (#1447). Nothing on it
  * weathers, and `untagged` keeps the sheet off a cladding that is not
  * panelling (`layoutTrim`). The Commune's `grown` pattern (#1110) keeps
  * the bands and drops the plate altogether: a grown composite has no butt,
@@ -138,6 +151,47 @@ const ROUND = new Set([
 
 /** A side triangle of a round part is one whose face is this far off its axis. */
 const SIDE = 0.7;
+
+/**
+ * The most facets round its axis a round geometry can have and still be
+ * laid flat as plates (#1124): a square section is four planes, and three's
+ * four-facet cylinder is a box stood on its corner.
+ */
+const PRISM = 4;
+
+/**
+ * Two face-normal components closer than this are a tie when the flat path
+ * picks the plane to project a prism's facet on: a facet at exactly 45°
+ * reads its dominant axis off rounding otherwise (`layoutMesh`).
+ */
+const TIE = 1e-6;
+
+/**
+ * The facets round a round geometry's axis, read from the `parameters` its
+ * constructor kept (`clone` carries them; the exporter never writes them),
+ * or null where the type has none to read. The count is the one the unroll
+ * turns through: a torus's `tubularSegments` round the ring, not the tube's,
+ * since `roundAxis` finds the ring's axis; a sphere's meridians; a capsule's
+ * `radialSegments`, three's or kit.mjs's by its `capSegments`.
+ */
+function facetsOf(g) {
+  const p = g.parameters;
+  if (!p) return null;
+  if (p.capSegments !== undefined) return p.radialSegments;
+  switch (g.type) {
+    case 'CylinderGeometry':
+    case 'ConeGeometry':
+      return p.radialSegments;
+    case 'SphereGeometry':
+      return p.widthSegments;
+    case 'LatheGeometry':
+      return p.segments;
+    case 'TorusGeometry':
+      return p.tubularSegments;
+    default:
+      return null;
+  }
+}
 
 /** [0, 1) from integers, the same on every machine. */
 export function hash(...ints) {
@@ -221,7 +275,8 @@ function valueNoise(xm, ym, cellM, cells, seed) {
  * starboard face, and a port part against its twin — and the table's
  * `mirror` makes `u` along the beam the same on both sides, a flat face's
  * and a round part's alike (#1375), though a joint mid-facet on a
- * tapering facet still kinks (#1124). The plate and tergite patterns do not
+ * tapering facet of more than `PRISM` facets still kinks (#1447; four or
+ * fewer lay flat since #1124). The plate and tergite patterns do not
  * read the chamfer keys.
  *
  * The `grown` pattern (#1110) draws no joint on either axis. Each strake
@@ -693,7 +748,10 @@ function layoutMesh(mesh, bands, wrapM, strakeM, mirror) {
   const idx = g.index;
   const count = idx ? idx.count : p.count;
   const m = mesh.matrixWorld;
-  const isRound = ROUND.has(g.type);
+  // A round type of `PRISM` facets or fewer is plates, and takes the flat
+  // path below with the boxes (#1124; the header says why the count alone).
+  const prism = ROUND.has(g.type) && (facetsOf(g) ?? Infinity) <= PRISM;
+  const isRound = ROUND.has(g.type) && !prism;
   const corner = new Uint32Array(count);
   const pos = new Float64Array(count * 3);
   const v = new THREE.Vector3();
@@ -708,7 +766,8 @@ function layoutMesh(mesh, bands, wrapM, strakeM, mirror) {
   let { min, max } = extentsOf(pos, count);
   // A flat part turned off the axes is laid in its own frame (`frameOf`):
   // its corners are turned square about its centre before anything below
-  // reads them. A round part finds its own axis and is left where it is.
+  // reads them — a prism of `PRISM` facets among them. A round part finds
+  // its own axis and is left where it is.
   const turn = isRound ? null : frameOf(m);
   if (turn) {
     const c = new THREE.Vector3((min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2);
@@ -885,7 +944,19 @@ function layoutMesh(mesh, bands, wrapM, strakeM, mirror) {
     const ax = Math.abs(n.x);
     const ay = Math.abs(n.y);
     const az = Math.abs(n.z);
-    const dominant = ax >= ay && ax >= az ? 0 : ay >= az ? 1 : 2;
+    // On a prism, two components within `TIE` are a tie, to the earlier axis
+    // as the comparison reads an exact one: a diamond-section prism's facets
+    // — the Responsory's barrel, its ridge on the crown — sit exactly on the
+    // y/z tie, and the two triangles of one facet, their normals from
+    // different edges, landed either side of it by rounding, one laid on xz
+    // and one on xy, 32 texels apart at the diagonal (#1124). A box's faces
+    // are square to its frame once `frameOf` has turned it, so its only ties
+    // are a bevel's, which rounding has sent each way on the Bulwark's and
+    // the slipways' slabs — the same way for both triangles of a bevel, so
+    // nothing kinks — and a tolerance there would move them; they keep the
+    // exact comparison.
+    const tol = prism ? TIE : 0;
+    const dominant = ax >= ay - tol && ax >= az - tol ? 0 : ay >= az - tol ? 1 : 2;
     const a1 = (dominant + 1) % 3;
     const a2 = (dominant + 2) % 3;
     const along = extent[a1] >= extent[a2] ? a1 : a2;
