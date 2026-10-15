@@ -60,7 +60,12 @@ import { LEDGER_EXPOSURE, PROLOGUE_SORROWGATE, inRegion } from '../src/sim/missi
 import { MissionRuntime, type MissionCommandSink } from '../src/sim/missions/runtime.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { createSimWorld } from '../src/sim/world.ts';
-import type { MissionDefinition, MissionLine } from '../src/sim/missions/index.ts';
+import type {
+  MissionBeat,
+  MissionConditionalBeat,
+  MissionDefinition,
+  MissionLine,
+} from '../src/sim/missions/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const ECHO_TICK_INTERVAL = Math.round(SIM.TICK_HZ / SIM.ECHO_HZ);
@@ -69,6 +74,8 @@ const TICKS_PER_S = SIM.ECHO_HZ;
 const T = (minutes: number, seconds = 0): number => (minutes * 60 + seconds) * SIM.TICK_HZ;
 
 const WARNING_S = 20;
+/** The First Trench's watch, exposure.ts's `WATCH`. */
+const WATCH_SLOT = 2;
 
 function heardAs(tick: number, tier: ResolutionTier): EchoSnapshot {
   return {
@@ -439,21 +446,17 @@ describe('The Western Margin, as docs/mission-exposure.md §11 draws it (#1144)'
   const watch = LEDGER_EXPOSURE.parties.find((party) =>
     party.units.some((unit) => unit.tag === 'watch-a')
   )!;
-  const pathOf = (tag: string): { x: number; y: number }[] => {
-    const start = watch.units.find((unit) => unit.tag === tag)!;
-    return [
-      { x: start.x, y: start.y },
-      ...LEDGER_EXPOSURE.beats.flatMap((beat) =>
-        beat.kind === 'move' && beat.tag === tag ? [{ x: beat.x, y: beat.y }] : []
-      ),
-    ];
-  };
+  /** A transit's points, a station kept over two legs read once. */
+  const legsOf = (beats: readonly (MissionBeat | MissionConditionalBeat)[], tag: string) =>
+    beats.flatMap((beat) => (beat.kind === 'transit' && beat.tag === tag ? beat.legs : []));
+  const pathOf = (tag: string): { x: number; y: number }[] =>
+    legsOf(LEDGER_EXPOSURE.beats, tag)
+      .map(({ x, y }) => ({ x, y }))
+      .filter((p, i, all) => i === 0 || p.x !== all[i - 1]!.x || p.y !== all[i - 1]!.y);
   const turnOf = (tag: string): { x: number; y: number } => {
-    const turn = (LEDGER_EXPOSURE.conditionalBeats ?? []).find(
-      (beat) => beat.kind === 'move' && beat.tag === tag
-    );
-    assert.ok(turn !== undefined && turn.kind === 'move', `${tag} turns at the recall`);
-    return { x: turn.x, y: turn.y };
+    const legs = legsOf(LEDGER_EXPOSURE.conditionalBeats ?? [], tag);
+    assert.equal(legs.length, 1, `${tag} turns at the recall, in one leg`);
+    return { x: legs[0]!.x, y: legs[0]!.y };
   };
   /** Every point of a leg, `stepM` apart, ends included. */
   const along = (a: { x: number; y: number }, b: { x: number; y: number }, stepM: number) => {
@@ -482,9 +485,9 @@ describe('The Western Margin, as docs/mission-exposure.md §11 draws it (#1144)'
     for (const point of emitters) stands.push([point.tag, point.x, point.y, 'worked']);
     // §7: the watch turns onto the listening ground, the only water the
     // survey can have been classified in.
-    for (const beat of LEDGER_EXPOSURE.conditionalBeats ?? []) {
-      if (beat.kind === 'move')
-        stands.push([`${beat.tag}, turned at the recall`, beat.x, beat.y, 'listening']);
+    for (const tag of ['watch-a', 'watch-b']) {
+      const { x, y } = turnOf(tag);
+      stands.push([`${tag}, turned at the recall`, x, y, 'listening']);
     }
     // §5: the rim pack, risen and driven along the rim.
     for (const beat of LEDGER_EXPOSURE.beats) {
@@ -505,6 +508,71 @@ describe('The Western Margin, as docs/mission-exposure.md §11 draws it (#1144)'
       for (const { x, y } of pathOf(tag)) {
         assert.deepEqual(at(x, y), REGIONS.worked, `${tag}'s beat at ${x},${y} is on the rim`);
       }
+    }
+  });
+
+  /**
+   * The watch hulls where they stand at `untilTick`, with the survey's tally
+   * fed Classification from `classifiedFrom` for thirty-five seconds — the
+   * recall forced through the ledger, without placing a survey under the
+   * watch's ears. Null classifies nothing: the clock's beat alone.
+   */
+  const watchAt = (classifiedFrom: number | null, untilTick: number) => {
+    const map = missionMapById(LEDGER_EXPOSURE.mapId)!;
+    const match = new Match(map, { mission: LEDGER_EXPOSURE, fauna: false, seed: 41 });
+    const runtime = (match as unknown as { missionRuntime: MissionRuntime }).missionRuntime;
+    const tick = runtime.tick.bind(runtime);
+    runtime.tick = (world, sink, own, heardTier) => {
+      const heard =
+        classifiedFrom !== null &&
+        world.tick >= classifiedFrom &&
+        world.tick < classifiedFrom + 35 * SIM.TICK_HZ;
+      const exposure = { tier: ResolutionTier.Classification, trackedCount: 1 };
+      return tick(world, sink, heard ? { ...own, exposure } : own, heardTier);
+    };
+    let recalledAt: number | null = null;
+    while (match.world.tick < untilTick) {
+      match.update(STEP_MS);
+      const lines = match.takeMissionLines();
+      if (recalledAt === null && lines.some((line) => line.text.startsWith('Thirty.'))) {
+        recalledAt = match.world.tick;
+      }
+    }
+    const hulls = defineQuery([Owner, Position]);
+    return {
+      recalledAt,
+      watch: [...hulls(match.world)]
+        .filter((eid) => Owner.slot[eid] === WATCH_SLOT)
+        .map((eid) => ({ x: Position.x[eid]!, y: Position.y[eid]! })),
+    };
+  };
+
+  it('keeps the watch on the listening ground after a recall the clock has not reached (#1437)', () => {
+    // §7: "At the recall, the watch turns." The beat's waypoints at 05:00,
+    // 08:00, 11:00 and 14:00 walked a turned watch back onto the rim, since a
+    // scheduled `move` is newer than the turn and the newest order wins. Two
+    // recalls: one in the middle of the beat's first leg, and one before the
+    // beat has started. And the positive control — no recall, and at 14:30
+    // the watch is on its beat, on the worked ground.
+    const turns = ['watch-a', 'watch-b'].map(turnOf);
+    for (const from of [T(3, 30), T(0, 1)]) {
+      const run = watchAt(from, T(14, 30));
+      assert.ok(run.recalledAt !== null && run.recalledAt < T(5), 'the recall did not fire');
+      assert.equal(run.watch.length, 2, '§7: the watch is two hulls');
+      for (const hull of run.watch) {
+        const off = Math.min(...turns.map((turn) => Math.hypot(hull.x - turn.x, hull.y - turn.y)));
+        assert.ok(off < 50, `a watch hull is ${Math.round(off)} m off its turn at 14:30`);
+        assert.deepEqual(at(hull.x, hull.y), REGIONS.listening, 'a turned hull left the ground');
+      }
+    }
+    const control = watchAt(null, T(14, 30));
+    assert.equal(control.recalledAt, null, 'an unclassified survey was recalled');
+    for (const hull of control.watch) {
+      assert.deepEqual(at(hull.x, hull.y), REGIONS.worked, 'the watch left its beat unrecalled');
+      // Both stations are on the worked ground too, so a beat that never
+      // walked would pass the line above. At 14:30 the hull is coming back
+      // from the east end, well east of where it stood at 00:00.
+      assert.ok(hull.x > 2000, `the watch never walked its beat: x ${Math.round(hull.x)}`);
     }
   });
 
