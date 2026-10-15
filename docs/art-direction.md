@@ -482,9 +482,14 @@ seam falls on a plate seam along the even strakes and mid-plate along the stagge
 and its caps laid flat. The part's frame is the world's, turned by whatever the part is
 yawed or tilted off the nearest axis, so a part square to the axes or a quarter turn off
 them lays on the world's planes, and a box the Sentinel Turret yaws 29° keeps its seams
-along its own edges rather than across them (#1107). A round part of four facets is still
-unrolled by angle, so the two triangles of a tapered facet can disagree;
-[#1124](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1124) holds that. No
+along its own edges rather than across them (#1107). A round part of four facets or fewer
+round its axis is not a curve but plate cut and welded, so it is laid flat as a box is
+([#1124](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1124)). Unrolled by
+angle, the two triangles of one tapered facet took two maps, and a joint mid-facet
+zig-zagged at the diagonal, 95 texels of the sheet on the Harvester's bow apron. The rule
+reads the facet count alone, not the taper, so a straight cable and a wedge lay alike.
+On a tapered round of more than four facets that kink remains, about a pixel at the conn
+view's range ([#1447](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1447)). No
 vertex moves: a vertex whose corners disagree
 is split, as the occlusion bake splits a chart's edge, so `diff.mjs` reads the file as
 unchanged and `check.mjs` compares the layout to 1/4,096 of the sheet.
@@ -593,10 +598,14 @@ rebaked, 4,213 to 4,280 bytes at the same luminance, where the Responsory's is b
 The Reed is byte for byte. A part turned exactly 45° ties to
 the lower axis, so of four diagonal arms — the Vent Tap's exchangers, the Sentinel's feet,
 the Baffle Barge's emitter fins — two pairs lay alike, each pair the other turned end for
-end. The Harvester waits on
+end. The Harvester waited on
 [#1124](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1124): its bow apron is a
-four-facet taper, unrolled by angle, and its seams zig-zag where the facet's two triangles
-disagree.
+four-facet taper, and unrolled by angle its seams zig-zagged where the facet's two triangles
+disagreed. Laid flat since, it went on the sheet, its four finishes tagged, its file from
+66,644 to 104,928 bytes and its sprite from 4,925 to 26,511. The rule re-laid nine more
+models' four-facet parts, the wedges on the Corvette, the Cruiser, the Spark and both Light
+Scouts, the Responsory's barrel, and the cables of the Gantry, the Bastion and the
+Slipway. Each shape reads unchanged under `diff.mjs`.
 
 The sheet is on `hull_black`, `iron_grey`, `oxide_rust` and `hazard_amber` wherever a model
 carries them, and three finishes stay bare, the owner's calls. `baffle_foam`, the Baffle
@@ -754,8 +763,10 @@ mid-facet where the facet tapers follows the triangle's diagonal and kinks, abou
 conn view's 3 px/m, and the mirror of a diagonal is the other one, on the blade, the horn, the
 drive and the resonator rings. **4.1 %** of the tagged area (243 of 5,898 m²) differs from its
 mirror by more than 8 levels, 4.2 % before #1375 and 4.7 % before `mirror`, all of it on those
-rounds, and [#1124](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1124) holds the
-kink. A round part's end caps laid from world position rather than the part's centre
+rounds, and [#1447](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1447) holds the
+kink. The barrel, four facets round, is laid flat since
+[#1124](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1124), within 2.7 levels
+of its mirror, and the 4.1 % does not move. A round part's end caps laid from world position rather than the part's centre
 (`layoutMesh`) are the layout's too, and
 [#746](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/746) holds them.
 
@@ -844,7 +855,7 @@ view's frame.
 | 3 | Bevel coverage and baked AO ([#1002](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1002)) | Both landed ("Bevels and baked occlusion — SPEC" above). Coverage measured: 30 of 190 extruded plates are bevelled, and plates are 3 % of 7,480 parts, so no primitive was added. The Knights' Bastion carries the first baked occlusion map and the Consortium's Bulwark the first hull's ([#1111](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1111)), each on its own UV set, read by the conn view alone, its silhouette unchanged; the next model is a call per model |
 | 4 | Vignette, chromatic split, camera sway ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)) | All three are built ([Atmosphere rides on top](#atmosphere-rides-on-top-in-screen-space)). The vignette and the sway use no pass. The split is a colour copy and one full-screen draw after the halo, and gate 6 allocates both. Existing shader-driven kelp sway and water fog are different effects; do not duplicate them. Respect gate 8 and reduced motion |
 | 5 | GLB gzip ([#1004](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1004)) | Built. The nginx image's `mime.types` names no `glb`, so `packages/frontend/nginx.conf` names the type in the models' own location and gzips them at level 6. Delivery cost, not frame quality |
-| 6 | UV layout and trim sheets ([#1005](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1005)) | Landed on all four navies: the Consortium's Bulwark and, since [#1107](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1107), twenty-two of its other twenty-three models, the Harvester waiting on [#1124](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1124), and one hull a navy for the other three: the Directorate's Light Scout ([#1108](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1108)), the Knights' Responsory ([#1109](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1109)) and the Commune's Reed ([#1110](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1110)), each on its navy's sheet ("UV layout and trim sheets — SPEC" above). At #1005, 6,863 of 7,025 primitives carry UV0 and 13 carry `uvAlike`'s zeros, but attribute presence is not a layout: the Bulwark's 162 parts are laid out in metres by its script, and four materials are tagged for the Consortium's sheet, one PNG a navy attached at load, luminance only, hue still the palette's. Sorrowgate's triplanar surfaces are kept under it; the next hull in the other three navies is a call per hull |
+| 6 | UV layout and trim sheets ([#1005](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1005)) | Landed on all four navies: the Consortium's Bulwark and, since [#1107](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1107), its other twenty-three models, the Harvester since [#1124](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1124), and one hull a navy for the other three: the Directorate's Light Scout ([#1108](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1108)), the Knights' Responsory ([#1109](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1109)) and the Commune's Reed ([#1110](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1110)), each on its navy's sheet ("UV layout and trim sheets — SPEC" above). At #1005, 6,863 of 7,025 primitives carry UV0 and 13 carry `uvAlike`'s zeros, but attribute presence is not a layout: the Bulwark's 162 parts are laid out in metres by its script, and four materials are tagged for the Consortium's sheet, one PNG a navy attached at load, luminance only, hue still the palette's. Sorrowgate's triplanar surfaces are kept under it; the next hull in the other three navies is a call per hull |
 | 7 | Shallow caustics ([#1006](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1006)) | Decided: none. The sunlit layer is the milky Lid, which scatters rather than focuses, and the water ramp already carries what light reaches the Shelf ("Shallow caustics — SPEC" above). Nothing to build |
 | 8 | WebGPU/TSL ([#1007](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1007)) | Defer migration until a separate feasibility decision. Water, survey, surface and sway shader patches depend on the current WebGL pipeline; this is not a renderer-constructor swap. The feasibility note is written ([webgpu-feasibility.md](webgpu-feasibility.md)): every patch has a TSL equivalent, but under r169 frame-wide tone mapping holds gate 3 only if every material carries its own curve, one-pixel points cost gate 6 triangles, and the halo's depth copy costs gate 6 a call or a target |
 
