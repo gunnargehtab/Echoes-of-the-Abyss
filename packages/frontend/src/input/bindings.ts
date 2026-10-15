@@ -175,8 +175,9 @@ export const DEFAULT_BINDINGS: Bindings = {
 export const ONE_HANDED_BINDINGS: Bindings = {
   ...DEFAULT_BINDINGS,
   // `H` is a right-hand key; `X` is left-hand but the mine takes it here.
-  // The two keys left of the top row are the only left-hand keys nothing
-  // else in either layout wants.
+  // The two keys left of the top row were the only left-hand keys nothing
+  // else in either layout wanted when this layout landed; `S` and `D` have
+  // been free too since #1132.
   stop: 'Backquote',
   holdPosition: 'Tab',
   ping: 'KeyQ',
@@ -184,11 +185,12 @@ export const ONE_HANDED_BINDINGS: Bindings = {
   noisemaker: 'KeyZ',
   mine: 'KeyX',
   buildSignature: 'KeyV',
-  // Q is the ping here, so engine off takes the B the signature structure
-  // vacated — the one left-hand key this layout does not otherwise want.
-  engineOff: 'KeyB',
+  // Q is the ping here, so engine off takes the `A` beside it, free in both
+  // layouts since Dive and Rise went (#1132). Not the `B` the signature
+  // structure vacated: that one sits under the right hand too (#1436).
+  engineOff: 'KeyA',
   // V was the throttle; the throttle moved to E, so V is free for the
-  // signature structure and B — a right-hand key — is not needed.
+  // signature structure.
 };
 
 export type LayoutName = 'default' | 'oneHanded' | 'custom';
