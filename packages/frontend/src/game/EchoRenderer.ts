@@ -3440,11 +3440,10 @@ export class EchoRenderer {
           yieldRank: YIELD.SITUATIONAL,
         });
         // The screen, for the one hull that carries a magazine of decoys
-        // (docs/systems-combat.md §5). Button only, no key: every left-hand
-        // key is spoken for in both layouts since engine off took the last one
-        // (#506), and §11's rebinding promise is about the keys that exist
-        // rather than a promise that everything gets one. TORP is the
-        // precedent — it is a readout and a right-click.
+        // (docs/systems-combat.md §5). Button only, no key: §11's rebinding
+        // promise is about the keys that exist rather than a promise that
+        // everything gets one. TORP is the precedent — it is a readout and a
+        // right-click.
         if (first?.decoys !== undefined) {
           const spacing = first.decoyLayCooldownS;
           buttons.push({

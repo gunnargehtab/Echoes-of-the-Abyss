@@ -175,8 +175,9 @@ export const DEFAULT_BINDINGS: Bindings = {
 export const ONE_HANDED_BINDINGS: Bindings = {
   ...DEFAULT_BINDINGS,
   // `H` is a right-hand key; `X` is left-hand but the mine takes it here.
-  // The two keys left of the top row are the only left-hand keys nothing
-  // else in either layout wants.
+  // The two keys left of the top row were the only left-hand keys nothing
+  // else in either layout wanted when this layout landed; `S` and `D` have
+  // been free too since #1132.
   stop: 'Backquote',
   holdPosition: 'Tab',
   ping: 'KeyQ',
