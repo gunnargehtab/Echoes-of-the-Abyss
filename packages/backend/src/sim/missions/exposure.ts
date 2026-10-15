@@ -33,7 +33,7 @@ import {
   UnitKind,
 } from '@echoes/shared';
 
-import type { MissionDefinition } from './types.ts';
+import type { MissionDefinition, MissionLeg } from './types.ts';
 
 /** §9's beat table is mm:ss; the simulation counts ticks. */
 const T = (minutes: number, seconds = 0): number => (minutes * 60 + seconds) * SIM.TICK_HZ;
@@ -64,6 +64,43 @@ const RIM_PACK_M = 1700;
  * dead and both hulls holed, in a fight no section authors (#1199).
  */
 const RIM_PACK_UNTIL = T(18);
+
+/**
+ * §11 — the listening ground's floor, which the watch climbs to when it turns
+ * onto it. The beat walks the worked ground at 1,700 m, and movement refuses a
+ * step onto ground above the hull: a turn that named no depth stopped at the
+ * rim's edge, 450 m short of the water §7 sends it to (#1437, as #1239).
+ */
+const LISTENING_FLOOR_M = 1600;
+
+/** §11 — where each watch hull stands at 00:00, on the worked ground. */
+const WATCH_A_STATION = { x: 1300, y: 2400 };
+const WATCH_B_STATION = { x: 1500, y: 2450 };
+
+/**
+ * §7 — the watch's beat as one `transit` per hull, not a `move` per waypoint.
+ * The recall turns the watch with a conditional `transit`, which replaces the
+ * beat outright (types.ts, `transit`); a scheduled `move` is a cursor nothing
+ * cancels, and the next waypoint walked the turned watch back onto the rim
+ * (#1437). So the beat is fired at 00:00, holding the hull's station to the
+ * walk's first order, and a recall at any tick is the walk from then on.
+ *
+ * Each station is reached at the hull's own speed — a one-tick leg orders the
+ * point outright — and kept until the next one's minute, which is the walk the
+ * `move` beats authored: "pauses where cohort procedure pauses".
+ */
+const watchBeat = (
+  station: { x: number; y: number },
+  walk: readonly { x: number; y: number; atTick: number }[]
+): MissionLeg[] => {
+  const legs: MissionLeg[] = [{ ...station, ticks: walk[0]!.atTick }];
+  walk.forEach(({ x, y, atTick }, i) => {
+    legs.push({ x, y, ticks: 1 });
+    const next = walk[i + 1];
+    if (next !== undefined) legs.push({ x, y, ticks: next.atTick - atTick - 1 });
+  });
+  return legs;
+};
 
 export const LEDGER_EXPOSURE: MissionDefinition = {
   ...LEDGER_EXPOSURE_HEADER,
@@ -154,8 +191,7 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
         {
           tag: 'watch-a',
           kind: UnitKind.AbyssalSubmersible,
-          x: 1300,
-          y: 2400,
+          ...WATCH_A_STATION,
           depthM: 1700,
           armed: true,
           note: 'A cohort watch is armed, and slow, and does not need to be otherwise',
@@ -163,8 +199,7 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
         {
           tag: 'watch-b',
           kind: UnitKind.AbyssalSubmersible,
-          x: 1500,
-          y: 2450,
+          ...WATCH_B_STATION,
           depthM: 1700,
           armed: true,
           note: '',
@@ -343,6 +378,37 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
    * twenty seconds is a fact about how the player played.
    */
   beats: [
+    // The watch walks the worked ground's length, pausing where cohort
+    // procedure pauses (§7): westward from 02:00, the east end at 11:00, and
+    // returning at 14:00. One transit a hull, from 00:00, so the recall's
+    // turn replaces it whenever the tally fires (`watchBeat`).
+    {
+      atTick: 0,
+      kind: 'transit',
+      tag: 'watch-a',
+      legs: watchBeat(WATCH_A_STATION, [
+        { x: 800, y: 2400, atTick: T(2) },
+        { x: 2000, y: 2500, atTick: T(5) },
+        { x: 3200, y: 2400, atTick: T(8) },
+        { x: 4200, y: 2500, atTick: T(11) },
+        { x: 2600, y: 2450, atTick: T(14) },
+      ]),
+      note: 'The beat, westward to the east end and returning',
+    },
+    {
+      atTick: 0,
+      kind: 'transit',
+      tag: 'watch-b',
+      legs: watchBeat(WATCH_B_STATION, [
+        { x: 1000, y: 2450, atTick: T(2) },
+        { x: 2200, y: 2450, atTick: T(5) },
+        { x: 3400, y: 2500, atTick: T(8) },
+        { x: 4000, y: 2400, atTick: T(11) },
+        { x: 2800, y: 2500, atTick: T(14) },
+      ]),
+      note: '',
+    },
+
     // 01:00 — Tull, on the charter (§12).
     {
       atTick: T(1),
@@ -351,19 +417,6 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
       text: 'The Board prices three navies and a hole. I am not down here because I like the water. I am down here because a model with a hole in it is a comfort, and the concern can no longer afford comfort at Board rates.',
       note: 'Hailed and read — the say channel since #381',
     },
-
-    // The watch walks the worked ground's length, pausing where cohort
-    // procedure pauses (§7).
-    { atTick: T(2), kind: 'move', tag: 'watch-a', x: 800, y: 2400, note: 'The beat, westward' },
-    { atTick: T(2), kind: 'move', tag: 'watch-b', x: 1000, y: 2450, note: '' },
-    { atTick: T(5), kind: 'move', tag: 'watch-a', x: 2000, y: 2500, note: '' },
-    { atTick: T(5), kind: 'move', tag: 'watch-b', x: 2200, y: 2450, note: '' },
-    { atTick: T(8), kind: 'move', tag: 'watch-a', x: 3200, y: 2400, note: '' },
-    { atTick: T(8), kind: 'move', tag: 'watch-b', x: 3400, y: 2500, note: '' },
-    { atTick: T(11), kind: 'move', tag: 'watch-a', x: 4200, y: 2500, note: 'The east end' },
-    { atTick: T(11), kind: 'move', tag: 'watch-b', x: 4000, y: 2400, note: '' },
-    { atTick: T(14), kind: 'move', tag: 'watch-a', x: 2600, y: 2450, note: 'The beat, returning' },
-    { atTick: T(14), kind: 'move', tag: 'watch-b', x: 2800, y: 2500, note: '' },
 
     // 16:45 — the rim pack, loud, on the relief's wake, run along the rim at
     // 1,700 m to the change: seventy-five seconds of warning in front of it
@@ -431,20 +484,20 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
     },
     // The watch turns onto the survey's last classified water — the
     // listening ground, which is the only water the survey can have been
-    // classified in (§7). Not a pursuit: an arrival.
+    // classified in (§7). Not a pursuit: an arrival, at the hull's own speed.
+    // A transit, so it replaces the beat rather than racing its next waypoint
+    // (`watchBeat`, #1437).
     {
-      kind: 'move',
+      kind: 'transit',
       tag: 'watch-a',
-      x: 2500,
-      y: 1800,
+      legs: [{ x: 2500, y: 1800, ticks: 1, depthM: LISTENING_FLOOR_M }],
       note: 'The watch turns',
       when: { kind: 'tolerance', ticks: TOLERANCE_TICKS, tier: ResolutionTier.Classification },
     },
     {
-      kind: 'move',
+      kind: 'transit',
       tag: 'watch-b',
-      x: 2200,
-      y: 1850,
+      legs: [{ x: 2200, y: 1850, ticks: 1, depthM: LISTENING_FLOOR_M }],
       note: '',
       when: { kind: 'tolerance', ticks: TOLERANCE_TICKS, tier: ResolutionTier.Classification },
     },
