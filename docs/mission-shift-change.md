@@ -234,8 +234,8 @@ Board reads what the shift did with the window it never knew it had.
 
 Two objectives, both real, pulling against each other through one lever:
 
-**The number.** Face Two reports 3,600 nodules this shift — four harvesters' standard tide
-with weather in it. The quota is not a pretext: the Vein is on the insolvency projection and
+**The number.** Face Two reports 3,600 nodules this shift — more than four harvesters make
+at Standard, so the face makes it only by running Overburden, loud. The quota is not a pretext: the Vein is on the insolvency projection and
 every shift's number is a row in it. It is also the cover, because the number *is* the hum,
 and the hum is what tells the audit that Face Two is a face and not an evacuation. A player
 who creeps the throttle protects nothing and starves both.
@@ -352,9 +352,8 @@ Seated at the working level, the seven hulls working every field at Standard ban
 about 2,800 (seed 41). That was with the barges mining, which §3 strikes. With the dredge struck
 (#1283) the four harvesters bank about 2,800 at Standard, the "works every field at Standard"
 case in `missionShiftChange.test.ts`, and about 3,760 with that fixture's throttle set to
-Overburden. So the quota is made only by running loud, which §8's "four harvesters' standard
-tide" no longer says. The figures are recorded, not tuned to: the quota is inside the balance
-freeze, and the owner's to move (#1392).
+Overburden. So the quota is made only by running loud, as §8 says (#1392). The figures are
+recorded, not tuned to: the quota is inside the balance freeze.
 
 Every number a shape states is a whole 250 m cell, and a cell is its region's when the shape
 holds its centre ([maps.md](maps.md), "How a map is written"). The regions were rectangles until
