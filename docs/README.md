@@ -92,6 +92,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[naming.md](naming.md)** | Title, taglines, logo direction |
 | **[concept-art/](concept-art/)** | Five survey plates in the Pressure Cartography language, plus two neon-noir presentation plates |
 | **[concept-art/hud-mockups/](concept-art/hud-mockups/)** | Three directions for the in-match HUD — ring menus, a classical console, and today's interface done properly — as ten frames of one moment, with what each keeps of [ui-ux.md](ui-ux.md) and what it breaks |
+| **[concept-art/hud-materials/](concept-art/hud-materials/)** | Four material directions for the same HUD moment — Brass Bathysphere, Living Reef, Abyssal CIC, Cyanotype Atlas — each as a frame and a component kit, with the style rules each breaks |
 
 ## Technical
 
