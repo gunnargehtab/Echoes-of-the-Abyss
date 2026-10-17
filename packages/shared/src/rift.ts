@@ -656,7 +656,7 @@ export const RIFT_GROUND: MapGround = {
         [4, 69],
       ],
       AbyssalTrench,
-      2_150,
+      2_450,
       'A trench of the nine'
     ),
     outline(
