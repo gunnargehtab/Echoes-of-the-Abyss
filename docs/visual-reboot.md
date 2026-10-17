@@ -69,6 +69,13 @@ lock to the west; the exit is the Upper Concourse to the north. In section, the 
 lies below the thermocline, the Descent and Concourse rise above it, and the Commit
 falls below the escorts' pressure rating. None of these relations comes from a texture.
 
+The continuous-world pilot ([world-map.md](world-map.md) §7) places this unchanged map in the
+Rift atlas at (17,500, 40,500), with 2,500 m of public surroundings at mission detail and the
+rest of the Rift at overview detail. Its border becomes an exterior-only fade into darkness;
+the camera's focus stays inside the map while the eye may orbit out. The world's layers spend
+from the same frame as §6 below: the 250,000-triangle reservation here stays the tutorial's,
+and the whole frame stays inside gate 6.
+
 | Public ground | Material and approved kit | What must remain legible |
 | --- | --- | --- |
 | Coral Ruins: court and districts | Broken civic paving, sediment in joints, coral-set stone; ruin blocks, dome shards and coral growth from the existing registry | The floor steps and service-lock route. No decorative seam becomes a navigation mark |

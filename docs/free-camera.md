@@ -106,8 +106,11 @@ click is the player's.
 **One hard clamp, and only one: the eye never goes below the seabed.** It stays at least
 **25 m of water** (TUNABLE) above the local floor, because a camera under the ground renders
 the inside of the terrain shell and reads as a bug in every case and a feature in none. The
-focus itself clamps to the water column — surface to seabed — for the same reason. Nothing
-else is clamped. The camera may sit inside the Lid, at the bottom of a trench, or nose-down
+focus itself clamps to the water column — surface to seabed — for the same reason, and in
+plan to the map's extent (`clampTarget`). Nothing else is clamped. In the continuous-world
+pilot that plan clamp is the mission rectangle, held for every verb that moves the focus,
+while the orbiting eye may swing outside it; the exterior fades rather than ends
+([world-map.md](world-map.md) §7.4). The camera may sit inside the Lid, at the bottom of a trench, or nose-down
 against a wall, because the player looking at a thing is not the player committing a hull to
 it, and none of the column's costs are the camera's to pay.
 

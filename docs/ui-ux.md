@@ -1494,6 +1494,13 @@ slots it is meant to sit beside.
 Review screenshots live in `docs/screenshots/issue-410/`: the board with the chart beside it,
 and the chart lit on the Kell Shoulder and on the Rim.
 
+**The continuous world puts the atlas behind the board, not in place of it.** In the Sorrowgate
+pilot ([world-map.md](world-map.md) §7) the board stays the control and the accessible reading,
+and every fact above stays in DOM text; the 3D atlas is drawn behind it. Launching the prologue
+from the board travels the camera to the mission and joins its room only after travel and
+loading finish, with cancel, retry, reconnection, resume, return and reduced motion as §7.6
+of that document gives them. Every other slot launches as it does today.
+
 ### Who is speaking
 
 The briefing names its reader. About 28,000 words of authored prose ship across the campaign's

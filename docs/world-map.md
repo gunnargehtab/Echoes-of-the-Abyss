@@ -1,6 +1,6 @@
 # The Pelagion Rift — Geography & Gazetteer
 
-> The canonical map of the setting: the Rift's shape, its vertical order, and every named place in the bible, each with its depth, its allegiance, and its sound. Drawn as [Plate VII](concept-art/plate-07-rift-chart.png) in the Pressure Cartography language ([art-direction.md](art-direction.md)); this document owns the facts, the plate transcribes them. [world.md](world.md) says what broke and why humanity is down here; this document says where *here* is. Skirmish maps are cut from this ground ([maps.md](maps.md)), and the campaign is placed on it (§5).
+> The canonical map of the setting: the Rift's shape, its vertical order, and every named place in the bible, each with its depth, its allegiance, and its sound. Drawn as [Plate VII](concept-art/plate-07-rift-chart.png) in the Pressure Cartography language ([art-direction.md](art-direction.md)); this document owns the facts, the plate transcribes them. [world.md](world.md) says what broke and why humanity is down here; this document says where *here* is. Skirmish maps are cut from this ground ([maps.md](maps.md)), the campaign is placed on it (§5), and §7 gives it one metric frame for the continuous 3D world.
 
 A rule before the geography: in a game where nobody looks and everybody listens, **a place is its sound**. Every entry below carries an acoustic identity, because that — not its skyline — is how a Rift inhabitant knows they have arrived somewhere.
 
@@ -153,9 +153,87 @@ The sync point with [campaign.md](campaign.md): every mission block, placed. Mis
 ## 6. For Level Design
 
 - **Maps are cut from regions, not invented beside them.** Each skirmish archetype in [maps.md](maps.md) names the ground it is cut from (the Enclosure, Fivewell, the Fourth Trench, the Fields, the drowned city), so a map's biome mix is a fact about the world before it is a balance decision.
-- **Authoring rules live in [maps.md](maps.md)** — 250 m cell grid, rectangles, ellipses and polygons painted in order, floors and ceilings per region. This document contributes the *where* and the names; it deliberately owns no cell-level numbers.
+- **Authoring rules live in [maps.md](maps.md)** — 250 m cell grid, rectangles, ellipses and polygons painted in order, floors and ceilings per region. This document contributes the *where* and the names; it deliberately owns no cell-level numbers. The one exception is §7's atlas frame, which places a whole map rather than a cell.
 - **The north–south gradient is free asymmetry.** A map set on the west wall should be loud (vents, grid hum, high ambient SIG tolerance); one cut from the plateaus should be quiet enough that any noise is an event. Placing a map on this geography is choosing its acoustic politics.
 - **Neutral ground is ruined ground.** Sorrowgate establishes the pattern: the places factions share are the places none of them built. Coral Ruins is the campaign's home biome for exactly this reason ([campaign.md](campaign.md) §10).
+
+---
+
+## 7. The World in Three Dimensions — SPEC
+
+The canonical account of the continuous world (#1449, contract #1455). Plate VII places the campaign in illustration coordinates — a 2,000 × 2,750 plate whose vertical axis is latitude and depth at once — and every mission map owns its own grid ([maps.md](maps.md)). Neither is a world a camera can travel. This section gives the Rift one metric frame, places Sorrowgate in it first, and says what a mission's border looks like from inside. [free-camera.md](free-camera.md), [art-direction.md](art-direction.md), [ui-ux.md](ui-ux.md) §14, [maps.md](maps.md) and the pilot brief ([visual-reboot.md](visual-reboot.md)) point here rather than restating it. Every number below is presentation, TUNABLE unless it is a fact this document already gives, and none of it is simulation tuning.
+
+### 7.1 Continuous to the eye, simulated only where the mission is
+
+The world is **continuous visual geography, not a persistent simulation**. The whole Rift is drawn at overview detail; one mission's ground, and the water around it, at mission detail. Only the active mission is simulated, by the server, on its own map exactly as it is today. Nothing outside the mission rectangle moves, sounds, is detected or can be ordered into: the atlas is public ground, identical for every player, and carries no unit, structure, creature or state. Live ground — the arch after it falls — reaches the client only through the active session's own map data, never by editing the atlas.
+
+**Sorrowgate is the pilot**, entered from the campaign board. Its gameplay, map literal, assets and lines do not change ([mission-sorrowgate.md](mission-sorrowgate.md); [visual-reboot.md](visual-reboot.md) §2). Every other mission keeps its current launch path, as do the title screen's Tutorial door, direct mission and map links, and [Radicals](mission-radicals.md), which plays on Sorrowgate's map and keeps its current presentation: the pilot is selected by mission identity, as the surface profile is.
+
+### 7.2 The atlas frame
+
+| Convention | Value |
+| --- | --- |
+| Extent | **40,000 m west to east × 90,000 m north to south** — §1's ninety kilometres end to end, forty at the widest, as one rectangle |
+| Plan axes | Origin at the north-west corner; *x* grows **east**, *y* grows **south**: the axes every mission map already uses, so a mission's local metres are atlas metres minus its origin |
+| Vertical | Depth in metres **below the surface, positive down**, as on every map. The renderer's own transform from metres to scene units is the renderer's and is never stored in data |
+| Grid | 1,000 m overview cells; mission ground keeps its 250 m cells. Every origin and boundary below is a whole 250 m cell, so a mission's cells sit on the atlas grid exactly |
+| Depth reach | The overview may draw ground to the Mouth's floor at 4,410 m. That is a place's depth, not a playing depth: the ruleset's 3,000 m ceiling ([systems-depth.md](systems-depth.md) §1) does not move, and no mission floor follows the atlas |
+
+**Anchors.** Pinned here; [#1457](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1457) authors the ground between them from §1–§4 and may not move them without changing this table first.
+
+| Anchor | Atlas position | Depth | Why there |
+| --- | --- | --- | --- |
+| Sorrowgate's map origin, its north-west corner | (17,500, 40,500) | — | Mid-Rift and mid-width, where §1 puts the drowned city; the court is then within a long day's transit of everyone (§4) |
+| The court, the flight's spawn at the arch | (20,050, 42,650) | 1,500 m | Derived: origin plus the spawn at (2,550, 2,150) |
+| The attending galleries | (20,000, 68,000) | 3,000 m | On the Ninth's axis, which runs due south along *x* = 20,000 |
+| The Ninth's sill | (20,000, 71,000) | 4,100 m | Three kilometres south of the galleries (§3) |
+| The Lip, the Mouth's northern edge | (20,000, 79,000) | 3,100 m | Eight kilometres on, eleven from the galleries (§4) |
+| The Mouth's floor | centred (20,000, 84,500), 11,000 m across | 4,410 m | The eleven-kilometre depression, at the far southern end |
+
+**Regions, as coarse allocations.** Each is the rectangle its ground is authored inside, overlapping where §3's regions meet: the Plateaus *x* 6–34 km, *y* 0–22 km; the West Wall *x* 0–10 km, *y* 12–50 km, so its north end shares a fence with the plateaus, as Sector Kell did (§4); the Drowned City *x* 12–28 km, *y* 32–50 km; the Resonance Fields *x* 26–40 km, *y* 30–62 km; the Trench Country the full width, *y* 50–79 km; the Mouth *y* 79–90 km. They are bounds on authoring, not shapes, and a shape inside them follows [maps.md](maps.md)'s rules: authored, never generated from an image or noise.
+
+### 7.3 Overview and detail
+
+- **Overview:** the whole atlas at 1,000 m cells, 3,600 of them, through the existing terrain, water and lighting pipelines. Honest overview detail: biome fill and relief, the approved prop vocabulary sparsely, no mission-density props.
+- **Detail:** a mission's rectangle plus **2,500 m of surroundings** on every side, at 250 m cells. For Sorrowgate that is *x* 15,000–25,000 m, *y* 38,000–47,000 m: 10,000 × 9,000 m, 1,440 cells, the 320 of the mission patch unchanged at its centre. The surroundings are public ground authored to continue the patch's edges, and are never simulated.
+- **Seam:** the detail rectangle's edge is a line of the overview grid. Detail owns everything inside it and the overview everything outside, so no surface overlaps another, and the seam's vertices take the overview's heights so the two meet without a crack.
+
+### 7.4 The mission border
+
+Inside a mission the border is **a fade into darkness, not a wall**. Three rules, one rectangle — the mission map's extent — shared by all of them:
+
+1. **The focus is clamped; the eye is not.** The camera's focus stays inside the mission rectangle for every verb that moves it: drag, keys and edge scroll, the scope, zoom about the cursor, centring, `Home` and fit, and any scripted move ([free-camera.md](free-camera.md) §4). The orbiting eye may swing outside it, keeping its 25 m clearance over whatever public ground lies beneath. On the campaign overview the focus is clamped to the atlas frame instead.
+2. **Only the exterior fades.** A scenery or water fragment at plan distance *d* outside the rectangle — zero inside, Euclidean from the nearest edge outside, so corners round off — is drawn at *f*(*d*) = 1 − smoothstep(0, *W*, *d*), with ***W* = 2,000 m** and smoothstep the cubic 3*t*² − 2*t*³. Inside, *f* is exactly 1 and nothing changes. At *W* the exterior meets the backdrop's darkness, which is why the detail surround is 500 m wider than the fade. The factor is a property of the place, never of where the eye stands. The HUD, the player's own hulls, resolved contacts, survey cues and every acoustic reading are never faded.
+3. **The exterior takes no orders.** A click that lands outside the rectangle is refused on the client; the server's movement bounds stay what they are, and stay the authority.
+
+The pilot drops the hard rim line and the skirt for this fade; a non-pilot mission keeps both. The fade ramps in over **0.8 s** once the mission's first state arrives and out over the same on the way back, instantly under reduced motion.
+
+### 7.5 Budgets
+
+The whole frame — overview, detail, water, props, the player's force, every pass — stays inside [graphics-standards.md](graphics-standards.md) gate 6: **≤ 150 draw calls and ≤ 400 k triangles**, pixel ratio at most 1.5. The tutorial keeps its own 250 k triangle reservation ([visual-reboot.md](visual-reboot.md) §6), so the world adds at most 150 k, and draw calls are counted for the whole frame rather than shared out. A mission-density mesh over the whole Rift would cost about 1.84 million terrain triangles, which is why overview and detail are two resolutions rather than one. At most **two detail regions** are resident — the one arriving and the one left — with at most **two chunk requests in flight**; a cancelled or failed request releases what it held. Every cache is bounded per page, as the model templates are.
+
+### 7.6 Entry, return, and what interrupts them
+
+A mission starts when its room is joined, so a camera flight after joining would spend the opening offscreen. The order is therefore fixed:
+
+1. **Overview.** The campaign board stays the control and the accessible reading ([ui-ux.md](ui-ux.md) §14); the atlas is drawn behind it. The briefing opens over the same world.
+2. **Travel.** Launching moves the camera to the mission's home frame — focus on the spawn, north, 55° — over **2.5 s** while the region's public ground and assets load. Skippable at any point, and a cut under reduced motion.
+3. **Join.** Only when travel and preparation have both finished is the room joined, once. Commands, HUD, input and audio attach when the first server state arrives; until then the frame is held and nothing can be ordered.
+4. **Return.** After the result, the session detaches — network, HUD, input and audio — the fade ramps out, and the camera goes back to the overview frame the player left.
+
+**Cancel** during travel or preparation goes back to the overview with nothing joined. **A load or join failure** holds the mission frame, says what failed and offers Retry and Back; at most one join is ever in flight, so a retry never doubles one. **A disconnect** keeps the world view and re-attaches through the existing reconnection grace; the ground is re-sent by the server, never restored from the atlas, which would resurrect a fallen arch. **Resume** from the title screen enters at the home frame with no travel, because the server has already spent the opening ([ui-ux.md](ui-ux.md) §14, "Resume").
+
+### 7.7 Readings and evidence
+
+**Top-down:** Sorrowgate stands mid-Rift on the Ninth's line, the plateaus north, the west wall within ten kilometres to the west, crystal country east; inside it the Concourse is north, the court central, the service lock west of the chamber and the Commit south ([mission-sorrowgate.md](mission-sorrowgate.md) §11). **In section:** the Concourse at 340 m above the thermocline, the court at 1,500 m below it, the Commit at 2,400 m, the trench country beyond falling to the Mouth's 4,410 m. Both readings come from relief and depth, never from a texture.
+
+**Evidence** for a change under this section: the pilot at the close, home, low-pitch and survey views, each paired with a baseline frame of the same camera, the HUD visible; a frame at a border corner; gate 6 measured at pixel ratios 1 and 1.5 on a named GPU, transitions included. **Non-target controls:** the Ventfront Divide skirmish and Radicals render as before.
+
+### 7.8 The calls this section took
+
+**Anchors from the prose, not the plate (taken).** Scaling Plate VII's coordinates would turn an illustration's compressions — its depth rail gives the shallows room — into geography. Pinning only Sorrowgate would leave #1457 to invent the rest unbound. The anchors above are the distances §1–§4 already state, with the rest bounded by region.
+
+**A fade of 2,000 m, the surround at 2,500 m (taken).** Eight overview cells of fade read as darkness arriving rather than a vignette, and stay a fraction of a 5,000 m mission; a wider fade would need a wider surround, at detail cost.
 
 ---
 
