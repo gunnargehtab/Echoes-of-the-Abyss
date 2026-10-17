@@ -65,8 +65,10 @@ import {
   Faction,
   MODEL_LIGHTING,
   MOVEMENT,
+  WORLD,
   clampToRect,
   detailGround,
+  detailRect,
   exteriorDistanceM,
   statsFor,
   structureStatsFor,
@@ -172,11 +174,23 @@ import {
   apronFrame,
   apronMesh,
   installApronShading,
+  installOverviewShading,
   paddedTerrain,
+  patchApronMesh,
   stepBorderStrength,
   type ApronPads,
   type BorderUniforms,
+  type SeamHeight,
 } from './worldBorder.ts';
+import {
+  overviewDepthAtM,
+  overviewGrid,
+  overviewIndices,
+  overviewSkin,
+  overviewVertices,
+  seamHeightFor,
+  seamWeight,
+} from './worldOverview.ts';
 import { DreamGroundCover } from './dreamGroundCover.ts';
 import { DreamLightHalos } from './dreamLightHalos.ts';
 import { swayAt, type SwayOffset } from './cameraSway.ts';
@@ -544,7 +558,23 @@ export class PerspectiveView {
     pads: ApronPads;
     mesh: Mesh | null;
     cells: DataTexture | null;
+    /** Held with the mesh so a ground delta can patch the apron in place (#1459). */
+    grid: HeightGrid | null;
+    canvas: HTMLCanvasElement | null;
+    texture: CanvasTexture | null;
+    classes: Uint8Array<ArrayBuffer> | null;
   } | null = null;
+  /**
+   * The Rift at overview detail round a placed mission (worldOverview.ts,
+   * #1459): one mesh in atlas metres, placed by its transform, built once for
+   * the view's life. A session changes the hole the drawn detail cuts in it
+   * (`holes`, the key of the last cut), never its ground. Null for a mission
+   * drawn alone.
+   */
+  private overview: { mesh: Mesh; holes: string; ready: boolean } | null = null;
+  /** The overview's skin and whether it has landed, as the apron's seam band reads them. */
+  private readonly seamMap: { value: CanvasTexture | null } = { value: null };
+  private readonly seamOn = { value: 0 };
   /**
    * §7.4's ramp: how far the border fade has come in, and where it is going.
    * In once a session's first state arrives, out when the session lets go; the
@@ -942,6 +972,7 @@ export class PerspectiveView {
     this.resizeObserver.observe(host);
     this.resize();
     this.setChromaticSplit(this.splitWanted);
+    this.ensureOverview();
     this.rebuildTerrain();
     this.exposeProbe();
     document.addEventListener('visibilitychange', this.onVisibility);
@@ -1100,15 +1131,13 @@ export class PerspectiveView {
       }
     }
     if (touched === null) return;
-    // The apron is not rebuilt either: its padded copy keeps the join's mission
-    // cells, which only touch the apron along the mission's edge. A delta on an
-    // edge cell would open the seam between the mission's edge and the apron's
-    // inner edge until the next terrain message; the live arch is central, and local edits are
-    // #1459's. The seed, the rock top and the depth ramp stay what the join set them
+    // The seed, the rock top and the depth ramp stay what the join set them
     // to: a delta changes the cells it names, and re-deriving any of the
     // three from the new ground would move every cell on the map to change a
-    // few (seabed.ts, `seabedSeed`).
+    // few (seabed.ts, `seabedSeed`). The apron is patched after the mission,
+    // whose edge it takes; the overview is public ground and never moves.
     this.patchTerrain(touched);
+    this.patchApron(cells, touched);
   }
 
   applySnapshot(snapshot: EchoSnapshot): void {
@@ -1165,6 +1194,7 @@ export class PerspectiveView {
   destroy(): void {
     this.setActive(false);
     this.disposeApron();
+    this.disposeOverview();
     document.removeEventListener('visibilitychange', this.onVisibility);
     this.resizeObserver?.disconnect();
     this.environment.destroy();
@@ -1739,6 +1769,7 @@ export class PerspectiveView {
     this.terrainMesh = new Mesh(geometry, material);
     this.scene.add(this.terrainMesh);
     if (this.apron !== null && this.apron.mesh === null) this.buildApron(grid);
+    this.cutOverview();
     this.terrainGrid = grid;
     this.seabedCanvas = canvas;
     this.seabedTexture = texture;
@@ -2121,11 +2152,11 @@ export class PerspectiveView {
 
   /**
    * The roofs take the ground's veil: they are ground, and stone nobody is
-   * listening to goes as cold as the floor under it. So does the apron, at
-   * the floor (`shadeApron`).
+   * listening to goes as cold as the floor under it. So does the exterior,
+   * at the floor (`shadeExterior`).
    */
   private shadeRoofs(): void {
-    this.shadeApron();
+    this.shadeExterior();
     const shade = this.veilColor;
     for (const roof of this.roofs) {
       const positions = roof.mesh.geometry.getAttribute('position') as BufferAttribute;
@@ -2202,7 +2233,18 @@ export class PerspectiveView {
     if (this.worldRegion !== null && this.surround !== null) {
       const { pads } = apronFrame(this.worldRegion, terrain.cellM);
       const padded = paddedTerrain(terrain, pads, this.surround);
-      if (padded !== null) this.apron = { terrain: padded, pads, mesh: null, cells: null };
+      if (padded !== null) {
+        this.apron = {
+          terrain: padded,
+          pads,
+          mesh: null,
+          cells: null,
+          grid: null,
+          canvas: null,
+          texture: null,
+          classes: null,
+        };
+      }
     }
   }
 
@@ -2241,32 +2283,33 @@ export class PerspectiveView {
   private buildApron(missionGrid: HeightGrid): void {
     const apron = this.apron;
     const terrain = this.terrain;
-    const rect = this.missionRect();
-    if (apron === null || terrain === null || rect === null || this.renderer === null) return;
+    const region = this.worldRegion;
+    if (apron === null || terrain === null || region === null || this.renderer === null) return;
+    this.ensureOverview();
+    const overview = this.overview;
+    if (overview === null) return;
     const grid = buildHeightGrid(apron.terrain, this.groundSeed, this.groundRockTopM);
-    const data = apronMesh(grid, missionGrid, apron.pads, terrain.cellM);
+    const data = apronMesh(grid, missionGrid, apron.pads, terrain.cellM, this.seamHeight());
     const geometry = new BufferGeometry();
     geometry.setAttribute('position', new BufferAttribute(data.positions, 3));
     geometry.setAttribute('uv', new BufferAttribute(data.uvs, 2));
     geometry.setIndex(new BufferAttribute(data.indices, 1));
-    const texture = new CanvasTexture(bakeSeabed(apron.terrain, this.groundSeed, this.seabedRange));
+    const canvas = bakeSeabed(apron.terrain, this.groundSeed, this.seabedRange);
+    const texture = new CanvasTexture(canvas);
     texture.flipY = false;
     texture.colorSpace = SRGBColorSpace;
     const material = new MeshBasicMaterial({ map: texture, toneMapped: false });
     // Shaded the way the mission's ground is (worldBorder.ts): its cells for
-    // the surface hook, the veil's shade on `color` (`shadeApron`), and the
-    // fade to the backdrop behind it, ramped by §7.4's strength.
-    this.border ??= {
-      uBorderRect: { value: [rect.x, rect.y, rect.widthM, rect.heightM] },
-      uBorderStrength: { value: this.borderStrength },
-      uFocusDepthM: this.backdrop.focusDepthUniform,
-    };
-    this.border.uBorderRect.value = [rect.x, rect.y, rect.widthM, rect.heightM];
-    const cells = surveyCellTexture(apron.terrain, surveyCellClasses(apron.terrain));
-    apron.cells = cells;
+    // the surface hook, the veil's shade on `color` (`shadeExterior`), the
+    // seam band into the overview's skin, and the fade to the backdrop behind
+    // it, ramped by §7.4's strength.
+    const border = this.borderUniforms();
+    const classes = surveyCellClasses(apron.terrain);
+    const cells = surveyCellTexture(apron.terrain, classes);
+    const detail = apronFrame(region, terrain.cellM).rect;
     installApronShading(
       material,
-      this.border,
+      border,
       {
         cells,
         cols: apron.terrain.cols,
@@ -2275,37 +2318,227 @@ export class PerspectiveView {
         padCols: apron.pads.west,
         padRows: apron.pads.north,
       },
-      BACKDROP_SPAN_M
+      BACKDROP_SPAN_M,
+      {
+        map: this.seamMap,
+        on: this.seamOn,
+        originM: [region.x, region.y],
+        sizeM: [WORLD.ATLAS_WIDTH_M, WORLD.ATLAS_HEIGHT_M],
+        detailRect: [detail.x, detail.y, detail.widthM, detail.heightM],
+      }
     );
     if (this.look === 'sorrowgate') installGroundSurface(material);
     const mesh = new Mesh(geometry, material);
     this.scene.add(mesh);
     apron.mesh = mesh;
-    this.shadeApron();
+    apron.cells = cells;
+    apron.grid = grid;
+    apron.canvas = canvas;
+    apron.texture = texture;
+    apron.classes = classes;
+    this.shadeExterior();
   }
 
   /**
-   * The veil over the apron: its floor, the shade of ground nobody hears,
-   * while anyone in the mission is listening (docs/ui-ux.md §4.5) — nothing
-   * outside a placed mission can be heard (docs/world-map.md §7.1) — and clear
-   * while nobody is, when the mission's own field is clear everywhere too. One
-   * colour for the whole mesh, so it costs no vertex walk.
+   * The fade's uniforms, one set for every exterior mesh: the mission
+   * rectangle once a session's ground has given it one, and nothing to fade
+   * before (strength 0 draws the whole world unfaded).
    */
-  private shadeApron(): void {
-    const material = this.apron?.mesh?.material as MeshBasicMaterial | undefined;
-    if (material === undefined) return;
+  private borderUniforms(): BorderUniforms {
+    const rect = this.missionRect() ?? { x: 0, y: 0, widthM: 0, heightM: 0 };
+    this.border ??= {
+      uBorderRect: { value: [] },
+      uBorderStrength: { value: this.borderStrength },
+      uFocusDepthM: this.backdrop.focusDepthUniform,
+    };
+    this.border.uBorderRect.value = [rect.x, rect.y, rect.widthM, rect.heightM];
+    return this.border;
+  }
+
+  /** The seam band's heights for this view's region (`seamHeightFor`). */
+  private seamHeight(): SeamHeight | undefined {
+    const region = this.worldRegion;
+    const terrain = this.terrain;
+    if (region === null || terrain === null) return undefined;
+    return seamHeightFor(region, apronFrame(region, terrain.cellM).rect);
+  }
+
+  /**
+   * The overview's mesh (worldOverview.ts, docs/world-map.md §7.3), once for
+   * the view's life: the atlas grid in atlas metres under a transform that
+   * puts the region's origin at the scene's, its skin, and the apron's fade
+   * from the same uniforms. Unlit, like the mission's ground. Shown once its
+   * skin has landed (`overviewSkin` bakes it between frames) and only while
+   * the fade is below full (`syncWater`): all of it lies past W, so at full
+   * strength every fragment would be the backdrop it covers.
+   */
+  private ensureOverview(): void {
+    const region = this.worldRegion;
+    if (this.overview !== null || region === null || this.renderer === null) return;
+    const grid = overviewGrid();
+    const { positions, uvs } = overviewVertices(grid);
+    const geometry = new BufferGeometry();
+    geometry.setAttribute('position', new BufferAttribute(positions, 3));
+    geometry.setAttribute('uv', new BufferAttribute(uvs, 2));
+    const indices = new Uint32Array((grid.vertsX - 1) * (grid.vertsZ - 1) * 6);
+    geometry.setIndex(new BufferAttribute(indices, 1));
+    geometry.setDrawRange(0, overviewIndices(grid, [], indices));
+    const material = new MeshBasicMaterial({ toneMapped: false });
+    installOverviewShading(material, this.borderUniforms(), BACKDROP_SPAN_M);
+    const mesh = new Mesh(geometry, material);
+    // Render transform only: the data stays in atlas metres (§7.2).
+    mesh.position.set(-region.x, 0, -region.y);
+    mesh.updateMatrixWorld();
+    mesh.visible = false;
+    this.scene.add(mesh);
+    const overview = { mesh, holes: '', ready: false };
+    this.overview = overview;
+    this.shadeExterior();
+    overviewSkin().then(
+      (canvas) => {
+        // A view torn down while the bake ran has nothing to put it on.
+        if (this.overview !== overview) return;
+        const texture = new CanvasTexture(canvas);
+        texture.flipY = false;
+        texture.colorSpace = SRGBColorSpace;
+        material.map = texture;
+        material.needsUpdate = true;
+        this.seamMap.value = texture;
+        this.seamOn.value = 1;
+        overview.ready = true;
+      },
+      () => {
+        // No skin, no overview: the apron keeps its own colour to its edge.
+      }
+    );
+  }
+
+  /**
+   * Cut the drawn detail out of the overview, so no surface overlaps another
+   * (§7.3, "Seam"): the session's detail rectangle once its ground is drawn,
+   * nothing before. One index buffer, rewritten in place and drawn to the
+   * kept length, so a cut leaves no buffer behind; only a change re-cuts.
+   */
+  private cutOverview(): void {
+    const overview = this.overview;
+    const region = this.worldRegion;
+    if (overview === null || region === null) return;
+    const holes = this.terrainMesh !== null ? [detailRect(region)] : [];
+    const key = JSON.stringify(holes);
+    if (key === overview.holes) return;
+    const geometry = overview.mesh.geometry;
+    const index = geometry.getIndex()!;
+    geometry.setDrawRange(0, overviewIndices(overviewGrid(), holes, index.array as Uint32Array));
+    index.needsUpdate = true;
+    overview.holes = key;
+  }
+
+  private disposeOverview(): void {
+    const mesh = this.overview?.mesh ?? null;
+    if (mesh === null) return;
+    this.scene.remove(mesh);
+    mesh.geometry.dispose();
+    (mesh.material as MeshBasicMaterial).map?.dispose();
+    (mesh.material as MeshBasicMaterial).dispose();
+    this.overview = null;
+    this.seamMap.value = null;
+    this.seamOn.value = 0;
+  }
+
+  /**
+   * Carry a ground delta into the apron, which holds the mission's live cells
+   * in its middle and takes the mission's heights along its edge (#1459): the
+   * cells are pasted into its padded copy, and where the delta reaches the
+   * edge — the heights and the bake reach one cell past a change — its
+   * vertices and skin are patched in place. Nothing past one cell moves, and
+   * the overview is never touched.
+   */
+  private patchApron(
+    cells: readonly { index: number; floorM: number; ceilingM: number; biome: number }[],
+    touched: CellRect
+  ): void {
+    const apron = this.apron;
+    const terrain = this.terrain;
+    const missionGrid = this.terrainGrid;
+    if (apron === null || terrain === null) return;
+    const { west, north } = apron.pads;
+    for (const cell of cells) {
+      if (cell.index < 0 || cell.index >= terrain.floor.length) continue;
+      const col = cell.index % terrain.cols;
+      const row = Math.floor(cell.index / terrain.cols);
+      const to = (row + north) * apron.terrain.cols + col + west;
+      apron.terrain.floor[to] = cell.floorM;
+      apron.terrain.ceiling[to] = cell.ceilingM;
+      apron.terrain.biomes[to] = cell.biome;
+    }
+    const reachesEdge =
+      touched.col0 <= 1 ||
+      touched.row0 <= 1 ||
+      touched.col1 >= terrain.cols - 2 ||
+      touched.row1 >= terrain.rows - 2;
+    const { mesh, grid, canvas, texture } = apron;
+    if (!reachesEdge || mesh === null || grid === null || missionGrid === null) return;
+    const shifted: CellRect = {
+      col0: touched.col0 + west,
+      row0: touched.row0 + north,
+      col1: touched.col1 + west,
+      row1: touched.row1 + north,
+    };
+    const span = patchHeightGrid(
+      grid,
+      apron.terrain,
+      this.groundSeed,
+      this.groundRockTopM,
+      shifted
+    );
+    const positions = mesh.geometry.getAttribute('position') as BufferAttribute;
+    patchApronMesh(
+      positions.array as Float32Array,
+      grid,
+      missionGrid,
+      apron.pads,
+      terrain.cellM,
+      span,
+      this.seamHeight()
+    );
+    positions.needsUpdate = true;
+    mesh.geometry.computeBoundingSphere();
+    mesh.geometry.computeBoundingBox();
+    if (apron.classes !== null && apron.cells !== null) {
+      patchSurveyCellClasses(apron.classes, apron.terrain, shifted);
+      apron.cells.needsUpdate = true;
+    }
+    if (canvas !== null && texture !== null) {
+      rebakeSeabedCells(canvas, apron.terrain, this.groundSeed, this.seabedRange, shifted);
+      texture.needsUpdate = true;
+    }
+  }
+
+  /**
+   * The veil over the exterior, the apron and the overview alike: its floor,
+   * the shade of ground nobody hears, while anyone in the mission is
+   * listening (docs/ui-ux.md §4.5) — nothing outside a placed mission can be
+   * heard (docs/world-map.md §7.1) — and clear while nobody is, when the
+   * mission's own field is clear everywhere too. One colour a mesh, so it
+   * costs no vertex walk, and the apron's seam band blends into the
+   * overview's skin under the same one.
+   */
+  private shadeExterior(): void {
     const k = this.veil.listening ? Math.min(1, Math.max(0, this.veilIntensity)) : 0;
     const i = Math.round(k * VEIL_STEPS) * 3;
-    material.color.setRGB(VEIL_TABLE[i]!, VEIL_TABLE[i + 1]!, VEIL_TABLE[i + 2]!);
+    for (const mesh of [this.apron?.mesh, this.overview?.mesh]) {
+      const material = mesh?.material as MeshBasicMaterial | undefined;
+      material?.color.setRGB(VEIL_TABLE[i]!, VEIL_TABLE[i + 1]!, VEIL_TABLE[i + 2]!);
+    }
   }
 
   /**
    * Whether a click here falls outside a placed mission — §7.4 rule 3: the
    * exterior takes no orders. The ray's first ground decides it: the mission's
-   * mesh or a roof is the mission's; the apron, or the ground plane past an
-   * edge, is not. Always false for a mission drawn alone, which keeps clamping
-   * a click onto the map as it did. The server's movement bounds stay the
-   * authority either way.
+   * mesh or a roof is the mission's; the apron, the overview, or the ground
+   * plane past an edge, is not. Always false for a mission drawn alone, which
+   * keeps clamping a click onto the map as it did. The server's movement
+   * bounds stay the authority either way.
    */
   refusesPick(clientX: number, clientY: number): boolean {
     const rect = this.missionRect();
@@ -2313,8 +2546,10 @@ export class PerspectiveView {
       return false;
     }
     const mission = this.groundHit();
-    const apronMesh = this.apron?.mesh ?? null;
-    const outside = apronMesh === null ? undefined : RAY_TMP.intersectObject(apronMesh, false)[0];
+    const exterior: Mesh[] = [];
+    if (this.apron?.mesh != null) exterior.push(this.apron.mesh);
+    if (this.overview !== null) exterior.push(this.overview.mesh);
+    const outside = RAY_TMP.intersectObjects(exterior, false)[0];
     if (mission !== undefined) return outside !== undefined && outside.distance < mission.distance;
     if (outside !== undefined) return true;
     const { origin, direction } = RAY_TMP.ray;
@@ -2338,18 +2573,30 @@ export class PerspectiveView {
   seabedDepthAt(xM: number, yM: number): number {
     const terrain = this.terrain;
     if (terrain === null) return 0;
-    // Past a placed mission's edge the ground is the apron's, so an eye that
-    // orbits out keeps its clearance over what is drawn there (§7.4 rule 1).
+    // Past a placed mission's edge the ground is the apron's, eased into the
+    // overview's across the seam band, and past the detail the overview's, as
+    // each is drawn: so an eye that orbits out keeps its clearance over what
+    // is under it (§7.4 rule 1), and a point projected there lands on it.
     const apron = this.apron;
+    const region = this.worldRegion;
     const rect = this.missionRect();
-    if (apron !== null && rect !== null && exteriorDistanceM(rect, { x: xM, y: yM }) > 0) {
-      return seabedDepthAtM(
+    if (
+      apron !== null &&
+      region !== null &&
+      rect !== null &&
+      exteriorDistanceM(rect, { x: xM, y: yM }) > 0
+    ) {
+      const overview = overviewDepthAtM(overviewGrid(), xM + region.x, yM + region.y);
+      const w = seamWeight(apronFrame(region, terrain.cellM).rect, xM, yM);
+      if (w === 1) return overview;
+      const own = seabedDepthAtM(
         apron.terrain,
         this.groundSeed,
         this.groundRockTopM,
         xM + apron.pads.west * terrain.cellM,
         yM + apron.pads.north * terrain.cellM
       );
+      return own + (overview - own) * w;
     }
     return seabedDepthAtM(terrain, this.groundSeed, this.groundRockTopM, xM, yM);
   }
@@ -2773,6 +3020,12 @@ export class PerspectiveView {
       if (this.border !== null) this.border.uBorderStrength.value = this.borderStrength;
       this.snow.setBorder(rect, this.borderStrength);
     }
+    // At full strength every overview fragment is the backdrop behind it, so
+    // it is not drawn: a mission's frame pays for the world only while the
+    // fade is coming in or going out, or before there is one (#1459).
+    if (this.overview !== null) {
+      this.overview.mesh.visible = this.overview.ready && this.borderStrength < 1;
+    }
     const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
     const projectionScalePx =
       (this.viewHeight * pixelRatio) / (2 * Math.tan(((FOV_DEG / 2) * Math.PI) / 180));
@@ -3187,6 +3440,15 @@ export class PerspectiveView {
       drawCalls: info?.render.calls ?? 0,
       triangles: info?.render.triangles ?? 0,
       passes: this.framePasses,
+      // The continuous world (docs/world-map.md §7): how far the fade has
+      // come in, and whether the overview was in the frame (#1459).
+      world:
+        this.worldRegion === null
+          ? null
+          : {
+              borderStrength: Number(this.borderStrength.toFixed(3)),
+              overviewDrawn: this.overview?.mesh.visible === true,
+            },
       // The lamp halo (art-direction.md, "Lamp halo — SPEC"): its state, what
       // it drew last frame, and what it holds (gate 6).
       halo: this.halo.state,

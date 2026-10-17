@@ -1080,6 +1080,7 @@ export class HeadlessWebGLRenderer {
           geometry?: {
             index?: { count: number } | null;
             attributes?: { position?: { count: number } };
+            drawRange?: { start: number; count: number };
             isInstancedBufferGeometry?: boolean;
             instanceCount?: number;
           };
@@ -1092,7 +1093,12 @@ export class HeadlessWebGLRenderer {
         : ((object as { count?: number }).count ?? 1);
       if (instances === 0) return;
       calls++;
-      const corners = geometry.index?.count ?? geometry.attributes?.position?.count ?? 0;
+      // Clamped to the draw range, as `renderBufferDirect` clamps it: a mesh
+      // that keeps one buffer and draws a prefix of it (the overview's cut)
+      // costs the prefix.
+      const all = geometry.index?.count ?? geometry.attributes?.position?.count ?? 0;
+      const range = geometry.drawRange ?? { start: 0, count: Infinity };
+      const corners = Math.max(0, Math.min(all, range.start + range.count) - range.start);
       triangles += (corners / 3) * instances;
     });
     if (world) {

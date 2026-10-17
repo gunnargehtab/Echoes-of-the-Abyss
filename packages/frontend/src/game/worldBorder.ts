@@ -19,6 +19,11 @@
  * Render-only, like every heightfield here. The simulation never reads the
  * apron, nothing out there can be detected, and a click on it is refused
  * (`PerspectiveView.refusesPick`).
+ *
+ * **Past the surround is the overview** (#1459, worldOverview.ts): the
+ * apron's last 500 m ease into it, heights on the vertex and colour in the
+ * fragment, so the two meet on the seam with neither a crack nor a line, and
+ * the overview takes the same fade from the same uniforms.
  */
 
 import {
@@ -31,6 +36,7 @@ import {
 import type { Material } from 'three';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import type { HeightGrid } from './perspectiveTerrain.ts';
+import { SEAM_WEIGHT_GLSL } from './worldOverview.ts';
 
 /** How many cells the surround adds on each side of the mission. */
 export interface ApronPads {
@@ -102,18 +108,48 @@ export function paddedTerrain(
 }
 
 /**
+ * Where the seam band puts an apron vertex: from its own world Y toward the
+ * overview's drawn surface by `seamWeight`, at a point in the mission's
+ * metres. The view builds it from worldOverview.ts.
+ */
+export type SeamHeight = (xM: number, zM: number, y: number) => number;
+
+/**
+ * One apron vertex's world Y. On the mission's edge, the mission grid's — the
+ * padded grid sees the surround past the edge where the mission grid saw its
+ * own edge cells again — so the two meshes share that line exactly and the
+ * seam cannot crack. Everywhere else the padded grid's, eased by the seam.
+ */
+function apronVertexY(
+  padded: HeightGrid,
+  mission: HeightGrid,
+  ox: number,
+  oz: number,
+  ix: number,
+  iz: number,
+  seam: SeamHeight | undefined
+): number {
+  const mx = ix - ox;
+  const mz = iz - oz;
+  if (mx >= 0 && mx < mission.vertsX && mz >= 0 && mz < mission.vertsZ) {
+    return mission.y[mz * mission.vertsX + mx]!;
+  }
+  const y = padded.y[iz * padded.vertsX + ix]!;
+  return seam === undefined ? y : seam(mx * padded.stepM, mz * padded.stepM, y);
+}
+
+/**
  * The apron's mesh: the padded grid's vertices in the mission's metres, with
  * every quad inside the mission left out, since the mission's own mesh draws
- * those. Vertices on the mission's edge take the mission grid's heights, not
- * the padded grid's — the padded grid sees the surround past the edge where
- * the mission grid saw its own edge cells again — so the two meshes share that line
- * exactly and the seam cannot crack.
+ * those. Heights by `apronVertexY`: the mission's on its edge, the seam's
+ * toward the overview on the outer one.
  */
 export function apronMesh(
   padded: HeightGrid,
   mission: HeightGrid,
   pads: ApronPads,
-  cellM: number
+  cellM: number,
+  seam?: SeamHeight
 ): { positions: Float32Array; uvs: Float32Array; indices: Uint32Array; triangles: number } {
   const { vertsX, vertsZ, stepM } = padded;
   const perCell = Math.round(cellM / stepM);
@@ -124,12 +160,9 @@ export function apronMesh(
   for (let iz = 0; iz < vertsZ; iz++) {
     for (let ix = 0; ix < vertsX; ix++) {
       const i = iz * vertsX + ix;
-      const mx = ix - ox;
-      const mz = iz - oz;
-      const onMission = mx >= 0 && mx < mission.vertsX && mz >= 0 && mz < mission.vertsZ;
-      positions[i * 3] = mx * stepM;
-      positions[i * 3 + 1] = onMission ? mission.y[mz * mission.vertsX + mx]! : padded.y[i]!;
-      positions[i * 3 + 2] = mz * stepM;
+      positions[i * 3] = (ix - ox) * stepM;
+      positions[i * 3 + 1] = apronVertexY(padded, mission, ox, oz, ix, iz, seam);
+      positions[i * 3 + 2] = (iz - oz) * stepM;
       uvs[i * 2] = (ix * stepM) / padded.widthM;
       uvs[i * 2 + 1] = (iz * stepM) / padded.heightM;
     }
@@ -154,6 +187,33 @@ export function apronMesh(
     indices: Uint32Array.from(quads),
     triangles: quads.length / 3,
   };
+}
+
+/**
+ * Re-take the apron's heights over a vertex span of the padded grid, into its
+ * position array in place, by the rule `apronMesh` built them with. A ground
+ * delta patches the mission grid and then the padded one (`patchHeightGrid`
+ * on each); this carries both into the apron, so the seam on the mission's
+ * edge holds after the delta exactly as a rebuild would draw it, and nothing
+ * past the span moves (#1459).
+ */
+export function patchApronMesh(
+  positions: Float32Array,
+  padded: HeightGrid,
+  mission: HeightGrid,
+  pads: ApronPads,
+  cellM: number,
+  span: { first: number; last: number },
+  seam?: SeamHeight
+): void {
+  const perCell = Math.round(cellM / padded.stepM);
+  const ox = pads.west * perCell;
+  const oz = pads.north * perCell;
+  for (let i = span.first; i <= span.last; i++) {
+    const ix = i % padded.vertsX;
+    const iz = Math.floor(i / padded.vertsX);
+    positions[i * 3 + 1] = apronVertexY(padded, mission, ox, oz, ix, iz, seam);
+  }
 }
 
 const glslFloat = (value: number) => (Number.isInteger(value) ? `${value}.0` : `${value}`);
@@ -195,8 +255,57 @@ export interface ApronCells {
   padRows: number;
 }
 
+/** What the apron's seam band blends toward: the overview's skin, and where it lies. */
+export interface SeamBlend {
+  /**
+   * The overview's skin, the texture its own mesh is drawn with, and 1 once
+   * it has landed: uniform objects the view sets when the bake is done.
+   */
+  map: { value: unknown };
+  on: { value: number };
+  /** Mission metres to atlas metres, x then y: the region's origin. */
+  originM: [number, number];
+  /** The atlas's size in metres, which the skin spans. */
+  sizeM: [number, number];
+  /** The detail rectangle in mission metres: x, y, width, height. */
+  detailRect: [number, number, number, number];
+}
+
+/** The world position every exterior fragment is faded by, and the hooks' plan position. */
+const borderVertex = (shader: { vertexShader: string }) => {
+  shader.vertexShader = shader.vertexShader
+    .replace(
+      '#include <common>',
+      '#include <common>\nvarying vec3 vBorderWorld;\nvarying vec2 vSurveyXZ;'
+    )
+    .replace(
+      '#include <begin_vertex>',
+      `#include <begin_vertex>
+        vBorderWorld = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;
+        vSurveyXZ = vBorderWorld.xz;`
+    );
+};
+
 /**
- * Shade the apron the way the mission's ground is shaded, then fade it.
+ * The fade, after the fog, as §7.4 has it: `f`, ramped by the strength,
+ * mixing toward the colour the backdrop draws behind this fragment — its ray
+ * graded from the backdrop's own anchor by the backdrop's own span — so at W
+ * the ground has become exactly the water behind it, at any pitch (#1023's
+ * ramp, composed as the fog composes it). The apron and the overview run this
+ * one chunk off one set of uniforms: one boundary term, wherever it is drawn.
+ */
+const borderFadeFragment = (backdropSpanM: number) => `#include <fog_fragment>
+        #ifdef USE_FOG
+          vec3 borderRay = normalize( vBorderWorld - cameraPosition );
+          vec3 borderDark = echoesWaterColor( uFocusDepthM - borderRay.y * ${glslFloat(backdropSpanM)} );
+          borderDark = linearToOutputTexel( vec4( borderDark, 1.0 ) ).rgb;
+          float borderFade = mix( 1.0, echoesExteriorFade( vBorderWorld.xz ), uBorderStrength );
+          gl_FragColor.rgb = mix( borderDark, gl_FragColor.rgb, borderFade );
+        #endif`;
+
+/**
+ * Shade the apron the way the mission's ground is shaded, ease it into the
+ * overview, then fade it.
  *
  * - **What the ground hooks read.** `vSurveyXZ` in the mission's own metres,
  *   so a surface pattern laid by plan position (`installGroundSurface`'s
@@ -204,12 +313,13 @@ export interface ApronCells {
  *   padded grid, so a hook asking for the biome under a point gets the apron's.
  *   No ink: the survey is the mission's instrument, and nothing out here is
  *   surveyed.
- * - **The fade**, after the fog, as §7.4 has it: `f`, ramped by the strength,
- *   mixing toward the colour the backdrop draws behind this fragment — its ray
- *   graded from the backdrop's own anchor by the backdrop's own span — so at W
- *   the ground has become exactly the water behind it, at any pitch, and the
- *   apron's far edge is nothing to see (#1023's ramp, composed as the fog
- *   composes it).
+ * - **The seam band.** Over the apron's last 500 m its colour, hooks and all,
+ *   goes to the overview's skin at the same point by the vertex blend's
+ *   weight, under the same veil, so on the seam the two are one colour; not
+ *   before the skin has landed, when the overview is not drawn either. The
+ *   overview's far edge is past the fade, so the apron no longer feathers its
+ *   own (#1461's interim, until the overview surrounded it).
+ * - **The fade**, `borderFadeFragment`.
  *
  * Chain `installGroundSurface` after this, as the mission mesh chains it after
  * the ink; its own key wraps this one.
@@ -218,27 +328,22 @@ export function installApronShading(
   material: Material,
   border: BorderUniforms,
   grid: ApronCells,
-  backdropSpanM: number
+  backdropSpanM: number,
+  seam: SeamBlend
 ): void {
   const uniforms = {
     ...border,
     uSurveyCells: { value: grid.cells },
     uSurveyGrid: { value: [grid.cols, grid.rows, grid.cellM] },
     uApronPad: { value: [grid.padCols, grid.padRows] },
+    uOverviewMap: seam.map,
+    uSeamOn: seam.on,
+    uOverviewFrame: { value: [...seam.originM, ...seam.sizeM] },
+    uDetailRect: { value: seam.detailRect },
   };
   material.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
-    shader.vertexShader = shader.vertexShader
-      .replace(
-        '#include <common>',
-        '#include <common>\nvarying vec3 vBorderWorld;\nvarying vec2 vSurveyXZ;'
-      )
-      .replace(
-        '#include <begin_vertex>',
-        `#include <begin_vertex>
-        vBorderWorld = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;
-        vSurveyXZ = vBorderWorld.xz;`
-      );
+    borderVertex(shader);
     shader.fragmentShader = shader.fragmentShader
       .replace(
         '#include <common>',
@@ -250,7 +355,11 @@ export function installApronShading(
         uniform vec2 uApronPad;
         uniform float uBorderStrength;
         uniform float uFocusDepthM;
+        uniform sampler2D uOverviewMap;
+        uniform float uSeamOn;
+        uniform vec4 uOverviewFrame;
         ${EXTERIOR_FADE_GLSL}
+        ${SEAM_WEIGHT_GLSL}
         float surveyCell( ivec2 c ) { return texelFetch( uSurveyCells, c, 0 ).r; }
         float surveyCellAt( vec2 xz ) {
           ivec2 c = ivec2( floor( xz / uSurveyGrid.z ) ) + ivec2( uApronPad );
@@ -258,25 +367,45 @@ export function installApronShading(
         }`
       )
       .replace(
-        '#include <fog_fragment>',
-        `#include <fog_fragment>
-        #ifdef USE_FOG
-          vec3 borderRay = normalize( vBorderWorld - cameraPosition );
-          vec3 borderDark = echoesWaterColor( uFocusDepthM - borderRay.y * ${glslFloat(backdropSpanM)} );
-          borderDark = linearToOutputTexel( vec4( borderDark, 1.0 ) ).rgb;
-          // The ramp acts on 0..W; the apron's last stretch, W to the
-          // surround's edge, goes to the backdrop at every strength, so a fade
-          // part-way in never shows where the apron ends (the owner's call on
-          // #1461, interim until the overview surrounds the detail).
-          float borderFeather =
-            1.0 - smoothstep( ${glslFloat(WORLD.FADE_M)}, ${glslFloat(WORLD.DETAIL_SURROUND_M)}, echoesExteriorDistance( vBorderWorld.xz ) );
-          float borderFade =
-            mix( 1.0, echoesExteriorFade( vBorderWorld.xz ), uBorderStrength ) * borderFeather;
-          gl_FragColor.rgb = mix( borderDark, gl_FragColor.rgb, borderFade );
-        #endif`
-      );
+        '#include <opaque_fragment>',
+        `vec2 seamUV = ( vBorderWorld.xz + uOverviewFrame.xy ) / uOverviewFrame.zw;
+        vec3 seamOverview = texture2D( uOverviewMap, seamUV ).rgb * diffuse;
+        outgoingLight = mix( outgoingLight, seamOverview, echoesSeamWeight( vBorderWorld.xz ) * uSeamOn );
+        #include <opaque_fragment>`
+      )
+      .replace('#include <fog_fragment>', borderFadeFragment(backdropSpanM));
   };
-  material.customProgramCacheKey = () => 'echoes-world-border-3';
+  material.customProgramCacheKey = () => 'echoes-world-border-4';
+  material.needsUpdate = true;
+}
+
+/**
+ * Fade the overview (worldOverview.ts) by the apron's own rule: the same
+ * chunk off the same uniforms, so the exterior has one boundary term wherever
+ * it is drawn. Nothing else: the overview carries no surface hook and no ink,
+ * and its colour is its skin under the veil.
+ */
+export function installOverviewShading(
+  material: Material,
+  border: BorderUniforms,
+  backdropSpanM: number
+): void {
+  material.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, border);
+    borderVertex(shader);
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+        varying vec3 vBorderWorld;
+        varying vec2 vSurveyXZ;
+        uniform float uBorderStrength;
+        uniform float uFocusDepthM;
+        ${EXTERIOR_FADE_GLSL}`
+      )
+      .replace('#include <fog_fragment>', borderFadeFragment(backdropSpanM));
+  };
+  material.customProgramCacheKey = () => 'echoes-world-overview-1';
   material.needsUpdate = true;
 }
 
