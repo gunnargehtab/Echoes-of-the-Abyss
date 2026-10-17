@@ -112,6 +112,7 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
     y: 17_000,
     depthM: 1_050,
   },
+  { id: 'the-underway', name: 'The Underway', region: 'west-wall', x: 5_500, y: 18_500 },
   {
     id: 'the-underworks',
     name: 'The Underworks',
@@ -403,7 +404,11 @@ export const RIFT_GROUND: MapGround = {
       380,
       'The lower terraces, at the Shelf break'
     ),
-    oval(5, 1, 5, 5, KelpForest, 320, 'Marr Plateau — Tidespeaker Marr’s terrace, b. 320 m'),
+    // Anholt's terraces step down south to the Furrow's Foot, which lies under
+    // them (§3; docs/mission-deep-furrow.md §1).
+    box(19, 9, 9, 4, KelpForest, 300, 'Anholt’s middle terraces'),
+    box(20, 13, 8, 4, KelpForest, 380, 'Anholt’s lower terraces — down to the Furrow’s Foot'),
+    oval(6, 1, 3, 5, KelpForest, 320, 'Marr Plateau — Tidespeaker Marr’s terrace, b. 320 m'),
     oval(10, 2, 4, 4, KelpForest, 380, 'Teel Plateau — Warden Teel’s, east of Marr, b. 380 m'),
     outline(
       [
@@ -714,27 +719,29 @@ export const RIFT_GROUND: MapGround = {
       3_100,
       'Its deep end'
     ),
+    box(29, 66, 2, 5, AbyssalTrench, 2_900, 'A trench of the nine'),
     outline(
       [
-        [29, 66],
-        [31, 66],
+        [28, 71],
+        [31, 71],
         [31, 76],
         [28, 76],
       ],
       AbyssalTrench,
-      3_000,
-      'A trench of the nine'
+      3_200,
+      'Its deep end'
     ),
+    box(32, 74, 4, 2, AbyssalTrench, 3_000, 'A trench of the nine'),
     outline(
       [
-        [32, 74],
-        [36, 74],
+        [32, 76],
+        [36, 76],
         [35, 79],
         [31, 79],
       ],
       AbyssalTrench,
-      3_200,
-      'A trench of the nine'
+      3_300,
+      'Its deep end'
     ),
 
     // The Rim (§3): the Mouth's northern edge, stepping down in four bands.

@@ -27,6 +27,7 @@ import {
   detailRect,
   paintGround,
   regionContains,
+  shapeContains,
   surroundFor,
   type GroundCells,
   type GroundRegion,
@@ -51,6 +52,13 @@ function place(id: string): RiftPlace {
 }
 
 const km = (a: RiftPlace, b: RiftPlace) => Math.hypot(a.x - b.x, a.y - b.y) / 1_000;
+
+/** An overview region by its note, read off the literal. */
+function region(note: string): GroundRegion {
+  const found = RIFT_GROUND.regions.filter((r) => r.note === note);
+  assert.equal(found.length, 1, `one region noted ${note}`);
+  return found[0]!;
+}
 
 const corners = (r: GroundRegion): number[] =>
   r.shape === 'polygon' ? r.points.flat() : [r.x, r.y, r.widthM, r.heightM];
@@ -157,6 +165,17 @@ describe('the named places (§3, placed by §7.2)', () => {
     assert.ok(ground(furrow).floorM >= 1_800);
   });
 
+  it("put the Furrow under Anholt's terrace (§3; mission-deep-furrow.md §1)", () => {
+    // The ground the Furrow's Foot is entered from, a cell north of it, is the
+    // last region painted there, and it is Anholt's.
+    const foot = region('The Furrow’s Foot — where the plateau’s lane comes down');
+    assert.ok(foot.shape === undefined);
+    const above = { x: foot.x + foot.widthM / 2, y: foot.y - 500 };
+    const owner = RIFT_GROUND.regions.filter((r) => shapeContains(r, above.x, above.y)).pop()!;
+    assert.match(owner.note!, /^Anholt’s /, `the Foot is entered from ${owner.note}`);
+    assert.equal(owner.biome, Biome.KelpForest);
+  });
+
   it('give the plateaus and Sector Kell one fence, and Halvard its kilometre (§3, §4)', () => {
     assert.ok(km(place('sector-kell'), place('kell-plateau')) <= 4, 'adjacent');
     const halvard = place('halvard');
@@ -206,6 +225,24 @@ describe('the named places (§3, placed by §7.2)', () => {
     const on = { x: lip.x + (lip.x - galleries.x) * 0.4, y: lip.y + (lip.y - galleries.y) * 0.4 };
     assert.equal(cellAt(overview, on.x, on.y).floorM, 4_410);
     assert.ok(lip.x > place('the-mouth').x, 'the column arrives on the eastern lip');
+  });
+
+  it('deepen the named trenches in the order of their count (§3)', () => {
+    // §3 counts a trench by its floor: the First's 1,800 m, the Fourth's by its
+    // Foot, the Ninth below 3,400 m; the Second is the First's sill's way on
+    // (docs/mission-trench-awakening.md §11).
+    const floors = [
+      region('The First Trench — the shallow band, under its worked rim'),
+      region('The Second Trench'),
+      region('The Foot — the Fourth’s last bench, where the Cantorate listens'),
+      region('The Ninth’s axis, below the galleries'),
+    ].map((r) => r.floorM!);
+    assert.deepEqual(
+      floors,
+      [...floors].sort((a, b) => a - b)
+    );
+    assert.equal(floors[0], 1_800);
+    assert.ok(floors[3]! >= 3_400);
   });
 
   it('aim the First Chord down the trench axis into the Mouth (§3)', () => {
@@ -259,17 +296,26 @@ describe("§7.2's anchor table", () => {
         .map((cell) => cell.trim())
     );
 
+  const position = (row: string[]) =>
+    row[1]!
+      .replace(/[()]/g, '')
+      .split(', ')
+      .map((v) => Number(v.replace(/,/g, '')));
+
+  it("pins Sorrowgate's map origin where the region stands", () => {
+    const origin = rows.filter(([name]) => name!.startsWith("Sorrowgate's map origin"));
+    assert.equal(origin.length, 1);
+    assert.deepEqual(position(origin[0]!), [SORROWGATE_REGION.x, SORROWGATE_REGION.y]);
+  });
+
   it('is the data, row for row: name, position and depth', () => {
-    assert.equal(rows.length, RIFT_PLACES.length + 1, "every place, and Sorrowgate's map origin");
+    const matched = new Set<string[]>();
     for (const p of RIFT_PLACES) {
-      const row = rows.find(([name]) => name === p.name || name!.startsWith(`${p.name} —`));
-      assert.ok(row, `${p.name} has a row`);
-      const [x, y] = row[1]!
-        .replace(/[()]/g, '')
-        .split(', ')
-        .map((v) => Number(v.replace(/,/g, '')));
-      assert.deepEqual([x, y], [p.x, p.y], `${p.name}'s position`);
-      const depths = row[2] === '—' ? [] : row[2]!.replace(/ m$/, '').split('–');
+      const row = rows.filter(([name]) => name === p.name || name!.startsWith(`${p.name} —`));
+      assert.equal(row.length, 1, `${p.name} has exactly one row`);
+      matched.add(row[0]!);
+      assert.deepEqual(position(row[0]!), [p.x, p.y], `${p.name}'s position`);
+      const depths = row[0]![2] === '—' ? [] : row[0]![2]!.replace(/ m$/, '').split('–');
       const want = [p.depthM, p.toDepthM].filter((d) => d !== undefined);
       assert.deepEqual(
         depths.map((d) => Number(d.replace(/,/g, ''))),
@@ -277,6 +323,9 @@ describe("§7.2's anchor table", () => {
         `${p.name}'s depth`
       );
     }
+    // Every row but the origin's is a place, and no place has two.
+    assert.equal(matched.size, RIFT_PLACES.length);
+    assert.equal(rows.length, RIFT_PLACES.length + 1, "the places and Sorrowgate's map origin");
   });
 });
 
