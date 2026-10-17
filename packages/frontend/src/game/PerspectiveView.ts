@@ -66,10 +66,12 @@ import {
   MODEL_LIGHTING,
   MOVEMENT,
   clampToRect,
+  detailGround,
   exteriorDistanceM,
   statsFor,
   structureStatsFor,
   type EchoSnapshot,
+  type GroundCells,
   type PlanRect,
   type WorldRegion,
   type OwnStructure,
@@ -167,7 +169,6 @@ import {
 import { stoneSeats, type StoneSeat } from './environment.ts';
 import { installGroundSurface, type WorldLook } from './tutorialLook.ts';
 import {
-  apronBaseFor,
   apronFrame,
   apronMesh,
   installApronShading,
@@ -534,8 +535,9 @@ export class PerspectiveView {
   private terrainMesh: Mesh | null = null;
   /**
    * The exterior ground a placed mission's border fades over (worldBorder.ts,
-   * #1461): the mission's cells padded with the map's base ground, its mesh,
-   * and how many cells it adds per side. Null for a mission drawn alone.
+   * #1461): the mission's live cells pasted into the region's authored detail
+   * ground (#1457), its mesh, and how many cells it adds per side. Null for a
+   * mission drawn alone.
    */
   private apron: {
     terrain: TerrainPayload;
@@ -789,6 +791,8 @@ export class PerspectiveView {
   private queueTimer: GpuTimer | null = null;
   /** The station these three are measuring, or null before one is named. */
   private stationLabel: string | null = null;
+  /** The placed region's detail ground (§7.3), or null for a mission drawn alone. */
+  private readonly surround: GroundCells | null;
   /** Set at construction so a probe read before the first frame still divides
    * by an elapsed time that means something. */
   private stationStartedAt = performance.now();
@@ -803,6 +807,9 @@ export class PerspectiveView {
     private readonly look: WorldLook = 'standard',
     private readonly worldRegion: WorldRegion | null = null
   ) {
+    // Painted once for the view's life: public ground, the same every
+    // session, which a live ground delta is pasted over and never written to.
+    this.surround = worldRegion === null ? null : (detailGround(worldRegion) ?? null);
     // Sorrowgate keeps its own mission surface (docs/visual-reboot.md §5).
     this.seabedDetail = SEABED_DETAIL_ON && look === 'standard';
     this.environment = new EnvironmentLayer(look, this.seabedDetail);
@@ -2192,10 +2199,10 @@ export class PerspectiveView {
     this.groundRockTopM = rockTopDepthM(terrain);
     this.seabedRange = seabedRange(terrain);
     this.disposeApron();
-    const base = this.worldRegion === null ? null : apronBaseFor(this.worldRegion.mapId);
-    if (this.worldRegion !== null && base !== null) {
+    if (this.worldRegion !== null && this.surround !== null) {
       const { pads } = apronFrame(this.worldRegion, terrain.cellM);
-      this.apron = { terrain: paddedTerrain(terrain, pads, base), pads, mesh: null, cells: null };
+      const padded = paddedTerrain(terrain, pads, this.surround);
+      if (padded !== null) this.apron = { terrain: padded, pads, mesh: null, cells: null };
     }
   }
 

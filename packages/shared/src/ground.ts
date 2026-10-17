@@ -12,9 +12,11 @@
  * So the ground of a placed map is authored here, once, and its backend
  * literal spreads it: the world renderer and the simulation read one source,
  * and a visual copy cannot drift from the ground the server paints. Only the
- * ground moves here. The backend keeps its painter (`terrainFor`), and a
- * terrain change during a match stays the session's own ground delta, never
- * an edit to this data.
+ * ground moves here. The backend keeps its terrain (`terrainFor`); the
+ * shape test both sides claim cells by is here, with `paintGround` for ground
+ * no server holds, the Rift's atlas among it (`rift.ts`). A terrain change
+ * during a match stays the session's own ground delta, never an edit to this
+ * data.
  */
 
 import { Biome } from './types.js';
@@ -99,6 +101,135 @@ export interface MapGround {
   /** The seabed before any region carves into it. */
   floorM: number;
   regions: readonly GroundRegion[];
+}
+
+/**
+ * Is (x, y) inside the shape? The grid asks it of each cell's centre, and that
+ * is what a region paints. Asked of any other point it answers for the
+ * outline, not the ground: a point inside an ellipse can stand in a corner
+ * cell the ellipse does not claim, so a test about the ground under a point
+ * asks it of that cell's centre.
+ *
+ * A rectangle is half-open: its west and north edges are in, and its east and
+ * south edges belong to the next rectangle along, which is what lets adjacent
+ * rectangles tile (#157). An ellipse or a polygon is **closed**: a point on
+ * its outline is inside it. The half-open rule hands a point on a slanted edge
+ * to the shape east of it, so the mirror image of that shape loses the mirror
+ * image of that point, and a symmetric map stops being symmetric along every
+ * 45° edge. A rectangle on the grid never meets the question, since no cell
+ * centre lies on a cell boundary.
+ */
+export function shapeContains(shape: Shape, x: number, y: number): boolean {
+  switch (shape.shape) {
+    case 'ellipse':
+      return ellipseContains(shape, x, y);
+    case 'polygon':
+      return polygonContains(shape.points, x, y);
+    default:
+      return (
+        x >= shape.x && x < shape.x + shape.widthM && y >= shape.y && y < shape.y + shape.heightM
+      );
+  }
+}
+
+function ellipseContains(e: EllipseShape, x: number, y: number): boolean {
+  if (x < e.x || x > e.x + e.widthM || y < e.y || y > e.y + e.heightM) return false;
+  // Twice the offset from the centre, so a frame in whole metres keeps every
+  // term whole: (dx/w)² + (dy/h)² <= 1, multiplied through by w²h². Exact for
+  // any frame under 67 km², which is larger than every map, so a centre on the
+  // outline is on it rather than a rounding error to either side.
+  const w = e.widthM;
+  const h = e.heightM;
+  const dx = 2 * (x - e.x) - w;
+  const dy = 2 * (y - e.y) - h;
+  return dx * dx * h * h + dy * dy * w * w <= w * w * h * h;
+}
+
+function polygonContains(points: PolygonShape['points'], x: number, y: number): boolean {
+  let inside = false;
+  for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+    const [ax, ay] = points[j]!;
+    const [bx, by] = points[i]!;
+    // Twice the signed area of the triangle a, b, p: zero when p is on the
+    // line through the edge, and exact in whole metres, so a point on the
+    // outline is caught here rather than left to round either way below.
+    const cross = (bx - ax) * (y - ay) - (by - ay) * (x - ax);
+    if (
+      cross === 0 &&
+      x >= Math.min(ax, bx) &&
+      x <= Math.max(ax, bx) &&
+      y >= Math.min(ay, by) &&
+      y <= Math.max(ay, by)
+    ) {
+      return true;
+    }
+    // Even-odd: a ray from p toward +x crosses this edge when the edge spans
+    // p's row and passes east of p.
+    if (ay > y !== by > y && (by > ay ? cross > 0 : cross < 0)) inside = !inside;
+  }
+  return inside;
+}
+
+/**
+ * A ground painted onto its grid: one value per cell, row-major from the
+ * north-west corner, as the server's terrain and the join payload hold it.
+ */
+export interface GroundCells {
+  cols: number;
+  rows: number;
+  cellM: number;
+  biomes: Uint8Array;
+  floor: Uint16Array;
+  ceiling: Uint16Array;
+}
+
+/**
+ * Paint a ground's regions onto its grid, by the backend's rules
+ * (`terrainFor`): open water at the base floor, then each region in order,
+ * claiming the cells whose centres its shape holds. A region writes its biome
+ * always and its floor and ceiling only where it states them, so one that
+ * says nothing about the water column leaves what an earlier region put
+ * there. The world renderer paints with this; a backend test holds it to
+ * `terrainFor` cell for cell on every map.
+ */
+export function paintGround(ground: MapGround): GroundCells {
+  const cols = Math.ceil(ground.widthM / ground.cellM);
+  const rows = Math.ceil(ground.heightM / ground.cellM);
+  const cells: GroundCells = {
+    cols,
+    rows,
+    cellM: ground.cellM,
+    biomes: new Uint8Array(cols * rows).fill(Biome.OpenWater),
+    floor: new Uint16Array(cols * rows).fill(ground.floorM),
+    ceiling: new Uint16Array(cols * rows),
+  };
+  paintRegions(cells, ground.regions);
+  return cells;
+}
+
+/**
+ * Paint regions over cells that already hold ground, by the same rules.
+ * `origin` is the grid's north-west corner in the regions' own frame, so a
+ * surround authored in atlas metres paints onto a grid that starts anywhere
+ * in the atlas.
+ */
+export function paintRegions(
+  cells: GroundCells,
+  regions: readonly GroundRegion[],
+  origin: { x: number; y: number } = { x: 0, y: 0 }
+): void {
+  for (const region of regions) {
+    for (let row = 0; row < cells.rows; row++) {
+      const y = origin.y + (row + 0.5) * cells.cellM;
+      for (let col = 0; col < cells.cols; col++) {
+        if (!shapeContains(region, origin.x + (col + 0.5) * cells.cellM, y)) continue;
+        const index = row * cells.cols + col;
+        cells.biomes[index] = region.biome;
+        if (region.floorM !== undefined) cells.floor[index] = region.floorM;
+        if (region.ceilingM !== undefined) cells.ceiling[index] = region.ceilingM;
+      }
+    }
+  }
 }
 
 /**

@@ -10,7 +10,14 @@
 import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
 import { DoubleSide, Mesh, MeshBasicMaterial, ShaderLib } from 'three';
-import { Biome, Faction, SORROWGATE_REGION, WORLD, exteriorFade } from '@echoes/shared';
+import {
+  Biome,
+  Faction,
+  SORROWGATE_REGION,
+  WORLD,
+  detailGround,
+  exteriorFade,
+} from '@echoes/shared';
 import {
   createHost,
   HeadlessApplication,
@@ -24,7 +31,6 @@ import { buildHeightGrid } from '../src/game/perspectiveTerrain.ts';
 import {
   EXTERIOR_FADE_GLSL,
   stepBorderStrength,
-  apronBaseFor,
   apronFrame,
   apronMesh,
   paddedTerrain,
@@ -80,36 +86,46 @@ afterEach(() => {
   for (const view of views.splice(0)) view.destroy();
 });
 
-describe('the apron: the exterior until #1457 authors it', () => {
-  it("is the map's own base ground, ten cells round Sorrowgate", () => {
-    assert.deepEqual(apronBaseFor('sorrowgate'), { biome: Biome.CoralRuins, floorM: 1600 });
-    assert.equal(apronBaseFor('ventfront-divide'), null, 'only placed maps have one');
+describe("the apron: the region's authored surround (#1457)", () => {
+  it("is §7.3's detail rectangle, ten cells round Sorrowgate", () => {
     const { rect, pads } = apronFrame(SORROWGATE_REGION, 250);
     assert.deepEqual(rect, { x: -2_500, y: -2_500, widthM: 10_000, heightM: 9_000 });
     assert.deepEqual(pads, { west: 10, north: 10, east: 10, south: 10 });
+    const surround = detailGround(SORROWGATE_REGION)!;
+    assert.equal(surround.cols, 40);
+    assert.equal(surround.rows, 36);
   });
 
-  it('pastes the mission into base ground cell for cell', () => {
+  it('pastes the live mission into the surround, and never writes the surround', () => {
     const mission = pilotTerrain();
     const pads = { west: 10, north: 10, east: 10, south: 10 };
-    const padded = paddedTerrain(mission, pads, { biome: Biome.CoralRuins, floorM: 1600 });
+    const surround = detailGround(SORROWGATE_REGION)!;
+    const baseline = Array.from(surround.floor);
+    const padded = paddedTerrain(mission, pads, surround)!;
     assert.equal(padded.cols, 40);
     assert.equal(padded.rows, 36);
-    for (let row = 0; row < mission.rows; row++) {
-      for (let col = 0; col < mission.cols; col++) {
-        const to = (row + 10) * 40 + col + 10;
-        assert.equal(padded.floor[to], mission.floor[row * mission.cols + col]);
-        assert.equal(padded.biomes[to], mission.biomes[row * mission.cols + col]);
+    for (let row = 0; row < padded.rows; row++) {
+      for (let col = 0; col < padded.cols; col++) {
+        const to = row * 40 + col;
+        const inside = row >= 10 && row < 26 && col >= 10 && col < 30;
+        const from = (row - 10) * mission.cols + col - 10;
+        assert.equal(padded.floor[to], inside ? mission.floor[from] : surround.floor[to]);
+        assert.equal(padded.biomes[to], inside ? mission.biomes[from] : surround.biomes[to]);
+        assert.equal(padded.ceiling[to], inside ? mission.ceiling[from] : surround.ceiling[to]);
       }
     }
-    assert.equal(padded.floor[0], 1600);
-    assert.equal(padded.biomes[padded.biomes.length - 1], Biome.CoralRuins);
+    assert.deepEqual(Array.from(surround.floor), baseline, 'the baseline is as it was');
+    assert.equal(
+      paddedTerrain(mission, { ...pads, west: 9 }, surround),
+      null,
+      'a grid that does not fit is refused, not cropped'
+    );
   });
 
   it('meets the mission mesh on its edge exactly, and draws nothing inside it', () => {
     const mission = pilotTerrain();
     const pads = { west: 10, north: 10, east: 10, south: 10 };
-    const padded = paddedTerrain(mission, pads, { biome: Biome.CoralRuins, floorM: 1600 });
+    const padded = paddedTerrain(mission, pads, detailGround(SORROWGATE_REGION)!)!;
     const missionGrid = buildHeightGrid(mission);
     const mesh = apronMesh(buildHeightGrid(padded), missionGrid, pads, 250);
     // 160 × 144 quads in the detail rectangle, less the mission's 80 × 64.
@@ -232,8 +248,9 @@ describe('the pilot view at its border', () => {
   it('lets the eye orbit out over the apron, clear of its ground', () => {
     const { view } = mountView(true);
     // The focus on the trench floor at the south edge (2,400 m), the eye low and
-    // 600 m out over the apron, whose base floor (1,600 m) stands 800 m higher:
-    // clearance read off the mission's edge cell would leave the eye in rock.
+    // 600 m out over the surround's districts (1,600 m), west of the Commit's
+    // basin, 800 m higher: clearance read off the mission's edge cell would
+    // leave the eye in rock.
     const camera = (
       globalThis as unknown as {
         window: {
@@ -241,7 +258,7 @@ describe('the pilot view at its border', () => {
         };
       }
     ).window.__perspectiveCamera;
-    camera(2_500, 3_990, 600, { pitchDeg: 10 });
+    camera(750, 3_990, 600, { pitchDeg: 10 });
     pumpAnimationFrames();
     const { eye, focus } = probe();
     assert.ok(focus.zM <= 4_000, 'the focus is on mission ground');

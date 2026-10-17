@@ -8,11 +8,24 @@
  * the ground, and a deliberate change to it redraws this picture in the same
  * commit. What it catches is the accidental kind — a region lost or reordered
  * in the move, or a painter that reads the shared literal differently.
+ *
+ * Since #1457 it also holds the shared painter (`paintGround`) to
+ * `terrainFor` on every map, the world's detail ground to the server's
+ * baseline, and the simulation to never reading the atlas.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { Biome, SORROWGATE_GROUND } from '@echoes/shared';
-import { SORROWGATE, terrainFor } from '../src/sim/maps/index.ts';
+import { readFileSync, readdirSync } from 'node:fs';
+import {
+  Biome,
+  DEPTH,
+  SORROWGATE_GROUND,
+  SORROWGATE_REGION,
+  detailGround,
+  detailRect,
+  paintGround,
+} from '@echoes/shared';
+import { MAPS, MISSION_MAPS, SORROWGATE, terrainFor } from '../src/sim/maps/index.ts';
 
 const LEGEND: Record<string, { biome: Biome; floorM: number; ceilingM: number }> = {
   '.': { biome: Biome.CoralRuins, floorM: 1600, ceilingM: 0 }, // the Districts
@@ -73,5 +86,64 @@ describe("Sorrowgate's shared ground", () => {
       }
     }
     assert.equal(checked, 320);
+  });
+});
+
+describe("the shared painter (#1457): the world renderer's ground is the server's", () => {
+  // Every map either side plays, skirmish and mission: `paintGround` is what
+  // the world draws Sorrowgate and its surround with, and a cell it painted
+  // differently from the server would draw ground the game is not played on.
+  for (const map of [...MAPS, ...MISSION_MAPS]) {
+    it(`paints ${map.id} cell for cell as terrainFor does`, () => {
+      const server = terrainFor(map).serialize();
+      // A map that authors no base floor gets the ruleset's, as Terrain does.
+      const shared = paintGround({ ...map, floorM: map.floorM ?? DEPTH.MAX_M });
+      assert.equal(shared.cols, server.cols);
+      assert.equal(shared.rows, server.rows);
+      assert.equal(shared.cellM, server.cellM);
+      assert.deepEqual(Array.from(shared.biomes), server.biomes, 'biomes');
+      assert.deepEqual(Array.from(shared.floor), server.floor, 'floors');
+      assert.deepEqual(Array.from(shared.ceiling), server.ceiling, 'ceilings');
+    });
+  }
+});
+
+describe("the continuous world's detail ground (#1457) holds the server's baseline", () => {
+  it("pastes Sorrowgate's 320 cells exactly as the server paints them", () => {
+    const server = terrainFor(SORROWGATE).serialize();
+    const detail = detailGround(SORROWGATE_REGION)!;
+    const rect = detailRect(SORROWGATE_REGION);
+    const west = (SORROWGATE_REGION.x - rect.x) / detail.cellM;
+    const north = (SORROWGATE_REGION.y - rect.y) / detail.cellM;
+    for (let row = 0; row < server.rows; row++) {
+      for (let col = 0; col < server.cols; col++) {
+        const from = row * server.cols + col;
+        const to = (row + north) * detail.cols + col + west;
+        const at = `cell (${col}, ${row})`;
+        assert.equal(detail.biomes[to], server.biomes[from], `${at} biome`);
+        assert.equal(detail.floor[to], server.floor[from], `${at} floor`);
+        assert.equal(detail.ceiling[to], server.ceiling[from], `${at} ceiling`);
+      }
+    }
+  });
+
+  it('is read by nothing in the simulation: the atlas is public ground (§7.1)', () => {
+    // A server that read the atlas would play on ground no mission authored.
+    const walk = (dir: URL): string[] =>
+      readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
+        entry.isDirectory()
+          ? walk(new URL(`${entry.name}/`, dir))
+          : entry.name.endsWith('.ts')
+            ? [readFileSync(new URL(entry.name, dir), 'utf8')]
+            : []
+      );
+    const sources = walk(new URL('../src/', import.meta.url));
+    assert.ok(sources.length > 50, 'walked the backend source');
+    for (const source of sources) {
+      assert.doesNotMatch(
+        source,
+        /(RIFT_GROUND|RIFT_PLACES|RIFT_REGIONS|detailGround|surroundFor)/
+      );
+    }
   });
 });
