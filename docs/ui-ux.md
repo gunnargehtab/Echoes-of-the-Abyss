@@ -1693,4 +1693,5 @@ renderer work rather than mixer work, so each names what it moves:
 - **[free-camera.md](free-camera.md)** — the freed camera §9's three new verbs drive, and why §5's scope box became the compass
 - **[campaign.md](campaign.md)** — the twenty-nine missions §14's board is a rendering of
 - **[concept-art/hud-mockups/](concept-art/hud-mockups/README.md)** — three directions for the in-match interface, each measured against the rules above: what it keeps, what it breaks, and what the break buys
+- **[concept-art/hud-materials/](concept-art/hud-materials/README.md)** — the second round: four materials for the chosen Console moment (brass, nacre, gunmetal, cyanotype), each keeping every information law and breaking the same four style rules
 - **[tech-stack.md](tech-stack.md)** — why the client is allowed so little
