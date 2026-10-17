@@ -10,8 +10,15 @@
 import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
 import { DoubleSide, Mesh, MeshBasicMaterial } from 'three';
-import { Biome, SORROWGATE_REGION, WORLD, exteriorFade } from '@echoes/shared';
-import { createHost, HeadlessWebGLRenderer, pumpAnimationFrames } from './support/headless.ts';
+import { Biome, Faction, SORROWGATE_REGION, WORLD, exteriorFade } from '@echoes/shared';
+import {
+  createHost,
+  HeadlessApplication,
+  HeadlessWebGLRenderer,
+  pumpAnimationFrames,
+} from './support/headless.ts';
+import { cannedMap, cannedSnapshot } from './support/cannedMatch.ts';
+import { EchoRenderer, type RendererCallbacks } from '../src/game/EchoRenderer.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { buildHeightGrid } from '../src/game/perspectiveTerrain.ts';
 import {
@@ -58,7 +65,10 @@ function mountView(placed: boolean): { view: PerspectiveView; gl: HeadlessWebGLR
   const view = new PerspectiveView('sorrowgate', placed ? SORROWGATE_REGION : null);
   views.push(view);
   const host = createHost(1280, 720) as unknown as HTMLElement;
-  assert.equal(view.mount(host, () => gl.asRenderer(), gl.environment), true);
+  assert.equal(
+    view.mount(host, () => gl.asRenderer(), gl.environment),
+    true
+  );
   view.setTerrain(pilotTerrain());
   view.setActive(true);
   pumpAnimationFrames();
@@ -144,7 +154,9 @@ describe('the pilot view at its border', () => {
     const placed = mountView(true).view;
     const alone = mountView(false).view;
     const skirt = (view: PerspectiveView) =>
-      (view as unknown as { terrainDressing: { children: unknown[] } }).terrainDressing.children.some(
+      (
+        view as unknown as { terrainDressing: { children: unknown[] } }
+      ).terrainDressing.children.some(
         (child) =>
           child instanceof Mesh &&
           child.material instanceof MeshBasicMaterial &&
@@ -159,7 +171,10 @@ describe('the pilot view at its border', () => {
     assert.ok(mesh !== null, 'the exterior is drawn');
     assert.equal(apron(alone), null);
     // The fade's program is the one the cache key names, compiled from the GLSL above.
-    assert.equal((mesh.material as MeshBasicMaterial).customProgramCacheKey(), 'echoes-world-border-1');
+    assert.equal(
+      (mesh.material as MeshBasicMaterial).customProgramCacheKey(),
+      'echoes-world-border-1'
+    );
   });
 
   it('holds the focus inside the mission under every verb', () => {
@@ -233,5 +248,65 @@ describe('the pilot view at its border', () => {
     pumpAnimationFrames();
     const past = alone.projectPoint(2_500, 4_900, null);
     assert.equal(alone.refusesPick(past.x, past.y), false, 'a view drawn alone still clamps');
+  });
+
+  it('gives no order for a right click past the edge, and one inside it', async () => {
+    const { view } = mountView(true);
+    const orders: string[] = [];
+    const callbacks = new Proxy(
+      {},
+      {
+        get: (_target, name) => (): void => {
+          if (String(name).endsWith('Order')) orders.push(String(name));
+        },
+      }
+    ) as RendererCallbacks;
+    const app = new HeadlessApplication();
+    const chart = new EchoRenderer(callbacks, app.asApplication());
+    await chart.init(createHost(1280, 720) as unknown as HTMLElement);
+    try {
+      chart.setConn(view);
+      chart.setTerrain(pilotTerrain());
+      chart.setMap(cannedMap());
+      chart.setIdentity(0, Faction.Bathyarch);
+      view.setIdentity(0, Faction.Bathyarch);
+      const snapshot = cannedSnapshot();
+      chart.applySnapshot(snapshot);
+      view.applySnapshot(snapshot);
+      const frame = () => {
+        pumpAnimationFrames();
+        app.frame();
+      };
+      const canvas = app.canvas;
+      const click = (button: 0 | 2, at: { x: number; y: number }) => {
+        for (const type of ['pointerdown', 'pointerup']) {
+          canvas.dispatch(type, {
+            button,
+            buttons: type === 'pointerdown' ? (button === 2 ? 2 : 1) : 0,
+            pointerId: 1,
+            pointerType: 'mouse',
+            clientX: at.x,
+            clientY: at.y,
+            shiftKey: false,
+            ctrlKey: false,
+            metaKey: false,
+          });
+        }
+        frame();
+      };
+      const hull = snapshot.units[0]!;
+      chart.focusOn(hull.x, hull.y);
+      frame();
+      click(0, view.projectPoint(hull.x, hull.y, hull.depth));
+      // Look at the south edge, with ground on both sides of it on screen.
+      view.focusWorld(2_500, 3_000, 4_000);
+      frame();
+      click(2, view.projectPoint(2_500, 4_900, null));
+      assert.deepEqual(orders, [], 'the exterior takes no orders');
+      click(2, view.projectPoint(2_500, 2_500, null));
+      assert.ok(orders.length > 0, 'and the mission still does');
+    } finally {
+      chart.destroy();
+    }
   });
 });
