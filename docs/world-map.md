@@ -179,19 +179,57 @@ The world is **continuous visual geography, not a persistent simulation**. The w
 | Grid | 1,000 m overview cells; mission ground keeps its 250 m cells. Every origin and boundary below is a whole 250 m cell, so a mission's cells sit on the atlas grid exactly |
 | Depth reach | The overview may draw ground to the Mouth's floor at 4,410 m. That is a place's depth, not a playing depth: the ruleset's 3,000 m limit on an order (`DEPTH.MAX_M`, [systems-depth.md](systems-depth.md) §6, *Map floor*) does not move, and no mission floor follows the atlas |
 
-**Anchors.** Only the pilot is pinned. Every other named place is placed by [#1457](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1457), inside its region's rectangle below and at the distances §1–§4 state, and enters this table when it is placed. An anchor in this table does not move unless this table changes first.
+**Anchors.** Sorrowgate's origin was pinned first. [#1457](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1457) placed every other row, each inside its region's rectangle below and at the distances §1–§4 state. An anchor in this table does not move unless this table changes first. A depth here is the place's own, as §3 gives it, and never the floor of a mission map cut from that ground; a place §3 gives no depth has none here. `RIFT_PLACES` in `packages/shared/src/rift.ts` transcribes the table, and a test holds the two row for row.
 
 | Anchor | Atlas position | Depth | Why there |
 | --- | --- | --- | --- |
 | Sorrowgate's map origin, its north-west corner | (17,500, 40,500) | — | Mid-Rift and mid-width, where §1 puts the drowned city; the court is then within a long day's transit of everyone (§4) |
-| The court, the flight's spawn at the arch | (20,050, 42,650) | 1,500 m | Derived: origin plus the spawn at (2,550, 2,150) |
+| Sorrowgate — the court, the flight's spawn at the arch | (20,050, 42,650) | 1,500 m | Derived: origin plus the spawn at (2,550, 2,150) |
+| Marr Plateau | (7,500, 3,500) | 320 m | The north-west terrace, eighty kilometres north of the Rim ([mission-second-seeding.md](mission-second-seeding.md)) |
+| Teel Plateau | (12,000, 4,000) | 380 m | East of Marr, at the shoulder's north edge ([mission-tend.md](mission-tend.md) §11; [mission-shallow.md](mission-shallow.md) §11) |
+| Anholt Plateau | (20,000, 5,500) | 210 m | The highest gardens, up the northern rise |
+| The Kell Shoulder | (9,000, 7,500) | 340 m | Four kilometres of bare rock between Marr and Kell |
+| The Enclosure | (16,000, 9,500) | — | Among the northern terraces ([environments.md](environments.md)) |
+| Kell Plateau | (11,000, 10,500) | — | Across the shoulder from Marr, a fence from Sector Kell (§4) |
+| The Furrow | (24,000, 19,000) | 900–2,600 m | At the terraces' southern foot, where the scar branches; its sill opens onto the scar |
+| Sector Kell | (8,500, 12,500) | 350 m | The Holding's top berths, beside Kell Plateau (§4) |
+| Holding One | (6,000, 16,000) | 350–1,300 m | Built down the face at the wall's north end |
+| Sector Vayle | (5,000, 17,000) | 1,050 m | Mid-city, above the root |
+| The Underway | (5,500, 18,500) | — | Asset 002, where Board country ends ([mission-item-nine.md](mission-item-nine.md) §1) |
+| The Underworks | (6,000, 19,500) | 1,900–2,100 m | Roofed water under the Holding's overhang |
+| Fivewell | (5,500, 22,000) | — | Above the Vein, at its rail head |
+| Ninefold Vein | (5,000, 26,500) | 900–1,400 m | The founding field's fault line, down the face |
+| Halvard | (7,000, 36,000) | 1,600 m | On the wall's lower face, nothing built within a kilometre |
+| The Upper Concourse | (20,000, 40,875) | 340 m | Derived: the middle of Sorrowgate's Concourse, at the end of the shoulder's tongue |
+| The Commit | (20,000, 44,000) | 2,400 m | Derived: the middle of Sorrowgate's Commit, a basin opening onto the scar |
+| The Ninth Chapter-House | (31,000, 50,000) | 1,900 m | Mid-slope, 450 m below the Third |
+| The Third Chapter-House | (36,500, 54,500) | 1,450 m | High on the slope, north-east of the outer formations ([mission-aptitude.md](mission-aptitude.md) §11) |
+| The First Chapter-House — where the First Chord stands | (27,500, 57,500) | 2,900 m | The fields' south-west corner, nearest the Mouth, where the scar ends and the First's axis begins |
+| The Fifth | (32,500, 57,500) | 1,450–1,780 m | Running north from the Seam into the Third's country |
+| The Rest | (30,000, 59,500) | 1,600–2,400 m | A trench head on the southern margin, falling east |
+| The Seam | (34,000, 59,500) | 1,750–1,780 m | The fields' southern boundary |
+| The Fourth Trench | (11,500, 52,500) | 1,700 m | The freight pipe from the wall's south end to the Deep Yard, eleven kilometres ([mission-baffle.md](mission-baffle.md)) |
+| The First Trench — the shallow band | (6,000, 53,000) | 1,800–2,400 m | The top step's west end, under the wall ([mission-exposure.md](mission-exposure.md) §11) |
+| The Deep Yard | (11,500, 58,500) | 1,650 m | The pipe's southern mouth |
+| The Fourth's foot | (11,500, 62,000) | 2,000–2,900 m | The Fan and the Foot below the Yard, the galleries in the fan's east wall |
+| The banding ground | (23,000, 64,000) | 1,500–2,400 m | The Ninth's head, entered from under the duct |
+| Sufficiency | (25,000, 69,000) | 2,750–3,400 m | Where the First's axis meets the Ninth, on the Chord's line to the Mouth |
+| The attending galleries | (24,500, 71,500) | 3,000 m | Sufficiency's southern face, eleven kilometres north of the Lip (§4) |
+| The Ninth's sill | (24,000, 74,500) | 4,100 m | Three kilometres on from the galleries |
+| The Staging | (20,000, 79,500) | 1,500 m | The Rim's northern band, where the road south arrives |
+| The Slopes | (20,000, 80,500) | 1,500–2,200 m | The Rim's second band |
+| The Terraces | (20,000, 81,500) | 2,600 m | The Rim's crystal band |
+| The Lip | (23,500, 82,500) | 3,100 m | Where the Ninth comes out, on the eastern lip ([mission-first-arrival.md](mission-first-arrival.md) §1) |
+| The Mouth | (20,500, 86,500) | 4,410 m | The depression's middle, below everything |
 
 **Regions, as coarse allocations.** Each is the rectangle its ground is authored inside, overlapping where §3's regions meet: the Plateaus *x* 6–34 km, *y* 0–22 km; the West Wall *x* 0–10 km, *y* 12–50 km, so its north end shares a fence with the plateaus, as Sector Kell did (§4); the Drowned City *x* 12–28 km, *y* 32–50 km; the Resonance Fields *x* 26–40 km, *y* 30–62 km; the Trench Country the full width, *y* 50–79 km; the Mouth *y* 79–90 km. They are bounds on authoring, not shapes, and a shape inside them follows [maps.md](maps.md)'s rules: authored, never generated from an image or noise.
+
+**The ground between the places.** `RIFT_GROUND` in `packages/shared/src/rift.ts` paints it. The north shoulder is bare rock at the Shelf break with the kelp terraces on it, Anholt's stepping down from 210 m to the Furrow's Foot, and its mid-water lanes step down south to the mid-Rift floor at 1,800 m. A tongue of the shoulder runs south at 400 m to the drowned city's front door. The West Wall falls east from a 600 m crest to a 1,700 m foot, its vent fields painted in, and the Holding is stepped down its north end. The fields rise east from a 2,200 m foot to a 1,400 m rim. One deep, the scar, runs from the Furrow's sill down the city's east and under the fields' foot to the First Chapter-House. From there the First's axis runs to Sufficiency and the Ninth carries it to the Mouth, the line the First Chord was aimed down. West of the Ninth a road of high ground at 1,500 m runs from the city to the Staging. All nine trenches are cut into the trench country, each entered high and falling south. Four are named: the First, the Fourth and the Ninth from §3, and the Second, toward which the First's sill leaves ([mission-trench-awakening.md](mission-trench-awakening.md) §11). Their floors deepen in count order: the First, the Second, the Fourth, the Ninth. The five whose number no document gives carry none; the Rest's trench is one, since §3 withholds its number.
 
 ### 7.3 Overview and detail
 
 - **Overview:** the whole atlas at 1,000 m cells, 3,600 of them, through the existing terrain, water and lighting pipelines. Honest overview detail: biome fill and relief, the approved prop vocabulary sparsely, no mission-density props.
-- **Detail:** a mission's rectangle plus **2,500 m of surroundings** on every side, at 250 m cells. For Sorrowgate that is *x* 15,000–25,000 m, *y* 38,000–47,000 m: 10,000 × 9,000 m, 1,440 cells, the 320 of the mission patch unchanged at its centre. The surroundings are public ground authored to continue the patch's edges, and are never simulated. Until [#1457](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1457) authors them, they are an apron of the map's own base ground — the region it paints first, at its base floor, for Sorrowgate the Districts' Coral Ruins at 1,600 m — so the pilot's border has ground to fade over without inventing any (the owner's call on #1461). Until the overview surrounds the detail, that apron's last 500 m, from W to the surround's edge, fades to the backdrop at any strength of §7.4's ramp, so a fade part-way in never shows where the apron ends.
+- **Detail:** a mission's rectangle plus **2,500 m of surroundings** on every side, at 250 m cells. For Sorrowgate that is *x* 15,000–25,000 m, *y* 38,000–47,000 m: 10,000 × 9,000 m, 1,440 cells, the 320 of the mission patch unchanged at its centre. The surroundings are public ground authored to continue the patch's edges, and are never simulated. Sorrowgate's were authored on [#1457](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1457), and they continue each edge of the patch. The districts go on all round, the Concourse runs north onto its ridge, and the West Approach's vein runs west. The Commit runs south and east into its basin and on to the scar, whose bank stands 1,500 m east of the map. Each cell touching the map takes the biome, floor and ceiling of the edge cell it touches. The detail's last 500 m are the overview's own cells. Live ground is pasted over this baseline by the session and never written into it (§7.1). Before #1457 the pilot drew an apron of the map's own base ground, the owner's call on #1461. Until the overview surrounds the detail, the detail's last 500 m, from W to the surround's edge, fade to the backdrop at any strength of §7.4's ramp, so a fade part-way in never shows where the detail ends.
 - **Seam:** the detail rectangle's edge is a line of the overview grid; a surround that would end between two 1,000 m lines grows outward to the next one. Sorrowgate's needs no rounding, its edges falling at 15, 25, 38 and 47 km. Detail owns everything inside it and the overview everything outside, so no surface overlaps another, and the seam's vertices take the overview's heights so the two meet without a crack.
 
 ### 7.4 The mission border
@@ -229,7 +267,7 @@ A mission starts when its room is joined, so a camera flight after joining would
 
 ### 7.8 The calls this section took
 
-The owner's calls, six on #1455 and six on #1461. Each was written with its options; the one taken is named.
+The owner's calls: six on #1455, six on #1461 and five on #1457. Each was written with its options; the one taken is named.
 
 **Anchors: Sorrowgate only (taken).** The alternatives were to pin every named place now from §1–§4's distances, or to scale Plate VII's coordinates. Scaling the plate would turn an illustration's compressions into geography, since its depth rail gives the shallows room. Pinning all of them now would decide ground no renderer has drawn yet. So only the pilot is pinned, and #1457 places the rest inside the region rectangles.
 
@@ -254,6 +292,16 @@ The owner's calls, six on #1455 and six on #1461. Each was written with its opti
 **The 0.8 s ramp, built now (taken).** It runs in on a session's first state and out when the session resets; deferring it to #1462, which owns the return, was the alternative.
 
 **The apron's last 500 m always fades (taken).** Below full strength the ramp would otherwise draw the apron's straight far edge against the backdrop. Ramping only the snow would have reversed the ramp for ground; accepting the edge for a second was the third option.
+
+**One scar, on the First Chord's line (taken).** One deep runs from the Furrow's sill to the Mouth, so the Chord points down the line the Ninth follows (§3, §4), and the Furrow opens onto deep water that leads to Directorate country. Sufficiency then stands about 5 km east of where Plate VII draws it. Following the plate's west–east order would have aimed the Chord across trench country instead of down the Ninth. Painting latitude bands and the named grounds only would have left the Furrow's sill opening onto nothing and the road to the Rim undrawn.
+
+**All nine trenches drawn (taken).** The five whose number no document gives are cut as trenches without numbers, each falling south, so the overview shows the nine §3 says exist. Drawing only the four the docs place would have shown four trenches where §3 says nine.
+
+**Anholt's terraces carried down to the Furrow (taken).** §3 and [mission-deep-furrow.md](mission-deep-furrow.md) put the Furrow under Anholt's terrace, so her terraces step down from 210 m to 380 m and meet its Foot. Moving the Furrow north would have branched the scar further north. Reading "under" as downslope would have left unnamed terraces between them.
+
+**The pilot draws the authored surround now (taken).** The apron's mesh and fade are unchanged and only its cells differ, so the pilot shows its surroundings before [#1459](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1459) draws the overview. Keeping the base-ground apron until #1459 was the alternative.
+
+**Clashes between the docs filed, not fixed (taken).** Where a mission document and this one disagree on a distance or a place, the atlas follows this document, and each clash is listed in [#1469](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1469). Amending the mission documents and Plate VII here would have widened #1457 past geography.
 
 ---
 

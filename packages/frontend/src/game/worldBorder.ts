@@ -9,12 +9,12 @@
  * be tested under node: the exterior ground the fade acts on, and the GLSL that
  * states the fade.
  *
- * **The exterior is an apron of the map's own base ground** until #1457
- * authors the surround (the owner's call on #1461): the region the map paints
- * first, at its base floor — for Sorrowgate the Districts' Coral Ruins at
- * 1,600 m — continued over §7.3's 2,500 m. Nothing is invented: the cells are
- * the map literal's own base, and the mission's cells are pasted in the middle
- * so the apron's relief and skin run continuously into the mission's.
+ * **The exterior is the region's authored surround** (#1457): §7.3's detail
+ * ground from `@echoes/shared/rift`, the overview's cells under its last
+ * 500 m and the surround cut into the rest, with the mission's live cells
+ * pasted in the middle so the apron's relief and skin run continuously into
+ * the mission's. It was an apron of the map's own base ground until #1457
+ * authored it (the owner's call on #1461), and is still called the apron.
  *
  * Render-only, like every heightfield here. The simulation never reads the
  * apron, nothing out there can be detected, and a click on it is refused
@@ -22,35 +22,15 @@
  */
 
 import {
-  SORROWGATE_GROUND,
   WORLD,
   detailRect,
-  type Biome,
-  type MapGround,
+  type GroundCells,
   type PlanRect,
   type WorldRegion,
 } from '@echoes/shared';
 import type { Material } from 'three';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import type { HeightGrid } from './perspectiveTerrain.ts';
-
-/** The public ground of each placed map, by map id (`@echoes/shared/ground`). */
-const PLACED_GROUND: Readonly<Record<string, MapGround>> = {
-  sorrowgate: SORROWGATE_GROUND,
-};
-
-/** The ground an apron is made of: the map's first region, at the map's base floor. */
-export interface ApronBase {
-  biome: Biome;
-  floorM: number;
-}
-
-export function apronBaseFor(mapId: string): ApronBase | null {
-  const ground = PLACED_GROUND[mapId];
-  const first = ground?.regions[0];
-  if (ground === undefined || first === undefined) return null;
-  return { biome: first.biome, floorM: ground.floorM };
-}
 
 /** How many cells the surround adds on each side of the mission. */
 export interface ApronPads {
@@ -88,20 +68,27 @@ export function apronFrame(
 }
 
 /**
- * The mission's cells pasted into a field of base ground, `pads` cells wide on
- * each side. A payload of the shape every ground function already takes, so
- * the apron is lit, relieved and skinned by the same code as the mission.
+ * The mission's live cells pasted into the region's detail ground, `pads`
+ * cells in from each side. A payload of the shape every ground function
+ * already takes, so the apron is lit, relieved and skinned by the same code
+ * as the mission. The live cells, not the baseline under them: after the arch
+ * falls the session's ground is the one drawn (§7.1), and the surround is
+ * never written to. Null when the two grids do not fit, which only a map
+ * placed with the wrong size could cause.
  */
 export function paddedTerrain(
   mission: TerrainPayload,
   pads: ApronPads,
-  base: ApronBase
-): TerrainPayload {
+  surround: GroundCells
+): TerrainPayload | null {
   const cols = mission.cols + pads.west + pads.east;
   const rows = mission.rows + pads.north + pads.south;
-  const biomes = new Array<number>(cols * rows).fill(base.biome);
-  const floor = new Array<number>(cols * rows).fill(base.floorM);
-  const ceiling = new Array<number>(cols * rows).fill(0);
+  if (surround.cellM !== mission.cellM || surround.cols !== cols || surround.rows !== rows) {
+    return null;
+  }
+  const biomes = Array.from(surround.biomes);
+  const floor = Array.from(surround.floor);
+  const ceiling = Array.from(surround.ceiling);
   for (let row = 0; row < mission.rows; row++) {
     for (let col = 0; col < mission.cols; col++) {
       const from = row * mission.cols + col;
@@ -118,8 +105,8 @@ export function paddedTerrain(
  * The apron's mesh: the padded grid's vertices in the mission's metres, with
  * every quad inside the mission left out, since the mission's own mesh draws
  * those. Vertices on the mission's edge take the mission grid's heights, not
- * the padded grid's — the padded grid sees base ground past the edge where the
- * mission grid saw its own edge cells — so the two meshes share that line
+ * the padded grid's — the padded grid sees the surround past the edge where
+ * the mission grid saw its own edge cells again — so the two meshes share that line
  * exactly and the seam cannot crack.
  */
 export function apronMesh(

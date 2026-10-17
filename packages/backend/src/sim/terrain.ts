@@ -27,8 +27,7 @@ import {
   PROPAGATION_FACTOR,
   SCATTERED_BIOME,
   SOLID_FLOOR_M,
-  type EllipseShape,
-  type PolygonShape,
+  shapeContains,
   type Shape,
 } from '@echoes/shared';
 import { FNV_OFFSET, mixU32 } from './fnv.ts';
@@ -135,78 +134,14 @@ function covers(mod: PropagationModifier, wx: number, wy: number): boolean {
 
 /**
  * A shape on the grid, in world metres: what a map region paints
- * (docs/maps.md, "How a map is written"). Declared in shared since #1456,
- * because a placed map's ground is authored there for the world renderer to
- * draw too (`@echoes/shared/ground`); the painter stays here.
+ * (docs/maps.md, "How a map is written"), and the test of which cells it
+ * claims. Declared in shared since #1456 and #1457, because placed ground is
+ * painted there too, for the world renderer (`@echoes/shared/ground`): one
+ * test on either side of the wire, so a drawn cell cannot disagree with the
+ * cell the simulation plays on.
  */
 export type { EllipseShape, PolygonShape, RectShape, Shape } from '@echoes/shared';
-
-/**
- * Is (x, y) inside the shape? The grid asks it of each cell's centre, and that
- * is what a region paints. Asked of any other point it answers for the
- * outline, not the ground: a point inside an ellipse can stand in a corner
- * cell the ellipse does not claim, so a test about the ground under a point
- * asks it of that cell's centre.
- *
- * A rectangle is half-open: its west and north edges are in, and its east and
- * south edges belong to the next rectangle along, which is what lets adjacent
- * rectangles tile (#157). An ellipse or a polygon is **closed**: a point on
- * its outline is inside it. The half-open rule hands a point on a slanted edge
- * to the shape east of it, so the mirror image of that shape loses the mirror
- * image of that point, and a symmetric map stops being symmetric along every
- * 45° edge. A rectangle on the grid never meets the question, since no cell
- * centre lies on a cell boundary.
- */
-export function shapeContains(shape: Shape, x: number, y: number): boolean {
-  switch (shape.shape) {
-    case 'ellipse':
-      return ellipseContains(shape, x, y);
-    case 'polygon':
-      return polygonContains(shape.points, x, y);
-    default:
-      return (
-        x >= shape.x && x < shape.x + shape.widthM && y >= shape.y && y < shape.y + shape.heightM
-      );
-  }
-}
-
-function ellipseContains(e: EllipseShape, x: number, y: number): boolean {
-  if (x < e.x || x > e.x + e.widthM || y < e.y || y > e.y + e.heightM) return false;
-  // Twice the offset from the centre, so a frame in whole metres keeps every
-  // term whole: (dx/w)² + (dy/h)² <= 1, multiplied through by w²h². Exact for
-  // any frame under 67 km², which is larger than every map, so a centre on the
-  // outline is on it rather than a rounding error to either side.
-  const w = e.widthM;
-  const h = e.heightM;
-  const dx = 2 * (x - e.x) - w;
-  const dy = 2 * (y - e.y) - h;
-  return dx * dx * h * h + dy * dy * w * w <= w * w * h * h;
-}
-
-function polygonContains(points: PolygonShape['points'], x: number, y: number): boolean {
-  let inside = false;
-  for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
-    const [ax, ay] = points[j]!;
-    const [bx, by] = points[i]!;
-    // Twice the signed area of the triangle a, b, p: zero when p is on the
-    // line through the edge, and exact in whole metres, so a point on the
-    // outline is caught here rather than left to round either way below.
-    const cross = (bx - ax) * (y - ay) - (by - ay) * (x - ax);
-    if (
-      cross === 0 &&
-      x >= Math.min(ax, bx) &&
-      x <= Math.max(ax, bx) &&
-      y >= Math.min(ay, by) &&
-      y <= Math.max(ay, by)
-    ) {
-      return true;
-    }
-    // Even-odd: a ray from p toward +x crosses this edge when the edge spans
-    // p's row and passes east of p.
-    if (ay > y !== by > y && (by > ay ? cross > 0 : cross < 0)) inside = !inside;
-  }
-  return inside;
-}
+export { shapeContains } from '@echoes/shared';
 
 export class Terrain {
   readonly widthM: number;
