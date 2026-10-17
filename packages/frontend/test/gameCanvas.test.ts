@@ -800,12 +800,12 @@ describe('the shell: the glass over the water', () => {
 describe('the shell: the persistent world view', () => {
   const pilot = { props: { mapId: 'sorrowgate', missionId: 'prologue-sorrowgate' } };
 
+  /** A copy: `groundQuad` rewrites the same four objects every call (#432). */
+  const footprint = () => worldView.current!.groundQuad().map((p) => ({ ...p }));
   /**
    * Whether two footprints are the same camera. Within 25 m, because the
    * camera sways between frames (`swayHeld`); a refit moves it kilometres.
    */
-  /** A copy: `groundQuad` rewrites the same four objects every call (#432). */
-  const footprint = () => worldView.current!.groundQuad().map((p) => ({ ...p }));
   const sameCamera = (a: { x: number; y: number }[], b: { x: number; y: number }[]): boolean =>
     a.every((p, i) => Math.hypot(p.x - b[i]!.x, p.y - b[i]!.y) < 25);
 
@@ -895,6 +895,49 @@ describe('the shell: the persistent world view', () => {
       assert.ok(sameCamera(footprint(), opening), 'the opening shot again');
     } finally {
       await again.unmount();
+    }
+  });
+
+  it('opens a rematch on the opening shot, as a fresh view would', async () => {
+    const world = await mount(pilot);
+    try {
+      await joinMatch(world);
+      const opening = footprint();
+      worldView.current!.focusWorld(1_000, 1_000, 900);
+      world.room.emit(SERVER_MSG.missionOver, {
+        missionId: 'prologue-sorrowgate',
+        outcome: MissionOutcome.Complete,
+        epilogue: '',
+        objectives: [],
+      });
+      await world.settle();
+      // "Again" is a rematch, and a rematch is new ground (MatchRoom.ts).
+      world.room.emit(SERVER_MSG.terrain, { ...cannedTerrain(), revision: 1 });
+      await world.settle();
+      assert.ok(sameCamera(footprint(), opening), 'the run starts framed again');
+    } finally {
+      await world.unmount();
+    }
+  });
+
+  it('gives back a room that answers after the session is gone, and draws nothing from it', async () => {
+    const late = await mount({ ...pilot, hang: true });
+    await late.unmount();
+    const now = await mount(pilot);
+    try {
+      await joinMatch(now);
+      worldView.current!.focusWorld(1_000, 1_000, 900);
+      const before = footprint();
+      // The first session's join answers only now.
+      late.net.answerHung();
+      await now.settle();
+      assert.equal(late.room.left, true, 'the late seat was given straight back');
+      assert.deepEqual(late.room.handled, [], 'and nothing was wired to it');
+      assert.equal(late.room.emit(SERVER_MSG.terrain, { ...cannedTerrain(), revision: 0 }), false);
+      assert.ok(sameCamera(footprint(), before), "the live session's camera is untouched");
+      assert.equal(now.room.left, false, 'and the live seat is still held');
+    } finally {
+      await now.unmount();
     }
   });
 

@@ -83,6 +83,12 @@ export class WorldViewHost {
    * Take a session's state off the view and keep the world. A claim that no
    * longer holds the view — a teardown landing after a newer session took it
    * over — releases nothing.
+   *
+   * The ground stays: the last session's terrain, any span its mission
+   * dropped included, is what the view holds until the next session's room
+   * sends its own, which it does on join. That is this player's own earlier
+   * map data, never another's; separating the public baseline from a
+   * session's live ground is #1460's regional overlay.
    */
   release(claim: symbol): void {
     if (this.holder !== claim || this.view === null) return;

@@ -302,7 +302,9 @@ export function GameCanvas({
     /**
      * Set when this session borrowed the page's world view (worldView.ts,
      * #1458) rather than building its own: teardown then hands it back
-     * instead of destroying it, and the map is framed once per session.
+     * instead of destroying it, and the map is framed once a run rather than
+     * on every terrain message. `framed` is that once: cleared at a result, so
+     * a rematch's new ground opens on the opening shot as it always has.
      */
     let worldClaim: symbol | null = null;
     let framed = false;
@@ -519,6 +521,9 @@ export function GameCanvas({
           // does — a renderer must never be a second source of truth, and there
           // is nothing else for it to draw from (the server-authoritative rule).
           onTerrain: (terrain) => {
+            // A torn-down session draws nothing more: its view may now be the
+            // next session's world (#1458).
+            if (cancelled) return;
             activeRenderer.setTerrain(terrain);
             // A view built for this match frames the map on every terrain
             // message, as it always has. A borrowed one frames on the
@@ -526,11 +531,13 @@ export function GameCanvas({
             // the player's camera is not the ground's to move.
             if (worldClaim === null) perspective.setTerrain(terrain);
             else {
+              if (!framed) perspective.home();
               perspective.setTerrain(terrain, { fit: !framed });
               framed = true;
             }
           },
           onGround: (cells) => {
+            if (cancelled) return;
             activeRenderer.applyGround(cells);
             perspective.applyGround(cells);
           },
@@ -541,10 +548,12 @@ export function GameCanvas({
           },
           onNodes: (nodes) => activeRenderer.setNodes(nodes),
           onAssigned: ({ slot, faction }) => {
+            if (cancelled) return;
             activeRenderer.setIdentity(slot, faction);
             perspective.setIdentity(slot, faction);
           },
           onEcho: (snapshot: EchoSnapshot) => {
+            if (cancelled) return;
             anyHullSilent = snapshot.units.some((unit) => unit.silentRunning);
             const bound = snapshot.boundSig ?? null;
             setBoundSig((previous) =>
@@ -569,6 +578,8 @@ export function GameCanvas({
             // one out is all that stops its voice: with the match over, the
             // picture it holds is let go here (#1326).
             matchOver = true;
+            // A rematch sends new ground; it opens framed, as a fresh view would.
+            framed = false;
             audio.releasePicture();
           },
           onMission: (view) => {
@@ -604,6 +615,7 @@ export function GameCanvas({
             setMissionOver(payload);
             activeRenderer.setMissionOver(payload);
             matchOver = true;
+            framed = false;
             audio.releasePicture();
             // The one write of the progression record (docs/campaign.md §11).
             // Here rather than inside `MissionResult`, because this is the
