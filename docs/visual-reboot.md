@@ -73,8 +73,7 @@ The continuous-world pilot ([world-map.md](world-map.md) §7) places this unchan
 Rift atlas at (17,500, 40,500), with 2,500 m of public surroundings at mission detail and the
 rest of the Rift at overview detail. Its border becomes an exterior-only fade into darkness;
 the camera's focus stays inside the map while the eye may orbit out. The world's layers spend
-from the same frame as §6 below: the 250,000-triangle reservation here stays the tutorial's,
-and the whole frame stays inside gate 6.
+from the same frame as §6 below, and the whole frame stays inside gate 6.
 
 | Public ground | Material and approved kit | What must remain legible |
 | --- | --- | --- |
@@ -133,8 +132,8 @@ survey distance using the same cameras before and after. Keep the HUD visible. E
 selection and movement, the flight's idle/cruise reading, and refusal of active sonar and
 construction; do not bypass the mission locks.
 
-Hold the existing [graphics gates](graphics-standards.md): at most 150 world draw calls
-and 250,000 triangles, with props inside their existing reservation. Count at least 240
+Hold the existing [graphics gates](graphics-standards.md): gate 6's 150 draw calls and
+400,000 triangles for the whole frame, with props inside their existing reservation. Count at least 240
 rendered frames per measured station, report both canvases' work and name the GPU.
 Check the non-target path, a palette switch, reduced motion, a ground delta and teardown.
 No phone timing is inferred from a desktop result.
@@ -273,7 +272,7 @@ or halos: 45 calls and 47,422 triangles. The
 [standard control](screenshots/issue-979/compatibility/04-flagged-standard-tend.png)
 retains main's study rig, 1,200 study motes, lamp shader, ground cover and halos:
 34 calls and 124,798 triangles. No browser console errors occurred in either control;
-both remain within the 150-call, 250,000-triangle gate.
+both remain within gate 6's 150 calls and 400,000 triangles.
 
 ### Independent review
 

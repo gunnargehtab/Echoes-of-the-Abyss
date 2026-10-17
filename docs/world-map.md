@@ -177,18 +177,14 @@ The world is **continuous visual geography, not a persistent simulation**. The w
 | Plan axes | Origin at the north-west corner; *x* grows **east**, *y* grows **south**: the axes every mission map already uses, so a mission's local metres are atlas metres minus its origin |
 | Vertical | Depth in metres **below the surface, positive down**, as on every map. The renderer's own transform from metres to scene units is the renderer's and is never stored in data |
 | Grid | 1,000 m overview cells; mission ground keeps its 250 m cells. Every origin and boundary below is a whole 250 m cell, so a mission's cells sit on the atlas grid exactly |
-| Depth reach | The overview may draw ground to the Mouth's floor at 4,410 m. That is a place's depth, not a playing depth: the ruleset's 3,000 m ceiling ([systems-depth.md](systems-depth.md) §1) does not move, and no mission floor follows the atlas |
+| Depth reach | The overview may draw ground to the Mouth's floor at 4,410 m. That is a place's depth, not a playing depth: the ruleset's 3,000 m limit on an order (`DEPTH.MAX_M`, [systems-depth.md](systems-depth.md) §6, *Map floor*) does not move, and no mission floor follows the atlas |
 
-**Anchors.** Pinned here; [#1457](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1457) authors the ground between them from §1–§4 and may not move them without changing this table first.
+**Anchors.** Only the pilot is pinned. Every other named place is placed by [#1457](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1457), inside its region's rectangle below and at the distances §1–§4 state, and enters this table when it is placed. An anchor in this table does not move unless this table changes first.
 
 | Anchor | Atlas position | Depth | Why there |
 | --- | --- | --- | --- |
 | Sorrowgate's map origin, its north-west corner | (17,500, 40,500) | — | Mid-Rift and mid-width, where §1 puts the drowned city; the court is then within a long day's transit of everyone (§4) |
 | The court, the flight's spawn at the arch | (20,050, 42,650) | 1,500 m | Derived: origin plus the spawn at (2,550, 2,150) |
-| The attending galleries | (20,000, 68,000) | 3,000 m | On the Ninth's axis, which runs due south along *x* = 20,000 |
-| The Ninth's sill | (20,000, 71,000) | 4,100 m | Three kilometres south of the galleries (§3) |
-| The Lip, the Mouth's northern edge | (20,000, 79,000) | 3,100 m | Eight kilometres on, eleven from the galleries (§4) |
-| The Mouth's floor | centred (20,000, 84,500), 11,000 m across | 4,410 m | The eleven-kilometre depression, at the far southern end |
 
 **Regions, as coarse allocations.** Each is the rectangle its ground is authored inside, overlapping where §3's regions meet: the Plateaus *x* 6–34 km, *y* 0–22 km; the West Wall *x* 0–10 km, *y* 12–50 km, so its north end shares a fence with the plateaus, as Sector Kell did (§4); the Drowned City *x* 12–28 km, *y* 32–50 km; the Resonance Fields *x* 26–40 km, *y* 30–62 km; the Trench Country the full width, *y* 50–79 km; the Mouth *y* 79–90 km. They are bounds on authoring, not shapes, and a shape inside them follows [maps.md](maps.md)'s rules: authored, never generated from an image or noise.
 
@@ -210,7 +206,7 @@ The pilot drops the hard rim line and the skirt for this fade; a non-pilot missi
 
 ### 7.5 Budgets
 
-The whole frame — overview, detail, water, props, the player's force, every pass — stays inside [graphics-standards.md](graphics-standards.md) gate 6: **≤ 150 draw calls and ≤ 400 k triangles**, pixel ratio at most 1.5. The tutorial keeps its own 250 k triangle reservation ([visual-reboot.md](visual-reboot.md) §6), so the world adds at most 150 k, and draw calls are counted for the whole frame rather than shared out. A mission-density mesh over the whole Rift would cost about 1.84 million terrain triangles, which is why overview and detail are two resolutions rather than one. At most **two detail regions** are resident — the one arriving and the one left — with at most **two chunk requests in flight**; a cancelled or failed request releases what it held. Every cache is bounded per page, as the model templates are.
+The whole frame — overview, detail, water, props, the player's force, every pass — stays inside [graphics-standards.md](graphics-standards.md) gate 6: **≤ 150 draw calls and ≤ 400 k triangles**, pixel ratio at most 1.5. That is the only cap: the world's layers take no reservation of their own, and the tutorial's ground and force spend from the same 400 k ([visual-reboot.md](visual-reboot.md) §6). Draw calls and triangles are counted for the whole frame rather than shared out. A mission-density mesh over the whole Rift would cost about 1.84 million terrain triangles, which is why overview and detail are two resolutions rather than one. At most **two detail regions** are resident — the one arriving and the one left — with at most **two chunk requests in flight**; a cancelled or failed request releases what it held. Every cache is bounded per page, as the model templates are.
 
 ### 7.6 Entry, return, and what interrupts them
 
@@ -225,15 +221,21 @@ A mission starts when its room is joined, so a camera flight after joining would
 
 ### 7.7 Readings and evidence
 
-**Top-down:** Sorrowgate stands mid-Rift on the Ninth's line, the plateaus north, the west wall within ten kilometres to the west, crystal country east; inside it the Concourse is north, the court central, the service lock west of the chamber and the Commit south ([mission-sorrowgate.md](mission-sorrowgate.md) §11). **In section:** the Concourse at 340 m above the thermocline, the court at 1,500 m below it, the Commit at 2,400 m, the trench country beyond falling to the Mouth's 4,410 m. Both readings come from relief and depth, never from a texture.
+**Top-down:** Sorrowgate stands mid-Rift and mid-width, the plateaus north, the west wall within ten kilometres to the west, crystal country east; inside it the Concourse is north, the court central, the service lock west of the chamber and the Commit south ([mission-sorrowgate.md](mission-sorrowgate.md) §11). **In section:** the Concourse at 340 m above the thermocline, the court at 1,500 m below it, the Commit at 2,400 m, the trench country beyond falling to the Mouth's 4,410 m. Both readings come from relief and depth, never from a texture.
 
 **Evidence** for a change under this section: the pilot at the close, home, low-pitch and survey views, each paired with a baseline frame of the same camera, the HUD visible; a frame at a border corner; gate 6 measured at pixel ratios 1 and 1.5 on a named GPU, transitions included. **Non-target controls:** the Ventfront Divide skirmish and Radicals render as before.
 
 ### 7.8 The calls this section took
 
-**Anchors from the prose, not the plate (taken).** Scaling Plate VII's coordinates would turn an illustration's compressions — its depth rail gives the shallows room — into geography. Pinning only Sorrowgate would leave #1457 to invent the rest unbound. The anchors above are the distances §1–§4 already state, with the rest bounded by region.
+Four calls, the owner's (#1455). Each was written with its options; the one taken is named.
 
-**A fade of 2,000 m, the surround at 2,500 m (taken).** Eight overview cells of fade read as darkness arriving rather than a vignette, and stay a fraction of a 5,000 m mission; a wider fade would need a wider surround, at detail cost.
+**Anchors: Sorrowgate only (taken).** The alternatives were to pin every named place now from §1–§4's distances, or to scale Plate VII's coordinates. Scaling the plate would turn an illustration's compressions into geography, since its depth rail gives the shallows room. Pinning all of them now would decide ground no renderer has drawn yet. So only the pilot is pinned, and #1457 places the rest inside the region rectangles.
+
+**A fade of 2,000 m, the surround at 2,500 m (taken).** Eight overview cells of fade read as darkness arriving rather than a vignette, and stay a fraction of a 5,000 m mission. A 1,000 m fade frames the mission tighter. A 3,000 m fade shows more world but needs a 3,500 m surround, about twice the detail cells.
+
+**Regions as bounding rectangles (taken).** Pinning polygon outlines now, or tracing the plate's silhouettes, would fix shapes before anyone saw them rendered. The rectangles bound #1457's authoring; the shapes are its call.
+
+**One triangle cap, gate 6's 400 k (taken).** [visual-reboot.md](visual-reboot.md) §6 had quoted the gate as 250 k, which [graphics-standards.md](graphics-standards.md) never set. Holding the pilot frame to 250 k, or reserving 250 k for the tutorial with the world taking the remaining 150 k, would each keep a number with no gate behind it. §6 now cites the gate.
 
 ---
 

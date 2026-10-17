@@ -110,8 +110,8 @@ focus itself clamps to the water column — surface to seabed — for the same r
 plan to the map's extent (`clampTarget`). Nothing else is clamped. In the continuous-world
 pilot that plan clamp is the mission rectangle, held for every verb that moves the focus,
 while the orbiting eye may swing outside it; the exterior fades rather than ends
-([world-map.md](world-map.md) §7.4). The camera may sit inside the Lid, at the bottom of a trench, or nose-down
-against a wall, because the player looking at a thing is not the player committing a hull to
+([world-map.md](world-map.md) §7.4). The camera may sit inside the Lid, at the bottom of a
+trench, or nose-down against a wall, because the player looking at a thing is not the player committing a hull to
 it, and none of the column's costs are the camera's to pay.
 
 ### Verbs
@@ -227,6 +227,15 @@ rather than a rendering one:
 
 None of that is camera work, and doing it under cover of a camera change would be the wrong
 shape. It is named here so the feedback's fourth goal has an address.
+
+**The continuous world does not pay any of it** (#1449). [world-map.md](world-map.md) §7 draws
+the Rift around a mission as public, render-only geography: the server simulates the active
+mission on its own map as it does today, and nothing outside that map moves, sounds or is
+detected. The world borrows the *look* of a larger map and none of its simulation. Chunked
+simulation, a broadphase bound for wider water and the move of `DEPTH.MAX_M` into map data
+stay unpromised, and the atlas drawing ground to the Mouth's 4,410 m changes none of them.
+The renderer's own costs — an overview mesh and bounded regional detail — are the frame's, and
+gate 6 counts them whole (§7.5 of that document).
 
 ## 8. Gates — what changes, what does not
 
