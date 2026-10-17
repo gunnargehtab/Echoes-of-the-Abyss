@@ -26,6 +26,7 @@ import {
 import { EchoRenderer, type ContactLogEntry } from './EchoRenderer.ts';
 import { PerspectiveView } from './PerspectiveView.ts';
 import { lookForMission } from './tutorialLook.ts';
+import { worldView } from './worldView.ts';
 import { paletteFor, type PaletteName } from './palette.ts';
 import { ContactLog } from './ContactLog.tsx';
 import { EscMenu } from './EscMenu.tsx';
@@ -299,6 +300,15 @@ export function GameCanvas({
     let renderer: EchoRenderer | null = null;
     let client: GameClient | null = null;
     /**
+     * Set when this session borrowed the page's world view (worldView.ts,
+     * #1458) rather than building its own: teardown then hands it back
+     * instead of destroying it, and the map is framed once a run rather than
+     * on every terrain message. `framed` is that once: cleared at a result, so
+     * a rematch's new ground opens on the opening shot as it always has.
+     */
+    let worldClaim: symbol | null = null;
+    let framed = false;
+    /**
      * StrictMode mounts effects twice in development, and Application.init()
      * is async — without this guard the second mount would race the first and
      * leave an orphaned canvas attached.
@@ -381,19 +391,42 @@ export function GameCanvas({
 
     const start = async () => {
       // The world first: the conn view mounts for the whole match, and the
-      // Pixi glass above it cannot draw a single world mark without it.
-      const perspective = new PerspectiveView(lookForMission(missionId));
-      perspectiveRef.current = perspective;
+      // Pixi glass above it cannot draw a single world mark without it. A
+      // mission drawn in the continuous world borrows the page's view, which
+      // outlives this session (docs/world-map.md §7.1); any other match builds
+      // its own, as it always did, after ending the world's so the page holds
+      // one GL context.
       const perspectiveHost = perspectiveHostRef.current;
-      if (
-        perspectiveHost === null ||
-        !perspective.mount(perspectiveHost, harness?.glRenderer, harness?.environment)
-      ) {
-        // No WebGL, no world. Say so rather than leaving a black screen
-        // wearing a working HUD — and take no seat in a match this device
-        // cannot render.
-        setGlFailed(true);
-        return;
+      let perspective: PerspectiveView;
+      if (worldView.isWorldMission(missionId)) {
+        const lent =
+          perspectiveHost === null
+            ? null
+            : worldView.acquire(missionId, perspectiveHost, {
+                glRenderer: harness?.glRenderer,
+                environment: harness?.environment,
+              });
+        if (lent === null) {
+          setGlFailed(true);
+          return;
+        }
+        perspective = lent.view;
+        worldClaim = lent.claim;
+        perspectiveRef.current = perspective;
+      } else {
+        worldView.dispose();
+        perspective = new PerspectiveView(lookForMission(missionId));
+        perspectiveRef.current = perspective;
+        if (
+          perspectiveHost === null ||
+          !perspective.mount(perspectiveHost, harness?.glRenderer, harness?.environment)
+        ) {
+          // No WebGL, no world. Say so rather than leaving a black screen
+          // wearing a working HUD — and take no seat in a match this device
+          // cannot render.
+          setGlFailed(true);
+          return;
+        }
       }
       perspective.setActive(true);
 
@@ -488,10 +521,23 @@ export function GameCanvas({
           // does — a renderer must never be a second source of truth, and there
           // is nothing else for it to draw from (the server-authoritative rule).
           onTerrain: (terrain) => {
+            // A torn-down session draws nothing more: its view may now be the
+            // next session's world (#1458).
+            if (cancelled) return;
             activeRenderer.setTerrain(terrain);
-            perspective.setTerrain(terrain);
+            // A view built for this match frames the map on every terrain
+            // message, as it always has. A borrowed one frames on the
+            // session's first only: a reconnection re-sends the ground, and
+            // the player's camera is not the ground's to move.
+            if (worldClaim === null) perspective.setTerrain(terrain);
+            else {
+              if (!framed) perspective.home();
+              perspective.setTerrain(terrain, { fit: !framed });
+              framed = true;
+            }
           },
           onGround: (cells) => {
+            if (cancelled) return;
             activeRenderer.applyGround(cells);
             perspective.applyGround(cells);
           },
@@ -502,10 +548,12 @@ export function GameCanvas({
           },
           onNodes: (nodes) => activeRenderer.setNodes(nodes),
           onAssigned: ({ slot, faction }) => {
+            if (cancelled) return;
             activeRenderer.setIdentity(slot, faction);
             perspective.setIdentity(slot, faction);
           },
           onEcho: (snapshot: EchoSnapshot) => {
+            if (cancelled) return;
             anyHullSilent = snapshot.units.some((unit) => unit.silentRunning);
             const bound = snapshot.boundSig ?? null;
             setBoundSig((previous) =>
@@ -530,6 +578,8 @@ export function GameCanvas({
             // one out is all that stops its voice: with the match over, the
             // picture it holds is let go here (#1326).
             matchOver = true;
+            // A rematch sends new ground; it opens framed, as a fresh view would.
+            framed = false;
             audio.releasePicture();
           },
           onMission: (view) => {
@@ -565,6 +615,7 @@ export function GameCanvas({
             setMissionOver(payload);
             activeRenderer.setMissionOver(payload);
             matchOver = true;
+            framed = false;
             audio.releasePicture();
             // The one write of the progression record (docs/campaign.md §11).
             // Here rather than inside `MissionResult`, because this is the
@@ -730,7 +781,10 @@ export function GameCanvas({
       clientRef.current = null;
       renderer?.destroy();
       rendererRef.current = null;
-      perspectiveRef.current?.destroy();
+      // A borrowed world view goes back with the session's state taken off it;
+      // a view built for this match goes with the match.
+      if (worldClaim !== null) worldView.release(worldClaim);
+      else perspectiveRef.current?.destroy();
       perspectiveRef.current = null;
       window.removeEventListener('pointerdown', unlock);
       window.removeEventListener('keydown', unlock);

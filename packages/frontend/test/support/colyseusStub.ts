@@ -460,9 +460,22 @@ export class StubClient {
     this.hangs.add(method);
   }
 
+  /** Joins left hanging, each waiting on the room it will be answered with. */
+  private readonly held: Array<(room: StubRoom) => void> = [];
+
+  /**
+   * Answer every hung join now, late — the room a server sends back after the
+   * player has already gone (#1458). The hang stays set for later calls.
+   */
+  answerHung(): void {
+    for (const resolve of this.held.splice(0)) resolve(this.room);
+  }
+
   private async answer(call: JoinCall): Promise<StubRoom> {
     this.calls.push(call);
-    if (this.hangs.has(call.method)) return new Promise<StubRoom>(() => {});
+    if (this.hangs.has(call.method)) {
+      return new Promise<StubRoom>((resolve) => this.held.push(resolve));
+    }
     const at = this.failures.indexOf(call.method);
     if (at >= 0) {
       this.failures.splice(at, 1);

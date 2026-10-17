@@ -834,7 +834,12 @@ export class PerspectiveView {
     makeRenderer: () => WebGLRenderer = glRenderer,
     makeEnvironment: typeof createWaterEnvironment = createWaterEnvironment
   ): boolean {
-    if (this.renderer !== null) return true;
+    if (this.renderer !== null) {
+      // Already built: a persistent view (worldView.ts) moves its one
+      // renderer into the new host rather than making a second.
+      if (this.host !== host) this.attach(host);
+      return true;
+    }
     try {
       this.renderer = makeRenderer();
     } catch {
@@ -890,6 +895,29 @@ export class PerspectiveView {
     this.exposeProbe();
     document.addEventListener('visibilitychange', this.onVisibility);
     return true;
+  }
+
+  /**
+   * Leave the host this view draws in, keeping the renderer, scene, camera and
+   * water environment for the next session to adopt (docs/world-map.md §7.6,
+   * #1458). The loop stops and the canvas leaves the page; nothing is
+   * disposed, and `attach` or `mount` puts it back.
+   */
+  detach(): void {
+    this.setActive(false);
+    this.resizeObserver?.disconnect();
+    this.renderer?.domElement.remove();
+    this.host = null;
+  }
+
+  /** Draw into `host` with the renderer this view already has. */
+  attach(host: HTMLElement): void {
+    if (this.renderer === null) return;
+    if (this.host !== null) this.detach();
+    host.appendChild(this.renderer.domElement);
+    this.host = host;
+    this.resizeObserver?.observe(host);
+    this.resize();
   }
 
   setActive(active: boolean): void {
@@ -974,7 +1002,13 @@ export class PerspectiveView {
     primeStructureArt(faction);
   }
 
-  setTerrain(terrain: TerrainPayload): void {
+  /**
+   * Replace the ground. `fit` frames the whole map as well, which is what a
+   * view built for one match wants on every terrain message; a persistent
+   * view (#1458) frames once per session itself, so a reconnection's re-sent
+   * ground does not throw the player's camera back to the opening shot.
+   */
+  setTerrain(terrain: TerrainPayload, { fit = true }: { fit?: boolean } = {}): void {
     // A defensive copy: the chart-side handlers mutate their payload in place
     // on ground deltas, and two consumers double-applying deltas to one
     // shared object is the bug this copy exists to make impossible.
@@ -985,7 +1019,7 @@ export class PerspectiveView {
       ceiling: [...terrain.ceiling],
     };
     this.refreshGroundCache();
-    this.fitToMap();
+    if (fit) this.fitToMap();
     this.rebuildTerrain();
     this.refreshVeil();
   }

@@ -51,6 +51,7 @@ import { installHeadlessAudio, uninstallHeadlessAudio } from './support/headless
 import { StubClient, StubRoom, stubCallbacks } from './support/colyseusStub.ts';
 import { cannedMap, cannedNodes, cannedSnapshot, cannedTerrain } from './support/cannedMatch.ts';
 import { GameCanvas, panelType, type GameCanvasProps } from '../src/game/GameCanvas.tsx';
+import { worldView } from '../src/game/worldView.ts';
 
 /** Every string the rendered tree contains, in document order. */
 function textOf(tree: ReactTestRenderer): string[] {
@@ -244,6 +245,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  // The page's world view outlives a mount by design (#1458); a test is a page.
+  worldView.dispose();
   uninstallHeadlessAudio();
   const g = globalThis as unknown as { window: Record<string, unknown> };
   clearStorage();
@@ -271,8 +274,11 @@ describe('the shell: booting', () => {
       } finally {
         await world.unmount();
       }
-      assert.equal(world.gl.disposed, true);
+      // The prologue's view is the page's world and outlives the session; the
+      // next map-only entry ends it, and the others go with their match.
+      assert.equal(world.gl.disposed, missionId !== 'prologue-sorrowgate');
     }
+    assert.equal(worldView.current, null, 'a skirmish view ended the world first');
   });
 
   it('builds the two canvases in the order the compositing needs', async () => {
@@ -777,6 +783,211 @@ describe('the shell: the glass over the water', () => {
       await world.settle();
       assert.equal(shows(world.tree, 'Holding station'), false, 'the menu stood aside');
       assert.equal(world.hosts.get('game-under')?.inert, false, 'and the water can be reached');
+    } finally {
+      await world.unmount();
+    }
+  });
+});
+
+/**
+ * The persistent world view (#1458, docs/world-map.md §7.1 and §7.6).
+ *
+ * The prologue borrows the page's one view instead of building its own, so
+ * what these hold is the borrowing: one renderer across entries, the session's
+ * state off it at teardown, one render loop however many times it is entered,
+ * and every other match still building and destroying its own.
+ */
+describe('the shell: the persistent world view', () => {
+  const pilot = { props: { mapId: 'sorrowgate', missionId: 'prologue-sorrowgate' } };
+
+  /** A copy: `groundQuad` rewrites the same four objects every call (#432). */
+  const footprint = () => worldView.current!.groundQuad().map((p) => ({ ...p }));
+  /**
+   * Whether two footprints are the same camera. Within 25 m, because the
+   * camera sways between frames (`swayHeld`); a refit moves it kilometres.
+   */
+  const sameCamera = (a: { x: number; y: number }[], b: { x: number; y: number }[]): boolean =>
+    a.every((p, i) => Math.hypot(p.x - b[i]!.x, p.y - b[i]!.y) < 25);
+
+  it('keeps one renderer, scene and camera across repeated entry', async () => {
+    const first = await mount(pilot);
+    const view = worldView.current;
+    assert.ok(view !== null, 'the prologue drew in the world view');
+    await joinMatch(first);
+    await first.unmount();
+    assert.equal(first.gl.disposed, false, 'leaving kept the renderer');
+    assert.equal(first.room.left, true, 'and gave up the seat');
+    assert.equal(first.app.destroyed, true, 'and the chart went with the session');
+
+    for (let entry = 0; entry < 2; entry++) {
+      const again = await mount(pilot);
+      try {
+        await joinMatch(again);
+        assert.equal(worldView.current, view, 'the same view, not a second one');
+        assert.equal(again.gl.ledger.frames, 0, 'this mount built no renderer of its own');
+        assert.equal(
+          again.hosts.get('perspective-host')?.childNodes.length,
+          1,
+          'the one canvas moved into the new host'
+        );
+      } finally {
+        await again.unmount();
+      }
+    }
+    assert.equal(first.gl.disposed, false);
+  });
+
+  it('takes the session off the view at teardown, and stops its loop', async () => {
+    const world = await mount(pilot);
+    await joinMatch(world);
+    await firstGesture(world);
+    const host = world.hosts.get('perspective-host')!;
+    assert.equal(host.childNodes.length, 1);
+    assert.equal(audioContext.state, 'running');
+
+    await world.unmount();
+
+    assert.equal(host.childNodes.length, 0, 'the canvas left the old host');
+    assert.equal(audioContext.state, 'closed', 'the mix closed its device');
+    assert.equal(world.hosts.get('game-host')?.listenerCount(), 0, 'no HUD listener survived');
+    const before = world.gl.ledger.frames;
+    pumpAnimationFrames(5);
+    assert.equal(world.gl.ledger.frames, before, 'nothing draws while no session holds it');
+  });
+
+  it('runs one render loop however many times it is entered', async () => {
+    let world = await mount(pilot);
+    const gl = world.gl;
+    for (let entry = 0; entry < 3; entry++) {
+      await world.unmount();
+      world = await mount(pilot);
+    }
+    try {
+      const before = gl.ledger.frames;
+      pumpAnimationFrames(4);
+      assert.equal(gl.ledger.frames - before, 4, 'four frames pumped, four drawn');
+    } finally {
+      await world.unmount();
+    }
+  });
+
+  it('frames the map once a session, so a re-sent ground keeps the camera', async () => {
+    const world = await mount(pilot);
+    let opening: { x: number; y: number }[] = [];
+    try {
+      await joinMatch(world);
+      const view = worldView.current!;
+      opening = footprint();
+      view.focusWorld(1_000, 1_000, 900);
+      const moved = footprint();
+      assert.ok(!sameCamera(moved, opening), 'the player moved the camera');
+      // A reconnection re-sends the ground (MatchRoom.sendMapData).
+      world.room.emit(SERVER_MSG.terrain, { ...cannedTerrain(), revision: 0 });
+      await world.settle();
+      assert.ok(sameCamera(footprint(), moved), 'the camera stayed where it was put');
+    } finally {
+      await world.unmount();
+    }
+    // The next session opens on the opening shot again, not on that camera.
+    const again = await mount(pilot);
+    try {
+      await joinMatch(again);
+      assert.ok(sameCamera(footprint(), opening), 'the opening shot again');
+    } finally {
+      await again.unmount();
+    }
+  });
+
+  it('opens a rematch on the opening shot, as a fresh view would', async () => {
+    const world = await mount(pilot);
+    try {
+      await joinMatch(world);
+      const opening = footprint();
+      worldView.current!.focusWorld(1_000, 1_000, 900);
+      worldView.current!.orbitBy(240, 0);
+      assert.notEqual(worldView.current!.headingRad, 0, 'the player turned the camera');
+      world.room.emit(SERVER_MSG.missionOver, {
+        missionId: 'prologue-sorrowgate',
+        outcome: MissionOutcome.Complete,
+        epilogue: '',
+        objectives: [],
+      });
+      await world.settle();
+      // "Again" is a rematch, and a rematch is new ground (MatchRoom.ts).
+      world.room.emit(SERVER_MSG.terrain, { ...cannedTerrain(), revision: 1 });
+      await world.settle();
+      assert.ok(sameCamera(footprint(), opening), 'the run starts framed again');
+      assert.equal(worldView.current!.headingRad, 0, 'and north-up, as a fresh view opens');
+    } finally {
+      await world.unmount();
+    }
+  });
+
+  it('gives back a room that answers after the session is gone, and draws nothing from it', async () => {
+    const late = await mount({ ...pilot, hang: true });
+    await late.unmount();
+    const now = await mount(pilot);
+    try {
+      await joinMatch(now);
+      worldView.current!.focusWorld(1_000, 1_000, 900);
+      const before = footprint();
+      // The first session's join answers only now.
+      late.net.answerHung();
+      await now.settle();
+      assert.equal(late.room.left, true, 'the late seat was given straight back');
+      assert.deepEqual(late.room.handled, [], 'and nothing was wired to it');
+      assert.equal(late.room.emit(SERVER_MSG.terrain, { ...cannedTerrain(), revision: 0 }), false);
+      assert.ok(sameCamera(footprint(), before), "the live session's camera is untouched");
+      assert.equal(now.room.left, false, 'and the live seat is still held');
+    } finally {
+      await now.unmount();
+    }
+  });
+
+  it('lets go cleanly when the session is torn down before the room answers', async () => {
+    const world = await mount({ ...pilot, hang: true });
+    const view = worldView.current;
+    await world.unmount();
+    assert.equal(world.net.calls.length > 0, true, 'it had asked to join');
+    assert.equal(world.hosts.get('perspective-host')?.childNodes.length, 0);
+    // A later entry still has the same world, and it works.
+    const again = await mount(pilot);
+    try {
+      await joinMatch(again);
+      assert.equal(worldView.current, view);
+      assert.ok(world.gl.ledger.frames > 0);
+    } finally {
+      await again.unmount();
+    }
+  });
+
+  it('is ended by a match that builds its own view, and rebuilt after', async () => {
+    const pilotRun = await mount(pilot);
+    await pilotRun.unmount();
+    const skirmish = await mount();
+    try {
+      assert.equal(pilotRun.gl.disposed, true, 'one GL context at a time');
+      assert.equal(worldView.current, null);
+      assert.ok(skirmish.gl.ledger.frames > 0, 'the skirmish drew with its own');
+    } finally {
+      await skirmish.unmount();
+    }
+    assert.equal(skirmish.gl.disposed, true, 'and destroyed it, as before');
+    const back = await mount(pilot);
+    try {
+      assert.ok(worldView.current !== null, 'the prologue builds the world again');
+      assert.ok(back.gl.ledger.frames > 0);
+    } finally {
+      await back.unmount();
+    }
+  });
+
+  it('takes no seat and holds nothing on a device that cannot render', async () => {
+    const world = await mount({ ...pilot, webgl: false });
+    try {
+      assert.ok(shows(world.tree, 'No light in the water'));
+      assert.equal(world.net.calls.length, 0);
+      assert.equal(worldView.current, null, 'a failed mount keeps no half-built world');
     } finally {
       await world.unmount();
     }

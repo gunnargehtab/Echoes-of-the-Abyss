@@ -385,8 +385,9 @@ export class GameClient {
     // and `attach` overwrites the token with the new room's anyway.
     if (stored !== null && storedMissionId() === wanted) {
       try {
-        this.attach(await this.client.reconnect<MatchLobbyState>(stored));
-        this.handlers.onStatus('connected');
+        if (this.attach(await this.client.reconnect<MatchLobbyState>(stored))) {
+          this.handlers.onStatus('connected');
+        }
         return;
       } catch {
         rememberToken(null);
@@ -398,8 +399,11 @@ export class GameClient {
       // improve on that.
       if (options.roomId !== undefined && options.roomId !== '') {
         const name = options.name === undefined || options.name === '' ? undefined : options.name;
-        this.attach(await this.client.joinById<MatchLobbyState>(options.roomId.trim(), { name }));
-        this.handlers.onStatus('connected');
+        if (
+          this.attach(await this.client.joinById<MatchLobbyState>(options.roomId.trim(), { name }))
+        ) {
+          this.handlers.onStatus('connected');
+        }
         return;
       }
       // The shell passes the archetype in; `?map=<id>` stays honoured as the
@@ -428,12 +432,12 @@ export class GameClient {
       // `create` makes a room of its own rather than looking for one. Quick
       // match keeps `joinOrCreate` — picking a map is picking a queue, and that
       // is still the fastest way into a game with strangers.
-      this.attach(
+      const joined = this.attach(
         options.create === undefined
           ? await this.client.joinOrCreate<MatchLobbyState>('match', joinOptions)
           : await this.client.create<MatchLobbyState>('match', joinOptions)
       );
-      this.handlers.onStatus('connected');
+      if (joined) this.handlers.onStatus('connected');
     } catch (error) {
       this.handlers.onStatus('error', error instanceof Error ? error.message : String(error));
     }
@@ -473,7 +477,15 @@ export class GameClient {
    * produces a *different* Room object for the same seat, and it needs exactly
    * the same wiring.
    */
-  private attach(room: MatchRoom): void {
+  private attach(room: MatchRoom): boolean {
+    // A join that answers after the player left is a seat nobody is in: give
+    // it straight back and wire nothing to it. Before #1458 its handlers wrote
+    // into a view already destroyed; now a mission's view is the page's
+    // world (worldView.ts), and the next session would be drawn on.
+    if (this.leaving) {
+      room.leave();
+      return false;
+    }
     this.unwatchLobby();
     this.room = room;
     rememberToken(room.reconnectionToken, this.missionId);
@@ -535,6 +547,7 @@ export class GameClient {
     });
 
     this.pushLobby();
+    return true;
   }
 
   /**
