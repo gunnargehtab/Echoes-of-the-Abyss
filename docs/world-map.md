@@ -229,7 +229,7 @@ A mission starts when its room is joined, so a camera flight after joining would
 
 ### 7.8 The calls this section took
 
-The owner's calls, six on #1455 and five on #1461. Each was written with its options; the one taken is named.
+The owner's calls, six on #1455 and six on #1461. Each was written with its options; the one taken is named.
 
 **Anchors: Sorrowgate only (taken).** The alternatives were to pin every named place now from §1–§4's distances, or to scale Plate VII's coordinates. Scaling the plate would turn an illustration's compressions into geography, since its depth rail gives the shallows room. Pinning all of them now would decide ground no renderer has drawn yet. So only the pilot is pinned, and #1457 places the rest inside the region rectangles.
 
@@ -252,6 +252,8 @@ The owner's calls, six on #1455 and five on #1461. Each was written with its opt
 **The apron takes the veil's floor and the surface shading (taken).** Extending the veil field outward would say the exterior can be heard; leaving the apron unveiled drew it warmer than the drained ground beside it.
 
 **The 0.8 s ramp, built now (taken).** It runs in on a session's first state and out when the session resets; deferring it to #1462, which owns the return, was the alternative.
+
+**The apron's last 500 m always fades (taken).** Below full strength the ramp would otherwise draw the apron's straight far edge against the backdrop. Ramping only the snow would have reversed the ramp for ground; accepting the edge for a second was the third option.
 
 ---
 
