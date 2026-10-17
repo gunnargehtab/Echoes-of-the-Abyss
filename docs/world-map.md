@@ -298,7 +298,7 @@ The owner's calls: six on #1455, six on #1461 and four on #1457. Each was writte
 
 **The pilot draws the authored surround now (taken).** The apron's mesh and fade are unchanged and only its cells differ, so the pilot shows its surroundings before [#1459](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1459) draws the overview. Keeping the base-ground apron until #1459 was the alternative.
 
-**Clashes between the docs filed, not fixed (taken).** Where a mission document and this one disagree on a distance or a place, the atlas follows this document, and each clash is listed in one finding. Amending the mission documents and Plate VII here would have widened #1457 past geography.
+**Clashes between the docs filed, not fixed (taken).** Where a mission document and this one disagree on a distance or a place, the atlas follows this document, and each clash is listed in [#1469](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1469). Amending the mission documents and Plate VII here would have widened #1457 past geography.
 
 ---
 
