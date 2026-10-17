@@ -72,6 +72,10 @@ describe('placed regions', () => {
       [[{ ...ok, x: 36_000 }], /outside the atlas/],
       [[{ ...ok, y: -250 }], /outside the atlas/],
       [[{ ...ok, widthM: 0 }], /empty/],
+      // Inside the frame, but 1,250 m from its west edge: §7.3's surround
+      // would leave the atlas, and is never clipped.
+      [[{ ...ok, x: 1_250 }], /detail surround leaves the atlas/],
+      [[{ ...ok, y: 90_000 - 4_000 - 2_250 }], /detail surround leaves the atlas/],
     ];
     for (const [regions, expected] of cases) {
       const problems = worldRegionProblems(regions);
@@ -119,17 +123,23 @@ describe('the detail rectangle', () => {
     assert.equal(cells, 1_440);
   });
 
-  it('grows outward to the overview grid and stays in the atlas', () => {
-    const odd = { x: 1_250, y: 20_250, widthM: 3_000, heightM: 2_750 };
+  it('grows outward to the overview grid, never thinner than the surround', () => {
+    const odd = { x: 5_250, y: 20_250, widthM: 3_000, heightM: 2_750 };
     const detail = detailRect(odd);
     for (const edge of [detail.x, detail.y, detail.x + detail.widthM, detail.y + detail.heightM]) {
       assert.equal(edge % WORLD.ATLAS_CELL_M, 0, `edge ${edge} off the overview grid`);
     }
-    // Never thinner than the surround it promises, and clipped at the frame.
-    assert.equal(detail.x, 0);
+    assert.deepEqual(detail, { x: 2_000, y: 17_000, widthM: 9_000, heightM: 9_000 });
+    assert.ok(odd.x - detail.x >= WORLD.DETAIL_SURROUND_M);
     assert.ok(odd.y - detail.y >= WORLD.DETAIL_SURROUND_M);
     assert.ok(detail.x + detail.widthM - (odd.x + odd.widthM) >= WORLD.DETAIL_SURROUND_M);
     assert.ok(detail.y + detail.heightM - (odd.y + odd.heightM) >= WORLD.DETAIL_SURROUND_M);
+  });
+
+  it('is never clipped at the frame; the placement is refused instead', () => {
+    // §7.3 promises the surround on every side (the owner's call on #1456).
+    const nearEdge = { x: 1_250, y: 20_250, widthM: 3_000, heightM: 2_750 };
+    assert.equal(detailRect(nearEdge).x, -2_000);
   });
 });
 

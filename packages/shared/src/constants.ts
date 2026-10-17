@@ -42,18 +42,23 @@ export const SORROWGATE_LOOK = {
 } as const;
 
 /**
- * SPEC — docs/world-map.md §7.2–§7.4, the continuous Rift world (#1449).
- * Presentation only: the atlas is public ground nobody simulates, and no
- * simulation number reads any of it. `ATLAS_*` is §7.2's frame, x east and
- * y south from the north-west corner; `DETAIL_SURROUND_M` is §7.3's ring of
- * mission-detail ground round a placed map; `FADE_M` is §7.4's W, the width
- * of the exterior's smoothstep to darkness.
+ * The continuous Rift world — docs/world-map.md §7 (#1449). Presentation only:
+ * the atlas is public ground nobody simulates, and no simulation number reads
+ * any of it. The frame runs x east and y south from the north-west corner.
  */
 export const WORLD = {
+  /** SPEC — docs/world-map.md §1: forty kilometres at the widest. */
   ATLAS_WIDTH_M: 40_000,
+  /** SPEC — docs/world-map.md §1: ninety kilometres end to end. */
   ATLAS_HEIGHT_M: 90_000,
-  ATLAS_CELL_M: 1_000,
+  /** SPEC — docs/maps.md, "How a map is written": the 250 m cell grid. */
   DETAIL_CELL_M: 250,
+  /**
+   * TUNABLE — §7's own presentation numbers ("TUNABLE unless it is a fact this
+   * document already gives"). The doc states each value, so moving one edits
+   * its line too: §7.2's overview cell, §7.3's surround, §7.4's fade width W.
+   */
+  ATLAS_CELL_M: 1_000,
   DETAIL_SURROUND_M: 2_500,
   FADE_M: 2_000,
 } as const;

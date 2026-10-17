@@ -102,23 +102,30 @@ export function regionContains(region: PlanRect, atlas: PlanPoint): boolean {
 /**
  * The region's mission-detail rectangle (§7.3): the map plus
  * `WORLD.DETAIL_SURROUND_M` on every side, grown outward to the next overview
- * line so detail and overview meet on the overview grid, and held inside the
- * atlas. Sorrowgate's is 15–25 km by 38–47 km and needs no rounding.
+ * line so detail and overview meet on the overview grid. Sorrowgate's is
+ * 15–25 km by 38–47 km and needs no rounding.
+ *
+ * Never clipped at the frame: §7.3 promises the surround on every side, so a
+ * placed map too near the atlas edge to have it is refused instead
+ * (`worldRegionProblems`), the owner's call on #1456.
  */
 export function detailRect(region: PlanRect): PlanRect {
   const cell = WORLD.ATLAS_CELL_M;
   const surround = WORLD.DETAIL_SURROUND_M;
-  const west = Math.max(RIFT_ATLAS.x, Math.floor((region.x - surround) / cell) * cell);
-  const north = Math.max(RIFT_ATLAS.y, Math.floor((region.y - surround) / cell) * cell);
-  const east = Math.min(
-    RIFT_ATLAS.x + RIFT_ATLAS.widthM,
-    Math.ceil((region.x + region.widthM + surround) / cell) * cell
-  );
-  const south = Math.min(
-    RIFT_ATLAS.y + RIFT_ATLAS.heightM,
-    Math.ceil((region.y + region.heightM + surround) / cell) * cell
-  );
+  const west = Math.floor((region.x - surround) / cell) * cell;
+  const north = Math.floor((region.y - surround) / cell) * cell;
+  const east = Math.ceil((region.x + region.widthM + surround) / cell) * cell;
+  const south = Math.ceil((region.y + region.heightM + surround) / cell) * cell;
   return { x: west, y: north, widthM: east - west, heightM: south - north };
+}
+
+function rectWithin(inner: PlanRect, outer: PlanRect): boolean {
+  return (
+    inner.x >= outer.x &&
+    inner.y >= outer.y &&
+    inner.x + inner.widthM <= outer.x + outer.widthM &&
+    inner.y + inner.heightM <= outer.y + outer.heightM
+  );
 }
 
 /**
@@ -126,7 +133,8 @@ export function detailRect(region: PlanRect): PlanRect {
  *
  * The rules §7.2 states: ids unique; each region names a map some mission
  * plays on; corners and sizes whole 250 m cells, so a mission's cells sit on
- * the atlas grid exactly; and every region inside the frame. Overlap is not
+ * the atlas grid exactly; and every region inside the frame with room for
+ * §7.3's whole surround (`detailRect`). Overlap is not
  * checked here: two placed maps may not overlap, but that is the ground's
  * authoring (#1457) to prove once there are two.
  */
@@ -161,6 +169,8 @@ export function worldRegionProblems(
       region.y + region.heightM > RIFT_ATLAS.y + RIFT_ATLAS.heightM
     ) {
       problems.push(`${region.id}: outside the atlas`);
+    } else if (!rectWithin(detailRect(region), RIFT_ATLAS)) {
+      problems.push(`${region.id}: its detail surround leaves the atlas`);
     }
   }
   return problems;
