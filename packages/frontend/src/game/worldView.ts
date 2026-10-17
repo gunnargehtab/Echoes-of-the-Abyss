@@ -63,7 +63,8 @@ export class WorldViewHost {
     const look = lookForMission(missionId);
     if (this.view !== null && this.look !== look) this.dispose();
     if (this.view === null) {
-      this.view = new PerspectiveView(look);
+      // Placed in the world, so its border is drawn and faded (#1461).
+      this.view = new PerspectiveView(look, worldRegionForMission(missionId) ?? null);
       this.look = look;
     }
     if (!this.view.mount(host, devices.glRenderer, devices.environment)) {

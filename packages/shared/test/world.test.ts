@@ -21,7 +21,10 @@ import {
   WORLD,
   WORLD_REGIONS,
   atlasToLocal,
+  clampToRect,
   detailRect,
+  exteriorDistanceM,
+  exteriorFade,
   localToAtlas,
   regionContains,
   worldRegionById,
@@ -140,6 +143,41 @@ describe('the detail rectangle', () => {
     // §7.3 promises the surround on every side (the owner's call on #1456).
     const nearEdge = { x: 1_250, y: 20_250, widthM: 3_000, heightM: 2_750 };
     assert.equal(detailRect(nearEdge).x, -2_000);
+  });
+});
+
+describe('the mission border', () => {
+  const mission = { x: 0, y: 0, widthM: 5_000, heightM: 4_000 };
+
+  it('measures d as zero inside, from the nearest edge outside, round at a corner', () => {
+    assert.equal(exteriorDistanceM(mission, { x: 2_500, y: 2_000 }), 0);
+    assert.equal(exteriorDistanceM(mission, { x: 5_000, y: 4_000 }), 0, 'the edge is inside');
+    assert.equal(exteriorDistanceM(mission, { x: -300, y: 1_000 }), 300);
+    assert.equal(exteriorDistanceM(mission, { x: 2_000, y: 4_750 }), 750);
+    assert.equal(exteriorDistanceM(mission, { x: 5_300, y: -400 }), 500, 'a 3-4-5 off the corner');
+  });
+
+  it('fades exactly 1 inside, smoothstep to 0 at W = 2,000 m, and never back', () => {
+    assert.equal(WORLD.FADE_M, 2_000);
+    assert.equal(exteriorFade(0), 1);
+    assert.equal(exteriorFade(-50), 1);
+    assert.equal(exteriorFade(2_000), 0);
+    assert.equal(exteriorFade(9_000), 0);
+    assert.equal(exteriorFade(1_000), 0.5, 'the midpoint of a smoothstep');
+    // §7.4's own reading: 0.96 one 250 m cell out, where the rim still marks the line.
+    assert.equal(exteriorFade(250).toFixed(2), '0.96');
+    let last = 1;
+    for (let d = 0; d <= 2_100; d += 25) {
+      const f = exteriorFade(d);
+      assert.ok(f <= last && f >= 0 && f <= 1, `monotone at ${d}`);
+      last = f;
+    }
+  });
+
+  it('clamps a focus onto the mission, closed at the far edges', () => {
+    assert.deepEqual(clampToRect(mission, { x: -10, y: 9_000 }), { x: 0, y: 4_000 });
+    assert.deepEqual(clampToRect(mission, { x: 5_000, y: 4_000 }), { x: 5_000, y: 4_000 });
+    assert.deepEqual(clampToRect(mission, { x: 1_234, y: 567 }), { x: 1_234, y: 567 });
   });
 });
 
