@@ -100,6 +100,43 @@ export function regionContains(region: PlanRect, atlas: PlanPoint): boolean {
 }
 
 /**
+ * How far a point lies outside a rectangle, in metres — §7.4's *d*. Zero on
+ * the rectangle or inside it; outside, the Euclidean distance to its nearest
+ * edge, so off a corner it is the distance to the corner and the fade's
+ * contours round off there rather than meeting in a mitre.
+ */
+export function exteriorDistanceM(rect: PlanRect, point: PlanPoint): number {
+  const dx = Math.max(rect.x - point.x, 0, point.x - (rect.x + rect.widthM));
+  const dy = Math.max(rect.y - point.y, 0, point.y - (rect.y + rect.heightM));
+  return Math.hypot(dx, dy);
+}
+
+/**
+ * §7.4's exterior factor, *f*(*d*) = 1 − smoothstep(0, W, *d*): exactly 1 on
+ * and inside the mission, so nothing there changes, and 0 from W on, where
+ * the exterior has met the backdrop's darkness. The renderer's shader states
+ * the same curve (`worldBorder.ts`), and a test holds the two together.
+ */
+export function exteriorFade(distanceM: number, widthM: number = WORLD.FADE_M): number {
+  if (distanceM <= 0) return 1;
+  if (distanceM >= widthM) return 0;
+  const t = distanceM / widthM;
+  return 1 - t * t * (3 - 2 * t);
+}
+
+/**
+ * The nearest point on or inside a rectangle — §7.4 rule 1, the focus clamp.
+ * Closed, unlike `regionContains`: a focus may stand on the far edge, which is
+ * still the mission's ground to look at.
+ */
+export function clampToRect(rect: PlanRect, point: PlanPoint): PlanPoint {
+  return {
+    x: Math.min(rect.x + rect.widthM, Math.max(rect.x, point.x)),
+    y: Math.min(rect.y + rect.heightM, Math.max(rect.y, point.y)),
+  };
+}
+
+/**
  * The region's mission-detail rectangle (§7.3): the map plus
  * `WORLD.DETAIL_SURROUND_M` on every side, grown outward to the next overview
  * line so detail and overview meet on the overview grid. Sorrowgate's is

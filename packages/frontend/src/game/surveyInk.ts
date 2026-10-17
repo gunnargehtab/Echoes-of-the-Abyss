@@ -222,6 +222,12 @@ function fragmentPars(): string {
     `const float SURVEY_MAJORS[${MAJOR_ISOBATHS_M.length}] = float[${MAJOR_ISOBATHS_M.length}](${majors});`,
     '',
     'float surveyCell( ivec2 c ) { return texelFetch( uSurveyCells, c, 0 ).r; }',
+    // The cell under a plan point, held to the grid: what a later hook asks
+    // when it wants a biome rather than a texel (`installGroundSurface`). The
+    // apron (worldBorder.ts) defines its own, offset into its padded grid.
+    'float surveyCellAt( vec2 xz ) {',
+    '  return surveyCell( clamp( ivec2( floor( xz / uSurveyGrid.z ) ), ivec2( 0 ), ivec2( uSurveyGrid.xy ) - 1 ) );',
+    '}',
     '',
     // The sRGB transfer both ways, so the ink blends in encoded space — the
     // space the mark layer's strokes blend in, which the ladder is measured in.

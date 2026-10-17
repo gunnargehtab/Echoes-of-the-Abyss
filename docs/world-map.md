@@ -191,7 +191,7 @@ The world is **continuous visual geography, not a persistent simulation**. The w
 ### 7.3 Overview and detail
 
 - **Overview:** the whole atlas at 1,000 m cells, 3,600 of them, through the existing terrain, water and lighting pipelines. Honest overview detail: biome fill and relief, the approved prop vocabulary sparsely, no mission-density props.
-- **Detail:** a mission's rectangle plus **2,500 m of surroundings** on every side, at 250 m cells. For Sorrowgate that is *x* 15,000–25,000 m, *y* 38,000–47,000 m: 10,000 × 9,000 m, 1,440 cells, the 320 of the mission patch unchanged at its centre. The surroundings are public ground authored to continue the patch's edges, and are never simulated.
+- **Detail:** a mission's rectangle plus **2,500 m of surroundings** on every side, at 250 m cells. For Sorrowgate that is *x* 15,000–25,000 m, *y* 38,000–47,000 m: 10,000 × 9,000 m, 1,440 cells, the 320 of the mission patch unchanged at its centre. The surroundings are public ground authored to continue the patch's edges, and are never simulated. Until [#1457](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1457) authors them, they are an apron of the map's own base ground — the region it paints first, at its base floor, for Sorrowgate the Districts' Coral Ruins at 1,600 m — so the pilot's border has ground to fade over without inventing any (the owner's call on #1461). Until the overview surrounds the detail, that apron's last 500 m, from W to the surround's edge, fades to the backdrop at any strength of §7.4's ramp, so a fade part-way in never shows where the apron ends.
 - **Seam:** the detail rectangle's edge is a line of the overview grid; a surround that would end between two 1,000 m lines grows outward to the next one. Sorrowgate's needs no rounding, its edges falling at 15, 25, 38 and 47 km. Detail owns everything inside it and the overview everything outside, so no surface overlaps another, and the seam's vertices take the overview's heights so the two meet without a crack.
 
 ### 7.4 The mission border
@@ -201,6 +201,8 @@ Inside a mission the border is **a fade into darkness, not a wall**. Three rules
 1. **The focus is clamped; the eye is not.** The camera's focus stays inside the mission rectangle for every verb that moves it: drag, keys and edge scroll, the scope, zoom about the cursor, centring, `Home` and fit, and any scripted move ([free-camera.md](free-camera.md) §4). The orbiting eye may swing outside it, keeping its 25 m clearance over whatever public ground lies beneath. On the campaign overview the focus is clamped to the atlas frame instead.
 2. **Only the exterior fades.** A scenery or water fragment at plan distance *d* outside the rectangle — zero inside, Euclidean from the nearest edge outside, so corners round off — is drawn at *f*(*d*) = 1 − smoothstep(0, *W*, *d*), with ***W* = 2,000 m** and smoothstep the cubic 3*t*² − 2*t*³. Inside, *f* is exactly 1 and nothing changes. At *W* the exterior meets the backdrop's darkness, which is why the detail surround is 500 m wider than the fade. The factor is a property of the place, never of where the eye stands. The HUD, the player's own hulls, resolved contacts, survey cues and every acoustic reading are never faded.
 3. **The exterior takes no orders.** A click that lands outside the rectangle is refused on the client; the server's movement bounds stay what they are, and stay the authority.
+
+The exterior's darkness is the backdrop's own colour along each fragment's ray, graded from the backdrop's anchor, so the ground becomes exactly the water behind it. Exterior marine snow takes the same factor. Nothing out there is heard, so while anyone in the mission listens the exterior takes the acoustic veil's floor ([ui-ux.md](ui-ux.md) §4.5), and with nobody listening it is as clear as the mission's own field.
 
 The pilot keeps its rim line and drops its skirt. The rim is chart ink, never dimmed ([ui-ux.md](ui-ux.md) §4.5), and it is what marks the line rule 3 refuses clicks beyond, where the fade has barely begun: *f* is still 0.96 one cell out. The skirt was the wall the world ended at — fogged like the seabed, never drawn as an instrument line — and the surround's public ground replaces it, so no chart ink is dimmed. A non-pilot mission keeps both. The fade ramps in over **0.8 s** once the mission's first state arrives and out over the same on the way back, instantly under reduced motion.
 
@@ -227,7 +229,7 @@ A mission starts when its room is joined, so a camera flight after joining would
 
 ### 7.8 The calls this section took
 
-Six calls, the owner's (#1455). Each was written with its options; the one taken is named.
+The owner's calls, six on #1455 and six on #1461. Each was written with its options; the one taken is named.
 
 **Anchors: Sorrowgate only (taken).** The alternatives were to pin every named place now from §1–§4's distances, or to scale Plate VII's coordinates. Scaling the plate would turn an illustration's compressions into geography, since its depth rail gives the shallows room. Pinning all of them now would decide ground no renderer has drawn yet. So only the pilot is pinned, and #1457 places the rest inside the region rectangles.
 
@@ -240,6 +242,18 @@ Six calls, the owner's (#1455). Each was written with its options; the one taken
 **The rim stays; the skirt goes (taken).** Dropping the rim too would leave nothing to mark where clicks stop working, and would dim the one line of [ui-ux.md](ui-ux.md) §4.5's chart register that marks it. Drawing the rim only on demand, with the cursor outside or a click refused, is new behaviour for no reading the rim does not already give. The rim is the instrument's border and the fade is the scenery's.
 
 **The world look on every path into the prologue (taken).** Making the Tutorial door travel too would put a flight in front of the game's first door. Keeping the pilot to board launches only would contradict selecting it by mission identity. So every path draws the world, and only the board travels.
+
+**The surround's ground until #1457: the map's base (taken).** Repeating each edge cell outward runs the trench and the vein on without a seam, but makes ground by repetition. Drawing no exterior until #1457 would land the fade with nothing to act on.
+
+**The fade's darkness: the backdrop along the ray (taken).** The deepest stop of the ramp is the backdrop only when the camera looks down, and left a dark band at low pitch; the fog's own water colour leaves a smaller one.
+
+**Exterior snow fades (taken).** Leaving it would have needed rule 2 above amended to exclude particulates.
+
+**The apron takes the veil's floor and the surface shading (taken).** Extending the veil field outward would say the exterior can be heard; leaving the apron unveiled drew it warmer than the drained ground beside it.
+
+**The 0.8 s ramp, built now (taken).** It runs in on a session's first state and out when the session resets; deferring it to #1462, which owns the return, was the alternative.
+
+**The apron's last 500 m always fades (taken).** Below full strength the ramp would otherwise draw the apron's straight far edge against the backdrop. Ramping only the snow would have reversed the ramp for ground; accepting the edge for a second was the third option.
 
 ---
 

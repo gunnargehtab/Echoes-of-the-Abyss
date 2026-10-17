@@ -2205,8 +2205,13 @@ export class EchoRenderer {
     this.conn = conn;
   }
 
-  /** The water under a pointer, or null before the conn view exists. */
+  /**
+   * The water under a pointer, or null before the conn view exists — or when
+   * the pointer is past a placed mission's edge, where the exterior takes no
+   * orders (docs/world-map.md §7.4 rule 3, #1461).
+   */
   private screenToWorld(clientX: number, clientY: number): { x: number; y: number } | null {
+    if (this.conn?.refusesPick(clientX, clientY) === true) return null;
     return this.conn?.resolveGround(clientX, clientY) ?? null;
   }
 
@@ -2214,12 +2219,14 @@ export class EchoRenderer {
    * The point in the water a click there would order (docs/ui-ux.md §9): the
    * first of the ground and — with the focus raised — the focus plane, at its
    * depth. Null before the conn view exists. A place-only order — a rally, a
-   * structure's site — keeps `screenToWorld`.
+   * structure's site — keeps `screenToWorld`. Null past a placed mission's
+   * edge too, for `screenToWorld`'s reason.
    */
   private screenToWater(
     clientX: number,
     clientY: number
   ): { x: number; y: number; depthM: number } | null {
+    if (this.conn?.refusesPick(clientX, clientY) === true) return null;
     return this.conn?.resolveWater(clientX, clientY) ?? null;
   }
 
@@ -5160,8 +5167,14 @@ export class EchoRenderer {
    */
   private earPosition(): { x: number; y: number } {
     const rect = this.app.canvas.getBoundingClientRect();
+    // The ground itself rather than `screenToWorld`: the ear is not an order,
+    // so a centre ray that meets a placed mission's exterior first still puts
+    // it on the ground the player is looking at, clamped onto the map (#1461).
     return (
-      this.screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2) ?? { x: 0, y: 0 }
+      this.conn?.resolveGround(rect.left + rect.width / 2, rect.top + rect.height / 2) ?? {
+        x: 0,
+        y: 0,
+      }
     );
   }
 

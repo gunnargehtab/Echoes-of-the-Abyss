@@ -76,6 +76,13 @@ export class VeilField {
   private rows = 0;
   private cellM = 1;
   private clarity = new Float32Array(0);
+  /**
+   * Whether the last build had anyone listening. Ground past a placed
+   * mission's edge is heard by nobody (docs/world-map.md §7.1), so while
+   * anyone listens it takes the veil's floor; with nobody, the field is clear
+   * everywhere and so is it (`PerspectiveView`'s apron shade).
+   */
+  listening = false;
 
   /**
    * Rebuild against a terrain and the listeners standing on it.
@@ -95,6 +102,7 @@ export class VeilField {
     this.cellM = cellM;
     if (this.clarity.length !== cols * rows) this.clarity = new Float32Array(cols * rows);
     const clarity = this.clarity;
+    this.listening = listeners.length > 0;
 
     // No listeners is not "the map is dark" — it is a match that has not
     // started, or a force that has just been wiped. Drawing a black chart
@@ -186,6 +194,7 @@ export class VeilField {
 
   /** Drop the field — a new match, or a view coming down. */
   clear(): void {
+    this.listening = false;
     this.clarity = new Float32Array(0);
     this.cols = 0;
     this.rows = 0;

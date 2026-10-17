@@ -65,9 +65,13 @@ import {
   Faction,
   MODEL_LIGHTING,
   MOVEMENT,
+  clampToRect,
+  exteriorDistanceM,
   statsFor,
   structureStatsFor,
   type EchoSnapshot,
+  type PlanRect,
+  type WorldRegion,
   type OwnStructure,
   type OwnOrdnance,
   type OwnUnit,
@@ -132,6 +136,7 @@ import {
   surveyCellTexture,
 } from './surveyInk.ts';
 import {
+  BACKDROP_SPAN_M,
   installWaterFog,
   MarineSnow,
   waterColorAt,
@@ -161,6 +166,16 @@ import {
 } from './seabedDetail.ts';
 import { stoneSeats, type StoneSeat } from './environment.ts';
 import { installGroundSurface, type WorldLook } from './tutorialLook.ts';
+import {
+  apronBaseFor,
+  apronFrame,
+  apronMesh,
+  installApronShading,
+  paddedTerrain,
+  stepBorderStrength,
+  type ApronPads,
+  type BorderUniforms,
+} from './worldBorder.ts';
 import { DreamGroundCover } from './dreamGroundCover.ts';
 import { DreamLightHalos } from './dreamLightHalos.ts';
 import { swayAt, type SwayOffset } from './cameraSway.ts';
@@ -518,6 +533,26 @@ export class PerspectiveView {
   private seabedRange: SeabedRange = { shallowest: 0, deepest: 0 };
   private terrainMesh: Mesh | null = null;
   /**
+   * The exterior ground a placed mission's border fades over (worldBorder.ts,
+   * #1461): the mission's cells padded with the map's base ground, its mesh,
+   * and how many cells it adds per side. Null for a mission drawn alone.
+   */
+  private apron: {
+    terrain: TerrainPayload;
+    pads: ApronPads;
+    mesh: Mesh | null;
+    cells: DataTexture | null;
+  } | null = null;
+  /**
+   * §7.4's ramp: how far the border fade has come in, and where it is going.
+   * In once a session's first state arrives, out when the session lets go; the
+   * apron and the snow read the strength through `border`.
+   */
+  private borderStrength = 0;
+  private borderTarget: 0 | 1 = 0;
+  private borderAt: number | null = null;
+  private border: BorderUniforms | null = null;
+  /**
    * The roofed passages and the stone over each (#1105), rebuilt with the
    * dressing. `base` is each roof's stone in linear light before the veil,
    * so a veil pass multiplies it rather than compounding on its own output.
@@ -758,7 +793,16 @@ export class PerspectiveView {
    * by an elapsed time that means something. */
   private stationStartedAt = performance.now();
 
-  constructor(private readonly look: WorldLook = 'standard') {
+  /**
+   * `worldRegion` places this view's mission in the continuous world
+   * (docs/world-map.md §7, `worldRegionForMission`): its exterior is drawn and
+   * faded, its skirt is gone, and a click past its edge is refused. Null — every
+   * view but the persistent one — draws the mission alone, as before.
+   */
+  constructor(
+    private readonly look: WorldLook = 'standard',
+    private readonly worldRegion: WorldRegion | null = null
+  ) {
     // Sorrowgate keeps its own mission surface (docs/visual-reboot.md §5).
     this.seabedDetail = SEABED_DETAIL_ON && look === 'standard';
     this.environment = new EnvironmentLayer(look, this.seabedDetail);
@@ -905,6 +949,9 @@ export class PerspectiveView {
    */
   detach(): void {
     this.setActive(false);
+    // Nothing is drawn while detached, so a ramp has nothing to show: land it.
+    this.borderStrength = this.borderTarget;
+    this.borderAt = null;
     this.resizeObserver?.disconnect();
     this.renderer?.domElement.remove();
     this.host = null;
@@ -1046,7 +1093,11 @@ export class PerspectiveView {
       }
     }
     if (touched === null) return;
-    // The seed, the rock top and the depth ramp stay what the join set them
+    // The apron is not rebuilt either: its padded copy keeps the join's mission
+    // cells, which only touch the apron along the mission's edge. A delta on an
+    // edge cell would open the seam between the mission's edge and the apron's
+    // inner edge until the next terrain message; the live arch is central, and local edits are
+    // #1459's. The seed, the rock top and the depth ramp stay what the join set them
     // to: a delta changes the cells it names, and re-deriving any of the
     // three from the new ground would move every cell on the map to change a
     // few (seabed.ts, `seabedSeed`).
@@ -1054,6 +1105,8 @@ export class PerspectiveView {
   }
 
   applySnapshot(snapshot: EchoSnapshot): void {
+    // The session's first state: a placed mission's border fades in (§7.4).
+    if (this.worldRegion !== null) this.borderTarget = 1;
     this.units = snapshot.units;
     this.structures = snapshot.structures;
     this.ordnance = snapshot.ordnance;
@@ -1085,6 +1138,8 @@ export class PerspectiveView {
   }
 
   resetForNewMatch(): void {
+    // The mission's state is gone, so its border fades back out (§7.4).
+    this.borderTarget = 0;
     this.units = [];
     this.structures = [];
     this.ordnance = [];
@@ -1102,6 +1157,7 @@ export class PerspectiveView {
 
   destroy(): void {
     this.setActive(false);
+    this.disposeApron();
     document.removeEventListener('visibilitychange', this.onVisibility);
     this.resizeObserver?.disconnect();
     this.environment.destroy();
@@ -1675,6 +1731,7 @@ export class PerspectiveView {
     }
     this.terrainMesh = new Mesh(geometry, material);
     this.scene.add(this.terrainMesh);
+    if (this.apron !== null && this.apron.mesh === null) this.buildApron(grid);
     this.terrainGrid = grid;
     this.seabedCanvas = canvas;
     this.seabedTexture = texture;
@@ -1882,6 +1939,9 @@ export class PerspectiveView {
       );
     }
 
+    // A placed mission has no wall: its exterior is ground that fades
+    // (docs/world-map.md §7.4). The rim above stays, as chart ink.
+    if (this.worldRegion !== null) return;
     const skirtBottom = depthToWorldY(DEPTH.MAX_M) - 250;
     const skirtPositions: number[] = [];
     const skirtIndices: number[] = [];
@@ -2054,9 +2114,11 @@ export class PerspectiveView {
 
   /**
    * The roofs take the ground's veil: they are ground, and stone nobody is
-   * listening to goes as cold as the floor under it.
+   * listening to goes as cold as the floor under it. So does the apron, at
+   * the floor (`shadeApron`).
    */
   private shadeRoofs(): void {
+    this.shadeApron();
     const shade = this.veilColor;
     for (const roof of this.roofs) {
       const positions = roof.mesh.geometry.getAttribute('position') as BufferAttribute;
@@ -2129,6 +2191,133 @@ export class PerspectiveView {
     this.groundSeed = seabedSeed(terrain);
     this.groundRockTopM = rockTopDepthM(terrain);
     this.seabedRange = seabedRange(terrain);
+    this.disposeApron();
+    const base = this.worldRegion === null ? null : apronBaseFor(this.worldRegion.mapId);
+    if (this.worldRegion !== null && base !== null) {
+      const { pads } = apronFrame(this.worldRegion, terrain.cellM);
+      this.apron = { terrain: paddedTerrain(terrain, pads, base), pads, mesh: null, cells: null };
+    }
+  }
+
+  /** The mission's own rectangle in its metres: what the focus and the fade are bounded by. */
+  private missionRect(): PlanRect | null {
+    const terrain = this.terrain;
+    if (terrain === null) return null;
+    return {
+      x: 0,
+      y: 0,
+      widthM: terrain.cols * terrain.cellM,
+      heightM: terrain.rows * terrain.cellM,
+    };
+  }
+
+  private disposeApron(): void {
+    this.apron?.cells?.dispose();
+    const mesh = this.apron?.mesh ?? null;
+    if (mesh !== null) {
+      this.scene.remove(mesh);
+      mesh.geometry.dispose();
+      (mesh.material as MeshBasicMaterial).map?.dispose();
+      (mesh.material as MeshBasicMaterial).dispose();
+    }
+    this.apron = null;
+  }
+
+  /**
+   * The apron's mesh and skin (docs/world-map.md §7.3–§7.4). Its skin is the
+   * mission's bake run over the padded ground on the mission's own terms —
+   * seed, rock top, depth range — so the colours meet at the edge. Unlit, like
+   * the mission mesh, and fogged like everything; then faded by plan distance
+   * from the mission, after the fog, to the deepest water the ramp has, which
+   * is the backdrop's darkness and the scene's clear colour.
+   */
+  private buildApron(missionGrid: HeightGrid): void {
+    const apron = this.apron;
+    const terrain = this.terrain;
+    const rect = this.missionRect();
+    if (apron === null || terrain === null || rect === null || this.renderer === null) return;
+    const grid = buildHeightGrid(apron.terrain, this.groundSeed, this.groundRockTopM);
+    const data = apronMesh(grid, missionGrid, apron.pads, terrain.cellM);
+    const geometry = new BufferGeometry();
+    geometry.setAttribute('position', new BufferAttribute(data.positions, 3));
+    geometry.setAttribute('uv', new BufferAttribute(data.uvs, 2));
+    geometry.setIndex(new BufferAttribute(data.indices, 1));
+    const texture = new CanvasTexture(bakeSeabed(apron.terrain, this.groundSeed, this.seabedRange));
+    texture.flipY = false;
+    texture.colorSpace = SRGBColorSpace;
+    const material = new MeshBasicMaterial({ map: texture, toneMapped: false });
+    // Shaded the way the mission's ground is (worldBorder.ts): its cells for
+    // the surface hook, the veil's shade on `color` (`shadeApron`), and the
+    // fade to the backdrop behind it, ramped by §7.4's strength.
+    this.border ??= {
+      uBorderRect: { value: [rect.x, rect.y, rect.widthM, rect.heightM] },
+      uBorderStrength: { value: this.borderStrength },
+      uFocusDepthM: this.backdrop.focusDepthUniform,
+    };
+    this.border.uBorderRect.value = [rect.x, rect.y, rect.widthM, rect.heightM];
+    const cells = surveyCellTexture(apron.terrain, surveyCellClasses(apron.terrain));
+    apron.cells = cells;
+    installApronShading(
+      material,
+      this.border,
+      {
+        cells,
+        cols: apron.terrain.cols,
+        rows: apron.terrain.rows,
+        cellM: apron.terrain.cellM,
+        padCols: apron.pads.west,
+        padRows: apron.pads.north,
+      },
+      BACKDROP_SPAN_M
+    );
+    if (this.look === 'sorrowgate') installGroundSurface(material);
+    const mesh = new Mesh(geometry, material);
+    this.scene.add(mesh);
+    apron.mesh = mesh;
+    this.shadeApron();
+  }
+
+  /**
+   * The veil over the apron: its floor, the shade of ground nobody hears,
+   * while anyone in the mission is listening (docs/ui-ux.md §4.5) — nothing
+   * outside a placed mission can be heard (docs/world-map.md §7.1) — and clear
+   * while nobody is, when the mission's own field is clear everywhere too. One
+   * colour for the whole mesh, so it costs no vertex walk.
+   */
+  private shadeApron(): void {
+    const material = this.apron?.mesh?.material as MeshBasicMaterial | undefined;
+    if (material === undefined) return;
+    const k = this.veil.listening ? Math.min(1, Math.max(0, this.veilIntensity)) : 0;
+    const i = Math.round(k * VEIL_STEPS) * 3;
+    material.color.setRGB(VEIL_TABLE[i]!, VEIL_TABLE[i + 1]!, VEIL_TABLE[i + 2]!);
+  }
+
+  /**
+   * Whether a click here falls outside a placed mission — §7.4 rule 3: the
+   * exterior takes no orders. The ray's first ground decides it: the mission's
+   * mesh or a roof is the mission's; the apron, or the ground plane past an
+   * edge, is not. Always false for a mission drawn alone, which keeps clamping
+   * a click onto the map as it did. The server's movement bounds stay the
+   * authority either way.
+   */
+  refusesPick(clientX: number, clientY: number): boolean {
+    const rect = this.missionRect();
+    if (this.worldRegion === null || rect === null || !this.castPointer(clientX, clientY)) {
+      return false;
+    }
+    const mission = this.groundHit();
+    const apronMesh = this.apron?.mesh ?? null;
+    const outside = apronMesh === null ? undefined : RAY_TMP.intersectObject(apronMesh, false)[0];
+    if (mission !== undefined) return outside !== undefined && outside.distance < mission.distance;
+    if (outside !== undefined) return true;
+    const { origin, direction } = RAY_TMP.ray;
+    const along = groundPlaneT(origin.y, direction.y, this.groundYAt(this.target.x, this.target.z));
+    return (
+      exteriorDistanceM(rect, {
+        x: origin.x + direction.x * along,
+        y: origin.z + direction.z * along,
+      }) > 0
+    );
   }
 
   /**
@@ -2142,6 +2331,19 @@ export class PerspectiveView {
   seabedDepthAt(xM: number, yM: number): number {
     const terrain = this.terrain;
     if (terrain === null) return 0;
+    // Past a placed mission's edge the ground is the apron's, so an eye that
+    // orbits out keeps its clearance over what is drawn there (§7.4 rule 1).
+    const apron = this.apron;
+    const rect = this.missionRect();
+    if (apron !== null && rect !== null && exteriorDistanceM(rect, { x: xM, y: yM }) > 0) {
+      return seabedDepthAtM(
+        apron.terrain,
+        this.groundSeed,
+        this.groundRockTopM,
+        xM + apron.pads.west * terrain.cellM,
+        yM + apron.pads.north * terrain.cellM
+      );
+    }
     return seabedDepthAtM(terrain, this.groundSeed, this.groundRockTopM, xM, yM);
   }
 
@@ -2444,8 +2646,11 @@ export class PerspectiveView {
   private clampTarget(): void {
     const terrain = this.terrain;
     if (terrain === null) return;
-    this.target.x = Math.min(terrain.cols * terrain.cellM, Math.max(0, this.target.x));
-    this.target.z = Math.min(terrain.rows * terrain.cellM, Math.max(0, this.target.z));
+    // §7.4 rule 1, the one rectangle the focus, the fade and a refused click
+    // share: every verb that moves the focus ends here.
+    const held = clampToRect(this.missionRect()!, { x: this.target.x, y: this.target.z });
+    this.target.x = held.x;
+    this.target.z = held.y;
     // The focus stays in water (docs/free-camera.md §4). Re-clamped on every
     // pan, not only when the player moves it: a focus held at 900 m that pans
     // onto a 400 m plateau is asking to sit inside rock, and the answer is the
@@ -2549,6 +2754,18 @@ export class PerspectiveView {
     // camera does.
     const focusDepthM = -this.focusY() / DEPTH_VISUAL_M_PER_M;
     this.backdrop.update(this.camera, focusDepthM);
+    const rect = this.worldRegion === null ? null : this.missionRect();
+    if (rect !== null) {
+      this.borderStrength = stepBorderStrength(
+        this.borderStrength,
+        this.borderTarget,
+        this.borderAt === null ? 0 : now - this.borderAt,
+        this.swayHeld
+      );
+      this.borderAt = now;
+      if (this.border !== null) this.border.uBorderStrength.value = this.borderStrength;
+      this.snow.setBorder(rect, this.borderStrength);
+    }
     const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
     const projectionScalePx =
       (this.viewHeight * pixelRatio) / (2 * Math.tan(((FOV_DEG / 2) * Math.PI) / 180));
