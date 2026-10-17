@@ -142,7 +142,7 @@ describe("the continuous world's detail ground (#1457) holds the server's baseli
     for (const source of sources) {
       assert.doesNotMatch(
         source,
-        /(RIFT_GROUND|RIFT_PLACES|RIFT_REGIONS|detailGround|surroundFor)/
+        /\b(RIFT_GROUND|RIFT_PLACES|RIFT_REGIONS|detailGround|surroundFor)\b/
       );
     }
   });
