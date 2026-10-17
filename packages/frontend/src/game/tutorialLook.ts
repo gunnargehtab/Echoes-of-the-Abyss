@@ -203,9 +203,7 @@ export function installGroundSurface(material: Material): void {
         vec2 aa = max(fwidth(paving), vec2(0.001));
         float joint = 1.0 - min(smoothstep(0.014, 0.014 + aa.x, edge.x),
                                 smoothstep(0.014, 0.014 + aa.y, edge.y));
-        ivec2 surfaceCell = clamp(ivec2(floor(vSurveyXZ / uSurveyGrid.z)), ivec2(0),
-                                 ivec2(uSurveyGrid.xy) - 1);
-        float surfaceBiome = floor(surveyCell(surfaceCell) * 255.0 + 0.5);
+        float surfaceBiome = floor(surveyCellAt(vSurveyXZ) * 255.0 + 0.5);
         float civic = 1.0 - step(0.5, abs(surfaceBiome - ${f(Biome.CoralRuins)}));
         float surfaceShade = clamp(0.72 + 0.28 * surfaceData.r + 0.08 * surfaceData.b -
                                    0.1 * joint * civic, ${f(SORROWGATE_LOOK.STONE_DIFFUSE_FLOOR)}, 1.0);

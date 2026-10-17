@@ -54,7 +54,6 @@ import {
   SRGBColorSpace,
   Vector2,
   Vector3,
-  Vector4,
   WebGLRenderer,
   type Intersection,
   type Material,
@@ -137,6 +136,7 @@ import {
   surveyCellTexture,
 } from './surveyInk.ts';
 import {
+  BACKDROP_SPAN_M,
   installWaterFog,
   MarineSnow,
   waterColorAt,
@@ -167,12 +167,14 @@ import {
 import { stoneSeats, type StoneSeat } from './environment.ts';
 import { installGroundSurface, type WorldLook } from './tutorialLook.ts';
 import {
-  EXTERIOR_FADE_GLSL,
   apronBaseFor,
   apronFrame,
   apronMesh,
+  installApronShading,
   paddedTerrain,
+  stepBorderStrength,
   type ApronPads,
+  type BorderUniforms,
 } from './worldBorder.ts';
 import { DreamGroundCover } from './dreamGroundCover.ts';
 import { DreamLightHalos } from './dreamLightHalos.ts';
@@ -535,7 +537,21 @@ export class PerspectiveView {
    * #1461): the mission's cells padded with the map's base ground, its mesh,
    * and how many cells it adds per side. Null for a mission drawn alone.
    */
-  private apron: { terrain: TerrainPayload; pads: ApronPads; mesh: Mesh | null } | null = null;
+  private apron: {
+    terrain: TerrainPayload;
+    pads: ApronPads;
+    mesh: Mesh | null;
+    cells: DataTexture | null;
+  } | null = null;
+  /**
+   * §7.4's ramp: how far the border fade has come in, and where it is going.
+   * In once a session's first state arrives, out when the session lets go; the
+   * apron and the snow read the strength through `border`.
+   */
+  private borderStrength = 0;
+  private borderTarget: 0 | 1 = 0;
+  private borderAt: number | null = null;
+  private border: BorderUniforms | null = null;
   /**
    * The roofed passages and the stone over each (#1105), rebuilt with the
    * dressing. `base` is each roof's stone in linear light before the veil,
@@ -933,6 +949,9 @@ export class PerspectiveView {
    */
   detach(): void {
     this.setActive(false);
+    // Nothing is drawn while detached, so a ramp has nothing to show: land it.
+    this.borderStrength = this.borderTarget;
+    this.borderAt = null;
     this.resizeObserver?.disconnect();
     this.renderer?.domElement.remove();
     this.host = null;
@@ -1074,7 +1093,11 @@ export class PerspectiveView {
       }
     }
     if (touched === null) return;
-    // The seed, the rock top and the depth ramp stay what the join set them
+    // The apron is not rebuilt either: its padded copy keeps the join's mission
+    // cells, which only touch the apron along the mission's edge. A delta on an
+    // edge cell would leave the seam the tests hold one step apart until the
+    // next terrain message; the live arch is central, and local edits are
+    // #1459's. The seed, the rock top and the depth ramp stay what the join set them
     // to: a delta changes the cells it names, and re-deriving any of the
     // three from the new ground would move every cell on the map to change a
     // few (seabed.ts, `seabedSeed`).
@@ -1082,6 +1105,8 @@ export class PerspectiveView {
   }
 
   applySnapshot(snapshot: EchoSnapshot): void {
+    // The session's first state: a placed mission's border fades in (§7.4).
+    if (this.worldRegion !== null) this.borderTarget = 1;
     this.units = snapshot.units;
     this.structures = snapshot.structures;
     this.ordnance = snapshot.ordnance;
@@ -1113,6 +1138,8 @@ export class PerspectiveView {
   }
 
   resetForNewMatch(): void {
+    // The mission's state is gone, so its border fades back out (§7.4).
+    this.borderTarget = 0;
     this.units = [];
     this.structures = [];
     this.ordnance = [];
@@ -2087,9 +2114,11 @@ export class PerspectiveView {
 
   /**
    * The roofs take the ground's veil: they are ground, and stone nobody is
-   * listening to goes as cold as the floor under it.
+   * listening to goes as cold as the floor under it. So does the apron, at
+   * the floor (`shadeApron`).
    */
   private shadeRoofs(): void {
+    this.shadeApron();
     const shade = this.veilColor;
     for (const roof of this.roofs) {
       const positions = roof.mesh.geometry.getAttribute('position') as BufferAttribute;
@@ -2166,7 +2195,7 @@ export class PerspectiveView {
     const base = this.worldRegion === null ? null : apronBaseFor(this.worldRegion.mapId);
     if (this.worldRegion !== null && base !== null) {
       const { pads } = apronFrame(this.worldRegion, terrain.cellM);
-      this.apron = { terrain: paddedTerrain(terrain, pads, base), pads, mesh: null };
+      this.apron = { terrain: paddedTerrain(terrain, pads, base), pads, mesh: null, cells: null };
     }
   }
 
@@ -2183,6 +2212,7 @@ export class PerspectiveView {
   }
 
   private disposeApron(): void {
+    this.apron?.cells?.dispose();
     const mesh = this.apron?.mesh ?? null;
     if (mesh !== null) {
       this.scene.remove(mesh);
@@ -2216,31 +2246,50 @@ export class PerspectiveView {
     texture.flipY = false;
     texture.colorSpace = SRGBColorSpace;
     const material = new MeshBasicMaterial({ map: texture, toneMapped: false });
-    const deepest = waterColorAt(DEPTH.MAX_M);
-    const dark = new Color().setRGB(deepest.r, deepest.g, deepest.b).convertLinearToSRGB();
-    material.onBeforeCompile = (shader) => {
-      shader.uniforms.uBorderRect = {
-        value: new Vector4(rect.x, rect.y, rect.widthM, rect.heightM),
-      };
-      shader.uniforms.uBorderDark = { value: dark };
-      shader.vertexShader = shader.vertexShader
-        .replace('#include <common>', '#include <common>\nvarying vec2 vBorderXZ;')
-        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvBorderXZ = transformed.xz;');
-      shader.fragmentShader = shader.fragmentShader
-        .replace(
-          '#include <common>',
-          `#include <common>\nvarying vec2 vBorderXZ;\nuniform vec3 uBorderDark;\n${EXTERIOR_FADE_GLSL}`
-        )
-        .replace(
-          '#include <fog_fragment>',
-          `#include <fog_fragment>
-          gl_FragColor.rgb = mix(uBorderDark, gl_FragColor.rgb, echoesExteriorFade(vBorderXZ));`
-        );
+    // Shaded the way the mission's ground is (worldBorder.ts): its cells for
+    // the surface hook, the veil's shade on `color` (`shadeApron`), and the
+    // fade to the backdrop behind it, ramped by §7.4's strength.
+    this.border ??= {
+      uBorderRect: { value: [rect.x, rect.y, rect.widthM, rect.heightM] },
+      uBorderStrength: { value: this.borderStrength },
+      uFocusDepthM: this.backdrop.focusDepthUniform,
     };
-    material.customProgramCacheKey = () => 'echoes-world-border-1';
+    this.border.uBorderRect.value = [rect.x, rect.y, rect.widthM, rect.heightM];
+    const cells = surveyCellTexture(apron.terrain, surveyCellClasses(apron.terrain));
+    apron.cells = cells;
+    installApronShading(
+      material,
+      this.border,
+      {
+        cells,
+        cols: apron.terrain.cols,
+        rows: apron.terrain.rows,
+        cellM: apron.terrain.cellM,
+        padCols: apron.pads.west,
+        padRows: apron.pads.north,
+      },
+      BACKDROP_SPAN_M
+    );
+    if (this.look === 'sorrowgate') installGroundSurface(material);
     const mesh = new Mesh(geometry, material);
     this.scene.add(mesh);
     apron.mesh = mesh;
+    this.shadeApron();
+  }
+
+  /**
+   * The veil over the apron: its floor, the shade of ground nobody hears,
+   * while anyone in the mission is listening (docs/ui-ux.md §4.5) — nothing
+   * outside a placed mission can be heard (docs/world-map.md §7.1) — and clear
+   * while nobody is, when the mission's own field is clear everywhere too. One
+   * colour for the whole mesh, so it costs no vertex walk.
+   */
+  private shadeApron(): void {
+    const material = this.apron?.mesh?.material as MeshBasicMaterial | undefined;
+    if (material === undefined) return;
+    const k = this.veil.listening ? Math.min(1, Math.max(0, this.veilIntensity)) : 0;
+    const i = Math.round(k * VEIL_STEPS) * 3;
+    material.color.setRGB(VEIL_TABLE[i]!, VEIL_TABLE[i + 1]!, VEIL_TABLE[i + 2]!);
   }
 
   /**
@@ -2705,6 +2754,18 @@ export class PerspectiveView {
     // camera does.
     const focusDepthM = -this.focusY() / DEPTH_VISUAL_M_PER_M;
     this.backdrop.update(this.camera, focusDepthM);
+    const rect = this.worldRegion === null ? null : this.missionRect();
+    if (rect !== null) {
+      this.borderStrength = stepBorderStrength(
+        this.borderStrength,
+        this.borderTarget,
+        this.borderAt === null ? 0 : now - this.borderAt,
+        this.swayHeld
+      );
+      this.borderAt = now;
+      if (this.border !== null) this.border.uBorderStrength.value = this.borderStrength;
+      this.snow.setBorder(rect, this.borderStrength);
+    }
     const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
     const projectionScalePx =
       (this.viewHeight * pixelRatio) / (2 * Math.tan(((FOV_DEG / 2) * Math.PI) / 180));

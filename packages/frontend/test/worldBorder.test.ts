@@ -9,7 +9,7 @@
 
 import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
-import { DoubleSide, Mesh, MeshBasicMaterial } from 'three';
+import { DoubleSide, Mesh, MeshBasicMaterial, ShaderLib } from 'three';
 import { Biome, Faction, SORROWGATE_REGION, WORLD, exteriorFade } from '@echoes/shared';
 import {
   createHost,
@@ -23,6 +23,7 @@ import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { buildHeightGrid } from '../src/game/perspectiveTerrain.ts';
 import {
   EXTERIOR_FADE_GLSL,
+  stepBorderStrength,
   apronBaseFor,
   apronFrame,
   apronMesh,
@@ -149,6 +150,19 @@ describe('the apron: the exterior until #1457 authors it', () => {
   });
 });
 
+describe('the ramp: §7.4 fades the border in over 0.8 s', () => {
+  it('comes in and goes out linearly, and at once under reduced motion', () => {
+    assert.equal(WORLD.FADE_RAMP_S, 0.8);
+    assert.equal(stepBorderStrength(0, 1, 400, false), 0.5);
+    assert.equal(stepBorderStrength(0.5, 1, 400, false), 1);
+    assert.equal(stepBorderStrength(1, 1, 5_000, false), 1, 'and holds');
+    assert.equal(stepBorderStrength(1, 0, 200, false), 0.75);
+    assert.equal(stepBorderStrength(0.1, 0, 800, false), 0);
+    assert.equal(stepBorderStrength(0, 1, 16, true), 1, 'a cut under reduced motion');
+    assert.equal(stepBorderStrength(1, 0, 16, true), 0);
+  });
+});
+
 describe('the pilot view at its border', () => {
   it('draws the apron with the fade, keeps the rim and drops the skirt', () => {
     const placed = mountView(true).view;
@@ -170,10 +184,10 @@ describe('the pilot view at its border', () => {
     const mesh = apron(placed);
     assert.ok(mesh !== null, 'the exterior is drawn');
     assert.equal(apron(alone), null);
-    // The fade's program is the one the cache key names, compiled from the GLSL above.
+    // The fade's program, with the tutorial's ground surface chained after it.
     assert.equal(
       (mesh.material as MeshBasicMaterial).customProgramCacheKey(),
-      'echoes-world-border-1'
+      'echoes-world-border-2:sorrowgate-ground-1'
     );
   });
 
@@ -308,5 +322,77 @@ describe('the pilot view at its border', () => {
     } finally {
       chart.destroy();
     }
+  });
+
+  it("fades to the backdrop along each ray, from the backdrop's own anchor", () => {
+    const { view } = mountView(true);
+    const internals = view as unknown as {
+      apron: { mesh: Mesh };
+      backdrop: { focusDepthUniform: { value: number } };
+    };
+    const material = internals.apron.mesh.material as MeshBasicMaterial;
+    const shader = {
+      uniforms: {} as Record<string, unknown>,
+      vertexShader: ShaderLib.basic.vertexShader,
+      fragmentShader: ShaderLib.basic.fragmentShader,
+    };
+    material.onBeforeCompile(shader as never, undefined as never);
+    assert.equal(
+      shader.uniforms.uFocusDepthM,
+      internals.backdrop.focusDepthUniform,
+      'the same uniform object the backdrop draws with, not a copy'
+    );
+    assert.match(shader.fragmentShader, /uFocusDepthM - borderRay\.y \* 2200\.0/);
+    assert.match(shader.fragmentShader, /linearToOutputTexel\( vec4\( borderDark/);
+    const fog = shader.fragmentShader.indexOf('#include <fog_fragment>');
+    assert.ok(fog > 0 && shader.fragmentShader.indexOf('borderFade', fog) > fog, 'after the fog');
+    // The surface hook asks the apron's own cell reader, offset into the padded grid.
+    assert.match(shader.fragmentShader, /surveyCellAt\(vSurveyXZ\)/);
+    assert.match(shader.fragmentShader, /\+ ivec2\( uApronPad \)/);
+  });
+
+  it('ramps the fade in on the first state, for the apron and the snow alike', () => {
+    const { view } = mountView(true);
+    type Internals = {
+      border: { uBorderStrength: { value: number } } | null;
+      snow: { points: { material: { uniforms: { uBorderStrength: { value: number } } } } };
+    };
+    const internals = view as unknown as Internals;
+    const snow = (v: Internals) => v.snow.points.material.uniforms.uBorderStrength.value;
+    pumpAnimationFrames(3);
+    assert.equal(internals.border!.uBorderStrength.value, 0, 'no state yet, no border');
+    assert.equal(snow(internals), 0);
+    view.setReducedMotion(true);
+    view.applySnapshot(cannedSnapshot());
+    pumpAnimationFrames();
+    assert.equal(internals.border!.uBorderStrength.value, 1, 'cut in under reduced motion');
+    assert.equal(snow(internals), 1);
+    view.resetForNewMatch();
+    pumpAnimationFrames();
+    assert.equal(internals.border!.uBorderStrength.value, 0, 'and out with the mission state');
+
+    const alone = mountView(false).view;
+    alone.applySnapshot(cannedSnapshot());
+    pumpAnimationFrames(3);
+    assert.equal(snow(alone as unknown as Internals), 0, 'no border on a view drawn alone');
+  });
+
+  it('shades the apron at the veil floor while anyone listens, and clear while nobody does', () => {
+    const { view } = mountView(true);
+    const color = () =>
+      ((view as unknown as { apron: { mesh: Mesh } }).apron.mesh.material as MeshBasicMaterial)
+        .color;
+    view.setVeilIntensity(1);
+    view.applySnapshot(cannedSnapshot());
+    pumpAnimationFrames();
+    const heard = color().clone();
+    assert.ok(heard.r < 0.5 && heard.b < 1, `the floor shade, not white: ${heard.getHexString()}`);
+    view.resetForNewMatch();
+    pumpAnimationFrames();
+    assert.equal(color().getHex(), 0xffffff, 'nobody listening: the field is clear and so is it');
+    view.applySnapshot(cannedSnapshot());
+    view.setVeilIntensity(0);
+    pumpAnimationFrames();
+    assert.equal(color().getHex(), 0xffffff, 'the veil turned off');
   });
 });

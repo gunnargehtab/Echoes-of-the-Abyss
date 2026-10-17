@@ -45,10 +45,12 @@ import {
   ShaderMaterial,
   Vector2,
   Vector3,
+  Vector4,
 } from 'three';
 import { DEPTH, LID, THERMOCLINE } from '@echoes/shared';
 import { DEPTH_VISUAL_M_PER_M } from './perspectiveTerrain.ts';
 import { DREAM_LOOP, dreamSnowNear } from './dreamLoop.ts';
+import { EXTERIOR_FADE_GLSL } from './worldBorder.ts';
 
 // -------------------------------------------------------------- the ramp
 
@@ -347,7 +349,7 @@ export function installWaterFog(): void {
  * world-space direction, so looking down darkens at any yaw and the
  * projection is never rotated by an effect (docs/free-camera.md §5).
  */
-const BACKDROP_SPAN_M = 2200;
+export const BACKDROP_SPAN_M = 2200;
 
 /**
  * The water where there is no geometry.
@@ -421,6 +423,16 @@ export class WaterBackdrop {
     // space says nothing about where it lands.
     this.mesh.frustumCulled = false;
     this.mesh.renderOrder = -1;
+  }
+
+  /**
+   * The focus depth the backdrop is anchored to, as the uniform object itself:
+   * a placed mission's exterior fades to the colour this quad draws behind it
+   * (worldBorder.ts), and sharing the object rather than copying its value is
+   * what keeps the two from ever reading different frames.
+   */
+  get focusDepthUniform(): { value: number } {
+    return this.uniforms.uFocusDepthM;
   }
 
   update(camera: PerspectiveCamera, focusDepthM: number): void {
@@ -512,6 +524,14 @@ export class MarineSnow {
     uReachM: { value: 4000 },
     uPixelScale: { value: 600 },
     uSizePx: { value: new Vector2(1, 3.5) },
+    /**
+     * A placed mission's rectangle and how far its border fade has ramped in
+     * (worldBorder.ts): the snow is water, and §7.4 fades exterior water as it
+     * fades exterior ground. Strength 0 — every view but the pilot's — leaves
+     * every mote as it was.
+     */
+    uBorderRect: { value: new Vector4(0, 0, 0, 0) },
+    uBorderStrength: { value: 0 },
   };
   private reducedMotion = false;
   private sunkM = 0;
@@ -562,9 +582,11 @@ export class MarineSnow {
         'uniform float uPixelScale;',
         'uniform vec2 uSizePx;',
         'attribute float snowSize;',
+        'uniform float uBorderStrength;',
         'varying vec3 vMote;',
         'varying float vAlpha;',
         WATER_RAMP_GLSL,
+        EXTERIOR_FADE_GLSL,
         'void main() {',
         // A slab, not a cube. The ocean is 3,000 m deep and drawn at 0.22, so
         // the water is 660 world units thick against a map eight thousand
@@ -594,6 +616,7 @@ export class MarineSnow {
         // visible at, so on its own it varies nothing a player can see and the
         // cloud reads as a starfield. Brightness is what breaks the rank.
         '  vAlpha = uStrength * edge * trans * snowSize;',
+        '  vAlpha *= mix( 1.0, echoesExteriorFade( world.xz ), uBorderStrength );',
         '  vMote = water;',
         '  vec4 mvPosition = modelViewMatrix * vec4( world, 1.0 );',
         '  gl_Position = projectionMatrix * mvPosition;',
@@ -620,6 +643,15 @@ export class MarineSnow {
     // bounds are a 1 m box at the origin and every cull would be wrong.
     this.points.frustumCulled = false;
     this.points.renderOrder = 2;
+  }
+
+  /** A placed mission's border, in plan metres, and its fade's ramp (0 is none). */
+  setBorder(
+    rect: { x: number; y: number; widthM: number; heightM: number },
+    strength: number
+  ): void {
+    this.uniforms.uBorderRect.value.set(rect.x, rect.y, rect.widthM, rect.heightM);
+    this.uniforms.uBorderStrength.value = strength;
   }
 
   /** Reduced motion (docs/ui-ux.md §11) stops the sink and keeps the cloud:

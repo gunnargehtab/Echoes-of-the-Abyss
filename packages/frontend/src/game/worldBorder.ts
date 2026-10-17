@@ -5,8 +5,8 @@
  * Inside a placed mission the border is a fade into darkness, not a wall: the
  * ground goes on past the edge, and the exterior falls to the backdrop's
  * darkness over §7.4's W by plan distance alone, whatever the eye is doing.
- * This module is the data half of that, with no three.js in it so it can be
- * tested under node: the exterior ground the fade acts on, and the GLSL that
+ * This module is the data half of that, with no three.js at runtime so it can
+ * be tested under node: the exterior ground the fade acts on, and the GLSL that
  * states the fade.
  *
  * **The exterior is an apron of the map's own base ground** until #1457
@@ -30,6 +30,7 @@ import {
   type PlanRect,
   type WorldRegion,
 } from '@echoes/shared';
+import type { Material } from 'three';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import type { HeightGrid } from './perspectiveTerrain.ts';
 
@@ -169,6 +170,121 @@ export function apronMesh(
 }
 
 const glslFloat = (value: number) => (Number.isInteger(value) ? `${value}.0` : `${value}`);
+
+/**
+ * One step of §7.4's ramp: the fade comes in over `WORLD.FADE_RAMP_S` once a
+ * mission's first state arrives and goes out over the same, linearly, and at
+ * once under reduced motion (docs/ui-ux.md §11). `strength` 0 is no border at
+ * all; 1 is the whole fade.
+ */
+export function stepBorderStrength(
+  strength: number,
+  target: 0 | 1,
+  dtMs: number,
+  reducedMotion: boolean
+): number {
+  if (reducedMotion) return target;
+  const step = Math.max(0, dtMs) / (WORLD.FADE_RAMP_S * 1000);
+  return target === 1 ? Math.min(1, strength + step) : Math.max(0, strength - step);
+}
+
+/** The fade's inputs, as uniform objects shared with whoever else reads them. */
+export interface BorderUniforms {
+  /** The mission rectangle in plan metres: x, y, width, height. */
+  uBorderRect: { value: number[] };
+  /** How far the fade has ramped in (`stepBorderStrength`). */
+  uBorderStrength: { value: number };
+  /** The backdrop's own anchor (`WaterBackdrop.focusDepthUniform`), the object itself. */
+  uFocusDepthM: { value: number };
+}
+
+/** The padded grid the apron's cells are read from, and where the mission sits in it. */
+export interface ApronCells {
+  cells: unknown;
+  cols: number;
+  rows: number;
+  cellM: number;
+  padCols: number;
+  padRows: number;
+}
+
+/**
+ * Shade the apron the way the mission's ground is shaded, then fade it.
+ *
+ * - **What the ground hooks read.** `vSurveyXZ` in the mission's own metres,
+ *   so a surface pattern laid by plan position (`installGroundSurface`'s
+ *   paving) runs across the seam unbroken, and `surveyCellAt` offset into the
+ *   padded grid, so a hook asking for the biome under a point gets the apron's.
+ *   No ink: the survey is the mission's instrument, and nothing out here is
+ *   surveyed.
+ * - **The fade**, after the fog, as §7.4 has it: `f`, ramped by the strength,
+ *   mixing toward the colour the backdrop draws behind this fragment — its ray
+ *   graded from the backdrop's own anchor by the backdrop's own span — so at W
+ *   the ground has become exactly the water behind it, at any pitch, and the
+ *   apron's far edge is nothing to see (#1023's ramp, composed as the fog
+ *   composes it).
+ *
+ * Chain `installGroundSurface` after this, as the mission mesh chains it after
+ * the ink; its own key wraps this one.
+ */
+export function installApronShading(
+  material: Material,
+  border: BorderUniforms,
+  grid: ApronCells,
+  backdropSpanM: number
+): void {
+  const uniforms = {
+    ...border,
+    uSurveyCells: { value: grid.cells },
+    uSurveyGrid: { value: [grid.cols, grid.rows, grid.cellM] },
+    uApronPad: { value: [grid.padCols, grid.padRows] },
+  };
+  material.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, uniforms);
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        '#include <common>\nvarying vec3 vBorderWorld;\nvarying vec2 vSurveyXZ;'
+      )
+      .replace(
+        '#include <begin_vertex>',
+        `#include <begin_vertex>
+        vBorderWorld = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;
+        vSurveyXZ = vBorderWorld.xz;`
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+        varying vec3 vBorderWorld;
+        varying vec2 vSurveyXZ;
+        uniform sampler2D uSurveyCells;
+        uniform vec3 uSurveyGrid;
+        uniform vec2 uApronPad;
+        uniform float uBorderStrength;
+        uniform float uFocusDepthM;
+        ${EXTERIOR_FADE_GLSL}
+        float surveyCell( ivec2 c ) { return texelFetch( uSurveyCells, c, 0 ).r; }
+        float surveyCellAt( vec2 xz ) {
+          ivec2 c = ivec2( floor( xz / uSurveyGrid.z ) ) + ivec2( uApronPad );
+          return surveyCell( clamp( c, ivec2( 0 ), ivec2( uSurveyGrid.xy ) - 1 ) );
+        }`
+      )
+      .replace(
+        '#include <fog_fragment>',
+        `#include <fog_fragment>
+        #ifdef USE_FOG
+          vec3 borderRay = normalize( vBorderWorld - cameraPosition );
+          vec3 borderDark = echoesWaterColor( uFocusDepthM - borderRay.y * ${glslFloat(backdropSpanM)} );
+          borderDark = linearToOutputTexel( vec4( borderDark, 1.0 ) ).rgb;
+          float borderFade = mix( 1.0, echoesExteriorFade( vBorderWorld.xz ), uBorderStrength );
+          gl_FragColor.rgb = mix( borderDark, gl_FragColor.rgb, borderFade );
+        #endif`
+      );
+  };
+  material.customProgramCacheKey = () => 'echoes-world-border-2';
+  material.needsUpdate = true;
+}
 
 /**
  * §7.4's curve in GLSL, the shader twin of `exteriorFade` in shared: *d* from
