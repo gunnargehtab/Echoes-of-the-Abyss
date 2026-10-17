@@ -195,6 +195,7 @@ The world is **continuous visual geography, not a persistent simulation**. The w
 | Sector Kell | (8,500, 12,500) | 350 m | The Holding's top berths, beside Kell Plateau (§4) |
 | Holding One | (6,000, 16,000) | 350–1,300 m | Built down the face at the wall's north end |
 | Sector Vayle | (5,000, 17,000) | 1,050 m | Mid-city, above the root |
+| The Underway | (5,500, 18,500) | — | Asset 002, where Board country ends ([mission-item-nine.md](mission-item-nine.md) §1) |
 | The Underworks | (6,000, 19,500) | 1,900–2,100 m | Roofed water under the Holding's overhang |
 | Fivewell | (5,500, 22,000) | — | Above the Vein, at its rail head |
 | Ninefold Vein | (5,000, 26,500) | 900–1,400 m | The founding field's fault line, down the face |
@@ -203,12 +204,12 @@ The world is **continuous visual geography, not a persistent simulation**. The w
 | The Commit | (20,000, 44,000) | 2,400 m | Derived: the middle of Sorrowgate's Commit, a basin opening onto the scar |
 | The Ninth Chapter-House | (31,000, 50,000) | 1,900 m | Mid-slope, 450 m below the Third |
 | The Third Chapter-House | (36,500, 54,500) | 1,450 m | High on the slope, north-east of the outer formations ([mission-aptitude.md](mission-aptitude.md) §11) |
-| The First Chapter-House | (27,500, 57,500) | 2,900 m | The fields' south-west corner, nearest the Mouth, where the scar ends and the First's axis begins |
+| The First Chapter-House — where the First Chord stands | (27,500, 57,500) | 2,900 m | The fields' south-west corner, nearest the Mouth, where the scar ends and the First's axis begins |
 | The Fifth | (32,500, 57,500) | 1,450–1,780 m | Running north from the Seam into the Third's country |
 | The Rest | (30,000, 59,500) | 1,600–2,400 m | A trench head on the southern margin, falling east |
 | The Seam | (34,000, 59,500) | 1,750–1,780 m | The fields' southern boundary |
 | The Fourth Trench | (11,500, 52,500) | 1,700 m | The freight pipe from the wall's south end to the Deep Yard, eleven kilometres ([mission-baffle.md](mission-baffle.md)) |
-| The First Trench | (6,000, 53,000) | 1,800–2,400 m | The top step's west end, under the wall ([mission-exposure.md](mission-exposure.md) §11) |
+| The First Trench — the shallow band | (6,000, 53,000) | 1,800–2,400 m | The top step's west end, under the wall ([mission-exposure.md](mission-exposure.md) §11) |
 | The Deep Yard | (11,500, 58,500) | 1,650 m | The pipe's southern mouth |
 | The Fourth's foot | (11,500, 62,000) | 2,000–2,900 m | The Fan and the Foot below the Yard, the galleries in the fan's east wall |
 | The banding ground | (23,000, 64,000) | 1,500–2,400 m | The Ninth's head, entered from under the duct |
@@ -223,7 +224,7 @@ The world is **continuous visual geography, not a persistent simulation**. The w
 
 **Regions, as coarse allocations.** Each is the rectangle its ground is authored inside, overlapping where §3's regions meet: the Plateaus *x* 6–34 km, *y* 0–22 km; the West Wall *x* 0–10 km, *y* 12–50 km, so its north end shares a fence with the plateaus, as Sector Kell did (§4); the Drowned City *x* 12–28 km, *y* 32–50 km; the Resonance Fields *x* 26–40 km, *y* 30–62 km; the Trench Country the full width, *y* 50–79 km; the Mouth *y* 79–90 km. They are bounds on authoring, not shapes, and a shape inside them follows [maps.md](maps.md)'s rules: authored, never generated from an image or noise.
 
-**The ground between the places.** `RIFT_GROUND` in `packages/shared/src/rift.ts` paints it. The north shoulder is bare rock at the Shelf break with the kelp terraces on it, and its mid-water lanes step down south to the mid-Rift floor at 1,800 m. A tongue of the shoulder runs south at 400 m to the drowned city's front door. The West Wall falls east from a 600 m crest to a 1,700 m foot, its vent fields painted in, and the Holding is stepped down its north end. The fields rise east from a 2,200 m foot to a 1,400 m rim. One deep, the scar, runs from the Furrow's sill down the city's east and under the fields' foot to the First Chapter-House. From there the First's axis runs to Sufficiency and the Ninth carries it to the Mouth, the line the First Chord was aimed down. West of the Ninth a road of high ground at 1,500 m runs from the city to the Staging. All nine trenches are cut into the trench country, each entered high and falling south, and each deepens in the order of its count. Only the First, the Second, the Fourth and the Ninth are named, because §3 numbers no other. The Rest's trench is one of the unnamed five.
+**The ground between the places.** `RIFT_GROUND` in `packages/shared/src/rift.ts` paints it. The north shoulder is bare rock at the Shelf break with the kelp terraces on it, Anholt's stepping down from 210 m to the Furrow's Foot, and its mid-water lanes step down south to the mid-Rift floor at 1,800 m. A tongue of the shoulder runs south at 400 m to the drowned city's front door. The West Wall falls east from a 600 m crest to a 1,700 m foot, its vent fields painted in, and the Holding is stepped down its north end. The fields rise east from a 2,200 m foot to a 1,400 m rim. One deep, the scar, runs from the Furrow's sill down the city's east and under the fields' foot to the First Chapter-House. From there the First's axis runs to Sufficiency and the Ninth carries it to the Mouth, the line the First Chord was aimed down. West of the Ninth a road of high ground at 1,500 m runs from the city to the Staging. All nine trenches are cut into the trench country, each entered high and falling south. Four are named: the First, the Fourth and the Ninth from §3, and the Second, toward which the First's sill leaves ([mission-trench-awakening.md](mission-trench-awakening.md) §11). Their floors deepen in that order. The five no document places carry no number, and the Rest's trench is one of them.
 
 ### 7.3 Overview and detail
 
@@ -266,7 +267,7 @@ A mission starts when its room is joined, so a camera flight after joining would
 
 ### 7.8 The calls this section took
 
-The owner's calls: six on #1455, six on #1461 and four on #1457. Each was written with its options; the one taken is named.
+The owner's calls: six on #1455, six on #1461 and five on #1457. Each was written with its options; the one taken is named.
 
 **Anchors: Sorrowgate only (taken).** The alternatives were to pin every named place now from §1–§4's distances, or to scale Plate VII's coordinates. Scaling the plate would turn an illustration's compressions into geography, since its depth rail gives the shallows room. Pinning all of them now would decide ground no renderer has drawn yet. So only the pilot is pinned, and #1457 places the rest inside the region rectangles.
 
@@ -294,7 +295,9 @@ The owner's calls: six on #1455, six on #1461 and four on #1457. Each was writte
 
 **One scar, on the First Chord's line (taken).** One deep runs from the Furrow's sill to the Mouth, so the Chord points down the line the Ninth follows (§3, §4), and the Furrow opens onto deep water that leads to Directorate country. Sufficiency then stands about 5 km east of where Plate VII draws it. Following the plate's west–east order would have aimed the Chord across trench country instead of down the Ninth. Painting latitude bands and the named grounds only would have left the Furrow's sill opening onto nothing and the road to the Rim undrawn.
 
-**All nine trenches drawn (taken).** The five §3 does not place are cut as trenches without names, each falling south and deepening in count order, so the overview shows the nine §3 says exist. Drawing only the four the docs place would have shown four trenches where §3 says nine.
+**All nine trenches drawn (taken).** The five no document places are cut as trenches without numbers, each falling south, so the overview shows the nine §3 says exist. Drawing only the four the docs place would have shown four trenches where §3 says nine.
+
+**Anholt's terraces carried down to the Furrow (taken).** §3 and [mission-deep-furrow.md](mission-deep-furrow.md) put the Furrow under Anholt's terrace, so his terraces step down from 210 m to 380 m and meet its Foot. Moving the Furrow north would have branched the scar further north. Reading "under" as downslope would have left unnamed terraces between them.
 
 **The pilot draws the authored surround now (taken).** The apron's mesh and fade are unchanged and only its cells differ, so the pilot shows its surroundings before [#1459](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1459) draws the overview. Keeping the base-ground apron until #1459 was the alternative.
 
