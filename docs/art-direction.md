@@ -1583,6 +1583,11 @@ What the rule is careful about:
 - **An atmosphere pass still may not rotate the projection.** The distinction is now
   load-bearing rather than incidental: the *player* may turn the camera, an *effect* may
   not. Sway stays translation only.
+- **A mission's border is a fade in the world, not a vignette on the screen.** In the
+  continuous-world pilot the exterior of the mission rectangle falls to darkness by plan
+  distance — a smoothstep over 2,000 m, corners rounded, exactly 1 inside — whatever the eye
+  is doing, and replaces the skirt there. The rim line stays, as chart ink. The HUD, own
+  hulls, resolved contacts and survey cues never fade. [world-map.md](world-map.md) §7.4 owns the curve.
 
 ### Atmosphere rides on top, in screen space
 
