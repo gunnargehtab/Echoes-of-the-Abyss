@@ -1499,7 +1499,9 @@ pilot ([world-map.md](world-map.md) §7) the board stays the control and the acc
 and every fact above stays in DOM text; the 3D atlas is drawn behind it. Launching the prologue
 from the board travels the camera to the mission and joins its room only after travel and
 loading finish, with cancel, retry, reconnection, resume, return and reduced motion as §7.6
-of that document gives them. Every other slot launches as it does today.
+of that document gives them. The Tutorial door, a direct link and Resume run the same mission in
+the same world, entered at the home frame with no travel. Every other slot launches as it does
+today.
 
 ### Who is speaking
 

@@ -167,7 +167,7 @@ The canonical account of the continuous world (#1449, contract #1455). Plate VII
 
 The world is **continuous visual geography, not a persistent simulation**. The whole Rift is drawn at overview detail; one mission's ground, and the water around it, at mission detail. Only the active mission is simulated, by the server, on its own map exactly as it is today. Nothing outside the mission rectangle moves, sounds, is detected or can be ordered into: the atlas is public ground, identical for every player, and carries no unit, structure, creature or state. Live ground — the arch after it falls — reaches the client only through the active session's own map data, never by editing the atlas.
 
-**Sorrowgate is the pilot**, entered from the campaign board. Its gameplay, map literal, assets and lines do not change ([mission-sorrowgate.md](mission-sorrowgate.md); [visual-reboot.md](visual-reboot.md) §2). Every other mission keeps its current launch path, as do the title screen's Tutorial door, direct mission and map links, and [Radicals](mission-radicals.md), which plays on Sorrowgate's map and keeps its current presentation: the pilot is selected by mission identity, as the surface profile is.
+**Sorrowgate is the pilot.** Its gameplay, map literal, assets and lines do not change ([mission-sorrowgate.md](mission-sorrowgate.md); [visual-reboot.md](visual-reboot.md) §2). The pilot is selected by mission identity, as the surface profile is, so every path that runs the prologue draws it in the world: the surround, the fade and the focus clamp of §7.3–§7.4. Only a launch from the campaign board travels there (§7.6); the title screen's Tutorial door, a direct mission link and Resume enter at the home frame and leave the way they do today. Every other mission keeps its current launch and presentation, and so does [Radicals](mission-radicals.md), which plays on Sorrowgate's map under another mission's identity.
 
 ### 7.2 The atlas frame
 
@@ -192,7 +192,7 @@ The world is **continuous visual geography, not a persistent simulation**. The w
 
 - **Overview:** the whole atlas at 1,000 m cells, 3,600 of them, through the existing terrain, water and lighting pipelines. Honest overview detail: biome fill and relief, the approved prop vocabulary sparsely, no mission-density props.
 - **Detail:** a mission's rectangle plus **2,500 m of surroundings** on every side, at 250 m cells. For Sorrowgate that is *x* 15,000–25,000 m, *y* 38,000–47,000 m: 10,000 × 9,000 m, 1,440 cells, the 320 of the mission patch unchanged at its centre. The surroundings are public ground authored to continue the patch's edges, and are never simulated.
-- **Seam:** the detail rectangle's edge is a line of the overview grid. Detail owns everything inside it and the overview everything outside, so no surface overlaps another, and the seam's vertices take the overview's heights so the two meet without a crack.
+- **Seam:** the detail rectangle's edge is a line of the overview grid; a surround that would end between two 1,000 m lines grows outward to the next one. Sorrowgate's needs no rounding, its edges falling at 15, 25, 38 and 47 km. Detail owns everything inside it and the overview everything outside, so no surface overlaps another, and the seam's vertices take the overview's heights so the two meet without a crack.
 
 ### 7.4 The mission border
 
@@ -202,7 +202,7 @@ Inside a mission the border is **a fade into darkness, not a wall**. Three rules
 2. **Only the exterior fades.** A scenery or water fragment at plan distance *d* outside the rectangle — zero inside, Euclidean from the nearest edge outside, so corners round off — is drawn at *f*(*d*) = 1 − smoothstep(0, *W*, *d*), with ***W* = 2,000 m** and smoothstep the cubic 3*t*² − 2*t*³. Inside, *f* is exactly 1 and nothing changes. At *W* the exterior meets the backdrop's darkness, which is why the detail surround is 500 m wider than the fade. The factor is a property of the place, never of where the eye stands. The HUD, the player's own hulls, resolved contacts, survey cues and every acoustic reading are never faded.
 3. **The exterior takes no orders.** A click that lands outside the rectangle is refused on the client; the server's movement bounds stay what they are, and stay the authority.
 
-The pilot drops the hard rim line and the skirt for this fade; a non-pilot mission keeps both. The fade ramps in over **0.8 s** once the mission's first state arrives and out over the same on the way back, instantly under reduced motion.
+The pilot keeps its rim line and drops its skirt. The rim is chart ink, never dimmed ([ui-ux.md](ui-ux.md) §4.5), and it is what marks the line rule 3 refuses clicks beyond, where the fade has barely begun: *f* is still 0.96 one cell out. The skirt was the wall the world ended at, and the surround's public ground replaces it. A non-pilot mission keeps both. The fade ramps in over **0.8 s** once the mission's first state arrives and out over the same on the way back, instantly under reduced motion.
 
 ### 7.5 Budgets
 
@@ -215,27 +215,31 @@ A mission starts when its room is joined, so a camera flight after joining would
 1. **Overview.** The campaign board stays the control and the accessible reading ([ui-ux.md](ui-ux.md) §14); the atlas is drawn behind it. The briefing opens over the same world.
 2. **Travel.** Launching moves the camera to the mission's home frame — focus on the spawn, north, 55° — over **2.5 s** while the region's public ground and assets load. Skippable at any point, and a cut under reduced motion.
 3. **Join.** Only when travel and preparation have both finished is the room joined, once. Commands, HUD, input and audio attach when the first server state arrives; until then the frame is held and nothing can be ordered.
-4. **Return.** After the result, the session detaches — network, HUD, input and audio — the fade ramps out, and the camera goes back to the overview frame the player left.
+4. **Return.** After the result, the session detaches — network, HUD, input and audio — the fade ramps out, and the camera travels back to the overview frame the player left: the same 2.5 s, a cut under reduced motion.
 
-**Cancel** during travel or preparation goes back to the overview with nothing joined. **A load or join failure** holds the mission frame, says what failed and offers Retry and Back; at most one join is ever in flight, so a retry never doubles one. **A disconnect** keeps the world view and re-attaches through the existing reconnection grace; the ground is re-sent by the server, never restored from the atlas, which would resurrect a fallen arch. **Resume** from the title screen enters at the home frame with no travel, because the server has already spent the opening ([ui-ux.md](ui-ux.md) §14, "Resume").
+**Cancel** during travel or preparation goes back to the overview with nothing joined, by the same return travel. **A load or join failure** holds the mission frame, says what failed and offers Retry and Back; at most one join is ever in flight, so a retry never doubles one. **A disconnect** keeps the world view and re-attaches through the existing reconnection grace; the ground is re-sent by the server, never restored from the atlas, which would resurrect a fallen arch. **Resume** from the title screen enters at the home frame with no travel, because the server has already spent the opening ([ui-ux.md](ui-ux.md) §14, "Resume").
 
 ### 7.7 Readings and evidence
 
-**Top-down:** Sorrowgate stands mid-Rift and mid-width, the plateaus north, the west wall within ten kilometres to the west, crystal country east; inside it the Concourse is north, the court central, the service lock west of the chamber and the Commit south ([mission-sorrowgate.md](mission-sorrowgate.md) §11). **In section:** the Concourse at 340 m above the thermocline, the court at 1,500 m below it, the Commit at 2,400 m, the trench country beyond falling to the Mouth's 4,410 m. Both readings come from relief and depth, never from a texture.
+**Top-down:** Sorrowgate stands mid-Rift and mid-width, the plateaus north, the west wall's region to the west, crystal country east; inside it the Concourse is north, the court central, the service lock west of the arch and the Commit south ([mission-sorrowgate.md](mission-sorrowgate.md) §11). **In section:** the Concourse at 340 m above the thermocline, the court at 1,500 m below it, the Commit at 2,400 m, the trench country beyond falling to the Mouth's 4,410 m. Both readings come from relief and depth, never from a texture.
 
 **Evidence** for a change under this section: the pilot at the close, home, low-pitch and survey views, each paired with a baseline frame of the same camera, the HUD visible; a frame at a border corner; gate 6 measured at pixel ratios 1 and 1.5 on a named GPU, transitions included. **Non-target controls:** the Ventfront Divide skirmish and Radicals render as before.
 
 ### 7.8 The calls this section took
 
-Four calls, the owner's (#1455). Each was written with its options; the one taken is named.
+Six calls, the owner's (#1455). Each was written with its options; the one taken is named.
 
 **Anchors: Sorrowgate only (taken).** The alternatives were to pin every named place now from §1–§4's distances, or to scale Plate VII's coordinates. Scaling the plate would turn an illustration's compressions into geography, since its depth rail gives the shallows room. Pinning all of them now would decide ground no renderer has drawn yet. So only the pilot is pinned, and #1457 places the rest inside the region rectangles.
 
-**A fade of 2,000 m, the surround at 2,500 m (taken).** Eight overview cells of fade read as darkness arriving rather than a vignette, and stay a fraction of a 5,000 m mission. A 1,000 m fade frames the mission tighter. A 3,000 m fade shows more world but needs a 3,500 m surround, about twice the detail cells.
+**A fade of 2,000 m, the surround at 2,500 m (taken).** Eight detail cells of fade read as darkness arriving rather than a vignette, and stay a fraction of a 5,000 m mission. A 1,000 m fade frames the mission tighter. A 3,000 m fade shows more world but needs a 3,500 m surround, about half as many detail cells again.
 
 **Regions as bounding rectangles (taken).** Pinning polygon outlines now, or tracing the plate's silhouettes, would fix shapes before anyone saw them rendered. The rectangles bound #1457's authoring; the shapes are its call.
 
-**One triangle cap, gate 6's 400 k (taken).** [visual-reboot.md](visual-reboot.md) §6 had quoted the gate as 250 k, which [graphics-standards.md](graphics-standards.md) never set. Holding the pilot frame to 250 k, or reserving 250 k for the tutorial with the world taking the remaining 150 k, would each keep a number with no gate behind it. §6 now cites the gate.
+**One triangle cap, gate 6's 400 k (taken).** [visual-reboot.md](visual-reboot.md) §6 had quoted the gate as 250 k, which [graphics-standards.md](graphics-standards.md) gate 6 has not set since #1027 raised it to 400 k. Holding the pilot frame to 250 k, or reserving 250 k for the tutorial with the world taking the remaining 150 k, would each keep a number with no gate behind it. §6 now cites the gate.
+
+**The rim stays; the skirt goes (taken).** Dropping both would leave nothing to mark where clicks stop working, and would need [ui-ux.md](ui-ux.md) §4.5 amended to dim chart ink. Drawing the rim only on demand, with the cursor outside or a click refused, is new behaviour for no reading the rim does not already give. The rim is the instrument's border and the fade is the scenery's.
+
+**The world look on every path into the prologue (taken).** Making the Tutorial door travel too would put a flight in front of the game's first door. Keeping the pilot to board launches only would contradict selecting it by mission identity. So every path draws the world, and only the board travels.
 
 ---
 
