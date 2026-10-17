@@ -794,7 +794,8 @@ What this mission deliberately does not teach:
 `sorrowgate` · **Sorrowgate** · one seat · 5,000 × 4,000 m · cell 250 m · base floor 1,600 m.
 
 **The prologue's map literal, unchanged** ([mission-sorrowgate.md](mission-sorrowgate.md)
-§11; `packages/backend/src/sim/maps/missions/sorrowgate.ts`), region for region —
+§11; its ground is `SORROWGATE_GROUND` in `packages/shared/src/ground.ts`, spread into
+`packages/backend/src/sim/maps/missions/sorrowgate.ts`), region for region —
 [campaign.md](campaign.md) §2 rule 5's third concrete pair, after Marr Plateau and the Furrow,
 and the first that pairs a campaign mission with the prologue. North is shallow and the way
 home; south is the basin and the way to the rim.

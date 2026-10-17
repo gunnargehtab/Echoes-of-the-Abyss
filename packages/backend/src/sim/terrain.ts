@@ -27,6 +27,9 @@ import {
   PROPAGATION_FACTOR,
   SCATTERED_BIOME,
   SOLID_FLOOR_M,
+  type EllipseShape,
+  type PolygonShape,
+  type Shape,
 } from '@echoes/shared';
 import { FNV_OFFSET, mixU32 } from './fnv.ts';
 
@@ -132,41 +135,11 @@ function covers(mod: PropagationModifier, wx: number, wy: number): boolean {
 
 /**
  * A shape on the grid, in world metres: what a map region paints
- * (docs/maps.md, "How a map is written").
- *
- * Three, since #1106 found a map drawn only in rectangles reading as a
- * checkerboard. A rectangle is a corner and a size. An ellipse is the one
- * inscribed in those same four numbers, so rounding a box off is one word. A
- * polygon is its corners in order.
+ * (docs/maps.md, "How a map is written"). Declared in shared since #1456,
+ * because a placed map's ground is authored there for the world renderer to
+ * draw too (`@echoes/shared/ground`); the painter stays here.
  */
-export interface RectShape {
-  shape?: undefined;
-  x: number;
-  y: number;
-  widthM: number;
-  heightM: number;
-}
-
-export interface EllipseShape {
-  shape: 'ellipse';
-  /** The rectangle the ellipse is inscribed in, touching each side at its midpoint. */
-  x: number;
-  y: number;
-  widthM: number;
-  heightM: number;
-}
-
-export interface PolygonShape {
-  shape: 'polygon';
-  /**
-   * The corners in order, as [x, y] in metres. The last joins back to the
-   * first. An outline that crosses itself paints by even-odd parity, which is
-   * a shape nobody drew, so the map tests refuse one.
-   */
-  points: readonly (readonly [number, number])[];
-}
-
-export type Shape = RectShape | EllipseShape | PolygonShape;
+export type { EllipseShape, PolygonShape, RectShape, Shape } from '@echoes/shared';
 
 /**
  * Is (x, y) inside the shape? The grid asks it of each cell's centre, and that

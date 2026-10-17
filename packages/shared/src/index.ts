@@ -19,5 +19,7 @@ export * from './ordnance.js';
 export * from './combat.js';
 export * from './fauna.js';
 export * from './maps.js';
+export * from './ground.js';
+export * from './world.js';
 export * from './missions.js';
 export * from './wire.js';

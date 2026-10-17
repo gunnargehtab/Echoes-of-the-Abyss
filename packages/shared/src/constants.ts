@@ -42,6 +42,23 @@ export const SORROWGATE_LOOK = {
 } as const;
 
 /**
+ * SPEC — docs/world-map.md §7.2–§7.4, the continuous Rift world (#1449).
+ * Presentation only: the atlas is public ground nobody simulates, and no
+ * simulation number reads any of it. `ATLAS_*` is §7.2's frame, x east and
+ * y south from the north-west corner; `DETAIL_SURROUND_M` is §7.3's ring of
+ * mission-detail ground round a placed map; `FADE_M` is §7.4's W, the width
+ * of the exterior's smoothstep to darkness.
+ */
+export const WORLD = {
+  ATLAS_WIDTH_M: 40_000,
+  ATLAS_HEIGHT_M: 90_000,
+  ATLAS_CELL_M: 1_000,
+  DETAIL_CELL_M: 250,
+  DETAIL_SURROUND_M: 2_500,
+  FADE_M: 2_000,
+} as const;
+
+/**
  * SPEC — docs/art-direction.md "UV layout and trim sheets — SPEC" (#1107).
  * A navy's sheet is filtered at four taps, Sorrowgate's number, so a deck
  * seen from the low camera keeps its plates. Presentation only.

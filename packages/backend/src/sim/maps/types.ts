@@ -20,13 +20,15 @@
 
 import type {
   AmbientBand,
-  Biome,
+  EllipseShape,
   FaunaSpecies,
   HazardKind,
   MapHeader,
+  PolygonShape,
+  RectShape,
+  RegionGround,
   ResourceKind,
 } from '@echoes/shared';
-import type { EllipseShape, PolygonShape, RectShape } from '../terrain.ts';
 
 /**
  * A painted region: a rectangle, an ellipse or a polygon (`Shape` in
@@ -51,26 +53,11 @@ export interface MapRect extends RectShape, RegionGround {}
 export interface MapEllipse extends EllipseShape, RegionGround {}
 export interface MapPolygon extends PolygonShape, RegionGround {}
 
-/** What a region paints into the cells it claims, whatever its shape. */
-interface RegionGround {
-  biome: Biome;
-  /**
-   * How deep the water goes here, in metres. Omitted inherits the map's
-   * `floorM` — which is what almost every region wants, because a map is
-   * mostly its own base seabed with a few things cut into it.
-   */
-  floorM?: number;
-  /**
-   * Rock above the water, in metres. Omitted means 0: open to the surface.
-   *
-   * Non-zero is a roofed passage — a tunnel, a cavern, an overhang — water
-   * reachable only from below. A ceiling deeper than the region's floor is
-   * solid ground and admits nothing at any depth (docs/systems-depth.md §1).
-   */
-  ceilingM?: number;
-  /** Why this region exists, in the doc's terms. Kept with the data. */
-  note?: string;
-}
+/**
+ * What a region paints — biome, floor, ceiling, note — is `RegionGround` in
+ * `@echoes/shared/ground` since #1456, where a placed map's ground is authored
+ * once for both the simulation and the world renderer (docs/world-map.md §7).
+ */
 
 /**
  * Where a player starts.
@@ -205,7 +192,7 @@ export interface MapDefinition<Region extends MapRegion = MapRegion> extends Map
    * and reshaping one is a type error until the table and its tests change
    * with it.
    */
-  regions: Region[];
+  regions: readonly Region[];
   spawns: MapSpawn[];
   resources: MapResource[];
   /** Bloom-share nodes — see `MapBloom`. Omitted is none, and no map is owed any. */
