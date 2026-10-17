@@ -1095,8 +1095,8 @@ export class PerspectiveView {
     if (touched === null) return;
     // The apron is not rebuilt either: its padded copy keeps the join's mission
     // cells, which only touch the apron along the mission's edge. A delta on an
-    // edge cell would leave the seam the tests hold one step apart until the
-    // next terrain message; the live arch is central, and local edits are
+    // edge cell would open the seam between the mission's edge and the apron's
+    // inner edge until the next terrain message; the live arch is central, and local edits are
     // #1459's. The seed, the rock top and the depth ramp stay what the join set them
     // to: a delta changes the cells it names, and re-deriving any of the
     // three from the new ground would move every cell on the map to change a

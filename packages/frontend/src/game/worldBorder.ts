@@ -277,12 +277,19 @@ export function installApronShading(
           vec3 borderRay = normalize( vBorderWorld - cameraPosition );
           vec3 borderDark = echoesWaterColor( uFocusDepthM - borderRay.y * ${glslFloat(backdropSpanM)} );
           borderDark = linearToOutputTexel( vec4( borderDark, 1.0 ) ).rgb;
-          float borderFade = mix( 1.0, echoesExteriorFade( vBorderWorld.xz ), uBorderStrength );
+          // The ramp acts on 0..W; the apron's last stretch, W to the
+          // surround's edge, goes to the backdrop at every strength, so a fade
+          // part-way in never shows where the apron ends (the owner's call on
+          // #1461, interim until the overview surrounds the detail).
+          float borderFeather =
+            1.0 - smoothstep( ${glslFloat(WORLD.FADE_M)}, ${glslFloat(WORLD.DETAIL_SURROUND_M)}, echoesExteriorDistance( vBorderWorld.xz ) );
+          float borderFade =
+            mix( 1.0, echoesExteriorFade( vBorderWorld.xz ), uBorderStrength ) * borderFeather;
           gl_FragColor.rgb = mix( borderDark, gl_FragColor.rgb, borderFade );
         #endif`
       );
   };
-  material.customProgramCacheKey = () => 'echoes-world-border-2';
+  material.customProgramCacheKey = () => 'echoes-world-border-3';
   material.needsUpdate = true;
 }
 
@@ -293,10 +300,12 @@ export function installApronShading(
  */
 export const EXTERIOR_FADE_GLSL = `
 uniform vec4 uBorderRect;
-float echoesExteriorFade(vec2 p) {
+float echoesExteriorDistance(vec2 p) {
   vec2 lo = uBorderRect.xy;
   vec2 hi = uBorderRect.xy + uBorderRect.zw;
-  vec2 outside = max(max(lo - p, p - hi), vec2(0.0));
-  return 1.0 - smoothstep(0.0, ${glslFloat(WORLD.FADE_M)}, length(outside));
+  return length(max(max(lo - p, p - hi), vec2(0.0)));
+}
+float echoesExteriorFade(vec2 p) {
+  return 1.0 - smoothstep(0.0, ${glslFloat(WORLD.FADE_M)}, echoesExteriorDistance(p));
 }
 `;

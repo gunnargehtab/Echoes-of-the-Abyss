@@ -61,7 +61,11 @@ export const WORLD = {
   ATLAS_CELL_M: 1_000,
   DETAIL_SURROUND_M: 2_500,
   FADE_M: 2_000,
-  /** §7.4: the fade ramps in over this once a mission's first state arrives, and out after. */
+  /**
+   * TUNABLE — §7.4's ramp, a presentation number like the three above: the
+   * fade comes in over this once a mission's first state arrives, and goes
+   * out over the same. The doc states it, so moving it edits §7.4 too.
+   */
   FADE_RAMP_S: 0.8,
 } as const;
 

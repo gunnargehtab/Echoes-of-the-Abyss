@@ -140,7 +140,14 @@ describe('the apron: the exterior until #1457 authors it', () => {
   });
 
   it('states the fade in GLSL at the same W the contract holds', () => {
-    assert.match(EXTERIOR_FADE_GLSL, new RegExp(`smoothstep\\(0\\.0, ${WORLD.FADE_M}\\.0, length`));
+    assert.match(
+      EXTERIOR_FADE_GLSL,
+      new RegExp(`smoothstep\\(0\\.0, ${WORLD.FADE_M}\\.0, echoesExteriorDistance\\(p\\)\\)`)
+    );
+    assert.match(
+      EXTERIOR_FADE_GLSL,
+      /return length\(max\(max\(lo - p, p - hi\), vec2\(0\.0\)\)\);/
+    );
     // GLSL's smoothstep is 3t² − 2t³, which is the contract's curve.
     const glsl = (d: number) => {
       const t = Math.min(1, Math.max(0, d / WORLD.FADE_M));
@@ -187,7 +194,7 @@ describe('the pilot view at its border', () => {
     // The fade's program, with the tutorial's ground surface chained after it.
     assert.equal(
       (mesh.material as MeshBasicMaterial).customProgramCacheKey(),
-      'echoes-world-border-2:sorrowgate-ground-1'
+      'echoes-world-border-3:sorrowgate-ground-1'
     );
   });
 
@@ -349,6 +356,29 @@ describe('the pilot view at its border', () => {
     // The surface hook asks the apron's own cell reader, offset into the padded grid.
     assert.match(shader.fragmentShader, /surveyCellAt\(vSurveyXZ\)/);
     assert.match(shader.fragmentShader, /\+ ivec2\( uApronPad \)/);
+    // The apron's last 500 m goes to the backdrop whatever the ramp is doing.
+    assert.match(shader.fragmentShader, /smoothstep\( 2000\.0, 2500\.0, echoesExteriorDistance/);
+    assert.match(shader.fragmentShader, /uBorderStrength \) \* borderFeather/);
+  });
+
+  it('ramps in over real frames, and lands at detach', () => {
+    const { view } = mountView(true);
+    const strength = () =>
+      (view as unknown as { border: { uBorderStrength: { value: number } } }).border.uBorderStrength
+        .value;
+    view.setReducedMotion(false);
+    view.applySnapshot(cannedSnapshot());
+    pumpAnimationFrames();
+    const start = Date.now();
+    while (Date.now() - start < 120) pumpAnimationFrames();
+    const part = strength();
+    assert.ok(part > 0 && part < 1, `part-way in after a moment, not cut: ${part}`);
+    view.detach();
+    assert.equal(
+      (view as unknown as { borderStrength: number }).borderStrength,
+      1,
+      'detached, the ramp lands on its target: nothing was drawn to ramp'
+    );
   });
 
   it('ramps the fade in on the first state, for the apron and the snow alike', () => {
