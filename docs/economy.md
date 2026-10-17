@@ -163,7 +163,7 @@ drive to a field, mine, haul home, deposit at a Bastion or Refinery. Constants l
 | --- | --- | --- |
 | Nodule | **Implemented** — per-player stockpile, spent on units and structures | Harvesters cut 10/s and carry 50 nodules per trip at Standard throttle |
 | Throttle states | **Implemented** — all four states of §3, per harvester | Mining SIG follows the throttle (12/25/45/68); the load scales 0/0.4/1.0/1.4, so a trip brings home 0/20/50/70 |
-| Refining SIG | **Implemented** — the Refinery holds 65 SIG sustained (§4) | Forward refineries are real: any deposit structure works, the loud one is optional |
+| Refining SIG | **Implemented** — the Refinery holds 65 SIG sustained (§4) | Forward refineries are real: any deposit structure works, the loud one is optional, and each load goes to whichever is nearest when the hauler turns for home |
 | Thermal Draw | **Implemented** — a rate, recomputed every tick and never banked | Vent taps on Thermal Vein terrain supply it; Foundries and Refineries consume it; a deficit slows production and nothing else |
 | Biomass | **Implemented** — paid on a fauna kill, Directorate at full rate and everyone else at 30%; spent as the third column of a price, refused and debited on the same server path as Nodules and Crystal | Yield scales with the region's Drift Health, which is the guard-rail against a Directorate snowball (§9): over-harvesting kills the region that pays them. The Chorister is priced in it — see below |
 | Resonance Crystal | **Implemented** — Abyssal field, second stockpile, tech gate | See below |

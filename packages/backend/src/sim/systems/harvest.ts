@@ -331,6 +331,11 @@ export function harvestSystem(world: SimWorld): void {
       );
 
       Harvester.cargo[eid] = 0;
+      // The next load picks its depot afresh, from wherever it turns for home:
+      // a Refinery raised beside the field after the first trip home is where
+      // it should go, and docs/economy.md §8's forward refinery is otherwise
+      // never hauled to, and never hums (#1434).
+      Harvester.depotEid[eid] = 0;
       MoveOrder.active[eid] = 0;
       if (nodeAlive(world, Harvester.nodeEid[eid]!)) {
         Harvester.mode[eid] = HarvestMode.ToNode;

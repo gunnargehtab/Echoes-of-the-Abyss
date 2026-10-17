@@ -389,7 +389,7 @@ export const Harvester = defineComponent({
   cargo: Types.f32,
   /** Entity id of the target node; only meaningful in modes 1-2. */
   nodeEid: Types.eid,
-  /** Entity id of the depot being hauled to; only meaningful in mode 3. */
+  /** Entity id of the depot being hauled to; only meaningful in mode 3. Cleared on deposit. */
   depotEid: Types.eid,
   /** HarvestThrottle ordinal. docs/economy.md §3. */
   throttle: Types.ui8,
