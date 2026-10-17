@@ -904,6 +904,8 @@ describe('the shell: the persistent world view', () => {
       await joinMatch(world);
       const opening = footprint();
       worldView.current!.focusWorld(1_000, 1_000, 900);
+      worldView.current!.orbitBy(240, 0);
+      assert.notEqual(worldView.current!.headingRad, 0, 'the player turned the camera');
       world.room.emit(SERVER_MSG.missionOver, {
         missionId: 'prologue-sorrowgate',
         outcome: MissionOutcome.Complete,
@@ -915,6 +917,7 @@ describe('the shell: the persistent world view', () => {
       world.room.emit(SERVER_MSG.terrain, { ...cannedTerrain(), revision: 1 });
       await world.settle();
       assert.ok(sameCamera(footprint(), opening), 'the run starts framed again');
+      assert.equal(worldView.current!.headingRad, 0, 'and north-up, as a fresh view opens');
     } finally {
       await world.unmount();
     }
