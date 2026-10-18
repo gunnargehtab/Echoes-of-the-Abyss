@@ -129,7 +129,12 @@ describe('the overview grid (§7.3)', () => {
     });
     const pixels = (canvas: HTMLCanvasElement) =>
       canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data;
-    assert.deepEqual(pixels(skin), pixels(whole));
+    // By the first byte that differs: assert's diff of 3.7M bytes takes five
+    // minutes to print, so a slice gone wrong would stall the shard, not fail it.
+    const [sliced, taken] = [pixels(skin), pixels(whole)];
+    assert.equal(sliced.length, taken.length);
+    const differs = sliced.findIndex((v, i) => v !== taken[i]);
+    assert.equal(differs, -1, `the sliced skin differs from the whole at byte ${differs}`);
     assert.equal(await overviewSkin(), skin, 'once a page');
     const rect = { col0: 14, row0: 37, col1: 16, row1: 39 };
     const flat = { pxPerCell: OVERVIEW_PX_PER_CELL, detail: false };
