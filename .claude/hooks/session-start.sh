@@ -41,3 +41,19 @@ git -C "$PWD" checkout -- package-lock.json 2>/dev/null || true
 # Both later gates depend on this, so pay for it once here rather than
 # discovering it mid-task.
 npm run build:shared
+
+# A stale origin/main makes `git diff origin/main...HEAD` (the critic's brief)
+# and every "is this mine?" check read wrong, and a shallow clone broke
+# tools/hull-models/diff.mjs, which reads the pre-port model out of history.
+# Best-effort: a session without the network still gets its gates.
+if [ "$(git rev-parse --is-shallow-repository)" = "true" ]; then
+  git fetch --quiet --unshallow origin || echo "session-start: unshallow failed" >&2
+fi
+git fetch --quiet origin main || echo "session-start: fetch of main failed" >&2
+
+# Five sessions reached for Pillow to read or crop a frame and found none. The
+# image normally carries it; this covers one that does not.
+if ! python3 -c 'import PIL' 2>/dev/null; then
+  pip install --quiet --user --break-system-packages pillow \
+    || echo "session-start: Pillow install failed" >&2
+fi

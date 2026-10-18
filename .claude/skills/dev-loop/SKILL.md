@@ -51,7 +51,10 @@ Seven steps, cheapest failure first.
    this loop's critics raise most.
 2. **Implement** one self-contained increment, not the whole issue.
 3. **Self-validate** with `npm run gates`. Iterate with `-- --only=`; drop the
-   filter before the round ends. Run it; never predict it.
+   filter before the round ends. Run it; never predict it. A full run can outlast
+   the 600-second foreground limit, so start it with `run_in_background` and act
+   on its notification. The stop hook's "unpushed commits" nag while it runs is
+   expected: push once it is green.
 4. **Capture evidence** that shows the change does what the target says (below).
 5. **Critique.** Spawn a fresh `loop-critic` with the brief below.
 6. **Address the verdict.** Fix each finding, or write down why it is wrong. A
@@ -162,8 +165,12 @@ raise it. Round three ends one of two ways:
 - **Exit criteria met:** done.
 - **Not met:** run the verification pass anyway, push what is green, and list the
   open findings under the pull request body's `## Open findings`, as the critic
-  worded them. Nothing
-  landable at all is `work-issue` §7's "does not converge".
+  worded them. If any is **blocking**, mark the pull request a draft
+  (`update_pull_request` with `draft: true`): a person then merges past it
+  knowingly or not at all. #923 merged at the cap with five blocking findings,
+  and #943 and #945 then had to fix them. If it merges anyway, `steward`
+  §8 files them. Nothing landable at all is `work-issue` §7's "does not
+  converge".
 
 Do not buy a round back by skipping the critic, folding two increments into one
 round, or calling the verification pass a round. Interactively, the person at the

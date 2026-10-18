@@ -100,6 +100,14 @@ labelled:
 **An assignee means taken, whoever it is.** The loop runs under the owner's login,
 so the name cannot tell a person from an earlier firing; the claim comment can.
 
+**Pass over an issue whose files an open pull request already changes.** List
+each open pull request's files (`pull_request_read` with `get_files`). If the
+issue names or plainly needs one of them, such as a navy's
+`tools/hull-models/factions/` module, `tools/hull-models/seabed.mjs` or a block
+of `docs/asset-prompts-3d.md`, leave it for a later firing and say so. Sibling
+issues run one after another. #883, #891 and #894 started six minutes apart on
+shared hull files and cost $1,214, most of it re-merging `main` and re-baking.
+
 **A stale claim** — assigned, the loop's latest comment a claim rather than a
 release, over a day old, no branch — goes in the run log's "Needs a person" line.
 Still skip it; do not clear it.
@@ -236,7 +244,9 @@ the body in `.github/PULL_REQUEST_TEMPLATE.md`'s shape.
   the taken one marked **(recommended, taken)**.
 - **Solution**, at most three sentences: what changed, how, and the test or
   evidence that proves it.
-- The closing line (`Fixes #<n>`, or `Refs #<n>` for part of an issue).
+- The closing line (`Fixes #<n>`, or `Refs #<n>` for part of an issue). The
+  instalment that finishes the issue takes `Fixes`, even after earlier `Refs`;
+  `steward` §8 closes out the rest.
 
 Nothing else: no round history, no gate output, no narrative. Two optional
 headings sit outside the sentence caps: **`## Open findings`**, when the loop

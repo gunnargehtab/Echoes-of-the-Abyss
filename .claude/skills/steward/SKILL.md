@@ -185,7 +185,43 @@ When it is `main`'s failure:
 
 Everything else is this PR's to root-cause, and §1 is where that starts.
 
-Every comment in this file — the stand-down, a reply to a reviewer, a status
+## 7. Waiting costs a full read of the session — check in rarely
+
+Every check-in re-reads the whole session: 300k to 770k tokens on a PR session
+here, $2 to $9 a wake. Hourly check-ins on PRs that waited only for a merge cost
+$40 or more a night on #822, #851 and #902, each wake saying "No change". The PR
+subscription already wakes the session on CI, a review, a merge or a close. This
+section replaces the generic check-in cadence:
+
+- **While CI runs or a fix is in flight:** at most one check-in, 50 minutes out.
+  The prompt cache holds for an hour, so that wake is cheap; one at 61 minutes is
+  a full re-read.
+- **Once the head is green, mergeable and no thread waits on you:** arm one
+  check-in six hours or more out, for drift against `main`. If it finds nothing,
+  arm none. The next event wakes the session.
+- **Never re-arm a quiet check-in overnight.**
+- **A subscription notice or an echo of your own comment** ends the turn with no
+  reply.
+- **When the PR merges or closes,** delete your pending check-ins with
+  `delete_trigger`.
+
+## 8. When it merges: close the issue, file the offers, stop
+
+- **Close what the PR finished.** `Fixes #n` does it. If a `Refs #n` PR was the
+  last instalment, close the issue with one line naming the PR. Otherwise comment
+  what is left and whom it waits on. #907 took a second session only to learn
+  it was done.
+- **File every follow-up you offered** before the session ends: one issue each,
+  labelled by nature, `finding` for a defect (`work-issue` §4). A reply ending
+  "want me to?" is not a record. The owner pasted four such offers back to get
+  them done.
+- **Merged with `## Open findings`:** file them as one `finding` issue citing
+  the PR. The merge does not settle them; #923's became #943 and #945.
+- **Then stop.** The next issue gets a fresh session. A session that runs past a
+  merge carries 500k tokens or more into unrelated work: $130 on #731's chain,
+  and #788's follow-up was refused in a 700k context.
+
+Every comment in this skill — the stand-down, a reply to a reviewer, a status
 refresh — is under 100 words and in short sentences, per `CLAUDE.md`'s "Write
 short on GitHub". Name the check, the commit, the fix. A reviewer reading a
 thread is mid-task; give them the fact and let them get back to it.
