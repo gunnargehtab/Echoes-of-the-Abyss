@@ -4889,16 +4889,21 @@ function drumBone(root, name, mat, r, a, b, rule, overlap = 0) {
  * `x` on the keel, from `bottom` to `top`, so most of each station's
  * area is at full beam and the head-on silhouette is wider than tall
  * (#1439 review). Returns `beamAt(x)`, the half-beam of the deck under a
- * station, for the hips to bolt to.
+ * station, for the hips to bolt to, with `beamAt.top(x)` the deck plate's
+ * height there.
  */
 export function carbody(root, mat, { decks }) {
   for (const [name, x, length, half, bottom, top] of decks)
     add(root, name, box(length, top - bottom, half * 2), mat, [x, (top + bottom) / 2, 0]);
-  return (x) => {
+  const under = (x) => {
     const deck = decks.find(([, dx, length]) => Math.abs(x - dx) <= length / 2);
     if (!deck) throw new Error(`carbody: no deck under x = ${x}`);
-    return deck[3];
+    return deck;
   };
+  const beamAt = (x) => under(x)[3];
+  // The deck plate's height under a station, for a fitting laid on it.
+  beamAt.top = (x) => under(x)[5];
+  return beamAt;
 }
 
 /**
@@ -4915,8 +4920,11 @@ export function carbody(root, mat, { decks }) {
  *   `{ s, p }` (one z a side) or as `(x, side) => z` (the Acolyte's
  *   stepped carbody, `carbody`), the can's skin `canFlank` finds there
  *   otherwise — so its inboard half is in the hull and its outboard face
- *   is the plate the femur comes off; two rivet heads of `hip.rivet` on
- *   its top face, fore and aft;
+ *   is the plate the femur comes off; two rivet heads of `hip.rivet`,
+ *   fore and aft of the femur at `rivet.pitch` and `rivet.out` along the
+ *   leg from the bracket's centre, on the bracket's top or — where
+ *   `rivet.top(x, side)` gives the height of a plate over the hip, the
+ *   Acolyte's deck — on that plate, the bracket's bolts through it;
  * - the **femur**, a box girder of newer plate `femur.section` (`[h, w]`)
  *   from the hip `femur.reach` outboard along the rake and `femur.rise`
  *   up to the knee, rooted `femur.root` into the bracket and the block;
@@ -4970,12 +4978,21 @@ export function plantedLegs(root, mats, opts) {
     const turned = [0, yaw, 0];
     add(root, `${name}_hip`, box(...hip.size), bracket, at, turned);
     const [rw, rh, rd] = hip.rivet.size;
-    const rivetY = at[1] + hip.size[1] / 2 + rh / 2 - hip.rivet.sink;
+    // The bracket's inboard half is in the hull and its top is under the
+    // deck plate, so the heads sit where `rivet.top(x, side)` puts the
+    // plate over the hip — the bolts through — `rivet.out` along the leg
+    // from the bracket's centre, inboard when negative so a yawed
+    // bracket's fore and aft heads both land on the plate (#1439 review);
+    // `sgn` turns the bracket's local z outboard either side.
+    const sgn = side === 'p' ? -1 : 1;
+    const dz = sgn * (hip.rivet.out ?? 0);
+    const top = hip.rivet.top ? hip.rivet.top(at[0], side) : at[1] + hip.size[1] / 2;
+    const rivetY = top + rh / 2 - hip.rivet.sink;
     for (let k = 0; k < 2; k++) {
       const dx = (k === 0 ? -1 : 1) * hip.rivet.pitch;
-      // Along the bracket's own length, which the yaw has turned.
-      const px = at[0] + dx * Math.cos(yaw);
-      const pz = at[2] - dx * Math.sin(yaw);
+      // Along the bracket's own length and depth, which the yaw has turned.
+      const px = at[0] + dx * Math.cos(yaw) + dz * Math.sin(yaw);
+      const pz = at[2] - dx * Math.sin(yaw) + dz * Math.cos(yaw);
       add(root, `${name}_hip_rivet_${k}`, box(rw, rh, rd), bone, [px, rivetY, pz], turned);
     }
     girder(root, `${name}_femur`, bone, at, kneeAt, femur.section, femur.root);

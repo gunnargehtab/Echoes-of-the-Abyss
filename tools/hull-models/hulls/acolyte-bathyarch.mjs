@@ -30,8 +30,9 @@
  * bracket, a box girder of a femur, a hull-black knee block with the one
  * amber lamp on its upward face, a hydraulic drum of a tibia, an ankle
  * collar and a transducer pad for a foot; the listening dome as the
- * Verger's riveted turret with its skirt all but buried in the middle
- * can's crown, the dome pressed to 0.3 and no boss; a pipe run a side on
+ * Verger's riveted turret with its skirt buried at the middle can's crown
+ * ridge and showing on the beams, the dome pressed to 0.3 and no boss; a
+ * pipe run a side on
  * the middle deck beside the can, neither where the other is; a short bow
  * block with the hazard stripe on it and the ram — the rostrum — to the
  * bow; a short stern block with the screw in its shroud — the telson —
@@ -60,7 +61,7 @@
  *   widest, as the Directorate's does. The knees stand at (+15.8, 10.2),
  *   (−2, 13.0) and (−15.8, 10.6) to starboard and (+12.8, −10.2),
  *   (+1, −13.0) and (−18.8, −10.6) to port, 2.9 m above the axis — the
- *   Directorate's are at the same six x, 10.4 to 12.8 out; the feet at
+ *   Directorate's are at the same six x, 9.2 to 12.8 out; the feet at
  *   (+17.9, 13.2), (−2, 16.6), (−17.9, 13.6) and (+14.9, −13.2),
  *   (+1, −16.6), (−20.9, −13.6), their pads reaching ±17.9: the plan is
  *   35.8 m broad against the Directorate's 35. `plantedLegs` refuses a
@@ -68,21 +69,26 @@
  * - **The knee is the lit joint.** The one joint that stands clear of the
  *   shell with a face up: a 0.9 m square plate of `amber_lamp` on each
  *   knee block's top, 4 m above the axis, six in all, and the hull's whole
- *   light. The hip brackets are inside the decks' depth, flush with
- *   nothing above the deck but their two rivet heads, unlit; the ankles
- *   are under the keel line, where the chart's straight-down bake sees
- *   nothing.
+ *   light. The hip brackets are inside the decks' depth — their tops at
+ *   y 0.5 under deck plates at 1.2 and 1.5 — and only their outboard
+ *   half a metre stands out of the deck's face; each one's two rivet
+ *   heads sit on the deck plate over it, the bracket's bolts through,
+ *   unlit; the ankles are under the keel line, where the chart's
+ *   straight-down bake sees nothing.
  * - **The feet are hydrophones, planted below the keel.** A hydrophone on
  *   this navy is a drum (`transducerDrum`), so each leg ends in a
  *   transducer pad 1.3 m in radius on a stem, face down, its underside at
  *   y −6.75 where the keel line — the middle can's bottom — is −4.5 and
- *   the decks' −3.5: the hull stands on them, 2.25 m clear, which is what
+ *   the decks' −3.5 amidships and −3 at the ends: the hull stands on
+ *   them, 2.25 m clear, which is what
  *   "planted" is. Every foot and stem reads under y 0 in contacts.mjs's
  *   sweep, as do the decks and the cans: this is a hull, whose y 0 is its
  *   axis, and the feet are meant to be there.
  * - **The dome is sunk low in the middle segment and carries no lamp.**
- *   The turret's skirt sits 2.2 m of its 2.4 into the middle can's crown
- *   and the dome crowns at y 5.7 on a can whose crown is 4.5, seated
+ *   The turret's skirt sits 2.2 m of its 2.4 into the middle can at the
+ *   crown's ridge, 1.75 m of it showing on each beam where the can's
+ *   skin at z ±3.2 is down at y 2.95, and the dome crowns at y 5.7 on a
+ *   can whose crown is 4.5, seated
  *   plumb on the keel line (`plumb`: the twelve-gon's crown is a ridge,
  *   and seating along its facet put an earlier skirt 0.23 m to
  *   starboard); `crown: null` leaves the boss off, because this block
@@ -105,9 +111,13 @@
  *   deck holds 79 % at full beam amidships (85 of 107.5 m²), 82 % at the
  *   bow (55 of 68) and 83 % at the stern (59 of 71), the rest the drum's
  *   crown standing 3 m above the deck amidships and 2.3 at the ends and
- *   its bilge a metre under it. The decks step narrower at the seams,
- *   where the caps cross and the cans pinch to 0.85 of their radius,
- *   which is the waist the Directorate's seams draw. Keel to dome crown
+ *   its bilge a metre under it amidships and half a metre at the ends.
+ *   There is no waist: each deck holds its beam its whole length and the
+ *   three step at the seams, 13.2 to 17 to 14, and each smaller can's
+ *   pinch to 0.85 of its radius is inside the larger can's cap (the fore
+ *   seam's outline runs 3.5 to 3.8 to 4.5) or behind the bow block. The
+ *   segments read by the steps and by the colour, grey between black,
+ *   where the Directorate's pinch at their seams. Keel to dome crown
  *   is 10.2 m against the Directorate's 9.8. The bow and stern blocks are
  *   short, 3 and 2.4 m, capped drums and not a tube.
  * - **No dorsal spines, and no deck walk.** The spines are the
@@ -129,10 +139,11 @@
  * 133 parts, 2,408 triangles; the file spans x −29 .. 29, y −6.8 .. 5.7,
  * z −17.9 .. 17.9.
  *
- * The sweep (contacts.mjs) reads 198 pairs and every one a mount: the
+ * The sweep (contacts.mjs) reads 186 pairs and every one a mount: the
  * decks butted at the seams with the caps crossing inside them, the cans
- * and their caps through the decks, the hips, their rivets and the
- * femurs' roots in the deck faces, every bone rooted into the block at
+ * and their caps through the decks, the hips and the femurs' roots in
+ * the deck faces, each hip's two rivet heads on the deck plate over it,
+ * every bone rooted into the block at
  * each end so femur meets tibia inside the knee and tibia meets stem
  * inside the ankle, the skirt in the crown with the dome, ribs and rivets
  * on it, the pipes on the deck plate on a flat of their six-gon — the
@@ -149,8 +160,8 @@
  * are the rule's.
  *
  * PANELS. The Klaxon's band for a hull is 0.75–2 m on a side, the median
- * unlit part from above (bathyarch.mjs `panels`): this file reads 1.22 m
- * over 102 parts.
+ * unlit part from above (bathyarch.mjs `panels`): this file reads 1.15 m
+ * over 110 parts.
  *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.
@@ -248,7 +259,7 @@ const joints = bathyarch.plantedLegs(
       sink: 0.5,
       on: (x) => beamAt(x),
       size: [2.6, 1.6, 2.0],
-      rivet: { size: [0.5, 0.3, 0.5], pitch: 1.0, sink: 0.05 },
+      rivet: { size: [0.5, 0.3, 0.5], pitch: 1.0, out: -0.4, top: (x) => beamAt.top(x), sink: 0.05 },
     },
     femur: { reach: 5, rise: 3.2, section: [1.6, 1.4], root: 0.2 },
     knee: { size: [2.4, 2.0, 2.2] },
