@@ -46,6 +46,7 @@ import {
 import { whenEnvTemplatesReady } from '../src/game/environmentModels.ts';
 import { worldView } from '../src/game/worldView.ts';
 import {
+  onLoad,
   onTravel,
   readyToJoin,
   startTravel,
@@ -644,13 +645,20 @@ describe('which launches travel, and when a travel joins (§7.6)', () => {
   });
 
   it('joins nothing for a match whose code failed to load (§7.6, "A load or join failure")', () => {
-    const arrived = { ...startTravel(PROLOGUE), settled: true, drew: true };
-    assert.equal(readyToJoin({ ...arrived, loadFailed: true }, false), false, 'failed');
-    assert.equal(readyToJoin({ ...arrived, loadFailed: true }, true), false, 'with no world too');
-    // Its Retry reloads the page (App.tsx, `reloadForRetry`): no fetch in this
-    // page can land, so no later news turns the failure into a join.
-    const failed = onTravel(arrived, { loadFailed: true }, PROLOGUE) as TravelState;
-    assert.equal(readyToJoin({ ...failed, skipped: true }, false), false);
+    // The load's outcome, as the shell applies it (`onLoad`), on a travel
+    // that has arrived, been skipped, or had no world to travel in.
+    const failed = onLoad(startTravel(PROLOGUE), false, PROLOGUE) as TravelState;
+    assert.equal(failed.loadFailed, true, 'the bar is told');
+    for (const travel of [
+      { ...failed, settled: true, drew: true },
+      { ...failed, skipped: true, settled: true },
+    ]) {
+      assert.equal(readyToJoin(travel, false), false, 'nothing is joined');
+      assert.equal(readyToJoin(travel, true), false, 'with no world either');
+    }
+    // A load that landed does join: the rule above is the failure's, not a stall.
+    const loaded = onLoad({ ...startTravel(PROLOGUE), settled: true }, true, PROLOGUE);
+    assert.equal(readyToJoin(loaded as TravelState, false), true);
   });
 });
 
@@ -743,7 +751,7 @@ describe("the match screen's failure (§7.6, 'A load or join failure')", () => {
         )
       );
       try {
-        assert.ok(view.shows('The match did not open'));
+        assert.ok(view.shows('The match stopped'));
         assert.ok(view.shows('Failed to fetch dynamically imported module'), 'and why');
         assert.deepEqual(view.buttonNames(), ['Retry', 'Back']);
         // react-test-renderer applies no autoFocus, so the request is what is read.

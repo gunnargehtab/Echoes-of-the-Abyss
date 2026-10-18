@@ -103,6 +103,19 @@ export function readyToJoin(travel: TravelState, worldFailed: boolean): boolean 
 }
 
 /**
+ * The match's code has loaded, or failed to (§7.6, "A load or join failure").
+ * A failure is never `prepared`, so it joins nothing: the bar says it, and its
+ * Retry reloads the page (`reloadForRetry`).
+ */
+export function onLoad<S extends { kind: string }>(
+  screen: S | TravelState,
+  loaded: boolean,
+  missionId: string
+): S | TravelState {
+  return onTravel(screen, loaded ? { prepared: true } : { loadFailed: true }, missionId);
+}
+
+/**
  * Apply a travel's own news — Skip pressed, the camera arrived, the match
  * loaded — to whatever screen is current, and to a travel only. A screen the
  * player has already left by Cancel is returned as it is, so news that lands

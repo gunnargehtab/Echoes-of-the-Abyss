@@ -40,6 +40,7 @@ import { TravelScreen } from './menu/TravelScreen.tsx';
 import { MatchBoundary } from './menu/MatchBoundary.tsx';
 import {
   forgetReopen,
+  onLoad,
   onTravel,
   readyToJoin,
   reloadForRetry,
@@ -207,8 +208,8 @@ function App() {
    */
   const prepareMatch = (missionId: string) => {
     loadGameCanvas().then(
-      () => setScreen((current) => onTravel(current, { prepared: true }, missionId)),
-      () => setScreen((current) => onTravel(current, { loadFailed: true }, missionId))
+      () => setScreen((current) => onLoad(current, true, missionId)),
+      () => setScreen((current) => onLoad(current, false, missionId))
     );
   };
 

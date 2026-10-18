@@ -1033,12 +1033,21 @@ export function GameCanvas({
               {LIFECYCLE.RECONNECT_GRACE_S} seconds.
             </p>
           )}
-          {status === 'error' && joinFailed && <p>The room did not answer.</p>}
-          {status === 'error' && (
+          {status === 'error' && joinFailed && (
+            // A refusal and a server that is not there both land here; the
+            // detail line below says which.
+            <>
+              <p>The room refused the join, or did not answer.</p>
+              <p>
+                If the game server is not running, start it with{' '}
+                <code>npm -w packages/backend run dev</code> and retry.
+              </p>
+            </>
+          )}
+          {status === 'error' && !joinFailed && (
             <p>
               Could not reach the game server. Start it with{' '}
-              <code>npm -w packages/backend run dev</code>
-              {joinFailed ? ' and retry.' : ' and reload.'}
+              <code>npm -w packages/backend run dev</code> and reload.
             </p>
           )}
           {detail !== '' && <p className="game-overlay-detail">{detail}</p>}

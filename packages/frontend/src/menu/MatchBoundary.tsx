@@ -31,8 +31,8 @@ export class MatchBoundary extends Component<MatchBoundaryProps, { failure: stri
     return (
       <div className="game-root">
         <div className="game-overlay">
-          <h2>The match did not open</h2>
-          <p>Its code did not load, or it failed as it started.</p>
+          <h2>The match stopped</h2>
+          <p>Its code did not load, or it failed.</p>
           <p className="game-overlay-detail">{this.state.failure}</p>
           <div className="game-overlay-controls">
             <button
