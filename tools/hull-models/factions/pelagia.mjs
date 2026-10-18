@@ -960,12 +960,19 @@ export function fins(root, membrane, { y = 0, pairs, bySide = false, stand = fal
  * it (hulls/chorister-pelagia.mjs), and its `stem_tail` is one with the apex
  * *forward*, buried in the last lobe, so that the stern is a transom — the
  * approved export's own, kept. The count is the rule's at the base (`cut`).
+ *
+ * `aft` turns the cone round: the apex at `tip` pointing astern and the base
+ * `length` ahead of it, for a tail drawn to a point — the Acolyte's, grown
+ * where the Directorate's telson is (hulls/acolyte-pelagia.mjs). The
+ * Chorister's transom is the file's and stays the default way round.
  */
 export function nose(root, mat, opts) {
-  const { name = 'leaf_tip', tip, y = 0, z = 0, r, length, cut: rule = METRE } = opts;
+  const { name = 'leaf_tip', tip, y = 0, z = 0, r, length, aft = false, cut: rule = METRE } = opts;
   noCount(name, opts, 'facets');
   const cone = cyl(0, r, length, rule.cyl(0, r, length));
-  add(root, name, cone, mat, [tip - length / 2, y, z], [0, 0, -Math.PI / 2]);
+  // A cone's apex is +Y; −π/2 about Z lays it on +X, +π/2 on −X.
+  const sgn = aft ? -1 : 1;
+  add(root, name, cone, mat, [tip - (sgn * length) / 2, y, z], [0, 0, -sgn * (Math.PI / 2)]);
 }
 
 /**
@@ -4440,6 +4447,11 @@ export function bayHatches(root, { ring: ringMat, rim: rimMat, door: doorMat }, 
  * `listeningDome`): the dome itself is dark and the chart's upward emitter
  * is a boss on its crown, because a dome lit whole would be the light
  * budget of a louder hull.
+ *
+ * Without `boss` the dome carries no lamp at all — the Acolyte's, whose
+ * block lights the knees and nothing else (hulls/acolyte-pelagia.mjs), as
+ * the Directorate's `listeningDome` has no `dome_crown` there. `light` may
+ * be left out with it.
  */
 export function sensoryDome(root, { skin, ridge, light }, opts) {
   const {
@@ -4476,15 +4488,177 @@ export function sensoryDome(root, { skin, ridge, light }, opts) {
     [0, 0, 0],
     squash
   );
-  bud(root, light, {
-    name: 'dome_boss',
-    x,
-    y: y + ry - boss.sink,
-    z,
-    r: boss.r,
-    squash: boss.squash,
-    cut: rule,
+  if (boss)
+    bud(root, light, {
+      name: 'dome_boss',
+      x,
+      y: y + ry - boss.sink,
+      z,
+      r: boss.r,
+      squash: boss.squash,
+      cut: rule,
+    });
+}
+
+/* --------------------------------------------------------------------------
+ * The Acolyte (#1439, on the Chorister's rule): the planted scout grown.
+ * What it adds is what a Commune hull that *stands* needs and none before
+ * it had — where the lobes' flank is, so a limb can be rooted in the shell,
+ * and a limb walked out and planted with a knuckle at every joint. The
+ * Directorate's `tergiteFlank` and `plantedLimbs` are the same two
+ * arguments in that navy's language (directorate.mjs); hulls/acolyte-
+ * pelagia.mjs is the consumer.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The lobes' half-beam at `(x, y)` on one side: the furthest any lobe's
+ * skin reaches to starboard (`sgn` +1) or port (−1) there, or 0 where no
+ * lobe is. `lobes` is `cohortLobes`' list, `{ at: [x, y, z], radii: [rx, ry,
+ * rz] }` each, and a lobe grown off the keel line reaches further on the
+ * side it leans to — which is why the side is asked, where the
+ * Directorate's `tergiteFlank` on a shell drawn on the line is not. A hull
+ * that seats its limbs by this roots them in the shell rather than beside
+ * it.
+ */
+export function lobeFlank(lobes, x, y, sgn = 1) {
+  let z = 0;
+  lobes.forEach(({ at: [lx, ly, lz], radii: [rx, ry, rz] }) => {
+    const u = (x - lx) / rx;
+    const v = (y - ly) / ry;
+    const d = 1 - u * u - v * v;
+    if (d > 0) z = Math.max(z, sgn * lz + rz * Math.sqrt(d));
   });
+  return z;
+}
+
+/**
+ * A grown stem: a tapered faceted spar `[root, tip]` in radius laid from `a`
+ * to `b`, the rotation the minimal one taking +Y onto that line, as `stalk`
+ * lays a peduncle by its node. The node sits at the midpoint and the length
+ * is the distance, so a script holds joints and never a length; `rule` cuts
+ * it at its root.
+ */
+function grownStem(root, name, mat, [rootR, tipR], a, b, rule) {
+  const A = new THREE.Vector3(...a);
+  const B = new THREE.Vector3(...b);
+  const d = B.clone().sub(A);
+  const q = new THREE.Quaternion().setFromUnitVectors(
+    new THREE.Vector3(0, 1, 0),
+    d.clone().normalize()
+  );
+  const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+  const mid = A.clone().add(B).multiplyScalar(0.5).toArray();
+  const n = rule.cyl(tipR, rootR, d.length());
+  return add(root, name, cyl(tipR, rootR, d.length(), n), mat, mid, [e.x, e.y, e.z]);
+}
+
+/**
+ * Hydrophone limbs walked out and planted, grown: the Acolyte's array in
+ * the stance it hears at 85 in (docs/models-plan.md §3.5), where the
+ * Directorate articulates steel bones between black orbs (directorate.mjs
+ * `plantedLimbs`). Each limb is six parts, `limb_${side}${i}_hip`, `_femur`,
+ * `_knee`, `_bud`, `_tibia`, `_foot`: a knuckle of `knuckle` ink — a
+ * squashed orb, `hip.r` across and `hip.squash` of that tall — rooted in
+ * the flank `lobeFlank` finds at `hip.y`, its centre `hip.sink` inside the
+ * skin; a femur stem of `stem` ink from the hip `femur.reach` outboard and
+ * `femur.rise` up to a knee knuckle of `knee.r`; on the knee's crown the
+ * one lit part of the limb, a photophore bud in `light` (`bud`), `bud.r`
+ * across and `bud.squash` of that tall, sunk `bud.sink` into the knuckle's
+ * pole; a tibia stem `tibia.reach` further out and `tibia.drop` down to the
+ * ankle; and from the ankle the hydrophone, a cone of `foot` ink `foot.r`
+ * by `foot.length` planted point-down with the tibia's tip `foot.sink`
+ * inside its base — a listening organ on this navy is membrane, as the
+ * dome's skin is, and the block says the limbs are the array. Stems are
+ * `[root, tip]` in radius, and every limb is one set of numbers grown six
+ * times at six stations: the Commune's regularity is a rule, not a rank.
+ *
+ * `lobes` is the shell as `cohortLobes` drew it, which is where the hips
+ * are seated; a station whose flank the lobes do not reach is refused,
+ * because a limb rooted in water is a limb the conn view shows floating.
+ * `limbs` is `[{ side, x, rake }]` — each limb's own station and its rake in
+ * plan, radians ahead of athwartships, astern when negative — each placed
+ * at its own signed z, port −z (#642), never through `bothSides` (§3.6).
+ * The reach is read along the raked line, so a raked limb stands nearer the
+ * keel than a square one and reaches further along the hull, as a crab's
+ * fore and hind legs do. A mirrored pair of hips is refused: the knees carry
+ * the hull's whole light budget, and a knee that answers another across the
+ * keel is a photophore that does. Returns the joints, `[{ side, i, hip,
+ * knee, ankle }]`, numbered a side in the order given, for the header's
+ * measure.
+ */
+export function grownLimbs(root, { knuckle, stem, foot: footMat, light }, opts) {
+  const {
+    lobes,
+    hip = { y: -0.8, sink: 0.5, r: 1.25, squash: 0.85 },
+    femur = { r: [1.0, 0.8], reach: 5, rise: 3.2 },
+    knee = { r: 1.3, squash: 0.85 },
+    bud: budOpt = { r: 0.75, squash: 0.55, sink: 0.15 },
+    tibia = { r: [0.85, 0.6], reach: 4, drop: 6 },
+    foot = { r: 0.8, length: 2.4, sink: 0.3 },
+    limbs: list,
+    cut: rule = METRE,
+  } = opts;
+  noCount('limb', opts, 'facets');
+  const count = { p: 0, s: 0 };
+  const joints = list.map(({ side, x, rake = 0 }) => {
+    if (side !== 'p' && side !== 's')
+      throw new Error(`limb_${side}: side is '${side}' — 'p' (port, -z) or 's' (starboard, +z)`);
+    const i = count[side]++;
+    const sgn = side === 'p' ? -1 : 1;
+    const flank = lobeFlank(lobes, x, hip.y, sgn);
+    if (flank <= hip.sink)
+      throw new Error(`limb_${side}${i}: no lobe to root in at x = ${x}, y = ${hip.y}`);
+    const out = [Math.sin(rake), 0, sgn * Math.cos(rake)];
+    const from = ([px, py, pz], reach, lift) => [
+      px + out[0] * reach,
+      py + lift,
+      pz + out[2] * reach,
+    ];
+    const at = [x, hip.y, sgn * (flank - hip.sink)];
+    const kneeAt = from(at, femur.reach, femur.rise);
+    const ankle = from(kneeAt, tibia.reach, -tibia.drop);
+    return { side, i, hip: at, knee: kneeAt, ankle };
+  });
+  refuseMirror('limb', joints, ({ hip: [x, y, z] }) => `${x},${y},${Math.abs(z)}`);
+  joints.forEach(({ side, i, hip: at, knee: kneeAt, ankle }) => {
+    const name = `limb_${side}${i}`;
+    const hipS = [hip.r, hip.r * hip.squash, hip.r];
+    add(root, `${name}_hip`, orb(...rule.orb(1, { scale: hipS })), knuckle, at, [0, 0, 0], hipS);
+    grownStem(root, `${name}_femur`, stem, femur.r, at, kneeAt, rule);
+    const kneeS = [knee.r, knee.r * knee.squash, knee.r];
+    add(
+      root,
+      `${name}_knee`,
+      orb(...rule.orb(1, { scale: kneeS })),
+      knuckle,
+      kneeAt,
+      [0, 0, 0],
+      kneeS
+    );
+    // The knuckle's pole is a vertex of the orb, so the bud seats on it to
+    // the millimetre without asking the scene.
+    bud(root, light, {
+      name: `${name}_bud`,
+      x: kneeAt[0],
+      y: kneeAt[1] + kneeS[1] + budOpt.r * budOpt.squash - budOpt.sink,
+      z: kneeAt[2],
+      r: budOpt.r,
+      squash: budOpt.squash,
+      cut: rule,
+    });
+    grownStem(root, `${name}_tibia`, stem, tibia.r, kneeAt, ankle, rule);
+    // A cone's apex is +Y; a half turn about X plants it point-down, its
+    // base ring `foot.sink` above the ankle so the tibia's tip ends inside it.
+    add(
+      root,
+      `${name}_foot`,
+      cyl(0, foot.r, foot.length, rule.cyl(0, foot.r, foot.length)),
+      footMat,
+      [ankle[0], ankle[1] + foot.sink - foot.length / 2, ankle[2]],
+      [Math.PI, 0, 0]
+    );
+  });
+  return joints;
 }
 
 /**
