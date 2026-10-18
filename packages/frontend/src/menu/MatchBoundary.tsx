@@ -16,7 +16,7 @@ import { Component, type ReactNode } from 'react';
 export interface MatchBoundaryProps {
   onRetry(): void;
   onBack(): void;
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 export class MatchBoundary extends Component<MatchBoundaryProps, { failure: string | null }> {
