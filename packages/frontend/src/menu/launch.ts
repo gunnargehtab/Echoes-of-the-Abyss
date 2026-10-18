@@ -98,7 +98,7 @@ export function startTravel(missionId: string): TravelState {
  * drawn at all, so there was no travel and nothing of it to wait on.
  */
 export function readyToJoin(travel: TravelState, worldFailed: boolean): boolean {
-  // A failed load is never `prepared`, so it joins nothing until a Retry's fetch lands.
+  // A failed load is never `prepared`, so it joins nothing; its Retry reloads the page.
   return travel.prepared && (travel.settled || worldFailed);
 }
 
