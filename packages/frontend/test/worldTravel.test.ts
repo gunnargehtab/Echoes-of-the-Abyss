@@ -408,6 +408,40 @@ describe('the world behind the board (§7.6)', () => {
     assert.equal(terrain() === null, true, 'the board let the ground go with the view');
   });
 
+  it('keeps a return across a board let go and taken again before it arrives', async () => {
+    // StrictMode's mount, unmount and mount, or a player leaving the board
+    // mid-return and coming back: the return is resumed, never cut.
+    const gl = new HeadlessWebGLRenderer();
+    const lent = worldView.acquire(
+      PROLOGUE_SORROWGATE_HEADER.id,
+      createHost(1280, 720) as unknown as HTMLElement,
+      { glRenderer: () => gl.asRenderer(), environment: gl.environment }
+    )!;
+    const left: CameraFrame = { xM: 1_200, yM: 2_600, distanceM: 1_800, yawDeg: 40, pitchDeg: 40 };
+    lent.view.setFrame(left);
+    worldView.release(lent.claim, 'return');
+    const first = await mountBackdrop();
+    await first.unmount();
+    const again = await mountBackdrop();
+    try {
+      sameFrame(lent.view.frame, left, 1e-6);
+      await frameAt(1);
+      await frameAt(2);
+      await frameAt(2_600);
+      sameFrame(lent.view.frame, boardFrame(SORROWGATE_REGION), 1e-6);
+    } finally {
+      await again.unmount();
+    }
+    // Arrived, the board lets go as any other: the next opens at its own frame.
+    lent.view.setFrame(left);
+    const after = await mountBackdrop();
+    try {
+      sameFrame(lent.view.frame, boardFrame(SORROWGATE_REGION), 1e-6);
+    } finally {
+      await after.unmount();
+    }
+  });
+
   it('opens the board at its own frame when no return is under way', async () => {
     const gl = new HeadlessWebGLRenderer();
     const lent = worldView.acquire(

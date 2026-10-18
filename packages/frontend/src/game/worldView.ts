@@ -23,7 +23,7 @@
 
 import { PROLOGUE_SORROWGATE_HEADER, worldRegionForMission } from '@echoes/shared';
 import type { WebGLRenderer } from 'three';
-import { PerspectiveView } from './PerspectiveView.ts';
+import { PerspectiveView, type CameraFrame } from './PerspectiveView.ts';
 import { lookForMission, type WorldLook } from './tutorialLook.ts';
 import type { createWaterEnvironment } from './modelLighting.ts';
 import { boardFrame } from './worldTravel.ts';
@@ -44,6 +44,12 @@ export class WorldViewHost {
    * board has not taken the view yet: it starts where the session left it.
    */
   private returning = false;
+  /**
+   * The board's claim on a return it took over, until the camera stands on
+   * the board's frame: a board let go before then keeps the return for the
+   * next one (`release`).
+   */
+  private returnClaim: symbol | null = null;
 
   /** Whether `missionId` is drawn in the persistent world. */
   isWorldMission(missionId: string | undefined): boolean {
@@ -71,6 +77,7 @@ export class WorldViewHost {
       this.returning = false;
       this.view?.clearTerrain();
     }
+    this.returnClaim = null;
     return this.lend(missionId, host, devices, false);
   }
 
@@ -123,9 +130,8 @@ export class WorldViewHost {
     this.returning = false;
     const lent = this.lend(PROLOGUE_SORROWGATE_HEADER.id, host, devices, returning);
     if (lent === null) return null;
-    if (!returning) {
-      lent.view.setFrame(boardFrame(worldRegionForMission(PROLOGUE_SORROWGATE_HEADER.id)!));
-    }
+    if (returning) this.returnClaim = lent.claim;
+    else lent.view.setFrame(boardFrame(worldRegionForMission(PROLOGUE_SORROWGATE_HEADER.id)!));
     lent.view.setActive(true);
     return lent.claim;
   }
@@ -145,12 +151,26 @@ export class WorldViewHost {
    * baseline is built and the ramp-out is not landed, so the board's
    * `showBoard` picks both up mid-way and travels back from the frame the
    * session was left on.
+   *
+   * A board let go before its return has reached the board's frame keeps the
+   * return the same way, and the next board resumes it from where the camera
+   * stands. Development's StrictMode mounts the board, lets it go and mounts
+   * it again at once, and a plain release there would cut the return to the
+   * board's frame; a player leaving the board mid-return draws nothing, so
+   * the ground kept meanwhile is never seen.
    */
   release(claim: symbol, how: 'leave' | 'return' = 'leave'): void {
     if (this.holder !== claim || this.view === null) return;
     this.holder = null;
+    const midReturn =
+      claim === this.returnClaim &&
+      !sameFrame(
+        this.view.frame,
+        boardFrame(worldRegionForMission(PROLOGUE_SORROWGATE_HEADER.id)!)
+      );
+    this.returnClaim = null;
     this.view.resetForNewMatch();
-    if (how === 'return') {
+    if (how === 'return' || midReturn) {
       this.view.releaseGround();
       this.view.detach(false);
       this.returning = true;
@@ -171,12 +191,24 @@ export class WorldViewHost {
     this.look = null;
     this.holder = null;
     this.returning = false;
+    this.returnClaim = null;
   }
 
   /** The view itself, for the headless tests' identity checks. Null when none exists. */
   get current(): PerspectiveView | null {
     return this.view;
   }
+}
+
+/** Whether two frames are one camera, to a metre and a hundredth of a degree. */
+function sameFrame(a: CameraFrame, b: CameraFrame): boolean {
+  return (
+    Math.abs(a.xM - b.xM) < 1 &&
+    Math.abs(a.yM - b.yM) < 1 &&
+    Math.abs(a.distanceM - b.distanceM) < 1 &&
+    Math.abs(a.yawDeg - b.yawDeg) < 0.01 &&
+    Math.abs(a.pitchDeg - b.pitchDeg) < 0.01
+  );
 }
 
 /** The page's one world view. */
