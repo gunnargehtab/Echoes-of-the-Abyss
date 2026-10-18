@@ -1043,7 +1043,10 @@ describe('the shell: the persistent world view', () => {
           node.props.className.split(' ').includes('game-overlay-held')
       ).length === 1;
     try {
-      assert.ok(shows(world.tree, 'The room refused the join, or did not answer.'), 'what failed is said');
+      assert.ok(
+        shows(world.tree, 'The room refused the join, or did not answer.'),
+        'what failed is said'
+      );
       assert.ok(held(), 'on the bar at the foot of the frame the travel held, not glass');
       assert.ok(
         world.tree.root.find((node) => node.props.className === 'game-root game-root-held'),
