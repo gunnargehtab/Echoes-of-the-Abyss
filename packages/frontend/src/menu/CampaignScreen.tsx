@@ -29,6 +29,7 @@ import {
   initialFocus,
   isOpenable,
   moveFocus,
+  returnFocus,
   slotAt,
   type BoardFocus,
   type BoardSlot,
@@ -48,6 +49,11 @@ export interface CampaignScreenProps {
   /** The record between missions — docs/ui-ux.md §14, "The record". */
   onRecord(): void;
   onBack(): void;
+  /**
+   * The mission whose slot the player is coming back from, absent for an entry
+   * from the title. A return lands there and takes focus (§14, "Keyboard").
+   */
+  returnFrom?: string;
 }
 
 const hex = (value: number): string => `#${value.toString(16).padStart(6, '0')}`;
@@ -77,20 +83,29 @@ function slotDescription(slot: BoardSlot): string {
   return ground === undefined ? state : `${state} · ${groundLine(ground)}`;
 }
 
-export function CampaignScreen({ hasPlayed, onSelect, onRecord, onBack }: CampaignScreenProps) {
+export function CampaignScreen({
+  hasPlayed,
+  onSelect,
+  onRecord,
+  onBack,
+  returnFrom,
+}: CampaignScreenProps) {
   // Built once per mount: the record cannot change while the board is on
   // screen, because finishing a mission means leaving it.
   const [board] = useState(() => buildBoard(hasPlayed));
   const [marks] = useState(() => chartMarks(board));
-  const [focus, setFocus] = useState<BoardFocus>(() => initialFocus(board));
+  // A return lands on the slot it came back from; an entry, on the first that opens.
+  const [back] = useState(() => (returnFrom === undefined ? null : returnFocus(board, returnFrom)));
+  const [focus, setFocus] = useState<BoardFocus>(() => back ?? initialFocus(board));
   // The slot the pointer is over, if any. The chart lights one slot at a time
   // — the hovered one, else the focused one — so a mouse and a keyboard read
   // the same chart without the pointer's last position pinning it.
   const [hover, setHover] = useState<string | null>(null);
   // Whether the roving tabindex should actually pull focus. Mounting must not
   // steal it from the screen the player arrived from; the first key or click
-  // inside the board arms it.
-  const armed = useRef(false);
+  // inside the board arms it. A return comes armed: the screen it came back
+  // from is gone, and focus would otherwise fall to the page.
+  const armed = useRef(back !== null);
   const focused = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {

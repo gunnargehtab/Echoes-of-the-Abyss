@@ -77,7 +77,7 @@ describe('the shell: where it opens', () => {
     let reloads = 0;
     g.window.location.reload = () => void (reloads += 1);
     try {
-      reloadForRetry(true);
+      reloadForRetry(PROLOGUE_SORROWGATE_HEADER.id);
       assert.equal(reloads, 1, 'Retry reloads the page');
       const view = await shell();
       try {
@@ -93,8 +93,8 @@ describe('the shell: where it opens', () => {
       }
       // Any other launch's Retry reloads with no note: a direct link's own
       // address re-enters its match, and a title launch opens on the title.
-      reloadForRetry(true);
-      reloadForRetry(false);
+      reloadForRetry(PROLOGUE_SORROWGATE_HEADER.id);
+      reloadForRetry(undefined);
       assert.equal(reloads, 3);
       const plain = await shell();
       try {
@@ -102,7 +102,7 @@ describe('the shell: where it opens', () => {
       } finally {
         await plain.unmount();
       }
-      reloadForRetry(true);
+      reloadForRetry(PROLOGUE_SORROWGATE_HEADER.id);
       const linked = await shell(`?mission=${PROLOGUE_SORROWGATE_HEADER.id}`);
       try {
         assert.equal(linked.shows(TITLE), false, 'a direct link still goes into the water');
@@ -360,6 +360,60 @@ describe('the shell: the world behind the board', () => {
       assert.equal(view.allByClass('campaign-slot').length, 0);
     } finally {
       await view.unmount();
+    }
+  });
+
+  it('reopens the board on the slot left from, with focus, by every way back', async () => {
+    // docs/ui-ux.md §14, "Keyboard": an entry lands on the first slot that
+    // opens and takes no focus; a return lands on its slot, lit, and takes it.
+    const lit = () => view.byClass('campaign-chart-title').props.children as string;
+    const focused = () => view.focused()?.name ?? '';
+    // The first Ledger slot, which the board titles without its campaign's name.
+    const ledger = { id: 'ledger-asset-recovery', name: 'Asset Recovery' };
+    const prologue = PROLOGUE_SORROWGATE_HEADER.name;
+    const view = await shell();
+    try {
+      await click(view, 'Campaign');
+      assert.equal(lit(), prologue, 'an entry lands on the first slot that opens');
+      assert.equal(focused().includes(prologue), false, 'and takes no focus');
+
+      // A briefing's Back, from the first Ledger slot.
+      const slot = view.allByClass('campaign-slot').at(1)!;
+      await view.act(() => {
+        (slot.props as { onClick?: () => void }).onClick?.();
+      });
+      await click(view, 'Back');
+      assert.equal(lit(), ledger.name, "the briefing's Back lands on its slot");
+      assert.ok(focused().includes(ledger.name), `focus on it, not ${focused()}`);
+
+      // Return to port, from the prologue's board launch. A travel's Cancel
+      // and a failure's Back call the same way back; the shell's travel ends
+      // before either can be pressed here, so the GPU drive presses them.
+      await click(view, 'Back');
+      await boardBriefing(view);
+      await click(view, 'Descend');
+      await until(view, () => inMatch(view), 'the join');
+      await click(view, 'Return to port');
+      assert.equal(lit(), prologue);
+      assert.ok(focused().includes(prologue), `Return to port focuses it, not ${focused()}`);
+    } finally {
+      await view.unmount();
+    }
+
+    // A load failure's Retry reloads onto the slot its launch left from.
+    const g = globalThis as unknown as { window: { location: { reload?: () => void } } };
+    g.window.location.reload = () => undefined;
+    try {
+      reloadForRetry(ledger.id);
+      const reopened = await shell();
+      try {
+        assert.equal(reopened.byClass('campaign-chart-title').props.children, ledger.name);
+        assert.ok((reopened.focused()?.name ?? '').includes(ledger.name));
+      } finally {
+        await reopened.unmount();
+      }
+    } finally {
+      delete g.window.location.reload;
     }
   });
 

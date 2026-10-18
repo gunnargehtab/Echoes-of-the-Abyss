@@ -294,6 +294,20 @@ export function initialFocus(board: CampaignBoard): BoardFocus {
   return { column: 0, row: 0 };
 }
 
+/**
+ * Where coming back to the board lands: the slot of the mission the player
+ * left from (§14, "Keyboard"). Null when no slot carries it, so the board
+ * lands as an entry does.
+ */
+export function returnFocus(board: CampaignBoard, missionId: string): BoardFocus | null {
+  if (board.prologue.missionId === missionId) return { column: 0, row: 0 };
+  for (let column = 0; column <= LAST_COLUMN; column++) {
+    const row = board.columns[column].slots.findIndex((slot) => slot.missionId === missionId);
+    if (row !== -1) return { column, row: row + 1 };
+  }
+  return null;
+}
+
 const clamp = (value: number, high: number): number => Math.min(Math.max(value, 0), high);
 
 /**

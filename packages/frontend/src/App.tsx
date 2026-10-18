@@ -44,7 +44,7 @@ import {
   onTravel,
   readyToJoin,
   reloadForRetry,
-  reopensBoard,
+  reopenedFrom,
   startTravel,
   travelsFirst,
   type TravelState,
@@ -96,7 +96,12 @@ type Screen =
   | { kind: 'title' }
   | { kind: 'setup'; mode: SetupMode }
   | { kind: 'browse' }
-  | { kind: 'campaign' }
+  /**
+   * The board. `from` names the mission whose slot the player is coming back
+   * from, so the board reopens there with focus; absent for an entry from the
+   * title (docs/ui-ux.md §14, "Keyboard").
+   */
+  | { kind: 'campaign'; from?: string }
   | {
       kind: 'briefing';
       missionId: string;
@@ -184,14 +189,16 @@ function initialScreen(): Screen {
     return { kind: 'match', name: loadSettings().profileName, mapId, resume: true };
   }
   // A load failure's Retry reloaded the page to reopen the board (§7.6).
-  if (reopensBoard()) return { kind: 'campaign' };
+  const reopened = reopenedFrom();
+  if (reopened !== null) return { kind: 'campaign', from: reopened };
   return { kind: 'title' };
 }
 
 function App() {
   const [screen, setScreen] = useState<Screen>(initialScreen);
   const toTitle = () => setScreen({ kind: 'title' });
-  const toCampaign = () => setScreen({ kind: 'campaign' });
+  const toCampaign = (from?: string) =>
+    setScreen(from === undefined ? { kind: 'campaign' } : { kind: 'campaign', from });
   const toRecord = () => setScreen({ kind: 'record' });
   // The port has music; the ocean has its own mix (#194). Held for exactly as
   // long as the shell is on screen, so the shell's AudioContext is closed
@@ -353,13 +360,14 @@ function App() {
           onSelect={(missionId) => setScreen({ kind: 'briefing', missionId, from: 'campaign' })}
           onRecord={toRecord}
           onBack={toTitle}
+          returnFrom={screen.from}
         />
       )}
       {screen.kind === 'record' && (
         <RecordScreen
           hasPlayed={hasPlayed}
           conclusions={witnessedConclusions()}
-          onBack={toCampaign}
+          onBack={() => toCampaign()}
         />
       )}
       {screen.kind === 'briefing' && (
@@ -387,7 +395,7 @@ function App() {
               missionId,
             });
           }}
-          onBack={screen.from === 'campaign' ? toCampaign : toTitle}
+          onBack={screen.from === 'campaign' ? () => toCampaign(screen.missionId) : toTitle}
         />
       )}
       {screen.kind === 'travel' && (
@@ -396,11 +404,11 @@ function App() {
           skipped={screen.skipped}
           settled={screen.settled}
           loadFailed={screen.loadFailed}
-          onRetry={() => reloadForRetry(true)}
+          onRetry={() => reloadForRetry(screen.missionId)}
           onSkip={() => setScreen((current) => onTravel(current, { skipped: true }))}
           // Back to the board with nothing joined; the camera travels back
           // under it (§7.6, "Cancel").
-          onCancel={toCampaign}
+          onCancel={() => toCampaign(screen.missionId)}
         />
       )}
       {screen.kind === 'settings' && (
@@ -412,8 +420,8 @@ function App() {
       {screen.kind === 'credits' && <CreditsScreen onBack={toTitle} />}
       {screen.kind === 'match' && (
         <MatchBoundary
-          onRetry={() => reloadForRetry(screen.board === true)}
-          onBack={screen.board === true ? toCampaign : toTitle}
+          onRetry={() => reloadForRetry(screen.board === true ? screen.missionId : undefined)}
+          onBack={screen.board === true ? () => toCampaign(screen.missionId) : toTitle}
         >
           <Suspense
             fallback={
@@ -439,7 +447,7 @@ function App() {
               // The world travels back only where it can be drawn; without it
               // the board stands alone, as it was left.
               returnsToBoard={screen.board === true && !worldFailed}
-              onExit={screen.board === true ? toCampaign : toTitle}
+              onExit={screen.board === true ? () => toCampaign(screen.missionId) : toTitle}
               onRecord={toRecord}
             />
           </Suspense>

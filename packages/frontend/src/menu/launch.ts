@@ -18,10 +18,14 @@ import { worldRegionForMission } from '@echoes/shared';
  */
 const REOPEN_KEY = 'echoes.reopen';
 
-/** Reload for a load failure's Retry; a board launch reopens on the board. */
-export function reloadForRetry(board: boolean): void {
+/**
+ * Reload for a load failure's Retry. A board launch names its mission, so the
+ * board reopens on that slot (docs/ui-ux.md §14, "Keyboard"); any other launch
+ * names none.
+ */
+export function reloadForRetry(board: string | undefined): void {
   try {
-    if (board) window.sessionStorage.setItem(REOPEN_KEY, 'board');
+    if (board !== undefined) window.sessionStorage.setItem(REOPEN_KEY, board);
     else window.sessionStorage.removeItem(REOPEN_KEY);
   } catch {
     // Storage refused: the reload opens on the title, which is still a way back.
@@ -30,15 +34,15 @@ export function reloadForRetry(board: boolean): void {
 }
 
 /**
- * Whether this page was reloaded to reopen the board. Read, not taken:
- * development's StrictMode runs the shell's initial state twice, so the note
- * is forgotten after mount (`forgetReopen`).
+ * The mission whose slot this page was reloaded to reopen the board on, if
+ * any. Read, not taken: development's StrictMode runs the shell's initial state
+ * twice, so the note is forgotten after mount (`forgetReopen`).
  */
-export function reopensBoard(): boolean {
+export function reopenedFrom(): string | null {
   try {
-    return window.sessionStorage.getItem(REOPEN_KEY) === 'board';
+    return window.sessionStorage.getItem(REOPEN_KEY);
   } catch {
-    return false;
+    return null;
   }
 }
 
