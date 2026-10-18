@@ -4689,7 +4689,7 @@ export function canHatches(root, { collar, door, rim, grey, rust }, opts) {
  * of newer plate stood on a can's crown and sunk into it so its rim meets
  * the shoulder plates either side, the dome a hemisphere of hull black
  * pressed to `squash` on it, `ribs` half-rings of older plate over the
- * dome a turn apart (`ribbedDome` above draws a structure's the same way),
+ * dome a turn apart with their feet on the skirt's rim,
  * a ring of `rivets` boxes round the skirt's upper rim, and on the dome's
  * crown the lit boss, a disc facing straight up — the chart's one upward
  * emitter on a hull that idles at SIG 14, and not the dome, which at this
@@ -4715,10 +4715,16 @@ export function listeningTurret(root, { grey, black, rust, lampM }, opts) {
     [0, 0, 0],
     [1, squash, 1]
   );
-  const turn = rule.round(r + ribs.t);
+  // The rib's ring is drawn at the dome's own radius, not pushed out by
+  // the dome's sag as a structure's ribs are (`ribbedDome`): its polygon
+  // then lies on the dome's meridian polygon — both count the rule's at
+  // this radius, both start at the horizontal — so the tube stands half
+  // proud all the way over, and its feet, `r ± t` at the skirt's top, land
+  // on the skirt's plates in every bearing. Pushed out by the sag they
+  // cleared the skirt's apothem by 0.06 m on the rib along the keel
+  // (#1438 review).
   const tubular = rule.round(r + ribs.t, Math.PI);
-  const sag = (r + ribs.t) * (1 - Math.cos(Math.PI / turn));
-  const rib = new THREE.TorusGeometry(r + sag, ribs.t, rule.round(ribs.t), tubular, Math.PI);
+  const rib = new THREE.TorusGeometry(r, ribs.t, rule.round(ribs.t), tubular, Math.PI);
   for (let i = 0; i < ribs.count; i++)
     add(root, `dome_rib_${i}`, rib, rust, [sx, top, sz], [0, (i * Math.PI) / ribs.count, 0], [1, squash, 1]);
   // The rivets sit on the skirt's plates, an apothem out, each turned to

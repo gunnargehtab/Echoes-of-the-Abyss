@@ -59,11 +59,12 @@
  *   radius 9.5 against the end cans' 6.5, two hatches a can, and the whole
  *   belly reads as one grey mass between two black ends. The hoops are the
  *   block's "ribbed", the Klaxon's way.
- * - **Where the hatches sit.** 2.5 m below the axis on the hold cans at
+ * - **Where the hatches sit.** 1.2 m below the axis on the hold cans at
  *   x 20 (starboard), 6 (port), −6 (starboard), −20 (port): the normal
- *   there points outboard and 15° down, each collar sunk 1.2 m into its
- *   can and standing 1.8 m proud, so the rims clear the hoops at x ±13 by
- *   3.7 m and each other by 10.
+ *   there points outboard and 7° down, each collar sunk 1.2 m into its
+ *   can and standing 1.8 m proud, so a rim's edge at x 16.7 clears the
+ *   hoop's outer face at 13.35 by 3.4 m, and the rims clear each other
+ *   by 10.
  * - **The deck walk rides the hoops.** A hoop stands 0.35 m proud of the
  *   crown, so the walk is seated on the hoops and floats that much over
  *   the crown plate between them — a deck on its frames — and the pipes
@@ -88,7 +89,7 @@
  * same lit area reads nearly twice as bright here. 146 parts, 3,894
  * triangles; the file spans x −50 .. 50, y −11.8 .. 13.5, z −12 .. 12.
  *
- * The sweep (contacts.mjs) reads 197 pairs and every one a mount: each
+ * The sweep (contacts.mjs) reads 200 pairs and every one a mount: each
  * fitting on its plate, the hatch parts on their collars, the collars and
  * the tanks set into the hold cans and the caps they cross at x 0, the end
  * cans into the hold caps as the Chorister's are, the walk and both pipes
@@ -97,7 +98,12 @@
  * 0.3 m into the stern cap, the bow block the same into the bow cap. A
  * first pass put the hatches 2.5 m below the axis and the tanks' seeds at
  * −7.5, and the tanks passed through three hatches' collars; the hatches
- * went up to −1.2 and the seeds down to −8.2.
+ * went up to −1.2 and the seeds down to −8.2. The review found three of
+ * the four dome ribs' feet off the skirt's rim — the ring was pushed out
+ * by the dome's sag, 0.15 m, and the rib along the keel ended 0.06 m
+ * outboard of the skirt's apothem — so the ring is drawn at the dome's own
+ * radius now and the tube at 0.4 (`listeningTurret`): every rib meets the
+ * skirt, the dome, its neighbours and the boss on their crossing.
  *
  * FACETS. Every ring asks the Klaxon's rule (bathyarch.mjs `cut`): the
  * hold cans, hoops, duct and dome ribs fourteen and twelve, the bow and
@@ -194,7 +200,7 @@ bathyarch.keelTanks(root, { grey, rust }, {
 });
 
 // The four cohort bays: a pressure hatch a station on the hold cans,
-// alternating sides from starboard, 2.5 m below the axis (the header says
+// alternating sides from starboard, 1.2 m below the axis (the header says
 // why there). Grey collar, dark door, lit rim, grey wheel on a rust hub,
 // four rust lugs.
 bathyarch.canHatches(root, { collar: grey, door: unlit, rim: lampM, grey, rust }, {
@@ -222,7 +228,7 @@ bathyarch.listeningTurret(root, { grey, black, rust, lampM }, {
   r: 4.2,
   skirt: { h: 4, sink: 1.5 },
   squash: 0.65,
-  ribs: { count: 4, t: 0.3 },
+  ribs: { count: 4, t: 0.4 },
   rivets: { size: [0.6, 0.4, 0.6], below: 0.5, sink: 0.1 },
   crown: { r: 1.4, h: 0.4, sink: -0.15 },
   cut,
