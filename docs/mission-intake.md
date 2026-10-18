@@ -51,8 +51,8 @@ is the entire neutrality argument: a mission that told the player *reassign one*
 mission that had taken a side, because it would have made the act mandatory and therefore
 correct. The mission asks for nothing and records what happened.
 
-**Where this ground is, and why it is not Sufficiency.** The attending galleries stand at
-2,750–3,400 m and the Ninth's axis falls past 4,000 m — water no animal in the bible reaches
+**Where this ground is, and why it is not Sufficiency.** Sufficiency stands at 2,750–3,400 m,
+its attending galleries open on the axis at 3,000, and the Ninth's axis falls past 4,000 m — water no animal in the bible reaches
 ([bestiary.md](bestiary.md) §4; [mission-attendance.md](mission-attendance.md) §1). A cohort
 economy is fauna, and fauna stop at 2,700 m. So the banding ground is *above* the city, on the
 upper Ninth at 1,500–2,400 m, which is also exactly where the year's band is: the doorway between
