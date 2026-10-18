@@ -2,17 +2,22 @@
  * The board's frame and a launch's travel — docs/world-map.md §7.6 (#1462).
  *
  * The campaign board holds one camera frame over the mid-Rift, and launching
- * the prologue from it moves that camera to the mission's opening frame before
- * any room is joined. Both frames are in the placed region's own metres, the
- * view's, so the travel ends exactly where the session's first ground frames
- * the map (`openingFrame`) and the join is not a cut.
+ * the prologue from it moves that camera home — onto the spawn, at the dolly a
+ * commander's first sight of their force opens at — before any room is joined.
+ * A travelled entry keeps that frame through the join (`holdOpeningFrame`), so
+ * the session begins where the travel ended. Both frames are in the placed
+ * region's own metres, the view's.
  *
- * No three.js here beyond the view's types: the arithmetic is tested alone,
- * and the view is driven through the two members a travel needs.
+ * And what the world itself must fetch for the region before the join: §7.6's
+ * "public ground and assets" (`prepareRegion`).
  */
 
-import { WORLD, type WorldRegion } from '@echoes/shared';
-import { HOME_PITCH_DEG, openingFrame, type CameraFrame } from './PerspectiveView.ts';
+import { PLACED_GROUND, RIFT_PLACES, WORLD, paintGround, type WorldRegion } from '@echoes/shared';
+import { HOME_DOLLY_M, HOME_PITCH_DEG, type CameraFrame } from './PerspectiveView.ts';
+import { placeProps, propSpec } from './environment.ts';
+import { whenEnvTemplatesReady } from './environmentModels.ts';
+import { overviewSkin } from './worldOverview.ts';
+import type { WorldLook } from './tutorialLook.ts';
 
 /**
  * §7.6 step 1: north, the home pitch, `WORLD.BOARD_DOLLY_M` back from the
@@ -28,9 +33,51 @@ export function boardFrame(region: WorldRegion): CameraFrame {
   };
 }
 
-/** §7.6 step 2's destination: the region's map framed whole, as every entry opens. */
-export function arrivalFrame(region: WorldRegion): CameraFrame {
-  return openingFrame(region.widthM, region.heightM);
+/**
+ * §7.6 step 2's destination: home, which is the spawn — §7.2's anchor of the
+ * same name as the region, public as the whole table is — north, at the home
+ * pitch and dolly. Undefined for a region the anchor table does not place.
+ */
+export function arrivalFrame(region: WorldRegion): CameraFrame | undefined {
+  const spawn = RIFT_PLACES.find((place) => place.id === region.id);
+  if (spawn === undefined) return undefined;
+  return {
+    xM: spawn.x - region.x,
+    yM: spawn.y - region.y,
+    distanceM: HOME_DOLLY_M,
+    yawDeg: 0,
+    pitchDeg: HOME_PITCH_DEG,
+  };
+}
+
+/**
+ * What the world fetches for a region before its room is joined (§7.6 step
+ * 2, "the region's public ground and assets"): the overview's skin, and the
+ * models of every prop the region's baseline ground stands, in the mission's
+ * look. Public, all of it — the map's ground is the atlas's — and settled
+ * either way: a piece that fails is done, so a launch is never held on it.
+ */
+export function prepareRegion(region: WorldRegion, look: WorldLook): Promise<void> {
+  const ground = PLACED_GROUND[region.mapId];
+  const props: { slug: string; footprintM: number; swayM: number }[] = [];
+  if (ground !== undefined) {
+    const cells = paintGround(ground);
+    const placements = placeProps({
+      cols: cells.cols,
+      rows: cells.rows,
+      cellM: cells.cellM,
+      biomes: Array.from(cells.biomes),
+      floor: Array.from(cells.floor),
+      ceiling: Array.from(cells.ceiling),
+    });
+    for (const slug of new Set(placements.map((placement) => placement.slug))) {
+      const spec = propSpec(slug);
+      if (spec !== undefined) props.push({ slug, footprintM: spec.footprintM, swayM: spec.swayM });
+    }
+  }
+  return Promise.allSettled([overviewSkin(), whenEnvTemplatesReady(props, look)]).then(
+    () => undefined
+  );
 }
 
 /** The cubic ease both ends of a travel settle on, 3t² − 2t³. */

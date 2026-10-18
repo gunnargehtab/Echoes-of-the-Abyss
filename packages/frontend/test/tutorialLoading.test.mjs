@@ -211,6 +211,35 @@ describe('pending prop delivery', () => {
     );
     assert.equal(pending.length, 3);
   });
+
+  it("tells a launch's preparation when each load ends, either way (world-map §7.6)", async () => {
+    controlLoads();
+    let ready = false;
+    void env
+      .whenEnvTemplatesReady(
+        [
+          { slug: 'env-kelp-cluster', footprintM: 30, swayM: 2 },
+          { slug: 'env-open-boulder', footprintM: 12, swayM: 0 },
+        ],
+        'sorrowgate'
+      )
+      .then(() => (ready = true));
+    await until(() => pending.length === 2);
+    pending[0].resolve(source());
+    await delay(30);
+    assert.equal(ready, false, 'one model is still loading');
+    mock.method(console, 'warn', () => {});
+    pending[1].reject(new Error('controlled decode failure'));
+    await until(() => ready);
+    // A load a reset forgets is not waited on for good.
+    let forgotten = false;
+    void env
+      .whenEnvTemplatesReady([{ slug: 'env-open-boulder', footprintM: 12, swayM: 0 }], 'standard')
+      .then(() => (forgotten = true));
+    await until(() => pending.length === 3);
+    env.resetEnvironmentModels();
+    await until(() => forgotten);
+  });
 });
 
 describe('seated stones', () => {

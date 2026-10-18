@@ -15,7 +15,7 @@ export interface TravelState {
   missionId: string;
   /** The player pressed Skip: the camera is cut to the end. */
   skipped: boolean;
-  /** The camera stands on the mission's opening frame. */
+  /** The camera is home, and the region's public ground and assets are fetched. */
   settled: boolean;
   /** The match's own code has loaded. */
   prepared: boolean;
@@ -36,10 +36,28 @@ export function startTravel(missionId: string): TravelState {
 }
 
 /**
- * Whether the room may be joined now (§7.6 step 3): the match's code is here
- * and the camera has arrived — or the world could not be drawn at all, so
- * there was no travel to wait on.
+ * Whether the room may be joined now (§7.6 step 3): the match's code is here,
+ * and the world has arrived and fetched its part — or the world could not be
+ * drawn at all, so there was no travel and nothing of it to wait on.
  */
 export function readyToJoin(travel: TravelState, worldFailed: boolean): boolean {
   return travel.prepared && (travel.settled || worldFailed);
+}
+
+/**
+ * Apply a travel's own news — Skip pressed, the camera arrived, the match
+ * loaded — to whatever screen is current, and to a travel only. A screen the
+ * player has already left by Cancel is returned as it is, so news that lands
+ * after a Cancel joins nothing. `missionId` narrows it to one travel; news
+ * from a launch that was cancelled and relaunched elsewhere is dropped.
+ */
+export function onTravel<S extends { kind: string }>(
+  screen: S | TravelState,
+  change: Partial<Pick<TravelState, 'skipped' | 'settled' | 'prepared'>>,
+  missionId?: string
+): S | TravelState {
+  if (screen.kind !== 'travel') return screen;
+  const travel = screen as TravelState;
+  if (missionId !== undefined && travel.missionId !== missionId) return screen;
+  return { ...travel, ...change };
 }

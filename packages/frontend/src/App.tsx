@@ -37,7 +37,13 @@ import { ControlsScreen } from './menu/ControlsScreen.tsx';
 import { SettingsScreen } from './menu/SettingsScreen.tsx';
 import { TitleScreen } from './menu/TitleScreen.tsx';
 import { TravelScreen } from './menu/TravelScreen.tsx';
-import { readyToJoin, startTravel, travelsFirst, type TravelState } from './menu/launch.ts';
+import {
+  onTravel,
+  readyToJoin,
+  startTravel,
+  travelsFirst,
+  type TravelState,
+} from './menu/launch.ts';
 import { storedMissionId } from './net/GameClient.ts';
 import { hasPlayed, seenScenes, witnessedConclusions } from './progression/store.ts';
 import { loadSettings } from './settings/store.ts';
@@ -124,6 +130,8 @@ type Screen =
        */
       roomId?: string;
       create?: 'public' | 'private';
+      /** Reached by a launch's travel, so the camera is already home (§7.6). */
+      travelled?: true;
     };
 
 /**
@@ -189,6 +197,8 @@ function App() {
       mapId: mapForMission(screen.missionId),
       resume: false,
       missionId: screen.missionId,
+      // Only a travel that drew: with no world the camera never moved.
+      ...(screen.settled && !worldFailed ? { travelled: true as const } : {}),
     });
   }, [screen, worldFailed]);
 
@@ -209,7 +219,7 @@ function App() {
         <WorldBoundary onFail={() => setWorldFailed(true)}>
           {/* No fallback: the board is drawn at once, and the world arrives
               behind it when its code does. */}
-          <Suspense fallback={null}>
+          <Suspense fallback={<div className="world-backdrop" aria-hidden="true" />}>
             <WorldBackdrop
               target={
                 screen.kind === 'travel'
@@ -217,11 +227,7 @@ function App() {
                   : { kind: 'board' }
               }
               skip={screen.kind === 'travel' && screen.skipped}
-              onSettled={() =>
-                setScreen((current) =>
-                  current.kind === 'travel' ? { ...current, settled: true } : current
-                )
-              }
+              onSettled={() => setScreen((current) => onTravel(current, { settled: true }))}
             />
           </Suspense>
         </WorldBoundary>
@@ -334,11 +340,7 @@ function App() {
             if (travelsFirst(screen.from, missionId)) {
               setScreen(startTravel(missionId));
               const prepared = () =>
-                setScreen((current) =>
-                  current.kind === 'travel' && current.missionId === missionId
-                    ? { ...current, prepared: true }
-                    : current
-                );
+                setScreen((current) => onTravel(current, { prepared: true }, missionId));
               // A failed fetch is the lazy screen's to report, as it would
               // be without a travel: the join is not held on it.
               loadGameCanvas().then(prepared, prepared);
@@ -359,11 +361,8 @@ function App() {
         <TravelScreen
           missionId={screen.missionId}
           skipped={screen.skipped}
-          onSkip={() =>
-            setScreen((current) =>
-              current.kind === 'travel' ? { ...current, skipped: true } : current
-            )
-          }
+          settled={screen.settled}
+          onSkip={() => setScreen((current) => onTravel(current, { skipped: true }))}
           // Back to the board with nothing joined; the camera travels back
           // under it (§7.6, "Cancel").
           onCancel={toCampaign}
@@ -380,7 +379,11 @@ function App() {
         <Suspense
           fallback={
             <div className="game-root">
-              <div className="game-overlay">
+              <div
+                className={
+                  screen.travelled === true ? 'game-overlay game-overlay-held' : 'game-overlay'
+                }
+              >
                 <h2>Listening…</h2>
               </div>
             </div>
@@ -393,6 +396,7 @@ function App() {
             roomId={screen.roomId}
             create={screen.create}
             resume={screen.resume}
+            travelled={screen.travelled === true}
             onExit={toTitle}
             onRecord={toRecord}
           />

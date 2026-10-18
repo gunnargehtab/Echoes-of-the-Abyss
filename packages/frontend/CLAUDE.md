@@ -45,11 +45,12 @@ Four rules hold over every test in `packages/frontend/test/`:
 
 Why there is no jsdom is at the foot of `packages/frontend/test/support/screen.ts`.
 
-Five production seams exist for these and have no other caller: an optional `Application`
+Six production seams exist for these and have no other caller: an optional `Application`
 on `EchoRenderer`, renderer/environment factories on `PerspectiveView.mount`, `Client` on `GameClient`,
 `harness` on `GameCanvas` — which *constructs* the other three, so a GPU-less boot
-without it stops at `mount()` — and `listRooms` on `BrowseScreen`. All default to the
-real thing; none is a feature.
+without it stops at `mount()` — `devices` on `WorldBackdrop`, the same factories for the
+board's world, and `listRooms` on `BrowseScreen`. All default to the real thing; none is a
+feature.
 
 Related: `CLAUDE.md` (the root file — the wire, import extensions, constants, CI) ·
 `docs/graphics-standards.md` (the gates anything visual clears, screenshot included) ·

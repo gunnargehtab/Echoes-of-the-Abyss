@@ -17,6 +17,7 @@ import {
   SEEDING_RADICALS_HEADER,
   SORROWGATE_REGION,
   WORLD,
+  WORLD_REGIONS,
   type WorldRegion,
 } from '@echoes/shared';
 import {
@@ -29,14 +30,24 @@ import {
   type StubElement,
 } from './support/headless.ts';
 import { saveSettings, loadSettings } from '../src/settings/store.ts';
-import { openingFrame, type CameraFrame } from '../src/game/PerspectiveView.ts';
+import { HOME_DOLLY_M, type CameraFrame } from '../src/game/PerspectiveView.ts';
 import { WorldBackdrop, type WorldBackdropProps } from '../src/game/WorldBackdrop.tsx';
 import { overviewDepthAtM, overviewGrid } from '../src/game/worldOverview.ts';
-import { arrivalFrame, boardFrame, Travel, travelFrame } from '../src/game/worldTravel.ts';
+import {
+  arrivalFrame,
+  boardFrame,
+  prepareRegion,
+  Travel,
+  travelFrame,
+} from '../src/game/worldTravel.ts';
+import { whenEnvTemplatesReady } from '../src/game/environmentModels.ts';
 import { worldView } from '../src/game/worldView.ts';
-import { readyToJoin, startTravel, travelsFirst } from '../src/menu/launch.ts';
+import { onTravel, readyToJoin, startTravel, travelsFirst } from '../src/menu/launch.ts';
 import { TravelScreen } from '../src/menu/TravelScreen.tsx';
 import { click, render } from './support/screen.ts';
+
+/** Where a travel to the prologue ends (§7.6 step 2). */
+const HOME = arrivalFrame(SORROWGATE_REGION)!;
 
 const near = (a: number, b: number, what: string, within = 1e-6) =>
   assert.ok(Math.abs(a - b) <= within, `${what}: ${a} against ${b}`);
@@ -72,23 +83,37 @@ describe('the board and the travel, as frames (§7.6)', () => {
     assert.equal(WORLD.TRAVEL_S, 2.5);
   });
 
-  it('ends a travel on the opening frame every entry opens on', () => {
-    const region: WorldRegion = SORROWGATE_REGION;
-    sameFrame(arrivalFrame(region), openingFrame(5_000, 4_000));
-    near(arrivalFrame(region).distanceM, 5_250, 'the map framed whole');
+  it('ends a travel home: on the spawn, at the dolly the first sight of the force opens at', () => {
+    // §7.2's anchor "Sorrowgate — the court, the flight's spawn at the arch",
+    // (20,050, 42,650) in the atlas, less the region's origin.
+    sameFrame(HOME, { xM: 2_550, yM: 2_150, distanceM: HOME_DOLLY_M, yawDeg: 0, pitchDeg: 55 });
+    assert.equal(HOME_DOLLY_M, 2_600);
+    const unplaced: WorldRegion = { ...SORROWGATE_REGION, id: 'nowhere' };
+    assert.equal(arrivalFrame(unplaced), undefined, 'a region the anchor table does not place');
+  });
+
+  it('places every region it travels to', () => {
+    for (const region of WORLD_REGIONS) {
+      const home = arrivalFrame(region);
+      assert.ok(home !== undefined, `${region.id} has an anchor of its name`);
+      assert.ok(
+        home.xM >= 0 && home.xM <= region.widthM && home.yM >= 0 && home.yM <= region.heightM,
+        `${region.id}'s home is on its map`
+      );
+    }
   });
 
   it('starts and ends exactly, eases between, and comes in evenly on the dolly', () => {
     const from = boardFrame(SORROWGATE_REGION);
-    const to = arrivalFrame(SORROWGATE_REGION);
+    const to = HOME;
     sameFrame(travelFrame(from, to, 0), from);
     sameFrame(travelFrame(from, to, 1), to);
     sameFrame(travelFrame(from, to, -1), from);
     sameFrame(travelFrame(from, to, 2), to);
     // Halfway in time is halfway in the dolly's logarithm.
-    near(travelFrame(from, to, 0.5).distanceM, Math.sqrt(24_000 * 5_250), 'midway', 1e-6);
+    near(travelFrame(from, to, 0.5).distanceM, Math.sqrt(24_000 * 2_600), 'midway', 1e-6);
     // Eased: the first tenth covers less than a tenth.
-    assert.ok(travelFrame(from, to, 0.1).distanceM > 24_000 * (5_250 / 24_000) ** 0.1);
+    assert.ok(travelFrame(from, to, 0.1).distanceM > 24_000 * (2_600 / 24_000) ** 0.1);
   });
 
   it('turns the shorter way round', () => {
@@ -98,7 +123,7 @@ describe('the board and the travel, as frames (§7.6)', () => {
   });
 
   it('cuts under a zero duration, and on a skip', () => {
-    const to = arrivalFrame(SORROWGATE_REGION);
+    const to = HOME;
     const cut = camera(boardFrame(SORROWGATE_REGION));
     assert.equal(new Travel(cut, to, 0).step(1_000), true);
     sameFrame(cut.frame, to);
@@ -113,7 +138,7 @@ describe('the board and the travel, as frames (§7.6)', () => {
   });
 
   it('arrives at 2.5 s and not before', () => {
-    const to = arrivalFrame(SORROWGATE_REGION);
+    const to = HOME;
     const moving = camera(boardFrame(SORROWGATE_REGION));
     const travel = new Travel(moving, to, WORLD.TRAVEL_S);
     assert.equal(travel.step(10_000), false);
@@ -182,6 +207,20 @@ async function mountBackdrop(
   return mounted;
 }
 
+/**
+ * Let real time run until the backdrop says it has arrived — the region's
+ * preparation runs on real timers (the overview's bake, the prop models'
+ * loads) while the travel runs on the stubbed clock.
+ */
+async function untilSettled(board: Mounted, count: number): Promise<void> {
+  for (let waited = 0; waited < 60_000 && board.settled < count; waited += 20) {
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+  }
+  assert.equal(board.settled, count, 'the backdrop said it had arrived');
+}
+
 /** Advance the clock and draw one frame. */
 async function frameAt(ms: number): Promise<void> {
   clock = ms;
@@ -237,8 +276,8 @@ describe('the world behind the board (§7.6)', () => {
       assert.equal(board.settled, 0, 'halfway is not there');
       assert.ok(view.frame.distanceM < WORLD.BOARD_DOLLY_M && view.frame.distanceM > 5_250);
       await frameAt(2_501);
-      assert.equal(board.settled, 1, 'arrived once');
-      sameFrame(view.frame, arrivalFrame(SORROWGATE_REGION), 1e-6);
+      sameFrame(view.frame, HOME, 1e-6);
+      await untilSettled(board, 1);
       await frameAt(4_000);
       assert.equal(board.settled, 1, 'and only once');
     } finally {
@@ -252,8 +291,8 @@ describe('the world behind the board (§7.6)', () => {
     try {
       await reduced.update({ target: PILOT });
       await frameAt(1);
-      assert.equal(reduced.settled, 1, 'a cut on the first frame');
-      sameFrame(worldView.current!.frame, arrivalFrame(SORROWGATE_REGION), 1e-6);
+      sameFrame(worldView.current!.frame, HOME, 1e-6);
+      await untilSettled(reduced, 1);
     } finally {
       await reduced.unmount();
     }
@@ -266,8 +305,8 @@ describe('the world behind the board (§7.6)', () => {
       await frameAt(500);
       assert.equal(skipped.settled, 0);
       await skipped.update({ skip: true });
-      assert.equal(skipped.settled, 1, 'Skip arrives at once');
-      sameFrame(worldView.current!.frame, arrivalFrame(SORROWGATE_REGION), 1e-6);
+      sameFrame(worldView.current!.frame, HOME, 1e-6);
+      await untilSettled(skipped, 1);
     } finally {
       await skipped.unmount();
     }
@@ -353,6 +392,7 @@ describe("the travel's bar (§7.6)", () => {
     const props = {
       missionId: PROLOGUE_SORROWGATE_HEADER.id,
       skipped: false,
+      settled: false,
       onSkip: () => void (skips += 1),
       onCancel: () => void (cancels += 1),
     };
@@ -360,6 +400,10 @@ describe("the travel's bar (§7.6)", () => {
     try {
       assert.ok(view.shows(PROLOGUE_SORROWGATE_HEADER.name));
       assert.ok(view.shows('1,500 m'), "the ground's depth, as the board's caption reads it");
+      assert.ok(view.shows('Descending'));
+      await view.update(createElement(TravelScreen, { ...props, settled: true }));
+      assert.ok(view.shows('Arriving'), 'arrived on its own, only the loading left');
+      await view.update(createElement(TravelScreen, props));
       await click(view, 'Skip');
       assert.equal(skips, 1);
       await click(view, 'Cancel');
@@ -376,5 +420,43 @@ describe("the travel's bar (§7.6)", () => {
     } finally {
       await view.unmount();
     }
+  });
+});
+
+describe("the region's preparation (§7.6 step 2)", () => {
+  // A hang is the failure this guards against, so it fails rather than stalls.
+  it(
+    "settles once the overview's skin and the props' models are fetched, or fail",
+    { timeout: 30_000 },
+    async () => {
+      // Under node no model loads, so every prop the baseline ground stands
+      // fails: a failure has to count as done, or a launch is held for good.
+      await prepareRegion(SORROWGATE_REGION, 'sorrowgate');
+      await whenEnvTemplatesReady(
+        [{ slug: 'env-no-such-prop', footprintM: 10, swayM: 0 }],
+        'sorrowgate'
+      );
+    }
+  );
+});
+
+describe("a travel's news, after the player has left it (§7.6, Cancel)", () => {
+  const PROLOGUE = PROLOGUE_SORROWGATE_HEADER.id;
+
+  it('joins nothing once Cancel has gone back to the board', () => {
+    const board = { kind: 'campaign' } as const;
+    for (const change of [{ prepared: true }, { settled: true }, { skipped: true }]) {
+      assert.equal(onTravel(board, change, PROLOGUE), board, JSON.stringify(change));
+      assert.equal(onTravel(board, change), board);
+    }
+  });
+
+  it("takes only its own launch's loading, and every travel's arrival and Skip", () => {
+    const travel = startTravel(PROLOGUE);
+    assert.equal(onTravel(travel, { prepared: true }, 'elsewhere'), travel, 'another launch');
+    const loaded = onTravel(travel, { prepared: true }, PROLOGUE);
+    assert.deepEqual(loaded, { ...travel, prepared: true });
+    const arrived = onTravel(loaded, { settled: true });
+    assert.equal(readyToJoin(arrived as typeof travel, false), true);
   });
 });

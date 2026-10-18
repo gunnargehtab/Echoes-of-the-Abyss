@@ -288,14 +288,59 @@ export function envTemplate(
         templates.set(key, template);
         waiting.delete(key);
         for (const notify of listeners) notify();
+        settle(key);
       },
       (error: unknown) => {
         if (started !== generation) return;
         waiting.delete(key);
         console.warn(`Environment model ${slug} failed; retaining terrain-only fallback.`, error);
+        // Not the layer's news — it keeps its terrain-only fallback with no
+        // rebuild — but a launch preparing the model stops waiting on it.
+        settle(key);
       }
     );
   return null;
+}
+
+/**
+ * Who is waiting for a load to end either way, by template key: a launch's
+ * preparation (`whenEnvTemplatesReady`). Apart from `waiting`, whose
+ * listeners hear only a template that loaded, so a failure still rebuilds no
+ * layer.
+ */
+const settling = new Map<string, Set<() => void>>();
+
+function settle(key: string): void {
+  const waiters = settling.get(key);
+  settling.delete(key);
+  for (const done of waiters ?? []) done();
+}
+
+/**
+ * Settles once every named prop's template has loaded or failed, in `look`:
+ * a launch's preparation (docs/world-map.md §7.6, `prepareRegion`). One the
+ * page already holds, or has no model for, is ready at once.
+ */
+export function whenEnvTemplatesReady(
+  props: readonly { slug: string; footprintM: number; swayM: number }[],
+  look: WorldLook
+): Promise<void> {
+  return Promise.all(
+    props.map(
+      (prop) =>
+        new Promise<void>((resolve) => {
+          const key = `${prop.slug}:${look}`;
+          envTemplate(prop.slug, prop.footprintM, prop.swayM, () => {}, look);
+          if (!waiting.has(key)) {
+            resolve();
+            return;
+          }
+          const waiters = settling.get(key) ?? new Set();
+          waiters.add(resolve);
+          settling.set(key, waiters);
+        })
+    )
+  ).then(() => undefined);
 }
 
 /** For tests and teardown: forget every cached template. */
@@ -303,4 +348,6 @@ export function resetEnvironmentModels(): void {
   generation++;
   templates.clear();
   waiting.clear();
+  // A load forgotten here never reports; nobody may wait on it for good.
+  for (const key of [...settling.keys()]) settle(key);
 }

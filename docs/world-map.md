@@ -253,7 +253,7 @@ The whole frame — overview, detail, water, props, the player's force, every pa
 A mission starts when its room is joined, so a camera flight after joining would spend the opening offscreen. The order is therefore fixed:
 
 1. **Overview.** The campaign board stays the control and the accessible reading ([ui-ux.md](ui-ux.md) §14); the atlas is drawn behind it. The briefing opens over the same world. The camera holds one frame there: north, 55°, from **24 km**, on the middle of Sorrowgate's map, so the drowned city is mid-frame with the plateaus' foot and the fields' slope at its edges. It does not move and takes no input, because the board is the control and nothing on the board moves. The world loads when the board opens, behind a board already drawn; on a device without WebGL the board is drawn alone, as it was before the world existed. A briefing the Tutorial door opens is drawn as it is today, off the world.
-2. **Travel.** Launching moves the camera to the mission's opening frame — its map framed whole, north, 55°, the frame every entry opens on — over **2.5 s** while the match's own code and the region's public assets load. Skippable at any point, and a cut under reduced motion. A bar names the destination as the board's caption does and carries two controls: **Skip**, focused, which cuts to the end, and **Cancel**, which Esc also presses.
+2. **Travel.** Launching moves the camera to the mission's home frame — focus on the spawn, north, 55°, at the **2,600 m** dolly a commander's first sight of their force opens at — over **2.5 s** while the match's own code and the region's public ground and assets load: the overview's skin and the models of the props the region's baseline ground stands. A piece that fails to load counts as loaded, so a launch is never held on it. The session then begins on that frame: a travelled entry is neither refitted to the map when its ground arrives nor recentred on the force when it is first seen. Skippable at any point, and a cut under reduced motion. A bar names the destination as the board's caption does and carries two controls: **Skip**, focused, which cuts to the end, and **Cancel**, which Esc also presses.
 3. **Join.** Only when travel and preparation have both finished is the room joined, once. Commands, HUD, input and audio attach when the first server state arrives; until then the frame is held and nothing can be ordered.
 4. **Return.** After the result, the session detaches — network, HUD, input and audio — the fade ramps out, and the camera travels back to the overview frame the player left: the same 2.5 s, a cut under reduced motion.
 
@@ -267,7 +267,7 @@ A mission starts when its room is joined, so a camera flight after joining would
 
 ### 7.8 The calls this section took
 
-The owner's calls: six on #1455, six on #1461, five on #1457, five on #1459, two on #1460 and three on #1462. Each was written with its options; the one taken is named.
+The owner's calls: six on #1455, six on #1461, five on #1457, five on #1459, two on #1460 and five on #1462. Each was written with its options; the one taken is named.
 
 **Anchors: Sorrowgate only (taken).** The alternatives were to pin every named place now from §1–§4's distances, or to scale Plate VII's coordinates. Scaling the plate would turn an illustration's compressions into geography, since its depth rail gives the shallows room. Pinning all of them now would decide ground no renderer has drawn yet. So only the pilot is pinned, and #1457 places the rest inside the region rectangles.
 
@@ -323,7 +323,9 @@ The owner's calls: six on #1455, six on #1461, five on #1457, five on #1459, two
 
 **Skip and Cancel as buttons (taken).** A bar with a caption and two real controls can be reached by keyboard and announced. Any key skipping, with Esc to cancel, would leave both controls invisible and unannounced.
 
-**Travel ends on the opening frame (taken).** Every entry since [#1458](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1458) opens on the map framed whole, so travel ending there lands where the session begins, with no cut. Ending on the spawn, as this section first said, would leave the session's first ground to refit the camera the moment it arrives.
+**Travel ends on the spawn, and the session keeps that frame (taken).** An entry with no travel cuts to its force at 2,600 m on the first state, about 320 m south of the spawn on Sorrowgate, and the force is not public before the join. So a travel ends on the spawn at that dolly, and a travelled entry skips both the map fit and the recentre: no cut, with the board's door opening 320 m north of the others. Gliding the 320 m to the force on the first state moves the camera in the first second of play. Keeping the recentre leaves a 320 m cut. Ending map-whole and suppressing the recentre opens the pilot away from home.
+
+**The join waits on the region's public ground and assets (taken).** The overview's skin and the models of the props the region's baseline ground stands load during the travel, each failure counting as done, beside the match's own code. Waiting on the code alone would join before the world had what it draws. Amending this section to code only would weaken the target to fit the code.
 
 ---
 

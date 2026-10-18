@@ -17,8 +17,8 @@
  * match keeps the view it builds for itself, and destroys it, exactly as it
  * did; and since a page should hold one GL context at a time, a match on that
  * path disposes the world view first rather than running two. The module is
- * imported only by `GameCanvas`, so three.js still loads with the match and
- * not with the shell.
+ * imported only by `GameCanvas` and the board's `WorldBackdrop`, both loaded
+ * on demand, so three.js still stays out of the title screen's bundle.
  */
 
 import { PROLOGUE_SORROWGATE_HEADER, worldRegionForMission } from '@echoes/shared';

@@ -20,13 +20,15 @@ import { groundFor, groundLine } from './riftChart.ts';
 
 export interface TravelScreenProps {
   missionId: string;
-  /** Whether the travel has been skipped and only the loading is left. */
+  /** Whether the travel has been skipped. */
   skipped: boolean;
+  /** Whether the camera has arrived and the region is prepared; only the join's loading is left. */
+  settled: boolean;
   onSkip(): void;
   onCancel(): void;
 }
 
-export function TravelScreen({ missionId, skipped, onSkip, onCancel }: TravelScreenProps) {
+export function TravelScreen({ missionId, skipped, settled, onSkip, onCancel }: TravelScreenProps) {
   const mission = missionHeaderById(missionId);
   const ground = mission === undefined ? undefined : groundFor(mission.mapId);
 
@@ -41,14 +43,23 @@ export function TravelScreen({ missionId, skipped, onSkip, onCancel }: TravelScr
   }, [onCancel]);
 
   return (
-    <div className="travel-screen" role="dialog" aria-label="Travel">
+    <div
+      className="travel-screen"
+      role="dialog"
+      aria-label="Travel"
+      aria-describedby="travel-caption"
+    >
       <div className="travel-bar">
-        {/* Announced once, as the travel starts, and again when only the
-            loading is left: the two states a player is waiting in. */}
-        <p className="travel-caption" role="status">
+        {/* The dialog's description, so moving focus onto Skip reads where
+            the travel is going; the state line is a live region, so the move
+            from travelling to only the loading being left is said when it
+            happens. */}
+        <p className="travel-caption" id="travel-caption">
           <span className="travel-destination">{mission?.name ?? missionId}</span>
           {ground !== undefined && <span className="travel-ground">{groundLine(ground)}</span>}
-          <span className="travel-state">{skipped ? 'Arriving' : 'Descending'}</span>
+          <span className="travel-state" role="status">
+            {settled || skipped ? 'Arriving' : 'Descending'}
+          </span>
         </p>
         <div className="travel-controls">
           {/* `aria-disabled`, not `disabled`, once skipped: the board's rule,

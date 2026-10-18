@@ -246,6 +246,13 @@ const VEIL_TABLE = ((): Float32Array => {
  */
 export const HOME_PITCH_DEG = 55;
 
+/**
+ * The dolly a commander's first sight of their own force opens at, centred on
+ * it (`EchoRenderer`, "a commander starts at home"), and the dolly a launch's
+ * travel ends at, on the spawn (docs/world-map.md §7.6). TUNABLE.
+ */
+export const HOME_DOLLY_M = 2_600;
+
 /** A camera stance: its focus on the ground in the view's metres, dolly and angles. */
 export interface CameraFrame {
   xM: number;
@@ -256,9 +263,9 @@ export interface CameraFrame {
 }
 
 /**
- * The opening shot of a map `widthM` by `heightM`: its middle, the whole of it
- * in frame, north, at the home pitch. Every entry opens here (`home`, then
- * `fitToMap`), and a travel ends here (docs/world-map.md §7.6).
+ * A map `widthM` by `heightM` framed whole: its middle, all of it in frame,
+ * north, at the home pitch — what `fitToMap` stands on, before the first sight
+ * of the force recentres on it.
  */
 export function openingFrame(widthM: number, heightM: number): CameraFrame {
   return {

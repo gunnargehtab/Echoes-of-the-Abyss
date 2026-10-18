@@ -89,6 +89,14 @@
   pointer-events: none;
 }
 
+/* A travelled entry's wait for its room (GameCanvas): the frame the travel
+   ended on stays in view, and the wait is said at the foot. */
+.game-overlay-held {
+  justify-content: flex-end;
+  padding-bottom: 3rem;
+  background: none;
+}
+
 .game-overlay h2 {
   margin: 0;
   font-family: var(--font-display);
@@ -3356,12 +3364,13 @@ button.objectives-row:hover {
    The world behind the board — docs/world-map.md §7.6 (#1462).
 
    The atlas is drawn behind the board, never in place of it. The backdrop
-   carries the menu's own gradient, so a board whose world has not arrived, or
-   cannot draw, is the board as it always was. Over the world each screen's
+   carries the menu's own gradient, and stands in while the world's code
+   loads, so a board whose world has not arrived, or cannot draw, is the board
+   as it always was. Over the world each screen's
    gradient becomes a wash of the same colours, enough to keep the board's
    type on the contrast it was set against, thin enough that the Rift reads
-   through it. Both alphas TUNABLE. Nothing here takes a pointer: the board is
-   the control. */
+   through it. All three alphas TUNABLE. Nothing here takes a pointer: the
+   board is the control. */
 .world-backdrop {
   position: absolute;
   inset: 0;
