@@ -190,6 +190,44 @@ export function apronMesh(
 }
 
 /**
+ * A whole grid as a mesh, every quad drawn: a region's detail where no
+ * session holds it (#1459), eased into the overview by the seam as the
+ * apron is. Vertices in the grid's own metres, from its north-west corner.
+ */
+export function detailMesh(
+  grid: HeightGrid,
+  seam?: SeamHeight
+): { positions: Float32Array; uvs: Float32Array; indices: Uint32Array } {
+  const { vertsX, vertsZ, stepM } = grid;
+  const positions = new Float32Array(vertsX * vertsZ * 3);
+  const uvs = new Float32Array(vertsX * vertsZ * 2);
+  for (let iz = 0; iz < vertsZ; iz++) {
+    for (let ix = 0; ix < vertsX; ix++) {
+      const i = iz * vertsX + ix;
+      const y = grid.y[i]!;
+      positions[i * 3] = ix * stepM;
+      positions[i * 3 + 1] = seam === undefined ? y : seam(ix * stepM, iz * stepM, y);
+      positions[i * 3 + 2] = iz * stepM;
+      uvs[i * 2] = (ix * stepM) / grid.widthM;
+      uvs[i * 2 + 1] = (iz * stepM) / grid.heightM;
+    }
+  }
+  const indices = new Uint32Array((vertsX - 1) * (vertsZ - 1) * 6);
+  let k = 0;
+  for (let iz = 0; iz < vertsZ - 1; iz++) {
+    for (let ix = 0; ix < vertsX - 1; ix++) {
+      const a = iz * vertsX + ix;
+      const b = a + 1;
+      const c = a + vertsX;
+      const d = c + 1;
+      indices.set([a, c, b, b, c, d], k);
+      k += 6;
+    }
+  }
+  return { positions, uvs, indices };
+}
+
+/**
  * Re-take the apron's heights over a vertex span of the padded grid, into its
  * position array in place, by the rule `apronMesh` built them with. A ground
  * delta patches the mission grid and then the padded one (`patchHeightGrid`

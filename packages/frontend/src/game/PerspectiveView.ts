@@ -38,6 +38,7 @@ import {
   DirectionalLight,
   DoubleSide,
   FogExp2,
+  Frustum,
   Group,
   LineBasicMaterial,
   LineLoop,
@@ -66,12 +67,15 @@ import {
   MODEL_LIGHTING,
   MOVEMENT,
   WORLD,
+  WORLD_REGIONS,
   clampToRect,
   detailGround,
   detailRect,
   exteriorDistanceM,
   statsFor,
   structureStatsFor,
+  surroundFor,
+  worldRegionById,
   type EchoSnapshot,
   type GroundCells,
   type PlanRect,
@@ -85,6 +89,7 @@ import { FACTION_PALETTE, sigColor, UI, VENT_EMBER } from './palette.ts';
 import { DepthCues } from './depthCues.ts';
 import {
   bakeSeabed,
+  bakeSeabedInSlices,
   emberFlicker,
   rebakeSeabedCells,
   seabedRange,
@@ -173,6 +178,7 @@ import { installGroundSurface, type WorldLook } from './tutorialLook.ts';
 import {
   apronFrame,
   apronMesh,
+  detailMesh,
   installApronShading,
   installOverviewShading,
   paddedTerrain,
@@ -191,6 +197,13 @@ import {
   seamHeightFor,
   seamWeight,
 } from './worldOverview.ts';
+import {
+  DETAIL_SLICE_CELLS,
+  DetailResidency,
+  type DetailCandidate,
+  projectedCellPx,
+  wantedDetail,
+} from './detailResidency.ts';
 import { DreamGroundCover } from './dreamGroundCover.ts';
 import { DreamLightHalos } from './dreamLightHalos.ts';
 import { swayAt, type SwayOffset } from './cameraSway.ts';
@@ -334,6 +347,10 @@ const RAY_TMP = new Raycaster();
 const NDC_TMP = new Vector2();
 const LOOK_TMP = new Vector3();
 const DIR_TMP = new Vector3();
+/** The frame's view volume and a region's box, for the detail's choice (`syncDetail`). */
+const FRUSTUM_TMP = new Frustum();
+const FRUSTUM_MATRIX_TMP = new Matrix4();
+const BOX_TMP = new Box3();
 const SWAY_TMP: SwayOffset = { right: 0, up: 0 };
 const SWAY_RIGHT = new Vector3();
 const SWAY_UP = new Vector3();
@@ -489,6 +506,21 @@ function glRenderer(): WebGLRenderer {
   return new WebGLRenderer({ antialias: true, stencil: true, powerPreference: 'high-performance' });
 }
 
+/**
+ * A placed region's detail drawn where no session holds it (#1459,
+ * `PerspectiveView.loadRegionDetail`): its mesh and the ground it stands for,
+ * so a projection or an eye over it reads what is drawn.
+ */
+interface RegionDetail {
+  mesh: Mesh;
+  cells: DataTexture;
+  terrain: TerrainPayload;
+  seed: number;
+  rockTopM: number;
+  /** Its detail rectangle in this view's scene metres. */
+  rect: PlanRect;
+}
+
 export class PerspectiveView {
   private renderer: WebGLRenderer | null = null;
   private readonly scene = new Scene();
@@ -575,6 +607,15 @@ export class PerspectiveView {
   /** The overview's skin and whether it has landed, as the apron's seam band reads them. */
   private readonly seamMap: { value: CanvasTexture | null } = { value: null };
   private readonly seamOn = { value: 0 };
+  /**
+   * Every other placed region's detail this view may draw (§7.5): held by
+   * projected size, two regions at most with the session's own among them,
+   * each built by a request that can be cancelled (detailResidency.ts). Null
+   * for a mission drawn alone.
+   */
+  private readonly residency: DetailResidency<RegionDetail> | null;
+  /** The placed regions with authored ground: the residency's candidates. */
+  private readonly detailRegions: readonly WorldRegion[];
   /**
    * §7.4's ramp: how far the border fade has come in, and where it is going.
    * In once a session's first state arrives, out when the session lets go; the
@@ -840,6 +881,15 @@ export class PerspectiveView {
     // Painted once for the view's life: public ground, the same every
     // session, which a live ground delta is pasted over and never written to.
     this.surround = worldRegion === null ? null : (detailGround(worldRegion) ?? null);
+    this.detailRegions =
+      worldRegion === null ? [] : WORLD_REGIONS.filter((r) => surroundFor(r) !== undefined);
+    this.residency =
+      worldRegion === null
+        ? null
+        : new DetailResidency(
+            (id, signal) => this.loadRegionDetail(id, signal),
+            (_id, detail) => this.releaseRegionDetail(detail)
+          );
     // Sorrowgate keeps its own mission surface (docs/visual-reboot.md §5).
     this.seabedDetail = SEABED_DETAIL_ON && look === 'standard';
     this.environment = new EnvironmentLayer(look, this.seabedDetail);
@@ -1194,6 +1244,7 @@ export class PerspectiveView {
   destroy(): void {
     this.setActive(false);
     this.disposeApron();
+    this.residency?.dispose();
     this.disposeOverview();
     document.removeEventListener('visibilitychange', this.onVisibility);
     this.resizeObserver?.disconnect();
@@ -2420,14 +2471,23 @@ export class PerspectiveView {
   /**
    * Cut the drawn detail out of the overview, so no surface overlaps another
    * (§7.3, "Seam"): the session's detail rectangle once its ground is drawn,
-   * nothing before. One index buffer, rewritten in place and drawn to the
-   * kept length, so a cut leaves no buffer behind; only a change re-cuts.
+   * and every other region's whose detail is drawn (`syncDetail`). One index
+   * buffer, rewritten in place and drawn to the kept length, so a cut leaves
+   * no buffer behind; only a change re-cuts.
    */
   private cutOverview(): void {
     const overview = this.overview;
     const region = this.worldRegion;
     if (overview === null || region === null) return;
     const holes = this.terrainMesh !== null ? [detailRect(region)] : [];
+    for (const detail of this.drawnDetails()) {
+      holes.push({
+        x: detail.rect.x + region.x,
+        y: detail.rect.y + region.y,
+        widthM: detail.rect.widthM,
+        heightM: detail.rect.heightM,
+      });
+    }
     const key = JSON.stringify(holes);
     if (key === overview.holes) return;
     const geometry = overview.mesh.geometry;
@@ -2435,6 +2495,172 @@ export class PerspectiveView {
     geometry.setDrawRange(0, overviewIndices(overviewGrid(), holes, index.array as Uint32Array));
     index.needsUpdate = true;
     overview.holes = key;
+  }
+
+  /** The other regions' detail drawn this frame (`syncDetail`). */
+  private drawnDetails(): RegionDetail[] {
+    const residency = this.residency;
+    if (residency === null) return [];
+    return residency.drawn().map((id) => residency.get(id)!);
+  }
+
+  /**
+   * Choose which other regions are drawn in detail this frame (§7.5,
+   * detailResidency.ts), and show them: every placed region but the
+   * session's, by how wide one of its overview cells projects at its nearest
+   * point, and whether its box is in view. Only while the overview is drawn:
+   * detail is cut into it, so none is wanted before its skin lands or at full
+   * strength, where all of it would be the backdrop's colour. A region let go
+   * is hidden and kept until a third would make it one too many. The overview
+   * is then cut where detail is drawn.
+   */
+  private syncDetail(): void {
+    const residency = this.residency;
+    const home = this.worldRegion;
+    if (residency === null || home === null) return;
+    const session = this.terrainMesh !== null ? home.id : null;
+    // A session holds its own region: a copy built before its ground arrived
+    // would hold the session's ground twice, hidden, until another region
+    // pushed it out.
+    if (session !== null) residency.drop(session);
+    const candidates: DetailCandidate[] = [];
+    if (this.overview?.mesh.visible === true) {
+      FRUSTUM_TMP.setFromProjectionMatrix(
+        FRUSTUM_MATRIX_TMP.multiplyMatrices(
+          this.camera.projectionMatrix,
+          this.camera.matrixWorldInverse
+        )
+      );
+      const eye = this.camera.position;
+      const grid = overviewGrid();
+      for (const region of this.detailRegions) {
+        if (region.id === session) continue;
+        const atlas = detailRect(region);
+        const x0 = atlas.x - home.x;
+        const z0 = atlas.y - home.y;
+        // The region's nearest point to the eye, on the overview's ground.
+        const nx = Math.min(x0 + atlas.widthM, Math.max(x0, eye.x));
+        const nz = Math.min(z0 + atlas.heightM, Math.max(z0, eye.z));
+        const ground = depthToWorldY(overviewDepthAtM(grid, nx + home.x, nz + home.y));
+        BOX_TMP.min.set(x0, depthToWorldY(DEPTH.MAX_M * 2), z0);
+        BOX_TMP.max.set(x0 + atlas.widthM, 0, z0 + atlas.heightM);
+        const distanceM = Math.hypot(eye.x - nx, eye.y - ground, eye.z - nz);
+        candidates.push({
+          id: region.id,
+          px: projectedCellPx(distanceM, this.viewHeight, FOV_DEG),
+          visible: FRUSTUM_TMP.intersectsBox(BOX_TMP),
+        });
+      }
+    }
+    const reserved = session === null ? 0 : 1;
+    residency.want(
+      wantedDetail(candidates, residency.keptIds(), residency.maxResident - reserved),
+      reserved
+    );
+    const drawn = new Set(residency.drawn());
+    for (const id of residency.residentIds()) residency.get(id)!.mesh.visible = drawn.has(id);
+    this.cutOverview();
+  }
+
+  /**
+   * Build one region's detail where no session holds it, a step at a time
+   * (§7.5's request): its authored ground with the map's baseline in the
+   * middle, its grid eased into the overview by the seam as the apron is, its
+   * skin baked in slices between frames, then its mesh, shaded and faded as
+   * the apron is and placed by its transform. It gives up between steps when
+   * the residency lets the region go, and holds nothing then. No look's
+   * surface hook is chained (`installGroundSurface`, which the apron takes
+   * under Sorrowgate's look): a region drawn without its session is the
+   * board's, and how it looks there is #1462's.
+   */
+  private async loadRegionDetail(id: string, signal: AbortSignal): Promise<RegionDetail> {
+    const region = worldRegionById(id);
+    const home = this.worldRegion;
+    const cells = region === undefined ? undefined : detailGround(region);
+    if (region === undefined || home === null || cells === undefined) {
+      throw new Error(`no authored detail for ${id}`);
+    }
+    const terrain: TerrainPayload = {
+      cols: cells.cols,
+      rows: cells.rows,
+      cellM: cells.cellM,
+      biomes: Array.from(cells.biomes),
+      floor: Array.from(cells.floor),
+      ceiling: Array.from(cells.ceiling),
+    };
+    const seed = seabedSeed(terrain);
+    const rockTopM = rockTopDepthM(terrain);
+    const atlas = detailRect(region);
+    const yieldTask = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+    const grid = buildHeightGrid(terrain, seed, rockTopM);
+    await yieldTask();
+    signal.throwIfAborted();
+    const canvas = await bakeSeabedInSlices(
+      terrain,
+      seed,
+      seabedRange(terrain),
+      {},
+      DETAIL_SLICE_CELLS,
+      yieldTask,
+      { signal }
+    );
+    if (this.renderer === null) throw new Error('the view has no renderer to draw it with');
+    const own = { x: 0, y: 0, widthM: atlas.widthM, heightM: atlas.heightM };
+    const data = detailMesh(grid, seamHeightFor({ x: atlas.x, y: atlas.y }, own));
+    const geometry = new BufferGeometry();
+    geometry.setAttribute('position', new BufferAttribute(data.positions, 3));
+    geometry.setAttribute('uv', new BufferAttribute(data.uvs, 2));
+    geometry.setIndex(new BufferAttribute(data.indices, 1));
+    const texture = new CanvasTexture(canvas);
+    texture.flipY = false;
+    texture.colorSpace = SRGBColorSpace;
+    const material = new MeshBasicMaterial({ map: texture, toneMapped: false });
+    const rect = {
+      x: atlas.x - home.x,
+      y: atlas.y - home.y,
+      widthM: atlas.widthM,
+      heightM: atlas.heightM,
+    };
+    const cellsTexture = surveyCellTexture(terrain, surveyCellClasses(terrain));
+    installApronShading(
+      material,
+      this.borderUniforms(),
+      {
+        cells: cellsTexture,
+        cols: terrain.cols,
+        rows: terrain.rows,
+        cellM: terrain.cellM,
+        padCols: Math.round(-rect.x / terrain.cellM),
+        padRows: Math.round(-rect.y / terrain.cellM),
+      },
+      BACKDROP_SPAN_M,
+      {
+        map: this.seamMap,
+        on: this.seamOn,
+        originM: [home.x, home.y],
+        sizeM: [WORLD.ATLAS_WIDTH_M, WORLD.ATLAS_HEIGHT_M],
+        detailRect: [rect.x, rect.y, rect.widthM, rect.heightM],
+      }
+    );
+    const mesh = new Mesh(geometry, material);
+    // Render transform only, as the overview's: the data stays in its own metres.
+    mesh.position.set(rect.x, 0, rect.y);
+    mesh.updateMatrixWorld();
+    mesh.visible = false;
+    this.scene.add(mesh);
+    // Under the veil's shade from its first frame: it is not resident yet, so
+    // `shadeExterior` would pass it by.
+    this.tintExterior(material);
+    return { mesh, cells: cellsTexture, terrain, seed, rockTopM, rect };
+  }
+
+  /** Free what `loadRegionDetail` built: the residency let its region go. */
+  private releaseRegionDetail(detail: RegionDetail): void {
+    this.scene.remove(detail.mesh);
+    detail.mesh.geometry.dispose();
+    (detail.mesh.material as MeshBasicMaterial).map?.dispose();
+    (detail.mesh.material as MeshBasicMaterial).dispose();
+    detail.cells.dispose();
   }
 
   private disposeOverview(): void {
@@ -2528,12 +2754,19 @@ export class PerspectiveView {
    * overview's skin under the same one.
    */
   private shadeExterior(): void {
+    const details = [...(this.residency?.residentIds() ?? [])].map(
+      (id) => this.residency!.get(id)!.mesh
+    );
+    for (const mesh of [this.apron?.mesh, this.overview?.mesh, ...details]) {
+      if (mesh != null) this.tintExterior(mesh.material as MeshBasicMaterial);
+    }
+  }
+
+  /** One exterior material at the veil's floor (`shadeExterior`). */
+  private tintExterior(material: MeshBasicMaterial): void {
     const k = this.veil.listening ? Math.min(1, Math.max(0, this.veilIntensity)) : 0;
     const i = Math.round(k * VEIL_STEPS) * 3;
-    for (const mesh of [this.apron?.mesh, this.overview?.mesh]) {
-      const material = mesh?.material as MeshBasicMaterial | undefined;
-      material?.color.setRGB(VEIL_TABLE[i]!, VEIL_TABLE[i + 1]!, VEIL_TABLE[i + 2]!);
-    }
+    material.color.setRGB(VEIL_TABLE[i]!, VEIL_TABLE[i + 1]!, VEIL_TABLE[i + 2]!);
   }
 
   /**
@@ -2550,7 +2783,7 @@ export class PerspectiveView {
       return false;
     }
     const mission = this.groundHit();
-    const exterior: Mesh[] = [];
+    const exterior: Mesh[] = this.drawnDetails().map((detail) => detail.mesh);
     if (this.apron?.mesh != null) exterior.push(this.apron.mesh);
     // Only while it is drawn: the raycaster tests hidden meshes too, and a
     // hidden overview rise would refuse a click on mission ground in view.
@@ -2594,15 +2827,30 @@ export class PerspectiveView {
     ) {
       const overview = overviewDepthAtM(overviewGrid(), xM + region.x, yM + region.y);
       const w = seamWeight(apronFrame(region, terrain.cellM).rect, xM, yM);
-      if (w === 1) return overview;
-      const own = seabedDepthAtM(
-        apron.terrain,
-        this.groundSeed,
-        this.groundRockTopM,
-        xM + apron.pads.west * terrain.cellM,
-        yM + apron.pads.north * terrain.cellM
-      );
-      return own + (overview - own) * w;
+      if (w < 1) {
+        const own = seabedDepthAtM(
+          apron.terrain,
+          this.groundSeed,
+          this.groundRockTopM,
+          xM + apron.pads.west * terrain.cellM,
+          yM + apron.pads.north * terrain.cellM
+        );
+        return own + (overview - own) * w;
+      }
+      // Another region's detail, where one is drawn, by the same seam.
+      for (const detail of this.drawnDetails()) {
+        const v = seamWeight(detail.rect, xM, yM);
+        if (v === 1) continue;
+        const own = seabedDepthAtM(
+          detail.terrain,
+          detail.seed,
+          detail.rockTopM,
+          xM - detail.rect.x,
+          yM - detail.rect.y
+        );
+        return own + (overview - own) * v;
+      }
+      return overview;
     }
     return seabedDepthAtM(terrain, this.groundSeed, this.groundRockTopM, xM, yM);
   }
@@ -3149,6 +3397,7 @@ export class PerspectiveView {
       }
     }
     this.syncWater(now);
+    this.syncDetail();
     // The readability factor follows the dolly, so it is recomputed on the
     // frame rather than on the 5 Hz snapshot: a wheel zoom must not wait up to
     // 200 ms for the fleet to reach its drawn size. Re-syncing only on an
@@ -3454,6 +3703,10 @@ export class PerspectiveView {
           : {
               borderStrength: Number(this.borderStrength.toFixed(3)),
               overviewDrawn: this.overview?.mesh.visible === true,
+              // §7.5's other regions: drawn, held, and asked for.
+              detailDrawn: this.residency?.drawn() ?? [],
+              detailResident: [...(this.residency?.residentIds() ?? [])],
+              detailPending: this.residency?.pending ?? 0,
             },
       // The lamp halo (art-direction.md, "Lamp halo — SPEC"): its state, what
       // it drew last frame, and what it holds (gate 6).

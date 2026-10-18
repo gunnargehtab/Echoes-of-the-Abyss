@@ -67,6 +67,13 @@ export const WORLD = {
    * out over the same. The doc states it, so moving it edits §7.4 too.
    */
   FADE_RAMP_S: 0.8,
+  /**
+   * TUNABLE — §7.5's residency, presentation numbers the doc states: detail
+   * regions held at once (the one arriving and the one left, a session's own
+   * among them), and region requests building at once.
+   */
+  DETAIL_RESIDENT: 2,
+  DETAIL_IN_FLIGHT: 2,
 } as const;
 
 /**

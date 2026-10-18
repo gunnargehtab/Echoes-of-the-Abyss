@@ -18,11 +18,12 @@ import {
   detailGround,
   detailRect,
   paintGround,
+  type WorldRegion,
 } from '@echoes/shared';
 import { createHost, HeadlessWebGLRenderer, pumpAnimationFrames } from './support/headless.ts';
 import { cannedSnapshot } from './support/cannedMatch.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
-import { buildHeightGrid, rockTopDepthM } from '../src/game/perspectiveTerrain.ts';
+import { buildHeightGrid, depthToWorldY, rockTopDepthM } from '../src/game/perspectiveTerrain.ts';
 import {
   bakeSeabed,
   bakeSeabedInSlices,
@@ -170,7 +171,7 @@ describe('the overview grid (§7.3)', () => {
         options,
         10,
         async () => void yields++,
-        () => (t += msPerRead)
+        { now: () => (t += msPerRead) }
       );
       return { canvas, yields };
     };
@@ -189,6 +190,28 @@ describe('the overview grid (§7.3)', () => {
       -1,
       'the slices are the whole bake'
     );
+  });
+
+  it('stops at its next yield once its signal aborts, a region let go (§7.5)', async () => {
+    const terrain = sorrowgate();
+    const controller = new AbortController();
+    let yields = 0;
+    let t = 0;
+    await assert.rejects(
+      bakeSeabedInSlices(
+        terrain,
+        seabedSeed(terrain),
+        seabedRange(terrain),
+        { pxPerCell: 4 },
+        10,
+        async () => {
+          if (++yields === 2) controller.abort(new Error('let go'));
+        },
+        { now: () => (t += SLICED_BAKE_BUDGET_MS), signal: controller.signal }
+      ),
+      /let go/
+    );
+    assert.equal(yields, 2, 'it shades no slice past the yield it was let go in');
   });
 });
 
@@ -489,5 +512,158 @@ describe('the overview in the pilot view (#1459)', () => {
     assert.deepEqual(Array.from(apronPositions.array), Array.from(rebuilt.positions));
     assert.equal(overviewPositions.version, overviewVersion, 'the overview never moves');
     assert.equal(overview!.mesh.geometry.getIndex()!.version, indexVersion);
+  });
+});
+
+describe("another region's detail, where no session holds it (§7.5)", () => {
+  type Residency = {
+    residency: {
+      counts: { requests: number; admitted: number; released: number; cancelled: number };
+      drawn: () => string[];
+      residentIds: () => ReadonlySet<string>;
+      get: (id: string) => { mesh: Mesh } | undefined;
+      pending: number;
+    };
+  };
+  const residency = (view: PerspectiveView) => (view as unknown as Residency).residency;
+  const camera = (x: number, z: number, d: number, aim: { pitchDeg: number }) =>
+    aimCamera(x, z, d, { yawDeg: 0, ...aim });
+  /** Frames until `done`, with the event loop let through between them. */
+  async function until(done: () => boolean, what: string): Promise<void> {
+    for (let i = 0; i < 2_000 && !done(); i++) {
+      await new Promise((resolve) => setTimeout(resolve, 2));
+      pumpAnimationFrames();
+    }
+    assert.ok(done(), `never ${what}`);
+  }
+
+  it('loads it once it projects large and in view, draws it cut into the overview, and lets it go', async () => {
+    // No session: the view the board will hold (#1462), Sorrowgate's region
+    // a region like any other.
+    const { view, gl } = await mountPilot(false);
+    const held = residency(view);
+    camera(2_500, 2_000, 6_000, { pitchDeg: 60 });
+    await until(() => held.drawn().includes(SORROWGATE_REGION.id), 'drawn');
+    const mesh = held.get(SORROWGATE_REGION.id)!.mesh;
+    assert.equal(mesh.visible, true);
+    assert.deepEqual(mesh.position.toArray(), [
+      HOLE.x - SORROWGATE_REGION.x,
+      0,
+      HOLE.y - SORROWGATE_REGION.y,
+    ]);
+    const overview = internals(view).overview!.mesh.geometry;
+    assert.equal(overview.drawRange.count, 28_080 * 3, 'the overview is cut where it stands');
+    // 160 × 144 quads of the whole detail, two triangles each, on the frame,
+    // and the frame inside gate 6 with it.
+    assert.ok(gl.ledger.triangles >= 28_080 + 160 * 144 * 2);
+    assert.ok(gl.ledger.calls <= 150 && gl.ledger.triangles <= 400_000, 'inside gate 6');
+    // Its edge on the overview's surface (§7.3, "Seam"): no crack, no ledge.
+    const grid = overviewGrid();
+    const positions = mesh.geometry.getAttribute('position') as BufferAttribute;
+    let edges = 0;
+    for (let i = 0; i < positions.count; i++) {
+      const [x, z] = [positions.getX(i), positions.getZ(i)];
+      if (x > 0 && z > 0 && x < HOLE.widthM && z < HOLE.heightM) continue;
+      const y = depthToWorldY(overviewDepthAtM(grid, HOLE.x + x, HOLE.y + z));
+      assert.ok(Math.abs(positions.getY(i) - y) < 1e-3, `edge vertex at ${x}, ${z}`);
+      edges++;
+    }
+    assert.equal(edges, 2 * (161 + 145) - 4, 'every edge vertex');
+    assert.equal(held.counts.requests, 1, 'asked for once, not every frame');
+    // Looking away, it is let go: hidden, kept as the one left, the overview whole again.
+    camera(-15_000, 40_000, 2_000, { pitchDeg: 88 });
+    await until(() => held.drawn().length === 0, 'let go');
+    assert.equal(mesh.visible, false);
+    assert.equal(overview.drawRange.count, 28_800 * 3);
+    assert.deepEqual([...held.residentIds()], [SORROWGATE_REGION.id], 'kept until a third arrives');
+    view.destroy();
+    views.splice(views.indexOf(view), 1);
+    assert.equal(held.counts.released, 1, 'released with the view');
+  });
+
+  it('asks for nothing at full strength, where the overview it is cut into is hidden', async () => {
+    const { view } = await mountPilot();
+    // A second placed region east of the pilot's detail, which the atlas does
+    // not have yet: its request fails for want of ground, so only the asking
+    // is counted.
+    const east: WorldRegion = {
+      id: 'east',
+      mapId: 'east',
+      x: 27_500,
+      y: 40_500,
+      widthM: 5_000,
+      heightM: 4_000,
+    };
+    (view as unknown as { detailRegions: WorldRegion[] }).detailRegions = [SORROWGATE_REGION, east];
+    const held = residency(view);
+    // A first state, the ramp cut straight to full, then the camera on it.
+    view.setReducedMotion(true);
+    view.applySnapshot(cannedSnapshot());
+    camera(12_500, 2_000, 6_000, { pitchDeg: 60 });
+    pumpAnimationFrames();
+    assert.equal(internals(view).overview!.mesh.visible, false, 'full strength');
+    assert.equal(held.counts.requests, 0, 'nothing asked for');
+    // The session's state gone, the fade goes out and the overview is drawn.
+    view.resetForNewMatch();
+    pumpAnimationFrames();
+    assert.equal(internals(view).overview!.mesh.visible, true, 'the fade gone out');
+    assert.equal(held.counts.requests, 1, 'asked for once the overview is drawn');
+  });
+
+  it("lets go of its own region's copy once a session takes the region", async () => {
+    const { view } = await mountPilot(false);
+    const held = residency(view);
+    camera(2_500, 2_000, 6_000, { pitchDeg: 60 });
+    await until(() => held.drawn().includes(SORROWGATE_REGION.id), 'drawn');
+    // The room's ground arrives after the copy was built: the session holds it now.
+    view.setTerrain(sorrowgate());
+    pumpAnimationFrames();
+    assert.deepEqual([...held.residentIds()], [], 'no second copy held');
+    assert.equal(held.counts.released, 1);
+    assert.ok(internals(view).terrainMesh !== null, "the session's own drawn instead");
+  });
+
+  it('builds a detail under the veil, before it is ever resident', async () => {
+    // A session's veil listens; a sessionless view's does not.
+    const { view } = await mountPilot();
+    view.setVeilIntensity(1);
+    view.applySnapshot(cannedSnapshot());
+    pumpAnimationFrames();
+    const overview = (internals(view).overview!.mesh.material as MeshBasicMaterial).color;
+    assert.notEqual(overview.getHex(), 0xffffff, 'someone listens: the floor shade');
+    const build = view as unknown as {
+      loadRegionDetail: (id: string, signal: AbortSignal) => Promise<{ mesh: Mesh }>;
+      releaseRegionDetail: (detail: { mesh: Mesh }) => void;
+    };
+    // Built as the residency's request builds it, before anything admits it.
+    const signal = new AbortController().signal;
+    const detail = await build.loadRegionDetail(SORROWGATE_REGION.id, signal);
+    const color = (detail.mesh.material as MeshBasicMaterial).color;
+    assert.equal(color.getHex(), overview.getHex(), 'the same shade as the overview');
+    build.releaseRegionDetail(detail);
+  });
+
+  it('cancels a request its region no longer needs, and leaves nothing behind', async () => {
+    const { view } = await mountPilot(false);
+    const held = residency(view);
+    const before = internals(view).overview!.mesh.parent!.children.length;
+    camera(2_500, 2_000, 6_000, { pitchDeg: 60 });
+    pumpAnimationFrames();
+    assert.equal(held.pending, 1, 'asked for');
+    camera(-15_000, 40_000, 2_000, { pitchDeg: 88 });
+    pumpAnimationFrames();
+    assert.equal(held.counts.cancelled, 1, 'and cancelled');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    pumpAnimationFrames();
+    assert.equal(held.pending, 0);
+    assert.equal(held.residentIds().size, 0, 'nothing held');
+    assert.equal(internals(view).overview!.mesh.parent!.children.length, before, 'nothing added');
+  });
+
+  it('is never asked for while a session holds the region', async () => {
+    const { view } = await mountPilot();
+    camera(2_500, 2_000, 6_000, { pitchDeg: 60 });
+    pumpAnimationFrames(3);
+    assert.equal(residency(view).counts.requests, 0);
   });
 });
