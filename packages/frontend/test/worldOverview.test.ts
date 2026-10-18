@@ -23,7 +23,14 @@ import { createHost, HeadlessWebGLRenderer, pumpAnimationFrames } from './suppor
 import { cannedSnapshot } from './support/cannedMatch.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { buildHeightGrid, rockTopDepthM } from '../src/game/perspectiveTerrain.ts';
-import { bakeSeabed, seabedRange, seabedSeed, shadeSeabed } from '../src/game/seabed.ts';
+import {
+  bakeSeabed,
+  bakeSeabedInSlices,
+  seabedRange,
+  seabedSeed,
+  shadeSeabed,
+  SLICED_BAKE_BUDGET_MS,
+} from '../src/game/seabed.ts';
 import { apronFrame, apronMesh, paddedTerrain } from '../src/game/worldBorder.ts';
 import {
   OVERVIEW_PX_PER_CELL,
@@ -145,6 +152,42 @@ describe('the overview grid (§7.3)', () => {
       shade(1, { pxPerCell: 16 }),
       shade(2, { pxPerCell: 16 }),
       'the field is what a seed moves'
+    );
+  });
+
+  it('yields once its bake budget is spent, not after every slice', async () => {
+    // Sorrowgate's 20 × 16 cells at 4 px a cell: 2 slices a row, 32 in all.
+    const terrain = sorrowgate();
+    const options = { pxPerCell: 4 };
+    const [seed, range] = [seabedSeed(terrain), seabedRange(terrain)];
+    const bake = async (msPerRead: number) => {
+      let t = 0;
+      let yields = 0;
+      const canvas = await bakeSeabedInSlices(
+        terrain,
+        seed,
+        range,
+        options,
+        10,
+        async () => void yields++,
+        () => (t += msPerRead)
+      );
+      return { canvas, yields };
+    };
+    const frozen = await bake(0);
+    assert.equal(frozen.yields, 0, 'no time spent, no yield');
+    assert.equal((await bake(SLICED_BAKE_BUDGET_MS)).yields, 32, 'every slice over budget');
+    // Three reads of 3 ms reach the 8 ms budget: a yield every third slice.
+    assert.equal((await bake(3)).yields, 10);
+    const pixels = (canvas: HTMLCanvasElement) =>
+      canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data;
+    const whole = pixels(bakeSeabed(terrain, seed, range, [], options));
+    const sliced = pixels(frozen.canvas);
+    assert.equal(sliced.length, whole.length);
+    assert.equal(
+      sliced.findIndex((v, i) => v !== whole[i]),
+      -1,
+      'the slices are the whole bake'
     );
   });
 });

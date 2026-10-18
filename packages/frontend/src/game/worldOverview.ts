@@ -21,7 +21,7 @@
 import { RIFT_GROUND, WORLD, paintGround, type PlanPoint, type PlanRect } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import { authoredFloorAtM, depthToWorldY, type HeightGrid } from './perspectiveTerrain.ts';
-import { paintSeabed, seabedRange, seabedSeed, shadeSeabed } from './seabed.ts';
+import { bakeSeabedInSlices, seabedRange, seabedSeed } from './seabed.ts';
 import type { SeamHeight } from './worldBorder.ts';
 
 /**
@@ -102,42 +102,35 @@ export function overviewGrid(): HeightGrid {
 }
 
 /**
- * TUNABLE — cells a slice of the skin's bake shades before it yields: ten of
- * one row is 2,560 px, a few milliseconds, so the bake never holds a frame.
+ * TUNABLE — cells of one row the skin's bake shades between looks at its
+ * budget: ten is 2,560 px, about a millisecond, so a yield comes at most a
+ * slice after `SLICED_BAKE_BUDGET_MS` runs out.
  */
 export const OVERVIEW_SLICE_CELLS = 10;
 
 /**
  * The atlas's skin, baked once a page: the mission bake's code at
  * `OVERVIEW_PX_PER_CELL` and without the detail field, on the atlas's own
- * seed and depth range. Whole, it is about a second of shading, so it is
- * taken a slice at a time with a task's yield between (`yieldTask`), and a
- * view draws the overview once it lands. A slice shades the pixels a whole
- * bake would (`shadeSeabed`'s promise to the partial rebake), so the slices
- * add up to exactly that bake. A bake that fails is not retried: the page
- * draws no overview, and the apron keeps its own colour to its edge.
+ * seed and depth range. Whole, it is about half a second of shading, so it is
+ * taken in slices with a task's yield (`yieldTask`) whenever the bake's
+ * budget runs out (`bakeSeabedInSlices`), and a view draws the overview once
+ * it lands. A bake that fails is not retried: the page draws no overview, and
+ * the apron keeps its own colour to its edge.
  */
 export function overviewSkin(
   yieldTask: () => Promise<void> = () => new Promise((resolve) => setTimeout(resolve, 0))
 ): Promise<HTMLCanvasElement> {
-  skinOnce ??= (async () => {
+  if (skinOnce === null) {
     const terrain = overviewTerrain();
-    const seed = seabedSeed(terrain);
-    const range = seabedRange(terrain);
-    const options = { pxPerCell: OVERVIEW_PX_PER_CELL, detail: false };
-    const canvas = document.createElement('canvas');
-    canvas.width = terrain.cols * OVERVIEW_PX_PER_CELL;
-    canvas.height = terrain.rows * OVERVIEW_PX_PER_CELL;
-    for (let row = 0; row < terrain.rows; row++) {
-      for (let col0 = 0; col0 < terrain.cols; col0 += OVERVIEW_SLICE_CELLS) {
-        const col1 = Math.min(terrain.cols, col0 + OVERVIEW_SLICE_CELLS) - 1;
-        const rect = { col0, row0: row, col1, row1: row };
-        paintSeabed(canvas, shadeSeabed(terrain, seed, range, rect, [], options));
-        await yieldTask();
-      }
-    }
-    return canvas;
-  })();
+    skinOnce = bakeSeabedInSlices(
+      terrain,
+      seabedSeed(terrain),
+      seabedRange(terrain),
+      { pxPerCell: OVERVIEW_PX_PER_CELL, detail: false },
+      OVERVIEW_SLICE_CELLS,
+      yieldTask
+    );
+  }
   return skinOnce;
 }
 

@@ -668,7 +668,7 @@ export function shadeSeabed(
 }
 
 /** Put one shaded rectangle onto the seabed canvas, in place. */
-export function paintSeabed(canvas: HTMLCanvasElement, pixels: SeabedPixels): void {
+function paintSeabed(canvas: HTMLCanvasElement, pixels: SeabedPixels): void {
   const ctx = canvas.getContext('2d');
   if (ctx === null) throw new Error('seabed bake: no 2d context');
   const img = ctx.createImageData(pixels.w, pixels.h);
@@ -708,6 +708,49 @@ export function bakeSeabed(
       options
     )
   );
+  return canvas;
+}
+
+/**
+ * TUNABLE — milliseconds of shading a sliced bake spends before it yields:
+ * half a 60 Hz frame, so it never holds one, whatever a slice costs on the
+ * machine. A yield after every slice tied the bake to the frame rate instead,
+ * since each yield waits out a frame: 360 of them, 450 ms each on a software
+ * rasteriser, kept the overview's skin off the screen for minutes (#1459).
+ */
+export const SLICED_BAKE_BUDGET_MS = 8;
+
+/**
+ * `bakeSeabed` a slice of `sliceCells` cells of one row at a time, yielding
+ * (`yieldTask`) once `SLICED_BAKE_BUDGET_MS` of `now` has passed since the
+ * last yield: for a bake too large to hold a frame for, the overview's skin
+ * (worldOverview.ts). A slice shades the pixels a whole bake would, the
+ * promise the partial rebake stands on, so the slices add up to exactly it.
+ */
+export async function bakeSeabedInSlices(
+  terrain: TerrainPayload,
+  seed: number,
+  range: SeabedRange,
+  options: BakeOptions,
+  sliceCells: number,
+  yieldTask: () => Promise<void>,
+  now: () => number = () => performance.now()
+): Promise<HTMLCanvasElement> {
+  const ppc = options.pxPerCell ?? SEABED_PX_PER_CELL;
+  const canvas = document.createElement('canvas');
+  canvas.width = terrain.cols * ppc;
+  canvas.height = terrain.rows * ppc;
+  let since = now();
+  for (let row = 0; row < terrain.rows; row++) {
+    for (let col0 = 0; col0 < terrain.cols; col0 += sliceCells) {
+      const col1 = Math.min(terrain.cols, col0 + sliceCells) - 1;
+      const rect = { col0, row0: row, col1, row1: row };
+      paintSeabed(canvas, shadeSeabed(terrain, seed, range, rect, [], options));
+      if (now() - since < SLICED_BAKE_BUDGET_MS) continue;
+      await yieldTask();
+      since = now();
+    }
+  }
   return canvas;
 }
 
