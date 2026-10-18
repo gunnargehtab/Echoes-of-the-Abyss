@@ -886,14 +886,7 @@ export function deckRing(root, { alloy, crystal }, opts) {
   const flat = [Math.PI / 2, 0, 0];
   const ringOf = (R, t) => torus(R, t, METRE.round(t), segments ?? METRE.round(R + t));
   add(root, 'resonator_ring', ringOf(r, tube), alloy, [x, y + tube, z], flat);
-  add(
-    root,
-    'ring_inner',
-    ringOf(inner.r, inner.tube),
-    crystal,
-    [x, y + inner.tube, z],
-    flat
-  );
+  add(root, 'ring_inner', ringOf(inner.r, inner.tube), crystal, [x, y + inner.tube, z], flat);
 }
 
 /**
@@ -1096,11 +1089,13 @@ export function lance(root, ink, { needle, rail, crystal, seams, muzzle }) {
   ]);
   spar(root, 'lance_crystal', ink.crystal, crystal);
   bothSides((side, sgn) =>
-    add(root, `lance_seam_${side}`, box(seams.length, seams.section[0], seams.section[1]), ink.seam, [
-      seams.x,
-      seams.y,
-      sgn * seams.z,
-    ])
+    add(
+      root,
+      `lance_seam_${side}`,
+      box(seams.length, seams.section[0], seams.section[1]),
+      ink.seam,
+      [seams.x, seams.y, sgn * seams.z]
+    )
   );
   point(root, 'muzzle', ink.node, muzzle);
 }
@@ -1298,6 +1293,158 @@ export function transom(root, mat, { x, t = 0.8, halfHeight, halfBeam, y = 0 }) 
   add(root, 'transom', box(t, 2 * halfHeight, 2 * halfBeam), mat, [x + t / 2, y, 0]);
 }
 
+/* --------------------------------------------------------------------------
+ * The Verger, the Order's (#1438, on the Chorister's rule): the cohort
+ * transport's plan — four bays behind pressure hatches low on the flanks, a
+ * listening dome forward, ballast tanks flanking a heavy keel, a single
+ * ducted drive — said in this navy's vocabulary. Five builders the Verger
+ * block names and no Order hull had: each is a form the next deep-pressure
+ * hull of the Order's composes from rather than redraws.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Pressure hatches on the flanks, in mirrored pairs: each a six-facet alloy
+ * `collar` standing `proud` of the skin and `sink` into it, a `door` of the
+ * lamp family's unlit finish on the collar's outer face, and the `rim`, a
+ * ring round the door that is the lamp. Four-sided tube, six round (`cut`,
+ * #919: the rule's own count at 2.75 m, and the hexagon the Order cuts a lip
+ * to) with a vertex at the top and the bottom as the collar has, so the rim
+ * stands a half tube above the collar's crown where the chart reads it.
+ * The rim is lit and the door is not because the Verger block lights the
+ * hatch rims at rest and the doors "stay dark until the bays are occupied"
+ * (models-plan.md §3.2, rule 2) — the same split the Directorate's
+ * `pressureHatches` makes, and the Verger's one lamp family on its flanks.
+ *
+ * Each hatch is a frame seated on the outermost skin of the part `on`
+ * names on its own beam line, at `[x, y]` (kit.mjs `seat`, `beam`), with
+ * its +y on that facet's outward normal, so a hatch on a vertical flank
+ * faces outboard and one on a facet that leans follows it. `hatches` lists
+ * the stations; every one is drawn on both sides, starboard first — the
+ * pairs the faction block's "precise bilateral symmetry" asks of this navy
+ * where the Directorate alternates its sides (hulls/verger.mjs).
+ */
+export function pressureHatches(root, { collar, door, rim }, opts) {
+  const { on, hatches, r, proud = 1.6, sink = 0.8, tube = 0.35, cut: rule = METRE } = opts;
+  const collarGeo = cyl(r, r, proud + sink, 6);
+  const doorGeo = cyl(r * 0.85, r * 0.85, 0.4, 6);
+  // Born in the xy-plane with a vertex on +x; a quarter about z puts it on
+  // +y, and a quarter about x lays the ring flat with that vertex on +z —
+  // the collar's own top, since the frame's z is the hull's vertical.
+  const rimGeo = torus(r, tube, rule.round(tube), rule.round(r + tube))
+    .rotateZ(Math.PI / 2)
+    .rotateX(Math.PI / 2);
+  hatches.forEach(([x, y], i) =>
+    bothSides((side, sgn) => {
+      const name = `hatch_${i}_${side}`;
+      const frame = group(root, name, seat(root, on, [x, y, 0], { beam: sgn }));
+      add(frame, `${name}_collar`, collarGeo, collar, [0, (proud - sink) / 2, 0]);
+      add(frame, `${name}_door`, doorGeo, door, [0, proud + 0.2, 0]);
+      add(frame, `${name}_rim`, rimGeo, rim, [0, proud, 0]);
+    })
+  );
+}
+
+/**
+ * The listening dome and its lit boss: a crystal dome of `r` drawn `theta`
+ * down from its pole at the rule's counts (`cut`, #919 — six round by two
+ * down at 3.4 m, a cut stone and not the Bastion's twelve by three), pressed
+ * `press` on its node at `[x, y]`, and on the pole a four-sided point of
+ * `boss.r` by `boss.h` in the seam lamp, its base `boss.sink` under the
+ * pole. The boss is the lamp and the dome is not, for the reason the
+ * Directorate's Verger gives: a dome lit whole would be the light budget of
+ * a hull three bands louder, and the block lights "a boss on the dome's
+ * crown". The dome is `resonance_crystal` clad, as every unlit crystal on
+ * an Order hull is. The boss faces straight up with nothing over it — the
+ * chart's one upward emitter on the centreline (models-plan.md §3.2, rule 5).
+ */
+export function listeningDome(root, { crystal: domeMat, seam }, opts) {
+  const { x, y, r, press = 1, theta = 0.6 * Math.PI, boss } = opts;
+  // The rule under the node's press, as `cut` prices an orb the file draws.
+  const [round, down] = cut(1, { press }).orb(r, { thetaLength: theta });
+  add(
+    root,
+    'listening_dome',
+    new THREE.SphereGeometry(r, round, down, 0, Math.PI * 2, 0, theta),
+    domeMat,
+    [x, y, 0],
+    [0, 0, 0],
+    [1, press, 1]
+  );
+  const pole = y + r * press;
+  add(root, 'dome_crown', cyl(0, boss.r, boss.h, 4), seam, [x, pole - boss.sink + boss.h / 2, 0]);
+}
+
+/**
+ * Pressure ribs: alloy hoops round a six-facet spar, one at each `station`
+ * `[x, r]` — the spar's radius there — a torus of `r + lift` on a tube of
+ * `tube`, four-sided round the tube and six round the ring, turned so a
+ * vertex stands on the crown as the spar's does, and pressed on its node by
+ * the spar's own `flat`, so the hoop hugs every facet at one stand-off:
+ * `lift − tube` into the skin, `lift + tube` proud of it. Six is the
+ * hexagonal section the Order cuts at any size (`facets`, Block 2c), not
+ * the rule's twelve at the hull's radius: a hoop on a hexagon is a hexagon.
+ * The Verger's "ribbed" deep-pressure hull said as a crystal held in a
+ * frame, which is what the Chorister's cage says of its bladder.
+ */
+export function pressureRibs(root, alloy, { stations, tube = 0.35, lift = 0.1, flat }) {
+  stations.forEach(([x, r], i) =>
+    add(
+      root,
+      `pressure_rib_${i}`,
+      torus(r + lift, tube, 4, 6)
+        .rotateZ(Math.PI / 6)
+        .rotateY(Math.PI / 2),
+      alloy,
+      [x, 0, 0],
+      [0, 0, 0],
+      [1, flat[0], flat[1]]
+    )
+  );
+}
+
+/**
+ * Ballast pods: a mirrored pair of four-facet spars on their own `profile`
+ * (`spar`, laid `flat`), `ballast_pod_s` and `_p`, at `[y, ±z]` — the
+ * Verger's "ballast tanks flanking a heavy keel", carried low on the
+ * flanks under the wing roots where the conn view sees them rather than
+ * under the belly where it cannot, and faceted as every Order spar is.
+ */
+export function ballastPods(root, mat, { profile, y, z, flat = [1, 1] }) {
+  bothSides((side, sgn) =>
+    spar(root, `ballast_pod_${side}`, mat, { profile, y, z: sgn * z, flat })
+  );
+}
+
+/**
+ * A ducted drive, the Order's: a six-facet `duct` lathed wall and bore with
+ * a vertex on the crown (`loft` at the hexagon's phase, as `spar` lays one),
+ * from the stern at `x` `length` forward, `r` outside and `r − wall`
+ * inside; a crystal `hub` in the bore, a four-sided point with its base at
+ * the stern and its tip `hub.length` forward (`point`); and two alloy
+ * `vanes` from the hub to the wall at the beam, one a side. Dark, every
+ * part: the Verger block lights nothing astern, and no Order hull does.
+ */
+export function ductedDrive(root, { duct: ductMat, crystal: hubMat, alloy }, opts) {
+  const { x, length, r, wall, hub, vanes } = opts;
+  const inner = r - wall;
+  const profile = [
+    [x, inner],
+    [x, r],
+    [x + length, r],
+    [x + length, inner],
+    [x, inner],
+  ];
+  add(root, 'drive_duct', loft(profile, 6, Math.PI / 6), ductMat);
+  point(root, 'drive_hub', hubMat, { x: x + hub.length / 2, r: hub.r, length: hub.length });
+  bothSides((side, sgn) =>
+    add(root, `drive_vane_${side}`, box(vanes.chord, vanes.t, vanes.span), alloy, [
+      vanes.x,
+      0,
+      sgn * vanes.z,
+    ])
+  );
+}
+
 /**
  * The spike — the Lance's forward third (#785): "an open faceted rail the
  * length of the forward third with the one torpedo lying in it, its nose
@@ -1340,7 +1487,14 @@ export function spike(root, { alloy, unlit, node }, { rail, ribs, torpedo, colla
   bothSides((side, sgn) => spar(root, `rail_${side}`, unlit, { ...rail, z: sgn * rail.z }));
   ribs.at.forEach((x, i) => add(root, `rail_rib_${i}`, box(...ribs.size), alloy, [x, ribs.y, 0]));
   const { x, y, r, length, fins } = torpedo;
-  add(root, 'torpedo', capsule(r, length, ...METRE.capsule(r)), alloy, [x, y, 0], [0, 0, -Math.PI / 2]);
+  add(
+    root,
+    'torpedo',
+    capsule(r, length, ...METRE.capsule(r)),
+    alloy,
+    [x, y, 0],
+    [0, 0, -Math.PI / 2]
+  );
   add(root, 'torpedo_fins_lateral', box(fins.chord, fins.t, 2 * fins.span), alloy, [fins.x, y, 0]);
   add(root, 'torpedo_fins_vertical', box(fins.chord, 2 * fins.span, fins.t), alloy, [fins.x, y, 0]);
   spar(root, 'muzzle_collar', node, { facets: 6, ...collar });
@@ -1751,8 +1905,22 @@ export function cradleDeck(root, { shadow, alloy, floor: floorMat, seam }, opts)
 export function exchangerHead(root, { crystal, alloy, seam }, opts) {
   const { bearing: a, at, prism, frame, seam: strip, spine: crest, buttress: blade } = opts;
   const yaw = [0, -a, 0];
-  add(root, 'exchanger_prism', loft(prism.profile, 4, Math.PI / 4), crystal, polar(a, at, prism.y), yaw);
-  add(root, 'exchanger_frame', loft(frame.profile, 4, Math.PI / 4), alloy, polar(a, at, frame.y), yaw);
+  add(
+    root,
+    'exchanger_prism',
+    loft(prism.profile, 4, Math.PI / 4),
+    crystal,
+    polar(a, at, prism.y),
+    yaw
+  );
+  add(
+    root,
+    'exchanger_frame',
+    loft(frame.profile, 4, Math.PI / 4),
+    alloy,
+    polar(a, at, frame.y),
+    yaw
+  );
   add(root, 'exchanger_seam', box(...strip.size), seam, polar(a, at, strip.y), yaw);
   // A four-sided pyramid, not an octahedron: the approved file's eight
   // triangles are four faces on a square base with a vertex at its centre
@@ -1988,7 +2156,9 @@ export function navMarks(root, light, { marks, r, on = null, cut: rule = METRE }
   for (const [name, x, y, z] of marks)
     pair((tag, sgn) => {
       const station = sided(sgn, [x, y, z]);
-      const placement = on ? { at: seat(root, on, station.at, { stand: r, sink: r / 2 }).at } : station;
+      const placement = on
+        ? { at: seat(root, on, station.at, { stand: r, sink: r / 2 }).at }
+        : station;
       const bud = new THREE.SphereGeometry(r, ...rule.orb(r));
       part(root, `nav_mark_${name}_${tag}`, bud, light, placement);
     });
@@ -2318,15 +2488,7 @@ export function pressureDome(root, { alloy, crystal: lit, glow, shadow }, opts) 
   add(
     root,
     'pressure_dome',
-    new THREE.SphereGeometry(
-      dome.r,
-      segments[0],
-      segments[1],
-      0,
-      Math.PI * 2,
-      0,
-      dome.theta
-    ),
+    new THREE.SphereGeometry(dome.r, segments[0], segments[1], 0, Math.PI * 2, 0, dome.theta),
     alloy,
     dome.at,
     [0, 0, 0],
@@ -3227,9 +3389,7 @@ export function ceramicSeams(root, mat, opts) {
     add(root, label, box(length, h, w), mat, at, rot);
   };
   for (const [tag, a, b] of pairs)
-    bothSides((side, sgn) =>
-      lay(`${name}_${tag}_${side}`, [a[0], sgn * a[1]], [b[0], sgn * b[1]])
-    );
+    bothSides((side, sgn) => lay(`${name}_${tag}_${side}`, [a[0], sgn * a[1]], [b[0], sgn * b[1]]));
   for (const [tag, a, b] of singles) lay(`${name}_${tag}`, a, b);
 }
 
@@ -3249,7 +3409,17 @@ export function ceramicSeams(root, mat, opts) {
  * mirrored few.
  */
 export function facetPlates(root, mat, opts) {
-  const { name, on, size: [w, s], t, about = [0, 0], rho, y, stations, phase = 0 } = opts;
+  const {
+    name,
+    on,
+    size: [w, s],
+    t,
+    about = [0, 0],
+    rho,
+    y,
+    stations,
+    phase = 0,
+  } = opts;
   const { holes = [], first = 0 } = opts;
   for (let k = 0; k < stations; k++) {
     if (holes.includes(k)) continue;
