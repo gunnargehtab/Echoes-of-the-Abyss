@@ -21,6 +21,11 @@ export interface TravelState {
   drew: boolean;
   /** The match's own code has loaded. */
   prepared: boolean;
+  /**
+   * The match's own code failed to load (§7.6, "A load or join failure"):
+   * nothing is joined, and the bar offers Retry and Back.
+   */
+  loadFailed: boolean;
 }
 
 /**
@@ -41,6 +46,7 @@ export function startTravel(missionId: string): TravelState {
     settled: false,
     drew: false,
     prepared: false,
+    loadFailed: false,
   };
 }
 
@@ -50,6 +56,7 @@ export function startTravel(missionId: string): TravelState {
  * drawn at all, so there was no travel and nothing of it to wait on.
  */
 export function readyToJoin(travel: TravelState, worldFailed: boolean): boolean {
+  // A failed load is never `prepared`, so it joins nothing until a Retry's fetch lands.
   return travel.prepared && (travel.settled || worldFailed);
 }
 
@@ -62,7 +69,7 @@ export function readyToJoin(travel: TravelState, worldFailed: boolean): boolean 
  */
 export function onTravel<S extends { kind: string }>(
   screen: S | TravelState,
-  change: Partial<Pick<TravelState, 'skipped' | 'settled' | 'drew' | 'prepared'>>,
+  change: Partial<Pick<TravelState, 'skipped' | 'settled' | 'drew' | 'prepared' | 'loadFailed'>>,
   missionId?: string
 ): S | TravelState {
   if (screen.kind !== 'travel') return screen;

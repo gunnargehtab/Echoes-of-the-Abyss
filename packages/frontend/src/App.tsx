@@ -22,7 +22,16 @@
  * answers, so the download and the join read as one wait, not two.
  */
 
-import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
+import {
+  Component,
+  lazy,
+  Suspense,
+  useEffect,
+  useMemo,
+  useState,
+  type ComponentType,
+  type ReactNode,
+} from 'react';
 import './App.css';
 import { useMenuAudio } from './audio/useMenuAudio.ts';
 import { DEFAULT_MAP_ID, missionHeaderById, PROLOGUE_SORROWGATE_HEADER } from '@echoes/shared';
@@ -37,6 +46,7 @@ import { ControlsScreen } from './menu/ControlsScreen.tsx';
 import { SettingsScreen } from './menu/SettingsScreen.tsx';
 import { TitleScreen } from './menu/TitleScreen.tsx';
 import { TravelScreen } from './menu/TravelScreen.tsx';
+import { MatchBoundary } from './menu/MatchBoundary.tsx';
 import {
   onTravel,
   readyToJoin,
@@ -45,13 +55,16 @@ import {
   type TravelState,
 } from './menu/launch.ts';
 import { storedMissionId } from './net/GameClient.ts';
+import type { GameCanvasProps } from './game/GameCanvas.tsx';
 import { hasPlayed, seenScenes, witnessedConclusions } from './progression/store.ts';
 import { loadSettings } from './settings/store.ts';
 
 /** The match's code: fetched by the lazy screen, and early by a travel (§7.6). */
 const loadGameCanvas = () => import('./game/GameCanvas.tsx');
 
-const GameCanvas = lazy(() => loadGameCanvas().then((module) => ({ default: module.GameCanvas })));
+/** The match screen, fetched on demand; a fresh one for each Retry after a failed load. */
+const lazyGameCanvas = () =>
+  lazy(() => loadGameCanvas().then((module) => ({ default: module.GameCanvas })));
 
 /**
  * The world behind the board (docs/world-map.md §7.6, #1462). Loaded when the
@@ -191,6 +204,21 @@ function App() {
   useMenuAudio(screen.kind !== 'match');
   /** Set when the world could not load or draw: the board stands alone. */
   const [worldFailed, setWorldFailed] = useState(false);
+  /** Bumped by the match screen's Retry: a fresh fetch and a fresh boundary. */
+  const [matchAttempt, setMatchAttempt] = useState(0);
+  const GameCanvas: ComponentType<GameCanvasProps> = useMemo(lazyGameCanvas, [matchAttempt]);
+
+  /**
+   * Fetch the match's code for a travel. A failure is said on the travel's
+   * bar, with nothing joined (§7.6, "A load or join failure"); its Retry
+   * fetches again.
+   */
+  const prepareMatch = (missionId: string) => {
+    loadGameCanvas().then(
+      () => setScreen((current) => onTravel(current, { prepared: true }, missionId)),
+      () => setScreen((current) => onTravel(current, { loadFailed: true }, missionId))
+    );
+  };
 
   // The join, once the travel has arrived and the match's code is here: once,
   // because the screen it leaves is the only thing that can call it.
@@ -347,11 +375,7 @@ function App() {
             // Tutorial door's, joins as it always has.
             if (travelsFirst(screen.from, missionId)) {
               setScreen(startTravel(missionId));
-              const prepared = () =>
-                setScreen((current) => onTravel(current, { prepared: true }, missionId));
-              // A failed fetch is the lazy screen's to report, as it would
-              // be without a travel: the join is not held on it.
-              loadGameCanvas().then(prepared, prepared);
+              prepareMatch(missionId);
               return;
             }
             setScreen({
@@ -370,6 +394,12 @@ function App() {
           missionId={screen.missionId}
           skipped={screen.skipped}
           settled={screen.settled}
+          loadFailed={screen.loadFailed}
+          onRetry={() => {
+            const missionId = screen.missionId;
+            setScreen((current) => onTravel(current, { loadFailed: false }, missionId));
+            prepareMatch(missionId);
+          }}
           onSkip={() => setScreen((current) => onTravel(current, { skipped: true }))}
           // Back to the board with nothing joined; the camera travels back
           // under it (§7.6, "Cancel").
@@ -384,34 +414,40 @@ function App() {
       )}
       {screen.kind === 'credits' && <CreditsScreen onBack={toTitle} />}
       {screen.kind === 'match' && (
-        <Suspense
-          fallback={
-            <div className="game-root">
-              <div
-                className={
-                  screen.travelled === true ? 'game-overlay game-overlay-held' : 'game-overlay'
-                }
-              >
-                <h2>Listening…</h2>
-              </div>
-            </div>
-          }
+        <MatchBoundary
+          key={matchAttempt}
+          onRetry={() => setMatchAttempt((attempt) => attempt + 1)}
+          onBack={screen.board === true ? toCampaign : toTitle}
         >
-          <GameCanvas
-            playerName={screen.name}
-            mapId={screen.mapId}
-            missionId={screen.missionId}
-            roomId={screen.roomId}
-            create={screen.create}
-            resume={screen.resume}
-            travelled={screen.travelled === true}
-            // The world travels back only where it can be drawn; without it
-            // the board stands alone, as it was left.
-            returnsToBoard={screen.board === true && !worldFailed}
-            onExit={screen.board === true ? toCampaign : toTitle}
-            onRecord={toRecord}
-          />
-        </Suspense>
+          <Suspense
+            fallback={
+              <div className="game-root">
+                <div
+                  className={
+                    screen.travelled === true ? 'game-overlay game-overlay-held' : 'game-overlay'
+                  }
+                >
+                  <h2>Listening…</h2>
+                </div>
+              </div>
+            }
+          >
+            <GameCanvas
+              playerName={screen.name}
+              mapId={screen.mapId}
+              missionId={screen.missionId}
+              roomId={screen.roomId}
+              create={screen.create}
+              resume={screen.resume}
+              travelled={screen.travelled === true}
+              // The world travels back only where it can be drawn; without it
+              // the board stands alone, as it was left.
+              returnsToBoard={screen.board === true && !worldFailed}
+              onExit={screen.board === true ? toCampaign : toTitle}
+              onRecord={toRecord}
+            />
+          </Suspense>
+        </MatchBoundary>
       )}
     </div>
   );

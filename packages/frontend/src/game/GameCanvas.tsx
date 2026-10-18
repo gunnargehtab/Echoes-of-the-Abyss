@@ -188,6 +188,14 @@ export function GameCanvas({
 }: GameCanvasProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ConnectionStatus>('connecting');
+  /**
+   * The room refused or did not answer before this session was ever in it
+   * (docs/world-map.md §7.6, "A load or join failure"): Retry and Back,
+   * rather than an error a seat that never existed could not recover from.
+   */
+  const [joinFailed, setJoinFailed] = useState(false);
+  /** The join itself, kept so Retry runs exactly the one the mount began. */
+  const joinRef = useRef<(() => Promise<void>) | null>(null);
   const [detail, setDetail] = useState<string>('');
   /**
    * The log is the one piece of game state React owns, and it can: it changes
@@ -327,6 +335,8 @@ export function GameCanvas({
     let worldClaim: symbol | null = null;
     // A travelled entry arrives framed: the travel ended home (§7.6).
     let framed = travelled;
+    /** Whether this session has been in its room: an error before it is a failed join. */
+    let joinedOnce = false;
     /**
      * StrictMode mounts effects twice in development, and Application.init()
      * is async — without this guard the second mount would race the first and
@@ -699,6 +709,9 @@ export function GameCanvas({
           },
           onStatus: (next, why) => {
             if (cancelled) return;
+            if (next === 'connected') joinedOnce = true;
+            if (next === 'connecting') setJoinFailed(false);
+            if (next === 'error' && !joinedOnce) setJoinFailed(true);
             statusRef.current = next;
             setStatus(next);
             setDetail(why ?? '');
@@ -777,18 +790,24 @@ export function GameCanvas({
       // at the First and the rim too; and read fresh at connect rather than
       // at mount for `seenScenes`' reason, since this is the moment it counts.
       const campaign = missionId === undefined ? undefined : missionHeaderById(missionId)?.campaign;
-      await client.connect({
-        name: playerName,
-        mapId,
-        missionId,
-        roomId,
-        create,
-        resume,
-        driftCarry,
-        ...(campaign === undefined ? {} : { spent: [...spentCadre(campaign)] }),
-      });
-      setSessionId(client.sessionId);
-      setJoinedRoomId(client.roomId);
+      const joining = client;
+      const join = async () => {
+        await joining.connect({
+          name: playerName,
+          mapId,
+          missionId,
+          roomId,
+          create,
+          resume,
+          driftCarry,
+          ...(campaign === undefined ? {} : { spent: [...spentCadre(campaign)] }),
+        });
+        if (cancelled) return;
+        setSessionId(joining.sessionId);
+        setJoinedRoomId(joining.roomId);
+      };
+      joinRef.current = join;
+      await join();
     };
 
     let unsubscribeSettings: (() => void) | null = null;
@@ -796,6 +815,7 @@ export function GameCanvas({
 
     return () => {
       cancelled = true;
+      joinRef.current = null;
       unsubscribeSettings?.();
       client?.disconnect();
       clientRef.current = null;
@@ -828,6 +848,15 @@ export function GameCanvas({
     returningRef.current = returnsToBoard;
     onExit();
   }, [returnsToBoard, onExit]);
+
+  /**
+   * Join again after a failed join. A second press while the first retry is
+   * under way joins nothing: `GameClient.connect` answers it with the join in
+   * flight (§7.6, "at most one join is ever in flight").
+   */
+  const retry = useCallback(() => {
+    void joinRef.current?.();
+  }, []);
 
   const focusOn = useCallback((x: number, y: number) => {
     rendererRef.current?.focusOn(x, y);
@@ -870,6 +899,12 @@ export function GameCanvas({
   }, []);
 
   const phase = lobby?.phase ?? MatchPhase.Lobby;
+  /**
+   * A travelled entry not yet in its room, waiting or refused: the frame the
+   * travel ended on, with the HUD detached and the wait or the failure a
+   * caption at the foot (§7.6 steps 3 and the failure that interrupts them).
+   */
+  const held = travelled && (status === 'connecting' || joinFailed);
   const live = status === 'connected';
   /** This seat's own readiness — what "Again" and "Rematch" toggle. */
   const selfReady = lobby?.players.find((player) => player.sessionId === sessionId)?.ready ?? false;
@@ -878,7 +913,7 @@ export function GameCanvas({
     <div
       // A travelled entry waiting on its room shows the held world and
       // nothing of the HUD, which attaches with the first state (§7.6 step 3).
-      className={travelled && status === 'connecting' ? 'game-root game-root-held' : 'game-root'}
+      className={held ? 'game-root game-root-held' : 'game-root'}
       style={cssVariables(uiScale, palette)}
     >
       {/* Everything the esc menu floats over, gathered so one `inert` can
@@ -983,13 +1018,9 @@ export function GameCanvas({
       {!live && !glFailed && (
         // A travelled entry waiting on its room holds the frame the travel
         // ended on (docs/world-map.md §7.6 step 3): the wait is a caption at
-        // the foot, not glass over the world. A lost or refused signal is
-        // information and keeps the glass.
-        <div
-          className={
-            travelled && status === 'connecting' ? 'game-overlay game-overlay-held' : 'game-overlay'
-          }
-        >
+        // the foot, not glass over the world, and so is a refused join. A
+        // signal lost once in the room is information and keeps the glass.
+        <div className={held ? 'game-overlay game-overlay-held' : 'game-overlay'}>
           <h2>
             {status === 'connecting' && 'Listening…'}
             {status === 'reconnecting' && 'Signal lost — re-acquiring'}
@@ -1002,17 +1033,32 @@ export function GameCanvas({
               {LIFECYCLE.RECONNECT_GRACE_S} seconds.
             </p>
           )}
+          {status === 'error' && joinFailed && <p>The room did not answer.</p>}
           {status === 'error' && (
             <p>
               Could not reach the game server. Start it with{' '}
-              <code>npm -w packages/backend run dev</code> and reload.
+              <code>npm -w packages/backend run dev</code>
+              {joinFailed ? ' and retry.' : ' and reload.'}
             </p>
           )}
           {detail !== '' && <p className="game-overlay-detail">{detail}</p>}
-          {(status === 'error' || status === 'closed') && (
-            <button type="button" className="game-overlay-back" onClick={exit}>
-              Return to port
-            </button>
+          {status === 'error' && joinFailed ? (
+            // No seat was ever taken, so nothing is abandoned: Retry joins
+            // the same room again, and Back goes where Return to port would.
+            <div className="game-overlay-controls">
+              <button type="button" className="game-overlay-back" onClick={retry} autoFocus>
+                Retry
+              </button>
+              <button type="button" className="game-overlay-back" onClick={exit}>
+                Back
+              </button>
+            </div>
+          ) : (
+            (status === 'error' || status === 'closed') && (
+              <button type="button" className="game-overlay-back" onClick={exit}>
+                Return to port
+              </button>
+            )
           )}
         </div>
       )}

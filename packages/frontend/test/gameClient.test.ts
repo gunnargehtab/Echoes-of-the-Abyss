@@ -432,6 +432,24 @@ describe('the match client: getting into a room', () => {
     assert.deepEqual(log.statuses(), ['connecting', 'error']);
     assert.match(String(log.argsOf('onStatus').at(-1)?.[1]), /refused/);
   });
+
+  it('keeps one join in flight, and joins again only once it has settled (§7.6)', async () => {
+    // docs/world-map.md §7.6: a retry never doubles a join.
+    const net = new StubClient();
+    net.fail('joinOrCreate');
+    const { handlers, log } = recordingHandlers();
+    const client = new GameClient(handlers, 'ws://test', net as unknown as never, stubCallbacks);
+    const first = client.connect({ resume: false });
+    const second = client.connect({ resume: false });
+    assert.equal(first, second, 'the second call is answered by the join under way');
+    await first;
+    assert.equal(net.calls.filter((call) => call.method === 'joinOrCreate').length, 1);
+    assert.deepEqual(log.statuses(), ['connecting', 'error']);
+    // Settled, a retry is a join of its own.
+    await client.connect({ resume: false });
+    assert.equal(net.calls.filter((call) => call.method === 'joinOrCreate').length, 2);
+    assert.equal(log.statuses().at(-1), 'connected');
+  });
 });
 
 describe('the match client: what the room says', () => {
