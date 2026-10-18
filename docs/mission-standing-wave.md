@@ -45,7 +45,7 @@ has never written down that either is theirs.
 
 **It is the only road.** Crystal territory ends where Directorate water begins
 ([world-map.md](world-map.md)), and between the two there is trench country on one side and
-the whole of the open east slope on the other. The Fifth is four kilometres of covered
+the whole of the open east slope on the other. The Fifth is three kilometres of covered
 ground between them, and it is covered in the Order's sense rather than anybody else's: PF 0.70,
 scattered, bearings that lie ([environments.md](environments.md)). A column that wants to be
 somewhere without having been heard crossing to it uses the Fifth. Everyone has always used the

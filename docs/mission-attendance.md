@@ -28,8 +28,9 @@ The mission's whole job is to make a player sit inside that.
 promise it, because the water says it first. Three facts about this water make it true, none of
 them a fence — with one rider on the first:
 
-**The Drift cannot descend here, and the one entry that might is not placed.** The galleries
-stand at 2,750–3,400 m and the axis below them falls past 4,000 m. Of the seven species
+**The Drift cannot descend here, and the one entry that might is not placed.** Sufficiency
+stands at 2,750–3,400 m, its galleries open on the axis at 3,000, and the axis below them falls
+past 4,000 m. Of the seven species
 [bestiary.md](bestiary.md) §4 prices in its band table, the deepest reach is a Sounder's, working
 2,000 m and pursuing to 2,700. Nothing in that table reaches this water.
 
@@ -37,14 +38,14 @@ stand at 2,750–3,400 m and the axis below them falls past 4,000 m. Of the seve
 walls and abyssal overhangs, which is exactly this map's country, and the question this document
 once deferred — whether the Hollow should reach 3,400 m — was settled where it belonged when the
 species' band was authored ([bestiary.md](bestiary.md) §4): it works 1,700 m and pursues to
-2,150, six hundred metres short of the shallowest gallery. The answer is no, and the galleries
+2,150, six hundred metres short of the city's upper terrace. The answer is no, and the galleries
 stay water the Drift declines. **This mission still places none.** What this document said while
 the case was open remains true and load-bearing: a Hollow at rest is functionally Tier 0,
 listens better than most units, and does not move until something loud passes within 500 m. **A shift that stayed silent all watch would have no way of finding out
 whether there was one.** Nothing has to be added to this water for that to be the case.
 
 The other uncatalogued entry — the Attendants — is found only within 400 m of the Mouth's rim,
-eleven kilometres south of the map's edge, and is not here. Tend's safety was a pursuit band;
+eleven kilometres south of the galleries and eight past the map's edge, and is not here. Tend's safety was a pursuit band;
 this one is the same rule read from the other end, and it is why the Directorate settled where it
 did.
 
@@ -634,7 +635,7 @@ what it was missing.
 | **The transcript as a variable close** | **Built** — the epilogue assembles: each arrival authors both of its readings (`Entered:` / `Not entered:`), and the close prints the nine the run earned under whichever of §8's three readings the count chose. Nothing is templated, which is why the lines are authored in pairs rather than built from a number and a noun |
 | The sixty-second telegraph as the rite's own structure | Ambient authoring and `say` beats; no new mechanism. The existing telegraph test measures the gap between the last loud beat and the resolve, and this mission satisfies it nine times over |
 | **Depth as acoustic range** — §4's fourth movement and §6's table | **Landed, on the literal's side** (#421). As first written, §4 and §6 spent the mission's ranges on *depth* — a dive from the watch's 3,000 m to arrivals at 4,100, at 45 m/s and SIG 72, and a climb back at 15 that could not be made twice — and two facts about the engine made that unplayable: the Echo Layer resolves detection on horizontal distance, with the thermocline as its only depth term, so below the duct depth is acoustically free; and `DEPTH.MAX_M` orders no hull below 3,000 m, so the dive was refused before it was priced. The literal transposed the expense to distance down the axis from the first commit, keeping every range §4 measured — 1,230 m to contact, 955 to bearing, about 800 across the galleries' occluded ground — and the arrivals' authored depths, and this document now says the same: the far two arrivals are 2,400 and 2,875 m down the channel, the going is priced in §5's ledger rather than in a climb, and the third sentence of §6's spine is written for the watch that is built rather than the one that was not. The ceiling stays at 3,000, [world-map.md](world-map.md) §3 now gives the Ninth a profile the 4,100 m channel fits in, and the return comes up out of water nobody stands in, which is a better sentence than the dive was |
-| **The Hollow's working depth** | **Specified and built since** — [bestiary.md](bestiary.md) §4 gives the Hollow 1,700 m, pursuing to 2,150, and §1 reads it that way: six hundred metres short of the shallowest gallery, so the mission's opening claim stands as written |
+| **The Hollow's working depth** | **Specified and built since** — [bestiary.md](bestiary.md) §4 gives the Hollow 1,700 m, pursuing to 2,150, and §1 reads it that way: six hundred metres short of the city's upper terrace, so the mission's opening claim stands as written |
 | The Drift, absent | **Built** — `fauna: false`, which the format already carries for a mission whose only creatures are authored. This is the first that authors none |
 | In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
 | The dreams as audio — the stalls, breathing, and a city that announces itself by subtraction | Not started ([audio-direction.md](audio-direction.md)). The mission reads correctly as text and is the one in the bible that reads *right* only with the mix |

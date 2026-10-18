@@ -887,7 +887,7 @@ player's, which is the sentence §1 was already writing.
 - **[mission-conclave-chord.md](mission-conclave-chord.md)** — Vrey heard not calling, and the lattice he built, collapsing here on somebody else's rim
 - **[mission-the-three.md](mission-the-three.md)** — §3, the Order's crystal counted once: the third Spire is the last 120
 - **[mission-intake.md](mission-intake.md)** — `runsItsLength`, standing `survive`, and the neutrality guard that keeps the two records level
-- **[mission-attendance.md](mission-attendance.md)** — the return at the sill: SIG 3, twenty seconds, entered as a time by the wrong people, eleven kilometres north
+- **[mission-attendance.md](mission-attendance.md)** — the return up the axis from the sill: SIG 3, twenty seconds, entered as a time by the wrong people at the galleries, eleven kilometres north
 - **[systems-echo.md](systems-echo.md)** — §3, the water this is priced through; §5, the ping; §8, the quartered circle the tone is aimed with
 - **[systems-depth.md](systems-depth.md)** — §2 and §3, the band, the crush, the fast loud dive and the slow silent climb
 - **[units.md](units.md)** — the Spire that sings while its grant is load-bearing, and the Clarion this party does not yet fly
