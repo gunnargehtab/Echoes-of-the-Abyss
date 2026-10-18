@@ -23,7 +23,7 @@ import {
 import { createHost, HeadlessWebGLRenderer, pumpAnimationFrames } from './support/headless.ts';
 import { cannedSnapshot } from './support/cannedMatch.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
-import { buildHeightGrid, rockTopDepthM } from '../src/game/perspectiveTerrain.ts';
+import { buildHeightGrid, depthToWorldY, rockTopDepthM } from '../src/game/perspectiveTerrain.ts';
 import {
   bakeSeabed,
   bakeSeabedInSlices,
@@ -553,8 +553,22 @@ describe("another region's detail, where no session holds it (§7.5)", () => {
     ]);
     const overview = internals(view).overview!.mesh.geometry;
     assert.equal(overview.drawRange.count, 28_080 * 3, 'the overview is cut where it stands');
-    // 160 × 144 quads of the whole detail, two triangles each, on the frame.
+    // 160 × 144 quads of the whole detail, two triangles each, on the frame,
+    // and the frame inside gate 6 with it.
     assert.ok(gl.ledger.triangles >= 28_080 + 160 * 144 * 2);
+    assert.ok(gl.ledger.calls <= 150 && gl.ledger.triangles <= 400_000, 'inside gate 6');
+    // Its edge on the overview's surface (§7.3, "Seam"): no crack, no ledge.
+    const grid = overviewGrid();
+    const positions = mesh.geometry.getAttribute('position') as BufferAttribute;
+    let edges = 0;
+    for (let i = 0; i < positions.count; i++) {
+      const [x, z] = [positions.getX(i), positions.getZ(i)];
+      if (x > 0 && z > 0 && x < HOLE.widthM && z < HOLE.heightM) continue;
+      const y = depthToWorldY(overviewDepthAtM(grid, HOLE.x + x, HOLE.y + z));
+      assert.ok(Math.abs(positions.getY(i) - y) < 1e-3, `edge vertex at ${x}, ${z}`);
+      edges++;
+    }
+    assert.equal(edges, 2 * (161 + 145) - 4, 'every edge vertex');
     assert.equal(held.counts.requests, 1, 'asked for once, not every frame');
     // Looking away, it is let go: hidden, kept as the one left, the overview whole again.
     camera(-15_000, 40_000, 2_000, { pitchDeg: 88 });
@@ -594,6 +608,39 @@ describe("another region's detail, where no session holds it (§7.5)", () => {
     pumpAnimationFrames();
     assert.equal(internals(view).overview!.mesh.visible, true, 'the fade gone out');
     assert.equal(held.counts.requests, 1, 'asked for once the overview is drawn');
+  });
+
+  it("lets go of its own region's copy once a session takes the region", async () => {
+    const { view } = await mountPilot(false);
+    const held = residency(view);
+    camera(2_500, 2_000, 6_000, { pitchDeg: 60 });
+    await until(() => held.drawn().includes(SORROWGATE_REGION.id), 'drawn');
+    // The room's ground arrives after the copy was built: the session holds it now.
+    view.setTerrain(sorrowgate());
+    pumpAnimationFrames();
+    assert.deepEqual([...held.residentIds()], [], 'no second copy held');
+    assert.equal(held.counts.released, 1);
+    assert.ok(internals(view).terrainMesh !== null, "the session's own drawn instead");
+  });
+
+  it('builds a detail under the veil, before it is ever resident', async () => {
+    // A session's veil listens; a sessionless view's does not.
+    const { view } = await mountPilot();
+    view.setVeilIntensity(1);
+    view.applySnapshot(cannedSnapshot());
+    pumpAnimationFrames();
+    const overview = (internals(view).overview!.mesh.material as MeshBasicMaterial).color;
+    assert.notEqual(overview.getHex(), 0xffffff, 'someone listens: the floor shade');
+    const build = view as unknown as {
+      loadRegionDetail: (id: string, signal: AbortSignal) => Promise<{ mesh: Mesh }>;
+      releaseRegionDetail: (detail: { mesh: Mesh }) => void;
+    };
+    // Built as the residency's request builds it, before anything admits it.
+    const signal = new AbortController().signal;
+    const detail = await build.loadRegionDetail(SORROWGATE_REGION.id, signal);
+    const color = (detail.mesh.material as MeshBasicMaterial).color;
+    assert.equal(color.getHex(), overview.getHex(), 'the same shade as the overview');
+    build.releaseRegionDetail(detail);
   });
 
   it('cancels a request its region no longer needs, and leaves nothing behind', async () => {

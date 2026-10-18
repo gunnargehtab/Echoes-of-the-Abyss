@@ -135,6 +135,38 @@ describe('holding detail (§7.5)', () => {
     assert.equal(residency.get('a'), 'a-detail');
   });
 
+  it('lets go of what no longer fits when a session takes a slot', async () => {
+    const { residency, released, settle } = loads();
+    residency.want(['a', 'b']);
+    await settle('a');
+    await settle('b');
+    residency.want(['a'], 1);
+    assert.deepEqual([...residency.residentIds()], ['a'], 'one beside the session');
+    assert.deepEqual(released, ['b:b-detail'], 'the one no longer wanted goes');
+  });
+
+  it('drops a region held or being built, as when a session takes it', async () => {
+    const { residency, open, released, settle } = loads();
+    residency.want(['home', 'b']);
+    await settle('home');
+    const { signal } = open.get('b')!;
+    residency.drop('home');
+    residency.drop('b');
+    assert.deepEqual([...residency.residentIds()], [], 'nothing held');
+    assert.deepEqual(released, ['home:home-detail']);
+    assert.equal(signal.aborted, true, 'and nothing left building');
+  });
+
+  it('keeps a region being built down to the keep threshold, so its request is not restarted', () => {
+    const { residency, open } = loads();
+    residency.want(['a']);
+    assert.ok(residency.keptIds().has('a'), 'in flight counts as kept');
+    const between = { id: 'a', px: (DETAIL_KEEP_PX + DETAIL_WANT_PX) / 2, visible: true };
+    residency.want(wantedDetail([between], residency.keptIds(), 2));
+    assert.equal(residency.counts.cancelled, 0, 'not aborted between the thresholds');
+    assert.ok(open.has('a'));
+  });
+
   it('counts a session region against the bound, and releases everything on dispose', async () => {
     const { residency, released, settle, open } = loads();
     residency.want(['a'], 1);

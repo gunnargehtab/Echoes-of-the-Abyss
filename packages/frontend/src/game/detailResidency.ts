@@ -8,13 +8,15 @@
  *
  * - **Selected by projected size.** A region is wanted while the overview is
  *   drawn and the region is in view, and one of its overview cells, at its
- *   nearest point, would project wider than `DETAIL_WANT_PX`: past that the
- *   overview's 1,000 m cells read as coarse. It stays wanted down to `DETAIL_KEEP_PX`, so a camera parked at
- *   the threshold does not swap it every frame.
+ *   nearest point, would project at least `DETAIL_WANT_PX` wide: past that the
+ *   overview's 1,000 m cells read as coarse. It stays wanted down to
+ *   `DETAIL_KEEP_PX`, held or still being built, so a camera parked at the
+ *   threshold neither swaps it nor restarts its request every frame.
  * - **Bounded.** At most `WORLD.DETAIL_RESIDENT` regions resident, the one
  *   arriving and the one left, and at most `WORLD.DETAIL_IN_FLIGHT` requests
  *   in flight. A session's own region is resident by the session and counts
- *   against the first.
+ *   against the first: when a session takes its slot, the residency lets go
+ *   of what no longer fits, and of any copy of that region it held.
  * - **Explicit about cancellation and failure.** A request for a region no
  *   longer wanted is aborted, and whatever it built is released when it
  *   settles. A request that fails holds nothing and is not retried until its
@@ -41,7 +43,7 @@ export const DETAIL_KEEP_PX = 16;
  */
 export const DETAIL_SLICE_CELLS = 3;
 
-/** How wide one overview cell projects at a distance, in pixels: the readability factor's own scale. */
+/** How wide one overview cell projects at a distance, in pixels: the readability factor's scale. */
 export function projectedCellPx(
   distanceM: number,
   viewportHeightPx: number,
@@ -60,16 +62,17 @@ export interface DetailCandidate {
 
 /**
  * The regions to hold this frame, largest first: in view and past the want
- * threshold, or past the keep threshold while already resident. At most
- * `max`, which a session's own region has already taken one of.
+ * threshold, or past the keep threshold while already held or being built
+ * (`kept`, `DetailResidency.keptIds`). At most `max`, which a session's own
+ * region has already taken one of.
  */
 export function wantedDetail(
   candidates: readonly DetailCandidate[],
-  resident: ReadonlySet<string>,
+  kept: ReadonlySet<string>,
   max: number
 ): string[] {
   return candidates
-    .filter((c) => c.visible && c.px >= (resident.has(c.id) ? DETAIL_KEEP_PX : DETAIL_WANT_PX))
+    .filter((c) => c.visible && c.px >= (kept.has(c.id) ? DETAIL_KEEP_PX : DETAIL_WANT_PX))
     .sort((a, b) => b.px - a.px)
     .slice(0, Math.max(0, max))
     .map((c) => c.id);
@@ -112,9 +115,18 @@ export class DetailResidency<T> {
     readonly maxInFlight: number = WORLD.DETAIL_IN_FLIGHT
   ) {}
 
-  /** The resident regions, as `wantedDetail` reads them. */
+  /** The resident regions. */
   residentIds(): ReadonlySet<string> {
     return new Set(this.resident.keys());
+  }
+
+  /**
+   * The regions held or being built, as `wantedDetail` reads them: either
+   * keeps its region down to `DETAIL_KEEP_PX`, so a request is not aborted and
+   * restarted as the camera crosses `DETAIL_WANT_PX`.
+   */
+  keptIds(): ReadonlySet<string> {
+    return new Set([...this.resident.keys(), ...this.inFlight.keys()]);
   }
 
   /** A resident region's detail, or undefined. */
@@ -153,11 +165,30 @@ export class DetailResidency<T> {
       const held = this.resident.get(id);
       if (held !== undefined) held.usedAt = this.tick;
     }
+    // A session taking its slot leaves less room: what no longer fits goes.
+    this.shrink(Math.max(0, this.maxResident - reserved));
     for (const id of ids) {
       if (this.inFlight.size >= this.maxInFlight) break;
       if (this.resident.has(id) || this.inFlight.has(id) || this.failedIds.has(id)) continue;
       this.request(id);
     }
+  }
+
+  /**
+   * Let a region go now, held or being built: a session has taken it, so this
+   * residency's copy would be a second one of the same ground.
+   */
+  drop(id: string): void {
+    const controller = this.inFlight.get(id);
+    if (controller !== undefined) {
+      this.inFlight.delete(id);
+      controller.abort();
+      this.counts.cancelled++;
+    }
+    const held = this.resident.get(id);
+    if (held === undefined) return;
+    this.resident.delete(id);
+    this.free(id, held.value);
   }
 
   /** Abort everything in flight and release everything held. */
@@ -197,16 +228,23 @@ export class DetailResidency<T> {
     );
   }
 
-  /** Hold a region, letting go of the least recently wanted others past the bound. */
+  /** Hold a region; the `want` that follows lets go of what no longer fits. */
   private admit(id: string, value: T): void {
     this.resident.set(id, { value, usedAt: this.tick });
     this.counts.admitted++;
-    const bound = Math.max(1, this.maxResident - this.reserved);
+  }
+
+  /**
+   * Let go of regions no longer wanted, least recently wanted first, until at
+   * most `bound` are held. A wanted region is never let go: `wantedDetail`
+   * asks for no more than the bound leaves room for.
+   */
+  private shrink(bound: number): void {
     while (this.resident.size > bound) {
       let victim: string | null = null;
       let oldest = Number.POSITIVE_INFINITY;
       for (const [other, held] of this.resident) {
-        if (other !== id && held.usedAt < oldest) {
+        if (!this.wanted.includes(other) && held.usedAt < oldest) {
           victim = other;
           oldest = held.usedAt;
         }

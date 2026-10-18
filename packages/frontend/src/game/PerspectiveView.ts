@@ -2519,6 +2519,9 @@ export class PerspectiveView {
     const home = this.worldRegion;
     if (residency === null || home === null) return;
     const session = this.terrainMesh !== null ? home.id : null;
+    // A session holds its own region: a copy built before its ground arrived
+    // would be a second one, past §7.5's two.
+    if (session !== null) residency.drop(session);
     const candidates: DetailCandidate[] = [];
     if (this.overview?.mesh.visible === true) {
       FRUSTUM_TMP.setFromProjectionMatrix(
@@ -2550,7 +2553,7 @@ export class PerspectiveView {
     }
     const reserved = session === null ? 0 : 1;
     residency.want(
-      wantedDetail(candidates, residency.residentIds(), residency.maxResident - reserved),
+      wantedDetail(candidates, residency.keptIds(), residency.maxResident - reserved),
       reserved
     );
     const drawn = new Set(residency.drawn());
@@ -2564,7 +2567,10 @@ export class PerspectiveView {
    * middle, its grid eased into the overview by the seam as the apron is, its
    * skin baked in slices between frames, then its mesh, shaded and faded as
    * the apron is and placed by its transform. It gives up between steps when
-   * the residency lets the region go, and holds nothing then.
+   * the residency lets the region go, and holds nothing then. No look's
+   * surface hook is chained (`installGroundSurface`, which the apron takes
+   * under Sorrowgate's look): a region drawn without its session is the
+   * board's, and how it looks there is #1462's.
    */
   private async loadRegionDetail(id: string, signal: AbortSignal): Promise<RegionDetail> {
     const region = worldRegionById(id);
@@ -2641,9 +2647,10 @@ export class PerspectiveView {
     mesh.updateMatrixWorld();
     mesh.visible = false;
     this.scene.add(mesh);
-    const detail = { mesh, cells: cellsTexture, terrain, seed, rockTopM, rect };
-    this.shadeExterior();
-    return detail;
+    // Under the veil's shade from its first frame: it is not resident yet, so
+    // `shadeExterior` would pass it by.
+    this.tintExterior(material);
+    return { mesh, cells: cellsTexture, terrain, seed, rockTopM, rect };
   }
 
   /** Free what `loadRegionDetail` built: the residency let its region go. */
@@ -2746,15 +2753,19 @@ export class PerspectiveView {
    * overview's skin under the same one.
    */
   private shadeExterior(): void {
-    const k = this.veil.listening ? Math.min(1, Math.max(0, this.veilIntensity)) : 0;
-    const i = Math.round(k * VEIL_STEPS) * 3;
     const details = [...(this.residency?.residentIds() ?? [])].map(
       (id) => this.residency!.get(id)!.mesh
     );
     for (const mesh of [this.apron?.mesh, this.overview?.mesh, ...details]) {
-      const material = mesh?.material as MeshBasicMaterial | undefined;
-      material?.color.setRGB(VEIL_TABLE[i]!, VEIL_TABLE[i + 1]!, VEIL_TABLE[i + 2]!);
+      if (mesh != null) this.tintExterior(mesh.material as MeshBasicMaterial);
     }
+  }
+
+  /** One exterior material at the veil's floor (`shadeExterior`). */
+  private tintExterior(material: MeshBasicMaterial): void {
+    const k = this.veil.listening ? Math.min(1, Math.max(0, this.veilIntensity)) : 0;
+    const i = Math.round(k * VEIL_STEPS) * 3;
+    material.color.setRGB(VEIL_TABLE[i]!, VEIL_TABLE[i + 1]!, VEIL_TABLE[i + 2]!);
   }
 
   /**
