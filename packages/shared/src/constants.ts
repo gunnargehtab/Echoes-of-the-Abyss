@@ -74,6 +74,14 @@ export const WORLD = {
    */
   DETAIL_RESIDENT: 2,
   DETAIL_IN_FLIGHT: 2,
+  /**
+   * TUNABLE — §7.6's board and travel, presentation numbers the doc states:
+   * how far the campaign board's fixed camera stands from the middle of
+   * Sorrowgate's map, and how long a launch's travel to the opening frame
+   * takes. Moving either edits §7.6 too.
+   */
+  BOARD_DOLLY_M: 24_000,
+  TRAVEL_S: 2.5,
 } as const;
 
 /**

@@ -252,8 +252,8 @@ The whole frame — overview, detail, water, props, the player's force, every pa
 
 A mission starts when its room is joined, so a camera flight after joining would spend the opening offscreen. The order is therefore fixed:
 
-1. **Overview.** The campaign board stays the control and the accessible reading ([ui-ux.md](ui-ux.md) §14); the atlas is drawn behind it. The briefing opens over the same world.
-2. **Travel.** Launching moves the camera to the mission's home frame — focus on the spawn, north, 55° — over **2.5 s** while the region's public ground and assets load. Skippable at any point, and a cut under reduced motion.
+1. **Overview.** The campaign board stays the control and the accessible reading ([ui-ux.md](ui-ux.md) §14); the atlas is drawn behind it. The briefing opens over the same world. The camera holds one frame there: north, 55°, from **24 km**, on the middle of Sorrowgate's map, so the drowned city is mid-frame with the plateaus' foot and the fields' slope at its edges. It does not move and takes no input, because the board is the control and nothing on the board moves. The world loads when the board opens, behind a board already drawn; on a device without WebGL the board is drawn alone, as it was before the world existed. A briefing the Tutorial door opens is drawn as it is today, off the world.
+2. **Travel.** Launching moves the camera to the mission's opening frame — its map framed whole, north, 55°, the frame every entry opens on — over **2.5 s** while the match's own code and the region's public assets load. Skippable at any point, and a cut under reduced motion. A bar names the destination as the board's caption does and carries two controls: **Skip**, focused, which cuts to the end, and **Cancel**, which Esc also presses.
 3. **Join.** Only when travel and preparation have both finished is the room joined, once. Commands, HUD, input and audio attach when the first server state arrives; until then the frame is held and nothing can be ordered.
 4. **Return.** After the result, the session detaches — network, HUD, input and audio — the fade ramps out, and the camera travels back to the overview frame the player left: the same 2.5 s, a cut under reduced motion.
 
@@ -267,7 +267,7 @@ A mission starts when its room is joined, so a camera flight after joining would
 
 ### 7.8 The calls this section took
 
-The owner's calls: six on #1455, six on #1461, five on #1457, five on #1459 and two on #1460. Each was written with its options; the one taken is named.
+The owner's calls: six on #1455, six on #1461, five on #1457, five on #1459, two on #1460 and three on #1462. Each was written with its options; the one taken is named.
 
 **Anchors: Sorrowgate only (taken).** The alternatives were to pin every named place now from §1–§4's distances, or to scale Plate VII's coordinates. Scaling the plate would turn an illustration's compressions into geography, since its depth rail gives the shallows room. Pinning all of them now would decide ground no renderer has drawn yet. So only the pilot is pinned, and #1457 places the rest inside the region rectangles.
 
@@ -316,6 +316,14 @@ The owner's calls: six on #1455, six on #1461, five on #1457, five on #1459 and 
 **The room names the region on its ground (taken).** The `terrain` message carries the region's id, so the ground and where it stands arrive in one message, at join, reconnection and rematch. Naming it on the `map` message would land it after the ground, with the surround built before its placement was known. Leaving placement to the client's own mission id would let the client paste a room's ground into a region the room never named.
 
 **A released view draws the baseline (taken).** Releasing the view drops the session's ground, so the overview never shows one run's state after the run. Keeping the last session's ground until the next join cost nothing, but drew a fallen arch into the public atlas.
+
+**The board's camera holds one frame over the mid-Rift (taken).** A fixed oblique keeps the board's rule that nothing on it moves, and keeps the atlas behind the board rather than beside it as a second control. Following the lit slot across the Rift would give the atlas a job but move the board. Framing all ninety kilometres needs a far plane past the camera's 60 km, and draws the drowned city a few pixels wide.
+
+**The world loads when the board opens (taken).** The title screen keeps its bundle, and the board is drawn at once with the atlas arriving behind it. Fetching it from the title would charge everyone who never opens the campaign.
+
+**Skip and Cancel as buttons (taken).** A bar with a caption and two real controls can be reached by keyboard and announced. Any key skipping, with Esc to cancel, would leave both controls invisible and unannounced.
+
+**Travel ends on the opening frame (taken).** Every entry since [#1458](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1458) opens on the map framed whole, so travel ending there lands where the session begins, with no cut. Ending on the spawn, as this section first said, would leave the session's first ground to refit the camera the moment it arrives.
 
 ---
 
