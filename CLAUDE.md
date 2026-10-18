@@ -35,6 +35,8 @@ it, since a merge commit carries its body into `main` for good.
 - **Facts, not narrative.** Numbers, paths, the failing test's name.
 - **Link instead of quoting.** Name the doc, the test or the issue and move on.
 - **Budgets.** 300 words for a pull request body, 200 for an issue, 100 for a comment.
+  They bind text posted to GitHub, not a subagent's report or a reply in the session.
+  Draft under the budget and measure once, on the final text, not after every rewrite.
 - **A pull request body is three sections** (`.github/PULL_REQUEST_TEMPLATE.md`):
   Problem, at most three sentences; Options, only when the change took a decision, at
   most three per option; Solution, at most three, naming what proves it.
