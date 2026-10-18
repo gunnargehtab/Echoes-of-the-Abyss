@@ -41,22 +41,24 @@ Three repo facts decide how to read what comes back:
   rebuild before believing the error — the fix is very often no code change at
   all. Root scripts (`type-check`, `test`, `build`) rebuild for you; workspace
   scripts do not.
-- **A red `docs` job is a dead link or a markdownlint hit**, in `docs/` or in
-  the prose this repository wrote under `.claude/`, and the `--only=` line above
-  is that job's three gates and nothing else. They need no install and finish in
-  well under a minute, so on a docs-touching PR they go before anything else.
+- **A red `docs` job is a dead link, a markdownlint hit or a tool test**, in
+  `docs/`, in the prose this repository wrote under `.claude/`, or under
+  `tools/` (`npm run test:tools`, here because one needs `docs/screenshots`,
+  which only this job checks out). The `--only=` line above is its three doc
+  gates. They need no install and finish in well under a minute, so on a
+  docs-touching PR they go before anything else.
   `gates.mjs` does not bail, so one run names every red gate rather than the
   first; the `--` is required, for the reason `CLAUDE.md`'s Commands section
   gives. The link check ignores this repo's own github.com URLs by config; any
   other dead link is real, and "Never link a doc that does not exist" is the
   rule that was broken.
-- **A red `test` shard names its files.** The backend suite is dealt out
-  file-by-file by `--test-shard`, deterministically, so the failing file is
-  the same one every run. Run that one file with the command above, not
+- **A red `test` shard names its files.** The backend and frontend suites are
+  dealt out file-by-file by `--test-shard`, deterministically, so the failing
+  file is the same one every run. Run that one file with the command above, not
   `npm test`: the mission tests play whole missions at 60 Hz and a single file
-  can take over a minute, so the full suite is the last thing to reach for.
-  If the failure is in `shared` or `frontend`, those run on the last shard
-  with `npm -w packages/<name> run test`.
+  can take over a minute, so the full suite is the last thing to reach for. A
+  frontend file also needs `--import ./test/support/viteAssets.mjs`, as its
+  `test` script shows. `shared` runs whole on the last shard.
 
 If none of those reproduces, look at the `setup` step before the test body: a
 `package.json` edited without its lockfile makes `npm ci` refuse the install,
