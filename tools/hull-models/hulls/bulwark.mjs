@@ -88,9 +88,12 @@
  * they stand on: `stack_0..3` spanned y 14–26 (1.87 m true, under the root's
  * 0.935) and `armour_tier_2`'s top is y 12.0, so `contacts.mjs` paired each
  * stack with its band and nothing else. Each now stands on the tier, its
- * foot at y 12 and its band 4 m up the drum as the file had it: `stack_0..3`
- * at y 12–24 and `stack_band_0..3` at y 21.5–22.5, every station and radius
- * the file's. Nothing in plan moves, so hullOutlines.generated.ts is
+ * foot at y 12 and its band 10 m up the drum, 2 m under its top, as the
+ * file had it: `stack_0..3` at y 12–24 and `stack_band_0..3` at y 21.5–22.5,
+ * every station and radius the file's. The after pair stands at the tier's
+ * chamfered after corner, whose edge runs (−58, ±12) to (−46, ±21), and one
+ * foot vertex of each, at (−56.4, ±13.4), hangs 0.15 m past it: a plan the
+ * file drew, left as it is. Nothing in plan moves, so hullOutlines.generated.ts is
  * unchanged; `contacts.mjs` adds `armour_tier_2 · stack_0..3`, and the
  * after flood patch (PATCHES, z ±9, y 12.05–12.35) stays 0.2 m clear of
  * the drums at z 9.2 while the bands, z 9.0 at their widest, pass 9 m over
@@ -222,7 +225,7 @@ bathyarch.citadel(root, { black, grey, rust, lampM }, {
 // Four stacks in two pairs abaft the citadel, port pair first, each
 // with its band written directly after it. Each stands on the second tier
 // (header, STACKS): its foot at the tier's top, y 12, so the 12 m drum
-// spans y 12–24 and the band rides at its #1123 height over the foot.
+// spans y 12–24 and the band rides at the file's height over the foot, 10 m.
 [[-46, -12], [-54, -12], [-46, 12], [-54, 12]].forEach(([x, z], i) => {
   bathyarch.stack(root, black, { name: `stack_${i}`, at: [x, 18, z], r: 2.8, rTop: 2.4, height: 12, cut });
   bathyarch.stackBand(root, amber, { name: `stack_band_${i}`, at: [x, 22, z], r: 3, h: 1, cut });
