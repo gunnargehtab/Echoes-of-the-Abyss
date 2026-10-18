@@ -90,7 +90,12 @@
 }
 
 /* A travelled entry's wait for its room (GameCanvas): the frame the travel
-   ended on stays in view, and the wait is said at the foot. */
+   ended on stays in view, the HUD stays off until the first state brings it,
+   and the wait is said at the foot. */
+.game-root-held .game-host {
+  visibility: hidden;
+}
+
 .game-overlay-held {
   justify-content: flex-end;
   padding-bottom: 3rem;

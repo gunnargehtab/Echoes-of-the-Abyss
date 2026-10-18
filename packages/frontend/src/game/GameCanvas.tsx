@@ -855,7 +855,12 @@ export function GameCanvas({
   const selfReady = lobby?.players.find((player) => player.sessionId === sessionId)?.ready ?? false;
 
   return (
-    <div className="game-root" style={cssVariables(uiScale, palette)}>
+    <div
+      // A travelled entry waiting on its room shows the held world and
+      // nothing of the HUD, which attaches with the first state (§7.6 step 3).
+      className={travelled && status === 'connecting' ? 'game-root game-root-held' : 'game-root'}
+      style={cssVariables(uiScale, palette)}
+    >
       {/* Everything the esc menu floats over, gathered so one `inert` can
           silence the lot of it while the menu is up (§9.5). The wrapper is
           unpositioned, so the absolute panels inside keep .game-root as

@@ -249,7 +249,9 @@ export const HOME_PITCH_DEG = 55;
 /**
  * The dolly a commander's first sight of their own force opens at, centred on
  * it (`EchoRenderer`, "a commander starts at home"), and the dolly a launch's
- * travel ends at, on the spawn (docs/world-map.md §7.6). TUNABLE.
+ * travel ends at, on the spawn. TUNABLE; docs/world-map.md §7.6 states it, so
+ * moving it edits §7.6 too. Here rather than in shared: only this package
+ * reads it.
  */
 export const HOME_DOLLY_M = 2_600;
 

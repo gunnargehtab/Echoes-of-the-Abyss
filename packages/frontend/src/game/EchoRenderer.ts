@@ -4620,6 +4620,16 @@ export class EchoRenderer {
   }
 
   /**
+   * Keep the frame the camera already stands on when the force is first seen,
+   * rather than recentring on it: a launch's travel has already brought the
+   * camera home, on the spawn at the home dolly (docs/world-map.md §7.6), and
+   * a recentre after it would be the cut the travel exists to avoid.
+   */
+  holdOpeningFrame(): void {
+    this.cameraCentered = true;
+  }
+
+  /**
    * Ground that changed mid-match — docs/mission-sorrowgate.md §9 (#197), and
    * the biome with it (#259).
    *
@@ -4633,16 +4643,6 @@ export class EchoRenderer {
    * `biomeAt` answers from it — so a scope that did not take it would keep
    * naming the water by what used to be there.
    */
-  /**
-   * Keep the frame the camera already stands on when the force is first seen,
-   * rather than recentring on it: a launch's travel has already brought the
-   * camera home, on the spawn at the home dolly (docs/world-map.md §7.6), and
-   * a recentre after it would be the cut the travel exists to avoid.
-   */
-  holdOpeningFrame(): void {
-    this.cameraCentered = true;
-  }
-
   applyGround(
     cells: readonly { index: number; floorM: number; ceilingM: number; biome: number }[]
   ): void {

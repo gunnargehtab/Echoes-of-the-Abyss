@@ -2,8 +2,8 @@
  * The board's world and a launch's travel — docs/world-map.md §7.6 (#1462).
  *
  * The board holds one frame over the mid-Rift and takes no input; launching
- * the prologue moves that camera to the mission's opening frame over 2.5 s,
- * a cut under reduced motion or a Skip, before any room is joined. These hold
+ * the prologue moves that camera home — the spawn, at the home dolly — over
+ * 2.5 s, a cut under reduced motion or a Skip, before any room is joined. These hold
  * the arithmetic to the section, and the backdrop to the page's one world
  * view: it draws the board from it, travels on it, and gives it back.
  */
@@ -164,11 +164,13 @@ const realNow = performance.now.bind(performance);
 
 async function mountBackdrop(
   props: Partial<WorldBackdropProps> = {},
-  webgl = true
+  webgl = true,
+  prepare?: () => Promise<void>
 ): Promise<Mounted> {
   const gl = new HeadlessWebGLRenderer();
   const host = createHost(1280, 720);
   const devices = {
+    ...(prepare === undefined ? {} : { prepare }),
     environment: gl.environment,
     glRenderer: () => {
       if (!webgl) throw new Error('headless: WebGL unavailable');
@@ -266,7 +268,7 @@ describe('the world behind the board (§7.6)', () => {
     }
   });
 
-  it('travels to the opening frame over 2.5 s, and says when it is there', async () => {
+  it('travels home over 2.5 s, and says when it is there', async () => {
     const board = await mountBackdrop();
     try {
       await board.update({ target: PILOT });
@@ -274,12 +276,34 @@ describe('the world behind the board (§7.6)', () => {
       const view = worldView.current!;
       await frameAt(1_250);
       assert.equal(board.settled, 0, 'halfway is not there');
-      assert.ok(view.frame.distanceM < WORLD.BOARD_DOLLY_M && view.frame.distanceM > 5_250);
+      assert.ok(
+        view.frame.distanceM < WORLD.BOARD_DOLLY_M && view.frame.distanceM > HOME.distanceM
+      );
       await frameAt(2_501);
       sameFrame(view.frame, HOME, 1e-6);
       await untilSettled(board, 1);
       await frameAt(4_000);
       assert.equal(board.settled, 1, 'and only once');
+    } finally {
+      await board.unmount();
+    }
+  });
+
+  it('waits for the region to be prepared before it says it has arrived', async () => {
+    let loaded!: () => void;
+    const held = new Promise<void>((resolve) => (loaded = resolve));
+    const board = await mountBackdrop({}, true, () => held);
+    try {
+      await board.update({ target: PILOT });
+      await frameAt(1);
+      await frameAt(2_501);
+      sameFrame(worldView.current!.frame, HOME, 1e-6);
+      assert.equal(board.settled, 0, 'home, but the region is still loading');
+      await act(async () => {
+        loaded();
+        await held;
+      });
+      assert.equal(board.settled, 1, 'arrived once the region is ready');
     } finally {
       await board.unmount();
     }

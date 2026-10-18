@@ -17,6 +17,8 @@ export interface TravelState {
   skipped: boolean;
   /** The camera is home, and the region's public ground and assets are fetched. */
   settled: boolean;
+  /** The world drew the travel: the camera moved, so the session keeps its frame. */
+  drew: boolean;
   /** The match's own code has loaded. */
   prepared: boolean;
 }
@@ -32,7 +34,14 @@ export function travelsFirst(from: 'title' | 'campaign', missionId: string): boo
 
 /** A travel just launched: nothing arrived, nothing loaded. */
 export function startTravel(missionId: string): TravelState {
-  return { kind: 'travel', missionId, skipped: false, settled: false, prepared: false };
+  return {
+    kind: 'travel',
+    missionId,
+    skipped: false,
+    settled: false,
+    drew: false,
+    prepared: false,
+  };
 }
 
 /**
@@ -53,7 +62,7 @@ export function readyToJoin(travel: TravelState, worldFailed: boolean): boolean 
  */
 export function onTravel<S extends { kind: string }>(
   screen: S | TravelState,
-  change: Partial<Pick<TravelState, 'skipped' | 'settled' | 'prepared'>>,
+  change: Partial<Pick<TravelState, 'skipped' | 'settled' | 'drew' | 'prepared'>>,
   missionId?: string
 ): S | TravelState {
   if (screen.kind !== 'travel') return screen;

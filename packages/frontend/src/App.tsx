@@ -197,8 +197,8 @@ function App() {
       mapId: mapForMission(screen.missionId),
       resume: false,
       missionId: screen.missionId,
-      // Only a travel that drew: with no world the camera never moved.
-      ...(screen.settled && !worldFailed ? { travelled: true as const } : {}),
+      // Only a travel the world drew: with none the camera never moved.
+      ...(screen.drew && !worldFailed ? { travelled: true as const } : {}),
     });
   }, [screen, worldFailed]);
 
@@ -227,7 +227,9 @@ function App() {
                   : { kind: 'board' }
               }
               skip={screen.kind === 'travel' && screen.skipped}
-              onSettled={() => setScreen((current) => onTravel(current, { settled: true }))}
+              onSettled={(drew) =>
+                setScreen((current) => onTravel(current, { settled: true, drew }))
+              }
             />
           </Suspense>
         </WorldBoundary>
