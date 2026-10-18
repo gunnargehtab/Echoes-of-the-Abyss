@@ -312,7 +312,8 @@ describe('the world behind the board (§7.6)', () => {
     const before = board.gl.ledger.frames;
     pumpAnimationFrames(3);
     assert.equal(board.gl.ledger.frames, before, 'nothing draws while nobody holds it');
-    const lent = worldView.acquire(PROLOGUE_SORROWGATE_HEADER.id, createHost(1280, 720));
+    const host = createHost(1280, 720) as unknown as HTMLElement;
+    const lent = worldView.acquire(PROLOGUE_SORROWGATE_HEADER.id, host);
     assert.equal(lent?.view, view, 'the session draws in the same world');
   });
 });
