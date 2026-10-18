@@ -126,6 +126,12 @@ export const UNITS = [
   { slug: 'beacon', model: 'beacon-bathyarch.glb', lengthM: 70, sig: 30 },
   { slug: 'glider', model: 'glider-pelagia.glb', lengthM: 55, sig: 8 },
   { slug: 'acolyte', model: 'acolyte-directorate.glb', lengthM: 58, sig: 10 },
+  // The Acolyte as the other navies field it (#1439), on the Chorister's rule:
+  // the planted scout's plan in each navy's shape language, the light kept
+  // nearly black at the Directorate's band.
+  { slug: 'acolyte-bathyarch', model: 'acolyte-bathyarch.glb', lengthM: 58, sig: 10 },
+  { slug: 'acolyte-pelagia', model: 'acolyte-pelagia.glb', lengthM: 58, sig: 10 },
+  { slug: 'acolyte-hadron', model: 'acolyte-hadron.glb', lengthM: 58, sig: 10 },
   { slug: 'herald', model: 'herald-hadron.glb', lengthM: 65, sig: 6.3 },
   // The ordnance hulls (docs/units.md "The ordnance hulls", #785 — Phase 4's
   // third box): one a navy, so each model is the kind's canonical one. The

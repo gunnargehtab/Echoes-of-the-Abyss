@@ -154,8 +154,8 @@ block's *Faction-locked* line). So they take the Chorister's model rule too: one
 Directorate model, `<slug>-directorate.glb`, on the kind's `UNITS` row, which serves every
 navy recoloured on the chart; in the conn view the runtime resolves `<slug>-<faction>.glb`,
 and a navy whose variant has not passed intake stays on the sprite. The Verger's three
-variants landed in #1438, as #649's did for the Chorister; the Acolyte's, the Thurible's and
-the Lure's are #1439, #1440 and #1441.
+variants landed in #1438 and the Acolyte's in #1439, as #649's did for the Chorister; the
+Thurible's and the Lure's are #1440 and #1441.
 
 ### 3.5 Built in a state
 
