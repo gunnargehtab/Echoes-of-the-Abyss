@@ -144,6 +144,13 @@ export interface GameCanvasProps {
   /** Whether a held seat should be redeemed rather than a new match joined. */
   resume: boolean;
   /**
+   * Entered by a launch's travel from the board (docs/world-map.md §7.6): the
+   * camera already stands home, so neither the first ground nor the first
+   * sight of the force reframes it. Like `harness`, a property of how this
+   * mount was reached rather than of the match, so not in the identity below.
+   */
+  travelled?: boolean;
+  /**
    * Leave the match and return to the shell. The teardown in the unmount
    * effect is the actual exit — disconnecting clears the reconnection token,
    * so the title screen does not offer to resume a seat left on purpose.
@@ -166,6 +173,7 @@ export function GameCanvas({
   roomId,
   create,
   resume,
+  travelled = false,
   onExit,
   onRecord,
   harness,
@@ -307,7 +315,8 @@ export function GameCanvas({
      * a rematch's new ground opens on the opening shot as it always has.
      */
     let worldClaim: symbol | null = null;
-    let framed = false;
+    // A travelled entry arrives framed: the travel ended home (§7.6).
+    let framed = travelled;
     /**
      * StrictMode mounts effects twice in development, and Application.init()
      * is async — without this guard the second mount would race the first and
@@ -511,6 +520,7 @@ export function GameCanvas({
       }
       renderer = activeRenderer;
       rendererRef.current = activeRenderer;
+      if (travelled) activeRenderer.holdOpeningFrame();
       // One camera, two painters: every world mark and every aimed pointer in
       // the Pixi layer goes through the conn view from here on.
       activeRenderer.setConn(perspective);
@@ -845,7 +855,12 @@ export function GameCanvas({
   const selfReady = lobby?.players.find((player) => player.sessionId === sessionId)?.ready ?? false;
 
   return (
-    <div className="game-root" style={cssVariables(uiScale, palette)}>
+    <div
+      // A travelled entry waiting on its room shows the held world and
+      // nothing of the HUD, which attaches with the first state (§7.6 step 3).
+      className={travelled && status === 'connecting' ? 'game-root game-root-held' : 'game-root'}
+      style={cssVariables(uiScale, palette)}
+    >
       {/* Everything the esc menu floats over, gathered so one `inert` can
           silence the lot of it while the menu is up (§9.5). The wrapper is
           unpositioned, so the absolute panels inside keep .game-root as
@@ -946,7 +961,15 @@ export function GameCanvas({
         </div>
       )}
       {!live && !glFailed && (
-        <div className="game-overlay">
+        // A travelled entry waiting on its room holds the frame the travel
+        // ended on (docs/world-map.md §7.6 step 3): the wait is a caption at
+        // the foot, not glass over the world. A lost or refused signal is
+        // information and keeps the glass.
+        <div
+          className={
+            travelled && status === 'connecting' ? 'game-overlay game-overlay-held' : 'game-overlay'
+          }
+        >
           <h2>
             {status === 'connecting' && 'Listening…'}
             {status === 'reconnecting' && 'Signal lost — re-acquiring'}

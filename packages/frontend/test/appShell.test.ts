@@ -182,3 +182,75 @@ describe('the shell: Back returns through the door it came in by', () => {
     }
   });
 });
+
+/**
+ * A launch from the board (docs/world-map.md §7.6, #1462), by its end states.
+ * No WebGL here, so the world is not drawn and a travel arrives at once: the
+ * order of a travel is `launch.ts`'s and worldTravel.test.ts's to hold. What
+ * this holds is that every door still reaches the water, and which screens
+ * the world is drawn behind.
+ */
+describe('the shell: the world behind the board', () => {
+  /** Wait, a few milliseconds at a time, for the shell to reach a state. */
+  async function until(view: Rendered, done: () => boolean, what: string): Promise<void> {
+    for (let waited = 0; waited < 5_000; waited += 20) {
+      if (done()) return;
+      await view.act(() => new Promise((resolve) => setTimeout(resolve, 20)));
+    }
+    assert.fail(`timed out waiting for ${what}`);
+  }
+  /** The match screen, as a runner with no WebGL draws it. */
+  const inMatch = (view: Rendered) =>
+    view.shows('Listening…') || view.shows('No light in the water');
+
+  async function boardBriefing(view: Rendered): Promise<void> {
+    await click(view, 'Campaign');
+    const slot = view.allByClass('campaign-slot').at(0)!;
+    await view.act(() => {
+      (slot.props as { onClick?: () => void }).onClick?.();
+    });
+  }
+
+  it("reaches the water from the board's prologue, by way of its travel", async () => {
+    const view = await shell();
+    try {
+      await boardBriefing(view);
+      await click(view, 'Descend');
+      await until(view, () => inMatch(view), 'the join');
+      assert.equal(view.allByClass('travel-bar').length, 0, 'the travel is over');
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it("reaches the water from the Tutorial door's briefing, with no travel", async () => {
+    const view = await shell();
+    try {
+      await click(view, 'Tutorial');
+      await click(view, 'Descend');
+      assert.equal(view.allByClass('travel-bar').length, 0, 'no travel from the title');
+      await until(view, () => inMatch(view), 'the join');
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('draws the world behind the board and its briefing only', async () => {
+    const view = await shell();
+    try {
+      const overWorld = () => view.allByClass('app-over-world').length > 0;
+      assert.equal(overWorld(), false, 'not behind the title');
+      await click(view, 'Tutorial');
+      assert.equal(overWorld(), false, "not behind the Tutorial door's briefing");
+      await click(view, 'Back');
+      await boardBriefing(view);
+      assert.ok(overWorld(), "behind the board's briefing");
+      await click(view, 'Back');
+      assert.ok(overWorld(), 'behind the board');
+      await click(view, 'The record');
+      assert.equal(overWorld(), false, 'not behind the record');
+    } finally {
+      await view.unmount();
+    }
+  });
+});

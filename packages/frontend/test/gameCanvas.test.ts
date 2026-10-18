@@ -890,6 +890,36 @@ describe('the shell: the persistent world view', () => {
     }
   });
 
+  it('keeps the frame a travel ended on, through the first ground and first sight', async () => {
+    // A launch's travel ends home, on the spawn at the home dolly (§7.6): a
+    // travelled entry is neither fitted to the map nor recentred on the force.
+    const home = { xM: 2_550, yM: 2_150, distanceM: 2_600, yawDeg: 0, pitchDeg: 55 };
+    const frameAfterJoin = async (travelled: boolean) => {
+      const world = await mount({ props: { ...pilot.props, travelled } });
+      try {
+        worldView.current!.setFrame(home);
+        await joinMatch(world);
+        world.room.emit(SERVER_MSG.echo, encodeEcho(null, cannedSnapshot(100), 0));
+        await world.settle();
+        return { ...worldView.current!.frame };
+      } finally {
+        await world.unmount();
+      }
+    };
+    const kept = await frameAfterJoin(true);
+    assert.ok(
+      Math.hypot(kept.xM - home.xM, kept.yM - home.yM) < 1 &&
+        Math.abs(kept.distanceM - home.distanceM) < 1,
+      `a travelled entry stays home: ${JSON.stringify(kept)}`
+    );
+    const moved = await frameAfterJoin(false);
+    assert.ok(
+      Math.hypot(moved.xM - home.xM, moved.yM - home.yM) > 1 ||
+        Math.abs(moved.distanceM - home.distanceM) > 1,
+      'an entry with no travel frames itself, as it always has'
+    );
+  });
+
   it('runs one render loop however many times it is entered', async () => {
     let world = await mount(pilot);
     const gl = world.gl;

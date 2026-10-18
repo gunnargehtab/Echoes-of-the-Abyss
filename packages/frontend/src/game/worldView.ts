@@ -17,15 +17,16 @@
  * match keeps the view it builds for itself, and destroys it, exactly as it
  * did; and since a page should hold one GL context at a time, a match on that
  * path disposes the world view first rather than running two. The module is
- * imported only by `GameCanvas`, so three.js still loads with the match and
- * not with the shell.
+ * imported only by `GameCanvas` and the board's `WorldBackdrop`, both loaded
+ * on demand, so three.js still stays out of the title screen's bundle.
  */
 
-import { worldRegionForMission } from '@echoes/shared';
+import { PROLOGUE_SORROWGATE_HEADER, worldRegionForMission } from '@echoes/shared';
 import type { WebGLRenderer } from 'three';
 import { PerspectiveView } from './PerspectiveView.ts';
 import { lookForMission, type WorldLook } from './tutorialLook.ts';
 import type { createWaterEnvironment } from './modelLighting.ts';
+import { boardFrame } from './worldTravel.ts';
 
 /** The GPU-less boot's stand-ins, as `PerspectiveView.mount` takes them. */
 export interface WorldViewDevices {
@@ -85,6 +86,21 @@ export class WorldViewHost {
     const claim = Symbol('world-view-session');
     this.holder = claim;
     return { view: this.view, claim };
+  }
+
+  /**
+   * Lend the view to the campaign board (docs/world-map.md §7.6 step 1): no
+   * session, the pilot's region at the board's fixed frame, its loop running.
+   * The board, the briefing it opens and a launch's travel all draw here, and
+   * hand the view on with `release` or by a session's `acquire`. Null when the
+   * device has no WebGL, and the board is drawn alone.
+   */
+  showBoard(host: HTMLElement, devices: WorldViewDevices = {}): symbol | null {
+    const lent = this.acquire(PROLOGUE_SORROWGATE_HEADER.id, host, devices);
+    if (lent === null) return null;
+    lent.view.setFrame(boardFrame(worldRegionForMission(PROLOGUE_SORROWGATE_HEADER.id)!));
+    lent.view.setActive(true);
+    return lent.claim;
   }
 
   /**

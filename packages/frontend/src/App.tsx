@@ -22,7 +22,7 @@
  * answers, so the download and the join read as one wait, not two.
  */
 
-import { lazy, Suspense, useState } from 'react';
+import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import './App.css';
 import { useMenuAudio } from './audio/useMenuAudio.ts';
 import { DEFAULT_MAP_ID, missionHeaderById, PROLOGUE_SORROWGATE_HEADER } from '@echoes/shared';
@@ -36,13 +36,55 @@ import { doorFor, type SetupMode } from './net/rooms.ts';
 import { ControlsScreen } from './menu/ControlsScreen.tsx';
 import { SettingsScreen } from './menu/SettingsScreen.tsx';
 import { TitleScreen } from './menu/TitleScreen.tsx';
+import { TravelScreen } from './menu/TravelScreen.tsx';
+import {
+  onTravel,
+  readyToJoin,
+  startTravel,
+  travelsFirst,
+  type TravelState,
+} from './menu/launch.ts';
 import { storedMissionId } from './net/GameClient.ts';
 import { hasPlayed, seenScenes, witnessedConclusions } from './progression/store.ts';
 import { loadSettings } from './settings/store.ts';
 
-const GameCanvas = lazy(() =>
-  import('./game/GameCanvas.tsx').then((module) => ({ default: module.GameCanvas }))
+/** The match's code: fetched by the lazy screen, and early by a travel (§7.6). */
+const loadGameCanvas = () => import('./game/GameCanvas.tsx');
+
+const GameCanvas = lazy(() => loadGameCanvas().then((module) => ({ default: module.GameCanvas })));
+
+/**
+ * The world behind the board (docs/world-map.md §7.6, #1462). Loaded when the
+ * board first opens rather than with the title, as the match is, so the port's
+ * bundle still carries no three.js.
+ */
+const WorldBackdrop = lazy(() =>
+  import('./game/WorldBackdrop.tsx').then((module) => ({ default: module.WorldBackdrop }))
 );
+
+/**
+ * Catches a world that failed to load or draw, so the board stands alone
+ * rather than the shell falling over: the atlas is behind the board, never
+ * in the way of it. `onFail` lets a travel waiting on it go ahead.
+ */
+class WorldBoundary extends Component<
+  { onFail(): void; children: ReactNode },
+  { failed: boolean }
+> {
+  override state = { failed: false };
+
+  static getDerivedStateFromError(): { failed: boolean } {
+    return { failed: true };
+  }
+
+  override componentDidCatch(): void {
+    this.props.onFail();
+  }
+
+  override render(): ReactNode {
+    return this.state.failed ? null : this.props.children;
+  }
+}
 
 type Screen =
   | { kind: 'title' }
@@ -60,6 +102,11 @@ type Screen =
        */
       from: 'title' | 'campaign';
     }
+  /**
+   * A launch from the board, travelling to the mission before its room is
+   * joined (docs/world-map.md §7.6; the rules are `menu/launch.ts`).
+   */
+  | TravelState
   | { kind: 'settings' }
   | { kind: 'controls' }
   | { kind: 'credits' }
@@ -83,6 +130,8 @@ type Screen =
        */
       roomId?: string;
       create?: 'public' | 'private';
+      /** Reached by a launch's travel, so the camera is already home (§7.6). */
+      travelled?: true;
     };
 
 /**
@@ -135,9 +184,56 @@ function App() {
   // long as the shell is on screen, so the shell's AudioContext is closed
   // before the match opens one — a device handle, not a singleton.
   useMenuAudio(screen.kind !== 'match');
+  /** Set when the world could not load or draw: the board stands alone. */
+  const [worldFailed, setWorldFailed] = useState(false);
+
+  // The join, once the travel has arrived and the match's code is here: once,
+  // because the screen it leaves is the only thing that can call it.
+  useEffect(() => {
+    if (screen.kind !== 'travel' || !readyToJoin(screen, worldFailed)) return;
+    setScreen({
+      kind: 'match',
+      name: loadSettings().profileName,
+      mapId: mapForMission(screen.missionId),
+      resume: false,
+      missionId: screen.missionId,
+      // Only a travel the world drew: with none the camera never moved.
+      ...(screen.drew && !worldFailed ? { travelled: true as const } : {}),
+    });
+  }, [screen, worldFailed]);
+
+  /**
+   * Whether the world is drawn behind this screen (§7.6): the board, the
+   * briefing the board opened, and a travel. The Tutorial door's briefing is
+   * drawn as it is today, off the world.
+   */
+  const overWorld =
+    !worldFailed &&
+    (screen.kind === 'campaign' ||
+      screen.kind === 'travel' ||
+      (screen.kind === 'briefing' && screen.from === 'campaign'));
 
   return (
-    <div className="app">
+    <div className={overWorld ? 'app app-over-world' : 'app'}>
+      {overWorld && (
+        <WorldBoundary onFail={() => setWorldFailed(true)}>
+          {/* No fallback: the board is drawn at once, and the world arrives
+              behind it when its code does. */}
+          <Suspense fallback={<div className="world-backdrop" aria-hidden="true" />}>
+            <WorldBackdrop
+              target={
+                screen.kind === 'travel'
+                  ? { kind: 'mission', missionId: screen.missionId }
+                  : { kind: 'board' }
+              }
+              skip={screen.kind === 'travel' && screen.skipped}
+              onSettled={(drew) =>
+                setScreen((current) => onTravel(current, { settled: true, drew }))
+              }
+            />
+          </Suspense>
+        </WorldBoundary>
+      )}
       {screen.kind === 'title' && (
         <TitleScreen
           onResume={() => {
@@ -238,16 +334,40 @@ function App() {
           // opened after a mission finished in this same session already
           // knows what that mission witnessed (docs/campaign.md §1).
           seenScenes={seenScenes()}
-          onDescend={() =>
+          onDescend={() => {
+            const missionId = screen.missionId;
+            // A placed mission launched from the board travels first (§7.6),
+            // fetching the match while it does; every other launch, and the
+            // Tutorial door's, joins as it always has.
+            if (travelsFirst(screen.from, missionId)) {
+              setScreen(startTravel(missionId));
+              const prepared = () =>
+                setScreen((current) => onTravel(current, { prepared: true }, missionId));
+              // A failed fetch is the lazy screen's to report, as it would
+              // be without a travel: the join is not held on it.
+              loadGameCanvas().then(prepared, prepared);
+              return;
+            }
             setScreen({
               kind: 'match',
               name: loadSettings().profileName,
-              mapId: mapForMission(screen.missionId),
+              mapId: mapForMission(missionId),
               resume: false,
-              missionId: screen.missionId,
-            })
-          }
+              missionId,
+            });
+          }}
           onBack={screen.from === 'campaign' ? toCampaign : toTitle}
+        />
+      )}
+      {screen.kind === 'travel' && (
+        <TravelScreen
+          missionId={screen.missionId}
+          skipped={screen.skipped}
+          settled={screen.settled}
+          onSkip={() => setScreen((current) => onTravel(current, { skipped: true }))}
+          // Back to the board with nothing joined; the camera travels back
+          // under it (§7.6, "Cancel").
+          onCancel={toCampaign}
         />
       )}
       {screen.kind === 'settings' && (
@@ -261,7 +381,11 @@ function App() {
         <Suspense
           fallback={
             <div className="game-root">
-              <div className="game-overlay">
+              <div
+                className={
+                  screen.travelled === true ? 'game-overlay game-overlay-held' : 'game-overlay'
+                }
+              >
                 <h2>Listening…</h2>
               </div>
             </div>
@@ -274,6 +398,7 @@ function App() {
             roomId={screen.roomId}
             create={screen.create}
             resume={screen.resume}
+            travelled={screen.travelled === true}
             onExit={toTitle}
             onRecord={toRecord}
           />

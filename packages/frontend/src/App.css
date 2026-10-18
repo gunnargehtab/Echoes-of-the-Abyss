@@ -89,6 +89,19 @@
   pointer-events: none;
 }
 
+/* A travelled entry's wait for its room (GameCanvas): the frame the travel
+   ended on stays in view, the HUD stays off until the first state brings it,
+   and the wait is said at the foot. */
+.game-root-held .game-host {
+  visibility: hidden;
+}
+
+.game-overlay-held {
+  justify-content: flex-end;
+  padding-bottom: 3rem;
+  background: none;
+}
+
 .game-overlay h2 {
   margin: 0;
   font-family: var(--font-display);
@@ -3350,4 +3363,83 @@ button.objectives-row:hover {
   line-height: 1.6;
   font-style: italic;
   color: var(--text-dim);
+}
+
+/* ---------------------------------------------------------------------------
+   The world behind the board — docs/world-map.md §7.6 (#1462).
+
+   The atlas is drawn behind the board, never in place of it. The backdrop
+   carries the menu's own gradient, and stands in while the world's code
+   loads, so a board whose world has not arrived, or cannot draw, is the board
+   as it always was. Over the world each screen's
+   gradient becomes a wash of the same colours, enough to keep the board's
+   type on the contrast it was set against, thin enough that the Rift reads
+   through it. All three alphas TUNABLE. Nothing here takes a pointer: the
+   board is the control. */
+.world-backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(var(--abyss-floor), var(--abyss-void) 55%, #000);
+}
+
+.world-backdrop canvas {
+  display: block;
+}
+
+.app-over-world .menu-screen {
+  background: linear-gradient(
+    color-mix(in srgb, var(--abyss-floor) 55%, transparent),
+    color-mix(in srgb, var(--abyss-void) 45%, transparent) 55%,
+    color-mix(in srgb, #000 65%, transparent)
+  );
+}
+
+/* The travel's bar (TravelScreen.tsx): at the foot, so the frame above it is
+   the travel. */
+.travel-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1.5rem;
+  pointer-events: none;
+  font-family: var(--font-data);
+  color: var(--text-dim);
+}
+
+.travel-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--neon-cyan) 35%, transparent);
+  border-radius: 3px;
+  background: var(--abyss-glass);
+  pointer-events: auto;
+}
+
+.travel-caption {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+}
+
+.travel-destination {
+  color: var(--text-bright);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.travel-state {
+  opacity: 0.65;
+}
+
+.travel-controls {
+  display: flex;
+  gap: 0.9rem;
 }

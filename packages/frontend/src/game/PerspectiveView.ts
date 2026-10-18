@@ -247,6 +247,39 @@ const VEIL_TABLE = ((): Float32Array => {
 export const HOME_PITCH_DEG = 55;
 
 /**
+ * The dolly a commander's first sight of their own force opens at, centred on
+ * it (`EchoRenderer`, "a commander starts at home"), and the dolly a launch's
+ * travel ends at, on the spawn. TUNABLE; docs/world-map.md §7.6 states it, so
+ * moving it edits §7.6 too. Here rather than in shared: only this package
+ * reads it.
+ */
+export const HOME_DOLLY_M = 2_600;
+
+/** A camera stance: its focus on the ground in the view's metres, dolly and angles. */
+export interface CameraFrame {
+  xM: number;
+  yM: number;
+  distanceM: number;
+  yawDeg: number;
+  pitchDeg: number;
+}
+
+/**
+ * A map `widthM` by `heightM` framed whole: its middle, all of it in frame,
+ * north, at the home pitch — what `fitToMap` stands on, before the first sight
+ * of the force recentres on it.
+ */
+export function openingFrame(widthM: number, heightM: number): CameraFrame {
+  return {
+    xM: widthM / 2,
+    yM: heightM / 2,
+    distanceM: Math.max(widthM, heightM) * 1.05,
+    yawDeg: 0,
+    pitchDeg: HOME_PITCH_DEG,
+  };
+}
+
+/**
  * SPEC — docs/free-camera.md §4: the band the player may pitch within.
  *
  * Neither end is taste. Below the floor the ground plane stops being a ground
@@ -1710,14 +1743,42 @@ export class PerspectiveView {
   fitToMap(): void {
     const terrain = this.terrain;
     if (terrain === null) return;
-    const widthM = terrain.cols * terrain.cellM;
-    const heightM = terrain.rows * terrain.cellM;
-    this.target.set(widthM / 2, 0, heightM / 2);
+    const opening = openingFrame(terrain.cols * terrain.cellM, terrain.rows * terrain.cellM);
+    this.target.set(opening.xM, 0, opening.yM);
     // Framing the map means framing the ground, so a focus the player had
     // lifted into the column comes back down. The angles are theirs and are
     // left alone — `home()` is the verb that takes those back.
     this.focusDepthM = null;
-    this.distance = Math.max(widthM, heightM) * 1.05;
+    this.distance = opening.distanceM;
+    this.applyCamera();
+  }
+
+  /** Where the camera stands: its focus on the ground, dolly and angles. */
+  get frame(): CameraFrame {
+    return {
+      xM: this.target.x,
+      yM: this.target.z,
+      distanceM: this.distance,
+      yawDeg: (this.yaw * 180) / Math.PI,
+      pitchDeg: (this.pitch * 180) / Math.PI,
+    };
+  }
+
+  /**
+   * Stand the camera on a frame, focus on the ground: the board's fixed frame
+   * and each step of a travel (docs/world-map.md §7.6). The focus is held to
+   * its rectangle as every verb's is; the dolly is the frame's own, since the
+   * board stands farther back than a player may zoom.
+   */
+  setFrame(frame: CameraFrame): void {
+    this.target.x = frame.xM;
+    this.target.z = frame.yM;
+    this.focusDepthM = null;
+    this.clampTarget();
+    this.distance = Math.max(250, frame.distanceM);
+    this.yaw = (frame.yawDeg * Math.PI) / 180;
+    const pitch = Math.min(PITCH_MAX_DEG, Math.max(PITCH_MIN_DEG, frame.pitchDeg));
+    this.pitch = (pitch * Math.PI) / 180;
     this.applyCamera();
   }
 
@@ -2861,7 +2922,9 @@ export class PerspectiveView {
    */
   seabedDepthAt(xM: number, yM: number): number {
     const terrain = this.terrain;
-    if (terrain === null) return 0;
+    // A placed view with no session's ground — the board, a travel — stands
+    // on the atlas as it is drawn (docs/world-map.md §7.6).
+    if (terrain === null) return this.worldRegion === null ? 0 : this.atlasGroundAt(xM, yM);
     // Past a placed mission's edge the ground is the apron's, eased into the
     // overview's across the seam band, and past the detail the overview's, as
     // each is drawn: so an eye that orbits out keeps its clearance over what
@@ -2875,9 +2938,9 @@ export class PerspectiveView {
       rect !== null &&
       exteriorDistanceM(rect, { x: xM, y: yM }) > 0
     ) {
-      const overview = overviewDepthAtM(overviewGrid(), xM + region.x, yM + region.y);
       const w = seamWeight(apronFrame(region, terrain.cellM).rect, xM, yM);
       if (w < 1) {
+        const overview = overviewDepthAtM(overviewGrid(), xM + region.x, yM + region.y);
         const own = seabedDepthAtM(
           apron.terrain,
           this.groundSeed,
@@ -2887,26 +2950,36 @@ export class PerspectiveView {
         );
         return own + (overview - own) * w;
       }
-      // Another region's detail, where one is drawn, by the same seam.
-      for (const detail of this.drawnDetails()) {
-        const v = seamWeight(detail.rect, xM, yM);
-        if (v === 1) continue;
-        const own = seabedDepthAtM(
-          detail.terrain,
-          detail.seed,
-          detail.rockTopM,
-          xM - detail.rect.x,
-          yM - detail.rect.y
-        );
-        return own + (overview - own) * v;
-      }
-      return overview;
+      return this.atlasGroundAt(xM, yM);
     }
     return seabedDepthAtM(terrain, this.groundSeed, this.groundRockTopM, xM, yM);
   }
 
+  /**
+   * The public ground at a point as it is drawn where no session's ground is:
+   * another region's detail eased into the overview by its seam, where one is
+   * drawn, else the overview. In this view's metres; a placed view only.
+   */
+  private atlasGroundAt(xM: number, yM: number): number {
+    const region = this.worldRegion!;
+    const overview = overviewDepthAtM(overviewGrid(), xM + region.x, yM + region.y);
+    for (const detail of this.drawnDetails()) {
+      const v = seamWeight(detail.rect, xM, yM);
+      if (v === 1) continue;
+      const own = seabedDepthAtM(
+        detail.terrain,
+        detail.seed,
+        detail.rockTopM,
+        xM - detail.rect.x,
+        yM - detail.rect.y
+      );
+      return own + (overview - own) * v;
+    }
+    return overview;
+  }
+
   private groundYAt(xM: number, zM: number): number {
-    if (this.terrain === null) return 0;
+    if (this.terrain === null && this.worldRegion === null) return 0;
     return depthToWorldY(this.seabedDepthAt(xM, zM));
   }
 
@@ -3201,12 +3274,29 @@ export class PerspectiveView {
     return Math.hypot(terrain.cols * terrain.cellM, terrain.rows * terrain.cellM);
   }
 
+  /**
+   * The rectangle the focus is held in: the mission's, or, in a placed view
+   * holding no session's ground, the atlas frame in this view's metres (§7.4
+   * rule 1, "on the campaign overview"). Null for a view drawn alone with no
+   * ground yet.
+   */
+  private focusRect(): PlanRect | null {
+    const rect = this.missionRect();
+    if (rect !== null || this.worldRegion === null) return rect;
+    return {
+      x: -this.worldRegion.x,
+      y: -this.worldRegion.y,
+      widthM: WORLD.ATLAS_WIDTH_M,
+      heightM: WORLD.ATLAS_HEIGHT_M,
+    };
+  }
+
   private clampTarget(): void {
-    const terrain = this.terrain;
-    if (terrain === null) return;
+    const rect = this.focusRect();
+    if (rect === null) return;
     // §7.4 rule 1, the one rectangle the focus, the fade and a refused click
     // share: every verb that moves the focus ends here.
-    const held = clampToRect(this.missionRect()!, { x: this.target.x, y: this.target.z });
+    const held = clampToRect(rect, { x: this.target.x, y: this.target.z });
     this.target.x = held.x;
     this.target.z = held.y;
     // The focus stays in water (docs/free-camera.md §4). Re-clamped on every
