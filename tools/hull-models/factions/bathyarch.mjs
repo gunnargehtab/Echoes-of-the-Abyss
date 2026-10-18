@@ -4880,6 +4880,28 @@ function drumBone(root, name, mat, r, a, b, rule, overlap = 0) {
 }
 
 /**
+ * The carbody: the shell's section carried in boxes, as the Klaxon carries
+ * a section it will not curve — a riveted deck the hull's length, stepped
+ * in beam at the seams as the Directorate's tergites step, with the
+ * pressure cans standing up through it (the Verger's V-grooved hold and
+ * the Freighter's box hull are the same grammar). `decks` is `[name, x,
+ * length, halfBeam, bottom, top]` each, a box of older plate centred at
+ * `x` on the keel, from `bottom` to `top`, so most of each station's
+ * area is at full beam and the head-on silhouette is wider than tall
+ * (#1439 review). Returns `beamAt(x)`, the half-beam of the deck under a
+ * station, for the hips to bolt to.
+ */
+export function carbody(root, mat, { decks }) {
+  for (const [name, x, length, half, bottom, top] of decks)
+    add(root, name, box(length, top - bottom, half * 2), mat, [x, (top + bottom) / 2, 0]);
+  return (x) => {
+    const deck = decks.find(([, dx, length]) => Math.abs(x - dx) <= length / 2);
+    if (!deck) throw new Error(`carbody: no deck under x = ${x}`);
+    return deck[3];
+  };
+}
+
+/**
  * Hydrophone legs walked out and planted: the Acolyte's array in the
  * stance it hears at 85 in (docs/models-plan.md §3.5), the Klaxon's way.
  * Each leg is ten parts in order, `leg_${side}${i}_hip`, `_hip_rivet_0`,
@@ -4889,9 +4911,9 @@ function drumBone(root, name, mat, r, a, b, rule, overlap = 0) {
  * - the **hip**, a bracket of older plate, a box of `hip.size` (fore and
  *   aft before the yaw — across the leg, the way the rivets lie along it
  *   — then tall, then out along the leg) yawed to the leg's rake with its centre `hip.sink`
- *   inside the flank at `hip.y` — the outboard face of the side's girder
- *   where `hip.on` gives one (`{ s, p }`, the face's z on each side, the
- *   Acolyte's outrigger girders), the can's skin `canFlank` finds there
+ *   inside the flank at `hip.y` — the outboard face `hip.on` gives, as
+ *   `{ s, p }` (one z a side) or as `(x, side) => z` (the Acolyte's
+ *   stepped carbody, `carbody`), the can's skin `canFlank` finds there
  *   otherwise — so its inboard half is in the hull and its outboard face
  *   is the plate the femur comes off; two rivet heads of `hip.rivet` on
  *   its top face, fore and aft;
@@ -4931,7 +4953,7 @@ export function plantedLegs(root, mats, opts) {
       throw new Error(`leg_${side}: side is '${side}' — 'p' (port, -z) or 's' (starboard, +z)`);
     const i = count[side]++;
     const sgn = side === 'p' ? -1 : 1;
-    const flank = hip.on ? hip.on[side] : canFlank(list, x, hip.y);
+    const flank = typeof hip.on === 'function' ? hip.on(x, side) : hip.on ? hip.on[side] : canFlank(list, x, hip.y);
     const out = [Math.sin(rake), 0, sgn * Math.cos(rake)];
     const from = ([px, py, pz], reach, lift) => [px + out[0] * reach, py + lift, pz + out[2] * reach];
     const at = [x, hip.y, sgn * (flank - hip.sink)];

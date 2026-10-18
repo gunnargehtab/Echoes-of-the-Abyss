@@ -18,124 +18,130 @@
  * Klaxon fields it on the Chorister's rule: the same plan, composed in the
  * navy's shape language, with the light kept at the Directorate's band.
  * Said the Klaxon's way, as hulls/chorister-bathyarch.mjs says the cohort
- * hull and hulls/verger-bathyarch.mjs the transport: three riveted
- * pressure cans on a keel — a bow can and a stern can in hull black at
- * 4.2 m of radius, the middle can in newer iron grey at 5, each capped
- * fore and aft in older plate so the caps cross at the seams as the
- * Verger's hold caps do, the outer cans' five crown rivets each; a
- * sponson of older plate along each flank at the axis, 33 m long, 5.1
- * wide and 1.6 deep, its outboard face at z ±8.5, lapped through the
- * middle can and 0.8 m into the outer two, the starboard centred on the
- * keel's middle and the port 3 m aft of it; six planted legs bolted to
- * the sponsons' outboard faces, each a riveted hip bracket, a box girder
- * of a femur, a hull-black knee block with the one amber lamp on its
- * upward face, a hydraulic drum of a tibia, an ankle collar and a
- * transducer pad for a foot; the listening dome as the Verger's riveted
- * turret with its skirt all but buried in the middle can's crown, the
- * dome pressed to 0.35 and no boss; a pipe run a side on the middle can's
- * shoulders, neither where the other is; a short bow block with the
- * hazard stripe on it and the ram — the rostrum — to the bow; a short
- * stern block with the screw in its shroud — the telson — and nothing lit
- * on it; a box stack on the stern can; and the cans and sponsons dressed
- * with two dogged hatches, seven patches, two seams and rivet rows.
+ * hull and hulls/verger-bathyarch.mjs the transport: a riveted carbody of
+ * older plate the hull's length in three decks, one a segment, stepped at
+ * the seams — 17 m across amidships, 13.2 at the bow and 14 at the stern,
+ * 5 m deep amidships and 4.2 at the ends — with three pressure cans
+ * standing up through it, a bow can and a stern can in hull black at
+ * 3.5 m of radius and the middle can in newer iron grey at 4.5, each
+ * capped fore and aft in older plate so the caps cross at the seams as the
+ * Verger's hold caps do, the outer cans' five crown rivets each; six
+ * planted legs bolted to the decks' outboard faces, each a riveted hip
+ * bracket, a box girder of a femur, a hull-black knee block with the one
+ * amber lamp on its upward face, a hydraulic drum of a tibia, an ankle
+ * collar and a transducer pad for a foot; the listening dome as the
+ * Verger's riveted turret with its skirt all but buried in the middle
+ * can's crown, the dome pressed to 0.3 and no boss; a pipe run a side on
+ * the middle deck beside the can, neither where the other is; a short bow
+ * block with the hazard stripe on it and the ram — the rostrum — to the
+ * bow; a short stern block with the screw in its shroud — the telson —
+ * and nothing lit on it; a box stack on the stern deck; and the decks
+ * dressed with two dogged hatches, seven patches, two seams and rivet
+ * rows.
  *
  * Built metre-true at 58 m, the ram's point at +29 and the shroud's and
  * hub's after faces at −29, with nothing to rescale (kit.mjs `metreTrue`),
  * and built in a state (§3.5): the legs are down. Every part comes from
- * `factions/bathyarch.mjs`; `plantedLegs` was written for this hull there,
- * beside the Verger's section, and `listeningTurret` learnt `crown: null`
- * and `plumb`. The legs are placed one side at a time at signed z, port
- * −z (#642), and never through `bothSides` (§3.6).
+ * `factions/bathyarch.mjs`; `carbody` and `plantedLegs` were written for
+ * this hull there, beside the Verger's section, and `listeningTurret`
+ * learnt `crown: null` and `plumb`. The legs are placed one side at a time
+ * at signed z, port −z (#642), and never through `bothSides` (§3.6).
  *
  * THE KIND'S DECISIONS, kept and translated (hulls/acolyte.mjs took them
  * for the Directorate; a variant keeps them, it does not retake them):
  *
  * - **The tripod stance, not a mirror.** Starboard hips at x +13, −2 and
  *   −13, port at +10, +1 and −16, 3 m of stride, all six at y −0.3 and
- *   z ±8.0, half a metre inside the sponsons' faces; the fore pair raked
+ *   half a metre inside the deck face under each — z ±6.1 on the bow
+ *   deck, ±8.0 amidships, ±6.5 on the stern deck; the fore pair raked
  *   0.6 rad ahead and the aft pair 0.6 astern, the middle pair square,
- *   and the reach read along the raked line. The knees stand at (+15.4,
- *   11.5), (−2, 12.2) and (−15.4, 11.5) to starboard and (+12.4, −11.5),
- *   (+1, −12.2) and (−18.4, −11.5) to port, 2.9 m above the axis — the
- *   Directorate's stand at x ±15.8, −2, +12.8, +1 and −18.8, 10.4 to
- *   12.8 out; the feet at (+17.6, 14.8), (−2, 16.2), (−17.6, 14.8) and
- *   (+14.6, −14.8), (+1, −16.2), (−20.6, −14.8), their pads reaching
- *   ±17.5: the plan is 35.0 m broad, the Directorate's own. The middle
- *   pair reaches furthest, so the plan is widest amidships, as the
- *   Directorate's is. `plantedLegs` refuses a mirrored pair, as the
- *   Directorate's `plantedLimbs` does.
+ *   and the reach read along the raked line, so a raked pair on a
+ *   narrower deck plants nearer the keel than the square pair on the
+ *   widest, as the Directorate's does. The knees stand at (+15.8, 10.2),
+ *   (−2, 13.0) and (−15.8, 10.6) to starboard and (+12.8, −10.2),
+ *   (+1, −13.0) and (−18.8, −10.6) to port, 2.9 m above the axis — the
+ *   Directorate's are at the same six x, 10.4 to 12.8 out; the feet at
+ *   (+17.9, 13.2), (−2, 16.6), (−17.9, 13.6) and (+14.9, −13.2),
+ *   (+1, −16.6), (−20.9, −13.6), their pads reaching ±17.9: the plan is
+ *   35.8 m broad against the Directorate's 35. `plantedLegs` refuses a
+ *   mirrored pair, as the Directorate's `plantedLimbs` does.
  * - **The knee is the lit joint.** The one joint that stands clear of the
  *   shell with a face up: a 0.9 m square plate of `amber_lamp` on each
  *   knee block's top, 4 m above the axis, six in all, and the hull's whole
- *   light. The hip brackets are flush with the sponsons top and bottom
- *   and carry two rivet heads each, unlit; the ankles are under the
- *   shell's keel line, where the chart's straight-down bake sees nothing.
+ *   light. The hip brackets are inside the decks' depth, flush with
+ *   nothing above the deck but their two rivet heads, unlit; the ankles
+ *   are under the keel line, where the chart's straight-down bake sees
+ *   nothing.
  * - **The feet are hydrophones, planted below the keel.** A hydrophone on
  *   this navy is a drum (`transducerDrum`), so each leg ends in a
  *   transducer pad 1.3 m in radius on a stem, face down, its underside at
- *   y −7.45 where the keel's is −5.8: the hull stands on them, 1.65 m
- *   clear, which is what "planted" is. Every foot and stem reads under
- *   y 0 in contacts.mjs's sweep, as do the keel, the cans and the
- *   sponsons: this is a hull, whose y 0 is its axis, and the feet are
- *   meant to be there.
+ *   y −6.75 where the keel line — the middle can's bottom — is −4.5 and
+ *   the decks' −3.5: the hull stands on them, 2.25 m clear, which is what
+ *   "planted" is. Every foot and stem reads under y 0 in contacts.mjs's
+ *   sweep, as do the decks and the cans: this is a hull, whose y 0 is its
+ *   axis, and the feet are meant to be there.
  * - **The dome is sunk low in the middle segment and carries no lamp.**
  *   The turret's skirt sits 2.2 m of its 2.4 into the middle can's crown
- *   and the dome crowns at y 6.3 on a can whose crown is 5, seated plumb
- *   on the keel line (`plumb`: the twelve-gon's crown is a ridge, and
- *   seating along its facet put the first pass's skirt 0.23 m to
+ *   and the dome crowns at y 5.7 on a can whose crown is 4.5, seated
+ *   plumb on the keel line (`plumb`: the twelve-gon's crown is a ridge,
+ *   and seating along its facet put an earlier skirt 0.23 m to
  *   starboard); `crown: null` leaves the boss off, because this block
  *   lights the knees and nothing else — the Verger's boss was its block's
  *   "the dome" lit.
  *
  * WHAT THE BLOCK DID NOT SAY — decided here:
  *
- * - **The sponsons are the "squat".** A Klaxon shell is a can, and a can
- *   is as tall as it is wide; the Directorate's shell is 17 m across its
- *   middle plate, 13.2 and 14 across the others, 9.8 tall from keel to
- *   dome crown — beam to height 1.7. Cans alone made this hull a 7 m tube
- *   with legs (the review of the first pass). The sponsons carry the
- *   shell out to 17 m across for 33 of its 58 m, 0.29 of the length as the
- *   Directorate's is, at 11.3 tall from the middle can's keel line to the
- *   dome's crown — 1.5 — without a curve: "boxy, riveted, over-engineered
- *   rectangles", a crawler's carbody rather than a crab's, with the three
- *   drums standing up through it. They are the plate the hips bolt to,
- *   and of unequal station so the pair never mirrors. The bow and stern
- *   blocks are short, 3 and 2.4 m, so the ends read as capped drums and
- *   not as one tube.
+ * - **The carbody carries the section; that is the "squat".** A Klaxon
+ *   pressure can is round, as tall as it is wide, and the Directorate's
+ *   tergites are flattened ellipsoids: 17 × 8.8 m amidships, 13.2 × 6.8
+ *   at the bow and 14 × 7.2 at the stern, each 1.9 wide to tall, 9.8 from
+ *   keel to dome crown. Two earlier passes put cans on a plank and read
+ *   as a tube with legs (the reviews). So the box carries the section,
+ *   as the Verger's V-grooved hold and the Freighter's box hull carry
+ *   theirs: head-on, each station measures 17 × 10.2 amidships from the
+ *   middle can's keel line to the dome's crown (1.67; 17 × 9 without the
+ *   dome, 1.9), 13.2 × 7 at the bow (1.9) and 14 × 7 at the stern (2.0),
+ *   wider than tall at every station; and of each station's area the
+ *   deck holds 79 % at full beam amidships (85 of 107.5 m²), 82 % at the
+ *   bow (55 of 68) and 83 % at the stern (59 of 71), the rest the drum's
+ *   crown standing 3 m above the deck amidships and 2.3 at the ends and
+ *   its bilge a metre under it. The decks step narrower at the seams,
+ *   where the caps cross and the cans pinch to 0.85 of their radius,
+ *   which is the waist the Directorate's seams draw. Keel to dome crown
+ *   is 10.2 m against the Directorate's 9.8. The bow and stern blocks are
+ *   short, 3 and 2.4 m, capped drums and not a tube.
  * - **No dorsal spines, and no deck walk.** The spines are the
  *   Directorate's tell; the Klaxon's is the stack, the hazard stripe and
- *   the rivets. The middle can's crown carries the dome, so it has no walk
- *   and no crown rivets and rivets its shoulders instead (`flankRivets`).
+ *   the rivets. The middle can's crown carries the dome, so it has no
+ *   crown rivets; the decks carry the fittings.
  * - **Nothing else is lit.** No bow lamp, no ports, no vent: the block
  *   licenses the knees alone and the band table says nearly black. The
  *   hazard stripe is `hazard_amber` cladding, not a lamp.
  *
  * The light budget, measured (`lightAudit`, printed by `exportGlb`): six
- * lit parts, the six knee lamps, 0.81 to 1.0 m² each as the chart's four
- * cells a metre read a 0.9 m square turned to its rake — 5.2 m² facing up
- * on a plan the legs make 35 m broad — no lamp hidden, none floating.
+ * lit parts, the six knee lamps, 0.75 to 0.81 m² each as the chart's four
+ * cells a metre read a 0.9 m square turned to its rake — 4.7 m² facing up
+ * on a plan the legs make 35.8 m broad — no lamp hidden, none floating.
  * The calibrated bake (tools/hull-maps/build.mjs, 4 px/m) reads raw E
- * 5.39 against the target E(10) = 0.92 and dims by ×0.171, eleven times
- * clear of the ×1/64 floor; the intake bake at 2 px/m reads raw 5.12.
+ * 5.11 against the target E(10) = 0.92 and dims by ×0.180, eleven times
+ * clear of the ×1/64 floor; the intake bake at 2 px/m reads raw 4.59.
  * The Directorate's reads 7.22 and ×0.129 on 6.5 m², the Verger's ×0.110.
- * 136 parts, 2,492 triangles; the file spans x −29 .. 29, y −7.4 .. 6.4,
- * z −17.5 .. 17.5.
+ * 133 parts, 2,408 triangles; the file spans x −29 .. 29, y −6.8 .. 5.7,
+ * z −17.9 .. 17.9.
  *
- * The sweep (contacts.mjs) reads 205 pairs and every one a mount: the
- * caps on their cans and crossing each other at the seams, the keel and
- * the sponsons set into the cans and their caps, the hips and the femurs'
- * roots in the sponsons, every bone rooted into the block at each end so
- * femur meets tibia inside the knee and tibia meets stem inside the
- * ankle, the skirt in the crown with the dome, ribs and rivets on it, the
- * pipes ending on the caps' roots, the fittings on their plates, the ram
- * and stripe on the bow block, the shroud and hub on the stern block. A
- * first pass drew the bow can 3 m into the middle can and the port fore
- * hip on both, and the cans were re-spanned to meet at crossing caps; the
- * review's pass found a patch butted on a rivet and the rework's first
- * hip rivets grazing the femur's top edge, and both moved.
+ * The sweep (contacts.mjs) reads 198 pairs and every one a mount: the
+ * decks butted at the seams with the caps crossing inside them, the cans
+ * and their caps through the decks, the hips, their rivets and the
+ * femurs' roots in the deck faces, every bone rooted into the block at
+ * each end so femur meets tibia inside the knee and tibia meets stem
+ * inside the ankle, the skirt in the crown with the dome, ribs and rivets
+ * on it, the pipes on the deck plate on a flat of their six-gon — the
+ * starboard one seam to seam, the port one from the fore seam to its
+ * flange — the fittings on their decks, the ram and stripe on the bow
+ * block, the shroud and hub on the stern block.
  *
  * FACETS. Every ring asks the Klaxon's rule (bathyarch.mjs `cut`): the
- * middle can and its caps twelve, the outer cans and theirs ten, the
+ * middle can and its caps twelve, the outer cans and theirs eight, the
  * skirt eight, the dome eight by four, the rib rings eight and their tubes
  * six, the tibias, stems, pads, pipes, ram, shroud and hub six. facets.mjs
  * names the drums laid off Y by their length as a radius — the cans, the
@@ -143,8 +149,8 @@
  * are the rule's.
  *
  * PANELS. The Klaxon's band for a hull is 0.75–2 m on a side, the median
- * unlit part from above (bathyarch.mjs `panels`): this file reads 1.08 m
- * over 110 parts.
+ * unlit part from above (bathyarch.mjs `panels`): this file reads 1.22 m
+ * over 102 parts.
  *
  * Coordinate tables below are laid out as tables on purpose; `tools/**\/*.mjs`
  * is outside the repo's Prettier scope (package.json) precisely so they can be.
@@ -171,19 +177,31 @@ const bar = (name, mat, size, t, e) => add(root, name, box(...size), mat, t, e);
 
 /**
  * The three cans, bow first: `{ x, r, length }` the scales the drums are
- * drawn at. The middle can is the fattest and in newer plate; the outer
- * cans' inner caps are buried in its caps, as the Chorister's are.
+ * drawn at. The middle can is the fattest and in newer plate; the cans
+ * meet at crossing caps at x 7.5 and −9.5, the seams the carbody steps at.
  */
 const CANS = [
-  { mat: black, x: 15, r: 4.2, length: 14, pitch: 2.4 },
-  { mat: grey, x: -1, r: 5.0, length: 16, pitch: 3.2, rivets: false },
-  { mat: black, x: -17.5, r: 4.2, length: 15, pitch: 2.4 },
+  { mat: black, x: 15, r: 3.5, length: 14, pitch: 2.4 },
+  { mat: grey, x: -1, r: 4.5, length: 16, pitch: 3.2, rivets: false },
+  { mat: black, x: -17.5, r: 3.5, length: 15, pitch: 2.4 },
 ];
-const MID_R = 5.0;
+
+// The carbody first, so the cans and everything after seat on it: three
+// decks of older plate, one a segment, stepped at the seams — 17 m across
+// amidships, 13.2 at the bow and 14 at the stern, the Directorate's three
+// tergites' beams — 5 m deep amidships and 4.2 at the ends, the keel line
+// at y −3.5 and −3 and the deck at 1.5 and 1.2. The cans stand up through
+// the decks; the hips bolt to the decks' faces.
+const DECKS = [
+  ['deck_f', 15, 15, 6.6, -3.0, 1.2],
+  ['deck_m', -1, 17, 8.5, -3.5, 1.5],
+  ['deck_a', -17.5, 16, 7.0, -3.0, 1.2],
+];
+const beamAt = bathyarch.carbody(root, rust, { decks: DECKS });
 
 // "Three overlapping segments": the cans, each with its caps, bow first.
-// The middle can's crown carries the dome, so it rivets its shoulders
-// instead (`flankRivets`, below); the outer two keep their five.
+// The middle can's crown carries the dome, so it has no crown rivets; the
+// outer two keep their five.
 bathyarch.cans(
   root,
   { rust, grey },
@@ -195,20 +213,16 @@ bathyarch.cans(
   }
 );
 
-// The keel under the middle can, sunk 0.4 m into its bottom plate.
-const keelY = -bathyarch.crownOnX(MID_R, cut.round(MID_R));
-bar('keel', rust, [18, 1.2, 2.2], [-1, keelY - 0.6 + 0.4, 0]);
-
 // The listening dome sunk low into the middle can: the Verger's riveted
-// turret with its skirt all but buried and the dome pressed to 0.35, and
-// no boss on its crown — this block lights the knees and nothing else.
+// turret with its skirt all but buried and the dome pressed to 0.3, and no
+// boss on its crown — this block lights the knees and nothing else.
 // Seated plumb: the can's twelve-gon has a ridge on its crown.
 bathyarch.listeningTurret(root, { grey, black, rust, lampM }, {
   on: 'can_1',
   x: -1,
   r: 3.2,
   skirt: { h: 2.4, sink: 2.2 },
-  squash: 0.35,
+  squash: 0.3,
   plumb: true,
   ribs: { count: 4, t: 0.3 },
   rivets: { size: [0.5, 0.35, 0.5], below: 0.15, sink: 0.1 },
@@ -216,42 +230,30 @@ bathyarch.listeningTurret(root, { grey, black, rust, lampM }, {
   cut,
 });
 
-// The sponsons: a flat box of older plate along each flank at the axis,
-// its inboard face 0.8 m inside the outer cans' skin and lapped through
-// the middle can's, its outboard face at z ±8.5 — the shell carried out
-// square to the Directorate's 17 m, which is the "squat" of the block
-// said in a rectangle, a crawler's carbody — and the plate the hips bolt
-// to. 33 m each, the starboard centred on the keel's middle and the port
-// 3 m further aft, so the pair never mirrors.
-const SPONSON = { y: -0.3, inboard: 3.4, face: 8.5, h: 1.6 };
-const SPONSON_W = SPONSON.face - SPONSON.inboard;
-const SPONSON_Z = (SPONSON.face + SPONSON.inboard) / 2;
-bar('sponson_s', rust, [33, SPONSON.h, SPONSON_W], [0, SPONSON.y, SPONSON_Z]);
-bar('sponson_p', rust, [33, SPONSON.h, SPONSON_W], [-3, SPONSON.y, -SPONSON_Z]);
-
 // The six hydrophone legs, walked out and planted in the tripod stance
-// (the header): hips 0.3 m under the axis and half a metre into the
-// sponsons' outboard faces, flush with them top and bottom, a femur 4.2 m
-// out and 3.2 up to the knee, a tibia 4 m out and 7.5 down to the ankle,
-// and the transducer pad planted 2.4 m under it. The fore pair raked 0.6
-// rad ahead, the aft pair 0.6 astern, the middle pair square.
+// (the header): hips 0.3 m under the axis and half a metre into the deck
+// face under each station, a femur 5 m out and 3.2 up to the knee, a tibia
+// 3.6 m out and 6.8 down to the ankle, and the transducer pad planted
+// 2.4 m under it. The fore pair raked 0.6 rad ahead, the aft pair 0.6
+// astern, the middle pair square.
 const RAKE = 0.6;
+const HIP_Y = -0.3;
 const joints = bathyarch.plantedLegs(
   root,
   { bracket: rust, bone: grey, block: black, pad: black, lampM },
   {
     cans: CANS,
     hip: {
-      y: SPONSON.y,
+      y: HIP_Y,
       sink: 0.5,
-      on: { s: SPONSON.face, p: SPONSON.face },
-      size: [2.6, SPONSON.h, 2.0],
+      on: (x) => beamAt(x),
+      size: [2.6, 1.6, 2.0],
       rivet: { size: [0.5, 0.3, 0.5], pitch: 1.0, sink: 0.05 },
     },
-    femur: { reach: 4.2, rise: 3.2, section: [1.6, 1.4], root: 0.2 },
+    femur: { reach: 5, rise: 3.2, section: [1.6, 1.4], root: 0.2 },
     knee: { size: [2.4, 2.0, 2.2] },
     lamp: { size: 0.9, h: 0.3, sink: 0.05 },
-    tibia: { reach: 4, drop: 7.5, r: 0.75, root: 0.3 },
+    tibia: { reach: 3.6, drop: 6.8, r: 0.75, root: 0.3 },
     ankle: { size: [1.6, 1.0, 1.6] },
     foot: { r: 1.3, h: 0.8, stem: { r: 0.5, h: 1.6, root: 0.3 } },
     cut,
@@ -266,23 +268,27 @@ const joints = bathyarch.plantedLegs(
   }
 );
 
-// A pipe run a side on the middle can's shoulder plates, half-sunk as the
-// Chorister's are: the starboard one the can's whole length, the port one
-// 11 m, ending at the same forward station and shorter aft, so the pair
-// never mirrors.
+// A pipe run a side on the middle deck beside the can, lying on the deck
+// plate on a flat of its six-gon (an apothem up, not a radius): the
+// starboard one the deck's whole length, seam to seam; the port one 11 m
+// from the fore seam to a blank flange mid-deck, so the pair never
+// mirrors.
+const DECK_M = 1.5;
+const PIPE_R = 0.5;
+const pipeY = DECK_M + PIPE_R * Math.cos(Math.PI / cut.round(PIPE_R));
 bathyarch.keelPipes(root, rust, {
   pipes: [
-    ['pipe_s', 0.5, 16, [-1, 2.2, 4.5]],
-    ['pipe_p', 0.5, 11, [1.5, 2.2, -4.5]],
+    ['pipe_s', PIPE_R, 17, [-1, pipeY, 5.2]],
+    ['pipe_p', PIPE_R, 11, [2, pipeY, -5.2]],
   ],
   cut,
 });
+bar('pipe_p_flange', grey, [0.4, 1.4, 1.4], [-3.5, DECK_M + 0.7, -5.2]);
 
 // The bow: a short block of hull black set 0.25 m into the bow can's fore
 // cap, the hazard stripe on its top and the short ram — the rostrum — to
 // the bow at +29. The stern: the stern block the same into the aft cap,
-// and the screw in its shroud with both after faces at −29. Both blocks
-// are short so the three cans read as three drums and not one tube.
+// and the screw in its shroud with both after faces at −29.
 bar('bow_block', black, [3, 5.6, 5.6], [24.5, 0, 0]);
 bar('hazard_stripe', amber, [2.4, 0.3, 1], [24.5, 2.95, 0]);
 bathyarch.ramCone(root, grey, { r: 2.4, length: 3.5, at: [27.25, 0, 0], cut });
@@ -293,26 +299,23 @@ bathyarch.tailScrew(
   { at: [-27.8, -0.4, 0], shroud: { r: 2.2, length: 2.4 }, hub: { r: 0.8, length: 2.4 }, cut }
 );
 
-// The box stack on the stern can, to starboard of its rivets.
-const stackAt = seat(root, 'can_2', [-14, 0, 2.0], { drop: true, stand: 1.6 - 0.5 }).at;
-bar('stack', black, [1.6, 3.2, 1.6], [-14, stackAt[1], 2.0]);
+// The box stack on the stern deck, to port.
+bar('stack', black, [1.6, 3.2, 1.6], [-22.5, 1.2 + 1.6, -5]);
 
-// PANELS: the cans dressed to the band (bathyarch.mjs `deckHatches`,
+// PANELS: the decks dressed to the band (bathyarch.mjs `deckHatches`,
 // `deckPlates`, `plateSeams`, `flankRivets`). A dogged hatch on the middle
-// can's crown ahead of the dome and one on the bow can's; patches of the
-// other finishes on every can's shoulder plates, none mirroring another;
-// two seams along the middle can's shoulders; and a rivet row along each
-// shoulder of the middle can, clear of the dome's skirt, the starboard on
-// a pitch of three from −10 and the port from −8.5.
+// deck and one on the bow deck; patches of the other finishes on every
+// deck, none mirroring another; two seams along the middle deck; and a
+// rivet row along each deck's outboard edge, clear of the hip brackets.
 bathyarch.deckHatches(
   root,
   { hatch: black, wheel: rust },
   {
-    on: 'can_1',
+    on: 'deck_m',
     r: 0.9,
     h: 0.35,
     wheel: { R: 0.45, t: 0.07 },
-    hatches: [['can_hatch_m', [5.2, 0.6]]],
+    hatches: [['deck_hatch_m', [-6, 6.9]]],
     cut,
   }
 );
@@ -320,48 +323,44 @@ bathyarch.deckHatches(
   root,
   { hatch: grey, wheel: rust },
   {
-    on: 'can_0',
+    on: 'deck_f',
     r: 0.8,
     h: 0.35,
     wheel: { R: 0.4, t: 0.07 },
-    hatches: [['can_hatch_f', [10.6, -1.5]]],
+    hatches: [['deck_hatch_f', [16, -4.6]]],
     cut,
   }
 );
-const canPatch = (on, plates) => bathyarch.deckPlates(root, { black, rust, grey }, { on, t: 0.25, plates });
-canPatch('can_1', [
-  ['can_patch_0', 'rust', [2.0, 1.4], [5.6, -2.4]],
-  ['can_patch_1', 'black', [1.8, 1.2], [-4.6, 2.4]],
-  ['can_patch_2', 'rust', [1.8, 1.2], [-6.6, -2.4]],
+const patches = (on, plates) => bathyarch.deckPlates(root, { black, grey }, { on, t: 0.25, plates });
+patches('deck_m', [
+  ['deck_patch_0', 'black', [2.0, 1.4], [4.5, 6.8]],
+  ['deck_patch_1', 'grey', [1.8, 1.2], [-6.5, -6.8]],
+  ['deck_patch_2', 'black', [1.8, 1.2], [-1.5, -7.0]],
 ]);
-canPatch('can_0', [
-  ['can_patch_3', 'grey', [2, 1], [18.6, 2.3]],
-  ['can_patch_4', 'rust', [1.6, 1], [13.8, 2.3]],
+patches('deck_f', [
+  ['deck_patch_3', 'grey', [2, 1], [19, 4.8]],
+  ['deck_patch_4', 'black', [1.6, 1], [20.5, -4.8]],
 ]);
-canPatch('can_2', [
-  ['can_patch_5', 'grey', [2.2, 1], [-21.1, -2.3]],
-  ['can_patch_6', 'rust', [1.6, 1], [-12, 2.3]],
+patches('deck_a', [
+  ['deck_patch_5', 'grey', [2.2, 1], [-22, 4.8]],
+  ['deck_patch_6', 'black', [1.6, 1], [-12.5, -4.8]],
 ]);
 const seam = (name, x, z) =>
-  bathyarch.plateSeams(root, rust, { on: 'can_1', name, stations: [x], z, along: true, length: 2.4, w: 0.4, h: 0.25 });
-seam('can_seam_s', 2.8, 2.4);
-seam('can_seam_p', 2.5, -2.4);
+  bathyarch.plateSeams(root, grey, { on: 'deck_m', name, stations: [x], z, along: true, length: 2.4, w: 0.4, h: 0.25 });
+seam('deck_seam_s', 1.5, 6.8);
+seam('deck_seam_p', 4, -6.8);
+const edge = (side, on, half, stations) => ({ side, z: (side === 'p' ? -1 : 1) * (half - 0.6), y: 2, stations, on });
 bathyarch.flankRivets(root, grey, {
-  name: 'sponson_rivet',
+  name: 'deck_rivet',
   size: [0.5, 0.3, 0.5],
   running: true,
   rows: [
-    { side: 's', z: SPONSON.face - 0.6, y: SPONSON.y + SPONSON.h / 2, stations: [-15.5, -9, -6, 4, 7, 15.5], on: 'sponson_s' },
-    { side: 'p', z: -(SPONSON.face - 0.6), y: SPONSON.y + SPONSON.h / 2, stations: [-18.5, -12, -5, 5, 12.2], on: 'sponson_p' },
-  ],
-});
-bathyarch.flankRivets(root, grey, {
-  name: 'can_rivet',
-  size: [0.6, 0.35, 0.6],
-  running: true,
-  rows: [
-    { side: 's', z: 2.4, y: 4.6, stations: [-8.2, -6.6, 5.0, 6.3], on: 'can_1' },
-    { side: 'p', z: -2.4, y: 4.6, stations: [-8.4, -4.6, 4.1], on: 'can_1' },
+    edge('s', 'deck_f', 6.6, [17, 20.5]),
+    edge('s', 'deck_m', 8.5, [-8.5, -4.5, 6.5]),
+    edge('s', 'deck_a', 7.0, [-19, -23]),
+    edge('p', 'deck_f', 6.6, [14, 19.5]),
+    edge('p', 'deck_m', 8.5, [-8.5, -5, 5.5]),
+    edge('p', 'deck_a', 7.0, [-19.5, -24.5]),
   ],
 });
 
