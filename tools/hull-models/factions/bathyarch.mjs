@@ -474,6 +474,22 @@ export function hullSlab(root, { black, grey, amber }, { outline, lengthM, depth
 }
 
 /**
+ * The spans of a run from `x0` to `x1` once each `[a, b]` of `gaps` is cut
+ * out of it, in order along x; a gap off the run or already inside another
+ * leaves nothing and an empty span is dropped. Exported for its test.
+ */
+export function seamSpans(x0, x1, gaps) {
+  const spans = [];
+  let from = x0;
+  for (const [a, b] of [...gaps].sort((p, q) => p[0] - q[0])) {
+    if (a > from) spans.push([from, Math.min(a, x1)]);
+    from = Math.max(from, b);
+  }
+  if (from < x1) spans.push([from, x1]);
+  return spans.filter(([a, b]) => b > a);
+}
+
+/**
  * Patchworked flank plate, older under newer, with its seam and rivet rows.
  *
  * The Derrick's flank is the default: 1.2 m plate, the seam a 0.5 × 1.4 m bar
@@ -486,6 +502,14 @@ export function hullSlab(root, { black, grey, amber }, { outline, lengthM, depth
  * its parallel flank about the origin, and the Furnace's runs from x 30
  * aft, so a seam centred on 0 stood 7 m past its bow corner with nothing
  * behind it (#786 review).
+ *
+ * `seam.gaps` breaks the run where the flank leaves it: each `[x0, x1]` is
+ * left out, and the bar is laid as `flank_seam_<side>0..n`, one box per
+ * remaining span, rather than the one `flank_seam_<side>` an unbroken run
+ * is. The Derrick's slab swells to a waist 13.2 m proud of its flank from
+ * x -12 to 24, and the one bar ran through it, 36 m of its 112 inside the
+ * slab (#1433). The rivet rank still takes its pitch from `seamLength`
+ * and `seam.x`, the whole run, so a break moves no rivet.
  *
  * A rivet row is fourteen stations along the seam at one height, and each
  * rivet sits on what is behind its station: the outermost of the plates,
@@ -507,18 +531,26 @@ export function flankPlates(root, { grey, rust }, opts) {
   const { z, plates, plateT = 1.2, seamLength, seam = {}, rivets = [], cut: rule = METRE } = opts;
   // The rule's orb (#919; the files' six by four).
   const rivet = new THREE.SphereGeometry(0.45, ...rule.orb(0.45));
-  const { x: seamX = 0, y: seamY = 2.2, h: seamH = 0.5, t: seamT = 1.4, z: seamZ = z } = seam;
+  const {
+    x: seamX = 0,
+    y: seamY = 2.2,
+    h: seamH = 0.5,
+    t: seamT = 1.4,
+    z: seamZ = z,
+    gaps = [],
+  } = seam;
+  const spans = seamSpans(seamX - seamLength / 2, seamX + seamLength / 2, gaps);
   const slab = root.children.some((p) => p.name === 'hull_slab') ? ['hull_slab'] : [];
   bothSides((side, sgn) => {
     plates.forEach(([x, len, h, y, old], i) =>
       add(root, `flank_plate_${side}${i}`, box(len, h, plateT), old ? rust : grey, [x, y, sgn * z])
     );
-    add(root, `flank_seam_${side}`, box(seamLength, seamH, seamT), rust, [
-      seamX,
-      seamY,
-      sgn * seamZ,
-    ]);
-    const backing = [...slab, ...plates.map((_, i) => `flank_plate_${side}${i}`), `flank_seam_${side}`];
+    const seams = spans.map(([x0, x1], i) => {
+      const name = gaps.length ? `flank_seam_${side}${i}` : `flank_seam_${side}`;
+      add(root, name, box(x1 - x0, seamH, seamT), rust, [(x0 + x1) / 2, seamY, sgn * seamZ]);
+      return name;
+    });
+    const backing = [...slab, ...plates.map((_, i) => `flank_plate_${side}${i}`), ...seams];
     for (const [tag, y] of rivets) {
       for (let i = 0; i < 14; i++) {
         const x = seamX - seamLength / 2 + 4 + ((seamLength - 8) * i) / 13;
