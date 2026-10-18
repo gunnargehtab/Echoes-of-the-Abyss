@@ -119,12 +119,14 @@
  *   three step at the seams, 13.2 to 17 to 14, and each smaller can's
  *   pinch to 0.85 of its radius is inside the larger can's cap (the fore
  *   seam's outline runs 3.5 to 3.8 to 4.5); the two end caps taper to
- *   2.98 beyond the deck ends, 0.2 to 0.3 m proud of the bow and stern
- *   blocks over their last quarter-metre, an end taper and no waist. The
+ *   2.98 beyond the deck ends, 0.2 to 0.3 m proud of the bow block and
+ *   0.5 to 0.6 m proud of the stern block over their last quarter-metre
+ *   (the blocks are 5.6 and 5 m square), an end taper and no waist. The
  *   segments read by the steps and by the colour, grey between black,
  *   where the Directorate's pinch at their seams. Keel to dome crown
  *   is 10.2 m against the Directorate's 9.8. The bow and stern blocks are
- *   short, 3 and 2.4 m, capped drums and not a tube.
+ *   short square blocks, 3 and 2.4 m, so the carbody reads as capped
+ *   drums and not a tube.
  * - **No dorsal spines, and no deck walk.** The spines are the
  *   Directorate's tell; the Klaxon's is the stack, the hazard stripe and
  *   the rivets. The middle can's crown carries the dome, so it has no
