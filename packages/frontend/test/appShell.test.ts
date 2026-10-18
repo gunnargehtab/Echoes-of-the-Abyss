@@ -17,13 +17,15 @@
 import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { createElement } from 'react';
-import { MissionOutcome, PROLOGUE_SORROWGATE_HEADER } from '@echoes/shared';
+import { Faction, MissionOutcome, PROLOGUE_SORROWGATE_HEADER } from '@echoes/shared';
+import { PALETTES, setActivePalette, type PaletteName } from '../src/game/palette.ts';
 import { recordMissionResult } from '../src/progression/store.ts';
 import { clearStorage, installStorage, setSearch } from './support/headless.ts';
 import { installHeadlessAudio, uninstallHeadlessAudio } from './support/headlessAudio.ts';
 import { click, render, type Rendered } from './support/screen.ts';
 import App from '../src/App.tsx';
 import { reloadForRetry } from '../src/menu/launch.ts';
+import { saveSettings } from '../src/settings/store.ts';
 
 /** Mount the shell on a given query string. */
 async function shell(search = ''): Promise<Rendered> {
@@ -110,6 +112,61 @@ describe('the shell: where it opens', () => {
       }
     } finally {
       delete g.window.location.reload;
+    }
+  });
+});
+
+/**
+ * The colour-vision palette is module state (palette.ts), and the board, its
+ * chart and the briefing read it at render. A page that has mounted no match
+ * yet must still be in the player's palette (docs/ui-ux.md §11, §14).
+ */
+describe('the shell: the colour-vision palette off the water', () => {
+  /** The board's column heads' inks, in board order. */
+  const heads = (view: Rendered): string[] =>
+    view.allByClass('campaign-head').map((head) => head.props.style['--faction']);
+  /** The four columns' glows in one palette, in the same order. */
+  const glows = (name: PaletteName): string[] =>
+    [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate, Faction.Hadron].map(
+      (faction) => `#${PALETTES[name].faction[faction].glow.toString(16).padStart(6, '0')}`
+    );
+
+  afterEach(() => setActivePalette('standard'));
+
+  it('inks the board in the stored palette on a fresh page', async () => {
+    saveSettings({ palette: 'deuteranopia' });
+    // A fresh page: nothing has applied the stored choice yet.
+    setActivePalette('standard');
+    const view = await shell();
+    try {
+      await click(view, 'Campaign');
+      assert.deepEqual(heads(view), glows('deuteranopia'));
+      // The first Ledger slot's briefing, spoken in a navy's register.
+      const slot = view.allByClass('campaign-slot').at(1);
+      assert.ok(slot !== undefined, 'the board has a Ledger slot');
+      await view.act(() => {
+        (slot.props as { onClick?: () => void }).onClick?.();
+      });
+      const speaker = view.byClass('briefing-speaker').props.style['--faction'];
+      assert.ok(glows('deuteranopia').includes(speaker), `the briefing's ink ${speaker}`);
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('inks the board in a palette chosen in Settings, with no match between', async () => {
+    const view = await shell();
+    try {
+      await click(view, 'Campaign');
+      assert.deepEqual(heads(view), glows('standard'));
+      await click(view, 'Back');
+      await click(view, 'Settings');
+      await click(view, 'Tritanopia');
+      await click(view, 'Back');
+      await click(view, 'Campaign');
+      assert.deepEqual(heads(view), glows('tritanopia'));
+    } finally {
+      await view.unmount();
     }
   });
 });

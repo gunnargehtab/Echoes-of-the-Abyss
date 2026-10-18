@@ -380,9 +380,10 @@ export const FONT_DISPLAY =
 /**
  * Swap every ink at once. Returns the palette now in force.
  *
- * Applied from the settings store at match mount and again whenever the store
- * changes, so a palette can be judged from inside the water rather than from a
- * menu — the same rule the rebinder follows.
+ * The shell applies the stored choice before its first render and again
+ * whenever the store changes, so the port's screens are in it before any match
+ * opens; a match applies it again as it mounts, so a palette can be judged from
+ * inside the water rather than from a menu — the same rule the rebinder follows.
  */
 export function setActivePalette(name: unknown): Palette {
   const palette = paletteFor(name);
