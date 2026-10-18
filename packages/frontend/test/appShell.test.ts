@@ -141,6 +141,14 @@ describe('the shell: the colour-vision palette off the water', () => {
     try {
       await click(view, 'Campaign');
       assert.deepEqual(heads(view), glows('deuteranopia'));
+      // The first Ledger slot's briefing, spoken in a navy's register.
+      const slot = view.allByClass('campaign-slot').at(1);
+      assert.ok(slot !== undefined, 'the board has a Ledger slot');
+      await view.act(() => {
+        (slot.props as { onClick?: () => void }).onClick?.();
+      });
+      const speaker = view.byClass('briefing-speaker').props.style['--faction'];
+      assert.ok(glows('deuteranopia').includes(speaker), `the briefing's ink ${speaker}`);
     } finally {
       await view.unmount();
     }
