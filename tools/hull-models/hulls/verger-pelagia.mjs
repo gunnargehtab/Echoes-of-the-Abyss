@@ -115,10 +115,11 @@
  * nozzle's root in the pod's tail and the pucker on the nozzle. The port
  * bladder sat 0.3 m into the port bay's underside at the first cut and was
  * dropped 0.6 m, its radii unchanged; the starboard one 0.5 m and 0.4 m
- * inboard, its beam 0.1 m less, when its bay grew taller; the valves at the first cut hung inside their bores a few
- * centimetres clear of the ring, which is a crack, and were widened and
- * seated so the lip passes through the lens; the dome's ring sat under the
- * boss's aft edge and moved aft of the dome's centre, clear of it.
+ * inboard, its beam 0.1 m less, when its bay grew taller; the valves at
+ * the first cut hung inside their bores a few centimetres clear of the
+ * ring, which is a crack, and were widened and seated so the lip passes
+ * through the lens; the dome's ring sat under the boss's aft edge and
+ * moved aft of the dome's centre, clear of it.
  *
  * FACETS (#919; pelagia.mjs `cut`): every round part is cut on the rule
  * and `facets.mjs --parts` names none. The body is sixteen round at 11.6 m,
