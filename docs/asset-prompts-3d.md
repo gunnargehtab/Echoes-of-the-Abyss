@@ -1087,6 +1087,11 @@ rims and at a boss on the dome's crown; the doors behind the rims stay dark
 until the bays are occupied, when they glow through their hatches.
 ```
 
+The Verger carries no faction lock — the Biomass is the lock, as the Chorister's is — so a
+navy rendering for one fields the same plan, the ribbed pressure hull, the four bays behind
+their hatches low on the flanks, the dome forward, the tanks about the keel and the one
+ducted drive, composed with its own FACTION block, with the light kept low and cold.
+
 ```text
 UNIT — Antiphon (pair with Hadron Knights): the Order's way of arriving, 110 m
 — three berths of hull, and what it lands, lands with +1 PR for twenty seconds

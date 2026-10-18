@@ -1298,6 +1298,160 @@ export function transom(root, mat, { x, t = 0.8, halfHeight, halfBeam, y = 0 }) 
   add(root, 'transom', box(t, 2 * halfHeight, 2 * halfBeam), mat, [x + t / 2, y, 0]);
 }
 
+/* --------------------------------------------------------------------------
+ * The Verger, the Order's (#1438, on the Chorister's rule): the cohort
+ * transport's plan — four bays behind pressure hatches low on the flanks, a
+ * listening dome forward, ballast tanks flanking a heavy keel, a single
+ * ducted drive — said in this navy's vocabulary. Five builders the Verger
+ * block names and no Order hull had: each is a form the next deep-pressure
+ * hull of the Order's composes from rather than redraws.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Pressure hatches on the flanks, in mirrored pairs: each a six-facet alloy
+ * `collar` standing `proud` of the skin and `sink` into it, a `door` of the
+ * lamp family's unlit finish on the collar's outer face, and the `rim`, a
+ * ring round the door that is the lamp. Four-sided tube at the rule's count
+ * (`cut`, #919), six round — the hexagon the Order cuts a lip to, the
+ * collar's own section and not the rule's four at 2.25 m — with a vertex at
+ * the top and the bottom as the collar has, so the rim stands a half tube
+ * above the collar's crown where the chart reads it.
+ * The rim is lit and the door is not because the Verger block lights the
+ * hatch rims at rest and the doors "stay dark until the bays are occupied"
+ * (models-plan.md §3.2, rule 2) — the same split the Directorate's
+ * `pressureHatches` makes, and the Verger's one lamp family on its flanks.
+ *
+ * Each hatch is a frame seated on the outermost skin of the part `on`
+ * names on its own beam line, at `[x, y]` (kit.mjs `seat`, `beam`), with
+ * its +y on that facet's outward normal, so a hatch on a vertical flank
+ * faces outboard and one on a facet that leans follows it. `hatches` lists
+ * the stations; every one is drawn on both sides, starboard first — the
+ * pairs the faction block's "precise bilateral symmetry" asks of this navy
+ * where the Directorate alternates its sides (hulls/verger.mjs).
+ */
+export function pressureHatches(root, { collar, door, rim }, opts) {
+  const { on, hatches, r, proud = 1.6, sink = 0.8, tube = 0.35, cut: rule = METRE } = opts;
+  const collarGeo = cyl(r, r, proud + sink, 6);
+  const doorGeo = cyl(r * 0.85, r * 0.85, 0.4, 6);
+  // Born in the xy-plane with a vertex on +x; a quarter about z puts it on
+  // +y, and a quarter about x lays the ring flat with that vertex on +z —
+  // the collar's own top, since the frame's z is the hull's vertical.
+  const rimGeo = torus(r, tube, rule.round(tube), 6)
+    .rotateZ(Math.PI / 2)
+    .rotateX(Math.PI / 2);
+  hatches.forEach(([x, y], i) =>
+    bothSides((side, sgn) => {
+      const name = `hatch_${i}_${side}`;
+      const frame = group(root, name, seat(root, on, [x, y, 0], { beam: sgn }));
+      add(frame, `${name}_collar`, collarGeo, collar, [0, (proud - sink) / 2, 0]);
+      add(frame, `${name}_door`, doorGeo, door, [0, proud + 0.2, 0]);
+      add(frame, `${name}_rim`, rimGeo, rim, [0, proud, 0]);
+    })
+  );
+}
+
+/**
+ * The listening dome and its lit boss: a crystal dome of `r` drawn `theta`
+ * down from its pole at the rule's counts (`cut`, #919 — six round by two
+ * down at 3.4 m, a cut stone and not the Bastion's twelve by three), pressed
+ * `press` on its node at `[x, y]`, and on the pole a four-sided point of
+ * `boss.r` by `boss.h` in the seam lamp, its base `boss.sink` under the
+ * pole. The boss is the lamp and the dome is not, for the reason the
+ * Directorate's Verger gives: a dome lit whole would be the light budget of
+ * a hull three bands louder, and the block lights "a boss on the dome's
+ * crown". The dome is `resonance_crystal` clad, as every unlit crystal on
+ * an Order hull is. The boss faces straight up with nothing over it — the
+ * chart's one upward emitter on the centreline (models-plan.md §3.2, rule 5).
+ */
+export function listeningDome(root, { crystal: domeMat, seam }, opts) {
+  const { x, y, r, press = 1, theta = 0.6 * Math.PI, boss } = opts;
+  // The rule under the node's press, as `cut` prices an orb the file draws.
+  const [round, down] = cut(1, { press }).orb(r, { thetaLength: theta });
+  add(
+    root,
+    'listening_dome',
+    new THREE.SphereGeometry(r, round, down, 0, Math.PI * 2, 0, theta),
+    domeMat,
+    [x, y, 0],
+    [0, 0, 0],
+    [1, press, 1]
+  );
+  const pole = y + r * press;
+  add(root, 'dome_crown', cyl(0, boss.r, boss.h, 4), seam, [x, pole - boss.sink + boss.h / 2, 0]);
+}
+
+/**
+ * Pressure ribs: alloy hoops round a spar of `facets` sides, one at each
+ * `station` `[x, r]` — the spar's radius there — a torus of `r + lift` on a
+ * tube of `tube`, four-sided round the tube and the spar's own count round
+ * the ring, turned half a facet so its flats and vertices lie on the
+ * spar's (`spar` lays four facets on a flat and six on a vertex), and
+ * pressed on its node by the spar's own `flat`, so the hoop hugs every
+ * facet at one stand-off. The count is the section the Order cuts at any
+ * size (`facets`, Block 2c), not the rule's twelve at the hull's radius: a
+ * hoop on a square is a square. The Verger's "ribbed" deep-pressure hull
+ * said as a crystal held in a frame, which is what the Chorister's cage
+ * says of its bladder.
+ */
+export function pressureRibs(root, alloy, { stations, tube = 0.35, lift = 0.1, flat, facets = 4 }) {
+  stations.forEach(([x, r], i) =>
+    add(
+      root,
+      `pressure_rib_${i}`,
+      torus(r + lift, tube, 4, facets)
+        .rotateZ(Math.PI / facets)
+        .rotateY(Math.PI / 2),
+      alloy,
+      [x, 0, 0],
+      [0, 0, 0],
+      [1, flat[0], flat[1]]
+    )
+  );
+}
+
+/**
+ * Ballast pods: a mirrored pair of four-facet spars on their own `profile`
+ * (`spar`, laid `flat`), `ballast_pod_s` and `_p`, at `[y, ±z]` — the
+ * Verger's "ballast tanks flanking a heavy keel", carried under the belly
+ * either side of the keel as the block has them — where no game view sees
+ * them, as it sees no Directorate tank — and faceted as every Order spar is.
+ */
+export function ballastPods(root, mat, { profile, y, z, flat = [1, 1] }) {
+  bothSides((side, sgn) =>
+    spar(root, `ballast_pod_${side}`, mat, { profile, y, z: sgn * z, flat })
+  );
+}
+
+/**
+ * A ducted drive, the Order's: a six-facet `duct` lathed wall and bore with
+ * a vertex on the crown (`loft` at the hexagon's phase, as `spar` lays one),
+ * from the stern at `x` `length` forward, `r` outside and `r − wall`
+ * inside; a crystal `hub` in the bore, a four-sided point with its base at
+ * the stern and its tip `hub.length` forward (`point`); and two alloy
+ * `vanes` from the hub to the wall at the beam, one a side. Dark, every
+ * part: the Verger block lights nothing astern, and no Order hull does.
+ */
+export function ductedDrive(root, { duct: ductMat, crystal: hubMat, alloy }, opts) {
+  const { x, length, r, wall, hub, vanes } = opts;
+  const inner = r - wall;
+  const profile = [
+    [x, inner],
+    [x, r],
+    [x + length, r],
+    [x + length, inner],
+    [x, inner],
+  ];
+  add(root, 'drive_duct', loft(profile, 6, Math.PI / 6), ductMat);
+  point(root, 'drive_hub', hubMat, { x: x + hub.length / 2, r: hub.r, length: hub.length });
+  bothSides((side, sgn) =>
+    add(root, `drive_vane_${side}`, box(vanes.chord, vanes.t, vanes.span), alloy, [
+      vanes.x,
+      0,
+      sgn * vanes.z,
+    ])
+  );
+}
+
 /**
  * The spike — the Lance's forward third (#785): "an open faceted rail the
  * length of the forward third with the one torpedo lying in it, its nose

@@ -14,7 +14,7 @@
  *   node tools/hull-maps/build.mjs derrick-bathyarch    or by model file name
  *   node tools/hull-maps/build.mjs --help
  *
- * A full run bakes all 94 models through Chromium, minutes for a change to one
+ * A full run bakes all 97 models through Chromium, minutes for a change to one
  * GLB, so a slug list bakes just those (#1055). Either way the plan outlines
  * are rewritten at the end: outlines.mjs reads the 44 unit models without a
  * browser, which is cheap. So is the roster contact sheet (sheet.mjs), a few

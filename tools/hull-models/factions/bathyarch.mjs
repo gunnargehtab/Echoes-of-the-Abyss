@@ -32,6 +32,7 @@ import {
   plate,
   plan,
   louvres,
+  loft,
   bothSides,
   polar,
   part,
@@ -3148,12 +3149,17 @@ const TO_BOW = [0, 0, -Math.PI / 2];
  * eight and ten (`crownOnX`), so the rivets come down with it.
  */
 export function cans(root, { rust, grey }, { cans: list, cap, rivet, cut: rule = METRE }) {
-  list.forEach(({ mat, x, r, length, pitch }, i) => {
+  list.forEach(({ mat, x, r, length, pitch, rivets = true }, i) => {
     const n = rule.round(r);
     add(root, `can_${i}`, cyl(r, r, length, n), mat, [x, 0, 0], TO_BOW);
     const reach = length / 2 + cap.proud;
     add(root, `can_cap_${i}f`, cyl(cap.tip * r, r, cap.length, n), rust, [x + reach, 0, 0], TO_BOW);
     add(root, `can_cap_${i}a`, cyl(r, cap.tip * r, cap.length, n), rust, [x - reach, 0, 0], TO_BOW);
+    // A can whose crown carries something else — the Verger's deck walk on
+    // its frames, its listening turret — says `rivets: false` and rivets
+    // its shoulders instead (`flankRivets`); the Chorister's three say
+    // nothing and keep their five (#1438).
+    if (!rivets) return;
     const crown = crownOnX(r, n);
     for (let k = -2; k <= 2; k++)
       add(root, `rivet_${root.children.length}`, box(...rivet.size), grey, [x + k * pitch, crown + rivet.proud, 0]);
@@ -4590,6 +4596,200 @@ export function craftGun(root, { black, grey, rust, amber }, opts) {
     barrel.y,
     0,
   ], onX);
+}
+
+
+/* --------------------------------------------------------------------------
+ * The Verger, the Klaxon's (#1438): the cohort transport's plan — "a
+ * deep-pressure hull … four cohort bays set into its belly behind pressure
+ * hatches low on the flanks, a listening dome forward, ballast tanks
+ * flanking a heavy keel, and a single ducted drive" (docs/asset-prompts-3d.md,
+ * UNIT — Verger) — said the way the Chorister above says the cohort hull:
+ * riveted cans on a keel. What the Chorister's section has no call for is
+ * here: the frames a long can is hooped with, the flank hatch with a lit
+ * rim and a dark door, the dome as a riveted turret, the tanks as a pair
+ * that does not mirror, and the drive in a duct. Built, not ported: every
+ * number is the hull script's.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Hoop frames over a can laid along X: a half-ring of `t` section arched
+ * over the crown from beam to beam at each `[name, x, r]`, in older plate,
+ * the rule's count on the ring over its half turn and on the tube — a
+ * pressure vessel's stiffeners, which is the one rib the Klaxon draws. The
+ * ring's polygon is the can's own: both put a vertex on the beam and count
+ * the same at one radius, so the hoop stands `t` proud along its whole
+ * arc rather than sinking between vertices. It stops at the beam so the
+ * hatches and the tanks under the chine meet the can and not the frame.
+ */
+export function canHoops(root, mat, { hoops, t, cut: rule = METRE }) {
+  for (const [name, x, r] of hoops) {
+    const geo = new THREE.TorusGeometry(r, t, rule.round(t), rule.round(r + t, Math.PI), Math.PI);
+    // The arc is drawn from +X over +Y to −X; a quarter turn about Y lays
+    // it from port over the crown to starboard.
+    geo.rotateY(Math.PI / 2);
+    add(root, name, geo, mat, [x, 0, 0]);
+  }
+}
+
+/**
+ * Pressure hatches low on the flank of a can — the Verger's cohort bays,
+ * one `{ side, x, can }` each on `cans[can]` (`{ x, r }`), `y` below the
+ * axis where the can's normal points outboard and down, so the chart's
+ * straight-down bake and the conn view's 55° both see the rim
+ * (hulls/verger.mjs says why there and not under the belly). Each is a
+ * frame stood on the can's normal holding, in order: the collar, a frustum
+ * of newer plate `r` at its face and a tenth wider at its root, `sink`
+ * into the can and `proud` of it; the door, a disc of the lamp family's
+ * unlit finish `0.4` thick on the collar's face — the block lights it only
+ * with the bays occupied, a later band, so it is cladding (docs/models-plan.md
+ * §3.2 rule 2); the rim, a lit torus of `tube` section round the collar's
+ * face; the dogging wheel lying on the door, a torus of `wheel.R` and
+ * `wheel.t` in grey on a hub in older plate; and `lugs` dog lugs round the
+ * collar's wall, a box each in older plate (`hatch_s0 · hatch_s0_collar ·
+ * hatch_s0_door · hatch_s0_rim · hatch_s0_wheel · hatch_s0_hub ·
+ * hatch_s0_lug_0..`). A pair at one station on opposite sides is refused:
+ * the kind's hatches alternate sides and never mirror.
+ */
+export function canHatches(root, { collar, door, rim, grey, rust }, opts) {
+  const { cans: list, hatches, y, r, proud, sink, tube, wheel, hub, lugs = 4, cut: rule = METRE } = opts;
+  const up = new THREE.Vector3(0, 1, 0);
+  hatches.forEach(({ side, x, can }, i) => {
+    const twin = hatches.find((h) => h !== hatches[i] && h.x === x && h.side !== side);
+    if (twin) throw new Error(`canHatches: hatch_${side}${i} mirrors another at x ${x}`);
+    const { r: cr } = list[can];
+    const sgn = side === 'p' ? -1 : 1;
+    const z = sgn * Math.sqrt(cr * cr - y * y);
+    const n = new THREE.Vector3(0, y / cr, z / cr).normalize();
+    const e = new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(up, n), 'XYZ');
+    const name = `hatch_${side}${i}`;
+    const frame = group(root, name, { at: [x, y, z], rot: [e.x, e.y, e.z] });
+    add(frame, `${name}_collar`, cyl(r, r * 1.1, proud + sink, rule.round(r * 1.1)), collar, [0, (proud - sink) / 2, 0]);
+    const doorR = r * 0.87;
+    add(frame, `${name}_door`, cyl(doorR, doorR, 0.4, rule.round(doorR)), door, [0, proud + 0.2, 0]);
+    const ring = torus(r, tube, rule.round(tube), rule.round(r + tube)).rotateX(Math.PI / 2);
+    add(frame, `${name}_rim`, ring, rim, [0, proud, 0]);
+    // The wheel's tube is a polygon of the rule's count with a vertex
+    // outward in the ring's plane, so its underside is t · cos(π/n) below
+    // its centre (`deckHatches`); it lies on the door's face by that.
+    const lift = wheel.t * Math.cos(Math.PI / rule.round(wheel.t));
+    const spokes = torus(wheel.R, wheel.t, rule.round(wheel.t), rule.round(wheel.R + wheel.t)).rotateX(Math.PI / 2);
+    add(frame, `${name}_wheel`, spokes, grey, [0, proud + 0.4 + lift, 0]);
+    add(frame, `${name}_hub`, cyl(hub.r, hub.r, hub.h, rule.round(hub.r)), rust, [0, proud + 0.4 + hub.h / 2 - 0.1, 0]);
+    for (let k = 0; k < lugs; k++) {
+      const a = (Math.PI * (2 * k + 1)) / lugs;
+      const [lx, , lz] = polar(a, r + 0.05);
+      add(frame, `${name}_lug_${k}`, box(0.6, 0.7, 0.9), rust, [lx, proud - 0.7, lz], [0, -a, 0]);
+    }
+  });
+}
+
+/**
+ * The listening turret: the dome as the Klaxon builds one — a drum skirt
+ * of newer plate stood on a can's crown and sunk into it so its rim meets
+ * the shoulder plates either side, the dome a hemisphere of hull black
+ * pressed to `squash` on it, `ribs` half-rings of older plate over the
+ * dome a turn apart with their feet on the skirt's rim,
+ * a ring of `rivets` boxes round the skirt's upper rim, and on the dome's
+ * crown the lit boss, a disc facing straight up — the chart's one upward
+ * emitter on a hull that idles at SIG 14, and not the dome, which at this
+ * size would be its whole light budget (`dome_skirt · dome · dome_rib_0.. ·
+ * dome_rivet_0.. · dome_crown`). The skirt's centre is dropped onto `on`
+ * under `[x, z]` and stood `skirt.h / 2 − skirt.sink` up from it.
+ */
+export function listeningTurret(root, { grey, black, rust, lampM }, opts) {
+  const { on, x, z = 0, r, skirt, squash, ribs, rivets, crown, cut: rule = METRE } = opts;
+  const { at } = seat(root, on, [x, 0, z], { drop: true, stand: skirt.h / 2 - skirt.sink });
+  const [sx, sy, sz] = at;
+  const n = rule.round(r);
+  add(root, 'dome_skirt', cyl(r, r, skirt.h, n), grey, at);
+  const top = sy + skirt.h / 2;
+  const quarter = Math.PI / 2;
+  const [round, down] = rule.orb(r, { thetaLength: quarter });
+  add(
+    root,
+    'dome',
+    new THREE.SphereGeometry(r, round, down, 0, Math.PI * 2, 0, quarter),
+    black,
+    [sx, top, sz],
+    [0, 0, 0],
+    [1, squash, 1]
+  );
+  // The rib's ring is drawn at the dome's own radius, not pushed out by
+  // the dome's sag as a structure's ribs are (`ribbedDome`): its polygon
+  // then lies on the dome's meridian polygon — both count the rule's at
+  // this radius, both start at the horizontal — so the tube stands half
+  // proud all the way over, and its feet, `r ± t` at the skirt's top, land
+  // on the skirt's plates in every bearing. Pushed out by the sag they
+  // cleared the skirt's apothem by 0.06 m on the rib along the keel
+  // (#1438 review).
+  const tubular = rule.round(r + ribs.t, Math.PI);
+  const rib = new THREE.TorusGeometry(r, ribs.t, rule.round(ribs.t), tubular, Math.PI);
+  for (let i = 0; i < ribs.count; i++)
+    add(root, `dome_rib_${i}`, rib, rust, [sx, top, sz], [0, (i * Math.PI) / ribs.count, 0], [1, squash, 1]);
+  // The rivets sit on the skirt's plates, an apothem out, each turned to
+  // its plate; the count is the skirt's so one lands mid-plate each.
+  const apothem = r * Math.cos(Math.PI / n);
+  for (let k = 0; k < n; k++) {
+    const a = (Math.PI * (2 * k + 1)) / n;
+    const [rx, , rz] = polar(a, apothem + rivets.size[2] / 2 - rivets.sink);
+    add(root, `dome_rivet_${k}`, box(...rivets.size), grey, [sx + rx, top - rivets.below, sz + rz], [0, -a, 0]);
+  }
+  const bossY = top + r * squash - crown.sink + crown.h / 2;
+  add(root, 'dome_crown', cyl(crown.r, crown.r, crown.h, rule.round(crown.r)), lampM, [sx, bossY, sz]);
+}
+
+/**
+ * Ballast tanks under the chine, `[name, x, length, seed]` each — a drum of
+ * newer plate laid along X and capped both ends with a frustum of older
+ * plate drawn in to `cap.tip` of its radius (`ballast_s · ballast_cap_sf ·
+ * ballast_cap_sa · …`), the rule's count on all three at the drum's radius.
+ * Each is seated from its seed on the nearest skin of `on`, stood its
+ * radius off less `sink`, so the pair meets the can wherever its chine is.
+ * Not `ballastBlisters`, which is a mirrored pair: the kind's two tanks are
+ * of unequal length and station, the starboard the longer and further aft
+ * (hulls/verger.mjs), and a list says so where a `bothSides` cannot.
+ */
+export function keelTanks(root, { grey, rust }, { on, tanks, r, cap, sink, cut: rule = METRE }) {
+  const n = rule.round(r);
+  for (const [tag, x, length, seed] of tanks) {
+    const { at } = seat(root, on, [x, seed[0], seed[1]], { stand: r, sink });
+    const [, y, z] = at;
+    add(root, `ballast_${tag}`, cyl(r, r, length, n), grey, [x, y, z], TO_BOW);
+    const reach = length / 2 + cap.length / 2 - cap.sink;
+    add(root, `ballast_cap_${tag}f`, cyl(cap.tip * r, r, cap.length, n), rust, [x + reach, y, z], TO_BOW);
+    add(root, `ballast_cap_${tag}a`, cyl(r, cap.tip * r, cap.length, n), rust, [x - reach, y, z], TO_BOW);
+  }
+}
+
+/**
+ * The single ducted drive: the duct, a tube of newer plate `length` long
+ * from `stern` forward with its bore faced in (kit.mjs `loft`), set
+ * `sink` into the cap ahead of it; the hub, a drum of hull black on the
+ * axis with its after face at the stern; `vanes.count` stator vanes of
+ * older plate from hub to bore, a box each, holding the duct to the hub
+ * the way the Klaxon holds anything — with plate; and `blades.count` screw
+ * blades fanned `blades.pitch` apart on the hub inside the duct's after
+ * end, in grey (`drive_duct · prop_hub · drive_vane_0.. · prop_blade_0..`).
+ * `tailScrew` above is the Chorister's open screw in a short shroud; a
+ * duct is the block's word for the Verger, and nothing on it is lit.
+ */
+export function ductedDrive(root, { grey, black, rust }, opts) {
+  const { stern, length, r, wall, sink, hub, vanes, blades, cut: rule = METRE } = opts;
+  const inner = r - wall;
+  const fore = stern + length + sink;
+  const profile = [[stern, inner], [stern, r], [fore, r], [fore, inner], [stern, inner]];
+  add(root, 'drive_duct', loft(profile, rule.round(r)), grey);
+  add(root, 'prop_hub', cyl(hub.r, hub.r, hub.length, rule.round(hub.r)), black, [stern + hub.length / 2, 0, 0], TO_BOW);
+  const span = inner - hub.r + 0.4;
+  const rc = (hub.r + inner) / 2;
+  for (let i = 0; i < vanes.count; i++) {
+    const a = vanes.phase + (i * 2 * Math.PI) / vanes.count;
+    add(root, `drive_vane_${i}`, box(vanes.chord, span, vanes.t), rust, [vanes.x, rc * Math.cos(a), rc * Math.sin(a)], [a, 0, 0]);
+  }
+  const blade = box(...blades.size);
+  for (let i = 0; i < blades.count; i++)
+    add(root, `prop_blade_${i}`, blade, grey, [blades.x, 0, 0], [i * blades.pitch, 0, 0]);
 }
 
 export { THREE };

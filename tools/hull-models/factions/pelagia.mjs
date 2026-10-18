@@ -4320,3 +4320,292 @@ export function buddingSheaths(root, { sheath, lining, scar, knuckle }, opts) {
     );
   });
 }
+
+/* --------------------------------------------------------------------------
+ * The Verger (#1438): the cohort transport as the Commune fields it, on the
+ * Chorister's rule — the Directorate's plan (hulls/verger.mjs) said in grown
+ * things. Built to its block, as the Drifter's builders above were; nothing
+ * here answers to a binary. X-long in the kit's frame, yawing nothing, and
+ * each builder refuses a matched pair where the navy grows a side its own
+ * way. hulls/verger-pelagia.mjs is the consumer.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Pressure hatches grown as sphincters on the bay lobes — the Verger's
+ * "cohort bays set into its belly behind pressure hatches low on the
+ * flanks", where the Directorate fits a steel collar and a drum door
+ * (directorate.mjs `pressureHatches`). Each is a frame seated on its lobe's
+ * skin at `dx` along and `dy` below the lobe's centre, its axis the
+ * ellipsoid's own normal there — outboard, and canted down by however far
+ * below the centre it sits — holding in that frame a `_ring`, the muscle
+ * ring: a ridge lathed round the axis from `sink` inside the skin to
+ * `proud` outside it, swelling to `crown` at `throat` inside the mouth and
+ * drawing in to `lip` at it; a `_rim`, the lit lip, a torus of `rim.r` and
+ * `rim.tube` lying `rim.at` up the axis — on the crown's own station unless
+ * said, where it is the widest thing at the mouth and nothing of the ring
+ * stands over it from above; and a `_door`, the membrane valve, a lens
+ * `door.r` across and `door.squash` of that tall, its edge sunk `door.sink`
+ * below the lip and out through the ring's wall so the bore never shows,
+ * bulging out through the mouth, in the lamp family's unlit finish —
+ * "the doors behind the rims stay dark until the bays are occupied" is a
+ * later band, and a later band is cladding (docs/models-plan.md §3.2).
+ *
+ * The rim is the light and the door is not, for the reason the
+ * Directorate's header gives: the chart bakes straight down and the conn
+ * view looks down at 55°, so a door canted under the flank is seen well by
+ * neither, and a ring has a face at every angle — its top arc stands
+ * outboard of the lobe's widest beam where the bake counts it. `hatches` is
+ * `[{ bay, dx, dy }]` over `bays` as `cargoLobes` took them, `{ side, at,
+ * radii }`, and the hatch takes its bay's side for its name,
+ * `hatch_<side>`; a mirrored pair across the keel is refused. `crown`,
+ * `lip`, `rim` and `door` on the call are the rank's, and each hatch may
+ * carry its own over them — it must, since two hatches of one size are
+ * refused too: the Commune grows however many it grew, no two alike.
+ */
+export function bayHatches(root, { ring: ringMat, rim: rimMat, door: doorMat }, opts) {
+  const { bays, hatches, proud = 1.8, sink = 1.4, throat = 1, cut: rule = METRE } = opts;
+  const rank = { crown: opts.crown, lip: opts.lip, rim: opts.rim, door: opts.door };
+  noCount('hatch', opts, 'facets');
+  refuseMirror('hatch', hatches, (h) => JSON.stringify({ ...rank, ...h, bay: 0, dx: 0, dy: 0 }));
+  const up = new THREE.Vector3(0, 1, 0);
+  const seats = hatches.map(({ bay, dx = 0, dy = 0, ...own }) => {
+    const {
+      side,
+      at: [x, y, z],
+      radii: [rx, ry, rz],
+    } = bays[bay];
+    if (!z) throw new Error(`hatch_${side}: a bay on the keel line has no flank`);
+    const sgn = Math.sign(z);
+    const u = dx / rx;
+    const v = dy / ry;
+    const w = Math.sqrt(1 - u * u - v * v);
+    const at = [x + dx, y + dy, z + sgn * rz * w];
+    const n = new THREE.Vector3(u / rx, v / ry, (sgn * w) / rz).normalize();
+    const e = new THREE.Euler().setFromQuaternion(
+      new THREE.Quaternion().setFromUnitVectors(up, n),
+      'XYZ'
+    );
+    return { side, at, rot: [e.x, e.y, e.z], own };
+  });
+  refuseMirror('hatch', seats, ({ at: [x, y, z] }) => `${x},${y},${Math.abs(z)}`);
+  seats.forEach(({ side, at, rot, own }) => {
+    // A hatch's own crown, lip, rim and door over the rank's: the navy grows
+    // however many it grew and no two the same, so one hatch stamped four
+    // times is refused as a matched pair is.
+    const { crown, lip, rim, door } = { ...rank, ...own };
+    const name = `hatch_${side}`;
+    const frame = group(root, name, { at, rot });
+    // The muscle ring, a lathe about the frame's Y listed root to mouth so
+    // it faces out (kit.mjs `loft` on winding).
+    const profile = [
+      [-sink, lip],
+      [proud - throat, crown],
+      [proud, lip],
+    ];
+    const n = rule.lathe(profile, { parent: frame });
+    const band = new THREE.LatheGeometry(
+      profile.map(([h, rr]) => new THREE.Vector2(rr, h)),
+      n
+    );
+    add(frame, `${name}_ring`, band, ringMat);
+    const [radial, tubular] = rule.torus(rim.r, rim.tube, { parent: frame });
+    add(
+      frame,
+      `${name}_rim`,
+      torus(rim.r, rim.tube, radial, tubular).rotateX(Math.PI / 2),
+      rimMat,
+      [0, rim.at ?? proud - throat, 0]
+    );
+    const lens = [door.r, door.r * door.squash, door.r];
+    add(
+      frame,
+      `${name}_door`,
+      orb(...rule.orb(1, { scale: lens, parent: frame })),
+      doorMat,
+      [0, proud - door.sink, 0],
+      [0, 0, 0],
+      lens
+    );
+  });
+}
+
+/**
+ * The listening dome, grown: a sensory lobe on the back — `listening_dome`,
+ * an orb of `skin` at `at` with `radii`, sunk into the crown by the caller;
+ * `dome_ring`, a growth ring round it `ring.dx` along its axis, lathed as
+ * every Commune ring is (`ridgeRing`) and pressed to the lobe's own
+ * section; and `dome_boss`, the one lit bud on its crown, `boss.r` across
+ * and `boss.squash` of that tall, sunk `boss.sink` into the pole. The
+ * Directorate's dome is the same argument (directorate.mjs
+ * `listeningDome`): the dome itself is dark and the chart's upward emitter
+ * is a boss on its crown, because a dome lit whole would be the light
+ * budget of a louder hull.
+ */
+export function sensoryDome(root, { skin, ridge, light }, opts) {
+  const {
+    at: [x, y, z],
+    radii: [rx, ry, rz],
+    ring,
+    boss,
+    cut: rule = METRE,
+  } = opts;
+  noCount('listening_dome', opts, 'facets');
+  noCount('dome_ring', ring, 'facets');
+  noCount('dome_boss', boss, 'facets');
+  const body = [rx, ry, rz];
+  add(
+    root,
+    'listening_dome',
+    orb(...rule.orb(1, { scale: body })),
+    skin,
+    [x, y, z],
+    [0, 0, 0],
+    body
+  );
+  const squash = [1, ry / rz, 1];
+  add(
+    root,
+    'dome_ring',
+    ruledRidge(
+      rule,
+      { crown: ring.crown, shoulder: ring.shoulder, halfWidth: ring.halfWidth ?? 0.6 },
+      { scale: squash }
+    ),
+    ridge,
+    [x + ring.dx, y, z],
+    [0, 0, 0],
+    squash
+  );
+  bud(root, light, {
+    name: 'dome_boss',
+    x,
+    y: y + ry - boss.sink,
+    z,
+    r: boss.r,
+    squash: boss.squash,
+    cut: rule,
+  });
+}
+
+/**
+ * A single ducted drive, grown: a siphon — the jet a swimming thing drives
+ * with, where the Directorate turns a screw in a duct (directorate.mjs
+ * `ductedDrive`). It grows out of the pod rather than bolting onto it:
+ * `siphon_duct` is a hollow lathe whose `outer` and `inner` walls are each
+ * an `[x, r]` polyline from the stern lip forward to the root, closed into
+ * one profile so the bore faces in and both ends close, and pressed to
+ * `squash` of its beam in height as the pod is — so a root drawn no wider
+ * than the pod at its station sits inside the skin with no step, and the
+ * tail flows into the bore. The lip is whatever the outer polyline draws
+ * — a flare and a rounded-over edge, not a straight cone's rim.
+ * `siphon_ring`, the muscle ring round the mouth, is a ridge lathed at
+ * `ring.x` with `ring.crown` and `ring.shoulder` over `ring.halfWidth`,
+ * pressed the same; and `siphon_funnel`, the nozzle inside the bore, a
+ * frustum of membrane `funnel.r` across at its forward end and
+ * `funnel.throat` at its aft, `funnel.length` long from `funnel.x`, closed
+ * at both ends so the bore shows a shut nozzle and never the hull's inside,
+ * pressed with the bore; and, when `funnel.pucker` is given, `siphon_pucker`
+ * over its aft cap, an orb of the throat's radius bulging `pucker` aft — a
+ * nozzle shut on a grown thing is puckered, not plugged flat. Dark, every
+ * part: the block lights nothing astern.
+ */
+export function siphonDrive(root, { duct: ductMat, ring: ringMat, funnel: funnelMat }, opts) {
+  const { outer, inner, squash = 1, ring, funnel, cut: rule = METRE } = opts;
+  noCount('siphon_duct', opts, 'facets');
+  noCount('siphon_ring', ring, 'facets');
+  noCount('siphon_funnel', funnel, 'facets');
+  // Stern inner, out along the lip, forward along the outer wall, in at the
+  // root and back along the bore: the Directorate's duct's own winding.
+  const profile = [inner[0], ...outer, ...inner.slice().reverse()];
+  const scale = [1, squash, 1];
+  add(
+    root,
+    'siphon_duct',
+    loft(profile, rule.lathe(profile, { scale })),
+    ductMat,
+    [0, 0, 0],
+    [0, 0, 0],
+    scale
+  );
+  add(
+    root,
+    'siphon_ring',
+    ruledRidge(
+      rule,
+      { crown: ring.crown, shoulder: ring.shoulder, halfWidth: ring.halfWidth },
+      { scale }
+    ),
+    ringMat,
+    [ring.x, 0, 0],
+    [0, 0, 0],
+    scale
+  );
+  // A cylinder's +Y is its `rTop`; a roll of +π/2 about Z lays +Y on -X, so
+  // the wide end is the forward one, and its local X on the world's Y, so
+  // the press goes on local X.
+  const placement = { rot: [0, 0, Math.PI / 2], scale: [squash, 1, 1] };
+  const n = rule.cyl(funnel.r, funnel.throat, funnel.length, placement);
+  add(
+    root,
+    'siphon_funnel',
+    cyl(funnel.throat, funnel.r, funnel.length, n),
+    funnelMat,
+    [funnel.x - funnel.length / 2, 0, 0],
+    placement.rot,
+    placement.scale
+  );
+  if (funnel.pucker) {
+    const dome = [funnel.pucker, funnel.throat * squash, funnel.throat];
+    add(
+      root,
+      'siphon_pucker',
+      orb(...rule.orb(1, { scale: dome })),
+      funnelMat,
+      [funnel.x - funnel.length, 0, 0],
+      [0, 0, 0],
+      dome
+    );
+  }
+}
+
+/**
+ * A heavy keel, grown: a ridge spindle under the belly that follows it — one
+ * `sweep` of a round section through `stations`, each `[x, halfBeam,
+ * halfHeight, yCentre]`, so a keel 60 m long on a pod that rises three
+ * metres at either end hugs the skin the whole way where a straight spar
+ * would hang under the ends (hulls/verger.mjs says the Directorate's does,
+ * and that navy's keel is a machine's). Closed to a point at both ends by a
+ * zero station each. The section is a regular polygon on the rule's count
+ * at the deepest station. `keel`.
+ */
+export function grownKeel(root, ridge, { stations, cut: rule = METRE }) {
+  const deepest = Math.max(...stations.map(([, , hh]) => hh));
+  const n = rule.round(deepest);
+  const section = Array.from({ length: n }, (_, k) => {
+    const a = (TAU * k) / n;
+    return [Math.sin(a), Math.cos(a)];
+  });
+  add(root, 'keel', uvAlike(sweep(stations, section)), ridge);
+}
+
+/**
+ * Ballast tanks, grown: bladders slung under the belly either side of the
+ * keel, `[{ side, at, radii }]`, each an orb of `skin` pressed to its own
+ * three radii — `ballast_bladder_<side>`. The starboard one longer and
+ * further aft, or the port; never the same, since a matched pair is
+ * refused.
+ */
+export function ballastBladders(root, skin, { bladders, cut: rule = METRE }) {
+  refuseMirror('ballast_bladder', bladders, (b) => b.radii.join());
+  bladders.forEach(({ side, at, radii }) =>
+    add(
+      root,
+      `ballast_bladder_${side}`,
+      orb(...rule.orb(1, { scale: radii })),
+      skin,
+      at,
+      [0, 0, 0],
+      radii
+    )
+  );
+}
