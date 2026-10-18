@@ -4358,14 +4358,18 @@ export function buddingSheaths(root, { sheath, lining, scar, knuckle }, opts) {
  * outboard of the lobe's widest beam where the bake counts it. `hatches` is
  * `[{ bay, dx, dy }]` over `bays` as `cargoLobes` took them, `{ side, at,
  * radii }`, and the hatch takes its bay's side for its name,
- * `hatch_<side>`; a mirrored pair across the keel is refused.
+ * `hatch_<side>`; a mirrored pair across the keel is refused. `crown`,
+ * `lip`, `rim` and `door` on the call are the rank's, and each hatch may
+ * carry its own over them — it must, since two hatches of one size are
+ * refused too: the Commune grows however many it grew, no two alike.
  */
 export function bayHatches(root, { ring: ringMat, rim: rimMat, door: doorMat }, opts) {
-  const { bays, hatches, proud = 1.8, sink = 1.4, throat = 1, crown, lip, rim, door } = opts;
-  const { cut: rule = METRE } = opts;
+  const { bays, hatches, proud = 1.8, sink = 1.4, throat = 1, cut: rule = METRE } = opts;
+  const rank = { crown: opts.crown, lip: opts.lip, rim: opts.rim, door: opts.door };
   noCount('hatch', opts, 'facets');
+  refuseMirror('hatch', hatches, (h) => JSON.stringify({ ...rank, ...h, bay: 0, dx: 0, dy: 0 }));
   const up = new THREE.Vector3(0, 1, 0);
-  const seats = hatches.map(({ bay, dx = 0, dy = 0 }) => {
+  const seats = hatches.map(({ bay, dx = 0, dy = 0, ...own }) => {
     const {
       side,
       at: [x, y, z],
@@ -4382,10 +4386,14 @@ export function bayHatches(root, { ring: ringMat, rim: rimMat, door: doorMat }, 
       new THREE.Quaternion().setFromUnitVectors(up, n),
       'XYZ'
     );
-    return { side, at, rot: [e.x, e.y, e.z] };
+    return { side, at, rot: [e.x, e.y, e.z], own };
   });
   refuseMirror('hatch', seats, ({ at: [x, y, z] }) => `${x},${y},${Math.abs(z)}`);
-  seats.forEach(({ side, at, rot }) => {
+  seats.forEach(({ side, at, rot, own }) => {
+    // A hatch's own crown, lip, rim and door over the rank's: the navy grows
+    // however many it grew and no two the same, so one hatch stamped four
+    // times is refused as a matched pair is.
+    const { crown, lip, rim, door } = { ...rank, ...own };
     const name = `hatch_${side}`;
     const frame = group(root, name, { at, rot });
     // The muscle ring, a lathe about the frame's Y listed root to mouth so
@@ -4483,50 +4491,66 @@ export function sensoryDome(root, { skin, ridge, light }, opts) {
 /**
  * A single ducted drive, grown: a siphon — the jet a swimming thing drives
  * with, where the Directorate turns a screw in a duct (directorate.mjs
- * `ductedDrive`). `siphon_duct` is a hollow lathe from `stern` running
- * `length` forward, `r` outside at the lip drawing in to `root.r` at the
- * root and `wall` thick, one closed profile so the bore faces in and both
- * ends close (the Directorate's duct is cut the same way); `siphon_ring`,
- * the muscle ring round the mouth, a ridge lathed at `ring.x` with
- * `ring.crown` and `ring.shoulder` over `ring.halfWidth`; and
- * `siphon_funnel`, the nozzle inside the bore, a frustum of membrane
- * `funnel.r` across at its forward end and `funnel.throat` at its aft,
- * `funnel.length` long from `funnel.x`, closed at both ends so the bore
- * shows a shut nozzle and never the hull's inside. Dark, every part: the
- * block lights nothing astern.
+ * `ductedDrive`). It grows out of the pod rather than bolting onto it:
+ * `siphon_duct` is a hollow lathe whose `outer` and `inner` walls are each
+ * an `[x, r]` polyline from the stern lip forward to the root, closed into
+ * one profile so the bore faces in and both ends close, and pressed to
+ * `squash` of its beam in height as the pod is — so a root drawn no wider
+ * than the pod at its station sits inside the skin with no step, and the
+ * tail flows into the bore. The lip is whatever the outer polyline draws
+ * — a flare and a rounded-over edge, not a straight cone's rim.
+ * `siphon_ring`, the muscle ring round the mouth, is a ridge lathed at
+ * `ring.x` with `ring.crown` and `ring.shoulder` over `ring.halfWidth`,
+ * pressed the same; and `siphon_funnel`, the nozzle inside the bore, a
+ * frustum of membrane `funnel.r` across at its forward end and
+ * `funnel.throat` at its aft, `funnel.length` long from `funnel.x`, closed
+ * at both ends so the bore shows a shut nozzle and never the hull's inside,
+ * pressed with the bore. Dark, every part: the block lights nothing astern.
  */
 export function siphonDrive(root, { duct: ductMat, ring: ringMat, funnel: funnelMat }, opts) {
-  const { stern, length, r, wall, root: rootEnd, ring, funnel, cut: rule = METRE } = opts;
+  const { outer, inner, squash = 1, ring, funnel, cut: rule = METRE } = opts;
   noCount('siphon_duct', opts, 'facets');
   noCount('siphon_ring', ring, 'facets');
   noCount('siphon_funnel', funnel, 'facets');
-  const fwd = stern + length;
-  const profile = [
-    [stern, r - wall],
-    [stern, r],
-    [fwd, rootEnd.r],
-    [fwd, rootEnd.r - wall],
-    [stern, r - wall],
-  ];
-  add(root, 'siphon_duct', loft(profile, rule.lathe(profile)), ductMat);
+  // Stern inner, out along the lip, forward along the outer wall, in at the
+  // root and back along the bore: the Directorate's duct's own winding.
+  const profile = [inner[0], ...outer, ...inner.slice().reverse()];
+  const scale = [1, squash, 1];
+  add(
+    root,
+    'siphon_duct',
+    loft(profile, rule.lathe(profile, { scale })),
+    ductMat,
+    [0, 0, 0],
+    [0, 0, 0],
+    scale
+  );
   add(
     root,
     'siphon_ring',
-    ruledRidge(rule, { crown: ring.crown, shoulder: ring.shoulder, halfWidth: ring.halfWidth }),
+    ruledRidge(
+      rule,
+      { crown: ring.crown, shoulder: ring.shoulder, halfWidth: ring.halfWidth },
+      { scale }
+    ),
     ringMat,
-    [ring.x, 0, 0]
+    [ring.x, 0, 0],
+    [0, 0, 0],
+    scale
   );
-  const placement = { rot: [0, 0, Math.PI / 2] };
+  // A cylinder's +Y is its `rTop`; a roll of +π/2 about Z lays +Y on -X, so
+  // the wide end is the forward one, and its local X on the world's Y, so
+  // the press goes on local X.
+  const placement = { rot: [0, 0, Math.PI / 2], scale: [squash, 1, 1] };
   const n = rule.cyl(funnel.r, funnel.throat, funnel.length, placement);
-  // A cylinder's +Y is its `rTop`; a roll of +π/2 about Z lays +Y on -X,
-  // so the wide end is the forward one.
   add(
     root,
     'siphon_funnel',
     cyl(funnel.throat, funnel.r, funnel.length, n),
     funnelMat,
     [funnel.x - funnel.length / 2, 0, 0],
-    placement.rot
+    placement.rot,
+    placement.scale
   );
 }
 

@@ -17,9 +17,9 @@
  * a transport's scale), each with its hatch grown as a sphincter — a muscle
  * ring of ridge, a lit rim, a dark membrane valve; a sensory lobe forward
  * with its own ring and a lit bud on its crown for the dome; two bladders
- * either side of a ridge-spindle keel under the belly; a siphon astern for
- * the duct, with a shut membrane nozzle in its bore; three trim vanes, none
- * a pair; and two navigation marks.
+ * either side of a ridge-spindle keel under the belly; a siphon grown out
+ * of the tail for the duct, with a shut membrane nozzle in its bore; three
+ * trim vanes, none a pair; and two navigation marks.
  *
  * BUILT, not ported: there is no approved binary, so every number here is a
  * decision (docs/models-plan.md §3.1). Drawn metre-true at 100 m, bow at
@@ -34,72 +34,93 @@
  *
  * What the block does not say, decided here:
  *
- * - **"Ducted drive" is a siphon.** The Commune's drive is a muscle (the
- *   Drifter's fluke, the Weaver's); a duct the navy would grow is the jet
- *   a swimming thing drives with — a hollow lathe of chitin 12 m long with
- *   a muscle ring of ridge round its mouth and a shut membrane nozzle in
- *   its bore. One, on the keel line, as the block has it. Dark: nothing
- *   astern is lit.
+ * - **"Ducted drive" is a siphon, grown out of the tail.** The Commune's
+ *   drive is a muscle (the Drifter's fluke, the Weaver's); a duct the navy
+ *   would grow is the jet a swimming thing drives with. A hollow lathe of
+ *   chitin 13.5 m long, rooted at x −36.5 at 8.5 m across where the pod is
+ *   8.8 — inside the skin, so there is no step and the tail runs into the
+ *   bore — holding 8.4 m across, flaring to 9.9 at −49.5 and rounding over
+ *   to the lip, pressed to the pod's own 0.8 so its section is the pod's; a
+ *   muscle ring of ridge round the mouth; a shut membrane nozzle in the
+ *   bore. One, on the keel line, as the block has it. Dark: nothing astern
+ *   is lit. The first cut was a straight round cone 9.8 m across on a pod
+ *   7.5 m tall there, and the review read it as the Directorate's duct in
+ *   green: a 1.4 m step above and below, a wasp waist behind the last ring,
+ *   a hard rectangle in plan.
  * - **The dome is a membrane lobe with a lit bud.** The Chorister's
  *   translation shows its bladder through the middle lobe as membrane
  *   (hulls/chorister-pelagia.mjs), and a listening organ that shows through
  *   the shell is the same thing: `listening_dome` in `algae_membrane`, 12 m
- *   across and sunk into the crown, with a growth ring and `dome_boss`, a
- *   `bio_light` bud 2.6 m across on its pole — the chart's one upward
- *   emitter, as the Directorate's crown boss is. Off the keel line 0.9 m to
- *   starboard: the navy grows nothing on the line.
+ *   across and sunk into the crown, with a growth ring 2.2 m aft of its
+ *   centre and `dome_boss`, a `bio_light` bud 2.6 m across on its pole — the
+ *   chart's one upward emitter, as the Directorate's crown boss is. Off the
+ *   keel line 0.9 m to starboard: the navy grows nothing on the line.
  * - **The hatch door is a lens of `bio_vein_unlit`.** The rim is the vein
  *   family (`bio_vein`), so the door behind it wears that family's unlit
  *   finish, as the Directorate's doors wear `biolight_unlit` (models-plan.md
- *   §3.2 rule 2). It bulges 0.45 m through the rim, a valve shut.
- * - **The rims burn at 0.4, the boss and the marks at 1.** The Drifter's
- *   header says why a mark burns whole on a hull whose other lamps are
- *   faint (drifter.mjs `SEAM`): the conn view keeps the file's strength,
- *   and "low and cold" is the conn view's number. 0.4 is twice the
- *   Drifter's seams on a hull three and a half times as loud, and under the
- *   Sower's 1.
- * - **Two marks, bow and dorsal**, which the band table's floor row
- *   licenses at every band; the dorsal one at x −14, well forward of the
- *   drive the block keeps dark.
+ *   §3.2 rule 2). Its edge is sunk through the ring's wall below the lip and
+ *   its crest stands 0.7–0.8 m past the lip: a valve shut, no hole from any
+ *   bearing.
+ * - **No two hatches alike, no two lobes in proportion.** `bayHatches`
+ *   refuses a second hatch of one size as it refuses a mirrored pair, so
+ *   each carries its own crown, lip, rim and door (6.6 to 7.3 m across the
+ *   crown), and the lobes' three radii are in no common ratio.
+ * - **The light burns rims and boss level, marks under them.** The conn view
+ *   keeps each lamp's own luminance (rosterModels.ts `recolor`): `bio_vein`
+ *   at 1 is 0.33 of white, `bio_light` at 1 is 0.62. So the rims burn at the
+ *   vein's 1, the boss at 0.55 of `bio_light` — 0.34, level with a rim a
+ *   pixel at a time — and the marks at 0.35, which is 0.22: the block names
+ *   the rims and the boss in one clause and the marks not at all, and the
+ *   band table's floor row licenses a mark without saying it outshines the
+ *   lights the block names. The first cut had the rims at 0.4 and the
+ *   marks at 1, and each mark was 4.7 times a rim per pixel — the block's
+ *   order inverted wherever the file's strength is kept.
+ * - **Two marks, bow and dorsal**, the dorsal one at x −14, well forward of
+ *   the drive the block keeps dark.
  * - **The keel is a spindle that follows the belly**, a sweep rather than a
  *   spar, so it hugs the skin where the Directorate's cylinder hangs under
  *   the plates' rise; and the bladders are chitin orbs, the starboard one
  *   the longer and further aft.
  *
  * THE LIGHT, measured (`lightAudit`, printed by `exportGlb`): seven lit
- * parts, 21.3 m² facing up — the four rims 3.94 to 4.44 m² (16.8 together),
- * the boss 3.13, the two marks 0.69 and 0.75 — nothing hidden and nothing
- * floating. Rims first, the dome second, the marks last: the block's own
- * order, and it was not so at the first cut. With the rim a torus in the
- * mouth behind a muscle ring that swelled wider than it, and the hatch
- * 1.2 m under the lobe's centre at 17° of cant, the four rims read 0.5 to
- * 0.94 m² from above: the ring's crown and the lobe's own overhang stood
- * over the rim's top arc. So the rim rides the crown's own station, where
- * it is the widest thing at the mouth (pelagia.mjs `bayHatches`), and the
- * hatches sit 1.7 to 1.9 m under their lobes' centres, canted about 25°
- * down. The bake at E(14) = 1.22 reads raw E = 6.17 and dims by ×0.197 —
- * the Directorate's Verger reads 6.21 and ×0.195 — a fivefold surplus,
- * twelve times clear of the ×1/64 floor and nowhere near the ×64 ceiling.
+ * parts, 21.1 m² facing up — the four rims 3.63 to 4.75 m² (16.5 together),
+ * the boss 3.06, the two marks 0.75 each — nothing hidden and nothing
+ * floating. By brightness: rims and boss level at 0.33–0.34 of white, marks
+ * at 0.22; by light, rims 16.5 m² at 0.33, boss 3.06 at 0.34, marks 1.5 at
+ * 0.22 — rims, dome, marks, the block's own order, in the conn view and on
+ * the chart alike. Where the rims sit was not so at the first cut: with
+ * the rim a torus in the mouth behind a muscle ring that swelled wider than
+ * it, and the hatch 1.2 m under the lobe's centre at 17° of cant, the four
+ * rims read 0.5 to 0.94 m² from above, the ring's crown and the lobe's
+ * overhang standing over the rim's top arc. So the rim rides the crown's
+ * own station, where it is the widest thing at the mouth (pelagia.mjs
+ * `bayHatches`), and the hatches sit 1.7 to 1.9 m under their lobes'
+ * centres, canted 25–29° down. The bake at E(14) = 1.22 reads raw E = 7.81
+ * and dims by ×0.155 — the Directorate's Verger reads 6.21 and ×0.195 — a
+ * sixfold surplus, ten times clear of the ×1/64 floor and nowhere near the
+ * ×64 ceiling.
  *
- * CONTACTS (`contacts.mjs`): 46 pairs meet, every one a mount — each
+ * CONTACTS (`contacts.mjs`): 45 pairs meet, every one a mount — each
  * ring, lobe, vane, mark, the dome, the keel, the bladders, the duct and
- * the nozzle on the body; the three hatch parts on each other and the ring
- * on its lobe; the amidships ring through the two lobes, the keel and both
+ * the nozzle on the body; the hatch ring on its lobe, and its rim and door
+ * on it; the amidships ring through the two lobes, the keel and both
  * bladders it girdles; the bow ring under the bow mark; the dome's ring
- * and boss on the dome. The port bladder sat 0.3 m into the port bay's
- * underside at the first cut and was dropped 0.6 m; the valves at the first
- * cut hung inside their bores a few centimetres clear of the ring, which
- * is a crack, and were widened to 5.9 m and seated so the lip passes
- * through the lens.
+ * and boss on the dome; the siphon's ring and nozzle on the duct. The port
+ * bladder sat 0.3 m into the port bay's underside at the first cut and was
+ * dropped 0.6 m, the starboard one 0.5 m and 0.4 m inboard when its bay
+ * grew taller; the valves at the first cut hung inside their bores a few
+ * centimetres clear of the ring, which is a crack, and were widened and
+ * seated so the lip passes through the lens; the dome's ring sat under the
+ * boss's aft edge and moved aft of the dome's centre, clear of it.
  *
  * FACETS (#919; pelagia.mjs `cut`): every round part is cut on the rule
  * and `facets.mjs --parts` names none. The body is sixteen round at 11.6 m,
  * the lobes sixteen by eight, the dome sixteen by eight, the hatch rings
- * fifteen a turn at 3.5 m with rims sixteen by five, the valves twelve by
- * six, the siphon duct sixteen and its nozzle thirteen, the boss five by
- * three. PANELS: the median unlit part from above is 3.95 m on a side over
- * twenty-one, a hatch ring (15.6 m²), inside the navy's 1.5–5 m band for a
- * hull. 36 parts, 4,208 triangles.
+ * fourteen to fifteen a turn at 3.3–3.65 m with rims fifteen to sixteen by
+ * five, the valves eleven to thirteen round by five or six, the siphon duct
+ * sixteen and its nozzle fourteen, the boss five by three. PANELS: the median unlit part from
+ * above is 4.14 m on a side over twenty-one, a hatch ring (17.1 m²),
+ * inside the navy's 1.5–5 m band for a hull. 36 parts, 4,386 triangles.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -109,15 +130,22 @@ const L = 100;
 const BOW = L / 2;
 const STERN = -L / 2;
 
-/** How the rims burn against the marks (the header). */
-const RIM = 0.4;
+/**
+ * How the lamps burn against each other (the header): the rims at the
+ * vein's full 1, the boss at 0.55 of the brighter `bio_light` so it matches
+ * them a pixel at a time, and the marks under both at 0.35.
+ */
+const RIM = 1;
+const BOSS = 0.55;
+const MARK = 0.35;
 
 const chitin = pelagia.ink.chitinHull();
 const ridge = pelagia.ink.growthRidge();
 const membrane = pelagia.ink.algaeMembrane();
 const vein = pelagia.ink.bioVein(RIM);
 const unlit = pelagia.ink.bioVeinUnlit();
-const light = pelagia.ink.bioLight();
+const boss = pelagia.ink.bioLight(BOSS);
+const mark = pelagia.ink.bioLight(MARK);
 
 const root = new THREE.Group();
 root.name = 'pelagia_verger';
@@ -182,27 +210,30 @@ pelagia.growthRings(root, ridge, {
   cut,
 });
 
-// The four cohort bays: swelling lobes low on the flanks, 2.5 m below the
-// axis, alternating sides from starboard aft, no two the same size — each
-// an orb of chitin 19–21 m long reaching 12.4–13.6 m off the keel where the
-// body reaches 11.6: the widest things on the hull, which the plan outline
-// is cut from, on alternating sides as docs/models-plan.md §3.6 has it.
+// The four cohort bays: swelling lobes low on the flanks, 2.4–2.6 m below
+// the axis, alternating sides from starboard aft, no two the same shape —
+// each an orb of chitin 18.8–21 m long, 8.6–9.6 tall and 10.2–11.2 across,
+// reaching 12.7–14 m off the keel where the body reaches 11.6; the lobes
+// and the hatch rings on them are what the plan outline is cut from, on
+// alternating sides as docs/models-plan.md §3.6 has it.
 const BAYS = [
   { side: 's0', at: [-20, -2.5, 8.0], radii: [10.0, 4.6, 5.2] },
-  { side: 'p1', at: [-6, -2.4, -8.4], radii: [10.5, 4.8, 5.4] },
-  { side: 's2', at: [8, -2.6, 8.2], radii: [10.2, 4.7, 5.3] },
-  { side: 'p3', at: [22, -2.5, -7.4], radii: [9.6, 4.4, 5.0] },
+  { side: 'p1', at: [-6, -2.4, -8.4], radii: [10.5, 4.5, 5.6] },
+  { side: 's2', at: [8, -2.6, 8.2], radii: [9.8, 4.8, 5.1] },
+  { side: 'p3', at: [22, -2.5, -7.4], radii: [9.4, 4.3, 5.3] },
 ];
 pelagia.cargoLobes(root, chitin, {
   lobes: BAYS.map(({ side, at, radii }) => [side, ...at, ...radii]),
   cut,
 });
 
-// The hatches: a sphincter on each lobe's outboard face, 1.2 m below the
-// lobe's centre where the skin's normal points outboard and about 17° down,
-// each its own distance along the lobe so no pair answers across the keel.
-// Muscle ring 6.8 m across at its crown, lit rim 5.2 m across, membrane
-// valve 5.1 m across bulging through it.
+// The hatches: a sphincter on each lobe's outboard face, 1.7–1.9 m below
+// the lobe's centre where the skin's normal points outboard and 25–29°
+// down, each its own distance along the lobe and its own size so none
+// answers another across the keel: muscle rings 6.6–7.3 m across at the
+// crown, lit rims 6.6–7.3 m across on the crown's station, membrane valves
+// 5.6–6.1 m across with their edge sunk through the ring's wall and their
+// crest standing 0.7–0.8 m past the lip.
 pelagia.bayHatches(
   root,
   { ring: ridge, rim: vein, door: unlit },
@@ -210,9 +241,33 @@ pelagia.bayHatches(
     bays: BAYS,
     hatches: [
       { bay: 0, dx: 1.0, dy: -1.8 },
-      { bay: 1, dx: -1.5, dy: -1.8 },
-      { bay: 2, dx: 0.5, dy: -1.9 },
-      { bay: 3, dx: -1.0, dy: -1.7 },
+      {
+        bay: 1,
+        dx: -1.5,
+        dy: -1.8,
+        crown: 3.65,
+        lip: 2.85,
+        rim: { r: 3.65, tube: 0.3 },
+        door: { r: 3.05, squash: 0.3, sink: 0.15 },
+      },
+      {
+        bay: 2,
+        dx: 0.5,
+        dy: -1.9,
+        crown: 3.4,
+        lip: 2.7,
+        rim: { r: 3.4, tube: 0.26 },
+        door: { r: 2.9, squash: 0.3, sink: 0.15 },
+      },
+      {
+        bay: 3,
+        dx: -1.0,
+        dy: -1.7,
+        crown: 3.3,
+        lip: 2.6,
+        rim: { r: 3.3, tube: 0.27 },
+        door: { r: 2.8, squash: 0.3, sink: 0.15 },
+      },
     ],
     proud: 2.0,
     sink: 1.6,
@@ -227,15 +282,16 @@ pelagia.bayHatches(
 
 // The listening dome forward: a sensory lobe of membrane on the crown at
 // x 28, 12 m long, 8.4 tall and 10.8 across, sunk 1.8 m into the body, a
-// growth ring 1.5 m forward of its centre, and on its pole the lit boss.
+// growth ring 2.2 m aft of its centre and clear of the boss, and on its
+// pole the lit boss.
 const DOME_X = 28;
 pelagia.sensoryDome(
   root,
-  { skin: membrane, ridge, light },
+  { skin: membrane, ridge, light: boss },
   {
     at: [DOME_X, crownAt(DOME_X) - 1.8, 0.9],
     radii: [6.0, 4.2, 5.4],
-    ring: { dx: 1.5, crown: 5.6, shoulder: 5.0, halfWidth: 0.6 },
+    ring: { dx: -2.2, crown: 5.6, shoulder: 5.0, halfWidth: 0.6 },
     boss: { r: 1.3, squash: 0.6, sink: 0.3 },
     cut,
   }
@@ -259,32 +315,46 @@ pelagia.grownKeel(root, ridge, {
 });
 
 // The ballast tanks: two bladders of chitin slung either side of the keel
-// at −7.4 and −7.8, half in the belly and clear of the lobes above them,
-// the starboard one 26 m long and further aft, the port 23 m and further
-// forward.
+// at −7.9 and −7.8, half in the belly and clear of the bays above them and
+// of the keel between, the starboard one 26 m long and further aft, the
+// port 23 m and further forward.
 pelagia.ballastBladders(root, chitin, {
   bladders: [
-    { side: 's', at: [-7, -7.4, 4.2], radii: [13.0, 2.5, 2.3] },
-    { side: 'p', at: [1, -7.8, -4.0], radii: [11.5, 2.3, 2.2] },
+    { side: 's', at: [-7, -7.9, 3.8], radii: [13.0, 2.5, 2.2] },
+    { side: 'p', at: [1, -7.8, -4.0], radii: [11.5, 2.3, 2.1] },
   ],
   cut,
 });
 
-// The single ducted drive, a siphon: a 12 m duct from the stern at −50,
-// 9.8 m across at its lip and 8.8 at its root in the pod's tail, 1.3 m of
-// wall; a muscle ring round the mouth at −48; and inside, the shut nozzle,
-// a membrane frustum 6.4 m across forward and 3 m aft. Dark.
+// The single ducted drive, a siphon grown out of the tail: a hollow lathe
+// 13.5 m long from the stern at −50, rooted at −36.5 at 8.5 m across where
+// the pod is 8.8 — inside the skin, no step — running 8.4 m across to −41,
+// flaring to 9.9 at −49.5 and rounding over to the lip, 1–1.3 m of wall,
+// pressed to the pod's own 0.8; a muscle ring round the mouth at −48; and
+// inside, the shut nozzle, a membrane frustum 6.6 m across forward and 3
+// aft, its forward rim buried in the bore's wall. Dark.
 pelagia.siphonDrive(
   root,
   { duct: chitin, ring: ridge, funnel: membrane },
   {
-    stern: STERN,
-    length: 12,
-    r: 4.9,
-    wall: 1.3,
-    root: { r: 4.4 },
-    ring: { x: -48, crown: 5.5, shoulder: 4.7, halfWidth: 1.2 },
-    funnel: { x: -39, r: 3.2, throat: 1.5, length: 7 },
+    outer: [
+      [STERN, 4.55],
+      [-49.5, 4.95],
+      [-48.2, 4.8],
+      [-45.5, 4.35],
+      [-41, 4.2],
+      [-36.5, 4.25],
+    ],
+    inner: [
+      [STERN, 3.6],
+      [-47.5, 3.45],
+      [-43, 3.25],
+      [-39, 3.2],
+      [-36.5, 3.2],
+    ],
+    squash: SQUASH,
+    ring: { x: -48, crown: 5.3, shoulder: 4.5, halfWidth: 1.2 },
+    funnel: { x: -38.5, r: 3.3, throat: 1.5, length: 7 },
     cut,
   }
 );
@@ -347,8 +417,8 @@ pelagia.trimVanes(root, membrane, {
 
 // "Nearly black; navigation marks only": a bow mark on the crown forward
 // and a dorsal one aft of the bays, a little to port, each dropped onto the
-// body's own facet (`on`).
-pelagia.navMarks(root, light, {
+// body's own facet (`on`), both under the rims and the boss (the header).
+pelagia.navMarks(root, mark, {
   marks: [
     ['nav_bow', 44, crownAt(44) + 0.5, 0],
     ['nav_dorsal', -14, crownAt(-14) + 0.5, -1.2],
