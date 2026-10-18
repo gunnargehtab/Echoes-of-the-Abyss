@@ -146,13 +146,16 @@ export class DetailResidency<T> {
 
   /**
    * Say what the camera wants now, `reserved` slots already held by a
-   * session's own region. Requests start in the order given while a slot is
-   * free; one for a region no longer wanted is aborted.
+   * session's own region. Only as many as the bound leaves room for are
+   * taken, the first given first, so the residency holds its bound whoever
+   * asks. Requests start in that order while a slot is free; one for a region
+   * no longer wanted is aborted.
    */
-  want(ids: readonly string[], reserved = 0): void {
+  want(asked: readonly string[], reserved = 0): void {
     if (this.disposed) return;
+    const ids = asked.slice(0, Math.max(0, this.maxResident - reserved));
     this.tick++;
-    this.wanted = [...ids];
+    this.wanted = ids;
     this.reserved = reserved;
     for (const id of [...this.failedIds]) if (!ids.includes(id)) this.failedIds.delete(id);
     for (const [id, controller] of [...this.inFlight]) {

@@ -2520,7 +2520,8 @@ export class PerspectiveView {
     if (residency === null || home === null) return;
     const session = this.terrainMesh !== null ? home.id : null;
     // A session holds its own region: a copy built before its ground arrived
-    // would be a second one, past §7.5's two.
+    // would hold the session's ground twice, hidden, until another region
+    // pushed it out.
     if (session !== null) residency.drop(session);
     const candidates: DetailCandidate[] = [];
     if (this.overview?.mesh.visible === true) {

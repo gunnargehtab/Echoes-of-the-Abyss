@@ -24,7 +24,10 @@ import { CONN_FOV_DEG } from '../src/game/readability.ts';
  * that honours its signal rejects when aborted; one that does not lands
  * whenever the test says, as a bake already past its last yield would.
  */
-function loads({ honoursAbort = true } = {}) {
+function loads({
+  honoursAbort = true,
+  maxResident = WORLD.DETAIL_RESIDENT,
+}: { honoursAbort?: boolean; maxResident?: number } = {}) {
   const open = new Map<
     string,
     { resolve: (v: string) => void; reject: (e: Error) => void; signal: AbortSignal }
@@ -36,7 +39,8 @@ function loads({ honoursAbort = true } = {}) {
         open.set(id, { resolve, reject, signal });
         if (honoursAbort) signal.addEventListener('abort', () => reject(new Error('aborted')));
       }),
-    (id, value) => released.push(`${id}:${value}`)
+    (id, value) => released.push(`${id}:${value}`),
+    maxResident
   );
   const settle = async (id: string, value = `${id}-detail`) => {
     open.get(id)!.resolve(value);
@@ -95,7 +99,8 @@ describe('holding detail (§7.5)', () => {
   });
 
   it('keeps two requests in flight at most, and starts the next as one lands', async () => {
-    const { residency, open, settle } = loads();
+    // Room for three held, so the two in flight are what binds.
+    const { residency, open, settle } = loads({ maxResident: 3 });
     residency.want(['a', 'b', 'c']);
     assert.deepEqual([...open.keys()], ['a', 'b'], 'two at once');
     assert.equal(residency.pending, 2);
@@ -143,6 +148,14 @@ describe('holding detail (§7.5)', () => {
     residency.want(['a'], 1);
     assert.deepEqual([...residency.residentIds()], ['a'], 'one beside the session');
     assert.deepEqual(released, ['b:b-detail'], 'the one no longer wanted goes');
+  });
+
+  it('takes no more than its bound leaves room for, whoever asks', async () => {
+    const { residency, open, settle } = loads();
+    residency.want(['a', 'b'], 1);
+    assert.deepEqual([...open.keys()], ['a'], 'one beside the session, the first asked');
+    await settle('a');
+    assert.deepEqual([...residency.residentIds()], ['a']);
   });
 
   it('drops a region held or being built, as when a session takes it', async () => {
