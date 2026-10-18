@@ -327,11 +327,11 @@ The owner's calls: six on #1455, six on #1461, five on #1457, five on #1459, two
 
 **The join waits on the region's public ground and assets (taken).** The overview's skin and the models of the props the region's baseline ground stands load during the travel, each failure counting as done, beside the match's own code. Waiting on the code alone would join before the world had its skin and props. Amending this section to code only would weaken the target to fit the code. The region's own detail is not waited on: the session's ground replaces it at the join, and on a GTX 1070 it is drawn within 1.5 s of the camera reaching 6 km.
 
-**Every Return to port from a board launch travels back (taken).** The result's and the Esc menu's both end on the board the player launched from, and the record keeps its door off the world. Returning from the result alone would send an abandoned mission to the title, away from the board it was launched from. Drawing the record over the world too would give the record a travel and a frame of its own for one more door.
+**Every Return to port from a board launch travels back (taken).** Wherever it is offered — the result, the Esc menu, a lost signal's overlay — it ends on the board the player launched from, and the record keeps its door off the world. Returning from the result alone would send an abandoned mission to the title, away from the board it was launched from. Drawing the record over the world too would give the record a travel and a frame of its own for one more door.
 
 **The session's ground gives way mid-travel, once its baseline is built (taken).** The baseline detail is built hidden during the ramp-out and swapped in the first frame after it that it is ready, while the camera moves. Swapping on arrival changes the still board frame in front of the player. Swapping at release, as before, stands the arch back up at 2,600 m and draws the overview's coarse ground until the detail is built.
 
-**Under reduced motion the cut waits for the baseline (taken).** The ramp-out and the travel are both cuts there, so the session's frame is held until the baseline is built and the two changes land as one. Cutting at once would swap the ground on the still board frame about 1.5 s later on a GTX 1070, a second change after the cut.
+**Under reduced motion the cut waits for the baseline (taken).** The ramp-out and the travel are both cuts there, so the session's frame is held until the baseline is built and the two changes land as one. Cutting at once would swap the ground on the still board frame about 2 s later on a GTX 1070, a second change after the cut.
 
 ---
 

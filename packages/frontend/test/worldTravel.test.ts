@@ -438,7 +438,7 @@ describe('the world behind the board (§7.6)', () => {
     }
     view.setFrame(LEFT);
     worldView.release(lent.claim, 'return');
-    return view;
+    return Object.assign(view, { gl });
   }
 
   it('keeps a return across a board let go and taken back in one commit', async () => {
@@ -505,21 +505,56 @@ describe('the world behind the board (§7.6)', () => {
   it('holds a reduced-motion return on its frame until the baseline, then cuts with the swap', async () => {
     saveSettings({ ...loadSettings(), reducedMotion: true });
     const view = await returning(true);
+    // What each drawn frame showed, read as the device draws it: the camera
+    // and whether the session's ground was still there.
+    const draws: { left: boolean; board: boolean; ground: boolean }[] = [];
+    const at = (a: CameraFrame, b: CameraFrame) =>
+      Math.hypot(a.xM - b.xM, a.yM - b.yM) < 1 && Math.abs(a.distanceM - b.distanceM) < 1;
+    const draw = view.gl.render.bind(view.gl);
+    view.gl.render = (scene, camera) => {
+      const frame = view.frame;
+      draws.push({
+        left: at(frame, LEFT),
+        board: at(frame, boardFrame(SORROWGATE_REGION)),
+        ground: view.leavingGround,
+      });
+      draw(scene, camera);
+    };
+    // The baseline's build, held until the test lets it go.
+    let built!: () => void;
+    const held = new Promise<void>((resolve) => (built = resolve));
+    type Build = { loadRegionDetail: (id: string, signal: AbortSignal) => Promise<unknown> };
+    const real = (view as unknown as Build).loadRegionDetail.bind(view);
+    (view as unknown as Build).loadRegionDetail = async (id, signal) => {
+      await held;
+      return real(id, signal);
+    };
     const board = await mountBackdrop();
     try {
-      await frameAt(1);
+      // Frames while the build is held: a cut not held would draw the board
+      // over the session's ground here.
+      for (let ms = 1; ms < 6; ms++) await frameAt(ms);
       assert.equal(view.leavingGround, true, 'the baseline is still building');
-      sameFrame(view.frame, LEFT, 1e-6);
-      // The build runs on real timers; the camera holds through every frame of it.
+      built();
+      // The build runs on real timers; the frames keep coming meanwhile.
       for (let waited = 0; waited < 60_000 && view.leavingGround; waited += 20) {
-        sameFrame(view.frame, LEFT, 1e-6);
         await act(async () => {
           await new Promise((resolve) => setTimeout(resolve, 20));
         });
-        await frameAt(2 + waited);
+        await frameAt(10 + waited);
       }
+      await frameAt(70_000);
       assert.equal(view.leavingGround, false, 'the baseline gave way');
-      sameFrame(view.frame, boardFrame(SORROWGATE_REGION), 1e-6);
+      const swap = draws.findIndex((d) => !d.ground);
+      assert.ok(swap > 0, 'frames were drawn over the session ground, then without it');
+      assert.ok(
+        draws.slice(0, swap).every((d) => d.left && d.ground),
+        "every frame before the swap is the session's, on its frame"
+      );
+      assert.ok(
+        draws.slice(swap).every((d) => d.board && !d.ground),
+        "the swap's own frame, and every one after, is the board's: one change"
+      );
       await untilSettled(board, 1);
     } finally {
       await board.unmount();
