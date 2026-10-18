@@ -141,6 +141,15 @@ import drifterEmissive from '../assets/hulls/maps/drifter-emissive.png';
 import vergerAlbedo from '../assets/hulls/maps/verger-albedo.png';
 import vergerHeight from '../assets/hulls/maps/verger-height.png';
 import vergerEmissive from '../assets/hulls/maps/verger-emissive.png';
+import vergerBathAlbedo from '../assets/hulls/maps/verger-bathyarch-albedo.png';
+import vergerBathHeight from '../assets/hulls/maps/verger-bathyarch-height.png';
+import vergerBathEmissive from '../assets/hulls/maps/verger-bathyarch-emissive.png';
+import vergerPelAlbedo from '../assets/hulls/maps/verger-pelagia-albedo.png';
+import vergerPelHeight from '../assets/hulls/maps/verger-pelagia-height.png';
+import vergerPelEmissive from '../assets/hulls/maps/verger-pelagia-emissive.png';
+import vergerHadAlbedo from '../assets/hulls/maps/verger-hadron-albedo.png';
+import vergerHadHeight from '../assets/hulls/maps/verger-hadron-height.png';
+import vergerHadEmissive from '../assets/hulls/maps/verger-hadron-emissive.png';
 import antiphonAlbedo from '../assets/hulls/maps/antiphon-albedo.png';
 import antiphonHeight from '../assets/hulls/maps/antiphon-height.png';
 import antiphonEmissive from '../assets/hulls/maps/antiphon-emissive.png';
@@ -325,8 +334,8 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
   },
   // The transports (#783), on the rung's rule: one navy's hull each, so the
   // kind's canonical model. The Verger carries no lock, so its Directorate
-  // model serves every navy recoloured — the Chorister's rule — until a
-  // variant passes intake.
+  // model is the kind's canonical one and the other three navies' are
+  // variants (#1438) — the Chorister's rule.
   [UnitKind.Freighter]: {
     albedo: freighterAlbedo,
     height: freighterHeight,
@@ -506,6 +515,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>
       height: choristerPelHeight,
       emissive: choristerPelEmissive,
     },
+    [UnitKind.Verger]: {
+      albedo: vergerPelAlbedo,
+      height: vergerPelHeight,
+      emissive: vergerPelEmissive,
+    },
   },
   [Faction.Bathyarch]: {
     [UnitKind.LightScout]: {
@@ -537,6 +551,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>
       albedo: choristerBathAlbedo,
       height: choristerBathHeight,
       emissive: choristerBathEmissive,
+    },
+    [UnitKind.Verger]: {
+      albedo: vergerBathAlbedo,
+      height: vergerBathHeight,
+      emissive: vergerBathEmissive,
     },
   },
   [Faction.Directorate]: {
@@ -591,6 +610,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>
       albedo: choristerHadAlbedo,
       height: choristerHadHeight,
       emissive: choristerHadEmissive,
+    },
+    [UnitKind.Verger]: {
+      albedo: vergerHadAlbedo,
+      height: vergerHadHeight,
+      emissive: vergerHadEmissive,
     },
   },
 };

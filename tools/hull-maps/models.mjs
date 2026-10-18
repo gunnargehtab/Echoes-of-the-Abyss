@@ -105,12 +105,18 @@ export const UNITS = [
   // The transports (docs/units.md "The transports", #783 — Phase 4's first
   // box): one a navy, so each model is the kind's canonical one. The Verger
   // carries no lock and takes the Chorister's rule — its Directorate model
-  // serves every navy recoloured until a variant passes intake. The
+  // is the kind's canonical one, and the three rows below it its variants. The
   // Antiphon's listed 12 is a cone figure like the Clarion's: it bakes on
   // the compass average, 5.4, and the light is placed forward.
   { slug: 'freighter', model: 'freighter-bathyarch.glb', lengthM: 160, sig: 30 },
   { slug: 'drifter', model: 'drifter-pelagia.glb', lengthM: 62, sig: 4 },
   { slug: 'verger', model: 'verger-directorate.glb', lengthM: 100, sig: 14 },
+  // The Verger as the other navies field it (#1438), on the Chorister's rule:
+  // the cohort transport's plan in each navy's shape language, the light kept
+  // at the Directorate's band.
+  { slug: 'verger-bathyarch', model: 'verger-bathyarch.glb', lengthM: 100, sig: 14 },
+  { slug: 'verger-pelagia', model: 'verger-pelagia.glb', lengthM: 100, sig: 14 },
+  { slug: 'verger-hadron', model: 'verger-hadron.glb', lengthM: 100, sig: 14 },
   { slug: 'antiphon', model: 'antiphon-hadron.glb', lengthM: 110, sig: 5.4 },
   // The scouts (docs/units.md "The scouts", #784 — Phase 4's second box):
   // one a navy, so each model is the kind's canonical one. The Acolyte

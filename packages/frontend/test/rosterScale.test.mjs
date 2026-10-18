@@ -74,7 +74,6 @@ const FIELDED = kinds(Faction).flatMap((faction) => [
  */
 const PENDING = new Map([
   ...['bathyarch', 'pelagia', 'hadron'].flatMap((navy) => [
-    [`verger-${navy}.glb`, 1438],
     [`acolyte-${navy}.glb`, 1439],
     [`thurible-${navy}.glb`, 1440],
     [`lure-${navy}.glb`, 1441],
