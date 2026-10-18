@@ -71,9 +71,12 @@
  *   knee block's top, 4 m above the axis, six in all, and the hull's whole
  *   light. The hip brackets are inside the decks' depth — their tops at
  *   y 0.5 under deck plates at 1.2 and 1.5 — and only their outboard
- *   half a metre stands out of the deck's face; each one's two rivet
- *   heads sit on the deck plate over it, the bracket's bolts through,
- *   unlit; the ankles are under the keel line, where the chart's
+ *   end stands out of the deck's face: half a metre on the square middle
+ *   pair, and on the four raked end hips a wedge from nothing to 1.06 m,
+ *   its face's centre 0.33 m out; each one's two rivet heads sit on the
+ *   deck plate over it, the bracket's bolts through, every corner of
+ *   each head inside the deck's edge (the outer head of each raked hip
+ *   0.04 m in), unlit; the ankles are under the keel line, where the chart's
  *   straight-down bake sees nothing.
  * - **The feet are hydrophones, planted below the keel.** A hydrophone on
  *   this navy is a drum (`transducerDrum`), so each leg ends in a
@@ -115,7 +118,9 @@
  *   There is no waist: each deck holds its beam its whole length and the
  *   three step at the seams, 13.2 to 17 to 14, and each smaller can's
  *   pinch to 0.85 of its radius is inside the larger can's cap (the fore
- *   seam's outline runs 3.5 to 3.8 to 4.5) or behind the bow block. The
+ *   seam's outline runs 3.5 to 3.8 to 4.5); the two end caps taper to
+ *   2.98 beyond the deck ends, 0.2 to 0.3 m proud of the bow and stern
+ *   blocks over their last quarter-metre, an end taper and no waist. The
  *   segments read by the steps and by the colour, grey between black,
  *   where the Directorate's pinch at their seams. Keel to dome crown
  *   is 10.2 m against the Directorate's 9.8. The bow and stern blocks are
@@ -259,7 +264,7 @@ const joints = bathyarch.plantedLegs(
       sink: 0.5,
       on: (x) => beamAt(x),
       size: [2.6, 1.6, 2.0],
-      rivet: { size: [0.5, 0.3, 0.5], pitch: 1.0, out: -0.4, top: (x) => beamAt.top(x), sink: 0.05 },
+      rivet: { size: [0.5, 0.3, 0.5], pitch: 1.0, out: -0.55, top: (x) => beamAt.top(x), sink: 0.05 },
     },
     femur: { reach: 5, rise: 3.2, section: [1.6, 1.4], root: 0.2 },
     knee: { size: [2.4, 2.0, 2.2] },
