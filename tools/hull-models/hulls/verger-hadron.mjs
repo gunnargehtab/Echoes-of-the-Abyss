@@ -35,98 +35,113 @@
  * as a crystal held in a frame, which is how hulls/chorister-hadron.mjs
  * says its bladder:
  *
- * - **The body is a six-facet spar** (`bladeBody`, the hexagon the Order
- *   cuts at any size, Block 2c), 88 m from x −45 to 43, pressed 1.05 tall
- *   by 1.3 wide on 6.2 m of radius at its fullest, x −4: 14.0 m in beam and
- *   13.0 m tall. Not the rung's four-facet blade at 0.55 by 1.5: four
- *   berths need volume, the module's own rule is that beam is wing and a
- *   wide body is the slab this navy must never have, so the volume is in
- *   the section's depth — a beam-to-length of 0.140 against the Antiphon's
- *   0.144 and the Clarion's 0.121, and a hull as tall as it is wide. A
- *   hexagon with a vertex on the crown gives the hull a vertical flank
- *   facet, 6.5 m tall at the fullest station, which is where a hatch goes.
+ * - **The body is the family's blade** (`bladeBody`): a four-facet spar
+ *   88 m from x −45 to 43, pressed 0.6 tall by 1.4 wide on 6.4 m of radius
+ *   at its fullest, x −4 — 12.7 m in beam and 5.4 m tall, the Chorister's
+ *   own section (its segments are `[0.6, 1.4]`) and a height-to-beam of
+ *   0.43 beside the Clarion's 0.37 and the Antiphon's 0.34. A first cut
+ *   put four berths' volume into a hexagon as tall as it was wide, 13 m
+ *   on 14, and review read it as a barrel with a cone on it (B1): neither
+ *   view rewards depth, and no approved Order body stands over 0.43. So
+ *   the hold is the Chorister's framed segment at the Verger's length, and
+ *   the four facets laid on a flat give the hull a vertical flank facet,
+ *   5.4 m tall at the fullest station, which is where a hatch goes.
  * - **Four hatches, two mirrored pairs** (`pressureHatches`), on that flank
- *   facet at x 2 and 16, 0.4 m under the axis: six-facet alloy collars
- *   2.6 m in radius standing 1.6 m proud and sunk 0.8, each with a dark
- *   door and a lit rim. The Directorate's Verger alternates its four
- *   hatches from starboard, the Listening's rule; the FACTION block makes
- *   this navy "the only faction with" precise bilateral symmetry, and the
- *   approved Chorister follows its faction block over the kind's asymmetric
- *   photophores (hulls/chorister-hadron.mjs). So here the Verger's four are
- *   two pairs, as that header's reasoning says they must be. Both pairs sit
- *   forward of amidships, in the full section, because an Order hull is lit
- *   from the bow back and dark astern (every Order block): the rims are the
- *   hull's flank light and they are its forward half's.
- * - **Three pressure ribs** (`pressureRibs`): alloy hoops hugging the hex
- *   at x −6, 9 and 23 — one abaft the after pair, one between the pairs,
- *   one ahead of the forward pair — so the bays read as held between
- *   frames. Each passes through the spine's base at the crown and is
- *   hidden in it; nothing else crosses a hoop.
+ *   facet at x 2 and 16, half a metre under the axis: six-facet alloy
+ *   collars 1.9 m in radius standing 1.4 m proud and sunk 0.7, each with a
+ *   dark door and a lit rim, the rim's ring a hexagon like the collar's.
+ *   The Directorate's Verger alternates its four hatches from starboard,
+ *   the Listening's rule; the FACTION block makes this navy "the only
+ *   faction with" precise bilateral symmetry, and the approved Chorister
+ *   follows its faction block over the kind's asymmetric photophores
+ *   (hulls/chorister-hadron.mjs). So here the Verger's four are two pairs,
+ *   as that header's reasoning says they must be. Both pairs sit forward
+ *   of amidships, in the full section, because an Order hull is lit from
+ *   the bow back and dark astern (every Order block): the rims are the
+ *   hull's flank light and they are its forward half's. "Low on the
+ *   flanks": the collar's centre is 0.5 m under the axis on a flank 5.2 m
+ *   tall there, its foot 0.2 m over the chine — the Directorate's is 2 m
+ *   under on a hull 26 m tall, the same two fifths up from the keel.
+ * - **Three pressure ribs** (`pressureRibs`): square alloy hoops hugging
+ *   the blade at x −6, 9 and 23 — one abaft the after pair, one between
+ *   the pairs, one ahead of the forward pair — so the bays read as held
+ *   between frames. Each passes through the spine's base at the crown,
+ *   hidden in it, and the two amidships pass through the keel's sunk top
+ *   under the belly, hidden in that: the keel runs x −34 to 20 and both
+ *   hoops' lower runs cross it inside its width. Nothing else crosses a
+ *   hoop (the pods end 1.7 m short of the after one).
  * - **The listening dome** (`listeningDome`) is a crystal cut stone on the
- *   crown at x 30: a dome of 3.4 m pressed 0.9, six facets round and two
- *   down, drawn past its equator so its skirt tucks into the upper facets,
- *   and on its pole the lit boss, a four-sided point 1.2 m in half-diagonal
- *   and 1.0 m tall with its base sunk 0.45 under the pole.
- * - **Ballast tanks flanking a heavy keel**: two four-facet alloy pods
- *   (`ballastPods`) 21 m long on 1.8 m of radius low on the flanks under
- *   the wing roots, x −30 to −9 at z ±6.9 and y −2.6, their inboard flats
- *   against the vertical flank facet — alloy, not the body's indigo, since
- *   a first cut in indigo vanished against the flank in the conn view and
- *   the Directorate's tanks are steel against chitin for the same reason;
- *   and the keel a four-facet alloy spar
- *   (`spar`, sheared) 54 m long under the belly, pressed 1.1 tall by 0.45
- *   wide on 1.6 m, its axis a metre under the keel line at every station,
- *   so its top is sunk in the hull the whole way and its bottom hangs 2.8 m
- *   under it amidships. The pods are not under the belly, where the
- *   Directorate's are, because a pod under a hexagon's lower facets is
- *   seen by neither the chart nor the conn camera: the facet faces away
- *   from both.
+ *   crown's flat at x 30: a dome of 3.4 m pressed 0.9, six facets round
+ *   and two down, sunk 0.6 and drawn past its equator so its skirt is
+ *   inside the hull, and on its pole the lit boss, a four-sided point
+ *   1.2 m in half-diagonal and 1.0 m tall with its base sunk 0.45 under
+ *   the pole.
+ * - **Ballast tanks flanking a heavy keel**: the block's literal tanks,
+ *   two four-facet alloy pods (`ballastPods`) 22 m long on 1.3 m of radius
+ *   under the belly either side of the keel, x −32 to −7 at z ±2.8, their
+ *   axes sheared to the belly line 0.6 m under it so their tops are sunk
+ *   0.3 m the whole way; and the keel a four-facet alloy spar (`spar`,
+ *   sheared) 54 m long between them, pressed 1.1 tall by 0.45 wide on
+ *   1.6 m, its axis a metre under the belly at every station, so its top
+ *   is sunk and its bottom hangs 2.8 m under the hull amidships. Neither
+ *   the chart nor the conn camera sees under a flat belly, so the tanks
+ *   and the keel show in no game view, as the Directorate's do not
+ *   (hulls/verger.mjs, "a keel is a side-elevation feature and shows on no
+ *   map"); they are here because the block names them, and the inspect
+ *   sheet's bow and stern three-quarters show them under the chine. A
+ *   first cut hung alloy pods on the flanks under the wing roots and
+ *   claimed the conn view saw them; review measured 7 m² of a 53 m²
+ *   footprint clear of the wing and a 6 m sliver in the conn view, 7 m
+ *   from the keel they were said to flank (B2). The block's placement is
+ *   the honest one.
  * - **The ducted drive** (`ductedDrive`): a six-facet shadow-indigo duct
- *   9 m long on the stern, 3.8 m outside and 3.1 inside, with a crystal
+ *   9 m long on the stern, 3.0 m outside and 2.3 inside, with a crystal
  *   point for a hub, its base the stern and its tip inside the body's
  *   tail, and two alloy vanes at the beam. The body closes to a point at
  *   x −45 inside the hub, and the duct's forward face meets the body's
- *   flanks at x −41, where the body stands 0.1 m into the wall at the beam.
- *   Dark: the block lights nothing astern.
+ *   flanks at x −41, where the body stands 0.1 m into the wall at the
+ *   beam. Dark: the block lights nothing astern.
  *
  * And the family's parts the block does not name, which every Order hull
  * carries (the Herald's header, same reasoning): a spine with a crystal
  * inlay along the crown, sheared to follow it (`spar`, the Antiphon's after
- * ridge) from x −40 to 38, standing 0.5 m proud and 2 m wide; swept guard
- * wings with crystal edge strips aft, 0.9 m thick at y 1.2, 21 m to the
+ * ridge) from x −41 to 38, standing 0.5 m proud and 2 m wide; swept guard
+ * wings with crystal edge strips aft, 0.9 m thick at y 0.4, 21 m to the
  * tip — the hull's beam, 42 m, is wing; a dorsal fin on the spine at x
  * −31..−23; and the Cantus's answer to an unarmed Order bow, a plain alloy
- * point with one mark abaft it (hulls/antiphon.mjs: no array, "no weapon").
+ * point with one mark 6 m ahead of the dome, between it and the prism
+ * (hulls/antiphon.mjs: no array, "no weapon").
  *
  * Resting light: the four rims, the dome boss and the bow mark — the
  * block's "lit low and cold at the hatch rims and at a boss on the dome's
  * crown", and the band table's licence for a mark at every band. Nothing
  * astern, nothing on the wings, the doors clad in the lamp's unlit finish.
  * Figures measured (`lightAudit`, printed by `exportGlb`; the intake bake):
- * six lit parts, 17.8 m² facing up — the four rims 3.5 m² each, the
- * boss 2.5, the mark 1.25 — every one resting on what is under it, none
- * hidden. 17.8 m² on 1,590 m² of plan (the bake's 6,359 mask px at 2 px/m).
- * The bake at E(14) = 1.22 reads raw E 10.09 and dims by ×0.121: eight times
+ * six lit parts, 14.1 m² facing up — the four rims 2.6 to 2.7 m² each,
+ * the boss 2.5, the mark 1.0 — every one resting on what is under it, none
+ * hidden. 14.1 m² on 1,496 m² of plan (the bake's 5,982 mask px at 2 px/m).
+ * The bake at E(14) = 1.22 reads raw E 8.54 and dims by ×0.143: nine times
  * clear of the ×1/64 floor the quiet end must not touch, and nowhere near
  * the ×64 ceiling a light-starved hull runs into. Rims first, the boss
- * second, the mark last — the block's own order. 34 parts, 1,022 triangles,
- * bounds x ±50, y −8.8..9.7, z ±21.
+ * second, the mark last — the block's own order. 34 parts, 954 triangles,
+ * bounds x ±50, y −5.0..6.8, z ±21.
  *
  * FACETS and PANELS (Block 2c; `node tools/hull-models/facets.mjs hadron`):
- * no ring off the rule. The body is the
- * hexagon (read at 7.7 m, its pressed beam), the spine, inlay, keel, pods,
- * bow prism, hub and boss the diamond; the dome six round and two down; the
- * ribs, collars, doors, duct and rims six, the rim and rib tubes four. The
- * median unlit part from above is 3.0 m on a side over twenty, inside the
- * hulls' 2–6 m band, so the hull carries no seams: a rib, a collar and a
- * pod each divide the plan where a seam would.
+ * no ring off the rule. The body, the
+ * ribs' rings, the spine, inlay, keel, pods, bow prism, hub and boss are
+ * the diamond (the body read at 9.0 m, its pressed beam); the dome six
+ * round and two down; the collars, doors, duct and rims six; the rim and
+ * rib tubes four. The median unlit part from above is 3.2 m on a side over
+ * eighteen, inside the hulls' 2–6 m band, so the hull carries no seams: a
+ * rib, a collar and the dome each divide the plan where a seam would.
  *
- * Contacts (`node tools/hull-models/contacts.mjs verger-hadron`): 48 pairs,
+ * Contacts (`node tools/hull-models/contacts.mjs verger-hadron`): 53 pairs,
  * every one a mount — each part on the body it is seated in or rooted
  * under; the ribs through the spine's base, the inlay inside it and the
- * keel's top, all hidden in the part they cross; the hub, the vanes and
- * the duct's forward face on the body's tail; the boss on the dome's pole.
- * No lamp is hidden and none floats (`exportGlb`, no warning).
+ * keel's sunk top, all hidden in the part they cross; each door's edge
+ * inside its rim's tube; the hub, the vanes and the duct's forward face on
+ * the body's tail; the boss on the dome's pole. No lamp is hidden and none
+ * floats (`exportGlb`, no warning).
  */
 import { THREE, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
@@ -135,8 +150,10 @@ const L = 100;
 const BOW = L / 2;
 const STERN = -L / 2;
 
-/** The deep hull's section: a hexagon pressed 1.05 tall by 1.3 wide (the header). */
-const HOLD = [1.05, 1.3];
+/** The hold's section: the Chorister's blade, four facets pressed 0.6 tall by 1.4 wide. */
+const HOLD = [0.6, 1.4];
+/** A four-facet spar's flat is at cos 45° of its radius (`spar`, "four facets sit on a flat"). */
+const FLAT = Math.SQRT1_2;
 
 const shadow = hadron.ink.shadowIndigo();
 const alloy = hadron.ink.paleAlloy();
@@ -156,12 +173,12 @@ root.name = 'hadron_verger';
 const BODY = [
   [-45, 0.3],
   [-40, 2.6],
-  [-32, 4.6],
-  [-20, 5.9],
-  [-4, 6.2],
-  [12, 6.1],
-  [24, 5.3],
-  [34, 3.7],
+  [-32, 4.7],
+  [-20, 6.0],
+  [-4, 6.4],
+  [12, 6.3],
+  [24, 5.5],
+  [34, 3.8],
   [40, 1.2],
   [43, 0.5],
 ];
@@ -173,10 +190,10 @@ const radius = (x) => {
   const [x1, r1] = BODY[k];
   return r0 + ((r1 - r0) * (x - x0)) / (x1 - x0);
 };
-/** The crown's height at `x`: the hexagon's top vertex under the press. */
-const crown = (x) => radius(x) * HOLD[0];
+/** The crown's height at `x`: the blade's top flat under the press; the belly is its mirror. */
+const crown = (x) => radius(x) * FLAT * HOLD[0];
 
-hadron.bladeBody(root, shadow, { profile: BODY, facets: 6, flat: HOLD });
+hadron.bladeBody(root, shadow, { profile: BODY, facets: 4, flat: HOLD });
 
 // The spine and its inlay along the crown, each a four-facet ridge sheared
 // to the crown's own rise and fall (a station's third number): the spine's
@@ -207,8 +224,8 @@ hadron.spine(
 );
 
 // The bow: a plain alloy point, its tip the bow at x 50, and one mark on
-// the spine's flat top abaft the dome — the Cantus's answer for an Order
-// hull with no weapon (the header).
+// the spine's flat top ahead of the dome, between it and the prism — the
+// Cantus's answer for an Order hull with no weapon (the header).
 hadron.bowPrism(
   root,
   { alloy, seam },
@@ -220,8 +237,8 @@ hadron.bowPrism(
   }
 );
 
-// The listening dome on the crown at x 30, sunk 0.6 into the body so its
-// skirt, drawn past the equator, tucks into the upper facets; the lit boss
+// The listening dome on the crown's flat at x 30, sunk 0.6 into the body
+// so its skirt, drawn past the equator, is inside the hull; the lit boss
 // on its pole (the header).
 hadron.listeningDome(
   root,
@@ -235,12 +252,13 @@ hadron.listeningDome(
   }
 );
 
-// Three pressure ribs hugging the hex (the header).
+// Three pressure ribs hugging the blade (the header).
 hadron.pressureRibs(root, alloy, {
   stations: [-6, 9, 23].map((x) => [x, radius(x)]),
   tube: 0.35,
   lift: 0.1,
   flat: HOLD,
+  facets: 4,
 });
 
 // The four cohort bays: two mirrored pairs of hatches on the vertical flank
@@ -252,12 +270,12 @@ hadron.pressureHatches(
   {
     on: 'blade_hull',
     hatches: [
-      [2, -0.4],
-      [16, -0.4],
+      [2, -0.5],
+      [16, -0.5],
     ],
-    r: 2.6,
-    proud: 1.6,
-    sink: 0.8,
+    r: 1.9,
+    proud: 1.4,
+    sink: 0.7,
     tube: 0.35,
     cut,
   }
@@ -278,7 +296,7 @@ hadron.wings(
       [-33, 20],
     ],
     t: 0.9,
-    y: 1.2,
+    y: 0.4,
     edge: {
       outline: [
         [-33, 20],
@@ -287,36 +305,37 @@ hadron.wings(
         [-32.2, 18.9],
       ],
       t: 1.4,
-      y: 1.35,
+      y: 0.55,
     },
   }
 );
 
-// The ballast pods low on the flanks under the wing roots, their inboard
-// flats against the flank facet (the header).
+// The ballast pods under the belly either side of the keel, each sheared
+// to the belly line so its top is sunk 0.3 m the whole way (the header).
+const belly = (x, sunk) => -crown(x) - sunk;
 hadron.ballastPods(root, alloy, {
   profile: [
-    [-30, 0.3],
-    [-27, 1.8],
-    [-12, 1.8],
-    [-9, 0.3],
+    [-32, 0.3, belly(-32, 0.4)],
+    [-29, 1.3, belly(-29, 0.6)],
+    [-20, 1.3, belly(-20, 0.6)],
+    [-10, 1.3, belly(-10, 0.6)],
+    [-7, 0.3, belly(-7, 0.4)],
   ],
-  y: -2.6,
-  z: 6.9,
+  y: 0,
+  z: 2.8,
 });
 
 // The heavy keel: a four-facet alloy spar under the belly, its axis a metre
-// under the keel line at every station it crosses, so it is sunk the whole
+// under the belly line at every station it crosses, so it is sunk the whole
 // way and hangs 2.8 m under the hull amidships (the header).
-const keelAxis = (x, sunk) => -crown(x) - sunk;
 hadron.spar(root, 'keel', alloy, {
   profile: [
-    [-34, 0.3, keelAxis(-34, 0.4)],
-    [-30, 1.6, keelAxis(-30, 1)],
-    [-20, 1.6, keelAxis(-20, 1)],
-    [-4, 1.6, keelAxis(-4, 1)],
-    [12, 1.6, keelAxis(12, 1)],
-    [20, 0.3, keelAxis(20, 0.4)],
+    [-34, 0.3, belly(-34, 0.4)],
+    [-30, 1.6, belly(-30, 1)],
+    [-20, 1.6, belly(-20, 1)],
+    [-4, 1.6, belly(-4, 1)],
+    [12, 1.6, belly(12, 1)],
+    [20, 0.3, belly(20, 0.4)],
   ],
   flat: [1.1, 0.45],
 });
@@ -335,10 +354,10 @@ hadron.ductedDrive(
   {
     x: STERN,
     length: 9,
-    r: 3.8,
+    r: 3.0,
     wall: 0.7,
     hub: { r: 1.8, length: 9 },
-    vanes: { x: -45.5, z: 1.75, chord: 2.4, t: 0.3, span: 2.3 },
+    vanes: { x: -45.5, z: 1.55, chord: 2.4, t: 0.3, span: 1.9 },
   }
 );
 

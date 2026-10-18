@@ -1306,10 +1306,11 @@ export function transom(root, mat, { x, t = 0.8, halfHeight, halfBeam, y = 0 }) 
  * Pressure hatches on the flanks, in mirrored pairs: each a six-facet alloy
  * `collar` standing `proud` of the skin and `sink` into it, a `door` of the
  * lamp family's unlit finish on the collar's outer face, and the `rim`, a
- * ring round the door that is the lamp. Four-sided tube, six round (`cut`,
- * #919: the rule's own count at 2.75 m, and the hexagon the Order cuts a lip
- * to) with a vertex at the top and the bottom as the collar has, so the rim
- * stands a half tube above the collar's crown where the chart reads it.
+ * ring round the door that is the lamp. Four-sided tube at the rule's count
+ * (`cut`, #919), six round — the hexagon the Order cuts a lip to, the
+ * collar's own section and not the rule's four at 2.25 m — with a vertex at
+ * the top and the bottom as the collar has, so the rim stands a half tube
+ * above the collar's crown where the chart reads it.
  * The rim is lit and the door is not because the Verger block lights the
  * hatch rims at rest and the doors "stay dark until the bays are occupied"
  * (models-plan.md §3.2, rule 2) — the same split the Directorate's
@@ -1330,7 +1331,7 @@ export function pressureHatches(root, { collar, door, rim }, opts) {
   // Born in the xy-plane with a vertex on +x; a quarter about z puts it on
   // +y, and a quarter about x lays the ring flat with that vertex on +z —
   // the collar's own top, since the frame's z is the hull's vertical.
-  const rimGeo = torus(r, tube, rule.round(tube), rule.round(r + tube))
+  const rimGeo = torus(r, tube, rule.round(tube), 6)
     .rotateZ(Math.PI / 2)
     .rotateX(Math.PI / 2);
   hatches.forEach(([x, y], i) =>
@@ -1375,24 +1376,25 @@ export function listeningDome(root, { crystal: domeMat, seam }, opts) {
 }
 
 /**
- * Pressure ribs: alloy hoops round a six-facet spar, one at each `station`
- * `[x, r]` — the spar's radius there — a torus of `r + lift` on a tube of
- * `tube`, four-sided round the tube and six round the ring, turned so a
- * vertex stands on the crown as the spar's does, and pressed on its node by
- * the spar's own `flat`, so the hoop hugs every facet at one stand-off:
- * `lift − tube` into the skin, `lift + tube` proud of it. Six is the
- * hexagonal section the Order cuts at any size (`facets`, Block 2c), not
- * the rule's twelve at the hull's radius: a hoop on a hexagon is a hexagon.
- * The Verger's "ribbed" deep-pressure hull said as a crystal held in a
- * frame, which is what the Chorister's cage says of its bladder.
+ * Pressure ribs: alloy hoops round a spar of `facets` sides, one at each
+ * `station` `[x, r]` — the spar's radius there — a torus of `r + lift` on a
+ * tube of `tube`, four-sided round the tube and the spar's own count round
+ * the ring, turned half a facet so its flats and vertices lie on the
+ * spar's (`spar` lays four facets on a flat and six on a vertex), and
+ * pressed on its node by the spar's own `flat`, so the hoop hugs every
+ * facet at one stand-off. The count is the section the Order cuts at any
+ * size (`facets`, Block 2c), not the rule's twelve at the hull's radius: a
+ * hoop on a square is a square. The Verger's "ribbed" deep-pressure hull
+ * said as a crystal held in a frame, which is what the Chorister's cage
+ * says of its bladder.
  */
-export function pressureRibs(root, alloy, { stations, tube = 0.35, lift = 0.1, flat }) {
+export function pressureRibs(root, alloy, { stations, tube = 0.35, lift = 0.1, flat, facets = 4 }) {
   stations.forEach(([x, r], i) =>
     add(
       root,
       `pressure_rib_${i}`,
-      torus(r + lift, tube, 4, 6)
-        .rotateZ(Math.PI / 6)
+      torus(r + lift, tube, 4, facets)
+        .rotateZ(Math.PI / facets)
         .rotateY(Math.PI / 2),
       alloy,
       [x, 0, 0],
