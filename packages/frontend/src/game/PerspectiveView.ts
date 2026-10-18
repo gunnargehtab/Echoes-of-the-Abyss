@@ -2411,7 +2411,8 @@ export class PerspectiveView {
         overview.ready = true;
       },
       () => {
-        // No skin, no overview: the apron keeps its own colour to its edge.
+        // No skin, no overview: the apron keeps its own colour, its last
+        // 500 m feathered to the backdrop as on #1461 (uSeamOn stays 0).
       }
     );
   }

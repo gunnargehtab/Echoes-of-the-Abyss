@@ -115,7 +115,8 @@ export const OVERVIEW_SLICE_CELLS = 10;
  * taken in slices with a task's yield (`yieldTask`) whenever the bake's
  * budget runs out (`bakeSeabedInSlices`), and a view draws the overview once
  * it lands. A bake that fails is not retried: the page draws no overview, and
- * the apron keeps its own colour to its edge.
+ * the apron keeps its own colour, its last 500 m feathered to the backdrop as
+ * on #1461 (docs/world-map.md §7.8).
  */
 export function overviewSkin(
   yieldTask: () => Promise<void> = () => new Promise((resolve) => setTimeout(resolve, 0))
