@@ -48,7 +48,8 @@
  *   on top, where the chart's straight-down bake can see it (§3.2) — and
  *   the light is a bud, the navy's lamp at a node (the Sower's `bud`, the
  *   Cruiser's hydrophone tips), not a flat square: `limb_*_bud`, a
- *   `bio_light` orb 1.5 m across and 0.41 tall on each knee knuckle's pole,
+ *   `bio_light` orb 1.5 m across and 0.83 tall, 0.68 of it clear of the
+ *   knuckle, on each knee knuckle's pole,
  *   six in all, in the stance's pattern — the knees at +15.8, −2 and −15.8
  *   to starboard and +12.8, +1 and −18.8 to port, the Directorate's own
  *   stations, 2.4 m above the axis.
@@ -57,14 +58,18 @@
  *   lobe where the bladder shows — so each limb ends in a cone of
  *   `algae_membrane`, 1.6 m across and 2.4 long, point-down from the ankle,
  *   where the Directorate plants a red six-sided spike. The tips reach
- *   1.7 m below the keel: the hull stands on them.
+ *   y −5.7, 1.4 m below the middle lobe's belly at −4.3: the hull stands
+ *   on them.
  * - **The dome is sunk low and carries no lamp.** `listening_dome` is the
  *   Verger's sensory lobe (`sensoryDome`) in membrane, 7.6 m across, its
- *   crown 0.86 m proud of the lobe's where the Directorate's is a metre,
+ *   crown at 5.1, 0.82 m proud of the lobe's 4.28 under it where the
+ *   Directorate's is a metre,
  *   ringed aft of its centre, and without the Verger's `dome_boss`: the
  *   block lights the knees and nothing else, so the dome is dark as the
  *   Directorate's is. Off the keel line 0.9 m to starboard, as the Verger's
- *   is: the navy grows nothing on the line.
+ *   is: the navy grows nothing on the line. In membrane it is the hull's
+ *   brightest unlit surface, about twenty times the chitin shell in
+ *   luminance — the Verger-pelagia's dome is the same, and the precedent.
  *
  * What the block does not say, decided here:
  *
@@ -74,9 +79,9 @@
  *   alternately, 0.4 m to port, 0.5 to starboard, 0.3 to port from the
  *   stern — the Chorister's own asymmetry — and the aft starboard hip at
  *   −13 sits where the aft lobe has drawn in to a 5.1 m half-beam, so that
- *   limb stands 1.5 m nearer the keel than its port neighbour at −16 and
- *   the plan the six feet make is a tripod on a shell that is itself not
- *   quite square: two asymmetries from one grown rule.
+ *   limb stands 1.5 m nearer the keel than its port neighbour at −16. The
+ *   lean is a pixel at the chart's 2 px/m and does not show on the sheet;
+ *   the stance is the asymmetry that reads.
  * - **Knuckles, not orbs.** Every joint is a ridge knuckle squashed to 0.85
  *   (`tailKnuckle`'s proportion), the hips 2.5 m across and the knees 2.6,
  *   each wider than the stem that leaves it — femur 2.0 to 1.6 m, tibia 1.7
@@ -88,7 +93,9 @@
  *   block names nothing else on the back; a trim vane here would be a part
  *   the block does not have on a hull whose shape is its six limbs.
  * - **Rings clear of the hips.** Each lobe's ring stands 0.5 m proud of the
- *   skin and is placed where no hip knuckle meets it: the aft ring 2 m
+ *   skin on the beam and a quarter-metre on the back, since `cohortLobes`
+ *   presses the ring to the lobe's own ry/rz, and is placed where no hip
+ *   knuckle meets it: the aft ring 2 m
  *   abaft its lobe's centre (x −19), the middle 5 m ahead (x 4), the fore
  *   2.5 ahead (x 16.5).
  * - **The light burns at 0.3.** The conn view keeps each lamp's own
@@ -97,8 +104,8 @@
  *   Acolyte's knees burn at, is 0.17. So the buds burn at 0.3 — 0.18 of
  *   white, level with the Directorate's knee a pixel at a time, so the two
  *   navies' Acolytes read one loudness side by side — under the
- *   Verger-pelagia's marks at 0.22, and above only the Glider's 0.2 wing
- *   vein among the navy's resting lamps. "Nearly black" is the band's
+ *   Verger-pelagia's marks at 0.22 of white, and above only the Glider's
+ *   wing vein at 0.07 (`bio_vein` at 0.2) among the navy's resting lamps. "Nearly black" is the band's
  *   first row (Block 3, the glow table), and six buds at 0.18 is that.
  *
  * THE LIGHT, measured (`lightAudit`, printed by `exportGlb`): six lit parts,

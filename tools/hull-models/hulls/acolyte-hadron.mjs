@@ -82,16 +82,18 @@
  *   ring is inside the flank facet, section and not axis: the ring's
  *   outboard vertex at z 6.17, y −1.02, where the flank at x −6 is 6.53
  *   (0.36 m inside); its fore and aft vertices at x −6.5 and −5.5, z 5.76,
- *   y −1.30, where the flank is 5.94 and 6.53 (0.18 m inside at the
- *   narrower); its lowest vertex at y −1.58, z 5.35, under a keel at
+ *   y −1.30, where the flank is 6.24 and 6.53 (0.48 m inside at the
+ *   narrower, 0.31 m normal to the taper facet); its lowest vertex at
+ *   y −1.58, z 5.35, under a keel at
  *   −2.8. A first cut at z ±4 put the outboard vertex 0.14 m outside the
  *   hull, and review measured it. Each strut comes up through the crown
- *   flat at z ±2.95 on its axis (±2.5 to 3.4 across its section) and its
+ *   flat at z ±2.95 on its axis (±2.4 to 3.5 across its section) and its
  *   head stands at y 5.3, z ±1.24, 1.5 m above the dome's pole; the
  *   nearest strut surface is 2.4 to 2.7 m from the stone's
  *   (`contacts.mjs --part cage_strut --near` names no dome pair at 2.4
  *   and all four at 2.7) — in x alone 1.1 m, dome ±3.42 against a strut
- *   at 6 with r 0.4–0.5. Nothing touches the dome, and no alloy shows on
+ *   5 m from its centre with r 0.4–0.5. Nothing touches the dome, and no
+ *   alloy shows on
  *   the flank (the inspect sheet's `--view flank:90:8:0.35`).
  * - **The rostrum and the telson** are the Chorister's prisms (`point`):
  *   an alloy bow prism 9 m long on 2.2 m of half-diagonal, its tip the bow
