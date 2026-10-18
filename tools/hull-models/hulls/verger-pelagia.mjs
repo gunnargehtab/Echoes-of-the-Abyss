@@ -34,19 +34,23 @@
  *
  * What the block does not say, decided here:
  *
- * - **"Ducted drive" is a siphon, grown out of the tail.** The Commune's
- *   drive is a muscle (the Drifter's fluke, the Weaver's); a duct the navy
- *   would grow is the jet a swimming thing drives with. A hollow lathe of
- *   chitin 13.5 m long, rooted at x −36.5 at 8.5 m across where the pod is
- *   8.8 — inside the skin, so there is no step and the tail runs into the
- *   bore — holding 8.4 m across, flaring to 9.9 at −49.5 and rounding over
- *   to the lip, pressed to the pod's own 0.8 so its section is the pod's; a
- *   muscle ring of ridge round the mouth; a shut membrane nozzle in the
- *   bore. One, on the keel line, as the block has it. Dark: nothing astern
- *   is lit. The first cut was a straight round cone 9.8 m across on a pod
- *   7.5 m tall there, and the review read it as the Directorate's duct in
- *   green: a 1.4 m step above and below, a wasp waist behind the last ring,
- *   a hard rectangle in plan.
+ * - **"Ducted drive" is a siphon, grown out of the tail as a bell.** The
+ *   Commune's drive is a muscle (the Drifter's fluke, the Weaver's); a duct
+ *   the navy would grow is the jet a swimming thing drives with. A hollow
+ *   lathe of chitin 13.5 m long, rooted at x −36.5 at 8.5 m across where
+ *   the pod is 8.8 — inside the skin, so there is no step and the tail runs
+ *   into the bore — and flaring the whole way to an 11.2 m lip at −49.5
+ *   that rounds over to the stern, pressed to the pod's own 0.8 so its
+ *   section is the pod's; a muscle ring of ridge forward on the neck at
+ *   −42, 10.6 m across, so the bell shows aft of it and the lip stands
+ *   wider; a shut membrane nozzle in the bore, puckered at its throat
+ *   rather than plugged flat. One, on the keel line, as the block has it.
+ *   Dark: nothing astern is lit. The first cut was a straight round cone
+ *   9.8 m across on a pod 7.5 m tall there, and the review read it as the
+ *   Directorate's duct in green — a 1.4 m step above and below, a wasp
+ *   waist behind the last ring, a hard rectangle in plan; the second held
+ *   8.4–8.9 m for ten metres with its flare under the ring, a bottle neck.
+ *   Now nothing on it is parallel to the keel.
  * - **The dome is a membrane lobe with a lit bud.** The Chorister's
  *   translation shows its bladder through the middle lobe as membrane
  *   (hulls/chorister-pelagia.mjs), and a listening organ that shows through
@@ -64,7 +68,9 @@
  * - **No two hatches alike, no two lobes in proportion.** `bayHatches`
  *   refuses a second hatch of one size as it refuses a mirrored pair, so
  *   each carries its own crown, lip, rim and door (6.6 to 7.3 m across the
- *   crown), and the lobes' three radii are in no common ratio.
+ *   crown; the s2 valve its own squash and sink too, since the s0 and s2
+ *   lenses are cut on one count and would otherwise be one lens at two
+ *   sizes), and the lobes' three radii are in no common ratio.
  * - **The light burns rims and boss level, marks under them.** The conn view
  *   keeps each lamp's own luminance (rosterModels.ts `recolor`): `bio_vein`
  *   at 1 is 0.33 of white, `bio_light` at 1 is 0.62. So the rims burn at the
@@ -95,20 +101,21 @@
  * overhang standing over the rim's top arc. So the rim rides the crown's
  * own station, where it is the widest thing at the mouth (pelagia.mjs
  * `bayHatches`), and the hatches sit 1.7 to 1.9 m under their lobes'
- * centres, canted 25–29° down. The bake at E(14) = 1.22 reads raw E = 7.81
- * and dims by ×0.155 — the Directorate's Verger reads 6.21 and ×0.195 — a
+ * centres, canted 25–29° down. The bake at E(14) = 1.22 reads raw E = 7.71
+ * and dims by ×0.156 — the Directorate's Verger reads 6.21 and ×0.195 — a
  * sixfold surplus, ten times clear of the ×1/64 floor and nowhere near the
  * ×64 ceiling.
  *
- * CONTACTS (`contacts.mjs`): 45 pairs meet, every one a mount — each
+ * CONTACTS (`contacts.mjs`): 46 pairs meet, every one a mount — each
  * ring, lobe, vane, mark, the dome, the keel, the bladders, the duct and
  * the nozzle on the body; the hatch ring on its lobe, and its rim and door
  * on it; the amidships ring through the two lobes, the keel and both
  * bladders it girdles; the bow ring under the bow mark; the dome's ring
- * and boss on the dome; the siphon's ring and nozzle on the duct. The port
+ * and boss on the dome; the siphon's ring and nozzle on the duct, the
+ * nozzle's root in the pod's tail and the pucker on the nozzle. The port
  * bladder sat 0.3 m into the port bay's underside at the first cut and was
- * dropped 0.6 m, the starboard one 0.5 m and 0.4 m inboard when its bay
- * grew taller; the valves at the first cut hung inside their bores a few
+ * dropped 0.6 m, its radii unchanged; the starboard one 0.5 m and 0.4 m
+ * inboard, its beam 0.1 m less, when its bay grew taller; the valves at the first cut hung inside their bores a few
  * centimetres clear of the ring, which is a crack, and were widened and
  * seated so the lip passes through the lens; the dome's ring sat under the
  * boss's aft edge and moved aft of the dome's centre, clear of it.
@@ -118,9 +125,10 @@
  * the lobes sixteen by eight, the dome sixteen by eight, the hatch rings
  * fourteen to fifteen a turn at 3.3–3.65 m with rims fifteen to sixteen by
  * five, the valves eleven to thirteen round by five or six, the siphon duct
- * sixteen and its nozzle fourteen, the boss five by three. PANELS: the median unlit part from
+ * sixteen, its nozzle sixteen and the pucker five by three, the boss five
+ * by three. PANELS: the median unlit part from
  * above is 4.14 m on a side over twenty-one, a hatch ring (17.1 m²),
- * inside the navy's 1.5–5 m band for a hull. 36 parts, 4,386 triangles.
+ * inside the navy's 1.5–5 m band for a hull. 37 parts, 4,414 triangles.
  */
 import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as pelagia from '../factions/pelagia.mjs';
@@ -257,7 +265,7 @@ pelagia.bayHatches(
         crown: 3.4,
         lip: 2.7,
         rim: { r: 3.4, tube: 0.26 },
-        door: { r: 2.9, squash: 0.3, sink: 0.15 },
+        door: { r: 2.9, squash: 0.34, sink: 0.18 },
       },
       {
         bay: 3,
@@ -321,40 +329,44 @@ pelagia.grownKeel(root, ridge, {
 pelagia.ballastBladders(root, chitin, {
   bladders: [
     { side: 's', at: [-7, -7.9, 3.8], radii: [13.0, 2.5, 2.2] },
-    { side: 'p', at: [1, -7.8, -4.0], radii: [11.5, 2.3, 2.1] },
+    { side: 'p', at: [1, -7.8, -4.0], radii: [11.5, 2.3, 2.2] },
   ],
   cut,
 });
 
-// The single ducted drive, a siphon grown out of the tail: a hollow lathe
-// 13.5 m long from the stern at −50, rooted at −36.5 at 8.5 m across where
-// the pod is 8.8 — inside the skin, no step — running 8.4 m across to −41,
-// flaring to 9.9 at −49.5 and rounding over to the lip, 1–1.3 m of wall,
-// pressed to the pod's own 0.8; a muscle ring round the mouth at −48; and
-// inside, the shut nozzle, a membrane frustum 6.6 m across forward and 3
-// aft, its forward rim buried in the bore's wall. Dark.
+// The single ducted drive, a siphon grown out of the tail: a bell. A hollow
+// lathe 13.5 m long from the stern at −50, rooted at −36.5 at 8.5 m across
+// where the pod is 8.8 — inside the skin, no step — and flaring the whole
+// way, 9.1 m at −41, 9.9 at −45, 10.7 at −48 and 11.2 at the lip at −49.5,
+// which rounds over to 10.4 at the stern; 1–1.3 m of wall; pressed to the
+// pod's own 0.8. The muscle ring sits forward on the neck at −42, 10.6 m
+// across its crown, so the bell shows aft of it and the lip stands wider
+// than the ring. Inside, the shut nozzle: a membrane frustum 7.8 m across
+// at −38, its forward rim buried in the bore's wall, drawn to 3 m at −45.5
+// and puckered there — steep enough that the pod's tail, which leaves the
+// bore's wall at −39.3, is inside it, so no skin shows in the bore. Dark.
 pelagia.siphonDrive(
   root,
   { duct: chitin, ring: ridge, funnel: membrane },
   {
     outer: [
-      [STERN, 4.55],
-      [-49.5, 4.95],
-      [-48.2, 4.8],
-      [-45.5, 4.35],
-      [-41, 4.2],
+      [STERN, 5.2],
+      [-49.5, 5.6],
+      [-48, 5.35],
+      [-45, 4.95],
+      [-41, 4.55],
       [-36.5, 4.25],
     ],
     inner: [
-      [STERN, 3.6],
-      [-47.5, 3.45],
-      [-43, 3.25],
+      [STERN, 4.2],
+      [-47.5, 3.9],
+      [-43, 3.45],
       [-39, 3.2],
       [-36.5, 3.2],
     ],
     squash: SQUASH,
-    ring: { x: -48, crown: 5.3, shoulder: 4.5, halfWidth: 1.2 },
-    funnel: { x: -38.5, r: 3.3, throat: 1.5, length: 7 },
+    ring: { x: -42, crown: 5.3, shoulder: 4.55, halfWidth: 1.2 },
+    funnel: { x: -38, r: 3.9, throat: 1.5, length: 7.5, pucker: 0.9 },
     cut,
   }
 );

@@ -4505,7 +4505,10 @@ export function sensoryDome(root, { skin, ridge, light }, opts) {
  * frustum of membrane `funnel.r` across at its forward end and
  * `funnel.throat` at its aft, `funnel.length` long from `funnel.x`, closed
  * at both ends so the bore shows a shut nozzle and never the hull's inside,
- * pressed with the bore. Dark, every part: the block lights nothing astern.
+ * pressed with the bore; and, when `funnel.pucker` is given, `siphon_pucker`
+ * over its aft cap, an orb of the throat's radius bulging `pucker` aft — a
+ * nozzle shut on a grown thing is puckered, not plugged flat. Dark, every
+ * part: the block lights nothing astern.
  */
 export function siphonDrive(root, { duct: ductMat, ring: ringMat, funnel: funnelMat }, opts) {
   const { outer, inner, squash = 1, ring, funnel, cut: rule = METRE } = opts;
@@ -4552,6 +4555,18 @@ export function siphonDrive(root, { duct: ductMat, ring: ringMat, funnel: funnel
     placement.rot,
     placement.scale
   );
+  if (funnel.pucker) {
+    const dome = [funnel.pucker, funnel.throat * squash, funnel.throat];
+    add(
+      root,
+      'siphon_pucker',
+      orb(...rule.orb(1, { scale: dome })),
+      funnelMat,
+      [funnel.x - funnel.length, 0, 0],
+      [0, 0, 0],
+      dome
+    );
+  }
 }
 
 /**
