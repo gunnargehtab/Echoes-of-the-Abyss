@@ -118,9 +118,10 @@ Static checks and the production build, model validation, two test shards, and
 documentation checks run in parallel. The existing required `build` check joins
 static checks and model validation, so both must pass.
 
-`npm test` and CI share `test:client` (shared and frontend) and `test:tools`
-(roadmap, prose-budget, documentation tooling and hull tooling). CI runs tools
-with backend shard 1 and client suites with shard 2; neither group is optional.
+`npm test` runs every suite. CI splits the frontend and backend suites by file
+across both test shards with `--test-shard`, runs shared on shard 2, and runs
+`test:tools` (roadmap, prose-budget, documentation tooling and hull tooling) in
+the docs job, which alone checks out `docs/screenshots`. None is optional.
 
 **All three documentation gates are blocking.** In particular, linking a file that
 does not exist fails the build. Planned-but-unwritten documents belong in the

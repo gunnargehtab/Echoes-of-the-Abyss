@@ -42,6 +42,8 @@ concurrency:
 # check. The join job costs another rounded runner minute but avoids silently
 # dropping model validation from branch protection when moving it out of build.
 # Baseline run 37661465072: 198 s wall clock, 11 rounded Linux job-minutes.
+# By run 39129858609 it was 315 s, all of it shard 2: the client suites, then
+# half the backend. Both suites are now split across both shards.
 # Compare both measures on warm-cache runs, not just the fastest job.
 jobs:
   build:
@@ -60,7 +62,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      # docs/screenshots is three quarters of the tree (~300 MB) and nothing
+      # here reads it, so leave it out. blob:none fetches only the blobs the
+      # sparse tree checks out. The docs job keeps the whole tree: its link
+      # check and the render-stack tool test both resolve screenshot paths.
       - uses: actions/checkout@v7.0.1
+        with: &sparse
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/docs/screenshots/
       - uses: ./.github/actions/setup
 
       # The root command builds shared before its consumers; no separate build.
@@ -91,6 +103,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7.0.1
+        with: *sparse
       - uses: ./.github/actions/setup
 
       # All hulls, structures, props, trim sheets and outlines, without filtering.
@@ -109,21 +122,26 @@ jobs:
     name: test (shard ${{ matrix.shard }})
     steps:
       - uses: actions/checkout@v7.0.1
+        with: *sparse
       - uses: ./.github/actions/setup
 
       - name: Build shared package
         run: npm run build:shared
 
-      # Run 37661465072: backend shards 74/57 s, client 65 s, tools 31 s.
-      # Put tools with the heavier backend shard and client with the lighter.
-      # npm test uses these same groups, including the prose-budget suite.
-      - name: Run tool tests
-        if: matrix.shard == 1
-        run: npm run test:tools
-
-      - name: Run shared and frontend tests
+      # Shared is 4 s; the frontend is a few heavy files (worldOverview,
+      # rendererSmoke, worldBorder, worldTravel, gameCanvas at 40-85 s each),
+      # so it is split by file like the backend rather than run whole on one
+      # shard. Measured locally: 112+85 s and 93+96 s. Tools run in docs.
+      - name: Run shared tests
         if: matrix.shard == strategy.job-total
-        run: npm run test:client
+        run: npm -w packages/shared run test
+
+      - name: Run frontend tests
+        working-directory: packages/frontend
+        run: >
+          node --import tsx --import ./test/support/viteAssets.mjs --test
+          --test-shard=${{ matrix.shard }}/${{ strategy.job-total }}
+          "test/*.test.ts" "test/*.test.mjs"
 
       # `--test-shard` is node:test's own file-level partition — deterministic,
       # so the same file always lands in the same shard and a failure is
@@ -174,3 +192,8 @@ jobs:
       # stay out, and a skill in neither list fails rather than being skipped.
       - name: Lint and link-check .claude/
         run: npm run docs:claude
+
+      # Here rather than on a test shard: about 40 s against this job's 40,
+      # and the render-stack test needs the screenshots this job checks out.
+      - name: Run tool tests
+        run: npm run test:tools
