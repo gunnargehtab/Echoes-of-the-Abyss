@@ -855,6 +855,24 @@ describe('the shell: the persistent world view', () => {
     assert.equal(world.gl.ledger.frames, before, 'nothing draws while no session holds it');
   });
 
+  it("lets the run's ground go at teardown, and draws nothing a dead session sends", async () => {
+    const world = await mount(pilot);
+    await joinMatch(world);
+    const view = worldView.current!;
+    const ground = () => (view as unknown as { terrain: unknown }).terrain;
+    assert.equal(ground() !== null, true, 'the session drew its ground');
+    await world.unmount();
+    // The session's overlay, not the atlas (docs/world-map.md §7.3, #1460).
+    assert.equal(ground() === null, true, "the run's ground went with the run");
+    world.room.emit(SERVER_MSG.terrain, { ...cannedTerrain(), revision: 2, region: 'sorrowgate' });
+    world.room.emit(SERVER_MSG.ground, {
+      revision: 3,
+      cells: [{ index: 0, floorM: 10, ceilingM: 0, biome: 0 }],
+    });
+    await world.settle();
+    assert.equal(ground() === null, true, 'a session torn down draws nothing more');
+  });
+
   it('runs one render loop however many times it is entered', async () => {
     let world = await mount(pilot);
     const gl = world.gl;

@@ -183,9 +183,18 @@ export class EnvironmentLayer {
     return { props: this.props, propTris: this.propTris };
   }
 
-  destroy(): void {
+  /**
+   * Stand nothing, and let no template still loading stand anything again: a
+   * session's ground let go (`PerspectiveView.clearTerrain`, #1460). The next
+   * `rebuild` starts the layer afresh.
+   */
+  reset(): void {
     this.generation++;
     this.clear();
+  }
+
+  destroy(): void {
+    this.reset();
   }
 
   private clear(): void {

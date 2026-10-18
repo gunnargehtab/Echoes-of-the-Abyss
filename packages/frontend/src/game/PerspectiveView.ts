@@ -566,6 +566,12 @@ export class PerspectiveView {
 
   private terrain: TerrainPayload | null = null;
   /**
+   * Whether the room named this view's region as the ground's (#1460): the
+   * one condition, beside the grids fitting, under which the session's ground
+   * is pasted into the region's surround.
+   */
+  private placed = false;
+  /**
    * The two whole-map scans `seabedDepthAtM` needs, cached per terrain.
    *
    * Both are O(cells), and `projectPoint` reaches the ground on every
@@ -1142,8 +1148,16 @@ export class PerspectiveView {
    * view built for one match wants on every terrain message; a persistent
    * view (#1458) frames once per session itself, so a reconnection's re-sent
    * ground does not throw the player's camera back to the opening shot.
+   *
+   * `region` is the world region the room says this ground stands in
+   * (`TerrainMessage.region`, docs/world-map.md §7.1, #1460). A placed view
+   * pastes the ground into its region's surround only when the room names
+   * that region; a room naming none, or another, draws no surround.
    */
-  setTerrain(terrain: TerrainPayload, { fit = true }: { fit?: boolean } = {}): void {
+  setTerrain(
+    { region, ...terrain }: TerrainPayload & { region?: string },
+    { fit = true }: { fit?: boolean } = {}
+  ): void {
     // A defensive copy: the chart-side handlers mutate their payload in place
     // on ground deltas, and two consumers double-applying deltas to one
     // shared object is the bug this copy exists to make impossible.
@@ -1153,6 +1167,7 @@ export class PerspectiveView {
       floor: [...terrain.floor],
       ceiling: [...terrain.ceiling],
     };
+    this.placed = this.worldRegion !== null && region === this.worldRegion.id;
     this.refreshGroundCache();
     if (fit) this.fitToMap();
     this.rebuildTerrain();
@@ -1239,6 +1254,31 @@ export class PerspectiveView {
     this.veil.clear();
     this.applyVeil();
     if (this.renderer !== null) this.syncEntities();
+  }
+
+  /**
+   * Let go of the session's ground (docs/world-map.md §7.3, #1460): the
+   * mission's mesh, its apron and everything standing on them. The view is
+   * left as it was before any session's ground arrived — the overview, with
+   * the region's public baseline drawn as detail once it is wanted — so a past
+   * run's ground, a fallen arch included, is never drawn as the atlas. The
+   * next room's `terrain` puts a session's ground back.
+   */
+  clearTerrain(): void {
+    if (this.terrain === null) return;
+    this.terrain = null;
+    this.placed = false;
+    this.disposeApron();
+    this.disposeGround();
+    for (const roof of this.roofs) {
+      roof.mesh.geometry.dispose();
+      roof.material.dispose();
+    }
+    this.roofs = [];
+    this.passages = null;
+    this.stones = [];
+    this.environment.reset();
+    this.cutOverview();
   }
 
   destroy(): void {
@@ -1715,15 +1755,18 @@ export class PerspectiveView {
 
   // ----------------------------------------------------------------- scene
 
-  private rebuildTerrain(): void {
-    if (this.renderer === null || this.terrain === null) return;
-    const terrain = this.terrain;
-
+  /**
+   * Take the session's ground mesh and what stands on it out of the scene:
+   * the mesh and its textures, the embers, the dressing and the roofs in it.
+   * A rebuild puts them back; `clearTerrain` does not.
+   */
+  private disposeGround(): void {
     if (this.terrainMesh !== null) {
       this.scene.remove(this.terrainMesh);
       this.terrainMesh.geometry.dispose();
       (this.terrainMesh.material as MeshBasicMaterial).map?.dispose();
       (this.terrainMesh.material as MeshBasicMaterial).dispose();
+      this.terrainMesh = null;
       this.surveyCells?.dispose();
       this.detailTexture?.dispose();
       this.terrainGrid = null;
@@ -1738,8 +1781,15 @@ export class PerspectiveView {
       this.scene.remove(this.embers);
       this.embers.geometry.dispose();
       (this.embers.material as PointsMaterial).dispose();
+      this.embers = null;
     }
     this.terrainDressing.clear();
+  }
+
+  private rebuildTerrain(): void {
+    if (this.renderer === null || this.terrain === null) return;
+    const terrain = this.terrain;
+    this.disposeGround();
 
     // The grid gives the ground its shape; the seabed bake gives it its skin.
     // One texture, one geometry, one draw call — the lighting is already in
@@ -2281,7 +2331,7 @@ export class PerspectiveView {
     this.groundRockTopM = rockTopDepthM(terrain);
     this.seabedRange = seabedRange(terrain);
     this.disposeApron();
-    if (this.worldRegion !== null && this.surround !== null) {
+    if (this.worldRegion !== null && this.surround !== null && this.placed) {
       const { pads } = apronFrame(this.worldRegion, terrain.cellM);
       const padded = paddedTerrain(terrain, pads, this.surround);
       if (padded !== null) {

@@ -38,8 +38,11 @@ import {
 import { overviewSkin } from '../src/game/worldOverview.ts';
 import type { TerrainPayload } from '../src/net/GameClient.ts';
 
-/** Sorrowgate's size, 20 × 16 cells of 250 m, with a trench along the south. */
-function pilotTerrain(): TerrainPayload {
+/**
+ * Sorrowgate's size, 20 × 16 cells of 250 m, with a trench along the south,
+ * as its room sends it: naming its region (#1460).
+ */
+function pilotTerrain(): TerrainPayload & { region?: string } {
   const cols = 20;
   const rows = 16;
   const biomes = new Array<number>(cols * rows).fill(Biome.CoralRuins);
@@ -52,7 +55,7 @@ function pilotTerrain(): TerrainPayload {
     }
     floor[col] = 340;
   }
-  return { cols, rows, cellM: 250, biomes, floor, ceiling } as unknown as TerrainPayload;
+  return { cols, rows, cellM: 250, biomes, floor, ceiling, region: 'sorrowgate' };
 }
 
 const probe = () =>
@@ -171,6 +174,112 @@ describe("the apron: the region's authored surround (#1457)", () => {
       return 1 - t * t * (3 - 2 * t);
     };
     for (const d of [0, 250, 1_000, 1_999, 2_000, 4_000]) assert.equal(glsl(d), exteriorFade(d));
+  });
+});
+
+/**
+ * The session's ground on its region (#1460, docs/world-map.md §7.1, §7.3):
+ * the room names where its ground stands, a live change is the session's
+ * overlay and never the atlas's, and the overlay goes when the session does.
+ */
+describe("the session's ground on its region (#1460)", () => {
+  type Internals = {
+    apron: { mesh: Mesh | null; terrain: TerrainPayload } | null;
+    surround: { floor: Uint16Array } | null;
+    terrainMesh: Mesh | null;
+    overview: { holes: string } | null;
+    scene: { children: unknown[] };
+  };
+  const internals = (view: PerspectiveView) => view as unknown as Internals;
+  /**
+   * Three cells of the arch's row (row 8) gone to rock as the beat writes it:
+   * a ceiling below the floor admits nothing (`backend/src/sim/terrain.ts`).
+   */
+  const LIVE_FLOOR_M = 1_000;
+  const COLLAPSE = [165, 166, 167].map((index) => ({
+    index,
+    floorM: LIVE_FLOOR_M,
+    ceilingM: LIVE_FLOOR_M + 1,
+    biome: Biome.CoralRuins,
+  }));
+  /** A padded index for a mission cell: ten cells of surround on every side. */
+  const padded = (index: number) => (Math.floor(index / 20) + 10) * 40 + (index % 20) + 10;
+
+  it('pastes the ground into the region only when the room names that region', () => {
+    const { view } = mountView(true);
+    assert.equal(Boolean(internals(view).apron?.mesh), true, 'named: the surround is drawn');
+    for (const region of [undefined, 'elsewhere']) {
+      view.setTerrain({ ...pilotTerrain(), region });
+      pumpAnimationFrames();
+      // Booleans, not the objects: a failure would print a whole scene graph.
+      assert.equal(internals(view).apron === null, true, `region ${String(region)}: no surround`);
+      // Still the mission's own metres: the room's ground is drawn, just not placed.
+      assert.equal(internals(view).terrainMesh !== null, true);
+    }
+    view.setTerrain(pilotTerrain());
+    pumpAnimationFrames();
+    assert.equal(Boolean(internals(view).apron?.mesh), true, 'named again: drawn again');
+  });
+
+  it('carries a collapse into the session overlay, never into the baseline', () => {
+    const { view } = mountView(true);
+    const baseline = Array.from(detailGround(SORROWGATE_REGION)!.floor);
+    view.applyGround(COLLAPSE);
+    pumpAnimationFrames();
+    const apron = internals(view).apron!;
+    for (const { index } of COLLAPSE) {
+      assert.equal(
+        apron.terrain.floor[padded(index)],
+        LIVE_FLOOR_M,
+        'the overlay has the live cell'
+      );
+      assert.notEqual(baseline[padded(index)], LIVE_FLOOR_M, 'the atlas has its own');
+    }
+    assert.deepEqual(Array.from(internals(view).surround!.floor), baseline, "the view's baseline");
+    assert.deepEqual(Array.from(detailGround(SORROWGATE_REGION)!.floor), baseline, 'the atlas');
+  });
+
+  it('lets the session ground go whole, and takes the live ground back from the room', () => {
+    const { view } = mountView(true);
+    view.applyGround(COLLAPSE);
+    pumpAnimationFrames();
+    const before = internals(view).scene.children.length;
+    assert.notEqual(internals(view).overview!.holes, '[]', 'the session cut its detail out');
+    const mission = internals(view).terrainMesh;
+    const apron = internals(view).apron!.mesh;
+    view.clearTerrain();
+    pumpAnimationFrames();
+    const scene = internals(view).scene.children;
+    assert.equal(internals(view).terrainMesh === null, true, 'the mission mesh is gone');
+    assert.equal(internals(view).apron === null, true, 'and its surround');
+    assert.ok(!scene.includes(mission) && !scene.includes(apron), 'neither mesh is drawn');
+    assert.ok(scene.length < before, 'the scene is smaller by them');
+    assert.equal(internals(view).overview!.holes, '[]', 'the overview is whole again');
+    // A reconnection after the fall: the room re-sends the live ground, and
+    // that is what is drawn, never the atlas's arch.
+    const live = pilotTerrain();
+    for (const cell of COLLAPSE) {
+      live.floor[cell.index] = cell.floorM;
+      live.ceiling[cell.index] = cell.ceilingM;
+    }
+    view.setTerrain(live);
+    pumpAnimationFrames();
+    for (const { index } of COLLAPSE) {
+      assert.equal(internals(view).apron!.terrain.floor[padded(index)], LIVE_FLOOR_M);
+    }
+  });
+
+  it('reads a click in mission metres, placed or not', () => {
+    const placed = mountView(true).view;
+    const alone = mountView(false).view;
+    for (const view of [placed, alone]) {
+      view.home();
+      view.focusWorld(2_500, 2_000, 3_000);
+      pumpAnimationFrames();
+      const at = view.projectPoint(1_250, 1_500, null);
+      const ground = view.resolveGround(at.x, at.y);
+      assert.ok(Math.hypot(ground.x - 1_250, ground.y - 1_500) < 30, `${ground.x}, ${ground.y}`);
+    }
   });
 });
 

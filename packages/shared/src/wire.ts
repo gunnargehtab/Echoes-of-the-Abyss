@@ -624,6 +624,15 @@ export interface TerrainPayload {
  */
 export interface TerrainMessage extends TerrainPayload {
   revision: number;
+  /**
+   * The world region this ground stands in (docs/world-map.md §7.1, #1460):
+   * a `WorldRegion` id, sent only by a room whose mission is placed
+   * (`worldRegionForMission`) and omitted by every other, so a skirmish's
+   * payload is byte-identical to what it was. On the ground's own message so
+   * the two cannot arrive apart. Public: the atlas is the same for everyone,
+   * and the server names the region rather than the client choosing one.
+   */
+  region?: string;
 }
 
 /** One cell the ground delta changed. */
