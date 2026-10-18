@@ -18,6 +18,10 @@
  * and assets are fetched (`prepareRegion`), and `onSettled` says both are done.
  * A travel the device cannot draw has arrived at once, so the launch is never
  * held waiting on a world that is not there.
+ *
+ * Mounted by a return from a board launch (§7.6 step 4), the board's target
+ * travels back from the frame the session left: `worldView.showBoard` keeps
+ * it, and the travel waits for the fade to ramp out first.
  */
 
 import { useEffect, useRef } from 'react';
@@ -118,6 +122,12 @@ export function WorldBackdrop({ target, skip = false, onSettled, devices }: Worl
     // the travel runs on the same clock whoever schedules the frame.
     const tick = () => {
       if (runRef.current !== run || run.travelled) return;
+      // A return's fade ramps out where the session left the camera before
+      // the camera moves (§7.6 step 4); the travel's clock starts after it.
+      if (!view.borderSettled) {
+        frame = requestAnimationFrame(tick);
+        return;
+      }
       if (run.travel.step(performance.now())) {
         run.travelled = true;
         announce(run);

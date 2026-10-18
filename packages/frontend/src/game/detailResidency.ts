@@ -139,6 +139,11 @@ export class DetailResidency<T> {
     return this.wanted.filter((id) => this.resident.has(id));
   }
 
+  /** Whether the last request for `id` failed, and it has been wanted ever since. */
+  hasFailed(id: string): boolean {
+    return this.failedIds.has(id);
+  }
+
   /** How many requests are in flight. */
   get pending(): number {
     return this.inFlight.size;

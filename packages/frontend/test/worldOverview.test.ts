@@ -670,4 +670,67 @@ describe("another region's detail, where no session holds it (§7.5)", () => {
     pumpAnimationFrames(3);
     assert.equal(residency(view).counts.requests, 0);
   });
+
+  it('builds its own region hidden on a return, and swaps it in once the fade is out (§7.6 step 4)', async () => {
+    // The ramp on a clock the test holds, so the build cannot outrun it.
+    const realNow = performance.now.bind(performance);
+    let clock = 0;
+    performance.now = () => clock;
+    try {
+      const { view } = await mountPilot();
+      const held = residency(view);
+      view.setReducedMotion(false);
+      view.applySnapshot(cannedSnapshot());
+      for (clock = 0; clock <= 1_000; clock += 100) pumpAnimationFrames();
+      assert.equal(internals(view).overview!.mesh.visible, false, 'the fade is all the way in');
+      const mission = internals(view).terrainMesh;
+      view.resetForNewMatch();
+      view.releaseGround();
+      await until(() => held.get(SORROWGATE_REGION.id) !== undefined, 'built');
+      const baseline = held.get(SORROWGATE_REGION.id)!.mesh;
+      assert.equal(view.borderSettled, false, 'the clock held, the fade is still going out');
+      assert.equal(internals(view).terrainMesh === mission, true, "the session's ground stays");
+      assert.equal(baseline.visible, false, 'the baseline built under it, hidden');
+      clock += 400;
+      pumpAnimationFrames();
+      assert.equal(internals(view).terrainMesh === mission, true, 'half out: still the session');
+      clock += 400;
+      pumpAnimationFrames();
+      // The frame the fade lands is the frame the baseline is drawn.
+      assert.equal(internals(view).terrainMesh === null, true, "the session's ground is gone");
+      assert.equal(baseline.visible, true, 'and the baseline drawn in its place');
+      assert.equal(held.counts.requests, 1, 'asked for once');
+    } finally {
+      performance.now = realNow;
+    }
+  });
+
+  it('gives way to the overview on a return whose baseline fails to build', async () => {
+    const { view } = await mountPilot();
+    const held = residency(view);
+    (view as unknown as { loadRegionDetail: () => Promise<never> }).loadRegionDetail = () =>
+      Promise.reject(new Error('headless: no detail'));
+    view.setReducedMotion(true);
+    view.applySnapshot(cannedSnapshot());
+    pumpAnimationFrames();
+    view.resetForNewMatch();
+    view.releaseGround();
+    await until(() => internals(view).terrainMesh === null, "the session's ground gone");
+    assert.equal(held.counts.failed, 1);
+    assert.equal(held.residentIds().size, 0, 'nothing held');
+    assert.equal(internals(view).overview!.mesh.visible, true, 'the overview drawn instead');
+  });
+
+  it("keeps a new room's ground that arrives while a return waits", async () => {
+    const { view } = await mountPilot();
+    const held = residency(view);
+    view.setReducedMotion(true);
+    view.resetForNewMatch();
+    view.releaseGround();
+    view.setTerrain(sorrowgate());
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    pumpAnimationFrames(3);
+    assert.equal(internals(view).terrainMesh !== null, true, "the room's ground is drawn");
+    assert.equal(held.residentIds().size + held.pending, 0, 'and no baseline under it');
+  });
 });

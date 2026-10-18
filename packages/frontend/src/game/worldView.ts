@@ -39,6 +39,11 @@ export class WorldViewHost {
   private look: WorldLook | null = null;
   /** The session holding the view, so a late release from an earlier one is a no-op. */
   private holder: symbol | null = null;
+  /**
+   * A session went back to the board (`release(claim, 'return')`) and the
+   * board has not taken the view yet: it starts where the session left it.
+   */
+  private returning = false;
 
   /** Whether `missionId` is drawn in the persistent world. */
   isWorldMission(missionId: string | undefined): boolean {
@@ -61,6 +66,20 @@ export class WorldViewHost {
     host: HTMLElement,
     devices: WorldViewDevices = {}
   ): { view: PerspectiveView; claim: symbol } | null {
+    // A session never inherits a return's ground: a new room sends its own.
+    if (this.returning) {
+      this.returning = false;
+      this.view?.clearTerrain();
+    }
+    return this.lend(missionId, host, devices, false);
+  }
+
+  private lend(
+    missionId: string | undefined,
+    host: HTMLElement,
+    devices: WorldViewDevices,
+    keepFrame: boolean
+  ): { view: PerspectiveView; claim: symbol } | null {
     const look = lookForMission(missionId);
     if (this.view !== null && this.look !== look) this.dispose();
     // A takeover: the session still holding the view will never let it go
@@ -81,8 +100,8 @@ export class WorldViewHost {
     }
     // Every session opens on the same frame a fresh view would: north, the
     // home pitch, the focus on the ground. The fit to the map follows when
-    // the session's ground arrives.
-    this.view.home();
+    // the session's ground arrives. A return keeps the frame it was left on.
+    if (!keepFrame) this.view.home();
     const claim = Symbol('world-view-session');
     this.holder = claim;
     return { view: this.view, claim };
@@ -94,11 +113,19 @@ export class WorldViewHost {
    * The board, the briefing it opens and a launch's travel all draw here, and
    * hand the view on with `release` or by a session's `acquire`. Null when the
    * device has no WebGL, and the board is drawn alone.
+   *
+   * After a return (§7.6 step 4) the camera is left where the session left
+   * it, the fade still ramping out and the session's ground still drawn
+   * (`PerspectiveView.releaseGround`): the board travels it back from there.
    */
   showBoard(host: HTMLElement, devices: WorldViewDevices = {}): symbol | null {
-    const lent = this.acquire(PROLOGUE_SORROWGATE_HEADER.id, host, devices);
+    const returning = this.returning;
+    this.returning = false;
+    const lent = this.lend(PROLOGUE_SORROWGATE_HEADER.id, host, devices, returning);
     if (lent === null) return null;
-    lent.view.setFrame(boardFrame(worldRegionForMission(PROLOGUE_SORROWGATE_HEADER.id)!));
+    if (!returning) {
+      lent.view.setFrame(boardFrame(worldRegionForMission(PROLOGUE_SORROWGATE_HEADER.id)!));
+    }
     lent.view.setActive(true);
     return lent.claim;
   }
@@ -112,11 +139,24 @@ export class WorldViewHost {
    * session's overlay on the region, never the atlas, so a span its mission
    * dropped is not left standing in the world after the run. The region is
    * drawn from its public baseline again until the next room sends its own.
+   *
+   * `'return'` is Return to port from a board launch (§7.6 step 4): the
+   * session's force and loop still go, but its ground stays until the
+   * baseline is built and the ramp-out is not landed, so the board's
+   * `showBoard` picks both up mid-way and travels back from the frame the
+   * session was left on.
    */
-  release(claim: symbol): void {
+  release(claim: symbol, how: 'leave' | 'return' = 'leave'): void {
     if (this.holder !== claim || this.view === null) return;
     this.holder = null;
     this.view.resetForNewMatch();
+    if (how === 'return') {
+      this.view.releaseGround();
+      this.view.detach(false);
+      this.returning = true;
+      return;
+    }
+    this.returning = false;
     this.view.clearTerrain();
     this.view.detach();
   }
@@ -130,6 +170,7 @@ export class WorldViewHost {
     this.view = null;
     this.look = null;
     this.holder = null;
+    this.returning = false;
   }
 
   /** The view itself, for the headless tests' identity checks. Null when none exists. */

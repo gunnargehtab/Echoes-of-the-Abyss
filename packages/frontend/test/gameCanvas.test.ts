@@ -35,6 +35,7 @@ import {
   ObjectiveStatus,
   encodeEcho,
   SERVER_MSG,
+  WORLD,
   type MissionView,
 } from '@echoes/shared';
 import {
@@ -918,6 +919,72 @@ describe('the shell: the persistent world view', () => {
         Math.abs(moved.distanceM - home.distanceM) > 1,
       'an entry with no travel frames itself, as it always has'
     );
+  });
+
+  it('hands the world back for a return on Return to port from a board launch, and only then', async () => {
+    // §7.6 step 4: the session goes, and its ground and the frame it left wait
+    // for the board. The record's door, and a launch from anywhere else, let
+    // both go as before.
+    const left = { xM: 1_200, yM: 2_600, distanceM: 1_800, yawDeg: 40, pitchDeg: 40 };
+    const leave = async (returnsToBoard: boolean, door: 'port' | 'record') => {
+      let exits = 0;
+      let records = 0;
+      const world = await mount({
+        props: {
+          ...pilot.props,
+          returnsToBoard,
+          onExit: () => (exits += 1),
+          onRecord: () => (records += 1),
+        },
+      });
+      await joinMatch(world);
+      const view = worldView.current!;
+      view.setFrame(left);
+      if (door === 'port') {
+        // The lost signal's own Return to port: the same exit the result's and the menu's are.
+        world.room.raiseError(4212, 'room is locked');
+        await world.settle();
+        const button = world.tree.root.find(
+          (node) => node.type === 'button' && node.props.className === 'game-overlay-back'
+        );
+        await act(async () => {
+          (button.props as { onClick: () => void }).onClick();
+        });
+      } else {
+        // The result's record button is handed `onRecord` itself.
+        await act(async () => {
+          world.tree.root.findByType(GameCanvas).props.onRecord();
+        });
+      }
+      assert.equal(exits + records, 1, 'the shell was told once');
+      await world.unmount();
+      assert.equal(world.app.destroyed, true, 'the HUD went with the session');
+      assert.equal(world.room.left, true, 'and the seat');
+      const held = (view as unknown as { terrain: unknown }).terrain !== null;
+      const board = worldView.showBoard(createHost(1280, 720) as unknown as HTMLElement);
+      const frame = { ...view.frame };
+      if (board !== null) worldView.release(board);
+      return { held, frame };
+    };
+
+    const back = await leave(true, 'port');
+    assert.equal(back.held, true, "a return keeps the session's ground for the board");
+    assert.ok(
+      Math.hypot(back.frame.xM - left.xM, back.frame.yM - left.yM) < 1 &&
+        Math.abs(back.frame.distanceM - left.distanceM) < 1,
+      `and the board starts where the session was left: ${JSON.stringify(back.frame)}`
+    );
+    for (const [returnsToBoard, door] of [
+      [false, 'port'],
+      [true, 'record'],
+    ] as const) {
+      const gone = await leave(returnsToBoard, door);
+      assert.equal(gone.held, false, `${door}, board ${returnsToBoard}: the ground went`);
+      assert.ok(
+        Math.abs(gone.frame.distanceM - WORLD.BOARD_DOLLY_M) < 1,
+        `${door}, board ${returnsToBoard}: the board opens at its own frame`
+      );
+    }
   });
 
   it('runs one render loop however many times it is entered', async () => {

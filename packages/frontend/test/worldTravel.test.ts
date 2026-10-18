@@ -13,8 +13,10 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import { createElement } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import {
+  paintGround,
   PROLOGUE_SORROWGATE_HEADER,
   SEEDING_RADICALS_HEADER,
+  SORROWGATE_GROUND,
   SORROWGATE_REGION,
   WORLD,
   WORLD_REGIONS,
@@ -29,6 +31,7 @@ import {
   pumpAnimationFrames,
   type StubElement,
 } from './support/headless.ts';
+import { cannedSnapshot } from './support/cannedMatch.ts';
 import { saveSettings, loadSettings } from '../src/settings/store.ts';
 import { HOME_DOLLY_M, type CameraFrame } from '../src/game/PerspectiveView.ts';
 import { WorldBackdrop, type WorldBackdropProps } from '../src/game/WorldBackdrop.tsx';
@@ -346,6 +349,78 @@ describe('the world behind the board (§7.6)', () => {
       await frameAt(1_001);
       await frameAt(3_502);
       sameFrame(worldView.current!.frame, boardFrame(SORROWGATE_REGION), 1e-6);
+    } finally {
+      await board.unmount();
+    }
+  });
+
+  it('takes a return where the session left it: the fade out, then the travel back (§7.6 step 4)', async () => {
+    // A session on the pilot, its fade all the way in, its camera wherever
+    // the player left it.
+    const gl = new HeadlessWebGLRenderer();
+    const lent = worldView.acquire(
+      PROLOGUE_SORROWGATE_HEADER.id,
+      createHost(1280, 720) as unknown as HTMLElement,
+      { glRenderer: () => gl.asRenderer(), environment: gl.environment }
+    )!;
+    const view = lent.view;
+    view.setActive(true);
+    view.setReducedMotion(false);
+    const ground = paintGround(SORROWGATE_GROUND);
+    view.setTerrain({
+      region: SORROWGATE_REGION.id,
+      cols: ground.cols,
+      rows: ground.rows,
+      cellM: ground.cellM,
+      biomes: Array.from(ground.biomes),
+      floor: Array.from(ground.floor),
+      ceiling: Array.from(ground.ceiling),
+    });
+    view.applySnapshot(cannedSnapshot());
+    for (let ms = 0; ms <= 1_000; ms += 100) await frameAt(ms);
+    const left: CameraFrame = { xM: 1_200, yM: 2_600, distanceM: 1_800, yawDeg: 40, pitchDeg: 40 };
+    view.setFrame(left);
+    const terrain = () => (view as unknown as { terrain: unknown }).terrain;
+
+    worldView.release(lent.claim, 'return');
+    const board = await mountBackdrop();
+    try {
+      assert.equal(worldView.current === view, true, 'the same world, on the board');
+      assert.equal(board.host.childNodes.length, 1, 'drawn behind it');
+      await frameAt(1_001);
+      await frameAt(1_400);
+      sameFrame(view.frame, left, 1e-6);
+      assert.equal(view.borderSettled, false, 'the fade going out, where the session left it');
+      assert.equal(terrain() !== null, true, "over the session's ground");
+      await frameAt(1_802);
+      await frameAt(1_803);
+      assert.equal(view.borderSettled, true, 'out after 0.8 s');
+      await frameAt(3_050);
+      assert.ok(
+        view.frame.distanceM > left.distanceM && view.frame.distanceM < WORLD.BOARD_DOLLY_M,
+        `travelling back: ${view.frame.distanceM} m`
+      );
+      await frameAt(4_400);
+      sameFrame(view.frame, boardFrame(SORROWGATE_REGION), 1e-6);
+    } finally {
+      await board.unmount();
+    }
+    assert.equal(terrain() === null, true, 'the board let the ground go with the view');
+  });
+
+  it('opens the board at its own frame when no return is under way', async () => {
+    const gl = new HeadlessWebGLRenderer();
+    const lent = worldView.acquire(
+      PROLOGUE_SORROWGATE_HEADER.id,
+      createHost(1280, 720) as unknown as HTMLElement,
+      { glRenderer: () => gl.asRenderer(), environment: gl.environment }
+    )!;
+    lent.view.setFrame({ xM: 1_200, yM: 2_600, distanceM: 1_800, yawDeg: 40, pitchDeg: 40 });
+    // The record's door, or any leaving but a return.
+    worldView.release(lent.claim);
+    const board = await mountBackdrop();
+    try {
+      sameFrame(lent.view.frame, boardFrame(SORROWGATE_REGION), 1e-6);
     } finally {
       await board.unmount();
     }
