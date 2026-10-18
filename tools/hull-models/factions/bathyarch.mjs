@@ -4700,10 +4700,22 @@ export function canHatches(root, { collar, door, rim, grey, rust }, opts) {
  * its knees and nothing else (#1439) — passes `crown: null` and gets the
  * dome without the boss: not a boss clad dark, since a part the block
  * never lights is not a later band's lamp (docs/models-plan.md §3.2).
+ * `plumb` seats the skirt straight up from the crown under it rather than
+ * along the facet's normal there (the note in the body).
  */
 export function listeningTurret(root, { grey, black, rust, lampM }, opts) {
-  const { on, x, z = 0, r, skirt, squash, ribs, rivets, crown, cut: rule = METRE } = opts;
-  const { at } = seat(root, on, [x, 0, z], { drop: true, stand: skirt.h / 2 - skirt.sink });
+  const { on, x, z = 0, r, skirt, squash, ribs, rivets, crown, plumb = false, cut: rule = METRE } = opts;
+  // `seat` stands a part off along the facet's normal under its station.
+  // On a can whose count is a multiple of four the crown is a ridge
+  // (`crownOnX`), and the facet it hits leans 15° at twelve: the Acolyte's
+  // skirt stood 0.23 m to starboard of its keel that way (#1439 review).
+  // `plumb` takes the surface point and stands the skirt straight up from
+  // it; the Verger's fourteen-sided can has a plate on its crown and reads
+  // the same either way, so it says nothing.
+  const stand = skirt.h / 2 - skirt.sink;
+  const { at } = plumb
+    ? (({ at: hit }) => ({ at: [hit[0], hit[1] + stand, hit[2]] }))(seat(root, on, [x, 0, z], { drop: true }))
+    : seat(root, on, [x, 0, z], { drop: true, stand });
   const [sx, sy, sz] = at;
   const n = rule.round(r);
   add(root, 'dome_skirt', cyl(r, r, skirt.h, n), grey, at);
@@ -4874,8 +4886,9 @@ function drumBone(root, name, mat, r, a, b, rule, overlap = 0) {
  * `_hip_rivet_1`, `_femur`, `_knee`, `_lamp`, `_tibia`, `_ankle`,
  * `_foot_stem`, `_foot`:
  *
- * - the **hip**, a bracket of older plate, a box of `hip.size` (along the
- *   leg, tall, athwart) yawed to the leg's rake with its centre `hip.sink`
+ * - the **hip**, a bracket of older plate, a box of `hip.size` (fore and
+ *   aft before the yaw — across the leg, the way the rivets lie along it
+ *   — then tall, then out along the leg) yawed to the leg's rake with its centre `hip.sink`
  *   inside the flank at `hip.y` — the outboard face of the side's girder
  *   where `hip.on` gives one (`{ s, p }`, the face's z on each side, the
  *   Acolyte's outrigger girders), the can's skin `canFlank` finds there
