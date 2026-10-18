@@ -725,8 +725,10 @@ export const SLICED_BAKE_BUDGET_MS = 8;
  * `bakeSeabed` a slice of `sliceCells` cells of one row at a time, yielding
  * (`yieldTask`) once `SLICED_BAKE_BUDGET_MS` of `now` has passed since the
  * last yield: for a bake too large to hold a frame for, the overview's skin
- * (worldOverview.ts). A slice shades the pixels a whole bake would, the
- * promise the partial rebake stands on, so the slices add up to exactly it.
+ * (worldOverview.ts) and a region's detail (`PerspectiveView`, §7.5). A slice
+ * shades the pixels a whole bake would, the promise the partial rebake stands
+ * on, so the slices add up to exactly it. An aborted `signal` stops it at the
+ * next yield, throwing the signal's reason, so a request let go stops shading.
  */
 export async function bakeSeabedInSlices(
   terrain: TerrainPayload,
@@ -735,12 +737,13 @@ export async function bakeSeabedInSlices(
   options: BakeOptions,
   sliceCells: number,
   yieldTask: () => Promise<void>,
-  now: () => number = () => performance.now()
+  { now = () => performance.now(), signal }: { now?: () => number; signal?: AbortSignal } = {}
 ): Promise<HTMLCanvasElement> {
   const ppc = options.pxPerCell ?? SEABED_PX_PER_CELL;
   const canvas = document.createElement('canvas');
   canvas.width = terrain.cols * ppc;
   canvas.height = terrain.rows * ppc;
+  signal?.throwIfAborted();
   let since = now();
   for (let row = 0; row < terrain.rows; row++) {
     for (let col0 = 0; col0 < terrain.cols; col0 += sliceCells) {
@@ -749,6 +752,7 @@ export async function bakeSeabedInSlices(
       paintSeabed(canvas, shadeSeabed(terrain, seed, range, rect, [], options));
       if (now() - since < SLICED_BAKE_BUDGET_MS) continue;
       await yieldTask();
+      signal?.throwIfAborted();
       since = now();
     }
   }

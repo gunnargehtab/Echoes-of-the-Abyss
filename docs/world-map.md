@@ -246,7 +246,7 @@ The pilot keeps its rim line and drops its skirt. The rim is chart ink, never di
 
 ### 7.5 Budgets
 
-The whole frame — overview, detail, water, props, the player's force, every pass — stays inside [graphics-standards.md](graphics-standards.md) gate 6: **≤ 150 draw calls and ≤ 400 k triangles**, pixel ratio at most 1.5. That is the only cap: the world's layers take no reservation of their own, and the tutorial's ground and force spend from the same 400 k ([visual-reboot.md](visual-reboot.md) §6). Draw calls and triangles are counted for the whole frame rather than shared out. A mission-density mesh over the whole Rift would cost about 1.84 million terrain triangles, which is why overview and detail are two resolutions rather than one. At most **two detail regions** are resident — the one arriving and the one left — with at most **two chunk requests in flight**; a cancelled or failed request releases what it held. Every cache is bounded per page, as the model templates are.
+The whole frame — overview, detail, water, props, the player's force, every pass — stays inside [graphics-standards.md](graphics-standards.md) gate 6: **≤ 150 draw calls and ≤ 400 k triangles**, pixel ratio at most 1.5. That is the only cap: the world's layers take no reservation of their own, and the tutorial's ground and force spend from the same 400 k ([visual-reboot.md](visual-reboot.md) §6). Draw calls and triangles are counted for the whole frame rather than shared out. A mission-density mesh over the whole Rift would cost about 1.84 million terrain triangles, which is why overview and detail are two resolutions rather than one. At most **two detail regions** are resident — the one arriving and the one left — with at most **two chunk requests in flight**; a cancelled or failed request releases what it held. Every cache is bounded per page, as the model templates are. A region's detail is one chunk, its mesh and skin. It is drawn while the overview is drawn, the region is in view, and one of its overview cells projects wide enough to read as a block; a little narrower lets it go again, so a camera at the edge of that does not swap it back and forth. A session's own region is held by the session and counts as one of the two. A failed request is tried again only once its region has been let go and is wanted again.
 
 ### 7.6 Entry, return, and what interrupts them
 
@@ -267,7 +267,7 @@ A mission starts when its room is joined, so a camera flight after joining would
 
 ### 7.8 The calls this section took
 
-The owner's calls: six on #1455, six on #1461, five on #1457 and four on #1459. Each was written with its options; the one taken is named.
+The owner's calls: six on #1455, six on #1461, five on #1457 and five on #1459. Each was written with its options; the one taken is named.
 
 **Anchors: Sorrowgate only (taken).** The alternatives were to pin every named place now from §1–§4's distances, or to scale Plate VII's coordinates. Scaling the plate would turn an illustration's compressions into geography, since its depth rail gives the shallows room. Pinning all of them now would decide ground no renderer has drawn yet. So only the pilot is pinned, and #1457 places the rest inside the region rectangles.
 
@@ -310,6 +310,8 @@ The owner's calls: six on #1455, six on #1461, five on #1457 and four on #1459. 
 **Overview props with the board (taken).** Nothing past *W* shows in a mission at full fade, and the board's camera is [#1462](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1462)'s, so the sparse props land there. Placing them now, or in the surround as well, would spend draw calls on frames that show none of them.
 
 **The feather kept until the overview lands (taken).** The overview's skin is baked between frames, so for its first moments, or for good if the bake fails, nothing is drawn past the apron's edge. Until the skin lands the apron's last 500 m still fade at every strength, as on #1461. Accepting the straight edge for that window would reverse #1461's call; holding the 0.8 s ramp until the skin lands would break §7.4's ramp and leave a failed bake undefined.
+
+**Detail held per region, by projected size (taken).** A region's whole detail is one request, chosen by how wide its overview cells project, so §7.5's two regions and two requests bound everything a camera can hold. Tiling each region into 2.5 km chunks would load only what is in view, at the cost of seams inside the detail. Leaving the choice to [#1462](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1462), whose board camera is the first to move between regions, would leave §7.5's bounds untested until then.
 
 ---
 
