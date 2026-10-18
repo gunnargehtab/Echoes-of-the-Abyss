@@ -139,6 +139,20 @@
  * side, two on the aft plate and three on the forward one. Every rivet
  * keeps its x on the pitch. 161 parts and 3,164 triangles become 143 and
  * 2,732; `contacts.mjs --part ^rivet` lists 38 pairs where it listed 18.
+ *
+ * THE WAIST (#1433). The slab's flank is at z 24 only on the parallel
+ * runs, x -52.8 to -12 and 24 to 50.4; between them it swells to the
+ * waist at 37.2 where the frame's legs land, up a 20° shoulder a side.
+ * The seam ran the full 112 m at z 23.9–25.3, so 36 m of it, from the
+ * aft shoulder at x -12 to the fore one at 24, lay inside the slab, and
+ * the forward plate (`flank_plate_s0`, x 22–50) put its aft 2 m inside
+ * the fore shoulder. Both passed every gate: `contacts.mjs` lists a part
+ * inside a closed one as a pair, the same as one seated on it. The seam
+ * is two bars now, `flank_seam_s0` from x -56 to -12 and `flank_seam_s1`
+ * from 24 to 56 (`flankPlates` `seam.gaps`), and `flank_plate_s0` starts at the
+ * shoulder's foot, x 24, 26 m long; the rivet rank keeps its pitch from
+ * the whole 112 m run, so no rivet moves. 143 parts and 2,732 triangles
+ * become 145 and 2,756.
  */
 import { THREE, add, box, cyl, strut, bothSides, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -175,8 +189,9 @@ bathyarch.hullSlab(root, { black, grey, amber }, {
 });
 bathyarch.flankPlates(root, { grey, rust }, {
   z: 24.6,
-  plates: [[36, 28, 5, -1, false], [-24, 18, 4, -2, true], [-46, 14, 3.5, 0, false]],
+  plates: [[37, 26, 5, -1, false], [-24, 18, 4, -2, true], [-46, 14, 3.5, 0, false]],
   seamLength: 112,
+  seam: { gaps: [[-12, 24]] },
   rivets: [['u', 3.6], ['l', -3.2]],
 });
 bathyarch.propTunnels(root, { grey, rust }, { x: -58, z: 9, r: 4.2 });
