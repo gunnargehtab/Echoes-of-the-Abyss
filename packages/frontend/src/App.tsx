@@ -51,7 +51,8 @@ import {
 } from './menu/launch.ts';
 import { storedMissionId } from './net/GameClient.ts';
 import { hasPlayed, seenScenes, witnessedConclusions } from './progression/store.ts';
-import { loadSettings } from './settings/store.ts';
+import { loadSettings, subscribeSettings } from './settings/store.ts';
+import { setActivePalette } from './game/palette.ts';
 
 /** The match's code: fetched by the lazy screen, and early by a travel (§7.6). */
 const loadGameCanvas = () => import('./game/GameCanvas.tsx');
@@ -200,6 +201,13 @@ function App() {
   const [worldFailed, setWorldFailed] = useState(false);
   // The reopen note has done its work once the shell has opened on it.
   useEffect(forgetReopen, []);
+  // The colour-vision palette is module state the board, its chart and the
+  // briefing read at render (docs/ui-ux.md §11, §14). A match applies it as it
+  // mounts, which is too late for a page that opens on the port, so the shell
+  // applies the stored choice before its first render and every change after,
+  // re-rendering so a screen already up takes the new ink.
+  const [, setPalette] = useState(() => setActivePalette(loadSettings().palette).name);
+  useEffect(() => subscribeSettings((next) => setPalette(setActivePalette(next.palette).name)), []);
 
   /**
    * Fetch the match's code for a travel. A failure is said on the travel's
