@@ -71,8 +71,8 @@
  * the only thing over it; the after patch on the second tier's after deck
  * at x −56..−42, z ±9, abaft the third tier's after face at x −40, in the
  * alley between the stack pairs, whose drums stand at z 9.2–14.8 and bands
- * reach z 9.0–15.0, feet at y 14, and clear of the two risers at
- * x −40.9..−39.1. It is 18 m wide
+ * reach z 9.0–15.0, feet at y 14 then and y 12 since #1431 (STACKS), and
+ * clear of the two risers at x −40.9..−39.1. It is 18 m wide
  * where it was 26, since 26 straddled the stacks; its length is the file's.
  * The forward patch's new station is the stencil's (`stencil_bow`, x 53–63
  * at y 9.05–9.35), so the stencil rises 0.3 m to lie on the patch, its
@@ -83,6 +83,21 @@
  * `citadel · flood_deck_aft` gone and `flood_deck_fwd · stencil_bow` the
  * one pair added; `diff.mjs` lists the three parts moved and the one
  * resized.
+ *
+ * STACKS (#1431). The approved file hung its four stacks 2 m over the deck
+ * they stand on: `stack_0..3` spanned y 14–26 (1.87 m true, under the root's
+ * 0.935) and `armour_tier_2`'s top is y 12.0, so `contacts.mjs` paired each
+ * stack with its band and nothing else. Each now stands on the tier, its
+ * foot at y 12 and its band 10 m up the drum, 2 m under its top, as the
+ * file had it: `stack_0..3` at y 12–24 and `stack_band_0..3` at y 21.5–22.5,
+ * every station and radius the file's. The after pair stands at the tier's
+ * chamfered after corner, whose edge runs (−58, ±12) to (−46, ±21), and one
+ * foot vertex of each, at (−56.4, ±13.4), hangs 0.15 m past it: a plan the
+ * file drew, left as it is. Nothing in plan moves, so hullOutlines.generated.ts is
+ * unchanged; `contacts.mjs` adds `armour_tier_2 · stack_0..3`, and the
+ * after flood patch (PATCHES, z ±9, y 12.05–12.35) stays 0.2 m clear of
+ * the drums at z 9.2 while the bands, z 9.0 at their widest, pass 9 m over
+ * it; `diff.mjs` lists the eight parts moved.
  *
  * TRIM (#1005). The first hull laid out on a trim sheet: `exportGlb`'s
  * `trim` takes the Klaxon's plate (factions/bathyarch.mjs `TRIM`) and
@@ -208,10 +223,12 @@ bathyarch.citadel(root, { black, grey, rust, lampM }, {
 });
 
 // Four stacks in two pairs abaft the citadel, port pair first, each
-// with its band written directly after it.
+// with its band written directly after it. Each stands on the second tier
+// (header, STACKS): its foot at the tier's top, y 12, so the 12 m drum
+// spans y 12–24 and the band rides at the file's height over the foot, 10 m.
 [[-46, -12], [-54, -12], [-46, 12], [-54, 12]].forEach(([x, z], i) => {
-  bathyarch.stack(root, black, { name: `stack_${i}`, at: [x, 20, z], r: 2.8, rTop: 2.4, height: 12, cut });
-  bathyarch.stackBand(root, amber, { name: `stack_band_${i}`, at: [x, 24, z], r: 3, h: 1, cut });
+  bathyarch.stack(root, black, { name: `stack_${i}`, at: [x, 18, z], r: 2.8, rTop: 2.4, height: 12, cut });
+  bathyarch.stackBand(root, amber, { name: `stack_band_${i}`, at: [x, 22, z], r: 3, h: 1, cut });
 });
 // Six vents across the transom, their tops a metre proud of the after deck
 // at y 7 (header).
