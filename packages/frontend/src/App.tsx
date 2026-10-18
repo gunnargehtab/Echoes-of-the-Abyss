@@ -22,16 +22,7 @@
  * answers, so the download and the join read as one wait, not two.
  */
 
-import {
-  Component,
-  lazy,
-  Suspense,
-  useEffect,
-  useMemo,
-  useState,
-  type ComponentType,
-  type ReactNode,
-} from 'react';
+import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import './App.css';
 import { useMenuAudio } from './audio/useMenuAudio.ts';
 import { DEFAULT_MAP_ID, missionHeaderById, PROLOGUE_SORROWGATE_HEADER } from '@echoes/shared';
@@ -48,23 +39,23 @@ import { TitleScreen } from './menu/TitleScreen.tsx';
 import { TravelScreen } from './menu/TravelScreen.tsx';
 import { MatchBoundary } from './menu/MatchBoundary.tsx';
 import {
+  forgetReopen,
   onTravel,
   readyToJoin,
+  reloadForRetry,
+  reopensBoard,
   startTravel,
   travelsFirst,
   type TravelState,
 } from './menu/launch.ts';
 import { storedMissionId } from './net/GameClient.ts';
-import type { GameCanvasProps } from './game/GameCanvas.tsx';
 import { hasPlayed, seenScenes, witnessedConclusions } from './progression/store.ts';
 import { loadSettings } from './settings/store.ts';
 
 /** The match's code: fetched by the lazy screen, and early by a travel (§7.6). */
 const loadGameCanvas = () => import('./game/GameCanvas.tsx');
 
-/** The match screen, fetched on demand; a fresh one for each Retry after a failed load. */
-const lazyGameCanvas = () =>
-  lazy(() => loadGameCanvas().then((module) => ({ default: module.GameCanvas })));
+const GameCanvas = lazy(() => loadGameCanvas().then((module) => ({ default: module.GameCanvas })));
 
 /**
  * The world behind the board (docs/world-map.md §7.6, #1462). Loaded when the
@@ -190,6 +181,8 @@ function initialScreen(): Screen {
   if (mapId !== null) {
     return { kind: 'match', name: loadSettings().profileName, mapId, resume: true };
   }
+  // A load failure's Retry reloaded the page to reopen the board (§7.6).
+  if (reopensBoard()) return { kind: 'campaign' };
   return { kind: 'title' };
 }
 
@@ -204,14 +197,13 @@ function App() {
   useMenuAudio(screen.kind !== 'match');
   /** Set when the world could not load or draw: the board stands alone. */
   const [worldFailed, setWorldFailed] = useState(false);
-  /** Bumped by the match screen's Retry: a fresh fetch and a fresh boundary. */
-  const [matchAttempt, setMatchAttempt] = useState(0);
-  const GameCanvas: ComponentType<GameCanvasProps> = useMemo(lazyGameCanvas, [matchAttempt]);
+  // The reopen note has done its work once the shell has opened on it.
+  useEffect(forgetReopen, []);
 
   /**
    * Fetch the match's code for a travel. A failure is said on the travel's
    * bar, with nothing joined (§7.6, "A load or join failure"); its Retry
-   * fetches again.
+   * reloads the page (`reloadForRetry`).
    */
   const prepareMatch = (missionId: string) => {
     loadGameCanvas().then(
@@ -395,11 +387,7 @@ function App() {
           skipped={screen.skipped}
           settled={screen.settled}
           loadFailed={screen.loadFailed}
-          onRetry={() => {
-            const missionId = screen.missionId;
-            setScreen((current) => onTravel(current, { loadFailed: false }, missionId));
-            prepareMatch(missionId);
-          }}
+          onRetry={() => reloadForRetry(true)}
           onSkip={() => setScreen((current) => onTravel(current, { skipped: true }))}
           // Back to the board with nothing joined; the camera travels back
           // under it (§7.6, "Cancel").
@@ -415,8 +403,7 @@ function App() {
       {screen.kind === 'credits' && <CreditsScreen onBack={toTitle} />}
       {screen.kind === 'match' && (
         <MatchBoundary
-          key={matchAttempt}
-          onRetry={() => setMatchAttempt((attempt) => attempt + 1)}
+          onRetry={() => reloadForRetry(screen.board === true)}
           onBack={screen.board === true ? toCampaign : toTitle}
         >
           <Suspense

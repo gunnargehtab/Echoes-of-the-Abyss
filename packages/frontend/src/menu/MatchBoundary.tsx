@@ -5,9 +5,9 @@
  * The match is the one screen fetched on demand (#442), and a fetch that
  * fails, or a screen that fails as it starts, used to leave the page blank:
  * nothing above the lazy screen caught it. This does, says so, and offers
- * **Retry**, focused, and **Back**. Retry is the shell's: it hands a fresh lazy
- * screen and a fresh boundary in (`key`), since a lazy screen remembers its
- * failure. Every launch has it; a board launch catches a load failure
+ * **Retry**, focused, and **Back**. Retry is the shell's, and reloads the
+ * page (`reloadForRetry`): a browser keeps a failed module fetch for the life
+ * of the page. Every launch has it; a board launch catches a load failure
  * earlier, on the travel's bar, before anything is joined.
  */
 

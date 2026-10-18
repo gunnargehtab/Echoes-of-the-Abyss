@@ -647,11 +647,10 @@ describe('which launches travel, and when a travel joins (§7.6)', () => {
     const arrived = { ...startTravel(PROLOGUE), settled: true, drew: true };
     assert.equal(readyToJoin({ ...arrived, loadFailed: true }, false), false, 'failed');
     assert.equal(readyToJoin({ ...arrived, loadFailed: true }, true), false, 'with no world too');
-    // Retry clears the failure and fetches again; only the fetch landing joins.
-    const retried = onTravel(onTravel(arrived, { loadFailed: true }), { loadFailed: false });
-    assert.equal(readyToJoin(retried as TravelState, false), false, 'retried, still loading');
-    const loaded = onTravel(retried, { prepared: true }, PROLOGUE) as TravelState;
-    assert.equal(readyToJoin(loaded, false), true, 'and joined once it lands');
+    // Its Retry reloads the page (App.tsx, `reloadForRetry`): no fetch in this
+    // page can land, so no later news turns the failure into a join.
+    const failed = onTravel(arrived, { loadFailed: true }, PROLOGUE) as TravelState;
+    assert.equal(readyToJoin({ ...failed, skipped: true }, false), false);
   });
 });
 

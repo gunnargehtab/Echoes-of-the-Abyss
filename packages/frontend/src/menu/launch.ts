@@ -9,6 +9,48 @@
 
 import { worldRegionForMission } from '@echoes/shared';
 
+/**
+ * The screen a load failure's Retry reopens after reloading (§7.6, "A load or
+ * join failure"). A browser keeps a failed module fetch for the life of the
+ * page — Chrome 155 answered a second import of one from its module map, with
+ * no request — so Retry reloads, and this one-shot note in `sessionStorage`
+ * brings a board launch back to the board.
+ */
+const REOPEN_KEY = 'echoes.reopen';
+
+/** Reload for a load failure's Retry; a board launch reopens on the board. */
+export function reloadForRetry(board: boolean): void {
+  try {
+    if (board) window.sessionStorage.setItem(REOPEN_KEY, 'board');
+    else window.sessionStorage.removeItem(REOPEN_KEY);
+  } catch {
+    // Storage refused: the reload opens on the title, which is still a way back.
+  }
+  window.location.reload();
+}
+
+/**
+ * Whether this page was reloaded to reopen the board. Read, not taken:
+ * development's StrictMode runs the shell's initial state twice, so the note
+ * is forgotten after mount (`forgetReopen`).
+ */
+export function reopensBoard(): boolean {
+  try {
+    return window.sessionStorage.getItem(REOPEN_KEY) === 'board';
+  } catch {
+    return false;
+  }
+}
+
+/** Forget the note, once the shell has opened on it. */
+export function forgetReopen(): void {
+  try {
+    window.sessionStorage.removeItem(REOPEN_KEY);
+  } catch {
+    // Nothing was kept.
+  }
+}
+
 /** A launch from the board, travelling before its room is joined. */
 export interface TravelState {
   kind: 'travel';

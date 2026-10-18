@@ -23,6 +23,7 @@ import { clearStorage, installStorage, setSearch } from './support/headless.ts';
 import { installHeadlessAudio, uninstallHeadlessAudio } from './support/headlessAudio.ts';
 import { click, render, type Rendered } from './support/screen.ts';
 import App from '../src/App.tsx';
+import { reloadForRetry } from '../src/menu/launch.ts';
 
 /** Mount the shell on a given query string. */
 async function shell(search = ''): Promise<Rendered> {
@@ -64,6 +65,51 @@ describe('the shell: where it opens', () => {
       } finally {
         await view.unmount();
       }
+    }
+  });
+
+  it("reopens on the board after a board launch's load-failure Retry, once (§7.6)", async () => {
+    // A browser keeps a failed module fetch for the page's life, so Retry
+    // reloads; the board launch's note brings it back to the board.
+    const g = globalThis as unknown as { window: { location: { reload?: () => void } } };
+    let reloads = 0;
+    g.window.location.reload = () => void (reloads += 1);
+    try {
+      reloadForRetry(true);
+      assert.equal(reloads, 1, 'Retry reloads the page');
+      const view = await shell();
+      try {
+        assert.ok(view.allByClass('campaign-slot').length > 0, 'on the board, not the title');
+      } finally {
+        await view.unmount();
+      }
+      const again = await shell();
+      try {
+        assert.ok(again.shows(TITLE), 'the note was one-shot: the next load is the title');
+      } finally {
+        await again.unmount();
+      }
+      // Any other launch's Retry reloads with no note: a direct link's own
+      // address re-enters its match, and a title launch opens on the title.
+      reloadForRetry(true);
+      reloadForRetry(false);
+      assert.equal(reloads, 3);
+      const plain = await shell();
+      try {
+        assert.ok(plain.shows(TITLE));
+      } finally {
+        await plain.unmount();
+      }
+      reloadForRetry(true);
+      const linked = await shell(`?mission=${PROLOGUE_SORROWGATE_HEADER.id}`);
+      try {
+        assert.equal(linked.shows(TITLE), false, 'a direct link still goes into the water');
+        assert.equal(linked.allByClass('campaign-slot').length, 0, 'not the board');
+      } finally {
+        await linked.unmount();
+      }
+    } finally {
+      delete g.window.location.reload;
     }
   });
 });
