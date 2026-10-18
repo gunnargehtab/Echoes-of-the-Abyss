@@ -62,6 +62,13 @@ export class WorldViewHost {
   ): { view: PerspectiveView; claim: symbol } | null {
     const look = lookForMission(missionId);
     if (this.view !== null && this.look !== look) this.dispose();
+    // A takeover: the session still holding the view will never let it go
+    // (its release is a no-op once the claim moves), so its ground goes now,
+    // as a release would take it (#1460).
+    if (this.view !== null && this.holder !== null) {
+      this.view.resetForNewMatch();
+      this.view.clearTerrain();
+    }
     if (this.view === null) {
       // Placed in the world, so its border is drawn and faded (#1461).
       this.view = new PerspectiveView(look, worldRegionForMission(missionId) ?? null);

@@ -873,6 +873,23 @@ describe('the shell: the persistent world view', () => {
     assert.equal(ground() === null, true, 'a session torn down draws nothing more');
   });
 
+  it("lets a run's ground go when a later session takes the view over", async () => {
+    const first = await mount(pilot);
+    await joinMatch(first);
+    const view = worldView.current!;
+    const ground = () => (view as unknown as { terrain: unknown }).terrain;
+    assert.equal(ground() !== null, true, 'the first session drew its ground');
+    // The second mounts before the first's teardown has run.
+    const second = await mount(pilot);
+    try {
+      assert.equal(worldView.current === view, true, 'the same view, taken over');
+      assert.equal(ground() === null, true, "the first run's ground went at the takeover");
+    } finally {
+      await second.unmount();
+      await first.unmount();
+    }
+  });
+
   it('runs one render loop however many times it is entered', async () => {
     let world = await mount(pilot);
     const gl = world.gl;
