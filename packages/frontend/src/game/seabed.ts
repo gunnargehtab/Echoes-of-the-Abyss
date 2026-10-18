@@ -32,7 +32,7 @@
  *   same rebuild cadence `drawTerrain` already had.
  */
 
-import { Biome, SEABED_DETAIL, TERRAIN_LIFT } from '@echoes/shared';
+import { Biome, SEABED_DETAIL, TERRAIN_LIFT, WORLD } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import type { StoneSeat } from './environment.ts';
 import { BIOME_COLOR, depthShade, reliefTextureGain, ROCK_FACE, scaleRgb } from './palette.ts';
@@ -44,6 +44,19 @@ import { BIOME_COLOR, depthShade, reliefTextureGain, ROCK_FACE, scaleRgb } from 
  * replaces).
  */
 export const SEABED_PX_PER_CELL = 32;
+
+/**
+ * How a bake is taken. A mission's ground takes the defaults. The Rift's
+ * overview (worldOverview.ts, #1459) takes fewer pixels a cell and no detail
+ * field: at 1,000 m cells the field's octaves are finer than a pixel, and
+ * would bake as grain rather than as shape.
+ */
+export interface BakeOptions {
+  /** Pixels across one cell; `SEABED_PX_PER_CELL` unless given. */
+  pxPerCell?: number;
+  /** Whether the detail field and the mottle shape the bake; true unless given. */
+  detail?: boolean;
+}
 
 /**
  * TUNABLE, per biome: how many metres of shape the detail field may add or
@@ -433,11 +446,14 @@ export function shadeSeabed(
   seed: number,
   range: SeabedRange,
   rect: CellRect,
-  stones: readonly StoneSeat[] = []
+  stones: readonly StoneSeat[] = [],
+  options: BakeOptions = {}
 ): SeabedPixels {
   const { cols, rows, cellM } = terrain;
-  const w = cols * SEABED_PX_PER_CELL;
-  const h = rows * SEABED_PX_PER_CELL;
+  const ppc = options.pxPerCell ?? SEABED_PX_PER_CELL;
+  const detail = options.detail ?? true;
+  const w = cols * ppc;
+  const h = rows * ppc;
   const { shallowest, deepest } = range;
 
   const isRock = (i: number) => terrain.ceiling[i]! > terrain.floor[i]!;
@@ -461,10 +477,10 @@ export function shadeSeabed(
   // The pixels asked for, and the one-pixel ring around them that pass 2's
   // gradients read — clamped to the canvas, where the edge pixel reads itself
   // exactly as it always has.
-  const x0 = Math.max(0, rect.col0) * SEABED_PX_PER_CELL;
-  const y0 = Math.max(0, rect.row0) * SEABED_PX_PER_CELL;
-  const x1 = Math.min(cols, rect.col1 + 1) * SEABED_PX_PER_CELL;
-  const y1 = Math.min(rows, rect.row1 + 1) * SEABED_PX_PER_CELL;
+  const x0 = Math.max(0, rect.col0) * ppc;
+  const y0 = Math.max(0, rect.row0) * ppc;
+  const x1 = Math.min(cols, rect.col1 + 1) * ppc;
+  const y1 = Math.min(rows, rect.row1 + 1) * ppc;
   const ex0 = Math.max(0, x0 - 1);
   const ey0 = Math.max(0, y0 - 1);
   const ex1 = Math.min(w, x1 + 1);
@@ -475,14 +491,14 @@ export function shadeSeabed(
   // the authored floor alone beside it, whose slope stays darken-only.
   const height = new Float32Array(ew * (ey1 - ey0));
   const ground = new Float32Array(ew * (ey1 - ey0));
-  const mPerPx = cellM / SEABED_PX_PER_CELL;
+  const mPerPx = cellM / ppc;
   for (let py = ey0; py < ey1; py++) {
     // Continuous cell coordinate of this pixel's centre.
-    const cy = (py + 0.5) / SEABED_PX_PER_CELL - 0.5;
+    const cy = (py + 0.5) / ppc - 0.5;
     const r0 = Math.floor(cy);
     const fy = smooth(cy - r0);
     for (let px = ex0; px < ex1; px++) {
-      const cx = (px + 0.5) / SEABED_PX_PER_CELL - 0.5;
+      const cx = (px + 0.5) / ppc - 0.5;
       const c0 = Math.floor(cx);
       const fx = smooth(cx - c0);
 
@@ -511,26 +527,28 @@ export function shadeSeabed(
         (b01[k] + (b11[k] - b01[k]) * fx - b00[k] - (b10[k] - b00[k]) * fx) * fy;
 
       ground[(py - ey0) * ew + (px - ex0)] = floor;
-      height[(py - ey0) * ew + (px - ex0)] =
-        floor +
-        detailM(
-          px * mPerPx,
-          py * mPerPx,
-          seed,
-          lerp2('amplitudeM'),
-          lerp2('roughness'),
-          lerp2('blockiness')
-        );
+      height[(py - ey0) * ew + (px - ex0)] = detail
+        ? floor +
+          detailM(
+            px * mPerPx,
+            py * mPerPx,
+            seed,
+            lerp2('amplitudeM'),
+            lerp2('roughness'),
+            lerp2('blockiness')
+          )
+        : floor;
     }
   }
 
   // Pass 2: light it. Gradients come off the baked heightfield, converted to
-  // metres-per-cell so reliefShade's reference scale means what it meant for
-  // the vector pass — one tuning, both renderers.
+  // metres per 250 m cell so reliefShade's reference scale means what it meant
+  // for the vector pass — one tuning, both renderers, and the overview's
+  // 1,000 m cells shaded by the same slope as the mission's.
   const outW = x1 - x0;
   const outH = y1 - y0;
   const data = new Uint8ClampedArray(outW * outH * 4);
-  const dropScale = SEABED_PX_PER_CELL / 2;
+  const dropScale = (ppc / 2) * (WORLD.DETAIL_CELL_M / cellM);
 
   /**
    * Distance from a world position to the nearest cell of the *other* ground
@@ -558,9 +576,9 @@ export function shadeSeabed(
     distM >= reachM ? 1 : gain + (1 - gain) * smooth(distM / reachM);
 
   for (let py = y0; py < y1; py++) {
-    const row = clampRow(Math.floor(py / SEABED_PX_PER_CELL));
+    const row = clampRow(Math.floor(py / ppc));
     for (let px = x0; px < x1; px++) {
-      const col = clampCol(Math.floor(px / SEABED_PX_PER_CELL));
+      const col = clampCol(Math.floor(px / ppc));
       const index = row * cols + col;
       const j = ((py - y0) * outW + (px - x0)) * 4;
       const xM = px * mPerPx;
@@ -627,7 +645,7 @@ export function shadeSeabed(
             (gD - gU) * dropScale,
             (hR - hL) * dropScale,
             (hD - hU) * dropScale
-          ) * mottleFactor(xM, yM, seed, relief.mottle)
+          ) * (detail ? mottleFactor(xM, yM, seed, relief.mottle) : 1)
         );
         color = scaleRgb(
           depthShade(base, height[i]!, shallowest, deepest),
@@ -667,11 +685,13 @@ export function bakeSeabed(
   terrain: TerrainPayload,
   seed = seabedSeed(terrain),
   range = seabedRange(terrain),
-  stones: readonly StoneSeat[] = []
+  stones: readonly StoneSeat[] = [],
+  options: BakeOptions = {}
 ): HTMLCanvasElement {
+  const ppc = options.pxPerCell ?? SEABED_PX_PER_CELL;
   const canvas = document.createElement('canvas');
-  canvas.width = terrain.cols * SEABED_PX_PER_CELL;
-  canvas.height = terrain.rows * SEABED_PX_PER_CELL;
+  canvas.width = terrain.cols * ppc;
+  canvas.height = terrain.rows * ppc;
   paintSeabed(
     canvas,
     shadeSeabed(
@@ -684,9 +704,54 @@ export function bakeSeabed(
         col1: terrain.cols - 1,
         row1: terrain.rows - 1,
       },
-      stones
+      stones,
+      options
     )
   );
+  return canvas;
+}
+
+/**
+ * TUNABLE — milliseconds of shading a sliced bake spends before it yields:
+ * half a 60 Hz frame. It holds a frame for at most that and one slice, and
+ * how many slices fit adapts to the machine. A yield after every slice tied
+ * the bake to the frame rate instead, since each yield waits out a frame: 360
+ * of them, 450 ms each on a software rasteriser, kept the overview's skin off
+ * the screen for minutes (#1459).
+ */
+export const SLICED_BAKE_BUDGET_MS = 8;
+
+/**
+ * `bakeSeabed` a slice of `sliceCells` cells of one row at a time, yielding
+ * (`yieldTask`) once `SLICED_BAKE_BUDGET_MS` of `now` has passed since the
+ * last yield: for a bake too large to hold a frame for, the overview's skin
+ * (worldOverview.ts). A slice shades the pixels a whole bake would, the
+ * promise the partial rebake stands on, so the slices add up to exactly it.
+ */
+export async function bakeSeabedInSlices(
+  terrain: TerrainPayload,
+  seed: number,
+  range: SeabedRange,
+  options: BakeOptions,
+  sliceCells: number,
+  yieldTask: () => Promise<void>,
+  now: () => number = () => performance.now()
+): Promise<HTMLCanvasElement> {
+  const ppc = options.pxPerCell ?? SEABED_PX_PER_CELL;
+  const canvas = document.createElement('canvas');
+  canvas.width = terrain.cols * ppc;
+  canvas.height = terrain.rows * ppc;
+  let since = now();
+  for (let row = 0; row < terrain.rows; row++) {
+    for (let col0 = 0; col0 < terrain.cols; col0 += sliceCells) {
+      const col1 = Math.min(terrain.cols, col0 + sliceCells) - 1;
+      const rect = { col0, row0: row, col1, row1: row };
+      paintSeabed(canvas, shadeSeabed(terrain, seed, range, rect, [], options));
+      if (now() - since < SLICED_BAKE_BUDGET_MS) continue;
+      await yieldTask();
+      since = now();
+    }
+  }
   return canvas;
 }
 

@@ -35,6 +35,7 @@ import {
   apronMesh,
   paddedTerrain,
 } from '../src/game/worldBorder.ts';
+import { overviewSkin } from '../src/game/worldOverview.ts';
 import type { TerrainPayload } from '../src/net/GameClient.ts';
 
 /** Sorrowgate's size, 20 × 16 cells of 250 m, with a trench along the south. */
@@ -210,7 +211,7 @@ describe('the pilot view at its border', () => {
     // The fade's program, with the tutorial's ground surface chained after it.
     assert.equal(
       (mesh.material as MeshBasicMaterial).customProgramCacheKey(),
-      'echoes-world-border-3:sorrowgate-ground-1'
+      'echoes-world-border-5:sorrowgate-ground-1'
     );
   });
 
@@ -348,19 +349,27 @@ describe('the pilot view at its border', () => {
     }
   });
 
-  it("fades to the backdrop along each ray, from the backdrop's own anchor", () => {
+  it("fades to the backdrop along each ray, from the backdrop's own anchor", async () => {
     const { view } = mountView(true);
     const internals = view as unknown as {
       apron: { mesh: Mesh };
+      overview: { mesh: Mesh };
       backdrop: { focusDepthUniform: { value: number } };
     };
-    const material = internals.apron.mesh.material as MeshBasicMaterial;
-    const shader = {
-      uniforms: {} as Record<string, unknown>,
-      vertexShader: ShaderLib.basic.vertexShader,
-      fragmentShader: ShaderLib.basic.fragmentShader,
+    const compile = (material: MeshBasicMaterial) => {
+      const shader = {
+        uniforms: {} as Record<string, unknown>,
+        vertexShader: ShaderLib.basic.vertexShader,
+        fragmentShader: ShaderLib.basic.fragmentShader,
+      };
+      material.onBeforeCompile(shader as never, undefined as never);
+      return shader;
     };
-    material.onBeforeCompile(shader as never, undefined as never);
+    const shader = compile(internals.apron.mesh.material as MeshBasicMaterial);
+    const seamOn = shader.uniforms.uSeamOn as { value: number };
+    // The skin lands a task after the view mounts, never inside it.
+    assert.equal(seamOn.value, 0, 'before the skin has landed');
+    await overviewSkin();
     assert.equal(
       shader.uniforms.uFocusDepthM,
       internals.backdrop.focusDepthUniform,
@@ -373,9 +382,23 @@ describe('the pilot view at its border', () => {
     // The surface hook asks the apron's own cell reader, offset into the padded grid.
     assert.match(shader.fragmentShader, /surveyCellAt\(vSurveyXZ\)/);
     assert.match(shader.fragmentShader, /\+ ivec2\( uApronPad \)/);
-    // The apron's last 500 m goes to the backdrop whatever the ramp is doing.
+    // Until the overview's skin lands nothing is drawn past the apron, so its
+    // last 500 m go to the backdrop whatever the ramp is doing (#1461); the
+    // skin's landing takes the feather off, and the overview never has one.
     assert.match(shader.fragmentShader, /smoothstep\( 2000\.0, 2500\.0, echoesExteriorDistance/);
-    assert.match(shader.fragmentShader, /uBorderStrength \) \* borderFeather/);
+    assert.match(shader.fragmentShader, /borderFade \*= mix\( borderFeather, 1\.0, uSeamOn \);/);
+    const overviewShader = compile(internals.overview.mesh.material as MeshBasicMaterial);
+    assert.doesNotMatch(overviewShader.fragmentShader, /borderFeather/);
+    assert.match(
+      shader.fragmentShader,
+      /vec3 seamOverview = texture2D\( uOverviewMap, seamUV \)\.rgb \* diffuse;\s*outgoingLight = mix\( outgoingLight, seamOverview, echoesSeamWeight\( vBorderWorld\.xz \) \* uSeamOn \);\s*#include <opaque_fragment>/
+    );
+    assert.equal(
+      (shader.uniforms.uOverviewMap as { value: unknown }).value,
+      (internals.overview.mesh.material as MeshBasicMaterial).map,
+      "the overview's own skin, so the two are one colour on the seam"
+    );
+    assert.equal(seamOn.value, 1, 'once it has landed');
   });
 
   it('ramps in over real frames, and lands at detach', () => {
@@ -429,11 +452,17 @@ describe('the pilot view at its border', () => {
     const color = () =>
       ((view as unknown as { apron: { mesh: Mesh } }).apron.mesh.material as MeshBasicMaterial)
         .color;
+    const overview = () =>
+      (
+        (view as unknown as { overview: { mesh: Mesh } }).overview.mesh
+          .material as MeshBasicMaterial
+      ).color;
     view.setVeilIntensity(1);
     view.applySnapshot(cannedSnapshot());
     pumpAnimationFrames();
     const heard = color().clone();
     assert.ok(heard.r < 0.5 && heard.b < 1, `the floor shade, not white: ${heard.getHexString()}`);
+    assert.equal(overview().getHex(), heard.getHex(), 'the overview under the same veil');
     view.resetForNewMatch();
     pumpAnimationFrames();
     assert.equal(color().getHex(), 0xffffff, 'nobody listening: the field is clear and so is it');

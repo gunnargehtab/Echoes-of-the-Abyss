@@ -228,9 +228,9 @@ The world is **continuous visual geography, not a persistent simulation**. The w
 
 ### 7.3 Overview and detail
 
-- **Overview:** the whole atlas at 1,000 m cells, 3,600 of them, through the existing terrain, water and lighting pipelines. Honest overview detail: biome fill and relief, the approved prop vocabulary sparsely, no mission-density props.
-- **Detail:** a mission's rectangle plus **2,500 m of surroundings** on every side, at 250 m cells. For Sorrowgate that is *x* 15,000–25,000 m, *y* 38,000–47,000 m: 10,000 × 9,000 m, 1,440 cells, the 320 of the mission patch unchanged at its centre. The surroundings are public ground authored to continue the patch's edges, and are never simulated. Sorrowgate's were authored on [#1457](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1457), and they continue each edge of the patch. The districts go on all round, the Concourse runs north onto its ridge, and the West Approach's vein runs west. The Commit runs south and east into its basin and on to the scar, whose bank stands 1,500 m east of the map. Each cell touching the map takes the biome, floor and ceiling of the edge cell it touches. The detail's last 500 m are the overview's own cells. Live ground is pasted over this baseline by the session and never written into it (§7.1). Before #1457 the pilot drew an apron of the map's own base ground, the owner's call on #1461. Until the overview surrounds the detail, the detail's last 500 m, from W to the surround's edge, fade to the backdrop at any strength of §7.4's ramp, so a fade part-way in never shows where the detail ends.
-- **Seam:** the detail rectangle's edge is a line of the overview grid; a surround that would end between two 1,000 m lines grows outward to the next one. Sorrowgate's needs no rounding, its edges falling at 15, 25, 38 and 47 km. Detail owns everything inside it and the overview everything outside, so no surface overlaps another, and the seam's vertices take the overview's heights so the two meet without a crack.
+- **Overview:** the whole atlas at 1,000 m cells, 3,600 of them, through the existing terrain, water and lighting pipelines. Honest overview detail: biome fill and relief, no mission-density props. Its relief is the authored floor alone, a vertex every 500 m, and its skin is the seabed bake without the detail field. Inside a mission all of it lies past *W*, so it is drawn only while the fade is below full. Its sparse props from the approved vocabulary land with the campaign board's camera ([#1462](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1462)), the first view that would show them.
+- **Detail:** a mission's rectangle plus **2,500 m of surroundings** on every side, at 250 m cells. For Sorrowgate that is *x* 15,000–25,000 m, *y* 38,000–47,000 m: 10,000 × 9,000 m, 1,440 cells, the 320 of the mission patch unchanged at its centre. The surroundings are public ground authored to continue the patch's edges, and are never simulated. Sorrowgate's were authored on [#1457](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1457), and they continue each edge of the patch. The districts go on all round, the Concourse runs north onto its ridge, and the West Approach's vein runs west. The Commit runs south and east into its basin and on to the scar, whose bank stands 1,500 m east of the map. Each cell touching the map takes the biome, floor and ceiling of the edge cell it touches. The detail's last 500 m are the overview's own cells. Live ground is pasted over this baseline by the session and never written into it (§7.1). Before #1457 the pilot drew an apron of the map's own base ground, the owner's call on #1461. A ground delta at the patch's edge moves the surround's ground within a cell of it, in place.
+- **Seam:** the detail rectangle's edge is a line of the overview grid; a surround that would end between two 1,000 m lines grows outward to the next one. Sorrowgate's needs no rounding, its edges falling at 15, 25, 38 and 47 km. Detail owns everything inside it and the overview everything outside, so no surface overlaps another, and the seam's vertices take the overview's heights so the two meet without a crack. Across the detail's last 500 m its heights and colour ease into the overview's, so there is no ledge or line at the seam either.
 
 ### 7.4 The mission border
 
@@ -267,7 +267,7 @@ A mission starts when its room is joined, so a camera flight after joining would
 
 ### 7.8 The calls this section took
 
-The owner's calls: six on #1455, six on #1461 and five on #1457. Each was written with its options; the one taken is named.
+The owner's calls: six on #1455, six on #1461, five on #1457 and four on #1459. Each was written with its options; the one taken is named.
 
 **Anchors: Sorrowgate only (taken).** The alternatives were to pin every named place now from §1–§4's distances, or to scale Plate VII's coordinates. Scaling the plate would turn an illustration's compressions into geography, since its depth rail gives the shallows room. Pinning all of them now would decide ground no renderer has drawn yet. So only the pilot is pinned, and #1457 places the rest inside the region rectangles.
 
@@ -291,7 +291,7 @@ The owner's calls: six on #1455, six on #1461 and five on #1457. Each was writte
 
 **The 0.8 s ramp, built now (taken).** It runs in on a session's first state and out when the session resets; deferring it to #1462, which owns the return, was the alternative.
 
-**The apron's last 500 m always fades (taken).** Below full strength the ramp would otherwise draw the apron's straight far edge against the backdrop. Ramping only the snow would have reversed the ramp for ground; accepting the edge for a second was the third option.
+**The apron's last 500 m always fades (taken).** Below full strength the ramp would otherwise draw the apron's straight far edge against the backdrop. Ramping only the snow would have reversed the ramp for ground; accepting the edge for a second was the third option. Since #1459 it holds until the overview's skin lands, when the overview is drawn past that edge.
 
 **One scar, on the First Chord's line (taken).** One deep runs from the Furrow's sill to the Mouth, so the Chord points down the line the Ninth follows (§3, §4), and the Furrow opens onto deep water that leads to Directorate country. Sufficiency then stands about 5 km east of where Plate VII draws it. Following the plate's west–east order would have aimed the Chord across trench country instead of down the Ninth. Painting latitude bands and the named grounds only would have left the Furrow's sill opening onto nothing and the road to the Rim undrawn.
 
@@ -302,6 +302,14 @@ The owner's calls: six on #1455, six on #1461 and five on #1457. Each was writte
 **The pilot draws the authored surround now (taken).** The apron's mesh and fade are unchanged and only its cells differ, so the pilot shows its surroundings before [#1459](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1459) draws the overview. Keeping the base-ground apron until #1459 was the alternative.
 
 **Clashes between the docs filed, not fixed (taken).** Where a mission document and this one disagree on a distance or a place, the atlas follows this document, and each clash is listed in [#1469](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1469). Amending the mission documents and Plate VII here would have widened #1457 past geography.
+
+**The overview at two vertices a cell (taken).** A 500 m step on the authored floor costs about 29,000 triangles for the whole atlas. One vertex a cell, about 7,000, draws straight ramps between cell centres. Four, about 115,000, spends more than a quarter of gate 6 on ground no mission frame shows at full fade.
+
+**The seam band blended (taken).** The detail's last 500 m ease into the overview's heights and colour and equal them on the seam. Pinning only the seam's vertices would leave a step one vertex inside it wherever the surround's ground and the overview's differ: up to about 120 m of drawn height, about 540 m of depth, on Sorrowgate's south edge.
+
+**Overview props with the board (taken).** Nothing past *W* shows in a mission at full fade, and the board's camera is [#1462](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1462)'s, so the sparse props land there. Placing them now, or in the surround as well, would spend draw calls on frames that show none of them.
+
+**The feather kept until the overview lands (taken).** The overview's skin is baked between frames, so for its first moments, or for good if the bake fails, nothing is drawn past the apron's edge. Until the skin lands the apron's last 500 m still fade at every strength, as on #1461. Accepting the straight edge for that window would reverse #1461's call; holding the 0.8 s ramp until the skin lands would break §7.4's ramp and leave a failed bake undefined.
 
 ---
 
