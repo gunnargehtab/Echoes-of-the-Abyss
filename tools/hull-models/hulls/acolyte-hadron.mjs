@@ -77,11 +77,22 @@
  *   emitter its block lit, and this block lights the knees and nothing
  *   else.
  * - **The cage** (`cage`): four alloy struts over the middle segment at
- *   x −6 and 4, z ±4, leaned 0.6 rad in — the Chorister's frame round its
- *   bladder, here round the stone — each foot inside the flank facet
- *   (6.26 m out on a flank at 6.53) and each head standing clear over the
- *   segment's shoulder at y 5.3, 1.5 m above the dome's pole and 1.4 m
- *   fore and aft of its skirt; nothing touches the dome.
+ *   x −6 and 4, z ±3.5, leaned 0.6 rad in, 8 m long on 0.4 to 0.5 m — the
+ *   Chorister's frame round its bladder, here round the stone. Each foot
+ *   ring is inside the flank facet, section and not axis: the ring's
+ *   outboard vertex at z 6.17, y −1.02, where the flank at x −6 is 6.53
+ *   (0.36 m inside); its fore and aft vertices at x −6.5 and −5.5, z 5.76,
+ *   y −1.30, where the flank is 5.94 and 6.53 (0.18 m inside at the
+ *   narrower); its lowest vertex at y −1.58, z 5.35, under a keel at
+ *   −2.8. A first cut at z ±4 put the outboard vertex 0.14 m outside the
+ *   hull, and review measured it. Each strut comes up through the crown
+ *   flat at z ±2.95 on its axis (±2.5 to 3.4 across its section) and its
+ *   head stands at y 5.3, z ±1.24, 1.5 m above the dome's pole; the
+ *   nearest strut surface is 2.4 to 2.7 m from the stone's
+ *   (`contacts.mjs --part cage_strut --near` names no dome pair at 2.4
+ *   and all four at 2.7) — in x alone 1.1 m, dome ±3.42 against a strut
+ *   at 6 with r 0.4–0.5. Nothing touches the dome, and no alloy shows on
+ *   the flank (the inspect sheet's `--view flank:90:8:0.35`).
  * - **The rostrum and the telson** are the Chorister's prisms (`point`):
  *   an alloy bow prism 9 m long on 2.2 m of half-diagonal, its tip the bow
  *   and its base inside the fore segment's nose; a crystal drive prism 6 m
@@ -250,11 +261,12 @@ hadron.point(root, 'drive_prism', crystal, { x: STERN + 3, r: 1.8, length: 6, ti
 // kind lights its knees and nothing else.
 hadron.listeningDome(root, { crystal, seam }, { x: -1, y: 0.92, r: 3.6, press: 0.8, boss: null });
 
-// The cage: four alloy struts over the middle segment leaned half a radian
-// in, framing the dome — the Chorister's frame round its bladder — each
-// foot inside the shell's flank facet and each head standing clear over
-// the dome's shoulder.
-hadron.cage(root, alloy, { r: [0.4, 0.5], length: 8, at: [5, 2.0, 4.0], lean: 0.6, x: -1 });
+// The cage: four alloy struts over the middle segment leaned 0.6 rad in,
+// framing the dome — the Chorister's frame round its bladder — each foot
+// ring inside the shell's flank facet, each strut rising through the crown
+// flat beside the dome and its head standing clear above the pole (the
+// header has the measured section).
+hadron.cage(root, alloy, { r: [0.4, 0.5], length: 8, at: [5, 2.0, 3.5], lean: 0.6, x: -1 });
 
 // The six hydrophone limbs, walked out and planted as three mirrored pairs
 // (the header): hips 0.8 m under the axis on the flank facet, a femur 5 m

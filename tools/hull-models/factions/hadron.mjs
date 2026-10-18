@@ -1472,8 +1472,10 @@ export function ductedDrive(root, { duct: ductMat, crystal: hubMat, alloy }, opt
  * `_femur`, `_knee`, `_tibia`, `_foot` and `knee_mark_${i}_${side}`: an
  * alloy hip block (`hip.size`, `[along, tall, across]` in the limb's own
  * frame) rooted on the vertical flank facet a four-facet spar laid on a
- * flat has (`spar`), its inboard face `hip.sink` inside the skin at
- * `hip.y`; an alloy femur, a four-facet spar tapering `femur.r` `[root,
+ * flat has (`spar`), its centre `hip.sink` inside the skin at `hip.y` —
+ * so a block `size[0]` long has its inboard face `size[0] / 2 + sink`
+ * inside and stands `size[0] / 2 − sink` proud, 1.6 m in and 0.4 m out on
+ * the defaults; an alloy femur, a four-facet spar tapering `femur.r` `[root,
  * tip]`, from the hip `femur.reach` outboard and `femur.rise` up to the
  * knee; an alloy knee block (`knee.size`) with its top face level, since
  * the lamp rides it; an alloy tibia from the knee `tibia.reach` further
