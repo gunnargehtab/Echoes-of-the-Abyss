@@ -80,7 +80,9 @@
  * **And every `CLAUDE.md` stays under 200 lines, since #899**, and every
  * repo-authored skill's `description` within 60 words, since #1186 — the only
  * prose here a session loads without asking. `lib/length.mjs` holds both
- * ceilings and the reason for each.
+ * ceilings and the reason for each. **Every agent under `.claude/agents/` is
+ * pinned to a model that exists**, since a session's critic named one that
+ * did not; `lib/agents.mjs` says what that cost.
  *
  *   node tools/claude-docs/check.mjs [--list]
  */
@@ -97,6 +99,7 @@ import {
   overlongClaudeFiles,
   overlongSkillDescriptions,
 } from './lib/length.mjs';
+import { unknownAgentModels } from './lib/agents.mjs';
 import { makeResolver, unresolvedPaths, unusedAllowances } from './lib/paths.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -439,6 +442,21 @@ if (wordy.length > 0) {
 process.stdout.write(
   `skill descriptions: all within ${SKILL_DESCRIPTION_WORD_LIMIT} words (vendored copies excepted)\n`
 );
+
+// A pin no one can spawn fails at the end of a round, not here; lib/agents.mjs
+// says what that cost.
+const badModels = unknownAgentModels(documents);
+if (badModels.length > 0) {
+  process.stderr.write(
+    `Agent(s) pinned to a model Claude Code cannot spawn:\n${badModels
+      .map(({ file, model }) => `  ${file}: ${model ?? 'no frontmatter'}`)
+      .join('\n')}\n` +
+      'Use an alias (opus, sonnet, haiku, fable, inherit) or a full claude-<family>-<version> id.\n'
+  );
+  process.exit(1);
+}
+
+process.stdout.write('agent models: all spawnable\n');
 
 // Two lint runs, two configs: .claude/'s turns MD018 off for the register those
 // files use, and the root three neither need that nor should get it.

@@ -131,12 +131,12 @@ tools/claude-docs  markdownlint, a relative-link check, and a path check over
                    backticked span under packages/, tools/, docs/, .claude/ or
                    .github/ must resolve against git or be the one declared
                    build output, a glob must match something, and an exemption
-                   nothing names any more fails —
-                   which is what a link checker cannot see, since prose names a
-                   file far more often than it links one. lib/length.mjs holds
-                   every CLAUDE.md under 200 lines (#899) and every authored
-                   skill description within 60 words (#1186), since a session
-                   loads each one unasked. Configs are
+                   nothing names any more fails — what a link checker cannot
+                   see, since prose names a file more often than it links one.
+                   lib/length.mjs holds every CLAUDE.md under 200 lines (#899)
+                   and every authored skill description within 60 words (#1186),
+                   since a session loads each one unasked; lib/agents.mjs fails
+                   an agent pinned to a model no one can spawn. Configs are
                    .claude/.markdownlint.json, which extends the root one and
                    turns MD018 off because those files open paragraphs with
                    issue numbers — the root three neither need that nor get it —
