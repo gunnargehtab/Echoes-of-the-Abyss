@@ -66,10 +66,11 @@
  *   the blade at x −6, 9 and 23 — one abaft the after pair, one between
  *   the pairs, one ahead of the forward pair — so the bays read as held
  *   between frames. Each passes through the spine's base at the crown,
- *   hidden in it, and the two amidships pass through the keel's sunk top
- *   under the belly, hidden in that: the keel runs x −34 to 20 and both
- *   hoops' lower runs cross it inside its width. Nothing else crosses a
- *   hoop (the pods end 1.7 m short of the after one).
+ *   hidden in it, and the two amidships land on the keel under the belly:
+ *   the keel runs x −34 to 20, both hoops' lower runs cross its sunk top
+ *   inside its width, and 0.19 m of each shows on the keel's flank where
+ *   the belly falls away. Nothing else crosses a hoop (the pods end 0.65 m
+ *   short of the after one).
  * - **The listening dome** (`listeningDome`) is a crystal cut stone on the
  *   crown's flat at x 30: a dome of 3.4 m pressed 0.9, six facets round
  *   and two down, sunk 0.6 and drawn past its equator so its skirt is
@@ -137,8 +138,8 @@
  *
  * Contacts (`node tools/hull-models/contacts.mjs verger-hadron`): 53 pairs,
  * every one a mount — each part on the body it is seated in or rooted
- * under; the ribs through the spine's base, the inlay inside it and the
- * keel's sunk top, all hidden in the part they cross; each door's edge
+ * under; the ribs through the spine's base and the inlay inside it, hidden
+ * in the part they cross, and landing on the keel's sunk top; each door's edge
  * inside its rim's tube; the hub, the vanes and the duct's forward face on
  * the body's tail; the boss on the dome's pole. No lamp is hidden and none
  * floats (`exportGlb`, no warning).

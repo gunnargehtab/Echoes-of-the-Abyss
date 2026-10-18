@@ -1407,9 +1407,9 @@ export function pressureRibs(root, alloy, { stations, tube = 0.35, lift = 0.1, f
 /**
  * Ballast pods: a mirrored pair of four-facet spars on their own `profile`
  * (`spar`, laid `flat`), `ballast_pod_s` and `_p`, at `[y, ±z]` — the
- * Verger's "ballast tanks flanking a heavy keel", carried low on the
- * flanks under the wing roots where the conn view sees them rather than
- * under the belly where it cannot, and faceted as every Order spar is.
+ * Verger's "ballast tanks flanking a heavy keel", carried under the belly
+ * either side of the keel as the block has them — where no game view sees
+ * them, as it sees no Directorate tank — and faceted as every Order spar is.
  */
 export function ballastPods(root, mat, { profile, y, z, flat = [1, 1] }) {
   bothSides((side, sgn) =>
