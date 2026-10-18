@@ -671,6 +671,12 @@ export class PerspectiveView {
    */
   private groundLeaving = false;
   /**
+   * Called in the frame a return's ground gives way, before that frame is
+   * drawn: the board cuts a reduced-motion return there, so the swap and the
+   * cut are one change (§7.6 step 4).
+   */
+  onGroundGone: (() => void) | null = null;
+  /**
    * The roofed passages and the stone over each (#1105), rebuilt with the
    * dressing. `base` is each roof's stone in linear light before the veil,
    * so a veil pass multiplies it rather than compounding on its own output.
@@ -1337,6 +1343,11 @@ export class PerspectiveView {
    */
   releaseGround(): void {
     if (this.terrain !== null) this.groundLeaving = true;
+  }
+
+  /** Whether a return's ground is still drawn, waiting on its baseline (`releaseGround`). */
+  get leavingGround(): boolean {
+    return this.groundLeaving && this.terrainMesh !== null;
   }
 
   /** Whether §7.4's ramp has reached its target, or there is no border to ramp. */
@@ -2672,6 +2683,7 @@ export class PerspectiveView {
       (residency.get(home.id) !== undefined || residency.hasFailed(home.id))
     ) {
       this.clearTerrain();
+      this.onGroundGone?.();
       this.syncDetail();
       return;
     }

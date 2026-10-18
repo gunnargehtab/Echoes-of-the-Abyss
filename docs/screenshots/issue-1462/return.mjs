@@ -2,7 +2,8 @@
 // Board -> briefing -> travel -> join; the camera moved off home; Esc, Return to
 // port, Abandon the water; then frames through the ramp-out, the travel back and
 // the board, each with the probe's world reading and the camera frame.
-// HIDE_BOARD=1 hides the board's glass after the exit, so the world is seen.
+// HIDE_BOARD=1 hides the board's glass after the exit, so the world is seen;
+// REDUCED=1 turns reduced motion on before it.
 // Run on the GPU: drive.mjs --headed --channel chrome, minus its title steps.
 export default async ({ page, shot }) => {
   const read = async (name) => {
@@ -29,6 +30,13 @@ export default async ({ page, shot }) => {
   await page.waitForTimeout(2500);
   await shot('in-match');
   await read('in-match');
+  if (process.env.REDUCED === '1') {
+    await page.evaluate(async () => {
+      const store = await import('/src/settings/store.ts');
+      store.saveSettings({ ...store.loadSettings(), reducedMotion: true });
+    });
+    await page.waitForTimeout(500);
+  }
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: /Return to port/ }).click();
   await page.getByRole('button', { name: /Abandon the water/ }).click();

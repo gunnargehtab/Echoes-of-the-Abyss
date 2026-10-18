@@ -23,7 +23,7 @@
 
 import { PROLOGUE_SORROWGATE_HEADER, worldRegionForMission } from '@echoes/shared';
 import type { WebGLRenderer } from 'three';
-import { PerspectiveView, type CameraFrame } from './PerspectiveView.ts';
+import { PerspectiveView } from './PerspectiveView.ts';
 import { lookForMission, type WorldLook } from './tutorialLook.ts';
 import type { createWaterEnvironment } from './modelLighting.ts';
 import { boardFrame } from './worldTravel.ts';
@@ -45,11 +45,13 @@ export class WorldViewHost {
    */
   private returning = false;
   /**
-   * The board's claim on a return it took over, until the camera stands on
-   * the board's frame: a board let go before then keeps the return for the
-   * next one (`release`).
+   * The board's claim on a return it took over, until its travel arrives
+   * (`endReturn`): a board let go before then keeps the return for a board
+   * that takes the view straight back (`release`).
    */
   private returnClaim: symbol | null = null;
+  /** A mid-return let-go waiting a microtask for a board to take the view back. */
+  private letGo: symbol | null = null;
 
   /** Whether `missionId` is drawn in the persistent world. */
   isWorldMission(missionId: string | undefined): boolean {
@@ -78,6 +80,7 @@ export class WorldViewHost {
       this.view?.clearTerrain();
     }
     this.returnClaim = null;
+    this.letGo = null;
     return this.lend(missionId, host, devices, false);
   }
 
@@ -128,6 +131,7 @@ export class WorldViewHost {
   showBoard(host: HTMLElement, devices: WorldViewDevices = {}): symbol | null {
     const returning = this.returning;
     this.returning = false;
+    this.letGo = null;
     const lent = this.lend(PROLOGUE_SORROWGATE_HEADER.id, host, devices, returning);
     if (lent === null) return null;
     if (returning) this.returnClaim = lent.claim;
@@ -152,33 +156,46 @@ export class WorldViewHost {
    * `showBoard` picks both up mid-way and travels back from the frame the
    * session was left on.
    *
-   * A board let go before its return has reached the board's frame keeps the
-   * return the same way, and the next board resumes it from where the camera
-   * stands. Development's StrictMode mounts the board, lets it go and mounts
-   * it again at once, and a plain release there would cut the return to the
-   * board's frame; a player leaving the board mid-return draws nothing, so
-   * the ground kept meanwhile is never seen.
+   * A board let go before its return has arrived keeps the return for one
+   * microtask, for a board that takes the view straight back: development's
+   * StrictMode mounts the board, lets it go and mounts it again within one
+   * commit, and a plain release there would cut the return to the board's
+   * frame. A board opened any later — the record's Back, say — opens at the
+   * board's frame, as §7.6 says, with the ground and the ramp landed.
    */
   release(claim: symbol, how: 'leave' | 'return' = 'leave'): void {
     if (this.holder !== claim || this.view === null) return;
     this.holder = null;
-    const midReturn =
-      claim === this.returnClaim &&
-      !sameFrame(
-        this.view.frame,
-        boardFrame(worldRegionForMission(PROLOGUE_SORROWGATE_HEADER.id)!)
-      );
+    const midReturn = claim === this.returnClaim;
     this.returnClaim = null;
     this.view.resetForNewMatch();
     if (how === 'return' || midReturn) {
       this.view.releaseGround();
       this.view.detach(false);
       this.returning = true;
+      if (how === 'return') return;
+      const letGo = Symbol('return-let-go');
+      this.letGo = letGo;
+      queueMicrotask(() => {
+        if (this.letGo !== letGo) return;
+        this.letGo = null;
+        this.returning = false;
+        this.view?.clearTerrain();
+        this.view?.detach();
+      });
       return;
     }
     this.returning = false;
     this.view.clearTerrain();
     this.view.detach();
+  }
+
+  /**
+   * The board's travel back has arrived: the return is over, and the board
+   * let go from here on lets go as any other.
+   */
+  endReturn(claim: symbol): void {
+    if (claim === this.returnClaim) this.returnClaim = null;
   }
 
   /**
@@ -192,23 +209,13 @@ export class WorldViewHost {
     this.holder = null;
     this.returning = false;
     this.returnClaim = null;
+    this.letGo = null;
   }
 
   /** The view itself, for the headless tests' identity checks. Null when none exists. */
   get current(): PerspectiveView | null {
     return this.view;
   }
-}
-
-/** Whether two frames are one camera, to a metre and a hundredth of a degree. */
-function sameFrame(a: CameraFrame, b: CameraFrame): boolean {
-  return (
-    Math.abs(a.xM - b.xM) < 1 &&
-    Math.abs(a.yM - b.yM) < 1 &&
-    Math.abs(a.distanceM - b.distanceM) < 1 &&
-    Math.abs(a.yawDeg - b.yawDeg) < 0.01 &&
-    Math.abs(a.pitchDeg - b.pitchDeg) < 0.01
-  );
 }
 
 /** The page's one world view. */
