@@ -522,7 +522,13 @@ describe('the overview in the pilot view (#1459)', () => {
 describe("another region's detail, where no session holds it (§7.5)", () => {
   type Residency = {
     residency: {
-      counts: { requests: number; admitted: number; released: number; cancelled: number };
+      counts: {
+        requests: number;
+        admitted: number;
+        released: number;
+        cancelled: number;
+        failed: number;
+      };
       drawn: () => string[];
       residentIds: () => ReadonlySet<string>;
       get: (id: string) => { mesh: Mesh } | undefined;

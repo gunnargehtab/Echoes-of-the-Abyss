@@ -3893,6 +3893,10 @@ export class PerspectiveView {
           : {
               borderStrength: Number(this.borderStrength.toFixed(3)),
               overviewDrawn: this.overview?.mesh.visible === true,
+              // A session's ground, and whether a return is letting it go (§7.6 step 4).
+              sessionGround: this.terrainMesh !== null,
+              groundLeaving: this.groundLeaving,
+              frame: this.frame,
               // §7.5's other regions: drawn, held, and asked for.
               detailDrawn: this.residency?.drawn() ?? [],
               detailResident: [...(this.residency?.residentIds() ?? [])],
