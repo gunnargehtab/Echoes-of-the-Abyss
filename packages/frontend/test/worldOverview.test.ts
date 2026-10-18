@@ -301,6 +301,13 @@ type Internals = {
   camera: Camera;
 };
 const internals = (view: PerspectiveView) => view as unknown as Internals;
+/** The view's camera hook (`window.__perspectiveCamera`), as a drive aims it. */
+const aimCamera = (x: number, z: number, d: number, aim: { yawDeg: number; pitchDeg: number }) =>
+  (
+    globalThis as unknown as {
+      window: { __perspectiveCamera: (x: number, z: number, d: number, aim: object) => void };
+    }
+  ).window.__perspectiveCamera(x, z, d, aim);
 
 afterEach(() => {
   for (const view of views.splice(0)) view.destroy();
@@ -365,19 +372,7 @@ describe('the overview in the pilot view (#1459)', () => {
 
   it('answers a projection on its own ground, and refuses a click there', async () => {
     const { view } = await mountPilot();
-    const camera = (
-      globalThis as unknown as {
-        window: {
-          __perspectiveCamera: (
-            x: number,
-            z: number,
-            d: number,
-            aim: { yawDeg: number; pitchDeg: number }
-          ) => void;
-        };
-      }
-    ).window.__perspectiveCamera;
-    camera(2_500, 3_990, 4_000, { yawDeg: 180, pitchDeg: 25 });
+    aimCamera(2_500, 3_990, 4_000, { yawDeg: 180, pitchDeg: 25 });
     pumpAnimationFrames();
     // 2.5 km south of the detail's south edge, in the mission's metres.
     const at = { x: 2_500, y: 9_000 };
@@ -400,6 +395,35 @@ describe('the overview in the pilot view (#1459)', () => {
       `back where it was projected from: ${hit.point.x}, ${hit.point.z}`
     );
     assert.equal(view.refusesPick(screen.x, screen.y), true, 'the exterior takes no orders');
+  });
+
+  it('refuses a click over the overview only while it is drawn', async () => {
+    const { view } = await mountPilot();
+    // The first state, the ramp cut straight to full: the overview is hidden.
+    view.setReducedMotion(true);
+    view.applySnapshot(cannedSnapshot());
+    pumpAnimationFrames();
+    // An orbited-out eye far south of the detail, low, on the mission's middle.
+    aimCamera(2_500, 2_000, 12_000, { yawDeg: 0, pitchDeg: 12 });
+    pumpAnimationFrames();
+    const { camera, terrainMesh, overview } = internals(view);
+    const screen = view.projectPoint(2_500, 2_000, null);
+    const ray = new Raycaster();
+    ray.setFromCamera(new Vector2((screen.x / 1280) * 2 - 1, -((screen.y / 720) * 2 - 1)), camera);
+    const ground = ray.intersectObject(terrainMesh!, false)[0]!.point;
+    const eye = camera.position;
+    assert.ok(eye.z > 10_000, `the eye stands past the detail: z ${eye.z}`);
+    // Flatten the overview into a sheet the ray crosses at z 10,000 m, past the
+    // detail's south edge (6,500 m), so it stands between the eye and the mission.
+    const s = (10_000 - ground.z) / (eye.z - ground.z);
+    // Not 0: the raycaster inverts the world matrix, and a singular one meets nothing.
+    overview!.mesh.scale.y = 1e-3;
+    overview!.mesh.position.y = ground.y + s * (eye.y - ground.y);
+    overview!.mesh.updateMatrixWorld();
+    assert.equal(overview!.mesh.visible, false, 'hidden at full strength');
+    assert.equal(view.refusesPick(screen.x, screen.y), false, 'a hidden sheet refuses nothing');
+    overview!.mesh.visible = true;
+    assert.equal(view.refusesPick(screen.x, screen.y), true, 'a drawn one stands in front');
   });
 
   it("leaves the overview alone under a ground delta, and patches the apron's edge in place", async () => {

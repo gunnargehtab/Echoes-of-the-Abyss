@@ -267,7 +267,7 @@ A mission starts when its room is joined, so a camera flight after joining would
 
 ### 7.8 The calls this section took
 
-The owner's calls: six on #1455, six on #1461, five on #1457 and three on #1459. Each was written with its options; the one taken is named.
+The owner's calls: six on #1455, six on #1461, five on #1457 and four on #1459. Each was written with its options; the one taken is named.
 
 **Anchors: Sorrowgate only (taken).** The alternatives were to pin every named place now from §1–§4's distances, or to scale Plate VII's coordinates. Scaling the plate would turn an illustration's compressions into geography, since its depth rail gives the shallows room. Pinning all of them now would decide ground no renderer has drawn yet. So only the pilot is pinned, and #1457 places the rest inside the region rectangles.
 
@@ -291,7 +291,7 @@ The owner's calls: six on #1455, six on #1461, five on #1457 and three on #1459.
 
 **The 0.8 s ramp, built now (taken).** It runs in on a session's first state and out when the session resets; deferring it to #1462, which owns the return, was the alternative.
 
-**The apron's last 500 m always fades (taken).** Below full strength the ramp would otherwise draw the apron's straight far edge against the backdrop. Ramping only the snow would have reversed the ramp for ground; accepting the edge for a second was the third option. It lasted until #1459 drew the overview past that edge.
+**The apron's last 500 m always fades (taken).** Below full strength the ramp would otherwise draw the apron's straight far edge against the backdrop. Ramping only the snow would have reversed the ramp for ground; accepting the edge for a second was the third option. Since #1459 it holds until the overview's skin lands, when the overview is drawn past that edge.
 
 **One scar, on the First Chord's line (taken).** One deep runs from the Furrow's sill to the Mouth, so the Chord points down the line the Ninth follows (§3, §4), and the Furrow opens onto deep water that leads to Directorate country. Sufficiency then stands about 5 km east of where Plate VII draws it. Following the plate's west–east order would have aimed the Chord across trench country instead of down the Ninth. Painting latitude bands and the named grounds only would have left the Furrow's sill opening onto nothing and the road to the Rim undrawn.
 
@@ -305,9 +305,11 @@ The owner's calls: six on #1455, six on #1461, five on #1457 and three on #1459.
 
 **The overview at two vertices a cell (taken).** A 500 m step on the authored floor costs about 29,000 triangles for the whole atlas. One vertex a cell, about 7,000, draws straight ramps between cell centres. Four, about 115,000, spends more than a quarter of gate 6 on ground no mission frame shows at full fade.
 
-**The seam band blended (taken).** The detail's last 500 m ease into the overview's heights and colour and equal them on the seam. Pinning only the seam's vertices would leave a ledge wherever two overview cells differ, up to about 20 m of drawn height over 62 m.
+**The seam band blended (taken).** The detail's last 500 m ease into the overview's heights and colour and equal them on the seam. Pinning only the seam's vertices would leave a step one vertex inside it wherever the surround's ground and the overview's differ: up to about 120 m of drawn height, about 540 m of depth, on Sorrowgate's south edge.
 
 **Overview props with the board (taken).** Nothing past *W* shows in a mission at full fade, and the board's camera is [#1462](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1462)'s, so the sparse props land there. Placing them now, or in the surround as well, would spend draw calls on frames that show none of them.
+
+**The feather kept until the overview lands (taken).** The overview's skin is baked between frames, so for its first moments, or for good if the bake fails, nothing is drawn past the apron's edge. Until the skin lands the apron's last 500 m still fade at every strength, as on #1461. Accepting the straight edge for that window would reverse #1461's call; holding the 0.8 s ramp until the skin lands would break §7.4's ramp and leave a failed bake undefined.
 
 ---
 

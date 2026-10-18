@@ -293,13 +293,26 @@ const borderVertex = (shader: { vertexShader: string }) => {
  * the ground has become exactly the water behind it, at any pitch (#1023's
  * ramp, composed as the fog composes it). The apron and the overview run this
  * one chunk off one set of uniforms: one boundary term, wherever it is drawn.
+ *
+ * `feathered` adds #1461's feather, the apron's alone: its last 500 m go to
+ * the backdrop at every strength until the overview's skin lands (`uSeamOn`),
+ * since until then nothing is drawn past its straight far edge, and a fade
+ * part-way in would show where it ends (the owner's call on #1461, kept for
+ * that window on #1459).
  */
-const borderFadeFragment = (backdropSpanM: number) => `#include <fog_fragment>
+const borderFadeFragment = (backdropSpanM: number, feathered = false) => `#include <fog_fragment>
         #ifdef USE_FOG
           vec3 borderRay = normalize( vBorderWorld - cameraPosition );
           vec3 borderDark = echoesWaterColor( uFocusDepthM - borderRay.y * ${glslFloat(backdropSpanM)} );
           borderDark = linearToOutputTexel( vec4( borderDark, 1.0 ) ).rgb;
-          float borderFade = mix( 1.0, echoesExteriorFade( vBorderWorld.xz ), uBorderStrength );
+          float borderFade = mix( 1.0, echoesExteriorFade( vBorderWorld.xz ), uBorderStrength );${
+            feathered
+              ? `
+          float borderFeather =
+            1.0 - smoothstep( ${glslFloat(WORLD.FADE_M)}, ${glslFloat(WORLD.DETAIL_SURROUND_M)}, echoesExteriorDistance( vBorderWorld.xz ) );
+          borderFade *= mix( borderFeather, 1.0, uSeamOn );`
+              : ''
+          }
           gl_FragColor.rgb = mix( borderDark, gl_FragColor.rgb, borderFade );
         #endif`;
 
@@ -316,10 +329,9 @@ const borderFadeFragment = (backdropSpanM: number) => `#include <fog_fragment>
  * - **The seam band.** Over the apron's last 500 m its colour, hooks and all,
  *   goes to the overview's skin at the same point by the vertex blend's
  *   weight, under the same veil, so on the seam the two are one colour; not
- *   before the skin has landed, when the overview is not drawn either. The
- *   overview's far edge is past the fade, so the apron no longer feathers its
- *   own (#1461's interim, until the overview surrounded it).
- * - **The fade**, `borderFadeFragment`.
+ *   before the skin has landed, when the overview is not drawn either.
+ * - **The fade**, `borderFadeFragment`, feathered until the skin lands and the
+ *   overview is drawn past the apron's edge.
  *
  * Chain `installGroundSurface` after this, as the mission mesh chains it after
  * the ink; its own key wraps this one.
@@ -373,9 +385,9 @@ export function installApronShading(
         outgoingLight = mix( outgoingLight, seamOverview, echoesSeamWeight( vBorderWorld.xz ) * uSeamOn );
         #include <opaque_fragment>`
       )
-      .replace('#include <fog_fragment>', borderFadeFragment(backdropSpanM));
+      .replace('#include <fog_fragment>', borderFadeFragment(backdropSpanM, true));
   };
-  material.customProgramCacheKey = () => 'echoes-world-border-4';
+  material.customProgramCacheKey = () => 'echoes-world-border-5';
   material.needsUpdate = true;
 }
 

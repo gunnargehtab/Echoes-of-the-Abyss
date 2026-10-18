@@ -211,7 +211,7 @@ describe('the pilot view at its border', () => {
     // The fade's program, with the tutorial's ground surface chained after it.
     assert.equal(
       (mesh.material as MeshBasicMaterial).customProgramCacheKey(),
-      'echoes-world-border-4:sorrowgate-ground-1'
+      'echoes-world-border-5:sorrowgate-ground-1'
     );
   });
 
@@ -351,18 +351,25 @@ describe('the pilot view at its border', () => {
 
   it("fades to the backdrop along each ray, from the backdrop's own anchor", async () => {
     const { view } = mountView(true);
-    await overviewSkin();
     const internals = view as unknown as {
       apron: { mesh: Mesh };
+      overview: { mesh: Mesh };
       backdrop: { focusDepthUniform: { value: number } };
     };
-    const material = internals.apron.mesh.material as MeshBasicMaterial;
-    const shader = {
-      uniforms: {} as Record<string, unknown>,
-      vertexShader: ShaderLib.basic.vertexShader,
-      fragmentShader: ShaderLib.basic.fragmentShader,
+    const compile = (material: MeshBasicMaterial) => {
+      const shader = {
+        uniforms: {} as Record<string, unknown>,
+        vertexShader: ShaderLib.basic.vertexShader,
+        fragmentShader: ShaderLib.basic.fragmentShader,
+      };
+      material.onBeforeCompile(shader as never, undefined as never);
+      return shader;
     };
-    material.onBeforeCompile(shader as never, undefined as never);
+    const shader = compile(internals.apron.mesh.material as MeshBasicMaterial);
+    const seamOn = shader.uniforms.uSeamOn as { value: number };
+    // The skin lands a task after the view mounts, never inside it.
+    assert.equal(seamOn.value, 0, 'before the skin has landed');
+    await overviewSkin();
     assert.equal(
       shader.uniforms.uFocusDepthM,
       internals.backdrop.focusDepthUniform,
@@ -375,20 +382,23 @@ describe('the pilot view at its border', () => {
     // The surface hook asks the apron's own cell reader, offset into the padded grid.
     assert.match(shader.fragmentShader, /surveyCellAt\(vSurveyXZ\)/);
     assert.match(shader.fragmentShader, /\+ ivec2\( uApronPad \)/);
-    // The overview surrounds it now (#1459), so its last 500 m no longer
-    // feather to the backdrop on their own: they ease into the overview's skin.
-    assert.doesNotMatch(shader.fragmentShader, /borderFeather/);
+    // Until the overview's skin lands nothing is drawn past the apron, so its
+    // last 500 m go to the backdrop whatever the ramp is doing (#1461); the
+    // skin's landing takes the feather off, and the overview never has one.
+    assert.match(shader.fragmentShader, /smoothstep\( 2000\.0, 2500\.0, echoesExteriorDistance/);
+    assert.match(shader.fragmentShader, /borderFade \*= mix\( borderFeather, 1\.0, uSeamOn \);/);
+    const overviewShader = compile(internals.overview.mesh.material as MeshBasicMaterial);
+    assert.doesNotMatch(overviewShader.fragmentShader, /borderFeather/);
     assert.match(
       shader.fragmentShader,
       /vec3 seamOverview = texture2D\( uOverviewMap, seamUV \)\.rgb \* diffuse;\s*outgoingLight = mix\( outgoingLight, seamOverview, echoesSeamWeight\( vBorderWorld\.xz \) \* uSeamOn \);\s*#include <opaque_fragment>/
     );
-    const overview = (view as unknown as { overview: { mesh: Mesh } }).overview.mesh;
     assert.equal(
       (shader.uniforms.uOverviewMap as { value: unknown }).value,
-      (overview.material as MeshBasicMaterial).map,
+      (internals.overview.mesh.material as MeshBasicMaterial).map,
       "the overview's own skin, so the two are one colour on the seam"
     );
-    assert.equal((shader.uniforms.uSeamOn as { value: number }).value, 1, 'once it has landed');
+    assert.equal(seamOn.value, 1, 'once it has landed');
   });
 
   it('ramps in over real frames, and lands at detach', () => {

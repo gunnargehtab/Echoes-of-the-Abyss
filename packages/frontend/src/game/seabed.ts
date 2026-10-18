@@ -713,10 +713,11 @@ export function bakeSeabed(
 
 /**
  * TUNABLE — milliseconds of shading a sliced bake spends before it yields:
- * half a 60 Hz frame, so it never holds one, whatever a slice costs on the
- * machine. A yield after every slice tied the bake to the frame rate instead,
- * since each yield waits out a frame: 360 of them, 450 ms each on a software
- * rasteriser, kept the overview's skin off the screen for minutes (#1459).
+ * half a 60 Hz frame. It holds a frame for at most that and one slice, and
+ * how many slices fit adapts to the machine. A yield after every slice tied
+ * the bake to the frame rate instead, since each yield waits out a frame: 360
+ * of them, 450 ms each on a software rasteriser, kept the overview's skin off
+ * the screen for minutes (#1459).
  */
 export const SLICED_BAKE_BUDGET_MS = 8;
 

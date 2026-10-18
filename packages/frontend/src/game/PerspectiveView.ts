@@ -2370,7 +2370,10 @@ export class PerspectiveView {
    * from the same uniforms. Unlit, like the mission's ground. Shown once its
    * skin has landed (`overviewSkin` bakes it between frames) and only while
    * the fade is below full (`syncWater`): all of it lies past W, so at full
-   * strength every fragment would be the backdrop it covers.
+   * strength every fragment would be the backdrop's colour, and where an
+   * overview rise stood between an orbited-out eye and the mission it would
+   * paint that colour over ground in play. Hidden, it takes no clicks either
+   * (`refusesPick`).
    */
   private ensureOverview(): void {
     const region = this.worldRegion;
@@ -2548,7 +2551,9 @@ export class PerspectiveView {
     const mission = this.groundHit();
     const exterior: Mesh[] = [];
     if (this.apron?.mesh != null) exterior.push(this.apron.mesh);
-    if (this.overview !== null) exterior.push(this.overview.mesh);
+    // Only while it is drawn: the raycaster tests hidden meshes too, and a
+    // hidden overview rise would refuse a click on mission ground in view.
+    if (this.overview?.mesh.visible === true) exterior.push(this.overview.mesh);
     const outside = RAY_TMP.intersectObjects(exterior, false)[0];
     if (mission !== undefined) return outside !== undefined && outside.distance < mission.distance;
     if (outside !== undefined) return true;
