@@ -149,7 +149,7 @@
  * the fore shoulder. Both passed every gate: `contacts.mjs` lists a part
  * inside a closed one as a pair, the same as one seated on it. The seam
  * is two bars now, `flank_seam_s0` from x -56 to -12 and `flank_seam_s1`
- * from 24 to 56 (`flankPlates` `seam.gaps`), and s0 starts at the
+ * from 24 to 56 (`flankPlates` `seam.gaps`), and `flank_plate_s0` starts at the
  * shoulder's foot, x 24, 26 m long; the rivet rank keeps its pitch from
  * the whole 112 m run, so no rivet moves. 143 parts and 2,732 triangles
  * become 145 and 2,756.
