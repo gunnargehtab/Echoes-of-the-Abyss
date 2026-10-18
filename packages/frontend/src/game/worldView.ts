@@ -62,6 +62,13 @@ export class WorldViewHost {
   ): { view: PerspectiveView; claim: symbol } | null {
     const look = lookForMission(missionId);
     if (this.view !== null && this.look !== look) this.dispose();
+    // A takeover: the session still holding the view will never let it go
+    // (its release is a no-op once the claim moves), so its ground goes now,
+    // as a release would take it (#1460).
+    if (this.view !== null && this.holder !== null) {
+      this.view.resetForNewMatch();
+      this.view.clearTerrain();
+    }
     if (this.view === null) {
       // Placed in the world, so its border is drawn and faded (#1461).
       this.view = new PerspectiveView(look, worldRegionForMission(missionId) ?? null);
@@ -85,16 +92,16 @@ export class WorldViewHost {
    * longer holds the view — a teardown landing after a newer session took it
    * over — releases nothing.
    *
-   * The ground stays: the last session's terrain, any span its mission
-   * dropped included, is what the view holds until the next session's room
-   * sends its own, which it does on join. That is this player's own earlier
-   * map data, never another's; separating the public baseline from a
-   * session's live ground is #1460's regional overlay.
+   * The session's ground goes too (#1460, docs/world-map.md §7.3): it was the
+   * session's overlay on the region, never the atlas, so a span its mission
+   * dropped is not left standing in the world after the run. The region is
+   * drawn from its public baseline again until the next room sends its own.
    */
   release(claim: symbol): void {
     if (this.holder !== claim || this.view === null) return;
     this.holder = null;
     this.view.resetForNewMatch();
+    this.view.clearTerrain();
     this.view.detach();
   }
 

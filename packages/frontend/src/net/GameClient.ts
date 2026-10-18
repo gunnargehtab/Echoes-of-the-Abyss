@@ -36,7 +36,7 @@ import {
   type GroundDeltaPayload,
   type MapPayload,
   type MissionLine,
-  type TerrainPayload,
+  type TerrainMessage,
 } from '@echoes/shared';
 import { toListings } from './rooms.ts';
 
@@ -55,6 +55,7 @@ export type {
   GroundDeltaPayload,
   MapPayload,
   MissionLine,
+  TerrainMessage,
   TerrainPayload,
 } from '@echoes/shared';
 
@@ -123,7 +124,8 @@ interface LobbyCallbacks {
 export type LobbyCallbacksFactory = (room: MatchRoom) => LobbyCallbacks;
 
 export interface GameClientHandlers {
-  onTerrain(terrain: TerrainPayload): void;
+  /** The ground, whole, with its revision and, for a placed mission, its region. */
+  onTerrain(terrain: TerrainMessage): void;
   /** Ground the match changed under the client's feet (#197). */
   onGround(cells: GroundDeltaPayload['cells']): void;
   onMap(map: MapPayload): void;

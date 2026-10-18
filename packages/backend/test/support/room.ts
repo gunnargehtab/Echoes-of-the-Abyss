@@ -94,17 +94,20 @@ export const CREATED = RoomInternalState.CREATED;
 export const DISPOSING = RoomInternalState.DISPOSING;
 
 /**
- * A booted room on the default map, with its simulation interval live.
+ * A booted room on the default map, with its simulation interval live, or on
+ * the map and mission `options` name, as a client's create would.
  *
  * The patch rate is switched off: it serialises state to clients this room has
  * none of, and leaving it on would put a second timer in the test alongside the
  * one actually under test.
  */
-export async function bootRoom(): Promise<MatchRoom> {
+export async function bootRoom(
+  options: Parameters<MatchRoom['onCreate']>[0] = {}
+): Promise<MatchRoom> {
   await prepareMatchMaker();
   const room = new MatchRoom();
   internals(room)._listing = stubListing(`test-room-${nextRoomId++}`);
-  await room.onCreate({});
+  await room.onCreate(options);
   // The matchmaker flips this once `onCreate` resolves, and `disconnect()`
   // refuses to run while a room still reads as CREATING. A room that never
   // left that state could not be ended by the hook under test.

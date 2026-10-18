@@ -47,10 +47,14 @@ import {
 } from '../src/game/worldOverview.ts';
 import type { TerrainPayload } from '../src/net/GameClient.ts';
 
-/** Sorrowgate's own ground, painted from the literal the server plays on. */
-function sorrowgate(): TerrainPayload {
+/**
+ * Sorrowgate's own ground, painted from the literal the server plays on, as
+ * its room sends it: naming its region (#1460).
+ */
+function sorrowgate(): TerrainPayload & { region: string } {
   const cells = paintGround(SORROWGATE_GROUND);
   return {
+    region: SORROWGATE_REGION.id,
     cols: cells.cols,
     rows: cells.rows,
     cellM: cells.cellM,

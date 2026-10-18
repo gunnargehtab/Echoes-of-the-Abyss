@@ -36,6 +36,7 @@ import {
   type MatchListingMetadata,
   encodeEcho,
   isValidClientMessage,
+  worldRegionForMission,
   CLIENT_MSG,
   SERVER_MSG,
   type EchoWire,
@@ -752,9 +753,17 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     // the ground as it *is* rather than as it was authored — which is what
     // makes a reconnection at 15:00 land on a map with the arch already down.
     // The revision it carries is that client's cursor into the change log.
+    //
+    // A placed mission's ground also says which world region it stands in
+    // (docs/world-map.md §7.1, #1460): the room names it, so the client never
+    // chooses where a room's ground goes. Keyed on the mission, as the client's
+    // look is, so Radicals on this same map names none; and omitted rather than
+    // sent empty, so every other room's terrain is what it always was.
+    const region = worldRegionForMission(this.mission?.id);
     this.sendTo(client, SERVER_MSG.terrain, {
       ...this.match.world.terrain.serialize(),
       revision: this.match.world.terrain.revision,
+      ...(region === undefined ? {} : { region: region.id }),
     });
     this.sendTo(client, SERVER_MSG.map, {
       id: this.map.id,
