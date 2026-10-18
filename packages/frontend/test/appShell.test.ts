@@ -235,6 +235,31 @@ describe('the shell: the world behind the board', () => {
     }
   });
 
+  it('returns to the board from a board launch, and to the title from the Tutorial door', async () => {
+    // §7.6 step 4: Return to port goes back where the mission was launched.
+    // On this runner the match has no WebGL, and its Return to port is the
+    // same exit the result's and the menu's are.
+    const view = await shell();
+    try {
+      await boardBriefing(view);
+      await click(view, 'Descend');
+      await until(view, () => inMatch(view), 'the join');
+      await click(view, 'Return to port');
+      assert.ok(view.allByClass('campaign-slot').length > 0, 'back on the board');
+      assert.ok(view.allByClass('app-over-world').length > 0, 'over the world');
+
+      await click(view, 'Back');
+      await click(view, 'Tutorial');
+      await click(view, 'Descend');
+      await until(view, () => inMatch(view), 'the join');
+      await click(view, 'Return to port');
+      assert.ok(view.shows('Campaign'), 'the title, as before');
+      assert.equal(view.allByClass('campaign-slot').length, 0);
+    } finally {
+      await view.unmount();
+    }
+  });
+
   it('draws the world behind the board and its briefing only', async () => {
     const view = await shell();
     try {

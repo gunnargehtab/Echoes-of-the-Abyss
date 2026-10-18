@@ -18,6 +18,12 @@
  * and assets are fetched (`prepareRegion`), and `onSettled` says both are done.
  * A travel the device cannot draw has arrived at once, so the launch is never
  * held waiting on a world that is not there.
+ *
+ * Mounted by a return from a board launch (§7.6 step 4), the board's target
+ * travels back from the frame the session left: `worldView.showBoard` keeps
+ * it, and the travel waits for the fade to ramp out first — and under reduced
+ * motion for the session's ground to give way to its baseline, so the cut and
+ * the swap land in one frame.
  */
 
 import { useEffect, useRef } from 'react';
@@ -102,13 +108,26 @@ export function WorldBackdrop({ target, skip = false, onSettled, devices }: Worl
       settledRef.current?.(false);
       return;
     }
+    const reduced = loadSettings().reducedMotion;
     const run: Run = {
-      travel: new Travel(view, planned.to, loadSettings().reducedMotion ? 0 : WORLD.TRAVEL_S),
+      travel: new Travel(view, planned.to, reduced ? 0 : WORLD.TRAVEL_S),
       travelled: false,
       prepared: false,
       announced: false,
     };
     runRef.current = run;
+    // Under reduced motion a return's cut waits for its baseline, and lands
+    // in the frame the session's ground gives way, before it is drawn: one
+    // change rather than a cut and then a swap (§7.6 step 4).
+    const holdForGround = reduced && target.kind === 'board' && view.leavingGround;
+    if (holdForGround) {
+      view.onGroundGone = () => {
+        if (runRef.current !== run || run.travelled) return;
+        run.travel.skip();
+        run.travelled = true;
+        announce(run);
+      };
+    }
     void planned.prepared.then(() => {
       run.prepared = true;
       announce(run);
@@ -118,6 +137,12 @@ export function WorldBackdrop({ target, skip = false, onSettled, devices }: Worl
     // the travel runs on the same clock whoever schedules the frame.
     const tick = () => {
       if (runRef.current !== run || run.travelled) return;
+      // A return's fade ramps out where the session left the camera before
+      // the camera moves (§7.6 step 4); the travel's clock starts after it.
+      if (!view.borderSettled || (holdForGround && view.leavingGround)) {
+        frame = requestAnimationFrame(tick);
+        return;
+      }
       if (run.travel.step(performance.now())) {
         run.travelled = true;
         announce(run);
@@ -128,6 +153,7 @@ export function WorldBackdrop({ target, skip = false, onSettled, devices }: Worl
     frame = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(frame);
+      if (holdForGround) view.onGroundGone = null;
       if (runRef.current === run) runRef.current = null;
     };
     // The target's identity is its key: a parent passing an equal object
@@ -146,6 +172,7 @@ export function WorldBackdrop({ target, skip = false, onSettled, devices }: Worl
   function announce(run: Run): void {
     if (run.announced || !run.travelled || !run.prepared || runRef.current !== run) return;
     run.announced = true;
+    if (target.kind === 'board' && claimRef.current !== null) worldView.endReturn(claimRef.current);
     settledRef.current?.(true);
   }
 

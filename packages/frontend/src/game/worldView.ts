@@ -39,6 +39,19 @@ export class WorldViewHost {
   private look: WorldLook | null = null;
   /** The session holding the view, so a late release from an earlier one is a no-op. */
   private holder: symbol | null = null;
+  /**
+   * A session went back to the board (`release(claim, 'return')`) and the
+   * board has not taken the view yet: it starts where the session left it.
+   */
+  private returning = false;
+  /**
+   * The board's claim on a return it took over, until its travel arrives
+   * (`endReturn`): a board let go before then keeps the return for a board
+   * that takes the view straight back (`release`).
+   */
+  private returnClaim: symbol | null = null;
+  /** A mid-return let-go waiting a microtask for a board to take the view back. */
+  private letGo: symbol | null = null;
 
   /** Whether `missionId` is drawn in the persistent world. */
   isWorldMission(missionId: string | undefined): boolean {
@@ -61,6 +74,22 @@ export class WorldViewHost {
     host: HTMLElement,
     devices: WorldViewDevices = {}
   ): { view: PerspectiveView; claim: symbol } | null {
+    // A session never inherits a return's ground: a new room sends its own.
+    if (this.returning) {
+      this.returning = false;
+      this.view?.clearTerrain();
+    }
+    this.returnClaim = null;
+    this.letGo = null;
+    return this.lend(missionId, host, devices, false);
+  }
+
+  private lend(
+    missionId: string | undefined,
+    host: HTMLElement,
+    devices: WorldViewDevices,
+    keepFrame: boolean
+  ): { view: PerspectiveView; claim: symbol } | null {
     const look = lookForMission(missionId);
     if (this.view !== null && this.look !== look) this.dispose();
     // A takeover: the session still holding the view will never let it go
@@ -81,8 +110,8 @@ export class WorldViewHost {
     }
     // Every session opens on the same frame a fresh view would: north, the
     // home pitch, the focus on the ground. The fit to the map follows when
-    // the session's ground arrives.
-    this.view.home();
+    // the session's ground arrives. A return keeps the frame it was left on.
+    if (!keepFrame) this.view.home();
     const claim = Symbol('world-view-session');
     this.holder = claim;
     return { view: this.view, claim };
@@ -94,11 +123,19 @@ export class WorldViewHost {
    * The board, the briefing it opens and a launch's travel all draw here, and
    * hand the view on with `release` or by a session's `acquire`. Null when the
    * device has no WebGL, and the board is drawn alone.
+   *
+   * After a return (§7.6 step 4) the camera is left where the session left
+   * it, the fade still ramping out and the session's ground still drawn
+   * (`PerspectiveView.releaseGround`): the board travels it back from there.
    */
   showBoard(host: HTMLElement, devices: WorldViewDevices = {}): symbol | null {
-    const lent = this.acquire(PROLOGUE_SORROWGATE_HEADER.id, host, devices);
+    const returning = this.returning;
+    this.returning = false;
+    this.letGo = null;
+    const lent = this.lend(PROLOGUE_SORROWGATE_HEADER.id, host, devices, returning);
     if (lent === null) return null;
-    lent.view.setFrame(boardFrame(worldRegionForMission(PROLOGUE_SORROWGATE_HEADER.id)!));
+    if (returning) this.returnClaim = lent.claim;
+    else lent.view.setFrame(boardFrame(worldRegionForMission(PROLOGUE_SORROWGATE_HEADER.id)!));
     lent.view.setActive(true);
     return lent.claim;
   }
@@ -112,13 +149,53 @@ export class WorldViewHost {
    * session's overlay on the region, never the atlas, so a span its mission
    * dropped is not left standing in the world after the run. The region is
    * drawn from its public baseline again until the next room sends its own.
+   *
+   * `'return'` is Return to port from a board launch (§7.6 step 4): the
+   * session's force and loop still go, but its ground stays until the
+   * baseline is built and the ramp-out is not landed, so the board's
+   * `showBoard` picks both up mid-way and travels back from the frame the
+   * session was left on.
+   *
+   * A board let go before its return has arrived keeps the return for one
+   * microtask, for a board that takes the view straight back: development's
+   * StrictMode mounts the board, lets it go and mounts it again within one
+   * commit, and a plain release there would cut the return to the board's
+   * frame. A board opened any later — the record's Back, say — opens at the
+   * board's frame, as §7.6 says, with the ground and the ramp landed.
    */
-  release(claim: symbol): void {
+  release(claim: symbol, how: 'leave' | 'return' = 'leave'): void {
     if (this.holder !== claim || this.view === null) return;
     this.holder = null;
+    const midReturn = claim === this.returnClaim;
+    this.returnClaim = null;
     this.view.resetForNewMatch();
+    if (how === 'return' || midReturn) {
+      this.view.releaseGround();
+      this.view.detach(false);
+      this.returning = true;
+      if (how === 'return') return;
+      const letGo = Symbol('return-let-go');
+      this.letGo = letGo;
+      queueMicrotask(() => {
+        if (this.letGo !== letGo) return;
+        this.letGo = null;
+        this.returning = false;
+        this.view?.clearTerrain();
+        this.view?.detach();
+      });
+      return;
+    }
+    this.returning = false;
     this.view.clearTerrain();
     this.view.detach();
+  }
+
+  /**
+   * The board's travel back has arrived: the return is over, and the board
+   * let go from here on lets go as any other.
+   */
+  endReturn(claim: symbol): void {
+    if (claim === this.returnClaim) this.returnClaim = null;
   }
 
   /**
@@ -130,6 +207,9 @@ export class WorldViewHost {
     this.view = null;
     this.look = null;
     this.holder = null;
+    this.returning = false;
+    this.returnClaim = null;
+    this.letGo = null;
   }
 
   /** The view itself, for the headless tests' identity checks. Null when none exists. */

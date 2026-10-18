@@ -151,6 +151,13 @@ export interface GameCanvasProps {
    */
   travelled?: boolean;
   /**
+   * Launched from the board, so Return to port goes back to it
+   * (docs/world-map.md §7.6 step 4): the borrowed world view is handed back
+   * with the session's ground and the fade's ramp-out still running, for the
+   * board to travel back from. A property of the mount, as `travelled` is.
+   */
+  returnsToBoard?: boolean;
+  /**
    * Leave the match and return to the shell. The teardown in the unmount
    * effect is the actual exit — disconnecting clears the reconnection token,
    * so the title screen does not offer to resume a seat left on purpose.
@@ -174,6 +181,7 @@ export function GameCanvas({
   create,
   resume,
   travelled = false,
+  returnsToBoard = false,
   onExit,
   onRecord,
   harness,
@@ -273,6 +281,8 @@ export function GameCanvas({
    * mark through the conn's camera.
    */
   const perspectiveRef = useRef<PerspectiveView | null>(null);
+  /** Set by Return to port on a board launch: the teardown hands the world back for a return. */
+  const returningRef = useRef(false);
   const perspectiveHostRef = useRef<HTMLDivElement>(null);
   /**
    * True when the GL surface could not be created. The conn view is the only
@@ -793,8 +803,9 @@ export function GameCanvas({
       rendererRef.current = null;
       // A borrowed world view goes back with the session's state taken off it;
       // a view built for this match goes with the match.
-      if (worldClaim !== null) worldView.release(worldClaim);
-      else perspectiveRef.current?.destroy();
+      if (worldClaim !== null) {
+        worldView.release(worldClaim, returningRef.current ? 'return' : 'leave');
+      } else perspectiveRef.current?.destroy();
       perspectiveRef.current = null;
       window.removeEventListener('pointerdown', unlock);
       window.removeEventListener('keydown', unlock);
@@ -808,6 +819,15 @@ export function GameCanvas({
     // because joining a named room and matchmaking into one are different
     // matches even when every other prop agrees.
   }, [playerName, mapId, missionId, roomId, create, resume]);
+
+  /**
+   * Return to port, from wherever it is offered. The record is a different
+   * door (`onRecord`) and leaves the world as any exit used to.
+   */
+  const exit = useCallback(() => {
+    returningRef.current = returnsToBoard;
+    onExit();
+  }, [returnsToBoard, onExit]);
 
   const focusOn = useCallback((x: number, y: number) => {
     rendererRef.current?.focusOn(x, y);
@@ -924,7 +944,7 @@ export function GameCanvas({
             result={missionOver}
             ready={selfReady}
             onAgain={setReady}
-            onExitToMenu={onExit}
+            onExitToMenu={exit}
             onRecord={onRecord}
           />
         )}
@@ -934,7 +954,7 @@ export function GameCanvas({
             players={lobby.players}
             sessionId={sessionId}
             onRematch={setReady}
-            onExitToMenu={onExit}
+            onExitToMenu={exit}
           />
         )}
       </div>
@@ -945,7 +965,7 @@ export function GameCanvas({
         <EscMenu
           ended={phase === MatchPhase.Ended}
           onResume={() => setMenuOpen(false)}
-          onExit={onExit}
+          onExit={exit}
         />
       )}
       {glFailed && (
@@ -955,7 +975,7 @@ export function GameCanvas({
             The conn view needs WebGL, and this browser or device refused a context. Enable hardware
             acceleration or try another browser.
           </p>
-          <button type="button" className="game-overlay-back" onClick={onExit}>
+          <button type="button" className="game-overlay-back" onClick={exit}>
             Return to port
           </button>
         </div>
@@ -990,7 +1010,7 @@ export function GameCanvas({
           )}
           {detail !== '' && <p className="game-overlay-detail">{detail}</p>}
           {(status === 'error' || status === 'closed') && (
-            <button type="button" className="game-overlay-back" onClick={onExit}>
+            <button type="button" className="game-overlay-back" onClick={exit}>
               Return to port
             </button>
           )}

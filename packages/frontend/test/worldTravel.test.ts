@@ -13,8 +13,10 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import { createElement } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import {
+  paintGround,
   PROLOGUE_SORROWGATE_HEADER,
   SEEDING_RADICALS_HEADER,
+  SORROWGATE_GROUND,
   SORROWGATE_REGION,
   WORLD,
   WORLD_REGIONS,
@@ -29,6 +31,7 @@ import {
   pumpAnimationFrames,
   type StubElement,
 } from './support/headless.ts';
+import { cannedSnapshot } from './support/cannedMatch.ts';
 import { saveSettings, loadSettings } from '../src/settings/store.ts';
 import { HOME_DOLLY_M, type CameraFrame } from '../src/game/PerspectiveView.ts';
 import { WorldBackdrop, type WorldBackdropProps } from '../src/game/WorldBackdrop.tsx';
@@ -233,6 +236,9 @@ async function frameAt(ms: number): Promise<void> {
 
 const PILOT = { kind: 'mission', missionId: PROLOGUE_SORROWGATE_HEADER.id } as const;
 
+/** Where a session was left before Return to port: turned, low, off home. */
+const LEFT: CameraFrame = { xM: 1_200, yM: 2_600, distanceM: 1_800, yawDeg: 40, pitchDeg: 40 };
+
 describe('the world behind the board (§7.6)', () => {
   beforeEach(() => {
     installStorage();
@@ -346,6 +352,228 @@ describe('the world behind the board (§7.6)', () => {
       await frameAt(1_001);
       await frameAt(3_502);
       sameFrame(worldView.current!.frame, boardFrame(SORROWGATE_REGION), 1e-6);
+    } finally {
+      await board.unmount();
+    }
+  });
+
+  it('takes a return where the session left it: the fade out, then the travel back (§7.6 step 4)', async () => {
+    // A session on the pilot, its fade all the way in, its camera wherever
+    // the player left it.
+    const gl = new HeadlessWebGLRenderer();
+    const lent = worldView.acquire(
+      PROLOGUE_SORROWGATE_HEADER.id,
+      createHost(1280, 720) as unknown as HTMLElement,
+      { glRenderer: () => gl.asRenderer(), environment: gl.environment }
+    )!;
+    const view = lent.view;
+    view.setActive(true);
+    view.setReducedMotion(false);
+    const ground = paintGround(SORROWGATE_GROUND);
+    view.setTerrain({
+      region: SORROWGATE_REGION.id,
+      cols: ground.cols,
+      rows: ground.rows,
+      cellM: ground.cellM,
+      biomes: Array.from(ground.biomes),
+      floor: Array.from(ground.floor),
+      ceiling: Array.from(ground.ceiling),
+    });
+    view.applySnapshot(cannedSnapshot());
+    for (let ms = 0; ms <= 1_000; ms += 100) await frameAt(ms);
+    const left: CameraFrame = { xM: 1_200, yM: 2_600, distanceM: 1_800, yawDeg: 40, pitchDeg: 40 };
+    view.setFrame(left);
+    const terrain = () => (view as unknown as { terrain: unknown }).terrain;
+
+    worldView.release(lent.claim, 'return');
+    const board = await mountBackdrop();
+    try {
+      assert.equal(worldView.current === view, true, 'the same world, on the board');
+      assert.equal(board.host.childNodes.length, 1, 'drawn behind it');
+      await frameAt(1_001);
+      await frameAt(1_400);
+      sameFrame(view.frame, left, 1e-6);
+      assert.equal(view.borderSettled, false, 'the fade going out, where the session left it');
+      assert.equal(terrain() !== null, true, "over the session's ground");
+      await frameAt(1_802);
+      await frameAt(1_803);
+      assert.equal(view.borderSettled, true, 'out after 0.8 s');
+      await frameAt(3_050);
+      assert.ok(
+        view.frame.distanceM > left.distanceM && view.frame.distanceM < WORLD.BOARD_DOLLY_M,
+        `travelling back: ${view.frame.distanceM} m`
+      );
+      await frameAt(4_400);
+      sameFrame(view.frame, boardFrame(SORROWGATE_REGION), 1e-6);
+    } finally {
+      await board.unmount();
+    }
+    assert.equal(terrain() === null, true, 'the board let the ground go with the view');
+  });
+
+  /** A session on the pilot, left at `LEFT` and handed back for a return. */
+  async function returning(withGround: boolean) {
+    const gl = new HeadlessWebGLRenderer();
+    const lent = worldView.acquire(
+      PROLOGUE_SORROWGATE_HEADER.id,
+      createHost(1280, 720) as unknown as HTMLElement,
+      { glRenderer: () => gl.asRenderer(), environment: gl.environment }
+    )!;
+    const view = lent.view;
+    if (withGround) {
+      const ground = paintGround(SORROWGATE_GROUND);
+      view.setTerrain({
+        region: SORROWGATE_REGION.id,
+        cols: ground.cols,
+        rows: ground.rows,
+        cellM: ground.cellM,
+        biomes: Array.from(ground.biomes),
+        floor: Array.from(ground.floor),
+        ceiling: Array.from(ground.ceiling),
+      });
+      view.setReducedMotion(true);
+      view.applySnapshot(cannedSnapshot());
+      view.setActive(true);
+      await frameAt(0);
+    }
+    view.setFrame(LEFT);
+    worldView.release(lent.claim, 'return');
+    return Object.assign(view, { gl });
+  }
+
+  it('keeps a return across a board let go and taken back in one commit', async () => {
+    // StrictMode's unmount and remount in development, which react-dom runs
+    // back to back inside one commit. react-test-renderer 18 does not
+    // double-invoke effects, so the two are made by hand inside one
+    // synchronous act, which flushes both sets of effects with no microtask
+    // between them.
+    const view = await returning(false);
+    const first = await mountBackdrop();
+    const gl = new HeadlessWebGLRenderer();
+    const host = createHost(1280, 720);
+    let again!: ReactTestRenderer;
+    act(() => {
+      first.tree.unmount();
+      again = create(
+        createElement(WorldBackdrop, {
+          target: { kind: 'board' },
+          devices: { environment: gl.environment, glRenderer: () => gl.asRenderer() },
+        }),
+        { createNodeMock: () => host }
+      );
+    });
+    try {
+      await frameAt(1);
+      sameFrame(view.frame, LEFT, 1e-6);
+      await frameAt(2);
+      await frameAt(2_600);
+      sameFrame(view.frame, boardFrame(SORROWGATE_REGION), 1e-6);
+    } finally {
+      await act(async () => {
+        again.unmount();
+      });
+    }
+  });
+
+  it('lets a board go at once once its return has arrived', async () => {
+    const view = await returning(true);
+    const claim = worldView.showBoard(createHost(1280, 720) as unknown as HTMLElement)!;
+    assert.equal(view.leavingGround, true, 'mid-return');
+    worldView.endReturn(claim);
+    worldView.release(claim);
+    assert.equal(view.leavingGround, false, 'a plain release: the ground went now');
+    sameFrame(view.frame, LEFT, 1e-6);
+  });
+
+  it('opens a board taken later at its own frame, the return landed', async () => {
+    // The record's door mid-return, and its Back (§7.6 step 4).
+    const view = await returning(true);
+    const first = await mountBackdrop();
+    await frameAt(1);
+    await first.unmount();
+    const terrain = () => (view as unknown as { terrain: unknown }).terrain;
+    assert.equal(terrain() === null, true, "the session's ground went with the board");
+    const later = await mountBackdrop();
+    try {
+      sameFrame(view.frame, boardFrame(SORROWGATE_REGION), 1e-6);
+      assert.equal(view.borderSettled, true, 'and the ramp landed');
+    } finally {
+      await later.unmount();
+    }
+  });
+
+  it('holds a reduced-motion return on its frame until the baseline, then cuts with the swap', async () => {
+    saveSettings({ ...loadSettings(), reducedMotion: true });
+    const view = await returning(true);
+    // What each drawn frame showed, read as the device draws it: the camera
+    // and whether the session's ground was still there.
+    const draws: { left: boolean; board: boolean; ground: boolean }[] = [];
+    const at = (a: CameraFrame, b: CameraFrame) =>
+      Math.hypot(a.xM - b.xM, a.yM - b.yM) < 1 && Math.abs(a.distanceM - b.distanceM) < 1;
+    const draw = view.gl.render.bind(view.gl);
+    view.gl.render = (scene, camera) => {
+      const frame = view.frame;
+      draws.push({
+        left: at(frame, LEFT),
+        board: at(frame, boardFrame(SORROWGATE_REGION)),
+        ground: view.leavingGround,
+      });
+      draw(scene, camera);
+    };
+    // The baseline's build, held until the test lets it go.
+    let built!: () => void;
+    const held = new Promise<void>((resolve) => (built = resolve));
+    type Build = { loadRegionDetail: (id: string, signal: AbortSignal) => Promise<unknown> };
+    const real = (view as unknown as Build).loadRegionDetail.bind(view);
+    (view as unknown as Build).loadRegionDetail = async (id, signal) => {
+      await held;
+      return real(id, signal);
+    };
+    const board = await mountBackdrop();
+    try {
+      // Frames while the build is held: a cut not held would draw the board
+      // over the session's ground here.
+      for (let ms = 1; ms < 6; ms++) await frameAt(ms);
+      assert.equal(view.leavingGround, true, 'the baseline is still building');
+      built();
+      // The build runs on real timers; the frames keep coming meanwhile.
+      for (let waited = 0; waited < 60_000 && view.leavingGround; waited += 20) {
+        await act(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 20));
+        });
+        await frameAt(10 + waited);
+      }
+      await frameAt(70_000);
+      assert.equal(view.leavingGround, false, 'the baseline gave way');
+      const swap = draws.findIndex((d) => !d.ground);
+      assert.ok(swap > 0, 'frames were drawn over the session ground, then without it');
+      assert.ok(
+        draws.slice(0, swap).every((d) => d.left && d.ground),
+        "every frame before the swap is the session's, on its frame"
+      );
+      assert.ok(
+        draws.slice(swap).every((d) => d.board && !d.ground),
+        "the swap's own frame, and every one after, is the board's: one change"
+      );
+      await untilSettled(board, 1);
+    } finally {
+      await board.unmount();
+    }
+  });
+
+  it('opens the board at its own frame when no return is under way', async () => {
+    const gl = new HeadlessWebGLRenderer();
+    const lent = worldView.acquire(
+      PROLOGUE_SORROWGATE_HEADER.id,
+      createHost(1280, 720) as unknown as HTMLElement,
+      { glRenderer: () => gl.asRenderer(), environment: gl.environment }
+    )!;
+    lent.view.setFrame({ xM: 1_200, yM: 2_600, distanceM: 1_800, yawDeg: 40, pitchDeg: 40 });
+    // The record's door, or any leaving but a return.
+    worldView.release(lent.claim);
+    const board = await mountBackdrop();
+    try {
+      sameFrame(lent.view.frame, boardFrame(SORROWGATE_REGION), 1e-6);
     } finally {
       await board.unmount();
     }

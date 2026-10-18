@@ -132,6 +132,11 @@ type Screen =
       create?: 'public' | 'private';
       /** Reached by a launch's travel, so the camera is already home (§7.6). */
       travelled?: true;
+      /**
+       * Launched from the board, so Return to port goes back to the board
+       * rather than the title, by the return travel (§7.6 step 4).
+       */
+      board?: true;
     };
 
 /**
@@ -197,6 +202,7 @@ function App() {
       mapId: mapForMission(screen.missionId),
       resume: false,
       missionId: screen.missionId,
+      board: true,
       // Only a travel the world drew: with none the camera never moved.
       ...(screen.drew && !worldFailed ? { travelled: true as const } : {}),
     });
@@ -399,7 +405,10 @@ function App() {
             create={screen.create}
             resume={screen.resume}
             travelled={screen.travelled === true}
-            onExit={toTitle}
+            // The world travels back only where it can be drawn; without it
+            // the board stands alone, as it was left.
+            returnsToBoard={screen.board === true && !worldFailed}
+            onExit={screen.board === true ? toCampaign : toTitle}
             onRecord={toRecord}
           />
         </Suspense>

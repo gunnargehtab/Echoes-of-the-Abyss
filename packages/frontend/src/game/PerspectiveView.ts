@@ -665,6 +665,18 @@ export class PerspectiveView {
   private borderAt: number | null = null;
   private border: BorderUniforms | null = null;
   /**
+   * A return to the board is under way (§7.6 step 4, `releaseGround`): the
+   * session's ground is still drawn, and goes once the region's baseline
+   * detail is built and the fade has ramped out.
+   */
+  private groundLeaving = false;
+  /**
+   * Called in the frame a return's ground gives way, before that frame is
+   * drawn: the board cuts a reduced-motion return there, so the swap and the
+   * cut are one change (§7.6 step 4).
+   */
+  onGroundGone: (() => void) | null = null;
+  /**
    * The roofed passages and the stone over each (#1105), rebuilt with the
    * dressing. `base` is each roof's stone in linear light before the veil,
    * so a veil pass multiplies it rather than compounding on its own output.
@@ -1073,11 +1085,15 @@ export class PerspectiveView {
    * water environment for the next session to adopt (docs/world-map.md §7.6,
    * #1458). The loop stops and the canvas leaves the page; nothing is
    * disposed, and `attach` or `mount` puts it back.
+   *
+   * A ramp under way lands, since nothing is drawn to show it — unless
+   * `landRamp` is false: a return hands the view straight to the board, which
+   * draws the ramp-out where the session left it (§7.6 step 4). The pause
+   * between the two is not counted as ramp time.
    */
-  detach(): void {
+  detach(landRamp = true): void {
     this.setActive(false);
-    // Nothing is drawn while detached, so a ramp has nothing to show: land it.
-    this.borderStrength = this.borderTarget;
+    if (landRamp) this.borderStrength = this.borderTarget;
     this.borderAt = null;
     this.resizeObserver?.disconnect();
     this.renderer?.domElement.remove();
@@ -1191,6 +1207,8 @@ export class PerspectiveView {
     { region, ...terrain }: TerrainPayload & { region?: string },
     { fit = true }: { fit?: boolean } = {}
   ): void {
+    // A room's ground is a session's own, never one a return is letting go.
+    this.groundLeaving = false;
     // A defensive copy: the chart-side handlers mutate their payload in place
     // on ground deltas, and two consumers double-applying deltas to one
     // shared object is the bug this copy exists to make impossible.
@@ -1298,6 +1316,7 @@ export class PerspectiveView {
    * next room's `terrain` puts a session's ground back.
    */
   clearTerrain(): void {
+    this.groundLeaving = false;
     if (this.terrain === null) return;
     this.terrain = null;
     this.placed = false;
@@ -1312,6 +1331,28 @@ export class PerspectiveView {
     this.stones = [];
     this.environment.reset();
     this.cutOverview();
+  }
+
+  /**
+   * Let go of the session's ground on a return to the board (§7.6 step 4):
+   * not now, as `clearTerrain` does, but once the region's baseline detail is
+   * built and the fade has ramped out, so the swap falls under the travel's
+   * motion rather than standing the arch back up in front of the player. The
+   * baseline is built hidden meanwhile (`syncDetail`). A new room's ground,
+   * or `clearTerrain`, ends the wait.
+   */
+  releaseGround(): void {
+    if (this.terrain !== null) this.groundLeaving = true;
+  }
+
+  /** Whether a return's ground is still drawn, waiting on its baseline (`releaseGround`). */
+  get leavingGround(): boolean {
+    return this.groundLeaving && this.terrainMesh !== null;
+  }
+
+  /** Whether §7.4's ramp has reached its target, or there is no border to ramp. */
+  get borderSettled(): boolean {
+    return this.missionRect() === null || this.borderStrength === this.borderTarget;
   }
 
   destroy(): void {
@@ -2624,12 +2665,29 @@ export class PerspectiveView {
    * strength, where all of it would be the backdrop's colour. A region let go
    * is hidden and kept until a third would make it one too many. The overview
    * is then cut where detail is drawn.
+   *
+   * On a return (`releaseGround`) the session's own region is asked for
+   * first whatever the camera, and built hidden under the session's ground,
+   * which still takes its slot. The first frame after the ramp-out that it
+   * is built — or has failed, when the overview takes its place — the
+   * session's ground goes and the baseline is drawn in the same frame.
    */
   private syncDetail(): void {
     const residency = this.residency;
     const home = this.worldRegion;
     if (residency === null || home === null) return;
-    const session = this.terrainMesh !== null ? home.id : null;
+    const leaving = this.groundLeaving && this.terrainMesh !== null;
+    if (
+      leaving &&
+      this.borderStrength === 0 &&
+      (residency.get(home.id) !== undefined || residency.hasFailed(home.id))
+    ) {
+      this.clearTerrain();
+      this.onGroundGone?.();
+      this.syncDetail();
+      return;
+    }
+    const session = this.terrainMesh !== null && !leaving ? home.id : null;
     // A session holds its own region: a copy built before its ground arrived
     // would hold the session's ground twice, hidden, until another region
     // pushed it out.
@@ -2645,7 +2703,7 @@ export class PerspectiveView {
       const eye = this.camera.position;
       const grid = overviewGrid();
       for (const region of this.detailRegions) {
-        if (region.id === session) continue;
+        if (region.id === home.id && this.terrainMesh !== null) continue;
         const atlas = detailRect(region);
         const x0 = atlas.x - home.x;
         const z0 = atlas.y - home.y;
@@ -2663,12 +2721,16 @@ export class PerspectiveView {
         });
       }
     }
-    const reserved = session === null ? 0 : 1;
-    residency.want(
-      wantedDetail(candidates, residency.keptIds(), residency.maxResident - reserved),
-      reserved
+    const reserved = this.terrainMesh === null ? 0 : 1;
+    const asked = wantedDetail(
+      candidates,
+      residency.keptIds(),
+      residency.maxResident - reserved - (leaving ? 1 : 0)
     );
+    residency.want(leaving ? [home.id, ...asked] : asked, reserved);
     const drawn = new Set(residency.drawn());
+    // Built under the session's ground, never drawn with it.
+    if (leaving) drawn.delete(home.id);
     for (const id of residency.residentIds()) residency.get(id)!.mesh.visible = drawn.has(id);
     this.cutOverview();
   }
@@ -3843,6 +3905,10 @@ export class PerspectiveView {
           : {
               borderStrength: Number(this.borderStrength.toFixed(3)),
               overviewDrawn: this.overview?.mesh.visible === true,
+              // A session's ground, and whether a return is letting it go (§7.6 step 4).
+              sessionGround: this.terrainMesh !== null,
+              groundLeaving: this.groundLeaving,
+              frame: this.frame,
               // §7.5's other regions: drawn, held, and asked for.
               detailDrawn: this.residency?.drawn() ?? [],
               detailResident: [...(this.residency?.residentIds() ?? [])],
