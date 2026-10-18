@@ -886,7 +886,14 @@ export function deckRing(root, { alloy, crystal }, opts) {
   const flat = [Math.PI / 2, 0, 0];
   const ringOf = (R, t) => torus(R, t, METRE.round(t), segments ?? METRE.round(R + t));
   add(root, 'resonator_ring', ringOf(r, tube), alloy, [x, y + tube, z], flat);
-  add(root, 'ring_inner', ringOf(inner.r, inner.tube), crystal, [x, y + inner.tube, z], flat);
+  add(
+    root,
+    'ring_inner',
+    ringOf(inner.r, inner.tube),
+    crystal,
+    [x, y + inner.tube, z],
+    flat
+  );
 }
 
 /**
@@ -1089,13 +1096,11 @@ export function lance(root, ink, { needle, rail, crystal, seams, muzzle }) {
   ]);
   spar(root, 'lance_crystal', ink.crystal, crystal);
   bothSides((side, sgn) =>
-    add(
-      root,
-      `lance_seam_${side}`,
-      box(seams.length, seams.section[0], seams.section[1]),
-      ink.seam,
-      [seams.x, seams.y, sgn * seams.z]
-    )
+    add(root, `lance_seam_${side}`, box(seams.length, seams.section[0], seams.section[1]), ink.seam, [
+      seams.x,
+      seams.y,
+      sgn * seams.z,
+    ])
   );
   point(root, 'muzzle', ink.node, muzzle);
 }
@@ -1489,14 +1494,7 @@ export function spike(root, { alloy, unlit, node }, { rail, ribs, torpedo, colla
   bothSides((side, sgn) => spar(root, `rail_${side}`, unlit, { ...rail, z: sgn * rail.z }));
   ribs.at.forEach((x, i) => add(root, `rail_rib_${i}`, box(...ribs.size), alloy, [x, ribs.y, 0]));
   const { x, y, r, length, fins } = torpedo;
-  add(
-    root,
-    'torpedo',
-    capsule(r, length, ...METRE.capsule(r)),
-    alloy,
-    [x, y, 0],
-    [0, 0, -Math.PI / 2]
-  );
+  add(root, 'torpedo', capsule(r, length, ...METRE.capsule(r)), alloy, [x, y, 0], [0, 0, -Math.PI / 2]);
   add(root, 'torpedo_fins_lateral', box(fins.chord, fins.t, 2 * fins.span), alloy, [fins.x, y, 0]);
   add(root, 'torpedo_fins_vertical', box(fins.chord, 2 * fins.span, fins.t), alloy, [fins.x, y, 0]);
   spar(root, 'muzzle_collar', node, { facets: 6, ...collar });
@@ -1907,22 +1905,8 @@ export function cradleDeck(root, { shadow, alloy, floor: floorMat, seam }, opts)
 export function exchangerHead(root, { crystal, alloy, seam }, opts) {
   const { bearing: a, at, prism, frame, seam: strip, spine: crest, buttress: blade } = opts;
   const yaw = [0, -a, 0];
-  add(
-    root,
-    'exchanger_prism',
-    loft(prism.profile, 4, Math.PI / 4),
-    crystal,
-    polar(a, at, prism.y),
-    yaw
-  );
-  add(
-    root,
-    'exchanger_frame',
-    loft(frame.profile, 4, Math.PI / 4),
-    alloy,
-    polar(a, at, frame.y),
-    yaw
-  );
+  add(root, 'exchanger_prism', loft(prism.profile, 4, Math.PI / 4), crystal, polar(a, at, prism.y), yaw);
+  add(root, 'exchanger_frame', loft(frame.profile, 4, Math.PI / 4), alloy, polar(a, at, frame.y), yaw);
   add(root, 'exchanger_seam', box(...strip.size), seam, polar(a, at, strip.y), yaw);
   // A four-sided pyramid, not an octahedron: the approved file's eight
   // triangles are four faces on a square base with a vertex at its centre
@@ -2158,9 +2142,7 @@ export function navMarks(root, light, { marks, r, on = null, cut: rule = METRE }
   for (const [name, x, y, z] of marks)
     pair((tag, sgn) => {
       const station = sided(sgn, [x, y, z]);
-      const placement = on
-        ? { at: seat(root, on, station.at, { stand: r, sink: r / 2 }).at }
-        : station;
+      const placement = on ? { at: seat(root, on, station.at, { stand: r, sink: r / 2 }).at } : station;
       const bud = new THREE.SphereGeometry(r, ...rule.orb(r));
       part(root, `nav_mark_${name}_${tag}`, bud, light, placement);
     });
@@ -2490,7 +2472,15 @@ export function pressureDome(root, { alloy, crystal: lit, glow, shadow }, opts) 
   add(
     root,
     'pressure_dome',
-    new THREE.SphereGeometry(dome.r, segments[0], segments[1], 0, Math.PI * 2, 0, dome.theta),
+    new THREE.SphereGeometry(
+      dome.r,
+      segments[0],
+      segments[1],
+      0,
+      Math.PI * 2,
+      0,
+      dome.theta
+    ),
     alloy,
     dome.at,
     [0, 0, 0],
@@ -3391,7 +3381,9 @@ export function ceramicSeams(root, mat, opts) {
     add(root, label, box(length, h, w), mat, at, rot);
   };
   for (const [tag, a, b] of pairs)
-    bothSides((side, sgn) => lay(`${name}_${tag}_${side}`, [a[0], sgn * a[1]], [b[0], sgn * b[1]]));
+    bothSides((side, sgn) =>
+      lay(`${name}_${tag}_${side}`, [a[0], sgn * a[1]], [b[0], sgn * b[1]])
+    );
   for (const [tag, a, b] of singles) lay(`${name}_${tag}`, a, b);
 }
 
@@ -3411,17 +3403,7 @@ export function ceramicSeams(root, mat, opts) {
  * mirrored few.
  */
 export function facetPlates(root, mat, opts) {
-  const {
-    name,
-    on,
-    size: [w, s],
-    t,
-    about = [0, 0],
-    rho,
-    y,
-    stations,
-    phase = 0,
-  } = opts;
+  const { name, on, size: [w, s], t, about = [0, 0], rho, y, stations, phase = 0 } = opts;
   const { holes = [], first = 0 } = opts;
   for (let k = 0; k < stations; k++) {
     if (holes.includes(k)) continue;

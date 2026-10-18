@@ -3982,8 +3982,7 @@ export function drumRings(root, mat, opts) {
   const { name, first = 0, on, stations, lift = 0.5, cut: rule = METRE } = opts;
   noCount(name, opts, 'facets');
   const drum = root.getObjectByName(on);
-  if (!drum || drum.parent !== root)
-    throw new Error(`${name}: no drum named ${on} on ${root.name}`);
+  if (!drum || drum.parent !== root) throw new Error(`${name}: no drum named ${on} on ${root.name}`);
   const p = drum.geometry.parameters;
   if (p.height === undefined) throw new Error(`${name}: ${on} is not a cylinder`);
   const { radiusTop, radiusBottom, height, thetaStart = 0, thetaLength = TAU } = p;
