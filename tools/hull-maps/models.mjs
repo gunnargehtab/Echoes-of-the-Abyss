@@ -142,6 +142,12 @@ export const UNITS = [
   { slug: 'broadside', model: 'broadside-bathyarch.glb', lengthM: 120, sig: 42 },
   { slug: 'weaver', model: 'weaver-pelagia.glb', lengthM: 70, sig: 12 },
   { slug: 'thurible', model: 'thurible-directorate.glb', lengthM: 105, sig: 16 },
+  // The Thurible as the other navies field it (#1440), on the Chorister's
+  // rule: the censer's plan in each navy's shape language, the light kept dim
+  // at the Directorate's band.
+  { slug: 'thurible-bathyarch', model: 'thurible-bathyarch.glb', lengthM: 105, sig: 16 },
+  { slug: 'thurible-pelagia', model: 'thurible-pelagia.glb', lengthM: 105, sig: 16 },
+  { slug: 'thurible-hadron', model: 'thurible-hadron.glb', lengthM: 105, sig: 16 },
   { slug: 'lance', model: 'lance-hadron.glb', lengthM: 95, sig: 9 },
   // The siege hulls (docs/units.md "The siege hulls", #786 — Phase 4's fourth
   // box): one a navy, so each model is the kind's canonical one, and three of

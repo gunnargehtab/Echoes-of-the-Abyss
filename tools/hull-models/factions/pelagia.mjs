@@ -3128,9 +3128,29 @@ export function cohortLobes(root, ridge, opts) {
   const { lobes, ring: rf = { halfWidth: 0.6 }, cut: rule = METRE } = opts;
   noCount('lobe', opts, 'facets');
   noCount('lobe_ring', rf, 'facets');
-  lobes.forEach(({ skin, at: [x, y, z], radii: [rx, ry, rz], ring }, i) => {
+  lobes.forEach(({ skin, at: [x, y, z], radii: [rx, ry, rz], ring, rim }, i) => {
     const body = [rx, ry, rz];
     add(root, `lobe_${i}`, orb(...rule.orb(1, { scale: body })), skin, [x, y, z], [0, 0, 0], body);
+    // A husk rim in the ring's place (`lobe_rim_<i>`): a lobe whose margin
+    // has thickened into a flared rim rather than a ridge — an orb of ridge
+    // `rim.radii` pressed flat along the keel, `rim.dx` from the centre and
+    // `rim.lift` above the axis, wider than the lobe where it stands so the
+    // lobe's trailing edge carries the corners the Thurible's shield has
+    // (hulls/thurible-pelagia.mjs, #1440; directorate.mjs `tergites` draws
+    // the same lip as the `ridge` orb). A lobe carries a ring or a rim.
+    if (rim) {
+      noCount(`lobe_rim_${i}`, rim, 'facets');
+      add(
+        root,
+        `lobe_rim_${i}`,
+        orb(...rule.orb(1, { scale: rim.radii })),
+        ridge,
+        [x + rim.dx, y + (rim.lift ?? 0), z],
+        [0, 0, 0],
+        rim.radii
+      );
+      return;
+    }
     const squash = [1, ry / rz, 1];
     add(
       root,
@@ -4752,7 +4772,7 @@ export function siphonDrive(root, { duct: ductMat, ring: ringMat, funnel: funnel
  * zero station each. The section is a regular polygon on the rule's count
  * at the deepest station. `keel`.
  */
-export function grownKeel(root, ridge, { stations, cut: rule = METRE }) {
+export function grownKeel(root, ridge, { stations, rings, cut: rule = METRE }) {
   const deepest = Math.max(...stations.map(([, , hh]) => hh));
   const n = rule.round(deepest);
   const section = Array.from({ length: n }, (_, k) => {
@@ -4760,6 +4780,53 @@ export function grownKeel(root, ridge, { stations, cut: rule = METRE }) {
     return [Math.sin(a), Math.cos(a)];
   });
   add(root, 'keel', uvAlike(sweep(stations, section)), ridge);
+  if (!rings) return;
+  // "Ribbed": `rings.count` growth rings round the spindle, `keel_ring_<i>`,
+  // from `rings.inset` metres inside each end, each a ridge lathed round the
+  // keel's axis at its own station's section — `proud` over the half-beam,
+  // its shoulders `rise` below the crest, `halfWidth` either way, pressed to
+  // the section's own height over beam and centred on the spindle's axis
+  // there (the Thurible's, hulls/thurible-pelagia.mjs; the Verger passes
+  // none and is unchanged). The Directorate hoops its keel in steel
+  // (directorate.mjs `keel` `ribs`); a grown keel grows rings.
+  const {
+    count,
+    mat: ringMat = ridge,
+    proud = 0.3,
+    rise = 0.6,
+    halfWidth = 0.5,
+    inset = 2,
+  } = rings;
+  noCount('keel_ring', rings, 'facets');
+  const first = stations[0][0];
+  const last = stations[stations.length - 1][0];
+  const at = (x) => {
+    for (let k = 1; k < stations.length; k++) {
+      const [x0, b0, h0, c0 = 0] = stations[k - 1];
+      const [x1, b1, h1, c1 = 0] = stations[k];
+      if ((x - x0) * (x - x1) <= 0 && x0 !== x1) {
+        const t = (x - x0) / (x1 - x0);
+        return [b0 + (b1 - b0) * t, h0 + (h1 - h0) * t, c0 + (c1 - c0) * t];
+      }
+    }
+    throw new Error(`keel_ring: x = ${x} is off the keel`);
+  };
+  for (let i = 0; i < count; i++) {
+    const t = count > 1 ? i / (count - 1) : 0.5;
+    const span = last - first;
+    const rx = first + Math.sign(span) * inset + (span - 2 * Math.sign(span) * inset) * t;
+    const [hb, hh, yc] = at(rx);
+    const scale = [1, hh / hb, 1];
+    add(
+      root,
+      `keel_ring_${i}`,
+      ruledRidge(rule, { crown: hb + proud, shoulder: hb + proud - rise, halfWidth }, { scale }),
+      ringMat,
+      [rx, yc, 0],
+      [0, 0, 0],
+      scale
+    );
+  }
 }
 
 /**
@@ -4782,4 +4849,465 @@ export function ballastBladders(root, skin, { bladders, cut: rule = METRE }) {
       radii
     )
   );
+}
+
+/* --------------------------------------------------------------------------
+ * The Thurible (#1440, on the Chorister's rule): the censer as the Commune
+ * fields it — the Directorate's plan (hulls/thurible.mjs) said in grown
+ * things. What it adds is what a hull that carries its ordnance on its
+ * *back* needs and no Commune hull before it had: a rack of open cups
+ * grown into a shell, and two ways of dressing a shell's *rim* rather than
+ * its crown — thorns off the edge and buds along it — and a limb folded
+ * under the shell rather than planted beside it. Every builder seats its
+ * parts by the lobes the hull drew (`lobeCrown`, `lobeFlank`), as the
+ * Directorate's seat theirs by `crown(x, z)` and `rim(x, y)`. Built to its
+ * block, nothing here answers to a binary; X-long in the kit's frame,
+ * yawing nothing; each builder refuses a matched pair where the navy grows
+ * a side its own way. hulls/thurible-pelagia.mjs is the consumer.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The lobes' crown at `(x, z)` in plan: the highest any lobe's skin reaches
+ * there, or `-Infinity` where no lobe is — `lobeFlank`'s other axis, and
+ * the Directorate's `tergiteCrown` in this navy's language. A lobe grown
+ * off the keel line is asked where it is, lean and all, so a part seated by
+ * this cannot type a height the shell does not reach. The ideal ellipsoid,
+ * not the facet: between meridians a sixteen-sided orb 27 m across sags
+ * half a metre under it, which is why a lamp seated by this is then dropped
+ * onto the facet (`rimBuds`) and a cup is sunk past the sag (`chargeCups`).
+ */
+export function lobeCrown(lobes, x, z) {
+  let y = -Infinity;
+  lobes.forEach(({ at: [lx, ly, lz], radii: [rx, ry, rz] }) => {
+    const u = (x - lx) / rx;
+    const w = (z - lz) / rz;
+    const d = 1 - u * u - w * w;
+    if (d > 0) y = Math.max(y, ly + ry * Math.sqrt(d));
+  });
+  return y;
+}
+
+/** A side letter's sign: port is −z (#642). */
+function sideSign(what, side) {
+  if (side !== 'p' && side !== 's')
+    throw new Error(`${what}: side is '${side}' — 'p' (port, -z) or 's' (starboard, +z)`);
+  return side === 'p' ? -1 : 1;
+}
+
+/**
+ * A stem tapered along a curve: `through` points in the kit's frame on a
+ * centripetal Catmull-Rom, `steps` rings of `n` facets from `r0` at the
+ * root to `r1` at the tip, closed by a fan at each end. `TubeGeometry` is
+ * one radius end to end, which is a hose; a thorn, a feeler and a tendril
+ * on this navy thin toward whatever they reach for. Normals are radial —
+ * a grown stem is smooth round its girth as the kit's tube is — and the
+ * sides and both caps are wound out.
+ */
+function taperedStem(through, steps, [r0, r1], n) {
+  const curve = new THREE.CatmullRomCurve3(
+    through.map((p) => new THREE.Vector3(...p)),
+    false,
+    'centripetal'
+  );
+  const frames = curve.computeFrenetFrames(steps, false);
+  const pos = [];
+  const nor = [];
+  const uv = [];
+  const idx = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const P = curve.getPointAt(t);
+    const r = r0 + (r1 - r0) * t;
+    const N = frames.normals[i];
+    const B = frames.binormals[i];
+    for (let j = 0; j < n; j++) {
+      const a = (TAU * j) / n;
+      const d = N.clone().multiplyScalar(Math.cos(a)).addScaledVector(B, Math.sin(a));
+      const v = P.clone().addScaledVector(d, r);
+      pos.push(v.x, v.y, v.z);
+      nor.push(d.x, d.y, d.z);
+      uv.push(j / n, t);
+    }
+  }
+  for (let i = 0; i < steps; i++)
+    for (let j = 0; j < n; j++) {
+      const a = i * n + j;
+      const b = i * n + ((j + 1) % n);
+      idx.push(a, b, a + n, b, b + n, a + n);
+    }
+  // The caps: a centre vertex at each end on the curve, its normal the
+  // tangent, the root's fan wound to face −T and the tip's +T.
+  const cap = (i, sgn) => {
+    const P = curve.getPointAt(i / steps);
+    const T = frames.tangents[i];
+    const c = pos.length / 3;
+    pos.push(P.x, P.y, P.z);
+    nor.push(sgn * T.x, sgn * T.y, sgn * T.z);
+    uv.push(0.5, i / steps);
+    for (let j = 0; j < n; j++) {
+      const a = i * n + j;
+      const b = i * n + ((j + 1) % n);
+      if (sgn < 0) idx.push(c, b, a);
+      else idx.push(c, a, b);
+    }
+  };
+  cap(0, -1);
+  cap(steps, 1);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.setIndex(idx);
+  return geo;
+}
+
+/**
+ * The charge rack, grown: open cups let into the shell's back, in ranks,
+ * `cell_${side}${i}` each and four parts to a cell, where the Directorate
+ * lets a steel collar and a hinged disc into its plates (directorate.mjs
+ * `chargeRack`). Each is seated upright on `crown(x, z)` — up is the way
+ * the rack fires, so a cup stands vertical on a sloping dome as the
+ * Directorate's collars do — and is:
+ *
+ * - `_cup`, a sphincter: a lathe of `cup` ink round the vertical from
+ *   `sink` inside the skin — or deeper, by what the steepest cell's
+ *   downhill foot needs plus `sag` for the facet (below) — to `proud`
+ *   above it, swelling `swell` over `r`
+ *   at `throat` under the mouth and drawing in to `r` at the lip, then in
+ *   over the lip by `wall` and down the bore, so the well has an inside.
+ * - `_floor`, the dark down the bore: a lens of `floor` ink `depth` under
+ *   the lip, its edge through the bore's wall, its crest a little above
+ *   the crown at the cell's centre — because the shell is a dome and not a
+ *   deck: a floor let in under the crown is a floor the dome's own slope
+ *   shows through on the uphill side (hulls/thurible.mjs says the first
+ *   Directorate run drew that).
+ * - `_node`, the hinge: a knuckle of `node` ink on the cup's aft lip, where
+ *   the lid grew from.
+ * - `_lid`, the lid: a leaf of `lid` ink `lid.length` long and `lid.width`
+ *   across, narrow at its root on the node, standing `lid.open` radians up
+ *   from shut — open forward and upward, hinged aft, as every lid on the
+ *   kind is.
+ *
+ * A rack and not a tube: nothing here has a muzzle and no face of it
+ * points along the hull. No lamp on any of it (docs/models-plan.md §3.2
+ * rule 4): the light of a charge is the charge's, above the hull. `cells`
+ * is `[{ side, x, z }]`, `z` unsigned and the side signing it (port −z,
+ * #642); a mirrored pair across the keel is refused.
+ */
+export function chargeCups(
+  root,
+  { cup: cupMat, floor: floorMat, lid: lidMat, node: nodeMat },
+  opts
+) {
+  const {
+    crown,
+    cells,
+    r = 2.8,
+    wall = 0.5,
+    proud = 2.4,
+    sink = 1.2,
+    sag = 0.6,
+    throat = 0.9,
+    swell = 0.5,
+    depth = 1.3,
+    floor = { squash: 0.22 },
+    node = { r: 0.8, squash: 0.75 },
+    lid = { t: 0.3, open: 1.35, length: 5.9, width: 5.3 },
+    cut: rule = METRE,
+  } = opts;
+  noCount('cell', opts, 'facets');
+  const count = { p: 0, s: 0 };
+  const placed = cells.map(({ side, x, z }) => {
+    const sgn = sideSign(`cell_${side}`, side);
+    const i = count[side]++;
+    const y = crown(x, sgn * z);
+    if (!Number.isFinite(y))
+      throw new Error(`cell_${side}${i}: no shell at x = ${x}, z = ${sgn * z}`);
+    return { name: `cell_${side}${i}`, at: [x, y, sgn * z] };
+  });
+  refuseMirror('cell', placed, ({ at: [x, y, z] }) => `${x},${y},${Math.abs(z)}`);
+  // The cup's foot is one ring for the rank and the shell is a dome, so the
+  // foot is sunk by what the steepest station needs: the crown's drop from
+  // each cell's centre to the downhill side of its foot, read round the
+  // foot at `r - 0.3` on sixteen bearings, plus `sag` for the facet's
+  // chord under the ideal crown — or `sink`, where that is the more. The
+  // first run sank every cup 1.2 and the aftmost starboard cup, on the
+  // steepest station, stood 0.16–0.35 m off its facet at its aft foot.
+  const foot = r - 0.3;
+  let drop = 0;
+  placed.forEach(({ at: [x, y, z] }) => {
+    for (let k = 0; k < 16; k++) {
+      const a = (TAU * k) / 16;
+      const yk = crown(x + foot * Math.cos(a), z + foot * Math.sin(a));
+      if (Number.isFinite(yk)) drop = Math.max(drop, y - yk);
+    }
+  });
+  const sunk = Math.max(sink, drop + sag);
+  // Root to mouth, in over the lip, down the bore: `[h, r]` about the
+  // vertical, the sides facing out, the lip up and the bore in.
+  const inner = r - wall;
+  const profile = [
+    [-sunk, r - 0.3],
+    [proud - throat, r + swell],
+    [proud, r],
+    [proud, inner],
+    [proud - depth - 0.8, inner],
+  ];
+  const facets = rule.lathe(profile);
+  const cupGeo = new THREE.LatheGeometry(
+    profile.map(([h, rr]) => new THREE.Vector2(rr, h)),
+    facets
+  );
+  // three's lathe leaves the normals of an open profile's last ring at
+  // zero, which the exporter then normalises with a warning; the averaged
+  // face normals are what its own are everywhere else on the cup.
+  cupGeo.computeVertexNormals();
+  const lensR = inner * 1.08;
+  const lens = [lensR, lensR * floor.squash, lensR];
+  const lensFacets = rule.orb(1, { scale: lens });
+  const nodeS = [node.r, node.r * node.squash, node.r];
+  const nodeFacets = rule.orb(1, { scale: nodeS });
+  const { length: L, width: w, t, open } = lid;
+  const leaf = plan(
+    [
+      [0, -0.3 * w],
+      [0.25 * L, -0.5 * w],
+      [0.65 * L, -0.46 * w],
+      [L, -0.1 * w],
+      [L, 0.1 * w],
+      [0.65 * L, 0.46 * w],
+      [0.25 * L, 0.5 * w],
+      [0, 0.3 * w],
+    ],
+    t
+  );
+  placed.forEach(({ name, at: [x, y, z] }) => {
+    const top = y + proud;
+    add(root, `${name}_cup`, cupGeo, cupMat, [x, y, z]);
+    add(
+      root,
+      `${name}_floor`,
+      orb(...lensFacets),
+      floorMat,
+      [x, top - depth - lens[1] / 2, z],
+      [0, 0, 0],
+      lens
+    );
+    add(root, `${name}_node`, orb(...nodeFacets), nodeMat, [x - r, top - 0.2, z], [0, 0, 0], nodeS);
+    // The leaf turns about the node: a roll of `open` about Z lifts its
+    // forward edge, and its root stays on the hinge.
+    add(root, `${name}_lid`, leaf, lidMat, [x - r + 0.2, top + 0.1, z], [0, 0, open]);
+  });
+  return sunk;
+}
+
+/**
+ * Thorns off a shell's rim, `rim_thorn_${side}${i}` each: a tapered stem of
+ * ridge (`taperedStem`) rooted `sink` inside the flank `rim(x, y, sgn)`
+ * finds at `(x, y)`, leaving it canted `cant` outboard of vertical and
+ * raked `rake` forward as the Directorate's rim spines leave theirs
+ * (directorate.mjs `rimSpines`), and curling as it goes: each thorn's own
+ * `curl` is `[forward, down]`, fractions of its length the tip is carried
+ * off the straight line, so no two bend alike. `r` is `[root, tip]`. A
+ * thorn lying out past the rim reads as a spike in plan, which is the
+ * kind's tell on a hull whose back is a rack; a straight black spike is the
+ * Directorate's and a stem that thins and bends is this navy's. `thorns`
+ * is `[{ side, x, length, curl }]`, each at its own signed side (port −z,
+ * #642); a mirrored pair is refused — "spines off the shield's rim at
+ * different stations each side" (the Thurible block).
+ */
+export function rimThorns(root, ridge, opts) {
+  const {
+    rim,
+    thorns,
+    y = 1,
+    r = [0.9, 0.12],
+    sink = 0.8,
+    cant = 1.05,
+    rake = -0.25,
+    steps = 10,
+    cut: rule = METRE,
+  } = opts;
+  noCount('rim_thorn', opts, 'facets');
+  const count = { p: 0, s: 0 };
+  const placed = thorns.map(({ side, x, length, curl = [0, 0] }) => {
+    const sgn = sideSign(`rim_thorn_${side}`, side);
+    const i = count[side]++;
+    const half = rim(x, y, sgn);
+    if (half <= sink) throw new Error(`rim_thorn_${side}${i}: no shell to root in at x = ${x}`);
+    const dir = [
+      -Math.sin(rake),
+      Math.cos(rake) * Math.cos(cant),
+      sgn * Math.cos(rake) * Math.sin(cant),
+    ];
+    const rootAt = [x, y, sgn * half];
+    const along = (f, [fwd, down] = [0, 0]) => [
+      rootAt[0] + dir[0] * f * length + fwd * length,
+      rootAt[1] + dir[1] * f * length - down * length,
+      rootAt[2] + dir[2] * f * length,
+    ];
+    const through = [
+      along(-sink / length),
+      along(0.3),
+      along(0.65, [curl[0] * 0.35, curl[1] * 0.35]),
+      along(1, curl),
+    ];
+    return { name: `rim_thorn_${side}${i}`, through, x, length, curl };
+  });
+  refuseMirror('rim_thorn', placed, (t) => `${t.x}|${t.length}|${t.curl.join()}`);
+  placed.forEach(({ name, through }) =>
+    add(root, name, taperedStem(through, steps, r, rule.tube(r[0])), ridge)
+  );
+}
+
+/** A tapered spar from `a` to `b` (`grownStem`, above), or a cone with its base at `a` and its point at `b`. */
+function spar(root, name, mat, [rootR, tipR], a, b, rule) {
+  const A = new THREE.Vector3(...a);
+  const B = new THREE.Vector3(...b);
+  const d = B.clone().sub(A);
+  const q = new THREE.Quaternion().setFromUnitVectors(
+    new THREE.Vector3(0, 1, 0),
+    d.clone().normalize()
+  );
+  const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+  const mid = A.clone().add(B).multiplyScalar(0.5).toArray();
+  const n = rule.cyl(tipR, rootR, d.length());
+  return add(root, name, cyl(tipR, rootR, d.length(), n), mat, mid, [e.x, e.y, e.z]);
+}
+
+/**
+ * Walking limbs folded under a shell, grown: the Thurible's, where the
+ * Directorate folds steel ranks under its plates (directorate.mjs `limbs`)
+ * and this navy walks the Acolyte's out and plants them (`grownLimbs`).
+ * Each limb is five parts, `limb_${side}${i}_hip`, `_femur`, `_knee`,
+ * `_tibia`, `_claw`: a hip knuckle of `knuckle` ink rooted in the flank
+ * `lobeFlank` finds at `hip.y`, its centre `hip.sink` inside the skin; a
+ * femur stem of `stem` ink `femur.reach` outboard and `femur.drop` down to
+ * a knee knuckle; a tibia folded back from the knee — `tibia.fold` forward,
+ * `tibia.inboard` in and `tibia.drop` down — to the ankle; and a claw of
+ * `claw` ink, a cone `claw.length` long carrying the tibia's line on to a
+ * point. Folded, so nothing stands on; the tips hang under the rim where
+ * the conn view sees them and the chart does not. No lamp: the block lights
+ * the rims, and a limb is dark. `limbs` is `[{ side, x }]`, each at its own
+ * signed z (port −z, #642), never through `bothSides`; a mirrored pair of
+ * hips is refused — the Directorate's rank is "the one place the navy
+ * allows a pair", and this navy allows none. Returns the joints for the
+ * header's measure.
+ */
+export function foldedLimbs(root, { knuckle, stem, claw: clawMat }, opts) {
+  const {
+    lobes,
+    hip = { y: -6, sink: 0.5, r: 1.1, squash: 0.85 },
+    femur = { r: [0.8, 0.6], reach: 6, drop: 1 },
+    knee = { r: 1.15, squash: 0.85 },
+    tibia = { r: [0.65, 0.45], fold: 5.5, inboard: 1, drop: 1.2 },
+    claw = { r: 0.5, length: 1.8 },
+    limbs: list,
+    cut: rule = METRE,
+  } = opts;
+  noCount('limb', opts, 'facets');
+  const count = { p: 0, s: 0 };
+  const joints = list.map(({ side, x }) => {
+    const sgn = sideSign(`limb_${side}`, side);
+    const i = count[side]++;
+    const flank = lobeFlank(lobes, x, hip.y, sgn);
+    if (flank <= hip.sink)
+      throw new Error(`limb_${side}${i}: no lobe to root in at x = ${x}, y = ${hip.y}`);
+    const hipAt = [x, hip.y, sgn * (flank - hip.sink)];
+    const kneeAt = [x, hip.y - femur.drop, sgn * (flank - hip.sink + femur.reach)];
+    const ankle = [kneeAt[0] + tibia.fold, kneeAt[1] - tibia.drop, kneeAt[2] - sgn * tibia.inboard];
+    const run = Math.hypot(tibia.fold, tibia.drop, tibia.inboard);
+    const tip = [
+      ankle[0] + (tibia.fold / run) * claw.length,
+      ankle[1] - (tibia.drop / run) * claw.length,
+      ankle[2] - ((sgn * tibia.inboard) / run) * claw.length,
+    ];
+    return { side, i, hip: hipAt, knee: kneeAt, ankle, tip };
+  });
+  refuseMirror('limb', joints, ({ hip: [x, y, z] }) => `${x},${y},${Math.abs(z)}`);
+  joints.forEach(({ side, i, hip: hipAt, knee: kneeAt, ankle, tip }) => {
+    const name = `limb_${side}${i}`;
+    const hipS = [hip.r, hip.r * hip.squash, hip.r];
+    add(root, `${name}_hip`, orb(...rule.orb(1, { scale: hipS })), knuckle, hipAt, [0, 0, 0], hipS);
+    spar(root, `${name}_femur`, stem, femur.r, hipAt, kneeAt, rule);
+    const kneeS = [knee.r, knee.r * knee.squash, knee.r];
+    add(
+      root,
+      `${name}_knee`,
+      orb(...rule.orb(1, { scale: kneeS })),
+      knuckle,
+      kneeAt,
+      [0, 0, 0],
+      kneeS
+    );
+    spar(root, `${name}_tibia`, stem, tibia.r, kneeAt, ankle, rule);
+    spar(root, `${name}_claw`, clawMat, [claw.r, 0], ankle, tip, rule);
+  });
+  return joints;
+}
+
+/**
+ * The one small spine-gun, grown: `spine_gun_node`, a knuckle of `knuckle`
+ * ink sunk in the shell at the breech, and `spine_gun`, a cone of `spike`
+ * ink `length` long from it to the muzzle at `x + length`, horizontal — the
+ * Chorister's spike with the joint it grew from, where the Directorate
+ * bolts a barrel to a mount (directorate.mjs `spineGun`). Dark.
+ */
+export function spineGun(root, { knuckle, spike }, opts) {
+  const { x, y, z, r = 0.6, length = 8, node = { r: 1.2, squash: 0.8 }, cut: rule = METRE } = opts;
+  noCount('spine_gun', opts, 'facets');
+  const nodeS = [node.r, node.r * node.squash, node.r];
+  add(
+    root,
+    'spine_gun_node',
+    orb(...rule.orb(1, { scale: nodeS })),
+    knuckle,
+    [x, y, z],
+    [0, 0, 0],
+    nodeS
+  );
+  spar(root, 'spine_gun', spike, [r, 0], [x, y, z], [x + length, y, z], rule);
+}
+
+/**
+ * Photophore buds along a shell's rim, `${name}_${side}${j}` each: a rank a
+ * side, `ranks.s` and `ranks.p` as `{ from, pitch, count }` — its first bud
+ * at station `from` and the rest `pitch` metres aft of it — every bud a
+ * squashed orb of `light`, `r` across its half-beam and `squash` of that
+ * tall, seated on the shell where it is: `at` of the rim's half-beam there
+ * (`rim(x, 0, sgn)`), dropped from the crown `crown(x, z)` finds onto the
+ * facet of the parts `on` names under that station (kit.mjs `seat`,
+ * `drop`), `sink` into it and tilted with it. The Directorate lays flat
+ * squares along its rim (directorate.mjs `rimPhotophores`); this navy's
+ * lamp is a bud at a node (the Sower's `bud`, the Acolyte's knees). The two
+ * ranks carry their own `from`, `pitch` and `count`, and a mirrored pair is
+ * refused: regimented, and never symmetric.
+ */
+export function rimBuds(root, light, opts) {
+  const { rim, crown, ranks, on, name = 'bud_rim', at = 0.84, r = 0.8, squash = 0.55 } = opts;
+  const { sink = 0.2, cut: rule = METRE } = opts;
+  noCount(name, opts, 'facets');
+  const spots = [];
+  for (const side of ['s', 'p']) {
+    const rank = ranks[side];
+    if (!rank) continue;
+    const sgn = sideSign(name, side);
+    for (let j = 0; j < rank.count; j++) {
+      const x = rank.from - rank.pitch * j;
+      const half = rim(x, 0, sgn);
+      if (half <= 0) throw new Error(`${name}_${side}${j}: no shell at x = ${x}`);
+      const z = sgn * at * half;
+      const y = crown(x, z);
+      if (!Number.isFinite(y))
+        throw new Error(`${name}_${side}${j}: no crown at x = ${x}, z = ${z}`);
+      spots.push({ name: `${name}_${side}${j}`, seed: [x, y + 1, z] });
+    }
+  }
+  refuseMirror(name, spots, ({ seed: [x, , z] }) => `${x},${Math.abs(z)}`);
+  const scale = [r, r * squash, r];
+  const facets = rule.orb(1, { scale });
+  spots.forEach(({ name: n, seed }) => {
+    const rest = seat(root, on, seed, { stand: r * squash, sink, drop: true });
+    add(root, n, orb(...facets), light, rest.at, rest.rot, scale);
+  });
 }

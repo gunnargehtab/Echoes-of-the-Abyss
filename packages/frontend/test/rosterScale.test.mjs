@@ -73,10 +73,7 @@ const FIELDED = kinds(Faction).flatMap((faction) => [
  * variant that lands must leave it, and a gap not listed fails.
  */
 const PENDING = new Map([
-  ...['bathyarch', 'pelagia', 'hadron'].flatMap((navy) => [
-    [`thurible-${navy}.glb`, 1440],
-    [`lure-${navy}.glb`, 1441],
-  ]),
+  ...['bathyarch', 'pelagia', 'hadron'].flatMap((navy) => [[`lure-${navy}.glb`, 1441]]),
 ]);
 
 /** Intake's design length for a file, by the table the bake reads. */

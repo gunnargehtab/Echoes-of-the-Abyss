@@ -1395,10 +1395,13 @@ export function listeningDome(root, { crystal: domeMat, seam }, opts) {
  * size (`facets`, Block 2c), not the rule's twelve at the hull's radius: a
  * hoop on a square is a square. The Verger's "ribbed" deep-pressure hull
  * said as a crystal held in a frame, which is what the Chorister's cage
- * says of its bladder.
+ * says of its bladder. A station may carry a third number, the spar's
+ * axis height there, as a `spar` station does: the Thurible's keel is
+ * sheared under its belly and its hoops follow it (hulls/thurible-hadron.mjs);
+ * the Verger's ride its body on the axis and leave it off.
  */
 export function pressureRibs(root, alloy, { stations, tube = 0.35, lift = 0.1, flat, facets = 4 }) {
-  stations.forEach(([x, r], i) =>
+  stations.forEach(([x, r, y = 0], i) =>
     add(
       root,
       `pressure_rib_${i}`,
@@ -1406,7 +1409,7 @@ export function pressureRibs(root, alloy, { stations, tube = 0.35, lift = 0.1, f
         .rotateZ(Math.PI / facets)
         .rotateY(Math.PI / 2),
       alloy,
-      [x, 0, 0],
+      [x, y, 0],
       [0, 0, 0],
       [1, flat[0], flat[1]]
     )
@@ -1585,6 +1588,277 @@ function bone(root, name, mat, [rootR, tipR], a, b) {
   const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
   const mid = A.clone().add(B).multiplyScalar(0.5).toArray();
   return add(root, name, cyl(tipR, rootR, d.length(), 4), mat, mid, [e.x, e.y, e.z]);
+}
+
+/* --------------------------------------------------------------------------
+ * The Thurible, the Order's (#1440, on the Chorister's rule): the censer
+ * that bombs upward. What the kind adds and no Order hull had is a rack of
+ * open wells let into a shield's back, and three ways of dressing a
+ * shield's *rim* — blades off its edge, limbs folded under it, marks along
+ * it — each drawn as the mirrored pair the faction block asks of this
+ * navy. Every builder seats its parts by functions the hull supplies,
+ * `crown(x, z)` and `flank(x)`, as the Directorate's Thurible builders do
+ * (factions/directorate.mjs `chargeRack`), because the shield is the hull's
+ * own spar and no builder here knows its profile.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The charge rack, the Order's: open-topped cells let into the shield's
+ * back in two MIRRORED ranks, `cell_${i}_${side}_collar`, `_well`, `_lid`
+ * and `_hinge` each — the Directorate's four parts a cell (`chargeRack`),
+ * cut the Order's way. The `collar` is a six-facet crystal ring, `r`
+ * outside and `r − wall` inside, standing `proud` of the crown at the
+ * cell's centre and running `sink` into it, one closed profile through
+ * the kit's `loft` stood on end so the well has an inside — the hexagonal
+ * prism this navy cuts a lip or a collar to (Block 2c), its flats fore and
+ * aft so the lid hinges on a flat edge and not a vertex. The `well` is the
+ * floor, a six-sided `floor` drum across the bore `depth` under the
+ * collar's top — `proud − depth` above the crown at the centre, because a
+ * floor let into a facet that slopes is a floor the facet shows through on
+ * the uphill side (the Directorate's header, the first run). The `lid` is
+ * a six-sided alloy disc of the collar's radius hinged along the collar's
+ * aft flat, `a = r cos 30°` abaft the centre, standing `lid.open` radians
+ * up from shut — forward and upward, because up is the way the rack fires
+ * — and the `hinge` an alloy pin along the hinge line, the flat's own
+ * length. Collars vertical, not normal to the facet: a well bores straight
+ * up whatever its deck does, as the Directorate's do on a 30° dome.
+ *
+ * `pairs` is `[{ x, z }]`, `z` unsigned, and every pair is drawn on both
+ * sides at one station, starboard first (`bothSides`, port −z, #642): the
+ * Directorate's rack is seven cells in two staggered ranks and its builder
+ * refuses a mirrored pair, because its block puts the ranks at different
+ * stations; this navy's block makes it "the only faction with" precise
+ * bilateral symmetry, and every approved Order variant takes the faction
+ * block over the kind's asymmetry (hulls/chorister-hadron.mjs, the lamps
+ * and the gun; hulls/verger-hadron.mjs, the hatches; hulls/acolyte-hadron.mjs,
+ * the stance). So the Order's rack is pairs, an even count, and this
+ * builder cannot draw it otherwise. A rack and not a tube: nothing here has
+ * a muzzle, no face of it points along the hull, and the cells carry no
+ * lamp (models-plan.md §3.2, rule 4) — the light of a charge is the
+ * charge's, above the hull — so the floor is the one dark cladding a hull
+ * of this navy carries (`ink.darkSteel`, the Offertory's cradle floors),
+ * never the seam's base.
+ */
+export function chargeWells(root, { collar: collarMat, floor: floorMat, lid: lidMat }, opts) {
+  const {
+    crown,
+    pairs,
+    r = 2.8,
+    wall = 0.55,
+    proud = 2.2,
+    sink = 1.2,
+    depth = 1.2,
+    floor = 0.3,
+    lid = { t: 0.25, open: 1.35 },
+    hinge = { r: 0.2 },
+  } = opts;
+  const inner = r - wall;
+  const collar = [
+    [0, inner],
+    [0, r],
+    [proud + sink, r],
+    [proud + sink, inner],
+    [0, inner],
+  ];
+  // The lathe at phase 0 carries a vertex on ±z and a flat on ±y, and stood
+  // on end by a quarter turn about z that flat is on ±x: the aft flat is
+  // the hinge line. `cyl` at thetaStart 0 lays its hexagon the same way.
+  const collarGeo = loft(collar, 6, 0);
+  const wellGeo = cyl(inner, inner, floor, 6);
+  const lidGeo = cyl(r, r, lid.t, 6);
+  const apothem = r * Math.cos(Math.PI / 6);
+  const pinGeo = cyl(hinge.r, hinge.r, r + 2 * hinge.r, 6);
+  pairs.forEach(({ x, z }, i) =>
+    bothSides((side, sgn) => {
+      const name = `cell_${i}_${side}`;
+      const y = crown(x, sgn * z);
+      if (!Number.isFinite(y)) throw new Error(`${name}: no shell at x = ${x}, z = ${sgn * z}`);
+      const top = y + proud;
+      add(
+        root,
+        `${name}_collar`,
+        collarGeo,
+        collarMat,
+        [x, y - sink, sgn * z],
+        [0, 0, Math.PI / 2]
+      );
+      add(root, `${name}_well`, wellGeo, floorMat, [x, top - depth - floor / 2, sgn * z]);
+      // The lid turns about the hinge on the collar's aft flat: a roll of
+      // `open` about z lifts the disc's forward edge, and its centre swings
+      // with it round the pin.
+      const { t, open } = lid;
+      add(
+        root,
+        `${name}_lid`,
+        lidGeo,
+        lidMat,
+        [x - apothem + apothem * Math.cos(open), top + t / 2 + apothem * Math.sin(open), sgn * z],
+        [0, 0, open]
+      );
+      add(root, `${name}_hinge`, pinGeo, lidMat, [x - apothem, top, sgn * z], [Math.PI / 2, 0, 0]);
+    })
+  );
+}
+
+/**
+ * Blades off a shield's rim, in mirrored pairs, `rim_blade_${i}_${side}`
+ * each: the Directorate's rim spines said the Order's way — a thin alloy
+ * plan (`plane`, the family's wing) rooted `sink` inside the vertical
+ * flank facet at its station and reaching `reach` out past it to a point,
+ * its `chord` along the flank and its tip `rake` metres ahead of the
+ * root's middle, lying level at `y`, `t` thick. A spike lying out past the
+ * rim reads as a spike in plan, which is why the Directorate puts its
+ * spines on the rim and not the back; a blade is what the Order cuts a
+ * spike as (the Clarion's wings, the Lance's guards). `flank(x)` is the
+ * shell's half-beam at `x`, the hull's own function of its spar, read at
+ * each root corner since a kite's rim is not parallel to the keel.
+ * `stations` is `[x]`, one a pair; the Directorate's `rimSpines` refuses a
+ * mirrored pair, and this draws nothing else.
+ */
+export function rimBlades(root, alloy, opts) {
+  const { flank, stations, chord = 5, reach = 9, rake = 2.2, t = 0.9, y = 0, sink = 1.5 } = opts;
+  stations.forEach((x, i) => {
+    const aft = x - chord / 2;
+    const fore = x + chord / 2;
+    const rootAft = flank(aft) - sink;
+    const rootFore = flank(fore) - sink;
+    if (rootAft <= 0 || rootFore <= 0)
+      throw new Error(`rim_blade_${i}: no shell to root in at x = ${x}`);
+    const outline = [
+      [aft, rootAft],
+      [fore, rootFore],
+      [x + rake, flank(x) + reach],
+    ];
+    bothSides((side, sgn) => plane(root, `rim_blade_${i}_${side}`, alloy, { outline, t, y }, sgn));
+  });
+}
+
+/**
+ * Walking limbs folded under a shield's rim, in mirrored pairs — the
+ * Directorate's "folded walking limbs" said the Order's way, with the
+ * Acolyte's bones (`plantedLimbs`) folded rather than planted. Each limb
+ * is five parts, `limb_${i}_${side}_hip`, `_femur`, `_knee`, `_tibia` and
+ * `_claw`: an alloy hip block (`hip.size`, `[along, tall, across]`) on
+ * the vertical flank facet at `[x, y]`, its centre `hip.sink` inside the
+ * skin; a four-facet alloy femur `femur.r` `[root, tip]` from the hip
+ * `femur.reach` outboard and `femur.drop` down to the knee, an alloy block
+ * (`knee.size`); a four-facet tibia from the knee `tibia.fold` forward
+ * along the hull, `tibia.in` back inboard and `tibia.drop` down to the
+ * ankle — the fold, which is what tucks the limb under the rim; and from
+ * the ankle a crystal point `claw.r` by `claw.length` lying forward along
+ * the hull, the Order's stone for a tip (`point`). The knee is the one
+ * joint out past the rim, and from above a folded rank reads as a row of
+ * knees along the edge, as the Directorate's reads as a row of tips.
+ *
+ * `pairs` is `[{ x, y }]`, the hip's station and height on the flank, and
+ * every pair is drawn on both sides, starboard first (`bothSides`, port
+ * −z, #642); the Directorate's `limbs` is the one pair that navy allows
+ * and is mirrored too. `flank(x)` is the shell's half-beam at the hip's
+ * station; a station with no flank is refused, because a limb rooted in
+ * water is a limb the conn view shows floating. Returns the joints,
+ * `[{ i, side, hip, knee, ankle }]`, for the record.
+ */
+export function foldedLimbs(root, { alloy, crystal: clawMat }, opts) {
+  const {
+    flank,
+    pairs,
+    hip = { sink: 0.6, size: [2.0, 1.6, 1.8] },
+    femur = { r: [0.8, 0.6], reach: 3.2, drop: 2.6 },
+    knee = { size: [2.0, 1.6, 1.6] },
+    tibia = { r: [0.6, 0.45], fold: 5.5, in: 2.2, drop: 1.2 },
+    claw = { r: 0.6, length: 2.4 },
+  } = opts;
+  const joints = [];
+  pairs.forEach(({ x, y }, i) => {
+    const half = flank(x);
+    if (half <= hip.sink) throw new Error(`limb_${i}: no shell to root on at x = ${x}`);
+    bothSides((side, sgn) => {
+      const name = `limb_${i}_${side}`;
+      const hipAt = [x, y, sgn * (half - hip.sink)];
+      const kneeAt = [x, y - femur.drop, sgn * (half - hip.sink + femur.reach)];
+      const ankle = [x + tibia.fold, kneeAt[1] - tibia.drop, kneeAt[2] - sgn * tibia.in];
+      add(root, `${name}_hip`, box(...hip.size), alloy, hipAt);
+      bone(root, `${name}_femur`, alloy, femur.r, hipAt, kneeAt);
+      add(root, `${name}_knee`, box(...knee.size), alloy, kneeAt);
+      bone(root, `${name}_tibia`, alloy, tibia.r, kneeAt, ankle);
+      // A point is born apex +y; a quarter turn about z lays it forward,
+      // its base ring on the ankle (`point`, `tipUp`).
+      add(
+        root,
+        `${name}_claw`,
+        cyl(0, claw.r, claw.length, 4),
+        clawMat,
+        [ankle[0] + claw.length / 2, ankle[1], ankle[2]],
+        [0, 0, -Math.PI / 2]
+      );
+      joints.push({ i, side, hip: hipAt, knee: kneeAt, ankle });
+    });
+  });
+  return joints;
+}
+
+/**
+ * Marks along a rim in mirrored pairs, `${name}_${i}_${side}` each: the
+ * Directorate's photophore rows (`rimPhotophores`) said the Order's way —
+ * `crystal_seam` boxes of `size` `[along, tall, across]`, each dropped
+ * from its station `[x, ±z]` onto the facet under it among the parts `on`
+ * names, its underside on that facet and tilted with it (kit.mjs `seat`,
+ * `drop`), so a mark on a shield's sloped facet lies on the slope and a
+ * mark on a segment's flat lies flat. `spots` is `[[x, z]]`, `z` unsigned,
+ * and every spot is drawn on both sides, starboard first (`bothSides`,
+ * port −z, #642): the Directorate's rows repeat on neither side by its
+ * block, and this navy's repeat on both by its. `navMarkPair` is one such
+ * pair at one level; this is a rank seated on a shell that is not level.
+ */
+export function rimMarkPairs(root, light, { name, on, spots, size = [1.2, 0.3, 1.2] }) {
+  spots.forEach(([x, z], i) =>
+    bothSides((side, sgn) => {
+      const laid = seat(root, on, [x, 50, sgn * z], { stand: size[1] / 2, drop: true });
+      add(root, `${name}_${i}_${side}`, box(...size), light, laid.at, laid.rot);
+    })
+  );
+}
+
+/**
+ * The spine-gun on the centreline, the Chorister's rail pair with a barrel
+ * between (hulls/chorister-hadron.mjs, "a rail each side of the spine"):
+ * an alloy `mount` block (`mount.size`) seated on the spine's top at the
+ * breech station `x` with its centre `mount.sink` under `y`, the spine's
+ * top there; a four-facet alloy `barrel` tapering `barrel.r` `[breech,
+ * muzzle]` over `barrel.length` forward of the breech, horizontal, its
+ * flat up (kit.mjs `cyl` at π/4), so over a nose that falls away the
+ * muzzle stands clear, as the Directorate's does; and a `rail` each side
+ * of the barrel, `rail_${side}`, boxes of `rail.size` at ±`rail.z` rooted
+ * in the mount at their after end and lying along the barrel's flanks.
+ * "Off the centreline" is the Directorate's clause, and the approved
+ * Chorister puts the Order's on the keel line for the faction block's
+ * symmetry; dark, every part, since the Thurible lights nothing on its gun.
+ */
+export function spineGun(root, alloy, opts) {
+  const { x, y, mount = { size: [2.4, 1.6, 2.4], sink: 0.6 } } = opts;
+  const { barrel = { r: [0.6, 0.45], length: 10 }, rail = { z: 0.65, size: [8, 0.5, 0.5] } } = opts;
+  const axis = y + mount.size[1] - mount.sink;
+  add(root, 'spine_gun_mount', box(...mount.size), alloy, [
+    x,
+    y + mount.size[1] / 2 - mount.sink,
+    0,
+  ]);
+  const [breech, muzzle] = barrel.r;
+  add(
+    root,
+    'spine_gun',
+    cyl(muzzle, breech, barrel.length, 4, Math.PI / 4),
+    alloy,
+    [x + barrel.length / 2, axis, 0],
+    [0, 0, -Math.PI / 2]
+  );
+  bothSides((side, sgn) =>
+    add(root, `rail_${side}`, box(...rail.size), alloy, [
+      x + rail.size[0] / 2 - 0.5,
+      axis - 0.2,
+      sgn * rail.z,
+    ])
+  );
 }
 
 /**
