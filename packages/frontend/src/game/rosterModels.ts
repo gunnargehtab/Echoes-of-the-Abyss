@@ -160,9 +160,8 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Herald]: 'herald',
   // The ordnance hulls (#507), script-built in #785: one model a navy. The
   // Thurible carries no lock, so a navy rendering for one resolves
-  // thurible-<its faction>.glb — only the Directorate's exists, and the
-  // others stay on the recoloured sprite until a variant passes intake
-  // (#1440).
+  // thurible-<its faction>.glb — all four variants exist (#1440), as the
+  // Acolyte's do.
   [UnitKind.Broadside]: 'broadside',
   [UnitKind.Weaver]: 'weaver',
   [UnitKind.Thurible]: 'thurible',
@@ -170,7 +169,7 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   // The siege hulls (#508), script-built in #786: one model a navy. The Lure
   // carries no lock, so a navy rendering for one resolves lure-<its
   // faction>.glb — only the Directorate's exists, and the others stay on the
-  // recoloured sprite until a variant passes intake, as the Thurible's do.
+  // recoloured sprite until a variant passes intake (#1441).
   [UnitKind.Furnace]: 'furnace',
   [UnitKind.Blight]: 'blight',
   [UnitKind.Lure]: 'lure',

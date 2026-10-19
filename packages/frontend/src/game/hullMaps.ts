@@ -183,6 +183,15 @@ import weaverEmissive from '../assets/hulls/maps/weaver-emissive.png';
 import thuribleAlbedo from '../assets/hulls/maps/thurible-albedo.png';
 import thuribleHeight from '../assets/hulls/maps/thurible-height.png';
 import thuribleEmissive from '../assets/hulls/maps/thurible-emissive.png';
+import thuribleBathAlbedo from '../assets/hulls/maps/thurible-bathyarch-albedo.png';
+import thuribleBathHeight from '../assets/hulls/maps/thurible-bathyarch-height.png';
+import thuribleBathEmissive from '../assets/hulls/maps/thurible-bathyarch-emissive.png';
+import thuriblePelAlbedo from '../assets/hulls/maps/thurible-pelagia-albedo.png';
+import thuriblePelHeight from '../assets/hulls/maps/thurible-pelagia-height.png';
+import thuriblePelEmissive from '../assets/hulls/maps/thurible-pelagia-emissive.png';
+import thuribleHadAlbedo from '../assets/hulls/maps/thurible-hadron-albedo.png';
+import thuribleHadHeight from '../assets/hulls/maps/thurible-hadron-height.png';
+import thuribleHadEmissive from '../assets/hulls/maps/thurible-hadron-emissive.png';
 import lanceAlbedo from '../assets/hulls/maps/lance-albedo.png';
 import lanceHeight from '../assets/hulls/maps/lance-height.png';
 import lanceEmissive from '../assets/hulls/maps/lance-emissive.png';
@@ -391,8 +400,9 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
   },
   // The ordnance hulls (#785), on the same rule: one navy's hull each, so
   // the kind's canonical model. The Thurible carries no lock, so its
-  // Directorate model serves every navy recoloured — the Chorister's, the
-  // Verger's and the Acolyte's rule — until a variant passes intake.
+  // Directorate model is the kind's canonical one and VARIANT_MAP_URL carries
+  // the other three navies' — the Chorister's, the Verger's and the
+  // Acolyte's rule (#1440).
   [UnitKind.Broadside]: {
     albedo: broadsideAlbedo,
     height: broadsideHeight,
@@ -417,7 +427,7 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
   // kind's canonical model, and three of the four baked in their working
   // state — ladders run out, fan spread, bell braced. The Lure carries no
   // lock, so its Directorate model serves every navy recoloured — the
-  // Chorister's and the Thurible's rule — until a variant passes intake.
+  // Chorister's and the Acolyte's rule — until a variant passes intake.
   [UnitKind.Furnace]: {
     albedo: furnaceAlbedo,
     height: furnaceHeight,
@@ -534,6 +544,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>
       height: acolytePelHeight,
       emissive: acolytePelEmissive,
     },
+    [UnitKind.Thurible]: {
+      albedo: thuriblePelAlbedo,
+      height: thuriblePelHeight,
+      emissive: thuriblePelEmissive,
+    },
   },
   [Faction.Bathyarch]: {
     [UnitKind.LightScout]: {
@@ -575,6 +590,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>
       albedo: acolyteBathAlbedo,
       height: acolyteBathHeight,
       emissive: acolyteBathEmissive,
+    },
+    [UnitKind.Thurible]: {
+      albedo: thuribleBathAlbedo,
+      height: thuribleBathHeight,
+      emissive: thuribleBathEmissive,
     },
   },
   [Faction.Directorate]: {
@@ -639,6 +659,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>
       albedo: acolyteHadAlbedo,
       height: acolyteHadHeight,
       emissive: acolyteHadEmissive,
+    },
+    [UnitKind.Thurible]: {
+      albedo: thuribleHadAlbedo,
+      height: thuribleHadHeight,
+      emissive: thuribleHadEmissive,
     },
   },
 };
