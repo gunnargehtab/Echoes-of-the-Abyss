@@ -647,6 +647,7 @@ describe("another region's detail, where no session holds it (§7.5)", () => {
     // Every layer's rebuild, the real one run: under node no model loads, so
     // what a layer was asked to stand is the reading, not what it drew.
     const rebuilds = mock.method(EnvironmentLayer.prototype, 'rebuild');
+    const destroys = mock.method(EnvironmentLayer.prototype, 'destroy');
     try {
       const { view } = await mountPilot(false);
       const held = residency(view);
@@ -684,9 +685,14 @@ describe("another region's detail, where no session holds it (§7.5)", () => {
       view.setTerrain(sorrowgate());
       pumpAnimationFrames();
       assert.equal(held.counts.released, 1);
-      assert.equal(group.children.length, 0, 'nothing of the baseline left standing');
+      assert.equal(
+        destroys.mock.calls.filter((c) => c.this === detail.props).length,
+        1,
+        'its props let go with it'
+      );
     } finally {
       rebuilds.mock.restore();
+      destroys.mock.restore();
     }
   });
 

@@ -2654,6 +2654,19 @@ export class PerspectiveView {
     overview.holes = key;
   }
 
+  /** The props standing on the detail drawn this frame, and their triangles (#1488). */
+  private detailPropStats(): { detailProps: number; detailPropTris: number } {
+    let detailProps = 0;
+    let detailPropTris = 0;
+    for (const detail of this.drawnDetails()) {
+      if (!detail.mesh.visible) continue;
+      const { props, propTris } = detail.props.stats();
+      detailProps += props;
+      detailPropTris += propTris;
+    }
+    return { detailProps, detailPropTris };
+  }
+
   /** The other regions' detail drawn this frame (`syncDetail`). */
   private drawnDetails(): RegionDetail[] {
     const residency = this.residency;
@@ -2835,7 +2848,8 @@ export class PerspectiveView {
     // join and the return's swap trade like for like (#1488). A child of the
     // mesh, so they are drawn, hidden and let go with it. No stone is seated:
     // this skin bakes no scour round one. Nothing fades them, since only the
-    // pilot's region has a surround, and its map lies inside its own mission.
+    // pilot's region has a surround, and its map lies inside its own mission;
+    // nor shades them, since the veil is cleared before a return lets go.
     const props = new EnvironmentLayer(this.look);
     const patchX = region.x - atlas.x;
     const patchY = region.y - atlas.y;
@@ -3938,9 +3952,9 @@ export class PerspectiveView {
               detailDrawn: this.residency?.drawn() ?? [],
               detailResident: [...(this.residency?.residentIds() ?? [])],
               detailPending: this.residency?.pending ?? 0,
-              // What the drawn detail's props cost (#1488), beside `props` above.
-              detailProps: this.drawnDetails().reduce((n, d) => n + d.props.stats().props, 0),
-              detailPropTris: this.drawnDetails().reduce((n, d) => n + d.props.stats().propTris, 0),
+              // What the drawn detail's props cost (#1488), beside the session's
+              // `props` below. A return's baseline, built hidden, is not drawn.
+              ...this.detailPropStats(),
             },
       // The lamp halo (art-direction.md, "Lamp halo — SPEC"): its state, what
       // it drew last frame, and what it holds (gate 6).
