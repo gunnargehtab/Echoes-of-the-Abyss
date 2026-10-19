@@ -748,11 +748,13 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
    * lobby can name and preview the map it is about to be played on.
    */
   private sendMapData(client: Client): void {
-    // Terrain is public information — it is the map. Serialised from the live
-    // arrays, so a client joining after a mission has written the ground gets
-    // the ground as it *is* rather than as it was authored — which is what
-    // makes a reconnection at 15:00 land on a map with the arch already down.
-    // The revision it carries is that client's cursor into the change log.
+    // Terrain is public information — it is the map. Sent as the match opened
+    // on it, with every write since: a client joining after a mission has
+    // written the ground replays the writes, so a reconnection at 15:00 lands
+    // on a map with the arch already down — on the noise seed the opening
+    // ground hashes to, as every other client's does (#1496). The live grid
+    // would hash to a new one and re-relieve the whole map. The revision it
+    // carries is that client's cursor into the change log.
     //
     // A placed mission's ground also says which world region it stands in
     // (docs/world-map.md §7.1, #1460): the room names it, so the client never
@@ -760,10 +762,12 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     // look is, so Radicals on this same map names none; and omitted rather than
     // sent empty, so every other room's terrain is what it always was.
     const region = worldRegionForMission(this.mission?.id);
+    const terrain = this.match.world.terrain;
     this.sendTo(client, SERVER_MSG.terrain, {
-      ...this.match.world.terrain.serialize(),
-      revision: this.match.world.terrain.revision,
+      ...terrain.serializeOpening(),
+      revision: terrain.revision,
       ...(region === undefined ? {} : { region: region.id }),
+      ...(terrain.revision === 0 ? {} : { changes: terrain.changesSince(0) }),
     });
     this.sendTo(client, SERVER_MSG.map, {
       id: this.map.id,

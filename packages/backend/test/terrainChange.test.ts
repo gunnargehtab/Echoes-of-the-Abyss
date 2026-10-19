@@ -188,16 +188,32 @@ describe('the arch, going', () => {
 });
 
 describe('ground the match wrote', () => {
-  it('is what a joining client is sent, not what the map authored', () => {
-    // A reconnection at 15:00 has to land on a map with the arch already down.
-    // `serialize` reads the live arrays, so this is really a check that nothing
-    // caches the constructed grid on the way to the wire.
+  it('is what the live grid reads, not what the map authored', () => {
+    // A commander's seat reads `serialize` (ai/seat.ts), and has to stand on
+    // the arch already down: a check that nothing caches the constructed grid.
     const authored = authoredGround().serialize();
     const played = transited().world.terrain.serialize();
     const differing = played.floor.filter((value, index) => value !== authored.floor[index]).length;
-    assert.ok(differing > 0, 'the served grid still matches the authored one');
+    assert.ok(differing > 0, 'the live grid still matches the authored one');
     assert.equal(played.cols, authored.cols);
     assert.equal(played.rows, authored.rows);
+  });
+
+  it('reaches a joining client as the opening ground and every write since (#1496)', () => {
+    // A reconnection at 15:00 has to land on a map with the arch already down,
+    // and on the noise seed the client hashed at 0:00: the client hashes the
+    // ground it is sent, so what it is sent is the opening one, and the writes
+    // replay the fall over it.
+    const terrain = transited().world.terrain;
+    const opening = terrain.serializeOpening();
+    assert.deepEqual(opening, authoredGround().serialize(), 'the ground the match opened on');
+    const replayed = structuredClone(opening);
+    for (const cell of terrain.changesSince(0)) {
+      replayed.floor[cell.index] = cell.floorM;
+      replayed.ceiling[cell.index] = cell.ceilingM;
+      replayed.biomes[cell.index] = cell.biome;
+    }
+    assert.deepEqual(replayed, terrain.serialize(), 'its writes replay to the live grid');
   });
 
   it('reports only the cells that actually moved', () => {
@@ -439,10 +455,10 @@ describe('the water a beat rewrites', () => {
     assert.equal(terrain.revision, revision, 'an idempotent repaint was sent');
   });
 
-  it('lands a replaying client on the grid a joining client is served', () => {
-    // The two paths into a client's biome array: `serialize` on join, and
-    // `changesSince` for a client holding an older cursor. A field carried by
-    // one and not the other is a map that differs by when you connected.
+  it('lands a replaying client on the live grid', () => {
+    // The live arrays (`serialize`, the commander's seat) and `changesSince`
+    // replayed over the opening grid (every client, #1496). A field carried by
+    // one and not the other is a map that differs by who is reading it.
     const terrain = new Terrain(4000, 4000, 250, { floorM: 1600 });
     terrain.fillRect(0, 0, 4000, 4000, Biome.OpenWater);
     terrain.markBaseline();
@@ -451,13 +467,13 @@ describe('the water a beat rewrites', () => {
     terrain.fillGround(1000, 1000, 500, 500, { biome: Biome.CoralRuins, floorM: 900 });
     terrain.fillGround(1200, 1200, 300, 300, { biome: Biome.ThermalVein });
 
-    // The late joiner is served the live arrays.
+    // The live arrays.
     const joinedLate = terrain.serialize().biomes;
     // The early joiner replays the log from its cursor, exactly as
     // `EchoRenderer.applyGround` does.
     for (const change of terrain.changesSince(0)) joinedEarly[change.index] = change.biome;
 
-    assert.deepEqual(joinedEarly, joinedLate, 'the two clients hold different water');
+    assert.deepEqual(joinedEarly, joinedLate, 'the replay and the live grid hold different water');
   });
 });
 

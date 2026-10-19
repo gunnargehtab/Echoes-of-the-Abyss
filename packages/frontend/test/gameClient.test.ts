@@ -477,6 +477,20 @@ describe('the match client: what the room says', () => {
     assert.deepEqual(log.argsOf('onMissionOver'), [[{ outcome: 0 }]]);
   });
 
+  it("replays a join's ground writes as a delta, after the ground and in its task (#1496)", async () => {
+    const { room, log } = await connected({});
+    const opening = cannedTerrain();
+    const changes = [{ index: 3, floorM: 2900, ceilingM: 0, biome: 3 }];
+    room.emit('terrain', { ...opening, revision: 1, changes });
+    assert.deepEqual(
+      log.argsOf('onTerrain'),
+      [[{ ...opening, revision: 1 }]],
+      'the opening ground'
+    );
+    assert.deepEqual(log.argsOf('onGround'), [[changes]], 'its writes, before the emit returns');
+    assert.deepEqual(log.names().slice(-2), ['onTerrain', 'onGround'], 'ground first, then writes');
+  });
+
   it('normalises a ground delta with no cells to an empty list', async () => {
     const { room, log } = await connected({});
     room.emit('ground', { cells: [{ index: 3, floorM: 2900, ceilingM: 0, biome: 3 }] });

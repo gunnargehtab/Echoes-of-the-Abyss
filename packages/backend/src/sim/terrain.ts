@@ -212,7 +212,7 @@ export class Terrain {
    *
    * Reset by `markBaseline` when the match starts, so this holds mid-match
    * change and never the map's own construction — the join payload already
-   * carries that, serialised from the live arrays.
+   * carries that, as the opening grid this list is replayed over (#1496).
    *
    * It grows without bound, and that is a deliberate bet rather than an
    * oversight: ground is authored by mission beats, and a beat fires once. A
@@ -229,6 +229,12 @@ export class Terrain {
    * (#259) reads as the divergence it is.
    */
   private digest = FNV_OFFSET;
+  /**
+   * The grid as `markBaseline` found it: the ground the match opened on, which
+   * a join is sent with `changes` to replay over it (#1496). Null before the
+   * baseline, when the live grid is the opening one.
+   */
+  private opening: { biomes: Uint8Array; floor: Uint16Array; ceiling: Uint16Array } | null = null;
   /**
    * The PF modifiers currently in force — the last set `applyPropagationModifiers`
    * was handed.
@@ -901,6 +907,11 @@ export class Terrain {
   markBaseline(): void {
     this.changes = [];
     this.digest = FNV_OFFSET;
+    this.opening = {
+      biomes: this.biomes.slice(),
+      floor: this.floor.slice(),
+      ceiling: this.ceiling.slice(),
+    };
   }
 
   /** The cell writes a client at `revision` has not seen. */
@@ -921,7 +932,7 @@ export class Terrain {
     return this.digest;
   }
 
-  /** Flat copy of the grid, for shipping to the client. Terrain is public. */
+  /** Flat copy of the live grid. Terrain is public. */
   serialize(): {
     cols: number;
     rows: number;
@@ -937,6 +948,25 @@ export class Terrain {
       biomes: Array.from(this.biomes),
       floor: Array.from(this.floor),
       ceiling: Array.from(this.ceiling),
+    };
+  }
+
+  /**
+   * Flat copy of the grid the match opened on, for shipping to a joining
+   * client with `changesSince(0)` (#1496). The client derives its noise seed,
+   * rock top and depth ramp from the ground it is sent, and every client must
+   * derive them from the same one, whenever it joined.
+   */
+  serializeOpening(): ReturnType<Terrain['serialize']> {
+    const opening = this.opening;
+    if (opening === null) return this.serialize();
+    return {
+      cols: this.cols_,
+      rows: this.rows_,
+      cellM: this.cellM,
+      biomes: Array.from(opening.biomes),
+      floor: Array.from(opening.floor),
+      ceiling: Array.from(opening.ceiling),
     };
   }
 

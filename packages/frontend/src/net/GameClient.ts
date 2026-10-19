@@ -124,8 +124,12 @@ interface LobbyCallbacks {
 export type LobbyCallbacksFactory = (room: MatchRoom) => LobbyCallbacks;
 
 export interface GameClientHandlers {
-  /** The ground, whole, with its revision and, for a placed mission, its region. */
-  onTerrain(terrain: TerrainMessage): void;
+  /**
+   * The ground, whole, with its revision and, for a placed mission, its
+   * region: the opening ground, which `onGround` then brings to the revision
+   * when the match has written it (#1496).
+   */
+  onTerrain(terrain: Omit<TerrainMessage, 'changes'>): void;
   /** Ground the match changed under the client's feet (#197). */
   onGround(cells: GroundDeltaPayload['cells']): void;
   onMap(map: MapPayload): void;
@@ -509,7 +513,14 @@ export class GameClient {
     this.room = room;
     rememberToken(room.reconnectionToken, this.missionId);
 
-    this.handle(room, SERVER_MSG.terrain, (payload) => this.handlers.onTerrain(payload));
+    // A join after the match wrote the ground is sent the opening ground and
+    // its writes (#1496): replayed here as the ground and then its delta, in
+    // one task, so no frame draws the opening ground and every handler sees
+    // the history arrive the way a player there from the start saw it.
+    this.handle(room, SERVER_MSG.terrain, ({ changes, ...terrain }) => {
+      this.handlers.onTerrain(terrain);
+      if (changes !== undefined && changes.length > 0) this.handlers.onGround(changes);
+    });
     // Ground that changed after the join payload was sent (#197). A mission
     // beat can collapse a span, and a client still drawing the route that is
     // no longer there is worse than one drawing nothing — the player would be

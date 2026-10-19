@@ -6,8 +6,9 @@
  * and the client must never be the one choosing where a room's ground goes.
  * So the room says so, on the ground's own message: these hold that the
  * prologue names Sorrowgate at join and again on a reconnection after its
- * ground has changed, with the live cells and the live revision, and that
- * every other room — Radicals on the same map included — names nothing.
+ * ground has changed, with writes that replay to the live cells and the live
+ * revision, and that every other room — Radicals on the same map included —
+ * names nothing.
  */
 
 import assert from 'node:assert/strict';
@@ -77,9 +78,13 @@ describe('the region a room names (#1460)', () => {
     const back = lastTerrain(client);
     assert.equal(back.region, SORROWGATE_REGION.id);
     assert.equal(back.revision, ground.revision, "the client's cursor is the live one");
+    // The opening ground and its writes (#1496), which replay to the live cells.
+    assert.deepEqual(back.floor, joined.floor, 'the ground the match opened on');
+    const replayed = [...back.floor];
+    for (const cell of back.changes ?? []) replayed[cell.index] = cell.floorM;
     const archRow = 8 * back.cols;
     for (let col = 0; col < back.cols; col++) {
-      assert.equal(back.floor[archRow + col], 1_000, `column ${col} is the live cell`);
+      assert.equal(replayed[archRow + col], 1_000, `column ${col} replays to the live cell`);
       assert.notEqual(joined.floor[archRow + col], 1_000, 'and was not at join');
     }
   });
