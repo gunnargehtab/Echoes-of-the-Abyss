@@ -359,6 +359,14 @@ const SPRITE_REGISTER = 0.24;
  * floor (graphics-standards.md gate 6). */
 const MAX_PIXEL_RATIO = 1.5;
 
+/**
+ * TUNABLE — the longest the canvas waits on programs still linking
+ * (`precompile`, #1495) before it draws anyway and waits on them in the draw,
+ * as it did before. The GTX 1070 linked a board launch's first ground in about
+ * 800 ms; a lost context, which never finishes a link, must not hold for good.
+ */
+const PROGRAM_HOLD_MAX_MS = 2_000;
+
 /** What `projectPoint` hands the overlay painter: a screen position, the
  * local scale (for symbol sizing and stroke parity), and visibility. */
 export interface ProjectedPoint {
@@ -847,6 +855,15 @@ export class PerspectiveView {
   private appliedHeight = 0;
   private active = false;
   private frameHandle = 0;
+  /**
+   * The materials whose programs the driver may still be linking, and when the
+   * hold on them ends whatever they do (`precompile`). Null when none is.
+   */
+  private linking: { materials: Set<Material>; until: number } | null = null;
+  /** Frames the canvas held for linking programs, for the probe. */
+  private heldFrames = 0;
+  /** Whether the scene gained a mesh since the last `precompile`: a ground, a handle, a model. */
+  private sceneGrew = false;
   private lastFrameAt = 0;
   /**
    * Whether the page went hidden at any point since the last frame. A hidden
@@ -2022,7 +2039,58 @@ export class PerspectiveView {
     this.scene.fog = fog;
 
     this.rebuildDressing();
+    this.sceneGrew = true;
     this.syncEntities();
+  }
+
+  /**
+   * Link the programs the scene's materials need on the driver's threads
+   * rather than in the next draw (#1495), and hold the canvas pass until they
+   * have: a session's ground and everything standing on it, and each handle
+   * and hull model as it lands. A draw that met a program still linking
+   * waited on it on this thread, which held the whole page, HUD included —
+   * 800 ms at a board launch's first join on the GTX 1070. Held, the canvas
+   * keeps the frame it last presented, at the join the frame §7.6 holds
+   * anyway, while the page answers. Only where the driver links in parallel
+   * (KHR_parallel_shader_compile); without it a program is ready the moment
+   * it is made, and there is nothing to wait for. A later call takes over the
+   * hold, since `compile` hands back every material in the scene.
+   *
+   * Mid-match too, the owner's call on #1495: the first hull or structure of
+   * a kind not yet drawn holds the canvas the same way. The HUD keeps drawing through
+   * the camera meanwhile, so its symbols slide over a still world during a
+   * pan, and a resize leaves the canvas cleared until the hold ends; before,
+   * the whole page hitched instead.
+   *
+   * Not `compileAsync`: its poll reads the program of every material it
+   * compiled, and a material disposed meanwhile has none, so the poll throws
+   * in a timer and its promise never settles: four times in one GPU drive.
+   * `linkingPrograms` polls on the frame instead, and counts a disposed
+   * material as done.
+   */
+  private precompile(): void {
+    const renderer = this.renderer;
+    if (renderer === null || !renderer.extensions.has('KHR_parallel_shader_compile')) return;
+    const materials = renderer.compile(this.scene, this.camera);
+    this.linking = { materials, until: performance.now() + PROGRAM_HOLD_MAX_MS };
+  }
+
+  /** Whether a program `precompile` started is still linking, inside the cap. */
+  private linkingPrograms(now: number): boolean {
+    const job = this.linking;
+    const renderer = this.renderer;
+    if (job === null || renderer === null) return false;
+    if (now < job.until) {
+      for (const material of job.materials) {
+        const { currentProgram: program } = renderer.properties.get(material) as {
+          currentProgram?: { isReady(): boolean };
+        };
+        if (program === undefined || program.isReady()) job.materials.delete(material);
+      }
+      if (job.materials.size > 0) return true;
+    }
+    this.linking = null;
+    return false;
   }
 
   /**
@@ -3248,6 +3316,7 @@ export class PerspectiveView {
         stands: spec.stands,
       };
       handles.set(id, handle);
+      this.sceneGrew = true;
     }
 
     // The model path: swap in the approved mesh the moment its template is
@@ -3260,6 +3329,7 @@ export class PerspectiveView {
         handle.model = instance;
         handle.modelKey = spec.modelCacheKey;
         this.models.attach(instance);
+        this.sceneGrew = true;
       }
     } else if (spec.modelDesc === null && handle.model !== null) {
       this.models.detach(handle.model);
@@ -3425,6 +3495,10 @@ export class PerspectiveView {
       });
     }
     this.syncOrdnance(now);
+    if (this.sceneGrew) {
+      this.sceneGrew = false;
+      this.precompile();
+    }
   }
 
   /**
@@ -3749,6 +3823,14 @@ export class PerspectiveView {
         this.drawScale
       );
     }
+    // Programs still linking (`precompile`): no pass draws, so none waits on
+    // them, and the canvas keeps its last frame until they are ready.
+    if (this.linkingPrograms(now)) {
+      this.heldFrames++;
+      this.framePasses = [];
+      this.connCost.add(performance.now() - now);
+      return;
+    }
     // Every pass of the frame goes inside this bracket, so a pass added later
     // is timed with the rest (gate 6). Ended even if a pass throws: a query
     // left open would stop every later frame from starting its own.
@@ -3984,6 +4066,9 @@ export class PerspectiveView {
     return {
       active: this.active,
       look: this.look,
+      // The canvas held for programs still linking (`precompile`, #1495):
+      // whether it holds now, and the frames it has held in the view's life.
+      programHold: { holding: this.linking !== null, heldFrames: this.heldFrames },
       // The rig's whole state (docs/free-camera.md §4). `pitchDeg` was a
       // constant when the camera was locked; a screenshot review that has to
       // judge gates 6 and 7 across the pitch band needs it to be a reading.

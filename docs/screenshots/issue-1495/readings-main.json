@@ -1,0 +1,296 @@
+[
+  {
+    "entry": 1,
+    "ms": 5407,
+    "on": false,
+    "links": 20,
+    "linkMs": 0.19999998807907104,
+    "waits": 34,
+    "waitMs": 1096.8999999463558,
+    "worstWaitMs": 170,
+    "compiles": 38,
+    "list": [
+      {
+        "atMs": 2653,
+        "ms": 16,
+        "name": "graphics-vertex",
+        "call": "param"
+      },
+      {
+        "atMs": 2685,
+        "ms": 24,
+        "name": "batch-vertex",
+        "call": "param"
+      },
+      {
+        "atMs": 2853,
+        "ms": 52,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 2907,
+        "ms": 133,
+        "name": "stone_dark:MeshStandardMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 3042,
+        "ms": 132,
+        "name": "ember:MeshStandardMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 3176,
+        "ms": 115,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 3292,
+        "ms": 95,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 3390,
+        "ms": 88,
+        "name": "?:LineBasicMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 3480,
+        "ms": 20,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 3502,
+        "ms": 21,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 3524,
+        "ms": 21,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 3546,
+        "ms": 8,
+        "name": "?:PointsMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 3641,
+        "ms": 21,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 3665,
+        "ms": 22,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 3688,
+        "ms": 20,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 3710,
+        "ms": 21,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 3944,
+        "ms": 170,
+        "name": "chitin_hull:MeshStandardMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 4117,
+        "ms": 113,
+        "name": "bio_light:MeshStandardMaterial",
+        "call": "log"
+      }
+    ],
+    "t0": 9378.59999999404,
+    "frames": 6439,
+    "longFrames": [
+      {
+        "atMs": 2544,
+        "ms": 71,
+        "sessionGround": false,
+        "units": 0
+      },
+      {
+        "atMs": 2615,
+        "ms": 91,
+        "sessionGround": false,
+        "units": 0
+      },
+      {
+        "atMs": 2756,
+        "ms": 804,
+        "sessionGround": true,
+        "units": 0
+      },
+      {
+        "atMs": 3579,
+        "ms": 166,
+        "sessionGround": true,
+        "units": 6
+      },
+      {
+        "atMs": 3932,
+        "ms": 290,
+        "sessionGround": true,
+        "units": 6
+      }
+    ],
+    "held": null
+  },
+  {
+    "entry": 2,
+    "ms": 4758,
+    "on": false,
+    "links": 9,
+    "linkMs": 0,
+    "waits": 12,
+    "waitMs": 96.89999997615814,
+    "worstWaitMs": 41.900000005960464,
+    "compiles": 16,
+    "list": [
+      {
+        "atMs": 2669,
+        "ms": 22,
+        "name": "graphics-vertex-4",
+        "call": "param"
+      },
+      {
+        "atMs": 2704,
+        "ms": 14,
+        "name": "batch-vertex",
+        "call": "param"
+      },
+      {
+        "atMs": 2803,
+        "ms": 5,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 2810,
+        "ms": 10,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 2822,
+        "ms": 42,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      }
+    ],
+    "t0": 21313.19999998808,
+    "frames": 7598,
+    "longFrames": [
+      {
+        "atMs": 2519,
+        "ms": 108,
+        "sessionGround": false,
+        "units": 0
+      },
+      {
+        "atMs": 2642,
+        "ms": 69,
+        "sessionGround": false,
+        "units": 0
+      },
+      {
+        "atMs": 2732,
+        "ms": 128,
+        "sessionGround": true,
+        "units": 0
+      }
+    ],
+    "held": null
+  },
+  {
+    "entry": 3,
+    "ms": 4785,
+    "on": false,
+    "links": 9,
+    "linkMs": 0,
+    "waits": 12,
+    "waitMs": 84.30000002682209,
+    "worstWaitMs": 26.900000005960464,
+    "compiles": 16,
+    "list": [
+      {
+        "atMs": 2705,
+        "ms": 24,
+        "name": "graphics-vertex-6",
+        "call": "param"
+      },
+      {
+        "atMs": 2742,
+        "ms": 13,
+        "name": "batch-vertex",
+        "call": "param"
+      },
+      {
+        "atMs": 2814,
+        "ms": 5,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 2820,
+        "ms": 10,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 2831,
+        "ms": 27,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 2859,
+        "ms": 3,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      }
+    ],
+    "t0": 32525.09999999404,
+    "frames": 7543,
+    "longFrames": [
+      {
+        "atMs": 2547,
+        "ms": 126,
+        "sessionGround": false,
+        "units": 0
+      },
+      {
+        "atMs": 2678,
+        "ms": 67,
+        "sessionGround": false,
+        "units": 0
+      },
+      {
+        "atMs": 2769,
+        "ms": 97,
+        "sessionGround": true,
+        "units": 0
+      }
+    ],
+    "held": null
+  }
+]

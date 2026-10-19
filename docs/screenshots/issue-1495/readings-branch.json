@@ -1,0 +1,221 @@
+[
+  {
+    "entry": 1,
+    "ms": 4960,
+    "on": false,
+    "links": 33,
+    "linkMs": 0,
+    "waits": 36,
+    "waitMs": 132.3000000268221,
+    "worstWaitMs": 65.20000000298023,
+    "compiles": 64,
+    "list": [
+      {
+        "atMs": 2667,
+        "ms": 16,
+        "name": "graphics-vertex-2",
+        "call": "param"
+      },
+      {
+        "atMs": 2698,
+        "ms": 33,
+        "name": "batch-vertex",
+        "call": "param"
+      },
+      {
+        "atMs": 3287,
+        "ms": 10,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 3298,
+        "ms": 65,
+        "name": "?:LineBasicMaterial",
+        "call": "log"
+      }
+    ],
+    "t0": 9433.89999999106,
+    "frames": 6206,
+    "longFrames": [
+      {
+        "atMs": 2550,
+        "ms": 73,
+        "sessionGround": false,
+        "units": 0
+      },
+      {
+        "atMs": 2624,
+        "ms": 117,
+        "sessionGround": false,
+        "units": 0
+      },
+      {
+        "atMs": 2775,
+        "ms": 138,
+        "sessionGround": true,
+        "units": 0
+      },
+      {
+        "atMs": 3142,
+        "ms": 108,
+        "sessionGround": true,
+        "units": 6
+      },
+      {
+        "atMs": 3250,
+        "ms": 116,
+        "sessionGround": true,
+        "units": 6
+      },
+      {
+        "atMs": 3366,
+        "ms": 51,
+        "sessionGround": true,
+        "units": 6
+      }
+    ],
+    "held": {
+      "holding": false,
+      "heldFrames": 124
+    }
+  },
+  {
+    "entry": 2,
+    "ms": 4725,
+    "on": false,
+    "links": 14,
+    "linkMs": 0,
+    "waits": 12,
+    "waitMs": 95.89999997615814,
+    "worstWaitMs": 52.70000000298023,
+    "compiles": 26,
+    "list": [
+      {
+        "atMs": 2642,
+        "ms": 21,
+        "name": "graphics-vertex-4",
+        "call": "param"
+      },
+      {
+        "atMs": 2678,
+        "ms": 14,
+        "name": "batch-vertex",
+        "call": "param"
+      },
+      {
+        "atMs": 2805,
+        "ms": 7,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 2813,
+        "ms": 53,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      }
+    ],
+    "t0": 20917.69999998808,
+    "frames": 7516,
+    "longFrames": [
+      {
+        "atMs": 2522,
+        "ms": 89,
+        "sessionGround": false,
+        "units": 0
+      },
+      {
+        "atMs": 2611,
+        "ms": 65,
+        "sessionGround": false,
+        "units": 0
+      },
+      {
+        "atMs": 2710,
+        "ms": 75,
+        "sessionGround": true,
+        "units": 0
+      },
+      {
+        "atMs": 2789,
+        "ms": 62,
+        "sessionGround": true,
+        "units": 0
+      },
+      {
+        "atMs": 2901,
+        "ms": 55,
+        "sessionGround": true,
+        "units": 6
+      }
+    ],
+    "held": {
+      "holding": false,
+      "heldFrames": 126
+    }
+  },
+  {
+    "entry": 3,
+    "ms": 4884,
+    "on": false,
+    "links": 14,
+    "linkMs": 0,
+    "waits": 12,
+    "waitMs": 195.19999998807907,
+    "worstWaitMs": 115.5,
+    "compiles": 26,
+    "list": [
+      {
+        "atMs": 2689,
+        "ms": 116,
+        "name": "graphics-vertex-6",
+        "call": "param"
+      },
+      {
+        "atMs": 2819,
+        "ms": 14,
+        "name": "batch-vertex",
+        "call": "param"
+      },
+      {
+        "atMs": 2921,
+        "ms": 23,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      },
+      {
+        "atMs": 2944,
+        "ms": 42,
+        "name": "?:MeshBasicMaterial",
+        "call": "log"
+      }
+    ],
+    "t0": 32140.59999999404,
+    "frames": 7474,
+    "longFrames": [
+      {
+        "atMs": 2538,
+        "ms": 107,
+        "sessionGround": false,
+        "units": 0
+      },
+      {
+        "atMs": 2660,
+        "ms": 160,
+        "sessionGround": false,
+        "units": 0
+      },
+      {
+        "atMs": 2915,
+        "ms": 73,
+        "sessionGround": true,
+        "units": 0
+      }
+    ],
+    "held": {
+      "holding": false,
+      "heldFrames": 132
+    }
+  }
+]

@@ -14,6 +14,7 @@ import {
   BufferAttribute,
   Mesh,
   MeshBasicMaterial,
+  type Material,
   Raycaster,
   Vector2,
   Vector3,
@@ -532,6 +533,79 @@ describe('the overview in the pilot view (#1459)', () => {
     assert.deepEqual(Array.from(apronPositions.array), Array.from(rebuilt.positions));
     assert.equal(overviewPositions.version, overviewVersion, 'the overview never moves');
     assert.equal(overview!.mesh.geometry.getIndex()!.version, indexVersion);
+  });
+});
+
+describe('programs linked off the frame (#1495)', () => {
+  const linking = (view: PerspectiveView) =>
+    (view as unknown as { linking: object | null }).linking !== null;
+
+  it("holds the canvas while a session's programs link, and draws once they have", async () => {
+    const realNow = performance.now.bind(performance);
+    let clock = 0;
+    performance.now = () => clock;
+    try {
+      const { view, gl } = await mountPilot(false);
+      gl.extensionNames.add('KHR_parallel_shader_compile');
+      let frames = gl.ledger.frames;
+      view.setTerrain(sorrowgate());
+      assert.equal(gl.compiles.length, 1, 'the ground asks for its programs');
+      assert.equal(gl.compiles[0], gl.lastScene, "the view's own scene");
+      assert.equal(linking(view), true);
+      clock += 16;
+      pumpAnimationFrames(3);
+      assert.equal(gl.ledger.frames, frames, 'no pass drawn while they link');
+      gl.finishLinking();
+      pumpAnimationFrames();
+      assert.equal(gl.ledger.frames, frames + 1, 'drawn the frame after');
+      assert.equal(linking(view), false);
+
+      // The session's force: its handles and hulls are new to the scene too.
+      view.applySnapshot(cannedSnapshot());
+      assert.equal(gl.compiles.length, 2, 'the force asks for its own');
+      frames = gl.ledger.frames;
+      pumpAnimationFrames();
+      assert.equal(gl.ledger.frames, frames, 'held again');
+      // A link that never ends, as a lost context's: the hold gives out.
+      clock += 1_999;
+      pumpAnimationFrames();
+      assert.equal(gl.ledger.frames, frames, 'still inside the cap');
+      clock += 2;
+      pumpAnimationFrames();
+      assert.equal(gl.ledger.frames, frames + 1, 'drawn past it, waiting in the draw');
+
+      // A snapshot that adds nothing asks for nothing.
+      view.applySnapshot(cannedSnapshot());
+      assert.equal(gl.compiles.length, 2);
+    } finally {
+      performance.now = realNow;
+    }
+  });
+
+  it('counts a material disposed while it links as done, and lets the hold go', async () => {
+    const { view, gl } = await mountPilot(false);
+    gl.extensionNames.add('KHR_parallel_shader_compile');
+    const frames = gl.ledger.frames;
+    view.setTerrain(sorrowgate());
+    pumpAnimationFrames();
+    assert.equal(gl.ledger.frames, frames, 'held');
+    // Every material the hold waits on, disposed before its link finished:
+    // none has a program left to ask.
+    gl.compiles[0]!.traverse((object) => {
+      const material = (object as { material?: Material | Material[] }).material;
+      for (const m of Array.isArray(material) ? material : material ? [material] : []) m.dispose();
+    });
+    pumpAnimationFrames();
+    assert.equal(gl.ledger.frames, frames + 1, 'drawn: nothing left to wait for');
+  });
+
+  it('draws at once where the driver links in the draw: there is nothing to wait for', async () => {
+    const { view, gl } = await mountPilot(false);
+    const frames = gl.ledger.frames;
+    view.setTerrain(sorrowgate());
+    pumpAnimationFrames();
+    assert.equal(gl.compiles.length, 0, 'no compile asked for');
+    assert.equal(gl.ledger.frames, frames + 1);
   });
 });
 

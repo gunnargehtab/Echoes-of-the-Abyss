@@ -35,6 +35,7 @@ import {
   NoToneMapping,
   WebGLRenderTarget,
   type Camera,
+  type Material,
   type Scene,
   type WebGLRenderer,
 } from 'three';
@@ -1044,9 +1045,15 @@ export class HeadlessWebGLRenderer {
   /** Extensions the context offers; a test removes one to model its absence. */
   readonly extensionNames = new Set(['EXT_color_buffer_float']);
   readonly extensions = { has: (name: string): boolean => this.extensionNames.has(name) };
-  private readonly targetProperties = new WeakMap<object, { __webglFramebuffer: object }>();
+  private readonly targetProperties = new WeakMap<
+    object,
+    { __webglFramebuffer: object; currentProgram?: { isReady(): boolean } }
+  >();
+  /** As three's, for a target's framebuffer and a material's program (`compile`). */
   readonly properties = {
-    get: (object: object): { __webglFramebuffer: object } => {
+    get: (
+      object: object
+    ): { __webglFramebuffer: object; currentProgram?: { isReady(): boolean } } => {
       let entry = this.targetProperties.get(object);
       if (entry === undefined) {
         entry = { __webglFramebuffer: {} };
@@ -1080,6 +1087,40 @@ export class HeadlessWebGLRenderer {
   }
   getClearAlpha(): number {
     return this.clearAlpha;
+  }
+
+  /**
+   * `compile`, as three's runs it on a driver that links in parallel: every
+   * material in the scene, each given a program that reports ready
+   * (`isReady`) once linked. Here the link is the test's to finish
+   * (`finishLinking`), so it can draw frames while the programs are still
+   * out; nothing compiles under node. A program once linked stays linked.
+   */
+  readonly compiles: Scene[] = [];
+  private linked = new WeakSet<object>();
+  compile(scene: Scene): Set<Material> {
+    this.compiles.push(scene);
+    const materials = new Set<Material>();
+    scene.traverse((object) => {
+      const material = (object as { material?: Material | Material[] }).material;
+      for (const m of Array.isArray(material) ? material : material ? [material] : []) {
+        materials.add(m);
+        const entry = this.properties.get(m) as { currentProgram?: { isReady(): boolean } };
+        if (entry.currentProgram === undefined) {
+          entry.currentProgram = { isReady: () => this.linked.has(m) };
+          // As three's: a disposed material's properties go, its program with them.
+          m.addEventListener('dispose', () => this.targetProperties.delete(m));
+        }
+      }
+    });
+    this.linking.push(...materials);
+    return materials;
+  }
+  private readonly linking: Material[] = [];
+
+  /** Finish every link `compile` started. */
+  finishLinking(): void {
+    for (const material of this.linking.splice(0)) this.linked.add(material);
   }
 
   render(scene: Scene, camera: Camera): void {
