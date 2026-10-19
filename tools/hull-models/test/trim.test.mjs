@@ -697,10 +697,12 @@ test("both triangles of a facet across the unroll's cut close the same way round
   const cap = place(consortium, new THREE.Mesh(frustum(0.32), mat), 'cap', 10, 0);
   layoutTrim(consortium, drawTrimSheet(SPEC), SPEC);
   const knights = new THREE.Group();
-  const star = place(knights, new THREE.Mesh(frustum(0.6), mat), 'cap_s', 10, 9);
+  // A fifth of a turn centres a facet on the cut, the case a triangle's own
+  // middle split; the sine clamp that settles its side is not under test.
+  const star = place(knights, new THREE.Mesh(frustum(Math.PI / 5), mat), 'cap_s', 10, 9);
   // Turned a quarter about z, a lathe's angle mirrors in z to π − φ, so the
   // port twin starts there to stand on the starboard's corners.
-  const port = place(knights, new THREE.Mesh(frustum(Math.PI - 0.6), mat), 'cap_p', 10, -9);
+  const port = place(knights, new THREE.Mesh(frustum(Math.PI - Math.PI / 5), mat), 'cap_p', 10, -9);
   const keel = place(knights, new THREE.Mesh(frustum(0), mat), 'keel', -10, 0);
   layoutTrim(knights, drawTrimSheet(HADRON), HADRON);
   for (const mesh of [cap, star, port, keel]) {
@@ -709,8 +711,8 @@ test("both triangles of a facet across the unroll's cut close the same way round
     for (const s of spans)
       assert.ok(s < 0.5, `${mesh.name}: a facet spans ${s.toFixed(2)} of the girth`);
   }
-  // The twins lay corner for corner, port turned over: #1375 holds the
-  // same of a cylinder, and the centred facet is the case the mean decides.
+  // The twins lay corner for corner, port turned over, as #1375 holds of a
+  // cylinder.
   const corners = (mesh, flip) => {
     const g = mesh.geometry;
     const v = new THREE.Vector3();
@@ -852,26 +854,18 @@ test('the Responsory is on the Knights sheet with its crystal bare', () => {
   const file = readGlb(join(repo, 'docs/concept-art/models/responsory-hadron.glb'));
   assert.equal(file.trim.sheet, HADRON.name);
   assert.deepEqual([...file.trim.materials].sort(), ['pale_alloy', 'shadow_indigo']);
-  assert.ok(
-    file.parts.some((p) => p.material === 'resonance_crystal'),
-    'no crystal to keep bare'
-  );
+  assert.ok(file.parts.some((p) => p.material === 'resonance_crystal'), 'no crystal to keep bare');
   for (const p of file.parts) assert.ok(p.uv0 && p.uv0.length === p.tris * 6, `${p.name} uv0`);
 });
 
 test('the Reed is on the Commune sheet with its unlit vein bare', () => {
   const file = readGlb(join(repo, 'docs/concept-art/models/reed-pelagia.glb'));
   assert.equal(file.trim.sheet, PELAGIA.name);
-  assert.deepEqual([...file.trim.materials].sort(), [
-    'algae_membrane',
-    'chitin_hull',
-    'growth_ridge',
-    'spore_pod',
-  ]);
-  assert.ok(
-    file.parts.some((p) => p.material === 'bio_vein_unlit'),
-    'no vein to keep bare'
+  assert.deepEqual(
+    [...file.trim.materials].sort(),
+    ['algae_membrane', 'chitin_hull', 'growth_ridge', 'spore_pod']
   );
+  assert.ok(file.parts.some((p) => p.material === 'bio_vein_unlit'), 'no vein to keep bare');
   for (const p of file.parts) assert.ok(p.uv0 && p.uv0.length === p.tris * 6, `${p.name} uv0`);
 });
 

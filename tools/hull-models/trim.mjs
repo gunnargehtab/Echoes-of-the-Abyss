@@ -860,16 +860,9 @@ function layoutMesh(mesh, bands, wrapM, strakeM, mirror) {
   // its own axis and is left where it is.
   const turn = isRound ? null : frameOf(m);
   if (turn) {
-    const c = new THREE.Vector3(
-      (min[0] + max[0]) / 2,
-      (min[1] + max[1]) / 2,
-      (min[2] + max[2]) / 2
-    );
+    const c = new THREE.Vector3((min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2);
     for (let k = 0; k < count; k++) {
-      v.set(pos[k * 3], pos[k * 3 + 1], pos[k * 3 + 2])
-        .sub(c)
-        .applyMatrix3(turn)
-        .add(c);
+      v.set(pos[k * 3], pos[k * 3 + 1], pos[k * 3 + 2]).sub(c).applyMatrix3(turn).add(c);
       pos[k * 3] = v.x;
       pos[k * 3 + 1] = v.y;
       pos[k * 3 + 2] = v.z;
@@ -1063,7 +1056,9 @@ function layoutMesh(mesh, bands, wrapM, strakeM, mirror) {
     for (let c = 0; c < 3; c++) {
       const k = t * 3 + c;
       uv[k * 2] =
-        mirror && along === 2 ? beamU(pos[k * 3 + 2]) : (pos[k * 3 + along] - min[along]) / wrapM;
+        mirror && along === 2
+          ? beamU(pos[k * 3 + 2])
+          : (pos[k * 3 + along] - min[along]) / wrapM;
       uv[k * 2 + 1] =
         band.v0 +
         (extent[cross] > 0 ? (pos[k * 3 + cross] - min[cross]) / extent[cross] : 0.5) *

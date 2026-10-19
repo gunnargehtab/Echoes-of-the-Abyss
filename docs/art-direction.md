@@ -490,7 +490,7 @@ zig-zagged at the diagonal, 95 texels of the sheet on the Harvester's bow apron.
 reads the facet count alone, not the taper, so a straight cable and a wedge lay alike.
 On a tapered round of more than four facets that kink stays
 ([#1447](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1447)): measured over the
-7,318 such facets on the 31 laid models, it is under a pixel at the conn view's 3 px/m on 97 %
+7,300 such facets on the 31 laid models, it is under a pixel at the conn view's 3 px/m on 97 %
 of them and 6.75 px at most, on the Bastion's dome skirt, and it is left rather than laid one
 map per facet, which steps every joint at every facet edge, or cut into rings, which spends
 triangles under gate 6. What #1447 moved is the unroll's seam: a facet's triangles now close
@@ -769,8 +769,8 @@ round part mirrors at its corners, the ring stays included, which before #1375 c
 butt on the inboard face of one and the outboard face of the other. Between the corners the
 rounds do not quite: the layout sets `u` per corner from the angle, so a joint that falls
 mid-facet where the facet tapers follows the triangle's diagonal and kinks, under a pixel at the
-conn view's 3 px/m but on the horn's widest facets, 2.8 px there, and the mirror of a diagonal is
-the other one, on the blade, the horn, the drive and the resonator rings. **4.1 %** of the tagged area (243 of 5,898 m²) differs from its
+conn view's 3 px/m but on the horn's widest facets, 2.8 px, and the drive's, 1.1 px, and the mirror
+of a diagonal is the other one, on the blade, the horn, the drive and the resonator rings. **4.1 %** of the tagged area (243 of 5,898 m²) differs from its
 mirror by more than 8 levels, 4.2 % before #1375 and 4.7 % before `mirror`, all of it on those
 rounds, and [#1447](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1447) measured
 the kink and left it. The barrel, four facets round, is laid flat since
