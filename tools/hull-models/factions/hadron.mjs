@@ -1356,7 +1356,8 @@ export function pressureHatches(root, { collar, door, rim }, opts) {
  * down at 3.4 m, a cut stone and not the Bastion's twelve by three), pressed
  * `press` on its node at `[x, y]`, and on the pole a four-sided point of
  * `boss.r` by `boss.h` in the seam lamp, its base `boss.sink` under the
- * pole. The boss is the lamp and the dome is not, for the reason the
+ * pole, or none when `boss` is null. The boss is the lamp and the dome is
+ * not, for the reason the
  * Directorate's Verger gives: a dome lit whole would be the light budget of
  * a hull three bands louder, and the block lights "a boss on the dome's
  * crown". The dome is `resonance_crystal` clad, as every unlit crystal on
@@ -1376,6 +1377,9 @@ export function listeningDome(root, { crystal: domeMat, seam }, opts) {
     [0, 0, 0],
     [1, press, 1]
   );
+  // `boss: null` is a dome with no lamp — the Acolyte's, sunk low and dark,
+  // on a kind that lights its knees and nothing else (hulls/acolyte-hadron.mjs).
+  if (!boss) return;
   const pole = y + r * press;
   add(root, 'dome_crown', cyl(0, boss.r, boss.h, 4), seam, [x, pole - boss.sink + boss.h / 2, 0]);
 }
@@ -1450,6 +1454,137 @@ export function ductedDrive(root, { duct: ductMat, crystal: hubMat, alloy }, opt
       sgn * vanes.z,
     ])
   );
+}
+
+/* --------------------------------------------------------------------------
+ * The Acolyte, the Order's (#1439, on the Chorister's rule): the scout that
+ * plants its ears. What the kind adds and no Order hull had is a *planted*
+ * limb — a hexapod's leg walked out and set down — and the kind's whole
+ * light sits on it. One builder, drawn as the pairs the faction block asks
+ * of this navy, so the next Order hull that stands on the floor composes
+ * from it rather than redrawing it.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Hydrophone limbs walked out and planted, in mirrored pairs: the Acolyte's
+ * array in the stance it hears at 85 in (docs/models-plan.md §3.5), said
+ * the Order's way. Each limb is six parts, `limb_${i}_${side}_hip`,
+ * `_femur`, `_knee`, `_tibia`, `_foot` and `knee_mark_${i}_${side}`: an
+ * alloy hip block (`hip.size`, `[along, tall, across]` in the limb's own
+ * frame) rooted on the vertical flank facet a four-facet spar laid on a
+ * flat has (`spar`), its centre `hip.sink` inside the skin at `hip.y` —
+ * so a block `size[0]` long has its inboard face `size[0] / 2 + sink`
+ * inside and stands `size[0] / 2 − sink` proud, 1.6 m in and 0.4 m out on
+ * the defaults; an alloy femur, a four-facet spar tapering `femur.r` `[root,
+ * tip]`, from the hip `femur.reach` outboard and `femur.rise` up to the
+ * knee; an alloy knee block (`knee.size`) with its top face level, since
+ * the lamp rides it; an alloy tibia from the knee `tibia.reach` further
+ * out and `tibia.drop` down to the ankle; from the ankle a crystal point
+ * of `foot.r` by `foot.length` planted point-down — the Order's point
+ * (`point`), which is what a hydrophone is on this navy, the Clarion's
+ * emitter and the Verger's boss being the same stone; and on the knee's
+ * top the lamp, a `light` box of `mark` `[along, tall, across]`, its
+ * underside on the block.
+ *
+ * The bones are the section the Order cuts at any size, four (Block 2c;
+ * the cage's struts are the same frustum), and every part of a limb is
+ * yawed by the limb's `rake` alone — radians ahead of athwartships in
+ * plan, astern when negative — so the hip's and knee's faces stay plumb
+ * and the knee's top stays level, which is what puts the lamp where the
+ * chart reads it (models-plan.md §3.2, rule 5). The reach is read *along
+ * the raked line*, as the Directorate's `plantedLimbs` reads it, so a
+ * raked pair plants nearer the keel and further along the hull than the
+ * square pair, and the knees come out widest amidships.
+ *
+ * `pairs` is `[{ x, rake }]`, one entry a pair, and every pair is drawn
+ * on both sides at one station, starboard first (`bothSides`, port −z,
+ * #642): the Directorate's stance is a tripod and its builder refuses a
+ * mirrored hip, because its knees carry light and its block forbids a
+ * pattern that repeats across the keel; this navy's block makes it "the
+ * only faction with" precise bilateral symmetry, and the approved
+ * Chorister and the Verger follow the faction block over the kind's
+ * asymmetry (hulls/chorister-hadron.mjs, hulls/verger-hadron.mjs). So the
+ * Order's Acolyte plants three mirrored pairs and lights six knees as
+ * three mirrored pairs, and this builder cannot draw it otherwise.
+ * `flank(x)` is the shell's half-beam at the hip's station, the caller's
+ * own function of its segments; a station with no flank is refused,
+ * because a limb rooted in water is a limb the conn view shows floating.
+ * Returns the joints, `[{ i, side, hip, knee, ankle }]`, for the record.
+ */
+export function plantedLimbs(root, { alloy, crystal: footMat, light }, opts) {
+  const {
+    flank,
+    pairs,
+    hip = { y: -0.8, sink: 0.6, size: [2.0, 1.6, 1.8] },
+    femur = { r: [0.9, 0.7], reach: 5, rise: 3.2 },
+    knee = { size: [2.4, 1.8, 2.0] },
+    tibia = { r: [0.7, 0.5], reach: 4, drop: 6 },
+    foot = { r: 0.8, length: 2.4 },
+    mark = [1.2, 0.3, 1.0],
+  } = opts;
+  const joints = [];
+  pairs.forEach(({ x, rake = 0 }, i) => {
+    const half = flank(x, hip.y);
+    if (half <= hip.sink) throw new Error(`limb_${i}: no shell to root on at x = ${x}`);
+    bothSides((side, sgn) => {
+      const name = `limb_${i}_${side}`;
+      // The limb's line in plan, and the yaw that lays a part's x along it:
+      // a box's +x turned onto (sin rake, 0, ±cos rake) about y.
+      const out = [Math.sin(rake), 0, sgn * Math.cos(rake)];
+      const yaw = [0, Math.atan2(-out[2], out[0]), 0];
+      const from = ([px, py, pz], reach, lift) => [
+        px + out[0] * reach,
+        py + lift,
+        pz + out[2] * reach,
+      ];
+      const hipAt = [x, hip.y, sgn * (half - hip.sink)];
+      const kneeAt = from(hipAt, femur.reach, femur.rise);
+      const ankle = from(kneeAt, tibia.reach, -tibia.drop);
+      add(root, `${name}_hip`, box(...hip.size), alloy, hipAt, yaw);
+      bone(root, `${name}_femur`, alloy, femur.r, hipAt, kneeAt);
+      add(root, `${name}_knee`, box(...knee.size), alloy, kneeAt, yaw);
+      bone(root, `${name}_tibia`, alloy, tibia.r, kneeAt, ankle);
+      // A point is born apex +y; a half turn about x plants it point-down,
+      // its base ring on the ankle.
+      add(
+        root,
+        `${name}_foot`,
+        cyl(0, foot.r, foot.length, 4),
+        footMat,
+        [ankle[0], ankle[1] - foot.length / 2, ankle[2]],
+        [Math.PI, 0, 0]
+      );
+      add(
+        root,
+        `knee_mark_${i}_${side}`,
+        box(...mark),
+        light,
+        [kneeAt[0], kneeAt[1] + knee.size[1] / 2 + mark[1] / 2, kneeAt[2]],
+        yaw
+      );
+      joints.push({ i, side, hip: hipAt, knee: kneeAt, ankle });
+    });
+  });
+  return joints;
+}
+
+/**
+ * A bone: a four-facet alloy frustum `[root, tip]` in radius laid from `a`
+ * to `b`, the rotation the minimal one taking +Y onto that line, so a
+ * script holds joints and never a length. The cage's strut cut to a line
+ * between two points (`cage`); four is the section (Block 2c).
+ */
+function bone(root, name, mat, [rootR, tipR], a, b) {
+  const A = new THREE.Vector3(...a);
+  const B = new THREE.Vector3(...b);
+  const d = B.clone().sub(A);
+  const q = new THREE.Quaternion().setFromUnitVectors(
+    new THREE.Vector3(0, 1, 0),
+    d.clone().normalize()
+  );
+  const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+  const mid = A.clone().add(B).multiplyScalar(0.5).toArray();
+  return add(root, name, cyl(tipR, rootR, d.length(), 4), mat, mid, [e.x, e.y, e.z]);
 }
 
 /**
@@ -2338,9 +2473,11 @@ export { flanks, flank } from '../kit.mjs';
  * it at height `at[1]`, leaned `lean` about x toward the centreline —
  * numbered aft first and the +z one of each pair first, which is how the
  * approved file counts them (chorister-hadron.glb, #649). An X-long export,
- * so nothing here is yawed.
+ * so nothing here is yawed. `x` is the cage's station along the hull, for
+ * a frame round a segment that is not on the origin (the Acolyte's, at −1);
+ * the Chorister's is at 0 and leaves it.
  */
-export function cage(root, alloy, { r, length, at, lean }) {
+export function cage(root, alloy, { r, length, at, lean, x = 0 }) {
   [
     [-1, 1],
     [-1, -1],
@@ -2352,7 +2489,7 @@ export function cage(root, alloy, { r, length, at, lean }) {
       `cage_strut_${i}`,
       cyl(r[0], r[1], length, 4),
       alloy,
-      [sx * at[0], at[1], sz * at[2]],
+      [x + sx * at[0], at[1], sz * at[2]],
       [-sz * lean, 0, 0]
     )
   );

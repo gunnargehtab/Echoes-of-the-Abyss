@@ -162,6 +162,15 @@ import gliderEmissive from '../assets/hulls/maps/glider-emissive.png';
 import acolyteAlbedo from '../assets/hulls/maps/acolyte-albedo.png';
 import acolyteHeight from '../assets/hulls/maps/acolyte-height.png';
 import acolyteEmissive from '../assets/hulls/maps/acolyte-emissive.png';
+import acolyteBathAlbedo from '../assets/hulls/maps/acolyte-bathyarch-albedo.png';
+import acolyteBathHeight from '../assets/hulls/maps/acolyte-bathyarch-height.png';
+import acolyteBathEmissive from '../assets/hulls/maps/acolyte-bathyarch-emissive.png';
+import acolytePelAlbedo from '../assets/hulls/maps/acolyte-pelagia-albedo.png';
+import acolytePelHeight from '../assets/hulls/maps/acolyte-pelagia-height.png';
+import acolytePelEmissive from '../assets/hulls/maps/acolyte-pelagia-emissive.png';
+import acolyteHadAlbedo from '../assets/hulls/maps/acolyte-hadron-albedo.png';
+import acolyteHadHeight from '../assets/hulls/maps/acolyte-hadron-height.png';
+import acolyteHadEmissive from '../assets/hulls/maps/acolyte-hadron-emissive.png';
 import heraldAlbedo from '../assets/hulls/maps/herald-albedo.png';
 import heraldHeight from '../assets/hulls/maps/herald-height.png';
 import heraldEmissive from '../assets/hulls/maps/herald-emissive.png';
@@ -520,6 +529,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>
       height: vergerPelHeight,
       emissive: vergerPelEmissive,
     },
+    [UnitKind.Acolyte]: {
+      albedo: acolytePelAlbedo,
+      height: acolytePelHeight,
+      emissive: acolytePelEmissive,
+    },
   },
   [Faction.Bathyarch]: {
     [UnitKind.LightScout]: {
@@ -556,6 +570,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>
       albedo: vergerBathAlbedo,
       height: vergerBathHeight,
       emissive: vergerBathEmissive,
+    },
+    [UnitKind.Acolyte]: {
+      albedo: acolyteBathAlbedo,
+      height: acolyteBathHeight,
+      emissive: acolyteBathEmissive,
     },
   },
   [Faction.Directorate]: {
@@ -615,6 +634,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>
       albedo: vergerHadAlbedo,
       height: vergerHadHeight,
       emissive: vergerHadEmissive,
+    },
+    [UnitKind.Acolyte]: {
+      albedo: acolyteHadAlbedo,
+      height: acolyteHadHeight,
+      emissive: acolyteHadEmissive,
     },
   },
 };

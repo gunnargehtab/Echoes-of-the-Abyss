@@ -152,8 +152,8 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Antiphon]: 'antiphon',
   // The scouts (#506), script-built in #784: one model a navy. The Acolyte
   // carries no lock, so a navy rendering for one resolves
-  // acolyte-<its faction>.glb — only the Directorate's exists, and the others
-  // stay on the recoloured sprite until a variant passes intake (#1439).
+  // acolyte-<its faction>.glb — all four variants exist (#1439), as the
+  // Verger's do.
   [UnitKind.Beacon]: 'beacon',
   [UnitKind.Glider]: 'glider',
   [UnitKind.Acolyte]: 'acolyte',
@@ -161,8 +161,8 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   // The ordnance hulls (#507), script-built in #785: one model a navy. The
   // Thurible carries no lock, so a navy rendering for one resolves
   // thurible-<its faction>.glb — only the Directorate's exists, and the
-  // others stay on the recoloured sprite until a variant passes intake, as
-  // the Acolyte's do.
+  // others stay on the recoloured sprite until a variant passes intake
+  // (#1440).
   [UnitKind.Broadside]: 'broadside',
   [UnitKind.Weaver]: 'weaver',
   [UnitKind.Thurible]: 'thurible',
@@ -170,8 +170,7 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   // The siege hulls (#508), script-built in #786: one model a navy. The Lure
   // carries no lock, so a navy rendering for one resolves lure-<its
   // faction>.glb — only the Directorate's exists, and the others stay on the
-  // recoloured sprite until a variant passes intake, as the Acolyte's and
-  // the Thurible's do.
+  // recoloured sprite until a variant passes intake, as the Thurible's do.
   [UnitKind.Furnace]: 'furnace',
   [UnitKind.Blight]: 'blight',
   [UnitKind.Lure]: 'lure',

@@ -4695,11 +4695,27 @@ export function canHatches(root, { collar, door, rim, grey, rust }, opts) {
  * emitter on a hull that idles at SIG 14, and not the dome, which at this
  * size would be its whole light budget (`dome_skirt · dome · dome_rib_0.. ·
  * dome_rivet_0.. · dome_crown`). The skirt's centre is dropped onto `on`
- * under `[x, z]` and stood `skirt.h / 2 − skirt.sink` up from it.
+ * under `[x, z]` and stood `skirt.h / 2 − skirt.sink` up from it. A hull
+ * whose block puts no light on the dome at any band — the Acolyte's lights
+ * its knees and nothing else (#1439) — passes `crown: null` and gets the
+ * dome without the boss: not a boss clad dark, since a part the block
+ * never lights is not a later band's lamp (docs/models-plan.md §3.2).
+ * `plumb` seats the skirt straight up from the crown under it rather than
+ * along the facet's normal there (the note in the body).
  */
 export function listeningTurret(root, { grey, black, rust, lampM }, opts) {
-  const { on, x, z = 0, r, skirt, squash, ribs, rivets, crown, cut: rule = METRE } = opts;
-  const { at } = seat(root, on, [x, 0, z], { drop: true, stand: skirt.h / 2 - skirt.sink });
+  const { on, x, z = 0, r, skirt, squash, ribs, rivets, crown, plumb = false, cut: rule = METRE } = opts;
+  // `seat` stands a part off along the facet's normal under its station.
+  // On a can whose count is a multiple of four the crown is a ridge
+  // (`crownOnX`), and the facet it hits leans 15° at twelve: the Acolyte's
+  // skirt stood 0.23 m to starboard of its keel that way (#1439 review).
+  // `plumb` takes the surface point and stands the skirt straight up from
+  // it; the Verger's fourteen-sided can has a plate on its crown and reads
+  // the same either way, so it says nothing.
+  const stand = skirt.h / 2 - skirt.sink;
+  const { at } = plumb
+    ? (({ at: hit }) => ({ at: [hit[0], hit[1] + stand, hit[2]] }))(seat(root, on, [x, 0, z], { drop: true }))
+    : seat(root, on, [x, 0, z], { drop: true, stand });
   const [sx, sy, sz] = at;
   const n = rule.round(r);
   add(root, 'dome_skirt', cyl(r, r, skirt.h, n), grey, at);
@@ -4735,6 +4751,7 @@ export function listeningTurret(root, { grey, black, rust, lampM }, opts) {
     const [rx, , rz] = polar(a, apothem + rivets.size[2] / 2 - rivets.sink);
     add(root, `dome_rivet_${k}`, box(...rivets.size), grey, [sx + rx, top - rivets.below, sz + rz], [0, -a, 0]);
   }
+  if (!crown) return;
   const bossY = top + r * squash - crown.sink + crown.h / 2;
   add(root, 'dome_crown', cyl(crown.r, crown.r, crown.h, rule.round(crown.r)), lampM, [sx, bossY, sz]);
 }
@@ -4790,6 +4807,219 @@ export function ductedDrive(root, { grey, black, rust }, opts) {
   const blade = box(...blades.size);
   for (let i = 0; i < blades.count; i++)
     add(root, `prop_blade_${i}`, blade, grey, [blades.x, 0, 0], [i * blades.pitch, 0, 0]);
+}
+
+/* --------------------------------------------------------------------------
+ * The Acolyte, the Klaxon's (#1439): the scout's plan — "a squat
+ * three-tergite carapace, wider in its limbs than in its shell, with six
+ * hydrophone limbs walked out and planted … a listening dome sunk low into
+ * the middle tergite" (docs/asset-prompts-3d.md, UNIT — Acolyte) — on the
+ * Chorister's cans and the Verger's turret. What neither section has is
+ * the limb: a planted leg in the Klaxon's boxy jointed language, which is
+ * a crawler's outrigger and not a crab's — a riveted hip bracket bolted to
+ * the can's flank, a box girder of a femur, a knee block that carries the
+ * one lamp, a hydraulic drum of a tibia, an ankle collar, and a transducer
+ * pad for a foot, planted. Built, not ported: every number is the hull
+ * script's.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The flank of the can under station `x` at height `y`: the can of `cans`
+ * (`{ x, r, length }`, as `cans` draws them) whose body spans `x`, and the
+ * half-beam of its skin there. A station on no can's body is an error, so
+ * a leg never roots on a cap or on water.
+ */
+function canFlank(list, x, y) {
+  const can = list.find((c) => Math.abs(x - c.x) <= c.length / 2);
+  if (!can) throw new Error(`canFlank: no can body under x = ${x}`);
+  if (Math.abs(y) >= can.r) throw new Error(`canFlank: y = ${y} is off a can of radius ${can.r}`);
+  return Math.sqrt(can.r * can.r - y * y);
+}
+
+/**
+ * A rank that must not mirror (docs/models-plan.md §3.6): refuses any two
+ * of `spots` (`[name, x, y, z]`) that stand within `tol` of each other's
+ * reflection across the keel, as the Directorate's own rule does.
+ */
+function refuseMirror(what, spots, tol = 0.5) {
+  for (const [a, ax, ay, az] of spots)
+    for (const [b, bx, by, bz] of spots)
+      if (a < b && Math.abs(ax - bx) < tol && Math.abs(ay - by) < tol && Math.abs(az + bz) < tol)
+        throw new Error(`${what}: ${a} and ${b} mirror across the keel`);
+}
+
+/**
+ * A box bone from `a` to `b`, `h` tall and `w` wide in section with its
+ * height held as near the vertical as its slope allows — a girder, not a
+ * strut turned by the minimal rotation, whose roll a leaning bone leaves
+ * wherever the rotation's axis puts it. `overlap` lengthens it by that
+ * much at both ends so it roots inside the blocks it joins.
+ */
+function girder(root, name, mat, a, b, [h, w], overlap = 0) {
+  const A = new THREE.Vector3(...a);
+  const B = new THREE.Vector3(...b);
+  const d = B.clone().sub(A);
+  const xAxis = d.clone().normalize();
+  const up = new THREE.Vector3(0, 1, 0);
+  const yAxis = up.sub(xAxis.clone().multiplyScalar(up.dot(xAxis))).normalize();
+  const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis);
+  const e = new THREE.Euler().setFromRotationMatrix(new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis), 'XYZ');
+  const mid = A.clone().add(B).multiplyScalar(0.5).toArray();
+  return add(root, name, box(d.length() + 2 * overlap, h, w), mat, mid, [e.x, e.y, e.z]);
+}
+
+/** A drum bone from `a` to `b` at the rule's count, born on Y and turned onto the line. */
+function drumBone(root, name, mat, r, a, b, rule, overlap = 0) {
+  const A = new THREE.Vector3(...a);
+  const B = new THREE.Vector3(...b);
+  const d = B.clone().sub(A);
+  const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.clone().normalize());
+  const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+  const mid = A.clone().add(B).multiplyScalar(0.5).toArray();
+  return add(root, name, cyl(r, r, d.length() + 2 * overlap, rule.round(r)), mat, mid, [e.x, e.y, e.z]);
+}
+
+/**
+ * The carbody: the shell's section carried in boxes, as the Klaxon carries
+ * a section it will not curve — a riveted deck the hull's length, stepped
+ * in beam at the seams as the Directorate's tergites step, with the
+ * pressure cans standing up through it (the Verger's V-grooved hold and
+ * the Freighter's box hull are the same grammar). `decks` is `[name, x,
+ * length, halfBeam, bottom, top]` each, a box of older plate centred at
+ * `x` on the keel, from `bottom` to `top`, so most of each station's
+ * area is at full beam and the head-on silhouette is wider than tall
+ * (#1439 review). Returns `beamAt(x)`, the half-beam of the deck under a
+ * station, for the hips to bolt to, with `beamAt.top(x)` the deck plate's
+ * height there.
+ */
+export function carbody(root, mat, { decks }) {
+  for (const [name, x, length, half, bottom, top] of decks)
+    add(root, name, box(length, top - bottom, half * 2), mat, [x, (top + bottom) / 2, 0]);
+  const under = (x) => {
+    const deck = decks.find(([, dx, length]) => Math.abs(x - dx) <= length / 2);
+    if (!deck) throw new Error(`carbody: no deck under x = ${x}`);
+    return deck;
+  };
+  const beamAt = (x) => under(x)[3];
+  // The deck plate's height under a station, for a fitting laid on it.
+  beamAt.top = (x) => under(x)[5];
+  return beamAt;
+}
+
+/**
+ * Hydrophone legs walked out and planted: the Acolyte's array in the
+ * stance it hears at 85 in (docs/models-plan.md §3.5), the Klaxon's way.
+ * Each leg is ten parts in order, `leg_${side}${i}_hip`, `_hip_rivet_0`,
+ * `_hip_rivet_1`, `_femur`, `_knee`, `_lamp`, `_tibia`, `_ankle`,
+ * `_foot_stem`, `_foot`:
+ *
+ * - the **hip**, a bracket of older plate, a box of `hip.size` (fore and
+ *   aft before the yaw — across the leg, the way the rivets lie along it
+ *   — then tall, then out along the leg) yawed to the leg's rake with its centre `hip.sink`
+ *   inside the flank at `hip.y` — the outboard face `hip.on` gives, as
+ *   `{ s, p }` (one z a side) or as `(x, side) => z` (the Acolyte's
+ *   stepped carbody, `carbody`), the can's skin `canFlank` finds there
+ *   otherwise — so its inboard half is in the hull and its outboard face
+ *   is the plate the femur comes off; two rivet heads of `hip.rivet`,
+ *   fore and aft of the femur at `rivet.pitch` and `rivet.out` along the
+ *   leg from the bracket's centre, on the bracket's top or — where
+ *   `rivet.top(x, side)` gives the height of a plate over the hip, the
+ *   Acolyte's deck — on that plate, the bracket's bolts through it;
+ * - the **femur**, a box girder of newer plate `femur.section` (`[h, w]`)
+ *   from the hip `femur.reach` outboard along the rake and `femur.rise`
+ *   up to the knee, rooted `femur.root` into the bracket and the block;
+ * - the **knee**, a block of hull black of `knee.size`, yawed to the rake,
+ *   and on its upward face the **lamp**, a square plate of `lamp.size`
+ *   and `lamp.h`, sunk `lamp.sink` into the block — the one lit part on a
+ *   leg, and the one joint that stands clear of the shell facing up
+ *   (hulls/acolyte.mjs says why the knee);
+ * - the **tibia**, a hydraulic drum of newer plate `tibia.r` in radius at
+ *   the rule's count, from the knee `tibia.reach` further out and
+ *   `tibia.drop` down to the ankle, rooted `tibia.root` into both blocks;
+ * - the **ankle**, a collar of older plate `ankle.size`, yawed to the rake;
+ * - the **foot**, a transducer pad of hull black — a drum `foot.r` by
+ *   `foot.h` at the rule's count on a stem `foot.stem.r` by `foot.stem.h`
+ *   straight down from the ankle, `foot.stem.root` up into the collar —
+ *   planted flat with its face down, which is what a hydrophone the hull
+ *   stands on is.
+ *
+ * `cans` is the shell as `cans` drew it, where the hips are rooted.
+ * `limbs` is `[{ side, x, rake }]`, each at its own signed side, port −z
+ * (#642), its station along the hull and its rake in plan, radians ahead
+ * of the beam; the reach is read along the raked line, as the Directorate
+ * reads its own. A mirrored pair of hips is refused: the kind's stance is
+ * a tripod and repeats on neither side (docs/models-plan.md §3.6), and the
+ * light that sits on the knees inherits the rule. Returns the joints,
+ * `{ side, i, hip, knee, ankle, lamp }` each, for the header to measure.
+ */
+export function plantedLegs(root, mats, opts) {
+  const { bracket, bone, block, pad, lampM } = mats;
+  const { cans: list, hip, femur, knee, tibia, ankle, foot, lamp, limbs, cut: rule = METRE } = opts;
+  const count = { p: 0, s: 0 };
+  const joints = limbs.map(({ side, x, rake = 0 }) => {
+    if (side !== 'p' && side !== 's')
+      throw new Error(`leg_${side}: side is '${side}' — 'p' (port, -z) or 's' (starboard, +z)`);
+    const i = count[side]++;
+    const sgn = side === 'p' ? -1 : 1;
+    const flank = typeof hip.on === 'function' ? hip.on(x, side) : hip.on ? hip.on[side] : canFlank(list, x, hip.y);
+    const out = [Math.sin(rake), 0, sgn * Math.cos(rake)];
+    const from = ([px, py, pz], reach, lift) => [px + out[0] * reach, py + lift, pz + out[2] * reach];
+    const at = [x, hip.y, sgn * (flank - hip.sink)];
+    const kneeAt = from(at, femur.reach, femur.rise);
+    const ankleAt = from(kneeAt, tibia.reach, -tibia.drop);
+    // A box yawed by θ about Y carries its local +z onto (sin θ, 0, cos θ);
+    // sgn · rake lays that on the leg's line either side.
+    return { side, i, hip: at, knee: kneeAt, ankle: ankleAt, yaw: sgn * rake };
+  });
+  refuseMirror('leg', joints.map(({ side, i, hip: at }) => [`leg_${side}${i}`, ...at]));
+  joints.forEach((j) => {
+    const { side, i, hip: at, knee: kneeAt, ankle: ankleAt, yaw } = j;
+    const name = `leg_${side}${i}`;
+    const turned = [0, yaw, 0];
+    add(root, `${name}_hip`, box(...hip.size), bracket, at, turned);
+    const [rw, rh, rd] = hip.rivet.size;
+    // The bracket's inboard half is in the hull and its top is under the
+    // deck plate, so the heads sit where `rivet.top(x, side)` puts the
+    // plate over the hip — the bolts through — `rivet.out` along the leg
+    // from the bracket's centre, inboard when negative so a yawed
+    // bracket's fore and aft heads both land on the plate (#1439 review);
+    // `sgn` turns the bracket's local z outboard either side.
+    const sgn = side === 'p' ? -1 : 1;
+    const dz = sgn * (hip.rivet.out ?? 0);
+    const top = hip.rivet.top ? hip.rivet.top(at[0], side) : at[1] + hip.size[1] / 2;
+    const rivetY = top + rh / 2 - hip.rivet.sink;
+    for (let k = 0; k < 2; k++) {
+      const dx = (k === 0 ? -1 : 1) * hip.rivet.pitch;
+      // Along the bracket's own length and depth, which the yaw has turned.
+      const px = at[0] + dx * Math.cos(yaw) + dz * Math.sin(yaw);
+      const pz = at[2] - dx * Math.sin(yaw) + dz * Math.cos(yaw);
+      add(root, `${name}_hip_rivet_${k}`, box(rw, rh, rd), bone, [px, rivetY, pz], turned);
+    }
+    girder(root, `${name}_femur`, bone, at, kneeAt, femur.section, femur.root);
+    add(root, `${name}_knee`, box(...knee.size), block, kneeAt, turned);
+    const lampAt = [kneeAt[0], kneeAt[1] + knee.size[1] / 2 + lamp.h / 2 - lamp.sink, kneeAt[2]];
+    add(root, `${name}_lamp`, box(lamp.size, lamp.h, lamp.size), lampM, lampAt, turned);
+    drumBone(root, `${name}_tibia`, bone, tibia.r, kneeAt, ankleAt, rule, tibia.root);
+    add(root, `${name}_ankle`, box(...ankle.size), bracket, ankleAt, turned);
+    const stemTop = ankleAt[1] - ankle.size[1] / 2 + foot.stem.root;
+    const stemBottom = ankleAt[1] - ankle.size[1] / 2 - foot.stem.h;
+    add(
+      root,
+      `${name}_foot_stem`,
+      cyl(foot.stem.r, foot.stem.r, stemTop - stemBottom, rule.round(foot.stem.r)),
+      bone,
+      [ankleAt[0], (stemTop + stemBottom) / 2, ankleAt[2]]
+    );
+    add(
+      root,
+      `${name}_foot`,
+      cyl(foot.r, foot.r, foot.h, rule.round(foot.r)),
+      pad,
+      [ankleAt[0], stemBottom - foot.h / 2 + 0.05, ankleAt[2]]
+    );
+    j.lamp = lampAt;
+  });
+  return joints;
 }
 
 export { THREE };
