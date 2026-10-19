@@ -633,6 +633,16 @@ export interface TerrainMessage extends TerrainPayload {
    * and the server names the region rather than the client choosing one.
    */
   region?: string;
+  /**
+   * Every cell the match has written, in order, when it has written any
+   * (#1496). The ground above is then the ground the match *opened* on, and
+   * these bring it to `revision`: the client draws what a player there from
+   * the start drew, the opening bake and then the same patches. Sent live
+   * instead, a join after an arch fell would hash the fallen ground into a
+   * new noise seed and re-relieve the whole map. Omitted on an unwritten
+   * ground, so a fresh join's payload is what it always was.
+   */
+  changes?: GroundCell[];
 }
 
 /** One cell the ground delta changed. */

@@ -52,6 +52,7 @@ import { installHeadlessAudio, uninstallHeadlessAudio } from './support/headless
 import { StubClient, StubRoom, stubCallbacks } from './support/colyseusStub.ts';
 import { cannedMap, cannedNodes, cannedSnapshot, cannedTerrain } from './support/cannedMatch.ts';
 import { GameCanvas, panelType, type GameCanvasProps } from '../src/game/GameCanvas.tsx';
+import { seabedSeed } from '../src/game/seabed.ts';
 import { worldView } from '../src/game/worldView.ts';
 
 /** Every string the rendered tree contains, in document order. */
@@ -1098,19 +1099,31 @@ describe('the shell: the persistent world view', () => {
       await joinMatch(world);
       const view = worldView.current!;
       const ground = () => (view as unknown as { terrain: { floor: number[] } | null }).terrain;
+      const seed = () => (view as unknown as { groundSeed: number }).groundSeed;
+      const joined = seed();
+      assert.equal(joined, seabedSeed(cannedTerrain()), "the join's seed, the opening ground's");
       world.room.drop();
       await world.settle();
       assert.ok(shows(world.tree, 'Signal lost'), 'the player is told');
       assert.equal(worldView.current === view, true, 'the same world view');
       assert.equal(ground() !== null, true, "the session's ground is still drawn");
       world.room.reconnect();
-      // The room re-sends its ground as it now is: a cell fallen since the join.
-      const now = cannedTerrain();
-      now.floor[0] = now.floor[0]! + 300;
-      world.room.emit(SERVER_MSG.terrain, { ...now, revision: 9 });
+      // The room re-sends the ground the match opened on and a cell fallen
+      // since the join (MatchRoom.sendMapData, #1496).
+      const opening = cannedTerrain();
+      const fallen = {
+        index: 0,
+        floorM: opening.floor[0]! + 300,
+        ceilingM: opening.ceiling[0]!,
+        biome: opening.biomes[0]!,
+      };
+      world.room.emit(SERVER_MSG.terrain, { ...opening, revision: 1, changes: [fallen] });
       await world.settle();
       assert.equal(shows(world.tree, 'Signal lost'), false, 'back in the room');
-      assert.equal(ground()!.floor[0], now.floor[0], "the room's ground, not the one before");
+      assert.equal(ground()!.floor[0], fallen.floorM, "the room's ground, not the one before");
+      // Hashed from the fallen ground, the seed would re-relieve every cell on
+      // the map to draw one fall.
+      assert.equal(seed(), joined, 'the relief keeps the seed the match opened on');
     } finally {
       await world.unmount();
     }

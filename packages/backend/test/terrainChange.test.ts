@@ -188,16 +188,32 @@ describe('the arch, going', () => {
 });
 
 describe('ground the match wrote', () => {
-  it('is what a joining client is sent, not what the map authored', () => {
-    // A reconnection at 15:00 has to land on a map with the arch already down.
-    // `serialize` reads the live arrays, so this is really a check that nothing
-    // caches the constructed grid on the way to the wire.
+  it('is what the live grid reads, not what the map authored', () => {
+    // A commander's seat reads `serialize` (ai/seat.ts), and has to stand on
+    // the arch already down: a check that nothing caches the constructed grid.
     const authored = authoredGround().serialize();
     const played = transited().world.terrain.serialize();
     const differing = played.floor.filter((value, index) => value !== authored.floor[index]).length;
-    assert.ok(differing > 0, 'the served grid still matches the authored one');
+    assert.ok(differing > 0, 'the live grid still matches the authored one');
     assert.equal(played.cols, authored.cols);
     assert.equal(played.rows, authored.rows);
+  });
+
+  it('reaches a joining client as the opening ground and every write since (#1496)', () => {
+    // A reconnection at 15:00 has to land on a map with the arch already down,
+    // and on the noise seed the client hashed at 0:00: the client hashes the
+    // ground it is sent, so what it is sent is the opening one, and the writes
+    // replay the fall over it.
+    const terrain = transited().world.terrain;
+    const opening = terrain.serializeOpening();
+    assert.deepEqual(opening, authoredGround().serialize(), 'the ground the match opened on');
+    const replayed = structuredClone(opening);
+    for (const cell of terrain.changesSince(0)) {
+      replayed.floor[cell.index] = cell.floorM;
+      replayed.ceiling[cell.index] = cell.ceilingM;
+      replayed.biomes[cell.index] = cell.biome;
+    }
+    assert.deepEqual(replayed, terrain.serialize(), 'its writes replay to the live grid');
   });
 
   it('reports only the cells that actually moved', () => {

@@ -2659,9 +2659,8 @@ export class PerspectiveView {
    * ground takes the region (`syncDetail`). Then the apron's bake and the
    * mission's would shade exactly the pixels it holds, outside the mission
    * rectangle on the padded ground's terms and inside it on the mission's.
-   * Null for any other ground, such as a reconnection's past a fallen arch,
-   * and whenever no baseline is built: a direct link's entry, or a launch
-   * that outran its bake.
+   * Null for any other ground, and whenever no baseline is built: a direct
+   * link's entry, or a launch that outran its bake.
    */
   private baselineSkin(): HTMLCanvasElement | null {
     const apron = this.apron;
