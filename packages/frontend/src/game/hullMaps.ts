@@ -376,8 +376,8 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
   },
   // The scouts (#784), on the same rule: one navy's hull each, so the kind's
   // canonical model. The Acolyte carries no lock, so its Directorate model
-  // serves every navy recoloured — the Chorister's and the Verger's rule —
-  // until a variant passes intake.
+  // is the kind's canonical one and VARIANT_MAP_URL carries the other three
+  // navies' — the Chorister's and the Verger's rule (#1439).
   [UnitKind.Beacon]: {
     albedo: beaconAlbedo,
     height: beaconHeight,
