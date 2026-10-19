@@ -82,7 +82,7 @@
  *   sits 0.32 m into the mount (the sweep lists `gun_mount · gun`), and
  *   the barrel's forward 6.5 m stand clear. Twelve metres ahead of the
  *   port rank's leading cell; the mount's aft face half a metre ahead of
- *   the upper tier's nose at +29; the muzzle's underside 3.8 m over the
+ *   the upper tier's nose at +29; the muzzle's underside 3.9 m over the
  *   slab's nose plate at 4.3, its axis 4.3 m over it.
  * - **The spines are off the rim, not the back.** Four whips at the kind's
  *   stations and lengths — starboard +30 (8 m) and +4 (9 m), port +24
@@ -147,9 +147,10 @@
  * tail's six at 1.0 to 1.25 on their facets — no lamp hidden, none
  * floating, on a plan of 12,671 mask pixels at 2 px/m, some 3,170 m²
  * (the Directorate's 12,563). The intake bake at 105 m reads raw E 7.37
- * against the target E(16) = 1.41 and dims by ×0.191: the Verger's band
- * (×0.195 at E(14)) and twelve times clear of the ×1/64 floor the quiet
- * end must not touch (§3.2). Five materials; 226 parts, 5,404 triangles;
+ * against the target E(16) = 1.41 and dims by ×0.191; the calibrated bake
+ * (tools/hull-maps/build.mjs, 4 px/m) reads raw 7.60 and ×0.186: the
+ * Verger's band (×0.195 at E(14)) and twelve times clear of the ×1/64
+ * floor the quiet end must not touch (§3.2). Five materials; 226 parts, 5,404 triangles;
  * the file spans x −52.5 .. 52.5, y −10.1 .. 17.1, z −32.1 .. 35.1.
  *
  * The sweep (contacts.mjs) reads 262 pairs and every one a mount: the
