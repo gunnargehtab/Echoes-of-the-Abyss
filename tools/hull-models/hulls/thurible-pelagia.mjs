@@ -157,7 +157,7 @@
  *
  * THE LIGHT, measured (`lightAudit`, printed by `exportGlb`): fifteen lit
  * parts, 23.5 m² facing up — the shield's nine at 1.69 to 1.88 m² each on
- * their facets, the tail's six at 1.19 to 1.31 — on a plan of 12,679 mask
+ * their facets, the tail's six at 1.19 to 1.31 — on a plan of 12,836 mask
  * pixels at 2 px/m, some 3,210 m²; the Directorate's fifteen show 23.9 on
  * 3,140. Nothing hidden, nothing floating: every bud's gap is 0. The bake
  * at E(16) = 1.41 reads raw E = 3.70 and dims by ×0.381 (the Directorate's
