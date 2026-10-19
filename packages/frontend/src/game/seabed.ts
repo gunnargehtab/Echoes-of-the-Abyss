@@ -712,6 +712,27 @@ export function bakeSeabed(
 }
 
 /**
+ * A rectangle of a skin already baked, copied onto a canvas of its own:
+ * `cols` × `rows` cells from `col`, `row` in. A copy, not a shade, so a skin
+ * baked once is taken again for the cost of a blit (#1495): the board's
+ * baseline detail holds the ground a board launch's session opens on.
+ */
+export function cutSeabed(
+  source: HTMLCanvasElement,
+  { col, row, cols, rows }: { col: number; row: number; cols: number; rows: number },
+  pxPerCell = SEABED_PX_PER_CELL
+): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  canvas.width = cols * pxPerCell;
+  canvas.height = rows * pxPerCell;
+  const ctx = canvas.getContext('2d');
+  if (ctx === null) throw new Error('seabed cut: no 2d context');
+  const { width, height } = canvas;
+  ctx.drawImage(source, col * pxPerCell, row * pxPerCell, width, height, 0, 0, width, height);
+  return canvas;
+}
+
+/**
  * TUNABLE — milliseconds of shading a sliced bake spends before it yields:
  * half a 60 Hz frame. It holds a frame for at most that and one slice, and
  * how many slices fit adapts to the machine. A yield after every slice tied

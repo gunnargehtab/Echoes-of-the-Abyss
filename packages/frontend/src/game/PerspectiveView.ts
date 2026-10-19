@@ -90,6 +90,7 @@ import { DepthCues } from './depthCues.ts';
 import {
   bakeSeabed,
   bakeSeabedInSlices,
+  cutSeabed,
   emberFlicker,
   rebakeSeabedCells,
   seabedRange,
@@ -186,6 +187,7 @@ import {
   paddedTerrain,
   pasteMissionGrid,
   patchApronMesh,
+  sameGround,
   stepBorderStrength,
   type ApronPads,
   type BorderUniforms,
@@ -551,6 +553,8 @@ interface RegionDetail {
   mesh: Mesh;
   cells: DataTexture;
   terrain: TerrainPayload;
+  /** Its skin, which a session opening on its baseline takes again (`baselineSkin`, #1495). */
+  canvas: HTMLCanvasElement;
   /** The map's baseline cut from `terrain`, and its pads: drawn in its own frame (#1491). */
   mission: TerrainPayload;
   pads: ApronPads;
@@ -1961,7 +1965,21 @@ export class PerspectiveView {
     // Seated stones scour the bake (seabed.ts `stoneScourGain`) only where
     // the layer seats them: a hollow with no stone in it would be a lie.
     this.stones = this.seabedDetail ? stoneSeats(terrain) : [];
-    const canvas = bakeSeabed(terrain, this.groundSeed, this.seabedRange, this.stones);
+    // A board launch opens on the ground the board's baseline detail already
+    // baked, so its skin is cut from that one rather than baked again on the
+    // join's held frame (#1495). The baseline seats no stones, so a ground
+    // seating any still bakes its own; so does every entry with no baseline.
+    const baseline = this.baselineSkin();
+    const apron = this.apron;
+    const canvas =
+      baseline !== null && apron !== null && this.stones.length === 0
+        ? cutSeabed(baseline, {
+            col: apron.pads.west,
+            row: apron.pads.north,
+            cols: terrain.cols,
+            rows: terrain.rows,
+          })
+        : bakeSeabed(terrain, this.groundSeed, this.seabedRange, this.stones);
     const texture = new CanvasTexture(canvas);
     // The bake's row 0 is the map's north edge, and so is the grid's iz 0;
     // an unflipped texture keeps the two aligned without inverting the v axis.
@@ -1983,7 +2001,7 @@ export class PerspectiveView {
     }
     this.terrainMesh = new Mesh(geometry, material);
     this.scene.add(this.terrainMesh);
-    if (this.apron !== null && this.apron.mesh === null) this.buildApron(grid);
+    if (this.apron !== null && this.apron.mesh === null) this.buildApron(grid, baseline);
     this.cutOverview();
     this.terrainGrid = grid;
     this.seabedCanvas = canvas;
@@ -2490,12 +2508,16 @@ export class PerspectiveView {
   /**
    * The apron's mesh and skin (docs/world-map.md §7.3–§7.4). Its skin is the
    * mission's bake run over the padded ground on the mission's own terms —
-   * seed, rock top, depth range — so the colours meet at the edge. Unlit, like
+   * seed, rock top, depth range — so the colours meet at the edge; or, given
+   * the `baseline` that bake would match (`baselineSkin`), a copy of it, whose
+   * mission rectangle is the mission's own skin rather than the padded
+   * ground's. The apron draws no quad there, so only filtering at its inner
+   * edge reads those texels, toward what the mission's mesh draws. Unlit, like
    * the mission mesh, and fogged like everything; then faded by plan distance
    * from the mission, after the fog, to the deepest water the ramp has, which
    * is the backdrop's darkness and the scene's clear colour.
    */
-  private buildApron(missionGrid: HeightGrid): void {
+  private buildApron(missionGrid: HeightGrid, baseline: HTMLCanvasElement | null): void {
     const apron = this.apron;
     const terrain = this.terrain;
     const region = this.worldRegion;
@@ -2509,7 +2531,15 @@ export class PerspectiveView {
     geometry.setAttribute('position', new BufferAttribute(data.positions, 3));
     geometry.setAttribute('uv', new BufferAttribute(data.uvs, 2));
     geometry.setIndex(new BufferAttribute(data.indices, 1));
-    const canvas = bakeSeabed(apron.terrain, this.groundSeed, this.seabedRange);
+    const canvas =
+      baseline !== null
+        ? cutSeabed(baseline, {
+            col: 0,
+            row: 0,
+            cols: apron.terrain.cols,
+            rows: apron.terrain.rows,
+          })
+        : bakeSeabed(apron.terrain, this.groundSeed, this.seabedRange);
     const texture = new CanvasTexture(canvas);
     texture.flipY = false;
     texture.colorSpace = SRGBColorSpace;
@@ -2552,6 +2582,25 @@ export class PerspectiveView {
     apron.texture = texture;
     apron.classes = classes;
     this.shadeExterior();
+  }
+
+  /**
+   * The skin the region's resident baseline detail baked, when the session's
+   * padded ground is that baseline cell for cell (#1495): what a board launch
+   * joins on, since the board holds its region's detail until the session's
+   * ground takes the region (`syncDetail`). Then the apron's bake and the
+   * mission's would shade exactly the pixels it holds, outside the mission
+   * rectangle on the padded ground's terms and inside it on the mission's.
+   * Null for any other ground, such as a reconnection's past a fallen arch,
+   * and whenever no baseline is built: a direct link's entry, or a launch
+   * that outran its bake.
+   */
+  private baselineSkin(): HTMLCanvasElement | null {
+    const apron = this.apron;
+    const region = this.worldRegion;
+    const detail = region === null ? undefined : this.residency?.get(region.id);
+    if (apron === null || detail === undefined || detail.seed !== this.groundSeed) return null;
+    return sameGround(detail.terrain, apron.terrain) ? detail.canvas : null;
   }
 
   /**
@@ -2882,7 +2931,18 @@ export class PerspectiveView {
       mapProps(region.mapId)
     );
     mesh.add(props.group);
-    return { mesh, cells: cellsTexture, terrain, mission, pads, seed, rockTopM, rect, props };
+    return {
+      mesh,
+      cells: cellsTexture,
+      terrain,
+      canvas,
+      mission,
+      pads,
+      seed,
+      rockTopM,
+      rect,
+      props,
+    };
   }
 
   /** Free what `loadRegionDetail` built: the residency let its region go. */
