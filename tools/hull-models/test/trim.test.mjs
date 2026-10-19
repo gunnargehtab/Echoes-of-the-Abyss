@@ -245,7 +245,12 @@ test('a round part of four facets lays each facet on one map', () => {
 });
 
 test('every corner gets a UV, no vertex moves, and two layouts are one', () => {
-  const { root } = yard();
+  const { root, drum } = yard();
+  // A quarter turn puts the unroll's cut on a vertex column two facets
+  // share, which then wants a UV each side. Square to the axes, the cut
+  // falls on the cylinder's own duplicate column and splits nothing; what
+  // split there before #1447 was a facet laid half each way round.
+  drum.rotation.y = Math.PI / 2;
   const before = sceneParts(root).parts.map((p) => Float32Array.from(p.positions));
   const sheet = drawTrimSheet(SPEC);
   const laid = layoutTrim(root, sheet, SPEC);
@@ -256,9 +261,10 @@ test('every corner gets a UV, no vertex moves, and two layouts are one', () => {
   });
   assert.ok(laid.split > 0, 'the drum seam splits no vertex');
   assert.deepEqual([...laid.materials], ['steel']);
-  const again = yard().root;
-  layoutTrim(again, drawTrimSheet(SPEC), SPEC);
-  sceneParts(again).parts.forEach((p, i) => assert.deepEqual(p.uv0, after[i].uv0));
+  const next = yard();
+  next.drum.rotation.y = Math.PI / 2;
+  layoutTrim(next.root, drawTrimSheet(SPEC), SPEC);
+  sceneParts(next.root).parts.forEach((p, i) => assert.deepEqual(p.uv0, after[i].uv0));
 });
 
 test('the sheet is bright, lapped, and the same twice', () => {
@@ -626,6 +632,79 @@ test('the facet layout unrolls a round twin as its mirror, and a keel drum onto 
   }
 });
 
+test("both triangles of a facet across the unroll's cut close the same way round", () => {
+  // #1447: a lathe numbers a facet's two triangles from either edge, so
+  // closed toward their first corners they took the cut's two sides on any
+  // facet it ran through; closed toward their own middles, they did so on a
+  // facet centred on it. Either way the plate between the two ways round
+  // ran down the diagonal, a tone apart at an odd count. Each facet must
+  // now span a facet's worth of `u`, never the whole girth.
+  const frustum = (phiStart = 0) =>
+    new THREE.LatheGeometry(
+      [new THREE.Vector2(1.8, -0.9), new THREE.Vector2(0.6, 0.9)],
+      5,
+      phiStart
+    );
+  const place = (root, mesh, name, x, z) => {
+    mesh.name = name;
+    mesh.rotation.z = Math.PI / 2;
+    mesh.position.set(x, 2, z);
+    root.add(mesh);
+    return mesh;
+  };
+  /** Each coplanar pair's `u` span against its part's, over every side facet. */
+  const facets = (mesh) => {
+    mesh.updateMatrixWorld(true);
+    const g = mesh.geometry;
+    const pos = g.attributes.position;
+    const uv = g.attributes.uv;
+    const idx = g.index;
+    const tris = idx.count / 3;
+    const at = (t, c) => idx.getX(t * 3 + c);
+    const key = (i) => [pos.getX(i), pos.getY(i), pos.getZ(i)].map((v) => v.toFixed(4)).join(',');
+    const normal = (t) => {
+      const [a, b, c] = [0, 1, 2].map((k) =>
+        new THREE.Vector3().fromBufferAttribute(pos, at(t, k))
+      );
+      return new THREE.Vector3().crossVectors(b.sub(a), c.sub(a)).normalize();
+    };
+    const edges = new Map();
+    for (let t = 0; t < tris; t++)
+      for (let c = 0; c < 3; c++) {
+        const e = [key(at(t, c)), key(at(t, (c + 1) % 3))].sort().join('|');
+        edges.set(e, [...(edges.get(e) ?? []), t]);
+      }
+    let partMin = Infinity;
+    let partMax = -Infinity;
+    for (let i = 0; i < uv.count; i++) {
+      partMin = Math.min(partMin, uv.getX(i));
+      partMax = Math.max(partMax, uv.getX(i));
+    }
+    const out = [];
+    for (const pair of edges.values()) {
+      if (pair.length !== 2 || normal(pair[0]).dot(normal(pair[1])) < 0.9999) continue;
+      const us = pair.flatMap((t) => [0, 1, 2].map((c) => uv.getX(at(t, c))));
+      out.push((Math.max(...us) - Math.min(...us)) / (partMax - partMin));
+    }
+    return out;
+  };
+  const mat = steel();
+  const consortium = new THREE.Group();
+  const cap = place(consortium, new THREE.Mesh(frustum(), mat), 'cap', 10, 0);
+  layoutTrim(consortium, drawTrimSheet(SPEC), SPEC);
+  const knights = new THREE.Group();
+  const star = place(knights, new THREE.Mesh(frustum(Math.PI / 5), mat), 'cap_s', 10, 9);
+  const port = place(knights, new THREE.Mesh(frustum(Math.PI / 5), mat), 'cap_p', 10, -9);
+  const keel = place(knights, new THREE.Mesh(frustum(), mat), 'keel', -10, 0);
+  layoutTrim(knights, drawTrimSheet(HADRON), HADRON);
+  for (const mesh of [cap, star, port, keel]) {
+    const spans = facets(mesh);
+    assert.ok(spans.length >= 5, `${mesh.name}: ${spans.length} facets found`);
+    for (const s of spans)
+      assert.ok(s < 0.5, `${mesh.name}: a facet spans ${s.toFixed(2)} of the girth`);
+  }
+});
+
 /** The Commune's sheet as it ships, drawn once: sixteen samples a texel take seconds. */
 let grownSheet = null;
 const grown = () => (grownSheet ??= drawTrimSheet(PELAGIA));
@@ -748,18 +827,26 @@ test('the Responsory is on the Knights sheet with its crystal bare', () => {
   const file = readGlb(join(repo, 'docs/concept-art/models/responsory-hadron.glb'));
   assert.equal(file.trim.sheet, HADRON.name);
   assert.deepEqual([...file.trim.materials].sort(), ['pale_alloy', 'shadow_indigo']);
-  assert.ok(file.parts.some((p) => p.material === 'resonance_crystal'), 'no crystal to keep bare');
+  assert.ok(
+    file.parts.some((p) => p.material === 'resonance_crystal'),
+    'no crystal to keep bare'
+  );
   for (const p of file.parts) assert.ok(p.uv0 && p.uv0.length === p.tris * 6, `${p.name} uv0`);
 });
 
 test('the Reed is on the Commune sheet with its unlit vein bare', () => {
   const file = readGlb(join(repo, 'docs/concept-art/models/reed-pelagia.glb'));
   assert.equal(file.trim.sheet, PELAGIA.name);
-  assert.deepEqual(
-    [...file.trim.materials].sort(),
-    ['algae_membrane', 'chitin_hull', 'growth_ridge', 'spore_pod']
+  assert.deepEqual([...file.trim.materials].sort(), [
+    'algae_membrane',
+    'chitin_hull',
+    'growth_ridge',
+    'spore_pod',
+  ]);
+  assert.ok(
+    file.parts.some((p) => p.material === 'bio_vein_unlit'),
+    'no vein to keep bare'
   );
-  assert.ok(file.parts.some((p) => p.material === 'bio_vein_unlit'), 'no vein to keep bare');
   for (const p of file.parts) assert.ok(p.uv0 && p.uv0.length === p.tris * 6, `${p.name} uv0`);
 });
 

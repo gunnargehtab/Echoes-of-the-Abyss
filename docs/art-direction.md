@@ -488,8 +488,15 @@ round its axis is not a curve but plate cut and welded, so it is laid flat as a 
 angle, the two triangles of one tapered facet took two maps, and a joint mid-facet
 zig-zagged at the diagonal, 95 texels of the sheet on the Harvester's bow apron. The rule
 reads the facet count alone, not the taper, so a straight cable and a wedge lay alike.
-On a tapered round of more than four facets that kink remains, about a pixel at the conn
-view's range ([#1447](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1447)). No
+On a tapered round of more than four facets that kink stays
+([#1447](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1447)): measured over the
+7,318 such facets on the 31 laid models, it is under a pixel at the conn view's 3 px/m on 97 %
+of them and 6.75 px at most, on the Bastion's dome skirt, and it is left rather than laid one
+map per facet, which steps every joint at every facet edge, or cut into rings, which spends
+triangles under gate 6. What #1447 moved is the unroll's seam: a facet's two triangles now
+close the same way round the cut, so the plate between the two ways round — a tone's step at
+an odd plate count — falls on a facet edge and never down a diagonal, as it did across the
+Harvester's ballast caps. No
 vertex moves: a vertex whose corners disagree
 is split, as the occlusion bake splits a chart's edge, so `diff.mjs` reads the file as
 unchanged and `check.mjs` compares the layout to 1/4,096 of the sheet.
@@ -759,12 +766,12 @@ one plate round with its joint and the unroll's wrap on the keel line, by 3.7 at
 round part mirrors at its corners, the ring stays included, which before #1375 carried their
 butt on the inboard face of one and the outboard face of the other. Between the corners the
 rounds do not quite: the layout sets `u` per corner from the angle, so a joint that falls
-mid-facet where the facet tapers follows the triangle's diagonal and kinks, about a pixel at the
-conn view's 3 px/m, and the mirror of a diagonal is the other one, on the blade, the horn, the
-drive and the resonator rings. **4.1 %** of the tagged area (243 of 5,898 m²) differs from its
+mid-facet where the facet tapers follows the triangle's diagonal and kinks, under a pixel at the
+conn view's 3 px/m but on the horn's widest facets, 2.8 px there, and the mirror of a diagonal is
+the other one, on the blade, the horn, the drive and the resonator rings. **4.1 %** of the tagged area (243 of 5,898 m²) differs from its
 mirror by more than 8 levels, 4.2 % before #1375 and 4.7 % before `mirror`, all of it on those
-rounds, and [#1447](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1447) holds the
-kink. The barrel, four facets round, is laid flat since
+rounds, and [#1447](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1447) measured
+the kink and left it. The barrel, four facets round, is laid flat since
 [#1124](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1124), within 2.7 levels
 of its mirror, and the 4.1 % does not move. A round part's end caps laid from world position rather than the part's centre
 (`layoutMesh`) are the layout's too, and
