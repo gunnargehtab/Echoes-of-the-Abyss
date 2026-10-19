@@ -9,8 +9,16 @@
  */
 
 import assert from 'node:assert/strict';
-import { afterEach, describe, it } from 'node:test';
-import { BufferAttribute, Mesh, MeshBasicMaterial, Raycaster, Vector2, type Camera } from 'three';
+import { afterEach, describe, it, mock } from 'node:test';
+import {
+  BufferAttribute,
+  Mesh,
+  MeshBasicMaterial,
+  Raycaster,
+  Vector2,
+  Vector3,
+  type Camera,
+} from 'three';
 import {
   SORROWGATE_GROUND,
   SORROWGATE_REGION,
@@ -23,6 +31,8 @@ import {
 import { createHost, HeadlessWebGLRenderer, pumpAnimationFrames } from './support/headless.ts';
 import { cannedSnapshot } from './support/cannedMatch.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
+import { placeProps, type PropPlacement } from '../src/game/environment.ts';
+import { EnvironmentLayer } from '../src/game/environmentLayer.ts';
 import { buildHeightGrid, depthToWorldY, rockTopDepthM } from '../src/game/perspectiveTerrain.ts';
 import {
   bakeSeabed,
@@ -631,6 +641,59 @@ describe("another region's detail, where no session holds it (§7.5)", () => {
     assert.deepEqual([...held.residentIds()], [], 'no second copy held');
     assert.equal(held.counts.released, 1);
     assert.ok(internals(view).terrainMesh !== null, "the session's own drawn instead");
+  });
+
+  it("stands the props the session stands, on the detail's own ground, and lets them go with it (#1488)", async () => {
+    // Every layer's rebuild, the real one run: under node no model loads, so
+    // what a layer was asked to stand is the reading, not what it drew.
+    const rebuilds = mock.method(EnvironmentLayer.prototype, 'rebuild');
+    const destroys = mock.method(EnvironmentLayer.prototype, 'destroy');
+    try {
+      const { view } = await mountPilot(false);
+      const held = residency(view);
+      camera(2_500, 2_000, 6_000, { pitchDeg: 60 });
+      await until(() => held.drawn().includes(SORROWGATE_REGION.id), 'drawn');
+      const detail = held.get(SORROWGATE_REGION.id)! as unknown as {
+        mesh: Mesh;
+        props: EnvironmentLayer;
+      };
+      const group = detail.props.group;
+      assert.equal(group.parent, detail.mesh, 'drawn, hidden and let go with the detail');
+      group.updateWorldMatrix(true, false);
+      assert.deepEqual(
+        new Vector3().setFromMatrixPosition(group.matrixWorld).toArray(),
+        [0, 0, 0],
+        "the map's metres are the view's: the patch stands where the session's ground does"
+      );
+      const call = rebuilds.mock.calls.find((c) => c.this === detail.props)!;
+      const [, groundY, placements] = call.arguments as [
+        unknown,
+        (xM: number, yM: number) => number,
+        PropPlacement[],
+      ];
+      // Exactly what the session's layer stands on the room's first ground.
+      assert.deepEqual(placements, placeProps(sorrowgate()));
+      assert.equal(placements.length, 74);
+      for (const p of placements) {
+        assert.equal(
+          groundY(p.xM, p.yM),
+          depthToWorldY(view.seabedDepthAt(p.xM, p.yM)),
+          `on the drawn ground at ${p.xM}, ${p.yM}`
+        );
+      }
+      // The room's ground takes the region: the copy goes, its props with it.
+      view.setTerrain(sorrowgate());
+      pumpAnimationFrames();
+      assert.equal(held.counts.released, 1);
+      assert.equal(
+        destroys.mock.calls.filter((c) => c.this === detail.props).length,
+        1,
+        'its props let go with it'
+      );
+    } finally {
+      rebuilds.mock.restore();
+      destroys.mock.restore();
+    }
   });
 
   it('builds a detail under the veil, before it is ever resident', async () => {

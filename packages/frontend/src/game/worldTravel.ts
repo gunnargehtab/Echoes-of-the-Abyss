@@ -12,9 +12,9 @@
  * "public ground and assets" (`prepareRegion`).
  */
 
-import { PLACED_GROUND, RIFT_PLACES, WORLD, paintGround, type WorldRegion } from '@echoes/shared';
+import { RIFT_PLACES, WORLD, type WorldRegion } from '@echoes/shared';
 import { HOME_DOLLY_M, HOME_PITCH_DEG, type CameraFrame } from './PerspectiveView.ts';
-import { placeProps, propSpec } from './environment.ts';
+import { mapProps, propSpec } from './environment.ts';
 import { whenEnvTemplatesReady } from './environmentModels.ts';
 import { overviewSkin } from './worldOverview.ts';
 import type { WorldLook } from './tutorialLook.ts';
@@ -58,22 +58,10 @@ export function arrivalFrame(region: WorldRegion): CameraFrame | undefined {
  * either way: a piece that fails is done, so a launch is never held on it.
  */
 export function prepareRegion(region: WorldRegion, look: WorldLook): Promise<void> {
-  const ground = PLACED_GROUND[region.mapId];
   const props: { slug: string; footprintM: number; swayM: number }[] = [];
-  if (ground !== undefined) {
-    const cells = paintGround(ground);
-    const placements = placeProps({
-      cols: cells.cols,
-      rows: cells.rows,
-      cellM: cells.cellM,
-      biomes: Array.from(cells.biomes),
-      floor: Array.from(cells.floor),
-      ceiling: Array.from(cells.ceiling),
-    });
-    for (const slug of new Set(placements.map((placement) => placement.slug))) {
-      const spec = propSpec(slug);
-      if (spec !== undefined) props.push({ slug, footprintM: spec.footprintM, swayM: spec.swayM });
-    }
+  for (const slug of new Set(mapProps(region.mapId).map((placement) => placement.slug))) {
+    const spec = propSpec(slug);
+    if (spec !== undefined) props.push({ slug, footprintM: spec.footprintM, swayM: spec.swayM });
   }
   return Promise.allSettled([overviewSkin(), whenEnvTemplatesReady(props, look)]).then(
     () => undefined
