@@ -18,6 +18,13 @@ test("the Derrick's waist splits the run in two about it", () => {
   ]);
 });
 
+test("the Derrick's end gaps stop each bar at its taper corner (#1481)", () => {
+  assert.deepEqual(seamSpans(-56, 56, [[-60, -52.8], [-12, 24], [50.4, 60]]), [
+    [-52.8, -12],
+    [24, 50.4],
+  ]);
+});
+
 test('gaps are clipped to the run, merged when they overlap, and sorted', () => {
   assert.deepEqual(seamSpans(0, 10, [[6, 8], [2, 4], [3, 5]]), [
     [0, 2],

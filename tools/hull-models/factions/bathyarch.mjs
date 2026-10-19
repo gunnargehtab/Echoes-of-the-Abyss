@@ -510,7 +510,10 @@ export function seamSpans(x0, x1, gaps) {
  * is. The Derrick's slab swells to a waist 13.2 m proud of its flank from
  * x -12 to 24, and the one bar ran through it, 36 m of its 112 inside the
  * slab (#1433). The rivet rank still takes its pitch from `seamLength`
- * and `seam.x`, the whole run, so a break moves no rivet.
+ * and `seam.x`, the whole run, so a break moves no rivet. A gap that
+ * reaches past the run's end clips the bar at the gap's inner edge, which
+ * the Derrick puts at its taper corners (#1481), and the rivet pitch is
+ * unmoved by that too.
  *
  * A rivet row is fourteen stations along the seam at one height, and each
  * rivet sits on what is behind its station: the outermost of the plates,
