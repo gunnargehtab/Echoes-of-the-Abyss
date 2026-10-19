@@ -3128,9 +3128,29 @@ export function cohortLobes(root, ridge, opts) {
   const { lobes, ring: rf = { halfWidth: 0.6 }, cut: rule = METRE } = opts;
   noCount('lobe', opts, 'facets');
   noCount('lobe_ring', rf, 'facets');
-  lobes.forEach(({ skin, at: [x, y, z], radii: [rx, ry, rz], ring }, i) => {
+  lobes.forEach(({ skin, at: [x, y, z], radii: [rx, ry, rz], ring, rim }, i) => {
     const body = [rx, ry, rz];
     add(root, `lobe_${i}`, orb(...rule.orb(1, { scale: body })), skin, [x, y, z], [0, 0, 0], body);
+    // A husk rim in the ring's place (`lobe_rim_<i>`): a lobe whose margin
+    // has thickened into a flared rim rather than a ridge — an orb of ridge
+    // `rim.radii` pressed flat along the keel, `rim.dx` from the centre and
+    // `rim.lift` above the axis, wider than the lobe where it stands so the
+    // lobe's trailing edge carries the corners the Thurible's shield has
+    // (hulls/thurible-pelagia.mjs, #1440; directorate.mjs `tergites` draws
+    // the same lip as the `ridge` orb). A lobe carries a ring or a rim.
+    if (rim) {
+      noCount(`lobe_rim_${i}`, rim, 'facets');
+      add(
+        root,
+        `lobe_rim_${i}`,
+        orb(...rule.orb(1, { scale: rim.radii })),
+        ridge,
+        [x + rim.dx, y + (rim.lift ?? 0), z],
+        [0, 0, 0],
+        rim.radii
+      );
+      return;
+    }
     const squash = [1, ry / rz, 1];
     add(
       root,
@@ -4950,7 +4970,9 @@ function taperedStem(through, steps, [r0, r1], n) {
  * Directorate's collars do — and is:
  *
  * - `_cup`, a sphincter: a lathe of `cup` ink round the vertical from
- *   `sink` inside the skin to `proud` above it, swelling `swell` over `r`
+ *   `sink` inside the skin — or deeper, by what the steepest cell's
+ *   downhill foot needs plus `sag` for the facet (below) — to `proud`
+ *   above it, swelling `swell` over `r`
  *   at `throat` under the mouth and drawing in to `r` at the lip, then in
  *   over the lip by `wall` and down the bore, so the well has an inside.
  * - `_floor`, the dark down the bore: a lens of `floor` ink `depth` under
@@ -4984,6 +5006,7 @@ export function chargeCups(
     wall = 0.5,
     proud = 2.4,
     sink = 1.2,
+    sag = 0.6,
     throat = 0.9,
     swell = 0.5,
     depth = 1.3,
@@ -5003,11 +5026,28 @@ export function chargeCups(
     return { name: `cell_${side}${i}`, at: [x, y, sgn * z] };
   });
   refuseMirror('cell', placed, ({ at: [x, y, z] }) => `${x},${y},${Math.abs(z)}`);
+  // The cup's foot is one ring for the rank and the shell is a dome, so the
+  // foot is sunk by what the steepest station needs: the crown's drop from
+  // each cell's centre to the downhill side of its foot, read round the
+  // foot at `r - 0.3` on sixteen bearings, plus `sag` for the facet's
+  // chord under the ideal crown — or `sink`, where that is the more. The
+  // first run sank every cup 1.2 and the aftmost starboard cup, on the
+  // steepest station, stood 0.16–0.35 m off its facet at its aft foot.
+  const foot = r - 0.3;
+  let drop = 0;
+  placed.forEach(({ at: [x, y, z] }) => {
+    for (let k = 0; k < 16; k++) {
+      const a = (TAU * k) / 16;
+      const yk = crown(x + foot * Math.cos(a), z + foot * Math.sin(a));
+      if (Number.isFinite(yk)) drop = Math.max(drop, y - yk);
+    }
+  });
+  const sunk = Math.max(sink, drop + sag);
   // Root to mouth, in over the lip, down the bore: `[h, r]` about the
   // vertical, the sides facing out, the lip up and the bore in.
   const inner = r - wall;
   const profile = [
-    [-sink, r - 0.3],
+    [-sunk, r - 0.3],
     [proud - throat, r + swell],
     [proud, r],
     [proud, inner],
@@ -5058,6 +5098,7 @@ export function chargeCups(
     // forward edge, and its root stays on the hinge.
     add(root, `${name}_lid`, leaf, lidMat, [x - r + 0.2, top + 0.1, z], [0, 0, open]);
   });
+  return sunk;
 }
 
 /**

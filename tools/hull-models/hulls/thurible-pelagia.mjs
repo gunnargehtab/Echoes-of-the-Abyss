@@ -24,7 +24,8 @@
  * and the 85 are the charge's, above it." — said the Commune's way: six
  * lobes down the keel, four small ones the tail and two great ones the
  * shield, each a squashed orb of chitin with a growth ring of ridge grown
- * round it, each leaning its own way off the keel line; a rostrum of
+ * round it — the aft shield's thickened into a flared husk rim at its
+ * trailing edge — each leaning its own way off the keel line; a rostrum of
  * ridge drawn to a point and a tail of chitin drawn to one astern; the
  * rack as seven cups grown into the shield's back, each a sphincter of
  * ridge round a dark chitin floor with a leaf of membrane standing open
@@ -48,19 +49,37 @@
  *   −13 and the tail behind it is 11 m of half-beam where the shield was
  *   25 — the step. Where the Directorate draws a lip on each plate this
  *   navy grows a ring: the tail rings about 0.6 of a half-length abaft
- *   each centre (x −43.6, −36, −27.5, −18), the aft shield's at −10.5 on the
- *   trailing part the fore lobe leaves bare, so it is the shield's lip in
- *   plan, and the fore shield's at +36, ahead of every cell and 2.3 m under
- *   the gun's barrel.
+ *   each centre (x −43.6, −36, −27.5, −18) and the fore shield's at +36,
+ *   ahead of every cell and 2.3 m under the gun's barrel.
+ * - **The shield's trailing corners, carried.** The Directorate flares its
+ *   aft plate's lip to 23 m of half-beam at x −9 where the plate has drawn
+ *   in to 16.5 — "the corners a horseshoe crab's has at its trailing
+ *   edge" — and a first cut here drew a 14 m ring there and lost them
+ *   (the reviewer's top-down read 16.5/17.3 at x −9 against the
+ *   Directorate's 21.9/21.8). So the aft shield lobe grows no ring but a
+ *   husk rim in its place (`cohortLobes` `rim`, written for this hull):
+ *   `lobe_rim_4`, an orb of ridge 5.4 m long, 14.4 tall and 46 across at
+ *   x −9.25, lifted 0.5 m, the Directorate's own lip orb said in ridge —
+ *   x −11.95 to −6.55, z ±23 on the lobe's lean, its crown 1.75 m over the
+ *   lobe's at its station and its belly 0.75 under. The plan now reads
+ *   21.8/22.7 m of half-beam at x −9, 21.3/22.2 at −10, 17.3/18.2 at −11,
+ *   where the Directorate's reads 21.9, 21.4 and 17.2, and 11 at −12
+ *   behind it: the step.
  * - **Seven cups, two ranks, the Directorate's stations.** Starboard four
  *   at z +6.5 at x 24, 14, 4 and −6; port three at z −7.5 at 19, 9 and −1,
  *   half a pitch aft, so no cup answers another across the keel
  *   (`chargeCups` refuses one that does). Each a 5.6 m well as the kind's
- *   is, its cup standing 2.4 m proud of the ideal crown and sunk 1.2 into
- *   it, swelling to 6.6 m across 0.9 under the lip; a chitin lens 1.3 m
- *   down the bore, its crest 1.2 m above the crown at the cell's centre
- *   (the Directorate's reason: a floor under a dome's crown shows the dome
- *   through it); a leaf lid 5.9 m long and 5.3 across hinged on a ridge
+ *   is, its cup standing 2.4 m proud of the ideal crown and sunk 1.73 into
+ *   it — one foot for the rank, sunk by what the steepest station needs:
+ *   the aftmost starboard cup at −6 drops 1.13 m from its centre to the
+ *   downhill side of its foot, plus 0.6 for the facet's sag (a first cut
+ *   sank every cup 1.2 and that one's aft foot stood 0.16–0.35 m off its
+ *   facet; now every foot is 0.32 to 2.4 m under the facet on every
+ *   bearing) — swelling to 6.6 m across 0.9 under the lip; a chitin lens
+ *   1.3 m down the bore, its crest 1.37 m above the crown at the cell's
+ *   centre (the Directorate's reason: a floor under a dome's crown shows
+ *   the dome through it; the s3 bore's wall stands at 8.39 against a crown
+ *   of 7.94 uphill); a leaf lid 5.9 m long and 5.3 across hinged on a ridge
  *   knuckle at the aft lip, standing 77° open forward and up, so the
  *   forward cup's lid reaches y 18.3 where the Directorate's reaches 17.9.
  *   From above each is a ring, a dark bore and a sliver of leaf behind it.
@@ -74,14 +93,12 @@
  *   y 1, canted 1.05 outboard and raked 0.25 forward as the kind's spines
  *   are, each a stem that thins from 0.9 m to 0.12 and curls its own way
  *   (`rimThorns`): the s0 tip at (32.6, 4.0, 31.5), the p0 at (27.2, 4.7,
- *   −33.4), which is the hull's beam, 65.1 m to the Directorate's 65.9.
+ *   −33.4), which is the hull's beam, 65.1 m to the Directorate's 65.9; the
+ *   p1 thorn at −8 roots in the husk rim, the flank there.
  * - **Four limbs a side, folded under the shield** — at y −6, where the
  *   shell is 16.3 m of half-beam at the first station and 21.7 at the
- *   second (`lobeFlank`). Starboard at the Directorate's 33, 23, 13 and 3;
- *   port half a pitch aft at 28, 18, 8 and −2, because that rank is "the
- *   one place the navy allows a pair" in the Directorate's words and this
- *   navy allows none (`foldedLimbs` refuses a mirrored hip, as every limb
- *   builder in the module does). Each a hip knuckle half a metre in the
+ *   second (`lobeFlank`), four a side as the kind has them; where the two
+ *   ranks stand is decided below. Each a hip knuckle half a metre in the
  *   skin, a femur 6 m out and 1 down to a knee knuckle, a tibia folded 5.5
  *   forward, 1 in and 1.2 down, a claw 1.8 m on: the s0 knee stands 0.4 m
  *   past the rim at x 33 and its claw reaches (40.2, −8.6, 21.3); the
@@ -107,6 +124,14 @@
  *
  * What the block does not say, decided here:
  *
+ * - **The port limbs stand half a pitch aft of the starboard.** Starboard
+ *   at the Directorate's 33, 23, 13 and 3; port at 28, 18, 8 and −2. The
+ *   kind's limbs are a matched rank each side — "the one place the navy
+ *   allows a pair", the Directorate's header says — and this navy's
+ *   FACTION block is asymmetric by rule: `foldedLimbs` refuses a mirrored
+ *   hip as every limb builder in the module does. So the one pair the kind
+ *   allowed is the one station set this file moves, by the offset the
+ *   port cell rank already carries.
  * - **The shield is two husks, not a leaf.** The Sower spreads its beam as
  *   a leaf; a domed carapace that carries wells on its back is a seed
  *   husk, and the Chorister's and Acolyte's lobe-and-ring series at this
@@ -133,41 +158,46 @@
  * THE LIGHT, measured (`lightAudit`, printed by `exportGlb`): fifteen lit
  * parts, 23.5 m² facing up — the shield's nine at 1.69 to 1.88 m² each on
  * their facets, the tail's six at 1.19 to 1.31 — on a plan of 12,679 mask
- * pixels at 2 px/m, some 3,170 m²; the Directorate's fifteen show 23.9 on
+ * pixels at 2 px/m, some 3,210 m²; the Directorate's fifteen show 23.9 on
  * 3,140. Nothing hidden, nothing floating: every bud's gap is 0. The bake
- * at E(16) = 1.41 reads raw E = 3.75 and dims by ×0.376 (the Directorate's
+ * at E(16) = 1.41 reads raw E = 3.70 and dims by ×0.381 (the Directorate's
  * reads 6.26 and ×0.224): twenty-four times clear of the ×1/64 floor the
  * quiet end must not touch (§3.2) and nowhere near the ×64 ceiling.
  * Intake at 105 m: scale ×1.000, length on X, 111 meshes, four materials
- * (`chitin_hull`, `growth_ridge`, `algae_membrane`, `bio_light`), 5,350
+ * (`chitin_hull`, `growth_ridge`, `algae_membrane`, `bio_light`), 5,510
  * triangles, no warning.
  *
- * CONTACTS (`contacts.mjs`): 150 pairs meet, every one a mount — each
- * ring on its lobe; each lobe on the next (and lobe_3 on lobe_5, a metre
- * of overlap inside lobe_4); the rostrum's base in the fore lobe and the
- * tail's in the aft; each thorn's root in its lobe; each hip and the root
+ * CONTACTS (`contacts.mjs`): 152 pairs meet, every one a mount — each
+ * ring on its lobe, the husk rim in lobe_4 and lobe_3; each lobe on the
+ * next (and lobe_3 on lobe_5, a metre of overlap inside lobe_4); the
+ * rostrum's base in the fore lobe and the tail's in the aft; each thorn's
+ * root in its lobe, the p1's in the rim; each hip and the root
  * of each femur in its lobe, each femur in its hip and its knee, each
  * tibia in its knee and its femur's tip, each claw on its tibia; the gun's
  * knuckle in the shell and the spike in it; each cup in its lobe, its
- * floor and its node in the cup, its lid on the node; the keel in all six
- * lobes and through the tail rings' insides under the skin, and its seven
- * rings on it; each bud on its lobe. No bud meets a thorn, a cup or a
- * ring. The lowest point is keel_ring_1 at −13.6 (a hull the view does
+ * floor and its node in the cup, its lid on the node (the s3 cup in the
+ * rim as well as lobe_4); the keel in all six lobes and the rim, and
+ * through the four tail rings — ridge into ridge: the rings' proud part
+ * crosses the keel line at y −3.16, −3.58, −3.97 and −5.19, outside the
+ * skin, and the keel's back there, −2.6 to −4.6, cuts it — and its seven
+ * rings on it; each bud on its lobe. No bud meets a thorn, a cup, a ring
+ * or the rim (the nearest, bud_tail_s0, 1.9 m from the rim). The lowest point is keel_ring_1 at −13.6 (a hull the view does
  * not stand).
  *
  * FACETS (#919; pelagia.mjs `cut`): every round part is asked of the rule
  * and `facets.mjs --parts` names none — the lobes sixteen round by eight
- * down at 6.5–27 m, their rings sixteen; the rostrum fourteen at 3.4 m,
+ * down at 6.5–27 m, the husk rim sixteen by eight, the rings sixteen; the rostrum fourteen at 3.4 m,
  * the tail cone ten at 2.4; the cups fourteen a turn at 3.3 m, their floors
  * eight by six, their nodes five by three; the thorns five; the knuckles
  * five by three, the stems and claws five; the keel ten, its rings nine;
  * the buds five by three. PANELS: the median unlit part from above is
  * 2.61 m on a side over sixty-five, inside the navy's 1.5–5 m band for a
- * hull. 111 parts, 5,350 triangles. TRIM: none laid, as the Chorister's,
+ * hull. 111 parts, 5,510 triangles. TRIM: none laid, as the Chorister's,
  * Verger's and Acolyte's Commune variants lay none.
  *
  * `chargeCups`, `rimThorns`, `foldedLimbs`, `spineGun`, `rimBuds`,
- * `lobeCrown` and `grownKeel`'s `rings` were written for this hull
+ * `lobeCrown`, `cohortLobes`' `rim` and `grownKeel`'s `rings` were
+ * written for this hull
  * (factions/pelagia.mjs, the Thurible section) and run here for the first
  * time.
  */
@@ -207,17 +237,33 @@ const LOBES = [
   { at: [-32, 0, 0.5], radii: [7, 3.6, 8], ringDx: -4, ringProud: 0.45 },
   { at: [-23, 0, -0.3], radii: [7.5, 4.2, 9.5], ringDx: -4.5, ringProud: 0.5 },
   { at: [-13, 0, 0.4], radii: [8, 4.8, 11], ringDx: -5, ringProud: 0.5 },
-  { at: [2, 0, -0.5], radii: [15, 9, 25], ringDx: -12.5, ringProud: 0.6 },
+  {
+    at: [2, 0, -0.5],
+    radii: [15, 9, 25],
+    rim: { dx: -11.25, lift: 0.5, radii: [2.7, 7.2, 23] },
+  },
   { at: [19, 0, 0.6], radii: [25, 10.5, 27], ringDx: 17, ringProud: 0.7 },
 ];
 const ringOn = ({ radii: [rx, , rz], ringDx, ringProud }) => {
   const crown = rz * Math.sqrt(1 - (ringDx / rx) ** 2) + ringProud;
   return { dx: ringDx, crown, shoulder: crown - 0.75 };
 };
+/** The shell: the lobes and the aft shield's husk rim, as `lobeCrown` and `lobeFlank` read them. */
+const SHELL = LOBES.flatMap((lobe) =>
+  lobe.rim
+    ? [
+        lobe,
+        {
+          at: [lobe.at[0] + lobe.rim.dx, lobe.at[1] + lobe.rim.lift, lobe.at[2]],
+          radii: lobe.rim.radii,
+        },
+      ]
+    : [lobe]
+);
 /** Where the shell's crown is at `(x, z)`, lean and all. */
-const crown = (x, z) => pelagia.lobeCrown(LOBES, x, z);
+const crown = (x, z) => pelagia.lobeCrown(SHELL, x, z);
 /** Where the shell's flank is at `(x, y)` on one side. */
-const rim = (x, y, sgn) => pelagia.lobeFlank(LOBES, x, y, sgn);
+const rim = (x, y, sgn) => pelagia.lobeFlank(SHELL, x, y, sgn);
 /** The belly's depth at `x` on the keel line, the ideal section's. */
 const belly = (x) => {
   let y = Infinity;
@@ -237,7 +283,8 @@ pelagia.cohortLobes(root, ridge, {
     skin: chitin,
     at: lobe.at,
     radii: lobe.radii,
-    ring: ringOn(lobe),
+    ring: lobe.rim ? undefined : ringOn(lobe),
+    rim: lobe.rim,
   })),
 });
 
@@ -364,7 +411,7 @@ pelagia.rimBuds(root, light, {
   at: 0.84,
   r: 0.95,
   squash: 0.55,
-  on: ['lobe_4', 'lobe_5', 'lobe_ring_4', 'lobe_ring_5'],
+  on: ['lobe_4', 'lobe_5', 'lobe_rim_4', 'lobe_ring_5'],
   cut,
 });
 pelagia.rimBuds(root, light, {
