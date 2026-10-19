@@ -159,6 +159,12 @@ export const UNITS = [
   { slug: 'furnace', model: 'furnace-bathyarch.glb', lengthM: 115, sig: 40 },
   { slug: 'blight', model: 'blight-pelagia.glb', lengthM: 80, sig: 10 },
   { slug: 'lure', model: 'lure-directorate.glb', lengthM: 100, sig: 14 },
+  // The Lure as the other navies field it (#1441), on the Chorister's rule:
+  // the song's plan in each navy's shape language, the light kept nearly
+  // black at the Directorate's band.
+  { slug: 'lure-bathyarch', model: 'lure-bathyarch.glb', lengthM: 100, sig: 14 },
+  { slug: 'lure-pelagia', model: 'lure-pelagia.glb', lengthM: 100, sig: 14 },
+  { slug: 'lure-hadron', model: 'lure-hadron.glb', lengthM: 100, sig: 14 },
   { slug: 'tocsin', model: 'tocsin-hadron.glb', lengthM: 105, sig: 9.9 },
   // The line hulls and the anchor (docs/units.md "The line hulls, and the
   // anchor", #787 — Phase 4's fifth box): the Consortium's line hull and the

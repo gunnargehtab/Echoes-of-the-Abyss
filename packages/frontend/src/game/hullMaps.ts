@@ -204,6 +204,15 @@ import blightEmissive from '../assets/hulls/maps/blight-emissive.png';
 import lureAlbedo from '../assets/hulls/maps/lure-albedo.png';
 import lureHeight from '../assets/hulls/maps/lure-height.png';
 import lureEmissive from '../assets/hulls/maps/lure-emissive.png';
+import lureBathAlbedo from '../assets/hulls/maps/lure-bathyarch-albedo.png';
+import lureBathHeight from '../assets/hulls/maps/lure-bathyarch-height.png';
+import lureBathEmissive from '../assets/hulls/maps/lure-bathyarch-emissive.png';
+import lurePelAlbedo from '../assets/hulls/maps/lure-pelagia-albedo.png';
+import lurePelHeight from '../assets/hulls/maps/lure-pelagia-height.png';
+import lurePelEmissive from '../assets/hulls/maps/lure-pelagia-emissive.png';
+import lureHadAlbedo from '../assets/hulls/maps/lure-hadron-albedo.png';
+import lureHadHeight from '../assets/hulls/maps/lure-hadron-height.png';
+import lureHadEmissive from '../assets/hulls/maps/lure-hadron-emissive.png';
 import tocsinAlbedo from '../assets/hulls/maps/tocsin-albedo.png';
 import tocsinHeight from '../assets/hulls/maps/tocsin-height.png';
 import tocsinEmissive from '../assets/hulls/maps/tocsin-emissive.png';
@@ -426,8 +435,9 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
   // The siege hulls (#786), on the same rule: one navy's hull each, so the
   // kind's canonical model, and three of the four baked in their working
   // state — ladders run out, fan spread, bell braced. The Lure carries no
-  // lock, so its Directorate model serves every navy recoloured — the
-  // Chorister's and the Acolyte's rule — until a variant passes intake.
+  // lock, so its Directorate model is the kind's canonical one and
+  // VARIANT_MAP_URL carries the other three navies' — the Chorister's, the
+  // Acolyte's and the Thurible's rule (#1441).
   [UnitKind.Furnace]: {
     albedo: furnaceAlbedo,
     height: furnaceHeight,
@@ -549,6 +559,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>
       height: thuriblePelHeight,
       emissive: thuriblePelEmissive,
     },
+    [UnitKind.Lure]: {
+      albedo: lurePelAlbedo,
+      height: lurePelHeight,
+      emissive: lurePelEmissive,
+    },
   },
   [Faction.Bathyarch]: {
     [UnitKind.LightScout]: {
@@ -595,6 +610,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>
       albedo: thuribleBathAlbedo,
       height: thuribleBathHeight,
       emissive: thuribleBathEmissive,
+    },
+    [UnitKind.Lure]: {
+      albedo: lureBathAlbedo,
+      height: lureBathHeight,
+      emissive: lureBathEmissive,
     },
   },
   [Faction.Directorate]: {
@@ -664,6 +684,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>
       albedo: thuribleHadAlbedo,
       height: thuribleHadHeight,
       emissive: thuribleHadEmissive,
+    },
+    [UnitKind.Lure]: {
+      albedo: lureHadAlbedo,
+      height: lureHadHeight,
+      emissive: lureHadEmissive,
     },
   },
 };

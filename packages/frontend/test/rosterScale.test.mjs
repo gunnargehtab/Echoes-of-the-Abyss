@@ -72,9 +72,7 @@ const FIELDED = kinds(Faction).flatMap((faction) => [
  * builds its model (graphics-standards.md, gate 1). The list only shrinks: a
  * variant that lands must leave it, and a gap not listed fails.
  */
-const PENDING = new Map([
-  ...['bathyarch', 'pelagia', 'hadron'].flatMap((navy) => [[`lure-${navy}.glb`, 1441]]),
-]);
+const PENDING = new Map();
 
 /** Intake's design length for a file, by the table the bake reads. */
 const LENGTH_M = new Map([...UNITS, ...STRUCTURES].map((row) => [row.model, row.lengthM]));
