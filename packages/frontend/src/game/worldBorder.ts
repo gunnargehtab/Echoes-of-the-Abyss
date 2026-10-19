@@ -133,8 +133,8 @@ export function missionCells(padded: TerrainPayload, pads: ApronPads): TerrainPa
 /**
  * Whether two grounds are the same cells, cell for cell. Two padded grounds
  * this calls the same, cut at the same pads, hold the same mission, whose
- * cells give the seed, rock top and depth range a skin is baked on — so they
- * bake the same skin (#1495).
+ * cells give the seed and depth range a skin is baked on — so they bake the
+ * same skin (#1495).
  */
 export function sameGround(a: TerrainPayload, b: TerrainPayload): boolean {
   if (a.cols !== b.cols || a.rows !== b.rows || a.cellM !== b.cellM) return false;
