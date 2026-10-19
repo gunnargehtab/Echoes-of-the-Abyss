@@ -729,6 +729,8 @@ export const SLICED_BAKE_BUDGET_MS = 8;
  * shades the pixels a whole bake would, the promise the partial rebake stands
  * on, so the slices add up to exactly it. An aborted `signal` stops it at the
  * next yield, throwing the signal's reason, so a request let go stops shading.
+ * `into` paints onto a canvas already baked instead, `col` and `row` cells in
+ * from its corner: a mission's skin laid over its region's (#1491).
  */
 export async function bakeSeabedInSlices(
   terrain: TerrainPayload,
@@ -737,19 +739,32 @@ export async function bakeSeabedInSlices(
   options: BakeOptions,
   sliceCells: number,
   yieldTask: () => Promise<void>,
-  { now = () => performance.now(), signal }: { now?: () => number; signal?: AbortSignal } = {}
+  {
+    now = () => performance.now(),
+    signal,
+    into,
+  }: {
+    now?: () => number;
+    signal?: AbortSignal;
+    into?: { canvas: HTMLCanvasElement; col: number; row: number };
+  } = {}
 ): Promise<HTMLCanvasElement> {
   const ppc = options.pxPerCell ?? SEABED_PX_PER_CELL;
-  const canvas = document.createElement('canvas');
-  canvas.width = terrain.cols * ppc;
-  canvas.height = terrain.rows * ppc;
+  const canvas = into?.canvas ?? document.createElement('canvas');
+  if (into === undefined) {
+    canvas.width = terrain.cols * ppc;
+    canvas.height = terrain.rows * ppc;
+  }
+  const dx = (into?.col ?? 0) * ppc;
+  const dy = (into?.row ?? 0) * ppc;
   signal?.throwIfAborted();
   let since = now();
   for (let row = 0; row < terrain.rows; row++) {
     for (let col0 = 0; col0 < terrain.cols; col0 += sliceCells) {
       const col1 = Math.min(terrain.cols, col0 + sliceCells) - 1;
       const rect = { col0, row0: row, col1, row1: row };
-      paintSeabed(canvas, shadeSeabed(terrain, seed, range, rect, [], options));
+      const pixels = shadeSeabed(terrain, seed, range, rect, [], options);
+      paintSeabed(canvas, { ...pixels, x: pixels.x + dx, y: pixels.y + dy });
       if (now() - since < SLICED_BAKE_BUDGET_MS) continue;
       await yieldTask();
       signal?.throwIfAborted();

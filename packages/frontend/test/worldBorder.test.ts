@@ -13,10 +13,12 @@ import { DoubleSide, Mesh, MeshBasicMaterial, ShaderLib } from 'three';
 import {
   Biome,
   Faction,
+  SORROWGATE_GROUND,
   SORROWGATE_REGION,
   WORLD,
   detailGround,
   exteriorFade,
+  paintGround,
 } from '@echoes/shared';
 import {
   createHost,
@@ -33,6 +35,7 @@ import {
   stepBorderStrength,
   apronFrame,
   apronMesh,
+  missionCells,
   paddedTerrain,
 } from '../src/game/worldBorder.ts';
 import { overviewSkin } from '../src/game/worldOverview.ts';
@@ -123,6 +126,32 @@ describe("the apron: the region's authored surround (#1457)", () => {
       paddedTerrain(mission, { ...pads, west: 9 }, surround),
       null,
       'a grid that does not fit is refused, not cropped'
+    );
+  });
+
+  it("cuts the mission back out whole: the map's baseline from its region's detail (#1491)", () => {
+    const mission = pilotTerrain();
+    const pads = { west: 10, north: 10, east: 10, south: 10 };
+    const cut = missionCells(paddedTerrain(mission, pads, detailGround(SORROWGATE_REGION)!)!, pads);
+    assert.deepEqual(
+      [cut.cols, cut.rows, cut.cellM, cut.biomes, cut.floor, cut.ceiling],
+      [mission.cols, mission.rows, mission.cellM, mission.biomes, mission.floor, mission.ceiling]
+    );
+    const detail = detailGround(SORROWGATE_REGION)!;
+    const map = paintGround(SORROWGATE_GROUND);
+    const baseline = missionCells(
+      {
+        ...detail,
+        biomes: [...detail.biomes],
+        floor: [...detail.floor],
+        ceiling: [...detail.ceiling],
+      },
+      apronFrame(SORROWGATE_REGION, detail.cellM).pads
+    );
+    assert.deepEqual(
+      [baseline.cols, baseline.rows, baseline.biomes, baseline.floor, baseline.ceiling],
+      [map.cols, map.rows, [...map.biomes], [...map.floor], [...map.ceiling]],
+      "the map's own cells, the ground its session opens on"
     );
   });
 

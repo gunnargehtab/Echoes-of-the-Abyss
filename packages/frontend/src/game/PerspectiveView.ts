@@ -178,10 +178,13 @@ import { installGroundSurface, type WorldLook } from './tutorialLook.ts';
 import {
   apronFrame,
   apronMesh,
+  baselineDepthAtM,
   detailMesh,
   installApronShading,
   installOverviewShading,
+  missionCells,
   paddedTerrain,
+  pasteMissionGrid,
   patchApronMesh,
   stepBorderStrength,
   type ApronPads,
@@ -548,6 +551,10 @@ interface RegionDetail {
   mesh: Mesh;
   cells: DataTexture;
   terrain: TerrainPayload;
+  /** The map's baseline cut from `terrain`, and its pads: drawn in its own frame (#1491). */
+  mission: TerrainPayload;
+  pads: ApronPads;
+  /** The mission's seed and rock top, as a session opening on it takes them (#1491). */
   seed: number;
   rockTopM: number;
   /** Its detail rectangle in this view's scene metres. */
@@ -2780,22 +2787,35 @@ export class PerspectiveView {
       floor: Array.from(cells.floor),
       ceiling: Array.from(cells.ceiling),
     };
-    const seed = seabedSeed(terrain);
-    const rockTopM = rockTopDepthM(terrain);
+    // Drawn on the session's terms, so the join and the return's swap trade
+    // like for like (#1491): the map's patch in the map's own frame, the rest
+    // in the padded ground's, all on the seed, rock top and depth range a
+    // session opening on the map takes — `refreshGroundCache` and `buildApron`.
+    const { pads } = apronFrame(region, terrain.cellM);
+    const mission = missionCells(terrain, pads);
+    const seed = seabedSeed(mission);
+    const rockTopM = rockTopDepthM(mission);
+    const range = seabedRange(mission);
     const atlas = detailRect(region);
     const yieldTask = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
     const grid = buildHeightGrid(terrain, seed, rockTopM);
+    pasteMissionGrid(grid, buildHeightGrid(mission, seed, rockTopM), pads, terrain.cellM);
     await yieldTask();
     signal.throwIfAborted();
     const canvas = await bakeSeabedInSlices(
       terrain,
       seed,
-      seabedRange(terrain),
+      range,
       {},
       DETAIL_SLICE_CELLS,
       yieldTask,
       { signal }
     );
+    // No stone is seated here, so the mission's skin bakes no scour.
+    await bakeSeabedInSlices(mission, seed, range, {}, DETAIL_SLICE_CELLS, yieldTask, {
+      signal,
+      into: { canvas, col: pads.west, row: pads.north },
+    });
     if (this.renderer === null) throw new Error('the view has no renderer to draw it with');
     const own = { x: 0, y: 0, widthM: atlas.widthM, heightM: atlas.heightM };
     const data = detailMesh(grid, seamHeightFor({ x: atlas.x, y: atlas.y }, own));
@@ -2843,9 +2863,10 @@ export class PerspectiveView {
     // Under the veil's shade from its first frame: it is not resident yet, so
     // `shadeExterior` would pass it by.
     this.tintExterior(material);
-    // The props the map's ground stands, on this detail's own heights: the
-    // placements the session's layer stands on the room's first ground, so the
-    // join and the return's swap trade like for like (#1488). A child of the
+    // The props the map's ground stands, on the map's own heights, which this
+    // detail draws: the placements and the ground the session's layer stands
+    // on the room's first ground, so the join and the return's swap trade like
+    // for like (#1488, #1491). A child of the
     // mesh, so they are drawn, hidden and let go with it. No stone is seated:
     // this skin bakes no scour round one. Nothing fades them, since only the
     // pilot's region has a surround, and its map lies inside its own mission;
@@ -2856,12 +2877,12 @@ export class PerspectiveView {
     props.group.position.set(patchX, 0, patchY);
     props.setReducedMotion(this.swayHeld);
     props.rebuild(
-      terrain,
-      (xM, yM) => depthToWorldY(seabedDepthAtM(terrain, seed, rockTopM, xM + patchX, yM + patchY)),
+      mission,
+      (xM, yM) => depthToWorldY(seabedDepthAtM(mission, seed, rockTopM, xM, yM)),
       mapProps(region.mapId)
     );
     mesh.add(props.group);
-    return { mesh, cells: cellsTexture, terrain, seed, rockTopM, rect, props };
+    return { mesh, cells: cellsTexture, terrain, mission, pads, seed, rockTopM, rect, props };
   }
 
   /** Free what `loadRegionDetail` built: the residency let its region go. */
@@ -3066,12 +3087,14 @@ export class PerspectiveView {
     for (const detail of this.drawnDetails()) {
       const v = seamWeight(detail.rect, xM, yM);
       if (v === 1) continue;
-      const own = seabedDepthAtM(
+      const own = baselineDepthAtM(
         detail.terrain,
+        detail.mission,
+        detail.pads,
         detail.seed,
         detail.rockTopM,
-        xM - detail.rect.x,
-        yM - detail.rect.y
+        xM - (detail.rect.x + detail.pads.west * detail.terrain.cellM),
+        yM - (detail.rect.y + detail.pads.north * detail.terrain.cellM)
       );
       return own + (overview - own) * v;
     }
