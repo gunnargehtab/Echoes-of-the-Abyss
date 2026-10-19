@@ -1106,7 +1106,11 @@ export class HeadlessWebGLRenderer {
       for (const m of Array.isArray(material) ? material : material ? [material] : []) {
         materials.add(m);
         const entry = this.properties.get(m) as { currentProgram?: { isReady(): boolean } };
-        entry.currentProgram ??= { isReady: () => this.linked.has(m) };
+        if (entry.currentProgram === undefined) {
+          entry.currentProgram = { isReady: () => this.linked.has(m) };
+          // As three's: a disposed material's properties go, its program with them.
+          m.addEventListener('dispose', () => this.targetProperties.delete(m));
+        }
       }
     });
     this.linking.push(...materials);

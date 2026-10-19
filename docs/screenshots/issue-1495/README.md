@@ -33,7 +33,7 @@ holds the canvas pass until the driver reports them ready: 124 frames in the fir
 then 2 and 6. The page answers meanwhile and the canvas shows the frame it last drew.
 Two programs an entry still link in the draw on the branch, a `MeshBasicMaterial` with a
 `LineBasicMaterial` or a second `MeshBasicMaterial`, 60 to 75 ms between them, as the
-later entries' two or three did on `main`. What makes them is not traced here.
+later entries' three or four did on `main`. What makes them is not traced here.
 
 The branch links 33 programs in the first entry against `main`'s 20, and 14 against 9 in
 the others. `compile` reaches every material in the scene, the hidden ones included, so

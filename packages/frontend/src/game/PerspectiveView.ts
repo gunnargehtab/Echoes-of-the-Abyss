@@ -2056,6 +2056,12 @@ export class PerspectiveView {
    * it is made, and there is nothing to wait for. A later call takes over the
    * hold, since `compile` hands back every material in the scene.
    *
+   * Mid-match too, the owner's call on #1495: the first hull of a kind not
+   * yet drawn holds the canvas the same way. The HUD keeps drawing through
+   * the camera meanwhile, so its symbols slide over a still world during a
+   * pan, and a resize leaves the canvas cleared until the hold ends; before,
+   * the whole page hitched instead.
+   *
    * Not `compileAsync`: its poll reads the program of every material it
    * compiled, and a material disposed meanwhile has none, so the poll throws
    * in a timer and its promise never settles: four times in one GPU drive.

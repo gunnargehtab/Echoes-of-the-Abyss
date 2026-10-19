@@ -14,6 +14,7 @@ import {
   BufferAttribute,
   Mesh,
   MeshBasicMaterial,
+  type Material,
   Raycaster,
   Vector2,
   Vector3,
@@ -579,6 +580,23 @@ describe('programs linked off the frame (#1495)', () => {
     } finally {
       performance.now = realNow;
     }
+  });
+
+  it('counts a material disposed while it links as done, and lets the hold go', async () => {
+    const { view, gl } = await mountPilot(false);
+    gl.extensionNames.add('KHR_parallel_shader_compile');
+    const frames = gl.ledger.frames;
+    view.setTerrain(sorrowgate());
+    pumpAnimationFrames();
+    assert.equal(gl.ledger.frames, frames, 'held');
+    // Every material the hold waits on, disposed before its link finished:
+    // none has a program left to ask.
+    gl.compiles[0]!.traverse((object) => {
+      const material = (object as { material?: Material | Material[] }).material;
+      for (const m of Array.isArray(material) ? material : material ? [material] : []) m.dispose();
+    });
+    pumpAnimationFrames();
+    assert.equal(gl.ledger.frames, frames + 1, 'drawn: nothing left to wait for');
   });
 
   it('draws at once where the driver links in the draw: there is nothing to wait for', async () => {
