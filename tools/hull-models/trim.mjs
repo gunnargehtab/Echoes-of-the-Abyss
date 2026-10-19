@@ -96,10 +96,16 @@
  * its starboard twin turned over, from the inboard line, and a part on
  * the keel from its crown, half a plate on. Between the corners it does
  * not quite: a joint that falls mid-facet where the facet tapers follows
- * the triangle diagonal and kinks, about a pixel at the conn view's
- * 3 px/m, and the mirror of that diagonal is the other one. #1124 took a
+ * the triangle diagonal and kinks — under a pixel at the conn view's
+ * 3 px/m on 97 of 100 such facets, 6.75 px at most on the Bastion's dome
+ * skirt — and the mirror of that diagonal is the other one. #1124 took a
  * four-facet part out of the unroll (`PRISM`); on the many-facet tapers the
- * kink remains (#1447). Nothing on it
+ * kink is measured and left (#1447): one map per facet would step every
+ * joint at every facet edge, and a facet cut into rings spends triangles
+ * under gate 6. What #1447 did move is the unroll's seam: a facet's
+ * triangles close the same way round the cut (`facetMids`), so the plate
+ * between the two ways round falls on a facet edge and not down a
+ * diagonal, on every laid model. Nothing on it
  * weathers, and `untagged` keeps the sheet off a cladding that is not
  * panelling (`layoutTrim`). The Commune's `grown` pattern (#1110) keeps
  * the bands and drops the plate altogether: a grown composite has no butt,
@@ -276,8 +282,8 @@ function valueNoise(xm, ym, cellM, cells, seed) {
  * starboard face, and a port part against its twin — and the table's
  * `mirror` makes `u` along the beam the same on both sides, a flat face's
  * and a round part's alike (#1375), though a joint mid-facet on a
- * tapering facet of more than `PRISM` facets still kinks (#1447; four or
- * fewer lay flat since #1124). The plate and tergite patterns do not
+ * tapering facet of more than `PRISM` facets still kinks (#1447 measured
+ * and left it; four or fewer lay flat since #1124). The plate and tergite patterns do not
  * read the chamfer keys.
  *
  * The `grown` pattern (#1110) draws no joint on either axis. Each strake
@@ -743,6 +749,89 @@ function extentsOf(pos, count) {
   return { min, max };
 }
 
+/**
+ * The angle each side triangle of a round part closes toward when the
+ * unroll's cut at ±π runs through it: the circular mean of its facet's
+ * corners, the facet being every side triangle joined to it across
+ * coplanar edges, a flood from the triangle (#1447), so stacked coplanar
+ * rows — a cylinder of more than one height segment, a lathe profile with
+ * three points in a line — are one facet too. `angle` is only known
+ * modulo a turn, so a corner past the cut from the rest of its triangle is
+ * brought round by one, and that choice is where the unroll's seam lands —
+ * a whole number of plates, a tone's swap at an odd count. Closed toward
+ * its first corner, as every navy did until #1375 and the three without
+ * `mirror` did until this, a facet's two triangles agreed on a cylinder,
+ * where three numbers both from the same corner, and disagreed on a lathe
+ * or a sphere, where it numbers them from either edge, so the seam ran
+ * down a diagonal of the Acolyte's dome; and on an edge exactly on the cut,
+ * read as +π on one ring and −π on the other by rounding, the two first
+ * corners took the two sides, a plate apart across 2,335/4,096 of the
+ * sheet on the Harvester's ballast caps and 2,101 on the Light Scout's
+ * `hull_cap_aft`. Closed toward each triangle's own middle, as `mirror`
+ * did, they disagreed on a facet centred on the cut. The facet's middle is
+ * the shape's, so every triangle of it takes one side and the seam falls
+ * on the facet's edge — a cap's fan too, where `roundAxis` has taken a
+ * squat drum's cap for its side (#1501) and unrolls it as one facet.
+ *
+ * The corners are summed in one order, by position, so the triangles of
+ * one facet add the same numbers the same way and agree to the bit; a
+ * twin turned over adds them to rounding, and a sine sum under 1e-9 is
+ * held to +0, so a facet centred on the cut closes toward +π on both twins
+ * and every machine, not by the sign of a rounding error. A triangle with
+ * no coplanar neighbour — a cone's or a dome's apex — is its own facet.
+ * Caps and anything not a side triangle are left at 0: nothing reads them.
+ */
+function facetMids(pos, count, angle, normals, side) {
+  const tris = count / 3;
+  const keys = new Array(count);
+  for (let k = 0; k < count; k++)
+    keys[k] = `${pos[k * 3].toFixed(4)},${pos[k * 3 + 1].toFixed(4)},${pos[k * 3 + 2].toFixed(4)}`;
+  const edgeKey = (t, c) => {
+    const a = keys[t * 3 + c];
+    const b = keys[t * 3 + ((c + 1) % 3)];
+    return a < b ? `${a}|${b}` : `${b}|${a}`;
+  };
+  const edges = new Map();
+  for (let t = 0; t < tris; t++) {
+    if (!side[t]) continue;
+    for (let c = 0; c < 3; c++) {
+      const e = edgeKey(t, c);
+      let list = edges.get(e);
+      if (!list) edges.set(e, (list = []));
+      list.push(t);
+    }
+  }
+  const mids = new Float64Array(tris);
+  const done = new Uint8Array(tris);
+  for (let t0 = 0; t0 < tris; t0++) {
+    if (!side[t0] || done[t0]) continue;
+    const facet = [t0];
+    done[t0] = 1;
+    for (let i = 0; i < facet.length; i++) {
+      const t = facet[i];
+      for (let c = 0; c < 3; c++)
+        for (const s of edges.get(edgeKey(t, c))) {
+          if (done[s] || normals[s].dot(normals[t]) < 1 - 1e-6) continue;
+          done[s] = 1;
+          facet.push(s);
+        }
+    }
+    const corners = new Map();
+    for (const t of facet)
+      for (let c = 0; c < 3; c++) corners.set(keys[t * 3 + c], angle[t * 3 + c]);
+    let sin = 0;
+    let cos = 0;
+    for (const k of [...corners.keys()].sort()) {
+      sin += Math.sin(corners.get(k));
+      cos += Math.cos(corners.get(k));
+    }
+    if (Math.abs(sin) < 1e-9) sin = 0;
+    const mid = Math.atan2(sin, cos);
+    for (const t of facet) mids[t] = mid;
+  }
+  return mids;
+}
+
 function layoutMesh(mesh, bands, wrapM, strakeM, mirror) {
   const g = mesh.geometry;
   const p = g.attributes.position;
@@ -890,6 +979,20 @@ function layoutMesh(mesh, bands, wrapM, strakeM, mirror) {
     plates = Math.max(1, Math.round((2 * Math.PI * (rSum / count)) / (wrapM / PLATES)));
   }
 
+  // Where each side triangle closes its angles toward, read once for the
+  // part so the two triangles of one facet read the same (`facetMids`).
+  let mids = null;
+  if (axis) {
+    const normals = [];
+    const side = new Uint8Array(count / 3);
+    for (let t = 0; t < count / 3; t++) {
+      const n = faceOf(t).clone();
+      normals.push(n);
+      side[t] = Math.abs(n.dot(axis)) < SIDE ? 1 : 0;
+    }
+    mids = facetMids(pos, count, angle, normals, side);
+  }
+
   for (let t = 0; t < count / 3; t++) {
     const n = faceOf(t);
     if (axis && Math.abs(n.dot(axis)) < SIDE) {
@@ -897,24 +1000,10 @@ function layoutMesh(mesh, bands, wrapM, strakeM, mirror) {
       round++;
       const band = bandFor(bands, hMax - hMin, strakeM);
       used.set(band.rows, used.get(band.rows) + 1);
-      const a0 = angle[t * 3];
-      // A triangle across the unroll's seam is closed toward its first
-      // corner, which is the file's order and not the shape's, so under
-      // `mirror` it is closed toward its own middle instead, the circular
-      // mean of its corners' angles (#1375): a twin's triangles are the
-      // same triangles under another numbering, and the mirror of a
-      // triangle on the keel closes toward the mirror of its middle. At an
-      // odd plate count the two ways round differ by a plate.
-      let mid = a0;
-      if (mirror) {
-        let sin = 0;
-        let cos = 0;
-        for (let c = 0; c < 3; c++) {
-          sin += Math.sin(angle[t * 3 + c]);
-          cos += Math.cos(angle[t * 3 + c]);
-        }
-        mid = Math.atan2(sin, cos);
-      }
+      // A triangle across the unroll's cut is closed toward its facet's
+      // middle (`facetMids`, #1447), so the plate the cut puts between the
+      // two ways round lands on a facet edge rather than a diagonal.
+      const mid = mids[t];
       for (let c = 0; c < 3; c++) {
         const k = t * 3 + c;
         let th = angle[k];

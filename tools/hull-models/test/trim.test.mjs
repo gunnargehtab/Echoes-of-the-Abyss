@@ -245,7 +245,12 @@ test('a round part of four facets lays each facet on one map', () => {
 });
 
 test('every corner gets a UV, no vertex moves, and two layouts are one', () => {
-  const { root } = yard();
+  const { root, drum } = yard();
+  // A quarter turn puts the unroll's cut on a vertex column two facets
+  // share, which then wants a UV each side. Square to the axes, the cut
+  // falls on the cylinder's own duplicate column and splits nothing; what
+  // split there before #1447 was a facet laid half each way round.
+  drum.rotation.y = Math.PI / 2;
   const before = sceneParts(root).parts.map((p) => Float32Array.from(p.positions));
   const sheet = drawTrimSheet(SPEC);
   const laid = layoutTrim(root, sheet, SPEC);
@@ -256,9 +261,10 @@ test('every corner gets a UV, no vertex moves, and two layouts are one', () => {
   });
   assert.ok(laid.split > 0, 'the drum seam splits no vertex');
   assert.deepEqual([...laid.materials], ['steel']);
-  const again = yard().root;
-  layoutTrim(again, drawTrimSheet(SPEC), SPEC);
-  sceneParts(again).parts.forEach((p, i) => assert.deepEqual(p.uv0, after[i].uv0));
+  const next = yard();
+  next.drum.rotation.y = Math.PI / 2;
+  layoutTrim(next.root, drawTrimSheet(SPEC), SPEC);
+  sceneParts(next.root).parts.forEach((p, i) => assert.deepEqual(p.uv0, after[i].uv0));
 });
 
 test('the sheet is bright, lapped, and the same twice', () => {
@@ -624,6 +630,106 @@ test('the facet layout unrolls a round twin as its mirror, and a keel drum onto 
         `the drum's corner at ${key}: u ${u} against ${other.map(([x]) => x)}`
       );
   }
+});
+
+test("both triangles of a facet across the unroll's cut close the same way round", () => {
+  // #1447: a lathe numbers a facet's two triangles from either edge, so
+  // closed toward their first corners they took the cut's two sides on any
+  // facet it ran through; closed toward their own middles, they did so on a
+  // facet centred on it. Either way the plate between the two ways round
+  // ran down the diagonal, a tone apart at an odd count. Each facet must
+  // now span a facet's worth of `u`, never the whole girth.
+  // A frustum of two coplanar rows: three profile points in a line, so a
+  // flood across coplanar edges reads one facet where one edge out read a
+  // triangle's own neighbours, and the two rows' triangles leaned apart.
+  // Tall, so `roundAxis` cannot take a side for a cap (#1501).
+  const frustum = (phiStart) =>
+    new THREE.LatheGeometry(
+      [new THREE.Vector2(1.8, -3), new THREE.Vector2(1.2, 0), new THREE.Vector2(0.6, 3)],
+      5,
+      phiStart
+    );
+  const place = (root, mesh, name, x, z) => {
+    mesh.name = name;
+    mesh.rotation.z = Math.PI / 2;
+    mesh.position.set(x, 2, z);
+    root.add(mesh);
+    return mesh;
+  };
+  /** Each coplanar pair's `u` span against its part's, over every side facet. */
+  const facets = (mesh) => {
+    mesh.updateMatrixWorld(true);
+    const g = mesh.geometry;
+    const pos = g.attributes.position;
+    const uv = g.attributes.uv;
+    const idx = g.index;
+    const tris = idx.count / 3;
+    const at = (t, c) => idx.getX(t * 3 + c);
+    const key = (i) => [pos.getX(i), pos.getY(i), pos.getZ(i)].map((v) => v.toFixed(4)).join(',');
+    const normal = (t) => {
+      const [a, b, c] = [0, 1, 2].map((k) =>
+        new THREE.Vector3().fromBufferAttribute(pos, at(t, k))
+      );
+      return new THREE.Vector3().crossVectors(b.sub(a), c.sub(a)).normalize();
+    };
+    const edges = new Map();
+    for (let t = 0; t < tris; t++)
+      for (let c = 0; c < 3; c++) {
+        const e = [key(at(t, c)), key(at(t, (c + 1) % 3))].sort().join('|');
+        edges.set(e, [...(edges.get(e) ?? []), t]);
+      }
+    let partMin = Infinity;
+    let partMax = -Infinity;
+    for (let i = 0; i < uv.count; i++) {
+      partMin = Math.min(partMin, uv.getX(i));
+      partMax = Math.max(partMax, uv.getX(i));
+    }
+    const out = [];
+    for (const pair of edges.values()) {
+      if (pair.length !== 2 || normal(pair[0]).dot(normal(pair[1])) < 0.9999) continue;
+      const us = pair.flatMap((t) => [0, 1, 2].map((c) => uv.getX(at(t, c))));
+      out.push((Math.max(...us) - Math.min(...us)) / (partMax - partMin));
+    }
+    return out;
+  };
+  const mat = steel();
+  const consortium = new THREE.Group();
+  const cap = place(consortium, new THREE.Mesh(frustum(0.32), mat), 'cap', 10, 0);
+  layoutTrim(consortium, drawTrimSheet(SPEC), SPEC);
+  const knights = new THREE.Group();
+  // A fifth of a turn centres a facet on the cut, the case a triangle's own
+  // middle split; the sine clamp that settles its side is not under test.
+  const star = place(knights, new THREE.Mesh(frustum(Math.PI / 5), mat), 'cap_s', 10, 9);
+  // Turned a quarter about z, a lathe's angle mirrors in z to π − φ, so the
+  // port twin starts there to stand on the starboard's corners.
+  const port = place(knights, new THREE.Mesh(frustum(Math.PI - Math.PI / 5), mat), 'cap_p', 10, -9);
+  const keel = place(knights, new THREE.Mesh(frustum(0), mat), 'keel', -10, 0);
+  layoutTrim(knights, drawTrimSheet(HADRON), HADRON);
+  for (const mesh of [cap, star, port, keel]) {
+    const spans = facets(mesh);
+    assert.ok(spans.length >= 5, `${mesh.name}: ${spans.length} facets found`);
+    for (const s of spans)
+      assert.ok(s < 0.5, `${mesh.name}: a facet spans ${s.toFixed(2)} of the girth`);
+  }
+  // The twins lay corner for corner, port turned over, as #1375 holds of a
+  // cylinder.
+  const corners = (mesh, flip) => {
+    const g = mesh.geometry;
+    const v = new THREE.Vector3();
+    const out = new Map();
+    for (let i = 0; i < g.attributes.position.count; i++) {
+      v.fromBufferAttribute(g.attributes.position, i).applyMatrix4(mesh.matrixWorld);
+      // A decimetre: a corner is a stride apart from the next, and a
+      // millimetre key splits a mirrored value that lands on a half.
+      const key = [v.x, v.y, flip ? -v.z : v.z].map((c) => Math.round(c * 10) + 0).join(',');
+      out.set(key, [...(out.get(key) ?? []), g.attributes.uv.getX(i).toFixed(4)].sort());
+    }
+    return out;
+  };
+  const s = corners(star, false);
+  const p = corners(port, true);
+  assert.equal(s.size, p.size, 'the twins do not stand on each other');
+  for (const [key, us] of s) assert.deepEqual(us, p.get(key), `the twins' corner at ${key}`);
 });
 
 /** The Commune's sheet as it ships, drawn once: sixteen samples a texel take seconds. */
