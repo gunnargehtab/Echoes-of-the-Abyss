@@ -14,7 +14,7 @@ falls at 10:40 of the match, as it does for a player.
 
 - [`world.mjs`](world.mjs) is the drive, and its header has the command. It runs under a
   copy of the run-game `drive.mjs` without its title, Solo and lobby steps, since a board
-  launch starts at the title. The driver reports each run as failed, because it fails any
+  launch starts at the title; the copy is not committed, and the header says how to make it. The driver reports each run as failed, because it fails any
   run with console errors: the only ones are the four reconnect attempts made while the
   page was offline, which the drive stages on purpose.
 - `readings-1.json` and `readings-1.5.json` are every reading the two drives took, at
@@ -92,7 +92,7 @@ travel, the join and the fade's 0.8 s ramp-in to a second at full strength. A re
 from Abandon through the ramp-out and the travel back to the board's frame. GPU time is
 over the transition's frames.
 
-| Transition | Ratio | Most calls | Most triangles | GPU avg / worst ms | Worst frame ms |
+| Transition | Ratio | Most calls | Most triangles | GPU avg / worst ms | Worst gap between the view's frames, ms |
 | --- | --- | ---: | ---: | ---: | ---: |
 | Entry, first | 1 | 37 | 108,129 | 0.52 / 242.8 | 2,644 |
 | Return, first | 1 | 33 | 93,229 | 0.59 / 37.5 | 61 |
@@ -106,6 +106,11 @@ over the transition's frames.
 | Return, second | 1.5 | 33 | 93,733 | 1.22 / 83.9 | 33 |
 | Entry, third | 1.5 | 34 | 108,129 | 0.92 / 1.8 | 1,876 |
 | Return, third | 1.5 | 33 | 93,733 | 1.23 / 87.5 | 24 |
+
+The last column is the interval between the conn view's own frames, not the page's: it
+spans whatever the view did not draw, so it can be longer than any one page frame, and
+it misses a page frame the view never drew, such as a return's first. The page's own long
+frames are below.
 
 The frame's peak is the ramp-in, where the overview and the session's ground are drawn
 together: 37 calls and 108,129 triangles, against 150 and 400 k. No transition frame held

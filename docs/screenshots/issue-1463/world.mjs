@@ -15,8 +15,10 @@
 //   UNPACED=1 VIEW_DPR=1 READINGS=<dir>/readings.json node .dev-loop/drive-board-tmp.mjs \
 //     --headed --channel chrome --url http://localhost:5173/ --out <dir> \
 //     --steps docs/screenshots/issue-1463/world.mjs
-// drive-board-tmp.mjs is drive.mjs minus its title, Solo and lobby steps, so
-// the module starts on the title screen. About 16 minutes a run: the arch
+// drive-board-tmp.mjs is not committed: it is the run-game skill's drive.mjs
+// (.claude/skills/run-game/scripts/) with its title, Solo and lobby steps
+// removed, so the module starts on the title screen. Copy it and delete
+// those steps to reproduce the run. About 16 minutes a run: the arch
 // falls at 10:40 of the match, and the mission has no faster clock.
 import { writeFileSync } from 'node:fs';
 
