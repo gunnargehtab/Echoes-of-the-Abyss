@@ -1,0 +1,1356 @@
+[
+  {
+    "station": "board",
+    "avgGpuMs": 0.22,
+    "worstGpuMs": 0.63,
+    "queuedGpuMs": 0.2,
+    "queue": {
+      "steps": 12000,
+      "avgMs": 3.53,
+      "frames": 16,
+      "dropped": 0
+    },
+    "avgFrameMs": 0.23,
+    "avgConnMs": 0.14,
+    "calls": 16,
+    "triangles": 93025,
+    "passes": [
+      "canvas",
+      "split-copy",
+      "split"
+    ],
+    "props": 0,
+    "propTris": 0,
+    "textures": 5,
+    "pixelRatio": 1,
+    "gpuTimer": "timing",
+    "focus": {
+      "xM": 2500,
+      "zM": 2000,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 2465,
+      "zM": 15727,
+      "depthM": -87900
+    },
+    "distance": 24000,
+    "pitchDeg": 55,
+    "world": {
+      "borderStrength": 0,
+      "overviewDrawn": true,
+      "sessionGround": false,
+      "groundLeaving": false,
+      "frame": {
+        "xM": 2500,
+        "yM": 2000,
+        "distanceM": 24000,
+        "yawDeg": 0,
+        "pitchDeg": 55
+      },
+      "detailDrawn": [
+        "sorrowgate"
+      ],
+      "detailResident": [
+        "sorrowgate"
+      ],
+      "detailPending": 0,
+      "detailProps": 74,
+      "detailPropTris": 18862
+    },
+    "units": 0,
+    "canvases": 1,
+    "heapMB": 44
+  },
+  {
+    "resources": "board-first",
+    "calls": 16,
+    "triangles": 93025,
+    "passes": [
+      "canvas",
+      "split-copy",
+      "split"
+    ],
+    "props": 0,
+    "propTris": 0,
+    "textures": 5,
+    "pixelRatio": 1,
+    "gpuTimer": "timing",
+    "focus": {
+      "xM": 2500,
+      "zM": 2000,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 2532,
+      "zM": 15803,
+      "depthM": -87657
+    },
+    "distance": 24000,
+    "pitchDeg": 55,
+    "world": {
+      "borderStrength": 0,
+      "overviewDrawn": true,
+      "sessionGround": false,
+      "groundLeaving": false,
+      "frame": {
+        "xM": 2500,
+        "yM": 2000,
+        "distanceM": 24000,
+        "yawDeg": 0,
+        "pitchDeg": 55
+      },
+      "detailDrawn": [
+        "sorrowgate"
+      ],
+      "detailResident": [
+        "sorrowgate"
+      ],
+      "detailPending": 0,
+      "detailProps": 74,
+      "detailPropTris": 18862
+    },
+    "units": 0,
+    "canvases": 1,
+    "heapMB": 48
+  },
+  {
+    "station": "entry",
+    "transition": true,
+    "ms": 8892,
+    "sampledFrames": 6660,
+    "maxCalls": 37,
+    "maxTriangles": 108129,
+    "maxTextures": 14,
+    "maxResident": 1,
+    "maxPending": 0,
+    "longFrames": [
+      {
+        "atMs": 2601,
+        "ms": 54,
+        "distance": 2600,
+        "sessionGround": false,
+        "travelBar": null
+      },
+      {
+        "atMs": 2655,
+        "ms": 107,
+        "distance": 2600,
+        "sessionGround": false,
+        "travelBar": null
+      },
+      {
+        "atMs": 2810,
+        "ms": 2324,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      },
+      {
+        "atMs": 5134,
+        "ms": 2027,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      },
+      {
+        "atMs": 7160,
+        "ms": 169,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      },
+      {
+        "atMs": 7329,
+        "ms": 141,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      },
+      {
+        "atMs": 7583,
+        "ms": 291,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      }
+    ],
+    "avgGpuMs": 0.52,
+    "worstGpuMs": 242.82,
+    "worstFrameMs": 2643.9,
+    "gpuTimer": "timing",
+    "pixelRatio": 1
+  },
+  {
+    "station": "arrival",
+    "avgGpuMs": 0.51,
+    "worstGpuMs": 6.05,
+    "queuedGpuMs": 0.42,
+    "queue": {
+      "steps": 12000,
+      "avgMs": 3.66,
+      "frames": 60,
+      "dropped": 0
+    },
+    "avgFrameMs": 2.44,
+    "avgConnMs": 0.61,
+    "calls": 32,
+    "triangles": 80049,
+    "passes": [
+      "canvas",
+      "split-copy",
+      "split"
+    ],
+    "props": 74,
+    "propTris": 18862,
+    "textures": 14,
+    "pixelRatio": 1,
+    "gpuTimer": "timing",
+    "focus": {
+      "xM": 2550,
+      "zM": 2150,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 2551,
+      "zM": 3637,
+      "depthM": -8116
+    },
+    "distance": 2600,
+    "pitchDeg": 55,
+    "world": {
+      "borderStrength": 1,
+      "overviewDrawn": false,
+      "sessionGround": true,
+      "groundLeaving": false,
+      "frame": {
+        "xM": 2550,
+        "yM": 2150,
+        "distanceM": 2600,
+        "yawDeg": 0,
+        "pitchDeg": 55
+      },
+      "detailDrawn": [],
+      "detailResident": [],
+      "detailPending": 0,
+      "detailProps": 0,
+      "detailPropTris": 0
+    },
+    "units": 6,
+    "canvases": 2,
+    "heapMB": 121
+  },
+  {
+    "arch": "standing",
+    "spanM": [
+      1577,
+      1649,
+      1575,
+      1601
+    ],
+    "lockM": 1510
+  },
+  {
+    "station": "escorts-moving",
+    "avgGpuMs": 0.55,
+    "worstGpuMs": 6.66,
+    "queuedGpuMs": 0.43,
+    "queue": {
+      "steps": 12000,
+      "avgMs": 3.62,
+      "frames": 92,
+      "dropped": 0
+    },
+    "avgFrameMs": 3.34,
+    "avgConnMs": 0.71,
+    "calls": 32,
+    "triangles": 80049,
+    "passes": [
+      "canvas",
+      "split-copy",
+      "split"
+    ],
+    "props": 74,
+    "propTris": 18862,
+    "textures": 20,
+    "pixelRatio": 1,
+    "gpuTimer": "timing",
+    "focus": {
+      "xM": 2550,
+      "zM": 2553,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 2546,
+      "zM": 2638,
+      "depthM": -10341
+    },
+    "distance": 2600,
+    "pitchDeg": 88,
+    "world": {
+      "borderStrength": 1,
+      "overviewDrawn": false,
+      "sessionGround": true,
+      "groundLeaving": false,
+      "frame": {
+        "xM": 2550,
+        "yM": 2552.8571428571427,
+        "distanceM": 2600,
+        "yawDeg": 0,
+        "pitchDeg": 87.99999999999999
+      },
+      "detailDrawn": [],
+      "detailResident": [],
+      "detailPending": 0,
+      "detailProps": 0,
+      "detailPropTris": 0
+    },
+    "units": 6,
+    "canvases": 2,
+    "heapMB": 127
+  },
+  {
+    "station": "close",
+    "avgGpuMs": 0.79,
+    "worstGpuMs": 4.43,
+    "queuedGpuMs": 0.66,
+    "queue": {
+      "steps": 12000,
+      "avgMs": 3.61,
+      "frames": 82,
+      "dropped": 0
+    },
+    "avgFrameMs": 3.01,
+    "avgConnMs": 0.73,
+    "calls": 40,
+    "triangles": 80076,
+    "passes": [
+      "canvas",
+      "depth-copy",
+      "halo-source",
+      "halo-spread",
+      "halo-composite",
+      "split-copy",
+      "split"
+    ],
+    "props": 74,
+    "propTris": 18862,
+    "textures": 20,
+    "pixelRatio": 1,
+    "gpuTimer": "timing",
+    "focus": {
+      "xM": 2550,
+      "zM": 2553,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 2552,
+      "zM": 3582,
+      "depthM": -5242
+    },
+    "distance": 1800,
+    "pitchDeg": 55,
+    "world": {
+      "borderStrength": 1,
+      "overviewDrawn": false,
+      "sessionGround": true,
+      "groundLeaving": false,
+      "frame": {
+        "xM": 2550,
+        "yM": 2552.8571428571427,
+        "distanceM": 1800,
+        "yawDeg": 0,
+        "pitchDeg": 55
+      },
+      "detailDrawn": [],
+      "detailResident": [],
+      "detailPending": 0,
+      "detailProps": 0,
+      "detailPropTris": 0
+    },
+    "units": 6,
+    "canvases": 2,
+    "heapMB": 155
+  },
+  {
+    "station": "low",
+    "avgGpuMs": 0.64,
+    "worstGpuMs": 5.38,
+    "queuedGpuMs": 0.43,
+    "queue": {
+      "steps": 12000,
+      "avgMs": 3.84,
+      "frames": 88,
+      "dropped": 0
+    },
+    "avgFrameMs": 3.46,
+    "avgConnMs": 0.73,
+    "calls": 33,
+    "triangles": 80049,
+    "passes": [
+      "canvas",
+      "split-copy",
+      "split"
+    ],
+    "props": 74,
+    "propTris": 18862,
+    "textures": 20,
+    "pixelRatio": 1,
+    "gpuTimer": "timing",
+    "focus": {
+      "xM": 2550,
+      "zM": 2553,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 2547,
+      "zM": 5976,
+      "depthM": -1845
+    },
+    "distance": 3500,
+    "pitchDeg": 12,
+    "world": {
+      "borderStrength": 1,
+      "overviewDrawn": false,
+      "sessionGround": true,
+      "groundLeaving": false,
+      "frame": {
+        "xM": 2550,
+        "yM": 2552.8571428571427,
+        "distanceM": 3500,
+        "yawDeg": 0,
+        "pitchDeg": 12
+      },
+      "detailDrawn": [],
+      "detailResident": [],
+      "detailPending": 0,
+      "detailProps": 0,
+      "detailPropTris": 0
+    },
+    "units": 6,
+    "canvases": 2,
+    "heapMB": 81
+  },
+  {
+    "station": "survey",
+    "avgGpuMs": 0.51,
+    "worstGpuMs": 4.07,
+    "queuedGpuMs": 0.37,
+    "queue": {
+      "steps": 12000,
+      "avgMs": 3.65,
+      "frames": 108,
+      "dropped": 0
+    },
+    "avgFrameMs": 3.09,
+    "avgConnMs": 0.6,
+    "calls": 32,
+    "triangles": 80049,
+    "passes": [
+      "canvas",
+      "split-copy",
+      "split"
+    ],
+    "props": 74,
+    "propTris": 18862,
+    "textures": 20,
+    "pixelRatio": 1,
+    "gpuTimer": "timing",
+    "focus": {
+      "xM": 2500,
+      "zM": 2000,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 2507,
+      "zM": 2513,
+      "depthM": -62413
+    },
+    "distance": 14087,
+    "pitchDeg": 88,
+    "world": {
+      "borderStrength": 1,
+      "overviewDrawn": false,
+      "sessionGround": true,
+      "groundLeaving": false,
+      "frame": {
+        "xM": 2500,
+        "yM": 2000,
+        "distanceM": 14086.873322352269,
+        "yawDeg": 0,
+        "pitchDeg": 87.99999999999999
+      },
+      "detailDrawn": [],
+      "detailResident": [],
+      "detailPending": 0,
+      "detailProps": 0,
+      "detailPropTris": 0
+    },
+    "units": 6,
+    "canvases": 2,
+    "heapMB": 72
+  },
+  {
+    "refusedOutside": {
+      "before": [
+        [
+          1,
+          2536,
+          2274
+        ],
+        [
+          2,
+          2533,
+          2332
+        ],
+        [
+          3,
+          2584,
+          2307
+        ],
+        [
+          4,
+          2558,
+          2218
+        ],
+        [
+          5,
+          2420,
+          2900
+        ],
+        [
+          6,
+          2680,
+          2900
+        ]
+      ],
+      "after": [
+        [
+          1,
+          2539,
+          2273
+        ],
+        [
+          2,
+          2531,
+          2331
+        ],
+        [
+          3,
+          2584,
+          2309
+        ],
+        [
+          4,
+          2559,
+          2216
+        ],
+        [
+          5,
+          2420,
+          2900
+        ],
+        [
+          6,
+          2680,
+          2900
+        ]
+      ]
+    }
+  },
+  {
+    "station": "corner-se",
+    "avgGpuMs": 0.56,
+    "worstGpuMs": 2.03,
+    "queuedGpuMs": 0.46,
+    "queue": {
+      "steps": 12000,
+      "avgMs": 3.67,
+      "frames": 85,
+      "dropped": 0
+    },
+    "avgFrameMs": 3.09,
+    "avgConnMs": 0.63,
+    "calls": 32,
+    "triangles": 80049,
+    "passes": [
+      "canvas",
+      "split-copy",
+      "split"
+    ],
+    "props": 74,
+    "propTris": 18862,
+    "textures": 20,
+    "pixelRatio": 1,
+    "gpuTimer": "timing",
+    "focus": {
+      "xM": 5000,
+      "zM": 4000,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 7435,
+      "zM": 6427,
+      "depthM": -9360
+    },
+    "distance": 4200,
+    "pitchDeg": 35,
+    "world": {
+      "borderStrength": 1,
+      "overviewDrawn": false,
+      "sessionGround": true,
+      "groundLeaving": false,
+      "frame": {
+        "xM": 5000,
+        "yM": 4000,
+        "distanceM": 4200,
+        "yawDeg": 45,
+        "pitchDeg": 35
+      },
+      "detailDrawn": [],
+      "detailResident": [],
+      "detailPending": 0,
+      "detailProps": 0,
+      "detailPropTris": 0
+    },
+    "units": 6,
+    "canvases": 2,
+    "heapMB": 108
+  },
+  {
+    "station": "corner-nw",
+    "avgGpuMs": 0.55,
+    "worstGpuMs": 2.47,
+    "queuedGpuMs": 0.42,
+    "queue": {
+      "steps": 12000,
+      "avgMs": 3.66,
+      "frames": 90,
+      "dropped": 0
+    },
+    "avgFrameMs": 3.14,
+    "avgConnMs": 0.62,
+    "calls": 32,
+    "triangles": 80049,
+    "passes": [
+      "canvas",
+      "split-copy",
+      "split"
+    ],
+    "props": 74,
+    "propTris": 18862,
+    "textures": 20,
+    "pixelRatio": 1,
+    "gpuTimer": "timing",
+    "focus": {
+      "xM": 0,
+      "zM": 0,
+      "depthM": null
+    },
+    "eye": {
+      "xM": -2788,
+      "zM": -2796,
+      "depthM": -4905
+    },
+    "distance": 4200,
+    "pitchDeg": 20,
+    "world": {
+      "borderStrength": 1,
+      "overviewDrawn": false,
+      "sessionGround": true,
+      "groundLeaving": false,
+      "frame": {
+        "xM": 0,
+        "yM": 0,
+        "distanceM": 4200,
+        "yawDeg": 225,
+        "pitchDeg": 20
+      },
+      "detailDrawn": [],
+      "detailResident": [],
+      "detailPending": 0,
+      "detailProps": 0,
+      "detailPropTris": 0
+    },
+    "units": 6,
+    "canvases": 2,
+    "heapMB": 172
+  },
+  {
+    "waitingForCollapseS": 575
+  },
+  {
+    "station": "collapse",
+    "avgGpuMs": 0.75,
+    "worstGpuMs": 3.28,
+    "queuedGpuMs": 0.51,
+    "queue": {
+      "steps": 12000,
+      "avgMs": 4.09,
+      "frames": 79,
+      "dropped": 0
+    },
+    "avgFrameMs": 3.28,
+    "avgConnMs": 0.61,
+    "calls": 33,
+    "triangles": 79541,
+    "passes": [
+      "canvas",
+      "split-copy",
+      "split"
+    ],
+    "props": 75,
+    "propTris": 18358,
+    "textures": 20,
+    "pixelRatio": 1,
+    "gpuTimer": "timing",
+    "focus": {
+      "xM": 2000,
+      "zM": 2125,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 2004,
+      "zM": 3922,
+      "depthM": -8249
+    },
+    "distance": 2800,
+    "pitchDeg": 50,
+    "world": {
+      "borderStrength": 1,
+      "overviewDrawn": false,
+      "sessionGround": true,
+      "groundLeaving": false,
+      "frame": {
+        "xM": 2000,
+        "yM": 2125,
+        "distanceM": 2800,
+        "yawDeg": 0,
+        "pitchDeg": 50
+      },
+      "detailDrawn": [],
+      "detailResident": [],
+      "detailPending": 0,
+      "detailProps": 0,
+      "detailPropTris": 0
+    },
+    "units": 6,
+    "canvases": 2,
+    "heapMB": 77
+  },
+  {
+    "arch": "fallen",
+    "spanM": [
+      197,
+      181,
+      200,
+      220
+    ],
+    "lockM": 1510
+  },
+  {
+    "resources": "signal-lost",
+    "calls": 33,
+    "triangles": 79541,
+    "passes": [
+      "canvas",
+      "split-copy",
+      "split"
+    ],
+    "props": 75,
+    "propTris": 18358,
+    "textures": 20,
+    "pixelRatio": 1,
+    "gpuTimer": "timing",
+    "focus": {
+      "xM": 2000,
+      "zM": 2125,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 1998,
+      "zM": 3929,
+      "depthM": -8222
+    },
+    "distance": 2800,
+    "pitchDeg": 50,
+    "world": {
+      "borderStrength": 1,
+      "overviewDrawn": false,
+      "sessionGround": true,
+      "groundLeaving": false,
+      "frame": {
+        "xM": 2000,
+        "yM": 2125,
+        "distanceM": 2800,
+        "yawDeg": 0,
+        "pitchDeg": 50
+      },
+      "detailDrawn": [],
+      "detailResident": [],
+      "detailPending": 0,
+      "detailProps": 0,
+      "detailPropTris": 0
+    },
+    "units": 6,
+    "canvases": 2,
+    "heapMB": 71
+  },
+  {
+    "station": "reconnected",
+    "avgGpuMs": 0.57,
+    "worstGpuMs": 2.27,
+    "queuedGpuMs": 0.45,
+    "queue": {
+      "steps": 12000,
+      "avgMs": 3.68,
+      "frames": 83,
+      "dropped": 0
+    },
+    "avgFrameMs": 2.93,
+    "avgConnMs": 0.58,
+    "calls": 33,
+    "triangles": 79541,
+    "passes": [
+      "canvas",
+      "split-copy",
+      "split"
+    ],
+    "props": 75,
+    "propTris": 18358,
+    "textures": 20,
+    "pixelRatio": 1,
+    "gpuTimer": "timing",
+    "focus": {
+      "xM": 2000,
+      "zM": 2125,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 2000,
+      "zM": 3921,
+      "depthM": -8250
+    },
+    "distance": 2800,
+    "pitchDeg": 50,
+    "world": {
+      "borderStrength": 1,
+      "overviewDrawn": false,
+      "sessionGround": true,
+      "groundLeaving": false,
+      "frame": {
+        "xM": 2000,
+        "yM": 2125,
+        "distanceM": 2800,
+        "yawDeg": 0,
+        "pitchDeg": 50
+      },
+      "detailDrawn": [],
+      "detailResident": [],
+      "detailPending": 0,
+      "detailProps": 0,
+      "detailPropTris": 0
+    },
+    "units": 6,
+    "canvases": 2,
+    "heapMB": 111
+  },
+  {
+    "arch": "after-reconnect",
+    "spanM": [
+      186,
+      198,
+      206,
+      171
+    ],
+    "lockM": 1513
+  },
+  {
+    "station": "return",
+    "transition": true,
+    "ms": 4994,
+    "sampledFrames": 8581,
+    "maxCalls": 33,
+    "maxTriangles": 93229,
+    "maxTextures": 20,
+    "maxResident": 1,
+    "maxPending": 1,
+    "longFrames": [
+      {
+        "atMs": 68,
+        "ms": 326,
+        "distance": 2800,
+        "sessionGround": true,
+        "travelBar": null
+      },
+      {
+        "atMs": 2487,
+        "ms": 54,
+        "distance": 9535,
+        "sessionGround": false,
+        "travelBar": null
+      }
+    ],
+    "avgGpuMs": 0.59,
+    "worstGpuMs": 37.49,
+    "worstFrameMs": 61.1,
+    "gpuTimer": "timing",
+    "pixelRatio": 1
+  },
+  {
+    "station": "board-returned",
+    "avgGpuMs": 0.31,
+    "worstGpuMs": 0.69,
+    "queuedGpuMs": 0.3,
+    "queue": {
+      "steps": 12000,
+      "avgMs": 3.94,
+      "frames": 16,
+      "dropped": 0
+    },
+    "avgFrameMs": 0.41,
+    "avgConnMs": 0.27,
+    "calls": 18,
+    "triangles": 93165,
+    "passes": [
+      "canvas",
+      "split-copy",
+      "split"
+    ],
+    "props": 0,
+    "propTris": 0,
+    "textures": 17,
+    "pixelRatio": 1,
+    "gpuTimer": "timing",
+    "focus": {
+      "xM": 2500,
+      "zM": 2000,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 2535,
+      "zM": 15724,
+      "depthM": -87910
+    },
+    "distance": 24000,
+    "pitchDeg": 55,
+    "world": {
+      "borderStrength": 0,
+      "overviewDrawn": true,
+      "sessionGround": false,
+      "groundLeaving": false,
+      "frame": {
+        "xM": 2500,
+        "yM": 2000,
+        "distanceM": 24000,
+        "yawDeg": 0,
+        "pitchDeg": 55
+      },
+      "detailDrawn": [
+        "sorrowgate"
+      ],
+      "detailResident": [
+        "sorrowgate"
+      ],
+      "detailPending": 0,
+      "detailProps": 74,
+      "detailPropTris": 18862
+    },
+    "units": 0,
+    "canvases": 1,
+    "heapMB": 42
+  },
+  {
+    "resources": "board-after-1",
+    "calls": 18,
+    "triangles": 93165,
+    "passes": [
+      "canvas",
+      "split-copy",
+      "split"
+    ],
+    "props": 0,
+    "propTris": 0,
+    "textures": 17,
+    "pixelRatio": 1,
+    "gpuTimer": "timing",
+    "focus": {
+      "xM": 2500,
+      "zM": 2000,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 2504,
+      "zM": 15801,
+      "depthM": -87664
+    },
+    "distance": 24000,
+    "pitchDeg": 55,
+    "world": {
+      "borderStrength": 0,
+      "overviewDrawn": true,
+      "sessionGround": false,
+      "groundLeaving": false,
+      "frame": {
+        "xM": 2500,
+        "yM": 2000,
+        "distanceM": 24000,
+        "yawDeg": 0,
+        "pitchDeg": 55
+      },
+      "detailDrawn": [
+        "sorrowgate"
+      ],
+      "detailResident": [
+        "sorrowgate"
+      ],
+      "detailPending": 0,
+      "detailProps": 74,
+      "detailPropTris": 18862
+    },
+    "units": 0,
+    "canvases": 1,
+    "heapMB": 42
+  },
+  {
+    "station": "entry-2",
+    "transition": true,
+    "ms": 8368,
+    "sampledFrames": 1374,
+    "maxCalls": 34,
+    "maxTriangles": 108129,
+    "maxTextures": 20,
+    "maxResident": 1,
+    "maxPending": 0,
+    "longFrames": [
+      {
+        "atMs": 2601,
+        "ms": 124,
+        "distance": 2600,
+        "sessionGround": false,
+        "travelBar": null
+      },
+      {
+        "atMs": 2739,
+        "ms": 141,
+        "distance": 2600,
+        "sessionGround": false,
+        "travelBar": null
+      },
+      {
+        "atMs": 2900,
+        "ms": 1792,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      },
+      {
+        "atMs": 4692,
+        "ms": 1948,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      },
+      {
+        "atMs": 6640,
+        "ms": 122,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      }
+    ],
+    "avgGpuMs": 0.53,
+    "worstGpuMs": 97.21,
+    "worstFrameMs": 1969.5,
+    "gpuTimer": "timing",
+    "pixelRatio": 1
+  },
+  {
+    "resources": "joined-2",
+    "calls": 33,
+    "triangles": 80049,
+    "passes": [
+      "canvas",
+      "split-copy",
+      "split"
+    ],
+    "props": 74,
+    "propTris": 18862,
+    "textures": 20,
+    "pixelRatio": 1,
+    "gpuTimer": "timing",
+    "focus": {
+      "xM": 2550,
+      "zM": 2150,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 2554,
+      "zM": 3646,
+      "depthM": -8089
+    },
+    "distance": 2600,
+    "pitchDeg": 55,
+    "world": {
+      "borderStrength": 1,
+      "overviewDrawn": false,
+      "sessionGround": true,
+      "groundLeaving": false,
+      "frame": {
+        "xM": 2550,
+        "yM": 2150,
+        "distanceM": 2600,
+        "yawDeg": 0,
+        "pitchDeg": 55
+      },
+      "detailDrawn": [],
+      "detailResident": [],
+      "detailPending": 0,
+      "detailProps": 0,
+      "detailPropTris": 0
+    },
+    "units": 6,
+    "canvases": 2,
+    "heapMB": 63
+  },
+  {
+    "station": "return-2",
+    "transition": true,
+    "ms": 4706,
+    "sampledFrames": 7837,
+    "maxCalls": 33,
+    "maxTriangles": 93733,
+    "maxTextures": 20,
+    "maxResident": 1,
+    "maxPending": 1,
+    "longFrames": [],
+    "avgGpuMs": 0.8,
+    "worstGpuMs": 73.59,
+    "worstFrameMs": 24.9,
+    "gpuTimer": "timing",
+    "pixelRatio": 1
+  },
+  {
+    "resources": "board-after-2",
+    "calls": 18,
+    "triangles": 93165,
+    "passes": [
+      "canvas",
+      "split-copy",
+      "split"
+    ],
+    "props": 0,
+    "propTris": 0,
+    "textures": 17,
+    "pixelRatio": 1,
+    "gpuTimer": "timing",
+    "focus": {
+      "xM": 2500,
+      "zM": 2000,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 2499,
+      "zM": 15723,
+      "depthM": -87912
+    },
+    "distance": 24000,
+    "pitchDeg": 55,
+    "world": {
+      "borderStrength": 0,
+      "overviewDrawn": true,
+      "sessionGround": false,
+      "groundLeaving": false,
+      "frame": {
+        "xM": 2500,
+        "yM": 2000,
+        "distanceM": 24000,
+        "yawDeg": 0,
+        "pitchDeg": 55
+      },
+      "detailDrawn": [
+        "sorrowgate"
+      ],
+      "detailResident": [
+        "sorrowgate"
+      ],
+      "detailPending": 0,
+      "detailProps": 74,
+      "detailPropTris": 18862
+    },
+    "units": 0,
+    "canvases": 1,
+    "heapMB": 77
+  },
+  {
+    "station": "entry-3",
+    "transition": true,
+    "ms": 7919,
+    "sampledFrames": 7237,
+    "maxCalls": 34,
+    "maxTriangles": 108129,
+    "maxTextures": 20,
+    "maxResident": 1,
+    "maxPending": 0,
+    "longFrames": [
+      {
+        "atMs": 2551,
+        "ms": 67,
+        "distance": 2600,
+        "sessionGround": false,
+        "travelBar": null
+      },
+      {
+        "atMs": 2633,
+        "ms": 1723,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      },
+      {
+        "atMs": 4355,
+        "ms": 1894,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      },
+      {
+        "atMs": 6249,
+        "ms": 114,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      }
+    ],
+    "avgGpuMs": 0.5,
+    "worstGpuMs": 116.25,
+    "worstFrameMs": 1809.1,
+    "gpuTimer": "timing",
+    "pixelRatio": 1
+  },
+  {
+    "resources": "joined-3",
+    "calls": 33,
+    "triangles": 80049,
+    "passes": [
+      "canvas",
+      "split-copy",
+      "split"
+    ],
+    "props": 74,
+    "propTris": 18862,
+    "textures": 20,
+    "pixelRatio": 1,
+    "gpuTimer": "timing",
+    "focus": {
+      "xM": 2550,
+      "zM": 2150,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 2554,
+      "zM": 3637,
+      "depthM": -8116
+    },
+    "distance": 2600,
+    "pitchDeg": 55,
+    "world": {
+      "borderStrength": 1,
+      "overviewDrawn": false,
+      "sessionGround": true,
+      "groundLeaving": false,
+      "frame": {
+        "xM": 2550,
+        "yM": 2150,
+        "distanceM": 2600,
+        "yawDeg": 0,
+        "pitchDeg": 55
+      },
+      "detailDrawn": [],
+      "detailResident": [],
+      "detailPending": 0,
+      "detailProps": 0,
+      "detailPropTris": 0
+    },
+    "units": 6,
+    "canvases": 2,
+    "heapMB": 75
+  },
+  {
+    "station": "return-3",
+    "transition": true,
+    "ms": 4694,
+    "sampledFrames": 8257,
+    "maxCalls": 33,
+    "maxTriangles": 93733,
+    "maxTextures": 20,
+    "maxResident": 1,
+    "maxPending": 1,
+    "longFrames": [
+      {
+        "atMs": 30,
+        "ms": 55,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      }
+    ],
+    "avgGpuMs": 0.72,
+    "worstGpuMs": 64.79,
+    "worstFrameMs": 28.1,
+    "gpuTimer": "timing",
+    "pixelRatio": 1
+  },
+  {
+    "resources": "board-after-3",
+    "calls": 18,
+    "triangles": 93165,
+    "passes": [
+      "canvas",
+      "split-copy",
+      "split"
+    ],
+    "props": 0,
+    "propTris": 0,
+    "textures": 17,
+    "pixelRatio": 1,
+    "gpuTimer": "timing",
+    "focus": {
+      "xM": 2500,
+      "zM": 2000,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 2501,
+      "zM": 15809,
+      "depthM": -87640
+    },
+    "distance": 24000,
+    "pitchDeg": 55,
+    "world": {
+      "borderStrength": 0,
+      "overviewDrawn": true,
+      "sessionGround": false,
+      "groundLeaving": false,
+      "frame": {
+        "xM": 2500,
+        "yM": 2000,
+        "distanceM": 24000,
+        "yawDeg": 0,
+        "pitchDeg": 55
+      },
+      "detailDrawn": [
+        "sorrowgate"
+      ],
+      "detailResident": [
+        "sorrowgate"
+      ],
+      "detailPending": 0,
+      "detailProps": 74,
+      "detailPropTris": 18862
+    },
+    "units": 0,
+    "canvases": 1,
+    "heapMB": 63
+  }
+]
