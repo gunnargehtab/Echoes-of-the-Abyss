@@ -153,6 +153,19 @@
  * shoulder's foot, x 24, 26 m long; the rivet rank keeps its pitch from
  * the whole 112 m run, so no rivet moves. 143 parts and 2,732 triangles
  * become 145 and 2,756.
+ *
+ * THE SEAM'S ENDS (#1481). The parallel flank at z 24 ends at the taper
+ * corners, x -52.8 aft and 50.4 forward (`outline` [-0.44, 0.2] and
+ * [0.42, 0.2]); past them it tapers to z 20.8 under x -56 and 17.0 under
+ * x 56. The two bars ran to x ±56, so `flank_seam_s0` overhung the aft
+ * corner by 3.2 m with up to 3.1 m of water behind it and `flank_seam_s1`
+ * the fore one by 5.6 m with up to 6.9 m, and `contacts.mjs` listed each
+ * as a slab pair anyway. Two more `seam.gaps` reach past the run's ends,
+ * so the bars are `flank_seam_s0` from x -52.8 to -12 and `flank_seam_s1`
+ * from 24 to 50.4, same names; `seamLength` stays 112 so the rivet rank
+ * keeps its pitch, and both rows clear the bar's band, y 1.95–2.45 (the
+ * upper at 3.6, the lower at -3.2), so no rivet seats on a bar and none
+ * moves. The export prints 145 parts and 2,756 triangles, as before.
  */
 import { THREE, add, box, cyl, strut, bothSides, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -191,7 +204,10 @@ bathyarch.flankPlates(root, { grey, rust }, {
   z: 24.6,
   plates: [[37, 26, 5, -1, false], [-24, 18, 4, -2, true], [-46, 14, 3.5, 0, false]],
   seamLength: 112,
-  seam: { gaps: [[-12, 24]] },
+  // The outer gaps end each bar at the slab's taper corner, x -52.8 aft and
+  // 50.4 forward (`outline` [-0.44, 0.2] and [0.42, 0.2] × 120), where the
+  // flank leaves z 24 (#1481); the inner one is the waist (#1433).
+  seam: { gaps: [[-60, -52.8], [-12, 24], [50.4, 60]] },
   rivets: [['u', 3.6], ['l', -3.2]],
 });
 bathyarch.propTunnels(root, { grey, rust }, { x: -58, z: 9, r: 4.2 });
