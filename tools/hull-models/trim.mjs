@@ -102,10 +102,10 @@
  * four-facet part out of the unroll (`PRISM`); on the many-facet tapers the
  * kink is measured and left (#1447): one map per facet would step every
  * joint at every facet edge, and a facet cut into rings spends triangles
- * under gate 6. What #1447 did move is the unroll's seam: a facet's two
+ * under gate 6. What #1447 did move is the unroll's seam: a facet's
  * triangles close the same way round the cut (`facetMids`), so the plate
- * between the two ways round falls on a facet edge and never down a
- * diagonal. Nothing on it
+ * between the two ways round falls on a facet edge and not down a
+ * diagonal, on every laid model. Nothing on it
  * weathers, and `untagged` keeps the sheet off a cladding that is not
  * panelling (`layoutTrim`). The Commune's `grown` pattern (#1110) keeps
  * the bands and drops the plate altogether: a grown composite has no butt,
@@ -752,28 +752,34 @@ function extentsOf(pos, count) {
 /**
  * The angle each side triangle of a round part closes toward when the
  * unroll's cut at ±π runs through it: the circular mean of its facet's
- * corners, the facet being the triangle and every coplanar triangle across
- * one of its edges (#1447). `angle` is only known modulo a turn, so a corner
- * past the cut from the rest of its triangle is brought round by one, and
- * that choice is where the unroll's seam lands — a whole number of plates,
- * a tone's swap at an odd count. Closed toward its first corner, as every
- * navy did until #1375, a facet's two triangles agreed on a cylinder, where
- * three numbers both from the same corner, and disagreed on a lathe or a
- * sphere, where it numbers them from either edge, so the seam ran down the
- * diagonal of the Acolyte's dome; closed toward each triangle's own middle,
- * as `mirror` did, they disagreed on a facet centred on the cut (the Light
- * Scout's eye) and on an edge exactly on it, read as +π on one ring and −π
- * on the other by rounding (the Harvester's ballast caps, a plate apart
- * across 2,335/4,096 of the sheet). The facet's middle is the shape's, so
- * both triangles take one side and the seam falls on the facet's edge.
+ * corners, the facet being every side triangle joined to it across
+ * coplanar edges, a flood from the triangle (#1447), so stacked coplanar
+ * rows — a cylinder of more than one height segment, a lathe profile with
+ * three points in a line — are one facet too. `angle` is only known
+ * modulo a turn, so a corner past the cut from the rest of its triangle is
+ * brought round by one, and that choice is where the unroll's seam lands —
+ * a whole number of plates, a tone's swap at an odd count. Closed toward
+ * its first corner, as every navy did until #1375 and the three without
+ * `mirror` did until this, a facet's two triangles agreed on a cylinder,
+ * where three numbers both from the same corner, and disagreed on a lathe
+ * or a sphere, where it numbers them from either edge, so the seam ran
+ * down a diagonal of the Acolyte's dome; and on an edge exactly on the cut,
+ * read as +π on one ring and −π on the other by rounding, the two first
+ * corners took the two sides, a plate apart across 2,335/4,096 of the
+ * sheet on the Harvester's ballast caps and 2,101 on the Light Scout's
+ * `hull_cap_aft`. Closed toward each triangle's own middle, as `mirror`
+ * did, they disagreed on a facet centred on the cut. The facet's middle is
+ * the shape's, so every triangle of it takes one side and the seam falls
+ * on the facet's edge — a cap's fan too, where `roundAxis` has taken a
+ * squat drum's cap for its side (#1501) and unrolls it as one facet.
  *
- * The corners are summed in one order, by position, so the two triangles
- * add the same numbers the same way and a twin turned over adds them too; a
- * sine sum under 1e-9 is held to +0, so a facet centred on the cut closes
- * toward +π on every machine and not by the sign of a rounding error.
- * A triangle with no coplanar neighbour — a cone's or a dome's apex — is its
- * own facet. Caps and anything not a side triangle are left at 0: nothing
- * reads them.
+ * The corners are summed in one order, by position, so the triangles of
+ * one facet add the same numbers the same way and agree to the bit; a
+ * twin turned over adds them to rounding, and a sine sum under 1e-9 is
+ * held to +0, so a facet centred on the cut closes toward +π on both twins
+ * and every machine, not by the sign of a rounding error. A triangle with
+ * no coplanar neighbour — a cone's or a dome's apex — is its own facet.
+ * Caps and anything not a side triangle are left at 0: nothing reads them.
  */
 function facetMids(pos, count, angle, normals, side) {
   const tris = count / 3;
@@ -796,15 +802,23 @@ function facetMids(pos, count, angle, normals, side) {
     }
   }
   const mids = new Float64Array(tris);
-  for (let t = 0; t < tris; t++) {
-    if (!side[t]) continue;
+  const done = new Uint8Array(tris);
+  for (let t0 = 0; t0 < tris; t0++) {
+    if (!side[t0] || done[t0]) continue;
+    const facet = [t0];
+    done[t0] = 1;
+    for (let i = 0; i < facet.length; i++) {
+      const t = facet[i];
+      for (let c = 0; c < 3; c++)
+        for (const s of edges.get(edgeKey(t, c))) {
+          if (done[s] || normals[s].dot(normals[t]) < 1 - 1e-6) continue;
+          done[s] = 1;
+          facet.push(s);
+        }
+    }
     const corners = new Map();
-    for (let c = 0; c < 3; c++) corners.set(keys[t * 3 + c], angle[t * 3 + c]);
-    for (let c = 0; c < 3; c++)
-      for (const s of edges.get(edgeKey(t, c))) {
-        if (s === t || normals[s].dot(normals[t]) < 1 - 1e-6) continue;
-        for (let d = 0; d < 3; d++) corners.set(keys[s * 3 + d], angle[s * 3 + d]);
-      }
+    for (const t of facet)
+      for (let c = 0; c < 3; c++) corners.set(keys[t * 3 + c], angle[t * 3 + c]);
     let sin = 0;
     let cos = 0;
     for (const k of [...corners.keys()].sort()) {
@@ -812,7 +826,8 @@ function facetMids(pos, count, angle, normals, side) {
       cos += Math.cos(corners.get(k));
     }
     if (Math.abs(sin) < 1e-9) sin = 0;
-    mids[t] = Math.atan2(sin, cos);
+    const mid = Math.atan2(sin, cos);
+    for (const t of facet) mids[t] = mid;
   }
   return mids;
 }
@@ -994,7 +1009,7 @@ function layoutMesh(mesh, bands, wrapM, strakeM, mirror) {
       used.set(band.rows, used.get(band.rows) + 1);
       // A triangle across the unroll's cut is closed toward its facet's
       // middle (`facetMids`, #1447), so the plate the cut puts between the
-      // two ways round lands on a facet edge and never on a diagonal.
+      // two ways round lands on a facet edge rather than a diagonal.
       const mid = mids[t];
       for (let c = 0; c < 3; c++) {
         const k = t * 3 + c;

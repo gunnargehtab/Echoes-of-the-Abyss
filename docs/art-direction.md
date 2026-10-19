@@ -493,10 +493,12 @@ On a tapered round of more than four facets that kink stays
 7,318 such facets on the 31 laid models, it is under a pixel at the conn view's 3 px/m on 97 %
 of them and 6.75 px at most, on the Bastion's dome skirt, and it is left rather than laid one
 map per facet, which steps every joint at every facet edge, or cut into rings, which spends
-triangles under gate 6. What #1447 moved is the unroll's seam: a facet's two triangles now
-close the same way round the cut, so the plate between the two ways round — a tone's step at
-an odd plate count — falls on a facet edge and never down a diagonal, as it did across the
-Harvester's ballast caps. No
+triangles under gate 6. What #1447 moved is the unroll's seam: a facet's triangles now close
+the same way round the cut, so the plate between the two ways round — a tone's step at an odd
+plate count — falls on a facet edge and not down a diagonal, as it did across the Harvester's
+ballast caps: none of the 31 models lays one across a diagonal now, the squat drums whose caps
+`roundAxis` takes for sides included
+([#1501](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1501) holds that). No
 vertex moves: a vertex whose corners disagree
 is split, as the occlusion bake splits a chart's edge, so `diff.mjs` reads the file as
 unchanged and `check.mjs` compares the layout to 1/4,096 of the sheet.

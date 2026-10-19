@@ -15,9 +15,10 @@
  * is a quarter of the chord difference, in metres and at the conn view's
  * 3 px/m. A pair whose mismatch is over six tenths of its part's whole u
  * span is a wrap: the two triangles took the cut's two sides, a plate
- * apart, which `facetMids` in trim.mjs now prevents. What it still lists
- * are squat drums whose caps `roundAxis` unrolls about the wrong axis, a
- * finding of its own.
+ * apart, which `facetMids` in trim.mjs now prevents: it lists none on the
+ * re-exported models. Closing one edge out, it still listed the cap fans
+ * of squat drums `roundAxis` unrolls about the wrong axis (#1501), every
+ * triangle coplanar with the next; the flood reads a fan as one facet.
  */
 import { readdirSync } from 'node:fs';
 import { readGlb } from '../../../tools/hull-models/glb.mjs';
@@ -108,6 +109,9 @@ for (const f of readdirSync(DIR)
       const bv = (d11 * d20 - d01 * d21) / den,
         bw = (d00 * d21 - d01 * d20) / den,
         bu = 1 - bv - bw;
+      // A sliver at a lathe's pole extrapolates its map across the model:
+      // a fourth corner far outside its triangle is not a facet's.
+      if (Math.max(Math.abs(bu), Math.abs(bv), Math.abs(bw)) > 4) continue;
       const pu = bu * UA[0][0] + bv * UA[1][0] + bw * UA[2][0];
       const du = Math.abs(pu - UB[di][0]);
       const tex = du * S;

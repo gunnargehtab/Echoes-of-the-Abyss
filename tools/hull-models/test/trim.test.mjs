@@ -639,9 +639,13 @@ test("both triangles of a facet across the unroll's cut close the same way round
   // facet centred on it. Either way the plate between the two ways round
   // ran down the diagonal, a tone apart at an odd count. Each facet must
   // now span a facet's worth of `u`, never the whole girth.
-  const frustum = (phiStart = 0) =>
+  // A frustum of two coplanar rows: three profile points in a line, so a
+  // flood across coplanar edges reads one facet where one edge out read a
+  // triangle's own neighbours, and the two rows' triangles leaned apart.
+  // Tall, so `roundAxis` cannot take a side for a cap (#1501).
+  const frustum = (phiStart) =>
     new THREE.LatheGeometry(
-      [new THREE.Vector2(1.8, -0.9), new THREE.Vector2(0.6, 0.9)],
+      [new THREE.Vector2(1.8, -3), new THREE.Vector2(1.2, 0), new THREE.Vector2(0.6, 3)],
       5,
       phiStart
     );
@@ -690,12 +694,14 @@ test("both triangles of a facet across the unroll's cut close the same way round
   };
   const mat = steel();
   const consortium = new THREE.Group();
-  const cap = place(consortium, new THREE.Mesh(frustum(), mat), 'cap', 10, 0);
+  const cap = place(consortium, new THREE.Mesh(frustum(0.32), mat), 'cap', 10, 0);
   layoutTrim(consortium, drawTrimSheet(SPEC), SPEC);
   const knights = new THREE.Group();
-  const star = place(knights, new THREE.Mesh(frustum(Math.PI / 5), mat), 'cap_s', 10, 9);
-  const port = place(knights, new THREE.Mesh(frustum(Math.PI / 5), mat), 'cap_p', 10, -9);
-  const keel = place(knights, new THREE.Mesh(frustum(), mat), 'keel', -10, 0);
+  const star = place(knights, new THREE.Mesh(frustum(0.6), mat), 'cap_s', 10, 9);
+  // Turned a quarter about z, a lathe's angle mirrors in z to π − φ, so the
+  // port twin starts there to stand on the starboard's corners.
+  const port = place(knights, new THREE.Mesh(frustum(Math.PI - 0.6), mat), 'cap_p', 10, -9);
+  const keel = place(knights, new THREE.Mesh(frustum(0), mat), 'keel', -10, 0);
   layoutTrim(knights, drawTrimSheet(HADRON), HADRON);
   for (const mesh of [cap, star, port, keel]) {
     const spans = facets(mesh);
@@ -703,6 +709,25 @@ test("both triangles of a facet across the unroll's cut close the same way round
     for (const s of spans)
       assert.ok(s < 0.5, `${mesh.name}: a facet spans ${s.toFixed(2)} of the girth`);
   }
+  // The twins lay corner for corner, port turned over: #1375 holds the
+  // same of a cylinder, and the centred facet is the case the mean decides.
+  const corners = (mesh, flip) => {
+    const g = mesh.geometry;
+    const v = new THREE.Vector3();
+    const out = new Map();
+    for (let i = 0; i < g.attributes.position.count; i++) {
+      v.fromBufferAttribute(g.attributes.position, i).applyMatrix4(mesh.matrixWorld);
+      // A decimetre: a corner is a stride apart from the next, and a
+      // millimetre key splits a mirrored value that lands on a half.
+      const key = [v.x, v.y, flip ? -v.z : v.z].map((c) => Math.round(c * 10) + 0).join(',');
+      out.set(key, [...(out.get(key) ?? []), g.attributes.uv.getX(i).toFixed(4)].sort());
+    }
+    return out;
+  };
+  const s = corners(star, false);
+  const p = corners(port, true);
+  assert.equal(s.size, p.size, 'the twins do not stand on each other');
+  for (const [key, us] of s) assert.deepEqual(us, p.get(key), `the twins' corner at ${key}`);
 });
 
 /** The Commune's sheet as it ships, drawn once: sixteen samples a texel take seconds. */
