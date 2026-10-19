@@ -173,7 +173,7 @@ import {
   patchGroundDetailCells,
   SEABED_DETAIL_ON,
 } from './seabedDetail.ts';
-import { stoneSeats, type StoneSeat } from './environment.ts';
+import { mapProps, stoneSeats, type StoneSeat } from './environment.ts';
 import { installGroundSurface, type WorldLook } from './tutorialLook.ts';
 import {
   apronFrame,
@@ -552,6 +552,8 @@ interface RegionDetail {
   rockTopM: number;
   /** Its detail rectangle in this view's scene metres. */
   rect: PlanRect;
+  /** The props its map's ground stands, a child of the mesh (#1488). */
+  props: EnvironmentLayer;
 }
 
 export class PerspectiveView {
@@ -1136,6 +1138,9 @@ export class PerspectiveView {
    */
   setReducedMotion(reduced: boolean): void {
     this.environment.setReducedMotion(reduced);
+    for (const id of this.residency?.residentIds() ?? []) {
+      this.residency!.get(id)!.props.setReducedMotion(reduced);
+    }
     this.snow.setReducedMotion(reduced);
     this.life.setReducedMotion(reduced);
     this.swayHeld = reduced;
@@ -2740,7 +2745,8 @@ export class PerspectiveView {
    * (§7.5's request): its authored ground with the map's baseline in the
    * middle, its grid eased into the overview by the seam as the apron is, its
    * skin baked in slices between frames, then its mesh, shaded and faded as
-   * the apron is and placed by its transform. It gives up between steps when
+   * the apron is and placed by its transform, with its map's props standing
+   * on it (#1488). It gives up between steps when
    * the residency lets the region go, and holds nothing then. No look's
    * surface hook is chained (`installGroundSurface`, which the apron takes
    * under Sorrowgate's look): a region drawn without its session is the
@@ -2824,11 +2830,29 @@ export class PerspectiveView {
     // Under the veil's shade from its first frame: it is not resident yet, so
     // `shadeExterior` would pass it by.
     this.tintExterior(material);
-    return { mesh, cells: cellsTexture, terrain, seed, rockTopM, rect };
+    // The props the map's ground stands, on this detail's own heights: the
+    // placements the session's layer stands on the room's first ground, so the
+    // join and the return's swap trade like for like (#1488). A child of the
+    // mesh, so they are drawn, hidden and let go with it. No stone is seated:
+    // this skin bakes no scour round one. Nothing fades them, since only the
+    // pilot's region has a surround, and its map lies inside its own mission.
+    const props = new EnvironmentLayer(this.look);
+    const patchX = region.x - atlas.x;
+    const patchY = region.y - atlas.y;
+    props.group.position.set(patchX, 0, patchY);
+    props.setReducedMotion(this.swayHeld);
+    props.rebuild(
+      terrain,
+      (xM, yM) => depthToWorldY(seabedDepthAtM(terrain, seed, rockTopM, xM + patchX, yM + patchY)),
+      mapProps(region.mapId)
+    );
+    mesh.add(props.group);
+    return { mesh, cells: cellsTexture, terrain, seed, rockTopM, rect, props };
   }
 
   /** Free what `loadRegionDetail` built: the residency let its region go. */
   private releaseRegionDetail(detail: RegionDetail): void {
+    detail.props.destroy();
     this.scene.remove(detail.mesh);
     detail.mesh.geometry.dispose();
     (detail.mesh.material as MeshBasicMaterial).map?.dispose();
@@ -3589,6 +3613,7 @@ export class PerspectiveView {
 
     // The kelp current: one uniform per bending template, nothing per prop.
     this.environment.tick(now);
+    for (const detail of this.drawnDetails()) detail.props.tick(now);
 
     this.swayClockMs = now;
     this.applyCamera();
@@ -3913,6 +3938,9 @@ export class PerspectiveView {
               detailDrawn: this.residency?.drawn() ?? [],
               detailResident: [...(this.residency?.residentIds() ?? [])],
               detailPending: this.residency?.pending ?? 0,
+              // What the drawn detail's props cost (#1488), beside `props` above.
+              detailProps: this.drawnDetails().reduce((n, d) => n + d.props.stats().props, 0),
+              detailPropTris: this.drawnDetails().reduce((n, d) => n + d.props.stats().propTris, 0),
             },
       // The lamp halo (art-direction.md, "Lamp halo — SPEC"): its state, what
       // it drew last frame, and what it holds (gate 6).

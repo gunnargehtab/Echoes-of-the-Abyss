@@ -26,7 +26,7 @@
  *   review to notice, so no future map or density tune can exceed them.
  */
 
-import { Biome } from '@echoes/shared';
+import { Biome, PLACED_GROUND, paintGround } from '@echoes/shared';
 
 /**
  * The published grid, as placement reads it — the shape of the client's
@@ -375,6 +375,27 @@ export function placeProps(
     placements.push(placement);
   }
   return placements;
+}
+
+/**
+ * The props a placed region's map ground stands at its baseline, in the map's
+ * own metres (docs/world-map.md §7.6): the models a travel loads, and what the
+ * region's baseline detail stands (#1488). The scatter reads the map's cells
+ * alone, so these are the placements the session's layer stands on the room's
+ * first ground, and the join and the return's swap trade like for like.
+ */
+export function mapProps(mapId: string): PropPlacement[] {
+  const ground = PLACED_GROUND[mapId];
+  if (ground === undefined) return [];
+  const cells = paintGround(ground);
+  return placeProps({
+    cols: cells.cols,
+    rows: cells.rows,
+    cellM: cells.cellM,
+    biomes: Array.from(cells.biomes),
+    floor: Array.from(cells.floor),
+    ceiling: Array.from(cells.ceiling),
+  });
 }
 
 /** Unbudgeted candidates, shared with the opt-in view-bounded material study.
