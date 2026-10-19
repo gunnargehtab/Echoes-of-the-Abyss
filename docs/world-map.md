@@ -351,6 +351,49 @@ The owner's calls: six on #1455, six on #1461, five on #1457, five on #1459, two
 
 **The baseline stands its map's props, wherever it is drawn (taken).** Before [#1488](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1488) the baseline drew none, so the props appeared all at once at the join, on the held home frame, and vanished at the return's swap. Now the join and the swap trade the same placements. The baseline is drawn on the board's frame too, where Sorrowgate's 74 props, about 18,900 triangles, are a few pixels each. Standing them only within reading range, at a dolly of about 5 km, would spend nothing on the board, but would add a threshold and show them appearing in the travel's last second. Fading them in at the join and out at the swap would still change a held frame.
 
+### 7.9 The other maps, before they join the world
+
+Sorrowgate is the only placed map. This inventory, taken for [#1463](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1463) at `2535d6ee`, lists what each of the nineteen other mission grounds and the three skirmish maps would need before it is placed. It decides nothing. Each row is where a migration starts, and §7.2's anchor table changes first, by its own rule.
+
+**What every migration moves.** `worldRegionForMission` in `packages/shared/src/world.ts` answers for the prologue alone, and the world's tests assert that every other mission is unplaced. The regions, the placed ground and the authored surrounds in `packages/shared/src/rift.ts` hold Sorrowgate alone, and only its ground has left the backend for `packages/shared/src/ground.ts`. A map joins by all four, and the room names its region at the join as it names Sorrowgate's (§7.1).
+
+**What blocks none of them.** Every map's props are placed from its biomes by the same placer the pilot uses, and every one is a model of the approved vocabulary: 44–141 a mission map and 225–367 a skirmish map, under the layer's cap of 600. A mission's structures are its parties, never atlas ground. Live ground is rare and interior: besides Sorrowgate's arch, only *Asset Recovery*, *Deep Furrow* and *In Writing*, and the Directorate's *Conclave* repaint ground, and none of their regions touches a map edge.
+
+**Placing a map.** "Placed at its anchor" below puts the map's centre on its §7.2 anchor, or the place the anchor names on it where the map draws that place. "Fits" means the map lies inside its region's rectangle and its whole §7.3 surround inside the atlas, as `worldRegionProblems` checks. The nearest anchor stands in for a map with none.
+
+| Map | Missions | Ground (§7.2) | Placed at its anchor | Settled first |
+| --- | --- | --- | --- | --- |
+| Face Six | *Asset Recovery* | Ninefold Vein | Fits | It shares the Vein with the Upper Workings |
+| The Upper Workings | *Shift Change* | Fivewell, its rail head | Fits, and clears Face Six's map with the rail head on Fivewell | Its surround overlaps Face Six's |
+| The Fourth Trench | *Baffle* | The Fourth Trench; the Deep Yard | Fits. The two anchors stand 6 km apart; the map's pipe ends about 2 km from its Yard | The pipe's length ([#1469](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1469)); its ground is part of the Foot's |
+| The Fourth's Foot | *The Dome* | The Fourth's foot | Fits, with its Yard on the Deep Yard; the foot's anchor then lies 2 km south of the map | Its rows 2–8 are the Fourth Trench's to the metre, so the two take one origin or one region |
+| The Western Margin | *Exposure* | None of its own; the First Trench's | Stood on the Shallow Band's rim, it crosses the line between the West Wall and the trench country, inside neither rectangle | An anchor; its worked ground is the Shallow Band's rim |
+| The Shallow Band | *Trench Awakening* | The First Trench — the shallow band | Fits | It overlaps the Western Margin |
+| The Underworks | *Tolerance* | The Underworks | Fits | It overlaps Board Country at any placement that keeps both anchors. The overview draws 1,300 m where the anchor gives 1,900–2,100 m of roofed water |
+| Board Country | *Item Nine* | The Underway | Fits | It overlaps the Underworks |
+| The Rim | *Prospect*, *The Second Seeding*, *First Arrival*, *The Rim Deposits*, *The Second Chord* | The Staging, the Slopes, the Terraces, the Lip | Fits with its four bands on the band anchors; centred on the Slopes it leaves the Mouth's rectangle | Five missions in four campaigns; three [#1469](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1469) clashes |
+| Marr Plateau | *Tend*, *Convocation* | Marr Plateau | Refused: its surround leaves the atlas's north edge. Moved 500 m east and 250 m south it fits | Two missions; Teel ([#1469](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1469)) |
+| The Kell Shoulder | *Thin Water*, *Shallow* | The Kell Shoulder | Fits | Marr to Kell runs west to east on the map and mostly north to south in the atlas; three [#1469](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1469) clashes; two campaigns |
+| The Furrow | *Deep Furrow*, *In Writing* | The Furrow | Fits | Two missions |
+| The Attending Galleries | *Attendance* | The attending galleries; the Ninth's sill | Fits, with the galleries and the sill each on its anchor | It overlaps the Upper Terraces; the galleries' depth and the eleven kilometres ([#1469](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1469)) |
+| The Upper Terraces | The Directorate's *Conclave* | Sufficiency | Fits | It redraws the galleries with a channel between the benches that the galleries' map does not draw |
+| The Banding Ground | *Intake* | The banding ground | Fits | Nothing beyond what every migration moves |
+| The Third's Outer Formations | *Aptitude*, the Order's *Conclave* | None of its own; the Third stands north-east of it | Refused under the Third: its surround leaves the atlas's east edge. Any origin west of 32,500 m fits | An anchor; two missions; it competes with the Fifth for the ground north of the Seam |
+| The Fifth | *Standing Wave* | The Fifth | Fits | It overlaps the Rest |
+| The Rest | *Nineteen* | The Rest | Fits | It overlaps the First and the Fifth; its trench falls east ([#1469](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1469)) |
+| The First | *The Three* | The First Chapter-House | Its map crosses the Fields' west edge | The map's axis runs east to west, and the atlas aims the First's axis south-west to Sufficiency |
+| The Ventfront Divide | Skirmish | None; "ground like" Fivewell's (§3) | No placement exists: inside the West Wall its origin is at most 2,000 m east, and its surround needs at least 2,500 m | A skirmish has no mission identity; it is §7.7's control |
+| Abyssal Rift Corridor | Skirmish | Cut from the Fourth Trench (§3) | It leaves the trench country's rectangle | It runs east to west across a pipe that runs north to south; it overlaps the Fourth's two maps |
+| Kelp Labyrinth | Skirmish | Cut from the Enclosure (§3) | Fits | Its floors of 1,800–2,600 m stand under plateau ground of 210–420 m ([#1469](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1469)) |
+
+**Five grounds are drawn twice.** The Fourth Trench and the Foot, the galleries and the Upper Terraces, the Western Margin and the Shallow Band, the Underworks and Board Country, and the two Ninefold maps each draw one ground in two literals. A heightfield holds one floor a cell, and `worldRegionProblems` says two placed maps may not overlap without checking it. Before either of a pair is placed, the pair needs one call: merge into one region, overlap where their cells agree, or move an anchor.
+
+**Surrounds overlap almost everywhere.** Placed at their anchors, about two dozen pairs of detail rectangles overlap, the Fields' three and the Fourth's stack by 45–99 km². §7.5 holds two regions resident at once, and each surround is authored alone, so two drawn together disagree wherever they share cells. Nothing yet says which one wins.
+
+**A skirmish has no way in.** §7.1 selects the world by mission identity, and a `?map=` boot has none, so a skirmish map cannot join until §7.1 says how a map without a mission is placed. Each of the three is cut from a place rather than being it, and the Ventfront Divide is §7.7's non-target control.
+
+**Shared maps need one call per mission.** Radicals plays Sorrowgate's map and keeps its own presentation (§7.1). The Rim carries five missions, and Marr, the Kell Shoulder, the Furrow and the Outer Formations two each, so each of those missions is a separate call to travel there or not.
+
 ---
 
 ## Related

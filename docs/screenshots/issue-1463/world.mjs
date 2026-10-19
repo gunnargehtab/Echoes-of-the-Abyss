@@ -182,6 +182,19 @@ export default async ({ page, shot }) => {
   };
 
   const camera = (args) => page.evaluate((a) => window.__perspectiveCamera(...a), args);
+  /**
+   * The drawn seabed across the arch's span (y 2,000-2,250, the whole width)
+   * and in the service lock (x 1,750-2,250): the fall reads as a number, since
+   * a frame of the court at 1,500 m is too dark to show it by eye.
+   */
+  const arch = async (when) =>
+    log({
+      arch: when,
+      spanM: await page.evaluate(() =>
+        [500, 1250, 2750, 4500].map((x) => Math.round(window.__perspectiveSeabedM?.(x, 2125) ?? NaN))
+      ),
+      lockM: await page.evaluate(() => Math.round(window.__perspectiveSeabedM?.(2000, 2125) ?? NaN)),
+    });
 
   // ---- The board and the briefing (§7.6 step 1) ------------------------------
   await page.waitForSelector('.menu-screen', { timeout: 10000 });
@@ -202,6 +215,7 @@ export default async ({ page, shot }) => {
   await page.waitForTimeout(2500);
   await shot('arrival');
   await station('arrival');
+  await arch('standing');
 
   // ---- Escort movement --------------------------------------------------------
   // Top-down over the flight, box-select it, and order it a little north.
@@ -281,6 +295,7 @@ export default async ({ page, shot }) => {
   await page.waitForTimeout(2500);
   await shot('collapse');
   await station('collapse');
+  await arch('fallen');
 
   // ---- A lost signal after the fall: the world kept, the ground re-sent ------
   // The browser's offline event is what the Colyseus client drops a room on.
@@ -295,6 +310,7 @@ export default async ({ page, shot }) => {
   await page.waitForTimeout(2000);
   await shot('reconnected');
   await station('reconnected');
+  await arch('after-reconnect');
 
   // ---- Return to port (§7.6 step 4) ------------------------------------------
   await leave('');
