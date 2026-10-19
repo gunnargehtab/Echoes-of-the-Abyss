@@ -154,8 +154,8 @@ block's *Faction-locked* line). So they take the Chorister's model rule too: one
 Directorate model, `<slug>-directorate.glb`, on the kind's `UNITS` row, which serves every
 navy recoloured on the chart; in the conn view the runtime resolves `<slug>-<faction>.glb`,
 and a navy whose variant has not passed intake stays on the sprite. The Verger's three
-variants landed in #1438, the Acolyte's in #1439 and the Thurible's in #1440, as #649's did
-for the Chorister; the Lure's are #1441.
+variants landed in #1438, the Acolyte's in #1439, the Thurible's in #1440 and the Lure's
+in #1441, as #649's did for the Chorister.
 
 ### 3.5 Built in a state
 
@@ -176,7 +176,7 @@ The Glider's wing is to starboard and its trim vane to port; the Reed's leaves a
 starboard at the forward node and port at the after; the Acolyte's and Thurible's
 photophores and the Thurible's spines repeat on neither side, except in the Order's variants,
 which take the Hadron FACTION block's symmetry over the kind's (`chorister-`, `verger-`,
-`acolyte-` and `thurible-hadron.glb`). These compose one side at a time — each part placed at its own signed z, port negative (#642), as the Drifter's bays and
+`acolyte-`, `thurible-` and `lure-hadron.glb`). These compose one side at a time — each part placed at its own signed z, port negative (#642), as the Drifter's bays and
 vanes are and as the Glider's wing and the Acolyte's limbs are (#784) — and never through
 `bothSides`, which mirrors. The kit's `flank` is the Z-long ports' pair placement and an
 X-long built hull has no use for it. `outlines.mjs` cuts each station's port and starboard

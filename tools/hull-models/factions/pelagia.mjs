@@ -68,6 +68,7 @@ import {
   seat,
 } from '../kit.mjs';
 import { facetsFor, orbFacets, ringsOf, ORB_FLOOR } from '../facets.mjs';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 const TAU = 2 * Math.PI;
 
@@ -5310,4 +5311,306 @@ export function rimBuds(root, light, opts) {
     const rest = seat(root, on, seed, { stand: r * squash, sink, drop: true });
     add(root, n, orb(...facets), light, rest.at, rest.rot, scale);
   });
+}
+
+/* --------------------------------------------------------------------------
+ * The Lure (#1441, on the Chorister's rule): the song as the Commune fields
+ * it — the Directorate's plan (hulls/lure.mjs) said in grown things. What it
+ * adds is what a hull that *sings* needs and no Commune hull before it had:
+ * a fan of leaf paddles spread astern on spars, a file of teeth grown down a
+ * tail's back as one ridge, a jointed stem raised over the back with a claw
+ * for a pick, and thorns on a back rather than off a rim. Every builder
+ * seats its parts by the lobes the hull drew (`lobeCrown`, kit.mjs `seat`),
+ * as the Thurible's do; X-long in the kit's frame, yawing nothing but the
+ * fan's own frames; every pair a builder would refuse is refused, and the one
+ * pair the kind licenses — the fan's — is composed a plate at a time.
+ * hulls/lure-pelagia.mjs is the consumer.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * A leaf paddle in its own frame — root at the origin, length along −x,
+ * `[x, out]` corners with `out` toward the plate's outboard side — and the
+ * half-width rule it was drawn by: rising from `root` to `tip` at `shoulder`
+ * of the length on a quarter sine, falling from there on a quarter ellipse
+ * to a flat end `flat` of `tip` wide, the outboard margin `bias` fuller than
+ * the inboard. A leaf is widest past its middle and never the same width
+ * both sides of its midrib, which is how a paddle here differs from the
+ * Directorate's squared chitin plate (directorate.mjs `paddle`). The end is
+ * flat so the kit's `plan` bevel lands the paddle's aftmost face exactly a
+ * bevel past `length` — three offsets an edge by the bevel and a corner by
+ * more — which is how a telson drawn to the stern lands the hull's length to
+ * the millimetre.
+ */
+function leafPaddle({ length, root, tip, shoulder = 0.62, flat = 0.3, bias = 0 }) {
+  const width = (t) =>
+    t <= shoulder
+      ? root + (tip - root) * Math.sin((Math.PI / 2) * (t / shoulder))
+      : tip * Math.sqrt(1 - ((t - shoulder) / (1 - shoulder)) ** 2 * (1 - flat * flat));
+  const stations = [0, 0.15, 0.3, 0.45, shoulder, 0.76, 0.88, 0.95, 1];
+  const inboard = stations.map((t) => [-t * length, -width(t) * (1 - bias)]);
+  const outboard = stations.map((t) => [-t * length, width(t) * (1 + bias)]).reverse();
+  return { outline: [...inboard, ...outboard], width };
+}
+
+/**
+ * The sounding fan, grown: five leaf paddles opened wide astern, two a side
+ * about a telson, each a frame of its own (`telson`, `fan_${side}${i}`, i = 0
+ * the inner pair and 1 the outer) placed at the fan's root `at` — `dx` along
+ * the hull and `y` up from it, the pairs `dz` off the keel at their own
+ * signed z, port negative (#642), yawed `spread` radians out on their own
+ * side and rolled `roll` about their own spar so the outboard margin dips —
+ * holding three parts: `_blade`, the kit's `plan` of `leafPaddle` in `blade`
+ * ink (membrane: the Chorister's pectorals, the Drifter's fluke, the
+ * Glider's wing — every paddle this navy swims with), `t` thick and bevelled
+ * `bevel` because a leaf has a soft margin; `_spar`, a tapered stem of `spar`
+ * ink down the paddle's midline from `spar.sink` inside the body to
+ * `spar.reach` of the length, the ridge the leaf grew along, standing
+ * through both faces; and `_vein`, a tube of `vein` ink on the top face from
+ * `vein.from` to `vein.to` of the length, leaving the midline over the spar
+ * and drifting to `curl` of the local half-width by the tip — the paddle's
+ * light, which is the singing band's: a hull passes the vein family's unlit
+ * finish (`ink.bioVeinUnlit`) and never a lamp (docs/models-plan.md §3.2
+ * rule 2), as the Directorate clads its ribs.
+ *
+ * The pairs match in plan, and match on purpose: "two a side about a telson"
+ * is the kind's own count and an instrument is tuned symmetric
+ * (hulls/lure.mjs), the one pair the Lure licenses beside its folded limbs,
+ * so this builder refuses no mirror — the only one in the module that does
+ * not — and the navy's asymmetry rides on each plate's own `roll` and
+ * `curl` (`s` and `p` on a pair), on the leaf's `bias` and on the telson,
+ * which leans its fuller margin to one side. Composed as §3.6 asks all the
+ * same: each plate at its own signed z and yaw, never through `bothSides`.
+ * Nothing on the fan points and nothing on it fires.
+ */
+export function soundingFan(root, { blade: bladeMat, spar: sparMat, vein: veinMat }, opts) {
+  const {
+    at: [ax, ay] = [0, 0],
+    t = 0.4,
+    bevel = 0.2,
+    spar: sp = { r: [0.55, 0.12], sink: 1.0, reach: 0.88 },
+    vein: vn = { r: 0.16, from: 0.08, to: 0.9, sink: 0.05, steps: 12, knots: 6 },
+    telson: tl,
+    pairs,
+    cut: rule = METRE,
+  } = opts;
+  noCount('fan', opts, 'facets');
+  const top = t / 2 + bevel;
+  const leaf = (frame, name, shape, sgn, { curl = 0.4 } = {}) => {
+    const { outline, width } = leafPaddle(shape);
+    add(
+      frame,
+      `${name}_blade`,
+      plan(
+        outline.map(([x, out]) => [x, sgn * out]),
+        t,
+        bevel
+      ),
+      bladeMat
+    );
+    spar(
+      frame,
+      `${name}_spar`,
+      sparMat,
+      sp.r,
+      [sp.sink, 0, 0],
+      [-sp.reach * shape.length, 0, 0],
+      rule
+    );
+    const through = [];
+    for (let k = 0; k < vn.knots; k++) {
+      const u = vn.from + ((vn.to - vn.from) * k) / (vn.knots - 1);
+      const drift = Math.sin((Math.PI / 2) * u);
+      through.push([
+        -u * shape.length,
+        top - vn.sink,
+        sgn * curl * width(u) * (1 + (shape.bias ?? 0)) * drift,
+      ]);
+    }
+    sweptVein(frame, veinMat, {
+      name: `${name}_vein`,
+      through,
+      steps: vn.steps,
+      r: vn.r,
+      cut: rule,
+    });
+  };
+  const telson = group(root, 'telson', {
+    at: [ax + (tl.dx ?? 0), ay + (tl.y ?? 0), 0],
+    rot: [tl.roll ?? 0, 0, 0],
+  });
+  leaf(telson, 'telson', tl, 1, tl);
+  pairs.forEach((p, i) => {
+    // A yaw of +a about Y carries the plate's own −x onto (−cos a, +sin a):
+    // aft and to starboard; the port plate takes −a. YXZ, so the roll is
+    // about the plate's own spar after the yaw, and `sgn` on it dips the
+    // outboard margin on either side.
+    for (const side of ['s', 'p']) {
+      const sgn = sideSign(`fan_${side}`, side);
+      const own = p[side] ?? {};
+      const name = `fan_${side}${i}`;
+      const f = group(root, name, {
+        at: [ax + (p.dx ?? 0), ay + (p.y ?? 0), sgn * p.dz],
+        rot: [sgn * (own.roll ?? 0), sgn * p.spread, 0, 'YXZ'],
+      });
+      leaf(f, name, p, sgn, own);
+    }
+  });
+}
+
+/**
+ * The file, grown: one part, `file_ridge`, down a tail's back at `z` from
+ * station `from` aft to `to` — `teeth` thorns of `ridge`, cones `r` across
+ * and `tooth` tall, each seated on the facet the parts `on` name under its
+ * station (kit.mjs `seat`, `drop`), sunk `sink` into it and leaning `rake`
+ * radians aft of the facet's normal as the navy's thorns lean, and under
+ * them a bead `bead.r` across swept through the same stations `bead.sink`
+ * into the skin, so the row reads as a ridge of teeth from above and not
+ * twelve dots. One buffer (`mergeGeometries`, as directorate.mjs `limbRun`
+ * runs a limb): a file is one organ, and the kind's own is one fin
+ * (directorate.mjs `fileRidge`). Where that fin rides over the joints on a
+ * straight crest, this row follows the lobes down — each tooth stands on
+ * whatever is under it, a lobe or its ring — because a grown thing follows
+ * the body it grew on. Returns each tooth's point, for the pick to aim at.
+ */
+export function fileRidge(root, ridge, opts) {
+  const {
+    on,
+    z,
+    from,
+    to,
+    teeth,
+    r = 0.35,
+    tooth = 0.9,
+    rake = 0.35,
+    sink = 0.3,
+    bead = { r: 0.3, sink: 0.12 },
+    steps = 24,
+    cut: rule = METRE,
+  } = opts;
+  noCount('file_ridge', opts, 'facets');
+  const pitch = (from - to) / (teeth - 1);
+  const pieces = [];
+  const tips = [];
+  const beadThrough = [];
+  const aft = new THREE.Vector3(-1, 0, 0);
+  const up = new THREE.Vector3(0, 1, 0);
+  for (let i = 0; i < teeth; i++) {
+    const x = from - i * pitch;
+    const rest = seat(root, on, [x, 0, z], { drop: true });
+    const P = new THREE.Vector3(...rest.at);
+    const N = new THREE.Vector3(...rest.normal);
+    const a = aft.clone().addScaledVector(N, -aft.dot(N)).normalize();
+    const axis = N.clone()
+      .multiplyScalar(Math.cos(rake))
+      .addScaledVector(a, Math.sin(rake))
+      .normalize();
+    const g = cyl(0, r, tooth, rule.cyl(0, r, tooth));
+    g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(up, axis));
+    g.translate(
+      ...P.clone()
+        .addScaledVector(axis, tooth / 2 - sink)
+        .toArray()
+    );
+    pieces.push(g);
+    tips.push(
+      P.clone()
+        .addScaledVector(axis, tooth - sink)
+        .toArray()
+    );
+    beadThrough.push(P.clone().addScaledVector(N, bead ? bead.r - bead.sink : 0));
+  }
+  if (bead) {
+    const curve = new THREE.CatmullRomCurve3(beadThrough, false, 'centripetal');
+    pieces.push(new THREE.TubeGeometry(curve, steps, bead.r, rule.tube(bead.r), false));
+  }
+  add(root, 'file_ridge', mergeGeometries(pieces), ridge);
+  return tips;
+}
+
+/**
+ * The plectrum stem, grown: one jointed stem raised over the back —
+ * `${name}_hip`, `_femur`, `_knee`, `_tibia`, `_wrist`, and the claw itself,
+ * `${name}` — knuckle, stem, knuckle, stem, knuckle, claw, where the
+ * Directorate articulates steel bones between black orbs and ends in a
+ * pressed pick (directorate.mjs `plectrumLimb`). The joints are given —
+ * `hip` in the flank, `knee` above the shell, `wrist` over the file, the
+ * claw's `tip` just clear of its teeth — and the stems are `spar`s between
+ * them in `[root, tip]` radius, the knuckles squashed orbs of `knuckle` ink
+ * at `joints`' radii, and the claw a cone of `claw` ink `claw.r` at the
+ * wrist drawn to a point at the tip: `foldedLimbs`' idiom stood up. The one
+ * limb on the hull that is raised, and raised is the state it is built in
+ * (docs/models-plan.md §3.5).
+ */
+export function plectrumStem(root, { knuckle, stem, claw: clawMat }, opts) {
+  const {
+    hip,
+    knee,
+    wrist,
+    tip,
+    joints = { hip: 1.3, knee: 1.15, wrist: 0.85 },
+    femur = [1.0, 0.8],
+    tibia = [0.8, 0.6],
+    claw = { r: 0.75 },
+    squash = 0.85,
+    name = 'plectrum',
+    cut: rule = METRE,
+  } = opts;
+  noCount(name, opts, 'facets');
+  const joint = (n, at, r) => {
+    const s = [r, r * squash, r];
+    add(root, `${name}_${n}`, orb(...rule.orb(1, { scale: s })), knuckle, at, [0, 0, 0], s);
+  };
+  joint('hip', hip, joints.hip);
+  spar(root, `${name}_femur`, stem, femur, hip, knee, rule);
+  joint('knee', knee, joints.knee);
+  spar(root, `${name}_tibia`, stem, tibia, knee, wrist, rule);
+  joint('wrist', wrist, joints.wrist);
+  spar(root, name, clawMat, [claw.r, 0], wrist, tip, rule);
+}
+
+/**
+ * Thorns on a back, `back_thorn_${i}` each: `rimThorns`' tapered stem
+ * (`taperedStem`) rooted `sink` inside the crown `crown(x, z)` finds at its
+ * station, standing up from it raked `rake` forward (negative is forward,
+ * as `rimThorns` and the Directorate's `dorsalSpines` take it) and curling
+ * as it goes — each thorn's `curl` is `[forward, outboard]`, fractions of
+ * its length the tip is carried off the straight line, outboard being the
+ * side of the keel its `z` names. The navy's tell on a back the Thurible's
+ * rack left bare: a thorn that thins and bends where the Directorate's spine
+ * is straight and black. `thorns` is `[{ x, z, length, curl }]`, each at its
+ * own signed z (port −z, #642); a mirrored pair is refused.
+ */
+export function backThorns(root, ridge, opts) {
+  const {
+    crown,
+    thorns,
+    r = [0.75, 0.1],
+    sink = 0.8,
+    rake = -0.3,
+    steps = 10,
+    cut: rule = METRE,
+  } = opts;
+  noCount('back_thorn', opts, 'facets');
+  const placed = thorns.map(({ x, z, length, curl = [0, 0] }, i) => {
+    const y = crown(x, z);
+    if (!Number.isFinite(y)) throw new Error(`back_thorn_${i}: no shell at x = ${x}, z = ${z}`);
+    const out = Math.sign(z) || 1;
+    const dir = [-Math.sin(rake), Math.cos(rake), 0];
+    const along = (f, [fwd, side] = [0, 0]) => [
+      x + dir[0] * f * length + fwd * length,
+      y + dir[1] * f * length,
+      z + out * side * length,
+    ];
+    const through = [
+      along(-sink / length),
+      along(0.3),
+      along(0.65, [curl[0] * 0.35, curl[1] * 0.35]),
+      along(1, curl),
+    ];
+    return { through, x, z, length, curl };
+  });
+  refuseMirror('back_thorn', placed, (t) => `${t.x}|${Math.abs(t.z)}|${t.length}|${t.curl.join()}`);
+  placed.forEach(({ through }, i) =>
+    add(root, `back_thorn_${i}`, taperedStem(through, steps, r, rule.tube(r[0])), ridge)
+  );
 }

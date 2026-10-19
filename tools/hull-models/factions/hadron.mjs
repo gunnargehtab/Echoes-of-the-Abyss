@@ -1398,13 +1398,17 @@ export function listeningDome(root, { crystal: domeMat, seam }, opts) {
  * says of its bladder. A station may carry a third number, the spar's
  * axis height there, as a `spar` station does: the Thurible's keel is
  * sheared under its belly and its hoops follow it (hulls/thurible-hadron.mjs);
- * the Verger's ride its body on the axis and leave it off.
+ * the Verger's ride its body on the axis and leave it off. `name` is the
+ * rank's, `pressure_rib` on every hull with one rank; the Lure carries two,
+ * the keel's and the bladder's, and a second rank under one name is two
+ * parts `seat` and `contacts.mjs` cannot tell apart (hulls/lure-hadron.mjs).
  */
-export function pressureRibs(root, alloy, { stations, tube = 0.35, lift = 0.1, flat, facets = 4 }) {
+export function pressureRibs(root, alloy, opts) {
+  const { stations, tube = 0.35, lift = 0.1, flat, facets = 4, name = 'pressure_rib' } = opts;
   stations.forEach(([x, r, y = 0], i) =>
     add(
       root,
-      `pressure_rib_${i}`,
+      `${name}_${i}`,
       torus(r + lift, tube, 4, facets)
         .rotateZ(Math.PI / facets)
         .rotateY(Math.PI / 2),
@@ -1859,6 +1863,185 @@ export function spineGun(root, alloy, opts) {
       sgn * rail.z,
     ])
   );
+}
+
+/* --------------------------------------------------------------------------
+ * The Lure, the Order's (#1441, on the Chorister's rule): the song. What
+ * the kind adds and no Order hull had is an instrument on the tail — a
+ * fan of plates spread astern, a file down the back and a limb raised to
+ * strike it — each drawn as the mirrored pair or the centreline part the
+ * faction block asks of this navy. The body is the Chorister's segments
+ * (`spar`), the bladder its crystal segment, the keel the Thurible's, and
+ * the limbs, marks and rows the Thurible's builders above.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The sounding fan, the Order's: five alloy blades spread astern, two a
+ * side about a telson — the Directorate's `soundingFan` said the Order's
+ * way, a kite plan with a squared end instead of a chitin paddle. Each
+ * blade is a frame of its own (`telson`, `fan_${i}_${side}`, i = 0 the
+ * inner pair and 1 the outer) placed at the fan's root `at` — `dx` along
+ * the hull and `y` up from it, the pairs `dz` off the keel and yawed
+ * `spread` radians out from it on their own side — holding a `_blade`,
+ * the kit's `plan` of a kite `t` thick: `root` of half-width at the root,
+ * `tip` at `waist` of its `length`, and a squared end `end` wide at the
+ * full length, square-edged as every Order plane is; and a `_rib` down
+ * the blade's own centreline, a bar of `rib.w` by `rib.h` from `rib.from`
+ * to `rib.to` of its length, sunk `rib.sink` into the top face, in
+ * `ribMat` — the lamp family's unlit finish (`ink.crystalSeamUnlit`),
+ * because "each plate of the fan lit along its rib" is the singing band
+ * and the resting model carries no lamp on the fan (models-plan.md §3.2,
+ * rule 2). Nothing on the fan points along the hull and nothing on it
+ * fires. The pairs are drawn through `bothSides`, starboard first (port
+ * −z, #642): the Directorate composes its matched pairs one side at a
+ * time by §3.6, and the Order's are mirrored by its faction block.
+ */
+export function soundingBlades(root, { alloy, rib: ribMat }, opts) {
+  const {
+    at: [ax, ay] = [0, 0],
+    t = 0.9,
+    rib = { w: 0.6, h: 0.4, from: 0.08, to: 0.92, sink: 0.1 },
+    telson: tl,
+    pairs,
+  } = opts;
+  const kite = ({ length, root: r, tip, end, waist = 0.6 }) => [
+    [0, r],
+    [-waist * length, tip],
+    [-length, end],
+    [-length, -end],
+    [-waist * length, -tip],
+    [0, -r],
+  ];
+  const blade = (frame, name, shape) => {
+    add(frame, `${name}_blade`, plan(kite(shape), t), alloy);
+    const ribLength = (rib.to - rib.from) * shape.length;
+    add(frame, `${name}_rib`, box(ribLength, rib.h, rib.w), ribMat, [
+      -(rib.from * shape.length + ribLength / 2),
+      t / 2 + rib.h / 2 - rib.sink,
+      0,
+    ]);
+  };
+  const frame = group(root, 'telson', { at: [ax + (tl.dx ?? 0), ay + (tl.y ?? 0), 0] });
+  blade(frame, 'telson', tl);
+  pairs.forEach((p, i) =>
+    bothSides((side, sgn) => {
+      // A yaw of +a about Y carries the blade's own −x onto (−cos a, +sin a):
+      // aft and to starboard; the port blade takes −a.
+      const name = `fan_${i}_${side}`;
+      const f = group(root, name, {
+        at: [ax + (p.dx ?? 0), ay + (p.y ?? 0), sgn * p.dz],
+        rot: [0, sgn * p.spread, 0],
+      });
+      blade(f, name, p);
+    })
+  );
+}
+
+/**
+ * The file, the Order's: a toothed rail on the centreline down the
+ * tail's back — the Directorate's `fileRidge`, one black fin a metre to
+ * starboard, said the Order's way as the spine itself grown teeth. The
+ * `file_rail` is a four-facet alloy spar (`spar`, sheared) on the axis
+ * `crown(x) − sink` at every station from `from` aft to `to`, tapering to
+ * 0.3 over `taper` at each end, pressed `flat`, so it rides the crown as
+ * the spine does and dips with the waists it crosses; and on its top the
+ * teeth, `file_teeth`, one crystal crest from `tooth.from` to `tooth.to`
+ * — `teeth` of them at an even pitch, each `tooth.height` tall over the
+ * rail's top with its point `tooth.rake` of the pitch back from its
+ * forward foot, so the rank leans aft as the Directorate's teeth do and
+ * the navy's spines do — `tooth.t` thick across the beam, its underside
+ * following the rail's top sampled twice a tooth and sunk `tooth.sink`
+ * into it. One extrusion in the hull's x–y plane as the Directorate's
+ * `fileRidge` is, and not twelve stones: a crest is one part the panel
+ * measure reads once, and twelve points under a metre each read as twelve
+ * panels under the band (facets.mjs `panels`). On the centreline because
+ * nothing on an Order hull is off it alone (hulls/chorister-hadron.mjs,
+ * the gun); a limb on each side reaches it. Returns `top(x)`, the rail's
+ * crown at `x`, for the picks to clear.
+ */
+export function fileRail(root, { alloy, crystal }, opts) {
+  const { crown, from, to, taper = 1.5, sink = 0.15, flat = [0.7, 1.4], step = 1 } = opts;
+  const { teeth = 12, tooth: th = {} } = opts;
+  const tooth = { t: 0.6, height: 0.9, sink: 0.2, rake: 0.3, from, to, ...th };
+  const lo = Math.min(from, to);
+  const hi = Math.max(from, to);
+  const stations = [[lo, 0.3, crown(lo) - sink]];
+  for (let x = lo + taper; x < hi - taper - 1e-6; x += step)
+    stations.push([x, 1.0, crown(x) - sink]);
+  stations.push([hi - taper, 1.0, crown(hi - taper) - sink], [hi, 0.3, crown(hi) - sink]);
+  spar(root, 'file_rail', alloy, { profile: stations, flat });
+  const top = (x) => crown(x) - sink + flat[0] * Math.SQRT1_2;
+  const tFore = Math.max(tooth.from, tooth.to);
+  const tAft = Math.min(tooth.from, tooth.to);
+  const pitch = (tFore - tAft) / teeth;
+  // The crest runs aft from the forward foot, tooth by tooth, then the
+  // underside comes back forward along the rail's top, sunk into it.
+  const shape = new THREE.Shape();
+  shape.moveTo(tFore, top(tFore));
+  for (let i = 0; i < teeth; i++) {
+    const foot = tFore - i * pitch;
+    const crest = foot - tooth.rake * pitch;
+    shape.lineTo(crest, top(crest) + tooth.height);
+    shape.lineTo(foot - pitch, top(foot - pitch));
+  }
+  const n = teeth * 2;
+  for (let k = 0; k <= n; k++) {
+    const x = tAft + ((tFore - tAft) * k) / n;
+    shape.lineTo(x, top(x) - tooth.sink);
+  }
+  const geo = new THREE.ExtrudeGeometry(shape, { depth: tooth.t, bevelEnabled: false, steps: 1 });
+  geo.translate(0, 0, -tooth.t / 2);
+  add(root, 'file_teeth', geo, crystal, [0, 0, 0]);
+  return top;
+}
+
+/**
+ * The plectrum, the Order's: a MIRRORED PAIR of raised limbs, one each
+ * side, both aimed at the file on the centreline — the Directorate's one
+ * `plectrumLimb` from port said the Order's way. Each limb is six parts,
+ * `plectrum_${side}_hip`, `_femur`, `_knee`, `_tibia`, `_wrist` and
+ * `_pick`: alloy blocks at the three joints (`joints`, `[along, tall,
+ * across]` each), the hip's on the flank at `hip` `[x, y, z]`, `z`
+ * unsigned and sunk by the hull; a four-facet alloy femur `femur`
+ * `[root, tip]` in radius from the hip up and out to the `knee`; a tibia
+ * `tibia` from the knee aft and inboard to the `wrist`; and from the wrist
+ * the pick, a crystal four-sided point `pick.r` of half-diagonal from the
+ * wrist to `tip`, where its apex is — aimed down and aft at the file's
+ * crest, and the hull holds the clearance. Both drawn through
+ * `bothSides`, starboard first (port −z, #642). A pair and not the kind's
+ * one limb because the faction block makes this navy "the only faction
+ * with" precise bilateral symmetry, and the alternative — one limb on the
+ * centreline from a dorsal hinge — would stand over the file it strikes
+ * and read as a spine; the Order's instruments are played in pairs, the
+ * Tocsin's brace blades and the Lance's guard wings. Raised is the built
+ * state (models-plan.md §3.5). Returns the joints, for the record.
+ */
+export function plectrumPair(root, { alloy, crystal: pickMat }, opts) {
+  const { hip, knee, wrist, tip } = opts;
+  const {
+    joints = { hip: [1.6, 1.4, 1.4], knee: [1.4, 1.4, 1.4], wrist: [1.1, 1.1, 1.1] },
+    femur = [0.8, 0.6],
+    tibia = [0.6, 0.45],
+    pick = { r: 0.9 },
+  } = opts;
+  const sided = ([x, y, z], sgn) => [x, y, sgn * z];
+  const placed = [];
+  bothSides((side, sgn) => {
+    const name = `plectrum_${side}`;
+    const h = sided(hip, sgn);
+    const k = sided(knee, sgn);
+    const w = sided(wrist, sgn);
+    const p = sided(tip, sgn);
+    add(root, `${name}_hip`, box(...joints.hip), alloy, h);
+    bone(root, `${name}_femur`, alloy, femur, h, k);
+    add(root, `${name}_knee`, box(...joints.knee), alloy, k);
+    bone(root, `${name}_tibia`, alloy, tibia, k, w);
+    add(root, `${name}_wrist`, box(...joints.wrist), alloy, w);
+    // A bone of `[r, 0]` is a point with its apex at `b`: the pick.
+    bone(root, `${name}_pick`, pickMat, [pick.r, 0], w, p);
+    placed.push({ side, hip: h, knee: k, wrist: w, tip: p });
+  });
+  return placed;
 }
 
 /**

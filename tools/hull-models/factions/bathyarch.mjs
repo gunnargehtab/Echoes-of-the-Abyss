@@ -5215,17 +5215,21 @@ export function rimWhips(root, { whip: whipMat, bracket: bracketMat }, opts) {
  * `shin.sweep`; and a tip block. Matched ranks are the kind's
  * regimentation, and the one pair this navy's Thurible allows: `limbs` is
  * `[{ x, z }]`, a hip a station at unsigned `z`, drawn both sides
- * (kit.mjs `bothSides`, starboard first). Returns the tips, `[side, i,
- * x, z]` each, for the header to measure against the rim.
+ * (kit.mjs `bothSides`, starboard first), each with its own `under` where
+ * the belly over it is not the rank's `under`. Returns the tips, `[side,
+ * i, x, z]` each, for the header to measure against the rim.
  */
 export function foldedLimbs(root, { bracket, girder: girderMat, block }, opts) {
   const { limbs, y, under, sink = 0.3, hip, thigh, knee, shin, tip } = opts;
   const tips = [];
   bothSides((side, sgn) =>
-    limbs.forEach(({ x, z }, i) => {
+    limbs.forEach(({ x, z, under: own = under }, i) => {
       const name = `limb_${side}${i}`;
       const hipAt = [x, y, sgn * z];
-      const top = under + sink;
+      // A limb may carry its own `under` for a body whose belly is not one
+      // height — the Lure's three lapped slabs (#1441); the Thurible's one
+      // shield hands every hip the same.
+      const top = own + sink;
       const bottom = y - thigh.section[0] / 2;
       add(root, `${name}_hip`, box(hip.size[0], top - bottom, hip.size[1]), bracket, [x, (top + bottom) / 2, sgn * z]);
       const kneeAt = [x + thigh.length * Math.sin(thigh.sweep), y, sgn * (z + thigh.length * Math.cos(thigh.sweep))];
@@ -5301,6 +5305,285 @@ export function rimLamps(root, lampM, opts) {
   refuseMirror(name, spots.map(([n, p]) => [n, ...p]));
   const plate = box(size, h, size);
   for (const [n, p, rot] of spots) add(root, n, plate, lampM, p, rot);
+}
+
+/* --------------------------------------------------------------------------
+ * The Lure (#1441): the song, said the Klaxon's way. What the kind adds
+ * that no Klaxon hull before it had — a body in three lapped slabs rather
+ * than one shield, a tail that opens into hinged vanes rather than a stern
+ * block, a toothed rail down the back with one girder arm raised over it
+ * to strike it, and a pressure dome standing on a can — is written here,
+ * beside the Thurible's section it borrows the rest from (`cans`,
+ * `ribbedKeel`, `foldedLimbs`, `rimLamps`, `planHalfBeam`). Every builder
+ * takes the numbers the hull hands it; none decides a shape of its own.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The body as lapped slabs: `hull_slab_${i}` each, a chamfered plan of
+ * `outline` (the top face, kit.mjs `plan`), `depth` between its faces and
+ * `bevel` proud all round, at `y`, in the slab's own `mat`; and on each a
+ * tier, `armour_tier_${i}`, a square-edged plan `tier.outline` of
+ * `tier.depth` standing on the slab's top face in `tier.mat` — the other
+ * finish, so a black slab carries a grey tier and a grey slab the older
+ * black showing through (`armouredSlab`'s rule, three times over). The
+ * slabs are numbered bow first, as the cans are, and each lies at its own
+ * `y`: a series stepped down toward the stern, the plate behind tucked
+ * under the plate ahead, is what "overlapping" is in plate. Nothing here
+ * is lit.
+ */
+export function slabSeries(root, mats, { slabs }) {
+  slabs.forEach(({ outline, depth, bevel = 0, y, mat, tier }, i) => {
+    add(root, `hull_slab_${i}`, plan(outline, depth, bevel), mats[mat], [0, y, 0]);
+    if (!tier) return;
+    const top = y + depth / 2 + bevel;
+    add(root, `armour_tier_${i}`, plan(tier.outline, tier.depth), mats[tier.mat], [0, top + tier.depth / 2, 0]);
+  });
+}
+
+/**
+ * Whip aerials standing off a deck, `dorsal_whip_${side}${i}` and its
+ * `_bracket` each — the Klaxon's reading of a spine rank down a carapace's
+ * back (directorate.mjs `dorsalSpines`): a pipe at the rule's count, `r` as
+ * `[root, tip]`, `length` long, dropped onto `on` under `(x, z)` (kit.mjs
+ * `seat`) so its foot is `sink` into the plate, raked forward by `rake`
+ * radians about the beam; and at the foot a bracket of older plate, a box
+ * of `bracket.size` (along the hull, tall, athwart) stood on the deck with
+ * `bracket.sink` of it in the plate. `whips` is `[{ side, x, z, length }]`,
+ * `z` unsigned and the side signing it (port −z, #642); a mirrored pair is
+ * refused, since the rank alternates sides and never repeats.
+ */
+export function deckWhips(root, { whip: whipMat, bracket: bracketMat }, opts) {
+  const { on, whips: list, r = [0.55, 0.2], rake = -0.3, sink = 0.8, bracket, cut: rule = METRE } = opts;
+  const count = { p: 0, s: 0 };
+  const placed = list.map(({ side, x, z, length }) => {
+    if (side !== 'p' && side !== 's')
+      throw new Error(`dorsal_whip_${side}: side is '${side}' — 'p' (port, -z) or 's' (starboard, +z)`);
+    const i = count[side]++;
+    const sgn = side === 'p' ? -1 : 1;
+    const foot = seat(root, on, [x, 0, sgn * z], { drop: true }).at;
+    // A rake about Z carries a +Y pipe's tip onto (−sin rake, cos rake, 0):
+    // forward for a negative rake, as the navy's spines lean.
+    const reach = length / 2 - sink;
+    const at = [foot[0] - Math.sin(rake) * reach, foot[1] + Math.cos(rake) * reach, foot[2]];
+    const [bl, bh] = bracket.size;
+    const bracketAt = [foot[0], foot[1] + bh / 2 - bracket.sink, foot[2]];
+    return { name: `dorsal_whip_${side}${i}`, at, length, bracketAt, bl };
+  });
+  refuseMirror('dorsal_whip', placed.map(({ name, at }) => [name, ...at]));
+  const [rootR, tipR] = r;
+  placed.forEach(({ name, at, length, bracketAt }) => {
+    add(root, `${name}_bracket`, box(...bracket.size), bracketMat, bracketAt);
+    add(root, name, cyl(tipR, rootR, length, rule.round(rootR)), whipMat, at, [0, 0, rake]);
+  });
+}
+
+/**
+ * A pressure dome standing on a can: `${name}` the dome, an orb at the
+ * rule's count of `r` pressed to `squash` of it tall, its equator at `at`
+ * and its lower half inside a skirt, `${name}_skirt`, a drum of the same
+ * radius at the rule's count `skirt.h` tall under the equator, so where the
+ * can's skin falls away from the dome's rim the skirt meets it — a pressure
+ * vessel on a pressure vessel, the one curve the Klaxon allows twice. The
+ * Verger's `listeningTurret` is the same idiom with ribs and a lit boss;
+ * this one carries no lamp (docs/models-plan.md §3.2 rule 4).
+ */
+export function pressureDome(root, { dome: domeMat, skirt: skirtMat }, opts) {
+  const { name = 'bladder_dome', at: [x, y, z], r, squash = 0.64, skirt, cut: rule = METRE } = opts;
+  const s = [r, r * squash, r];
+  add(root, `${name}_skirt`, cyl(r, r, skirt.h, rule.round(r)), skirtMat, [x, y - skirt.h / 2, z]);
+  add(root, name, new THREE.SphereGeometry(1, ...rule.orb(r)), domeMat, [x, y, z], [0, 0, 0], s);
+}
+
+/**
+ * A toothed rack down a tail's back — the Klaxon's reading of the kind's
+ * stridulating file (directorate.mjs `fileRidge`): a rail of newer plate,
+ * `file_rail`, a box girder `rail.h` by `rail.w` in section from station
+ * `from` to `to` at `z`, its top a straight line from `top[0]` to `top[1]`;
+ * `teeth` square teeth of hull black standing on it, `file_tooth_${i}`,
+ * each `tooth.l` long and `tooth.h` tall and the rail's width, one to a
+ * pitch with its forward face at the pitch's forward foot; and
+ * `file_post_${i}` pedestals of older plate under the rail at
+ * `posts.stations`, each a box of the rail's width dropped onto `posts.on`
+ * (kit.mjs `seat`) and sunk `posts.sink` into the plate it stands on, so
+ * the rail rides the cans' steps rather than following them. Returns
+ * `crest(x)`, the teeth's top at a station, for the arm to aim at.
+ */
+export function toothedRack(root, { rail: railMat, tooth: toothMat, post: postMat }, opts) {
+  const { z, from, to, top: [yFrom, yTo], rail, teeth, tooth, posts } = opts;
+  const line = (x) => yFrom + ((yTo - yFrom) * (from - x)) / (from - to);
+  const slope = Math.atan2(yTo - yFrom, to - from);
+  girder(root, 'file_rail', railMat, [from, yFrom - rail.h / 2, z], [to, yTo - rail.h / 2, z], [rail.h, rail.w]);
+  const pitch = (from - to) / teeth;
+  const toothGeo = box(tooth.l, tooth.h, rail.w);
+  for (let i = 0; i < teeth; i++) {
+    const x = from - i * pitch - tooth.l / 2;
+    add(root, `file_tooth_${i}`, toothGeo, toothMat, [x, line(x) + tooth.h / 2, z], [0, 0, slope]);
+  }
+  posts.stations.forEach((x, i) => {
+    const foot = seat(root, posts.on, [x, 0, z], { drop: true }).at;
+    const bottom = foot[1] - posts.sink;
+    const topY = line(x) - rail.h;
+    add(root, `file_post_${i}`, box(rail.w, topY - bottom, rail.w), postMat, [x, (topY + bottom) / 2, z]);
+  });
+  return (x) => line(x) + tooth.h;
+}
+
+/**
+ * The striking arm: one jointed girder arm raised over the back,
+ * `${name}_hip`, `_femur`, `_knee`, `_tibia`, `_wrist` and the striker
+ * itself, `${name}` — the Klaxon's reading of the kind's plectrum limb
+ * (directorate.mjs `plectrumLimb`). The joints are given — `hip` on a
+ * can's flank, `knee` above the back, `wrist` over the rail, the striker's
+ * `tip` just clear of its teeth — and the bones drawn between them on
+ * `foldedLimbs`' rule (`girder`): a hip bracket of older plate, a box of
+ * `bracket.size` centred on the hip; a femur and a tibia, box girders of
+ * newer plate in `femur` and `tibia` section (`[h, w]`), rooted `overlap`
+ * into the blocks they join; a knee block and a wrist block of hull black.
+ * The striker is a four-sided wedge of hull black from the wrist to the
+ * tip, `pick.r` across at its base and pressed to `pick.flat` of that
+ * across the beam, so its broad face lies along the hull and its edge
+ * across the rail's teeth; its frame is built — +Y onto the aim, the beam
+ * axis kept as near the hull's beam as the aim allows — as the kind's is.
+ * The one limb on the hull that stands up; "raised" is the state it is
+ * built in (docs/models-plan.md §3.5).
+ */
+export function pickArm(root, { bracket: bracketMat, girder: girderMat, block: blockMat, pick: pickMat }, opts) {
+  const {
+    hip,
+    knee,
+    wrist,
+    tip,
+    bracket,
+    femur = [1.0, 0.9],
+    tibia = [0.9, 0.8],
+    blocks = { knee: [1.4, 1.2, 1.4], wrist: [1.2, 1.0, 1.2] },
+    pick = { r: 1.2, flat: 0.3 },
+    overlap = 0.3,
+    name = 'plectrum',
+  } = opts;
+  add(root, `${name}_hip`, box(...bracket.size), bracketMat, hip);
+  girder(root, `${name}_femur`, girderMat, hip, knee, femur, overlap);
+  add(root, `${name}_knee`, box(...blocks.knee), blockMat, knee);
+  girder(root, `${name}_tibia`, girderMat, knee, wrist, tibia, overlap);
+  add(root, `${name}_wrist`, box(...blocks.wrist), blockMat, wrist);
+  const W = new THREE.Vector3(...wrist);
+  const T = new THREE.Vector3(...tip);
+  const aim = T.clone().sub(W);
+  const yAxis = aim.clone().normalize();
+  const beam = new THREE.Vector3(0, 0, 1);
+  const zAxis = beam.sub(yAxis.clone().multiplyScalar(beam.dot(yAxis))).normalize();
+  const xAxis = new THREE.Vector3().crossVectors(yAxis, zAxis);
+  const e = new THREE.Euler().setFromRotationMatrix(new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis), 'XYZ');
+  const mid = W.clone().add(T).multiplyScalar(0.5).toArray();
+  // Four sides at a phase of π/4: a square with its flats on the frame's
+  // axes, which the press then flattens across the beam (`squareWedge`).
+  add(root, name, cyl(0, pick.r, aim.length(), 4, Math.PI / 4), pickMat, mid, [e.x, e.y, e.z], [1, 1, pick.flat]);
+}
+
+/**
+ * A sounding vane's outline in its own frame: the root at the origin, the
+ * vane running aft along −x, `root` and `tip` its half-widths at the root
+ * and at the squared end, the widening straight — a trapezoid of plate
+ * with a squared end, where the kind's paddle shoulders and chamfers
+ * (directorate.mjs `paddle`).
+ */
+const vane = ({ length, root, tip }) => [
+  [0, root],
+  [-length, tip],
+  [-length, -tip],
+  [0, -root],
+];
+
+/**
+ * The sounding fan as the Klaxon builds one: five hinged steel vanes
+ * opened wide astern, two a side about a telson, each a frame of its own
+ * (`telson`, `fan_${side}${i}`, i = 0 the inner pair and 1 the outer)
+ * placed at the fan's root `at` — `dx` along the hull and `y` up from it,
+ * the pairs `dz` off the keel at their own signed z, port negative (#642),
+ * yawed `spread` radians out from the keel on their own side — holding, in
+ * order: a `_plate`, the kit's `plan` of `vane` above, `t` thick and
+ * square-edged; a `_rib`, a bar of `rib.w` by `rib.h` down the plate's
+ * centreline from `rib.from` to `rib.to` of its length — from just aft of
+ * the knuckle on a vane that folds — sunk `rib.sink` into the top face, in
+ * `ribMat` — the lamp family's unlit finish, since
+ * "each plate of the fan lit along its rib" is the singing band and this
+ * is the resting one (docs/models-plan.md §3.2 rule 2), and never a lamp;
+ * on a vane that folds (one with a `hinge`), a `_pin`, a vertical drum at
+ * the rule's count `hinge.r` in radius standing through the plate at
+ * `hinge.at` along its axis, and a `_knuckle_u` and `_knuckle_l`, boxes of
+ * `hinge.knuckle` (along the vane, tall, across) lying on the plate's two
+ * faces round the pin; and `_rivet_${k}` square-headed rivets in a row
+ * along each long edge, `rivets.inset` in from it, from `rivets.from` of
+ * the length aft at `rivets.pitch`, `rivets.size` each, half their height
+ * proud of the top face. The plates alternate through `skins` from the
+ * telson outward.
+ *
+ * The pairs are matched: "two a side about a telson" is the block's own
+ * count, and an instrument is tuned symmetric — the kind's licence
+ * (directorate.mjs `soundingFan`), and this navy's `foldedLimbs` is the
+ * other pair it allows; neither carries light. Composed as §3.6 asks all
+ * the same: each vane placed on its own side at its own signed z and its
+ * own yaw, never through `bothSides`. Nothing on the fan points and
+ * nothing on it fires.
+ */
+export function soundingVanes(root, mats, opts) {
+  const { skins, rib: ribMat, pin: pinMat, knuckle: knuckleMat, rivet: rivetMat } = mats;
+  const {
+    at: [ax, ay] = [0, 0],
+    t = 0.6,
+    rib = { w: 0.7, h: 0.4, from: 0.08, to: 0.92, sink: 0.1 },
+    rivets = null,
+    telson: tl,
+    pairs,
+    cut: rule = METRE,
+  } = opts;
+  const blade = (frame, name, shape, skin) => {
+    add(frame, `${name}_plate`, plan(vane(shape), t), skin);
+    // On a vane that folds the rib runs from the knuckle aft, so the hinge
+    // strap lies on plate and not on the rib; the telson's runs the length.
+    const hinge = shape.hinge;
+    const ribFrom = hinge
+      ? (hinge.at + hinge.knuckle[0] / 2 + (hinge.clear ?? 0.2)) / shape.length
+      : rib.from;
+    const ribLength = (rib.to - ribFrom) * shape.length;
+    add(frame, `${name}_rib`, box(ribLength, rib.h, rib.w), ribMat, [
+      -(ribFrom * shape.length + ribLength / 2),
+      t / 2 + rib.h / 2 - rib.sink,
+      0,
+    ]);
+    if (hinge) {
+      const { r, at: s, knuckle } = hinge;
+      const kh = knuckle[1];
+      const pinH = t + 2 * kh + 2 * (hinge.proud ?? 0.3);
+      add(frame, `${name}_pin`, cyl(r, r, pinH, rule.round(r)), pinMat, [-s, 0, 0]);
+      add(frame, `${name}_knuckle_u`, box(...knuckle), knuckleMat, [-s, t / 2 + kh / 2, 0]);
+      add(frame, `${name}_knuckle_l`, box(...knuckle), knuckleMat, [-s, -(t / 2 + kh / 2), 0]);
+    }
+    if (rivets) {
+      const head = box(...rivets.size);
+      let k = 0;
+      for (let s = rivets.from; s <= shape.length - rivets.from + 1e-9; s += rivets.pitch) {
+        const half = shape.root + ((shape.tip - shape.root) * s) / shape.length;
+        for (const sgn of [1, -1])
+          add(frame, `${name}_rivet_${k++}`, head, rivetMat, [-s, t / 2, sgn * (half - rivets.inset)]);
+      }
+    }
+  };
+  const frame = group(root, 'telson', { at: [ax + (tl.dx ?? 0), ay + (tl.y ?? 0), 0] });
+  blade(frame, 'telson', tl, skins[0]);
+  pairs.forEach((p, i) => {
+    // A yaw of +a about Y carries the vane's own −x onto (−cos a, +sin a):
+    // aft and to starboard; the port vane takes −a.
+    for (const side of ['s', 'p']) {
+      const sgn = side === 'p' ? -1 : 1;
+      const name = `fan_${side}${i}`;
+      const f = group(root, name, {
+        at: [ax + (p.dx ?? 0), ay + (p.y ?? 0), sgn * p.dz],
+        rot: [0, sgn * p.spread, 0],
+      });
+      blade(f, name, p, skins[(i + 1) % skins.length]);
+    }
+  });
 }
 
 export { THREE };

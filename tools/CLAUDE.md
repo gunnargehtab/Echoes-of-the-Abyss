@@ -49,7 +49,7 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    sweep for clips no gate asks about, kept (#953) and held by
                    test/contacts.test.mjs.
 tools/hull-maps    The committed outputs of the approved models: build.mjs bakes
-                   the sprite maps (Chromium), all 103 or the slugs named (#1055),
+                   the sprite maps (Chromium), all 106 or the slugs named (#1055),
                    then outlines.mjs writes hullOutlines.generated.ts (no browser)
                    and sheet.mjs the site's roster sheet in the game's own sprite
                    code; a roadmap test fails on a map the sheet predates.

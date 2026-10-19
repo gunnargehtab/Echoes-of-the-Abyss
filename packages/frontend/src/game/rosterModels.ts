@@ -168,8 +168,7 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Lance]: 'lance',
   // The siege hulls (#508), script-built in #786: one model a navy. The Lure
   // carries no lock, so a navy rendering for one resolves lure-<its
-  // faction>.glb — only the Directorate's exists, and the others stay on the
-  // recoloured sprite until a variant passes intake (#1441).
+  // faction>.glb — all four variants exist (#1441), as the Thurible's do.
   [UnitKind.Furnace]: 'furnace',
   [UnitKind.Blight]: 'blight',
   [UnitKind.Lure]: 'lure',
