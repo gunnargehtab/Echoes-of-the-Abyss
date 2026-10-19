@@ -165,8 +165,7 @@
  * from 24 to 50.4, same names; `seamLength` stays 112 so the rivet rank
  * keeps its pitch, and both rows clear the bar's band, y 1.95–2.45 (the
  * upper at 3.6, the lower at -3.2), so no rivet seats on a bar and none
- * moves. The export prints
- * 145 parts and 2,756 triangles, as before.
+ * moves. The export prints 145 parts and 2,756 triangles, as before.
  */
 import { THREE, add, box, cyl, strut, bothSides, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
