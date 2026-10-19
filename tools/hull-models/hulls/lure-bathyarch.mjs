@@ -88,8 +88,9 @@
  *   thick — so no vane touches another and a rivet head or a knuckle on
  *   one clears the plate over it by 0.1 m: a vane that folds over its
  *   neighbour has clearance to. The outer vanes' aft corners stand 23.3 m
- *   off the keel at x −36.8: 46.6 m across, 12.6 m wider than the mid
- *   slab, which is "widest at the stern" by a margin the chart can read.
+ *   off the keel at x −36.8: 46.6 m across, 11 m wider than the mid
+ *   slab's bevelled rim (±17.8), which is "widest at the stern" by a
+ *   margin the chart can read.
  *   Grey, black, grey from the telson.
  * - **The ribs are clad, not lit.** Each vane carries its rib — 0.7 m
  *   wide, 0.4 tall, to 0.92 of the vane's length — in `amber_lamp_unlit`,
@@ -119,7 +120,7 @@
  *   down to y 1.2 (the can's skin is at 2.1 under the dome's outboard
  *   rim); iron grey is the
  *   navy's palest cladding, which is what "paler" buys here where the
- *   Directorate's violet could not. Its 5 m of plan sits on the 5.1 m of
+ *   Directorate's violet could not. Its 4.3 m of plan sits on the 5.1 m of
  *   that can's crown the cap ahead does not cover, which is why the can
  *   is 6.6 m long and the last 4.2; the can under it carries no crown rivets, as
  *   the Verger's turret can does not.
@@ -213,7 +214,7 @@
  * the Thurible's (×0.191 at E(16)) and the Directorate Lure's (×0.225),
  * and twelve times clear of the ×1/64 floor the quiet end must not touch
  * (§3.2). The bake is warning-free — no rescale, no rotate, 100.0 × 46.6
- * m. Five materials; 252 parts, 4,744 triangles; the file spans x −50 ..
+ * m. Six materials; 252 parts, 4,744 triangles; the file spans x −50 ..
  * 50, y −9.3 .. 13, z −23.3 .. 23.3.
  *
  * The sweep (contacts.mjs) reads 365 pairs and every one a mount: the
