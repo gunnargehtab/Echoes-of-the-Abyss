@@ -265,7 +265,7 @@ A mission starts when its room is joined, so a camera flight after joining would
 
 **Evidence** for a change under this section: the pilot at the close, home, low-pitch and survey views, each paired with a baseline frame of the same camera, the HUD visible; a frame at a border corner; gate 6 measured at pixel ratios 1 and 1.5 on a named GPU, transitions included. **Non-target controls:** the Ventfront Divide skirmish and Radicals render as before.
 
-The pilot was accepted against this list on [#1463](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1463), on a GTX 1070 at both ratios, in one drive per ratio played past the arch's fall: [the acceptance record](screenshots/issue-1463/README.md). Every held view and every transition stayed inside gate 6, at 33 calls and 93,733 triangles at most. Each join holds the home frame through two stalls of about two seconds, filed as [#1495](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1495).
+The pilot was accepted against this list on [#1463](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1463), on a GTX 1070 at both ratios, in one drive per ratio played past the arch's fall: [the acceptance record](screenshots/issue-1463/README.md). Every held view and every transition, the join and the fade's ramp-in included, stayed inside gate 6, at 40 calls and 108,129 triangles at most. Each join holds the home frame through two stalls of about two seconds, filed as [#1495](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1495).
 
 ### 7.8 The calls this section took
 
@@ -357,11 +357,11 @@ The owner's calls: six on #1455, six on #1461, five on #1457, five on #1459, two
 
 Sorrowgate is the only placed map. This inventory, taken for [#1463](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1463) at `2535d6ee`, lists what each of the nineteen other mission grounds and the three skirmish maps would need before it is placed. It decides nothing. Each row is where a migration starts, and §7.2's anchor table changes first, by its own rule.
 
-**What every migration moves.** `worldRegionForMission` in `packages/shared/src/world.ts` answers for the prologue alone, and the world's tests assert that every other mission is unplaced. The regions, the placed ground and the authored surrounds in `packages/shared/src/rift.ts` hold Sorrowgate alone, and only its ground has left the backend for `packages/shared/src/ground.ts`. A map joins by all four, and the room names its region at the join as it names Sorrowgate's (§7.1).
+**What every migration moves.** `worldRegionForMission` in `packages/shared/src/world.ts` answers for the prologue alone, and the world's tests assert that every other mission is unplaced. The placed regions beside it hold Sorrowgate alone, and so do the placed ground and the authored surrounds in `packages/shared/src/rift.ts`; only Sorrowgate's ground has left the backend, for `packages/shared/src/ground.ts`. A map joins by all four, and the room names its region at the join as it names Sorrowgate's (§7.1).
 
 **What blocks none of them.** Every map's props are placed from its biomes by the same placer the pilot uses, and every one is a model of the approved vocabulary: 44–141 a mission map and 225–367 a skirmish map, under the layer's cap of 600. A mission's structures are its parties, never atlas ground. Live ground is rare and interior: besides Sorrowgate's arch, only *Asset Recovery*, *Deep Furrow* and *In Writing*, and the Directorate's *Conclave* repaint ground, and none of their regions touches a map edge.
 
-**Placing a map.** "Placed at its anchor" below puts the map's centre on its §7.2 anchor, or the place the anchor names on it where the map draws that place. "Fits" means the map lies inside its region's rectangle and its whole §7.3 surround inside the atlas, as `worldRegionProblems` checks. The nearest anchor stands in for a map with none.
+**Placing a map.** "Placed at its anchor" below puts the map's centre on its §7.2 anchor, or the place the anchor names on it where the map draws that place. "Fits" means the map lies inside its region's rectangle, and its whole §7.3 surround inside the atlas, which `worldRegionProblems` checks. The nearest anchor stands in for a map with none.
 
 | Map | Missions | Ground (§7.2) | Placed at its anchor | Settled first |
 | --- | --- | --- | --- | --- |

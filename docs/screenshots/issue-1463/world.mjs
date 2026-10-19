@@ -6,12 +6,15 @@
 // a lost signal and its reconnection, Return to port, and two more entries and
 // exits. Every held view is a gate-6 station: the frame's calls and triangles,
 // GPU time unqueued and queued, the props drawn and §7.5's held regions. Each
-// transition — the travel in, the return — is a station too, with the most
-// calls and triangles any of its frames drew.
+// transition is a station too, with the most calls, triangles, textures, held
+// regions and requests in flight any of its frames drew: an entry from Descend
+// through the travel, the join and the fade's 0.8 s ramp-in to the first
+// second at full strength, and a return from Abandon to the board's frame.
 //
 // Run on the named GPU, unpaced, at both ratios (VIEW_DPR=1 and 1.5):
-//   UNPACED=1 VIEW_DPR=1 node .dev-loop/drive-board-tmp.mjs --headed --channel chrome \
-//     --url http://localhost:5173/ --out <dir> --steps docs/screenshots/issue-1463/world.mjs
+//   UNPACED=1 VIEW_DPR=1 READINGS=<dir>/readings.json node .dev-loop/drive-board-tmp.mjs \
+//     --headed --channel chrome --url http://localhost:5173/ --out <dir> \
+//     --steps docs/screenshots/issue-1463/world.mjs
 // drive-board-tmp.mjs is drive.mjs minus its title, Solo and lobby steps, so
 // the module starts on the title screen. About 16 minutes a run: the arch
 // falls at 10:40 of the match, and the mission has no faster clock.
@@ -86,7 +89,16 @@ export default async ({ page, shot }) => {
    */
   const transition = async (name, run) => {
     await page.evaluate((label) => {
-      const s = { maxCalls: 0, maxTris: 0, frames: 0, maxTextures: 0, on: true, long: [] };
+      const s = {
+        maxCalls: 0,
+        maxTris: 0,
+        frames: 0,
+        maxTextures: 0,
+        maxResident: 0,
+        maxPending: 0,
+        on: true,
+        long: [],
+      };
       window.__sample1463 = s;
       const t0 = performance.now();
       let last = t0;
@@ -98,6 +110,9 @@ export default async ({ page, shot }) => {
           s.maxCalls = Math.max(s.maxCalls, p.drawCalls);
           s.maxTris = Math.max(s.maxTris, p.triangles);
           s.maxTextures = Math.max(s.maxTextures, p.textures);
+          // §7.5's bounds bind while the camera moves: two regions, two requests.
+          s.maxResident = Math.max(s.maxResident, p.world?.detailResident?.length ?? 0);
+          s.maxPending = Math.max(s.maxPending, p.world?.detailPending ?? 0);
         }
         // Where in the transition a long frame lands: the camera's dolly says
         // whether it was moving, `sessionGround` whether the room had joined.
@@ -132,6 +147,8 @@ export default async ({ page, shot }) => {
       maxCalls: r.sample.maxCalls,
       maxTriangles: r.sample.maxTris,
       maxTextures: r.sample.maxTextures,
+      maxResident: r.sample.maxResident,
+      maxPending: r.sample.maxPending,
       longFrames: r.sample.long,
       avgGpuMs: r.station?.avgGpuMs,
       worstGpuMs: r.station?.worstGpuMs,
@@ -148,24 +165,32 @@ export default async ({ page, shot }) => {
     });
   };
 
-  /** Slot -> briefing -> Descend -> travel -> join: the first state drawn. */
+  /**
+   * Slot -> briefing -> Descend -> travel -> join -> the fade's ramp-in. The
+   * window stays open until the session's force is drawn with the fade at full
+   * strength, and a second after, so the frames that draw the overview and the
+   * session together are inside it.
+   */
   const enter = async (tag) => {
     await page.locator('.campaign-slot').first().click();
     await page.getByRole('region', { name: 'Briefing' }).waitFor();
-    await transition(`travel-in${tag}`, async () => {
+    await transition(`entry${tag}`, async () => {
       await page.getByRole('button', { name: 'Descend' }).click();
       await page.waitForSelector('.travel-bar', { timeout: 10000 }).catch(() => {});
       if (tag === '') {
         await page.waitForTimeout(1200);
         await shot('travel-mid');
       }
-      await page.waitForSelector('.travel-bar', { state: 'detached', timeout: 60000 });
+      await page.waitForFunction(
+        () => {
+          const p = window.__perspectiveProbe?.();
+          return p?.world?.sessionGround === true && p.units > 0 && p.world.borderStrength === 1;
+        },
+        null,
+        { timeout: 60000 }
+      );
+      await page.waitForTimeout(1000);
     });
-    await page.waitForFunction(
-      () => window.__perspectiveProbe?.()?.world?.sessionGround === true && window.__perspectiveProbe().units > 0,
-      null,
-      { timeout: 60000 }
-    );
     return Date.now();
   };
 
@@ -231,9 +256,6 @@ export default async ({ page, shot }) => {
   await page.mouse.move(Math.max(...xs) + pad, Math.max(...ys) + pad, { steps: 4 });
   await page.mouse.up();
   await page.waitForTimeout(500);
-  // Silent running first, as the silence order asks: the flight moves under 20.
-  await page.keyboard.press('Space');
-  await page.waitForTimeout(300);
   const view = page.viewportSize();
   await page.mouse.click(view.width / 2, view.height / 2 - 120, { button: 'right' });
   await page.waitForTimeout(2500);
@@ -261,9 +283,9 @@ export default async ({ page, shot }) => {
   await page.waitForTimeout(2000);
   await shot('survey');
   await station('survey');
-  // A right click on the exterior, about 6 km west of the map's middle in the
-  // survey frame, with the flight still selected: refused on the client (§7.4
-  // rule 3).
+  // A right click on the exterior, about 5 km west of the map's middle and
+  // 3 km past its edge in the survey frame, with the flight still selected:
+  // refused on the client (§7.4 rule 3).
   // The pick is dropped before it is an order, so nothing is said: the proof
   // is that no route is drawn and the flight stays where it was.
   const flight = () =>

@@ -2,16 +2,16 @@
   {
     "station": "board",
     "avgGpuMs": 0.45,
-    "worstGpuMs": 0.47,
-    "queuedGpuMs": 0.46,
+    "worstGpuMs": 0.49,
+    "queuedGpuMs": 0.41,
     "queue": {
       "steps": 12000,
-      "avgMs": 3.59,
+      "avgMs": 3.72,
       "frames": 16,
       "dropped": 0
     },
-    "avgFrameMs": 0.55,
-    "avgConnMs": 0.45,
+    "avgFrameMs": 0.57,
+    "avgConnMs": 0.39,
     "calls": 16,
     "triangles": 93025,
     "passes": [
@@ -31,8 +31,8 @@
     },
     "eye": {
       "xM": 2466,
-      "zM": 15724,
-      "depthM": -87909
+      "zM": 15725,
+      "depthM": -87907
     },
     "distance": 24000,
     "pitchDeg": 55,
@@ -60,7 +60,7 @@
     },
     "units": 0,
     "canvases": 1,
-    "heapMB": 43
+    "heapMB": 44
   },
   {
     "resources": "board-first",
@@ -82,9 +82,9 @@
       "depthM": null
     },
     "eye": {
-      "xM": 2535,
-      "zM": 15789,
-      "depthM": -87701
+      "xM": 2534,
+      "zM": 15793,
+      "depthM": -87689
     },
     "distance": 24000,
     "pitchDeg": 55,
@@ -115,40 +115,91 @@
     "heapMB": 48
   },
   {
-    "station": "travel-in",
+    "station": "entry",
     "transition": true,
-    "ms": 2762,
-    "sampledFrames": 4493,
-    "maxCalls": 16,
-    "maxTriangles": 93025,
-    "maxTextures": 5,
+    "ms": 8997,
+    "sampledFrames": 4916,
+    "maxCalls": 37,
+    "maxTriangles": 108129,
+    "maxTextures": 14,
+    "maxResident": 1,
+    "maxPending": 0,
     "longFrames": [
       {
-        "atMs": 2552,
-        "ms": 195,
+        "atMs": 2544,
+        "ms": 203,
         "distance": 2600,
         "sessionGround": false,
         "travelBar": null
+      },
+      {
+        "atMs": 2756,
+        "ms": 190,
+        "distance": 2600,
+        "sessionGround": false,
+        "travelBar": null
+      },
+      {
+        "atMs": 2945,
+        "ms": 127,
+        "distance": 2600,
+        "sessionGround": false,
+        "travelBar": null
+      },
+      {
+        "atMs": 3110,
+        "ms": 2358,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      },
+      {
+        "atMs": 5468,
+        "ms": 1845,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      },
+      {
+        "atMs": 7313,
+        "ms": 154,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      },
+      {
+        "atMs": 7466,
+        "ms": 103,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      },
+      {
+        "atMs": 7693,
+        "ms": 274,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
       }
     ],
-    "avgGpuMs": null,
-    "worstGpuMs": null,
-    "worstFrameMs": 3.9,
+    "avgGpuMs": 0.95,
+    "worstGpuMs": 204.44,
+    "worstFrameMs": 2477,
     "gpuTimer": "timing",
     "pixelRatio": 1.5
   },
   {
     "station": "arrival",
-    "avgGpuMs": 0.92,
-    "worstGpuMs": 2.03,
-    "queuedGpuMs": 0.84,
+    "avgGpuMs": 0.91,
+    "worstGpuMs": 2.12,
+    "queuedGpuMs": 0.82,
     "queue": {
       "steps": 12000,
-      "avgMs": 3.72,
-      "frames": 50,
+      "avgMs": 3.86,
+      "frames": 51,
       "dropped": 0
     },
-    "avgFrameMs": 2.19,
+    "avgFrameMs": 2.18,
     "avgConnMs": 0.54,
     "calls": 32,
     "triangles": 80049,
@@ -168,9 +219,9 @@
       "depthM": null
     },
     "eye": {
-      "xM": 2551,
+      "xM": 2553,
       "zM": 3637,
-      "depthM": -8115
+      "depthM": -8118
     },
     "distance": 2600,
     "pitchDeg": 55,
@@ -194,7 +245,7 @@
     },
     "units": 6,
     "canvases": 2,
-    "heapMB": 132
+    "heapMB": 134
   },
   {
     "arch": "standing",
@@ -209,16 +260,16 @@
   {
     "station": "escorts-moving",
     "avgGpuMs": 0.92,
-    "worstGpuMs": 4.34,
-    "queuedGpuMs": 0.84,
+    "worstGpuMs": 4.15,
+    "queuedGpuMs": 0.83,
     "queue": {
       "steps": 12000,
-      "avgMs": 3.82,
+      "avgMs": 3.86,
       "frames": 64,
       "dropped": 0
     },
-    "avgFrameMs": 2.9,
-    "avgConnMs": 0.59,
+    "avgFrameMs": 2.94,
+    "avgConnMs": 0.62,
     "calls": 32,
     "triangles": 80049,
     "passes": [
@@ -237,8 +288,8 @@
       "depthM": null
     },
     "eye": {
-      "xM": 2546,
-      "zM": 2638,
+      "xM": 2547,
+      "zM": 2640,
       "depthM": -10341
     },
     "distance": 2600,
@@ -263,25 +314,29 @@
     },
     "units": 6,
     "canvases": 2,
-    "heapMB": 77
+    "heapMB": 169
   },
   {
     "station": "close",
-    "avgGpuMs": 0.92,
-    "worstGpuMs": 2.26,
-    "queuedGpuMs": 0.83,
+    "avgGpuMs": 1.51,
+    "worstGpuMs": 4.89,
+    "queuedGpuMs": 1.38,
     "queue": {
       "steps": 12000,
-      "avgMs": 3.8,
-      "frames": 61,
+      "avgMs": 3.78,
+      "frames": 60,
       "dropped": 0
     },
-    "avgFrameMs": 2.93,
-    "avgConnMs": 0.6,
-    "calls": 32,
-    "triangles": 80049,
+    "avgFrameMs": 3.17,
+    "avgConnMs": 0.75,
+    "calls": 40,
+    "triangles": 80076,
     "passes": [
       "canvas",
+      "depth-copy",
+      "halo-source",
+      "halo-spread",
+      "halo-composite",
       "split-copy",
       "split"
     ],
@@ -296,9 +351,9 @@
       "depthM": null
     },
     "eye": {
-      "xM": 2550,
-      "zM": 3583,
-      "depthM": -5237
+      "xM": 2549,
+      "zM": 3584,
+      "depthM": -5234
     },
     "distance": 1800,
     "pitchDeg": 55,
@@ -322,21 +377,21 @@
     },
     "units": 6,
     "canvases": 2,
-    "heapMB": 142
+    "heapMB": 83
   },
   {
     "station": "low",
-    "avgGpuMs": 0.84,
-    "worstGpuMs": 2.43,
+    "avgGpuMs": 0.86,
+    "worstGpuMs": 3.02,
     "queuedGpuMs": 0.74,
     "queue": {
       "steps": 12000,
-      "avgMs": 3.81,
+      "avgMs": 3.85,
       "frames": 71,
       "dropped": 0
     },
-    "avgFrameMs": 2.98,
-    "avgConnMs": 0.6,
+    "avgFrameMs": 3.33,
+    "avgConnMs": 0.71,
     "calls": 33,
     "triangles": 80049,
     "passes": [
@@ -355,9 +410,9 @@
       "depthM": null
     },
     "eye": {
-      "xM": 2551,
+      "xM": 2552,
       "zM": 5975,
-      "depthM": -1870
+      "depthM": -1871
     },
     "distance": 3500,
     "pitchDeg": 12,
@@ -381,21 +436,21 @@
     },
     "units": 6,
     "canvases": 2,
-    "heapMB": 206
+    "heapMB": 107
   },
   {
     "station": "survey",
-    "avgGpuMs": 0.78,
-    "worstGpuMs": 4.66,
+    "avgGpuMs": 0.77,
+    "worstGpuMs": 2.09,
     "queuedGpuMs": 0.66,
     "queue": {
       "steps": 12000,
       "avgMs": 3.83,
-      "frames": 78,
+      "frames": 72,
       "dropped": 0
     },
-    "avgFrameMs": 3.01,
-    "avgConnMs": 0.56,
+    "avgFrameMs": 3.11,
+    "avgConnMs": 0.6,
     "calls": 32,
     "triangles": 80049,
     "passes": [
@@ -414,9 +469,9 @@
       "depthM": null
     },
     "eye": {
-      "xM": 2490,
-      "zM": 2478,
-      "depthM": -62418
+      "xM": 2487,
+      "zM": 2470,
+      "depthM": -62420
     },
     "distance": 14087,
     "pitchDeg": 88,
@@ -440,70 +495,70 @@
     },
     "units": 6,
     "canvases": 2,
-    "heapMB": 112
+    "heapMB": 154
   },
   {
     "refusedOutside": {
       "before": [
         [
-          87,
-          2538,
-          2273
+          53,
+          2537,
+          2272
         ],
         [
-          88,
-          2532,
+          54,
+          2531,
           2331
         ],
         [
-          89,
-          2584,
-          2308
+          55,
+          2583,
+          2307
         ],
         [
-          90,
-          2559,
-          2217
+          56,
+          2558,
+          2216
         ],
         [
-          91,
+          57,
           2420,
           2900
         ],
         [
-          92,
+          58,
           2680,
           2900
         ]
       ],
       "after": [
         [
-          87,
-          2540,
-          2272
+          53,
+          2539,
+          2271
         ],
         [
-          88,
-          2530,
-          2330
+          54,
+          2528,
+          2329
         ],
         [
-          89,
-          2583,
-          2311
+          55,
+          2582,
+          2310
         ],
         [
-          90,
+          56,
           2559,
           2215
         ],
         [
-          91,
+          57,
           2420,
           2900
         ],
         [
-          92,
+          58,
           2680,
           2900
         ]
@@ -512,17 +567,17 @@
   },
   {
     "station": "corner-se",
-    "avgGpuMs": 0.95,
-    "worstGpuMs": 3.25,
-    "queuedGpuMs": 0.85,
+    "avgGpuMs": 0.96,
+    "worstGpuMs": 2.36,
+    "queuedGpuMs": 0.86,
     "queue": {
       "steps": 12000,
-      "avgMs": 3.85,
-      "frames": 65,
+      "avgMs": 3.83,
+      "frames": 66,
       "dropped": 0
     },
-    "avgFrameMs": 2.91,
-    "avgConnMs": 0.59,
+    "avgFrameMs": 3.03,
+    "avgConnMs": 0.63,
     "calls": 32,
     "triangles": 80049,
     "passes": [
@@ -542,8 +597,8 @@
     },
     "eye": {
       "xM": 7432,
-      "zM": 6427,
-      "depthM": -9373
+      "zM": 6429,
+      "depthM": -9365
     },
     "distance": 4200,
     "pitchDeg": 35,
@@ -567,21 +622,21 @@
     },
     "units": 6,
     "canvases": 2,
-    "heapMB": 147
+    "heapMB": 197
   },
   {
     "station": "corner-nw",
-    "avgGpuMs": 0.85,
-    "worstGpuMs": 4.07,
+    "avgGpuMs": 0.86,
+    "worstGpuMs": 2.04,
     "queuedGpuMs": 0.75,
     "queue": {
       "steps": 12000,
-      "avgMs": 3.81,
-      "frames": 67,
+      "avgMs": 3.82,
+      "frames": 70,
       "dropped": 0
     },
-    "avgFrameMs": 2.95,
-    "avgConnMs": 0.58,
+    "avgFrameMs": 3.1,
+    "avgConnMs": 0.64,
     "calls": 32,
     "triangles": 80049,
     "passes": [
@@ -600,9 +655,9 @@
       "depthM": null
     },
     "eye": {
-      "xM": -2787,
-      "zM": -2790,
-      "depthM": -4962
+      "xM": -2788,
+      "zM": -2789,
+      "depthM": -4964
     },
     "distance": 4200,
     "pitchDeg": 20,
@@ -626,23 +681,23 @@
     },
     "units": 6,
     "canvases": 2,
-    "heapMB": 91
+    "heapMB": 155
   },
   {
-    "waitingForCollapseS": 571
+    "waitingForCollapseS": 572
   },
   {
     "station": "collapse",
     "avgGpuMs": 0.98,
-    "worstGpuMs": 2.22,
+    "worstGpuMs": 2.73,
     "queuedGpuMs": 0.89,
     "queue": {
       "steps": 12000,
-      "avgMs": 3.85,
-      "frames": 68,
+      "avgMs": 3.86,
+      "frames": 74,
       "dropped": 0
     },
-    "avgFrameMs": 3.15,
+    "avgFrameMs": 3.09,
     "avgConnMs": 0.58,
     "calls": 33,
     "triangles": 79541,
@@ -662,9 +717,9 @@
       "depthM": null
     },
     "eye": {
-      "xM": 2003,
-      "zM": 3923,
-      "depthM": -8245
+      "xM": 2004,
+      "zM": 3921,
+      "depthM": -8255
     },
     "distance": 2800,
     "pitchDeg": 50,
@@ -688,7 +743,7 @@
     },
     "units": 6,
     "canvases": 2,
-    "heapMB": 71
+    "heapMB": 100
   },
   {
     "arch": "fallen",
@@ -720,9 +775,9 @@
       "depthM": null
     },
     "eye": {
-      "xM": 1998,
-      "zM": 3929,
-      "depthM": -8222
+      "xM": 1996,
+      "zM": 3928,
+      "depthM": -8226
     },
     "distance": 2800,
     "pitchDeg": 50,
@@ -746,20 +801,20 @@
     },
     "units": 6,
     "canvases": 2,
-    "heapMB": 132
+    "heapMB": 107
   },
   {
     "station": "reconnected",
-    "avgGpuMs": 0.99,
-    "worstGpuMs": 4.72,
+    "avgGpuMs": 1.01,
+    "worstGpuMs": 2.19,
     "queuedGpuMs": 0.89,
     "queue": {
       "steps": 12000,
       "avgMs": 3.84,
-      "frames": 62,
+      "frames": 65,
       "dropped": 0
     },
-    "avgFrameMs": 2.89,
+    "avgFrameMs": 2.99,
     "avgConnMs": 0.58,
     "calls": 33,
     "triangles": 79541,
@@ -779,9 +834,9 @@
       "depthM": null
     },
     "eye": {
-      "xM": 2000,
-      "zM": 3921,
-      "depthM": -8249
+      "xM": 1998,
+      "zM": 3920,
+      "depthM": -8254
     },
     "distance": 2800,
     "pitchDeg": 50,
@@ -805,7 +860,7 @@
     },
     "units": 6,
     "canvases": 2,
-    "heapMB": 106
+    "heapMB": 89
   },
   {
     "arch": "after-reconnect",
@@ -820,46 +875,48 @@
   {
     "station": "return",
     "transition": true,
-    "ms": 5110,
-    "sampledFrames": 5132,
+    "ms": 5098,
+    "sampledFrames": 5293,
     "maxCalls": 33,
     "maxTriangles": 93229,
     "maxTextures": 20,
+    "maxResident": 1,
+    "maxPending": 1,
     "longFrames": [
       {
-        "atMs": 57,
-        "ms": 453,
+        "atMs": 74,
+        "ms": 433,
         "distance": 2800,
         "sessionGround": true,
         "travelBar": null
       },
       {
-        "atMs": 2777,
-        "ms": 55,
-        "distance": 12129,
+        "atMs": 2576,
+        "ms": 167,
+        "distance": 10731,
         "sessionGround": false,
         "travelBar": null
       }
     ],
-    "avgGpuMs": 1.09,
-    "worstGpuMs": 52.3,
-    "worstFrameMs": 60.2,
+    "avgGpuMs": 0.81,
+    "worstGpuMs": 0.96,
+    "worstFrameMs": 176.9,
     "gpuTimer": "timing",
     "pixelRatio": 1.5
   },
   {
     "station": "board-returned",
-    "avgGpuMs": 0.64,
-    "worstGpuMs": 0.67,
-    "queuedGpuMs": 0.59,
+    "avgGpuMs": 0.65,
+    "worstGpuMs": 0.66,
+    "queuedGpuMs": 0.58,
     "queue": {
       "steps": 12000,
-      "avgMs": 3.98,
+      "avgMs": 3.68,
       "frames": 16,
       "dropped": 0
     },
-    "avgFrameMs": 0.75,
-    "avgConnMs": 0.6,
+    "avgFrameMs": 0.74,
+    "avgConnMs": 0.58,
     "calls": 18,
     "triangles": 93165,
     "passes": [
@@ -878,9 +935,9 @@
       "depthM": null
     },
     "eye": {
-      "xM": 2535,
-      "zM": 15729,
-      "depthM": -87894
+      "xM": 2527,
+      "zM": 15757,
+      "depthM": -87804
     },
     "distance": 24000,
     "pitchDeg": 55,
@@ -908,7 +965,7 @@
     },
     "units": 0,
     "canvases": 1,
-    "heapMB": 110
+    "heapMB": 81
   },
   {
     "resources": "board-after-1",
@@ -930,9 +987,9 @@
       "depthM": null
     },
     "eye": {
-      "xM": 2497,
-      "zM": 15807,
-      "depthM": -87646
+      "xM": 2480,
+      "zM": 15803,
+      "depthM": -87658
     },
     "distance": 24000,
     "pitchDeg": 55,
@@ -960,28 +1017,58 @@
     },
     "units": 0,
     "canvases": 1,
-    "heapMB": 110
+    "heapMB": 81
   },
   {
-    "station": "travel-in-2",
+    "station": "entry-2",
     "transition": true,
-    "ms": 3046,
-    "sampledFrames": 591,
-    "maxCalls": 18,
-    "maxTriangles": 93165,
-    "maxTextures": 17,
+    "ms": 8778,
+    "sampledFrames": 1270,
+    "maxCalls": 34,
+    "maxTriangles": 108129,
+    "maxTextures": 20,
+    "maxResident": 1,
+    "maxPending": 0,
     "longFrames": [
       {
-        "atMs": 2584,
-        "ms": 429,
+        "atMs": 2616,
+        "ms": 452,
         "distance": 2600,
         "sessionGround": false,
         "travelBar": null
+      },
+      {
+        "atMs": 3071,
+        "ms": 175,
+        "distance": 2600,
+        "sessionGround": false,
+        "travelBar": null
+      },
+      {
+        "atMs": 3280,
+        "ms": 1800,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      },
+      {
+        "atMs": 5080,
+        "ms": 2022,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      },
+      {
+        "atMs": 7102,
+        "ms": 94,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
       }
     ],
-    "avgGpuMs": null,
-    "worstGpuMs": null,
-    "worstFrameMs": 444.7,
+    "avgGpuMs": 0.92,
+    "worstGpuMs": 108.19,
+    "worstFrameMs": 2009.7,
     "gpuTimer": "timing",
     "pixelRatio": 1.5
   },
@@ -1006,8 +1093,8 @@
     },
     "eye": {
       "xM": 2553,
-      "zM": 3646,
-      "depthM": -8088
+      "zM": 3641,
+      "depthM": -8104
     },
     "distance": 2600,
     "pitchDeg": 55,
@@ -1031,20 +1118,30 @@
     },
     "units": 6,
     "canvases": 2,
-    "heapMB": 143
+    "heapMB": 58
   },
   {
     "station": "return-2",
     "transition": true,
-    "ms": 4728,
-    "sampledFrames": 4927,
+    "ms": 4714,
+    "sampledFrames": 4920,
     "maxCalls": 33,
     "maxTriangles": 93733,
     "maxTextures": 20,
-    "longFrames": [],
-    "avgGpuMs": 1.08,
-    "worstGpuMs": 54.05,
-    "worstFrameMs": 27.8,
+    "maxResident": 1,
+    "maxPending": 1,
+    "longFrames": [
+      {
+        "atMs": 37,
+        "ms": 58,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      }
+    ],
+    "avgGpuMs": 1.22,
+    "worstGpuMs": 83.87,
+    "worstFrameMs": 33.4,
     "gpuTimer": "timing",
     "pixelRatio": 1.5
   },
@@ -1068,9 +1165,9 @@
       "depthM": null
     },
     "eye": {
-      "xM": 2507,
-      "zM": 15728,
-      "depthM": -87897
+      "xM": 2472,
+      "zM": 15754,
+      "depthM": -87814
     },
     "distance": 24000,
     "pitchDeg": 55,
@@ -1098,49 +1195,58 @@
     },
     "units": 0,
     "canvases": 1,
-    "heapMB": 143
+    "heapMB": 74
   },
   {
-    "station": "travel-in-3",
+    "station": "entry-3",
     "transition": true,
-    "ms": 6491,
-    "sampledFrames": 3274,
-    "maxCalls": 24,
-    "maxTriangles": 93733,
+    "ms": 8210,
+    "sampledFrames": 3983,
+    "maxCalls": 34,
+    "maxTriangles": 108129,
     "maxTextures": 20,
+    "maxResident": 1,
+    "maxPending": 0,
     "longFrames": [
       {
-        "atMs": 2528,
-        "ms": 233,
+        "atMs": 2523,
+        "ms": 237,
         "distance": 2600,
         "sessionGround": false,
         "travelBar": null
       },
       {
-        "atMs": 2777,
-        "ms": 87,
+        "atMs": 2771,
+        "ms": 70,
         "distance": 2600,
         "sessionGround": false,
         "travelBar": null
       },
       {
-        "atMs": 2890,
-        "ms": 1732,
+        "atMs": 2860,
+        "ms": 1727,
         "distance": 2600,
         "sessionGround": true,
         "travelBar": null
       },
       {
-        "atMs": 4622,
-        "ms": 1868,
+        "atMs": 4586,
+        "ms": 1916,
+        "distance": 2600,
+        "sessionGround": true,
+        "travelBar": null
+      },
+      {
+        "atMs": 6502,
+        "ms": 101,
         "distance": 2600,
         "sessionGround": true,
         "travelBar": null
       }
     ],
-    "avgGpuMs": 0.49,
-    "worstGpuMs": 0.51,
-    "worstFrameMs": 1903.6,
+    "avgGpuMs": 0.92,
+    "worstGpuMs": 1.8,
+    "worstFrameMs": 1875.7,
     "gpuTimer": "timing",
     "pixelRatio": 1.5
   },
@@ -1164,9 +1270,9 @@
       "depthM": null
     },
     "eye": {
-      "xM": 2552,
-      "zM": 3638,
-      "depthM": -8115
+      "xM": 2553,
+      "zM": 3643,
+      "depthM": -8097
     },
     "distance": 2600,
     "pitchDeg": 55,
@@ -1190,20 +1296,22 @@
     },
     "units": 6,
     "canvases": 2,
-    "heapMB": 127
+    "heapMB": 122
   },
   {
     "station": "return-3",
     "transition": true,
-    "ms": 4657,
-    "sampledFrames": 4992,
+    "ms": 4689,
+    "sampledFrames": 5032,
     "maxCalls": 33,
     "maxTriangles": 93733,
     "maxTextures": 20,
+    "maxResident": 1,
+    "maxPending": 1,
     "longFrames": [],
-    "avgGpuMs": 1.26,
-    "worstGpuMs": 96.18,
-    "worstFrameMs": 19.8,
+    "avgGpuMs": 1.23,
+    "worstGpuMs": 87.53,
+    "worstFrameMs": 23.7,
     "gpuTimer": "timing",
     "pixelRatio": 1.5
   },
@@ -1227,9 +1335,9 @@
       "depthM": null
     },
     "eye": {
-      "xM": 2524,
-      "zM": 15787,
-      "depthM": -87708
+      "xM": 2471,
+      "zM": 15762,
+      "depthM": -87787
     },
     "distance": 24000,
     "pitchDeg": 55,
@@ -1257,6 +1365,6 @@
     },
     "units": 0,
     "canvases": 1,
-    "heapMB": 146
+    "heapMB": 133
   }
 ]
