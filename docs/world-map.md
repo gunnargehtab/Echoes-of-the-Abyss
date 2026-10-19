@@ -265,6 +265,8 @@ A mission starts when its room is joined, so a camera flight after joining would
 
 **Evidence** for a change under this section: the pilot at the close, home, low-pitch and survey views, each paired with a baseline frame of the same camera, the HUD visible; a frame at a border corner; gate 6 measured at pixel ratios 1 and 1.5 on a named GPU, transitions included. **Non-target controls:** the Ventfront Divide skirmish and Radicals render as before.
 
+The pilot was accepted against this list on [#1463](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1463), on a GTX 1070 at both ratios, in one drive per ratio played past the arch's fall: [the acceptance record](screenshots/issue-1463/README.md). Every held view and every transition stayed inside gate 6, at 33 calls and 93,733 triangles at most. Each join holds the home frame through two stalls of about two seconds, filed as [#1495](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1495).
+
 ### 7.8 The calls this section took
 
 The owner's calls: six on #1455, six on #1461, five on #1457, five on #1459, two on #1460, sixteen on #1462 and one on #1488. Each was written with its options; the one taken is named.
