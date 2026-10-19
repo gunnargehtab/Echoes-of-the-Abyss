@@ -19,13 +19,14 @@ attempts' `ERR_INTERNET_DISCONNECTED` console errors alone.
 | After the reconnect, 11:07 | 197 · 181 · 200 · 220 m | 1,510 m |
 | #1463, after the reconnect | 186 · 198 · 206 · 171 m | 1,513 m |
 
-The first three rows match #1463's to the metre, and the reconnect now reads what the fall
+The first two rows match #1463's to the metre, and the reconnect now reads what the fall
 left. The drive also read a 10 × 10 grid at 500 m spacing: three of its 100 points moved
 when the arch fell, and none on the reconnect ([readings.json](readings.json)).
 
 | Frame | What it shows |
 | --- | --- |
 | [fallen](fallen.png) | The court after the fall, over the service lock |
+| [signal lost](signal-lost.png) | The offline drop at 10:51, the overlay over the world |
 | [reconnected](reconnected.png) | The same camera after the reconnect, the overlay gone |
 
 Related: [#1463's readings](../issue-1463/README.md) ·

@@ -7,8 +7,8 @@
  * So the room says so, on the ground's own message: these hold that the
  * prologue names Sorrowgate at join and again on a reconnection after its
  * ground has changed, with writes that replay to the live cells and the live
- * revision, and that
- * every other room — Radicals on the same map included — names nothing.
+ * revision, and that every other room — Radicals on the same map included —
+ * names nothing.
  */
 
 import assert from 'node:assert/strict';

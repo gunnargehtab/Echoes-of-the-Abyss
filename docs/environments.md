@@ -153,7 +153,8 @@ Nothing about it is hidden. Terrain is public on join by design — both command
 standing on it — and a mid-match repaint is that same published fact changing, sent to
 every client as the cells that moved. It resolves nothing per observer and adds no channel
 the Echo Layer does not already own. A client that joins after the collapse is served the
-ground as it *is*; one that was already here is sent the difference.
+ground the match opened on and every write since, so it draws the ground as it is on the
+same relief as one that was already here, which is sent only the difference (#1496).
 
 [campaign.md](campaign.md) §10 states the same fact from the mission side; the two lines
 move together.

@@ -386,7 +386,7 @@ itself, and each is a place this could have gone quietly wrong:
 - **A cursor, not a snapshot.** The terrain keeps its own change log and the client's cursor
   into it is a revision number. A joining client is served the grid the match opened on and
   every write since, which it replays before it draws, so a reconnection at 15:00 lands on a
-  map with the arch already down, and the delta after that is only what it has not seen. Not
+  map with the arch already down, and the delta after that adds nothing it has not seen. Not
   the live grid: the client hashes its relief's noise seed from the ground it is sent, and a
   fallen arch hashed in would re-relieve the whole map under the overlay (#1496).
 - **Cells on the wire, not rectangles.** A rect delta would make both sides redo the

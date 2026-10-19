@@ -76,7 +76,7 @@ import type {
  */
 export { AiDifficulty } from '@echoes/shared';
 
-/** The biome grid, exactly as `Terrain.serialize()` hands it to a client. */
+/** The biome grid in the shape a client is sent, read live from `Terrain.serialize()`. */
 export interface TerrainView {
   cols: number;
   rows: number;
