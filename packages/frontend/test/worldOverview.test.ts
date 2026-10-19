@@ -45,6 +45,7 @@ import {
   seabedRange,
   seabedSeed,
   shadeSeabed,
+  SEABED_PX_PER_CELL,
   SLICED_BAKE_BUDGET_MS,
 } from '../src/game/seabed.ts';
 import { apronFrame, apronMesh, paddedTerrain } from '../src/game/worldBorder.ts';
@@ -745,6 +746,89 @@ describe("another region's detail, where no session holds it (§7.5)", () => {
       .getImageData(pads.west * ppc, pads.north * ppc, bake.width, bake.height).data;
     const own = bake.getContext('2d')!.getImageData(0, 0, bake.width, bake.height).data;
     assert.ok(Buffer.from(patch).equals(Buffer.from(own)), "the map's own skin");
+  });
+
+  it("cuts the session's skins from the baseline the board baked, and shades none at the join (#1495)", async () => {
+    const map = sorrowgate();
+    const { pads } = apronFrame(SORROWGATE_REGION, map.cellM);
+    const padded = paddedTerrain(map, pads, detailGround(SORROWGATE_REGION)!)!;
+    const seed = seabedSeed(map);
+    const range = seabedRange(map);
+    const ppc = SEABED_PX_PER_CELL;
+    const pixels = (canvas: HTMLCanvasElement) =>
+      canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data;
+    /** A padded skin's texels, the mission rectangle's or every other one. */
+    const part = (canvas: HTMLCanvasElement, inside: boolean) => {
+      const data = Buffer.from(pixels(canvas));
+      const row = canvas.width * 4;
+      const x0 = pads.west * ppc * 4;
+      const x1 = x0 + map.cols * ppc * 4;
+      const y0 = pads.north * ppc;
+      const y1 = y0 + map.rows * ppc;
+      const out: Buffer[] = [];
+      for (let y = 0; y < canvas.height; y++) {
+        const line = data.subarray(y * row, (y + 1) * row);
+        if (y < y0 || y >= y1) {
+          if (!inside) out.push(line);
+        } else if (inside) out.push(line.subarray(x0, x1));
+        else out.push(line.subarray(0, x0), line.subarray(x1));
+      }
+      return Buffer.concat(out);
+    };
+    /** The pixels shaded while `run` runs: every shaded rectangle is one `createImageData`. */
+    const shading = (run: () => void): number => {
+      const ctx: { createImageData: (w: number, h: number) => unknown } = Object.getPrototypeOf(
+        document.createElement('canvas').getContext('2d')
+      );
+      const calls = mock.method(ctx, 'createImageData');
+      try {
+        run();
+        return calls.mock.calls.reduce((n, c) => n + c.arguments[0] * c.arguments[1], 0);
+      } finally {
+        calls.mock.restore();
+      }
+    };
+    const skins = (view: PerspectiveView) => ({
+      mission: (internals(view).terrainMesh!.material as MeshBasicMaterial).map!
+        .image as HTMLCanvasElement,
+      apron: (internals(view).apron!.mesh.material as MeshBasicMaterial).map!
+        .image as HTMLCanvasElement,
+    });
+
+    // A board launch: the baseline built before the room's ground arrives.
+    const { view } = await mountPilot(false);
+    const held = residency(view);
+    camera(2_500, 2_000, 6_000, { pitchDeg: 60 });
+    await until(() => held.drawn().includes(SORROWGATE_REGION.id), 'drawn');
+    assert.equal(
+      shading(() => view.setTerrain(map)),
+      0,
+      'no pixel shaded at the join'
+    );
+    const cut = skins(view);
+    // Each skin is the bake it stands for: the mission's whole, and the
+    // apron's outside the mission, where the apron draws; inside, it is the
+    // mission's own.
+    const own = bakeSeabed(map, seed, range);
+    assert.ok(Buffer.from(pixels(cut.mission)).equals(Buffer.from(pixels(own))), "the mission's");
+    const whole = bakeSeabed(padded, seed, range);
+    assert.ok(part(cut.apron, false).equals(part(whole, false)), "the apron's, where it draws");
+    assert.ok(part(cut.apron, true).equals(Buffer.from(pixels(own))), "the mission's inside it");
+
+    // The control: a ground that is not the baseline bakes both skins whole.
+    const { view: other } = await mountPilot(false);
+    const otherHeld = residency(other);
+    await until(() => otherHeld.drawn().includes(SORROWGATE_REGION.id), 'drawn');
+    // A biome, which leaves the seed alone: the seed reads the floor only.
+    const moved = { ...map, biomes: [...map.biomes] };
+    moved.biomes[0] = moved.biomes[0] === 0 ? 1 : 0;
+    assert.equal(seabedSeed(moved), seed);
+    const area = (map.cols * map.rows + padded.cols * padded.rows) * ppc * ppc;
+    assert.equal(
+      shading(() => other.setTerrain(moved)),
+      area,
+      'both baked whole'
+    );
   });
 
   it('builds a detail under the veil, before it is ever resident', async () => {

@@ -386,7 +386,30 @@ class StubContext2D {
   stroke(): void {}
   fillText(): void {}
   strokeText(): void {}
-  drawImage(): void {}
+  /**
+   * A canvas copied unscaled is honest, as the pixel calls are: a skin cut
+   * from one already baked (seabed.ts `cutSeabed`, #1495) would otherwise come
+   * back as zeros a test could not tell from a missing copy. The copy
+   * replaces what is under it, which is exact only for an opaque source drawn
+   * source-over at full alpha with no filter, as every seabed skin is. Every
+   * other draw, and every other source, stays a no-op: nothing here composites
+   * or resamples.
+   */
+  drawImage(source: unknown, ...args: number[]): void {
+    if (!(source instanceof StubCanvas)) return;
+    if (this.globalCompositeOperation !== 'source-over') return;
+    if (this.globalAlpha !== 1 || this.filter !== 'none') return;
+    // (source, dx, dy), or (source, sx, sy, sw, sh, dx, dy, dw, dh) unscaled.
+    const [sx, sy, w, h, dx, dy] =
+      args.length === 2
+        ? [0, 0, source.width, source.height, args[0]!, args[1]!]
+        : args.length === 8 && args[6] === args[2] && args[7] === args[3]
+          ? args
+          : [];
+    if (dy === undefined) return;
+    const from = (source.getContext('2d') as StubContext2D).getImageData(sx!, sy!, w!, h!);
+    this.putImageData(from, dx!, dy);
+  }
   clearRect(): void {}
   fillRect(): void {}
   strokeRect(): void {}

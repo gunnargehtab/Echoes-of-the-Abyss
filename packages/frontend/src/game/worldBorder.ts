@@ -131,6 +131,22 @@ export function missionCells(padded: TerrainPayload, pads: ApronPads): TerrainPa
 }
 
 /**
+ * Whether two grounds are the same cells, cell for cell. Two padded grounds
+ * this calls the same, cut at the same pads, hold the same mission, whose
+ * cells give the seed and depth range a skin is baked on — so they bake the
+ * same skin (#1495).
+ */
+export function sameGround(a: TerrainPayload, b: TerrainPayload): boolean {
+  if (a.cols !== b.cols || a.rows !== b.rows || a.cellM !== b.cellM) return false;
+  if (a.floor.length !== b.floor.length) return false;
+  for (let i = 0; i < a.floor.length; i++) {
+    if (a.floor[i] !== b.floor[i] || a.ceiling[i] !== b.ceiling[i]) return false;
+    if (a.biomes[i] !== b.biomes[i]) return false;
+  }
+  return true;
+}
+
+/**
  * Lay the mission grid's vertices over the padded grid's, in place: a
  * region's baseline detail drawn as a session draws the same ground, the
  * mission mesh inside and the apron round it, which take their relief from
