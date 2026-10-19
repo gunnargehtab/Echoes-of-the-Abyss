@@ -99,11 +99,17 @@ interface Mounted {
  * can take a screenshot has a GPU.
  */
 async function mount(
-  options: { webgl?: boolean; hang?: boolean; props?: Partial<GameCanvasProps> } = {}
+  options: {
+    webgl?: boolean;
+    hang?: boolean;
+    refuse?: boolean;
+    props?: Partial<GameCanvasProps>;
+  } = {}
 ): Promise<Mounted> {
   const room = new StubRoom();
   const net = new StubClient(room);
   if (options.hang === true) net.hang('joinOrCreate');
+  if (options.refuse === true) net.fail('joinOrCreate');
   const app = new HeadlessApplication();
   const gl = new HeadlessWebGLRenderer();
   const hosts = new Map<string, StubElement>();
@@ -1014,6 +1020,118 @@ describe('the shell: the persistent world view', () => {
         Math.abs(gone.frame.distanceM - WORLD.BOARD_DOLLY_M) < 1,
         `${door}, board ${returnsToBoard}: the board opens at its own frame`
       );
+    }
+  });
+
+  it('holds a refused join on the frame, with Retry and Back, one join per Retry (§7.6)', async () => {
+    let exits = 0;
+    const world = await mount({
+      refuse: true,
+      props: { ...pilot.props, travelled: true, returnsToBoard: true, onExit: () => (exits += 1) },
+    });
+    const joins = () => world.net.calls.filter((call) => call.method === 'joinOrCreate').length;
+    const buttons = (label: string) =>
+      world.tree.root.findAll(
+        (node) =>
+          node.type === 'button' &&
+          node.children.some((child) => typeof child === 'string' && child === label)
+      );
+    const held = () =>
+      world.tree.root.findAll(
+        (node) =>
+          typeof node.props.className === 'string' &&
+          node.props.className.split(' ').includes('game-overlay-held')
+      ).length === 1;
+    try {
+      assert.ok(
+        shows(world.tree, 'The room refused the join, or did not answer.'),
+        'what failed is said'
+      );
+      assert.ok(held(), 'on the bar at the foot of the frame the travel held, not glass');
+      assert.ok(
+        world.tree.root.find((node) => node.props.className === 'game-root game-root-held'),
+        'the HUD still detached'
+      );
+      assert.equal(buttons('Return to port').length, 0, 'no seat was taken, so none is left');
+      assert.equal(joins(), 1);
+
+      // The server is now simply not there: the retry stays in flight.
+      world.net.hang('joinOrCreate');
+      const retry = buttons('Retry')[0]!.props as { onClick: () => void };
+      await act(async () => {
+        retry.onClick();
+        retry.onClick();
+      });
+      await world.settle();
+      assert.equal(joins(), 2, 'two presses, one join');
+      assert.ok(shows(world.tree, 'Listening…'), 'waiting again, on the same held frame');
+      assert.ok(held());
+      assert.equal(buttons('Retry').length, 0, 'and nothing to press while it waits');
+    } finally {
+      await world.unmount();
+    }
+
+    // Back is Return to port's road: the board, by the return travel.
+    const refused = await mount({
+      refuse: true,
+      props: { ...pilot.props, travelled: true, returnsToBoard: true, onExit: () => (exits += 1) },
+    });
+    try {
+      const back = refused.tree.root.find(
+        (node) => node.type === 'button' && node.children.some((child) => child === 'Back')
+      );
+      await act(async () => {
+        (back.props as { onClick: () => void }).onClick();
+      });
+      assert.equal(exits, 1);
+    } finally {
+      await refused.unmount();
+    }
+  });
+
+  it('keeps the world through a lost signal, and draws the ground the room re-sends (§7.6)', async () => {
+    // "A disconnect keeps the world view and re-attaches through the existing
+    // reconnection grace; the ground is re-sent by the server, never restored
+    // from the atlas, which would resurrect a fallen arch."
+    const world = await mount(pilot);
+    try {
+      await joinMatch(world);
+      const view = worldView.current!;
+      const ground = () => (view as unknown as { terrain: { floor: number[] } | null }).terrain;
+      world.room.drop();
+      await world.settle();
+      assert.ok(shows(world.tree, 'Signal lost'), 'the player is told');
+      assert.equal(worldView.current === view, true, 'the same world view');
+      assert.equal(ground() !== null, true, "the session's ground is still drawn");
+      world.room.reconnect();
+      // The room re-sends its ground as it now is: a cell fallen since the join.
+      const now = cannedTerrain();
+      now.floor[0] = now.floor[0]! + 300;
+      world.room.emit(SERVER_MSG.terrain, { ...now, revision: 9 });
+      await world.settle();
+      assert.equal(shows(world.tree, 'Signal lost'), false, 'back in the room');
+      assert.equal(ground()!.floor[0], now.floor[0], "the room's ground, not the one before");
+    } finally {
+      await world.unmount();
+    }
+  });
+
+  it('offers Retry and Back over the glass for a launch that did not travel', async () => {
+    const world = await mount({ refuse: true });
+    try {
+      assert.ok(shows(world.tree, 'No signal'));
+      assert.ok(shows(world.tree, 'The room refused the join, or did not answer.'));
+      const labels = world.tree.root
+        .findAll((node) => node.type === 'button')
+        .map((node) => node.children.join(''));
+      assert.deepEqual(labels, ['Retry', 'Back']);
+      assert.equal(
+        world.tree.root.findAll((node) => node.props.className === 'game-overlay').length,
+        1,
+        'the glass, as a lost signal has'
+      );
+    } finally {
+      await world.unmount();
     }
   });
 

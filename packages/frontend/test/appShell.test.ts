@@ -17,12 +17,15 @@
 import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { createElement } from 'react';
-import { MissionOutcome, PROLOGUE_SORROWGATE_HEADER } from '@echoes/shared';
+import { Faction, MissionOutcome, PROLOGUE_SORROWGATE_HEADER } from '@echoes/shared';
+import { PALETTES, setActivePalette, type PaletteName } from '../src/game/palette.ts';
 import { recordMissionResult } from '../src/progression/store.ts';
 import { clearStorage, installStorage, setSearch } from './support/headless.ts';
 import { installHeadlessAudio, uninstallHeadlessAudio } from './support/headlessAudio.ts';
 import { click, render, type Rendered } from './support/screen.ts';
 import App from '../src/App.tsx';
+import { reloadForRetry } from '../src/menu/launch.ts';
+import { saveSettings } from '../src/settings/store.ts';
 
 /** Mount the shell on a given query string. */
 async function shell(search = ''): Promise<Rendered> {
@@ -64,6 +67,106 @@ describe('the shell: where it opens', () => {
       } finally {
         await view.unmount();
       }
+    }
+  });
+
+  it("reopens on the board after a board launch's load-failure Retry, once (§7.6)", async () => {
+    // A browser keeps a failed module fetch for the page's life, so Retry
+    // reloads; the board launch's note brings it back to the board.
+    const g = globalThis as unknown as { window: { location: { reload?: () => void } } };
+    let reloads = 0;
+    g.window.location.reload = () => void (reloads += 1);
+    try {
+      reloadForRetry(PROLOGUE_SORROWGATE_HEADER.id);
+      assert.equal(reloads, 1, 'Retry reloads the page');
+      const view = await shell();
+      try {
+        assert.ok(view.allByClass('campaign-slot').length > 0, 'on the board, not the title');
+      } finally {
+        await view.unmount();
+      }
+      const again = await shell();
+      try {
+        assert.ok(again.shows(TITLE), 'the note was one-shot: the next load is the title');
+      } finally {
+        await again.unmount();
+      }
+      // Any other launch's Retry reloads with no note: a direct link's own
+      // address re-enters its match, and a title launch opens on the title.
+      reloadForRetry(PROLOGUE_SORROWGATE_HEADER.id);
+      reloadForRetry(undefined);
+      assert.equal(reloads, 3);
+      const plain = await shell();
+      try {
+        assert.ok(plain.shows(TITLE));
+      } finally {
+        await plain.unmount();
+      }
+      reloadForRetry(PROLOGUE_SORROWGATE_HEADER.id);
+      const linked = await shell(`?mission=${PROLOGUE_SORROWGATE_HEADER.id}`);
+      try {
+        assert.equal(linked.shows(TITLE), false, 'a direct link still goes into the water');
+        assert.equal(linked.allByClass('campaign-slot').length, 0, 'not the board');
+      } finally {
+        await linked.unmount();
+      }
+    } finally {
+      delete g.window.location.reload;
+    }
+  });
+});
+
+/**
+ * The colour-vision palette is module state (palette.ts), and the board, its
+ * chart and the briefing read it at render. A page that has mounted no match
+ * yet must still be in the player's palette (docs/ui-ux.md §11, §14).
+ */
+describe('the shell: the colour-vision palette off the water', () => {
+  /** The board's column heads' inks, in board order. */
+  const heads = (view: Rendered): string[] =>
+    view.allByClass('campaign-head').map((head) => head.props.style['--faction']);
+  /** The four columns' glows in one palette, in the same order. */
+  const glows = (name: PaletteName): string[] =>
+    [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate, Faction.Hadron].map(
+      (faction) => `#${PALETTES[name].faction[faction].glow.toString(16).padStart(6, '0')}`
+    );
+
+  afterEach(() => setActivePalette('standard'));
+
+  it('inks the board in the stored palette on a fresh page', async () => {
+    saveSettings({ palette: 'deuteranopia' });
+    // A fresh page: nothing has applied the stored choice yet.
+    setActivePalette('standard');
+    const view = await shell();
+    try {
+      await click(view, 'Campaign');
+      assert.deepEqual(heads(view), glows('deuteranopia'));
+      // The first Ledger slot's briefing, spoken in a navy's register.
+      const slot = view.allByClass('campaign-slot').at(1);
+      assert.ok(slot !== undefined, 'the board has a Ledger slot');
+      await view.act(() => {
+        (slot.props as { onClick?: () => void }).onClick?.();
+      });
+      const speaker = view.byClass('briefing-speaker').props.style['--faction'];
+      assert.ok(glows('deuteranopia').includes(speaker), `the briefing's ink ${speaker}`);
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('inks the board in a palette chosen in Settings, with no match between', async () => {
+    const view = await shell();
+    try {
+      await click(view, 'Campaign');
+      assert.deepEqual(heads(view), glows('standard'));
+      await click(view, 'Back');
+      await click(view, 'Settings');
+      await click(view, 'Tritanopia');
+      await click(view, 'Back');
+      await click(view, 'Campaign');
+      assert.deepEqual(heads(view), glows('tritanopia'));
+    } finally {
+      await view.unmount();
     }
   });
 });
@@ -257,6 +360,67 @@ describe('the shell: the world behind the board', () => {
       assert.equal(view.allByClass('campaign-slot').length, 0);
     } finally {
       await view.unmount();
+    }
+  });
+
+  it('reopens the board on the slot left from, with focus, by every way back', async () => {
+    // docs/ui-ux.md §14, "Keyboard": an entry lands on the first slot that
+    // opens and takes no focus; a return lands on its slot, lit, and takes it.
+    const lit = () => view.byClass('campaign-chart-title').props.children as string;
+    const focused = () => view.focused()?.name ?? '';
+    // The first Ledger slot, which the board titles without its campaign's name.
+    const ledger = { id: 'ledger-asset-recovery', name: 'Asset Recovery' };
+    const prologue = PROLOGUE_SORROWGATE_HEADER.name;
+    const view = await shell();
+    try {
+      await click(view, 'Campaign');
+      assert.equal(lit(), prologue, 'an entry lands on the first slot that opens');
+      assert.equal(focused().includes(prologue), false, 'and takes no focus');
+
+      // The record is not a slot: its Back lands as an entry does, and gives
+      // focus back to the door that opened it.
+      await click(view, 'The record');
+      await click(view, 'Back');
+      assert.equal(lit(), prologue, "the record's Back lands as an entry does");
+      assert.equal(focused(), 'The record', "and focuses the record's door");
+
+      // A briefing's Back, from the first Ledger slot.
+      const slot = view.allByClass('campaign-slot').at(1)!;
+      await view.act(() => {
+        (slot.props as { onClick?: () => void }).onClick?.();
+      });
+      await click(view, 'Back');
+      assert.equal(lit(), ledger.name, "the briefing's Back lands on its slot");
+      assert.ok(focused().includes(ledger.name), `focus on it, not ${focused()}`);
+
+      // Return to port, from the prologue's board launch. A travel's Cancel
+      // and a failure's Back call the same way back; the shell's travel ends
+      // before either can be pressed here, so the GPU drive presses them.
+      await click(view, 'Back');
+      await boardBriefing(view);
+      await click(view, 'Descend');
+      await until(view, () => inMatch(view), 'the join');
+      await click(view, 'Return to port');
+      assert.equal(lit(), prologue);
+      assert.ok(focused().includes(prologue), `Return to port focuses it, not ${focused()}`);
+    } finally {
+      await view.unmount();
+    }
+
+    // A load failure's Retry reloads onto the slot its launch left from.
+    const g = globalThis as unknown as { window: { location: { reload?: () => void } } };
+    g.window.location.reload = () => undefined;
+    try {
+      reloadForRetry(ledger.id);
+      const reopened = await shell();
+      try {
+        assert.equal(reopened.byClass('campaign-chart-title').props.children, ledger.name);
+        assert.ok((reopened.focused()?.name ?? '').includes(ledger.name));
+      } finally {
+        await reopened.unmount();
+      }
+    } finally {
+      delete g.window.location.reload;
     }
   });
 

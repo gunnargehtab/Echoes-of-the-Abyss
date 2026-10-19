@@ -9,6 +9,52 @@
 
 import { worldRegionForMission } from '@echoes/shared';
 
+/**
+ * The screen a load failure's Retry reopens after reloading (§7.6, "A load or
+ * join failure"). A browser keeps a failed module fetch for the life of the
+ * page — Chrome 155 answered a second import of one from its module map, with
+ * no request — so Retry reloads, and this one-shot note in `sessionStorage`
+ * brings a board launch back to the board.
+ */
+const REOPEN_KEY = 'echoes.reopen';
+
+/**
+ * Reload for a load failure's Retry. A board launch names its mission, so the
+ * board reopens on that slot (docs/ui-ux.md §14, "Keyboard"); any other launch
+ * names none.
+ */
+export function reloadForRetry(board: string | undefined): void {
+  try {
+    if (board !== undefined) window.sessionStorage.setItem(REOPEN_KEY, board);
+    else window.sessionStorage.removeItem(REOPEN_KEY);
+  } catch {
+    // Storage refused: the reload opens on the title, which is still a way back.
+  }
+  window.location.reload();
+}
+
+/**
+ * The mission whose slot this page was reloaded to reopen the board on, if
+ * any. Read, not taken: development's StrictMode runs the shell's initial state
+ * twice, so the note is forgotten after mount (`forgetReopen`).
+ */
+export function reopenedFrom(): string | null {
+  try {
+    return window.sessionStorage.getItem(REOPEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/** Forget the note, once the shell has opened on it. */
+export function forgetReopen(): void {
+  try {
+    window.sessionStorage.removeItem(REOPEN_KEY);
+  } catch {
+    // Nothing was kept.
+  }
+}
+
 /** A launch from the board, travelling before its room is joined. */
 export interface TravelState {
   kind: 'travel';
@@ -21,6 +67,11 @@ export interface TravelState {
   drew: boolean;
   /** The match's own code has loaded. */
   prepared: boolean;
+  /**
+   * The match's own code failed to load (§7.6, "A load or join failure"):
+   * nothing is joined, and the bar offers Retry and Back.
+   */
+  loadFailed: boolean;
 }
 
 /**
@@ -41,6 +92,7 @@ export function startTravel(missionId: string): TravelState {
     settled: false,
     drew: false,
     prepared: false,
+    loadFailed: false,
   };
 }
 
@@ -50,7 +102,21 @@ export function startTravel(missionId: string): TravelState {
  * drawn at all, so there was no travel and nothing of it to wait on.
  */
 export function readyToJoin(travel: TravelState, worldFailed: boolean): boolean {
+  // A failed load is never `prepared`, so it joins nothing; its Retry reloads the page.
   return travel.prepared && (travel.settled || worldFailed);
+}
+
+/**
+ * The match's code has loaded, or failed to (§7.6, "A load or join failure").
+ * A failure is never `prepared`, so it joins nothing: the bar says it, and its
+ * Retry reloads the page (`reloadForRetry`).
+ */
+export function onLoad<S extends { kind: string }>(
+  screen: S | TravelState,
+  loaded: boolean,
+  missionId: string
+): S | TravelState {
+  return onTravel(screen, loaded ? { prepared: true } : { loadFailed: true }, missionId);
 }
 
 /**
@@ -62,7 +128,7 @@ export function readyToJoin(travel: TravelState, worldFailed: boolean): boolean 
  */
 export function onTravel<S extends { kind: string }>(
   screen: S | TravelState,
-  change: Partial<Pick<TravelState, 'skipped' | 'settled' | 'drew' | 'prepared'>>,
+  change: Partial<Pick<TravelState, 'skipped' | 'settled' | 'drew' | 'prepared' | 'loadFailed'>>,
   missionId?: string
 ): S | TravelState {
   if (screen.kind !== 'travel') return screen;

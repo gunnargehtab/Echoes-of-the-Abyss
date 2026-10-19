@@ -37,16 +37,22 @@ import { ControlsScreen } from './menu/ControlsScreen.tsx';
 import { SettingsScreen } from './menu/SettingsScreen.tsx';
 import { TitleScreen } from './menu/TitleScreen.tsx';
 import { TravelScreen } from './menu/TravelScreen.tsx';
+import { MatchBoundary } from './menu/MatchBoundary.tsx';
 import {
+  forgetReopen,
+  onLoad,
   onTravel,
   readyToJoin,
+  reloadForRetry,
+  reopenedFrom,
   startTravel,
   travelsFirst,
   type TravelState,
 } from './menu/launch.ts';
 import { storedMissionId } from './net/GameClient.ts';
 import { hasPlayed, seenScenes, witnessedConclusions } from './progression/store.ts';
-import { loadSettings } from './settings/store.ts';
+import { loadSettings, subscribeSettings } from './settings/store.ts';
+import { setActivePalette } from './game/palette.ts';
 
 /** The match's code: fetched by the lazy screen, and early by a travel (§7.6). */
 const loadGameCanvas = () => import('./game/GameCanvas.tsx');
@@ -90,7 +96,13 @@ type Screen =
   | { kind: 'title' }
   | { kind: 'setup'; mode: SetupMode }
   | { kind: 'browse' }
-  | { kind: 'campaign' }
+  /**
+   * The board. `from` names the mission whose slot the player is coming back
+   * from, so the board reopens there with focus; absent for an entry from the
+   * title or the record, and `record` gives focus back to the record's door
+   * (docs/ui-ux.md §14, "Keyboard").
+   */
+  | { kind: 'campaign'; from?: string; record?: true }
   | {
       kind: 'briefing';
       missionId: string;
@@ -177,13 +189,17 @@ function initialScreen(): Screen {
   if (mapId !== null) {
     return { kind: 'match', name: loadSettings().profileName, mapId, resume: true };
   }
+  // A load failure's Retry reloaded the page to reopen the board (§7.6).
+  const reopened = reopenedFrom();
+  if (reopened !== null) return { kind: 'campaign', from: reopened };
   return { kind: 'title' };
 }
 
 function App() {
   const [screen, setScreen] = useState<Screen>(initialScreen);
   const toTitle = () => setScreen({ kind: 'title' });
-  const toCampaign = () => setScreen({ kind: 'campaign' });
+  const toCampaign = (from?: string) =>
+    setScreen(from === undefined ? { kind: 'campaign' } : { kind: 'campaign', from });
   const toRecord = () => setScreen({ kind: 'record' });
   // The port has music; the ocean has its own mix (#194). Held for exactly as
   // long as the shell is on screen, so the shell's AudioContext is closed
@@ -191,6 +207,27 @@ function App() {
   useMenuAudio(screen.kind !== 'match');
   /** Set when the world could not load or draw: the board stands alone. */
   const [worldFailed, setWorldFailed] = useState(false);
+  // The reopen note has done its work once the shell has opened on it.
+  useEffect(forgetReopen, []);
+  // The colour-vision palette is module state the board, its chart and the
+  // briefing read at render (docs/ui-ux.md §11, §14). A match applies it as it
+  // mounts, which is too late for a page that opens on the port, so the shell
+  // applies the stored choice before its first render and every change after,
+  // re-rendering so a screen already up takes the new ink.
+  const [, setPalette] = useState(() => setActivePalette(loadSettings().palette).name);
+  useEffect(() => subscribeSettings((next) => setPalette(setActivePalette(next.palette).name)), []);
+
+  /**
+   * Fetch the match's code for a travel. A failure is said on the travel's
+   * bar, with nothing joined (§7.6, "A load or join failure"); its Retry
+   * reloads the page (`reloadForRetry`).
+   */
+  const prepareMatch = (missionId: string) => {
+    loadGameCanvas().then(
+      () => setScreen((current) => onLoad(current, true, missionId)),
+      () => setScreen((current) => onLoad(current, false, missionId))
+    );
+  };
 
   // The join, once the travel has arrived and the match's code is here: once,
   // because the screen it leaves is the only thing that can call it.
@@ -324,13 +361,15 @@ function App() {
           onSelect={(missionId) => setScreen({ kind: 'briefing', missionId, from: 'campaign' })}
           onRecord={toRecord}
           onBack={toTitle}
+          returnFrom={screen.from}
+          fromRecord={screen.record === true}
         />
       )}
       {screen.kind === 'record' && (
         <RecordScreen
           hasPlayed={hasPlayed}
           conclusions={witnessedConclusions()}
-          onBack={toCampaign}
+          onBack={() => setScreen({ kind: 'campaign', record: true })}
         />
       )}
       {screen.kind === 'briefing' && (
@@ -347,11 +386,7 @@ function App() {
             // Tutorial door's, joins as it always has.
             if (travelsFirst(screen.from, missionId)) {
               setScreen(startTravel(missionId));
-              const prepared = () =>
-                setScreen((current) => onTravel(current, { prepared: true }, missionId));
-              // A failed fetch is the lazy screen's to report, as it would
-              // be without a travel: the join is not held on it.
-              loadGameCanvas().then(prepared, prepared);
+              prepareMatch(missionId);
               return;
             }
             setScreen({
@@ -362,7 +397,7 @@ function App() {
               missionId,
             });
           }}
-          onBack={screen.from === 'campaign' ? toCampaign : toTitle}
+          onBack={screen.from === 'campaign' ? () => toCampaign(screen.missionId) : toTitle}
         />
       )}
       {screen.kind === 'travel' && (
@@ -370,10 +405,12 @@ function App() {
           missionId={screen.missionId}
           skipped={screen.skipped}
           settled={screen.settled}
+          loadFailed={screen.loadFailed}
+          onRetry={() => reloadForRetry(screen.missionId)}
           onSkip={() => setScreen((current) => onTravel(current, { skipped: true }))}
           // Back to the board with nothing joined; the camera travels back
           // under it (§7.6, "Cancel").
-          onCancel={toCampaign}
+          onCancel={() => toCampaign(screen.missionId)}
         />
       )}
       {screen.kind === 'settings' && (
@@ -384,34 +421,39 @@ function App() {
       )}
       {screen.kind === 'credits' && <CreditsScreen onBack={toTitle} />}
       {screen.kind === 'match' && (
-        <Suspense
-          fallback={
-            <div className="game-root">
-              <div
-                className={
-                  screen.travelled === true ? 'game-overlay game-overlay-held' : 'game-overlay'
-                }
-              >
-                <h2>Listening…</h2>
-              </div>
-            </div>
-          }
+        <MatchBoundary
+          onRetry={() => reloadForRetry(screen.board === true ? screen.missionId : undefined)}
+          onBack={screen.board === true ? () => toCampaign(screen.missionId) : toTitle}
         >
-          <GameCanvas
-            playerName={screen.name}
-            mapId={screen.mapId}
-            missionId={screen.missionId}
-            roomId={screen.roomId}
-            create={screen.create}
-            resume={screen.resume}
-            travelled={screen.travelled === true}
-            // The world travels back only where it can be drawn; without it
-            // the board stands alone, as it was left.
-            returnsToBoard={screen.board === true && !worldFailed}
-            onExit={screen.board === true ? toCampaign : toTitle}
-            onRecord={toRecord}
-          />
-        </Suspense>
+          <Suspense
+            fallback={
+              <div className="game-root">
+                <div
+                  className={
+                    screen.travelled === true ? 'game-overlay game-overlay-held' : 'game-overlay'
+                  }
+                >
+                  <h2>Listening…</h2>
+                </div>
+              </div>
+            }
+          >
+            <GameCanvas
+              playerName={screen.name}
+              mapId={screen.mapId}
+              missionId={screen.missionId}
+              roomId={screen.roomId}
+              create={screen.create}
+              resume={screen.resume}
+              travelled={screen.travelled === true}
+              // The world travels back only where it can be drawn; without it
+              // the board stands alone, as it was left.
+              returnsToBoard={screen.board === true && !worldFailed}
+              onExit={screen.board === true ? () => toCampaign(screen.missionId) : toTitle}
+              onRecord={toRecord}
+            />
+          </Suspense>
+        </MatchBoundary>
       )}
     </div>
   );

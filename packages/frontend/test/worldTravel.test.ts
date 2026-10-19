@@ -45,8 +45,16 @@ import {
 } from '../src/game/worldTravel.ts';
 import { whenEnvTemplatesReady } from '../src/game/environmentModels.ts';
 import { worldView } from '../src/game/worldView.ts';
-import { onTravel, readyToJoin, startTravel, travelsFirst } from '../src/menu/launch.ts';
+import {
+  onLoad,
+  onTravel,
+  readyToJoin,
+  startTravel,
+  travelsFirst,
+  type TravelState,
+} from '../src/menu/launch.ts';
 import { TravelScreen } from '../src/menu/TravelScreen.tsx';
+import { MatchBoundary } from '../src/menu/MatchBoundary.tsx';
 import { click, render } from './support/screen.ts';
 
 /** Where a travel to the prologue ends (§7.6 step 2). */
@@ -635,6 +643,23 @@ describe('which launches travel, and when a travel joins (§7.6)', () => {
       'no world to travel in: loaded is enough'
     );
   });
+
+  it('joins nothing for a match whose code failed to load (§7.6, "A load or join failure")', () => {
+    // The load's outcome, as the shell applies it (`onLoad`), on a travel
+    // that has arrived, been skipped, or had no world to travel in.
+    const failed = onLoad(startTravel(PROLOGUE), false, PROLOGUE) as TravelState;
+    assert.equal(failed.loadFailed, true, 'the bar is told');
+    for (const travel of [
+      { ...failed, settled: true, drew: true },
+      { ...failed, skipped: true, settled: true },
+    ]) {
+      assert.equal(readyToJoin(travel, false), false, 'nothing is joined');
+      assert.equal(readyToJoin(travel, true), false, 'with no world either');
+    }
+    // A load that landed does join: the rule above is the failure's, not a stall.
+    const loaded = onLoad({ ...startTravel(PROLOGUE), settled: true }, true, PROLOGUE);
+    assert.equal(readyToJoin(loaded as TravelState, false), true);
+  });
 });
 
 describe("the travel's bar (§7.6)", () => {
@@ -671,6 +696,74 @@ describe("the travel's bar (§7.6)", () => {
       assert.equal(skips, 1, 'a second Skip does nothing');
     } finally {
       await view.unmount();
+    }
+  });
+
+  it("says a load failure on the bar, with Retry and Back (§7.6, 'A load or join failure')", async () => {
+    let retries = 0;
+    let backs = 0;
+    const props = {
+      missionId: PROLOGUE_SORROWGATE_HEADER.id,
+      skipped: false,
+      settled: true,
+      loadFailed: true,
+      onSkip: () => {},
+      onCancel: () => void (backs += 1),
+      onRetry: () => void (retries += 1),
+    };
+    const view = await render(createElement(TravelScreen, props));
+    try {
+      assert.ok(view.shows('The match did not load'), 'what failed, in the live line');
+      assert.ok(view.shows(PROLOGUE_SORROWGATE_HEADER.name), 'still where it was going');
+      assert.deepEqual(view.buttonNames(), ['Retry', 'Back'], 'Skip and Cancel give way');
+      // react-test-renderer applies no autoFocus, so the request is what is read.
+      assert.equal(view.button('Retry').props.autoFocus, true, 'Retry takes the focus');
+      await click(view, 'Retry');
+      assert.equal(retries, 1);
+      await click(view, 'Back');
+      assert.equal(backs, 1, "Back is Cancel's road: nothing was joined");
+      await view.act(() => {
+        dispatchWindow('keydown', { key: 'Escape', preventDefault: () => {} });
+      });
+      assert.equal(backs, 2, 'and Esc presses it');
+    } finally {
+      await view.unmount();
+    }
+  });
+});
+
+describe("the match screen's failure (§7.6, 'A load or join failure')", () => {
+  it('says what failed in place of a blank page, and offers Retry and Back', async () => {
+    let retries = 0;
+    let backs = 0;
+    const Broken = () => {
+      throw new Error('Failed to fetch dynamically imported module');
+    };
+    // React logs a caught render error; the test wants the boundary, not the noise.
+    const quiet = console.error;
+    console.error = () => {};
+    try {
+      const view = await render(
+        createElement(
+          MatchBoundary,
+          { onRetry: () => void (retries += 1), onBack: () => void (backs += 1) },
+          createElement(Broken)
+        )
+      );
+      try {
+        assert.ok(view.shows('The match stopped'));
+        assert.ok(view.shows('Failed to fetch dynamically imported module'), 'and why');
+        assert.deepEqual(view.buttonNames(), ['Retry', 'Back']);
+        // react-test-renderer applies no autoFocus, so the request is what is read.
+        assert.equal(view.button('Retry').props.autoFocus, true, 'Retry takes the focus');
+        await click(view, 'Retry');
+        await click(view, 'Back');
+        assert.deepEqual([retries, backs], [1, 1]);
+      } finally {
+        await view.unmount();
+      }
+    } finally {
+      console.error = quiet;
     }
   });
 });

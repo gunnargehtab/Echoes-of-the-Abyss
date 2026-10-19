@@ -1497,6 +1497,12 @@
   margin-top: 0.6rem;
 }
 
+/* Retry and Back, side by side (docs/world-map.md §7.6, "A load or join failure"). */
+.game-overlay-controls {
+  display: flex;
+  gap: 0.6rem;
+}
+
 /*
  * The esc menu — docs/ui-ux.md §9.5.
  *

@@ -1443,6 +1443,16 @@ Entering the board lands on the first available slot — the prologue, today —
 first thing a keyboard reaches should be a door that opens. Every other slot is still
 reachable with an arrow key and still announces why it will not.
 
+Coming back to the board lands on the slot the player left from instead, and takes focus
+there. A briefing's Back, a travel's Cancel, a failure's Back and every Return to port from a
+board launch are each a return from one slot, so the board reopens on it, lit, with its
+caption reading its ground. The screen the player came back from is gone, so focus would
+otherwise fall to the page, and a reader would hear nothing until a Tab found the board. An
+entry from the title keeps the board's rule of never pulling focus as it mounts. A board
+reopened by a load failure's Retry is a return from that slot too. The record is not a slot,
+so its Back lands as an entry does, on the first slot that opens, and gives focus back to
+the board's own record door, the control that opened it.
+
 #### The chart
 
 **The board sits beside Plate VII** ([world-map.md](world-map.md), the chart that document

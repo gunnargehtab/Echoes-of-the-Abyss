@@ -12,6 +12,10 @@
  *
  * A bar rather than a screen: the world is the thing to look at, so the bar
  * sits at the foot and the rest of the frame is the travel.
+ *
+ * When the match's code fails to load, the bar says so and its controls
+ * become **Retry**, focused, and **Back**, which Esc also presses (§7.6, "A
+ * load or join failure"): nothing has been joined, so Back is Cancel's road.
  */
 
 import { useEffect } from 'react';
@@ -24,11 +28,23 @@ export interface TravelScreenProps {
   skipped: boolean;
   /** Whether the camera has arrived and the region is prepared; only the join's loading is left. */
   settled: boolean;
+  /** The match's code failed to load. */
+  loadFailed?: boolean;
   onSkip(): void;
   onCancel(): void;
+  /** Load the match's code again. */
+  onRetry?(): void;
 }
 
-export function TravelScreen({ missionId, skipped, settled, onSkip, onCancel }: TravelScreenProps) {
+export function TravelScreen({
+  missionId,
+  skipped,
+  settled,
+  loadFailed = false,
+  onSkip,
+  onCancel,
+  onRetry,
+}: TravelScreenProps) {
   const mission = missionHeaderById(missionId);
   const ground = mission === undefined ? undefined : groundFor(mission.mapId);
 
@@ -58,28 +74,46 @@ export function TravelScreen({ missionId, skipped, settled, onSkip, onCancel }: 
           <span className="travel-destination">{mission?.name ?? missionId}</span>
           {ground !== undefined && <span className="travel-ground">{groundLine(ground)}</span>}
           <span className="travel-state" role="status">
-            {settled || skipped ? 'Arriving' : 'Descending'}
+            {loadFailed ? 'The match did not load' : settled || skipped ? 'Arriving' : 'Descending'}
           </span>
         </p>
-        <div className="travel-controls">
-          {/* `aria-disabled`, not `disabled`, once skipped: the board's rule,
+        {loadFailed ? (
+          <div className="travel-controls">
+            {/* A new element rather than Skip relabelled, so focus moves onto it. */}
+            <button
+              key="retry"
+              type="button"
+              className="menu-commit"
+              onClick={() => onRetry?.()}
+              autoFocus
+            >
+              Retry
+            </button>
+            <button type="button" className="menu-back" onClick={onCancel}>
+              Back
+            </button>
+          </div>
+        ) : (
+          <div className="travel-controls">
+            {/* `aria-disabled`, not `disabled`, once skipped: the board's rule,
               so the button keeps the focus it was given rather than dropping
               it to the page while the loading finishes. */}
-          <button
-            type="button"
-            className="menu-commit"
-            onClick={() => {
-              if (!skipped) onSkip();
-            }}
-            aria-disabled={skipped ? true : undefined}
-            autoFocus
-          >
-            Skip
-          </button>
-          <button type="button" className="menu-back" onClick={onCancel}>
-            Cancel
-          </button>
-        </div>
+            <button
+              type="button"
+              className="menu-commit"
+              onClick={() => {
+                if (!skipped) onSkip();
+              }}
+              aria-disabled={skipped ? true : undefined}
+              autoFocus
+            >
+              Skip
+            </button>
+            <button type="button" className="menu-back" onClick={onCancel}>
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

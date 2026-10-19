@@ -334,6 +334,8 @@ export class GameClient {
   private missionId = '';
   /** True once the player has deliberately left; suppresses reconnection. */
   private leaving = false;
+  /** The join under way, if any (`connect`). */
+  private joining: Promise<void> | null = null;
   /**
    * The schema subscriptions the lobby view is built from, and the per-seat
    * ones under them.
@@ -365,7 +367,22 @@ export class GameClient {
     this.callbacks = callbacks;
   }
 
-  async connect(options: ConnectOptions = {}): Promise<void> {
+  /**
+   * Join, or resume a held seat. At most one join is in flight per client
+   * (docs/world-map.md §7.6, "A load or join failure"): a call while one is
+   * under way is answered by that join, so a Retry pressed twice, or a press
+   * racing the first attempt, never takes two seats.
+   */
+  connect(options: ConnectOptions = {}): Promise<void> {
+    if (this.joining !== null) return this.joining;
+    const joining = this.join(options).finally(() => {
+      if (this.joining === joining) this.joining = null;
+    });
+    this.joining = joining;
+    return joining;
+  }
+
+  private async join(options: ConnectOptions): Promise<void> {
     this.handlers.onStatus('connecting');
     // Always a string, and `''` for a skirmish. The server filters rooms on
     // this key, and Colyseus matches filter keys by equality — a client
