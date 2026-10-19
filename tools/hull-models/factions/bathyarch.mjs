@@ -5022,4 +5022,285 @@ export function plantedLegs(root, mats, opts) {
   return joints;
 }
 
+/* --------------------------------------------------------------------------
+ * The Thurible, the Klaxon's (#1440): the censer's plan — "a shield over a
+ * tail; the charge rack let into the shield's back as open-topped cells in
+ * two ranks, each a round well with a hinged lid, the lids standing open
+ * upward … spines off the shield's rim … folded walking limbs, a ribbed
+ * pressure keel" (docs/asset-prompts-3d.md, UNIT — Thurible) — on the
+ * Bulwark's armoured slab and the Chorister's cans. What no section has is
+ * the rack, the rim's dressing, the limb folded rather than planted, and
+ * the keel: a charge well as the Klaxon builds one — a steel can let into
+ * the deck with a dogged lid standing open on its hinge and dog lugs round
+ * its collar; whip aerials off brackets on the slab's flank; a two-girder
+ * limb folded under the shield on a hip bracket; a pressure drum of a keel
+ * with hoop frames round it; and the amber lamps along a rim. Built, not
+ * ported: every number is the hull script's.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The half-beam of a symmetric plan outline at station `x` — the largest
+ * |z| of the outline's edges where they cross `x` — for a rank that asks
+ * where the slab's rim is, as the Directorate's rim rules ask its shell
+ * (`rimSpines`, `rimPhotophores` in directorate.mjs). Nothing at a station
+ * off the plan: a caller refuses to root there.
+ */
+export function planHalfBeam(outline, x) {
+  let best = 0;
+  const n = outline.length;
+  for (let i = 0; i < n; i++) {
+    const [x0, z0] = outline[i];
+    const [x1, z1] = outline[(i + 1) % n];
+    if (x < Math.min(x0, x1) || x > Math.max(x0, x1)) continue;
+    const z = x0 === x1 ? Math.max(Math.abs(z0), Math.abs(z1)) : Math.abs(z0 + ((z1 - z0) * (x - x0)) / (x1 - x0));
+    best = Math.max(best, z);
+  }
+  return best;
+}
+
+/**
+ * The charge rack as the Klaxon builds one: open-topped cells let into a
+ * deck in ranks, `cell_${side}${i}` each and ten parts to a cell, in order
+ * `_collar`, `_well`, `_lid`, `_hinge`, `_wheel`, `_hub`, `_lug_0..`:
+ *
+ * - the **collar**, a steel can `r` outside and `r - wall` inside, one
+ *   closed profile through the kit's `loft` stood on end so the well has
+ *   an inside, running `sink` into the deck and standing `proud` of it;
+ * - the **well**, the floor, a drum of hull black across the bore `depth`
+ *   under the collar's top — the dark the chart sees down the bore — and
+ *   above the deck it is let into by `proud − depth`, which the builder
+ *   holds positive: a floor under the deck's plate is a floor the plate
+ *   covers from above, and the bake would see plate down every bore;
+ * - the **lid**, a disc of the collar's radius `lid.t` thick hinged at the
+ *   collar's aft edge and standing `lid.open` radians up from shut, open
+ *   forward and upward, because up is the way the rack fires, its outer
+ *   face to the stern; the **hinge**, a pin along the hinge line; and on
+ *   the lid's outer face its **dogging wheel**, a torus of `wheel.R` and
+ *   `wheel.t` on a **hub** of `hub.r` and `hub.h`, the two turned with the
+ *   lid — a Klaxon lid is dogged shut, and the wheel on a standing lid is
+ *   what says the cell is open;
+ * - `lugs` **dog lugs** round the collar's wall, a box each of `lug` (its
+ *   first size radial, its last tangential) at the odd bearings so none
+ *   stands at the hinge, turned to its bearing, `lug.below` under the
+ *   collar's top.
+ *
+ * Every ring the collar's count (`cut` at `r`), the well and the lid
+ * included, as a can's caps take the can's; the pin, the wheel and the hub
+ * at their own. `cells` is `[{ side, x, z }]`, `z` unsigned and the side
+ * signing it (port −z, #642), each dropped onto `on` under its station
+ * (kit.mjs `seat`) — a deck, where the Directorate's rack asks a crown — and
+ * a mirrored pair across the keel is refused. A rack and not a tube: no face
+ * of it points along the hull, and nothing here is lit (docs/models-plan.md
+ * §3.2 rule 4): the light of a charge is the charge's, above the hull.
+ */
+export function chargeCans(root, mats, opts) {
+  const { collar: collarMat, well: wellMat, lid: lidMat, pin: pinMat, wheel: wheelMat, hub: hubMat, lug: lugMat } = mats;
+  const {
+    on,
+    cells,
+    r = 2.8,
+    wall = 0.55,
+    proud = 2.2,
+    sink = 1.2,
+    depth = 1.8,
+    floor = 0.3,
+    lid = { t: 0.25, open: 1.35 },
+    hinge = { r: 0.22, length: 0.85 },
+    wheel = { R: 0.9, t: 0.1 },
+    hub = { r: 0.3, h: 0.4 },
+    lug = { size: [0.9, 0.9, 1.2], out: 0.15, below: 0.3 },
+    lugs = 4,
+    cut: rule = METRE,
+  } = opts;
+  if (depth >= proud)
+    throw new Error(`chargeCans: a well ${depth} m down a collar ${proud} m proud puts its floor under the deck`);
+  const count = { p: 0, s: 0 };
+  const placed = cells.map(({ side, x, z }) => {
+    if (side !== 'p' && side !== 's')
+      throw new Error(`cell_${side}: side is '${side}' — 'p' (port, -z) or 's' (starboard, +z)`);
+    const i = count[side]++;
+    const sgn = side === 'p' ? -1 : 1;
+    const { at } = seat(root, on, [x, 0, sgn * z], { drop: true });
+    return { name: `cell_${side}${i}`, at: [x, at[1], sgn * z] };
+  });
+  refuseMirror('cell', placed.map(({ name, at }) => [name, ...at]));
+  const n = rule.round(r);
+  const inner = r - wall;
+  const profile = [[0, inner], [0, r], [proud + sink, r], [proud + sink, inner], [0, inner]];
+  const collarGeo = loft(profile, n);
+  const wellGeo = cyl(inner, inner, floor, n);
+  const lidGeo = cyl(r, r, lid.t, n);
+  const pinGeo = cyl(hinge.r, hinge.r, 2 * r * hinge.length, rule.round(hinge.r));
+  const wheelGeo = torus(wheel.R, wheel.t, rule.round(wheel.t), rule.round(wheel.R + wheel.t)).rotateX(Math.PI / 2);
+  const hubGeo = cyl(hub.r, hub.r, hub.h, rule.round(hub.r));
+  const lugGeo = box(...lug.size);
+  const { t, open } = lid;
+  // The lid's outer face: a roll of `open` about Z carries a disc's +Y
+  // onto (−sin open, cos open, 0), aft and up.
+  const nrm = [-Math.sin(open), Math.cos(open), 0];
+  const onLid = (at, lift) => at.map((c, k) => c + nrm[k] * lift);
+  // The wheel's tube is a polygon of the rule's count with a vertex outward
+  // in the ring's plane, so its underside is t · cos(π/n) below its centre
+  // (`deckHatches`); it lies on the lid's face by that.
+  const wheelLift = t / 2 + wheel.t * Math.cos(Math.PI / rule.round(wheel.t));
+  placed.forEach(({ name, at: [x, y, z] }) => {
+    const top = y + proud;
+    add(root, `${name}_collar`, collarGeo, collarMat, [x, y - sink, z], [0, 0, Math.PI / 2]);
+    add(root, `${name}_well`, wellGeo, wellMat, [x, top - depth - floor / 2, z]);
+    // The lid turns about the hinge at the collar's aft edge: its centre
+    // swings round the pin with the roll.
+    const lidAt = [x - r + r * Math.cos(open), top + t / 2 + r * Math.sin(open), z];
+    add(root, `${name}_lid`, lidGeo, lidMat, lidAt, [0, 0, open]);
+    add(root, `${name}_hinge`, pinGeo, pinMat, [x - r, top, z], [Math.PI / 2, 0, 0]);
+    add(root, `${name}_wheel`, wheelGeo, wheelMat, onLid(lidAt, wheelLift), [0, 0, open]);
+    add(root, `${name}_hub`, hubGeo, hubMat, onLid(lidAt, t / 2 + hub.h / 2 - 0.1), [0, 0, open]);
+    for (let k = 0; k < lugs; k++) {
+      const a = (Math.PI * (2 * k + 1)) / lugs;
+      const [lx, , lz] = polar(a, r + lug.out);
+      add(root, `${name}_lug_${k}`, lugGeo, lugMat, [x + lx, top - lug.below - lug.size[1] / 2, z + lz], [0, -a, 0]);
+    }
+  });
+}
+
+/**
+ * Whip aerials off a slab's rim, `rim_whip_${side}${i}` and its
+ * `_bracket` each — the Klaxon's reading of a spine off a carapace's rim
+ * (directorate.mjs `rimSpines`): a pipe at the rule's count, `r` as
+ * `[root, tip]`, rooted `sink` inside the slab's flank at `(x, y)` —
+ * `rim(x, y)` gives the half-beam there — canted outboard by `cant` and
+ * raked forward by `rake`, one cant and one rake for the rank; and at the
+ * root a bracket of older plate, a box of `bracket.size` (along the hull,
+ * tall, athwart) with its centre `bracket.sink` inside the flank, the
+ * plate the whip is bolted off. A whip laid out past the rim reads as a
+ * spike in plan, which is the kind's tell on a hull whose back is a rack.
+ * `whips` is `[{ side, x, length }]`, each at its own signed side — port
+ * −z (#642) — and a mirrored pair is refused: "spines off the shield's rim
+ * at different stations each side".
+ */
+export function rimWhips(root, { whip: whipMat, bracket: bracketMat }, opts) {
+  const { rim, whips: list, y = 1, r = [0.55, 0.2], rake = -0.25, cant = 1.05, sink = 0.8, bracket, cut: rule = METRE } = opts;
+  const count = { p: 0, s: 0 };
+  const placed = list.map(({ side, x, length }) => {
+    if (side !== 'p' && side !== 's')
+      throw new Error(`rim_whip_${side}: side is '${side}' — 'p' (port, -z) or 's' (starboard, +z)`);
+    const i = count[side]++;
+    const sgn = side === 'p' ? -1 : 1;
+    const half = rim(x, y);
+    if (half <= sink) throw new Error(`rim_whip_${side}${i}: no slab to root in at x = ${x}`);
+    // Euler XYZ is Rx · Ry · Rz: the rake about Z first, then the cant about
+    // X, so a +Y pipe's tip lands forward, up, and out past the rim.
+    const dir = [-Math.sin(rake), Math.cos(rake) * Math.cos(cant), sgn * Math.cos(rake) * Math.sin(cant)];
+    const reach = length / 2 - sink;
+    const at = [x + dir[0] * reach, y + dir[1] * reach, sgn * half + dir[2] * reach];
+    const bracketAt = [x, y, sgn * (half - bracket.sink)];
+    return { name: `rim_whip_${side}${i}`, at, rot: [sgn * cant, 0, rake], length, bracketAt };
+  });
+  refuseMirror('rim_whip', placed.map(({ name, at }) => [name, ...at]));
+  const [rootR, tipR] = r;
+  placed.forEach(({ name, at, rot, length, bracketAt }) => {
+    add(root, `${name}_bracket`, box(...bracket.size), bracketMat, bracketAt);
+    add(root, name, cyl(tipR, rootR, length, rule.round(rootR)), whipMat, at, rot);
+  });
+}
+
+/**
+ * Walking limbs folded under a slab's flanks, `limb_${side}${i}` in five
+ * parts each — `_hip`, `_thigh`, `_knee`, `_shin`, `_tip` — the Klaxon's
+ * reading of the Directorate's folded steel rank (directorate.mjs
+ * `limbs`): a hip bracket of older plate hung from the slab's underside at
+ * `under`, its top `sink` into the plate and its foot at the limb's line
+ * `y`; a thigh, a box girder of newer plate `thigh.section` (`[h, w]`)
+ * `thigh.length` out along the beam and swept forward `thigh.sweep`
+ * radians; a knee block of hull black; a shin folded further forward by
+ * `shin.sweep`; and a tip block. Matched ranks are the kind's
+ * regimentation, and the one pair this navy's Thurible allows: `limbs` is
+ * `[{ x, z }]`, a hip a station at unsigned `z`, drawn both sides
+ * (kit.mjs `bothSides`, starboard first). Returns the tips, `[side, i,
+ * x, z]` each, for the header to measure against the rim.
+ */
+export function foldedLimbs(root, { bracket, girder: girderMat, block }, opts) {
+  const { limbs, y, under, sink = 0.3, hip, thigh, knee, shin, tip } = opts;
+  const tips = [];
+  bothSides((side, sgn) =>
+    limbs.forEach(({ x, z }, i) => {
+      const name = `limb_${side}${i}`;
+      const hipAt = [x, y, sgn * z];
+      const top = under + sink;
+      const bottom = y - thigh.section[0] / 2;
+      add(root, `${name}_hip`, box(hip.size[0], top - bottom, hip.size[1]), bracket, [x, (top + bottom) / 2, sgn * z]);
+      const kneeAt = [x + thigh.length * Math.sin(thigh.sweep), y, sgn * (z + thigh.length * Math.cos(thigh.sweep))];
+      const tipAt = [
+        kneeAt[0] + shin.length * Math.sin(shin.sweep),
+        y,
+        kneeAt[2] + sgn * shin.length * Math.cos(shin.sweep),
+      ];
+      girder(root, `${name}_thigh`, girderMat, hipAt, kneeAt, thigh.section, thigh.root);
+      // A box yawed by θ about Y carries its local +z onto (sin θ, 0, cos θ);
+      // sgn · sweep lays it on the bone's line either side (`plantedLegs`).
+      add(root, `${name}_knee`, box(...knee.size), block, kneeAt, [0, sgn * thigh.sweep, 0]);
+      girder(root, `${name}_shin`, girderMat, kneeAt, tipAt, shin.section ?? thigh.section, shin.root ?? thigh.root);
+      add(root, `${name}_tip`, box(...tip.size), block, tipAt, [0, sgn * shin.sweep, 0]);
+      tips.push([side, i, tipAt[0], tipAt[2]]);
+    })
+  );
+  return tips;
+}
+
+/**
+ * A ribbed pressure keel: one drum of hull black under the belly, `radii`
+ * `[fore, aft]` over `length` at the rule's count, laid along the hull at
+ * `[x, y]`, and `ribs.count` hoop frames of older plate round it, `keel_rib_i`
+ * each — a torus `ribs.t` thick standing `ribs.proud` of the drum's own
+ * radius at its station, evenly from `ribs.inset` inside one end to
+ * `ribs.inset` inside the other, the rule's count on ring and tube. The
+ * one rib a pressure vessel demands, as `canHoops` arches over a hold
+ * can; a full ring here, since the keel is seen from under the step and
+ * its crown is buried in the plates over it.
+ */
+export function ribbedKeel(root, { keel: keelMat, rib: ribMat }, opts) {
+  const { x, y, radii, length, ribs, cut: rule = METRE } = opts;
+  const [fore, aft] = radii;
+  add(root, 'keel', cyl(fore, aft, length, rule.round(Math.max(fore, aft))), keelMat, [x, y, 0], TO_BOW);
+  const { count, t, proud, inset } = ribs;
+  for (let i = 0; i < count; i++) {
+    const f = count > 1 ? i / (count - 1) : 0.5;
+    const rx = x + (length / 2 - inset) * (1 - 2 * f);
+    const r = fore + ((aft - fore) * (x + length / 2 - rx)) / length + proud;
+    const hoop = torus(r, t, rule.round(t), rule.round(r + t)).rotateY(Math.PI / 2);
+    add(root, `keel_rib_${i}`, hoop, ribMat, [rx, y, 0]);
+  }
+}
+
+/**
+ * Lamps along a rim, `${name}_${side}${j}` each: a rank a side, `ranks.s`
+ * and `ranks.p` as `{ from, pitch, count }` — its first mark at station
+ * `from` and the rest `pitch` metres aft of it — every mark at `at` of the
+ * rim's half-beam there (`rim(x)`) and dropped onto `on` under that
+ * station, a square plate of `size` and `h` lying on the facet it lands on
+ * with its underside `sink` into it (kit.mjs `seat`). The Directorate's
+ * `rimPhotophores` on a slab and on cans; the two ranks carry their own
+ * numbers, and the one pair the two could still produce is refused: a
+ * pattern that repeats on neither side.
+ */
+export function rimLamps(root, lampM, opts) {
+  const { name, ranks, rim, on, at, size, h = 0.4, sink = 0.1 } = opts;
+  const spots = [];
+  for (const side of ['s', 'p']) {
+    const rank = ranks[side];
+    if (!rank) continue;
+    const sgn = side === 'p' ? -1 : 1;
+    for (let j = 0; j < rank.count; j++) {
+      const x = rank.from - rank.pitch * j;
+      const half = rim(x);
+      if (half <= 0) throw new Error(`${name}_${side}${j}: no rim at x = ${x}`);
+      const z = sgn * at * half;
+      const rest = seat(root, on, [x, 0, z], { drop: true, stand: h / 2, sink });
+      spots.push([`${name}_${side}${j}`, rest.at, rest.rot]);
+    }
+  }
+  refuseMirror(name, spots.map(([n, p]) => [n, ...p]));
+  const plate = box(size, h, size);
+  for (const [n, p, rot] of spots) add(root, n, plate, lampM, p, rot);
+}
+
 export { THREE };
