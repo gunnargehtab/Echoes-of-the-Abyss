@@ -267,7 +267,7 @@ A mission starts when its room is joined, so a camera flight after joining would
 
 ### 7.8 The calls this section took
 
-The owner's calls: six on #1455, six on #1461, five on #1457, five on #1459, two on #1460 and fourteen on #1462. Each was written with its options; the one taken is named.
+The owner's calls: six on #1455, six on #1461, five on #1457, five on #1459, two on #1460 and fifteen on #1462. Each was written with its options; the one taken is named.
 
 **Anchors: Sorrowgate only (taken).** The alternatives were to pin every named place now from §1–§4's distances, or to scale Plate VII's coordinates. Scaling the plate would turn an illustration's compressions into geography, since its depth rail gives the shallows room. Pinning all of them now would decide ground no renderer has drawn yet. So only the pilot is pinned, and #1457 places the rest inside the region rectangles.
 
@@ -341,9 +341,11 @@ The owner's calls: six on #1455, six on #1461, five on #1457, five on #1459, two
 
 **The captions are the chart's and the bar's (taken).** The chart's caption names the lit slot's ground, the travel's bar names the destination as it does, and the only sound under either is the port's music bed, which carries no fact and so owes no caption under [ui-ux.md](ui-ux.md) §11's parity table, so [#1462](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1462)'s captions are those two. Captioning the world itself, a label over the overview's ground, would draw the board's facts twice and keep nothing from a reader the board does not already give.
 
-**Every way back reopens the board on the slot left from (taken).** A briefing's Back, a travel's Cancel, a failure's Back and Return to port each come back from one slot, so the board lands there, lit. Restoring it on a mission's return alone would send a player who backed out of a briefing to the prologue, away from the slot they had just read.
+**Every way back reopens the board on the slot left from (taken).** A briefing's Back, a travel's Cancel, a failure's Back and Return to port each come back from one slot, so the board lands there, lit. Restoring it on a mission's return alone would send a player who backed out of a briefing to the prologue, away from the slot they had just read; keeping every return on the first slot that opens, as the board did, would do that on every way back.
 
 **A return takes focus; an entry does not (taken).** The screen the player came back from is gone, so the slot takes focus and is announced. An entry from the title keeps the board's rule of never pulling focus as it mounts. Lighting the slot without focusing it would leave a keyboard player on the page until a Tab found the board.
+
+**The record's Back focuses the record's door (taken).** The record is not a slot, so its Back lands on the board as an entry does, but the record screen is gone, so focus goes back to the control that opened it. Landing on the first slot that opens with focus would move a reader to a door they did not leave from; keeping an entry's no focus would leave them on the page.
 
 ---
 

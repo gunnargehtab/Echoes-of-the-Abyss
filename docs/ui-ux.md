@@ -1448,9 +1448,10 @@ there. A briefing's Back, a travel's Cancel, a failure's Back and every Return t
 board launch are each a return from one slot, so the board reopens on it, lit, with its
 caption reading its ground. The screen the player came back from is gone, so focus would
 otherwise fall to the page, and a reader would hear nothing until a Tab found the board. An
-entry from the title still takes no focus, because the title is still the screen the player
-left. A board reopened by a load failure's Retry is a return from that slot too. The record
-is not a slot, so its Back lands as an entry does.
+entry from the title keeps the board's rule of never pulling focus as it mounts. A board
+reopened by a load failure's Retry is a return from that slot too. The record is not a slot,
+so its Back lands as an entry does, on the first slot that opens, and gives focus back to
+the board's own record door, the control that opened it.
 
 #### The chart
 

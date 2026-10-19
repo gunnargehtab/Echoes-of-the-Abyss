@@ -51,9 +51,12 @@ export interface CampaignScreenProps {
   onBack(): void;
   /**
    * The mission whose slot the player is coming back from, absent for an entry
-   * from the title. A return lands there and takes focus (§14, "Keyboard").
+   * from the title or the record. A return lands there and takes focus (§14,
+   * "Keyboard").
    */
   returnFrom?: string;
+  /** Coming back from the record, whose Back gives focus to the door it opened by. */
+  fromRecord?: boolean;
 }
 
 const hex = (value: number): string => `#${value.toString(16).padStart(6, '0')}`;
@@ -89,6 +92,7 @@ export function CampaignScreen({
   onRecord,
   onBack,
   returnFrom,
+  fromRecord = false,
 }: CampaignScreenProps) {
   // Built once per mount: the record cannot change while the board is on
   // screen, because finishing a mission means leaving it.
@@ -107,6 +111,12 @@ export function CampaignScreen({
   // from is gone, and focus would otherwise fall to the page.
   const armed = useRef(back !== null);
   const focused = useRef<HTMLButtonElement | null>(null);
+  // The record is not a slot, so its Back lands as an entry does; but the
+  // record screen is gone, so focus goes back to the door that opened it.
+  const recordDoor = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    if (fromRecord) recordDoor.current?.focus();
+  }, [fromRecord]);
 
   useEffect(() => {
     if (armed.current) focused.current?.focus();
@@ -292,7 +302,7 @@ export function CampaignScreen({
 
         <footer className="menu-foot">
           {/* Cyan tells you: the record is read, never committed to. */}
-          <button type="button" className="menu-secondary" onClick={onRecord}>
+          <button type="button" className="menu-secondary" onClick={onRecord} ref={recordDoor}>
             The record
           </button>
           <button type="button" className="menu-back" onClick={onBack}>

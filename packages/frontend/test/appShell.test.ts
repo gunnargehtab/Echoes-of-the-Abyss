@@ -377,6 +377,13 @@ describe('the shell: the world behind the board', () => {
       assert.equal(lit(), prologue, 'an entry lands on the first slot that opens');
       assert.equal(focused().includes(prologue), false, 'and takes no focus');
 
+      // The record is not a slot: its Back lands as an entry does, and gives
+      // focus back to the door that opened it.
+      await click(view, 'The record');
+      await click(view, 'Back');
+      assert.equal(lit(), prologue, "the record's Back lands as an entry does");
+      assert.equal(focused(), 'The record', "and focuses the record's door");
+
       // A briefing's Back, from the first Ledger slot.
       const slot = view.allByClass('campaign-slot').at(1)!;
       await view.act(() => {

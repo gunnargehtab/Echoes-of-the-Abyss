@@ -99,9 +99,10 @@ type Screen =
   /**
    * The board. `from` names the mission whose slot the player is coming back
    * from, so the board reopens there with focus; absent for an entry from the
-   * title (docs/ui-ux.md §14, "Keyboard").
+   * title or the record, and `record` gives focus back to the record's door
+   * (docs/ui-ux.md §14, "Keyboard").
    */
-  | { kind: 'campaign'; from?: string }
+  | { kind: 'campaign'; from?: string; record?: true }
   | {
       kind: 'briefing';
       missionId: string;
@@ -361,13 +362,14 @@ function App() {
           onRecord={toRecord}
           onBack={toTitle}
           returnFrom={screen.from}
+          fromRecord={screen.record === true}
         />
       )}
       {screen.kind === 'record' && (
         <RecordScreen
           hasPlayed={hasPlayed}
           conclusions={witnessedConclusions()}
-          onBack={() => toCampaign()}
+          onBack={() => setScreen({ kind: 'campaign', record: true })}
         />
       )}
       {screen.kind === 'briefing' && (

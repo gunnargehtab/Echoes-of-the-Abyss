@@ -1,7 +1,7 @@
 // #1462 slice 5: every way back reopens the board on the slot left from, with
 // focus (docs/ui-ux.md §14, "Keyboard"; docs/world-map.md §7.6 step 4), on the GPU.
 // The pointer is parked off the board after every click, so the lit slot is the
-// board's focus rather than a hover. Ways back: a briefing's Back, a travel's
+// board's focus rather than a hover. Ways back: the record's Back, a briefing's Back, a travel's
 // Cancel, a refused join's Back, and Return to port from the Esc menu.
 // Run: drive.mjs --headed --channel chrome, minus its title steps.
 export default async ({ page, shot }) => {
@@ -15,7 +15,7 @@ export default async ({ page, shot }) => {
       focused: document.activeElement?.classList.contains('campaign-slot')
         ? document.activeElement.querySelector('.campaign-slot-title')?.textContent ??
           document.activeElement.textContent?.slice(0, 40)
-        : `${document.activeElement?.tagName}.${document.activeElement?.className}`,
+        : `${document.activeElement?.tagName}.${document.activeElement?.className} ${document.activeElement?.textContent?.slice(0, 20) ?? ''}`,
     }));
     console.log(JSON.stringify({ name, ...r }));
   };
@@ -37,6 +37,11 @@ export default async ({ page, shot }) => {
     timeout: 30000,
   });
   await settle('entry');
+
+  // The record's Back: lands as an entry does, focus on the record's door.
+  await page.getByRole('button', { name: 'The record' }).click();
+  await page.getByRole('button', { name: 'Back' }).click();
+  await settle('record-back');
 
   // A briefing's Back, from the first Ledger slot.
   await page.locator('.campaign-slot').nth(1).click();
