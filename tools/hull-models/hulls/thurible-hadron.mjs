@@ -82,7 +82,7 @@
  *   alloy plans 0.9 m thick at y 0, the flank's middle, each rooted 1.5 m
  *   inside the vertical flank facet on a 5 m chord and reaching 9 m past
  *   the rim to a point 2.2 m ahead of its root's middle — the forward
- *   pair's tips at (29.2, ±22.55), the after pair's at (−1.8, ±26.38),
+ *   pair's tips at (29.2, ±22.83), the after pair's at (−1.8, ±26.38),
  *   which is the model's beam. Spikes said as blades, the Clarion's wing
  *   and the Lance's guard.
  * - **Limbs as four mirrored pairs** at x 31, 21, 11 and 1 (`foldedLimbs`):
@@ -94,9 +94,9 @@
  *   (11, −5.0, ±23.17) and (1, −4.8, ±21.05), their outboard faces 3.4 m
  *   past the rim at every station; the claws' bases at x 36, 26, 16 and 6,
  *   their tips at ±11.57, ±16.21, ±20.17 and ±18.05, which on the kite's
- *   narrowing nose is 2.9, 2.7 and 1.9 m past the rim at the three forward
- *   stations and 1.7 m under it at the after one — the Directorate's 3.5,
- *   1.7, −0.6 and −0.1, near enough.
+ *   narrowing nose is 3.0, 3.0 and 2.4 m past the plan rim at the three
+ *   forward stations and 2.0 m under it at the after one — the
+ *   Directorate's 3.5, 1.7, −0.6 and −0.1, near enough.
  * - **Marks as mirrored pairs**: five along the shield's rim and three down
  *   the tail (LIGHT below).
  *
@@ -134,7 +134,9 @@
  *   dipping with the waists. No inlay: the hull is dim.
  * - **The rostrum and the telson** are the Chorister's prisms (`point`):
  *   an alloy bow prism 10 m long on 2.2 m of half-diagonal, its tip the
- *   bow and its base at 42.5 inside the shield's nose (ridge 2.4 there);
+ *   bow and its base at 42.5 in the shield's nose, where the ridge is 1.97
+ *   and the spine's top 2.10, so the base's crown vertex at 2.2 stands
+ *   0.23 m over the ridge and 0.1 over the spine it sits in;
  *   a crystal drive prism 8 m long on 2.2, born apex-up and laid point
  *   forward into segment_2, its base ring the stern. Both dark.
  * - **The dorsal fin** (`finAndKeel`), the family's, 8 by 4 m by 0.8 on the
@@ -149,11 +151,19 @@
  *   the aft flat, 2.42 m abaft the centre, standing 1.35 rad open forward
  *   and up; and an alloy pin along the hinge. Collars vertical on the
  *   10.9° facet, as the Directorate's are on its dome. The cells sit on
- *   the facet at y 4.33, 6.20, 5.90 and 5.09 from the forward station aft;
- *   the forward two floors meet the facet at their aft-inboard corner,
- *   0.13 m under the floor's top, where the facet rises 0.4 m over the
- *   bore's length on the nose's slope and 0.43 over its width — inside the
- *   collar, under the floor, and the chart sees a dark bore.
+ *   the facet at y 4.41, 6.20, 5.90 and 5.09 from the forward station aft.
+ *   Each floor stands clear ABOVE the facet, mounted flush in its collar
+ *   (the collar · well pairs): the facet's highest point under a floor is
+ *   its aft-inboard corner, where the nose's slope and the facet's own
+ *   rise add to 0.57 m at most, and `gapBetween` reads the floors 0.13 m
+ *   over the facet at the forward two cells and 0.26 at the after two —
+ *   inside the collar, under the floor, and the chart sees a dark bore.
+ *   Crystal collars rather than the Directorate's steel is a judgement:
+ *   unlit `resonance_crystal` has a linear luminance of about 0.20 against
+ *   `shadow_indigo`'s 0.035, so the conn view shows the eight cells as
+ *   mid-tone rings on a dark shield, a rack of cut stones let into a
+ *   blade, where alloy rings would read as the lids' pale again and the
+ *   bores would lose their edge.
  * - **The keel** (`spar`, sheared, and `pressureRibs`): a four-facet alloy
  *   spar 72 m from x −40 to 32 on 1.6 m of radius pressed 1.1 tall by
  *   0.45 wide (2.5 by 1.0 in section), its axis a metre under the belly
@@ -179,8 +189,8 @@
  * the segments' flat tops, 1.0 m² each. The two scales again, and nothing
  * larger anywhere. Nothing else is lit: not the cells (models-plan.md
  * §3.2, rule 4), not the gun, not the keel, nothing on the centreline and
- * nothing abaft x −35 — the last 17.5 m, segment_2's tail and the drive
- * prism, are dark, as every Order stern is. Figures measured
+ * nothing abaft the tail marks centred at x −35 — the last 17 m, segment_2's
+ * tail and the drive prism, are dark, as every Order stern is. Figures measured
  * (`lightAudit`, printed by `exportGlb`; the intake bake): sixteen lit
  * parts, 20.5 m² facing up, every one resting on its facet, none hidden,
  * none floating. 20.5 m² on 2,284 m² of plan (9,134 mask px at 2 px/m).
