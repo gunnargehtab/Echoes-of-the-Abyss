@@ -33,7 +33,12 @@ import { cannedSnapshot } from './support/cannedMatch.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { placeProps, type PropPlacement } from '../src/game/environment.ts';
 import { EnvironmentLayer } from '../src/game/environmentLayer.ts';
-import { buildHeightGrid, depthToWorldY, rockTopDepthM } from '../src/game/perspectiveTerrain.ts';
+import {
+  VERTS_PER_CELL,
+  buildHeightGrid,
+  depthToWorldY,
+  rockTopDepthM,
+} from '../src/game/perspectiveTerrain.ts';
 import {
   bakeSeabed,
   bakeSeabedInSlices,
@@ -694,6 +699,52 @@ describe("another region's detail, where no session holds it (§7.5)", () => {
       rebuilds.mock.restore();
       destroys.mock.restore();
     }
+  });
+
+  it("draws the ground the session draws, so the join and the return's swap move nothing (#1491)", async () => {
+    const { view } = await mountPilot(false);
+    const held = residency(view);
+    camera(2_500, 2_000, 6_000, { pitchDeg: 60 });
+    await until(() => held.drawn().includes(SORROWGATE_REGION.id), 'drawn');
+    const detail = held.get(SORROWGATE_REGION.id)!.mesh;
+    const map = sorrowgate();
+    const widthM = map.cols * map.cellM;
+    const heightM = map.rows * map.cellM;
+    // Over the patch, its edges included, and over the surround short of the
+    // seam band, where the apron is the session's own ground undisturbed.
+    const points: [number, number][] = [];
+    for (let y = -1_500; y <= heightM + 1_500; y += 125) {
+      for (let x = -1_500; x <= widthM + 1_500; x += 125) points.push([x, y]);
+    }
+    const before = points.map(([x, y]) => view.seabedDepthAt(x, y));
+    const drawn = detail.geometry.getAttribute('position') as BufferAttribute;
+    const skin = (detail.material as MeshBasicMaterial).map!.image as HTMLCanvasElement;
+
+    view.setTerrain(map);
+    pumpAnimationFrames();
+    points.forEach(([x, y], i) =>
+      assert.equal(view.seabedDepthAt(x, y), before[i], `the ground at ${x}, ${y}`)
+    );
+    // The patch's vertices are the session's mesh's, the mission's own frame.
+    const session = internals(view).terrainMesh!.geometry.getAttribute('position');
+    const vertsX = map.cols * VERTS_PER_CELL + 1;
+    const vertsZ = map.rows * VERTS_PER_CELL + 1;
+    const { pads } = apronFrame(SORROWGATE_REGION, map.cellM);
+    const paddedX = (map.cols + pads.west + pads.east) * VERTS_PER_CELL + 1;
+    for (let iz = 0; iz < vertsZ; iz++) {
+      for (let ix = 0; ix < vertsX; ix++) {
+        const at = (iz + pads.north * VERTS_PER_CELL) * paddedX + ix + pads.west * VERTS_PER_CELL;
+        assert.equal(drawn.getY(at), session.getY(iz * vertsX + ix), `the vertex ${ix}, ${iz}`);
+      }
+    }
+    // The patch's skin is the map's bake on the session's seed and ramp.
+    const bake = bakeSeabed(map, seabedSeed(map), seabedRange(map));
+    const ppc = skin.width / (map.cols + pads.west + pads.east);
+    const patch = skin
+      .getContext('2d')!
+      .getImageData(pads.west * ppc, pads.north * ppc, bake.width, bake.height).data;
+    const own = bake.getContext('2d')!.getImageData(0, 0, bake.width, bake.height).data;
+    assert.ok(Buffer.from(patch).equals(Buffer.from(own)), "the map's own skin");
   });
 
   it('builds a detail under the veil, before it is ever resident', async () => {

@@ -35,7 +35,7 @@ import {
 } from '@echoes/shared';
 import type { Material } from 'three';
 import type { TerrainPayload } from '../net/GameClient.ts';
-import type { HeightGrid } from './perspectiveTerrain.ts';
+import { seabedDepthAtM, type HeightGrid } from './perspectiveTerrain.ts';
 import { SEAM_WEIGHT_GLSL } from './worldOverview.ts';
 
 /** How many cells the surround adds on each side of the mission. */
@@ -105,6 +105,83 @@ export function paddedTerrain(
     }
   }
   return { ...mission, cols, rows, biomes, floor, ceiling };
+}
+
+/**
+ * The mission's cells cut back out of a padded ground: `paddedTerrain`'s
+ * inverse. Cut from a region's detail ground it is the map's baseline, the
+ * ground a session opens on (`detailGround` pastes it whole), so its seed,
+ * rock top and depth range are the session's too (#1491).
+ */
+export function missionCells(padded: TerrainPayload, pads: ApronPads): TerrainPayload {
+  const cols = padded.cols - pads.west - pads.east;
+  const rows = padded.rows - pads.north - pads.south;
+  const biomes: number[] = [];
+  const floor: number[] = [];
+  const ceiling: number[] = [];
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const from = (row + pads.north) * padded.cols + col + pads.west;
+      biomes.push(padded.biomes[from]!);
+      floor.push(padded.floor[from]!);
+      ceiling.push(padded.ceiling[from]!);
+    }
+  }
+  return { ...padded, cols, rows, biomes, floor, ceiling };
+}
+
+/**
+ * Lay the mission grid's vertices over the padded grid's, in place: a
+ * region's baseline detail drawn as a session draws the same ground, the
+ * mission mesh inside and the apron round it, which take their relief from
+ * different frames (#1491). The vertices `apronVertexY` gives the mission's,
+ * edge included, so the two cannot differ anywhere a session draws.
+ */
+export function pasteMissionGrid(
+  padded: HeightGrid,
+  mission: HeightGrid,
+  pads: ApronPads,
+  cellM: number
+): void {
+  const perCell = Math.round(cellM / padded.stepM);
+  const ox = pads.west * perCell;
+  const oz = pads.north * perCell;
+  for (let mz = 0; mz < mission.vertsZ; mz++) {
+    for (let mx = 0; mx < mission.vertsX; mx++) {
+      const to = (mz + oz) * padded.vertsX + mx + ox;
+      padded.y[to] = mission.y[mz * mission.vertsX + mx]!;
+      padded.floor[to] = mission.floor[mz * mission.vertsX + mx]!;
+    }
+  }
+}
+
+/**
+ * The seabed depth `pasteMissionGrid`'s ground stands for, at a point in the
+ * mission's metres: the mission's own sample on and inside its rectangle, the
+ * padded ground's past it, each in its own frame and on one seed — the rule
+ * `PerspectiveView.seabedDepthAt` reads a session's by, taken from the same
+ * point so the two agree to the last bit.
+ */
+export function baselineDepthAtM(
+  padded: TerrainPayload,
+  mission: TerrainPayload,
+  pads: ApronPads,
+  seed: number,
+  rockTopM: number,
+  xM: number,
+  yM: number
+): number {
+  const inside =
+    xM >= 0 && yM >= 0 && xM <= mission.cols * mission.cellM && yM <= mission.rows * mission.cellM;
+  return inside
+    ? seabedDepthAtM(mission, seed, rockTopM, xM, yM)
+    : seabedDepthAtM(
+        padded,
+        seed,
+        rockTopM,
+        xM + pads.west * padded.cellM,
+        yM + pads.north * padded.cellM
+      );
 }
 
 /**

@@ -33,6 +33,7 @@ import {
   stepBorderStrength,
   apronFrame,
   apronMesh,
+  missionCells,
   paddedTerrain,
 } from '../src/game/worldBorder.ts';
 import { overviewSkin } from '../src/game/worldOverview.ts';
@@ -123,6 +124,16 @@ describe("the apron: the region's authored surround (#1457)", () => {
       paddedTerrain(mission, { ...pads, west: 9 }, surround),
       null,
       'a grid that does not fit is refused, not cropped'
+    );
+  });
+
+  it("cuts the mission back out whole: the map's baseline from its region's detail (#1491)", () => {
+    const mission = pilotTerrain();
+    const pads = { west: 10, north: 10, east: 10, south: 10 };
+    const cut = missionCells(paddedTerrain(mission, pads, detailGround(SORROWGATE_REGION)!)!, pads);
+    assert.deepEqual(
+      [cut.cols, cut.rows, cut.cellM, cut.biomes, cut.floor, cut.ceiling],
+      [mission.cols, mission.rows, mission.cellM, mission.biomes, mission.floor, mission.ceiling]
     );
   });
 
