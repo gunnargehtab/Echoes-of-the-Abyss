@@ -76,17 +76,20 @@
  *   the count. On a deck the seven sit at one height where the
  *   Directorate's step down its dome: a Klaxon deck is flat.
  * - **The gun is where the kind put it.** 5.5 m to port, its mount a 3 m
- *   block on the lower tier at x +31 (its top at 8.4), the barrel 8 m
- *   from +31 to the muzzle at +39 at y 9, 0.6 to 0.45 in radius, six
- *   plates, horizontal; twelve metres ahead of the port rank's leading
- *   cell and half a metre ahead of the upper tier's nose at +29, the
- *   muzzle 4.1 m over the slab's nose plate.
+ *   block on the lower tier from x +29.5 to +32.5 (its top at 8.4), the
+ *   barrel 8 m from +31 to the muzzle at +39 with its axis at y 8.6, 0.6
+ *   to 0.45 in radius, six plates, horizontal: its flat underside at 8.08
+ *   sits 0.32 m into the mount (the sweep lists `gun_mount · gun`), and
+ *   the barrel's forward 6.5 m stand clear. Twelve metres ahead of the
+ *   port rank's leading cell; the mount's aft face half a metre ahead of
+ *   the upper tier's nose at +29; the muzzle's underside 3.8 m over the
+ *   slab's nose plate at 4.3, its axis 4.3 m over it.
  * - **The spines are off the rim, not the back.** Four whips at the kind's
  *   stations and lengths — starboard +30 (8 m) and +4 (9 m), port +24
  *   (9 m) and −8 (8 m) — rooted 0.8 m into the slab's flank at y 1, each
  *   off a bracket of older plate 1.6 × 1.8 × 1.4 set 0.5 into the flank,
  *   canted 60° outboard and raked 0.25 forward, 0.55 m at the root to 0.2
- *   at the tip, six plates. The tips: (31.8, 4.5, 28.2), (26.0, 5.0,
+ *   at the tip, six plates. The tips: (31.8, 4.5, 27.9), (26.0, 5.0,
  *   −31.7), (6.0, 5.0, 34.7), (−6.2, 4.5, −31.6), which is why the file
  *   spans z −32.1 .. 35.1 on a slab 54 m across: four spikes in plan at
  *   four stations, none opposite another.
@@ -99,12 +102,14 @@
  *   widest section (12.1 and 22.5 there) on the forward two pairs, 0.6 and
  *   0.1 m inside it (27.5, 27.8) on the after two, the Directorate's four
  *   reaches. The hips are set by those reaches, z 10.3, 18.9, 21.6 and
- *   22.4, so the forward pair's bracket hangs 12 m inside the chine and
- *   the after pair's 5.
+ *   22.4, so the forward pair's bracket hangs 9.2 m inside the slab's
+ *   flank (19.5 at x +33) and the after pair's 5.4 (27.8 at +3).
  * - **The keel and its ribs.** A black drum 64 m from +25 to −39, 3.2 m
  *   forward to 2.4 aft, eight plates, its axis at −6.5: its crown 1 m into
- *   the slab's belly and its bottom at −9.7 forward and −8.9 aft, 3.7 m
- *   under the first can and 4.9 under the last; seven hoop frames of older
+ *   the slab's belly and its bottom at −9.7 forward and −8.9 aft: 2.67 m
+ *   in radius at the first can's station, −17.5, so 3.3 m under that can's
+ *   flat bottom at −5.85, and 5.1 m under the last can's at −3.8 where the
+ *   keel ends at −39; seven hoop frames of older
  *   plate 0.35 thick and 0.25 proud from 3 m inside each end. Nothing on
  *   any map; the conn view sees it under the step.
  * - **The lamps.** Two rims, one rule (`rimLamps`): a rank a side at its
@@ -131,9 +136,9 @@
  *   tail is 11 to 6.5 of half-beam. Each can's crown rivets pitch 2.4 on
  *   the first and 1.7 on the other two, so no rivet lands inside the
  *   wider cap behind it.
- * - **The stripe runs between the ranks.** A 16 m hazard stripe on the
- *   upper tier's centreline from 0 to +16, and the bow stripe on the bow
- *   block: cladding, not lamps.
+ * - **The stripe runs between the ranks.** A 16 m hazard stripe down the
+ *   upper tier from 0 to +16 at z −0.5, between the two ranks, and the bow
+ *   stripe on the bow block: cladding, not lamps.
  * - **The stack is to port aft**, on the lower tier at (−6, −16), 5 m tall.
  *
  * The light budget, measured (`lightAudit`, printed by `exportGlb`):
@@ -147,7 +152,7 @@
  * end must not touch (§3.2). Five materials; 226 parts, 5,404 triangles;
  * the file spans x −52.5 .. 52.5, y −10.1 .. 17.1, z −32.1 .. 35.1.
  *
- * The sweep (contacts.mjs) reads 261 pairs and every one a mount: the
+ * The sweep (contacts.mjs) reads 262 pairs and every one a mount: the
  * tiers on the slab and each other, the first can and its fore cap
  * emerging through the slab's trailing face, the cans and caps crossing
  * at the seams, the crown rivets on their cans, the keel and its four
@@ -155,7 +160,8 @@
  * through their brackets into the slab, the hips in the belly and each
  * bone rooted into the block at both ends, the collars in the upper
  * tier with the well, the pin and the lugs in each and the wheel and hub
- * on each lid, the mount on the lower tier, the fittings on their plates.
+ * on each lid, the mount on the lower tier and the barrel's breech in the
+ * mount, the fittings on their plates.
  * Two tail lamps, `tail_lamp_s1` at −23 and `tail_lamp_p1` at −34, lie on
  * their cans at the kind's stations with an edge 5 cm into the cap face
  * behind them, which the sweep lists; the two patches that first lay under
@@ -316,13 +322,17 @@ bathyarch.foldedLimbs(root, { bracket: rust, girder: grey, block: black }, {
 });
 
 // "One small spine-gun off the centreline ahead of the rack": 5.5 m to
-// port on the lower tier at +31, the muzzle at +39.
+// port on the lower tier at +31, the muzzle at +39. A six-plate barrel's
+// underside is a flat 0.52 m under its axis, so the axis sits 0.2 m over
+// the mount's top and the breech's flat 0.32 m into the mount (the
+// Chorister's sinks 0.4); at a radius over the top it floated 8 cm.
+const MOUNT_TOP = TIER_1_TOP + 1.6;
 bathyarch.spineGun(
   root,
   { grey, black },
   {
     mount: { size: [3, 1.6, 3], at: [31, TIER_1_TOP + 0.8, -5.5] },
-    gun: { radii: [0.45, 0.6], length: 8, at: [35, TIER_1_TOP + 1.6 + 0.6, -5.5] },
+    gun: { radii: [0.45, 0.6], length: 8, at: [35, MOUNT_TOP + 0.2, -5.5] },
     cut,
   }
 );
