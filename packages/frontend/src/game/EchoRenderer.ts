@@ -6510,8 +6510,8 @@ export class EchoRenderer {
 
   /**
    * Read-only telemetry for the headless harness (`__chartProbe`): the hits
-   * alive on tracks and where the last one landed. Counts what is drawn, and
-   * every input to it was resolved for this player.
+   * alive on tracks, drawn or held through a ghost frame, and where the last
+   * one ever landed. Every input to it was resolved for this player.
    */
   probeReading(): {
     trackHits: number;

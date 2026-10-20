@@ -149,6 +149,14 @@ describe('TrackHits', () => {
     assert.equal(hits.count, 1, 'one hit per track');
   });
 
+  it('drops a hit when its track falls out of Tier 4', () => {
+    const hits = new TrackHits();
+    hits.observe(was(track(150), NOW), track(100), NOW);
+    const down = track(100, { tier: ResolutionTier.Classification });
+    hits.observe(was(track(100), NOW + 200), down, NOW + 200);
+    assert.equal(hits.count, 0, 'the old spray does not return with the track');
+  });
+
   it('expires a hit no frame drew, so a ghost frame never strands one', () => {
     // A hit on a track that went to ghost is held, not drawn; prune is what
     // lets it go once its life is over.

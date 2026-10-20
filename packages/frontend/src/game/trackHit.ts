@@ -63,7 +63,7 @@ export const TRACK_HIT_FLASH_ALPHA = 0.3;
  * structure to measure: an animal or a torpedo.
  */
 export const TRACK_HIT_SMALL_RADIUS_M = 20;
-/** The radius of one spray dot, in screen pixels at any zoom. */
+/** TUNABLE — the radius of one spray dot, in screen pixels at any zoom. */
 export const TRACK_HIT_DOT_PX = 3;
 /**
  * TUNABLE — how bright a hit draws at the floor, against a full one. Most
@@ -124,6 +124,9 @@ export class TrackHits {
    * track still spraying replaces the hit, as the harder of the two.
    */
   observe(previous: TrackReading | undefined, next: Contact, nowMs: number): boolean {
+    // Out of Tier 4, the bar is gone, and the hit on it goes too: a track
+    // back at Tier 4 within a hit's life would otherwise wear the old spray.
+    if (next.tier < ResolutionTier.Track) this.hits.delete(next.id);
     const strength = trackHitStrength(previous, next, nowMs);
     if (strength === null) return false;
     const live = this.hits.get(next.id);

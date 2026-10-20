@@ -541,7 +541,7 @@ export function GameCanvas({
       renderer = activeRenderer;
       rendererRef.current = activeRenderer;
       // Read-only, for the headless harness, like the hazard and mark probes:
-      // what the chart is drawing, never what it has not resolved.
+      // what the chart drew, every input to it resolved for this player.
       (window as unknown as { __chartProbe?: () => unknown }).__chartProbe = () =>
         activeRenderer.probeReading();
       if (travelled) activeRenderer.holdOpeningFrame();
