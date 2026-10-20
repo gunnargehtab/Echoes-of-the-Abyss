@@ -380,9 +380,10 @@ draw calls at most for any number of shots, none for a kind with nothing in the 
 sharing the fleet's depth cues, and reported by the
 probe as `ordnance`.
 
-Own hulls' wakes are one `LineSegments` for the whole fleet (`hullWake.ts`, #1508): one
-draw call however many hulls are moving and none when nothing is, its buffers written in
-place and grown only by doubling, and reported by the probe as `wakes`.
+Own hulls' wakes are one `Points` for the whole fleet (`hullWake.ts`, #1508): a fixed ring
+of 512 bubbles, written in place, whose oldest are overwritten when it is full. That is one
+draw call however many hulls are moving and none once the last bubble fades, and the
+probe reports the live bubbles as `wakeBubbles`.
 
 The fleet's depth cues follow the same rule (#434). Every own hull hangs over a ground
 shadow on a plumb line — the cue that makes the water column readable — and each used to

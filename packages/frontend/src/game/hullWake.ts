@@ -14,21 +14,28 @@
  * nothing; the enemy is never geometry in the conn view (gate 6), and a track
  * gets no wake for the same reason it gets no model.
  *
- * One `LineSegments` for every hull, the torpedo trail's shape
- * (ordnanceLayer.ts): a fixed run of segments behind the stern, climbing as
- * bubbles do and fading with distance. Its buffers grow by doubling and are
- * never rebuilt per frame, so the fleet's wakes are one draw call however
- * many hulls are moving, and none when nothing is. Unlit, like the trail: it
- * wears the faction glow, which ACES would fade toward white.
+ * Bubbles, not a line. A hull sheds one at its stern every few metres it
+ * travels, and each stays where it was shed, climbing and fading: the wake is
+ * left in the water rather than dragged along behind the hull, so a turn
+ * leaves a curve. A line redrawn behind the hull each frame read as a rod
+ * bolted to the stern, and at one pixel it barely read at all.
+ *
+ * One `Points` from a fixed ring of WAKE_POOL slots, as the launch burst is
+ * drawn (ordnanceLayer.ts): one draw call for the whole fleet, none when no
+ * bubble lives, nothing allocated per frame, and a full ring overwrites its
+ * oldest bubbles rather than growing. Unlit and additive, like the trail: it
+ * wears the faction glow, which ACES would fade toward white, and a spent
+ * bubble (colour zero) adds nothing.
  */
 
 import {
+  AdditiveBlending,
   BufferGeometry,
   Color,
   DynamicDrawUsage,
   Float32BufferAttribute,
-  LineBasicMaterial,
-  LineSegments,
+  Points,
+  PointsMaterial,
 } from 'three';
 import { SIG_BANDS } from '@echoes/shared';
 import { SIG_GLOW_EFOLD } from './glow.ts';
@@ -47,13 +54,21 @@ export const WAKE_FLOOR = 0.06;
 /** TUNABLE — below this horizontal speed a hull is holding, not running. */
 export const WAKE_MIN_SPEED_MPS = 0.5;
 
-/** TUNABLE — segments per wake, and its length at full strength, in metres;
- * a wake never draws shorter than WAKE_MIN_SHARE of that. */
-export const WAKE_SEGMENTS = 8;
-export const WAKE_MAX_M = 90;
+/**
+ * TUNABLE — the wake's shape: one bubble shed per WAKE_SPACING_M of travel,
+ * each living WAKE_LIFE_MS at full strength and never less than
+ * WAKE_MIN_SHARE of that, so a loud wake is longer as well as brighter. The
+ * ring holds WAKE_POOL bubbles, enough for a full berth list running loud.
+ */
+export const WAKE_SPACING_M = 5;
+export const WAKE_LIFE_MS = 4000;
 export const WAKE_MIN_SHARE = 0.3;
-/** TUNABLE — how far the far end climbs, in metres: bubbles rise. */
-export const WAKE_RISE_M = 6;
+export const WAKE_POOL = 512;
+/** TUNABLE — how fast a bubble climbs, metres per second, and its size in pixels. */
+export const WAKE_RISE_MPS = 2;
+const WAKE_SIZE_PX = 2.5;
+/** A hull that covered more than this between two calls jumped; it sheds nothing for it. */
+const WAKE_SNAP_M = 200;
 
 /**
  * A wake's strength, 0–1: zero for a hull with its engine cut or not moving,
@@ -65,8 +80,9 @@ export function wakeStrength(sig: number, speedMps: number, engineOff: boolean):
   return Math.min(1, Math.max(WAKE_FLOOR, Math.exp((sig - WAKE_REFERENCE_SIG) / SIG_GLOW_EFOLD)));
 }
 
-/** One hull's wake this frame, in world units. Reused by the caller. */
+/** One hull's wake input this frame, in world units. Reused by the caller. */
 export interface WakeSource {
+  id: number;
   x: number;
   y: number;
   z: number;
@@ -74,33 +90,55 @@ export interface WakeSource {
   heading: number;
   /** Distance from the hull's centre to its stern, world units. */
   sternM: number;
-  /** `wakeStrength`, 0 for no wake. */
+  /** `wakeStrength`, 0 for a hull shedding nothing. */
   strength: number;
 }
 
 export class HullWake {
-  readonly lines: LineSegments;
-  private readonly material: LineBasicMaterial;
-  private positions!: Float32BufferAttribute;
-  private colors!: Float32BufferAttribute;
-  private capacity: number;
+  readonly points: Points;
+  private readonly material: PointsMaterial;
+  private readonly positions: Float32BufferAttribute;
+  private readonly colors: Float32BufferAttribute;
+  // Per slot: where it was shed, how bright, how long it lives, how fast it
+  // climbs, and when. `tick` lifts each straight up from where it was shed.
+  private readonly birth = new Float32Array(WAKE_POOL * 3);
+  private readonly level = new Float32Array(WAKE_POOL);
+  private readonly lifeMs = new Float32Array(WAKE_POOL).fill(1);
+  private readonly rise = new Float32Array(WAKE_POOL);
+  private readonly bornAt = new Float64Array(WAKE_POOL).fill(-Infinity);
+  private head = 0;
+  private alive = 0;
+  private shed = 0;
+  /** A bubble was shed since the last tick, so a still ring must still draw it. */
+  private spawnedSinceTick = false;
+  /** Where each hull last shed a bubble, so the next one is a spacing on. */
+  private readonly lastShed = new Map<number, { x: number; z: number }>();
+  /** Scratch for `sync`: the hulls shedding this call. */
+  private readonly seen = new Set<number>();
   private readonly glow = new Color(0xffffff);
-  private wakes = 0;
+  private reducedMotion = false;
 
-  constructor(capacity = 8) {
-    this.capacity = Math.max(1, capacity);
-    this.material = new LineBasicMaterial({
-      toneMapped: false,
+  constructor() {
+    this.material = new PointsMaterial({
+      size: WAKE_SIZE_PX,
+      sizeAttenuation: false,
       vertexColors: true,
+      toneMapped: false,
       transparent: true,
-      opacity: 0.55,
+      blending: AdditiveBlending,
       depthWrite: false,
     });
-    this.lines = new LineSegments(new BufferGeometry(), this.material);
-    this.lines.name = 'hull_wakes';
-    this.lines.frustumCulled = false;
-    this.lines.visible = false;
-    this.allocate();
+    this.positions = new Float32BufferAttribute(new Float32Array(WAKE_POOL * 3), 3);
+    this.colors = new Float32BufferAttribute(new Float32Array(WAKE_POOL * 3), 3);
+    this.positions.setUsage(DynamicDrawUsage);
+    this.colors.setUsage(DynamicDrawUsage);
+    const geometry = new BufferGeometry();
+    geometry.setAttribute('position', this.positions);
+    geometry.setAttribute('color', this.colors);
+    this.points = new Points(geometry, this.material);
+    this.points.name = 'hull_wakes';
+    this.points.frustumCulled = false;
+    this.points.visible = false;
   }
 
   /** Gate 4: the wake wears the faction glow, as the torpedo trail does. */
@@ -108,91 +146,151 @@ export class HullWake {
     this.glow.set(glow);
   }
 
-  /** Hulls with a wake this frame, for the probe and the tests. */
+  /**
+   * Reduced motion (docs/ui-ux.md §11) keeps the wake and stills it: bubbles
+   * are still shed and still fade, because the wake says how loud the hull
+   * is, but none climbs.
+   */
+  setReducedMotion(reduced: boolean): void {
+    this.reducedMotion = reduced;
+  }
+
+  /** Bubbles alive this frame, for the probe and the tests. */
   get count(): number {
-    return this.wakes;
+    return this.alive;
   }
 
-  /** The vertices the wake draws this frame. */
-  get vertexCount(): number {
-    return this.lines.geometry.drawRange.count;
+  /** Bubbles shed since the wake was made, for the tests. */
+  get shedCount(): number {
+    return this.shed;
   }
 
-  /** The far end of the i-th drawn wake, for the tests. */
-  tailOf(index: number): { x: number; y: number; z: number } {
-    const v = (index + 1) * WAKE_SEGMENTS * 2 - 1;
+  /** Slots in the ring: fixed, however many hulls run. */
+  get poolSize(): number {
+    return this.positions.count;
+  }
+
+  /** Whether any bubble is still alive, so the view keeps ticking. */
+  get live(): boolean {
+    return this.alive > 0;
+  }
+
+  /** The drawn position of one slot, for the tests. */
+  bubbleAt(slot: number): { x: number; y: number; z: number } {
     const p = this.positions;
-    return { x: p.getX(v), y: p.getY(v), z: p.getZ(v) };
+    return { x: p.getX(slot), y: p.getY(slot), z: p.getZ(slot) };
   }
 
-  /** The brightest vertex of the i-th drawn wake, its stern end, for the tests. */
-  levelOf(index: number): number {
-    const v = index * WAKE_SEGMENTS * 2;
+  /** One slot's drawn brightness against the glow, 0–1, for the tests. */
+  levelAt(slot: number): number {
     const c = this.colors;
     const glow = this.glow.r + this.glow.g + this.glow.b;
-    return (c.getX(v) + c.getY(v) + c.getZ(v)) / Math.max(1e-6, glow);
+    return (c.getX(slot) + c.getY(slot) + c.getZ(slot)) / Math.max(1e-6, glow);
   }
 
   /**
-   * Write the first `n` sources' wakes. Allocates only when the fleet grows
-   * past every size it has been, so a frame of gliding hulls costs buffer
-   * writes and nothing else.
+   * Shed each of the first `n` sources' bubbles for the ground it covered
+   * since the last call, then draw the frame. A hull with no strength sheds
+   * nothing and is forgotten, so it starts fresh when it moves again.
    */
-  sync(sources: readonly WakeSource[], n: number, draw: number): void {
-    let live = 0;
-    for (let i = 0; i < n; i++) if (sources[i]!.strength > 0) live++;
-    if (live > this.capacity) {
-      while (this.capacity < live) this.capacity *= 2;
-      this.allocate();
-    }
-    let v = 0;
+  sync(sources: readonly WakeSource[], n: number, draw: number, nowMs: number): void {
+    const spacing = WAKE_SPACING_M * Math.max(draw, 1e-3);
+    const seen = this.seen;
+    seen.clear();
     for (let i = 0; i < n; i++) {
       const s = sources[i]!;
       if (s.strength <= 0) continue;
-      const dx = -Math.cos(s.heading);
-      const dz = -Math.sin(s.heading);
-      const length = WAKE_MAX_M * (WAKE_MIN_SHARE + (1 - WAKE_MIN_SHARE) * s.strength) * draw;
-      for (let seg = 0; seg < WAKE_SEGMENTS; seg++) {
-        for (let end = 0; end < 2; end++) {
-          const k = (seg + end) / WAKE_SEGMENTS;
-          const reach = s.sternM + k * length;
-          this.positions.setXYZ(
-            v,
-            s.x + dx * reach,
-            s.y + k * WAKE_RISE_M * draw,
-            s.z + dz * reach
-          );
-          const fade = (1 - k) * s.strength;
-          this.colors.setXYZ(v, this.glow.r * fade, this.glow.g * fade, this.glow.b * fade);
-          v++;
-        }
+      seen.add(s.id);
+      const sx = s.x - Math.cos(s.heading) * s.sternM;
+      const sz = s.z - Math.sin(s.heading) * s.sternM;
+      const last = this.lastShed.get(s.id);
+      if (last === undefined) {
+        this.lastShed.set(s.id, { x: sx, z: sz });
+        continue;
+      }
+      let dx = sx - last.x;
+      let dz = sz - last.z;
+      let d = Math.hypot(dx, dz);
+      if (d > WAKE_SNAP_M * Math.max(draw, 1)) {
+        last.x = sx;
+        last.z = sz;
+        continue;
+      }
+      if (d < spacing) continue;
+      dx /= d;
+      dz /= d;
+      // Shed along the ground covered, a spacing apart, so the wake's density
+      // is the same at any frame rate.
+      while (d >= spacing) {
+        last.x += dx * spacing;
+        last.z += dz * spacing;
+        d -= spacing;
+        this.spawn(last.x, s.y, last.z, s.strength, draw, nowMs);
       }
     }
-    this.wakes = live;
-    this.lines.geometry.setDrawRange(0, v);
-    this.lines.visible = v > 0;
+    for (const id of this.lastShed.keys()) {
+      if (!seen.has(id)) this.lastShed.delete(id);
+    }
+    this.tick(nowMs);
+  }
+
+  /** Per frame while any bubble lives: each climbs and fades where it was shed. */
+  tick(nowMs: number): void {
+    if (this.alive === 0 && !this.spawnedSinceTick) return;
+    this.spawnedSinceTick = false;
+    let alive = 0;
+    for (let i = 0; i < WAKE_POOL; i++) {
+      const age = nowMs - this.bornAt[i]!;
+      const t = age / this.lifeMs[i]!;
+      if (!(t >= 0 && t < 1)) {
+        this.colors.setXYZ(i, 0, 0, 0);
+        continue;
+      }
+      alive++;
+      this.positions.setXYZ(
+        i,
+        this.birth[i * 3]!,
+        this.birth[i * 3 + 1]! + (age / 1000) * this.rise[i]!,
+        this.birth[i * 3 + 2]!
+      );
+      const fade = (1 - t) * this.level[i]!;
+      this.colors.setXYZ(i, this.glow.r * fade, this.glow.g * fade, this.glow.b * fade);
+    }
+    this.alive = alive;
+    this.points.visible = alive > 0;
     this.positions.needsUpdate = true;
     this.colors.needsUpdate = true;
   }
 
+  /** A new match: every bubble and every hull's last shed point goes. */
+  reset(): void {
+    this.bornAt.fill(-Infinity);
+    this.lastShed.clear();
+    this.head = 0;
+    this.alive = 0;
+    this.spawnedSinceTick = false;
+    this.colors.array.fill(0);
+    this.colors.needsUpdate = true;
+    this.points.visible = false;
+  }
+
   dispose(): void {
-    this.lines.geometry.dispose();
+    this.points.geometry.dispose();
     this.material.dispose();
   }
 
-  private allocate(): void {
-    const vertices = this.capacity * WAKE_SEGMENTS * 2;
-    this.positions = new Float32BufferAttribute(new Float32Array(vertices * 3), 3);
-    this.colors = new Float32BufferAttribute(new Float32Array(vertices * 3), 3);
-    this.positions.setUsage(DynamicDrawUsage);
-    this.colors.setUsage(DynamicDrawUsage);
-    const geometry = this.lines.geometry;
-    // A resized buffer is a new attribute, and a new attribute on a geometry
-    // the renderer has seen needs a new geometry, or three keeps the old one.
-    geometry.dispose();
-    const next = new BufferGeometry();
-    next.setAttribute('position', this.positions);
-    next.setAttribute('color', this.colors);
-    this.lines.geometry = next;
+  /** Write one bubble into the next slot of the ring, over the oldest. */
+  private spawn(x: number, y: number, z: number, strength: number, draw: number, nowMs: number) {
+    const i = this.head;
+    this.head = (this.head + 1) % WAKE_POOL;
+    this.shed++;
+    this.spawnedSinceTick = true;
+    this.birth[i * 3] = x;
+    this.birth[i * 3 + 1] = y;
+    this.birth[i * 3 + 2] = z;
+    this.level[i] = strength;
+    this.lifeMs[i] = WAKE_LIFE_MS * (WAKE_MIN_SHARE + (1 - WAKE_MIN_SHARE) * strength);
+    this.rise[i] = this.reducedMotion ? 0 : WAKE_RISE_MPS * draw;
+    this.bornAt[i] = nowMs;
   }
 }

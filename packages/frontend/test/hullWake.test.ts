@@ -1,7 +1,7 @@
 /**
  * The cavitation wake behind own hulls (#1508, docs/art-direction.md
  * "Animation Style"). The three.js objects here need no GL — these tests read
- * the buffers and the draw range the render would.
+ * the bubble ring's buffers the render would.
  */
 
 import assert from 'node:assert/strict';
@@ -10,17 +10,19 @@ import { SIG_BANDS, SILENT_RUNNING } from '@echoes/shared';
 import {
   HullWake,
   WAKE_FLOOR,
-  WAKE_MAX_M,
+  WAKE_LIFE_MS,
+  WAKE_MIN_SHARE,
   WAKE_MIN_SPEED_MPS,
-  WAKE_RISE_M,
-  WAKE_SEGMENTS,
+  WAKE_POOL,
+  WAKE_SPACING_M,
   wakeStrength,
   type WakeSource,
 } from '../src/game/hullWake.ts';
 
 const RUNNING = 8;
 
-const source = (x: number, heading: number, strength: number): WakeSource => ({
+const source = (id: number, x: number, strength: number, heading = 0): WakeSource => ({
+  id,
   x,
   y: -300,
   z: 0,
@@ -51,50 +53,101 @@ describe('wakeStrength', () => {
 });
 
 describe('HullWake', () => {
-  it('draws any number of wakes as one object, and none when nothing runs', () => {
-    const wake = new HullWake(2);
-    const sources = [source(0, 0, 1), source(100, 0, 0.5), source(200, 0, 0.2)];
-    wake.sync(sources, 3, 1);
-    assert.equal(wake.count, 3, 'grew past its initial capacity');
-    assert.equal(wake.vertexCount, 3 * WAKE_SEGMENTS * 2);
-    assert.ok(wake.lines.visible);
-    wake.sync([source(0, 0, 0)], 1, 1);
-    assert.equal(wake.count, 0);
-    assert.equal(wake.vertexCount, 0);
-    assert.equal(wake.lines.visible, false, 'nothing running draws nothing');
-  });
-
-  it('allocates nothing on a frame that fits the fleet it has seen', () => {
-    const wake = new HullWake(4);
-    const sources = [source(0, 0, 1), source(100, 0, 1)];
-    wake.sync(sources, 2, 1);
-    const geometry = wake.lines.geometry;
-    const positions = geometry.getAttribute('position');
-    for (let frame = 0; frame < 5; frame++) {
-      sources[0]!.x += 1;
-      wake.sync(sources, 2, 1);
+  /** Run one hull `metres` along +X in 1 m steps, a frame each at 16 ms. */
+  const run = (wake: HullWake, s: WakeSource, metres: number, t0 = 0): number => {
+    let t = t0;
+    for (let m = 0; m <= metres; m++) {
+      s.x = m;
+      wake.sync([s], 1, 1, t);
+      t += 16;
     }
-    assert.equal(wake.lines.geometry, geometry);
-    assert.equal(wake.lines.geometry.getAttribute('position'), positions);
+    return t;
+  };
+
+  it('sheds one bubble per spacing of ground covered, astern, whatever the frame rate', () => {
+    const wake = new HullWake();
+    run(wake, source(1, 0, 1), 10 * WAKE_SPACING_M);
+    assert.equal(wake.shedCount, 10);
+    const coarse = new HullWake();
+    const s = source(1, 0, 1);
+    coarse.sync([s], 1, 1, 0);
+    s.x = 10 * WAKE_SPACING_M;
+    coarse.sync([s], 1, 1, 16);
+    assert.equal(coarse.shedCount, 10, 'one long frame sheds what many short ones do');
+    // The stern is 10 m behind a bow on +X: the first bubble is shed there.
+    assert.ok(Math.abs(coarse.bubbleAt(0).x - (WAKE_SPACING_M - 10)) < 1e-4);
+    assert.ok(Math.abs(coarse.bubbleAt(0).z) < 1e-4, 'and nowhere sideways');
   });
 
-  it('trails astern, climbing, and longer and brighter for a louder hull', () => {
+  it('draws every hull from one fixed ring, recycling the oldest', () => {
     const wake = new HullWake();
-    wake.sync([source(0, 0, 1), source(0, Math.PI / 2, WAKE_FLOOR)], 2, 1);
-    const loud = wake.tailOf(0);
-    assert.ok(Math.abs(loud.x - -(10 + WAKE_MAX_M)) < 1e-4, 'a bow on +X trails to -X');
-    assert.ok(Math.abs(loud.z) < 1e-4, 'and nowhere sideways');
-    assert.ok(Math.abs(loud.y - (-300 + WAKE_RISE_M)) < 1e-4, 'bubbles climb');
-    const quiet = wake.tailOf(1);
-    assert.ok(quiet.z < 0 && Math.abs(quiet.x) < 1e-4, 'a bow on +Z trails to -Z');
-    assert.ok(-quiet.z - 10 < WAKE_MAX_M, 'a quiet wake is shorter');
-    assert.ok(wake.levelOf(1) < wake.levelOf(0), 'and fainter');
-    assert.ok(Math.abs(wake.levelOf(0) - 1) < 1e-6);
+    const sources = [source(1, 0, 1), source(2, 0, 1), source(3, 0, 1)];
+    let t = 0;
+    for (let m = 0; m <= 1000; m += 5) {
+      for (const s of sources) s.x = m;
+      wake.sync(sources, 3, 1, t);
+      t += 16;
+    }
+    assert.ok(wake.shedCount > WAKE_POOL, 'shed more than the ring holds');
+    assert.equal(wake.poolSize, WAKE_POOL, 'and the ring never grew');
+    assert.equal(wake.points.geometry.getAttribute('position').count, WAKE_POOL);
   });
 
-  it('scales with the far-zoom draw factor, as the torpedo trail does', () => {
+  it('leaves bubbles where they were shed, climbing straight up, then gone', () => {
     const wake = new HullWake();
-    wake.sync([source(0, 0, 1)], 1, 3);
-    assert.ok(Math.abs(wake.tailOf(0).x - -(10 + 3 * WAKE_MAX_M)) < 1e-3);
+    const t = run(wake, source(1, 0, 1), 2 * WAKE_SPACING_M);
+    const born = wake.bubbleAt(0);
+    wake.tick(t + 1000);
+    const later = wake.bubbleAt(0);
+    assert.equal(later.x, born.x, 'the hull moved on; the bubble did not');
+    assert.equal(later.z, born.z);
+    assert.ok(later.y > born.y, 'bubbles climb');
+    wake.tick(t + WAKE_LIFE_MS + 100);
+    assert.equal(wake.count, 0);
+    assert.equal(wake.live, false);
+    assert.equal(wake.points.visible, false, 'nothing alive draws nothing');
+  });
+
+  it('makes a louder wake brighter and longer-lived', () => {
+    const loud = new HullWake();
+    const quiet = new HullWake();
+    const t = run(loud, source(1, 0, 1), WAKE_SPACING_M);
+    run(quiet, source(1, 0, WAKE_FLOOR), WAKE_SPACING_M);
+    assert.ok(quiet.levelAt(0) < loud.levelAt(0), 'fainter');
+    const quietLife = WAKE_LIFE_MS * (WAKE_MIN_SHARE + (1 - WAKE_MIN_SHARE) * WAKE_FLOOR);
+    loud.tick(t + quietLife + 50);
+    quiet.tick(t + quietLife + 50);
+    assert.equal(quiet.count, 0, 'a quiet wake is gone');
+    assert.ok(loud.count > 0, 'a loud one is still there, so it trails further');
+  });
+
+  it('sheds nothing for a hull with no strength, or across a jump', () => {
+    const wake = new HullWake();
+    run(wake, source(1, 0, 0), 10 * WAKE_SPACING_M);
+    assert.equal(wake.shedCount, 0, 'engine cut or holding still');
+    const s = source(2, 0, 1);
+    wake.sync([s], 1, 1, 0);
+    s.x = 5000;
+    wake.sync([s], 1, 1, 16);
+    assert.equal(wake.shedCount, 0, 'a lift is not a run');
+  });
+
+  it('keeps the wake but stills it under reduced motion (docs/ui-ux.md §11)', () => {
+    const wake = new HullWake();
+    wake.setReducedMotion(true);
+    const t = run(wake, source(1, 0, 1), WAKE_SPACING_M);
+    const born = wake.bubbleAt(0);
+    wake.tick(t + 1000);
+    assert.ok(wake.count > 0, 'still drawn');
+    assert.equal(wake.bubbleAt(0).y, born.y, 'and none climbs');
+  });
+
+  it('clears every bubble for a new match', () => {
+    const wake = new HullWake();
+    const t = run(wake, source(1, 0, 1), 4 * WAKE_SPACING_M);
+    wake.reset();
+    wake.tick(t + 16);
+    assert.equal(wake.count, 0);
+    assert.equal(wake.points.visible, false);
   });
 });

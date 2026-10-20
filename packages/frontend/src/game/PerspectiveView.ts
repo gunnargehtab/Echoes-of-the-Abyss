@@ -1015,7 +1015,7 @@ export class PerspectiveView {
       this.life.group,
       this.unitGroup,
       this.ordnanceLayer.group,
-      this.wake.lines,
+      this.wake.points,
       this.structureGroup,
       this.models.group,
       this.cues.group,
@@ -1186,6 +1186,7 @@ export class PerspectiveView {
     }
     this.snow.setReducedMotion(reduced);
     this.ordnanceLayer.setReducedMotion(reduced);
+    this.wake.setReducedMotion(reduced);
     this.life.setReducedMotion(reduced);
     this.swayHeld = reduced;
     this.motion.levelHeld = reduced;
@@ -1352,6 +1353,7 @@ export class PerspectiveView {
     this.motion.reset();
     this.ordnanceMotion.reset();
     this.ordnanceLayer.reset();
+    this.wake.reset();
     // A force of nobody is not a dark map (acousticVeil.ts): the veil comes
     // off with the fleet rather than closing over the whole chart.
     this.veil.clear();
@@ -3459,9 +3461,9 @@ export class PerspectiveView {
 
   /**
    * Every own hull's wake, from where its hull was just placed: runs after
-   * the entity sync and after each per-frame placement, so a wake never lags
-   * the hull it trails. Strength is live SIG on gate 3's curve, zero for a
-   * hull holding still or with its engine cut (hullWake.ts).
+   * the entity sync and after each per-frame placement, so a hull sheds its
+   * bubbles from the stern it is drawn with. Strength is live SIG on gate 3's
+   * curve, zero for a hull holding still or with its engine cut (hullWake.ts).
    */
   private syncWakes(nowMs: number): void {
     const draw = this.drawScale;
@@ -3473,6 +3475,7 @@ export class PerspectiveView {
       if (strength <= 0) continue;
       const at = this.motion.at(unit, nowMs, this.drawn);
       const source = (this.wakeSources[n] ??= {
+        id: 0,
         x: 0,
         y: 0,
         z: 0,
@@ -3480,6 +3483,7 @@ export class PerspectiveView {
         sternM: 0,
         strength: 0,
       });
+      source.id = unit.id;
       source.x = at.x;
       source.y = handle.drawnY;
       source.z = at.y;
@@ -3489,7 +3493,7 @@ export class PerspectiveView {
       n++;
     }
     this.wake.setPalette(FACTION_PALETTE[this.faction].glow);
-    this.wake.sync(this.wakeSources, n, draw);
+    this.wake.sync(this.wakeSources, n, draw, nowMs);
   }
 
   private syncEntities(): void {
@@ -3877,8 +3881,10 @@ export class PerspectiveView {
       this.placeUnits(now);
       this.syncOrdnance(now);
     } else {
-      // A launch burst outlives a torpedo that hits inside its 1.5 s.
+      // A launch burst outlives a torpedo that hits inside its 1.5 s, and a
+      // wake outlives the run that shed it.
       this.ordnanceLayer.tick(now);
+      this.wake.tick(now);
     }
     if (this.dreamLights !== null) {
       const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
@@ -4276,8 +4282,8 @@ export class PerspectiveView {
       structures: this.structureHandles.size,
       // Own ordnance in the water, drawn by the instanced layer (gate 6).
       ordnance: this.ordnanceLayer.count,
-      // Own hulls leaving a wake this frame, all of them one draw (#1508).
-      wakes: this.wake.count,
+      // Wake bubbles alive this frame, every hull's one draw (#1508).
+      wakeBubbles: this.wake.count,
       // The prop layer's own ledger (gate 6): a prop regression is a
       // number, not an impression.
       ...this.environment.stats(),
