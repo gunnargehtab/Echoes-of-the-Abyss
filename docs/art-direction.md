@@ -63,7 +63,7 @@ Only lit surfaces take the curve: the hulls, structures and props, and the ordna
 bodies. Every unlit layer bypasses it and keeps its authored register: the water
 backdrop and marine snow; the baked seabed with its route ink, map rim and skirt;
 fallback sprites and depth marks; public life's stipple; embers; and ordnance lamps
-with their trails and launch bubbles. The loudness ladder measures its rungs in encoded luminance
+with their trails and launch bubbles, and own hulls' wakes. The loudness ladder measures its rungs in encoded luminance
 ([map-visuals.md](map-visuals.md) §5), and the water, the routes, the rim and the stipple
 stand on its rungs 1 and 5; the conn view places the skirt, which §5 does not name, on
 rung 1. A trail wears its lamp's glow, which ACES would fade toward white. Each of these
@@ -1300,8 +1300,12 @@ decodes, every enemy contact the law below still caps at a flat silhouette — e
 below Track, and a Track that has gone to ghost — and
 **construction sites** — a half-built structure is schematic on purpose, and reads as
 scaffolding until it is commissioned. Cavitation trails run behind the player's own
-torpedoes in the conn view ("Own ordnance is geometry too", below); animated bases are
-still to come.
+torpedoes in the conn view ("Own ordnance is geometry too", below), and behind the
+player's own moving hulls (#1508). A hull's wake is its live SIG on gate 3's curve, full
+at the red stop of 65: long and bright for a hull pushing hard, short and faint for one
+running silent, and none for a hull holding still or with its engine cut. It states how
+loud the hull is and nothing more, so the enemy, which is never geometry in the conn
+view, never has one. Animated bases are still to come.
 
 ### The Asymmetric Fidelity Law
 

@@ -100,6 +100,21 @@ describe('OwnMotion', () => {
  * docs/ui-ux.md §11 for the hold. Read from the same samples as the glide, so
  * a hull leans only on what the player was already told about it.
  */
+describe('OwnMotion.speedOf', () => {
+  it('reads metres per second over the last tick, and nothing without one or across a jump', () => {
+    const motion = new OwnMotion();
+    motion.record([hull(1, 0, 0)], 0);
+    assert.equal(motion.speedOf(1), 0, 'one sample is no speed');
+    motion.record([hull(1, 3, 4)], INTERVAL_MS);
+    assert.ok(Math.abs(motion.speedOf(1) - 5 / (INTERVAL_MS / 1000)) < 1e-9);
+    motion.record([hull(1, 3, 4)], 2 * INTERVAL_MS);
+    assert.equal(motion.speedOf(1), 0, 'a hull that held still');
+    motion.record([hull(1, 3000, 4)], 3 * INTERVAL_MS);
+    assert.equal(motion.speedOf(1), 0, 'a jump is a lift, not a speed');
+    assert.equal(motion.speedOf(2), 0, 'a hull it never saw');
+  });
+});
+
 describe('attitudeOf', () => {
   const level = () => ({ roll: 0, pitch: 0 });
   const MAX_ROLL = (18 * Math.PI) / 180;

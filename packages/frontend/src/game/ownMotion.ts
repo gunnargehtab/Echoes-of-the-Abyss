@@ -266,6 +266,19 @@ export class OwnMotion {
   }
 
   /**
+   * A hull's horizontal speed over its last tick, metres per second: zero
+   * without two samples, and across a jump, which is no speed at all. What
+   * the wake reads (hullWake.ts) to tell a hull running from one holding.
+   */
+  speedOf(id: number): number {
+    const prior = this.previous.get(id);
+    const latest = this.current.get(id);
+    if (prior === undefined || latest === undefined) return 0;
+    const step = Math.hypot(latest.x - prior.x, latest.y - prior.y);
+    return step > SNAP_M ? 0 : step / (this.intervalMs / 1000);
+  }
+
+  /**
    * The attitude one of the player's hulls is drawn at now, written into
    * `out`: between its last two ticks' readings, on the same clock as `at`.
    */
