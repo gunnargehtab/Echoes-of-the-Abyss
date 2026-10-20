@@ -205,6 +205,7 @@ import {
   structureTexture,
 } from './structureTextures.ts';
 import { contactFidelity } from './trackFidelity.ts';
+import { TRACK_HIT_DOT_PX, TRACK_HIT_FLASH_ALPHA, TrackHits } from './trackHit.ts';
 import {
   agentStippleContext,
   agentStippleGraphics,
@@ -1835,6 +1836,8 @@ export class EchoRenderer {
   private cameraCentered = false;
   /** Contact handle to the moment it reached Tier 4, for the lock brackets. */
   private readonly lockFlash = new Map<number, number>();
+  /** The flash and spray on a live track whose hp fell (trackHit.ts, #1517). */
+  private readonly trackHits = new TrackHits();
   /**
    * The player's own ping in flight: where it went out from and when.
    *
@@ -4841,6 +4844,7 @@ export class EchoRenderer {
     this.exposureFlashes.length = 0;
     this.brokeSilence.clear();
     this.tracked.clear();
+    this.trackHits.reset();
     this.selected.clear();
     this.controlGroups.clear();
     this.marks = [];
@@ -4939,6 +4943,9 @@ export class EchoRenderer {
       ) {
         this.lockFlash.set(contact.id, now);
       }
+      // An hp drop between two live Tier-4 readings: the bar the player is
+      // already reading fell, and the track flashes and sprays where it did.
+      this.trackHits.observe(previous, contact, now);
       // Tier 3 names the hull; Tier 4 draws it. Starting the decode on the
       // tier *below* the one that needs it is the whole prefetch (#834): a
       // classification is a tier of lead time, and a sprite still decoding
@@ -6477,6 +6484,44 @@ export class EchoRenderer {
     }
   }
 
+  /**
+   * The flash and spray on a live track whose hp just fell (trackHit.ts,
+   * #1517), drawn in the contact symbol's own space over its sprite. Rung 7,
+   * with the contact it sits on: the spray's dots are weighed at the
+   * contact's alpha (ladder.ts `hitSpray`), the flash is a soft fill and is
+   * not. Reduced motion (docs/ui-ux.md §11) keeps the flash and drops the
+   * spray, as an own hull's hit does.
+   */
+  private drawTrackHit(
+    g: Graphics,
+    id: number,
+    contact: Contact,
+    color: number,
+    alpha: number,
+    now: number,
+    inverseScale: number
+  ): void {
+    const radius =
+      contact.kind !== undefined
+        ? HULL_LENGTH_M[contact.kind] / 2
+        : contact.structure !== undefined
+          ? structureStatsFor(contact.structure).radiusM
+          : 70;
+    const flash = this.trackHits.flash(id, now);
+    if (flash > 0) {
+      // Swells as it fades: the jolt is tight, the afterglow wide.
+      g.circle(0, 0, radius * (1.1 - 0.4 * flash)).fill({
+        color: UI.text,
+        alpha: alpha * TRACK_HIT_FLASH_ALPHA * flash,
+      });
+    }
+    const dot = TRACK_HIT_DOT_PX * inverseScale;
+    this.trackHits.spray(id, radius, now, (x, y, fade, debris) => {
+      if (this.reducedMotion) return;
+      g.circle(x, y, dot).fill({ color: debris ? UI.text : color, alpha: alpha * fade });
+    });
+  }
+
   /** The terrain grid's index for a point, clamped onto the map. 0 before a map. */
   private terrainCell(x: number, y: number): number {
     const terrain = this.terrain;
@@ -6530,6 +6575,7 @@ export class EchoRenderer {
         // "A retreating enemy leaves a fading trail of last-known positions."
         this.tracked.delete(id);
         this.lockFlash.delete(id);
+        this.trackHits.forget(id);
         continue;
       }
 
@@ -6579,6 +6625,9 @@ export class EchoRenderer {
       // *resolved*, so a track the player is still holding stays live however
       // long they have held it.
       const live = contactFidelity(contact.tier, age) === 'sprite';
+      // A hit is drawn only on a live track: on a ghost it would claim a
+      // present tense, as a lit sprite would.
+      if (!live) this.trackHits.forget(id);
       // ...and a *new* mark fades in, which is the Precedence Law's budget
       // rather than a flourish: a mark that pops instantly races the audio
       // device's own output latency and will sometimes win (§2). The two
@@ -6708,6 +6757,7 @@ export class EchoRenderer {
             sg.circle(0, 0, style.radius).fill({ color, alpha });
           }
 
+          this.drawTrackHit(sg, id, contact, color, alpha, now, inverseScale);
           this.drawGlyph(sg, contact, color, alpha, style.radius, inverseScale);
 
           if (contact.hp !== undefined && contact.maxHp !== undefined && contact.maxHp > 0) {

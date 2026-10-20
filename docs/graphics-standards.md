@@ -392,6 +392,10 @@ one draw call for any number of hits and none once the last spray fades. The lam
 costs no draw: it rides the gate-3 glow attribute the hull already writes. The probe
 reports live hits as `hits` and their particles as `hitParticles`.
 
+A hit on a live enemy track (`trackHit.ts`, #1517) is drawn on the chart, not in the
+conn view, into the `Graphics` the contact already owns: no display object of its own, at
+most 24 dots and one disc per struck track while it lives, and nothing once it is spent.
+
 The fleet's depth cues follow the same rule (#434). Every own hull hangs over a ground
 shadow on a plumb line — the cue that makes the water column readable — and each used to
 be its own line and its own disc: two draw calls per hull, ninety-six at the berth

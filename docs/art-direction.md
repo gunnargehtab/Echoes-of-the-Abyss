@@ -1430,7 +1430,15 @@ lamp factor for about a third of a second, to twice its ceiling at full, since a
 fire is usually loud and already at the ceiling; the spray lives 1.2 s. The
 trigger is the server's `Damaged` self-event, and the size is the difference of two own
 snapshots, so nothing unresolved is drawn. Reduced motion keeps the flash and drops the
-spray. Hits on enemy tracks are a separate issue.
+spray.
+
+A live Tier-4 track whose hp falls between two readings (#1517) takes the same hit on the
+chart, beside its sprite: a pale flash swelling as it fades and the same spray, bubbles in
+the contact's colour and pale fragments, at the size the same blow on an own hull would
+be. The player already reads that hp on the track's bar, so it reveals nothing. It fires
+only between two live Tier-4 readings of one handle, never across a tier change or after
+a ghost, and a track that goes to ghost takes its hit with it. The conn view never draws
+it: the enemy is never geometry there. Reduced motion keeps the flash.
 
 ### Echo Layer Requirements
 

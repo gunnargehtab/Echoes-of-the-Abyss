@@ -401,7 +401,8 @@ What stays recorded, for the owner. The tests pin each break and fail if it move
   Hadron's deep blue and dark teal, sit at 0.17–0.19 luminance. At 0.33 the ring lifts the kelp
   fill by 0.024–0.030: under rung 6's floor there (0.065–0.103), and under the survey ink's
   coast (0.042). A Tier-4 contact's glyph and health bar fall under rung 6's floor too in the
-  three palettes that draw the Hadron dark, in tritanopia by less than 0.0001. In the
+  three palettes that draw the Hadron dark, and so does the spray a hit throws off a live track
+  (#1517), whose bubbles wear the bar's colours at its alpha, in tritanopia by less than 0.0001. In the
   standard palette they fall under it over lifted ground only, once a lit face lifts the
   palest fill by 0.05 or more; the owner kept the 0.15 cap and recorded it (#1103). The ground
   itself stays far under them: a lit face lifts that fill by 0.017, and the glyph lifts the
@@ -426,7 +427,7 @@ What stays recorded, for the owner. The tests pin each break and fail if it move
 - **Some placements are the audit's, not §5's.** §5's rows do not name these, and each draw
   site says why it was placed where it is. On rung 6: order routes and their markers, the
   lock flash, the crush and break-silence rings, the ink about own ordnance, a yard's rally
-  course, and the health and build bars. On rung 7: a contact's glyph and health bar, a
+  course, and the health and build bars. On rung 7: a contact's glyph, health bar and hit spray, a
   construction scaffold, and own depth cues. On rung 1: the skirt at the map's edge.
 
 ### Phase 3 — landed
