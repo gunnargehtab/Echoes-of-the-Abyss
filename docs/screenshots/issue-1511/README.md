@@ -4,7 +4,7 @@ Evidence for [#1511](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/
 flash and pressure ring of an own gun's shot, specified under "UI FX" in
 [art-direction.md](../../art-direction.md) and counted under gate 6 of
 [graphics-standards.md](../../graphics-standards.md). Taken headless in a Linux container
-on The Ventfront Divide against a Veteran AI opponent, so the frames come from SwiftShader:
+on The Ventfront Divide against an AI opponent, so the frames come from SwiftShader:
 they show what is drawn, and no millisecond is a gate-6 reading.
 
 ```bash
