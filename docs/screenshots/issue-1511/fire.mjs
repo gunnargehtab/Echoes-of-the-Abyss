@@ -47,17 +47,18 @@ await look(target.x, target.z, 1400);
 await page.waitForTimeout(300);
 await page.mouse.click(C.x, C.y, { button: 'right' });
 
-// Sail in until the first shot, then stop: SwiftShader takes seconds a frame
-// in the fight, and a hull at 70 m/s leaves the frame between aiming and the
-// shot. Held, the guns keep firing where the camera points. Every pass is
-// shot, and the frames in which a shot's particles are alive are kept.
+// Sail in until the first blow either way, then stop: a hull under a move
+// order does not stop to brawl, so its guns open only once it is held, and
+// SwiftShader takes seconds a frame in the fight. Held, the guns keep firing
+// where the camera points. Every pass is shot, and the frames in which a
+// shot's particles are alive are kept.
 const deadline = Date.now() + 8 * 60_000;
 let taken = 0;
 let held = false;
 while (Date.now() < deadline && taken < 4) {
   const p = await probe();
   if (!held) {
-    if (p.shots > 0) {
+    if (p.hits > 0 || p.shots > 0) {
       await page.keyboard.press('KeyX');
       held = true;
     } else if (p.ownCentre !== null) {
