@@ -141,7 +141,9 @@ export const GROUNDS: readonly Ground[] = [
     mapId: 'holding-underworks',
     name: 'The Underworks, under Holding One',
     region: 'The West Wall',
-    depthM: 1300,
+    // The roofed water's top, 1,900 m; 1,300 is Tolerance's Face floor, a
+    // map's floor and not the place (docs/world-map.md §3).
+    depthM: 1900,
     ...held(Faction.Bathyarch),
     x: 537,
     y: 1110,
@@ -304,8 +306,10 @@ export const GROUNDS: readonly Ground[] = [
     depthM: 2600,
     water: null,
     whose: 'nobody’s water — four reasons converging',
+    // South of the galleries, which stand eleven kilometres north of the Lip
+    // (docs/world-map.md §4).
     x: 1000,
-    y: 2286,
+    y: 2350,
   },
 ];
 

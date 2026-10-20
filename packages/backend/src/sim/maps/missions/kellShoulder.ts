@@ -31,7 +31,7 @@ import type { MapDefinition, MapRect } from '../types.ts';
 export const KELL_SHOULDER: MapDefinition<MapRect> = {
   id: 'kell-shoulder',
   name: 'The Kell Shoulder',
-  idealUse: 'Thin Water, mission two. Four kilometres of bare rock and a corridor across it.',
+  idealUse: 'Thin Water, mission two. Four kilometres between gardens and a corridor across it.',
   seats: 1,
   widthM: 5000,
   heightM: 3000,

@@ -67,6 +67,7 @@ describe('the gazetteer', () => {
     assert.ok(y('marr-plateau') < y('holding-underworks'));
     assert.ok(y('holding-underworks') < y('the-first'));
     assert.ok(y('the-first') < y('attending-galleries'));
+    assert.ok(y('attending-galleries') < y('mouth-rim'));
     assert.ok(y('sorrowgate') < y('mouth-rim'));
   });
 
@@ -101,7 +102,7 @@ describe('the gazetteer', () => {
       'marr-plateau': 320, // the plateau
       'kell-shoulder': 340, // the shoulder, at the Concourse's own depth
       'anholt-furrow': 2200, // the seeded floor, not the Foot at 900
-      'holding-underworks': 1300, // the Holding's lowest berths, over the roofed works
+      'holding-underworks': 1900, // the roofed works' top, under the Holding's berths
       'holding-board': 1350, // Board country, at the bottom of the city
       'ninefold-face-six': 1000, // the founding field, 900–1,400 m
       'ninefold-workings': 1100, // the upper workings, astride the layer

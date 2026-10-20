@@ -25,7 +25,7 @@ out loud.
 
 Two garden terraces, and four kilometres of nothing between them.
 
-Kell Plateau is the terrace that shared a name and a fate with the Consortium sector above it:
+Kell Plateau is the terrace that shared a name and a fate with the Consortium sector beside it:
 the 197 PC flood front crossed it, four thousand farmers got out, two hundred did not, and the
 Commune has never renamed it and never will ([world-map.md](world-map.md);
 [timeline.md](timeline.md)). It was replanted. The kelp grows. Its bloom came early this tide,
