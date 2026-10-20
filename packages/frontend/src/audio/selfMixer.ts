@@ -301,6 +301,11 @@ export class SelfMixer {
         // whether it ever earns a sound of its own is a mix decision and is
         // not one this change makes.
         return false;
+      case SelfEventKind.Fired:
+        // Silent here for now: #1511 gave own gunfire its muzzle effect and
+        // left its sound to an issue of its own. BreakSilence already voices
+        // the shot that costs the most.
+        return false;
     }
   }
 

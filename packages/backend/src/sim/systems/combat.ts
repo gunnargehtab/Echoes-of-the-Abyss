@@ -562,6 +562,18 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
     if (applyFiringSpike(eid, profile.firingSig)) {
       raiseSelfEvent(world, { kind: SelfEventKind.BreakSilence, eid });
     }
+    // The owner sees their own gun fire (#1511): one event a shot, with the
+    // bearing it fired on. Every gun's cooldown is over the 0.2 s between
+    // Echo passes, so the drain's one-per-entity-and-kind never folds two
+    // shots of one gun together.
+    raiseSelfEvent(world, {
+      kind: SelfEventKind.Fired,
+      eid,
+      bearing: Math.atan2(
+        Position.y[target]! - Position.y[eid]!,
+        Position.x[target]! - Position.x[eid]!
+      ),
+    });
     // Residue, laid down at the target rather than the shooter: a scout that
     // finds a battle site should find where the fighting *was*, and the losing
     // side is the one that stayed still (docs/systems-echo.md §7).
