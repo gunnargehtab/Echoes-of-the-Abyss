@@ -17,8 +17,8 @@
  * span is a wrap: the two triangles took the cut's two sides, a plate
  * apart, which `facetMids` in trim.mjs now prevents: it lists none on the
  * re-exported models. Closing one edge out, it still listed the cap fans
- * of squat drums `roundAxis` unrolls about the wrong axis (#1501), every
- * triangle coplanar with the next; the flood reads a fan as one facet.
+ * of squat drums `roundAxis` unrolled about the wrong axis, every triangle
+ * coplanar with the next, until #1501 unrolled each about its own.
  */
 import { readdirSync } from 'node:fs';
 import { readGlb } from '../../../tools/hull-models/glb.mjs';

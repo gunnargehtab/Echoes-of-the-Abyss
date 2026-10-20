@@ -244,6 +244,34 @@ test('a round part of four facets lays each facet on one map', () => {
   assert.ok(facetDisagreement(cone) > sheet, 'a twelve-facet taper is no longer unrolled');
 });
 
+// #1501: a squat drum read its own axis at 0.77 under three's repeated
+// corners and unrolled about a side axis, its caps laid as sides. Each
+// unrolled about its own: its side corners wrap whole plates, at every
+// count, turned in its geometry or by its mesh.
+test('a squat drum unrolls about its own axis, not across it', () => {
+  const drums = [
+    // The Spark's gun drum, six facets wider than it is tall.
+    ['gun_drum', new THREE.CylinderGeometry(0.7, 0.8, 0.8, 6), new THREE.Vector3(0, 1, 0)],
+    // The Lure's can_1, near a cube: its own axis wins only the tie-break.
+    ['can_1', new THREE.CylinderGeometry(5.4, 5.4, 7.4, 14), new THREE.Vector3(0, 1, 0)],
+    // A Thurible hub stood on x in its geometry, as a collar's lathe is.
+    [
+      'hub',
+      new THREE.CylinderGeometry(0.3, 0.3, 0.4, 6).rotateZ(Math.PI / 2),
+      new THREE.Vector3(1, 0, 0),
+    ],
+  ];
+  for (const [name, geometry, axis] of drums) {
+    const mesh = laidAlone(geometry);
+    const us = uvsAt(mesh, (n) => Math.abs(n.dot(axis)) < 0.5).map(([u]) => u);
+    const plates = (Math.max(...us) - Math.min(...us)) * PLATES;
+    assert.ok(
+      plates > 0.5 && Math.abs(plates - Math.round(plates)) < 1e-6,
+      `${name}: its side wraps ${plates.toFixed(3)} plates`
+    );
+  }
+});
+
 test('every corner gets a UV, no vertex moves, and two layouts are one', () => {
   const { root, drum } = yard();
   // A quarter turn puts the unroll's cut on a vertex column two facets
