@@ -266,6 +266,19 @@ export class OwnMotion {
   }
 
   /**
+   * Whether a hull moved across the ground between its last two ticks: one
+   * holding station, diving in place, or with a single sample has not. A snap is a respawn or a lift, not
+   * a passage, and does not count.
+   */
+  moving(id: number): boolean {
+    const prior = this.previous.get(id);
+    const latest = this.current.get(id);
+    if (prior === undefined || latest === undefined) return false;
+    const step = Math.hypot(latest.x - prior.x, latest.y - prior.y);
+    return step > 0 && step <= SNAP_M;
+  }
+
+  /**
    * The attitude one of the player's hulls is drawn at now, written into
    * `out`: between its last two ticks' readings, on the same clock as `at`.
    */

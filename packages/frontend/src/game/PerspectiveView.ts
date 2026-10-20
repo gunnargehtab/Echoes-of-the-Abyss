@@ -135,6 +135,7 @@ import {
 } from './passages.ts';
 import { OwnMotion, type Attitude } from './ownMotion.ts';
 import { OrdnanceLayer } from './ordnanceLayer.ts';
+import { HullWake, wakeStrength, type WakePlacement } from './hullWake.ts';
 import { EnvironmentLayer } from './environmentLayer.ts';
 import { createWaterEnvironment, keepsGlowOutsideToneMapping } from './modelLighting.ts';
 import { GLOW_FACTOR_MAX, GLOW_FACTOR_MIN, SIG_GLOW_EFOLD } from './glow.ts';
@@ -807,6 +808,10 @@ export class PerspectiveView {
   private ordnance: OwnOrdnance[] = [];
   /** Own ordnance glides between ticks as own hulls do (ownMotion.ts). */
   readonly ordnanceMotion = new OwnMotion();
+  /** The cavitation wake behind own moving hulls: one line for the fleet (hullWake.ts). */
+  private readonly wake = new HullWake();
+  /** Its placements, reused frame to frame so a glide allocates nothing. */
+  private readonly wakes: WakePlacement[] = [];
 
   private faction: Faction = Faction.Bathyarch;
   private units: OwnUnit[] = [];
@@ -1007,6 +1012,7 @@ export class PerspectiveView {
       this.life.group,
       this.unitGroup,
       this.ordnanceLayer.group,
+      this.wake.lines,
       this.structureGroup,
       this.models.group,
       this.cues.group,
@@ -1407,6 +1413,7 @@ export class PerspectiveView {
     this.resizeObserver?.disconnect();
     this.environment.destroy();
     this.ordnanceLayer.dispose();
+    this.wake.dispose();
     this.models.dispose();
     this.cues.dispose();
     this.backdrop.dispose();
@@ -3441,6 +3448,36 @@ export class PerspectiveView {
       const lean = this.motion.attitude(unit.id, nowMs, this.lean);
       this.placeHandle(handle, at.x, at.y, at.depth, this.headings.get(unit.id) ?? 0, lean);
     }
+    this.syncWakes(nowMs);
+  }
+
+  /**
+   * The wake behind each own hull, from where the hull is drawn now. Runs
+   * wherever the hulls are placed, so the line never lags its stern. Rung 7
+   * with the hulls it trails (docs/map-visuals.md §5).
+   */
+  private syncWakes(nowMs: number): void {
+    this.wake.setPalette(FACTION_PALETTE[this.faction].glow);
+    const draw = this.drawScale;
+    let n = 0;
+    for (const unit of this.units) {
+      const handle = this.unitHandles.get(unit.id);
+      if (handle === undefined) continue;
+      const at = this.motion.at(unit, nowMs, this.drawn);
+      const wake = (this.wakes[n] ??= { x: 0, y: 0, z: 0, yaw: 0, sternM: 0, strength: 0 });
+      // The height placeHandle gives the hull, seabed clearance included, so
+      // a bottomed hull's wake leaves its stern rather than the ground.
+      wake.x = at.x;
+      wake.y = Math.max(depthToWorldY(at.depth), this.groundYAt(at.x, at.y) + 4 * draw);
+      wake.z = at.y;
+      wake.yaw = this.headings.get(unit.id) ?? 0;
+      const lengthM =
+        handle.model !== null && !handle.mesh.visible ? handle.model.lengthM : handle.widthM;
+      wake.sternM = 0.5 * lengthM * draw;
+      wake.strength = wakeStrength(unit.sig, unit.engineOff, this.motion.moving(unit.id));
+      n++;
+    }
+    this.wake.sync(this.wakes, n);
   }
 
   private syncEntities(): void {
@@ -3478,6 +3515,7 @@ export class PerspectiveView {
         stands: false,
       });
     }
+    this.syncWakes(now);
 
     const liveStructures = new Set(this.structures.map((s) => s.id));
     for (const [id, handle] of this.structureHandles) {
@@ -4226,6 +4264,8 @@ export class PerspectiveView {
       structures: this.structureHandles.size,
       // Own ordnance in the water, drawn by the instanced layer (gate 6).
       ordnance: this.ordnanceLayer.count,
+      // Own hulls trailing a wake, all on the one line (hullWake.ts).
+      wakes: this.wake.count,
       // The prop layer's own ledger (gate 6): a prop regression is a
       // number, not an impression.
       ...this.environment.stats(),

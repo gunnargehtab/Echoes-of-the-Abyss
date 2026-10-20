@@ -93,7 +93,15 @@ import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
 import { FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
 import { RING_FAR_ALPHA, RING_NEAR_ALPHA } from '../src/game/scopeSweep.ts';
-import { BufferAttribute, FogExp2, Mesh, MeshBasicMaterial, Points, type Scene } from 'three';
+import {
+  BufferAttribute,
+  FogExp2,
+  LineSegments,
+  Mesh,
+  MeshBasicMaterial,
+  Points,
+  type Scene,
+} from 'three';
 
 /** What the shell was told, in the order it was told. */
 interface CallbackLog {
@@ -914,6 +922,58 @@ describe('renderer smoke test: the conn view', () => {
         false,
         'the conn view holds nothing about contacts'
       );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('trails one wake line for the whole moving fleet, and none for a still one (#1508)', async () => {
+    const world = await boot();
+    try {
+      // The boot gave every hull one sample: nothing has moved yet.
+      world.frame(2);
+      const wakes = (): LineSegments[] => {
+        const found: LineSegments[] = [];
+        world.gl.lastScene?.traverse((object) => {
+          if (object instanceof LineSegments && object.name === 'hull_wakes') found.push(object);
+        });
+        return found;
+      };
+      const probe = (): Record<string, unknown> =>
+        (
+          globalThis as unknown as { window: { __perspectiveProbe: () => Record<string, unknown> } }
+        ).window.__perspectiveProbe();
+      assert.equal(wakes().length, 1, 'one line object in the scene');
+      assert.equal(probe().wakes, 0, 'a fleet that has not moved leaves no wake');
+      const still = world.gl.ledger.calls;
+
+      const snapshot = cannedSnapshot(301);
+      const advance = (moved: number, shift: number) => {
+        world.conn.applySnapshot({
+          ...snapshot,
+          units: snapshot.units.map((unit, i) =>
+            i < moved ? { ...unit, x: unit.x + shift } : unit
+          ),
+        });
+        world.frame(1);
+      };
+      advance(1, 40);
+      const one = world.gl.ledger.calls - still;
+      assert.equal(probe().wakes, 1);
+      assert.equal(one, 1, 'one hull under way costs one draw');
+
+      advance(snapshot.units.length, 80);
+      assert.equal(probe().wakes, snapshot.units.length, 'every hull under way trails a wake');
+      assert.equal(world.gl.ledger.calls - still, one, 'and the whole fleet costs the same one');
+
+      // The same hulls, drive cut, carried on: no thrust, no cavitation.
+      world.conn.applySnapshot({
+        ...snapshot,
+        units: snapshot.units.map((unit) => ({ ...unit, x: unit.x + 120, engineOff: true })),
+      });
+      world.frame(1);
+      assert.equal(probe().wakes, 0, 'an engine-off hull leaves none');
+      assert.equal(world.gl.ledger.calls, still, 'and the line is not drawn at all');
     } finally {
       world.teardown();
     }
