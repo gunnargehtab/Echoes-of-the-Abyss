@@ -48,6 +48,14 @@ Licence texts are in `.claude/vendor-licenses/`. `cloudai-x/threejs-skills`
 ships no `LICENSE` file; its README states MIT, and that statement is quoted in
 `threejs-skills.NOTICE`.
 
+**The three.js upstream moved on 19 October, and the copies here did not (#1450).**
+`cloudai-x/threejs-skills` is at `0e18186`: every skill rewritten to target three r186,
+a WebGPU and TSL section in each, three new skills and a `LICENSE` file. The client pins
+`three@^0.169.0` and installs 0.169.0, so a re-sync would trade the r169 drift listed
+below for r186 advice that does not run here: `HDRLoader` (r180), a core `Timer` (r183),
+WebGPU. The four stay at `b1c6230` until `three` is bumped; that bump re-syncs them,
+re-applies their `LOCAL` notes, and swaps the NOTICE for the upstream `LICENSE`.
+
 Why each one earns its context:
 
 - **PixiJS** is official, written against v8, and `pixi.js` is pinned to `^8.2.0`
@@ -262,23 +270,26 @@ Recorded so the next search does not repeat this one.
 - **Game-dev bundles** are Unity, Godot or Roblox shaped, and **code review,
   monorepo and vitest** skills duplicate what is already here. The backend suite
   runs on `node:test`, not vitest.
-- **`threejs-lighting`** (`cloudai-x/threejs-skills`, `b1c6230`), checked for #974
-  at `f3a21972`. The client builds one `AmbientLight`, two `DirectionalLight`s and
+- **`threejs-lighting`** (`cloudai-x/threejs-skills`), checked for #974 at
+  `f3a21972` against `b1c6230`, and again for #1450 at `16c77f45` against
+  `0e18186`. The client still builds one `AmbientLight`, two `DirectionalLight`s and
   one `PMREMGenerator`, plus a `PointLight` in the development-only Dream Loop
   study, and `grep -rE 'castShadow|receiveShadow|shadowMap' packages/frontend/src`
-  finds nothing, because the shared rig adds no shadows. The rest — shadows,
+  still finds nothing, because the shared rig adds no shadows. The rest — shadows,
   hemisphere and point lights — belongs to the two `tools/hull-renders` rigs, which
-  are not a gate. The skill's IBL recipe also drops the render target that
-  `packages/frontend/src/game/modelLighting.ts` keeps and disposes. Revisit if a
-  production shadow map or a new runtime light type lands.
-- **`threejs-shaders`** (same upstream and commit). It passes the import half: the
-  client builds three `ShaderMaterial`s outside the Dream Loop study, patches
-  built-in materials through `onBeforeCompile` at five sites and rewrites three's
-  global fog chunks in `packages/frontend/src/game/water.ts`. It fails the half
-  that earns context. Its extension example replaces an earlier patch and sets no
-  `customProgramCacheKey`, it lists `output_fragment`, which r169 no longer has,
-  and it sets WebGL1 extension flags r169 no longer reads. A vendored copy could
-  be corrected only through another `LOCAL` exception, and the chaining rule
-  already lives in `material-design` and in
-  `packages/frontend/test/modelLighting.test.ts`. Revisit with a
-  `.claude/skill-eval/` probe on a shader-patch issue.
+  are not a gate. The r186 rewrite's IBL recipe still keeps only `.texture` from
+  `fromScene`, dropping the render target that
+  `packages/frontend/src/game/modelLighting.ts` keeps and disposes, and its
+  corrections name `HDRLoader` and a core `Timer`, which `three@0.169.0` does not
+  ship. Revisit if a production shadow map or a new runtime light type lands.
+- **`threejs-shaders`** (same upstream and checks). It passes the import half by
+  more than it did: at `16c77f45` the client builds ten `ShaderMaterial`s outside
+  the Dream Loop study, patches built-in materials through `onBeforeCompile` at nine
+  sites and rewrites three's global fog chunks in
+  `packages/frontend/src/game/water.ts`. At `b1c6230` it failed the half that earns
+  context, with no `customProgramCacheKey`, an `output_fragment` chunk and WebGL1
+  extension flags. The r186 rewrite fixes all three. What is left is narrower: its
+  extension example still assigns `onBeforeCompile` over any earlier patch, the rule
+  `material-design` and `packages/frontend/test/modelLighting.test.ts` hold, and a
+  fifth of it is WebGPU and TSL, which a WebGL client cannot use. Revisit with a
+  `.claude/skill-eval/` probe on a shader-patch issue, or when `three` reaches r186.
