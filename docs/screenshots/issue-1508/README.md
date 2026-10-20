@@ -17,7 +17,6 @@ trails amber bubbles from its stern, left in the water where they were shed, and
 light scout at SIG 12 trails a fainter, shorter line. The probe read 97 live bubbles.
 
 `wake-silent.png` is the same fleet coming back under Silent Running, at SIG 8: the wakes
-are at the floor's strength and barely show. The probe read 76 live bubbles, every one
-shed under Silent Running: the loud run's had faded eight seconds earlier.
+are at the floor's strength and barely show. The probe read 76 live bubbles.
 
 After a stop order the probe read 0 live bubbles once the last had faded.

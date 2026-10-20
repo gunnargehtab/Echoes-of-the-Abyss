@@ -6,9 +6,11 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { SIG_BANDS, SILENT_RUNNING } from '@echoes/shared';
+import { PerspectiveCamera, Scene } from 'three';
+import { BERTHS, SIG_BANDS, SILENT_RUNNING, UnitKind, statsFor } from '@echoes/shared';
 import {
   HullWake,
+  WAKE_BUBBLES_PER_HULL,
   WAKE_FLOOR,
   WAKE_LIFE_MS,
   WAKE_MIN_SHARE,
@@ -18,11 +20,14 @@ import {
   wakeStrength,
   type WakeSource,
 } from '../src/game/hullWake.ts';
+import { HeadlessWebGLRenderer } from './support/headless.ts';
 
 const RUNNING = 8;
 
+/** A source at a slow cruise, where the near spacing is the one that holds. */
 const source = (id: number, x: number, strength: number, heading = 0): WakeSource => ({
   id,
+  speedMps: 5,
   x,
   y: -300,
   z: 0,
@@ -132,6 +137,46 @@ describe('HullWake', () => {
     assert.equal(wake.shedCount, 0, 'a lift is not a run');
   });
 
+  it('fits a full berth list running flat out without losing a live bubble', () => {
+    const fastest = statsFor(UnitKind.LightScout).speed;
+    const fleet = Array.from({ length: BERTHS.CEILING }, (_, i) => ({
+      ...source(i + 1, 0, 1),
+      z: i * 100,
+      speedMps: fastest,
+    }));
+    const wake = new HullWake();
+    // Six seconds at 60 frames a second: past one full bubble life.
+    for (let frame = 0; frame <= 360; frame++) {
+      for (const s of fleet) s.x = fastest * (frame / 60);
+      wake.sync(fleet, fleet.length, 1, (frame * 1000) / 60);
+    }
+    assert.equal(wake.overwrites, 0, 'no wake lost its tail to another’s head');
+    assert.ok(wake.count <= BERTHS.CEILING * WAKE_BUBBLES_PER_HULL);
+    assert.ok(wake.count >= BERTHS.CEILING * (WAKE_BUBBLES_PER_HULL - 2), 'and every hull has one');
+    assert.equal(WAKE_POOL, BERTHS.CEILING * WAKE_BUBBLES_PER_HULL);
+  });
+
+  it('is one draw for one hull or forty, and none once the wake fades', () => {
+    const gl = new HeadlessWebGLRenderer();
+    const camera = new PerspectiveCamera();
+    const wake = new HullWake();
+    const scene = new Scene().add(wake.points);
+    let t = 0;
+    for (const n of [1, BERTHS.CEILING]) {
+      const fleet = Array.from({ length: n }, (_, i) => ({ ...source(i + 1, 0, 1), z: i * 50 }));
+      for (let m = 0; m <= 4 * WAKE_SPACING_M; m++) {
+        for (const s of fleet) s.x = m;
+        wake.sync(fleet, n, 1, t);
+        t += 16;
+      }
+      gl.render(scene, camera);
+      assert.equal(gl.ledger.calls, 1, `${n} hulls`);
+    }
+    wake.tick(t + WAKE_LIFE_MS + 100);
+    gl.render(scene, camera);
+    assert.equal(gl.ledger.calls, 0, 'a faded wake costs nothing');
+  });
+
   it('keeps the wake but stills it under reduced motion (docs/ui-ux.md §11)', () => {
     const wake = new HullWake();
     wake.setReducedMotion(true);
@@ -140,6 +185,17 @@ describe('HullWake', () => {
     wake.tick(t + 1000);
     assert.ok(wake.count > 0, 'still drawn');
     assert.equal(wake.bubbleAt(0).y, born.y, 'and none climbs');
+  });
+
+  it('freezes bubbles already climbing when reduced motion turns on, without a jump', () => {
+    const wake = new HullWake();
+    const t = run(wake, source(1, 0, 1), WAKE_SPACING_M);
+    wake.tick(t + 500);
+    const climbing = wake.bubbleAt(0);
+    wake.setReducedMotion(true);
+    wake.tick(t + 1500);
+    assert.ok(wake.count > 0);
+    assert.ok(Math.abs(wake.bubbleAt(0).y - climbing.y) < 1e-4, 'held where it was drawn');
   });
 
   it('clears every bubble for a new match', () => {

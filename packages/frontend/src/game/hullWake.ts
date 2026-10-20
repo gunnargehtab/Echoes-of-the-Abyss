@@ -37,13 +37,14 @@ import {
   Points,
   PointsMaterial,
 } from 'three';
-import { SIG_BANDS } from '@echoes/shared';
+import { BERTHS, SIG_BANDS } from '@echoes/shared';
 import { SIG_GLOW_EFOLD } from './glow.ts';
 
 /**
- * SPEC — gate 3's curve E(SIG) = 0.45·e^(SIG/14), read as a ratio against the
- * red stop (docs/ui-ux.md §3): a hull in the red band leaves the full wake,
- * and every quieter hull sits below it on the e-folding the hull lamps use.
+ * SPEC — docs/art-direction.md "Rendering Target": the wake is gate 3's curve
+ * E(SIG) = 0.45·e^(SIG/14), read as a ratio against the red stop of
+ * docs/ui-ux.md §3, so a hull in the red band leaves the full wake and every
+ * quieter hull sits below it on the e-folding the hull lamps use.
  */
 export const WAKE_REFERENCE_SIG = SIG_BANDS.RED;
 /**
@@ -55,15 +56,23 @@ export const WAKE_FLOOR = 0.06;
 export const WAKE_MIN_SPEED_MPS = 0.5;
 
 /**
- * TUNABLE — the wake's shape: one bubble shed per WAKE_SPACING_M of travel,
- * each living WAKE_LIFE_MS at full strength and never less than
- * WAKE_MIN_SHARE of that, so a loud wake is longer as well as brighter. The
- * ring holds WAKE_POOL bubbles, enough for a full berth list running loud.
+ * TUNABLE — the wake's shape: each bubble lives WAKE_LIFE_MS at full strength
+ * and never less than WAKE_MIN_SHARE of that, so a wake is as long as the
+ * hull runs in that time — longer for a louder hull as well as brighter. One
+ * is shed every WAKE_SPACING_M of travel, scaled by the far-zoom factor, or
+ * further apart if that would give the hull more than WAKE_BUBBLES_PER_HULL
+ * alive at once: a Light Scout at 120 m/s spreads its dozen over 480 m.
  */
 export const WAKE_SPACING_M = 5;
 export const WAKE_LIFE_MS = 4000;
 export const WAKE_MIN_SHARE = 0.3;
-export const WAKE_POOL = 512;
+export const WAKE_BUBBLES_PER_HULL = 12;
+/**
+ * Derived — a dozen live bubbles for every hull the base's grant can float
+ * (docs/economy.md §10), so a full berth list running flat out fits the ring
+ * and no live wake loses its tail to another's head.
+ */
+export const WAKE_POOL = BERTHS.CEILING * WAKE_BUBBLES_PER_HULL;
 /** TUNABLE — how fast a bubble climbs, metres per second, and its size in pixels. */
 export const WAKE_RISE_MPS = 2;
 const WAKE_SIZE_PX = 2.5;
@@ -80,6 +89,11 @@ export function wakeStrength(sig: number, speedMps: number, engineOff: boolean):
   return Math.min(1, Math.max(WAKE_FLOOR, Math.exp((sig - WAKE_REFERENCE_SIG) / SIG_GLOW_EFOLD)));
 }
 
+/** How long a bubble shed at this strength lives, in milliseconds. */
+function lifeOf(strength: number): number {
+  return WAKE_LIFE_MS * (WAKE_MIN_SHARE + (1 - WAKE_MIN_SHARE) * strength);
+}
+
 /** One hull's wake input this frame, in world units. Reused by the caller. */
 export interface WakeSource {
   id: number;
@@ -88,6 +102,8 @@ export interface WakeSource {
   z: number;
   /** The bow's bearing, the conn view's yaw: +X at 0. */
   heading: number;
+  /** Horizontal speed, metres per second: what spreads a fast hull's bubbles. */
+  speedMps: number;
   /** Distance from the hull's centre to its stern, world units. */
   sternM: number;
   /** `wakeStrength`, 0 for a hull shedding nothing. */
@@ -109,6 +125,9 @@ export class HullWake {
   private head = 0;
   private alive = 0;
   private shed = 0;
+  private overwrote = 0;
+  /** The clock of the last tick, so a reduced-motion switch stills bubbles where they are. */
+  private lastTickMs = 0;
   /** A bubble was shed since the last tick, so a still ring must still draw it. */
   private spawnedSinceTick = false;
   /** Where each hull last shed a bubble, so the next one is a spacing on. */
@@ -153,6 +172,14 @@ export class HullWake {
    */
   setReducedMotion(reduced: boolean): void {
     this.reducedMotion = reduced;
+    if (!reduced) return;
+    // The bubbles already climbing stop where they are drawn now, so the
+    // switch is a freeze rather than a jump.
+    for (let i = 0; i < WAKE_POOL; i++) {
+      const age = this.lastTickMs - this.bornAt[i]!;
+      if (age > 0) this.birth[i * 3 + 1]! += (age / 1000) * this.rise[i]!;
+      this.rise[i] = 0;
+    }
   }
 
   /** Bubbles alive this frame, for the probe and the tests. */
@@ -163,6 +190,11 @@ export class HullWake {
   /** Bubbles shed since the wake was made, for the tests. */
   get shedCount(): number {
     return this.shed;
+  }
+
+  /** Live bubbles a shed wrote over, for the tests: zero while the ring is big enough. */
+  get overwrites(): number {
+    return this.overwrote;
   }
 
   /** Slots in the ring: fixed, however many hulls run. */
@@ -194,13 +226,17 @@ export class HullWake {
    * nothing and is forgotten, so it starts fresh when it moves again.
    */
   sync(sources: readonly WakeSource[], n: number, draw: number, nowMs: number): void {
-    const spacing = WAKE_SPACING_M * Math.max(draw, 1e-3);
+    const near = WAKE_SPACING_M * Math.max(draw, 1e-3);
     const seen = this.seen;
     seen.clear();
     for (let i = 0; i < n; i++) {
       const s = sources[i]!;
       if (s.strength <= 0) continue;
       seen.add(s.id);
+      // A bubble lives this long, and the hull runs this far in that time: one
+      // fewer spacing than the cap, so rounding never puts a thirteenth alive.
+      const lifeS = lifeOf(s.strength) / 1000;
+      const spacing = Math.max(near, (s.speedMps * lifeS) / (WAKE_BUBBLES_PER_HULL - 1));
       const sx = s.x - Math.cos(s.heading) * s.sternM;
       const sz = s.z - Math.sin(s.heading) * s.sternM;
       const last = this.lastShed.get(s.id);
@@ -236,6 +272,7 @@ export class HullWake {
 
   /** Per frame while any bubble lives: each climbs and fades where it was shed. */
   tick(nowMs: number): void {
+    this.lastTickMs = nowMs;
     if (this.alive === 0 && !this.spawnedSinceTick) return;
     this.spawnedSinceTick = false;
     let alive = 0;
@@ -283,13 +320,14 @@ export class HullWake {
   private spawn(x: number, y: number, z: number, strength: number, draw: number, nowMs: number) {
     const i = this.head;
     this.head = (this.head + 1) % WAKE_POOL;
+    if (nowMs - this.bornAt[i]! < this.lifeMs[i]!) this.overwrote++;
     this.shed++;
     this.spawnedSinceTick = true;
     this.birth[i * 3] = x;
     this.birth[i * 3 + 1] = y;
     this.birth[i * 3 + 2] = z;
     this.level[i] = strength;
-    this.lifeMs[i] = WAKE_LIFE_MS * (WAKE_MIN_SHARE + (1 - WAKE_MIN_SHARE) * strength);
+    this.lifeMs[i] = lifeOf(strength);
     this.rise[i] = this.reducedMotion ? 0 : WAKE_RISE_MPS * draw;
     this.bornAt[i] = nowMs;
   }

@@ -1301,8 +1301,10 @@ below Track, and a Track that has gone to ghost — and
 **construction sites** — a half-built structure is schematic on purpose, and reads as
 scaffolding until it is commissioned. Cavitation trails run behind the player's own
 torpedoes in the conn view ("Own ordnance is geometry too", below), and behind the
-player's own moving hulls (#1508). A hull sheds a bubble at its stern every five metres it
-travels, and each stays where it was shed, climbing and fading, so a turn leaves a curve.
+player's own moving hulls (#1508). A hull sheds bubbles at its stern as it travels, five
+metres apart at the closest zoom and wider as the far-zoom scale grows, and never more than
+twelve alive at once, so a fast hull's bubbles spread out. Each stays where it was shed,
+climbing and fading, so a turn leaves a curve.
 The wake is its live SIG on gate 3's curve, full at the red stop of 65: long and bright for
 a hull pushing hard, short and faint for one running silent, and none for a hull holding
 still or with its engine cut. Reduced motion keeps the bubbles and stops their climb. It states how

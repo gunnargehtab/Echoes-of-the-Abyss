@@ -3471,7 +3471,8 @@ export class PerspectiveView {
     for (const unit of this.units) {
       const handle = this.unitHandles.get(unit.id);
       if (handle === undefined) continue;
-      const strength = wakeStrength(unit.sig, this.motion.speedOf(unit.id), unit.engineOff);
+      const speedMps = this.motion.speedOf(unit.id);
+      const strength = wakeStrength(unit.sig, speedMps, unit.engineOff);
       if (strength <= 0) continue;
       const at = this.motion.at(unit, nowMs, this.drawn);
       const source = (this.wakeSources[n] ??= {
@@ -3480,6 +3481,7 @@ export class PerspectiveView {
         y: 0,
         z: 0,
         heading: 0,
+        speedMps: 0,
         sternM: 0,
         strength: 0,
       });
@@ -3488,6 +3490,7 @@ export class PerspectiveView {
       source.y = handle.drawnY;
       source.z = at.y;
       source.heading = this.headings.get(unit.id) ?? 0;
+      source.speedMps = speedMps;
       source.sternM = 0.5 * draw * (handle.model?.lengthM ?? handle.widthM);
       source.strength = strength;
       n++;
