@@ -2,7 +2,7 @@
  * The cavitation wake behind the player's own moving hulls in the conn view
  * (docs/art-direction.md "Rendering Target" and "Animation Style": sub
  * movement leaves cavitation trails). The torpedo's trail is the model
- * (ordnanceLayer.ts), drawn as a flat ribbon rather than a line: a WebGL line
+ * (ordnanceLayer.ts), but this wake is a flat ribbon rather than its line: a WebGL line
  * is one pixel wide at any zoom, and a 1 px wake behind a hull sixty pixels
  * long did not read in a run-game frame (#1508).
  *

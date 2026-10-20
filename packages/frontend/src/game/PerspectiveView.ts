@@ -3455,7 +3455,7 @@ export class PerspectiveView {
 
   /**
    * The wake behind each own hull, from where the hull is drawn now. Runs
-   * wherever the hulls are placed, so the line never lags its stern. Rung 7
+   * wherever the hulls are placed, so the wake never lags its stern. Rung 7
    * with the hulls it trails (docs/map-visuals.md §5).
    */
   private syncWakes(nowMs: number): void {
