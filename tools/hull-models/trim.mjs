@@ -570,10 +570,24 @@ function bandFor(bands, crossM, strakeM) {
  * tall, and a tall drum seen along its length is a bar. Read as the ratio
  * of the projection's covariance eigenvalues; between two axes within a
  * fiftieth of each other (a sphere, a cube-like drum) the one whose radial
- * distances vary least decides.
+ * distances vary least decides. Each position counts once (#1501): three's
+ * ring repeats its θ 0 column at 2π, a cap repeats the side's ring, and a
+ * cap's fan has a centre per facet, and those weights skew a regular
+ * ring's projection along its own axis to 0.77 for six facets, under a
+ * squat drum's side view. Counted once, any regular ring reads 1. The key
+ * rounds to the hundredth of a millimetre, and `${-0}` is "0", so the 2π
+ * column's −2e-16 lands on θ 0's key. The tie-break leaves out the corners
+ * on the axis: a cap's centre has no angle to unroll, and at r 0 it alone
+ * gave a cube-like drum's own axis the larger spread (the Lure's `can_1`,
+ * 0.994 against 1).
  */
 function roundAxis(g) {
   const p = g.attributes.position;
+  const corners = new Map();
+  for (let i = 0; i < p.count; i++) {
+    const c = [p.getX(i), p.getY(i), p.getZ(i)];
+    corners.set(c.map((v) => Math.round(v * 1e5)).join(','), c);
+  }
   let best = 1;
   let bestIso = -Infinity;
   let bestCv = Infinity;
@@ -587,26 +601,28 @@ function roundAxis(g) {
     let sab = 0;
     let sr = 0;
     let srr = 0;
-    for (let i = 0; i < p.count; i++) {
-      const c = [p.getX(i), p.getY(i), p.getZ(i)];
+    let rn = 0;
+    for (const c of corners.values()) {
       sa += c[a];
       sb += c[b];
       saa += c[a] * c[a];
       sbb += c[b] * c[b];
       sab += c[a] * c[b];
       const r = Math.hypot(c[a], c[b]);
+      if (r < 1e-5) continue;
       sr += r;
       srr += r * r;
+      rn++;
     }
-    const n = p.count;
+    const n = corners.size;
     const vaa = saa / n - (sa / n) ** 2;
     const vbb = sbb / n - (sb / n) ** 2;
     const vab = sab / n - (sa / n) * (sb / n);
     const half = (vaa + vbb) / 2;
     const spread = Math.sqrt(Math.max(0, ((vaa - vbb) / 2) ** 2 + vab * vab));
     const iso = half + spread > 0 ? (half - spread) / (half + spread) : 0;
-    const mean = sr / n;
-    const cv = mean > 0 ? Math.sqrt(Math.max(0, srr / n - mean * mean)) / mean : Infinity;
+    const mean = rn > 0 ? sr / rn : 0;
+    const cv = mean > 0 ? Math.sqrt(Math.max(0, srr / rn - mean * mean)) / mean : Infinity;
     if (iso > bestIso + 0.02 || (Math.abs(iso - bestIso) <= 0.02 && cv < bestCv)) {
       bestIso = Math.max(iso, bestIso);
       bestCv = cv;
@@ -770,8 +786,8 @@ function extentsOf(pos, count) {
  * `hull_cap_aft`. Closed toward each triangle's own middle, as `mirror`
  * did, they disagreed on a facet centred on the cut. The facet's middle is
  * the shape's, so every triangle of it takes one side and the seam falls
- * on the facet's edge — a cap's fan too, where `roundAxis` has taken a
- * squat drum's cap for its side (#1501) and unrolls it as one facet.
+ * on the facet's edge — a cap's fan too, where `roundAxis` took a squat
+ * drum's cap for its side and unrolled it as one facet, until #1501.
  *
  * The corners are summed in one order, by position, so the triangles of
  * one facet add the same numbers the same way and agree to the bit; a
