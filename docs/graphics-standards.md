@@ -374,9 +374,10 @@ that re-shaded the ground per frame, would be the regression — and a veil used
 raycasts, and still gets its props.
 
 Own ordnance is instanced the same way (`ordnanceLayer.ts`, [art-direction.md](art-direction.md)
-"Own ordnance is geometry too"): one body and one lamp mesh per kind and one line object
-for every torpedo's trail — nine draw calls at most for any number of shots, none for a
-kind with nothing in the water — sharing the fleet's depth cues, and reported by the
+"Own ordnance is geometry too"): one body and one lamp mesh per kind, one line object
+for every torpedo's trail and one fixed pool of points for every launch's bubbles — ten
+draw calls at most for any number of shots, none for a kind with nothing in the water —
+sharing the fleet's depth cues, and reported by the
 probe as `ordnance`.
 
 The fleet's depth cues follow the same rule (#434). Every own hull hangs over a ground

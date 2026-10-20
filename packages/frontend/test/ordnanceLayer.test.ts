@@ -12,6 +12,9 @@ import { DepthCues } from '../src/game/depthCues.ts';
 import {
   LAMP_FLOOR,
   ORDNANCE_KINDS,
+  BUBBLES_PER_BURST,
+  BUBBLE_LIFE_MS,
+  BUBBLE_POOL,
   OrdnanceLayer,
   TRAIL_SEGMENTS,
   lampBrightness,
@@ -31,7 +34,7 @@ const shot = (id: number, kind: OrdnanceKind, x: number, sig: number): OwnOrdnan
 const flat = (item: OwnOrdnance) => ({ x: item.x, z: item.y, worldY: -item.depth, groundY: -900 });
 
 describe('ordnance layer', () => {
-  it('draws any amount of ordnance with nine objects', () => {
+  it('draws any amount of ordnance with ten objects', () => {
     const cues = new DepthCues(0x00ffff, 4);
     const layer = new OrdnanceLayer(cues, 2);
     const items = [
@@ -41,8 +44,8 @@ describe('ordnance layer', () => {
       shot(4, OrdnanceKind.Noisemaker, 150, ORDNANCE.NOISEMAKER.SIG),
       shot(5, OrdnanceKind.DepthCharge, 200, 20),
     ];
-    layer.sync(items, flat, 1);
-    assert.equal(layer.group.children.length, ORDNANCE_KINDS.length * 2 + 1);
+    layer.sync(items, flat, 1, 0);
+    assert.equal(layer.group.children.length, ORDNANCE_KINDS.length * 2 + 2);
     assert.equal(layer.count, 5, 'grew past its initial capacity');
     assert.equal(layer.countOf(OrdnanceKind.Torpedo), 2);
     assert.equal(layer.countOf(OrdnanceKind.Mine), 1);
@@ -54,8 +57,13 @@ describe('ordnance layer', () => {
   it('releases the depth cues of ordnance that has gone', () => {
     const cues = new DepthCues(0x00ffff, 4);
     const layer = new OrdnanceLayer(cues, 4);
-    layer.sync([shot(1, OrdnanceKind.Mine, 0, 2), shot(2, OrdnanceKind.Torpedo, 10, 60)], flat, 1);
-    layer.sync([shot(1, OrdnanceKind.Mine, 0, 2)], flat, 1);
+    layer.sync(
+      [shot(1, OrdnanceKind.Mine, 0, 2), shot(2, OrdnanceKind.Torpedo, 10, 60)],
+      flat,
+      1,
+      0
+    );
+    layer.sync([shot(1, OrdnanceKind.Mine, 0, 2)], flat, 1, 0);
     assert.equal(layer.count, 1);
     assert.equal(cues.count, 1);
     assert.equal(layer.countOf(OrdnanceKind.Torpedo), 0);
@@ -68,7 +76,8 @@ describe('ordnance layer', () => {
     layer.sync(
       [shot(1, OrdnanceKind.Torpedo, 0, 60)],
       () => ({ x: 0, z: 0, worldY: -905, groundY: -900 }),
-      3
+      3,
+      0
     );
     // Clearance rides the scale: 2 m × 3 above the ground, not below it.
     assert.equal(layer.positionOf(OrdnanceKind.Torpedo, 0).y, -894);
@@ -80,5 +89,57 @@ describe('ordnance layer', () => {
     assert.ok(torpedo > 0.45 && torpedo < 0.55, `a running torpedo burns at ${torpedo}`);
     assert.equal(lampBrightness(ORDNANCE.MINE.SIG_ARMED), LAMP_FLOOR, 'an armed mine is a mark');
     assert.equal(lampBrightness(95), 1, 'never past full');
+  });
+
+  it('bursts bubbles once per launch, from a pool that never grows', () => {
+    const cues = new DepthCues(0x00ffff, 8);
+    const layer = new OrdnanceLayer(cues, 4);
+    assert.equal(layer.bubblePoolSize, BUBBLE_POOL);
+    layer.sync([shot(1, OrdnanceKind.Torpedo, 0, 60)], flat, 1, 0);
+    assert.equal(layer.burstCount, 1, 'a new torpedo id is a launch');
+    layer.sync([shot(1, OrdnanceKind.Torpedo, 30, 60)], flat, 1, 200);
+    assert.equal(layer.burstCount, 1, 'a known id spawns nothing');
+    layer.sync([shot(2, OrdnanceKind.Mine, 0, 2)], flat, 1, 300);
+    assert.equal(layer.burstCount, 1, 'a mine is not a launch');
+    // Three pools' worth of launches recycle the oldest slots.
+    const launches = 3 * (BUBBLE_POOL / BUBBLES_PER_BURST);
+    for (let id = 10; id < 10 + launches; id++) {
+      layer.sync([shot(id, OrdnanceKind.Torpedo, id, 60)], flat, 1, 400 + id);
+    }
+    assert.equal(layer.burstCount, 1 + launches);
+    assert.equal(layer.bubblePoolSize, BUBBLE_POOL, 'the pool is fixed');
+  });
+
+  it('lifts bubbles straight up and lets them go after their life', () => {
+    const cues = new DepthCues(0x00ffff, 4);
+    const layer = new OrdnanceLayer(cues, 4);
+    layer.sync([shot(1, OrdnanceKind.Torpedo, 0, 60)], flat, 1, 1000);
+    const born = Array.from({ length: BUBBLES_PER_BURST }, (_, i) => layer.bubbleAt(i));
+    layer.tick(1000 + BUBBLE_LIFE_MS / 2);
+    for (let i = 0; i < BUBBLES_PER_BURST; i++) {
+      const at = layer.bubbleAt(i);
+      // Sideways drift states a current (docs/map-visuals.md §8).
+      assert.equal(at.x, born[i]!.x, `bubble ${i} kept its x`);
+      assert.equal(at.z, born[i]!.z, `bubble ${i} kept its z`);
+      assert.ok(at.y > born[i]!.y, `bubble ${i} rose`);
+    }
+    // The burst outlives a torpedo that hits inside its life.
+    layer.sync([], flat, 1, 1000 + BUBBLE_LIFE_MS * 0.9);
+    assert.ok(layer.bubbling);
+    layer.tick(1000 + BUBBLE_LIFE_MS);
+    assert.ok(!layer.bubbling, 'spent');
+  });
+
+  it('skips the burst under reduced motion (docs/ui-ux.md §11)', () => {
+    const cues = new DepthCues(0x00ffff, 4);
+    const layer = new OrdnanceLayer(cues, 4);
+    layer.setReducedMotion(true);
+    layer.sync([shot(1, OrdnanceKind.Torpedo, 0, 60)], flat, 1, 0);
+    assert.equal(layer.burstCount, 0);
+    assert.ok(!layer.bubbling);
+    // Turning it off mid-run does not burst a torpedo already running.
+    layer.setReducedMotion(false);
+    layer.sync([shot(1, OrdnanceKind.Torpedo, 30, 60)], flat, 1, 200);
+    assert.equal(layer.burstCount, 0);
   });
 });

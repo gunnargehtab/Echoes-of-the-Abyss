@@ -1161,7 +1161,8 @@ export class PerspectiveView {
 
   /**
    * ui-ux.md §11: hold the world's decoration — the kelp current, the snow's
-   * sink, the stipple's pulse and the camera's sway. Re-applied now, so the
+   * sink, the stipple's pulse and the camera's sway — and skip the launch
+   * bubbles, which only move. Re-applied now, so the
    * camera settles before the overlay's next projection, not a frame later.
    */
   setReducedMotion(reduced: boolean): void {
@@ -1170,6 +1171,7 @@ export class PerspectiveView {
       this.residency!.get(id)!.props.setReducedMotion(reduced);
     }
     this.snow.setReducedMotion(reduced);
+    this.ordnanceLayer.setReducedMotion(reduced);
     this.life.setReducedMotion(reduced);
     this.swayHeld = reduced;
     this.applyCamera();
@@ -3520,7 +3522,8 @@ export class PerspectiveView {
           groundY: this.groundYAt(at.x, at.y),
         };
       },
-      this.drawScale
+      this.drawScale,
+      nowMs
     );
   }
 
@@ -3809,6 +3812,9 @@ export class PerspectiveView {
       // the frame nothing.
       this.placeUnits(now);
       this.syncOrdnance(now);
+    } else {
+      // A launch burst outlives a torpedo that hits inside its 1.5 s.
+      this.ordnanceLayer.tick(now);
     }
     if (this.dreamLights !== null) {
       const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
