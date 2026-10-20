@@ -1440,6 +1440,14 @@ only between two live Tier-4 readings of one handle, never across a tier change 
 a ghost, and a ghost draws none. The conn view never draws
 it: the enemy is never geometry there. Reduced motion keeps the flash.
 
+An own gun firing (#1511) throws a short flash from the hull or turret down the bearing it
+fired on, white-hot cooling into the faction glow over about a third of a second, and a pressure
+ring spreading flat from the muzzle for three quarters of one. A siege hull, the Furnace's
+cutter and the Tocsin's bell, also kicks astern of that bearing by 12% of its drawn
+half-length in 70 ms and settles over 650 ms: the "heavy recoil" above. The trigger is the
+server's `Fired` self-event, which only the gun's owner receives, and its bearing is the
+gun's own aim. Reduced motion keeps the flash and drops the ring and the recoil.
+
 ### Echo Layer Requirements
 
 The Echo Layer (see [systems-echo.md](systems-echo.md)) only works if it's readable at a glance:

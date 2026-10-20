@@ -138,6 +138,7 @@ import { OwnMotion, type Attitude } from './ownMotion.ts';
 import { OrdnanceLayer } from './ordnanceLayer.ts';
 import { HullWake, wakeStrength, type WakeSource } from './hullWake.ts';
 import { HullHits, flashedGlow, hitStrength } from './hullHit.ts';
+import { GunFire, isSiegeHull } from './gunFire.ts';
 import { EnvironmentLayer } from './environmentLayer.ts';
 import { createWaterEnvironment, keepsGlowOutsideToneMapping } from './modelLighting.ts';
 import { GLOW_FACTOR_MAX, GLOW_FACTOR_MIN, SIG_GLOW_EFOLD } from './glow.ts';
@@ -824,6 +825,10 @@ export class PerspectiveView {
   private readonly hits = new HullHits();
   /** Where the last hit was thrown, world metres, so a drive can frame it. */
   private lastHitAt: { x: number; z: number; depthM: number } | null = null;
+  /** The muzzle flash, pressure ring and siege recoil of own guns (gunFire.ts, #1511). */
+  private readonly gunFire = new GunFire();
+  /** Where the last shot was fired from, world metres, so a drive can frame it. */
+  private lastShotAt: { x: number; z: number; depthM: number } | null = null;
 
   private faction: Faction = Faction.Bathyarch;
   private units: OwnUnit[] = [];
@@ -1026,6 +1031,7 @@ export class PerspectiveView {
       this.ordnanceLayer.group,
       this.wake.points,
       this.hits.points,
+      this.gunFire.points,
       this.structureGroup,
       this.models.group,
       this.cues.group,
@@ -1198,6 +1204,7 @@ export class PerspectiveView {
     this.ordnanceLayer.setReducedMotion(reduced);
     this.wake.setReducedMotion(reduced);
     this.hits.setReducedMotion(reduced);
+    this.gunFire.setReducedMotion(reduced);
     this.life.setReducedMotion(reduced);
     this.swayHeld = reduced;
     this.motion.levelHeld = reduced;
@@ -1351,6 +1358,7 @@ export class PerspectiveView {
     }
     if (this.renderer !== null) this.syncEntities();
     if (struck !== null) this.throwHits(struck);
+    this.fireGuns(snapshot);
     // The veil is a 5 Hz fact about where the fleet's ears are, so it moves
     // with the snapshot rather than with the frame (docs/ui-ux.md §4.5).
     this.refreshVeil();
@@ -1371,6 +1379,8 @@ export class PerspectiveView {
     this.wake.reset();
     this.hits.reset();
     this.lastHitAt = null;
+    this.gunFire.reset();
+    this.lastShotAt = null;
     // A force of nobody is not a dark map (acousticVeil.ts): the veil comes
     // off with the fleet rather than closing over the whole chart.
     this.veil.clear();
@@ -1437,6 +1447,7 @@ export class PerspectiveView {
     this.ordnanceLayer.dispose();
     this.wake.dispose();
     this.hits.dispose();
+    this.gunFire.dispose();
     this.models.dispose();
     this.cues.dispose();
     this.backdrop.dispose();
@@ -3587,6 +3598,55 @@ export class PerspectiveView {
     });
   }
 
+  /**
+   * One muzzle effect per `Fired`, from where the gun is drawn, on the
+   * bearing the server says it fired (gunFire.ts). A siege hull also kicks.
+   * A gun gone with the tick is not drawn, and gets none.
+   */
+  private fireGuns(snapshot: EchoSnapshot): void {
+    let now = -1;
+    for (const event of snapshot.selfEvents) {
+      if (event.kind !== SelfEventKind.Fired || event.bearing === undefined) continue;
+      const unit = this.units.find((u) => u.id === event.unitId);
+      const entity = unit ?? this.structures.find((s) => s.id === event.unitId);
+      const handle = this.unitHandles.get(event.unitId) ?? this.structureHandles.get(event.unitId);
+      if (entity === undefined || handle === undefined) continue;
+      if (now < 0) {
+        now = performance.now();
+        this.gunFire.setPalette(FACTION_PALETTE[this.faction].glow);
+      }
+      const at = handle.mesh.visible ? handle.mesh.position : handle.model!.root.position;
+      this.gunFire.fire(
+        event.unitId,
+        at.x,
+        at.y,
+        at.z,
+        event.bearing,
+        0.5 * this.drawScale * (handle.model?.lengthM ?? handle.widthM),
+        now,
+        unit !== undefined && isSiegeHull(unit.kind)
+      );
+      this.lastShotAt = { x: at.x, z: at.z, depthM: entity.depth };
+    }
+  }
+
+  /**
+   * A siege hull's recoil: placed where its glide puts it, thrown astern of
+   * the bearing it fired on (gunFire.ts). After every other placement this
+   * frame, so the kick is not overwritten, and once more at zero when it has
+   * settled, so the hull lands where the glide left it.
+   */
+  private kickRecoils(nowMs: number): void {
+    this.gunFire.eachRecoil(nowMs, (id, dx, dz) => {
+      const unit = this.units.find((u) => u.id === id);
+      const handle = this.unitHandles.get(id);
+      if (unit === undefined || handle === undefined) return;
+      const at = this.motion.at(unit, nowMs, this.drawn);
+      const lean = this.motion.attitude(id, nowMs, this.lean);
+      this.placeHandle(handle, at.x + dx, at.y + dz, at.depth, this.headings.get(id) ?? 0, lean);
+    });
+  }
+
   private syncEntities(): void {
     if (this.terrain === null) return;
     this.openRoofs();
@@ -3981,6 +4041,8 @@ export class PerspectiveView {
     // was just written with rather than one a placement then overwrites.
     this.flashLamps(now);
     this.hits.tick(now);
+    this.kickRecoils(now);
+    this.gunFire.tick(now);
     if (this.dreamLights !== null) {
       const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
       this.dreamLights.update(
@@ -4383,6 +4445,12 @@ export class PerspectiveView {
       hits: this.hits.count,
       hitParticles: this.hits.particles,
       hitAt: this.lastHitAt,
+      // Own guns' shots since the view was made, their flash and ring, and
+      // the siege hulls still kicking back (#1511).
+      shots: this.gunFire.shotCount,
+      shotParticles: this.gunFire.particles,
+      recoiling: this.gunFire.recoiling,
+      shotAt: this.lastShotAt,
       // The prop layer's own ledger (gate 6): a prop regression is a
       // number, not an impression.
       ...this.environment.stats(),
