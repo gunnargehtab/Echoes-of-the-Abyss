@@ -11,7 +11,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { SIM, UnitKind, type OwnUnit } from '@echoes/shared';
-import { OwnMotion } from '../src/game/ownMotion.ts';
+import { OwnMotion, attitudeOf } from '../src/game/ownMotion.ts';
 
 const INTERVAL_MS = 1000 / SIM.ECHO_HZ;
 
@@ -92,5 +92,131 @@ describe('OwnMotion', () => {
     const out = { x: 0, y: 0, depth: 0 };
     motion.at(hull(2, 500, 500), 2 * INTERVAL_MS + 10, out);
     assert.equal(out.x, 500, 'a hull that came back has no prior to glide from');
+  });
+});
+
+/**
+ * Bank and pitch (#1507) — docs/art-direction.md "Animation Style", and
+ * docs/ui-ux.md §11 for the hold. Read from the same samples as the glide, so
+ * a hull leans only on what the player was already told about it.
+ */
+describe('attitudeOf', () => {
+  const level = () => ({ roll: 0, pitch: 0 });
+  const MAX_ROLL = (18 * Math.PI) / 180;
+
+  it('gives no roll to a hull holding its heading', () => {
+    const out = attitudeOf(hull(1, 0, 0), hull(1, 100, 0), hull(1, 200, 0), INTERVAL_MS, level());
+    assert.equal(out.roll, 0);
+    assert.equal(out.pitch, 0, 'and no pitch without a depth order');
+  });
+
+  it('banks toward a clockwise turn, and clamps a hard one', () => {
+    const gentle = attitudeOf(
+      hull(1, 0, 0),
+      hull(1, 100, 0),
+      hull(1, 199, 10),
+      INTERVAL_MS,
+      level()
+    );
+    assert.ok(gentle.roll > 0 && gentle.roll < MAX_ROLL, `a gentle turn banks: ${gentle.roll}`);
+    const mirrored = attitudeOf(
+      hull(1, 0, 0),
+      hull(1, 100, 0),
+      hull(1, 199, -10),
+      INTERVAL_MS,
+      level()
+    );
+    assert.ok(Math.abs(mirrored.roll + gentle.roll) < 1e-12, 'the other way banks the other way');
+    const hard = attitudeOf(
+      hull(1, 0, 0),
+      hull(1, 100, 0),
+      hull(1, 100, 100),
+      INTERVAL_MS,
+      level()
+    );
+    assert.equal(hard.roll, MAX_ROLL, 'a right-angle corner hits the clamp');
+    const reversal = attitudeOf(
+      hull(1, 0, 0),
+      hull(1, 100, 0),
+      hull(1, 0, 1),
+      INTERVAL_MS,
+      level()
+    );
+    assert.equal(Math.abs(reversal.roll), MAX_ROLL, 'a reversal wraps and still clamps');
+  });
+
+  it('pitches only while a depth change is ordered, nose down into a dive', () => {
+    const diving = { ...hull(1, 100, 0, 620), depthOrder: 900 };
+    const dive = attitudeOf(undefined, hull(1, 0, 0, 600), diving, INTERVAL_MS, level());
+    assert.ok(Math.abs(dive.pitch - Math.atan2(20, 100)) < 1e-12, 'along the path it took');
+    const rising = { ...hull(1, 100, 0, 550), depthOrder: 300 };
+    assert.ok(attitudeOf(undefined, hull(1, 0, 0, 600), rising, INTERVAL_MS, level()).pitch < 0);
+    const drifting = hull(1, 100, 0, 650);
+    assert.equal(
+      attitudeOf(undefined, hull(1, 0, 0, 600), drifting, INTERVAL_MS, level()).pitch,
+      0
+    );
+    const sinkingInPlace = { ...hull(1, 0, 0, 650), depthOrder: 900 };
+    const steep = attitudeOf(undefined, hull(1, 0, 0, 600), sinkingInPlace, INTERVAL_MS, level());
+    assert.equal(steep.pitch, (15 * Math.PI) / 180, 'a dive in place is clamped');
+  });
+
+  it('sits level across a jump, or without history', () => {
+    assert.deepEqual(
+      attitudeOf(undefined, undefined, hull(1, 0, 0), INTERVAL_MS, level()),
+      level()
+    );
+    const lift = attitudeOf(
+      hull(1, 0, 0),
+      hull(1, 100, 0),
+      hull(1, 100, 4000),
+      INTERVAL_MS,
+      level()
+    );
+    assert.deepEqual(lift, level());
+  });
+});
+
+describe('OwnMotion.attitude', () => {
+  /** Straight, then a right-angle corner, then straight on. */
+  function cornering(motion: OwnMotion): void {
+    motion.record([hull(1, 0, 0)], 0);
+    motion.record([hull(1, 100, 0)], INTERVAL_MS);
+    motion.record([hull(1, 200, 0)], 2 * INTERVAL_MS);
+    motion.record([hull(1, 200, 100)], 3 * INTERVAL_MS);
+  }
+
+  it('leans into a corner between ticks, and eases back out', () => {
+    const motion = new OwnMotion();
+    cornering(motion);
+    const out = { roll: 0, pitch: 0 };
+    assert.equal(motion.attitude(1, 3 * INTERVAL_MS, out).roll, 0, 'level as the tick lands');
+    const leaned = motion.attitude(1, 4 * INTERVAL_MS, out).roll;
+    assert.ok(leaned > 0, 'banked by the time the next is due');
+    motion.record([hull(1, 200, 200)], 4 * INTERVAL_MS);
+    const after = motion.attitude(1, 5 * INTERVAL_MS, out).roll;
+    assert.ok(after > 0 && after < leaned, 'straight again, it eases out rather than snapping');
+    assert.equal(motion.animating(4.5 * INTERVAL_MS), true);
+  });
+
+  it('settles level and stops asking for frames', () => {
+    const motion = new OwnMotion();
+    cornering(motion);
+    for (let tick = 4; tick < 20; tick++) motion.record([hull(1, 200, 100)], tick * INTERVAL_MS);
+    const out = { roll: 0, pitch: 0 };
+    assert.equal(motion.attitude(1, 20 * INTERVAL_MS, out).roll, 0);
+    assert.equal(motion.animating(19.5 * INTERVAL_MS), false);
+  });
+
+  it('holds every hull level under reduced motion (docs/ui-ux.md §11)', () => {
+    const motion = new OwnMotion();
+    cornering(motion);
+    motion.levelHeld = true;
+    assert.deepEqual(motion.attitude(1, 4 * INTERVAL_MS, { roll: 1, pitch: 1 }), {
+      roll: 0,
+      pitch: 0,
+    });
+    motion.levelHeld = false;
+    assert.ok(motion.attitude(1, 4 * INTERVAL_MS, { roll: 0, pitch: 0 }).roll > 0);
   });
 });

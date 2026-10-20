@@ -133,7 +133,7 @@ import {
   ROOF_OPEN_OPACITY,
   type Passages,
 } from './passages.ts';
-import { OwnMotion } from './ownMotion.ts';
+import { OwnMotion, type Attitude } from './ownMotion.ts';
 import { OrdnanceLayer } from './ordnanceLayer.ts';
 import { EnvironmentLayer } from './environmentLayer.ts';
 import { createWaterEnvironment, keepsGlowOutsideToneMapping } from './modelLighting.ts';
@@ -532,6 +532,8 @@ interface EntitySpec {
   z: number;
   depthM: number;
   yaw: number;
+  /** An own hull's bank and pitch (#1507); everything else sits level. */
+  attitude?: Attitude;
   dimmed: boolean;
   /** null keeps the entity on the sprite path (construction sites, VentTap). */
   modelDesc: RosterModelKey | null;
@@ -819,6 +821,8 @@ export class PerspectiveView {
   readonly motion = new OwnMotion();
   /** Scratch for `motion.at`, consumed before the next call. */
   private readonly drawn = { x: 0, y: 0, depth: 0 };
+  /** Scratch for `motion.attitude`, the same way. */
+  private readonly lean: Attitude = { roll: 0, pitch: 0 };
   /** `groundQuad`'s four corners, rewritten in place per frame. */
   private readonly quadScratch = [
     { x: 0, y: 0 },
@@ -1161,8 +1165,9 @@ export class PerspectiveView {
 
   /**
    * ui-ux.md §11: hold the world's decoration — the kelp current, the snow's
-   * sink, the stipple's pulse and the camera's sway. Re-applied now, so the
-   * camera settles before the overlay's next projection, not a frame later.
+   * sink, the stipple's pulse, the camera's sway and the hulls' lean (#1507).
+   * Re-applied now, so the camera settles before the overlay's next
+   * projection and every hull is level, not a frame later.
    */
   setReducedMotion(reduced: boolean): void {
     this.environment.setReducedMotion(reduced);
@@ -1172,6 +1177,8 @@ export class PerspectiveView {
     this.snow.setReducedMotion(reduced);
     this.life.setReducedMotion(reduced);
     this.swayHeld = reduced;
+    this.motion.levelHeld = reduced;
+    if (this.renderer !== null) this.syncEntities();
     this.applyCamera();
   }
 
@@ -3369,7 +3376,7 @@ export class PerspectiveView {
         ? Math.max(model.lengthM, model.beamM) * 0.4
         : Math.max(handle.widthM, handle.heightM) * 0.35);
 
-    this.placeHandle(handle, spec.x, spec.z, spec.depthM, spec.yaw);
+    this.placeHandle(handle, spec.x, spec.z, spec.depthM, spec.yaw, spec.attitude);
   }
 
   /**
@@ -3383,7 +3390,8 @@ export class PerspectiveView {
     x: number,
     z: number,
     depthM: number,
-    yaw: number
+    yaw: number,
+    attitude?: Attitude
   ): void {
     const draw = this.drawScale;
     // The sync hides the sprite exactly when the model is showing.
@@ -3396,7 +3404,10 @@ export class PerspectiveView {
     if (model !== null) {
       const modelY = handle.stands ? standingY(model.groundM, draw, y, groundY) : hullY;
       model.root.position.set(x, modelY, z);
-      model.root.rotation.y = -yaw;
+      // Yaw outermost, then pitch about the beam, then roll about the keel:
+      // the bow is the root's +X, so +Z rotation would lift it and a dive's
+      // positive pitch is negated (#1507). A sprite stays flat on the chart.
+      model.root.rotation.set(attitude?.roll ?? 0, -yaw, -(attitude?.pitch ?? 0), 'YZX');
       // Its slot in the batch, scale and glow included: the sync sets those
       // before it places, so this is the one write either path needs.
       this.models.place(model);
@@ -3424,7 +3435,8 @@ export class PerspectiveView {
       const handle = this.unitHandles.get(unit.id);
       if (handle === undefined) continue;
       const at = this.motion.at(unit, nowMs, this.drawn);
-      this.placeHandle(handle, at.x, at.y, at.depth, this.headings.get(unit.id) ?? 0);
+      const lean = this.motion.attitude(unit.id, nowMs, this.lean);
+      this.placeHandle(handle, at.x, at.y, at.depth, this.headings.get(unit.id) ?? 0, lean);
     }
   }
 
@@ -3454,6 +3466,7 @@ export class PerspectiveView {
         z: at.y,
         depthM: at.depth,
         yaw: this.headings.get(unit.id) ?? 0,
+        attitude: this.motion.attitude(unit.id, now, this.lean),
         dimmed: unit.silentRunning,
         modelDesc: { unit: unit.kind, faction: this.faction },
         modelCacheKey: `unit:${unit.kind}:${this.faction}:${ACTIVE_PALETTE.name}`,
