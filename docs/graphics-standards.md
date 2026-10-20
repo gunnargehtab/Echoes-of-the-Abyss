@@ -386,6 +386,12 @@ whole 40-berth ceiling running flat out without overwriting a live one. That is 
 call however many hulls are moving and none once the last bubble fades, and the probe
 reports the live bubbles as `wakeBubbles`.
 
+A hit on an own hull or structure is one more `Points` (`hullHit.ts`, #1510): a fixed ring
+of 384 particles, sixteen full hits' worth, a full ring overwriting its oldest. That is
+one draw call for any number of hits and none once the last spray fades. The lamp flash
+costs no draw: it rides the gate-3 glow attribute the hull already writes. The probe
+reports live hits as `hits` and their particles as `hitParticles`.
+
 The fleet's depth cues follow the same rule (#434). Every own hull hangs over a ground
 shadow on a plumb line — the cue that makes the water column readable — and each used to
 be its own line and its own disc: two draw calls per hull, ninety-six at the berth

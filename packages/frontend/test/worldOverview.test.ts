@@ -385,10 +385,11 @@ describe('the overview in the pilot view (#1459)', () => {
     const mesh = internals(view).overview!.mesh;
     assert.equal(mesh.visible, true, 'no state yet: the world is unfaded');
     // The first state, a frame into the ramp, then the ramp cut to full: two
-    // frames of the same force that differ by the fade alone.
+    // frames of the same force that differ by the fade alone. A quiet tick:
+    // the canned one's Damaged throws a spray reduced motion drops (#1510).
     view.setReducedMotion(false);
     pumpAnimationFrames();
-    view.applySnapshot(cannedSnapshot());
+    view.applySnapshot({ ...cannedSnapshot(), selfEvents: [] });
     pumpAnimationFrames();
     assert.equal(mesh.visible, true, 'part-way in, the world still shows');
     const drawn = { ...gl.ledger };

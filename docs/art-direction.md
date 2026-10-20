@@ -63,7 +63,7 @@ Only lit surfaces take the curve: the hulls, structures and props, and the ordna
 bodies. Every unlit layer bypasses it and keeps its authored register: the water
 backdrop and marine snow; the baked seabed with its route ink, map rim and skirt;
 fallback sprites and depth marks; public life's stipple; embers; and ordnance lamps
-with their trails and launch bubbles, and own hulls' wakes. The loudness ladder measures its rungs in encoded luminance
+with their trails and launch bubbles, own hulls' wakes, and the spray of a hit on one. The loudness ladder measures its rungs in encoded luminance
 ([map-visuals.md](map-visuals.md) §5), and the water, the routes, the rim and the stipple
 stand on its rungs 1 and 5; the conn view places the skirt, which §5 does not name, on
 rung 1. A trail wears its lamp's glow, which ACES would fade toward white. Each of these
@@ -1422,6 +1422,14 @@ status line, and the command panel keeps its full-size targets ([ui-ux.md](ui-ux
 - Sonar pings
 - Pressure warnings
 - Cavitation distortion on damage
+
+A hit on the player's own hull or structure (#1510) flashes that hull's lamps and throws a
+short spray from it: bubbles in the faction glow climbing, pale hull fragments sinking.
+Both scale with the share of hull the blow took, full at a fifth. The flash lifts gate 3's
+lamp factor toward its ceiling for about a third of a second; the spray lives 1.2 s. The
+trigger is the server's `Damaged` self-event, and the size is the difference of two own
+snapshots, so nothing unresolved is drawn. Reduced motion keeps the flash and drops the
+spray. Hits on enemy tracks are a separate issue.
 
 ### Echo Layer Requirements
 

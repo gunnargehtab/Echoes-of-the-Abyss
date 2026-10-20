@@ -66,6 +66,7 @@ import {
   Faction,
   MODEL_LIGHTING,
   MOVEMENT,
+  SelfEventKind,
   WORLD,
   WORLD_REGIONS,
   clampToRect,
@@ -136,6 +137,7 @@ import {
 import { OwnMotion, type Attitude } from './ownMotion.ts';
 import { OrdnanceLayer } from './ordnanceLayer.ts';
 import { HullWake, wakeStrength, type WakeSource } from './hullWake.ts';
+import { HullHits, flashedGlow, hitStrength } from './hullHit.ts';
 import { EnvironmentLayer } from './environmentLayer.ts';
 import { createWaterEnvironment, keepsGlowOutsideToneMapping } from './modelLighting.ts';
 import { GLOW_FACTOR_MAX, GLOW_FACTOR_MIN, SIG_GLOW_EFOLD } from './glow.ts';
@@ -525,6 +527,9 @@ interface EntityHandle {
   /** The world Y it was last placed at, clearance included: where its wake
    * starts (hullWake.ts), so the wake never re-reads the ground. */
   drawnY: number;
+  /** Gate 3's lamp factor as the sync last set it, which a hit's flash lifts
+   * from and returns to (hullHit.ts). */
+  restGlow: number;
 }
 
 /** Everything one entity's sync needs, sprite path and model path alike. */
@@ -815,6 +820,8 @@ export class PerspectiveView {
   private readonly wake = new HullWake();
   /** The wake's per-hull inputs, reused frame to frame: nothing allocated. */
   private readonly wakeSources: WakeSource[] = [];
+  /** The flash and spray on an own hull or structure hit (hullHit.ts, #1510). */
+  private readonly hits = new HullHits();
 
   private faction: Faction = Faction.Bathyarch;
   private units: OwnUnit[] = [];
@@ -1016,6 +1023,7 @@ export class PerspectiveView {
       this.unitGroup,
       this.ordnanceLayer.group,
       this.wake.points,
+      this.hits.points,
       this.structureGroup,
       this.models.group,
       this.cues.group,
@@ -1187,6 +1195,7 @@ export class PerspectiveView {
     this.snow.setReducedMotion(reduced);
     this.ordnanceLayer.setReducedMotion(reduced);
     this.wake.setReducedMotion(reduced);
+    this.hits.setReducedMotion(reduced);
     this.life.setReducedMotion(reduced);
     this.swayHeld = reduced;
     this.motion.levelHeld = reduced;
@@ -1311,6 +1320,9 @@ export class PerspectiveView {
   applySnapshot(snapshot: EchoSnapshot): void {
     // The session's first state: a placed mission's border fades in (§7.4).
     if (this.worldRegion !== null) this.borderTarget = 1;
+    // What each struck entity held before this tick, read before the arrays
+    // are replaced: the blow's size is the difference (hullHit.ts).
+    const struck = this.hpBeforeHits(snapshot);
     this.units = snapshot.units;
     this.structures = snapshot.structures;
     this.ordnance = snapshot.ordnance;
@@ -1336,6 +1348,7 @@ export class PerspectiveView {
       }
     }
     if (this.renderer !== null) this.syncEntities();
+    if (struck !== null) this.throwHits(struck);
     // The veil is a 5 Hz fact about where the fleet's ears are, so it moves
     // with the snapshot rather than with the frame (docs/ui-ux.md §4.5).
     this.refreshVeil();
@@ -1354,6 +1367,7 @@ export class PerspectiveView {
     this.ordnanceMotion.reset();
     this.ordnanceLayer.reset();
     this.wake.reset();
+    this.hits.reset();
     // A force of nobody is not a dark map (acousticVeil.ts): the veil comes
     // off with the fleet rather than closing over the whole chart.
     this.veil.clear();
@@ -1419,6 +1433,7 @@ export class PerspectiveView {
     this.environment.destroy();
     this.ordnanceLayer.dispose();
     this.wake.dispose();
+    this.hits.dispose();
     this.models.dispose();
     this.cues.dispose();
     this.backdrop.dispose();
@@ -3336,6 +3351,7 @@ export class PerspectiveView {
         modelKey: '',
         stands: spec.stands,
         drawnY: 0,
+        restGlow: 1,
       };
       handles.set(id, handle);
       this.sceneGrew = true;
@@ -3383,6 +3399,7 @@ export class PerspectiveView {
       // around the intake-approved resting strength (gate 3), so a hull
       // running silent goes dark instead of translucent.
       applyLiveGlow(model, spec.liveSig, spec.restSig);
+      handle.restGlow = model.glow;
     } else {
       (handle.mesh.material as MeshBasicMaterial).opacity = spec.dimmed ? 0.45 : 1;
     }
@@ -3497,6 +3514,60 @@ export class PerspectiveView {
     }
     this.wake.setPalette(FACTION_PALETTE[this.faction].glow);
     this.wake.sync(this.wakeSources, n, draw, nowMs);
+  }
+
+  /**
+   * The HP each entity named by a `Damaged` held before this snapshot, or
+   * null when nothing was hit. Own entities only: the event names nothing
+   * else, and an id the old arrays do not hold reads NaN (nothing measured).
+   */
+  private hpBeforeHits(snapshot: EchoSnapshot): Map<number, number> | null {
+    let struck: Map<number, number> | null = null;
+    for (const event of snapshot.selfEvents) {
+      if (event.kind !== SelfEventKind.Damaged) continue;
+      struck ??= new Map();
+      if (struck.has(event.unitId)) continue;
+      const was =
+        this.units.find((u) => u.id === event.unitId) ??
+        this.structures.find((s) => s.id === event.unitId);
+      struck.set(event.unitId, was?.hp ?? NaN);
+    }
+    return struck;
+  }
+
+  /**
+   * One hit per struck entity this tick, however many blows landed in it:
+   * the HP lost is one number a tick, so it cannot be split between them.
+   * Thrown from where the entity is drawn, so the spray leaves the hull the
+   * player sees. An entity gone with the blow is not drawn, and gets none.
+   */
+  private throwHits(struck: Map<number, number>): void {
+    const now = performance.now();
+    this.hits.setPalette(FACTION_PALETTE[this.faction].glow);
+    for (const [id, was] of struck) {
+      const entity =
+        this.units.find((u) => u.id === id) ?? this.structures.find((s) => s.id === id);
+      const handle = this.unitHandles.get(id) ?? this.structureHandles.get(id);
+      if (entity === undefined || handle === undefined) continue;
+      const at = handle.mesh.visible ? handle.mesh.position : handle.model!.root.position;
+      const strength = hitStrength(was - entity.hp, entity.maxHp);
+      this.hits.hit(id, at.x, at.y, at.z, strength, this.drawScale, now);
+    }
+  }
+
+  /**
+   * A hit's flash on the struck entity's lamps: gate 3's factor lifted toward
+   * its ceiling and back (hullHit.ts). A flash that has run out writes the
+   * resting factor once, so the lamps land where the sync left them.
+   */
+  private flashLamps(nowMs: number): void {
+    this.hits.eachFlash(nowMs, (id, level) => {
+      const handle = this.unitHandles.get(id) ?? this.structureHandles.get(id);
+      const model = handle?.model;
+      if (handle === undefined || model == null || handle.mesh.visible) return;
+      model.glow = flashedGlow(handle.restGlow, level);
+      this.models.place(model);
+    });
   }
 
   private syncEntities(): void {
@@ -3889,6 +3960,10 @@ export class PerspectiveView {
       this.ordnanceLayer.tick(now);
       this.wake.tick(now);
     }
+    // After every placement this frame, so a flash lifts the glow the hull
+    // was just written with rather than one a placement then overwrites.
+    this.flashLamps(now);
+    this.hits.tick(now);
     if (this.dreamLights !== null) {
       const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
       this.dreamLights.update(
@@ -4287,6 +4362,9 @@ export class PerspectiveView {
       ordnance: this.ordnanceLayer.count,
       // Wake bubbles alive this frame, every hull's one draw (#1508).
       wakeBubbles: this.wake.count,
+      // Hits alive on own hulls and structures, and their spray (#1510).
+      hits: this.hits.count,
+      hitParticles: this.hits.particles,
       // The prop layer's own ledger (gate 6): a prop regression is a
       // number, not an impression.
       ...this.environment.stats(),
