@@ -149,6 +149,17 @@ describe('TrackHits', () => {
     assert.equal(hits.count, 1, 'one hit per track');
   });
 
+  it('expires a hit no frame drew, so a ghost frame never strands one', () => {
+    // A hit on a track that went to ghost is held, not drawn; prune is what
+    // lets it go once its life is over.
+    const hits = new TrackHits();
+    hits.observe(was(track(150), NOW), track(100), NOW);
+    hits.prune(NOW + HIT_LIFE_MS - 1);
+    assert.equal(hits.count, 1, 'still alive');
+    hits.prune(NOW + HIT_LIFE_MS);
+    assert.equal(hits.count, 0, 'gone at the end of its life');
+  });
+
   it('forgets a track, and a new match forgets them all', () => {
     const hits = new TrackHits();
     hits.observe(was(track(150, { id: 1 }), NOW), track(100, { id: 1 }), NOW);

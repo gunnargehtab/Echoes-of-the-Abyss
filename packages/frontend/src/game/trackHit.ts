@@ -42,10 +42,12 @@ import { contactFidelity } from './trackFidelity.ts';
  * TUNABLE — the spray's shape in the track's own radius, as hullHit.ts sizes
  * its own: where a particle starts, how fast it flies out, and how fast a
  * bubble climbs and a fragment sinks, each a second. The chart is drawn from
- * above, so "climbs" is toward the top of the screen.
+ * above, so "climbs" is toward the top of the screen. It flies twice as far
+ * as an own hull's: a track's sprite is flat ink in its navy's colour, the
+ * colour its bubbles wear, so a spray that stays over the hull is lost on it.
  */
 const START_SHARE = 0.3;
-const SPREAD_PER_S = 1.6;
+const SPREAD_PER_S = 3.2;
 const BUBBLE_RISE_PER_S = 1;
 const DEBRIS_SINK_PER_S = 0.6;
 const DEBRIS_LIFE_SHARE = 0.6;
@@ -55,9 +57,21 @@ const DEBRIS_LIFE_SHARE = 0.6;
  * the pale ink of a fragment. A soft fill, so the ladder does not weigh it
  * (ladder.ts); the spray's dots are what it weighs.
  */
-export const TRACK_HIT_FLASH_ALPHA = 0.55;
+export const TRACK_HIT_FLASH_ALPHA = 0.3;
+/**
+ * TUNABLE — the radius a hit is sized by on a track with no hull or
+ * structure to measure: an animal or a torpedo.
+ */
+export const TRACK_HIT_SMALL_RADIUS_M = 20;
 /** The radius of one spray dot, in screen pixels at any zoom. */
-export const TRACK_HIT_DOT_PX = 2.5;
+export const TRACK_HIT_DOT_PX = 3;
+/**
+ * TUNABLE — how bright a hit draws at the floor, against a full one. Most
+ * blows are a gun round's few percent, which sits on the strength floor; an
+ * own hull's flash rides its lamps and reads there, and flat chart ink at the
+ * floor's own share did not.
+ */
+const LEVEL_FLOOR = 0.6;
 
 /** What the previous snapshot held for a contact, and when it was resolved. */
 export interface TrackReading {
@@ -131,7 +145,7 @@ export class TrackHits {
     if (hit === undefined) return 0;
     const t = (nowMs - hit.bornAt) / HIT_FLASH_MS;
     if (!(t >= 0 && t < 1)) return 0;
-    return hit.strength * (1 - t) * (1 - t);
+    return (LEVEL_FLOOR + (1 - LEVEL_FLOOR) * hit.strength) * (1 - t) * (1 - t);
   }
 
   /**
@@ -161,7 +175,7 @@ export class TrackHits {
       HIT_PARTICLES_MIN + (HIT_PARTICLES_MAX - HIT_PARTICLES_MIN) * hit.strength
     );
     const r = Math.max(radiusM, 1e-3);
-    const level = 0.4 + 0.6 * hit.strength;
+    const level = LEVEL_FLOOR + (1 - LEVEL_FLOOR) * hit.strength;
     let visited = 0;
     for (let k = 0; k < n; k++) {
       const debris = k % 3 === 0;
@@ -188,7 +202,14 @@ export class TrackHits {
     return visited;
   }
 
-  /** The track went out of hearing, or out of Tier 4: its hit goes with it. */
+  /** Forget every hit past its life, drawn or not: once a frame, before the draw. */
+  prune(nowMs: number): void {
+    for (const [id, hit] of this.hits) {
+      if (nowMs - hit.bornAt >= HIT_LIFE_MS) this.hits.delete(id);
+    }
+  }
+
+  /** The track went out of hearing: its hit goes with it. */
   forget(id: number): void {
     this.hits.delete(id);
   }

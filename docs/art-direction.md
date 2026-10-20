@@ -1437,7 +1437,7 @@ chart, beside its sprite: a pale flash swelling as it fades and the same spray, 
 the contact's colour and pale fragments, at the size the same blow on an own hull would
 be. The player already reads that hp on the track's bar, so it reveals nothing. It fires
 only between two live Tier-4 readings of one handle, never across a tier change or after
-a ghost, and a track that goes to ghost takes its hit with it. The conn view never draws
+a ghost, and a ghost draws none. The conn view never draws
 it: the enemy is never geometry there. Reduced motion keeps the flash.
 
 ### Echo Layer Requirements
