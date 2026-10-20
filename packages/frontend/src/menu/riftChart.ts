@@ -306,8 +306,7 @@ export const GROUNDS: readonly Ground[] = [
     depthM: 2600,
     water: null,
     whose: 'nobody’s water — four reasons converging',
-    // South of the galleries, which stand eleven kilometres north of the Lip
-    // (docs/world-map.md §4).
+    // South of the galleries: they stand north of the Lip (docs/world-map.md §4).
     x: 1000,
     y: 2350,
   },

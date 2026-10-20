@@ -8,7 +8,7 @@
 > came apart and which side moved.
 
 **Setting:** the Kell Shoulder — a four-kilometre crossing in the Shelf band between Kell Plateau
-and Marr, under two of it bare scoured rock, the Consortium's posted corridor across it, and the Kell slope falling
+and Marr, two kilometres of it bare scoured rock, the Consortium's posted corridor across it, and the Kell slope falling
 away to 900 m at its southern edge — 214 PC, the tide after Marr rang its bell off-tide
 ([world-map.md](world-map.md); [mission-thin-water.md](mission-thin-water.md) §1, §11;
 [mission-convocation.md](mission-convocation.md) §1, §7; [timeline.md](timeline.md), 205 PC).

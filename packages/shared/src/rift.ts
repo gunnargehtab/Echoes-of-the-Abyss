@@ -419,7 +419,7 @@ export const RIFT_GROUND: MapGround = {
       ],
       OpenWater,
       340,
-      'The Kell Shoulder — a four-kilometre crossing between Marr and Kell, under two of it bare rock, PF 1.00'
+      'The Kell Shoulder — a four-kilometre crossing between Marr and Kell, two kilometres of it bare rock, PF 1.00'
     ),
     oval(
       9,
