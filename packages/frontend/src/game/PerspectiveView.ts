@@ -1165,9 +1165,10 @@ export class PerspectiveView {
 
   /**
    * ui-ux.md §11: hold the world's decoration — the kelp current, the snow's
-   * sink, the stipple's pulse, the camera's sway and the hulls' lean (#1507).
-   * Re-applied now, so the camera settles before the overlay's next
-   * projection and every hull is level, not a frame later.
+   * sink, the stipple's pulse, the camera's sway and the hulls' lean (#1507)
+   * — and skip the launch bubbles, which only move. Re-applied now, so the
+   * camera settles before the overlay's next projection and every hull is
+   * level, not a frame later.
    */
   setReducedMotion(reduced: boolean): void {
     this.environment.setReducedMotion(reduced);
@@ -1175,6 +1176,7 @@ export class PerspectiveView {
       this.residency!.get(id)!.props.setReducedMotion(reduced);
     }
     this.snow.setReducedMotion(reduced);
+    this.ordnanceLayer.setReducedMotion(reduced);
     this.life.setReducedMotion(reduced);
     this.swayHeld = reduced;
     this.motion.levelHeld = reduced;
@@ -1340,6 +1342,7 @@ export class PerspectiveView {
     this.lastPositions.clear();
     this.motion.reset();
     this.ordnanceMotion.reset();
+    this.ordnanceLayer.reset();
     // A force of nobody is not a dark map (acousticVeil.ts): the veil comes
     // off with the fleet rather than closing over the whole chart.
     this.veil.clear();
@@ -3533,7 +3536,8 @@ export class PerspectiveView {
           groundY: this.groundYAt(at.x, at.y),
         };
       },
-      this.drawScale
+      this.drawScale,
+      nowMs
     );
   }
 
@@ -3822,6 +3826,9 @@ export class PerspectiveView {
       // the frame nothing.
       this.placeUnits(now);
       this.syncOrdnance(now);
+    } else {
+      // A launch burst outlives a torpedo that hits inside its 1.5 s.
+      this.ordnanceLayer.tick(now);
     }
     if (this.dreamLights !== null) {
       const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);

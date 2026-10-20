@@ -11,15 +11,17 @@
  * their own shot run.
  *
  * Instanced, like the depth cues and the props: one body mesh and one lamp
- * mesh per kind, and one LineSegments for every torpedo's cavitation trail —
- * nine objects for any amount of ordnance, and a kind with no instances is
- * hidden rather than drawn empty. Glow encodes loudness (gate 3): each lamp's
- * colour is the faction glow scaled by the live SIG on the spec curve, so a
- * running torpedo (60) burns, a noisemaker (70) burns brighter, and an armed
- * mine (2) is the near-black §6 asks for — a listener, not an emitter.
+ * mesh per kind, one LineSegments for every torpedo's cavitation trail and
+ * one Points for every launch's bubble burst — ten objects for any amount of
+ * ordnance, and a kind with no instances is hidden rather than drawn empty.
+ * Glow encodes loudness (gate 3): each lamp's colour is the faction glow
+ * scaled by the live SIG on the spec curve, so a running torpedo (60) burns,
+ * a noisemaker (70) burns brighter, and an armed mine (2) is the near-black
+ * §6 asks for — a listener, not an emitter.
  */
 
 import {
+  AdditiveBlending,
   BufferGeometry,
   Color,
   ConeGeometry,
@@ -35,6 +37,8 @@ import {
   MeshBasicMaterial,
   MeshStandardMaterial,
   Object3D,
+  Points,
+  PointsMaterial,
   SphereGeometry,
 } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -63,6 +67,27 @@ export function lampBrightness(sig: number): number {
 export const TRAIL_SEGMENTS = 6;
 export const TRAIL_SEGMENT_M = 7;
 export const TRAIL_RISE_M = 1.2;
+
+/** TUNABLE — the launch burst: bubbles per burst, the fixed pool they are
+ * drawn from (eight bursts in the water at once; a ninth recycles the
+ * oldest), how long one lives, how fast it climbs, how wide a burst spreads
+ * at birth, and its point size in pixels. */
+export const BUBBLES_PER_BURST = 8;
+export const BUBBLE_POOL = BUBBLES_PER_BURST * 8;
+export const BUBBLE_LIFE_MS = 1500;
+export const BUBBLE_RISE_MPS = 9;
+export const BUBBLE_SPREAD_M = 3;
+const BUBBLE_SIZE_PX = 3;
+
+/** TUNABLE — how much of its run a torpedo may have spent and still read as
+ * just launched: five Echo ticks, so a view built mid-match (a reconnect)
+ * does not burst every shot already running. */
+export const LAUNCH_WINDOW_S = 1;
+
+/** Whether this torpedo, seen for the first time, was seen at its launch. */
+export function isLaunch(item: OwnOrdnance): boolean {
+  return item.remainingS >= ORDNANCE.TORPEDO.RUN_TIME_S - LAUNCH_WINDOW_S;
+}
 
 /** Every kind the layer draws, in a fixed order so the probe and tests can
  * count them. */
@@ -141,9 +166,27 @@ export class OrdnanceLayer {
   private trailPositions!: Float32BufferAttribute;
   private trailColors!: Float32BufferAttribute;
 
+  // The launch bubbles: a fixed ring of BUBBLE_POOL points, never rebuilt.
+  // Each slot keeps where it was born, its brightness and its birth time;
+  // `tick` lifts it straight up from there and fades it out.
+  private readonly bubbles: Points;
+  private readonly bubblePositions: Float32BufferAttribute;
+  private readonly bubbleColors: Float32BufferAttribute;
+  private readonly bubbleBirth = new Float32Array(BUBBLE_POOL * 3);
+  private readonly bubbleRise = new Float32Array(BUBBLE_POOL);
+  private readonly bubbleLevel = new Float32Array(BUBBLE_POOL);
+  private readonly bubbleBornAt = new Float64Array(BUBBLE_POOL).fill(-Infinity);
+  private bubbleHead = 0;
+  private bubblesLive = false;
+  private bursts = 0;
+  /** Torpedo ids already seen, so a burst marks a launch and only a launch. */
+  private knownTorpedoes = new Set<number>();
+  private reducedMotion = false;
+
   private readonly bodyMaterial: MeshStandardMaterial;
   private readonly lampMaterial: MeshBasicMaterial;
   private readonly trailMaterial: LineBasicMaterial;
+  private readonly bubbleMaterial: PointsMaterial;
   private readonly glow = new Color(0xffffff);
 
   /** The depth-cue slot each live piece holds, by ordnance id. */
@@ -171,7 +214,38 @@ export class OrdnanceLayer {
       opacity: 0.55,
       depthWrite: false,
     });
+    // Additive, so a spent bubble (colour zero) adds nothing: the whole pool
+    // is drawn every frame it is live, with no draw range to keep in step.
+    this.bubbleMaterial = new PointsMaterial({
+      size: BUBBLE_SIZE_PX,
+      sizeAttenuation: false,
+      vertexColors: true,
+      toneMapped: false,
+      transparent: true,
+      blending: AdditiveBlending,
+      depthWrite: false,
+    });
+    this.bubblePositions = new Float32BufferAttribute(new Float32Array(BUBBLE_POOL * 3), 3);
+    this.bubbleColors = new Float32BufferAttribute(new Float32Array(BUBBLE_POOL * 3), 3);
+    this.bubblePositions.setUsage(DynamicDrawUsage);
+    this.bubbleColors.setUsage(DynamicDrawUsage);
+    const bubbleGeometry = new BufferGeometry();
+    bubbleGeometry.setAttribute('position', this.bubblePositions);
+    bubbleGeometry.setAttribute('color', this.bubbleColors);
+    this.bubbles = new Points(bubbleGeometry, this.bubbleMaterial);
+    this.bubbles.name = 'ordnance_bubbles';
+    this.bubbles.visible = false;
+    this.bubbles.frustumCulled = false;
     this.build();
+  }
+
+  /**
+   * Reduced motion (docs/ui-ux.md §11) skips the burst: a launch transient
+   * that only moves has no static equivalent worth drawing, and the torpedo
+   * and its trail still say the shot is in the water.
+   */
+  setReducedMotion(reduced: boolean): void {
+    this.reducedMotion = reduced;
   }
 
   /** Gate 4: the body wears the faction primary at hull value, the lamps its glow. */
@@ -200,6 +274,27 @@ export class OrdnanceLayer {
     return { x: TMP_OBJECT.position.x, y: TMP_OBJECT.position.y, z: TMP_OBJECT.position.z };
   }
 
+  /** Launch bursts spawned since the layer was made, for the tests. */
+  get burstCount(): number {
+    return this.bursts;
+  }
+
+  /** Bubble slots in the pool: fixed, whatever was launched. */
+  get bubblePoolSize(): number {
+    return this.bubblePositions.count;
+  }
+
+  /** Whether any bubble is still rising, so the view keeps ticking. */
+  get bubbling(): boolean {
+    return this.bubblesLive;
+  }
+
+  /** The drawn position of one bubble slot, for the tests. */
+  bubbleAt(slot: number): { x: number; y: number; z: number } {
+    const p = this.bubblePositions;
+    return { x: p.getX(slot), y: p.getY(slot), z: p.getZ(slot) };
+  }
+
   /** The vertices the trail draws this frame. */
   get trailVertexCount(): number {
     return this.trail.geometry.drawRange.count;
@@ -213,7 +308,8 @@ export class OrdnanceLayer {
   sync(
     items: readonly OwnOrdnance[],
     place: (item: OwnOrdnance) => OrdnancePlacement,
-    draw: number
+    draw: number,
+    nowMs: number
   ): void {
     if (items.length > this.capacity) {
       while (this.capacity < items.length) this.capacity *= 2;
@@ -222,6 +318,7 @@ export class OrdnanceLayer {
     this.counts.clear();
     let trailVertex = 0;
     const seen = new Set<number>();
+    const torpedoes = new Set<number>();
     for (const item of items) {
       const kind = item.kind;
       const index = this.counts.get(kind) ?? 0;
@@ -252,6 +349,13 @@ export class OrdnanceLayer {
       this.cues.setShadow(slot, at.x, at.groundY + 2, at.z, SHADOW_M[kind] * draw);
 
       if (kind === OrdnanceKind.Torpedo) {
+        torpedoes.add(item.id);
+        // A torpedo id the layer has never seen, with its run still nearly
+        // whole, is a launch: the snapshot carries no launch event, and needs
+        // none, because own ordnance is sent in full from its first tick.
+        if (!this.knownTorpedoes.has(item.id) && isLaunch(item) && !this.reducedMotion) {
+          this.spawnBurst(at.x, y, at.z, draw, lampBrightness(item.sig), nowMs);
+        }
         // Cavitation behind the run, fading with distance and climbing as
         // bubbles do. Trail geometry scales with the draw factor so it stays
         // a trail at survey zoom rather than a dot.
@@ -287,6 +391,8 @@ export class OrdnanceLayer {
       }
     }
     this.live = items.length;
+    // Only the live ids are kept: a torpedo that has gone cannot come back.
+    this.knownTorpedoes = torpedoes;
 
     for (const kind of ORDNANCE_KINDS) {
       const n = this.counts.get(kind) ?? 0;
@@ -304,6 +410,79 @@ export class OrdnanceLayer {
     this.trail.visible = trailVertex > 0;
     this.trailPositions.needsUpdate = true;
     this.trailColors.needsUpdate = true;
+    this.tick(nowMs);
+  }
+
+  /**
+   * Per frame while any bubble lives: each climbs straight up from where it
+   * was born and fades. Vertical only, because sideways drift states a
+   * current, and a current is a mechanic (docs/map-visuals.md §8).
+   */
+  tick(nowMs: number): void {
+    if (!this.bubblesLive) return;
+    let live = false;
+    for (let i = 0; i < BUBBLE_POOL; i++) {
+      const age = nowMs - this.bubbleBornAt[i]!;
+      const t = age / BUBBLE_LIFE_MS;
+      if (!(t >= 0 && t < 1)) {
+        this.bubbleColors.setXYZ(i, 0, 0, 0);
+        continue;
+      }
+      live = true;
+      this.bubblePositions.setXYZ(
+        i,
+        this.bubbleBirth[i * 3]!,
+        this.bubbleBirth[i * 3 + 1]! + (age / 1000) * this.bubbleRise[i]!,
+        this.bubbleBirth[i * 3 + 2]!
+      );
+      const fade = (1 - t) * this.bubbleLevel[i]!;
+      this.bubbleColors.setXYZ(i, this.glow.r * fade, this.glow.g * fade, this.glow.b * fade);
+    }
+    this.bubblesLive = live;
+    this.bubbles.visible = live;
+    this.bubblePositions.needsUpdate = true;
+    this.bubbleColors.needsUpdate = true;
+  }
+
+  /** Write one burst into the next slots of the ring, over the oldest. */
+  private spawnBurst(
+    x: number,
+    y: number,
+    z: number,
+    draw: number,
+    level: number,
+    nowMs: number
+  ): void {
+    this.bursts++;
+    for (let b = 0; b < BUBBLES_PER_BURST; b++) {
+      const i = this.bubbleHead;
+      this.bubbleHead = (this.bubbleHead + 1) % BUBBLE_POOL;
+      // A fixed rosette, not noise: the spread is where each bubble is born,
+      // and every frame after that only lifts it.
+      const angle = (b / BUBBLES_PER_BURST) * Math.PI * 2;
+      const r =
+        BUBBLE_SPREAD_M * draw * (0.4 + (0.6 * ((b * 5) % BUBBLES_PER_BURST)) / BUBBLES_PER_BURST);
+      this.bubbleBirth[i * 3] = x + Math.cos(angle) * r;
+      this.bubbleBirth[i * 3 + 1] = y;
+      this.bubbleBirth[i * 3 + 2] = z + Math.sin(angle) * r;
+      // Smaller bubbles rise slower; the spread in speed is what makes it
+      // read as a burst rather than a ring lifting as one.
+      this.bubbleRise[i] =
+        BUBBLE_RISE_MPS * draw * (0.6 + (0.4 * ((b * 3) % BUBBLES_PER_BURST)) / BUBBLES_PER_BURST);
+      this.bubbleLevel[i] = level;
+      this.bubbleBornAt[i] = nowMs;
+    }
+    this.bubblesLive = true;
+  }
+
+  /** A new match: forget the last one's torpedoes and its bubbles. */
+  reset(): void {
+    this.knownTorpedoes.clear();
+    this.bubbleBornAt.fill(-Infinity);
+    this.bubbleColors.array.fill(0);
+    this.bubbleColors.needsUpdate = true;
+    this.bubblesLive = false;
+    this.bubbles.visible = false;
   }
 
   dispose(): void {
@@ -313,6 +492,8 @@ export class OrdnanceLayer {
     for (const mesh of this.bodies.values()) mesh.geometry.dispose();
     for (const mesh of this.lamps.values()) mesh.geometry.dispose();
     this.trail.geometry.dispose();
+    this.bubbles.geometry.dispose();
+    this.bubbleMaterial.dispose();
     this.bodyMaterial.dispose();
     this.lampMaterial.dispose();
     this.trailMaterial.dispose();
@@ -365,6 +546,6 @@ export class OrdnanceLayer {
     this.trail.name = 'ordnance_trails';
     this.trail.visible = false;
     this.trail.frustumCulled = false;
-    this.group.add(this.trail);
+    this.group.add(this.trail, this.bubbles);
   }
 }

@@ -63,7 +63,7 @@ Only lit surfaces take the curve: the hulls, structures and props, and the ordna
 bodies. Every unlit layer bypasses it and keeps its authored register: the water
 backdrop and marine snow; the baked seabed with its route ink, map rim and skirt;
 fallback sprites and depth marks; public life's stipple; embers; and ordnance lamps
-with their trails. The loudness ladder measures its rungs in encoded luminance
+with their trails and launch bubbles. The loudness ladder measures its rungs in encoded luminance
 ([map-visuals.md](map-visuals.md) §5), and the water, the routes, the rim and the stipple
 stand on its rungs 1 and 5; the conn view places the skirt, which §5 does not name, on
 rung 1. A trail wears its lamp's glow, which ACES would fade toward white. Each of these
@@ -1521,7 +1521,10 @@ noisemaker outshines it for its eight seconds, and an armed mine (2) is the near
 [systems-combat.md](systems-combat.md) §6 describes, a listener rather than an emitter.
 The chart annotates each shot in the own voice — a ring whose arc is the run a torpedo
 has left, a diamond for a mine, a breathing ring for a noisemaker, a down-pointing tick
-for a depth charge — and the scope carries an own-force dot for every one.
+for a depth charge — and the scope carries an own-force dot for every one. A launch, the
+loudest moment of a shot's life, throws a short burst of bubbles where the torpedo first
+appears; they climb straight up and fade within a second and a half, and reduced motion
+skips them.
 
 ### Far-zoom readability scale — SPEC
 
