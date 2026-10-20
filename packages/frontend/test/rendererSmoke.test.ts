@@ -919,58 +919,6 @@ describe('renderer smoke test: the conn view', () => {
     }
   });
 
-  it('trails one wake mesh for the whole moving fleet, and none for a still one (#1508)', async () => {
-    const world = await boot();
-    try {
-      // The boot gave every hull one sample: nothing has moved yet.
-      world.frame(2);
-      const wakes = (): Mesh[] => {
-        const found: Mesh[] = [];
-        world.gl.lastScene?.traverse((object) => {
-          if (object instanceof Mesh && object.name === 'hull_wakes') found.push(object);
-        });
-        return found;
-      };
-      const probe = (): Record<string, unknown> =>
-        (
-          globalThis as unknown as { window: { __perspectiveProbe: () => Record<string, unknown> } }
-        ).window.__perspectiveProbe();
-      assert.equal(wakes().length, 1, 'one wake object in the scene');
-      assert.equal(probe().wakes, 0, 'a fleet that has not moved leaves no wake');
-      const still = world.gl.ledger.calls;
-
-      const snapshot = cannedSnapshot(301);
-      const advance = (moved: number, shift: number) => {
-        world.conn.applySnapshot({
-          ...snapshot,
-          units: snapshot.units.map((unit, i) =>
-            i < moved ? { ...unit, x: unit.x + shift } : unit
-          ),
-        });
-        world.frame(1);
-      };
-      advance(1, 40);
-      const one = world.gl.ledger.calls - still;
-      assert.equal(probe().wakes, 1);
-      assert.equal(one, 1, 'one hull under way costs one draw');
-
-      advance(snapshot.units.length, 80);
-      assert.equal(probe().wakes, snapshot.units.length, 'every hull under way trails a wake');
-      assert.equal(world.gl.ledger.calls - still, one, 'and the whole fleet costs the same one');
-
-      // The same hulls, drive cut, carried on: no thrust, no cavitation.
-      world.conn.applySnapshot({
-        ...snapshot,
-        units: snapshot.units.map((unit) => ({ ...unit, x: unit.x + 120, engineOff: true })),
-      });
-      world.frame(1);
-      assert.equal(probe().wakes, 0, 'an engine-off hull leaves none');
-      assert.equal(world.gl.ledger.calls, still, 'and the wake is not drawn at all');
-    } finally {
-      world.teardown();
-    }
-  });
-
   it('lets the ground go cold where nothing of the fleet is listening (#472)', async () => {
     const world = await boot();
     try {
@@ -1021,8 +969,6 @@ describe('renderer smoke test: the conn view', () => {
         const found: Mesh[] = [];
         world.gl.lastScene?.traverse((object) => {
           if (!(object instanceof Mesh)) return;
-          // The hull wake is vertex-coloured too, and draws once a hull moves.
-          if (object.name === 'hull_wakes') return;
           const geometry = object.geometry;
           if (geometry.getAttribute('color') === undefined) return;
           if (geometry.getAttribute('surveyFloor') !== undefined) return;

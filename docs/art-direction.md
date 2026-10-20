@@ -63,7 +63,7 @@ Only lit surfaces take the curve: the hulls, structures and props, and the ordna
 bodies. Every unlit layer bypasses it and keeps its authored register: the water
 backdrop and marine snow; the baked seabed with its route ink, map rim and skirt;
 fallback sprites and depth marks; public life's stipple; embers; and ordnance lamps
-with their trails and launch bubbles. The loudness ladder measures its rungs in encoded luminance
+with their trails and launch bubbles, own hulls' wakes, and the spray of a hit on one. The loudness ladder measures its rungs in encoded luminance
 ([map-visuals.md](map-visuals.md) §5), and the water, the routes, the rim and the stipple
 stand on its rungs 1 and 5; the conn view places the skirt, which §5 does not name, on
 rung 1. A trail wears its lamp's glow, which ACES would fade toward white. Each of these
@@ -1301,9 +1301,15 @@ below Track, and a Track that has gone to ghost — and
 **construction sites** — a half-built structure is schematic on purpose, and reads as
 scaffolding until it is commissioned. Cavitation trails run behind the player's own
 torpedoes in the conn view ("Own ordnance is geometry too", below), and behind the
-player's own moving hulls: a wake whose length and brightness follow live SIG on gate 3's
-curve, faint under Silent Running and absent with the drive cut (`hullWake.ts`). Animated
-bases are still to come.
+player's own moving hulls (#1508). A hull sheds bubbles at its stern as it travels, five
+metres apart at the closest zoom and wider as the far-zoom scale grows, and never more than
+twelve alive at once, so a fast hull's bubbles spread out. Each stays where it was shed,
+climbing and fading, so a turn leaves a curve.
+The wake is its live SIG on gate 3's curve, full at the red stop of 65: long and bright for
+a hull pushing hard, short and faint for one running silent, and none for a hull holding
+still or with its engine cut. Reduced motion keeps the bubbles and stops their climb. It states how
+loud the hull is and nothing more, so the enemy, which is never geometry in the conn
+view, never has one. Animated bases are still to come.
 
 ### The Asymmetric Fidelity Law
 
@@ -1416,6 +1422,15 @@ status line, and the command panel keeps its full-size targets ([ui-ux.md](ui-ux
 - Sonar pings
 - Pressure warnings
 - Cavitation distortion on damage
+
+A hit on the player's own hull or structure (#1510) flashes that hull's lamps and throws a
+short spray from it: bubbles in the faction glow climbing, pale hull fragments sinking.
+Both scale with the share of hull the blow took, full at a fifth. The flash lifts gate 3's
+lamp factor for about a third of a second, to twice its ceiling at full, since a hull under
+fire is usually loud and already at the ceiling; the spray lives 1.2 s. The
+trigger is the server's `Damaged` self-event, and the size is the difference of two own
+snapshots, so nothing unresolved is drawn. Reduced motion keeps the flash and drops the
+spray. Hits on enemy tracks are a separate issue.
 
 ### Echo Layer Requirements
 

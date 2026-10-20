@@ -380,9 +380,17 @@ draw calls at most for any number of shots, none for a kind with nothing in the 
 sharing the fleet's depth cues, and reported by the
 probe as `ordnance`.
 
-The cavitation wake behind own moving hulls (`hullWake.ts`) is one ribbon mesh for the
-whole fleet: one draw call while any hull is under way, none while the fleet is still or
-every drive is cut, and reported by the probe as `wakes`.
+Own hulls' wakes are one `Points` for the whole fleet (`hullWake.ts`, #1508): a fixed ring
+of 480 bubbles, written in place. A hull keeps at most twelve alive, so the ring holds the
+whole 40-berth ceiling running flat out without overwriting a live one. That is one draw
+call however many hulls are moving and none once the last bubble fades, and the probe
+reports the live bubbles as `wakeBubbles`.
+
+A hit on an own hull or structure is one more `Points` (`hullHit.ts`, #1510): a fixed ring
+of 384 particles, sixteen full hits' worth, a full ring overwriting its oldest. That is
+one draw call for any number of hits and none once the last spray fades. The lamp flash
+costs no draw: it rides the gate-3 glow attribute the hull already writes. The probe
+reports live hits as `hits` and their particles as `hitParticles`.
 
 The fleet's depth cues follow the same rule (#434). Every own hull hangs over a ground
 shadow on a plumb line — the cue that makes the water column readable — and each used to

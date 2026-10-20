@@ -66,6 +66,7 @@ import {
   Faction,
   MODEL_LIGHTING,
   MOVEMENT,
+  SelfEventKind,
   WORLD,
   WORLD_REGIONS,
   clampToRect,
@@ -135,7 +136,8 @@ import {
 } from './passages.ts';
 import { OwnMotion, type Attitude } from './ownMotion.ts';
 import { OrdnanceLayer } from './ordnanceLayer.ts';
-import { HullWake, wakeStrength, type WakePlacement } from './hullWake.ts';
+import { HullWake, wakeStrength, type WakeSource } from './hullWake.ts';
+import { HullHits, flashedGlow, hitStrength } from './hullHit.ts';
 import { EnvironmentLayer } from './environmentLayer.ts';
 import { createWaterEnvironment, keepsGlowOutsideToneMapping } from './modelLighting.ts';
 import { GLOW_FACTOR_MAX, GLOW_FACTOR_MIN, SIG_GLOW_EFOLD } from './glow.ts';
@@ -522,6 +524,12 @@ interface EntityHandle {
   modelKey: string;
   /** A structure stands on its depth; a hull hangs by its centre (#955). */
   stands: boolean;
+  /** The world Y it was last placed at, clearance included: where its wake
+   * starts (hullWake.ts), so the wake never re-reads the ground. */
+  drawnY: number;
+  /** Gate 3's lamp factor as the sync last set it, which a hit's flash lifts
+   * from and returns to (hullHit.ts). */
+  restGlow: number;
 }
 
 /** Everything one entity's sync needs, sprite path and model path alike. */
@@ -808,12 +816,14 @@ export class PerspectiveView {
   private ordnance: OwnOrdnance[] = [];
   /** Own ordnance glides between ticks as own hulls do (ownMotion.ts). */
   readonly ordnanceMotion = new OwnMotion();
-  /** The cavitation wake behind own moving hulls: one mesh for the fleet (hullWake.ts). */
+  /** Every own hull's cavitation wake, one draw call (hullWake.ts, #1508). */
   private readonly wake = new HullWake();
-  /** Its placements, reused frame to frame so a glide allocates nothing. */
-  private readonly wakes: WakePlacement[] = [];
-  /** The seabed under a wake vertex, bound once so a glide allocates nothing. */
-  private readonly wakeGround = (x: number, z: number): number => this.groundYAt(x, z);
+  /** The wake's per-hull inputs, reused frame to frame: nothing allocated. */
+  private readonly wakeSources: WakeSource[] = [];
+  /** The flash and spray on an own hull or structure hit (hullHit.ts, #1510). */
+  private readonly hits = new HullHits();
+  /** Where the last hit was thrown, world metres, so a drive can frame it. */
+  private lastHitAt: { x: number; z: number; depthM: number } | null = null;
 
   private faction: Faction = Faction.Bathyarch;
   private units: OwnUnit[] = [];
@@ -1014,7 +1024,8 @@ export class PerspectiveView {
       this.life.group,
       this.unitGroup,
       this.ordnanceLayer.group,
-      this.wake.mesh,
+      this.wake.points,
+      this.hits.points,
       this.structureGroup,
       this.models.group,
       this.cues.group,
@@ -1185,6 +1196,8 @@ export class PerspectiveView {
     }
     this.snow.setReducedMotion(reduced);
     this.ordnanceLayer.setReducedMotion(reduced);
+    this.wake.setReducedMotion(reduced);
+    this.hits.setReducedMotion(reduced);
     this.life.setReducedMotion(reduced);
     this.swayHeld = reduced;
     this.motion.levelHeld = reduced;
@@ -1309,6 +1322,9 @@ export class PerspectiveView {
   applySnapshot(snapshot: EchoSnapshot): void {
     // The session's first state: a placed mission's border fades in (§7.4).
     if (this.worldRegion !== null) this.borderTarget = 1;
+    // What each struck entity held before this tick, read before the arrays
+    // are replaced: the blow's size is the difference (hullHit.ts).
+    const struck = this.hpBeforeHits(snapshot);
     this.units = snapshot.units;
     this.structures = snapshot.structures;
     this.ordnance = snapshot.ordnance;
@@ -1334,6 +1350,7 @@ export class PerspectiveView {
       }
     }
     if (this.renderer !== null) this.syncEntities();
+    if (struck !== null) this.throwHits(struck);
     // The veil is a 5 Hz fact about where the fleet's ears are, so it moves
     // with the snapshot rather than with the frame (docs/ui-ux.md §4.5).
     this.refreshVeil();
@@ -1351,6 +1368,9 @@ export class PerspectiveView {
     this.motion.reset();
     this.ordnanceMotion.reset();
     this.ordnanceLayer.reset();
+    this.wake.reset();
+    this.hits.reset();
+    this.lastHitAt = null;
     // A force of nobody is not a dark map (acousticVeil.ts): the veil comes
     // off with the fleet rather than closing over the whole chart.
     this.veil.clear();
@@ -1416,6 +1436,7 @@ export class PerspectiveView {
     this.environment.destroy();
     this.ordnanceLayer.dispose();
     this.wake.dispose();
+    this.hits.dispose();
     this.models.dispose();
     this.cues.dispose();
     this.backdrop.dispose();
@@ -3332,6 +3353,8 @@ export class PerspectiveView {
         model: null,
         modelKey: '',
         stands: spec.stands,
+        drawnY: 0,
+        restGlow: 1,
       };
       handles.set(id, handle);
       this.sceneGrew = true;
@@ -3379,6 +3402,7 @@ export class PerspectiveView {
       // around the intake-approved resting strength (gate 3), so a hull
       // running silent goes dark instead of translucent.
       applyLiveGlow(model, spec.liveSig, spec.restSig);
+      handle.restGlow = model.glow;
     } else {
       (handle.mesh.material as MeshBasicMaterial).opacity = spec.dimmed ? 0.45 : 1;
     }
@@ -3416,6 +3440,7 @@ export class PerspectiveView {
     if (model !== null) {
       const modelY = handle.stands ? standingY(model.groundM, draw, y, groundY) : hullY;
       model.root.position.set(x, modelY, z);
+      handle.drawnY = modelY;
       // Yaw outermost, then pitch about the beam, then roll about the keel:
       // the bow is the root's +X, so +Z rotation would lift it and a dive's
       // positive pitch is negated (#1507). A sprite stays flat on the chart.
@@ -3426,6 +3451,7 @@ export class PerspectiveView {
     } else {
       handle.mesh.position.set(x, hullY, z);
       handle.mesh.rotation.y = -yaw;
+      handle.drawnY = hullY;
     }
 
     // The plumb line and ground shadow are what make the water column
@@ -3454,32 +3480,111 @@ export class PerspectiveView {
   }
 
   /**
-   * The wake behind each own hull, from where the hull is drawn now. Runs
-   * wherever the hulls are placed, so the wake never lags its stern. Rung 7
-   * with the hulls it trails (docs/map-visuals.md §5).
+   * Every own hull's wake, from where its hull was just placed: runs after
+   * the entity sync and after each per-frame placement, so a hull sheds its
+   * bubbles from the stern it is drawn with. Strength is live SIG on gate 3's
+   * curve, zero for a hull holding still or with its engine cut (hullWake.ts).
    */
   private syncWakes(nowMs: number): void {
-    this.wake.setPalette(FACTION_PALETTE[this.faction].glow);
     const draw = this.drawScale;
     let n = 0;
     for (const unit of this.units) {
       const handle = this.unitHandles.get(unit.id);
       if (handle === undefined) continue;
+      const speedMps = this.motion.speedOf(unit.id);
+      const strength = wakeStrength(unit.sig, speedMps, unit.engineOff);
+      if (strength <= 0) continue;
       const at = this.motion.at(unit, nowMs, this.drawn);
-      const wake = (this.wakes[n] ??= { x: 0, y: 0, z: 0, yaw: 0, sternM: 0, strength: 0 });
-      // The height placeHandle gives the hull, seabed clearance included, so
-      // a bottomed hull's wake leaves its stern rather than the ground.
-      wake.x = at.x;
-      wake.y = Math.max(depthToWorldY(at.depth), this.groundYAt(at.x, at.y) + 4 * draw);
-      wake.z = at.y;
-      wake.yaw = this.headings.get(unit.id) ?? 0;
-      const lengthM =
-        handle.model !== null && !handle.mesh.visible ? handle.model.lengthM : handle.widthM;
-      wake.sternM = 0.5 * lengthM * draw;
-      wake.strength = wakeStrength(unit.sig, unit.engineOff, this.motion.moving(unit.id));
+      const source = (this.wakeSources[n] ??= {
+        id: 0,
+        x: 0,
+        y: 0,
+        z: 0,
+        heading: 0,
+        speedMps: 0,
+        sternM: 0,
+        strength: 0,
+      });
+      source.id = unit.id;
+      source.x = at.x;
+      source.y = handle.drawnY;
+      source.z = at.y;
+      source.heading = this.headings.get(unit.id) ?? 0;
+      source.speedMps = speedMps;
+      source.sternM = 0.5 * draw * (handle.model?.lengthM ?? handle.widthM);
+      source.strength = strength;
       n++;
     }
-    this.wake.sync(this.wakes, n, this.wakeGround);
+    this.wake.setPalette(FACTION_PALETTE[this.faction].glow);
+    this.wake.sync(this.wakeSources, n, draw, nowMs);
+  }
+
+  /**
+   * The HP each entity named by a `Damaged` held before this snapshot, or
+   * null when nothing was hit. Own entities only: the event names nothing
+   * else, and an id the old arrays do not hold reads NaN (nothing measured).
+   */
+  private hpBeforeHits(snapshot: EchoSnapshot): Map<number, number> | null {
+    let struck: Map<number, number> | null = null;
+    for (const event of snapshot.selfEvents) {
+      if (event.kind !== SelfEventKind.Damaged) continue;
+      struck ??= new Map();
+      if (struck.has(event.unitId)) continue;
+      const was =
+        this.units.find((u) => u.id === event.unitId) ??
+        this.structures.find((s) => s.id === event.unitId);
+      struck.set(event.unitId, was?.hp ?? NaN);
+    }
+    return struck;
+  }
+
+  /**
+   * One hit per struck entity this tick, however many blows landed in it:
+   * the HP lost is one number a tick, so it cannot be split between them.
+   * Thrown from where the entity is drawn, so the spray leaves the hull the
+   * player sees. An entity gone with the blow is not drawn, and gets none.
+   */
+  private throwHits(struck: Map<number, number>): void {
+    const now = performance.now();
+    this.hits.setPalette(FACTION_PALETTE[this.faction].glow);
+    for (const [id, was] of struck) {
+      const entity =
+        this.units.find((u) => u.id === id) ?? this.structures.find((s) => s.id === id);
+      const handle = this.unitHandles.get(id) ?? this.structureHandles.get(id);
+      if (entity === undefined || handle === undefined) continue;
+      const at = handle.mesh.visible ? handle.mesh.position : handle.model!.root.position;
+      const strength = hitStrength(was - entity.hp, entity.maxHp);
+      // A structure has no way on; a hull's is its glide and its heading.
+      const speed = this.unitHandles.has(id) ? this.motion.speedOf(id) : 0;
+      const heading = this.headings.get(id) ?? 0;
+      this.hits.hit(
+        id,
+        at.x,
+        at.y,
+        at.z,
+        strength,
+        0.5 * this.drawScale * (handle.model?.lengthM ?? handle.widthM),
+        now,
+        Math.cos(heading) * speed,
+        Math.sin(heading) * speed
+      );
+      this.lastHitAt = { x: at.x, z: at.z, depthM: entity.depth };
+    }
+  }
+
+  /**
+   * A hit's flash on the struck entity's lamps: gate 3's factor lifted toward
+   * its ceiling and back (hullHit.ts). A flash that has run out writes the
+   * resting factor once, so the lamps land where the sync left them.
+   */
+  private flashLamps(nowMs: number): void {
+    this.hits.eachFlash(nowMs, (id, level) => {
+      const handle = this.unitHandles.get(id) ?? this.structureHandles.get(id);
+      const model = handle?.model;
+      if (handle === undefined || model == null || handle.mesh.visible) return;
+      model.glow = flashedGlow(handle.restGlow, level);
+      this.models.place(model);
+    });
   }
 
   private syncEntities(): void {
@@ -3867,9 +3972,15 @@ export class PerspectiveView {
       this.placeUnits(now);
       this.syncOrdnance(now);
     } else {
-      // A launch burst outlives a torpedo that hits inside its 1.5 s.
+      // A launch burst outlives a torpedo that hits inside its 1.5 s, and a
+      // wake outlives the run that shed it.
       this.ordnanceLayer.tick(now);
+      this.wake.tick(now);
     }
+    // After every placement this frame, so a flash lifts the glow the hull
+    // was just written with rather than one a placement then overwrites.
+    this.flashLamps(now);
+    this.hits.tick(now);
     if (this.dreamLights !== null) {
       const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
       this.dreamLights.update(
@@ -4266,8 +4377,12 @@ export class PerspectiveView {
       structures: this.structureHandles.size,
       // Own ordnance in the water, drawn by the instanced layer (gate 6).
       ordnance: this.ordnanceLayer.count,
-      // Own hulls trailing a wake, all on the one mesh (hullWake.ts).
-      wakes: this.wake.count,
+      // Wake bubbles alive this frame, every hull's one draw (#1508).
+      wakeBubbles: this.wake.count,
+      // Hits alive on own hulls and structures, and their spray (#1510).
+      hits: this.hits.count,
+      hitParticles: this.hits.particles,
+      hitAt: this.lastHitAt,
       // The prop layer's own ledger (gate 6): a prop regression is a
       // number, not an impression.
       ...this.environment.stats(),
@@ -4504,9 +4619,6 @@ export class PerspectiveView {
         restSig: statsFor(unit.kind).sigIdle,
         silentRunning: unit.silentRunning,
         engineOff: unit.engineOff,
-        // The wake's strength now (hullWake.ts), so a frame's wake reads
-        // against a number rather than an impression.
-        wake: wakeStrength(unit.sig, unit.engineOff, this.motion.moving(unit.id)),
         xM: unit.x,
         zM: unit.y,
         depthM: unit.depth,
