@@ -1300,8 +1300,10 @@ decodes, every enemy contact the law below still caps at a flat silhouette — e
 below Track, and a Track that has gone to ghost — and
 **construction sites** — a half-built structure is schematic on purpose, and reads as
 scaffolding until it is commissioned. Cavitation trails run behind the player's own
-torpedoes in the conn view ("Own ordnance is geometry too", below); animated bases are
-still to come.
+torpedoes in the conn view ("Own ordnance is geometry too", below), and behind the
+player's own moving hulls: a wake whose length and brightness follow live SIG on gate 3's
+curve, faint under Silent Running and absent with the drive cut (`hullWake.ts`). Animated
+bases are still to come.
 
 ### The Asymmetric Fidelity Law
 

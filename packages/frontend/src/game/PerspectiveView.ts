@@ -808,10 +808,12 @@ export class PerspectiveView {
   private ordnance: OwnOrdnance[] = [];
   /** Own ordnance glides between ticks as own hulls do (ownMotion.ts). */
   readonly ordnanceMotion = new OwnMotion();
-  /** The cavitation wake behind own moving hulls: one line for the fleet (hullWake.ts). */
+  /** The cavitation wake behind own moving hulls: one mesh for the fleet (hullWake.ts). */
   private readonly wake = new HullWake();
   /** Its placements, reused frame to frame so a glide allocates nothing. */
   private readonly wakes: WakePlacement[] = [];
+  /** The seabed under a wake vertex, bound once so a glide allocates nothing. */
+  private readonly wakeGround = (x: number, z: number): number => this.groundYAt(x, z);
 
   private faction: Faction = Faction.Bathyarch;
   private units: OwnUnit[] = [];
@@ -1012,7 +1014,7 @@ export class PerspectiveView {
       this.life.group,
       this.unitGroup,
       this.ordnanceLayer.group,
-      this.wake.lines,
+      this.wake.mesh,
       this.structureGroup,
       this.models.group,
       this.cues.group,
@@ -3477,7 +3479,7 @@ export class PerspectiveView {
       wake.strength = wakeStrength(unit.sig, unit.engineOff, this.motion.moving(unit.id));
       n++;
     }
-    this.wake.sync(this.wakes, n);
+    this.wake.sync(this.wakes, n, this.wakeGround);
   }
 
   private syncEntities(): void {
@@ -4264,7 +4266,7 @@ export class PerspectiveView {
       structures: this.structureHandles.size,
       // Own ordnance in the water, drawn by the instanced layer (gate 6).
       ordnance: this.ordnanceLayer.count,
-      // Own hulls trailing a wake, all on the one line (hullWake.ts).
+      // Own hulls trailing a wake, all on the one mesh (hullWake.ts).
       wakes: this.wake.count,
       // The prop layer's own ledger (gate 6): a prop regression is a
       // number, not an impression.
@@ -4502,6 +4504,9 @@ export class PerspectiveView {
         restSig: statsFor(unit.kind).sigIdle,
         silentRunning: unit.silentRunning,
         engineOff: unit.engineOff,
+        // The wake's strength now (hullWake.ts), so a frame's wake reads
+        // against a number rather than an impression.
+        wake: wakeStrength(unit.sig, unit.engineOff, this.motion.moving(unit.id)),
         xM: unit.x,
         zM: unit.y,
         depthM: unit.depth,
