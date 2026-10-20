@@ -145,8 +145,9 @@ const RUNG_6_FLOOR_UNDER_RUNG_5_FLOOR: readonly PaletteName[] = [];
  *   contact's navy, and the darkest faction primaries — the Directorate's
  *   crimson, the Hadron's deep blue and dark teal — sit at 0.17–0.19
  *   luminance: at 0.33 and 0.55 they barely lift the ground.
- * - A Tier-4 contact's glyph and health bar, in the three palettes that draw
- *   the Hadron dark. In tritanopia they miss the ring by less than 0.0001
+ * - A Tier-4 contact's glyph, health bar and hit spray (#1517), in the three
+ *   palettes that draw the Hadron dark. The spray's bubbles wear the bar's
+ *   colours at the bar's alpha, so they fall where it falls. In tritanopia they miss the ring by less than 0.0001
  *   over the palest ground. In the standard palette they miss it only over
  *   lifted ground, from a lift of 0.05; the owner kept the 0.15 cap and
  *   recorded this (#1103). Ordnance's disc is not among them: the server names
@@ -157,10 +158,10 @@ const RUNG_6_FLOOR_UNDER_RUNG_5_FLOOR: readonly PaletteName[] = [];
  * every palette (faunaAgentStipple.test.ts weighs it against rung 5's too).
  */
 const RUNG_7_UNDER_RUNG_6_FLOOR: Record<PaletteName, readonly string[]> = {
-  standard: ['countRingTier3', 'glyphTier3', 'glyphTier4', 'healthBarTier4'],
-  deuteranopia: ['countRingTier3', 'glyphTier3', 'glyphTier4', 'healthBarTier4'],
-  protanopia: ['countRingTier3', 'glyphTier3', 'glyphTier4', 'healthBarTier4'],
-  tritanopia: ['countRingTier3', 'glyphTier3', 'glyphTier4', 'healthBarTier4'],
+  standard: ['countRingTier3', 'glyphTier3', 'glyphTier4', 'healthBarTier4', 'hitSprayTier4'],
+  deuteranopia: ['countRingTier3', 'glyphTier3', 'glyphTier4', 'healthBarTier4', 'hitSprayTier4'],
+  protanopia: ['countRingTier3', 'glyphTier3', 'glyphTier4', 'healthBarTier4', 'hitSprayTier4'],
+  tritanopia: ['countRingTier3', 'glyphTier3', 'glyphTier4', 'healthBarTier4', 'hitSprayTier4'],
 };
 
 describe('the loudness ladder, rung 5', () => {

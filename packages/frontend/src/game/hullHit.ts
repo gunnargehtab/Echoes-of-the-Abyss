@@ -106,8 +106,11 @@ interface Flash {
   bornAt: number;
 }
 
-/** A cheap hash on an integer, 0–1, so a spray is the same on every run. */
-function hash(n: number): number {
+/**
+ * A cheap hash on an integer, 0–1, so a spray is the same on every run. A
+ * track's spray (trackHit.ts) draws from it too.
+ */
+export function hash(n: number): number {
   let x = Math.imul(n ^ 0x9e3779b9, 0x85ebca6b);
   x = Math.imul(x ^ (x >>> 13), 0xc2b2ae35);
   return ((x ^ (x >>> 16)) >>> 0) / 4294967296;

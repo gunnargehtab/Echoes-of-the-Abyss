@@ -206,6 +206,12 @@ import {
 } from './structureTextures.ts';
 import { contactFidelity } from './trackFidelity.ts';
 import {
+  TRACK_HIT_DOT_PX,
+  TRACK_HIT_FLASH_ALPHA,
+  TRACK_HIT_SMALL_RADIUS_M,
+  TrackHits,
+} from './trackHit.ts';
+import {
   agentStippleContext,
   agentStippleGraphics,
   destroyAgentStippleContexts,
@@ -403,6 +409,15 @@ function compassDeg(bearing: number): number {
  * fires once per acquisition and never sustains.
  */
 const LOCK_FLASH_MS = 700;
+
+/** Where a track hit landed (trackHit.ts), for the harness's probe. */
+interface TrackHitAt {
+  x: number;
+  y: number;
+  depthM: number | null;
+  /** When it fired, on `performance.now()`'s clock. */
+  atMs: number;
+}
 
 /**
  * How each hazard phase is drawn.
@@ -1835,6 +1850,10 @@ export class EchoRenderer {
   private cameraCentered = false;
   /** Contact handle to the moment it reached Tier 4, for the lock brackets. */
   private readonly lockFlash = new Map<number, number>();
+  /** The flash and spray on a live track whose hp fell (trackHit.ts, #1517). */
+  private readonly trackHits = new TrackHits();
+  /** Where the last track hit landed, world metres, so a drive can frame it. */
+  private lastTrackHitAt: TrackHitAt | null = null;
   /**
    * The player's own ping in flight: where it went out from and when.
    *
@@ -4841,6 +4860,8 @@ export class EchoRenderer {
     this.exposureFlashes.length = 0;
     this.brokeSilence.clear();
     this.tracked.clear();
+    this.trackHits.reset();
+    this.lastTrackHitAt = null;
     this.selected.clear();
     this.controlGroups.clear();
     this.marks = [];
@@ -4938,6 +4959,16 @@ export class EchoRenderer {
         (previous === undefined || previous.contact.tier < ResolutionTier.Track)
       ) {
         this.lockFlash.set(contact.id, now);
+      }
+      // An hp drop between two live Tier-4 readings: the bar the player is
+      // already reading fell, and the track flashes and sprays where it did.
+      if (this.trackHits.observe(previous, contact, now)) {
+        this.lastTrackHitAt = {
+          x: contact.x,
+          y: contact.y,
+          depthM: contact.depth ?? null,
+          atMs: now,
+        };
       }
       // Tier 3 names the hull; Tier 4 draws it. Starting the decode on the
       // tier *below* the one that needs it is the whole prefetch (#834): a
@@ -6477,6 +6508,69 @@ export class EchoRenderer {
     }
   }
 
+  /**
+   * Read-only telemetry for the headless harness (`__chartProbe`): the hits
+   * alive on tracks, drawn or held through a ghost frame, and where the last
+   * one ever landed. Every input to it was resolved for this player.
+   */
+  probeReading(): {
+    trackHits: number;
+    trackHitAt: TrackHitAt | null;
+    trackHitAgeMs: number | null;
+    trackHitScreen: { x: number; y: number; visible: boolean } | null;
+  } {
+    const at = this.lastTrackHitAt;
+    // Where it projects now, in CSS pixels, so a drive can tell a hit in
+    // frame from one off it.
+    const p = at === null ? null : this.project(at.x, at.y, at.depthM);
+    return {
+      trackHits: this.trackHits.count,
+      trackHitAt: at,
+      trackHitAgeMs: at === null ? null : performance.now() - at.atMs,
+      trackHitScreen: p === null ? null : { x: p.x, y: p.y, visible: p.visible },
+    };
+  }
+
+  /**
+   * The flash and spray on a live track whose hp just fell (trackHit.ts,
+   * #1517), drawn in the contact symbol's own space over its sprite. Rung 7,
+   * with the contact it sits on: the spray's dots are weighed at the
+   * contact's alpha (ladder.ts `hitSpray`), the flash is a soft fill and is
+   * not. Reduced motion (docs/ui-ux.md §11) keeps the flash and drops the
+   * spray, as an own hull's hit does.
+   */
+  private drawTrackHit(
+    g: Graphics,
+    id: number,
+    contact: Contact,
+    color: number,
+    alpha: number,
+    now: number,
+    inverseScale: number
+  ): void {
+    const radius =
+      contact.kind !== undefined
+        ? HULL_LENGTH_M[contact.kind] / 2
+        : contact.structure !== undefined
+          ? structureStatsFor(contact.structure).radiusM
+          : // An animal or a torpedo: no hull to size by, and both are small
+            // against one. A hull's 70 m swallowed a Draymaw's stipple whole.
+            TRACK_HIT_SMALL_RADIUS_M;
+    const flash = this.trackHits.flash(id, now);
+    if (flash > 0) {
+      // Swells as it fades: the jolt is tight, the afterglow wider.
+      g.circle(0, 0, radius * (0.9 - 0.4 * flash)).fill({
+        color: UI.text,
+        alpha: alpha * TRACK_HIT_FLASH_ALPHA * flash,
+      });
+    }
+    const dot = TRACK_HIT_DOT_PX * inverseScale;
+    this.trackHits.spray(id, radius, now, (x, y, fade, debris) => {
+      if (this.reducedMotion) return;
+      g.circle(x, y, dot).fill({ color: debris ? UI.text : color, alpha: alpha * fade });
+    });
+  }
+
   /** The terrain grid's index for a point, clamped onto the map. 0 before a map. */
   private terrainCell(x: number, y: number): number {
     const terrain = this.terrain;
@@ -6524,12 +6618,14 @@ export class EchoRenderer {
     this.drawShoals(g);
     this.drawEchoMarks(g);
 
+    this.trackHits.prune(now);
     for (const [id, entry] of this.tracked) {
       const age = now - entry.lastSeenMs;
       if (age > decayMs) {
         // "A retreating enemy leaves a fading trail of last-known positions."
         this.tracked.delete(id);
         this.lockFlash.delete(id);
+        this.trackHits.forget(id);
         continue;
       }
 
@@ -6708,6 +6804,10 @@ export class EchoRenderer {
             sg.circle(0, 0, style.radius).fill({ color, alpha });
           }
 
+          // Only on a live track: on a ghost it would claim a present tense,
+          // as a lit sprite would. Held rather than forgotten, so one late
+          // frame does not cost a hit the next live frame would have drawn.
+          if (live) this.drawTrackHit(sg, id, contact, color, alpha, now, inverseScale);
           this.drawGlyph(sg, contact, color, alpha, style.radius, inverseScale);
 
           if (contact.hp !== undefined && contact.maxHp !== undefined && contact.maxHp > 0) {

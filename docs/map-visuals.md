@@ -405,7 +405,8 @@ What stays recorded, for the owner. The tests pin each break and fail if it move
   standard palette they fall under it over lifted ground only, once a lit face lifts the
   palest fill by 0.05 or more; the owner kept the 0.15 cap and recorded it (#1103). The ground
   itself stays far under them: a lit face lifts that fill by 0.017, and the glyph lifts the
-  lifted pixel by 0.067. Ordnance's disc
+  lifted pixel by 0.067. The spray a hit throws off a live track (#1517) falls with them: its
+  bubbles wear the bar's colours at the bar's alpha. It is recorded, not fixed. Ordnance's disc
   does not: the server names no navy for ordnance, so it wears the Track tier's colour. Nor
   does a classified animal. Phase 4 made it dots, weighed by one dot at its tier's alpha, and
   that clears rung 6's floor in every palette. A Tier-3 Sounder's halo fell under it in the two
@@ -426,8 +427,8 @@ What stays recorded, for the owner. The tests pin each break and fail if it move
 - **Some placements are the audit's, not §5's.** §5's rows do not name these, and each draw
   site says why it was placed where it is. On rung 6: order routes and their markers, the
   lock flash, the crush and break-silence rings, the ink about own ordnance, a yard's rally
-  course, and the health and build bars. On rung 7: a contact's glyph and health bar, a
-  construction scaffold, and own depth cues. On rung 1: the skirt at the map's edge.
+  course, and the health and build bars. On rung 7: a contact's glyph, health bar and hit
+  spray, a construction scaffold, and own depth cues. On rung 1: the skirt at the map's edge.
 
 ### Phase 3 — landed
 

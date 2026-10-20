@@ -44,6 +44,7 @@ import {
 } from '@echoes/shared';
 import { FOCUS_DRAG_M_PER_PX, FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
 import { swayAt } from '../src/game/cameraSway.ts';
+import { HIT_PARTICLES_MIN } from '../src/game/hullHit.ts';
 import {
   createHost,
   dispatchWindow,
@@ -3935,6 +3936,49 @@ describe('the command card when it is offered more than it holds', () => {
     } finally {
       world.teardown();
     }
+  });
+});
+
+describe('a live track flashes and sprays when its hp falls (#1517)', () => {
+  type Hits = { trackHits: { fired: number; count: number } };
+  /** Two snapshots of one Tier-4 track, the second with less hp; the frames' draw count after each. */
+  const strike = async (reduced: boolean) => {
+    const world = await boot();
+    try {
+      world.chart.setReducedMotion(reduced);
+      const hits = (world.chart as unknown as Hits).trackHits;
+      const template = cannedSnapshot().contacts.find((c) => c.tier === ResolutionTier.Track)!;
+      const at = (tick: number, hp: number) => ({
+        ...cannedSnapshot(tick),
+        contacts: [{ ...template, id: 7777, hp, tick }],
+      });
+      world.chart.applySnapshot(at(1000, 120));
+      world.frame(1);
+      const before = drawInstructions(world.app.stage);
+      world.chart.applySnapshot(at(1001, 120));
+      assert.equal(hits.fired, 0, 'an unchanged track is not hit');
+      world.chart.applySnapshot(at(1002, 80));
+      world.frame(1);
+      const after = drawInstructions(world.app.stage);
+      // Another snapshot at the new hp: the blow is not thrown twice.
+      world.chart.applySnapshot(at(1003, 80));
+      return { fired: hits.fired, count: hits.count, added: after - before };
+    } finally {
+      world.teardown();
+    }
+  };
+
+  it('fires once on the drop and draws its spray on the chart', async () => {
+    const { fired, count, added } = await strike(false);
+    assert.equal(fired, 1);
+    assert.equal(count, 1);
+    assert.ok(added > HIT_PARTICLES_MIN, `the spray is drawn (${added} more draws)`);
+  });
+
+  it('keeps the flash and drops the spray under reduced motion', async () => {
+    const { fired, added } = await strike(true);
+    assert.equal(fired, 1);
+    assert.equal(added, 1, 'the flash alone');
   });
 });
 

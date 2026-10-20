@@ -481,6 +481,10 @@ function contactTier(tier: ChartTier, alpha: number, label: string) {
     // The threat-red edge every Tier-4 hull and structure is drawn with.
     own[`edge${label}`] = steady(alpha, (p) => [p.ui.threat]);
     own[`healthBar${label}`] = atPeak(alpha, contactColors(tier));
+    // A hit's spray on a live track (trackHit.ts): rimless, so weighed by one
+    // dot at the contact's alpha, in its colour or the pale ink of a fragment.
+    // The flash under it is a soft fill and is not weighed.
+    own[`hitSpray${label}`] = atPeak(alpha, (p) => [...contactColors(tier)(p), p.ui.text]);
     // A track with no hull, structure or animal to draw — ordnance — is a
     // disc, in the tier's colour: the server names no navy for ordnance.
     own[`disc${label}`] = atPeak(alpha, (p) => [p.tier[tier].color]);
