@@ -23,13 +23,16 @@ import {
   JELLY_DOTS_PER_FIELD,
   JELLY_PULSE_S,
   PULSE_WRAP_S,
+  SHOAL_BURST_S,
   SHOAL_DOTS,
   SHOAL_FORMED_GAIN,
   SHOAL_FORMED_RADIUS_M,
+  SHOAL_GATHER_S,
   SHOAL_PULSE_S,
   SHOAL_SCATTERED_GAIN,
   SHOAL_SCATTERED_RADIUS_M,
   SHOAL_TWINKLE_S,
+  burstSettle,
   type StippleFrame,
 } from '../src/game/faunaStipple.ts';
 import { FURNITURE_DOT_GAIN } from '../src/game/ladder.ts';
@@ -84,9 +87,52 @@ function dots(cloud: FaunaStipple['jellies']): Array<{
   return out;
 }
 
+/** Each live dot's `aBurst`: the ratio it eases in from, and when it began. */
+function bursts(cloud: FaunaStipple['shoals']): Array<[number, number, number, number]> {
+  const burst = cloud.points.geometry.getAttribute('aBurst') as BufferAttribute;
+  return Array.from({ length: cloud.dotCount }, (_, i) => [
+    burst.getX(i),
+    burst.getY(i),
+    burst.getZ(i),
+    burst.getW(i),
+  ]);
+}
+
+/**
+ * Where the shader draws each live shoal dot at `nowS` on the burst clock, as
+ * an offset from its anchor and a brightness, the pulse and twinkle aside:
+ * the layout eased from `aBurst`'s ratio to the one the buffers hold.
+ */
+function drawn(
+  cloud: FaunaStipple['shoals'],
+  nowS: number
+): Array<[number, number, number, number]> {
+  const b = bursts(cloud);
+  return dots(cloud).map((d, i) => {
+    const [px, py, pg, start] = b[i]!;
+    const k = burstSettle(start, px < 1 ? SHOAL_BURST_S : SHOAL_GATHER_S, nowS);
+    const plan = px + (1 - px) * k;
+    const height = py + (1 - py) * k;
+    const gain = pg + (1 - pg) * k;
+    return [d.offset[0] * plan, d.offset[1] * height, d.offset[2] * plan, d.seed[1] * gain];
+  });
+}
+
+function near(a: number[][], b: number[][], tolerance: number, what: string): void {
+  assert.equal(a.length, b.length);
+  for (let i = 0; i < a.length; i++) {
+    for (let c = 0; c < a[i]!.length; c++) {
+      assert.ok(
+        Math.abs(a[i]![c]! - b[i]![c]!) < tolerance,
+        `${what}: dot ${i}[${c}] is ${a[i]![c]} against ${b[i]![c]}`
+      );
+    }
+  }
+}
+
 function versions(cloud: FaunaStipple['jellies']): number[] {
   const geometry = cloud.points.geometry;
-  return ['position', 'aDot', 'aSeed'].map(
+  return ['position', 'aDot', 'aSeed', 'aBurst'].map(
     (name) => (geometry.getAttribute(name) as BufferAttribute).version
   );
 }
@@ -351,6 +397,182 @@ describe('fauna stipple: what a shoal says (§8)', () => {
   });
 });
 
+describe('fauna stipple: the burst and the gather (#1513)', () => {
+  const formed: ShoalTell = { id: 61, x: 2500, y: 3400, depth: 250, scattered: false };
+  const scattered: ShoalTell = { ...formed, scattered: true };
+  /** Today's two layouts, each drawn settled by a stipple that saw no change. */
+  const settled = (shoal: ShoalTell): number[][] => {
+    const still = new FaunaStipple();
+    try {
+      still.setLife([], [shoal]);
+      return drawn(still.shoals, 0);
+    } finally {
+      still.dispose();
+    }
+  };
+
+  it('bursts from the formed layout to the scattered one, and gathers back', () => {
+    const stipple = new FaunaStipple();
+    try {
+      stipple.setLife([], [formed]);
+      stipple.update(frame(1000));
+      stipple.update(frame(3000));
+      near(drawn(stipple.shoals, 2), settled(formed), 1e-6, 'a shoal first seen is drawn as it is');
+
+      stipple.setLife([], [scattered]);
+      near(
+        drawn(stipple.shoals, 2),
+        settled(formed),
+        1e-3,
+        'the burst starts at the formed layout'
+      );
+      const out = drawn(stipple.shoals, 2 + SHOAL_BURST_S / 2);
+      const reach = (layout: number[][]) =>
+        Math.max(...layout.map((d) => Math.hypot(d[0]!, d[2]!)));
+      assert.ok(reach(out) > reach(settled(formed)), 'half-way out');
+      assert.ok(reach(out) < reach(settled(scattered)), 'and not yet there');
+      near(
+        drawn(stipple.shoals, 2 + SHOAL_BURST_S),
+        settled(scattered),
+        1e-6,
+        'and ends scattered'
+      );
+
+      stipple.update(frame(3000 + SHOAL_BURST_S * 1000));
+      stipple.setLife([], [formed]);
+      const at = 2 + SHOAL_BURST_S;
+      near(drawn(stipple.shoals, at), settled(scattered), 1e-3, 'the gather starts scattered');
+      near(drawn(stipple.shoals, at + SHOAL_GATHER_S), settled(formed), 1e-6, 'and ends formed');
+      assert.ok(SHOAL_BURST_S < SHOAL_GATHER_S, 'a scatter is startled; a reform is not');
+    } finally {
+      stipple.dispose();
+    }
+  });
+
+  it('scales a whole shoal by one ratio, so its centre never moves', () => {
+    const stipple = new FaunaStipple();
+    try {
+      stipple.setLife([], SHOALS);
+      stipple.update(frame(0));
+      stipple.setLife(
+        [],
+        SHOALS.map((s) => ({ ...s, scattered: !s.scattered }))
+      );
+      const b = bursts(stipple.shoals);
+      for (let s = 0; s < SHOALS.length; s++) {
+        const own = b.slice(s * SHOAL_DOTS, (s + 1) * SHOAL_DOTS);
+        for (const ratio of own) assert.deepEqual(ratio, own[0], 'one ratio a shoal');
+        assert.notDeepEqual(own[0]!.slice(0, 3), [1, 1, 1], 'and it is mid-tween');
+      }
+      // One ratio scales every offset of a shoal alike, and the offsets
+      // average to zero on the plan, so at every step of the tween the mean
+      // stays on the anchor.
+      for (const t of [0, 0.1, 0.3, 1, 3]) {
+        const layout = drawn(stipple.shoals, t);
+        for (let s = 0; s < SHOALS.length; s++) {
+          const own = layout.slice(s * SHOAL_DOTS, (s + 1) * SHOAL_DOTS);
+          const mx = own.reduce((sum, d) => sum + d[0]!, 0) / own.length;
+          const mz = own.reduce((sum, d) => sum + d[2]!, 0) / own.length;
+          assert.ok(
+            Math.hypot(mx, mz) < 1e-3,
+            `shoal ${s} leans ${Math.hypot(mx, mz)} m at ${t} s`
+          );
+        }
+      }
+      // And the shader applies the ratio as a scale on the pulse's own terms.
+      const shader = (stipple.shoals.points.material as ShaderMaterial).vertexShader;
+      assert.match(shader, /float squeeze = mix\(.*\) \* burst\.x;/);
+      assert.match(shader, /float stretch = \(.*\) \* burst\.y;/);
+      assert.match(
+        shader,
+        /vec3 burst = mix\( aBurst\.xyz, vec3\( 1\.0 \), 1\.0 - pow\( 1\.0 - settle, 3\.0 \) \);/
+      );
+    } finally {
+      stipple.dispose();
+    }
+  });
+
+  it('turns back from where it is drawn when a reform cuts a burst short', () => {
+    const stipple = new FaunaStipple();
+    try {
+      stipple.setLife([], [formed]);
+      stipple.update(frame(0));
+      stipple.setLife([], [scattered]);
+      const mid = SHOAL_BURST_S / 3;
+      stipple.update(frame(mid * 1000));
+      const before = drawn(stipple.shoals, mid);
+      stipple.setLife([], [formed]);
+      near(drawn(stipple.shoals, mid), before, 1e-3, 'no jump at the turn');
+      near(drawn(stipple.shoals, mid + SHOAL_GATHER_S), settled(formed), 1e-6, 'and home');
+    } finally {
+      stipple.dispose();
+    }
+  });
+
+  it('never lights a mote past the formed gain on the way', () => {
+    const stipple = new FaunaStipple();
+    try {
+      stipple.setLife([], [formed]);
+      stipple.update(frame(0));
+      stipple.setLife([], [scattered]);
+      for (const t of [0, 0.2, 0.6]) {
+        for (const d of drawn(stipple.shoals, t)) {
+          assert.ok(d[3]! <= SHOAL_FORMED_GAIN + 1e-6, `a mote at ${d[3]} at ${t} s`);
+        }
+      }
+    } finally {
+      stipple.dispose();
+    }
+  });
+
+  it('tweens on the GPU: a frame mid-burst writes a uniform and never a buffer', () => {
+    const stipple = new FaunaStipple();
+    try {
+      stipple.setLife([], [formed]);
+      stipple.update(frame(0));
+      stipple.setLife([], [scattered]);
+      const written = versions(stipple.shoals);
+      for (let t = 1; t < 60; t++) stipple.update(frame(t * 16.7));
+      assert.deepEqual(versions(stipple.shoals), written, 'no buffer written by a frame');
+      assert.ok(Math.abs(stipple.shoals.uniforms.uBurstS.value - 59 * 0.0167) < 1e-9);
+    } finally {
+      stipple.dispose();
+    }
+  });
+
+  it('runs its clock unwrapped, so a tween never replays when the pulse wraps', () => {
+    const stipple = new FaunaStipple();
+    try {
+      stipple.update(frame(0));
+      for (let t = 1; t <= 4 * PULSE_WRAP_S; t++) stipple.update(frame(t * 250));
+      assert.equal(stipple.shoals.uniforms.uBurstS.value, PULSE_WRAP_S);
+      assert.ok(stipple.shoals.uniforms.uTime.value < PULSE_WRAP_S);
+    } finally {
+      stipple.dispose();
+    }
+  });
+
+  it('snaps between layouts under reduced motion, as before (docs/ui-ux.md §11)', () => {
+    const stipple = new FaunaStipple();
+    try {
+      stipple.setReducedMotion(true);
+      stipple.setLife([], [formed]);
+      stipple.update(frame(0));
+      stipple.setLife([], [scattered]);
+      near(drawn(stipple.shoals, 0), settled(scattered), 1e-6, 'scattered at once');
+
+      // Turned on mid-burst, the shoal lands where it was going.
+      stipple.setReducedMotion(false);
+      stipple.setLife([], [formed]);
+      stipple.update(frame(100));
+      stipple.setReducedMotion(true);
+      near(drawn(stipple.shoals, 0.1), settled(formed), 1e-6, 'formed at once');
+    } finally {
+      stipple.dispose();
+    }
+  });
+});
+
 describe('fauna stipple: colour and motion', () => {
   it('draws in FAUNA_COLOR in all four palettes, read at draw time', () => {
     const stipple = new FaunaStipple();
@@ -444,7 +666,7 @@ describe('fauna stipple: as the ladder weighs it (§5)', () => {
         assert.match(
           material.vertexShader,
           new RegExp(
-            `^\\s*vAlpha = aSeed\\.y \\* trans \\* twinkle \\* \\( 1\\.0 \\+ ${lift.toFixed(6).replace('.', '\\.')} \\* beat \\);$`,
+            `^\\s*vAlpha = aSeed\\.y \\* burst\\.z \\* trans \\* twinkle \\* \\( 1\\.0 \\+ ${lift.toFixed(6).replace('.', '\\.')} \\* beat \\);$`,
             'm'
           )
         );

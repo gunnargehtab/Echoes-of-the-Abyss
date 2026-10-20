@@ -461,10 +461,15 @@ Four choices a reviewer should see:
   follow with a lag, and a shoal breathes and twinkles. Each group of dots that scales
   together averages to its axis, and no term exceeds 1 on the plan, so nothing travels at any
   phase and no dot passes the 250 m.
+- **A scatter bursts, a reform gathers (#1513).** The motes fly out from the shoal's centre
+  over 0.6 s when it scatters, and drift back in over 3 s when it reforms. The tween is one
+  scale for the whole shoal about its fixed centre, between the formed and scattered layouts,
+  so it is the same rule. It runs in the vertex shader; a frame writes one more uniform.
 - **The water fades it, and the veil does not.** Dots dim with distance by the same reach as
   everything else in the water, and the water setting can only reveal them. The veil leaves
   them alone, because it touches ground only ([ui-ux.md](ui-ux.md) §4.5).
-- **Reduced motion holds the pulse** and keeps the dots ([ui-ux.md](ui-ux.md) §11).
+- **Reduced motion holds the pulse** and keeps the dots, and a shoal snaps between its two
+  layouts ([ui-ux.md](ui-ux.md) §11).
 
 ### Phase 4 — landed
 
