@@ -786,8 +786,8 @@ function extentsOf(pos, count) {
  * `hull_cap_aft`. Closed toward each triangle's own middle, as `mirror`
  * did, they disagreed on a facet centred on the cut. The facet's middle is
  * the shape's, so every triangle of it takes one side and the seam falls
- * on the facet's edge — a cap's fan too, where `roundAxis` has taken a
- * squat drum's cap for its side (#1501) and unrolls it as one facet.
+ * on the facet's edge — a cap's fan too, where `roundAxis` took a squat
+ * drum's cap for its side and unrolled it as one facet, until #1501.
  *
  * The corners are summed in one order, by position, so the triangles of
  * one facet add the same numbers the same way and agree to the bit; a

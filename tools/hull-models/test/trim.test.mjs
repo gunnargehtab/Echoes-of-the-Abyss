@@ -247,7 +247,7 @@ test('a round part of four facets lays each facet on one map', () => {
 // #1501: a squat drum read its own axis at 0.77 under three's repeated
 // corners and unrolled about a side axis, its caps laid as sides. Each
 // unrolled about its own: its side corners wrap whole plates, at every
-// count, turned in its geometry or by its mesh.
+// count, and turned in its geometry as a Thurible collar is.
 test('a squat drum unrolls about its own axis, not across it', () => {
   const drums = [
     // The Spark's gun drum, six facets wider than it is tall.
