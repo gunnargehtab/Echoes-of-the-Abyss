@@ -60,8 +60,9 @@ export const WAKE_MIN_SPEED_MPS = 0.5;
  * and never less than WAKE_MIN_SHARE of that, so a wake is as long as the
  * hull runs in that time — longer for a louder hull as well as brighter. One
  * is shed every WAKE_SPACING_M of travel, scaled by the far-zoom factor, or
- * further apart if that would give the hull more than WAKE_BUBBLES_PER_HULL
- * alive at once: a Light Scout at 120 m/s spreads its dozen over 480 m.
+ * further apart if a full-life wake would hold more than
+ * WAKE_BUBBLES_PER_HULL: a Light Scout at 120 m/s sheds every 44 m, so a loud
+ * one trails a dozen over 480 m and a silent one a handful.
  */
 export const WAKE_SPACING_M = 5;
 export const WAKE_LIFE_MS = 4000;
@@ -233,10 +234,15 @@ export class HullWake {
       const s = sources[i]!;
       if (s.strength <= 0) continue;
       seen.add(s.id);
-      // A bubble lives this long, and the hull runs this far in that time: one
-      // fewer spacing than the cap, so rounding never puts a thirteenth alive.
-      const lifeS = lifeOf(s.strength) / 1000;
-      const spacing = Math.max(near, (s.speedMps * lifeS) / (WAKE_BUBBLES_PER_HULL - 1));
+      // Spaced by the longest life any bubble has, not by this one's: a hull
+      // then sheds at most eleven per WAKE_LIFE_MS at any speed, and no bubble
+      // outlives that, so the cap holds while SIG or speed changes under it —
+      // a fleet going silent keeps its loud tails. One fewer than the cap, so
+      // rounding never puts a thirteenth alive.
+      const spacing = Math.max(
+        near,
+        (s.speedMps * WAKE_LIFE_MS) / 1000 / (WAKE_BUBBLES_PER_HULL - 1)
+      );
       const sx = s.x - Math.cos(s.heading) * s.sternM;
       const sz = s.z - Math.sin(s.heading) * s.sternM;
       const last = this.lastShed.get(s.id);

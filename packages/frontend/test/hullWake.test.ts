@@ -156,6 +156,33 @@ describe('HullWake', () => {
     assert.equal(WAKE_POOL, BERTHS.CEILING * WAKE_BUBBLES_PER_HULL);
   });
 
+  it('keeps every loud tail when the whole fleet goes silent mid-run', () => {
+    const fastest = statsFor(UnitKind.LightScout).speed;
+    const fleet = Array.from({ length: BERTHS.CEILING }, (_, i) => ({
+      ...source(i + 1, 0, 1),
+      z: i * 100,
+      speedMps: fastest,
+    }));
+    const wake = new HullWake();
+    let x = 0;
+    let most = 0;
+    // Six seconds loud and flat out, then six silent at Silent Running's pace
+    // and the floor's strength: shorter lives under a wake still alive.
+    for (let frame = 0; frame <= 720; frame++) {
+      const silent = frame > 360;
+      for (const s of fleet) {
+        s.speedMps = silent ? fastest * SILENT_RUNNING.SPEED_MULTIPLIER : fastest;
+        s.strength = silent ? WAKE_FLOOR : 1;
+      }
+      x += fleet[0]!.speedMps / 60;
+      for (const s of fleet) s.x = x;
+      wake.sync(fleet, fleet.length, 1, (frame * 1000) / 60);
+      most = Math.max(most, wake.count);
+    }
+    assert.equal(wake.overwrites, 0);
+    assert.ok(most <= WAKE_POOL);
+  });
+
   it('is one draw for one hull or forty, and none once the wake fades', () => {
     const gl = new HeadlessWebGLRenderer();
     const camera = new PerspectiveCamera();
@@ -169,6 +196,7 @@ describe('HullWake', () => {
         wake.sync(fleet, n, 1, t);
         t += 16;
       }
+      assert.ok(wake.count >= n, `${n} hulls' bubbles are all in the draw`);
       gl.render(scene, camera);
       assert.equal(gl.ledger.calls, 1, `${n} hulls`);
     }
