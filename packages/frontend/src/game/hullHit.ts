@@ -6,8 +6,8 @@
  * `SelfEventKind.Damaged` the struck hull's lamps flash and a short spray of
  * debris and bubbles leaves it, both scaled by the share of hull the blow
  * took. The hull's lamps already say how loud it is (gate 3), so the flash
- * rides that same factor up toward its ceiling and back: a hit reads as the
- * hull's own light jolting, not as a new light in the water.
+ * rides that same factor up, briefly past its ceiling, and back: a hit reads
+ * as the hull's own light jolting, not as a new light in the water.
  *
  * Own force only, and every input is resolved: the event names a unit of
  * yours, and the HP it lost is the difference of two own snapshots, which the
@@ -55,15 +55,31 @@ export const HIT_PARTICLES_MAX = 24;
  * full ring overwrites its oldest particles, which are the faintest.
  */
 export const HIT_POOL = 16 * HIT_PARTICLES_MAX;
-/** TUNABLE — the spray's motion, metres per second at the closest zoom. */
-const HIT_SPREAD_MPS = 9;
-const HIT_BUBBLE_RISE_MPS = 7;
-const HIT_DEBRIS_SINK_MPS = 4;
+/**
+ * TUNABLE — the spray's shape, in the struck hull's own drawn radius: where a
+ * particle starts out from the centre, how fast it flies out, and how fast a
+ * bubble climbs and a fragment sinks, each a second. Sized by the hull, so a
+ * spray clears a Caisson's hundred metres of plating as it does a scout's,
+ * at any zoom; one sized in metres hid inside the big hulls.
+ */
+const HIT_START_SHARE = 0.3;
+const HIT_SPREAD_PER_S = 1.6;
+const HIT_BUBBLE_RISE_PER_S = 1;
+const HIT_DEBRIS_SINK_PER_S = 0.6;
 /** Debris falls out of the spray sooner than the bubbles climb out of it. */
 const HIT_DEBRIS_LIFE_SHARE = 0.6;
-const HIT_SIZE_PX = 3;
+const HIT_SIZE_PX = 5;
 /** The pale fleck a fragment of hull catches the light as. */
 const DEBRIS_COLOR = new Color(0.62, 0.66, 0.7);
+
+/**
+ * TUNABLE — the lamp factor a full hit's flash peaks at: twice gate 3's
+ * ceiling. A hull under fire is usually loud, with its lamps already at the
+ * ceiling, so a flash held under it would never show on the hulls that get
+ * hit. The ceiling keeps a *standing* state from white-clipping the hull; a
+ * third of a second past it is the jolt.
+ */
+export const HIT_FLASH_PEAK = 2 * GLOW_FACTOR_MAX;
 
 /**
  * A hit's strength, 0–1, from the HP it took: the share of the hull against
@@ -78,10 +94,10 @@ export function hitStrength(hpLost: number, maxHp: number): number {
 
 /**
  * The lamp factor a flashing hull draws at: its resting gate-3 `glow` lifted
- * toward the ceiling by the flash's level, and never below where it rests.
+ * toward HIT_FLASH_PEAK by the flash's level, and never below where it rests.
  */
 export function flashedGlow(glow: number, level: number): number {
-  return Math.max(glow, glow + (GLOW_FACTOR_MAX - glow) * level);
+  return Math.max(glow, glow + (HIT_FLASH_PEAK - glow) * level);
 }
 
 /** One hit's flash, while it lives. */
@@ -106,6 +122,8 @@ export class HullHits {
   // it lives and when it was thrown. `tick` moves each in a straight line.
   private readonly birth = new Float32Array(HIT_POOL * 3);
   private readonly velocity = new Float32Array(HIT_POOL * 3);
+  /** The hull's velocity at the hit, horizontal: what the spray is carried by. */
+  private readonly carried = new Float32Array(HIT_POOL * 2);
   private readonly level = new Float32Array(HIT_POOL);
   private readonly debris = new Uint8Array(HIT_POOL);
   private readonly lifeMs = new Float32Array(HIT_POOL).fill(1);
@@ -181,7 +199,8 @@ export class HullHits {
 
   /**
    * One `Damaged`: start (or restart) the entity's flash and throw its spray
-   * from where it is drawn, in world units. `draw` is the far-zoom scale.
+   * from where it is drawn, in world units. `radiusM` is the hull's drawn
+   * half-length, and `vx`/`vz` its velocity, which the spray carries with it.
    */
   hit(
     id: number,
@@ -189,8 +208,10 @@ export class HullHits {
     y: number,
     z: number,
     strength: number,
-    draw: number,
-    nowMs: number
+    radiusM: number,
+    nowMs: number,
+    vx = 0,
+    vz = 0
   ): void {
     const flash = this.flashes.get(id);
     if (flash !== undefined && nowMs - flash.bornAt < HIT_FLASH_MS) {
@@ -202,24 +223,30 @@ export class HullHits {
     }
     if (this.reducedMotion) return;
     const n = Math.round(HIT_PARTICLES_MIN + (HIT_PARTICLES_MAX - HIT_PARTICLES_MIN) * strength);
-    const scale = Math.max(draw, 1e-3);
+    const r = Math.max(radiusM, 1e-3);
     for (let k = 0; k < n; k++) {
-      const seed = this.thrown * 3;
+      const seed = this.thrown * 4;
       const yaw = hash(seed) * Math.PI * 2;
-      const out = HIT_SPREAD_MPS * scale * (0.35 + 0.65 * hash(seed + 1)) * (0.5 + strength);
+      const dx = Math.cos(yaw);
+      const dz = Math.sin(yaw);
+      // From the plating, not the centre, where the hull would hide it.
+      const start = r * HIT_START_SHARE * (0.8 + 0.4 * hash(seed + 3));
+      const out = r * HIT_SPREAD_PER_S * (0.35 + 0.65 * hash(seed + 1)) * (0.5 + strength);
       // Every third particle is debris; the rest are the bubbles the blow
       // shakes out of the hull.
       const isDebris = k % 3 === 0;
       const lift = isDebris
-        ? -HIT_DEBRIS_SINK_MPS * scale * (0.5 + hash(seed + 2))
-        : HIT_BUBBLE_RISE_MPS * scale * (0.5 + hash(seed + 2));
+        ? -r * HIT_DEBRIS_SINK_PER_S * (0.5 + hash(seed + 2))
+        : r * HIT_BUBBLE_RISE_PER_S * (0.5 + hash(seed + 2));
       this.spawn(
-        x,
+        x + dx * start,
         y,
-        z,
-        Math.cos(yaw) * out,
+        z + dz * start,
+        dx * out,
         lift,
-        Math.sin(yaw) * out,
+        dz * out,
+        vx,
+        vz,
         strength,
         isDebris,
         nowMs
@@ -257,13 +284,18 @@ export class HullHits {
       alive++;
       const s = age / 1000;
       // Drag: the spray bursts out and slows, so it reads as a blow rather
-      // than a fountain.
+      // than a fountain. The hull's own way is lost more slowly, so a hit on
+      // a hull at speed stays with it for the moment the flash lasts rather
+      // than being left astern at once.
       const travel = s / (1 + 2 * s);
+      const carry = s / (1 + 0.5 * s);
       this.positions.setXYZ(
         i,
-        this.birth[i * 3]! + this.velocity[i * 3]! * travel,
+        this.birth[i * 3]! + this.velocity[i * 3]! * travel + this.carried[i * 2]! * carry,
         this.birth[i * 3 + 1]! + this.velocity[i * 3 + 1]! * s,
-        this.birth[i * 3 + 2]! + this.velocity[i * 3 + 2]! * travel
+        this.birth[i * 3 + 2]! +
+          this.velocity[i * 3 + 2]! * travel +
+          this.carried[i * 2 + 1]! * carry
       );
       const fade = (1 - t) * this.level[i]!;
       const tint = this.debris[i] === 1 ? DEBRIS_COLOR : this.glow;
@@ -300,6 +332,8 @@ export class HullHits {
     vx: number,
     vy: number,
     vz: number,
+    carryX: number,
+    carryZ: number,
     strength: number,
     isDebris: boolean,
     nowMs: number
@@ -314,6 +348,8 @@ export class HullHits {
     this.velocity[i * 3] = vx;
     this.velocity[i * 3 + 1] = vy;
     this.velocity[i * 3 + 2] = vz;
+    this.carried[i * 2] = carryX;
+    this.carried[i * 2 + 1] = carryZ;
     this.level[i] = 0.4 + 0.6 * strength;
     this.debris[i] = isDebris ? 1 : 0;
     this.lifeMs[i] = HIT_LIFE_MS * (isDebris ? HIT_DEBRIS_LIFE_SHARE : 1);

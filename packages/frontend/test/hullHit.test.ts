@@ -11,6 +11,7 @@ import { PerspectiveCamera, Scene } from 'three';
 import { Faction, SelfEventKind } from '@echoes/shared';
 import {
   HIT_FLASH_MS,
+  HIT_FLASH_PEAK,
   HIT_FLOOR,
   HIT_FULL_SHARE,
   HIT_LIFE_MS,
@@ -49,10 +50,14 @@ describe('hitStrength', () => {
 });
 
 describe('flashedGlow', () => {
-  it('lifts gate 3’s factor to its ceiling at full and leaves it at rest at zero', () => {
+  it('lifts gate 3’s factor to the flash peak at full and leaves it at rest at zero', () => {
     assert.equal(flashedGlow(0.3, 0), 0.3);
-    assert.equal(flashedGlow(0.3, 1), GLOW_FACTOR_MAX);
-    assert.ok(flashedGlow(0.3, 0.5) > 0.3 && flashedGlow(0.3, 0.5) < GLOW_FACTOR_MAX);
+    assert.equal(flashedGlow(0.3, 1), HIT_FLASH_PEAK);
+    assert.ok(flashedGlow(0.3, 0.5) > 0.3 && flashedGlow(0.3, 0.5) < HIT_FLASH_PEAK);
+  });
+
+  it('still shows on a loud hull, whose lamps already sit at the ceiling', () => {
+    assert.ok(flashedGlow(GLOW_FACTOR_MAX, HIT_FLOOR) > GLOW_FACTOR_MAX);
   });
 });
 
@@ -116,6 +121,37 @@ describe('HullHits', () => {
       assert.ok(Math.hypot(y.getX(i), y.getZ(i)) > 0, 'spread out');
     }
     assert.ok(up > down && down > 0);
+  });
+
+  it('throws the spray clear of the hull, sized by it', () => {
+    const scout = new HullHits();
+    const caisson = new HullHits();
+    scout.hit(1, 0, 0, 0, 1, 10, 0);
+    caisson.hit(1, 0, 0, 0, 1, 50, 0);
+    scout.tick(500);
+    caisson.tick(500);
+    const a = scout.points.geometry.getAttribute('position');
+    const b = caisson.points.geometry.getAttribute('position');
+    for (let i = 0; i < HIT_PARTICLES_MAX; i++) {
+      const near = Math.hypot(a.getX(i), a.getZ(i));
+      assert.ok(near > 10 * 0.2, 'out from the plating, not the centre');
+      assert.ok(Math.abs(Math.hypot(b.getX(i), b.getZ(i)) - 5 * near) < 1e-3, 'five times out');
+    }
+  });
+
+  it('carries the spray along with a hull under way', () => {
+    const still = new HullHits();
+    const running = new HullHits();
+    still.hit(1, 0, 0, 0, 1, 1, 0);
+    running.hit(1, 0, 0, 0, 1, 1, 0, 40, 0);
+    still.tick(600);
+    running.tick(600);
+    const a = still.points.geometry.getAttribute('position');
+    const b = running.points.geometry.getAttribute('position');
+    for (let i = 0; i < HIT_PARTICLES_MAX; i++) {
+      assert.ok(b.getX(i) > a.getX(i), 'carried ahead');
+      assert.equal(b.getZ(i), a.getZ(i), 'and nowhere sideways');
+    }
   });
 
   it('draws every hit from one fixed ring, and is one draw or none', () => {

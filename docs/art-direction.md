@@ -1426,7 +1426,8 @@ status line, and the command panel keeps its full-size targets ([ui-ux.md](ui-ux
 A hit on the player's own hull or structure (#1510) flashes that hull's lamps and throws a
 short spray from it: bubbles in the faction glow climbing, pale hull fragments sinking.
 Both scale with the share of hull the blow took, full at a fifth. The flash lifts gate 3's
-lamp factor toward its ceiling for about a third of a second; the spray lives 1.2 s. The
+lamp factor for about a third of a second, to twice its ceiling at full, since a hull under
+fire is usually loud and already at the ceiling; the spray lives 1.2 s. The
 trigger is the server's `Damaged` self-event, and the size is the difference of two own
 snapshots, so nothing unresolved is drawn. Reduced motion keeps the flash and drops the
 spray. Hits on enemy tracks are a separate issue.

@@ -822,6 +822,8 @@ export class PerspectiveView {
   private readonly wakeSources: WakeSource[] = [];
   /** The flash and spray on an own hull or structure hit (hullHit.ts, #1510). */
   private readonly hits = new HullHits();
+  /** Where the last hit was thrown, world metres, so a drive can frame it. */
+  private lastHitAt: { x: number; z: number; depthM: number } | null = null;
 
   private faction: Faction = Faction.Bathyarch;
   private units: OwnUnit[] = [];
@@ -1368,6 +1370,7 @@ export class PerspectiveView {
     this.ordnanceLayer.reset();
     this.wake.reset();
     this.hits.reset();
+    this.lastHitAt = null;
     // A force of nobody is not a dark map (acousticVeil.ts): the veil comes
     // off with the fleet rather than closing over the whole chart.
     this.veil.clear();
@@ -3551,7 +3554,21 @@ export class PerspectiveView {
       if (entity === undefined || handle === undefined) continue;
       const at = handle.mesh.visible ? handle.mesh.position : handle.model!.root.position;
       const strength = hitStrength(was - entity.hp, entity.maxHp);
-      this.hits.hit(id, at.x, at.y, at.z, strength, this.drawScale, now);
+      // A structure has no way on; a hull's is its glide and its heading.
+      const speed = this.unitHandles.has(id) ? this.motion.speedOf(id) : 0;
+      const heading = this.headings.get(id) ?? 0;
+      this.hits.hit(
+        id,
+        at.x,
+        at.y,
+        at.z,
+        strength,
+        0.5 * this.drawScale * (handle.model?.lengthM ?? handle.widthM),
+        now,
+        Math.cos(heading) * speed,
+        Math.sin(heading) * speed
+      );
+      this.lastHitAt = { x: at.x, z: at.z, depthM: entity.depth };
     }
   }
 
@@ -4365,6 +4382,7 @@ export class PerspectiveView {
       // Hits alive on own hulls and structures, and their spray (#1510).
       hits: this.hits.count,
       hitParticles: this.hits.particles,
+      hitAt: this.lastHitAt,
       // The prop layer's own ledger (gate 6): a prop regression is a
       // number, not an impression.
       ...this.environment.stats(),
