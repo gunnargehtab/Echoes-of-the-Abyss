@@ -561,7 +561,7 @@ describe('fauna stipple: the burst and the gather (#1513)', () => {
       stipple.setLife([], [scattered]);
       near(drawn(stipple.shoals, 0), settled(scattered), 1e-6, 'scattered at once');
 
-      // Turned on mid-burst, the shoal lands where it was going.
+      // Turned on mid-gather, the shoal lands where it was going.
       stipple.setReducedMotion(false);
       stipple.setLife([], [formed]);
       stipple.update(frame(100));
