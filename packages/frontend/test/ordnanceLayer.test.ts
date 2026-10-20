@@ -17,6 +17,7 @@ import {
   BUBBLE_POOL,
   OrdnanceLayer,
   TRAIL_SEGMENTS,
+  isLaunch,
   lampBrightness,
 } from '../src/game/ordnanceLayer.ts';
 
@@ -29,6 +30,12 @@ const shot = (id: number, kind: OrdnanceKind, x: number, sig: number): OwnOrdnan
   heading: 0,
   sig,
   remainingS: 10,
+});
+
+/** A torpedo on its first Echo tick, with its whole run ahead of it. */
+const launched = (id: number, x: number): OwnOrdnance => ({
+  ...shot(id, OrdnanceKind.Torpedo, x, ORDNANCE.TORPEDO.SIG_RUNNING),
+  remainingS: ORDNANCE.TORPEDO.RUN_TIME_S,
 });
 
 const flat = (item: OwnOrdnance) => ({ x: item.x, z: item.y, worldY: -item.depth, groundY: -900 });
@@ -95,25 +102,31 @@ describe('ordnance layer', () => {
     const cues = new DepthCues(0x00ffff, 8);
     const layer = new OrdnanceLayer(cues, 4);
     assert.equal(layer.bubblePoolSize, BUBBLE_POOL);
-    layer.sync([shot(1, OrdnanceKind.Torpedo, 0, 60)], flat, 1, 0);
+    layer.sync([launched(1, 0)], flat, 1, 0);
     assert.equal(layer.burstCount, 1, 'a new torpedo id is a launch');
-    layer.sync([shot(1, OrdnanceKind.Torpedo, 30, 60)], flat, 1, 200);
+    layer.sync([launched(1, 30)], flat, 1, 200);
     assert.equal(layer.burstCount, 1, 'a known id spawns nothing');
     layer.sync([shot(2, OrdnanceKind.Mine, 0, 2)], flat, 1, 300);
     assert.equal(layer.burstCount, 1, 'a mine is not a launch');
-    // Three pools' worth of launches recycle the oldest slots.
-    const launches = 3 * (BUBBLE_POOL / BUBBLES_PER_BURST);
+    // A pool's worth of launches fills every slot; the next one lands on the
+    // oldest, which is slot 0, the first launch's.
+    const launches = BUBBLE_POOL / BUBBLES_PER_BURST;
     for (let id = 10; id < 10 + launches; id++) {
-      layer.sync([shot(id, OrdnanceKind.Torpedo, id, 60)], flat, 1, 400 + id);
+      layer.sync([launched(id, id * 1000)], flat, 1, 400 + id);
     }
     assert.equal(layer.burstCount, 1 + launches);
     assert.equal(layer.bubblePoolSize, BUBBLE_POOL, 'the pool is fixed');
+    const newest = 10 + launches - 1;
+    assert.ok(
+      Math.abs(layer.bubbleAt(0).x - newest * 1000) < 10,
+      `slot 0 holds the newest burst, at x ${layer.bubbleAt(0).x}`
+    );
   });
 
   it('lifts bubbles straight up and lets them go after their life', () => {
     const cues = new DepthCues(0x00ffff, 4);
     const layer = new OrdnanceLayer(cues, 4);
-    layer.sync([shot(1, OrdnanceKind.Torpedo, 0, 60)], flat, 1, 1000);
+    layer.sync([launched(1, 0)], flat, 1, 1000);
     const born = Array.from({ length: BUBBLES_PER_BURST }, (_, i) => layer.bubbleAt(i));
     layer.tick(1000 + BUBBLE_LIFE_MS / 2);
     for (let i = 0; i < BUBBLES_PER_BURST; i++) {
@@ -134,12 +147,33 @@ describe('ordnance layer', () => {
     const cues = new DepthCues(0x00ffff, 4);
     const layer = new OrdnanceLayer(cues, 4);
     layer.setReducedMotion(true);
-    layer.sync([shot(1, OrdnanceKind.Torpedo, 0, 60)], flat, 1, 0);
+    layer.sync([launched(1, 0)], flat, 1, 0);
     assert.equal(layer.burstCount, 0);
     assert.ok(!layer.bubbling);
     // Turning it off mid-run does not burst a torpedo already running.
     layer.setReducedMotion(false);
-    layer.sync([shot(1, OrdnanceKind.Torpedo, 30, 60)], flat, 1, 200);
+    layer.sync([launched(1, 30)], flat, 1, 200);
     assert.equal(layer.burstCount, 0);
+  });
+
+  it('does not burst a torpedo first seen mid-run, as a reconnect sees it', () => {
+    const cues = new DepthCues(0x00ffff, 4);
+    const layer = new OrdnanceLayer(cues, 4);
+    const running = { ...launched(1, 0), remainingS: ORDNANCE.TORPEDO.RUN_TIME_S - 5 };
+    layer.sync([running], flat, 1, 0);
+    assert.equal(layer.burstCount, 0, 'a shot already running was not seen launching');
+    assert.ok(!isLaunch(running));
+    assert.ok(isLaunch(launched(2, 0)));
+  });
+
+  it('forgets the last match on reset', () => {
+    const cues = new DepthCues(0x00ffff, 4);
+    const layer = new OrdnanceLayer(cues, 4);
+    layer.sync([launched(1, 0)], flat, 1, 0);
+    assert.ok(layer.bubbling);
+    layer.reset();
+    assert.ok(!layer.bubbling, 'the old match leaves no bubbles');
+    layer.sync([launched(1, 0)], flat, 1, 100);
+    assert.equal(layer.burstCount, 2, 'an id the new match reuses is a new launch');
   });
 });

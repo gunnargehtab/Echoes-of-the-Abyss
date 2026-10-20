@@ -1335,6 +1335,7 @@ export class PerspectiveView {
     this.lastPositions.clear();
     this.motion.reset();
     this.ordnanceMotion.reset();
+    this.ordnanceLayer.reset();
     // A force of nobody is not a dark map (acousticVeil.ts): the veil comes
     // off with the fleet rather than closing over the whole chart.
     this.veil.clear();

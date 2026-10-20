@@ -63,7 +63,7 @@ Only lit surfaces take the curve: the hulls, structures and props, and the ordna
 bodies. Every unlit layer bypasses it and keeps its authored register: the water
 backdrop and marine snow; the baked seabed with its route ink, map rim and skirt;
 fallback sprites and depth marks; public life's stipple; embers; and ordnance lamps
-with their trails. The loudness ladder measures its rungs in encoded luminance
+with their trails and launch bubbles. The loudness ladder measures its rungs in encoded luminance
 ([map-visuals.md](map-visuals.md) §5), and the water, the routes, the rim and the stipple
 stand on its rungs 1 and 5; the conn view places the skirt, which §5 does not name, on
 rung 1. A trail wears its lamp's glow, which ACES would fade toward white. Each of these

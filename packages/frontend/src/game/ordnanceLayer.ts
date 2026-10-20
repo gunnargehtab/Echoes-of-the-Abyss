@@ -13,10 +13,11 @@
  * Instanced, like the depth cues and the props: one body mesh and one lamp
  * mesh per kind, one LineSegments for every torpedo's cavitation trail and
  * one Points for every launch's bubble burst — ten objects for any amount of
- * ordnance, and a kind with no instances is hidden rather than drawn empty. Glow encodes loudness (gate 3): each lamp's
- * colour is the faction glow scaled by the live SIG on the spec curve, so a
- * running torpedo (60) burns, a noisemaker (70) burns brighter, and an armed
- * mine (2) is the near-black §6 asks for — a listener, not an emitter.
+ * ordnance, and a kind with no instances is hidden rather than drawn empty.
+ * Glow encodes loudness (gate 3): each lamp's colour is the faction glow
+ * scaled by the live SIG on the spec curve, so a running torpedo (60) burns,
+ * a noisemaker (70) burns brighter, and an armed mine (2) is the near-black
+ * §6 asks for — a listener, not an emitter.
  */
 
 import {
@@ -77,6 +78,16 @@ export const BUBBLE_LIFE_MS = 1500;
 export const BUBBLE_RISE_MPS = 9;
 export const BUBBLE_SPREAD_M = 3;
 const BUBBLE_SIZE_PX = 3;
+
+/** TUNABLE — how much of its run a torpedo may have spent and still read as
+ * just launched: five Echo ticks, so a view built mid-match (a reconnect)
+ * does not burst every shot already running. */
+export const LAUNCH_WINDOW_S = 1;
+
+/** Whether this torpedo, seen for the first time, was seen at its launch. */
+export function isLaunch(item: OwnOrdnance): boolean {
+  return item.remainingS >= ORDNANCE.TORPEDO.RUN_TIME_S - LAUNCH_WINDOW_S;
+}
 
 /** Every kind the layer draws, in a fixed order so the probe and tests can
  * count them. */
@@ -339,10 +350,10 @@ export class OrdnanceLayer {
 
       if (kind === OrdnanceKind.Torpedo) {
         torpedoes.add(item.id);
-        // A torpedo id the layer has never seen is a launch: the snapshot
-        // carries no launch event, and needs none, because own ordnance is
-        // sent in full from its first tick.
-        if (!this.knownTorpedoes.has(item.id) && !this.reducedMotion) {
+        // A torpedo id the layer has never seen, with its run still nearly
+        // whole, is a launch: the snapshot carries no launch event, and needs
+        // none, because own ordnance is sent in full from its first tick.
+        if (!this.knownTorpedoes.has(item.id) && isLaunch(item) && !this.reducedMotion) {
           this.spawnBurst(at.x, y, at.z, draw, lampBrightness(item.sig), nowMs);
         }
         // Cavitation behind the run, fading with distance and climbing as
@@ -462,6 +473,16 @@ export class OrdnanceLayer {
       this.bubbleBornAt[i] = nowMs;
     }
     this.bubblesLive = true;
+  }
+
+  /** A new match: forget the last one's torpedoes and its bubbles. */
+  reset(): void {
+    this.knownTorpedoes.clear();
+    this.bubbleBornAt.fill(-Infinity);
+    this.bubbleColors.array.fill(0);
+    this.bubbleColors.needsUpdate = true;
+    this.bubblesLive = false;
+    this.bubbles.visible = false;
   }
 
   dispose(): void {
