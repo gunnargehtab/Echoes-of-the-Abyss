@@ -12,11 +12,12 @@ node .claude/skills/run-game/scripts/drive.mjs --out <dir> \
   --steps docs/screenshots/issue-1508/wake.mjs
 ```
 
-`wake-loud.png` is the opening fleet about 1.5 s after a move order, at SIG 64: each hull
-trails amber bubbles from its stern, left in the water where they were shed, and the
-light scout at SIG 12 trails a fainter, shorter line. The probe read 97 live bubbles.
+`wake-loud.png` is the opening fleet about 1.5 s after a move order, at SIG 64: each loud
+hull trails a line of amber bubbles from its stern, spaced wider for a faster hull and left
+in the water where they were shed. The probe read 18 live bubbles, the fleet having run
+only a second and a half.
 
 `wake-silent.png` is the same fleet coming back under Silent Running, at SIG 8: the wakes
-are at the floor's strength and barely show. The probe read 76 live bubbles.
+are at the floor's strength and barely show. The probe read 39 live bubbles.
 
 After a stop order the probe read 0 live bubbles once the last had faded.
