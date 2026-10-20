@@ -67,11 +67,12 @@ export interface Attitude {
 
 /**
  * Roll per rad/s of heading rate. Hulls turn on a waypoint rather than at a
- * rated speed, so a corner is a single tick's heading change; this gain puts a
- * 30-degree corner at about 7 degrees of bank and leaves the clamp for the
- * hard ones. TUNABLE, render-only.
+ * rated speed, so a corner is a single tick's heading change: at SIM.ECHO_HZ
+ * this gain reads a 30-degree corner as 12 degrees of bank, which SETTLE draws
+ * at about 6 at its peak, and only a corner past 45 degrees reaches the clamp.
+ * TUNABLE, render-only.
  */
-const ROLL_PER_RAD_S = 0.15;
+const ROLL_PER_RAD_S = 0.08;
 const MAX_ROLL_RAD = (18 * Math.PI) / 180;
 const MAX_PITCH_RAD = (15 * Math.PI) / 180;
 /**
@@ -148,6 +149,15 @@ export class OwnMotion {
    * they are held outright rather than given a static equivalent.
    */
   levelHeld = false;
+  /**
+   * Only hulls lean. Own ordnance glides on this class too, and a track per
+   * shot that nothing draws would be gate-6 work with nothing to show for it.
+   */
+  private readonly leans: boolean;
+
+  constructor(options: { leans?: boolean } = {}) {
+    this.leans = options.leans ?? false;
+  }
 
   /** A snapshot's own-unit list, at the moment it arrived. */
   record(units: readonly Tracked[], nowMs: number): void {
@@ -165,6 +175,7 @@ export class OwnMotion {
     this.current = retired;
     for (const unit of units) {
       this.current.set(unit.id, unit);
+      if (!this.leans) continue;
       const reading = attitudeOf(
         this.older.get(unit.id),
         this.previous.get(unit.id),

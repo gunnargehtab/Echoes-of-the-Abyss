@@ -818,7 +818,7 @@ export class PerspectiveView {
    * Public so the chart's ink about a hull — its ring, its bar, its route —
    * reads the same answer and never drifts off the hull it captions.
    */
-  readonly motion = new OwnMotion();
+  readonly motion = new OwnMotion({ leans: true });
   /** Scratch for `motion.at`, consumed before the next call. */
   private readonly drawn = { x: 0, y: 0, depth: 0 };
   /** Scratch for `motion.attitude`, the same way. */

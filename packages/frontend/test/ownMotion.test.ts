@@ -187,7 +187,7 @@ describe('OwnMotion.attitude', () => {
   }
 
   it('leans into a corner between ticks, and eases back out', () => {
-    const motion = new OwnMotion();
+    const motion = new OwnMotion({ leans: true });
     cornering(motion);
     const out = { roll: 0, pitch: 0 };
     assert.equal(motion.attitude(1, 3 * INTERVAL_MS, out).roll, 0, 'level as the tick lands');
@@ -200,7 +200,7 @@ describe('OwnMotion.attitude', () => {
   });
 
   it('settles level and stops asking for frames', () => {
-    const motion = new OwnMotion();
+    const motion = new OwnMotion({ leans: true });
     cornering(motion);
     for (let tick = 4; tick < 20; tick++) motion.record([hull(1, 200, 100)], tick * INTERVAL_MS);
     const out = { roll: 0, pitch: 0 };
@@ -208,8 +208,16 @@ describe('OwnMotion.attitude', () => {
     assert.equal(motion.animating(19.5 * INTERVAL_MS), false);
   });
 
-  it('holds every hull level under reduced motion (docs/ui-ux.md §11)', () => {
+  it('keeps no attitude for a track that does not lean, such as ordnance', () => {
     const motion = new OwnMotion();
+    cornering(motion);
+    assert.equal(motion.attitude(1, 4 * INTERVAL_MS, { roll: 1, pitch: 1 }).roll, 0);
+    motion.record([hull(1, 200, 100)], 4 * INTERVAL_MS);
+    assert.equal(motion.animating(4.5 * INTERVAL_MS), false, 'a stopped shot asks for no frames');
+  });
+
+  it('holds every hull level under reduced motion (docs/ui-ux.md §11)', () => {
+    const motion = new OwnMotion({ leans: true });
     cornering(motion);
     motion.levelHeld = true;
     assert.deepEqual(motion.attitude(1, 4 * INTERVAL_MS, { roll: 1, pitch: 1 }), {
