@@ -225,7 +225,12 @@ Two consequences worth naming:
 
 V3 is mostly already law. This section collects it, so that the next revision cites one place.
 
-- **Depth is luminance**, on the ground and in the water, and never hue.
+- **Depth is luminance**, on the ground and in the water, and never hue. Depth darkens a
+  fill toward 0.55 of itself at the foot of a map's range, and never below the Abyssal
+  Trench's own fill: that fill is the "pitch black" the gradient ends on
+  ([art-direction.md](art-direction.md)), so depth takes nothing from the trench itself.
+  Shaded like the rest, a basin drew at about a third of the water over it and read as a
+  hole, not as the deepest floor ([#1532](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1532)).
 - **Hue is biome**, and biome is propagation factor. Nothing else on the ground carries a hue:
   not stone, not ink, not water.
 - **Light is loudness.** Agents glow with SIG. The ground emits only through the three world-light

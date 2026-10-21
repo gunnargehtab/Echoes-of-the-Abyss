@@ -455,9 +455,27 @@ export function depthShade(color: number, floorM: number, shallowest: number, de
   // in the first version of this, turning a kelp plateau into the loudest thing
   // on screen. Deep ground is pushed down toward black without reaching it,
   // because pure black reads as a hole in the map rather than as deep water.
-  const gain = 1 - t * 0.45;
+  //
+  // And never below the trench's own fill, the "pitch black" the gradient ends
+  // on (docs/map-visuals.md §6). The trench is authored there already, so depth
+  // has nothing left to darken it by: shaded at 0.55 like the rest, a basin at
+  // the foot of a map's range drew at a third of the water over it, and read
+  // as a hole rather than as the deepest floor (#1532). Every other fill's deep
+  // end stands above it, so this binds the trench alone.
+  const gain = Math.max(1 - t * 0.45, Math.min(1, PITCH_BLACK_LUMINANCE / encodedLuminance(color)));
   return scaleRgb(color, gain);
 }
+
+/** Rec. 709 on the encoded bytes, the space the fills are authored and read in. */
+function encodedLuminance(color: number): number {
+  return (
+    (0.2126 * ((color >> 16) & 0xff) + 0.7152 * ((color >> 8) & 0xff) + 0.0722 * (color & 0xff)) /
+    255
+  );
+}
+
+/** The darkest ground the depth shade draws: the trench's fill, unshaded. */
+const PITCH_BLACK_LUMINANCE = encodedLuminance(BIOME_COLOR[Biome.AbyssalTrench]);
 
 /** Multiply a packed RGB by a gain. Shared by the terrain shading passes. */
 export function scaleRgb(color: number, gain: number): number {
