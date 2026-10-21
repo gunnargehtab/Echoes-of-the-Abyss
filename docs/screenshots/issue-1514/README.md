@@ -18,6 +18,5 @@ columns standing, one per chimney.
 
 - `chimney-steam.png`: 450 m out at 50° pitch. Ember-hued puffs climb straight up from the
   stack and thin out.
-- `chimney-steam-close.png`: 260 m at 40°. The column is spaced puffs at their own heights,
-  dimmer than the embers.
+- `chimney-steam-close.png`: 260 m at 40°. The column is spaced puffs at their own heights.
 - `chimney-steam-low.png`: 320 m at 15°, across the column. It stays one vertical line.
