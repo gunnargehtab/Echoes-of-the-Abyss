@@ -183,8 +183,8 @@ The old rule carried four loads. Each moves; none is dropped.
 ## 6. What does not move at all
 
 - **Server-authoritative resolution.** A camera verb changes what the client draws, never
-  what it receives. The conn view holds own-force payloads and live Tier-4 hull tracks, and
-  nothing else about the enemy to leak; turning it around cannot reveal a contact the Echo
+  what it receives. The conn view holds own-force payloads and live Tier-4 hull and
+  structure tracks, and nothing else about the enemy to leak; turning it around cannot reveal a contact the Echo
   Layer did not resolve.
   This is the rule that makes a free camera *safe* in a hidden-information game, and it is
   worth stating because in most games it would not be: here the client genuinely does not

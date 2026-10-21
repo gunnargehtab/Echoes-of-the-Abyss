@@ -219,7 +219,7 @@ import {
 } from './faunaAgentStipple.ts';
 import type { MapPayload, TerrainPayload } from '../net/GameClient.ts';
 import { FOCUS_DRAG_M_PER_PX, FOCUS_STEP_M, HOME_DOLLY_M } from './PerspectiveView.ts';
-import type { HullTrack, PerspectiveView, ProjectedPoint } from './PerspectiveView.ts';
+import type { PerspectiveView, ProjectedPoint, Track } from './PerspectiveView.ts';
 import {
   COLUMN_RIBBONS,
   columnDepthsM,
@@ -1571,8 +1571,8 @@ export class EchoRenderer {
   private structures: OwnStructure[] = [];
   private nodes: readonly ResourceNodeInfo[] = [];
   private readonly tracked = new Map<number, TrackedContact>();
-  /** This frame's live Tier-4 hull tracks, for the conn view's models (#1531). */
-  private readonly hullTracks: HullTrack[] = [];
+  /** This frame's live Tier-4 tracks, for the conn view's models (#1531, #1539). */
+  private readonly modelTracks: Track[] = [];
   /** Orders given and not yet echoed back, by unit (docs/ui-ux.md §12). */
   private readonly pendingOrders = new Map<number, PendingOrder[]>();
   /** Attack-move is armed: the next click on the water is where to go (§9). */
@@ -6621,7 +6621,7 @@ export class EchoRenderer {
     this.drawEchoMarks(g);
 
     this.trackHits.prune(now);
-    this.hullTracks.length = 0;
+    this.modelTracks.length = 0;
     for (const [id, entry] of this.tracked) {
       const age = now - entry.lastSeenMs;
       if (age > decayMs) {
@@ -6643,19 +6643,21 @@ export class EchoRenderer {
       // *resolved*, so a track the player is still holding stays live however
       // long they have held it.
       const live = contactFidelity(contact.tier, age) === 'sprite';
-      // A live hull track sails in the conn view as its roster model (#1531),
-      // whether or not its mark is on screen this frame: the model's own
-      // frustum decides that, not the mark's anchor.
+      // A live hull or structure track is drawn in the conn view as its
+      // roster model (#1531, #1539), whether or not its mark is on screen
+      // this frame: the model's own frustum decides that, not the mark's
+      // anchor.
       const modelled =
         live &&
         this.conn !== null &&
-        contact.kind !== undefined &&
+        (contact.kind !== undefined || contact.structure !== undefined) &&
         contact.faction !== undefined &&
         contact.depth !== undefined;
       if (modelled) {
-        this.hullTracks.push({
+        this.modelTracks.push({
           id,
-          kind: contact.kind!,
+          kind: contact.kind,
+          structure: contact.structure,
           faction: contact.faction!,
           x: contact.x,
           y: contact.y,
@@ -6758,9 +6760,9 @@ export class EchoRenderer {
           // itself. docs/systems-echo.md §4 calls Tier 4 "full resolution",
           // and the Asymmetric Fidelity Law in docs/art-direction.md keeps one
           // rule with a reason: nothing hull-shaped below Tier 4, anywhere.
-          // Where the conn view draws the live track's model (#1531) this
-          // draws no sprite over it; without one, the baked sprite is the
-          // hull (#834).
+          // Where the conn view draws the live track's model (#1531, #1539)
+          // this draws no sprite over it; without one, the baked sprite is
+          // the hull or structure (#834).
           //
           // Either is drawn only while the track is live. A ghost is a
           // last-known position, and a lit hull sitting on one would claim a
@@ -6803,7 +6805,7 @@ export class EchoRenderer {
             );
           } else if (contact.structure !== undefined) {
             const texture =
-              live && contact.faction !== undefined
+              live && !modelled && contact.faction !== undefined
                 ? structureTexture(contact.structure, contact.faction)
                 : null;
             if (texture !== null && contact.faction !== undefined) {
@@ -6823,7 +6825,13 @@ export class EchoRenderer {
               0,
               0,
               structureStatsFor(contact.structure).radiusM,
-              { color, accent: UI.threat, alpha, detail: false, fill: texture === null },
+              {
+                color,
+                accent: UI.threat,
+                alpha,
+                detail: false,
+                fill: texture === null && !modelled,
+              },
               2 * inverseScale
             );
           } else if (contact.fauna !== undefined) {
@@ -6858,7 +6866,7 @@ export class EchoRenderer {
       }
     }
     this.contactSymbols.sweep();
-    this.conn?.setTracks(this.hullTracks);
+    this.conn?.setTracks(this.modelTracks);
   }
 
   /**

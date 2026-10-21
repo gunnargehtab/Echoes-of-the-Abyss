@@ -1333,9 +1333,10 @@ brightness.
 
 Detail is something you *own*, never something you are shown. The player's base and
 force render at full fidelity — lit, animated, alive. The enemy renders **only at the
-fidelity their detection earned** — no more, and since #834 and #1531 no less: a Tier-1
-return is a smudge, a Tier-2 a blurred blob, a Tier-3 a classified disc, and a Tier-4 hull
-track the hull's own roster model, sailing in the conn view as an own hull does.
+fidelity their detection earned** — no more, and since #834, #1531 and #1539 no less: a
+Tier-1 return is a smudge, a Tier-2 a blurred blob, a Tier-3 a classified disc, and a
+Tier-4 track its own roster model in the conn view, a hull sailing as an own hull does and
+a structure standing as an own structure does.
 [systems-echo.md](systems-echo.md) §4 calls Tier 4 "full resolution: exact unit, health,
 facing" and means it. The art side used to cap that tier at a flat silhouette, then at a
 sprite in the overlay; both were one rule too many.
@@ -1349,13 +1350,17 @@ many tracks share it, and only while the Echo Layer holds it at four times thres
 ping. A cruising hull reaches that against a HYD-50 listener at 0.9 to 1.3 km, outside the
 400 to 900 m weapon ranges, so the enemy you fight is a model before the first shot lands;
 a hull running silent can close unresolved, which is the ambush the Echo Layer exists for.
-Tier-4 structures keep the overlay sprite for now.
+A structure reaches Tier 4 the same way, and a refinery's sustained 55 to 75 SIG carries
+it further than most hulls.
 
 The model takes nothing a track did not earn. It sits where the last return put it and
 moves only when the next one does, with no glide between them. Its lamps hold at their
 intake-approved rest, because a Tier-4 payload carries no SIG and glow is loudness. It is
 drawn at true metres, without the far-zoom readability factor that is ink about an own
-entity, so the threat-red outline about it in the overlay matches its size.
+entity, so the threat-red outline about it in the overlay matches its size. A structure
+track stands unrotated on its depth, and always as the finished model: the payload carries
+no build progress, so a site at Tier 4 shows the building it will be rather than the
+scaffold it is.
 
 **A track is a return, not a window.** It decays on the same twenty-second ghost clock
 every other contact does, and the model is drawn only while the track is *live*: the
@@ -1569,9 +1574,9 @@ Own hulls and structures render as the approved roster models
 same rig the sprite bake transcribed: cold ambient, low oblique key, hard cyan rim. The
 plan-view sprite bake (`packages/frontend/src/game/bake.ts`) survives as the loading
 fallback and the sonar scope's language. Glow is loudness (gate 3): the model lamps swing
-with live SIG, so a hull running silent goes dark instead of translucent. An enemy hull
-renders as a model only as a live Tier-4 track, under the Asymmetric Fidelity Law above;
-below Track it never does, whatever the camera.
+with live SIG, so a hull running silent goes dark instead of translucent. An enemy hull or
+structure renders as a model only as a live Tier-4 track, under the Asymmetric Fidelity
+Law above; below Track it never does, whatever the camera.
 
 ### Own ordnance is geometry too
 
