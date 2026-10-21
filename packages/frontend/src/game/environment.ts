@@ -256,14 +256,14 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
   {
     slug: 'env-coral-growth',
     footprintM: 12,
-    triBudget: 184,
+    triBudget: 196,
     density: 0.12,
     stands: [Biome.CoralRuins, Biome.KelpForest],
     nearRock: 'any',
     maxSlopeM: Number.POSITIVE_INFINITY,
     excludeRoofed: false,
     scaleJitter: [0.7, 1.3],
-    worldLight: 'none',
+    worldLight: 'flora',
     swayM: 0,
   },
   // Rock, any biome — the jagged-rock vocabulary for mesa edges.
