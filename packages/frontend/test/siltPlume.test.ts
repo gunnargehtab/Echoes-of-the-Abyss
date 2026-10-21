@@ -173,24 +173,52 @@ describe('SiltPlume', () => {
     assert.equal(gl.ledger.calls, 0, 'a settled plume costs nothing');
   });
 
-  it('keeps a static plume under reduced motion (docs/ui-ux.md §11)', () => {
+  it('holds a fixed cloud at constant brightness under reduced motion (docs/ui-ux.md §11)', () => {
     const plume = new SiltPlume();
     plume.setReducedMotion(true);
     const s = source(1, 0, 1);
-    const t = dredge(plume, [s], PLUME_LIFE_MS / 4);
-    const born = plume.moteAt(0);
-    plume.tick(t + 200);
-    assert.ok(plume.count > 0, 'still drawn');
-    assert.equal(plume.moteAt(0).y, born.y, 'and none lifts');
+    plume.sync([s], 1, 1, 0);
+    assert.equal(plume.count, PLUME_MOTES_PER_HULL, 'a full plume’s motes at once');
+    const first = Array.from(
+      { length: plume.count },
+      (_, k) => [plume.moteAt(k), plume.levelAt(k)] as const
+    );
+    for (const t of [16, 500, 1700, 4000]) {
+      plume.sync([s], 1, 1, t);
+      plume.tick(t);
+      assert.equal(plume.count, PLUME_MOTES_PER_HULL);
+      for (let k = 0; k < plume.count; k++) {
+        assert.deepEqual(plume.moteAt(k), first[k]![0], `mote ${k} at ${t} ms`);
+        assert.equal(plume.levelAt(k), first[k]![1], `mote ${k}'s brightness at ${t} ms`);
+      }
+    }
+    for (let k = 0; k < plume.count; k++) {
+      const m = plume.moteAt(k);
+      assert.ok(Math.hypot(m.x, m.z) <= PLUME_RADIUS_M + 1e-4, 'within the radius');
+    }
   });
 
-  it('freezes motes already lifting when reduced motion turns on, without a drop', () => {
+  it('sizes the still cloud by strength, and clears it when the dredge stops', () => {
     const plume = new SiltPlume();
-    const t = dredge(plume, [source(1, 0, 1)], PLUME_LIFE_MS / 4);
-    const lifting = plume.moteAt(0);
     plume.setReducedMotion(true);
-    plume.tick(t + 400);
-    assert.ok(Math.abs(plume.moteAt(0).y - lifting.y) < 1e-4, 'held where it was drawn');
+    plume.sync([source(1, 0, 0.4)], 1, 1, 0);
+    const quiet = plume.count;
+    assert.ok(quiet > 0 && quiet < PLUME_MOTES_PER_HULL);
+    plume.sync([], 0, 1, 16);
+    assert.equal(plume.count, 0);
+    assert.equal(plume.points.visible, false);
+  });
+
+  it('swaps the moving plume for the still one when reduced motion turns on', () => {
+    const plume = new SiltPlume();
+    const s = source(1, 0, 1);
+    const t = dredge(plume, [s], PLUME_LIFE_MS);
+    assert.ok(plume.count > 0);
+    plume.setReducedMotion(true);
+    plume.sync([s], 1, 1, t + 16);
+    assert.equal(plume.count, PLUME_MOTES_PER_HULL);
+    plume.setReducedMotion(false);
+    assert.equal(plume.count, 0, 'and back: the moving plume starts fresh');
   });
 
   it('clears every mote for a new match', () => {

@@ -1316,8 +1316,8 @@ cargo rises between two own snapshots, which is the dredge biting, and its size 
 throttle's SIG against Overburden's: a harder dredge is louder, so its cloud is wider,
 higher and denser. Each mote lifts straight up and settles back on the same line, so the
 plume never drifts sideways ([map-visuals.md](map-visuals.md) §8). Silt wears no faction
-glow: it is a dim sediment fleck. A struck dredge never plumes, and reduced motion keeps
-the motes and stops their lift.
+glow: it is a dim sediment fleck. A struck dredge never plumes. Reduced motion draws each
+dredging harvester one fixed cloud, the same size, at constant brightness.
 
 ### The Asymmetric Fidelity Law
 

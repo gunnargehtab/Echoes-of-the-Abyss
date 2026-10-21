@@ -106,8 +106,6 @@ export class SiltPlume {
   /** Each hull's motes owed but not yet stirred, so the rate holds at any frame rate. */
   private readonly owed = new Map<number, number>();
   private lastSyncMs: number | null = null;
-  /** The clock of the last tick, so a reduced-motion switch stills motes where they are. */
-  private lastTickMs = 0;
   /** Scratch for `sync`: the hulls stirring this call. */
   private readonly seen = new Set<number>();
   /** A small LCG: where each mote is stirred, the same from one run to the next. */
@@ -138,20 +136,23 @@ export class SiltPlume {
   }
 
   /**
-   * Reduced motion (docs/ui-ux.md §11) keeps the plume and stills it: motes
-   * are still stirred and still fade, because the plume says the dredge is
-   * running, but none lifts.
+   * Reduced motion (docs/ui-ux.md §11) replaces the plume rather than
+   * removing it: "same information, no movement". Each dredging harvester
+   * holds one fixed cloud at constant brightness, sized as the moving plume
+   * is, for as long as it dredges (`syncStill`). Stilling only the lift would
+   * still leave motes popping in and fading out, which is movement.
    */
   setReducedMotion(reduced: boolean): void {
+    if (reduced === this.reducedMotion) return;
     this.reducedMotion = reduced;
-    if (!reduced) return;
-    // Motes already in the air stop where they are drawn now, so the switch
-    // is a freeze rather than a drop.
-    for (let i = 0; i < PLUME_POOL; i++) {
-      const t = (this.lastTickMs - this.bornAt[i]!) / PLUME_LIFE_MS;
-      if (t > 0 && t < 1) this.birth[i * 3 + 1]! += Math.sin(Math.PI * t) * this.lift[i]!;
-      this.lift[i] = 0;
-    }
+    // Either way the other mode's motes go: the next sync draws this one's.
+    this.bornAt.fill(-Infinity);
+    this.owed.clear();
+    this.lastSyncMs = null;
+    this.alive = 0;
+    this.colors.array.fill(0);
+    this.colors.needsUpdate = true;
+    this.points.visible = false;
   }
 
   /** Motes alive this frame, for the probe and the tests. */
@@ -189,6 +190,10 @@ export class SiltPlume {
    * forgotten, so it starts fresh when its dredge bites again.
    */
   sync(sources: readonly PlumeSource[], n: number, draw: number, nowMs: number): void {
+    if (this.reducedMotion) {
+      this.syncStill(sources, n, draw);
+      return;
+    }
     const dtMs = this.lastSyncMs === null ? 0 : Math.max(0, nowMs - this.lastSyncMs);
     this.lastSyncMs = nowMs;
     const seen = this.seen;
@@ -215,7 +220,7 @@ export class SiltPlume {
 
   /** Per frame while any mote lives: each lifts and settles where it was stirred. */
   tick(nowMs: number): void {
-    this.lastTickMs = nowMs;
+    if (this.reducedMotion) return;
     if (this.alive === 0 && !this.spawnedSinceTick) return;
     this.spawnedSinceTick = false;
     let alive = 0;
@@ -262,6 +267,34 @@ export class SiltPlume {
     this.material.dispose();
   }
 
+  /**
+   * Reduced motion: each dredging hull's fixed cloud, rewritten in place. A
+   * mote's spot is a hash of the hull and its index, so the same hull draws
+   * the same cloud every frame; its count, spread and height follow the
+   * strength as the moving plume's do.
+   */
+  private syncStill(sources: readonly PlumeSource[], n: number, draw: number): void {
+    let slot = 0;
+    for (let i = 0; i < n; i++) {
+      const s = sources[i]!;
+      if (s.strength <= 0) continue;
+      const motes = Math.min(Math.round(s.strength * PLUME_MOTES_PER_HULL), PLUME_POOL - slot);
+      for (let k = 0; k < motes; k++, slot++) {
+        const r = PLUME_RADIUS_M * draw * s.strength * Math.sqrt(hash01(s.id, k, 1));
+        const a = 2 * Math.PI * hash01(s.id, k, 2);
+        const h = 0.5 * PLUME_RISE_M * draw * s.strength * hash01(s.id, k, 3);
+        this.positions.setXYZ(slot, s.x + r * Math.cos(a), s.y + h, s.z + r * Math.sin(a));
+        const level = 0.6 * s.strength;
+        this.colors.setXYZ(slot, SILT_COLOR.r * level, SILT_COLOR.g * level, SILT_COLOR.b * level);
+      }
+    }
+    for (let i = slot; i < this.alive; i++) this.colors.setXYZ(i, 0, 0, 0);
+    this.alive = slot;
+    this.points.visible = slot > 0;
+    this.positions.needsUpdate = true;
+    this.colors.needsUpdate = true;
+  }
+
   private random(): number {
     this.seed = (Math.imul(this.seed, 1664525) + 1013904223) >>> 0;
     return this.seed / 0x100000000;
@@ -280,9 +313,15 @@ export class SiltPlume {
     this.birth[i * 3 + 1] = s.y;
     this.birth[i * 3 + 2] = s.z + r * Math.sin(a);
     this.level[i] = s.strength;
-    this.lift[i] = this.reducedMotion
-      ? 0
-      : PLUME_RISE_M * draw * s.strength * (0.5 + 0.5 * this.random());
+    this.lift[i] = PLUME_RISE_M * draw * s.strength * (0.5 + 0.5 * this.random());
     this.bornAt[i] = nowMs;
   }
+}
+
+/** A stable 0–1 from a hull, a mote and a salt: the still cloud's spots. */
+function hash01(id: number, k: number, salt: number): number {
+  let h = Math.imul(id ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(k + 1, 0xc2b2ae35) ^ salt;
+  h = Math.imul(h ^ (h >>> 16), 0x7feb352d);
+  h = Math.imul(h ^ (h >>> 15), 0x846ca68b);
+  return ((h ^ (h >>> 16)) >>> 0) / 0x100000000;
 }
