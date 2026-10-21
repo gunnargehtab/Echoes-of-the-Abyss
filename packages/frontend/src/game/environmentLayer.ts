@@ -17,7 +17,9 @@
  * Sway (epic #308 PR-3) is the one thing here that runs per frame, and it is
  * one uniform write per bending template — the displacement itself is in the
  * vertex shader (environmentModels.ts), so the 60 Hz path carries no
- * geometry work and the instance matrices never change.
+ * geometry work and the instance matrices never change. The chimneys' steam
+ * (ventPlume.ts, #1514) is the same bargain: one `Points` written per rebuild,
+ * and a clock uniform per frame.
  */
 
 /**
@@ -32,6 +34,7 @@ import type { TerrainPayload } from '../net/GameClient.ts';
 import { placeProps, propSpec, type PropPlacement } from './environment.ts';
 import { envTemplate, type SwayUniforms } from './environmentModels.ts';
 import type { WorldLook } from './tutorialLook.ts';
+import { VentPlume, plumeSites } from './ventPlume.ts';
 
 const TMP_MATRIX = new Matrix4();
 const TMP_QUAT = new Quaternion();
@@ -50,10 +53,14 @@ export class EnvironmentLayer {
   constructor(
     private readonly look: WorldLook = 'standard',
     private readonly seatStones = false
-  ) {}
+  ) {
+    this.group.add(this.plume.points);
+  }
 
   /** Added to the scene once by the view; rebuilt in place. */
   readonly group = new Group();
+  /** Every standing chimney's steam, one draw; a child of the group for good. */
+  readonly plume = new VentPlume();
 
   /** Guards late template loads: a load that finishes after another rebuild
    * (new terrain, teardown) must not resurrect stale placements. */
@@ -92,6 +99,8 @@ export class EnvironmentLayer {
     this.clear();
 
     if (placements.length === 0) return;
+    // Where each standing slug tops out, per unit scale: the chimneys' mouths.
+    const topM = new Map<string, number>();
 
     const bySlug = new Map<string, PropPlacement[]>();
     for (const placement of placements) {
@@ -137,7 +146,16 @@ export class EnvironmentLayer {
       this.props += list.length;
       this.propTris += list.length * template.trianglesPerInstance;
       if (template.sway !== null) this.swaying.push(template.sway);
+      topM.set(slug, template.heightM - sinkM);
     }
+    // A chimney whose model has not loaded stands nothing, so it breathes
+    // nothing either: plumeSites skips any slug missing here.
+    const sites = plumeSites(placements, (placement) => {
+      const top = topM.get(placement.slug);
+      if (top === undefined) return null;
+      return groundY(placement.xM, placement.yM) + top * placement.scale;
+    });
+    this.plume.build(sites, this.shade);
   }
 
   /**
@@ -145,7 +163,8 @@ export class EnvironmentLayer {
    * and the write still happens so a toggle mid-match takes effect on the
    * next frame rather than on the next terrain rebuild.
    */
-  tick(nowMs: number): void {
+  tick(nowMs: number, waterReachM?: number): void {
+    this.plume.tick(nowMs, waterReachM);
     if (this.swaying.length === 0) return;
     const time = this.reducedMotion ? SWAY_HOLD_S : nowMs / 1000;
     for (const sway of this.swaying) sway.uSwayTime.value = time;
@@ -153,6 +172,7 @@ export class EnvironmentLayer {
 
   setReducedMotion(reduced: boolean): void {
     this.reducedMotion = reduced;
+    this.plume.setReducedMotion(reduced);
   }
 
   /**
@@ -165,6 +185,7 @@ export class EnvironmentLayer {
   setShade(shade: ((xM: number, yM: number, out: Color) => void) | null): void {
     this.shade = shade;
     for (const { mesh, list } of this.shaded) this.applyShade(mesh, list);
+    this.plume.setShade(shade);
   }
 
   private applyShade(mesh: InstancedMesh, list: readonly PropPlacement[]): void {
@@ -178,9 +199,9 @@ export class EnvironmentLayer {
     if (mesh.instanceColor !== null) mesh.instanceColor.needsUpdate = true;
   }
 
-  /** Probe telemetry (gate 6): bodies standing and triangles they cost. */
-  stats(): { props: number; propTris: number } {
-    return { props: this.props, propTris: this.propTris };
+  /** Probe telemetry (gate 6): bodies standing, triangles they cost, and steam columns. */
+  stats(): { props: number; propTris: number; ventPlumes: number } {
+    return { props: this.props, propTris: this.propTris, ventPlumes: this.plume.plumes };
   }
 
   /**
@@ -195,15 +216,19 @@ export class EnvironmentLayer {
 
   destroy(): void {
     this.reset();
+    this.plume.dispose();
   }
 
   private clear(): void {
     for (const child of [...this.group.children]) {
+      // The steam stays a child: it is emptied below, not removed.
+      if (child === this.plume.points) continue;
       this.group.remove(child);
       // Instance attributes are this layer's own; geometry and material
       // belong to the template cache and must survive the rebuild.
       if (child instanceof InstancedMesh) child.dispose();
     }
+    this.plume.clear();
     this.props = 0;
     this.propTris = 0;
     this.swaying = [];

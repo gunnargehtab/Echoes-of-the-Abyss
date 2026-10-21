@@ -4072,8 +4072,10 @@ export class PerspectiveView {
     }
 
     // The kelp current: one uniform per bending template, nothing per prop.
-    this.environment.tick(now);
-    for (const detail of this.drawnDetails()) detail.props.tick(now);
+    // The chimneys' steam rides the same tick, with the water's reach so a
+    // far column swims out as the embers do (ventPlume.ts).
+    this.environment.tick(now, this.waterReach);
+    for (const detail of this.drawnDetails()) detail.props.tick(now, this.waterReach);
 
     this.swayClockMs = now;
     this.applyCamera();
