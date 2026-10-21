@@ -63,7 +63,7 @@ Only lit surfaces take the curve: the hulls, structures and props, and the ordna
 bodies. Every unlit layer bypasses it and keeps its authored register: the water
 backdrop and marine snow; the baked seabed with its route ink, map rim and skirt;
 fallback sprites and depth marks; public life's stipple; embers; and ordnance lamps
-with their trails and launch bubbles, own hulls' wakes, and the spray of a hit on one. The loudness ladder measures its rungs in encoded luminance
+with their trails and launch bubbles, own hulls' wakes, the spray of a hit on one, and own harvesters' silt plumes. The loudness ladder measures its rungs in encoded luminance
 ([map-visuals.md](map-visuals.md) §5), and the water, the routes, the rim and the stipple
 stand on its rungs 1 and 5; the conn view places the skirt, which §5 does not name, on
 rung 1. A trail wears its lamp's glow, which ACES would fade toward white. Each of these
@@ -1310,6 +1310,14 @@ a hull pushing hard, short and faint for one running silent, and none for a hull
 still or with its engine cut. Reduced motion keeps the bubbles and stops their climb. It states how
 loud the hull is and nothing more, so the enemy, which is never geometry in the conn
 view, never has one. Animated bases are still to come.
+
+An own harvester working a node stirs a silt plume at its keel (#1512). It plumes while its
+cargo rises between two own snapshots, which is the dredge biting, and its size is the
+throttle's SIG against Overburden's: a harder dredge is louder, so its cloud is wider,
+higher and denser. Each mote lifts straight up and settles back on the same line, so the
+plume never drifts sideways ([map-visuals.md](map-visuals.md) §8). Silt wears no faction
+glow: it is a dim sediment fleck. A struck dredge never plumes, and reduced motion keeps
+the motes and stops their lift.
 
 ### The Asymmetric Fidelity Law
 
