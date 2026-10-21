@@ -11,7 +11,6 @@ import { describe, it } from 'node:test';
 import { Color, PerspectiveCamera, Scene, ShaderLib, type BufferAttribute } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mapProps, propSpec, type PropPlacement } from '../src/game/environment.ts';
-import { EnvironmentLayer } from '../src/game/environmentLayer.ts';
 import { buildTemplate } from '../src/game/environmentModels.ts';
 import { VENT_EMBER } from '../src/game/palette.ts';
 import {
@@ -72,17 +71,8 @@ describe('one plume per standing chimney', () => {
     assert.equal(propSpec('env-vent-basalt')!.plume, undefined);
   });
 
-  it('keeps the steam in the prop layer when no template has loaded', () => {
-    // The test shim offers no environment model, so nothing stands — and a
-    // chimney that does not stand does not breathe.
-    const layer = new EnvironmentLayer();
-    const terrain = { cols: 1, rows: 1, cellM: 1, biomes: [0], floor: [0], ceiling: [0] };
-    layer.rebuild(terrain as never, () => 0, chimneys);
-    assert.equal(layer.stats().ventPlumes, 0);
-    assert.ok(layer.group.children.includes(layer.plume.points), 'the steam survives a rebuild');
-    layer.reset();
-    assert.ok(layer.group.children.includes(layer.plume.points), 'and a reset');
-  });
+  // The prop layer's own delivery of it, with real template loads, is in
+  // tutorialLoading.test.mjs "vent steam": that file holds the load seam.
 });
 
 describe('the column', () => {

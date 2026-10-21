@@ -53,13 +53,11 @@ export class EnvironmentLayer {
   constructor(
     private readonly look: WorldLook = 'standard',
     private readonly seatStones = false
-  ) {
-    this.group.add(this.plume.points);
-  }
+  ) {}
 
   /** Added to the scene once by the view; rebuilt in place. */
   readonly group = new Group();
-  /** Every standing chimney's steam, one draw; a child of the group for good. */
+  /** Every standing chimney's steam, one draw; in the group while a column stands. */
   readonly plume = new VentPlume();
 
   /** Guards late template loads: a load that finishes after another rebuild
@@ -156,6 +154,7 @@ export class EnvironmentLayer {
       return groundY(placement.xM, placement.yM) + top * placement.scale;
     });
     this.plume.build(sites, this.shade);
+    if (sites.length > 0) this.group.add(this.plume.points);
   }
 
   /**
@@ -221,13 +220,12 @@ export class EnvironmentLayer {
 
   private clear(): void {
     for (const child of [...this.group.children]) {
-      // The steam stays a child: it is emptied below, not removed.
-      if (child === this.plume.points) continue;
       this.group.remove(child);
       // Instance attributes are this layer's own; geometry and material
       // belong to the template cache and must survive the rebuild.
       if (child instanceof InstancedMesh) child.dispose();
     }
+    // Emptied, not disposed: its material outlives the rebuild.
     this.plume.clear();
     this.props = 0;
     this.propTris = 0;
