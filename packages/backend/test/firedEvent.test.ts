@@ -1,8 +1,9 @@
 /**
  * `SelfEventKind.Fired` (#1511): a gun's shot is told to its owner, with the
- * bearing to the point the owner was shown of its target, and to nobody else. The client draws its muzzle effect
- * from this event alone, so a missing shot is a gun firing with nothing to
- * see, and a shot told to the enemy would be a bearing it never resolved.
+ * bearing to the point the owner was shown of its target, and to nobody
+ * else. The client draws its muzzle effect from this event alone, so a
+ * missing shot is a gun firing with nothing to see, and a shot told to the
+ * enemy would be a bearing it never resolved.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
