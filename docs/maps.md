@@ -378,7 +378,7 @@ A mission map is authored the same way — a literal, regions painted in order �
 | Marr Plateau | `marr-plateau` | #251 | 4,000 × 2,500 m. A garden terrace, a working day, and a survey — [mission-tend.md](mission-tend.md) §11 |
 | The Attending Galleries | `attending-galleries` | #258 | 5,000 × 4,000 m. A gallery of sleepers, and the Ninth aimed at the Mouth — [mission-attendance.md](mission-attendance.md) §11 |
 | The Third's Outer Formations | `outer-formations` | #298 | 5,000 × 4,000 m. Crystal country with no cover in it, and one strip that carries — [mission-aptitude.md](mission-aptitude.md) §11 |
-| The Kell Shoulder | `kell-shoulder` | #212 | 5,000 × 3,000 m. Four kilometres of bare rock between two gardens, and a corridor across it — [mission-thin-water.md](mission-thin-water.md) §11 |
+| The Kell Shoulder | `kell-shoulder` | #212 | 5,000 × 3,000 m. Four kilometres between two gardens, under two of them bare rock, and a corridor across it — [mission-thin-water.md](mission-thin-water.md) §11 |
 | The Banding Ground | `banding-ground` | #212 | 5,000 × 4,000 m. The upper Ninth above Sufficiency, eight animals on its walls, and one line across the bench — [mission-intake.md](mission-intake.md) §11 |
 | The Furrow | `anholt-furrow` | #212 | 4,000 × 3,000 m. A cleft between two walls of rock, and one road down it to a garden and then a sill — [mission-deep-furrow.md](mission-deep-furrow.md) §11 |
 | The Fourth's Foot | `fourth-foot` | #212 | 3,000 × 6,000 m. *Baffle*'s trench a kilometre longer, the Fan it opens into, and the dome on the Foot — [mission-the-dome.md](mission-the-dome.md) §11 |

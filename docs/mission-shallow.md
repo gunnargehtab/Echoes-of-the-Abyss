@@ -7,8 +7,8 @@
 > text — and code transcribes this document, which `shallow.ts` now does; §13 says where the two
 > came apart and which side moved.
 
-**Setting:** the Kell Shoulder — four kilometres of bare scoured rock in the Shelf band between
-Kell Plateau and Marr, the Consortium's posted corridor across it, and the Kell slope falling
+**Setting:** the Kell Shoulder — a four-kilometre crossing in the Shelf band between Kell Plateau
+and Marr, two kilometres of it bare scoured rock, the Consortium's posted corridor across it, and the Kell slope falling
 away to 900 m at its southern edge — 214 PC, the tide after Marr rang its bell off-tide
 ([world-map.md](world-map.md); [mission-thin-water.md](mission-thin-water.md) §1, §11;
 [mission-convocation.md](mission-convocation.md) §1, §7; [timeline.md](timeline.md), 205 PC).
@@ -33,7 +33,7 @@ used — `kell-shoulder`, unchanged, from [mission-thin-water.md](mission-thin-w
 
 ## 1. What the Shoulder Is
 
-Two garden terraces, four kilometres of scoured rock between them, and a stair down to Mid-Water
+Two garden terraces, four kilometres apart across scoured rock, and a stair down to Mid-Water
 at its southern edge. [mission-thin-water.md](mission-thin-water.md) §1 wrote this ground from
 the plateau's side: a bare rise too shallow for the trench country's cold and too swept for kelp,
 with the Consortium's grid spur crossing it east to west under a posted closure. All of that

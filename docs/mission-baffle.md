@@ -234,7 +234,7 @@ in ([campaign.md](campaign.md) §10).
 
 | Time | Beat |
 | --- | --- |
-| 00:00 | The convoy musters at the north staging, masked ground. The writ is read. The yard's plant is already in the water, missing beats, eleven kilometres of trench away |
+| 00:00 | The convoy musters at the north staging, masked ground. The writ is read. The yard's plant is already in the water, missing beats, four kilometres of trench away |
 | 01:30 | Vail, on the plant (§12) |
 | 02:30 | The trench. PF 0.45 to 1.6 in one cell, mission 1's lesson at freight scale: the meter does not move and the world's response does |
 | 04:00 | **The first challenge.** The picket names its law, once, in the passive voice (§12). Nothing moves toward the convoy. Counting has begun |

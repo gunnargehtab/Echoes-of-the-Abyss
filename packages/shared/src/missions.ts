@@ -618,7 +618,7 @@ export const SEEDING_THIN_WATER_HEADER: MissionHeader = {
   ordinal: 2,
   name: 'The Second Seeding \u2014 Thin Water',
   premise:
-    'Ten loaded tenders, four kilometres of bare rock between two gardens, and a line the concern has closed across it.',
+    'Ten loaded tenders, four kilometres between two gardens, bare rock across the middle, and a line the concern has closed across it.',
   mapId: 'kell-shoulder',
   speaker: 'marr',
   spokenBy: 'Tidespeaker Ysolde Marr, at the load-out, from Marr, on the plateau channel',

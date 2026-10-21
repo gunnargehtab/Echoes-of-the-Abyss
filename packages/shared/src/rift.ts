@@ -216,7 +216,7 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
     name: 'The Fourth Trench',
     region: 'trench-country',
     x: 11_500,
-    y: 52_500,
+    y: 56_000,
     depthM: 1_700,
   },
   {
@@ -419,7 +419,7 @@ export const RIFT_GROUND: MapGround = {
       ],
       OpenWater,
       340,
-      'The Kell Shoulder — four kilometres of bare scoured rock between Marr and Kell, PF 1.00'
+      'The Kell Shoulder — a four-kilometre crossing between Marr and Kell, two kilometres of it bare rock, PF 1.00'
     ),
     oval(
       9,
@@ -464,7 +464,6 @@ export const RIFT_GROUND: MapGround = {
     box(4, 23, 2, 3, ThermalVein, 1_000, 'Ninefold Vein — the founding field’s upper faces'),
     box(4, 26, 2, 4, ThermalVein, 1_300, 'Ninefold Vein — the deep faces, 1,400 m at the last'),
     box(2, 32, 3, 10, ThermalVein, 1_000, 'Vent fields along the face'),
-    box(10, 46, 2, 1, ThermalVein, 1_100, 'The grid’s masked apron, at the Fourth’s north mouth'),
 
     // The Resonance Fields (§3): crystal country on the east slope, below the
     // layer, 1,400 m at the rim down to 2,900 m at the southern edge.
@@ -670,7 +669,8 @@ export const RIFT_GROUND: MapGround = {
       2_700,
       'Its deep end'
     ),
-    box(11, 47, 1, 11, AbyssalTrench, 1_700, 'The Fourth Trench — the freight pipe, 500 m wide'),
+    box(10, 53, 2, 1, ThermalVein, 1_100, 'The grid’s masked apron, at the Fourth’s north mouth'),
+    box(11, 54, 1, 4, AbyssalTrench, 1_700, 'The Fourth Trench — the freight pipe, 500 m wide'),
     box(11, 58, 1, 1, AbyssalTrench, 1_650, 'The Deep Yard — the pipe’s southern mouth'),
     outline(
       [

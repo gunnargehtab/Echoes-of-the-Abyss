@@ -140,7 +140,7 @@ describe('the named places (§3, placed by §7.2)', () => {
       assert.equal(at.biome, Biome.KelpForest, id);
       assert.ok(at.floorM <= 400, `${id} in the Shelf band: ${at.floorM}`);
     }
-    // §3: four kilometres of bare scoured rock at 340 m, Open Water.
+    // §3: a four-kilometre crossing between the gardens at 340 m, Open Water.
     const shoulder = place('kell-shoulder');
     assert.deepEqual(ground(shoulder), { biome: Biome.OpenWater, floorM: 340, ceilingM: 0 });
     const marr = place('marr');

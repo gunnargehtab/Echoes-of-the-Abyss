@@ -23,9 +23,9 @@ out loud.
 
 ## 1. What the Kell Shoulder Is
 
-Two garden terraces, and four kilometres of nothing between them.
+Two garden terraces, four kilometres apart, and two kilometres of nothing between their kelp.
 
-Kell Plateau is the terrace that shared a name and a fate with the Consortium sector above it:
+Kell Plateau is the terrace that shared a name and a fate with the Consortium sector beside it:
 the 197 PC flood front crossed it, four thousand farmers got out, two hundred did not, and the
 Commune has never renamed it and never will ([world-map.md](world-map.md);
 [timeline.md](timeline.md)). It was replanted. The kelp grows. Its bloom came early this tide,
@@ -55,7 +55,7 @@ player experiences as the same thing and is not. That distinction is the mission
 
 **Thin water.** [culture.md](culture.md) §3 lists *thin* in the Commune's vocabulary as a word
 said **of a person** — brittle, over-extended — and the title means that first: a column of ten
-tenders sent four kilometres past the last kelp, because the bloom was early and the turning
+tenders sent four kilometres from home, two of them past the last kelp, because the bloom was early and the turning
 needs seed stock, is thin in exactly the sense the Commune uses the word about someone it is
 worried about. It happens to also be literally true of the water, which has nothing in it to
 stop a sound. The Commune did not name the ground twice by accident. Neither does this
