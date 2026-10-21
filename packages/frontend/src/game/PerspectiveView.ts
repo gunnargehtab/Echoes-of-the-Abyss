@@ -4642,6 +4642,8 @@ export class PerspectiveView {
       structures: this.structureHandles.size,
       // Live Tier-4 tracks the chart handed over (#1531, #1539), and nothing else of the enemy.
       tracks: this.trackHandles.size,
+      // How many of them are structures (#1539).
+      structureTracks: this.tracks.filter((t) => t.structure !== undefined).length,
       // Where the first of them is, world metres, so a drive can frame it.
       trackAt:
         this.tracks.length === 0
