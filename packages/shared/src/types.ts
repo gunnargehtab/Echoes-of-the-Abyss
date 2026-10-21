@@ -926,6 +926,18 @@ export enum SelfEventKind {
    * of `peakSig`.
    */
   WentLoud = 6,
+  /**
+   * One of your guns fired — a hull's or a turret's, point defence included
+   * (#1511, docs/art-direction.md "Animation Style": "heavy recoil" on siege
+   * subs). Carries `bearing` toward the point its owner was shown of the
+   * target, when they were shown one.
+   *
+   * An event and not something the client could read off the state. A
+   * `Battle` mark needs a HYD 40 listener and never names an owner
+   * (docs/systems-echo.md §7), and a cooldown field sampled at 5 Hz folds two
+   * shots inside one tick into one. A hull's own shot is its own information.
+   */
+  Fired = 7,
 }
 
 export interface SelfEvent {
@@ -933,7 +945,15 @@ export interface SelfEvent {
   /** The entity of yours this happened to. */
   unitId: number;
   /**
-   * `Exposed` only: bearing in radians from your unit toward the emitter that
+   * `Fired`: bearing in radians from your gun toward the point you were shown
+   * of what it fired at — the Echo layer's `firingSolution`, the same point a
+   * torpedo is aimed at (docs/systems-combat.md §7) — and only when your slot
+   * holds that target at Bearing or better. A gun can be shooting at a Tier-1
+   * return or a Tier-2 ghost, so its true aim would be a fix the slot never
+   * earned; below Bearing the event carries no bearing, and the client draws
+   * the shot along the hull's own heading.
+   *
+   * `Exposed`: bearing in radians from your unit toward the emitter that
    * lit it — on one lit unit per ping, the nearest of those the ping lights
    * on its first pass, and on no other (#1290). A unit the ping reaches later
    * gets no `Exposed` at all (#1300). Every lit unit used to carry its own, and

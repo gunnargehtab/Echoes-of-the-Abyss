@@ -392,6 +392,12 @@ one draw call for any number of hits and none once the last spray fades. The lam
 costs no draw: it rides the gate-3 glow attribute the hull already writes. The probe
 reports live hits as `hits` and their particles as `hitParticles`.
 
+An own gun's shot is one more `Points` (`gunFire.ts`, #1511): a fixed ring of 544
+particles, sixteen shots' flash and pressure ring, a full ring overwriting its oldest.
+That is one draw call for any number of guns and none once the last ring fades. A siege
+hull's recoil costs no draw: it moves the hull the view already places. The probe reports
+`shots` fired, their live `shotParticles`, and the hulls still `recoiling`.
+
 An own harvester's silt plume is one more `Points` (`siltPlume.ts`, #1512): a fixed ring of
 960 motes, twenty-four for each of the 40 berths, so a berth list of harvesters all on
 Overburden fits it. That is one draw call for every plume and none once the last mote

@@ -3219,15 +3219,25 @@ export class Match {
       const bucket = eventsBySlot.get(pending.slot);
       if (bucket === undefined) continue;
       // Packs the kind into the low three bits, so it is correct while
-      // SelfEventKind has fewer than eight members. #623's `WentLoud` is the
-      // seventh; an eighth is fine and a ninth would silently fold two
-      // different events on neighbouring entities into one, which is the kind
-      // of bug that never reproduces. Widen the stride before adding it.
+      // SelfEventKind has at most eight members. #1511's `Fired` is the
+      // eighth; a ninth would silently fold two different events on
+      // neighbouring entities into one, which is the kind of bug that never
+      // reproduces. Widen the stride before adding it.
       const key = pending.eid * 8 + pending.kind;
       if (seen.has(key)) continue;
       seen.add(key);
       const event: SelfEvent = { kind: pending.kind, unitId: pending.eid };
       if (pending.bearing !== undefined) event.bearing = pending.bearing;
+      // A shot's bearing points at the point the owner was shown of its
+      // target (docs/systems-combat.md §7, the #1247 aiming rule), and only
+      // at Bearing or better: below that the slot was shown no position, and
+      // the truth would be a fix it never earned (#1511).
+      if (pending.target !== undefined) {
+        const shown = this.echo.firingSolution(pending.slot, pending.target);
+        if (shown !== undefined && shown.tier >= ResolutionTier.Bearing) {
+          event.bearing = Math.atan2(shown.y - pending.fromY!, shown.x - pending.fromX!);
+        }
+      }
       if (pending.idleReason !== undefined) event.idleReason = pending.idleReason;
       bucket.push(event);
     }

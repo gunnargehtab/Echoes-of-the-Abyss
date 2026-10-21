@@ -562,6 +562,19 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
     if (applyFiringSpike(eid, profile.firingSig)) {
       raiseSelfEvent(world, { kind: SelfEventKind.BreakSilence, eid });
     }
+    // The owner sees their own gun fire (#1511): one event a shot. Every
+    // gun's cooldown is over the 0.2 s between Echo passes, so the drain's
+    // one-per-entity-and-kind never folds two shots of one gun together. The
+    // target goes with it, not a bearing: a gun may be shooting at a Tier-1
+    // return or a Tier-2 ghost, so the drain aims the bearing at what the
+    // owner was shown of it, which only the Echo layer knows.
+    raiseSelfEvent(world, {
+      kind: SelfEventKind.Fired,
+      eid,
+      target,
+      fromX: Position.x[eid]!,
+      fromY: Position.y[eid]!,
+    });
     // Residue, laid down at the target rather than the shooter: a scout that
     // finds a battle site should find where the fighting *was*, and the losing
     // side is the one that stayed still (docs/systems-echo.md §7).
