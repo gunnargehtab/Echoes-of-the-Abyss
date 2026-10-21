@@ -3549,6 +3549,15 @@ export class PerspectiveView {
     }
   }
 
+  /** The first dredging harvester's position, world metres, or null: the probe's. */
+  private plumeAt(): { x: number; z: number; depthM: number } | null {
+    for (const id of this.dredging.keys()) {
+      const unit = this.units.find((u) => u.id === id);
+      if (unit !== undefined) return { x: unit.x, z: unit.y, depthM: unit.depth };
+    }
+    return null;
+  }
+
   /**
    * Every dredging harvester's plume, stirred at the keel it is drawn with:
    * per frame, after every placement, since a harvester holding over its
@@ -4439,6 +4448,8 @@ export class PerspectiveView {
       hitParticles: this.hits.particles,
       // Silt motes alive under dredging harvesters, one draw (#1512).
       plumeMotes: this.plume.count,
+      // Where the first dredging harvester stands, world metres, so a drive can frame it.
+      plumeAt: this.plumeAt(),
       hitAt: this.lastHitAt,
       // The prop layer's own ledger (gate 6): a prop regression is a
       // number, not an impression.

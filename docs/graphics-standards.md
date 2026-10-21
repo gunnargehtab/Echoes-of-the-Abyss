@@ -393,7 +393,7 @@ costs no draw: it rides the gate-3 glow attribute the hull already writes. The p
 reports live hits as `hits` and their particles as `hitParticles`.
 
 An own harvester's silt plume is one more `Points` (`siltPlume.ts`, #1512): a fixed ring of
-640 motes, sixteen for each of the 40 berths, so a berth list of harvesters all on
+960 motes, twenty-four for each of the 40 berths, so a berth list of harvesters all on
 Overburden fits it. That is one draw call for every plume and none once the last mote
 settles. The probe reports the live motes as `plumeMotes`.
 

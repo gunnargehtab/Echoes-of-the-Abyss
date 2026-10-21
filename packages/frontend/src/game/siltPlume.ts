@@ -51,19 +51,19 @@ const FULL_PLUME_SIG = HARVEST_THROTTLE[HarvestThrottle.Overburden].sig;
  * stirs fewer motes, in a narrower, lower cloud. All scale with the far-zoom
  * factor, as the hull they hang under does.
  */
-export const PLUME_MOTES_PER_HULL = 16;
+export const PLUME_MOTES_PER_HULL = 24;
 export const PLUME_LIFE_MS = 2400;
-export const PLUME_RADIUS_M = 14;
-export const PLUME_RISE_M = 18;
+export const PLUME_RADIUS_M = 30;
+export const PLUME_RISE_M = 40;
 /**
- * Derived — sixteen live motes for every hull the base's grant can float
+ * Derived — twenty-four live motes for every hull the base's grant can float
  * (docs/economy.md §10), so even a berth list of nothing but harvesters, all
  * on Overburden, fits the ring.
  */
 export const PLUME_POOL = BERTHS.CEILING * PLUME_MOTES_PER_HULL;
 /** The fleck a stirred mote of silt catches the lamps as: dim, warm, no hue of a faction's. */
-const SILT_COLOR = new Color(0.5, 0.46, 0.38);
-const PLUME_SIZE_PX = 2.5;
+const SILT_COLOR = new Color(0.78, 0.72, 0.6);
+const PLUME_SIZE_PX = 4;
 
 /**
  * A harvester's plume strength, 0–1, from two own readings of it: zero unless
