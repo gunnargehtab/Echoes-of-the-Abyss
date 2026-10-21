@@ -7,7 +7,7 @@
 # dev servers up and nothing uncommitted; the trap puts the branch back.
 # docs/screenshots/issue-1530/table.py tables what it writes.
 set -u
-cd /d/Claude
+cd "$(git rev-parse --show-toplevel)"
 BEFORE=${BEFORE:-b6db7fe947517994fca584fba48c505faebdb2df}
 AFTER=${AFTER:-d7d255dc11eeba0a5277d9a34031e7eed468af72}
 BRANCH=$(git rev-parse --abbrev-ref HEAD)

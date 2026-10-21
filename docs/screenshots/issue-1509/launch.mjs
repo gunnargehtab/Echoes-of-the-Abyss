@@ -82,8 +82,9 @@ await page.waitForTimeout(300);
 await page.mouse.click(C.x, C.y);
 
 // Follow the fleet until a gun hits a live track: that track is a Tier-4
-// contact the launch can take. Then frame fleet and track together, launch,
-// and photograph the burst as it rises and fades over its 1.5 s.
+// contact the launch can take. Then frame the track to click it, launch,
+// frame the nearest tube-carrier and photograph the burst as it rises and
+// fades over its 1.5 s.
 const AFTER_MS = [250, 600, 1000, 1400];
 const deadline = Date.now() + 8 * 60_000;
 const sets = [];

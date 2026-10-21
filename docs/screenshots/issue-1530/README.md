@@ -48,19 +48,25 @@ Queued `avgGpuMs` in ms, run 1 / run 2. Calls and triangles are the frame's whol
 | Sorrowgate | survey | 1.5 | 0.67 / 0.67 | 0.68 / 0.70 | +0.02 | 32 → 33 | 80 k |
 
 Every change is −0.04 to +0.02 ms, against the up to 0.03 ms the two runs of one
-revision differ by, and the largest is a fall. The effects add zero to three calls a
+revision differ by, and the largest is a fall. The effects add one to three calls a
 station and not one triangle, since every draw they add is a `Points`; banking and the
-shoals' burst add none. That is well inside gate 6's
-150 calls and 400 k triangles: no breach, so nothing is filed. The unqueued bracket,
+shoals' burst add none. One before fight run drew 63 calls and 152,780 triangles where
+the other three drew 61 and 152,540, which is the table's 61–63. That is well inside
+gate 6's 150 calls and 400 k triangles: no breach, so nothing is filed. The unqueued bracket,
 which adds the browser's hand-over, moved −0.02 to +0.44 ms on Ventfront and at most
 0.03 ms on Sorrowgate. Gate 6 bounds the queued reading, not that.
 
 ## What the stations drew
 
-The after probe says which effects were in the frame. On Ventfront, 34 vent plumes stood,
-the moving fleet's wake held 1–9 live bubbles, and the survey camera caught a dredging
-harvester's silt plume (11 motes). On Sorrowgate, 3 vent plumes stood and no wake bubble was live.
-No station fires, hits or launches: the probe read 0 `shots`, `hits` and `ordnance`
-throughout. Gate 6 gives each of those three effects no draw once its last particle
-fades, so they are priced here at that idle cost. The torpedo burst's frames on the GPU
+The after probe at the capture cameras says which effects were in the frame. On
+Ventfront, 34 vent plumes stood and the moving fleet's wake held 1–11 live bubbles. One
+survey run (11 motes) and one low run (8 motes) caught a dredging harvester's silt plume:
+the third extra call in those two cells. On Sorrowgate, 3 vent plumes stood and no wake
+bubble was live. All 16 capture drives read 0 `shots`, `hits` and `ordnance`.
+
+`fight.json` records none of the three. The fight's noisemaker and mine are ordnance, but
+the burst is torpedo-only (`ordnanceLayer.ts`, `OrdnanceKind.Torpedo`). Its calls, 61 → 63,
+are the wake and the steam, so no gun or hit draw is in that frame either. Gate 6 gives
+each of the gun, hit and burst effects no draw once its last particle fades, so they are
+priced here at that idle cost. The torpedo burst's frames on the GPU
 are in [issue-1509](../issue-1509/README.md).
