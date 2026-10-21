@@ -2843,17 +2843,27 @@ export class PerspectiveView {
     overview.holes = key;
   }
 
-  /** The props standing on the detail drawn this frame, and their triangles (#1488). */
-  private detailPropStats(): { detailProps: number; detailPropTris: number } {
+  /**
+   * The props standing on the detail drawn this frame, their triangles (#1488),
+   * and the steam columns over its chimneys (#1514): each drawn region with a
+   * chimney costs one more plume draw, as its props cost their own.
+   */
+  private detailPropStats(): {
+    detailProps: number;
+    detailPropTris: number;
+    detailVentPlumes: number;
+  } {
     let detailProps = 0;
     let detailPropTris = 0;
+    let detailVentPlumes = 0;
     for (const detail of this.drawnDetails()) {
       if (!detail.mesh.visible) continue;
-      const { props, propTris } = detail.props.stats();
+      const { props, propTris, ventPlumes } = detail.props.stats();
       detailProps += props;
       detailPropTris += propTris;
+      detailVentPlumes += ventPlumes;
     }
-    return { detailProps, detailPropTris };
+    return { detailProps, detailPropTris, detailVentPlumes };
   }
 
   /** The other regions' detail drawn this frame (`syncDetail`). */
@@ -3560,13 +3570,14 @@ export class PerspectiveView {
     }
   }
 
-  /** The first dredging harvester's position, world metres, or null: the probe's. */
+  /** The session's first standing chimney's mouth, world metres, or null: the probe's. */
   private ventPlumeAt(): { x: number; z: number; depthM: number } | null {
     const site = this.environment.plume.firstSite;
     if (site === null) return null;
     return { x: site.xM, z: site.yM, depthM: -site.y / DEPTH_VISUAL_M_PER_M };
   }
 
+  /** The first dredging harvester's position, world metres, or null: the probe's. */
   private plumeAt(): { x: number; z: number; depthM: number } | null {
     for (const id of this.dredging.keys()) {
       const unit = this.units.find((u) => u.id === id);

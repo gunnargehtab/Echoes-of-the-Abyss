@@ -99,7 +99,7 @@ describe('the column', () => {
     assert.ok(patched.fragmentShader.includes('discard'), 'a soft disc, not a square');
   });
 
-  it('is lit in the vent family, under the ember ceiling (rule 2)', () => {
+  it('is lit in the vent family, each puff under the ember peak (rule 2)', () => {
     const plume = new VentPlume();
     plume.build([site(0, 0)]);
     const color = plume.points.geometry.getAttribute('color') as BufferAttribute;
