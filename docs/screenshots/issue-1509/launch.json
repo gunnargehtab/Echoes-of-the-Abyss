@@ -1,0 +1,46 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "sets": [
+    {
+      "at": {
+        "x": 5250.10595703125,
+        "y": 1305.2291259765625,
+        "depthM": 300,
+        "atMs": 61448.39999997616
+      },
+      "screen": {
+        "x": 721.4723251251669,
+        "y": 447.86979932952084,
+        "visible": true
+      },
+      "launcher": {
+        "id": 389,
+        "name": "Caisson",
+        "rangeM": 1249.7513470994734
+      },
+      "ordnanceBefore": 0,
+      "frames": [
+        {
+          "file": "launch-1.png",
+          "ms": 465,
+          "ordnance": 2
+        },
+        {
+          "file": "launch-2.png",
+          "ms": 797,
+          "ordnance": 2
+        },
+        {
+          "file": "launch-3.png",
+          "ms": 1192,
+          "ordnance": 2
+        },
+        {
+          "file": "launch-4.png",
+          "ms": 1599,
+          "ordnance": 2
+        }
+      ]
+    }
+  ]
+}
