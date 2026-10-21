@@ -13,7 +13,13 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { Biome } from '@echoes/shared';
-import { BIOME_RELIEF, detailM, ROCK_RELIEF, seabedSeed } from '../src/game/seabed.ts';
+import {
+  BIOME_RELIEF,
+  detailM,
+  reliefAtCell,
+  ROCK_RELIEF,
+  seabedSeed,
+} from '../src/game/seabed.ts';
 import {
   authoredFloorAtM,
   buildHeightGrid,
@@ -94,6 +100,53 @@ describe('perspective heightfield', () => {
     assert.equal(grid.heightM, 1000);
     assert.equal(grid.stepM * (grid.vertsX - 1), grid.widthM);
     assert.equal(grid.y.length, grid.vertsX * grid.vertsZ);
+  });
+
+  it('climbs between cell centres instead of terracing at each one (#1532)', () => {
+    // A ramp of four open cells, each 100 m deeper than the last. A quarter
+    // of the way from one centre to the next the floor is a quarter of the
+    // step on: no flat tread at the centre, so a ramp reads as one.
+    const terrain: TerrainPayload = {
+      cols: 4,
+      rows: 1,
+      cellM: 250,
+      biomes: new Array(4).fill(Biome.OpenWater),
+      floor: [1000, 1100, 1200, 1300],
+      ceiling: new Array(4).fill(0),
+    };
+    for (const t of [0.25, 0.5, 0.75]) {
+      const x = (1 + 0.5 + t) * 250;
+      assert.ok(Math.abs(authoredFloorAtM(terrain, x, 125) - (1100 + 100 * t)) < 1e-9);
+    }
+  });
+
+  it('tears no wall where two biomes with different fields meet (#1532)', () => {
+    // Coral Ruins' blocky field beside a Thermal Vein's, on one flat floor:
+    // the only height either side is the detail field. Taken from the nearest
+    // cell, the mesh switched from one field to the other at the boundary, a
+    // jump with no width; blended as the bake blends it, the ground is one
+    // continuous surface, so a centimetre across the line moves it a hair.
+    const cols = 6;
+    const terrain: TerrainPayload = {
+      cols,
+      rows: 6,
+      cellM: 250,
+      biomes: Array.from({ length: 36 }, (_, i) =>
+        i % cols < 3 ? Biome.CoralRuins : Biome.ThermalVein
+      ),
+      floor: new Array(36).fill(1600),
+      ceiling: new Array(36).fill(0),
+    };
+    const seed = seabedSeed(terrain);
+    const rockTop = rockTopDepthM(terrain);
+    const line = 3 * 250;
+    let worst = 0;
+    for (let y = 10; y < 1500; y += 37) {
+      const west = seabedDepthAtM(terrain, seed, rockTop, line - 0.01, y);
+      const east = seabedDepthAtM(terrain, seed, rockTop, line + 0.01, y);
+      worst = Math.max(worst, Math.abs(east - west));
+    }
+    assert.ok(worst < 0.5, `the boundary moves the ground ${worst} m in 2 cm`);
   });
 
   it('patches a ground delta into the grid a full build would make (#434)', () => {
@@ -197,7 +250,6 @@ describe('authored floor for the survey ink', () => {
     const terrain = demoTerrain();
     const seed = seabedSeed(terrain);
     const rockTop = rockTopDepthM(terrain);
-    const relief = BIOME_RELIEF[Biome.OpenWater];
     // Every open-homed vertex of the demo map: the mesh depth minus the
     // detail field at the same point is the authored floor, exactly.
     const grid = buildHeightGrid(terrain, seed, rockTop);
@@ -209,6 +261,7 @@ describe('authored floor for the survey ink', () => {
         const col = Math.min(3, Math.max(0, Math.round(x / 250 - 0.5)));
         const row = Math.min(3, Math.max(0, Math.round(y / 250 - 0.5)));
         if (terrain.ceiling[row * 4 + col]! > terrain.floor[row * 4 + col]!) continue;
+        const relief = reliefAtCell(terrain, x / 250 - 0.5, y / 250 - 0.5);
         const detail = detailM(x, y, seed, relief.amplitudeM, relief.roughness, relief.blockiness);
         const mesh = seabedDepthAtM(terrain, seed, rockTop, x, y);
         assert.ok(Math.abs(mesh - detail - grid.floor[iz * grid.vertsX + ix]!) < 1e-6);

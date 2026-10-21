@@ -190,6 +190,56 @@ function latticeNoise(ix: number, iy: number, seed: number): number {
 const smooth = (t: number) => t * t * (3 - 2 * t);
 
 /**
+ * The weight a cell centre's neighbour gets at fraction `t` of the way to it,
+ * for everything upsampled from cells: the floor, and the relief parameters
+ * over it. Linear, so the upsample is the bilinear one docs/map-visuals.md §4
+ * rule 1 names. It was a smoothstep, whose zero slope at every centre made
+ * each cell a flat tread and put its whole step in an S between two centres,
+ * so an authored ramp or curve climbed as a staircase of 250 m terraces
+ * (#1532). Either reaches one cell, which the partial rebuilds stand on.
+ */
+export const cellBlend = (t: number) => t;
+
+const NO_RELIEF: BiomeRelief = { amplitudeM: 0, roughness: 0, blockiness: 0, mottle: 0 };
+
+/**
+ * The relief parameters at a continuous cell coordinate (`x / cellM - 0.5`),
+ * interpolated between the four nearest cell centres by `cellBlend`, the same
+ * way the floor is — so the *amount* of texture fades across a boundary while
+ * the field itself is one continuous function of world position. Rock carries
+ * none. The bake and the heightfield both read it, so the colour's slopes and
+ * the mesh's shape are the same ground: taken from the nearest cell instead,
+ * the mesh tore up to ~155 m of depth within one vertex step along every biome
+ * edge whose fields differ, the Coral Ruins grid against its neighbours most.
+ */
+export function reliefAtCell(terrain: TerrainPayload, cx: number, cy: number): BiomeRelief {
+  const { cols, rows } = terrain;
+  const c0 = Math.floor(cx);
+  const r0 = Math.floor(cy);
+  const fx = cellBlend(cx - c0);
+  const fy = cellBlend(cy - r0);
+  const at = (r: number, c: number): BiomeRelief => {
+    const i = Math.min(rows - 1, Math.max(0, r)) * cols + Math.min(cols - 1, Math.max(0, c));
+    if (terrain.ceiling[i]! > terrain.floor[i]!) return NO_RELIEF;
+    return BIOME_RELIEF[terrain.biomes[i] as Biome] ?? BIOME_RELIEF[Biome.OpenWater];
+  };
+  const b00 = at(r0, c0);
+  const b10 = at(r0, c0 + 1);
+  const b01 = at(r0 + 1, c0);
+  const b11 = at(r0 + 1, c0 + 1);
+  const lerp2 = (k: keyof BiomeRelief) =>
+    b00[k] +
+    (b10[k] - b00[k]) * fx +
+    (b01[k] + (b11[k] - b01[k]) * fx - b00[k] - (b10[k] - b00[k]) * fx) * fy;
+  return {
+    amplitudeM: lerp2('amplitudeM'),
+    roughness: lerp2('roughness'),
+    blockiness: lerp2('blockiness'),
+    mottle: lerp2('mottle'),
+  };
+}
+
+/**
  * Quantise a coordinate to the ruin grid, with the step ramped over ~30% of a
  * block instead of arriving inside one bake pixel. A hard snap put the whole
  * step across a single texel, which saturated `reliefShade`'s darkening cap
@@ -496,11 +546,11 @@ export function shadeSeabed(
     // Continuous cell coordinate of this pixel's centre.
     const cy = (py + 0.5) / ppc - 0.5;
     const r0 = Math.floor(cy);
-    const fy = smooth(cy - r0);
+    const fy = cellBlend(cy - r0);
     for (let px = ex0; px < ex1; px++) {
       const cx = (px + 0.5) / ppc - 0.5;
       const c0 = Math.floor(cx);
-      const fx = smooth(cx - c0);
+      const fx = cellBlend(cx - c0);
 
       const homeIndex = clampRow(Math.round(cy)) * cols + clampCol(Math.round(cx));
       const f00 = floorAt(r0, c0, homeIndex);
@@ -509,35 +559,22 @@ export function shadeSeabed(
       const f11 = floorAt(r0 + 1, c0 + 1, homeIndex);
       const floor = f00 + (f10 - f00) * fx + (f01 + (f11 - f01) * fx - f00 - (f10 - f00) * fx) * fy;
 
-      // Detail parameters interpolate the same way the floor does, so the
-      // *amount* of texture fades smoothly across a boundary while the field
-      // itself is one continuous function of world position.
-      const reliefOf = (r: number, c: number): BiomeRelief => {
-        const i = clampRow(r) * cols + clampCol(c);
-        if (isRock(i)) return { amplitudeM: 0, roughness: 0, blockiness: 0, mottle: 0 };
-        return BIOME_RELIEF[terrain.biomes[i] as Biome] ?? BIOME_RELIEF[Biome.OpenWater];
-      };
-      const b00 = reliefOf(r0, c0);
-      const b10 = reliefOf(r0, c0 + 1);
-      const b01 = reliefOf(r0 + 1, c0);
-      const b11 = reliefOf(r0 + 1, c0 + 1);
-      const lerp2 = (k: keyof BiomeRelief) =>
-        b00[k] +
-        (b10[k] - b00[k]) * fx +
-        (b01[k] + (b11[k] - b01[k]) * fx - b00[k] - (b10[k] - b00[k]) * fx) * fy;
-
       ground[(py - ey0) * ew + (px - ex0)] = floor;
-      height[(py - ey0) * ew + (px - ex0)] = detail
-        ? floor +
+      if (detail) {
+        const relief = reliefAtCell(terrain, cx, cy);
+        height[(py - ey0) * ew + (px - ex0)] =
+          floor +
           detailM(
             px * mPerPx,
             py * mPerPx,
             seed,
-            lerp2('amplitudeM'),
-            lerp2('roughness'),
-            lerp2('blockiness')
-          )
-        : floor;
+            relief.amplitudeM,
+            relief.roughness,
+            relief.blockiness
+          );
+      } else {
+        height[(py - ey0) * ew + (px - ex0)] = floor;
+      }
     }
   }
 

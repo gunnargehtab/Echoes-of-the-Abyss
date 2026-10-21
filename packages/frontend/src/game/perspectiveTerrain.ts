@@ -23,8 +23,7 @@
  */
 
 import type { TerrainPayload } from '../net/GameClient.ts';
-import { Biome } from '@echoes/shared';
-import { BIOME_RELIEF, detailM, rockDetailM, seabedSeed } from './seabed.ts';
+import { cellBlend, detailM, reliefAtCell, rockDetailM, seabedSeed } from './seabed.ts';
 
 /**
  * TUNABLE — metres of world height per metre of depth. 0.22 keeps a full
@@ -77,12 +76,11 @@ export function rockTopDepthM(terrain: TerrainPayload): number {
   return Math.max(0, openFloorRange(terrain).shallowest - ROCK_RISE_ABOVE_SHALLOWEST_M);
 }
 
-const smooth = (t: number) => t * t * (3 - 2 * t);
-
 /**
  * Seabed depth at a world position, in metres: the authored floor bilinearly
  * upsampled (rock and off-map neighbours reading as the home cell's floor,
- * exactly as the bake's `floorAt` does) plus the biome-weighted detail field.
+ * exactly as the bake's `floorAt` does) plus the detail field, its parameters
+ * interpolated between cells as the bake's are (`reliefAtCell`).
  * Positions whose nearest cell is rock return the rock top plus the rock
  * detail field — a craggy wall face, not a floor. The crag is bounded by
  * `ROCK_RELIEF.amplitudeM` < `ROCK_RISE_ABOVE_SHALLOWEST_M`, so a mesa's
@@ -100,7 +98,7 @@ export function seabedDepthAtM(
   if (isRock(terrain, homeIndex)) return rockSurfaceDepthM(seed, rockTopM, xM, yM);
 
   const floor = authoredFloorAtM(terrain, xM, yM);
-  const relief = BIOME_RELIEF[terrain.biomes[homeIndex] as Biome] ?? BIOME_RELIEF[Biome.OpenWater];
+  const relief = reliefAtCell(terrain, xM / terrain.cellM - 0.5, yM / terrain.cellM - 0.5);
   return floor + detailM(xM, yM, seed, relief.amplitudeM, relief.roughness, relief.blockiness);
 }
 
@@ -147,8 +145,8 @@ export function authoredFloorAtM(terrain: TerrainPayload, xM: number, yM: number
   const cy = yM / cellM - 0.5;
   const c0 = Math.floor(cx);
   const r0 = Math.floor(cy);
-  const fx = smooth(cx - c0);
-  const fy = smooth(cy - r0);
+  const fx = cellBlend(cx - c0);
+  const fy = cellBlend(cy - r0);
 
   const corners = [
     clampRow(r0) * cols + clampCol(c0),
