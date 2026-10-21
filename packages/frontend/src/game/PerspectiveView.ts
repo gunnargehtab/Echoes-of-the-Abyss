@@ -139,6 +139,7 @@ import { OrdnanceLayer } from './ordnanceLayer.ts';
 import { HullWake, wakeStrength, type WakeSource } from './hullWake.ts';
 import { HullHits, flashedGlow, hitStrength } from './hullHit.ts';
 import { GunFire, isSiegeHull } from './gunFire.ts';
+import { SiltPlume, plumeStrength, type PlumeSource } from './siltPlume.ts';
 import { EnvironmentLayer } from './environmentLayer.ts';
 import { createWaterEnvironment, keepsGlowOutsideToneMapping } from './modelLighting.ts';
 import { GLOW_FACTOR_MAX, GLOW_FACTOR_MIN, SIG_GLOW_EFOLD } from './glow.ts';
@@ -823,6 +824,12 @@ export class PerspectiveView {
   private readonly wakeSources: WakeSource[] = [];
   /** The flash and spray on an own hull or structure hit (hullHit.ts, #1510). */
   private readonly hits = new HullHits();
+  /** The silt plume under every own harvester while it dredges (siltPlume.ts, #1512). */
+  private readonly plume = new SiltPlume();
+  /** The plume's per-hull inputs, reused frame to frame: nothing allocated. */
+  private readonly plumeSources: PlumeSource[] = [];
+  /** Each harvester whose cargo rose at the last tick, and its plume strength. */
+  private readonly dredging = new Map<number, number>();
   /** Where the last hit was thrown, world metres, so a drive can frame it. */
   private lastHitAt: { x: number; z: number; depthM: number } | null = null;
   /** The muzzle flash, pressure ring and siege recoil of own guns (gunFire.ts, #1511). */
@@ -1032,6 +1039,7 @@ export class PerspectiveView {
       this.wake.points,
       this.hits.points,
       this.gunFire.points,
+      this.plume.points,
       this.structureGroup,
       this.models.group,
       this.cues.group,
@@ -1205,6 +1213,7 @@ export class PerspectiveView {
     this.wake.setReducedMotion(reduced);
     this.hits.setReducedMotion(reduced);
     this.gunFire.setReducedMotion(reduced);
+    this.plume.setReducedMotion(reduced);
     this.life.setReducedMotion(reduced);
     this.swayHeld = reduced;
     this.motion.levelHeld = reduced;
@@ -1332,6 +1341,9 @@ export class PerspectiveView {
     // What each struck entity held before this tick, read before the arrays
     // are replaced: the blow's size is the difference (hullHit.ts).
     const struck = this.hpBeforeHits(snapshot);
+    // Which harvesters' cargo rose since the last tick, read before the
+    // arrays are replaced: that rise is the dredge biting (siltPlume.ts).
+    this.markDredging(snapshot.units);
     this.units = snapshot.units;
     this.structures = snapshot.structures;
     this.ordnance = snapshot.ordnance;
@@ -1378,6 +1390,8 @@ export class PerspectiveView {
     this.ordnanceLayer.reset();
     this.wake.reset();
     this.hits.reset();
+    this.plume.reset();
+    this.dredging.clear();
     this.lastHitAt = null;
     this.gunFire.reset();
     this.lastShotAt = null;
@@ -1448,6 +1462,7 @@ export class PerspectiveView {
     this.wake.dispose();
     this.hits.dispose();
     this.gunFire.dispose();
+    this.plume.dispose();
     this.models.dispose();
     this.cues.dispose();
     this.backdrop.dispose();
@@ -3531,6 +3546,54 @@ export class PerspectiveView {
   }
 
   /**
+   * Record which own harvesters dredged over the last tick: cargo up between
+   * the readings before and after it. Held until the next snapshot, so the
+   * plume runs for the whole tick the dredge bit in.
+   */
+  private markDredging(next: readonly OwnUnit[]): void {
+    this.dredging.clear();
+    for (const unit of next) {
+      if (unit.cargo === undefined) continue;
+      const was = this.units.find((u) => u.id === unit.id);
+      const strength = plumeStrength(was?.cargo, unit);
+      if (strength > 0) this.dredging.set(unit.id, strength);
+    }
+  }
+
+  /** The first dredging harvester's position, world metres, or null: the probe's. */
+  private plumeAt(): { x: number; z: number; depthM: number } | null {
+    for (const id of this.dredging.keys()) {
+      const unit = this.units.find((u) => u.id === id);
+      if (unit !== undefined) return { x: unit.x, z: unit.y, depthM: unit.depth };
+    }
+    return null;
+  }
+
+  /**
+   * Every dredging harvester's plume, stirred at the keel it is drawn with:
+   * per frame, after every placement, since a harvester holding over its
+   * node is not gliding and nothing else would place it (siltPlume.ts).
+   */
+  private syncPlumes(nowMs: number): void {
+    const draw = this.drawScale;
+    let n = 0;
+    for (const [id, strength] of this.dredging) {
+      const unit = this.units.find((u) => u.id === id);
+      const handle = this.unitHandles.get(id);
+      if (unit === undefined || handle === undefined) continue;
+      const at = this.motion.at(unit, nowMs, this.drawn);
+      const source = (this.plumeSources[n] ??= { id: 0, x: 0, y: 0, z: 0, strength: 0 });
+      source.id = id;
+      source.x = at.x;
+      source.y = handle.drawnY - 0.5 * draw * (handle.model?.heightM ?? 0);
+      source.z = at.y;
+      source.strength = strength;
+      n++;
+    }
+    this.plume.sync(this.plumeSources, n, draw, nowMs);
+  }
+
+  /**
    * The HP each entity named by a `Damaged` held before this snapshot, or
    * null when nothing was hit. Own entities only: the event names nothing
    * else, and an id the old arrays do not hold reads NaN (nothing measured).
@@ -4048,6 +4111,7 @@ export class PerspectiveView {
     this.hits.tick(now);
     this.kickRecoils(now);
     this.gunFire.tick(now);
+    this.syncPlumes(now);
     if (this.dreamLights !== null) {
       const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
       this.dreamLights.update(
@@ -4449,6 +4513,10 @@ export class PerspectiveView {
       // Hits alive on own hulls and structures, and their spray (#1510).
       hits: this.hits.count,
       hitParticles: this.hits.particles,
+      // Silt motes alive under dredging harvesters, one draw (#1512).
+      plumeMotes: this.plume.count,
+      // Where the first dredging harvester stands, world metres, so a drive can frame it.
+      plumeAt: this.plumeAt(),
       hitAt: this.lastHitAt,
       // Own guns' shots since the view was made, their flash and ring, and
       // the siege hulls still kicking back (#1511).

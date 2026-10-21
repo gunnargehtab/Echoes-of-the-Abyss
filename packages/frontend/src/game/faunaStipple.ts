@@ -29,10 +29,17 @@
  * authored bearing (docs/hazards.md). Marine snow is under the same rule and
  * for the same reason (water.ts).
  *
+ * **A scatter bursts; a reform gathers (#1513).** A shoal's one informative
+ * moment is the scatter — something came within 300 m (docs/bestiary.md §4) —
+ * so the motes fly out from the centre over a fraction of a second, and drift
+ * back in over a few when the shoal reforms. That is the same scale about the
+ * same fixed centre, eased between the two layouts, so §8 holds as it stands.
+ *
  * **Gate 6's budget, as §8 sets it.** One `Points` draw per kind, a fixed dot
- * count per field, and the pulse in the vertex shader: a frame costs a handful
- * of uniform writes, and the buffers are rewritten only when a public layer
- * changes — a field or shoal is born or dies, or a shoal scatters or reforms.
+ * count per field, and the pulse and the burst in the vertex shader: a frame
+ * costs a handful of uniform writes, and the buffers are rewritten only when a
+ * public layer changes — a field or shoal is born or dies, or a shoal scatters
+ * or reforms.
  *
  * Rung 5, map furniture (docs/map-visuals.md §5): public, and never an agent.
  * The acoustic veil leaves it alone, because the veil touches ground only
@@ -134,6 +141,35 @@ const SHOAL_SQUEEZE = 0.08;
 const SHOAL_TWINKLE = 0.5;
 
 /**
+ * TUNABLE — seconds a scatter takes to fling the motes out, and a reform to
+ * gather them back. A burst is startled, so fast; a shoal re-forms the way it
+ * settles, slowly. Both ease out: quickest at the start, as a blow is.
+ */
+export const SHOAL_BURST_S = 0.6;
+export const SHOAL_GATHER_S = 3;
+/**
+ * The scattered layout against the formed one: on the plan, in height and in
+ * brightness. `writeShoal` draws both from the same seeded draws, so one is
+ * the other scaled, and the tween is only ever this scale about the centre.
+ */
+const SCATTERED_RATIO: Burst = [
+  SHOAL_SCATTERED_RADIUS_M / SHOAL_FORMED_RADIUS_M,
+  SHOAL_SCATTERED_HEIGHT_M / SHOAL_FORMED_HEIGHT_M,
+  SHOAL_SCATTERED_GAIN / SHOAL_FORMED_GAIN,
+];
+const FORMED_RATIO: Burst = [1, 1, 1];
+
+/** A shoal's layout as a scale of its formed one: plan, height, brightness. */
+export type Burst = [number, number, number];
+
+/** How far through a tween of `durationS` begun at `startS` the shoal is, at
+ * `nowS`, eased: 0 where it began, 1 settled. The shader holds the same curve. */
+export function burstSettle(startS: number, durationS: number, nowS: number): number {
+  const p = Math.min(1, Math.max(0, (nowS - startS) / durationS));
+  return 1 - (1 - p) ** 3;
+}
+
+/**
  * Where the pulse clock wraps, in seconds: a whole number of every period
  * above (8 field beats, 13 shoal breaths, 39 twinkles), so no dot skips at the
  * wrap. Without one the uniform grows for the whole match and takes the
@@ -187,6 +223,7 @@ class StippleCloud {
     uPixelScale: { value: number };
     uSizePx: { value: Vector2 };
     uColor: { value: Color };
+    uBurstS: { value: number };
   };
 
   constructor(
@@ -200,6 +237,8 @@ class StippleCloud {
       twinkle: number;
       twinkleS: number;
       lift: number;
+      /** Whether a dot's layout eases in from another (`aBurst`): shoals. */
+      burst: boolean;
     }
   ) {
     this.uniforms = {
@@ -210,8 +249,18 @@ class StippleCloud {
       uPixelScale: { value: 600 },
       uSizePx: { value: new Vector2(1, DOT_MAX_PX) },
       uColor: { value: new Color(FAUNA_COLOR) },
+      uBurstS: { value: 0 },
     };
     const omega = (Math.PI * 2) / motion.periodS;
+    // `aBurst`: xyz, the layout the dot eases in from, as a ratio of the one
+    // its `aDot` and `aSeed` hold (plan, height, brightness); w, when the
+    // tween began on `uBurstS`. Settled is a ratio of 1: today's layout.
+    const burst = motion.burst
+      ? [
+          `  float settle = clamp( ( uBurstS - aBurst.w ) / ( aBurst.x < 1.0 ? ${f(SHOAL_BURST_S)} : ${f(SHOAL_GATHER_S)} ), 0.0, 1.0 );`,
+          '  vec3 burst = mix( aBurst.xyz, vec3( 1.0 ), 1.0 - pow( 1.0 - settle, 3.0 ) );',
+        ]
+      : ['  vec3 burst = vec3( 1.0 );'];
     const material = new ShaderMaterial({
       uniforms: this.uniforms,
       transparent: true,
@@ -229,19 +278,23 @@ class StippleCloud {
         'uniform float uClearness;',
         'uniform float uPixelScale;',
         'uniform vec2 uSizePx;',
+        ...(motion.burst ? ['uniform float uBurstS;', 'attribute vec4 aBurst;'] : []),
         'attribute vec4 aDot;',
         'attribute vec2 aSeed;',
         'varying float vAlpha;',
         'void main() {',
+        ...burst,
         // 0 at rest, 1 fully contracted. A cosine from rest, so a bell spends
         // most of its period relaxed and contracts in a beat.
         `  float beat = 0.5 - 0.5 * cos( uTime * ${f(omega)} + aSeed.x );`,
         `  float trail = 0.5 - 0.5 * cos( uTime * ${f(omega)} + aSeed.x - aDot.w * ${f(motion.trailLag)} );`,
         '  float body = step( aDot.w, 0.0 );',
         // Every term is a scale about the anchor, and none exceeds 1 on the
-        // plan: a dot never reaches past where it rests, and nothing travels.
-        `  float squeeze = mix( 1.0 - ${f(motion.trailSqueeze)} * trail, 1.0 - ${f(motion.squeeze)} * beat, body );`,
-        `  float stretch = 1.0 + ${f(motion.stretch)} * mix( trail, beat, body );`,
+        // plan but the burst's: a dot never reaches past where its layout
+        // rests, and nothing travels. A burst eases between two layouts,
+        // neither wider than the scattered one.
+        `  float squeeze = mix( 1.0 - ${f(motion.trailSqueeze)} * trail, 1.0 - ${f(motion.squeeze)} * beat, body ) * burst.x;`,
+        `  float stretch = ( 1.0 + ${f(motion.stretch)} * mix( trail, beat, body ) ) * burst.y;`,
         '  vec3 world = position + vec3( aDot.x * squeeze, aDot.y * stretch, aDot.z * squeeze );',
         '  float dist = distance( world, uEye );',
         // Extinction without inscatter, as the embers take it (water.ts): an
@@ -251,7 +304,7 @@ class StippleCloud {
         '  float t = dist * uClearness / max( uReachM, 1.0 );',
         '  float trans = exp( - t * t );',
         `  float twinkle = 1.0 - ${f(motion.twinkle)} * ( 0.5 + 0.5 * sin( uTime * ${f((Math.PI * 2) / motion.twinkleS)} + aSeed.x * 7.0 + aSeed.y * 13.0 ) );`,
-        `  vAlpha = aSeed.y * trans * twinkle * ( 1.0 + ${f(motion.lift)} * beat );`,
+        `  vAlpha = aSeed.y * burst.z * trans * twinkle * ( 1.0 + ${f(motion.lift)} * beat );`,
         '  vec4 mvPosition = modelViewMatrix * vec4( world, 1.0 );',
         '  gl_Position = projectionMatrix * mvPosition;',
         '  gl_PointSize = clamp( uPixelScale / max( dist, 1.0 ), uSizePx.x, uSizePx.y );',
@@ -288,6 +341,7 @@ class StippleCloud {
     geometry.setAttribute('position', new BufferAttribute(new Float32Array(this.capacity * 3), 3));
     geometry.setAttribute('aDot', new BufferAttribute(new Float32Array(this.capacity * 4), 4));
     geometry.setAttribute('aSeed', new BufferAttribute(new Float32Array(this.capacity * 2), 2));
+    geometry.setAttribute('aBurst', new BufferAttribute(new Float32Array(this.capacity * 4), 4));
     geometry.setDrawRange(0, 0);
     return geometry;
   }
@@ -299,7 +353,7 @@ class StippleCloud {
    */
   write(
     dots: number,
-    fill: (anchor: Float32Array, dot: Float32Array, seed: Float32Array) => void
+    fill: (anchor: Float32Array, dot: Float32Array, seed: Float32Array, burst: Float32Array) => void
   ): void {
     if (dots > this.capacity) {
       this.points.geometry.dispose();
@@ -309,10 +363,17 @@ class StippleCloud {
     const anchor = geometry.getAttribute('position') as BufferAttribute;
     const dot = geometry.getAttribute('aDot') as BufferAttribute;
     const seed = geometry.getAttribute('aSeed') as BufferAttribute;
-    fill(anchor.array as Float32Array, dot.array as Float32Array, seed.array as Float32Array);
+    const burst = geometry.getAttribute('aBurst') as BufferAttribute;
+    fill(
+      anchor.array as Float32Array,
+      dot.array as Float32Array,
+      seed.array as Float32Array,
+      burst.array as Float32Array
+    );
     anchor.needsUpdate = true;
     dot.needsUpdate = true;
     seed.needsUpdate = true;
+    burst.needsUpdate = true;
     geometry.setDrawRange(0, dots);
     this.points.visible = dots > 0;
   }
@@ -357,6 +418,7 @@ export class FaunaStipple {
     twinkle: 0,
     twinkleS: JELLY_PULSE_S,
     lift: FURNITURE_DOT_GAIN.jellyBeatLift,
+    burst: false,
   });
   readonly shoals = new StippleCloud('shoal', {
     periodS: SHOAL_PULSE_S,
@@ -367,9 +429,18 @@ export class FaunaStipple {
     twinkle: SHOAL_TWINKLE,
     twinkleS: SHOAL_TWINKLE_S,
     lift: 0,
+    burst: true,
   });
   private jellyKey = '';
   private shoalKey = '';
+  private shoalsShown: readonly ShoalTell[] = [];
+  /** Each shoal's tween, by its public id: what it eases from and to (as a
+   * ratio of the formed layout) and when it began on `burstClockS`. */
+  private readonly bursts = new Map<number, { from: Burst; to: Burst; startS: number }>();
+  /** Seconds since the first frame, unwrapped: a tween lasts a few seconds and
+   * must not replay when the pulse clock wraps. */
+  private burstClockS = 0;
+  private burstOriginMs: number | null = null;
   private reducedMotion = false;
   /** Seconds of pulse elapsed, held still under reduced motion. */
   private clockS = 0;
@@ -382,7 +453,14 @@ export class FaunaStipple {
   /** Reduced motion (docs/ui-ux.md §11) holds the pulse and keeps the dots:
    * the stipple is the chart data, and only its breathing is decoration. */
   setReducedMotion(reduced: boolean): void {
+    const was = this.reducedMotion;
     this.reducedMotion = reduced;
+    // It snaps a shoal between layouts too, as it did before the burst: one
+    // mid-tween lands where it was going.
+    if (reduced && !was && this.bursts.size > 0) {
+      this.shoalKey = '';
+      this.setShoals(this.shoalsShown);
+    }
   }
 
   /** The public layers, as the snapshot carries them. */
@@ -396,15 +474,47 @@ export class FaunaStipple {
         );
       });
     }
+    this.setShoals(shoals);
+  }
+
+  private setShoals(shoals: readonly ShoalTell[]): void {
     const shoalKey = shoals
       .map((s) => `${s.id}:${s.x}:${s.y}:${s.depth}:${s.scattered ? 1 : 0}`)
       .join('|');
-    if (shoalKey !== this.shoalKey) {
-      this.shoalKey = shoalKey;
-      this.shoals.write(shoals.length * SHOAL_DOTS, (anchor, dot, seed) => {
-        shoals.forEach((shoal, i) => writeShoal(shoal, i * SHOAL_DOTS, anchor, dot, seed));
+    if (shoalKey === this.shoalKey) return;
+    this.shoalKey = shoalKey;
+    this.shoalsShown = shoals;
+    const now = this.burstClockS;
+    const live = new Set<number>();
+    const from = shoals.map((shoal) => {
+      live.add(shoal.id);
+      const to = shoal.scattered ? SCATTERED_RATIO : FORMED_RATIO;
+      const prior = this.bursts.get(shoal.id);
+      // A shoal first seen is drawn as it is: it burst before we looked.
+      let start: Burst = to;
+      if (prior !== undefined && !this.reducedMotion) {
+        // From wherever it is drawn now, so a reform mid-burst turns back
+        // from there rather than jumping to the end of the burst first.
+        const k = burstSettle(
+          prior.startS,
+          prior.to[0] < prior.from[0] ? SHOAL_GATHER_S : SHOAL_BURST_S,
+          now
+        );
+        start = [0, 1, 2].map((c) => prior.from[c]! + (prior.to[c]! - prior.from[c]!) * k) as Burst;
+      }
+      if (prior === undefined || prior.to !== to || this.reducedMotion) {
+        this.bursts.set(shoal.id, { from: start, to, startS: now });
+      }
+      const state = this.bursts.get(shoal.id)!;
+      return [state.from[0] / to[0], state.from[1] / to[1], state.from[2] / to[2], state.startS];
+    });
+    for (const id of this.bursts.keys()) if (!live.has(id)) this.bursts.delete(id);
+    this.shoals.write(shoals.length * SHOAL_DOTS, (anchor, dot, seed, burst) => {
+      shoals.forEach((shoal, i) => {
+        writeShoal(shoal, i * SHOAL_DOTS, anchor, dot, seed);
+        for (let m = 0; m < SHOAL_DOTS; m++) burst.set(from[i]!, (i * SHOAL_DOTS + m) * 4);
       });
-    }
+    });
   }
 
   update(frame: StippleFrame): void {
@@ -414,6 +524,9 @@ export class FaunaStipple {
       this.clockS = (this.clockS + dt) % PULSE_WRAP_S;
     }
     this.lastTickAt = frame.now;
+    this.burstOriginMs ??= frame.now;
+    this.burstClockS = (frame.now - this.burstOriginMs) / 1000;
+    this.shoals.uniforms.uBurstS.value = this.burstClockS;
     for (const cloud of [this.jellies, this.shoals]) {
       const u = cloud.uniforms;
       u.uTime.value = this.clockS;
@@ -546,7 +659,8 @@ function bellOffsets(rng: () => number): Float32Array {
 /**
  * One shoal's motes, written at `base`: a flattened cloud about the shoal's
  * centre, tight while formed and flung wide and dim while scattered. The
- * scatter lands on the tick the server says so, because it is the tell.
+ * scatter starts on the tick the server says so, because it is the tell; the
+ * burst toward this layout is `aBurst`'s, written beside it by `setShoals`.
  */
 function writeShoal(
   shoal: ShoalTell,

@@ -398,6 +398,11 @@ That is one draw call for any number of guns and none once the last ring fades. 
 hull's recoil costs no draw: it moves the hull the view already places. The probe reports
 `shots` fired, their live `shotParticles`, and the hulls still `recoiling`.
 
+An own harvester's silt plume is one more `Points` (`siltPlume.ts`, #1512): a fixed ring of
+960 motes, twenty-four for each of the 40 berths, so a berth list of harvesters all on
+Overburden fits it. That is one draw call for every plume and none once the last mote
+settles. The probe reports the live motes as `plumeMotes`.
+
 A hit on a live enemy track (`trackHit.ts`, #1517) is drawn on the chart, not in the
 conn view, into the `Graphics` the contact already owns: no display object of its own, at
 most 24 dots and one disc per struck track while it lives, and nothing once it is spent.
