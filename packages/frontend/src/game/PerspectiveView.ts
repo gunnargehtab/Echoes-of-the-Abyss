@@ -3072,7 +3072,7 @@ export class PerspectiveView {
     props.rebuild(
       mission,
       (xM, yM) => depthToWorldY(seabedDepthAtM(mission, seed, rockTopM, xM, yM)),
-      mapProps(region.mapId)
+      mapProps(region.mapId, this.look)
     );
     mesh.add(props.group);
     return {

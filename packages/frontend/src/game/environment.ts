@@ -27,6 +27,7 @@
  */
 
 import { Biome, PLACED_GROUND, paintGround } from '@echoes/shared';
+import type { WorldLook } from './tutorialLook.ts';
 
 /**
  * The published grid, as placement reads it — the shape of the client's
@@ -322,6 +323,21 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
  * Labyrinth) dresses at ~102 k, and the whole layer still sits well inside the
  * conn view's 400 k on-screen budget. */
 export const PROP_INSTANCE_CAP = 600;
+
+/**
+ * TUNABLE — a look's density over the registry's, per biome: docs/visual-reboot.md
+ * §4. The registry's Coral Ruins rows are the low ones because the ruins ring is
+ * the largest biome on two of the three skirmish maps; on Sorrowgate they left
+ * the court two props and the Concourse one, so the most human ground in the
+ * setting read as the barest (#1532). The look raises them, and the Commit's
+ * trench kit with them, on the prologue's ground alone: no skirmish map and no
+ * other mission is drawn in this look. Dressing only — a prop reads the cells
+ * and never writes one — and spent inside the same reservation below.
+ */
+export const LOOK_DENSITY: Record<WorldLook, Partial<Record<Biome, number>>> = {
+  standard: {},
+  sorrowgate: { [Biome.CoralRuins]: 3, [Biome.AbyssalTrench]: 2 },
+};
 export const PROP_TRI_RESERVATION = 105_000;
 
 export interface PropPlacement {
@@ -371,11 +387,12 @@ export function propHash(values: readonly number[]): number {
  */
 export function placeProps(
   terrain: TerrainGrid,
-  specs: readonly PropSpec[] = ENVIRONMENT_PROPS
+  specs: readonly PropSpec[] = ENVIRONMENT_PROPS,
+  look: WorldLook = 'standard'
 ): PropPlacement[] {
   const placements: PropPlacement[] = [];
   let trisSpent = 0;
-  for (const { placement, spec } of scatterProps(terrain, specs)) {
+  for (const { placement, spec } of scatterProps(terrain, specs, look)) {
     if (placements.length >= PROP_INSTANCE_CAP) break;
     if (trisSpent + spec.triBudget > PROP_TRI_RESERVATION) break;
     trisSpent += spec.triBudget;
@@ -391,28 +408,34 @@ export function placeProps(
  * alone, so these are the placements the session's layer stands on the room's
  * first ground, and the join and the return's swap trade like for like.
  */
-export function mapProps(mapId: string): PropPlacement[] {
+export function mapProps(mapId: string, look: WorldLook = 'standard'): PropPlacement[] {
   const ground = PLACED_GROUND[mapId];
   if (ground === undefined) return [];
   const cells = paintGround(ground);
-  return placeProps({
-    cols: cells.cols,
-    rows: cells.rows,
-    cellM: cells.cellM,
-    biomes: Array.from(cells.biomes),
-    floor: Array.from(cells.floor),
-    ceiling: Array.from(cells.ceiling),
-  });
+  return placeProps(
+    {
+      cols: cells.cols,
+      rows: cells.rows,
+      cellM: cells.cellM,
+      biomes: Array.from(cells.biomes),
+      floor: Array.from(cells.floor),
+      ceiling: Array.from(cells.ceiling),
+    },
+    ENVIRONMENT_PROPS,
+    look
+  );
 }
 
 /** Unbudgeted candidates, shared with the opt-in view-bounded material study.
  * Consumers must apply both reservations before creating instances. */
 export function* scatterProps(
   terrain: TerrainGrid,
-  specs: readonly PropSpec[] = ENVIRONMENT_PROPS
+  specs: readonly PropSpec[] = ENVIRONMENT_PROPS,
+  look: WorldLook = 'standard'
 ): Generator<{ placement: PropPlacement; spec: PropSpec }> {
   const { cols, rows, cellM } = terrain;
   if (specs.length === 0) return;
+  const lookDensity = LOOK_DENSITY[look];
 
   const isRock = (i: number) => terrain.ceiling[i]! > terrain.floor[i]!;
   const isRoofed = (i: number) => terrain.ceiling[i]! !== 0 && !isRock(i);
@@ -467,8 +490,9 @@ export function* scatterProps(
           terrain.ceiling[index]!,
           s,
         ];
-        const whole = Math.floor(spec.density);
-        const count = whole + (propHash([...cell, 0x1b873593]) < spec.density - whole ? 1 : 0);
+        const density = spec.density * (lookDensity[terrain.biomes[index] as Biome] ?? 1);
+        const whole = Math.floor(density);
+        const count = whole + (propHash([...cell, 0x1b873593]) < density - whole ? 1 : 0);
 
         for (let k = 0; k < count; k++) {
           // Inside its own cell, like an ember: a prop that leaned over a

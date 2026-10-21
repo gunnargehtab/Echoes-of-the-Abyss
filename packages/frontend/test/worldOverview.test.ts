@@ -33,7 +33,7 @@ import {
 import { createHost, HeadlessWebGLRenderer, pumpAnimationFrames } from './support/headless.ts';
 import { cannedSnapshot } from './support/cannedMatch.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
-import { placeProps, type PropPlacement } from '../src/game/environment.ts';
+import { ENVIRONMENT_PROPS, placeProps, type PropPlacement } from '../src/game/environment.ts';
 import { EnvironmentLayer } from '../src/game/environmentLayer.ts';
 import {
   VERTS_PER_CELL,
@@ -754,8 +754,9 @@ describe("another region's detail, where no session holds it (§7.5)", () => {
         PropPlacement[],
       ];
       // Exactly what the session's layer stands on the room's first ground.
-      assert.deepEqual(placements, placeProps(sorrowgate()));
-      assert.equal(placements.length, 74);
+      // In the prologue's look, whose density the baseline shares (#1532).
+      assert.deepEqual(placements, placeProps(sorrowgate(), ENVIRONMENT_PROPS, 'sorrowgate'));
+      assert.equal(placements.length, 186);
       for (const p of placements) {
         assert.equal(
           groundY(p.xM, p.yM),

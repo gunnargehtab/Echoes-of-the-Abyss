@@ -94,6 +94,16 @@ rebuild that subscribed while an asset was already loading; a correct placement 
 alone does not prove an inhabited scene. Restoring the already-approved kit is not a
 new prop-density choice.
 
+The look then makes one density choice of its own ([#1532](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1532)).
+At the registry's densities the court stood two props, the Upper Concourse one and the
+Service Lock none, because those rows are set low for the skirmish maps' ruins rings. The
+prologue's look stands Coral Ruins props at three times the registry's density and the
+Commit's trench kit at twice it: 186 props and about 49,000 triangles, against 74 and
+18,900, inside gate 6's prop reservation. `LOOK_DENSITY` in
+`packages/frontend/src/game/environment.ts` holds the factors. No other look and no other
+biome moves, and the slope and roof rules still keep tall props off the cliffs and out of
+the lock.
+
 ## 5. Runtime material contract
 
 One reusable linear-data surface texture supplies mottling, micro-height and roughness.
