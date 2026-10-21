@@ -1,11 +1,12 @@
 /**
- * The world view, identical in all ten frames.
+ * The world view, identical in every frame but for whose fleet it is.
  *
  * Every mockup draws the same water, the same fleet and the same four contacts,
  * because the thing under comparison is the chrome and a comparison whose
  * frames disagree about the scene is not one. Only the state extras differ:
  * a route and an order marker for the order frames, a placement ghost for the
- * production ones.
+ * production ones. The faction-accent row also passes `own`, which re-inks the
+ * player's fleet and keeps the named contacts off the player's own navy.
  *
  * Drawn to docs/ui-ux.md §4's rendering contract rather than to taste — the
  * tier marks carry the alphas and relative radii of `TIER_SHAPE`, the veil of
@@ -13,8 +14,6 @@
  */
 
 import { BIOME, FACTION, GLYPH, NEON, RESOURCE, TEXT, TIER, VENT_EMBER } from './tokens.mjs';
-
-const AMBER = FACTION.bathyarch.primary;
 
 /** Where the ring opens, per state — the pointer is the ring's anchor. */
 export const CURSOR = {
@@ -180,8 +179,17 @@ function healthBar(x, y, w, frac, lost) {
 }
 
 /** The four tiers of §4, each at its own alpha and its own honesty about edges. */
-function contacts() {
+/**
+ * Faction uniqueness is enforced per match, so the scene's two named navies
+ * cannot be the player's own: when the frame is drawn for the Knights or the
+ * Directorate, that contact is a Consortium boat instead. Only its ink and
+ * glyph change; position, tier and alpha stay where the comparison put them.
+ */
+function contacts(own) {
   const t3 = TIER[3];
+  const t3Ink = FACTION[own === 'hadron' ? 'bathyarch' : 'hadron'].glow;
+  const t3Glyph = GLYPH[own === 'hadron' ? 'bathyarch' : 'hadron'];
+  const t4 = own === 'directorate' ? 'bathyarch' : 'directorate';
   return `
   <!-- Tier 1: a haze, because a haze is what the server sent -->
   <circle cx="1548" cy="322" r="98" fill="url(#hazeT1)"/>
@@ -191,13 +199,13 @@ function contacts() {
   <ellipse cx="1176" cy="424" rx="54" ry="40" fill="url(#blobT2)"/>
 
   <!-- Tier 3: faction ink, the navy's glyph beside it, and a count that looks like an estimate -->
-  <circle cx="1622" cy="628" r="26" fill="none" stroke="${FACTION.hadron.accent}" stroke-opacity="0.5" stroke-width="1.2"/>
-  <circle cx="1622" cy="628" r="7" fill="${FACTION.hadron.accent}" fill-opacity="${t3.alpha}"/>
-  <circle cx="1622" cy="628" r="7" fill="none" stroke="${FACTION.hadron.accent}" stroke-width="1.3"/>
+  <circle cx="1622" cy="628" r="26" fill="none" stroke="${t3Ink}" stroke-opacity="0.5" stroke-width="1.2"/>
+  <circle cx="1622" cy="628" r="7" fill="${t3Ink}" fill-opacity="${t3.alpha}"/>
+  <circle cx="1622" cy="628" r="7" fill="none" stroke="${t3Ink}" stroke-width="1.3"/>
   <g transform="translate(1656 628) scale(0.62)" opacity="0.95">
-    <path d="${GLYPH.hadron}" fill="none" stroke="${FACTION.hadron.accent}" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="${t3Glyph}" fill="none" stroke="${t3Ink}" stroke-width="2.4" stroke-linejoin="round"/>
   </g>
-  <text x="1622" y="672" fill="${FACTION.hadron.accent}" font-family="ui-monospace, Consolas, monospace" font-size="11" letter-spacing="1.4" text-anchor="middle" opacity="0.92">~3</text>
+  <text x="1622" y="672" fill="${t3Ink}" font-family="ui-monospace, Consolas, monospace" font-size="11" letter-spacing="1.4" text-anchor="middle" opacity="0.92">~3</text>
 
   <!-- Tier 4: crisp, with heading, health and the brackets that mirror the lock tone -->
   <g>
@@ -206,7 +214,7 @@ function contacts() {
     ${hull(1059, 329, 0.82, TIER[4].ink, -33)}
     ${healthBar(1037, 358, 44, 0.62, 0.16)}
     <g transform="translate(1010 329) scale(0.5)">
-      <path d="${GLYPH.directorate}" fill="none" stroke="${FACTION.directorate.accent}" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="${GLYPH[t4]}" fill="none" stroke="${FACTION[t4].glow}" stroke-width="2.6" stroke-linejoin="round"/>
     </g>
   </g>`;
 }
@@ -225,18 +233,18 @@ function marks() {
   </g>`;
 }
 
-function ownForce(state) {
+function ownForce(state, ink) {
   const sel = `${selectionRing(884, 706, 30)}${selectionRing(942, 752, 30)}`;
   // The selected hull's own detection ring — predicted client-side from the
   // same maths the server runs (docs/ui-ux.md §12), so it is honest to draw.
   const ring = `<ellipse cx="884" cy="706" rx="268" ry="124" fill="none" stroke="${NEON.cyan}" stroke-opacity="0.18" stroke-width="1.4" stroke-dasharray="5 7"/>`;
   return `<g>
     ${ring}
-    ${structure(742, 596, 1.15, AMBER, 'bastion')}
-    ${structure(646, 668, 1, AMBER, 'foundry')}
-    ${hull(1296, 762, 0.95, AMBER, 8)}
-    ${hull(884, 706, 1, AMBER, -12)}
-    ${hull(942, 752, 1, AMBER, -12)}
+    ${structure(742, 596, 1.15, ink, 'bastion')}
+    ${structure(646, 668, 1, ink, 'foundry')}
+    ${hull(1296, 762, 0.95, ink, 8)}
+    ${hull(884, 706, 1, ink, -12)}
+    ${hull(942, 752, 1, ink, -12)}
     ${sel}
     ${state === 'build' ? `<ellipse cx="742" cy="596" rx="54" ry="26" fill="none" stroke="${NEON.cyan}" stroke-width="1.4" stroke-opacity="0.75"/>` : ''}
   </g>`;
@@ -271,7 +279,8 @@ export function pointer(x, y) {
   </g>`;
 }
 
-export function world(state = 'rest') {
+/** `own` is the player's navy: its primary inks the fleet, as `palette.primary` does. */
+export function world(state = 'rest', { own = 'bathyarch' } = {}) {
   return `<svg class="world" viewBox="0 0 1920 1080" width="1920" height="1080" aria-hidden="true" focusable="false">
     ${defs()}
     <rect x="0" y="0" width="1920" height="1080" fill="url(#column)"/>
@@ -279,9 +288,9 @@ export function world(state = 'rest') {
     ${ground()}
     ${veil()}
     ${marks()}
-    ${ownForce(state)}
+    ${ownForce(state, FACTION[own].primary)}
     ${state === 'orders' ? orderExtras() : ''}
     ${state === 'build' ? buildExtras() : ''}
-    ${contacts()}
+    ${contacts(own)}
   </svg>`;
 }

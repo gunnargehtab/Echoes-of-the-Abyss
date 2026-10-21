@@ -9,7 +9,7 @@
  * turned out to mean.
  */
 
-import { BLACK, FONT, NEON, SIG, TEXT, TIER } from './tokens.mjs';
+import { BLACK, FACTION, FONT, NEON, SIG, TEXT, TIER } from './tokens.mjs';
 
 export const CSS = `
   * { box-sizing: border-box; }
@@ -229,8 +229,26 @@ export function logHeight(rows) {
   return HEAD_H + rows * LOG_ROW_H + 4;
 }
 
-export function logRows(limit = 7, fontSize = 10) {
-  return LOG_ROWS.slice(0, limit)
+/**
+ * The two named rows, re-named when the frame is drawn for the navy they name:
+ * faction uniqueness is per match, so the Knights' player hears a Consortium
+ * flight and the Directorate's player tracks a Consortium Tender instead.
+ */
+function rowsFor(own) {
+  if (own === 'hadron') {
+    return LOG_ROWS.map((r, i) =>
+      i === 1 ? [r[0], r[1], '~3 Bathyarch Consortium', r[3], FACTION.bathyarch.glow, r[5]] : r
+    );
+  }
+  if (own === 'directorate') {
+    return LOG_ROWS.map((r, i) => (i === 3 ? [r[0], r[1], 'Tender', ...r.slice(3)] : r));
+  }
+  return LOG_ROWS;
+}
+
+export function logRows(limit = 7, fontSize = 10, { own = 'bathyarch' } = {}) {
+  return rowsFor(own)
+    .slice(0, limit)
     .map(
       ([t, tier, what, detail, ink, op]) => `
       <div class="row" style="gap:8px;height:${LOG_ROW_H}px;padding:0 9px;font-size:${fontSize}px;letter-spacing:0.06em;opacity:${op};border-bottom:1px solid rgba(214,230,240,0.04);white-space:nowrap">
