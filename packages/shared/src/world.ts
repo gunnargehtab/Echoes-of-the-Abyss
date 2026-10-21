@@ -16,6 +16,7 @@
  */
 
 import { WORLD } from './constants.js';
+import { PLACED_GROUND, paintGround, type GroundCells, type MapGround } from './ground.js';
 import { MISSION_HEADERS, PROLOGUE_SORROWGATE_HEADER } from './missions.js';
 
 /** A point or a rectangle corner, in metres. */
@@ -170,14 +171,16 @@ function rectWithin(inner: PlanRect, outer: PlanRect): boolean {
  *
  * The rules §7.2 states: ids unique; each region names a map some mission
  * plays on; corners and sizes whole 250 m cells, so a mission's cells sit on
- * the atlas grid exactly; and every region inside the frame with room for
- * §7.3's whole surround (`detailRect`). Overlap is not
- * checked here: two placed maps may not overlap, but that is the ground's
- * authoring (#1457) to prove once there are two.
+ * the atlas grid exactly; every region inside the frame with room for §7.3's
+ * whole surround (`detailRect`); and two regions overlap only where every
+ * shared cell has one biome, floor and ceiling in both maps' ground, since a
+ * heightfield holds one floor a cell (#1527). An overlap whose ground is not
+ * in `grounds` cannot be shown to agree, so it is refused too.
  */
 export function worldRegionProblems(
   regions: readonly WorldRegion[],
-  knownMapIds: ReadonlySet<string> = new Set(MISSION_HEADERS.map((header) => header.mapId))
+  knownMapIds: ReadonlySet<string> = new Set(MISSION_HEADERS.map((header) => header.mapId)),
+  grounds: Readonly<Record<string, MapGround>> = PLACED_GROUND
 ): string[] {
   const problems: string[] = [];
   const seen = new Set<string>();
@@ -210,7 +213,88 @@ export function worldRegionProblems(
       problems.push(`${region.id}: its detail surround leaves the atlas`);
     }
   }
+  const painted = new Map<string, GroundCells>();
+  const cellsOf = (mapId: string): GroundCells | undefined => {
+    const ground = grounds[mapId];
+    if (ground === undefined) return undefined;
+    let cells = painted.get(mapId);
+    if (cells === undefined) painted.set(mapId, (cells = paintGround(ground)));
+    return cells;
+  };
+  for (let i = 0; i < regions.length; i++) {
+    for (let j = i + 1; j < regions.length; j++) {
+      const problem = overlapProblem(regions[i]!, regions[j]!, cellsOf);
+      if (problem !== undefined) problems.push(problem);
+    }
+  }
   return problems;
+}
+
+/**
+ * Why two regions may not overlap as placed, or undefined when they may:
+ * they do not overlap, or every 250 m cell they share agrees. A shared edge is
+ * not an overlap, since a region is half-open (`regionContains`).
+ */
+function overlapProblem(
+  a: WorldRegion,
+  b: WorldRegion,
+  cellsOf: (mapId: string) => GroundCells | undefined
+): string | undefined {
+  const west = Math.max(a.x, b.x);
+  const east = Math.min(a.x + a.widthM, b.x + b.widthM);
+  const north = Math.max(a.y, b.y);
+  const south = Math.min(a.y + a.heightM, b.y + b.heightM);
+  if (east <= west || south <= north) return undefined;
+  const pair = `${a.id} and ${b.id}`;
+  const cellsA = cellsOf(a.mapId);
+  const cellsB = cellsOf(b.mapId);
+  if (cellsA === undefined || cellsB === undefined) {
+    const missing = cellsA === undefined ? a : b;
+    return `${pair}: overlap, and ${missing.id}'s ground is not placed to compare`;
+  }
+  const cell = WORLD.DETAIL_CELL_M;
+  let disagree = 0;
+  let first: PlanPoint | undefined;
+  for (let y = north + cell / 2; y < south; y += cell) {
+    for (let x = west + cell / 2; x < east; x += cell) {
+      if (groundAgrees(a, cellsA, b, cellsB, x, y)) continue;
+      disagree++;
+      first ??= { x: x - cell / 2, y: y - cell / 2 };
+    }
+  }
+  if (disagree === 0) return undefined;
+  return `${pair}: overlap, and ${disagree} shared cells disagree, the first at (${first!.x}, ${first!.y})`;
+}
+
+/**
+ * Do two placed maps paint the same biome, floor and ceiling under an atlas
+ * point? A point off either map's painted grid never agrees: there is nothing
+ * there to share.
+ */
+function groundAgrees(
+  a: WorldRegion,
+  cellsA: GroundCells,
+  b: WorldRegion,
+  cellsB: GroundCells,
+  x: number,
+  y: number
+): boolean {
+  const ia = cellIndex(cellsA, atlasToLocal(a, { x, y }));
+  const ib = cellIndex(cellsB, atlasToLocal(b, { x, y }));
+  return (
+    ia >= 0 &&
+    ib >= 0 &&
+    cellsA.biomes[ia] === cellsB.biomes[ib] &&
+    cellsA.floor[ia] === cellsB.floor[ib] &&
+    cellsA.ceiling[ia] === cellsB.ceiling[ib]
+  );
+}
+
+function cellIndex(cells: GroundCells, local: PlanPoint): number {
+  const col = Math.floor(local.x / cells.cellM);
+  const row = Math.floor(local.y / cells.cellM);
+  if (col < 0 || row < 0 || col >= cells.cols || row >= cells.rows) return -1;
+  return row * cells.cols + col;
 }
 
 /**

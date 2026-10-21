@@ -372,3 +372,12 @@ export const SORROWGATE_GROUND: MapGround = {
     },
   ],
 };
+
+/**
+ * The public ground of each placed map, by map id. Here rather than beside
+ * the atlas (`rift.ts`) because `worldRegionProblems` compares two placed
+ * maps' cells, and `world.ts` cannot import the file that imports it.
+ */
+export const PLACED_GROUND: Readonly<Record<string, MapGround>> = {
+  sorrowgate: SORROWGATE_GROUND,
+};

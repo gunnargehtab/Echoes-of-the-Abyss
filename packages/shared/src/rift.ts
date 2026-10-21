@@ -17,7 +17,7 @@
 
 import { WORLD } from './constants.js';
 import {
-  SORROWGATE_GROUND,
+  PLACED_GROUND,
   paintGround,
   paintRegions,
   type GroundCells,
@@ -789,11 +789,6 @@ export const RIFT_GROUND: MapGround = {
     oval(14, 82, 13, 8, AbyssalTrench, 3_100, 'The Lip — the edge that carries like a trench'),
     oval(15, 83, 11, 7, AbyssalTrench, 4_410, 'The Mouth — the floor of the setting'),
   ],
-};
-
-/** The public ground of each placed map, by map id (`ground.ts`). */
-export const PLACED_GROUND: Readonly<Record<string, MapGround>> = {
-  sorrowgate: SORROWGATE_GROUND,
 };
 
 /**
