@@ -1,5 +1,5 @@
 /**
- * Emit the ten artboards and the canvas manifest.
+ * Emit the fourteen artboards and the canvas manifest.
  *
  *   node docs/concept-art/hud-mockups/build.mjs
  *
@@ -10,6 +10,8 @@
  * the things that settle an argument about this interface are docs/ui-ux.md and
  * a person looking at it. What this script buys is that all ten frames draw the
  * same water from the same tokens, so the comparison is about chrome alone.
+ * The accent row is the one exception: it redraws the player's own fleet in
+ * each navy's ink, because a player's own hulls are never another navy's.
  */
 
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -22,6 +24,19 @@ import { ringRest, ringOrders, ringBuild, RING_CSS } from './designRing.mjs';
 import { classicRest, classicOrders, classicBuild } from './designClassic.mjs';
 import { improvedRest, improvedOrders, improvedBuild } from './designImproved.mjs';
 import { FRAME } from './tokens.mjs';
+
+/**
+ * docs/ui-ux.md §12.5's open question — a faction accent on the selection card
+ * and the command card's rule line — drawn once per navy so it can be judged
+ * rather than imagined. Not chosen; a row on the chosen page because it is a
+ * proposed dress for that direction, not a direction of its own.
+ */
+const ACCENT_FACTIONS = [
+  ['bathyarch', 'Bathyarch'],
+  ['pelagia', 'Pelagia'],
+  ['directorate', 'Directorate'],
+  ['hadron', 'Hadron'],
+];
 
 const OUT = join(dirname(fileURLToPath(import.meta.url)), 'artboards');
 
@@ -54,6 +69,13 @@ const FRAMES = [
     css: '',
     page: 'page-1',
   },
+  ...ACCENT_FACTIONS.map(([key, name]) => ({
+    file: `Accent${name}.dc.html`,
+    title: `B · Console — accent, ${key}`,
+    body: () => classicOrders({ faction: key }),
+    css: '',
+    page: 'page-1',
+  })),
   {
     file: 'RingRest.dc.html',
     title: 'A · Ring — at rest',
@@ -104,13 +126,17 @@ const PAGES = [
 ];
 
 /** One row per design, 160 px between frames and 200 px between rows. */
-const COL = [0, 2080, 4160];
-const ROW = { today: 0, console: 1280, ring: 0, improved: 1280 };
+const COL = [0, 2080, 4160, 6240];
+const ROW = { today: 0, console: 1280, accent: 2560, ring: 0, improved: 1280 };
 const PLACE = {
   'Today.dc.html': [COL[0], ROW.today],
   'Main.dc.html': [COL[0], ROW.console],
   'ClassicOrders.dc.html': [COL[1], ROW.console],
   'ClassicBuild.dc.html': [COL[2], ROW.console],
+  'AccentBathyarch.dc.html': [COL[0], ROW.accent],
+  'AccentPelagia.dc.html': [COL[1], ROW.accent],
+  'AccentDirectorate.dc.html': [COL[2], ROW.accent],
+  'AccentHadron.dc.html': [COL[3], ROW.accent],
   'RingRest.dc.html': [COL[0], ROW.ring],
   'RingOrders.dc.html': [COL[1], ROW.ring],
   'RingBuild.dc.html': [COL[2], ROW.ring],
@@ -202,6 +228,32 @@ Permanence, which is the genre's oldest and best argument. The roster makes a gr
 
 COSTS, HONESTLY
 It is the least interesting of the three to look at. It is the worst fit for a phone, where the blocks have to stack or scroll. And a game whose entire subject is a dark ocean gives a fifth of the ocean away to instrumentation.`,
+  },
+  {
+    id: 'note-accent',
+    page: 'page-1',
+    x: NOTE_X,
+    y: ROW.accent,
+    w: NOTE_W,
+    text: `B · CONSOLE — FACTION ACCENT, PROPOSED
+
+ui-ux.md §12.5 leaves one question open: a faction accent on the selection card or the command bar's rule line. Ink on chrome, never a moved panel or a re-shaped meter. These four frames draw it, so it can be judged rather than imagined.
+
+WHAT CHANGES
+· The selection and command headers trade the magenta rule for a 2 px rule in the navy's glow ink.
+· The selection header carries the navy's glyph, because a hue is never the only identifier (§11).
+· The fleet and the selection wireframe wear the navy's primary, which is the hull's ink and always was.
+
+WHAT DOES NOT
+Layout, cells, the SIG meter, the scope, the log, the objectives and every other rule. Cyan still tells, magenta still asks, red still warns.
+
+WHAT THE FRAMES SHOW
+· Consortium amber is also the console's price, idle and SIG-caution ink. On a Bathyarch console the accent reads as one more warning.
+· Directorate crimson sits near threat red and the Tier 4 track. The accent reads as alarm.
+· Commune green and Knights violet stay distinct from every chrome ink.
+
+NOT OWED
+§12.5 says it ships only with an argument in sound or depth. These frames carry none. They show what the dress costs.`,
   },
   {
     id: 'note-improved',

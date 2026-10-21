@@ -1,7 +1,7 @@
 # In-match interface — three directions
 
-Ten frames of one moment, comparing three ways to lay out the HUD a player holds
-during a mission. It is concept art and a decision aid, not a specification:
+Fourteen frames of one moment, comparing three ways to lay out the HUD a player holds
+during a mission, and one proposed faction dress for the chosen layout. It is concept art and a decision aid, not a specification:
 [ui-ux.md](../../ui-ux.md) stays the source of every rule cited below, and nothing here
 changes one until a direction is chosen and that document is edited to say so.
 
@@ -26,6 +26,7 @@ repaint.
 | **B · Console** | At rest · giving orders · production | **Chosen**, and the one still being iterated |
 | **A · Ring** | At rest · giving orders · production | Not chosen |
 | **C · Improved** | At rest · giving orders · production | Not chosen |
+| **B · Console, accent** | Giving orders, once per navy | Proposed, not chosen |
 
 The two unchosen directions are kept rather than deleted. A decision nobody wrote down is
 a decision somebody re-argues, and these frames plus their law-breaks are the whole record
@@ -155,6 +156,30 @@ back the most screen of anything left, but §3 wants own loudness permanently vi
 the console's five blocks are now dense enough that the strip would be competing rather
 than fitting.
 
+## B · Console, faction accent
+
+Proposed, not chosen. [ui-ux.md](../../ui-ux.md) §12.5 leaves one question open: a faction
+accent on the selection card or the command bar's rule line. These four frames draw it, one
+per navy, on the console's giving-orders moment.
+
+**Changes.** The selection and command headers trade the magenta rule for a 2 px rule in the
+navy's glow ink. The selection header carries the navy's glyph, so the hue is never alone
+(§11). Nothing moves and nothing changes shape.
+
+**Scene.** The player's fleet wears its own navy's primary. Faction uniqueness is per match,
+so a named contact that would be the player's own navy becomes a Consortium boat instead.
+
+**What the frames show.**
+
+- **Consortium amber** is also the console's price, idle and SIG-caution ink. The accent
+  reads as one more warning.
+- **Directorate crimson** sits near threat red and the Tier 4 track. The accent reads as
+  alarm.
+- **Commune green** and **Knights violet** stay clear of every chrome ink.
+
+**Not owed.** §12.5 ships the accent only with an argument in sound or depth. These frames
+make none. They show what the dress costs, so the question can be settled by looking.
+
 ## C · Improved
 
 Not chosen, and kept as the record of why. Same topology as today: strip, ribbon, scope,
@@ -188,10 +213,10 @@ meter, the plate VI card, and §13's priced buttons with the reason a greyed one
 node docs/concept-art/hud-mockups/build.mjs
 ```
 
-Writes the ten `.dc.html` files and `canvas.json` into `artboards/`. Not a gate, and never
+Writes the fourteen `.dc.html` files and `canvas.json` into `artboards/`. Not a gate, and never
 will be — a mockup is an argument, and what settles an argument about this interface is
 [ui-ux.md](../../ui-ux.md) and a person looking at the frames. What the script buys is
-that all ten draw the same water from the same tokens.
+that all fourteen draw the same water from the same tokens.
 
 Related: [ui-ux.md](../../ui-ux.md) · [style-neon-noir.md](../../style-neon-noir.md) ·
 [art-direction.md](../../art-direction.md) · [graphics-standards.md](../../graphics-standards.md)

@@ -36,7 +36,7 @@
  * (docs/ui-ux.md §10.5).
  */
 
-import { FONT, NEON, TEXT, FACTION } from './tokens.mjs';
+import { FONT, NEON, TEXT, FACTION, GLYPH } from './tokens.mjs';
 import {
   logRows,
   logHeight,
@@ -54,7 +54,6 @@ const CONSOLE_H = 208;
 const CONSOLE_TOP = 1080 - CONSOLE_H;
 const PAD = 8;
 const HEAD_H = 22;
-const AMBER = FACTION.bathyarch.primary;
 
 /** Block edges, chosen from what each block actually needs to say. */
 const B = {
@@ -84,12 +83,27 @@ function topStrip() {
   </div>`;
 }
 
+/**
+ * The two places docs/ui-ux.md §12.5 licenses faction dress on chrome: the
+ * selection card and the command card's rule line. Ink only — the header rule
+ * changes colour, the selection header gains the navy's glyph so the hue is
+ * never alone (§11), and nothing moves or changes shape. Every other block
+ * keeps its magenta rule whatever the faction.
+ */
+const DRESSED = new Set(['selection', 'commands']);
+
 /** A console block: its own bezel inside the console's, with a cyan cap. */
-function block(key, title, inner, { sub = '' } = {}) {
+function block(key, title, inner, { sub = '', faction = null } = {}) {
   const [x, w] = B[key];
+  const accent = faction && DRESSED.has(key) ? FACTION[faction].glow : null;
+  const rule = accent ? `2px solid ${accent}` : '1px solid rgba(255,61,166,0.24)';
+  const glyph =
+    accent && key === 'selection'
+      ? `<svg width="14" height="14" viewBox="-12 -12 24 24" aria-hidden="true" focusable="false" style="margin-right:6px;vertical-align:-2px"><path d="${GLYPH[faction]}" fill="none" stroke="${accent}" stroke-width="2.4" stroke-linejoin="round"/></svg>`
+      : '';
   return `<div style="position:absolute;left:${x}px;top:${PAD}px;width:${w}px;bottom:${PAD}px;background:rgba(7,14,26,0.82);border:1px solid rgba(255,61,166,0.3);border-radius:3px;overflow:hidden">
-    <div class="row" style="justify-content:space-between;height:${HEAD_H}px;padding:0 8px;border-bottom:1px solid rgba(255,61,166,0.24);font-family:${FONT.display};font-weight:600;font-size:13px;letter-spacing:0.17em;text-transform:uppercase;color:${TEXT.cyan};text-shadow:0 0 8px rgba(53,224,255,0.4)">
-      <span>${title}</span><span style="font-family:${FONT.data};font-size:9px;font-weight:400;letter-spacing:0.11em;color:${TEXT.dim};text-shadow:none">${sub}</span>
+    <div class="row" style="justify-content:space-between;height:${HEAD_H}px;padding:0 8px;border-bottom:${rule};font-family:${FONT.display};font-weight:600;font-size:13px;letter-spacing:0.17em;text-transform:uppercase;color:${TEXT.cyan};text-shadow:0 0 8px rgba(53,224,255,0.4)">
+      <span>${glyph}${title}</span><span style="font-family:${FONT.data};font-size:9px;font-weight:400;letter-spacing:0.11em;color:${TEXT.dim};text-shadow:none">${sub}</span>
     </div>
     <div style="height:calc(100% - ${HEAD_H}px)">${inner}</div>
   </div>`;
@@ -130,7 +144,12 @@ function commandCard(cells) {
 }
 
 /** The selection: a small wireframe, then six facts in a grid instead of three lines. */
-function selectionBlock(name, badge, stats, { hull = 0.88, lost = 0.08, note = '' } = {}) {
+function selectionBlock(
+  name,
+  badge,
+  stats,
+  { hull = 0.88, lost = 0.08, note = '', ink = FACTION.bathyarch.primary } = {}
+) {
   const statCell = ([k, v, ink]) => `
     <div class="col" style="gap:0;text-align:left;min-width:0">
       <span style="font-size:8.5px;letter-spacing:0.14em;color:${TEXT.dim}">${k}</span>
@@ -141,8 +160,8 @@ function selectionBlock(name, badge, stats, { hull = 0.88, lost = 0.08, note = '
       <svg width="34" height="34" viewBox="-22 -22 44 44" aria-hidden="true" focusable="false" style="flex:0 0 34px">
         <circle cx="0" cy="0" r="20" fill="none" stroke="${NEON.cyan}" stroke-opacity="0.16" stroke-width="1"/>
         <g transform="scale(1.05)">
-          <path d="M -17 0 L -9 -5 L 12 -5 L 19 0 L 12 5 L -9 5 Z" fill="none" stroke="${AMBER}" stroke-width="1.1"/>
-          <path d="M -4 -5 L 3 -5 L 3 -9 L -2 -9 Z" fill="none" stroke="${AMBER}" stroke-width="0.9"/>
+          <path d="M -17 0 L -9 -5 L 12 -5 L 19 0 L 12 5 L -9 5 Z" fill="none" stroke="${ink}" stroke-width="1.1"/>
+          <path d="M -4 -5 L 3 -5 L 3 -9 L -2 -9 Z" fill="none" stroke="${ink}" stroke-width="0.9"/>
         </g>
       </svg>
       <span style="flex:1 1 auto;font-family:${FONT.display};font-weight:600;font-size:19px;letter-spacing:0.08em;color:${NEON.cyan};text-shadow:0 0 10px rgba(53,224,255,0.4);text-align:left;white-space:nowrap">${name}</span>
@@ -262,10 +281,10 @@ function consoleShell(inner) {
   </div>`;
 }
 
-function sideChrome() {
+function sideChrome(own = 'bathyarch') {
   return `
   ${depthRibbon({ top: 68, height: 700, plated: true })}
-  ${plate(`right:14px;top:68px;width:352px;height:${logHeight(7)}px;overflow:hidden;`, logRows(7), { title: 'Contact Log', sub: '4 HEARD' })}
+  ${plate(`right:14px;top:68px;width:352px;height:${logHeight(7)}px;overflow:hidden;`, logRows(7, 10, { own }), { title: 'Contact Log', sub: '4 HEARD' })}
   ${plate(`right:14px;top:${68 + logHeight(7) + 12}px;width:352px;height:${objHeight(3)}px;overflow:hidden;`, objectiveRows(), { title: 'The Sorrowgate', sub: 'T+06:12' })}`;
 }
 
@@ -383,15 +402,22 @@ export function classicRest() {
   </div>`;
 }
 
-export function classicOrders() {
+/**
+ * The orders moment. With a `faction`, it is drawn for that navy's player: the
+ * fleet and the selection wireframe in its primary, as the hull always was,
+ * and §12.5's licensed accent on the two dressed blocks. Without one it is the
+ * chosen console as it stands, which wears no faction on its chrome at all.
+ */
+export function classicOrders({ faction = null } = {}) {
+  const own = faction ?? 'bathyarch';
   const chips = [
     { label: 'CORV', hp: 88, silent: true },
     { label: 'CORV', hp: 64, silent: true, hurt: true },
   ];
   return `<div class="frame">
-    ${world('orders')}
+    ${world('orders', { own })}
     <div class="hud">
-      ${topStrip()}${sideChrome()}
+      ${topStrip()}${sideChrome(own)}
       ${consoleShell(`
         ${block('scope', 'Scope', `<div style="height:100%;line-height:0;display:flex;align-items:center;justify-content:center">${scopeFace(156)}</div>`)}
         ${block(
@@ -408,12 +434,17 @@ export function classicOrders() {
               ['ORDERED', '1,200 m'],
               ['QUEUE', 'move → field'],
             ],
-            { hull: 0.88, lost: 0.08, note: 'SILENT RUNNING – open · the world got louder' }
+            {
+              hull: 0.88,
+              lost: 0.08,
+              note: 'SILENT RUNNING – open · the world got louder',
+              ink: FACTION[own].primary,
+            }
           ),
-          { sub: 'GROUP 1' }
+          { sub: 'GROUP 1', faction }
         )}
         ${block('fleet', 'Fleet', fleetBlock({ chips, groups: GROUPS, census: CENSUS, idle: true }), { sub: '2 SELECTED' })}
-        ${block('commands', 'Commands', commandCard(ORDER_CELLS), { sub: 'SQUAD' })}
+        ${block('commands', 'Commands', commandCard(ORDER_CELLS), { sub: 'SQUAD', faction })}
         ${block('production', 'Production', production(LINES_BUSY, SUMMARY_BUSY), { sub: '2 YARDS RUNNING' })}
       `)}
       ${hint('Break silence to fire? +40 SIG on the hull that shoots', NEON.amber)}

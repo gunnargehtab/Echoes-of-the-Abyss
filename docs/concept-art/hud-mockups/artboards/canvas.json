@@ -37,6 +37,42 @@
       "h": 1080
     },
     {
+      "file": "AccentBathyarch.dc.html",
+      "title": "B · Console — accent, bathyarch",
+      "page": "page-1",
+      "x": 0,
+      "y": 2560,
+      "w": 1920,
+      "h": 1080
+    },
+    {
+      "file": "AccentPelagia.dc.html",
+      "title": "B · Console — accent, pelagia",
+      "page": "page-1",
+      "x": 2080,
+      "y": 2560,
+      "w": 1920,
+      "h": 1080
+    },
+    {
+      "file": "AccentDirectorate.dc.html",
+      "title": "B · Console — accent, directorate",
+      "page": "page-1",
+      "x": 4160,
+      "y": 2560,
+      "w": 1920,
+      "h": 1080
+    },
+    {
+      "file": "AccentHadron.dc.html",
+      "title": "B · Console — accent, hadron",
+      "page": "page-1",
+      "x": 6240,
+      "y": 2560,
+      "w": 1920,
+      "h": 1080
+    },
+    {
       "file": "RingRest.dc.html",
       "title": "A · Ring — at rest",
       "page": "page-2",
@@ -123,6 +159,14 @@
       "y": 1280,
       "w": 440,
       "text": "B · THE CLASSICAL CONSOLE — CHOSEN\n\nOne full-width console in fixed blocks: scope, selection with its stat block, group roster, a 4×3 command card, the production line. Nothing is behind a tab, and the twelve cells are always in the same twelve places.\n\nKEEPS\nEvery information law untouched. Faction ink stays on hulls and contacts and never reaches chrome (§12.5); the roster shows own force only, never a hostile count (§10.5).\n\nBREAKS §2's 22% chrome cap — the console plus the strip is about 30% of a 1080p frame.\n\nWHAT THE BREAK BUYS\nPermanence, which is the genre's oldest and best argument. The roster makes a group countable at a glance. The production block makes a queue readable without selecting anything. The command card is the one layout muscle memory genuinely works on, because a cell never moves.\n\nCOSTS, HONESTLY\nIt is the least interesting of the three to look at. It is the worst fit for a phone, where the blocks have to stack or scroll. And a game whose entire subject is a dark ocean gives a fifth of the ocean away to instrumentation."
+    },
+    {
+      "id": "note-accent",
+      "page": "page-1",
+      "x": -520,
+      "y": 2560,
+      "w": 440,
+      "text": "B · CONSOLE — FACTION ACCENT, PROPOSED\n\nui-ux.md §12.5 leaves one question open: a faction accent on the selection card or the command bar's rule line. Ink on chrome, never a moved panel or a re-shaped meter. These four frames draw it, so it can be judged rather than imagined.\n\nWHAT CHANGES\n· The selection and command headers trade the magenta rule for a 2 px rule in the navy's glow ink.\n· The selection header carries the navy's glyph, because a hue is never the only identifier (§11).\n· The fleet and the selection wireframe wear the navy's primary, which is the hull's ink and always was.\n\nWHAT DOES NOT\nLayout, cells, the SIG meter, the scope, the log, the objectives and every other rule. Cyan still tells, magenta still asks, red still warns.\n\nWHAT THE FRAMES SHOW\n· Consortium amber is also the console's price, idle and SIG-caution ink. On a Bathyarch console the accent reads as one more warning.\n· Directorate crimson sits near threat red and the Tier 4 track. The accent reads as alarm.\n· Commune green and Knights violet stay distinct from every chrome ink.\n\nNOT OWED\n§12.5 says it ships only with an argument in sound or depth. These frames carry none. They show what the dress costs."
     },
     {
       "id": "note-improved",
