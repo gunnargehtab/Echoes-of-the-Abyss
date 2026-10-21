@@ -163,19 +163,21 @@ accent on the selection card or the command bar's rule line. These four frames d
 per navy, on the console's giving-orders moment.
 
 **Changes.** The selection and command headers trade the magenta rule for a 2 px rule in the
-navy's glow ink. The selection header carries the navy's glyph, so the hue is never alone
+navy's accent ink (`ACCENT` in `tokens.mjs`). The selection header carries the navy's glyph, so the hue is never alone
 (§11). Nothing moves and nothing changes shape.
 
 **Scene.** The player's fleet wears its own navy's primary. Faction uniqueness is per match,
 so a named contact that would be the player's own navy becomes a Consortium boat instead.
 
-**What the frames show.**
+**The inks.**
 
-- **Consortium amber** is also the console's price, idle and SIG-caution ink. The accent
-  reads as one more warning.
-- **Directorate crimson** sits near threat red and the Tier 4 track. The accent reads as
-  alarm.
-- **Commune green** and **Knights violet** stay clear of every chrome ink.
+- **Commune green** and **Knights violet** are each navy's glow, and clear every chrome ink.
+- **Consortium iron grey** `#8C8378` is its own `accent`. Its glow, hazard amber, is
+  already the console's price, idle and SIG-caution ink, and read as one more warning.
+- **Directorate bruise violet**, lifted from `#2D1B3D` to `#7A5A9E`. Its crimson read as
+  threat red, and the rest of its palette is too dark for a panel. It is the one ink here
+  the client does not carry, and it needs a token in
+  [style-neon-noir.md](../../style-neon-noir.md) before it ships.
 
 **Not owed.** §12.5 ships the accent only with an argument in sound or depth. These frames
 make none. They show what the dress costs, so the question can be settled by looking.

@@ -240,7 +240,7 @@ It is the least interesting of the three to look at. It is the worst fit for a p
 ui-ux.md §12.5 leaves one question open: a faction accent on the selection card or the command bar's rule line. Ink on chrome, never a moved panel or a re-shaped meter. These four frames draw it, so it can be judged rather than imagined.
 
 WHAT CHANGES
-· The selection and command headers trade the magenta rule for a 2 px rule in the navy's glow ink.
+· The selection and command headers trade the magenta rule for a 2 px rule in the navy's accent ink (tokens.mjs ACCENT).
 · The selection header carries the navy's glyph, because a hue is never the only identifier (§11).
 · The fleet and the selection wireframe wear the navy's primary, which is the hull's ink and always was.
 
@@ -248,9 +248,9 @@ WHAT DOES NOT
 Layout, cells, the SIG meter, the scope, the log, the objectives and every other rule. Cyan still tells, magenta still asks, red still warns.
 
 WHAT THE FRAMES SHOW
-· Consortium amber is also the console's price, idle and SIG-caution ink. On a Bathyarch console the accent reads as one more warning.
-· Directorate crimson sits near threat red and the Tier 4 track. The accent reads as alarm.
-· Commune green and Knights violet stay distinct from every chrome ink.
+· Commune green and Knights violet use their glow ink, which clears every chrome ink.
+· The Consortium uses its own iron grey, not its glow. Hazard amber is already the console's price, idle and SIG-caution ink, so it read as one more warning.
+· The Directorate uses its bruise violet lifted to #7A5A9E. Its crimson read as threat red, and nothing else in its palette is readable on a panel. This is the one invented ink in the mockups; it needs a style-neon-noir.md token before it ships.
 
 NOT OWED
 §12.5 says it ships only with an argument in sound or depth. These frames carry none. They show what the dress costs.`,

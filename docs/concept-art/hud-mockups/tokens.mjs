@@ -61,6 +61,25 @@ export const GLYPH = {
   hadron: 'M 0 -11 L 4.5 0 L 0 11 L -4.5 0 Z',
 };
 
+/**
+ * The console accent per navy, for the proposed dress of docs/ui-ux.md §12.5.
+ * Each navy's glow, except the two whose glow collides with chrome ink:
+ *
+ * - The Consortium takes its own `accent`, iron grey. Its glow is hazard
+ *   amber, which is already the console's price, idle and SIG-caution ink.
+ * - The Directorate's whole palette is red or near-black, so nothing in it
+ *   clears threat red. Its bruise violet `#2D1B3D` is lifted to a readable
+ *   value here. This is the one ink in this file the client does not carry:
+ *   it is a proposal, and it needs a token in docs/style-neon-noir.md before
+ *   anything ships it.
+ */
+export const ACCENT = {
+  bathyarch: FACTION.bathyarch.accent,
+  pelagia: FACTION.pelagia.glow,
+  directorate: '#7a5a9e',
+  hadron: FACTION.hadron.glow,
+};
+
 export const RESOURCE = { nodule: '#f2b233', crystal: '#b98cff' };
 export const BIOME = {
   openWater: '#07131e',
