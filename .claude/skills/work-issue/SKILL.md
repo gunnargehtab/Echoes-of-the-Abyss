@@ -94,6 +94,7 @@ labelled:
 | `standing` | Open on purpose: code cites it by number. A person's to apply and remove. |
 | `needs-hardware` | Needs a real GPU or device. A person's to apply. |
 | `needs-decision` | A person reserved the call, or the rest is inside the balance freeze. |
+| `decision-proposed` | Until its proposal is 24 hours old with no reply; then it is eligible (§7). |
 | `fable-5.1` | Shape work, authored under the design model of record (`CONTRIBUTING.md`). The Routine is pinned to another model. Never apply or remove it. |
 | `wontfix` | Parked: the finding stands, the build cannot act on it yet. A person's. |
 
@@ -122,8 +123,8 @@ balance. An issue whose remaining work is all inside the freeze takes
 Prefer `bug` over `enhancement` when the ages are close. Taking anything but the
 oldest is a judgement: name each older eligible issue you passed over, one clause
 each, in the claim comment. An issue you pass over twice for the same reason wants
-a label: apply `needs-decision` yourself only for the freeze case; propose the
-others in the run log.
+a label: apply `needs-decision` yourself only for the freeze case, and
+`decision-proposed` only in §7's case; propose the others in the run log.
 
 **Found one? Go to §5.** §4 is only for an empty backlog.
 
@@ -212,7 +213,9 @@ it**:
   firing may apply;
 - this section's instruction to invoke `dev-loop`, `loop-critic`'s separation from
   the author (its file, its missing edit tools) and §8's rounds line;
-- `dev-loop`'s three-round cap and the verification pass that is not a round.
+- `dev-loop`'s three-round cap and the verification pass that is not a round;
+- §7's `decision-proposed` scope and its 24 hours, and §6's `automerge` conditions
+  with `steward` §9's.
 
 For those, **write the issue and stop**: what the rule costs and what you would
 put in its place. A person decides. A generator that widens its own bounds is
@@ -238,6 +241,12 @@ down and why. A person's in-flight branch is worth more than a firing's.
 
 Then open the pull request against `main`: not a draft, labelled **`routine`**,
 the body in `.github/PULL_REQUEST_TEMPLATE.md`'s shape.
+
+**Add `automerge` too** when `dev-loop` met its exit criteria, so no
+`## Open findings`, and the diff touches none of the paths `steward` §9 lists:
+what the client draws, the balance baselines and the loop's own rules. The steward
+merges it once CI is green. The owner chose this on 21 October
+(#1483): green pull requests sat for hours waiting on a manual merge.
 
 - **Problem**, at most three sentences.
 - **Options**, only when the work needed a decision: at most three sentences each,
@@ -297,6 +306,25 @@ and your recommendation to the person at the keyboard and take their answer.
 
 A decision rides the pull request that needed it. One that would widen the change
 beyond the issue is filed labelled `finding`, with its options, instead.
+
+### A proposed decision: 24 hours, then the recommendation
+
+Some calls would wait for a person but are small: how to fix a verified defect,
+or which of two readings a `bug` or `finding` issue means. Label that issue
+**`decision-proposed`** and comment the options and a recommendation in the shape
+above, under 100 words. That comment starts the clock. The owner chose this on
+21 October (#1483): they took the recommendation 9 times out of 9, and meanwhile
+the Routine ran out of eligible work.
+
+- **A person answers** by replying, or by swapping the label for
+  `needs-decision`. A reply is any newer comment that is not a firing's own claim,
+  release or note. Their answer wins, as a reviewer's pick does.
+- **After 24 hours with no reply**, the issue is eligible. The firing that takes
+  it removes the label and takes the recommendation. The pull request's Options
+  section marks it **(recommended, taken after 24 h)**.
+- **Small correctness fixes only:** a `bug` or `finding` issue, one pull request,
+  no new mechanic. It never covers anything the next list names. It never
+  replaces a person's `needs-decision`.
 
 **The loop never decides:**
 
