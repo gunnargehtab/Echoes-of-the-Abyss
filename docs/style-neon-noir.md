@@ -478,14 +478,18 @@ is: **if the motion is the message, it stays.**
 Light belongs to *agents and instruments*; the seafloor stays dark. But three
 biomes are *defined* by things that emit — magma in the cracks, life in the kelp,
 charge in the crystals ([environments.md](environments.md) asks for all three) —
-and a vent field with no embers is not a vent field. So terrain-owned light exists,
-in exactly three families, and nothing else on the ground ever emits:
+and a vent field with no embers is not a vent field. One place was *built*:
+[habitats-art-brief.md](habitats-art-brief.md) already draws Sorrowgate's lamps in key
+art, "few, low, and the only warm thing for a kilometre", and in-engine they stand on
+the Upper Concourse, the drowned city's terminus. So terrain-owned light exists, in exactly four
+families, and nothing else on the ground ever emits:
 
 | Token | Hex | Where | What it is |
 | --- | --- | --- | --- |
 | `vent-ember` | `#E06A2B` | Thermal Veins | Sparse ember points in the cracked ground — the original carve-out, unchanged — and the steam over a chimney's mouth, puffs climbing on the 5 Hz grid |
 | `flora-biolight` | `#2E8C74` | Kelp Forest, Coral Ruins | Dim tips on kelp stalks and living coral — points and short lines, never a glowing canopy |
 | `crystal-seam` | `#5B4A8C` | Resonance Fields | A dull internal seam in the crystal props — violet is already licensed here ("resonance" is one of its three contexts) |
+| `civic-lamp` | `#B8875A` | Coral Ruins with a floor at 350 m or shallower — the Upper Concourse | A steady tallow point standing low over the terminus, about one cell in three and never more than twelve to a map |
 
 Every family obeys the same five rules, and they are gates, not suggestions:
 
@@ -498,8 +502,8 @@ Every family obeys the same five rules, and they are gates, not suggestions:
    85–90 % darkness budget and the 5–10 % seafloor luminance floor stand
    untouched; world light is what makes the darkness read as *inhabited*, not a
    way around it.
-3. **Static or 5 Hz-quantised.** Embers flicker on the sonar grid; flora and
-   crystal light hold steady or step on the same 200 ms bucket. Smooth video
+3. **Static or 5 Hz-quantised.** Embers flicker on the sonar grid; flora,
+   crystal and civic light hold steady or step on the same 200 ms bucket. Smooth video
    glow on terrain reads as an agent, which is a lie.
 4. **Deterministic and stateless.** Placed by the map, identical for every
    client and every screenshot, and never brightening with activity, occupancy,
@@ -508,7 +512,8 @@ Every family obeys the same five rules, and they are gates, not suggestions:
 5. **No UI hue ever touches it.** The families have their own tokens,
    deliberately away from the neons — `vent-ember` redder than Bathyarch's
    amber, `flora-biolight` dimmer and greyer than Pelagia's biolight,
-   `crystal-seam` duller than Hadron's crystal glow — so nothing in the world
+   `crystal-seam` duller than Hadron's crystal glow, `civic-lamp` yellower than the
+   ember and greyer than every faction's warm glow — so nothing in the world
    can be mistaken for the interface, or for a faction.
 
 The three families as exported, effective emissive luminance being the material's
@@ -521,6 +526,15 @@ nothing on the prop read as *light*. At 0.11 the seam is the brightest thing on 
 at 250 m, gone into fog by 700 m, and still under Hadron's crystal glow on a structure at
 the same distance (0.37 against 0.43 rendered sRGB luminance). Rule 2 holds: the ember
 stays the ceiling by a factor of 1.6.
+
+The civic lamp is no prop, so it has no export: it is a point in the ember cloud, priced
+the way an ember is. An ember draws `vent-ember` at 0.55 times its flicker, a mean of 0.33;
+a lamp draws `civic-lamp` at a steady 0.12. With each hue's luminance priced in, a lamp
+renders at about 70 % of an ember's mean and a quarter of its peak, so every lamp is
+dimmer than a vent ember (#1533). The 350 m floor is the Concourse's 340 m and nothing
+else: the 380 m Coral Ruins dividers on the skirmish maps are ground a hull rises over,
+and a lamp on a choke would make it the warmest thing on competitive ground. The
+caps, floor and level are TUNABLE in `packages/frontend/src/game/seabed.ts`.
 
 Per-map count caps live in code beside the emitters (the `VENT_EMBER_CAP`
 pattern in `PerspectiveView.ts`); [art-direction.md](art-direction.md) "Reading
@@ -539,9 +553,9 @@ palette tables above.
 - No neon on terrain or biomes — the seafloor stays desaturated
   (`BIOME_COLOR` in `packages/frontend/src/game/palette.ts`); light belongs to
   *agents and instruments*. Terrain-owned light exists only as the three
-  **world-light families** above — vent ember, flora biolight, crystal seam —
-  under their five rules. It is world-light, not neon: no UI hue ever touches
-  it, and no fourth family gets added without amending this doc first.
+  **world-light families** above — vent ember, flora biolight, crystal seam,
+  civic lamp — under their five rules. It is world-light, not neon: no UI hue
+  ever touches it, and no fifth family gets added without amending this doc first.
 - No violet outside the Mouth/resonance/Hadron contexts. The logo **is** a
   Mouth context — [naming.md](naming.md) "The logo" — so the title masthead
   and its throat-light token (`mouth-glow`, `#C9A6FF`) are licensed; the rest
@@ -583,4 +597,4 @@ are changing and why.
 - [systems-echo.md](systems-echo.md) — the mechanics the glow rules encode
 - [habitats-art-brief.md](habitats-art-brief.md) — the inhabited places drawn under
   these tokens and the world-light rules, including the Lid ceiling haze that was tried
-  against them and refused, so the three families stand
+  against them and refused, so the families stand as four
