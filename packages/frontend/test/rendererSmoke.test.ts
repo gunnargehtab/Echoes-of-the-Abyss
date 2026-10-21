@@ -45,6 +45,7 @@ import {
 import { FOCUS_DRAG_M_PER_PX, FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
 import { swayAt } from '../src/game/cameraSway.ts';
 import { HIT_PARTICLES_MIN } from '../src/game/hullHit.ts';
+import { LIVE_TRACK_MS } from '../src/game/trackFidelity.ts';
 import {
   createHost,
   dispatchWindow,
@@ -888,7 +889,7 @@ describe('renderer smoke test: the conn view', () => {
     }
   });
 
-  it('reports the force it was given, and nothing about anyone else', async () => {
+  it('reports the force it was given, and of the enemy only its live hull tracks', async () => {
     const world = await boot();
     try {
       world.frame(3);
@@ -907,15 +908,56 @@ describe('renderer smoke test: the conn view', () => {
       // no-op. This harness never decodes art, so the site is exactly that
       // case, and the conn view correctly puts nothing in the scene for it.
       assert.equal(report.structures, 1, 'the commissioned Bastion, not the building site');
-      // Seven contacts are in the snapshot and none of them is in this scene:
-      // the conn view draws own-force payloads only, which is what keeps the
-      // world canvas from being a maphack.
+      // Seven contacts are in the snapshot and one of them is in this scene:
+      // the live Tier-4 Corvette track, as its model (#1531). The Tier-4
+      // torpedo is ordnance, not a hull, and nothing below Track is handed
+      // over, which is what keeps the world canvas from being a maphack.
+      assert.equal(report.tracks, 1, 'the one live hull track, and no other contact');
       assert.equal(
         Object.keys(report).some((key) => key.includes('contact')),
         false,
-        'the conn view holds nothing about contacts'
+        'the conn view holds nothing else about contacts'
       );
     } finally {
+      world.teardown();
+    }
+  });
+
+  it('sails a hull track as a model only while it is a live Track (#1531)', async () => {
+    const world = await boot();
+    let nowMs = 100_000;
+    const clock = mock.method(performance, 'now', () => nowMs);
+    try {
+      const probe = () =>
+        (
+          globalThis as unknown as { window: { __perspectiveProbe: () => { tracks: number } } }
+        ).window.__perspectiveProbe();
+      const snapshot = cannedSnapshot(2000);
+      world.chart.applySnapshot(snapshot);
+      world.frame(1);
+      assert.equal(probe().tracks, 1, 'a live Tier-4 hull track sails as its model');
+
+      // No new return: past the live window the track is a ghost, a
+      // last-known position, and a model sitting on one would claim a
+      // present tense the Echo Layer never granted.
+      nowMs += LIVE_TRACK_MS + 1;
+      world.frame(1);
+      assert.equal(probe().tracks, 0, 'a ghosted track leaves the conn view');
+
+      // Resolved again, but only to Classification: no heading, no model.
+      nowMs += 1;
+      world.chart.applySnapshot({
+        ...cannedSnapshot(2001),
+        contacts: snapshot.contacts.map((c) =>
+          c.tier === ResolutionTier.Track && c.kind !== undefined
+            ? { ...c, tier: ResolutionTier.Classification, hp: undefined, heading: undefined }
+            : c
+        ),
+      });
+      world.frame(1);
+      assert.equal(probe().tracks, 0, 'a classified hull is never a model');
+    } finally {
+      clock.mock.restore();
       world.teardown();
     }
   });

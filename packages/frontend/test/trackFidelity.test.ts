@@ -9,8 +9,8 @@
  * rule again — they assert over every tier and over the whole ghost window,
  * not at the two points the draw loop happens to hit.
  *
- * The other half of gate 5 — no enemy geometry in the conn view, at any tier —
- * is asserted where it lives, in rendererSmoke.test.ts.
+ * What the conn view is handed — the live Tier-4 hull tracks and nothing else
+ * of the enemy (#1531) — is asserted where it lives, in rendererSmoke.test.ts.
  */
 
 import assert from 'node:assert/strict';

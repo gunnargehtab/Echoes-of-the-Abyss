@@ -219,7 +219,7 @@ import {
 } from './faunaAgentStipple.ts';
 import type { MapPayload, TerrainPayload } from '../net/GameClient.ts';
 import { FOCUS_DRAG_M_PER_PX, FOCUS_STEP_M, HOME_DOLLY_M } from './PerspectiveView.ts';
-import type { PerspectiveView, ProjectedPoint } from './PerspectiveView.ts';
+import type { HullTrack, PerspectiveView, ProjectedPoint } from './PerspectiveView.ts';
 import {
   COLUMN_RIBBONS,
   columnDepthsM,
@@ -1571,6 +1571,8 @@ export class EchoRenderer {
   private structures: OwnStructure[] = [];
   private nodes: readonly ResourceNodeInfo[] = [];
   private readonly tracked = new Map<number, TrackedContact>();
+  /** This frame's live Tier-4 hull tracks, for the conn view's models (#1531). */
+  private readonly hullTracks: HullTrack[] = [];
   /** Orders given and not yet echoed back, by unit (docs/ui-ux.md §12). */
   private readonly pendingOrders = new Map<number, PendingOrder[]>();
   /** Attack-move is armed: the next click on the water is where to go (§9). */
@@ -6619,6 +6621,7 @@ export class EchoRenderer {
     this.drawEchoMarks(g);
 
     this.trackHits.prune(now);
+    this.hullTracks.length = 0;
     for (const [id, entry] of this.tracked) {
       const age = now - entry.lastSeenMs;
       if (age > decayMs) {
@@ -6634,6 +6637,32 @@ export class EchoRenderer {
 
       const style = TIER_STYLE[contact.tier as Exclude<ResolutionTier, ResolutionTier.Silent>];
       if (style === undefined) continue;
+
+      // What this contact has earned the right to be drawn as — gate 5, in
+      // one call (trackFidelity.ts). `age` is time since it was last
+      // *resolved*, so a track the player is still holding stays live however
+      // long they have held it.
+      const live = contactFidelity(contact.tier, age) === 'sprite';
+      // A live hull track sails in the conn view as its roster model (#1531),
+      // whether or not its mark is on screen this frame: the model's own
+      // frustum decides that, not the mark's anchor.
+      const modelled =
+        live &&
+        this.conn !== null &&
+        contact.kind !== undefined &&
+        contact.faction !== undefined &&
+        contact.depth !== undefined;
+      if (modelled) {
+        this.hullTracks.push({
+          id,
+          kind: contact.kind!,
+          faction: contact.faction!,
+          x: contact.x,
+          y: contact.y,
+          depth: contact.depth!,
+          heading: contact.heading ?? 0,
+        });
+      }
 
       // Where the mark billboards. A contact that earned a depth billboards
       // at it, with the contact at the local origin. One that did not earns
@@ -6670,11 +6699,6 @@ export class EchoRenderer {
       // Ghosts fade rather than vanish; a stale contact is still information,
       // just less of it.
       const freshness = 1 - age / decayMs;
-      // What this contact has earned the right to be drawn as — gate 5, in
-      // one call (trackFidelity.ts). `age` is time since it was last
-      // *resolved*, so a track the player is still holding stays live however
-      // long they have held it.
-      const live = contactFidelity(contact.tier, age) === 'sprite';
       // ...and a *new* mark fades in, which is the Precedence Law's budget
       // rather than a flourish: a mark that pops instantly races the audio
       // device's own output latency and will sometimes win (§2). The two
@@ -6730,15 +6754,15 @@ export class EchoRenderer {
         }
         case ResolutionTier.Track: {
           const color = this.contactColor(contact, style.color);
-          // A track earns the hull: its shape, its heading, and since #834 the
-          // sprite baked from the model itself. docs/systems-echo.md §4 calls
-          // Tier 4 "full resolution" and the art side no longer caps it below
-          // that — see the Asymmetric Fidelity Law in docs/art-direction.md,
-          // which is now two rules and keeps only the ones with a reason: no
-          // sprite below Tier 4 anywhere, and no enemy *geometry* in the conn
-          // view at any tier.
+          // A track earns the hull: its shape, its heading, and the model
+          // itself. docs/systems-echo.md §4 calls Tier 4 "full resolution",
+          // and the Asymmetric Fidelity Law in docs/art-direction.md keeps one
+          // rule with a reason: nothing hull-shaped below Tier 4, anywhere.
+          // Where the conn view draws the live track's model (#1531) this
+          // draws no sprite over it; without one, the baked sprite is the
+          // hull (#834).
           //
-          // The sprite is drawn only while the track is live. A ghost is a
+          // Either is drawn only while the track is live. A ghost is a
           // last-known position, and a lit hull sitting on one would claim a
           // present tense the Echo Layer never granted.
           //
@@ -6748,7 +6772,7 @@ export class EchoRenderer {
           // sprite stands, the outline gives up its *fill* so the two are not
           // stacked (`SilhouetteStyle.fill`).
           if (contact.kind !== undefined && contact.faction !== undefined) {
-            const texture = live ? hullTexture(contact.kind, contact.faction) : null;
+            const texture = live && !modelled ? hullTexture(contact.kind, contact.faction) : null;
             if (texture !== null) {
               const size = hullSpriteSizeM(contact.kind, contact.faction);
               const sprite = this.contactSymbols.sprite(id);
@@ -6768,7 +6792,13 @@ export class EchoRenderer {
               0,
               0,
               contact.heading ?? 0,
-              { color, accent: UI.threat, alpha, detail: false, fill: texture === null },
+              {
+                color,
+                accent: UI.threat,
+                alpha,
+                detail: false,
+                fill: texture === null && !modelled,
+              },
               2 * inverseScale
             );
           } else if (contact.structure !== undefined) {
@@ -6828,6 +6858,7 @@ export class EchoRenderer {
       }
     }
     this.contactSymbols.sweep();
+    this.conn?.setTracks(this.hullTracks);
   }
 
   /**

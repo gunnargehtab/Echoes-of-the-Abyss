@@ -7,9 +7,9 @@
  * worth pinning under test without a GL context, and this is the whole of what
  * #834 changed. The draw loop asks once and then draws; it never re-decides.
  *
- * This answers only the half of gate 5 that is about *tiers*. The other half —
- * the enemy is never geometry in the conn view, at any tier — is enforced
- * where it lives, by PerspectiveView never being handed a contact at all.
+ * Since #1531 the same answer decides the conn view: a `sprite` hull track is
+ * handed to PerspectiveView and sails there as its roster model, and nothing
+ * else of the enemy is ever handed over.
  */
 
 import { PERSISTENCE, ResolutionTier } from '@echoes/shared';
@@ -22,8 +22,9 @@ import { PERSISTENCE, ResolutionTier } from '@echoes/shared';
 export const LIVE_TRACK_MS = PERSISTENCE.LIVE_TRACK_S * 1000;
 
 /**
- * - `sprite` — the hull's baked art, stroked threat-red. A live Tier-4 track,
- *   and nothing else.
+ * - `sprite` — the hull's own art, stroked threat-red: its roster model in the
+ *   conn view, or its baked sprite without one. A live Tier-4 track, and
+ *   nothing else.
  * - `shape` — the flat resolved outline, filled. Every tier below Track, and a
  *   Track that has gone to ghost.
  */
