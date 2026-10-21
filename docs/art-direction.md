@@ -1006,7 +1006,9 @@ Three further layers of the same texture-not-information rule:
   for ground the map already declares hot, alive, or charged — deterministic per
   map, render-only, and carrying no state, never brightening with activity,
   occupancy, or anything else a player could read as a signal. The seafloor
-  otherwise stays unlit.
+  otherwise stays unlit. Each vent chimney breathes steam in the ember's hue (#1514): soft
+  puffs leave its mouth, climb straight up and thin out, each puff dimmer than an ember at its peak.
+  The climb steps on the same 5 Hz grid, and reduced motion holds each column still.
 
 #### Silt detail and seated stones — SPEC
 

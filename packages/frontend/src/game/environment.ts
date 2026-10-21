@@ -91,6 +91,12 @@ export interface PropSpec {
    * silt detail is (seabedDetail.ts), with the scour the bake gives it.
    */
   buryFraction?: number;
+  /**
+   * Breathes steam from its mouth: docs/environments.md §1's Thermal Vein
+   * plumes, drawn by ventPlume.ts in the vent world-light family. Absent on
+   * everything that is not a stack — a basalt boulder has no mouth.
+   */
+  plume?: true;
 }
 
 /**
@@ -120,6 +126,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     scaleJitter: [0.8, 1.25],
     worldLight: 'vent',
     swayM: 0,
+    plume: true,
   },
   {
     slug: 'env-vent-basalt',

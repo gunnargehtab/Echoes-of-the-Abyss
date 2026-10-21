@@ -182,7 +182,7 @@ describe('pending prop delivery', () => {
     texture.addEventListener('dispose', () => disposed++);
     live.destroy();
     assert.equal(live.group.children.length, 0);
-    assert.deepEqual(live.stats(), { props: 0, propTris: 0 });
+    assert.deepEqual(live.stats(), { props: 0, propTris: 0, ventPlumes: 0 });
     assert.equal(disposed, 0, 'a match must not dispose the page-owned surface texture');
   });
 
@@ -272,6 +272,37 @@ describe('seated stones', () => {
     } finally {
       seated.destroy();
       standing.destroy();
+    }
+  });
+});
+
+describe('vent steam (#1514)', () => {
+  it('stands one column on each chimney that stands, at its mouth, and none on basalt', async () => {
+    controlLoads();
+    const vents = { ...terrain(), biomes: Array(64).fill(Biome.ThermalVein) };
+    const all = placeProps(vents);
+    const chimneys = all.filter((p) => p.slug === 'env-vent-chimney');
+    assert.ok(chimneys.length > 0 && all.some((p) => p.slug === 'env-vent-basalt'));
+    const layer = new EnvironmentLayer();
+    try {
+      layer.rebuild(vents, () => -200, all);
+      assert.equal(layer.stats().ventPlumes, 0, 'a chimney still loading breathes nothing');
+      assert.ok(!layer.group.children.includes(layer.plume.points));
+      await until(() => pending.length === 2);
+      pending.forEach((p) => p.resolve(source()));
+      await until(() => layer.stats().props === all.length);
+      assert.equal(layer.stats().ventPlumes, chimneys.length);
+      assert.ok(layer.group.children.includes(layer.plume.points));
+      // The source box is 2 m tall on a 4 m footprint, held to the chimney's 12 m: 6 m.
+      const height = env.envTemplate('env-vent-chimney', 12, 0, () => {}).heightM;
+      const mouth = layer.plume.firstSite;
+      assert.equal(mouth.xM, chimneys[0].xM);
+      assert.ok(Math.abs(mouth.y - (-200 + height * chimneys[0].scale)) < 1e-9);
+      layer.reset();
+      assert.equal(layer.stats().ventPlumes, 0);
+      assert.equal(layer.group.children.length, 0);
+    } finally {
+      layer.destroy();
     }
   });
 });

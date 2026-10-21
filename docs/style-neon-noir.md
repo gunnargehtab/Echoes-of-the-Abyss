@@ -483,7 +483,7 @@ in exactly three families, and nothing else on the ground ever emits:
 
 | Token | Hex | Where | What it is |
 | --- | --- | --- | --- |
-| `vent-ember` | `#E06A2B` | Thermal Veins | Sparse ember points in the cracked ground — the original carve-out, unchanged |
+| `vent-ember` | `#E06A2B` | Thermal Veins | Sparse ember points in the cracked ground — the original carve-out, unchanged — and the steam over a chimney's mouth, puffs climbing on the 5 Hz grid |
 | `flora-biolight` | `#2E8C74` | Kelp Forest, Coral Ruins | Dim tips on kelp stalks and living coral — points and short lines, never a glowing canopy |
 | `crystal-seam` | `#5B4A8C` | Resonance Fields | A dull internal seam in the crystal props — violet is already licensed here ("resonance" is one of its three contexts) |
 
