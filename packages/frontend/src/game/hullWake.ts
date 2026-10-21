@@ -11,8 +11,8 @@
  * never anything the HUD does not already say.
  *
  * Own hulls only. The server sends them in full, so drawing a wake leaks
- * nothing; the enemy is never geometry in the conn view (gate 6), and a track
- * gets no wake for the same reason it gets no model.
+ * nothing. A live track's model (#1531) gets none: a Tier-4 payload carries
+ * no SIG, and a wake is a statement about loudness.
  *
  * Bubbles, not a line. A hull sheds one at its stern every few metres it
  * travels, and each stays where it was shed, climbing and fading: the wake is

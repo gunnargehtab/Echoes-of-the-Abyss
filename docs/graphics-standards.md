@@ -285,13 +285,14 @@ for the reason a hex is.
 ### 5. The Asymmetric Fidelity Law is a rendering gate
 
 The player's own force renders at full fidelity. The enemy renders **only at the fidelity
-their detection earned** — no more, and since #834 no less: a Tier-1 return is a smudge, a
-Tier-2 a blurred blob, a Tier-3 a classified disc, and a Tier-4 track the model-backed
-sprite, stroked threat-red and drawn only while the track is live. A classified animal is
+their detection earned** — no more, and since #834 and #1531 no less: a Tier-1 return is a
+smudge, a Tier-2 a blurred blob, a Tier-3 a classified disc, and a Tier-4 hull track its
+roster model in the conn view, stroked threat-red in the overlay and drawn only while the
+track is live. A classified animal is
 its species' shape in dots instead, denser at Tier 4, and below Tier 3 it is the same
 smudge and blob as a hull ([map-visuals.md](map-visuals.md) §8).
 
-The gate is **two independent rules**. Lifting one has never lifted the other:
+The gate has **two rules**:
 
 - **Below Tier 4, in every view.** The server attaches `kind` and `faction` no earlier than
   Tier 3, and `hp`/`heading` no earlier than Tier 4
@@ -300,14 +301,17 @@ The gate is **two independent rules**. Lifting one has never lifted the other:
   it that way. No debug path that renders a sprite for a sub-Track contact ships, ever.
   This is the server-authoritative rule in [tech-stack.md](tech-stack.md) wearing a
   renderer's clothes, and it is the half that is absolute.
-- **The conn view, at every tier.** Gate 6 spends its 150 draw calls and 400 k triangles on
-  the own force, which is what keeps the budget flat — "never an army of contacts". The
-  enemy is never geometry there. A billboarded sprite is not a mesh, so Tier 4 earning a
-  sprite in the overlay does not touch this; `packages/frontend/test/rendererSmoke.test.ts`
-  asserts the conn scene holds nothing about contacts, and that assertion does not move.
+- **The conn view holds live hull tracks and nothing else of the enemy.** Gate 6 spends its
+  150 draw calls and 400 k triangles on the own force first. A live Tier-4 hull track joins
+  its template's instanced batch (`rosterBatches.ts`), so tracks of one kind and faction
+  cost one draw per material together, and nothing below Track, no ghost, no structure and
+  no ordnance is handed over (#1531). `packages/frontend/test/rendererSmoke.test.ts`
+  asserts the canned scene holds exactly its one live hull track, and that a ghosted or
+  classified one leaves it.
 
 **A live track, not a window.** Every contact decays on one twenty-second ghost clock
-(`PERSISTENCE.GHOST_MARKER_DECAY_S`). The sprite is drawn only while the track is live —
+(`PERSISTENCE.GHOST_MARKER_DECAY_S`). The model, or the overlay sprite where no conn view
+draws one, is drawn only while the track is live —
 `PERSISTENCE.LIVE_TRACK_S`, two Echo passes — and falls back to `HULL_OUTLINE` the moment
 it ghosts, because a lit hull on a last-known position claims a present tense the Echo
 Layer never granted ([ui-ux.md](ui-ux.md) §4). The threat-red stroke survives the change

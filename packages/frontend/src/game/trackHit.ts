@@ -8,10 +8,10 @@
  * already read; they make the drop visible at a glance instead of in a sliver
  * of red.
  *
- * Drawn on the chart, beside the track's sprite, never in the conn view: the
- * enemy is never geometry there at any tier (graphics-standards gate 5), and
- * `PerspectiveView` is never handed a contact. That is why #1510's three.js
- * ring cannot be reused here. What is reused is the shape of a hit: the same
+ * Drawn on the chart, beside the track's bar, even where the conn view draws
+ * the track's model (#1531): the drop is read from that bar, and the conn view
+ * is handed a track's kind and pose, never its hp. That is why #1510's three.js
+ * ring is not reused here. What is reused is the shape of a hit: the same
  * strength curve, life, flash length and particle counts, so a blow on an
  * enemy reads at the size the same blow on your own hull does.
  *

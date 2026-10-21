@@ -11,8 +11,8 @@
  *
  * Own force only, and every input is resolved: the event names a unit of
  * yours, and the HP it lost is the difference of two own snapshots, which the
- * server sends in full. Hits on enemy tracks are another issue (#1467); the
- * enemy is never geometry in the conn view (gate 6).
+ * server sends in full. Hits on enemy tracks are the chart's (trackHit.ts,
+ * #1517), beside the bar they are read from.
  *
  * One `Points` from a fixed ring of HIT_POOL slots, as the wake is drawn
  * (hullWake.ts): one draw call for every hit at once, none when no particle

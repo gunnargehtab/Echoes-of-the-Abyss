@@ -8,7 +8,9 @@
  * with their route drawn on top (passages.ts), the map edge as a rim and a
  * dark skirt; the player's own force sails as the approved
  * roster models (rosterModels.ts) at true depth, with the flat baked sprites
- * as the loading fallback. A WC3-lineage camera looks down and along at a
+ * as the loading fallback. A live Tier-4 enemy hull track sails the same way
+ * (#1531): EchoRenderer hands it over with `setTracks`, and nothing else
+ * about the enemy ever reaches this class. A WC3-lineage camera looks down and along at a
  * fixed 55° pitch; yaw is locked, per the no-rotation rule the revision kept.
  *
  * Everything else on screen — contacts, rings, hazards, marks, bars, the whole
@@ -19,8 +21,9 @@
  * two painters, no second opinion about where anything is.
  *
  * Rules carried over intact, because a renderer change must never be a rules
- * change: server-authoritative fidelity (this class draws only own-force
- * payloads; it holds nothing about the enemy to leak), texture-not-information
+ * change: server-authoritative fidelity (this class draws own-force payloads
+ * and the live Tier-4 hull tracks the chart passes it, which carry nothing a
+ * track did not already earn), texture-not-information
  * (the detail relief is render-only), and glow-is-loudness (model lamps swing
  * with live SIG on the gate-3 curve).
  */
@@ -84,6 +87,7 @@ import {
   type OwnStructure,
   type OwnOrdnance,
   type OwnUnit,
+  type UnitKind,
 } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import { FACTION_PALETTE, sigColor, UI, VENT_EMBER } from './palette.ts';
@@ -532,6 +536,27 @@ interface EntityHandle {
   /** Gate 3's lamp factor as the sync last set it, which a hit's flash lifts
    * from and returns to (hullHit.ts). */
   restGlow: number;
+  /** Whether the far-zoom readability factor applies. Own entities only: a
+   * track is drawn at true metres, as the chart's threat-red outline about
+   * it is (`hullDrawScale`), so the two never disagree about its size. */
+  scaled: boolean;
+}
+
+/**
+ * A live Tier-4 enemy hull track, as the chart hands it to the conn view
+ * (#1531). Every field is one the server attached at Tier 4: the kind and
+ * faction from Tier 3, the depth floored to whole metres, and the heading,
+ * which only a Track carries (`Contact`, packages/shared/src/types.ts).
+ */
+export interface HullTrack {
+  /** The contact's opaque per-observer handle, never an entity id. */
+  id: number;
+  kind: UnitKind;
+  faction: Faction;
+  x: number;
+  y: number;
+  depth: number;
+  heading: number;
 }
 
 /** Everything one entity's sync needs, sprite path and model path alike. */
@@ -553,6 +578,8 @@ interface EntitySpec {
   restSig: number;
   /** True for a structure, whose model stands on its depth (`standingY`). */
   stands: boolean;
+  /** False for a track, which takes no readability factor (`EntityHandle.scaled`). */
+  scaled?: boolean;
 }
 
 /**
@@ -808,6 +835,8 @@ export class PerspectiveView {
 
   private readonly unitGroup = new Group();
   private readonly structureGroup = new Group();
+  /** The sprites a live track's model replaces while it loads (#1531). */
+  private readonly trackGroup = new Group();
   /** Every own model, one draw a template material (rosterBatches.ts, #1079):
    * the two groups above hold the sprites a model replaces, never the model. */
   private readonly models = new RosterBatches();
@@ -862,6 +891,9 @@ export class PerspectiveView {
 
   private readonly unitHandles = new Map<number, EntityHandle>();
   private readonly structureHandles = new Map<number, EntityHandle>();
+  /** Live Tier-4 hull tracks, keyed by contact handle (#1531). */
+  private readonly trackHandles = new Map<number, EntityHandle>();
+  private tracks: HullTrack[] = [];
   private readonly spriteTextures = new Map<string, CanvasTexture>();
 
   /** Canvas CSS size, cached in resize(): projectPoint runs too hot to ask
@@ -1041,6 +1073,7 @@ export class PerspectiveView {
       this.gunFire.points,
       this.plume.points,
       this.structureGroup,
+      this.trackGroup,
       this.models.group,
       this.cues.group,
       this.snow.points
@@ -1382,6 +1415,7 @@ export class PerspectiveView {
     this.units = [];
     this.structures = [];
     this.ordnance = [];
+    this.tracks = [];
     this.life.setLife([], []);
     this.headings.clear();
     this.lastPositions.clear();
@@ -3391,6 +3425,7 @@ export class PerspectiveView {
         stands: spec.stands,
         drawnY: 0,
         restGlow: 1,
+        scaled: spec.scaled ?? true,
       };
       handles.set(id, handle);
       this.sceneGrew = true;
@@ -3429,7 +3464,7 @@ export class PerspectiveView {
     // Render-only: it multiplies what draws the hull and nothing that measures
     // it. Applied here rather than at texture-swap time because it moves with
     // the dolly, not with the entity.
-    const draw = this.drawScale;
+    const draw = handle.scaled ? this.drawScale : 1;
     handle.mesh.scale.set(handle.widthM * draw, handle.heightM * draw, 1);
 
     if (model !== null) {
@@ -3465,7 +3500,7 @@ export class PerspectiveView {
     yaw: number,
     attitude?: Attitude
   ): void {
-    const draw = this.drawScale;
+    const draw = handle.scaled ? this.drawScale : 1;
     // The sync hides the sprite exactly when the model is showing.
     const model = handle.mesh.visible ? null : handle.model;
     const y = depthToWorldY(depthM);
@@ -3732,6 +3767,60 @@ export class PerspectiveView {
     });
   }
 
+  /**
+   * The live Tier-4 hull tracks this frame, from the chart (#1531). A track
+   * earns its hull — "full resolution: exact unit, health, facing"
+   * (docs/systems-echo.md §4) — and here that is the roster model, as an own
+   * hull's is. The chart decides which contacts qualify (`contactFidelity`)
+   * and calls this every frame; an unchanged set costs one comparison.
+   */
+  setTracks(tracks: readonly HullTrack[]): void {
+    if (sameTracks(this.tracks, tracks)) return;
+    this.tracks = tracks.map((t) => ({ ...t }));
+    if (this.renderer === null || this.terrain === null) return;
+    this.syncTracks();
+    if (this.sceneGrew) {
+      this.sceneGrew = false;
+      this.precompile();
+    }
+  }
+
+  /**
+   * Each track's model, where the track says it is. No glide: a track moves
+   * when the Echo Layer resolves it again, exactly as the chart's mark does,
+   * so the model never claims a position between two returns. Lamps at their
+   * intake-approved rest: a Tier-4 payload carries no SIG, and glow is
+   * loudness (gate 3), so the hull shows no loudness it was not heard at.
+   */
+  private syncTracks(): void {
+    const live = new Set(this.tracks.map((t) => t.id));
+    for (const [id, handle] of this.trackHandles) {
+      if (!live.has(id)) {
+        this.dropHandle(this.trackGroup, handle);
+        this.trackHandles.delete(id);
+      }
+    }
+    for (const track of this.tracks) {
+      const restSig = statsFor(track.kind).sigIdle;
+      this.syncEntity(this.trackHandles, this.trackGroup, track.id, {
+        spriteKey: `unit:${track.kind}:${track.faction}:${ACTIVE_PALETTE.name}`,
+        canvas: hullSpriteCanvas(track.kind, track.faction),
+        sizeM: hullSpriteSizeM(track.kind, track.faction),
+        x: track.x,
+        z: track.y,
+        depthM: track.depth,
+        yaw: track.heading,
+        dimmed: false,
+        modelDesc: { unit: track.kind, faction: track.faction },
+        modelCacheKey: `unit:${track.kind}:${track.faction}:${ACTIVE_PALETTE.name}`,
+        liveSig: restSig,
+        restSig,
+        stands: false,
+        scaled: false,
+      });
+    }
+  }
+
   private syncEntities(): void {
     if (this.terrain === null) return;
     this.openRoofs();
@@ -3799,6 +3888,7 @@ export class PerspectiveView {
         stands: true,
       });
     }
+    this.syncTracks();
     this.syncOrdnance(now);
     if (this.sceneGrew) {
       this.sceneGrew = false;
@@ -4525,6 +4615,13 @@ export class PerspectiveView {
             ),
       units: this.unitHandles.size,
       structures: this.structureHandles.size,
+      // Live Tier-4 hull tracks the chart handed over (#1531), and nothing else of the enemy.
+      tracks: this.trackHandles.size,
+      // Where the first of them is, world metres, so a drive can frame it.
+      trackAt:
+        this.tracks.length === 0
+          ? null
+          : { x: this.tracks[0]!.x, z: this.tracks[0]!.y, depthM: this.tracks[0]!.depth },
       // Own ordnance in the water, drawn by the instanced layer (gate 6).
       ordnance: this.ordnanceLayer.count,
       // Wake bubbles alive this frame, every hull's one draw (#1508).
@@ -4800,4 +4897,25 @@ export class PerspectiveView {
       })),
     };
   }
+}
+
+/** Whether two track lists say the same thing, so a still frame syncs nothing. */
+function sameTracks(a: readonly HullTrack[], b: readonly HullTrack[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const p = a[i]!;
+    const q = b[i]!;
+    if (
+      p.id !== q.id ||
+      p.kind !== q.kind ||
+      p.faction !== q.faction ||
+      p.x !== q.x ||
+      p.y !== q.y ||
+      p.depth !== q.depth ||
+      p.heading !== q.heading
+    ) {
+      return false;
+    }
+  }
+  return true;
 }
