@@ -2747,6 +2747,7 @@ export class PerspectiveView {
       uBorderRect: { value: [] },
       uBorderStrength: { value: this.borderStrength },
       uFocusDepthM: this.backdrop.focusDepthUniform,
+      uExteriorFloor: { value: [1, 1, 1] },
     };
     this.border.uBorderRect.value = [rect.x, rect.y, rect.widthM, rect.heightM];
     return this.border;
@@ -3184,24 +3185,24 @@ export class PerspectiveView {
    * the shade of ground nobody hears, while anyone in the mission is
    * listening (docs/ui-ux.md §4.5) — nothing outside a placed mission can be
    * heard (docs/world-map.md §7.1) — and clear while nobody is, when the
-   * mission's own field is clear everywhere too. One colour a mesh, so it
-   * costs no vertex walk, and the apron's seam band blends into the
-   * overview's skin under the same one.
+   * mission's own field is clear everywhere too. One uniform for every
+   * exterior mesh, in display terms, which the fade drains the exterior
+   * toward as it darkens (worldBorder.ts `borderFadeFragment`), so it costs no
+   * vertex walk and the apron's seam band and the overview share it.
    */
   private shadeExterior(): void {
-    const details = [...(this.residency?.residentIds() ?? [])].map(
-      (id) => this.residency!.get(id)!.mesh
-    );
-    for (const mesh of [this.apron?.mesh, this.overview?.mesh, ...details]) {
-      if (mesh != null) this.tintExterior(mesh.material as MeshBasicMaterial);
-    }
+    const k = this.veil.listening ? Math.min(1, Math.max(0, this.veilIntensity)) : 0;
+    const floor = veilShade(0, k);
+    this.borderUniforms().uExteriorFloor.value = [floor.r, floor.g, floor.b];
   }
 
-  /** One exterior material at the veil's floor (`shadeExterior`). */
+  /**
+   * An exterior material's own colour stays white: the veil reaches it through
+   * the fade's uniform (`shadeExterior`), never through a linear tint.
+   */
   private tintExterior(material: MeshBasicMaterial): void {
-    const k = this.veil.listening ? Math.min(1, Math.max(0, this.veilIntensity)) : 0;
-    const i = Math.round(k * VEIL_STEPS) * 3;
-    material.color.setRGB(VEIL_TABLE[i]!, VEIL_TABLE[i + 1]!, VEIL_TABLE[i + 2]!);
+    material.color.setRGB(1, 1, 1);
+    this.shadeExterior();
   }
 
   /**
