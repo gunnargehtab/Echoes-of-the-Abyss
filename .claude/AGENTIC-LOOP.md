@@ -142,6 +142,12 @@ open is not guessing; guessing is a reading taken without the options written
 down, which `loop-critic`'s check 4 makes a blocking finding. Interactively the
 options go to the person at the keyboard instead, and their answer is taken.
 
+On 21 October the owner moved two more things off their own desk (#1483).
+A small correctness call labelled `decision-proposed` is taken after 24 hours of
+silence (`work-issue` §7). A green `routine` pull request labelled `automerge` is
+merged by `steward` §9. Neither covers what the client draws, the balance freeze,
+or these files. Both scopes are on §5's list of the loop's own bounds.
+
 The same change cut what a firing reads and what a round spends. The pull request
 body is three sections of at most three sentences each, which
 `tools/prose-budget` measures. Findings are **blocking** or **minor**, and only

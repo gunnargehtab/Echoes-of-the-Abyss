@@ -101,3 +101,13 @@
 - name: needs-decision
   color: 6f42c1
   description: A call a person reserved, or work waiting on the balance freeze — the unattended loop skips it
+
+- name: decision-proposed
+  color: b392f0
+  description: Options and a recommendation posted; after 24 h with no reply the loop takes the recommendation
+  # Small correctness fixes only (work-issue §7), never in place of needs-decision (#1483).
+
+- name: automerge
+  color: 0e8a16
+  description: A routine pull request that steward merges once CI is green — a person removes it to hold the merge
+  # Never on a pull request that changes what the client draws (steward §9, #1483).

@@ -196,7 +196,8 @@ section replaces the generic check-in cadence:
 - **While CI runs or a fix is in flight:** at most one check-in, 50 minutes out.
   The prompt cache holds for an hour, so that wake is cheap; one at 61 minutes is
   a full re-read.
-- **Once the head is green, mergeable and no thread waits on you:** arm one
+- **Once the head is green, mergeable and no thread waits on you:** if the pull
+  request carries `automerge`, merge it per §9 and arm nothing. Otherwise arm one
   check-in six hours or more out, for drift against `main`. If it finds nothing,
   arm none. The next event wakes the session.
 - **Never re-arm a quiet check-in overnight.**
@@ -220,6 +221,32 @@ section replaces the generic check-in cadence:
 - **Then stop.** The next issue gets a fresh session. A session that runs past a
   merge carries 500k tokens or more into unrelated work: $130 on #731's chain,
   and #788's follow-up was refused in a 700k context.
+
+## 9. `automerge`: merge it yourself once green
+
+The owner chose this on 21 October (#1483). Green pull requests from the loop sat
+for hours waiting on a manual merge, and one session merged 27 in a row by hand.
+The repository has no branch protection, so GitHub's own auto-merge would merge at
+once. The steward is the gate. Merge only when every condition below holds, and
+check them all again just before merging:
+
+- The pull request carries both `routine` and `automerge`.
+- Every check on the head commit passed, and it is mergeable: not a draft, no
+  conflict.
+- No review requests changes, and no review thread is unresolved.
+- The body has no `## Open findings` and no `## Screenshots`.
+- The diff touches none of these: `packages/frontend/`, `tools/hull-models/`, any
+  `.glb`, `docs/screenshots/`, `tools/balance/baselines/`, `.claude/` or
+  `.github/`. The first four change what the client draws, which a person reviews
+  from the frames. A refreshed baseline sits next to the balance freeze. The last
+  two hold the loop's own rules, which it may not land for itself.
+
+Merge with a merge commit (`CONTRIBUTING.md`). The title is the pull request's
+title followed by `(#<pr>)`, and the message is its body. Then follow §8.
+
+When a push of yours breaks a condition, remove the label. Only `work-issue` §6
+applies it. A person removes it to hold a
+merge, and nothing puts it back.
 
 Every comment in this skill — the stand-down, a reply to a reviewer, a status
 refresh — is under 100 words and in short sentences, per `CLAUDE.md`'s "Write

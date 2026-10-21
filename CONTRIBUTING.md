@@ -170,6 +170,13 @@ for the freeze, with a comment saying so; a person applies it to reserve a call,
 other two are a person's to apply. Removing any of them puts the issue back in
 play on the next firing.
 
+Two labels hand a person's wait to the loop, both added on 21 October (#1483).
+**`decision-proposed`** marks a small correctness call with its options and a
+recommendation posted: a reply decides it, and after 24 hours of silence the loop
+takes the recommendation (`work-issue` §7). **`automerge`** marks a `routine` pull
+request that `steward` merges once CI is green, and never one that changes what the
+client draws (`steward` §9). Removing either label hands the call back to a person.
+
 **`standing`** is the fourth, and it marks an issue that is open *because the decision
 went that way* — a permanent target something in the tree cites by number, rather than
 work anybody intends to finish. #703 is the case that cut it. `AiUnbuilt` in
