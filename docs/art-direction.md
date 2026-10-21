@@ -1310,8 +1310,8 @@ climbing and fading, so a turn leaves a curve.
 The wake is its live SIG on gate 3's curve, full at the red stop of 65: long and bright for
 a hull pushing hard, short and faint for one running silent, and none for a hull holding
 still or with its engine cut. Reduced motion keeps the bubbles and stops their climb. It states how
-loud the hull is and nothing more, so the enemy, which is never geometry in the conn
-view, never has one. Animated bases are still to come.
+loud the hull is and nothing more, so an enemy hull never has one: below Tier 4 it is
+never geometry in the conn view, and a Tier-4 payload carries no SIG to size a wake by. Animated bases are still to come.
 
 An own harvester working a node stirs a silt plume at its keel (#1512). It plumes while its
 cargo rises between two own snapshots, which is the dredge biting, and its size is the
@@ -1326,22 +1326,32 @@ brightness.
 
 Detail is something you *own*, never something you are shown. The player's base and
 force render at full fidelity — lit, animated, alive. The enemy renders **only at the
-fidelity their detection earned** — no more, and since #834 no less: a Tier-1 return is a
-smudge, a Tier-2 a blurred blob, a Tier-3 a classified disc, and a Tier-4 track the hull's
-own sprite. [systems-echo.md](systems-echo.md) §4 calls Tier 4 "full resolution: exact
-unit, health, facing" and means it; the art side used to cap that same tier at a flat
-silhouette, which was one rule too many and is the half this law no longer holds.
+fidelity their detection earned** — no more, and since #834 and #1531 no less: a Tier-1
+return is a smudge, a Tier-2 a blurred blob, a Tier-3 a classified disc, and a Tier-4 hull
+track the hull's own roster model, sailing in the conn view as an own hull does.
+[systems-echo.md](systems-echo.md) §4 calls Tier 4 "full resolution: exact unit, health,
+facing" and means it. The art side used to cap that tier at a flat silhouette, then at a
+sprite in the overlay; both were one rule too many.
 
-**It is two rules, and only one of them was ever about dread.** Below Tier 4 the law is
-*information safety*: the server attaches `kind` and `faction` no earlier than Tier 3, so
-a renderer reaching for a sprite under that has nothing real to reach for. In the conn
-view it is a *budget*: gate 6 of [graphics-standards.md](graphics-standards.md) spends its
-draw calls on the own force, so the enemy is never geometry there at any tier. A
-billboarded sprite is not a mesh, which is why lifting the first rule leaves the second
-standing — see "Dimensionality is the roster models, lit by the law", below.
+**The rule that stays is information safety.** The server attaches `kind` and `faction` no
+earlier than Tier 3 and `heading` no earlier than Tier 4, so a renderer reaching for a hull
+below Track has nothing real to reach for. The conn view's old cap was a *budget* instead:
+gate 6 of [graphics-standards.md](graphics-standards.md) spends its draw calls on the own
+force. A live track costs that budget its template's batch, one draw per material however
+many tracks share it, and only while the Echo Layer holds it at four times threshold or a
+ping. A cruising hull reaches that against a HYD-50 listener at 0.9 to 1.3 km, outside the
+400 to 900 m weapon ranges, so the enemy you fight is a model before the first shot lands;
+a hull running silent can close unresolved, which is the ambush the Echo Layer exists for.
+Tier-4 structures keep the overlay sprite for now.
+
+The model takes nothing a track did not earn. It sits where the last return put it and
+moves only when the next one does, with no glide between them. Its lamps hold at their
+intake-approved rest, because a Tier-4 payload carries no SIG and glow is loudness. It is
+drawn at true metres, without the far-zoom readability factor that is ink about an own
+entity, so the threat-red outline about it in the overlay matches its size.
 
 **A track is a return, not a window.** It decays on the same twenty-second ghost clock
-every other contact does, and the sprite is drawn only while the track is *live*: the
+every other contact does, and the model is drawn only while the track is *live*: the
 moment it ghosts it falls back to the outline, because a lit hull sitting on a
 last-known position claims a present tense the Echo Layer never granted
 ([ui-ux.md](ui-ux.md) §4). The threat-red stroke stays around it for the reason it was
@@ -1349,7 +1359,7 @@ put there — a faction's livery can match the biome it is sitting in, and the e
 keeps a track readable when it does.
 
 A fully-lit battlefield where both sides gleam would still be a lie the renderer tells
-against the Echo Layer. What buys the gleam is a live Tier-4 track: four times threshold,
+against the Echo Layer. What buys the enemy's gleam is a live Tier-4 track: four times threshold,
 or a ping and the 2,400 m of self-reveal it costs. The contrast between the rich home base
 and the black ocean past the sonar line is where the dread lives, and past the sonar line
 is still black.
@@ -1448,8 +1458,9 @@ chart, beside its sprite: a pale flash swelling as it fades and the same spray, 
 the contact's colour and pale fragments, at the size the same blow on an own hull would
 be. The player already reads that hp on the track's bar, so it reveals nothing. It fires
 only between two live Tier-4 readings of one handle, never across a tier change or after
-a ghost, and a ghost draws none. The conn view never draws
-it: the enemy is never geometry there. Reduced motion keeps the flash.
+a ghost, and a ghost draws none. It stays on the chart even where the conn view draws
+the track's model, since the blow is read from the bar the chart draws. Reduced motion
+keeps the flash.
 
 An own gun firing (#1511) throws a short flash from the hull or turret down the bearing it
 fired on, white-hot cooling into the faction glow over about a third of a second, and a pressure
@@ -1551,8 +1562,9 @@ Own hulls and structures render as the approved roster models
 same rig the sprite bake transcribed: cold ambient, low oblique key, hard cyan rim. The
 plan-view sprite bake (`packages/frontend/src/game/bake.ts`) survives as the loading
 fallback and the sonar scope's language. Glow is loudness (gate 3): the model lamps swing
-with live SIG, so a hull running silent goes dark instead of translucent. The enemy never
-renders as a model at any tier — the Asymmetric Fidelity Law is untouched by the camera.
+with live SIG, so a hull running silent goes dark instead of translucent. An enemy hull
+renders as a model only as a live Tier-4 track, under the Asymmetric Fidelity Law above;
+below Track it never does, whatever the camera.
 
 ### Own ordnance is geometry too
 

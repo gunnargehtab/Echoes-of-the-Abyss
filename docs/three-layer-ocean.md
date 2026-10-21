@@ -125,8 +125,9 @@ The old spec was load-bearing. Each load moves; none is dropped:
 - **Server-authoritative resolution.** A perspective camera changes what the client draws,
   never what it receives. Contacts still arrive resolved, under opaque per-observer handles.
 - **The Asymmetric Fidelity Law.** Own force renders as full models. The enemy renders at the
-  fidelity their detection earned: Tier 1 a smudge, Tier 2 a blurred blob, Tier 4 a resolved
-  flat silhouette — as billboarded impostors in the 3D scene, never as meshes. The renderer
+  fidelity their detection earned: Tier 1 a smudge, Tier 2 a blurred blob, Tier 3 a
+  classified disc, and since #1531 a live Tier-4 hull track its roster model
+  ([art-direction.md](art-direction.md), "The Asymmetric Fidelity Law"). The renderer
   cannot leak what the server never sent, and it stays that way.
 - **Glow encodes loudness.** The `E(SIG)` energy curve in
   [graphics-standards.md](graphics-standards.md) gate 3 applies to runtime emissive materials
