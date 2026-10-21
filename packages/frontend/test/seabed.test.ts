@@ -234,7 +234,7 @@ describe('the baked ground (#1103)', () => {
       row1: rows - 1,
     });
     const luminance = (r: number, g: number, b: number) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    const sums = new Map<number, { total: number; n: number }>();
+    const sums = new Map<number, { total: number; own: number; n: number }>();
     for (let py = 0; py < pixels.h; py++) {
       for (let px = 0; px < pixels.w; px++) {
         const index =
