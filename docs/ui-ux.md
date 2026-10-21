@@ -21,13 +21,15 @@
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
 │ NODULES · CRYSTAL · BERTHS · DRAW · SIG ▓▓▓░ · band      map · T+ · n  │
-│ ┌──┐                                              ┌──────────────────┐ │
-│ │D │                                              │   CONTACT LOG    │ │
-│ │E │                                              │ T+04:12 …        │ │
-│ │P │              world view                      └──────────────────┘ │
-│ │T │                                              ┌──────────────────┐ │
-│ │H │                                              │   OBJECTIVES     │ │
-│ └──┘                                              └──────────────────┘ │
+│ ┌──┐┌──────────────────┐                          ┌──────────────────┐ │
+│ │D ││ ORDERS   SIG …   │                          │ CONTACT LOG    ▾ │ │
+│ │E ││ open  …          │                          │ T+04:12 …        │ │
+│ │P ││ 7 withheld     ▸ │        world view        └──────────────────┘ │
+│ │T │└──────────────────┘                                               │
+│ │H │                                              ┌──────────────────┐ │
+│ └──┘                                              │ IN THE WATER   ▾ │ │
+│                                                   │ T+09:00 …        │ │
+│                                                   └──────────────────┘ │
 │                      hint line — why a press did nothing               │
 │ ┌BUILD┬FOUNDRY┬SLIPWAY┬SQUAD┐                                  ┌MENU┐  │
 │ ┌───────┬───────────┬──────────┬───────────────┬─────────────────────┐ │
@@ -42,6 +44,13 @@
 The world view is the whole screen above the console; every panel floats on it as
 glass ([art-direction.md](art-direction.md) "UI Direction"), and the centre of the water
 stays clear — contacts appear in the world, not in a list.
+
+Three panels float above the console, each 340 px wide at 100% UI scale and anchored to a
+corner so it scales from that corner (§11): the orders panel (§10.5) top-left, clear of the
+depth ribbon; the contact log (§10) top-right, at most 30% of the screen's height; and the
+mission log bottom-right, clear of the console, at most 18%. Those caps are the panels'
+whole claim on the water, and they were cut from 40% and 24% (#1532) because at 1440 × 900
+the three together covered a third of what the console leaves.
 
 **The console is a deliberate break with this section's old 22% chrome budget, and the
 argument is written down rather than assumed.** The budget was set against a HUD of
@@ -80,7 +89,29 @@ feed whose newest line is the one that matters, where going back through the res
 activity the game means to support. There are four — the contact log (§10), the mission log,
 the briefing and the record's pages (§14) — and each scrolls inside its own box while the
 screen around it does not. The objectives panel (§10.5) is deliberately not one: it states
-what is being asked *now*, and every row of it has to be on screen at once.
+what is being asked *now*, and every objective in it has to be on screen at once.
+
+**A panel may fold, and a fold is not a scroll.** A scrollbar hides the part that did not
+fit and says nothing about it; a fold is a control the player pressed, and it keeps saying
+what it holds. Three things fold, each to a form that still reads: the contact log and the
+mission log to their title and their newest two rows (§10), and the orders panel's list of
+withheld actions to its count — `7 actions withheld` (§10.5). Nothing else folds, and the
+objectives themselves never do. Four rules bind every fold:
+
+- **It is a real button in the panel's title strip** — in the tab order, carrying
+  `aria-expanded`, so a screen reader announces the state it moved to.
+- **The player folds it, never a timer and never the pointer.** An idle auto-fold that
+  opened on hover was weighed and refused: a panel that grows under the cursor while the
+  player is giving orders on the water catches clicks meant for the water, and a fold
+  that happens on its own is a change the player did not make and may not see happen.
+- **A fold never hides a row the moment it arrives.** The newest row is the one a folded
+  log keeps, so a line that lands while it is folded is on screen; an older one leaves the
+  screen only when a newer one has taken its place.
+- **What is folded stays in the document.** It is hidden, not unmounted, so the live
+  regions keep announcing and the text is still there to copy the moment it is opened.
+
+A log's fold is remembered on the device, as a convenience to whoever sits at it, because
+nothing in a log is a rule. The orders fold is not remembered, for the reason §10.5 gives.
 
 **A console row is a pointer target.** §11's 44 px floor is what sets the console's height
 rather than taste: a command cell is four columns wide and three rows deep so that a cell
@@ -786,6 +817,19 @@ and not reachable by a screen reader. It is marked up as an `aria-live` log regi
 detections are announced as they happen, and it follows the tail only while the player has
 not scrolled up to read something.
 
+**The log folds to its newest two rows, and its fold is the player's** (§2's four rules). The
+title strip is the button: `CONTACT LOG`, with `aria-expanded` saying which way it stands.
+Folded, the panel keeps its title and the two most recent rows and gives the rest of its
+height back to the water. Two rows rather than one because detections arrive in pairs as
+often as not — a contact and the tier it settled on, a ping and the exposure it caused —
+and one row would split the pair at the moment it is read. The rows above them are hidden,
+not removed, so the region stays one `aria-live` log: a detection that lands while the log is
+folded becomes one of the two rows on screen and is announced like any other, which is what
+§11's mute play needs from this channel whatever the panel looks like. The fold is kept on
+the device between matches, since a player who reads the world rather than the list will
+want it folded every time. The mission log folds on the same terms and for the same
+reasons: a spoken line is the newest row, so it is never folded out of sight as it is said.
+
 An entry is written when a contact is first heard and again whenever its tier *changes* —
 not every 5 Hz tick, which would bury the events that matter. Entries are never rewritten:
 a log that sharpened its own history when a better resolution arrived would let a player
@@ -888,7 +932,11 @@ something new, and a log role would re-announce the whole panel every time a cou
   the mission log, both of which have room for it. Where a mission locks several abilities
   for the **same** reason, the panel states that reason once and names the abilities it
   covers together, because four rows reading `weapons cold` teach nothing the first one did
-  not and cost the rows underneath their place on screen.
+  not and cost the rows underneath their place on screen. That row is **one line**, the
+  names and then the reason — `MINES · DEPTH CHARGES: weapons cold` — and wraps only where
+  the two together outrun the panel. Stacking the reason under the names spent two lines on
+  every reason to say one thing. The colon, rather than a third `·`, is what keeps the
+  reason from reading as one more ability, in a copied line and a spoken one as on screen.
 - **The gloss is authored per mission and is never templated either.** A shared string fails
   here for the reason it fails above, and four registers would have to be broken to make one
   fit; what is shared is the **slot**, not the sentence. Three rules bind a gloss exactly as
@@ -940,6 +988,30 @@ something new, and a log role would re-announce the whole panel every time a cou
   affordance: `disabled — silence order`. The lock is continuous state, not a reply to a
   click — the player learns the rule before pressing, because a refusal delivered afterwards
   teaches nothing and §1.5 forbids finding out what something cost by paying it.
+- **The withheld list may fold to its count, and it opens on its own whenever there is
+  something new to learn.** It is the one part of this panel that may fold (§2), because it
+  is the part a player stops needing once read: Sorrowgate withholds seven actions under four
+  reasons for the whole mission, and after the first minute those four rows are chrome over
+  the water and nothing more. Folded, it reads `7 actions withheld ▸` — a count of the player's own
+  actions, never of anything hostile — so the player always knows that something is being
+  withheld and that one press shows what. That count is load-bearing rather than a nicety
+  for one ability: construction's reason is written nowhere but here, because a mission that
+  locks construction takes the build tabs off the command card instead of offering a menu of
+  refusals. Its default is decided against the rule above, that the player learns the rule
+  before pressing:
+  - **Open at the start of every mission**, and never remembered between missions. A fold
+    carried into the next mission would put that mission's own rules behind a count before
+    the player had read them, which is exactly the refusal-after-the-fact the bullet
+    above forbids.
+  - **Folded only by the player**, never on a timer. "Open for the first minute" was
+    weighed and refused: the minute a player spends on the briefing, the water or a paused
+    menu is a minute in which the rules folded themselves away unread.
+  - **Opened again whenever the withheld set changes.** A lock that arrives or lifts is a
+    rule the player has not read yet, and so is a reason that changes; a fold taken over the
+    old set does not hold over the new one.
+
+  Folded rows are hidden rather than unmounted: the text stays in the document, whole and
+  in order, so opening the list is one press and never a fetch or a rebuild.
 - **A hull the mission is holding still shows its reason on the same terms**, on the inspector
   line and in the same form: `held — no ears in range`, `held — not released yet`. A hull is the
   affordance here, and the rule is stricter than for a button because there is nothing to grey
