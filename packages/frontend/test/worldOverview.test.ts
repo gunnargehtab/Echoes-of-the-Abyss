@@ -16,6 +16,7 @@ import {
   MeshBasicMaterial,
   type Material,
   Raycaster,
+  ShaderLib,
   Vector2,
   Vector3,
   type Camera,
@@ -32,7 +33,7 @@ import {
 import { createHost, HeadlessWebGLRenderer, pumpAnimationFrames } from './support/headless.ts';
 import { cannedSnapshot } from './support/cannedMatch.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
-import { placeProps, type PropPlacement } from '../src/game/environment.ts';
+import { ENVIRONMENT_PROPS, placeProps, type PropPlacement } from '../src/game/environment.ts';
 import { EnvironmentLayer } from '../src/game/environmentLayer.ts';
 import {
   VERTS_PER_CELL,
@@ -366,7 +367,7 @@ describe('the overview in the pilot view (#1459)', () => {
     assert.deepEqual([positions.getX(80), positions.getZ(181 * 81 - 1)], [40_000, 90_000]);
     assert.equal(
       (mesh.material as MeshBasicMaterial).customProgramCacheKey(),
-      'echoes-world-overview-1'
+      'echoes-world-overview-2'
     );
     const alone = new PerspectiveView('sorrowgate', null);
     views.push(alone);
@@ -753,8 +754,9 @@ describe("another region's detail, where no session holds it (§7.5)", () => {
         PropPlacement[],
       ];
       // Exactly what the session's layer stands on the room's first ground.
-      assert.deepEqual(placements, placeProps(sorrowgate()));
-      assert.equal(placements.length, 74);
+      // In the prologue's look, whose density the baseline shares (#1532).
+      assert.deepEqual(placements, placeProps(sorrowgate(), ENVIRONMENT_PROPS, 'sorrowgate'));
+      assert.equal(placements.length, 186);
       for (const p of placements) {
         assert.equal(
           groundY(p.xM, p.yM),
@@ -907,13 +909,15 @@ describe("another region's detail, where no session holds it (§7.5)", () => {
   });
 
   it('builds a detail under the veil, before it is ever resident', async () => {
-    // A session's veil listens; a sessionless view's does not.
+    // A session's veil listens; a sessionless view's does not. The floor is
+    // the fade's one uniform (#1532), so a detail built before anything
+    // admits it drains by the same one as the overview.
     const { view } = await mountPilot();
     view.setVeilIntensity(1);
     view.applySnapshot(cannedSnapshot());
     pumpAnimationFrames();
-    const overview = (internals(view).overview!.mesh.material as MeshBasicMaterial).color;
-    assert.notEqual(overview.getHex(), 0xffffff, 'someone listens: the floor shade');
+    const border = (view as unknown as { border: { uExteriorFloor: { value: number[] } } }).border;
+    assert.ok(border.uExteriorFloor.value[0]! < 0.5, 'someone listens: the floor shade');
     const build = view as unknown as {
       loadRegionDetail: (id: string, signal: AbortSignal) => Promise<{ mesh: Mesh }>;
       releaseRegionDetail: (detail: { mesh: Mesh }) => void;
@@ -921,8 +925,15 @@ describe("another region's detail, where no session holds it (§7.5)", () => {
     // Built as the residency's request builds it, before anything admits it.
     const signal = new AbortController().signal;
     const detail = await build.loadRegionDetail(SORROWGATE_REGION.id, signal);
-    const color = (detail.mesh.material as MeshBasicMaterial).color;
-    assert.equal(color.getHex(), overview.getHex(), 'the same shade as the overview');
+    const material = detail.mesh.material as MeshBasicMaterial;
+    assert.equal(material.color.getHex(), 0xffffff, 'no linear tint of its own');
+    const shader = {
+      uniforms: {} as Record<string, unknown>,
+      vertexShader: ShaderLib.basic.vertexShader,
+      fragmentShader: ShaderLib.basic.fragmentShader,
+    };
+    material.onBeforeCompile(shader as never, undefined as never);
+    assert.equal(shader.uniforms.uExteriorFloor, border.uExteriorFloor, 'the same floor');
     build.releaseRegionDetail(detail);
   });
 

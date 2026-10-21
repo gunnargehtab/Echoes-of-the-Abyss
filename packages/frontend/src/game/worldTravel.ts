@@ -59,7 +59,7 @@ export function arrivalFrame(region: WorldRegion): CameraFrame | undefined {
  */
 export function prepareRegion(region: WorldRegion, look: WorldLook): Promise<void> {
   const props: { slug: string; footprintM: number; swayM: number }[] = [];
-  for (const slug of new Set(mapProps(region.mapId).map((placement) => placement.slug))) {
+  for (const slug of new Set(mapProps(region.mapId, look).map((placement) => placement.slug))) {
     const spec = propSpec(slug);
     if (spec !== undefined) props.push({ slug, footprintM: spec.footprintM, swayM: spec.swayM });
   }

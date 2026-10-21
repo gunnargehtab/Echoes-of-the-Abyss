@@ -19,6 +19,7 @@
  * the leak the panel is careful not to be.
  */
 
+import { useId, useState } from 'react';
 import {
   ObjectiveStatus,
   type BoundSig,
@@ -81,9 +82,9 @@ const sigReading = (view: MissionView, boundSig: BoundSig | undefined): string =
  * (docs/ui-ux.md §10.5).
  *
  * §7 asks that a dead affordance carry its reason; it does not ask that the
- * same sentence be printed once per affordance. Sorrowgate strikes four of the
- * player's buttons under two reasons, and printing them separately spent eight
- * lines of a panel that must fit (§2) to say two things — while a player
+ * same sentence be printed once per affordance. Sorrowgate strikes seven of the
+ * player's buttons under five reasons, and printing them separately spent seven
+ * rows of a panel that must fit (§2) to say five things — while a player
  * reading `weapons cold` for the fourth time learns nothing they did not have
  * on the first. Order is preserved, and it is the mission's: the first lock to
  * name a reason is where that reason stands.
@@ -111,6 +112,24 @@ const ABILITY_LABEL: Record<MissionAbility, string> = {
   construction: 'construction',
 };
 
+/**
+ * What the withheld list's fold is taken over: this mission, and every lock in
+ * it with its reason, in the mission's order (docs/ui-ux.md §10.5).
+ *
+ * A fold holds only while this is unchanged. A lock that arrives or lifts, or
+ * a reason that changes, is a rule the player has not read yet, so the list
+ * opens again on its own — compared rather than watched, so there is no
+ * effect to forget and no frame on which the new rule sat folded.
+ */
+const lockSetKey = (view: MissionView): string =>
+  [view.missionId, ...view.locks.map((lock) => `${lock.ability}\u0000${lock.reason}`)].join(
+    '\u0001'
+  );
+
+/** `7 actions withheld` — a count of the player's own buttons, never of anything hostile. */
+const withheldCount = (count: number): string =>
+  `${count} ${count === 1 ? 'action' : 'actions'} withheld`;
+
 export interface MissionPanelProps {
   view: MissionView;
   /**
@@ -137,6 +156,14 @@ export interface MissionPanelProps {
 }
 
 export function MissionPanel({ view, boundSig, onFocus, onCommanderAbility }: MissionPanelProps) {
+  // The lock set the player folded the list over, or null while it is open.
+  // Local state and never stored: §10.5 opens the list at the start of every
+  // mission, so a fold may not outlive the panel it was taken in.
+  const [foldedOver, setFoldedOver] = useState<string | null>(null);
+  const locksKey = lockSetKey(view);
+  const locksOpen = foldedOver !== locksKey;
+  const lockListId = useId();
+
   const markerFor = (objective: ObjectiveView) =>
     objective.markerId === undefined
       ? undefined
@@ -263,21 +290,52 @@ export function MissionPanel({ view, boundSig, onFocus, onCommanderAbility }: Mi
         })}
 
         {view.locks.length > 0 && (
-          <ul className="objectives-locks" aria-label="Disabled actions">
-            {groupLocks(view.locks).map((group) => (
-              // Dead affordances, named with the reason attached (§7). The
-              // reason is here as standing state rather than as a response to
-              // a refused order, so the player reads it before reaching for
-              // the key rather than after. One row per *reason*, naming every
-              // ability it covers — see `groupLocks`.
-              <li key={group.abilities.join('-')} className="objectives-lock">
-                <span className="objectives-lock-name">
-                  {group.abilities.map((ability) => ABILITY_LABEL[ability]).join(' · ')}
-                </span>
-                <span className="objectives-lock-reason">{group.reason}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="objectives-locks">
+            {/* The fold's summary is the count, and it stays on screen folded:
+                the player always knows something is withheld and that one
+                press says what. For construction this panel is the only place
+                the reason is written at all — the command card drops the build
+                tabs rather than offer a menu of refusals — so a fold that went
+                silent would lose it (§10.5). */}
+            <button
+              type="button"
+              className="objectives-locks-toggle"
+              aria-expanded={locksOpen}
+              aria-controls={lockListId}
+              onClick={() => setFoldedOver(locksOpen ? locksKey : null)}
+            >
+              <span>{withheldCount(view.locks.length)}</span>
+              <span className="panel-fold-mark" aria-hidden="true">
+                {locksOpen ? '▾' : '▸'}
+              </span>
+            </button>
+            {/* Hidden rather than unmounted: the rows stay in the document,
+                whole and in order, for the moment the list is opened. */}
+            <ul
+              id={lockListId}
+              className="objectives-lock-list"
+              aria-label="Disabled actions"
+              hidden={!locksOpen}
+            >
+              {groupLocks(view.locks).map((group) => (
+                // Dead affordances, named with the reason attached (§7). The
+                // reason is here as standing state rather than as a response
+                // to a refused order, so the player reads it before reaching
+                // for the key rather than after. One row per *reason*, naming
+                // every ability it covers — see `groupLocks` — and one line,
+                // the names then the reason. The colon rather than a third `·`
+                // keeps the reason from reading as one more ability, copied or
+                // spoken as much as on screen.
+                <li key={group.abilities.join('-')} className="objectives-lock">
+                  <span className="objectives-lock-name">
+                    {group.abilities.map((ability) => ABILITY_LABEL[ability]).join(' · ')}
+                  </span>
+                  {': '}
+                  <span className="objectives-lock-reason">{group.reason}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
 
         {view.ability !== undefined && onCommanderAbility !== undefined && (

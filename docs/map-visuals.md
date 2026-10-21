@@ -88,7 +88,10 @@ reference, the way `WATER_RAMP` is: the values are TUNABLE, the shape is not.
 - **Coastlines** are drawn **exactly on the cell edges** where the ground changes kind: solid
   where water meets rock, dashed where one biome meets another. The biome is the propagation
   factor, and a coastline that rounded a corner would draw a PF boundary that is not there.
-  Edges on the map's own perimeter are the rim's, not the coast's.
+  Edges on the map's own perimeter are the rim's, not the coast's. The fills either side
+  ease into each other across 60 m of the edge ([art-direction.md](art-direction.md),
+  "Reading the Sea Floor"); the dashed coast is what states the boundary, so the ink stays
+  on the edge whatever the fill does beside it.
 
 Seven rules ride with the ink, and each is a review question:
 
@@ -225,7 +228,12 @@ Two consequences worth naming:
 
 V3 is mostly already law. This section collects it, so that the next revision cites one place.
 
-- **Depth is luminance**, on the ground and in the water, and never hue.
+- **Depth is luminance**, on the ground and in the water, and never hue. Depth darkens a
+  fill toward 0.55 of itself at the foot of a map's range, and never below the Abyssal
+  Trench's own fill: that fill is the "pitch black" the gradient ends on
+  ([art-direction.md](art-direction.md)), so depth takes nothing from the trench itself.
+  Shaded like the rest, a basin drew at about a third of the water over it and read as a
+  hole, not as the deepest floor ([#1532](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1532)).
 - **Hue is biome**, and biome is propagation factor. Nothing else on the ground carries a hue:
   not stone, not ink, not water.
 - **Light is loudness.** Agents glow with SIG. The ground emits only through the three world-light

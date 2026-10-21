@@ -140,6 +140,66 @@ export const ROCK_EDGE_GAIN = 0.55;
 export const CLIFF_SHADOW_M = 90;
 export const CLIFF_SHADOW_GAIN = 0.7;
 
+/**
+ * TUNABLE — how far either side of a biome coast the fill eases into its
+ * neighbour's, in metres: docs/art-direction.md "Reading the Sea Floor". At
+ * the cell edge the two fills meet half and half, and a band's width in from
+ * it each is its own again. The coast is still drawn exactly on the edge by
+ * the survey ink, dashed, which is the PF line; the band only stops the fill
+ * from printing the 250 m grid as a staircase of hard colour (#1532).
+ */
+export const BIOME_BAND_M = 60;
+
+/**
+ * The fill at a world position: the home cell's biome fill, eased into each
+ * open neighbour of another biome across `BIOME_BAND_M` of its nearest edge
+ * (`smooth`, both sides alike, so the two meet in one colour on the line).
+ * Rock is no biome and keeps its solid coast; the map's own edge has no
+ * neighbour. Reaches less than a cell, as every other term of the bake does.
+ */
+export function bandedFill(terrain: TerrainPayload, xM: number, yM: number): number {
+  const { cols, rows, cellM } = terrain;
+  const col = Math.min(cols - 1, Math.max(0, Math.floor(xM / cellM)));
+  const row = Math.min(rows - 1, Math.max(0, Math.floor(yM / cellM)));
+  const index = row * cols + col;
+  const own = terrain.biomes[index] as Biome;
+  const fillOf = (biome: Biome) => BIOME_COLOR[biome] ?? BIOME_COLOR[Biome.OpenWater];
+  const ownFill = fillOf(own);
+  const isRock = (i: number) => terrain.ceiling[i]! > terrain.floor[i]!;
+  if (isRock(index)) return ownFill;
+  /** The neighbour across the nearer of two opposite edges, and its weight. */
+  const across = (dLow: number, dHigh: number, low: number | null, high: number | null) => {
+    const near = dLow <= dHigh ? low : high;
+    const d = Math.min(dLow, dHigh);
+    if (near === null || isRock(near) || terrain.biomes[near] === own || d >= BIOME_BAND_M) {
+      return null;
+    }
+    return { fill: fillOf(terrain.biomes[near] as Biome), w: 0.5 * (1 - smooth(d / BIOME_BAND_M)) };
+  };
+  const x = across(
+    xM - col * cellM,
+    (col + 1) * cellM - xM,
+    col > 0 ? index - 1 : null,
+    col < cols - 1 ? index + 1 : null
+  );
+  const y = across(
+    yM - row * cellM,
+    (row + 1) * cellM - yM,
+    row > 0 ? index - cols : null,
+    row < rows - 1 ? index + cols : null
+  );
+  if (x === null && y === null) return ownFill;
+  const wx = x?.w ?? 0;
+  const wy = y?.w ?? 0;
+  const channel = (shift: number) =>
+    Math.round(
+      ((ownFill >> shift) & 0xff) * (1 - wx - wy) +
+        (((x?.fill ?? 0) >> shift) & 0xff) * wx +
+        (((y?.fill ?? 0) >> shift) & 0xff) * wy
+    );
+  return (channel(16) << 16) | (channel(8) << 8) | channel(0);
+}
+
 /** Detail wavelengths, metres. Fixed globally so the *field* is continuous and
  * only its per-biome amplitude changes across a region boundary — varying the
  * frequency instead would print the authoring rectangles back onto the noise. */
@@ -188,6 +248,56 @@ function latticeNoise(ix: number, iy: number, seed: number): number {
 }
 
 const smooth = (t: number) => t * t * (3 - 2 * t);
+
+/**
+ * The weight a cell centre's neighbour gets at fraction `t` of the way to it,
+ * for everything upsampled from cells: the floor, and the relief parameters
+ * over it. Linear, so the upsample is the bilinear one docs/map-visuals.md §4
+ * rule 1 names. It was a smoothstep, whose zero slope at every centre made
+ * each cell a flat tread and put its whole step in an S between two centres,
+ * so an authored ramp or curve climbed as a staircase of 250 m terraces
+ * (#1532). Either reaches one cell, which the partial rebuilds stand on.
+ */
+export const cellBlend = (t: number) => t;
+
+const NO_RELIEF: BiomeRelief = { amplitudeM: 0, roughness: 0, blockiness: 0, mottle: 0 };
+
+/**
+ * The relief parameters at a continuous cell coordinate (`x / cellM - 0.5`),
+ * interpolated between the four nearest cell centres by `cellBlend`, the same
+ * way the floor is — so the *amount* of texture fades across a boundary while
+ * the field itself is one continuous function of world position. Rock carries
+ * none. The bake and the heightfield both read it, so the colour's slopes and
+ * the mesh's shape are the same ground: taken from the nearest cell instead,
+ * the mesh tore up to ~155 m of depth within one vertex step along every biome
+ * edge whose fields differ, the Coral Ruins grid against its neighbours most.
+ */
+export function reliefAtCell(terrain: TerrainPayload, cx: number, cy: number): BiomeRelief {
+  const { cols, rows } = terrain;
+  const c0 = Math.floor(cx);
+  const r0 = Math.floor(cy);
+  const fx = cellBlend(cx - c0);
+  const fy = cellBlend(cy - r0);
+  const at = (r: number, c: number): BiomeRelief => {
+    const i = Math.min(rows - 1, Math.max(0, r)) * cols + Math.min(cols - 1, Math.max(0, c));
+    if (terrain.ceiling[i]! > terrain.floor[i]!) return NO_RELIEF;
+    return BIOME_RELIEF[terrain.biomes[i] as Biome] ?? BIOME_RELIEF[Biome.OpenWater];
+  };
+  const b00 = at(r0, c0);
+  const b10 = at(r0, c0 + 1);
+  const b01 = at(r0 + 1, c0);
+  const b11 = at(r0 + 1, c0 + 1);
+  const lerp2 = (k: keyof BiomeRelief) =>
+    b00[k] +
+    (b10[k] - b00[k]) * fx +
+    (b01[k] + (b11[k] - b01[k]) * fx - b00[k] - (b10[k] - b00[k]) * fx) * fy;
+  return {
+    amplitudeM: lerp2('amplitudeM'),
+    roughness: lerp2('roughness'),
+    blockiness: lerp2('blockiness'),
+    mottle: lerp2('mottle'),
+  };
+}
 
 /**
  * Quantise a coordinate to the ruin grid, with the step ramped over ~30% of a
@@ -496,11 +606,11 @@ export function shadeSeabed(
     // Continuous cell coordinate of this pixel's centre.
     const cy = (py + 0.5) / ppc - 0.5;
     const r0 = Math.floor(cy);
-    const fy = smooth(cy - r0);
+    const fy = cellBlend(cy - r0);
     for (let px = ex0; px < ex1; px++) {
       const cx = (px + 0.5) / ppc - 0.5;
       const c0 = Math.floor(cx);
-      const fx = smooth(cx - c0);
+      const fx = cellBlend(cx - c0);
 
       const homeIndex = clampRow(Math.round(cy)) * cols + clampCol(Math.round(cx));
       const f00 = floorAt(r0, c0, homeIndex);
@@ -509,35 +619,22 @@ export function shadeSeabed(
       const f11 = floorAt(r0 + 1, c0 + 1, homeIndex);
       const floor = f00 + (f10 - f00) * fx + (f01 + (f11 - f01) * fx - f00 - (f10 - f00) * fx) * fy;
 
-      // Detail parameters interpolate the same way the floor does, so the
-      // *amount* of texture fades smoothly across a boundary while the field
-      // itself is one continuous function of world position.
-      const reliefOf = (r: number, c: number): BiomeRelief => {
-        const i = clampRow(r) * cols + clampCol(c);
-        if (isRock(i)) return { amplitudeM: 0, roughness: 0, blockiness: 0, mottle: 0 };
-        return BIOME_RELIEF[terrain.biomes[i] as Biome] ?? BIOME_RELIEF[Biome.OpenWater];
-      };
-      const b00 = reliefOf(r0, c0);
-      const b10 = reliefOf(r0, c0 + 1);
-      const b01 = reliefOf(r0 + 1, c0);
-      const b11 = reliefOf(r0 + 1, c0 + 1);
-      const lerp2 = (k: keyof BiomeRelief) =>
-        b00[k] +
-        (b10[k] - b00[k]) * fx +
-        (b01[k] + (b11[k] - b01[k]) * fx - b00[k] - (b10[k] - b00[k]) * fx) * fy;
-
       ground[(py - ey0) * ew + (px - ex0)] = floor;
-      height[(py - ey0) * ew + (px - ex0)] = detail
-        ? floor +
+      if (detail) {
+        const relief = reliefAtCell(terrain, cx, cy);
+        height[(py - ey0) * ew + (px - ex0)] =
+          floor +
           detailM(
             px * mPerPx,
             py * mPerPx,
             seed,
-            lerp2('amplitudeM'),
-            lerp2('roughness'),
-            lerp2('blockiness')
-          )
-        : floor;
+            relief.amplitudeM,
+            relief.roughness,
+            relief.blockiness
+          );
+      } else {
+        height[(py - ey0) * ew + (px - ex0)] = floor;
+      }
     }
   }
 
@@ -618,7 +715,7 @@ export function shadeSeabed(
         const gU = ground[i - (py > 0 ? ew : 0)]!;
         const gD = ground[i + (py < h - 1 ? ew : 0)]!;
         const biome = terrain.biomes[index] as Biome;
-        const base = BIOME_COLOR[biome] ?? BIOME_COLOR[Biome.OpenWater];
+        const base = bandedFill(terrain, xM, yM);
         const relief = BIOME_RELIEF[biome] ?? BIOME_RELIEF[Biome.OpenWater];
         // The deepest scour wins rather than two stacking, so a cluster's
         // hollow is no darker than one stone's.

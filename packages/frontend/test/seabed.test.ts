@@ -20,6 +20,8 @@ import {
   ROCK_RELIEF,
   seabedRange,
   seabedSeed,
+  bandedFill,
+  BIOME_BAND_M,
   SEABED_PX_PER_CELL,
   shadeSeabed,
   VENT_EMBER_CAP,
@@ -232,13 +234,18 @@ describe('the baked ground (#1103)', () => {
       row1: rows - 1,
     });
     const luminance = (r: number, g: number, b: number) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    const sums = new Map<number, { total: number; n: number }>();
+    const sums = new Map<number, { total: number; own: number; n: number }>();
     for (let py = 0; py < pixels.h; py++) {
       for (let px = 0; px < pixels.w; px++) {
         const index =
           Math.floor(py / SEABED_PX_PER_CELL) * cols + Math.floor(px / SEABED_PX_PER_CELL);
+        // The fill a pixel's texture is centred on: its biome's, eased across
+        // a coast's band (#1532). The band is the fill, not texture over it.
+        const mPerPx = 250 / SEABED_PX_PER_CELL;
         const fill =
-          ceiling[index]! > floor[index]! ? ROCK_FACE : BIOME_COLOR[biomes[index] as Biome];
+          ceiling[index]! > floor[index]!
+            ? ROCK_FACE
+            : bandedFill(terrain, px * mPerPx, py * mPerPx);
         const ceilingColor = scaleRgb(fill, 1 + TERRAIN_LIFT.BAKE);
         const j = (py * pixels.w + px) * 4;
         for (const [k, shift] of [16, 8, 0].entries()) {
@@ -247,19 +254,60 @@ describe('the baked ground (#1103)', () => {
             `pixel ${px},${py} lifts past the cap`
           );
         }
-        const entry = sums.get(fill) ?? { total: 0, n: 0 };
+        // Grouped by the cell's own biome, each pixel weighed against the
+        // fill it was centred on, so the band's own lift is not texture's.
+        const key = ceiling[index]! > floor[index]! ? -1 : biomes[index]!;
+        const entry = sums.get(key) ?? { total: 0, own: 0, n: 0 };
         entry.total += luminance(pixels.data[j]!, pixels.data[j + 1]!, pixels.data[j + 2]!);
+        entry.own += luminance((fill >> 16) & 0xff, (fill >> 8) & 0xff, fill & 0xff);
         entry.n++;
-        sums.set(fill, entry);
+        sums.set(key, entry);
       }
     }
-    for (const [fill, { total, n }] of sums) {
+    for (const [fill, { total, own: ownTotal, n }] of sums) {
       const mean = total / n;
-      const own = luminance((fill >> 16) & 0xff, (fill >> 8) & 0xff, fill & 0xff);
+      const own = ownTotal / n;
       // Within a thousandth of the fill (invariant row 46), plus the bake's
       // rounding to whole bytes: half a code value, no more.
-      assert.ok(mean <= own + 0.5, `fill ${fill.toString(16)} averages ${mean}, over ${own}`);
+      assert.ok(mean <= own + 0.5, `biome ${fill} averages ${mean}, over ${own}`);
     }
+  });
+});
+
+describe('the biome band (#1532)', () => {
+  // Coral Ruins west of a Thermal Vein, a mesa south of both.
+  const terrain = {
+    cols: 2,
+    rows: 2,
+    cellM: 250,
+    biomes: [Biome.CoralRuins, Biome.ThermalVein, Biome.CoralRuins, Biome.CoralRuins],
+    floor: [1600, 1600, 1600, 1600],
+    ceiling: [0, 0, 0, 3000],
+  };
+  const coral = BIOME_COLOR[Biome.CoralRuins];
+  const vein = BIOME_COLOR[Biome.ThermalVein];
+  const half = (shift: number) =>
+    Math.round((((coral >> shift) & 0xff) + ((vein >> shift) & 0xff)) / 2);
+
+  it('meets in one colour on the coast, from either side', () => {
+    const west = bandedFill(terrain, 249.999, 60 + BIOME_BAND_M + 10);
+    const east = bandedFill(terrain, 250.001, 60 + BIOME_BAND_M + 10);
+    for (const shift of [16, 8, 0]) {
+      assert.ok(Math.abs(((west >> shift) & 0xff) - half(shift)) <= 1, `west, channel ${shift}`);
+      assert.ok(Math.abs(((east >> shift) & 0xff) - half(shift)) <= 1, `east, channel ${shift}`);
+    }
+  });
+
+  it('is each biome its own fill a band in from the coast', () => {
+    assert.equal(bandedFill(terrain, 250 - BIOME_BAND_M, 125), coral);
+    assert.equal(bandedFill(terrain, 250 + BIOME_BAND_M, 125), vein);
+  });
+
+  it('eases nothing into rock, and nothing within one biome', () => {
+    // The vein's south neighbour is the mesa: its coast stays solid.
+    assert.equal(bandedFill(terrain, 375, 249), vein);
+    // Coral over coral, across the west column's row edge.
+    assert.equal(bandedFill(terrain, 60, 250), coral);
   });
 });
 

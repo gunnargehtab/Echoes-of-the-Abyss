@@ -30,8 +30,10 @@ import { cannedMap, cannedSnapshot } from './support/cannedMatch.ts';
 import { EchoRenderer, type RendererCallbacks } from '../src/game/EchoRenderer.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { buildHeightGrid } from '../src/game/perspectiveTerrain.ts';
+import { VEIL_FLOOR_RGB } from '../src/game/acousticVeil.ts';
 import {
   EXTERIOR_FADE_GLSL,
+  installOverviewShading,
   stepBorderStrength,
   apronFrame,
   apronMesh,
@@ -349,7 +351,7 @@ describe('the pilot view at its border', () => {
     // The fade's program, with the tutorial's ground surface chained after it.
     assert.equal(
       (mesh.material as MeshBasicMaterial).customProgramCacheKey(),
-      'echoes-world-border-5:sorrowgate-ground-1'
+      'echoes-world-border-6:sorrowgate-ground-2'
     );
   });
 
@@ -585,28 +587,59 @@ describe('the pilot view at its border', () => {
     assert.equal(snow(alone as unknown as Internals), 0, 'no border on a view drawn alone');
   });
 
-  it('shades the apron at the veil floor while anyone listens, and clear while nobody does', () => {
+  it('drains the exterior to the veil floor along the fade while anyone listens (#1532)', () => {
+    // docs/world-map.md §7.4: the exterior drains to the veil's floor by W,
+    // so at the edge it is as clear as the mission's ground. The floor is the
+    // fade's uniform, in display terms; the materials' own colour stays white,
+    // since a linear tint flat from the edge drew the surround below the
+    // backdrop.
     const { view } = mountView(true);
-    const color = () =>
-      ((view as unknown as { apron: { mesh: Mesh } }).apron.mesh.material as MeshBasicMaterial)
-        .color;
-    const overview = () =>
-      (
-        (view as unknown as { overview: { mesh: Mesh } }).overview.mesh
-          .material as MeshBasicMaterial
-      ).color;
+    const mesh = (name: 'apron' | 'overview') =>
+      (view as unknown as Record<string, { mesh: Mesh }>)[name]!.mesh.material as MeshBasicMaterial;
+    const floor = () =>
+      (view as unknown as { border: { uExteriorFloor: { value: number[] } } }).border.uExteriorFloor
+        .value;
     view.setVeilIntensity(1);
     view.applySnapshot(cannedSnapshot());
     pumpAnimationFrames();
-    const heard = color().clone();
-    assert.ok(heard.r < 0.5 && heard.b < 1, `the floor shade, not white: ${heard.getHexString()}`);
-    assert.equal(overview().getHex(), heard.getHex(), 'the overview under the same veil');
+    const heard = floor();
+    for (const [i, want] of [VEIL_FLOOR_RGB.r, VEIL_FLOOR_RGB.g, VEIL_FLOOR_RGB.b].entries()) {
+      assert.ok(Math.abs(heard[i]! - want) < 1e-9, `channel ${i}: ${heard[i]} for ${want}`);
+    }
+    assert.equal(mesh('apron').color.getHex(), 0xffffff, 'no tint on the apron itself');
+    assert.equal(mesh('overview').color.getHex(), 0xffffff, 'nor on the overview');
     view.resetForNewMatch();
     pumpAnimationFrames();
-    assert.equal(color().getHex(), 0xffffff, 'nobody listening: the field is clear and so is it');
+    assert.deepEqual(floor(), [1, 1, 1], 'nobody listening: the field is clear and so is it');
     view.applySnapshot(cannedSnapshot());
     view.setVeilIntensity(0);
     pumpAnimationFrames();
-    assert.equal(color().getHex(), 0xffffff, 'the veil turned off');
+    assert.deepEqual(floor(), [1, 1, 1], 'the veil turned off');
+  });
+
+  it('drains by the fade factor in the shader, after the output transform', () => {
+    const material = new MeshBasicMaterial();
+    installOverviewShading(
+      material,
+      {
+        uBorderRect: { value: [0, 0, 5000, 4000] },
+        uBorderStrength: { value: 1 },
+        uFocusDepthM: { value: 1500 },
+        uExteriorFloor: { value: [0.3, 0.38, 0.62] },
+      },
+      2200
+    );
+    const shader = {
+      uniforms: {} as Record<string, unknown>,
+      vertexShader: ShaderLib.basic.vertexShader,
+      fragmentShader: ShaderLib.basic.fragmentShader,
+    };
+    material.onBeforeCompile(shader as never, undefined as never);
+    const drain = shader.fragmentShader.indexOf(
+      'gl_FragColor.rgb *= mix( uExteriorFloor, vec3( 1.0 ), borderFade );'
+    );
+    assert.ok(drain > shader.fragmentShader.indexOf('#include <colorspace_fragment>'));
+    assert.ok(drain < shader.fragmentShader.indexOf('gl_FragColor.rgb = mix( borderDark'));
+    material.dispose();
   });
 });

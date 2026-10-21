@@ -374,6 +374,11 @@ export interface BorderUniforms {
   uBorderStrength: { value: number };
   /** The backdrop's own anchor (`WaterBackdrop.focusDepthUniform`), the object itself. */
   uFocusDepthM: { value: number };
+  /**
+   * The veil's floor, in display terms (`veilShade` at no clarity), that the
+   * exterior drains toward as it fades: white while nobody listens.
+   */
+  uExteriorFloor: { value: number[] };
 }
 
 /** The padded grid the apron's cells are read from, and where the mission sits in it. */
@@ -425,6 +430,15 @@ const borderVertex = (shader: { vertexShader: string }) => {
  * ramp, composed as the fog composes it). The apron and the overview run this
  * one chunk off one set of uniforms: one boundary term, wherever it is drawn.
  *
+ * The veil's floor rides the same factor (#1532): the exterior is drained
+ * toward it as it fades, so it is as clear as the mission's ground at the
+ * edge and wholly unheard by W, where it is the backdrop anyway. Multiplied
+ * here, after the output transform, so the floor means in the frame what
+ * `veilShade` says in display terms. Laid flat on the material's colour from
+ * the edge, it multiplied linear texels in the transfer curve's toe, where a
+ * third in display terms lands nearer a tenth, and drew the whole surround
+ * below the backdrop behind it.
+ *
  * `feathered` adds #1461's feather, the apron's alone: its last 500 m go to
  * the backdrop at every strength until the overview's skin lands (`uSeamOn`),
  * since until then nothing is drawn past its straight far edge, and a fade
@@ -444,6 +458,7 @@ const borderFadeFragment = (backdropSpanM: number, feathered = false) => `#inclu
           borderFade *= mix( borderFeather, 1.0, uSeamOn );`
               : ''
           }
+          gl_FragColor.rgb *= mix( uExteriorFloor, vec3( 1.0 ), borderFade );
           gl_FragColor.rgb = mix( borderDark, gl_FragColor.rgb, borderFade );
         #endif`;
 
@@ -498,6 +513,7 @@ export function installApronShading(
         uniform vec2 uApronPad;
         uniform float uBorderStrength;
         uniform float uFocusDepthM;
+        uniform vec3 uExteriorFloor;
         uniform sampler2D uOverviewMap;
         uniform float uSeamOn;
         uniform vec4 uOverviewFrame;
@@ -518,7 +534,7 @@ export function installApronShading(
       )
       .replace('#include <fog_fragment>', borderFadeFragment(backdropSpanM, true));
   };
-  material.customProgramCacheKey = () => 'echoes-world-border-5';
+  material.customProgramCacheKey = () => 'echoes-world-border-6';
   material.needsUpdate = true;
 }
 
@@ -544,11 +560,12 @@ export function installOverviewShading(
         varying vec2 vSurveyXZ;
         uniform float uBorderStrength;
         uniform float uFocusDepthM;
+        uniform vec3 uExteriorFloor;
         ${EXTERIOR_FADE_GLSL}`
       )
       .replace('#include <fog_fragment>', borderFadeFragment(backdropSpanM));
   };
-  material.customProgramCacheKey = () => 'echoes-world-overview-1';
+  material.customProgramCacheKey = () => 'echoes-world-overview-2';
   material.needsUpdate = true;
 }
 

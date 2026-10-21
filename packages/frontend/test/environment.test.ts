@@ -14,6 +14,8 @@ import { describe, it } from 'node:test';
 import { Biome } from '@echoes/shared';
 import {
   ENVIRONMENT_PROPS,
+  LOOK_DENSITY,
+  mapProps,
   placeProps,
   PROP_INSTANCE_CAP,
   PROP_TRI_RESERVATION,
@@ -227,14 +229,16 @@ describe('prop placement', () => {
   });
 
   it('licenses light only where Block 4 does', () => {
-    // The table's Light column, transcribed: three lit rows, each in its own
-    // family, and everything else 'none' so intake fails a glowing rock.
+    // The table's Light column, transcribed: four lit rows, the coral growth
+    // in the kelp's family since #1532, and everything else 'none' so intake
+    // fails a glowing rock.
     const lit = Object.fromEntries(
       ENVIRONMENT_PROPS.filter((s) => s.worldLight !== 'none').map((s) => [s.slug, s.worldLight])
     );
     assert.deepEqual(lit, {
       'env-vent-chimney': 'vent',
       'env-kelp-cluster': 'flora',
+      'env-coral-growth': 'flora',
       'env-resonance-crystal': 'crystal',
     });
   });
@@ -305,3 +309,48 @@ describe('sway weight', () => {
     assert.equal(swayWeight(10, 0), 0, 'a flat prop has no sway at all');
   });
 });
+
+describe("a look's density (docs/visual-reboot.md §4)", () => {
+  // Sorrowgate's regions, as docs/mission-sorrowgate.md §11 draws them.
+  const inConcourse = (p: { xM: number; yM: number }) => p.xM >= 1500 && p.xM < 3500 && p.yM < 750;
+  const inCourt = (p: { xM: number; yM: number }) =>
+    ((p.xM - 1750) / 750) ** 2 + ((p.yM - 2250) / 500) ** 2 <= 1 && p.yM < 3000;
+
+  it('dresses the prologue ground past the bare court and Concourse (#1532)', () => {
+    const standard = mapProps('sorrowgate');
+    const prologue = mapProps('sorrowgate', 'sorrowgate');
+    assert.ok(prologue.filter(inConcourse).length >= 5, 'the terminus carries ruins');
+    assert.ok(prologue.filter(inCourt).length > standard.filter(inCourt).length);
+    const tris = prologue.reduce((sum, p) => sum + propSpecTris(p.slug), 0);
+    assert.ok(prologue.length < PROP_INSTANCE_CAP && tris < PROP_TRI_RESERVATION, `${tris} tris`);
+  });
+
+  it('keeps every standard placement where it was', () => {
+    assert.deepEqual(LOOK_DENSITY.standard, {});
+    const terrain = {
+      cols: 4,
+      rows: 1,
+      cellM: 250,
+      biomes: [Biome.CoralRuins, Biome.ThermalVein, Biome.AbyssalTrench, Biome.KelpForest],
+      floor: [1600, 1600, 2400, 600],
+      ceiling: [0, 0, 0, 0],
+    };
+    assert.deepEqual(placeProps(terrain, ENVIRONMENT_PROPS, 'standard'), placeProps(terrain));
+  });
+
+  it('moves only the biomes the look names', () => {
+    const vein = {
+      cols: 8,
+      rows: 8,
+      cellM: 250,
+      biomes: new Array(64).fill(Biome.ThermalVein),
+      floor: new Array(64).fill(1600),
+      ceiling: new Array(64).fill(0),
+    };
+    assert.deepEqual(placeProps(vein, ENVIRONMENT_PROPS, 'sorrowgate'), placeProps(vein));
+  });
+});
+
+function propSpecTris(slug: string): number {
+  return ENVIRONMENT_PROPS.find((spec) => spec.slug === slug)!.triBudget;
+}

@@ -31,7 +31,7 @@ const SWAY_HOLD_S = 1.7;
 
 import { Color, Group, InstancedMesh, Matrix4, Quaternion, Vector3 } from 'three';
 import type { TerrainPayload } from '../net/GameClient.ts';
-import { placeProps, propSpec, type PropPlacement } from './environment.ts';
+import { ENVIRONMENT_PROPS, placeProps, propSpec, type PropPlacement } from './environment.ts';
 import { envTemplate, type SwayUniforms } from './environmentModels.ts';
 import type { WorldLook } from './tutorialLook.ts';
 import { VentPlume, plumeSites } from './ventPlume.ts';
@@ -91,7 +91,7 @@ export class EnvironmentLayer {
   rebuild(
     terrain: TerrainPayload,
     groundY: (xM: number, yM: number) => number,
-    placements: readonly PropPlacement[] = placeProps(terrain)
+    placements: readonly PropPlacement[] = placeProps(terrain, ENVIRONMENT_PROPS, this.look)
   ): void {
     const generation = ++this.generation;
     this.clear();

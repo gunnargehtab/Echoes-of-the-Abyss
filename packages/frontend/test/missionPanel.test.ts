@@ -20,13 +20,14 @@ import type { ReactTestInstance } from 'react-test-renderer';
 import {
   MovementHoldReason,
   ObjectiveStatus,
+  type AbilityLock,
   type BoundSig,
   type CommanderAbilityView,
   type MissionView,
   type ObjectiveView,
 } from '@echoes/shared';
-import './support/headless.ts';
-import { render, type Rendered } from './support/screen.ts';
+import { clearStorage, installStorage } from './support/headless.ts';
+import { click, render, type Rendered } from './support/screen.ts';
 import {
   APP_CSS,
   borderBoxWidth,
@@ -623,6 +624,150 @@ describe('the objectives panel: the affordances a mission withholds', () => {
       assert.equal(/held/.test(rendered.text().join(' ')), false);
     } finally {
       await rendered.unmount();
+    }
+  });
+});
+
+describe('the objectives panel: the withheld list, on one line and foldable', () => {
+  /** Sorrowgate's own seven locks under five reasons — the panel #1532 measured. */
+  const SORROWGATE_LOCKS: AbilityLock[] = [
+    { ability: 'weapons', reason: 'weapons cold — the hardpoints are on the table' },
+    { ability: 'torpedoes', reason: 'weapons cold — the hardpoints are on the table' },
+    { ability: 'mines', reason: "weapons cold — nothing of yours is left in the court's water" },
+    {
+      ability: 'depthCharges',
+      reason: "weapons cold — nothing of yours is left in the court's water",
+    },
+    { ability: 'noisemakers', reason: 'disabled — silence order' },
+    { ability: 'activeSonar', reason: 'disabled — the array was pulled with the hardpoints' },
+    { ability: 'construction', reason: "the court's water is not yours to build in" },
+  ];
+
+  const element = (view: MissionView) =>
+    createElement(MissionPanel, { view, onFocus: () => {}, onCommanderAbility: () => {} });
+
+  it('writes each reason on one line, after the names it covers', async () => {
+    // §10.5: `MINES · DEPTH CHARGES: weapons cold`. Names then reason inside
+    // one row, and the colon is what keeps the reason from reading as one more
+    // ability in a copied or spoken line.
+    const { rendered } = await panel(missionView({ locks: SORROWGATE_LOCKS }));
+    try {
+      const rows = rendered.allByClass('objectives-lock');
+      assert.equal(rows.length, 5, 'one row per reason');
+      assert.equal(
+        deepText(rows[1]!),
+        "mines · depth charges: weapons cold — nothing of yours is left in the court's water"
+      );
+    } finally {
+      await rendered.unmount();
+    }
+    // And on screen as well as in the text: neither half of the row is a block
+    // of its own, so the reason is not pushed onto a second line under the
+    // names. Read off the shipped stylesheet, because that is where a stacked
+    // row came from.
+    const rules = parseCss(APP_CSS);
+    const ancestors = [
+      { tag: 'div', classes: ['game-root'] },
+      { tag: 'div', classes: ['game-under'] },
+      { tag: 'section', classes: ['objectives'] },
+      { tag: 'div', classes: ['objectives-body'] },
+      { tag: 'div', classes: ['objectives-locks'] },
+      { tag: 'ul', classes: ['objectives-lock-list'] },
+      { tag: 'li', classes: ['objectives-lock'] },
+    ];
+    for (const half of ['objectives-lock-name', 'objectives-lock-reason']) {
+      const display = boxRulesFor(
+        rules,
+        { tag: 'span', classes: [half], ancestors },
+        new Set(['display'])
+      )
+        .flatMap((rule) => rule.declarations)
+        .filter(([property]) => property === 'display')
+        .at(-1)?.[1];
+      assert.ok(
+        display === undefined || display.startsWith('inline'),
+        `.${half} is \`display: ${display}\`, which stacks the row`
+      );
+    }
+  });
+
+  it('opens on the list, and folds it to a count of what is withheld', async () => {
+    const { rendered } = await panel(missionView({ locks: SORROWGATE_LOCKS }));
+    try {
+      const toggle = rendered.button('7 actions withheld');
+      assert.equal(toggle.props['aria-expanded'], true, 'open at the start of the mission');
+      const list = rendered.byClass('objectives-lock-list');
+      assert.equal(toggle.props['aria-controls'], list.props.id);
+      assert.notEqual(list.props.hidden, true);
+
+      await click(rendered, '7 actions withheld');
+      assert.equal(rendered.button('7 actions withheld').props['aria-expanded'], false);
+      assert.equal(rendered.byClass('objectives-lock-list').props.hidden, true);
+      // Hidden, not unmounted: every reason is still in the document.
+      assert.equal(rendered.allByClass('objectives-lock').length, 5);
+      assert.ok(rendered.shows("the court's water is not yours to build in"));
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('counts actions, not reasons, and says one as one', async () => {
+    const { rendered } = await panel(
+      missionView({ locks: [{ ability: 'activeSonar', reason: 'disabled — silence order' }] })
+    );
+    try {
+      assert.equal(rendered.button('1 action withheld').props['aria-expanded'], true);
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('opens again on its own when the withheld set changes, and not otherwise', async () => {
+    // §10.5: a lock that arrives or lifts is a rule the player has not read.
+    const view = missionView({ locks: SORROWGATE_LOCKS });
+    const { rendered } = await panel(view);
+    try {
+      await click(rendered, '7 actions withheld');
+      // The same locks on a later tick: the view is re-sent, the fold holds.
+      await rendered.update(element({ ...view, tick: view.tick + 60, debtS: 3 }));
+      assert.equal(rendered.button('7 actions withheld').props['aria-expanded'], false);
+
+      // A lock lifts.
+      await rendered.update(element({ ...view, locks: SORROWGATE_LOCKS.slice(0, 6) }));
+      assert.equal(rendered.button('6 actions withheld').props['aria-expanded'], true);
+      assert.notEqual(rendered.byClass('objectives-lock-list').props.hidden, true);
+
+      // A reason changes under the same abilities.
+      await click(rendered, '6 actions withheld');
+      const reworded = SORROWGATE_LOCKS.slice(0, 6).map((lock) =>
+        lock.ability === 'noisemakers'
+          ? { ...lock, reason: 'disabled — the court is listening' }
+          : lock
+      );
+      await rendered.update(element({ ...view, locks: reworded }));
+      assert.equal(rendered.button('6 actions withheld').props['aria-expanded'], true);
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('never carries a fold into the next mission, even on a device that remembers', async () => {
+    installStorage();
+    try {
+      const first = await panel(missionView({ locks: SORROWGATE_LOCKS }));
+      try {
+        await click(first.rendered, '7 actions withheld');
+      } finally {
+        await first.rendered.unmount();
+      }
+      const next = await panel(missionView({ locks: SORROWGATE_LOCKS }));
+      try {
+        assert.equal(next.rendered.button('7 actions withheld').props['aria-expanded'], true);
+      } finally {
+        await next.rendered.unmount();
+      }
+    } finally {
+      clearStorage();
     }
   });
 });

@@ -4,21 +4,25 @@
  * Ruins that also stands in the Kelp Forest: a civilisation's worth of
  * coral over a block of its masonry.
  *
- * "Coral Ruins | env-coral-growth | 12 m | 9 m | ≤ 400 | none ... ruin
- * props carry the geometric patterns of art-direction.md's "Environmental
- * Shapes" — right angles, terraces, a civilisation's worth of coral growth
- * over them" (docs/asset-prompts-3d.md, Block 4), under ENV STYLE:
- * "Natural or ruined form — stone, coral ... pressure-scarred and ancient;
- * nothing manufactured ... low-poly with crisp facets, at most two
- * materials", and no light of any kind. Two materials, 184 triangles,
- * 9.45 m tall at its 12 m by intake's measure (`sizeM.height`), which the
- * row has carried since #879 moved it from 8 m; 8 m raw, the old row's
- * figure and the frame every figure below is in, before `K` and the root's
- * fit.
+ * "Coral Ruins | env-coral-growth | 12 m | 10 m | ≤ 400 | `flora-biolight`,
+ * tip points ... ruin props carry the geometric patterns of
+ * art-direction.md's "Environmental Shapes" — right angles, terraces, a
+ * civilisation's worth of coral growth over them" (docs/asset-prompts-3d.md,
+ * Block 4), under ENV STYLE: "Natural or ruined form — stone, coral ...
+ * pressure-scarred and ancient; nothing manufactured ... low-poly with
+ * crisp facets, at most two materials", the one licensed light being
+ * `flora-biolight` at the branch tips (#1532, below). Three materials — the
+ * two stones the export carried and the light, the row's stated exception
+ * to the two-material cap — 196 triangles, 9.74 m tall at its 12 m by
+ * intake's measure (`sizeM.height`; 9.45 m before the tips, which the row
+ * carried as 9 m since #879 moved it from 8 m, and 10 m since #1532); 8 m
+ * raw, the old row's figure and the frame every figure below is in, before
+ * `K` and the root's fit.
  *
  * A port of the approved export (docs/concept-art/models/env-coral-growth.glb
  * as committed before #869), part for part in its order, every number the
- * export's own. What the file is made of: in `stone_dark`, a masonry block
+ * export's own, and since #1532 three lit tips after the last branch.
+ * What the file is made of: in `stone_dark`, a masonry block
  * 8.2 by 3 by 6 and a lip 3.8 by 1.3 by 2.4 beside it, three's boxes kept
  * indexed (seabed.mjs `kept`); in the ruins' `coral_stone` (#3A2B24 at
  * roughness 0.95 — `coralStoneRuin`, not the tower's #171D19), six lobes
@@ -28,7 +32,40 @@
  * three's own normals, each 44° off its own face where the neighbouring
  * facets are 88° apart — which is why `parts.mjs` prints them as "10 v
  * 4 t" with no constructor: an open cone to a point drops its four apex
- * triangles.
+ * triangles. Then in `biolight`, three tips: three's tetrahedron (`tetra`,
+ * at `TIP`), one at the apex of each of the three tallest branches,
+ * centred on the point the branch's own transform puts its apex at —
+ * (−0.27021, 8.78718, 0.363), (1.14173, 7.49684, 1.53688) and (−1.63171,
+ * 6.77279, −1.33783) raw, the cone's local (0, h/2, 0) through its node —
+ * so each sits with the branch's point inside it and rests on nothing else
+ * (kit.mjs `lightAudit` reads a 0 m gap; a tip standing off its branch
+ * would be a light in the water, #894).
+ *
+ * The light (#1532). docs/style-neon-noir.md "World light" licenses
+ * `flora-biolight` for "Kelp Forest, Coral Ruins — dim tips on kelp stalks
+ * and living coral, points and short lines, never a glowing canopy", and
+ * docs/habitats-art-brief.md has the ruin's own light as "flora-biolight on
+ * living coral, points only". The living coral here is the branches — the
+ * four cones standing off the lobes — so the tips go on them and on nothing
+ * in stone: not the masonry, not the lobes, not the plates. Three of four,
+ * the tallest, sparse the way the kelp lights three of its six stipes
+ * (props/kelp-cluster.mjs). The fixture is the kelp's to the digit —
+ * `seabed.ground.biolight`, #2E8C74 at `KHR_materials_emissive_strength`
+ * 0.55 over #0B1D19 at roughness 1 — so the family's one luminance (0.11
+ * effective, the doc's figure, under the ember's 0.18 ceiling) is what both
+ * props carry, and `finishes.mjs` sees one `biolight` at one value. `TIP`
+ * is 0.5: a tetrahedron stands on a square plan of side 1.155 r, 0.577 m
+ * raw and 0.588 m in the file after `K` and the root's ×1.186 (×1.0187
+ * together), so each tip holds two of the audit's four-cells-a-metre cells
+ * a side wherever the grid falls and reads at or over the 0.25 m² floor —
+ * the kelp's reasoning (#890) at this file's scale, which is ×1.24 the
+ * kelp's; the kelp's 0.6 would read 0.71 m here, a point grown past what a
+ * 9 m prop's branch head carries. All three are one fixture at one size.
+ * They add 12 triangles and nothing to the plan, which the lobes and plates
+ * draw wider than any branch, so `DRAWN` and the root's factor are the
+ * export's; the height is theirs, though — biolight_1's top corner stands
+ * 0.29 m raw over branch_01's apex, and intake's loose box reads the file
+ * at 9.74 m against 9.45 m before (a part's box, not its vertices, #876).
  *
  * Every node in the file is an identity, and every buffer carries its
  * part's whole transform: the generator placed the fifteen parts at the
@@ -47,7 +84,8 @@
  * ×1.186 with a rescale warning, so the root carries that one factor and
  * nothing else (seabed.mjs `stand`, with no lift, since the file's root
  * has none). `diff.mjs env-coral-growth 1856135` — the pre-port binary,
- * which is also the default rev — divides it out and lists nothing else.
+ * which is also the default rev — divides it out and lists the three tips
+ * as added, and nothing else.
  */
 import { THREE, add, box, exportGlb } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
@@ -56,9 +94,13 @@ const FOOTPRINT = 12;
 const DRAWN = 10.1139;
 /** The export's own factor over the round numbers below; see the header. */
 const K = 0.8587186;
+// A tip's tetrahedron, at the radius three takes: the smallest that shows
+// over the audit's 0.25 m² from above at this file's scale (the header).
+const TIP = 0.5;
 
 const stone = seabed.ground.stoneDark();
 const coral = seabed.ground.coralStoneRuin();
+const biolight = seabed.ground.biolight();
 
 const growth = new THREE.Group();
 growth.name = 'env_coral_growth';
@@ -105,10 +147,23 @@ add(growth, 'plate_02', seabed.octa([2.47, 0.38, 2.28]), coral, [-2.2, 4.4, 1.2]
 add(growth, 'plate_03', seabed.octa([1.92, 0.32, 1.6]), coral, [3.6, 3.7, 0.6], [0.35, 0.2, -0.3]);
 
 // Four branches standing off the top, the tallest to 8 m raw.
-add(growth, 'branch_01', branch(0.7, 3.4), coral, [-0.4, 7.1, 0.2], [0.12, 0.3, -0.08]);
-add(growth, 'branch_02', branch(0.55, 2.6), coral, [1.4, 6.3, 1.1], [0.35, 0, 0.2]);
-add(growth, 'branch_03', branch(0.5, 2.2), coral, [-1.9, 5.8, -0.9], [-0.25, 0.6, -0.3]);
-add(growth, 'branch_04', branch(0.45, 1.8), coral, [0.9, 5.6, -2.1], [-0.4, 0.2, 0.15]);
+const BRANCHES = [
+  ['branch_01', 0.7, 3.4, [-0.4, 7.1, 0.2], [0.12, 0.3, -0.08]],
+  ['branch_02', 0.55, 2.6, [1.4, 6.3, 1.1], [0.35, 0, 0.2]],
+  ['branch_03', 0.5, 2.2, [-1.9, 5.8, -0.9], [-0.25, 0.6, -0.3]],
+  ['branch_04', 0.45, 1.8, [0.9, 5.6, -2.1], [-0.4, 0.2, 0.15]],
+];
+const branches = BRANCHES.map(([name, r, h, p, e]) => add(growth, name, branch(r, h), coral, p, e));
+
+// The three lit tips, centred on the apex of each of the three tallest
+// branches: the cone's local (0, h/2, 0) through the branch's own transform,
+// in the raw frame, before K and the bake carry the lot together.
+growth.updateMatrixWorld(true);
+branches.slice(0, 3).forEach((mesh, i) => {
+  const h = BRANCHES[i][2];
+  const apex = mesh.localToWorld(new THREE.Vector3(0, h / 2, 0));
+  add(growth, `biolight_${i + 1}`, seabed.tetra(TIP), biolight, apex.toArray());
+});
 
 // The generator's last step, and the file's: the lot scaled by K, sat on
 // the ground by its vertex floor, and baked into the buffers under identity

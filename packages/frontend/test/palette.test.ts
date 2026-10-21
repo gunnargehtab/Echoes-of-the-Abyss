@@ -22,6 +22,7 @@ import { describe, it } from 'node:test';
 import { Biome, Faction, ResolutionTier, ResourceKind, TERRAIN_LIFT } from '@echoes/shared';
 import {
   BIOME_COLOR,
+  depthShade,
   PALETTE_LABEL,
   PALETTE_NAMES,
   PALETTES,
@@ -373,6 +374,20 @@ describe('the ground palette', () => {
       encodedLuminance(BIOME_COLOR[Biome.AbyssalTrench]) < 0.05,
       'the trench has come up into the band with the rest of the seabed'
     );
+  });
+
+  it('darkens no ground below the trench, and the trench not at all (#1532)', () => {
+    // docs/map-visuals.md §6: the trench fill is where "pitch black" ends, so
+    // depth has nothing left to take from it. Shaded like the rest, a basin at
+    // the foot of a map's range drew at a third of the water over it: a hole.
+    const trench = BIOME_COLOR[Biome.AbyssalTrench];
+    assert.equal(depthShade(trench, 2400, 340, 2400), trench, 'the basin keeps its fill');
+    for (const [biome, fill] of Object.entries(BIOME_COLOR)) {
+      if (Number(biome) === Biome.AbyssalTrench) continue;
+      // Every other fill still reaches its 0.55 deep end, which stands above it.
+      assert.equal(depthShade(fill, 2400, 340, 2400), scaleRgb(fill, 0.55), `biome ${biome}`);
+      assert.ok(encodedLuminance(scaleRgb(fill, 0.55)) > encodedLuminance(trench));
+    }
   });
 });
 

@@ -13,9 +13,10 @@
  * speech is audio, and the screen owes a mute player every word of it.
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { SIM } from '@echoes/shared';
 import type { MissionLine } from '../net/GameClient.ts';
+import { PanelFoldButton, foldedOut, usePanelFold } from './panelFold.tsx';
 
 /**
  * Match clock from the simulation tick, in the contact log's format on
@@ -37,6 +38,8 @@ export interface MissionLogProps {
 export function MissionLog({ lines }: MissionLogProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const pinnedToBottom = useRef(true);
+  const [folded, toggleFold] = usePanelFold('missionLog');
+  const listId = useId();
 
   // Follow the tail unless the player scrolled up to re-read something. A
   // line spoken at 09:00 is worth going back to at 10:40, and yanking them
@@ -45,12 +48,20 @@ export function MissionLog({ lines }: MissionLogProps) {
     const list = listRef.current;
     if (list === null || !pinnedToBottom.current) return;
     list.scrollTop = list.scrollHeight;
-  }, [lines]);
+  }, [lines, folded]);
 
   return (
-    <section className="mission-log" aria-label="Mission log">
-      <header className="mission-log-title">IN THE WATER</header>
+    <section className={folded ? 'mission-log folded' : 'mission-log'} aria-label="Mission log">
+      <header className="mission-log-title">
+        <PanelFoldButton
+          title="IN THE WATER"
+          folded={folded}
+          controls={listId}
+          onToggle={toggleFold}
+        />
+      </header>
       <div
+        id={listId}
         className="mission-log-entries"
         ref={listRef}
         role="log"
@@ -60,16 +71,25 @@ export function MissionLog({ lines }: MissionLogProps) {
           pinnedToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
         }}
       >
-        {lines.map((line, index) => (
-          // Two lines can share a tick and a speaker, and nothing on the wire
-          // identifies one, so position in the feed is the identity. The feed
-          // is append-only, so that index is stable.
-          <p className="mission-log-row" key={`${line.tick}-${index}`}>
-            <span className="mission-log-time">{stamp(line.tick)}</span>
-            <span className="mission-log-speaker">{line.speaker}</span>
-            <span className="mission-log-text">{line.text}</span>
-          </p>
-        ))}
+        {lines.map((line, index) => {
+          // A line spoken while the log is folded is its newest row, so it is
+          // on screen as it is said (docs/ui-ux.md §10).
+          const out = foldedOut(folded, index, lines.length);
+          return (
+            // Two lines can share a tick and a speaker, and nothing on the wire
+            // identifies one, so position in the feed is the identity. The feed
+            // is append-only, so that index is stable.
+            <p
+              className={out ? 'mission-log-row folded-out' : 'mission-log-row'}
+              key={`${line.tick}-${index}`}
+              hidden={out}
+            >
+              <span className="mission-log-time">{stamp(line.tick)}</span>
+              <span className="mission-log-speaker">{line.speaker}</span>
+              <span className="mission-log-text">{line.text}</span>
+            </p>
+          );
+        })}
       </div>
     </section>
   );
