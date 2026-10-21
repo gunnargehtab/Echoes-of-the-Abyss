@@ -4617,6 +4617,11 @@ export class PerspectiveView {
       structures: this.structureHandles.size,
       // Live Tier-4 hull tracks the chart handed over (#1531), and nothing else of the enemy.
       tracks: this.trackHandles.size,
+      // Where the first of them is, world metres, so a drive can frame it.
+      trackAt:
+        this.tracks.length === 0
+          ? null
+          : { x: this.tracks[0]!.x, z: this.tracks[0]!.y, depthM: this.tracks[0]!.depth },
       // Own ordnance in the water, drawn by the instanced layer (gate 6).
       ordnance: this.ordnanceLayer.count,
       // Wake bubbles alive this frame, every hull's one draw (#1508).
