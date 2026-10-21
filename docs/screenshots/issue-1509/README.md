@@ -26,7 +26,7 @@ Caisson.
   torpedo leaves in the second, and rise and thin through the last two. The hulls move
   between frames; the crop does not follow them.
 
-The drive names its frames `launch-<set>-<ms>ms.png` and took two sets. The first set is
-committed, renamed `launch-1.png` to `launch-4.png`, and `launch.json` keeps that set
-under the new names. The strip was cropped by hand: the box from (760, 240) to
+The drive names its frames `launch-<set>-<ms>ms.png` and aims for two sets, but took one
+before its 8-minute deadline. That set is committed, renamed `launch-1.png` to
+`launch-4.png`, and `launch.json` records it under the new names. The strip was cropped by hand: the box from (760, 240) to
 (1020, 460) of each frame, doubled with nearest-neighbour scaling.

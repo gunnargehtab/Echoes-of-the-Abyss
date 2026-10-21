@@ -62,7 +62,8 @@ The after probe at the capture cameras says which effects were in the frame. On
 Ventfront, 34 vent plumes stood and the moving fleet's wake held 1–11 live bubbles. One
 survey run (11 motes) and one low run (8 motes) caught a dredging harvester's silt plume:
 the third extra call in those two cells. On Sorrowgate, 3 vent plumes stood and no wake
-bubble was live. All 16 capture drives read 0 `shots`, `hits` and `ordnance`.
+bubble was live. All 8 after capture drives read 0 `shots`, `hits` and `ordnance`; the
+before probe has no `shots` or `hits` field.
 
 `fight.json` records none of the three. The fight's noisemaker and mine are ordnance, but
 the burst is torpedo-only (`ordnanceLayer.ts`, `OrdnanceKind.Torpedo`). Its calls, 61 → 63,
