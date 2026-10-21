@@ -8,9 +8,9 @@
  * with their route drawn on top (passages.ts), the map edge as a rim and a
  * dark skirt; the player's own force sails as the approved
  * roster models (rosterModels.ts) at true depth, with the flat baked sprites
- * as the loading fallback. A live Tier-4 enemy hull track sails the same way
- * (#1531): EchoRenderer hands it over with `setTracks`, and nothing else
- * about the enemy ever reaches this class. A WC3-lineage camera looks down and along at a
+ * as the loading fallback. A live Tier-4 enemy hull or structure track is
+ * drawn the same way (#1531, #1539): EchoRenderer hands it over with
+ * `setTracks`, and nothing else about the enemy ever reaches this class. A WC3-lineage camera looks down and along at a
  * fixed 55° pitch; yaw is locked, per the no-rotation rule the revision kept.
  *
  * Everything else on screen — contacts, rings, hazards, marks, bars, the whole
@@ -22,7 +22,7 @@
  *
  * Rules carried over intact, because a renderer change must never be a rules
  * change: server-authoritative fidelity (this class draws own-force payloads
- * and the live Tier-4 hull tracks the chart passes it, which carry nothing a
+ * and the live Tier-4 tracks the chart passes it, which carry nothing a
  * track did not already earn), texture-not-information
  * (the detail relief is render-only), and glow-is-loudness (model lamps swing
  * with live SIG on the gate-3 curve).
@@ -87,6 +87,7 @@ import {
   type OwnStructure,
   type OwnOrdnance,
   type OwnUnit,
+  type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
@@ -543,15 +544,18 @@ interface EntityHandle {
 }
 
 /**
- * A live Tier-4 enemy hull track, as the chart hands it to the conn view
- * (#1531). Every field is one the server attached at Tier 4: the kind and
- * faction from Tier 3, the depth floored to whole metres, and the heading,
- * which only a Track carries (`Contact`, packages/shared/src/types.ts).
+ * A live Tier-4 enemy track, as the chart hands it to the conn view: a hull
+ * (#1531) or a structure (#1539). Every field is one the server attached at
+ * Tier 4: the kind or structure and the faction from Tier 3, the depth
+ * floored to whole metres, and a hull's heading, which only a Track carries
+ * (`Contact`, packages/shared/src/types.ts).
  */
-export interface HullTrack {
+export interface Track {
   /** The contact's opaque per-observer handle, never an entity id. */
   id: number;
-  kind: UnitKind;
+  /** Exactly one of `kind` and `structure`, as on a `Contact`. */
+  kind?: UnitKind;
+  structure?: StructureKind;
   faction: Faction;
   x: number;
   y: number;
@@ -891,9 +895,9 @@ export class PerspectiveView {
 
   private readonly unitHandles = new Map<number, EntityHandle>();
   private readonly structureHandles = new Map<number, EntityHandle>();
-  /** Live Tier-4 hull tracks, keyed by contact handle (#1531). */
+  /** Live Tier-4 tracks, keyed by contact handle (#1531, #1539). */
   private readonly trackHandles = new Map<number, EntityHandle>();
-  private tracks: HullTrack[] = [];
+  private tracks: Track[] = [];
   private readonly spriteTextures = new Map<string, CanvasTexture>();
 
   /** Canvas CSS size, cached in resize(): projectPoint runs too hot to ask
@@ -3768,13 +3772,14 @@ export class PerspectiveView {
   }
 
   /**
-   * The live Tier-4 hull tracks this frame, from the chart (#1531). A track
+   * The live Tier-4 tracks this frame, from the chart (#1531, #1539). A track
    * earns its hull — "full resolution: exact unit, health, facing"
    * (docs/systems-echo.md §4) — and here that is the roster model, as an own
-   * hull's is. The chart decides which contacts qualify (`contactFidelity`)
-   * and calls this every frame; an unchanged set costs one comparison.
+   * hull's or structure's is. The chart decides which contacts qualify
+   * (`contactFidelity`) and calls this every frame; an unchanged set costs
+   * one comparison.
    */
-  setTracks(tracks: readonly HullTrack[]): void {
+  setTracks(tracks: readonly Track[]): void {
     if (sameTracks(this.tracks, tracks)) return;
     this.tracks = tracks.map((t) => ({ ...t }));
     if (this.renderer === null || this.terrain === null) return;
@@ -3791,6 +3796,11 @@ export class PerspectiveView {
    * so the model never claims a position between two returns. Lamps at their
    * intake-approved rest: a Tier-4 payload carries no SIG, and glow is
    * loudness (gate 3), so the hull shows no loudness it was not heard at.
+   *
+   * A structure stands on its depth, unrotated, as an own one does. The
+   * payload says nothing of its build progress, so a site at Tier 4 stands as
+   * the finished model: it claims a building, never a fact the Echo Layer
+   * did not send.
    */
   private syncTracks(): void {
     const live = new Set(this.tracks.map((t) => t.id));
@@ -3801,23 +3811,38 @@ export class PerspectiveView {
       }
     }
     for (const track of this.tracks) {
-      const restSig = statsFor(track.kind).sigIdle;
-      this.syncEntity(this.trackHandles, this.trackGroup, track.id, {
-        spriteKey: `unit:${track.kind}:${track.faction}:${ACTIVE_PALETTE.name}`,
-        canvas: hullSpriteCanvas(track.kind, track.faction),
-        sizeM: hullSpriteSizeM(track.kind, track.faction),
-        x: track.x,
-        z: track.y,
-        depthM: track.depth,
-        yaw: track.heading,
-        dimmed: false,
-        modelDesc: { unit: track.kind, faction: track.faction },
-        modelCacheKey: `unit:${track.kind}:${track.faction}:${ACTIVE_PALETTE.name}`,
-        liveSig: restSig,
-        restSig,
-        stands: false,
-        scaled: false,
-      });
+      const where = { x: track.x, z: track.y, depthM: track.depth, dimmed: false, scaled: false };
+      if (track.kind !== undefined) {
+        const key = `unit:${track.kind}:${track.faction}:${ACTIVE_PALETTE.name}`;
+        const restSig = statsFor(track.kind).sigIdle;
+        this.syncEntity(this.trackHandles, this.trackGroup, track.id, {
+          ...where,
+          spriteKey: key,
+          canvas: hullSpriteCanvas(track.kind, track.faction),
+          sizeM: hullSpriteSizeM(track.kind, track.faction),
+          yaw: track.heading,
+          modelDesc: { unit: track.kind, faction: track.faction },
+          modelCacheKey: key,
+          liveSig: restSig,
+          restSig,
+          stands: false,
+        });
+      } else if (track.structure !== undefined) {
+        const key = `structure:${track.structure}:${track.faction}:${ACTIVE_PALETTE.name}`;
+        const restSig = structureStatsFor(track.structure).sigIdle;
+        this.syncEntity(this.trackHandles, this.trackGroup, track.id, {
+          ...where,
+          spriteKey: key,
+          canvas: structureSpriteCanvas(track.structure, track.faction),
+          sizeM: structureSpriteSizeM(track.structure, track.faction),
+          yaw: 0,
+          modelDesc: { structure: track.structure, faction: track.faction },
+          modelCacheKey: key,
+          liveSig: restSig,
+          restSig,
+          stands: true,
+        });
+      }
     }
   }
 
@@ -4615,7 +4640,7 @@ export class PerspectiveView {
             ),
       units: this.unitHandles.size,
       structures: this.structureHandles.size,
-      // Live Tier-4 hull tracks the chart handed over (#1531), and nothing else of the enemy.
+      // Live Tier-4 tracks the chart handed over (#1531, #1539), and nothing else of the enemy.
       tracks: this.trackHandles.size,
       // Where the first of them is, world metres, so a drive can frame it.
       trackAt:
@@ -4900,7 +4925,7 @@ export class PerspectiveView {
 }
 
 /** Whether two track lists say the same thing, so a still frame syncs nothing. */
-function sameTracks(a: readonly HullTrack[], b: readonly HullTrack[]): boolean {
+function sameTracks(a: readonly Track[], b: readonly Track[]): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) {
     const p = a[i]!;
@@ -4908,6 +4933,7 @@ function sameTracks(a: readonly HullTrack[], b: readonly HullTrack[]): boolean {
     if (
       p.id !== q.id ||
       p.kind !== q.kind ||
+      p.structure !== q.structure ||
       p.faction !== q.faction ||
       p.x !== q.x ||
       p.y !== q.y ||

@@ -889,7 +889,7 @@ describe('renderer smoke test: the conn view', () => {
     }
   });
 
-  it('reports the force it was given, and of the enemy only its live hull tracks', async () => {
+  it('reports the force it was given, and of the enemy only its live tracks', async () => {
     const world = await boot();
     try {
       world.frame(3);
@@ -910,9 +910,10 @@ describe('renderer smoke test: the conn view', () => {
       assert.equal(report.structures, 1, 'the commissioned Bastion, not the building site');
       // Seven contacts are in the snapshot and one of them is in this scene:
       // the live Tier-4 Corvette track, as its model (#1531). The Tier-4
-      // torpedo is ordnance, not a hull, and nothing below Track is handed
-      // over, which is what keeps the world canvas from being a maphack.
-      assert.equal(report.tracks, 1, 'the one live hull track, and no other contact');
+      // torpedo is ordnance, not a hull or a structure, and nothing below
+      // Track is handed over — the classified Sentinel Turret included —
+      // which is what keeps the world canvas from being a maphack.
+      assert.equal(report.tracks, 1, 'the one live track, and no other contact');
       assert.equal(
         Object.keys(report).some((key) => key.includes('contact')),
         false,
@@ -956,6 +957,38 @@ describe('renderer smoke test: the conn view', () => {
       });
       world.frame(1);
       assert.equal(probe().tracks, 0, 'a classified hull is never a model');
+    } finally {
+      clock.mock.restore();
+      world.teardown();
+    }
+  });
+
+  it('stands a structure track as a model only while it is a live Track (#1539)', async () => {
+    const world = await boot();
+    let nowMs = 100_000;
+    const clock = mock.method(performance, 'now', () => nowMs);
+    try {
+      const probe = () =>
+        (
+          globalThis as unknown as { window: { __perspectiveProbe: () => { tracks: number } } }
+        ).window.__perspectiveProbe();
+      // The canned Sentinel Turret, resolved to Track rather than classified.
+      const tracked = (tick: number) => {
+        const snapshot = cannedSnapshot(tick);
+        return {
+          ...snapshot,
+          contacts: snapshot.contacts.map((c) =>
+            c.structure !== undefined ? { ...c, tier: ResolutionTier.Track } : c
+          ),
+        };
+      };
+      world.chart.applySnapshot(tracked(3000));
+      world.frame(1);
+      assert.equal(probe().tracks, 2, 'the Corvette and the turret, each as its model');
+
+      nowMs += LIVE_TRACK_MS + 1;
+      world.frame(1);
+      assert.equal(probe().tracks, 0, 'a ghosted structure track leaves the conn view');
     } finally {
       clock.mock.restore();
       world.teardown();

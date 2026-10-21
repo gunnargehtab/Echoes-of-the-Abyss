@@ -7,9 +7,9 @@
  * worth pinning under test without a GL context, and this is the whole of what
  * #834 changed. The draw loop asks once and then draws; it never re-decides.
  *
- * Since #1531 the same answer decides the conn view: a `sprite` hull track is
- * handed to PerspectiveView and sails there as its roster model, and nothing
- * else of the enemy is ever handed over.
+ * Since #1531 and #1539 the same answer decides the conn view: a `sprite` hull
+ * or structure track is handed to PerspectiveView and drawn there as its
+ * roster model, and nothing else of the enemy is ever handed over.
  */
 
 import { PERSISTENCE, ResolutionTier } from '@echoes/shared';
