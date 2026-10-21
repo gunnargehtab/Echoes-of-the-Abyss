@@ -1910,13 +1910,14 @@ metre, a range the band a generated one lands in; `Tris` is the per-instance bud
 | Resonance Field | `env-resonance-pylon` | 10 m | 31 m | ≤ 500 | none |
 | Coral Ruins | `env-ruin-block` | 25 m | 15–25 m | ≤ 400 | none |
 | Coral Ruins | `env-ruin-dome-shard` | 40 m | 16 m | ≤ 600 | none |
-| Coral Ruins | `env-coral-growth` | 12 m | 9 m | ≤ 400 | none |
+| Coral Ruins | `env-coral-growth` | 12 m | 10 m | ≤ 400 | `flora-biolight`, tip points |
 | Rock (any biome) | `env-rock-crag-a` / `-b` | 30 m | 30–50 m | ≤ 500 | none |
 | Open Water | `env-open-boulder` | 12 m | 6 m | ≤ 300 | none |
 
 Four heights moved to their approved models (#879): the trench slab from 10 m, the
 resonance pylon from 25 m, the dome shard from 20 m to 14 m and the coral growth from
-8 m; #883 then moved the shard's again, to its new file's. The
+8 m; #883 then moved the shard's again, to its new file's, and #1532 the growth's to
+10 m, its lit tips' corners now the top of its box. The
 footprint is the scale, and the height follows it. The pylon and the growth were drawn to
 the old figures, and the fit to their footprints stretched them (`seabed.mjs` `stand`).
 Since #876 the runtime draws at intake's measure, so a row's height is what the game
@@ -1939,6 +1940,16 @@ crystal and the toppled remains of older instruments; ruin props carry the geome
 patterns of [art-direction.md](art-direction.md)'s "Environmental Shapes" — right
 angles, terraces, a civilisation's worth of coral growth over them. Crags are the
 jagged-rock vocabulary for mesa edges anywhere on the map.
+
+`flora-biolight` is licensed for the Kelp Forest *and* the Coral Ruins
+([style-neon-noir.md](style-neon-noir.md) "World light", [map-visuals.md](map-visuals.md)
+"World light" column, [habitats-art-brief.md](habitats-art-brief.md) Sorrowgate's
+"Light"), and `env-coral-growth` carries it as the kelp cluster does: dim points on the
+living coral only — three tetrahedral tips at the heads of its three tallest branches, the
+kelp's `biolight` material to the digit — and nothing on its masonry, lobes or plates
+(#1532). It is the one prop with three materials: the export's two stones under the
+light. The two-material rule below stands for everything else, and intake takes
+`--max-materials 3` for this row only.
 
 Naming is `env-<biome-word>-<thing>.glb`, flat in `docs/concept-art/models/` beside the
 roster. Props ship as meshes, not baked maps, so the sprite-density contract
@@ -1989,7 +2000,8 @@ For environment props (Block 4):
 - Darker and quieter than any vessel — desaturated, no manufactured surfaces, nothing
   that could be mistaken for a structure or a contact?
 - Emissive only where the table licenses a world-light family, and dim within it?
-- At most two materials, inside the row's triangle budget?
+- At most two materials (three on `env-coral-growth` alone, its two stones under the
+  licensed light), inside the row's triangle budget?
 
 ## Related
 

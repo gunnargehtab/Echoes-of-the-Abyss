@@ -98,7 +98,7 @@ suffix saying which. Metalness is 0 on every one; roughness is the material's ow
 | `coral-stone-living` | `#171D19` | 1 | `coral_stone` | Coral tower |
 | `kelp` | `#2A2916` | 0.96 | `kelp` | Kelp cluster (two-sided) |
 | `ember-base` | `#0B0806` | 1 | `ember` | Vent chimney, under `vent-ember` |
-| `biolight-base` | `#0B1D19` | 1 | `biolight` | Kelp cluster, under `flora-biolight` |
+| `biolight-base` | `#0B1D19` | 1 | `biolight` | Kelp cluster, coral growth, under `flora-biolight` |
 | `violet-seam-base` | `#06050A` | 0.9 | `violet_seam` | Resonance crystal, under `crystal-seam` |
 
 Three rules ride with the table:
