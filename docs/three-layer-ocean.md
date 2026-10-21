@@ -126,9 +126,9 @@ The old spec was load-bearing. Each load moves; none is dropped:
   never what it receives. Contacts still arrive resolved, under opaque per-observer handles.
 - **The Asymmetric Fidelity Law.** Own force renders as full models. The enemy renders at the
   fidelity their detection earned: Tier 1 a smudge, Tier 2 a blurred blob, Tier 3 a
-  classified disc, and since #1531 a live Tier-4 hull track its roster model
-  ([art-direction.md](art-direction.md), "The Asymmetric Fidelity Law"). The renderer
-  cannot leak what the server never sent, and it stays that way.
+  classified disc, and since #1531 and #1539 a live Tier-4 hull or structure track its
+  roster model ([art-direction.md](art-direction.md), "The Asymmetric Fidelity Law"). The
+  renderer cannot leak what the server never sent, and it stays that way.
 - **Glow encodes loudness.** The `E(SIG)` energy curve in
   [graphics-standards.md](graphics-standards.md) gate 3 applies to runtime emissive materials
   exactly as it applied to baked emissive maps, up to the white the canvas can show, where

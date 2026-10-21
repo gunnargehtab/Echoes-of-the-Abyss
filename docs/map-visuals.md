@@ -536,8 +536,8 @@ form, and a test holds five axes of it:
 
 Four choices a reviewer should see:
 
-- **The overlay, not the conn scene.** Gate 5 hands the conn view live hull tracks and
-  nothing else of the enemy, and a creature is not a hull. §8's budget sentence named one
+- **The overlay, not the conn scene.** Gate 5 hands the conn view live hull and structure
+  tracks and nothing else of the enemy, and a creature is neither. §8's budget sentence named one
   Points draw per kind and a dot cap per field. It was read as written for public life, the
   only thing with a field, and is now scoped to say so.
 - **A ghost keeps its density.** Density follows the tier, which is knowledge, and brightness
