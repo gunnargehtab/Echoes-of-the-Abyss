@@ -256,6 +256,11 @@ diffuseColor.a *= 1.0 - plumeR * plumeR;`
     return this.sites.length;
   }
 
+  /** The first column's mouth, so a capture can frame it; null when none stands. */
+  get firstSite(): PlumeSite | null {
+    return this.sites[0] ?? null;
+  }
+
   /** The shader's clock as last written, for the tests. */
   get clockS(): number {
     return this.uniforms.uPlumeTime.value;

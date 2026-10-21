@@ -3561,6 +3561,12 @@ export class PerspectiveView {
   }
 
   /** The first dredging harvester's position, world metres, or null: the probe's. */
+  private ventPlumeAt(): { x: number; z: number; depthM: number } | null {
+    const site = this.environment.plume.firstSite;
+    if (site === null) return null;
+    return { x: site.xM, z: site.yM, depthM: -site.y / DEPTH_VISUAL_M_PER_M };
+  }
+
   private plumeAt(): { x: number; z: number; depthM: number } | null {
     for (const id of this.dredging.keys()) {
       const unit = this.units.find((u) => u.id === id);
@@ -4519,6 +4525,8 @@ export class PerspectiveView {
       plumeMotes: this.plume.count,
       // Where the first dredging harvester stands, world metres, so a drive can frame it.
       plumeAt: this.plumeAt(),
+      // The first vent chimney's mouth, world metres, so a drive can frame its steam (#1514).
+      ventPlumeAt: this.ventPlumeAt(),
       hitAt: this.lastHitAt,
       // Own guns' shots since the view was made, their flash and ring, and
       // the siege hulls still kicking back (#1511).
