@@ -1317,7 +1317,8 @@ throttle's SIG against Overburden's: a harder dredge is louder, so its cloud is 
 higher and denser. Each mote lifts straight up and settles back on the same line, so the
 plume never drifts sideways ([map-visuals.md](map-visuals.md) §8). Silt wears no faction
 glow: it is a dim sediment fleck. A struck dredge never plumes. Reduced motion draws each
-dredging harvester one fixed cloud, the same size, at constant brightness.
+dredging harvester one fixed cloud, sized by strength as the moving plume is, at constant
+brightness.
 
 ### The Asymmetric Fidelity Law
 
