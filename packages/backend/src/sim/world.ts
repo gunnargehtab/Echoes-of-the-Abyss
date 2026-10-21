@@ -503,6 +503,14 @@ export interface PendingSelfEvent {
    */
   slot: number;
   bearing?: number;
+  /**
+   * `Fired` only: what the gun shot at and where the gun stood. Turned into a
+   * bearing at the drain, against the point the owner was shown of that
+   * target, never its true position (#1511).
+   */
+  target?: number;
+  fromX?: number;
+  fromY?: number;
   /** `HarvesterIdle` only — why the hull ran out of work. */
   idleReason?: HarvestIdleReason;
 }

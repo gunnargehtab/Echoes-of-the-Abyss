@@ -3228,6 +3228,16 @@ export class Match {
       seen.add(key);
       const event: SelfEvent = { kind: pending.kind, unitId: pending.eid };
       if (pending.bearing !== undefined) event.bearing = pending.bearing;
+      // A shot's bearing points at the point the owner was shown of its
+      // target (docs/systems-combat.md §7, the #1247 aiming rule), and only
+      // at Bearing or better: below that the slot was shown no position, and
+      // the truth would be a fix it never earned (#1511).
+      if (pending.target !== undefined) {
+        const shown = this.echo.firingSolution(pending.slot, pending.target);
+        if (shown !== undefined && shown.tier >= ResolutionTier.Bearing) {
+          event.bearing = Math.atan2(shown.y - pending.fromY!, shown.x - pending.fromX!);
+        }
+      }
       if (pending.idleReason !== undefined) event.idleReason = pending.idleReason;
       bucket.push(event);
     }

@@ -86,6 +86,25 @@ describe('GunFire', () => {
     assert.equal(east, west, 'evenly round');
   });
 
+  it('flashes all round from the gun itself, and kicks nothing, with no bearing', () => {
+    const fire = new GunFire();
+    fire.fire(1, 0, -300, 0, null, 10, 0, true);
+    assert.equal(fire.shotCount, 1);
+    assert.equal(fire.recoiling, 0, 'no bearing, no astern to kick toward');
+    fire.tick(200);
+    const at = fire.points.geometry.getAttribute('position');
+    let sx = 0;
+    let sz = 0;
+    for (let i = 0; i < FLASH_PARTICLES; i++) {
+      sx += Math.sign(at.getX(i));
+      sz += Math.sign(at.getZ(i));
+    }
+    assert.ok(
+      Math.abs(sx) < FLASH_PARTICLES && Math.abs(sz) < FLASH_PARTICLES,
+      'not one direction'
+    );
+  });
+
   it('kicks a siege hull astern of the bearing and puts it back', () => {
     const fire = new GunFire();
     fire.fire(1, 0, 0, 0, 0, 10, 0, true);
@@ -209,10 +228,20 @@ describe('the conn view on a Fired', () => {
     assert.equal(probe().shots, 2);
     assert.equal(probe().recoiling, 1);
 
-    view.applySnapshot({ ...cannedSnapshot(303), units: bell.units, selfEvents: [] });
+    // A shot at a target the slot holds below Bearing carries no bearing
+    // (#1511): still one effect, along the hull's own heading.
+    const blind = cannedSnapshot(303);
+    blind.units[0]!.kind = UnitKind.Tocsin;
+    blind.selfEvents = [{ kind: SelfEventKind.Fired, unitId: gun.id }];
+    view.applySnapshot(blind);
+    clock += 16;
+    pumpAnimationFrames();
+    assert.equal(probe().shots, 3, 'a shot with no bearing is still drawn');
+
+    view.applySnapshot({ ...cannedSnapshot(304), units: bell.units, selfEvents: [] });
     clock += RING_LIFE_MS + RECOIL_KICK_MS + RECOIL_SETTLE_MS;
     pumpAnimationFrames();
-    assert.equal(probe().shots, 2, 'nothing new is fired');
+    assert.equal(probe().shots, 3, 'nothing new is fired');
     assert.equal(probe().shotParticles, 0);
     assert.equal(probe().recoiling, 0);
   });

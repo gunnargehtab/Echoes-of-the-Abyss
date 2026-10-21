@@ -3601,12 +3601,15 @@ export class PerspectiveView {
   /**
    * One muzzle effect per `Fired`, from where the gun is drawn, on the
    * bearing the server says it fired (gunFire.ts). A siege hull also kicks.
-   * A gun gone with the tick is not drawn, and gets none.
+   * A gun gone with the tick is not drawn, and gets none. A shot at a target
+   * shown at less than Bearing carries no bearing (#1511): a hull's flash
+   * then leaves along its own heading, and a turret, which has none, flashes
+   * all round.
    */
   private fireGuns(snapshot: EchoSnapshot): void {
     let now = -1;
     for (const event of snapshot.selfEvents) {
-      if (event.kind !== SelfEventKind.Fired || event.bearing === undefined) continue;
+      if (event.kind !== SelfEventKind.Fired) continue;
       const unit = this.units.find((u) => u.id === event.unitId);
       const entity = unit ?? this.structures.find((s) => s.id === event.unitId);
       const handle = this.unitHandles.get(event.unitId) ?? this.structureHandles.get(event.unitId);
@@ -3616,12 +3619,14 @@ export class PerspectiveView {
         this.gunFire.setPalette(FACTION_PALETTE[this.faction].glow);
       }
       const at = handle.mesh.visible ? handle.mesh.position : handle.model!.root.position;
+      const bearing =
+        event.bearing ?? (unit !== undefined ? (this.headings.get(unit.id) ?? 0) : null);
       this.gunFire.fire(
         event.unitId,
         at.x,
         at.y,
         at.z,
-        event.bearing,
+        bearing,
         0.5 * this.drawScale * (handle.model?.lengthM ?? handle.widthM),
         now,
         unit !== undefined && isSiegeHull(unit.kind)

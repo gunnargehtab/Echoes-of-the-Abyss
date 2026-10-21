@@ -1,12 +1,19 @@
 /**
  * `SelfEventKind.Fired` (#1511): a gun's shot is told to its owner, with the
- * bearing it fired on, and to nobody else. The client draws its muzzle effect
+ * bearing to the point the owner was shown of its target, and to nobody else. The client draws its muzzle effect
  * from this event alone, so a missing shot is a gun firing with nothing to
  * see, and a shot told to the enemy would be a bearing it never resolved.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { Faction, SIM, SelfEventKind, StructureKind, UnitKind } from '@echoes/shared';
+import {
+  Faction,
+  ResolutionTier,
+  SIM,
+  SelfEventKind,
+  StructureKind,
+  UnitKind,
+} from '@echoes/shared';
 import type { EchoSnapshot } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
@@ -107,6 +114,53 @@ describe('Fired', () => {
     for (const shot of shots) {
       assert.equal(shot.unitId, turret);
       assert.ok(Math.abs(Math.abs(shot.bearing!) - Math.PI) < 1e-6, `bearing ${shot.bearing}`);
+    }
+  });
+
+  it('aims at the point the owner was shown, and carries no bearing below Bearing', () => {
+    const match = openWaterMatch();
+    const gun = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Pelagia,
+      x: 6000,
+      y: 6000,
+    });
+    spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 1,
+      faction: Faction.Directorate,
+      x: 6000,
+      y: 6300,
+      weaponsCold: true,
+    });
+    // The Echo layer decides what slot 0 was shown; the drain may read nothing
+    // else. Each pass is told a different story, and the bearing must follow
+    // the story rather than the prey's true position due +y.
+    type Shown = ReturnType<typeof match.echo.firingSolution>;
+    let shown: Shown = undefined;
+    const real = match.echo.firingSolution.bind(match.echo);
+    match.echo.firingSolution = (slot, eid) => (slot === 0 ? shown : real(slot, eid));
+
+    const shots = (story: Shown) => {
+      shown = story;
+      return run(match, 2).flatMap((views) =>
+        views.get(0)!.selfEvents.filter((e) => e.kind === SelfEventKind.Fired)
+      );
+    };
+
+    // A Tier-2 ghost due +x of the gun: the bearing points at the ghost.
+    const ghost = shots({ tier: ResolutionTier.Bearing, x: 6400, y: 6000 });
+    assert.ok(ghost.length > 0, 'the gun fired');
+    for (const e of ghost) {
+      assert.equal(e.unitId, gun);
+      assert.ok(e.bearing !== undefined && Math.abs(e.bearing) < 0.05, `bearing ${e.bearing}`);
+    }
+    // A Tier-1 return, and a target the slot no longer holds: no bearing.
+    for (const story of [{ tier: ResolutionTier.Contact, x: 6000, y: 6000 }, undefined]) {
+      const blind = shots(story);
+      assert.ok(blind.length > 0, 'the gun still fired');
+      for (const e of blind) assert.equal(e.bearing, undefined, `tier ${story?.tier}`);
     }
   });
 });

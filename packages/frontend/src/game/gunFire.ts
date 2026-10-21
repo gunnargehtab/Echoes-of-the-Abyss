@@ -7,8 +7,9 @@
  * An own gun used to fire with nothing to see. On the server's
  * `SelfEventKind.Fired` a short flash leaves the hull or turret on the bearing
  * it fired, a pressure ring spreads flat from the muzzle, and a siege hull
- * kicks back off the shot and settles. The bearing is the gun's own aim, which
- * the server sends its owner alone; nothing here reads an enemy position.
+ * kicks back off the shot and settles. The bearing points at what the owner
+ * was shown of the target, sent to the owner alone, or is absent when they
+ * were shown no position; nothing here reads an enemy position.
  *
  * One `Points` from a fixed ring of FIRE_POOL slots, as the hit is drawn
  * (hullHit.ts): one draw call for every shot at once, none when no particle
@@ -192,27 +193,31 @@ export class GunFire {
    * One `Fired`: throw the flash and the ring from the muzzle, in world units,
    * and start the hull's recoil if it is a siege hull. `x`/`z` is where the
    * gun is drawn and `bearing` is the server's, radians from world +x toward
-   * +y, which the view draws as +z. `radiusM` is the drawn half-length.
+   * +y, which the view draws as +z. `radiusM` is the drawn half-length. A
+   * null bearing is a turret's shot at a target its owner was never shown a
+   * position for: the flash leaves all round, from the gun itself, and
+   * nothing recoils.
    */
   fire(
     id: number,
     x: number,
     y: number,
     z: number,
-    bearing: number,
+    bearing: number | null,
     radiusM: number,
     nowMs: number,
     recoils = false
   ): void {
     this.shots++;
     const r = Math.max(radiusM, 1e-3);
-    const bx = Math.cos(bearing);
-    const bz = Math.sin(bearing);
-    const mx = x + bx * r * MUZZLE_SHARE;
-    const mz = z + bz * r * MUZZLE_SHARE;
+    const aimed = bearing !== null;
+    const mx = aimed ? x + Math.cos(bearing) * r * MUZZLE_SHARE : x;
+    const mz = aimed ? z + Math.sin(bearing) * r * MUZZLE_SHARE : z;
     for (let k = 0; k < FLASH_PARTICLES; k++) {
       const seed = this.thrown * 4;
-      const yaw = bearing + (hash(seed) * 2 - 1) * FLASH_CONE_RAD;
+      const yaw = aimed
+        ? bearing + (hash(seed) * 2 - 1) * FLASH_CONE_RAD
+        : hash(seed) * Math.PI * 2;
       const speed = r * FLASH_SPEED_PER_S * (0.4 + 0.6 * hash(seed + 1));
       const lift = r * (hash(seed + 2) - 0.5) * 0.6;
       this.spawn(mx, y, mz, Math.cos(yaw) * speed, lift, Math.sin(yaw) * speed, true, nowMs);
@@ -224,7 +229,7 @@ export class GunFire {
       const speed = r * RING_SPREAD_PER_S;
       this.spawn(mx, y, mz, Math.cos(yaw) * speed, 0, Math.sin(yaw) * speed, false, nowMs);
     }
-    if (recoils) this.recoils.set(id, { bearing, radiusM: r, bornAt: nowMs });
+    if (recoils && aimed) this.recoils.set(id, { bearing, radiusM: r, bornAt: nowMs });
   }
 
   /**

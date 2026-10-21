@@ -1445,8 +1445,12 @@ fired on, white-hot cooling into the faction glow over about a third of a second
 ring spreading flat from the muzzle for three quarters of one. A siege hull, the Furnace's
 cutter and the Tocsin's bell, also kicks astern of that bearing by 12% of its drawn
 half-length in 70 ms and settles over 650 ms: the "heavy recoil" above. The trigger is the
-server's `Fired` self-event, which only the gun's owner receives, and its bearing is the
-gun's own aim. Reduced motion keeps the flash and drops the ring and the recoil.
+server's `Fired` self-event, which only the gun's owner receives. Its bearing points at the
+point the owner was shown of the target, the spot a torpedo is aimed at
+([systems-combat.md](systems-combat.md) §7), and only at Bearing or better. Below Bearing a
+gun can be firing at a smudge or a ghost, so the event carries no bearing: a hull's flash
+leaves along its own heading, and a turret's flashes all round with nothing to kick. Reduced
+motion keeps the flash and drops the ring and the recoil.
 
 ### Echo Layer Requirements
 
