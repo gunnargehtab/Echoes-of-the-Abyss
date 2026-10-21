@@ -911,6 +911,13 @@ speak:
   its own — a plateau in kelp is still kelp-green, only paler — because hue belongs to the
   biome and the biome is what the Echo Layer prices sound by. A player should be able to see
   the trench, the shelf and the vent line as terrain before they know any of the numbers.
+  Where two biomes meet, each fill eases into the other across 60 m of the cell edge
+  (`BIOME_BAND_M`, [#1532](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1532)),
+  the two meeting half and half on the line. Inside that band a pixel carries a mix of two
+  biomes' hues, and nowhere else: the coast the survey ink dashes on the edge is still the
+  PF line, so which biome holds a cell is read from the ink, never from the band. A hard cut
+  printed the 250 m grid back onto every authored ramp, vein and dome as a staircase of
+  colour. Rock keeps its solid coast and takes no band.
 - **Ground you cannot enter speaks in the interface voice.** Whether ground blocks you is not
   a property of the ground, it is a relationship between the ground and *your* hulls: a ridge
   that stops a deep raider is open water to a scout. So it is drawn only while something is

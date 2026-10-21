@@ -88,7 +88,10 @@ reference, the way `WATER_RAMP` is: the values are TUNABLE, the shape is not.
 - **Coastlines** are drawn **exactly on the cell edges** where the ground changes kind: solid
   where water meets rock, dashed where one biome meets another. The biome is the propagation
   factor, and a coastline that rounded a corner would draw a PF boundary that is not there.
-  Edges on the map's own perimeter are the rim's, not the coast's.
+  Edges on the map's own perimeter are the rim's, not the coast's. The fills either side
+  ease into each other across 60 m of the edge ([art-direction.md](art-direction.md),
+  "Reading the Sea Floor"); the dashed coast is what states the boundary, so the ink stays
+  on the edge whatever the fill does beside it.
 
 Seven rules ride with the ink, and each is a review question:
 
