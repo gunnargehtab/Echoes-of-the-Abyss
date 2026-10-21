@@ -990,8 +990,8 @@ something new, and a log role would re-announce the whole panel every time a cou
   teaches nothing and §1.5 forbids finding out what something cost by paying it.
 - **The withheld list may fold to its count, and it opens on its own whenever there is
   something new to learn.** It is the one part of this panel that may fold (§2), because it
-  is the part a player stops needing once read: Sorrowgate withholds seven actions under four
-  reasons for the whole mission, and after the first minute those four rows are chrome over
+  is the part a player stops needing once read: Sorrowgate withholds seven actions under five
+  reasons for the whole mission, and after the first minute those five rows are chrome over
   the water and nothing more. Folded, it reads `7 actions withheld ▸` — a count of the player's own
   actions, never of anything hostile — so the player always knows that something is being
   withheld and that one press shows what. That count is load-bearing rather than a nicety
