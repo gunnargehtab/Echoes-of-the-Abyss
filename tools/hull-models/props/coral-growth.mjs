@@ -4,7 +4,7 @@
  * Ruins that also stands in the Kelp Forest: a civilisation's worth of
  * coral over a block of its masonry.
  *
- * "Coral Ruins | env-coral-growth | 12 m | 9 m | ≤ 400 | `flora-biolight`,
+ * "Coral Ruins | env-coral-growth | 12 m | 10 m | ≤ 400 | `flora-biolight`,
  * tip points ... ruin props carry the geometric patterns of
  * art-direction.md's "Environmental Shapes" — right angles, terraces, a
  * civilisation's worth of coral growth over them" (docs/asset-prompts-3d.md,

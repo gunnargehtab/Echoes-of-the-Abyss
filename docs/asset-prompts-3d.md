@@ -1886,7 +1886,8 @@ is scenery in a lightless ocean and must read darker and quieter than any
 vessel. Lighting: one hard cyan rim light (#35E0FF) for the review render
 only — the model itself carries no lights and no emissive unless the prompt
 says so. Strong readable silhouette from a high 55-degree RTS camera;
-low-poly with crisp facets, at most two materials. No text, no water
+low-poly with crisp facets, at most two materials (three for
+env-coral-growth: its two stones and its light). No text, no water
 surface — this stands on the seabed, deep underwater.
 ```
 
@@ -1944,8 +1945,8 @@ jagged-rock vocabulary for mesa edges anywhere on the map.
 `flora-biolight` is licensed for the Kelp Forest *and* the Coral Ruins
 ([style-neon-noir.md](style-neon-noir.md) "World light", [map-visuals.md](map-visuals.md)
 "World light" column, [habitats-art-brief.md](habitats-art-brief.md) Sorrowgate's
-"Light"), and `env-coral-growth` carries it as the kelp cluster does: dim points on the
-living coral only — three tetrahedral tips at the heads of its three tallest branches, the
+"Light"), and `env-coral-growth` carries it as the kelp cluster does, by the owner's call
+on #1532: dim points on its branches only — three tetrahedral tips at the heads of its three tallest branches, the
 kelp's `biolight` material to the digit — and nothing on its masonry, lobes or plates
 (#1532). It is the one prop with three materials: the export's two stones under the
 light. The two-material rule below stands for everything else, and intake takes

@@ -227,14 +227,16 @@ describe('prop placement', () => {
   });
 
   it('licenses light only where Block 4 does', () => {
-    // The table's Light column, transcribed: three lit rows, each in its own
-    // family, and everything else 'none' so intake fails a glowing rock.
+    // The table's Light column, transcribed: four lit rows, the coral growth
+    // in the kelp's family since #1532, and everything else 'none' so intake
+    // fails a glowing rock.
     const lit = Object.fromEntries(
       ENVIRONMENT_PROPS.filter((s) => s.worldLight !== 'none').map((s) => [s.slug, s.worldLight])
     );
     assert.deepEqual(lit, {
       'env-vent-chimney': 'vent',
       'env-kelp-cluster': 'flora',
+      'env-coral-growth': 'flora',
       'env-resonance-crystal': 'crystal',
     });
   });
