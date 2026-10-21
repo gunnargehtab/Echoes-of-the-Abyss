@@ -14,10 +14,11 @@
  * exists for — reasoning about what was knowable at the time.
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { ResolutionTier } from '@echoes/shared';
 import { stamp } from './clock.ts';
 import type { ContactLogEntry } from './EchoRenderer.ts';
+import { PanelFoldButton, foldedOut, usePanelFold } from './panelFold.tsx';
 
 const TIER_LABEL: Record<ResolutionTier, string> = {
   [ResolutionTier.Silent]: '---',
@@ -69,20 +70,31 @@ export interface ContactLogProps {
 export function ContactLog({ entries, onFocus }: ContactLogProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const pinnedToBottom = useRef(true);
+  const [folded, toggleFold] = usePanelFold('contactLog');
+  const listId = useId();
 
   // Follow the tail, unless the player has scrolled up to read something —
   // yanking them back to the newest line mid-read would make the log useless
-  // for exactly the analysis it exists to support.
+  // for exactly the analysis it exists to support. Opening a fold counts as
+  // new content: the rows that come back are above the tail, not below it.
   useEffect(() => {
     const list = listRef.current;
     if (list === null || !pinnedToBottom.current) return;
     list.scrollTop = list.scrollHeight;
-  }, [entries]);
+  }, [entries, folded]);
 
   return (
-    <section className="contact-log" aria-label="Contact log">
-      <header className="contact-log-title">CONTACT LOG</header>
+    <section className={folded ? 'contact-log folded' : 'contact-log'} aria-label="Contact log">
+      <header className="contact-log-title">
+        <PanelFoldButton
+          title="CONTACT LOG"
+          folded={folded}
+          controls={listId}
+          onToggle={toggleFold}
+        />
+      </header>
       <div
+        id={listId}
         className="contact-log-entries"
         ref={listRef}
         // A live region: the log is the mute-play information channel, so a
@@ -95,28 +107,35 @@ export function ContactLog({ entries, onFocus }: ContactLogProps) {
         }}
       >
         {entries.length === 0 && <p className="contact-log-empty">no contacts</p>}
-        {entries.map((entry) => (
-          <button
-            key={entry.id}
-            type="button"
-            className={`contact-log-row tier-${entry.tier}${entry.mark === true ? ' mark' : ''}${
-              entry.fresh ? ' fresh' : ''
-            }`}
-            // Focus only where a position was actually reported. A Tier-1 row
-            // has nowhere honest to send the camera.
-            disabled={entry.focusX === undefined}
-            onClick={() => {
-              if (entry.focusX !== undefined && entry.focusY !== undefined) {
-                onFocus(entry.focusX, entry.focusY);
-              }
-            }}
-          >
-            <span className="contact-log-time">{stamp(entry.tick)}</span>
-            <span className="contact-log-tier">{tierLabel(entry)}</span>
-            <span className="contact-log-label">{entry.label}</span>
-            <span className="contact-log-detail">{detail(entry)}</span>
-          </button>
-        ))}
+        {entries.map((entry, index) => {
+          // Folded out of sight, never out of the log: the row stays in this
+          // live region, and the newest rows are the ones a fold keeps, so a
+          // detection that lands while folded is on screen as it is read.
+          const out = foldedOut(folded, index, entries.length);
+          return (
+            <button
+              key={entry.id}
+              type="button"
+              hidden={out}
+              className={`contact-log-row tier-${entry.tier}${entry.mark === true ? ' mark' : ''}${
+                entry.fresh ? ' fresh' : ''
+              }${out ? ' folded-out' : ''}`}
+              // Focus only where a position was actually reported. A Tier-1 row
+              // has nowhere honest to send the camera.
+              disabled={entry.focusX === undefined}
+              onClick={() => {
+                if (entry.focusX !== undefined && entry.focusY !== undefined) {
+                  onFocus(entry.focusX, entry.focusY);
+                }
+              }}
+            >
+              <span className="contact-log-time">{stamp(entry.tick)}</span>
+              <span className="contact-log-tier">{tierLabel(entry)}</span>
+              <span className="contact-log-label">{entry.label}</span>
+              <span className="contact-log-detail">{detail(entry)}</span>
+            </button>
+          );
+        })}
       </div>
     </section>
   );

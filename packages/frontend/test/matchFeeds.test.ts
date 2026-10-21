@@ -20,11 +20,11 @@
  */
 
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { afterEach, describe, it } from 'node:test';
 import { createElement } from 'react';
 import { ResolutionTier, SIM, type MissionLine } from '@echoes/shared';
-import './support/headless.ts';
-import { render, type Rendered } from './support/screen.ts';
+import { clearStorage, installStorage } from './support/headless.ts';
+import { click, render, type Rendered } from './support/screen.ts';
 import { ContactLog } from '../src/game/ContactLog.tsx';
 import { MissionLog } from '../src/game/MissionLog.tsx';
 import { stamp } from '../src/game/clock.ts';
@@ -324,6 +324,144 @@ describe('the two feeds: following the tail, but never yanking a reader back', (
       assert.equal(host.scrollTop, 900, 'back at the bottom is back to following');
     } finally {
       await view.unmount();
+    }
+  });
+});
+
+/**
+ * docs/ui-ux.md §2's four rules for a fold, and §10's two rows: a real button
+ * in the title strip that says which way it stands, folded only by a press,
+ * never hiding a row the moment it arrives, and never taking a row out of the
+ * live region.
+ */
+describe('the two feeds: a fold the player takes, never a row the log loses', () => {
+  afterEach(() => clearStorage());
+
+  /** Which rows are folded out of sight — `hidden`, which a browser and a screen reader both read. */
+  const hiddenRows = (view: Rendered, rowClass: string): boolean[] =>
+    view.allByClass(rowClass).map((row) => row.props.hidden === true);
+
+  const three = [entry({ id: 'a' }), entry({ id: 'b' }), entry({ id: 'c' })];
+
+  it('makes the title strip a button that says which way it stands', async () => {
+    const { view } = await contactLog(three);
+    try {
+      const toggle = view.button('CONTACT LOG');
+      assert.equal(toggle.props.type, 'button', 'a real button, so it is in the tab order');
+      assert.equal(toggle.props['aria-expanded'], true, 'open until the player folds it');
+      assert.equal(
+        toggle.props['aria-controls'],
+        view.byClass('contact-log-entries').props.id,
+        'it names the region it folds'
+      );
+      assert.deepEqual(hiddenRows(view, 'contact-log-row'), [false, false, false]);
+
+      await click(view, 'CONTACT LOG');
+      assert.equal(view.button('CONTACT LOG').props['aria-expanded'], false);
+
+      await click(view, 'CONTACT LOG');
+      assert.equal(view.button('CONTACT LOG').props['aria-expanded'], true, 'and opens again');
+      assert.deepEqual(hiddenRows(view, 'contact-log-row'), [false, false, false]);
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('folds to the newest two rows and keeps every row in the live log', async () => {
+    const { view } = await contactLog(three);
+    try {
+      await click(view, 'CONTACT LOG');
+      assert.equal(view.allByClass('contact-log-row').length, 3, 'hidden, never unmounted');
+      assert.deepEqual(hiddenRows(view, 'contact-log-row'), [true, false, false]);
+      const list = view.byClass('contact-log-entries');
+      assert.equal(list.props.role, 'log', 'still the one live region §11 relies on');
+      assert.equal(list.props['aria-live'], 'polite');
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('shows a detection that lands while folded, and lets only an older row go', async () => {
+    const { view } = await contactLog(three);
+    try {
+      await click(view, 'CONTACT LOG');
+      await view.update(
+        createElement(ContactLog, {
+          entries: [...three, entry({ id: 'd', label: 'just heard' })],
+          onFocus: () => {},
+        })
+      );
+      assert.deepEqual(hiddenRows(view, 'contact-log-row'), [true, true, false, false]);
+      const newest = view.allByClass('contact-log-row').at(-1)!;
+      assert.equal(newest.props.hidden, false, 'the row that just arrived is on screen');
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('folds the mission log on the same terms, so a line is never folded away as it is said', async () => {
+    const lines = [line({ text: 'one' }), line({ text: 'two' }), line({ text: 'three' })];
+    const view = await render(createElement(MissionLog, { lines }));
+    try {
+      const toggle = view.button('IN THE WATER');
+      assert.equal(toggle.props['aria-expanded'], true);
+      assert.equal(toggle.props['aria-controls'], view.byClass('mission-log-entries').props.id);
+
+      await click(view, 'IN THE WATER');
+      assert.equal(view.button('IN THE WATER').props['aria-expanded'], false);
+      assert.deepEqual(hiddenRows(view, 'mission-log-row'), [true, false, false]);
+
+      await view.update(createElement(MissionLog, { lines: [...lines, line({ text: 'four' })] }));
+      assert.deepEqual(hiddenRows(view, 'mission-log-row'), [true, true, false, false]);
+      assert.equal(view.byClass('mission-log-entries').props.role, 'log');
+      const texts = view.allByClass('mission-log-text').map((n) => String(n.props.children));
+      assert.deepEqual(texts, ['one', 'two', 'three', 'four'], 'every line still in the feed');
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('remembers a log’s fold on the device, as a convenience and nothing more', async () => {
+    installStorage();
+    const first = await contactLog(three);
+    try {
+      await click(first.view, 'CONTACT LOG');
+    } finally {
+      await first.view.unmount();
+    }
+    const second = await contactLog(three);
+    try {
+      assert.equal(second.view.button('CONTACT LOG').props['aria-expanded'], false);
+    } finally {
+      await second.view.unmount();
+    }
+    // Each log's fold is its own: folding one does not fold the other.
+    const mission = await render(createElement(MissionLog, { lines: [line()] }));
+    try {
+      assert.equal(mission.button('IN THE WATER').props['aria-expanded'], true);
+    } finally {
+      await mission.unmount();
+    }
+  });
+
+  it('renders open, and still folds, where storage refuses to be read or written', async () => {
+    const g = globalThis as Record<string, unknown>;
+    g.localStorage = {
+      getItem: () => {
+        throw new Error('blocked');
+      },
+      setItem: () => {
+        throw new Error('blocked');
+      },
+    };
+    const { view } = await contactLog(three);
+    try {
+      assert.equal(view.button('CONTACT LOG').props['aria-expanded'], true);
+      await click(view, 'CONTACT LOG');
+      assert.equal(view.button('CONTACT LOG').props['aria-expanded'], false);
+    } finally {
+      await view.unmount();
+      delete g.localStorage;
     }
   });
 });

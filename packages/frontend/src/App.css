@@ -268,7 +268,10 @@
   transform: scale(var(--ui-scale, 1));
   transform-origin: top right;
   width: min(340px, calc(32vw / var(--ui-scale, 1)));
-  max-height: calc(40vh / var(--ui-scale, 1));
+  /* 30vh rather than 40: docs/ui-ux.md §2 caps the log's claim on the water,
+     and at 1440 × 900 the three panels together covered a third of it (#1532).
+     A player who wants more of it folds the log instead (§10). */
+  max-height: calc(30vh / var(--ui-scale, 1));
   display: flex;
   flex-direction: column;
   border: 1px solid rgba(255, 61, 166, 0.45);
@@ -290,7 +293,6 @@
    voice. Sized up a step from the old mono caption: the condensed face needs
    the height to stay legible at strip scale. */
 .contact-log-title {
-  padding: 4px 8px;
   font-family: var(--font-display);
   font-size: 0.82rem;
   font-weight: 600;
@@ -298,6 +300,53 @@
   text-transform: uppercase;
   color: var(--text-cyan);
   border-bottom: 1px solid rgba(255, 61, 166, 0.3);
+}
+
+/*
+ * A log's title strip is its fold button — docs/ui-ux.md §2, §10. The padding
+ * the strip used to carry is the button's, so the whole strip is the target
+ * rather than the words in it. Everything typographic is inherited: it is
+ * still the title, and only now also a control.
+ */
+.panel-fold {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 4px 8px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.panel-fold:focus-visible,
+.objectives-locks-toggle:focus-visible {
+  outline: 1px solid var(--text-cyan);
+  outline-offset: -1px;
+}
+
+.panel-fold-mark {
+  opacity: 0.7;
+}
+
+/* Folded, the title strip is the panel's last edge, so it carries none. */
+.contact-log.folded .contact-log-title {
+  border-bottom-color: transparent;
+}
+
+/* `hidden` loses to any author `display`, and every row below sets one. A
+   folded row has to leave the screen while it stays in the log (§2). A class
+   rather than `[hidden]`: the box reader the panel tests use refuses attribute
+   selectors that set `display`, and it is right to — so the row says it. */
+.contact-log-row.folded-out,
+.mission-log-row.folded-out {
+  display: none;
 }
 
 .contact-log-entries {
@@ -1901,10 +1950,38 @@ button.objectives-row:hover {
   border-top: 1px solid color-mix(in srgb, var(--neon-magenta) 25%, transparent);
 }
 
-/* Name over reason rather than two columns. The name is a *group* of abilities
-   since #720 — `mines · depth charges` — so a fixed first column either clipped
-   it or took a third of the panel from the sentence that is the point. Stacked,
-   the reason gets the full width and wraps at most once.
+/* The fold's summary — `7 actions withheld ▾` (docs/ui-ux.md §10.5). In the
+   lock rows' voice rather than the title's: it is the first line of the list,
+   not a heading over it, and it stays on screen when the list is folded. */
+.objectives-locks-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: calc(0.6rem * var(--panel-type, 1));
+  line-height: 1.6;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+}
+
+.objectives-lock-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Names then reason, inline, on one line (§10.5) — wrapping only where the two
+   together outrun the panel. Stacked, every reason cost two lines to say one
+   thing, and the name is a *group* since #720 (`mines · depth charges`), so a
+   fixed first column would clip it or take the reason's width; inline flow
+   lets each take what it needs.
 
    `text-align: left` because it is not inherited here: `#root` centres text for
    the app, `.objectives-row` opts out for the rows above, and this block never
@@ -1914,12 +1991,12 @@ button.objectives-row:hover {
   font-size: calc(0.6rem * var(--panel-type, 1));
   line-height: 1.6;
   text-align: left;
+  color: var(--text-dim);
 }
 
 /* Dimmed to 40%, never greyed out, per the shell's disabled rule — and the
    reason beside it stays legible, because the reason is the point. */
 .objectives-lock-name {
-  display: block;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-bright);
@@ -1927,7 +2004,6 @@ button.objectives-row:hover {
 }
 
 .objectives-lock-reason {
-  display: block;
   color: var(--text-dim);
 }
 
@@ -2016,8 +2092,12 @@ button.objectives-row:hover {
   bottom: calc(220px * var(--ui-scale, 1));
   transform: scale(var(--ui-scale, 1));
   transform-origin: bottom right;
-  width: min(420px, calc(34vw / var(--ui-scale, 1)));
-  max-height: calc(24vh / var(--ui-scale, 1));
+  /* The other two panels' width, and the smallest of the three heights:
+     docs/ui-ux.md §2 caps each panel's claim on the water, and 420 px by 24vh
+     made this the widest thing over it (#1532). Prose wraps to the narrower
+     measure; a player who wants the water back folds the log (§10). */
+  width: min(340px, calc(32vw / var(--ui-scale, 1)));
+  max-height: calc(18vh / var(--ui-scale, 1));
   display: flex;
   flex-direction: column;
   border: 1px solid color-mix(in srgb, var(--neon-cyan) 35%, transparent);
@@ -2028,7 +2108,6 @@ button.objectives-row:hover {
 }
 
 .mission-log-title {
-  padding: 4px 8px;
   font-family: var(--font-display);
   font-size: 0.82rem;
   font-weight: 600;
@@ -2036,6 +2115,10 @@ button.objectives-row:hover {
   text-transform: uppercase;
   color: var(--text-cyan);
   border-bottom: 1px solid color-mix(in srgb, var(--neon-cyan) 25%, transparent);
+}
+
+.mission-log.folded .mission-log-title {
+  border-bottom-color: transparent;
 }
 
 .mission-log-entries {
