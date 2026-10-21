@@ -1163,6 +1163,11 @@ export class HeadlessWebGLRenderer {
       const all = geometry.index?.count ?? geometry.attributes?.position?.count ?? 0;
       const range = geometry.drawRange ?? { start: 0, count: Infinity };
       const corners = Math.max(0, Math.min(all, range.start + range.count) - range.start);
+      // Points and lines are a call but no triangles, as `WebGLInfo.update`
+      // books them: counted as corners over three, a cloud of four lamps
+      // added a third of a triangle a frame (#1533).
+      const flags = object as { isPoints?: boolean; isLine?: boolean };
+      if (flags.isPoints === true || flags.isLine === true) return;
       triangles += (corners / 3) * instances;
     });
     if (world) {
