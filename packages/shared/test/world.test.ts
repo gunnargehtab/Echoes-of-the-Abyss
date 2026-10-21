@@ -13,6 +13,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 
 import {
+  Biome,
   MISSION_HEADERS,
   PROLOGUE_SORROWGATE_HEADER,
   RIFT_ATLAS,
@@ -31,6 +32,7 @@ import {
   worldRegionForMission,
   worldRegionProblems,
   type GroundRegion,
+  type MapGround,
   type WorldRegion,
 } from '../dist/index.js';
 
@@ -87,6 +89,78 @@ describe('placed regions', () => {
         `${expected}: got ${JSON.stringify(problems)}`
       );
     }
+  });
+});
+
+describe('two placed maps sharing ground (#1527)', () => {
+  // Two 2 km maps of one flat seabed, 1 km apart: they share a 1 × 2 km strip.
+  const flat = (floorM: number, regions: GroundRegion[] = []): MapGround => ({
+    widthM: 2_000,
+    heightM: 2_000,
+    cellM: 250,
+    floorM,
+    regions,
+  });
+  const west: WorldRegion = {
+    id: 'west',
+    mapId: 'west',
+    x: 10_000,
+    y: 40_000,
+    widthM: 2_000,
+    heightM: 2_000,
+  };
+  const east: WorldRegion = { ...west, id: 'east', mapId: 'east', x: 11_000 };
+  const maps = new Set(['west', 'east']);
+  const problemsWith = (eastGround: MapGround, regions = [west, east]) =>
+    worldRegionProblems(regions, maps, { west: flat(1_000), east: eastGround });
+
+  it('allows an overlap whose every shared cell agrees, and a shared edge', () => {
+    assert.deepEqual(problemsWith(flat(1_000)), []);
+    // Ground east of the strip is the east map's alone, so it may differ.
+    const ridge = flat(1_000, [
+      { x: 1_000, y: 0, widthM: 1_000, heightM: 2_000, biome: Biome.AbyssalTrench, floorM: 400 },
+    ]);
+    assert.deepEqual(problemsWith(ridge), []);
+    assert.deepEqual(problemsWith(flat(1_200), [west, { ...east, x: 12_000 }]), []);
+  });
+
+  it('refuses an overlap where a shared cell differs in floor, ceiling or biome', () => {
+    const cases: [MapGround, RegExp][] = [
+      [
+        flat(1_200),
+        /west and east: overlap, and 32 shared cells disagree, the first at \(11000, 40000\)/,
+      ],
+      [
+        flat(1_000, [
+          { x: 750, y: 1_750, widthM: 250, heightM: 250, biome: Biome.OpenWater, ceilingM: 300 },
+        ]),
+        /1 shared cells disagree, the first at \(11750, 41750\)/,
+      ],
+      [
+        flat(1_000, [{ x: 0, y: 500, widthM: 250, heightM: 250, biome: Biome.KelpForest }]),
+        /1 shared cells disagree, the first at \(11000, 40500\)/,
+      ],
+    ];
+    for (const [ground, expected] of cases) {
+      const problems = problemsWith(ground);
+      assert.equal(problems.length, 1, JSON.stringify(problems));
+      assert.match(problems[0]!, expected);
+    }
+  });
+
+  it('refuses an overlap with a map whose ground is not placed', () => {
+    const problems = worldRegionProblems([west, east], maps, { west: flat(1_000) });
+    assert.deepEqual(problems, [
+      "west and east: overlap, and east's ground is not placed to compare",
+    ]);
+  });
+
+  it("reads Sorrowgate's own ground: itself agrees, itself a cell east does not", () => {
+    const twin: WorldRegion = { ...SORROWGATE_REGION, id: 'twin' };
+    assert.deepEqual(worldRegionProblems([SORROWGATE_REGION, twin]), []);
+    const shifted = worldRegionProblems([SORROWGATE_REGION, { ...twin, x: twin.x + 250 }]);
+    assert.equal(shifted.length, 1, JSON.stringify(shifted));
+    assert.match(shifted[0]!, /^sorrowgate and twin: overlap, and \d+ shared cells disagree/);
   });
 });
 
