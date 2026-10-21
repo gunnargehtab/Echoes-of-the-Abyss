@@ -13,7 +13,7 @@ import {
   ShaderLib,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { Faction, SORROWGATE_LOOK, UnitKind } from '@echoes/shared';
+import { Faction, SORROWGATE_LOOK, TERRAIN_LIFT, UnitKind } from '@echoes/shared';
 import {
   installGroundSurface,
   installHullSurface,
@@ -143,7 +143,7 @@ describe('the Sorrowgate surface contract', () => {
     const shader = compile(material, 'basic');
     assert.equal(shader.uniforms.uSurveyCells.value, cells);
     assert.equal(shader.uniforms.uSurfaceData.value, surfaceTexture());
-    assert.equal(material.customProgramCacheKey(), 'survey-ink:sorrowgate-ground-1');
+    assert.equal(material.customProgramCacheKey(), 'survey-ink:sorrowgate-ground-2');
     const shade = shader.fragmentShader.indexOf('diffuseColor.rgb *= mix');
     const ink = shader.fragmentShader.indexOf('diffuseColor.rgb = surveyDecode');
     assert.ok(shade > 0 && ink > shade);
@@ -151,6 +151,36 @@ describe('the Sorrowgate surface contract', () => {
     assert.match(shader.fragmentShader, /#include <fog_fragment>/);
     assert.match(shader.vertexShader, /#include <color_vertex>/);
     cells.dispose();
+    material.dispose();
+  });
+
+  it('centres the ground shade on the fill, under the detail share of the lift cap (#1532)', () => {
+    // docs/visual-reboot.md §4: terrain detail is centred on the fill under a
+    // cap. The compiled shader's own expression is evaluated over the
+    // texture's own pixels, away from a joint, so this holds the shader and
+    // not a copy of it.
+    const material = new MeshBasicMaterial({ vertexColors: true });
+    installGroundSurface(material);
+    const source = compile(material, 'basic').fragmentShader;
+    const expression = /float surfaceShade = (clamp\([\s\S]*?\));/.exec(source)?.[1];
+    assert.ok(expression, 'the shader states its shade');
+    const shadeOf = new Function(
+      'surfaceData',
+      'joint',
+      'civic',
+      'const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));' + `return ${expression};`
+    );
+    const pixels = surfacePixels();
+    let sum = 0;
+    let max = 0;
+    for (let i = 0; i < pixels.length; i += 4) {
+      const shade = shadeOf({ r: pixels[i] / 255, b: pixels[i + 2] / 255 }, 0, 0);
+      sum += shade;
+      max = Math.max(max, shade);
+    }
+    const mean = sum / (pixels.length / 4);
+    assert.ok(Math.abs(mean - 1) < 0.001, `the ground averages ${mean} of its fill`);
+    assert.ok(max <= 1 + TERRAIN_LIFT.MAX - TERRAIN_LIFT.BAKE + 1e-9, `it lifts to ${max}`);
     material.dispose();
   });
 });

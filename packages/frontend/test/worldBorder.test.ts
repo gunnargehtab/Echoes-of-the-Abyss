@@ -349,7 +349,7 @@ describe('the pilot view at its border', () => {
     // The fade's program, with the tutorial's ground surface chained after it.
     assert.equal(
       (mesh.material as MeshBasicMaterial).customProgramCacheKey(),
-      'echoes-world-border-5:sorrowgate-ground-1'
+      'echoes-world-border-5:sorrowgate-ground-2'
     );
   });
 

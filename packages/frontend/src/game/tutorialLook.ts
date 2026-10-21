@@ -10,7 +10,13 @@ import {
   RepeatWrapping,
   type Material,
 } from 'three';
-import { Biome, Faction, PROLOGUE_SORROWGATE_HEADER, SORROWGATE_LOOK } from '@echoes/shared';
+import {
+  Biome,
+  Faction,
+  PROLOGUE_SORROWGATE_HEADER,
+  SORROWGATE_LOOK,
+  TERRAIN_LIFT,
+} from '@echoes/shared';
 import { propHash } from './environment.ts';
 
 export type WorldLook = 'standard' | 'sorrowgate';
@@ -56,6 +62,35 @@ export function surfacePixels(): Uint8Array<ArrayBuffer> {
 }
 
 let surface: DataTexture | null = null;
+let means: { mottle: number; roughness: number } | null = null;
+
+/** The surface texture's mean mottle (R) and roughness (B), 0..1, read once off its own pixels. */
+export function surfaceMeans(): { mottle: number; roughness: number } {
+  if (means !== null) return means;
+  const pixels = surfacePixels();
+  let r = 0;
+  let b = 0;
+  for (let i = 0; i < pixels.length; i += 4) {
+    r += pixels[i]!;
+    b += pixels[i + 2]!;
+  }
+  const n = (pixels.length / 4) * 255;
+  means = { mottle: r / n, roughness: b / n };
+  return means;
+}
+
+/**
+ * The share of ground a paving joint darkens: each axis' band is 0.014 of the
+ * interval either side of a line, so 0.028 a line, and the two axes' union.
+ */
+export const PAVING_JOINT_SHARE = 1 - (1 - 0.028) ** 2;
+
+/**
+ * The ground shade's ceiling. Sorrowgate's surface stands in for the silt
+ * detail, which the look turns off (PerspectiveView), so it takes the detail's
+ * share of the terrain lift cap and no more.
+ */
+export const GROUND_SHADE_MAX = 1 + TERRAIN_LIFT.MAX - TERRAIN_LIFT.BAKE;
 
 /** Page-lifetime immutable cache, shared by all look/palette templates; never per entity. */
 export function surfaceTexture(): DataTexture {
@@ -181,9 +216,18 @@ export function installPropSurface(material: Material): void {
   if (material instanceof MeshStandardMaterial) installSurface(material, 'stone', 1);
 }
 
-/** Install after survey ink, but shade before its colour-fragment insertion. */
+/**
+ * Install after survey ink, but shade before its colour-fragment insertion.
+ *
+ * The shade is centred on the fill, as docs/visual-reboot.md §4 requires of
+ * terrain detail: each term is taken about its own mean, so the ground
+ * averages its fill within a thousandth and lifts no further than
+ * `GROUND_SHADE_MAX`. It was darken-only, about 0.88 on average, and drew the
+ * court, the ground the flight holds on, darker than its own biome (#1532).
+ */
 export function installGroundSurface(material: Material): void {
   const before = material.onBeforeCompile;
+  const m = surfaceMeans();
   const key = material.customProgramCacheKey();
   const fade = SORROWGATE_LOOK.GROUND_FADE_M_PER_PX;
   material.onBeforeCompile = (shader, renderer) => {
@@ -205,11 +249,13 @@ export function installGroundSurface(material: Material): void {
                                 smoothstep(0.014, 0.014 + aa.y, edge.y));
         float surfaceBiome = floor(surveyCellAt(vSurveyXZ) * 255.0 + 0.5);
         float civic = 1.0 - step(0.5, abs(surfaceBiome - ${f(Biome.CoralRuins)}));
-        float surfaceShade = clamp(0.72 + 0.28 * surfaceData.r + 0.08 * surfaceData.b -
-                                   0.1 * joint * civic, ${f(SORROWGATE_LOOK.STONE_DIFFUSE_FLOOR)}, 1.0);
+        float surfaceShade = clamp(1.0 + 0.28 * (surfaceData.r - ${f(m.mottle)}) +
+                                   0.08 * (surfaceData.b - ${f(m.roughness)}) -
+                                   0.1 * (joint - ${f(PAVING_JOINT_SHARE)}) * civic,
+                                   ${f(SORROWGATE_LOOK.STONE_DIFFUSE_FLOOR)}, ${f(GROUND_SHADE_MAX)});
         diffuseColor.rgb *= mix(1.0, surfaceShade, surfaceFade);`
       );
   };
-  material.customProgramCacheKey = () => `${key}:sorrowgate-ground-1`;
+  material.customProgramCacheKey = () => `${key}:sorrowgate-ground-2`;
   material.needsUpdate = true;
 }
