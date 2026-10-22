@@ -1887,7 +1887,7 @@ vessel. Lighting: one hard cyan rim light (#35E0FF) for the review render
 only — the model itself carries no lights and no emissive unless the prompt
 says so. Strong readable silhouette from a high 55-degree RTS camera;
 low-poly with crisp facets, at most two materials (three for
-env-coral-growth: its two stones and its light). No text, no water
+env-coral-growth and env-nodule-bed: two stones under a light). No text, no water
 surface — this stands on the seabed, deep underwater.
 ```
 
@@ -1914,7 +1914,7 @@ metre, a range the band a generated one lands in; `Tris` is the per-instance bud
 | Coral Ruins | `env-coral-growth` | 12 m | 10 m | ≤ 400 | `flora-biolight`, tip points |
 | Rock (any biome) | `env-rock-crag-a` / `-b` | 30 m | 30–50 m | ≤ 500 | none |
 | Open Water | `env-open-boulder` | 12 m | 6 m | ≤ 300 | none |
-| Resource field (any biome) | `env-nodule-bed` | 12 m | 2 m | ≤ 240 | none |
+| Resource field (any biome) | `env-nodule-bed` | 12 m | 2 m | ≤ 240 | `ore-trace`, glint facets |
 
 Four heights moved to their approved models (#879): the trench slab from 10 m, the
 resonance pylon from 25 m, the dome shard from 20 m to 14 m and the coral growth from
@@ -1948,7 +1948,8 @@ mines): a low drift of silt with a scatter of dark, matte, fist-to-boulder lumps
 floor at the edge. It stands in any biome, several to a field, so one bed is a piece of a
 field and never the whole; it must read from the 55° camera as "there is ore here", quieter
 than any vessel and never as a structure or a contact. `stone_dark` on the lumps,
-`stone_silt` on the drift, no light.
+`silt_drift` on the drift — the paler of the two, so the ore reads dark on it — and
+`ore-trace` as a glint facet on a few of the largest lumps, never on the drift.
 
 `flora-biolight` is licensed for the Kelp Forest *and* the Coral Ruins
 ([style-neon-noir.md](style-neon-noir.md) "World light", [map-visuals.md](map-visuals.md)
@@ -1956,9 +1957,12 @@ than any vessel and never as a structure or a contact. `stone_dark` on the lumps
 "Light"), and `env-coral-growth` carries it as the kelp cluster does, by the owner's call
 on #1532: dim points on its branches only — three tetrahedral tips at the heads of its three tallest branches, the
 kelp's `biolight` material to the digit — and nothing on its masonry, lobes or plates
-(#1532). It is the one prop with three materials: the export's two stones under the
-light. The two-material rule below stands for everything else, and intake takes
-`--max-materials 3` for this row only.
+(#1532). It is one of two props with three materials: the export's two stones under the
+light. The other is the nodule bed, whose `ore-trace` glint (#1555) is a quad plate let
+into one upward facet on three of its largest drift lumps — `stone_dark`, `silt_drift`
+and `ore_trace` — and nothing on the drift or the loose floor lumps. The two-material
+rule below stands for everything else, and intake takes `--max-materials 3` for these
+two rows only.
 
 Naming is `env-<biome-word>-<thing>.glb`, flat in `docs/concept-art/models/` beside the
 roster. Props ship as meshes, not baked maps, so the sprite-density contract
@@ -2011,8 +2015,8 @@ For environment props (Block 4):
 - Darker and quieter than any vessel — desaturated, no manufactured surfaces, nothing
   that could be mistaken for a structure or a contact?
 - Emissive only where the table licenses a world-light family, and dim within it?
-- At most two materials (three on `env-coral-growth` alone, its two stones under the
-  licensed light), inside the row's triangle budget?
+- At most two materials (three on `env-coral-growth` and `env-nodule-bed` alone, two
+  stones under the licensed light), inside the row's triangle budget?
 
 ## Related
 

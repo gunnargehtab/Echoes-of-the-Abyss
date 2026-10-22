@@ -36,6 +36,7 @@ import { ENVIRONMENT_PROPS, placeProps, propSpec, type PropPlacement } from './e
 import { envTemplate, type SwayUniforms } from './environmentModels.ts';
 import type { WorldLook } from './tutorialLook.ts';
 import { VentPlume, plumeSites } from './ventPlume.ts';
+import { FieldHaze, hazeSites } from './fieldHaze.ts';
 
 const TMP_MATRIX = new Matrix4();
 const TMP_QUAT = new Quaternion();
@@ -60,6 +61,8 @@ export class EnvironmentLayer {
   readonly group = new Group();
   /** Every standing chimney's steam, one draw; in the group while a column stands. */
   readonly plume = new VentPlume();
+  /** Every field's sediment haze, one draw; in the group while a field stands (#1555). */
+  readonly haze = new FieldHaze();
 
   /** Guards late template loads: a load that finishes after another rebuild
    * (new terrain, teardown) must not resurrect stale placements. */
@@ -168,6 +171,9 @@ export class EnvironmentLayer {
     });
     this.plume.build(sites, this.shade);
     if (sites.length > 0) this.group.add(this.plume.points);
+    const hazes = hazeSites(this.fields, terrain, groundY);
+    this.haze.build(hazes, this.shade);
+    if (hazes.length > 0) this.group.add(this.haze.points);
   }
 
   /**
@@ -177,6 +183,7 @@ export class EnvironmentLayer {
    */
   tick(nowMs: number, waterReachM?: number): void {
     this.plume.tick(nowMs, waterReachM);
+    this.haze.tick(nowMs, waterReachM);
     if (this.swaying.length === 0) return;
     const time = this.reducedMotion ? SWAY_HOLD_S : nowMs / 1000;
     for (const sway of this.swaying) sway.uSwayTime.value = time;
@@ -185,6 +192,7 @@ export class EnvironmentLayer {
   setReducedMotion(reduced: boolean): void {
     this.reducedMotion = reduced;
     this.plume.setReducedMotion(reduced);
+    this.haze.setReducedMotion(reduced);
   }
 
   /**
@@ -206,6 +214,7 @@ export class EnvironmentLayer {
     this.shade = shade;
     for (const { mesh, list } of this.shaded) this.applyShade(mesh, list);
     this.plume.setShade(shade);
+    this.haze.setShade(shade);
   }
 
   private applyShade(mesh: InstancedMesh, list: readonly PropPlacement[]): void {
@@ -219,9 +228,14 @@ export class EnvironmentLayer {
     if (mesh.instanceColor !== null) mesh.instanceColor.needsUpdate = true;
   }
 
-  /** Probe telemetry (gate 6): bodies standing, triangles they cost, and steam columns. */
-  stats(): { props: number; propTris: number; ventPlumes: number } {
-    return { props: this.props, propTris: this.propTris, ventPlumes: this.plume.plumes };
+  /** Probe telemetry (gate 6): bodies standing, triangles they cost, steam columns and hazed fields. */
+  stats(): { props: number; propTris: number; ventPlumes: number; fieldHazes: number } {
+    return {
+      props: this.props,
+      propTris: this.propTris,
+      ventPlumes: this.plume.plumes,
+      fieldHazes: this.haze.fields,
+    };
   }
 
   /**
@@ -237,6 +251,7 @@ export class EnvironmentLayer {
   destroy(): void {
     this.reset();
     this.plume.dispose();
+    this.haze.dispose();
   }
 
   private clear(): void {
@@ -246,8 +261,9 @@ export class EnvironmentLayer {
       // belong to the template cache and must survive the rebuild.
       if (child instanceof InstancedMesh) child.dispose();
     }
-    // Emptied, not disposed: its material outlives the rebuild.
+    // Emptied, not disposed: their materials outlive the rebuild.
     this.plume.clear();
+    this.haze.clear();
     this.props = 0;
     this.propTris = 0;
     this.swaying = [];

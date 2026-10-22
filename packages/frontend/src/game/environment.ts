@@ -80,7 +80,7 @@ export interface PropSpec {
   scaleJitter: readonly [number, number];
   /** The licensed world-light family (docs/style-neon-noir.md "World light").
    * 'none' means intake fails the model if it carries any emissive. */
-  worldLight: 'none' | 'vent' | 'flora' | 'crystal';
+  worldLight: 'none' | 'vent' | 'flora' | 'crystal' | 'ore';
   /** Current sway, metres of lateral displacement at the prop's top (0 for
    * everything that is stone). Vertex-only: the instance matrix never moves,
    * so placement, the probe and the budget are untouched by it. */
@@ -317,14 +317,14 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
   {
     slug: 'env-nodule-bed',
     footprintM: 12,
-    triBudget: 194,
+    triBudget: 240,
     density: 0,
     stands: [],
     nearRock: 'any',
     maxSlopeM: Number.POSITIVE_INFINITY,
     excludeRoofed: false,
     scaleJitter: [0.8, 1.25],
-    worldLight: 'none',
+    worldLight: 'ore',
     swayM: 0,
   },
 ];

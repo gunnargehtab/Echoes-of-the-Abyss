@@ -65,7 +65,7 @@
 import { THREE, clad, lamp, hex, box, flatShaded, tabled } from './kit.mjs';
 
 /**
- * The palette, as the fifteen files carry it: eight stones and three
+ * The palette, as the fifteen files carry it: nine stones and four
  * lights, each named by its docs/style-neon-noir.md "The props" token.
  * Metalness is 0 on every material in the set — "nothing manufactured"
  * (ENV STYLE) — and roughness the file's own. A lamp is kit.mjs `lamp`:
@@ -87,6 +87,18 @@ export const ground = {
   stoneDark: () => clad('stone_dark', hex('#15181B'), 0, 1),
   /** Silted stone, `stone-silt`: the open-water boulder. */
   stoneSilt: () => clad('stone_silt', hex('#17150F'), 0, 1),
+  /**
+   * Drifted silt, `silt-drift`: the nodule bed's drift, under its
+   * `stone_dark` lumps. Paler than `stone-silt` by 1.73× in linear
+   * luminance (0.01306 against 0.00753) with the same warm cast, because
+   * the runtime's ceiling scales a prop's brightest material to 0.06 and
+   * the rest by their ratio to it (environmentModels.ts
+   * `ENV_LUMINANCE_CEILING`): on `stone-silt` the lumps came out 18 %
+   * brighter than the drift and read as pale boulders, and no stone token
+   * sits more than 15 % from another, so the drift needed a sediment of
+   * its own to put the lumps at 0.68 of it.
+   */
+  siltDrift: () => clad('silt_drift', hex('#211E15'), 0, 1),
   /** Trench basalt, `basalt-trench`: the slab's and the spire's `basalt`. */
   basaltTrench: () => clad('basalt', hex('#14171A'), 0, 0.96),
   /** Vent basalt, `basalt-vent`: the chimney's and the basalt pile's `basalt`, its own value. */
@@ -109,6 +121,13 @@ export const ground = {
   biolight: () => lamp('biolight', hex('#2E8C74'), hex('#0B1D19'), 1, 0.55),
   /** `crystal-seam` at 1.2 over `violet-seam-base`, the resonance crystal's seam. */
   violetSeam: () => lamp('violet_seam', hex('#5B4A8C'), hex('#06050A'), 0.9, 1.2),
+  /**
+   * `ore-trace` at 0.725 over `ore-trace-base`, the nodule bed's glint
+   * facets (#1555). The strength puts the family at the doc's 0.08
+   * effective emissive luminance: #7A5634 is 0.1104 linear, times 0.725 is
+   * 0.0800, the dimmest of the four by design.
+   */
+  oreTrace: () => lamp('ore_trace', hex('#7A5634'), hex('#0B0805'), 1, 0.725),
 };
 
 /**

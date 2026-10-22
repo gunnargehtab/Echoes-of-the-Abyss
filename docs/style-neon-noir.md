@@ -90,7 +90,8 @@ suffix saying which. Metalness is 0 on every one; roughness is the material's ow
 | Token | Hex | Roughness | Material | Props |
 | --- | --- | --- | --- | --- |
 | `stone-dark` | `#15181B` | 1 | `stone_dark` | Both crags, coral growth, ruin block, dome shard, nodule bed's lumps |
-| `stone-silt` | `#17150F` | 1 | `stone_silt` | Open boulder, nodule bed's drift |
+| `stone-silt` | `#17150F` | 1 | `stone_silt` | Open boulder |
+| `silt-drift` | `#211E15` | 1 | `silt_drift` | Nodule bed's drift |
 | `basalt-trench` | `#14171A` | 0.96 | `basalt` | Trench slab, trench spire |
 | `basalt-vent` | `#121517` | 0.96 | `basalt` | Vent chimney, vent basalt |
 | `abyss-stone` | `#10161D` | 0.96 | `abyss_stone` | Resonance crystal, resonance pylon |
@@ -100,6 +101,7 @@ suffix saying which. Metalness is 0 on every one; roughness is the material's ow
 | `ember-base` | `#0B0806` | 1 | `ember` | Vent chimney, under `vent-ember` |
 | `biolight-base` | `#0B1D19` | 1 | `biolight` | Kelp cluster, coral growth, under `flora-biolight` |
 | `violet-seam-base` | `#06050A` | 0.9 | `violet_seam` | Resonance crystal, under `crystal-seam` |
+| `ore-trace-base` | `#0B0805` | 1 | `ore_trace` | Nodule bed's glint facets, under `ore-trace` |
 
 Three rules ride with the table:
 
@@ -110,12 +112,17 @@ Three rules ride with the table:
   draws, and on a one-material prop it is not read at all.
 - **Stone is neutral, and growth is not.** The four stones — `stone-dark`, both basalts,
   `abyss-stone` — sit at hue 204–212°, the stone ramp's own blue-grey, under its rule.
-  `coral-stone-ruin`, `coral-stone-living`, `kelp` and `stone-silt` carry a warm or green
-  cast on purpose. They are growth and sediment, not bare rock. Coral stands where coral
-  grows (Coral Ruins, Kelp Forest), kelp in the Kelp Forest and silt in Open Water and
-  under a nodule bed's lumps wherever a resource field is, so each cast belongs to the
-  ground it stands on (`ENVIRONMENT_PROPS`, `packages/frontend/src/game/environment.ts`).
-- **A lamp's base is near-black.** The three `-base` tokens sit under the
+  `coral-stone-ruin`, `coral-stone-living`, `kelp`, `stone-silt` and `silt-drift` carry a
+  warm or green cast on purpose. They are growth and sediment, not bare rock. Coral stands
+  where coral grows (Coral Ruins, Kelp Forest), kelp in the Kelp Forest and silt in Open
+  Water and under a nodule bed's lumps wherever a resource field is, so each cast belongs
+  to the ground it stands on (`ENVIRONMENT_PROPS`,
+  `packages/frontend/src/game/environment.ts`). `silt-drift` is the one sediment paler
+  than every stone: 1.73× `stone-silt`'s linear luminance (0.0131 against 0.0075), so
+  under the ceiling rule above the bed's `stone-dark` lumps sit at 0.68 of its drift and
+  read as dark ore on pale silt rather than the other way round. Every other stone sits
+  within 15% of its neighbours, which is why no existing token could do that job.
+- **A lamp's base is near-black.** The four `-base` tokens sit under the
   [World light](#world-light--the-terrain-carve-outs) families. The emissive is what reads,
   and the base does not compete with it.
 
@@ -505,7 +512,9 @@ charge in the crystals ([environments.md](environments.md) asks for all three) �
 and a vent field with no embers is not a vent field. One place was *built*:
 [habitats-art-brief.md](habitats-art-brief.md) already draws Sorrowgate's lamps in key
 art, "few, low, and the only warm thing for a kilometre", and in-engine they stand on
-the Upper Concourse, the drowned city's terminus. So terrain-owned light exists, in exactly four
+the Upper Concourse, the drowned city's terminus. The fifth is the ore: a resource field is
+*where the game's economy is*, and the owner licensed a trace on it (#1555) so a field reads as
+ore and not as stone by hull-light alone. So terrain-owned light exists, in exactly five
 families, and nothing else on the ground ever emits:
 
 | Token | Hex | Where | What it is |
@@ -514,6 +523,7 @@ families, and nothing else on the ground ever emits:
 | `flora-biolight` | `#2E8C74` | Kelp Forest, Coral Ruins | Dim tips on kelp stalks and living coral — points and short lines, never a glowing canopy |
 | `crystal-seam` | `#5B4A8C` | Resonance Fields | A dull internal seam in the crystal props — violet is already licensed here ("resonance" is one of its three contexts) |
 | `civic-lamp` | `#B8875A` | Coral Ruins with a floor at 350 m or shallower — the Upper Concourse | A steady tallow point standing low over the terminus, about one cell in three and never more than twelve to a map |
+| `ore-trace` | `#7A5634` | Resource fields, any biome — the nodule bed | A dull glint in the crust of a few nodules on each bed: facets the size of a lump, never a lit drift. The same charge a crystal seam carries whole, in the trace of it the ore keeps ([economy.md](economy.md) §2's two modelled resources are one substance at two grades) |
 
 Every family obeys the same five rules, and they are gates, not suggestions:
 
@@ -537,12 +547,15 @@ Every family obeys the same five rules, and they are gates, not suggestions:
    deliberately away from the neons — `vent-ember` redder than Bathyarch's
    amber, `flora-biolight` dimmer and greyer than Pelagia's biolight,
    `crystal-seam` duller than Hadron's crystal glow, `civic-lamp` yellower than the
-   ember and greyer than every faction's warm glow — so nothing in the world
+   ember and greyer than every faction's warm glow, `ore-trace` browner and darker than
+   both the civic lamp and the Nodules' own chart ink — so nothing in the world
    can be mistaken for the interface, or for a faction.
 
-The three families as exported, effective emissive luminance being the material's
+The four prop families as exported, effective emissive luminance being the material's
 emissive luminance times its `KHR_materials_emissive_strength`: `vent-ember` 0.18,
-`flora-biolight` 0.11, `crystal-seam` 0.11. The seam shipped at 0.05 and was lifted to
+`flora-biolight` 0.11, `crystal-seam` 0.11, `ore-trace` 0.08, the dimmest of them by
+design, since a field is on the map's most contested ground and a glint that out-shone
+the seam would make a bed the brightest thing between two bases. The seam shipped at 0.05 and was lifted to
 biolight parity once the prop-luminance normalisation (a 0.06 diffuse ceiling, see
 Block 4 in [asset-prompts-3d.md](asset-prompts-3d.md)) made the crystal's stone read: at 0.05 the
 seam's brightest pixel matched the stone's lit facets at the closest zoom (250 m), so
@@ -621,4 +634,4 @@ are changing and why.
 - [systems-echo.md](systems-echo.md) — the mechanics the glow rules encode
 - [habitats-art-brief.md](habitats-art-brief.md) — the inhabited places drawn under
   these tokens and the world-light rules, including the Lid ceiling haze that was tried
-  against them and refused, so the families stand as four
+  against them and refused, so the families stood as four until the ore trace (#1555)

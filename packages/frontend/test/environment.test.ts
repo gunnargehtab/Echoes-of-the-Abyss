@@ -239,8 +239,9 @@ describe('prop placement', () => {
   });
 
   it('licenses light only where Block 4 does', () => {
-    // The table's Light column, transcribed: four lit rows, the coral growth
-    // in the kelp's family since #1532, and everything else 'none' so intake
+    // The table's Light column, transcribed: five lit rows, the coral growth
+    // in the kelp's family since #1532 and the nodule bed in the ore family
+    // the owner licensed on #1555, and everything else 'none' so intake
     // fails a glowing rock.
     const lit = Object.fromEntries(
       ENVIRONMENT_PROPS.filter((s) => s.worldLight !== 'none').map((s) => [s.slug, s.worldLight])
@@ -250,6 +251,7 @@ describe('prop placement', () => {
       'env-kelp-cluster': 'flora',
       'env-coral-growth': 'flora',
       'env-resonance-crystal': 'crystal',
+      'env-nodule-bed': 'ore',
     });
   });
 });

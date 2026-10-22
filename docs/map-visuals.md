@@ -45,7 +45,7 @@ screenshot from the survey dolly.
 | V1 — the gap | **Nothing on the ground is a line.** At an 11 km dolly, a 700 m plateau beside a 2,600 m plain is one dark rectangle next to another. The relief that reads at 1 km is sub-pixel, and the fills are too close in value to carry a shape | the survey frame of any skirmish map |
 | V2 | Contacts, rings and glyphs are loud; terrain is quiet; blocked ground is cyan and shown only while a hull is selected | [art-direction.md](art-direction.md), [graphics-standards.md](graphics-standards.md) gate 7 |
 | V2 — the gap | The order is right but unwritten, so nothing stops a new layer landing on the wrong rung | — |
-| V3 | Depth is luminance on the ground and in the water. Hue belongs to the biome. Four world-light families. The veil is a drain, not a blackout | [art-direction.md](art-direction.md), [style-neon-noir.md](style-neon-noir.md) "World light" |
+| V3 | Depth is luminance on the ground and in the water. Hue belongs to the biome. Five world-light families. The veil is a drain, not a blackout | [art-direction.md](art-direction.md), [style-neon-noir.md](style-neon-noir.md) "World light" |
 | V4 | Six biomes, each with a fill, a relief row, a prop set and its light families, spread across four docs and three files | §7 below collects them |
 | V5 | Tetherjelly fields and Lampfry shoals are public chart data, drawn as stipple in the water since Phase 3 (§10). Classified fauna are stipple shapes since Phase 4 | `faunaStipple.ts`, `faunaAgentStipple.ts` |
 
@@ -229,7 +229,12 @@ Two consequences worth naming:
   beds of nodules, or the Resonance Field's shard for the crystal field — and placed by the
   same rules as any prop ([graphics-standards.md](graphics-standards.md) gate 1, #1555). A
   field is drawn from its position, kind and starting stock alone, so it looks the same full
-  and mined out: depletion is heard, never shown.
+  and mined out: depletion is heard, never shown. Two things ride on the beds and read nothing
+  more: a sediment haze of silt motes lifting and settling in place over the field
+  (`fieldHaze.ts`, on the 5 Hz grid), and the `ore-trace` glint, the fifth world-light family
+  ([style-neon-noir.md](style-neon-noir.md) "World light"). What a field being *worked* shows
+  is the harvester's, not the field's: its silt plume, its cutter sparks and its work-light on
+  the ore under it, all scaled to the throttle's SIG (`workLight.ts`).
 
 ## 6. Colour, light and depth — one grammar
 
