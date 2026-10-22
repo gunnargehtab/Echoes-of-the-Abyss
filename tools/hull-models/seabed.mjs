@@ -96,11 +96,11 @@ export const ground = {
    * the rest by their ratio to it (environmentModels.ts
    * `ENV_LUMINANCE_CEILING`): on `stone-silt` the lumps came out 18 %
    * brighter than the drift and read as pale boulders. No existing token
-   * could stand under them: every stone near `stone-dark` sits within 7 %
-   * of it, and the two paler ones are coral, with a green cast
-   * (`coral-stone-living`) or a ruin red (`coral-stone-ruin`) that belongs
-   * to coral ground. So the drift took a sediment of its own, which puts
-   * the lumps at 0.68 of it.
+   * could stand under them: no stone is paler than `stone-dark` (the
+   * nearest, `basalt-trench`, sits 6 % under it), and the paler tokens are
+   * growth — both corals and the kelp — whose cast belongs to their own
+   * ground. So the drift took a sediment of its own, which puts the lumps
+   * at 0.68 of it.
    */
   siltDrift: () => clad('silt_drift', hex('#211E15'), 0, 1),
   /** Trench basalt, `basalt-trench`: the slab's and the spire's `basalt`. */

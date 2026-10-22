@@ -120,8 +120,10 @@ Three rules ride with the table:
   `packages/frontend/src/game/environment.ts`). `silt-drift` is the one sediment paler
   than every stone: 1.73× `stone-silt`'s linear luminance (0.0131 against 0.0075), so
   under the ceiling rule above the bed's `stone-dark` lumps sit at 0.68 of its drift and
-  read as dark ore on pale silt rather than the other way round. Every other stone sits
-  within 15% of its neighbours, which is why no existing token could do that job.
+  read as dark ore on pale silt rather than the other way round. No stone is paler than
+  `stone-dark`: the nearest, `basalt-trench`, sits 6% under it. The paler tokens are growth,
+  both corals and kelp, whose cast belongs to their own ground, which is why no existing
+  token could do that job.
 - **A lamp's base is near-black.** The four `-base` tokens sit under the
   [World light](#world-light--the-terrain-carve-outs) families. The emissive is what reads,
   and the base does not compete with it.
@@ -582,7 +584,8 @@ haze is the ground's, so it is capped under the dimmest family — a mote peaks 
 silt colour, about 0.05 luminance against `ore-trace`'s 0.08 — and keeps rules 3 and 4 as the
 steam does: the 5 Hz grid, deterministic from the field's published values, never responding
 to the game. A plume is the hull's, as its lamps are: a mote peaks at the throttle's share of
-1.0 under gate 3, which is loudness and may respond to the throttle. The ladder weighs neither:
+1.0, scaled by the throttle's SIG against Overburden's, as gate 3 has glow follow loudness,
+and so it may respond to the throttle. The ladder weighs neither:
 a soft fill, as §5 of [map-visuals.md](map-visuals.md) leaves a haze unweighed.
 
 Per-map count caps live in code beside the emitters (the `VENT_EMBER_CAP`
