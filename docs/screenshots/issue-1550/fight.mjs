@@ -222,9 +222,10 @@ await page.mouse.click(C.x, C.y);
 // to two and a half seconds in a fight (the probe's `avgFrameMs` and
 // `worstFrameMs`), so each probe that says an effect is alive is followed
 // by a camera move and a frame, and the probe read again after the frame says
-// whether it was still alive when it was drawn. Two are read before the frame
-// instead, once the camera has moved: the lean (`takeLean`'s `after`) and the
-// track hit (`after` below), so neither proves its effect was drawn.
+// whether it was still alive when it was drawn. Three are read before the
+// frame instead: the lean (`takeLean`'s `after`) and the track hit (`after`
+// below) once the camera has moved, and a shoal's state before it moves. None
+// of the three proves its effect was drawn.
 const deadline = Date.now() + 8 * 60_000;
 const wanted = ['wake', 'bank-pitch', 'shoal', 'muzzle', 'own-hit', 'track-hit', 'launch'];
 let launchTries = 0;
@@ -339,7 +340,7 @@ while (Date.now() < deadline && wanted.some((w) => !taken.has(w))) {
     continue;
   }
   // Last, and three tries at most: the order, the camera move and the frame
-  // take about ten seconds here (the record's `sinceOrderMs`), and the burst
+  // take 11 to 12 s here (the record's `sinceOrderMs`), and the burst
   // lives 1.5 s (docs/screenshots/issue-1509/README.md), so a try
   // rarely catches it and each one costs the fight's other effects their
   // frames. A hit track may be fauna, at which a launch is refused: own

@@ -15,10 +15,10 @@ The drive frames the harvester's silt, the first chimney and the nearest shoal a
 sends the fleet in and holds it at the first blow, as #1510's and #1511's drives do: a hull
 under a move order sails out of shot while a fight frame is drawn here. It then frames
 each effect as the probes report it alive. `fight.json` records every frame it took, with
-the probe's reading after it, except the lean and the track hit, which are read after the
-camera move and before the frame; a retry overwrote its frame. The drive was run nine times
-while it was built, and the fleet's fortunes differ from run to run. This set is one match
-and every frame is from it.
+the probe's reading after it, with three exceptions read before the frame: the lean and the
+track hit after the camera move, and a shoal's state before it. A retry overwrote its frame.
+The drive was run nine times while it was built, and the fleet's fortunes differ from run to
+run. This set is one match and every frame is from it.
 
 ## Which frame shows which
 
