@@ -232,13 +232,15 @@ it is allowed to select.
   three rounds" says how to stop there. The Routine itself needed no edit, for the
   reason the paragraph below gives.
 
-  **It runs `claude-opus-5-5` at medium effort since 22 September**, set by the
-  repository owner; it ran `claude-opus-5` before. The two live in different
-  places. The model is the trigger's, the one field its form carries. The effort
-  is `.claude/settings.json`'s `modelSettings`, because a trigger has no effort
-  field and a firing reads the settings from its clone of `main`. That file is
+  **It runs `claude-opus-5-5` at high effort since 22 October**, set by the
+  repository owner; it ran at medium from 22 September, and on `claude-opus-5`
+  before that. The two live in different places. The model is the trigger's, the
+  one field its form carries. The effort is `.claude/settings.json`'s
+  `modelSettings`, because a trigger has no effort field and a firing reads the
+  settings from its clone of `main`. An environment variable could carry it too,
+  but nobody can diff one, so the file is the only place it is set. That file is
   every session's, so an interactive `claude-opus-5-5` session here also starts
-  at medium, and `/effort` still moves it for that session. Both are a person's
+  at high, and `/effort` still moves it for that session. Both are a person's
   settings, like the round cap.
 
   Its prompt is 54 words since 26 September (`wc -w` on the trigger's prompt): it
