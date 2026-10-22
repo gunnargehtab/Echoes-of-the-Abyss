@@ -176,8 +176,9 @@ so a named contact that would be the player's own navy becomes a Consortium boat
   already the console's price, idle and SIG-caution ink, and read as one more warning.
 - **Directorate bruise violet**, lifted from `#2D1B3D` to `#7A5A9E`. Its crimson read as
   threat red, and the rest of its palette is too dark for a panel. It is the one ink here
-  the client does not carry, and it needs a token in
-  [style-neon-noir.md](../../style-neon-noir.md) before it ships.
+  the client does not carry: `directorate-console` in
+  [style-neon-noir.md](../../style-neon-noir.md#console-accent--proposed), which lists what
+  it still owes.
 
 **Not owed.** §12.5 ships the accent only with an argument in sound or depth. These frames
 make none. They show what the dress costs, so the question can be settled by looking.
