@@ -29,8 +29,8 @@ after the arch falls, where #1463 drew 74 and 75.
 
 ## Held views
 
-Calls, triangles and queued GPU ms (12,000 steps of load), ratio 1 and 1.5. The arrow is
-#1463 → now.
+Calls, triangles and queued GPU ms (12,000 steps of load), ratio 1 and 1.5. Each arrow
+runs from #1463's reading to this one.
 
 | Station | Calls | Triangles | Queued ms, 1 | Queued ms, 1.5 |
 | --- | ---: | ---: | ---: | ---: |
