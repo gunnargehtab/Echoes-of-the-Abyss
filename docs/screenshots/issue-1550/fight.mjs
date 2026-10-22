@@ -218,10 +218,13 @@ await page.mouse.click(C.x, C.y);
   }
 }
 
-// Then each effect as the fight brings it up. A SwiftShader frame takes
-// seconds in a fight, so each probe that says an effect is alive is followed
+// Then each effect as the fight brings it up. A SwiftShader frame takes one
+// to two and a half seconds in a fight (the probe's `avgFrameMs` and
+// `worstFrameMs`), so each probe that says an effect is alive is followed
 // by a camera move and a frame, and the probe read again after the frame says
-// whether it was still alive when it was drawn.
+// whether it was still alive when it was drawn. Two are read before the frame
+// instead, once the camera has moved: the lean (`takeLean`'s `after`) and the
+// track hit (`after` below), so neither proves its effect was drawn.
 const deadline = Date.now() + 8 * 60_000;
 const wanted = ['wake', 'bank-pitch', 'shoal', 'muzzle', 'own-hit', 'track-hit', 'launch'];
 let launchTries = 0;
@@ -335,8 +338,9 @@ while (Date.now() < deadline && wanted.some((w) => !taken.has(w))) {
     if (e.trackHits > 0 && e.ageMs < 1200) taken.add('track-hit');
     continue;
   }
-  // Last, and three tries at most: a SwiftShader frame here takes seconds, and
-  // the burst lives 1.5 s (docs/screenshots/issue-1509/README.md), so a try
+  // Last, and three tries at most: the order, the camera move and the frame
+  // take about ten seconds here (the record's `sinceOrderMs`), and the burst
+  // lives 1.5 s (docs/screenshots/issue-1509/README.md), so a try
   // rarely catches it and each one costs the fight's other effects their
   // frames. A hit track may be fauna, at which a launch is refused: own
   // ordnance rising, read once at the order and once after the frame, is what
