@@ -2,8 +2,8 @@
 
 The Ventfront Divide at 1440×900, 3.8 km at 55°, over ground no hull of the player's hears.
 One drive each: `main` at `a6e380da` before, this branch after, and this branch with the
-veil set to 0 in Settings. Headless Chromium on a software rasteriser; calls and triangles
-were not read here.
+veil set to 0 in Settings. Headless Chromium on a software rasteriser, so gate 6's GPU time
+was not read; it is owed on the named GPU.
 
 | Before | After | Veil off |
 | --- | --- | --- |
@@ -18,7 +18,8 @@ Mean pixel, as a share of the veil-off frame:
 
 What the frames show: the cold ground is drained rather than blacked out, and blue still
 holds above the other two, so it goes towards the water's cold grey. The fog in the frame
-pulls every share towards 1, so neither column reaches `VEIL_FLOOR_RGB`'s 0.30, 0.38, 0.62.
+pulls every share towards 1, yet the before column falls to or below `VEIL_FLOOR_RGB`'s
+0.30, 0.38, 0.62 on the kelp shelf: the bug itself. The after column stays above it.
 Embers, vent plumes and props still take the linear table.
 
 ## Related

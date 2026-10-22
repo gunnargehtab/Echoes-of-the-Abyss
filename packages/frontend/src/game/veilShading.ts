@@ -14,8 +14,9 @@
  * colour is encoded, multiplied and decoded where the vertex colour used to
  * land, inside `<color_fragment>`. Not after `<colorspace_fragment>`, where
  * the exterior's is: the survey ink is laid over the veiled ground at its own
- * alpha (surveyInk.ts), and the ladder weighs it over the fully drained floor
- * (ladder.ts), so a multiply after the ink would drain the ink too. The ground
+ * alpha (surveyInk.ts), and its ladder tests weigh it over black, which
+ * bounds the drained floor (test/ladder.test.ts), so a multiply after the
+ * ink would drain the ink too. The ground
  * and roofs are unlit and not tone-mapped, so what is encoded here is what the
  * output transform writes, before the fog, as the old multiply was.
  */
