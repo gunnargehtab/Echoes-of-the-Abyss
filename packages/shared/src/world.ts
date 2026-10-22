@@ -17,6 +17,7 @@
 
 import { WORLD } from './constants.js';
 import { PLACED_GROUND, paintGround, type GroundCells, type MapGround } from './ground.js';
+import { mapHeaderById } from './maps.js';
 import { MISSION_HEADERS, PROLOGUE_SORROWGATE_HEADER } from './missions.js';
 
 /** A point or a rectangle corner, in metres. */
@@ -303,12 +304,32 @@ function cellIndex(cells: GroundCells, local: PlanPoint): number {
  *
  * **Keyed on mission identity, never on the map** (§7.1), as the surface
  * profile is (`lookForMission`): Radicals plays on Sorrowgate's map and keeps
- * its own presentation, and a `?map=` boot on Sorrowgate's map is not the
- * prologue. Every path into the prologue — the board, the Tutorial door, a
+ * its own presentation. A session with no mission asks `worldRegionForSession`. Every path into the prologue — the board, the Tutorial door, a
  * `?mission=` link, Resume — passes the same id, so one predicate answers for
  * all of them. The one the persistent view (#1458), the regional snapshot
  * (#1460) and the border fade (#1461) all ask; none of them keeps a flag.
  */
 export function worldRegionForMission(missionId: string | undefined): WorldRegion | undefined {
   return missionId === PROLOGUE_SORROWGATE_HEADER.id ? SORROWGATE_REGION : undefined;
+}
+
+/**
+ * The world region a session is drawn in, or `undefined` for one that keeps
+ * today's presentation (§7.1, #1529). A session with a mission is placed by
+ * its mission alone, as `worldRegionForMission` says. One without — a
+ * `?map=` skirmish boot — is placed by its map id, when that map is a
+ * skirmish map with a placement: the mission maps resolve by mission and by
+ * nothing else, as the server's catalogues do, so `?map=sorrowgate` is never
+ * the pilot's region. No skirmish map is placed yet, so today every one
+ * resolves none and the Ventfront Divide stays §7.7's control. `regions` is
+ * the placed set, a parameter so a test can place one.
+ */
+export function worldRegionForSession(
+  missionId: string | undefined,
+  mapId: string | undefined,
+  regions: readonly WorldRegion[] = WORLD_REGIONS
+): WorldRegion | undefined {
+  if (missionId !== undefined && missionId !== '') return worldRegionForMission(missionId);
+  if (mapId === undefined || mapHeaderById(mapId) === undefined) return undefined;
+  return regions.find((region) => region.mapId === mapId);
 }
