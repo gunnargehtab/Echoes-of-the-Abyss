@@ -3,7 +3,7 @@
 The Ventfront Divide at 1440×900, 3.8 km at 55°, over ground no hull of the player's hears.
 One drive each: `main` at `a6e380da` before, this branch after, and this branch with the
 veil set to 0 in Settings. Headless Chromium on a software rasteriser, so gate 6's GPU time
-was not read; it is owed on the named GPU.
+was not read; #1551 holds that reading for the named GPU.
 
 | Before | After | Veil off |
 | --- | --- | --- |
