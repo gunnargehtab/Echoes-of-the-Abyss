@@ -65,17 +65,17 @@ await page.waitForTimeout(6000);
 
 const record = { frames: [], missed: {} };
 const taken = new Set();
-// Which own model stands within `rangeM` of a world point with its box on
-// the conn view, read off the lamp probe's screen boxes: a frame of an effect
-// on a hull that sailed out of shot while it was drawn shows nothing.
-async function subjectOnScreen(near, rangeM = 150) {
+// Which own hull or structure stands within `rangeM` of a world point and
+// near enough the camera's focus to be in shot, or null: a frame of an effect
+// on a hull that sailed out of shot while it was drawn shows nothing. Read in
+// world metres against the probe's focus: the lamp probe's screen boxes came
+// back null for these hulls when this drive first read them.
+async function subjectOnScreen(near, p, rangeM = 150) {
   if (near === null) return null;
   const { units, structures } = await lamps();
   for (const e of [...units, ...structures]) {
-    if (e.screen === null || Math.hypot(e.xM - near.x, e.zM - near.z) > rangeM) continue;
-    const x = (e.screen.x0 + e.screen.x1) / 2;
-    const y = (e.screen.y0 + e.screen.y1) / 2;
-    if (x > 0 && x < 1440 && y > 52 && y < 690) return e.name;
+    if (Math.hypot(e.xM - near.x, e.zM - near.z) > rangeM) continue;
+    if (Math.hypot(e.xM - p.focus.xM, e.zM - p.focus.zM) < 0.4 * p.distance) return e.name;
   }
   return null;
 }
@@ -87,7 +87,7 @@ async function take(name, reading, near = null) {
     name,
     atS: Math.round((Date.now() - t0) / 1000),
     camera: { focus: p.focus, distance: p.distance, pitchDeg: p.pitchDeg },
-    onScreen: await subjectOnScreen(near),
+    onScreen: await subjectOnScreen(near, p),
     ...reading(p),
   };
   record.frames.push(entry);
@@ -118,9 +118,10 @@ for (let i = 0; i < 600 && !taken.has('silt-plume'); i++) {
   }
 }
 
-// The shoal nearest home, formed. The fleet's course passes inside 300 m of
-// none, so a scattered one is taken in the fight only if something else
-// scatters one.
+// The shoal nearest home, before the fleet sails, in whichever state it is
+// in: the frame is named for the formed shoal it looks for, and the record's
+// `scattered` says which it found. The fight's own frame of a shoal waits for
+// a scattered one.
 {
   const s = await nearestShoal((await probe()).ownCentre);
   if (s !== null) {
@@ -147,7 +148,7 @@ async function leaned() {
 }
 // The shoal nearest the fleet, scattered ones first, wherever they are: a
 // shoal scatters off any hull inside 300 m, the opponent's and the fauna's
-// included, and the fleet's route passes none of them.
+// included, and the fleet's own course need not pass one.
 async function nearestShoal(centre) {
   const shoals = await page.evaluate(() => window.__shoals);
   const by = (s) => Math.hypot(s.x - centre.x, s.y - centre.z);
