@@ -8,7 +8,15 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
-import { Color, PerspectiveCamera, Scene, ShaderLib, type BufferAttribute } from 'three';
+import {
+  Color,
+  PerspectiveCamera,
+  Scene,
+  ShaderLib,
+  type BufferAttribute,
+  type Material,
+} from 'three';
+import { readsDisplayVeil, VEIL_SHADE_ATTRIBUTE } from '../src/game/veilShading.ts';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mapProps, propSpec, type PropPlacement } from '../src/game/environment.ts';
 import { buildTemplate } from '../src/game/environmentModels.ts';
@@ -109,15 +117,21 @@ describe('the column', () => {
     assert.ok(Math.abs(color.getX(0) - ember.r * VENT_PLUME_LEVEL) < 1e-6);
   });
 
-  it('goes as cold as its ground under the veil', () => {
+  it('goes as cold as its ground under the veil, in display terms (#1536)', () => {
     const plume = new VentPlume();
     plume.build([site(0, 0)]);
     const color = plume.points.geometry.getAttribute('color') as BufferAttribute;
+    const veil = plume.points.geometry.getAttribute(VEIL_SHADE_ATTRIBUTE) as BufferAttribute;
     const full = color.getX(0);
-    plume.setShade((_x, _y, out) => out.setRGB(0.25, 0.25, 0.25));
-    assert.ok(Math.abs(color.getX(0) - full * 0.25) < 1e-6);
+    // A plain drain: the shade's mean, in all three channels, and the colour
+    // left alone, drained in the shader after the encode.
+    plume.setShade((_x, _y, out) => out.setRGB(0.3, 0.38, 0.62));
+    assert.ok(Math.abs(veil.getX(0) - 0.4333333) < 1e-6);
+    assert.equal(veil.getX(0), veil.getZ(0));
+    assert.equal(color.getX(0), full);
+    assert.ok(readsDisplayVeil(plume.points.material as Material));
     plume.setShade(null);
-    assert.ok(Math.abs(color.getX(0) - full) < 1e-6);
+    assert.equal(veil.getX(0), 1);
   });
 });
 

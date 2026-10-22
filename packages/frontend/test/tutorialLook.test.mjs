@@ -261,7 +261,8 @@ describe('retained source models', () => {
       if (b.material.emissive.getHex() === 0) {
         patched++;
         assert.equal(shader.uniforms.uSurfaceData.value, surfaceTexture());
-        assert.equal(b.material.customProgramCacheKey(), 'env-sway:sorrowgate-stone-1');
+        // The veil chains last, on every prop (veilShading.ts, #1536).
+        assert.equal(b.material.customProgramCacheKey(), 'env-sway:sorrowgate-stone-1:prop-veil-1');
       }
     }
     assert.ok(patched > 0);

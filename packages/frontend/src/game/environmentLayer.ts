@@ -70,7 +70,8 @@ export class EnvironmentLayer {
   private reducedMotion = false;
   /**
    * The acoustic veil's ground shade (acousticVeil.ts, docs/ui-ux.md §4.5),
-   * as the view's own linear-space multiplier at a point.
+   * the view's display-space multiplier at a point, carried on each instance's
+   * colour into the shader (veilShading.ts `installPropVeil`).
    *
    * Props take it because they stand *on* the ground: a kelp bed at full
    * colour over a chart that has gone cold reads as a renderer that forgot

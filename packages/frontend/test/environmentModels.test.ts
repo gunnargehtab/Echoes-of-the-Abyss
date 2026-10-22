@@ -15,10 +15,12 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
-import { Box3, MeshStandardMaterial, Vector3, type Group } from 'three';
+import { Box3, MeshStandardMaterial, ShaderLib, Vector3, type Group } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ENVIRONMENT_PROPS } from '../src/game/environment.ts';
 import { buildTemplate, type EnvTemplate } from '../src/game/environmentModels.ts';
+import { keepsGlowOutsideToneMapping, TONED_SURFACE } from '../src/game/modelLighting.ts';
+import { readsPropVeil } from '../src/game/veilShading.ts';
 
 const MODELS = new URL('../../../docs/concept-art/models/', import.meta.url);
 
@@ -86,10 +88,47 @@ describe('glowing props keep their hue: art-direction, gates 3 and 4', () => {
       for (const { material } of template.parts) {
         if (!(material instanceof MeshStandardMaterial) || material.emissive.getHex() === 0)
           continue;
-        assert.match(material.customProgramCacheKey(), /glow-after-tone-2$/);
+        assert.ok(keepsGlowOutsideToneMapping(material));
         glowing++;
       }
       if (spec.worldLight !== 'none') assert.ok(glowing > 0, 'a licensed light must reach a part');
+    });
+  }
+});
+
+describe('props take the veil on their surface light alone (#1536)', () => {
+  for (const spec of ENVIRONMENT_PROPS) {
+    it(`${spec.slug}: drains the toned surface in display terms, never the glow`, async () => {
+      const template = buildTemplate(await parse(spec.slug), spec.footprintM, spec.swayM);
+      for (const { material } of template.parts) {
+        assert.ok(readsPropVeil(material), 'every part takes the veil');
+        if (!(material instanceof MeshStandardMaterial)) continue;
+        const shader = {
+          uniforms: {} as Record<string, unknown>,
+          vertexShader: ShaderLib.standard.vertexShader,
+          fragmentShader: ShaderLib.standard.fragmentShader,
+        };
+        material.onBeforeCompile(shader as never, undefined as never);
+        // The instance colour is the shade now, not a tint on the diffuse.
+        assert.ok(!shader.vertexShader.includes('#include <color_vertex>'));
+        assert.ok(!shader.vertexShader.includes('vColor.xyz *= instanceColor.xyz;'));
+        assert.ok(shader.vertexShader.includes('vVeilShade = instanceColor.rgb;'));
+        const frag = shader.fragmentShader;
+        if (material.emissive.getHex() !== 0) {
+          // Inside the glow's chunk: the toned surface drained, the glow added after.
+          assert.ok(
+            frag.includes(
+              `echoesDisplayVeil( ${TONED_SURFACE}, vVeilShade ) + totalEmissiveRadiance;`
+            )
+          );
+        } else {
+          const veil = frag.indexOf(
+            'gl_FragColor.rgb = echoesDisplayVeil( gl_FragColor.rgb, vVeilShade );'
+          );
+          assert.ok(veil > frag.indexOf('#include <tonemapping_fragment>'), 'after the curve');
+          assert.ok(veil < frag.indexOf('#include <colorspace_fragment>'), 'before the encode');
+        }
+      }
     });
   }
 });

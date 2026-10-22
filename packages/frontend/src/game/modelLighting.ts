@@ -55,6 +55,13 @@ export function createWaterEnvironment(renderer: WebGLRenderer): WebGLRenderTarg
 }
 
 /**
+ * The surface term of `GLOW_AFTER_TONE_MAPPING`, tone-mapped, before the glow
+ * is added back: what the acoustic veil drains on a prop (veilShading.ts
+ * `installPropVeil`), so the prop's glow keeps its strength and hue.
+ */
+export const TONED_SURFACE = 'toneMapping( max( gl_FragColor.rgb - totalEmissiveRadiance, 0.0 ) )';
+
+/**
  * The tone-mapping curve applies to surface light only. ACES on the summed
  * colour fades a saturated lamp toward white, so a faction's glow would stop
  * reading as its faction (gate 4) and a loud hull's colour would lie about its
@@ -75,7 +82,7 @@ export function createWaterEnvironment(renderer: WebGLRenderer): WebGLRenderTarg
  * a physical material's clearcoat or sheen would attenuate it first.
  */
 export const GLOW_AFTER_TONE_MAPPING = `#if defined( TONE_MAPPING )
-	gl_FragColor.rgb = toneMapping( max( gl_FragColor.rgb - totalEmissiveRadiance, 0.0 ) ) + totalEmissiveRadiance;
+	gl_FragColor.rgb = ${TONED_SURFACE} + totalEmissiveRadiance;
 	gl_FragColor.rgb /= max( 1.0, max( gl_FragColor.r, max( gl_FragColor.g, gl_FragColor.b ) ) );
 #endif`;
 
@@ -98,7 +105,8 @@ export function keepGlowOutsideToneMapping(material: MeshStandardMaterial): void
 /** Whether `keepGlowOutsideToneMapping` patched this material, read off the
  * key it leaves, for a reading that has to show the patch is there. */
 export function keepsGlowOutsideToneMapping(material: MeshStandardMaterial): boolean {
-  return material.customProgramCacheKey().endsWith(GLOW_AFTER_TONE_KEY);
+  // Not the key's end: a prop's veil chains after it (veilShading.ts).
+  return material.customProgramCacheKey().includes(GLOW_AFTER_TONE_KEY);
 }
 
 /**
