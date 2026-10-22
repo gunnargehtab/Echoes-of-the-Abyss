@@ -44,6 +44,8 @@ import {
 } from '@echoes/shared';
 import { FOCUS_DRAG_M_PER_PX, FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
 import { swayAt } from '../src/game/cameraSway.ts';
+import { readsDisplayVeil, VEIL_SHADE_ATTRIBUTE } from '../src/game/veilShading.ts';
+import { VEIL_FLOOR_RGB } from '../src/game/acousticVeil.ts';
 import { HIT_PARTICLES_MIN } from '../src/game/hullHit.ts';
 import { LIVE_TRACK_MS } from '../src/game/trackFidelity.ts';
 import {
@@ -832,8 +834,8 @@ function loneListener(world: Booted): void {
  * The one mesh in the conn scene carrying the survey's floor attribute: the
  * terrain. Found rather than reached for, because the view owns its own scene
  * graph and a test that indexed into `children` would break on any reorder.
- * By `surveyFloor` and not by its vertex colour, since the roofs over a
- * passage carry the veil as a vertex colour too (#1105).
+ * By `surveyFloor` and not by its veil attribute, since the roofs over a
+ * passage carry the veil too (#1105).
  */
 function terrainMesh(scene: Scene | null): Mesh {
   assert.ok(scene !== null, 'the conn rendered at least once');
@@ -842,7 +844,7 @@ function terrainMesh(scene: Scene | null): Mesh {
     if (found !== null || !(object instanceof Mesh)) return;
     if (object.geometry.getAttribute('surveyFloor') !== undefined) found = object;
   });
-  assert.ok(found !== null, 'the ground carries the veil as a vertex colour');
+  assert.ok(found !== null, 'the ground is in the scene');
   return found;
 }
 
@@ -1002,7 +1004,7 @@ describe('renderer smoke test: the conn view', () => {
       loneListener(world);
 
       const ground = terrainMesh(world.gl.lastScene);
-      const shades = ground.geometry.getAttribute('color') as BufferAttribute;
+      const shades = ground.geometry.getAttribute(VEIL_SHADE_ATTRIBUTE) as BufferAttribute;
       assert.equal(
         shades.count,
         (ground.geometry.getAttribute('position') as BufferAttribute).count,
@@ -1017,7 +1019,21 @@ describe('renderer smoke test: the conn view', () => {
       assert.ok(held > cold, `held water ${held} is brighter than cold water ${cold}`);
       assert.ok(cold > 0, 'the chart is drained, never unexplored black (§5)');
 
-      // Gate 6: a vertex colour on a mesh that was already there. The veil
+      // In display terms (#1536): every vertex is `veilShade` at some amount,
+      // the floor's own proportions between the channels and never past it.
+      // A linear shade breaks both, its red near 0.07 at the floor.
+      let deepest = 0;
+      for (let i = 0; i < shades.count; i++) {
+        const k = (1 - shades.getX(i)) / (1 - VEIL_FLOOR_RGB.r);
+        assert.ok(Math.abs((1 - shades.getY(i)) / (1 - VEIL_FLOOR_RGB.g) - k) < 1e-6);
+        assert.ok(Math.abs((1 - shades.getZ(i)) / (1 - VEIL_FLOOR_RGB.b) - k) < 1e-6);
+        assert.ok(k <= 1 + 1e-6, `vertex ${i} drains past the floor`);
+        deepest = Math.max(deepest, k);
+      }
+      assert.ok(deepest > 0.25, `the cold corner is in the veil (${deepest})`);
+      assert.ok(readsDisplayVeil(ground.material as MeshBasicMaterial));
+
+      // Gate 6: a vertex attribute on a mesh that was already there. The veil
       // spends no draw call and no triangle, which is why it can be a
       // full-map effect at all.
       const calls = world.gl.ledger.calls;
@@ -1055,6 +1071,9 @@ describe('renderer smoke test: the conn view', () => {
       const material = () => roofs()[0]!.material as MeshBasicMaterial;
       const opacity = () => material().opacity;
       assert.equal(roofs().length, 1, 'one passage, one roof');
+      // Stone as its vertex colour, the veil beside it in display terms (#1536).
+      assert.ok(roofs()[0]!.geometry.getAttribute(VEIL_SHADE_ATTRIBUTE) !== undefined);
+      assert.ok(readsDisplayVeil(material()), 'the roof takes the veil after the output transform');
       assert.equal(opacity(), 1, 'closed while no own hull is under it');
 
       // The same passage is on the scope, as a route stroked in rung 5's ink.

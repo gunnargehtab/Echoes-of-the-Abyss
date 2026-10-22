@@ -343,8 +343,7 @@ export interface GroundDetailUniforms {
  * Patch the terrain's material to shade the silt detail. Install after the
  * survey ink: it reads the ink's world position (`vSurveyXZ`) and its sRGB
  * transfer, chains the ink's hook and key, and lands right after the bake's
- * colour — before the ink and the fog, after the veil's vertex colour, which
- * three applies inside `<color_fragment>`.
+ * colour — before the veil (veilShading.ts), the ink and the fog.
  */
 export function installGroundDetail(
   material: Material,

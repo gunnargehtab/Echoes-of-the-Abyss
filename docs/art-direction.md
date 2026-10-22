@@ -1091,11 +1091,11 @@ without ripples, and rock admits no water at all.
   coordinates in single precision and differs between GPUs; an integer hash cost the
   named GPU up to a millisecond a frame. Seven fetches a fragment, and the meander's slope
   comes from its screen derivatives rather than more of them.
-- **Order.** It lands after the bake's colour and the veil's vertex colour, and before the
-  survey ink and the fog. Ink lifts darker ground further, but the ladder already weighs
-  ink over black, the fully drained veil, so darkening cannot break it. Ink lifts paler
-  ground less, so the ladder's tests also weigh it over the palest fill lifted by the
-  whole cap.
+- **Order.** It lands after the bake's colour, and before the veil, the survey ink and the
+  fog: the veil drains the finished ground in display terms, and the ink goes over it. Ink
+  lifts darker ground further, but the ladder already weighs ink over black, the fully
+  drained veil, so darkening cannot break it. Ink lifts paler ground less, so the
+  ladder's tests also weigh it over the palest fill lifted by the whole cap.
 - **Cost.** No pass, draw call or triangle. One RGBA8 texture of one texel a cell, 4 KiB
   on a 32 × 32 map, and the 64 KiB noise lattice, once a page. GPU time is read on the
   named GPU (gate 6, [issue-1083](screenshots/issue-1083/README.md),
