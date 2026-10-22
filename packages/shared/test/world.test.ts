@@ -73,7 +73,7 @@ describe('placed regions', () => {
     const ok: WorldRegion = { ...SORROWGATE_REGION };
     const cases: [WorldRegion[], RegExp][] = [
       [[ok, { ...ok }], /sorrowgate: id used twice/],
-      [[{ ...ok, mapId: 'no-such-map' }], /no mission plays on map 'no-such-map'/],
+      [[{ ...ok, mapId: 'no-such-map' }], /no mission or skirmish plays on map 'no-such-map'/],
       [[{ ...ok, x: 17_600 }], /x 17600 is not a whole 250 m cell/],
       [[{ ...ok, heightM: 4_100 }], /heightM 4100 is not a whole 250 m cell/],
       [[{ ...ok, x: 36_000 }], /outside the atlas/],
@@ -290,9 +290,12 @@ describe('a skirmish boot (#1529)', () => {
     assert.ok(MAP_HEADERS.some((h) => h.id === corridor.mapId));
     assert.equal(worldRegionForSession(undefined, corridor.mapId, [corridor]), corridor);
     assert.equal(worldRegionForSession('', corridor.mapId, [corridor]), corridor);
+    // And the validator takes it: a skirmish map is a known map (§7.9).
+    const problems = worldRegionProblems([corridor], undefined, {});
+    assert.ok(!problems.some((p) => /plays on map/.test(p)), problems.join('; '));
   });
 
-  it('resolves none for every skirmish map today, so the Ventfront Divide stays the control', () => {
+  it('resolves none for every skirmish map today: the Ventfront Divide stays the control', () => {
     for (const header of MAP_HEADERS) {
       assert.equal(worldRegionForSession(undefined, header.id), undefined, header.id);
     }

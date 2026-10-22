@@ -427,19 +427,14 @@ export function GameCanvas({
       // one GL context.
       const perspectiveHost = perspectiveHostRef.current;
       let perspective: PerspectiveView;
-      if (worldView.isWorldMission(missionId, mapId)) {
+      if (worldView.isWorldMission(missionId)) {
         const lent =
           perspectiveHost === null
             ? null
-            : worldView.acquire(
-                missionId,
-                perspectiveHost,
-                {
-                  glRenderer: harness?.glRenderer,
-                  environment: harness?.environment,
-                },
-                mapId
-              );
+            : worldView.acquire(missionId, perspectiveHost, {
+                glRenderer: harness?.glRenderer,
+                environment: harness?.environment,
+              });
         if (lent === null) {
           setGlFailed(true);
           return;

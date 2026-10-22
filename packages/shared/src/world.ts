@@ -17,7 +17,7 @@
 
 import { WORLD } from './constants.js';
 import { PLACED_GROUND, paintGround, type GroundCells, type MapGround } from './ground.js';
-import { mapHeaderById } from './maps.js';
+import { MAP_HEADERS, mapHeaderById } from './maps.js';
 import { MISSION_HEADERS, PROLOGUE_SORROWGATE_HEADER } from './missions.js';
 
 /** A point or a rectangle corner, in metres. */
@@ -46,10 +46,11 @@ export const RIFT_ATLAS: PlanRect = {
 };
 
 /**
- * A mission map placed in the atlas. `mapId` names the map whose ground this
- * is; `x`/`y` is that map's north-west corner in atlas metres, and the size is
- * the map's own. Several missions may stand on one region — Radicals plays on
- * Sorrowgate's — and the region does not know which.
+ * A map placed in the atlas, a mission's or a skirmish's (#1529). `mapId` names
+ * the map whose ground this is; `x`/`y` is that map's north-west corner in
+ * atlas metres, and the size is the map's own. Several missions may stand on
+ * one region — Radicals plays on Sorrowgate's — and the region does not know
+ * which.
  */
 export interface WorldRegion extends PlanRect {
   /** Unique within `WORLD_REGIONS`. */
@@ -170,17 +171,21 @@ function rectWithin(inner: PlanRect, outer: PlanRect): boolean {
 /**
  * What is wrong with a region list, as sentences; empty when nothing is.
  *
- * The rules §7.2 states: ids unique; each region names a map some mission
- * plays on; corners and sizes whole 250 m cells, so a mission's cells sit on
- * the atlas grid exactly; every region inside the frame with room for §7.3's
- * whole surround (`detailRect`); and two regions overlap only where every
- * shared cell has one biome, floor and ceiling in both maps' ground, since a
- * heightfield holds one floor a cell (#1527). An overlap whose ground is not
- * in `grounds` cannot be shown to agree, so it is refused too.
+ * The rules §7.2 states: ids unique; each region names a map some mission plays
+ * on, or a skirmish map, which a `?map=` boot places by its id (#1529); corners
+ * and sizes whole 250 m cells, so a mission's cells sit on the atlas grid
+ * exactly; every region inside the frame with room for §7.3's whole surround
+ * (`detailRect`); and two regions overlap only where every shared cell has one
+ * biome, floor and ceiling in both maps' ground, since a heightfield holds one
+ * floor a cell (#1527). An overlap whose ground is not in `grounds` cannot be
+ * shown to agree, so it is refused too.
  */
 export function worldRegionProblems(
   regions: readonly WorldRegion[],
-  knownMapIds: ReadonlySet<string> = new Set(MISSION_HEADERS.map((header) => header.mapId)),
+  knownMapIds: ReadonlySet<string> = new Set([
+    ...MISSION_HEADERS.map((header) => header.mapId),
+    ...MAP_HEADERS.map((header) => header.id),
+  ]),
   grounds: Readonly<Record<string, MapGround>> = PLACED_GROUND
 ): string[] {
   const problems: string[] = [];
@@ -190,7 +195,7 @@ export function worldRegionProblems(
     if (seen.has(region.id)) problems.push(`${region.id}: id used twice`);
     seen.add(region.id);
     if (!knownMapIds.has(region.mapId)) {
-      problems.push(`${region.id}: no mission plays on map '${region.mapId}'`);
+      problems.push(`${region.id}: no mission or skirmish plays on map '${region.mapId}'`);
     }
     for (const [name, value] of [
       ['x', region.x],
@@ -304,10 +309,11 @@ function cellIndex(cells: GroundCells, local: PlanPoint): number {
  *
  * **Keyed on mission identity, never on the map** (§7.1), as the surface
  * profile is (`lookForMission`): Radicals plays on Sorrowgate's map and keeps
- * its own presentation. A session with no mission asks `worldRegionForSession`. Every path into the prologue — the board, the Tutorial door, a
- * `?mission=` link, Resume — passes the same id, so one predicate answers for
- * all of them. The one the persistent view (#1458), the regional snapshot
- * (#1460) and the border fade (#1461) all ask; none of them keeps a flag.
+ * its own presentation. A session with no mission asks `worldRegionForSession`.
+ * Every path into the prologue — the board, the Tutorial door, a `?mission=`
+ * link, Resume — passes the same id, so one predicate answers for all of them.
+ * The one the persistent view (#1458), the regional snapshot (#1460) and the
+ * border fade (#1461) all ask; none of them keeps a flag.
  */
 export function worldRegionForMission(missionId: string | undefined): WorldRegion | undefined {
   return missionId === PROLOGUE_SORROWGATE_HEADER.id ? SORROWGATE_REGION : undefined;
@@ -315,14 +321,14 @@ export function worldRegionForMission(missionId: string | undefined): WorldRegio
 
 /**
  * The world region a session is drawn in, or `undefined` for one that keeps
- * today's presentation (§7.1, #1529). A session with a mission is placed by
- * its mission alone, as `worldRegionForMission` says. One without — a
- * `?map=` skirmish boot — is placed by its map id, when that map is a
- * skirmish map with a placement: the mission maps resolve by mission and by
- * nothing else, as the server's catalogues do, so `?map=sorrowgate` is never
- * the pilot's region. No skirmish map is placed yet, so today every one
- * resolves none and the Ventfront Divide stays §7.7's control. `regions` is
- * the placed set, a parameter so a test can place one.
+ * today's presentation (§7.1, #1529). A session with a mission is placed by its
+ * mission alone, as `worldRegionForMission` says. One without — a `?map=`
+ * skirmish boot — is placed by its map id, when that map is a skirmish map with
+ * a placement: the mission maps resolve by mission and by nothing else, as the
+ * server's catalogues do, so `?map=sorrowgate` is never the pilot's region. No
+ * skirmish map is placed yet, so today every one resolves none and the
+ * Ventfront Divide stays §7.7's control. `regions` is the placed set, a
+ * parameter so a test can place one.
  */
 export function worldRegionForSession(
   missionId: string | undefined,

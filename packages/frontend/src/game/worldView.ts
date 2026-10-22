@@ -13,8 +13,7 @@
  * before; `release` takes the session's state back off it — its force, its
  * loop, its canvas host — and keeps the renderer, scene, camera and water.
  *
- * Only the sessions `worldRegionForSession` places are drawn here: a mission
- * by its identity, a skirmish by its map when that map is placed (#1529). Every other
+ * Only the missions `worldRegionForMission` names are drawn here. Every other
  * match keeps the view it builds for itself, and destroys it, exactly as it
  * did; and since a page should hold one GL context at a time, a match on that
  * path disposes the world view first rather than running two. The module is
@@ -22,12 +21,7 @@
  * on demand, so three.js still stays out of the title screen's bundle.
  */
 
-import {
-  PROLOGUE_SORROWGATE_HEADER,
-  worldRegionForMission,
-  worldRegionForSession,
-  type WorldRegion,
-} from '@echoes/shared';
+import { PROLOGUE_SORROWGATE_HEADER, worldRegionForMission } from '@echoes/shared';
 import type { WebGLRenderer } from 'three';
 import { PerspectiveView } from './PerspectiveView.ts';
 import { lookForMission, type WorldLook } from './tutorialLook.ts';
@@ -43,8 +37,6 @@ export interface WorldViewDevices {
 export class WorldViewHost {
   private view: PerspectiveView | null = null;
   private look: WorldLook | null = null;
-  /** The region the view was built for: a view is placed once, at construction. */
-  private region: WorldRegion | null = null;
   /** The session holding the view, so a late release from an earlier one is a no-op. */
   private holder: symbol | null = null;
   /**
@@ -61,12 +53,9 @@ export class WorldViewHost {
   /** A mid-return let-go waiting a microtask for a board to take the view back. */
   private letGo: symbol | null = null;
 
-  /**
-   * Whether a session is drawn in the persistent world: its mission, or with
-   * none its map, is placed (`worldRegionForSession`).
-   */
-  isWorldMission(missionId: string | undefined, mapId?: string): boolean {
-    return worldRegionForSession(missionId, mapId) !== undefined;
+  /** Whether `missionId` is drawn in the persistent world. */
+  isWorldMission(missionId: string | undefined): boolean {
+    return worldRegionForMission(missionId) !== undefined;
   }
 
   /**
@@ -83,8 +72,7 @@ export class WorldViewHost {
   acquire(
     missionId: string | undefined,
     host: HTMLElement,
-    devices: WorldViewDevices = {},
-    mapId?: string
+    devices: WorldViewDevices = {}
   ): { view: PerspectiveView; claim: symbol } | null {
     // A session never inherits a return's ground: a new room sends its own.
     if (this.returning) {
@@ -93,20 +81,17 @@ export class WorldViewHost {
     }
     this.returnClaim = null;
     this.letGo = null;
-    return this.lend(missionId, host, devices, false, mapId);
+    return this.lend(missionId, host, devices, false);
   }
 
   private lend(
     missionId: string | undefined,
     host: HTMLElement,
     devices: WorldViewDevices,
-    keepFrame: boolean,
-    mapId?: string
+    keepFrame: boolean
   ): { view: PerspectiveView; claim: symbol } | null {
     const look = lookForMission(missionId);
-    const region = worldRegionForSession(missionId, mapId) ?? null;
-    // Two skirmish maps share a look, so the region is checked as well.
-    if (this.view !== null && (this.look !== look || this.region !== region)) this.dispose();
+    if (this.view !== null && this.look !== look) this.dispose();
     // A takeover: the session still holding the view will never let it go
     // (its release is a no-op once the claim moves), so its ground goes now,
     // as a release would take it (#1460).
@@ -116,9 +101,8 @@ export class WorldViewHost {
     }
     if (this.view === null) {
       // Placed in the world, so its border is drawn and faded (#1461).
-      this.view = new PerspectiveView(look, region);
+      this.view = new PerspectiveView(look, worldRegionForMission(missionId) ?? null);
       this.look = look;
-      this.region = region;
     }
     if (!this.view.mount(host, devices.glRenderer, devices.environment)) {
       this.dispose();
@@ -222,7 +206,6 @@ export class WorldViewHost {
     this.view?.destroy();
     this.view = null;
     this.look = null;
-    this.region = null;
     this.holder = null;
     this.returning = false;
     this.returnClaim = null;
