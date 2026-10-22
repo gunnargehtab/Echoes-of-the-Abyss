@@ -165,8 +165,9 @@ export function detailRect(region: PlanRect): PlanRect {
  * holds the cell's centre, the one whose map rectangle lies nearest it, by
  * §7.4's *d*. A mission patch is at *d* = 0, so it beats any surround; two
  * patches tie only where their cells agree (§7.2), and a tie goes to the region
- * listed first, which the view makes the session's. A property of the place,
- * never of travel order, as the fade is; undefined where none of them draws.
+ * listed first: the view lists the session's first, and the rest by id. A
+ * property of the place, never of travel order, as the fade is; undefined
+ * where none of them draws.
  */
 export function detailOwner(
   drawn: readonly WorldRegion[],

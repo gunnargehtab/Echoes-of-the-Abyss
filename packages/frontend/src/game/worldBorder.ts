@@ -442,7 +442,7 @@ export interface DrawnDetail {
 
 /**
  * Point each drawn detail at the other one (#1528), in the order
- * `detailOwner` takes them: the first listed, the session's, wins a tie.
+ * `detailOwner` takes them: the first listed wins a tie.
  * `home` is the region whose origin is the scene's. A detail drawn alone, or
  * past the two §7.5 allows, has no rival and draws all of its cells.
  */

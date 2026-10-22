@@ -74,6 +74,7 @@ import {
   WORLD_REGIONS,
   clampToRect,
   detailGround,
+  detailOwner,
   detailRect,
   exteriorDistanceM,
   statsFor,
@@ -187,7 +188,7 @@ import {
   patchGroundDetailCells,
   SEABED_DETAIL_ON,
 } from './seabedDetail.ts';
-import { mapProps, stoneSeats, type StoneSeat } from './environment.ts';
+import { mapProps, stoneSeats, type PropPlacement, type StoneSeat } from './environment.ts';
 import { installGroundSurface, type WorldLook } from './tutorialLook.ts';
 import {
   apronFrame,
@@ -628,6 +629,9 @@ interface RegionDetail {
   /** Its region, and the other drawn detail whose cells it leaves (#1528). */
   region: WorldRegion;
   rival: DetailRival;
+  /** Every prop its map stands, and the drawn set its layer last stood them for. */
+  placements: readonly PropPlacement[];
+  propsFor: string;
 }
 
 export class PerspectiveView {
@@ -3012,15 +3016,19 @@ export class PerspectiveView {
     if (leaving) drawn.delete(home.id);
     for (const id of residency.residentIds()) residency.get(id)!.mesh.visible = drawn.has(id);
     // Where two drawn details share cells, each draws only the cells it owns
-    // by place (§7.3, #1528): the session's apron first, so it wins a tie. It
-    // is drawn until its ground goes, the ramp-out included.
+    // by place (§7.3, #1528). The session's apron is listed first, so it wins
+    // a tie; it is drawn until its ground goes, the ramp-out included. The
+    // others follow by id, so on the board a tie never turns on which region
+    // arrived first.
+    const details = [...drawn]
+      .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+      .map((id) => residency.get(id)!);
     const sharing: DrawnDetail[] =
       (this.apron?.mesh ?? null) === null ? [] : [{ region: home, rival: this.apronRival }];
-    for (const id of drawn) {
-      const detail = residency.get(id)!;
-      sharing.push({ region: detail.region, rival: detail.rival });
-    }
+    for (const detail of details) sharing.push({ region: detail.region, rival: detail.rival });
     assignRivals(sharing, home);
+    const regions = sharing.map((d) => d.region);
+    for (const detail of details) this.standOwnedProps(detail, regions);
     this.cutOverview();
   }
 
@@ -3142,11 +3150,8 @@ export class PerspectiveView {
     const patchY = region.y - atlas.y;
     props.group.position.set(patchX, 0, patchY);
     props.setReducedMotion(this.swayHeld);
-    props.rebuild(
-      mission,
-      (xM, yM) => depthToWorldY(seabedDepthAtM(mission, seed, rockTopM, xM, yM)),
-      mapProps(region.mapId, this.look)
-    );
+    const placements = mapProps(region.mapId, this.look);
+    props.rebuild(mission, this.detailPropGround(mission, seed, rockTopM), placements);
     mesh.add(props.group);
     return {
       mesh,
@@ -3161,7 +3166,39 @@ export class PerspectiveView {
       props,
       region,
       rival,
+      placements,
+      propsFor: region.id,
     };
+  }
+
+  /** The heights a region's detail stands its props on: the map's own (#1491). */
+  private detailPropGround(
+    mission: TerrainPayload,
+    seed: number,
+    rockTopM: number
+  ): (xM: number, yM: number) => number {
+    return (xM, yM) => depthToWorldY(seabedDepthAtM(mission, seed, rockTopM, xM, yM));
+  }
+
+  /**
+   * Stand a drawn region's props only on the cells it draws (#1528): a prop
+   * follows its ground, so where its patch loses a tie to another's, the
+   * other's props stand there and its own do not. Re-stood only when the
+   * drawn set changes.
+   */
+  private standOwnedProps(detail: RegionDetail, sharing: readonly WorldRegion[]): void {
+    const key = sharing.map((r) => r.id).join(' ');
+    if (key === detail.propsFor) return;
+    detail.propsFor = key;
+    const { region } = detail;
+    const owned = detail.placements.filter(
+      (p) => detailOwner(sharing, { x: region.x + p.xM, y: region.y + p.yM }) === region
+    );
+    detail.props.rebuild(
+      detail.mission,
+      this.detailPropGround(detail.mission, detail.seed, detail.rockTopM),
+      owned
+    );
   }
 
   /** Free what `loadRegionDetail` built: the residency let its region go. */

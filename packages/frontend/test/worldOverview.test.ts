@@ -28,6 +28,7 @@ import {
   detailGround,
   detailRect,
   paintGround,
+  regionContains,
   type WorldRegion,
 } from '@echoes/shared';
 import { createHost, HeadlessWebGLRenderer, pumpAnimationFrames } from './support/headless.ts';
@@ -50,7 +51,13 @@ import {
   SEABED_PX_PER_CELL,
   SLICED_BAKE_BUDGET_MS,
 } from '../src/game/seabed.ts';
-import { apronFrame, apronMesh, paddedTerrain } from '../src/game/worldBorder.ts';
+import {
+  apronFrame,
+  apronMesh,
+  detailRival,
+  paddedTerrain,
+  type DetailRival,
+} from '../src/game/worldBorder.ts';
 import {
   OVERVIEW_PX_PER_CELL,
   SEAM_BAND_M,
@@ -710,6 +717,117 @@ describe("another region's detail, where no session holds it (§7.5)", () => {
     pumpAnimationFrames();
     assert.equal(internals(view).overview!.mesh.visible, true, 'the fade gone out');
     assert.equal(held.counts.requests, 1, 'asked for once the overview is drawn');
+  });
+
+  /**
+   * Two details drawn together (#1528). No second region has authored ground
+   * yet, so none can be built under node: the real residency is made to
+   * report one resident beside what it holds, a detail with the slots and
+   * props layer the view reads, and the view's own frame does the rest.
+   */
+  function alsoDrawn(view: PerspectiveView, other: WorldRegion) {
+    const held = residency(view);
+    const fake = {
+      mesh: new Mesh(),
+      rect: { x: 0, y: 0, widthM: 0, heightM: 0 },
+      props: new EnvironmentLayer('sorrowgate'),
+      mission: sorrowgate(),
+      seed: 1,
+      rockTopM: 0,
+      region: other,
+      rival: detailRival(),
+      placements: [],
+      propsFor: other.id,
+    };
+    const drawn = held.drawn.bind(held);
+    const get = held.get.bind(held);
+    mock.method(held, 'drawn', () => [other.id, ...drawn()]);
+    mock.method(held, 'get', (id: string) => (id === other.id ? fake : get(id)));
+    return fake;
+  }
+  // East of Sorrowgate's map with its patch over Sorrowgate's west 1,000 m:
+  // the two share patch cells, a tie, and surround cells.
+  const over: WorldRegion = {
+    id: 'over',
+    mapId: 'sorrowgate',
+    x: 21_500,
+    y: 41_000,
+    widthM: 4_000,
+    heightM: 3_000,
+  };
+  const scene = (r: { x: number; y: number; widthM: number; heightM: number }) => [
+    r.x - SORROWGATE_REGION.x,
+    r.y - SORROWGATE_REGION.y,
+    r.widthM,
+    r.heightM,
+  ];
+
+  it("points the session's apron and a resident detail at each other, the session winning a tie", async () => {
+    const { view } = await mountPilot();
+    const apronRival = (view as unknown as { apronRival: DetailRival }).apronRival;
+    assert.equal(apronRival.uRival.value, 0, 'drawn alone, it draws every cell');
+    assert.deepEqual(apronRival.uOwnMapRect.value, [0, 0, 5_000, 4_000]);
+    // The apron's own program discards what its rival owns, off these very slots.
+    const apron = internals(view).apron!.mesh.material as MeshBasicMaterial;
+    const shader = {
+      uniforms: {} as Record<string, unknown>,
+      vertexShader: ShaderLib.basic.vertexShader,
+      fragmentShader: ShaderLib.basic.fragmentShader,
+    };
+    apron.onBeforeCompile(shader as never, null as never);
+    assert.match(shader.fragmentShader, /if \( echoesRivalOwns\( vBorderWorld\.xz \) \) discard;/);
+    assert.equal(shader.uniforms.uRival, apronRival.uRival, 'the slot the view writes');
+    assert.equal(shader.uniforms.uRivalMapRect, apronRival.uRivalMapRect);
+    const other = alsoDrawn(view, over);
+    pumpAnimationFrames();
+    assert.equal(apronRival.uRival.value, 1, 'a rival, which loses a tie to the session');
+    assert.deepEqual(apronRival.uRivalMapRect.value, scene(over));
+    assert.deepEqual(apronRival.uRivalDetailRect.value, scene(detailRect(over)));
+    assert.equal(other.rival.uRival.value, 2, "the session's apron, which wins one");
+    assert.deepEqual(other.rival.uRivalMapRect.value, [0, 0, 5_000, 4_000]);
+    assert.deepEqual(other.rival.uOwnMapRect.value, scene(over));
+  });
+
+  it('settles a tie on the board by id, and stands each prop only where its ground is drawn', async () => {
+    const rebuilds = mock.method(EnvironmentLayer.prototype, 'rebuild');
+    try {
+      const { view } = await mountPilot(false);
+      const held = residency(view);
+      camera(2_500, 2_000, 6_000, { pitchDeg: 60 });
+      await until(() => held.drawn().includes(SORROWGATE_REGION.id), 'drawn');
+      const own = held.get(SORROWGATE_REGION.id)! as unknown as {
+        props: EnvironmentLayer;
+        rival: DetailRival;
+        placements: PropPlacement[];
+      };
+      assert.equal(own.rival.uRival.value, 0, 'drawn alone');
+      const stood = () => rebuilds.mock.calls.filter((c) => c.this === own.props).length;
+      assert.equal(stood(), 1, 'stood once, all of them');
+      alsoDrawn(view, over);
+      pumpAnimationFrames();
+      // 'over' sorts before 'sorrowgate', so it takes the tie whatever order they arrived in.
+      assert.equal(own.rival.uRival.value, 2);
+      assert.equal(stood(), 2, 're-stood once for the new drawn set');
+      const kept = rebuilds.mock.calls.filter((c) => c.this === own.props)[1]!
+        .arguments[2] as PropPlacement[];
+      const gone = own.placements.filter((p) => !kept.includes(p));
+      assert.ok(gone.length > 0 && kept.length > 0);
+      // Gone exactly from the cells both patches draw, where 'over' wins the tie.
+      const inOver = (p: PropPlacement) => {
+        const cell = WORLD.DETAIL_CELL_M;
+        const centre = (m: number) => (Math.floor(m / cell) + 0.5) * cell;
+        return regionContains(over, {
+          x: centre(SORROWGATE_REGION.x + p.xM),
+          y: centre(SORROWGATE_REGION.y + p.yM),
+        });
+      };
+      for (const p of gone) assert.ok(inOver(p), `gone at ${p.xM}, ${p.yM}`);
+      for (const p of kept) assert.ok(!inOver(p), `kept at ${p.xM}, ${p.yM}`);
+      pumpAnimationFrames();
+      assert.equal(stood(), 2, 'not re-stood while the drawn set holds');
+    } finally {
+      rebuilds.mock.restore();
+    }
   });
 
   it("lets go of its own region's copy once a session takes the region", async () => {
