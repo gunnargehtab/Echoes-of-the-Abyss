@@ -1311,6 +1311,14 @@ const PLATE = {
  */
 const GRAIN = { SPACING_PX: 5, ALPHA: 0.035 } as const;
 
+/**
+ * TUNABLE — an inert hazard site's fill. A soft fill under the site's rim,
+ * between the kelp field's idle 0.02 and gripping 0.05: it is permanent chart
+ * data like the kelp, and threat ink is the louder colour, so it needs no
+ * more than the kelp does to read as ground.
+ */
+const INERT_SITE_FILL_ALPHA = 0.04;
+
 /** Past this much pointer travel, a left drag is a marquee rather than a click. */
 const DRAG_SLOP_PX = 6;
 /** Two clicks inside this window on the same spot select all of that class. */
@@ -6073,36 +6081,30 @@ export class EchoRenderer {
    * Inert hazard sites off the map payload, telegraphed. docs/maps.md's core
    * principles list "hazard telegraphing — players must see danger before
    * entering": this ground is dangerous from the moment the map loads, so it
-   * draws every frame like the rest of the ground language, hatched rather
-   * than filled — the sites carry no behaviour yet, and a solid marker would
-   * imply an effect that does not exist.
+   * draws every frame like the rest of the ground language — a rim and a
+   * faint fill, the kelp field's treatment. The sites carry no behaviour yet,
+   * and a solid marker would imply an effect that does not exist.
+   *
+   * It was hatched until #1554, and the hatch is not coming back: a straight
+   * line between two ground points is straight on screen while the rim it sits
+   * inside is sampled and follows the slope, so on a plateau's edge the lines
+   * floated over the ground the rim hugged, and read as stray diagonals across
+   * the map rather than as the site's texture. The fill conforms by
+   * construction — `fillCircle` projects the same sampled ring.
    *
    * Rung 5, map furniture (docs/map-visuals.md §5). The rim is weighed; the
-   * hatching is interior, unweighed only while the rim speaks for it.
+   * fill is interior, a soft fill the ladder does not weigh.
    */
   private drawStaticHazardSites(g: Graphics): void {
     for (const site of this.map?.hazards ?? []) {
       // Simulated hazards are drawn live, with a phase and a countdown.
       if (site.simulated) continue;
+      this.fillCircle(g, site.x, site.y, site.radiusM, null, {
+        color: UI.threat,
+        alpha: INERT_SITE_FILL_ALPHA,
+      });
       if (this.traceCircle(g, site.x, site.y, site.radiusM, null)) {
         g.stroke({ width: 3, color: UI.threat, alpha: FURNITURE_OUTLINE_ALPHA.inertSiteRim });
-      }
-      const step = Math.max(60, site.radiusM / 4);
-      for (let offset = -site.radiusM; offset <= site.radiusM; offset += step) {
-        // Chord length at this offset, so the hatching stays inside the ring.
-        const half = Math.sqrt(Math.max(0, site.radiusM * site.radiusM - offset * offset));
-        if (
-          this.traceLine(
-            g,
-            site.x + offset - half,
-            site.y + offset + half,
-            site.x + offset + half,
-            site.y + offset - half,
-            null
-          )
-        ) {
-          g.stroke({ width: 1.5, color: UI.threat, alpha: 0.12 });
-        }
       }
     }
   }
