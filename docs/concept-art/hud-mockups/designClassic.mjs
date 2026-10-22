@@ -36,7 +36,7 @@
  * (docs/ui-ux.md §10.5).
  */
 
-import { FONT, NEON, TEXT, FACTION, GLYPH } from './tokens.mjs';
+import { ACCENT, FONT, NEON, TEXT, FACTION, GLYPH } from './tokens.mjs';
 import {
   logRows,
   logHeight,
@@ -95,7 +95,7 @@ const DRESSED = new Set(['selection', 'commands']);
 /** A console block: its own bezel inside the console's, with a cyan cap. */
 function block(key, title, inner, { sub = '', faction = null } = {}) {
   const [x, w] = B[key];
-  const accent = faction && DRESSED.has(key) ? FACTION[faction].glow : null;
+  const accent = faction && DRESSED.has(key) ? ACCENT[faction] : null;
   const rule = accent ? `2px solid ${accent}` : '1px solid rgba(255,61,166,0.24)';
   const glyph =
     accent && key === 'selection'
