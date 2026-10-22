@@ -152,7 +152,7 @@ import { SiltPlume, plumeStrength, type PlumeSource } from './siltPlume.ts';
 import { EnvironmentLayer } from './environmentLayer.ts';
 import { createWaterEnvironment, keepsGlowOutsideToneMapping } from './modelLighting.ts';
 import { GLOW_FACTOR_MAX, GLOW_FACTOR_MIN, SIG_GLOW_EFOLD } from './glow.ts';
-import { VeilField, veilShade, type VeilListener } from './acousticVeil.ts';
+import { VeilField, VEIL_FLOOR_RGB, veilShade, type VeilListener } from './acousticVeil.ts';
 import {
   installSurveyInk,
   patchSurveyCellClasses,
@@ -230,6 +230,7 @@ import {
 import { DreamGroundCover } from './dreamGroundCover.ts';
 import { DreamLightHalos } from './dreamLightHalos.ts';
 import { swayAt, type SwayOffset } from './cameraSway.ts';
+import { installDisplayVeil, VEIL_SHADE_ATTRIBUTE } from './veilShading.ts';
 
 /**
  * Steps in the veil's shade table. 64 is finer than an 8-bit colour channel
@@ -760,11 +761,11 @@ export class PerspectiveView {
   onGroundGone: (() => void) | null = null;
   /**
    * The roofed passages and the stone over each (#1105), rebuilt with the
-   * dressing. `base` is each roof's stone in linear light before the veil,
-   * so a veil pass multiplies it rather than compounding on its own output.
+   * dressing. Each roof's stone is its vertex colour, and the veil its own
+   * attribute beside it, so a veil pass never compounds on its own output.
    */
   private passages: Passages | null = null;
-  private roofs: { mesh: Mesh; material: MeshBasicMaterial; base: Float32Array }[] = [];
+  private roofs: { mesh: Mesh; material: MeshBasicMaterial }[] = [];
   /**
    * What `rebuildTerrain` made, kept so `applyGround` can patch it (#434): the
    * vertex grid the mesh's positions came from, and the canvas its texture
@@ -2089,13 +2090,13 @@ export class PerspectiveView {
     const geometry = new BufferGeometry();
     geometry.setAttribute('position', new BufferAttribute(positions, 3));
     geometry.setAttribute('uv', new BufferAttribute(uvs, 2));
-    // The acoustic veil rides the ground as a vertex colour, so it costs the
-    // frame no draw call and no triangle (gate 6): the terrain is already one
-    // unlit mesh with a baked map, and a vertex colour multiplies straight
-    // into it. White until a field exists — a chart with nothing shading it
-    // is a chart, not a black tile.
+    // The acoustic veil rides the ground as a vertex attribute, so it costs
+    // the frame no draw call and no triangle (gate 6): the terrain is already
+    // one unlit mesh with a baked map. In display terms, multiplied after the
+    // output transform (veilShading.ts, #1536). White until a field exists —
+    // a chart with nothing shading it is a chart, not a black tile.
     const shades = new Float32Array(grid.vertsX * grid.vertsZ * 3).fill(1);
-    geometry.setAttribute('color', new BufferAttribute(shades, 3));
+    geometry.setAttribute(VEIL_SHADE_ATTRIBUTE, new BufferAttribute(shades, 3));
     // The authored floor per vertex, for the survey ink's isobaths
     // (docs/map-visuals.md §4). Shared with the grid rather than copied, so a
     // ground delta that patches the grid has patched the attribute too.
@@ -2126,12 +2127,15 @@ export class PerspectiveView {
     texture.flipY = false;
     texture.colorSpace = SRGBColorSpace;
     texture.anisotropy = Math.min(4, this.renderer.capabilities.getMaxAnisotropy());
-    const material = new MeshBasicMaterial({ map: texture, vertexColors: true, toneMapped: false });
+    const material = new MeshBasicMaterial({ map: texture, toneMapped: false });
     // The survey: isobaths and coastlines drawn in this material's own
     // fragment shader, so the ground's silhouette costs no draw call.
     const classes = surveyCellClasses(terrain);
     const cells = surveyCellTexture(terrain, classes);
     installSurveyInk(material, terrain, cells);
+    // Between the two: the veil drains the finished ground, surface and
+    // detail and all, and the ink goes over it (veilShading.ts).
+    installDisplayVeil(material);
     if (this.look === 'sorrowgate') installGroundSurface(material);
     else if (this.seabedDetail) {
       // After the ink, whose world position it reads and whose hook it chains.
@@ -2323,7 +2327,11 @@ export class PerspectiveView {
       }
       const geometry = new BufferGeometry();
       geometry.setAttribute('position', new BufferAttribute(shape.positions, 3));
-      geometry.setAttribute('color', new BufferAttribute(base.slice(), 3));
+      geometry.setAttribute('color', new BufferAttribute(base, 3));
+      geometry.setAttribute(
+        VEIL_SHADE_ATTRIBUTE,
+        new BufferAttribute(new Float32Array(base.length).fill(1), 3)
+      );
       geometry.setIndex(new BufferAttribute(shape.indices, 1));
       // Double-sided: the underside is seen from inside a mouth, and the
       // sides from either hand.
@@ -2333,9 +2341,10 @@ export class PerspectiveView {
         side: DoubleSide,
         transparent: true,
       });
+      installDisplayVeil(material);
       const mesh = new Mesh(geometry, material);
       this.terrainDressing.add(mesh);
-      this.roofs.push({ mesh, material, base });
+      this.roofs.push({ mesh, material });
     }
     this.shadeRoofs();
 
@@ -2543,8 +2552,27 @@ export class PerspectiveView {
   }
 
   /**
+   * The veil's multiplier at a point, in display terms, as `veilShade` gives
+   * it: what the ground and the roofs multiply their fragment by after the
+   * output transform (veilShading.ts, #1536).
+   */
+  private displayShadeAt(xM: number, yM: number, out: Color): void {
+    // `veilShade` inlined: this runs per vertex per Echo tick, and the
+    // function returns a fresh object.
+    const k = (1 - this.veil.at(xM, yM)) * this.veilIntensity;
+    const c = k < 0 ? 0 : k > 1 ? 1 : k;
+    out.setRGB(
+      1 + (VEIL_FLOOR_RGB.r - 1) * c,
+      1 + (VEIL_FLOOR_RGB.g - 1) * c,
+      1 + (VEIL_FLOOR_RGB.b - 1) * c
+    );
+  }
+
+  /**
    * The veil's multiplier at a point, written into `out` in the renderer's
-   * **linear** working space.
+   * **linear** working space: the embers' drain and the props' instance
+   * colour, which still multiply before the output transform (#1536 keeps
+   * them for a later instalment).
    *
    * The conversion is the gotcha this method exists to hold in one place.
    * `veilShade` speaks in display terms — "a third of the chart's
@@ -2566,14 +2594,14 @@ export class PerspectiveView {
     const mesh = this.terrainMesh;
     const grid = this.terrainGrid;
     if (mesh === null || grid === null) return;
-    const colors = mesh.geometry.getAttribute('color') as BufferAttribute | undefined;
+    const colors = mesh.geometry.getAttribute(VEIL_SHADE_ATTRIBUTE) as BufferAttribute | undefined;
     if (colors === undefined) return;
     const shade = this.veilColor;
     for (let iz = 0; iz < grid.vertsZ; iz++) {
       const z = iz * grid.stepM;
       const row = iz * grid.vertsX;
       for (let ix = 0; ix < grid.vertsX; ix++) {
-        this.linearShadeAt(ix * grid.stepM, z, shade);
+        this.displayShadeAt(ix * grid.stepM, z, shade);
         colors.setXYZ(row + ix, shade.r, shade.g, shade.b);
       }
     }
@@ -2591,16 +2619,10 @@ export class PerspectiveView {
     const shade = this.veilColor;
     for (const roof of this.roofs) {
       const positions = roof.mesh.geometry.getAttribute('position') as BufferAttribute;
-      const colors = roof.mesh.geometry.getAttribute('color') as BufferAttribute;
-      const base = roof.base;
+      const colors = roof.mesh.geometry.getAttribute(VEIL_SHADE_ATTRIBUTE) as BufferAttribute;
       for (let i = 0; i < positions.count; i++) {
-        this.linearShadeAt(positions.getX(i), positions.getZ(i), shade);
-        colors.setXYZ(
-          i,
-          base[i * 3]! * shade.r,
-          base[i * 3 + 1]! * shade.g,
-          base[i * 3 + 2]! * shade.b
-        );
+        this.displayShadeAt(positions.getX(i), positions.getZ(i), shade);
+        colors.setXYZ(i, shade.r, shade.g, shade.b);
       }
       colors.needsUpdate = true;
     }
