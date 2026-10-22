@@ -36,7 +36,7 @@ import {
   type MatchListingMetadata,
   encodeEcho,
   isValidClientMessage,
-  worldRegionForMission,
+  worldRegionForSession,
   CLIENT_MSG,
   SERVER_MSG,
   type EchoWire,
@@ -759,9 +759,10 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     // A placed mission's ground also says which world region it stands in
     // (docs/world-map.md §7.1, #1460): the room names it, so the client never
     // chooses where a room's ground goes. Keyed on the mission, as the client's
-    // look is, so Radicals on this same map names none; and omitted rather than
-    // sent empty, so every other room's terrain is what it always was.
-    const region = worldRegionForMission(this.mission?.id);
+    // look is, so Radicals on this same map names none; a skirmish room, with
+    // no mission, by its map when that map is placed (#1529). Omitted rather
+    // than sent empty, so every other room's terrain is what it always was.
+    const region = worldRegionForSession(this.mission?.id, this.map.id);
     const terrain = this.match.world.terrain;
     this.sendTo(client, SERVER_MSG.terrain, {
       ...terrain.serializeOpening(),

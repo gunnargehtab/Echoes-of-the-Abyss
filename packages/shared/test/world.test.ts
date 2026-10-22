@@ -14,6 +14,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 
 import {
   Biome,
+  MAP_HEADERS,
   MISSION_HEADERS,
   PROLOGUE_SORROWGATE_HEADER,
   RIFT_ATLAS,
@@ -30,6 +31,7 @@ import {
   regionContains,
   worldRegionById,
   worldRegionForMission,
+  worldRegionForSession,
   worldRegionProblems,
   type GroundRegion,
   type MapGround,
@@ -71,7 +73,7 @@ describe('placed regions', () => {
     const ok: WorldRegion = { ...SORROWGATE_REGION };
     const cases: [WorldRegion[], RegExp][] = [
       [[ok, { ...ok }], /sorrowgate: id used twice/],
-      [[{ ...ok, mapId: 'no-such-map' }], /no mission plays on map 'no-such-map'/],
+      [[{ ...ok, mapId: 'no-such-map' }], /no mission or skirmish plays on map 'no-such-map'/],
       [[{ ...ok, x: 17_600 }], /x 17600 is not a whole 250 m cell/],
       [[{ ...ok, heightM: 4_100 }], /heightM 4100 is not a whole 250 m cell/],
       [[{ ...ok, x: 36_000 }], /outside the atlas/],
@@ -269,6 +271,45 @@ describe('the pilot predicate', () => {
     }
     // A `?map=` boot passes no mission, and the map id is not one.
     assert.equal(worldRegionForMission('sorrowgate'), undefined);
+  });
+});
+
+describe('a skirmish boot (#1529)', () => {
+  // A `?map=` boot has no mission, so it is placed by its map id, when the map
+  // is a skirmish map with a placement (docs/world-map.md §7.1).
+  const corridor: (typeof WORLD_REGIONS)[number] = {
+    id: 'corridor',
+    mapId: 'abyssal-rift-corridor',
+    x: 30_000,
+    y: 50_000,
+    widthM: 6_000,
+    heightM: 4_000,
+  };
+
+  it('resolves a placed skirmish map to its region', () => {
+    assert.ok(MAP_HEADERS.some((h) => h.id === corridor.mapId));
+    assert.equal(worldRegionForSession(undefined, corridor.mapId, [corridor]), corridor);
+    assert.equal(worldRegionForSession('', corridor.mapId, [corridor]), corridor);
+    // And the validator takes it: a skirmish map is a known map (§7.9).
+    const problems = worldRegionProblems([corridor], undefined, {});
+    assert.ok(!problems.some((p) => /plays on map/.test(p)), problems.join('; '));
+  });
+
+  it('resolves none for every skirmish map today: the Ventfront Divide stays the control', () => {
+    for (const header of MAP_HEADERS) {
+      assert.equal(worldRegionForSession(undefined, header.id), undefined, header.id);
+    }
+    assert.equal(worldRegionForSession(undefined, 'ventfront-divide', [corridor]), undefined);
+    assert.equal(worldRegionForSession(undefined, undefined), undefined);
+  });
+
+  it('places a mission by its identity alone, and a mission map never by its id', () => {
+    assert.equal(
+      worldRegionForSession(PROLOGUE_SORROWGATE_HEADER.id, undefined),
+      SORROWGATE_REGION
+    );
+    assert.equal(worldRegionForSession('seeding-radicals', 'sorrowgate'), undefined);
+    assert.equal(worldRegionForSession(undefined, 'sorrowgate'), undefined);
   });
 });
 
