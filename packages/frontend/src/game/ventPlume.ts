@@ -37,6 +37,7 @@ import {
 import { SIM } from '@echoes/shared';
 import { propSpec, type PropPlacement } from './environment.ts';
 import { VENT_EMBER } from './palette.ts';
+import { installDisplayVeil, VEIL_SHADE_ATTRIBUTE } from './veilShading.ts';
 
 /**
  * TUNABLE — a plume's shape, before the chimney's own scale: puffs alive at
@@ -170,6 +171,7 @@ diffuseColor.a *= 1.0 - plumeR * plumeR;`
       );
     };
     this.material.customProgramCacheKey = () => 'vent-plume';
+    installDisplayVeil(this.material);
     this.points = new Points(new BufferGeometry(), this.material);
     this.points.name = 'vent_plumes';
     // One cloud spans the map: per-object culling would hide it whole.
@@ -209,7 +211,17 @@ diffuseColor.a *= 1.0 - plumeR * plumeR;`
     this.points.geometry = geometry;
     geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
     geometry.setAttribute('aPlume', new Float32BufferAttribute(plume, 2));
-    geometry.setAttribute('color', new Float32BufferAttribute(new Float32Array(n * 3), 3));
+    const color = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      color[i * 3] = EMBER.r * VENT_PLUME_LEVEL;
+      color[i * 3 + 1] = EMBER.g * VENT_PLUME_LEVEL;
+      color[i * 3 + 2] = EMBER.b * VENT_PLUME_LEVEL;
+    }
+    geometry.setAttribute('color', new Float32BufferAttribute(color, 3));
+    geometry.setAttribute(
+      VEIL_SHADE_ATTRIBUTE,
+      new Float32BufferAttribute(new Float32Array(n * 3).fill(1), 3)
+    );
     this.setShade(shade);
     this.points.visible = n > 0;
   }
@@ -217,23 +229,24 @@ diffuseColor.a *= 1.0 - plumeR * plumeR;`
   /**
    * Take the acoustic veil's shade (docs/ui-ux.md §4.5): a vent nobody is
    * listening to goes as cold as the ground it stands on, plume and all.
-   * On the veil's cadence, never per frame.
+   * A plain drain, the shade's mean in all three channels, in display terms
+   * (veilShading.ts). On the veil's cadence, never per frame.
    */
   setShade(shade: ShadeFn | null): void {
-    const colors = this.points.geometry.getAttribute('color') as Float32BufferAttribute | undefined;
-    if (colors === undefined) return;
+    const veils = this.points.geometry.getAttribute(VEIL_SHADE_ATTRIBUTE) as
+      Float32BufferAttribute | undefined;
+    if (veils === undefined) return;
     this.sites.forEach((site, c) => {
       let veil = 1;
       if (shade !== null) {
         shade(site.xM, site.yM, TMP_SHADE);
         veil = (TMP_SHADE.r + TMP_SHADE.g + TMP_SHADE.b) / 3;
       }
-      const level = VENT_PLUME_LEVEL * veil;
       for (let k = 0; k < VENT_PLUME_PUFFS; k++) {
-        colors.setXYZ(c * VENT_PLUME_PUFFS + k, EMBER.r * level, EMBER.g * level, EMBER.b * level);
+        veils.setXYZ(c * VENT_PLUME_PUFFS + k, veil, veil, veil);
       }
     });
-    colors.needsUpdate = true;
+    veils.needsUpdate = true;
   }
 
   /**

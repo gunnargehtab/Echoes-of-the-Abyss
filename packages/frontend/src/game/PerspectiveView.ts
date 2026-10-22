@@ -233,33 +233,6 @@ import { swayAt, type SwayOffset } from './cameraSway.ts';
 import { installDisplayVeil, VEIL_SHADE_ATTRIBUTE } from './veilShading.ts';
 
 /**
- * Steps in the veil's shade table. 64 is finer than an 8-bit colour channel
- * can resolve over the range the veil actually spans, so the table costs
- * nothing in banding and saves a `pow` per vertex per Echo tick.
- */
-const VEIL_STEPS = 64;
-
-/**
- * The veil's linear-space shade, tabulated over the veil amount 0-1.
- *
- * Built once. `Color.setRGB(..., SRGBColorSpace)` is what does the
- * conversion, so three owns the transfer function rather than this file
- * carrying a hand-rolled gamma that would drift from it.
- */
-const VEIL_TABLE = ((): Float32Array => {
-  const table = new Float32Array((VEIL_STEPS + 1) * 3);
-  const color = new Color();
-  for (let i = 0; i <= VEIL_STEPS; i++) {
-    const shade = veilShade(1 - i / VEIL_STEPS, 1);
-    color.setRGB(shade.r, shade.g, shade.b, SRGBColorSpace);
-    table[i * 3] = color.r;
-    table[i * 3 + 1] = color.g;
-    table[i * 3 + 2] = color.b;
-  }
-  return table;
-})();
-
-/**
  * SPEC — docs/art-direction.md "Camera & Projection": 55° below horizontal,
  * settled by the Phase-1 screenshot comparison and pinned at Phase 5.
  *
@@ -808,8 +781,6 @@ export class PerspectiveView {
   private emberBucket = -1;
   /** Where each point stands, embers then lamps, for the veil's reshade. */
   private emberPositions: Array<{ xM: number; yM: number }> = [];
-  /** Per-point veil factor, parallel to `emberPositions`; 1 with no veil. */
-  private emberVeil: Float32Array = new Float32Array(0);
 
   /**
    * The acoustic veil (acousticVeil.ts, docs/ui-ux.md §4.5, issue #472): the
@@ -828,7 +799,7 @@ export class PerspectiveView {
   private readonly veilColor = new Color();
   /** Handed to the prop layer, which owns when its instances are re-coloured. */
   private readonly propShade = (xM: number, yM: number, out: Color): void => {
-    this.linearShadeAt(xM, yM, out);
+    this.displayShadeAt(xM, yM, out);
   };
 
   /**
@@ -2455,7 +2426,6 @@ export class PerspectiveView {
     this.emberPhases = embers.map((e) => e.phase);
     this.emberPositions = [...embers, ...lamps].map((e) => ({ xM: e.xM, yM: e.yM }));
     const count = this.emberPositions.length;
-    this.emberVeil = new Float32Array(count).fill(1);
     if (count === 0) {
       this.embers = null;
       return;
@@ -2472,26 +2442,29 @@ export class PerspectiveView {
     const emberGeometry = new BufferGeometry();
     emberGeometry.setAttribute('position', new BufferAttribute(emberPositions, 3));
     emberGeometry.setAttribute('color', new BufferAttribute(emberColors, 3));
-    this.embers = new Points(
-      emberGeometry,
-      new PointsMaterial({
-        toneMapped: false,
-        size: 55,
-        sizeAttenuation: true,
-        vertexColors: true,
-        transparent: true,
-        blending: AdditiveBlending,
-        depthWrite: false,
-        // Out of the fog chunk on purpose: mixing an *additive* fragment
-        // toward the water colour makes a distant vent brighter the murkier
-        // the water gets. An emitter loses light to the swim and gains none,
-        // so the 5 Hz flicker multiplies by `waterTransmittance` instead
-        // (water.ts).
-        fog: false,
-        // A point without a map rasterises as a square; an ember is a glow.
-        map: this.emberSpriteTexture(),
-      })
+    emberGeometry.setAttribute(
+      VEIL_SHADE_ATTRIBUTE,
+      new BufferAttribute(new Float32Array(count * 3).fill(1), 3)
     );
+    const emberMaterial = new PointsMaterial({
+      toneMapped: false,
+      size: 55,
+      sizeAttenuation: true,
+      vertexColors: true,
+      transparent: true,
+      blending: AdditiveBlending,
+      depthWrite: false,
+      // Out of the fog chunk on purpose: mixing an *additive* fragment
+      // toward the water colour makes a distant vent brighter the murkier
+      // the water gets. An emitter loses light to the swim and gains none,
+      // so the 5 Hz flicker multiplies by `waterTransmittance` instead
+      // (water.ts).
+      fog: false,
+      // A point without a map rasterises as a square; an ember is a glow.
+      map: this.emberSpriteTexture(),
+    });
+    installDisplayVeil(emberMaterial);
+    this.embers = new Points(emberGeometry, emberMaterial);
     this.embers.renderOrder = 1;
     this.scene.add(this.embers);
     this.emberBucket = -1;
@@ -2553,8 +2526,8 @@ export class PerspectiveView {
 
   /**
    * The veil's multiplier at a point, in display terms, as `veilShade` gives
-   * it: what the ground and the roofs multiply their fragment by after the
-   * output transform (veilShading.ts, #1536).
+   * it: what the ground, the roofs, the embers and the props drain their
+   * colour by in the shader, encoded (veilShading.ts, #1536).
    */
   private displayShadeAt(xM: number, yM: number, out: Color): void {
     // `veilShade` inlined: this runs per vertex per Echo tick, and the
@@ -2566,28 +2539,6 @@ export class PerspectiveView {
       1 + (VEIL_FLOOR_RGB.g - 1) * c,
       1 + (VEIL_FLOOR_RGB.b - 1) * c
     );
-  }
-
-  /**
-   * The veil's multiplier at a point, written into `out` in the renderer's
-   * **linear** working space: the embers' drain and the props' instance
-   * colour, which still multiply before the output transform (#1536 keeps
-   * them for a later instalment).
-   *
-   * The conversion is the gotcha this method exists to hold in one place.
-   * `veilShade` speaks in display terms — "a third of the chart's
-   * brightness" — because that is the only space the number can be reviewed
-   * in. Vertex colours and instance colours are consumed raw by the shader,
-   * with colour management on and `outputColorSpace` sRGB, so a display
-   * figure written straight into the buffer lands about twice as bright as it
-   * reads. `VEIL_TABLE` is that conversion done once at construction, over
-   * the veil amount rather than per vertex: three `pow`s in total instead of
-   * three per vertex per Echo tick over a 16k-vertex grid.
-   */
-  private linearShadeAt(xM: number, yM: number, out: Color): void {
-    const k = (1 - this.veil.at(xM, yM)) * this.veilIntensity;
-    const i = Math.round((k < 0 ? 0 : k > 1 ? 1 : k) * VEIL_STEPS) * 3;
-    out.setRGB(VEIL_TABLE[i]!, VEIL_TABLE[i + 1]!, VEIL_TABLE[i + 2]!);
   }
 
   private shadeGround(): void {
@@ -2661,19 +2612,21 @@ export class PerspectiveView {
    * Embers and lamps take a plain drain rather than the cold tint the ground
    * takes. A vent is a light, and deafness is not a filter over a light — it
    * dims it. Recolouring the seabed's warm lights towards blue would be
-   * inventing a hue nobody specified (gate 4).
+   * inventing a hue nobody specified (gate 4). The mean of the ground's
+   * display shade, in all three channels, drained in display terms
+   * (veilShading.ts), so the flicker's colours never carry it.
    */
   private shadeEmbers(): void {
-    if (this.emberVeil.length === 0) return;
+    if (this.embers === null) return;
+    const veils = this.embers.geometry.getAttribute(VEIL_SHADE_ATTRIBUTE) as BufferAttribute;
     const shade = this.veilColor;
     for (let i = 0; i < this.emberPositions.length; i++) {
       const at = this.emberPositions[i]!;
-      this.linearShadeAt(at.xM, at.yM, shade);
-      this.emberVeil[i] = (shade.r + shade.g + shade.b) / 3;
+      this.displayShadeAt(at.xM, at.yM, shade);
+      const veil = (shade.r + shade.g + shade.b) / 3;
+      veils.setXYZ(i, veil, veil, veil);
     }
-    // The flicker only writes on a bucket change, so force the next frame to
-    // re-issue the colours the veil just moved.
-    this.emberBucket = -1;
+    veils.needsUpdate = true;
   }
 
   private refreshGroundCache(): void {
@@ -4298,7 +4251,7 @@ export class PerspectiveView {
           const gain = isEmber
             ? EMBER_GAIN * emberFlicker(i, bucket, this.emberPhases[i]!)
             : CIVIC_LAMP_LEVEL;
-          const level = gain * (this.emberVeil[i] ?? 1) * swim;
+          const level = gain * swim;
           colors.setXYZ(i, light.r * level, light.g * level, light.b * level);
         }
         colors.needsUpdate = true;

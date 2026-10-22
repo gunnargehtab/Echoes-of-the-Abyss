@@ -5,9 +5,13 @@
  */
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { MeshBasicMaterial, ShaderLib } from 'three';
+import { MeshBasicMaterial, MeshStandardMaterial, ShaderLib } from 'three';
+import { keepGlowOutsideToneMapping, TONED_SURFACE } from '../src/game/modelLighting.ts';
 import {
   DISPLAY_VEIL_FRAGMENT,
+  DISPLAY_VEIL_GLSL,
+  installPropVeil,
+  readsPropVeil,
   installDisplayVeil,
   readsDisplayVeil,
   VEIL_SHADE_ATTRIBUTE,
@@ -49,11 +53,9 @@ describe('the interior veil, in display space (#1536)', () => {
     assert.ok(drain < fragmentShader.indexOf('// ink'), 'under the ink');
     assert.ok(drain < fragmentShader.indexOf('#include <fog_fragment>'), 'before the fog');
     // Encoded, multiplied, decoded: never a linear multiply by a display figure.
-    assert.match(
-      DISPLAY_VEIL_FRAGMENT,
-      /pow\( diffuseColor\.rgb, vec3\( 1\.0 \/ 2\.4 \) \)[^;]*\* vVeilShade;/
-    );
-    assert.match(DISPLAY_VEIL_FRAGMENT, /vec3\( 2\.4 \)/);
+    assert.ok(fragmentShader.includes(DISPLAY_VEIL_GLSL), 'the transfer is declared');
+    assert.match(DISPLAY_VEIL_GLSL, /pow\( c, vec3\( 1\.0 \/ 2\.4 \) \)[^;]*\* shade;/);
+    assert.match(DISPLAY_VEIL_GLSL, /vec3\( 2\.4 \)/);
     material.dispose();
   });
 
@@ -71,6 +73,34 @@ describe('the interior veil, in display space (#1536)', () => {
     assert.ok(material.customProgramCacheKey().startsWith('earlier'));
     assert.ok(readsDisplayVeil(material));
     assert.ok(!readsDisplayVeil(new MeshBasicMaterial()));
+    material.dispose();
+  });
+
+  it("drains a glowing prop's surface after the curve and adds the glow back", () => {
+    const material = new MeshStandardMaterial({ emissive: 0x40ffc0 });
+    keepGlowOutsideToneMapping(material);
+    installPropVeil(material);
+    assert.ok(readsPropVeil(material));
+    const shader = {
+      uniforms: {} as Record<string, unknown>,
+      vertexShader: ShaderLib.standard.vertexShader,
+      fragmentShader: ShaderLib.standard.fragmentShader,
+    };
+    material.onBeforeCompile(shader as never, undefined as never);
+    const frag = shader.fragmentShader;
+    assert.ok(
+      frag.includes(`echoesDisplayVeil( ${TONED_SURFACE}, vVeilShade ) + totalEmissiveRadiance;`)
+    );
+    // Where nothing is tone-mapped the glow chunk is a no-op: the same split.
+    const untoned = frag.indexOf('#if !defined( TONE_MAPPING )');
+    assert.ok(untoned > 0 && untoned < frag.indexOf('#include <colorspace_fragment>'));
+    assert.ok(
+      !frag.includes('echoesDisplayVeil( gl_FragColor.rgb, vVeilShade )'),
+      'never the whole pixel'
+    );
+    // The instance colour is the shade, and no longer tints the diffuse.
+    assert.ok(shader.vertexShader.includes('vVeilShade = instanceColor.rgb;'));
+    assert.ok(!shader.vertexShader.includes('vColor.xyz *= instanceColor.xyz;'));
     material.dispose();
   });
 });

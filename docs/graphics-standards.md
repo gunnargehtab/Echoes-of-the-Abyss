@@ -410,7 +410,7 @@ settles. The probe reports the live motes as `plumeMotes`.
 The vent chimneys' steam is one more `Points` (`ventPlume.ts`, #1514): fourteen puffs for
 every chimney standing, written once per terrain rebuild. The climb, the fade and the swim
 are in the vertex shader, so a frame writes two uniforms a plume and no buffer; the veil's
-shade rewrites the colours when it moves. That is one draw call for every chimney on the
+shade rewrites its own attribute when it moves (#1536). That is one draw call for every chimney on the
 session's map, plus one for each drawn detail region that stands a chimney, as each
 region's props cost their own draws. The probe reports the session's columns as
 `ventPlumes` and the detail regions' as `detailVentPlumes`.

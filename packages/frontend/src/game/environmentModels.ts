@@ -44,6 +44,7 @@ import { mergeByMaterial } from './rosterModels.ts';
 import { swayWeight } from './environment.ts';
 import { installPropSurface, type WorldLook } from './tutorialLook.ts';
 import { keepGlowOutsideToneMapping } from './modelLighting.ts';
+import { installPropVeil } from './veilShading.ts';
 
 /**
  * TUNABLE — the diffuse luminance a prop's brightest material is set to,
@@ -245,6 +246,8 @@ export function buildTemplate(
     if (material instanceof MeshStandardMaterial && material.emissive.getHex() !== 0) {
       keepGlowOutsideToneMapping(material);
     }
+    // Last: it wraps the glow's surface term (veilShading.ts).
+    installPropVeil(material);
     parts.push({ geometry, material });
   });
   return { parts, trianglesPerInstance: triangles, sway, heightM };

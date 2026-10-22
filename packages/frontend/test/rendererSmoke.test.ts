@@ -1033,6 +1033,24 @@ describe('renderer smoke test: the conn view', () => {
       assert.ok(deepest > 0.25, `the cold corner is in the veil (${deepest})`);
       assert.ok(readsDisplayVeil(ground.material as MeshBasicMaterial));
 
+      // The embers take a plain drain, the ground's mean in all three
+      // channels, drained in display terms too: never below the floor's mean.
+      let embers: Points | null = null;
+      world.gl.lastScene?.traverse((object) => {
+        if (object instanceof Points && object.geometry.getAttribute(VEIL_SHADE_ATTRIBUTE)) {
+          if (object.geometry.getAttribute('aPlume') === undefined) embers = object;
+        }
+      });
+      assert.ok(embers !== null, 'the embers carry the veil');
+      const lit = embers as Points;
+      assert.ok(readsDisplayVeil(lit.material as MeshBasicMaterial));
+      const emberVeil = lit.geometry.getAttribute(VEIL_SHADE_ATTRIBUTE) as BufferAttribute;
+      const floorMean = (VEIL_FLOOR_RGB.r + VEIL_FLOOR_RGB.g + VEIL_FLOOR_RGB.b) / 3;
+      for (let i = 0; i < emberVeil.count; i++) {
+        assert.equal(emberVeil.getX(i), emberVeil.getZ(i), 'a drain, not a tint');
+        assert.ok(emberVeil.getX(i) >= floorMean - 1e-6 && emberVeil.getX(i) <= 1);
+      }
+
       // Gate 6: a vertex attribute on a mesh that was already there. The veil
       // spends no draw call and no triangle, which is why it can be a
       // full-map effect at all.
