@@ -294,7 +294,7 @@ The six things a new biome supplies:
 2. **A fill** inside 5–10% luminance, distinct from its neighbours in value as well as hue,
    in all four colour-vision palettes.
 3. **A relief row**: amplitude, roughness, blockiness, mottle.
-4. **A world-light family, or an explicit "none"**. A fifth family amends
+4. **A world-light family, or an explicit "none"**. A sixth family amends
    [style-neon-noir.md](style-neon-noir.md) first.
 5. **A prop set** from the environment branch of the pipeline of record
    ([graphics-standards.md](graphics-standards.md) gate 1).

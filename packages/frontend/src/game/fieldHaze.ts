@@ -36,6 +36,7 @@ import {
 } from 'three';
 import { SIM, type ResourceNodeInfo } from '@echoes/shared';
 import { fieldRadiusM } from './environment.ts';
+import { SILT_COLOR } from './siltPlume.ts';
 import { installDisplayVeil, VEIL_SHADE_ATTRIBUTE } from './veilShading.ts';
 
 /**
@@ -55,9 +56,13 @@ export const FIELD_HAZE_SPREAD = 0.85;
  * (map-visuals §8's public life); a haze is felt before it is counted.
  */
 export const FIELD_HAZE_LEVEL = 0.07;
+/**
+ * SPEC — docs/style-neon-noir.md "World light", "Suspended matter is not
+ * light": a haze mote's peak luminance stays under the dimmest family's,
+ * `ore-trace` at 0.08. The test holds `FIELD_HAZE_LEVEL` to it.
+ */
+export const HAZE_LUMINANCE_CAP = 0.08;
 const FIELD_HAZE_SIZE = 4;
-/** The silt plume's fleck: dim, warm, no hue of a faction's (siltPlume.ts). */
-const SILT = new Color(0.78, 0.72, 0.6);
 /** The sonar bucket the clock steps on: SIM.ECHO_HZ's 200 ms. */
 const BUCKET_MS = 1000 / SIM.ECHO_HZ;
 /**
@@ -203,9 +208,9 @@ diffuseColor.a *= 1.0 - hazeR * hazeR;`
     geometry.setAttribute('aHaze', new Float32BufferAttribute(haze, 2));
     const color = new Float32Array(n * 3);
     for (let i = 0; i < n; i++) {
-      color[i * 3] = SILT.r * FIELD_HAZE_LEVEL;
-      color[i * 3 + 1] = SILT.g * FIELD_HAZE_LEVEL;
-      color[i * 3 + 2] = SILT.b * FIELD_HAZE_LEVEL;
+      color[i * 3] = SILT_COLOR.r * FIELD_HAZE_LEVEL;
+      color[i * 3 + 1] = SILT_COLOR.g * FIELD_HAZE_LEVEL;
+      color[i * 3 + 2] = SILT_COLOR.b * FIELD_HAZE_LEVEL;
     }
     geometry.setAttribute('color', new Float32BufferAttribute(color, 3));
     geometry.setAttribute(

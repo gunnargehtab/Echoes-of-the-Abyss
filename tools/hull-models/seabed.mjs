@@ -95,9 +95,12 @@ export const ground = {
    * the runtime's ceiling scales a prop's brightest material to 0.06 and
    * the rest by their ratio to it (environmentModels.ts
    * `ENV_LUMINANCE_CEILING`): on `stone-silt` the lumps came out 18 %
-   * brighter than the drift and read as pale boulders, and every stone
-   * token sits within 15 % of its neighbours, so the drift needed a
-   * sediment of its own to put the lumps at 0.68 of it.
+   * brighter than the drift and read as pale boulders. No existing token
+   * could stand under them: every stone near `stone-dark` sits within 7 %
+   * of it, and the two paler ones are coral, with a green cast
+   * (`coral-stone-living`) or a ruin red (`coral-stone-ruin`) that belongs
+   * to coral ground. So the drift took a sediment of its own, which puts
+   * the lumps at 0.68 of it.
    */
   siltDrift: () => clad('silt_drift', hex('#211E15'), 0, 1),
   /** Trench basalt, `basalt-trench`: the slab's and the spire's `basalt`. */

@@ -15,9 +15,11 @@ import {
   FIELD_HAZE_MOTES,
   FIELD_HAZE_SPREAD,
   FieldHaze,
+  HAZE_LUMINANCE_CAP,
   hazeSites,
   type HazeSite,
 } from '../src/game/fieldHaze.ts';
+import { SILT_COLOR } from '../src/game/siltPlume.ts';
 import { VENT_PLUME_LEVEL } from '../src/game/ventPlume.ts';
 import { readsDisplayVeil, VEIL_SHADE_ATTRIBUTE } from '../src/game/veilShading.ts';
 
@@ -91,9 +93,13 @@ describe('the haze', () => {
     haze.build([site(fields[0]!)]);
     const color = haze.points.geometry.getAttribute('color') as BufferAttribute;
     assert.ok(FIELD_HAZE_LEVEL < VENT_PLUME_LEVEL, 'quieter than steam');
+    // "Suspended matter is not light": capped under the dimmest family,
+    // ore-trace at 0.08 (docs/style-neon-noir.md "World light").
+    const luminance = 0.2126 * SILT_COLOR.r + 0.7152 * SILT_COLOR.g + 0.0722 * SILT_COLOR.b;
+    assert.ok(FIELD_HAZE_LEVEL * luminance < HAZE_LUMINANCE_CAP, 'a haze mote out-shone the ore');
     // Warm grey: red over blue, nothing saturated.
     assert.ok(color.getX(0) > color.getZ(0) && color.getX(0) < 1.5 * color.getZ(0));
-    assert.ok(Math.abs(color.getX(0) - 0.78 * FIELD_HAZE_LEVEL) < 1e-6);
+    assert.ok(Math.abs(color.getX(0) - SILT_COLOR.r * FIELD_HAZE_LEVEL) < 1e-6);
   });
 
   it('goes as cold as its ground under the veil, in display terms', () => {

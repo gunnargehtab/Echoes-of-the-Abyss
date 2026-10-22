@@ -575,14 +575,15 @@ caps, floor and level are TUNABLE in `packages/frontend/src/game/seabed.ts`.
 
 **Suspended matter is not light.** Silt lifted into the water — the plume under an own
 harvester while it dredges (#1512) and the sediment haze that hangs over a resource field
-(#1555, `fieldHaze.ts`) — is drawn additively, so a spent mote adds nothing, but it is matter
-the lamps catch and not a family: it takes the silt colour, a warm grey that is no token of a
-faction's or a family's, and its peak is capped under the dimmest family. A haze mote peaks at
-0.07 of the silt colour, about 0.05 luminance against `ore-trace`'s 0.08; a plume mote at the
-throttle's share of 1.0, and it is the hull's, as its lamps are. Matter on the ground keeps
-rules 3 and 4 as the steam does — the 5 Hz grid, deterministic from the field's published
-values, never responding to the game — and the ladder weighs none of it: a soft fill, as §5 of
-[map-visuals.md](map-visuals.md) leaves a haze unweighed.
+(#1555, `fieldHaze.ts`) — is drawn additively, so a spent mote adds nothing, but it is matter,
+drawn as if lamp-caught, and not a family: it takes the silt colour, linear (0.78, 0.72, 0.60),
+a warm grey that is no token of a faction's or a family's. The two differ in whose they are. A
+haze is the ground's, so it is capped under the dimmest family — a mote peaks at 0.07 of the
+silt colour, about 0.05 luminance against `ore-trace`'s 0.08 — and keeps rules 3 and 4 as the
+steam does: the 5 Hz grid, deterministic from the field's published values, never responding
+to the game. A plume is the hull's, as its lamps are: a mote peaks at the throttle's share of
+1.0 under gate 3, which is loudness and may respond to the throttle. The ladder weighs neither:
+a soft fill, as §5 of [map-visuals.md](map-visuals.md) leaves a haze unweighed.
 
 Per-map count caps live in code beside the emitters (the `VENT_EMBER_CAP`
 pattern in `PerspectiveView.ts`); [art-direction.md](art-direction.md) "Reading
