@@ -231,8 +231,9 @@ Two consequences worth naming:
   field is drawn from its position, kind and starting stock alone, so it looks the same full
   and mined out: depletion is heard, never shown. Two things ride on the beds and read nothing
   more: a sediment haze of silt motes lifting and settling in place over the field
-  (`fieldHaze.ts`, on the 5 Hz grid), and the `ore-trace` glint, the fifth world-light family
-  ([style-neon-noir.md](style-neon-noir.md) "World light"). What a field being *worked* shows
+  (`fieldHaze.ts`, on the 5 Hz grid), which is suspended matter and not light, capped under the
+  dimmest family and unweighed as a soft fill, and the `ore-trace` glint, the fifth world-light
+  family (both in [style-neon-noir.md](style-neon-noir.md) "World light"). What a field being *worked* shows
   is the harvester's, not the field's: its silt plume, its cutter sparks and its work-light on
   the ore under it, all scaled to the throttle's SIG (`workLight.ts`).
 
@@ -248,7 +249,7 @@ V3 is mostly already law. This section collects it, so that the next revision ci
   hole, not as the deepest floor ([#1532](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1532)).
 - **Hue is biome**, and biome is propagation factor. Nothing else on the ground carries a hue:
   not stone, not ink, not water.
-- **Light is loudness.** Agents glow with SIG. The ground emits only through the four world-light
+- **Light is loudness.** Agents glow with SIG. The ground emits only through the five world-light
   families, statically or on the 5 Hz grid.
 - **Ink is knowledge.** It draws what the survey knows — public map data — and nothing the Echo
   Layer resolved.

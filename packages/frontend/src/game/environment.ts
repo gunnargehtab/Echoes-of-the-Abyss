@@ -340,7 +340,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
  * 80 k. That figure restored those densities, and the tightest shipped map
  * (Ventfront Divide) dressed at ~101 k of it. Raised to 120 k on #1555, when
  * the resource fields' ore joined the layer: seven fields on Ventfront stand
- * about 11 k more, and the whole layer still sits well inside the conn view's
+ * about 12.5 k more, and the whole layer still sits well inside the conn view's
  * 400 k on-screen budget. */
 export const PROP_INSTANCE_CAP = 600;
 
@@ -437,8 +437,8 @@ export function placeProps(
  * A resource field's bed on the ground (#1555) — docs/graphics-standards.md
  * "The environment branch", docs/map-visuals.md §5.
  *
- * Node positions are map data, sent once on join exactly as the terrain is
- * (`ResourceNodeInfo`), so a field can stand on the seabed the way a vent or
+ * Node positions are map data, published once per match and never updated,
+ * exactly as the terrain is (`ResourceNodeInfo`), so a field can stand on the seabed the way a vent or
  * a kelp bed does, under the same rules: deterministic from what every client
  * holds, render-only, spent inside the gate-6 reservation. What is *not* map
  * data is depletion — how much a field has left is heard, never shown — and a
@@ -484,9 +484,11 @@ export function fieldRadiusM(field: Pick<ResourceNodeInfo, 'initialAmount'>): nu
 
 /**
  * Every field's instances, deterministic from the field's own published
- * values — id, position, kind, stock — and nothing map-global, so a field
- * stands the same on every client and a ground delta elsewhere never moves
- * it. An instance that would land on rock or off the map is skipped: a field
+ * values — position, kind, stock — and nothing map-global, so a field
+ * stands the same on every client, in every match on the map, and a ground
+ * delta elsewhere never moves it. Not its id: that is the match's entity
+ * number, which depends on what the server spawned before it, and a bed
+ * keyed on it would rearrange from one match to the next. An instance that would land on rock or off the map is skipped: a field
  * seated in a wall is a map bug, and ore drawn inside one would be a second.
  */
 export function* scatterFields(
@@ -504,7 +506,6 @@ export function* scatterFields(
     // The field's identity, as the hash sees it: integers, since propHash
     // reads its words as such.
     const seed = [
-      field.id,
       Math.round(field.x),
       Math.round(field.y),
       field.kind,

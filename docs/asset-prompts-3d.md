@@ -1867,9 +1867,11 @@ over it is going. A reactor found quiet has stripped its own bed bare.
 
 Environment props dress the biomes the terrain grid already declares — they are world
 geometry, not agents, so the STYLE block changes: no faction palette, no running lights,
-no glow-by-loudness. A prop's light, where it has any at all, comes from the three
-world-light families in [style-neon-noir.md](style-neon-noir.md) "World light", and
-intake fails a prop with any other emissive (gate 2's inverted rule).
+no glow-by-loudness. A prop's light, where it has any at all, comes from the four
+world-light families a prop may carry in [style-neon-noir.md](style-neon-noir.md)
+"World light" — `vent-ember`, `flora-biolight`, `crystal-seam` and `ore-trace`; the
+civic lamp is no prop — and intake fails a prop with any other emissive (gate 2's
+inverted rule).
 
 Every environment prompt is **ENV STYLE + one row of the prop table**, the row expanded
 into a sentence or two. Same workflow rules as the roster: one Claude Design conversation
@@ -1958,9 +1960,11 @@ than any vessel and never as a structure or a contact. `stone_dark` on the lumps
 on #1532: dim points on its branches only — three tetrahedral tips at the heads of its three tallest branches, the
 kelp's `biolight` material to the digit — and nothing on its masonry, lobes or plates
 (#1532). It is one of two props with three materials: the export's two stones under the
-light. The other is the nodule bed, whose `ore-trace` glint (#1555) is a quad plate let
-into one upward facet on three of its largest drift lumps — `stone_dark`, `silt_drift`
-and `ore_trace` — and nothing on the drift or the loose floor lumps. The two-material
+light. The other is the nodule bed, whose `ore-trace` glint (#1555) is a seam over one
+ridge on three of its largest drift lumps: two triangles across the lump's two most
+upward-facing adjacent facets, each inset within its own facet's outline, 2 cm proud —
+`stone_dark`, `silt_drift` and `ore_trace` — and nothing on the drift or the loose floor
+lumps. The two-material
 rule below stands for everything else, and intake takes `--max-materials 3` for these
 two rows only.
 

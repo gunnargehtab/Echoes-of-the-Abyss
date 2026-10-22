@@ -5,12 +5,13 @@
  * "Environment props dress the biomes the terrain grid already declares —
  * they are world geometry, not agents, so the STYLE block changes: no
  * faction palette, no running lights, no glow-by-loudness. A prop's light,
- * where it has any at all, comes from the three world-light families"
- * (docs/asset-prompts-3d.md, Block 4). A prop belongs to nobody, so a
- * prop script composes from here rather than from `factions/`: the Block 4
- * materials as the fourteen approved files carry them (and the fifteenth,
- * the nodule bed, takes two of the same tokens — #1555), the builders more
- * than one prop needs, and the root every prop stands on.
+ * where it has any at all, comes from the four world-light families a prop
+ * may carry" (docs/asset-prompts-3d.md, Block 4). A prop belongs to nobody,
+ * so a prop script composes from here rather than from `factions/`: the
+ * Block 4 materials as the fourteen approved files carry them (and the
+ * fifteenth, the nodule bed, takes one of the same tokens, `stone_dark`,
+ * and two of its own, `silt_drift` and `ore_trace` — #1555), the builders
+ * more than one prop needs, and the root every prop stands on.
  *
  * Three things about the fourteen batch files are worth knowing before
  * reading one, and this module is where they are written down:
@@ -94,9 +95,9 @@ export const ground = {
    * the runtime's ceiling scales a prop's brightest material to 0.06 and
    * the rest by their ratio to it (environmentModels.ts
    * `ENV_LUMINANCE_CEILING`): on `stone-silt` the lumps came out 18 %
-   * brighter than the drift and read as pale boulders, and no stone token
-   * sits more than 15 % from another, so the drift needed a sediment of
-   * its own to put the lumps at 0.68 of it.
+   * brighter than the drift and read as pale boulders, and every stone
+   * token sits within 15 % of its neighbours, so the drift needed a
+   * sediment of its own to put the lumps at 0.68 of it.
    */
   siltDrift: () => clad('silt_drift', hex('#211E15'), 0, 1),
   /** Trench basalt, `basalt-trench`: the slab's and the spire's `basalt`. */

@@ -25,9 +25,12 @@ import {
 } from '../../frontend/src/game/environment.ts';
 
 /**
- * The fields a match on this map publishes, as `Match.seedResourceNodes`
- * seeds them: the ore the layer stands at them spends from the same
- * reservation (#1555), so the worst case is the map's scatter plus its fields.
+ * The fields a match on this map publishes — position, kind and starting
+ * stock as `Match.seedResourceNodes` sets them. The id is the match's entity
+ * number and the depth the field's band, and placement reads neither
+ * (`scatterFields`), so the numbers here need only be well-formed. The ore the
+ * layer stands at the fields spends from the same reservation (#1555), so the
+ * worst case is the map's scatter plus its fields.
  */
 function fieldsOf(map: MapDefinition): ResourceNodeInfo[] {
   return map.resources.map((node, i) => ({
@@ -35,7 +38,11 @@ function fieldsOf(map: MapDefinition): ResourceNodeInfo[] {
     x: node.x,
     y: node.y,
     kind: node.kind,
-    depth: node.depthM ?? 0,
+    depth:
+      node.depthM ??
+      (node.kind === ResourceKind.ResonanceCrystal
+        ? CRYSTAL.FIELD_DEPTH_M
+        : ECONOMY.NODULE_FIELD_DEPTH_M),
     initialAmount:
       node.amount ??
       (node.kind === ResourceKind.ResonanceCrystal

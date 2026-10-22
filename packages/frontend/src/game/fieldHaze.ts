@@ -277,7 +277,9 @@ const TMP_SHADE = new Color();
 
 /** A stable 0–1 from a field, a mote and a salt. */
 function moteHash(site: HazeSite, k: number, salt: number): number {
-  let h = Math.imul(site.id ^ 0x9e3779b9, 0x85ebca6b);
+  // The field's radius and position, never its id: an entity number is the
+  // match's, not the map's (environment.ts `scatterFields`).
+  let h = Math.imul(Math.round(site.radiusM) ^ 0x9e3779b9, 0x85ebca6b);
   h ^= Math.imul(Math.round(site.xM) + 0x632be5ab, 0xc2b2ae35);
   h ^= Math.imul(Math.round(site.yM) ^ 0x1b873593, 0x7feb352d);
   h ^= Math.imul(k + 1, 0x27d4eb2d) ^ salt;

@@ -93,9 +93,13 @@
  *   glint, so the scatter is the one the review measured.
  *
  * Measured from the conn camera (tools/hull-renders/inspect.mjs, bearing
- * 90, elevation 55) with the two materials masked flat: the lumps are
- * 25.1 % of the bed's pixels (5.9 % at the commit before this), and their
- * mean luma on the lit sheet is 0.64 of the drift's in sRGB, 0.48 linear.
+ * 90, elevation 55): the lumps are 24.5–25.1 % of the bed's pixels by the
+ * two masks taken of it, the review's and this script's own (5.9 % at the
+ * commit before this). The lumps' value against the drift's is two
+ * measures: 0.68× by linear material luminance (`stone_dark` 0.00892 over
+ * `silt_drift` 0.01306, the ratio the runtime's ceiling keeps), and 0.64×
+ * as mean sRGB luma on the lit sheet, 0.48× linear there, where shading
+ * widens the gap.
  *
  * The root is `env_nodule_bed`, an identity: every placement and the fit
  * are baked into the buffers as the ruins' are, the whole standing on y = 0

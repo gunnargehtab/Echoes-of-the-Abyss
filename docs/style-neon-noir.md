@@ -573,6 +573,17 @@ else: the 380 m Coral Ruins dividers on the skirmish maps are ground a hull rise
 and a lamp on a choke would make it the warmest thing on competitive ground. The
 caps, floor and level are TUNABLE in `packages/frontend/src/game/seabed.ts`.
 
+**Suspended matter is not light.** Silt lifted into the water — the plume under an own
+harvester while it dredges (#1512) and the sediment haze that hangs over a resource field
+(#1555, `fieldHaze.ts`) — is drawn additively, so a spent mote adds nothing, but it is matter
+the lamps catch and not a family: it takes the silt colour, a warm grey that is no token of a
+faction's or a family's, and its peak is capped under the dimmest family. A haze mote peaks at
+0.07 of the silt colour, about 0.05 luminance against `ore-trace`'s 0.08; a plume mote at the
+throttle's share of 1.0, and it is the hull's, as its lamps are. Matter on the ground keeps
+rules 3 and 4 as the steam does — the 5 Hz grid, deterministic from the field's published
+values, never responding to the game — and the ladder weighs none of it: a soft fill, as §5 of
+[map-visuals.md](map-visuals.md) leaves a haze unweighed.
+
 Per-map count caps live in code beside the emitters (the `VENT_EMBER_CAP`
 pattern in `PerspectiveView.ts`); [art-direction.md](art-direction.md) "Reading
 the Sea Floor" and [graphics-standards.md](graphics-standards.md) carry the
@@ -589,10 +600,10 @@ palette tables above.
 
 - No neon on terrain or biomes — the seafloor stays desaturated
   (`BIOME_COLOR` in `packages/frontend/src/game/palette.ts`); light belongs to
-  *agents and instruments*. Terrain-owned light exists only as the three
+  *agents and instruments*. Terrain-owned light exists only as the five
   **world-light families** above — vent ember, flora biolight, crystal seam,
-  civic lamp — under their five rules. It is world-light, not neon: no UI hue
-  ever touches it, and no fifth family gets added without amending this doc first.
+  civic lamp, ore trace — under their five rules. It is world-light, not neon: no UI hue
+  ever touches it, and no sixth family gets added without amending this doc first.
 - No violet outside the Mouth/resonance/Hadron contexts. The logo **is** a
   Mouth context — [naming.md](naming.md) "The logo" — so the title masthead
   and its throat-light token (`mouth-glow`, `#C9A6FF`) are licensed; the rest

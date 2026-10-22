@@ -3832,6 +3832,18 @@ export class PerspectiveView {
   }
 
   /**
+   * The room's resource fields, stood as ore on the ground (#1555). They
+   * arrive on their own message after the terrain, so a ground already
+   * standing is re-dressed now; one not yet standing picks them up when it
+   * is. The opt-in study chooses its own placements and stands no field
+   * and raises no haze.
+   */
+  setNodes(nodes: readonly ResourceNodeInfo[]): void {
+    this.environment.setFields(nodes);
+    if (this.terrain !== null && this.dreamCover === null) this.rebuildDressing();
+  }
+
+  /**
    * The live Tier-4 tracks this frame, from the chart (#1531, #1539). A track
    * earns its hull — "full resolution: exact unit, health, facing"
    * (docs/systems-echo.md §4) — and here that is the roster model, as an own
@@ -3839,17 +3851,6 @@ export class PerspectiveView {
    * (`contactFidelity`) and calls this every frame; an unchanged set costs
    * one comparison.
    */
-  /**
-   * The room's resource fields, stood as ore on the ground (#1555). They
-   * arrive on their own message after the terrain, so a ground already
-   * standing is re-dressed now; one not yet standing picks them up when it
-   * is. The opt-in study chooses its own placements and stands no field.
-   */
-  setNodes(nodes: readonly ResourceNodeInfo[]): void {
-    this.environment.setFields(nodes);
-    if (this.terrain !== null && this.dreamCover === null) this.rebuildDressing();
-  }
-
   setTracks(tracks: readonly Track[]): void {
     if (sameTracks(this.tracks, tracks)) return;
     this.tracks = tracks.map((t) => ({ ...t }));

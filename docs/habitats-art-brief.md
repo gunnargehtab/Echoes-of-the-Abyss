@@ -60,7 +60,7 @@ gates as a hull.
 | Law | What it means for a habitat | Owner |
 | --- | --- | --- |
 | **Darkness budget** — 85–90 % near-black, seafloor luminance floor 5–10 % | A city is a few lit things in a dark place, not a lit place | [style-neon-noir.md](style-neon-noir.md) |
-| **World light is four families, points and seams, `vent-ember` the ceiling** | The *ground* of a habitat may carry `#E06A2B` embers (vents), `#2E8C74` flora tips (kelp, living coral), `#5B4A8C` crystal seams, `#B8875A` civic lamps (the Upper Concourse) — and nothing else. A fifth family is a doc amendment first | [style-neon-noir.md](style-neon-noir.md) *World light* |
+| **World light is five families, points and seams, `vent-ember` the ceiling** | The *ground* of a habitat may carry `#E06A2B` embers (vents), `#2E8C74` flora tips (kelp, living coral), `#5B4A8C` crystal seams, `#B8875A` civic lamps (the Upper Concourse), `#7A5634` ore-trace glints (the nodule beds of a resource field) — and nothing else. A sixth family is a doc amendment first | [style-neon-noir.md](style-neon-noir.md) *World light* |
 | **Glow encodes loudness** | A habitat's lit *structures* burn at their SIG on the gate-3 curve. A quiet city is a dark city, and that is the Directorate's beauty, not a bug | [graphics-standards.md](graphics-standards.md) gate 3 |
 | **Hue belongs to the faction constant** | Every colour in a habitat traces to its faction's four hexes, a neon-noir token, or a world-light family. No new hex to make a city pop | gate 4 |
 | **Texture, not information** | Relief, mottle and props darken and dress; they never say anything the map does not already declare. The relief figures quoted below are today's TUNABLE values from `packages/frontend/src/game/seabed.ts`, cited for character, not pinned | [art-direction.md](art-direction.md) *Reading the Sea Floor* |
@@ -498,8 +498,8 @@ survey and combat zoom, at three opacities.
 **Why it stays out.** Three facts, each sufficient:
 
 - **It is area light on terrain.** [style-neon-noir.md](style-neon-noir.md) *World light*
-  licenses four families, all points and seams, with `vent-ember` as the ceiling. A haze over
-  Shelf-band water is a fifth family and a fill, and the rule that darkness is the default
+  licenses five families, all points and seams, with `vent-ember` as the ceiling. A haze over
+  Shelf-band water is a sixth family and a fill, and the rule that darkness is the default
   state is the style, not a constraint on it (§1).
 - **The Lid is already in the game as what it is: a cost.** The sour timer above 150 m is
   built ([systems-depth.md](systems-depth.md) §2) and the mix gives it three sounds for its
@@ -568,7 +568,7 @@ For any map, plate or panel that shows an inhabited place, beside the visual che
 - **[art-direction.md](art-direction.md)** — palettes, silhouette law, the seafloor rules, the
   camera, the plate series
 - **[style-neon-noir.md](style-neon-noir.md)** — the tokens, the darkness budget, the glow
-  recipe, and the four world-light families
+  recipe, and the five world-light families
 - **[graphics-standards.md](graphics-standards.md)** — the gates a habitat scene ships under
 - **[asset-prompts-3d.md](asset-prompts-3d.md)** — the prompt kit whose ENV STYLE block the
   seeds above sit beside, and the prop table they cite

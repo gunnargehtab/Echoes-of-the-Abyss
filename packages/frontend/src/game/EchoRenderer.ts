@@ -5770,14 +5770,6 @@ export class EchoRenderer {
   }
 
   /**
-   * Nodule fields — public survey-chart data, laid on the seabed. Deliberately
-   * dim: they are geography, not intel.
-   *
-   * Rung 5, map furniture (docs/map-visuals.md §5). The rim and the crystal's
-   * depth ring are the outlines the ladder weighs; the fill and the grains
-   * are interior.
-   */
-  /**
    * A resource field on the chart: its rim, and for the crystal field the
    * dashed ring that says it lies at depth. Rung 5, map furniture
    * (docs/map-visuals.md §5). The ore itself stands in the conn view since

@@ -3,8 +3,8 @@
  * while they dredge (#1555, the owner's "effects and light"; from #1512's
  * plume).
  *
- * A dredging harvester is the loudest thing the economy does (docs/economy.md
- * §3), and gate 3 says glow encodes loudness: its lamps already brighten with
+ * Dredging is the loudest thing a harvester does (docs/economy.md §3), and
+ * gate 3 says glow encodes loudness: its lamps already brighten with
  * its throttle. What its lamps did not do was reach the ground. Now they do,
  * and the cutters throw sparks into the silt they stir:
  *

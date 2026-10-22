@@ -405,15 +405,17 @@ describe('field placement', () => {
     );
   });
 
-  it('reads nothing but the field: another id is another pattern, the same field the same', () => {
+  it('reads the map and not the match: another place is another pattern, another id the same', () => {
     const terrain = demoTerrain();
     const [a] = fields;
-    const same = { ...a! };
-    const other = { ...a!, id: 9 };
+    // An entity id is the match's; a field keyed on it would rearrange from
+    // one match to the next on the same map.
+    const otherId = { ...a!, id: 9 };
+    const moved = { ...a!, x: a!.x + 40 };
     const pattern = (field: ResourceNodeInfo) =>
       JSON.stringify([...scatterFields(terrain, [field])].map((f) => f.placement));
-    assert.equal(pattern(a!), pattern(same));
-    assert.notEqual(pattern(a!), pattern(other));
+    assert.equal(pattern(a!), pattern(otherId));
+    assert.notEqual(pattern(a!), pattern(moved));
   });
 
   it('skips ore that would stand on rock or off the map', () => {

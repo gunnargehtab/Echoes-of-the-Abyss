@@ -507,7 +507,7 @@ export const RELIEF_REFERENCE_M = 550;
 
 /**
  * Vent ember orange, docs/art-direction.md "Reading the Sea Floor" (SPEC):
- * one of the four world-light families in docs/style-neon-noir.md "World
+ * one of the five world-light families in docs/style-neon-noir.md "World
  * light" — deliberately redder than Bathyarch's #F2B233 hazard amber so a vent
  * field never reads as somebody's base lights. Flora biolight and the crystal
  * seam arrive with the environment props that carry them; nothing else on

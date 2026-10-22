@@ -102,15 +102,14 @@ export class EnvironmentLayer {
   rebuild(
     terrain: TerrainPayload,
     groundY: (xM: number, yM: number) => number,
-    placements: readonly PropPlacement[] = placeProps(
-      terrain,
-      ENVIRONMENT_PROPS,
-      this.look,
-      this.fields
-    )
+    placements?: readonly PropPlacement[]
   ): void {
     const generation = ++this.generation;
     this.clear();
+    // Only the default placement stands the fields, so only it hazes them: the
+    // opt-in study hands in its own budgeted list and stands no field.
+    const standsFields = placements === undefined;
+    placements ??= placeProps(terrain, ENVIRONMENT_PROPS, this.look, this.fields);
 
     if (placements.length === 0) return;
     // Where each standing slug tops out, per unit scale: the chimneys' mouths.
@@ -131,8 +130,12 @@ export class EnvironmentLayer {
         spec.footprintM,
         spec.swayM,
         () => {
-          // A load belongs to the latest rebuild that subscribed to it.
-          if (generation === this.generation) this.rebuild(terrain, groundY, placements);
+          // A load belongs to the latest rebuild that subscribed to it, on
+          // the path it took: the default one re-places, so the fields it
+          // stood stand again.
+          if (generation === this.generation) {
+            this.rebuild(terrain, groundY, standsFields ? undefined : placements);
+          }
         },
         this.look
       );
@@ -171,7 +174,7 @@ export class EnvironmentLayer {
     });
     this.plume.build(sites, this.shade);
     if (sites.length > 0) this.group.add(this.plume.points);
-    const hazes = hazeSites(this.fields, terrain, groundY);
+    const hazes = standsFields ? hazeSites(this.fields, terrain, groundY) : [];
     this.haze.build(hazes, this.shade);
     if (hazes.length > 0) this.group.add(this.haze.points);
   }

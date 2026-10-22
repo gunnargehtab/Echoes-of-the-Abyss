@@ -178,7 +178,7 @@ The same law covers the ground. An environment visual is either an approved `env
 instanced by the environment registry, or the documented procedural seabed bake (relief,
 mottle, embers) — no hand-placed one-off decor, no per-map special-case dressing code.
 Prop *placement* is itself part of the rule: deterministic from the published terrain
-grid and the resource fields the room sends once on join, identical on every client, and
+grid and the resource fields the room publishes once per match and never updates, identical on every client, and
 render-only — the simulation never reads where a prop stands. A field's ore stands by the
 same rule (#1555): its position, kind and starting stock are map data like the grid, and
 its depletion is not, so a bed reads none of it and a field looks the same full and mined
