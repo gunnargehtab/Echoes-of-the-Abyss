@@ -159,6 +159,37 @@ export function detailRect(region: PlanRect): PlanRect {
   return { x: west, y: north, widthM: east - west, heightM: south - north };
 }
 
+/**
+ * Which drawn region's detail draws the 250 m cell under an atlas point, by
+ * place (§7.3, #1528, the owner's call): of the regions whose detail rectangle
+ * holds the cell's centre, the one whose map rectangle lies nearest it, by
+ * §7.4's *d*. A mission patch is at *d* = 0, so it beats any surround; two
+ * patches tie only where their cells agree (§7.2), and a tie goes to the region
+ * listed first, which the view makes the session's. A property of the place,
+ * never of travel order, as the fade is; undefined where none of them draws.
+ */
+export function detailOwner(
+  drawn: readonly WorldRegion[],
+  point: PlanPoint
+): WorldRegion | undefined {
+  const cell = WORLD.DETAIL_CELL_M;
+  const centre = {
+    x: Math.floor(point.x / cell) * cell + cell / 2,
+    y: Math.floor(point.y / cell) * cell + cell / 2,
+  };
+  let owner: WorldRegion | undefined;
+  let nearest = Number.POSITIVE_INFINITY;
+  for (const region of drawn) {
+    if (!regionContains(detailRect(region), centre)) continue;
+    const d = exteriorDistanceM(region, centre);
+    if (d < nearest) {
+      owner = region;
+      nearest = d;
+    }
+  }
+  return owner;
+}
+
 function rectWithin(inner: PlanRect, outer: PlanRect): boolean {
   return (
     inner.x >= outer.x &&

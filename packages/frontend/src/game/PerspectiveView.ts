@@ -193,7 +193,9 @@ import {
   apronFrame,
   apronMesh,
   baselineDepthAtM,
+  assignRivals,
   detailMesh,
+  detailRival,
   installApronShading,
   installOverviewShading,
   missionCells,
@@ -204,6 +206,8 @@ import {
   stepBorderStrength,
   type ApronPads,
   type BorderUniforms,
+  type DetailRival,
+  type DrawnDetail,
   type SeamHeight,
 } from './worldBorder.ts';
 import {
@@ -621,6 +625,9 @@ interface RegionDetail {
   rect: PlanRect;
   /** The props its map's ground stands, a child of the mesh (#1488). */
   props: EnvironmentLayer;
+  /** Its region, and the other drawn detail whose cells it leaves (#1528). */
+  region: WorldRegion;
+  rival: DetailRival;
 }
 
 export class PerspectiveView {
@@ -715,6 +722,8 @@ export class PerspectiveView {
   /** The overview's skin and whether it has landed, as the apron's seam band reads them. */
   private readonly seamMap: { value: CanvasTexture | null } = { value: null };
   private readonly seamOn = { value: 0 };
+  /** The detail drawn with the apron, whose cells it leaves (#1528); kept across rebuilds. */
+  private readonly apronRival = detailRival();
   /**
    * Every other placed region's detail this view may draw (§7.5): held by
    * projected size, two regions at most with the session's own among them,
@@ -2755,6 +2764,7 @@ export class PerspectiveView {
         originM: [region.x, region.y],
         sizeM: [WORLD.ATLAS_WIDTH_M, WORLD.ATLAS_HEIGHT_M],
         detailRect: [detail.x, detail.y, detail.widthM, detail.heightM],
+        rival: this.apronRival,
       }
     );
     if (this.look === 'sorrowgate') installGroundSurface(material);
@@ -3001,6 +3011,16 @@ export class PerspectiveView {
     // Built under the session's ground, never drawn with it.
     if (leaving) drawn.delete(home.id);
     for (const id of residency.residentIds()) residency.get(id)!.mesh.visible = drawn.has(id);
+    // Where two drawn details share cells, each draws only the cells it owns
+    // by place (§7.3, #1528): the session's apron first, so it wins a tie. It
+    // is drawn until its ground goes, the ramp-out included.
+    const sharing: DrawnDetail[] =
+      (this.apron?.mesh ?? null) === null ? [] : [{ region: home, rival: this.apronRival }];
+    for (const id of drawn) {
+      const detail = residency.get(id)!;
+      sharing.push({ region: detail.region, rival: detail.rival });
+    }
+    assignRivals(sharing, home);
     this.cutOverview();
   }
 
@@ -3078,6 +3098,7 @@ export class PerspectiveView {
       heightM: atlas.heightM,
     };
     const cellsTexture = surveyCellTexture(terrain, surveyCellClasses(terrain));
+    const rival = detailRival();
     installApronShading(
       material,
       this.borderUniforms(),
@@ -3096,6 +3117,7 @@ export class PerspectiveView {
         originM: [home.x, home.y],
         sizeM: [WORLD.ATLAS_WIDTH_M, WORLD.ATLAS_HEIGHT_M],
         detailRect: [rect.x, rect.y, rect.widthM, rect.heightM],
+        rival,
       }
     );
     const mesh = new Mesh(geometry, material);
@@ -3137,6 +3159,8 @@ export class PerspectiveView {
       rockTopM,
       rect,
       props,
+      region,
+      rival,
     };
   }
 
