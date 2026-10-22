@@ -1305,9 +1305,12 @@ const PLATE = {
 } as const;
 
 /**
- * Rule 5 — one diagonal texture across the whole HUD layer, never per-panel,
- * at no more than 4%. Spacing and angle are chosen to read as a scanline at
- * 1080p rather than as moiré.
+ * Rule 5 — one diagonal texture across the HUD's plates, never per-panel, at
+ * no more than 4%. Spacing and angle are chosen to read as a scanline at
+ * 1080p rather than as moiré. It covers the strip and the console and stops
+ * at the playfield (#1559): over the lit ground it read as a second diagonal
+ * pattern against the dunes and the survey ink, the same slope as the hazard
+ * hatch #1554 took out.
  */
 const GRAIN = { SPACING_PX: 5, ALPHA: 0.035 } as const;
 
@@ -7187,8 +7190,14 @@ export class EchoRenderer {
    * It is its own layer and its own Graphics because it is drawn once per
    * resize and never per frame: at 5px spacing a 1080p frame is about six
    * hundred short strokes, which is nothing once, and would be real money at
-   * 60 Hz. It sits above the panels and below nothing — the whole HUD layer
-   * wears one texture, which is what stops it becoming per-panel noise.
+   * 60 Hz. It sits above the panels and below nothing — the strip and the
+   * console wear one texture, which is what stops it becoming per-panel noise.
+   *
+   * Two bands rather than the whole layer (#1559): the strip's and the
+   * console's. Each stroke is the line `x − y = c` cut to its band, with `c`
+   * stepping once for both, so the two bands share one lattice and the
+   * texture stays one texture; the water between them, and anything floating
+   * over it, carries none.
    */
   private buildGrain(): void {
     const w = Math.ceil(this.hudWidth());
@@ -7198,9 +7207,11 @@ export class EchoRenderer {
     this.grainKey = key;
     const g = this.grainGraphics;
     g.clear();
+    const consoleTop = h - CONSOLE_HEIGHT;
     // 135°, so the stroke runs the same way as the plates' own bevel light.
-    for (let i = -h; i < w; i += GRAIN.SPACING_PX) {
-      g.moveTo(i, 0).lineTo(i + h, h);
+    for (let c = -h; c < w; c += GRAIN.SPACING_PX) {
+      g.moveTo(c, 0).lineTo(c + TOP_BAR_HEIGHT, TOP_BAR_HEIGHT);
+      g.moveTo(c + consoleTop, consoleTop).lineTo(c + h, h);
     }
     g.stroke({ width: 1, color: UI.text, alpha: GRAIN.ALPHA });
   }

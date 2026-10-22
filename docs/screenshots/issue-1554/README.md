@@ -14,3 +14,15 @@ What the before frames show: the site's red hatch lines run past its rim, over t
 roof and across the plateau's edge, since each line's endpoints lie at √2 × radius from the
 centre and a straight screen-space line cannot follow the slope the sampled rim hugs. After:
 the rim alone, over a faint fill that conforms to the ground as the rim does.
+
+## #1559 — the grain off the playfield
+
+The west kelp plateau, 2 km at 55°, `__perspectiveCamera(500, 2500, 2000, { pitchDeg: 55 })`,
+the same two drives.
+
+| Before | After |
+| --- | --- |
+| [before](kelp-plateau-before.png) | [after](kelp-plateau-after.png) |
+
+Before, rule 5's 135° texture lies over the ground as well as the plates, a second diagonal
+pattern across the dunes. After, the strip and the console keep it and the water carries none.
