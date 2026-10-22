@@ -243,6 +243,30 @@ running lights, wireframe silhouettes, and the player-colour trim only.
 | Abyssal Directorate | Biolight crimson `#C2465E` | Rows of small points (plate II's eye-lines), never area glow — except a maw, below |
 | Hadron Knights | Resonance violet `#C9A6FF` | Razor-thin constant lines, mirror speculars — the only faction whose light never flickers |
 
+### Console accent — proposed
+
+[ui-ux.md](ui-ux.md) §12.5 leaves one dress open: a faction accent on the selection card
+and the command card's rule line. It is proposed, not adopted, and drawn in the
+[console mockups](concept-art/hud-mockups/README.md). These are its inks.
+
+| Faction | Console accent | Source |
+| --- | --- | --- |
+| Bathyarch Consortium | `#8C8378` | Its own iron-grey accent. Its amber glow is `neon-amber`, the console's price and SIG-mid ink |
+| Pelagia Commune | `#8FE36B` | Its glow |
+| Abyssal Directorate | `directorate-console` `#7A5A9E` | Its bruise violet `#2D1B3D`, lifted to read on `abyss-panel`. Its crimson glow sits beside `neon-red` |
+| Hadron Knights | `#C9A6FF` | Its glow |
+
+`directorate-console` is the one token here no faction table carries. It is faction ink,
+not `neon-violet`, the same way the Knights' violet is, so violet's reservation for the
+unresolved still holds on the chrome. It holds 3.3:1 against `abyss-panel`, over the 3:1 a
+non-text mark needs, and sits 1.75 stops below the Knights' accent; the glyph beside it
+resolves the rest (§11).
+
+Two things stay owed before the accent ships. §12.5 wants its argument in sound or depth,
+and each colour-vision palette below needs a console-accent row of its own. Their faction
+accents cannot stand in: under deuteranopia the Directorate's ochre sits on `SIG mid`.
+Until both land, nothing transcribes these into `palette.ts`.
+
 ### The Directorate's one area glow: a maw is not livery
 
 "Never area glow" was written about *livery* — how a hull signs itself as Directorate — and

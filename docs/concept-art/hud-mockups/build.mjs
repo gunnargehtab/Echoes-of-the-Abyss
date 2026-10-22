@@ -250,7 +250,7 @@ Layout, cells, the SIG meter, the scope, the log, the objectives and every other
 WHAT THE FRAMES SHOW
 · Commune green and Knights violet use their glow ink, which clears every chrome ink.
 · The Consortium uses its own iron grey, not its glow. Hazard amber is already the console's price, idle and SIG-caution ink, so it read as one more warning.
-· The Directorate uses its bruise violet lifted to #7A5A9E. Its crimson read as threat red, and nothing else in its palette is readable on a panel. This is the one invented ink in the mockups; it needs a style-neon-noir.md token before it ships.
+· The Directorate uses its bruise violet lifted to #7A5A9E. Its crimson read as threat red, and nothing else in its palette is readable on a panel. It is the one ink the client does not carry: directorate-console in style-neon-noir.md, which lists what it still owes before it ships.
 
 NOT OWED
 §12.5 says it ships only with an argument in sound or depth. These frames carry none. They show what the dress costs.`,

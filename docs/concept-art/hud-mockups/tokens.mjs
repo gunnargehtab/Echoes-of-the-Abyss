@@ -70,8 +70,8 @@ export const GLYPH = {
  * - The Directorate's whole palette is red or near-black, so nothing in it
  *   clears threat red. Its bruise violet `#2D1B3D` is lifted to a readable
  *   value here. This is the one ink in this file the client does not carry:
- *   it is a proposal, and it needs a token in docs/style-neon-noir.md before
- *   anything ships it.
+ *   it is `directorate-console` in docs/style-neon-noir.md "Console accent —
+ *   proposed", which also lists what it still owes before it ships.
  */
 export const ACCENT = {
   bathyarch: FACTION.bathyarch.accent,
