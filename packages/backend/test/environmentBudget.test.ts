@@ -13,20 +13,48 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { CRYSTAL, ECONOMY, ResourceKind, type ResourceNodeInfo } from '@echoes/shared';
 import { MAPS, MISSION_MAPS, terrainFor } from '../src/sim/maps/index.ts';
+import type { MapDefinition } from '../src/sim/maps/types.ts';
 import {
   ENVIRONMENT_PROPS,
+  FIELD_PROP_SLUG,
   placeProps,
   PROP_INSTANCE_CAP,
   PROP_TRI_RESERVATION,
 } from '../../frontend/src/game/environment.ts';
+
+/**
+ * The fields a match on this map publishes, as `Match.seedResourceNodes`
+ * seeds them: the ore the layer stands at them spends from the same
+ * reservation (#1555), so the worst case is the map's scatter plus its fields.
+ */
+function fieldsOf(map: MapDefinition): ResourceNodeInfo[] {
+  return map.resources.map((node, i) => ({
+    id: i + 1,
+    x: node.x,
+    y: node.y,
+    kind: node.kind,
+    depth: node.depthM ?? 0,
+    initialAmount:
+      node.amount ??
+      (node.kind === ResourceKind.ResonanceCrystal
+        ? CRYSTAL.FIELD_STARTING_AMOUNT
+        : ECONOMY.NODE_STARTING_AMOUNT),
+  }));
+}
 
 describe('environment prop budget over the shipped maps', () => {
   const heaviest = Math.max(...ENVIRONMENT_PROPS.map((spec) => spec.triBudget));
 
   for (const map of [...MAPS, ...MISSION_MAPS]) {
     it(`${map.id} dresses inside the gate-6 reservation without a cut`, () => {
-      const placements = placeProps(terrainFor(map).serialize());
+      const placements = placeProps(
+        terrainFor(map).serialize(),
+        ENVIRONMENT_PROPS,
+        'standard',
+        fieldsOf(map)
+      );
       const tris = placements.reduce(
         (sum, p) => sum + (ENVIRONMENT_PROPS.find((s) => s.slug === p.slug)?.triBudget ?? 0),
         0
@@ -43,6 +71,30 @@ describe('environment prop budget over the shipped maps', () => {
       );
     });
   }
+
+  it('stands ore at every field on every map', () => {
+    // A field with nothing standing in it is the chart's rim over bare ground:
+    // the pre-#1555 look, which a map seating a field in a wall would restore.
+    for (const map of [...MAPS, ...MISSION_MAPS]) {
+      const fields = fieldsOf(map);
+      const placements = placeProps(
+        terrainFor(map).serialize(),
+        ENVIRONMENT_PROPS,
+        'standard',
+        fields
+      );
+      for (const field of fields) {
+        const slug = FIELD_PROP_SLUG[field.kind];
+        const near = placements.filter(
+          (p) => p.slug === slug && Math.hypot(p.xM - field.x, p.yM - field.y) <= 200
+        );
+        assert.ok(
+          near.length > 0,
+          `${map.id}: field ${field.id} at ${field.x},${field.y} stands bare`
+        );
+      }
+    }
+  });
 
   it('dresses every skirmish map with something', () => {
     // The other half of the contract: densities low enough to fit must still

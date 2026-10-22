@@ -30,6 +30,7 @@
 const SWAY_HOLD_S = 1.7;
 
 import { Color, Group, InstancedMesh, Matrix4, Quaternion, Vector3 } from 'three';
+import type { ResourceNodeInfo } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import { ENVIRONMENT_PROPS, placeProps, propSpec, type PropPlacement } from './environment.ts';
 import { envTemplate, type SwayUniforms } from './environmentModels.ts';
@@ -69,6 +70,12 @@ export class EnvironmentLayer {
   private swaying: SwayUniforms[] = [];
   private reducedMotion = false;
   /**
+   * The room's resource fields, stood as ore by the default placement
+   * (environment.ts `scatterFields`, #1555). Held here because they arrive
+   * on their own message after the ground and outlive its rebuilds.
+   */
+  private fields: readonly ResourceNodeInfo[] = [];
+  /**
    * The acoustic veil's ground shade (acousticVeil.ts, docs/ui-ux.md §4.5),
    * the view's display-space multiplier at a point, carried on each instance's
    * colour into the shader (veilShading.ts `installPropVeil`).
@@ -92,7 +99,12 @@ export class EnvironmentLayer {
   rebuild(
     terrain: TerrainPayload,
     groundY: (xM: number, yM: number) => number,
-    placements: readonly PropPlacement[] = placeProps(terrain, ENVIRONMENT_PROPS, this.look)
+    placements: readonly PropPlacement[] = placeProps(
+      terrain,
+      ENVIRONMENT_PROPS,
+      this.look,
+      this.fields
+    )
   ): void {
     const generation = ++this.generation;
     this.clear();
@@ -173,6 +185,14 @@ export class EnvironmentLayer {
   setReducedMotion(reduced: boolean): void {
     this.reducedMotion = reduced;
     this.plume.setReducedMotion(reduced);
+  }
+
+  /**
+   * Take the room's fields. The caller rebuilds: the view owns *when*, as
+   * for every other change to what stands on the ground.
+   */
+  setFields(fields: readonly ResourceNodeInfo[]): void {
+    this.fields = fields;
   }
 
   /**

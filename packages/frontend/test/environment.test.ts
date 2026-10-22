@@ -11,14 +11,18 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { Biome } from '@echoes/shared';
+import { Biome, ResourceKind, type ResourceNodeInfo } from '@echoes/shared';
 import {
   ENVIRONMENT_PROPS,
+  FIELD_PROP_SLUG,
+  FIELD_STAND,
+  fieldRadiusM,
   LOOK_DENSITY,
   mapProps,
   placeProps,
   PROP_INSTANCE_CAP,
   PROP_TRI_RESERVATION,
+  scatterFields,
   scatterProps,
   stoneSeats,
   swayWeight,
@@ -208,7 +212,7 @@ describe('prop placement', () => {
 
   it('holds every registry row to the documented contracts', () => {
     // Block 4's table is the source: env- slugs, ≤ 800 triangles, sane
-    // density and jitter, and one row per slug. The GLBs themselves are
+    // density and jitter (the field-stood bed aside), and one row per slug. The GLBs themselves are
     // checked by hull-intake; the backend's environmentBudget test sums
     // these rows over the shipped maps.
     assert.ok(ENVIRONMENT_PROPS.length >= 14, 'the Block 4 table has fourteen rows');
@@ -218,7 +222,13 @@ describe('prop placement', () => {
       assert.ok(!seen.has(spec.slug), `${spec.slug} is registered twice`);
       seen.add(spec.slug);
       assert.ok(spec.triBudget > 0 && spec.triBudget <= 800, `${spec.slug} triangle budget`);
-      assert.ok(spec.density > 0 && spec.density <= 3, `${spec.slug} density`);
+      // A row stood by the fields alone names no biome and scatters at no
+      // density (#1555); every other row must dress something.
+      if (spec.stands !== 'rock' && spec.stands.length === 0) {
+        assert.equal(spec.density, 0, `${spec.slug} stands in no biome yet scatters`);
+      } else {
+        assert.ok(spec.density > 0 && spec.density <= 3, `${spec.slug} density`);
+      }
       assert.ok(spec.footprintM > 0 && spec.footprintM <= 60, `${spec.slug} footprint`);
       const [lo, hi] = spec.scaleJitter;
       assert.ok(lo > 0 && hi >= lo && hi <= 2, `${spec.slug} scale jitter`);
@@ -354,3 +364,79 @@ describe("a look's density (docs/visual-reboot.md §4)", () => {
 function propSpecTris(slug: string): number {
   return ENVIRONMENT_PROPS.find((spec) => spec.slug === slug)!.triBudget;
 }
+
+/**
+ * A resource field's ore (#1555): stood at the fields the room publishes,
+ * from the field's own values alone, inside its rim, first in the spend. The
+ * bed model is a GLB and is reviewed by screenshot; this holds the placement.
+ */
+describe('field placement', () => {
+  const fields: ResourceNodeInfo[] = [
+    { id: 1, x: 900, y: 900, kind: ResourceKind.Nodule, depth: 600, initialAmount: 3000 },
+    {
+      id: 2,
+      x: 1200,
+      y: 1700,
+      kind: ResourceKind.ResonanceCrystal,
+      depth: 2400,
+      initialAmount: 900,
+    },
+  ];
+
+  it('stands each kind its own prop, inside the rim the chart draws, deterministically', () => {
+    const terrain = demoTerrain();
+    const placed = [...scatterFields(terrain, fields)].map((f) => f.placement);
+    assert.deepEqual(
+      placed,
+      [...scatterFields(terrain, fields)].map((f) => f.placement)
+    );
+    for (const field of fields) {
+      const own = placed.filter(
+        (p) => Math.hypot(p.xM - field.x, p.yM - field.y) <= fieldRadiusM(field)
+      );
+      assert.equal(own.length, FIELD_STAND[field.kind].count, `field ${field.id} stands short`);
+      for (const p of own) assert.equal(p.slug, FIELD_PROP_SLUG[field.kind]);
+    }
+    assert.equal(
+      placed.length,
+      fields.reduce((n, f) => n + FIELD_STAND[f.kind].count, 0)
+    );
+  });
+
+  it('reads nothing but the field: another id is another pattern, the same field the same', () => {
+    const terrain = demoTerrain();
+    const [a] = fields;
+    const same = { ...a! };
+    const other = { ...a!, id: 9 };
+    const pattern = (field: ResourceNodeInfo) =>
+      JSON.stringify([...scatterFields(terrain, [field])].map((f) => f.placement));
+    assert.equal(pattern(a!), pattern(same));
+    assert.notEqual(pattern(a!), pattern(other));
+  });
+
+  it('skips ore that would stand on rock or off the map', () => {
+    const terrain = demoTerrain();
+    // The 2×2 rock block at (5..6, 0..1): x 1250–1750, y 0–500.
+    const onRock: ResourceNodeInfo = { ...fields[0]!, id: 3, x: 1500, y: 250, initialAmount: 1500 };
+    const offMap: ResourceNodeInfo = { ...fields[0]!, id: 4, x: -400, y: -400 };
+    assert.equal([...scatterFields(terrain, [onRock])].length, 0, 'ore stood in a wall');
+    assert.equal([...scatterFields(terrain, [offMap])].length, 0, 'ore stood off the map');
+  });
+
+  it('spends the reservation on the fields first, then the biome scatter', () => {
+    const terrain = demoTerrain();
+    const fieldCount = fields.reduce((n, f) => n + FIELD_STAND[f.kind].count, 0);
+    const placements = placeProps(terrain, ENVIRONMENT_PROPS, 'standard', fields);
+    const slugs = new Set(Object.values(FIELD_PROP_SLUG));
+    assert.ok(
+      placements.slice(0, fieldCount).every((p) => slugs.has(p.slug)),
+      'a field was not first'
+    );
+    assert.ok(placements.length > fieldCount, 'the scatter stood nothing after the fields');
+    // The bed is never scattered by biome: without a field, none stands.
+    assert.ok(
+      placeProps(terrain).every((p) => p.slug !== FIELD_PROP_SLUG[ResourceKind.Nodule]),
+      'a bed stood with no field to stand in'
+    );
+  });
+});

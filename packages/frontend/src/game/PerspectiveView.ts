@@ -88,6 +88,7 @@ import {
   type OwnStructure,
   type OwnOrdnance,
   type OwnUnit,
+  type ResourceNodeInfo,
   type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
@@ -3829,6 +3830,17 @@ export class PerspectiveView {
    * (`contactFidelity`) and calls this every frame; an unchanged set costs
    * one comparison.
    */
+  /**
+   * The room's resource fields, stood as ore on the ground (#1555). They
+   * arrive on their own message after the terrain, so a ground already
+   * standing is re-dressed now; one not yet standing picks them up when it
+   * is. The opt-in study chooses its own placements and stands no field.
+   */
+  setNodes(nodes: readonly ResourceNodeInfo[]): void {
+    this.environment.setFields(nodes);
+    if (this.terrain !== null && this.dreamCover === null) this.rebuildDressing();
+  }
+
   setTracks(tracks: readonly Track[]): void {
     if (sameTracks(this.tracks, tracks)) return;
     this.tracks = tracks.map((t) => ({ ...t }));

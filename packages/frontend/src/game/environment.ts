@@ -26,7 +26,8 @@
  *   review to notice, so no future map or density tune can exceed them.
  */
 
-import { Biome, PLACED_GROUND, paintGround } from '@echoes/shared';
+import { Biome, ECONOMY, PLACED_GROUND, paintGround, ResourceKind } from '@echoes/shared';
+import type { ResourceNodeInfo } from '@echoes/shared';
 import type { WorldLook } from './tutorialLook.ts';
 
 /**
@@ -309,6 +310,23 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     swayM: 0,
     buryFraction: 0.3,
   },
+  // Resource field, any biome — the ore a nodule field is made of (#1555).
+  // Stood by `scatterFields` at the fields the room publishes, never by the
+  // biome scatter: `stands` names no biome and the density is zero, so the
+  // row is a template and a triangle price, and a field is its only caller.
+  {
+    slug: 'env-nodule-bed',
+    footprintM: 12,
+    triBudget: 194,
+    density: 0,
+    stands: [],
+    nearRock: 'any',
+    maxSlopeM: Number.POSITIVE_INFINITY,
+    excludeRoofed: false,
+    scaleJitter: [0.8, 1.25],
+    worldLight: 'none',
+    swayM: 0,
+  },
 ];
 
 /** Gate-6 reservation, both halves (docs/graphics-standards.md): instancing
@@ -319,9 +337,11 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
  * Claude Design batch (#321) replaced the generated props: the densities above
  * were tuned to the generator's triangle counts, the design models run heavier
  * per instance, and the batch cut eight densities to stay under the original
- * 80 k. This figure restores those densities; the tightest shipped map (Kelp
- * Labyrinth) dresses at ~102 k, and the whole layer still sits well inside the
- * conn view's 400 k on-screen budget. */
+ * 80 k. That figure restored those densities, and the tightest shipped map
+ * (Ventfront Divide) dressed at ~101 k of it. Raised to 120 k on #1555, when
+ * the resource fields' ore joined the layer: seven fields on Ventfront stand
+ * about 11 k more, and the whole layer still sits well inside the conn view's
+ * 400 k on-screen budget. */
 export const PROP_INSTANCE_CAP = 600;
 
 /**
@@ -338,7 +358,7 @@ export const LOOK_DENSITY: Record<WorldLook, Partial<Record<Biome, number>>> = {
   standard: {},
   sorrowgate: { [Biome.CoralRuins]: 3, [Biome.AbyssalTrench]: 2 },
 };
-export const PROP_TRI_RESERVATION = 105_000;
+export const PROP_TRI_RESERVATION = 120_000;
 
 export interface PropPlacement {
   slug: string;
@@ -382,23 +402,139 @@ export function propHash(values: readonly number[]): number {
 /**
  * Every prop placement for a terrain, deterministic and budget-capped.
  *
- * Row-major cells, registry-order specs — a fixed spend order, so the caps
- * cut identically on every client. Normal play always passes the registry.
+ * The fields first, then row-major cells in registry-order specs — a fixed
+ * spend order, so the caps cut identically on every client, and a cut, should
+ * one ever come, falls on the biome scatter and never on a field (below).
+ * Normal play always passes the registry.
  */
 export function placeProps(
   terrain: TerrainGrid,
   specs: readonly PropSpec[] = ENVIRONMENT_PROPS,
-  look: WorldLook = 'standard'
+  look: WorldLook = 'standard',
+  fields: readonly ResourceNodeInfo[] = []
 ): PropPlacement[] {
   const placements: PropPlacement[] = [];
   let trisSpent = 0;
-  for (const { placement, spec } of scatterProps(terrain, specs, look)) {
-    if (placements.length >= PROP_INSTANCE_CAP) break;
-    if (trisSpent + spec.triBudget > PROP_TRI_RESERVATION) break;
+  const spend = (placement: PropPlacement, spec: PropSpec): boolean => {
+    if (placements.length >= PROP_INSTANCE_CAP) return false;
+    if (trisSpent + spec.triBudget > PROP_TRI_RESERVATION) return false;
     trisSpent += spec.triBudget;
     placements.push(placement);
+    return true;
+  };
+  for (const { placement, spec } of scatterFields(terrain, fields, specs)) {
+    if (!spend(placement, spec)) return placements;
+  }
+  for (const { placement, spec } of scatterProps(terrain, specs, look)) {
+    if (!spend(placement, spec)) break;
   }
   return placements;
+}
+
+// ------------------------------------------------------------ resource fields
+
+/**
+ * A resource field's bed on the ground (#1555) — docs/graphics-standards.md
+ * "The environment branch", docs/map-visuals.md §5.
+ *
+ * Node positions are map data, sent once on join exactly as the terrain is
+ * (`ResourceNodeInfo`), so a field can stand on the seabed the way a vent or
+ * a kelp bed does, under the same rules: deterministic from what every client
+ * holds, render-only, spent inside the gate-6 reservation. What is *not* map
+ * data is depletion — how much a field has left is heard, never shown — and a
+ * bed reads nothing the field does not publish: its position, its kind and
+ * its starting stock, which also sets its radius on the chart. A field looks
+ * the same full and mined out, by construction.
+ */
+
+/**
+ * What a field stands. A nodule field is beds of the ore itself; the crystal
+ * field stands the Resonance Field's own shard, since the field and the biome
+ * are one substance and a second model would say otherwise.
+ */
+export const FIELD_PROP_SLUG: Record<ResourceKind, string> = {
+  [ResourceKind.Nodule]: 'env-nodule-bed',
+  [ResourceKind.ResonanceCrystal]: 'env-resonance-crystal',
+};
+
+/**
+ * TUNABLE — what stands in one field: how many, the band of the field's
+ * radius they stand in (a share of `fieldRadiusM`, so the ore keeps inside
+ * the rim the chart draws) and their scale jitter. Beds enough that a field
+ * reads as a patch of ore from the survey dolly rather than a boulder or two;
+ * shards few, since each is 27 m tall and the field is one place on the map.
+ */
+export const FIELD_STAND: Record<
+  ResourceKind,
+  { count: number; band: readonly [number, number]; scale: readonly [number, number] }
+> = {
+  [ResourceKind.Nodule]: { count: 8, band: [0.1, 0.8], scale: [0.8, 1.25] },
+  [ResourceKind.ResonanceCrystal]: { count: 3, band: [0.15, 0.55], scale: [0.7, 1] },
+};
+
+/**
+ * A field's radius, metres, on the chart and on the ground alike: 60 m, and
+ * 40 m more for every starting stock the size of a home field's. Starting
+ * stock is published once with the field; nothing that happens to the field
+ * afterwards moves it.
+ */
+export function fieldRadiusM(field: Pick<ResourceNodeInfo, 'initialAmount'>): number {
+  return 60 + (field.initialAmount / ECONOMY.NODE_STARTING_AMOUNT) * 40;
+}
+
+/**
+ * Every field's instances, deterministic from the field's own published
+ * values — id, position, kind, stock — and nothing map-global, so a field
+ * stands the same on every client and a ground delta elsewhere never moves
+ * it. An instance that would land on rock or off the map is skipped: a field
+ * seated in a wall is a map bug, and ore drawn inside one would be a second.
+ */
+export function* scatterFields(
+  terrain: TerrainGrid,
+  fields: readonly ResourceNodeInfo[],
+  specs: readonly PropSpec[] = ENVIRONMENT_PROPS
+): Generator<{ placement: PropPlacement; spec: PropSpec }> {
+  const { cols, rows, cellM } = terrain;
+  for (const field of fields) {
+    const slug = FIELD_PROP_SLUG[field.kind];
+    const spec = specs.find((candidate) => candidate.slug === slug);
+    if (spec === undefined) continue;
+    const stand = FIELD_STAND[field.kind];
+    const radius = fieldRadiusM(field);
+    // The field's identity, as the hash sees it: integers, since propHash
+    // reads its words as such.
+    const seed = [
+      field.id,
+      Math.round(field.x),
+      Math.round(field.y),
+      field.kind,
+      Math.round(field.initialAmount),
+    ];
+    for (let k = 0; k < stand.count; k++) {
+      const angle = propHash([...seed, k, 0x1b873593]) * Math.PI * 2;
+      const [near, far] = stand.band;
+      const r = radius * (near + (far - near) * propHash([...seed, k, 0x85ebca6b]));
+      const xM = field.x + Math.cos(angle) * r;
+      const yM = field.y + Math.sin(angle) * r;
+      const col = Math.floor(xM / cellM);
+      const row = Math.floor(yM / cellM);
+      if (col < 0 || col >= cols || row < 0 || row >= rows) continue;
+      const index = row * cols + col;
+      if (terrain.ceiling[index]! > terrain.floor[index]!) continue;
+      const [lo, hi] = stand.scale;
+      yield {
+        placement: {
+          slug,
+          xM,
+          yM,
+          yawRad: propHash([...seed, k, 0x27d4eb2d]) * Math.PI * 2,
+          scale: lo + (hi - lo) * propHash([...seed, k, 0x9e3779b9]),
+          cellIndex: index,
+        },
+        spec,
+      };
+    }
+  }
 }
 
 /**

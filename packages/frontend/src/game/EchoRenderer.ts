@@ -135,6 +135,7 @@ import {
   FURNITURE_OUTLINE_ALPHA,
   INSTRUMENT_OUTLINE_ALPHA,
 } from './ladder.ts';
+import { fieldRadiusM } from './environment.ts';
 import { roofedPassages } from './passages.ts';
 import {
   actionFor,
@@ -5776,26 +5777,23 @@ export class EchoRenderer {
    * depth ring are the outlines the ladder weighs; the fill and the grains
    * are interior.
    */
+  /**
+   * A resource field on the chart: its rim, and for the crystal field the
+   * dashed ring that says it lies at depth. Rung 5, map furniture
+   * (docs/map-visuals.md §5). The ore itself stands in the conn view since
+   * #1555 (environment.ts `scatterFields`), so the chart draws no fill and no
+   * grains: the rim is the chart's whole claim, and the ground under it is
+   * the world's.
+   */
   private drawNodes(): void {
     const g = this.nodeLayer;
     g.clear();
     for (const node of this.nodes) {
       const crystal = node.kind === ResourceKind.ResonanceCrystal;
       const color = RESOURCE_COLOR[node.kind];
-      const radius = 60 + (node.initialAmount / 3000) * 40;
-      this.fillCircle(g, node.x, node.y, radius, null, { color, alpha: 0.1 });
+      const radius = fieldRadiusM(node);
       if (this.traceCircle(g, node.x, node.y, radius, null)) {
         g.stroke({ width: 2, color, alpha: FURNITURE_OUTLINE_ALPHA.resourceRim });
-      }
-      // A scatter of ore, deterministic per node so the map is stable. Each
-      // grain is metres across — a screen dot at its projected point says the
-      // same thing without sampling a circle nobody can see the shape of.
-      for (let i = 0; i < 7; i++) {
-        const angle = (i / 7) * Math.PI * 2 + node.id;
-        const r = radius * 0.55 * (0.4 + ((i * 37 + node.id * 13) % 10) / 16);
-        const p = this.project(node.x + Math.cos(angle) * r, node.y + Math.sin(angle) * r, null);
-        if (p === null || !p.visible) continue;
-        g.circle(p.x, p.y, 6 * p.pxPerM).fill({ color, alpha: 0.45 });
       }
       // A field you cannot reach without diving reads as a depth, not just a
       // colour: the dashed ring says "this is somewhere else vertically".

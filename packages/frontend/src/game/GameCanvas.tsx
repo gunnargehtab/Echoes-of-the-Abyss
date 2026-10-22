@@ -580,7 +580,11 @@ export function GameCanvas({
             setMapName(map.name);
             setMaxSlots(map.seats);
           },
-          onNodes: (nodes) => activeRenderer.setNodes(nodes),
+          onNodes: (nodes) => {
+            if (cancelled) return;
+            activeRenderer.setNodes(nodes);
+            perspective.setNodes(nodes);
+          },
           onAssigned: ({ slot, faction }) => {
             if (cancelled) return;
             activeRenderer.setIdentity(slot, faction);

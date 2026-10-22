@@ -888,7 +888,7 @@ moved no GLB.
 
 The environment props (Block 4) carry no rule: "nothing manufactured" is the whole of their
 law, a crag's drum is a table under its export's own jittered vertices, and a chord is a
-gauge. The measure reads the fourteen and judges none.
+gauge. The measure reads the fifteen and judges none.
 
 ## Block 3 — UNIT (one per generation)
 
@@ -1914,6 +1914,7 @@ metre, a range the band a generated one lands in; `Tris` is the per-instance bud
 | Coral Ruins | `env-coral-growth` | 12 m | 10 m | ≤ 400 | `flora-biolight`, tip points |
 | Rock (any biome) | `env-rock-crag-a` / `-b` | 30 m | 30–50 m | ≤ 500 | none |
 | Open Water | `env-open-boulder` | 12 m | 6 m | ≤ 300 | none |
+| Resource field (any biome) | `env-nodule-bed` | 12 m | 2 m | ≤ 240 | none |
 
 Four heights moved to their approved models (#879): the trench slab from 10 m, the
 resonance pylon from 25 m, the dome shard from 20 m to 14 m and the coral growth from
@@ -1940,7 +1941,14 @@ trench props are blackened, pressure-eroded, knife-edged; resonance props are fa
 crystal and the toppled remains of older instruments; ruin props carry the geometric
 patterns of [art-direction.md](art-direction.md)'s "Environmental Shapes" — right
 angles, terraces, a civilisation's worth of coral growth over them. Crags are the
-jagged-rock vocabulary for mesa edges anywhere on the map.
+jagged-rock vocabulary for mesa edges anywhere on the map. The nodule bed is the ore
+itself ([economy.md](economy.md) §2's polymetallic nodules, the bulk resource every navy
+mines): a low drift of silt with a scatter of dark, matte, fist-to-boulder lumps — 0.3 to
+1.2 m across — half-sunk in it, denser at the crown and thinning to loose lumps on the
+floor at the edge. It stands in any biome, several to a field, so one bed is a piece of a
+field and never the whole; it must read from the 55° camera as "there is ore here", quieter
+than any vessel and never as a structure or a contact. `stone_dark` on the lumps,
+`stone_silt` on the drift, no light.
 
 `flora-biolight` is licensed for the Kelp Forest *and* the Coral Ruins
 ([style-neon-noir.md](style-neon-noir.md) "World light", [map-visuals.md](map-visuals.md)
@@ -1957,12 +1965,14 @@ roster. Props ship as meshes, not baked maps, so the sprite-density contract
 (4 / 1.5 px/m) does not apply to them — the triangle column above is their density
 contract.
 
-Every row of this table was filled by a Claude Design model from the Block 4 batch; the
-deterministic generator that stood in for the batch was retired when the last row
-landed ([graphics-standards.md](graphics-standards.md), "The environment branch").
-Each file is now written by a script under `tools/hull-models/props/` (#869) that ports
-that model part for part — or, for the dome shard, replaces it (#883) — composed from
-`tools/hull-models/seabed.mjs`, and held at the row's footprint. A model generated from the prompts above replaces its row through that
+Every row of this table but the nodule bed's was filled by a Claude Design model from
+the Block 4 batch; the deterministic generator that stood in for the batch was retired
+when the last row landed ([graphics-standards.md](graphics-standards.md), "The
+environment branch"). Each file is now written by a script under
+`tools/hull-models/props/` (#869) that ports that model part for part — or, for the
+dome shard, replaces it (#883), and for the nodule bed authors it from a seeded formula
+with no export behind it (#1555) — composed from `tools/hull-models/seabed.mjs`, and
+held at the row's footprint. A model generated from the prompts above replaces its row through that
 script: port the export into it, run it, run intake with the row's footprint, cap and
 light, commit the GLB with the script, and update the registry row's triangle count from
 the intake report. The environment registry, the placement rules and the kelp sway read

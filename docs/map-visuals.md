@@ -223,6 +223,13 @@ Two consequences worth naming:
   contact. Both are stipple in `FAUNA_COLOR`, so form holds them apart: an agent's dot is
   larger, hard, blended normally and still, where a public dot is soft, additive and pulsing
   (§10, Phase 4).
+- **A resource field splits across two views.** Its rim is furniture (rung 5) on the chart,
+  in the resource's own ink, and nothing else is: no fill, no grains. The ore itself is ground
+  (rung 3), stood in the conn view as environment props at the field the room published —
+  beds of nodules, or the Resonance Field's shard for the crystal field — and placed by the
+  same rules as any prop ([graphics-standards.md](graphics-standards.md) gate 1, #1555). A
+  field is drawn from its position, kind and starting stock alone, so it looks the same full
+  and mined out: depletion is heard, never shown.
 
 ## 6. Colour, light and depth — one grammar
 

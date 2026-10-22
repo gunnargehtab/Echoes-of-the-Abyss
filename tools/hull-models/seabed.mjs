@@ -8,11 +8,12 @@
  * where it has any at all, comes from the three world-light families"
  * (docs/asset-prompts-3d.md, Block 4). A prop belongs to nobody, so a
  * prop script composes from here rather than from `factions/`: the Block 4
- * materials as the fourteen approved files carry them, the builders more
+ * materials as the fourteen approved files carry them (and the fifteenth,
+ * the nodule bed, takes two of the same tokens — #1555), the builders more
  * than one prop needs, and the root every prop stands on.
  *
- * Three things about the fourteen files are worth knowing before reading
- * one, and this module is where they are written down:
+ * Three things about the fourteen batch files are worth knowing before
+ * reading one, and this module is where they are written down:
  *
  * - **Every stone part is a table.** `parts.mjs` prints a crag's peak as
  *   "non-indexed, 48 triangles — an extrusion, a sweep or a table", and the
@@ -64,7 +65,7 @@
 import { THREE, clad, lamp, hex, box, flatShaded, tabled } from './kit.mjs';
 
 /**
- * The palette, as the fourteen files carry it: eight stones and three
+ * The palette, as the fifteen files carry it: eight stones and three
  * lights, each named by its docs/style-neon-noir.md "The props" token.
  * Metalness is 0 on every material in the set — "nothing manufactured"
  * (ENV STYLE) — and roughness the file's own. A lamp is kit.mjs `lamp`:
@@ -109,6 +110,32 @@ export const ground = {
   /** `crystal-seam` at 1.2 over `violet-seam-base`, the resonance crystal's seam. */
   violetSeam: () => lamp('violet_seam', hex('#5B4A8C'), hex('#06050A'), 0.9, 1.2),
 };
+
+/**
+ * A seeded stream of numbers in [0, 1): mulberry32 on a 32-bit seed, every
+ * step integer arithmetic under `Math.imul` and `>>>`, so the stream is the
+ * same on every machine and `npm run check:models` reproduces a prop that
+ * scatters by it byte for byte. For a prop authored as a formula whose
+ * parts are scattered rather than placed by hand — the nodule bed's lumps
+ * (#1555) — where a port would carry a table of the export's own numbers
+ * and a hand-drawn scatter would be a table typed from nothing. A script
+ * takes one stream and draws from it in a fixed order; adding a draw
+ * anywhere moves every draw after it, which is the same bargain a table
+ * row makes and the reason a scatter's order is written down where it is
+ * drawn. `between(lo, hi)` is one draw spread over a range.
+ */
+export function seeded(seed) {
+  let a = seed >>> 0;
+  const next = () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  next.between = (lo, hi) => lo + (hi - lo) * next();
+  return next;
+}
 
 /* --------------------------------------------------------------------------
  * Tables under a constructor. Each takes the export's vertex table in

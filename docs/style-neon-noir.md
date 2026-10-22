@@ -82,15 +82,15 @@ palest fill; rims and cliff shadows darken only ([art-direction.md](art-directio
 
 ### The props (the seabed's furniture)
 
-The fourteen environment models of [asset-prompts-3d.md](asset-prompts-3d.md) Block 4 take
+The fifteen environment models of [asset-prompts-3d.md](asset-prompts-3d.md) Block 4 take
 their base colours from this table. Each token is named for the glTF material that carries
 it, hyphenated. `basalt` and `coral_stone` each carry two values, so their tokens take a
 suffix saying which. Metalness is 0 on every one; roughness is the material's own:
 
 | Token | Hex | Roughness | Material | Props |
 | --- | --- | --- | --- | --- |
-| `stone-dark` | `#15181B` | 1 | `stone_dark` | Both crags, coral growth, ruin block, dome shard |
-| `stone-silt` | `#17150F` | 1 | `stone_silt` | Open boulder |
+| `stone-dark` | `#15181B` | 1 | `stone_dark` | Both crags, coral growth, ruin block, dome shard, nodule bed's lumps |
+| `stone-silt` | `#17150F` | 1 | `stone_silt` | Open boulder, nodule bed's drift |
 | `basalt-trench` | `#14171A` | 0.96 | `basalt` | Trench slab, trench spire |
 | `basalt-vent` | `#121517` | 0.96 | `basalt` | Vent chimney, vent basalt |
 | `abyss-stone` | `#10161D` | 0.96 | `abyss_stone` | Resonance crystal, resonance pylon |
@@ -112,9 +112,9 @@ Three rules ride with the table:
   `abyss-stone` — sit at hue 204–212°, the stone ramp's own blue-grey, under its rule.
   `coral-stone-ruin`, `coral-stone-living`, `kelp` and `stone-silt` carry a warm or green
   cast on purpose. They are growth and sediment, not bare rock. Coral stands where coral
-  grows (Coral Ruins, Kelp Forest), kelp in the Kelp Forest and silt in Open Water, so each
-  cast belongs to the ground it stands on (`ENVIRONMENT_PROPS`,
-  `packages/frontend/src/game/environment.ts`).
+  grows (Coral Ruins, Kelp Forest), kelp in the Kelp Forest and silt in Open Water and
+  under a nodule bed's lumps wherever a resource field is, so each cast belongs to the
+  ground it stands on (`ENVIRONMENT_PROPS`, `packages/frontend/src/game/environment.ts`).
 - **A lamp's base is near-black.** The three `-base` tokens sit under the
   [World light](#world-light--the-terrain-carve-outs) families. The emissive is what reads,
   and the base does not compete with it.

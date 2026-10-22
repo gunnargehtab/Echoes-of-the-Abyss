@@ -137,8 +137,9 @@ Approved model committed          docs/concept-art/models/env-*.glb
         │
         ▼
 Runtime instancing                packages/frontend/src/game/environment registry
-                                  (deterministic scatter from the terrain grid;
-                                  no offline map render — props have no chart presence)
+                                  (deterministic scatter from the terrain grid and
+                                  the room's resource fields; no offline map render —
+                                  props have no chart presence)
 ```
 
 Props never appear on the sonar scope or in the sprite bake: they are world dressing,
@@ -177,8 +178,11 @@ The same law covers the ground. An environment visual is either an approved `env
 instanced by the environment registry, or the documented procedural seabed bake (relief,
 mottle, embers) — no hand-placed one-off decor, no per-map special-case dressing code.
 Prop *placement* is itself part of the rule: deterministic from the published terrain
-grid, identical on every client, and render-only — the simulation never reads where a
-prop stands.
+grid and the resource fields the room sends once on join, identical on every client, and
+render-only — the simulation never reads where a prop stands. A field's ore stands by the
+same rule (#1555): its position, kind and starting stock are map data like the grid, and
+its depletion is not, so a bed reads none of it and a field looks the same full and mined
+out.
 
 ### 2. Intake is the gate, not a formality
 
@@ -347,7 +351,9 @@ memory class are still regressions, and anything drawn per tick is on the 60 Hz 
 ([tech-stack.md](tech-stack.md)).
 
 Environment props spend from the same two budgets, on a stated reservation: roughly
-**30 draw calls and 105 k triangles** for the whole prop layer, achieved by instancing
+**30 draw calls and 120 k triangles** for the whole prop layer, the resource fields' ore
+inside it since #1555 (it was 105 k, which Ventfront Divide's scatter alone filled to
+101 k), achieved by instancing
 (one `InstancedMesh` per prop type per material — instance count never adds draw calls)
 under a registry-level instance cap, the `VENT_EMBER_CAP` pattern applied to geometry.
 The probe reports the layer separately (`props` / `propTris`) so a prop regression is a
