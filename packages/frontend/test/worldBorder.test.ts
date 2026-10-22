@@ -17,6 +17,8 @@ import {
   SORROWGATE_REGION,
   WORLD,
   detailGround,
+  detailOwner,
+  detailRect,
   exteriorFade,
   paintGround,
 } from '@echoes/shared';
@@ -32,7 +34,10 @@ import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { buildHeightGrid } from '../src/game/perspectiveTerrain.ts';
 import { VEIL_FLOOR_RGB } from '../src/game/acousticVeil.ts';
 import {
+  DETAIL_OWNER_GLSL,
   EXTERIOR_FADE_GLSL,
+  assignRivals,
+  detailRival,
   installOverviewShading,
   stepBorderStrength,
   apronFrame,
@@ -209,6 +214,89 @@ describe("the apron: the region's authored surround (#1457)", () => {
 });
 
 /**
+ * Two details drawn together (#1528, docs/world-map.md §7.3): each mesh
+ * discards the cells the other owns by place, so every shared cell is drawn
+ * once, by the region `detailOwner` names.
+ */
+describe('two details sharing cells', () => {
+  const east = {
+    id: 'east',
+    mapId: 'sorrowgate',
+    x: 24_000,
+    y: 41_000,
+    widthM: 4_000,
+    heightM: 3_000,
+  };
+  const over = { ...east, id: 'over', x: 21_500 };
+
+  /** `DETAIL_OWNER_GLSL`'s predicate, read off one mesh's uniforms, in scene metres. */
+  function rivalOwns(rival: ReturnType<typeof detailRival>, x: number, y: number): boolean {
+    if (rival.uRival.value < 0.5) return false;
+    const cell = WORLD.DETAIL_CELL_M;
+    const c = [(Math.floor(x / cell) + 0.5) * cell, (Math.floor(y / cell) + 0.5) * cell];
+    const [rx, ry, rw, rh] = rival.uRivalDetailRect.value;
+    if (c[0]! < rx! || c[1]! < ry!) return false;
+    if (c[0]! >= rx! + rw! || c[1]! >= ry! + rh!) return false;
+    const distance = ([x0, y0, w, h]: number[]) =>
+      Math.hypot(
+        Math.max(x0! - c[0]!, 0, c[0]! - (x0! + w!)),
+        Math.max(y0! - c[1]!, 0, c[1]! - (y0! + h!))
+      );
+    const own = distance(rival.uOwnMapRect.value);
+    const theirs = distance(rival.uRivalMapRect.value);
+    return theirs < own || (theirs === own && rival.uRival.value > 1.5);
+  }
+
+  for (const [name, other] of [
+    ['two surrounds', east],
+    ['a patch over a patch', over],
+  ] as const) {
+    it(`draws every shared cell once, by its owner: ${name}`, () => {
+      const home = SORROWGATE_REGION;
+      const drawn = [
+        { region: home, rival: detailRival() },
+        { region: other, rival: detailRival() },
+      ];
+      assignRivals(drawn, home);
+      const a = detailRect(home);
+      const b = detailRect(other);
+      let shared = 0;
+      const cell = WORLD.DETAIL_CELL_M;
+      for (
+        let y = Math.max(a.y, b.y) + cell / 2;
+        y < Math.min(a.y + a.heightM, b.y + b.heightM);
+        y += cell
+      ) {
+        for (
+          let x = Math.max(a.x, b.x) + cell / 2;
+          x < Math.min(a.x + a.widthM, b.x + b.widthM);
+          x += cell
+        ) {
+          const owner = detailOwner([home, other], { x, y })!;
+          const keeps = drawn.filter((d) => !rivalOwns(d.rival, x - home.x, y - home.y));
+          assert.deepEqual(
+            keeps.map((d) => d.region.id),
+            [owner.id],
+            `cell at ${x}, ${y}`
+          );
+          shared++;
+        }
+      }
+      assert.ok(shared > 0, 'the pair shares cells');
+    });
+  }
+
+  it('leaves a detail drawn alone whole, and states the rule in GLSL', () => {
+    const alone = { region: SORROWGATE_REGION, rival: detailRival() };
+    assignRivals([alone], SORROWGATE_REGION);
+    assert.equal(alone.rival.uRival.value, 0);
+    assert.deepEqual(alone.rival.uOwnMapRect.value, [0, 0, 5_000, 4_000]);
+    assert.match(DETAIL_OWNER_GLSL, /return rival < own \|\| \(rival == own && uRival > 1\.5\);/);
+    assert.match(DETAIL_OWNER_GLSL, new RegExp(`floor\\(p / ${WORLD.DETAIL_CELL_M}\\.0\\)`));
+  });
+});
+
+/**
  * The session's ground on its region (#1460, docs/world-map.md §7.1, §7.3):
  * the room names where its ground stands, a live change is the session's
  * overlay and never the atlas's, and the overlay goes when the session does.
@@ -351,7 +439,7 @@ describe('the pilot view at its border', () => {
     // The fade's program, with the tutorial's ground surface chained after it.
     assert.equal(
       (mesh.material as MeshBasicMaterial).customProgramCacheKey(),
-      'echoes-world-border-6:sorrowgate-ground-2'
+      'echoes-world-border-7:sorrowgate-ground-2'
     );
   });
 

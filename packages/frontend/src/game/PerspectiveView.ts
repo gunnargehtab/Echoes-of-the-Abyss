@@ -74,6 +74,7 @@ import {
   WORLD_REGIONS,
   clampToRect,
   detailGround,
+  detailOwner,
   detailRect,
   exteriorDistanceM,
   statsFor,
@@ -187,13 +188,15 @@ import {
   patchGroundDetailCells,
   SEABED_DETAIL_ON,
 } from './seabedDetail.ts';
-import { mapProps, stoneSeats, type StoneSeat } from './environment.ts';
+import { mapProps, stoneSeats, type PropPlacement, type StoneSeat } from './environment.ts';
 import { installGroundSurface, type WorldLook } from './tutorialLook.ts';
 import {
   apronFrame,
   apronMesh,
   baselineDepthAtM,
+  assignRivals,
   detailMesh,
+  detailRival,
   installApronShading,
   installOverviewShading,
   missionCells,
@@ -204,6 +207,8 @@ import {
   stepBorderStrength,
   type ApronPads,
   type BorderUniforms,
+  type DetailRival,
+  type DrawnDetail,
   type SeamHeight,
 } from './worldBorder.ts';
 import {
@@ -621,6 +626,12 @@ interface RegionDetail {
   rect: PlanRect;
   /** The props its map's ground stands, a child of the mesh (#1488). */
   props: EnvironmentLayer;
+  /** Its region, and the other drawn detail whose cells it leaves (#1528). */
+  region: WorldRegion;
+  rival: DetailRival;
+  /** Every prop its map stands, and the drawn set its layer last stood them for. */
+  placements: readonly PropPlacement[];
+  propsFor: string;
 }
 
 export class PerspectiveView {
@@ -715,6 +726,8 @@ export class PerspectiveView {
   /** The overview's skin and whether it has landed, as the apron's seam band reads them. */
   private readonly seamMap: { value: CanvasTexture | null } = { value: null };
   private readonly seamOn = { value: 0 };
+  /** The detail drawn with the apron, whose cells it leaves (#1528); kept across rebuilds. */
+  private readonly apronRival = detailRival();
   /**
    * Every other placed region's detail this view may draw (§7.5): held by
    * projected size, two regions at most with the session's own among them,
@@ -2755,6 +2768,7 @@ export class PerspectiveView {
         originM: [region.x, region.y],
         sizeM: [WORLD.ATLAS_WIDTH_M, WORLD.ATLAS_HEIGHT_M],
         detailRect: [detail.x, detail.y, detail.widthM, detail.heightM],
+        rival: this.apronRival,
       }
     );
     if (this.look === 'sorrowgate') installGroundSurface(material);
@@ -3001,6 +3015,20 @@ export class PerspectiveView {
     // Built under the session's ground, never drawn with it.
     if (leaving) drawn.delete(home.id);
     for (const id of residency.residentIds()) residency.get(id)!.mesh.visible = drawn.has(id);
+    // Where two drawn details share cells, each draws only the cells it owns
+    // by place (§7.3, #1528). The session's apron is listed first, so it wins
+    // a tie; it is drawn until its ground goes, the ramp-out included. The
+    // others follow by id, so on the board a tie never turns on which region
+    // arrived first.
+    const details = [...drawn]
+      .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+      .map((id) => residency.get(id)!);
+    const sharing: DrawnDetail[] =
+      (this.apron?.mesh ?? null) === null ? [] : [{ region: home, rival: this.apronRival }];
+    for (const detail of details) sharing.push({ region: detail.region, rival: detail.rival });
+    assignRivals(sharing, home);
+    const regions = sharing.map((d) => d.region);
+    for (const detail of details) this.standOwnedProps(detail, regions);
     this.cutOverview();
   }
 
@@ -3078,6 +3106,7 @@ export class PerspectiveView {
       heightM: atlas.heightM,
     };
     const cellsTexture = surveyCellTexture(terrain, surveyCellClasses(terrain));
+    const rival = detailRival();
     installApronShading(
       material,
       this.borderUniforms(),
@@ -3096,6 +3125,7 @@ export class PerspectiveView {
         originM: [home.x, home.y],
         sizeM: [WORLD.ATLAS_WIDTH_M, WORLD.ATLAS_HEIGHT_M],
         detailRect: [rect.x, rect.y, rect.widthM, rect.heightM],
+        rival,
       }
     );
     const mesh = new Mesh(geometry, material);
@@ -3120,11 +3150,8 @@ export class PerspectiveView {
     const patchY = region.y - atlas.y;
     props.group.position.set(patchX, 0, patchY);
     props.setReducedMotion(this.swayHeld);
-    props.rebuild(
-      mission,
-      (xM, yM) => depthToWorldY(seabedDepthAtM(mission, seed, rockTopM, xM, yM)),
-      mapProps(region.mapId, this.look)
-    );
+    const placements = mapProps(region.mapId, this.look);
+    props.rebuild(mission, this.detailPropGround(mission, seed, rockTopM), placements);
     mesh.add(props.group);
     return {
       mesh,
@@ -3137,7 +3164,41 @@ export class PerspectiveView {
       rockTopM,
       rect,
       props,
+      region,
+      rival,
+      placements,
+      propsFor: region.id,
     };
+  }
+
+  /** The heights a region's detail stands its props on: the map's own (#1491). */
+  private detailPropGround(
+    mission: TerrainPayload,
+    seed: number,
+    rockTopM: number
+  ): (xM: number, yM: number) => number {
+    return (xM, yM) => depthToWorldY(seabedDepthAtM(mission, seed, rockTopM, xM, yM));
+  }
+
+  /**
+   * Stand a drawn region's props only on the cells it draws (#1528): a prop
+   * follows its ground, so where its patch loses a tie to another's, the
+   * other's props stand there and its own do not. Re-stood only when the
+   * drawn set changes.
+   */
+  private standOwnedProps(detail: RegionDetail, sharing: readonly WorldRegion[]): void {
+    const key = sharing.map((r) => r.id).join(' ');
+    if (key === detail.propsFor) return;
+    detail.propsFor = key;
+    const { region } = detail;
+    const owned = detail.placements.filter(
+      (p) => detailOwner(sharing, { x: region.x + p.xM, y: region.y + p.yM }) === region
+    );
+    detail.props.rebuild(
+      detail.mission,
+      this.detailPropGround(detail.mission, detail.seed, detail.rockTopM),
+      owned
+    );
   }
 
   /** Free what `loadRegionDetail` built: the residency let its region go. */

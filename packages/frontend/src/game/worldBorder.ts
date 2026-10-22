@@ -405,7 +405,84 @@ export interface SeamBlend {
   sizeM: [number, number];
   /** The detail rectangle in mission metres: x, y, width, height. */
   detailRect: [number, number, number, number];
+  /** The other drawn detail, whose cells this one does not draw (#1528). */
+  rival: DetailRival;
 }
+
+/**
+ * The one other region whose detail is drawn with this mesh, as the shader
+ * reads it (§7.3, #1528): §7.5 holds two resident, so a detail has at most one
+ * rival. Rectangles are x, y, width, height in this view's scene metres.
+ */
+export interface DetailRival {
+  /** This mesh's own map rectangle. */
+  uOwnMapRect: { value: number[] };
+  /** The rival's map rectangle, and its detail rectangle, where it draws. */
+  uRivalMapRect: { value: number[] };
+  uRivalDetailRect: { value: number[] };
+  /** 0 with no rival drawn; 1 drawn and losing a tie; 2 drawn and winning one. */
+  uRival: { value: number };
+}
+
+/** A rival slot with nobody in it, for a mesh to hold from its first frame. */
+export function detailRival(): DetailRival {
+  return {
+    uOwnMapRect: { value: [0, 0, 0, 0] },
+    uRivalMapRect: { value: [0, 0, 0, 0] },
+    uRivalDetailRect: { value: [0, 0, 0, 0] },
+    uRival: { value: 0 },
+  };
+}
+
+/** One drawn detail, as `assignRivals` reads it: its region, and the slot its mesh reads. */
+export interface DrawnDetail {
+  region: WorldRegion;
+  rival: DetailRival;
+}
+
+/**
+ * Point each drawn detail at the other one (#1528), in the order
+ * `detailOwner` takes them: the first listed wins a tie.
+ * `home` is the region whose origin is the scene's. A detail drawn alone, or
+ * past the two §7.5 allows, has no rival and draws all of its cells.
+ */
+export function assignRivals(drawn: readonly DrawnDetail[], home: PlanRect): void {
+  const scene = (rect: PlanRect) => [rect.x - home.x, rect.y - home.y, rect.widthM, rect.heightM];
+  for (const [i, detail] of drawn.entries()) {
+    const other = drawn.length === 2 ? drawn[1 - i]! : undefined;
+    detail.rival.uOwnMapRect.value = scene(detail.region);
+    detail.rival.uRival.value = other === undefined ? 0 : i === 0 ? 1 : 2;
+    if (other === undefined) continue;
+    detail.rival.uRivalMapRect.value = scene(other.region);
+    detail.rival.uRivalDetailRect.value = scene(detailRect(other.region));
+  }
+}
+
+/**
+ * `detailOwner` in GLSL, from one mesh's side: does the rival own the 250 m
+ * cell under `p`? Only where the rival's detail draws, and only when its map
+ * rectangle is nearer the cell's centre, or as near and it wins the tie. The
+ * scene's origin is a region's, a whole cell (§7.2), so cells in scene metres
+ * are the atlas's.
+ */
+export const DETAIL_OWNER_GLSL = `
+uniform vec4 uOwnMapRect;
+uniform vec4 uRivalMapRect;
+uniform vec4 uRivalDetailRect;
+uniform float uRival;
+float echoesRectDistance(vec4 r, vec2 p) {
+  return length(max(max(r.xy - p, p - (r.xy + r.zw)), vec2(0.0)));
+}
+bool echoesRivalOwns(vec2 p) {
+  if (uRival < 0.5) return false;
+  vec2 c = (floor(p / ${glslFloat(WORLD.DETAIL_CELL_M)}) + 0.5) * ${glslFloat(WORLD.DETAIL_CELL_M)};
+  if (any(lessThan(c, uRivalDetailRect.xy))) return false;
+  if (any(greaterThanEqual(c, uRivalDetailRect.xy + uRivalDetailRect.zw))) return false;
+  float own = echoesRectDistance(uOwnMapRect, c);
+  float rival = echoesRectDistance(uRivalMapRect, c);
+  return rival < own || (rival == own && uRival > 1.5);
+}
+`;
 
 /** The world position every exterior fragment is faded by, and the hooks' plan position. */
 const borderVertex = (shader: { vertexShader: string }) => {
@@ -498,6 +575,7 @@ export function installApronShading(
     uSeamOn: seam.on,
     uOverviewFrame: { value: [...seam.originM, ...seam.sizeM] },
     uDetailRect: { value: seam.detailRect },
+    ...seam.rival,
   };
   material.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
@@ -519,11 +597,17 @@ export function installApronShading(
         uniform vec4 uOverviewFrame;
         ${EXTERIOR_FADE_GLSL}
         ${SEAM_WEIGHT_GLSL}
+        ${DETAIL_OWNER_GLSL}
         float surveyCell( ivec2 c ) { return texelFetch( uSurveyCells, c, 0 ).r; }
         float surveyCellAt( vec2 xz ) {
           ivec2 c = ivec2( floor( xz / uSurveyGrid.z ) ) + ivec2( uApronPad );
           return surveyCell( clamp( c, ivec2( 0 ), ivec2( uSurveyGrid.xy ) - 1 ) );
         }`
+      )
+      .replace(
+        '#include <clipping_planes_fragment>',
+        `#include <clipping_planes_fragment>
+        if ( echoesRivalOwns( vBorderWorld.xz ) ) discard;`
       )
       .replace(
         '#include <opaque_fragment>',
@@ -534,7 +618,7 @@ export function installApronShading(
       )
       .replace('#include <fog_fragment>', borderFadeFragment(backdropSpanM, true));
   };
-  material.customProgramCacheKey = () => 'echoes-world-border-6';
+  material.customProgramCacheKey = () => 'echoes-world-border-7';
   material.needsUpdate = true;
 }
 

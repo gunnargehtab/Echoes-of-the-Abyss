@@ -24,6 +24,7 @@ import {
   WORLD_REGIONS,
   atlasToLocal,
   clampToRect,
+  detailOwner,
   detailRect,
   exteriorDistanceM,
   exteriorFade,
@@ -163,6 +164,61 @@ describe('two placed maps sharing ground (#1527)', () => {
     const shifted = worldRegionProblems([SORROWGATE_REGION, { ...twin, x: twin.x + 250 }]);
     assert.equal(shifted.length, 1, JSON.stringify(shifted));
     assert.match(shifted[0]!, /^sorrowgate and twin: overlap, and \d+ shared cells disagree/);
+  });
+});
+
+describe('two surrounds drawn together (#1528)', () => {
+  // A map placed 1,500 m east of Sorrowgate's: the two detail rectangles
+  // share 21–25 km by 38–47 km, and neither map stands in the other's.
+  const east: WorldRegion = {
+    id: 'east',
+    mapId: 'sorrowgate',
+    x: 24_000,
+    y: 41_000,
+    widthM: 4_000,
+    heightM: 3_000,
+  };
+  // And one whose patch overlaps Sorrowgate's by its west 1,000 m.
+  const over: WorldRegion = { ...east, id: 'over', x: 21_500 };
+
+  it('gives a cell between two surrounds to the nearer map rectangle', () => {
+    const drawn = [SORROWGATE_REGION, east];
+    // 22,600 is 100 m from Sorrowgate's east edge and 1,400 m from east's west edge.
+    assert.equal(detailOwner(drawn, { x: 22_600, y: 42_000 })?.id, 'sorrowgate');
+    assert.equal(detailOwner(drawn, { x: 23_900, y: 42_000 })?.id, 'east');
+    // Either order: a property of the place, never of which arrived first.
+    for (const point of [
+      { x: 22_600, y: 42_000 },
+      { x: 23_900, y: 42_000 },
+      { x: 23_100, y: 38_100 },
+    ]) {
+      assert.equal(
+        detailOwner(drawn, point)?.id,
+        detailOwner([east, SORROWGATE_REGION], point)?.id
+      );
+    }
+  });
+
+  it('lets a mission patch beat any surround, and a tie go to the first listed', () => {
+    // In east's patch, 1,250 m outside Sorrowgate's map, inside its surround.
+    assert.equal(detailOwner([SORROWGATE_REGION, east], { x: 24_100, y: 42_000 })?.id, 'east');
+    // In both patches, where §7.2 says the cells agree: the first listed.
+    assert.equal(
+      detailOwner([SORROWGATE_REGION, over], { x: 22_000, y: 42_000 })?.id,
+      'sorrowgate'
+    );
+    assert.equal(detailOwner([over, SORROWGATE_REGION], { x: 22_000, y: 42_000 })?.id, 'over');
+  });
+
+  it('owns by the cell, and only where a detail draws', () => {
+    const drawn = [SORROWGATE_REGION, east];
+    // Every point of one 250 m cell has one owner: its centre's.
+    const corner = detailOwner(drawn, { x: 23_000, y: 42_000 });
+    assert.equal(detailOwner(drawn, { x: 23_249, y: 42_249 }), corner);
+    // Past Sorrowgate's detail, east's alone; past both, nobody's.
+    assert.equal(detailOwner(drawn, { x: 25_500, y: 42_000 })?.id, 'east');
+    assert.equal(detailOwner(drawn, { x: 31_500, y: 42_000 }), undefined);
+    assert.equal(detailOwner([], { x: 20_000, y: 42_000 }), undefined);
   });
 });
 
