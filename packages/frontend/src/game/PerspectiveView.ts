@@ -91,12 +91,15 @@ import {
   type UnitKind,
 } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
-import { FACTION_PALETTE, sigColor, UI, VENT_EMBER } from './palette.ts';
+import { CIVIC_LAMP, FACTION_PALETTE, sigColor, UI, VENT_EMBER } from './palette.ts';
 import { DepthCues } from './depthCues.ts';
 import {
   bakeSeabed,
   bakeSeabedInSlices,
+  CIVIC_LAMP_LEVEL,
+  civicLamps,
   cutSeabed,
+  EMBER_GAIN,
   emberFlicker,
   rebakeSeabedCells,
   seabedRange,
@@ -474,6 +477,7 @@ function lampMeshesScreen(
   return { sitesPx, areaPx: Number(areaPx.toFixed(1)) };
 }
 const EMBER_COLOR = new Color(VENT_EMBER);
+const LAMP_COLOR = new Color(CIVIC_LAMP);
 /** Screen corners in NDC, the order `groundQuad` has always returned them in. */
 const QUAD_CORNERS: ReadonlyArray<readonly [number, number]> = [
   [-1, 1],
@@ -783,12 +787,14 @@ export class PerspectiveView {
   /** Environment props (environmentLayer.ts) — rebuilt on the terrain cadence. */
   private readonly environment: EnvironmentLayer;
   private lightingEnvironment: WebGLRenderTarget | null = null;
+  /** Vent embers, then civic lamps: the ground's point lights in one cloud. */
   private embers: Points | null = null;
+  /** One phase per ember; the lamps after them have none, being steady. */
   private emberPhases: number[] = [];
   private emberBucket = -1;
-  /** Where each ember stands, for the veil's reshade. */
+  /** Where each point stands, embers then lamps, for the veil's reshade. */
   private emberPositions: Array<{ xM: number; yM: number }> = [];
-  /** Per-ember veil factor, parallel to `emberPhases`; 1 with no veil. */
+  /** Per-point veil factor, parallel to `emberPositions`; 1 with no veil. */
   private emberVeil: Float32Array = new Float32Array(0);
 
   /**
@@ -2417,22 +2423,29 @@ export class PerspectiveView {
    * The 5 Hz step and the SPEC ember hue are seabed.ts's, unchanged.
    *
    * World light, which stands outside the loudness ladder by design
-   * (docs/map-visuals.md §5) and answers to its own five rules instead. */
+   * (docs/map-visuals.md §5) and answers to its own five rules instead. The
+   * civic lamps ride the same cloud after the embers (#1533): one more family
+   * is a few more points, not another draw call, and it takes the veil and
+   * the swim the same way. */
   private buildEmbers(terrain: TerrainPayload): void {
     const embers = ventEmbers(terrain, this.groundSeed);
+    const lamps = civicLamps(terrain, this.groundSeed);
     this.emberPhases = embers.map((e) => e.phase);
-    this.emberPositions = embers.map((e) => ({ xM: e.xM, yM: e.yM }));
-    this.emberVeil = new Float32Array(embers.length).fill(1);
-    if (embers.length === 0) {
+    this.emberPositions = [...embers, ...lamps].map((e) => ({ xM: e.xM, yM: e.yM }));
+    const count = this.emberPositions.length;
+    this.emberVeil = new Float32Array(count).fill(1);
+    if (count === 0) {
       this.embers = null;
       return;
     }
-    const emberPositions = new Float32Array(embers.length * 3);
-    const emberColors = new Float32Array(embers.length * 3);
-    embers.forEach((ember, i) => {
-      emberPositions[i * 3] = ember.xM;
-      emberPositions[i * 3 + 1] = this.groundYAt(ember.xM, ember.yM) + 6;
-      emberPositions[i * 3 + 2] = ember.yM;
+    const emberPositions = new Float32Array(count * 3);
+    const emberColors = new Float32Array(count * 3);
+    this.emberPositions.forEach((at, i) => {
+      emberPositions[i * 3] = at.xM;
+      // A lamp stands lower than an ember's glow: "few, low"
+      // (docs/habitats-art-brief.md, Sorrowgate).
+      emberPositions[i * 3 + 1] = this.groundYAt(at.xM, at.yM) + (i < embers.length ? 6 : 3);
+      emberPositions[i * 3 + 2] = at.yM;
     });
     const emberGeometry = new BufferGeometry();
     emberGeometry.setAttribute('position', new BufferAttribute(emberPositions, 3));
@@ -2610,9 +2623,9 @@ export class PerspectiveView {
   }
 
   /**
-   * Embers take a plain drain rather than the cold tint the ground takes.
-   * A vent is a light, and deafness is not a filter over a light — it dims
-   * it. Recolouring the one warm thing on the seabed towards blue would be
+   * Embers and lamps take a plain drain rather than the cold tint the ground
+   * takes. A vent is a light, and deafness is not a filter over a light — it
+   * dims it. Recolouring the seabed's warm lights towards blue would be
    * inventing a hue nobody specified (gate 4).
    */
   private shadeEmbers(): void {
@@ -4180,7 +4193,7 @@ export class PerspectiveView {
         const ember = EMBER_COLOR;
         const eye = this.camera.position;
         const reach = this.waterReach;
-        for (let i = 0; i < this.emberPhases.length; i++) {
+        for (let i = 0; i < this.emberPositions.length; i++) {
           // A vent seen through water nobody is listening to is still a vent,
           // and still the seabed's one light — it just goes as cold as the
           // ground it burns on. An unveiled ember over veiled ground would be
@@ -4196,9 +4209,14 @@ export class PerspectiveView {
           const dx = at.xM - eye.x;
           const dz = at.yM - eye.z;
           const swim = waterTransmittance(Math.hypot(dx, dz), reach);
-          const level =
-            0.55 * emberFlicker(i, bucket, this.emberPhases[i]!) * (this.emberVeil[i] ?? 1) * swim;
-          colors.setXYZ(i, ember.r * level, ember.g * level, ember.b * level);
+          // A lamp holds steady (rule 3) at a level under the ember's mean.
+          const isEmber = i < this.emberPhases.length;
+          const light = isEmber ? ember : LAMP_COLOR;
+          const gain = isEmber
+            ? EMBER_GAIN * emberFlicker(i, bucket, this.emberPhases[i]!)
+            : CIVIC_LAMP_LEVEL;
+          const level = gain * (this.emberVeil[i] ?? 1) * swim;
+          colors.setXYZ(i, light.r * level, light.g * level, light.b * level);
         }
         colors.needsUpdate = true;
       }

@@ -22,6 +22,11 @@ import {
   seabedSeed,
   bandedFill,
   BIOME_BAND_M,
+  CIVIC_LAMP_CAP,
+  CIVIC_LAMP_FLOOR_M,
+  CIVIC_LAMP_LEVEL,
+  civicLamps,
+  EMBER_GAIN,
   SEABED_PX_PER_CELL,
   shadeSeabed,
   VENT_EMBER_CAP,
@@ -29,6 +34,8 @@ import {
 } from '../src/game/seabed.ts';
 import {
   BIOME_COLOR,
+  CIVIC_LAMP,
+  VENT_EMBER,
   RELIEF_REFERENCE_M,
   ROCK_FACE,
   ROCK_SHADOW,
@@ -366,5 +373,59 @@ describe('vent embers', () => {
       }
     }
     assert.ok(moved > 0, 'the flicker never changes — a lamp, not an ember');
+  });
+});
+
+describe('civic lamps', () => {
+  // The Upper Concourse in miniature: shallow ruin across the top two rows,
+  // the deep city below, and a 380 m skirmish divider in the bottom row.
+  const terrain = {
+    cols: 8,
+    rows: 8,
+    cellM: 250,
+    biomes: new Array(64).fill(Biome.CoralRuins),
+    floor: Array.from({ length: 64 }, (_, i) => (i < 16 ? 340 : i >= 56 ? 380 : 1600)),
+    ceiling: new Array(64).fill(0),
+  };
+
+  it('stands few, deterministic and inside the shallow ruin only', () => {
+    const a = civicLamps(terrain, SEED);
+    assert.deepEqual(a, civicLamps(terrain, SEED));
+    assert.ok(a.length > 0, 'the Concourse stood no lamp');
+    assert.ok(a.length < 16 / 2, `${a.length} lamps on 16 cells is a street, not "few"`);
+    assert.ok(a.length <= CIVIC_LAMP_CAP);
+    for (const lamp of a) {
+      const index = Math.floor(lamp.yM / 250) * 8 + Math.floor(lamp.xM / 250);
+      assert.ok(terrain.floor[index]! <= CIVIC_LAMP_FLOOR_M, 'lamp off the Concourse');
+    }
+  });
+
+  it('lights nothing in other biomes, under rock, or on the 380 m dividers', () => {
+    const kelp = { ...terrain, biomes: new Array(64).fill(Biome.KelpForest) };
+    assert.equal(civicLamps(kelp, SEED).length, 0);
+    const sealed = { ...terrain, ceiling: new Array(64).fill(2000) };
+    assert.equal(civicLamps(sealed, SEED).length, 0);
+    const dividers = { ...terrain, floor: new Array(64).fill(380) };
+    assert.equal(civicLamps(dividers, SEED).length, 0);
+  });
+
+  it('renders dimmer than a vent ember on average (rule 2, #1533)', () => {
+    const linear = (c: number) => {
+      const v = c / 255;
+      return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+    };
+    const luminance = (hex: number) =>
+      0.2126 * linear(hex >> 16) + 0.7152 * linear((hex >> 8) & 255) + 0.0722 * linear(hex & 255);
+    let sum = 0;
+    let n = 0;
+    for (let i = 0; i < 200; i++) {
+      for (let bucket = 0; bucket < 200; bucket++) {
+        sum += emberFlicker(i, bucket, (i * 0.618) % 1);
+        n++;
+      }
+    }
+    const emberMean = EMBER_GAIN * (sum / n) * luminance(VENT_EMBER);
+    const lamp = CIVIC_LAMP_LEVEL * luminance(CIVIC_LAMP);
+    assert.ok(lamp < emberMean, `lamp ${lamp.toFixed(4)} ≥ ember mean ${emberMean.toFixed(4)}`);
   });
 });

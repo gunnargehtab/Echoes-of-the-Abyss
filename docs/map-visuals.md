@@ -45,8 +45,8 @@ screenshot from the survey dolly.
 | V1 — the gap | **Nothing on the ground is a line.** At an 11 km dolly, a 700 m plateau beside a 2,600 m plain is one dark rectangle next to another. The relief that reads at 1 km is sub-pixel, and the fills are too close in value to carry a shape | the survey frame of any skirmish map |
 | V2 | Contacts, rings and glyphs are loud; terrain is quiet; blocked ground is cyan and shown only while a hull is selected | [art-direction.md](art-direction.md), [graphics-standards.md](graphics-standards.md) gate 7 |
 | V2 — the gap | The order is right but unwritten, so nothing stops a new layer landing on the wrong rung | — |
-| V3 | Depth is luminance on the ground and in the water. Hue belongs to the biome. Three world-light families. The veil is a drain, not a blackout | [art-direction.md](art-direction.md), [style-neon-noir.md](style-neon-noir.md) "World light" |
-| V4 | Six biomes, each with a fill, a relief row, a prop set and at most one light family, spread across four docs and three files | §7 below collects them |
+| V3 | Depth is luminance on the ground and in the water. Hue belongs to the biome. Four world-light families. The veil is a drain, not a blackout | [art-direction.md](art-direction.md), [style-neon-noir.md](style-neon-noir.md) "World light" |
+| V4 | Six biomes, each with a fill, a relief row, a prop set and its light families, spread across four docs and three files | §7 below collects them |
 | V5 | Tetherjelly fields and Lampfry shoals are public chart data, drawn as stipple in the water since Phase 3 (§10). Classified fauna are stipple shapes since Phase 4 | `faunaStipple.ts`, `faunaAgentStipple.ts` |
 
 The one-line version: *the ground has a shape and a skin, but no survey on it.*
@@ -236,7 +236,7 @@ V3 is mostly already law. This section collects it, so that the next revision ci
   hole, not as the deepest floor ([#1532](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1532)).
 - **Hue is biome**, and biome is propagation factor. Nothing else on the ground carries a hue:
   not stone, not ink, not water.
-- **Light is loudness.** Agents glow with SIG. The ground emits only through the three world-light
+- **Light is loudness.** Agents glow with SIG. The ground emits only through the four world-light
   families, statically or on the 5 Hz grid.
 - **Ink is knowledge.** It draws what the survey knows — public map data — and nothing the Echo
   Layer resolved.
@@ -263,7 +263,7 @@ biomes, so they need no new row: their silhouettes come from their floors and th
 | Kelp Forest | 0.55 | `#0A1E18` | Rolling, 65 m | Flora biolight | Kelp, coral towers, growth | Yes |
 | Abyssal Trench | 1.6 | `#040609` | Pressure-smoothed, 40 m | None | Spires, slabs | Yes |
 | Resonance Field | 0.7 | `#1A132A` | Faceted, 60 m | Crystal seam | Crystals, pylons | Yes |
-| Coral Ruins | 0.8 | `#111A1E` | Terraced, 60 m | Flora biolight | Ruin blocks, dome shards, growth | Yes |
+| Coral Ruins | 0.8 | `#111A1E` | Terraced, 60 m | Flora biolight; civic lamp where the floor is 350 m or shallower | Ruin blocks, dome shards, growth | Yes |
 
 The relief numbers are `BIOME_RELIEF` in `seabed.ts`. PF is `PROPAGATION_FACTOR` in shared
 constants. The table restates neither as a source. It collects them so a new row can be
@@ -281,7 +281,7 @@ The six things a new biome supplies:
 2. **A fill** inside 5–10% luminance, distinct from its neighbours in value as well as hue,
    in all four colour-vision palettes.
 3. **A relief row**: amplitude, roughness, blockiness, mottle.
-4. **A world-light family, or an explicit "none"**. A fourth family amends
+4. **A world-light family, or an explicit "none"**. A fifth family amends
    [style-neon-noir.md](style-neon-noir.md) first.
 5. **A prop set** from the environment branch of the pipeline of record
    ([graphics-standards.md](graphics-standards.md) gate 1).

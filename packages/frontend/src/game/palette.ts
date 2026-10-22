@@ -507,13 +507,21 @@ export const RELIEF_REFERENCE_M = 550;
 
 /**
  * Vent ember orange, docs/art-direction.md "Reading the Sea Floor" (SPEC):
- * one of the three world-light families in docs/style-neon-noir.md "World
- * light", and the only one transcribed so far — deliberately redder than
- * Bathyarch's #F2B233 hazard amber so a vent field never reads as somebody's
- * base lights. The other families (flora-biolight, crystal-seam) arrive with
- * the environment props that carry them; nothing else on terrain emits.
+ * one of the four world-light families in docs/style-neon-noir.md "World
+ * light" — deliberately redder than Bathyarch's #F2B233 hazard amber so a vent
+ * field never reads as somebody's base lights. Flora biolight and the crystal
+ * seam arrive with the environment props that carry them; nothing else on
+ * terrain emits.
  */
 export const VENT_EMBER = 0xe06a2b;
+
+/**
+ * Civic lamp, docs/style-neon-noir.md "World light" (SPEC): the fourth family,
+ * on the Upper Concourse only (#1533). Tallow rather than amber — yellower than
+ * the ember, greyer than every faction's warm glow — so a terminus lamp reads as
+ * the city's, never as a Bathyarch hull at rest on it.
+ */
+export const CIVIC_LAMP = 0xb8875a;
 
 /**
  * The stone ramp, docs/style-neon-noir.md "The stone" (SPEC): ground that

@@ -450,6 +450,75 @@ export function emberFlicker(index: number, bucket: number, phase: number): numb
   return v * v;
 }
 
+/** TUNABLE. The ember's colour gain over its flicker: an ember at the top of
+ * its breath draws `VENT_EMBER` at this level, and every other world light is
+ * priced against it (docs/style-neon-noir.md "World light", rule 2). */
+export const EMBER_GAIN = 0.55;
+
+/** One civic lamp: a steady point on a built terminus. World metres. */
+export interface CivicLamp {
+  xM: number;
+  yM: number;
+}
+
+/** TUNABLE. The floor a Coral Ruins cell must stand above to carry a lamp.
+ * 350 m lights the Upper Concourse (340 m) and nothing else on any map: the
+ * skirmish dividers at 380 m are ruin a hull rises over, not a terminus, and a
+ * lamp on a choke would be the only warm thing on competitive ground (#1533). */
+export const CIVIC_LAMP_FLOOR_M = 350;
+
+/** TUNABLE. "Few" (docs/habitats-art-brief.md, Sorrowgate): a hard cap, so a
+ * future shelf of shallow ruin cannot become a lit street. */
+export const CIVIC_LAMP_CAP = 12;
+
+/** TUNABLE. A lamp's steady colour gain, the number `EMBER_GAIN × flicker` is
+ * for an ember. Priced with its hue, it renders at about 70 % of an ember's
+ * mean breath and a quarter of its peak — the seabed test holds it under the
+ * mean — so every lamp is dimmer than a vent ember: the owner's call on #1533,
+ * and rule 2. */
+export const CIVIC_LAMP_LEVEL = 0.12;
+
+/**
+ * Deterministic civic-lamp sites (docs/style-neon-noir.md "World light", the
+ * fourth family): Coral Ruins standing above `CIVIC_LAMP_FLOOR_M`, which is to
+ * say the Upper Concourse — the one part of the drowned city built near the
+ * surface. Placed from the ground and nothing else, as `ventEmbers` is, so a
+ * map supplies no light of its own (docs/map-visuals.md §7). Each lamp sits at
+ * its cell's centre, jittered: a lamp is civic furniture, not a field.
+ */
+export function civicLamps(
+  terrain: {
+    cols: number;
+    rows: number;
+    cellM: number;
+    biomes: readonly number[];
+    floor: readonly number[];
+    ceiling: readonly number[];
+  },
+  seed: number
+): CivicLamp[] {
+  const lamps: CivicLamp[] = [];
+  for (let row = 0; row < terrain.rows; row++) {
+    for (let col = 0; col < terrain.cols; col++) {
+      const index = row * terrain.cols + col;
+      if (terrain.biomes[index] !== Biome.CoralRuins) continue;
+      if (terrain.floor[index]! > CIVIC_LAMP_FLOOR_M) continue;
+      if (terrain.ceiling[index]! > terrain.floor[index]!) continue;
+      // About one cell in three: the Concourse's nineteen cells stand six or
+      // so, and a frame of the court's "few, low" lamps holds two or three.
+      if (latticeNoise(col, row, seed ^ 0x3c6ef372) <= 0.3) continue;
+      if (lamps.length >= CIVIC_LAMP_CAP) return lamps;
+      const jx = latticeNoise(col * 2, row, seed ^ 0xa54ff53a);
+      const jy = latticeNoise(col, row * 2, seed ^ 0x510e527f);
+      lamps.push({
+        xM: (col + 0.5 + 0.3 * jx) * terrain.cellM,
+        yM: (row + 0.5 + 0.3 * jy) * terrain.cellM,
+      });
+    }
+  }
+  return lamps;
+}
+
 /**
  * Bake the seabed into a canvas covering the whole map, `SEABED_PX_PER_CELL`
  * pixels per terrain cell.
