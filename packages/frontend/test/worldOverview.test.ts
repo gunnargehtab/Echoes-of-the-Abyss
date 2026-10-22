@@ -745,7 +745,7 @@ describe("another region's detail, where no session holds it (§7.5)", () => {
     mock.method(held, 'get', (id: string) => (id === other.id ? fake : get(id)));
     return fake;
   }
-  // East of Sorrowgate's map with its patch over Sorrowgate's west 1,000 m:
+  // Overlapping Sorrowgate's east 1,000 m with its patch:
   // the two share patch cells, a tie, and surround cells.
   const over: WorldRegion = {
     id: 'over',
