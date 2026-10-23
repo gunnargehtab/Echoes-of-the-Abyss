@@ -230,6 +230,7 @@ import {
   type ColumnLayout,
   type ColumnPoint,
 } from './contactColumn.ts';
+import { clipPolygon, clipSegment } from './rimClip.ts';
 
 /**
  * An order the player gave that the server has not yet echoed back
@@ -1610,6 +1611,8 @@ export class EchoRenderer {
     visible: false,
   }));
   private projectNext = 0;
+  /** Scratch for `clipSegment`'s two parameters, consumed at once. */
+  private readonly clipSpan: [number, number] = [0, 0];
   /**
    * The command bar's model and layout, rebuilt only when something it
    * reads has changed (#432): it used to be rebuilt, closures and all,
@@ -2312,6 +2315,10 @@ export class EchoRenderer {
    * ring conforms to the terrain — a 2,400 m detection ring climbing a ridge
    * is the honest picture of a distance measured through the water.
    * Returns false when nothing was visible.
+   *
+   * Cut at the map's rim (`PerspectiveView.inkBounds`, #1556): the ring ends
+   * on the rim and resumes where it comes back in, so a ring that crosses the
+   * edge comes back as arcs the way a skipped vertex already makes it.
    */
   private traceCircle(
     g: Graphics,
@@ -2325,32 +2332,69 @@ export class EchoRenderer {
     // and nothing downstream had to learn anything new.
     skip?: (x: number, y: number) => boolean
   ): boolean {
+    if (this.conn === null) return false;
+    const bounds = this.conn.inkBounds();
+    const span = this.clipSpan;
     let open = false;
     let any = false;
+    // One world point onto the run: a break first when asked, and a break
+    // after it when it leaves the frustum.
+    const emit = (x: number, y: number, breakBefore: boolean): void => {
+      if (breakBefore) open = false;
+      const p = this.project(x, y, depthM);
+      if (p === null || !p.visible) {
+        open = false;
+        return;
+      }
+      if (open) g.lineTo(p.x, p.y);
+      else g.moveTo(p.x, p.y);
+      open = true;
+      any = true;
+    };
+    // The last vertex kept, when there is one: what the next is clipped from.
+    let held = false;
+    let px = 0;
+    let py = 0;
     for (let i = 0; i <= CIRCLE_SEGMENTS; i++) {
       const angle = (i / CIRCLE_SEGMENTS) * Math.PI * 2;
       const x = cx + Math.cos(angle) * radiusM;
       const y = cy + Math.sin(angle) * radiusM;
       if (skip?.(x, y) === true) {
         open = false;
+        held = false;
         continue;
       }
-      const p = this.project(x, y, depthM);
-      if (p === null) return false;
-      if (!p.visible) {
+      if (bounds === null) {
+        emit(x, y, false);
+        continue;
+      }
+      if (!held) {
+        // A run's first vertex: drawn if it is on the map, else the run waits
+        // for the segment that brings it back in.
+        if (clipSegment(bounds, x, y, x, y, span)) emit(x, y, true);
+        else open = false;
+      } else if (clipSegment(bounds, px, py, x, y, span)) {
+        const dx = x - px;
+        const dy = y - py;
+        // Entering from off the map: the run starts on the rim.
+        if (span[0] > 0) emit(px + dx * span[0], py + dy * span[0], true);
+        emit(px + dx * span[1], py + dy * span[1], false);
+        // Leaving it: the run ends on the rim.
+        if (span[1] < 1) open = false;
+      } else {
         open = false;
-        continue;
       }
-      if (open) g.lineTo(p.x, p.y);
-      else g.moveTo(p.x, p.y);
-      open = true;
-      any = true;
+      held = true;
+      px = x;
+      py = y;
     }
     return any;
   }
 
   /** Fill a ground-lying circle as a projected polygon. Skipped when any
-   * vertex leaves the frustum — a partial fill would invent an edge. */
+   * vertex leaves the frustum — a partial fill would invent an edge. Cut at
+   * the map's rim first, as `traceCircle` is: the rim is an edge the map
+   * draws, so a fill that stops on it invents nothing. */
   private fillCircle(
     g: Graphics,
     cx: number,
@@ -2359,14 +2403,17 @@ export class EchoRenderer {
     depthM: number | null,
     fill: { color: number; alpha: number }
   ): void {
-    const points: number[] = [];
+    let world: number[] = [];
     for (let i = 0; i < CIRCLE_SEGMENTS; i++) {
       const angle = (i / CIRCLE_SEGMENTS) * Math.PI * 2;
-      const p = this.project(
-        cx + Math.cos(angle) * radiusM,
-        cy + Math.sin(angle) * radiusM,
-        depthM
-      );
+      world.push(cx + Math.cos(angle) * radiusM, cy + Math.sin(angle) * radiusM);
+    }
+    const bounds = this.conn?.inkBounds() ?? null;
+    if (bounds !== null) world = clipPolygon(bounds, world);
+    if (world.length < 6) return;
+    const points: number[] = [];
+    for (let i = 0; i < world.length; i += 2) {
+      const p = this.project(world[i]!, world[i + 1]!, depthM);
       if (p === null || !p.visible) return;
       points.push(p.x, p.y);
     }
@@ -2374,7 +2421,8 @@ export class EchoRenderer {
   }
 
   /** A straight world segment on the ground — straight on screen too, so the
-   * endpoints suffice. Dropped when either end leaves the frustum. */
+   * endpoints suffice. Cut at the map's rim, as `traceCircle` is, and dropped
+   * when nothing is left or either end leaves the frustum. */
   private traceLine(
     g: Graphics,
     x0: number,
@@ -2383,6 +2431,18 @@ export class EchoRenderer {
     y1: number,
     depthM: number | null
   ): boolean {
+    const bounds = this.conn?.inkBounds() ?? null;
+    if (bounds !== null) {
+      const span = this.clipSpan;
+      if (!clipSegment(bounds, x0, y0, x1, y1, span)) return false;
+      const dx = x1 - x0;
+      const dy = y1 - y0;
+      const [t0, t1] = span;
+      x1 = x0 + dx * t1;
+      y1 = y0 + dy * t1;
+      x0 += dx * t0;
+      y0 += dy * t0;
+    }
     const a = this.project(x0, y0, depthM);
     const b = this.project(x1, y1, depthM);
     if (a === null || b === null || !a.visible || !b.visible) return false;
