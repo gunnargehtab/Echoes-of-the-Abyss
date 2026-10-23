@@ -13,7 +13,7 @@
  * nothing manufactured ... low-poly with crisp facets, at most two
  * materials (three for env-coral-growth and env-nodule-bed: two stones
  * under a light)". Three materials, 230 triangles, 1.65 m tall by 12 by
- * 6.1 across at its 12 m by intake's measure (`sizeM`), which takes
+ * 6.4 across at its 12 m by intake's measure (`sizeM`), which takes
  * `--world-light ore --max-materials 3` for this row.
  *
  * Authored as a formula rather than ported: there is no export. Every
@@ -23,7 +23,10 @@
  * built at a nominal size and held at the footprint by ×1.0849 before the
  * bake (seabed.mjs `bake`), so the root is an identity and seabed.mjs
  * `stand` finds ×1.000; the figures below are the file's, after that fit.
- * What stands:
+ * The fit was ×1.0591 with eight loose lumps: six re-space round the foot,
+ * a different pair carries the ends, and the whole bed grew ×1.0244 with
+ * them — the largest lumps from 1.20 to 1.23 m, the crown from 1.27 to
+ * 1.30 m — which is the range Block 4 now quotes. What stands:
  *
  * - `mound`, in `silt_drift`: a low drift of silt, three rings of ten
  *   corners from a foot at y = 0 up to a crown at 1.30 m — an ellipse
@@ -51,8 +54,7 @@
  *   no two show the same facets. 168 triangles. A lump whose centre would
  *   stand in plan within nine tenths of the pair's mean width of one
  *   already set is redrawn a bearing on; `contacts.mjs` lists no pair of
- *   lumps that meet, only the mound against each of the fifteen on it and
- *   against `nodule_20` and `nodule_21`, which touch its skirt from outside.
+ *   lumps that meet, only the mound against each of the fifteen on it.
  *   - The fifteen on the drift are set at a bearing that steps round by the
  *     golden angle, ±0.5 rad drawn, and at a radius the stream draws biased
  *     to the centre (r ∝ u^0.75) and capped nearer the centre the larger
@@ -66,14 +68,15 @@
  *     off the ends (`nodule_16` at x 5.63–6.17, `nodule_19` at −5.83 to
  *     −5.46) lie at 1.1 of the foot's radius and are what makes the
  *     footprint 12 m; the other four are drawn at 0.85–1.1 of it and stepped
- *     out by 5 % of the foot at a time until half their height stands clear
- *     of the skirt, so none is buried in it. `nodule_17` and `_18` lie past
- *     the foot's +z side on the floor, and `_20` and `_21` at its −z foot,
- *     which is the edge thinning to loose lumps and the outline breaking.
- *     There were eight loose lumps until the glints went from three to six:
- *     the two smallest (0.30 and 0.28 m nominal) paid the twelve triangles.
- *     Eight
- *     lumps in all touch the floor.
+ *     out by 5 % of the foot at a time until the drift is under neither
+ *     their centre nor their inner edge, so every one stands clear of the
+ *     skirt on the floor. `nodule_17` and `_18` lie past the foot's +z side
+ *     (z 2.59–3.17) and `_20` and `_21` past its −z side (`_20` at x −1.42
+ *     to −1.11, z −3.25 to −2.95; `_21` at x 1.60–1.89, z −3.06 to −2.73),
+ *     which is the edge thinning to loose lumps and the outline breaking on
+ *     both sides. There were eight loose lumps until the glints went from
+ *     three to six: the two smallest (0.30 and 0.28 m nominal) paid the
+ *     twelve triangles. Eight lumps in all touch the floor.
  * - Six `nodule_NN_glint`, in `ore_trace`: the licensed light,
  *   docs/style-neon-noir.md "World light" `ore-trace` — "a dull glint in
  *   the crust of a few nodules on each bed: facets the size of a lump,
@@ -94,7 +97,8 @@
  *   floor lumps. kit.mjs `lightAudit` at the export reads 1.9 m² facing up
  *   over the six, 0.25 to 0.38 m² of plan each at its 4 cells a metre
  *   (0.31 to 0.35 at 20), none hidden and none floating; the lit share of
- *   the bed's 44 m² plan is 4.3 %. Nothing draws from the stream for a
+ *   the bed's plan is 4.5 % (2.0 of 44.5 m² at 20 cells a metre; the
+ *   audit's coarser 1.9 m² reads 4.4). Nothing draws from the stream for a
  *   glint, so the scatter is the one the review measured.
  *
  * Measured from the conn camera (tools/hull-renders/inspect.mjs, bearing
@@ -238,11 +242,19 @@ WIDTHS.forEach((width, i) => {
     if (edge) {
       // Out at the foot — the end pair at 1.1 of it, so the footprint is the
       // drift's length plus one loose lump each end — then stepped outward
-      // until half its height stands clear of the skirt, so a loose lump is
-      // never buried in it.
+      // until it stands clear of the skirt on the floor.
       const end = (i - EDGE) % ((WIDTHS.length - EDGE) / 2) === 0;
       r = (end ? 1.1 : draw.between(0.85, 1.1)) * foot(t);
-      while (surface(r * Math.cos(t), r * Math.sin(t)) > 0.5 * height) r += 0.05 * foot(t);
+      // Clear when the drift is under neither the lump's centre nor its
+      // inner edge (the point of it nearest the crown): a lump on the skirt
+      // sits on the outline instead of breaking it (`nodule_20` and `_21`
+      // did, at the −z foot, until the review).
+      const inner = (rr) => rr - 0.5 * width;
+      while (
+        surface(r * Math.cos(t), r * Math.sin(t)) > 0 ||
+        surface(inner(r) * Math.cos(t), inner(r) * Math.sin(t)) > 0
+      )
+        r += 0.05 * foot(t);
     } else {
       const reach = 0.9 - 0.3 * (width / WIDTHS[0]);
       r = (0.05 + reach * draw() ** 0.75) * foot(t);

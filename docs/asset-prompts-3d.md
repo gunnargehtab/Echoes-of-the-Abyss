@@ -1945,8 +1945,8 @@ patterns of [art-direction.md](art-direction.md)'s "Environmental Shapes" — ri
 angles, terraces, a civilisation's worth of coral growth over them. Crags are the
 jagged-rock vocabulary for mesa edges anywhere on the map. The nodule bed is the ore
 itself ([economy.md](economy.md) §2's polymetallic nodules, the bulk resource every navy
-mines): a low drift of silt with a scatter of dark, matte, fist-to-boulder lumps — 0.3 to
-1.2 m across — half-sunk in it, denser at the crown and thinning to loose lumps on the
+mines): a low drift of silt with a scatter of dark, matte, fist-to-boulder lumps — 0.36 to
+1.23 m across — half-sunk in it, denser at the crown and thinning to loose lumps on the
 floor at the edge. It stands in any biome, several to a field, so one bed is a piece of a
 field and never the whole; it must read from the 55° camera as "there is ore here", quieter
 than any vessel and never as a structure or a contact. `stone_dark` on the lumps,
