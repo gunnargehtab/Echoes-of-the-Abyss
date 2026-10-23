@@ -762,14 +762,12 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     // look is, so Radicals on this same map names none; a skirmish room, with
     // no mission, by its map when that map is placed (#1529). Omitted rather
     // than sent empty, so every other room's terrain is what it always was.
+    //
+    // The map goes first: the client bakes the ground the moment it lands,
+    // and the bake's stone scours trail away from the map's current source,
+    // which the map's id names (docs/art-direction.md, #1573).
     const region = worldRegionForSession(this.mission?.id, this.map.id);
     const terrain = this.match.world.terrain;
-    this.sendTo(client, SERVER_MSG.terrain, {
-      ...terrain.serializeOpening(),
-      revision: terrain.revision,
-      ...(region === undefined ? {} : { region: region.id }),
-      ...(terrain.revision === 0 ? {} : { changes: terrain.changesSince(0) }),
-    });
     this.sendTo(client, SERVER_MSG.map, {
       id: this.map.id,
       name: this.map.name,
@@ -785,6 +783,12 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
         ...site,
         simulated: isSimulated(site.kind),
       })),
+    });
+    this.sendTo(client, SERVER_MSG.terrain, {
+      ...terrain.serializeOpening(),
+      revision: terrain.revision,
+      ...(region === undefined ? {} : { region: region.id }),
+      ...(terrain.revision === 0 ? {} : { changes: terrain.changesSince(0) }),
     });
   }
 

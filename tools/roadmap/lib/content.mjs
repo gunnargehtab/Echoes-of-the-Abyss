@@ -276,6 +276,12 @@ export const phases = {
       'The phase being worked now: every other mission and map placed in that same continuous ocean.',
     done: 'Every mission and every skirmish map stands in one continuous Rift, the way the first mission already does.',
   },
+  16: {
+    title: 'Playable by a stranger',
+    blurb:
+      'Starts when the current phase is done: the game put online, and played by people who did not build it.',
+    done: 'Someone who has never seen the game plays a match to a win or a loss without help, and the first version is tagged.',
+  },
   later: {
     title: 'Parked and unscheduled',
     blurb:
@@ -548,6 +554,8 @@ export const items = {
   1505: 'Every other mission and map placed in the one continuous Rift',
   1557: 'Map markings painted over ships and buildings instead of behind them',
   1560: 'Sand ripples that all run the same way, on every map',
+  // Phase 16
+  1574: 'The game online, played by people who did not build it, and its first tagged version',
 };
 
 export const sprints = {

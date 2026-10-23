@@ -566,8 +566,8 @@ export function seabedRange(terrain: TerrainPayload): SeabedRange {
  * (docs/art-direction.md "Silt detail and seated stones — SPEC").
  *
  * Deepest at and under the stone, recovering by `STONE_SCOUR_REACH` radii
- * up-current and across, and `STONE_SCOUR_LEE` times further on the lee, the
- * south side, where the current drops its silt. It never leaves the stone's
+ * up-current and across, and `STONE_SCOUR_LEE` times further on the lee,
+ * down the seat's `flow`, where the current drops its silt (#1573). It never leaves the stone's
  * own cell — faded to nothing over the last radius before the edge, like an
  * ember's glow — so a ground delta's rebake of the touched cells and their
  * ring redraws every scour the delta moved, and nothing past them.
@@ -580,9 +580,12 @@ export function stoneScourGain(
 ): number {
   const reach = SEABED_DETAIL.STONE_SCOUR_REACH;
   const dx = (xM - seat.xM) / seat.radiusM;
-  const dyUp = (yM - seat.yM) / seat.radiusM;
-  const dy = dyUp > 0 ? dyUp / SEABED_DETAIL.STONE_SCOUR_LEE : dyUp;
-  const d = Math.hypot(dx, dy);
+  const dy = (yM - seat.yM) / seat.radiusM;
+  // In the current's frame: down-current positive, so the lee is where it is.
+  const [fx, fy] = seat.flow;
+  const down = dx * fx + dy * fy;
+  const across = dx * fy - dy * fx;
+  const d = Math.hypot(across, down > 0 ? down / SEABED_DETAIL.STONE_SCOUR_LEE : down);
   if (d >= reach) return 1;
   const edgeM = Math.min(xM - cell.x0, cell.x1 - xM, yM - cell.y0, cell.y1 - yM);
   if (edgeM <= 0) return 1;
