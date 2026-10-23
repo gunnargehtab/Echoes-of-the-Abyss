@@ -180,6 +180,7 @@ import { LAMP_HALO } from './lampHalo.ts';
 import { publishLampHaloStatus } from './lampHaloStatus.ts';
 import { gatherHaloSplats } from './haloSource.ts';
 import { ChromaticSplit } from './chromaticSplit.ts';
+import { columnsFor, InkOcclusion } from './inkOcclusion.ts';
 import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
 import { FaunaStipple } from './faunaStipple.ts';
 import { DREAM_LOOP } from './dreamLoop.ts';
@@ -847,6 +848,8 @@ export class PerspectiveView {
   /** Every own model, one draw a template material (rosterBatches.ts, #1079):
    * the two groups above hold the sprites a model replaces, never the model. */
   private readonly models = new RosterBatches();
+  /** The models the chart's ground ink passes behind this frame (`beginInk`). */
+  private readonly ink = new InkOcclusion();
   /** Every plumb and every shadow, two draw calls in all (#434). */
   private readonly cues = new DepthCues(UI.accent);
   /** The player's own ordnance, instanced (ordnanceLayer.ts); shares the cues. */
@@ -1794,6 +1797,47 @@ export class PerspectiveView {
    */
   inkBounds(): PlanRect | null {
     return this.worldRegion === null ? this.missionRect() : null;
+  }
+
+  /**
+   * Gather the models ground-lying chart ink passes behind (inkOcclusion.ts,
+   * docs/map-visuals.md §5, #1557): every own hull and structure and every
+   * live track drawn as its model, where it was last placed. A sprite is flat
+   * on the chart and hides nothing. The chart calls this once a frame before
+   * it traces; the answer is a revision that moves when any of them moved, for
+   * a layer the chart caches.
+   */
+  beginInk(): number {
+    const ink = this.ink;
+    ink.begin(this.camera, this.viewWidth, this.viewHeight);
+    if (this.renderer !== null) {
+      for (const handles of [this.unitHandles, this.structureHandles, this.trackHandles]) {
+        for (const handle of handles.values()) {
+          // The sync hides the sprite exactly when the model is showing.
+          const model = handle.mesh.visible ? null : handle.model;
+          if (model === null) continue;
+          model.root.updateMatrix();
+          ink.add(columnsFor(model.template), model.root.matrix);
+        }
+      }
+    }
+    return ink.end();
+  }
+
+  /** Whether the screen segment between two projected points crosses a model's screen box. */
+  inkCrosses(ax: number, ay: number, bx: number, by: number): boolean {
+    return this.ink.size > 0 && this.ink.crosses(ax, ay, bx, by);
+  }
+
+  /**
+   * Whether a model stands between the eye and a point in the water, given
+   * the pixel `projectPoint` put it at. `depthM` reads as there: null is the
+   * seabed under the point.
+   */
+  inkHidden(xM: number, yM: number, depthM: number | null, sx: number, sy: number): boolean {
+    if (this.ink.size === 0 || !this.ink.covers(sx, sy)) return false;
+    const y = depthM === null ? this.groundYAt(xM, yM) : depthToWorldY(depthM);
+    return this.ink.hides(sx, sy, xM, y, yM);
   }
 
   /**

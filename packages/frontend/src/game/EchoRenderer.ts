@@ -479,6 +479,16 @@ const GLYPH_MIN_PX = 7;
 const CIRCLE_SEGMENTS = 48;
 
 /**
+ * Where a traced segment crosses a model's screen box, the screen pixels
+ * between the points it is re-sampled at, so the break behind a model lands
+ * within this of its silhouette (#1557). A 2,400 m ring's vertices stand 314 m
+ * apart, wider than any hull, so testing the vertices alone would miss it.
+ */
+const OCCLUSION_STEP_PX = 2;
+/** The most samples one segment is cut into, however long it runs on screen. */
+const OCCLUSION_STEPS_MAX = 256;
+
+/**
  * A pool of per-entity symbol Graphics.
  *
  * Symbols — contact marks, bars, glyphs, selection rings — billboard at their
@@ -1653,6 +1663,14 @@ export class EchoRenderer {
   /** Scratch for `clipSegment`'s two parameters, consumed at once. */
   private readonly clipSpan: [number, number] = [0, 0];
   /**
+   * The pen a ground-lying run is traced with (`penTo`): whether a line is
+   * open, whether the last point projected (so the next segment is tested
+   * from it), and where that point was, in world metres and on screen.
+   */
+  private readonly pen = { open: false, held: false, any: false, x: 0, y: 0, sx: 0, sy: 0 };
+  /** The conn view's occluder revision as of this frame (`beginInk`). */
+  private inkRevision = 0;
+  /**
    * The command bar's model and layout, rebuilt only when something it
    * reads has changed (#432): it used to be rebuilt, closures and all,
    * every frame. `barSignature` is the concatenation of those inputs.
@@ -2374,21 +2392,20 @@ export class EchoRenderer {
     if (this.conn === null) return false;
     const bounds = this.conn.inkBounds();
     const span = this.clipSpan;
-    let open = false;
-    let any = false;
-    // One world point onto the run: a break first when asked, and a break
-    // after it when it leaves the frustum.
+    const pen = this.pen;
+    pen.open = false;
+    pen.held = false;
+    pen.any = false;
+    // One world point onto the run: a break first when asked.
     const emit = (x: number, y: number, breakBefore: boolean): void => {
-      if (breakBefore) open = false;
-      const p = this.project(x, y, depthM);
-      if (p === null || !p.visible) {
-        open = false;
-        return;
-      }
-      if (open) g.lineTo(p.x, p.y);
-      else g.moveTo(p.x, p.y);
-      open = true;
-      any = true;
+      if (breakBefore) pen.open = false;
+      this.penTo(g, x, y, depthM);
+    };
+    // A world-space skip or a rim cut ends the run, and the next point starts
+    // a new one rather than being tested along a segment that was never drawn.
+    const lift = (): void => {
+      pen.open = false;
+      pen.held = false;
     };
     // The last vertex kept, when there is one: what the next is clipped from.
     let held = false;
@@ -2399,7 +2416,7 @@ export class EchoRenderer {
       const x = cx + Math.cos(angle) * radiusM;
       const y = cy + Math.sin(angle) * radiusM;
       if (skip?.(x, y) === true) {
-        open = false;
+        lift();
         held = false;
         continue;
       }
@@ -2410,24 +2427,89 @@ export class EchoRenderer {
       if (!held) {
         // A run's first vertex: drawn if it is on the map, else the run waits
         // for the segment that brings it back in.
-        if (clipSegment(bounds, x, y, x, y, span)) emit(x, y, true);
-        else open = false;
+        if (clipSegment(bounds, x, y, x, y, span)) {
+          lift();
+          emit(x, y, true);
+        } else lift();
       } else if (clipSegment(bounds, px, py, x, y, span)) {
         const dx = x - px;
         const dy = y - py;
         // Entering from off the map: the run starts on the rim.
-        if (span[0] > 0) emit(px + dx * span[0], py + dy * span[0], true);
+        if (span[0] > 0) {
+          lift();
+          emit(px + dx * span[0], py + dy * span[0], true);
+        }
         emit(px + dx * span[1], py + dy * span[1], false);
         // Leaving it: the run ends on the rim.
-        if (span[1] < 1) open = false;
+        if (span[1] < 1) lift();
       } else {
-        open = false;
+        lift();
       }
       held = true;
       px = x;
       py = y;
     }
-    return any;
+    return pen.any;
+  }
+
+  /**
+   * Carry the pen to a world point on a ground-lying run: a line from the last
+   * point when the run is open, a move when it is not. A point off the frustum
+   * ends the run, and so does a point a model hides (docs/map-visuals.md §5,
+   * #1557): the run resumes at the first point past it. A segment whose screen
+   * path crosses a model's screen box is walked at `OCCLUSION_STEP_PX`, in
+   * plan, so the break lands on the silhouette rather than at the next vertex.
+   */
+  private penTo(g: Graphics, x: number, y: number, depthM: number | null): void {
+    const pen = this.pen;
+    const conn = this.conn;
+    const p = this.project(x, y, depthM);
+    if (conn === null || p === null || !p.visible) {
+      pen.open = false;
+      pen.held = false;
+      return;
+    }
+    // Copied: the walk below projects more than the ring holds.
+    const sx = p.x;
+    const sy = p.y;
+    if (pen.held && conn.inkCrosses(pen.sx, pen.sy, sx, sy)) {
+      const x0 = pen.x;
+      const y0 = pen.y;
+      const steps = Math.min(
+        OCCLUSION_STEPS_MAX,
+        Math.ceil(Math.hypot(sx - pen.sx, sy - pen.sy) / OCCLUSION_STEP_PX)
+      );
+      for (let k = 1; k < steps; k++) {
+        const t = k / steps;
+        const qx = x0 + (x - x0) * t;
+        const qy = y0 + (y - y0) * t;
+        const q = this.project(qx, qy, depthM);
+        if (q === null || !q.visible) {
+          pen.open = false;
+          continue;
+        }
+        this.penPoint(g, q.x, q.y, conn.inkHidden(qx, qy, depthM, q.x, q.y));
+      }
+    }
+    this.penPoint(g, sx, sy, conn.inkHidden(x, y, depthM, sx, sy));
+    pen.held = true;
+    pen.x = x;
+    pen.y = y;
+    pen.sx = sx;
+    pen.sy = sy;
+  }
+
+  /** One projected point onto the open run, or a break where a model hides it. */
+  private penPoint(g: Graphics, sx: number, sy: number, hidden: boolean): void {
+    const pen = this.pen;
+    if (hidden) {
+      pen.open = false;
+      return;
+    }
+    if (pen.open) g.lineTo(sx, sy);
+    else g.moveTo(sx, sy);
+    pen.open = true;
+    pen.any = true;
   }
 
   /** Fill a ground-lying circle as a projected polygon. Skipped when any
@@ -2460,8 +2542,9 @@ export class EchoRenderer {
   }
 
   /** A straight world segment on the ground — straight on screen too, so the
-   * endpoints suffice. Cut at the map's rim, as `traceCircle` is, and dropped
-   * when nothing is left or either end leaves the frustum. */
+   * endpoints suffice, unless a model stands across it (`penTo`). Cut at the
+   * map's rim, as `traceCircle` is, and dropped when nothing is left or either
+   * end leaves the frustum. */
   private traceLine(
     g: Graphics,
     x0: number,
@@ -2485,8 +2568,13 @@ export class EchoRenderer {
     const a = this.project(x0, y0, depthM);
     const b = this.project(x1, y1, depthM);
     if (a === null || b === null || !a.visible || !b.visible) return false;
-    g.moveTo(a.x, a.y).lineTo(b.x, b.y);
-    return true;
+    const pen = this.pen;
+    pen.open = false;
+    pen.held = false;
+    pen.any = false;
+    this.penTo(g, x0, y0, depthM);
+    this.penTo(g, x1, y1, depthM);
+    return pen.any;
   }
 
   /**
@@ -5764,9 +5852,12 @@ export class EchoRenderer {
     // on top, everything projected through the one shared camera.
     const now = this.frameNowMs;
     const view = this.conn?.viewRevision ?? 0;
+    // The models ground ink passes behind, where they stand this frame. A
+    // layer cached on the view alone redraws when one of them moves too.
+    this.inkRevision = this.conn?.beginInk() ?? 0;
     const base = `${this.snapshotSeq}|${this.selectionSeq}|${view}|${this.worldRev}`;
     if (this.stale('ground', base)) this.drawBlockedGround();
-    if (this.stale('nodes', `${view}|${this.worldRev}`)) this.drawNodes();
+    if (this.stale('nodes', `${view}|${this.worldRev}|${this.inkRevision}`)) this.drawNodes();
     // The force layers share the ring Graphics (rings, routes, a rally) and
     // the symbol pools, so they repaint together. Anything on them that
     // moves between snapshots — a gliding hull, a contracting order marker,
@@ -5779,7 +5870,7 @@ export class EchoRenderer {
       this.ordnance.length > 0 ||
       this.orderMarkers.length > 0 ||
       this.brokeSilence.size > 0;
-    const force = `${base}|${this.previewPing}|${this.ordersSeq}|${moving ? now : 0}`;
+    const force = `${base}|${this.previewPing}|${this.ordersSeq}|${moving ? now : 0}|${this.inkRevision}`;
     const forceStale = this.stale('force', force);
     if (forceStale) this.drawRings();
     this.drawContacts();
