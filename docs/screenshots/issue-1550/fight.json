@@ -1,0 +1,481 @@
+{
+  "frames": [
+    {
+      "name": "silt-plume",
+      "atS": 12,
+      "camera": {
+        "focus": {
+          "xM": 1821,
+          "zM": 1451,
+          "depthM": 600
+        },
+        "distance": 300,
+        "pitchDeg": 55
+      },
+      "onScreen": null,
+      "plumeMotes": 5
+    },
+    {
+      "name": "vent-plume",
+      "atS": 17,
+      "camera": {
+        "focus": {
+          "xM": 4358,
+          "zM": 2806,
+          "depthM": 2486
+        },
+        "distance": 450,
+        "pitchDeg": 50
+      },
+      "onScreen": null,
+      "ventPlumes": 34
+    },
+    {
+      "name": "shoal-formed",
+      "atS": 23,
+      "camera": {
+        "focus": {
+          "xM": 3972,
+          "zM": 1212,
+          "depthM": 265
+        },
+        "distance": 520,
+        "pitchDeg": 40
+      },
+      "onScreen": null,
+      "shoal": {
+        "id": 2,
+        "x": 3971.81689453125,
+        "y": 1211.934814453125,
+        "depth": 265.0923156738281,
+        "scattered": true
+      }
+    },
+    {
+      "name": "bank-pitch",
+      "atS": 74,
+      "camera": {
+        "focus": {
+          "xM": 2410,
+          "zM": 1566,
+          "depthM": 670
+        },
+        "distance": 250,
+        "pitchDeg": 35
+      },
+      "onScreen": null,
+      "hull": "Caisson",
+      "id": 744,
+      "rollDeg": 3.1,
+      "pitchDeg": 0,
+      "afterFrame": {
+        "id": 744,
+        "rollDeg": 0,
+        "pitchDeg": 0
+      }
+    },
+    {
+      "name": "wake",
+      "atS": 87,
+      "camera": {
+        "focus": {
+          "xM": 3386,
+          "zM": 1515,
+          "depthM": null
+        },
+        "distance": 900,
+        "pitchDeg": 55
+      },
+      "onScreen": "Caisson",
+      "wakeBubbles": 23
+    },
+    {
+      "name": "muzzle",
+      "atS": 103,
+      "camera": {
+        "focus": {
+          "xM": 3486,
+          "zM": 1469,
+          "depthM": 670
+        },
+        "distance": 450,
+        "pitchDeg": 55
+      },
+      "onScreen": null,
+      "shots": 38,
+      "shotParticles": 0
+    },
+    {
+      "name": "track-hit",
+      "atS": 132,
+      "camera": {
+        "focus": {
+          "xM": 4250,
+          "zM": 1837,
+          "depthM": 670
+        },
+        "distance": 650,
+        "pitchDeg": 55
+      },
+      "onScreen": null,
+      "trackHits": 0,
+      "ageMs": 4592,
+      "at": {
+        "x": 4107.0546875,
+        "y": 1689.4127197265625,
+        "depthM": 670,
+        "atMs": 150751.30000000028
+      }
+    },
+    {
+      "name": "track-hit",
+      "atS": 214,
+      "camera": {
+        "focus": {
+          "xM": 5061,
+          "zM": 2650,
+          "depthM": 600
+        },
+        "distance": 650,
+        "pitchDeg": 55
+      },
+      "onScreen": null,
+      "trackHits": 0,
+      "ageMs": 6894,
+      "at": {
+        "x": 5060.55419921875,
+        "y": 2649.710205078125,
+        "depthM": 600,
+        "atMs": 233553.8999999999
+      }
+    },
+    {
+      "name": "track-hit",
+      "atS": 224,
+      "camera": {
+        "focus": {
+          "xM": 5046,
+          "zM": 2528,
+          "depthM": 600
+        },
+        "distance": 650,
+        "pitchDeg": 55
+      },
+      "onScreen": null,
+      "trackHits": 1,
+      "ageMs": 1268,
+      "at": {
+        "x": 4947.80078125,
+        "y": 2582.02587890625,
+        "depthM": 600,
+        "atMs": 249269.8999999999
+      }
+    },
+    {
+      "name": "muzzle",
+      "atS": 239,
+      "camera": {
+        "focus": {
+          "xM": 3793,
+          "zM": 1459,
+          "depthM": 670
+        },
+        "distance": 450,
+        "pitchDeg": 55
+      },
+      "onScreen": "Caisson",
+      "shots": 66,
+      "shotParticles": 0
+    },
+    {
+      "name": "track-hit",
+      "atS": 253,
+      "camera": {
+        "focus": {
+          "xM": 3931,
+          "zM": 2465,
+          "depthM": 900
+        },
+        "distance": 650,
+        "pitchDeg": 55
+      },
+      "onScreen": null,
+      "trackHits": 1,
+      "ageMs": 18,
+      "at": {
+        "x": 3941.349853515625,
+        "y": 2460.946533203125,
+        "depthM": 900,
+        "atMs": 279321.3000000003
+      }
+    },
+    {
+      "name": "launch",
+      "atS": 337,
+      "camera": {
+        "focus": {
+          "xM": 3767,
+          "zM": 1546,
+          "depthM": 670
+        },
+        "distance": 600,
+        "pitchDeg": 55
+      },
+      "onScreen": null,
+      "ordnanceBefore": 0,
+      "ordnanceAtOrder": 0,
+      "ordnance": 0,
+      "launcher": "Caisson",
+      "sinceOrderMs": 11463
+    },
+    {
+      "name": "launch",
+      "atS": 438,
+      "camera": {
+        "focus": {
+          "xM": 3767,
+          "zM": 1546,
+          "depthM": 670
+        },
+        "distance": 600,
+        "pitchDeg": 55
+      },
+      "onScreen": null,
+      "ordnanceBefore": 0,
+      "ordnanceAtOrder": 0,
+      "ordnance": 1,
+      "launcher": "Caisson",
+      "sinceOrderMs": 12117
+    },
+    {
+      "name": "bank-pitch",
+      "atS": 465,
+      "camera": {
+        "focus": {
+          "xM": 3723,
+          "zM": 1468,
+          "depthM": 670
+        },
+        "distance": 250,
+        "pitchDeg": 35
+      },
+      "onScreen": "Caisson",
+      "hull": "Caisson",
+      "id": 745,
+      "rollDeg": 3.7,
+      "pitchDeg": 0,
+      "afterFrame": {
+        "id": 744,
+        "rollDeg": 0,
+        "pitchDeg": 0
+      }
+    },
+    {
+      "name": "shoal",
+      "atS": 479,
+      "camera": {
+        "focus": {
+          "xM": 3972,
+          "zM": 1212,
+          "depthM": 265
+        },
+        "distance": 520,
+        "pitchDeg": 40
+      },
+      "onScreen": null,
+      "shoal": {
+        "id": 2,
+        "x": 3971.81689453125,
+        "y": 1211.934814453125,
+        "depth": 265.0923156738281,
+        "scattered": true
+      }
+    },
+    {
+      "name": "muzzle",
+      "atS": 519,
+      "camera": {
+        "focus": {
+          "xM": 4042,
+          "zM": 1459,
+          "depthM": 670
+        },
+        "distance": 450,
+        "pitchDeg": 55
+      },
+      "onScreen": "Light Scout",
+      "shots": 128,
+      "shotParticles": 0
+    },
+    {
+      "name": "own-hit",
+      "atS": 563,
+      "camera": {
+        "focus": {
+          "xM": 3768,
+          "zM": 1549,
+          "depthM": 670
+        },
+        "distance": 350,
+        "pitchDeg": 55
+      },
+      "onScreen": "Caisson",
+      "struck": "hull",
+      "hits": 0,
+      "hitParticles": 0
+    },
+    {
+      "name": "end",
+      "atS": 586,
+      "camera": {
+        "focus": {
+          "xM": 3768,
+          "zM": 1549,
+          "depthM": 670
+        },
+        "distance": 350,
+        "pitchDeg": 55
+      },
+      "onScreen": null,
+      "units": 3,
+      "tracks": 2
+    }
+  ],
+  "missed": {
+    "bank-pitch": "not seen by the deadline",
+    "muzzle": "not seen by the deadline",
+    "own-hit": "not seen by the deadline"
+  },
+  "lastProbe": {
+    "active": true,
+    "look": "standard",
+    "programHold": {
+      "holding": false,
+      "heldFrames": 0
+    },
+    "pitchDeg": 55,
+    "yawDeg": 0,
+    "sway": "on",
+    "focus": {
+      "xM": 3768,
+      "zM": 1549,
+      "depthM": 670
+    },
+    "eye": {
+      "xM": 3768,
+      "zM": 1750,
+      "depthM": -631
+    },
+    "distance": 350,
+    "waterReachM": 1120,
+    "waterDensity": 1,
+    "hullScale": 1,
+    "drawCalls": 43,
+    "triangles": 141666,
+    "passes": [
+      "canvas",
+      "depth-copy",
+      "halo-source",
+      "halo-spread",
+      "halo-composite",
+      "split-copy",
+      "split"
+    ],
+    "world": null,
+    "halo": "drawn",
+    "haloSites": 62,
+    "haloDropped": 0,
+    "haloCalls": 8,
+    "haloTriangles": 131,
+    "haloBytes": 22422976,
+    "split": "on",
+    "splitBytes": 5184000,
+    "canvasStencilBits": 8,
+    "textures": 22,
+    "pixelRatio": 1,
+    "drawingBuffer": {
+      "width": 1440,
+      "height": 900
+    },
+    "toneMapping": 4,
+    "environmentIntensity": 0.35,
+    "environmentBytes": 344064,
+    "station": null,
+    "stationMs": 602527.9,
+    "stationFrames": 656,
+    "avgFrames": 240,
+    "fps": 1.1,
+    "avgFrameMs": 980.69,
+    "worstFrameMs": 2409.9,
+    "avgConnMs": 2.11,
+    "worstConnMs": 289.7,
+    "avgOverlayMs": 4.83,
+    "worstOverlayMs": 48.7,
+    "overlayFrames": 648,
+    "gpuTimer": "software",
+    "avgGpuMs": null,
+    "worstGpuMs": null,
+    "gpuFrames": 0,
+    "gpuDropped": 0,
+    "gpuQueue": null,
+    "gpuSplit": false,
+    "gpuParts": null,
+    "units": 3,
+    "structures": 2,
+    "tracks": 2,
+    "structureTracks": 0,
+    "trackAt": {
+      "x": 4935.0771484375,
+      "z": 2146.17529296875,
+      "depthM": 600
+    },
+    "ordnance": 0,
+    "wakeBubbles": 0,
+    "hits": 0,
+    "hitParticles": 0,
+    "plumeMotes": 0,
+    "plumeAt": null,
+    "ventPlumeAt": {
+      "x": 4357.840016028844,
+      "z": 2806.244862870779,
+      "depthM": 2486.404387606084
+    },
+    "hitAt": {
+      "x": 3768.21533203125,
+      "z": 1548.6236572265625,
+      "depthM": 670
+    },
+    "shots": 137,
+    "shotParticles": 0,
+    "recoiling": 0,
+    "shotAt": {
+      "x": 3717.738525390625,
+      "z": 1474.1114501953125,
+      "depthM": 670
+    },
+    "props": 367,
+    "propTris": 101012,
+    "ventPlumes": 34,
+    "modelBacked": 5,
+    "modelMeshes": 26,
+    "ownCentre": {
+      "x": 2872.365283203125,
+      "z": 1373.5508056640624
+    }
+  },
+  "lastChart": {
+    "trackHits": 0,
+    "trackHitAt": {
+      "x": 3963.80712890625,
+      "y": 1519.805419921875,
+      "depthM": 300,
+      "atMs": 575296.4999999995
+    },
+    "trackHitAgeMs": 30035.900000000373,
+    "trackHitScreen": {
+      "x": 1526.815188924558,
+      "y": 158.35253827501128,
+      "visible": true
+    }
+  }
+}
