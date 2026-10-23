@@ -12,23 +12,23 @@
  * STYLE: "Natural or ruined form — stone ... pressure-scarred and ancient;
  * nothing manufactured ... low-poly with crisp facets, at most two
  * materials (three for env-coral-growth and env-nodule-bed: two stones
- * under a light)". Three materials, 240 triangles, 1.61 m tall by 12 by
- * 6.0 across at its 12 m by intake's measure (`sizeM`), which takes
+ * under a light)". Three materials, 230 triangles, 1.65 m tall by 12 by
+ * 6.1 across at its 12 m by intake's measure (`sizeM`), which takes
  * `--world-light ore --max-materials 3` for this row.
  *
  * Authored as a formula rather than ported: there is no export. Every
  * number below is drawn from one seeded stream (seabed.mjs `seeded`, seed
  * 1555) in the order the parts are built, so the file is the same on every
  * machine and `npm run check:models` holds the script to it. The whole is
- * built at a nominal size and held at the footprint by ×1.0591 before the
+ * built at a nominal size and held at the footprint by ×1.0849 before the
  * bake (seabed.mjs `bake`), so the root is an identity and seabed.mjs
  * `stand` finds ×1.000; the figures below are the file's, after that fit.
  * What stands:
  *
  * - `mound`, in `silt_drift`: a low drift of silt, three rings of ten
- *   corners from a foot at y = 0 up to a crown at 1.27 m — an ellipse
- *   10.6 by 5.3 m at the foot, a shoulder at 0.32 m pulled along +x and a
- *   little toward −z, a top ring at 0.85 m pulled further, so the drift
+ *   corners from a foot at y = 0 up to a crown at 1.30 m — an ellipse
+ *   10.8 by 5.4 m at the foot, a shoulder at 0.33 m pulled along +x and a
+ *   little toward −z, a top ring at 0.87 m pulled further, so the drift
  *   lies down-current rather than sitting as a disc; every corner pushed in
  *   or out by up to 16 % of its radius at the foot and 14 and 12 % above,
  *   and lifted or dropped by up to 0.1 m on the shoulder and 0.08 m on the
@@ -43,16 +43,16 @@
  *   (environmentModels.ts `ENV_LUMINANCE_CEILING`): on `stone_silt` the
  *   lumps came out 18 % brighter than the drift and read as pale boulders;
  *   now they sit at 0.68 of it, dark ore on silt.
- * - Twenty-three `nodule_NN`, in `stone_dark`, every one an octahedron
- *   (seabed.mjs `octa`, 8 triangles): eight at 1.2 m across, three at
- *   1.15, then 1.1, 1.0, 0.9 and 0.8 — the fifteen on the drift — and
- *   eight loose from 0.55 m down to 0.3 — each squashed to 0.7–0.9 of its
+ * - Twenty-one `nodule_NN`, in `stone_dark`, every one an octahedron
+ *   (seabed.mjs `octa`, 8 triangles): eight at 1.23 m across, three at
+ *   1.18, then 1.13, 1.02, 0.92 and 0.82 — the fifteen on the drift — and
+ *   six loose from 0.56 m down to 0.36 — each squashed to 0.7–0.9 of its
  *   width, stretched up to 15 % one way, yawed and tipped up to 0.25 rad so
- *   no two show the same facets. 184 triangles. A lump whose centre would
+ *   no two show the same facets. 168 triangles. A lump whose centre would
  *   stand in plan within nine tenths of the pair's mean width of one
  *   already set is redrawn a bearing on; `contacts.mjs` lists no pair of
  *   lumps that meet, only the mound against each of the fifteen on it and
- *   against `nodule_21`, which touches its skirt from outside.
+ *   against `nodule_20` and `nodule_21`, which touch its skirt from outside.
  *   - The fifteen on the drift are set at a bearing that steps round by the
  *     golden angle, ±0.5 rad drawn, and at a radius the stream draws biased
  *     to the centre (r ∝ u^0.75) and capped nearer the centre the larger
@@ -61,45 +61,50 @@
  *     onto the mound's facets), but never under y = 0 — `nodule_05` and
  *     `nodule_15` stand where the skirt is thinner than their sink and so
  *     rest on the floor.
- *   - The eight loose lumps, the smallest third, are spaced evenly round
- *     the foot from +x, ±0.3 rad drawn, every one with its bottom on y = 0.
- *     The pair off the ends (`nodule_16` at x 5.50–6.03, `nodule_20` at
- *     −5.97 to −5.67) lie at 1.1 of the foot's radius and are what makes the
- *     footprint 12 m; the other six are drawn at 0.85–1.1 of it and stepped
+ *   - The six loose lumps, the smallest, are spaced evenly round the foot
+ *     from +x, ±0.3 rad drawn, every one with its bottom on y = 0. The pair
+ *     off the ends (`nodule_16` at x 5.63–6.17, `nodule_19` at −5.83 to
+ *     −5.46) lie at 1.1 of the foot's radius and are what makes the
+ *     footprint 12 m; the other four are drawn at 0.85–1.1 of it and stepped
  *     out by 5 % of the foot at a time until half their height stands clear
- *     of the skirt, so none is buried in it. `nodule_17`, `_18` and `_19`
- *     lie past the foot's +z side and `_22` and `_23` past its −z side, on
- *     the floor, which is the edge thinning to loose lumps and the outline
- *     breaking. Ten lumps in all touch the floor.
- * - Three `nodule_NN_glint`, in `ore_trace`: the licensed light,
+ *     of the skirt, so none is buried in it. `nodule_17` and `_18` lie past
+ *     the foot's +z side on the floor, and `_20` and `_21` at its −z foot,
+ *     which is the edge thinning to loose lumps and the outline breaking.
+ *     There were eight loose lumps until the glints went from three to six:
+ *     the two smallest (0.30 and 0.28 m nominal) paid the twelve triangles.
+ *     Eight
+ *     lumps in all touch the floor.
+ * - Six `nodule_NN_glint`, in `ore_trace`: the licensed light,
  *   docs/style-neon-noir.md "World light" `ore-trace` — "a dull glint in
  *   the crust of a few nodules on each bed: facets the size of a lump,
- *   never a lit drift" — at 0.08 effective emissive luminance (#7A5634 is
- *   0.1104 linear, at a strength of 0.725), the dimmest family, under the
- *   ember (rule 2), static (rule 4). On the first, fourth and seventh of
- *   the eight largest lumps (`nodule_01`, `_04`, `_07`), a seam over one
- *   ridge each: the lump's most upward-facing facet and its most
+ *   never a lit drift" — at 0.14 effective emissive luminance (#7A5634 is
+ *   0.1104 linear, at a strength of 1.268), between the seam and the ember
+ *   and under the ember (rule 2), static (rule 4). On six of the eight
+ *   largest lumps (`nodule_01`, `_03`, `_04`, `_05`, `_06`, `_07`), a seam
+ *   over one ridge each: the lump's most upward-facing facet and its most
  *   upward-facing neighbour, two triangles, each inset within its own
  *   facet's outline — the shared ridge shortened by 6 % at each end, the
  *   far corner pulled 12 % of the way to the ridge's middle — and 2 cm
  *   proud of both facets (the ridge corners along the two normals'
- *   bisector). No corner leaves its facet: every corner stands 0.024 to
- *   0.026 m off its own lump, and the nearest corner to the drift is
- *   0.06 m from it (`nodule_04`), so `contacts.mjs` lists no glint pair.
- *   Nothing on the drift and nothing on the loose floor lumps. kit.mjs
- *   `lightAudit` at the export reads 1.0 m² facing up over the three,
- *   0.30 to 0.33 m² of plan each, none hidden and none floating; the lit
- *   share of the bed's plan is 2.2 %. Nothing draws from the stream for a
+ *   bisector). No corner leaves its facet: every corner stands 0.022 to
+ *   0.027 m off its own lump, and the nearest corner to the drift is
+ *   0.053 m from it (`nodule_05`), so `contacts.mjs` lists no glint pair.
+ *   `nodule_02` and `_08` carry none because their seams would come within
+ *   4 and 36 mm of the drift. Nothing on the drift and nothing on the loose
+ *   floor lumps. kit.mjs `lightAudit` at the export reads 1.9 m² facing up
+ *   over the six, 0.25 to 0.38 m² of plan each at its 4 cells a metre
+ *   (0.31 to 0.35 at 20), none hidden and none floating; the lit share of
+ *   the bed's 44 m² plan is 4.3 %. Nothing draws from the stream for a
  *   glint, so the scatter is the one the review measured.
  *
  * Measured from the conn camera (tools/hull-renders/inspect.mjs, bearing
- * 90, elevation 55): the lumps are 24.5–25.1 % of the bed's pixels by the
- * two masks taken of it, the review's and this script's own (5.9 % at the
- * commit before this). The lumps' value against the drift's is two
- * measures: 0.68× by linear material luminance (`stone_dark` 0.00892 over
- * `silt_drift` 0.01306, the ratio the runtime's ceiling keeps), and 0.64×
- * as mean sRGB luma on the lit sheet, 0.48× linear there, where shading
- * widens the gap.
+ * 90, elevation 55) at three glints: the lumps were 24.5–25.1 % of the
+ * bed's pixels by the two masks taken of it, the review's and this
+ * script's own (5.9 % at the commit before that). The lumps' value against
+ * the drift's is two measures: 0.68× by linear material luminance
+ * (`stone_dark` 0.00892 over `silt_drift` 0.01306, the ratio the runtime's
+ * ceiling keeps), and 0.64× as mean sRGB luma on the lit sheet, 0.48×
+ * linear there, where shading widens the gap.
  *
  * The root is `env_nodule_bed`, an identity: every placement and the fit
  * are baked into the buffers as the ruins' are, the whole standing on y = 0
@@ -194,9 +199,9 @@ const foot = (t) => {
 // its place, in this order. An octahedron at radius 1 spans 2 on each axis.
 const WIDTHS = [
   1.1336, 1.1336, 1.1336, 1.1336, 1.1336, 1.1336, 1.1336, 1.1336, 1.0863, 1.0863, 1.0863, 1.0391,
-  0.9446, 0.8502, 0.7557, 0.5196, 0.4723, 0.4251, 0.3968, 0.359, 0.3306, 0.3023, 0.2834,
+  0.9446, 0.8502, 0.7557, 0.5196, 0.4723, 0.4251, 0.3968, 0.359, 0.3306,
 ];
-// The smallest third lie loose at the edge, from this index on.
+// The smallest lie loose at the edge, from this index on.
 const EDGE = 15;
 const GOLDEN = Math.PI * (3 - Math.sqrt(5));
 const set = [];
@@ -256,15 +261,16 @@ WIDTHS.forEach((width, i) => {
 });
 
 // --- the glints ------------------------------------------------------------------
-// `ore-trace` on three of the eight largest lumps, the first, fourth and
-// seventh set, as a seam over one ridge each: the lump's most upward-facing
+// `ore-trace` on six of the eight largest lumps — the second and eighth set
+// left out, since their seams would all but touch the drift — as a seam
+// over one ridge each: the lump's most upward-facing
 // facet and its most upward-facing neighbour, each facet's triangle inset
 // within its own outline (the ridge shortened by RIDGE_IN at each end, the
 // far corner pulled FAR_IN of the way to the ridge's middle), the two
 // sharing the inset ridge, and the whole 2 cm proud of both facets. No
 // corner leaves its facet, so the glint is the crust and not a card.
 // Nothing draws from the stream here, so the scatter above is unchanged.
-const GLINTS = [0, 3, 6];
+const GLINTS = [0, 2, 3, 4, 5, 6];
 const RIDGE_IN = 0.06;
 const FAR_IN = 0.12;
 const PROUD = 0.02;

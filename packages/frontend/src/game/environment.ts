@@ -317,7 +317,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
   {
     slug: 'env-nodule-bed',
     footprintM: 12,
-    triBudget: 240,
+    triBudget: 230,
     density: 0,
     stands: [],
     nearRock: 'any',
@@ -340,7 +340,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
  * 80 k. That figure restored those densities, and the tightest shipped map
  * (Ventfront Divide) dressed at ~101 k of it. Raised to 120 k on #1555, when
  * the resource fields' ore joined the layer: seven fields on Ventfront stand
- * about 15.4 k more, and the whole layer still sits well inside the conn view's
+ * about 14.8 k more, and the whole layer still sits well inside the conn view's
  * 400 k on-screen budget. */
 export const PROP_INSTANCE_CAP = 600;
 
