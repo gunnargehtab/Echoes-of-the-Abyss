@@ -140,8 +140,8 @@ deterministic replays with a state hash, a benchmarked Echo pass, a test suite p
 cases, and a green CI in about two minutes. The audit's headline was that the discipline is
 production-grade and the *game* around the core mechanic is still a prototype: a six-hull
 roster shared across factions, no pathfinding, no competitive mode, matches that do not end,
-and nothing about shipping in place. Phase 10 was that list; Phase 11 is what is being worked
-now.
+and nothing about shipping in place. Phase 10 was that list, Phases 11 to 14 worked
+through what followed it, and Phase 15 is what is being worked now.
 
 ---
 
@@ -642,10 +642,10 @@ now because the Echo budget puts a number on what a cap can be.
 
 ## Phase 11 — The carriers, and the fleet as source
 
-**Now.** The one phase being worked. The eighth roster wave shipped the carriers and their
-craft ([#838](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/838), [#840](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/840)); what is left is a commander that flies them, and the
-craft's own bugs. The fleet's last models still need their scripts. The loop's defects ride
-along, because most are found working these two.
+**Closed.** The eighth roster wave shipped the carriers and their craft
+([#838](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/838), [#840](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/840)), and the
+commander flies them since #839. Every model is script output since #540 closed on 4
+October. The loop's defects rode along, because most were found working these two.
 
 **Done when:** the commander builds and flies a carrier in the baseline, every model under
 `docs/concept-art/models/` is script output that `npm run check:models` rebuilds, and no row
@@ -682,9 +682,11 @@ below is open.
 
 ## Phase 12 — An ocean you can read
 
-**Next.** Starts when Phase 11's test passes. The map-visuals plan in its own order — the
-loudness ladder, then public fauna as stipple, then classified fauna — and then the frame time
-measured on the hardware the game promises, because the visual pass is what changes it.
+**Closed.** The map-visuals plan in its own order — the loudness ladder, then public fauna as
+stipple, then classified fauna — and then the frame time measured on the hardware the game
+promises. The ladder and both stipple passes landed on 24 September. The frame is timed on
+one desktop GPU under [graphics-standards.md](graphics-standards.md) gate 6, and the phone
+floor #286 also asked for retired with touch (#1132).
 
 **Done when:** every map layer names its loudness rung with a test holding it, public and
 classified fauna draw as stipple, and the composited frame is timed on a real GPU.
@@ -699,6 +701,156 @@ classified fauna draw as stipple, and the composited frame is timed on a real GP
 
 ---
 
+## Phase 13 — The render stack, and real 3D control
+
+**Closed.** Worked between the 22 September re-plan and mid-October, and placed here once the
+roadmap caught up with it. #974's graphics audit ranked eight render upgrades; every navy
+now has a trim sheet, and the first hull carries a baked occlusion map. #1132 dropped Dive
+and Rise for depth ordered with the camera and the mouse, and retired touch with them. The
+mission maps stopped being rectangles (#1139). The loop's defects closed under their epic
+until it reached GitHub's hundred sub-issues on 9 October (#746).
+
+**The render stack**
+
+| Work | Issue |
+| --- | --- |
+| Epic — feature and improvement ideas, the render stack among them | [#833](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/833) |
+| The Abyss Render Stack — a graphics audit and eight ranked upgrades | [#974](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/974) |
+| A hull or structure rendered up to 1.14× its reviewed size | [#882](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/882) |
+| The ruin dome shard re-authored as a shard | [#883](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/883) |
+| The Directorate Refinery rebuilt whole | [#947](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/947) |
+| Own hull models instanced per kind, so the berth ceiling fits 150 calls | [#1079](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1079) |
+| The Consortium’s other 23 models on its trim sheet | [#1107](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1107) |
+| The Directorate’s trim sheet | [#1108](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1108) |
+| The Knights’ trim sheet | [#1109](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1109) |
+| The Commune’s trim sheet | [#1110](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1110) |
+| An occlusion map baked on the first hull | [#1111](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1111) |
+
+**The seabed and the chart**
+
+| Work | Issue |
+| --- | --- |
+| The seabed’s silt detail visible in every match | [#1103](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1103) |
+| The thermocline drawn on the seabed as a major isobath | [#1104](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1104) |
+| How a roofed passage is drawn: overhang or route line | [#1105](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1105) |
+| Map regions were rectangles, so the seabed read as a checkerboard | [#1106](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1106) |
+| Epic — the mission maps drawn in shapes, not rectangles | [#1139](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1139) |
+| The Kelp Labyrinth in shapes | [#1137](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1137) |
+| The Abyssal Rift Corridor in shapes | [#1138](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1138) |
+
+**Control in three dimensions**
+
+| Work | Issue |
+| --- | --- |
+| Real 3D control — depth ordered with the camera and the mouse | [#1132](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1132) |
+
+**The opponent**
+
+| Work | Issue |
+| --- | --- |
+| The commander’s leash held only when the order was given | [#946](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/946) |
+| The gunless ordnance hulls never left their yard | [#1090](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1090) |
+| A spent hull rearmed to two torpedoes, not its own magazine | [#1092](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1092) |
+| The commander asked for a BioReactor the server refuses, forever | [#1286](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1286) |
+
+**Shipping and hygiene**
+
+| Work | Issue |
+| --- | --- |
+| Colyseus guidance for the 0.18 migration | [#963](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/963) |
+| A finished match’s ECS world was never released | [#1278](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1278) |
+| The CORS lock never reached `/matchmake` | [#1301](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1301) |
+| A refused origin’s matchmaking POST still created a room | [#1310](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1310) |
+| The roadmap site split into a public cut and a private one | [#1357](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1357) |
+
+**Defects the loop finds**
+
+| Work | Issue |
+| --- | --- |
+| Epic — the defects the loop finds that have no other home | [#746](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/746) |
+
+---
+
+## Phase 14 — One world, and life in the water
+
+**Closed.** #1449 put the campaign in one continuous Rift, with Sorrowgate as its pilot,
+entered from the world overview without a cut. Own hulls bank, wake, fire and take hits on
+screen (#1467), and live Tier-4 tracks sail as their roster models. Three navies gained the
+four mid-tier hulls they lacked. A visual survey of the three skirmish maps ended with the
+chart's ink cut to the map's rim.
+
+**One world**
+
+| Work | Issue |
+| --- | --- |
+| Epic — the Rift as one continuous world, Sorrowgate first | [#1449](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1449) |
+| Docs disagreed on Rift distances and placements | [#1469](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1469) |
+| A region’s baseline detail drew no props at the join | [#1488](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1488) |
+| A region’s baseline detail drew other relief than the session’s ground | [#1491](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1491) |
+| A board launch froze the home frame for about 2 s, twice | [#1495](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1495) |
+| A reconnect redrew the whole map on a new noise seed | [#1496](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1496) |
+| The Sorrowgate pilot made to read in play | [#1532](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1532) |
+| A landmark for Sorrowgate’s Upper Concourse | [#1533](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1533) |
+| The interior veil applied in display space | [#1536](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1536) |
+| Gate 6 read on the Sorrowgate pilot | [#1540](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1540) |
+| Gate 6 read on the display-space veil | [#1551](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1551) |
+
+**Life in the water**
+
+| Work | Issue |
+| --- | --- |
+| Epic — animations: banking, wakes, muzzle rings, hits, steam and shoals | [#1467](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1467) |
+| Live Tier-4 tracks sail as roster models | [#1531](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1531) |
+| Live Tier-4 structure tracks stand as roster models | [#1539](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1539) |
+| Resource fields as a seabed bed in the conn view and a rim on the chart | [#1555](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1555) |
+
+**The roster, wave by wave**
+
+| Work | Issue |
+| --- | --- |
+| The Verger for the Consortium, the Commune and the Knights | [#1438](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1438) |
+| The Acolyte for the Consortium, the Commune and the Knights | [#1439](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1439) |
+| The Thurible for the Consortium, the Commune and the Knights | [#1440](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1440) |
+| The Lure for the Consortium, the Commune and the Knights | [#1441](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1441) |
+| `check:models` passed a unit a navy fields with no hull model | [#1442](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1442) |
+
+**What the chart survey found**
+
+| Work | Issue |
+| --- | --- |
+| Inert hazard sites drew diagonal lines past their rim | [#1554](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1554) |
+| Rings and furniture drew past the map rim, into the void | [#1556](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1556) |
+| The scope’s camera box collapsed when the view left the map | [#1558](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1558) |
+| The HUD grain striped the seabed with diagonal lines | [#1559](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1559) |
+
+---
+
+## Phase 15 — The rest of the Rift
+
+**Now.** The one phase being worked. #1505 places the other nineteen mission grounds and the
+three skirmish maps in the Rift as #1449 placed Sorrowgate, from
+[world-map.md](world-map.md) §7.9's inventory. Its three decisions are taken; the anchors and
+the migrations are left. The chart survey's last two findings ride along. No phase is
+planned behind it yet.
+
+**Done when:** every mission ground and skirmish map stands in the Rift as Sorrowgate does,
+and no row below is open.
+
+**One world**
+
+| Work | Issue |
+| --- | --- |
+| Epic — place the other maps in the Rift world | [#1505](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1505) |
+
+**What the chart survey found**
+
+| Work | Issue |
+| --- | --- |
+| Ground ink draws over hulls and structures with no occlusion | [#1557](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1557) |
+| Dune crests run east to west on every map | [#1560](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1560) |
+
+---
+
 ## Later — Parked and unscheduled
 
 **Later.** Nothing here is scheduled, so nothing here is dated. A row moves up when a Next
@@ -709,11 +861,11 @@ phase is planned around it.
 | Work | Issue |
 | --- | --- |
 | Defects the loop finds | [the `finding` label](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues?q=is%3Aissue+is%3Aopen+label%3Afinding) |
-| Epic — feature and improvement ideas | [#833](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/833) |
 
-Each is where a new issue lands when it has no other home. The loop's findings take a label
+This is where a finding lands when it has no other home. The loop's findings take a label
 rather than an epic since #746 reached GitHub's 100 sub-issues on 9 October. Their issues
-get rows in the phase that schedules them.
+get rows in the phase that schedules them. The ideas epic, #833, closed on 3 October and is
+a Phase 13 row.
 
 **Parked under the balance freeze**
 
