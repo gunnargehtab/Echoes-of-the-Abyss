@@ -1945,13 +1945,13 @@ patterns of [art-direction.md](art-direction.md)'s "Environmental Shapes" — ri
 angles, terraces, a civilisation's worth of coral growth over them. Crags are the
 jagged-rock vocabulary for mesa edges anywhere on the map. The nodule bed is the ore
 itself ([economy.md](economy.md) §2's polymetallic nodules, the bulk resource every navy
-mines): a low drift of silt with a scatter of dark, matte, fist-to-boulder lumps — 0.3 to
-1.2 m across — half-sunk in it, denser at the crown and thinning to loose lumps on the
+mines): a low drift of silt with a scatter of dark, matte, fist-to-boulder lumps — 0.36 to
+1.23 m across — half-sunk in it, denser at the crown and thinning to loose lumps on the
 floor at the edge. It stands in any biome, several to a field, so one bed is a piece of a
 field and never the whole; it must read from the 55° camera as "there is ore here", quieter
 than any vessel and never as a structure or a contact. `stone_dark` on the lumps,
 `silt_drift` on the drift — the paler of the two, so the ore reads dark on it — and
-`ore-trace` as a glint facet on a few of the largest lumps, never on the drift.
+`ore-trace` as a glint facet on six of the largest lumps, never on the drift.
 
 `flora-biolight` is licensed for the Kelp Forest *and* the Coral Ruins
 ([style-neon-noir.md](style-neon-noir.md) "World light", [map-visuals.md](map-visuals.md)
@@ -1961,7 +1961,7 @@ on #1532: dim points on its branches only — three tetrahedral tips at the head
 kelp's `biolight` material to the digit — and nothing on its masonry, lobes or plates
 (#1532). It is one of two props with three materials: the export's two stones under the
 light. The other is the nodule bed, whose `ore-trace` glint (#1555) is a seam over one
-ridge on three of its largest drift lumps: two triangles across the lump's two most
+ridge on six of its largest drift lumps: two triangles across the lump's two most
 upward-facing adjacent facets, each inset within its own facet's outline, 2 cm proud —
 `stone_dark`, `silt_drift` and `ore_trace` — and nothing on the drift or the loose floor
 lumps. The two-material

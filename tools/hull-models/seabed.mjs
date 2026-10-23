@@ -126,12 +126,14 @@ export const ground = {
   /** `crystal-seam` at 1.2 over `violet-seam-base`, the resonance crystal's seam. */
   violetSeam: () => lamp('violet_seam', hex('#5B4A8C'), hex('#06050A'), 0.9, 1.2),
   /**
-   * `ore-trace` at 0.725 over `ore-trace-base`, the nodule bed's glint
-   * facets (#1555). The strength puts the family at the doc's 0.08
-   * effective emissive luminance: #7A5634 is 0.1104 linear, times 0.725 is
-   * 0.0800, the dimmest of the four by design.
+   * `ore-trace` at 1.268 over `ore-trace-base`, the nodule bed's glint
+   * facets (#1555). The strength puts the family at the doc's 0.14
+   * effective emissive luminance: #7A5634 is 0.1104 linear, times 1.268 is
+   * 0.1400, between the seam's 0.11 and the ember's 0.18 and still under
+   * the ember (rule 2). It shipped at 0.725 for 0.08, the dimmest of the
+   * four, and the owner asked for a brighter glint.
    */
-  oreTrace: () => lamp('ore_trace', hex('#7A5634'), hex('#0B0805'), 1, 0.725),
+  oreTrace: () => lamp('ore_trace', hex('#7A5634'), hex('#0B0805'), 1, 1.268),
 };
 
 /**

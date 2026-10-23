@@ -118,8 +118,9 @@ export const FURNITURE_OUTLINE_ALPHA = {
    */
   hazardCountdownStart: 0.35,
   hazardCountdownGain: 0.5,
-  /** A resource field's rim, nodule or crystal (EchoRenderer `drawNodes`). */
-  resourceRim: 0.3,
+  /** A resource field's rim, nodule or crystal (EchoRenderer `drawNodes`);
+   * 0.3 until the owner asked for a more visible field after #1563. */
+  resourceRim: 0.45,
   /** The dashed ring that says a crystal field is at depth (EchoRenderer `drawNodes`). */
   crystalDepthRing: 0.55,
   /** A roofed passage's route line (PerspectiveView `buildTerrainDressing`). */
