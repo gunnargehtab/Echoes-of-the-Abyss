@@ -165,7 +165,7 @@ view stands as its model; a flat sprite hides nothing. A model's solid is its pl
 columns, each from the lowest to the highest of its geometry over that cell, so ground seen
 under a hull's keel or a structure's raised deck still carries its ink. The rule reaches only
 what is traced on the ground. A fill is texture inside its rim and is not cut. Blocked
-ground's hatch is drawn cell by cell and is not cut yet. The selection ring and the loudness
+ground's hatch is drawn cell by cell and is not cut. The selection ring and the loudness
 collar are not traced at all: each is a circle in screen space about the entity's ground point
 ([ui-ux.md](ui-ux.md) §3.5), so a collar can still cross its own model or a neighbour's. That
 is open, and is not a design: a collar painted across a roof is the same drawing error.
