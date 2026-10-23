@@ -161,11 +161,11 @@ export const playable = [
   },
   {
     title: 'A three-layer ocean you can see',
-    text: 'A perspective view over a sculpted seabed, ships sailing at their true depth, and a ribbon that warns before a dive would crush you.',
+    text: 'A perspective view over a sculpted seabed, ships sailing at their true depth, depth ordered with the camera and the mouse, and a warning before a dive would crush you.',
   },
   {
     title: 'Runs in a browser',
-    text: 'Nothing to install. The whole game — the server included — is small enough to run on a phone.',
+    text: 'Nothing to install. Open it in a desktop browser and play with keyboard and mouse.',
   },
 ];
 
@@ -252,14 +252,29 @@ export const phases = {
   11: {
     title: 'Carriers, and ships built from scripts',
     blurb:
-      'The phase being worked now: the computer opponent flying its new carriers, and the last models rebuilt from scripts.',
+      'The computer opponent learned to fly its new carriers, and the last models were rebuilt from scripts.',
     done: 'The computer opponent builds and flies a carrier, and every ship and prop is built from a script.',
   },
   12: {
     title: 'An ocean you can read',
+    blurb: 'A clearer map and sea life drawn in dots, then the game timed on a real graphics card.',
+    done: 'Every layer of the map is drawn at a brightness it has earned, sea life is drawn in dots, and the game has been timed on a real graphics card.',
+  },
+  13: {
+    title: 'A sharper picture, and depth under the mouse',
     blurb:
-      'Starts when the current phase is done: a clearer map and sea life, then the game timed on real hardware.',
-    done: 'Every layer of the map is drawn at a brightness it has earned, sea life is drawn in dots, and the game has been timed on a real PC and a phone.',
+      'Textured hulls, a seabed drawn in shapes rather than squares, and depth ordered with the camera and the mouse instead of buttons.',
+  },
+  14: {
+    title: 'One ocean, and ships that move',
+    blurb:
+      'The campaign’s first mission set inside one continuous Rift, and ships that bank, leave wakes and flash when they fire.',
+  },
+  15: {
+    title: 'The rest of the Rift',
+    blurb:
+      'The phase being worked now: every other mission and map placed in that same continuous ocean.',
+    done: 'Every mission and every skirmish map stands in one continuous Rift, the way the first mission already does.',
   },
   later: {
     title: 'Parked and unscheduled',
@@ -292,6 +307,12 @@ export const groups = {
   'Built when a branch wants it': 'Built when needed',
   'Competitive play': 'Playing it against other people',
   'After the game ships': 'After the game ships',
+  'The render stack': 'A sharper picture',
+  'The seabed and the chart': 'The seabed and the chart',
+  'Control in three dimensions': 'Control in three dimensions',
+  'One world': 'One ocean',
+  'Life in the water': 'Ships that move like ships',
+  'What the chart survey found': 'A cleaner chart',
 };
 
 export const items = {
@@ -470,6 +491,63 @@ export const items = {
   857: 'A hidden clock that kept measuring itself every second',
   858: 'A test note that blamed the wrong cause for a redraw',
   863: 'Small craft that shove their own carrier into enemy guns',
+  // Phase 13 — worked after the re-plan, placed when the roadmap caught up
+  974: 'A full audit of how the game is drawn, and eight upgrades ranked by what they buy',
+  882: 'Ships and buildings drawn bigger than the size they were checked at',
+  883: 'A ruined dome on the seabed rebuilt as the broken shard it was meant to be',
+  947: 'The Directorate’s refinery rebuilt as one building, not a kit of parts',
+  1079: 'Your own fleet drawn in batches, so a full fleet stays smooth',
+  1107: 'The Consortium’s whole fleet given painted, worn surfaces',
+  1108: 'The Directorate’s painted surfaces, on its first ship',
+  1109: 'The Knights’ painted surfaces, on their first ship',
+  1110: 'The Commune’s painted surfaces, on its first ship',
+  1111: 'Soft shadow baked into the creases of the first ship',
+  1103: 'Fine silt and ripples on the seabed, in every match',
+  1104: 'The thermocline drawn on the seabed as a contour line',
+  1105: 'Passages under a rock roof, drawn so you can see the roof and the way through',
+  1106: 'A seabed that read as a checkerboard of squares',
+  1139: 'Every mission map drawn in natural shapes rather than rectangles',
+  1137: 'The Kelp Labyrinth drawn in natural shapes',
+  1138: 'The Abyssal Rift Corridor drawn in natural shapes',
+  1132: 'Depth ordered with the camera and the mouse, instead of dive and rise buttons',
+  946: 'The computer opponent’s ships chasing off alone while the rest gathered',
+  1090: 'Torpedo ships that never left the yard they were built in',
+  1092: 'Ships that reloaded the wrong number of torpedoes',
+  1286: 'The computer opponent asking forever for a building it was never allowed',
+  963: 'The multiplayer server moved to a new version of its framework',
+  1278: 'Finished matches that never let go of their memory',
+  1301: 'A security lock that did not cover joining a match',
+  1310: 'A blocked website that could still open a match room',
+  1357: 'This page, split from the full internal version so it shows only what is public',
+  // Phase 14
+  1449: 'The Rift as one continuous ocean, starting with the first mission',
+  1469: 'Design documents that disagreed on where places in the Rift sit',
+  1488: 'Seabed props popping in and out as you crossed into a mission',
+  1491: 'The seabed shifting as you crossed into a mission',
+  1495: 'A two-second freeze as a mission began',
+  1496: 'A reconnect that redrew the whole seabed differently',
+  1532: 'The first mission made to read clearly in play',
+  1533: 'A landmark for the first mission’s upper hall',
+  1536: 'The dark of unlistened water drawn more evenly',
+  1540: 'The first mission timed on a real graphics card',
+  1551: 'That darker water timed on a real graphics card',
+  1467: 'Ships that bank, leave wakes, flash when they fire and show their hits, with steam and scattering shoals',
+  1531: 'Enemy ships you know well enough drawn as the real ships they are',
+  1539: 'Enemy buildings you know well enough drawn as the real buildings they are',
+  1555: 'Ore beds on the seabed where resources lie, lit while you mine them',
+  1438: 'The Verger, built for three more navies',
+  1439: 'The Acolyte, built for three more navies',
+  1440: 'The Thurible, built for three more navies',
+  1441: 'The Lure, built for three more navies',
+  1442: 'A check that every ship a navy can build has a model',
+  1554: 'Hazard zones drawn with stray diagonal lines',
+  1556: 'Rings that ran off the edge of the map into nothing',
+  1558: 'The minimap’s view box collapsing at the edge of the map',
+  1559: 'A texture that striped the seabed with diagonal lines',
+  // Phase 15
+  1505: 'Every other mission and map placed in the one continuous Rift',
+  1557: 'Map markings painted over ships and buildings instead of behind them',
+  1560: 'Sand ripples that all run the same way, on every map',
 };
 
 export const sprints = {
