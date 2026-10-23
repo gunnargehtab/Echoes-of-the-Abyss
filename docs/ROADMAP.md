@@ -830,8 +830,7 @@ chart's ink cut to the map's rim.
 **Now.** The one phase being worked. #1505 places the other nineteen mission grounds and the
 three skirmish maps in the Rift as #1449 placed Sorrowgate, from
 [world-map.md](world-map.md) §7.9's inventory. Its three decisions are taken; the anchors and
-the migrations are left. The chart survey's last two findings ride along. No phase is
-planned behind it yet.
+the migrations are left. The chart survey's last two findings ride along.
 
 **Done when:** every mission ground and skirmish map stands in the Rift as Sorrowgate does,
 and no row below is open.
@@ -848,6 +847,25 @@ and no row below is open.
 | --- | --- |
 | Ground ink draws over hulls and structures with no occlusion | [#1557](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1557) |
 | Dune crests run east to west on every map | [#1560](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1560) |
+
+---
+
+## Phase 16 — Playable by a stranger
+
+**Next.** Starts when Phase 15's test passes. `CONTRIBUTING.md` sets the bar for the first
+tag: someone who did not build the game plays it end to end — lobby, a match, a win or a
+loss — without a README open. Nobody outside the project has played it yet, and nothing
+hosts it: `SETUP.md` ships the containers and no platform. So this phase hosts a build,
+reports the errors a stranger meets, walks the first run as a newcomer, and seats people
+who did not build it in front of it. It adds no mechanic and tunes nothing; the balance
+freeze stands.
+
+**Done when:** a stranger reaches a win or a loss on the hosted build unaided, and `v0.1.0`
+is tagged from a green `main`.
+
+| Work | Issue |
+| --- | --- |
+| Epic — playable by a stranger, and the first tag | [#1574](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1574) |
 
 ---
 
