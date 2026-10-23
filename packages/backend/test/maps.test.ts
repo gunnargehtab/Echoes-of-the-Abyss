@@ -25,6 +25,7 @@ import {
   MAP_HEADERS,
   PROPAGATION_FACTOR,
   ResourceKind,
+  SEABED_DETAIL,
   SIM,
   UnitKind,
   mapHeaderById,
@@ -1463,4 +1464,30 @@ describe('every map has water where it seats things', () => {
       });
     });
   }
+});
+
+describe('the dunes never run against an authored current (#1560)', () => {
+  // The client lays its dune crests in arcs about SEABED_DETAIL.DUNE_SOURCE,
+  // the lee away from it: a direction the floor states to everyone who looks
+  // (docs/art-direction.md "Silt detail and seated stones — SPEC"). Over a
+  // cold-shock site the floor must not say the water runs another way than
+  // the current a player has to learn (docs/hazards.md §8). The fallback is
+  // the client's `duneSource`, restated: the backend cannot import it.
+  it('keeps the lee within 60° of the flow over every cold-shock site', () => {
+    for (const map of [...MAPS, ...MISSION_MAPS]) {
+      const [sx, sy] = SEABED_DETAIL.DUNE_SOURCE[map.id] ?? [
+        map.widthM / 2,
+        map.heightM / 2 - SEABED_DETAIL.DUNE_SOURCE_NORTH_M,
+      ];
+      for (const site of map.hazards.filter((h) => h.kind === 'cold-shock')) {
+        const lee = Math.atan2(site.y - sy, site.x - sx);
+        const flow = ((site.flowDeg ?? 0) * Math.PI) / 180;
+        const apart = Math.acos(Math.cos(lee - flow)) * (180 / Math.PI);
+        assert.ok(
+          apart <= 60,
+          `${map.id} (${site.x}, ${site.y}): the lee is ${apart.toFixed(1)}° off`
+        );
+      }
+    }
+  });
 });

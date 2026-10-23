@@ -184,11 +184,13 @@ import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
 import { FaunaStipple } from './faunaStipple.ts';
 import { DREAM_LOOP } from './dreamLoop.ts';
 import {
+  duneSource,
   groundDetailCells,
   groundDetailTexture,
   installGroundDetail,
   patchGroundDetailCells,
   SEABED_DETAIL_ON,
+  type GroundDetailUniforms,
 } from './seabedDetail.ts';
 import { mapProps, stoneSeats, type PropPlacement, type StoneSeat } from './environment.ts';
 import { installGroundSurface, type WorldLook } from './tutorialLook.ts';
@@ -769,6 +771,13 @@ export class PerspectiveView {
   private readonly seabedDetail: boolean;
   private detailCells: Uint8Array<ArrayBuffer> | null = null;
   private detailTexture: DataTexture | null = null;
+  private detailUniforms: GroundDetailUniforms | null = null;
+  /**
+   * The map the room named (`setMap`), which says where its dunes' current
+   * comes from (#1560). The room sends it after the ground, so the source is a
+   * uniform the map's arrival moves rather than a reason to rebuild.
+   */
+  private mapId: string | null = null;
   private stones: StoneSeat[] = [];
   private readonly terrainDressing = new Group();
   private readonly dreamStudy: boolean;
@@ -1293,6 +1302,14 @@ export class PerspectiveView {
     if (clamped === this.veilIntensity) return;
     this.veilIntensity = clamped;
     this.applyVeil();
+  }
+
+  /** Which map the room says this is: where its dunes' current comes from. */
+  setMap(mapId: string): void {
+    this.mapId = mapId;
+    if (this.detailUniforms !== null && this.terrain !== null) {
+      this.detailUniforms.uDuneSource.value = duneSource(mapId, this.terrain);
+    }
   }
 
   setIdentity(_slot: number, faction: Faction): void {
@@ -2027,6 +2044,7 @@ export class PerspectiveView {
       this.surveyCells = null;
       this.detailCells = null;
       this.detailTexture = null;
+      this.detailUniforms = null;
     }
     if (this.embers !== null) {
       this.scene.remove(this.embers);
@@ -2133,7 +2151,12 @@ export class PerspectiveView {
       // After the ink, whose world position it reads and whose hook it chains.
       this.detailCells = groundDetailCells(terrain);
       this.detailTexture = groundDetailTexture(terrain, this.detailCells);
-      installGroundDetail(material, terrain, this.detailTexture);
+      this.detailUniforms = installGroundDetail(
+        material,
+        terrain,
+        this.detailTexture,
+        duneSource(this.mapId, terrain)
+      );
     }
     this.terrainMesh = new Mesh(geometry, material);
     this.scene.add(this.terrainMesh);

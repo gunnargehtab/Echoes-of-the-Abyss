@@ -9,6 +9,11 @@
 
 import { Biome, DepthBand, Faction, HarvestThrottle, ResourceKind } from './types.js';
 import { MEAN_RENDERED_BIOMASS } from './fauna.js';
+import {
+  ABYSSAL_RIFT_CORRIDOR_HEADER,
+  KELP_LABYRINTH_HEADER,
+  VENTFRONT_DIVIDE_HEADER,
+} from './maps.js';
 
 /** SPEC — docs/art-direction.md, Shared model lighting. Presentation only. */
 export const MODEL_LIGHTING = {
@@ -124,6 +129,24 @@ export const SEABED_DETAIL = {
   MAX_SUM: 0.4,
   /** SPEC — metres per pixel: whole through the first, gone by the second. */
   FADE_M_PER_PX: [2, 8] as readonly [number, number],
+  /**
+   * SPEC — where each map's current comes from (#1560), in map metres, x east
+   * and y south: a point off the map that the dune crests arc about, so they
+   * keep their spacing and still turn across the map. Render-only, like the
+   * rest of the block: no simulated current reads it, and where a map has
+   * authored currents the backend's maps test holds the dunes to them.
+   */
+  DUNE_SOURCE: {
+    [VENTFRONT_DIVIDE_HEADER.id]: [4000, -2500],
+    [ABYSSAL_RIFT_CORRIDOR_HEADER.id]: [-2500, 3000],
+    [KELP_LABYRINTH_HEADER.id]: [4000, -12000],
+  } as Readonly<Record<string, readonly [number, number]>>,
+  /**
+   * SPEC — how far north of its centre a map with no source of its own has
+   * one: far enough that across 10 km of map its crests stay within 6° of
+   * east–west, near enough that single precision keeps the ripples' phase.
+   */
+  DUNE_SOURCE_NORTH_M: 60000,
   /** SPEC — dune crest spacing, metres, and the lee face's share of it. */
   DUNE_M: 110,
   DUNE_LEE: 0.3,
