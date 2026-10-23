@@ -5,14 +5,16 @@
  * "Environment props dress the biomes the terrain grid already declares —
  * they are world geometry, not agents, so the STYLE block changes: no
  * faction palette, no running lights, no glow-by-loudness. A prop's light,
- * where it has any at all, comes from the three world-light families"
- * (docs/asset-prompts-3d.md, Block 4). A prop belongs to nobody, so a
- * prop script composes from here rather than from `factions/`: the Block 4
- * materials as the fourteen approved files carry them, the builders more
- * than one prop needs, and the root every prop stands on.
+ * where it has any at all, comes from the four world-light families a prop
+ * may carry" (docs/asset-prompts-3d.md, Block 4). A prop belongs to nobody,
+ * so a prop script composes from here rather than from `factions/`: the
+ * Block 4 materials as the fourteen approved files carry them (and the
+ * fifteenth, the nodule bed, takes one of the same tokens, `stone_dark`,
+ * and two of its own, `silt_drift` and `ore_trace` — #1555), the builders
+ * more than one prop needs, and the root every prop stands on.
  *
- * Three things about the fourteen files are worth knowing before reading
- * one, and this module is where they are written down:
+ * Three things about the fourteen batch files are worth knowing before
+ * reading one, and this module is where they are written down:
  *
  * - **Every stone part is a table.** `parts.mjs` prints a crag's peak as
  *   "non-indexed, 48 triangles — an extrusion, a sweep or a table", and the
@@ -64,7 +66,7 @@
 import { THREE, clad, lamp, hex, box, flatShaded, tabled } from './kit.mjs';
 
 /**
- * The palette, as the fourteen files carry it: eight stones and three
+ * The palette, as the fifteen files carry it: nine stones and four
  * lights, each named by its docs/style-neon-noir.md "The props" token.
  * Metalness is 0 on every material in the set — "nothing manufactured"
  * (ENV STYLE) — and roughness the file's own. A lamp is kit.mjs `lamp`:
@@ -86,6 +88,21 @@ export const ground = {
   stoneDark: () => clad('stone_dark', hex('#15181B'), 0, 1),
   /** Silted stone, `stone-silt`: the open-water boulder. */
   stoneSilt: () => clad('stone_silt', hex('#17150F'), 0, 1),
+  /**
+   * Drifted silt, `silt-drift`: the nodule bed's drift, under its
+   * `stone_dark` lumps. Paler than `stone-silt` by 1.73× in linear
+   * luminance (0.01306 against 0.00753) with the same warm cast, because
+   * the runtime's ceiling scales a prop's brightest material to 0.06 and
+   * the rest by their ratio to it (environmentModels.ts
+   * `ENV_LUMINANCE_CEILING`): on `stone-silt` the lumps came out 18 %
+   * brighter than the drift and read as pale boulders. No existing token
+   * could stand under them: no stone is paler than `stone-dark` (the
+   * nearest, `basalt-trench`, sits 6 % under it), and the paler tokens are
+   * growth — both corals and the kelp — whose cast belongs to their own
+   * ground. So the drift took a sediment of its own, which puts the lumps
+   * at 0.68 of it.
+   */
+  siltDrift: () => clad('silt_drift', hex('#211E15'), 0, 1),
   /** Trench basalt, `basalt-trench`: the slab's and the spire's `basalt`. */
   basaltTrench: () => clad('basalt', hex('#14171A'), 0, 0.96),
   /** Vent basalt, `basalt-vent`: the chimney's and the basalt pile's `basalt`, its own value. */
@@ -108,7 +125,40 @@ export const ground = {
   biolight: () => lamp('biolight', hex('#2E8C74'), hex('#0B1D19'), 1, 0.55),
   /** `crystal-seam` at 1.2 over `violet-seam-base`, the resonance crystal's seam. */
   violetSeam: () => lamp('violet_seam', hex('#5B4A8C'), hex('#06050A'), 0.9, 1.2),
+  /**
+   * `ore-trace` at 0.725 over `ore-trace-base`, the nodule bed's glint
+   * facets (#1555). The strength puts the family at the doc's 0.08
+   * effective emissive luminance: #7A5634 is 0.1104 linear, times 0.725 is
+   * 0.0800, the dimmest of the four by design.
+   */
+  oreTrace: () => lamp('ore_trace', hex('#7A5634'), hex('#0B0805'), 1, 0.725),
 };
+
+/**
+ * A seeded stream of numbers in [0, 1): mulberry32 on a 32-bit seed, every
+ * step integer arithmetic under `Math.imul` and `>>>`, so the stream is the
+ * same on every machine and `npm run check:models` reproduces a prop that
+ * scatters by it byte for byte. For a prop authored as a formula whose
+ * parts are scattered rather than placed by hand — the nodule bed's lumps
+ * (#1555) — where a port would carry a table of the export's own numbers
+ * and a hand-drawn scatter would be a table typed from nothing. A script
+ * takes one stream and draws from it in a fixed order; adding a draw
+ * anywhere moves every draw after it, which is the same bargain a table
+ * row makes and the reason a scatter's order is written down where it is
+ * drawn. `between(lo, hi)` is one draw spread over a range.
+ */
+export function seeded(seed) {
+  let a = seed >>> 0;
+  const next = () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  next.between = (lo, hi) => lo + (hi - lo) * next();
+  return next;
+}
 
 /* --------------------------------------------------------------------------
  * Tables under a constructor. Each takes the export's vertex table in

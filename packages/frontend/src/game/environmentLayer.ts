@@ -30,11 +30,13 @@
 const SWAY_HOLD_S = 1.7;
 
 import { Color, Group, InstancedMesh, Matrix4, Quaternion, Vector3 } from 'three';
+import type { ResourceNodeInfo } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import { ENVIRONMENT_PROPS, placeProps, propSpec, type PropPlacement } from './environment.ts';
 import { envTemplate, type SwayUniforms } from './environmentModels.ts';
 import type { WorldLook } from './tutorialLook.ts';
 import { VentPlume, plumeSites } from './ventPlume.ts';
+import { FieldHaze, hazeSites } from './fieldHaze.ts';
 
 const TMP_MATRIX = new Matrix4();
 const TMP_QUAT = new Quaternion();
@@ -59,6 +61,8 @@ export class EnvironmentLayer {
   readonly group = new Group();
   /** Every standing chimney's steam, one draw; in the group while a column stands. */
   readonly plume = new VentPlume();
+  /** Every field's sediment haze, one draw; in the group while a field stands (#1555). */
+  readonly haze = new FieldHaze();
 
   /** Guards late template loads: a load that finishes after another rebuild
    * (new terrain, teardown) must not resurrect stale placements. */
@@ -68,6 +72,12 @@ export class EnvironmentLayer {
   /** Sway handles of the templates standing in this build, ticked per frame. */
   private swaying: SwayUniforms[] = [];
   private reducedMotion = false;
+  /**
+   * The room's resource fields, stood as ore by the default placement
+   * (environment.ts `scatterFields`, #1555). Held here because they arrive
+   * on their own message after the ground and outlive its rebuilds.
+   */
+  private fields: readonly ResourceNodeInfo[] = [];
   /**
    * The acoustic veil's ground shade (acousticVeil.ts, docs/ui-ux.md §4.5),
    * the view's display-space multiplier at a point, carried on each instance's
@@ -92,10 +102,14 @@ export class EnvironmentLayer {
   rebuild(
     terrain: TerrainPayload,
     groundY: (xM: number, yM: number) => number,
-    placements: readonly PropPlacement[] = placeProps(terrain, ENVIRONMENT_PROPS, this.look)
+    placements?: readonly PropPlacement[]
   ): void {
     const generation = ++this.generation;
     this.clear();
+    // Only the default placement stands the fields, so only it hazes them: the
+    // opt-in study hands in its own budgeted list and stands no field.
+    const standsFields = placements === undefined;
+    placements ??= placeProps(terrain, ENVIRONMENT_PROPS, this.look, this.fields);
 
     if (placements.length === 0) return;
     // Where each standing slug tops out, per unit scale: the chimneys' mouths.
@@ -116,8 +130,12 @@ export class EnvironmentLayer {
         spec.footprintM,
         spec.swayM,
         () => {
-          // A load belongs to the latest rebuild that subscribed to it.
-          if (generation === this.generation) this.rebuild(terrain, groundY, placements);
+          // A load belongs to the latest rebuild that subscribed to it, on
+          // the path it took: the default one re-places, so the fields it
+          // stood stand again.
+          if (generation === this.generation) {
+            this.rebuild(terrain, groundY, standsFields ? undefined : placements);
+          }
         },
         this.look
       );
@@ -156,6 +174,9 @@ export class EnvironmentLayer {
     });
     this.plume.build(sites, this.shade);
     if (sites.length > 0) this.group.add(this.plume.points);
+    const hazes = standsFields ? hazeSites(this.fields, terrain, groundY) : [];
+    this.haze.build(hazes, this.shade);
+    if (hazes.length > 0) this.group.add(this.haze.points);
   }
 
   /**
@@ -165,6 +186,7 @@ export class EnvironmentLayer {
    */
   tick(nowMs: number, waterReachM?: number): void {
     this.plume.tick(nowMs, waterReachM);
+    this.haze.tick(nowMs, waterReachM);
     if (this.swaying.length === 0) return;
     const time = this.reducedMotion ? SWAY_HOLD_S : nowMs / 1000;
     for (const sway of this.swaying) sway.uSwayTime.value = time;
@@ -173,6 +195,15 @@ export class EnvironmentLayer {
   setReducedMotion(reduced: boolean): void {
     this.reducedMotion = reduced;
     this.plume.setReducedMotion(reduced);
+    this.haze.setReducedMotion(reduced);
+  }
+
+  /**
+   * Take the room's fields. The caller rebuilds: the view owns *when*, as
+   * for every other change to what stands on the ground.
+   */
+  setFields(fields: readonly ResourceNodeInfo[]): void {
+    this.fields = fields;
   }
 
   /**
@@ -186,6 +217,7 @@ export class EnvironmentLayer {
     this.shade = shade;
     for (const { mesh, list } of this.shaded) this.applyShade(mesh, list);
     this.plume.setShade(shade);
+    this.haze.setShade(shade);
   }
 
   private applyShade(mesh: InstancedMesh, list: readonly PropPlacement[]): void {
@@ -199,9 +231,14 @@ export class EnvironmentLayer {
     if (mesh.instanceColor !== null) mesh.instanceColor.needsUpdate = true;
   }
 
-  /** Probe telemetry (gate 6): bodies standing, triangles they cost, and steam columns. */
-  stats(): { props: number; propTris: number; ventPlumes: number } {
-    return { props: this.props, propTris: this.propTris, ventPlumes: this.plume.plumes };
+  /** Probe telemetry (gate 6): bodies standing, triangles they cost, steam columns and hazed fields. */
+  stats(): { props: number; propTris: number; ventPlumes: number; fieldHazes: number } {
+    return {
+      props: this.props,
+      propTris: this.propTris,
+      ventPlumes: this.plume.plumes,
+      fieldHazes: this.haze.fields,
+    };
   }
 
   /**
@@ -217,6 +254,7 @@ export class EnvironmentLayer {
   destroy(): void {
     this.reset();
     this.plume.dispose();
+    this.haze.dispose();
   }
 
   private clear(): void {
@@ -226,8 +264,9 @@ export class EnvironmentLayer {
       // belong to the template cache and must survive the rebuild.
       if (child instanceof InstancedMesh) child.dispose();
     }
-    // Emptied, not disposed: its material outlives the rebuild.
+    // Emptied, not disposed: their materials outlive the rebuild.
     this.plume.clear();
+    this.haze.clear();
     this.props = 0;
     this.propTris = 0;
     this.swaying = [];

@@ -63,7 +63,7 @@ Only lit surfaces take the curve: the hulls, structures and props, and the ordna
 bodies. Every unlit layer bypasses it and keeps its authored register: the water
 backdrop and marine snow; the baked seabed with its route ink, map rim and skirt;
 fallback sprites and depth marks; public life's stipple; embers; and ordnance lamps
-with their trails and launch bubbles, own hulls' wakes, the spray of a hit on one, and own harvesters' silt plumes. The loudness ladder measures its rungs in encoded luminance
+with their trails and launch bubbles, own hulls' wakes, the spray of a hit on one, own harvesters' silt plumes and the cutter sparks under them, and the sediment haze over a resource field. The loudness ladder measures its rungs in encoded luminance
 ([map-visuals.md](map-visuals.md) §5), and the water, the routes, the rim and the stipple
 stand on its rungs 1 and 5; the conn view places the skirt, which §5 does not name, on
 rung 1. A trail wears its lamp's glow, which ACES would fade toward white. Each of these
@@ -325,8 +325,8 @@ nothing left to pattern, and most factions live below that line
 So the rule is a prohibition, and it binds the four places a caustic could have appeared:
 
 - **Terrain never carries one.** World light is points and seams, never area glow, in
-  exactly four families ([style-neon-noir.md](style-neon-noir.md) "World light"); a moving
-  light pattern on the ground would be a fifth family and area glow at once.
+  exactly five families ([style-neon-noir.md](style-neon-noir.md) "World light"); a moving
+  light pattern on the ground would be a sixth family and area glow at once.
 - **No hull, structure or prop carries one at any depth.** The depth a hull sits at is
   read from the water it stands in, never from a pattern on its skin; a pattern that
   brightened with shallowness would be an instrument drawn in the world, and instruments
@@ -1004,13 +1004,14 @@ Three further layers of the same texture-not-information rule:
   purpose, and stays there lifted: 1.15 × `rock-face` is still under the palest fill. Ground
   you can enter always speaks louder than ground you cannot, and the cyan blocked-ground
   overlay stays the only voice that says "not for *this* hull".
-- **World light.** Terrain-owned light exists in exactly four families, spec'd and
+- **World light.** Terrain-owned light exists in exactly five families, spec'd and
   capped in [style-neon-noir.md](style-neon-noir.md) "World light": **vent ember**
   points in `#E06A2B` (SPEC — deliberately redder than Bathyarch's hazard amber),
   flickering on the 5 Hz sonar grid; **flora biolight** tips on kelp and living
-  coral; the **crystal seam** in resonance crystal; and the **civic lamp**, a steady
-  `#B8875A` point on the Upper Concourse, the one ground that was built (#1533). All
-  four are points and seams, never area glow, with the vent ember as the brightness
+  coral; the **crystal seam** in resonance crystal; the **civic lamp**, a steady
+  `#B8875A` point on the Upper Concourse, the one ground that was built (#1533); and the
+  **ore trace**, a dull `#7A5634` glint on a few lumps of each nodule bed (#1555). All
+  five are points and seams, never area glow, with the vent ember as the brightness
   ceiling: decoration for ground the map already declares hot, alive, charged or
   built — deterministic per
   map, render-only, and carrying no state, never brightening with activity,

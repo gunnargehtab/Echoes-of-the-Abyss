@@ -61,8 +61,13 @@ export const PLUME_RISE_M = 40;
  * on Overburden, fits the ring.
  */
 export const PLUME_POOL = BERTHS.CEILING * PLUME_MOTES_PER_HULL;
-/** The fleck a stirred mote of silt catches the lamps as: dim, warm, no hue of a faction's. */
-const SILT_COLOR = new Color(0.78, 0.72, 0.6);
+/**
+ * The fleck a stirred mote of silt catches the lamps as: dim, warm, no hue
+ * of a faction's. Linear, and the one silt colour in the game: the haze over
+ * a field (fieldHaze.ts) takes it too, and docs/style-neon-noir.md "World
+ * light" quotes it ("Suspended matter is not light").
+ */
+export const SILT_COLOR = new Color(0.78, 0.72, 0.6);
 const PLUME_SIZE_PX = 4;
 
 /**

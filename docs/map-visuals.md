@@ -45,7 +45,7 @@ screenshot from the survey dolly.
 | V1 — the gap | **Nothing on the ground is a line.** At an 11 km dolly, a 700 m plateau beside a 2,600 m plain is one dark rectangle next to another. The relief that reads at 1 km is sub-pixel, and the fills are too close in value to carry a shape | the survey frame of any skirmish map |
 | V2 | Contacts, rings and glyphs are loud; terrain is quiet; blocked ground is cyan and shown only while a hull is selected | [art-direction.md](art-direction.md), [graphics-standards.md](graphics-standards.md) gate 7 |
 | V2 — the gap | The order is right but unwritten, so nothing stops a new layer landing on the wrong rung | — |
-| V3 | Depth is luminance on the ground and in the water. Hue belongs to the biome. Four world-light families. The veil is a drain, not a blackout | [art-direction.md](art-direction.md), [style-neon-noir.md](style-neon-noir.md) "World light" |
+| V3 | Depth is luminance on the ground and in the water. Hue belongs to the biome. Five world-light families. The veil is a drain, not a blackout | [art-direction.md](art-direction.md), [style-neon-noir.md](style-neon-noir.md) "World light" |
 | V4 | Six biomes, each with a fill, a relief row, a prop set and its light families, spread across four docs and three files | §7 below collects them |
 | V5 | Tetherjelly fields and Lampfry shoals are public chart data, drawn as stipple in the water since Phase 3 (§10). Classified fauna are stipple shapes since Phase 4 | `faunaStipple.ts`, `faunaAgentStipple.ts` |
 
@@ -223,6 +223,19 @@ Two consequences worth naming:
   contact. Both are stipple in `FAUNA_COLOR`, so form holds them apart: an agent's dot is
   larger, hard, blended normally and still, where a public dot is soft, additive and pulsing
   (§10, Phase 4).
+- **A resource field splits across two views.** Its rim is furniture (rung 5) on the chart,
+  in the resource's own ink, and nothing else is: no fill, no grains. The ore itself is ground
+  (rung 3), stood in the conn view as environment props at the field the room published —
+  beds of nodules, or the Resonance Field's shard for the crystal field — and placed by the
+  same rules as any prop ([graphics-standards.md](graphics-standards.md) gate 1, #1555). A
+  field is drawn from its position, kind and starting stock alone, so it looks the same full
+  and mined out: depletion is heard, never shown. Two things ride on the beds and read nothing
+  more: a sediment haze of silt motes lifting and settling in place over the field
+  (`fieldHaze.ts`, on the 5 Hz grid), which is suspended matter and not light, capped under the
+  dimmest family and unweighed as a soft fill, and the `ore-trace` glint, the fifth world-light
+  family (both in [style-neon-noir.md](style-neon-noir.md) "World light"). What a field being *worked* shows
+  is the harvester's, not the field's: its silt plume, its cutter sparks and its work-light on
+  the ore under it, all scaled to the throttle's SIG (`workLight.ts`).
 
 ## 6. Colour, light and depth — one grammar
 
@@ -236,7 +249,7 @@ V3 is mostly already law. This section collects it, so that the next revision ci
   hole, not as the deepest floor ([#1532](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1532)).
 - **Hue is biome**, and biome is propagation factor. Nothing else on the ground carries a hue:
   not stone, not ink, not water.
-- **Light is loudness.** Agents glow with SIG. The ground emits only through the four world-light
+- **Light is loudness.** Agents glow with SIG. The ground emits only through the five world-light
   families, statically or on the 5 Hz grid.
 - **Ink is knowledge.** It draws what the survey knows — public map data — and nothing the Echo
   Layer resolved.
@@ -281,7 +294,7 @@ The six things a new biome supplies:
 2. **A fill** inside 5–10% luminance, distinct from its neighbours in value as well as hue,
    in all four colour-vision palettes.
 3. **A relief row**: amplitude, roughness, blockiness, mottle.
-4. **A world-light family, or an explicit "none"**. A fifth family amends
+4. **A world-light family, or an explicit "none"**. A sixth family amends
    [style-neon-noir.md](style-neon-noir.md) first.
 5. **A prop set** from the environment branch of the pipeline of record
    ([graphics-standards.md](graphics-standards.md) gate 1).

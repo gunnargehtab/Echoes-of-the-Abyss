@@ -88,6 +88,7 @@ import {
   type OwnStructure,
   type OwnOrdnance,
   type OwnUnit,
+  type ResourceNodeInfo,
   type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
@@ -149,6 +150,7 @@ import { HullWake, wakeStrength, type WakeSource } from './hullWake.ts';
 import { HullHits, flashedGlow, hitStrength } from './hullHit.ts';
 import { GunFire, isSiegeHull } from './gunFire.ts';
 import { SiltPlume, plumeStrength, type PlumeSource } from './siltPlume.ts';
+import { WorkLights } from './workLight.ts';
 import { EnvironmentLayer } from './environmentLayer.ts';
 import { createWaterEnvironment, keepsGlowOutsideToneMapping } from './modelLighting.ts';
 import { GLOW_FACTOR_MAX, GLOW_FACTOR_MIN, SIG_GLOW_EFOLD } from './glow.ts';
@@ -852,6 +854,8 @@ export class PerspectiveView {
   private readonly plume = new SiltPlume();
   /** The plume's per-hull inputs, reused frame to frame: nothing allocated. */
   private readonly plumeSources: PlumeSource[] = [];
+  /** The work-light and cutter sparks under the same hulls (workLight.ts, #1555). */
+  private readonly workLights = new WorkLights();
   /** Each harvester whose cargo rose at the last tick, and its plume strength. */
   private readonly dredging = new Map<number, number>();
   /** Where the last hit was thrown, world metres, so a drive can frame it. */
@@ -1067,6 +1071,7 @@ export class PerspectiveView {
       this.hits.points,
       this.gunFire.points,
       this.plume.points,
+      this.workLights.group,
       this.structureGroup,
       this.trackGroup,
       this.models.group,
@@ -1242,6 +1247,7 @@ export class PerspectiveView {
     this.hits.setReducedMotion(reduced);
     this.gunFire.setReducedMotion(reduced);
     this.plume.setReducedMotion(reduced);
+    this.workLights.setReducedMotion(reduced);
     this.life.setReducedMotion(reduced);
     this.swayHeld = reduced;
     this.motion.levelHeld = reduced;
@@ -1420,6 +1426,7 @@ export class PerspectiveView {
     this.wake.reset();
     this.hits.reset();
     this.plume.reset();
+    this.workLights.reset();
     this.dredging.clear();
     this.lastHitAt = null;
     this.gunFire.reset();
@@ -1492,6 +1499,7 @@ export class PerspectiveView {
     this.hits.dispose();
     this.gunFire.dispose();
     this.plume.dispose();
+    this.workLights.dispose();
     this.models.dispose();
     this.cues.dispose();
     this.backdrop.dispose();
@@ -3697,6 +3705,8 @@ export class PerspectiveView {
       n++;
     }
     this.plume.sync(this.plumeSources, n, draw, nowMs);
+    this.workLights.setPalette(FACTION_PALETTE[this.faction].glow);
+    this.workLights.sync(this.plumeSources, n, draw, nowMs);
   }
 
   /**
@@ -3819,6 +3829,18 @@ export class PerspectiveView {
       const lean = this.motion.attitude(id, nowMs, this.lean);
       this.placeHandle(handle, at.x + dx, at.y + dz, at.depth, this.headings.get(id) ?? 0, lean);
     });
+  }
+
+  /**
+   * The room's resource fields, stood as ore on the ground (#1555). They
+   * arrive on their own message after the terrain, so a ground already
+   * standing is re-dressed now; one not yet standing picks them up when it
+   * is. The opt-in study chooses its own placements and stands no field
+   * and raises no haze.
+   */
+  setNodes(nodes: readonly ResourceNodeInfo[]): void {
+    this.environment.setFields(nodes);
+    if (this.terrain !== null && this.dreamCover === null) this.rebuildDressing();
   }
 
   /**
@@ -4713,6 +4735,9 @@ export class PerspectiveView {
       hitParticles: this.hits.particles,
       // Silt motes alive under dredging harvesters, one draw (#1512).
       plumeMotes: this.plume.count,
+      // The work-lights lit and the sparks alive under the same hulls (#1555).
+      workLightsLit: this.workLights.lit,
+      sparks: this.workLights.sparks,
       // Where the first dredging harvester stands, world metres, so a drive can frame it.
       plumeAt: this.plumeAt(),
       // The first vent chimney's mouth, world metres, so a drive can frame its steam (#1514).

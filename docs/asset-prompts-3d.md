@@ -888,7 +888,7 @@ moved no GLB.
 
 The environment props (Block 4) carry no rule: "nothing manufactured" is the whole of their
 law, a crag's drum is a table under its export's own jittered vertices, and a chord is a
-gauge. The measure reads the fourteen and judges none.
+gauge. The measure reads the fifteen and judges none.
 
 ## Block 3 — UNIT (one per generation)
 
@@ -1867,9 +1867,11 @@ over it is going. A reactor found quiet has stripped its own bed bare.
 
 Environment props dress the biomes the terrain grid already declares — they are world
 geometry, not agents, so the STYLE block changes: no faction palette, no running lights,
-no glow-by-loudness. A prop's light, where it has any at all, comes from the three
-world-light families in [style-neon-noir.md](style-neon-noir.md) "World light", and
-intake fails a prop with any other emissive (gate 2's inverted rule).
+no glow-by-loudness. A prop's light, where it has any at all, comes from the four
+world-light families a prop may carry in [style-neon-noir.md](style-neon-noir.md)
+"World light" — `vent-ember`, `flora-biolight`, `crystal-seam` and `ore-trace`; the
+civic lamp is no prop — and intake fails a prop with any other emissive (gate 2's
+inverted rule).
 
 Every environment prompt is **ENV STYLE + one row of the prop table**, the row expanded
 into a sentence or two. Same workflow rules as the roster: one Claude Design conversation
@@ -1887,7 +1889,7 @@ vessel. Lighting: one hard cyan rim light (#35E0FF) for the review render
 only — the model itself carries no lights and no emissive unless the prompt
 says so. Strong readable silhouette from a high 55-degree RTS camera;
 low-poly with crisp facets, at most two materials (three for
-env-coral-growth: its two stones and its light). No text, no water
+env-coral-growth and env-nodule-bed: two stones under a light). No text, no water
 surface — this stands on the seabed, deep underwater.
 ```
 
@@ -1914,6 +1916,7 @@ metre, a range the band a generated one lands in; `Tris` is the per-instance bud
 | Coral Ruins | `env-coral-growth` | 12 m | 10 m | ≤ 400 | `flora-biolight`, tip points |
 | Rock (any biome) | `env-rock-crag-a` / `-b` | 30 m | 30–50 m | ≤ 500 | none |
 | Open Water | `env-open-boulder` | 12 m | 6 m | ≤ 300 | none |
+| Resource field (any biome) | `env-nodule-bed` | 12 m | 2 m | ≤ 240 | `ore-trace`, glint facets |
 
 Four heights moved to their approved models (#879): the trench slab from 10 m, the
 resonance pylon from 25 m, the dome shard from 20 m to 14 m and the coral growth from
@@ -1940,7 +1943,15 @@ trench props are blackened, pressure-eroded, knife-edged; resonance props are fa
 crystal and the toppled remains of older instruments; ruin props carry the geometric
 patterns of [art-direction.md](art-direction.md)'s "Environmental Shapes" — right
 angles, terraces, a civilisation's worth of coral growth over them. Crags are the
-jagged-rock vocabulary for mesa edges anywhere on the map.
+jagged-rock vocabulary for mesa edges anywhere on the map. The nodule bed is the ore
+itself ([economy.md](economy.md) §2's polymetallic nodules, the bulk resource every navy
+mines): a low drift of silt with a scatter of dark, matte, fist-to-boulder lumps — 0.3 to
+1.2 m across — half-sunk in it, denser at the crown and thinning to loose lumps on the
+floor at the edge. It stands in any biome, several to a field, so one bed is a piece of a
+field and never the whole; it must read from the 55° camera as "there is ore here", quieter
+than any vessel and never as a structure or a contact. `stone_dark` on the lumps,
+`silt_drift` on the drift — the paler of the two, so the ore reads dark on it — and
+`ore-trace` as a glint facet on a few of the largest lumps, never on the drift.
 
 `flora-biolight` is licensed for the Kelp Forest *and* the Coral Ruins
 ([style-neon-noir.md](style-neon-noir.md) "World light", [map-visuals.md](map-visuals.md)
@@ -1948,21 +1959,28 @@ jagged-rock vocabulary for mesa edges anywhere on the map.
 "Light"), and `env-coral-growth` carries it as the kelp cluster does, by the owner's call
 on #1532: dim points on its branches only — three tetrahedral tips at the heads of its three tallest branches, the
 kelp's `biolight` material to the digit — and nothing on its masonry, lobes or plates
-(#1532). It is the one prop with three materials: the export's two stones under the
-light. The two-material rule below stands for everything else, and intake takes
-`--max-materials 3` for this row only.
+(#1532). It is one of two props with three materials: the export's two stones under the
+light. The other is the nodule bed, whose `ore-trace` glint (#1555) is a seam over one
+ridge on three of its largest drift lumps: two triangles across the lump's two most
+upward-facing adjacent facets, each inset within its own facet's outline, 2 cm proud —
+`stone_dark`, `silt_drift` and `ore_trace` — and nothing on the drift or the loose floor
+lumps. The two-material
+rule below stands for everything else, and intake takes `--max-materials 3` for these
+two rows only.
 
 Naming is `env-<biome-word>-<thing>.glb`, flat in `docs/concept-art/models/` beside the
 roster. Props ship as meshes, not baked maps, so the sprite-density contract
 (4 / 1.5 px/m) does not apply to them — the triangle column above is their density
 contract.
 
-Every row of this table was filled by a Claude Design model from the Block 4 batch; the
-deterministic generator that stood in for the batch was retired when the last row
-landed ([graphics-standards.md](graphics-standards.md), "The environment branch").
-Each file is now written by a script under `tools/hull-models/props/` (#869) that ports
-that model part for part — or, for the dome shard, replaces it (#883) — composed from
-`tools/hull-models/seabed.mjs`, and held at the row's footprint. A model generated from the prompts above replaces its row through that
+Every row of this table but the nodule bed's was filled by a Claude Design model from
+the Block 4 batch; the deterministic generator that stood in for the batch was retired
+when the last row landed ([graphics-standards.md](graphics-standards.md), "The
+environment branch"). Each file is now written by a script under
+`tools/hull-models/props/` (#869) that ports that model part for part — or, for the
+dome shard, replaces it (#883), and for the nodule bed authors it from a seeded formula
+with no export behind it (#1555) — composed from `tools/hull-models/seabed.mjs`, and
+held at the row's footprint. A model generated from the prompts above replaces its row through that
 script: port the export into it, run it, run intake with the row's footprint, cap and
 light, commit the GLB with the script, and update the registry row's triangle count from
 the intake report. The environment registry, the placement rules and the kelp sway read
@@ -2001,8 +2019,8 @@ For environment props (Block 4):
 - Darker and quieter than any vessel — desaturated, no manufactured surfaces, nothing
   that could be mistaken for a structure or a contact?
 - Emissive only where the table licenses a world-light family, and dim within it?
-- At most two materials (three on `env-coral-growth` alone, its two stones under the
-  licensed light), inside the row's triangle budget?
+- At most two materials (three on `env-coral-growth` and `env-nodule-bed` alone, two
+  stones under the licensed light), inside the row's triangle budget?
 
 ## Related
 

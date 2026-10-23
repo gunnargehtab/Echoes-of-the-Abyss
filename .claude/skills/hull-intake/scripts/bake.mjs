@@ -16,7 +16,7 @@
  *   node bake.mjs <model.glb> --length-m <metres> [--out <dir>] [--ppm <px>]
  *                 [--allow-no-emissive] [--glow-e <target>]
  *   node bake.mjs <model.glb> --category env --footprint-m <metres>
- *                 [--out <dir>] [--ppm <px>] [--world-light <vent|flora|crystal>]
+ *                 [--out <dir>] [--ppm <px>] [--world-light <vent|flora|crystal|ore>]
  *                 [--max-tris <n>] [--max-materials <n>]
  *
  * --length-m is the design hull length: HULL_LENGTH_M in
@@ -65,7 +65,7 @@ const allowNoEmissive = args.includes('--allow-no-emissive');
 // Env mode: the licensed world-light family, and the registry budgets the
 // export is held to (PropSpec.triBudget caps at 800 in the registry fence;
 // two materials is the draw-call contract).
-const WORLD_LIGHT_FAMILIES = ['vent', 'flora', 'crystal'];
+const WORLD_LIGHT_FAMILIES = ['vent', 'flora', 'crystal', 'ore'];
 const worldLight = flag('--world-light');
 const maxTris = Number(flag('--max-tris') || 800);
 const maxMaterials = Number(flag('--max-materials') || 2);
@@ -305,7 +305,7 @@ try {
       console.error(
         '\nFAIL: this prop carries emissive but no world-light family was licensed. On the ' +
           'ground the glowing rock is the style bug (docs/style-neon-noir.md "World light") — ' +
-          'pass --world-light <vent|flora|crystal> only if Block 4 licenses this prop.'
+          'pass --world-light <vent|flora|crystal|ore> only if Block 4 licenses this prop.'
       );
       failed = true;
     }
