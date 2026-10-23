@@ -340,7 +340,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
  * 80 k. That figure restored those densities, and the tightest shipped map
  * (Ventfront Divide) dressed at ~101 k of it. Raised to 120 k on #1555, when
  * the resource fields' ore joined the layer: seven fields on Ventfront stand
- * about 12.5 k more, and the whole layer still sits well inside the conn view's
+ * about 15.4 k more, and the whole layer still sits well inside the conn view's
  * 400 k on-screen budget. */
 export const PROP_INSTANCE_CAP = 600;
 
@@ -461,14 +461,16 @@ export const FIELD_PROP_SLUG: Record<ResourceKind, string> = {
  * TUNABLE — what stands in one field: how many, the band of the field's
  * radius they stand in (a share of `fieldRadiusM`, so the ore keeps inside
  * the rim the chart draws) and their scale jitter. Beds enough that a field
- * reads as a patch of ore from the survey dolly rather than a boulder or two;
- * shards few, since each is 27 m tall and the field is one place on the map.
+ * reads as a patch of ore from the survey dolly rather than a boulder or two
+ * (ten, up to 1.45× their 12 m, since the owner asked for more field after
+ * #1563's eight at 1.25); shards few, since each is 27 m tall and the field
+ * is one place on the map.
  */
 export const FIELD_STAND: Record<
   ResourceKind,
   { count: number; band: readonly [number, number]; scale: readonly [number, number] }
 > = {
-  [ResourceKind.Nodule]: { count: 8, band: [0.1, 0.8], scale: [0.8, 1.25] },
+  [ResourceKind.Nodule]: { count: 10, band: [0.1, 0.8], scale: [0.95, 1.45] },
   [ResourceKind.ResonanceCrystal]: { count: 3, band: [0.15, 0.55], scale: [0.7, 1] },
 };
 

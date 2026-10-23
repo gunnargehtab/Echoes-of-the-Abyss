@@ -556,9 +556,10 @@ Every family obeys the same five rules, and they are gates, not suggestions:
 
 The four prop families as exported, effective emissive luminance being the material's
 emissive luminance times its `KHR_materials_emissive_strength`: `vent-ember` 0.18,
-`flora-biolight` 0.11, `crystal-seam` 0.11, `ore-trace` 0.08, the dimmest of them by
-design, since a field is on the map's most contested ground and a glint that out-shone
-the seam would make a bed the brightest thing between two bases. The seam shipped at 0.05 and was lifted to
+`flora-biolight` 0.11, `crystal-seam` 0.11, `ore-trace` 0.14. The trace shipped at 0.08,
+the dimmest of them, and the owner raised it after #1563 so a bed reads from the home
+dolly: between the seam and the ember, and still under the ember (rule 2), since a glint
+that out-shone the ember would make a bed the brightest thing between two bases. The seam shipped at 0.05 and was lifted to
 biolight parity once the prop-luminance normalisation (a 0.06 diffuse ceiling, see
 Block 4 in [asset-prompts-3d.md](asset-prompts-3d.md)) made the crystal's stone read: at 0.05 the
 seam's brightest pixel matched the stone's lit facets at the closest zoom (250 m), so
@@ -581,8 +582,8 @@ harvester while it dredges (#1512) and the sediment haze that hangs over a resou
 (#1555, `fieldHaze.ts`) — is drawn additively, so a spent mote adds nothing, but it is matter,
 drawn as if lamp-caught, and not a family: it takes the silt colour, linear (0.78, 0.72, 0.60),
 a warm grey that is no token of a faction's or a family's. The two differ in whose they are. A
-haze is the ground's, so it is capped under the dimmest family — a mote peaks at 0.07 of the
-silt colour, about 0.05 luminance against `ore-trace`'s 0.08 — and keeps rules 3 and 4 as the
+haze is the ground's, so it is capped under the dimmest families — a mote peaks at 0.10 of the
+silt colour, about 0.07 luminance against the seam's and the biolight's 0.11 — and keeps rules 3 and 4 as the
 steam does: the 5 Hz grid, deterministic from the field's published values, never responding
 to the game. A plume is the hull's, as its lamps are: a mote peaks at the throttle's share of
 1.0, scaled by the throttle's SIG against Overburden's, as gate 3 has glow follow loudness,

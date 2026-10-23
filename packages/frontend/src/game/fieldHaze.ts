@@ -44,7 +44,7 @@ import { installDisplayVeil, VEIL_SHADE_ATTRIBUTE } from './veilShading.ts';
  * rise and settle, how high it lifts at most, and the share of the field's
  * radius it rises within. Low and slow: a haze, not a plume.
  */
-export const FIELD_HAZE_MOTES = 32;
+export const FIELD_HAZE_MOTES = 48;
 export const FIELD_HAZE_LIFE_S = 6;
 export const FIELD_HAZE_RISE_M = 10;
 export const FIELD_HAZE_SPREAD = 0.85;
@@ -53,16 +53,18 @@ export const FIELD_HAZE_SPREAD = 0.85;
  * world units. Far dimmer and smaller than a vent puff (0.3 of the ember on
  * 26 units): sediment catching a lamp, not steam over a fire. The first cut,
  * 0.22 on 9 units, drew bright pearls over the field that read as a stipple
- * (map-visuals §8's public life); a haze is felt before it is counted.
+ * (map-visuals §8's public life); 0.07 on 4 units was felt before it was
+ * counted, and the owner asked for more field, so it sits between the two.
  */
-export const FIELD_HAZE_LEVEL = 0.07;
+export const FIELD_HAZE_LEVEL = 0.1;
 /**
  * SPEC — docs/style-neon-noir.md "World light", "Suspended matter is not
- * light": a haze mote's peak luminance stays under the dimmest family's,
- * `ore-trace` at 0.08. The test holds `FIELD_HAZE_LEVEL` to it.
+ * light": a haze mote's peak luminance stays under the dimmest families',
+ * `flora-biolight` and `crystal-seam` at 0.11. The test holds
+ * `FIELD_HAZE_LEVEL` to it.
  */
-export const HAZE_LUMINANCE_CAP = 0.08;
-const FIELD_HAZE_SIZE = 4;
+export const HAZE_LUMINANCE_CAP = 0.11;
+const FIELD_HAZE_SIZE = 6;
 /** The sonar bucket the clock steps on: SIM.ECHO_HZ's 200 ms. */
 const BUCKET_MS = 1000 / SIM.ECHO_HZ;
 /**
