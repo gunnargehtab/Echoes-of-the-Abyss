@@ -22,7 +22,6 @@ import {
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { Faction, StructureKind } from '@echoes/shared';
-import { stripImages } from '../../../tools/hull-models/images.mjs';
 import {
   createHost,
   HeadlessApplication,
@@ -43,10 +42,11 @@ import { buildTemplate, instantiate, type Template } from '../src/game/rosterMod
 
 const MODELS = new URL('../../../docs/concept-art/models/', import.meta.url);
 
+/** The Bathyarch Bastion, which carries no image for the loader to decode. */
 async function bastion(): Promise<Template> {
   const bytes = readFileSync(new URL('bastion-bathyarch.glb', MODELS));
   const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-  const scene = (await new GLTFLoader().parseAsync(stripImages(buffer), '')).scene;
+  const scene = (await new GLTFLoader().parseAsync(buffer, '')).scene;
   return buildTemplate(scene, { structure: StructureKind.Bastion, faction: Faction.Bathyarch });
 }
 
