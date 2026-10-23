@@ -232,6 +232,7 @@ import {
   type ColumnPoint,
 } from './contactColumn.ts';
 import { clipPolygon, clipSegment } from './rimClip.ts';
+import { scopeBox } from './scopeBox.ts';
 
 /**
  * An order the player gave that the server has not yet echoed back
@@ -8771,28 +8772,31 @@ export class EchoRenderer {
     // Camera viewport, so the scope doubles as a navigator — and, since the
     // camera was freed, as the compass (docs/free-camera.md §5, docs/ui-ux.md
     // §5). A trapezoid, not a rectangle: the conn camera is tilted, and its
-    // honest footprint on the ground has a near edge wider than its far one.
-    // It needed no change to survive a free yaw, because it is unprojected
-    // from the screen corners rather than derived from a heading. Vertices
-    // clamp to the scope's square — a zoomed-out camera sees past the map's
-    // edge, and the box must not draw past its frame.
-    const quad = this.conn?.groundQuad() ?? [];
-    if (quad.length === 4) {
-      const points: number[] = [];
-      for (const corner of quad) {
-        points.push(
-          Math.max(0, Math.min(size, corner.x * k)),
-          Math.max(0, Math.min(size, corner.y * k))
-        );
-      }
-      og.poly(points).stroke({ width: 1, color: UI.text, alpha: 0.6 });
+    // honest footprint on the ground is one. It needed no change to survive a
+    // free yaw, because it is unprojected from the screen corners rather than
+    // derived from a heading. Cut to the map as a polygon, never clamped
+    // corner by corner: a camera looking past the edge put two corners on one
+    // side of the frame and drew a slash (#1558).
+    const box =
+      terrain === null
+        ? null
+        : scopeBox(this.conn?.groundQuad() ?? [], {
+            x: 0,
+            y: 0,
+            widthM: terrain.cols * terrain.cellM,
+            heightM: terrain.rows * terrain.cellM,
+          });
+    if (box !== null && box.outline.length > 0) {
+      og.poly(box.outline.map((m) => m * k)).stroke({ width: 1, color: UI.text, alpha: 0.6 });
+    }
+    if (box !== null && box.far !== null) {
       // The far edge, heavier. A rotating box in a north-up frame already
       // says *where* the camera is looking; this is what makes it say which
       // way round, which is the job the yaw lock used to do by making the
-      // answer permanent. `groundQuad` returns the corners from the top of
-      // the screen, so the first two are the far edge.
-      og.moveTo(points[0]!, points[1]!)
-        .lineTo(points[2]!, points[3]!)
+      // answer permanent.
+      const [x0, y0, x1, y1] = box.far;
+      og.moveTo(x0 * k, y0 * k)
+        .lineTo(x1 * k, y1 * k)
         .stroke({ width: 2, color: UI.text, alpha: 0.85 });
     }
   }
