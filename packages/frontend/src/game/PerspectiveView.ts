@@ -1987,7 +1987,7 @@ export class PerspectiveView {
     const terrain = this.terrain;
     if (terrain === null || this.renderer === null) return [];
     const groundY = this.groundYAt(this.target.x, this.target.z);
-    // The same four objects every frame, rewritten in place (#432): the one
+    // The same four objects every frame, rewritten in place (#432): each
     // caller reads them and keeps nothing. A perspective camera's ray from a
     // screen corner is the unprojected corner minus the eye, which needs no
     // Raycaster to say.

@@ -89,6 +89,16 @@ describe('scopeBox', () => {
     assert.deepEqual(box.far, [0, 0, 4000, 0]);
   });
 
+  it('stops at the map, not the square scope, on a map wider than it is long', () => {
+    // The Abyssal Rift Corridor is 10 by 6 km, so the scope draws it in its top
+    // three fifths. Facing south past the south rim, the box ends on the rim
+    // rather than running on over the blank band below the map.
+    const corridor: PlanRect = { x: 0, y: 0, widthM: 10000, heightM: 6000 };
+    const box = scopeBox(quad(7000, 9000, 3000, 9000, 4500, 4000, 5500, 4000), corridor);
+    assert.ok(inside(box.outline, corridor), 'nothing past the south rim');
+    assert.deepEqual(box.far, [3900, 6000, 6100, 6000]);
+  });
+
   it('draws nothing for a view wholly off the map, or no footprint at all', () => {
     assert.deepEqual(scopeBox(quad(5000, 0, 6000, 0, 6000, 1000, 5000, 1000), MAP), {
       outline: [],
