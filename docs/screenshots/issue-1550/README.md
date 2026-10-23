@@ -45,7 +45,7 @@ drive's own `muzzle` frames came too late, so this is the match's frame of it.
   [#1509's GPU frames](../issue-1509/README.md) show it.
 - **The wake.** The drive counted it as taken: 23 bubbles after the frame, and a Caisson
   inside its focus test. The frame shows open water, the pair just past its top edge. Not
-  committed.
+  committed. [#1508's frames](../issue-1508/README.md) show it.
 - **The own-hull hit.** A hit lives 1.2 s. The one try's hit had faded by the time its frame
   was drawn, and the probe read 0 live hits after it. Not committed.
   [#1510's frames](../issue-1510/README.md) show it.
