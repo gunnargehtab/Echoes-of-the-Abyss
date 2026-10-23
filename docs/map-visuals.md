@@ -145,6 +145,14 @@ outshines any line on the map by design: a vent field with no embers is not a ve
 is capped by its own five rules instead ([style-neon-noir.md](style-neon-noir.md) "World
 light"): points and seams only, the ember as the ceiling, static or on the 5 Hz grid.
 
+**A mark on the ground ends at the rim.** Rungs 5 and 6 lie on the seabed, and past the rim
+there is none: a mission drawn alone ends in the skirt, the deep water the world ends in. So a
+ring or a fill whose circle crosses the map's edge stops on the rim and resumes where it comes
+back in, and one wholly past it is not drawn. A reach that covers the whole map therefore draws
+nothing, which is the honest answer: there is no water on the map it does not reach. A placed
+mission's exterior is ground ([world-map.md](world-map.md) §7.4), so a mark there keeps
+drawing on it. The owner filed this as a draw fault on #1556.
+
 **A mark is weighed by its outline, never by its interior.** A kelp field's faint fill and an
 inert hazard site's are texture inside a mark whose rim already speaks for it. A ladder that
 weighed them would rank the grain of a mark rather than the mark.

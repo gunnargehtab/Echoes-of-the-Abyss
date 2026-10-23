@@ -15,7 +15,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { Container, Graphics, type GraphicsPath } from 'pixi.js';
-import { Faction, SIG_BANDS } from '@echoes/shared';
+import { Biome, Faction, SIG_BANDS } from '@echoes/shared';
 import {
   createHost,
   HeadlessApplication,
@@ -36,6 +36,7 @@ import {
 } from '../src/game/EchoRenderer.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { UI } from '../src/game/palette.ts';
+import type { TerrainPayload } from '../src/net/GameClient.ts';
 
 /** §3's three stops, which are what marks a stroke as being about loudness. */
 const SIG_RAMP = new Set<number>([UI.sigLow, UI.sigMid, UI.sigHigh]);
@@ -162,6 +163,32 @@ function reachRings(app: HeadlessApplication): Stroke[] {
   return sigStrokes(app).filter((stroke) => !stroke.local && alphas.includes(stroke.alpha));
 }
 
+/**
+ * The canned ground, padded east and south to 12 km of open water. Reach is
+ * kilometres, and on the canned 4 km map the fixture's loud hulls hear all of
+ * it: since the chart cuts its rings at the rim (#1556), their envelope has no
+ * boundary left on the map. The padding gives it ground to lie on and moves
+ * nothing, since every hull and every canned cell keeps its place.
+ */
+const REACH_CELLS = 48;
+function reachTerrain(): TerrainPayload {
+  const canned = cannedTerrain();
+  const n = REACH_CELLS * REACH_CELLS;
+  const biomes = new Array<number>(n).fill(Biome.OpenWater);
+  const floor = new Array<number>(n).fill(2000);
+  const ceiling = new Array<number>(n).fill(0);
+  for (let row = 0; row < canned.rows; row++) {
+    for (let col = 0; col < canned.cols; col++) {
+      const from = row * canned.cols + col;
+      const to = row * REACH_CELLS + col;
+      biomes[to] = canned.biomes[from]!;
+      floor[to] = canned.floor[from]!;
+      ceiling[to] = canned.ceiling[from]!;
+    }
+  }
+  return { cols: REACH_CELLS, rows: REACH_CELLS, cellM: canned.cellM, biomes, floor, ceiling };
+}
+
 async function boot(): Promise<{
   chart: EchoRenderer;
   conn: PerspectiveView;
@@ -185,10 +212,11 @@ async function boot(): Promise<{
   await chart.init(chartHost as unknown as HTMLElement);
   chart.setConn(conn);
 
-  const terrain = cannedTerrain();
+  const terrain = reachTerrain();
   chart.setTerrain(terrain);
   conn.setTerrain(terrain);
-  chart.setMap(cannedMap());
+  const sizeM = REACH_CELLS * terrain.cellM;
+  chart.setMap({ ...cannedMap(), widthM: sizeM, heightM: sizeM });
   chart.setNodes(cannedNodes());
   chart.setIdentity(0, Faction.Bathyarch);
   conn.setIdentity(0, Faction.Bathyarch);
@@ -215,6 +243,18 @@ async function boot(): Promise<{
       conn.destroy();
     },
   };
+}
+
+/**
+ * `boot`, with the whole map in frame. The home camera stands about 2.8 km
+ * south of the base, so a ring's southern arcs are behind it; on the 4 km
+ * map the arcs left in view were the ones past the rim (#1556).
+ */
+async function bootReach(): ReturnType<typeof boot> {
+  const world = await boot();
+  world.conn.fitToMap();
+  world.frame(2);
+  return world;
 }
 
 /** The canned snapshot's own hulls, by SIG — the fixture this file reads. */
@@ -586,20 +626,23 @@ describe('the reach envelope (ui-ux.md §3.5)', () => {
     }
   });
 
-  it("collapses the fixture's nested rings and keeps the one that is apart", async () => {
-    const world = await boot();
+  it("collapses the fixture's nested rings to the one that bounds the map", async () => {
+    const world = await bootReach();
     try {
       // The fixture's own geometry, and the reason the rule exists. Three
       // hulls clear §3's amber stop: 11 at SIG 48, 13 at 62, and 14 at exactly
-      // 30. Hull 11 sits inside hull 13's reach — same base, and 4 km of reach
-      // against 300 m of spacing — so it bounds nothing. Hull 14 is 3.7 km
-      // away across the map and bounds its own water.
+      // 30. Hull 11 sits inside hull 13's reach — same base, and 2.9 km of
+      // reach against 13's 4.4 km and 300 m of spacing — so it bounds
+      // nothing. Hull 14 is 3.7 km away in the trench, where PF 1.6 gives it
+      // 3.7 km of reach, and the only water hull 13 hears past it lies north
+      // and west of the base, past the rim, which the chart no longer draws
+      // over (#1556). So the map holds one boundary, and it is hull 14's.
       const gated = CANNED_SIGS.filter((sig) => sig >= SIG_BANDS.AMBER).length;
       assert.equal(gated, 3, 'the fixture has to keep three hulls over the stop');
       assert.equal(
         reachRings(world.app).length,
-        2,
-        'the nested pair must merge and the distant hull must keep its own boundary'
+        1,
+        'the nested hulls must merge into the boundary that lies on the map'
       );
     } finally {
       world.teardown();
@@ -607,7 +650,7 @@ describe('the reach envelope (ui-ux.md §3.5)', () => {
   });
 
   it('draws nothing at all for a fleet under the stop', async () => {
-    const world = await boot();
+    const world = await bootReach();
     try {
       // Silent Running floors a hull at SIG 8 (§7), two stops under the gate,
       // so a fleet that has gone quiet takes its whole exposure off the water.
@@ -623,7 +666,7 @@ describe('the reach envelope (ui-ux.md §3.5)', () => {
   });
 
   it('collapses a squad to one contour rather than a circle each', async () => {
-    const world = await boot();
+    const world = await bootReach();
     try {
       // The case the rule exists for, at the scale the fixture cannot reach.
       // Twenty hulls at one SIG, 200 m apart: equal discs never *contain* each
@@ -668,7 +711,7 @@ describe('the reach envelope (ui-ux.md §3.5)', () => {
   });
 
   it('draws exactly one for a lone loud hull', async () => {
-    const world = await boot();
+    const world = await bootReach();
     try {
       // One emitter has nothing to be covered by, so the envelope is its own
       // circle — the rule costs a solitary hull nothing.
@@ -690,7 +733,7 @@ describe('the reach envelope (ui-ux.md §3.5)', () => {
 
 describe('the reach ring (ui-ux.md §3.5)', () => {
   it('draws for a hull at or above the amber stop and for no quieter one', async () => {
-    const world = await boot();
+    const world = await bootReach();
     try {
       const loud = CANNED_SIGS.filter((sig) => sig >= SIG_BANDS.AMBER).length;
       assert.ok(loud > 0 && loud < CANNED_SIGS.length, 'the fixture has to have both kinds');
@@ -715,7 +758,7 @@ describe('the reach ring (ui-ux.md §3.5)', () => {
   });
 
   it('never inks a ring green: the gate is the amber stop', async () => {
-    const world = await boot();
+    const world = await bootReach();
     try {
       for (const ring of reachRings(world.app)) {
         assert.notEqual(
@@ -730,7 +773,7 @@ describe('the reach ring (ui-ux.md §3.5)', () => {
   });
 
   it('keeps selection louder than the gate, so selection still reads', async () => {
-    const world = await boot();
+    const world = await bootReach();
     try {
       const alphas = new Set(reachRings(world.app).map((ring) => ring.alpha));
       assert.equal(alphas.size, 1, 'nothing is selected, so every ring is a gated one');
