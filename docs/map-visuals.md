@@ -151,7 +151,7 @@ ring or a fill whose circle crosses the map's edge stops on the rim and resumes 
 back in, and one wholly past it is not drawn. A reach that covers the whole map therefore draws
 nothing, which is the honest answer: there is no water on the map it does not reach. A placed
 mission's exterior is ground ([world-map.md](world-map.md) §7.4), so a mark there keeps
-drawing on it. The owner filed this as a draw fault on #1556.
+drawing on it (#1556).
 
 **A mark is weighed by its outline, never by its interior.** A kelp field's faint fill and an
 inert hazard site's are texture inside a mark whose rim already speaks for it. A ladder that
