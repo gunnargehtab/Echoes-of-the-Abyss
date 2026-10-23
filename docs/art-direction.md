@@ -1070,16 +1070,36 @@ without ripples, and rock admits no water at all.
   lattice's share of hollow, and grain on the lattice's mean byte. The detail lifts the
   bake's pixel by at most 1.15 / 1.05 − 1, about 0.095, so with the bake's own 0.05 no pixel
   passes `TERRAIN_LIFT`'s 0.15 of its fill.
-- **Dunes** run in crests 110 m apart, east–west, meandering over 420 m. The lee face is
-  the south 30 % of each dune, down-current. They are hillshaded by the key light about
+- **Dunes** run in crests 110 m apart across the current, meandering over 420 m. The lee
+  face is the far 30 % of each dune, down-current. Each map's current comes from a point off
+  its edge, and the crests are arcs about that point
+  ([#1560](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1560)): a distance
+  keeps the crests 110 m apart wherever they turn, so two plateaus never share a crest line
+  and the lit-face bound below holds at every bearing. One crest line on every map read as
+  corduroy, the only large regularity on an organic floor. They are hillshaded by the key light about
   flat ground: a face turned from it darkens by the whole strength, flat ground stays at
   the fill, and a face turned to it lifts by up to 0.44 of the strength, as far as the cap
   lets it. The dunes read by their lit faces as well as their shadows. A second field on
   the meander's 420 m lattice fades them in and out, down to a quarter of their strength.
+- **The current's source**, in metres east and south of the map's north-west corner:
+
+  | Map | East | South | The water |
+  | --- | --- | --- | --- |
+  | The Ventfront Divide | 4,000 | −2,500 | Over the north trench, fanning south across the divide |
+  | Abyssal Rift Corridor | −2,500 | 3,000 | Off the west end, down the rift |
+  | Kelp Labyrinth | 4,000 | −12,000 | Far north, nearly straight south |
+
+  The Kelp Labyrinth's cold-shock currents cross in a saddle, south-east on one diagonal and
+  south-west on the other ([hazards.md](hazards.md) §8), and no one source draws both. A far
+  one keeps every lee within 60° of the current over each site, so the floor never says the
+  water runs the other way. A map with no source of its own, every mission map today, takes
+  one 60,000 m north of its centre: across 10 km of map its crests stay within 6° of
+  east–west.
 - **Ripples** lie 7 m apart, parallel to the dunes and settled in their troughs. A
   ripple's lee darkens, and the rest of its 7 m lifts by as much in sum. A ripple draws
   while it spans 8 pixels and is gone at 3. **Scours** are hollows on a 38 m field,
-  drawn out 1.8 times longer north–south, along the current.
+  drawn out 1.8 times longer north–south on every map. They do not turn with the dunes'
+  source yet: a rotation that varies across the map would shear the field.
   **Grain** runs at 3 m and 1.3 m, each octave whole from 6 pixels and gone at 3.
 - **The layer fades with distance.** It is whole through 2 m a pixel and gone by 8, so the
   survey dolly sees the bake and the ink and nothing else: no second map grid.
@@ -1111,7 +1131,8 @@ Each seated stone leaves a **scour** in the bake, on open ground only. Its radiu
 its footprint at its own scale. The ground darkens to 0.7 at and under the stone, a
 shallower dip than a full face, and recovers by 2.2 radii up-current and across. The
 scour runs 1.6 times further on the lee, the south side, where the current drops its
-silt. It stays inside its stone's own cell, faded to nothing over the last radius before
+silt. The lee stays south on every map: the bake runs before the room names its map, so it
+cannot know where that map's current comes from. It stays inside its stone's own cell, faded to nothing over the last radius before
 the edge, like an ember's glow. A ground delta's rebake of the touched cells and a ring
 then redraws every scour it moved. Being in the bake, it costs nothing per frame, and fog,
 veil and ink treat it as ground.

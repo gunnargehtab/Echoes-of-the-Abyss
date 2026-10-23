@@ -577,6 +577,7 @@ export function GameCanvas({
           },
           onMap: (map) => {
             activeRenderer.setMap(map);
+            if (!cancelled) perspective.setMap(map.id);
             setMapName(map.name);
             setMaxSlots(map.seats);
           },

@@ -164,6 +164,24 @@ export function groundDetailTexture(terrain: TerrainPayload, cells: Uint8Array<A
 
 const f = (value: number) => (Number.isInteger(value) ? `${value}.0` : `${value}`);
 
+/**
+ * Where the map's current comes from (`SEABED_DETAIL.DUNE_SOURCE`, #1560): the
+ * point the dune crests arc about, in map metres. A map with no source of its
+ * own, and a view that has not heard which map it is, takes one far north of
+ * the map's centre, so its crests run east–west as every map's once did.
+ */
+export function duneSource(
+  mapId: string | null,
+  terrain: Pick<TerrainPayload, 'cols' | 'rows' | 'cellM'>
+): [number, number] {
+  const authored = mapId === null ? undefined : SEABED_DETAIL.DUNE_SOURCE[mapId];
+  if (authored !== undefined) return [authored[0], authored[1]];
+  return [
+    (terrain.cols * terrain.cellM) / 2,
+    (terrain.rows * terrain.cellM) / 2 - SEABED_DETAIL.DUNE_SOURCE_NORTH_M,
+  ];
+}
+
 /** The key light's horizontal heading, map x east and z south: where a face turns from it. */
 function lightHeading(): [number, number] {
   const length = Math.hypot(KEY_LIGHT.x, KEY_LIGHT.y);
@@ -229,6 +247,7 @@ function fragmentPars(): string {
 uniform sampler2D uGroundDetail;
 uniform sampler2D uGroundNoise;
 uniform vec2 uGroundDetailSize;
+uniform vec2 uDuneSource;
 vec4 groundNoise(vec2 x) {
   vec2 i = floor(x);
   vec2 t = x - i;
@@ -272,9 +291,15 @@ function fragmentMain(): string {
   float gWarpMax = 3.0 / ${f(d.MEANDER_FINE_M)};
   gWarpGrad *= min(1.0, gWarpMax / max(length(gWarpGrad), 1e-6));
 
-  // Dunes: crests east-west, the lee the south share of each, down-current.
-  float gCycle = gp.y / ${f(d.DUNE_M)} + gWarp;
-  vec2 gCycleGrad = vec2(0.0, 1.0 / ${f(d.DUNE_M)}) + gWarpGrad;
+  // Dunes: crests in arcs about the current's source, the lee the far share
+  // of each, down-current. A distance from a point keeps its gradient a unit
+  // vector, so the crests turn across the map at their one spacing, and the
+  // lit side's bound holds at every bearing (DUNE_LIT_SCALE). The source is
+  // off the map; the floor only keeps a stray uniform from dividing by zero.
+  vec2 gFrom = gp - uDuneSource;
+  float gReach = max(length(gFrom), 1.0);
+  float gCycle = gReach / ${f(d.DUNE_M)} + gWarp;
+  vec2 gCycleGrad = gFrom / (gReach * ${f(d.DUNE_M)}) + gWarpGrad;
   float gT = fract(gCycle);
   float gRise = clamp(gT / ${f(stoss)}, 0.0, 1.0);
   float gFall = clamp((gT - ${f(stoss)}) / ${f(d.DUNE_LEE)}, 0.0, 1.0);
@@ -292,7 +317,8 @@ function fragmentMain(): string {
                       dot(gCycleGrad, gLight) * ${f(leeNorm)}, -1.0, 1.0);
   gDune = gDune < 0.0 ? ${f(DUNE_LIT_SCALE)} * gDune : gDune;
 
-  // Scours: hollows the current took, drawn out along it, north-south. The
+  // Scours: hollows the current took, drawn out north-south on every map:
+  // unlike the dunes, they do not turn with its source yet (#1560). The
   // stretch comes first, so the noise stays isotropic in the stretched frame and
   // the hollows lie along z; the turn after it sets the lattice off the map's
   // axes, so no square of it shows. The first fetch's last channel wobbles the
@@ -304,7 +330,7 @@ function fragmentMain(): string {
   float gScour = smoothstep(0.52, 0.78, 0.65 * gS1.r + 0.35 * gS2.g) - ${f(SCOUR_MEAN)};
 
   // Ripples: the dunes' meander at their own spacing, lying in the troughs.
-  float gRCycle = (gp.y + gWarp * ${f(d.DUNE_M)}) / ${f(d.RIPPLE_M)} + 0.6 * gS1.a;
+  float gRCycle = (gReach + gWarp * ${f(d.DUNE_M)}) / ${f(d.RIPPLE_M)} + 0.6 * gS1.a;
   float gR = fract(gRCycle);
   // Centred over its own cycle: the lee darkens and the rest lifts as much.
   float gRLee = (gR >= ${f(rippleStoss)}
@@ -337,6 +363,8 @@ export interface GroundDetailUniforms {
   uGroundDetail: { value: DataTexture };
   uGroundNoise: { value: DataTexture };
   uGroundDetailSize: { value: [number, number] };
+  /** The current's source (`duneSource`): a uniform, so the map's id may land after its ground. */
+  uDuneSource: { value: [number, number] };
 }
 
 /**
@@ -348,12 +376,14 @@ export interface GroundDetailUniforms {
 export function installGroundDetail(
   material: Material,
   terrain: TerrainPayload,
-  texture: DataTexture
+  texture: DataTexture,
+  source: [number, number] = duneSource(null, terrain)
 ): GroundDetailUniforms {
   const uniforms: GroundDetailUniforms = {
     uGroundDetail: { value: texture },
     uGroundNoise: { value: groundNoiseTexture() },
     uGroundDetailSize: { value: [terrain.cols * terrain.cellM, terrain.rows * terrain.cellM] },
+    uDuneSource: { value: source },
   };
   const before = material.onBeforeCompile;
   const key = material.customProgramCacheKey();
@@ -364,7 +394,7 @@ export function installGroundDetail(
       .replace('#include <common>', `#include <common>\n${fragmentPars()}`)
       .replace('#include <color_fragment>', `#include <color_fragment>\n${fragmentMain()}`);
   };
-  material.customProgramCacheKey = () => `${key}:seabed-detail-3`;
+  material.customProgramCacheKey = () => `${key}:seabed-detail-4`;
   material.needsUpdate = true;
   return uniforms;
 }

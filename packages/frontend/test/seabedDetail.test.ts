@@ -20,11 +20,12 @@ import {
   ShaderLib,
   UnsignedByteType,
 } from 'three';
-import { Biome, SEABED_DETAIL, TERRAIN_LIFT } from '@echoes/shared';
+import { Biome, MAP_HEADERS, SEABED_DETAIL, TERRAIN_LIFT } from '@echoes/shared';
 import {
   DETAIL_LIFT,
   detailStrengths,
   DUNE_LIT_SCALE,
+  duneSource,
   GRAIN_MEAN,
   groundDetailCells,
   groundDetailTexture,
@@ -143,7 +144,8 @@ describe('the strength table', () => {
       `No row may exceed **${d.MAX_SUM.toFixed(2)}**`,
       `crests ${d.DUNE_M} m apart`,
       `meandering over ${d.MEANDER_M} m`,
-      `the south ${d.DUNE_LEE * 100} % of each dune`,
+      `the far ${d.DUNE_LEE * 100} % of each dune`,
+      `one ${d.DUNE_SOURCE_NORTH_M.toLocaleString('en-US')} m north of its centre`,
       `the meander's ${d.MEANDER_M} m lattice`,
       'down to a quarter of their strength',
       `lie ${d.RIPPLE_M} m apart`,
@@ -163,6 +165,66 @@ describe('the strength table', () => {
     for (const phrase of phrases) {
       assert.ok(prose.includes(phrase), `the SPEC no longer says "${phrase}"`);
     }
+  });
+});
+
+describe("the dunes' current (#1560)", () => {
+  const doc = readFileSync(new URL('../../../docs/art-direction.md', import.meta.url), 'utf8');
+  const section = doc.slice(doc.indexOf('#### Silt detail and seated stones'));
+  const metres = (cell: string) => Number(cell.trim().replace(/,/g, '').replace('−', '-'));
+
+  it('is the source table the SPEC section prints, one row a catalogue map', () => {
+    for (const map of MAP_HEADERS) {
+      const source = SEABED_DETAIL.DUNE_SOURCE[map.id];
+      assert.ok(source !== undefined, `${map.id} has no source`);
+      const line = section.split('\n').find((l) => l.trim().startsWith(`| ${map.name} |`));
+      assert.ok(line !== undefined, `the SPEC table has no ${map.name} row`);
+      const cells = line.trim().split('|');
+      assert.deepEqual([metres(cells[2]!), metres(cells[3]!)], [...source], map.name);
+    }
+  });
+
+  it('stands every source at least 2 km off its map, so no crest closes into a ring', () => {
+    for (const map of MAP_HEADERS) {
+      const [x, y] = SEABED_DETAIL.DUNE_SOURCE[map.id]!;
+      const dx = Math.max(0 - x, 0, x - map.widthM);
+      const dy = Math.max(0 - y, 0, y - map.heightM);
+      assert.ok(Math.hypot(dx, dy) >= 2000, `${map.id}'s source is ${Math.hypot(dx, dy)} m out`);
+    }
+  });
+
+  it('turns the crests across each catalogue map, so plateaus do not share one line', () => {
+    // The crest bearing is square to the line from the source. Across the
+    // map's four corners it must turn by at least 20°.
+    for (const map of MAP_HEADERS) {
+      const [x, y] = SEABED_DETAIL.DUNE_SOURCE[map.id]!;
+      const bearings = [
+        [0, 0],
+        [map.widthM, 0],
+        [0, map.heightM],
+        [map.widthM, map.heightM],
+      ].map(([cx, cy]) => (Math.atan2(cy! - y, cx! - x) * 180) / Math.PI);
+      const turn = Math.max(...bearings) - Math.min(...bearings);
+      assert.ok(turn >= 20, `${map.id}'s crests turn ${turn.toFixed(1)}° across it`);
+    }
+  });
+
+  it('falls back far north: crests within 6° of east–west across 10 km', () => {
+    const terrain = { cols: 40, rows: 40, cellM: 250 };
+    assert.deepEqual(duneSource('a-mission-map', terrain), duneSource(null, terrain));
+    const [x, y] = duneSource(null, terrain);
+    assert.equal(x, 5000);
+    for (const [cx, cy] of [
+      [0, 0],
+      [10000, 0],
+      [0, 10000],
+      [10000, 10000],
+    ]) {
+      const fromSouth = Math.abs(Math.atan2(cx! - x, cy! - y)) * (180 / Math.PI);
+      assert.ok(fromSouth <= 6, `a crest ${fromSouth.toFixed(2)}° off east–west at ${cx}, ${cy}`);
+    }
+    const [vx, vy] = SEABED_DETAIL.DUNE_SOURCE['ventfront-divide']!;
+    assert.deepEqual(duneSource('ventfront-divide', terrain), [vx, vy]);
   });
 });
 
@@ -384,11 +446,23 @@ describe('the silt detail shader', () => {
   const fragment = shader.fragmentShader;
 
   it('chains the survey ink, keeps its cells, and keys itself apart', () => {
-    assert.equal(material.customProgramCacheKey(), 'survey-ink:seabed-detail-3');
+    assert.equal(material.customProgramCacheKey(), 'survey-ink:seabed-detail-4');
     assert.equal((shader.uniforms.uSurveyCells as { value: unknown }).value, surveyCells);
     assert.equal((shader.uniforms.uGroundDetail as { value: unknown }).value, texture);
     assert.deepEqual((shader.uniforms.uGroundDetailSize as { value: unknown }).value, [1500, 1250]);
     assert.equal((shader.uniforms.uGroundNoise as { value: unknown }).value, groundNoiseTexture());
+    assert.deepEqual(
+      (shader.uniforms.uDuneSource as { value: unknown }).value,
+      duneSource(null, terrain)
+    );
+  });
+
+  it('lays dunes and ripples on the distance from the source, not on a map axis (#1560)', () => {
+    const flat = fragment.replace(/\s+/g, ' ');
+    assert.ok(flat.includes('vec2 gFrom = gp - uDuneSource;'));
+    assert.ok(flat.includes(`float gCycle = gReach / ${SEABED_DETAIL.DUNE_M}.0 + gWarp;`));
+    assert.match(flat, /float gRCycle = \(gReach \+ gWarp/);
+    assert.doesNotMatch(flat, /gp\.y \//, 'a crest still runs along the map x axis');
   });
 
   it('shades after the bake and the veil, before the ink and the fog', () => {
