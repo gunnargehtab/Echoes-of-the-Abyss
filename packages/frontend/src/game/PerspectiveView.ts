@@ -469,15 +469,16 @@ const QUAD_CORNERS: ReadonlyArray<readonly [number, number]> = [
 
 /**
  * How far along a ray the ground plane is — or, when it is not there at all,
- * far enough that the caller's own map clamp answers instead.
+ * far enough that the caller's own cut to the map answers instead.
  *
  * A freely pitched camera can point a corner ray *above* the horizon, where
  * the ground plane lies behind the eye and the intersection is negative. The
  * honest answer is "this corner sees past the map", and the honest way to say
- * it is a point far out along the ray's own heading, which every caller here
- * clamps to the map edge. Answering with the eye's own position instead —
- * what `Math.max(1, t)` used to do — drew a scope box collapsed to a dot at
- * exactly the moment the player most needed to know where they were looking.
+ * it is a point far out along the ray's own heading, which the scope cuts at
+ * the map's edge (scopeBox.ts) and the culling bounds clamp to it. Answering
+ * with the eye's own position instead — what `Math.max(1, t)` used to do —
+ * drew a scope box collapsed to a dot at exactly the moment the player most
+ * needed to know where they were looking.
  */
 function groundPlaneT(originY: number, directionY: number, groundY: number): number {
   if (Math.abs(directionY) < 1e-6) return HORIZON_T;
@@ -1978,13 +1979,15 @@ export class PerspectiveView {
    * tilted camera honestly sees. Analytic on purpose: this runs every frame,
    * and four terrain-mesh raycasts per frame would spend real budget buying
    * ridge-accurate corners a 170 px scope box cannot show. Pointer intents
-   * keep the precise `resolveGround`.
+   * keep the precise `resolveGround`. Corners past the map's edge stay where
+   * they are: clamped one by one they slid along the rim and the scope drew
+   * the box as a slash (#1558), so each caller bounds them to the map itself.
    */
   groundQuad(): Array<{ x: number; y: number }> {
     const terrain = this.terrain;
     if (terrain === null || this.renderer === null) return [];
     const groundY = this.groundYAt(this.target.x, this.target.z);
-    // The same four objects every frame, rewritten in place (#432): the one
+    // The same four objects every frame, rewritten in place (#432): each
     // caller reads them and keeps nothing. A perspective camera's ray from a
     // screen corner is the unprojected corner minus the eye, which needs no
     // Raycaster to say.
@@ -1994,11 +1997,9 @@ export class PerspectiveView {
       const [nx, ny] = QUAD_CORNERS[i]!;
       const direction = DIR_TMP.set(nx, ny, 0.5).unproject(this.camera).sub(origin).normalize();
       const scale = groundPlaneT(origin.y, direction.y, groundY);
-      const px = origin.x + direction.x * scale;
-      const pz = origin.z + direction.z * scale;
       const corner = out[i]!;
-      corner.x = Math.min(terrain.cols * terrain.cellM, Math.max(0, px));
-      corner.y = Math.min(terrain.rows * terrain.cellM, Math.max(0, pz));
+      corner.x = origin.x + direction.x * scale;
+      corner.y = origin.z + direction.z * scale;
     }
     return out;
   }
