@@ -8,7 +8,14 @@
  */
 import assert from 'node:assert/strict';
 import { afterEach, describe, it, mock } from 'node:test';
-import { Faction, ResourceKind, SORROWGATE_REGION, type PlanRect } from '@echoes/shared';
+import { Container, Graphics } from 'pixi.js';
+import {
+  Faction,
+  HazardPhase,
+  ResourceKind,
+  SORROWGATE_REGION,
+  type PlanRect,
+} from '@echoes/shared';
 import {
   createHost,
   HeadlessApplication,
@@ -16,7 +23,8 @@ import {
   pumpAnimationFrames,
 } from './support/headless.ts';
 import { cannedMap, cannedNodes, cannedSnapshot, cannedTerrain } from './support/cannedMatch.ts';
-import { EchoRenderer, type RendererCallbacks } from '../src/game/EchoRenderer.ts';
+import { EchoRenderer, hearsWholeMap, type RendererCallbacks } from '../src/game/EchoRenderer.ts';
+import { UI } from '../src/game/palette.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { clipPolygon, clipSegment } from '../src/game/rimClip.ts';
 
@@ -74,6 +82,31 @@ describe('clipPolygon', () => {
   });
 });
 
+describe('hearsWholeMap', () => {
+  it('is true when one reach holds every corner', () => {
+    assert.equal(hearsWholeMap([{ x: 2000, y: 2000, radiusM: 3000 }], MAP), true);
+  });
+
+  it('is true when two reaches hold the map between them and neither alone does', () => {
+    const pair = [
+      { x: 1000, y: 2000, radiusM: 2600 },
+      { x: 3000, y: 2000, radiusM: 2600 },
+    ];
+    assert.equal(hearsWholeMap([pair[0]!], MAP), false);
+    assert.equal(hearsWholeMap(pair, MAP), true);
+  });
+
+  it('is false while any arc of the envelope lies on the map', () => {
+    assert.equal(hearsWholeMap([{ x: 2000, y: 2000, radiusM: 1500 }], MAP), false);
+    assert.equal(hearsWholeMap([{ x: 0, y: 0, radiusM: 3000 }], MAP), false);
+  });
+
+  it('is false for a reach wholly off the map, and for none', () => {
+    assert.equal(hearsWholeMap([{ x: -5000, y: 2000, radiusM: 1000 }], MAP), false);
+    assert.equal(hearsWholeMap([], MAP), false);
+  });
+});
+
 const views: PerspectiveView[] = [];
 afterEach(() => {
   for (const view of views.splice(0)) view.destroy();
@@ -81,6 +114,7 @@ afterEach(() => {
 
 describe('the chart at the rim', () => {
   async function boot(): Promise<{
+    app: HeadlessApplication;
     conn: PerspectiveView;
     ground: { x: number; y: number }[];
     frame(): void;
@@ -118,7 +152,23 @@ describe('the chart at the rim', () => {
     ]);
     chart.setIdentity(0, Faction.Bathyarch);
     conn.setIdentity(0, Faction.Bathyarch);
+    // A live current against the east rim, flowing east: its streak at
+    // y 3,600 runs from x 3,919 to 4,021, so `traceLine` has a course to cut.
     const snapshot = cannedSnapshot();
+    snapshot.hazards = [
+      ...(snapshot.hazards ?? []),
+      {
+        id: 99,
+        kind: 'cold-shock',
+        x: 3970,
+        y: 3700,
+        radiusM: 300,
+        phase: HazardPhase.Active,
+        progress: 0.2,
+        remainingS: 20,
+        flowRad: 0,
+      },
+    ];
     chart.applySnapshot(snapshot);
     conn.applySnapshot(snapshot);
 
@@ -133,7 +183,7 @@ describe('the chart at the rim', () => {
       pumpAnimationFrames();
       app.frame();
     };
-    return { conn, ground, frame, teardown: () => chart.destroy() };
+    return { app, conn, ground, frame, teardown: () => chart.destroy() };
   }
 
   const offMap = (points: { x: number; y: number }[]) =>
@@ -155,6 +205,65 @@ describe('the chart at the rim', () => {
         ground.some((p) => Math.abs(p.y) < 1e-6),
         'a ring meets the north rim'
       );
+    } finally {
+      teardown();
+    }
+  });
+
+  it("cuts a current's streak on the rim", async () => {
+    const { ground, frame, teardown } = await boot();
+    try {
+      frame();
+      frame();
+      // The streak's cut end; the rim stroke steps every 250 m, so no other
+      // ink lands on the east rim at y 3,600.
+      assert.ok(
+        ground.some((p) => Math.abs(p.x - 4000) < 1e-6 && Math.abs(p.y - 3600) < 1e-6),
+        'the streak ends on the east rim'
+      );
+    } finally {
+      teardown();
+    }
+  });
+
+  it('strokes the rim in the reach ink when the fleet hears the whole map', async () => {
+    const { app, ground, frame, teardown } = await boot();
+    try {
+      frame();
+      frame();
+      // The canned fleet hears all of the 4 km map: hull 13 at SIG 62 holds
+      // the north-west, hull 14 in the trench the south-east. No arc of the
+      // envelope is left on the map, so systems-echo.md §9's reach is the rim.
+      for (const [x, y] of [
+        [0, 0],
+        [4000, 0],
+        [4000, 4000],
+        [0, 4000],
+      ] as const) {
+        assert.ok(
+          ground.some((p) => p.x === x && p.y === y),
+          `the rim stroke reaches the corner (${x}, ${y})`
+        );
+      }
+      const reach = new Set<number>([UI.sigMid, UI.sigHigh]);
+      const strokes: number[] = [];
+      const walk = (node: Container): void => {
+        for (const child of node.children) {
+          if (child instanceof Graphics) {
+            for (const instruction of child.context.instructions) {
+              if (instruction.action !== 'stroke') continue;
+              const style = (instruction.data as { style?: { color?: number; alpha?: number } })
+                .style;
+              if (style?.color !== undefined && reach.has(style.color) && style.alpha === 0.27) {
+                strokes.push(style.color);
+              }
+            }
+          }
+          walk(child as Container);
+        }
+      };
+      walk(app.stage as unknown as Container);
+      assert.equal(strokes.length, 1, 'one reach stroke: the rim, in the gated ring alpha');
     } finally {
       teardown();
     }

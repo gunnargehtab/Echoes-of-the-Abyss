@@ -224,6 +224,7 @@ the water gives it.
 | Not drawn for | Structures, at any loudness. A base is loud, anchored and permanent, so its ring would be a permanent circle that never says anything new; the collar is the whole of what a structure's loudness has to report |
 | Ink | §3's stops again, at lower alpha than a selected hull's, so selection still reads as selection |
 | Shape | Projected onto the terrain vertex by vertex, like every ring: a distance measured through water climbs a ridge |
+| At the rim | Cut there, like every mark on the ground ([map-visuals.md](map-visuals.md) §5). A fleet whose reach holds the whole map has no arc left on it, so the rim is stroked in the loudest ringed hull's ink, at the selected alpha when a ringed hull is selected (#1556) |
 
 **A ring is drawn exactly where it adds exposure.** Reach is kilometres and a fleet's
 spacing is hundreds of metres, so hulls near each other have nested reach almost always —

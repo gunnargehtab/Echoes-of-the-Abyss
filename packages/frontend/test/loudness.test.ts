@@ -13,7 +13,7 @@
  */
 
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { describe, it, mock } from 'node:test';
 import { Container, Graphics, type GraphicsPath } from 'pixi.js';
 import { Biome, Faction, SIG_BANDS } from '@echoes/shared';
 import {
@@ -644,6 +644,32 @@ describe('the reach envelope (ui-ux.md §3.5)', () => {
         1,
         'the nested hulls must merge into the boundary that lies on the map'
       );
+      // And it is hull 14's: a ring's kept vertices are the ground points one
+      // hull's centre stands equally far from, so count them for each hull.
+      const ground: Array<{ x: number; y: number }> = [];
+      const project = world.conn.projectPoint.bind(world.conn);
+      mock.method(
+        world.conn,
+        'projectPoint',
+        (...args: Parameters<PerspectiveView['projectPoint']>) => {
+          if (args[2] === null) ground.push({ x: args[0], y: args[1] });
+          return project(...args);
+        }
+      );
+      world.frame();
+      const onRingOf = (id: number): number => {
+        const hull = cannedSnapshot().units.find((unit) => unit.id === id)!;
+        // Distinct points only: a frame asks for the same point more than once.
+        const counts = new Map<string, number>();
+        for (const key of new Set(ground.map((p) => `${p.x},${p.y}`))) {
+          const [x, y] = key.split(',').map(Number) as [number, number];
+          const at = Math.hypot(x - hull.x, y - hull.y).toFixed(3);
+          counts.set(at, (counts.get(at) ?? 0) + 1);
+        }
+        return Math.max(0, ...counts.values());
+      };
+      assert.ok(onRingOf(14) >= 3, "hull 14's ring is drawn");
+      assert.ok(onRingOf(13) < 3, "hull 13's ring is not");
     } finally {
       world.teardown();
     }

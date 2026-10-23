@@ -5,13 +5,18 @@ issue's own cameras, at the branch (`cut`) and with `PerspectiveView.inkBounds` 
 on the live conn view (`uncut`), which is how `main` drew. Headless, 1440×900, SwiftShader.
 
 ```bash
-node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost:5173/?map=ventfront-divide' \
-  --out <dir> --steps docs/screenshots/issue-1556/frames.mjs
+for map in ventfront-divide abyssal-rift-corridor; do
+  node .claude/skills/run-game/scripts/drive.mjs --url "http://localhost:5173/?map=$map" \
+    --out <dir>/$map --steps docs/screenshots/issue-1556/frames.mjs
+done
 ```
+
+The drive numbers its frames: `02-<map>-cut.png` and `03-<map>-uncut.png` were renamed below
+for what they show.
 
 | Frame | What it shows |
 | --- | --- |
-| `ventfront-bastion-ring-uncut.png` | The Bastion's SIG ring rising past the pink rim into the void |
-| `ventfront-bastion-ring-cut.png` | The same ring ending on the rim |
+| `ventfront-reach-ring-uncut.png` | The fleet's reach ring rising past the pink rim into the void |
+| `ventfront-reach-ring-cut.png` | The same ring ending on the rim |
 | `corridor-storm-rings-uncut.png` | Two corner storm rings floating in the void at the horizon |
 | `corridor-storm-rings-cut.png` | Only the storm rings' arcs on the map; the orange ring ends on the rim |

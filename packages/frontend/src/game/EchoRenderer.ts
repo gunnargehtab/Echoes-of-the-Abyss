@@ -110,6 +110,7 @@ import {
   type OwnOrdnance,
   type OwnStructure,
   type OwnUnit,
+  type PlanRect,
   type Price,
   type QueuedOrderView,
   type ResourceNodeInfo,
@@ -1139,6 +1140,43 @@ export function insideAnotherReach(
     if (dx * dx + dy * dy < limit * limit) return true;
   }
   return false;
+}
+
+/**
+ * Does the fleet hear the whole of the map?
+ *
+ * The chart cuts its rings at the rim (rimClip.ts, #1556), so a fleet whose
+ * reach holds every metre of the map has no arc left on it and would draw
+ * what a silent fleet draws — the one under-drawing docs/systems-echo.md §9
+ * forbids. The rim is then where the heard water ends, and `drawRings`
+ * strokes it in the reach's ink (docs/map-visuals.md §5).
+ *
+ * Answered from the envelope itself: walk the same polygon `traceCircle`
+ * draws, a side kept when neither end is inside another reach. If no kept
+ * side reaches the map, no boundary of the union lies on it, so the map is
+ * wholly heard or wholly unheard, and its middle says which.
+ */
+export function hearsWholeMap(discs: readonly ReachDisc[], bounds: PlanRect): boolean {
+  const span: [number, number] = [0, 0];
+  for (let i = 0; i < discs.length; i++) {
+    const { x, y, radiusM } = discs[i]!;
+    let ax = x + radiusM;
+    let ay = y;
+    let aKept = !insideAnotherReach(ax, ay, discs, i);
+    for (let k = 1; k <= CIRCLE_SEGMENTS; k++) {
+      const angle = (k / CIRCLE_SEGMENTS) * Math.PI * 2;
+      const bx = x + Math.cos(angle) * radiusM;
+      const by = y + Math.sin(angle) * radiusM;
+      const bKept = !insideAnotherReach(bx, by, discs, i);
+      if (aKept && bKept && clipSegment(bounds, ax, ay, bx, by, span)) return false;
+      ax = bx;
+      ay = by;
+      aKept = bKept;
+    }
+  }
+  const mx = bounds.x + bounds.widthM / 2;
+  const my = bounds.y + bounds.heightM / 2;
+  return discs.some((d) => (mx - d.x) ** 2 + (my - d.y) ** 2 < d.radiusM ** 2);
 }
 
 /**
@@ -6117,10 +6155,12 @@ export class EchoRenderer {
       const traced = this.traceCircle(g, disc.x, disc.y, disc.radiusM, null, (x, y) =>
         insideAnotherReach(x, y, discs, i)
       );
-      // Nothing survived: every metre of this hull's reach is water another of
-      // the player's own hulls already hears into, so its ring adds no exposure
-      // and is not drawn. The hull still wears its collar, and the water it is
-      // audible in is inside the envelope the others draw.
+      // Nothing survived: every metre of this hull's reach on the map is water
+      // another of the player's own hulls already hears into, so its ring adds
+      // no exposure and is not drawn — or the rest lies past the rim, where
+      // there is no water to measure (#1556). The hull still wears its collar,
+      // and the water it is audible in is inside the envelope the others
+      // draw, or the rim below says the whole map is.
       if (!traced) continue;
       g.stroke({
         width: 2 * this.uiScale,
@@ -6128,6 +6168,61 @@ export class EchoRenderer {
         alpha: selected ? INSTRUMENT_OUTLINE_ALPHA.selectedRing : LOUD_RING_ALPHA,
       });
     }
+
+    // A fleet that hears the whole map has no arc left on it, and the rim is
+    // where its heard water ends: stroked in the loudest hull's ink, at the
+    // selected ring's alpha when any ringed hull is selected.
+    const bounds = this.conn?.inkBounds() ?? null;
+    if (bounds !== null && ringed.length > 0 && hearsWholeMap(discs, bounds)) {
+      let loudest = ringed[0]!;
+      for (const entry of ringed) if (entry.unit.sig > loudest.unit.sig) loudest = entry;
+      if (this.traceRim(g, bounds)) {
+        g.stroke({
+          width: 2 * this.uiScale,
+          color: sigColor(loudest.unit.sig),
+          alpha: ringed.some((entry) => entry.selected)
+            ? INSTRUMENT_OUTLINE_ALPHA.selectedRing
+            : LOUD_RING_ALPHA,
+        });
+      }
+    }
+  }
+
+  /**
+   * The map's rim as ground-lying ink, a cell at a time so it conforms to the
+   * ground the way the conn view's rim line does. Returns false when nothing
+   * was visible.
+   */
+  private traceRim(g: Graphics, bounds: PlanRect): boolean {
+    const stepM = this.terrain?.cellM ?? 250;
+    const right = bounds.x + bounds.widthM;
+    const bottom = bounds.y + bounds.heightM;
+    const corners = [
+      [bounds.x, bounds.y],
+      [right, bounds.y],
+      [right, bottom],
+      [bounds.x, bottom],
+    ] as const;
+    let any = false;
+    for (let c = 0; c < 4; c++) {
+      const [x0, y0] = corners[c]!;
+      const [x1, y1] = corners[(c + 1) % 4]!;
+      const steps = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / stepM));
+      for (let i = 0; i < steps; i++) {
+        const t0 = i / steps;
+        const t1 = (i + 1) / steps;
+        const drew = this.traceLine(
+          g,
+          x0 + (x1 - x0) * t0,
+          y0 + (y1 - y0) * t0,
+          x0 + (x1 - x0) * t1,
+          y0 + (y1 - y0) * t1,
+          null
+        );
+        any = any || drew;
+      }
+    }
+    return any;
   }
 
   /**
