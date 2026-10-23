@@ -372,7 +372,7 @@ In order, because each step can be played before the next exists:
    `canChooseFaction` refuses it, and no `PlayerState.faction` holds it. Every table keyed by
    faction gains a row, `FACTION_PRESSURE_BASELINE` among them, at PR-2, with the cap beside it.
    The value is available for the three commons only. `unitAvailableTo` checks the lock alone,
-   so it would admit every unlocked hull to a new value, the Harvester and the Lure among them.
+   so it would admit every unlocked hull to a new value, the Harvester and the Chorister among them.
    The phantom list and the hire's check both read that answer, so a moorage phantom is only
    ever a hull a moorage sails.
 2. **The slot and the flag, audited.** Every reader of `Owner.faction` is asked whether it means

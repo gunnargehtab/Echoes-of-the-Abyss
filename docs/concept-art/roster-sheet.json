@@ -3,12 +3,12 @@
   "navies": [
     {
       "name": "Bathyarch Consortium",
-      "hulls": 20,
+      "hulls": 16,
       "structures": 8
     },
     {
       "name": "Pelagia Commune",
-      "hulls": 20,
+      "hulls": 16,
       "structures": 8
     },
     {
@@ -18,7 +18,7 @@
     },
     {
       "name": "Hadron Knights",
-      "hulls": 20,
+      "hulls": 16,
       "structures": 8
     }
   ],

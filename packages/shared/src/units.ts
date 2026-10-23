@@ -102,7 +102,8 @@ export interface UnitStats {
    * Absent on every generic hull, which is the roster's default and stays it:
    * the Light Scout and the Abyssal Submersible carry a faction in their
    * *names* and no lock in their stats, and the Chorister is the Directorate's
-   * by its price rather than by a rule (docs/units.md, design notes).
+   * by its price rather than by a rule (docs/units.md, design notes). Since
+   * #1582 it is the only Biomass-priced hull left without a lock.
    *
    * The Clarion is the exception and the first one. Its listed SIG is a *cone*
    * figure and only means anything under the directional term, and that term
@@ -972,12 +973,18 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     speed: 40,
     hullLengthM: 100,
     // The Precentor's price shape: the cohort programme's account beside the
-    // Nodules. Nobody's by lock — the Biomass is the lock, as the
-    // Chorister's is (docs/units.md; docs/economy.md §6).
+    // Nodules (docs/economy.md §6).
     cost: 140,
     biomassCost: 30,
     buildTimeS: 45,
     berths: 2,
+    /**
+     * A descent saved is worth something only to the navy that lives below
+     * the layer. Locked by its price alone until #1582, which left the Commune,
+     * earning Biomass by bloom-share, a second way in (docs/units.md, design
+     * notes).
+     */
+    faction: Faction.Directorate,
     /** "Four berths — four Choristers, or two Corvettes." */
     holdBerths: 4,
     attackDamage: 0,
@@ -1125,13 +1132,17 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     maxHp: 200,
     speed: 40,
     hullLengthM: 58,
-    // Grown, and that is the lock. Not faction-bound: the Biomass column is
-    // what keeps this hull in the Directorate's hands, exactly as it keeps the
-    // Chorister there (docs/economy.md §8).
+    // Grown, in the cohort programme's account (docs/economy.md §8).
     cost: 90,
     biomassCost: 15,
     buildTimeS: 20,
     berths: 1,
+    /**
+     * The tier it gains sitting still is the Listening; under another flag it
+     * is a slow Light Scout. Locked by its price alone until #1582
+     * (docs/units.md, design notes).
+     */
+    faction: Faction.Directorate,
     attackDamage: 0,
     attackRangeM: 0,
     attackCooldownS: 0,
@@ -1257,11 +1268,12 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     pressureRating: 3,
     maxHp: 620,
     speed: 42,
-    // Grown, the cohort programme's account again — and not faction-locked, as
-    // the Chorister and the Acolyte are not. Every navy may drop a charge; only
-    // this one lives deep enough for "up" to be where the enemy is.
+    // Grown, the cohort programme's account again. Only the Directorate lives
+    // deep enough for "up" to be where the enemy is, which is the lock
+    // (#1582; docs/units.md, design notes).
     cost: 300,
     biomassCost: 40,
+    faction: Faction.Directorate,
     hullLengthM: 105,
     buildTimeS: 60,
     berths: 3,
@@ -1415,10 +1427,11 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     maxHp: 560,
     speed: 40,
     cost: 280,
-    // Grown, and that is the lock — the Chorister's rule a fourth time. A song
-    // that calls the Drift reads the same under any flag; what does not is
-    // paying for it out of the account whose yield rises with Drift Health.
+    // Grown. The Drift it calls renders into the account only the Directorate
+    // earns at full rate, so the song pays the navy that sang it — the lock
+    // since #1582 (docs/units.md, design notes).
     biomassCost: 50,
+    faction: Faction.Directorate,
     hullLengthM: 100,
     buildTimeS: 58,
     berths: 3,

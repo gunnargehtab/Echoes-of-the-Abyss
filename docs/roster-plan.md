@@ -57,6 +57,9 @@ The plan is bounded by decisions that are already made, and it is shorter for it
   `faction` only when its stat line cannot be read outside the navy — the Clarion test. Where
   a price does the work, the price is the lock, as the Chorister's Biomass is. Most of what
   follows fails the Clarion test honestly and is locked; the cells that do not are marked.
+  Since #1582 the Chorister is the only hull the price alone still locks: the Directorate's
+  four other Biomass hulls carry `faction` too, so its row is its own (units.md, design
+  notes).
 - **The berths are the budget.** [economy.md](economy.md) §10 caps a commander at forty
   berths whatever the roster holds, so a richer roster costs the Echo pass nothing. Kinds are
   free; entities are not. This is what makes the expansion possible at all after
@@ -122,8 +125,9 @@ is this navy's and not another's. Numbers are directions until the wave writes t
   Locked: the Veil's scout is an argument about a floor nobody else's economy could stand.
 - *Acolyte* (Directorate, Foundry). A scout that hears one tier better than it should for its
   HYD while stationary — the Listening's ears, made into a hull that sits at a chokepoint
-  rather than one that drives past it. Slow, cheap, priced partly in Biomass. Not locked:
-  the Biomass is the lock, as the Chorister's is.
+  rather than one that drives past it. Slow, cheap, priced partly in Biomass. Written
+  unlocked, on the Chorister's rule, and locked since #1582, as are the Verger, the Thurible
+  and the Lure.
 - *Herald* (Knights, Foundry). A cone hull with a 100 m/s drive whose listed SIG is loud but
   whose wake is the quietest in the game — ×0.10, [systems-echo.md](systems-echo.md) §8 — so
   the way to scout with it is to turn and run, and the way to be caught is to face the enemy.

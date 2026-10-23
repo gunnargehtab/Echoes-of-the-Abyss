@@ -104,8 +104,9 @@ export const UNITS = [
   { slug: 'responsory', model: 'responsory-hadron.glb', lengthM: 95, sig: 27 },
   // The transports (docs/units.md "The transports", #783 — Phase 4's first
   // box): one a navy, so each model is the kind's canonical one. The Verger
-  // carries no lock and takes the Chorister's rule — its Directorate model
-  // is the kind's canonical one, and the three rows below it its variants. The
+  // took the Chorister's rule until #1582 locked it — its Directorate model
+  // is the kind's canonical one, and the three dormant rows below it its
+  // variants (models-plan.md §3.4). The
   // Antiphon's listed 12 is a cone figure like the Clarion's: it bakes on
   // the compass average, 5.4, and the light is placed forward.
   { slug: 'freighter', model: 'freighter-bathyarch.glb', lengthM: 160, sig: 30 },
@@ -119,8 +120,8 @@ export const UNITS = [
   { slug: 'verger-hadron', model: 'verger-hadron.glb', lengthM: 100, sig: 14 },
   { slug: 'antiphon', model: 'antiphon-hadron.glb', lengthM: 110, sig: 5.4 },
   // The scouts (docs/units.md "The scouts", #784 — Phase 4's second box):
-  // one a navy, so each model is the kind's canonical one. The Acolyte
-  // carries no lock and takes the Chorister's rule, as the Verger does. The
+  // one a navy, so each model is the kind's canonical one. The Acolyte's
+  // variants are dormant, as the Verger's are. The
   // Herald's listed 14 is a cone figure like the Antiphon's: it bakes on the
   // compass average, 6.3, and the light is placed forward, in the throat.
   { slug: 'beacon', model: 'beacon-bathyarch.glb', lengthM: 70, sig: 30 },
@@ -135,8 +136,7 @@ export const UNITS = [
   { slug: 'herald', model: 'herald-hadron.glb', lengthM: 65, sig: 6.3 },
   // The ordnance hulls (docs/units.md "The ordnance hulls", #785 — Phase 4's
   // third box): one a navy, so each model is the kind's canonical one. The
-  // Thurible carries no lock and takes the Chorister's rule, as the Verger
-  // and the Acolyte do. The Lance's listed 20 is a cone figure like the
+  // Thurible's variants are dormant, as the Verger's are. The Lance's listed 20 is a cone figure like the
   // Herald's: it bakes on the compass average, 9, and the light is placed
   // forward, in the muzzle collar.
   { slug: 'broadside', model: 'broadside-bathyarch.glb', lengthM: 120, sig: 42 },
@@ -152,8 +152,8 @@ export const UNITS = [
   // The siege hulls (docs/units.md "The siege hulls", #786 — Phase 4's fourth
   // box): one a navy, so each model is the kind's canonical one, and three of
   // the four are built in their working state (models-plan.md §3.5) with the
-  // resting band's lamps (§3.2). The Lure carries no lock and takes the
-  // Chorister's rule, as the Thurible does. The Tocsin's listed 22 is a cone
+  // resting band's lamps (§3.2). The Lure's variants are dormant, as the
+  // Verger's are. The Tocsin's listed 22 is a cone
   // figure like the Lance's: it bakes on the compass average, 9.9, and the
   // light is placed forward, in the muzzle collar.
   { slug: 'furnace', model: 'furnace-bathyarch.glb', lengthM: 115, sig: 40 },

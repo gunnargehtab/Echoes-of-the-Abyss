@@ -290,12 +290,16 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
       UnitKind.Rootstock,
       UnitKind.Runner,
     ],
-    // The Verger, the Acolyte, the Thurible and the Lure are the Directorate's
-    // by their price and carry no lock, as the Chorister is and does
-    // (docs/units.md), so none of them is in this row.
+    // The Chorister is the Directorate's by its price and carries no lock
+    // (docs/units.md), so it is not in this row. The Verger, the Acolyte, the
+    // Thurible and the Lure took that rule until #1582 and are locked now.
     [Faction.Directorate]: [
       UnitKind.Precentor,
       UnitKind.Dredge,
+      UnitKind.Verger,
+      UnitKind.Acolyte,
+      UnitKind.Thurible,
+      UnitKind.Lure,
       // The Succentor is locked rather than priced: it is PR-4, and the rule
       // below is that whatever reaches the Hadal band is this navy's. Its
       // Trebles are rated for the band with it, so they are locked for the
@@ -553,7 +557,9 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
       // bloom — and it is on the same clock, which is why it is here rather
       // than in the siege hulls' `siegeWorkSig` route (#509).
       [Faction.Pelagia]: [UnitKind.Sower, UnitKind.Bower],
-      [Faction.Directorate]: [],
+      // The Lure's song, on the siege route rather than the clock (#508), and
+      // in this row since #1582 locked it.
+      [Faction.Directorate]: [UnitKind.Lure],
       [Faction.Hadron]: [UnitKind.Cantus, UnitKind.Tocsin],
     };
     const GROWN: Record<Faction, readonly UnitKind[]> = {
@@ -577,11 +583,11 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
       );
     }
     // The *commons* — nobody's by lock and nobody's by price. A Biomass price
-    // is a lock (docs/units.md, design notes): the Chorister, the Verger, the
-    // Acolyte, the Thurible and the Lure are the Directorate's as surely as the
-    // Precentor is, so "carries no `faction`" is not the same question. This
-    // loop used to ask the wrong one and passed only because no price-locked
-    // hull had a working figure until the Lure (#508).
+    // is a lock (docs/units.md, design notes): the Chorister is the
+    // Directorate's as surely as the Precentor is, so "carries no `faction`"
+    // is not the same question. This loop used to ask the wrong one and passed
+    // only because no price-locked hull had a working figure until the Lure
+    // (#508), which has carried a `faction` since #1582.
     const commons = roster.filter((s) => s.faction === undefined && (s.biomassCost ?? 0) === 0);
     for (const stats of commons) {
       assert.equal(stats.sigWorking, undefined, `${stats.name} is nobody's and clocks nothing`);
@@ -638,16 +644,16 @@ describe('the production card’s pages', () => {
       Faction.Bathyarch,
       [
         [StructureKind.Bastion, 1],
-        [StructureKind.Foundry, 12],
-        [StructureKind.Slipway, 7],
+        [StructureKind.Foundry, 10],
+        [StructureKind.Slipway, 5],
       ],
     ],
     [
       Faction.Pelagia,
       [
         [StructureKind.Bastion, 1],
-        [StructureKind.Foundry, 12],
-        [StructureKind.Slipway, 7],
+        [StructureKind.Foundry, 10],
+        [StructureKind.Slipway, 5],
       ],
     ],
     [
@@ -662,16 +668,17 @@ describe('the production card’s pages', () => {
       Faction.Hadron,
       [
         [StructureKind.Bastion, 1],
-        [StructureKind.Foundry, 11],
-        [StructureKind.Slipway, 8],
+        [StructureKind.Foundry, 9],
+        [StructureKind.Slipway, 6],
       ],
     ],
   ]);
 
   it('puts the Harvester on the page of the line that never has to be built', () => {
     // It is on the Bastion's line as well as the Foundry's, and the Bastion
-    // always stands. That one placement takes the Foundry's thirteen down to
-    // twelve, which is how the Derrick and the Reed keep their cells (#820).
+    // always stands. That one placement took the Foundry's thirteen down to
+    // twelve, which is how the Derrick and the Reed kept their cells (#820)
+    // until #1582 freed two more.
     assert.equal(productionPageFor(UnitKind.Harvester), StructureKind.Bastion);
     // The placement rests on the Bastion leading `PRODUCTION_LINES`, and it
     // leads because `StructureKind.Bastion` is 0 — the keys of `PRODUCIBLE`

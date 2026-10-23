@@ -1087,10 +1087,12 @@ rims and at a boss on the dome's crown; the doors behind the rims stay dark
 until the bays are occupied, when they glow through their hatches.
 ```
 
-The Verger carries no faction lock — the Biomass is the lock, as the Chorister's is — so a
-navy rendering for one fields the same plan, the ribbed pressure hull, the four bays behind
-their hatches low on the flanks, the dome forward, the tanks about the keel and the one
-ducted drive, composed with its own FACTION block, with the light kept low and cold.
+The Verger was written without a faction lock — the Biomass was the lock, as the Chorister's
+is — so a navy rendering for one fielded the same plan, the ribbed pressure hull, the four
+bays behind their hatches low on the flanks, the dome forward, the tanks about the keel and
+the one ducted drive, composed with its own FACTION block, with the light kept low and cold.
+Since #1582 the hull is the Directorate's alone, and those variants are dormant
+([models-plan.md](models-plan.md) §3.4).
 
 ```text
 UNIT — Antiphon (pair with Hadron Knights): the Order's way of arriving, 110 m
@@ -1161,9 +1163,11 @@ way they fold flat under the shell. Nearly black: a photophore on each
 limb's knee, in a pattern the stance keeps from repeating on either side.
 ```
 
-The Acolyte carries no faction lock — the Biomass is the lock, as the Chorister's is — so a
-navy rendering for one fields the same plan, the squat shell, the six planted limbs and the
-sunk dome, composed with its own FACTION block, with the light kept nearly black.
+The Acolyte was written without a faction lock — the Biomass was the lock, as the
+Chorister's is — so a navy rendering for one fielded the same plan, the squat shell, the six
+planted limbs and the sunk dome, composed with its own FACTION block, with the light kept
+nearly black. Since #1582 the hull is the Directorate's alone, and those variants are
+dormant ([models-plan.md](models-plan.md) §3.4).
 
 ```text
 UNIT — Herald (pair with Hadron Knights): the scout that scouts by leaving,
@@ -1255,10 +1259,11 @@ hull flares when it fires, because the light and the 85 are the charge's,
 above it.
 ```
 
-The Thurible carries no faction lock — the Biomass is the lock, as the Chorister's and the
-Acolyte's are — so a navy rendering for one fields the same plan, the shield over the tail,
-the open-lidded rack on its back and the one spine-gun, composed with its own FACTION block,
-with the light kept dim.
+The Thurible was written without a faction lock — the Biomass was the lock, as the
+Chorister's is — so a navy rendering for one fielded the same plan, the shield over the
+tail, the open-lidded rack on its back and the one spine-gun, composed with its own FACTION
+block, with the light kept dim. Since #1582 the hull is the Directorate's alone, and those
+variants are dormant ([models-plan.md](models-plan.md) §3.4).
 
 ```text
 UNIT — Lance (pair with Hadron Knights): the committed shot, 95 m — one
@@ -1380,10 +1385,11 @@ song is the loudest thing this hull does, and it is still a band short of a
 cutter.
 ```
 
-The Lure carries no faction lock — the Biomass is the lock, as the Chorister's, the
-Acolyte's and the Thurible's are — so a navy rendering for one fields the same plan, the
-segmented body, the fan spread astern and the raised plectrum, composed with its own FACTION
-block, with the light kept nearly black at rest and a band short of a cutter when it sings.
+The Lure was written without a faction lock — the Biomass was the lock, as the Chorister's
+is — so a navy rendering for one fielded the same plan, the segmented body, the fan spread
+astern and the raised plectrum, composed with its own FACTION block, with the light kept
+nearly black at rest and a band short of a cutter when it sings. Since #1582 the hull is the
+Directorate's alone, and those variants are dormant ([models-plan.md](models-plan.md) §3.4).
 
 ```text
 UNIT — Tocsin (pair with Hadron Knights): the bell, 105 m — an energy gun
