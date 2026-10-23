@@ -163,10 +163,12 @@ point it lies on, and resumes past it, as it does at the rim and at the frame's 
 models are your own hulls and commissioned structures and every live Tier-4 track the conn
 view stands as its model; a flat sprite hides nothing. A model's solid is its plan in
 columns, each from the lowest to the highest of its geometry over that cell, so ground seen
-under a hull's keel or a structure's raised deck still carries its ink. Three things are not
-cut: a fill, which is texture inside its rim; blocked ground's hatch; and the ink drawn
-*about* an entity, its selection ring and loudness collar, which stand on it rather than
-behind it.
+under a hull's keel or a structure's raised deck still carries its ink. The rule reaches only
+what is traced on the ground. A fill is texture inside its rim and is not cut. Blocked
+ground's hatch is drawn cell by cell and is not cut yet. The selection ring and the loudness
+collar are not traced at all: each is a circle in screen space about the entity's ground point
+([ui-ux.md](ui-ux.md) §3.5), so a collar can still cross its own model or a neighbour's. That
+is open, and is not a design: a collar painted across a roof is the same drawing error.
 
 **A mark is weighed by its outline, never by its interior.** A kelp field's faint fill and an
 inert hazard site's are texture inside a mark whose rim already speaks for it. A ladder that

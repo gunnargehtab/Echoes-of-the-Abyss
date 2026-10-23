@@ -22,4 +22,5 @@ between a cut frame and its uncut one, so its own ink differs.
 | `ventfront-close-cut.png` | The rim passing behind the Foundry |
 
 The grey circle about each structure, and the amber and green arcs on it, are its loudness
-collar: ink *about* the structure, which docs/map-visuals.md §5 leaves uncut.
+collar. It is drawn in screen space rather than traced on the ground, so the cut does not reach
+it, and it still crosses the Foundry's roof: docs/map-visuals.md §5 records that as open.

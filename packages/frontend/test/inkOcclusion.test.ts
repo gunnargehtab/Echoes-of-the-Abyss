@@ -12,12 +12,14 @@ import { readFileSync } from 'node:fs';
 import { afterEach, describe, it, mock } from 'node:test';
 import { Container, Graphics } from 'pixi.js';
 import {
+  Box3,
   BoxGeometry,
   Group,
   Matrix4,
   Mesh,
   MeshBasicMaterial,
   PerspectiveCamera,
+  Ray,
   Vector3,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -161,12 +163,31 @@ afterEach(() => {
   for (const view of views.splice(0)) view.destroy();
 });
 
+/**
+ * How far apart on screen two points of one run can stand: a ring's vertices
+ * at this frame, where the walk across a model's screen box steps 2 px.
+ */
+const NEIGHBOUR_PX = 40;
+
+/** One point the chart asked about: plan metres, its pixel, and the answer. */
+interface Asked {
+  x: number;
+  y: number;
+  sx: number;
+  sy: number;
+  hidden: boolean;
+}
+
 describe('the chart behind a model', () => {
   // `cut` false records what the test answers and draws as if it said no.
   async function boot(cut = true): Promise<{
     app: HeadlessApplication;
     conn: PerspectiveView;
-    hidden: Array<{ sx: number; sy: number }>;
+    hidden: Asked[];
+    asked: Asked[];
+    /** The Bastion's drawn box and the eye, as the conn view holds them. */
+    box: Box3;
+    eye: Vector3;
     frame(): void;
     teardown(): void;
   }> {
@@ -207,18 +228,24 @@ describe('the chart behind a model', () => {
     // The home frame over the Bastion and the field beside it (node 1).
     conn.focusWorld(650, 650, 1800);
 
-    const hidden: Array<{ sx: number; sy: number }> = [];
+    const hidden: Asked[] = [];
+    const asked: Asked[] = [];
     const inkHidden = conn.inkHidden.bind(conn);
     mock.method(conn, 'inkHidden', (...args: Parameters<PerspectiveView['inkHidden']>) => {
       const answer = inkHidden(...args);
-      if (answer) hidden.push({ sx: args[3], sy: args[4] });
+      const point = { x: args[0], y: args[1], sx: args[3], sy: args[4], hidden: answer };
+      asked.push(point);
+      if (answer) hidden.push(point);
       return cut && answer;
     });
+    const model = handle.model as { root: Group };
+    const box = new Box3().setFromObject(model.root, true);
+    const eye = (conn as unknown as { camera: PerspectiveCamera }).camera.position;
     const frame = (): void => {
       pumpAnimationFrames();
       app.frame();
     };
-    return { app, conn, hidden, frame, teardown: () => chart.destroy() };
+    return { app, conn, hidden, asked, box, eye, frame, teardown: () => chart.destroy() };
   }
 
   /** Every point a stroked path on the stage moves or draws to. */
@@ -248,7 +275,7 @@ describe('the chart behind a model', () => {
   const key = (p: { sx: number; sy: number }) => `${p.sx.toFixed(3)},${p.sy.toFixed(3)}`;
 
   it('draws no point of ground ink the Bastion stands in front of', async () => {
-    const { app, hidden, frame, teardown } = await boot();
+    const { app, conn, hidden, box, eye, frame, teardown } = await boot();
     try {
       frame();
       frame();
@@ -259,6 +286,53 @@ describe('the chart behind a model', () => {
         [],
         'no hidden point is drawn'
       );
+      // Behind the Bastion, and not merely behind something: the eye's ray to
+      // each hidden point passes through the box the model is drawn in, read
+      // off the model itself rather than off the columns or their screen box.
+      const groundY = (conn as unknown as { groundYAt(x: number, z: number): number }).groundYAt;
+      const ray = new Ray();
+      const point = new Vector3();
+      const met = new Vector3();
+      const strays = hidden.filter((p) => {
+        point.set(p.x, groundY.call(conn, p.x, p.y), p.y);
+        ray.set(eye, point.clone().sub(eye).normalize());
+        const at = ray.intersectBox(box, met);
+        return at === null || at.distanceTo(eye) > point.distanceTo(eye);
+      });
+      assert.deepEqual(strays, [], 'every hidden point lies behind the Bastion');
+    } finally {
+      teardown();
+    }
+  });
+
+  it('resumes a run past the Bastion, on the far side of what it hides', async () => {
+    const { app, asked, frame, teardown } = await boot();
+    try {
+      frame();
+      frame();
+      const drawn = pathPoints(app);
+      // In the order the chart traced them: a drawn point, then hidden ones,
+      // then a drawn point again, each beside the next on screen so the three
+      // belong to one run. Each run is cut, not dropped.
+      const near = (p: Asked, q: Asked | null) =>
+        q !== null && Math.hypot(p.sx - q.sx, p.sy - q.sy) <= NEIGHBOUR_PX;
+      let lastDrawn: Asked | null = null;
+      let lastHidden: Asked | null = null;
+      let resumed = false;
+      for (const p of asked) {
+        if (p.hidden) {
+          if (lastHidden !== null || near(p, lastDrawn)) lastHidden = p;
+          lastDrawn = null;
+        } else if (drawn.has(key(p))) {
+          if (near(p, lastHidden)) resumed = true;
+          lastDrawn = p;
+          lastHidden = null;
+        } else {
+          lastDrawn = null;
+          lastHidden = null;
+        }
+      }
+      assert.ok(resumed, 'a traced run is drawn before and after the stretch the Bastion hides');
     } finally {
       teardown();
     }
