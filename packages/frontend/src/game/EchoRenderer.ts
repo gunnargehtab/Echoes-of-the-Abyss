@@ -6176,7 +6176,7 @@ export class EchoRenderer {
     if (bounds !== null && ringed.length > 0 && hearsWholeMap(discs, bounds)) {
       let loudest = ringed[0]!;
       for (const entry of ringed) if (entry.unit.sig > loudest.unit.sig) loudest = entry;
-      if (this.traceRim(g, bounds)) {
+      if (this.traceRim(g, bounds, this.terrain.cellM)) {
         g.stroke({
           width: 2 * this.uiScale,
           color: sigColor(loudest.unit.sig),
@@ -6189,12 +6189,11 @@ export class EchoRenderer {
   }
 
   /**
-   * The map's rim as ground-lying ink, a cell at a time so it conforms to the
-   * ground the way the conn view's rim line does. Returns false when nothing
+   * The map's rim as ground-lying ink, a cell (`stepM`) at a time so it
+   * conforms to the ground the way the conn view's rim line does. Returns false when nothing
    * was visible.
    */
-  private traceRim(g: Graphics, bounds: PlanRect): boolean {
-    const stepM = this.terrain?.cellM ?? 250;
+  private traceRim(g: Graphics, bounds: PlanRect, stepM: number): boolean {
     const right = bounds.x + bounds.widthM;
     const bottom = bounds.y + bounds.heightM;
     const corners = [

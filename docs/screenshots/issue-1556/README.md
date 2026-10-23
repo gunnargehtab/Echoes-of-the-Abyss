@@ -20,3 +20,9 @@ for what they show.
 | `ventfront-reach-ring-cut.png` | The same ring ending on the rim |
 | `corridor-storm-rings-uncut.png` | Two corner storm rings floating in the void at the horizon |
 | `corridor-storm-rings-cut.png` | Only the storm rings' arcs on the map; the orange ring ends on the rim |
+
+No frame shows the rim stroked in the reach ink. On a shipped map it takes a fleet that hears
+the whole map, such as a hull at SIG 75 in trench water near the Rift Corridor's middle, and this
+drive does not stage that. `rimClip.test.ts` stands in for it: on the canned
+4 km map the fleet hears whole, the booted chart strokes the rim at all four corners in the
+loudest ringed hull's ink and alpha.

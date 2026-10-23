@@ -4,7 +4,7 @@
  * The chart projects a ring vertex by vertex onto the seabed, and the conn
  * view answers a point past the map's edge with the edge cell's depth. So a
  * ring whose radius crosses the edge kept going, over the skirt and into the
- * void beyond it: a Bastion's SIG ring rose above the rim, a corner storm's
+ * void beyond it: the fleet's reach ring rose above the rim, a corner storm's
  * ring floated on the horizon. The rim is chart ink and the skirt the water
  * the world ends in (docs/map-visuals.md §5, docs/world-map.md §7.4), so a
  * measurement that runs past both reads as a draw fault, not as water.

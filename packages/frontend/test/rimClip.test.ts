@@ -115,6 +115,7 @@ afterEach(() => {
 describe('the chart at the rim', () => {
   async function boot(): Promise<{
     app: HeadlessApplication;
+    chart: EchoRenderer;
     conn: PerspectiveView;
     ground: { x: number; y: number }[];
     frame(): void;
@@ -183,7 +184,7 @@ describe('the chart at the rim', () => {
       pumpAnimationFrames();
       app.frame();
     };
-    return { app, conn, ground, frame, teardown: () => chart.destroy() };
+    return { app, chart, conn, ground, frame, teardown: () => chart.destroy() };
   }
 
   const offMap = (points: { x: number; y: number }[]) =>
@@ -226,6 +227,31 @@ describe('the chart at the rim', () => {
     }
   });
 
+  // Every stroke on the stage in the reach ink at a reach ring's alpha.
+  const reachStrokes = (app: HeadlessApplication): Array<{ color: number; alpha: number }> => {
+    const ink = new Set<number>([UI.sigMid, UI.sigHigh]);
+    const found: Array<{ color: number; alpha: number }> = [];
+    const walk = (node: Container): void => {
+      for (const child of node.children) {
+        if (child instanceof Graphics) {
+          for (const instruction of child.context.instructions) {
+            if (instruction.action !== 'stroke') continue;
+            const style = (instruction.data as { style?: { color?: number; alpha?: number } })
+              .style;
+            const color = style?.color;
+            const alpha = style?.alpha ?? 1;
+            if (color !== undefined && ink.has(color) && (alpha === 0.27 || alpha === 0.35)) {
+              found.push({ color, alpha });
+            }
+          }
+        }
+        walk(child as Container);
+      }
+    };
+    walk(app.stage as unknown as Container);
+    return found;
+  };
+
   it('strokes the rim in the reach ink when the fleet hears the whole map', async () => {
     const { app, ground, frame, teardown } = await boot();
     try {
@@ -245,25 +271,35 @@ describe('the chart at the rim', () => {
           `the rim stroke reaches the corner (${x}, ${y})`
         );
       }
-      const reach = new Set<number>([UI.sigMid, UI.sigHigh]);
-      const strokes: number[] = [];
-      const walk = (node: Container): void => {
-        for (const child of node.children) {
-          if (child instanceof Graphics) {
-            for (const instruction of child.context.instructions) {
-              if (instruction.action !== 'stroke') continue;
-              const style = (instruction.data as { style?: { color?: number; alpha?: number } })
-                .style;
-              if (style?.color !== undefined && reach.has(style.color) && style.alpha === 0.27) {
-                strokes.push(style.color);
-              }
-            }
-          }
-          walk(child as Container);
-        }
+      // Both loud hulls are amber (SIG 62 and 30), and nothing is selected.
+      assert.deepEqual(reachStrokes(app), [{ color: UI.sigMid, alpha: 0.27 }]);
+    } finally {
+      teardown();
+    }
+  });
+
+  it("takes the loudest ringed hull's ink, and the selected alpha", async () => {
+    const { app, chart, conn, frame, teardown } = await boot();
+    try {
+      // Hull 13 over §3's red stop: its reach only grows, so the map is still
+      // heard whole, and the rim takes its ink rather than hull 14's amber.
+      const base = cannedSnapshot(2);
+      const red = {
+        ...base,
+        units: base.units.map((unit) => (unit.id === 13 ? { ...unit, sig: 70 } : unit)),
       };
-      walk(app.stage as unknown as Container);
-      assert.equal(strokes.length, 1, 'one reach stroke: the rim, in the gated ring alpha');
+      chart.applySnapshot(red);
+      conn.applySnapshot(red);
+      frame();
+      frame();
+      assert.deepEqual(reachStrokes(app), [{ color: UI.sigHigh, alpha: 0.27 }]);
+      // Selecting a ringed hull lifts the rim to the selected ring's alpha.
+      // Set directly: a click picks the nearest own entity, and a structure
+      // stands beside hull 13.
+      (chart as unknown as { selected: Set<number> }).selected.add(14);
+      frame();
+      frame();
+      assert.deepEqual(reachStrokes(app), [{ color: UI.sigHigh, alpha: 0.35 }]);
     } finally {
       teardown();
     }
