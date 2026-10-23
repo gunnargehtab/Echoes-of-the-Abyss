@@ -1305,11 +1305,22 @@ const PLATE = {
 } as const;
 
 /**
- * Rule 5 — one diagonal texture across the whole HUD layer, never per-panel,
- * at no more than 4%. Spacing and angle are chosen to read as a scanline at
- * 1080p rather than as moiré.
+ * Rule 5 — one diagonal texture across the HUD's plates, never per-panel, at
+ * no more than 4%. Spacing and angle are chosen to read as a scanline at
+ * 1080p rather than as moiré. It covers the strip and the console and stops
+ * at the playfield (#1559): over the lit ground it read as a second diagonal
+ * pattern against the dunes and the survey ink, the same slope as the hazard
+ * hatch #1554 took out.
  */
 const GRAIN = { SPACING_PX: 5, ALPHA: 0.035 } as const;
+
+/**
+ * TUNABLE — an inert hazard site's fill. A soft fill under the site's rim,
+ * between the kelp field's idle 0.02 and gripping 0.05: it is permanent chart
+ * data like the kelp, and threat ink is the louder colour, so it needs no
+ * more than the kelp does to read as ground.
+ */
+const INERT_SITE_FILL_ALPHA = 0.04;
 
 /** Past this much pointer travel, a left drag is a marquee rather than a click. */
 const DRAG_SLOP_PX = 6;
@@ -6073,36 +6084,30 @@ export class EchoRenderer {
    * Inert hazard sites off the map payload, telegraphed. docs/maps.md's core
    * principles list "hazard telegraphing — players must see danger before
    * entering": this ground is dangerous from the moment the map loads, so it
-   * draws every frame like the rest of the ground language, hatched rather
-   * than filled — the sites carry no behaviour yet, and a solid marker would
-   * imply an effect that does not exist.
+   * draws every frame like the rest of the ground language — a rim and a
+   * faint fill, the kelp field's treatment. The sites carry no behaviour yet,
+   * and a solid marker would imply an effect that does not exist.
+   *
+   * It was hatched until #1554, and the hatch is not coming back: a straight
+   * line between two ground points is straight on screen while the rim it sits
+   * inside is sampled and follows the slope, so on a plateau's edge the lines
+   * floated over the ground the rim hugged, and read as stray diagonals across
+   * the map rather than as the site's texture. The fill conforms by
+   * construction — `fillCircle` projects the same sampled ring.
    *
    * Rung 5, map furniture (docs/map-visuals.md §5). The rim is weighed; the
-   * hatching is interior, unweighed only while the rim speaks for it.
+   * fill is interior, a soft fill the ladder does not weigh.
    */
   private drawStaticHazardSites(g: Graphics): void {
     for (const site of this.map?.hazards ?? []) {
       // Simulated hazards are drawn live, with a phase and a countdown.
       if (site.simulated) continue;
+      this.fillCircle(g, site.x, site.y, site.radiusM, null, {
+        color: UI.threat,
+        alpha: INERT_SITE_FILL_ALPHA,
+      });
       if (this.traceCircle(g, site.x, site.y, site.radiusM, null)) {
         g.stroke({ width: 3, color: UI.threat, alpha: FURNITURE_OUTLINE_ALPHA.inertSiteRim });
-      }
-      const step = Math.max(60, site.radiusM / 4);
-      for (let offset = -site.radiusM; offset <= site.radiusM; offset += step) {
-        // Chord length at this offset, so the hatching stays inside the ring.
-        const half = Math.sqrt(Math.max(0, site.radiusM * site.radiusM - offset * offset));
-        if (
-          this.traceLine(
-            g,
-            site.x + offset - half,
-            site.y + offset + half,
-            site.x + offset + half,
-            site.y + offset - half,
-            null
-          )
-        ) {
-          g.stroke({ width: 1.5, color: UI.threat, alpha: 0.12 });
-        }
       }
     }
   }
@@ -7185,8 +7190,14 @@ export class EchoRenderer {
    * It is its own layer and its own Graphics because it is drawn once per
    * resize and never per frame: at 5px spacing a 1080p frame is about six
    * hundred short strokes, which is nothing once, and would be real money at
-   * 60 Hz. It sits above the panels and below nothing — the whole HUD layer
-   * wears one texture, which is what stops it becoming per-panel noise.
+   * 60 Hz. It sits above the panels and below nothing — the strip and the
+   * console wear one texture, which is what stops it becoming per-panel noise.
+   *
+   * Two bands rather than the whole layer (#1559): the strip's and the
+   * console's. Each stroke is the line `x − y = c` cut to its band, with `c`
+   * stepping once for both, so the two bands share one lattice and the
+   * texture stays one texture; the water between them, and anything floating
+   * over it, carries none.
    */
   private buildGrain(): void {
     const w = Math.ceil(this.hudWidth());
@@ -7196,9 +7207,11 @@ export class EchoRenderer {
     this.grainKey = key;
     const g = this.grainGraphics;
     g.clear();
+    const consoleTop = h - CONSOLE_HEIGHT;
     // 135°, so the stroke runs the same way as the plates' own bevel light.
-    for (let i = -h; i < w; i += GRAIN.SPACING_PX) {
-      g.moveTo(i, 0).lineTo(i + h, h);
+    for (let c = -h; c < w; c += GRAIN.SPACING_PX) {
+      g.moveTo(c, 0).lineTo(c + TOP_BAR_HEIGHT, TOP_BAR_HEIGHT);
+      g.moveTo(c + consoleTop, consoleTop).lineTo(c + h, h);
     }
     g.stroke({ width: 1, color: UI.text, alpha: GRAIN.ALPHA });
   }

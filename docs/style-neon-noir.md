@@ -220,8 +220,9 @@ plate:
 3. A cyan header band: uppercase mono title, thin `neon-cyan` rule beneath.
 4. Corner registration ticks (the plates' survey marks) instead of rounded
    corners; radius stays ≤ 4 px.
-5. One diagonal scanline/noise texture at ≤ 4 % opacity across the whole HUD
-   layer — one texture for everything, never per-panel.
+5. One diagonal scanline/noise texture at ≤ 4 % opacity across the HUD's plates —
+   the strip and the console, one texture for both, never per-panel, and never over
+   the playfield, where it read as a second pattern against the ground (#1559).
 6. Disabled = desaturate and dim to 40 %, never grey-out: a dead console still
    has phosphor in it.
 
