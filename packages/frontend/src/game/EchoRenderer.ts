@@ -110,6 +110,7 @@ import {
   type OwnOrdnance,
   type OwnStructure,
   type OwnUnit,
+  type PlanRect,
   type Price,
   type QueuedOrderView,
   type ResourceNodeInfo,
@@ -230,6 +231,7 @@ import {
   type ColumnLayout,
   type ColumnPoint,
 } from './contactColumn.ts';
+import { clipPolygon, clipSegment } from './rimClip.ts';
 
 /**
  * An order the player gave that the server has not yet echoed back
@@ -1141,6 +1143,43 @@ export function insideAnotherReach(
 }
 
 /**
+ * Does the fleet hear the whole of the map?
+ *
+ * The chart cuts its rings at the rim (rimClip.ts, #1556), so a fleet whose
+ * reach holds every metre of the map has no arc left on it and would draw
+ * what a silent fleet draws — the one under-drawing docs/systems-echo.md §9
+ * forbids. The rim is then where the heard water ends, and `drawRings`
+ * strokes it in the reach's ink (docs/map-visuals.md §5).
+ *
+ * Answered from the envelope itself: walk the same polygon `traceCircle`
+ * draws, a side kept when neither end is inside another reach. If no kept
+ * side reaches the map, no boundary of the union lies on it, so the map is
+ * wholly heard or wholly unheard, and its middle says which.
+ */
+export function hearsWholeMap(discs: readonly ReachDisc[], bounds: PlanRect): boolean {
+  const span: [number, number] = [0, 0];
+  for (let i = 0; i < discs.length; i++) {
+    const { x, y, radiusM } = discs[i]!;
+    let ax = x + radiusM;
+    let ay = y;
+    let aKept = !insideAnotherReach(ax, ay, discs, i);
+    for (let k = 1; k <= CIRCLE_SEGMENTS; k++) {
+      const angle = (k / CIRCLE_SEGMENTS) * Math.PI * 2;
+      const bx = x + Math.cos(angle) * radiusM;
+      const by = y + Math.sin(angle) * radiusM;
+      const bKept = !insideAnotherReach(bx, by, discs, i);
+      if (aKept && bKept && clipSegment(bounds, ax, ay, bx, by, span)) return false;
+      ax = bx;
+      ay = by;
+      aKept = bKept;
+    }
+  }
+  const mx = bounds.x + bounds.widthM / 2;
+  const my = bounds.y + bounds.heightM / 2;
+  return discs.some((d) => (mx - d.x) ** 2 + (my - d.y) ** 2 < d.radiusM ** 2);
+}
+
+/**
  * Alpha of a detection ring the player did not ask for by selecting its hull
  * (docs/ui-ux.md §3.5).
  *
@@ -1610,6 +1649,8 @@ export class EchoRenderer {
     visible: false,
   }));
   private projectNext = 0;
+  /** Scratch for `clipSegment`'s two parameters, consumed at once. */
+  private readonly clipSpan: [number, number] = [0, 0];
   /**
    * The command bar's model and layout, rebuilt only when something it
    * reads has changed (#432): it used to be rebuilt, closures and all,
@@ -2312,6 +2353,10 @@ export class EchoRenderer {
    * ring conforms to the terrain — a 2,400 m detection ring climbing a ridge
    * is the honest picture of a distance measured through the water.
    * Returns false when nothing was visible.
+   *
+   * Cut at the map's rim (`PerspectiveView.inkBounds`, #1556): the ring ends
+   * on the rim and resumes where it comes back in, so a ring that crosses the
+   * edge comes back as arcs the way a skipped vertex already makes it.
    */
   private traceCircle(
     g: Graphics,
@@ -2325,32 +2370,69 @@ export class EchoRenderer {
     // and nothing downstream had to learn anything new.
     skip?: (x: number, y: number) => boolean
   ): boolean {
+    if (this.conn === null) return false;
+    const bounds = this.conn.inkBounds();
+    const span = this.clipSpan;
     let open = false;
     let any = false;
+    // One world point onto the run: a break first when asked, and a break
+    // after it when it leaves the frustum.
+    const emit = (x: number, y: number, breakBefore: boolean): void => {
+      if (breakBefore) open = false;
+      const p = this.project(x, y, depthM);
+      if (p === null || !p.visible) {
+        open = false;
+        return;
+      }
+      if (open) g.lineTo(p.x, p.y);
+      else g.moveTo(p.x, p.y);
+      open = true;
+      any = true;
+    };
+    // The last vertex kept, when there is one: what the next is clipped from.
+    let held = false;
+    let px = 0;
+    let py = 0;
     for (let i = 0; i <= CIRCLE_SEGMENTS; i++) {
       const angle = (i / CIRCLE_SEGMENTS) * Math.PI * 2;
       const x = cx + Math.cos(angle) * radiusM;
       const y = cy + Math.sin(angle) * radiusM;
       if (skip?.(x, y) === true) {
         open = false;
+        held = false;
         continue;
       }
-      const p = this.project(x, y, depthM);
-      if (p === null) return false;
-      if (!p.visible) {
+      if (bounds === null) {
+        emit(x, y, false);
+        continue;
+      }
+      if (!held) {
+        // A run's first vertex: drawn if it is on the map, else the run waits
+        // for the segment that brings it back in.
+        if (clipSegment(bounds, x, y, x, y, span)) emit(x, y, true);
+        else open = false;
+      } else if (clipSegment(bounds, px, py, x, y, span)) {
+        const dx = x - px;
+        const dy = y - py;
+        // Entering from off the map: the run starts on the rim.
+        if (span[0] > 0) emit(px + dx * span[0], py + dy * span[0], true);
+        emit(px + dx * span[1], py + dy * span[1], false);
+        // Leaving it: the run ends on the rim.
+        if (span[1] < 1) open = false;
+      } else {
         open = false;
-        continue;
       }
-      if (open) g.lineTo(p.x, p.y);
-      else g.moveTo(p.x, p.y);
-      open = true;
-      any = true;
+      held = true;
+      px = x;
+      py = y;
     }
     return any;
   }
 
   /** Fill a ground-lying circle as a projected polygon. Skipped when any
-   * vertex leaves the frustum — a partial fill would invent an edge. */
+   * vertex leaves the frustum — a partial fill would invent an edge. Cut at
+   * the map's rim first, as `traceCircle` is: the rim is an edge the map
+   * draws, so a fill that stops on it invents nothing. */
   private fillCircle(
     g: Graphics,
     cx: number,
@@ -2359,14 +2441,17 @@ export class EchoRenderer {
     depthM: number | null,
     fill: { color: number; alpha: number }
   ): void {
-    const points: number[] = [];
+    let world: number[] = [];
     for (let i = 0; i < CIRCLE_SEGMENTS; i++) {
       const angle = (i / CIRCLE_SEGMENTS) * Math.PI * 2;
-      const p = this.project(
-        cx + Math.cos(angle) * radiusM,
-        cy + Math.sin(angle) * radiusM,
-        depthM
-      );
+      world.push(cx + Math.cos(angle) * radiusM, cy + Math.sin(angle) * radiusM);
+    }
+    const bounds = this.conn?.inkBounds() ?? null;
+    if (bounds !== null) world = clipPolygon(bounds, world);
+    if (world.length < 6) return;
+    const points: number[] = [];
+    for (let i = 0; i < world.length; i += 2) {
+      const p = this.project(world[i]!, world[i + 1]!, depthM);
       if (p === null || !p.visible) return;
       points.push(p.x, p.y);
     }
@@ -2374,7 +2459,8 @@ export class EchoRenderer {
   }
 
   /** A straight world segment on the ground — straight on screen too, so the
-   * endpoints suffice. Dropped when either end leaves the frustum. */
+   * endpoints suffice. Cut at the map's rim, as `traceCircle` is, and dropped
+   * when nothing is left or either end leaves the frustum. */
   private traceLine(
     g: Graphics,
     x0: number,
@@ -2383,6 +2469,18 @@ export class EchoRenderer {
     y1: number,
     depthM: number | null
   ): boolean {
+    const bounds = this.conn?.inkBounds() ?? null;
+    if (bounds !== null) {
+      const span = this.clipSpan;
+      if (!clipSegment(bounds, x0, y0, x1, y1, span)) return false;
+      const dx = x1 - x0;
+      const dy = y1 - y0;
+      const [t0, t1] = span;
+      x1 = x0 + dx * t1;
+      y1 = y0 + dy * t1;
+      x0 += dx * t0;
+      y0 += dy * t0;
+    }
     const a = this.project(x0, y0, depthM);
     const b = this.project(x1, y1, depthM);
     if (a === null || b === null || !a.visible || !b.visible) return false;
@@ -6057,10 +6155,12 @@ export class EchoRenderer {
       const traced = this.traceCircle(g, disc.x, disc.y, disc.radiusM, null, (x, y) =>
         insideAnotherReach(x, y, discs, i)
       );
-      // Nothing survived: every metre of this hull's reach is water another of
-      // the player's own hulls already hears into, so its ring adds no exposure
-      // and is not drawn. The hull still wears its collar, and the water it is
-      // audible in is inside the envelope the others draw.
+      // Nothing survived: every metre of this hull's reach on the map is water
+      // another of the player's own hulls already hears into, so its ring adds
+      // no exposure and is not drawn — or the rest lies past the rim, where
+      // there is no water to measure (#1556). The hull still wears its collar,
+      // and the water it is audible in is inside the envelope the others
+      // draw, or the rim below says the whole map is.
       if (!traced) continue;
       g.stroke({
         width: 2 * this.uiScale,
@@ -6068,6 +6168,60 @@ export class EchoRenderer {
         alpha: selected ? INSTRUMENT_OUTLINE_ALPHA.selectedRing : LOUD_RING_ALPHA,
       });
     }
+
+    // A fleet that hears the whole map has no arc left on it, and the rim is
+    // where its heard water ends: stroked in the loudest hull's ink, at the
+    // selected ring's alpha when any ringed hull is selected.
+    const bounds = this.conn?.inkBounds() ?? null;
+    if (bounds !== null && ringed.length > 0 && hearsWholeMap(discs, bounds)) {
+      let loudest = ringed[0]!;
+      for (const entry of ringed) if (entry.unit.sig > loudest.unit.sig) loudest = entry;
+      if (this.traceRim(g, bounds, this.terrain.cellM)) {
+        g.stroke({
+          width: 2 * this.uiScale,
+          color: sigColor(loudest.unit.sig),
+          alpha: ringed.some((entry) => entry.selected)
+            ? INSTRUMENT_OUTLINE_ALPHA.selectedRing
+            : LOUD_RING_ALPHA,
+        });
+      }
+    }
+  }
+
+  /**
+   * The map's rim as ground-lying ink, a cell (`stepM`) at a time so it
+   * conforms to the ground the way the conn view's rim line does. Returns false when nothing
+   * was visible.
+   */
+  private traceRim(g: Graphics, bounds: PlanRect, stepM: number): boolean {
+    const right = bounds.x + bounds.widthM;
+    const bottom = bounds.y + bounds.heightM;
+    const corners = [
+      [bounds.x, bounds.y],
+      [right, bounds.y],
+      [right, bottom],
+      [bounds.x, bottom],
+    ] as const;
+    let any = false;
+    for (let c = 0; c < 4; c++) {
+      const [x0, y0] = corners[c]!;
+      const [x1, y1] = corners[(c + 1) % 4]!;
+      const steps = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / stepM));
+      for (let i = 0; i < steps; i++) {
+        const t0 = i / steps;
+        const t1 = (i + 1) / steps;
+        const drew = this.traceLine(
+          g,
+          x0 + (x1 - x0) * t0,
+          y0 + (y1 - y0) * t0,
+          x0 + (x1 - x0) * t1,
+          y0 + (y1 - y0) * t1,
+          null
+        );
+        any = any || drew;
+      }
+    }
+    return any;
   }
 
   /**

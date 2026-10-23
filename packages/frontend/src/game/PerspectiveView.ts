@@ -1767,6 +1767,18 @@ export class PerspectiveView {
   }
 
   /**
+   * The plan rectangle ground-lying chart ink may stand on, or null where it
+   * may stand anywhere. A mission drawn alone ends at its rim, past which is
+   * the skirt and then nothing: `projectPoint` would still answer there, at
+   * the edge cell's depth, so the chart cuts its rings and lines here first
+   * (rimClip.ts, #1556). A placed mission's exterior is ground
+   * (docs/world-map.md §7.4), so ink past its edge lands on it, as before.
+   */
+  inkBounds(): PlanRect | null {
+    return this.worldRegion === null ? this.missionRect() : null;
+  }
+
+  /**
    * How much larger than true metre scale own hulls and structures are being
    * drawn right now (docs/art-direction.md "Far-zoom readability scale").
    *
