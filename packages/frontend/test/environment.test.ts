@@ -277,7 +277,8 @@ describe('seated stones', () => {
     const terrain = demoTerrain();
     terrain.biomes[0] = Biome.ThermalVein;
     terrain.biomes[1] = Biome.AbyssalTrench;
-    const seats = stoneSeats(terrain);
+    const source = [-2000, 600] as const;
+    const seats = stoneSeats(terrain, source);
     const stones = [...scatterProps(terrain)].filter(({ spec }) => (spec.buryFraction ?? 0) > 0);
     assert.ok(seats.length > 0, 'the demo map seats nothing');
     assert.equal(seats.length, stones.length);
@@ -291,15 +292,21 @@ describe('seated stones', () => {
       const row = Math.floor(seat.cellIndex / terrain.cols);
       assert.ok(seat.xM > col * terrain.cellM && seat.xM < (col + 1) * terrain.cellM);
       assert.ok(seat.yM > row * terrain.cellM && seat.yM < (row + 1) * terrain.cellM);
+      // The current runs past it away from the source (#1573).
+      const [fx, fy] = seat.flow;
+      assert.ok(Math.abs(Math.hypot(fx, fy) - 1) < 1e-12, 'the flow is not a unit vector');
+      const away = Math.atan2(seat.yM - source[1], seat.xM - source[0]);
+      assert.ok(Math.abs(Math.atan2(fy, fx) - away) < 1e-12, 'the flow runs toward the source');
     });
   });
 
   it('move only beside a ground delta, as the props do', () => {
-    const before = stoneSeats(demoTerrain());
+    const source = [-2000, 600] as const;
+    const before = stoneSeats(demoTerrain(), source);
     const changed = demoTerrain();
     const target = 1 * changed.cols + 1; // an open cell
     changed.ceiling[target] = 3000; // collapses into rock
-    const after = stoneSeats(changed);
+    const after = stoneSeats(changed, source);
     const near = (index: number) =>
       Math.abs(Math.floor(index / changed.cols) - 1) <= 1 &&
       Math.abs((index % changed.cols) - 1) <= 1;
