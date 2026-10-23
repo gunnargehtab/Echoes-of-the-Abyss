@@ -114,7 +114,7 @@ describe('seabed region shading', () => {
 
 describe('the scour round a seated stone', () => {
   const cell = { x0: 0, y0: 0, x1: 250, y1: 250 };
-  const seat: StoneSeat = { xM: 125, yM: 125, radiusM: 6, cellIndex: 0 };
+  const seat: StoneSeat = { xM: 125, yM: 125, radiusM: 6, cellIndex: 0, flow: [0, 1] };
   const reach = SEABED_DETAIL.STONE_SCOUR_REACH;
   const lee = SEABED_DETAIL.STONE_SCOUR_LEE;
 
@@ -132,7 +132,25 @@ describe('the scour round a seated stone', () => {
     assert.ok(deepest > 0.58);
   });
 
-  it('runs further on the lee, the south side, where the current drops its silt', () => {
+  it('trails down its own current, the same scour turned (#1573)', () => {
+    // A current running east-north-east turns the south-running scour with it:
+    // each point keeps its distance down and across the flow, and its gain.
+    const [fx, fy] = [Math.cos(-0.4), Math.sin(-0.4)];
+    const turned: StoneSeat = { ...seat, flow: [fx, fy] };
+    for (let i = 0; i < 400; i++) {
+      const across = ((i * 7.31) % 30) - 15;
+      const down = ((i * 13.7) % 40) - 15;
+      const south = stoneScourGain(125 + across, 125 + down, seat, cell);
+      const x = 125 + down * fx + across * fy;
+      const y = 125 + down * fy - across * fx;
+      assert.ok(
+        Math.abs(stoneScourGain(x, y, turned, cell) - south) < 1e-9,
+        `at ${across}, ${down}`
+      );
+    }
+  });
+
+  it('runs further on the lee, here the south side, where the current drops its silt', () => {
     const across = 6 * (1 + (reach - 1) / 2);
     assert.ok(
       stoneScourGain(125, 125 + across, seat, cell) < stoneScourGain(125, 125 - across, seat, cell)
@@ -142,7 +160,7 @@ describe('the scour round a seated stone', () => {
   });
 
   it('never leaves its own cell, fading to nothing at the edge', () => {
-    const edge: StoneSeat = { xM: 4, yM: 125, radiusM: 6, cellIndex: 0 };
+    const edge: StoneSeat = { xM: 4, yM: 125, radiusM: 6, cellIndex: 0, flow: [0, 1] };
     assert.equal(stoneScourGain(0, 125, edge, cell), 1);
     assert.equal(stoneScourGain(-3, 125, edge, cell), 1);
     assert.ok(stoneScourGain(4, 125, edge, cell) < 1, 'the stone itself still scours');
@@ -155,7 +173,9 @@ describe('the bake with seated stones', () => {
   const range = seabedRange(terrain);
   const whole = { col0: 0, row0: 0, col1: terrain.cols - 1, row1: terrain.rows - 1 };
   const bare = shadeSeabed(terrain, seed, range, whole);
-  const stones = stoneSeats(terrain);
+  // A current from the west, so the scours trail east, off the map's axes.
+  const source = [-2000, 600] as const;
+  const stones = stoneSeats(terrain, source);
   const seated = shadeSeabed(terrain, seed, range, whole, stones);
   const P = SEABED_PX_PER_CELL;
 
@@ -184,7 +204,7 @@ describe('the bake with seated stones', () => {
     const seatedCell = stones[0]!.cellIndex;
     const changed = demoTerrain();
     changed.ceiling[seatedCell] = 3000;
-    const after = stoneSeats(changed);
+    const after = stoneSeats(changed, source);
     assert.ok(
       !after.some((s) => s.cellIndex === seatedCell),
       'the delta left the stone standing, so it tests nothing'

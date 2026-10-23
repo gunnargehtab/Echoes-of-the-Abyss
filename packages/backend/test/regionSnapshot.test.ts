@@ -113,3 +113,18 @@ describe('the region a room names (#1460)', () => {
     ]);
   });
 });
+
+describe('the order a room names its ground in (#1573)', () => {
+  // The client bakes the ground the moment it lands, and the bake's stone
+  // scours trail away from the current source the map's id names
+  // (docs/art-direction.md "Silt detail and seated stones — SPEC").
+  it('sends the map before the terrain', async () => {
+    const skirmish = await room({});
+    const client = fakeClient('pilot');
+    skirmish.onJoin(client as unknown as Client);
+    const order = client.sent.map((message) => message.type);
+    const map = order.indexOf(SERVER_MSG.map);
+    assert.ok(map >= 0, 'no map was sent');
+    assert.ok(map < order.indexOf(SERVER_MSG.terrain), `sent in the order ${order.join(', ')}`);
+  });
+});

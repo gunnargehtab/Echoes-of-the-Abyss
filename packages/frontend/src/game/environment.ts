@@ -665,10 +665,17 @@ export interface StoneSeat {
   radiusM: number;
   /** Its own cell: the scour never leaves it. */
   cellIndex: number;
+  /**
+   * Which way the current runs past it, a unit vector, map x east and y
+   * south: away from the map's current source (#1573), so its scour trails
+   * down-current as the dunes' lee faces do.
+   */
+  flow: readonly [number, number];
 }
 
 /**
- * Every seated stone on the map, from the registry's own scatter — the same
+ * Every seated stone on the map, from the registry's own scatter, each with
+ * the current from `source` (seabedDetail.ts `duneSource`) — the same
  * placements the prop layer stands, since the shipped maps dress without a
  * cut (the backend's environmentBudget test). The scatter runs over the whole
  * registry and is filtered after, because a spec's index is in its hash.
@@ -677,15 +684,20 @@ export interface StoneSeat {
  * so a ground delta moves only the seats a rebake of the touched cells and
  * their ring redraws.
  */
-export function stoneSeats(terrain: TerrainGrid): StoneSeat[] {
+export function stoneSeats(terrain: TerrainGrid, source: readonly [number, number]): StoneSeat[] {
   const seats: StoneSeat[] = [];
   for (const { placement, spec } of scatterProps(terrain)) {
     if ((spec.buryFraction ?? 0) <= 0) continue;
+    // The source stands off the map, so no stone sits on it.
+    const fx = placement.xM - source[0];
+    const fy = placement.yM - source[1];
+    const length = Math.hypot(fx, fy);
     seats.push({
       xM: placement.xM,
       yM: placement.yM,
       radiusM: (spec.footprintM * placement.scale) / 2,
       cellIndex: placement.cellIndex,
+      flow: [fx / length, fy / length],
     });
   }
   return seats;

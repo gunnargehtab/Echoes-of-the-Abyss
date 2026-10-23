@@ -317,14 +317,17 @@ function fragmentMain(): string {
                       dot(gCycleGrad, gLight) * ${f(leeNorm)}, -1.0, 1.0);
   gDune = gDune < 0.0 ? ${f(DUNE_LIT_SCALE)} * gDune : gDune;
 
-  // Scours: hollows the current took, drawn out north-south on every map:
-  // unlike the dunes, they do not turn with its source yet (#1560). The
-  // stretch comes first, so the noise stays isotropic in the stretched frame and
-  // the hollows lie along z; the turn after it sets the lattice off the map's
-  // axes, so no square of it shows. The first fetch's last channel wobbles the
-  // ripples.
+  // Scours: hollows the current took, drawn out along it (#1573). One
+  // frame a map, the flow at its centre: a turn that varied with position
+  // would shear the field, the further the more. Taken into that frame
+  // first, then stretched, so the noise stays isotropic in the stretched
+  // frame and the hollows lie down-current; the turn after it sets the
+  // lattice off the frame's axes, so no square of it shows. The first
+  // fetch's last channel wobbles the ripples.
+  vec2 gFlow = normalize(0.5 * uGroundDetailSize - uDuneSource);
+  vec2 gDown = vec2(gp.x * gFlow.y - gp.y * gFlow.x, dot(gp, gFlow));
   vec2 gQ = mat2(0.866, -0.5, 0.5, 0.866) *
-            (gp / vec2(${f(d.SCOUR_M)}, ${f(d.SCOUR_M * d.SCOUR_STRETCH)}));
+            (gDown / vec2(${f(d.SCOUR_M)}, ${f(d.SCOUR_M * d.SCOUR_STRETCH)}));
   vec4 gS1 = groundNoise(gQ + gN1.b * 1.7);
   vec4 gS2 = groundNoise(gQ * 2.3 + 11.0);
   float gScour = smoothstep(0.52, 0.78, 0.65 * gS1.r + 0.35 * gS2.g) - ${f(SCOUR_MEAN)};
@@ -394,7 +397,7 @@ export function installGroundDetail(
       .replace('#include <common>', `#include <common>\n${fragmentPars()}`)
       .replace('#include <color_fragment>', `#include <color_fragment>\n${fragmentMain()}`);
   };
-  material.customProgramCacheKey = () => `${key}:seabed-detail-4`;
+  material.customProgramCacheKey = () => `${key}:seabed-detail-5`;
   material.needsUpdate = true;
   return uniforms;
 }

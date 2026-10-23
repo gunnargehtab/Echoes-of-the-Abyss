@@ -774,8 +774,9 @@ export class PerspectiveView {
   private detailUniforms: GroundDetailUniforms | null = null;
   /**
    * The map the room named (`setMap`), which says where its dunes' current
-   * comes from (#1560). The room sends it after the ground, so the source is a
-   * uniform the map's arrival moves rather than a reason to rebuild.
+   * comes from (#1560). The room names it before it sends the ground
+   * (#1573), so the bake's stone scours trail the right way from the first
+   * frame; the shader's source is a uniform all the same.
    */
   private mapId: string | null = null;
   private stones: StoneSeat[] = [];
@@ -2115,7 +2116,7 @@ export class PerspectiveView {
 
     // Seated stones scour the bake (seabed.ts `stoneScourGain`) only where
     // the layer seats them: a hollow with no stone in it would be a lie.
-    this.stones = this.seabedDetail ? stoneSeats(terrain) : [];
+    this.stones = this.seabedDetail ? stoneSeats(terrain, duneSource(this.mapId, terrain)) : [];
     // A board launch opens on the ground the board's baseline detail already
     // baked, so its skin is cut from that one rather than baked again on the
     // join's held frame (#1495). The baseline seats no stones, so a ground
@@ -2298,7 +2299,7 @@ export class PerspectiveView {
       patchGroundDetailCells(this.detailCells, terrain, touched);
       this.detailTexture.needsUpdate = true;
       // Seats read their cell and its ring, which the rebake below covers.
-      this.stones = stoneSeats(terrain);
+      this.stones = stoneSeats(terrain, duneSource(this.mapId, terrain));
     }
     rebakeSeabedCells(canvas, terrain, this.groundSeed, this.seabedRange, touched, this.stones);
     texture.needsUpdate = true;

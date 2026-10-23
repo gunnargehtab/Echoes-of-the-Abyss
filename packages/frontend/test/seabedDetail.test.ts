@@ -151,7 +151,7 @@ describe('the strength table', () => {
       `lie ${d.RIPPLE_M} m apart`,
       `spans ${d.RIPPLE_PX[1]} pixels and is gone at ${d.RIPPLE_PX[0]}`,
       `on a ${d.SCOUR_M} m field`,
-      `${d.SCOUR_STRETCH} times longer north–south`,
+      `${d.SCOUR_STRETCH} times longer along the current`,
       `runs at ${d.GRAIN_M} m and ${d.GRAIN_FINE_M} m`,
       `whole from ${d.GRAIN_PX[1]} pixels and gone at ${d.GRAIN_PX[0]}`,
       `darkens to ${d.STONE_SCOUR_GAIN} at and under the stone`,
@@ -446,7 +446,7 @@ describe('the silt detail shader', () => {
   const fragment = shader.fragmentShader;
 
   it('chains the survey ink, keeps its cells, and keys itself apart', () => {
-    assert.equal(material.customProgramCacheKey(), 'survey-ink:seabed-detail-4');
+    assert.equal(material.customProgramCacheKey(), 'survey-ink:seabed-detail-5');
     assert.equal((shader.uniforms.uSurveyCells as { value: unknown }).value, surveyCells);
     assert.equal((shader.uniforms.uGroundDetail as { value: unknown }).value, texture);
     assert.deepEqual((shader.uniforms.uGroundDetailSize as { value: unknown }).value, [1500, 1250]);
@@ -463,6 +463,29 @@ describe('the silt detail shader', () => {
     assert.ok(flat.includes(`float gCycle = gReach / ${SEABED_DETAIL.DUNE_M}.0 + gWarp;`));
     assert.match(flat, /float gRCycle = \(gReach \+ gWarp/);
     assert.doesNotMatch(flat, /gp\.y \//, 'a crest still runs along the map x axis');
+  });
+
+  it("stretches the scours along the flow at the map's centre, one frame a map (#1573)", () => {
+    const flat = fragment.replace(/\s+/g, ' ');
+    assert.ok(flat.includes('vec2 gFlow = normalize(0.5 * uGroundDetailSize - uDuneSource);'));
+    assert.ok(flat.includes('vec2 gDown = vec2(gp.x * gFlow.y - gp.y * gFlow.x, dot(gp, gFlow));'));
+    assert.match(flat, /\(gDown \/ vec2\(/, 'the scours are stretched off the flow frame');
+  });
+
+  it('turns the scours down the Rift and leaves them north–south elsewhere (#1573)', () => {
+    // The shader's gFlow, for each catalogue map and the fallback: the doc
+    // says the Rift's run east–west and the other two's north–south.
+    const flow = (id: string | null, widthM: number, heightM: number) => {
+      const [sx, sy] = duneSource(id, { cols: widthM / 250, rows: heightM / 250, cellM: 250 });
+      const [x, y] = [widthM / 2 - sx, heightM / 2 - sy];
+      return [x / Math.hypot(x, y), y / Math.hypot(x, y)];
+    };
+    const near = (a: number[], b: number[]) => Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!) < 1e-12;
+    for (const map of MAP_HEADERS) {
+      const expected = map.id === 'abyssal-rift-corridor' ? [1, 0] : [0, 1];
+      assert.ok(near(flow(map.id, map.widthM, map.heightM), expected), map.id);
+    }
+    assert.ok(near(flow(null, 5000, 3000), [0, 1]), 'a mission map keeps them north–south');
   });
 
   it('shades after the bake and the veil, before the ink and the fog', () => {

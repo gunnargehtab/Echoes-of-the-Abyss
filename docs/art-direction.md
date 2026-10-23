@@ -1098,8 +1098,12 @@ without ripples, and rock admits no water at all.
 - **Ripples** lie 7 m apart, parallel to the dunes and settled in their troughs. A
   ripple's lee darkens, and the rest of its 7 m lifts by as much in sum. A ripple draws
   while it spans 8 pixels and is gone at 3. **Scours** are hollows on a 38 m field,
-  drawn out 1.8 times longer north–south on every map. They do not turn with the dunes'
-  source yet: a rotation that varies across the map would shear the field.
+  drawn out 1.8 times longer along the current
+  ([#1573](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1573)). They take
+  one heading a map, the flow at its centre: a turn that varied across the map would shear
+  the field, the further from its origin the more. So they run north–south on the
+  Ventfront Divide and the Kelp Labyrinth, whose centres the current crosses heading south,
+  and east–west down the Abyssal Rift Corridor.
   **Grain** runs at 3 m and 1.3 m, each octave whole from 6 pixels and gone at 3.
 - **The layer fades with distance.** It is whole through 2 m a pixel and gone by 8, so the
   survey dolly sees the bake and the ink and nothing else: no second map grid.
@@ -1130,9 +1134,10 @@ silhouette still stands. The models do not change; their instances stand lower.
 Each seated stone leaves a **scour** in the bake, on open ground only. Its radius is half
 its footprint at its own scale. The ground darkens to 0.7 at and under the stone, a
 shallower dip than a full face, and recovers by 2.2 radii up-current and across. The
-scour runs 1.6 times further on the lee, the south side, where the current drops its
-silt. The lee stays south on every map: the bake runs before the room names its map, so it
-cannot know where that map's current comes from. It stays inside its stone's own cell, faded to nothing over the last radius before
+scour runs 1.6 times further on the lee, down-current, away from the map's source,
+where the current drops its silt
+([#1573](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1573)). The room names
+its map before it sends the ground, so the bake knows the source from its first frame. It stays inside its stone's own cell, faded to nothing over the last radius before
 the edge, like an ember's glow. A ground delta's rebake of the touched cells and a ring
 then redraws every scour it moved. Being in the bake, it costs nothing per frame, and fog,
 veil and ink treat it as ground.
