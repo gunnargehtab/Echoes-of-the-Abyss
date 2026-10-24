@@ -601,9 +601,10 @@ Verger (Foundry)
 - Hold: **4** berths — four Choristers, or two Corvettes
 - Speed: 40
 - HP: 800
-- Faction-locked: no. The Biomass is the lock, as the Chorister's is: a four-berth PR-3
-  transport reads the same under any flag, and the rendering contracts price it for everyone
-  else at a third of the rate ([economy.md](economy.md) §6)
+- Faction-locked: yes (#1582). It takes a cohort under the layer for one descent, and only
+  the navy whose cohorts belong below the layer has a descent to save. It was locked by its
+  Biomass price alone until #1582, which left the Directorate four hulls of its own against
+  everyone else's ten
 
 Antiphon (Slipway)
 
@@ -696,9 +697,9 @@ Acolyte (Foundry)
 - Berths: 1
 - Speed: 40
 - HP: 200
-- Faction-locked: no. The Biomass is the lock, as the Chorister's is: a stationary listening
-  step reads the same under any flag, and the rendering contracts price it for everyone else
-  ([economy.md](economy.md) §6)
+- Faction-locked: yes (#1582). The tier it gains sitting still is the Listening, the
+  Directorate's ears made into a hull; under any other flag it is a slow Light Scout. Locked
+  by its Biomass price alone until #1582, as the Verger was
 
 Herald (Foundry)
 
@@ -792,9 +793,9 @@ Thurible (Slipway)
   of the descent, so the shallow attack is slow where the deep one is fast — the defender
   above gets three times the warning a defender below does, and that asymmetry is
   [systems-depth.md](systems-depth.md) §2 arriving in the weapon
-- Faction-locked: no. The Biomass is the lock, as the Chorister's and the Acolyte's are.
-  Every navy may drop a charge; only this one lives deep enough for *up* to be where the
-  enemy is
+- Faction-locked: yes (#1582). Only the Directorate lives deep enough for *up* to be where
+  the enemy is, and a charge set to burst above the hull that dropped it is that navy's
+  argument and nobody else's. Locked by its Biomass price alone until #1582
 
 Lance (Slipway)
 
@@ -895,9 +896,9 @@ Lure (Slipway)
   radius and a clock), on a 90 s cooldown. Worth nothing against a base nothing lives near,
   and worth a great deal beside a Drift that is healthy — which is the one siege in the
   roster whose strength is a property of the map rather than of the hull
-- Faction-locked: no. The Biomass is the lock, as the Chorister's, the Verger's, the
-  Acolyte's and the Thurible's are: a song reads the same under any flag, and what does not
-  is paying for it out of the account whose yield rises and falls with Drift Health
+- Faction-locked: yes (#1582). The Drift it calls renders into the account only the
+  Directorate earns at full rate, so the siege pays the navy that sang it; under another flag
+  it is a song that feeds somebody else. Locked by its Biomass price alone until #1582
 
 Tocsin (Slipway)
 
@@ -1348,8 +1349,9 @@ Design notes
   them, and `packages/shared/src/economy.ts` is the one place they become a sum and the one
   rule for spending it — the server, the commander AI and the command bar all read that sum
   and never the columns (economy.md §8). Biomass is the cohort programme's account
-  (economy.md §6): the Chorister and the Verger are priced in it and locked by nothing else,
-  and the Precentor and the Dredge are priced in it and locked besides. The Abyssal
+  (economy.md §6): the Chorister is priced in it and locked by nothing else, and the
+  Precentor, the Dredge, the Acolyte, the Verger, the Thurible and the Lure are priced in it
+  and locked besides (the last four since #1582, below). The Abyssal
   Submersible is not — it is the crystal-locked deep hull and stays priced as one.
 - **The cohort hull is the Chorister, and the decision is recorded here so it can be
   overruled in one place (issue #352).** economy.md §6 called the Directorate "cheapest per
@@ -1380,6 +1382,18 @@ Design notes
     dozen renderings' worth of hull at a time, which is not "very many". Under a strained
     region a Draymaw pays 16.5 and falls short, so the guard-rail bites at the first hull
     rather than the tenth.
+- **The Chorister is the one hull the price still locks (#1582).** The Acolyte, the Verger,
+  the Thurible and the Lure took the Chorister's rule when they were written, and each carried
+  no lock. Two things ended it. The price stopped being a lock once a second navy earned
+  Biomass: bloom-share pays the Commune into the same account
+  ([systems-flora.md](systems-flora.md) §6). And the rule left the Directorate four hulls of
+  its own against everyone else's ten, the gap [roster-plan.md](roster-plan.md) §1 exists to
+  close. Each of the four is an argument about the Directorate's depth or its ears: the
+  Acolyte's stationary tier, the Verger's descent, the Thurible's charge set *up*, the
+  Lure's Drift rendering into the full-rate account. So each is now locked. The Chorister
+  stays open: it is the cohort hull every navy can fall back to, and the Commune's doctrine
+  names it (#582). The other three navies' models of the four, from #1438 to #1441, stay
+  on disk and are loaded by nothing ([models-plan.md](models-plan.md) §3.4).
 
 ---
 

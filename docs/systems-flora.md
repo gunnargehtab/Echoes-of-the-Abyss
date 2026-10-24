@@ -241,12 +241,14 @@ should, and the reason is in the code rather than in the prose:
 - **The Commune can already spend Biomass, and no hull is repriced.** *Since #582 their
   doctrine names the Chorister, which is what makes the paragraph below true in a match rather
   than only on paper.* Of the seven
-  Biomass-priced entries in the roster, only the Precentor and the Dredge are locked to the
+  Biomass-priced entries in the roster, only the Precentor and the Dredge were locked to the
   Directorate. The Acolyte (15), the Chorister (20), the Verger (30), the Thurible (40) and
-  the Lure (50) are open to any navy — *the price is the lock*. That design has never
-  actually worked, because only one navy earns the account; giving the Commune an income
-  makes five unlocked hulls reachable by a second navy and the price-as-lock rule start
-  doing what [economy.md](economy.md) §8 says it does. Repricing the Commune's own grown
+  the Lure (50) were open to any navy — *the price is the lock*. That design had never
+  actually worked, because only one navy earned the account; giving the Commune an income
+  made five unlocked hulls reachable by a second navy and the price-as-lock rule start
+  doing what [economy.md](economy.md) §8 says it does. Since #1582 four of the five carry a
+  faction lock, and the Chorister (20) is the one Biomass hull the Commune can buy
+  ([units.md](units.md), design notes). Repricing the Commune's own grown
   hulls in Biomass is a **later option, not a prerequisite** — worth doing for the fiction of
   a navy that grows its ships, and worth measuring first.
 - **Nothing moves in a skirmish.** No skirmish map authors a bloom node, so the system

@@ -360,9 +360,9 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
     emissive: responsoryEmissive,
   },
   // The transports (#783), on the rung's rule: one navy's hull each, so the
-  // kind's canonical model. The Verger carries no lock, so its Directorate
-  // model is the kind's canonical one and the other three navies' are
-  // variants (#1438) — the Chorister's rule.
+  // kind's canonical model. The Verger's Directorate model is the canonical
+  // one; the other three navies' variants (#1438) are dormant since #1582
+  // locked it (docs/models-plan.md §3.4).
   [UnitKind.Freighter]: {
     albedo: freighterAlbedo,
     height: freighterHeight,
@@ -384,9 +384,9 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
     emissive: antiphonEmissive,
   },
   // The scouts (#784), on the same rule: one navy's hull each, so the kind's
-  // canonical model. The Acolyte carries no lock, so its Directorate model
-  // is the kind's canonical one and VARIANT_MAP_URL carries the other three
-  // navies' — the Chorister's and the Verger's rule (#1439).
+  // canonical model. The Acolyte's Directorate model is the canonical one;
+  // VARIANT_MAP_URL's other-navy entries (#1439) are dormant, as the
+  // Verger's are.
   [UnitKind.Beacon]: {
     albedo: beaconAlbedo,
     height: beaconHeight,
@@ -408,10 +408,9 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
     emissive: heraldEmissive,
   },
   // The ordnance hulls (#785), on the same rule: one navy's hull each, so
-  // the kind's canonical model. The Thurible carries no lock, so its
-  // Directorate model is the kind's canonical one and VARIANT_MAP_URL carries
-  // the other three navies' — the Chorister's, the Verger's and the
-  // Acolyte's rule (#1440).
+  // the kind's canonical model. The Thurible's Directorate model is the
+  // canonical one; VARIANT_MAP_URL's other-navy entries (#1440) are dormant,
+  // as the Verger's are.
   [UnitKind.Broadside]: {
     albedo: broadsideAlbedo,
     height: broadsideHeight,
@@ -434,10 +433,9 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
   },
   // The siege hulls (#786), on the same rule: one navy's hull each, so the
   // kind's canonical model, and three of the four baked in their working
-  // state — ladders run out, fan spread, bell braced. The Lure carries no
-  // lock, so its Directorate model is the kind's canonical one and
-  // VARIANT_MAP_URL carries the other three navies' — the Chorister's, the
-  // Acolyte's and the Thurible's rule (#1441).
+  // state — ladders run out, fan spread, bell braced. The Lure's Directorate
+  // model is the canonical one; VARIANT_MAP_URL's other-navy entries (#1441)
+  // are dormant, as the Verger's are.
   [UnitKind.Furnace]: {
     albedo: furnaceAlbedo,
     height: furnaceHeight,

@@ -662,7 +662,8 @@ they gave the order, not to a live feed of where it is now.
 
 Production's route is the console's command card, and that card is 4 × 3 (§2). A whole navy's
 roster does not fit in twelve cells: the Bathyarch Consortium, the Pelagia Commune and the Hadron
-Knights each offer nineteen hulls and a refit, and since the carriers of
+Knights each offer fifteen hulls and a refit (nineteen until #1582 locked four Biomass hulls
+to the Directorate), and since the carriers of
 [units.md](units.md)'s eighth wave the Abyssal Directorate's thirteen do not fit as one list
 either — it was the one navy whose roster ever did. Both of the usual escapes are already closed — §2 does not let a panel scroll, and the digits
 belong to control groups rather than to production (above).
@@ -674,13 +675,14 @@ fits what it holds:
 | Page | Consortium | Commune | Directorate | Knights |
 | --- | --- | --- | --- | --- |
 | BASTION | 1 | 1 | 1 | 1 |
-| FOUNDRY | 12 | 12 | 8 | 11 |
-| SLIPWAY, with the refits | 7 | 7 | 4 | 8 |
+| FOUNDRY | 10 | 10 | 8 | 9 |
+| SLIPWAY, with the refits | 5 | 5 | 4 | 6 |
 
 Two placements make those figures fit rather than a wider grid, and both follow from what the yard
 is. The **Harvester** is on the Bastion's line as well as the Foundry's and the Bastion always
-stands, so it belongs to the page of the yard that never has to be built — which is what takes the
-Foundry's thirteen down to twelve. The **refits** sit on the Slipway's page because the Slipway's
+stands, so it belongs to the page of the yard that never has to be built — which is what took the
+Foundry's thirteen down to twelve, before #1582 took the Acolyte and the Verger off three navies'
+pages. The **refits** sit on the Slipway's page because the Slipway's
 line is what they compete for ([systems-progression.md](systems-progression.md) §1).
 
 The Bastion's page is the Harvester by itself, and it is the one page with no *standing*
@@ -691,7 +693,7 @@ because they are the two a commander may not have.
 Selecting the Bastion is what opens its page, and that is always a route: losing the Bastion
 is elimination, so a commander with a yard to produce at has one. The alternative reading —
 the Harvester on *every* page, being the one hull no rung gates — was rejected because it
-leaves the Foundry at thirteen, which is the count this section exists to bring down.
+left the Foundry at thirteen, which is the count this section exists to bring down.
 
 A page opens by selection: picking a yard shows that yard's. Both *yards'* pages stay reachable
 with the yard not standing, because a Slipway hull greyed for *no Slipway standing* is how a

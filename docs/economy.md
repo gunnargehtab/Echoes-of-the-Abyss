@@ -251,7 +251,7 @@ and the price the server charges cannot drift — they are one figure, written t
 | Accounts | Nodules, Crystal, Biomass — checked together, never exchanged | §6: the Directorate's living is a different resource, not a discount on the same one. A commander short one rendering is refused however rich in Nodules |
 | Rendering contracts | The same account, at `DRIFT.RENDERING_CONTRACT_RATE` (0.3) | §2's "others at ~30%". The price is as faction-blind as every other price in the roster; the doctrine is the rate |
 | Where a refusal shows | The button, greyed, and on a press the account it fell short in — *Abyssal Submersible: 80 crystal short* | [ui-ux.md](ui-ux.md) §7 forbids the silent grey-out, and naming the account names the readout to watch. The same wording serves a Biomass price the day one exists |
-| The roster's Biomass column | **The Chorister, at 30 Nodules and 20 Biomass** ([units.md](units.md), #352); since #461 the Precentor and the Dredge, and since #501 the Verger at 140 and 30. The Abyssal Submersible stays the crystal-locked deep hull, at 260 Nodules and 80 Crystal | One mid-water rendering at full rate; a third of one through a contract, which is how the hull is the Directorate's without a faction lock. Under a strained region the same rendering pays 16.5 and is refused, so §9's guard-rail bites at the first hull rather than the tenth |
+| The roster's Biomass column | **The Chorister, at 30 Nodules and 20 Biomass** ([units.md](units.md), #352); since #461 the Precentor and the Dredge, and since #501 the Verger at 140 and 30, locked to the Directorate since #1582. The Abyssal Submersible stays the crystal-locked deep hull, at 260 Nodules and 80 Crystal | One mid-water rendering at full rate; a third of one through a contract, which is how the hull is the Directorate's without a faction lock. Under a strained region the same rendering pays 16.5 and is refused, so §9's guard-rail bites at the first hull rather than the tenth |
 
 **Why the mechanism shipped ahead of the entry.** [mission-intake.md](mission-intake.md)
 §13 found that *"cheap expendable units"* — [campaign.md](campaign.md) §6 row 2's teaching
@@ -260,8 +260,10 @@ will ask is the Directorate's fifth. The account, the query over it (#330) and t
 (#351) each landed before the hull, so the entry (#352) was a roster row and nothing else:
 no new path, no new account. `packages/shared/test/economy.test.ts` holds the roster to it —
 the Biomass column names the cohort programme's hulls and nobody else's (the Chorister and,
-since wave 1 of [roster-plan.md](roster-plan.md), the Verger, both locked by the price alone;
-the Precentor and the Dredge, locked besides), and the Chorister the cheapest in Nodules.
+since wave 1 of [roster-plan.md](roster-plan.md), the Verger; the Chorister is the one
+locked by the price alone, and the Precentor, the Dredge and since #1582 the Verger, the
+Acolyte, the Thurible and the Lure are locked besides), and the Chorister the cheapest in
+Nodules.
 
 ---
 

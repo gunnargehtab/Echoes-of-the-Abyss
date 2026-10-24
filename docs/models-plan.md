@@ -146,16 +146,19 @@ the Tocsin's 22 at 9.9; after Phase 4, the Offertory's 18 at 8.1 and the Versicl
 The light is *placed* forward, where the cone is loud, as the
 Clarion's and Responsory's rows already say.
 
-### 3.4 Four kinds carry no lock
+### 3.4 Four kinds were written without a lock
 
-The Verger, the Acolyte, the Thurible and the Lure are the Directorate's and faction-locked
-by nothing but their Biomass price — the Chorister's rule ([units.md](units.md), each
-block's *Faction-locked* line). So they take the Chorister's model rule too: one canonical
-Directorate model, `<slug>-directorate.glb`, on the kind's `UNITS` row, which serves every
-navy recoloured on the chart; in the conn view the runtime resolves `<slug>-<faction>.glb`,
-and a navy whose variant has not passed intake stays on the sprite. The Verger's three
-variants landed in #1438, the Acolyte's in #1439, the Thurible's in #1440 and the Lure's
-in #1441, as #649's did for the Chorister.
+The Verger, the Acolyte, the Thurible and the Lure were written as the Directorate's and
+faction-locked by nothing but their Biomass price — the Chorister's rule. So they took the
+Chorister's model rule too: one canonical Directorate model, `<slug>-directorate.glb`, on
+the kind's `UNITS` row, and in the conn view the runtime resolves `<slug>-<faction>.glb`.
+The other three navies' variants landed in #1438 (the Verger), #1439 (the Acolyte), #1440
+(the Thurible) and #1441 (the Lure), as #649's did for the Chorister.
+
+Since #1582 the four carry `faction` and only the Directorate builds them ([units.md](units.md),
+design notes). Their twelve other-navy variants stay on disk, with their scripts, maps and
+outlines, and nothing loads them: the texture preload and every yard ask `unitAvailableTo`
+first. Whether to delete them is a follow-up, kept apart so the lock stays one small diff.
 
 ### 3.5 Built in a state
 

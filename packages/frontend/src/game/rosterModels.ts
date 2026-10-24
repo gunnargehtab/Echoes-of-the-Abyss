@@ -143,32 +143,26 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Cantus]: 'cantus',
   [UnitKind.Reciter]: 'reciter',
   // The transports (#501), script-built in #783: one model a navy. The
-  // Verger carries no lock, so a navy rendering for one resolves
-  // verger-<its faction>.glb — all four variants exist (#1438), as the
-  // Chorister's do.
+  // Verger's three other-navy variants (#1438) are dormant since #1582 locked
+  // it to the Directorate (docs/models-plan.md §3.4).
   [UnitKind.Freighter]: 'freighter',
   [UnitKind.Drifter]: 'drifter',
   [UnitKind.Verger]: 'verger',
   [UnitKind.Antiphon]: 'antiphon',
-  // The scouts (#506), script-built in #784: one model a navy. The Acolyte
-  // carries no lock, so a navy rendering for one resolves
-  // acolyte-<its faction>.glb — all four variants exist (#1439), as the
-  // Verger's do.
+  // The scouts (#506), script-built in #784: one model a navy. The Acolyte's
+  // other-navy variants (#1439) are dormant, as the Verger's are.
   [UnitKind.Beacon]: 'beacon',
   [UnitKind.Glider]: 'glider',
   [UnitKind.Acolyte]: 'acolyte',
   [UnitKind.Herald]: 'herald',
   // The ordnance hulls (#507), script-built in #785: one model a navy. The
-  // Thurible carries no lock, so a navy rendering for one resolves
-  // thurible-<its faction>.glb — all four variants exist (#1440), as the
-  // Acolyte's do.
+  // Thurible's other-navy variants (#1440) are dormant, as the Verger's are.
   [UnitKind.Broadside]: 'broadside',
   [UnitKind.Weaver]: 'weaver',
   [UnitKind.Thurible]: 'thurible',
   [UnitKind.Lance]: 'lance',
-  // The siege hulls (#508), script-built in #786: one model a navy. The Lure
-  // carries no lock, so a navy rendering for one resolves lure-<its
-  // faction>.glb — all four variants exist (#1441), as the Thurible's do.
+  // The siege hulls (#508), script-built in #786: one model a navy. The
+  // Lure's other-navy variants (#1441) are dormant, as the Verger's are.
   [UnitKind.Furnace]: 'furnace',
   [UnitKind.Blight]: 'blight',
   [UnitKind.Lure]: 'lure',
