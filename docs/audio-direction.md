@@ -343,13 +343,13 @@ The score is the port's grammar played in the water: a pedal under 40 Hz, cold p
 | Machinery, ≤ 65 | 3 | One higher again | −2 dB |
 | Full plant, ≤ 100 | 4 | The top of the set, shortest (1.2–3.0 s) | 0 dB |
 
-So the swell is density, height and level together, and it is the player's own: the fleet's loudest **unit**, the figure §4's bed reads, never the HUD's `peakSig`. It rises over about a second and falls back over about three, so a burst of speed is felt as a swell and its end as the swell taking its time to leave. The pedal rises with it, by less.
+So the swell is density, height and level together, and it is the player's own: the fleet's loudest **unit**, the figure §4's bed reads and the HUD has drawn since #623. It rises over about a second and falls back over about three, so a burst of speed is felt as a swell and its end as the swell taking its time to leave. The pedal rises with it, by less.
 
 **Under Silent Running only the pedal stays.** Every layer above 800 Hz closes on the world bus's own 0.6 s crossfade, and the pedal holds at its lowest level: a held breath. §4's inversion is the world getting louder because the player got quieter, and a score still drifting over the top of that moment would be the one thing in the mix not taking part in it.
 
 **It never touches the tuned bed.** §9's root, third and fifth (880, 1,100 and 1,320 Hz) are the Fields' own, and the score's partials stay at least 60 cents from each of them and from their octaves, on every map rather than only where crystal is in earshot: a score that changed key where the Fields begin would be a terrain readout. The set is a pentatonic on C and D with its A removed (1,046.5, 1,174.7, 1,396.9, 1,568, 2,093 and 2,349.3 Hz), which keeps the port's property of having no semitone to grind.
 
-**It starts when the server first describes the fleet.** The score is silent until the first own-force frame arrives, so the port's engine, which never receives one, never plays it, and nothing sounds in a match before the mix has a band to play. It rides the `music` bus, so the duck under a contact, the speech rung and the Music slider all reach it without the score knowing they exist. It is built at the unlock gesture and composed off the Echo tick, so a tick still allocates nothing.
+**It starts when the server first describes the fleet.** The score is silent until the first own-force frame arrives, so the port's engine, which never receives one, never plays it, and nothing sounds in a match before the mix has a band to play. It rides the `music` bus, so the duck under a contact, the speech rung and the Music slider all reach it without the score knowing they exist. It is built at the unlock gesture and composed off the Echo tick, so a tick still builds no node.
 
 ### The port
 
@@ -650,10 +650,10 @@ master, the score reads -43.7 LUFS at hull creak and -36.6 at full plant, 17.6 d
 SIG 80 scene, and the pedal alone under Silent Running reads -50.7. The pedal sits at a quarter
 of its first level, because at that level it was 91-96% of the score's energy below 60 Hz,
 which is #663's fault in a new layer; it is 63% at hull creak and 38% at full plant now. The
-speaker profile takes the score 20 dB down where it takes the scenes 9-12 dB, so on a phone the
-score at full plant sits where hull creak sits without the profile. That is recorded, not
-chased: the profile is the louder question, and the score is meant to be the quietest thing in
-the mix.
+speaker profile takes the score 20 dB down where it takes the scenes 9-12 dB: profiled, the
+score at full plant (-56.2) sits 28.1 dB under the SIG 80 scene against 17.6 dB without the
+profile, and 8.6 dB under the idle scene. That is recorded, not chased here: it is the
+profile's handling of a layer whose information sits above 800 Hz, and it is its own issue (#1603).
 
 Contacts are sonified (§3): a voice per contact, panned with the authority its tier earned,
 filtered by the biome it arrived through (§9), and carrying from Tier 3 up the timbre family

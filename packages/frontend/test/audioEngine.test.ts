@@ -1043,6 +1043,40 @@ describe('the audio engine: the score (§10, #1599)', () => {
     }
   });
 
+  it('lets a swell finish rising while the band holds', () => {
+    // The frame comes at 5 Hz whether or not the band moved. Re-aiming an
+    // unchanged target restarted the ramp on the fall's constant, so §10's
+    // rise "over about a second" took three (round-1 critic, #1599).
+    const { engine } = boot();
+    try {
+      engine.applySelf(selfFrame({ fleetSig: 10 }));
+      engine.onEchoTick();
+      const { layers, pedal } = scoreNodes(engine);
+      const top = layers[SCORE_LAYERS - 1]!;
+      const before = { top: top.gain.writes.length, pedal: pedal.gain.writes.length };
+      for (let tick = 101; tick < 106; tick++) {
+        engine.applySelf(selfFrame({ tick, fleetSig: 80 }));
+        engine.onEchoTick();
+      }
+      const topWrites = top.gain.writes.slice(before.top);
+      assert.equal(topWrites.length, 1, 'five frames at one band wrote the layer more than once');
+      const pedalWrites = pedal.gain.writes.slice(before.pedal);
+      assert.equal(pedalWrites.length, 1, 'five frames at one band wrote the pedal more than once');
+      // And the one write is a rise, for both: "the pedal rises with it".
+      const rise = topWrites[0]!.timeConstant!;
+      assert.equal(pedalWrites[0]!.timeConstant, rise);
+      engine.applySelf(selfFrame({ tick: 106, fleetSig: 10 }));
+      engine.onEchoTick();
+      assert.ok(
+        top.gain.writes.at(-1)!.timeConstant! > rise,
+        'the fall is no slower than the rise'
+      );
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+
   it('keeps only the pedal under Silent Running', () => {
     const { engine } = boot();
     try {

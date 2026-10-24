@@ -57,10 +57,9 @@ export const TUNED_CLEARANCE_CENTS = 60;
 export const SCORE_PEDAL_HZ = [31.0, 31.3] as const;
 
 /**
- * Linear gain of the open layers, by band — §10's −6, −4, −2 and 0 dB.
- *
- * TUNABLE in the figures, SPEC in the shape: the score swells by density,
- * height and level together, and level is the smallest of the three.
+ * SPEC — docs/audio-direction.md §10, "The score": linear gain of the open
+ * layers, by band, at −6, −4, −2 and 0 dB. The score swells by density, height
+ * and level together, and level is the smallest of the three.
  */
 export const LAYER_LEVEL = [0.501, 0.631, 0.794, 1] as const;
 
@@ -200,6 +199,7 @@ export class Score {
   private band: number | null = null;
   /** The gain each layer was last aimed at, so a ramp knows if it is a rise. */
   private readonly aimed = new Array<number>(SCORE_LAYERS).fill(0);
+  private aimedPedal = 0;
   private stopped = false;
   private readonly selfTimed: boolean;
 
@@ -262,13 +262,24 @@ export class Score {
     const silent = mix.band < 0;
     for (let layer = 0; layer < SCORE_LAYERS; layer++) {
       const target = mix.layers[layer] ?? 0;
-      // Against the last target rather than the parameter's value, which is
-      // wherever the previous ramp has got to and says nothing about direction.
-      const ramp = silent ? SILENT_S : target > this.aimed[layer]! ? RISE_S : FALL_S;
+      this.aim(this.layers[layer]!.gain, target, this.aimed[layer]!, silent, now);
       this.aimed[layer] = target;
-      this.layers[layer]!.gain.setTargetAtTime(target, now, ramp);
     }
-    this.pedal.gain.setTargetAtTime(mix.pedal, now, silent ? SILENT_S : FALL_S);
+    this.aim(this.pedal.gain, mix.pedal, this.aimedPedal, silent, now);
+    this.aimedPedal = mix.pedal;
+  }
+
+  /**
+   * Write a ramp only when the target moved. The frame arrives at 5 Hz whether
+   * or not the band changed, and re-aiming an unchanged target restarts its
+   * ramp from wherever it has got to — on the fall's constant, since an equal
+   * target is not a rise — so a swell meant to arrive in a second took three.
+   * Direction is read against the last target, not the parameter's value,
+   * which is wherever the previous ramp has got to and says nothing about it.
+   */
+  private aim(param: AudioParam, target: number, last: number, silent: boolean, now: number): void {
+    if (target === last) return;
+    param.setTargetAtTime(target, now, silent ? SILENT_S : target > last ? RISE_S : FALL_S);
   }
 
   private begin(now: number): void {
