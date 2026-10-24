@@ -67,7 +67,8 @@ jobs:
        github.event.workflow_run.event == 'push') ||
       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     outputs:
-      deploy: ${{ steps.switch.outputs.deploy }}
+      deploy: ${{ steps.head.outputs.current }}
+      sha: ${{ steps.head.outputs.sha }}
     steps:
       # Read in bash for the reasons pages.yml gives: the log shows the raw
       # value, and a "NAME = true" pasted whole into the Value box still counts.
@@ -84,6 +85,27 @@ jobs:
           else
             echo "deploy=false" >> "$GITHUB_OUTPUT"
             echo "Deploying is off — set the DEPLOY_PLAYTEST variable to true to deploy (header of this file)."
+          fi
+
+      # Here rather than in the deploy job, so a skip binds no environment and
+      # records no deployment. A head whose CI is red or still running skips:
+      # its own CI run fires this workflow again when it passes, and a red one
+      # waits for the next merge.
+      - name: Newest green main
+        id: head
+        if: steps.switch.outputs.deploy == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)"
+          green="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$sha&event=push&status=success" --jq .total_count)"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          if [ "$green" -gt 0 ]; then
+            echo "current=true" >> "$GITHUB_OUTPUT"
+            echo "main is at $sha and CI passed on it — deploying it."
+          else
+            echo "current=false" >> "$GITHUB_OUTPUT"
+            echo "main is at $sha with no passing CI run yet — skipping."
           fi
 
   deploy:
@@ -121,30 +143,11 @@ jobs:
           printf 'Host playtest\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/playtest\n  IdentitiesOnly yes\n  StrictHostKeyChecking yes\n' \
             "$ECHOES_DOMAIN" "$SSH_USER" > ~/.ssh/config
 
-      # A head whose CI is red or still running skips. Its own CI run fires this
-      # workflow again when it passes; a red one waits for the next merge.
-      - name: Newest green main
-        id: head
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)"
-          green="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$sha&event=push&status=success" --jq .total_count)"
-          echo "sha=$sha" >> "$GITHUB_OUTPUT"
-          if [ "$green" -gt 0 ]; then
-            echo "current=true" >> "$GITHUB_OUTPUT"
-            echo "main is at $sha and CI passed on it — deploying it."
-          else
-            echo "current=false" >> "$GITHUB_OUTPUT"
-            echo "main is at $sha with no passing CI run yet — skipping."
-          fi
-
       # The sparse tree ci.yml checks out: docs/screenshots is most of the
       # repository and no image reads it.
       - uses: actions/checkout@v7.0.1
-        if: steps.head.outputs.current == 'true'
         with:
-          ref: ${{ steps.head.outputs.sha }}
+          ref: ${{ needs.switch.outputs.sha }}
           filter: blob:none
           sparse-checkout-cone-mode: false
           sparse-checkout: |
@@ -152,18 +155,15 @@ jobs:
             !/docs/screenshots/
 
       - name: Build the images
-        if: steps.head.outputs.current == 'true'
         run: $COMPOSE build backend frontend
 
       - name: Ship the images and the compose files
-        if: steps.head.outputs.current == 'true'
         run: |
           docker save echoes-backend:playtest echoes-frontend:playtest | gzip | ssh playtest 'gunzip | docker load'
           tar -c docker-compose.yml deploy/compose.playtest.yml deploy/Caddyfile \
             | ssh playtest 'mkdir -p echoes && tar -x -C echoes'
 
       - name: Start them
-        if: steps.head.outputs.current == 'true'
         run: |
           # Expanded on the runner on purpose: the host has no ECHOES_DOMAIN
           # until this line writes it.
@@ -176,9 +176,8 @@ jobs:
       # what a stranger's browser reaches. The first deploy waits on the
       # certificate, hence the retries.
       - name: Reachable from outside
-        if: steps.head.outputs.current == 'true'
         run: |
           curl -fsS --retry 20 --retry-delay 6 --retry-all-errors -o /dev/null "https://$ECHOES_DOMAIN/"
           curl -fsS --retry 20 --retry-delay 6 --retry-all-errors "https://$ECHOES_DOMAIN:3000/health"
           echo
-          echo "Deployed ${{ steps.head.outputs.sha }} to https://$ECHOES_DOMAIN/"
+          echo "Deployed ${{ needs.switch.outputs.sha }} to https://$ECHOES_DOMAIN/"
