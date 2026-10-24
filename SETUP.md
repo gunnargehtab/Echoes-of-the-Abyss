@@ -194,9 +194,36 @@ This is the deployed shape rather than the development loop: the client is a
 static build, so a source edit needs a rebuild. Use `npm run dev` for iterating;
 compose is for checking that what deploys actually comes up.
 
-What is **not** here is the platform half — no Vercel project, no Hetzner host,
-no Actions job that deploys anything. `.github/workflows/pages.yml` publishes the
-roadmap site, not the game.
+### The playtest host
+
+One VPS serves the public playtest build (#1575): the same two images, behind
+Caddy, under one host name. `deploy/compose.playtest.yml` is the override that
+makes compose's local shape a public one:
+
+```bash
+docker compose -f docker-compose.yml -f deploy/compose.playtest.yml up -d
+```
+
+- **One name, two ports.** The client is built with `VITE_SERVER_URL` empty, so
+  it dials `wss://<host>:3000`. Caddy (`deploy/Caddyfile`) issues a Let's Encrypt
+  certificate for the name and terminates TLS on 443 for the page and on 3000 for
+  the game server. Neither app container publishes a port of its own.
+- **`CORS_ORIGIN` is `https://<host>`**, from `ECHOES_DOMAIN` in the host's
+  `.env`. Compose refuses to start without it.
+- **The host needs** Docker with Compose 2.24 or newer (for `!reset`), a DNS
+  record pointing the name at it, and ports 80, 443 and 3000 open.
+
+`.github/workflows/deploy.yml` updates it after every green CI run on `main`. It
+builds both images on the runner, loads them on the host over SSH, and starts
+them, so the host never clones this repository or runs a build. Each run ships
+`main`'s head, and only once CI has passed on it, so a CI run that finishes late
+can neither roll the host back nor leave a merge undeployed.
+
+Deploying is **off by default**, as publishing the roadmap is: the repository is
+private and the build is not. The workflow's header lists the switch
+(`DEPLOY_PLAYTEST`), the host and SSH settings, and the key secret. Until they
+are set it builds nothing and stays green. `.github/workflows/pages.yml`
+publishes the roadmap site, not the game.
 
 ## Architecture Notes
 

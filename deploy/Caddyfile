@@ -1,0 +1,16 @@
+# The playtest host's TLS proxy (#1575), mounted by deploy/compose.playtest.yml.
+#
+# Two sites under one name, because the client reaches the server on the page's
+# own host at port 3000 (net/GameClient.ts `defaultEndpoint`). Caddy issues the
+# certificate for the name and serves it on both ports; WebSocket upgrades pass
+# through reverse_proxy without any setting.
+
+{$ECHOES_DOMAIN} {
+	reverse_proxy frontend:80
+}
+
+# Matchmaking's POST to /matchmake/, the lobby's GET of /rooms/match and the
+# game socket itself all arrive here.
+{$ECHOES_DOMAIN}:3000 {
+	reverse_proxy backend:3000
+}
