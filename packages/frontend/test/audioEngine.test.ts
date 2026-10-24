@@ -1077,6 +1077,35 @@ describe('the audio engine: the score (§10, #1599)', () => {
     }
   });
 
+  it('closes a layer still falling on the crossfade when the fleet goes silent', () => {
+    // Full plant, then hull creak: the top layer is aimed at 0 on the slow
+    // fall. Going silent inside those three seconds must still close it on
+    // §10's crossfade, though its target does not change (round-2 critic).
+    const { engine } = boot();
+    try {
+      engine.applySelf(selfFrame({ fleetSig: 80 }));
+      engine.onEchoTick();
+      engine.applySelf(selfFrame({ tick: 101, fleetSig: 10 }));
+      engine.onEchoTick();
+      const { layers } = scoreNodes(engine);
+      const top = layers[SCORE_LAYERS - 1]!;
+      const fall = top.gain.writes.at(-1)!.timeConstant!;
+      engine.applySelf(selfFrame({ tick: 102, fleetSig: 10, silentRunning: true }));
+      engine.onEchoTick();
+      const close = top.gain.writes.at(-1)!;
+      assert.equal(close.value, 0);
+      assert.ok(close.timeConstant! < fall, 'the falling layer kept the slow fall');
+      // And a held silence writes nothing further.
+      const count = top.gain.writes.length;
+      engine.applySelf(selfFrame({ tick: 103, fleetSig: 10, silentRunning: true }));
+      engine.onEchoTick();
+      assert.equal(top.gain.writes.length, count);
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+
   it('keeps only the pedal under Silent Running', () => {
     const { engine } = boot();
     try {

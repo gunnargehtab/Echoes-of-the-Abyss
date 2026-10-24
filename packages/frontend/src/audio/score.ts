@@ -257,15 +257,21 @@ export class Score {
   /** Aim the score at `mix`. Writes parameters only; the first call also starts it. */
   update(mix: ScoreMix, now: number): void {
     if (this.stopped) return;
+    const wasSilent = this.band !== null && this.band < 0;
     if (this.band === null) this.begin(now);
     this.band = mix.band;
     const silent = mix.band < 0;
+    // Going silent re-aims even an unchanged target: a layer already falling to
+    // 0 from a higher band is on the fall's constant, and §10 closes every layer
+    // on the world bus's crossfade. Leaving silence does not, or a layer still
+    // closing would be put back on the slow fall.
+    const entering = silent && !wasSilent;
     for (let layer = 0; layer < SCORE_LAYERS; layer++) {
       const target = mix.layers[layer] ?? 0;
-      this.aim(this.layers[layer]!.gain, target, this.aimed[layer]!, silent, now);
+      this.aim(this.layers[layer]!.gain, target, this.aimed[layer]!, silent, entering, now);
       this.aimed[layer] = target;
     }
-    this.aim(this.pedal.gain, mix.pedal, this.aimedPedal, silent, now);
+    this.aim(this.pedal.gain, mix.pedal, this.aimedPedal, silent, entering, now);
     this.aimedPedal = mix.pedal;
   }
 
@@ -277,8 +283,15 @@ export class Score {
    * Direction is read against the last target, not the parameter's value,
    * which is wherever the previous ramp has got to and says nothing about it.
    */
-  private aim(param: AudioParam, target: number, last: number, silent: boolean, now: number): void {
-    if (target === last) return;
+  private aim(
+    param: AudioParam,
+    target: number,
+    last: number,
+    silent: boolean,
+    entering: boolean,
+    now: number
+  ): void {
+    if (target === last && !entering) return;
     param.setTargetAtTime(target, now, silent ? SILENT_S : target > last ? RISE_S : FALL_S);
   }
 
