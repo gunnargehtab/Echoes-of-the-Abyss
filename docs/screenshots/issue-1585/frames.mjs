@@ -19,7 +19,7 @@ export default async ({ page, shot }) => {
   await shot('tender-one');
   await page.locator('button.objectives-row', { hasText: 'Tender One is loaded' }).click();
   await page.waitForTimeout(3000);
-  await shot('concourse');
+  await shot('concourse-jump');
   await loaded(page, 'Tender Two is loaded');
   await page.waitForTimeout(3000);
   await shot('tender-two');
