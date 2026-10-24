@@ -207,9 +207,10 @@ it is allowed to select.
   say the Routine was owed as account configuration. It is not: `Work one issue
   from the backlog` (`trig_0188TRMLkmwkoArLR7DZ3RGR`) has fired since 27 August
   in a fresh session per firing — every four hours on `13 */4 * * *` until
-  15 September, every six on `13 */6 * * *` until 10 October, and every two on
-  `13 */2 * * *` since. It slowed first because the loop's open-PR cap bound on
-  review throughput rather than on backlog supply: the 04:15 firing on
+  15 September, every six on `13 */6 * * *` until 10 October, every two on
+  `13 */2 * * *` until 17 October, and every six on `15 */6 * * *` since, which
+  the repository owner confirmed on 24 October. It slowed first because the
+  loop's open-PR cap bound on review throughput rather than on backlog supply: the 04:15 firing on
   15 September was the first to find two of its own pull requests open, green
   and unmerged, and to stop at step 2 without selecting anything. It sped up on
   10 October, set by the repository owner, because supply bound instead: twenty

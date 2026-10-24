@@ -225,7 +225,7 @@ export function render({
   fontHref,
   iconHref = 'favicon.svg',
   sheet = null,
-  unplaced = 0,
+  unplaced = [],
   unrecorded = 0,
   portraits = {},
   renderStackHref = null,
@@ -239,7 +239,7 @@ export function render({
   }
   if (audience === 'public') {
     repo = null;
-    unplaced = 0;
+    unplaced = [];
     unrecorded = 0;
     renderStackHref = null;
   }
@@ -361,13 +361,21 @@ export function render({
         <figcaption>${escape(content.roster.caption)}</figcaption>
       </figure>`;
 
-  // What the tracker has that the roadmap has not placed yet. Said in one
-  // line rather than hidden, so the page never claims the rows are the whole
-  // of the work when the build knows they are not.
+  // What the tracker has that the roadmap has not placed yet. Said rather
+  // than hidden, so the page never claims the rows are the whole of the work
+  // when the build knows they are not. Each issue is listed by its own title
+  // behind the count, so one filed this morning is on the next build's page
+  // before anybody has written it a row: the doc still owns where it goes.
+  const unplacedRow = (issue) => `<li class="item open" data-state="open">
+  <span class="mark" aria-hidden="true"></span>
+  <span class="work">${escape(issue.title)}</span>
+  <span class="state-tag">not placed</span>
+  <a class="ref" href="${escape(issue.url ?? `https://github.com/${repo}/issues/${issue.number}`)}">#${issue.number}</a>
+</li>`;
   const backlog =
-    unplaced === 0
+    unplaced.length === 0
       ? ''
-      : `      <p class="lede backlog"><a href="https://github.com/${repo}/issues?q=is%3Aissue+is%3Aopen">${unplaced === 1 ? 'One more open item in the tracker is' : `${unplaced} more open items in the tracker are`} not yet placed on this roadmap.</a></p>`;
+      : `      <details class="unplaced-roll backlog"><summary>${unplaced.length === 1 ? 'One more open item in the tracker is' : `${unplaced.length} more open items in the tracker are`} not yet placed on this roadmap.</summary><ul class="items">${unplaced.map(unplacedRow).join('')}</ul></details>`;
 
   // The same honesty for the record: closed work that no row and no epic row
   // stands for. The history below is what the rows say, and this is how much
@@ -766,6 +774,10 @@ footer .note { color: var(--text-bright); font-family: var(--display); font-size
 .sheet figcaption { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); padding: 0.7rem 0.3rem 0.1rem; }
 .backlog { font-size: 0.8rem; margin-top: -0.8rem; }
 .backlog a { color: var(--neon-amber); }
+.unplaced-roll { margin-bottom: 1.2rem; }
+.unplaced-roll > summary { cursor: pointer; color: var(--neon-amber); }
+.unplaced-roll > summary::after { content: ' ▾'; font-size: 0.7em; }
+.unplaced-roll[open] > summary::after { content: ' ▴'; }
 ${oceanStyle}</style>
 </head>
 <body>
@@ -986,6 +998,7 @@ ${sprints}
   const items = [...document.querySelectorAll('.item')];
   const phases = [...document.querySelectorAll('.phase')];
   const rolls = [...document.querySelectorAll('.done-roll')];
+  const backlog = document.querySelector('.unplaced-roll');
   phases.forEach((p) => { const n = document.createElement('p'); n.className = 'empty'; n.textContent = 'Nothing in this phase matches.'; p.querySelector('.phase-body').appendChild(n); });
   const apply = () => {
     const q = query.trim().toLowerCase();
@@ -1001,6 +1014,13 @@ ${sprints}
       r.hidden = visible === 0;
       if (filter === 'closed' || q !== '') r.open = visible > 0;
       if (filter === 'open') r.open = false;
+    }
+    // The unplaced list is all open work, so it answers "Planned" and a
+    // search, and has nothing to say to "Done".
+    if (backlog) {
+      const visible = backlog.querySelectorAll('.item:not([hidden])').length;
+      backlog.hidden = visible === 0;
+      if (filter !== 'all' || q !== '') backlog.open = visible > 0;
     }
     for (const p of phases) {
       const visible = p.querySelectorAll('.item:not([hidden])').length;
@@ -1020,6 +1040,7 @@ ${sprints}
     const expand = toggle.dataset.toggle === 'expand';
     phases.forEach((p) => { p.open = expand; });
     rolls.forEach((r) => { r.open = expand; });
+    if (backlog) backlog.open = expand;
     toggle.dataset.toggle = expand ? 'collapse' : 'expand';
     toggle.textContent = expand ? 'Collapse all' : 'Expand all';
   });

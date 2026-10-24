@@ -227,7 +227,7 @@ const page = {
   fontHref,
   iconHref: src.get('favicon.svg'),
   sheet: sheet === null ? null : { ...sheet, href: src.get(sheet.href) },
-  unplaced: drift.unplaced.length,
+  unplaced: drift.unplaced.map(({ number, title, url }) => ({ number, title, url })),
   unrecorded: drift.unrecorded.length,
   portraits: Object.fromEntries(
     Object.entries(portraits.found).map(([navy, p]) => [navy, { ...p, href: src.get(p.href) }])

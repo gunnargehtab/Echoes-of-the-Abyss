@@ -91,7 +91,9 @@ neon-noir register of `docs/style-neon-noir.md` under the Mouth lockup from `doc
   match, and the card's count and bar say the number either way. Filter by planned or done,
   search, expand all; `#phase-N` deep-links open the phase. In the private cut, one line
   above the phases counts the open issues the roadmap has not placed in any row yet, so the
-  page never presents the rows as the whole of the work when they are not.
+  page never presents the rows as the whole of the work when they are not. It opens to list
+  each one by number, title and link, so an issue filed today is on the next build's page
+  before anybody writes it a row; the Planned filter and a search reach into that list too.
 - **Later** — the doc's `## Later` section: parked and unscheduled work, grouped, and undated
   by definition, because a "since" date there would claim work that is not happening.
 - **The road so far** — the finished phases, folded, then the milestone record. Nothing is
@@ -188,13 +190,14 @@ Each thing on the page has one owner, and each owner has a check:
 | Each upgrade's state | the GitHub API at build time, for the issue `UPGRADES` names | `pages.yml` rebuilds on issue events; `test/renderStack.test.mjs` fails if a card loses its tag |
 | The render-stack frames | `FRAMES`: Plate V, the Bathyarch Cruiser's portrait, #836's 12° Ventfront frame | `pages.yml` rebuilds when one changes; the test fails if any is missing |
 | The dates each phase ran | issue `created_at` / `closed_at`, at build time | nothing to drift — no date is typed anywhere, and a phase with open rows says *since* rather than guessing an end |
-| Open issues with no row | the GitHub API against the doc | the build log names them, and the private cut counts them; epics and `routine-log` ledgers are not counted, being containers and records rather than missing work. An issue under an epic that has a row counts as placed — the doc gives an epic one row, not one per sub-issue |
+| Open issues with no row | the GitHub API against the doc | the build log names them, and the private cut counts and lists them; epics and `routine-log` ledgers are not counted, being containers and records rather than missing work. An issue under an epic that has a row counts as placed — the doc gives an epic one row, not one per sub-issue |
 | Closed work with no row | the same, for closed issues | the build log names them and the private cut's "The road so far" counts them, so the record says how much it leaves out; duplicates and issues closed as not planned are not work done |
 
-Two things stay on people. **A new issue is not a row until somebody adds one** — the build
-names every open issue the doc does not place, and the ones it does not mention at all are
-called out separately, so the list to work through is in the Pages run's log and in the
-local build's output. And **numbers typed into the doc's prose** ("twelve issues are open")
+Two things stay on people. **A new issue is not a row until somebody adds one** — the private
+cut lists every open issue the doc does not place, but only under "not yet placed", never in
+a phase. The build log names them too, and calls out separately the ones the doc does not
+mention at all, so the list to work through is in the Pages run's log and in the local
+build's output. And **numbers typed into the doc's prose** ("twelve issues are open")
 are not read by anything; the page shows only the counted ones, and the prose is for the
 doc's own readers to keep true.
 

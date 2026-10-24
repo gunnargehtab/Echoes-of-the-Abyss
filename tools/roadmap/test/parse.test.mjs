@@ -364,7 +364,7 @@ test('render: the roster figure and the unplaced line appear only when there is 
   const full = render({
     ...base,
     sheet: { href: 'roster-contact-sheet.png', width: 1424, height: 1204 },
-    unplaced: 4,
+    unplaced: [501, 502, 503, 504].map((n) => ({ number: n, title: `Filed today <${n}>` })),
   });
   assert.match(
     full,
@@ -372,8 +372,11 @@ test('render: the roster figure and the unplaced line appear only when there is 
   );
   assert.match(full, /The fleet, as it renders today/);
   assert.match(full, /4 more open items in the tracker are not yet placed on this roadmap/);
+  // Each one by its own title and link, escaped, before anybody writes it a row.
+  assert.match(full, /<span class="work">Filed today &lt;503&gt;<\/span>/);
+  assert.match(full, new RegExp(`href="https://github.com/${REPO}/issues/504">#504</a>`));
   assert.match(
-    render({ ...base, unplaced: 1 }),
+    render({ ...base, unplaced: [{ number: 501, title: 'one' }] }),
     /One more open item in the tracker is not yet placed/
   );
 });
