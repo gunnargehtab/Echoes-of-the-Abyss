@@ -5,8 +5,8 @@
  * The continuous world draws a placed mission's live ground inside its region,
  * and the client must never be the one choosing where a room's ground goes.
  * So the room says so, on the ground's own message: these hold that the
- * prologue names Sorrowgate at join and again on a reconnection after its
- * ground has changed, with writes that replay to the live cells and the live
+ * prologue names Sorrowgate at join and Intake the Banding Ground (#1598),
+ * and the prologue again on a reconnection after its ground has changed, with writes that replay to the live cells and the live
  * revision, and that every other room — Radicals on the same map included —
  * names nothing.
  */
@@ -15,6 +15,8 @@ import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
 import type { Client } from '@colyseus/core';
 import {
+  ATTENDING_INTAKE_HEADER,
+  BANDING_GROUND_REGION,
   PROLOGUE_SORROWGATE_HEADER,
   SEEDING_RADICALS_HEADER,
   SERVER_MSG,
@@ -58,6 +60,16 @@ describe('the region a room names (#1460)', () => {
     assert.equal(terrain.region, SORROWGATE_REGION.id);
     assert.equal(terrain.cols * terrain.cellM, SORROWGATE_REGION.widthM, 'the region is this map');
     assert.equal(terrain.rows * terrain.cellM, SORROWGATE_REGION.heightM);
+  });
+
+  it("names the Banding Ground on Intake's ground at join (#1598)", async () => {
+    const intake = await room({ missionId: ATTENDING_INTAKE_HEADER.id });
+    const client = fakeClient('intake');
+    intake.onJoin(client as unknown as Client);
+    const terrain = lastTerrain(client);
+    assert.equal(terrain.region, BANDING_GROUND_REGION.id);
+    assert.equal(terrain.cols * terrain.cellM, BANDING_GROUND_REGION.widthM);
+    assert.equal(terrain.rows * terrain.cellM, BANDING_GROUND_REGION.heightM);
   });
 
   it('names it again on a reconnection, with the ground as it now is', async () => {

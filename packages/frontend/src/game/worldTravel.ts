@@ -5,14 +5,15 @@
  * the prologue from it moves that camera home — onto the spawn, at the dolly a
  * commander's first sight of their force opens at — before any room is joined.
  * A travelled entry keeps that frame through the join (`holdOpeningFrame`), so
- * the session begins where the travel ended. Both frames are in the placed
- * region's own metres, the view's.
+ * the session begins where the travel ended. Each frame is in its region's
+ * own metres, and `inView` restates one in the metres the view stands in,
+ * which are its latest session's region's (`PerspectiveView.rehome`, #1598).
  *
  * And what the world itself must fetch for the region before the join: §7.6's
  * "public ground and assets" (`prepareRegion`).
  */
 
-import { RIFT_PLACES, WORLD, type WorldRegion } from '@echoes/shared';
+import { RIFT_PLACES, WORLD, type PlanPoint, type WorldRegion } from '@echoes/shared';
 import { HOME_DOLLY_M, HOME_PITCH_DEG, type CameraFrame } from './PerspectiveView.ts';
 import { mapProps, propSpec } from './environment.ts';
 import { whenEnvTemplatesReady } from './environmentModels.ts';
@@ -34,12 +35,22 @@ export function boardFrame(region: WorldRegion): CameraFrame {
 }
 
 /**
- * §7.6 step 2's destination: home, which is the spawn — §7.2's anchor of the
- * same name as the region, public as the whole table is — north, at the home
- * pitch and dolly. Undefined for a region the anchor table does not place.
+ * Each placed region's spawn, as §7.2's derived anchor names it: Sorrowgate's
+ * court, the flight's spawn at the arch, and the muster, the intake's.
+ */
+const SPAWN_PLACE: Readonly<Record<string, string>> = {
+  sorrowgate: 'sorrowgate',
+  'banding-ground': 'the-muster',
+};
+
+/**
+ * §7.6 step 2's destination: home, which is the spawn — §7.2's derived anchor
+ * for the region, public as the whole table is — north, at the home pitch and
+ * dolly. Undefined for a region the anchor table does not place.
  */
 export function arrivalFrame(region: WorldRegion): CameraFrame | undefined {
-  const spawn = RIFT_PLACES.find((place) => place.id === region.id);
+  const id = SPAWN_PLACE[region.id];
+  const spawn = id === undefined ? undefined : RIFT_PLACES.find((place) => place.id === id);
   if (spawn === undefined) return undefined;
   return {
     xM: spawn.x - region.x,
@@ -48,6 +59,14 @@ export function arrivalFrame(region: WorldRegion): CameraFrame | undefined {
     yawDeg: 0,
     pitchDeg: HOME_PITCH_DEG,
   };
+}
+
+/**
+ * A frame in `from`'s metres restated in `view`'s: the same place in the
+ * atlas, since a region's metres are the atlas's less its origin (§7.2).
+ */
+export function inView(frame: CameraFrame, from: PlanPoint, view: PlanPoint): CameraFrame {
+  return { ...frame, xM: frame.xM + from.x - view.x, yM: frame.yM + from.y - view.y };
 }
 
 /**

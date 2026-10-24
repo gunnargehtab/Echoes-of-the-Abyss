@@ -391,6 +391,13 @@ export interface ApronCells {
   padRows: number;
 }
 
+/** The apron uniforms that place it in the view's metres (`installApronShading`). */
+export interface ApronFrameUniforms {
+  uApronPad: { value: number[] };
+  uOverviewFrame: { value: number[] };
+  uDetailRect: { value: number[] };
+}
+
 /** What the apron's seam band blends toward: the overview's skin, and where it lies. */
 export interface SeamBlend {
   /**
@@ -558,6 +565,10 @@ const borderFadeFragment = (backdropSpanM: number, feathered = false) => `#inclu
  *
  * Chain `installGroundSurface` after this, as the mission mesh chains it after
  * the ink; its own key wraps this one.
+ *
+ * Returns the uniforms that say where the mesh stands in the view's metres,
+ * so a view moved to another region (`PerspectiveView.rehome`) can move a
+ * detail it keeps without building it again.
  */
 export function installApronShading(
   material: Material,
@@ -565,7 +576,7 @@ export function installApronShading(
   grid: ApronCells,
   backdropSpanM: number,
   seam: SeamBlend
-): void {
+): ApronFrameUniforms {
   const uniforms = {
     ...border,
     uSurveyCells: { value: grid.cells },
@@ -620,6 +631,7 @@ export function installApronShading(
   };
   material.customProgramCacheKey = () => 'echoes-world-border-7';
   material.needsUpdate = true;
+  return uniforms;
 }
 
 /**

@@ -27,11 +27,16 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { PROLOGUE_SORROWGATE_HEADER, WORLD, worldRegionForMission } from '@echoes/shared';
+import {
+  PROLOGUE_SORROWGATE_HEADER,
+  WORLD,
+  worldRegionForMission,
+  type WorldRegion,
+} from '@echoes/shared';
 import { loadSettings } from '../settings/store.ts';
 import { lookForMission } from './tutorialLook.ts';
 import { worldView, type WorldViewDevices } from './worldView.ts';
-import { arrivalFrame, boardFrame, prepareRegion, Travel } from './worldTravel.ts';
+import { arrivalFrame, boardFrame, inView, prepareRegion, Travel } from './worldTravel.ts';
 
 export type WorldTarget = { kind: 'board' } | { kind: 'mission'; missionId: string };
 
@@ -53,18 +58,23 @@ export interface WorldBackdropProps {
 }
 
 /**
- * The camera frame a target names, in the pilot region's metres, and what the
- * world must fetch before it counts as arrived.
+ * The camera frame a target names, in the metres the view stands in (`view`,
+ * the region its latest session was placed in), and what the world must fetch
+ * before it counts as arrived. A travel to the Banding Ground from a board
+ * standing in the pilot's metres ends 21 km south of the pilot's origin.
  */
-function plan(target: WorldTarget, prepare: typeof prepareRegion) {
+function plan(target: WorldTarget, prepare: typeof prepareRegion, view: WorldRegion | null) {
   if (target.kind === 'board') {
     const board = worldRegionForMission(PROLOGUE_SORROWGATE_HEADER.id)!;
-    return { to: boardFrame(board), prepared: Promise.resolve() };
+    return { to: inView(boardFrame(board), board, view ?? board), prepared: Promise.resolve() };
   }
   const region = worldRegionForMission(target.missionId);
   const to = region === undefined ? undefined : arrivalFrame(region);
   if (region === undefined || to === undefined) return null;
-  return { to, prepared: prepare(region, lookForMission(target.missionId)) };
+  return {
+    to: inView(to, region, view ?? region),
+    prepared: prepare(region, lookForMission(target.missionId)),
+  };
 }
 
 /** One target's run: its travel, and whether each half of arriving is done. */
@@ -101,7 +111,7 @@ export function WorldBackdrop({ target, skip = false, onSettled, devices }: Worl
   const key = target.kind === 'board' ? 'board' : `mission:${target.missionId}`;
   useEffect(() => {
     const view = claimRef.current === null ? null : worldView.current;
-    const planned = plan(target, devices?.prepare ?? prepareRegion);
+    const planned = plan(target, devices?.prepare ?? prepareRegion, view?.region ?? null);
     if (view === null || planned === null) {
       // Nothing to draw a travel on, or to fetch for: arrived, without a move.
       runRef.current = null;

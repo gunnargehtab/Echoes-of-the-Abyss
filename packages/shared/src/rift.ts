@@ -272,6 +272,9 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
     depthM: 1_500,
     toDepthM: 2_400,
   },
+  // Derived, as the court is: the Banding Ground's origin plus its spawn, so
+  // a travel to *Intake* ends on the intake's spawn (§7.6, #1598).
+  { id: 'the-muster', name: 'The muster', region: 'trench-country', x: 23_000, y: 62_750 },
   {
     id: 'sufficiency',
     name: 'Sufficiency',
