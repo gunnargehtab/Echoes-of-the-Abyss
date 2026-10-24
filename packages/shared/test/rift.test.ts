@@ -31,6 +31,7 @@ import {
   surroundFor,
   type GroundCells,
   type GroundRegion,
+  type PlanRect,
   type RiftPlace,
 } from '../dist/index.js';
 
@@ -275,6 +276,52 @@ describe('the named places (§3, placed by §7.2)', () => {
       }
     }
     assert.equal(widest, 11);
+  });
+});
+
+describe('the two maps anchored at their centre (§7.9, #1565)', () => {
+  // A map stood on its anchor, by the size its mission's §11 gives it: the
+  // shared package cannot read the backend's literals, so these restate them.
+  const stood = (id: string, widthM: number, heightM: number): PlanRect => {
+    const p = place(id);
+    return { x: p.x - widthM / 2, y: p.y - heightM / 2, widthM, heightM };
+  };
+  const inside = (outer: PlanRect, inner: PlanRect) =>
+    inner.x >= outer.x &&
+    inner.y >= outer.y &&
+    inner.x + inner.widthM <= outer.x + outer.widthM &&
+    inner.y + inner.heightM <= outer.y + outer.heightM;
+  const fits = (map: PlanRect, region: RiftPlace['region']) => {
+    assert.ok(inside(RIFT_REGIONS[region], map), `inside ${region}`);
+    assert.ok(inside(RIFT_ATLAS, detailRect(map)), 'its surround inside the atlas');
+  };
+
+  it('stands the Western Margin on the top step, edge to edge north of the Shallow Band', () => {
+    // mission-exposure.md §11: 5,000 × 3,000 m, its worked ground the last 750 m.
+    const margin = stood('western-margin', 5_000, 3_000);
+    fits(margin, 'trench-country');
+    // mission-trench-awakening.md §11: 5,000 × 4,000 m, its rim the first 750 m.
+    const band = stood('first-trench', 5_000, 4_000);
+    assert.equal(margin.x, band.x);
+    assert.equal(margin.y + margin.heightM, band.y, 'the worked ground meets the rim');
+    // It crosses the line the trench country's north bound used to draw.
+    assert.ok(margin.y < 50_000 && margin.y + margin.heightM > 50_000);
+  });
+
+  it("stands the Outer Formations' Seam row on the Seam, the Third north of its Approach", () => {
+    // mission-aptitude.md §11: 5,000 × 4,000 m; the Seam is its last 500 m,
+    // the Approach its north-east 1,250 × 1,000 m.
+    const map = stood('outer-formations', 5_000, 4_000);
+    fits(map, 'resonance-fields');
+    const seam = place('the-seam');
+    assert.equal(map.y + map.heightM, seam.y);
+    assert.ok(seam.x >= map.x && seam.x < map.x + map.widthM);
+    const approach = { x: map.x + 3_750 + 625, y: map.y + 500 };
+    const third = place('third-chapter-house');
+    assert.ok(Math.abs(km(third, { ...third, ...approach }) - 1.5) < 0.01);
+    assert.ok(third.y < approach.y);
+    // Half a kilometre further east and the surround leaves the atlas (§7.9).
+    assert.ok(!inside(RIFT_ATLAS, detailRect({ ...map, x: map.x + 500 })));
   });
 });
 
