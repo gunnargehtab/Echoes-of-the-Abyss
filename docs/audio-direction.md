@@ -233,9 +233,9 @@ is also what gives *goes flat* a number to be measured against.
 contacts permanently. Every voice of this bed is above both — 880 Hz is also where the port's cold
 partials start (§10, "The port"), which is not a coincidence but a decision already made: this game
 has settled what crystal sounds like, and it is thin and high and pure, the same material §8 gives
-the Knights. **The one cost is that the bed shares the register the in-game score would use.** The
-score is unwritten; when it is written it must leave the fifth alone, in the same way it already
-leaves the contact band alone.
+the Knights. **The one cost is that the bed shares the register the in-game score uses.** The score
+leaves the fifth alone, and the root and third with it, in the same way it already leaves the
+contact band alone (§10, "The score").
 
 **Level.** The bed's ceiling is 6 dB under the mark bed, which §6 already put 6 dB under the live
 contact bus. So the water sits 12 dB under the contacts it carries and 6 dB under the memory of
@@ -329,6 +329,27 @@ The score is dread, not action, and it is subordinate to information. Rules:
 - The music bus is side-chained to the contact bus at a 4:1 ratio, 40 ms attack. A new contact ducks the score. The score never ducks a contact.
 - No stingers on detection. The contact voice is the stinger.
 - Combat does not trigger "combat music." Loudness does — the score follows the player's own SIG, which means the music swells when they are *exposed*, not when they are winning.
+
+### The score
+
+The score is the port's grammar played in the water: a pedal under 40 Hz, cold partials above 800 Hz, nothing between, onsets on the 200 ms grid, composed deterministically so the same match-length of music comes back every launch and no loop point becomes a hook (#1599). What it adds is the one input the port has none of, and it takes that input from §4 rather than inventing its own.
+
+**It follows §4's four bands, not the SIG number.** The bed, the HUD label and the score then move on the same comparisons, so a player never hears the music change without the plant changing under it. The score is written in four layers, one per band, and a band opens every layer at or below it:
+
+| Band (§4) | Layers open | Partials it adds | Level of the open layers |
+| --- | --- | --- | --- |
+| Hull creak, ≤ 15 | 1 | The three lowest, long (3.0–6.0 s) | −6 dB |
+| Drive hum, ≤ 40 | 2 | One higher, a little shorter | −4 dB |
+| Machinery, ≤ 65 | 3 | One higher again | −2 dB |
+| Full plant, ≤ 100 | 4 | The top of the set, shortest (1.2–3.0 s) | 0 dB |
+
+So the swell is density, height and level together, and it is the player's own: the fleet's loudest **unit**, the figure §4's bed reads, never the HUD's `peakSig`. It rises over about a second and falls back over about three, so a burst of speed is felt as a swell and its end as the swell taking its time to leave. The pedal rises with it, by less.
+
+**Under Silent Running only the pedal stays.** Every layer above 800 Hz closes on the world bus's own 0.6 s crossfade, and the pedal holds at its lowest level: a held breath. §4's inversion is the world getting louder because the player got quieter, and a score still drifting over the top of that moment would be the one thing in the mix not taking part in it.
+
+**It never touches the tuned bed.** §9's root, third and fifth (880, 1,100 and 1,320 Hz) are the Fields' own, and the score's partials stay at least 60 cents from each of them and from their octaves, on every map rather than only where crystal is in earshot: a score that changed key where the Fields begin would be a terrain readout. The set is a pentatonic on C and D with its A removed (1,046.5, 1,174.7, 1,396.9, 1,568, 2,093 and 2,349.3 Hz), which keeps the port's property of having no semitone to grind.
+
+**It starts when the server first describes the fleet.** The score is silent until the first own-force frame arrives, so the port's engine, which never receives one, never plays it, and nothing sounds in a match before the mix has a band to play. It rides the `music` bus, so the duck under a contact, the speech rung and the Music slider all reach it without the score knowing they exist. It is built at the unlock gesture and composed off the Echo tick, so a tick still allocates nothing.
 
 ### The port
 
@@ -621,8 +642,18 @@ chased.
 
 The **music bus now carries the port's bed** (§10, "The port") — the shell's own engine,
 opened on the first gesture in a menu and closed on the way into a match. The in-game score
-is still unwritten: the bus ducks and trims correctly and has one piece to play, in the
-place where a match is not.
+is written (§10, "The score", #1599): `score.ts`, four layers keyed to §4's bands, silent until
+the first own-force frame and pedal-only under Silent Running. `score.test.ts` holds its
+composition to the band law and to the tuned bed's pitches, and `audioEngine.test.ts` drives it
+through the engine. Measured with `tools/audio-meter`'s `score:` and `score-out:` cases: through
+master, the score reads -43.7 LUFS at hull creak and -36.6 at full plant, 17.6 dB under the
+SIG 80 scene, and the pedal alone under Silent Running reads -50.7. The pedal sits at a quarter
+of its first level, because at that level it was 91-96% of the score's energy below 60 Hz,
+which is #663's fault in a new layer; it is 63% at hull creak and 38% at full plant now. The
+speaker profile takes the score 20 dB down where it takes the scenes 9-12 dB, so on a phone the
+score at full plant sits where hull creak sits without the profile. That is recorded, not
+chased: the profile is the louder question, and the score is meant to be the quietest thing in
+the mix.
 
 Contacts are sonified (§3): a voice per contact, panned with the authority its tier earned,
 filtered by the biome it arrived through (§9), and carrying from Tier 3 up the timbre family

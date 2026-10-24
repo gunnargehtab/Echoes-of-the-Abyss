@@ -93,7 +93,7 @@ export interface MenuPartial {
  * each loop, or the loop point becomes a hook. Seeding by phrase index gives
  * both: launch twice and hear the same music, sit through it and hear it move.
  */
-function lcg(seed: number): () => number {
+export function lcg(seed: number): () => number {
   let state = (seed * 1664525 + 1013904223) >>> 0;
   return () => {
     state = (state * 1664525 + 1013904223) >>> 0;

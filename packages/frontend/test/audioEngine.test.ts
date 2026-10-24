@@ -29,6 +29,7 @@ import {
   installHeadlessAudio,
   uninstallHeadlessAudio,
   StubBiquadFilterNode,
+  StubOscillatorNode,
   StubStereoPannerNode,
   type StubAudioNode,
   type StubGainNode,
@@ -46,6 +47,7 @@ import { MAX_CONTACT_VOICES } from '../src/audio/voiceAllocator.ts';
 import { duckFor } from '../src/audio/precedence.ts';
 import { MARK_CEILING } from '../src/audio/markBed.ts';
 import { SILENT_MIX, selfMixFor } from '../src/audio/selfNoise.ts';
+import { LAYER_LEVEL, PEDAL_LEVEL, SCORE_LAYERS, scoreMixFor } from '../src/audio/score.ts';
 import type { ContactAudioEntry, ContactAudioFrame } from '../src/audio/contactMixer.ts';
 import type { SelfAudioFrame } from '../src/audio/selfMixer.ts';
 
@@ -945,6 +947,136 @@ describe('the audio engine: the Precedence Law and the trims', () => {
       );
     } finally {
       void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+});
+
+describe('the audio engine: the score (§10, #1599)', () => {
+  /**
+   * The score's nodes, found by walking back from the music bus: its output
+   * feeds the bus, the air highpass and the pedal feed its output, and the
+   * four layers feed the highpass.
+   */
+  function scoreNodes(engine: AudioEngine): { layers: StubGainNode[]; pedal: StubGainNode } {
+    const music = engine.graph!.music as unknown as StubAudioNode;
+    const out = music.inputs.find((node) => node.inputs.length === 2)!;
+    assert.ok(out !== undefined, 'something with two inputs feeds the music bus');
+    const floor = out.inputs.find(
+      (node): node is StubBiquadFilterNode => node instanceof StubBiquadFilterNode
+    )!;
+    const pedal = out.inputs.find((node) => node !== floor) as StubGainNode;
+    return { layers: floor.inputs as StubGainNode[], pedal };
+  }
+
+  it('rides the music bus, and so the duck and the Music trim', () => {
+    const { engine } = boot();
+    try {
+      const { layers, pedal } = scoreNodes(engine);
+      assert.equal(layers.length, SCORE_LAYERS, 'one layer per §4 band');
+      const master = engine.graph!.master as unknown as StubAudioNode;
+      const music = engine.graph!.music as unknown as StubAudioNode;
+      for (const node of [...layers, pedal]) {
+        assert.ok(node.reaches(music), 'a part of the score bypasses the music bus');
+        assert.ok(node.reaches(master));
+      }
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+
+  it('is silent until the server first describes the fleet', () => {
+    // The port's engine never receives an own-force frame, which is the whole
+    // of how the shell keeps its own piece.
+    const { engine, context } = boot();
+    try {
+      for (let i = 0; i < 10; i++) engine.onEchoTick();
+      const { layers, pedal } = scoreNodes(engine);
+      assert.equal(engine.scoreBand, null);
+      assert.ok(layers.every((layer) => layer.gain.value === 0), 'a layer opened on its own');
+      assert.equal(pedal.gain.value, 0, 'the pedal opened on its own');
+      const pedals = context.nodes.filter(
+        (node): node is StubOscillatorNode =>
+          node instanceof StubOscillatorNode && node.reaches(pedal)
+      );
+      assert.equal(pedals.length, 2);
+      assert.ok(pedals.every((osc) => osc.startedAt === null), 'the pedal started early');
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+
+  it('opens the layers of the fleet\'s band, and builds nothing on the tick', () => {
+    const { engine, context } = boot();
+    try {
+      engine.onEchoTick();
+      context.resetLedger();
+      engine.applySelf(selfFrame({ fleetSig: 80 }));
+      engine.onEchoTick();
+      assert.equal(context.createdCount, 0, 'the tick that began the score built nodes');
+      assert.equal(engine.scoreBand, 3, 'SIG 80 is full plant');
+      const { layers, pedal } = scoreNodes(engine);
+      assert.deepEqual(
+        layers.map((layer) => layer.gain.target),
+        scoreMixFor(80, false).layers
+      );
+      assert.equal(pedal.gain.target, scoreMixFor(80, false).pedal);
+
+      engine.applySelf(selfFrame({ tick: 101, fleetSig: 10 }));
+      engine.onEchoTick();
+      assert.equal(engine.scoreBand, 0, 'and falls back with the fleet');
+      assert.deepEqual(
+        layers.map((layer) => layer.gain.target),
+        [LAYER_LEVEL[0], 0, 0, 0]
+      );
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+
+  it('keeps only the pedal under Silent Running', () => {
+    const { engine } = boot();
+    try {
+      engine.applySelf(selfFrame({ fleetSig: 50 }));
+      engine.onEchoTick();
+      engine.applySelf(selfFrame({ tick: 101, fleetSig: 5, silentRunning: true }));
+      engine.onEchoTick();
+      const { layers, pedal } = scoreNodes(engine);
+      assert.equal(engine.scoreBand, -1);
+      assert.ok(layers.every((layer) => layer.gain.target === 0), 'a layer stayed open');
+      assert.equal(pedal.gain.target, PEDAL_LEVEL[0]);
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+
+  it('composes off the tick, and silences what it queued when the engine goes', async () => {
+    const { engine, context } = boot();
+    try {
+      engine.applySelf(selfFrame({ fleetSig: 40 }));
+      engine.onEchoTick();
+      assert.equal(engine.scorePartials, 0, 'a phrase was queued on the tick itself');
+      // The first phrase is queued on the next turn of the event loop.
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      assert.ok(engine.scorePartials > 0, 'no phrase was ever queued');
+      const { layers } = scoreNodes(engine);
+      const partials = context.nodes.filter(
+        (node): node is StubOscillatorNode =>
+          node instanceof StubOscillatorNode && layers.some((layer) => node.reaches(layer))
+      );
+      assert.equal(partials.length, engine.scorePartials);
+      // Each was queued to stop at the end of its own envelope, seconds out.
+      assert.ok(partials.every((osc) => (osc.stoppedAt ?? 0) > context.currentTime));
+      await engine.destroy();
+      assert.ok(
+        partials.every((osc) => osc.stoppedAt === context.currentTime),
+        'a queued partial would have played on into a closed engine'
+      );
+    } finally {
       uninstallHeadlessAudio();
     }
   });
