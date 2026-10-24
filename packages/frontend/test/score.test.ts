@@ -103,7 +103,10 @@ describe('the score: four layers, one per band', () => {
     // §10's table: the lowest layer is the three lowest partials, long; full
     // plant adds the top of the set, shortest.
     const lowest = new Set(ALL.filter((p) => p.layer === 0).map((p) => p.hz));
-    assert.deepEqual([...lowest].sort((a, b) => a - b), SCORE_PARTIALS_HZ.slice(0, 3));
+    assert.deepEqual(
+      [...lowest].sort((a, b) => a - b),
+      SCORE_PARTIALS_HZ.slice(0, 3)
+    );
     assert.ok(
       ALL.some((p) => p.layer === SCORE_LAYERS - 1 && p.hz === SCORE_PARTIALS_HZ.at(-1)),
       'the top layer never reaches the top of the set'
@@ -160,7 +163,10 @@ describe('the score: what it follows', () => {
     for (const sig of [5, 50, 95]) {
       const mix = scoreMixFor(sig, true);
       assert.equal(mix.band, -1);
-      assert.ok(mix.layers.every((g) => g === 0), `SIG ${sig}: a layer stayed open`);
+      assert.ok(
+        mix.layers.every((g) => g === 0),
+        `SIG ${sig}: a layer stayed open`
+      );
       assert.equal(mix.pedal, PEDAL_LEVEL[0]);
     }
   });

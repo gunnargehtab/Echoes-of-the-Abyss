@@ -994,21 +994,27 @@ describe('the audio engine: the score (§10, #1599)', () => {
       for (let i = 0; i < 10; i++) engine.onEchoTick();
       const { layers, pedal } = scoreNodes(engine);
       assert.equal(engine.scoreBand, null);
-      assert.ok(layers.every((layer) => layer.gain.value === 0), 'a layer opened on its own');
+      assert.ok(
+        layers.every((layer) => layer.gain.value === 0),
+        'a layer opened on its own'
+      );
       assert.equal(pedal.gain.value, 0, 'the pedal opened on its own');
       const pedals = context.nodes.filter(
         (node): node is StubOscillatorNode =>
           node instanceof StubOscillatorNode && node.reaches(pedal)
       );
       assert.equal(pedals.length, 2);
-      assert.ok(pedals.every((osc) => osc.startedAt === null), 'the pedal started early');
+      assert.ok(
+        pedals.every((osc) => osc.startedAt === null),
+        'the pedal started early'
+      );
     } finally {
       void engine.destroy();
       uninstallHeadlessAudio();
     }
   });
 
-  it('opens the layers of the fleet\'s band, and builds nothing on the tick', () => {
+  it("opens the layers of the fleet's band, and builds nothing on the tick", () => {
     const { engine, context } = boot();
     try {
       engine.onEchoTick();
@@ -1046,7 +1052,10 @@ describe('the audio engine: the score (§10, #1599)', () => {
       engine.onEchoTick();
       const { layers, pedal } = scoreNodes(engine);
       assert.equal(engine.scoreBand, -1);
-      assert.ok(layers.every((layer) => layer.gain.target === 0), 'a layer stayed open');
+      assert.ok(
+        layers.every((layer) => layer.gain.target === 0),
+        'a layer stayed open'
+      );
       assert.equal(pedal.gain.target, PEDAL_LEVEL[0]);
     } finally {
       void engine.destroy();
