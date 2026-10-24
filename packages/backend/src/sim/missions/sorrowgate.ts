@@ -480,7 +480,9 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
    * reads `HARVESTER`, and a hold that lifted on a tender nobody had ordered. So
    * the station's gloss names the Harvesters as the tenders, and each tender's
    * puts the escort before the order north to the Concourse, because `Match`
-   * drops an order given to a held tender (`holdsMovement`).
+   * drops an order given to a held tender (`holdsMovement`). Each is held to
+   * the line count of the gloss it replaced: from 13:40 the panel already runs
+   * past its foot, and a longer gloss pushes the withheld list further under.
    *
    * Each is **one sentence**, which docs/ui-ux.md §10.5 now requires and §2's
    * no-scroll rule is the reason for: this panel grows as the mission reveals
@@ -519,8 +521,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     {
       id: 'station',
       text: 'The flight holds at the arch.',
-      gloss:
-        'Hold until the arch falls, then go to the two Harvester hulls in the chamber: they are the tenders.',
+      gloss: 'Hold until the arch falls, then go to the two Harvester hulls: the tenders.',
       initial: ObjectiveStatus.Pending,
       // The station ends when the arch does. Nothing else about the first ten
       // minutes is a task, on purpose: §10 gives them to SIG, to the array, and
@@ -543,8 +544,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     {
       id: 'tender-one',
       text: 'Tender One is loaded. Tender One does not move without ears.',
-      gloss:
-        'Bring an escort within 400 m of Tender One, then order it north to the Concourse; it stops whenever no escort is that close.',
+      gloss: 'With an escort within 400 m, order Tender One north to the Concourse.',
       initial: ObjectiveStatus.Pending,
       revealAtTick: T(11, 20),
       markerId: 'concourse',
@@ -559,8 +559,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     {
       id: 'tender-two',
       text: 'Tender Two is loaded. The gate is open, and it will not be open twice.',
-      gloss:
-        'The same for Tender Two: an escort within 400 m, then an order north to the Concourse.',
+      gloss: 'The same for Tender Two: an escort within 400 m, then the order north.',
       initial: ObjectiveStatus.Pending,
       revealAtTick: T(13, 40),
       markerId: 'concourse',
