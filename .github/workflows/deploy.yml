@@ -12,7 +12,10 @@
 # link. Nothing happens until someone sets, under Settings -> Secrets and
 # variables -> Actions:
 #
-#   Variables  DEPLOY_PLAYTEST       true
+#   Variables  DEPLOY_PLAYTEST       true, at the repository level: the switch
+#                                    job reads it before any job binds the
+#                                    `playtest` environment, so a copy set only
+#                                    on that environment is never seen
 #              PLAYTEST_HOST         the host name, e.g. play.example.org; its
 #                                    DNS record points at the VPS
 #              PLAYTEST_KNOWN_HOSTS  `ssh-keyscan <host>` output, checked from a
@@ -26,8 +29,12 @@
 # looks exactly like one that worked.
 name: Playtest deploy
 
+# Whatever fires it, a run deploys main's head, and only once CI has passed on
+# that commit (the "Newest green main" step). The event says when to look, not
+# what to ship: CI runs finish out of commit order, and a pending run is
+# replaced by the next (below), so a run that shipped its own trigger's commit
+# could roll the host back or leave a merge undeployed.
 on:
-  # A green CI run, not a push: the host only ever serves a commit CI passed.
   workflow_run:
     workflows: [CI]
     types: [completed]
@@ -36,9 +43,13 @@ on:
 
 permissions:
   contents: read
+  # To ask whether CI passed on main's head.
+  actions: read
 
 # One deploy at a time, and never cut short: a cancelled deploy can stop
-# between loading the images and starting them. A newer run queues instead.
+# between loading the images and starting them. A newer run waits, and replaces
+# any run already waiting; that loses nothing, since whichever run goes next
+# deploys main's head as it is then.
 concurrency:
   group: playtest-deploy
   cancel-in-progress: false
@@ -86,7 +97,6 @@ jobs:
     env:
       ECHOES_DOMAIN: ${{ vars.PLAYTEST_HOST }}
       SSH_USER: ${{ vars.PLAYTEST_SSH_USER || 'deploy' }}
-      SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
       COMPOSE: docker compose -f docker-compose.yml -f deploy/compose.playtest.yml
     steps:
       - name: Everything the deploy needs is set
@@ -111,30 +121,35 @@ jobs:
           printf 'Host playtest\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/playtest\n  IdentitiesOnly yes\n  StrictHostKeyChecking yes\n' \
             "$ECHOES_DOMAIN" "$SSH_USER" > ~/.ssh/config
 
+      # A head whose CI is red or still running skips. Its own CI run fires this
+      # workflow again when it passes; a red one waits for the next merge.
+      - name: Newest green main
+        id: head
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)"
+          green="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$sha&event=push&status=success" --jq .total_count)"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          if [ "$green" -gt 0 ]; then
+            echo "current=true" >> "$GITHUB_OUTPUT"
+            echo "main is at $sha and CI passed on it — deploying it."
+          else
+            echo "current=false" >> "$GITHUB_OUTPUT"
+            echo "main is at $sha with no passing CI run yet — skipping."
+          fi
+
       # The sparse tree ci.yml checks out: docs/screenshots is most of the
       # repository and no image reads it.
       - uses: actions/checkout@v7.0.1
+        if: steps.head.outputs.current == 'true'
         with:
-          ref: ${{ env.SHA }}
+          ref: ${{ steps.head.outputs.sha }}
           filter: blob:none
           sparse-checkout-cone-mode: false
           sparse-checkout: |
             /*
             !/docs/screenshots/
-
-      # CI on main is never cancelled, so an older commit's run can finish after
-      # a newer one's. Deploying it then would roll the host back; the newer
-      # commit's own green run deploys it instead.
-      - name: Still the head of main?
-        id: head
-        run: |
-          head="$(git ls-remote origin refs/heads/main | cut -f1)"
-          if [ "$head" = "$SHA" ]; then
-            echo "current=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "current=false" >> "$GITHUB_OUTPUT"
-            echo "main is at $head, not $SHA — skipping; that commit's green CI run deploys it."
-          fi
 
       - name: Build the images
         if: steps.head.outputs.current == 'true'
@@ -166,4 +181,4 @@ jobs:
           curl -fsS --retry 20 --retry-delay 6 --retry-all-errors -o /dev/null "https://$ECHOES_DOMAIN/"
           curl -fsS --retry 20 --retry-delay 6 --retry-all-errors "https://$ECHOES_DOMAIN:3000/health"
           echo
-          echo "Deployed $SHA to https://$ECHOES_DOMAIN/"
+          echo "Deployed ${{ steps.head.outputs.sha }} to https://$ECHOES_DOMAIN/"

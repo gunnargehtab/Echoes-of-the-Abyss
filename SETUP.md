@@ -215,8 +215,9 @@ docker compose -f docker-compose.yml -f deploy/compose.playtest.yml up -d
 
 `.github/workflows/deploy.yml` updates it after every green CI run on `main`. It
 builds both images on the runner, loads them on the host over SSH, and starts
-them, so the host never clones this repository or runs a build. A run for an
-older commit than `main`'s head skips, so a slow run cannot roll the host back.
+them, so the host never clones this repository or runs a build. Each run ships
+`main`'s head, and only once CI has passed on it, so a CI run that finishes late
+can neither roll the host back nor leave a merge undeployed.
 
 Deploying is **off by default**, as publishing the roadmap is: the repository is
 private and the build is not. The workflow's header lists the switch
