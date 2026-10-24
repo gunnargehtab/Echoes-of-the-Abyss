@@ -18,7 +18,8 @@ This document is also what the roadmap site renders (`tools/roadmap/build.mjs`).
 reads the phase tables, asks GitHub whether each issue is open, and draws that — so a table
 row is a claim that the work is tracked, not a claim that it is live. The tracker is what
 says which, and the site asks it on every build. The site also counts the open issues this
-document places in no table, shows the
+document places in no table. A daily Routine places them, and may close, promote or add a
+phase; its pull request is how the rows below change unattended. The site shows the
 roster contact sheet `tools/hull-maps` bakes with the sprite maps, and dates every
 phase from the tracker — the day its first issue was filed to the day its last one closed —
 so no phase date is typed anywhere. The first issue on this roadmap was filed on 15 August

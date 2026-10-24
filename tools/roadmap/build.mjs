@@ -19,7 +19,7 @@
  * about progress is stored anywhere.
  *
  *   node tools/roadmap/build.mjs [--public dist/roadmap] [--private <dir>]
- *                                [--single-file]
+ *                                [--single-file] [--drift <file.json>]
  *
  * Two cuts, from one set of reads. **public** is what GitHub Pages may show:
  * no issue numbers, links or titles, no tracker counts, no render-stack audit.
@@ -30,6 +30,10 @@
  * `--single-file` writes index.html alone, its font, icon and pictures inside
  * it as data URIs, and no audit page: the shape a claude.ai artifact takes
  * (lib/inline.mjs says why).
+ *
+ * `--drift` also writes what the tracker has that the doc does not place, as
+ * JSON: the input the roadmap-sync skill works from, so it never has to
+ * parse the log line meant for a person.
  *
  * Without a token it still builds — every item renders as "unknown" and the
  * page says so. That keeps the generator runnable locally by anyone, and means
@@ -95,6 +99,7 @@ function arg(name, fallback) {
 const outs = { public: arg('public', arg('out', null)), private: arg('private', null) };
 if (outs.public === null && outs.private === null) outs.public = 'dist/roadmap';
 const singleFile = process.argv.includes('--single-file');
+const driftOut = arg('drift', null);
 // The audit is private, and a single file has no second page to put it on.
 const withStack = outs.private !== null && !singleFile;
 const markdown = readFileSync(join(repoRoot, 'docs', 'ROADMAP.md'), 'utf8');
@@ -125,8 +130,9 @@ if (TOKEN === '') {
 // rather than silently absent from both.
 // Closed work too: the history phases are a record, and the page says how
 // much of what was done no row records.
-// The public cut shows neither count, so it does not ask.
-const tracker = outs.private !== null ? await fetchAllIssues(REPO, TOKEN) : [];
+// The public cut shows neither count, so it does not ask unless --drift does.
+const tracker =
+  outs.private !== null || driftOut !== null ? await fetchAllIssues(REPO, TOKEN) : [];
 const drift = driftReport({
   markdown,
   roadmap,
@@ -143,6 +149,23 @@ if (drift.unrecorded.length > 0) {
   console.error(
     `Closed issues on no row, and under no issue that has one (${drift.unrecorded.length}): ` +
       drift.unrecorded.map((i) => `#${i.number}`).join(', ')
+  );
+}
+if (driftOut !== null) {
+  const brief = ({ number, title, url, labels, parent, closedAt }) =>
+    ({ number, title, url, labels, parent, closedAt });
+  writeFileSync(
+    driftOut,
+    JSON.stringify(
+      {
+        tokenless: TOKEN === '',
+        unplaced: drift.unplaced.map(brief),
+        unmentioned: drift.unmentioned.map((i) => i.number),
+        unrecorded: drift.unrecorded.map(brief),
+      },
+      null,
+      2
+    ) + '\n'
   );
 }
 if (drift.unmentioned.length > 0) {
@@ -227,7 +250,7 @@ const page = {
   fontHref,
   iconHref: src.get('favicon.svg'),
   sheet: sheet === null ? null : { ...sheet, href: src.get(sheet.href) },
-  unplaced: drift.unplaced.length,
+  unplaced: drift.unplaced.map(({ number, title, url }) => ({ number, title, url })),
   unrecorded: drift.unrecorded.length,
   portraits: Object.fromEntries(
     Object.entries(portraits.found).map(([navy, p]) => [navy, { ...p, href: src.get(p.href) }])

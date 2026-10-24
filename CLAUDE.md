@@ -181,7 +181,8 @@ to run first. Anything visual also clears `docs/graphics-standards.md`. The temp
 
 `work-issue` picks an issue, `dev-loop` runs the change as a closed loop — built against a
 written target, validated by `npm run gates`, graded each round by a fresh `loop-critic` —
-and `steward` drives the pull request to green. Each skill holds its own rules, and
+and `steward` drives the pull request to green. `roadmap-sync` keeps `docs/ROADMAP.md`'s
+rows and phases in step with the tracker. Each skill holds its own rules, and
 `.claude/AGENTIC-LOOP.md` maps where every guardrail is enforced.
 
 Three bind a session whether or not it loaded the skill. The loop never tunes for balance

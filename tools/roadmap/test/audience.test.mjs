@@ -40,7 +40,11 @@ const page = (audience) =>
     repo: REPO,
     generatedAt: 'now',
     fontHref: 'fonts/x.woff2',
-    unplaced: 7,
+    unplaced: [7001, 7002].map((n) => ({
+      number: n,
+      title: `tracker-only title ${n}`,
+      url: `https://github.com/${REPO}/issues/${n}`,
+    })),
     unrecorded: 5,
     renderStackHref: 'render-stack.html',
     audience,
@@ -63,7 +67,7 @@ test('the public cut links nothing on GitHub and names no issue', () => {
 
 test('the public cut drops the tracker counts and the audit', () => {
   const html = page('public');
-  assert.doesNotMatch(html, /class="lede backlog"/);
+  assert.doesNotMatch(html, /class="lede backlog"|class="unplaced-roll/);
   assert.doesNotMatch(html, /render-stack\.html/);
 });
 
@@ -79,7 +83,8 @@ test('the private cut is the whole page', () => {
   const html = page('private');
   assert.match(html, /class="ref" href="https:\/\/github\.com\//);
   assert.match(html, /title="tracker-only title \d+"/);
-  assert.match(html, /7 more open items in the tracker are/);
+  assert.match(html, /2 more open items in the tracker are/);
+  assert.match(html, /<span class="work">tracker-only title 7002<\/span>/);
   assert.match(html, /5 closed issues are recorded on no row/);
   assert.match(html, /href="render-stack\.html"/);
   assert.match(html, /The project on GitHub/);
