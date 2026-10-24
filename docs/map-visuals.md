@@ -155,6 +155,21 @@ the rim itself is stroked in the reach's ink: the heard water ends at it ([ui-ux
 mission's exterior is ground ([world-map.md](world-map.md) §7.4), so a mark there keeps drawing
 on it (#1556).
 
+**A mark on the ground passes behind a model.** The mark layer is painted over the conn view,
+so a ring, a rim or a course that crossed a hull or a structure used to run across its roof,
+which reads as a drawing error at the home frame and flattens the model it crosses (#1557).
+So a traced line breaks where a model the conn view draws stands between the eye and the
+point it lies on, and resumes past it, as it does at the rim and at the frame's edge. The
+models are your own hulls and commissioned structures and every live Tier-4 track the conn
+view stands as its model; a flat sprite hides nothing. A model's solid is its plan in
+columns, each from the lowest to the highest of its geometry over that cell, so ground seen
+under a hull's keel or a structure's raised deck still carries its ink. The rule reaches only
+what is traced on the ground. A fill is texture inside its rim and is not cut. Blocked
+ground's hatch is drawn cell by cell and is not cut. The selection ring and the loudness
+collar are not traced at all: each is a circle in screen space about the entity's ground point
+([ui-ux.md](ui-ux.md) §3.5), so a collar can still cross its own model or a neighbour's. That
+is open, and is not a design: a collar painted across a roof is the same drawing error.
+
 **A mark is weighed by its outline, never by its interior.** A kelp field's faint fill and an
 inert hazard site's are texture inside a mark whose rim already speaks for it. A ladder that
 weighed them would rank the grain of a mark rather than the mark.
