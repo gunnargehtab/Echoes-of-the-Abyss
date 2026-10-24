@@ -5,8 +5,8 @@
  * Three were seated in the arch-span row, which the 10:40 `ground` beat makes
  * solid to the surface; the seabed lifts a hull inside rock at the ascent rate
  * (docs/systems-depth.md §2), so the three rose from 1,450 m into the Lid and
- * died by 14:15, and a player who followed the station gloss — "stay where you
- * are until the arch falls" — lost three of four hulls to nothing. Seated under
+ * died by 14:15, and a player who followed the station gloss — "hold until the
+ * arch falls" — lost three of four hulls to nothing. Seated under
  * the arch's south face, the flight sits out the transit where it was put.
  */
 import { describe, it } from 'node:test';

@@ -912,7 +912,11 @@ something new, and a log role would re-announce the whole panel every time a cou
 - **Rows are focusable, and focusing one recentres the camera on its marker** — the same
   gesture click-to-focus already teaches in the log. A marker is an authored place (the
   Concourse, the service lock), never an entity, so the camera moves to somewhere the mission
-  named and never to something the player has not detected.
+  named and never to something the player has not detected. **A row with a marker looks like
+  one**: its reading is underlined, dotted, which is the mark for text that goes somewhere,
+  and a row with no marker is not. The row was the only route to Sorrowgate's Concourse and
+  looked like static text, so a newcomer never took it (#1585). An underline adds no line and
+  no column, which is what §2's no-scroll rule asks of anything added to this panel.
 - **Objective text is authored per mission and rendered verbatim.** Never templated. The
   court says *the flight stays under twenty* ([mission-sorrowgate.md](mission-sorrowgate.md)
   §12); a shared string would say "maintain SIG below 20", which is a sentence no faction in

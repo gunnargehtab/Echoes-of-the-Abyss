@@ -634,6 +634,16 @@ the passive, and the Knights would be courteous about it.
 - *Tender Two is loaded. The gate is open, and it will not be open twice.*
 - *The Concourse is above the layer. Nothing follows you up.*
 
+They work as instructions inside the fiction, but none of them names a hull, an order or a
+place on the chart that a newcomer could find. So the objectives panel puts a plain gloss of one
+sentence beside each objective ([ui-ux.md](ui-ux.md) §10.5), and three of the glosses carry the
+escort (#1585). The station's says that the two Harvester hulls are the tenders, and that the
+flight goes to them once the arch falls: that covers the forty seconds between the
+transit and the first load. Each tender's says to bring an escort within 400 m and then order the
+tender north to the Concourse. A held tender refuses an order, and once its hold lifts (§8) it
+still waits for one. The tender rows are the panel's route to the Concourse: each sends the
+camera there.
+
 ### The four voices in the water
 
 **Voice Ren Kalliso, arriving — 06:20**
