@@ -74,7 +74,8 @@ export interface RiftPlace {
  */
 export const RIFT_PLACES: readonly RiftPlace[] = [
   // The Plateaus.
-  { id: 'marr', name: 'Marr Plateau', region: 'plateaus', x: 7_500, y: 3_500, depthM: 320 },
+  // Half a kilometre east and a quarter south of #1457's placing, so the map fits (#1566).
+  { id: 'marr', name: 'Marr Plateau', region: 'plateaus', x: 8_000, y: 3_750, depthM: 320 },
   { id: 'teel', name: 'Teel Plateau', region: 'plateaus', x: 12_000, y: 4_000, depthM: 380 },
   { id: 'anholt', name: 'Anholt Plateau', region: 'plateaus', x: 20_000, y: 5_500, depthM: 210 },
   {
