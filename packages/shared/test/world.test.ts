@@ -13,11 +13,16 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 
 import {
+  ATTENDING_INTAKE_HEADER,
+  BANDING_GROUND_GROUND,
+  BANDING_GROUND_REGION,
   Biome,
   MAP_HEADERS,
   MISSION_HEADERS,
+  PLACED_GROUND,
   PROLOGUE_SORROWGATE_HEADER,
   RIFT_ATLAS,
+  RIFT_PLACES,
   SORROWGATE_GROUND,
   SORROWGATE_REGION,
   WORLD,
@@ -62,6 +67,32 @@ describe('placed regions', () => {
     assert.equal(SORROWGATE_REGION.widthM, SORROWGATE_GROUND.widthM);
     assert.equal(SORROWGATE_REGION.heightM, SORROWGATE_GROUND.heightM);
     assert.equal(SORROWGATE_REGION.mapId, PROLOGUE_SORROWGATE_HEADER.mapId);
+  });
+
+  it("centres the Banding Ground on §7.2's banding ground anchor (§7.9, #1598)", () => {
+    assert.deepEqual(BANDING_GROUND_REGION, {
+      id: 'banding-ground',
+      mapId: 'banding-ground',
+      x: 20_500,
+      y: 62_000,
+      widthM: 5_000,
+      heightM: 4_000,
+    });
+    assert.equal(BANDING_GROUND_REGION.widthM, BANDING_GROUND_GROUND.widthM);
+    assert.equal(BANDING_GROUND_REGION.heightM, BANDING_GROUND_GROUND.heightM);
+    assert.equal(BANDING_GROUND_REGION.mapId, ATTENDING_INTAKE_HEADER.mapId);
+    const anchor = RIFT_PLACES.find((p) => p.id === 'banding-ground')!;
+    assert.deepEqual(
+      [
+        BANDING_GROUND_REGION.x + BANDING_GROUND_REGION.widthM / 2,
+        BANDING_GROUND_REGION.y + BANDING_GROUND_REGION.heightM / 2,
+      ],
+      [anchor.x, anchor.y]
+    );
+  });
+
+  it('place every map whose ground is placed, and none without', () => {
+    assert.deepEqual(WORLD_REGIONS.map((r) => r.mapId).sort(), Object.keys(PLACED_GROUND).sort());
   });
 
   it('are valid: unique ids, known maps, whole cells, inside the atlas', () => {
@@ -327,6 +358,9 @@ describe('the pilot predicate', () => {
     }
     // A `?map=` boot passes no mission, and the map id is not one.
     assert.equal(worldRegionForMission('sorrowgate'), undefined);
+    // Intake's ground is placed, but the mission keeps today's presentation
+    // until the client can carry a session into a second region (#1598).
+    assert.equal(worldRegionForMission(ATTENDING_INTAKE_HEADER.id), undefined);
   });
 });
 
@@ -374,13 +408,13 @@ describe('the public boundary', () => {
     // A spawn, a force or a resource field before a match is knowledge the
     // player has not earned (`maps.ts`); if a field here is genuinely ground,
     // add it deliberately.
-    assert.deepEqual(Object.keys(SORROWGATE_GROUND).sort(), [
-      'cellM',
-      'floorM',
-      'heightM',
-      'regions',
-      'widthM',
-    ]);
+    for (const [mapId, ground] of Object.entries(PLACED_GROUND)) {
+      assert.deepEqual(
+        Object.keys(ground).sort(),
+        ['cellM', 'floorM', 'heightM', 'regions', 'widthM'],
+        mapId
+      );
+    }
     const regionKeys = new Set([
       'shape',
       'x',
@@ -393,18 +427,21 @@ describe('the public boundary', () => {
       'ceilingM',
       'note',
     ]);
-    for (const region of SORROWGATE_GROUND.regions) {
-      for (const key of Object.keys(region)) assert.ok(regionKeys.has(key), `region key ${key}`);
+    for (const ground of Object.values(PLACED_GROUND)) {
+      for (const region of ground.regions) {
+        for (const key of Object.keys(region)) assert.ok(regionKeys.has(key), `region key ${key}`);
+      }
     }
   });
 
   it('keeps its regions on whole 250 m cells', () => {
-    const cell = SORROWGATE_GROUND.cellM;
-    const whole = (v: number) => v % cell === 0;
     const corners = (r: GroundRegion): number[] =>
       r.shape === 'polygon' ? r.points.flat() : [r.x, r.y, r.widthM, r.heightM];
-    for (const region of SORROWGATE_GROUND.regions) {
-      assert.ok(corners(region).every(whole), region.note);
+    for (const ground of Object.values(PLACED_GROUND)) {
+      const whole = (v: number) => v % ground.cellM === 0;
+      for (const region of ground.regions) {
+        assert.ok(corners(region).every(whole), region.note);
+      }
     }
   });
 

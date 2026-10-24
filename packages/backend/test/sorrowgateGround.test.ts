@@ -17,15 +17,23 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import {
+  BANDING_GROUND_GROUND,
   Biome,
   DEPTH,
   SORROWGATE_GROUND,
-  SORROWGATE_REGION,
+  WORLD_REGIONS,
   detailGround,
   detailRect,
   paintGround,
 } from '@echoes/shared';
-import { MAPS, MISSION_MAPS, SORROWGATE, terrainFor } from '../src/sim/maps/index.ts';
+import {
+  BANDING_GROUND,
+  MAPS,
+  MISSION_MAPS,
+  SORROWGATE,
+  missionMapById,
+  terrainFor,
+} from '../src/sim/maps/index.ts';
 
 const LEGEND: Record<string, { biome: Biome; floorM: number; ceilingM: number }> = {
   '.': { biome: Biome.CoralRuins, floorM: 1600, ceilingM: 0 }, // the Districts
@@ -108,24 +116,40 @@ describe("the shared painter (#1457): the world renderer's ground is the server'
   }
 });
 
-describe("the continuous world's detail ground (#1457) holds the server's baseline", () => {
-  it("pastes Sorrowgate's 320 cells exactly as the server paints them", () => {
-    const server = terrainFor(SORROWGATE).serialize();
-    const detail = detailGround(SORROWGATE_REGION)!;
-    const rect = detailRect(SORROWGATE_REGION);
-    const west = (SORROWGATE_REGION.x - rect.x) / detail.cellM;
-    const north = (SORROWGATE_REGION.y - rect.y) / detail.cellM;
-    for (let row = 0; row < server.rows; row++) {
-      for (let col = 0; col < server.cols; col++) {
-        const from = row * server.cols + col;
-        const to = (row + north) * detail.cols + col + west;
-        const at = `cell (${col}, ${row})`;
-        assert.equal(detail.biomes[to], server.biomes[from], `${at} biome`);
-        assert.equal(detail.floor[to], server.floor[from], `${at} floor`);
-        assert.equal(detail.ceiling[to], server.ceiling[from], `${at} ceiling`);
-      }
-    }
+describe("the Banding Ground's shared ground (#1598)", () => {
+  // Its cells are held to the server's by the shared painter's test below and
+  // pinned against the mission by `missionIntake.test.ts`; this holds the move.
+  it('is the one source: the map spreads the shared literal, not a copy', () => {
+    assert.equal(BANDING_GROUND.regions, BANDING_GROUND_GROUND.regions);
+    assert.equal(BANDING_GROUND.widthM, BANDING_GROUND_GROUND.widthM);
+    assert.equal(BANDING_GROUND.heightM, BANDING_GROUND_GROUND.heightM);
+    assert.equal(BANDING_GROUND.cellM, BANDING_GROUND_GROUND.cellM);
+    assert.equal(BANDING_GROUND.floorM, BANDING_GROUND_GROUND.floorM);
   });
+});
+
+describe("the continuous world's detail ground (#1457) holds the server's baseline", () => {
+  for (const region of WORLD_REGIONS) {
+    it(`pastes ${region.id}'s cells exactly as the server paints them`, () => {
+      const map = missionMapById(region.mapId);
+      assert.ok(map, `a mission map ${region.mapId}`);
+      const server = terrainFor(map).serialize();
+      const detail = detailGround(region)!;
+      const rect = detailRect(region);
+      const west = (region.x - rect.x) / detail.cellM;
+      const north = (region.y - rect.y) / detail.cellM;
+      for (let row = 0; row < server.rows; row++) {
+        for (let col = 0; col < server.cols; col++) {
+          const from = row * server.cols + col;
+          const to = (row + north) * detail.cols + col + west;
+          const at = `cell (${col}, ${row})`;
+          assert.equal(detail.biomes[to], server.biomes[from], `${at} biome`);
+          assert.equal(detail.floor[to], server.floor[from], `${at} floor`);
+          assert.equal(detail.ceiling[to], server.ceiling[from], `${at} ceiling`);
+        }
+      }
+    });
+  }
 
   it('is read by nothing in the simulation: the atlas is public ground (§7.1)', () => {
     // A server that read the atlas would play on ground no mission authored.

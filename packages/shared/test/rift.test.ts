@@ -4,7 +4,7 @@
  * The atlas is authored ground, so these hold it to what the bible states
  * rather than to a picture of itself: every named place where §1–§4 put it,
  * §7.2's anchor table and the data agreeing row for row, the overview drawn
- * by maps.md's rules, and Sorrowgate's detail ground meeting both the
+ * by maps.md's rules, and each placed map's detail ground meeting both the
  * mission it surrounds and the overview it sits in. The backend suite holds
  * the detail's middle to the server's own terrain (`sorrowgateGround.test.ts`).
  */
@@ -20,9 +20,10 @@ import {
   RIFT_GROUND,
   RIFT_PLACES,
   RIFT_REGIONS,
-  SORROWGATE_GROUND,
+  PLACED_GROUND,
   SORROWGATE_REGION,
   WORLD,
+  WORLD_REGIONS,
   detailGround,
   detailRect,
   paintGround,
@@ -410,96 +411,100 @@ describe("§7.2's anchor table", () => {
   });
 });
 
-describe("Sorrowgate's detail ground (§7.3)", () => {
-  const detail = detailGround(SORROWGATE_REGION)!;
-  const rect = detailRect(SORROWGATE_REGION);
-  const mission = paintGround(SORROWGATE_GROUND);
-  const west = (SORROWGATE_REGION.x - rect.x) / 250;
-  const north = (SORROWGATE_REGION.y - rect.y) / 250;
-  const at = (col: number, row: number) => {
-    const i = row * detail.cols + col;
-    return { biome: detail.biomes[i], floorM: detail.floor[i], ceilingM: detail.ceiling[i] };
-  };
+for (const placed of WORLD_REGIONS)
+  describe(`${placed.id}'s detail ground (§7.3)`, () => {
+    const detail = detailGround(placed)!;
+    const rect = detailRect(placed);
+    const mission = paintGround(PLACED_GROUND[placed.mapId]!);
+    const west = (placed.x - rect.x) / 250;
+    const north = (placed.y - rect.y) / 250;
+    const at = (col: number, row: number) => {
+      const i = row * detail.cols + col;
+      return { biome: detail.biomes[i], floorM: detail.floor[i], ceilingM: detail.ceiling[i] };
+    };
 
-  it('is the detail rectangle at 250 m: 40 × 36 cells', () => {
-    assert.equal(detail.cellM, 250);
-    assert.equal(detail.cols, rect.widthM / 250);
-    assert.equal(detail.rows, rect.heightM / 250);
-    assert.equal(detail.cols * detail.rows, 1_440);
-  });
+    it('is the detail rectangle at 250 m', () => {
+      assert.equal(detail.cellM, 250);
+      assert.equal(detail.cols, rect.widthM / 250);
+      assert.equal(detail.rows, rect.heightM / 250);
+      // Sorrowgate's needs no rounding: §7.3 gives it as 40 × 36 cells.
+      if (placed === SORROWGATE_REGION) assert.equal(detail.cols * detail.rows, 1_440);
+    });
 
-  it("holds the mission's 320 cells unchanged at its middle", () => {
-    for (let row = 0; row < mission.rows; row++) {
-      for (let col = 0; col < mission.cols; col++) {
-        const i = row * mission.cols + col;
-        assert.deepEqual(
-          at(col + west, row + north),
-          { biome: mission.biomes[i], floorM: mission.floor[i], ceilingM: mission.ceiling[i] },
-          `mission cell (${col}, ${row})`
+    it(`holds the mission's ${mission.cols * mission.rows} cells unchanged at its middle`, () => {
+      for (let row = 0; row < mission.rows; row++) {
+        for (let col = 0; col < mission.cols; col++) {
+          const i = row * mission.cols + col;
+          assert.deepEqual(
+            at(col + west, row + north),
+            { biome: mission.biomes[i], floorM: mission.floor[i], ceilingM: mission.ceiling[i] },
+            `mission cell (${col}, ${row})`
+          );
+        }
+      }
+    });
+
+    it('carries each edge on: the ring outside the map takes the edge cell it touches', () => {
+      let ring = 0;
+      for (let row = north - 1; row <= north + mission.rows; row++) {
+        for (let col = west - 1; col <= west + mission.cols; col++) {
+          const inside =
+            row >= north && row < north + mission.rows && col >= west && col < west + mission.cols;
+          if (inside) continue;
+          const mc = Math.min(mission.cols - 1, Math.max(0, col - west));
+          const mr = Math.min(mission.rows - 1, Math.max(0, row - north));
+          const i = mr * mission.cols + mc;
+          assert.deepEqual(
+            at(col, row),
+            { biome: mission.biomes[i], floorM: mission.floor[i], ceilingM: mission.ceiling[i] },
+            `ring cell (${col}, ${row}) against edge cell (${mc}, ${mr})`
+          );
+          ring++;
+        }
+      }
+      assert.equal(ring, 2 * (mission.cols + 2) + 2 * mission.rows);
+    });
+
+    it("meets the overview at the seam: its last 500 m are the overview's cells", () => {
+      let seam = 0;
+      for (let row = 0; row < detail.rows; row++) {
+        for (let col = 0; col < detail.cols; col++) {
+          if (col >= 2 && col < detail.cols - 2 && row >= 2 && row < detail.rows - 2) continue;
+          const want = cellAt(overview, rect.x + (col + 0.5) * 250, rect.y + (row + 0.5) * 250);
+          assert.deepEqual(at(col, row), want, `seam cell (${col}, ${row})`);
+          seam++;
+        }
+      }
+      assert.equal(seam, detail.cols * detail.rows - (detail.cols - 4) * (detail.rows - 4));
+    });
+
+    it('is authored like a map, inside the detail and short of its last 500 m', () => {
+      const surround = surroundFor(placed)!;
+      assert.ok(surround.length > 0);
+      for (const region of surround) {
+        assert.ok(
+          corners(region).every((v) => v % 250 === 0),
+          `${region.note}: whole cells`
+        );
+        const xs =
+          region.shape === 'polygon'
+            ? region.points.map(([x]) => x)
+            : [region.x, region.x + region.widthM];
+        const ys =
+          region.shape === 'polygon'
+            ? region.points.map(([, y]) => y)
+            : [region.y, region.y + region.heightM];
+        assert.ok(Math.min(...xs) >= rect.x + 500 && Math.max(...xs) <= rect.x + rect.widthM - 500);
+        assert.ok(
+          Math.min(...ys) >= rect.y + 500 && Math.max(...ys) <= rect.y + rect.heightM - 500
         );
       }
-    }
-  });
+    });
 
-  it('carries each edge on: the ring outside the map takes the edge cell it touches', () => {
-    let ring = 0;
-    for (let row = north - 1; row <= north + mission.rows; row++) {
-      for (let col = west - 1; col <= west + mission.cols; col++) {
-        const inside =
-          row >= north && row < north + mission.rows && col >= west && col < west + mission.cols;
-        if (inside) continue;
-        const mc = Math.min(mission.cols - 1, Math.max(0, col - west));
-        const mr = Math.min(mission.rows - 1, Math.max(0, row - north));
-        const i = mr * mission.cols + mc;
-        assert.deepEqual(
-          at(col, row),
-          { biome: mission.biomes[i], floorM: mission.floor[i], ceilingM: mission.ceiling[i] },
-          `ring cell (${col}, ${row}) against edge cell (${mc}, ${mr})`
-        );
-        ring++;
-      }
-    }
-    assert.equal(ring, 2 * (mission.cols + 2) + 2 * mission.rows);
+    it('is a fresh baseline each time, so a session pastes over its own copy', () => {
+      const a = detailGround(placed)!;
+      a.floor.fill(0);
+      assert.deepEqual(Array.from(detailGround(placed)!.floor), Array.from(detail.floor));
+      assert.equal(detailGround({ ...placed, id: 'nowhere' }), undefined);
+    });
   });
-
-  it("meets the overview at the seam: its last 500 m are the overview's cells", () => {
-    let seam = 0;
-    for (let row = 0; row < detail.rows; row++) {
-      for (let col = 0; col < detail.cols; col++) {
-        if (col >= 2 && col < detail.cols - 2 && row >= 2 && row < detail.rows - 2) continue;
-        const want = cellAt(overview, rect.x + (col + 0.5) * 250, rect.y + (row + 0.5) * 250);
-        assert.deepEqual(at(col, row), want, `seam cell (${col}, ${row})`);
-        seam++;
-      }
-    }
-    assert.equal(seam, 1_440 - 36 * 32);
-  });
-
-  it('is authored like a map, inside the detail and short of its last 500 m', () => {
-    const surround = surroundFor(SORROWGATE_REGION)!;
-    assert.ok(surround.length > 0);
-    for (const region of surround) {
-      assert.ok(
-        corners(region).every((v) => v % 250 === 0),
-        `${region.note}: whole cells`
-      );
-      const xs =
-        region.shape === 'polygon'
-          ? region.points.map(([x]) => x)
-          : [region.x, region.x + region.widthM];
-      const ys =
-        region.shape === 'polygon'
-          ? region.points.map(([, y]) => y)
-          : [region.y, region.y + region.heightM];
-      assert.ok(Math.min(...xs) >= rect.x + 500 && Math.max(...xs) <= rect.x + rect.widthM - 500);
-      assert.ok(Math.min(...ys) >= rect.y + 500 && Math.max(...ys) <= rect.y + rect.heightM - 500);
-    }
-  });
-
-  it('is a fresh baseline each time, so a session pastes over its own copy', () => {
-    const a = detailGround(SORROWGATE_REGION)!;
-    a.floor.fill(0);
-    assert.deepEqual(Array.from(detailGround(SORROWGATE_REGION)!.floor), Array.from(detail.floor));
-    assert.equal(detailGround({ ...SORROWGATE_REGION, id: 'nowhere' }), undefined);
-  });
-});
