@@ -279,7 +279,7 @@ describe('the named places (§3, placed by §7.2)', () => {
   });
 });
 
-describe('the two maps anchored at their centre (§7.9, #1565)', () => {
+describe('the maps §7.9 stands at their centre (#1565, #1566)', () => {
   // A map stood on its anchor, by the size its mission's §11 gives it: the
   // shared package cannot read the backend's literals, so these restate them.
   const stood = (id: string, widthM: number, heightM: number): PlanRect => {
@@ -322,6 +322,40 @@ describe('the two maps anchored at their centre (§7.9, #1565)', () => {
     assert.ok(third.y < approach.y);
     // Half a kilometre further east and the surround leaves the atlas (§7.9).
     assert.ok(!inside(RIFT_ATLAS, detailRect({ ...map, x: map.x + 500 })));
+  });
+
+  it('stands Marr Plateau on its moved anchor, which the old one refused', () => {
+    // mission-tend.md §11: 4,000 × 2,500 m.
+    const map = stood('marr', 4_000, 2_500);
+    fits(map, 'plateaus');
+    // At #1457's (7,500, 3,500) the map left the plateaus' west bound and its
+    // surround the atlas's north edge.
+    const old = { ...map, x: map.x - 500, y: map.y - 250 };
+    assert.ok(old.x < RIFT_REGIONS.plateaus.x);
+    assert.ok(detailRect(old).y < RIFT_ATLAS.y);
+  });
+
+  it("stands the First in the trench country, its Axis's edge where the atlas's axis begins", () => {
+    // mission-the-three.md §11: 4,000 × 3,000 m, the Axis its south edge.
+    const map = stood('first-chapter-house', 4_000, 3_000);
+    fits(map, 'trench-country');
+    assert.ok(map.x < RIFT_REGIONS['resonance-fields'].x, "it crosses the Fields' west edge");
+    const house = region('The First’s formation — the oldest house, nearest the Mouth');
+    assert.ok(house.shape === undefined);
+    assert.equal(map.y, house.y);
+    assert.equal(map.y + map.heightM, house.y + house.heightM);
+    const axis = region('The First’s axis — the line the Chord was aimed down');
+    assert.ok(axis.shape === 'polygon');
+    const head = axis.points.filter(([, y]) => y === Math.min(...axis.points.map((p) => p[1])));
+    assert.ok(
+      head.every(([x, y]) => y === map.y + map.heightM && x > map.x && x < map.x + map.widthM)
+    );
+    // The Rest's north-west corner is the anchor, so the two overlap (§7.9).
+    const rest = stood('the-rest', 5_000, 4_000);
+    assert.deepEqual(
+      [rest.x, rest.y],
+      [place('first-chapter-house').x, place('first-chapter-house').y]
+    );
   });
 });
 
