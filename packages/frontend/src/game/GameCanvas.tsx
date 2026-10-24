@@ -365,6 +365,8 @@ export function GameCanvas({
       selfRung: audio.activeRung,
       selfCues: audio.selfCuesFired,
       speechCues: audio.speechCuesFired,
+      scoreBand: audio.scoreBand,
+      scorePartials: audio.scorePartials,
       tuned:
         audio.tunedMix === null
           ? null

@@ -253,6 +253,16 @@ class StubSourceNode extends StubAudioNode {
     this.stoppedAt = at;
     this.context.ledger.stopped++;
   }
+
+  /**
+   * Kept, not fired: nothing here moves a source to its end. A scheduler that
+   * cleans up on `ended` (menuBed.ts, score.ts) must still be able to register,
+   * or the first phrase it queues throws.
+   */
+  readonly listeners: Array<{ type: string; listener: () => void }> = [];
+  addEventListener(type: string, listener: () => void): void {
+    this.listeners.push({ type, listener });
+  }
 }
 
 export class StubGainNode extends StubAudioNode {

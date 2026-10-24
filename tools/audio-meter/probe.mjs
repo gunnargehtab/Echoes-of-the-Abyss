@@ -28,6 +28,7 @@ import { SELF_BANDS, selfMixFor, sourMixFor } from '../../packages/frontend/src/
 import { ContactVoice } from '../../packages/frontend/src/audio/contactVoice.ts';
 import { MarkBed } from '../../packages/frontend/src/audio/markBed.ts';
 import { TunedBed, tunedMixFor } from '../../packages/frontend/src/audio/tunedBed.ts';
+import { Score, scoreMixFor } from '../../packages/frontend/src/audio/score.ts';
 
 /** The engine's Echo cadence, 5 Hz. The beds are only ever driven on it. */
 const TICK_S = 0.2;
@@ -199,6 +200,53 @@ CASES['tuned-bed:full'] = (context, destination) => {
   });
   return (now) => bed.update(mix, now);
 };
+
+/**
+ * §10's score at each of §4's bands, and under Silent Running (#1599).
+ *
+ * Driven by `pump` on the Echo cadence rather than by its own timer, which
+ * would read the render's clock while the render runs. Long enough for a
+ * reading, not a whole phrase: the layers' densities are the same throughout.
+ */
+for (const [label, sig, silent] of [
+  ['hull-creak', 10, false],
+  ['drive-hum', 35, false],
+  ['machinery', 55, false],
+  ['full-plant', 80, false],
+  ['silent-running', 80, true],
+]) {
+  CASES[`score:${label}`] = (context, destination) => {
+    const score = new Score(context, destination, { selfTimed: false });
+    const mix = scoreMixFor(sig, silent);
+    return (now) => {
+      score.update(mix, now);
+      score.pump(now);
+    };
+  };
+}
+
+/**
+ * The score's loudest and quietest states through the real output chain, with
+ * and without §11's profile: the profile turns a sub-40 Hz pedal into harmonics
+ * above 260 Hz, and the question is how much of the score that leaves there.
+ */
+for (const [label, sig, silent] of [
+  ['full-plant', 80, false],
+  ['silent-running', 80, true],
+]) {
+  for (const speakerProfile of [false, true]) {
+    CASES[`score-out${speakerProfile ? '-profile' : ''}:${label}`] = (context, destination) => {
+      const { master, speaker } = createOutputChain(context, destination);
+      speaker.set(speakerProfile, 0);
+      const score = new Score(context, master, { selfTimed: false });
+      const mix = scoreMixFor(sig, silent);
+      return (now) => {
+        score.update(mix, now);
+        score.pump(now);
+      };
+    };
+  }
+}
 
 /**
  * The whole mix, as one scene, through the real output chain.
@@ -395,7 +443,9 @@ export async function render(name, seconds) {
  */
 const AT_OUTPUT = new Set(
   Object.keys(CASES).filter((name) =>
-    ['scene:', 'profile:', 'bed:', 'bed-profile:'].some((prefix) => name.startsWith(prefix))
+    ['scene:', 'profile:', 'bed:', 'bed-profile:', 'score-out'].some((prefix) =>
+      name.startsWith(prefix)
+    )
   )
 );
 

@@ -51,6 +51,7 @@ import { TunedBed, tunedMixFor, type TunedInputs, type TunedMix } from './tunedB
 import { duckFor, louderRung, type BusRung } from './precedence.ts';
 import { SelfMixer, type SelfAudioFrame } from './selfMixer.ts';
 import { playHail, readingSeconds } from './speechVoice.ts';
+import { Score, scoreMixFor } from './score.ts';
 import {
   SelfBed,
   SourBed,
@@ -349,6 +350,8 @@ export class AudioEngine {
   /** What `lastTuned` was mixed from, so a release can narrow it (#1332). */
   private lastTunedInputs: TunedInputs | null = null;
   private pendingSelf: SelfAudioFrame | null = null;
+  /** §10's score, on the music bus. Silent until the first own-force frame. */
+  private score: Score | null = null;
   /**
    * Lines spoken since the last tick, each with the whisper rule as it stood
    * when the line arrived. Buffered like everything else so the hail is built
@@ -556,6 +559,11 @@ export class AudioEngine {
     // a loud player deaf to the crystal exactly as it does to the past.
     this.tunedBed = new TunedBed(context, world);
 
+    // The score is built here with every gain at zero and nothing started, and
+    // begins on the first own-force frame — which the port's engine never
+    // receives, so the shell keeps its own piece (§10, "The score").
+    this.score = new Score(context, music);
+
     const bed = new SelfBed(context, self);
     this.selfBed = bed;
     // A second bed on the same bus rather than a mode of the first: a hull can
@@ -662,6 +670,12 @@ export class AudioEngine {
     this.pendingSelf = null;
     if (selfMixer !== null && selfFrame !== null && this.context !== null) {
       selfMixer.update(selfFrame, this.context.currentTime);
+      // The same two facts the self bed reads, so the score and the bed are
+      // always in the same band.
+      this.score?.update(
+        scoreMixFor(selfFrame.fleetSig, selfFrame.silentRunning),
+        this.context.currentTime
+      );
     }
 
     // Lines, hailed on the tick they were drained on rather than at the
@@ -888,6 +902,16 @@ export class AudioEngine {
     return this.selfMixer?.firedCounts ?? {};
   }
 
+  /** §4's band the score is playing, -1 running silent, null before it began. */
+  get scoreBand(): number | null {
+    return this.score?.playingBand ?? null;
+  }
+
+  /** Score partials queued and not yet ended — the harness's "is it composing". */
+  get scorePartials(): number {
+    return this.score?.scheduledPartials ?? 0;
+  }
+
   /** Which rung of the Precedence Law is currently sounding, if any. */
   get activeRung(): string | null {
     return this.selfMixer?.activeRung ?? null;
@@ -1021,6 +1045,10 @@ export class AudioEngine {
   async destroy(): Promise<void> {
     this.detachLifecycle?.();
     this.detachLifecycle = null;
+    // First, and synchronously: the score's timer would otherwise outlive a
+    // `void destroy()` and queue phrases into a closing context.
+    this.score?.stop(this.context?.currentTime ?? 0);
+    this.score = null;
     this.mixer?.clear(this.context?.currentTime ?? 0);
     this.mixer = null;
     this.markBed?.stop(this.context?.currentTime ?? 0);
