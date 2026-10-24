@@ -13,9 +13,12 @@
  * before; `release` takes the session's state back off it — its force, its
  * loop, its canvas host — and keeps the renderer, scene, camera and water.
  *
- * Only the missions `worldRegionForMission` names are drawn here. Every other
- * match keeps the view it builds for itself, and destroys it, exactly as it
- * did; and since a page should hold one GL context at a time, a match on that
+ * Only the missions `worldRegionForMission` names are drawn here, each in its
+ * own region and look: the view is moved to a session's region and dressed in
+ * its mission's look when the session takes it (`PerspectiveView.rehome`,
+ * `setLook`, #1598), so the board, a travel to any placed mission and its
+ * session are one world. Every other match keeps the view it builds for
+ * itself, and destroys it, exactly as it did; and since a page should hold one GL context at a time, a match on that
  * path disposes the world view first rather than running two. The module is
  * imported only by `GameCanvas` and the board's `WorldBackdrop`, both loaded
  * on demand, so three.js still stays out of the title screen's bundle.
@@ -26,7 +29,7 @@ import type { WebGLRenderer } from 'three';
 import { PerspectiveView } from './PerspectiveView.ts';
 import { lookForMission, type WorldLook } from './tutorialLook.ts';
 import type { createWaterEnvironment } from './modelLighting.ts';
-import { boardFrame } from './worldTravel.ts';
+import { boardFrame, inView } from './worldTravel.ts';
 
 /** The GPU-less boot's stand-ins, as `PerspectiveView.mount` takes them. */
 export interface WorldViewDevices {
@@ -36,7 +39,6 @@ export interface WorldViewDevices {
 
 export class WorldViewHost {
   private view: PerspectiveView | null = null;
-  private look: WorldLook | null = null;
   /** The session holding the view, so a late release from an earlier one is a no-op. */
   private holder: symbol | null = null;
   /**
@@ -81,17 +83,22 @@ export class WorldViewHost {
     }
     this.returnClaim = null;
     this.letGo = null;
-    return this.lend(missionId, host, devices, false);
+    return this.lend(missionId, host, devices, 'session');
   }
 
+  /**
+   * `as` says who borrows: a session, which the view is moved to and dressed
+   * for; the board, which takes the prologue's look and keeps the view's
+   * metres, since its frame is restated in them (`inView`); or a return,
+   * which keeps both, since the session's ground is still drawn.
+   */
   private lend(
     missionId: string | undefined,
     host: HTMLElement,
     devices: WorldViewDevices,
-    keepFrame: boolean
+    as: 'session' | 'board' | 'return'
   ): { view: PerspectiveView; claim: symbol } | null {
     const look = lookForMission(missionId);
-    if (this.view !== null && this.look !== look) this.dispose();
     // A takeover: the session still holding the view will never let it go
     // (its release is a no-op once the claim moves), so its ground goes now,
     // as a release would take it (#1460).
@@ -99,10 +106,10 @@ export class WorldViewHost {
       this.view.resetForNewMatch();
       this.view.clearTerrain();
     }
+    if (this.view !== null && !this.dress(this.view, missionId, look, as)) this.dispose();
     if (this.view === null) {
       // Placed in the world, so its border is drawn and faded (#1461).
       this.view = new PerspectiveView(look, worldRegionForMission(missionId) ?? null);
-      this.look = look;
     }
     if (!this.view.mount(host, devices.glRenderer, devices.environment)) {
       this.dispose();
@@ -111,7 +118,7 @@ export class WorldViewHost {
     // Every session opens on the same frame a fresh view would: north, the
     // home pitch, the focus on the ground. The fit to the map follows when
     // the session's ground arrives. A return keeps the frame it was left on.
-    if (!keepFrame) this.view.home();
+    if (as !== 'return') this.view.home();
     const claim = Symbol('world-view-session');
     this.holder = claim;
     return { view: this.view, claim };
@@ -132,12 +139,38 @@ export class WorldViewHost {
     const returning = this.returning;
     this.returning = false;
     this.letGo = null;
-    const lent = this.lend(PROLOGUE_SORROWGATE_HEADER.id, host, devices, returning);
+    const lent = this.lend(
+      PROLOGUE_SORROWGATE_HEADER.id,
+      host,
+      devices,
+      returning ? 'return' : 'board'
+    );
     if (lent === null) return null;
     if (returning) this.returnClaim = lent.claim;
-    else lent.view.setFrame(boardFrame(worldRegionForMission(PROLOGUE_SORROWGATE_HEADER.id)!));
+    else {
+      const pilot = worldRegionForMission(PROLOGUE_SORROWGATE_HEADER.id)!;
+      lent.view.setFrame(inView(boardFrame(pilot), pilot, lent.view.region ?? pilot));
+    }
     lent.view.setActive(true);
     return lent.claim;
+  }
+
+  /**
+   * Keep the view for a borrower rather than build another: a session's look
+   * and region, or the board's look. False where the view cannot change in
+   * place, and the caller builds a new one.
+   */
+  private dress(
+    view: PerspectiveView,
+    missionId: string | undefined,
+    look: WorldLook,
+    as: 'session' | 'board' | 'return'
+  ): boolean {
+    if (as === 'return') return true;
+    if (!view.setLook(look)) return false;
+    if (as === 'board') return true;
+    const region = worldRegionForMission(missionId);
+    return region !== undefined && view.rehome(region);
   }
 
   /**
@@ -205,7 +238,6 @@ export class WorldViewHost {
   dispose(): void {
     this.view?.destroy();
     this.view = null;
-    this.look = null;
     this.holder = null;
     this.returning = false;
     this.returnClaim = null;

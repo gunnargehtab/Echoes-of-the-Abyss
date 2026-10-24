@@ -18,7 +18,11 @@
 import { WORLD } from './constants.js';
 import { PLACED_GROUND, paintGround, type GroundCells, type MapGround } from './ground.js';
 import { MAP_HEADERS, mapHeaderById } from './maps.js';
-import { MISSION_HEADERS, PROLOGUE_SORROWGATE_HEADER } from './missions.js';
+import {
+  ATTENDING_INTAKE_HEADER,
+  MISSION_HEADERS,
+  PROLOGUE_SORROWGATE_HEADER,
+} from './missions.js';
 
 /** A point or a rectangle corner, in metres. */
 export interface PlanPoint {
@@ -76,10 +80,6 @@ export const SORROWGATE_REGION: WorldRegion = {
  * banding ground anchor, (23,000, 64,000), so its north edge lies on the
  * Ninth's head, where the Ascent leaves it, and its throat opens south toward
  * Sufficiency.
- *
- * Placed ground only, so far: the world draws it, but *Intake* still keeps
- * today's presentation (`worldRegionForMission`) until the client can carry a
- * session into a region other than the pilot's.
  */
 export const BANDING_GROUND_REGION: WorldRegion = {
   id: 'banding-ground',
@@ -355,19 +355,30 @@ function cellIndex(cells: GroundCells, local: PlanPoint): number {
 }
 
 /**
+ * The missions drawn in the world, each on its region: the prologue on the
+ * pilot's, and *Intake* on the Banding Ground (§7.9, #1598). A mission on a
+ * placed map is not placed until it is named here, so each is its own call.
+ */
+const MISSION_REGIONS: ReadonlyMap<string, WorldRegion> = new Map([
+  [PROLOGUE_SORROWGATE_HEADER.id, SORROWGATE_REGION],
+  [ATTENDING_INTAKE_HEADER.id, BANDING_GROUND_REGION],
+]);
+
+/**
  * The world region a mission is drawn in, or `undefined` for a mission that
  * keeps today's presentation.
  *
  * **Keyed on mission identity, never on the map** (§7.1), as the surface
  * profile is (`lookForMission`): Radicals plays on Sorrowgate's map and keeps
  * its own presentation. A session with no mission asks `worldRegionForSession`.
- * Every path into the prologue — the board, the Tutorial door, a `?mission=`
- * link, Resume — passes the same id, so one predicate answers for all of them.
+ * Every path into a placed mission — the board, the prologue's Tutorial door,
+ * a `?mission=` link, Resume — passes the same id, so one predicate answers
+ * for all of them.
  * The one the persistent view (#1458), the regional snapshot (#1460) and the
  * border fade (#1461) all ask; none of them keeps a flag.
  */
 export function worldRegionForMission(missionId: string | undefined): WorldRegion | undefined {
-  return missionId === PROLOGUE_SORROWGATE_HEADER.id ? SORROWGATE_REGION : undefined;
+  return missionId === undefined ? undefined : MISSION_REGIONS.get(missionId);
 }
 
 /**

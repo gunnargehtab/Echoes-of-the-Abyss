@@ -210,6 +210,7 @@ import {
   patchApronMesh,
   sameGround,
   stepBorderStrength,
+  type ApronFrameUniforms,
   type ApronPads,
   type BorderUniforms,
   type DetailRival,
@@ -604,6 +605,8 @@ interface RegionDetail {
   rockTopM: number;
   /** Its detail rectangle in this view's scene metres. */
   rect: PlanRect;
+  /** The apron uniforms that place it in this view's metres, which `rehome` moves. */
+  frame: ApronFrameUniforms;
   /** The props its map's ground stands, a child of the mesh (#1488). */
   props: EnvironmentLayer;
   /** Its region, and the other drawn detail whose cells it leaves (#1528). */
@@ -769,7 +772,7 @@ export class PerspectiveView {
    * with the ground; all null on Sorrowgate's surface, or in a development
    * build opened with `?seabed-detail=0`.
    */
-  private readonly seabedDetail: boolean;
+  private seabedDetail: boolean;
   private detailCells: Uint8Array<ArrayBuffer> | null = null;
   private detailTexture: DataTexture | null = null;
   private detailUniforms: GroundDetailUniforms | null = null;
@@ -786,7 +789,7 @@ export class PerspectiveView {
   private readonly dreamCover: DreamGroundCover | null;
   private readonly dreamLights: DreamLightHalos | null;
   /** Environment props (environmentLayer.ts) — rebuilt on the terrain cadence. */
-  private readonly environment: EnvironmentLayer;
+  private environment: EnvironmentLayer;
   private lightingEnvironment: WebGLRenderTarget | null = null;
   /** Vent embers, then civic lamps: the ground's point lights in one cloud. */
   private embers: Points | null = null;
@@ -1022,7 +1025,7 @@ export class PerspectiveView {
   /** The station these three are measuring, or null before one is named. */
   private stationLabel: string | null = null;
   /** The placed region's detail ground (§7.3), or null for a mission drawn alone. */
-  private readonly surround: GroundCells | null;
+  private surround: GroundCells | null;
   /** Set at construction so a probe read before the first frame still divides
    * by an elapsed time that means something. */
   private stationStartedAt = performance.now();
@@ -1034,11 +1037,12 @@ export class PerspectiveView {
    * view but the persistent one — draws the mission alone, as before.
    */
   constructor(
-    private readonly look: WorldLook = 'standard',
-    private readonly worldRegion: WorldRegion | null = null
+    private look: WorldLook = 'standard',
+    private worldRegion: WorldRegion | null = null
   ) {
-    // Painted once for the view's life: public ground, the same every
-    // session, which a live ground delta is pasted over and never written to.
+    // Painted once per region the view stands in (`rehome`): public ground,
+    // the same every session, which a live ground delta is pasted over and
+    // never written to.
     this.surround = worldRegion === null ? null : (detailGround(worldRegion) ?? null);
     this.detailRegions =
       worldRegion === null ? [] : WORLD_REGIONS.filter((r) => surroundFor(r) !== undefined);
@@ -1506,6 +1510,92 @@ export class PerspectiveView {
   /** Whether §7.4's ramp has reached its target, or there is no border to ramp. */
   get borderSettled(): boolean {
     return this.missionRect() === null || this.borderStrength === this.borderTarget;
+  }
+
+  /**
+   * The region whose metres this view's scene is in: a placed view's, the one
+   * its latest session was placed in or the pilot's before any. Frames are
+   * set and read in these metres. Null for a view outside the world.
+   */
+  get region(): WorldRegion | null {
+    return this.worldRegion;
+  }
+
+  /**
+   * Stand the view in another region's metres, so a session placed there
+   * (docs/world-map.md §7.9, #1598) is drawn in the page's one world, as the
+   * pilot's is. Only between sessions, with no session's ground drawn: the
+   * scene's origin is the session's, since its ground, force and orders are
+   * in its own map's metres. Nothing moves on screen. The camera, the
+   * overview and every detail held are moved by the difference between the
+   * two origins, which is whole cells, so each stands on the atlas where it
+   * stood. False, and nothing changed, for a view outside the world or with
+   * a session's ground still drawn.
+   */
+  rehome(region: WorldRegion): boolean {
+    const from = this.worldRegion;
+    if (from === null || this.terrain !== null) return false;
+    if (from.id === region.id) return true;
+    const dx = region.x - from.x;
+    const dy = region.y - from.y;
+    this.worldRegion = region;
+    this.surround = detailGround(region) ?? null;
+    if (this.overview !== null) {
+      this.overview.mesh.position.set(-region.x, 0, -region.y);
+      this.overview.mesh.updateMatrixWorld();
+    }
+    for (const id of this.residency?.residentIds() ?? []) {
+      const detail = this.residency!.get(id)!;
+      const { rect, frame, mesh } = detail;
+      rect.x -= dx;
+      rect.y -= dy;
+      mesh.position.set(rect.x, 0, rect.y);
+      mesh.updateMatrixWorld(true);
+      frame.uApronPad.value = [
+        Math.round(-rect.x / detail.terrain.cellM),
+        Math.round(-rect.y / detail.terrain.cellM),
+      ];
+      frame.uOverviewFrame.value = [region.x, region.y, WORLD.ATLAS_WIDTH_M, WORLD.ATLAS_HEIGHT_M];
+      frame.uDetailRect.value = [rect.x, rect.y, rect.widthM, rect.heightM];
+    }
+    this.target.x -= dx;
+    this.target.z -= dy;
+    this.applyCamera();
+    this.cutOverview();
+    return true;
+  }
+
+  /**
+   * Draw in another mission's surfaces (docs/visual-reboot.md §2: the look is
+   * the mission's, never the map's or the world's), so a session whose look
+   * differs from the last one's keeps the page's world rather than a new one.
+   * Between sessions only, as `rehome` is: the props layer is built again in
+   * the new look, and so are the props of every detail held. False, and
+   * nothing changed, with a session's ground drawn or under the development
+   * Dream Loop study, whose layers are chosen at construction: the host then
+   * builds a view for the look.
+   */
+  setLook(look: WorldLook): boolean {
+    if (look === this.look) return true;
+    if (this.terrain !== null || DREAM_LOOP) return false;
+    const old = this.environment;
+    const index = this.scene.children.indexOf(old.group);
+    old.destroy();
+    this.scene.remove(old.group);
+    this.look = look;
+    this.seabedDetail = SEABED_DETAIL_ON && look === 'standard';
+    this.environment = new EnvironmentLayer(look, this.seabedDetail);
+    this.environment.setReducedMotion(this.swayHeld);
+    // Back in its place among the scene's groups, which the ladder orders.
+    this.scene.add(this.environment.group);
+    if (index >= 0) {
+      this.scene.children.pop();
+      this.scene.children.splice(index, 0, this.environment.group);
+    }
+    for (const id of this.residency?.residentIds() ?? []) {
+      this.restandDetailProps(this.residency!.get(id)!);
+    }
+    return true;
   }
 
   destroy(): void {
@@ -3110,9 +3200,8 @@ export class PerspectiveView {
    */
   private async loadRegionDetail(id: string, signal: AbortSignal): Promise<RegionDetail> {
     const region = worldRegionById(id);
-    const home = this.worldRegion;
     const cells = region === undefined ? undefined : detailGround(region);
-    if (region === undefined || home === null || cells === undefined) {
+    if (region === undefined || this.worldRegion === null || cells === undefined) {
       throw new Error(`no authored detail for ${id}`);
     }
     const terrain: TerrainPayload = {
@@ -3153,6 +3242,10 @@ export class PerspectiveView {
       into: { canvas, col: pads.west, row: pads.north },
     });
     if (this.renderer === null) throw new Error('the view has no renderer to draw it with');
+    // Read after the bake: the view may have moved to another region while it
+    // ran (`rehome`), and the mesh stands in the metres it is in now.
+    const home = this.worldRegion;
+    if (home === null) throw new Error('the view left the world while the detail baked');
     const own = { x: 0, y: 0, widthM: atlas.widthM, heightM: atlas.heightM };
     const data = detailMesh(grid, seamHeightFor({ x: atlas.x, y: atlas.y }, own));
     const geometry = new BufferGeometry();
@@ -3171,7 +3264,7 @@ export class PerspectiveView {
     };
     const cellsTexture = surveyCellTexture(terrain, surveyCellClasses(terrain));
     const rival = detailRival();
-    installApronShading(
+    const frame = installApronShading(
       material,
       this.borderUniforms(),
       {
@@ -3206,9 +3299,10 @@ export class PerspectiveView {
     // on the room's first ground, so the join and the return's swap trade like
     // for like (#1488, #1491). A child of the
     // mesh, so they are drawn, hidden and let go with it. No stone is seated:
-    // this skin bakes no scour round one. Nothing fades them, since only the
-    // pilot's region has a surround, and its map lies inside its own mission;
-    // nor shades them, since the veil is cleared before a return lets go.
+    // this skin bakes no scour round one. Nothing fades them, since they stand
+    // on their own map alone, and no placed map lies within W of another's
+    // (the pilot's and the Banding Ground's stand 17.5 km apart); nor shades
+    // them, since the veil is cleared before a return lets go.
     const props = new EnvironmentLayer(this.look);
     const patchX = region.x - atlas.x;
     const patchY = region.y - atlas.y;
@@ -3227,12 +3321,36 @@ export class PerspectiveView {
       seed,
       rockTopM,
       rect,
+      frame,
       props,
       region,
       rival,
       placements,
       propsFor: region.id,
     };
+  }
+
+  /**
+   * A held detail's props, stood again in the view's look (`setLook`): the
+   * placements the look gives its map, re-owned against the drawn set on the
+   * next frame (`standOwnedProps`).
+   */
+  private restandDetailProps(detail: RegionDetail): void {
+    detail.mesh.remove(detail.props.group);
+    detail.props.destroy();
+    const props = new EnvironmentLayer(this.look);
+    const atlas = detailRect(detail.region);
+    props.group.position.set(detail.region.x - atlas.x, 0, detail.region.y - atlas.y);
+    props.setReducedMotion(this.swayHeld);
+    detail.placements = mapProps(detail.region.mapId, this.look);
+    props.rebuild(
+      detail.mission,
+      this.detailPropGround(detail.mission, detail.seed, detail.rockTopM),
+      detail.placements
+    );
+    detail.mesh.add(props.group);
+    detail.props = props;
+    detail.propsFor = detail.region.id;
   }
 
   /** The heights a region's detail stands its props on: the map's own (#1491). */
@@ -4108,12 +4226,16 @@ export class PerspectiveView {
   /**
    * The rectangle the focus is held in: the mission's, or, in a placed view
    * holding no session's ground, the atlas frame in this view's metres (§7.4
-   * rule 1, "on the campaign overview"). Null for a view drawn alone with no
-   * ground yet.
+   * rule 1, "on the campaign overview"). A return's ground is still drawn
+   * while the board travels back (§7.6 step 4), but the session is over, so
+   * the atlas holds the focus then too: the board's frame lies off every map
+   * but the pilot's, and the mission's rectangle would stop the travel at its
+   * edge (#1598). Null for a view drawn alone with no ground yet.
    */
   private focusRect(): PlanRect | null {
     const rect = this.missionRect();
-    if (rect !== null || this.worldRegion === null) return rect;
+    if (this.worldRegion === null) return rect;
+    if (rect !== null && !this.groundLeaving) return rect;
     return {
       x: -this.worldRegion.x,
       y: -this.worldRegion.y,

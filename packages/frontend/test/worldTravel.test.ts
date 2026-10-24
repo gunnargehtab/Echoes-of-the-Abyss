@@ -13,6 +13,9 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import { createElement } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import {
+  ATTENDING_INTAKE_HEADER,
+  BANDING_GROUND_GROUND,
+  BANDING_GROUND_REGION,
   paintGround,
   PROLOGUE_SORROWGATE_HEADER,
   SEEDING_RADICALS_HEADER,
@@ -39,6 +42,7 @@ import { overviewDepthAtM, overviewGrid } from '../src/game/worldOverview.ts';
 import {
   arrivalFrame,
   boardFrame,
+  inView,
   prepareRegion,
   Travel,
   travelFrame,
@@ -617,6 +621,136 @@ describe('the world behind the board (§7.6)', () => {
   });
 });
 
+describe('a second placed mission, in the same world (#1598)', () => {
+  const INTAKE = { kind: 'mission', missionId: ATTENDING_INTAKE_HEADER.id } as const;
+  const look = (view: object) => (view as { look: string }).look;
+  const terrainOf = (region: WorldRegion, ground: typeof SORROWGATE_GROUND) => {
+    const cells = paintGround(ground);
+    return {
+      region: region.id,
+      cols: cells.cols,
+      rows: cells.rows,
+      cellM: cells.cellM,
+      biomes: Array.from(cells.biomes),
+      floor: Array.from(cells.floor),
+      ceiling: Array.from(cells.ceiling),
+    };
+  };
+
+  beforeEach(() => {
+    installStorage();
+    clock = 0;
+    performance.now = () => clock;
+  });
+
+  afterEach(() => {
+    performance.now = realNow;
+    worldView.dispose();
+    clearStorage();
+  });
+
+  it("ends Intake's travel on the muster, §7.2's derived anchor for its spawn", () => {
+    sameFrame(arrivalFrame(BANDING_GROUND_REGION)!, {
+      xM: 2_500,
+      yM: 750,
+      distanceM: HOME_DOLLY_M,
+      yawDeg: 0,
+      pitchDeg: 55,
+    });
+  });
+
+  it("restates a frame in another region's metres at the same place in the atlas", () => {
+    const home = arrivalFrame(BANDING_GROUND_REGION)!;
+    const inPilot = inView(home, BANDING_GROUND_REGION, SORROWGATE_REGION);
+    sameFrame(inPilot, { ...home, xM: 5_500, yM: 22_250 });
+    sameFrame(inView(inPilot, SORROWGATE_REGION, BANDING_GROUND_REGION), home);
+  });
+
+  it("travels from the pilot's board to the muster, and the session keeps the world", async () => {
+    const board = await mountBackdrop({}, true, () => Promise.resolve());
+    const view = worldView.current!;
+    assert.equal(look(view), 'sorrowgate', "the board opens in the prologue's look");
+    await board.update({ target: INTAKE });
+    await frameAt(1);
+    await frameAt(2_501);
+    // Still in the pilot's metres: the muster is 5.5 km east and 22.25 km south.
+    sameFrame(
+      view.frame,
+      inView(arrivalFrame(BANDING_GROUND_REGION)!, BANDING_GROUND_REGION, SORROWGATE_REGION)
+    );
+    await untilSettled(board, 1);
+    await board.unmount();
+
+    const gl = new HeadlessWebGLRenderer();
+    const lent = worldView.acquire(
+      ATTENDING_INTAKE_HEADER.id,
+      createHost(1280, 720) as unknown as HTMLElement,
+      { glRenderer: () => gl.asRenderer(), environment: gl.environment }
+    )!;
+    assert.equal(lent.view, view, 'the same view, not one built for the session');
+    assert.equal(view.region, BANDING_GROUND_REGION, "now in the Banding Ground's metres");
+    assert.equal(
+      look(view),
+      'standard',
+      'Intake keeps the standard surfaces (visual-reboot.md §2)'
+    );
+    sameFrame(view.frame, arrivalFrame(BANDING_GROUND_REGION)!, 1e-6);
+    view.setTerrain(terrainOf(BANDING_GROUND_REGION, BANDING_GROUND_GROUND));
+    assert.equal(view.rehome(SORROWGATE_REGION), false, "never under a session's ground");
+    assert.equal(view.setLook('sorrowgate'), false);
+    worldView.release(lent.claim);
+  });
+
+  it("takes a return from Intake back to the pilot's board, and the prologue home again", async () => {
+    const gl = new HeadlessWebGLRenderer();
+    const host = createHost(1280, 720) as unknown as HTMLElement;
+    const devices = { glRenderer: () => gl.asRenderer(), environment: gl.environment };
+    const lent = worldView.acquire(ATTENDING_INTAKE_HEADER.id, host, devices)!;
+    const view = lent.view;
+    view.setActive(true);
+    view.setReducedMotion(false);
+    view.setTerrain(terrainOf(BANDING_GROUND_REGION, BANDING_GROUND_GROUND));
+    view.applySnapshot(cannedSnapshot());
+    for (let ms = 0; ms <= 1_000; ms += 100) await frameAt(ms);
+    worldView.release(lent.claim, 'return');
+    // While the return's ground is still drawn the session is over, and the
+    // focus is held to the atlas, not the mission: the board's frame lies
+    // 19.5 km north of this map, and the travel back must reach it.
+    const terrain = (view as unknown as { terrain: unknown }).terrain;
+    assert.notEqual(terrain, null, "the session's ground is still drawn");
+    const offMap = inView(boardFrame(SORROWGATE_REGION), SORROWGATE_REGION, BANDING_GROUND_REGION);
+    const left = view.frame;
+    view.setFrame(offMap);
+    sameFrame(view.frame, offMap, 1e-6);
+    view.setFrame(left);
+    const board = await mountBackdrop();
+    const pilotBoard = inView(
+      boardFrame(SORROWGATE_REGION),
+      SORROWGATE_REGION,
+      BANDING_GROUND_REGION
+    );
+    try {
+      assert.equal(worldView.current, view, 'the same world, on the board');
+      assert.equal(view.region, BANDING_GROUND_REGION, "a return keeps the session's metres");
+      // The travel back runs while the session's ground is still drawn, and
+      // the board's frame is 19.5 km north of the map: the mission's
+      // rectangle must not hold the focus at its edge.
+      for (let ms = 1_001; ms <= 4_401; ms += 100) await frameAt(ms);
+      assert.ok(pilotBoard.yM < -19_000, `the board's frame lies off this map: ${pilotBoard.yM}`);
+      sameFrame(view.frame, pilotBoard, 1e-6);
+    } finally {
+      await board.unmount();
+    }
+    const again = worldView.acquire(PROLOGUE_SORROWGATE_HEADER.id, host, devices)!;
+    assert.equal(again.view, view, 'the prologue draws in the same world');
+    assert.equal(view.region, SORROWGATE_REGION);
+    assert.equal(look(view), 'sorrowgate');
+    // The camera stood on the board's frame, and stands there still.
+    sameFrame({ ...view.frame, pitchDeg: 0 }, { ...boardFrame(SORROWGATE_REGION), pitchDeg: 0 });
+    worldView.release(again.claim);
+  });
+});
+
 describe('which launches travel, and when a travel joins (§7.6)', () => {
   const PROLOGUE = PROLOGUE_SORROWGATE_HEADER.id;
 
@@ -628,6 +762,7 @@ describe('which launches travel, and when a travel joins (§7.6)', () => {
       false,
       "Radicals is on Sorrowgate's map and is not placed"
     );
+    assert.equal(travelsFirst('campaign', ATTENDING_INTAKE_HEADER.id), true, 'Intake is (#1598)');
   });
 
   it('joins once the match is loaded and the camera has arrived, never before', () => {

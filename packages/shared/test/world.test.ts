@@ -344,23 +344,30 @@ describe('the mission border', () => {
   });
 });
 
-describe('the pilot predicate', () => {
-  it('draws the prologue in the world, and no other mission', () => {
+describe('the placed-mission predicate', () => {
+  it('draws the prologue and Intake in the world, each on its region, and no other mission', () => {
     assert.equal(worldRegionForMission(PROLOGUE_SORROWGATE_HEADER.id), SORROWGATE_REGION);
+    assert.equal(worldRegionForMission(ATTENDING_INTAKE_HEADER.id), BANDING_GROUND_REGION);
     assert.equal(worldRegionForMission(undefined), undefined);
     // Radicals plays on Sorrowgate's map and keeps its presentation: the
     // predicate is keyed on mission identity, never on the map (§7.1).
     const radicals = MISSION_HEADERS.find((h) => h.id === 'seeding-radicals');
     assert.equal(radicals?.mapId, 'sorrowgate');
+    const placed = new Set([PROLOGUE_SORROWGATE_HEADER.id, ATTENDING_INTAKE_HEADER.id]);
     for (const header of MISSION_HEADERS) {
-      if (header.id === PROLOGUE_SORROWGATE_HEADER.id) continue;
+      if (placed.has(header.id)) continue;
       assert.equal(worldRegionForMission(header.id), undefined, header.id);
     }
     // A `?map=` boot passes no mission, and the map id is not one.
     assert.equal(worldRegionForMission('sorrowgate'), undefined);
-    // Intake's ground is placed, but the mission keeps today's presentation
-    // until the client can carry a session into a second region (#1598).
-    assert.equal(worldRegionForMission(ATTENDING_INTAKE_HEADER.id), undefined);
+    assert.equal(worldRegionForMission('banding-ground'), undefined);
+  });
+
+  it("places each mission on its own map's region", () => {
+    for (const header of MISSION_HEADERS) {
+      const region = worldRegionForMission(header.id);
+      if (region !== undefined) assert.equal(region.mapId, header.mapId, header.id);
+    }
   });
 });
 

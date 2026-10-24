@@ -22,6 +22,7 @@ import {
   type Camera,
 } from 'three';
 import {
+  BANDING_GROUND_REGION,
   SORROWGATE_GROUND,
   SORROWGATE_REGION,
   WORLD,
@@ -688,6 +689,36 @@ describe("another region's detail, where no session holds it (§7.5)", () => {
     view.destroy();
     views.splice(views.indexOf(view), 1);
     assert.equal(held.counts.released, 1, 'released with the view');
+  });
+
+  it("moves a held detail with the view to another region's metres, where it stood (#1598)", async () => {
+    const { view } = await mountPilot(false);
+    const held = residency(view);
+    camera(2_500, 2_000, 6_000, { pitchDeg: 60 });
+    await until(() => held.drawn().includes(SORROWGATE_REGION.id), 'drawn');
+    const before = view.frame;
+    const dx = BANDING_GROUND_REGION.x - SORROWGATE_REGION.x;
+    const dy = BANDING_GROUND_REGION.y - SORROWGATE_REGION.y;
+    assert.equal(view.rehome(BANDING_GROUND_REGION), true);
+    assert.equal(view.region, BANDING_GROUND_REGION);
+    const mesh = held.get(SORROWGATE_REGION.id)!.mesh;
+    assert.deepEqual(mesh.position.toArray(), [
+      HOLE.x - BANDING_GROUND_REGION.x,
+      0,
+      HOLE.y - BANDING_GROUND_REGION.y,
+    ]);
+    assert.deepEqual(internals(view).overview!.mesh.position.toArray(), [
+      -BANDING_GROUND_REGION.x,
+      0,
+      -BANDING_GROUND_REGION.y,
+    ]);
+    // The camera stands on the same water: its focus moved by the origins'
+    // difference, and nothing else of the frame did.
+    assert.deepEqual(view.frame, { ...before, xM: before.xM - dx, yM: before.yM - dy });
+    // Still drawn, and only built once: the move rebuilt nothing.
+    pumpAnimationFrames(2);
+    assert.ok(held.drawn().includes(SORROWGATE_REGION.id));
+    assert.equal(held.counts.requests, 1);
   });
 
   it('asks for nothing at full strength, where the overview it is cut into is hidden', async () => {
