@@ -4226,12 +4226,16 @@ export class PerspectiveView {
   /**
    * The rectangle the focus is held in: the mission's, or, in a placed view
    * holding no session's ground, the atlas frame in this view's metres (§7.4
-   * rule 1, "on the campaign overview"). Null for a view drawn alone with no
-   * ground yet.
+   * rule 1, "on the campaign overview"). A return's ground is still drawn
+   * while the board travels back (§7.6 step 4), but the session is over, so
+   * the atlas holds the focus then too: the board's frame lies off every map
+   * but the pilot's, and the mission's rectangle would stop the travel at its
+   * edge (#1598). Null for a view drawn alone with no ground yet.
    */
   private focusRect(): PlanRect | null {
     const rect = this.missionRect();
-    if (rect !== null || this.worldRegion === null) return rect;
+    if (this.worldRegion === null) return rect;
+    if (rect !== null && !this.groundLeaving) return rect;
     return {
       x: -this.worldRegion.x,
       y: -this.worldRegion.y,

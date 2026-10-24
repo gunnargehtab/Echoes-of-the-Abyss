@@ -707,23 +707,37 @@ describe('a second placed mission, in the same world (#1598)', () => {
     const devices = { glRenderer: () => gl.asRenderer(), environment: gl.environment };
     const lent = worldView.acquire(ATTENDING_INTAKE_HEADER.id, host, devices)!;
     const view = lent.view;
-    view.setReducedMotion(true);
+    view.setActive(true);
+    view.setReducedMotion(false);
     view.setTerrain(terrainOf(BANDING_GROUND_REGION, BANDING_GROUND_GROUND));
     view.applySnapshot(cannedSnapshot());
-    view.setActive(true);
-    await frameAt(0);
+    for (let ms = 0; ms <= 1_000; ms += 100) await frameAt(ms);
     worldView.release(lent.claim, 'return');
+    // While the return's ground is still drawn the session is over, and the
+    // focus is held to the atlas, not the mission: the board's frame lies
+    // 19.5 km north of this map, and the travel back must reach it.
+    const terrain = (view as unknown as { terrain: unknown }).terrain;
+    assert.notEqual(terrain, null, "the session's ground is still drawn");
+    const offMap = inView(boardFrame(SORROWGATE_REGION), SORROWGATE_REGION, BANDING_GROUND_REGION);
+    const left = view.frame;
+    view.setFrame(offMap);
+    sameFrame(view.frame, offMap, 1e-6);
+    view.setFrame(left);
     const board = await mountBackdrop();
+    const pilotBoard = inView(
+      boardFrame(SORROWGATE_REGION),
+      SORROWGATE_REGION,
+      BANDING_GROUND_REGION
+    );
     try {
       assert.equal(worldView.current, view, 'the same world, on the board');
       assert.equal(view.region, BANDING_GROUND_REGION, "a return keeps the session's metres");
-      for (let ms = 1; ms <= 4_000; ms += 100) await frameAt(ms);
-      await untilSettled(board, 1);
-      sameFrame(
-        view.frame,
-        inView(boardFrame(SORROWGATE_REGION), SORROWGATE_REGION, BANDING_GROUND_REGION),
-        1e-6
-      );
+      // The travel back runs while the session's ground is still drawn, and
+      // the board's frame is 19.5 km north of the map: the mission's
+      // rectangle must not hold the focus at its edge.
+      for (let ms = 1_001; ms <= 4_401; ms += 100) await frameAt(ms);
+      assert.ok(pilotBoard.yM < -19_000, `the board's frame lies off this map: ${pilotBoard.yM}`);
+      sameFrame(view.frame, pilotBoard, 1e-6);
     } finally {
       await board.unmount();
     }
