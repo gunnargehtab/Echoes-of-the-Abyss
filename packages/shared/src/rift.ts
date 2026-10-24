@@ -898,6 +898,51 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       note: 'The scar’s west bank',
     },
   ],
+  // The Banding Ground's 2,000 m (#1598). Less is cut here than round
+  // Sorrowgate, since the overview already draws this water: the shoulders
+  // west and east, the First's axis coming down past the map's south-east
+  // corner, the throat and Sufficiency's terrace south. What the surround adds
+  // is the map's own edges carried on: the trench a ring round the map, the
+  // halls along the north wall, the Ascent north under the duct toward the
+  // shallows, and the map's Throat joined to the overview's.
+  'banding-ground': [
+    {
+      x: 20_250,
+      y: 61_750,
+      widthM: 5_500,
+      heightM: 4_500,
+      biome: AbyssalTrench,
+      floorM: 2_400,
+      note: 'The upper Ninth, carried round the map',
+    },
+    {
+      x: 22_000,
+      y: 61_750,
+      widthM: 2_000,
+      heightM: 250,
+      biome: CoralRuins,
+      floorM: 1_750,
+      note: 'The Cohort Halls, continued along the north wall',
+    },
+    {
+      x: 22_750,
+      y: 59_500,
+      widthM: 500,
+      heightM: 2_500,
+      biome: CoralRuins,
+      floorM: 1_500,
+      note: 'The Ascent, carried north under the duct toward the shallows',
+    },
+    {
+      x: 22_500,
+      y: 66_250,
+      widthM: 2_500,
+      heightM: 750,
+      biome: AbyssalTrench,
+      floorM: 2_400,
+      note: 'The Throat, carried south to Sufficiency’s terrace',
+    },
+  ],
 };
 
 /** The surround a placed region has authored, or undefined for none. */

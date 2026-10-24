@@ -71,8 +71,27 @@ export const SORROWGATE_REGION: WorldRegion = {
   heightM: 4_000,
 };
 
+/**
+ * The Banding Ground, *Intake*'s map (§7.9, #1598): its centre on §7.2's
+ * banding ground anchor, (23,000, 64,000), so its north edge lies on the
+ * Ninth's head, where the Ascent leaves it, and its throat opens south toward
+ * Sufficiency.
+ *
+ * Placed ground only, so far: the world draws it, but *Intake* still keeps
+ * today's presentation (`worldRegionForMission`) until the client can carry a
+ * session into a region other than the pilot's.
+ */
+export const BANDING_GROUND_REGION: WorldRegion = {
+  id: 'banding-ground',
+  mapId: 'banding-ground',
+  x: 20_500,
+  y: 62_000,
+  widthM: 5_000,
+  heightM: 4_000,
+};
+
 /** Every placed region. Other maps keep their own grids until migrated (§7.1). */
-export const WORLD_REGIONS: readonly WorldRegion[] = [SORROWGATE_REGION];
+export const WORLD_REGIONS: readonly WorldRegion[] = [SORROWGATE_REGION, BANDING_GROUND_REGION];
 
 export function worldRegionById(id: string): WorldRegion | undefined {
   return WORLD_REGIONS.find((region) => region.id === id);

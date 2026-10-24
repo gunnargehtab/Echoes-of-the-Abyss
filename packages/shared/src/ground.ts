@@ -374,10 +374,134 @@ export const SORROWGATE_GROUND: MapGround = {
 };
 
 /**
+ * The Banding Ground's ground — docs/mission-intake.md §11; docs/maps.md,
+ * "Mission maps". The second map placed in the Rift (docs/world-map.md §7.9,
+ * #1598), at the banding ground's anchor.
+ *
+ * The upper Ninth above Sufficiency and below the duct: the doorway between
+ * Mid-Water and the Abyssal, 1,500 m at the ascent's foot to 2,400 m in the
+ * throat. The overhangs are the map's one piece of gameplay geometry, a
+ * hundred metres of lift over the bench and not a fence, and every useful
+ * move on it is upward.
+ */
+export const BANDING_GROUND_GROUND: MapGround = {
+  widthM: 5000,
+  heightM: 4000,
+  cellM: 250,
+  floorM: 2400,
+  // One row per row of §11's table, in the document's order. Later regions
+  // overwrite earlier ones, which is what lets the trench be painted whole and
+  // the halls, the ascent and the muster cut into its north wall. Every
+  // number a shape states is a whole 250 m cell, and a cell is its region's
+  // when the shape holds its centre (#1152). Only the two overhangs are
+  // shapes, and they trade cells between 2,150 and 2,400 m of Abyssal Trench
+  // and nothing else; every hull, every Hollow, both ends of the Sounder's
+  // line and all three mission regions stand on the ground they stood on when
+  // these were all rectangles, and `missionIntake.test.ts` pins it.
+  regions: [
+    // A box, because it is the whole map's base.
+    {
+      x: 0,
+      y: 0,
+      widthM: 5000,
+      heightM: 4000,
+      biome: Biome.AbyssalTrench,
+      floorM: 2400,
+      note: 'The Upper Ninth — the trench. PF 1.60, painted first; everything else is cut into it',
+    },
+    // A box, because it is built: the berths, cut to a line.
+    {
+      x: 1500,
+      y: 0,
+      widthM: 2000,
+      heightM: 500,
+      biome: Biome.CoralRuins,
+      floorM: 1750,
+      note: "The Cohort Halls — the year's berths, cut into the north wall. Structure and hard acoustic shadow, for a place that is not ruined",
+    },
+    // A box, because the mission's `the-ascent` region is this same
+    // rectangle: the roll is filed on the stair drawn.
+    {
+      x: 2250,
+      y: 0,
+      widthM: 500,
+      heightM: 250,
+      biome: Biome.CoralRuins,
+      floorM: 1500,
+      note: "The Ascent — the stair north out of the map, toward the shallows. The roll's region. Its floor is the shallowest metre this mission authors, and it is 1,100 m below mission 4's line",
+    },
+    // A box, because the mission's `the-muster` region is this same rectangle.
+    {
+      x: 1750,
+      y: 500,
+      widthM: 1500,
+      heightM: 500,
+      biome: Biome.CoralRuins,
+      floorM: 1900,
+      note: 'The Muster — the banding ground proper. The spawn',
+    },
+    // A box, because the mission's `the-bench` region is this same rectangle,
+    // and the Sounder's line runs down it at x 2,500.
+    {
+      x: 1500,
+      y: 1250,
+      widthM: 2000,
+      heightM: 1500,
+      biome: Biome.AbyssalTrench,
+      floorM: 2250,
+      note: "The Bench — the open middle, and the Sounder's line",
+    },
+    // Its two corners on the bench side are cut on a slant, so it narrows
+    // toward the bench and meets it across the middle 500 m of the bench's
+    // edge, and the Ninth's 2,400 m runs along the bench's edge for the 500 m
+    // at each end. Every Hollow on it stands on a cell the cut leaves.
+    {
+      shape: 'polygon',
+      points: [
+        [250, 1250],
+        [750, 1250],
+        [1500, 2000],
+        [750, 2750],
+        [250, 2750],
+      ],
+      biome: Biome.AbyssalTrench,
+      floorM: 2150,
+      note: "The West Overhang — trench wall and overhang. Hollow country, and half the year's income",
+    },
+    // The West Overhang's mirror image across x 2,500.
+    {
+      shape: 'polygon',
+      points: [
+        [4250, 1250],
+        [4750, 1250],
+        [4750, 2750],
+        [4250, 2750],
+        [3500, 2000],
+      ],
+      biome: Biome.AbyssalTrench,
+      floorM: 2150,
+      note: 'The East Overhang — the other half, four kilometres from the first',
+    },
+    // A box: it paints the Upper Ninth's own biome and floor, so any shape
+    // would paint the same ground. It is on the chart so the door has a name.
+    {
+      x: 2000,
+      y: 3250,
+      widthM: 1000,
+      heightM: 750,
+      biome: Biome.AbyssalTrench,
+      floorM: 2400,
+      note: 'The Throat — where the Ninth leaves the map southward toward Sufficiency. The Sounder arrives through it',
+    },
+  ],
+};
+
+/**
  * The public ground of each placed map, by map id. Here rather than beside
  * the atlas (`rift.ts`) because `worldRegionProblems` compares two placed
  * maps' cells, and `world.ts` cannot import the file that imports it.
  */
 export const PLACED_GROUND: Readonly<Record<string, MapGround>> = {
   sorrowgate: SORROWGATE_GROUND,
+  'banding-ground': BANDING_GROUND_GROUND,
 };
