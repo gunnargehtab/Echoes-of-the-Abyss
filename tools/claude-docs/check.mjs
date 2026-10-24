@@ -117,6 +117,7 @@ const REPO_AUTHORED_SKILLS = [
   'hull-intake',
   'map-design',
   'material-design',
+  'roadmap-sync',
   'run-game',
   'steward',
   'unit-design',

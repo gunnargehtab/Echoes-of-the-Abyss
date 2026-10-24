@@ -72,6 +72,7 @@ export async function fetchAllIssues(repo, token) {
         url: issue.html_url,
         state: issue.state,
         stateReason: issue.state_reason ?? null,
+        closedAt: issue.closed_at ?? null,
         labels: (issue.labels ?? []).map((label) =>
           typeof label === 'string' ? label : label.name
         ),

@@ -245,7 +245,7 @@ Merge with a merge commit (`CONTRIBUTING.md`). The title is the pull request's
 title followed by `(#<pr>)`, and the message is its body. Then follow §8.
 
 When a push of yours breaks a condition, remove the label. Only `work-issue` §6
-applies it. A person removes it to hold a
+and `roadmap-sync` §6 apply it. A person removes it to hold a
 merge, and nothing puts it back.
 
 Every comment in this skill — the stand-down, a reply to a reviewer, a status

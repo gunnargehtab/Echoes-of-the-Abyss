@@ -163,10 +163,10 @@ tools/roadmap      docs/ROADMAP.md rendered against live GitHub issue state, for
                    node_modules; without a token every state reads "unknown".
                    Two cuts from one read (#1357): --public, the default, is
                    all Pages may show, with no issue link, title or count and
-                   no audit; --private is everything, and --single-file makes
-                   it the one page a claude.ai artifact can hold.
-                   npm run test:roadmap is its suite. Published by
-                   .github/workflows/pages.yml, not ci.yml (root CLAUDE.md, CI).
+                   no audit; --private is everything, --single-file makes it
+                   the one page a claude.ai artifact holds, and --drift writes
+                   the issues no row places as JSON, for roadmap-sync. Suite:
+                   npm run test:roadmap. pages.yml publishes it, not ci.yml.
 tools/balance      Headless matches, telemetry, and a verdict against every
                    guard-rail the design bible names. run.mjs is a launcher only:
                    the harness is packages/backend/src/balance/, because it

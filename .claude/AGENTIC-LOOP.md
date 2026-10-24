@@ -254,10 +254,20 @@ it is allowed to select.
   trigger configuration nobody can diff: the prompt names a schedule and a file,
   and nothing a pull request would need to change.
 
+- **A second Routine keeps the roadmap placed.** "Sync the roadmap with the
+  tracker" fires daily at 05:47 UTC, an hour before the artifact is republished
+  from `main`, and invokes `/roadmap-sync` the same way: a thin prompt and the
+  rules in the file. It places new and recently closed issues in rows of
+  `docs/ROADMAP.md`, and may close, promote or create a phase. A placement-only
+  pull request takes `automerge`. A phase change never does, because the plan is
+  the owner's. Its pull request carries `routine`, so it counts toward
+  `work-issue` §2's cap of five.
+
 ## Related
 
 [`skills/dev-loop/SKILL.md`](skills/dev-loop/SKILL.md) ·
 [`agents/loop-critic.md`](agents/loop-critic.md) ·
 [`skills/work-issue/SKILL.md`](skills/work-issue/SKILL.md) ·
 [`skills/steward/SKILL.md`](skills/steward/SKILL.md) ·
+[`skills/roadmap-sync/SKILL.md`](skills/roadmap-sync/SKILL.md) ·
 [`VENDORED-SKILLS.md`](VENDORED-SKILLS.md) · `../CLAUDE.md`

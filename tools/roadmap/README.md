@@ -193,7 +193,10 @@ Each thing on the page has one owner, and each owner has a check:
 | Open issues with no row | the GitHub API against the doc | the build log names them, and the private cut counts and lists them; epics and `routine-log` ledgers are not counted, being containers and records rather than missing work. An issue under an epic that has a row counts as placed — the doc gives an epic one row, not one per sub-issue |
 | Closed work with no row | the same, for closed issues | the build log names them and the private cut's "The road so far" counts them, so the record says how much it leaves out; duplicates and issues closed as not planned are not work done |
 
-Two things stay on people. **A new issue is not a row until somebody adds one** — the private
+Two things stay on people, and a Routine does most of the first. **A new issue is not a row
+until somebody adds one.** "Sync the roadmap with the tracker" runs the `roadmap-sync` skill
+daily at 05:47 UTC: it places new and recently closed issues in rows, writes their copy, and
+may close, promote or add a phase, all in one pull request. Until that merges, the private
 cut lists every open issue the doc does not place, but only under "not yet placed", never in
 a phase. The build log names them too, and calls out separately the ones the doc does not
 mention at all, so the list to work through is in the Pages run's log and in the local
