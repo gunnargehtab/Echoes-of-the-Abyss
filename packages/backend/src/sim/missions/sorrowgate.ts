@@ -474,6 +474,14 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
    * two tenders spawn 260 m apart against a 400 m radius, so one hull can
    * cover both and no gloss says otherwise.
    *
+   * Three of them carry the escort as well (#1585, §12). The court's lines name
+   * no hull, no order and no place, and a newcomer walking the prologue met the
+   * forty seconds after the transit with nothing open, a tender whose inspector
+   * reads `HARVESTER`, and a hold that lifted on a tender nobody had ordered. So
+   * the station's gloss names the Harvesters as the tenders, and each tender's
+   * puts the escort before the order north to the Concourse, because `Match`
+   * drops an order given to a held tender (`holdsMovement`).
+   *
    * Each is **one sentence**, which docs/ui-ux.md §10.5 now requires and §2's
    * no-scroll rule is the reason for: this panel grows as the mission reveals
    * rows, and the paragraph-length glosses these five started as pushed the
@@ -511,7 +519,8 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     {
       id: 'station',
       text: 'The flight holds at the arch.',
-      gloss: 'Wait. Nothing but the clock is measured — stay where you are until the arch falls.',
+      gloss:
+        'Hold until the arch falls, then go to the two Harvester hulls in the chamber: they are the tenders.',
       initial: ObjectiveStatus.Pending,
       // The station ends when the arch does. Nothing else about the first ten
       // minutes is a task, on purpose: §10 gives them to SIG, to the array, and
@@ -534,7 +543,8 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     {
       id: 'tender-one',
       text: 'Tender One is loaded. Tender One does not move without ears.',
-      gloss: 'Tender One is deaf — it only moves while an escort is within 400 m of it.',
+      gloss:
+        'Bring an escort within 400 m of Tender One, then order it north to the Concourse; it stops whenever no escort is that close.',
       initial: ObjectiveStatus.Pending,
       revealAtTick: T(11, 20),
       markerId: 'concourse',
@@ -549,7 +559,8 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     {
       id: 'tender-two',
       text: 'Tender Two is loaded. The gate is open, and it will not be open twice.',
-      gloss: 'Same rule — keep an escort within 400 m, or Tender Two stays where it is.',
+      gloss:
+        'The same for Tender Two: an escort within 400 m, then an order north to the Concourse.',
       initial: ObjectiveStatus.Pending,
       revealAtTick: T(13, 40),
       markerId: 'concourse',

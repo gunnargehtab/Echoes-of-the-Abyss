@@ -541,6 +541,54 @@ describe('the objectives panel: where a row may send the camera', () => {
     }
   });
 
+  it('marks a row that sends the camera at rest, and leaves a row that does not unmarked', async () => {
+    // §10.5: a row with a marker looks like one (#1585). The prologue's tender
+    // rows were its only route to the Concourse, and a newcomer read them as
+    // static text. Read off the shipped stylesheet for the reading inside each
+    // row the panel actually rendered, at rest — a hover rule does not count,
+    // because a touch screen never hovers.
+    const { rendered } = await panel(
+      missionView({
+        objectives: [objective({ id: 'go', markerId: CONCOURSE.id }), objective({ id: 'stay' })],
+      })
+    );
+    try {
+      const rules = parseCss(APP_CSS);
+      const DECORATION = new Set(['text-decoration', 'text-decoration-line']);
+      const underlined = rendered.allByClass('objectives-row').map((row) => {
+        const text = row.find(
+          (node) =>
+            String((node.props as { className?: string }).className ?? '') === 'objectives-text'
+        );
+        const element = {
+          tag: String(text.type),
+          classes: ['objectives-text'],
+          ancestors: [
+            { tag: 'section', classes: ['objectives'] },
+            { tag: 'div', classes: ['objectives-body'] },
+            {
+              tag: String(row.type),
+              classes: String((row.props as { className: string }).className).split(/\s+/),
+            },
+          ],
+        };
+        const decorations = rulesTargeting(rules, element, DECORATION)
+          .filter((rule) => rule.condition === null)
+          .flatMap((rule) => rule.declarations.filter(([property]) => DECORATION.has(property)));
+        return {
+          tag: String(row.type),
+          underlined: decorations.some(([, v]) => /underline/.test(v)),
+        };
+      });
+      assert.deepEqual(underlined, [
+        { tag: 'button', underlined: true },
+        { tag: 'p', underlined: false },
+      ]);
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
   it('ignores a markerId the mission never placed rather than sending the camera nowhere', async () => {
     const { rendered } = await panel(
       missionView({ objectives: [objective({ markerId: 'a-place-that-is-not-on-the-chart' })] })

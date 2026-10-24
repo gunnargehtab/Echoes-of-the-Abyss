@@ -1880,6 +1880,18 @@ button.objectives-row:hover {
   background: color-mix(in srgb, var(--neon-cyan) 8%, transparent);
 }
 
+/* A row that sends the camera says so at rest, and not only under a pointer
+   that happens to hover it: the mission's own reading is underlined, dotted,
+   the mark for text that goes somewhere (docs/ui-ux.md §10.5). The tender rows
+   were the prologue's only route to the Concourse and read as static text, so
+   a newcomer never took them (#1585). Ink rather than a box, so it adds no
+   line and no column, which is what §2's no-scroll rule asks of this panel. */
+button.objectives-row .objectives-text {
+  text-decoration: underline dotted;
+  text-decoration-color: color-mix(in srgb, var(--text-cyan) 60%, transparent);
+  text-underline-offset: 0.2em;
+}
+
 .objectives-row:focus-visible {
   outline: 1px solid var(--text-cyan);
   outline-offset: -1px;
