@@ -276,10 +276,11 @@ export class Score {
   }
 
   /**
-   * Write a ramp only when the target moved. The frame arrives at 5 Hz whether
-   * or not the band changed, and re-aiming an unchanged target restarts its
-   * ramp from wherever it has got to — on the fall's constant, since an equal
-   * target is not a rise — so a swell meant to arrive in a second took three.
+   * Write a ramp only when the target moved, or when the fleet goes silent (see
+   * `update`). The frame arrives at 5 Hz whether or not the band changed, and
+   * re-aiming an unchanged target restarts its ramp from wherever it has got
+   * to — on the fall's constant, since an equal target is not a rise — so a
+   * swell meant to arrive in a second took three.
    * Direction is read against the last target, not the parameter's value,
    * which is wherever the previous ramp has got to and says nothing about it.
    */
