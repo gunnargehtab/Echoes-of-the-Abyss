@@ -41,7 +41,8 @@ export const RIFT_REGIONS: Readonly<Record<RiftRegionId, PlanRect>> = {
   'west-wall': { x: 0, y: 12_000, widthM: 10_000, heightM: 38_000 },
   'drowned-city': { x: 12_000, y: 32_000, widthM: 16_000, heightM: 18_000 },
   'resonance-fields': { x: 26_000, y: 30_000, widthM: 14_000, heightM: 32_000 },
-  'trench-country': { x: 0, y: 50_000, widthM: 40_000, heightM: 29_000 },
+  // North to 48 km so the Western Margin, the top step's west end, fits (#1565).
+  'trench-country': { x: 0, y: 48_000, widthM: 40_000, heightM: 31_000 },
   mouth: { x: 0, y: 79_000, widthM: 40_000, heightM: 11_000 },
 };
 
@@ -67,7 +68,9 @@ export interface RiftPlace {
  * Every named place of §3 that this atlas places, north to south, in §7.2's
  * anchor table's order. Sorrowgate's court is the table's derived anchor; the
  * rest are placed inside their region's rectangle at the distances §1–§4
- * give, and the table changes before any of them moves.
+ * give, and the table changes before any of them moves. Two rows anchor a
+ * map §3 names no place for, the Western Margin and the Third's outer
+ * formations, at the map's centre (§7.9, #1565).
  */
 export const RIFT_PLACES: readonly RiftPlace[] = [
   // The Plateaus.
@@ -193,6 +196,13 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
     toDepthM: 1_780,
   },
   {
+    id: 'outer-formations',
+    name: "The Third's outer formations",
+    region: 'resonance-fields',
+    x: 34_750,
+    y: 57_500,
+  },
+  {
     id: 'the-rest',
     name: 'The Rest',
     region: 'resonance-fields',
@@ -211,6 +221,13 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
     toDepthM: 1_780,
   },
   // The Trench Country.
+  {
+    id: 'western-margin',
+    name: 'The Western Margin',
+    region: 'trench-country',
+    x: 6_000,
+    y: 49_500,
+  },
   {
     id: 'fourth-trench',
     name: 'The Fourth Trench',
