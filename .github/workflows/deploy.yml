@@ -1,0 +1,169 @@
+# The public playtest build (#1575): every green `main`, built here and shipped
+# to one VPS, which serves it under one name over TLS.
+#
+# The shape is deploy/compose.playtest.yml's: the two images from
+# docker-compose.yml behind Caddy, which terminates TLS on 443 for the page and
+# on 3000 for the game server. The images are built on the runner and loaded
+# over SSH, so the host needs Docker and nothing else: no clone of this private
+# repository, no registry credential, and no Vite build on a small machine.
+#
+# Deploying is **opt-in and off by default**, for the reason pages.yml gives: the
+# repository is private, and a hosted build shows the game to anyone holding the
+# link. Nothing happens until someone sets, under Settings -> Secrets and
+# variables -> Actions:
+#
+#   Variables  DEPLOY_PLAYTEST       true
+#              PLAYTEST_HOST         the host name, e.g. play.example.org; its
+#                                    DNS record points at the VPS
+#              PLAYTEST_KNOWN_HOSTS  `ssh-keyscan <host>` output, checked from a
+#                                    machine you trust
+#              PLAYTEST_SSH_USER     optional, default `deploy`; must be able to
+#                                    run docker
+#   Secrets    PLAYTEST_SSH_KEY      a private key that user accepts
+#
+# Switched off, the workflow is green and builds nothing. Switched on with a
+# piece missing, it is red and names the piece: a deploy that skips quietly
+# looks exactly like one that worked.
+name: Playtest deploy
+
+on:
+  # A green CI run, not a push: the host only ever serves a commit CI passed.
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deploy at a time, and never cut short: a cancelled deploy can stop
+# between loading the images and starting them. A newer run queues instead.
+concurrency:
+  group: playtest-deploy
+  cancel-in-progress: false
+
+jobs:
+  switch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    # `branches: [main]` matches a head branch by name, which a fork's pull
+    # request can share, so the event must also be a push. A manual run deploys
+    # main or nothing.
+    if: >-
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push') ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    outputs:
+      deploy: ${{ steps.switch.outputs.deploy }}
+    steps:
+      # Read in bash for the reasons pages.yml gives: the log shows the raw
+      # value, and a "NAME = true" pasted whole into the Value box still counts.
+      - name: Is the playtest deploy switched on?
+        id: switch
+        env:
+          RAW: ${{ vars.DEPLOY_PLAYTEST }}
+        run: |
+          echo "DEPLOY_PLAYTEST=[$RAW]"
+          last="${RAW##* }"; last="${last##*=}"; last="${last,,}"
+          if [ "$last" = "true" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+            echo "Deploying is on."
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            echo "Deploying is off — set the DEPLOY_PLAYTEST variable to true to deploy (header of this file)."
+          fi
+
+  deploy:
+    needs: switch
+    if: needs.switch.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: playtest
+      url: https://${{ vars.PLAYTEST_HOST }}
+    env:
+      ECHOES_DOMAIN: ${{ vars.PLAYTEST_HOST }}
+      SSH_USER: ${{ vars.PLAYTEST_SSH_USER || 'deploy' }}
+      SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      COMPOSE: docker compose -f docker-compose.yml -f deploy/compose.playtest.yml
+    steps:
+      - name: Everything the deploy needs is set
+        env:
+          SSH_KEY: ${{ secrets.PLAYTEST_SSH_KEY }}
+          KNOWN_HOSTS: ${{ vars.PLAYTEST_KNOWN_HOSTS }}
+        run: |
+          missing=0
+          [ -n "$ECHOES_DOMAIN" ] || { echo "::error::PLAYTEST_HOST variable is unset"; missing=1; }
+          [ -n "$KNOWN_HOSTS" ] || { echo "::error::PLAYTEST_KNOWN_HOSTS variable is unset"; missing=1; }
+          [ -n "$SSH_KEY" ] || { echo "::error::PLAYTEST_SSH_KEY secret is unset"; missing=1; }
+          # The name goes into a remote shell command and a certificate, so it
+          # is a host name or it is refused.
+          if [ -n "$ECHOES_DOMAIN" ] && ! [[ "$ECHOES_DOMAIN" =~ ^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$ ]]; then
+            echo "::error::PLAYTEST_HOST=[$ECHOES_DOMAIN] is not a host name"; missing=1
+          fi
+          [ "$missing" = 0 ] || exit 1
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/playtest
+          chmod 600 ~/.ssh/playtest
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf 'Host playtest\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/playtest\n  IdentitiesOnly yes\n  StrictHostKeyChecking yes\n' \
+            "$ECHOES_DOMAIN" "$SSH_USER" > ~/.ssh/config
+
+      # The sparse tree ci.yml checks out: docs/screenshots is most of the
+      # repository and no image reads it.
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ env.SHA }}
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/docs/screenshots/
+
+      # CI on main is never cancelled, so an older commit's run can finish after
+      # a newer one's. Deploying it then would roll the host back; the newer
+      # commit's own green run deploys it instead.
+      - name: Still the head of main?
+        id: head
+        run: |
+          head="$(git ls-remote origin refs/heads/main | cut -f1)"
+          if [ "$head" = "$SHA" ]; then
+            echo "current=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "current=false" >> "$GITHUB_OUTPUT"
+            echo "main is at $head, not $SHA — skipping; that commit's green CI run deploys it."
+          fi
+
+      - name: Build the images
+        if: steps.head.outputs.current == 'true'
+        run: $COMPOSE build backend frontend
+
+      - name: Ship the images and the compose files
+        if: steps.head.outputs.current == 'true'
+        run: |
+          docker save echoes-backend:playtest echoes-frontend:playtest | gzip | ssh playtest 'gunzip | docker load'
+          tar -c docker-compose.yml deploy/compose.playtest.yml deploy/Caddyfile \
+            | ssh playtest 'mkdir -p echoes && tar -x -C echoes'
+
+      - name: Start them
+        if: steps.head.outputs.current == 'true'
+        run: |
+          # Expanded on the runner on purpose: the host has no ECHOES_DOMAIN
+          # until this line writes it.
+          # shellcheck disable=SC2029
+          ssh playtest "cd echoes && printf 'ECHOES_DOMAIN=%s\n' '$ECHOES_DOMAIN' > .env \
+            && $COMPOSE up -d --no-build --remove-orphans \
+            && docker image prune -f"
+
+      # The page and the server, each through the proxy, from outside the host:
+      # what a stranger's browser reaches. The first deploy waits on the
+      # certificate, hence the retries.
+      - name: Reachable from outside
+        if: steps.head.outputs.current == 'true'
+        run: |
+          curl -fsS --retry 20 --retry-delay 6 --retry-all-errors -o /dev/null "https://$ECHOES_DOMAIN/"
+          curl -fsS --retry 20 --retry-delay 6 --retry-all-errors "https://$ECHOES_DOMAIN:3000/health"
+          echo
+          echo "Deployed $SHA to https://$ECHOES_DOMAIN/"

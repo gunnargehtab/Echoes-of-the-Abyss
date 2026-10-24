@@ -42,10 +42,12 @@ The repository carries the container half of that: `packages/backend/Dockerfile`
 builds the server as its self-contained esbuild bundle,
 `packages/frontend/Dockerfile` builds the client and serves it from nginx, and
 the root `docker-compose.yml` brings both up together for a local end-to-end
-check. The platform half — a Vercel project, a Hetzner host — is not configured
-here. See [SETUP.md](../SETUP.md) for the commands and the environment
-variables, including `CORS_ORIGIN`, which the server refuses to start without
-when `NODE_ENV=production`.
+check. The platform half is one VPS for the playtest build (#1575), not yet a
+Vercel project: `deploy/compose.playtest.yml` puts both images behind a TLS
+proxy under one host name, and `.github/workflows/deploy.yml` ships each green
+`main` to it once the owner switches it on. See [SETUP.md](../SETUP.md) for the
+commands and the environment variables, including `CORS_ORIGIN`, which the
+server refuses to start without when `NODE_ENV=production`.
 
 ## Echo Layer Implementation Notes
 
