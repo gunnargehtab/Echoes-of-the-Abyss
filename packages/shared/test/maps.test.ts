@@ -11,8 +11,9 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
-import { DEFAULT_MAP_ID, MAP_HEADERS, mapHeaderById } from '../dist/index.js';
+import { DEFAULT_MAP_ID, MAP_HEADERS, SETUP_CARD, mapHeaderById } from '../dist/index.js';
 
 describe('the public map catalogue', () => {
   it('has a default that resolves, listed first', () => {
@@ -42,6 +43,23 @@ describe('the public map catalogue', () => {
       for (const key of Object.keys(header)) {
         assert.ok(allowed.has(key), `${header.id}: unexpected public field "${key}"`);
       }
+    }
+  });
+
+  it('gives every catalogue map a setup card, and nothing else one (#1587)', () => {
+    // docs/maps.md, "On the setup card": the line a newcomer reads in place of
+    // the archetype's shorthand. A map without one would fall back to nothing.
+    assert.deepEqual(Object.keys(SETUP_CARD).sort(), MAP_HEADERS.map((h) => h.id).sort());
+    for (const header of MAP_HEADERS) {
+      assert.notEqual(SETUP_CARD[header.id], header.idealUse, `${header.id}: still the shorthand`);
+    }
+  });
+
+  it('transcribes each card from docs/maps.md, where it is authored', () => {
+    const doc = readFileSync(new URL('../../../docs/maps.md', import.meta.url), 'utf8');
+    for (const header of MAP_HEADERS) {
+      const card = SETUP_CARD[header.id]!;
+      assert.ok(doc.includes(`### On the setup card\n\n${card}\n`), `${header.id}: not in the doc`);
     }
   });
 });

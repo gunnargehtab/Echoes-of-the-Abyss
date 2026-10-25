@@ -13,7 +13,7 @@
  */
 
 import { useState } from 'react';
-import { DEFAULT_MAP_ID, MAP_HEADERS } from '@echoes/shared';
+import { DEFAULT_MAP_ID, MAP_HEADERS, SETUP_CARD } from '@echoes/shared';
 import { loadSettings, saveSettings } from '../settings/store.ts';
 import type { SetupMode } from '../net/rooms.ts';
 
@@ -92,7 +92,8 @@ export function SetupScreen({ mode, onEngage, onBack }: SetupScreenProps) {
                     {map.seats} commanders · {(map.widthM / 1000).toFixed(0)} ×{' '}
                     {(map.heightM / 1000).toFixed(0)} km
                   </span>
-                  <span className="menu-map-use">{map.idealUse}</span>
+                  {/* The plain line, not the archetype's shorthand (#1587). */}
+                  <span className="menu-map-use">{SETUP_CARD[map.id]}</span>
                 </button>
               </li>
             );

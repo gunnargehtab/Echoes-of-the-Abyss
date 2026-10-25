@@ -27,6 +27,19 @@ const DIFFICULTY_LABEL: Record<AiDifficulty, string> = {
   [AiDifficulty.Veteran]: 'Veteran',
 };
 
+/**
+ * Both choices, in this order. A single chip that toggled gave no sign it was
+ * a control, so a newcomer never found Recruit (#1587, docs/ui-ux.md §14).
+ */
+const DIFFICULTIES: AiDifficulty[] = [AiDifficulty.Recruit, AiDifficulty.Veteran];
+
+/**
+ * What an added opponent starts at: the one a first match should meet. It
+ * knows exactly what a Veteran knows and decides worse (docs/tech-stack.md,
+ * "Difficulty is decision quality").
+ */
+const FIRST_OPPONENT = AiDifficulty.Recruit;
+
 export interface LobbyProps {
   mapName: string;
   players: LobbyPlayerView[];
@@ -70,6 +83,34 @@ export function Lobby({
   const others = present.filter((player) => player.sessionId !== sessionId && !player.ready).length;
   const shortHanded = present.length < LIFECYCLE.MIN_PLAYERS;
   const needed = LIFECYCLE.MIN_PLAYERS - present.length;
+  // Nobody else holds a seat. `MIN_PLAYERS` is 1, so Ready alone starts an
+  // empty match; the room says so and offers an opponent first rather than
+  // refusing, because a host may want to try the water before anyone joins
+  // (docs/ui-ux.md §14, "The ready room").
+  const alone = self !== null && players.every((player) => player.sessionId === sessionId);
+
+  const ready = (
+    <button
+      type="button"
+      className="lobby-ready"
+      onClick={() => onReady(!(self?.ready ?? false))}
+      disabled={self === null}
+    >
+      {self?.ready === true ? 'Stand down' : 'Ready'}
+    </button>
+  );
+  const addOpponent = (
+    <button
+      type="button"
+      className={`lobby-add-ai${alone ? ' lead' : ''}`}
+      onClick={() => onAddAi(FIRST_OPPONENT)}
+      disabled={!canAddAi}
+      // Focus is placed once, at mount, which is when a solo room is alone.
+      autoFocus={alone && canAddAi}
+    >
+      Add opponent
+    </button>
+  );
 
   return (
     <div className="lobby" role="dialog" aria-label="Match lobby">
@@ -130,22 +171,29 @@ export function Lobby({
               <span className="lobby-roster-faction">{FACTION_FULL_NAME[player.faction]}</span>
               {player.isAi ? (
                 <span className="lobby-roster-ai">
-                  {/* Difficulty is shown, and shown as a button, because it is
+                  {/* Difficulty is shown, and shown as controls, because it is
                       a term of the game both commanders agreed to. */}
-                  <button
-                    type="button"
-                    className="lobby-chip"
-                    onClick={() =>
-                      onAiDifficulty(
-                        player.sessionId,
-                        player.difficulty === AiDifficulty.Veteran
-                          ? AiDifficulty.Recruit
-                          : AiDifficulty.Veteran
-                      )
-                    }
+                  <span
+                    className="lobby-difficulty"
+                    role="group"
+                    aria-label={`${player.name}'s difficulty`}
                   >
-                    {DIFFICULTY_LABEL[player.difficulty]}
-                  </button>
+                    {DIFFICULTIES.map((difficulty) => (
+                      <button
+                        key={difficulty}
+                        type="button"
+                        className="lobby-chip"
+                        aria-pressed={player.difficulty === difficulty}
+                        onClick={() => {
+                          if (player.difficulty !== difficulty) {
+                            onAiDifficulty(player.sessionId, difficulty);
+                          }
+                        }}
+                      >
+                        {DIFFICULTY_LABEL[difficulty]}
+                      </button>
+                    ))}
+                  </span>
                   <button
                     type="button"
                     className="lobby-chip"
@@ -170,30 +218,27 @@ export function Lobby({
         </p>
 
         <footer className="lobby-foot">
-          <button
-            type="button"
-            className="lobby-ready"
-            onClick={() => onReady(!(self?.ready ?? false))}
-            disabled={self === null}
-          >
-            {self?.ready === true ? 'Stand down' : 'Ready'}
-          </button>
-          <button
-            type="button"
-            className="lobby-add-ai"
-            onClick={() => onAddAi(AiDifficulty.Veteran)}
-            disabled={!canAddAi}
-          >
-            Add opponent
-          </button>
+          {alone ? (
+            <>
+              {addOpponent}
+              {ready}
+            </>
+          ) : (
+            <>
+              {ready}
+              {addOpponent}
+            </>
+          )}
           <p className="lobby-hint">
             {shortHanded
               ? `Waiting for ${needed} more ${needed === 1 ? 'commander' : 'commanders'}.`
-              : self?.ready !== true
-                ? 'Ready when you are.'
-                : others > 0
-                  ? `Waiting on ${others} ${others === 1 ? 'commander' : 'commanders'}.`
-                  : 'Starting…'}
+              : alone && self?.ready !== true
+                ? 'Nobody else is here. Add an opponent, or ready to go into the water alone.'
+                : self?.ready !== true
+                  ? 'Ready when you are.'
+                  : others > 0
+                    ? `Waiting on ${others} ${others === 1 ? 'commander' : 'commanders'}.`
+                    : 'Starting…'}
           </p>
         </footer>
       </div>

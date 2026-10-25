@@ -1279,7 +1279,9 @@ title screen, and reads the briefing on the way in.
   stays above it when a seat is held, for the reason "Resume" below already gives: a held
   seat is a match still in the water, and it is offered first and autofocused. The order
   is the only thing this says — the door is unchanged, and Tutorial still opens the
-  briefing on the prologue directly, one mission behind two doors.
+  briefing on the prologue directly, one mission behind two doors. With no seat held the
+  focus starts on Tutorial as well, so a first run's Enter goes where the list points
+  ([#1587](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1587)).
 - **Campaign** — the board of four campaigns and their slots. A board rather than a list
   because the order is free after the prologue ([campaign.md](campaign.md) §1): a list
   would assert a sequence the campaign refuses to have, and mission ids are namespaced by
@@ -1290,7 +1292,10 @@ title screen, and reads the briefing on the way in.
   its mission is played on — and under the board is the door to **the record**, the setting
   read between missions; both are specified below.
 - **Setup** — shared by Solo and hosting: a commander-name field and one card per map
-  archetype (name, doctrine line, seats), from the shared catalogue. Faction choice and AI
+  archetype (name, seats and size, and the plain line [maps.md](maps.md) writes for its
+  setup card), from the shared catalogue. The card does not print the archetype's *Ideal
+  Use*: that line is a designer's shorthand, and a newcomer read "high-skill micro +
+  positioning" as a warning rather than a description. Faction choice and AI
   opponents stay in the in-room ready room, because faction uniqueness is enforced by the
   room and a pick is a request the room may refuse ([tech-stack.md](tech-stack.md)) — the
   shell does not promise what the server may deny. Hosting adds one control the solo path
@@ -1718,6 +1723,22 @@ opposition. Neither offers a toggle, because neither has a question to ask.
 The host's room code is shown in the ready room, and only there: it is the one piece of a
 private room worth handing to somebody, and the ready room is where the host is standing
 when they want to.
+
+### The ready room
+
+A room's lobby, where navies are picked and AI commanders seated. Two of its defaults are
+written for the player who has not played yet
+([#1587](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1587)).
+
+- **An added opponent starts at Recruit.** It plays slower and plainer and knows exactly
+  what a Veteran knows ([tech-stack.md](tech-stack.md), "Difficulty is decision quality"),
+  so it is the one a first match should meet. Its difficulty is shown as both choices side
+  by side, the current one pressed, so it reads as the control it is.
+- **Alone, the room says so and offers an opponent first.** While no other seat is filled,
+  Add opponent leads the footer and takes the focus, and the line beside it says that
+  readying now goes into the water alone. Readying alone is still allowed —
+  `LIFECYCLE.MIN_PLAYERS` is 1, and a host may want to try the water before anyone joins
+  — so an empty match is said rather than refused.
 
 ### Resume
 

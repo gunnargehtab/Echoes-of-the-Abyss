@@ -149,8 +149,10 @@ export function TitleScreen({
               className={`title-entry${entry.resume === true ? ' menu-resume' : ''}`}
               // Autofocus goes to the held seat when there is one, because a
               // reload mid-match lands here and getting back should cost one
-              // keypress inside the grace window.
-              autoFocus={entry.resume === true || (!held && entry.id === 'solo')}
+              // keypress inside the grace window. Otherwise to Tutorial, where
+              // the list points: a first run's Enter on Solo game put a
+              // newcomer in a skirmish nothing had taught (#1587).
+              autoFocus={entry.resume === true || (!held && entry.id === 'tutorial')}
               onClick={entry.open}
               onPointerEnter={() => (mark.current = markFor(index))}
               onPointerLeave={() => (mark.current = null)}

@@ -37,13 +37,14 @@ interface Calls {
   chosen: Faction[];
   ready: boolean[];
   addedAi: AiDifficulty[];
+  difficulty: Array<[string, AiDifficulty]>;
 }
 
 async function lobby(
   players: LobbyPlayerView[],
   over: { sessionId?: string | null; canAddAi?: boolean } = {}
 ): Promise<{ view: Rendered; calls: Calls }> {
-  const calls: Calls = { chosen: [], ready: [], addedAi: [] };
+  const calls: Calls = { chosen: [], ready: [], addedAi: [], difficulty: [] };
   const view = await render(
     createElement(Lobby, {
       mapName: 'Smoke Basin',
@@ -55,7 +56,7 @@ async function lobby(
       onReady: (ready) => calls.ready.push(ready),
       onAddAi: (difficulty) => calls.addedAi.push(difficulty),
       onRemoveAi: () => {},
-      onAiDifficulty: () => {},
+      onAiDifficulty: (sessionId, difficulty) => calls.difficulty.push([sessionId, difficulty]),
     })
   );
   return { view, calls };
@@ -112,15 +113,49 @@ describe('the ready room: what it says while it waits', () => {
     // The split the source comment exists for: "you have not readied" and
     // "somebody else has not" are different sentences, and rolling them
     // together produces the memorable absurdity of a solo lobby announcing it
-    // is waiting on one commander. `LIFECYCLE.MIN_PLAYERS` is 1, so a solo
-    // room is not short-handed — it is waiting on precisely you.
-    const { view } = await lobby([seat({ ready: false })]);
+    // is waiting on one commander. `LIFECYCLE.MIN_PLAYERS` is 1, so a room is
+    // not short-handed with you in it — it is waiting on precisely you.
+    const { view } = await lobby([
+      seat({ ready: false }),
+      seat({ sessionId: 'ai-2', name: 'Cohort', faction: Faction.Hadron, isAi: true, ready: true }),
+    ]);
     try {
       const said = view.text().join(' ');
       assert.match(said, /Ready when you are/, 'it asks you, because you are who it is waiting on');
       assert.equal(/Waiting on/.test(said), false, 'and never reports you as somebody else');
     } finally {
       await view.unmount();
+    }
+  });
+
+  it('says an empty match is empty, and offers an opponent first (§14, #1587)', async () => {
+    // "While no other seat is filled, Add opponent leads the footer and takes
+    // the focus, and the line beside it says that readying now goes into the
+    // water alone." Said rather than refused: Ready stays live.
+    const { view } = await lobby([seat({ ready: false })]);
+    try {
+      assert.match(view.text().join(' '), /into the water alone/, 'it says what Ready would do');
+      const names = view.buttonNames();
+      const at = (name: string) => names.indexOf(name);
+      assert.ok(at('Add opponent') < at('Ready'), `Add opponent leads: ${names}`);
+      assert.equal(view.button('Add opponent').props.autoFocus, true, 'and takes the focus');
+      assert.notEqual(view.button('Ready').props.disabled, true, 'and Ready is not refused');
+    } finally {
+      await view.unmount();
+    }
+
+    // Once anyone else holds a seat, Ready leads again and nothing is focused.
+    const joined = await lobby([
+      seat(),
+      seat({ sessionId: 'seat-2', name: 'Korrin', faction: Faction.Hadron }),
+    ]);
+    try {
+      const names = joined.view.buttonNames();
+      assert.ok(names.indexOf('Ready') < names.indexOf('Add opponent'), `Ready leads: ${names}`);
+      assert.notEqual(joined.view.button('Add opponent').props.autoFocus, true);
+      assert.equal(/into the water alone/.test(joined.view.text().join(' ')), false);
+    } finally {
+      await joined.view.unmount();
     }
   });
 
@@ -151,6 +186,51 @@ describe('the ready room: what it says while it waits', () => {
         .allByClass('lobby-add-ai')
         .filter((node) => (node.props as { disabled?: boolean }).disabled === true);
       assert.ok(disabled.length > 0, 'a map with no free seat offers no AI');
+    } finally {
+      await view.unmount();
+    }
+  });
+});
+
+describe('the ready room: the opponent a newcomer meets', () => {
+  it('adds a Recruit, the opponent a first match should meet (§14, #1587)', async () => {
+    const { view, calls } = await lobby([seat()]);
+    try {
+      await view.act(() => {
+        (view.button('Add opponent').props as { onClick: () => void }).onClick();
+      });
+      assert.deepEqual(calls.addedAi, [AiDifficulty.Recruit]);
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('shows both difficulties as controls, the current one pressed', async () => {
+    // "Its difficulty is shown as both choices side by side, the current one
+    // pressed, so it reads as the control it is." A lone chip that toggled
+    // gave no sign it could be pressed.
+    const ai = seat({
+      sessionId: 'ai-2',
+      name: 'Cohort',
+      faction: Faction.Hadron,
+      isAi: true,
+      difficulty: AiDifficulty.Veteran,
+    });
+    const { view, calls } = await lobby([seat(), ai]);
+    try {
+      const pressed = (label: string) =>
+        (view.button(label).props as { 'aria-pressed'?: boolean })['aria-pressed'];
+      assert.equal(pressed('Veteran'), true, 'the current one is pressed');
+      assert.equal(pressed('Recruit'), false, 'and the other is offered, not hidden');
+      await view.act(() => {
+        (view.button('Recruit').props as { onClick: () => void }).onClick();
+        (view.button('Veteran').props as { onClick: () => void }).onClick();
+      });
+      assert.deepEqual(
+        calls.difficulty,
+        [['ai-2', AiDifficulty.Recruit]],
+        'pressing the other changes it; pressing the current one sends nothing'
+      );
     } finally {
       await view.unmount();
     }

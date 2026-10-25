@@ -772,6 +772,19 @@
   outline-offset: 1px;
 }
 
+/* Both difficulties side by side, the current one pressed (#1587): a lone
+   chip that toggled gave no sign it was a control. */
+.lobby-difficulty {
+  display: inline-flex;
+  gap: 0.2rem;
+}
+
+.lobby-chip[aria-pressed='true'] {
+  border-color: var(--neon-cyan);
+  background: rgba(53, 224, 255, 0.16);
+  color: var(--neon-cyan);
+}
+
 .lobby-ai-note {
   margin: -0.4rem 0 0;
   font-size: 0.62rem;
@@ -780,7 +793,9 @@
   opacity: 0.55;
 }
 
-/* Secondary to Ready: adding an opponent is setup, readying is commitment. */
+/* Secondary to Ready: adding an opponent is setup, readying is commitment.
+   Alone in the room it leads instead (`.lead`), because Ready would start an
+   empty match (docs/ui-ux.md §14, "The ready room"). */
 .lobby-add-ai {
   padding: 0.45rem 1.1rem;
   border: 1px solid rgba(255, 61, 166, 0.5);
@@ -801,6 +816,15 @@
 .lobby-add-ai:disabled {
   cursor: default;
   opacity: 0.35;
+}
+
+.lobby-add-ai.lead {
+  padding: 0.45rem 1.4rem;
+  border-color: var(--neon-magenta);
+  color: var(--neon-magenta);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  box-shadow: 0 0 10px rgba(255, 61, 166, 0.22);
 }
 
 /*
