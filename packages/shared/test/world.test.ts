@@ -18,7 +18,11 @@ import {
   BANDING_GROUND_GROUND,
   BANDING_GROUND_REGION,
   Biome,
+  FACE_SIX_GROUND,
+  FACE_SIX_REGION,
+  LEDGER_ASSET_RECOVERY_HEADER,
   LEDGER_EXPOSURE_HEADER,
+  LEDGER_SHIFT_CHANGE_HEADER,
   MAP_HEADERS,
   MISSION_HEADERS,
   PLACED_GROUND,
@@ -29,6 +33,8 @@ import {
   SHALLOW_BAND_REGION,
   SORROWGATE_GROUND,
   SORROWGATE_REGION,
+  UPPER_WORKINGS_GROUND,
+  UPPER_WORKINGS_REGION,
   WORLD,
   WESTERN_MARGIN_GROUND,
   WESTERN_MARGIN_REGION,
@@ -147,6 +153,53 @@ describe('placed regions', () => {
     // two share no cell and need not agree on one (§7.2).
     assert.equal(SHALLOW_BAND_REGION.y, WESTERN_MARGIN_REGION.y + WESTERN_MARGIN_REGION.heightM);
     assert.equal(SHALLOW_BAND_REGION.x, WESTERN_MARGIN_REGION.x);
+  });
+
+  it('places the two Ninefold maps a row apart on the Vein (§7.9, #1626)', () => {
+    assert.deepEqual(UPPER_WORKINGS_REGION, {
+      id: 'ninefold-workings',
+      mapId: 'ninefold-workings',
+      x: 3_500,
+      y: 21_750,
+      widthM: 4_000,
+      heightM: 3_000,
+    });
+    assert.deepEqual(FACE_SIX_REGION, {
+      id: 'ninefold-face-six',
+      mapId: 'ninefold-face-six',
+      x: 3_000,
+      y: 25_000,
+      widthM: 4_000,
+      heightM: 3_000,
+    });
+    for (const [region, ground] of [
+      [UPPER_WORKINGS_REGION, UPPER_WORKINGS_GROUND],
+      [FACE_SIX_REGION, FACE_SIX_GROUND],
+    ] as const) {
+      assert.equal(region.widthM, ground.widthM);
+      assert.equal(region.heightM, ground.heightM);
+    }
+    assert.equal(UPPER_WORKINGS_REGION.mapId, LEDGER_SHIFT_CHANGE_HEADER.mapId);
+    assert.equal(FACE_SIX_REGION.mapId, LEDGER_ASSET_RECOVERY_HEADER.mapId);
+    // The Workings' rail head, cells (1,500–2,500, 0–500), stands on Fivewell.
+    const fivewell = RIFT_PLACES.find((p) => p.id === 'fivewell')!;
+    assert.deepEqual(
+      [UPPER_WORKINGS_REGION.x + 2_000, UPPER_WORKINGS_REGION.y + 250],
+      [fivewell.x, fivewell.y]
+    );
+    const vein = RIFT_PLACES.find((p) => p.id === 'ninefold-vein')!;
+    assert.deepEqual(
+      [
+        FACE_SIX_REGION.x + FACE_SIX_REGION.widthM / 2,
+        FACE_SIX_REGION.y + FACE_SIX_REGION.heightM / 2,
+      ],
+      [vein.x, vein.y]
+    );
+    // One row apart: the two share no cell and need not agree on one (§7.2).
+    assert.equal(
+      FACE_SIX_REGION.y - (UPPER_WORKINGS_REGION.y + UPPER_WORKINGS_REGION.heightM),
+      250
+    );
   });
 
   it('place every map whose ground is placed, and none without', () => {
@@ -403,11 +456,13 @@ describe('the mission border', () => {
 });
 
 describe('the placed-mission predicate', () => {
-  it('draws the prologue, Intake, Exposure and Trench Awakening in the world, each on its region, and no other', () => {
+  it('draws the placed missions in the world, each on its region, and no other', () => {
     assert.equal(worldRegionForMission(PROLOGUE_SORROWGATE_HEADER.id), SORROWGATE_REGION);
     assert.equal(worldRegionForMission(ATTENDING_INTAKE_HEADER.id), BANDING_GROUND_REGION);
     assert.equal(worldRegionForMission(LEDGER_EXPOSURE_HEADER.id), WESTERN_MARGIN_REGION);
     assert.equal(worldRegionForMission(ATTENDING_TRENCH_AWAKENING_HEADER.id), SHALLOW_BAND_REGION);
+    assert.equal(worldRegionForMission(LEDGER_SHIFT_CHANGE_HEADER.id), UPPER_WORKINGS_REGION);
+    assert.equal(worldRegionForMission(LEDGER_ASSET_RECOVERY_HEADER.id), FACE_SIX_REGION);
     assert.equal(worldRegionForMission(undefined), undefined);
     // Radicals plays on Sorrowgate's map and keeps its presentation: the
     // predicate is keyed on mission identity, never on the map (§7.1).
@@ -418,6 +473,8 @@ describe('the placed-mission predicate', () => {
       ATTENDING_INTAKE_HEADER.id,
       LEDGER_EXPOSURE_HEADER.id,
       ATTENDING_TRENCH_AWAKENING_HEADER.id,
+      LEDGER_SHIFT_CHANGE_HEADER.id,
+      LEDGER_ASSET_RECOVERY_HEADER.id,
     ]);
     for (const header of MISSION_HEADERS) {
       if (placed.has(header.id)) continue;
@@ -428,6 +485,7 @@ describe('the placed-mission predicate', () => {
     assert.equal(worldRegionForMission('banding-ground'), undefined);
     assert.equal(worldRegionForMission('first-trench-margin'), undefined);
     assert.equal(worldRegionForMission('shallow-band'), undefined);
+    assert.equal(worldRegionForMission('ninefold-face-six'), undefined);
   });
 
   it("places each mission on its own map's region", () => {

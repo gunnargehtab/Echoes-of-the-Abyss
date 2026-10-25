@@ -18,10 +18,12 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import {
   BANDING_GROUND_GROUND,
+  FACE_SIX_GROUND,
   Biome,
   DEPTH,
   SHALLOW_BAND_GROUND,
   SORROWGATE_GROUND,
+  UPPER_WORKINGS_GROUND,
   WESTERN_MARGIN_GROUND,
   WORLD_REGIONS,
   detailGround,
@@ -33,6 +35,8 @@ import {
   FIRST_TRENCH_MARGIN,
   MAPS,
   MISSION_MAPS,
+  NINEFOLD_FACE_SIX,
+  NINEFOLD_WORKINGS,
   SHALLOW_BAND,
   SORROWGATE,
   missionMapById,
@@ -155,6 +159,24 @@ describe("the Shallow Band's shared ground (#1615)", () => {
     assert.equal(SHALLOW_BAND.cellM, SHALLOW_BAND_GROUND.cellM);
     assert.equal(SHALLOW_BAND.floorM, SHALLOW_BAND_GROUND.floorM);
   });
+});
+
+describe("the two Ninefold maps' shared ground (#1626)", () => {
+  // Their cells are held to the server's by the shared painter's test below
+  // and pinned against the missions by `missionAssetRecovery.test.ts` and
+  // `missionShiftChange.test.ts`; this holds the move.
+  for (const [map, ground] of [
+    [NINEFOLD_FACE_SIX, FACE_SIX_GROUND],
+    [NINEFOLD_WORKINGS, UPPER_WORKINGS_GROUND],
+  ] as const) {
+    it(`${map.id} spreads the shared literal, not a copy`, () => {
+      assert.equal(map.regions, ground.regions);
+      assert.equal(map.widthM, ground.widthM);
+      assert.equal(map.heightM, ground.heightM);
+      assert.equal(map.cellM, ground.cellM);
+      assert.equal(map.floorM, ground.floorM);
+    });
+  }
 });
 
 describe("the continuous world's detail ground (#1457) holds the server's baseline", () => {

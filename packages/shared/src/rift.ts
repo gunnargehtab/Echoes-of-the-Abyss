@@ -127,6 +127,9 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
     toDepthM: 2_100,
   },
   { id: 'fivewell', name: 'Fivewell', region: 'west-wall', x: 5_500, y: 22_000 },
+  // Derived: the Upper Workings' origin plus its spawn at Face Two's muster,
+  // so a travel to *Shift Change* ends there (§7.6, #1626).
+  { id: 'face-two', name: "Face Two's muster", region: 'west-wall', x: 4_375, y: 24_000 },
   {
     id: 'ninefold-vein',
     name: 'Ninefold Vein',
@@ -135,6 +138,15 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
     y: 26_500,
     depthM: 900,
     toDepthM: 1_400,
+  },
+  // Derived: Face Six's origin plus its spawn at the Rail Head, so a travel to
+  // *Asset Recovery* ends there (§7.6, #1626).
+  {
+    id: 'face-six-rail-head',
+    name: "Face Six's rail head",
+    region: 'west-wall',
+    x: 5_000,
+    y: 25_250,
   },
   { id: 'halvard', name: 'Halvard', region: 'west-wall', x: 7_000, y: 36_000, depthM: 1_600 },
   // The Drowned City. The court is §7.2's derived anchor, the spawn at the arch.
@@ -1061,6 +1073,94 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       biome: AbyssalTrench,
       floorM: 2_400,
       note: 'The Sill, carried south into the deep end',
+    },
+  ],
+  // The Upper Workings' 2,500 m (#1626). The map is the Vein's field in
+  // west–east bands, straddling the layer: the rail head and the High Road
+  // above it, the Downworks below. The surround carries each band a
+  // kilometre west and east across the wall's faces, and the rail head north
+  // onto Fivewell's pillar. Face Six's map lies a row south, and its patch
+  // takes its own cells where both are drawn (§7.3).
+  'ninefold-workings': [
+    {
+      x: 2_500,
+      y: 21_500,
+      widthM: 6_000,
+      heightM: 3_500,
+      biome: ThermalVein,
+      floorM: 1_100,
+      note: 'The Field, carried a kilometre west and east',
+    },
+    {
+      x: 5_000,
+      y: 21_000,
+      widthM: 1_000,
+      heightM: 750,
+      biome: ThermalVein,
+      floorM: 850,
+      note: 'The Rail Head, carried north onto Fivewell',
+    },
+    {
+      x: 2_500,
+      y: 22_250,
+      widthM: 6_000,
+      heightM: 500,
+      biome: ThermalVein,
+      floorM: 950,
+      note: 'The High Road, carried along the shoulder',
+    },
+    {
+      x: 2_500,
+      y: 23_250,
+      widthM: 6_000,
+      heightM: 500,
+      biome: ThermalVein,
+      floorM: 1_300,
+      note: 'The Downworks, carried on below the layer',
+    },
+  ],
+  // Face Six's 2,500 m (#1626). The map is the Vein's field with the Terrace
+  // across it and the Scar torn down to its south edge. The surround carries
+  // the Field and the Terrace a kilometre west and east, and the Field half a
+  // kilometre south onto the overview's deep faces, with the Scar torn on a
+  // kilometre into them. The Upper Workings' map lies a row north, and its
+  // patch takes its own cells where both are drawn (§7.3).
+  'ninefold-face-six': [
+    {
+      x: 2_000,
+      y: 24_750,
+      widthM: 6_000,
+      heightM: 3_750,
+      biome: ThermalVein,
+      floorM: 1_000,
+      note: 'The Field, carried a kilometre west and east and onto the deep faces',
+    },
+    {
+      x: 4_500,
+      y: 24_750,
+      widthM: 1_000,
+      heightM: 250,
+      biome: ThermalVein,
+      floorM: 700,
+      note: 'The Rail Head, carried a row north',
+    },
+    {
+      x: 2_000,
+      y: 25_500,
+      widthM: 6_000,
+      heightM: 500,
+      biome: ThermalVein,
+      floorM: 850,
+      note: 'The Terrace, carried along the face',
+    },
+    {
+      x: 4_750,
+      y: 28_000,
+      widthM: 500,
+      heightM: 1_000,
+      biome: AbyssalTrench,
+      floorM: 1_150,
+      note: 'The Scar, torn on south into the deep faces',
     },
   ],
 };

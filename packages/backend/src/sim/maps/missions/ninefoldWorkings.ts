@@ -13,9 +13,15 @@
  * argument, unchanged: one seat, not balanced, resolved by mission id and
  * nothing else. Unusually for a mission map it authors resources, because the
  * mission's cover story is a working economy and the economy is real (§8).
+ *
+ * **The ground is shared's** (`UPPER_WORKINGS_GROUND`, #1626), as the Shallow
+ * Band's is: the continuous world draws this map before any room exists
+ * (docs/world-map.md §7.9), so its regions are authored once, in
+ * `@echoes/shared`, and spread in here. What stays here is the spawn and the
+ * nodule fields.
  */
 
-import { Biome, ResourceKind } from '@echoes/shared';
+import { ResourceKind, UPPER_WORKINGS_GROUND } from '@echoes/shared';
 import type { MapDefinition } from '../types.ts';
 
 export const NINEFOLD_WORKINGS: MapDefinition = {
@@ -23,96 +29,8 @@ export const NINEFOLD_WORKINGS: MapDefinition = {
   name: 'The Upper Workings',
   idealUse: 'The Ledger, mission two. A dying face, a filed audit, and one shift to thread them.',
   seats: 1,
-  widthM: 4000,
-  heightM: 3000,
   doc: 'docs/mission-shift-change.md §11; docs/maps.md — Mission maps',
-  cellM: 250,
-  floorM: 1100,
-  // One row per row of §11's table, in the document's order. Later regions
-  // overwrite earlier ones; every number a shape states is a whole 250 m cell,
-  // and a cell is its region's when the shape holds its centre (#1142). Every
-  // spawn, field, hull and beat the mission places stands on the ground it
-  // stood on when these were all rectangles, an idle shift walks the tracks it
-  // walked on them (#1171), and `missionShiftChange.test.ts` pins both.
-  regions: [
-    {
-      x: 0,
-      y: 0,
-      widthM: 4000,
-      heightM: 3000,
-      biome: Biome.ThermalVein,
-      floorM: 1100,
-      note: "The Field — the Vein's masked working ground. Painted first; everything else is cut into it",
-    },
-    // A box, because it is built: and the mission's extract region is this same
-    // rectangle, so the berths the watches are counted in are the berths drawn.
-    {
-      x: 1500,
-      y: 0,
-      widthM: 1000,
-      heightM: 500,
-      biome: Biome.ThermalVein,
-      floorM: 850,
-      note: 'The Rail Head — the Fivewell rail transfer: berths, registry office, the transfer point. Above the layer',
-    },
-    // A box, because it is built: a graded freight road, and both passes walk
-    // its whole length on lines that cross every cell of it.
-    {
-      x: 0,
-      y: 500,
-      widthM: 4000,
-      heightM: 500,
-      biome: Biome.ThermalVein,
-      floorM: 950,
-      note: "The High Road — the audit's ground: the freight road along the workings' shoulder, above the layer",
-    },
-    // A basin rather than a band: its north edge draws back at both ends, and
-    // never enters the shoulder row, so the climb to the road is as long as it
-    // was. Its south edge is the rectangle's, straight along the faces' heads:
-    // an ellipse there dipped into the Field between the faces and changed how
-    // the packs reach the muster (#1171).
-    {
-      shape: 'polygon',
-      points: [
-        [0, 1500],
-        [750, 1500],
-        [1000, 1250],
-        [3000, 1250],
-        [3250, 1500],
-        [4000, 1500],
-        [4000, 2000],
-        [0, 2000],
-      ],
-      biome: Biome.ThermalVein,
-      floorM: 1300,
-      note: 'The Downworks — the working level below the layer: the refinery and the roads between faces, with the pack above the layer over its east end',
-    },
-    // An old cut, worked down the slope past the last seam.
-    {
-      shape: 'polygon',
-      points: [
-        [250, 2000],
-        [1250, 2000],
-        [1250, 2500],
-        [750, 2750],
-        [500, 2500],
-      ],
-      biome: Biome.ThermalVein,
-      floorM: 1350,
-      note: 'Face Two — the dying face: the muster, the last seam, and the thin field',
-    },
-    // A fresh, round working opening off the Downworks' south edge.
-    {
-      shape: 'ellipse',
-      x: 2500,
-      y: 2000,
-      widthM: 1250,
-      heightM: 750,
-      biome: Biome.ThermalVein,
-      floorM: 1350,
-      note: 'Face Five — the producing face the quota leans on: the rich field',
-    },
-  ],
+  ...UPPER_WORKINGS_GROUND,
   // One spawn, at Face Two's muster. The offsets address a pre-built Foundry
   // the mission never places; the shift is seated in the constructor.
   spawns: [{ x: 875, y: 2250, foundryOffsetX: 0, foundryOffsetY: 0 }],
