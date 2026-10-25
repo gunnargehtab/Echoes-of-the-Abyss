@@ -10,6 +10,12 @@ interface ImportMetaEnv {
    * is passed and `??` would take that for an address (#624).
    */
   readonly VITE_SERVER_URL?: string;
+  /**
+   * This bundle's build tag, from the image's `ECHOES_BUILD` build argument
+   * (packages/frontend/Dockerfile). Unset and empty both read as `dev`
+   * (net/reports.ts `clientBuild`), for `VITE_SERVER_URL`'s reason.
+   */
+  readonly VITE_ECHOES_BUILD?: string;
 }
 
 interface ImportMeta {

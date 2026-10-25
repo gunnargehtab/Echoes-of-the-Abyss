@@ -159,16 +159,23 @@ describe('a handler that throws', () => {
         deliver(room, 'boom', fakeClient('one'), {});
       });
 
-      const line = logged[0] ?? '';
-      assert.match(line, new RegExp(`MatchRoom ${room.roomId}`));
-      assert.match(line, /tick \d+/);
-      assert.match(line, /phase Playing/);
-      assert.match(line, /onMessage boom/);
+      // One JSON object per line (#1576), so a log reader can filter on it.
+      const line = JSON.parse(logged[0] ?? '{}') as Record<string, unknown>;
+      assert.equal(line.source, 'server');
+      assert.equal(line.room, room.roomId ?? null);
+      assert.equal(line.kind, 'onMessage boom');
+      assert.equal(line.build, 'dev');
+      // The seed, so the owner can replay the match the throw came from.
+      assert.equal(line.seed, room.seed);
+      assert.equal(typeof line.seed, 'number');
+      assert.match(String(line.summary), /tick \d+/);
+      assert.match(String(line.summary), /phase Playing/);
       // The line says what became of the throw, not only that one happened.
-      assert.match(line, /message dropped/);
+      assert.match(String(line.summary), /message dropped/);
       // The cause, not just the wrapper Colyseus built around it. Without it
       // the line says a throw happened and nothing about where.
-      assert.match(line, /a handler went wrong/);
+      assert.equal(line.message, 'a handler went wrong');
+      assert.match(String(line.stack), /a handler went wrong/);
     } finally {
       await shutdown(room);
     }
@@ -368,7 +375,7 @@ describe('a leave that throws', () => {
       assert.equal(logged.length, 1, 'the throw should have been logged once');
       assert.match(logged[0] ?? '', /onLeave/);
       assert.match(logged[0] ?? '', /phase Ended/);
-      assert.match(logged[0] ?? '', /seat released:/);
+      assert.match(logged[0] ?? '', /seat released"/);
     } finally {
       await shutdown(room);
     }

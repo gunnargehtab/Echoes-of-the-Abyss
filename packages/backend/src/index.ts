@@ -17,6 +17,8 @@ import {
   guardOrigins,
   resolveCorsPolicy,
 } from './http/cors.ts';
+import { mountReports } from './http/reports.ts';
+import { describeThrown, logFailure } from './log.ts';
 
 const PORT = Number(process.env.PORT ?? 3000);
 
@@ -37,6 +39,15 @@ function loadCorsPolicy(): CorsPolicy {
 }
 
 const corsPolicy = loadCorsPolicy();
+
+// A throw that escapes every room, as a structured line (#1576). The monitor
+// rather than a handler: Colyseus's `registerGracefulShutdown` owns the
+// `uncaughtException` handler and the exit it makes, and the monitor runs
+// before it without changing either. An unhandled rejection arrives here too,
+// as Node raises it by default.
+process.on('uncaughtExceptionMonitor', (error, origin) => {
+  logFailure({ source: 'server', kind: origin, room: null, ...describeThrown(error) });
+});
 
 // The one CORS decision. Colyseus prepends a request listener to the HTTP
 // server that, on every request and before express sees it, sets
@@ -95,9 +106,21 @@ export const server = defineServer({
           }))
         );
       } catch (error) {
-        console.error('Failed to list public matches:', error);
+        logFailure({
+          source: 'server',
+          kind: 'GET /rooms/match',
+          room: null,
+          ...describeThrown(error),
+        });
         res.status(500).json({ error: 'Match listings are unavailable.' });
       }
+    });
+
+    // A hosted client's uncaught errors (#1576). The seed is looked up here,
+    // from the room the report names, because the client is never sent it.
+    mountReports(app, (roomId) => {
+      const room = matchMaker.getLocalRoomById(roomId);
+      return room instanceof MatchRoom ? room.seed : null;
     });
   },
 });

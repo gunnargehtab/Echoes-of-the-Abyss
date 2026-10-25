@@ -12,6 +12,10 @@ services:
     build:
       context: .
       dockerfile: packages/backend/Dockerfile
+      args:
+        # The tag on every failure line (#1576): `ECHOES_BUILD=$(git rev-parse
+        # --short HEAD) docker compose up --build`. Unset, both say `dev`.
+        ECHOES_BUILD: ${ECHOES_BUILD:-}
     environment:
       PORT: 3000
       # The image runs with NODE_ENV=production, so the origin lock refuses to
@@ -30,6 +34,7 @@ services:
         # will dial. Not `ws://backend:3000` — `backend` resolves inside the
         # compose network, and the browser is not on it.
         VITE_SERVER_URL: ws://localhost:3000
+        ECHOES_BUILD: ${ECHOES_BUILD:-}
     ports:
       - '8080:80'
     depends_on:

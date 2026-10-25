@@ -49,6 +49,12 @@ COPY tools/hull-maps/models.mjs tools/hull-maps/models.mjs
 ARG VITE_SERVER_URL=
 ENV VITE_SERVER_URL=$VITE_SERVER_URL
 
+# The build tag every error report carries (#1576; net/reports.ts), usually the
+# commit sha. Baked for the same reason as the address above. Unset, the bundle
+# reports itself as `dev`, which says only that nobody named it.
+ARG ECHOES_BUILD=
+ENV VITE_ECHOES_BUILD=$ECHOES_BUILD
+
 RUN npm run build:shared && npm -w packages/frontend run build
 
 # ---------------------------------------------------------------------------

@@ -39,6 +39,7 @@ import {
   type TerrainMessage,
 } from '@echoes/shared';
 import { toListings } from './rooms.ts';
+import { leaveReportRoom, setReportRoom } from './reports.ts';
 
 /**
  * The wire payloads, re-exported.
@@ -511,6 +512,7 @@ export class GameClient {
     }
     this.unwatchLobby();
     this.room = room;
+    setReportRoom(room.roomId);
     rememberToken(room.reconnectionToken, this.missionId);
 
     // A join after the match wrote the ground is sent the opening ground and
@@ -572,6 +574,7 @@ export class GameClient {
       if (this.leaving || room !== this.room) return;
       this.unwatchLobby();
       this.room = null;
+      leaveReportRoom(room.roomId);
       rememberToken(null);
       this.handlers.onStatus('closed');
     });
@@ -921,6 +924,7 @@ export class GameClient {
     // double-mount in development would otherwise leave a stale token behind
     // that the next mount tries, and fails, to redeem.
     rememberToken(null);
+    if (this.room !== null) leaveReportRoom(this.room.roomId);
     this.room?.leave();
     this.room = null;
   }
