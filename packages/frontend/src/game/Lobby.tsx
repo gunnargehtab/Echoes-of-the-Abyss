@@ -86,7 +86,9 @@ export function Lobby({
   // Nobody else holds a seat. `MIN_PLAYERS` is 1, so Ready alone starts an
   // empty match; the room says so and offers an opponent first rather than
   // refusing, because a host may want to try the water before anyone joins
-  // (docs/ui-ux.md §14, "The ready room").
+  // (docs/ui-ux.md §14, "The ready room"). Offered by emphasis and focus, never
+  // by moving the buttons: swapped back once an opponent sat, Ready landed
+  // under the second click meant for another opponent.
   const alone = self !== null && players.every((player) => player.sessionId === sessionId);
 
   const ready = (
@@ -218,17 +220,8 @@ export function Lobby({
         </p>
 
         <footer className="lobby-foot">
-          {alone ? (
-            <>
-              {addOpponent}
-              {ready}
-            </>
-          ) : (
-            <>
-              {ready}
-              {addOpponent}
-            </>
-          )}
+          {ready}
+          {addOpponent}
           <p className="lobby-hint">
             {shortHanded
               ? `Waiting for ${needed} more ${needed === 1 ? 'commander' : 'commanders'}.`

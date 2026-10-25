@@ -794,8 +794,9 @@
 }
 
 /* Secondary to Ready: adding an opponent is setup, readying is commitment.
-   Alone in the room it leads instead (`.lead`), because Ready would start an
-   empty match (docs/ui-ux.md §14, "The ready room"). */
+   Alone in the room it is emphasised instead (`.lead`), because Ready would
+   start an empty match (docs/ui-ux.md §14, "The ready room"). It keeps its
+   place, so nothing moves under a second click. */
 .lobby-add-ai {
   padding: 0.45rem 1.1rem;
   border: 1px solid rgba(255, 61, 166, 0.5);

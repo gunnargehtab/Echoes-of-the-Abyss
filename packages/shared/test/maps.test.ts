@@ -57,9 +57,20 @@ describe('the public map catalogue', () => {
 
   it('transcribes each card from docs/maps.md, where it is authored', () => {
     const doc = readFileSync(new URL('../../../docs/maps.md', import.meta.url), 'utf8');
+    // Per map, not per string: each card is looked for under its own map's
+    // heading, so two cards swapped between maps fail here.
+    const section = (name: string): string => {
+      const start = doc.search(new RegExp(`^## Map Type \\d+ — ${name}$`, 'm'));
+      assert.ok(start >= 0, `${name}: no section in docs/maps.md`);
+      const next = doc.indexOf('\n## ', start + 1);
+      return doc.slice(start, next < 0 ? undefined : next);
+    };
     for (const header of MAP_HEADERS) {
       const card = SETUP_CARD[header.id]!;
-      assert.ok(doc.includes(`### On the setup card\n\n${card}\n`), `${header.id}: not in the doc`);
+      assert.ok(
+        section(header.name).includes(`### On the setup card\n\n${card}\n`),
+        `${header.id}: not under its own heading in the doc`
+      );
     }
   });
 });

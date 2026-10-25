@@ -1735,8 +1735,9 @@ written for the player who has not played yet
   so it is the one a first match should meet. Its difficulty is shown as both choices side
   by side, the current one pressed, so it reads as the control it is.
 - **Alone, the room says so and offers an opponent first.** While no other seat is filled,
-  Add opponent leads the footer and takes the focus, and the line beside it says that
-  readying now goes into the water alone. Readying alone is still allowed —
+  Add opponent is the emphasised button and takes the focus, and the line beside it says
+  that readying now goes into the water alone. Neither button moves: Ready keeps its place
+  beside it, so a second click meant for another opponent never lands on Ready. Readying alone is still allowed —
   `LIFECYCLE.MIN_PLAYERS` is 1, and a host may want to try the water before anyone joins
   — so an empty match is said rather than refused.
 

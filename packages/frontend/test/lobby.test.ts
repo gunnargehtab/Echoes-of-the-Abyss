@@ -129,33 +129,61 @@ describe('the ready room: what it says while it waits', () => {
   });
 
   it('says an empty match is empty, and offers an opponent first (§14, #1587)', async () => {
-    // "While no other seat is filled, Add opponent leads the footer and takes
-    // the focus, and the line beside it says that readying now goes into the
-    // water alone." Said rather than refused: Ready stays live.
+    // "While no other seat is filled, Add opponent is the emphasised button and
+    // takes the focus, and the line beside it says that readying now goes into
+    // the water alone." Said rather than refused: Ready stays live.
     const { view } = await lobby([seat({ ready: false })]);
     try {
       assert.match(view.text().join(' '), /into the water alone/, 'it says what Ready would do');
-      const names = view.buttonNames();
-      const at = (name: string) => names.indexOf(name);
-      assert.ok(at('Add opponent') < at('Ready'), `Add opponent leads: ${names}`);
-      assert.equal(view.button('Add opponent').props.autoFocus, true, 'and takes the focus');
+      const add = view.button('Add opponent');
+      assert.equal(add.props.autoFocus, true, 'Add opponent takes the focus');
+      assert.match(String(add.props.className), /\blead\b/, 'and is the emphasised one');
       assert.notEqual(view.button('Ready').props.disabled, true, 'and Ready is not refused');
     } finally {
       await view.unmount();
     }
+  });
 
-    // Once anyone else holds a seat, Ready leads again and nothing is focused.
-    const joined = await lobby([
-      seat(),
-      seat({ sessionId: 'seat-2', name: 'Korrin', faction: Faction.Hadron }),
-    ]);
+  it('moves neither button when the first opponent sits down', async () => {
+    // "Neither button moves: Ready keeps its place beside it, so a second click
+    // meant for another opponent never lands on Ready." Re-rendered in place,
+    // as the room's broadcast does, so a swap of the buttons would show here.
+    const alone = [seat()];
+    const { view, calls } = await lobby(alone);
+    const footer = () => view.buttonNames().filter((n) => n === 'Ready' || n === 'Add opponent');
     try {
-      const names = joined.view.buttonNames();
-      assert.ok(names.indexOf('Ready') < names.indexOf('Add opponent'), `Ready leads: ${names}`);
-      assert.notEqual(joined.view.button('Add opponent').props.autoFocus, true);
-      assert.equal(/into the water alone/.test(joined.view.text().join(' ')), false);
+      const before = footer();
+      const ai = seat({
+        sessionId: 'ai-2',
+        name: 'Recruit 2',
+        faction: Faction.Hadron,
+        isAi: true,
+      });
+      await view.update(
+        createElement(Lobby, {
+          mapName: 'Smoke Basin',
+          players: [...alone, ai],
+          sessionId: 'seat-1',
+          roomId: 'ROOM-1',
+          canAddAi: true,
+          onChooseFaction: () => {},
+          onReady: (ready) => calls.ready.push(ready),
+          onAddAi: (difficulty) => calls.addedAi.push(difficulty),
+          onRemoveAi: () => {},
+          onAiDifficulty: () => {},
+        })
+      );
+      assert.deepEqual(footer(), before, 'the footer reads in the same order');
+      const add = view.button('Add opponent');
+      assert.equal(/\blead\b/.test(String(add.props.className)), false, 'no longer emphasised');
+      assert.equal(/into the water alone/.test(view.text().join(' ')), false);
+      await view.act(() => {
+        (add.props as { onClick: () => void }).onClick();
+      });
+      assert.deepEqual(calls.addedAi, [AiDifficulty.Recruit], 'a second add adds');
+      assert.deepEqual(calls.ready, [], 'and readies nothing');
     } finally {
-      await joined.view.unmount();
+      await view.unmount();
     }
   });
 
