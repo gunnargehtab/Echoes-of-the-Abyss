@@ -951,11 +951,12 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
   ],
   // The Western Margin's 2,500 m (#1612). The map is five bands, west to
   // east, stepping down south from the shelf lane to the worked rim, and the
-  // surround carries each band on: a kilometre west, where the wall's upper
-  // face rises beyond it, and a kilometre and a quarter east along the wall's
-  // foot. The worked ground goes half a kilometre further each way and a row
-  // further south, onto the overview's own worked rim, which runs at the same
-  // 1,750 m down to the First's shallow band.
+  // surround carries each band on, a kilometre west and a kilometre and a
+  // quarter east: the shelf lane, the slope and the bench under the wall,
+  // between its upper face and its foot, and the listening ground's edge
+  // across the top step. The worked ground goes half a kilometre further each
+  // way and a row further south, onto the overview's own worked rim, which
+  // runs at the same 1,750 m down to the First's shallow band.
   'first-trench-margin': [
     {
       x: 2_500,
