@@ -930,7 +930,9 @@ something new, and a log role would re-announce the whole panel every time a cou
 - **A named marker is drawn on the chart while an open row names it.** A mission may give a
   marker a short place name — *The arch*, *The Concourse* — and the world view then draws it
   where it is: a ring of the marker's radius on the seabed, and the name above the ring, held
-  at screen size, so it never sits on the hulls the ring is drawn round.
+  at screen size, so it never sits on the hulls the ring is drawn round. A row may name a
+  second marker as the place on its way, Sorrowgate's service lock for its tenders (#1594):
+  the chart draws it beside the row's own, and focusing the row still goes to the row's own.
   The row that names it going met or failed takes it off the chart, so the chart says where
   the mission is sending the player now, never where it once did. The ring is an instrument
   ([map-visuals.md](map-visuals.md) §5, rung 6): it is the player's own orders drawn on the

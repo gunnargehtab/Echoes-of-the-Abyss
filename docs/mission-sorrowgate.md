@@ -313,6 +313,21 @@ when it is ordered anyway: `held — not released yet` before it is loaded, `hel
 range` after. That is [ui-ux.md](ui-ux.md) §10.5's rule about a locked ability applied to an
 order, and it is the difference between the mission's one rule and a hull that appears broken.
 
+**The flight keeps the freight's pace when it is sent with it.** A Light Scout is quicker than a
+Harvester, so a flight sent north in one order with a tender left it inside a minute: past
+400 m the tender stopped where it stood, and the flight waited on the Concourse for a hull that
+was not coming (#1594). So a hull ordered in the same move as a tender travels at that tender's
+speed, or the slower tender's when the move sends both, for as long as that order stands. Any
+newer order of its own ends it, so sending an escort ahead to listen is still one order. It binds
+the hulls sent *with* a tender and nothing else; no other mission has a tender.
+
+**A tender's ears are drawn round it.** From its load until the mission ends, each tender has a
+400 m ring on the chart. It is steady cyan while a hull of the flight is inside it, and the
+interface's magenta while the tender is held for want of one, because that ring is asking for an
+escort. The rule is a distance, and a distance is easier to see than to read; the glosses (§12)
+still say it. The ring is an instrument ([map-visuals.md](map-visuals.md) §5, rung 6): the
+player's own freight and an authored number, and nothing about anybody else.
+
 **Four escorts, two tenders, one colossus, and you cannot be in both places.** Split the flight
 and both tenders crawl with two hulls of cover each; commit all four to one and the other sits
 in a chamber that is about to stop existing. That is the mission's single decision and the
@@ -639,10 +654,10 @@ place on the chart that a newcomer could find. So the objectives panel puts a pl
 sentence beside each objective ([ui-ux.md](ui-ux.md) §10.5), and three of the glosses carry the
 escort (#1585). The station's says to hold under the arch until it falls, and that the two
 Harvester hulls are the tenders the flight goes to then: that covers the forty seconds between
-the transit and the first load. Each tender's says to bring an escort
-within 400 m and then order the tender north to the Concourse. A held tender refuses an order,
-and once its hold lifts (§8) it still waits for one. The tender rows are the panel's route to the
-Concourse: each sends the camera there.
+the transit and the first load. Each tender's says to order the tender and an escort within
+400 m to the Concourse together, which is the one order that keeps them together (§8). A held
+tender refuses an order, and once its hold lifts it still waits for one. The tender rows are the
+panel's route to the Concourse: each sends the camera there.
 
 Two places are named on the chart as well as in the panel (#1611). Nothing in the ground marks
 the arch before it falls (§9), and a newcomer told to hold at it held under it for ten minutes
@@ -650,7 +665,12 @@ without knowing it was there. So the station row carries a marker on the span, a
 whose 350 m ring takes in the escorts' seats. Its name is *The arch*, and its line is *The arch.
 The flight's water is under its south face.* The chart draws it until the station is met at
 10:40. The Concourse's marker is named *The Concourse*, and is drawn from 11:20, when the tender
-rows that name it arrive. The station row also counts down to the transit
+rows that name it arrive. From then the chart names *The service lock* too, at 2,000, 2,125,
+with a 250 m ring, while a tender row is open (#1594). Each tender row names the lock as the
+place on its way and still sends the camera to the Concourse. Hulls find the lock by themselves,
+because movement routes round ground, so the name says why the freight turns west before it
+turns north; it is not a waypoint to steer by. Its line is *The service lock. The only way north
+since the arch fell.* The station row also counts down to the transit
 ([ui-ux.md](ui-ux.md) §10.5): a hold with no end in sight reads as a mission that has stalled.
 
 ### The four voices in the water
@@ -772,6 +792,7 @@ not.
 | Objectives, results, and the failure at adjournment | Implemented (#190) |
 | The briefing and the objective readings | Implemented (#190) |
 | The arch and the Concourse named on the chart, and the station's countdown | Implemented (#1611) — two named markers, drawn while a row that names them is open, and the station row counting down to 10:40 ([ui-ux.md](ui-ux.md) §10.5) |
+| The way north: the flight keeping the freight's pace, a tender's ears on the chart, the service lock named | Implemented (#1594) — a hull sent in one move with a tender takes the tender's speed while that order stands; each tender's 400 m ring is drawn from its load, cyan while escorted and magenta while held; the lock is a named marker each tender row names as its way |
 | The court's four lines in the opening window | **Built** (#726) — four `say` beats at 00:20, 01:00, 01:50 and 02:40, authored in §12 and transcribed by the literal, in the court's register and signed by Halloran, who until now spoke only in the briefing. They name no control, for the two reasons §9 gives, and they are `say` beats and nothing else, so no objective and no conditional beat keys on one. `missionRuntime.test.ts` plays the mission and asserts all four arrive at their minute, that the four in the water still arrive at theirs, and that a run which ignores every one of them still resolves on §8's terms |
 | The four voices in the water | **Built** (#381) — the `say` beat carries speaker and line to the mission log beside the orders panel at the times §12 gives, and the mix now hails each on the speech bus [audio-direction.md](audio-direction.md) §13 owns: 600 ms of signature in the speaker's register's material, then a murmur bed for the reading. The four are four registers by construction — Kalliso in the Order's note at 06:20, Drenn in the concern's beat at 09:00, Sende in the cohorts' ticks at 09:20, Teel in the plateaus' breath at 10:40 — and `missionRuntime.test.ts` plays the mission and asserts they arrive as four different voices. Under the silence order the hail whispers (−6 dB, the top octave gone, the bed half as long) and never mutes; the log stays the caption, so a player with their eyes on the water now hears that somebody spoke and which of the four it was. Under the cast (#403) Kalliso and Teel are signed — the Order's own note at a soldier's pace, and the warden's breath — and Drenn and Sende, who have no entry in [characters.md](characters.md), speak as the grid and as those below: still four registers, and now four speakers |
 | Ghost markers as a taught system | **Not taught here, and [campaign.md](campaign.md) §3 now says so.** §10's fourth beat was written for a fading twenty-second trail; measured, the colossus holds Tier 4 from 09:00 to the adjournment in every drive — passive, escorted, and escorted-with-the-climb — because SIG 100 through PF 1.6 stays four times over threshold even across the thermocline. §10 row 4 has been rewritten to what the phase does teach. Whether the lesson moves to another mission or the colossus is made quieter is a campaign-level decision, not this document's |
