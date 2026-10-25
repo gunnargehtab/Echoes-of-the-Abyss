@@ -307,42 +307,6 @@ describe('placed regions', () => {
       widthM: 4_000,
       heightM: 3_000,
     });
-
-    it("stands the Rim with its four bands on §7.2's band anchors (§7.9, #1640)", () => {
-      assert.deepEqual(MOUTH_RIM_REGION, {
-        id: 'mouth-rim',
-        mapId: 'mouth-rim',
-        x: 17_000,
-        y: 79_000,
-        widthM: 6_000,
-        heightM: 4_000,
-      });
-      assert.equal(MOUTH_RIM_REGION.widthM, MOUTH_RIM_GROUND.widthM);
-      assert.equal(MOUTH_RIM_REGION.heightM, MOUTH_RIM_GROUND.heightM);
-      // All five of its missions play it, and all five are drawn there (#1505).
-      for (const mission of [
-        LEDGER_PROSPECT_HEADER,
-        SEEDING_SECOND_SEEDING_HEADER,
-        ATTENDING_FIRST_ARRIVAL_HEADER,
-        CHORD_RIM_DEPOSITS_HEADER,
-        CHORD_SECOND_CHORD_HEADER,
-      ]) {
-        assert.equal(MOUTH_RIM_REGION.mapId, mission.mapId, mission.id);
-      }
-      // Each band is a kilometre of the map and stands on its anchor's row; the
-      // first three are centred on theirs, and the Lip's lies 500 m east.
-      const at = (id: string) => RIFT_PLACES.find((p) => p.id === id)!;
-      ['the-staging', 'the-slopes', 'the-terraces'].forEach((id, band) => {
-        assert.deepEqual(
-          [MOUTH_RIM_REGION.x + 3_000, MOUTH_RIM_REGION.y + band * 1_000 + 500],
-          [at(id).x, at(id).y],
-          id
-        );
-      });
-      const lip = at('the-lip');
-      assert.equal(lip.y, MOUTH_RIM_REGION.y + 3_500);
-      assert.equal(lip.x - (MOUTH_RIM_REGION.x + MOUTH_RIM_REGION.widthM), 500);
-    });
     assert.equal(ANHOLT_FURROW_REGION.widthM, ANHOLT_FURROW_GROUND.widthM);
     assert.equal(ANHOLT_FURROW_REGION.heightM, ANHOLT_FURROW_GROUND.heightM);
     // Both of its missions play it, and both are drawn there (#1505).
@@ -354,6 +318,42 @@ describe('placed regions', () => {
       [ANHOLT_FURROW_REGION.x + 2_000, ANHOLT_FURROW_REGION.y + 1_500],
       [furrow.x, furrow.y]
     );
+  });
+
+  it("stands the Rim with its four bands on §7.2's band anchors (§7.9, #1640)", () => {
+    assert.deepEqual(MOUTH_RIM_REGION, {
+      id: 'mouth-rim',
+      mapId: 'mouth-rim',
+      x: 17_000,
+      y: 79_000,
+      widthM: 6_000,
+      heightM: 4_000,
+    });
+    assert.equal(MOUTH_RIM_REGION.widthM, MOUTH_RIM_GROUND.widthM);
+    assert.equal(MOUTH_RIM_REGION.heightM, MOUTH_RIM_GROUND.heightM);
+    // All five of its missions play it, and all five are drawn there (#1505).
+    for (const mission of [
+      LEDGER_PROSPECT_HEADER,
+      SEEDING_SECOND_SEEDING_HEADER,
+      ATTENDING_FIRST_ARRIVAL_HEADER,
+      CHORD_RIM_DEPOSITS_HEADER,
+      CHORD_SECOND_CHORD_HEADER,
+    ]) {
+      assert.equal(MOUTH_RIM_REGION.mapId, mission.mapId, mission.id);
+    }
+    // Each band is a kilometre of the map and stands on its anchor's row; the
+    // first three are centred on theirs, and the Lip's lies 500 m east.
+    const at = (id: string) => RIFT_PLACES.find((p) => p.id === id)!;
+    ['the-staging', 'the-slopes', 'the-terraces'].forEach((id, band) => {
+      assert.deepEqual(
+        [MOUTH_RIM_REGION.x + 3_000, MOUTH_RIM_REGION.y + band * 1_000 + 500],
+        [at(id).x, at(id).y],
+        id
+      );
+    });
+    const lip = at('the-lip');
+    assert.equal(lip.y, MOUTH_RIM_REGION.y + 3_500);
+    assert.equal(lip.x - (MOUTH_RIM_REGION.x + MOUTH_RIM_REGION.widthM), 500);
   });
 
   it('place every map whose ground is placed, and none without', () => {

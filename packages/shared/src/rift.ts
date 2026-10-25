@@ -1480,11 +1480,12 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
   // The Rim's 2,500 m (#1640). The map is the Mouth's northern edge in four
   // bands, which the overview already draws a kilometre deep across the map's
   // width, with the road south arriving at the Staging and the Ninth rising
-  // to the Lip east of it. The surround carries each band a kilometre west and
-  // a row east, to the Ninth's west wall, and the Staging a row north onto the
-  // road. The Deep Water of the Slopes' west bay runs on west, and of their
-  // south-east corner a row east. The Lip runs on east under the Ninth's mouth
-  // and a row south, where the overview's Mouth falls away.
+  // to the Lip east of it. The surround carries the Staging, the Slopes and the
+  // Terraces a kilometre west and a row east, to the Ninth's west wall, and the
+  // Staging a row north onto the road and the Ninth's western shoulder. The
+  // Deep Water of the Slopes' west bay runs on west, and of their south-east
+  // corner a row east. The Lip runs a kilometre west, on east under the Ninth's
+  // mouth, and a row south, where the overview's Mouth falls away.
   'mouth-rim': [
     {
       x: 16_000,
@@ -1493,7 +1494,7 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       heightM: 1_250,
       biome: OpenWater,
       floorM: 1_500,
-      note: 'The Staging, a kilometre west, a row east and a row north onto the road',
+      note: 'The Staging, a kilometre west, a row east and a row north onto the road and shoulder',
     },
     {
       x: 16_000,
