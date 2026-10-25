@@ -7,9 +7,9 @@
  * from one build read against another's source is a wrong answer that looks
  * like a right one.
  *
- * Only failures go through here: a client's report, a room's caught throw and a
- * process-level throw. The startup and budget lines stay prose, for whoever
- * reads the terminal.
+ * Only failures go through here: a client's report, a room's or a route's
+ * caught throw, and a process-level throw. The startup and budget lines stay
+ * prose, for whoever reads the terminal.
  */
 
 /**
@@ -28,7 +28,7 @@ export type LogSource = 'client' | 'server';
 /** The fields every failure line carries; anything else rides beside them. */
 export interface FailureLine {
   source: LogSource;
-  /** What failed: a report's kind, a room method, or a process origin. */
+  /** What failed: a report's kind, a room method, a route, or a process origin. */
   kind: string;
   /** The room it happened in, or `null` outside one. */
   room: string | null;

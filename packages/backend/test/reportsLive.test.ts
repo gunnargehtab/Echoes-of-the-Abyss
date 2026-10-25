@@ -149,9 +149,10 @@ describe('the error-report route, as a hosted client meets it', () => {
   });
 
   it('limits each client behind the proxy to its own window', async () => {
-    // From loopback, which is where the playtest proxy's requests come from as
-    // the backend sees them, so `X-Forwarded-For` names the client. Without
-    // `trust proxy` every client would share loopback's one window.
+    // From loopback, a trusted peer as the playtest proxy's private
+    // Docker-network address is (#1597), so `X-Forwarded-For` names the
+    // client. Without `trust proxy` every client would share the peer's one
+    // window.
     const from = (client: string) =>
       fetch(`${base}${REPORT_PATH}`, {
         method: 'POST',
