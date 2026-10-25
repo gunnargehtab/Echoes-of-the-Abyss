@@ -16,11 +16,13 @@ import {
   ATTENDING_INTAKE_HEADER,
   BANDING_GROUND_GROUND,
   BANDING_GROUND_REGION,
+  LEDGER_EXPOSURE_HEADER,
   paintGround,
   PROLOGUE_SORROWGATE_HEADER,
   SEEDING_RADICALS_HEADER,
   SORROWGATE_GROUND,
   SORROWGATE_REGION,
+  WESTERN_MARGIN_REGION,
   WORLD,
   WORLD_REGIONS,
   type WorldRegion,
@@ -659,6 +661,21 @@ describe('a second placed mission, in the same world (#1598)', () => {
     });
   });
 
+  it("ends Exposure's travel on the shelf lane, its spawn (#1612)", () => {
+    sameFrame(arrivalFrame(WESTERN_MARGIN_REGION)!, {
+      xM: 2_500,
+      yM: 375,
+      distanceM: HOME_DOLLY_M,
+      yawDeg: 0,
+      pitchDeg: 55,
+    });
+  });
+
+  it('gives every placed region a home to travel to', () => {
+    // A region with no derived anchor would launch its mission off the world.
+    for (const region of WORLD_REGIONS) assert.ok(arrivalFrame(region), region.id);
+  });
+
   it("restates a frame in another region's metres at the same place in the atlas", () => {
     const home = arrivalFrame(BANDING_GROUND_REGION)!;
     const inPilot = inView(home, BANDING_GROUND_REGION, SORROWGATE_REGION);
@@ -763,6 +780,7 @@ describe('which launches travel, and when a travel joins (§7.6)', () => {
       "Radicals is on Sorrowgate's map and is not placed"
     );
     assert.equal(travelsFirst('campaign', ATTENDING_INTAKE_HEADER.id), true, 'Intake is (#1598)');
+    assert.equal(travelsFirst('campaign', LEDGER_EXPOSURE_HEADER.id), true, 'Exposure is (#1612)');
   });
 
   it('joins once the match is loaded and the camera has arrived, never before', () => {

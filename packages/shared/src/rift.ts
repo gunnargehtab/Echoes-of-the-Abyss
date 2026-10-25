@@ -229,6 +229,9 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
     x: 6_000,
     y: 49_500,
   },
+  // Derived, as the court and the muster are: the Western Margin's origin plus
+  // its spawn on the shelf lane, so a travel to *Exposure* ends there (§7.6, #1612).
+  { id: 'the-shelf-lane', name: 'The shelf lane', region: 'trench-country', x: 6_000, y: 48_375 },
   {
     id: 'fourth-trench',
     name: 'The Fourth Trench',
@@ -944,6 +947,60 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       biome: AbyssalTrench,
       floorM: 2_400,
       note: 'The Throat, carried south to Sufficiency’s terrace',
+    },
+  ],
+  // The Western Margin's 2,500 m (#1612). The map is five bands, west to
+  // east, stepping down south from the shelf lane to the worked rim, and the
+  // surround carries each band on: a kilometre west, where the wall's upper
+  // face rises beyond it, and a kilometre and a quarter east along the wall's
+  // foot. The worked ground goes half a kilometre further each way and a row
+  // further south, onto the overview's own worked rim, which runs at the same
+  // 1,750 m down to the First's shallow band.
+  'first-trench-margin': [
+    {
+      x: 2_500,
+      y: 47_750,
+      widthM: 7_250,
+      heightM: 1_000,
+      biome: OpenWater,
+      floorM: 1_050,
+      note: 'The Shelf Lane, carried along the wall above the layer',
+    },
+    {
+      x: 2_500,
+      y: 48_750,
+      widthM: 7_250,
+      heightM: 750,
+      biome: OpenWater,
+      floorM: 1_450,
+      note: 'The Slope, carried on through the layer',
+    },
+    {
+      x: 2_500,
+      y: 49_500,
+      widthM: 7_250,
+      heightM: 500,
+      biome: OpenWater,
+      floorM: 1_500,
+      note: 'The bench at the slope’s foot, carried on',
+    },
+    {
+      x: 2_500,
+      y: 50_000,
+      widthM: 7_250,
+      heightM: 250,
+      biome: OpenWater,
+      floorM: 1_600,
+      note: 'The Listening Ground’s southern edge, carried on',
+    },
+    {
+      x: 2_000,
+      y: 50_250,
+      widthM: 8_250,
+      heightM: 1_000,
+      biome: AbyssalTrench,
+      floorM: 1_750,
+      note: 'The Worked Ground, carried along the First’s rim',
     },
   ],
 };

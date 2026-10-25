@@ -21,6 +21,7 @@ import {
   Biome,
   DEPTH,
   SORROWGATE_GROUND,
+  WESTERN_MARGIN_GROUND,
   WORLD_REGIONS,
   detailGround,
   detailRect,
@@ -28,6 +29,7 @@ import {
 } from '@echoes/shared';
 import {
   BANDING_GROUND,
+  FIRST_TRENCH_MARGIN,
   MAPS,
   MISSION_MAPS,
   SORROWGATE,
@@ -125,6 +127,18 @@ describe("the Banding Ground's shared ground (#1598)", () => {
     assert.equal(BANDING_GROUND.heightM, BANDING_GROUND_GROUND.heightM);
     assert.equal(BANDING_GROUND.cellM, BANDING_GROUND_GROUND.cellM);
     assert.equal(BANDING_GROUND.floorM, BANDING_GROUND_GROUND.floorM);
+  });
+});
+
+describe("the Western Margin's shared ground (#1612)", () => {
+  // Its cells are held to the server's by the shared painter's test below and
+  // pinned against the mission by `missionExposure.test.ts`; this holds the move.
+  it('is the one source: the map spreads the shared literal, not a copy', () => {
+    assert.equal(FIRST_TRENCH_MARGIN.regions, WESTERN_MARGIN_GROUND.regions);
+    assert.equal(FIRST_TRENCH_MARGIN.widthM, WESTERN_MARGIN_GROUND.widthM);
+    assert.equal(FIRST_TRENCH_MARGIN.heightM, WESTERN_MARGIN_GROUND.heightM);
+    assert.equal(FIRST_TRENCH_MARGIN.cellM, WESTERN_MARGIN_GROUND.cellM);
+    assert.equal(FIRST_TRENCH_MARGIN.floorM, WESTERN_MARGIN_GROUND.floorM);
   });
 });
 
