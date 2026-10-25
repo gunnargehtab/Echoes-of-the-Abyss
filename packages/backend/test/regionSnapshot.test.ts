@@ -6,8 +6,9 @@
  * and the client must never be the one choosing where a room's ground goes.
  * So the room says so, on the ground's own message: these hold that the
  * prologue names Sorrowgate at join, Intake the Banding Ground (#1598),
- * Exposure the Western Margin (#1612) and Trench Awakening the Shallow Band
- * (#1615), and the prologue again on a
+ * Exposure the Western Margin (#1612), Trench Awakening the Shallow Band
+ * (#1615), and Shift Change and Asset Recovery the two Ninefold maps (#1626),
+ * and the prologue again on a
  * reconnection after its ground has changed, with writes that replay to the
  * live cells and the live revision, and that every other room — Radicals on the same map included —
  * names nothing.
@@ -20,12 +21,16 @@ import {
   ATTENDING_INTAKE_HEADER,
   ATTENDING_TRENCH_AWAKENING_HEADER,
   BANDING_GROUND_REGION,
+  FACE_SIX_REGION,
+  LEDGER_ASSET_RECOVERY_HEADER,
   LEDGER_EXPOSURE_HEADER,
+  LEDGER_SHIFT_CHANGE_HEADER,
   PROLOGUE_SORROWGATE_HEADER,
   SEEDING_RADICALS_HEADER,
   SERVER_MSG,
   SHALLOW_BAND_REGION,
   SORROWGATE_REGION,
+  UPPER_WORKINGS_REGION,
   WESTERN_MARGIN_REGION,
   type TerrainMessage,
 } from '@echoes/shared';
@@ -97,6 +102,21 @@ describe('the region a room names (#1460)', () => {
     assert.equal(terrain.cols * terrain.cellM, SHALLOW_BAND_REGION.widthM);
     assert.equal(terrain.rows * terrain.cellM, SHALLOW_BAND_REGION.heightM);
   });
+
+  for (const [mission, region] of [
+    [LEDGER_SHIFT_CHANGE_HEADER, UPPER_WORKINGS_REGION],
+    [LEDGER_ASSET_RECOVERY_HEADER, FACE_SIX_REGION],
+  ] as const) {
+    it(`names ${region.id} on ${mission.id}'s ground at join (#1626)`, async () => {
+      const match = await room({ missionId: mission.id });
+      const client = fakeClient(mission.id);
+      match.onJoin(client as unknown as Client);
+      const terrain = lastTerrain(client);
+      assert.equal(terrain.region, region.id);
+      assert.equal(terrain.cols * terrain.cellM, region.widthM);
+      assert.equal(terrain.rows * terrain.cellM, region.heightM);
+    });
+  }
 
   it('names it again on a reconnection, with the ground as it now is', async () => {
     const prologue = await room({ missionId: PROLOGUE_SORROWGATE_HEADER.id });

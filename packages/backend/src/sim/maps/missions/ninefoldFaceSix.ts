@@ -21,9 +21,15 @@
  * the ground they stood on, the road from the Rail Head to the fall crosses the
  * same five grounds in the same order, and `missionAssetRecovery.test.ts`
  * holds both.
+ *
+ * **The ground is shared's** (`FACE_SIX_GROUND`, #1626), as the Shallow
+ * Band's is: the continuous world draws this map before any room exists
+ * (docs/world-map.md §7.9), so its regions are authored once, in
+ * `@echoes/shared`, and spread in here. What stays here is the spawn and the
+ * eruption sites.
  */
 
-import { Biome } from '@echoes/shared';
+import { FACE_SIX_GROUND } from '@echoes/shared';
 import type { MapDefinition } from '../types.ts';
 
 export const NINEFOLD_FACE_SIX: MapDefinition = {
@@ -31,101 +37,8 @@ export const NINEFOLD_FACE_SIX: MapDefinition = {
   name: 'Face Six',
   idealUse: 'The Ledger, mission one. A dying field, a fallen face, and a recovery writ.',
   seats: 1,
-  widthM: 4000,
-  heightM: 3000,
   doc: 'docs/mission-asset-recovery.md §11; docs/maps.md — Mission maps',
-  cellM: 250,
-  floorM: 1000,
-  // One row per row of §11's table, in the document's order. Later regions
-  // overwrite earlier ones, which is what lets the Field be painted whole and
-  // the wound cut into it — and the fall cut into the wound. Every number a
-  // shape states is a whole 250 m cell, and a cell is its region's when the
-  // shape holds its centre (docs/maps.md, "How a map is written").
-  regions: [
-    {
-      x: 0,
-      y: 0,
-      widthM: 4000,
-      heightM: 3000,
-      biome: Biome.ThermalVein,
-      floorM: 1000,
-      note: "The Field — the Vein's masked working ground. Painted first; everything else is cut into it. A box because it is the whole map",
-    },
-    {
-      x: 1500,
-      y: 0,
-      widthM: 1000,
-      heightM: 500,
-      biome: Biome.ThermalVein,
-      floorM: 700,
-      note: "The Rail Head — staging, the writ's delivery point, the extraction point. A built yard, so a box, and the same box the writ counts deliveries in",
-    },
-    {
-      shape: 'polygon',
-      points: [
-        [0, 750],
-        [250, 500],
-        [500, 500],
-        [750, 250],
-        [1250, 250],
-        [1500, 500],
-        [2500, 500],
-        [2750, 250],
-        [3250, 250],
-        [3500, 500],
-        [3750, 500],
-        [4000, 750],
-        [4000, 1000],
-        [3750, 1000],
-        [3250, 1500],
-        [750, 1500],
-        [250, 1000],
-        [0, 1000],
-      ],
-      biome: Biome.ThermalVein,
-      floorM: 850,
-      note: "The Terrace — the herd's feeding ground and the road's shallow shoulder. It rises about each of the vent line's two eruption sites, sags into an apron below each, and thins to the map's edges",
-    },
-    {
-      shape: 'polygon',
-      points: [
-        [1500, 1250],
-        [2500, 1250],
-        [2750, 1750],
-        [2750, 2000],
-        [1000, 2000],
-      ],
-      biome: Biome.ThermalVein,
-      floorM: 1100,
-      note: "The Works — the descent road, leaving the Terrace's lip under the Rail Head and fanning west into the old workings where it meets the Scar. PF 0.45: the column's own ground protects it here, and nothing tells the player this",
-    },
-    {
-      shape: 'polygon',
-      points: [
-        [1000, 2000],
-        [2500, 2000],
-        [3000, 2500],
-        [2500, 2750],
-        [2250, 2750],
-        [2250, 3000],
-        [1750, 3000],
-        [1750, 2750],
-        [1000, 2750],
-      ],
-      biome: Biome.AbyssalTrench,
-      floorM: 1150,
-      note: "The Scar — the blowout channel, torn east to a point and down past the fall to the field's south edge, where the vent line under the face blew out. Raw rock, PF 1.6, the wound that carries. Trench paint at Mid-Water depth: biome is acoustics, not band",
-    },
-    {
-      x: 1750,
-      y: 2250,
-      widthM: 500,
-      heightM: 500,
-      biome: Biome.CoralRuins,
-      floorM: 1150,
-      note: 'Face Six — the fall itself: collapsed structure, hard acoustic shadows, the chamber inside. Cut into the Scar, painted after it. A box because the mission closes the fall as this rectangle (§8), and on four cells an ellipse paints the same four',
-    },
-  ],
+  ...FACE_SIX_GROUND,
   // One spawn, at the Rail Head. The offsets address a pre-built Foundry a
   // mission never places: no economy here and nothing to build — the mission
   // seats its own column in the constructor.

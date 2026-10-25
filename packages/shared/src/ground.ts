@@ -738,6 +738,213 @@ export const SHALLOW_BAND_GROUND: MapGround = {
 };
 
 /**
+ * Face Six's ground — docs/mission-asset-recovery.md §11; docs/maps.md,
+ * "Mission maps". Placed in the Rift (docs/world-map.md §7.9, #1626),
+ * centred on the Ninefold Vein's anchor, a row south of the Upper Workings.
+ *
+ * The Vein's sixth face, fallen: the Field is Thermal Vein at PF 0.45 and the
+ * blowout channel through it raw rock at PF 1.6, so the one place the column
+ * must work is the one place the whole field hears it.
+ */
+export const FACE_SIX_GROUND: MapGround = {
+  widthM: 4000,
+  heightM: 3000,
+  cellM: 250,
+  floorM: 1000,
+  // One row per row of §11's table, in the document's order. Later regions
+  // overwrite earlier ones, which is what lets the Field be painted whole and
+  // the wound cut into it — and the fall cut into the wound. Every number a
+  // shape states is a whole 250 m cell, and a cell is its region's when the
+  // shape holds its centre (docs/maps.md, "How a map is written").
+  regions: [
+    {
+      x: 0,
+      y: 0,
+      widthM: 4000,
+      heightM: 3000,
+      biome: Biome.ThermalVein,
+      floorM: 1000,
+      note: "The Field — the Vein's masked working ground. Painted first; everything else is cut into it. A box because it is the whole map",
+    },
+    {
+      x: 1500,
+      y: 0,
+      widthM: 1000,
+      heightM: 500,
+      biome: Biome.ThermalVein,
+      floorM: 700,
+      note: "The Rail Head — staging, the writ's delivery point, the extraction point. A built yard, so a box, and the same box the writ counts deliveries in",
+    },
+    {
+      shape: 'polygon',
+      points: [
+        [0, 750],
+        [250, 500],
+        [500, 500],
+        [750, 250],
+        [1250, 250],
+        [1500, 500],
+        [2500, 500],
+        [2750, 250],
+        [3250, 250],
+        [3500, 500],
+        [3750, 500],
+        [4000, 750],
+        [4000, 1000],
+        [3750, 1000],
+        [3250, 1500],
+        [750, 1500],
+        [250, 1000],
+        [0, 1000],
+      ],
+      biome: Biome.ThermalVein,
+      floorM: 850,
+      note: "The Terrace — the herd's feeding ground and the road's shallow shoulder. It rises about each of the vent line's two eruption sites, sags into an apron below each, and thins to the map's edges",
+    },
+    {
+      shape: 'polygon',
+      points: [
+        [1500, 1250],
+        [2500, 1250],
+        [2750, 1750],
+        [2750, 2000],
+        [1000, 2000],
+      ],
+      biome: Biome.ThermalVein,
+      floorM: 1100,
+      note: "The Works — the descent road, leaving the Terrace's lip under the Rail Head and fanning west into the old workings where it meets the Scar. PF 0.45: the column's own ground protects it here, and nothing tells the player this",
+    },
+    {
+      shape: 'polygon',
+      points: [
+        [1000, 2000],
+        [2500, 2000],
+        [3000, 2500],
+        [2500, 2750],
+        [2250, 2750],
+        [2250, 3000],
+        [1750, 3000],
+        [1750, 2750],
+        [1000, 2750],
+      ],
+      biome: Biome.AbyssalTrench,
+      floorM: 1150,
+      note: "The Scar — the blowout channel, torn east to a point and down past the fall to the field's south edge, where the vent line under the face blew out. Raw rock, PF 1.6, the wound that carries. Trench paint at Mid-Water depth: biome is acoustics, not band",
+    },
+    {
+      x: 1750,
+      y: 2250,
+      widthM: 500,
+      heightM: 500,
+      biome: Biome.CoralRuins,
+      floorM: 1150,
+      note: 'Face Six — the fall itself: collapsed structure, hard acoustic shadows, the chamber inside. Cut into the Scar, painted after it. A box because the mission closes the fall as this rectangle (§8), and on four cells an ellipse paints the same four',
+    },
+  ],
+};
+
+/**
+ * The Upper Workings' ground — docs/mission-shift-change.md §11; docs/maps.md,
+ * "Mission maps". Placed in the Rift (docs/world-map.md §7.9, #1626), its
+ * rail head on Fivewell, a row north of Face Six.
+ *
+ * The producing Vein, straddling the layer: floors above the thermocline
+ * north of the workings, floors below it south, and no region whose water
+ * spans it, so every crossing is a climb somebody ordered.
+ */
+export const UPPER_WORKINGS_GROUND: MapGround = {
+  widthM: 4000,
+  heightM: 3000,
+  cellM: 250,
+  floorM: 1100,
+  // One row per row of §11's table, in the document's order. Later regions
+  // overwrite earlier ones; every number a shape states is a whole 250 m cell,
+  // and a cell is its region's when the shape holds its centre (#1142). Every
+  // spawn, field, hull and beat the mission places stands on the ground it
+  // stood on when these were all rectangles, an idle shift walks the tracks it
+  // walked on them (#1171), and `missionShiftChange.test.ts` pins both.
+  regions: [
+    {
+      x: 0,
+      y: 0,
+      widthM: 4000,
+      heightM: 3000,
+      biome: Biome.ThermalVein,
+      floorM: 1100,
+      note: "The Field — the Vein's masked working ground. Painted first; everything else is cut into it",
+    },
+    // A box, because it is built: and the mission's extract region is this same
+    // rectangle, so the berths the watches are counted in are the berths drawn.
+    {
+      x: 1500,
+      y: 0,
+      widthM: 1000,
+      heightM: 500,
+      biome: Biome.ThermalVein,
+      floorM: 850,
+      note: 'The Rail Head — the Fivewell rail transfer: berths, registry office, the transfer point. Above the layer',
+    },
+    // A box, because it is built: a graded freight road, and both passes walk
+    // its whole length on lines that cross every cell of it.
+    {
+      x: 0,
+      y: 500,
+      widthM: 4000,
+      heightM: 500,
+      biome: Biome.ThermalVein,
+      floorM: 950,
+      note: "The High Road — the audit's ground: the freight road along the workings' shoulder, above the layer",
+    },
+    // A basin rather than a band: its north edge draws back at both ends, and
+    // never enters the shoulder row, so the climb to the road is as long as it
+    // was. Its south edge is the rectangle's, straight along the faces' heads:
+    // an ellipse there dipped into the Field between the faces and changed how
+    // the packs reach the muster (#1171).
+    {
+      shape: 'polygon',
+      points: [
+        [0, 1500],
+        [750, 1500],
+        [1000, 1250],
+        [3000, 1250],
+        [3250, 1500],
+        [4000, 1500],
+        [4000, 2000],
+        [0, 2000],
+      ],
+      biome: Biome.ThermalVein,
+      floorM: 1300,
+      note: 'The Downworks — the working level below the layer: the refinery and the roads between faces, with the pack above the layer over its east end',
+    },
+    // An old cut, worked down the slope past the last seam.
+    {
+      shape: 'polygon',
+      points: [
+        [250, 2000],
+        [1250, 2000],
+        [1250, 2500],
+        [750, 2750],
+        [500, 2500],
+      ],
+      biome: Biome.ThermalVein,
+      floorM: 1350,
+      note: 'Face Two — the dying face: the muster, the last seam, and the thin field',
+    },
+    // A fresh, round working opening off the Downworks' south edge.
+    {
+      shape: 'ellipse',
+      x: 2500,
+      y: 2000,
+      widthM: 1250,
+      heightM: 750,
+      biome: Biome.ThermalVein,
+      floorM: 1350,
+      note: 'Face Five — the producing face the quota leans on: the rich field',
+    },
+  ],
+};
+
+/**
  * The public ground of each placed map, by map id. Here rather than beside
  * the atlas (`rift.ts`) because `worldRegionProblems` compares two placed
  * maps' cells, and `world.ts` cannot import the file that imports it.
@@ -747,4 +954,6 @@ export const PLACED_GROUND: Readonly<Record<string, MapGround>> = {
   'banding-ground': BANDING_GROUND_GROUND,
   'first-trench-margin': WESTERN_MARGIN_GROUND,
   'shallow-band': SHALLOW_BAND_GROUND,
+  'ninefold-face-six': FACE_SIX_GROUND,
+  'ninefold-workings': UPPER_WORKINGS_GROUND,
 };
