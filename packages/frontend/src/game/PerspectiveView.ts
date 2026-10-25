@@ -1866,7 +1866,11 @@ export class PerspectiveView {
       return out;
     }
     const y = depthM === null ? this.groundYAt(xM, yM) : depthToWorldY(depthM);
-    const point = PROJECT_TMP.set(xM, y, yM);
+    return this.projectWorld(PROJECT_TMP.set(xM, y, yM), out);
+  }
+
+  /** A point in world space to pixels, as `projectPoint` reports it. Consumes `point`. */
+  private projectWorld(point: Vector3, out: ProjectedPoint): ProjectedPoint {
     const viewDistance = point.distanceTo(this.camera.position);
     point.project(this.camera);
     const pxPerM =
@@ -1929,6 +1933,27 @@ export class PerspectiveView {
     if (this.ink.size === 0 || !this.ink.covers(sx, sy)) return false;
     const y = depthM === null ? this.groundYAt(xM, yM) : depthToWorldY(depthM);
     return this.ink.hides(sx, sy, xM, y, yM);
+  }
+
+  /**
+   * Where an own structure's model is drawn, as pixels: the centre of its
+   * solid, not the footing `projectPoint` gives for its plan position.
+   * docs/ui-ux.md §3.5 rings the figure as drawn, and a structure stands on
+   * its depth, so at the 55° home frame its roof rises well above the footing
+   * on screen and a ring about the footing crosses it (#1583). A hull hangs by
+   * its centre, so its plan position already is its drawn centre. Null while
+   * the structure is a sprite, or not yet synced, and the caller keeps the
+   * footing.
+   */
+  structureCentre(id: number, out: ProjectedPoint): ProjectedPoint | null {
+    if (this.renderer === null) return null;
+    const handle = this.structureHandles.get(id);
+    // The sync hides the sprite exactly when the model is showing.
+    const model = handle === undefined || handle.mesh.visible ? null : handle.model;
+    if (model === null) return null;
+    model.root.updateMatrix();
+    const centre = columnsFor(model.template).box.getCenter(PROJECT_TMP);
+    return this.projectWorld(centre.applyMatrix4(model.root.matrix), out);
   }
 
   /**

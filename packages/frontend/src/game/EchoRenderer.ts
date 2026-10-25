@@ -1246,7 +1246,9 @@ export function crackleAmplitude(sig: number): number {
  *
  * `inverseScale` puts the strokes in screen pixels while the radius stays in
  * the metres the caller drew its figure at: a line on an instrument takes
- * §11's UI scale, and what it captions does not.
+ * §11's UI scale, and what it captions does not. `cx` and `cy` are the
+ * figure's drawn centre in the same local space, which for a structure is
+ * not the symbol's origin (`drawStructures`).
  */
 function drawLoudnessCollar(
   g: Graphics,
@@ -1254,12 +1256,14 @@ function drawLoudnessCollar(
   sig: number,
   inverseScale: number,
   nowMs: number,
-  still: boolean
+  still: boolean,
+  cx = 0,
+  cy = 0
 ): void {
   const px = inverseScale;
   // The dial first, so the sweep is read as a proportion rather than as a
   // stray arc — and so an emitter at SIG 0 still shows where its gauge is.
-  g.circle(0, 0, radius).stroke({
+  g.circle(cx, cy, radius).stroke({
     width: LOUDNESS_COLLAR.TRACK_PX * px,
     color: UI.text,
     alpha: LOUDNESS_COLLAR.TRACK_ALPHA,
@@ -1295,8 +1299,8 @@ function drawLoudnessCollar(
       const noise =
         Math.sin(angle * 23.7 + seed * 1.9) * Math.sin(angle * 11.3 - seed * 0.7) * pinned;
       const r = radius + noise * amplitude * px;
-      const x = Math.cos(angle) * r;
-      const y = Math.sin(angle) * r;
+      const x = cx + Math.cos(angle) * r;
+      const y = cy + Math.sin(angle) * r;
       if (i === 0) g.moveTo(x, y);
       else g.lineTo(x, y);
     }
@@ -1653,6 +1657,8 @@ export class EchoRenderer {
   private frameNowMs = 0;
   /** Scratch for `drawnPosition`, consumed before the next call. */
   private readonly drawnScratch = { x: 0, y: 0, depth: 0 };
+  /** Scratch for a structure's drawn centre (`drawStructures`), consumed at once. */
+  private readonly centreScratch: ProjectedPoint = { x: 0, y: 0, pxPerM: 1, visible: false };
   private readonly projectRing: ProjectedPoint[] = Array.from({ length: PROJECT_RING }, () => ({
     x: 0,
     y: 0,
@@ -6043,8 +6049,21 @@ export class EchoRenderer {
       const building = structure.buildProgress < 1;
       const alpha = building ? AGENT_OUTLINE_ALPHA.scaffold : 0.9;
 
+      // The rings that caption the figure sit about its model as drawn, not
+      // its footing (docs/ui-ux.md §3.5, #1583): the model stands on the
+      // seabed, so its roof climbs the screen from the footing and a ring
+      // about the footing ran across it. Both rings move, not the collar
+      // alone: at the 55° home frame a structure's centre sits further up the
+      // screen than the collar clears the selection ring by (a Foundry's by
+      // about 39 m against 19 m), so moving one would cross the other. The bars and the rally course stay on the footing. The
+      // centre's own scale replaces the footing's: it is nearer the eye.
+      const c = this.conn?.structureCentre(structure.id, this.centreScratch) ?? null;
+      const cx = c === null ? 0 : (c.x - p.x) * inverseScale;
+      const cy = c === null ? 0 : (c.y - p.y) * inverseScale;
+      const ringScale = c === null ? 1 : c.pxPerM * inverseScale;
+
       if (isSelected) {
-        g.circle(0, 0, radius + SELECTION_GAP_M.STRUCTURE).stroke({
+        g.circle(cx, cy, (radius + SELECTION_GAP_M.STRUCTURE) * ringScale).stroke({
           width: 2 * inverseScale,
           color: UI.text,
           alpha: INSTRUMENT_OUTLINE_ALPHA.selectionRing,
@@ -6097,11 +6116,13 @@ export class EchoRenderer {
       // leaving it would have left the HUD saying loudness two ways.
       drawLoudnessCollar(
         g,
-        collarRadius(radius, SELECTION_GAP_M.STRUCTURE),
+        collarRadius(radius, SELECTION_GAP_M.STRUCTURE) * ringScale,
         structure.sig,
         inverseScale,
         this.frameNowMs,
-        this.reducedMotion
+        this.reducedMotion,
+        cx,
+        cy
       );
 
       const barWidth = radius * 2;
