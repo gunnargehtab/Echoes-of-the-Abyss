@@ -1796,7 +1796,7 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       heightM: 1_750,
       biome: AbyssalTrench,
       floorM: 3_200,
-      note: 'The galleries’ Ninth, coarsely',
+      note: 'The galleries’ Step and benches, coarsely',
     },
     {
       x: 23_250,
@@ -1820,11 +1820,12 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
   // The attending galleries' 2,500 m (#1624). The map is Sufficiency's
   // southern face over the Ninth: the Lower Rows, the galleries, the benches
   // and the Axis leaving south through the Sill. The overview draws the
-  // galleries a row south of the map's and the axis on to the sill. The
-  // surround carries the Lower Rows and the Ninth a kilometre west and east,
-  // the Rows a row north, the trench's south shoulders on, and the Ninth and
-  // the Sill two rows south. North, its detail covers the Upper Terraces'
-  // south, and draws it coarsely, as their map does.
+  // galleries half a kilometre north of the map's and the axis on to the sill.
+  // The surround carries the Lower Rows and the Step and its benches a
+  // kilometre west and east, the Rows a row north, the trench's 3,400 m
+  // shoulders on round its south corners, and the Step and the Sill two rows
+  // south. North, its detail covers the Upper Terraces' south, and draws it
+  // coarsely, as their map does.
   'attending-galleries': [
     {
       x: 22_500,
@@ -1878,7 +1879,7 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       heightM: 3_750,
       biome: AbyssalTrench,
       floorM: 3_200,
-      note: 'The Ninth, a kilometre west and east and two rows south',
+      note: 'The Step and its benches, a kilometre west and east and two rows south',
     },
     {
       x: 21_000,
