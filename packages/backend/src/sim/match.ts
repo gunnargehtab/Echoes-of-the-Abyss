@@ -1248,16 +1248,9 @@ export class Match {
   }
 
   /**
-   * Go there — and, with a depth, go there in three dimensions (#1132): a
-   * click is a point in the water (docs/ui-ux.md §9), and a move onto the
-   * ground follows it (docs/systems-depth.md §2). Without one the move is a
-   * place alone and the hull keeps its depth, which is how the commander walks
-   * and a mission's beats move.
-   */
-  /**
    * One move given to several hulls at once — the room's `move`, which names
    * every hull the player had selected. The same as `orderMove` on each, with
-   * one addition: a hull sent with a Sorrowgate tender keeps the tender's pace
+   * one addition: a hull sent with a mission's tender keeps the tender's pace
    * (docs/mission-sorrowgate.md §8, #1594), which only a move that knows its
    * whole party can decide. Decided once, before any of them is applied, so
    * the answer does not depend on which hull was ordered first.
@@ -1276,6 +1269,13 @@ export class Match {
     }
   }
 
+  /**
+   * Go there — and, with a depth, go there in three dimensions (#1132): a
+   * click is a point in the water (docs/ui-ux.md §9), and a move onto the
+   * ground follows it (docs/systems-depth.md §2). Without one the move is a
+   * place alone and the hull keeps its depth, which is how the commander walks
+   * and a mission's beats move.
+   */
   orderMove(
     slot: number,
     eid: number,
@@ -1484,26 +1484,24 @@ export class Match {
     x = this.world.terrain.clampXM(x);
     y = this.world.terrain.clampYM(y);
 
-    // The pace is bound to the point, so a queued leg takes it up when the
-    // queue reaches it and any order elsewhere lets it lapse (`MoveOrder`).
-    // Only an unqueued move with no tender clears it outright: a queued one
-    // would wipe the pace of a leg still waiting in the plan.
-    if (paceEid !== 0) {
-      MoveOrder.paceEid[eid] = paceEid;
-      MoveOrder.paceX[eid] = x;
-      MoveOrder.paceY[eid] = y;
-    } else if (!queued) {
-      MoveOrder.paceEid[eid] = 0;
-    }
-
     if (queued) {
-      enqueue(
-        this.world,
-        eid,
-        depthM === undefined ? { kind: 'move', x, y } : { kind: 'move', x, y, depth: depthM }
-      );
+      // The pace rides the leg and is bound when the queue begins it
+      // (`orderQueue.ts`), so the leg under way keeps its own (#1594).
+      enqueue(this.world, eid, {
+        kind: 'move',
+        x,
+        y,
+        ...(depthM === undefined ? {} : { depth: depthM }),
+        ...(paceEid === 0 ? {} : { pace: paceEid }),
+      });
       return;
     }
+
+    // Bound to the point, so any later order elsewhere lets it lapse without
+    // being cleared (`MoveOrder`); a move with no tender runs at its own.
+    MoveOrder.paceEid[eid] = paceEid;
+    MoveOrder.paceX[eid] = x;
+    MoveOrder.paceY[eid] = y;
 
     // An unqueued order replaces the whole plan, not just its current leg.
     clearQueue(this.world, eid);

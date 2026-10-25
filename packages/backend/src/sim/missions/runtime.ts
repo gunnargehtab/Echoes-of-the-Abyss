@@ -741,7 +741,8 @@ export class MissionRuntime {
 
   /**
    * The tender the rest of one move keeps pace with, or 0 for none
-   * (docs/mission-sorrowgate.md §8, #1594).
+   * (docs/mission-sorrowgate.md §8, #1594). The format's, not Sorrowgate's:
+   * every mission with an escort rule has it.
    *
    * A Light Scout outruns a Harvester, so a flight sent north in one order with
    * its tender left it past the escort radius inside a minute, and the tender
@@ -749,7 +750,7 @@ export class MissionRuntime {
    * both keeps the hulls with the slower; ties go to the first named, which the
    * replay records in order. A tender the hold refuses is not one the move
    * sends: pacing the flight to a hull that stays put would strand both.
-   * Zero where the escort rule is off, which is every mission but this one.
+   * Zero where the escort rule is off: every mission but the five that author one.
    */
   paceFor(slot: number, eids: readonly number[]): number {
     if (slot !== this.definition.playerSlot || this.definition.escortRadiusM <= 0) return 0;

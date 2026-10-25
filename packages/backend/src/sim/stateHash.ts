@@ -473,6 +473,8 @@ export function hashWorld(world: SimWorld): number {
         h = mixU32(h, order.depth === undefined ? 0 : 1);
         if (order.depth !== undefined) h = mixFloat(h, order.depth);
       }
+      // And the pace a queued move will take up when it begins (#1594).
+      if (order.kind === 'move') h = mixU32(h, ordinalOf.get(order.pace ?? 0) ?? -1);
     }
   }
 

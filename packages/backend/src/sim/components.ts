@@ -53,7 +53,7 @@ export const MoveOrder = defineComponent({
   active: Types.ui8,
   /**
    * The hull this one keeps pace with, 0 for its own pace — a hull sent in
-   * one move with a Sorrowgate tender travels at the tender's speed
+   * one move with a mission's tender travels at the tender's speed
    * (docs/mission-sorrowgate.md §8, #1594). Bound to the point the paced
    * order went to (`paceX`, `paceY`) and read only while `x`, `y` still name
    * it: eighteen places write a move order, and a pace that had to be cleared

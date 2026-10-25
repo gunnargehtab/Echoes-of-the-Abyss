@@ -154,8 +154,8 @@ export function projectMissionView(
     // every pass, and a payload that aliased it would change under a client
     // that had not been sent anything.
     held: state.held.map((hold): MovementHold => ({ ...hold })),
-    // Absent until a tender is loaded, `struck`'s arrangement: no other mission
-    // has an escort rule, and its view should not grow a field to say so.
+    // Absent until a tender is loaded, `struck`'s arrangement: most missions
+    // have no escort rule, and their views should not grow a field to say so.
     ...(state.ears === undefined || state.ears.length === 0
       ? {}
       : { ears: { radiusM: definition.escortRadiusM, unitIds: [...state.ears] } }),

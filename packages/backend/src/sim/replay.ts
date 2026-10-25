@@ -46,10 +46,11 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
- * 32: a hull sent with a Sorrowgate tender keeps its pace (#1594). A move
+ * 32: a hull sent with a mission's tender keeps its pace (#1594). A move
  * names the tender it was given with, and movement caps the hull's speed at
- * the tender's while the order stands; the fingerprint mixes the pace. A v31
- * file's flight replays at its own speed and leaves its tenders behind.
+ * the tender's while the order stands, a queued leg included; the fingerprint
+ * mixes the pace. A v31 file's escorts, in any of the five missions with an
+ * escort rule, replay at their own speed and leave their tenders behind.
  *
  * 31: a burned canopy closes as slowly as it opened (#1425). A field the
  * cutters opened stayed open only while `burnedS` sat at full, so it shut on

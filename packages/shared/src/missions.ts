@@ -1552,8 +1552,8 @@ export interface MovementHold {
 }
 
 /**
- * The hulls a mission's escort rule listens for, and how far — a Sorrowgate
- * tender's ears (docs/mission-sorrowgate.md §8, #1594). The rule is a distance,
+ * The hulls a mission's escort rule listens for, and how far — a tender's
+ * ears (docs/mission-sorrowgate.md §8, #1594). The rule is a distance,
  * and the chart draws it as one: a ring round each tender, so a player can see
  * where an escort has to be rather than read it in a gloss.
  *
@@ -1713,7 +1713,8 @@ export interface MissionView {
   held: readonly MovementHold[];
   /**
    * The player's own hulls the escort rule listens for — see `EscortEars`.
-   * Absent until a tender is loaded, which is every mission but one.
+   * Absent until a tender is free to move, and in every mission without an
+   * escort rule — all but five.
    */
   ears?: EscortEars;
   /**

@@ -236,7 +236,10 @@ function roundOwnCarrier(world: SimWorld, eid: number, px: number, py: number): 
  * and an escort that waited for the tender to move would wait beside nothing.
  * Read only while the hull's order still names the point it was paced to, and
  * only while the pace hull is still the same side's hull: an id recycled to
- * somebody else's hull is not the tender this move was given with.
+ * somebody else's hull is not the tender this move was given with. One case it
+ * does not catch: a tender that dies mid-order and whose id goes to a new hull
+ * of the same side, which then sets the pace at its own kind's speed until the
+ * order ends.
  */
 function paceOf(world: SimWorld, eid: number): number {
   const pace = MoveOrder.paceEid[eid]!;

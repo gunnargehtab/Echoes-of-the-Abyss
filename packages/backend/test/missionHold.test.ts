@@ -323,6 +323,21 @@ describe('a hull sent with a tender keeps its pace (#1594)', () => {
     );
   });
 
+  it('keeps the pace on a queued leg, and on the leg under way when it is queued', () => {
+    // A shift-click through the lock is two legs: the pace rides each, so
+    // queuing the second neither takes it off the first nor leaves it off the
+    // second (#1594).
+    const h = harness();
+    h.settle(3, 'close');
+    const ids = [h.escortId(), h.tenderId()];
+    h.match.orderMoves(PLAYER, ids, OUT.x, OUT.y);
+    h.match.orderMoves(PLAYER, ids, OUT.x + 700, OUT.y, true);
+    const gap = widest(h, 34);
+    assert.ok(gap < HOLD_MISSION.escortRadiusM, `the escort got ${gap.toFixed(0)} m away`);
+    assert.equal(h.heldReason(), null, 'the tender is still escorted');
+    assert.ok(tenderAt(h).x > OUT.x + 300, 'and the tender is well along its second leg');
+  });
+
   it('leaves the tender behind when the two are sent apart, which is the trap', () => {
     // The control, and the state #1594 found: the same destination, given as
     // two orders, has nothing to say the hulls are travelling together.

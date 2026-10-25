@@ -44,7 +44,13 @@ const ordered = defineQuery([Unit, MoveOrder, Position]);
  * An attack's `target` is 0 for a phantom, which has no entity behind it.
  */
 export type QueuedOrder =
-  | { kind: 'move'; x: number; y: number; depth?: number }
+  /**
+   * `pace`: the tender this leg keeps pace with, by entity (#1594). Carried on
+   * the leg rather than bound when it is queued, because a hull has one pace
+   * slot and the leg under way is still using it. Server-side only: the
+   * snapshot copies a queued leg's place and depth and nothing else.
+   */
+  | { kind: 'move'; x: number; y: number; depth?: number; pace?: number }
   | { kind: 'attackMove'; x: number; y: number; depth?: number }
   | { kind: 'attack'; x: number; y: number; target: number }
   | { kind: 'harvest'; x: number; y: number; node: number };
@@ -91,6 +97,11 @@ function begin(world: SimWorld, eid: number, order: QueuedOrder): void {
       MoveOrder.x[eid] = order.x;
       MoveOrder.y[eid] = order.y;
       MoveOrder.active[eid] = 1;
+      // The leg's own pace, bound to its own point as an unqueued move binds
+      // it (Match.applyMove): a leg queued without one runs at the hull's own.
+      MoveOrder.paceEid[eid] = order.pace ?? 0;
+      MoveOrder.paceX[eid] = order.x;
+      MoveOrder.paceY[eid] = order.y;
       // A queued move is the player parking the hull, exactly as an immediate
       // one is (Match.applyMove) — so a stalled harvester stops being stalled
       // the moment its leg begins, rather than driving the player's order with
