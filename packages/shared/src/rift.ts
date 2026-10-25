@@ -1308,13 +1308,13 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
   ],
   // The Kell Shoulder's 2,500 m (#1633). The map is the bare rise between
   // Marr's terraces and Kell's, the Grid Spur across it, Kell Face at its east
-  // end and the Kell Slope along its south. North, its detail covers Marr
-  // Plateau's map: the surround draws Marr's Terrace, Drop and Landing there as
-  // Marr's own surround does, so the shoulder alone does not draw the
-  // overview's narrower terrace. The shoulder's base runs on round the map, the
-  // Holdfast Gate north to the Drop's foot and the Marr Approach west. The Grid
-  // Spur runs on west and east, Kell Face a kilometre east, and the Kell Slope
-  // two rows south toward Kell's terraces.
+  // end and the Kell Slope along its south. North, its detail covers all but
+  // Marr Plateau's top two rows: south of the seam the surround draws Marr's
+  // Terrace, Drop and Landing as Marr's own surround does, so the overview's
+  // narrower terrace shows only in the seam. The shoulder's base runs on round
+  // the map, the Holdfast Gate north to the Drop's foot and the Marr Approach
+  // west. The Grid Spur runs on west and east, Kell Face a kilometre east, and
+  // the Kell Slope two rows south toward Kell's terraces.
   'kell-shoulder': [
     {
       x: 5_000,

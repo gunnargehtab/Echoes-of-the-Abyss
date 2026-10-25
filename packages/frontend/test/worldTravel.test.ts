@@ -855,7 +855,8 @@ describe('which launches travel, and when a travel joins (§7.6)', () => {
       'The Dome is (#1628)'
     );
     assert.equal(travelsFirst('campaign', 'ledger-baffle'), false, 'Baffle waits (#1505)');
-    // A shared map's missions all travel (#1505): both of Marr's (#1630).
+    // A shared map's missions all travel (#1505): both of Marr's (#1630), and
+    // both of the Kell Shoulder's (#1633).
     for (const mission of [SEEDING_TEND_HEADER, SEEDING_CONVOCATION_HEADER]) {
       assert.equal(travelsFirst('campaign', mission.id), true, `${mission.id} is (#1630)`);
     }
