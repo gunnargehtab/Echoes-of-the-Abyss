@@ -824,6 +824,7 @@
   color: var(--neon-magenta);
   font-size: 0.72rem;
   letter-spacing: 0.18em;
+  white-space: nowrap;
   box-shadow: 0 0 10px rgba(255, 61, 166, 0.22);
 }
 
