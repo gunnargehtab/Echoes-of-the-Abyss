@@ -319,6 +319,7 @@ export const groups = {
   'One world': 'One ocean',
   'Life in the water': 'Ships that move like ships',
   'What the chart survey found': 'A cleaner chart',
+  Audio: 'Sound',
 };
 
 export const items = {
@@ -554,7 +555,24 @@ export const items = {
   1505: 'Every other mission and map placed in the one continuous Rift',
   1557: 'Map markings painted over ships and buildings instead of behind them',
   1560: 'Sand ripples that all run the same way, on every map',
+  1583: 'The sound ring drawn across the roof of the building it surrounds',
+  1573: 'Seabed scour marks that still ran the old way after the sand ripples turned',
+  1582: 'Four ships made the Directorate’s own, as its roster says',
+  1599: 'A score that plays through the match and swells when your fleet is loud',
+  1431: 'The Bulwark’s four stacks standing clear of the deck',
+  1433: 'A seam on the Derrick running inside its own hull',
+  1481: 'The Derrick’s seam hanging out past the ends of its hull',
+  1447: 'Hull trim that kinked on tapering round parts',
+  1501: 'Squat round parts of a hull wrapped the wrong way',
+  1450: 'A look at which lighting and shader tools the project should borrow',
+  1483: 'A set of decisions left for the owner after a review of the loop’s sessions',
   // Phase 16
+  1593: 'The prologue’s orders panel cutting off its list of withheld orders',
+  1594: 'The prologue never saying the way north is the service lock',
+  // Later
+  1600: 'Whether picking and ordering should make any interface sound',
+  1601: 'How big the game’s sound files may be, and how they load',
+  1603: 'The score going almost silent on a phone’s speaker setting',
   1574: 'The game online, played by people who did not build it, and its first tagged version',
 };
 
