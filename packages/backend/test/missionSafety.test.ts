@@ -317,6 +317,9 @@ describe('a mission view says only what the player could have worked out', () =>
       'markers',
       'locks',
       'held',
+      // A tender's ears (#1594): own hull ids and the authored radius, held
+      // to both by `holds only hulls the observer owns` below.
+      'ears',
       'sigBudget',
       'debtS',
     ]);
@@ -378,6 +381,9 @@ describe('a mission view says only what the player could have worked out', () =>
         }
         assert.equal(typeof shown.reason, 'number', 'a hold reason is a code, never prose');
       }
+      if (sentView.ears !== undefined) {
+        assert.deepEqual(Object.keys(sentView.ears).sort(), ['radiusM', 'unitIds']);
+      }
     }
   });
 
@@ -388,14 +394,30 @@ describe('a mission view says only what the player could have worked out', () =>
     // from — because a hold on a hull the player cannot see would be a contact
     // handed over in a friendlier field.
     let seen = 0;
+    let heard = 0;
     for (const { view, own } of sentViews()) {
       const mine = new Set(own.units.map((unit) => unit.id));
       for (const hold of view.held) {
         assert.ok(mine.has(hold.unitId), `tick ${view.tick}: held a hull the player does not own`);
         seen++;
       }
+      // The tenders' ears (#1594) name entities too, on the same terms, and
+      // only from a tender's load: the court does not hand over its freight
+      // before 11:20, and a ring round it would.
+      for (const id of view.ears?.unitIds ?? []) {
+        assert.ok(mine.has(id), `tick ${view.tick}: drew ears round a hull the player does not own`);
+        assert.ok(
+          view.tick >= 11 * 60 * SIM.TICK_HZ + 20 * SIM.TICK_HZ,
+          `tick ${view.tick}: drew ears round a tender before it was loaded`
+        );
+        heard++;
+      }
+      if (view.ears !== undefined) {
+        assert.equal(view.ears.radiusM, PROLOGUE_SORROWGATE.escortRadiusM);
+      }
     }
     assert.ok(seen > 0, 'the Prologue holds its tenders, so this asserted nothing');
+    assert.ok(heard > 0, 'no tender ever had ears on the wire, so this asserted nothing');
   });
 });
 

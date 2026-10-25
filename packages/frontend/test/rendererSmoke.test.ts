@@ -5174,6 +5174,65 @@ describe("a mission's named markers on the chart (#1611)", () => {
     }
   });
 
+  // #1594: a loaded tender wears its escort radius, cyan while an escort is
+  // inside it and magenta while the hold keeps it for want of one.
+  async function eared(held: boolean) {
+    // Only the strokes the ears pass makes: the ring layer carries every
+    // other instrument too, and their cyan would answer for a missing ring.
+    const strokes: number[] = [];
+    const { world, traced } = await charted(() => view({}));
+    const chart = world.chart as unknown as Chart & {
+      ringLayer: Graphics;
+      drawTenderEars(g: Graphics): void;
+      drawnPosition(unit: OwnUnit): { x: number; y: number };
+    };
+    const hull = chart.units[0]!;
+    const ears = chart.drawTenderEars.bind(chart);
+    chart.drawTenderEars = (g) => {
+      const stroke = g.stroke.bind(g);
+      g.stroke = ((style: { color: number }) => {
+        strokes.push(style.color);
+        return stroke(style);
+      }) as typeof g.stroke;
+      try {
+        ears(g);
+      } finally {
+        g.stroke = stroke;
+      }
+    };
+    world.chart.setMissionMarkers(
+      view({
+        ears: { radiusM: 400, unitIds: [hull.id] },
+        held: held ? [{ unitId: hull.id, reason: MovementHoldReason.Unescorted }] : [],
+      })
+    );
+    world.frame(2);
+    const rings = traced.filter((ring) => ring.radiusM === 400);
+    return { world, rings, strokes, hull: chart.drawnPosition(hull) };
+  }
+
+  it('rings a tender with its ears, round where the hull is drawn', async () => {
+    const { world, rings, strokes, hull } = await eared(false);
+    try {
+      assert.equal(rings.length > 0, true, 'a loaded tender wears its escort radius');
+      assert.deepEqual({ x: rings[0]!.x, y: rings[0]!.y }, { x: hull.x, y: hull.y });
+      assert.ok(strokes.includes(UI.accent), 'in cyan while an escort answers it');
+      assert.ok(!strokes.includes(UI.glassStroke), 'and not in the asking magenta');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('turns the ears magenta while the tender is held for want of an escort', async () => {
+    const { world, rings, strokes } = await eared(true);
+    try {
+      assert.ok(rings.length > 0, 'a held tender still wears its ears');
+      assert.ok(strokes.includes(UI.glassStroke), 'in the magenta that asks');
+    } finally {
+      world.teardown();
+    }
+  });
+
   it('takes the way off with the row', async () => {
     const { world, traced, names } = await charted((at) =>
       view({ objectives: [tender(ObjectiveStatus.Met)], markers: [ARCH(at), LOCK(at)] })

@@ -62,6 +62,7 @@ import {
   LID,
   maxAudibleRangeM,
   MissionOutcome,
+  MovementHoldReason,
   ObjectiveStatus,
   onTheGround,
   ORDNANCE,
@@ -105,6 +106,7 @@ import {
   type GameOverPayload,
   type HazardState,
   type JellyCluster,
+  type EscortEars,
   type MissionAbility,
   type MissionMarker,
   type MissionResultPayload,
@@ -1878,7 +1880,14 @@ export class EchoRenderer {
    * names. Empty in a skirmish, and in every mission that names no marker.
    */
   private missionMarks: readonly MissionMarker[] = [];
-  /** What `missionMarks` was built from, so an unchanged view repaints nothing. */
+  /**
+   * The tenders the escort rule listens for, and how far (`EscortEars`,
+   * docs/mission-sorrowgate.md §8, #1594). Null in every mission without one.
+   */
+  private missionEars: EscortEars | null = null;
+  /** The tenders among them the hold keeps for want of an escort: the ring that asks. */
+  private missionEarsAsking: ReadonlySet<number> = new Set();
+  /** What `missionMarks` and `missionEars` were built from, so an unchanged view repaints nothing. */
   private missionMarksKey = '';
   /** One pooled name per drawn marker, in the overlay under the HUD. */
   private readonly markNames = new Container();
@@ -4992,10 +5001,19 @@ export class EchoRenderer {
         .filter((id) => id !== undefined)
     );
     const marks = view.markers.filter((marker) => marker.name !== undefined && open.has(marker.id));
-    const key = JSON.stringify(marks);
+    // The ears ride the same key, with the holds that colour them: a tender
+    // losing its escort changes the ring and nothing else in this view.
+    const ears = view.ears ?? null;
+    const key = JSON.stringify([marks, ears, view.held]);
     if (key === this.missionMarksKey) return;
     this.missionMarksKey = key;
     this.missionMarks = marks;
+    this.missionEars = ears;
+    this.missionEarsAsking = new Set(
+      view.held
+        .filter((hold) => hold.reason === MovementHoldReason.Unescorted)
+        .map((hold) => hold.unitId)
+    );
   }
 
   setMissionOver(payload: MissionResultPayload): void {
@@ -8328,6 +8346,7 @@ export class EchoRenderer {
    */
   private drawMissionMarks(): void {
     const g = this.ringLayer;
+    this.drawTenderEars(g);
     const names = this.markNames.children as Text[];
     let shown = 0;
     for (const mark of this.missionMarks) {
@@ -8370,6 +8389,36 @@ export class EchoRenderer {
       shown++;
     }
     for (let i = shown; i < names.length; i++) names[i]!.visible = false;
+  }
+
+  /**
+   * A tender's ears — docs/mission-sorrowgate.md §8 (#1594). A tender moves only
+   * while a hull of the flight is within 400 m of it, and a newcomer who sent
+   * the flight on ahead watched the tender stop with nothing on screen to say
+   * how far was too far. So each loaded tender wears the radius: cyan while an
+   * escort is inside it, the interface's magenta while the tender is held for
+   * want of one, which is the ring asking (map-visuals.md §5's voice).
+   *
+   * Rung 6, beside the mission's markers: the player's own freight and an
+   * authored number. A course on the chart floor round where the hull is drawn,
+   * so it glides with it, cut at the rim like every ground ring.
+   */
+  private drawTenderEars(g: Graphics): void {
+    const ears = this.missionEars;
+    if (ears === null) return;
+    for (const id of ears.unitIds) {
+      const unit = this.units.find((own) => own.id === id);
+      if (unit === undefined) continue;
+      const at = this.drawnPosition(unit);
+      const asking = this.missionEarsAsking.has(id);
+      if (this.traceCircle(g, at.x, at.y, ears.radiusM, null)) {
+        g.stroke({
+          width: 1.5,
+          color: asking ? UI.glassStroke : UI.accent,
+          alpha: INSTRUMENT_OUTLINE_ALPHA.tenderEars,
+        });
+      }
+    }
   }
 
   /**

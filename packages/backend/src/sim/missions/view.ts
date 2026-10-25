@@ -89,6 +89,12 @@ export interface MissionState {
    */
   held: readonly MovementHold[];
   /**
+   * The player's own tenders the escort rule listens for, from their load
+   * (`EscortEars`). `held`'s terms: own hulls, under a rule the mission
+   * authored.
+   */
+  ears?: readonly number[];
+  /**
    * The player's own hulls a `strike` beat took out of the count — see
    * types.ts, `strike`. Own-force state for `held`'s reason: every id is one
    * of this observer's hulls, struck under a rule the mission authored.
@@ -148,6 +154,11 @@ export function projectMissionView(
     // every pass, and a payload that aliased it would change under a client
     // that had not been sent anything.
     held: state.held.map((hold): MovementHold => ({ ...hold })),
+    // Absent until a tender is loaded, `struck`'s arrangement: no other mission
+    // has an escort rule, and its view should not grow a field to say so.
+    ...(state.ears === undefined || state.ears.length === 0
+      ? {}
+      : { ears: { radiusM: definition.escortRadiusM, unitIds: [...state.ears] } }),
     // Absent until something is struck, `ability`'s arrangement: every mission
     // but one never strikes, and its view should not grow a field to say so.
     // Sorted so the change key does not move with set order.

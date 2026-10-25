@@ -291,6 +291,8 @@ export class MissionRuntime {
    * order depends on which tender was released first.
    */
   private held: MovementHold[] = [];
+  /** Loaded tenders in the water, for the chart's ears (`EscortEars`, #1594). */
+  private ears: number[] = [];
   /**
    * The world, for the order-time hold check.
    *
@@ -1346,6 +1348,7 @@ export class MissionRuntime {
     const disabled = this.definition.escortRadiusM <= 0;
     const escorts = this.idsFor('escort');
     const held: MovementHold[] = [];
+    const ears: number[] = [];
     world.movementHeld.clear();
     for (const party of this.definition.parties) {
       if (party.slot !== this.definition.playerSlot) continue;
@@ -1366,6 +1369,9 @@ export class MissionRuntime {
           continue;
         }
 
+        // A loaded tender has ears to draw, escorted or not; the rule off has
+        // none, because a ring nothing is held by would be a promise of one.
+        if (!unreleased && !disabled) ears.push(eid);
         const escortedNow = disabled || this.escorted(own, escorts, eid);
         if (escortedNow) this.lastEscorted.add(unit.tag);
         else this.lastEscorted.delete(unit.tag);
@@ -1382,6 +1388,7 @@ export class MissionRuntime {
       }
     }
     this.held = held;
+    this.ears = ears;
   }
 
   /**
@@ -2472,6 +2479,7 @@ export class MissionRuntime {
       sounded: this.soundedIds.size,
       paired: this.pairedIds,
       held: this.held,
+      ears: this.ears,
       struck: this.struckIds,
       debtS: this.debtS,
     };
