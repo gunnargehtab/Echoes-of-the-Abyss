@@ -405,7 +405,10 @@ describe('a mission view says only what the player could have worked out', () =>
       // only from a tender's load: the court does not hand over its freight
       // before 11:20, and a ring round it would.
       for (const id of view.ears?.unitIds ?? []) {
-        assert.ok(mine.has(id), `tick ${view.tick}: drew ears round a hull the player does not own`);
+        assert.ok(
+          mine.has(id),
+          `tick ${view.tick}: drew ears round a hull the player does not own`
+        );
         assert.ok(
           view.tick >= 11 * 60 * SIM.TICK_HZ + 20 * SIM.TICK_HZ,
           `tick ${view.tick}: drew ears round a tender before it was loaded`
