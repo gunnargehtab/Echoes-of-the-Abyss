@@ -14,25 +14,31 @@ import { createElement } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import {
   ANHOLT_FURROW_REGION,
+  ATTENDING_FIRST_ARRIVAL_HEADER,
   ATTENDING_INTAKE_HEADER,
   ATTENDING_SHALLOW_HEADER,
   ATTENDING_THE_DOME_HEADER,
   ATTENDING_TRENCH_AWAKENING_HEADER,
   BANDING_GROUND_GROUND,
   BANDING_GROUND_REGION,
+  CHORD_RIM_DEPOSITS_HEADER,
+  CHORD_SECOND_CHORD_HEADER,
   FACE_SIX_REGION,
   FOURTH_FOOT_REGION,
   KELL_SHOULDER_REGION,
   LEDGER_ASSET_RECOVERY_HEADER,
   LEDGER_EXPOSURE_HEADER,
+  LEDGER_PROSPECT_HEADER,
   LEDGER_SHIFT_CHANGE_HEADER,
   MARR_PLATEAU_REGION,
+  MOUTH_RIM_REGION,
   paintGround,
   PROLOGUE_SORROWGATE_HEADER,
   SEEDING_CONVOCATION_HEADER,
   SEEDING_DEEP_FURROW_HEADER,
   SEEDING_IN_WRITING_HEADER,
   SEEDING_RADICALS_HEADER,
+  SEEDING_SECOND_SEEDING_HEADER,
   SEEDING_TEND_HEADER,
   SEEDING_THIN_WATER_HEADER,
   SHALLOW_BAND_REGION,
@@ -744,6 +750,16 @@ describe('a second placed mission, in the same world (#1598)', () => {
     });
   });
 
+  it("ends the Rim's five travels on the Staging, its spawn and §7.2's own anchor (#1640)", () => {
+    sameFrame(arrivalFrame(MOUTH_RIM_REGION)!, {
+      xM: 3_000,
+      yM: 500,
+      distanceM: HOME_DOLLY_M,
+      yawDeg: 0,
+      pitchDeg: 55,
+    });
+  });
+
   it('gives every placed region a home to travel to', () => {
     // A region with no derived anchor would launch its mission off the world.
     for (const region of WORLD_REGIONS) assert.ok(arrivalFrame(region), region.id);
@@ -869,7 +885,8 @@ describe('which launches travel, and when a travel joins (§7.6)', () => {
     );
     assert.equal(travelsFirst('campaign', 'ledger-baffle'), false, 'Baffle waits (#1505)');
     // A shared map's missions all travel (#1505): both of Marr's (#1630), both
-    // of the Kell Shoulder's (#1633), and both of the Furrow's (#1638).
+    // of the Kell Shoulder's (#1633), both of the Furrow's (#1638), and all five
+    // of the Rim's (#1640).
     for (const mission of [SEEDING_TEND_HEADER, SEEDING_CONVOCATION_HEADER]) {
       assert.equal(travelsFirst('campaign', mission.id), true, `${mission.id} is (#1630)`);
     }
@@ -878,6 +895,15 @@ describe('which launches travel, and when a travel joins (§7.6)', () => {
     }
     for (const mission of [SEEDING_DEEP_FURROW_HEADER, SEEDING_IN_WRITING_HEADER]) {
       assert.equal(travelsFirst('campaign', mission.id), true, `${mission.id} is (#1638)`);
+    }
+    for (const mission of [
+      LEDGER_PROSPECT_HEADER,
+      SEEDING_SECOND_SEEDING_HEADER,
+      ATTENDING_FIRST_ARRIVAL_HEADER,
+      CHORD_RIM_DEPOSITS_HEADER,
+      CHORD_SECOND_CHORD_HEADER,
+    ]) {
+      assert.equal(travelsFirst('campaign', mission.id), true, `${mission.id} is (#1640)`);
     }
   });
 

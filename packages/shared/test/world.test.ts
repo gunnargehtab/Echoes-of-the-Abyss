@@ -15,6 +15,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import {
   ANHOLT_FURROW_GROUND,
   ANHOLT_FURROW_REGION,
+  ATTENDING_FIRST_ARRIVAL_HEADER,
   ATTENDING_INTAKE_HEADER,
   ATTENDING_SHALLOW_HEADER,
   ATTENDING_THE_DOME_HEADER,
@@ -22,6 +23,8 @@ import {
   BANDING_GROUND_GROUND,
   BANDING_GROUND_REGION,
   Biome,
+  CHORD_RIM_DEPOSITS_HEADER,
+  CHORD_SECOND_CHORD_HEADER,
   FACE_SIX_GROUND,
   FACE_SIX_REGION,
   FOURTH_FOOT_GROUND,
@@ -30,11 +33,14 @@ import {
   KELL_SHOULDER_REGION,
   LEDGER_ASSET_RECOVERY_HEADER,
   LEDGER_EXPOSURE_HEADER,
+  LEDGER_PROSPECT_HEADER,
   LEDGER_SHIFT_CHANGE_HEADER,
   MAP_HEADERS,
   MARR_PLATEAU_GROUND,
   MARR_PLATEAU_REGION,
   MISSION_HEADERS,
+  MOUTH_RIM_GROUND,
+  MOUTH_RIM_REGION,
   PLACED_GROUND,
   PROLOGUE_SORROWGATE_HEADER,
   RIFT_ATLAS,
@@ -42,6 +48,7 @@ import {
   SEEDING_CONVOCATION_HEADER,
   SEEDING_DEEP_FURROW_HEADER,
   SEEDING_IN_WRITING_HEADER,
+  SEEDING_SECOND_SEEDING_HEADER,
   SEEDING_TEND_HEADER,
   SEEDING_THIN_WATER_HEADER,
   SHALLOW_BAND_GROUND,
@@ -313,6 +320,42 @@ describe('placed regions', () => {
     );
   });
 
+  it("stands the Rim with its four bands on §7.2's band anchors (§7.9, #1640)", () => {
+    assert.deepEqual(MOUTH_RIM_REGION, {
+      id: 'mouth-rim',
+      mapId: 'mouth-rim',
+      x: 17_000,
+      y: 79_000,
+      widthM: 6_000,
+      heightM: 4_000,
+    });
+    assert.equal(MOUTH_RIM_REGION.widthM, MOUTH_RIM_GROUND.widthM);
+    assert.equal(MOUTH_RIM_REGION.heightM, MOUTH_RIM_GROUND.heightM);
+    // All five of its missions play it, and all five are drawn there (#1505).
+    for (const mission of [
+      LEDGER_PROSPECT_HEADER,
+      SEEDING_SECOND_SEEDING_HEADER,
+      ATTENDING_FIRST_ARRIVAL_HEADER,
+      CHORD_RIM_DEPOSITS_HEADER,
+      CHORD_SECOND_CHORD_HEADER,
+    ]) {
+      assert.equal(MOUTH_RIM_REGION.mapId, mission.mapId, mission.id);
+    }
+    // Each band is a kilometre of the map and stands on its anchor's row; the
+    // first three are centred on theirs, and the Lip's lies 500 m east.
+    const at = (id: string) => RIFT_PLACES.find((p) => p.id === id)!;
+    ['the-staging', 'the-slopes', 'the-terraces'].forEach((id, band) => {
+      assert.deepEqual(
+        [MOUTH_RIM_REGION.x + 3_000, MOUTH_RIM_REGION.y + band * 1_000 + 500],
+        [at(id).x, at(id).y],
+        id
+      );
+    });
+    const lip = at('the-lip');
+    assert.equal(lip.y, MOUTH_RIM_REGION.y + 3_500);
+    assert.equal(lip.x - (MOUTH_RIM_REGION.x + MOUTH_RIM_REGION.widthM), 500);
+  });
+
   it('place every map whose ground is placed, and none without', () => {
     assert.deepEqual(WORLD_REGIONS.map((r) => r.mapId).sort(), Object.keys(PLACED_GROUND).sort());
   });
@@ -581,6 +624,15 @@ describe('the placed-mission predicate', () => {
     assert.equal(worldRegionForMission(ATTENDING_SHALLOW_HEADER.id), KELL_SHOULDER_REGION);
     assert.equal(worldRegionForMission(SEEDING_DEEP_FURROW_HEADER.id), ANHOLT_FURROW_REGION);
     assert.equal(worldRegionForMission(SEEDING_IN_WRITING_HEADER.id), ANHOLT_FURROW_REGION);
+    for (const mission of [
+      LEDGER_PROSPECT_HEADER,
+      SEEDING_SECOND_SEEDING_HEADER,
+      ATTENDING_FIRST_ARRIVAL_HEADER,
+      CHORD_RIM_DEPOSITS_HEADER,
+      CHORD_SECOND_CHORD_HEADER,
+    ]) {
+      assert.equal(worldRegionForMission(mission.id), MOUTH_RIM_REGION, mission.id);
+    }
     assert.equal(worldRegionForMission(undefined), undefined);
     // Radicals plays on Sorrowgate's map and keeps its presentation: the
     // predicate is keyed on mission identity, never on the map (§7.1).
@@ -600,6 +652,11 @@ describe('the placed-mission predicate', () => {
       ATTENDING_SHALLOW_HEADER.id,
       SEEDING_DEEP_FURROW_HEADER.id,
       SEEDING_IN_WRITING_HEADER.id,
+      LEDGER_PROSPECT_HEADER.id,
+      SEEDING_SECOND_SEEDING_HEADER.id,
+      ATTENDING_FIRST_ARRIVAL_HEADER.id,
+      CHORD_RIM_DEPOSITS_HEADER.id,
+      CHORD_SECOND_CHORD_HEADER.id,
     ]);
     for (const header of MISSION_HEADERS) {
       if (placed.has(header.id)) continue;
@@ -614,6 +671,7 @@ describe('the placed-mission predicate', () => {
     assert.equal(worldRegionForMission('marr-plateau'), undefined);
     assert.equal(worldRegionForMission('kell-shoulder'), undefined);
     assert.equal(worldRegionForMission('anholt-furrow'), undefined);
+    assert.equal(worldRegionForMission('mouth-rim'), undefined);
   });
 
   it("places each mission on its own map's region", () => {

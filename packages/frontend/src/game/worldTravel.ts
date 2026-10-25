@@ -35,13 +35,14 @@ export function boardFrame(region: WorldRegion): CameraFrame {
 }
 
 /**
- * Each placed region's spawn, as §7.2's derived anchor names it: Sorrowgate's
+ * Each placed region's spawn, as §7.2's anchor table names it: Sorrowgate's
  * court, the flight's spawn at the arch; the muster, the intake's; the shelf
  * lane, the survey's; the rendering row, the yard's; Face Two's muster, the
  * shift's; Face Six's rail head, the column's; the Fourth's mouth, the
  * picket's; the Holdfast, the tide's, for both of Marr's missions; Kell Face,
- * the column's, for both of the Kell Shoulder's; and the Furrow's Foot, the
- * day's, for both of the Furrow's.
+ * the column's, for both of the Kell Shoulder's; the Furrow's Foot, the
+ * day's, for both of the Furrow's; and the Staging, where the Rim's spawn
+ * stands on §7.2's own anchor, for all five of the Rim's.
  */
 const SPAWN_PLACE: Readonly<Record<string, string>> = {
   sorrowgate: 'sorrowgate',
@@ -54,12 +55,13 @@ const SPAWN_PLACE: Readonly<Record<string, string>> = {
   'marr-plateau': 'the-holdfast',
   'kell-shoulder': 'kell-face',
   'anholt-furrow': 'furrows-foot',
+  'mouth-rim': 'the-staging',
 };
 
 /**
- * §7.6 step 2's destination: home, which is the spawn — §7.2's derived anchor
- * for the region, public as the whole table is — north, at the home pitch and
- * dolly. Undefined for a region the anchor table does not place.
+ * §7.6 step 2's destination: home, which is the spawn — §7.2's anchor for the
+ * region, public as the whole table is — north, at the home pitch and dolly.
+ * Undefined for a region the anchor table does not place.
  */
 export function arrivalFrame(region: WorldRegion): CameraFrame | undefined {
   const id = SPAWN_PLACE[region.id];

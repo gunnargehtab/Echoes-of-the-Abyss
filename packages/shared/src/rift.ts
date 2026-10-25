@@ -1477,6 +1477,71 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       note: 'The Sill, opening south onto the scar',
     },
   ],
+  // The Rim's 2,500 m (#1640). The map is the Mouth's northern edge in four
+  // bands, which the overview already draws a kilometre deep across the map's
+  // width, with the road south arriving at the Staging and the Ninth rising
+  // to the Lip east of it. The surround carries the Staging, the Slopes and the
+  // Terraces a kilometre west and a row east, to the Ninth's west wall, and the
+  // Staging a row north onto the road and the Ninth's western shoulder. The
+  // Deep Water of the Slopes' west bay runs on west, and of their south-east
+  // corner a row east. The Lip runs a kilometre west, on east under the Ninth's
+  // mouth, and a row south, where the overview's Mouth falls away.
+  'mouth-rim': [
+    {
+      x: 16_000,
+      y: 78_750,
+      widthM: 7_250,
+      heightM: 1_250,
+      biome: OpenWater,
+      floorM: 1_500,
+      note: 'The Staging, a kilometre west, a row east and a row north onto the road and shoulder',
+    },
+    {
+      x: 16_000,
+      y: 80_000,
+      widthM: 7_250,
+      heightM: 1_000,
+      biome: OpenWater,
+      floorM: 2_200,
+      note: 'The Slopes, a kilometre west and a row east',
+    },
+    {
+      x: 16_000,
+      y: 80_750,
+      widthM: 1_000,
+      heightM: 250,
+      biome: OpenWater,
+      floorM: 2_600,
+      note: 'The Deep Water of the west bay, carried a kilometre west',
+    },
+    {
+      x: 23_000,
+      y: 80_500,
+      widthM: 250,
+      heightM: 500,
+      biome: OpenWater,
+      floorM: 2_600,
+      note: 'The Deep Water of the south-east corner, a row east',
+    },
+    {
+      x: 16_000,
+      y: 81_000,
+      widthM: 7_250,
+      heightM: 1_000,
+      biome: ResonanceField,
+      floorM: 2_600,
+      note: 'The Terraces, crystal a kilometre west and a row east',
+    },
+    {
+      x: 16_000,
+      y: 82_000,
+      widthM: 9_000,
+      heightM: 1_250,
+      biome: AbyssalTrench,
+      floorM: 3_100,
+      note: 'The Lip, on east under the Ninth’s mouth and a row south',
+    },
+  ],
 };
 
 /** The surround a placed region has authored, or undefined for none. */

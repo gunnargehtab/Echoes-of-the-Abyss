@@ -19,11 +19,15 @@ import { WORLD } from './constants.js';
 import { PLACED_GROUND, paintGround, type GroundCells, type MapGround } from './ground.js';
 import { MAP_HEADERS, mapHeaderById } from './maps.js';
 import {
+  ATTENDING_FIRST_ARRIVAL_HEADER,
   ATTENDING_INTAKE_HEADER,
   ATTENDING_THE_DOME_HEADER,
   ATTENDING_TRENCH_AWAKENING_HEADER,
   LEDGER_ASSET_RECOVERY_HEADER,
+  CHORD_RIM_DEPOSITS_HEADER,
+  CHORD_SECOND_CHORD_HEADER,
   LEDGER_EXPOSURE_HEADER,
+  LEDGER_PROSPECT_HEADER,
   LEDGER_SHIFT_CHANGE_HEADER,
   MISSION_HEADERS,
   ATTENDING_SHALLOW_HEADER,
@@ -31,6 +35,7 @@ import {
   SEEDING_CONVOCATION_HEADER,
   SEEDING_DEEP_FURROW_HEADER,
   SEEDING_IN_WRITING_HEADER,
+  SEEDING_SECOND_SEEDING_HEADER,
   SEEDING_TEND_HEADER,
   SEEDING_THIN_WATER_HEADER,
 } from './missions.js';
@@ -214,6 +219,21 @@ export const ANHOLT_FURROW_REGION: WorldRegion = {
   heightM: 3_000,
 };
 
+/**
+ * The Rim, the convergence's map (§7.9, #1640): its four bands on §7.2's band
+ * anchors, the Staging, the Slopes and the Terraces each centred at x 20,000
+ * and the Lip on its row, whose anchor lies 500 m east of the map where the
+ * Ninth comes out. Its spawn is the Staging's anchor.
+ */
+export const MOUTH_RIM_REGION: WorldRegion = {
+  id: 'mouth-rim',
+  mapId: 'mouth-rim',
+  x: 17_000,
+  y: 79_000,
+  widthM: 6_000,
+  heightM: 4_000,
+};
+
 /** Every placed region. Other maps keep their own grids until migrated (§7.1). */
 export const WORLD_REGIONS: readonly WorldRegion[] = [
   SORROWGATE_REGION,
@@ -226,6 +246,7 @@ export const WORLD_REGIONS: readonly WorldRegion[] = [
   MARR_PLATEAU_REGION,
   KELL_SHOULDER_REGION,
   ANHOLT_FURROW_REGION,
+  MOUTH_RIM_REGION,
 ];
 
 export function worldRegionById(id: string): WorldRegion | undefined {
@@ -495,8 +516,9 @@ function cellIndex(cells: GroundCells, local: PlanPoint): number {
  * Western Margin (#1612), *Trench Awakening* on the Shallow Band (#1615), and
  * *Shift Change* and *Asset Recovery* on the two Ninefold maps (#1626), *The
  * Dome* on the Fourth's Foot (#1628), *Tend* and *Convocation* on Marr Plateau
- * (#1630), *Thin Water* and *Shallow* on the Kell Shoulder (#1633), and *Deep
- * Furrow* and *In Writing* on the Furrow (#1638). A
+ * (#1630), *Thin Water* and *Shallow* on the Kell Shoulder (#1633), *Deep
+ * Furrow* and *In Writing* on the Furrow (#1638), and the Rim's five on the Rim
+ * (#1640). A
  * mission on a placed map is not placed until it is named here, so placing one
  * is a line here. On a placed shared map every mission is
  * named (the owner's call on #1505), Radicals excepted.
@@ -515,6 +537,11 @@ const MISSION_REGIONS: ReadonlyMap<string, WorldRegion> = new Map([
   [ATTENDING_SHALLOW_HEADER.id, KELL_SHOULDER_REGION],
   [SEEDING_DEEP_FURROW_HEADER.id, ANHOLT_FURROW_REGION],
   [SEEDING_IN_WRITING_HEADER.id, ANHOLT_FURROW_REGION],
+  [LEDGER_PROSPECT_HEADER.id, MOUTH_RIM_REGION],
+  [SEEDING_SECOND_SEEDING_HEADER.id, MOUTH_RIM_REGION],
+  [ATTENDING_FIRST_ARRIVAL_HEADER.id, MOUTH_RIM_REGION],
+  [CHORD_RIM_DEPOSITS_HEADER.id, MOUTH_RIM_REGION],
+  [CHORD_SECOND_CHORD_HEADER.id, MOUTH_RIM_REGION],
 ]);
 
 /**
