@@ -40,6 +40,8 @@ import {
   StructureKind,
   type Contact,
   UnitKind,
+  type MissionView,
+  ObjectiveStatus,
   type OwnUnit,
 } from '@echoes/shared';
 import { FOCUS_DRAG_M_PER_PX, FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
@@ -484,7 +486,7 @@ describe('renderer smoke test: the chart', () => {
       // The scene graph the class doc-comment describes: overlay, then HUD.
       assert.equal(world.app.stage.children.length, 2, 'stage is overlay + hud, in that order');
       const [overlay, hud] = world.app.stage.children;
-      assert.equal(overlay!.children.length, 8, 'the eight overlay layers are wired');
+      assert.equal(overlay!.children.length, 9, 'the nine overlay layers are wired');
       assert.ok(hud!.children.length >= 6, 'the HUD graphics layers are wired');
 
       // The HUD's labels are built once, at init, before any snapshot lands.
@@ -5024,6 +5026,116 @@ describe('the ping preview rings the hull that pings (#1330)', () => {
       }
     } finally {
       dispatchWindow('keyup', { code: 'AltLeft' });
+      world.teardown();
+    }
+  });
+});
+
+/**
+ * A mission's named places on the chart — docs/ui-ux.md §10.5 (#1611). A
+ * newcomer told to hold *at the arch* held under it for ten minutes without
+ * knowing it was there. Driven through the real draw pass on the canned match,
+ * with the marker laid round its first hull so the ring and its name are on
+ * screen.
+ */
+describe("a mission's named markers on the chart (#1611)", () => {
+  type Chart = {
+    units: OwnUnit[];
+    markNames: Container;
+    drawMissionMarks(): void;
+    traceCircle(g: Graphics, cx: number, cy: number, radiusM: number, ...rest: unknown[]): boolean;
+  };
+
+  /** The canned match with a mission view, and every circle the marker pass traced. */
+  async function charted(view: (at: { x: number; y: number }) => MissionView) {
+    const world = await boot();
+    const chart = world.chart as unknown as Chart;
+    const traced: Array<{ x: number; y: number; radiusM: number }> = [];
+    let inPass = false;
+    const pass = chart.drawMissionMarks.bind(chart);
+    const traceCircle = chart.traceCircle.bind(chart);
+    chart.drawMissionMarks = () => {
+      traced.length = 0;
+      inPass = true;
+      try {
+        pass();
+      } finally {
+        inPass = false;
+      }
+    };
+    chart.traceCircle = (g, cx, cy, radiusM, ...rest) => {
+      if (inPass) traced.push({ x: cx, y: cy, radiusM });
+      return traceCircle(g, cx, cy, radiusM, ...rest);
+    };
+    world.frame(2);
+    const hull = chart.units[0]!;
+    world.chart.setMissionMarkers(view({ x: hull.x, y: hull.y }));
+    world.frame(2);
+    const names = (chart.markNames.children as Text[])
+      .filter((name) => name.visible)
+      .map((name) => name.text);
+    return { world, traced, names };
+  }
+
+  const ARCH = (at: { x: number; y: number }, name: string | null = 'The arch') => ({
+    id: 'arch',
+    label: "The arch. The flight's water is under its south face.",
+    ...(name === null ? {} : { name }),
+    x: at.x,
+    y: at.y,
+    radiusM: 350,
+  });
+  const view = (over: Partial<MissionView>): MissionView => ({
+    missionId: 'sorrowgate',
+    tick: 0,
+    objectives: [],
+    markers: [],
+    locks: [],
+    held: [],
+    sigBudget: 20,
+    debtS: 0,
+    ...over,
+  });
+  const station = (status: ObjectiveStatus) => ({
+    id: 'station',
+    text: 'The flight holds at the arch.',
+    status,
+    markerId: 'arch',
+  });
+
+  it('rings and names a marker an open row names', async () => {
+    const { world, traced, names } = await charted((at) =>
+      view({ objectives: [station(ObjectiveStatus.Pending)], markers: [ARCH(at)] })
+    );
+    try {
+      assert.equal(traced.length, 1, 'one ring, round the marker');
+      assert.equal(traced[0]!.radiusM, 350, 'at the marker radius, in true metres');
+      assert.deepEqual(names, ['The arch'], 'and its name beside it');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('takes it off the chart once the row is met', async () => {
+    const { world, traced, names } = await charted((at) =>
+      view({ objectives: [station(ObjectiveStatus.Met)], markers: [ARCH(at)] })
+    );
+    try {
+      assert.equal(traced.length, 0, 'a met row sends the player nowhere');
+      assert.deepEqual(names, []);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('draws nothing for a marker the mission did not name', async () => {
+    const { world, traced, names } = await charted((at) =>
+      view({ objectives: [station(ObjectiveStatus.Pending)], markers: [ARCH(at, null)] })
+    );
+    try {
+      assert.equal(traced.length, 0, 'an unnamed marker stays a camera jump');
+      assert.deepEqual(names, []);
+    } finally {
       world.teardown();
     }
   });

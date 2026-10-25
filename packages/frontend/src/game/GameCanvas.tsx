@@ -656,6 +656,9 @@ export function GameCanvas({
             // And which it has struck from the count, which the inspector
             // says beside the hold (docs/mission-thin-water.md §8, #1281).
             activeRenderer.setMissionStruck(view.struck ?? []);
+            // And the places it names, which the chart draws while an open
+            // row names them (docs/ui-ux.md §10.5, #1611).
+            activeRenderer.setMissionMarkers(view);
           },
           onMissionLine: (line) => {
             // Heard when its beat fires and never earlier: the hail is queued
