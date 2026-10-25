@@ -814,6 +814,11 @@ chart's ink cut to the map's rim.
 | The Thurible for the Consortium, the Commune and the Knights | [#1440](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1440) |
 | The Lure for the Consortium, the Commune and the Knights | [#1441](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1441) |
 | `check:models` passed a unit a navy fields with no hull model | [#1442](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1442) |
+| Bulwark stacks floating 2 m above their tier | [#1431](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1431) |
+| Derrick flank seam running inside the waist | [#1433](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1433) |
+| Derrick flank seam overhanging the tapers | [#1481](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1481) |
+| Trim joints kinking mid-facet on tapering rounds | [#1447](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1447) |
+| A squat drum unrolled about the wrong axis | [#1501](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1501) |
 
 **What the chart survey found**
 
@@ -823,6 +828,13 @@ chart's ink cut to the map's rim.
 | Rings and furniture drew past the map rim, into the void | [#1556](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1556) |
 | The scope’s camera box collapsed when the view left the map | [#1558](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1558) |
 | The HUD grain striped the seabed with diagonal lines | [#1559](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1559) |
+
+**How the project runs**
+
+| Work | Issue |
+| --- | --- |
+| Lighting and shader skills reviewed against the vendored set | [#1450](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1450) |
+| Owner calls left from the session review | [#1483](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1483) |
 
 ---
 
@@ -848,6 +860,20 @@ and no row below is open.
 | --- | --- |
 | Ground ink draws over hulls and structures with no occlusion | [#1557](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1557) |
 | Dune crests run east to west on every map | [#1560](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1560) |
+| The loudness collar crossing its own structure’s roof | [#1583](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1583) |
+| Scours and stone trails still running north–south | [#1573](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1573) |
+
+**The roster, wave by wave**
+
+| Work | Issue |
+| --- | --- |
+| Acolyte, Verger, Thurible and Lure locked to the Directorate | [#1582](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1582) |
+
+**Audio**
+
+| Work | Issue |
+| --- | --- |
+| The in-match score | [#1599](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1599) |
 
 ---
 
@@ -867,6 +893,8 @@ is tagged from a green `main`.
 | Work | Issue |
 | --- | --- |
 | Epic — playable by a stranger, and the first tag | [#1574](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1574) |
+| Sorrowgate’s orders panel hiding its withheld list | [#1593](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1593) |
+| Prologue: nothing says the way north is the service lock | [#1594](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1594) |
 
 ---
 
@@ -944,6 +972,16 @@ heard, and it takes the buyer's orders while flying the moorage's flag, so no ti
 pays it. Skirmish rooms only, never the campaign. It adds a structure and three hulls to a
 detection pass that already crosses its budget at about 160, so its build waits on that
 measurement and on release.
+
+**Audio**
+
+| Work | Issue |
+| --- | --- |
+| What else the ui bus carries, to be specified | [#1600](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1600) |
+| An audio asset size budget and loading story | [#1601](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1601) |
+| The speaker profile taking the score 20 dB down | [#1603](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1603) |
+
+The score is built (#1599). These wait on a decision, or on a fix to the speaker profile.
 
 ---
 
