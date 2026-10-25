@@ -11,9 +11,14 @@
  *
  * **Not in `MAPS` and not in `MAP_HEADERS`, deliberately** — one seat, no
  * resources, resolved by mission id and nothing else.
+ *
+ * **The ground is shared's** (`HOLDING_BOARD_GROUND`, #1623), as the Rim's
+ * is: the continuous world draws this map before any room exists
+ * (docs/world-map.md §7.9), so its regions are authored once, in
+ * `@echoes/shared`, and spread in here. What stays here is the spawn.
  */
 
-import { Biome } from '@echoes/shared';
+import { HOLDING_BOARD_GROUND } from '@echoes/shared';
 import type { MapDefinition } from '../types.ts';
 
 export const HOLDING_BOARD: MapDefinition = {
@@ -21,53 +26,8 @@ export const HOLDING_BOARD: MapDefinition = {
   name: 'Board Country',
   idealUse: 'The Ledger, mission seven. Nine items, one chamber, and the ninth.',
   seats: 1,
-  widthM: 3000,
-  heightM: 2500,
   doc: 'docs/mission-item-nine.md §11; docs/maps.md — Mission maps',
-  cellM: 250,
-  floorM: 1350,
-  // One row per row of §11's table, in the document's order. Later regions
-  // overwrite earlier ones; every number a shape states is a whole 250 m cell,
-  // and a cell is its region's when the shape holds its centre (#1147). Every
-  // spawn, hull and item the mission places stands on the ground it stood on
-  // when these were all rectangles, and `missionItemNine.test.ts` pins it.
-  regions: [
-    // A box, because it is the whole map.
-    {
-      x: 0,
-      y: 0,
-      widthM: 3000,
-      heightM: 2500,
-      biome: Biome.ThermalVein,
-      floorM: 1350,
-      note: "The Wall — Board country's water: the grid's hum at its deepest and most settled. Painted first",
-    },
-    // A box, because it is built: the array floor the open arrays stand on.
-    {
-      x: 0,
-      y: 0,
-      widthM: 1000,
-      heightM: 750,
-      biome: Biome.ThermalVein,
-      floorM: 1250,
-      note: 'The Registry — the open arrays and their watch: the ears that make a record a record',
-    },
-    // The old hull's long hall, round at both ends, with the rail midway along it.
-    // Its frame is a cell longer at each end than the box it was, and holds
-    // every cell centre the box held: the two it adds, at either end of its
-    // middle row, were the Wall's Thermal Vein on the same floor, and no line
-    // from the flight to an item or the registry watch crosses either.
-    {
-      shape: 'ellipse',
-      x: 1250,
-      y: 1500,
-      widthM: 1500,
-      heightM: 750,
-      biome: Biome.CoralRuins,
-      floorM: 1350,
-      note: 'The Underway — Asset 002: the Surface Age hull the concern was chartered inside. Occluded, honest, and listening',
-    },
-  ],
+  ...HOLDING_BOARD_GROUND,
   // One spawn, at the rail. The offsets address a pre-built Foundry the
   // mission never places; the flight is seated in the constructor.
   spawns: [{ x: 2000, y: 1900, foundryOffsetX: 0, foundryOffsetY: 0 }],
