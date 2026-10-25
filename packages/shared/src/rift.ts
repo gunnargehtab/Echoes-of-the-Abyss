@@ -117,15 +117,23 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
     depthM: 350,
     toDepthM: 1_300,
   },
+  // In the Underworks' Upper Berths, where Tolerance's map stands its frame:
+  // 1,250 m south of #1457's placing, which Board Country's map now covers
+  // (#1623, the owner's call).
   {
     id: 'sector-vayle',
     name: 'Sector Vayle',
     region: 'west-wall',
     x: 5_000,
-    y: 17_000,
+    y: 18_250,
     depthM: 1_050,
   },
-  { id: 'the-underway', name: 'The Underway', region: 'west-wall', x: 5_500, y: 18_500 },
+  // 1,750 m north of #1457's placing, so Board Country's map meets the
+  // Underworks' edge to edge rather than over it (#1623, the owner's call).
+  { id: 'the-underway', name: 'The Underway', region: 'west-wall', x: 5_500, y: 16_750 },
+  // Derived: Board Country's origin plus its spawn at the rail, so a travel to
+  // *Item Nine* ends there (§7.6, #1623).
+  { id: 'the-boards-rail', name: "The Board's rail", region: 'west-wall', x: 6_000, y: 17_400 },
   {
     id: 'the-underworks',
     name: 'The Underworks',
@@ -135,6 +143,9 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
     depthM: 1_900,
     toDepthM: 2_100,
   },
+  // Derived: the Underworks' origin plus its spawn at the Works Yard, so a
+  // travel to *Tolerance* ends there (§7.6, #1623).
+  { id: 'the-works-yard', name: 'The Works Yard', region: 'west-wall', x: 6_000, y: 19_000 },
   { id: 'fivewell', name: 'Fivewell', region: 'west-wall', x: 5_500, y: 22_000 },
   // Derived: the Upper Workings' origin plus its spawn at Face Two's muster,
   // so a travel to *Shift Change* ends there (§7.6, #1626).
@@ -1540,6 +1551,173 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       biome: AbyssalTrench,
       floorM: 3_100,
       note: 'The Lip, on east under the Ninth’s mouth and a row south',
+    },
+  ],
+  // Board Country's 2,500 m (#1623). The map is the bottom of the Holding:
+  // the Wall's deep berths, the Registry's arrays in its north-west corner and
+  // the Underway's hall. The overview draws the Holding's berth bands round it,
+  // shallower. The surround carries the Wall half a kilometre round the map
+  // and the Registry west and north. South, its detail covers the Underworks'
+  // map, so it draws the Upper Berths, the Face and the roofed works there as
+  // the Underworks' surround does.
+  'holding-board': [
+    {
+      x: 3_500,
+      y: 15_000,
+      widthM: 4_000,
+      heightM: 3_250,
+      biome: ThermalVein,
+      floorM: 1_350,
+      note: 'The Wall, Board country’s deep berths, half a kilometre round the map',
+    },
+    {
+      x: 3_500,
+      y: 15_000,
+      widthM: 1_500,
+      heightM: 1_250,
+      biome: ThermalVein,
+      floorM: 1_250,
+      note: 'The Registry’s arrays, half a kilometre west and north',
+    },
+    {
+      x: 3_000,
+      y: 18_250,
+      widthM: 6_000,
+      heightM: 500,
+      biome: ThermalVein,
+      floorM: 1_050,
+      note: 'The Underworks’ Upper Berths, as Tolerance draws them',
+    },
+    {
+      x: 3_000,
+      y: 18_750,
+      widthM: 6_000,
+      heightM: 750,
+      biome: ThermalVein,
+      floorM: 1_300,
+      note: 'The Underworks’ Face, as Tolerance draws it',
+    },
+    {
+      x: 3_000,
+      y: 19_500,
+      widthM: 6_000,
+      heightM: 1_000,
+      biome: CoralRuins,
+      floorM: 2_100,
+      ceilingM: 1_900,
+      note: 'The Underworks under the overhang, as Tolerance draws them',
+    },
+  ],
+  // The Underworks' 2,500 m (#1623). The map is the Holding's wall face: the
+  // Upper Berths where Sector Vayle's frame stands, the Face and the Works
+  // Yard, and under the overhang the roofed works. The overview draws the
+  // Holding's lowest berth band over it, at 1,300 m. The surround carries the
+  // Upper Berths, the Face and the overhang a kilometre west and east, the
+  // Berths a row north and the overhang a row south. North, its detail covers
+  // Board Country's map, and south the Upper Workings' top, so it draws both
+  // as their own surrounds do.
+  'holding-underworks': [
+    {
+      x: 4_000,
+      y: 15_500,
+      widthM: 3_000,
+      heightM: 2_250,
+      biome: ThermalVein,
+      floorM: 1_350,
+      note: 'Board Country’s Wall, as Board Country draws it',
+    },
+    {
+      x: 4_000,
+      y: 15_500,
+      widthM: 1_000,
+      heightM: 750,
+      biome: ThermalVein,
+      floorM: 1_250,
+      note: 'Board Country’s Registry',
+    },
+    {
+      shape: 'ellipse',
+      x: 5_250,
+      y: 17_000,
+      widthM: 1_500,
+      heightM: 750,
+      biome: CoralRuins,
+      floorM: 1_350,
+      note: 'The Underway’s hall',
+    },
+    {
+      x: 3_000,
+      y: 17_750,
+      widthM: 6_000,
+      heightM: 1_000,
+      biome: ThermalVein,
+      floorM: 1_050,
+      note: 'The Upper Berths, a kilometre west and east and a row north',
+    },
+    {
+      x: 3_000,
+      y: 18_750,
+      widthM: 6_000,
+      heightM: 750,
+      biome: ThermalVein,
+      floorM: 1_300,
+      note: 'The Face, a kilometre west and east',
+    },
+    {
+      x: 3_000,
+      y: 19_500,
+      widthM: 6_000,
+      heightM: 1_750,
+      biome: CoralRuins,
+      floorM: 2_100,
+      ceilingM: 1_900,
+      note: 'The Underworks, the overhang a kilometre west and east and a row south',
+    },
+    {
+      x: 8_000,
+      y: 19_500,
+      widthM: 1_000,
+      heightM: 250,
+      biome: ThermalVein,
+      floorM: 1_300,
+      ceilingM: 0,
+      note: 'The Face’s east foot, where the overhang starts a row lower',
+    },
+    {
+      x: 2_500,
+      y: 21_250,
+      widthM: 6_000,
+      heightM: 2_250,
+      biome: ThermalVein,
+      floorM: 1_100,
+      note: 'The Upper Workings’ Field, as its surround draws it',
+    },
+    {
+      x: 5_000,
+      y: 21_250,
+      widthM: 1_000,
+      heightM: 500,
+      biome: ThermalVein,
+      floorM: 850,
+      note: 'The Upper Workings’ Rail Head, on Fivewell',
+    },
+    {
+      x: 2_500,
+      y: 22_250,
+      widthM: 6_000,
+      heightM: 500,
+      biome: ThermalVein,
+      floorM: 950,
+      note: 'The Upper Workings’ High Road',
+    },
+    {
+      x: 2_500,
+      y: 23_250,
+      widthM: 6_000,
+      heightM: 250,
+      biome: ThermalVein,
+      floorM: 1_300,
+      note: 'The Upper Workings’ Downworks',
     },
   ],
 };

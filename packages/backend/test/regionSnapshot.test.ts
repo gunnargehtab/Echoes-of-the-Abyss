@@ -10,7 +10,8 @@
  * (#1615), Shift Change and Asset Recovery the two Ninefold maps (#1626), The
  * Dome the Fourth's Foot (#1628), Tend and Convocation Marr Plateau (#1630),
  * Thin Water and Shallow the Kell Shoulder (#1633), Deep Furrow and In Writing
- * the Furrow (#1638), the Rim's five the Rim (#1640), and the prologue again on a
+ * the Furrow (#1638), the Rim's five the Rim (#1640), Item Nine and Tolerance
+ * Board Country and the Underworks (#1623), and the prologue again on a
  * reconnection after its ground has changed, with writes that replay to the
  * live cells and the live revision, and that every other room — Radicals on the same map included —
  * names nothing.
@@ -31,11 +32,15 @@ import {
   CHORD_SECOND_CHORD_HEADER,
   FACE_SIX_REGION,
   FOURTH_FOOT_REGION,
+  HOLDING_BOARD_REGION,
+  HOLDING_UNDERWORKS_REGION,
   KELL_SHOULDER_REGION,
   LEDGER_ASSET_RECOVERY_HEADER,
   LEDGER_EXPOSURE_HEADER,
+  LEDGER_ITEM_NINE_HEADER,
   LEDGER_PROSPECT_HEADER,
   LEDGER_SHIFT_CHANGE_HEADER,
+  LEDGER_TOLERANCE_HEADER,
   MARR_PLATEAU_REGION,
   MOUTH_RIM_REGION,
   PROLOGUE_SORROWGATE_HEADER,
@@ -137,6 +142,8 @@ describe('the region a room names (#1460)', () => {
     [ATTENDING_FIRST_ARRIVAL_HEADER, MOUTH_RIM_REGION],
     [CHORD_RIM_DEPOSITS_HEADER, MOUTH_RIM_REGION],
     [CHORD_SECOND_CHORD_HEADER, MOUTH_RIM_REGION],
+    [LEDGER_ITEM_NINE_HEADER, HOLDING_BOARD_REGION],
+    [LEDGER_TOLERANCE_HEADER, HOLDING_UNDERWORKS_REGION],
   ] as const) {
     it(`names ${region.id} on ${mission.id}'s ground at join`, async () => {
       const match = await room({ missionId: mission.id });

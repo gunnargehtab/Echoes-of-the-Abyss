@@ -25,11 +25,15 @@ import {
   CHORD_SECOND_CHORD_HEADER,
   FACE_SIX_REGION,
   FOURTH_FOOT_REGION,
+  HOLDING_BOARD_REGION,
+  HOLDING_UNDERWORKS_REGION,
   KELL_SHOULDER_REGION,
   LEDGER_ASSET_RECOVERY_HEADER,
   LEDGER_EXPOSURE_HEADER,
+  LEDGER_ITEM_NINE_HEADER,
   LEDGER_PROSPECT_HEADER,
   LEDGER_SHIFT_CHANGE_HEADER,
+  LEDGER_TOLERANCE_HEADER,
   MARR_PLATEAU_REGION,
   MOUTH_RIM_REGION,
   paintGround,
@@ -760,6 +764,12 @@ describe('a second placed mission, in the same world (#1598)', () => {
     });
   });
 
+  it("ends Item Nine's travel on the Board's rail and Tolerance's on the Works Yard (#1623)", () => {
+    const home = { distanceM: HOME_DOLLY_M, yawDeg: 0, pitchDeg: 55 };
+    sameFrame(arrivalFrame(HOLDING_BOARD_REGION)!, { xM: 2_000, yM: 1_900, ...home });
+    sameFrame(arrivalFrame(HOLDING_UNDERWORKS_REGION)!, { xM: 2_000, yM: 1_000, ...home });
+  });
+
   it('gives every placed region a home to travel to', () => {
     // A region with no derived anchor would launch its mission off the world.
     for (const region of WORLD_REGIONS) assert.ok(arrivalFrame(region), region.id);
@@ -904,6 +914,9 @@ describe('which launches travel, and when a travel joins (§7.6)', () => {
       CHORD_SECOND_CHORD_HEADER,
     ]) {
       assert.equal(travelsFirst('campaign', mission.id), true, `${mission.id} is (#1640)`);
+    }
+    for (const mission of [LEDGER_ITEM_NINE_HEADER, LEDGER_TOLERANCE_HEADER]) {
+      assert.equal(travelsFirst('campaign', mission.id), true, `${mission.id} is (#1623)`);
     }
   });
 

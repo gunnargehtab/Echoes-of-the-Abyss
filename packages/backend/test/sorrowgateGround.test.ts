@@ -23,6 +23,8 @@ import {
   FOURTH_FOOT_GROUND,
   Biome,
   DEPTH,
+  HOLDING_BOARD_GROUND,
+  HOLDING_UNDERWORKS_GROUND,
   KELL_SHOULDER_GROUND,
   MARR_PLATEAU_GROUND,
   MOUTH_RIM_GROUND,
@@ -40,6 +42,8 @@ import {
   BANDING_GROUND,
   FOURTH_FOOT,
   FIRST_TRENCH_MARGIN,
+  HOLDING_BOARD,
+  HOLDING_UNDERWORKS,
   KELL_SHOULDER,
   MAPS,
   MARR_PLATEAU,
@@ -248,6 +252,23 @@ describe("the Rim's shared ground (#1640)", () => {
     assert.equal(MOUTH_RIM.cellM, MOUTH_RIM_GROUND.cellM);
     assert.equal(MOUTH_RIM.floorM, MOUTH_RIM_GROUND.floorM);
   });
+});
+
+describe("Board Country's and the Underworks' shared ground (#1623)", () => {
+  // Their cells are held to the server's by the shared painter's test below
+  // and pinned against their missions by their own tests; this holds the move.
+  for (const [map, ground] of [
+    [HOLDING_BOARD, HOLDING_BOARD_GROUND],
+    [HOLDING_UNDERWORKS, HOLDING_UNDERWORKS_GROUND],
+  ] as const) {
+    it(`${map.id} is the one source: the map spreads the shared literal, not a copy`, () => {
+      assert.equal(map.regions, ground.regions);
+      assert.equal(map.widthM, ground.widthM);
+      assert.equal(map.heightM, ground.heightM);
+      assert.equal(map.cellM, ground.cellM);
+      assert.equal(map.floorM, ground.floorM);
+    });
+  }
 });
 
 describe("the continuous world's detail ground (#1457) holds the server's baseline", () => {

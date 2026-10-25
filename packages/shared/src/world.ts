@@ -27,8 +27,10 @@ import {
   CHORD_RIM_DEPOSITS_HEADER,
   CHORD_SECOND_CHORD_HEADER,
   LEDGER_EXPOSURE_HEADER,
+  LEDGER_ITEM_NINE_HEADER,
   LEDGER_PROSPECT_HEADER,
   LEDGER_SHIFT_CHANGE_HEADER,
+  LEDGER_TOLERANCE_HEADER,
   MISSION_HEADERS,
   ATTENDING_SHALLOW_HEADER,
   PROLOGUE_SORROWGATE_HEADER,
@@ -234,6 +236,34 @@ export const MOUTH_RIM_REGION: WorldRegion = {
   heightM: 4_000,
 };
 
+/**
+ * Board Country, *Item Nine*'s map (§7.9, #1623): centred on §7.2's Underway
+ * anchor, (5,500, 16,750), which moved 1,750 m north so the map meets the
+ * Underworks' edge to edge rather than over it (the owner's call).
+ */
+export const HOLDING_BOARD_REGION: WorldRegion = {
+  id: 'holding-board',
+  mapId: 'holding-board',
+  x: 4_000,
+  y: 15_500,
+  widthM: 3_000,
+  heightM: 2_500,
+};
+
+/**
+ * The Underworks, *Tolerance*'s map (§7.9, #1623): centred on §7.2's
+ * Underworks anchor, (6,000, 19,500), Board Country's map along its north edge
+ * and the Upper Workings' three-quarters of a kilometre south.
+ */
+export const HOLDING_UNDERWORKS_REGION: WorldRegion = {
+  id: 'holding-underworks',
+  mapId: 'holding-underworks',
+  x: 4_000,
+  y: 18_000,
+  widthM: 4_000,
+  heightM: 3_000,
+};
+
 /** Every placed region. Other maps keep their own grids until migrated (§7.1). */
 export const WORLD_REGIONS: readonly WorldRegion[] = [
   SORROWGATE_REGION,
@@ -247,6 +277,8 @@ export const WORLD_REGIONS: readonly WorldRegion[] = [
   KELL_SHOULDER_REGION,
   ANHOLT_FURROW_REGION,
   MOUTH_RIM_REGION,
+  HOLDING_BOARD_REGION,
+  HOLDING_UNDERWORKS_REGION,
 ];
 
 export function worldRegionById(id: string): WorldRegion | undefined {
@@ -517,8 +549,9 @@ function cellIndex(cells: GroundCells, local: PlanPoint): number {
  * *Shift Change* and *Asset Recovery* on the two Ninefold maps (#1626), *The
  * Dome* on the Fourth's Foot (#1628), *Tend* and *Convocation* on Marr Plateau
  * (#1630), *Thin Water* and *Shallow* on the Kell Shoulder (#1633), *Deep
- * Furrow* and *In Writing* on the Furrow (#1638), and the Rim's five on the Rim
- * (#1640). A
+ * Furrow* and *In Writing* on the Furrow (#1638), the Rim's five on the Rim
+ * (#1640), and *Item Nine* and *Tolerance* on Board Country and the Underworks
+ * (#1623). A
  * mission on a placed map is not placed until it is named here, so placing one
  * is a line here. On a placed shared map every mission is
  * named (the owner's call on #1505), Radicals excepted.
@@ -542,6 +575,8 @@ const MISSION_REGIONS: ReadonlyMap<string, WorldRegion> = new Map([
   [ATTENDING_FIRST_ARRIVAL_HEADER.id, MOUTH_RIM_REGION],
   [CHORD_RIM_DEPOSITS_HEADER.id, MOUTH_RIM_REGION],
   [CHORD_SECOND_CHORD_HEADER.id, MOUTH_RIM_REGION],
+  [LEDGER_ITEM_NINE_HEADER.id, HOLDING_BOARD_REGION],
+  [LEDGER_TOLERANCE_HEADER.id, HOLDING_UNDERWORKS_REGION],
 ]);
 
 /**

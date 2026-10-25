@@ -29,12 +29,18 @@ import {
   FACE_SIX_REGION,
   FOURTH_FOOT_GROUND,
   FOURTH_FOOT_REGION,
+  HOLDING_BOARD_GROUND,
+  HOLDING_BOARD_REGION,
+  HOLDING_UNDERWORKS_GROUND,
+  HOLDING_UNDERWORKS_REGION,
   KELL_SHOULDER_GROUND,
   KELL_SHOULDER_REGION,
   LEDGER_ASSET_RECOVERY_HEADER,
   LEDGER_EXPOSURE_HEADER,
+  LEDGER_ITEM_NINE_HEADER,
   LEDGER_PROSPECT_HEADER,
   LEDGER_SHIFT_CHANGE_HEADER,
+  LEDGER_TOLERANCE_HEADER,
   MAP_HEADERS,
   MARR_PLATEAU_GROUND,
   MARR_PLATEAU_REGION,
@@ -356,6 +362,54 @@ describe('placed regions', () => {
     assert.equal(lip.x - (MOUTH_RIM_REGION.x + MOUTH_RIM_REGION.widthM), 500);
   });
 
+  it('stands Board Country and the Underworks edge to edge, each centred on its anchor (§7.9, #1623)', () => {
+    assert.deepEqual(HOLDING_BOARD_REGION, {
+      id: 'holding-board',
+      mapId: 'holding-board',
+      x: 4_000,
+      y: 15_500,
+      widthM: 3_000,
+      heightM: 2_500,
+    });
+    assert.deepEqual(HOLDING_UNDERWORKS_REGION, {
+      id: 'holding-underworks',
+      mapId: 'holding-underworks',
+      x: 4_000,
+      y: 18_000,
+      widthM: 4_000,
+      heightM: 3_000,
+    });
+    for (const [region, ground, mission] of [
+      [HOLDING_BOARD_REGION, HOLDING_BOARD_GROUND, LEDGER_ITEM_NINE_HEADER],
+      [HOLDING_UNDERWORKS_REGION, HOLDING_UNDERWORKS_GROUND, LEDGER_TOLERANCE_HEADER],
+    ] as const) {
+      assert.equal(region.widthM, ground.widthM);
+      assert.equal(region.heightM, ground.heightM);
+      assert.equal(region.mapId, mission.mapId, mission.id);
+    }
+    const at = (id: string) => RIFT_PLACES.find((p) => p.id === id)!;
+    // The Underway moved 1,750 m north so the two meet edge to edge rather
+    // than over each other (the owner's call on #1623).
+    assert.deepEqual(
+      [HOLDING_BOARD_REGION.x + 1_500, HOLDING_BOARD_REGION.y + 1_250],
+      [at('the-underway').x, at('the-underway').y]
+    );
+    assert.deepEqual(
+      [HOLDING_UNDERWORKS_REGION.x + 2_000, HOLDING_UNDERWORKS_REGION.y + 1_500],
+      [at('the-underworks').x, at('the-underworks').y]
+    );
+    assert.equal(
+      HOLDING_BOARD_REGION.y + HOLDING_BOARD_REGION.heightM,
+      HOLDING_UNDERWORKS_REGION.y
+    );
+    // Sector Vayle stands in the Underworks' Upper Berths, where Tolerance's
+    // map draws its frame, and not on Board Country's ground (#1623).
+    const vayle = at('sector-vayle');
+    assert.ok(
+      vayle.y >= HOLDING_UNDERWORKS_REGION.y && vayle.y < HOLDING_UNDERWORKS_REGION.y + 750
+    );
+  });
+
   it('place every map whose ground is placed, and none without', () => {
     assert.deepEqual(WORLD_REGIONS.map((r) => r.mapId).sort(), Object.keys(PLACED_GROUND).sort());
   });
@@ -633,6 +687,8 @@ describe('the placed-mission predicate', () => {
     ]) {
       assert.equal(worldRegionForMission(mission.id), MOUTH_RIM_REGION, mission.id);
     }
+    assert.equal(worldRegionForMission(LEDGER_ITEM_NINE_HEADER.id), HOLDING_BOARD_REGION);
+    assert.equal(worldRegionForMission(LEDGER_TOLERANCE_HEADER.id), HOLDING_UNDERWORKS_REGION);
     assert.equal(worldRegionForMission(undefined), undefined);
     // Radicals plays on Sorrowgate's map and keeps its presentation: the
     // predicate is keyed on mission identity, never on the map (§7.1).
@@ -657,6 +713,8 @@ describe('the placed-mission predicate', () => {
       ATTENDING_FIRST_ARRIVAL_HEADER.id,
       CHORD_RIM_DEPOSITS_HEADER.id,
       CHORD_SECOND_CHORD_HEADER.id,
+      LEDGER_ITEM_NINE_HEADER.id,
+      LEDGER_TOLERANCE_HEADER.id,
     ]);
     for (const header of MISSION_HEADERS) {
       if (placed.has(header.id)) continue;
@@ -672,6 +730,7 @@ describe('the placed-mission predicate', () => {
     assert.equal(worldRegionForMission('kell-shoulder'), undefined);
     assert.equal(worldRegionForMission('anholt-furrow'), undefined);
     assert.equal(worldRegionForMission('mouth-rim'), undefined);
+    assert.equal(worldRegionForMission('holding-board'), undefined);
   });
 
   it("places each mission on its own map's region", () => {

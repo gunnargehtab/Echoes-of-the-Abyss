@@ -1549,6 +1549,161 @@ export const MOUTH_RIM_GROUND: MapGround = {
 };
 
 /**
+ * Board Country's ground — docs/mission-item-nine.md §11; docs/maps.md,
+ * "Mission maps". Placed in the Rift (docs/world-map.md §7.9, #1623) centred
+ * on §7.2's Underway anchor, moved 1,750 m north so it meets the Underworks'
+ * map edge to edge rather than over it (the owner's call).
+ *
+ * The bottom of the Holding: the wall's deep berths, the Registry's open
+ * arrays, and the Underway, the one Coral Ruins chamber the Consortium owns.
+ */
+export const HOLDING_BOARD_GROUND: MapGround = {
+  widthM: 3000,
+  heightM: 2500,
+  cellM: 250,
+  floorM: 1350,
+  // One row per row of §11's table, in the document's order. Later regions
+  // overwrite earlier ones; every number a shape states is a whole 250 m cell,
+  // and a cell is its region's when the shape holds its centre (#1147). Every
+  // spawn, hull and item the mission places stands on the ground it stood on
+  // when these were all rectangles, and `missionItemNine.test.ts` pins it.
+  regions: [
+    // A box, because it is the whole map.
+    {
+      x: 0,
+      y: 0,
+      widthM: 3000,
+      heightM: 2500,
+      biome: Biome.ThermalVein,
+      floorM: 1350,
+      note: "The Wall — Board country's water: the grid's hum at its deepest and most settled. Painted first",
+    },
+    // A box, because it is built: the array floor the open arrays stand on.
+    {
+      x: 0,
+      y: 0,
+      widthM: 1000,
+      heightM: 750,
+      biome: Biome.ThermalVein,
+      floorM: 1250,
+      note: 'The Registry — the open arrays and their watch: the ears that make a record a record',
+    },
+    // The old hull's long hall, round at both ends, with the rail midway along it.
+    // Its frame is a cell longer at each end than the box it was, and holds
+    // every cell centre the box held: the two it adds, at either end of its
+    // middle row, were the Wall's Thermal Vein on the same floor, and no line
+    // from the flight to an item or the registry watch crosses either.
+    {
+      shape: 'ellipse',
+      x: 1250,
+      y: 1500,
+      widthM: 1500,
+      heightM: 750,
+      biome: Biome.CoralRuins,
+      floorM: 1350,
+      note: 'The Underway — Asset 002: the Surface Age hull the concern was chartered inside. Occluded, honest, and listening',
+    },
+  ],
+};
+
+/**
+ * The Underworks' ground — docs/mission-tolerance.md §11; docs/maps.md,
+ * "Mission maps". Placed in the Rift (docs/world-map.md §7.9, #1623) centred
+ * on §7.2's Underworks anchor, edge to edge south of Board Country.
+ *
+ * The Holding's wall face, the Upper Berths where Sector Vayle's frame stands,
+ * the Works Yard and the Throat, and below the overhang the Underworks:
+ * roofed water between 1,900 and 2,100 m, reached only by the Throat.
+ */
+export const HOLDING_UNDERWORKS_GROUND: MapGround = {
+  widthM: 4000,
+  heightM: 3000,
+  cellM: 250,
+  floorM: 1300,
+  // One row per row of §11's table, in the document's order. Later regions
+  // overwrite earlier ones; every number a shape states is a whole 250 m cell,
+  // and a cell is its region's when the shape holds its centre (#1145). The
+  // reshape is new content, never a lever: eight cells moved, and every spawn,
+  // hull, emitter, marker, pack and mission region stands on the ground it
+  // stood on in rectangles. `missionUnderworks.test.ts` pins it.
+  regions: [
+    // A box because it is the whole map, painted first.
+    {
+      x: 0,
+      y: 0,
+      widthM: 4000,
+      heightM: 3000,
+      biome: Biome.ThermalVein,
+      floorM: 1300,
+      note: "The Face — the wall, the grid's humming ground. Painted first; everything else is cut into it",
+    },
+    // The band, with Vayle's sector hanging a row further down the wall under
+    // its frame's own three columns (x 500-1,250). Thermal Vein like the Face
+    // it was cut from, so only the floor under those three cells moved.
+    {
+      shape: 'polygon',
+      points: [
+        [0, 0],
+        [4000, 0],
+        [4000, 750],
+        [1500, 750],
+        [1000, 1000],
+        [750, 1000],
+        [500, 750],
+        [0, 750],
+      ],
+      biome: Biome.ThermalVein,
+      floorM: 1050,
+      note: "The Upper Berths — the city's lower berth band. Sector Vayle's frame stands here",
+    },
+    // A box because it is built, and the mission's `the-yard`, where the pour
+    // is held, is this same rectangle.
+    {
+      x: 1500,
+      y: 750,
+      widthM: 1000,
+      heightM: 500,
+      biome: Biome.ThermalVein,
+      floorM: 1200,
+      note: 'The Works Yard — the casting yard: the pour, the muster, the tungsten',
+    },
+    // A box: the one opening in the overhang, two cells over the root
+    // aperture's two. A shape that painted other cells would move the dive,
+    // and one that did not would paint these same two.
+    {
+      x: 1750,
+      y: 1500,
+      widthM: 500,
+      heightM: 250,
+      biome: Biome.ThermalVein,
+      floorM: 2100,
+      note: "The Throat — the one open shaft into the Underworks: the dive, and the ledger's first page",
+    },
+    // The overhang's lip climbs a row up the wall across the five columns west
+    // of x 1,250, toward Vayle, and from there east runs under the throat's
+    // row, at 1,750 m. The five cells it took were open Face at PF 0.45; no
+    // line from the column's seats, a marker or a mission region to the alarm,
+    // the complaint or a pack's authored position crosses them, and the throat
+    // is still the only water that opens into the works.
+    {
+      shape: 'polygon',
+      points: [
+        [0, 1500],
+        [1000, 1500],
+        [1500, 1750],
+        [4000, 1750],
+        [4000, 3000],
+        [0, 3000],
+      ],
+      biome: Biome.CoralRuins,
+      floorM: 2100,
+      ceilingM: 1900,
+      note: "The Underworks — the Surface Age's vent works under the city's overhang: water only between roof and floor, reached only by the throat, priced only in crush",
+    },
+  ],
+};
+
+/**
  * The public ground of each placed map, by map id. Here rather than beside
  * the atlas (`rift.ts`) because `worldRegionProblems` compares two placed
  * maps' cells, and `world.ts` cannot import the file that imports it.
@@ -1565,4 +1720,6 @@ export const PLACED_GROUND: Readonly<Record<string, MapGround>> = {
   'kell-shoulder': KELL_SHOULDER_GROUND,
   'anholt-furrow': ANHOLT_FURROW_GROUND,
   'mouth-rim': MOUTH_RIM_GROUND,
+  'holding-board': HOLDING_BOARD_GROUND,
+  'holding-underworks': HOLDING_UNDERWORKS_GROUND,
 };
