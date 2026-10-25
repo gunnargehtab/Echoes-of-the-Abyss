@@ -19,6 +19,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import {
   BANDING_GROUND_GROUND,
   FACE_SIX_GROUND,
+  FOURTH_FOOT_GROUND,
   Biome,
   DEPTH,
   SHALLOW_BAND_GROUND,
@@ -32,6 +33,7 @@ import {
 } from '@echoes/shared';
 import {
   BANDING_GROUND,
+  FOURTH_FOOT,
   FIRST_TRENCH_MARGIN,
   MAPS,
   MISSION_MAPS,
@@ -177,6 +179,18 @@ describe("the two Ninefold maps' shared ground (#1626)", () => {
       assert.equal(map.floorM, ground.floorM);
     });
   }
+});
+
+describe("the Fourth's Foot's shared ground (#1628)", () => {
+  // Its cells are held to the server's by the shared painter's test below and
+  // pinned against the mission by `missionTheDome.test.ts`; this holds the move.
+  it('is the one source: the map spreads the shared literal, not a copy', () => {
+    assert.equal(FOURTH_FOOT.regions, FOURTH_FOOT_GROUND.regions);
+    assert.equal(FOURTH_FOOT.widthM, FOURTH_FOOT_GROUND.widthM);
+    assert.equal(FOURTH_FOOT.heightM, FOURTH_FOOT_GROUND.heightM);
+    assert.equal(FOURTH_FOOT.cellM, FOURTH_FOOT_GROUND.cellM);
+    assert.equal(FOURTH_FOOT.floorM, FOURTH_FOOT_GROUND.floorM);
+  });
 });
 
 describe("the continuous world's detail ground (#1457) holds the server's baseline", () => {

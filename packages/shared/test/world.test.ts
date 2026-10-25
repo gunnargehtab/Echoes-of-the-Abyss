@@ -14,12 +14,15 @@ import { readFileSync, readdirSync } from 'node:fs';
 
 import {
   ATTENDING_INTAKE_HEADER,
+  ATTENDING_THE_DOME_HEADER,
   ATTENDING_TRENCH_AWAKENING_HEADER,
   BANDING_GROUND_GROUND,
   BANDING_GROUND_REGION,
   Biome,
   FACE_SIX_GROUND,
   FACE_SIX_REGION,
+  FOURTH_FOOT_GROUND,
+  FOURTH_FOOT_REGION,
   LEDGER_ASSET_RECOVERY_HEADER,
   LEDGER_EXPOSURE_HEADER,
   LEDGER_SHIFT_CHANGE_HEADER,
@@ -199,6 +202,31 @@ describe('placed regions', () => {
     assert.equal(
       FACE_SIX_REGION.y - (UPPER_WORKINGS_REGION.y + UPPER_WORKINGS_REGION.heightM),
       250
+    );
+  });
+
+  it("stands the Fourth's Foot with its Deep Yard on §7.2's anchor (§7.9, #1628)", () => {
+    assert.deepEqual(FOURTH_FOOT_REGION, {
+      id: 'fourth-foot',
+      mapId: 'fourth-foot',
+      x: 10_000,
+      y: 54_000,
+      widthM: 3_000,
+      heightM: 6_000,
+    });
+    assert.equal(FOURTH_FOOT_REGION.widthM, FOURTH_FOOT_GROUND.widthM);
+    assert.equal(FOURTH_FOOT_REGION.heightM, FOURTH_FOOT_GROUND.heightM);
+    assert.equal(FOURTH_FOOT_REGION.mapId, ATTENDING_THE_DOME_HEADER.mapId);
+    // The Deep Yard is cells (750–2,250, 4,250–4,750); its middle is the anchor.
+    const yard = RIFT_PLACES.find((p) => p.id === 'deep-yard')!;
+    assert.deepEqual(
+      [FOURTH_FOOT_REGION.x + 1_500, FOURTH_FOOT_REGION.y + 4_500],
+      [yard.x, yard.y]
+    );
+    // *Baffle*'s Fourth Trench holds the same ground and stays unplaced (#1505).
+    assert.equal(
+      WORLD_REGIONS.some((r) => r.mapId === 'fourth-trench'),
+      false
     );
   });
 
@@ -463,6 +491,7 @@ describe('the placed-mission predicate', () => {
     assert.equal(worldRegionForMission(ATTENDING_TRENCH_AWAKENING_HEADER.id), SHALLOW_BAND_REGION);
     assert.equal(worldRegionForMission(LEDGER_SHIFT_CHANGE_HEADER.id), UPPER_WORKINGS_REGION);
     assert.equal(worldRegionForMission(LEDGER_ASSET_RECOVERY_HEADER.id), FACE_SIX_REGION);
+    assert.equal(worldRegionForMission(ATTENDING_THE_DOME_HEADER.id), FOURTH_FOOT_REGION);
     assert.equal(worldRegionForMission(undefined), undefined);
     // Radicals plays on Sorrowgate's map and keeps its presentation: the
     // predicate is keyed on mission identity, never on the map (§7.1).
@@ -475,6 +504,7 @@ describe('the placed-mission predicate', () => {
       ATTENDING_TRENCH_AWAKENING_HEADER.id,
       LEDGER_SHIFT_CHANGE_HEADER.id,
       LEDGER_ASSET_RECOVERY_HEADER.id,
+      ATTENDING_THE_DOME_HEADER.id,
     ]);
     for (const header of MISSION_HEADERS) {
       if (placed.has(header.id)) continue;
