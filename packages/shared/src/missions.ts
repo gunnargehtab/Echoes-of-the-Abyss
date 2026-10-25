@@ -1713,7 +1713,7 @@ export interface MissionView {
   held: readonly MovementHold[];
   /**
    * The player's own hulls the escort rule listens for — see `EscortEars`.
-   * Absent until a tender is free to move, and in every mission without an
+   * Absent until a tender is past its release, and in every mission without an
    * escort rule — all but five.
    */
   ears?: EscortEars;

@@ -243,7 +243,7 @@ because a rule forbids it but because there is nowhere else it needs to be (§8,
 
 **A flight sent with its freight keeps the freight's pace, and the freight's ears are drawn**
 ([mission-sorrowgate.md](mission-sorrowgate.md) §8, #1594). A hull ordered in one move with a
-tender travels at its speed while that order stands, and each tender that is free to move
+tender travels at its speed while that order stands, and each tender past its release
 carries its 600 m ring on the chart: cyan while an escort is inside it, magenta while it is
 held for want of one. The ring is drawn on the chart, so the mouth of the room is a place a player can see the hold reach.
 

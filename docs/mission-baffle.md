@@ -201,7 +201,7 @@ requirement, because a corridor full of firing solutions is not the Scar, and he
 
 **A flight sent with its freight keeps the freight's pace, and the freight's ears are drawn**
 ([mission-sorrowgate.md](mission-sorrowgate.md) §8, #1594). A hull ordered in one move with a
-tender travels at its speed while that order stands, and each tender that is free to move
+tender travels at its speed while that order stands, and each tender past its release
 carries its 450 m ring on the chart: cyan while an escort is inside it, magenta while it is
 held for want of one. The barge is the convoy's one tender, so it is the barge's pace and the barge's ring.
 

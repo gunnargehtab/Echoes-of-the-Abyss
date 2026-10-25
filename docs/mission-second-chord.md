@@ -142,7 +142,7 @@ Aptitude's ([units.md](units.md); [mission-aptitude.md](mission-aptitude.md) §3
 
 **A flight sent with its freight keeps the freight's pace, and the freight's ears are drawn**
 ([mission-sorrowgate.md](mission-sorrowgate.md) §8, #1594). A hull ordered in one move with a
-tender travels at its speed while that order stands, and each tender that is free to move
+tender travels at its speed while that order stands, and each tender past its release
 carries its 600 m ring on the chart: cyan while an escort is inside it, magenta while it is
 held for want of one. The Choirmaster is the party's tender, so from 15:30 she is the one the ring is drawn round, and
 an escort sent down the slopes with her keeps her speed.
