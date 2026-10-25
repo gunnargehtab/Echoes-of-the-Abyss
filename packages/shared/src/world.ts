@@ -20,6 +20,7 @@ import { PLACED_GROUND, paintGround, type GroundCells, type MapGround } from './
 import { MAP_HEADERS, mapHeaderById } from './maps.js';
 import {
   ATTENDING_INTAKE_HEADER,
+  LEDGER_EXPOSURE_HEADER,
   MISSION_HEADERS,
   PROLOGUE_SORROWGATE_HEADER,
 } from './missions.js';
@@ -90,8 +91,26 @@ export const BANDING_GROUND_REGION: WorldRegion = {
   heightM: 4_000,
 };
 
+/**
+ * The Western Margin, *Exposure*'s map (§7.9, #1612): its centre on §7.2's
+ * Western Margin anchor, (6,000, 49,500), so it stands edge to edge north of
+ * the Shallow Band, its worked ground meeting the band's rim at 1,750 m.
+ */
+export const WESTERN_MARGIN_REGION: WorldRegion = {
+  id: 'first-trench-margin',
+  mapId: 'first-trench-margin',
+  x: 3_500,
+  y: 48_000,
+  widthM: 5_000,
+  heightM: 3_000,
+};
+
 /** Every placed region. Other maps keep their own grids until migrated (§7.1). */
-export const WORLD_REGIONS: readonly WorldRegion[] = [SORROWGATE_REGION, BANDING_GROUND_REGION];
+export const WORLD_REGIONS: readonly WorldRegion[] = [
+  SORROWGATE_REGION,
+  BANDING_GROUND_REGION,
+  WESTERN_MARGIN_REGION,
+];
 
 export function worldRegionById(id: string): WorldRegion | undefined {
   return WORLD_REGIONS.find((region) => region.id === id);
@@ -356,12 +375,14 @@ function cellIndex(cells: GroundCells, local: PlanPoint): number {
 
 /**
  * The missions drawn in the world, each on its region: the prologue on the
- * pilot's, and *Intake* on the Banding Ground (§7.9, #1598). A mission on a
- * placed map is not placed until it is named here, so each is its own call.
+ * pilot's, *Intake* on the Banding Ground (§7.9, #1598) and *Exposure* on the
+ * Western Margin (#1612). A mission on a placed map is not placed until it is
+ * named here, so each is its own call.
  */
 const MISSION_REGIONS: ReadonlyMap<string, WorldRegion> = new Map([
   [PROLOGUE_SORROWGATE_HEADER.id, SORROWGATE_REGION],
   [ATTENDING_INTAKE_HEADER.id, BANDING_GROUND_REGION],
+  [LEDGER_EXPOSURE_HEADER.id, WESTERN_MARGIN_REGION],
 ]);
 
 /**
