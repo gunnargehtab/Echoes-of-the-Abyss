@@ -4977,8 +4977,9 @@ export class EchoRenderer {
 
   /**
    * The places to draw on the chart, off the mission view (docs/ui-ux.md
-   * §10.5, #1611): a marker with a `name`, while a row that names it is open.
-   * The row going met takes it off — the chart says where the mission is
+   * §10.5, #1611): a marker with a `name`, while a row that names it is open
+   * — as where it sends the camera, or as the place on its way (#1594's
+   * service lock). The row going met takes it off — the chart says where the mission is
    * sending the player now, and the arch is rock by the time the station is
    * met. Every marker here came off the wire, where the server withholds one
    * until a revealed row names it, so nothing is drawn that was not sent.
@@ -4986,8 +4987,9 @@ export class EchoRenderer {
   setMissionMarkers(view: MissionView): void {
     const open = new Set(
       view.objectives
-        .filter((row) => row.status === ObjectiveStatus.Pending && row.markerId !== undefined)
-        .map((row) => row.markerId)
+        .filter((row) => row.status === ObjectiveStatus.Pending)
+        .flatMap((row) => [row.markerId, row.viaMarkerId])
+        .filter((id) => id !== undefined)
     );
     const marks = view.markers.filter((marker) => marker.name !== undefined && open.has(marker.id));
     const key = JSON.stringify(marks);

@@ -69,10 +69,11 @@ const CONCOURSE = { x: 2500, y: 350 };
  * The route out, since the arch closed behind the transit (#197).
  *
  * §9's "the service lock is now the only way out" is ground now, so the run
- * north is no longer a straight line and this test can no longer drive one.
- * Movement has no pathfinder — `resolveStep` slides a hull along an obstacle
- * and never searches — so a player heading for the Concourse steers through
- * the lock themselves, and so does this.
+ * north is no longer a straight line. Movement routes round ground at the
+ * hull's own depth (`pathfinding.ts`, #431), so a hull ordered straight at the
+ * Concourse finds the lock alone (#1594). This drive still steers through the
+ * lock by waypoints, because its climb is ordered on the last leg only: a
+ * hull rising inside the lock meets its 1,300 m roof.
  *
  * Two waypoints and then the Concourse: into the lock's own column, north
  * through it, and out the far side. The second is deliberately at x 1,950 —

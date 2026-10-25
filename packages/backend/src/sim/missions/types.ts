@@ -864,6 +864,11 @@ export interface MissionObjective {
    */
   revealAtTick?: number;
   markerId?: string;
+  /**
+   * The place on the way to `markerId` — `ObjectiveView.viaMarkerId`. Shipped
+   * under the same rule as `markerId`: only once this objective is revealed.
+   */
+  viaMarkerId?: string;
   /** Met means the mission is complete outright, not merely progressed. */
   terminal?: boolean;
   /**

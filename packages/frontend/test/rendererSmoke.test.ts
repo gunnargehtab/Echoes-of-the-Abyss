@@ -5139,6 +5139,52 @@ describe("a mission's named markers on the chart (#1611)", () => {
       world.teardown();
     }
   });
+
+  // #1594: a tender row names the service lock as the place on its way to
+  // the Concourse, and the chart draws both while the row is open.
+  const LOCK = (at: { x: number; y: number }) => ({
+    id: 'service-lock',
+    label: 'The service lock. The only way north since the arch fell.',
+    name: 'The service lock',
+    x: at.x,
+    y: at.y,
+    radiusM: 250,
+  });
+  const tender = (status: ObjectiveStatus) => ({
+    id: 'tender-one',
+    text: 'Tender One is loaded.',
+    status,
+    markerId: 'arch',
+    viaMarkerId: 'service-lock',
+  });
+
+  it('draws the place on a row’s way beside the row’s own', async () => {
+    const { world, traced, names } = await charted((at) =>
+      view({ objectives: [tender(ObjectiveStatus.Pending)], markers: [ARCH(at), LOCK(at)] })
+    );
+    try {
+      assert.deepEqual(
+        traced.map((ring) => ring.radiusM).sort(),
+        [250, 350],
+        'a ring for the destination and one for the way'
+      );
+      assert.deepEqual(names.sort(), ['The arch', 'The service lock']);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('takes the way off with the row', async () => {
+    const { world, traced, names } = await charted((at) =>
+      view({ objectives: [tender(ObjectiveStatus.Met)], markers: [ARCH(at), LOCK(at)] })
+    );
+    try {
+      assert.equal(traced.length, 0, 'a met row has no way left to show');
+      assert.deepEqual(names, []);
+    } finally {
+      world.teardown();
+    }
+  });
 });
 
 /**

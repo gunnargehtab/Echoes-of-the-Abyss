@@ -117,6 +117,7 @@ function authoredStrings(): Set<string> {
     if (objective.gloss !== undefined) strings.add(objective.gloss);
     if (objective.debtGloss !== undefined) strings.add(objective.debtGloss);
     if (objective.markerId !== undefined) strings.add(objective.markerId);
+    if (objective.viaMarkerId !== undefined) strings.add(objective.viaMarkerId);
   }
   for (const marker of PROLOGUE_SORROWGATE.markers) {
     strings.add(marker.id);
@@ -231,25 +232,33 @@ describe('a mission view says only what the player could have worked out', () =>
     // Checked on the wire rather than on the panel, because "the client is not
     // sent it" and "the client does not draw it" are different promises and
     // only the first one holds when somebody adds a minimap.
-    const seen: number[] = [];
-    for (const { view } of sentViews()) {
-      const shipped = view.markers.some((marker) => marker.id === 'concourse');
-      const named = view.objectives.some((objective) => objective.markerId === 'concourse');
-      assert.equal(
-        shipped,
-        named,
-        `tick ${view.tick}: the concourse was ${shipped ? 'sent' : 'withheld'} and ` +
-          `${named ? 'named' : 'unnamed'} — a marker ships exactly while an objective names it`
+    //
+    // The service lock rides the same rule as the place on the tender rows'
+    // way (#1594): it says where the route out goes, so it is no earlier than
+    // the Concourse it leads to.
+    for (const id of ['concourse', 'service-lock']) {
+      const seen: number[] = [];
+      for (const { view } of sentViews()) {
+        const shipped = view.markers.some((marker) => marker.id === id);
+        const named = view.objectives.some(
+          (objective) => objective.markerId === id || objective.viaMarkerId === id
+        );
+        assert.equal(
+          shipped,
+          named,
+          `tick ${view.tick}: ${id} was ${shipped ? 'sent' : 'withheld'} and ` +
+            `${named ? 'named' : 'unnamed'} — a marker ships exactly while an objective names it`
+        );
+        if (shipped) seen.push(view.tick);
+      }
+      // Both halves have to happen inside the sampled run, or this asserts
+      // nothing: a marker that never ships would pass the equality above.
+      assert.ok(seen.length > 0, `${id} never reached the client at all`);
+      assert.ok(
+        seen[0]! >= 11 * 60 * SIM.TICK_HZ + 20 * SIM.TICK_HZ,
+        `${id} was on the wire at tick ${seen[0]}, before the gate opens at 11:20`
       );
-      if (shipped) seen.push(view.tick);
     }
-    // Both halves have to happen inside the sampled run, or this asserts
-    // nothing: a marker that never ships would pass the equality above.
-    assert.ok(seen.length > 0, 'the concourse never reached the client at all');
-    assert.ok(
-      seen[0]! >= 11 * 60 * SIM.TICK_HZ + 20 * SIM.TICK_HZ,
-      `the concourse was on the wire at tick ${seen[0]}, before the gate opens at 11:20`
-    );
   });
 
   it("states a hold's end once, as the tick the hold is met on", () => {
@@ -320,7 +329,9 @@ describe('a mission view says only what the player could have worked out', () =>
     // `endsAtTick` is a number, and the test above holds it to the authored
     // end of the objective's own clock (#1611). `name` is a marker's second
     // authored string, admitted on `gloss`'s terms: a literal constant, which
-    // `carries no string the mission did not author` holds.
+    // `carries no string the mission did not author` holds. `viaMarkerId` is
+    // `markerId`'s second slot (#1594): an authored id, withheld with its row
+    // by the test above.
     const objective = new Set([
       'id',
       'text',
@@ -329,6 +340,7 @@ describe('a mission view says only what the player could have worked out', () =>
       'progress',
       'endsAtTick',
       'markerId',
+      'viaMarkerId',
     ]);
     const marker = new Set(['id', 'label', 'name', 'x', 'y', 'radiusM']);
     const lock = new Set(['ability', 'reason']);

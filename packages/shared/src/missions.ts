@@ -1638,6 +1638,14 @@ export interface ObjectiveView {
   endsAtTick?: number;
   /** The marker this objective sends you to, if any. */
   markerId?: string;
+  /**
+   * A second marker this objective names as the place on its way —
+   * Sorrowgate's service lock, on the road to the Concourse (#1594). The chart
+   * draws it beside `markerId`'s while the row is open, and focusing the row
+   * still goes to `markerId`: the destination is where the camera belongs, and
+   * the way is something to see on the chart on the way there.
+   */
+  viaMarkerId?: string;
 }
 
 /**

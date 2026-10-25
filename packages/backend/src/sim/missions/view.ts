@@ -110,6 +110,7 @@ export function projectMissionView(
     if (objective.revealAtTick !== undefined && own.tick < objective.revealAtTick) continue;
     objectives.push(objectiveView(definition, objective, state, own));
     if (objective.markerId !== undefined) named.add(objective.markerId);
+    if (objective.viaMarkerId !== undefined) named.add(objective.viaMarkerId);
   }
   // The live row's marker, and only that one. An objective carries a single
   // `markerId` and the walk *moves*, so the circuit's seven rows cannot be
@@ -206,6 +207,7 @@ function objectiveView(
   const gloss = glossFor(objective, state);
   if (gloss !== undefined) view.gloss = gloss;
   if (objective.markerId !== undefined) view.markerId = objective.markerId;
+  if (objective.viaMarkerId !== undefined) view.viaMarkerId = objective.viaMarkerId;
   // The walk sends the camera to wherever the question currently is, which is
   // the one marker in this format that is not a constant. An objective carries
   // a single `markerId` and a circuit moves, so the walk's objective takes the
