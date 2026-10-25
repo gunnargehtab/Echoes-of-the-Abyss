@@ -129,6 +129,12 @@ npm run lint
 | `NODE_ENV` | backend | unset | `production` arms the origin lock below. |
 | `CORS_ORIGIN` | backend | loopback | Origins allowed to reach matchmaking. |
 | `VITE_SERVER_URL` | frontend, **at build time** | the page's own scheme and host, on `:3000` | Where the client dials the server. |
+| `ECHOES_BUILD` | both images, **at build time** | `dev` | The build tag on every error report and failure line. |
+
+Failures are logged as one JSON object per line on the server's stderr (#1576):
+a client's uncaught error, POSTed to `/reports`, and a throw in a room or the
+process. Each carries `build` and `room`, and `seed` when the room is live.
+Read them with `docker compose logs backend`.
 
 `CORS_ORIGIN` is the one to understand. The WebSocket upgrade is not subject to
 CORS, but `@colyseus/sdk` POSTs to `/matchmake/` first, and the lobby list is a

@@ -41,6 +41,11 @@ WORKDIR /srv
 ENV NODE_ENV=production
 ENV PORT=3000
 
+# The build tag on every failure line the server writes (#1576; src/log.ts),
+# usually the commit sha. Unset, the server logs itself as `dev`.
+ARG ECHOES_BUILD=
+ENV ECHOES_BUILD=$ECHOES_BUILD
+
 # esbuild inlines express, Colyseus and bitecs into one file, which the
 # standalone bundle test in the PR confirmed runs with no node_modules beside
 # it. So the runtime image carries the bundle and nothing else.
