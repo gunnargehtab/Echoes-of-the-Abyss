@@ -1253,7 +1253,7 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
   // falling across its south edge and Teel's Landing at its east. The overview
   // draws Marr's terrace narrower than the map, and Teel's a kilometre east of
   // it. The surround carries the Terrace a kilometre west and north, lays Teel's
-  // terrace east from the map's next row, and runs the Landing onto it. The Drop
+  // terrace east of the ring touching the map, and runs the Landing onto it. The Drop
   // runs on a kilometre west and east and two rows south, and below its foot
   // the shoulder's bare rock closes the overview's terrace off at the Drop.
   'marr-plateau': [

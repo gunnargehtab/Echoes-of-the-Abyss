@@ -462,8 +462,8 @@ function cellIndex(cells: GroundCells, local: PlanPoint): number {
  * *Shift Change* and *Asset Recovery* on the two Ninefold maps (#1626), *The
  * Dome* on the Fourth's Foot (#1628), and *Tend* and *Convocation* on Marr
  * Plateau (#1630). A mission on a placed map is not placed until it is named
- * here, so each is its own call; on a shared map every mission travels (the
- * owner's call on #1505), and Radicals is the one that stays.
+ * here, so placing one is a line here. On a placed shared map every mission is
+ * named (the owner's call on #1505), Radicals excepted.
  */
 const MISSION_REGIONS: ReadonlyMap<string, WorldRegion> = new Map([
   [PROLOGUE_SORROWGATE_HEADER.id, SORROWGATE_REGION],
