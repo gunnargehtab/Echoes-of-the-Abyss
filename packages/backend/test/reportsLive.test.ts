@@ -148,6 +148,30 @@ describe('the error-report route, as a hosted client meets it', () => {
     assert.deepEqual(lines, []);
   });
 
+  it('limits each client behind the proxy to its own window', async () => {
+    // From loopback, which is where the playtest proxy's requests come from as
+    // the backend sees them, so `X-Forwarded-For` names the client. Without
+    // `trust proxy` every client would share loopback's one window.
+    const from = (client: string) =>
+      fetch(`${base}${REPORT_PATH}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Origin: ALLOWED,
+          'X-Forwarded-For': client,
+        },
+        body: JSON.stringify(report()),
+      });
+    const lines = await capturingLines(async () => {
+      for (let i = 0; i < REPORTS.MAX_PER_WINDOW; i += 1) {
+        assert.equal((await from('203.0.113.7')).status, 204);
+      }
+      assert.equal((await from('203.0.113.7')).status, 429, 'the window is spent');
+      assert.equal((await from('203.0.113.8')).status, 204, 'another client has its own');
+    });
+    assert.equal(lines.length, REPORTS.MAX_PER_WINDOW + 1, 'a refused report logs nothing');
+  });
+
   it('answers the preflight a JSON report needs, for the allowed origin only', async () => {
     const preflight = (origin: string) =>
       fetch(`${base}${REPORT_PATH}`, {

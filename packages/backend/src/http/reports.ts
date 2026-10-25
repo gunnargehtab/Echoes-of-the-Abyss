@@ -60,14 +60,6 @@ export function parseClientReport(body: unknown): ClientReport | null {
   };
 }
 
-/**
- * Most addresses the limiter remembers. Past it, expired windows are dropped,
- * and if every one is live the table starts over: a flood from that many
- * addresses is not something a per-address count can stop anyway, and an
- * unbounded table is a second way to fill the box.
- */
-const MAX_TRACKED = 10_000;
-
 /** A fixed-window count per address. */
 export class ReportLimiter {
   private readonly windows = new Map<string, { start: number; count: number }>();
@@ -81,7 +73,8 @@ export class ReportLimiter {
   allow(address: string, now: number): boolean {
     const window = this.windows.get(address);
     if (window === undefined || now - window.start >= this.windowMs) {
-      if (window === undefined && this.windows.size >= MAX_TRACKED) this.prune(now);
+      if (window === undefined && this.windows.size >= REPORTS.MAX_TRACKED_ADDRESSES)
+        this.prune(now);
       this.windows.set(address, { start: now, count: 1 });
       return true;
     }
@@ -99,7 +92,7 @@ export class ReportLimiter {
     for (const [address, window] of this.windows) {
       if (now - window.start >= this.windowMs) this.windows.delete(address);
     }
-    if (this.windows.size >= MAX_TRACKED) this.windows.clear();
+    if (this.windows.size >= REPORTS.MAX_TRACKED_ADDRESSES) this.windows.clear();
   }
 }
 
@@ -110,7 +103,7 @@ export type SeedLookup = (roomId: string) => number | null;
  * Mount the route on `app`.
  *
  * `trust proxy` is set to private addresses only, because the playtest host puts
- * a proxy in front (`deploy/Caddyfile`) and every request then arrives from it:
+ * a TLS proxy in front (#1597) and every request then arrives from it:
  * without this, every stranger shares one address and one window. A peer on a
  * private network is the proxy, whose `X-Forwarded-For` is believed; a peer on
  * the internet is the client, whose header is not, so it cannot buy itself a

@@ -66,8 +66,9 @@ describe('the per-address report limit', () => {
 
   it('remembers a bounded number of addresses', () => {
     const limiter = new ReportLimiter(1, 1000);
-    for (let i = 0; i < 10_000; i += 1) limiter.allow(`old-${i}`, 0);
-    assert.equal(limiter.tracked, 10_000);
+    const bound = REPORTS.MAX_TRACKED_ADDRESSES;
+    for (let i = 0; i < bound; i += 1) limiter.allow(`old-${i}`, 0);
+    assert.equal(limiter.tracked, bound);
     // Every old window has expired by now, so making room drops them all.
     limiter.allow('new', 5000);
     assert.equal(limiter.tracked, 1);

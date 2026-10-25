@@ -3059,4 +3059,11 @@ export const REPORTS = {
    * this many distinct errors has said what it can; the rest is noise.
    */
   MAX_PER_PAGE: 20,
+  /**
+   * TUNABLE — addresses the server's limiter remembers. Past it, expired
+   * windows are dropped, and if every one is live the table starts over: a
+   * flood from that many addresses is not something a per-address count can
+   * stop anyway, and an unbounded table is a second way to fill the box.
+   */
+  MAX_TRACKED_ADDRESSES: 10_000,
 } as const;

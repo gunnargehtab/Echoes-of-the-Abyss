@@ -106,7 +106,12 @@ export const server = defineServer({
           }))
         );
       } catch (error) {
-        console.error('Failed to list public matches:', error);
+        logFailure({
+          source: 'server',
+          kind: 'GET /rooms/match',
+          room: null,
+          ...describeThrown(error),
+        });
         res.status(500).json({ error: 'Match listings are unavailable.' });
       }
     });
