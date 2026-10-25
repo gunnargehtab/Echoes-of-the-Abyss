@@ -808,11 +808,30 @@ describe('the shell: the glass over the water', () => {
 describe('the shell: the persistent world view', () => {
   const pilot = { props: { mapId: 'sorrowgate', missionId: 'prologue-sorrowgate' } };
 
-  /** A copy: `groundQuad` rewrites the same four objects every call (#432). */
-  const footprint = () => worldView.current!.groundQuad().map((p) => ({ ...p }));
   /**
-   * Whether two footprints are the same camera. Within 25 m, because the
-   * camera sways between frames (`swayHeld`); a refit moves it kilometres.
+   * A copy, taken with the sway held: `groundQuad` rewrites the same four
+   * objects every call (#432), and the sway is clocked (cameraSway.ts), so two
+   * sessions' opening shots taken seconds apart could differ by more than any
+   * tolerance at the map-fit dolly (#1610). The aim alone is compared, and the
+   * sway is put back as it was.
+   */
+  const footprint = () => {
+    const view = worldView.current! as unknown as {
+      swayHeld: boolean;
+      applyCamera(): void;
+      groundQuad(): { x: number; y: number }[];
+    };
+    const held = view.swayHeld;
+    view.swayHeld = true;
+    view.applyCamera();
+    const quad = view.groundQuad().map((p) => ({ ...p }));
+    view.swayHeld = held;
+    view.applyCamera();
+    return quad;
+  };
+  /**
+   * Whether two footprints are the same camera. Within 25 m as a margin; a
+   * refit moves it kilometres.
    */
   const sameCamera = (a: { x: number; y: number }[], b: { x: number; y: number }[]): boolean =>
     a.every((p, i) => Math.hypot(p.x - b[i]!.x, p.y - b[i]!.y) < 25);
