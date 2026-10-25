@@ -140,6 +140,13 @@ Forty-one souls, and the party still flies Order colours on generic hulls: the r
 Clarion now (#401) and this document has not yet spent it, so the directional figures are
 Aptitude's ([units.md](units.md); [mission-aptitude.md](mission-aptitude.md) §3, §13).
 
+**A flight sent with its freight keeps the freight's pace, and the freight's ears are drawn**
+([mission-sorrowgate.md](mission-sorrowgate.md) §8, #1594). A hull ordered in one move with a
+tender travels at its speed while that order stands, and each tender past its release
+carries its 600 m ring on the chart: cyan while an escort is inside it, magenta while it is
+held for want of one. The Choirmaster is the party's tender, so from 15:30 she is the one the ring is drawn round, and
+an escort sent down the slopes with her keeps her speed.
+
 **Whether the terraces' two nodes were corrected on D+2 is not carried.** The carry between
 missions is hulls by name and nothing else (§13; [mission-nineteen.md](mission-nineteen.md) §13),
 and a structure has none, so this document seats all three standing and says so rather than

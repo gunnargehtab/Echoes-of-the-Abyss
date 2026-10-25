@@ -256,6 +256,12 @@ export const INSTRUMENT_OUTLINE_ALPHA = {
    * voice, the player's orders on the ground.
    */
   missionMarker: 0.45,
+  /**
+   * A tender's ears, the escort radius round it (EchoRenderer
+   * `drawMissionMarks`, #1594). The mission marker's alpha, in its cyan while
+   * an escort answers it and the interface's magenta while it asks for one.
+   */
+  tenderEars: 0.45,
   /** A yard's rally course (EchoRenderer `drawStructures`). */
   rallyCourse: 0.35,
   /** And the glyph at its rally point. */
@@ -444,6 +450,7 @@ export const INSTRUMENT_OUTLINES: Readonly<Record<string, WeighedOutline>> = {
   orderMarker: steady(I.orderMarker, (p) => [p.ui.accent, p.ui.threat]),
   orderAck: atPeak(I.orderAckPeak, (p) => [p.ui.accent, p.ui.threat]),
   missionMarker: steady(I.missionMarker, (p) => [p.ui.accent]),
+  tenderEars: steady(I.tenderEars, (p) => [p.ui.accent, p.ui.glassStroke]),
   rallyCourse: steady(I.rallyCourse, (p) => [p.ui.accent]),
   rallyMarker: steady(I.rallyMarker, (p) => [p.ui.accent]),
   readingBar: atPeak(I.readingBar, (p) => [p.ui.friendly, p.ui.sigMid]),

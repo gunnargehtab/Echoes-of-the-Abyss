@@ -197,6 +197,22 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       y: 350,
       radiusM: 900,
     },
+    /**
+     * §12's third named place (#1594): the way north once the arch has fallen.
+     * Hulls route round ground on their own (`pathfinding.ts`), so this is not
+     * a waypoint to steer by; it says why the freight turns west before it
+     * turns north. Centred on the lock where it is cut back through the span,
+     * and 250 m takes in both of its columns. The tender rows name it as their
+     * way, so it ships with them at 11:20 and not before.
+     */
+    {
+      id: 'service-lock',
+      label: 'The service lock. The only way north since the arch fell.',
+      name: 'The service lock',
+      x: 2000,
+      y: 2125,
+      radiusM: 250,
+    },
   ],
 
   parties: [
@@ -498,8 +514,10 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
    * reads `HARVESTER`, and a hold that lifted on a tender nobody had ordered. So
    * the station's gloss names the Harvesters as the tenders — and, since #1611,
    * says the flight is already under the arch it holds at — and each tender's
-   * puts the escort before the order north to the Concourse, because `Match`
-   * drops an order given to a held tender (`holdsMovement`). Each is held to
+   * puts the escort in the order itself, because `Match` drops an order given
+   * to a held tender (`holdsMovement`), and since #1594 one move sending both
+   * holds the escort to the tender's pace (§8) where two orders left the
+   * tender behind inside a minute. Each is held to
    * the line count of the gloss it replaced: from 13:40 the panel already runs
    * past its foot, and a longer gloss pushes the withheld list further under.
    * The station's countdown sits under its status word, beside this gloss,
@@ -566,10 +584,11 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     {
       id: 'tender-one',
       text: 'Tender One is loaded. Tender One does not move without ears.',
-      gloss: 'With an escort within 400 m, order Tender One north to the Concourse.',
+      gloss: 'Order Tender One and an escort within 400 m to the Concourse together.',
       initial: ObjectiveStatus.Pending,
       revealAtTick: T(11, 20),
       markerId: 'concourse',
+      viaMarkerId: 'service-lock',
       // Terminal, like the objective below it, because §8's table is a count
       // and the runtime reads the count off the terminal objectives: one of the
       // two met is "nine are out", both is "fourteen out", neither is a closed
@@ -581,10 +600,11 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     {
       id: 'tender-two',
       text: 'Tender Two is loaded. The gate is open, and it will not be open twice.',
-      gloss: 'The same for Tender Two: an escort within 400 m, then the order north.',
+      gloss: 'The same for Tender Two: order it and an escort within 400 m together.',
       initial: ObjectiveStatus.Pending,
       revealAtTick: T(13, 40),
       markerId: 'concourse',
+      viaMarkerId: 'service-lock',
       // The second half of the count. Both met is the only thing that means
       // fourteen out, and the mission closes the moment it is — the court does
       // not keep sitting once everybody is out.

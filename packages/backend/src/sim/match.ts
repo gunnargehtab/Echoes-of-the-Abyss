@@ -1248,6 +1248,28 @@ export class Match {
   }
 
   /**
+   * One move given to several hulls at once — the room's `move`, which names
+   * every hull the player had selected. The same as `orderMove` on each, with
+   * one addition: a hull sent with a mission's tender keeps the tender's pace
+   * (docs/mission-sorrowgate.md §8, #1594), which only a move that knows its
+   * whole party can decide. Decided once, before any of them is applied, so
+   * the answer does not depend on which hull was ordered first.
+   */
+  orderMoves(
+    slot: number,
+    eids: readonly number[],
+    x: number,
+    y: number,
+    queued = false,
+    depthM?: number
+  ): void {
+    const pace = this.missionRuntime?.paceFor(slot, eids) ?? 0;
+    for (const eid of eids) {
+      this.orderMove(slot, eid, x, y, queued, depthM, eid === pace ? 0 : pace);
+    }
+  }
+
+  /**
    * Go there — and, with a depth, go there in three dimensions (#1132): a
    * click is a point in the water (docs/ui-ux.md §9), and a move onto the
    * ground follows it (docs/systems-depth.md §2). Without one the move is a
@@ -1260,7 +1282,8 @@ export class Match {
     x: number,
     y: number,
     queued = false,
-    depthM?: number
+    depthM?: number,
+    paceEid = 0
   ): void {
     this.recordCommand({
       tick: this.world.tick,
@@ -1271,13 +1294,14 @@ export class Match {
       y,
       queued,
       ...(depthM === undefined ? {} : { depth: depthM }),
+      ...(paceEid === 0 ? {} : { pace: this.localId(paceEid) }),
     });
     // A mission may be holding this hull still — the court's tenders do not
     // move before they are loaded, and do not move at all without an escort
     // close enough to hear for them. Refused after the recording, like every
     // other refusal on this path.
     if (this.missionRuntime?.holdsMovement(slot, eid) === true) return;
-    this.applyMove(slot, eid, x, y, queued, depthM);
+    this.applyMove(slot, eid, x, y, queued, depthM, paceEid);
   }
 
   /**
@@ -1438,7 +1462,8 @@ export class Match {
     x: number,
     y: number,
     queued: boolean,
-    depthM?: number
+    depthM?: number,
+    paceEid = 0
   ): void {
     if (!this.owns(slot, eid) || !hasComponent(this.world, MoveOrder, eid)) return;
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
@@ -1460,13 +1485,23 @@ export class Match {
     y = this.world.terrain.clampYM(y);
 
     if (queued) {
-      enqueue(
-        this.world,
-        eid,
-        depthM === undefined ? { kind: 'move', x, y } : { kind: 'move', x, y, depth: depthM }
-      );
+      // The pace rides the leg and is bound when the queue begins it
+      // (`orderQueue.ts`), so the leg under way keeps its own (#1594).
+      enqueue(this.world, eid, {
+        kind: 'move',
+        x,
+        y,
+        ...(depthM === undefined ? {} : { depth: depthM }),
+        ...(paceEid === 0 ? {} : { pace: paceEid }),
+      });
       return;
     }
+
+    // Bound to the point, so any later order elsewhere lets it lapse without
+    // being cleared (`MoveOrder`); a move with no tender runs at its own.
+    MoveOrder.paceEid[eid] = paceEid;
+    MoveOrder.paceX[eid] = x;
+    MoveOrder.paceY[eid] = y;
 
     // An unqueued order replaces the whole plan, not just its current leg.
     clearQueue(this.world, eid);

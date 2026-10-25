@@ -660,6 +660,12 @@ describe('the objectives', () => {
             `${mission.id}: "${objective.id}" points at marker "${objective.markerId}"`
           );
         }
+        if (objective.viaMarkerId !== undefined) {
+          assert.ok(
+            markers.has(objective.viaMarkerId),
+            `${mission.id}: "${objective.id}" goes by marker "${objective.viaMarkerId}"`
+          );
+        }
         assert.ok(objective.text.trim().length > 0, `${mission.id}: "${objective.id}" is unnamed`);
       }
       const ids = mission.objectives.map((objective) => objective.id);
@@ -893,7 +899,7 @@ describe('the objectives', () => {
     for (const mission of MISSIONS) {
       const named = new Set(
         mission.objectives
-          .map((objective) => objective.markerId)
+          .flatMap((objective) => [objective.markerId, objective.viaMarkerId])
           .filter((id): id is string => id !== undefined)
       );
       // A walk row names one too, and ships it while that row is the live one

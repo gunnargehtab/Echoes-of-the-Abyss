@@ -236,6 +236,11 @@ export function hashWorld(world: SimWorld): number {
       h = mixU32(h, MoveOrder.active[eid]!);
       h = mixFloat(h, MoveOrder.x[eid]!);
       h = mixFloat(h, MoveOrder.y[eid]!);
+      // Whose pace it keeps, by ordinal, and the point that pace is bound to
+      // (#1594): two runs that disagree about it disagree about speed.
+      h = mixU32(h, ordinalOf.get(MoveOrder.paceEid[eid]!) ?? -1);
+      h = mixFloat(h, MoveOrder.paceX[eid]!);
+      h = mixFloat(h, MoveOrder.paceY[eid]!);
     }
     // What the player told this hull to shoot, by ordinal like every other
     // entity reference. `Posture.engage` above says a hull is fighting on its
@@ -468,6 +473,8 @@ export function hashWorld(world: SimWorld): number {
         h = mixU32(h, order.depth === undefined ? 0 : 1);
         if (order.depth !== undefined) h = mixFloat(h, order.depth);
       }
+      // And the pace a queued move will take up when it begins (#1594).
+      if (order.kind === 'move') h = mixU32(h, ordinalOf.get(order.pace ?? 0) ?? -1);
     }
   }
 

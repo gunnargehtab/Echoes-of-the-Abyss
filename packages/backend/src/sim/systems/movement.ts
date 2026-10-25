@@ -226,6 +226,31 @@ function roundOwnCarrier(world: SimWorld, eid: number, px: number, py: number): 
   aim.y = py + dirY * leg;
 }
 
+/**
+ * The speed of the hull this one was sent with, or Infinity for its own pace
+ * (`MoveOrder.paceEid`; docs/mission-sorrowgate.md §8, #1594).
+ *
+ * The tender's own speed with every condition on it, so a flight sent with a
+ * tender creeping on Silent Running creeps too. Its speed and not its motion:
+ * a tender stopped by the escort hold is stopped *because* no escort is near,
+ * and an escort that waited for the tender to move would wait beside nothing.
+ * Read only while the hull's order still names the point it was paced to, and
+ * only while the pace hull is still the same side's hull: an id recycled to
+ * somebody else's hull is not the tender this move was given with. One case it
+ * does not catch: a tender that dies mid-order and whose id goes to a new hull
+ * of the same side, which then sets the pace at its own kind's speed until the
+ * order ends.
+ */
+function paceOf(world: SimWorld, eid: number): number {
+  const pace = MoveOrder.paceEid[eid]!;
+  if (pace === 0) return Infinity;
+  if (MoveOrder.x[eid] !== MoveOrder.paceX[eid] || MoveOrder.y[eid] !== MoveOrder.paceY[eid]) {
+    return Infinity;
+  }
+  if (!hasComponent(world, Unit, pace) || Owner.slot[pace] !== Owner.slot[eid]) return Infinity;
+  return statsFor(Unit.kind[pace] as UnitKind).speed * speedMultiplier(world, pace);
+}
+
 function speedMultiplier(world: SimWorld, eid: number): number {
   // Storm interference stacks with silent running rather than replacing it
   // (docs/hazards.md §5, "Bathyarch machinery malfunctions"): a Consortium
@@ -324,7 +349,7 @@ export function movementSystem(world: SimWorld): void {
     }
 
     const stats = statsFor(Unit.kind[eid] as UnitKind);
-    const speed = stats.speed * speedMultiplier(world, eid);
+    const speed = Math.min(stats.speed * speedMultiplier(world, eid), paceOf(world, eid));
     const fromX = Position.x[eid]!;
     const fromY = Position.y[eid]!;
 

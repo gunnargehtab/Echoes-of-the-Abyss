@@ -1100,6 +1100,9 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   MoveOrder.active[eid] = 0;
   MoveOrder.x[eid] = 0;
   MoveOrder.y[eid] = 0;
+  MoveOrder.paceEid[eid] = 0;
+  MoveOrder.paceX[eid] = 0;
+  MoveOrder.paceY[eid] = 0;
 
   // Every hull has a posture, so the order paths need no component check.
   addComponent(world, Posture, eid);

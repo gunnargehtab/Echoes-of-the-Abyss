@@ -1551,6 +1551,21 @@ export interface MovementHold {
   reason: MovementHoldReason;
 }
 
+/**
+ * The hulls a mission's escort rule listens for, and how far — a tender's
+ * ears (docs/mission-sorrowgate.md §8, #1594). The rule is a distance,
+ * and the chart draws it as one: a ring round each tender, so a player can see
+ * where an escort has to be rather than read it in a gloss.
+ *
+ * Own-force state and an authored number, `held`'s terms: every id is one of
+ * the observer's own hulls, listed from its load, and the radius is the
+ * literal's `escortRadiusM`. Whether a ring is answered is `held`'s to say.
+ */
+export interface EscortEars {
+  radiusM: number;
+  unitIds: readonly number[];
+}
+
 /** Where the player is being sent. Authored and public; never an entity. */
 export interface MissionMarker {
   id: string;
@@ -1638,6 +1653,14 @@ export interface ObjectiveView {
   endsAtTick?: number;
   /** The marker this objective sends you to, if any. */
   markerId?: string;
+  /**
+   * A second marker this objective names as the place on its way —
+   * Sorrowgate's service lock, on the road to the Concourse (#1594). The chart
+   * draws it beside `markerId`'s while the row is open, and focusing the row
+   * still goes to `markerId`: the destination is where the camera belongs, and
+   * the way is something to see on the chart on the way there.
+   */
+  viaMarkerId?: string;
 }
 
 /**
@@ -1688,6 +1711,12 @@ export interface MissionView {
    * Empty in every mission that holds nothing, which is most of them.
    */
   held: readonly MovementHold[];
+  /**
+   * The player's own hulls the escort rule listens for — see `EscortEars`.
+   * Absent until a tender is past its release, and in every mission without an
+   * escort rule — all but five.
+   */
+  ears?: EscortEars;
   /**
    * The player's own hulls the mission has struck from its count — Thin
    * Water's closure (docs/mission-thin-water.md §8). They still move and still

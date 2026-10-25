@@ -343,20 +343,20 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     this.onClientMessage(CLIENT_MSG.move, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined) return;
-      for (const unitId of message.unitIds) {
-        // Shape is checked in `onClientMessage` against the table in
-        // `wire.ts`; ownership is re-checked inside the sim, because the
-        // client is never trusted to only send units it owns. The depth is
-        // range-checked there too, and refuses the whole move when it is bad.
-        this.match.orderMove(
-          slot,
-          unitId,
-          message.x,
-          message.y,
-          message.queued === true,
-          message.depth
-        );
-      }
+      // Shape is checked in `onClientMessage` against the table in `wire.ts`;
+      // ownership is re-checked inside the sim, because the client is never
+      // trusted to only send units it owns. The depth is range-checked there
+      // too, and refuses the whole move when it is bad. One call for the
+      // whole selection, because whether a hull keeps a tender's pace depends
+      // on what else the move sends (#1594).
+      this.match.orderMoves(
+        slot,
+        message.unitIds,
+        message.x,
+        message.y,
+        message.queued === true,
+        message.depth
+      );
     });
 
     this.onClientMessage(CLIENT_MSG.silent, (client, message) => {

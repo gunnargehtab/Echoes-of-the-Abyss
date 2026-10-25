@@ -89,6 +89,12 @@ export interface MissionState {
    */
   held: readonly MovementHold[];
   /**
+   * The player's own tenders the escort rule listens for, from their load
+   * (`EscortEars`). `held`'s terms: own hulls, under a rule the mission
+   * authored.
+   */
+  ears?: readonly number[];
+  /**
    * The player's own hulls a `strike` beat took out of the count — see
    * types.ts, `strike`. Own-force state for `held`'s reason: every id is one
    * of this observer's hulls, struck under a rule the mission authored.
@@ -110,6 +116,7 @@ export function projectMissionView(
     if (objective.revealAtTick !== undefined && own.tick < objective.revealAtTick) continue;
     objectives.push(objectiveView(definition, objective, state, own));
     if (objective.markerId !== undefined) named.add(objective.markerId);
+    if (objective.viaMarkerId !== undefined) named.add(objective.viaMarkerId);
   }
   // The live row's marker, and only that one. An objective carries a single
   // `markerId` and the walk *moves*, so the circuit's seven rows cannot be
@@ -147,6 +154,11 @@ export function projectMissionView(
     // every pass, and a payload that aliased it would change under a client
     // that had not been sent anything.
     held: state.held.map((hold): MovementHold => ({ ...hold })),
+    // Absent until a tender is loaded, `struck`'s arrangement: most missions
+    // have no escort rule, and their views should not grow a field to say so.
+    ...(state.ears === undefined || state.ears.length === 0
+      ? {}
+      : { ears: { radiusM: definition.escortRadiusM, unitIds: [...state.ears] } }),
     // Absent until something is struck, `ability`'s arrangement: every mission
     // but one never strikes, and its view should not grow a field to say so.
     // Sorted so the change key does not move with set order.
@@ -206,6 +218,7 @@ function objectiveView(
   const gloss = glossFor(objective, state);
   if (gloss !== undefined) view.gloss = gloss;
   if (objective.markerId !== undefined) view.markerId = objective.markerId;
+  if (objective.viaMarkerId !== undefined) view.viaMarkerId = objective.viaMarkerId;
   // The walk sends the camera to wherever the question currently is, which is
   // the one marker in this format that is not a constant. An objective carries
   // a single `markerId` and a circuit moves, so the walk's objective takes the

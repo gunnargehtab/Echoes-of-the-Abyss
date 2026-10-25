@@ -69,10 +69,11 @@ const CONCOURSE = { x: 2500, y: 350 };
  * The route out, since the arch closed behind the transit (#197).
  *
  * §9's "the service lock is now the only way out" is ground now, so the run
- * north is no longer a straight line and this test can no longer drive one.
- * Movement has no pathfinder — `resolveStep` slides a hull along an obstacle
- * and never searches — so a player heading for the Concourse steers through
- * the lock themselves, and so does this.
+ * north is no longer a straight line. Movement routes round ground at the
+ * hull's own depth (`pathfinding.ts`, #431), so a hull ordered straight at the
+ * Concourse finds the lock alone (#1594). This drive still steers through the
+ * lock by waypoints, because its climb is ordered on the last leg only: a
+ * hull rising inside the lock meets its 1,300 m roof.
  *
  * Two waypoints and then the Concourse: into the lock's own column, north
  * through it, and out the far side. The second is deliberately at x 1,950 —
@@ -1164,6 +1165,63 @@ describe('a mission replays', () => {
       result.divergedAtTick,
       null,
       `a mission replay diverged at tick ${String(result.divergedAtTick)}`
+    );
+  });
+
+  it('reproduces a flight sent with its tender, at the tender’s pace (#1594)', () => {
+    // docs/mission-sorrowgate.md §8: one move sending a tender and its flight
+    // holds the flight to the tender's speed. The pace is decided from the
+    // whole move, so the recording has to carry it: replayed as plain moves,
+    // the flight would run off at its own speed and the tender would stop.
+    // This is a newcomer's play as #1594 measured it — the flight brought to
+    // the tender as it loads, then everything sent to the Concourse in one
+    // click — and it ends with the tender still escorted, which it did not.
+    const match = new Match(missionMapById(PROLOGUE_SORROWGATE.mapId)!, {
+      mission: PROLOGUE_SORROWGATE,
+      fauna: false,
+      seed: 21,
+      record: true,
+    });
+    const at = (m: number, s: number) => (m * 60 + s) * SIM.TICK_HZ;
+    let last: EchoSnapshot | null = null;
+    let widest = 0;
+    for (let tick = 0; tick < at(12, 30); tick++) {
+      const own = match.update(STEP_MS)?.get(PLAYER);
+      if (own !== undefined) last = own;
+      if (last === null) continue;
+      const tender = tendersIn(last)[0]!;
+      const escorts = escortsIn(last);
+      if (tick === at(10, 45)) {
+        for (const escort of escorts) {
+          match.orderMove(PLAYER, escort.id, tender.x, tender.y - 150);
+        }
+      }
+      if (tick === at(11, 22)) {
+        const ids = [tender.id, ...escorts.map((escort) => escort.id)];
+        match.orderMoves(PLAYER, ids, CONCOURSE.x, CONCOURSE.y);
+      }
+      if (tick > at(11, 22) && tick % SIM.TICK_HZ === 0) {
+        const nearest = Math.min(
+          ...escorts.map((escort) => Math.hypot(escort.x - tender.x, escort.y - tender.y))
+        );
+        widest = Math.max(widest, nearest);
+      }
+    }
+    assert.ok(
+      widest < PROLOGUE_SORROWGATE.escortRadiusM,
+      `the nearest escort got ${widest.toFixed(0)} m from the tender`
+    );
+
+    const replay = match.replay()!;
+    assert.ok(
+      replay.commands.some((command) => command.type === 'move' && command.pace !== undefined),
+      'the recording carries the pace'
+    );
+    const result = playReplay(replay);
+    assert.equal(
+      result.divergedAtTick,
+      null,
+      `a paced replay diverged at tick ${String(result.divergedAtTick)}`
     );
   });
 });
