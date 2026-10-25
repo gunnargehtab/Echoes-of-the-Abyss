@@ -946,8 +946,11 @@ something new, and a log role would re-announce the whole panel every time a cou
   column, as `0 of 1` does on a counted row, and like it narrows the row's reading: while it
   runs, the row may wrap a line longer than it does once met, in its reading or its gloss.
   That is the one line this panel may spend, and each mission that counts a hold down is
-  checked in a browser at its fullest moment (`docs/screenshots/issue-1611/panelFit.mjs`).
-  Where the panel fits, it still fits with the line. Where a panel already runs past its foot
+  checked in a browser once every row it reveals has arrived
+  (`docs/screenshots/issue-1611/panelFit.mjs`). Where those panels fit, they still fit with
+  the line. A row can also grow without a reveal — a silence debt, a stalled walk's reading,
+  the commander's bell — and those have not been measured with the line (#1622). Where a
+  panel already runs past its foot
   while a hold counts — Tend from 15:00 (#1619), Conclave Chord from 13:30 (#1621) — a line
   the countdown wraps adds to that overflow until the overflow is fixed, and fixing the
   overflow takes the line back with it. The server sends the tick the row ends at, once, and

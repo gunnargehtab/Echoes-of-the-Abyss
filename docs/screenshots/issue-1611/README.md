@@ -47,8 +47,10 @@ node .claude/skills/run-game/scripts/drive.mjs --headed --channel chrome   --url
 
 Where the panel has room, the countdown costs one line of 14–16 px and the panel still fits.
 Sorrowgate, Item Nine, Convocation and Tend reveal no row while their hold runs, so the first
-moment is the fullest. Conclave Chord reveals six stood rows and `the-quiet` at 13:30, a
-minute before its hold ends, so it is also read there.
+moment holds every row they reveal. Conclave Chord reveals six stood rows and `the-quiet` at
+13:30, a minute before its hold ends, so it is also read there. A panel can also grow without
+a reveal, and none of those states was measured: Sorrowgate's silence debt (19 px of slack
+with the countdown), Convocation's stalled walk (5 px), and the commander's bell (#1622).
 
 Two panels already overflow while a hold counts. Tend's is at its cap at 15:00 and overflows
 by the same 80 px either way (`tend-turning.png`, #1619). Conclave Chord's overflows by 170 px
