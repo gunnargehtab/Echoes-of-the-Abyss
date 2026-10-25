@@ -7,8 +7,9 @@
  * So the room says so, on the ground's own message: these hold that the
  * prologue names Sorrowgate at join, Intake the Banding Ground (#1598),
  * Exposure the Western Margin (#1612), Trench Awakening the Shallow Band
- * (#1615), Shift Change and Asset Recovery the two Ninefold maps (#1626), and
- * The Dome the Fourth's Foot (#1628), and the prologue again on a
+ * (#1615), Shift Change and Asset Recovery the two Ninefold maps (#1626), The
+ * Dome the Fourth's Foot (#1628), Tend and Convocation Marr Plateau (#1630),
+ * and the prologue again on a
  * reconnection after its ground has changed, with writes that replay to the
  * live cells and the live revision, and that every other room — Radicals on the same map included —
  * names nothing.
@@ -27,8 +28,11 @@ import {
   LEDGER_ASSET_RECOVERY_HEADER,
   LEDGER_EXPOSURE_HEADER,
   LEDGER_SHIFT_CHANGE_HEADER,
+  MARR_PLATEAU_REGION,
   PROLOGUE_SORROWGATE_HEADER,
+  SEEDING_CONVOCATION_HEADER,
   SEEDING_RADICALS_HEADER,
+  SEEDING_TEND_HEADER,
   SERVER_MSG,
   SHALLOW_BAND_REGION,
   SORROWGATE_REGION,
@@ -109,6 +113,8 @@ describe('the region a room names (#1460)', () => {
     [LEDGER_SHIFT_CHANGE_HEADER, UPPER_WORKINGS_REGION],
     [LEDGER_ASSET_RECOVERY_HEADER, FACE_SIX_REGION],
     [ATTENDING_THE_DOME_HEADER, FOURTH_FOOT_REGION],
+    [SEEDING_TEND_HEADER, MARR_PLATEAU_REGION],
+    [SEEDING_CONVOCATION_HEADER, MARR_PLATEAU_REGION],
   ] as const) {
     it(`names ${region.id} on ${mission.id}'s ground at join`, async () => {
       const match = await room({ missionId: mission.id });

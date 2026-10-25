@@ -22,6 +22,7 @@ import {
   FOURTH_FOOT_GROUND,
   Biome,
   DEPTH,
+  MARR_PLATEAU_GROUND,
   SHALLOW_BAND_GROUND,
   SORROWGATE_GROUND,
   UPPER_WORKINGS_GROUND,
@@ -36,6 +37,7 @@ import {
   FOURTH_FOOT,
   FIRST_TRENCH_MARGIN,
   MAPS,
+  MARR_PLATEAU,
   MISSION_MAPS,
   NINEFOLD_FACE_SIX,
   NINEFOLD_WORKINGS,
@@ -190,6 +192,18 @@ describe("the Fourth's Foot's shared ground (#1628)", () => {
     assert.equal(FOURTH_FOOT.heightM, FOURTH_FOOT_GROUND.heightM);
     assert.equal(FOURTH_FOOT.cellM, FOURTH_FOOT_GROUND.cellM);
     assert.equal(FOURTH_FOOT.floorM, FOURTH_FOOT_GROUND.floorM);
+  });
+});
+
+describe("Marr Plateau's shared ground (#1630)", () => {
+  // Its cells are held to the server's by the shared painter's test below and
+  // pinned against both missions by `missionTend.test.ts`; this holds the move.
+  it('is the one source: the map spreads the shared literal, not a copy', () => {
+    assert.equal(MARR_PLATEAU.regions, MARR_PLATEAU_GROUND.regions);
+    assert.equal(MARR_PLATEAU.widthM, MARR_PLATEAU_GROUND.widthM);
+    assert.equal(MARR_PLATEAU.heightM, MARR_PLATEAU_GROUND.heightM);
+    assert.equal(MARR_PLATEAU.cellM, MARR_PLATEAU_GROUND.cellM);
+    assert.equal(MARR_PLATEAU.floorM, MARR_PLATEAU_GROUND.floorM);
   });
 });
 

@@ -14,9 +14,14 @@
  * argument: one seat, not balanced, resolved by mission id and nothing else.
  * The Drop's trench paint at the Shelf's edge is Asset Recovery's authoring
  * freedom pointed the other way: biome is acoustics, not band.
+ *
+ * **The ground is shared's** (`MARR_PLATEAU_GROUND`, #1630), as the Fourth's
+ * Foot's is: the continuous world draws this map before any room exists
+ * (docs/world-map.md §7.9), so its regions are authored once, in
+ * `@echoes/shared`, and spread in here. What stays here is the spawn.
  */
 
-import { Biome, FaunaSpecies, TETHERJELLY_KELP_BAND } from '@echoes/shared';
+import { FaunaSpecies, MARR_PLATEAU_GROUND, TETHERJELLY_KELP_BAND } from '@echoes/shared';
 import type { MapDefinition } from '../types.ts';
 
 export const MARR_PLATEAU: MapDefinition = {
@@ -24,110 +29,8 @@ export const MARR_PLATEAU: MapDefinition = {
   name: 'Marr Plateau',
   idealUse: 'The Second Seeding, mission one. A garden terrace, a working day, and a survey.',
   seats: 1,
-  widthM: 4000,
-  heightM: 2500,
   doc: 'docs/mission-tend.md §11; docs/maps.md — Mission maps',
-  cellM: 250,
-  floorM: 320,
-  // One row per row of §11's table, in the document's order. Later regions
-  // overwrite earlier ones; every number a shape states is a whole 250 m cell,
-  // and a cell is its region's when the shape holds its centre (#1148). The
-  // reshape is new content, never a lever: three cells moved, none under a
-  // place either mission seats, orders or bounds, and two of them went from
-  // trench to kelp. `missionTend.test.ts` pins both missions' ground.
-  regions: [
-    // A box because it is the whole map, painted first.
-    {
-      x: 0,
-      y: 0,
-      widthM: 4000,
-      heightM: 2500,
-      biome: Biome.KelpForest,
-      floorM: 320,
-      note: 'The Terrace — the plateau. Painted first; everything else is cut into it',
-    },
-    // A box because Tend restates it as the `gardens` region the share's
-    // loads are worked in: a shape that painted other cells would draw garden
-    // the mission does not count.
-    {
-      x: 500,
-      y: 250,
-      widthM: 1250,
-      heightM: 750,
-      biome: Biome.KelpForest,
-      floorM: 250,
-      note: "The Gardens — the bloom nodes and the farm rows. The share's source",
-    },
-    // A box because Convocation restates it as the `holdfast` region a
-    // foreign hull holds, and Tend's `holdfast` and `ovens` lie inside it.
-    {
-      x: 2250,
-      y: 250,
-      widthM: 750,
-      heightM: 500,
-      biome: Biome.KelpForest,
-      floorM: 280,
-      note: "The Holdfast — home, named for what anchors kelp. The spawn, and the share's delivery point",
-    },
-    // A box because Tend restates it as the `west-lane` region the re-seat
-    // is counted in.
-    {
-      x: 250,
-      y: 1000,
-      widthM: 1000,
-      heightM: 750,
-      biome: Biome.KelpForest,
-      floorM: 300,
-      note: 'The West Lane — the jelly lane. The clusters have walked; the re-seat happens here',
-    },
-    // The lip runs on a slant to the west edge, so the terrace reaches two
-    // rows further south in the edge column. No line from a place either
-    // mission seats, sends or holds the player to another party's authored
-    // position crosses those two cells, but a hull that strays into them is
-    // now heard through kelp rather than trench, and water deeper than 320 m
-    // no longer reaches them.
-    {
-      shape: 'polygon',
-      points: [
-        [0, 2500],
-        [250, 2000],
-        [500, 1750],
-        [4000, 1750],
-        [4000, 2500],
-      ],
-      biome: Biome.AbyssalTrench,
-      floorM: 900,
-      note: "The Drop — the bare slope and the survey lane. Trench paint at the Shelf's edge: the drop carries",
-    },
-    // The bench's east end runs on a slant, so its north-east cell is the
-    // Drop's 900 m, trench like the bench, and open to water deeper than
-    // 600 m. Every other cell is held: the watch's edge in its north row, the
-    // sweep's lane along its south row, and the heavy's climb across its
-    // north-west corner.
-    {
-      shape: 'polygon',
-      points: [
-        [1500, 1750],
-        [2250, 1750],
-        [2500, 2250],
-        [1500, 2250],
-      ],
-      biome: Biome.AbyssalTrench,
-      floorM: 600,
-      note: 'The Face — a nodule bench on the slope that two parties call theirs. The Rift has more than one, which is the problem',
-    },
-    // A box because Tend restates it as the `landing` region the gift is
-    // delivered to.
-    {
-      x: 3500,
-      y: 1750,
-      widthM: 500,
-      heightM: 500,
-      biome: Biome.KelpForest,
-      floorM: 400,
-      note: "Teel's Landing — the neighbouring terrace's storm-bitten edge. The gift's destination",
-    },
-  ],
+  ...MARR_PLATEAU_GROUND,
   // One spawn, at the Holdfast. The offsets address a pre-built Foundry a
   // mission never places: nothing to build, and the day seats itself.
   spawns: [{ x: 2625, y: 375, foundryOffsetX: 0, foundryOffsetY: 0 }],

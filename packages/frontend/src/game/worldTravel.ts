@@ -38,8 +38,8 @@ export function boardFrame(region: WorldRegion): CameraFrame {
  * Each placed region's spawn, as §7.2's derived anchor names it: Sorrowgate's
  * court, the flight's spawn at the arch; the muster, the intake's; the shelf
  * lane, the survey's; the rendering row, the yard's; Face Two's muster, the
- * shift's; Face Six's rail head, the column's; and the Fourth's mouth, the
- * picket's.
+ * shift's; Face Six's rail head, the column's; the Fourth's mouth, the
+ * picket's; and the Holdfast, the tide's, for both of Marr's missions.
  */
 const SPAWN_PLACE: Readonly<Record<string, string>> = {
   sorrowgate: 'sorrowgate',
@@ -49,6 +49,7 @@ const SPAWN_PLACE: Readonly<Record<string, string>> = {
   'ninefold-workings': 'face-two',
   'ninefold-face-six': 'face-six-rail-head',
   'fourth-foot': 'fourths-mouth',
+  'marr-plateau': 'the-holdfast',
 };
 
 /**
