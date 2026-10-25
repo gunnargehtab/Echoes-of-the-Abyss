@@ -39,7 +39,8 @@ export function boardFrame(region: WorldRegion): CameraFrame {
  * court, the flight's spawn at the arch; the muster, the intake's; the shelf
  * lane, the survey's; the rendering row, the yard's; Face Two's muster, the
  * shift's; Face Six's rail head, the column's; the Fourth's mouth, the
- * picket's; and the Holdfast, the tide's, for both of Marr's missions.
+ * picket's; the Holdfast, the tide's, for both of Marr's missions; and Kell
+ * Face, the column's, for both of the Kell Shoulder's.
  */
 const SPAWN_PLACE: Readonly<Record<string, string>> = {
   sorrowgate: 'sorrowgate',
@@ -50,6 +51,7 @@ const SPAWN_PLACE: Readonly<Record<string, string>> = {
   'ninefold-face-six': 'face-six-rail-head',
   'fourth-foot': 'fourths-mouth',
   'marr-plateau': 'the-holdfast',
+  'kell-shoulder': 'kell-face',
 };
 
 /**

@@ -23,9 +23,14 @@
  *
  * **Not in `MAPS` and not in `MAP_HEADERS`, deliberately** — the standing
  * argument: one seat, not balanced, resolved by mission id and nothing else.
+ *
+ * **The ground is shared's** (`KELL_SHOULDER_GROUND`, #1633), as Marr
+ * Plateau's is: the continuous world draws this map before any room exists
+ * (docs/world-map.md §7.9), so its regions are authored once, in
+ * `@echoes/shared`, and spread in here. What stays here is the spawn.
  */
 
-import { Biome } from '@echoes/shared';
+import { KELL_SHOULDER_GROUND } from '@echoes/shared';
 import type { MapDefinition, MapRect } from '../types.ts';
 
 export const KELL_SHOULDER: MapDefinition<MapRect> = {
@@ -33,78 +38,8 @@ export const KELL_SHOULDER: MapDefinition<MapRect> = {
   name: 'The Kell Shoulder',
   idealUse: 'Thin Water, mission two. Four kilometres between gardens and a corridor across it.',
   seats: 1,
-  widthM: 5000,
-  heightM: 3000,
   doc: 'docs/mission-thin-water.md §11; docs/maps.md — Mission maps',
-  cellM: 250,
-  floorM: 340,
-  // One row per row of §11's table, in the document's order. Every rectangle
-  // lands on the 250 m cell grid and paints exactly the metres it reads.
-  regions: [
-    {
-      x: 0,
-      y: 0,
-      widthM: 5000,
-      heightM: 3000,
-      biome: Biome.OpenWater,
-      floorM: 340,
-      note: "The Shoulder — the bare rise. Painted first; everything else is cut into it. PF 1.0, the thin water, and the mission's whole argument",
-    },
-    {
-      x: 0,
-      y: 1250,
-      widthM: 5000,
-      heightM: 500,
-      biome: Biome.OpenWater,
-      floorM: 420,
-      note: 'The Grid Spur — the closed corridor: pipe, cable, tension frame, seven pump housings. It crosses the map east to west and getting across it is the mission',
-    },
-    {
-      x: 0,
-      y: 2500,
-      widthM: 5000,
-      heightM: 500,
-      biome: Biome.AbyssalTrench,
-      floorM: 900,
-      note: "The Kell Slope — the shoulder's southern edge falling away. Trench paint at Shelf's edge: nothing the column wants is down there, and everything that hears it is",
-    },
-    {
-      x: 1750,
-      y: 1750,
-      widthM: 1000,
-      heightM: 750,
-      biome: Biome.ThermalVein,
-      floorM: 620,
-      note: "The Vent Under-run — the geothermal field the spur draws from. PF 0.45, the map's one mask, and it lies below the corridor: the quiet way is the deep way",
-    },
-    {
-      x: 3750,
-      y: 1750,
-      widthM: 1250,
-      heightM: 750,
-      biome: Biome.KelpForest,
-      floorM: 300,
-      note: "Kell Face — the replanted terrace's working face and the early bloom. The spawn, and the last water in which the column's own numbers are true",
-    },
-    {
-      x: 0,
-      y: 250,
-      widthM: 2000,
-      heightM: 750,
-      biome: Biome.KelpForest,
-      floorM: 280,
-      note: "The Marr Approach — home terrace's outer rows. The first water where 18 means 18 again",
-    },
-    {
-      x: 250,
-      y: 0,
-      widthM: 1000,
-      heightM: 250,
-      biome: Biome.KelpForest,
-      floorM: 260,
-      note: 'The Holdfast Gate — the extraction region. The count is taken here',
-    },
-  ],
+  ...KELL_SHOULDER_GROUND,
   // One spawn, at the Kell face (§11). The offsets address a pre-built Foundry
   // a mission never places: the load is already aboard and there is nothing to
   // build with.

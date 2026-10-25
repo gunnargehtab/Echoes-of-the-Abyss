@@ -22,6 +22,7 @@ import {
   FOURTH_FOOT_GROUND,
   Biome,
   DEPTH,
+  KELL_SHOULDER_GROUND,
   MARR_PLATEAU_GROUND,
   SHALLOW_BAND_GROUND,
   SORROWGATE_GROUND,
@@ -36,6 +37,7 @@ import {
   BANDING_GROUND,
   FOURTH_FOOT,
   FIRST_TRENCH_MARGIN,
+  KELL_SHOULDER,
   MAPS,
   MARR_PLATEAU,
   MISSION_MAPS,
@@ -204,6 +206,19 @@ describe("Marr Plateau's shared ground (#1630)", () => {
     assert.equal(MARR_PLATEAU.heightM, MARR_PLATEAU_GROUND.heightM);
     assert.equal(MARR_PLATEAU.cellM, MARR_PLATEAU_GROUND.cellM);
     assert.equal(MARR_PLATEAU.floorM, MARR_PLATEAU_GROUND.floorM);
+  });
+});
+
+describe("the Kell Shoulder's shared ground (#1633)", () => {
+  // Its cells are held to the server's by the shared painter's test below and
+  // pinned against both missions by `missionThinWater.test.ts` and
+  // `missionShallow.test.ts`; this holds the move.
+  it('is the one source: the map spreads the shared literal, not a copy', () => {
+    assert.equal(KELL_SHOULDER.regions, KELL_SHOULDER_GROUND.regions);
+    assert.equal(KELL_SHOULDER.widthM, KELL_SHOULDER_GROUND.widthM);
+    assert.equal(KELL_SHOULDER.heightM, KELL_SHOULDER_GROUND.heightM);
+    assert.equal(KELL_SHOULDER.cellM, KELL_SHOULDER_GROUND.cellM);
+    assert.equal(KELL_SHOULDER.floorM, KELL_SHOULDER_GROUND.floorM);
   });
 });
 
