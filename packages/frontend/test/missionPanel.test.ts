@@ -20,6 +20,7 @@ import type { ReactTestInstance } from 'react-test-renderer';
 import {
   MovementHoldReason,
   ObjectiveStatus,
+  SIM,
   type AbilityLock,
   type BoundSig,
   type CommanderAbilityView,
@@ -75,13 +76,15 @@ interface Calls {
 
 async function panel(
   view: MissionView,
-  boundSig?: BoundSig
+  boundSig?: BoundSig,
+  tick?: number
 ): Promise<{ rendered: Rendered; calls: Calls }> {
   const calls: Calls = { focused: [], rung: 0 };
   const rendered = await render(
     createElement(MissionPanel, {
       view,
       ...(boundSig === undefined ? {} : { boundSig }),
+      ...(tick === undefined ? {} : { tick }),
       onFocus: (x, y) => calls.focused.push([x, y]),
       onCommanderAbility: () => calls.rung++,
     })
@@ -494,6 +497,88 @@ describe('the objectives panel: whose words these are', () => {
     try {
       const words = rendered.allByClass('objectives-status').map((s) => s.props.children);
       assert.deepEqual(words, ['open', 'met', 'failed']);
+    } finally {
+      await rendered.unmount();
+    }
+  });
+});
+
+describe('the objectives panel: a hold that ends on its own', () => {
+  // §10.5 (#1611): a newcomer told to hold at the arch did not know for how
+  // long, and could not tell holding from waiting for something they missed.
+  // The server sends the tick the hold ends on; the panel counts down to it.
+  const HZ = SIM.TICK_HZ;
+  const ENDS = (10 * 60 + 40) * HZ;
+  const hold = (over: Partial<ObjectiveView> = {}) =>
+    objective({ id: 'station', text: 'The flight holds at the arch.', endsAtTick: ENDS, ...over });
+
+  it('counts the time left down against the match clock, in whole seconds', async () => {
+    for (const [tick, reading] of [
+      [30 * HZ, '10:10 left'],
+      [ENDS - HZ / 2, '00:01 left'],
+      [ENDS, '00:00 left'],
+      // The row goes met within an Echo pass of its end, and holds at zero
+      // across it rather than counting on past it.
+      [ENDS + HZ, '00:00 left'],
+    ] as const) {
+      const { rendered } = await panel(missionView({ objectives: [hold()] }), undefined, tick);
+      try {
+        assert.equal(deepText(rendered.byClass('objectives-clock')).split('until')[0], reading);
+      } finally {
+        await rendered.unmount();
+      }
+    }
+  });
+
+  it('keeps the moving figure out of the live region and says the end once', async () => {
+    // A live region announces every change inside it, and this figure changes
+    // every second: in the tree it would read the countdown aloud over every
+    // objective. So it is hidden there, and the row's accessible name carries
+    // the end instead, in the strip clock's own form.
+    const { rendered } = await panel(missionView({ objectives: [hold()] }), undefined, 30 * HZ);
+    try {
+      const clock = rendered.byClass('objectives-clock');
+      const hidden = clock.findAll(
+        (node) => (node.props as { 'aria-hidden'?: string })['aria-hidden'] === 'true'
+      );
+      assert.equal(hidden.length, 1, 'the countdown is hidden from assistive tech');
+      assert.match(deepText(hidden[0]!), /10:10 left/);
+      const end = rendered.byClass('objectives-clock-end');
+      assert.equal(deepText(end), 'until T+10:40');
+      // Clipped, never `display: none`: the end has to stay in the tree.
+      const rules = rulesTargeting(
+        parseCss(APP_CSS),
+        { tag: 'span', classes: ['objectives-clock-end'], ancestors: [] },
+        new Set(['clip-path', 'display', 'visibility'])
+      ).flatMap((rule) => rule.declarations);
+      assert.ok(
+        rules.some(([property]) => property === 'clip-path'),
+        'the end is not clipped'
+      );
+      assert.ok(
+        !rules.some(
+          ([property, value]) => /display|visibility/.test(property) && /none|hidden/.test(value)
+        ),
+        'the end was taken out of the accessible tree'
+      );
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('counts nothing on a row that is not a hold, or once the hold is met', async () => {
+    const { rendered } = await panel(
+      missionView({
+        objectives: [
+          objective({ id: 'silence' }),
+          hold({ status: ObjectiveStatus.Met, endsAtTick: undefined }),
+        ],
+      }),
+      undefined,
+      30 * HZ
+    );
+    try {
+      assert.equal(rendered.allByClass('objectives-clock').length, 0);
     } finally {
       await rendered.unmount();
     }

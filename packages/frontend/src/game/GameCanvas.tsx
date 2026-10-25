@@ -15,6 +15,7 @@ import {
   LIFECYCLE,
   MatchPhase,
   ResolutionTier,
+  SIM,
   missionHeaderById,
   type AiDifficulty,
   type BoundSig,
@@ -228,6 +229,13 @@ export function GameCanvas({
    * `BoundSig.peak`), so this compares the figure the player reads.
    */
   const [boundSig, setBoundSig] = useState<BoundSig | null>(null);
+  /**
+   * The match clock for a hold's countdown (docs/ui-ux.md §10.5, #1611), set
+   * on the whole second and only while the mission has a hold to count down —
+   * `boundSig`'s reasoning: the shell re-renders when this moves, and a 5 Hz
+   * tick nobody reads would re-render it five times a second in every match.
+   */
+  const [clockTick, setClockTick] = useState<number | null>(null);
   const [missionLines, setMissionLines] = useState<MissionLine[]>([]);
   /** Non-null once the mission has concluded. Never a winner; an outcome. */
   const [missionOver, setMissionOver] = useState<MissionResultPayload | null>(null);
@@ -407,6 +415,8 @@ export function GameCanvas({
      */
     let underSilenceOrder = false;
     let anyHullSilent = false;
+    /** Whether the latest mission view has a hold counting down (#1611). */
+    let missionCounts = false;
 
     /**
      * Set by a result, cleared by a rematch. The deciding tick's snapshot can
@@ -602,6 +612,14 @@ export function GameCanvas({
                 ? previous
                 : bound
             );
+            if (missionCounts) {
+              const second = Math.floor(snapshot.tick / SIM.TICK_HZ);
+              setClockTick((previous) =>
+                previous !== null && Math.floor(previous / SIM.TICK_HZ) === second
+                  ? previous
+                  : snapshot.tick
+              );
+            }
             activeRenderer.applySnapshot(snapshot);
             perspective.applySnapshot(snapshot);
             // A snapshot after a result is the deciding tick's: the chart draws
@@ -625,6 +643,7 @@ export function GameCanvas({
           },
           onMission: (view) => {
             underSilenceOrder = view.debtS > 0;
+            missionCounts = view.objectives.some((row) => row.endsAtTick !== undefined);
             setMission(view);
             // The renderer needs the locks, not the objectives: they decide
             // which keys still do anything and what the hint bar says when one
@@ -943,6 +962,7 @@ export function GameCanvas({
           <MissionPanel
             view={mission}
             {...(boundSig === null ? {} : { boundSig })}
+            {...(clockTick === null ? {} : { tick: clockTick })}
             onFocus={focusOn}
             onCommanderAbility={() => clientRef.current?.commanderAbility()}
           />
