@@ -1715,20 +1715,17 @@
   transform-origin: top left;
   /* Divided by `--panel-type` as well as by the scale, so the panel keeps its
      width in panel units as it magnifies instead of narrowing to a column that
-     wraps every row twice. At 100% both are 1 and this is the old rule. The
-     extra height is the same argument: at 200% the screen between the strip and
-     the console is 182 units, and 38vh/2 left 171 of them unused. */
+     wraps every row twice. At 100% both are 1 and this is the old rule. */
   width: min(340px, calc(32vw / var(--ui-scale, 1) / var(--panel-type, 1)));
-  /* Two caps, and the smaller wins. The first is the panel's share of the
-     screen. The second is the room that actually exists between the top strip
-     and the console — 60 and 208 panel units, both Pixi-drawn and both scaling
-     with the HUD — because a panel allowed past it would cover the console
-     rather than the water, which §2 does not allow either. At 100% the first
-     binds (38vh against 632 units); at 200% the second does. */
-  max-height: min(
-    calc(38vh / var(--ui-scale, 1) / var(--panel-type, 1)),
-    calc(100vh / var(--ui-scale, 1) - 280px)
-  );
+  /* One cap: the room that actually exists between the top strip and the
+     console — 60 and 208 panel units, both Pixi-drawn and both scaling with the
+     HUD — because a panel allowed past it would cover the console rather than
+     the water. There was a second, a 38vh share of the screen like the logs'
+     30% and 18%, and it is gone because §2 gives this panel no share: every
+     objective has to be on screen at once (§10.5). At 1440x900 it held the body
+     to 313 px while Sorrowgate's rows and withheld list wanted 471 from 13:40,
+     so the list sat under the foot (#1593). */
+  max-height: calc(100vh / var(--ui-scale, 1) - 280px);
   display: flex;
   flex-direction: column;
   border: 1px solid color-mix(in srgb, var(--neon-magenta) 45%, transparent);
@@ -1785,7 +1782,10 @@
 .objectives-row {
   display: grid;
   grid-template-columns: calc(3.2rem * var(--panel-type, 1)) minmax(0, 1fr) auto;
-  gap: 8px;
+  /* Between columns only. A gloss is the row's second grid row, and a row gap
+     put 8 px between a reading and its own gloss, on top of the gloss's 2 px
+     margin: 32 px of Sorrowgate's panel at 13:40 spent on nothing (#1593). */
+  column-gap: 8px;
   width: 100%;
   /* `width: 100%` is the body's content width, and these 8s are added to it
      unless the padding is counted inside the box. A marker row is a `button`,
