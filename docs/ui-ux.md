@@ -926,8 +926,7 @@ something new, and a log role would re-announce the whole panel every time a cou
   one**: its reading is underlined, dotted, which is the mark for text that goes somewhere,
   and a row with no marker is not. The row was the only route to Sorrowgate's Concourse and
   looked like static text, so a newcomer never took it (#1585). An underline adds no line and
-  no column, which is what §2's no-scroll rule asks of anything added to this panel; a hold's
-  countdown, below, is the one exception, and pays for it.
+  no column, which is what §2's no-scroll rule asks of anything added to this panel.
 - **A named marker is drawn on the chart while an open row names it.** A mission may give a
   marker a short place name — *The arch*, *The Concourse* — and the world view then draws it
   where it is: a ring of the marker's radius on the seabed, and the name above the ring, held
@@ -940,21 +939,21 @@ something new, and a log role would re-announce the whole panel every time a cou
   more. A newcomer told to hold *at the arch* stood under it for ten minutes without knowing
   it was there, because nothing on screen said so (#1611).
 - **A row that runs on a clock says how long is left.** A hold that ends on its own — the
-  flight holding at the arch, a sitting, a tide — reads the time remaining beside its reading,
-  `10:10 left`, until the row is met. A player told to hold and not told for how long cannot
-  tell holding from waiting for something they missed (#1611). The figure takes the counter's
-  column, as `0 of 1` does on a counted row, and like it narrows the row's reading: while it
-  runs, the row may wrap a line longer than it does once met, in its reading or its gloss.
-  That is the one line this panel may spend, and each mission that counts a hold down is
-  checked in a browser once every row it reveals has arrived
-  (`docs/screenshots/issue-1611/panelFit.mjs`). Where those panels fit, they still fit with
-  the line. A row can also grow without a reveal — a silence debt, a stalled walk's reading,
-  the commander's bell — and those have not been measured with the line (#1622). Where a
-  panel already runs past its foot
-  while a hold counts — Tend from 15:00 (#1619), Conclave Chord from 13:30 (#1621) — a line
-  the countdown wraps adds to that overflow until the overflow is fixed, and fixing the
-  overflow takes the line back with it. The server sends the tick the row ends at, once, and
-  the client counts down against the match clock, so the view is not resent every second. The changing figure is hidden from the live region, which would
+  flight holding at the arch, a sitting, a tide — shows the time remaining under its status
+  word, `OPEN` over `10:10`, until the row is met. A player told to hold and not told for how
+  long cannot tell holding from waiting for something they missed (#1611). The figure sits in
+  the status column, beside the gloss on a row that has one and at the foot of the reading on
+  a row that does not, so it adds no line and no column: §2's rule holds for it as for the
+  underline. That holds where the row runs two lines without it, as every hold authored
+  today does at 100% scale. A reading that fits one line — Tend's hold at 200%, where the
+  panel fits about a third more to the line (§11) — grows the row to hold the figure under
+  the word rather than print it over the word. It reads without "left" because the status column is 3.2rem wide and `10:10 left` is not; the
+  figure is seen counting down, and the screen reader is told the end. The countdown first
+  took the counter's column, which narrowed the reading and cost a line, and with a silence
+  debt or a stalled walk on screen that line overflowed Sorrowgate's panel by 10 px and
+  Convocation's by 11 (#1622, `docs/screenshots/issue-1611/`). The server sends the tick the
+  row ends at, once, and the client counts down against the match clock, so the view is not
+  resent every second. The changing figure is hidden from the live region, which would
   otherwise announce it every second over every objective. In its place the row's accessible
   name carries the end once, in the clock's own form: `until T+10:40`. A clock is not a
   failure: [campaign.md](campaign.md) §10 forbids failing a mission on a timer alone, and no

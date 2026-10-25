@@ -514,12 +514,12 @@ describe('the objectives panel: a hold that ends on its own', () => {
 
   it('counts the time left down against the match clock, in whole seconds', async () => {
     for (const [tick, reading] of [
-      [30 * HZ, '10:10 left'],
-      [ENDS - HZ / 2, '00:01 left'],
-      [ENDS, '00:00 left'],
+      [30 * HZ, '10:10'],
+      [ENDS - HZ / 2, '00:01'],
+      [ENDS, '00:00'],
       // The row goes met within an Echo pass of its end, and holds at zero
       // across it rather than counting on past it.
-      [ENDS + HZ, '00:00 left'],
+      [ENDS + HZ, '00:00'],
     ] as const) {
       const { rendered } = await panel(missionView({ objectives: [hold()] }), undefined, tick);
       try {
@@ -542,7 +542,7 @@ describe('the objectives panel: a hold that ends on its own', () => {
         (node) => (node.props as { 'aria-hidden'?: string })['aria-hidden'] === 'true'
       );
       assert.equal(hidden.length, 1, 'the countdown is hidden from assistive tech');
-      assert.match(deepText(hidden[0]!), /10:10 left/);
+      assert.equal(deepText(hidden[0]!), '10:10');
       const end = rendered.byClass('objectives-clock-end');
       assert.equal(deepText(end), 'until T+10:40');
       // Clipped, never `display: none`: the end has to stay in the tree.
@@ -561,6 +561,60 @@ describe('the objectives panel: a hold that ends on its own', () => {
         ),
         'the end was taken out of the accessible tree'
       );
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('puts the countdown under the status word, never in the counter’s track', async () => {
+    // #1622: in the counter's track the figure narrowed the reading, and the
+    // line that cost overflowed Sorrowgate's panel during a silence debt and
+    // Convocation's during a stalled walk. Under the status word it costs none
+    // (§10.5): beside the gloss where there is one, else at the reading's foot
+    // a status line down, so a one-line reading grows rather than overprints.
+    const rules = parseCss(APP_CSS);
+    const PLACEMENT = new Set(['grid-column', 'grid-row', 'margin-top']);
+    const placed = (classes: string[]) => {
+      // Last wins in source order, which is the cascade here: the `glossed`
+      // rule follows the plain one and is the more specific of the two.
+      const last = new Map<string, string>();
+      for (const rule of rulesTargeting(
+        rules,
+        { tag: 'span', classes, ancestors: [] },
+        PLACEMENT
+      )) {
+        for (const [property, value] of rule.declarations) {
+          if (PLACEMENT.has(property)) last.set(property, value);
+        }
+      }
+      return Object.fromEntries(last);
+    };
+    assert.deepEqual(placed(['objectives-clock']), {
+      'grid-column': '1',
+      'grid-row': '1',
+      'margin-top': 'calc(0.58rem * 1.5)',
+    });
+    // The status word is placed too: an auto-flowed one finds the clock's
+    // cell taken and opens a track at the row's right, which narrowed
+    // Convocation's reading by a line in the browser (#1622).
+    assert.deepEqual(placed(['objectives-status']), { 'grid-column': '1', 'grid-row': '1' });
+    assert.deepEqual(placed(['objectives-clock', 'glossed']), {
+      'grid-column': '1',
+      'grid-row': '2',
+      'margin-top': '0',
+    });
+
+    const { rendered } = await panel(
+      missionView({
+        objectives: [hold({ gloss: 'Hold under the arch until it falls.' })],
+      }),
+      undefined,
+      30 * HZ
+    );
+    try {
+      const clock = rendered.byClass('objectives-clock');
+      const classes = String((clock.props as { className: string }).className).split(' ');
+      assert.ok(classes.includes('glossed'), 'a glossed hold puts its figure beside the gloss');
     } finally {
       await rendered.unmount();
     }

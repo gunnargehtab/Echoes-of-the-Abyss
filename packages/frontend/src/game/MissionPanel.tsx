@@ -279,15 +279,20 @@ export function MissionPanel({
                   {objective.progress.done} of {objective.progress.of}
                 </span>
               )}
-              {/* A hold's countdown, in the counter's slot: an `endure` row
-                  carries no counter, so the two never share it. The figure
-                  that moves is hidden from the live region, which would read
-                  it out every second over every objective; the end is said
-                  once instead, in the clock's own form (§10.5, #1611). */}
+              {/* A hold's countdown, under the status word rather than in the
+                  counter's slot: there it narrowed the reading and cost the
+                  panel a line, which overflowed it during a silence debt or a
+                  stalled walk (#1622). Beside the gloss where the row has one,
+                  at the reading's foot where it does not — App.css places it.
+                  The figure that moves is hidden from the live region, which
+                  would read it out every second over every objective; the end
+                  is said once instead, in the clock's own form (§10.5, #1611). */}
               {objective.endsAtTick !== undefined && (
-                <span className="objectives-progress objectives-clock">
+                <span
+                  className={`objectives-clock${objective.gloss === undefined ? '' : ' glossed'}`}
+                >
                   {tick !== undefined && (
-                    <span aria-hidden="true">{remaining(objective.endsAtTick - tick)} left</span>
+                    <span aria-hidden="true">{remaining(objective.endsAtTick - tick)}</span>
                   )}
                   <span className="objectives-clock-end">until {stamp(objective.endsAtTick)}</span>
                 </span>

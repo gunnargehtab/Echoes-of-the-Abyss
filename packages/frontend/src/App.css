@@ -1901,6 +1901,12 @@ button.objectives-row .objectives-text {
    alone (§11) — because the whole scale has to survive a colour-vision
    difference and a screen reader both. */
 .objectives-status {
+  /* Placed rather than left to auto-flow, `.objectives-text`'s reason below:
+     a placed item is laid first, so once the countdown is placed in this cell
+     an auto-flowed status word found it taken and opened a fourth track at
+     the row's right, narrowing the reading by a line (#1622). */
+  grid-column: 1;
+  grid-row: 1;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   font-size: 0.58rem;
@@ -1953,6 +1959,35 @@ button.objectives-row .objectives-text {
   color: var(--text-cyan);
   opacity: 0.85;
   white-space: nowrap;
+}
+
+/* A hold's countdown, in the status column (ui-ux.md §10.5, #1622). Its own
+   grid item rather than a line inside the status word's cell, because a cell
+   two lines tall would push a one-line reading's gloss down a line — the cost
+   this placement exists to avoid. Without a gloss it shares the reading's row
+   and sits at its foot, its top margin one status line tall: a reading of two
+   lines or more already holds both, and a one-line reading — Tend's hold at
+   200% scale, where the panel fits a third more to the line — grows the row
+   rather than printing the figure over the word. With a gloss it takes the
+   gloss's row, which a gloss-less row lacks and would gain a gap and a line
+   for. Sized as the status word is, so a figure narrower than `FAILED` fits
+   wherever that word does. */
+.objectives-clock {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: end;
+  margin-top: calc(0.58rem * 1.5);
+  font-size: 0.58rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-cyan);
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+.objectives-clock.glossed {
+  grid-row: 2;
+  align-self: start;
+  margin-top: 0;
 }
 
 /* A hold's end, said once to a screen reader in place of the countdown beside
