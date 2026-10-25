@@ -52,5 +52,5 @@ minute before its hold ends, so it is also read there.
 
 Two panels already overflow while a hold counts. Tend's is at its cap at 15:00 and overflows
 by the same 80 px either way (`tend-turning.png`, #1619). Conclave Chord's overflows by 170 px
-at 13:43 without the countdown, and the countdown's line takes it to 186 (`chord-full.png`,
-#1621). Fixing either overflow takes the line back with it (`ui-ux.md` §10.5).
+at 13:43 without the countdown, and the countdown's line takes it to 186 px (#1621, frame
+`chord-full.png`). Fixing either overflow takes the line back with it (`ui-ux.md` §10.5).
