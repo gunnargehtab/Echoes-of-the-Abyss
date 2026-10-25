@@ -40,8 +40,9 @@ export function boardFrame(region: WorldRegion): CameraFrame {
  * lane, the survey's; the rendering row, the yard's; Face Two's muster, the
  * shift's; Face Six's rail head, the column's; the Fourth's mouth, the
  * picket's; the Holdfast, the tide's, for both of Marr's missions; Kell Face,
- * the column's, for both of the Kell Shoulder's; and the Furrow's Foot, the
- * day's, for both of the Furrow's.
+ * the column's, for both of the Kell Shoulder's; the Furrow's Foot, the
+ * day's, for both of the Furrow's; and the Staging, where the Rim's spawn
+ * stands on §7.2's own anchor, for all five of the Rim's.
  */
 const SPAWN_PLACE: Readonly<Record<string, string>> = {
   sorrowgate: 'sorrowgate',
@@ -54,6 +55,7 @@ const SPAWN_PLACE: Readonly<Record<string, string>> = {
   'marr-plateau': 'the-holdfast',
   'kell-shoulder': 'kell-face',
   'anholt-furrow': 'furrows-foot',
+  'mouth-rim': 'the-staging',
 };
 
 /**

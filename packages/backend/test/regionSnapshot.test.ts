@@ -10,7 +10,7 @@
  * (#1615), Shift Change and Asset Recovery the two Ninefold maps (#1626), The
  * Dome the Fourth's Foot (#1628), Tend and Convocation Marr Plateau (#1630),
  * Thin Water and Shallow the Kell Shoulder (#1633), Deep Furrow and In Writing
- * the Furrow (#1638), and the prologue again on a
+ * the Furrow (#1638), the Rim's five the Rim (#1640), and the prologue again on a
  * reconnection after its ground has changed, with writes that replay to the
  * live cells and the live revision, and that every other room — Radicals on the same map included —
  * names nothing.
@@ -21,23 +21,29 @@ import { afterEach, describe, it } from 'node:test';
 import type { Client } from '@colyseus/core';
 import {
   ANHOLT_FURROW_REGION,
+  ATTENDING_FIRST_ARRIVAL_HEADER,
   ATTENDING_INTAKE_HEADER,
   ATTENDING_SHALLOW_HEADER,
   ATTENDING_THE_DOME_HEADER,
   ATTENDING_TRENCH_AWAKENING_HEADER,
   BANDING_GROUND_REGION,
+  CHORD_RIM_DEPOSITS_HEADER,
+  CHORD_SECOND_CHORD_HEADER,
   FACE_SIX_REGION,
   FOURTH_FOOT_REGION,
   KELL_SHOULDER_REGION,
   LEDGER_ASSET_RECOVERY_HEADER,
   LEDGER_EXPOSURE_HEADER,
+  LEDGER_PROSPECT_HEADER,
   LEDGER_SHIFT_CHANGE_HEADER,
   MARR_PLATEAU_REGION,
+  MOUTH_RIM_REGION,
   PROLOGUE_SORROWGATE_HEADER,
   SEEDING_CONVOCATION_HEADER,
   SEEDING_DEEP_FURROW_HEADER,
   SEEDING_IN_WRITING_HEADER,
   SEEDING_RADICALS_HEADER,
+  SEEDING_SECOND_SEEDING_HEADER,
   SEEDING_TEND_HEADER,
   SEEDING_THIN_WATER_HEADER,
   SERVER_MSG,
@@ -126,6 +132,11 @@ describe('the region a room names (#1460)', () => {
     [ATTENDING_SHALLOW_HEADER, KELL_SHOULDER_REGION],
     [SEEDING_DEEP_FURROW_HEADER, ANHOLT_FURROW_REGION],
     [SEEDING_IN_WRITING_HEADER, ANHOLT_FURROW_REGION],
+    [LEDGER_PROSPECT_HEADER, MOUTH_RIM_REGION],
+    [SEEDING_SECOND_SEEDING_HEADER, MOUTH_RIM_REGION],
+    [ATTENDING_FIRST_ARRIVAL_HEADER, MOUTH_RIM_REGION],
+    [CHORD_RIM_DEPOSITS_HEADER, MOUTH_RIM_REGION],
+    [CHORD_SECOND_CHORD_HEADER, MOUTH_RIM_REGION],
   ] as const) {
     it(`names ${region.id} on ${mission.id}'s ground at join`, async () => {
       const match = await room({ missionId: mission.id });

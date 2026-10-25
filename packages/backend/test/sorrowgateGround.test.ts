@@ -25,6 +25,7 @@ import {
   DEPTH,
   KELL_SHOULDER_GROUND,
   MARR_PLATEAU_GROUND,
+  MOUTH_RIM_GROUND,
   SHALLOW_BAND_GROUND,
   SORROWGATE_GROUND,
   UPPER_WORKINGS_GROUND,
@@ -43,6 +44,7 @@ import {
   MAPS,
   MARR_PLATEAU,
   MISSION_MAPS,
+  MOUTH_RIM,
   NINEFOLD_FACE_SIX,
   NINEFOLD_WORKINGS,
   SHALLOW_BAND,
@@ -233,6 +235,18 @@ describe("the Furrow's shared ground (#1638)", () => {
     assert.equal(ANHOLT_FURROW.heightM, ANHOLT_FURROW_GROUND.heightM);
     assert.equal(ANHOLT_FURROW.cellM, ANHOLT_FURROW_GROUND.cellM);
     assert.equal(ANHOLT_FURROW.floorM, ANHOLT_FURROW_GROUND.floorM);
+  });
+});
+
+describe("the Rim's shared ground (#1640)", () => {
+  // Its cells are held to the server's by the shared painter's test below and
+  // pinned against all five missions by their own tests; this holds the move.
+  it('is the one source: the map spreads the shared literal, not a copy', () => {
+    assert.equal(MOUTH_RIM.regions, MOUTH_RIM_GROUND.regions);
+    assert.equal(MOUTH_RIM.widthM, MOUTH_RIM_GROUND.widthM);
+    assert.equal(MOUTH_RIM.heightM, MOUTH_RIM_GROUND.heightM);
+    assert.equal(MOUTH_RIM.cellM, MOUTH_RIM_GROUND.cellM);
+    assert.equal(MOUTH_RIM.floorM, MOUTH_RIM_GROUND.floorM);
   });
 });
 
