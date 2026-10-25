@@ -3020,3 +3020,43 @@ export const WIRE = {
   /** TUNABLE — the window the count above is spent in. */
   BUDGET_WINDOW_MS: 1000,
 } as const;
+
+/**
+ * What the error-report route will take from a hosted client (#1576).
+ *
+ * Bounds, like `WIRE`: the route is public and anonymous, so these say how much
+ * one stranger may write into the owner's log, not anything about the game.
+ * Here because the client trims a report to fit them and the server refuses one
+ * that does not, and the two must not disagree.
+ *
+ * None is a balance number, so none is inside `CLAUDE.md`'s freeze.
+ */
+export const REPORTS = {
+  /**
+   * TUNABLE — the largest body the route reads, in bytes. A stack of the
+   * length below, a message and the tags fit with room to spare; anything
+   * larger is answered 413 before it is parsed.
+   */
+  MAX_BODY_BYTES: 8192,
+  /** TUNABLE — characters of an error's message kept, client and server alike. */
+  MAX_MESSAGE_CHARS: 500,
+  /**
+   * TUNABLE — characters of a stack kept. A production bundle ships without
+   * source maps (`vite.config.ts`), so a frame is a chunk name and an offset,
+   * and the first few dozen frames are the ones that say where.
+   */
+  MAX_STACK_CHARS: 4000,
+  /**
+   * TUNABLE — reports one address may send inside `WINDOW_MS`. A broken frame
+   * loop throws sixty times a second; the client sends each distinct error once,
+   * so this binds a script, not a player whose session is falling apart.
+   */
+  MAX_PER_WINDOW: 30,
+  /** TUNABLE — the window the count above is spent in. */
+  WINDOW_MS: 60_000,
+  /**
+   * TUNABLE — reports one page load sends at most. A session that has thrown
+   * this many distinct errors has said what it can; the rest is noise.
+   */
+  MAX_PER_PAGE: 20,
+} as const;

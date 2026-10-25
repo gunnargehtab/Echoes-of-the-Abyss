@@ -46,6 +46,7 @@ import {
   type ServerMessages,
 } from '@echoes/shared';
 import { AiSeat, briefingFor } from '../ai/seat.ts';
+import { describeThrown, logFailure } from '../log.ts';
 import { Match } from '../sim/match.ts';
 import { DEFAULT_MAP_ID, mapById, missionMapById } from '../sim/maps/index.ts';
 import type { MapDefinition } from '../sim/maps/types.ts';
@@ -1025,6 +1026,15 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     void this.publishListing();
   }
 
+  /**
+   * The match's seed, for a failure line (#1576); `null` before `onCreate`
+   * built a match. Server-side only: it reproduces the whole match, so no
+   * client is ever sent it.
+   */
+  get seed(): number | null {
+    return this.match === undefined ? null : this.match.seed;
+  }
+
   override onDispose(): void {
     // A room whose `onCreate` refused an unknown mission never built a match,
     // and reading one here would throw a TypeError on top of the real error —
@@ -1119,11 +1129,19 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     // package compiles against `lib: ES2020` and `Error.cause` is ES2022, so
     // the property is there at runtime and absent from the type.
     const cause = (error as { cause?: unknown }).cause;
-    console.error(
-      `[MatchRoom ${this.roomId}] caught a throw in ${where} at ${tick}, ` +
-        `phase ${phase}; ${outcomeOf(methodName, midMatch)}: ` +
-        (cause instanceof Error ? (cause.stack ?? cause.message) : String(cause))
-    );
+    // One structured line (#1576), tagged with the room and its seed so the
+    // owner can find it beside a client's report and replay the match. The
+    // summary keeps the sentence this line always was, for a reader without jq.
+    logFailure({
+      source: 'server',
+      kind: where,
+      // `?? null` because a room booted outside the matchmaker has no id, and
+      // JSON would drop the key rather than say so.
+      room: this.roomId ?? null,
+      seed: this.seed,
+      summary: `caught a throw in ${where} at ${tick}, phase ${phase}; ${outcomeOf(methodName, midMatch)}`,
+      ...describeThrown(cause),
+    });
 
     const torn =
       methodName === 'setTimestep' ||
