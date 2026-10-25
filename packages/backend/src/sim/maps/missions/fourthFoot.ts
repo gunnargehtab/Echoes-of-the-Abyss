@@ -44,13 +44,15 @@
  * **Not in `MAPS` and not in `MAP_HEADERS`, deliberately** — the standing
  * argument: one seat, no resources, not balanced, resolved by mission id and
  * nothing else.
+ *
+ * **The ground is shared's** (`FOURTH_FOOT_GROUND`, #1628), as the Shallow
+ * Band's is: the continuous world draws this map before any room exists
+ * (docs/world-map.md §7.9), so its regions are authored once, in
+ * `@echoes/shared`, and spread in here. What stays here is the spawn.
  */
 
-import { Biome } from '@echoes/shared';
+import { FOURTH_FOOT_GROUND } from '@echoes/shared';
 import type { MapDefinition } from '../types.ts';
-
-/** Solid rock, as a region: no depth satisfies ceiling <= D <= floor. */
-const ROCK = { floorM: 0, ceilingM: 1 } as const;
 
 export const FOURTH_FOOT: MapDefinition = {
   id: 'fourth-foot',
@@ -58,162 +60,8 @@ export const FOURTH_FOOT: MapDefinition = {
   idealUse:
     "The Attending, mission three. The Ledger's trench from the counting side, and the deep it opens into.",
   seats: 1,
-  widthM: 3000,
-  heightM: 6000,
   doc: 'docs/mission-the-dome.md §11; docs/maps.md — Mission maps',
-  cellM: 250,
-  floorM: 1450,
-  // One row per row of §11's table, in the document's order. The lay-bys are
-  // painted after the walls they notch and the Foot after the Fan it stands
-  // at the bottom of, which is what carves water back out of rock and the last
-  // bench out of the slope — the same order-of-paint argument as everywhere
-  // else.
-  //
-  // Drawn in shapes since #1154, with rows 2–8 drawn once for both maps in
-  // #1143: the walls end on a slant to the margin, the Fan spreads from the
-  // yard's mouth, and the Foot is a bench whose northern corners fall to the
-  // Fan. Every number is a whole 250 m cell, and a cell is a region's when its
-  // shape holds the cell's centre (#157). Every hull, structure, emitter,
-  // order, creature and mission region stands on the ground it stood on, and
-  // `missionTheDome.test.ts` pins it.
-  //
-  // A pocket states `ceilingM: 0`, which clears the 1 m rock ceiling the wall
-  // painted over it (#1105) — `fourth-trench`'s ground exactly.
-  regions: [
-    // A box because it is the whole map, painted first: `fourth-trench`'s
-    // Margin, a thousand metres taller.
-    {
-      x: 0,
-      y: 0,
-      widthM: 3000,
-      heightM: 6000,
-      biome: Biome.OpenWater,
-      floorM: 1450,
-      note: "The Margin — the base water. Painted first; everything else is cut into it. Baffle's margin, run a thousand metres south",
-    },
-    // Rows 2–8 are `fourthTrench.ts`'s, to the metre; that file says why each
-    // is the shape it is.
-    {
-      x: 0,
-      y: 0,
-      widthM: 3000,
-      heightM: 750,
-      biome: Biome.ThermalVein,
-      floorM: 1100,
-      note: "The Staging — the north mouth: the grid's masked apron, above the layer's duct. The concern's muster, and the reason entering the trench is also a crossing",
-    },
-    {
-      shape: 'polygon',
-      points: [
-        [0, 750],
-        [1250, 750],
-        [1250, 4250],
-        [1000, 4250],
-        [0, 3250],
-      ],
-      biome: Biome.OpenWater,
-      ...ROCK,
-      note: 'The West Wall — solid. The trench is the only road',
-    },
-    {
-      shape: 'polygon',
-      points: [
-        [1750, 750],
-        [3000, 750],
-        [3000, 3250],
-        [2000, 4250],
-        [1750, 4250],
-      ],
-      biome: Biome.OpenWater,
-      ...ROCK,
-      note: 'The East Wall — solid',
-    },
-    {
-      x: 1250,
-      y: 750,
-      widthM: 500,
-      heightM: 3500,
-      biome: Biome.AbyssalTrench,
-      floorM: 1700,
-      note: 'The Trench — the shortcut: PF 1.6, no secrets down its length, only distances. Trench paint at Mid-Water depth, so a PR-2 convoy transits it whole',
-    },
-    {
-      x: 1000,
-      y: 1750,
-      widthM: 250,
-      heightM: 250,
-      biome: Biome.ThermalVein,
-      // Cut into the wall's rock, whose ceiling (1 m) would otherwise survive
-      // under the new floor and roof the pocket over: §11 gives a floor only
-      // (#1105).
-      floorM: 1700,
-      ceilingM: 0,
-      note: 'Lay-by One — the northern chartered pocket, notched into the west wall. `baffle-north` moors here, and the picket takes it off the chart at 13:00',
-    },
-    {
-      x: 1750,
-      y: 3000,
-      widthM: 250,
-      heightM: 250,
-      biome: Biome.ThermalVein,
-      floorM: 1700,
-      ceilingM: 0,
-      note: 'Lay-by Two — the southern pocket, east wall. `baffle-south`. Half the quiet water on the map, and the other half is the first one',
-    },
-    {
-      x: 750,
-      y: 4250,
-      widthM: 1500,
-      heightM: 500,
-      biome: Biome.OpenWater,
-      floorM: 1650,
-      note: "The Deep Yard — berths, a failing plant, forty-one souls. The concern's, and not the inquiry's. Its floor is the one place a hull is seated on the bottom rather than over it",
-    },
-    // A fan, spreading from the yard's mouth to the map's width by its third
-    // row. The corners it leaves at its head stay the margin's shelf at
-    // 1,450 m, which runs on from the walls' feet down both flanks of the yard.
-    {
-      shape: 'polygon',
-      points: [
-        [750, 4750],
-        [2250, 4750],
-        [3000, 5250],
-        [3000, 6000],
-        [0, 6000],
-        [0, 5250],
-      ],
-      biome: Biome.AbyssalTrench,
-      floorM: 2000,
-      note: 'The Fan — where the shortcut meets the deep: the trench opens and falls away. The walls have stopped, so this is the first water with no road in it. The Call is sounded here',
-    },
-    // A bench whose northern corners fall to the Fan. Its north edge stays on
-    // y 5,250, so the bench comes no nearer the yard's berth than it did.
-    {
-      shape: 'polygon',
-      points: [
-        [1000, 5250],
-        [2000, 5250],
-        [2250, 5750],
-        [2250, 6000],
-        [750, 6000],
-        [750, 5750],
-      ],
-      biome: Biome.AbyssalTrench,
-      floorM: 2400,
-      note: 'The Foot — the last bench: the dome, the array, and what deep basins hold. Painted over the Fan because it is the bottom of it',
-    },
-    // A box because it is built: the cohort's berths, cut square into the
-    // rock.
-    {
-      x: 2250,
-      y: 5000,
-      widthM: 750,
-      heightM: 1000,
-      biome: Biome.CoralRuins,
-      floorM: 2900,
-      note: "The Freight Galleries — the 4th Trench Cohort's berths, cut into the fan's east wall. Tessen's water: structure, and hard acoustic shadow at PF 0.80",
-    },
-  ],
+  ...FOURTH_FOOT_GROUND,
   // One spawn, at the mouth (§11) — irrelevant to play, since every party is
   // seated directly, and authored because a map needs one seat. The offsets
   // address a pre-built Foundry the mission never places: a closure re-rigs

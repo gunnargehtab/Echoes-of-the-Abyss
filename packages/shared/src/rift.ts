@@ -264,6 +264,15 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
   // Derived: the Shallow Band's origin plus its spawn at the row, so a travel
   // to *Trench Awakening* ends there (§7.6, #1615).
   { id: 'the-row', name: 'The rendering row', region: 'trench-country', x: 6_000, y: 52_000 },
+  // Derived: the Fourth's Foot's origin plus its spawn at the mouth, so a
+  // travel to *The Dome* ends there (§7.6, #1628).
+  {
+    id: 'fourths-mouth',
+    name: "The Fourth's mouth",
+    region: 'trench-country',
+    x: 11_500,
+    y: 58_000,
+  },
   {
     id: 'deep-yard',
     name: 'The Deep Yard',
@@ -1161,6 +1170,80 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       biome: AbyssalTrench,
       floorM: 1_150,
       note: 'The Scar, torn on south into the deep faces',
+    },
+  ],
+  // The Fourth's Foot's 2,500 m (#1628). The map is the Fourth Trench's pipe
+  // between two solid walls, opening at the Deep Yard into the Fan, the Foot
+  // and the cohort galleries. The overview already draws the pipe, the grid's
+  // apron at its north mouth and the deep water the Foot falls into. The
+  // surround lays the top step's margin round the map, carries the Staging
+  // north onto the apron, and thickens each wall by a row. South, it carries
+  // the Fan, the Foot and the galleries on down toward the Fourth's foot.
+  'fourth-foot': [
+    {
+      x: 9_750,
+      y: 53_000,
+      widthM: 3_500,
+      heightM: 7_250,
+      biome: OpenWater,
+      floorM: 1_450,
+      note: 'The Margin, the top step round the map',
+    },
+    {
+      x: 9_750,
+      y: 53_000,
+      widthM: 3_500,
+      heightM: 1_750,
+      biome: ThermalVein,
+      floorM: 1_100,
+      note: 'The Staging, carried north onto the grid’s apron',
+    },
+    {
+      x: 9_750,
+      y: 54_750,
+      widthM: 250,
+      heightM: 2_750,
+      biome: OpenWater,
+      floorM: 0,
+      ceilingM: 1,
+      note: 'The West Wall, a row thicker: solid',
+    },
+    {
+      x: 13_000,
+      y: 54_750,
+      widthM: 250,
+      heightM: 2_750,
+      biome: OpenWater,
+      floorM: 0,
+      ceilingM: 1,
+      note: 'The East Wall, a row thicker: solid',
+    },
+    {
+      x: 9_750,
+      y: 59_250,
+      widthM: 1_000,
+      heightM: 1_750,
+      biome: AbyssalTrench,
+      floorM: 2_000,
+      note: 'The Fan, spreading on south-west',
+    },
+    {
+      x: 10_750,
+      y: 60_000,
+      widthM: 1_500,
+      heightM: 2_500,
+      biome: AbyssalTrench,
+      floorM: 2_400,
+      note: 'The Foot, carried down to the Fourth’s foot',
+    },
+    {
+      x: 12_250,
+      y: 59_000,
+      widthM: 1_000,
+      heightM: 2_000,
+      biome: CoralRuins,
+      floorM: 2_900,
+      note: 'The Freight Galleries, carried along the fan’s east wall',
     },
   ],
 };

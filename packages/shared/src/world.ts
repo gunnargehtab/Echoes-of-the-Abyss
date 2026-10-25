@@ -20,6 +20,7 @@ import { PLACED_GROUND, paintGround, type GroundCells, type MapGround } from './
 import { MAP_HEADERS, mapHeaderById } from './maps.js';
 import {
   ATTENDING_INTAKE_HEADER,
+  ATTENDING_THE_DOME_HEADER,
   ATTENDING_TRENCH_AWAKENING_HEADER,
   LEDGER_ASSET_RECOVERY_HEADER,
   LEDGER_EXPOSURE_HEADER,
@@ -150,6 +151,21 @@ export const FACE_SIX_REGION: WorldRegion = {
   heightM: 3_000,
 };
 
+/**
+ * The Fourth's Foot, *The Dome*'s map (§7.9, #1628): its Deep Yard, cells
+ * (750–2,250, 4,250–4,750), on §7.2's Deep Yard anchor, (11,500, 58,500), so
+ * the Foot's own anchor lies 2 km south of the map. *Baffle*'s Fourth Trench,
+ * one ground in a second literal, is not placed (the owner's call on #1505).
+ */
+export const FOURTH_FOOT_REGION: WorldRegion = {
+  id: 'fourth-foot',
+  mapId: 'fourth-foot',
+  x: 10_000,
+  y: 54_000,
+  widthM: 3_000,
+  heightM: 6_000,
+};
+
 /** Every placed region. Other maps keep their own grids until migrated (§7.1). */
 export const WORLD_REGIONS: readonly WorldRegion[] = [
   SORROWGATE_REGION,
@@ -158,6 +174,7 @@ export const WORLD_REGIONS: readonly WorldRegion[] = [
   SHALLOW_BAND_REGION,
   UPPER_WORKINGS_REGION,
   FACE_SIX_REGION,
+  FOURTH_FOOT_REGION,
 ];
 
 export function worldRegionById(id: string): WorldRegion | undefined {
@@ -425,9 +442,9 @@ function cellIndex(cells: GroundCells, local: PlanPoint): number {
  * The missions drawn in the world, each on its region: the prologue on the
  * pilot's, *Intake* on the Banding Ground (§7.9, #1598), *Exposure* on the
  * Western Margin (#1612), *Trench Awakening* on the Shallow Band (#1615), and
- * *Shift Change* and *Asset Recovery* on the two Ninefold maps (#1626). A
- * mission on a placed map is not placed until it is named here, so each is its
- * own call.
+ * *Shift Change* and *Asset Recovery* on the two Ninefold maps (#1626), and *The
+ * Dome* on the Fourth's Foot (#1628). A mission on a placed map is not placed
+ * until it is named here, so each is its own call.
  */
 const MISSION_REGIONS: ReadonlyMap<string, WorldRegion> = new Map([
   [PROLOGUE_SORROWGATE_HEADER.id, SORROWGATE_REGION],
@@ -436,6 +453,7 @@ const MISSION_REGIONS: ReadonlyMap<string, WorldRegion> = new Map([
   [ATTENDING_TRENCH_AWAKENING_HEADER.id, SHALLOW_BAND_REGION],
   [LEDGER_SHIFT_CHANGE_HEADER.id, UPPER_WORKINGS_REGION],
   [LEDGER_ASSET_RECOVERY_HEADER.id, FACE_SIX_REGION],
+  [ATTENDING_THE_DOME_HEADER.id, FOURTH_FOOT_REGION],
 ]);
 
 /**

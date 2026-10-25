@@ -149,7 +149,8 @@ const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
  * §7 states its path means as figures — 0.307 through the layer, 1.53 down the
  * pipe, 1.40 across Lay-by Two's vent — and a test that fed those numbers back
  * into `detectionRatio` would assert the document against itself: repaint a
- * region in `fourthFoot.ts` and every ratio below would still pass. So the
+ * region in `FOURTH_FOOT_GROUND` (shared `ground.ts`) and every ratio below
+ * would still pass. So the
  * mean is walked out of `terrainFor(FOURTH_FOOT)` and the pair's thermocline
  * term is applied on top of it, exactly as `echoLayer.ts` folds the two.
  */
