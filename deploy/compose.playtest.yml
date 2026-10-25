@@ -1,0 +1,72 @@
+# The public playtest host (#1575): docker-compose.yml's two images behind one
+# TLS proxy, on one VPS, under one name.
+#
+#   docker compose -f docker-compose.yml -f deploy/compose.playtest.yml up -d
+#
+# An override rather than a second compose file, so the images, the health
+# check and the start order stay described once. What it changes is only what a
+# public host needs that `localhost` does not:
+#
+# - **The client dials the page's own host.** docker-compose.yml bakes
+#   `ws://localhost:3000`, which in a stranger's browser is the stranger's own
+#   machine. Set empty here, the bundle falls back to `defaultEndpoint`
+#   (net/GameClient.ts): `wss://` from an `https:` page, same host, port 3000.
+# - **So the proxy terminates TLS on 443 and on 3000.** The page is HTTPS, and an
+#   HTTPS page may not open a `ws:` socket (SETUP.md, Deployment). Neither app
+#   container publishes a port any more; Caddy is the only thing listening.
+# - **The origin lock names the page.** The backend image runs with
+#   NODE_ENV=production and refuses to start without CORS_ORIGIN.
+#
+# ECHOES_DOMAIN is the host name the DNS record points at this machine. The
+# deploy job writes it into the host's `.env`, which compose reads on its own.
+#
+# `!reset` needs Docker Compose 2.24 or newer: it empties the base file's port
+# lists instead of appending to them.
+
+# Pinned, so the certificate volume keeps one name whatever directory the files
+# land in. A renamed volume is a new certificate, and Let's Encrypt rate-limits
+# those per host name.
+name: echoes-playtest
+
+services:
+  backend:
+    image: echoes-backend:playtest
+    # The deploy job builds on the runner and loads the image over SSH, so the
+    # host never builds and never pulls these two.
+    pull_policy: never
+    restart: unless-stopped
+    environment:
+      CORS_ORIGIN: https://${ECHOES_DOMAIN:?set ECHOES_DOMAIN to the playtest host name}
+    ports: !reset []
+
+  frontend:
+    image: echoes-frontend:playtest
+    pull_policy: never
+    restart: unless-stopped
+    build:
+      args:
+        VITE_SERVER_URL: ''
+    ports: !reset []
+
+  proxy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    environment:
+      ECHOES_DOMAIN: ${ECHOES_DOMAIN:?set ECHOES_DOMAIN to the playtest host name}
+    ports:
+      # 80 answers Let's Encrypt's HTTP challenge and redirects everything else.
+      - '80:80'
+      - '443:443'
+      - '3000:3000'
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - frontend
+      - backend
+
+volumes:
+  # The certificates and the ACME account. Losing them means re-issuing.
+  caddy-data:
+  caddy-config:
