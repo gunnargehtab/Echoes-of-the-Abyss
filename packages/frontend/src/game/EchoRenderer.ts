@@ -2125,12 +2125,14 @@ export class EchoRenderer {
       this.groundLayer,
       this.nodeLayer,
       this.ringLayer,
-      this.markNames,
       this.structureSymbols.layer,
       this.contactLayer,
       this.contactSymbols.layer,
       this.unitSymbols.layer,
-      this.ordnanceSymbols.layer
+      this.ordnanceSymbols.layer,
+      // Last, so a place's name is never painted under the hulls its ring is
+      // drawn round — the arch's ring takes in all four escorts (#1611).
+      this.markNames
     );
     this.hud.addChild(
       this.hudGraphics,
