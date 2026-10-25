@@ -1557,10 +1557,11 @@ export interface MissionMarker {
   label: string;
   /**
    * A short place name — *The arch*, *The Concourse* — that the chart prints
-   * beside the marker while an open objective names it (docs/ui-ux.md §10.5).
+   * above the marker's ring while an open objective names it (docs/ui-ux.md
+   * §10.5).
    *
    * Separate from `label` because `label` is a sentence in the mission's own
-   * register, a line for the panel's row, and a sentence printed on the seabed
+   * register, a line for the panel's row, and a sentence printed on the chart
    * covers the water it is about. Absent, the marker is a camera jump and
    * nothing is drawn, which is every mission but one today (#1611).
    */

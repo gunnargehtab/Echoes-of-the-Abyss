@@ -28,8 +28,9 @@ so its exterior is ground, and a ground mark keeps drawing there
 
 ## The fit check
 
-`panelFit.mjs` waits for the first countdown row, then reads `.objectives-body` with the
-countdown shown and hidden, so an overflow can be blamed or cleared:
+`panelFit.mjs` waits for the first countdown row, or with `FIT_LEFT_S` for the countdown to
+read that many seconds or fewer, then reads `.objectives-body` with the countdown shown and
+hidden, so an overflow can be blamed or cleared:
 
 ```bash
 node .claude/skills/run-game/scripts/drive.mjs --headed --channel chrome   --url "http://localhost:5173/?mission=<id>"   --out <dir> --steps docs/screenshots/issue-1611/panelFit.mjs
@@ -41,8 +42,15 @@ node .claude/skills/run-game/scripts/drive.mjs --headed --channel chrome   --url
 | `ledger-item-nine` | 00:00 | 0 px | 0 px | 249 / 233 px |
 | `seeding-convocation` | 00:00 | 0 px | 0 px | 308 / 292 px |
 | `chord-conclave` | 00:00 | 0 px | 0 px | 223 / 207 px |
+| `chord-conclave`, at 13:43 (`FIT_LEFT_S=50`) | 00:00 | 186 px | 170 px | 313 / 313 px |
 | `seeding-tend` | 15:00 | 80 px | 80 px | 313 / 313 px |
 
 Where the panel has room, the countdown costs one line of 14–16 px and the panel still fits.
-Tend's panel is already at its cap at 15:00 and overflows by the same 80 px either way
-(`tend-turning.png`, #1619): the countdown is not what pushes it.
+Sorrowgate, Item Nine, Convocation and Tend reveal no row while their hold runs, so the first
+moment is the fullest. Conclave Chord reveals six stood rows and `the-quiet` at 13:30, a
+minute before its hold ends, so it is also read there.
+
+Two panels already overflow while a hold counts. Tend's is at its cap at 15:00 and overflows
+by the same 80 px either way (`tend-turning.png`, #1619). Conclave Chord's overflows by 170 px
+at 13:43 without the countdown, and the countdown's line takes it to 186 (`chord-full.png`,
+#1621). Fixing either overflow takes the line back with it (`ui-ux.md` §10.5).

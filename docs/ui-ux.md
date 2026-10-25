@@ -944,12 +944,14 @@ something new, and a log role would re-announce the whole panel every time a cou
   `10:10 left`, until the row is met. A player told to hold and not told for how long cannot
   tell holding from waiting for something they missed (#1611). The figure takes the counter's
   column, as `0 of 1` does on a counted row, and like it narrows the row's reading: while it
-  runs, the row's gloss may wrap a line longer than it does once met. That is the one line
-  this panel may spend, and only while the panel still fits whole at that moment, which
-  each mission that counts a hold down is checked for in a browser
-  (`docs/screenshots/issue-1611/panelFit.mjs`). The server sends the tick the
-  row ends at, once, and the client counts down against the match clock, so the view is not
-  resent every second. The changing figure is hidden from the live region, which would
+  runs, the row may wrap a line longer than it does once met, in its reading or its gloss.
+  That is the one line this panel may spend, and each mission that counts a hold down is
+  checked in a browser at its fullest moment (`docs/screenshots/issue-1611/panelFit.mjs`).
+  Where the panel fits, it still fits with the line. Where a panel already runs past its foot
+  while a hold counts — Tend from 15:00 (#1619), Conclave Chord from 13:30 (#1621) — a line
+  the countdown wraps adds to that overflow until the overflow is fixed, and fixing the
+  overflow takes the line back with it. The server sends the tick the row ends at, once, and
+  the client counts down against the match clock, so the view is not resent every second. The changing figure is hidden from the live region, which would
   otherwise announce it every second over every objective. In its place the row's accessible
   name carries the end once, in the clock's own form: `until T+10:40`. A clock is not a
   failure: [campaign.md](campaign.md) §10 forbids failing a mission on a timer alone, and no
