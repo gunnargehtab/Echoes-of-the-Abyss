@@ -1122,8 +1122,8 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
   // Face Six's 2,500 m (#1626). The map is the Vein's field with the Terrace
   // across it and the Scar torn down to its south edge. The surround carries
   // the Field and the Terrace a kilometre west and east, and the Field half a
-  // kilometre south onto the overview's deep faces, with the Scar torn on a
-  // kilometre into them. The Upper Workings' map lies a row north, and its
+  // kilometre south across the wall's faces, its middle onto the overview's
+  // deep faces, with the Scar torn on a kilometre into them. The Upper Workings' map lies a row north, and its
   // patch takes its own cells where both are drawn (§7.3).
   'ninefold-face-six': [
     {
@@ -1133,7 +1133,7 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       heightM: 3_750,
       biome: ThermalVein,
       floorM: 1_000,
-      note: 'The Field, carried a kilometre west and east and onto the deep faces',
+      note: 'The Field, carried a kilometre west and east and half a kilometre south',
     },
     {
       x: 4_500,
