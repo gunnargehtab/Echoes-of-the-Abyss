@@ -18,8 +18,13 @@ let placeProps;
 let surfaceTexture;
 let pending;
 
+// Polls for a delivery, not a deadline: these tests ask whether a completed
+// load reaches its consumer at all, and how long the template build takes is
+// the runner's business. A shared CI runner, under the shard's other files,
+// once took longer than the 2 s this allowed (#1629); a delivery that never
+// comes still fails, after 10 s.
 async function until(predicate) {
-  for (let i = 0; i < 200; i++) {
+  for (let i = 0; i < 1000; i++) {
     if (predicate()) return;
     await delay(10);
   }
