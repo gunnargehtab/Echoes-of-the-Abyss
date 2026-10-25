@@ -20,6 +20,7 @@ import {
   BANDING_GROUND_GROUND,
   Biome,
   DEPTH,
+  SHALLOW_BAND_GROUND,
   SORROWGATE_GROUND,
   WESTERN_MARGIN_GROUND,
   WORLD_REGIONS,
@@ -32,6 +33,7 @@ import {
   FIRST_TRENCH_MARGIN,
   MAPS,
   MISSION_MAPS,
+  SHALLOW_BAND,
   SORROWGATE,
   missionMapById,
   terrainFor,
@@ -139,6 +141,19 @@ describe("the Western Margin's shared ground (#1612)", () => {
     assert.equal(FIRST_TRENCH_MARGIN.heightM, WESTERN_MARGIN_GROUND.heightM);
     assert.equal(FIRST_TRENCH_MARGIN.cellM, WESTERN_MARGIN_GROUND.cellM);
     assert.equal(FIRST_TRENCH_MARGIN.floorM, WESTERN_MARGIN_GROUND.floorM);
+  });
+});
+
+describe("the Shallow Band's shared ground (#1615)", () => {
+  // Its cells are held to the server's by the shared painter's test below and
+  // pinned against the mission by `missionTrenchAwakening.test.ts`; this holds
+  // the move.
+  it('is the one source: the map spreads the shared literal, not a copy', () => {
+    assert.equal(SHALLOW_BAND.regions, SHALLOW_BAND_GROUND.regions);
+    assert.equal(SHALLOW_BAND.widthM, SHALLOW_BAND_GROUND.widthM);
+    assert.equal(SHALLOW_BAND.heightM, SHALLOW_BAND_GROUND.heightM);
+    assert.equal(SHALLOW_BAND.cellM, SHALLOW_BAND_GROUND.cellM);
+    assert.equal(SHALLOW_BAND.floorM, SHALLOW_BAND_GROUND.floorM);
   });
 });
 
