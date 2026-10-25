@@ -76,6 +76,9 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
   // The Plateaus.
   // Half a kilometre east and a quarter south of #1457's placing, so the map fits (#1566).
   { id: 'marr', name: 'Marr Plateau', region: 'plateaus', x: 8_000, y: 3_750, depthM: 320 },
+  // Derived: Marr Plateau's origin plus its spawn at the Holdfast, so a travel
+  // to *Tend* or *Convocation* ends there (§7.6, #1630).
+  { id: 'the-holdfast', name: 'The Holdfast', region: 'plateaus', x: 8_625, y: 2_875 },
   { id: 'teel', name: 'Teel Plateau', region: 'plateaus', x: 12_000, y: 4_000, depthM: 380 },
   { id: 'anholt', name: 'Anholt Plateau', region: 'plateaus', x: 20_000, y: 5_500, depthM: 210 },
   {
@@ -1244,6 +1247,60 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       biome: CoralRuins,
       floorM: 2_900,
       note: 'The Freight Galleries, carried along the fan’s east wall',
+    },
+  ],
+  // Marr Plateau's 2,500 m (#1630). The map is the Terrace, with the Drop
+  // falling across its south edge and Teel's Landing at its east. The overview
+  // draws Marr's terrace narrower than the map, and Teel's a kilometre east of
+  // it. The surround carries the Terrace a kilometre west and north, lays Teel's
+  // terrace east of the ring touching the map, and runs the Landing onto it. The Drop
+  // runs on a kilometre west and east and two rows south, and below its foot
+  // the shoulder's bare rock closes the overview's terrace off at the Drop.
+  'marr-plateau': [
+    {
+      x: 5_000,
+      y: 1_500,
+      widthM: 5_250,
+      heightM: 3_250,
+      biome: KelpForest,
+      floorM: 320,
+      note: 'The Terrace, carried a kilometre west and north',
+    },
+    {
+      x: 10_250,
+      y: 2_000,
+      widthM: 2_250,
+      heightM: 3_000,
+      biome: KelpForest,
+      floorM: 380,
+      note: 'Teel Plateau, across the map’s east edge',
+    },
+    {
+      x: 10_000,
+      y: 4_250,
+      widthM: 1_000,
+      heightM: 500,
+      biome: KelpForest,
+      floorM: 400,
+      note: 'Teel’s Landing, carried a kilometre east onto Teel’s terrace',
+    },
+    {
+      x: 5_000,
+      y: 4_750,
+      widthM: 6_000,
+      heightM: 750,
+      biome: AbyssalTrench,
+      floorM: 900,
+      note: 'The Drop, carried a kilometre west and east and two rows south',
+    },
+    {
+      x: 5_000,
+      y: 5_500,
+      widthM: 6_000,
+      heightM: 500,
+      biome: OpenWater,
+      floorM: 420,
+      note: 'The north shoulder’s bare rock, between the Drop’s foot and the Kell Shoulder',
     },
   ],
 };

@@ -27,6 +27,8 @@ import {
   LEDGER_SHIFT_CHANGE_HEADER,
   MISSION_HEADERS,
   PROLOGUE_SORROWGATE_HEADER,
+  SEEDING_CONVOCATION_HEADER,
+  SEEDING_TEND_HEADER,
 } from './missions.js';
 
 /** A point or a rectangle corner, in metres. */
@@ -166,6 +168,20 @@ export const FOURTH_FOOT_REGION: WorldRegion = {
   heightM: 6_000,
 };
 
+/**
+ * Marr Plateau, *Tend*'s and *Convocation*'s map (§7.9, #1630): centred on
+ * §7.2's Marr Plateau anchor, (8,000, 3,750), at the origin its anchor moved
+ * for (#1566). Teel's Landing at its east edge looks across to Teel Plateau.
+ */
+export const MARR_PLATEAU_REGION: WorldRegion = {
+  id: 'marr-plateau',
+  mapId: 'marr-plateau',
+  x: 6_000,
+  y: 2_500,
+  widthM: 4_000,
+  heightM: 2_500,
+};
+
 /** Every placed region. Other maps keep their own grids until migrated (§7.1). */
 export const WORLD_REGIONS: readonly WorldRegion[] = [
   SORROWGATE_REGION,
@@ -175,6 +191,7 @@ export const WORLD_REGIONS: readonly WorldRegion[] = [
   UPPER_WORKINGS_REGION,
   FACE_SIX_REGION,
   FOURTH_FOOT_REGION,
+  MARR_PLATEAU_REGION,
 ];
 
 export function worldRegionById(id: string): WorldRegion | undefined {
@@ -442,9 +459,11 @@ function cellIndex(cells: GroundCells, local: PlanPoint): number {
  * The missions drawn in the world, each on its region: the prologue on the
  * pilot's, *Intake* on the Banding Ground (§7.9, #1598), *Exposure* on the
  * Western Margin (#1612), *Trench Awakening* on the Shallow Band (#1615), and
- * *Shift Change* and *Asset Recovery* on the two Ninefold maps (#1626), and *The
- * Dome* on the Fourth's Foot (#1628). A mission on a placed map is not placed
- * until it is named here, so each is its own call.
+ * *Shift Change* and *Asset Recovery* on the two Ninefold maps (#1626), *The
+ * Dome* on the Fourth's Foot (#1628), and *Tend* and *Convocation* on Marr
+ * Plateau (#1630). A mission on a placed map is not placed until it is named
+ * here, so placing one is a line here. On a placed shared map every mission is
+ * named (the owner's call on #1505), Radicals excepted.
  */
 const MISSION_REGIONS: ReadonlyMap<string, WorldRegion> = new Map([
   [PROLOGUE_SORROWGATE_HEADER.id, SORROWGATE_REGION],
@@ -454,6 +473,8 @@ const MISSION_REGIONS: ReadonlyMap<string, WorldRegion> = new Map([
   [LEDGER_SHIFT_CHANGE_HEADER.id, UPPER_WORKINGS_REGION],
   [LEDGER_ASSET_RECOVERY_HEADER.id, FACE_SIX_REGION],
   [ATTENDING_THE_DOME_HEADER.id, FOURTH_FOOT_REGION],
+  [SEEDING_TEND_HEADER.id, MARR_PLATEAU_REGION],
+  [SEEDING_CONVOCATION_HEADER.id, MARR_PLATEAU_REGION],
 ]);
 
 /**

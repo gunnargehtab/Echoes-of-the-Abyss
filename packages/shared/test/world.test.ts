@@ -27,11 +27,15 @@ import {
   LEDGER_EXPOSURE_HEADER,
   LEDGER_SHIFT_CHANGE_HEADER,
   MAP_HEADERS,
+  MARR_PLATEAU_GROUND,
+  MARR_PLATEAU_REGION,
   MISSION_HEADERS,
   PLACED_GROUND,
   PROLOGUE_SORROWGATE_HEADER,
   RIFT_ATLAS,
   RIFT_PLACES,
+  SEEDING_CONVOCATION_HEADER,
+  SEEDING_TEND_HEADER,
   SHALLOW_BAND_GROUND,
   SHALLOW_BAND_REGION,
   SORROWGATE_GROUND,
@@ -227,6 +231,28 @@ describe('placed regions', () => {
     assert.equal(
       WORLD_REGIONS.some((r) => r.mapId === 'fourth-trench'),
       false
+    );
+  });
+
+  it("stands Marr Plateau centred on §7.2's anchor (§7.9, #1630)", () => {
+    assert.deepEqual(MARR_PLATEAU_REGION, {
+      id: 'marr-plateau',
+      mapId: 'marr-plateau',
+      x: 6_000,
+      y: 2_500,
+      widthM: 4_000,
+      heightM: 2_500,
+    });
+    assert.equal(MARR_PLATEAU_REGION.widthM, MARR_PLATEAU_GROUND.widthM);
+    assert.equal(MARR_PLATEAU_REGION.heightM, MARR_PLATEAU_GROUND.heightM);
+    // Both of its missions play it, and both are drawn there (#1505).
+    for (const mission of [SEEDING_TEND_HEADER, SEEDING_CONVOCATION_HEADER]) {
+      assert.equal(MARR_PLATEAU_REGION.mapId, mission.mapId, mission.id);
+    }
+    const marr = RIFT_PLACES.find((p) => p.id === 'marr')!;
+    assert.deepEqual(
+      [MARR_PLATEAU_REGION.x + 2_000, MARR_PLATEAU_REGION.y + 1_250],
+      [marr.x, marr.y]
     );
   });
 
@@ -492,6 +518,8 @@ describe('the placed-mission predicate', () => {
     assert.equal(worldRegionForMission(LEDGER_SHIFT_CHANGE_HEADER.id), UPPER_WORKINGS_REGION);
     assert.equal(worldRegionForMission(LEDGER_ASSET_RECOVERY_HEADER.id), FACE_SIX_REGION);
     assert.equal(worldRegionForMission(ATTENDING_THE_DOME_HEADER.id), FOURTH_FOOT_REGION);
+    assert.equal(worldRegionForMission(SEEDING_TEND_HEADER.id), MARR_PLATEAU_REGION);
+    assert.equal(worldRegionForMission(SEEDING_CONVOCATION_HEADER.id), MARR_PLATEAU_REGION);
     assert.equal(worldRegionForMission(undefined), undefined);
     // Radicals plays on Sorrowgate's map and keeps its presentation: the
     // predicate is keyed on mission identity, never on the map (§7.1).
@@ -505,6 +533,8 @@ describe('the placed-mission predicate', () => {
       LEDGER_SHIFT_CHANGE_HEADER.id,
       LEDGER_ASSET_RECOVERY_HEADER.id,
       ATTENDING_THE_DOME_HEADER.id,
+      SEEDING_TEND_HEADER.id,
+      SEEDING_CONVOCATION_HEADER.id,
     ]);
     for (const header of MISSION_HEADERS) {
       if (placed.has(header.id)) continue;
@@ -516,6 +546,7 @@ describe('the placed-mission predicate', () => {
     assert.equal(worldRegionForMission('first-trench-margin'), undefined);
     assert.equal(worldRegionForMission('shallow-band'), undefined);
     assert.equal(worldRegionForMission('ninefold-face-six'), undefined);
+    assert.equal(worldRegionForMission('marr-plateau'), undefined);
   });
 
   it("places each mission on its own map's region", () => {
