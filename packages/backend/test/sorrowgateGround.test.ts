@@ -17,6 +17,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import {
+  ANHOLT_FURROW_GROUND,
   BANDING_GROUND_GROUND,
   FACE_SIX_GROUND,
   FOURTH_FOOT_GROUND,
@@ -34,6 +35,7 @@ import {
   paintGround,
 } from '@echoes/shared';
 import {
+  ANHOLT_FURROW,
   BANDING_GROUND,
   FOURTH_FOOT,
   FIRST_TRENCH_MARGIN,
@@ -219,6 +221,18 @@ describe("the Kell Shoulder's shared ground (#1633)", () => {
     assert.equal(KELL_SHOULDER.heightM, KELL_SHOULDER_GROUND.heightM);
     assert.equal(KELL_SHOULDER.cellM, KELL_SHOULDER_GROUND.cellM);
     assert.equal(KELL_SHOULDER.floorM, KELL_SHOULDER_GROUND.floorM);
+  });
+});
+
+describe("the Furrow's shared ground (#1638)", () => {
+  // Its cells are held to the server's by the shared painter's test below and
+  // pinned against both missions by their own tests; this holds the move.
+  it('is the one source: the map spreads the shared literal, not a copy', () => {
+    assert.equal(ANHOLT_FURROW.regions, ANHOLT_FURROW_GROUND.regions);
+    assert.equal(ANHOLT_FURROW.widthM, ANHOLT_FURROW_GROUND.widthM);
+    assert.equal(ANHOLT_FURROW.heightM, ANHOLT_FURROW_GROUND.heightM);
+    assert.equal(ANHOLT_FURROW.cellM, ANHOLT_FURROW_GROUND.cellM);
+    assert.equal(ANHOLT_FURROW.floorM, ANHOLT_FURROW_GROUND.floorM);
   });
 });
 

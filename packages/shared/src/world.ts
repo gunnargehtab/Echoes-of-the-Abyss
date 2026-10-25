@@ -29,6 +29,8 @@ import {
   ATTENDING_SHALLOW_HEADER,
   PROLOGUE_SORROWGATE_HEADER,
   SEEDING_CONVOCATION_HEADER,
+  SEEDING_DEEP_FURROW_HEADER,
+  SEEDING_IN_WRITING_HEADER,
   SEEDING_TEND_HEADER,
   SEEDING_THIN_WATER_HEADER,
 } from './missions.js';
@@ -198,6 +200,20 @@ export const KELL_SHOULDER_REGION: WorldRegion = {
   heightM: 3_000,
 };
 
+/**
+ * The Furrow, *Deep Furrow*'s and *In Writing*'s map (§7.9, #1638): centred on
+ * §7.2's Furrow anchor, (24,000, 19,000), under Anholt's lower terraces where
+ * the scar branches.
+ */
+export const ANHOLT_FURROW_REGION: WorldRegion = {
+  id: 'anholt-furrow',
+  mapId: 'anholt-furrow',
+  x: 22_000,
+  y: 17_500,
+  widthM: 4_000,
+  heightM: 3_000,
+};
+
 /** Every placed region. Other maps keep their own grids until migrated (§7.1). */
 export const WORLD_REGIONS: readonly WorldRegion[] = [
   SORROWGATE_REGION,
@@ -209,6 +225,7 @@ export const WORLD_REGIONS: readonly WorldRegion[] = [
   FOURTH_FOOT_REGION,
   MARR_PLATEAU_REGION,
   KELL_SHOULDER_REGION,
+  ANHOLT_FURROW_REGION,
 ];
 
 export function worldRegionById(id: string): WorldRegion | undefined {
@@ -478,7 +495,8 @@ function cellIndex(cells: GroundCells, local: PlanPoint): number {
  * Western Margin (#1612), *Trench Awakening* on the Shallow Band (#1615), and
  * *Shift Change* and *Asset Recovery* on the two Ninefold maps (#1626), *The
  * Dome* on the Fourth's Foot (#1628), *Tend* and *Convocation* on Marr Plateau
- * (#1630), and *Thin Water* and *Shallow* on the Kell Shoulder (#1633). A
+ * (#1630), *Thin Water* and *Shallow* on the Kell Shoulder (#1633), and *Deep
+ * Furrow* and *In Writing* on the Furrow (#1638). A
  * mission on a placed map is not placed until it is named here, so placing one
  * is a line here. On a placed shared map every mission is
  * named (the owner's call on #1505), Radicals excepted.
@@ -495,6 +513,8 @@ const MISSION_REGIONS: ReadonlyMap<string, WorldRegion> = new Map([
   [SEEDING_CONVOCATION_HEADER.id, MARR_PLATEAU_REGION],
   [SEEDING_THIN_WATER_HEADER.id, KELL_SHOULDER_REGION],
   [ATTENDING_SHALLOW_HEADER.id, KELL_SHOULDER_REGION],
+  [SEEDING_DEEP_FURROW_HEADER.id, ANHOLT_FURROW_REGION],
+  [SEEDING_IN_WRITING_HEADER.id, ANHOLT_FURROW_REGION],
 ]);
 
 /**

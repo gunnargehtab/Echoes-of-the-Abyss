@@ -103,6 +103,9 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
     depthM: 900,
     toDepthM: 2_600,
   },
+  // Derived: the Furrow's origin plus its spawn at the Foot, so a travel to
+  // *Deep Furrow* or *In Writing* ends there (§7.6, #1638).
+  { id: 'furrows-foot', name: "The Furrow's Foot", region: 'plateaus', x: 24_000, y: 17_750 },
   // The West Wall.
   { id: 'sector-kell', name: 'Sector Kell', region: 'west-wall', x: 8_500, y: 12_500, depthM: 350 },
   {
@@ -1414,6 +1417,63 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       biome: AbyssalTrench,
       floorM: 900,
       note: 'The Kell Slope, carried two rows south toward Kell’s terraces',
+    },
+  ],
+  // The Furrow's 2,500 m (#1638). The map is a cleft under Anholt's lower
+  // terraces: the Mid-Water lanes and the Foot across its north, two solid
+  // walls, and the road between them down to the Sill. The overview draws the
+  // terraces round it and the Furrow's column through them. The surround runs
+  // the lanes a kilometre west and east and two rows north, and the Foot a
+  // kilometre north toward the terraces. Each wall is two rows thicker and two
+  // rows longer, flanking the Sill, which opens two kilometres south onto the
+  // overview's scar.
+  'anholt-furrow': [
+    {
+      x: 21_000,
+      y: 17_000,
+      widthM: 6_000,
+      heightM: 1_500,
+      biome: OpenWater,
+      floorM: 1_100,
+      note: 'The Lanes, carried a kilometre west and east and two rows north',
+    },
+    {
+      x: 23_500,
+      y: 16_500,
+      widthM: 1_000,
+      heightM: 1_000,
+      biome: OpenWater,
+      floorM: 900,
+      note: 'The Foot, and the plateau’s lane coming down to it',
+    },
+    {
+      x: 21_500,
+      y: 18_500,
+      widthM: 1_250,
+      heightM: 2_500,
+      biome: OpenWater,
+      floorM: 0,
+      ceilingM: 1,
+      note: 'The West Wall, two rows thicker and two rows longer: solid',
+    },
+    {
+      x: 25_250,
+      y: 18_500,
+      widthM: 1_250,
+      heightM: 2_500,
+      biome: OpenWater,
+      floorM: 0,
+      ceilingM: 1,
+      note: 'The East Wall, two rows thicker and two rows longer: solid',
+    },
+    {
+      x: 22_750,
+      y: 20_500,
+      widthM: 2_500,
+      heightM: 2_000,
+      biome: AbyssalTrench,
+      floorM: 2_600,
+      note: 'The Sill, opening south onto the scar',
     },
   ],
 };
