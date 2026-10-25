@@ -316,13 +316,16 @@ order, and it is the difference between the mission's one rule and a hull that a
 **The flight keeps the freight's pace when it is sent with it.** A Light Scout is quicker than a
 Harvester, so a flight sent north in one order with a tender left it inside a minute: past
 400 m the tender stopped where it stood, and the flight waited on the Concourse for a hull that
-was not coming (#1594). So a hull ordered in the same move as a tender travels at that tender's
-speed, or the slower tender's when the move sends both, for as long as that order stands. Any
-newer order of its own ends it, so sending an escort ahead to listen is still one order. It binds
-the hulls sent *with* a tender and nothing else; no other mission has a tender.
+was not coming (#1594). So a hull ordered in the same move as a tender that takes the order
+travels at that tender's speed, or the slowest one's when the move sends several, for as long as
+that order stands, and a queued leg keeps the pace it was given with. Any newer order of its own
+ends it, so sending an escort ahead to listen is still one order. A tender the hold refuses sets
+no pace: a flight held to the speed of a hull that stays put would strand both. The rule is the
+mission format's, so every mission with an escort rule has it — Thin Water, Baffle, Second Chord
+and The Three as well as this one.
 
 **A tender's ears are drawn round it.** From its load until the mission ends, each tender has a
-400 m ring on the chart. It is steady cyan while a hull of the flight is inside it, and the
+400 m ring on the chart — the escort radius, which every mission with the rule draws at its own. It is steady cyan while a hull of the flight is inside it, and the
 interface's magenta while the tender is held for want of one, because that ring is asking for an
 escort. The rule is a distance, and a distance is easier to see than to read; the glosses (§12)
 still say it. The ring is an instrument ([map-visuals.md](map-visuals.md) §5, rung 6): the

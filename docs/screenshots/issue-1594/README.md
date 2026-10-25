@@ -21,6 +21,10 @@ It gives no waypoint through the lock, and no separate climb.
 | `the-way-north.png` | T+12:03 | Twenty seconds after the one right click, tender and flight in the lock together, the ring cyan the whole way |
 | `concourse.png` | T+14:17 | Tender One met, `1 of 1`, on the Concourse; Tender Two's row open |
 
+The panel in `concourse.png` shows #1585's two old glosses. The drive had swapped them into
+the page for the panel measurement below, and the copy that took this frame did not swap them
+back; `frames.mjs` now does.
+
 Hulls route round ground on their own (`pathfinding.ts`, #431), and a click on the plateau's
 floor carries its depth (#1132), so the one click found the lock and made the climb. Without
 the pace, the probe that found #1594's trap stopped the tender 150 m from its seat, held, for

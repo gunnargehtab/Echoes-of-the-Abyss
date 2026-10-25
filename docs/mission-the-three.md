@@ -241,6 +241,12 @@ holds **every metre of the room inside the hold — the farthest corner is 559 m
 does what no predicate can: the escort waits at the mouth of the room and does not go in, not
 because a rule forbids it but because there is nowhere else it needs to be (§8, §13).
 
+**A flight sent with its freight keeps the freight's pace, and the freight's ears are drawn**
+([mission-sorrowgate.md](mission-sorrowgate.md) §8, #1594). A hull ordered in one move with a
+tender travels at its speed while that order stands, and each tender that is free to move
+carries its 600 m ring on the chart: cyan while an escort is inside it, magenta while it is
+held for want of one. The ring is drawn on the chart, so the mouth of the room is a place a player can see the hold reach.
+
 **3. The dive is the door, and the house hears every one.** Four ceilings — 2,600, 2,700, 2,750,
 2,800 — each entered by a deliberate dive at `DEPTH.DESCENT_SIG` 72
 ([systems-depth.md](systems-depth.md) §2). The First Chord listens at HYD 45, and 72 through the

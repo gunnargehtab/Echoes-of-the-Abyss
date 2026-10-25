@@ -199,6 +199,12 @@ yard's own plant fails at 20:00. The barge is deaf and moves only with an escort
 Sorrowgate's hold, with guns added: the writ prices the barge's deafness as an escort
 requirement, because a corridor full of firing solutions is not the Scar, and here it matters.
 
+**A flight sent with its freight keeps the freight's pace, and the freight's ears are drawn**
+([mission-sorrowgate.md](mission-sorrowgate.md) §8, #1594). A hull ordered in one move with a
+tender travels at its speed while that order stands, and each tender that is free to move
+carries its 450 m ring on the chart: cyan while an escort is inside it, magenta while it is
+held for want of one. The barge is the convoy's one tender, so it is the barge's pace and the barge's ring.
+
 **The column.** The escorts that fight the convoy through are on the writ too, and the close
 prices them by name-count: an exchange entered at cost is still entered.
 

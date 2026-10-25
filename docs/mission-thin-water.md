@@ -148,6 +148,13 @@ a second the tenders behind them are not moving. There is no way to fight and wi
 same time, and the player discovers this not from a briefing line but from ten hulls quietly
 stopping.
 
+**A flight sent with its freight keeps the freight's pace, and the freight's ears are drawn**
+([mission-sorrowgate.md](mission-sorrowgate.md) §8, #1594). A hull ordered in one move with a
+tender travels at its speed while that order stands, and each tender that is free to move
+carries its 450 m ring on the chart: cyan while an escort is inside it, magenta while it is
+held for want of one. So the column holds together when it is sent as one, and the rings say which tenders the escorts
+have left behind when they turn to face the corridor.
+
 That single rule produces the mission's four decisions, none of which is scripted:
 
 1. **How far forward to put the escorts.** Forward buys the column bearing-quality

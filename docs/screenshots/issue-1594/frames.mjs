@@ -66,31 +66,37 @@ export default async ({ page, shot }) => {
     }));
   const now = await read();
   await shot('04-panel');
-  const before = await page.evaluate(() => {
-    const old = new Map([
-      [
-        'Order Tender One and an escort within 400 m to the Concourse together.',
-        'With an escort within 400 m, order Tender One north to the Concourse.',
-      ],
-      [
-        'The same for Tender Two: order it and an escort within 400 m together.',
-        'The same for Tender Two: an escort within 400 m, then the order north.',
-      ],
-    ]);
-    let swapped = 0;
-    for (const el of document.querySelectorAll('.objectives-body *')) {
-      if (el.children.length > 0) continue;
-      const was = old.get(el.textContent ?? '');
-      if (was !== undefined) {
-        el.textContent = was;
-        swapped++;
+  const glosses = new Map([
+    [
+      'Order Tender One and an escort within 400 m to the Concourse together.',
+      'With an escort within 400 m, order Tender One north to the Concourse.',
+    ],
+    [
+      'The same for Tender Two: order it and an escort within 400 m together.',
+      'The same for Tender Two: an escort within 400 m, then the order north.',
+    ],
+  ]);
+  // Swap each gloss in the page for its other text; run twice, it puts them back.
+  const swap = (pairs) =>
+    page.evaluate((pairs) => {
+      const other = new Map([...pairs, ...pairs.map(([a, b]) => [b, a])]);
+      let swapped = 0;
+      for (const el of document.querySelectorAll('.objectives-body *')) {
+        if (el.children.length > 0) continue;
+        const was = other.get(el.textContent ?? '');
+        if (was !== undefined) {
+          el.textContent = was;
+          swapped++;
+        }
       }
-    }
-    return swapped;
-  });
+      return swapped;
+    }, pairs);
+  const before = await swap([...glosses]);
   await page.waitForTimeout(500);
   const old = await read();
   console.log(`fit: ${JSON.stringify({ glosses: now, oldGlosses: old, swapped: before })}`);
+  // The shipped glosses back, so the frames after this one show the build as it is.
+  await swap([...glosses]);
 
   // And whether Tender One got there on that one click.
   await page.waitForTimeout(30000);
