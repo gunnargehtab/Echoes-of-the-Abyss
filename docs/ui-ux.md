@@ -50,7 +50,10 @@ corner so it scales from that corner (§11): the orders panel (§10.5) top-left,
 depth ribbon; the contact log (§10) top-right, at most 30% of the screen's height; and the
 mission log bottom-right, clear of the console, at most 18%. Those caps are the panels'
 whole claim on the water, and they were cut from 40% and 24% (#1532) because at 1440 × 900
-the three together covered a third of what the console leaves.
+the three together covered a third of what the console leaves. The orders panel has no
+share of its own: it is as tall as what it holds, up to the room between the strip and the
+hint line, because every objective in it has to be on screen at once (§10.5). A 38% share hid
+Sorrowgate's withheld list under the panel's foot from 13:40 at 1440 × 900 (#1593).
 
 **The console is a deliberate break with this section's old 22% chrome budget, and the
 argument is written down rather than assumed.** The budget was set against a HUD of
