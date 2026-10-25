@@ -42,8 +42,9 @@ export const FOURTH_TRENCH: MapDefinition = {
   // and a cell is a region's when its shape holds the cell's centre (#157).
   // Twelve cells of wall became margin; every spawn, hull, station, emitter,
   // order and creature stands on the ground it stood on, and
-  // `missionBaffle.test.ts` pins it. `fourthFoot.ts` repeats rows 2–8 to the
-  // metre, so a change here is a change there.
+  // `missionBaffle.test.ts` pins it. `FOURTH_FOOT_GROUND` in
+  // `packages/shared/src/ground.ts` repeats rows 2–8 to the metre, so a change
+  // here is a change there.
   regions: [
     // A box because it is the whole map, painted first.
     {
