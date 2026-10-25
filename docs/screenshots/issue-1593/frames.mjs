@@ -6,7 +6,7 @@ export default async ({ page, shot }) => {
   await page.waitForFunction(
     () => document.querySelector('.objectives')?.textContent?.includes('Tender Two is loaded'),
     undefined,
-    { timeout: 16 * 60 * 1000, polling: 1000 }
+    { timeout: 20 * 60 * 1000, polling: 1000 }
   );
   await page.waitForTimeout(3000);
   const fit = await page.$eval('.objectives-body', (body) => ({
