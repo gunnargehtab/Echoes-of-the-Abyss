@@ -249,6 +249,9 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
     depthM: 1_800,
     toDepthM: 2_400,
   },
+  // Derived: the Shallow Band's origin plus its spawn at the row, so a travel
+  // to *Trench Awakening* ends there (§7.6, #1615).
+  { id: 'the-row', name: 'The rendering row', region: 'trench-country', x: 6_000, y: 52_000 },
   {
     id: 'deep-yard',
     name: 'The Deep Yard',
@@ -1002,6 +1005,62 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       biome: AbyssalTrench,
       floorM: 1_750,
       note: 'The Worked Ground, carried along the First’s rim',
+    },
+  ],
+  // The Shallow Band's 2,500 m (#1615). The map is the First Trench across
+  // its middle, and the overview draws the trench between the same two walls,
+  // 2 and 10 km. The surround carries the map's trench out to them: the rim
+  // along the north wall, each overhang to its own wall, and the axis's water
+  // under them a row past the map's south edge. The Sill goes on south into
+  // the First's deep end, toward the Second. The rim's row north of the map
+  // lies on the Western Margin's ground, so where both are drawn the margin's
+  // region takes it (§7.3): its patch above the map, and its worked ground
+  // either side.
+  'shallow-band': [
+    {
+      x: 2_000,
+      y: 51_000,
+      widthM: 8_000,
+      heightM: 4_250,
+      biome: AbyssalTrench,
+      floorM: 2_400,
+      note: 'The First, carried on to its walls',
+    },
+    {
+      x: 2_000,
+      y: 50_750,
+      widthM: 8_000,
+      heightM: 1_000,
+      biome: CoralRuins,
+      floorM: 1_750,
+      note: 'The Rim, carried along the north wall',
+    },
+    {
+      x: 2_000,
+      y: 51_750,
+      widthM: 1_500,
+      heightM: 2_000,
+      biome: AbyssalTrench,
+      floorM: 2_150,
+      note: 'The West Overhang, carried on to the west wall',
+    },
+    {
+      x: 8_500,
+      y: 52_000,
+      widthM: 1_500,
+      heightM: 1_750,
+      biome: AbyssalTrench,
+      floorM: 2_150,
+      note: 'The East Overhang, carried on to the east wall',
+    },
+    {
+      x: 5_500,
+      y: 55_000,
+      widthM: 1_000,
+      heightM: 1_000,
+      biome: AbyssalTrench,
+      floorM: 2_400,
+      note: 'The Sill, carried south into the deep end',
     },
   ],
 };

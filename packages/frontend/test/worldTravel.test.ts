@@ -14,12 +14,14 @@ import { createElement } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import {
   ATTENDING_INTAKE_HEADER,
+  ATTENDING_TRENCH_AWAKENING_HEADER,
   BANDING_GROUND_GROUND,
   BANDING_GROUND_REGION,
   LEDGER_EXPOSURE_HEADER,
   paintGround,
   PROLOGUE_SORROWGATE_HEADER,
   SEEDING_RADICALS_HEADER,
+  SHALLOW_BAND_REGION,
   SORROWGATE_GROUND,
   SORROWGATE_REGION,
   WESTERN_MARGIN_REGION,
@@ -671,6 +673,16 @@ describe('a second placed mission, in the same world (#1598)', () => {
     });
   });
 
+  it("ends Trench Awakening's travel on the rendering row, its spawn (#1615)", () => {
+    sameFrame(arrivalFrame(SHALLOW_BAND_REGION)!, {
+      xM: 2_500,
+      yM: 1_000,
+      distanceM: HOME_DOLLY_M,
+      yawDeg: 0,
+      pitchDeg: 55,
+    });
+  });
+
   it('gives every placed region a home to travel to', () => {
     // A region with no derived anchor would launch its mission off the world.
     for (const region of WORLD_REGIONS) assert.ok(arrivalFrame(region), region.id);
@@ -781,6 +793,11 @@ describe('which launches travel, and when a travel joins (§7.6)', () => {
     );
     assert.equal(travelsFirst('campaign', ATTENDING_INTAKE_HEADER.id), true, 'Intake is (#1598)');
     assert.equal(travelsFirst('campaign', LEDGER_EXPOSURE_HEADER.id), true, 'Exposure is (#1612)');
+    assert.equal(
+      travelsFirst('campaign', ATTENDING_TRENCH_AWAKENING_HEADER.id),
+      true,
+      'Trench Awakening is (#1615)'
+    );
   });
 
   it('joins once the match is loaded and the camera has arrived, never before', () => {

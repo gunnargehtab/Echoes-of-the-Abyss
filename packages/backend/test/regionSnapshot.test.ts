@@ -5,8 +5,9 @@
  * The continuous world draws a placed mission's live ground inside its region,
  * and the client must never be the one choosing where a room's ground goes.
  * So the room says so, on the ground's own message: these hold that the
- * prologue names Sorrowgate at join, Intake the Banding Ground (#1598) and
- * Exposure the Western Margin (#1612), and the prologue again on a
+ * prologue names Sorrowgate at join, Intake the Banding Ground (#1598),
+ * Exposure the Western Margin (#1612) and Trench Awakening the Shallow Band
+ * (#1615), and the prologue again on a
  * reconnection after its ground has changed, with writes that replay to the
  * live cells and the live revision, and that every other room — Radicals on the same map included —
  * names nothing.
@@ -17,11 +18,13 @@ import { afterEach, describe, it } from 'node:test';
 import type { Client } from '@colyseus/core';
 import {
   ATTENDING_INTAKE_HEADER,
+  ATTENDING_TRENCH_AWAKENING_HEADER,
   BANDING_GROUND_REGION,
   LEDGER_EXPOSURE_HEADER,
   PROLOGUE_SORROWGATE_HEADER,
   SEEDING_RADICALS_HEADER,
   SERVER_MSG,
+  SHALLOW_BAND_REGION,
   SORROWGATE_REGION,
   WESTERN_MARGIN_REGION,
   type TerrainMessage,
@@ -83,6 +86,16 @@ describe('the region a room names (#1460)', () => {
     assert.equal(terrain.region, WESTERN_MARGIN_REGION.id);
     assert.equal(terrain.cols * terrain.cellM, WESTERN_MARGIN_REGION.widthM);
     assert.equal(terrain.rows * terrain.cellM, WESTERN_MARGIN_REGION.heightM);
+  });
+
+  it("names the Shallow Band on Trench Awakening's ground at join (#1615)", async () => {
+    const awakening = await room({ missionId: ATTENDING_TRENCH_AWAKENING_HEADER.id });
+    const client = fakeClient('awakening');
+    awakening.onJoin(client as unknown as Client);
+    const terrain = lastTerrain(client);
+    assert.equal(terrain.region, SHALLOW_BAND_REGION.id);
+    assert.equal(terrain.cols * terrain.cellM, SHALLOW_BAND_REGION.widthM);
+    assert.equal(terrain.rows * terrain.cellM, SHALLOW_BAND_REGION.heightM);
   });
 
   it('names it again on a reconnection, with the ground as it now is', async () => {

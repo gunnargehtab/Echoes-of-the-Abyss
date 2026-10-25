@@ -14,6 +14,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 
 import {
   ATTENDING_INTAKE_HEADER,
+  ATTENDING_TRENCH_AWAKENING_HEADER,
   BANDING_GROUND_GROUND,
   BANDING_GROUND_REGION,
   Biome,
@@ -24,6 +25,8 @@ import {
   PROLOGUE_SORROWGATE_HEADER,
   RIFT_ATLAS,
   RIFT_PLACES,
+  SHALLOW_BAND_GROUND,
+  SHALLOW_BAND_REGION,
   SORROWGATE_GROUND,
   SORROWGATE_REGION,
   WORLD,
@@ -118,6 +121,32 @@ describe('placed regions', () => {
     // tall: the margin's south edge is the band's north edge (#1565).
     const band = RIFT_PLACES.find((p) => p.id === 'first-trench')!;
     assert.equal(WESTERN_MARGIN_REGION.y + WESTERN_MARGIN_REGION.heightM, band.y - 4_000 / 2);
+  });
+
+  it("centres the Shallow Band on §7.2's First Trench anchor, under the margin (§7.9, #1615)", () => {
+    assert.deepEqual(SHALLOW_BAND_REGION, {
+      id: 'shallow-band',
+      mapId: 'shallow-band',
+      x: 3_500,
+      y: 51_000,
+      widthM: 5_000,
+      heightM: 4_000,
+    });
+    assert.equal(SHALLOW_BAND_REGION.widthM, SHALLOW_BAND_GROUND.widthM);
+    assert.equal(SHALLOW_BAND_REGION.heightM, SHALLOW_BAND_GROUND.heightM);
+    assert.equal(SHALLOW_BAND_REGION.mapId, ATTENDING_TRENCH_AWAKENING_HEADER.mapId);
+    const anchor = RIFT_PLACES.find((p) => p.id === 'first-trench')!;
+    assert.deepEqual(
+      [
+        SHALLOW_BAND_REGION.x + SHALLOW_BAND_REGION.widthM / 2,
+        SHALLOW_BAND_REGION.y + SHALLOW_BAND_REGION.heightM / 2,
+      ],
+      [anchor.x, anchor.y]
+    );
+    // Edge to edge: the band's north edge is the margin's south edge, so the
+    // two share no cell and need not agree on one (§7.2).
+    assert.equal(SHALLOW_BAND_REGION.y, WESTERN_MARGIN_REGION.y + WESTERN_MARGIN_REGION.heightM);
+    assert.equal(SHALLOW_BAND_REGION.x, WESTERN_MARGIN_REGION.x);
   });
 
   it('place every map whose ground is placed, and none without', () => {
@@ -374,10 +403,11 @@ describe('the mission border', () => {
 });
 
 describe('the placed-mission predicate', () => {
-  it('draws the prologue, Intake and Exposure in the world, each on its region, and no other mission', () => {
+  it('draws the prologue, Intake, Exposure and Trench Awakening in the world, each on its region, and no other', () => {
     assert.equal(worldRegionForMission(PROLOGUE_SORROWGATE_HEADER.id), SORROWGATE_REGION);
     assert.equal(worldRegionForMission(ATTENDING_INTAKE_HEADER.id), BANDING_GROUND_REGION);
     assert.equal(worldRegionForMission(LEDGER_EXPOSURE_HEADER.id), WESTERN_MARGIN_REGION);
+    assert.equal(worldRegionForMission(ATTENDING_TRENCH_AWAKENING_HEADER.id), SHALLOW_BAND_REGION);
     assert.equal(worldRegionForMission(undefined), undefined);
     // Radicals plays on Sorrowgate's map and keeps its presentation: the
     // predicate is keyed on mission identity, never on the map (§7.1).
@@ -387,6 +417,7 @@ describe('the placed-mission predicate', () => {
       PROLOGUE_SORROWGATE_HEADER.id,
       ATTENDING_INTAKE_HEADER.id,
       LEDGER_EXPOSURE_HEADER.id,
+      ATTENDING_TRENCH_AWAKENING_HEADER.id,
     ]);
     for (const header of MISSION_HEADERS) {
       if (placed.has(header.id)) continue;
@@ -396,6 +427,7 @@ describe('the placed-mission predicate', () => {
     assert.equal(worldRegionForMission('sorrowgate'), undefined);
     assert.equal(worldRegionForMission('banding-ground'), undefined);
     assert.equal(worldRegionForMission('first-trench-margin'), undefined);
+    assert.equal(worldRegionForMission('shallow-band'), undefined);
   });
 
   it("places each mission on its own map's region", () => {
