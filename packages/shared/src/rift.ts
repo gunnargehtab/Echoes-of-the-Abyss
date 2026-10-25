@@ -515,11 +515,13 @@ export const RIFT_GROUND: MapGround = {
     box(6, 20, 2, 30, OpenWater, 1_500, 'The wall’s lower face'),
     box(8, 20, 2, 30, OpenWater, 1_700, 'The wall’s foot'),
     // Holding One, built down the face at the wall's north end where it
-    // shares a fence with the plateaus (§4): berths from 350 m to 1,300 m.
+    // shares a fence with the plateaus (§4): berths from 350 m to 1,300 m,
+    // named by grade: Board Country's map and Sector Vayle's anchor no longer
+    // stand on the bands once named for them (#1623).
     box(2, 12, 8, 2, ThermalVein, 400, 'Holding One’s top berths — Sector Kell, 350 m'),
     box(2, 14, 8, 2, ThermalVein, 700, 'Holding One — the middle berths'),
-    box(2, 16, 8, 2, ThermalVein, 1_050, 'Holding One — Sector Vayle’s grade, 1,050 m'),
-    box(2, 18, 8, 2, ThermalVein, 1_300, 'Holding One — Board country, the Underway at its foot'),
+    box(2, 16, 8, 2, ThermalVein, 1_050, 'Holding One — the deep berths, 1,050 m'),
+    box(2, 18, 8, 2, ThermalVein, 1_300, 'Holding One — the lowest berths, 1,300 m'),
     box(
       4,
       21,
@@ -1556,10 +1558,10 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
   // Board Country's 2,500 m (#1623). The map is the bottom of the Holding:
   // the Wall's deep berths, the Registry's arrays in its north-west corner and
   // the Underway's hall. The overview draws the Holding's berth bands round it,
-  // shallower. The surround carries the Wall half a kilometre round the map
-  // and the Registry west and north. South, its detail covers the Underworks'
-  // map, so it draws the Upper Berths, the Face and the roofed works there as
-  // the Underworks' surround does.
+  // shallower. The surround carries the Wall half a kilometre west, north and
+  // east and a row south, and the Registry west and north. South, its detail
+  // covers the Underworks' map, so it draws the Upper Berths, the Face and the
+  // roofed works there coarsely, as the Underworks' surround does.
   'holding-board': [
     {
       x: 3_500,
@@ -1568,7 +1570,7 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       heightM: 3_250,
       biome: ThermalVein,
       floorM: 1_350,
-      note: 'The Wall, Board country’s deep berths, half a kilometre round the map',
+      note: 'The Wall, Board country’s deep berths, half a kilometre west, north and east and a row south',
     },
     {
       x: 3_500,
@@ -1586,7 +1588,7 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       heightM: 500,
       biome: ThermalVein,
       floorM: 1_050,
-      note: 'The Underworks’ Upper Berths, as Tolerance draws them',
+      note: 'The Underworks’ Upper Berths, as Tolerance draws them, coarsely',
     },
     {
       x: 3_000,
@@ -1595,7 +1597,7 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       heightM: 750,
       biome: ThermalVein,
       floorM: 1_300,
-      note: 'The Underworks’ Face, as Tolerance draws it',
+      note: 'The Underworks’ Face, as Tolerance draws it, coarsely',
     },
     {
       x: 3_000,
@@ -1605,17 +1607,18 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       biome: CoralRuins,
       floorM: 2_100,
       ceilingM: 1_900,
-      note: 'The Underworks under the overhang, as Tolerance draws them',
+      note: 'The Underworks under the overhang, as Tolerance draws them, coarsely',
     },
   ],
   // The Underworks' 2,500 m (#1623). The map is the Holding's wall face: the
   // Upper Berths where Sector Vayle's frame stands, the Face and the Works
   // Yard, and under the overhang the roofed works. The overview draws the
-  // Holding's lowest berth band over it, at 1,300 m. The surround carries the
-  // Upper Berths, the Face and the overhang a kilometre west and east, the
-  // Berths a row north and the overhang a row south. North, its detail covers
-  // Board Country's map, and south the Upper Workings' top, so it draws both
-  // as their own surrounds do.
+  // Holding's lowest berth band, at 1,300 m, over its first two kilometres and
+  // the wall's faces over its last. The surround carries the Upper Berths, the
+  // Face and the overhang a kilometre west and east, the Berths a row north
+  // and the overhang a row south. North, its detail covers Board Country's
+  // map, and south the Upper Workings' top, so it draws both coarsely, as
+  // their own ground and surrounds do.
   'holding-underworks': [
     {
       x: 4_000,
@@ -1696,7 +1699,7 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       x: 5_000,
       y: 21_250,
       widthM: 1_000,
-      heightM: 500,
+      heightM: 1_000,
       biome: ThermalVein,
       floorM: 850,
       note: 'The Upper Workings’ Rail Head, on Fivewell',
