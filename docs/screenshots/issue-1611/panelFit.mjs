@@ -1,9 +1,9 @@
 // #1611's fit check: does the orders panel still fit once a hold counts down?
 //
-// docs/ui-ux.md §10.5 lets a clock row take the counter's column and cost its gloss a
-// line while it runs, on the condition that the panel still fits. Fitting is a layout
-// question with real fonts, so it is asked of a browser rather than of a headless
-// test. Waits for the first countdown row, then reads `.objectives-body`'s overflow
+// docs/ui-ux.md §10.5 puts a hold's countdown under the row's status word, where it
+// costs no line, so the panel should measure the same with it as without it (#1622).
+// Fitting is a layout question with real fonts, so it is asked of a browser rather than
+// of a headless test. Waits for the first countdown row, then reads `.objectives-body`'s overflow
 // with the countdown shown and with it hidden, so an overflow is attributed.
 export default async ({ page, shot }) => {
   await page.waitForSelector('.objectives-clock', { timeout: 17 * 60 * 1000 });

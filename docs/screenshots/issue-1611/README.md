@@ -44,7 +44,7 @@ drive and restores it, and its header says how. Only Sorrowgate keeps a silence 
 the five, only Convocation has a walk and a bell, and Item Nine, Tend and Conclave Chord
 reveal no state of either kind.
 
-| Mission, state | Clock | Overflow, shown / hidden | Height, shown / hidden |
+| Mission, state | Countdown | Overflow, shown / hidden | Height, shown / hidden |
 | --- | --- | --- | --- |
 | `prologue-sorrowgate`, silence owed (`sorrowgate-debt.png`) | 10:16 | 0 / 0 px | 309 / 309 px |
 | `seeding-convocation`, walk stalled (`convocation-stall.png`) | 18:26 | 0 / 0 px | 308 / 308 px |

@@ -945,13 +945,14 @@ something new, and a log role would re-announce the whole panel every time a cou
   the status column, beside the gloss on a row that has one and at the foot of the reading on
   a row that does not, so it adds no line and no column: §2's rule holds for it as for the
   underline. That holds where the row runs two lines without it, as every hold authored
-  today does at 100% scale. A reading that fits one line — Tend's hold at 200%, where the
-  panel fits about a third more to the line (§11) — grows the row to hold the figure under
-  the word rather than print it over the word. It reads without "left" because the status column is 3.2rem wide and `10:10 left` is not; the
-  figure is seen counting down, and the screen reader is told the end. The countdown first
-  took the counter's column, which narrowed the reading and cost a line, and with a silence
-  debt or a stalled walk on screen that line overflowed Sorrowgate's panel by 10 px and
-  Convocation's by 11 (#1622, `docs/screenshots/issue-1611/`). The server sends the tick the
+  today does at 100% scale. A reading short enough to fit one line — as Tend's may at 200%,
+  where the panel fits about a third more to the line (§11) — grows the row to hold the
+  figure under the word rather than print it over the word. It reads without "left" because
+  the status column is 3.2rem wide and `10:10 left` is not; the figure is seen counting
+  down, and the screen reader is told the end. The countdown first took the counter's
+  column, which narrowed the reading and cost a line, and with a silence debt or a stalled
+  walk on screen that line overflowed Sorrowgate's panel by 10 px and Convocation's by 11
+  (#1622, `docs/screenshots/issue-1611/`). The server sends the tick the
   row ends at, once, and the client counts down against the match clock, so the view is not
   resent every second. The changing figure is hidden from the live region, which would
   otherwise announce it every second over every objective. In its place the row's accessible
