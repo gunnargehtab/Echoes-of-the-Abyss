@@ -1717,15 +1717,16 @@
      width in panel units as it magnifies instead of narrowing to a column that
      wraps every row twice. At 100% both are 1 and this is the old rule. */
   width: min(340px, calc(32vw / var(--ui-scale, 1) / var(--panel-type, 1)));
-  /* One cap: the room that actually exists between the top strip and the
-     console — 60 and 208 panel units, both Pixi-drawn and both scaling with the
-     HUD — because a panel allowed past it would cover the console rather than
-     the water. There was a second, a 38vh share of the screen like the logs'
-     30% and 18%, and it is gone because §2 gives this panel no share: every
-     objective has to be on screen at once (§10.5). At 1440x900 it held the body
-     to 313 px while Sorrowgate's rows and withheld list wanted 471 from 13:40,
-     so the list sat under the foot (#1593). */
-  max-height: calc(100vh / var(--ui-scale, 1) - 280px);
+  /* One cap: the room that actually exists between the top strip and the hint
+     line — 60 panel units of strip above, and below the console's 208, the
+     hint's 20 and 4 of breath, all Pixi-drawn and all scaling with the HUD.
+     A panel allowed past it would cover the line that says why a press did
+     nothing, or the console, rather than the water. There was a second cap, a
+     38vh share of the screen like the logs' 30% and 18%, and it is gone because
+     §2 gives this panel no share: every objective has to be on screen at once
+     (§10.5). At 1440x900 it held the body to 313 px while Sorrowgate's rows and
+     withheld list wanted 471 from 13:40, so the list sat under the foot (#1593). */
+  max-height: calc(100vh / var(--ui-scale, 1) - 292px);
   display: flex;
   flex-direction: column;
   border: 1px solid color-mix(in srgb, var(--neon-magenta) 45%, transparent);
