@@ -9,8 +9,8 @@ node .claude/skills/run-game/scripts/drive.mjs --headed --channel chrome   --url
 
 | Frame | Clock | What it shows |
 | --- | --- | --- |
-| `arch.png` | T+00:48 | The arch's ring round the four escorts, named; the station row reads `09:53 left` |
-| `arch-row-pressed.png` | T+00:51 | The station row pressed: the camera on the arch, at 2,550, 2,125 |
+| `arch.png` | T+00:50 | The arch's ring round the four escorts, named; the station row reads `OPEN` over `09:51` |
+| `arch-row-pressed.png` | T+00:53 | The station row pressed: the camera on the arch, at 2,550, 2,125 |
 | `arch-fallen.png` | T+10:45 | The station met: no countdown, and the arch's ring and name gone with the span |
 | `concourse.png` | T+11:30 | Tender One's row pressed: the Concourse ringed and named on the plateau |
 
@@ -28,31 +28,33 @@ so its exterior is ground, and a ground mark keeps drawing there
 
 ## The fit check
 
-`panelFit.mjs` waits for the first countdown row, or with `FIT_LEFT_S` for the countdown to
-read that many seconds or fewer, then reads `.objectives-body` with the countdown shown and
-hidden, so an overflow can be blamed or cleared:
+The countdown sits under the status word and costs no line (`ui-ux.md` §10.5). Two scripts
+read `.objectives-body` with it shown and hidden, so an overflow can be blamed or cleared.
+`panelFit.mjs` reads once: at the first countdown row, or with `FIT_LEFT_S` once it reads
+that many seconds or fewer. `panelSweep.mjs` samples every second for `SWEEP_S` seconds,
+presses the commander's act at `SWEEP_BELL_S`, and keeps the worst reading for each state
+it saw:
 
 ```bash
-node .claude/skills/run-game/scripts/drive.mjs --headed --channel chrome   --url "http://localhost:5173/?mission=<id>"   --out <dir> --steps docs/screenshots/issue-1611/panelFit.mjs
+node .claude/skills/run-game/scripts/drive.mjs --headed --channel chrome   --url "http://localhost:5173/?mission=<id>"   --out <dir> --steps docs/screenshots/issue-1611/panelSweep.mjs
 ```
 
-| Mission | Countdown from | Overflow, shown | Overflow, hidden | Height, shown / hidden |
-| --- | --- | --- | --- | --- |
-| `prologue-sorrowgate` | 00:00 | 0 px | 0 px | 294 / 280 px |
-| `ledger-item-nine` | 00:00 | 0 px | 0 px | 249 / 233 px |
-| `seeding-convocation` | 00:00 | 0 px | 0 px | 308 / 292 px |
-| `chord-conclave` | 00:00 | 0 px | 0 px | 223 / 207 px |
-| `chord-conclave`, at 13:43 (`FIT_LEFT_S=50`) | 00:00 | 186 px | 170 px | 313 / 313 px |
-| `seeding-tend` | 15:00 | 80 px | 80 px | 313 / 313 px |
+A silence debt and a stalled walk are staged: `stage-patch.py` patches the server for the
+drive and restores it, and its header says how. Only Sorrowgate keeps a silence ledger among
+the five, only Convocation has a walk and a bell, and Item Nine, Tend and Conclave Chord
+reveal no state of either kind.
 
-Where the panel has room, the countdown costs one line of 14–16 px and the panel still fits.
-Sorrowgate, Item Nine, Convocation and Tend reveal no row while their hold runs, so the first
-moment holds every row they reveal. Conclave Chord reveals six stood rows and `the-quiet` at
-13:30, a minute before its hold ends, so it is also read there. A panel can also grow without
-a reveal, and none of those states was measured: Sorrowgate's silence debt (19 px of slack
-with the countdown), Convocation's stalled walk (5 px), and the commander's bell (#1622).
+| Mission, state | Clock | Overflow, shown / hidden | Height, shown / hidden |
+| --- | --- | --- | --- |
+| `prologue-sorrowgate`, silence owed (`sorrowgate-debt.png`) | 10:16 | 0 / 0 px | 309 / 309 px |
+| `seeding-convocation`, walk stalled (`convocation-stall.png`) | 18:26 | 0 / 0 px | 308 / 308 px |
+| `seeding-convocation`, stalled, bell ringing | 17:55 | 0 / 0 px | 298 / 298 px |
+| `ledger-item-nine` | 12:11 | 0 / 0 px | 233 / 233 px |
+| `chord-conclave`, at 13:43 (`chord-full.png`, `FIT_LEFT_S=50`) | 00:47 | 170 / 170 px | 313 / 313 px |
+| `seeding-tend`, at 15:03 (`tend-turning.png`) | 00:48 | 80 / 80 px | 313 / 313 px |
 
-Two panels already overflow while a hold counts. Tend's is at its cap at 15:00 and overflows
-by the same 80 px either way (`tend-turning.png`, #1619). Conclave Chord's overflows by 170 px
-at 13:43 without the countdown, and the countdown's line takes it to 186 px (#1621, frame
-`chord-full.png`). Fixing either overflow takes the line back with it (`ui-ux.md` §10.5).
+Every panel measures the same with the countdown as without it. In its first place, the
+counter's column, it narrowed the reading and cost a line: Sorrowgate with a debt overflowed
+by 10 px and Convocation stalled by 11, against 0 without it, and Conclave Chord's overflow
+grew from 170 px to 186 (#1622). Tend's 80 px at its cap (#1619) and Conclave Chord's 170
+from 13:30 (#1621) are the panels' own, and the countdown adds nothing to either.
