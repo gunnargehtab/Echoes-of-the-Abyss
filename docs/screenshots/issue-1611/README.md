@@ -25,3 +25,24 @@ drive had just pressed a row in the panel.
 The Concourse's ring reaches north past the map's edge. The prologue is a placed mission,
 so its exterior is ground, and a ground mark keeps drawing there
 ([map-visuals.md](../../map-visuals.md) §5, #1556).
+
+## The fit check
+
+`panelFit.mjs` waits for the first countdown row, then reads `.objectives-body` with the
+countdown shown and hidden, so an overflow can be blamed or cleared:
+
+```bash
+node .claude/skills/run-game/scripts/drive.mjs --headed --channel chrome   --url "http://localhost:5173/?mission=<id>"   --out <dir> --steps docs/screenshots/issue-1611/panelFit.mjs
+```
+
+| Mission | Countdown from | Overflow, shown | Overflow, hidden | Height, shown / hidden |
+| --- | --- | --- | --- | --- |
+| `prologue-sorrowgate` | 00:00 | 0 px | 0 px | 294 / 280 px |
+| `ledger-item-nine` | 00:00 | 0 px | 0 px | 249 / 233 px |
+| `seeding-convocation` | 00:00 | 0 px | 0 px | 308 / 292 px |
+| `chord-conclave` | 00:00 | 0 px | 0 px | 223 / 207 px |
+| `seeding-tend` | 15:00 | 80 px | 80 px | 313 / 313 px |
+
+Where the panel has room, the countdown costs one line of 14–16 px and the panel still fits.
+Tend's panel is already at its cap at 15:00 and overflows by the same 80 px either way
+(`tend-turning.png`, #1619): the countdown is not what pushes it.

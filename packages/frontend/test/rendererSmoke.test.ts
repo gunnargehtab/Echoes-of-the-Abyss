@@ -5110,7 +5110,7 @@ describe("a mission's named markers on the chart (#1611)", () => {
     try {
       assert.equal(traced.length, 1, 'one ring, round the marker');
       assert.equal(traced[0]!.radiusM, 350, 'at the marker radius, in true metres');
-      assert.deepEqual(names, ['The arch'], 'and its name beside it');
+      assert.deepEqual(names, ['The arch'], 'and its name above it');
     } finally {
       world.teardown();
     }

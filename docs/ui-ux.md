@@ -926,10 +926,12 @@ something new, and a log role would re-announce the whole panel every time a cou
   one**: its reading is underlined, dotted, which is the mark for text that goes somewhere,
   and a row with no marker is not. The row was the only route to Sorrowgate's Concourse and
   looked like static text, so a newcomer never took it (#1585). An underline adds no line and
-  no column, which is what §2's no-scroll rule asks of anything added to this panel.
+  no column, which is what §2's no-scroll rule asks of anything added to this panel; a hold's
+  countdown, below, is the one exception, and pays for it.
 - **A named marker is drawn on the chart while an open row names it.** A mission may give a
   marker a short place name — *The arch*, *The Concourse* — and the world view then draws it
-  where it is: a ring of the marker's radius on the seabed, and the name beside its centre.
+  where it is: a ring of the marker's radius on the seabed, and the name above the ring, held
+  at screen size, so it never sits on the hulls the ring is drawn round.
   The row that names it going met or failed takes it off the chart, so the chart says where
   the mission is sending the player now, never where it once did. The ring is an instrument
   ([map-visuals.md](map-visuals.md) §5, rung 6): it is the player's own orders drawn on the
@@ -940,7 +942,12 @@ something new, and a log role would re-announce the whole panel every time a cou
 - **A row that runs on a clock says how long is left.** A hold that ends on its own — the
   flight holding at the arch, a sitting, a tide — reads the time remaining beside its reading,
   `10:10 left`, until the row is met. A player told to hold and not told for how long cannot
-  tell holding from waiting for something they missed (#1611). The server sends the tick the
+  tell holding from waiting for something they missed (#1611). The figure takes the counter's
+  column, as `0 of 1` does on a counted row, and like it narrows the row's reading: while it
+  runs, the row's gloss may wrap a line longer than it does once met. That is the one line
+  this panel may spend, and only while the panel still fits whole at that moment, which
+  each mission that counts a hold down is checked for in a browser
+  (`docs/screenshots/issue-1611/panelFit.mjs`). The server sends the tick the
   row ends at, once, and the client counts down against the match clock, so the view is not
   resent every second. The changing figure is hidden from the live region, which would
   otherwise announce it every second over every objective. In its place the row's accessible

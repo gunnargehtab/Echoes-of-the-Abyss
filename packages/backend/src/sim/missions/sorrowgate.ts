@@ -502,6 +502,9 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
    * drops an order given to a held tender (`holdsMovement`). Each is held to
    * the line count of the gloss it replaced: from 13:40 the panel already runs
    * past its foot, and a longer gloss pushes the withheld list further under.
+   * The station's is, once met; while it runs, its countdown takes the
+   * counter's column and wraps it a line longer, which docs/ui-ux.md §10.5
+   * allows because the panel then holds two rows and fits (#1611).
    *
    * Each is **one sentence**, which docs/ui-ux.md §10.5 now requires and §2's
    * no-scroll rule is the reason for: this panel grows as the mission reveals
