@@ -539,7 +539,13 @@ describe('cssBox: what a column track refuses to shrink below', () => {
     // returning `undefined` for it would drop a column from the check above
     // without saying so.
     assert.equal(columnOf(parseCss(APP_CSS), TEXT), 2);
-    assert.equal(columnOf(parseCss(APP_CSS), STATUS), undefined);
+    // The status word was this test's unplaced cell until the countdown shared
+    // its cell and it had to be placed (#1622); a class no rule names stands in.
+    assert.equal(columnOf(parseCss(APP_CSS), STATUS), 1);
+    assert.equal(
+      columnOf(parseCss(APP_CSS), { ...TEXT, classes: ['objectives-unplaced'] }),
+      undefined
+    );
     for (const placement of ['span 2', 'auto', '2 / 4', 'text-start']) {
       assert.throws(
         () => columnOf(parseCss(withRule(`.objectives-text { grid-column: ${placement} }`)), TEXT),

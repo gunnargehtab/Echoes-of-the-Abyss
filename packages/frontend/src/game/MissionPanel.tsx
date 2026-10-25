@@ -16,10 +16,13 @@
  * The counters are computed server-side from this observer's own snapshot and
  * can only ever count the player's own force, so there is no arithmetic in
  * this file — displaying a number the server did not send would be exactly
- * the leak the panel is careful not to be.
+ * the leak the panel is careful not to be. The one subtraction is a hold's
+ * countdown (#1611), and both its terms are clocks the server sent: the tick
+ * the hold ends on, and the match clock the strip already prints.
  */
 
 import { useId, useState } from 'react';
+import { remaining, stamp } from './clock.ts';
 import {
   ObjectiveStatus,
   type BoundSig,
@@ -144,6 +147,14 @@ export interface MissionPanelProps {
    * skirmish.
    */
   boundSig?: BoundSig;
+  /**
+   * The match clock, for a hold's countdown — the server tick the strip's
+   * `T+` reads (docs/ui-ux.md §10.5, #1611). A prop beside `boundSig` for the
+   * same reason: the view is sent once per change, and a figure that moved
+   * every second on it would resend the whole view every second. Absent, a
+   * hold counts nothing on screen and still says its end to a screen reader.
+   */
+  tick?: number;
   /** Recentre the camera. The same callback the contact log focuses with. */
   onFocus(x: number, y: number): void;
   /**
@@ -155,7 +166,13 @@ export interface MissionPanelProps {
   onCommanderAbility?(): void;
 }
 
-export function MissionPanel({ view, boundSig, onFocus, onCommanderAbility }: MissionPanelProps) {
+export function MissionPanel({
+  view,
+  boundSig,
+  tick,
+  onFocus,
+  onCommanderAbility,
+}: MissionPanelProps) {
   // The lock set the player folded the list over, or null while it is open.
   // Local state and never stored: §10.5 opens the list at the start of every
   // mission, so a fold may not outlive the panel it was taken in.
@@ -260,6 +277,24 @@ export function MissionPanel({ view, boundSig, onFocus, onCommanderAbility }: Mi
               {objective.progress !== undefined && (
                 <span className="objectives-progress">
                   {objective.progress.done} of {objective.progress.of}
+                </span>
+              )}
+              {/* A hold's countdown, under the status word rather than in the
+                  counter's slot: there it narrowed the reading and cost the
+                  panel a line, which overflowed it during a silence debt or a
+                  stalled walk (#1622). Beside the gloss where the row has one,
+                  at the reading's foot where it does not — App.css places it.
+                  The figure that moves is hidden from the live region, which
+                  would read it out every second over every objective; the end
+                  is said once instead, in the clock's own form (§10.5, #1611). */}
+              {objective.endsAtTick !== undefined && (
+                <span
+                  className={`objectives-clock${objective.gloss === undefined ? '' : ' glossed'}`}
+                >
+                  {tick !== undefined && (
+                    <span aria-hidden="true">{remaining(objective.endsAtTick - tick)}</span>
+                  )}
+                  <span className="objectives-clock-end">until {stamp(objective.endsAtTick)}</span>
                 </span>
               )}
             </>

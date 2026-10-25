@@ -667,6 +667,26 @@ describe('the objectives', () => {
     }
   });
 
+  it('names a marker for the chart with a place, not a sentence', () => {
+    // docs/ui-ux.md §10.5 (#1611): a marker's `name` is printed on the chart
+    // above its ring, so it is the place — *The arch* — and never `label`'s
+    // sentence, which would lie across the water it is about. Short, one
+    // clause, and different from the label it sits beside.
+    let named = 0;
+    for (const mission of MISSIONS) {
+      for (const marker of mission.markers) {
+        if (marker.name === undefined) continue;
+        named++;
+        const where = `${mission.id}: marker "${marker.id}" is named "${marker.name}"`;
+        assert.ok(marker.name.trim() === marker.name && marker.name.length > 0, where);
+        assert.ok(marker.name.length <= 24, `${where}, too long to sit on the chart`);
+        assert.ok(!/[.,;:!?]/.test(marker.name), `${where}, which is a sentence`);
+        assert.notEqual(marker.name, marker.label, `${where}, which is its label`);
+      }
+    }
+    assert.ok(named > 0, 'no mission names a marker, so this asserted nothing');
+  });
+
   it('glosses a rule in the player’s own terms and names nobody else’s hulls', () => {
     // docs/ui-ux.md §10.5's gloss rule, over every mission there will ever be.
     //

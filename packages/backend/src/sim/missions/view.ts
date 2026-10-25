@@ -11,7 +11,7 @@
  * Widening it is how this stops being true, so it is the line to defend.
  */
 
-import { SIM } from '@echoes/shared';
+import { ObjectiveStatus, SIM } from '@echoes/shared';
 import type {
   AbilityLock,
   CommanderAbilityView,
@@ -19,7 +19,6 @@ import type {
   MissionMarker,
   MissionView,
   MovementHold,
-  ObjectiveStatus,
   ObjectiveView,
 } from '@echoes/shared';
 
@@ -126,11 +125,12 @@ export function projectMissionView(
     objectives,
     // Only the markers a *revealed* objective names, and this is the same
     // withholding as `revealAtTick` rather than a tidiness pass. In the
-    // Prologue the sole marker is the Upper Concourse, and the court does not
-    // name where the tenders are going until it opens the gate at 11:20
-    // (docs/mission-sorrowgate.md §8) — shipping the marker with the first view
-    // would put the extraction point on the wire eleven minutes early, and a
-    // payload the client holds is a payload some later layer draws.
+    // Prologue the court does not name where the tenders are going until it
+    // opens the gate at 11:20 (docs/mission-sorrowgate.md §8) — shipping the
+    // Upper Concourse with the first view would put the extraction point on the
+    // wire eleven minutes early, and a payload the client holds is a payload
+    // some later layer draws (since #1611 the chart does). The arch ships from
+    // tick 0 under the same rule: the station row names it from the start.
     //
     // Derived from the objectives rather than given its own reveal time so the
     // two cannot drift apart; `missions.test.ts` asserts every authored marker
@@ -216,6 +216,13 @@ function objectiveView(
     const row = liveRow(definition, state);
     if (row?.markerId !== undefined) view.markerId = row.markerId;
   }
+  // A hold says when it ends — docs/ui-ux.md §10.5, #1611. The end, not the
+  // time left: `rebuildView` resends on a changed JSON, and a figure moving
+  // every second would resend the whole view with it. `endure` measures from
+  // `startedAt` (predicates.ts), so this is the tick its own predicate is met.
+  if (objective.predicate.kind === 'endure' && view.status === ObjectiveStatus.Pending) {
+    view.endsAtTick = (state.startedAt.get(objective.id) ?? 0) + objective.predicate.ticks;
+  }
   if (counts(objective)) {
     const progress = judge(objective.predicate);
     view.progress = objective.predicate.kind === 'tolerance' ? inSeconds(progress) : progress;
@@ -297,7 +304,9 @@ function glossFor(objective: MissionObjective, state: MissionState): string | un
  * A counter is for things the player can count. `extract` and `survive` tally
  * hulls, which is a number worth showing beside a sentence; a ceiling and a
  * clock are rules that are simply in force or not, and rendering "1 of 1" or a
- * tick count beside either would be a progress bar over a fact.
+ * tick count beside either would be a progress bar over a fact. A clock still
+ * says when it ends — `endsAtTick`, above — because "hold" with no end in sight
+ * reads as a mission that has stalled (#1611).
  */
 function counts(objective: MissionObjective): boolean {
   return (

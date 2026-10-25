@@ -250,6 +250,12 @@ export const INSTRUMENT_OUTLINE_ALPHA = {
   orderMarker: 0.8,
   /** The click's acknowledgement, at its peak (EchoRenderer `drawOrderPlans`). */
   orderAckPeak: 0.9,
+  /**
+   * A mission marker's ring, while an open row names it (EchoRenderer
+   * `drawMissionMarks`, #1611). The order route's alpha: it is the same
+   * voice, the player's orders on the ground.
+   */
+  missionMarker: 0.45,
   /** A yard's rally course (EchoRenderer `drawStructures`). */
   rallyCourse: 0.35,
   /** And the glyph at its rally point. */
@@ -437,6 +443,7 @@ export const INSTRUMENT_OUTLINES: Readonly<Record<string, WeighedOutline>> = {
   orderRoute: steady(I.orderRoute, (p) => [p.ui.accent]),
   orderMarker: steady(I.orderMarker, (p) => [p.ui.accent, p.ui.threat]),
   orderAck: atPeak(I.orderAckPeak, (p) => [p.ui.accent, p.ui.threat]),
+  missionMarker: steady(I.missionMarker, (p) => [p.ui.accent]),
   rallyCourse: steady(I.rallyCourse, (p) => [p.ui.accent]),
   rallyMarker: steady(I.rallyMarker, (p) => [p.ui.accent]),
   readingBar: atPeak(I.readingBar, (p) => [p.ui.friendly, p.ui.sigMid]),

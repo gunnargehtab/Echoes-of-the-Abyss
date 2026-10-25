@@ -62,6 +62,7 @@ import {
   LID,
   maxAudibleRangeM,
   MissionOutcome,
+  ObjectiveStatus,
   onTheGround,
   ORDNANCE,
   OrdnanceKind,
@@ -105,7 +106,9 @@ import {
   type HazardState,
   type JellyCluster,
   type MissionAbility,
+  type MissionMarker,
   type MissionResultPayload,
+  type MissionView,
   type MovementHold,
   type OwnOrdnance,
   type OwnStructure,
@@ -262,6 +265,19 @@ interface OrderMarker {
 }
 
 const ORDER_MARKER_MS = 600;
+/**
+ * The four points of a mission marker's ring its name may stand over, as unit
+ * offsets in plan (`drawMissionMarks`). Four, not the ring's 48: the name only
+ * needs the side of the ring nearest the top of the screen.
+ */
+const MARK_COMPASS: ReadonlyArray<readonly [number, number]> = [
+  [0, -1],
+  [1, 0],
+  [0, 1],
+  [-1, 0],
+];
+/** How far above its ring a marker's name stands, in screen px. */
+const MARK_NAME_GAP_PX = 4;
 /** Projected-point scratch depth; see `project`. */
 const PROJECT_RING = 16;
 /** The strip of screen, in px, that counts as its edge for scrolling (§9). */
@@ -1857,6 +1873,16 @@ export class EchoRenderer {
   private missionHolds: readonly MovementHold[] = [];
   private missionStruck: readonly number[] = [];
   /**
+   * The places the mission is sending the player now, drawn on the chart
+   * (docs/ui-ux.md §10.5, #1611): each marker with a `name` that an open row
+   * names. Empty in a skirmish, and in every mission that names no marker.
+   */
+  private missionMarks: readonly MissionMarker[] = [];
+  /** What `missionMarks` was built from, so an unchanged view repaints nothing. */
+  private missionMarksKey = '';
+  /** One pooled name per drawn marker, in the overlay under the HUD. */
+  private readonly markNames = new Container();
+  /**
    * The last refused press, and when: a locked key pressed anyway, or a
    * priced button the player could not cover. The orders panel carries the
    * standing lock list and the top strip the balances; this is what the hint
@@ -2088,6 +2114,7 @@ export class EchoRenderer {
     // - ground: rung 6, blocked ground.
     // - nodes: rung 5, the resource fields.
     // - rings: rung 6, detection rings, the ping preview and order routes.
+    // - mark names: rung 6, the names of a mission's markers on its rings.
     // - structure, unit and ordnance symbols: rung 6, the ink about own
     //   entities the conn view draws at rung 7 (a site's scaffold aside).
     // - contact layer: rung 5's hazards, fauna fields and acoustic residue.
@@ -2102,7 +2129,10 @@ export class EchoRenderer {
       this.contactLayer,
       this.contactSymbols.layer,
       this.unitSymbols.layer,
-      this.ordnanceSymbols.layer
+      this.ordnanceSymbols.layer,
+      // Last, so a place's name is never painted under the hulls its ring is
+      // drawn round — the arch's ring takes in all four escorts (#1611).
+      this.markNames
     );
     this.hud.addChild(
       this.hudGraphics,
@@ -4945,6 +4975,27 @@ export class EchoRenderer {
     this.missionStruck = struck;
   }
 
+  /**
+   * The places to draw on the chart, off the mission view (docs/ui-ux.md
+   * §10.5, #1611): a marker with a `name`, while a row that names it is open.
+   * The row going met takes it off — the chart says where the mission is
+   * sending the player now, and the arch is rock by the time the station is
+   * met. Every marker here came off the wire, where the server withholds one
+   * until a revealed row names it, so nothing is drawn that was not sent.
+   */
+  setMissionMarkers(view: MissionView): void {
+    const open = new Set(
+      view.objectives
+        .filter((row) => row.status === ObjectiveStatus.Pending && row.markerId !== undefined)
+        .map((row) => row.markerId)
+    );
+    const marks = view.markers.filter((marker) => marker.name !== undefined && open.has(marker.id));
+    const key = JSON.stringify(marks);
+    if (key === this.missionMarksKey) return;
+    this.missionMarksKey = key;
+    this.missionMarks = marks;
+  }
+
   setMissionOver(payload: MissionResultPayload): void {
     this.missionOver = payload;
   }
@@ -5876,7 +5927,7 @@ export class EchoRenderer {
       this.ordnance.length > 0 ||
       this.orderMarkers.length > 0 ||
       this.brokeSilence.size > 0;
-    const force = `${base}|${this.previewPing}|${this.ordersSeq}|${moving ? now : 0}|${this.inkRevision}`;
+    const force = `${base}|${this.previewPing}|${this.ordersSeq}|${moving ? now : 0}|${this.inkRevision}|${this.missionMarksKey}`;
     const forceStale = this.stale('force', force);
     if (forceStale) this.drawRings();
     this.drawContacts();
@@ -5884,6 +5935,7 @@ export class EchoRenderer {
       this.drawStructures();
       this.drawUnits();
       this.drawOrderPlans();
+      this.drawMissionMarks();
     }
     // The map ends here. Every pass below paints screen space — panels, the
     // edge flash, the drag box — and sits outside the loudness ladder, which
@@ -8256,6 +8308,66 @@ export class EchoRenderer {
     if (Math.hypot(foot.x - ax, foot.y - ay) < 2) return false;
     g.moveTo(ax, ay).lineTo(foot.x, foot.y);
     return true;
+  }
+
+  /**
+   * The places a mission is sending the player, on the chart — docs/ui-ux.md
+   * §10.5 (#1611). A newcomer told to hold *at the arch* stood under it for ten
+   * minutes without knowing it was there, because nothing on screen said so.
+   *
+   * Rung 6, instruments (docs/map-visuals.md §5): the player's own orders
+   * drawn on the ground, in the interface cyan that tells, and the order
+   * route's argument for the placement. The ring is a course on the chart
+   * floor at the marker's radius, cut at the rim and broken behind models as
+   * every ground ring is (`traceCircle`). The name is a symbol and billboards
+   * (gate 8), held at screen size above the ring's highest point on screen, so
+   * it never sits on the hulls the ring is drawn round — the arch's ring takes
+   * in all four escorts.
+   */
+  private drawMissionMarks(): void {
+    const g = this.ringLayer;
+    const names = this.markNames.children as Text[];
+    let shown = 0;
+    for (const mark of this.missionMarks) {
+      if (this.traceCircle(g, mark.x, mark.y, mark.radiusM, null)) {
+        g.stroke({ width: 1.5, color: UI.accent, alpha: INSTRUMENT_OUTLINE_ALPHA.missionMarker });
+      }
+      // The ring's compass points, and the one highest on screen: whichever
+      // way the free camera faces, the name stands over the ring and not in
+      // it. A point off the frustum or past the rim is not a place to stand it.
+      const bounds = this.conn?.inkBounds() ?? null;
+      let top: { x: number; y: number } | null = null;
+      for (const [dx, dy] of MARK_COMPASS) {
+        const x = mark.x + dx * mark.radiusM;
+        const y = mark.y + dy * mark.radiusM;
+        const past =
+          bounds !== null &&
+          (x < bounds.x ||
+            x > bounds.x + bounds.widthM ||
+            y < bounds.y ||
+            y > bounds.y + bounds.heightM);
+        if (past) continue;
+        const p = this.project(x, y, null);
+        if (p === null || !p.visible) continue;
+        if (top === null || p.y < top.y) top = { x: p.x, y: p.y };
+      }
+      if (top === null) continue;
+      let name = names[shown];
+      if (name === undefined) {
+        name = new Text({
+          text: '',
+          style: { fontFamily: FONT_DATA, fontSize: 12, letterSpacing: 1, fill: UI.textDim },
+        });
+        name.anchor.set(0.5, 1);
+        this.markNames.addChild(name);
+      }
+      name.text = mark.name!;
+      name.style.fill = UI.textDim;
+      name.position.set(Math.round(top.x), Math.round(top.y - MARK_NAME_GAP_PX));
+      name.visible = true;
+      shown++;
+    }
+    for (let i = shown; i < names.length; i++) names[i]!.visible = false;
   }
 
   /**

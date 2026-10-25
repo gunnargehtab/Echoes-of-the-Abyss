@@ -137,7 +137,7 @@ on #866.
 | 3 — Ground | Biome fills, relief, mottle, props | 5–10% luminance, hue by biome |
 | 4 — Survey ink | Isobaths, coastlines | Hue-neutral, thin, constant width (§4) |
 | 5 — Map furniture | Hazard sites, resource fields, currents, tunnel routes, Tetherjelly fields, Lampfry shoals, the map rim, acoustic residue | Public, or your own heard residue; conforming, each in its own token |
-| 6 — Instruments | Range rings, ping preview, blocked ground, selection, the loudness collar | The interface voice: cyan tells, magenta asks, red warns |
+| 6 — Instruments | Range rings, ping preview, blocked ground, selection, the loudness collar, a mission's named markers | The interface voice: cyan tells, magenta asks, red warns |
 | 7 — Agents | Own hulls and structures, contacts at every tier, ordnance | Loudest; glow is loudness (gate 3) |
 
 **World light stands outside the ladder.** A vent ember is a point of additive light, and it

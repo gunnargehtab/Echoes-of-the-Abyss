@@ -927,6 +927,38 @@ something new, and a log role would re-announce the whole panel every time a cou
   and a row with no marker is not. The row was the only route to Sorrowgate's Concourse and
   looked like static text, so a newcomer never took it (#1585). An underline adds no line and
   no column, which is what §2's no-scroll rule asks of anything added to this panel.
+- **A named marker is drawn on the chart while an open row names it.** A mission may give a
+  marker a short place name — *The arch*, *The Concourse* — and the world view then draws it
+  where it is: a ring of the marker's radius on the seabed, and the name above the ring, held
+  at screen size, so it never sits on the hulls the ring is drawn round.
+  The row that names it going met or failed takes it off the chart, so the chart says where
+  the mission is sending the player now, never where it once did. The ring is an instrument
+  ([map-visuals.md](map-visuals.md) §5, rung 6): it is the player's own orders drawn on the
+  ground, in the interface's cyan, and like every rung-6 mark it ends at the rim. The scope
+  draws none: §5 keeps it a scope. A marker without a name stays a camera jump and nothing
+  more. A newcomer told to hold *at the arch* stood under it for ten minutes without knowing
+  it was there, because nothing on screen said so (#1611).
+- **A row that runs on a clock says how long is left.** A hold that ends on its own — the
+  flight holding at the arch, a sitting, a tide — shows the time remaining under its status
+  word, `OPEN` over `10:10`, until the row is met. A player told to hold and not told for how
+  long cannot tell holding from waiting for something they missed (#1611). The figure sits in
+  the status column, beside the gloss on a row that has one and at the foot of the reading on
+  a row that does not, so it adds no line and no column: §2's rule holds for it as for the
+  underline. That holds where the row runs two lines without it, as every hold authored
+  today does at 100% scale. A reading short enough to fit one line — as Tend's may at 200%,
+  where the panel fits about a third more to the line (§11) — grows the row to hold the
+  figure under the word rather than print it over the word. It reads without "left" because
+  the status column is 3.2rem wide and `10:10 left` is not; the figure is seen counting
+  down, and the screen reader is told the end. The countdown first took the counter's
+  column, which narrowed the reading and cost a line, and with a silence debt or a stalled
+  walk on screen that line overflowed Sorrowgate's panel by 10 px and Convocation's by 11
+  (#1622, `docs/screenshots/issue-1611/`). The server sends the tick the
+  row ends at, once, and the client counts down against the match clock, so the view is not
+  resent every second. The changing figure is hidden from the live region, which would
+  otherwise announce it every second over every objective. In its place the row's accessible
+  name carries the end once, in the clock's own form: `until T+10:40`. A clock is not a
+  failure: [campaign.md](campaign.md) §10 forbids failing a mission on a timer alone, and no
+  row that counts down fails when it reaches zero.
 - **Objective text is authored per mission and rendered verbatim.** Never templated. The
   court says *the flight stays under twenty* ([mission-sorrowgate.md](mission-sorrowgate.md)
   §12); a shared string would say "maintain SIG below 20", which is a sentence no faction in
@@ -1202,7 +1234,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | The shell — title, browse, setup, briefing, settings, credits | Implemented (§14) |
 | Mission runtime and the prologue | Implemented (#190) — one mission when it shipped, thirteen now; the campaign entry is a live door onto the board (#374) rather than the disabled placeholder it was |
 | The campaign board | Implemented (#374) — twenty-nine slots in three states, the prologue lane spanning four columns of seven, one tab stop with a roving `tabindex`, and every unbuilt slot `aria-disabled` and announced with its teaching target. The slot titles and teaching lines are transcribed from [campaign.md](campaign.md) §1 and §4–§7; which slots open is read off the shipped mission catalogue rather than written down, so a mission lights its own slot. `played` reads the progression record (#371, [campaign.md](campaign.md) §11) through a lookup the board is handed |
-| Objectives panel | Implemented (§10.5) — DOM, `role="status"`, focusable rows, own-force counters only, and a silence order's own reading beside the ceiling it is held to (#623) |
+| Objectives panel | Implemented (§10.5) — DOM, `role="status"`, focusable rows, own-force counters only, and a silence order's own reading beside the ceiling it is held to (#623). A clock row counts down to its end, and a named marker is drawn on the chart while an open row names it (#1611) |
 | Settings persistence and per-bus volume | Implemented (§14) — `localStorage`, applied at match mount |
 | Match browser, private rooms, join by code | Implemented (#193) — a listing names the water and the seat count and nothing else; solo and missions are private |
 | Menu music | Implemented (#194) — the port's own bed on the `music` bus, a different piece from the score |

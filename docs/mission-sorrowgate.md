@@ -637,12 +637,21 @@ the passive, and the Knights would be courteous about it.
 They work as instructions inside the fiction, but none of them names a hull, an order or a
 place on the chart that a newcomer could find. So the objectives panel puts a plain gloss of one
 sentence beside each objective ([ui-ux.md](ui-ux.md) §10.5), and three of the glosses carry the
-escort (#1585). The station's says that the two Harvester hulls are the tenders, and that the
-flight goes to them once the arch falls: that covers the forty seconds between the
-transit and the first load. Each tender's says to bring an escort within 400 m and then order the
-tender north to the Concourse. A held tender refuses an order, and once its hold lifts (§8) it
-still waits for one. The tender rows are the panel's route to the Concourse: each sends the
-camera there.
+escort (#1585). The station's says to hold under the arch until it falls, and that the two
+Harvester hulls are the tenders the flight goes to then: that covers the forty seconds between
+the transit and the first load. Each tender's says to bring an escort
+within 400 m and then order the tender north to the Concourse. A held tender refuses an order,
+and once its hold lifts (§8) it still waits for one. The tender rows are the panel's route to the
+Concourse: each sends the camera there.
+
+Two places are named on the chart as well as in the panel (#1611). Nothing in the ground marks
+the arch before it falls (§9), and a newcomer told to hold at it held under it for ten minutes
+without knowing it was there. So the station row carries a marker on the span, at 2,550, 2,125,
+whose 350 m ring takes in the escorts' seats. Its name is *The arch*, and its line is *The arch.
+The flight's water is under its south face.* The chart draws it until the station is met at
+10:40. The Concourse's marker is named *The Concourse*, and is drawn from 11:20, when the tender
+rows that name it arrive. The station row also counts down to the transit
+([ui-ux.md](ui-ux.md) §10.5): a hold with no end in sight reads as a mission that has stalled.
 
 ### The four voices in the water
 
@@ -762,6 +771,7 @@ not.
 | The beat schedule, including Drenn's ping and the transit | Implemented (#190) |
 | Objectives, results, and the failure at adjournment | Implemented (#190) |
 | The briefing and the objective readings | Implemented (#190) |
+| The arch and the Concourse named on the chart, and the station's countdown | Implemented (#1611) — two named markers, drawn while a row that names them is open, and the station row counting down to 10:40 ([ui-ux.md](ui-ux.md) §10.5) |
 | The court's four lines in the opening window | **Built** (#726) — four `say` beats at 00:20, 01:00, 01:50 and 02:40, authored in §12 and transcribed by the literal, in the court's register and signed by Halloran, who until now spoke only in the briefing. They name no control, for the two reasons §9 gives, and they are `say` beats and nothing else, so no objective and no conditional beat keys on one. `missionRuntime.test.ts` plays the mission and asserts all four arrive at their minute, that the four in the water still arrive at theirs, and that a run which ignores every one of them still resolves on §8's terms |
 | The four voices in the water | **Built** (#381) — the `say` beat carries speaker and line to the mission log beside the orders panel at the times §12 gives, and the mix now hails each on the speech bus [audio-direction.md](audio-direction.md) §13 owns: 600 ms of signature in the speaker's register's material, then a murmur bed for the reading. The four are four registers by construction — Kalliso in the Order's note at 06:20, Drenn in the concern's beat at 09:00, Sende in the cohorts' ticks at 09:20, Teel in the plateaus' breath at 10:40 — and `missionRuntime.test.ts` plays the mission and asserts they arrive as four different voices. Under the silence order the hail whispers (−6 dB, the top octave gone, the bed half as long) and never mutes; the log stays the caption, so a player with their eyes on the water now hears that somebody spoke and which of the four it was. Under the cast (#403) Kalliso and Teel are signed — the Order's own note at a soldier's pace, and the warden's breath — and Drenn and Sende, who have no entry in [characters.md](characters.md), speak as the grid and as those below: still four registers, and now four speakers |
 | Ghost markers as a taught system | **Not taught here, and [campaign.md](campaign.md) §3 now says so.** §10's fourth beat was written for a fading twenty-second trail; measured, the colossus holds Tier 4 from 09:00 to the adjournment in every drive — passive, escorted, and escorted-with-the-climb — because SIG 100 through PF 1.6 stays four times over threshold even across the thermocline. §10 row 4 has been rewritten to what the phase does teach. Whether the lesson moves to another mission or the colossus is made quieter is a campaign-level decision, not this document's |

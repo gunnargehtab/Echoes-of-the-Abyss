@@ -172,9 +172,27 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     },
   ],
   markers: [
+    /**
+     * §12's two named places (#1611). The arch is one cell row of ordinary
+     * Districts until 10:40 — `arch-span` above, which no ground layer draws —
+     * so a newcomer told to hold at it had nothing on screen to find. The
+     * marker sits on the span over the escorts' seats (2,400-2,700 by
+     * 2,280-2,430), and 350 m from its centre takes in all four. The station
+     * row names it, so it ships from tick 0: the arch is public ground the
+     * flight is already under, and naming it places nobody else.
+     */
+    {
+      id: 'arch',
+      label: "The arch. The flight's water is under its south face.",
+      name: 'The arch',
+      x: 2550,
+      y: 2125,
+      radiusM: 350,
+    },
     {
       id: 'concourse',
       label: 'The Concourse is above the layer. Nothing follows you up.',
+      name: 'The Concourse',
       x: 2500,
       y: 350,
       radiusM: 900,
@@ -478,11 +496,14 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
    * no hull, no order and no place, and a newcomer walking the prologue met the
    * forty seconds after the transit with nothing open, a tender whose inspector
    * reads `HARVESTER`, and a hold that lifted on a tender nobody had ordered. So
-   * the station's gloss names the Harvesters as the tenders, and each tender's
+   * the station's gloss names the Harvesters as the tenders — and, since #1611,
+   * says the flight is already under the arch it holds at — and each tender's
    * puts the escort before the order north to the Concourse, because `Match`
    * drops an order given to a held tender (`holdsMovement`). Each is held to
    * the line count of the gloss it replaced: from 13:40 the panel already runs
    * past its foot, and a longer gloss pushes the withheld list further under.
+   * The station's countdown sits under its status word, beside this gloss,
+   * and costs it no line (docs/ui-ux.md §10.5, #1622).
    *
    * Each is **one sentence**, which docs/ui-ux.md §10.5 now requires and §2's
    * no-scroll rule is the reason for: this panel grows as the mission reveals
@@ -521,8 +542,9 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     {
       id: 'station',
       text: 'The flight holds at the arch.',
-      gloss: 'Hold until the arch falls, then go to the two Harvester hulls: the tenders.',
+      gloss: 'Hold under the arch until it falls, then go to the two Harvester hulls: the tenders.',
       initial: ObjectiveStatus.Pending,
+      markerId: 'arch',
       // The station ends when the arch does. Nothing else about the first ten
       // minutes is a task, on purpose: §10 gives them to SIG, to the array, and
       // to a contact that will not resolve.

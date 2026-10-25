@@ -1555,6 +1555,17 @@ export interface MovementHold {
 export interface MissionMarker {
   id: string;
   label: string;
+  /**
+   * A short place name — *The arch*, *The Concourse* — that the chart prints
+   * above the marker's ring while an open objective names it (docs/ui-ux.md
+   * §10.5).
+   *
+   * Separate from `label` because `label` is a sentence in the mission's own
+   * register, a line for the panel's row, and a sentence printed on the chart
+   * covers the water it is about. Absent, the marker is a camera jump and
+   * nothing is drawn, which is every mission but one today (#1611).
+   */
+  name?: string;
   x: number;
   y: number;
   radiusM: number;
@@ -1613,6 +1624,18 @@ export interface ObjectiveView {
    * and no mission predicate can address an entity the player does not own.
    */
   progress?: { done: number; of: number };
+  /**
+   * The tick an open hold ends on, for the countdown beside its reading
+   * (docs/ui-ux.md §10.5, #1611). Only on an `endure` objective that is still
+   * pending; a met row has nothing left to count.
+   *
+   * The end rather than the time left, because the runtime resends the view
+   * only when its JSON changes (`rebuildView`): a figure that moved every
+   * second would resend every objective, marker and lock with it every second.
+   * The client counts down against the match clock it already holds. Own-force
+   * state and an authored constant — the mission's own clock, no one else's.
+   */
+  endsAtTick?: number;
   /** The marker this objective sends you to, if any. */
   markerId?: string;
 }

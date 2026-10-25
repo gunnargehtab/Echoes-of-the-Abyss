@@ -31,7 +31,13 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { SIM, UnitKind, type EchoSnapshot, type MissionView } from '@echoes/shared';
+import {
+  ObjectiveStatus,
+  SIM,
+  UnitKind,
+  type EchoSnapshot,
+  type MissionView,
+} from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { missionMapById } from '../src/sim/maps/index.ts';
 import { MISSIONS, PROLOGUE_SORROWGATE, inRegion } from '../src/sim/missions/index.ts';
@@ -115,6 +121,7 @@ function authoredStrings(): Set<string> {
   for (const marker of PROLOGUE_SORROWGATE.markers) {
     strings.add(marker.id);
     strings.add(marker.label);
+    if (marker.name !== undefined) strings.add(marker.name);
   }
   for (const lock of PROLOGUE_SORROWGATE.locks) {
     strings.add(lock.ability);
@@ -245,6 +252,48 @@ describe('a mission view says only what the player could have worked out', () =>
     );
   });
 
+  it("states a hold's end once, as the tick the hold is met on", () => {
+    // docs/ui-ux.md §10.5's countdown (#1611). The end is the mission's own
+    // clock — the station's `endure`, stamped on the pass that first derives
+    // it — so it is an authored duration and never a reading of the water. And
+    // it is the *end*, never the time left: a figure that moved would change
+    // the view's JSON every second, and the runtime would resend the whole view
+    // with it. One value for the whole hold is that promise.
+    const station = PROLOGUE_SORROWGATE.objectives.find((o) => o.id === 'station')!;
+    assert.equal(station.predicate.kind, 'endure');
+    const authored = station.predicate.kind === 'endure' ? station.predicate.ticks : NaN;
+    const ends = new Set<number>();
+    let lastOpen = -1;
+    let firstMet = Infinity;
+    for (const { view } of sentViews()) {
+      const row = view.objectives.find((objective) => objective.id === 'station')!;
+      if (row.status === ObjectiveStatus.Pending) {
+        assert.ok(row.endsAtTick !== undefined, `tick ${view.tick}: an open hold has no end`);
+        ends.add(row.endsAtTick);
+        lastOpen = Math.max(lastOpen, view.tick);
+      } else {
+        assert.equal(row.endsAtTick, undefined, `tick ${view.tick}: a met hold still counts`);
+        firstMet = Math.min(firstMet, view.tick);
+      }
+      // A ceiling is a rule in force, not a clock: nothing to count down.
+      const silence = view.objectives.find((objective) => objective.id === 'silence')!;
+      assert.equal(silence.endsAtTick, undefined, 'the ceiling grew a countdown');
+    }
+    assert.equal(ends.size, 1, `the hold's end moved: ${[...ends].join(', ')}`);
+    const [endsAt] = [...ends] as [number];
+    // Within one Echo pass of the authored 10:40 — the stamp is the first pass
+    // that derives the row, not tick 0.
+    const pass = SIM.TICK_HZ / SIM.ECHO_HZ;
+    assert.ok(
+      endsAt >= authored && endsAt <= authored + pass,
+      `the hold ends at ${endsAt}, not at the authored ${authored}`
+    );
+    // And the countdown reaches zero when the row goes met, not before or after.
+    assert.ok(lastOpen < endsAt, `the row was still open at ${lastOpen}, past its end ${endsAt}`);
+    assert.ok(firstMet >= endsAt, `the row went met at ${firstMet}, before its end ${endsAt}`);
+    assert.ok(firstMet - endsAt <= pass, `the row went met at ${firstMet}, long after ${endsAt}`);
+  });
+
   it("has no field that could hold another slot's state", () => {
     // Structural, in the register of `ai.test.ts`'s tuning-knob test and for
     // the same reason: the promise is that a mission panel never reports on
@@ -268,8 +317,20 @@ describe('a mission view says only what the player could have worked out', () =>
     // nothing but one of the literal's own constants (§10.5, and the two tests
     // in `objectiveGloss.test.ts` that hold it). Adding a third would want the
     // same argument made again.
-    const objective = new Set(['id', 'text', 'gloss', 'status', 'progress', 'markerId']);
-    const marker = new Set(['id', 'label', 'x', 'y', 'radiusM']);
+    // `endsAtTick` is a number, and the test above holds it to the authored
+    // end of the objective's own clock (#1611). `name` is a marker's second
+    // authored string, admitted on `gloss`'s terms: a literal constant, which
+    // `carries no string the mission did not author` holds.
+    const objective = new Set([
+      'id',
+      'text',
+      'gloss',
+      'status',
+      'progress',
+      'endsAtTick',
+      'markerId',
+    ]);
+    const marker = new Set(['id', 'label', 'name', 'x', 'y', 'radiusM']);
     const lock = new Set(['ability', 'reason']);
     // A held hull is the one place the payload names an *entity*, so it gets
     // the same treatment as everything else here and one extra check below:
