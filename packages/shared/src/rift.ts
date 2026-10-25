@@ -1012,9 +1012,10 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
   // 2 and 10 km. The surround carries the map's trench out to them: the rim
   // along the north wall, each overhang to its own wall, and the axis's water
   // under them a row past the map's south edge. The Sill goes on south into
-  // the First's deep end, toward the Second. The rim's row north of the map is
-  // the Western Margin's own ground, so where both are drawn the margin's
-  // patch takes it (§7.3).
+  // the First's deep end, toward the Second. The rim's row north of the map
+  // lies on the Western Margin's ground, so where both are drawn the margin's
+  // region takes it (§7.3): its patch above the map, and its worked ground
+  // either side.
   'shallow-band': [
     {
       x: 2_000,
