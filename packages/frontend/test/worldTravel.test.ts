@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import { createElement } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import {
+  ANHOLT_FURROW_REGION,
   ATTENDING_INTAKE_HEADER,
   ATTENDING_SHALLOW_HEADER,
   ATTENDING_THE_DOME_HEADER,
@@ -29,6 +30,8 @@ import {
   paintGround,
   PROLOGUE_SORROWGATE_HEADER,
   SEEDING_CONVOCATION_HEADER,
+  SEEDING_DEEP_FURROW_HEADER,
+  SEEDING_IN_WRITING_HEADER,
   SEEDING_RADICALS_HEADER,
   SEEDING_TEND_HEADER,
   SEEDING_THIN_WATER_HEADER,
@@ -731,6 +734,16 @@ describe('a second placed mission, in the same world (#1598)', () => {
     });
   });
 
+  it("ends Deep Furrow's and In Writing's travel on the Furrow's Foot, their spawn (#1638)", () => {
+    sameFrame(arrivalFrame(ANHOLT_FURROW_REGION)!, {
+      xM: 2_000,
+      yM: 250,
+      distanceM: HOME_DOLLY_M,
+      yawDeg: 0,
+      pitchDeg: 55,
+    });
+  });
+
   it('gives every placed region a home to travel to', () => {
     // A region with no derived anchor would launch its mission off the world.
     for (const region of WORLD_REGIONS) assert.ok(arrivalFrame(region), region.id);
@@ -855,13 +868,16 @@ describe('which launches travel, and when a travel joins (§7.6)', () => {
       'The Dome is (#1628)'
     );
     assert.equal(travelsFirst('campaign', 'ledger-baffle'), false, 'Baffle waits (#1505)');
-    // A shared map's missions all travel (#1505): both of Marr's (#1630), and
-    // both of the Kell Shoulder's (#1633).
+    // A shared map's missions all travel (#1505): both of Marr's (#1630), both
+    // of the Kell Shoulder's (#1633), and both of the Furrow's (#1638).
     for (const mission of [SEEDING_TEND_HEADER, SEEDING_CONVOCATION_HEADER]) {
       assert.equal(travelsFirst('campaign', mission.id), true, `${mission.id} is (#1630)`);
     }
     for (const mission of [SEEDING_THIN_WATER_HEADER, ATTENDING_SHALLOW_HEADER]) {
       assert.equal(travelsFirst('campaign', mission.id), true, `${mission.id} is (#1633)`);
+    }
+    for (const mission of [SEEDING_DEEP_FURROW_HEADER, SEEDING_IN_WRITING_HEADER]) {
+      assert.equal(travelsFirst('campaign', mission.id), true, `${mission.id} is (#1638)`);
     }
   });
 

@@ -13,6 +13,8 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 
 import {
+  ANHOLT_FURROW_GROUND,
+  ANHOLT_FURROW_REGION,
   ATTENDING_INTAKE_HEADER,
   ATTENDING_SHALLOW_HEADER,
   ATTENDING_THE_DOME_HEADER,
@@ -38,6 +40,8 @@ import {
   RIFT_ATLAS,
   RIFT_PLACES,
   SEEDING_CONVOCATION_HEADER,
+  SEEDING_DEEP_FURROW_HEADER,
+  SEEDING_IN_WRITING_HEADER,
   SEEDING_TEND_HEADER,
   SEEDING_THIN_WATER_HEADER,
   SHALLOW_BAND_GROUND,
@@ -284,6 +288,28 @@ describe('placed regions', () => {
     assert.equal(
       KELL_SHOULDER_REGION.y - (MARR_PLATEAU_REGION.y + MARR_PLATEAU_REGION.heightM),
       1_000
+    );
+  });
+
+  it("stands the Furrow centred on §7.2's anchor (§7.9, #1638)", () => {
+    assert.deepEqual(ANHOLT_FURROW_REGION, {
+      id: 'anholt-furrow',
+      mapId: 'anholt-furrow',
+      x: 22_000,
+      y: 17_500,
+      widthM: 4_000,
+      heightM: 3_000,
+    });
+    assert.equal(ANHOLT_FURROW_REGION.widthM, ANHOLT_FURROW_GROUND.widthM);
+    assert.equal(ANHOLT_FURROW_REGION.heightM, ANHOLT_FURROW_GROUND.heightM);
+    // Both of its missions play it, and both are drawn there (#1505).
+    for (const mission of [SEEDING_DEEP_FURROW_HEADER, SEEDING_IN_WRITING_HEADER]) {
+      assert.equal(ANHOLT_FURROW_REGION.mapId, mission.mapId, mission.id);
+    }
+    const furrow = RIFT_PLACES.find((p) => p.id === 'the-furrow')!;
+    assert.deepEqual(
+      [ANHOLT_FURROW_REGION.x + 2_000, ANHOLT_FURROW_REGION.y + 1_500],
+      [furrow.x, furrow.y]
     );
   });
 
@@ -553,6 +579,8 @@ describe('the placed-mission predicate', () => {
     assert.equal(worldRegionForMission(SEEDING_CONVOCATION_HEADER.id), MARR_PLATEAU_REGION);
     assert.equal(worldRegionForMission(SEEDING_THIN_WATER_HEADER.id), KELL_SHOULDER_REGION);
     assert.equal(worldRegionForMission(ATTENDING_SHALLOW_HEADER.id), KELL_SHOULDER_REGION);
+    assert.equal(worldRegionForMission(SEEDING_DEEP_FURROW_HEADER.id), ANHOLT_FURROW_REGION);
+    assert.equal(worldRegionForMission(SEEDING_IN_WRITING_HEADER.id), ANHOLT_FURROW_REGION);
     assert.equal(worldRegionForMission(undefined), undefined);
     // Radicals plays on Sorrowgate's map and keeps its presentation: the
     // predicate is keyed on mission identity, never on the map (§7.1).
@@ -570,6 +598,8 @@ describe('the placed-mission predicate', () => {
       SEEDING_CONVOCATION_HEADER.id,
       SEEDING_THIN_WATER_HEADER.id,
       ATTENDING_SHALLOW_HEADER.id,
+      SEEDING_DEEP_FURROW_HEADER.id,
+      SEEDING_IN_WRITING_HEADER.id,
     ]);
     for (const header of MISSION_HEADERS) {
       if (placed.has(header.id)) continue;
@@ -583,6 +613,7 @@ describe('the placed-mission predicate', () => {
     assert.equal(worldRegionForMission('ninefold-face-six'), undefined);
     assert.equal(worldRegionForMission('marr-plateau'), undefined);
     assert.equal(worldRegionForMission('kell-shoulder'), undefined);
+    assert.equal(worldRegionForMission('anholt-furrow'), undefined);
   });
 
   it("places each mission on its own map's region", () => {
