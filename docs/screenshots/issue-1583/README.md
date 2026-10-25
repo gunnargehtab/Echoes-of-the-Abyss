@@ -16,8 +16,8 @@ between a model frame and its footing one.
 
 | Frame | What it shows |
 | --- | --- |
-| `ventfront-home-footing.png` | The Foundry's collar across its roof's left edge, and the Bastion's below its dome's top |
-| `ventfront-home-model.png` | Both collars ringing the whole model, roof included |
+| `ventfront-home-footing.png` | The Foundry's collar across its roof's left edge |
+| `ventfront-home-model.png` | The same collar ringing the whole Foundry, roof included |
 | `ventfront-close-footing.png` | At 900 m, the Foundry's collar across its roof and lit bay |
 | `ventfront-close-model.png` | The same collar passing outside the Foundry's roof |
 
