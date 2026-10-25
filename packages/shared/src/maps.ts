@@ -65,6 +65,24 @@ export const MAP_HEADERS: readonly MapHeader[] = [
 
 export const DEFAULT_MAP_ID = VENTFRONT_DIVIDE_HEADER.id;
 
+/**
+ * What the setup screen says about each map, in plain words — docs/maps.md,
+ * "On the setup card"; docs/ui-ux.md §14.
+ *
+ * Not `idealUse`, which is the archetype's design shorthand: a newcomer read
+ * "high-skill micro + positioning" as a warning (#1587). Beside the headers
+ * rather than on them because `MapDefinition` extends `MapHeader`, and the
+ * twenty mission maps are never on a card.
+ */
+export const SETUP_CARD: Readonly<Record<string, string>> = {
+  [VENTFRONT_DIVIDE_HEADER.id]:
+    'Four seats on two plateaus, with a line of erupting vents between them whose roar hides a hull. A few narrow crossings, and tunnels round the sides.',
+  [ABYSSAL_RIFT_CORRIDOR_HEADER.id]:
+    'Two seats, one at each end of a long, deep trench. Narrow choke points, and pressure that wears down a hull in the deepest water.',
+  [KELP_LABYRINTH_HEADER.id]:
+    'Four seats round a kelp maze, where a hull is hard to hear. Winding routes, hidden tunnels, and the crystal at its centre.',
+};
+
 export function mapHeaderById(id: string): MapHeader | undefined {
   return MAP_HEADERS.find((header) => header.id === id);
 }

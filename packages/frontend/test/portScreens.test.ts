@@ -29,7 +29,7 @@
 import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 import { createElement } from 'react';
-import { MAP_HEADERS, type MatchListing } from '@echoes/shared';
+import { MAP_HEADERS, SETUP_CARD, type MatchListing } from '@echoes/shared';
 import { clearStorage, installStorage } from './support/headless.ts';
 import { click, render, type Rendered } from './support/screen.ts';
 import { TitleScreen } from '../src/menu/TitleScreen.tsx';
@@ -165,7 +165,7 @@ function leadsWith(name: string, want: string): boolean {
  *
  * Both lists are checked, because they are not the same list: a held seat adds
  * an entry *and* moves the autofocus, and `autoFocus` is an expression over
- * both facts (`entry.resume === true || (!held && entry.id === 'solo')`). Held
+ * both facts (`entry.resume === true || (!held && entry.id === 'tutorial')`). Held
  * on the no-seat list alone, that expression could lose its `!held` and
  * autofocus two entries whenever a seat was held with nothing to say so.
  */
@@ -245,18 +245,16 @@ describe('the title screen: the shape of the finished game', () => {
     }
   });
 
-  it('changes which entry is offered first, never how many stops the list has', async () => {
+  it('focuses Tutorial with no seat held, and keeps one stop per entry', async () => {
     // The half of #723 that a reorder can break silently, on the list with no
     // seat to resume; the held-seat list is checked in its own describe below.
     //
-    // Autofocus is keyed on an entry's id rather than its index, so moving
-    // Tutorial up leaves it where it was: on Solo game, which is now the third
-    // entry rather than the second. §14 documents autofocus only for a held
-    // seat, so where it lands without one is the code's call, and this holds it
-    // still rather than changing it.
+    // §14, Title: "With no seat held the focus starts on Tutorial as well, so a
+    // first run's Enter goes where the list points" (#1587). It had stayed on
+    // Solo game, which put a newcomer's first keypress into a skirmish.
     const { view } = await title();
     try {
-      oneStopPerEntry(view, 6, 'Solo game');
+      oneStopPerEntry(view, 6, 'Tutorial');
     } finally {
       await view.unmount();
     }
@@ -497,12 +495,17 @@ describe('match setup: what it may offer, and what it may not', () => {
         'the catalogue’s order, and the catalogue’s names'
       );
       const metas = view.allByClass('menu-map-meta').map(reads);
+      const uses = view.allByClass('menu-map-use').map(reads);
       for (const [index, header] of MAP_HEADERS.entries()) {
         assert.match(
           metas[index]!,
           new RegExp(`^${header.seats} commanders · `),
           'and the seats it holds, which is half of what picking a water decides'
         );
+        // §14, Setup: the card prints maps.md's plain setup-card line, never
+        // the archetype's design shorthand (#1587).
+        assert.equal(uses[index], SETUP_CARD[header.id], `${header.id}: its setup card`);
+        assert.equal(uses[index]!.includes(header.idealUse), false, `${header.id}: no shorthand`);
       }
     } finally {
       await view.unmount();

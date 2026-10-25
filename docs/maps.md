@@ -15,6 +15,11 @@ Readable, tactical, atmospheric — built for the underwater world.
   route under it are different routes with different costs, and only one of them can be
   seen from above. See [systems-depth.md](systems-depth.md) §1.
 
+A map a player can pick also carries an **On the setup card** line: what a newcomer reads on
+the setup screen ([ui-ux.md](ui-ux.md) §14), in plain words, where *Ideal Use* keeps the
+designer's shorthand ([#1587](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1587)).
+The three in the public catalogue carry one; an archetype gains one when it is built.
+
 ## Map Type 1 — The Ventfront Divide
 
 A geothermal battlefield split by erupting thermal veins.
@@ -65,6 +70,10 @@ A geothermal battlefield split by erupting thermal veins.
 
 Competitive 1v1 or 2v2; high-pressure mid-control gameplay.
 
+### On the setup card
+
+Four seats on two plateaus, with a line of erupting vents between them whose roar hides a hull. A few narrow crossings, and tunnels round the sides.
+
 ## Map Type 2 — Kelp Labyrinth
 
 A dense maze of kelp forests with hidden paths and stealth zones.
@@ -112,6 +121,10 @@ The maze was the half #626 left, and it is settled the same way: **a mirrored ma
 
 What the quadrant says is two concentric kelp walls around the central pocket, each with one gate per side and the gates **staggered** — the outer wall opens on the centre lines, the inner wall on the diagonals. A run at the crystal is therefore never a straight one: through the outer gate the inner wall is broadside, and its door is a quarter turn away along a 250 m corridor. The four corner pressure pockets are the other four doors, painted over the outer wall's corners, so the shortcut through the maze is the fast way in and still the one that costs hull.
 
+### On the setup card
+
+Four seats round a kelp maze, where a hull is hard to hear. Winding routes, hidden tunnels, and the crystal at its centre.
+
 ## Map Type 3 — Abyssal Rift Corridor
 
 A long trench map with brutal choke points and vertical depth gameplay.
@@ -152,6 +165,10 @@ A long trench map with brutal choke points and vertical depth gameplay.
 ### Ideal Use
 
 1v1 competitive; high-skill micro + positioning.
+
+### On the setup card
+
+Two seats, one at each end of a long, deep trench. Narrow choke points, and pressure that wears down a hull in the deepest water.
 
 ## Map Type 4 — Crystal Convergence
 
