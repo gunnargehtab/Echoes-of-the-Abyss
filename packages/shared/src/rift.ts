@@ -1422,7 +1422,8 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
   // The Furrow's 2,500 m (#1638). The map is a cleft under Anholt's lower
   // terraces: the Mid-Water lanes and the Foot across its north, two solid
   // walls, and the road between them down to the Sill. The overview draws the
-  // terraces round it and the Furrow's column through them. The surround runs
+  // terraces north of it and beside it down to y 20 km, the shoulder's bare
+  // rock south of that, and the Furrow's column through both. The surround runs
   // the lanes a kilometre west and east and two rows north, and the Foot a
   // kilometre north toward the terraces. Each wall is two rows thicker and two
   // rows longer, flanking the Sill, which opens two kilometres south onto the

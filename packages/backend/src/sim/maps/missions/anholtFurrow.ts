@@ -30,8 +30,8 @@
  * under the floor of the Hollows' band, so the garden is the only water in
  * this cleft where a quiet hull is beyond the reach of everything that hunts.
  *
- * The Second Furrow is bare rock in the literal and is Abyssal Trench here on
- * purpose. Both missions turn it Kelp Forest with a `ground` beat — *Deep
+ * The Second Furrow is bare rock in the literal and is Abyssal Trench in
+ * `ANHOLT_FURROW_GROUND` on purpose. Both missions turn it Kelp Forest with a `ground` beat — *Deep
  * Furrow* when the sowing completes, *In Writing* restating it at 00:00 — and
  * a map literal cannot carry a mission's repaint (docs/campaign.md §2 rule 5).
  * The literal is the ground before anyone sowed it, once, and the missions say

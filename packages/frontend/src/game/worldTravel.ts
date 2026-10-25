@@ -41,7 +41,7 @@ export function boardFrame(region: WorldRegion): CameraFrame {
  * shift's; Face Six's rail head, the column's; the Fourth's mouth, the
  * picket's; the Holdfast, the tide's, for both of Marr's missions; Kell Face,
  * the column's, for both of the Kell Shoulder's; and the Furrow's Foot, the
- * seat's, for both of the Furrow's.
+ * day's, for both of the Furrow's.
  */
 const SPAWN_PLACE: Readonly<Record<string, string>> = {
   sorrowgate: 'sorrowgate',
