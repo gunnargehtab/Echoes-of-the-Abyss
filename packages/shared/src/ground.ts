@@ -1704,6 +1704,244 @@ export const HOLDING_UNDERWORKS_GROUND: MapGround = {
 };
 
 /**
+ * The attending galleries' ground — docs/mission-attendance.md §11;
+ * docs/maps.md, "Mission maps". Placed in the Rift (docs/world-map.md §7.9,
+ * #1624) at origin (22,000, 71,000), edge to edge south of the Upper Terraces,
+ * the one origin measured that clears them (the owner's call). §7.2's
+ * galleries anchor stays, on the map's Lower Rows.
+ *
+ * Sufficiency's southern face over the Ninth: the Lower Rows, the Attending
+ * Galleries, the Step and its two benches, and the Axis leaving south through
+ * the Sill.
+ */
+export const ATTENDING_GALLERIES_GROUND: MapGround = {
+  widthM: 5000,
+  heightM: 4000,
+  cellM: 250,
+  floorM: 3400,
+  // One row per row of §11's table, in the document's order. Later regions
+  // overwrite earlier ones, which is what lets the trench be painted whole and
+  // the city cut into the top of it. Every number a shape states is a whole
+  // 250 m cell, and a cell is its region's when the shape holds its centre
+  // (#1149). Only the Step and the two benches are shapes, and they trade
+  // cells between 3,200 and 3,400 m of Abyssal Trench and nothing else; every
+  // seat, the dome, every arrival and both mission regions stand on the ground
+  // they stood on when these were all rectangles, and
+  // `missionAttendance.test.ts` pins it.
+  regions: [
+    // A box, because it is the whole map's base.
+    {
+      x: 0,
+      y: 0,
+      widthM: 5000,
+      heightM: 4000,
+      biome: Biome.AbyssalTrench,
+      floorM: 3400,
+      note: 'The Ninth — the trench. PF 1.60, painted first; everything else is cut into it',
+    },
+    // A box, because it is built: the city's terraces, cut to a line.
+    {
+      x: 0,
+      y: 0,
+      widthM: 5000,
+      heightM: 750,
+      biome: Biome.CoralRuins,
+      floorM: 2750,
+      note: "Sufficiency's Lower Rows — the city's lowest terraces. Cut structure and hard acoustic shadows, for a city that is not ruined",
+    },
+    // A box, because it is built, and the mission's `galleries` region is this
+    // same rectangle: the stalls the watch is seated in are the stalls drawn.
+    {
+      x: 1250,
+      y: 750,
+      widthM: 2500,
+      heightM: 500,
+      biome: Biome.CoralRuins,
+      floorM: 3000,
+      note: 'The Attending Galleries — the southern face: the stalls, open on the axis. The spawn, and where the dome stands',
+    },
+    // Its north edge runs on a slant from the galleries' lower corners out to
+    // the map's edges, so north of it the Ninth's 3,400 m shows only in a
+    // wedge beside each end of the galleries rather than as two boxes.
+    {
+      shape: 'polygon',
+      points: [
+        [0, 750],
+        [1250, 1250],
+        [3750, 1250],
+        [5000, 750],
+        [5000, 2000],
+        [0, 2000],
+      ],
+      biome: Biome.AbyssalTrench,
+      floorM: 3200,
+      note: "The Step — the slope's last bench before the channel",
+    },
+    // Each bench's outer south corner is cut on a slant, and the Ninth's floor
+    // shows there, at the map's south-west and south-east corners. Both are
+    // mirror images across x 2,500.
+    {
+      shape: 'polygon',
+      points: [
+        [0, 2000],
+        [2000, 2000],
+        [2000, 4000],
+        [1000, 4000],
+        [0, 3000],
+      ],
+      biome: Biome.AbyssalTrench,
+      floorM: 3200,
+      note: "The West Bench — the channel's shoulder",
+    },
+    {
+      shape: 'polygon',
+      points: [
+        [3000, 2000],
+        [5000, 2000],
+        [5000, 3000],
+        [4000, 4000],
+        [3000, 4000],
+      ],
+      biome: Biome.AbyssalTrench,
+      floorM: 3200,
+      note: 'The East Bench — the other shoulder',
+    },
+    // A box: with the Sill below it, it is the mission's `axis` region, the
+    // same rectangle, and every arrival stands on its line at x 2,500.
+    //
+    // It is cut north to the galleries' own edge rather than starting below
+    // the Step, and §11's row says so, because §6 row 1 is the sentence that
+    // decides the geometry: the first arrival "arrives in the stalls' own
+    // water". A channel whose head began a kilometre south of the stalls could
+    // not deliver that, and an arrival in it would be a smudge from the face on
+    // the first tick of the mission. The Step is still the bench either side;
+    // the channel cuts through it, which is what "everything else is cut into
+    // it" describes.
+    {
+      x: 2000,
+      y: 1250,
+      widthM: 1000,
+      heightM: 2500,
+      biome: Biome.AbyssalTrench,
+      floorM: 4100,
+      note: "The Axis — the Ninth's channel proper, aimed at the Mouth's approach. Every arrival is on this line",
+    },
+    // A box, for the Axis's reason.
+    {
+      x: 2000,
+      y: 3750,
+      widthM: 1000,
+      heightM: 250,
+      biome: Biome.AbyssalTrench,
+      floorM: 4100,
+      note: 'The Sill — where the axis leaves the map southward. Everything arrives through it',
+    },
+  ],
+};
+
+/**
+ * The Upper Terraces' ground — docs/mission-conclave-attending.md §11;
+ * docs/maps.md, "Mission maps". Placed in the Rift (docs/world-map.md §7.9,
+ * #1624) centred on §7.2's Sufficiency anchor, the galleries' map along its
+ * south edge.
+ *
+ * Sufficiency from above: the Head of the Ninth, the Undermarshalcy's terrace
+ * north, the Crossing, the Cantorate's terrace south, and the galleries'
+ * benches cut in two by the Axis.
+ */
+export const UPPER_TERRACES_GROUND: MapGround = {
+  widthM: 5000,
+  heightM: 4000,
+  cellM: 250,
+  floorM: 3400,
+  // One row per row of §11's table, in the document's order. Later regions
+  // overwrite earlier ones, which is what lets the galleries be painted whole
+  // and the channel cut through the middle of them — the axis last, so the
+  // stalls become the two benches the ground beat addresses. Every number a
+  // shape states is a whole 250 m cell, and a cell is its region's when the
+  // shape holds its centre (#1156). Only the two terraces are shapes: they
+  // hand four cells, one at each terrace end on the row against the crossing,
+  // to the Head's trench, and every seat, the dome, every cell, both arrivals
+  // and all three mission regions stand on the ground they stood on when
+  // these were all rectangles — `missionConclaveAttending.test.ts` pins it.
+  regions: [
+    // A box, because it is the whole map's base.
+    {
+      x: 0,
+      y: 0,
+      widthM: 5000,
+      heightM: 4000,
+      biome: Biome.AbyssalTrench,
+      floorM: 3400,
+      note: 'The Head — the head of the Ninth. PF 1.60, painted first; everything else is cut into it',
+    },
+    // Its outer ends run on a slant from the back wall to the face, so the
+    // face over the crossing is 2,500 m long and the Head's water reaches in
+    // at both of its corners there. Every seat is between x 1,500 and 3,700.
+    {
+      shape: 'polygon',
+      points: [
+        [1000, 0],
+        [4000, 0],
+        [3750, 750],
+        [1250, 750],
+      ],
+      biome: Biome.CoralRuins,
+      floorM: 2750,
+      note: "The Undermarshalcy — the north terrace: command, the city's shallowest water, and where the called are seated",
+    },
+    // A box, because it paints the Head's own biome and floor, so a shape
+    // that kept off the Undermarshalcy would paint the same ground; §4 prices
+    // the crossing as its 1,750 m from y 750 to y 2,500.
+    {
+      x: 1000,
+      y: 750,
+      widthM: 3000,
+      heightM: 1750,
+      biome: Biome.AbyssalTrench,
+      floorM: 3400,
+      note: "The Crossing — the open water between the terraces. It takes the head's own biome and floor and repaints nothing; it is on the chart because it is the water the mission is about, and a hull under way in it is the only sound there is, the length of the trench",
+    },
+    // The Undermarshalcy's mirror image across the crossing. The cells and
+    // both arrivals' lines are between x 1,500 and 3,500, clear of the slants.
+    {
+      shape: 'polygon',
+      points: [
+        [1250, 2500],
+        [3750, 2500],
+        [4000, 3250],
+        [1000, 3250],
+      ],
+      biome: Biome.CoralRuins,
+      floorM: 2800,
+      note: "The Cantorate — the south terrace, standing over the galleries: Ossary's seat, the cells, and where a calling is attended or is not. Its floor is the line both arrivals run, because it is the deepest one the terrace admits",
+    },
+    // A box, because the Axis cuts it into the mission's `galleries-west` and
+    // `galleries-east`, the rectangles the ground beats repaint, so every cell
+    // of it is a cell one of those beats names.
+    {
+      x: 1250,
+      y: 3250,
+      widthM: 2500,
+      heightM: 500,
+      biome: Biome.CoralRuins,
+      floorM: 3000,
+      note: "The Attending Galleries — the stalls' benches and the dome, Attendance's room seen from above. Painted whole and cut in two by the axis; this is the bench as it stood at 00:00, and the 11:00 ground beat is what takes each half to 2,900 and trench",
+    },
+    // A box, because the mission's `the-axis` is this same rectangle.
+    {
+      x: 2000,
+      y: 3250,
+      widthM: 1000,
+      heightM: 750,
+      biome: Biome.AbyssalTrench,
+      floorM: 3400,
+      note: "The Axis — the Ninth's channel, leaving south between the galleries' benches. Painted last, which is what makes them two; named by neither ground beat, and still 3,400 m after 11:00",
+    },
+  ],
+};
+
+/**
  * The public ground of each placed map, by map id. Here rather than beside
  * the atlas (`rift.ts`) because `worldRegionProblems` compares two placed
  * maps' cells, and `world.ts` cannot import the file that imports it.
@@ -1722,4 +1960,6 @@ export const PLACED_GROUND: Readonly<Record<string, MapGround>> = {
   'mouth-rim': MOUTH_RIM_GROUND,
   'holding-board': HOLDING_BOARD_GROUND,
   'holding-underworks': HOLDING_UNDERWORKS_GROUND,
+  'attending-galleries': ATTENDING_GALLERIES_GROUND,
+  'upper-terraces': UPPER_TERRACES_GROUND,
 };

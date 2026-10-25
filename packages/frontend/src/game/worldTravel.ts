@@ -43,7 +43,8 @@ export function boardFrame(region: WorldRegion): CameraFrame {
  * the column's, for both of the Kell Shoulder's; the Furrow's Foot, the
  * day's, for both of the Furrow's; the Staging, where the Rim's spawn stands on
  * §7.2's own anchor, for all five of the Rim's; the Board's rail, the
- * session's; and the Works Yard, the writ's.
+ * session's; the Works Yard, the writ's; the Undermarshalcy, the calling's;
+ * and the stalls, the shift's.
  */
 const SPAWN_PLACE: Readonly<Record<string, string>> = {
   sorrowgate: 'sorrowgate',
@@ -59,6 +60,8 @@ const SPAWN_PLACE: Readonly<Record<string, string>> = {
   'mouth-rim': 'the-staging',
   'holding-board': 'the-boards-rail',
   'holding-underworks': 'the-works-yard',
+  'upper-terraces': 'the-undermarshalcy',
+  'attending-galleries': 'the-stalls',
 };
 
 /**

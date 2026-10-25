@@ -19,6 +19,8 @@ import { WORLD } from './constants.js';
 import { PLACED_GROUND, paintGround, type GroundCells, type MapGround } from './ground.js';
 import { MAP_HEADERS, mapHeaderById } from './maps.js';
 import {
+  ATTENDING_ATTENDANCE_HEADER,
+  ATTENDING_CONCLAVE_HEADER,
   ATTENDING_FIRST_ARRIVAL_HEADER,
   ATTENDING_INTAKE_HEADER,
   ATTENDING_THE_DOME_HEADER,
@@ -264,6 +266,35 @@ export const HOLDING_UNDERWORKS_REGION: WorldRegion = {
   heightM: 3_000,
 };
 
+/**
+ * The Upper Terraces, the Directorate's *Conclave*'s map (§7.9, #1624):
+ * centred on §7.2's Sufficiency anchor, (25,000, 69,000), the galleries' map
+ * along its south edge.
+ */
+export const UPPER_TERRACES_REGION: WorldRegion = {
+  id: 'upper-terraces',
+  mapId: 'upper-terraces',
+  x: 22_500,
+  y: 67_000,
+  widthM: 5_000,
+  heightM: 4_000,
+};
+
+/**
+ * The attending galleries, *Attendance*'s map (§7.9, #1624): at the one origin
+ * measured that clears the Upper Terraces, edge to edge south of them (the
+ * owner's call). §7.2's galleries anchor, (24,500, 71,500), stays, on the
+ * map's Lower Rows, eleven kilometres north of the Lip.
+ */
+export const ATTENDING_GALLERIES_REGION: WorldRegion = {
+  id: 'attending-galleries',
+  mapId: 'attending-galleries',
+  x: 22_000,
+  y: 71_000,
+  widthM: 5_000,
+  heightM: 4_000,
+};
+
 /** Every placed region. Other maps keep their own grids until migrated (§7.1). */
 export const WORLD_REGIONS: readonly WorldRegion[] = [
   SORROWGATE_REGION,
@@ -279,6 +310,8 @@ export const WORLD_REGIONS: readonly WorldRegion[] = [
   MOUTH_RIM_REGION,
   HOLDING_BOARD_REGION,
   HOLDING_UNDERWORKS_REGION,
+  UPPER_TERRACES_REGION,
+  ATTENDING_GALLERIES_REGION,
 ];
 
 export function worldRegionById(id: string): WorldRegion | undefined {
@@ -550,8 +583,9 @@ function cellIndex(cells: GroundCells, local: PlanPoint): number {
  * Dome* on the Fourth's Foot (#1628), *Tend* and *Convocation* on Marr Plateau
  * (#1630), *Thin Water* and *Shallow* on the Kell Shoulder (#1633), *Deep
  * Furrow* and *In Writing* on the Furrow (#1638), the Rim's five on the Rim
- * (#1640), and *Item Nine* and *Tolerance* on Board Country and the Underworks
- * (#1623). A
+ * (#1640), *Item Nine* and *Tolerance* on Board Country and the Underworks
+ * (#1623), and *Conclave* and *Attendance* on the Upper Terraces and the
+ * galleries (#1624). A
  * mission on a placed map is not placed until it is named here, so placing one
  * is a line here. On a placed shared map every mission is
  * named (the owner's call on #1505), Radicals excepted.
@@ -577,6 +611,8 @@ const MISSION_REGIONS: ReadonlyMap<string, WorldRegion> = new Map([
   [CHORD_SECOND_CHORD_HEADER.id, MOUTH_RIM_REGION],
   [LEDGER_ITEM_NINE_HEADER.id, HOLDING_BOARD_REGION],
   [LEDGER_TOLERANCE_HEADER.id, HOLDING_UNDERWORKS_REGION],
+  [ATTENDING_CONCLAVE_HEADER.id, UPPER_TERRACES_REGION],
+  [ATTENDING_ATTENDANCE_HEADER.id, ATTENDING_GALLERIES_REGION],
 ]);
 
 /**
