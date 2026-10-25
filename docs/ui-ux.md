@@ -155,17 +155,6 @@ A gauge ring around every own hull, **outside every other mark about that figure
 the crush ring and past the selection ring, clearing the latter by **12% of the figure's own
 radius**, never less than 4 m.
 
-**It rings the figure as drawn.** A hull hangs by its centre (#955), so its position is the
-middle of its model. A structure stands on the seabed, so at the 55° home frame its roof
-climbs the screen from its footing, and a ring about the footing ran across the roof (#1583).
-So a structure's collar and its selection ring both sit about the centre of its model, and
-move together: at the home frame a structure's centre stands further up the screen than the
-collar clears the selection ring by (a Foundry's by about 39 m, against a 19 m clearance), so
-moving one alone would cross the other. The
-build and health bars and the rally course stay on the footing, which is where the structure
-meets the water. The ring keeps its radius rule, so a footprint wider than its half-length
-still grazes the collar at its corners.
-
 A share and not a flat metre count, because the renderer draws figures from a **7 m**
 half-extent (a 14 m craft) to a **220 m** one (a Bastion's footprint), and no fixed gap
 serves a 31× range: at a flat +6 and +8 the collar and the selection ring sat 29% of a craft
@@ -173,6 +162,16 @@ apart and **1.8% of a Bastion** apart, which on screen is one circle. Outside ra
 between, for a second reason — a collar that crossed the selection ring as the figure grew
 would be exactly coincident with it at the size where it crossed, which is a rule that
 guarantees the collision it was written to remove.
+
+**It rings the figure as drawn.** A hull hangs by its centre (#955), so its position is the
+middle of its model. A structure stands on the seabed, so at the 55° home frame its roof
+climbs the screen from its footing, and a ring about the footing ran across the roof (#1583).
+So a structure's collar and its selection ring both sit about the centre of its model, and
+move together: at the home frame a structure's centre stands further up the screen than the
+collar clears the selection ring by (a Foundry's by about 39 m, against a 19 m clearance), so
+moving one alone would cross the other. The build and health bars and the rally course stay
+on the footing, which is where the structure meets the seabed. The ring keeps its radius
+rule, so a footprint wider than its half-length still grazes the collar at its corners.
 
 | Property | Spec |
 | --- | --- |

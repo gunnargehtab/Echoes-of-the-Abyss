@@ -6055,8 +6055,9 @@ export class EchoRenderer {
       // about the footing ran across it. Both rings move, not the collar
       // alone: at the 55° home frame a structure's centre sits further up the
       // screen than the collar clears the selection ring by (a Foundry's by
-      // about 39 m against 19 m), so moving one would cross the other. The bars and the rally course stay on the footing. The
-      // centre's own scale replaces the footing's: it is nearer the eye.
+      // about 39 m against 19 m), so moving one would cross the other. The
+      // bars and the rally course stay on the footing. The centre's own scale
+      // replaces the footing's: it is nearer the eye.
       const c = this.conn?.structureCentre(structure.id, this.centreScratch) ?? null;
       const cx = c === null ? 0 : (c.x - p.x) * inverseScale;
       const cy = c === null ? 0 : (c.y - p.y) * inverseScale;
