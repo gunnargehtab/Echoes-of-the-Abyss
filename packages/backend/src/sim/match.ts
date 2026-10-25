@@ -1254,13 +1254,36 @@ export class Match {
    * place alone and the hull keeps its depth, which is how the commander walks
    * and a mission's beats move.
    */
+  /**
+   * One move given to several hulls at once — the room's `move`, which names
+   * every hull the player had selected. The same as `orderMove` on each, with
+   * one addition: a hull sent with a Sorrowgate tender keeps the tender's pace
+   * (docs/mission-sorrowgate.md §8, #1594), which only a move that knows its
+   * whole party can decide. Decided once, before any of them is applied, so
+   * the answer does not depend on which hull was ordered first.
+   */
+  orderMoves(
+    slot: number,
+    eids: readonly number[],
+    x: number,
+    y: number,
+    queued = false,
+    depthM?: number
+  ): void {
+    const pace = this.missionRuntime?.paceFor(slot, eids) ?? 0;
+    for (const eid of eids) {
+      this.orderMove(slot, eid, x, y, queued, depthM, eid === pace ? 0 : pace);
+    }
+  }
+
   orderMove(
     slot: number,
     eid: number,
     x: number,
     y: number,
     queued = false,
-    depthM?: number
+    depthM?: number,
+    paceEid = 0
   ): void {
     this.recordCommand({
       tick: this.world.tick,
@@ -1271,13 +1294,14 @@ export class Match {
       y,
       queued,
       ...(depthM === undefined ? {} : { depth: depthM }),
+      ...(paceEid === 0 ? {} : { pace: this.localId(paceEid) }),
     });
     // A mission may be holding this hull still — the court's tenders do not
     // move before they are loaded, and do not move at all without an escort
     // close enough to hear for them. Refused after the recording, like every
     // other refusal on this path.
     if (this.missionRuntime?.holdsMovement(slot, eid) === true) return;
-    this.applyMove(slot, eid, x, y, queued, depthM);
+    this.applyMove(slot, eid, x, y, queued, depthM, paceEid);
   }
 
   /**
@@ -1438,7 +1462,8 @@ export class Match {
     x: number,
     y: number,
     queued: boolean,
-    depthM?: number
+    depthM?: number,
+    paceEid = 0
   ): void {
     if (!this.owns(slot, eid) || !hasComponent(this.world, MoveOrder, eid)) return;
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
@@ -1458,6 +1483,18 @@ export class Match {
     // inheriting it, and the validation path is exercised on playback too.
     x = this.world.terrain.clampXM(x);
     y = this.world.terrain.clampYM(y);
+
+    // The pace is bound to the point, so a queued leg takes it up when the
+    // queue reaches it and any order elsewhere lets it lapse (`MoveOrder`).
+    // Only an unqueued move with no tender clears it outright: a queued one
+    // would wipe the pace of a leg still waiting in the plan.
+    if (paceEid !== 0) {
+      MoveOrder.paceEid[eid] = paceEid;
+      MoveOrder.paceX[eid] = x;
+      MoveOrder.paceY[eid] = y;
+    } else if (!queued) {
+      MoveOrder.paceEid[eid] = 0;
+    }
 
     if (queued) {
       enqueue(

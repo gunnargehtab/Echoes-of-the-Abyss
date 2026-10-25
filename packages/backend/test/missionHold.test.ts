@@ -33,6 +33,7 @@ import {
   DEPTH,
   MovementHoldReason,
   SIM,
+  statsFor,
   UnitKind,
   type EchoSnapshot,
   type MissionView,
@@ -280,6 +281,73 @@ describe('the escort hold pauses a route rather than cancelling it', () => {
       tenderAt(h).y > resumed.y + 50,
       `the tender took the order it was last given (y ${tenderAt(h).y.toFixed(0)}, was ${resumed.y.toFixed(0)})`
     );
+  });
+});
+
+/**
+ * docs/mission-sorrowgate.md §8, *the flight keeps the freight's pace when it is
+ * sent with it* (#1594). A Light Scout runs at three times a Harvester's speed,
+ * so a newcomer who selected the tender with its escort and sent both north
+ * watched the escort leave the 400 m radius inside seconds and the tender stop
+ * where it stood. Driven through `orderMoves`, the room's one call for one
+ * click, and read from the player's own snapshot.
+ */
+describe('a hull sent with a tender keeps its pace (#1594)', () => {
+  /** North of the tender's seat and short of the arch, 600 m off. */
+  const OUT = { x: 2420, y: 2300 };
+
+  /** The widest the escort got from the tender over `seconds`, sampled each second. */
+  function widest(h: Harness, seconds: number): number {
+    let widest = 0;
+    for (let s = 0; s < seconds; s++) {
+      h.settle(1);
+      const escort = h.own().units.find((unit) => unit.id === h.escortId())!;
+      const tender = tenderAt(h);
+      widest = Math.max(widest, Math.hypot(escort.x - tender.x, escort.y - tender.y));
+    }
+    return widest;
+  }
+
+  it('keeps the escort inside the radius when one move sends both', () => {
+    const h = harness();
+    h.settle(3, 'close');
+    assert.equal(h.heldReason(), null, 'the premise: the tender is escorted when it is ordered');
+    const from = tenderAt(h);
+    h.match.orderMoves(PLAYER, [h.escortId(), h.tenderId()], OUT.x, OUT.y);
+    const gap = widest(h, 10);
+    assert.ok(gap < HOLD_MISSION.escortRadiusM, `the escort got ${gap.toFixed(0)} m away`);
+    assert.equal(h.heldReason(), null, 'the tender is still escorted');
+    assert.ok(
+      from.y - tenderAt(h).y > 300,
+      `the tender made ${(from.y - tenderAt(h).y).toFixed(0)} m of the 600 m north`
+    );
+  });
+
+  it('leaves the tender behind when the two are sent apart, which is the trap', () => {
+    // The control, and the state #1594 found: the same destination, given as
+    // two orders, has nothing to say the hulls are travelling together.
+    const h = harness();
+    h.settle(3, 'close');
+    h.match.orderMove(PLAYER, h.escortId(), OUT.x, OUT.y);
+    h.match.orderMove(PLAYER, h.tenderId(), OUT.x, OUT.y);
+    const gap = widest(h, 10);
+    assert.ok(gap > HOLD_MISSION.escortRadiusM, `the escort stayed within ${gap.toFixed(0)} m`);
+    assert.equal(h.heldReason(), UNESCORTED, 'and the tender is held for want of it');
+  });
+
+  it("lets the escort's own next order go at its own speed", () => {
+    // Scouting ahead is still one order: the pace binds the move it came with.
+    const h = harness();
+    h.settle(3, 'close');
+    h.match.orderMoves(PLAYER, [h.escortId(), h.tenderId()], OUT.x, OUT.y);
+    h.settle(2);
+    const at = h.own().units.find((unit) => unit.id === h.escortId())!;
+    h.match.orderMove(PLAYER, h.escortId(), AWAY.x, AWAY.y);
+    h.settle(2);
+    const now = h.own().units.find((unit) => unit.id === h.escortId())!;
+    const ran = Math.hypot(now.x - at.x, now.y - at.y);
+    const tenderPace = statsFor(UnitKind.Harvester).speed * 2;
+    assert.ok(ran > tenderPace * 1.5, `the escort ran ${ran.toFixed(0)} m in two seconds`);
   });
 });
 

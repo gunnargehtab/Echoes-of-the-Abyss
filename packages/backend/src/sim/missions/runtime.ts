@@ -40,6 +40,7 @@ import {
   detectionRatio,
   thermoclineFactor,
   speakerOf,
+  statsFor,
   voiceOf,
   type BoundSig,
   type CommanderAbilityView,
@@ -49,6 +50,7 @@ import {
   type MissionView,
   type MovementHold,
   type ObjectiveView,
+  type UnitKind,
 } from '@echoes/shared';
 import {
   Acoustic,
@@ -63,6 +65,7 @@ import {
   Pressure,
   StaticEmitter,
   Structure,
+  Unit,
 } from '../components.ts';
 import {
   ambientBandFor,
@@ -732,6 +735,33 @@ export class MissionRuntime {
       if (this.lastWorld !== null && this.eidOf(this.lastWorld, tag) === eid) return tag;
     }
     return null;
+  }
+
+  /**
+   * The tender the rest of one move keeps pace with, or 0 for none
+   * (docs/mission-sorrowgate.md §8, #1594).
+   *
+   * A Light Scout outruns a Harvester, so a flight sent north in one order with
+   * its tender left it past the escort radius inside a minute, and the tender
+   * stopped where it stood. The slowest tender the move sends, so a move with
+   * both keeps the hulls with the slower; ties go to the first named, which the
+   * replay records in order. A tender the hold refuses is not one the move
+   * sends: pacing the flight to a hull that stays put would strand both.
+   * Zero where the escort rule is off, which is every mission but this one.
+   */
+  paceFor(slot: number, eids: readonly number[]): number {
+    if (slot !== this.definition.playerSlot || this.definition.escortRadiusM <= 0) return 0;
+    let pace = 0;
+    let slowest = Infinity;
+    for (const eid of eids) {
+      if (this.tagOfTender(eid) === null || this.holdsMovement(slot, eid)) continue;
+      const speed = statsFor(Unit.kind[eid] as UnitKind).speed;
+      if (speed < slowest) {
+        slowest = speed;
+        pace = eid;
+      }
+    }
+    return pace;
   }
 
   /** The tender tag behind this entity, or null when it is not a tender. */

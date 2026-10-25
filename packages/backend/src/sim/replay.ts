@@ -46,6 +46,11 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * 32: a hull sent with a Sorrowgate tender keeps its pace (#1594). A move
+ * names the tender it was given with, and movement caps the hull's speed at
+ * the tender's while the order stands; the fingerprint mixes the pace. A v31
+ * file's flight replays at its own speed and leaves its tenders behind.
+ *
  * 31: a burned canopy closes as slowly as it opened (#1425). A field the
  * cutters opened stayed open only while `burnedS` sat at full, so it shut on
  * the tick they left; it now stays open until the burn bleeds back to zero,
@@ -312,7 +317,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 31;
+export const REPLAY_FORMAT_VERSION = 32;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
@@ -326,6 +331,8 @@ export type ReplayCommand =
       queued: boolean;
       /** The depth the move was given (#1132); absent for a place alone. */
       depth?: number;
+      /** The tender this hull was sent with, by local id (#1594); absent for its own pace. */
+      pace?: number;
     }
   | { tick: number; type: 'depth'; slot: number; unit: number; depth: number }
   | {
@@ -651,7 +658,8 @@ function applyCommand(match: Match, command: ReplayCommand): void {
         command.x,
         command.y,
         command.queued,
-        command.depth
+        command.depth,
+        command.pace === undefined ? 0 : eid(command.pace)
       );
       break;
     case 'depth':
