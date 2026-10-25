@@ -31,11 +31,11 @@
  * this cleft where a quiet hull is beyond the reach of everything that hunts.
  *
  * The Second Furrow is bare rock in the literal and is Abyssal Trench in
- * `ANHOLT_FURROW_GROUND` on purpose. Both missions turn it Kelp Forest with a `ground` beat — *Deep
- * Furrow* when the sowing completes, *In Writing* restating it at 00:00 — and
- * a map literal cannot carry a mission's repaint (docs/campaign.md §2 rule 5).
- * The literal is the ground before anyone sowed it, once, and the missions say
- * what happened to it.
+ * `ANHOLT_FURROW_GROUND` on purpose. Both missions turn it Kelp Forest with a
+ * `ground` beat — *Deep Furrow* when the sowing completes, *In Writing*
+ * restating it at 00:00 — and a map literal cannot carry a mission's repaint
+ * (docs/campaign.md §2 rule 5). The literal is the ground before anyone sowed
+ * it, once, and the missions say what happened to it.
  *
  * **Shared by two missions, and owned by one.** docs/mission-deep-furrow.md
  * §11 owns this literal; docs/mission-in-writing.md §11 reuses it unchanged,
