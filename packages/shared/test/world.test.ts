@@ -14,6 +14,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 
 import {
   ATTENDING_INTAKE_HEADER,
+  ATTENDING_SHALLOW_HEADER,
   ATTENDING_THE_DOME_HEADER,
   ATTENDING_TRENCH_AWAKENING_HEADER,
   BANDING_GROUND_GROUND,
@@ -23,6 +24,8 @@ import {
   FACE_SIX_REGION,
   FOURTH_FOOT_GROUND,
   FOURTH_FOOT_REGION,
+  KELL_SHOULDER_GROUND,
+  KELL_SHOULDER_REGION,
   LEDGER_ASSET_RECOVERY_HEADER,
   LEDGER_EXPOSURE_HEADER,
   LEDGER_SHIFT_CHANGE_HEADER,
@@ -36,6 +39,7 @@ import {
   RIFT_PLACES,
   SEEDING_CONVOCATION_HEADER,
   SEEDING_TEND_HEADER,
+  SEEDING_THIN_WATER_HEADER,
   SHALLOW_BAND_GROUND,
   SHALLOW_BAND_REGION,
   SORROWGATE_GROUND,
@@ -253,6 +257,33 @@ describe('placed regions', () => {
     assert.deepEqual(
       [MARR_PLATEAU_REGION.x + 2_000, MARR_PLATEAU_REGION.y + 1_250],
       [marr.x, marr.y]
+    );
+  });
+
+  it("stands the Kell Shoulder centred on §7.2's anchor (§7.9, #1633)", () => {
+    assert.deepEqual(KELL_SHOULDER_REGION, {
+      id: 'kell-shoulder',
+      mapId: 'kell-shoulder',
+      x: 6_500,
+      y: 6_000,
+      widthM: 5_000,
+      heightM: 3_000,
+    });
+    assert.equal(KELL_SHOULDER_REGION.widthM, KELL_SHOULDER_GROUND.widthM);
+    assert.equal(KELL_SHOULDER_REGION.heightM, KELL_SHOULDER_GROUND.heightM);
+    // Both of its missions play it, and both are drawn there (#1505).
+    for (const mission of [SEEDING_THIN_WATER_HEADER, ATTENDING_SHALLOW_HEADER]) {
+      assert.equal(KELL_SHOULDER_REGION.mapId, mission.mapId, mission.id);
+    }
+    const shoulder = RIFT_PLACES.find((p) => p.id === 'kell-shoulder')!;
+    assert.deepEqual(
+      [KELL_SHOULDER_REGION.x + 2_500, KELL_SHOULDER_REGION.y + 1_500],
+      [shoulder.x, shoulder.y]
+    );
+    // A kilometre of Marr's Drop between the two maps, so they share no cell.
+    assert.equal(
+      KELL_SHOULDER_REGION.y - (MARR_PLATEAU_REGION.y + MARR_PLATEAU_REGION.heightM),
+      1_000
     );
   });
 
@@ -520,6 +551,8 @@ describe('the placed-mission predicate', () => {
     assert.equal(worldRegionForMission(ATTENDING_THE_DOME_HEADER.id), FOURTH_FOOT_REGION);
     assert.equal(worldRegionForMission(SEEDING_TEND_HEADER.id), MARR_PLATEAU_REGION);
     assert.equal(worldRegionForMission(SEEDING_CONVOCATION_HEADER.id), MARR_PLATEAU_REGION);
+    assert.equal(worldRegionForMission(SEEDING_THIN_WATER_HEADER.id), KELL_SHOULDER_REGION);
+    assert.equal(worldRegionForMission(ATTENDING_SHALLOW_HEADER.id), KELL_SHOULDER_REGION);
     assert.equal(worldRegionForMission(undefined), undefined);
     // Radicals plays on Sorrowgate's map and keeps its presentation: the
     // predicate is keyed on mission identity, never on the map (§7.1).
@@ -535,6 +568,8 @@ describe('the placed-mission predicate', () => {
       ATTENDING_THE_DOME_HEADER.id,
       SEEDING_TEND_HEADER.id,
       SEEDING_CONVOCATION_HEADER.id,
+      SEEDING_THIN_WATER_HEADER.id,
+      ATTENDING_SHALLOW_HEADER.id,
     ]);
     for (const header of MISSION_HEADERS) {
       if (placed.has(header.id)) continue;
@@ -547,6 +582,7 @@ describe('the placed-mission predicate', () => {
     assert.equal(worldRegionForMission('shallow-band'), undefined);
     assert.equal(worldRegionForMission('ninefold-face-six'), undefined);
     assert.equal(worldRegionForMission('marr-plateau'), undefined);
+    assert.equal(worldRegionForMission('kell-shoulder'), undefined);
   });
 
   it("places each mission on its own map's region", () => {

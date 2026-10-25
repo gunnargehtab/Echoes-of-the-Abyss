@@ -26,9 +26,11 @@ import {
   LEDGER_EXPOSURE_HEADER,
   LEDGER_SHIFT_CHANGE_HEADER,
   MISSION_HEADERS,
+  ATTENDING_SHALLOW_HEADER,
   PROLOGUE_SORROWGATE_HEADER,
   SEEDING_CONVOCATION_HEADER,
   SEEDING_TEND_HEADER,
+  SEEDING_THIN_WATER_HEADER,
 } from './missions.js';
 
 /** A point or a rectangle corner, in metres. */
@@ -182,6 +184,20 @@ export const MARR_PLATEAU_REGION: WorldRegion = {
   heightM: 2_500,
 };
 
+/**
+ * The Kell Shoulder, *Thin Water*'s and *Shallow*'s map (§7.9, #1633):
+ * centred on §7.2's Kell Shoulder anchor, (9,000, 7,500). Its north edge lies a
+ * kilometre south of Marr Plateau's map, across Marr's Drop.
+ */
+export const KELL_SHOULDER_REGION: WorldRegion = {
+  id: 'kell-shoulder',
+  mapId: 'kell-shoulder',
+  x: 6_500,
+  y: 6_000,
+  widthM: 5_000,
+  heightM: 3_000,
+};
+
 /** Every placed region. Other maps keep their own grids until migrated (§7.1). */
 export const WORLD_REGIONS: readonly WorldRegion[] = [
   SORROWGATE_REGION,
@@ -192,6 +208,7 @@ export const WORLD_REGIONS: readonly WorldRegion[] = [
   FACE_SIX_REGION,
   FOURTH_FOOT_REGION,
   MARR_PLATEAU_REGION,
+  KELL_SHOULDER_REGION,
 ];
 
 export function worldRegionById(id: string): WorldRegion | undefined {
@@ -460,9 +477,10 @@ function cellIndex(cells: GroundCells, local: PlanPoint): number {
  * pilot's, *Intake* on the Banding Ground (§7.9, #1598), *Exposure* on the
  * Western Margin (#1612), *Trench Awakening* on the Shallow Band (#1615), and
  * *Shift Change* and *Asset Recovery* on the two Ninefold maps (#1626), *The
- * Dome* on the Fourth's Foot (#1628), and *Tend* and *Convocation* on Marr
- * Plateau (#1630). A mission on a placed map is not placed until it is named
- * here, so placing one is a line here. On a placed shared map every mission is
+ * Dome* on the Fourth's Foot (#1628), *Tend* and *Convocation* on Marr Plateau
+ * (#1630), and *Thin Water* and *Shallow* on the Kell Shoulder (#1633). A
+ * mission on a placed map is not placed until it is named here, so placing one
+ * is a line here. On a placed shared map every mission is
  * named (the owner's call on #1505), Radicals excepted.
  */
 const MISSION_REGIONS: ReadonlyMap<string, WorldRegion> = new Map([
@@ -475,6 +493,8 @@ const MISSION_REGIONS: ReadonlyMap<string, WorldRegion> = new Map([
   [ATTENDING_THE_DOME_HEADER.id, FOURTH_FOOT_REGION],
   [SEEDING_TEND_HEADER.id, MARR_PLATEAU_REGION],
   [SEEDING_CONVOCATION_HEADER.id, MARR_PLATEAU_REGION],
+  [SEEDING_THIN_WATER_HEADER.id, KELL_SHOULDER_REGION],
+  [ATTENDING_SHALLOW_HEADER.id, KELL_SHOULDER_REGION],
 ]);
 
 /**

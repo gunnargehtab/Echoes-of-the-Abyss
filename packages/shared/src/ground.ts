@@ -93,14 +93,18 @@ export type GroundRegion =
  * A map's ground: its extent, its grid, its base seabed and its regions.
  * Nothing else — no spawn, no force, no field — which is the boundary this
  * file exists to hold.
+ *
+ * `Region` narrows what the regions may be, as the backend's `MapDefinition`
+ * does: a map drawn only in rectangles keeps saying so once its ground is
+ * here (#1633).
  */
-export interface MapGround {
+export interface MapGround<Region extends GroundRegion = GroundRegion> {
   widthM: number;
   heightM: number;
   cellM: number;
   /** The seabed before any region carves into it. */
   floorM: number;
-  regions: readonly GroundRegion[];
+  regions: readonly Region[];
 }
 
 /**
@@ -1234,6 +1238,91 @@ export const MARR_PLATEAU_GROUND: MapGround = {
 };
 
 /**
+ * The Kell Shoulder's ground — docs/mission-thin-water.md §11; docs/maps.md,
+ * "Mission maps". Placed in the Rift (docs/world-map.md §7.9, #1633) centred
+ * on §7.2's Kell Shoulder anchor. *Thin Water* and *Shallow* both play it, and
+ * both are drawn here (the owner's call on #1505).
+ *
+ * The bare rise between Marr's terraces and Kell's: the Grid Spur across it,
+ * the Vent Under-run below the spur, Kell Face at its east end and the Kell
+ * Slope falling away along its south. Rectangles only, as the backend map
+ * says it is (#1150).
+ */
+export const KELL_SHOULDER_GROUND: MapGround<RectShape & RegionGround> = {
+  widthM: 5000,
+  heightM: 3000,
+  cellM: 250,
+  floorM: 340,
+  // One row per row of §11's table, in the document's order. Every rectangle
+  // lands on the 250 m cell grid and paints exactly the metres it reads.
+  regions: [
+    {
+      x: 0,
+      y: 0,
+      widthM: 5000,
+      heightM: 3000,
+      biome: Biome.OpenWater,
+      floorM: 340,
+      note: "The Shoulder — the bare rise. Painted first; everything else is cut into it. PF 1.0, the thin water, and the mission's whole argument",
+    },
+    {
+      x: 0,
+      y: 1250,
+      widthM: 5000,
+      heightM: 500,
+      biome: Biome.OpenWater,
+      floorM: 420,
+      note: 'The Grid Spur — the closed corridor: pipe, cable, tension frame, seven pump housings. It crosses the map east to west and getting across it is the mission',
+    },
+    {
+      x: 0,
+      y: 2500,
+      widthM: 5000,
+      heightM: 500,
+      biome: Biome.AbyssalTrench,
+      floorM: 900,
+      note: "The Kell Slope — the shoulder's southern edge falling away. Trench paint at Shelf's edge: nothing the column wants is down there, and everything that hears it is",
+    },
+    {
+      x: 1750,
+      y: 1750,
+      widthM: 1000,
+      heightM: 750,
+      biome: Biome.ThermalVein,
+      floorM: 620,
+      note: "The Vent Under-run — the geothermal field the spur draws from. PF 0.45, the map's one mask, and it lies below the corridor: the quiet way is the deep way",
+    },
+    {
+      x: 3750,
+      y: 1750,
+      widthM: 1250,
+      heightM: 750,
+      biome: Biome.KelpForest,
+      floorM: 300,
+      note: "Kell Face — the replanted terrace's working face and the early bloom. The spawn, and the last water in which the column's own numbers are true",
+    },
+    {
+      x: 0,
+      y: 250,
+      widthM: 2000,
+      heightM: 750,
+      biome: Biome.KelpForest,
+      floorM: 280,
+      note: "The Marr Approach — home terrace's outer rows. The first water where 18 means 18 again",
+    },
+    {
+      x: 250,
+      y: 0,
+      widthM: 1000,
+      heightM: 250,
+      biome: Biome.KelpForest,
+      floorM: 260,
+      note: 'The Holdfast Gate — the extraction region. The count is taken here',
+    },
+  ],
+};
+
+/**
  * The public ground of each placed map, by map id. Here rather than beside
  * the atlas (`rift.ts`) because `worldRegionProblems` compares two placed
  * maps' cells, and `world.ts` cannot import the file that imports it.
@@ -1247,4 +1336,5 @@ export const PLACED_GROUND: Readonly<Record<string, MapGround>> = {
   'ninefold-workings': UPPER_WORKINGS_GROUND,
   'fourth-foot': FOURTH_FOOT_GROUND,
   'marr-plateau': MARR_PLATEAU_GROUND,
+  'kell-shoulder': KELL_SHOULDER_GROUND,
 };

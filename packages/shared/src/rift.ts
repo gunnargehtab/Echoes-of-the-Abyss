@@ -89,6 +89,9 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
     y: 7_500,
     depthM: 340,
   },
+  // Derived: the Kell Shoulder's origin plus its spawn on Kell Face, so a
+  // travel to *Thin Water* or *Shallow* ends there (§7.6, #1633).
+  { id: 'kell-face', name: 'Kell Face', region: 'plateaus', x: 10_875, y: 8_125 },
   { id: 'the-enclosure', name: 'The Enclosure', region: 'plateaus', x: 16_000, y: 9_500 },
   { id: 'kell-plateau', name: 'Kell Plateau', region: 'plateaus', x: 11_000, y: 10_500 },
   {
@@ -1301,6 +1304,116 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       biome: OpenWater,
       floorM: 420,
       note: 'The north shoulder’s bare rock, between the Drop’s foot and the Kell Shoulder',
+    },
+  ],
+  // The Kell Shoulder's 2,500 m (#1633). The map is the bare rise between
+  // Marr's terraces and Kell's, the Grid Spur across it, Kell Face at its east
+  // end and the Kell Slope along its south. North, its detail covers all but
+  // Marr Plateau's top two rows: south of the seam the surround draws Marr's
+  // Terrace, Drop and Landing as Marr's own surround does, so the overview's
+  // narrower terrace shows only in the seam. The shoulder's base runs on round
+  // the map, the Holdfast Gate north to the Drop's foot and the Marr Approach
+  // west. The Grid Spur runs on west and east, Kell Face a kilometre east, and
+  // the Kell Slope two rows south toward Kell's terraces.
+  'kell-shoulder': [
+    {
+      x: 5_000,
+      y: 3_500,
+      widthM: 5_250,
+      heightM: 1_250,
+      biome: KelpForest,
+      floorM: 320,
+      note: 'Marr’s Terrace, as Marr Plateau draws it',
+    },
+    {
+      x: 10_250,
+      y: 3_500,
+      widthM: 2_250,
+      heightM: 1_500,
+      biome: KelpForest,
+      floorM: 380,
+      note: 'Teel Plateau, east of Marr’s map',
+    },
+    {
+      x: 9_500,
+      y: 4_250,
+      widthM: 1_500,
+      heightM: 500,
+      biome: KelpForest,
+      floorM: 400,
+      note: 'Teel’s Landing, at Marr’s east edge',
+    },
+    {
+      x: 6_250,
+      y: 4_250,
+      widthM: 3_250,
+      heightM: 500,
+      biome: AbyssalTrench,
+      floorM: 900,
+      note: 'Marr’s Drop, under the lip',
+    },
+    {
+      x: 5_000,
+      y: 4_750,
+      widthM: 6_000,
+      heightM: 750,
+      biome: AbyssalTrench,
+      floorM: 900,
+      note: 'Marr’s Drop, to its foot',
+    },
+    {
+      x: 5_500,
+      y: 5_500,
+      widthM: 7_000,
+      heightM: 3_000,
+      biome: OpenWater,
+      floorM: 340,
+      note: 'The Shoulder, the bare rise round the map',
+    },
+    {
+      x: 6_750,
+      y: 5_500,
+      widthM: 1_000,
+      heightM: 500,
+      biome: KelpForest,
+      floorM: 260,
+      note: 'The Holdfast Gate, carried north to the Drop’s foot',
+    },
+    {
+      x: 5_500,
+      y: 6_250,
+      widthM: 1_000,
+      heightM: 750,
+      biome: KelpForest,
+      floorM: 280,
+      note: 'The Marr Approach, carried a kilometre west',
+    },
+    {
+      x: 4_500,
+      y: 7_250,
+      widthM: 9_000,
+      heightM: 500,
+      biome: OpenWater,
+      floorM: 420,
+      note: 'The Grid Spur, carried on west and east',
+    },
+    {
+      x: 11_500,
+      y: 7_750,
+      widthM: 1_000,
+      heightM: 750,
+      biome: KelpForest,
+      floorM: 300,
+      note: 'Kell Face, carried a kilometre east',
+    },
+    {
+      x: 5_500,
+      y: 8_500,
+      widthM: 7_000,
+      heightM: 1_000,
+      biome: AbyssalTrench,
+      floorM: 900,
+      note: 'The Kell Slope, carried two rows south toward Kell’s terraces',
     },
   ],
 };

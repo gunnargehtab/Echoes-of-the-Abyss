@@ -9,7 +9,7 @@
  * Exposure the Western Margin (#1612), Trench Awakening the Shallow Band
  * (#1615), Shift Change and Asset Recovery the two Ninefold maps (#1626), The
  * Dome the Fourth's Foot (#1628), Tend and Convocation Marr Plateau (#1630),
- * and the prologue again on a
+ * Thin Water and Shallow the Kell Shoulder (#1633), and the prologue again on a
  * reconnection after its ground has changed, with writes that replay to the
  * live cells and the live revision, and that every other room — Radicals on the same map included —
  * names nothing.
@@ -20,11 +20,13 @@ import { afterEach, describe, it } from 'node:test';
 import type { Client } from '@colyseus/core';
 import {
   ATTENDING_INTAKE_HEADER,
+  ATTENDING_SHALLOW_HEADER,
   ATTENDING_THE_DOME_HEADER,
   ATTENDING_TRENCH_AWAKENING_HEADER,
   BANDING_GROUND_REGION,
   FACE_SIX_REGION,
   FOURTH_FOOT_REGION,
+  KELL_SHOULDER_REGION,
   LEDGER_ASSET_RECOVERY_HEADER,
   LEDGER_EXPOSURE_HEADER,
   LEDGER_SHIFT_CHANGE_HEADER,
@@ -33,6 +35,7 @@ import {
   SEEDING_CONVOCATION_HEADER,
   SEEDING_RADICALS_HEADER,
   SEEDING_TEND_HEADER,
+  SEEDING_THIN_WATER_HEADER,
   SERVER_MSG,
   SHALLOW_BAND_REGION,
   SORROWGATE_REGION,
@@ -115,6 +118,8 @@ describe('the region a room names (#1460)', () => {
     [ATTENDING_THE_DOME_HEADER, FOURTH_FOOT_REGION],
     [SEEDING_TEND_HEADER, MARR_PLATEAU_REGION],
     [SEEDING_CONVOCATION_HEADER, MARR_PLATEAU_REGION],
+    [SEEDING_THIN_WATER_HEADER, KELL_SHOULDER_REGION],
+    [ATTENDING_SHALLOW_HEADER, KELL_SHOULDER_REGION],
   ] as const) {
     it(`names ${region.id} on ${mission.id}'s ground at join`, async () => {
       const match = await room({ missionId: mission.id });
