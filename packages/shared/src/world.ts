@@ -329,8 +329,9 @@ export const THE_FIRST_REGION: WorldRegion = {
 
 /**
  * The Rest, *Nineteen*'s map (§7.9, #1625): centred on §7.2's Rest anchor,
- * (29,750, 61,000), which moved 1.5 km south so the map meets the First's and
- * the Outer Formations' edge to edge (the owner's call).
+ * (29,750, 61,000), which moved 1.5 km south and 250 m west so the map meets
+ * the First's and the Outer Formations' edge to edge (the owner's call). It
+ * crosses the Fields' south bound into the trench country.
  */
 export const THE_REST_REGION: WorldRegion = {
   id: 'the-rest',

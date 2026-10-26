@@ -2090,8 +2090,8 @@ export const THE_FIRST_GROUND: MapGround = {
 /**
  * The Rest's ground — docs/mission-nineteen.md §11; docs/maps.md, "Mission
  * maps". Placed in the Rift (docs/world-map.md §7.9, #1625) centred on §7.2's
- * Rest anchor, moved 1.5 km south so the map clears the First and the Outer
- * Formations (the owner's call).
+ * Rest anchor, moved 1.5 km south and 250 m west so the map clears the First
+ * and the Outer Formations (the owner's call).
  */
 export const THE_REST_GROUND: MapGround = {
   widthM: 5000,

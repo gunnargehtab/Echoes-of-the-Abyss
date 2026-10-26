@@ -253,8 +253,9 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
     x: 36_750,
     y: 56_000,
   },
-  // 1.5 km south of #1457's placing, so its map clears the First's and the
-  // Outer Formations' (#1625, the owner's call).
+  // 1.5 km south and 250 m west of #1457's placing, so its map clears the
+  // First's and, by the 250 m, the Outer Formations' (#1625, the owner's call).
+  // It crosses the Fields' south bound, as the First crosses their west.
   {
     id: 'the-rest',
     name: 'The Rest',
@@ -595,7 +596,15 @@ export const RIFT_GROUND: MapGround = {
       1_700,
       'The Fifth — the covered road, a kilometre wall to wall'
     ),
-    box(29, 57, 2, 2, ResonanceField, 1_600, 'The Rest’s Head — the shallowest ground'),
+    box(
+      29,
+      57,
+      2,
+      2,
+      ResonanceField,
+      1_600,
+      'The Rest’s Head, carried north — the shallowest ground'
+    ),
     box(28, 59, 12, 1, AbyssalTrench, 1_780, 'The Seam — the fields’ southern boundary, PF 1.60'),
 
     // The Drowned City (§3): mid-Rift, where the Shelf breaks toward deep
@@ -1941,10 +1950,12 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
   // The Third's outer formations' 2,500 m (#1625). The map is crystal country
   // with the Third's Approach in its north-east corner and the Seam along its
   // south edge. The overview draws the Third's country round it and the Seam
-  // across the fields. The surround carries the Fields half a kilometre west, a
-  // row north and a kilometre east, the Approach north and east into the
-  // Third's country, and the Seam west and east and a row south. South-west,
-  // its detail covers the Rest's north, and draws it coarsely, as its map does.
+  // across the fields. The surround carries the Fields half a kilometre west,
+  // three rows north and a kilometre east, the Approach north and east into
+  // the Third's country, and the Seam west and east and a row south.
+  // South-west, its detail covers the Rest's east thirteen columns down to
+  // y 62 km, and draws them coarsely as its map does, but for the row touching
+  // the map, which takes this map's own edge.
   'outer-formations': [
     {
       x: 31_750,
@@ -1953,7 +1964,7 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       heightM: 4_250,
       biome: ResonanceField,
       floorM: 1_700,
-      note: 'The Fields, half a kilometre west, a row north and a kilometre east',
+      note: 'The Fields, half a kilometre west, three rows north and a kilometre east',
     },
     {
       x: 36_000,
@@ -2014,8 +2025,10 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
   // First's formation in it and the Axis along its south edge. The overview
   // draws the formation under the map and its axis leaving south. The surround
   // carries the Foot a kilometre round the map and the Axis a kilometre west
-  // and east and a row south. South-east, its detail covers the Rest's north
-  // and west, and draws it coarsely, as its map does.
+  // and east and a row south. South-east, its detail covers all of the Rest's
+  // map but its south kilometre and east 250 m, and draws it coarsely as its
+  // map does, but for the row touching the map, which takes this map's own
+  // edge.
   'the-first': [
     {
       x: 24_500,
@@ -2065,12 +2078,14 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
   ],
   // The Rest's 2,500 m (#1625). The map is a trench across crystal shoulders,
   // its Head on the north shoulder and its Deep End falling east. The overview
-  // draws the Head's bench a kilometre north of the moved map, the trench floor
-  // across it and the fall east of it. The surround carries the Shoulders a
-  // kilometre round the map, the Head north onto that bench, the trench a row
-  // west and the Deep End east to the fall. North, its detail covers the
-  // First's south and the Outer Formations' south-west, and the Banding
-  // Ground's east edge; it draws them coarsely, as their maps do.
+  // draws the Head where #1457 placed it, north of the moved map, the trench
+  // floor across it and the fall east of it. The surround carries the
+  // Shoulders a kilometre round the map, the Head north onto the overview's,
+  // the trench half a kilometre west and the Deep End east to the fall. Its
+  // detail covers all of the First's map, its last two rows in the seam, the
+  // Outer Formations' south-west and the Banding Ground's east edge. It draws
+  // them coarsely as their maps do, but for the row touching the map, which
+  // takes this map's own edge.
   'the-rest': [
     {
       x: 26_250,
@@ -2088,7 +2103,7 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       heightM: 2_000,
       biome: ResonanceField,
       floorM: 1_600,
-      note: 'The Head, carried north onto the overview’s bench',
+      note: 'The Head, carried north onto the overview’s',
     },
     {
       x: 25_500,
@@ -2133,7 +2148,7 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       heightM: 500,
       biome: AbyssalTrench,
       floorM: 2_050,
-      note: 'The trench’s upper wall, a row west',
+      note: 'The trench’s upper wall, half a kilometre west',
     },
     {
       x: 26_750,
@@ -2142,7 +2157,7 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       heightM: 1_000,
       biome: AbyssalTrench,
       floorM: 2_150,
-      note: 'The trench floor, a row west',
+      note: 'The trench floor, half a kilometre west',
     },
     {
       x: 26_750,
@@ -2151,7 +2166,7 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       heightM: 500,
       biome: AbyssalTrench,
       floorM: 2_050,
-      note: 'The trench’s lower wall, a row west',
+      note: 'The trench’s lower wall, half a kilometre west',
     },
     {
       x: 32_250,

@@ -495,7 +495,7 @@ describe('placed regions', () => {
       for (const mission of missions) assert.equal(region.mapId, mission.mapId, mission.id);
     }
     const at = (id: string) => RIFT_PLACES.find((p) => p.id === id)!;
-    // The Rest moved 1.5 km south (the owner's call): centred on its anchor,
+    // The Rest moved 1.5 km south and 250 m west (the owner's call): centred on its anchor,
     // edge to edge with the First's south edge and the Outer Formations' west.
     assert.deepEqual(
       [THE_REST_REGION.x + 2_500, THE_REST_REGION.y + 2_000],

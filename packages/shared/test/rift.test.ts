@@ -351,11 +351,18 @@ describe('the maps §7.9 stands at their centre (#1565, #1566)', () => {
     assert.ok(
       head.every(([x, y]) => y === map.y + map.heightM && x > map.x && x < map.x + map.widthM)
     );
-    // The Rest's anchor moved 1.5 km south, so its map meets the First's south
-    // edge rather than overlapping it (§7.9, #1625, the owner's call).
+    // The Rest's anchor moved 1.5 km south and 250 m west, so its map meets the
+    // First's south edge rather than overlapping it, and is authored in the
+    // trench country, since it crosses the Fields' south edge at 62 km (§7.9,
+    // #1625, the owner's call).
     const rest = stood('the-rest', 5_000, 4_000);
     assert.equal(rest.y, map.y + map.heightM);
     assert.ok(rest.x > map.x && rest.x < map.x + map.widthM);
+    fits(rest, 'trench-country');
+    const fields = RIFT_REGIONS['resonance-fields'];
+    assert.ok(
+      rest.y < fields.y + fields.heightM && rest.y + rest.heightM > fields.y + fields.heightM
+    );
   });
 });
 
