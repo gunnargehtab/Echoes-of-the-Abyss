@@ -489,7 +489,7 @@ breach the ceiling — but §10 refuses to teach depth here, so no line names it
 is seated near the floor, so a plain move is a move onto the ground and follows it
 ([systems-depth.md](systems-depth.md) §2), and where the ground falls away the follow is a
 dive at 72. A newcomer's walk found it twice (#1586): two `went loud` rows at T+12:29 and
-T+12:32 from a scout following the floor, and a plain move at 16:26 that put the flight in
+T+12:32 from escorts following the floor, and a plain move at 16:26 that put the flight in
 debt. The ledger charged each one, and `silenceUnderWay.test.ts` holds that it charges every
 run over the ceiling in six scripted minutes of moves along the seabed; the order read met
 again by T+12:41 because the debt had paid itself off. So the silence row's debt gloss says what a dive is here, at the one moment the

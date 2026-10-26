@@ -3173,7 +3173,7 @@ describe('renderer smoke test: the strip explains itself', () => {
     booted.teardown();
   });
 
-  it('says the meter counts every hull while an order reads fewer (#1586)', async () => {
+  it('says the meter counts every hull while an order is in force (#1586)', async () => {
     const booted = await boot();
     booted.chart.setStatus('connected');
     booted.frame();
@@ -3196,7 +3196,7 @@ describe('renderer smoke test: the strip explains itself', () => {
     booted.frame(2);
     const second = textSaying(stage, ' loud')!;
     assert.match(second, /^all \d+ units · \d+ loud$/, `§3's second line reads "${second}"`);
-    assert.match(sigBox().detail, /not only the flight the orders panel reads/);
+    assert.match(sigBox().detail, /the orders panel's figure reads only the flight$/);
 
     booted.teardown();
   });

@@ -222,7 +222,11 @@ describe('a move along the seabed, under the order (#1586)', () => {
             Math.hypot(Position.x[e]! - seat.x, Position.y[e]! - seat.y) < 1
         )!
       );
-    assert.equal(flight.length, 4, 'the premise: the flight is four seated hulls');
+    assert.equal(flight.length, 4, 'the premise: the flight is four hulls');
+    assert.ok(
+      flight.every((eid) => eid !== undefined),
+      'the premise: each is seated where the literal puts it'
+    );
 
     // A fixed walk: every eight seconds each escort is sent up to 200 m in a
     // direction the seed picks, to a point on the ground — the click a player

@@ -7626,8 +7626,8 @@ export class EchoRenderer {
     // directly under the label it would disagree with.
     this.loudCount = loud;
     const n = this.units.length;
-    // `all` while a mission's order reads a narrower set in the orders panel:
-    // the two figures are different counts, and the word says which this is.
+    // `all` while a mission's order is in force: the orders panel reads the
+    // set the order binds, and the word says this figure is every hull.
     const all = this.boundSig === null ? '' : 'all ';
     this.loudLabel.text = `${all}${n} unit${n === 1 ? '' : 's'} \u00b7 ${loud} loud`;
     this.loudLabel.style.fill = loud > 0 ? UI.sigMid : UI.textDim;

@@ -191,12 +191,15 @@ export function sigDetail(
     ' — the loudest hull is the one that gets you found' +
     ` · green below ${SIG_BANDS.AMBER}, amber from ${SIG_BANDS.AMBER}, red from ${SIG_BANDS.RED}` +
     ` · ${loud} of ${units} over ${SIG_BANDS.LOUD}, the count that predicts trouble`;
-  // §3's `all n units`: a mission's order reads a narrower set in the orders
-  // panel's header, and Sorrowgate's meter at 18 beside the panel's 6 read as
-  // a contradiction until the strip said which of the two it was (#1586).
+  // §3's `all n units`: a mission's order reads its own authored set in the
+  // orders panel's header, and Sorrowgate's meter at 18 beside the panel's 6
+  // read as a contradiction until the strip said which of the two it was
+  // (#1586). Worded to hold where the set is every hull too — Attendance's
+  // shift is the whole roster — so it says what each reads, not that they
+  // differ.
   if (bound === undefined) return line;
-  const set = bound.setName ?? 'hulls the order binds';
-  return line + ` · every hull of yours, not only the ${set} the orders panel reads`;
+  const set = bound.setName ?? 'hulls its order binds';
+  return line + ` · every hull of yours; the orders panel's figure reads only the ${set}`;
 }
 
 /**
