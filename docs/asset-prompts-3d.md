@@ -58,7 +58,7 @@ are contacts, drawn at earned fidelity, never world meshes
    hull built this way is a series break like any other, and its script and its block
    below are one author's work (#540).
 
-   Either way this is *shape*, which is what the `fable-5.1` label routes
+   Either way this is *shape*, which is what the `shape-work` label routes
    ([CONTRIBUTING.md](../CONTRIBUTING.md)), and either way the gates are unchanged and
    stay adversarial to whoever authored the model: `hull-intake`, the glow calibration,
    the screenshot review.

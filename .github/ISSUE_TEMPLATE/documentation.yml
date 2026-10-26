@@ -1,6 +1,6 @@
 name: Documentation
 description: Report a gap, error, or improvement in the design docs
-labels: [docs, triage]
+labels: [docs]
 body:
   - type: input
     id: location

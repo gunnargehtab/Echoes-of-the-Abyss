@@ -34,8 +34,10 @@
   color: ededed
   description: A design call about the game's systems, world, or fiction
 
+# --- Area: which part of the tree the change lands in ---
+
 - name: frontend
-  color: ededed
+  color: bfd4f2
   description: The client — renderer, HUD, screens, and audio
 
 # --- Process: how an issue is tracked ---
@@ -44,37 +46,16 @@
   color: 3e4b9e
   description: Large body of work tracked across multiple issues
 
-- name: triage
-  color: fbca04
-  description: Needs review to confirm validity, scope, or priority
-
-- name: duplicate
-  color: cfd3d7
-  description: This issue or pull request already exists
-
-- name: invalid
-  color: e4e669
-  description: This doesn't seem right
-
-- name: question
-  color: d876e3
-  description: Further information is requested
-
 - name: wontfix
   color: ffffff
   description: This will not be worked on
 
-- name: good first issue
-  color: 7057ff
-  description: Good for newcomers
-
-- name: help wanted
-  color: 008672
-  description: Extra attention is needed
-
 # --- Routing: addressed to a model or to the unattended Routine ---
 
-- name: fable-5.1
+# Named fable-5.1 until 26 October, which tied it to a model version rather
+# than the work. from_name moves its issues across; it is a no-op once the sync has run.
+- name: shape-work
+  from_name: fable-5.1
   color: f4a6c8
   description: Shape work, authored under the design model of record (asset-prompts-3d.md rule 3); the backlog Routine skips it
 
@@ -93,10 +74,6 @@
 - name: finding
   color: a2595f
   description: A defect the loop verified while working something else — ordinary work, open to any firing
-
-- name: standing
-  color: 7a8b99
-  description: Open by design — a permanent citation target the tree points at, never a work item
 
 - name: needs-decision
   color: 6f42c1

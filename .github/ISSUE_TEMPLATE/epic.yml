@@ -1,6 +1,6 @@
 name: Epic
 description: Track a large body of work spanning multiple issues
-labels: [epic, triage]
+labels: [epic]
 body:
   - type: textarea
     id: goal
