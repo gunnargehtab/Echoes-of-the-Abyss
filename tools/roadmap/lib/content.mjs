@@ -558,6 +558,9 @@ export const items = {
   1583: 'The sound ring drawn across the roof of the building it surrounds',
   1573: 'Seabed scour marks that still ran the old way after the sand ripples turned',
   1582: 'Four ships made the Directorate’s own, as its roster says',
+  1610: 'A flaky check on the map’s first framing, made steady',
+  1611: 'Feedback from playing the tutorial, worked through',
+  1622: 'Measuring the orders panel while a hold countdown ticks',
   1599: 'A score that plays through the match and swells when your fleet is loud',
   1431: 'The Bulwark’s four stacks standing clear of the deck',
   1433: 'A seam on the Derrick running inside its own hull',
@@ -569,7 +572,13 @@ export const items = {
   // Phase 16
   1593: 'The prologue’s orders panel cutting off its list of withheld orders',
   1594: 'The prologue never saying the way north is the service lock',
+  1613: 'A kind, plain message when the server is down, and the same care for the game’s other failure screens',
+  1617: 'Names for the other missions’ markers on the chart',
+  1619: 'Tend’s orders panel hiding its list of withheld orders late in the mission',
+  1621: 'Conclave Chord’s orders panel cutting off its last rows late in the mission',
+  1634: 'Sorrowgate’s orders panel spilling out of the room at larger interface sizes',
   // Later
+  1637: 'Three new looks for the game’s scenes, with the owner choosing which to follow',
   1600: 'Whether picking and ordering should make any interface sound',
   1601: 'How big the game’s sound files may be, and how they load',
   1603: 'The score going almost silent on a phone’s speaker setting',
