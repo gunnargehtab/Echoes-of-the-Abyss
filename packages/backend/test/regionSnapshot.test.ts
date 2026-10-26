@@ -12,7 +12,8 @@
  * Thin Water and Shallow the Kell Shoulder (#1633), Deep Furrow and In Writing
  * the Furrow (#1638), the Rim's five the Rim (#1640), Item Nine and Tolerance
  * Board Country and the Underworks (#1623), Conclave and Attendance the Upper
- * Terraces and the galleries (#1624), and the prologue again on a
+ * Terraces and the galleries (#1624), Aptitude, the Order's Conclave, The Three
+ * and Nineteen three of the Fields' maps (#1625), and the prologue again on a
  * reconnection after its ground has changed, with writes that replay to the
  * live cells and the live revision, and that every other room — Radicals on the same map included —
  * names nothing.
@@ -32,8 +33,12 @@ import {
   ATTENDING_THE_DOME_HEADER,
   ATTENDING_TRENCH_AWAKENING_HEADER,
   BANDING_GROUND_REGION,
+  CHORD_APTITUDE_HEADER,
+  CHORD_CONCLAVE_HEADER,
+  CHORD_NINETEEN_HEADER,
   CHORD_RIM_DEPOSITS_HEADER,
   CHORD_SECOND_CHORD_HEADER,
+  CHORD_THE_THREE_HEADER,
   FACE_SIX_REGION,
   FOURTH_FOOT_REGION,
   HOLDING_BOARD_REGION,
@@ -47,6 +52,7 @@ import {
   LEDGER_TOLERANCE_HEADER,
   MARR_PLATEAU_REGION,
   MOUTH_RIM_REGION,
+  OUTER_FORMATIONS_REGION,
   PROLOGUE_SORROWGATE_HEADER,
   SEEDING_CONVOCATION_HEADER,
   SEEDING_DEEP_FURROW_HEADER,
@@ -58,6 +64,8 @@ import {
   SERVER_MSG,
   SHALLOW_BAND_REGION,
   SORROWGATE_REGION,
+  THE_FIRST_REGION,
+  THE_REST_REGION,
   UPPER_TERRACES_REGION,
   UPPER_WORKINGS_REGION,
   WESTERN_MARGIN_REGION,
@@ -151,6 +159,10 @@ describe('the region a room names (#1460)', () => {
     [LEDGER_TOLERANCE_HEADER, HOLDING_UNDERWORKS_REGION],
     [ATTENDING_CONCLAVE_HEADER, UPPER_TERRACES_REGION],
     [ATTENDING_ATTENDANCE_HEADER, ATTENDING_GALLERIES_REGION],
+    [CHORD_APTITUDE_HEADER, OUTER_FORMATIONS_REGION],
+    [CHORD_CONCLAVE_HEADER, OUTER_FORMATIONS_REGION],
+    [CHORD_THE_THREE_HEADER, THE_FIRST_REGION],
+    [CHORD_NINETEEN_HEADER, THE_REST_REGION],
   ] as const) {
     it(`names ${region.id} on ${mission.id}'s ground at join`, async () => {
       const match = await room({ missionId: mission.id });

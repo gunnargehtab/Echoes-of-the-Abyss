@@ -32,9 +32,14 @@
  * **Not in `MAPS` and not in `MAP_HEADERS`, deliberately** — the standing
  * argument: one seat, no resources, no hazard sites, not balanced, resolved by
  * mission id and nothing else.
+ *
+ * **The ground is shared's** (`OUTER_FORMATIONS_GROUND`, #1625), as the galleries' is: the
+ * continuous world draws this map before any room exists (docs/world-map.md
+ * §7.9), so its regions are authored once, in `@echoes/shared`, and spread in
+ * here. What stays here is the spawn.
  */
 
-import { Biome } from '@echoes/shared';
+import { OUTER_FORMATIONS_GROUND } from '@echoes/shared';
 import type { MapDefinition, MapRect } from '../types.ts';
 
 export const OUTER_FORMATIONS: MapDefinition<MapRect> = {
@@ -43,44 +48,8 @@ export const OUTER_FORMATIONS: MapDefinition<MapRect> = {
   idealUse:
     'The Second Chord, mission one. Crystal country with no cover in it, and one strip that carries.',
   seats: 1,
-  widthM: 5000,
-  heightM: 4000,
   doc: 'docs/mission-aptitude.md §11; docs/maps.md — Mission maps',
-  cellM: 250,
-  floorM: 1700,
-  // One row per row of §11's table, in the document's order. Later regions
-  // overwrite earlier ones, which is what lets the Fields be painted whole and
-  // the Approach cut into the north-east corner of them. Every rectangle lands
-  // on the 250 m cell grid and paints exactly the metres it reads.
-  regions: [
-    {
-      x: 0,
-      y: 0,
-      widthM: 5000,
-      heightM: 4000,
-      biome: Biome.ResonanceField,
-      floorM: 1700,
-      note: 'The Fields — crystal country. PF 0.70, scattered; painted first, and almost nothing is cut into it',
-    },
-    {
-      x: 3750,
-      y: 0,
-      widthM: 1250,
-      heightM: 1000,
-      biome: Biome.ResonanceField,
-      floorM: 1450,
-      note: "The Third's Approach — the chapter-house's own water. The spawn, and the region the party returns to",
-    },
-    {
-      x: 0,
-      y: 3500,
-      widthM: 5000,
-      heightM: 500,
-      biome: Biome.AbyssalTrench,
-      floorM: 1750,
-      note: 'The Seam — where crystal country breaks toward the trenches. PF 1.60, and the one strip of ground on this map that carries',
-    },
-  ],
+  ...OUTER_FORMATIONS_GROUND,
   // One spawn, in the Approach at 1,450 m. The Foundry offsets address a
   // structure a tuning never places: no economy here, and maintenance is not a
   // works order (§3).

@@ -351,12 +351,11 @@ describe('the maps §7.9 stands at their centre (#1565, #1566)', () => {
     assert.ok(
       head.every(([x, y]) => y === map.y + map.heightM && x > map.x && x < map.x + map.widthM)
     );
-    // The Rest's north-west corner is the anchor, so the two overlap (§7.9).
+    // The Rest's anchor moved 1.5 km south, so its map meets the First's south
+    // edge rather than overlapping it (§7.9, #1625, the owner's call).
     const rest = stood('the-rest', 5_000, 4_000);
-    assert.deepEqual(
-      [rest.x, rest.y],
-      [place('first-chapter-house').x, place('first-chapter-house').y]
-    );
+    assert.equal(rest.y, map.y + map.heightM);
+    assert.ok(rest.x > map.x && rest.x < map.x + map.widthM);
   });
 });
 

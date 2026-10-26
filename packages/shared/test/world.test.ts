@@ -27,8 +27,13 @@ import {
   BANDING_GROUND_GROUND,
   BANDING_GROUND_REGION,
   Biome,
+  CHORD_APTITUDE_HEADER,
+  CHORD_CONCLAVE_HEADER,
+  CHORD_NINETEEN_HEADER,
   CHORD_RIM_DEPOSITS_HEADER,
   CHORD_SECOND_CHORD_HEADER,
+  CHORD_STANDING_WAVE_HEADER,
+  CHORD_THE_THREE_HEADER,
   FACE_SIX_GROUND,
   FACE_SIX_REGION,
   FOURTH_FOOT_GROUND,
@@ -51,6 +56,8 @@ import {
   MISSION_HEADERS,
   MOUTH_RIM_GROUND,
   MOUTH_RIM_REGION,
+  OUTER_FORMATIONS_GROUND,
+  OUTER_FORMATIONS_REGION,
   PLACED_GROUND,
   PROLOGUE_SORROWGATE_HEADER,
   RIFT_ATLAS,
@@ -65,6 +72,10 @@ import {
   SHALLOW_BAND_REGION,
   SORROWGATE_GROUND,
   SORROWGATE_REGION,
+  THE_FIRST_GROUND,
+  THE_FIRST_REGION,
+  THE_REST_GROUND,
+  THE_REST_REGION,
   UPPER_TERRACES_GROUND,
   UPPER_TERRACES_REGION,
   UPPER_WORKINGS_GROUND,
@@ -461,6 +472,47 @@ describe('placed regions', () => {
     assert.equal(at('the-sill').y - galleries.y, 3_000);
   });
 
+  it('stands three of the Fields maps edge to edge, and the Fifth waits (§7.9, #1625)', () => {
+    assert.deepEqual(
+      [OUTER_FORMATIONS_REGION, THE_FIRST_REGION, THE_REST_REGION].map((r) => [r.id, r.x, r.y]),
+      [
+        ['outer-formations', 32_250, 55_500],
+        ['the-first', 25_500, 56_000],
+        ['the-rest', 27_250, 59_000],
+      ]
+    );
+    for (const [region, ground, missions] of [
+      [
+        OUTER_FORMATIONS_REGION,
+        OUTER_FORMATIONS_GROUND,
+        [CHORD_APTITUDE_HEADER, CHORD_CONCLAVE_HEADER],
+      ],
+      [THE_FIRST_REGION, THE_FIRST_GROUND, [CHORD_THE_THREE_HEADER]],
+      [THE_REST_REGION, THE_REST_GROUND, [CHORD_NINETEEN_HEADER]],
+    ] as const) {
+      assert.equal(region.widthM, ground.widthM);
+      assert.equal(region.heightM, ground.heightM);
+      for (const mission of missions) assert.equal(region.mapId, mission.mapId, mission.id);
+    }
+    const at = (id: string) => RIFT_PLACES.find((p) => p.id === id)!;
+    // The Rest moved 1.5 km south (the owner's call): centred on its anchor,
+    // edge to edge with the First's south edge and the Outer Formations' west.
+    assert.deepEqual(
+      [THE_REST_REGION.x + 2_500, THE_REST_REGION.y + 2_000],
+      [at('the-rest').x, at('the-rest').y]
+    );
+    assert.equal(THE_REST_REGION.y, THE_FIRST_REGION.y + THE_FIRST_REGION.heightM);
+    assert.equal(THE_REST_REGION.x + THE_REST_REGION.widthM, OUTER_FORMATIONS_REGION.x);
+    // The Seam's anchor stands on the Outer Formations' south edge.
+    assert.equal(OUTER_FORMATIONS_REGION.y + OUTER_FORMATIONS_REGION.heightM, at('the-seam').y);
+    // The Fifth is not placed: no clear origin keeps its Mouth on the Seam.
+    assert.equal(worldRegionForMission(CHORD_STANDING_WAVE_HEADER.id), undefined);
+    assert.equal(
+      WORLD_REGIONS.some((r) => r.mapId === 'the-fifth'),
+      false
+    );
+  });
+
   it('place every map whose ground is placed, and none without', () => {
     assert.deepEqual(WORLD_REGIONS.map((r) => r.mapId).sort(), Object.keys(PLACED_GROUND).sort());
   });
@@ -742,6 +794,10 @@ describe('the placed-mission predicate', () => {
     assert.equal(worldRegionForMission(LEDGER_TOLERANCE_HEADER.id), HOLDING_UNDERWORKS_REGION);
     assert.equal(worldRegionForMission(ATTENDING_CONCLAVE_HEADER.id), UPPER_TERRACES_REGION);
     assert.equal(worldRegionForMission(ATTENDING_ATTENDANCE_HEADER.id), ATTENDING_GALLERIES_REGION);
+    assert.equal(worldRegionForMission(CHORD_APTITUDE_HEADER.id), OUTER_FORMATIONS_REGION);
+    assert.equal(worldRegionForMission(CHORD_CONCLAVE_HEADER.id), OUTER_FORMATIONS_REGION);
+    assert.equal(worldRegionForMission(CHORD_THE_THREE_HEADER.id), THE_FIRST_REGION);
+    assert.equal(worldRegionForMission(CHORD_NINETEEN_HEADER.id), THE_REST_REGION);
     assert.equal(worldRegionForMission(undefined), undefined);
     // Radicals plays on Sorrowgate's map and keeps its presentation: the
     // predicate is keyed on mission identity, never on the map (§7.1).
@@ -770,6 +826,10 @@ describe('the placed-mission predicate', () => {
       LEDGER_TOLERANCE_HEADER.id,
       ATTENDING_CONCLAVE_HEADER.id,
       ATTENDING_ATTENDANCE_HEADER.id,
+      CHORD_APTITUDE_HEADER.id,
+      CHORD_CONCLAVE_HEADER.id,
+      CHORD_THE_THREE_HEADER.id,
+      CHORD_NINETEEN_HEADER.id,
     ]);
     for (const header of MISSION_HEADERS) {
       if (placed.has(header.id)) continue;
@@ -787,6 +847,7 @@ describe('the placed-mission predicate', () => {
     assert.equal(worldRegionForMission('mouth-rim'), undefined);
     assert.equal(worldRegionForMission('holding-board'), undefined);
     assert.equal(worldRegionForMission('upper-terraces'), undefined);
+    assert.equal(worldRegionForMission('outer-formations'), undefined);
   });
 
   it("places each mission on its own map's region", () => {

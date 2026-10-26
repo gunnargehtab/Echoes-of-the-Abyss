@@ -44,7 +44,8 @@ export function boardFrame(region: WorldRegion): CameraFrame {
  * day's, for both of the Furrow's; the Staging, where the Rim's spawn stands on
  * §7.2's own anchor, for all five of the Rim's; the Board's rail, the
  * session's; the Works Yard, the writ's; the Undermarshalcy, the calling's;
- * and the stalls, the shift's.
+ * the stalls, the shift's; and the Third's Approach, the foot of the First and
+ * the Rest's Head, each the party's.
  */
 const SPAWN_PLACE: Readonly<Record<string, string>> = {
   sorrowgate: 'sorrowgate',
@@ -62,6 +63,9 @@ const SPAWN_PLACE: Readonly<Record<string, string>> = {
   'holding-underworks': 'the-works-yard',
   'upper-terraces': 'the-undermarshalcy',
   'attending-galleries': 'the-stalls',
+  'outer-formations': 'the-thirds-approach',
+  'the-first': 'the-firsts-foot',
+  'the-rest': 'the-rests-head',
 };
 
 /**
