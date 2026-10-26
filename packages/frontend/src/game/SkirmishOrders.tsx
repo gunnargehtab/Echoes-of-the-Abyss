@@ -32,7 +32,10 @@ export function SkirmishOrders({ seated }: SkirmishOrdersProps) {
       <header className="objectives-title">
         <span>ORDERS</span>
       </header>
-      <div className="objectives-body">
+      {/* A status region for the panel's reason (§10.5): the row changes in
+          place, from every enemy Bastion to the enemy Bastion, when a third
+          commander walks out. */}
+      <div className="objectives-body" role="status" aria-live="polite">
         <p className="objectives-row pending">
           <span className="objectives-status">{alone ? 'none' : 'win'}</span>
           <span className="objectives-text">

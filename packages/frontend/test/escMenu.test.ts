@@ -405,6 +405,25 @@ describe('the esc menu: Resign ends at a result (#1588)', () => {
     }
   });
 
+  it('makes Return to port say the match ends, where Resign is offered', async () => {
+    // Walking out resigns (§9.5). With two seated that decides the match, so
+    // "the match goes on without you" — the line the other case keeps, held
+    // by "arms the leave entry rather than taking it" above — would be false.
+    const { view, doors } = await resignable();
+    try {
+      await click(view, 'Return to port');
+      assert.ok(
+        view.shows(
+          'Leaving ends the match as your loss, and you will not see the result. Resign shows it.'
+        )
+      );
+      assert.equal(view.shows('The match goes on without you.'), false);
+      assert.equal(doors.exits, 0);
+    } finally {
+      await view.unmount();
+    }
+  });
+
   it('is withdrawn once the match is decided', async () => {
     const { view, doors, resigns } = await resignable();
     try {
