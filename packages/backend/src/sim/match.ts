@@ -3520,6 +3520,7 @@ export class Match {
         if (Harvester.mode[eid] === HarvestMode.Idle && Harvester.idleReason[eid]! > 0) {
           unit.idle = (Harvester.idleReason[eid]! - 1) as HarvestIdleReason;
         }
+        if (Harvester.mode[eid] !== HarvestMode.Idle) unit.harvesting = true;
       }
       out.push(unit);
     }

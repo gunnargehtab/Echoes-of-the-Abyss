@@ -690,6 +690,13 @@ export interface OwnUnit {
    */
   idle?: HarvestIdleReason;
   /**
+   * Harvesters only: true while the hull has a field to work — bound for it,
+   * cutting it, or hauling the cut home. Absent while it waits for an order,
+   * as the opening kit's harvester does until it is sent (#1589): the skirmish
+   * orders panel points a newcomer at it for exactly as long as that lasts.
+   */
+  harvesting?: boolean;
+  /**
    * Torpedoes aboard, for hulls that carry them.
    *
    * Sent because scarcity is the class identity (docs/systems-combat.md §5):

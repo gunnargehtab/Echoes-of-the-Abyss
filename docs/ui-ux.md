@@ -721,6 +721,14 @@ with the yard not standing, because a Slipway hull greyed for *no Slipway standi
 commander finds out what the rung is for, and §7's rule is that a disabled action names its reason
 rather than going quiet.
 
+**A cell names what it makes when the pointer rests on it.** Twelve cells leave room for a code
+and a price — `SUB 260+80c`, `BAF 600+120c` — and a newcomer met those with nothing saying what
+they built or what the `c` was (#1589). So the hint line, while the pointer is on a priced cell
+of the production pages or the build page, reads its whole name and the price in words:
+*Baffle Barge — 600 nodules, 120 crystal*. A refusal still takes the line first, for the four
+seconds §7 gives it. Hover rather than a key, because the card is the mouse's route (§2) and the
+hand on it is the one asking.
+
 ### What yields when the card is full
 
 A squad page can be offered more than twelve entries too, without a roster in sight: a mixed
@@ -939,13 +947,31 @@ citations to no purpose.
 
 A mission states what it wants of the player ([campaign.md](campaign.md) §10), and the panel
 is where it says so. It is in-match chrome, present while a mission is running. A
-skirmish has no objectives, and the panel carries one row in their place: the rule that
+skirmish has no objectives, and the panel carries a row in their place: the rule that
 wins it, *destroy the enemy Bastion*, glossed *lose yours and you are out*
 ([game-identity.md](game-identity.md), "Destroy"). With three or four commanders seated it
 reads *every enemy Bastion*; with one, it says nothing ends the match but leaving. A
 newcomer met a skirmish with nothing on screen saying what wins (#1588). The row has no
 marker and its status word never moves, because the server sends nothing about any other
 Bastion and the row may not imply that it does.
+
+A second row is about the harvester, because Solo game is reachable having been taught nothing
+of harvesting — the prologue has no economy ([campaign.md](campaign.md)) — and nothing on
+screen named the one hull that pays for the rest (#1589). It has two forms, and reads only the
+player's own hulls:
+
+- **While the player's one harvester is working a field**, it names it: *your harvester is
+  working a field*, glossed *the nodules it hauls home buy hulls and structures; build more at
+  the Bastion*. The opening kit's harvester is sent to the nearest field at spawn, so this is
+  the row a skirmish opens on.
+- **While a new harvester waits for a field**, it points at it: *a new harvester is waiting for
+  a field*, glossed *select it, then right-click a nodule field*. A yard launches a harvester
+  with no field, so the second one a newcomer buys sits where it rolled out, or at the yard's rally point. A harvester the
+  client has seen work is not new: one the player parked is a chosen quiet, and the row does
+  not nag a commander buying silence. Nor is one stalled on a mined-out map or a lost yard,
+  for which §5's scope marker speaks.
+
+The waiting form takes precedence; with two or more harvesters and none waiting, the row is gone.
 
 **DOM, not Pixi, for §10's reasons exactly.** A canvas objective is not selectable and not
 reachable by a screen reader, and an objective the player cannot copy into a bug report or

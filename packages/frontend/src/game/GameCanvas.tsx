@@ -36,7 +36,7 @@ import { MatchResult } from './MatchResult.tsx';
 import { MissionLog } from './MissionLog.tsx';
 import { MissionPanel } from './MissionPanel.tsx';
 import { MissionResult } from './MissionResult.tsx';
-import { SkirmishOrders } from './SkirmishOrders.tsx';
+import { SkirmishOrders, harvestRow, sameHarvestRow, type HarvestRow } from './SkirmishOrders.tsx';
 import { StripReadouts } from './StripReadouts.tsx';
 import type { ReadoutBox } from './readouts.ts';
 import { AudioEngine, dbToGain } from '../audio/engine.ts';
@@ -231,6 +231,11 @@ export function GameCanvas({
    */
   const [boundSig, setBoundSig] = useState<BoundSig | null>(null);
   /**
+   * The skirmish orders panel's harvester row (#1589), set only when what it
+   * says changes, for `boundSig`'s reason: the snapshot arrives at 5 Hz.
+   */
+  const [harvest, setHarvest] = useState<HarvestRow>(null);
+  /**
    * The match clock for a hold's countdown (docs/ui-ux.md §10.5, #1611), set
    * on the whole second and only while the mission has a hold to count down —
    * `boundSig`'s reasoning: the shell re-renders when this moves, and a 5 Hz
@@ -416,6 +421,8 @@ export function GameCanvas({
      */
     let underSilenceOrder = false;
     let anyHullSilent = false;
+    /** Own harvesters seen working this match, for `harvestRow`. */
+    const workedHarvesters = new Set<number>();
     /** Whether the latest mission view has a hold counting down (#1611). */
     let missionCounts = false;
 
@@ -607,6 +614,8 @@ export function GameCanvas({
           onEcho: (snapshot: EchoSnapshot) => {
             if (cancelled) return;
             anyHullSilent = snapshot.units.some((unit) => unit.silentRunning);
+            const row = harvestRow(snapshot.units, workedHarvesters);
+            setHarvest((previous) => (sameHarvestRow(previous, row) ? previous : row));
             const bound = snapshot.boundSig ?? null;
             setBoundSig((previous) =>
               previous?.peak === bound?.peak && previous?.ceiling === bound?.ceiling
@@ -994,7 +1003,9 @@ export function GameCanvas({
             onCommanderAbility={() => clientRef.current?.commanderAbility()}
           />
         )}
-        {live && phase !== MatchPhase.Lobby && skirmish && <SkirmishOrders seated={seated} />}
+        {live && phase !== MatchPhase.Lobby && skirmish && (
+          <SkirmishOrders seated={seated} harvest={harvest} />
+        )}
         {live && phase !== MatchPhase.Lobby && missionLines.length > 0 && (
           <MissionLog lines={missionLines} />
         )}

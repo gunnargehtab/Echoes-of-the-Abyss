@@ -155,7 +155,7 @@ import {
 import { FACTION_NAME } from './factions.ts';
 import { DREDGE_STRUCK_TEXT, NO_DECOY_TEXT, carriesDecoy, dredgeStruck, fights } from './dredge.ts';
 import { heldWholly, missionLineFor, movableIn } from './movementHolds.ts';
-import { priceTag, priceWords, shortfallLine } from './price.ts';
+import { hoverLine, priceTag, priceWords, shortfallLine } from './price.ts';
 import {
   drawScopeEchoMarks,
   markRadiusM,
@@ -879,6 +879,13 @@ interface BarButton {
    * swallowed, which is what it was before anything carried a reason.
    */
   refusal?: string;
+  /**
+   * What the hint bar says while the pointer rests on the button: the whole
+   * name of what a code like `SUB 260+80c` makes, and the price in words, so
+   * the `c` and `b` suffixes are spelled out where they are met (#1589). A
+   * priced button carries one; the orders' own words are their names.
+   */
+  hover?: string;
   /**
    * Where this entry stands when the card is offered more than it holds
    * (docs/ui-ux.md §9, "What yields when the card is full"). Lower yields
@@ -3325,18 +3332,28 @@ export class EchoRenderer {
     const rect = this.app.canvas.getBoundingClientRect();
     // Back through the HUD's scale: the bar was laid out in virtual pixels, so
     // a click has to be expressed in them before it can be compared.
-    const x = (clientX - rect.left) / this.uiScale;
     const y = (clientY - rect.top) / this.uiScale;
     if (y < this.hudHeight() - CONSOLE_HEIGHT) return false;
-    for (const button of this.barButtons) {
-      if (x >= button.x && x <= button.x + button.w && y >= button.y && y <= button.y + button.h) {
-        if (button.enabled) button.action();
-        else if (button.refusal !== undefined) this.refuse(button.refusal);
-        return true;
-      }
+    const button = this.barButtonAt(clientX, clientY);
+    if (button !== null) {
+      if (button.enabled) button.action();
+      else if (button.refusal !== undefined) this.refuse(button.refusal);
     }
     // A press on the bar's dead space is still the bar's, not the world's.
     return true;
+  }
+
+  /** The command-card button under a client point, or null. One hit test for press and hover. */
+  private barButtonAt(clientX: number, clientY: number): BarButton | null {
+    const rect = this.app.canvas.getBoundingClientRect();
+    const x = (clientX - rect.left) / this.uiScale;
+    const y = (clientY - rect.top) / this.uiScale;
+    for (const button of this.barButtons) {
+      if (x >= button.x && x <= button.x + button.w && y >= button.y && y <= button.y + button.h) {
+        return button;
+      }
+    }
+    return null;
   }
 
   // --- Sonar scope (minimap) ------------------------------------------------
@@ -3572,6 +3589,7 @@ export class EchoRenderer {
           enabled: target !== undefined && berthed && affords(stockpile, price),
           active: false,
           action: () => this.commandProduce(kind),
+          hover: hoverLine(stats.name, price),
           // Greyed for a reason (§7): the account it fell short in, the
           // berths it has not got, or the yard it has not got — and the last
           // names *this page's* yard, since a Slipway hull greyed for a
@@ -3611,6 +3629,7 @@ export class EchoRenderer {
           enabled: !owned && yard !== undefined && affords(stockpile, price),
           active: owned,
           action: () => this.commandRefit(kind),
+          hover: owned ? `${refit.name} — fitted` : hoverLine(refit.name, price),
           // Greyed for a reason (docs/ui-ux.md §7), and the reasons are in the
           // order they stop being fixable: bought once and never again, then
           // the yard, then the account. The yard's name is the navy's own —
@@ -3798,6 +3817,7 @@ export class EchoRenderer {
           enabled: affords(stockpile, price),
           active: false,
           action: () => this.armBuild(kind),
+          hover: hoverLine(stats.name, price),
           refusal: shortfallLine(stats.name, stockpile, price) ?? undefined,
         });
       }
@@ -9384,6 +9404,14 @@ export class EchoRenderer {
     // account a price fell short in.
     if (this.refusal !== null && performance.now() - this.refusal.atMs < REFUSAL_MS) {
       return this.refusal.reason;
+    }
+    // Then what the pointer is resting on. A code and a price are all a cell
+    // has room for, and a newcomer met `BAF 600+120c` with nothing saying what
+    // it builds or what the `c` is (#1589). Hover rather than a key, because
+    // the card is the mouse's route (§2) and the hand on it is the one asking.
+    if (this.pointerOverWater && !this.menuOpen) {
+      const hovered = this.barButtonAt(this.pointerClient.x, this.pointerClient.y);
+      if (hovered?.hover !== undefined) return hovered.hover;
     }
     if (this.pendingBuild !== null) {
       const stats = structureStatsFor(this.pendingBuild);
