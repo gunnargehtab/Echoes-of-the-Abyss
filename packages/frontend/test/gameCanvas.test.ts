@@ -807,19 +807,20 @@ describe('the shell: the glass over the water', () => {
  */
 describe('the shell: a skirmish says what wins it, and how to give it up (#1588)', () => {
   /** A seat on the roster, as the schema carries it. */
-  const seat = (slot: number, isAi: boolean) => [
-    `seat-${slot}`,
-    {
-      sessionId: `seat-${slot}`,
-      name: isAi ? `Commander ${slot}` : 'Marr',
-      slot,
-      faction: Faction.Bathyarch,
-      ready: false,
-      connected: true,
-      isAi,
-      difficulty: 0,
-    },
-  ];
+  const seat = (slot: number, isAi: boolean) =>
+    [
+      `seat-${slot}`,
+      {
+        sessionId: `seat-${slot}`,
+        name: isAi ? `Commander ${slot}` : 'Marr',
+        slot,
+        faction: Faction.Bathyarch,
+        ready: false,
+        connected: true,
+        isAi,
+        difficulty: 0,
+      },
+    ] as const;
   const text = (node: unknown): string =>
     typeof node === 'string'
       ? node

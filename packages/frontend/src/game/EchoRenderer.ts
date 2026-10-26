@@ -8249,7 +8249,11 @@ export class EchoRenderer {
       this.bannerLabel.position.set(screenWidth / 2, this.hudHeight() / 2);
     } else if (this.gameOver !== null) {
       const won = this.gameOver.winnerSlot === this.slot;
-      this.bannerLabel.text = won ? 'THE RIFT FALLS SILENT — VICTORY' : 'BASTION LOST — DEFEAT';
+      // The loss names no cause, because the result carries none: a fallen
+      // Bastion, a scuttling and a resignation (#1588) all arrive as one
+      // `winnerSlot`. "BASTION LOST" stood over a resigned player's Bastion,
+      // still standing on screen. The result card's own heading is the line.
+      this.bannerLabel.text = won ? 'THE RIFT FALLS SILENT — VICTORY' : 'CONTACT LOST — DEFEAT';
       this.bannerLabel.style.fill = won ? UI.friendly : UI.threat;
       this.bannerLabel.position.set(screenWidth / 2, this.hudHeight() / 2);
     } else {
