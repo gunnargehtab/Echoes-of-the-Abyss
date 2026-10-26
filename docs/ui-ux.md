@@ -951,7 +951,7 @@ skirmish has no objectives, and the panel carries a row in their place: the rule
 wins it, *destroy the enemy Bastion*, glossed *lose yours and you are out*
 ([game-identity.md](game-identity.md), "Destroy"). With three or four commanders seated it
 reads *every enemy Bastion*; with one, it says nothing ends the match but leaving. A
-newcomer met a skirmish with nothing on screen saying what wins (#1588). The row has no
+newcomer met a skirmish with nothing on screen saying what wins (#1588). The win row has no
 marker and its status word never moves, because the server sends nothing about any other
 Bastion and the row may not imply that it does.
 
@@ -966,10 +966,12 @@ player's own hulls:
   the row a skirmish opens on.
 - **While a new harvester waits for a field**, it points at it: *a new harvester is waiting for
   a field*, glossed *select it, then right-click a nodule field*. A yard launches a harvester
-  with no field, so the second one a newcomer buys sits where it rolled out, or at the yard's rally point. A harvester the
-  client has seen work is not new: one the player parked is a chosen quiet, and the row does
-  not nag a commander buying silence. Nor is one stalled on a mined-out map or a lost yard,
-  for which §5's scope marker speaks.
+  with no field, so the second one a newcomer buys sits where it rolled out, or at the yard's
+  rally point. A harvester the client has seen work is not new: parked after that, it is a
+  chosen quiet, and the row does not nag a commander buying silence. One parked before its
+  first field still reads as waiting, because the server sends the same state for a hull that
+  rolled out and one that was moved. Nor is one stalled on a mined-out map or a lost yard
+  waiting, for §5's scope marker speaks for it.
 
 The waiting form takes precedence; with two or more harvesters and none waiting, the row is gone.
 

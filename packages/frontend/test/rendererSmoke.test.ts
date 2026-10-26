@@ -3673,6 +3673,35 @@ describe('a priced cell names what it makes under the pointer (#1589)', () => {
       world.teardown();
     }
   });
+
+  it('gives a refusal the line first, with the pointer still on the cell', async () => {
+    const world = await boot();
+    try {
+      // Nothing banked, so every priced cell is greyed and a press is refused.
+      const broke = cannedSnapshot();
+      broke.nodules = 0;
+      world.chart.applySnapshot(broke);
+      world.frame(2);
+      const stats = structureStatsFor(StructureKind.Refinery);
+      const price = priceOf(stats);
+      const line = `${stats.name} — ${priceWords(price)}`;
+      const cell = barLabel(world.app, `REF ${priceTag(price)}`);
+      assert.ok(barGrey(world.app, `REF ${priceTag(price)}`), 'the premise: the cell is greyed');
+      const at = { pointerId: 1, pointerType: 'mouse', clientX: cell.x, clientY: cell.y };
+      world.app.canvas.dispatch('pointermove', at);
+      world.frame(1);
+      assert.ok(textSaying(world.app.stage, line) !== null, 'the control: hovered, it is named');
+
+      world.app.canvas.dispatch('pointerdown', { ...at, button: 0 });
+      world.frame(1);
+      // §7's wording for a price, built by `shortfallLine`.
+      const refusal = `${stats.name}: ${price.nodules} nodules short`;
+      assert.ok(textSaying(world.app.stage, refusal) !== null, `no "${refusal}" on the bar`);
+      assert.equal(textSaying(world.app.stage, line), null, 'the hover line covered the refusal');
+    } finally {
+      world.teardown();
+    }
+  });
 });
 
 /**

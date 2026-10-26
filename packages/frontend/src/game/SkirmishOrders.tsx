@@ -1,13 +1,13 @@
 /**
- * The skirmish's one order — docs/ui-ux.md §10.5, #1588.
+ * The skirmish's orders — docs/ui-ux.md §10.5, #1588, #1589.
  *
  * A skirmish has no objectives, and for a long while it drew nothing in their
  * corner: the rule that wins it lived only in docs/game-identity.md
  * ("Destroy"), and a newcomer met a match with nothing on screen saying what
- * it was for. So the objectives panel's corner carries one row here, in the
+ * it was for. So the objectives panel's corner carries a row here, in the
  * panel's own dress, stating the rule.
  *
- * The row says what the rules say and nothing the server did not send. Its
+ * That row says what the rules say and nothing the server did not send. Its
  * status word never moves and it has no marker, because nothing about any
  * other Bastion — where it is, whether it still stands — reaches this client,
  * and a row that went `met` or flew the camera somewhere would be claiming
@@ -41,8 +41,10 @@ export type HarvestRow = { kind: 'opening' } | { kind: 'waiting'; count: number 
  * The harvester row for this snapshot.
  *
  * A harvester is counted as waiting only if this client has never seen it
- * work: one the player parked with a move order is a chosen quiet, not a
- * lesson missed, and the row must not nag a commander buying silence. So
+ * work: one the player parked after it worked is a chosen quiet, not a lesson
+ * missed, and the row must not nag a commander buying silence. One parked
+ * before its first field still counts, since the server writes the same
+ * state for a hull that rolled out and one that was moved. So
  * `worked` remembers every own harvester seen working, and is pruned to the
  * hulls in this snapshot so a recycled id starts over. A stalled harvester
  * (`idle`) is not waiting either: a mined-out map or a lost yard is §5's

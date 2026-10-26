@@ -691,9 +691,10 @@ export interface OwnUnit {
   idle?: HarvestIdleReason;
   /**
    * Harvesters only: true while the hull has a field to work — bound for it,
-   * cutting it, or hauling the cut home. Absent while it waits for an order,
-   * as the opening kit's harvester does until it is sent (#1589): the skirmish
-   * orders panel points a newcomer at it for exactly as long as that lasts.
+   * cutting it, or hauling the cut home. Absent while it has none: a yard
+   * launches a harvester with the rally move and no field, and a move order
+   * parks one. The skirmish orders panel reads it to tell a harvester that is
+   * earning from one waiting for a field (#1589).
    */
   harvesting?: boolean;
   /**
