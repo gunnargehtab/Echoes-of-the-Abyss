@@ -805,6 +805,107 @@ describe('the shell: the glass over the water', () => {
  * state off it at teardown, one render loop however many times it is entered,
  * and every other match still building and destroying its own.
  */
+describe('the shell: a skirmish says what wins it, and how to give it up (#1588)', () => {
+  /** A seat on the roster, as the schema carries it. */
+  const seat = (slot: number, isAi: boolean) =>
+    [
+      `seat-${slot}`,
+      {
+        sessionId: `seat-${slot}`,
+        name: isAi ? `Commander ${slot}` : 'Marr',
+        slot,
+        faction: Faction.Bathyarch,
+        ready: false,
+        connected: true,
+        isAi,
+        difficulty: 0,
+      },
+    ] as const;
+  const text = (node: unknown): string =>
+    typeof node === 'string'
+      ? node
+      : node !== null && typeof node === 'object' && 'children' in node
+        ? (node as { children: unknown[] }).children.map(text).join('')
+        : '';
+  const buttons = (world: Mounted): string[] =>
+    world.tree.root.findAll((node) => node.type === 'button').map(text);
+  const press = async (world: Mounted, starts: string): Promise<void> => {
+    const button = world.tree.root.find(
+      (node) => node.type === 'button' && text(node).startsWith(starts)
+    );
+    await act(async () => {
+      (button.props as { onClick: () => void }).onClick();
+    });
+    await world.settle();
+  };
+  /** A running match with `seated` commanders, and the esc menu open over it. */
+  const playing = async (world: Mounted, seated: number): Promise<void> => {
+    await joinMatch(world);
+    world.room.changeState({
+      phase: MatchPhase.Playing,
+      winnerSlot: -1,
+      players: new Map(Array.from({ length: seated }, (_, slot) => seat(slot, slot > 0))),
+    });
+    world.room.emit(SERVER_MSG.echo, encodeEcho(null, cannedSnapshot(100), 0));
+    await world.settle();
+    dispatchWindow('keydown', { code: 'Escape' });
+    await world.settle();
+    assert.ok(shows(world.tree, 'Holding station'), 'the premise: the menu is up');
+  };
+
+  it('states the rule and offers Resign in a skirmish of two, which sends it and closes', async () => {
+    const world = await mount();
+    try {
+      await playing(world, 2);
+      assert.ok(shows(world.tree, 'Destroy the enemy Bastion'), '§10.5: the goal is on screen');
+      await press(world, 'Resign');
+      assert.equal(
+        world.room.sent.some((message) => message.type === 'resign'),
+        false,
+        'armed, not sent'
+      );
+      await press(world, 'Give up the match');
+      assert.deepEqual(
+        world.room.sent.filter((message) => message.type === 'resign'),
+        [{ type: 'resign', payload: {} }]
+      );
+      assert.equal(shows(world.tree, 'Holding station'), false, 'the water is given back');
+      assert.equal(world.room.left, false, 'and the seat kept, for the result');
+    } finally {
+      await world.unmount();
+    }
+  });
+
+  it('does not offer it with a third commander still seated', async () => {
+    const world = await mount();
+    try {
+      await playing(world, 3);
+      assert.ok(shows(world.tree, 'Destroy every enemy Bastion'));
+      assert.equal(
+        buttons(world).some((label) => label.startsWith('Resign')),
+        false,
+        '§9.5: a resignation here would not decide the match'
+      );
+    } finally {
+      await world.unmount();
+    }
+  });
+
+  it('neither states the Bastion rule nor offers Resign in a mission', async () => {
+    const world = await mount({ props: { mapId: 'sorrowgate', missionId: 'prologue-sorrowgate' } });
+    try {
+      await playing(world, 1);
+      assert.equal(shows(world.tree, 'enemy Bastion'), false, 'a mission states its own orders');
+      assert.equal(
+        buttons(world).some((label) => label.startsWith('Resign')),
+        false
+      );
+    } finally {
+      await world.unmount();
+    }
+  });
+});
+
 describe('the shell: the persistent world view', () => {
   const pilot = { props: { mapId: 'sorrowgate', missionId: 'prologue-sorrowgate' } };
 

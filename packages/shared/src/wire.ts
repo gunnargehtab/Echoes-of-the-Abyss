@@ -92,6 +92,8 @@ export const CLIENT_MSG = {
   build: 'build',
   produce: 'produce',
   refit: 'refit',
+  // The match itself. The esc menu's Resign (docs/ui-ux.md §9.5).
+  resign: 'resign',
   // Lobby. Phase-gated, and declared again as `LOBBY_MSG` below — that tuple
   // is the one a type can read, and these five names must agree with it.
   faction: 'faction',
@@ -117,7 +119,7 @@ export const LOBBY_MSG = ['faction', 'ready', 'addAi', 'removeAi', 'aiDifficulty
 export type LobbyClientMessageKey = (typeof LOBBY_MSG)[number];
 
 /**
- * A key of `CLIENT_MSG` a seated commander may send — 26 of the 31.
+ * A key of `CLIENT_MSG` a seated commander may send — 27 of the 32.
  *
  * A **key**, deliberately, not a `ClientMessageName`. The two differ in one
  * place: `depthCharge` travels as `depthcharge` (above), so anything keyed on
@@ -268,6 +270,15 @@ export interface PingMessage {
 export type AbilityMessage = Record<string, never>;
 
 /**
+ * Give the match up and stay for the result — docs/ui-ux.md §9.5, #1588.
+ *
+ * No payload: the slot is the sender's seat, and the server will not take the
+ * client's word for whose match is being given up. Walking out resigns too,
+ * but it releases the seat in the same act, so the result has nobody to reach.
+ */
+export type ResignMessage = Record<string, never>;
+
+/**
  * Sow the bed a hull is standing in — docs/systems-flora.md §2.
  *
  * No position: a sowing is served where the hull already is, and the server
@@ -383,6 +394,7 @@ export interface ClientMessages {
   build: BuildMessage;
   produce: ProduceMessage;
   refit: RefitMessage;
+  resign: ResignMessage;
   faction: FactionMessage;
   ready: ReadyMessage;
   addAi: AddAiMessage;
@@ -505,6 +517,7 @@ export const CLIENT_SHAPE: { readonly [K in keyof ClientMessages]: ShapeOf<Clien
   build: { kind: NUM, x: NUM, y: NUM },
   produce: { structureId: NUM, kind: NUM },
   refit: { structureId: NUM, kind: NUM },
+  resign: {},
   faction: { faction: NUM },
   ready: { ready: OPTIONAL_FLAG },
   addAi: { difficulty: OPTIONAL_NUM },

@@ -22,7 +22,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { ClientState, CloseCode, type Client } from '@colyseus/core';
-import { CLIENT_MSG, MatchPhase, SIM } from '@echoes/shared';
+import { CLIENT_MSG, MatchPhase, PROLOGUE_SORROWGATE_HEADER, SIM } from '@echoes/shared';
 
 // The boot and delivery harness, shared with `wireValidation.test.ts` since
 // #628 rather than written out twice — see the head of that file.
@@ -85,7 +85,7 @@ async function recordingUnhandled(body: () => Promise<void>): Promise<unknown[]>
 }
 
 describe('the containment gate', () => {
-  it('defines the hook, which is what wraps all 31 handlers and the interval', async () => {
+  it('defines the hook, which is what wraps all 32 handlers and the interval', async () => {
     const room = await bootRoom();
     try {
       // The gate itself. Colyseus reads this once, in its constructor, and
@@ -101,7 +101,7 @@ describe('the containment gate', () => {
       // arity, which is what this counts.
       const registered = internals(room).onMessageEvents.events;
       const names = Object.values(CLIENT_MSG);
-      assert.equal(names.length, 31);
+      assert.equal(names.length, 32);
       for (const name of names) {
         const handler = registered[name]?.[0];
         assert.ok(handler !== undefined, `${name} has no handler`);
@@ -439,6 +439,66 @@ describe('a room giving its world back', () => {
       assert.equal(steps(second), false, 'the ended room left its world standing');
     } finally {
       if (!ended) await shutdown(room);
+    }
+  });
+});
+
+describe('a resignation the client asks for (#1588)', () => {
+  /**
+   * docs/ui-ux.md §9.5: Resign is the walk-out's resignation with the seat
+   * kept, so the result reaches the player who gave up. A walk-out releases the
+   * seat in the same act and its result has nobody to reach; this one must not.
+   */
+  it('ends the match at a result the resigning seat is still in the room to see', async () => {
+    const room = await bootRoom();
+    try {
+      const [resigning, staying] = startPlaying(room);
+      const loser = room.state.players.get(resigning!.sessionId)!.slot;
+      const winner = room.state.players.get(staying!.sessionId)!.slot;
+
+      deliver(room, CLIENT_MSG.resign, resigning!, {});
+      await until(() => room.state.phase === MatchPhase.Ended, 'the result');
+
+      assert.equal(room.state.winnerSlot, winner, 'the other commander won');
+      assert.notEqual(room.state.winnerSlot, loser);
+      assert.ok(room.state.players.has(resigning!.sessionId), 'the resigning seat was released');
+    } finally {
+      await shutdown(room);
+    }
+  });
+
+  it('is refused before the match starts', async () => {
+    const room = await bootRoom();
+    try {
+      const client = fakeClient('early');
+      room.onJoin(client as unknown as Client);
+      let resigned = 0;
+      internals(room).match.resign = (): void => {
+        resigned++;
+      };
+      deliver(room, CLIENT_MSG.resign, client, {});
+      assert.equal(resigned, 0, 'a lobby has no match to give up');
+      assert.equal(room.state.phase, MatchPhase.Lobby);
+    } finally {
+      await shutdown(room);
+    }
+  });
+
+  it('is refused in a mission, which concludes on its own terms', async () => {
+    const room = await bootRoom({ missionId: PROLOGUE_SORROWGATE_HEADER.id });
+    try {
+      const pilot = fakeClient('pilot');
+      room.onJoin(pilot as unknown as Client);
+      deliver(room, CLIENT_MSG.ready, pilot, { ready: true });
+      assert.equal(room.state.phase, MatchPhase.Playing, 'the premise: the mission is running');
+      let resigned = 0;
+      internals(room).match.resign = (): void => {
+        resigned++;
+      };
+      deliver(room, CLIENT_MSG.resign, pilot, {});
+      assert.equal(resigned, 0, 'a mission was resigned');
+    } finally {
+      await shutdown(room);
     }
   });
 });

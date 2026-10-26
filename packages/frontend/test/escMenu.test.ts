@@ -190,7 +190,7 @@ describe('the esc menu: a seat left on purpose is not held', () => {
       await click(view, 'Return to port');
       assert.equal(doors.exits, 0, 'nothing has been spent yet');
       assert.ok(
-        view.shows('A seat left on purpose is not held. The match goes on without you.'),
+        view.shows('A seat left on purpose is not held, and you will not see how the match ends.'),
         'and the cost is named before it is paid'
       );
       assert.equal(
@@ -324,6 +324,121 @@ describe('the esc menu: where it puts the keyboard', () => {
       assert.equal(entries(view).includes('Stay'), false, 'the arming dropped');
       assert.ok(view.focuses().length > armedOn, 'and the one focus effect ran again');
       assert.match(focusedEntry(view) ?? '', /Return to the water/, 'onto the cheapest exit');
+    } finally {
+      await view.unmount();
+    }
+  });
+});
+
+describe('the esc menu: Resign ends at a result (#1588)', () => {
+  /** The menu as a two-commander skirmish opens it, with Resign offered. */
+  async function resignable(): Promise<{ view: Rendered; doors: Doors; resigns: () => number }> {
+    const doors: Doors = { resumes: 0, exits: 0 };
+    let resigns = 0;
+    const view = await render(
+      createElement(EscMenu, {
+        ended: false,
+        onResume: () => doors.resumes++,
+        onExit: () => doors.exits++,
+        onResign: () => resigns++,
+      })
+    );
+    return { view, doors, resigns: () => resigns };
+  }
+
+  it('is offered only where the shell passes it', async () => {
+    // §9.5: only in a skirmish of two commanders, where it decides the match.
+    // The shell decides that; the menu's answer is the prop's presence.
+    const { view } = await escMenu();
+    try {
+      assert.equal(entries(view).includes('Resign'), false, 'no prop, no entry');
+    } finally {
+      await view.unmount();
+    }
+    const offered = await resignable();
+    try {
+      assert.ok(entries(offered.view).includes('Resign'));
+    } finally {
+      await offered.view.unmount();
+    }
+  });
+
+  it('arms rather than resigning, names the cost, and pays it on the second press', async () => {
+    const { view, doors, resigns } = await resignable();
+    try {
+      await click(view, 'Resign');
+      assert.equal(resigns(), 0, 'nothing has been given up yet');
+      assert.ok(view.shows('The match ends now, as your loss. The result follows.'));
+      assert.equal(focusedEntry(view), 'Stay', 'the Enter that armed it cannot also resign');
+
+      await click(view, 'Give up the match');
+      assert.equal(resigns(), 1);
+      assert.equal(doors.exits, 0, 'resigning is not leaving: the seat stays for the result');
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('backs out by Stay or Escape, and arms one entry at a time', async () => {
+    for (const back of ['Stay', 'escape'] as const) {
+      const { view, resigns } = await resignable();
+      try {
+        await click(view, 'Resign');
+        if (back === 'Stay') await click(view, 'Stay');
+        else await escape(view);
+        assert.equal(view.allByClass('esc-menu-confirm').length, 0, `${back} disarmed it`);
+        assert.equal(resigns(), 0);
+      } finally {
+        await view.unmount();
+      }
+    }
+
+    const { view } = await resignable();
+    try {
+      await click(view, 'Resign');
+      await click(view, 'Return to port');
+      assert.equal(view.allByClass('esc-menu-confirm').length, 1, 'one cost named at a time');
+      assert.ok(entries(view).includes('Resign'), 'the other entry went back to its idle face');
+      assert.equal(focusedEntry(view), 'Stay', 'and focus followed the arming');
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('makes Return to port say the match ends, where Resign is offered', async () => {
+    // Walking out resigns (§9.5). With two seated that decides the match, and
+    // the line says so rather than the other case's, held by "arms the leave
+    // entry rather than taking it" above.
+    const { view, doors } = await resignable();
+    try {
+      await click(view, 'Return to port');
+      assert.ok(
+        view.shows(
+          'Leaving ends the match as your loss, and you will not see the result. Resign shows it.'
+        )
+      );
+      assert.equal(view.shows('you will not see how the match ends'), false);
+      assert.equal(doors.exits, 0);
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('is withdrawn once the match is decided', async () => {
+    const { view, doors, resigns } = await resignable();
+    try {
+      await click(view, 'Resign');
+      await view.update(
+        createElement(EscMenu, {
+          ended: true,
+          onResume: () => doors.resumes++,
+          onExit: () => doors.exits++,
+          onResign: () => {},
+        })
+      );
+      assert.equal(entries(view).includes('Resign'), false, 'a decided match has nothing to give');
+      assert.equal(view.allByClass('esc-menu-confirm').length, 0, 'and its arming went with it');
+      assert.equal(resigns(), 0);
     } finally {
       await view.unmount();
     }

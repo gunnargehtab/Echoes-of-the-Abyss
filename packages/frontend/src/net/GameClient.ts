@@ -823,6 +823,15 @@ export class GameClient {
   }
 
   /**
+   * Give the match up and stay for the result — the esc menu's Resign
+   * (docs/ui-ux.md §9.5). No payload: the seat is this connection's, and the
+   * result arrives as any other does, on `gameOver`.
+   */
+  resign(): void {
+    this.order(CLIENT_MSG.resign, {});
+  }
+
+  /**
    * Launch a torpedo at a heard contact — docs/systems-combat.md §5, §7.
    *
    * The same opaque handle an attack order uses, and for the same reason: it is

@@ -129,7 +129,7 @@ Copying an import line between packages will break it.
 
 ## The wire
 
-Every message that crosses the socket — 31 a client may send, 11 the room may send — is
+Every message that crosses the socket — 32 a client may send, 11 the room may send — is
 declared once in `packages/shared/src/wire.ts`: the name, the payload, and for a client
 message its runtime **shape** in `CLIENT_SHAPE`. No message name is a string literal
 anywhere else, and adding one is all three edits — the assertions at the foot of `wire.ts`
