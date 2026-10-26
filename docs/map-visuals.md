@@ -326,7 +326,9 @@ The six things a new biome supplies:
    ([graphics-standards.md](graphics-standards.md) gate 1).
 6. **Whether it admits public life** (§8), which the seeder is told, not the renderer.
 
-A new *map* supplies nothing visual. Its look is its floors, ceilings and biomes, because
+A new *map* supplies nothing visual but, at most, one public landmark under
+[graphics-standards.md](graphics-standards.md#1-model-backed-or-deliberately-procedural--no-third-path)
+gate 1's rules. Its look is its floors, ceilings and biomes, because
 the survey ink draws the shape the author wrote. An authored layout is legible by
 construction or it is a layout problem, not a rendering one.
 

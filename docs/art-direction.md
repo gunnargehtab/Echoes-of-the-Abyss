@@ -1247,7 +1247,10 @@ blocks, crags) from the environment branch of the pipeline of record
 the terrain grid the server already published. Props are dressing for what a cell
 already declares — a kelp cluster stands only in kelp, a crag only against rock —
 so they never *add* information, and they obey the same silence: desaturated,
-darker than any contact, lit only within the world-light families. Where kelp
+darker than any contact, lit only within the world-light families. A public landmark
+is the one prop a map places by name rather than by cell
+([graphics-standards.md](graphics-standards.md#1-model-backed-or-deliberately-procedural--no-third-path)
+gate 1), and it keeps the same silence. Where kelp
 slows and hides a hull ([environments.md](environments.md)), the props are what
 the player sees; the cell grid stays what the simulation reads.
 
