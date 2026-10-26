@@ -8,45 +8,39 @@ Not all of it is a gate: a portrait and a level are judgements a number informs 
 than settles, and `hull-renders` and `audio-meter` say so in their own lines.
 
 ```text
-tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
-                   (buildability), factions/*.mjs (one navy's shape language),
-                   hulls/*.mjs (one hull), structures/*.mjs (one structure kind
-                   in one navy), and for the environment props seabed.mjs (the
-                   ground's shape language, since a prop belongs to no navy)
-                   and props/*.mjs (one env-*.glb each, #869). Not an npm
-                   workspace; run a script directly and it writes into
-                   docs/concept-art/models/, which then goes through
-                   hull-intake like any other export. check.mjs rebuilds every
-                   script in all three directories in a scratch directory and
-                   fails on any drift from the committed GLB, a material's
-                   values and a part's normals included (#911), on any name
-                   finishes.mjs finds at two values inside one navy, and on a
-                   model file that is neither an env- prop nor named
-                   -<navy>.glb (#888); CI runs it in the models job. It reads
-                   uv1 and the occlusion map a script bakes (#1002), UV0 and the
-                   trim tag one lays (trim.mjs, #1005), and each navy's sheet (sheets.mjs).
-                   diff.mjs answers the one thing check.mjs cannot —
-                   what a port changed about a shape — by reading the pre-port
-                   binary out of git history, since after a port the committed
-                   file is the script's own output and the check is comparing it
-                   against itself. parts.mjs reads a file the way a script is
-                   written — each node's transform, which primitive its buffer
-                   is, which nodes share one — and is what a port transcribes
-                   from. Port is -z: the bow is on +X and Y is up, so +z is
-                   starboard (kit.mjs `bothSides`, #642). facets.mjs runs
-                   every script and reads each round part's facets off the
-                   live scene, since a GLB cannot say whether twelve sides
-                   were a circle or a prism, and each model's panel edge from
-                   above; it judges both against the navy's `facets` and
-                   `panels` tables and is advisory, not a gate (#919).
-                   test/facets.test.mjs holds its reading to its rule, under
-                   npm run test:hull-models. contacts.mjs lists every pair of
-                   parts that meet or sit within --near (1 mm, #1370), both
-                   ways round and inside only a closed part (#1373), and every
-                   part under the model's y 0, testing only pairs whose boxes
-                   overlap, so a sweep is under a second. A contact is a
-                   question, mount or clip, so it is advisory too: #947's hand
-                   sweep for clips no gate asks about, kept (#953) and held by
+tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs (buildability),
+                   factions/*.mjs (one navy's shape language), hulls/*.mjs (one hull),
+                   structures/*.mjs (one structure kind in one navy), and for the
+                   environment props seabed.mjs (the ground's shape language, since a prop
+                   belongs to no navy) and props/*.mjs (one env-*.glb each, #869). Not an
+                   npm workspace; run a script directly and it writes into
+                   docs/concept-art/models/, which then goes through hull-intake like any
+                   other export. check.mjs rebuilds every script in all three directories
+                   in a scratch directory and fails on any drift from the committed GLB, a
+                   material's values and a part's normals included (#911), on any name
+                   finishes.mjs finds at two values inside one navy, and on a model file
+                   that is neither an env- prop nor named -<navy>.glb (#888); CI runs it in
+                   the models job. It reads uv1 and the occlusion map a script bakes
+                   (#1002), UV0 and the trim tag one lays (trim.mjs, #1005), and each
+                   navy's sheet (sheets.mjs). diff.mjs answers the one thing check.mjs
+                   cannot — what a port changed about a shape — by reading the pre-port
+                   binary out of git history, since after a port the committed file is the
+                   script's own output and the check is comparing it against itself.
+                   parts.mjs reads a file the way a script is written — each node's
+                   transform, which primitive its buffer is, which nodes share one — and is
+                   what a port transcribes from. Port is -z: the bow is on +X and Y is up,
+                   so +z is starboard (kit.mjs `bothSides`, #642). facets.mjs runs every
+                   script and reads each round part's facets off the live scene, since a
+                   GLB cannot say whether twelve sides were a circle or a prism, and each
+                   model's panel edge from above; it judges both against the navy's
+                   `facets` and `panels` tables and is advisory, not a gate (#919).
+                   test/facets.test.mjs holds its reading to its rule, under npm run
+                   test:hull-models. contacts.mjs lists every pair of parts that meet or
+                   sit within --near (1 mm, #1370), both ways round and inside only a
+                   closed part (#1373), and every part under the model's y 0, testing only
+                   pairs whose boxes overlap, so a sweep is under a second. A contact is a
+                   question, mount or clip, so it is advisory too: #947's hand sweep for
+                   clips no gate asks about, kept (#953) and held by
                    test/contacts.test.mjs.
 tools/hull-maps    The committed outputs of the approved models: build.mjs bakes
                    the sprite maps (Chromium), all 106 or the slugs named (#1055),
@@ -73,6 +67,10 @@ tools/hull-renders The same models photographed rather than measured: render.mjs
                    or run-game, never it. Not a workspace or a gate — a picture is a
                    presentation artifact, and a model is still approved by hull-intake and
                    check.mjs, which measure.
+tools/steam-capsules The Steam store and library art (#1651): render.mjs draws the title
+                   screen's logo, MouthMark.tsx and the index.css tokens, over a text-free
+                   background per Steam size into a gitignored out/. Not a workspace or a
+                   gate, for hull-renders' reason; npm run build:shared first.
 tools/render-stack #974's audit and camera pairs, kept runnable rather than quoted; not an
                    npm workspace and not a gate. audit.mjs recounts the ranked audit's
                    figures off the committed GLBs: raw and gzip bytes (a library sum, not a
