@@ -1942,6 +1942,258 @@ export const UPPER_TERRACES_GROUND: MapGround = {
 };
 
 /**
+ * The Third's outer formations' ground — docs/mission-aptitude.md §11;
+ * docs/maps.md, "Mission maps". Placed in the Rift (docs/world-map.md §7.9,
+ * #1625) at origin (32,250, 55,500): its Seam row on §7.2's Seam anchor, the
+ * Third 1.5 km north of its Approach. *Aptitude* and the Order's *Conclave*
+ * both play it. Rectangles only, as the backend map says it is (#1151).
+ */
+export const OUTER_FORMATIONS_GROUND: MapGround<RectShape & RegionGround> = {
+  widthM: 5000,
+  heightM: 4000,
+  cellM: 250,
+  floorM: 1700,
+  // One row per row of §11's table, in the document's order. Later regions
+  // overwrite earlier ones, which is what lets the Fields be painted whole and
+  // the Approach cut into the north-east corner of them. Every rectangle lands
+  // on the 250 m cell grid and paints exactly the metres it reads.
+  regions: [
+    {
+      x: 0,
+      y: 0,
+      widthM: 5000,
+      heightM: 4000,
+      biome: Biome.ResonanceField,
+      floorM: 1700,
+      note: 'The Fields — crystal country. PF 0.70, scattered; painted first, and almost nothing is cut into it',
+    },
+    {
+      x: 3750,
+      y: 0,
+      widthM: 1250,
+      heightM: 1000,
+      biome: Biome.ResonanceField,
+      floorM: 1450,
+      note: "The Third's Approach — the chapter-house's own water. The spawn, and the region the party returns to",
+    },
+    {
+      x: 0,
+      y: 3500,
+      widthM: 5000,
+      heightM: 500,
+      biome: Biome.AbyssalTrench,
+      floorM: 1750,
+      note: 'The Seam — where crystal country breaks toward the trenches. PF 1.60, and the one strip of ground on this map that carries',
+    },
+  ],
+};
+
+/**
+ * The First's ground — docs/mission-the-three.md §11; docs/maps.md, "Mission
+ * maps". Placed in the Rift (docs/world-map.md §7.9, #1625) at origin
+ * (25,500, 56,000), its house over the atlas's formation and its Axis's south
+ * edge where the atlas's axis begins, the Chord 750 m south of its anchor.
+ */
+export const THE_FIRST_GROUND: MapGround = {
+  widthM: 4000,
+  heightM: 3000,
+  cellM: 250,
+  floorM: 2700,
+  // One row per row of §11's table, in the document's order. Later regions
+  // overwrite earlier ones, which is what lets the Fields be painted whole and
+  // the house cut into them as four roofed rooms — every one of which is a
+  // ceiling laid over water that was open a line earlier. The Axis is painted
+  // last and clears the foot's south edge; it does not reach the rooms, which
+  // stop at y = 2500. Every number a shape states is a whole 250 m cell, and a
+  // cell is its region's when the shape holds its centre (#1158). Every
+  // authored point and mission region stands on the ground it stood on when
+  // these were all rectangles, an idle tide plays the tracks it played on
+  // them, and `missionTheThree.test.ts` pins both.
+  regions: [
+    // A box, because it is the whole map's base.
+    {
+      x: 0,
+      y: 0,
+      widthM: 4000,
+      heightM: 3000,
+      biome: Biome.ResonanceField,
+      floorM: 2700,
+      note: "The Foot of the Fields — crystal country's last ground before the trenches, PF 0.70. Painted first; everything else is cut into it. The party crosses it at 2,300 m",
+    },
+    // The four rooms are boxes, because §6 restates each as the same
+    // rectangle and the mission restates three of them; the sealed room is
+    // `sealed-room`, where the extract counts her in.
+    {
+      x: 1500,
+      y: 750,
+      widthM: 1000,
+      heightM: 1250,
+      biome: Biome.ResonanceField,
+      floorM: 2900,
+      ceilingM: 2600,
+      note: 'The Approach — the roofed way in: water only between 2,600 and 2,900 m. Entered by a deliberate dive and by nothing else',
+    },
+    {
+      x: 1500,
+      y: 2000,
+      widthM: 1000,
+      heightM: 500,
+      biome: Biome.CoralRuins,
+      floorM: 2900,
+      ceilingM: 2700,
+      note: "The Chord — the hall at the formation's heart. Cut structure is Coral Ruins (docs/habitats.md §8), PF 0.80 occluded. The First Chord stands here, and so does the hush",
+    },
+    {
+      x: 1000,
+      y: 2000,
+      widthM: 500,
+      heightM: 500,
+      biome: Biome.CoralRuins,
+      floorM: 2900,
+      ceilingM: 2750,
+      note: 'The Hospice — three cells off the chord. The Three. Heard from the hall for twelve minutes and never entered',
+    },
+    {
+      x: 2500,
+      y: 2000,
+      widthM: 500,
+      heightM: 500,
+      biome: Biome.CoralRuins,
+      floorM: 2900,
+      ceilingM: 2800,
+      note: 'The Sealed Room — the cut dry room, off the east end of the chord. The deepest ceiling on the map, so it is the last dive',
+    },
+    // The one shape on the map: a trench rather than a room, drawn widest
+    // under the house it is aimed at. Its north edge runs straight along the
+    // rooms' south side from x 1,000 to 3,000, so it still shares a column
+    // with all three, and runs out on a slant to y 2,750 at the map's west and
+    // east edges; its south row still runs the whole width. The four cells the
+    // slant gives back to the foot carry at 0.70 where they carried at 1.60,
+    // and hold a following hull at 2,670 m where it held 3,000; §11 states it.
+    {
+      shape: 'polygon',
+      points: [
+        [0, 2750],
+        [1000, 2500],
+        [3000, 2500],
+        [4000, 2750],
+        [4000, 3000],
+        [0, 3000],
+      ],
+      biome: Biome.AbyssalTrench,
+      floorM: 3100,
+      note: 'The Axis — the trench the Chord is aimed down, PF 1.60. What is heard on it is heard from the south, and its floor is a hundred metres below anywhere a hull can be ordered',
+    },
+  ],
+};
+
+/**
+ * The Rest's ground — docs/mission-nineteen.md §11; docs/maps.md, "Mission
+ * maps". Placed in the Rift (docs/world-map.md §7.9, #1625) centred on §7.2's
+ * Rest anchor, moved 1.5 km south and 250 m west so the map clears the First
+ * and the Outer Formations (the owner's call).
+ */
+export const THE_REST_GROUND: MapGround = {
+  widthM: 5000,
+  heightM: 4000,
+  cellM: 250,
+  floorM: 1700,
+  // One row per row of §11's table, in the document's order: the walls and the
+  // Deep End cut into the trench, and the trench cuts into the shoulders.
+  // Later regions overwrite earlier ones; every number a shape states is a
+  // whole 250 m cell, and a cell is its region's when the shape holds its
+  // centre (#1157, a box of #1139). Every spawn, hull, coil, interval, leg and
+  // the basin stands on the ground it stood on when these were all
+  // rectangles, an idle committal plays the tracks it played on them, and
+  // `missionNineteen.test.ts` pins both.
+  regions: [
+    // A box, because it is the whole map's base.
+    {
+      x: 0,
+      y: 0,
+      widthM: 5000,
+      heightM: 4000,
+      biome: Biome.ResonanceField,
+      floorM: 1700,
+      note: 'The Shoulders — crystal country, PF 0.70. Painted first; the far shoulder south of the trench survives as this, and nobody has a reason to be on it',
+    },
+    // A spur off the northern edge, narrowing toward the cut: its two southern
+    // corners are shoulder, and every hull of the party is seated inside it.
+    {
+      shape: 'polygon',
+      points: [
+        [2000, 0],
+        [3000, 0],
+        [3000, 250],
+        [2750, 750],
+        [2250, 750],
+        [2000, 250],
+      ],
+      biome: Biome.ResonanceField,
+      floorM: 1600,
+      note: "The Head — the spawn, and the bench the party climbs back to. The shallowest ground on the map, where the Order's 211 PC chart begins",
+    },
+    // A box: what shows of it is the axis between the walls' inner edges, and
+    // those are straight because the sounding rows' 250 m from them is the
+    // number the mission turns on.
+    {
+      x: 0,
+      y: 1000,
+      widthM: 5000,
+      heightM: 2000,
+      biome: Biome.AbyssalTrench,
+      floorM: 2150,
+      note: 'The Rest — the trench. PF 1.60 axial, "no secrets, only distances". The nineteen are on this floor and both sounding rows run 400 m above it',
+    },
+    // The inner edge is the rectangle's, 250 m in plan from the northern row
+    // the whole way; the outer edge runs on a slant north over the last
+    // 1,250 m, and the ground it paints opens east over the last 750 m, the
+    // cells at x 4,250–5,000, toward the Deep End.
+    {
+      shape: 'polygon',
+      points: [
+        [0, 1000],
+        [3750, 1000],
+        [5000, 750],
+        [5000, 1500],
+        [0, 1500],
+      ],
+      biome: Biome.AbyssalTrench,
+      floorM: 2050,
+      note: 'The North Wall — Hollow ground. Four coil here at 1,700 m: the northern row runs 250 m clear of this wall in plan and fifty metres under the coils on it',
+    },
+    // The North Wall's mirror image across the axis.
+    {
+      shape: 'polygon',
+      points: [
+        [0, 2500],
+        [5000, 2500],
+        [5000, 3250],
+        [3750, 3000],
+        [0, 3000],
+      ],
+      biome: Biome.AbyssalTrench,
+      floorM: 2050,
+      note: 'The South Wall — Hollow ground. The other three, on the same offset from the southern row',
+    },
+    // Widening east: its west edge is the rectangle's, and its north and south
+    // edges run on a slant out into both walls toward the map's eastern edge.
+    {
+      shape: 'polygon',
+      points: [
+        [4250, 1250],
+        [5000, 1000],
+        [5000, 3000],
+        [4250, 2750],
+      ],
+      biome: Biome.AbyssalTrench,
+      floorM: 2400,
+      note: "The Deep End — where the trench falls east toward Directorate country. The basin's water and the watch's station, and 650 m under the last three names",
+    },
+  ],
+};
+
+/**
  * The public ground of each placed map, by map id. Here rather than beside
  * the atlas (`rift.ts`) because `worldRegionProblems` compares two placed
  * maps' cells, and `world.ts` cannot import the file that imports it.
@@ -1962,4 +2214,7 @@ export const PLACED_GROUND: Readonly<Record<string, MapGround>> = {
   'holding-underworks': HOLDING_UNDERWORKS_GROUND,
   'attending-galleries': ATTENDING_GALLERIES_GROUND,
   'upper-terraces': UPPER_TERRACES_GROUND,
+  'outer-formations': OUTER_FORMATIONS_GROUND,
+  'the-first': THE_FIRST_GROUND,
+  'the-rest': THE_REST_GROUND,
 };

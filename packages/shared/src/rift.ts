@@ -219,6 +219,15 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
     y: 57_500,
     depthM: 2_900,
   },
+  // Derived: the First's origin plus its spawn at the foot, so a travel to
+  // *The Three* ends there (§7.6, #1625).
+  {
+    id: 'the-firsts-foot',
+    name: 'The foot of the First',
+    region: 'resonance-fields',
+    x: 27_500,
+    y: 56_375,
+  },
   {
     id: 'the-fifth',
     name: 'The Fifth',
@@ -235,14 +244,35 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
     x: 34_750,
     y: 57_500,
   },
+  // Derived: the Outer Formations' origin plus its spawn in the Approach, so a
+  // travel to *Aptitude* or the Order's *Conclave* ends there (§7.6, #1625).
+  {
+    id: 'the-thirds-approach',
+    name: "The Third's Approach",
+    region: 'resonance-fields',
+    x: 36_750,
+    y: 56_000,
+  },
+  // 1.5 km south and 250 m west of #1457's placing, so its map clears the
+  // First's and, by the 250 m, the Outer Formations' (#1625, the owner's call).
+  // It crosses the Fields' south bound, as the First crosses their west.
   {
     id: 'the-rest',
     name: 'The Rest',
     region: 'resonance-fields',
-    x: 30_000,
-    y: 59_500,
+    x: 29_750,
+    y: 61_000,
     depthM: 1_600,
     toDepthM: 2_400,
+  },
+  // Derived: the Rest's origin plus its spawn at the Head, so a travel to
+  // *Nineteen* ends there (§7.6, #1625).
+  {
+    id: 'the-rests-head',
+    name: "The Rest's Head",
+    region: 'resonance-fields',
+    x: 29_750,
+    y: 59_375,
   },
   {
     id: 'the-seam',
@@ -566,7 +596,15 @@ export const RIFT_GROUND: MapGround = {
       1_700,
       'The Fifth — the covered road, a kilometre wall to wall'
     ),
-    box(29, 57, 2, 2, ResonanceField, 1_600, 'The Rest’s Head — the shallowest ground'),
+    box(
+      29,
+      57,
+      2,
+      2,
+      ResonanceField,
+      1_600,
+      'The Rest’s Head, carried north — the shallowest ground'
+    ),
     box(28, 59, 12, 1, AbyssalTrench, 1_780, 'The Seam — the fields’ southern boundary, PF 1.60'),
 
     // The Drowned City (§3): mid-Rift, where the Shelf breaks toward deep
@@ -1907,6 +1945,264 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       biome: AbyssalTrench,
       floorM: 4_100,
       note: 'The Sill, two rows south',
+    },
+  ],
+  // The Third's outer formations' 2,500 m (#1625). The map is crystal country
+  // with the Third's Approach in its north-east corner and the Seam along its
+  // south edge. The overview draws the Third's country round it and the Seam
+  // across the fields. The surround carries the Fields half a kilometre west,
+  // three rows north and a kilometre east, the Approach north and east into
+  // the Third's country, and the Seam west and east and a row south.
+  // South-west, its detail covers the Rest's east thirteen columns down to
+  // y 62 km, and draws them coarsely as its map does, but for the row touching
+  // the map, which takes this map's own edge.
+  'outer-formations': [
+    {
+      x: 31_750,
+      y: 54_750,
+      widthM: 6_500,
+      heightM: 4_250,
+      biome: ResonanceField,
+      floorM: 1_700,
+      note: 'The Fields, half a kilometre west, three rows north and a kilometre east',
+    },
+    {
+      x: 36_000,
+      y: 54_750,
+      widthM: 2_250,
+      heightM: 1_750,
+      biome: ResonanceField,
+      floorM: 1_450,
+      note: 'The Third’s Approach, north and east into the Third’s country',
+    },
+    {
+      x: 29_500,
+      y: 59_000,
+      widthM: 10_000,
+      heightM: 750,
+      biome: AbyssalTrench,
+      floorM: 1_750,
+      note: 'The Seam, west and east and a row south',
+    },
+    {
+      x: 29_500,
+      y: 59_000,
+      widthM: 2_500,
+      heightM: 1_000,
+      biome: ResonanceField,
+      floorM: 1_700,
+      note: 'The Rest’s north shoulder, coarsely',
+    },
+    {
+      x: 29_500,
+      y: 59_000,
+      widthM: 750,
+      heightM: 750,
+      biome: ResonanceField,
+      floorM: 1_600,
+      note: 'The Rest’s Head, coarsely',
+    },
+    {
+      x: 29_500,
+      y: 60_000,
+      widthM: 2_000,
+      heightM: 1_500,
+      biome: AbyssalTrench,
+      floorM: 2_150,
+      note: 'The Rest’s trench, coarsely',
+    },
+    {
+      x: 31_500,
+      y: 60_000,
+      widthM: 750,
+      heightM: 1_500,
+      biome: AbyssalTrench,
+      floorM: 2_400,
+      note: 'The Rest’s Deep End, coarsely',
+    },
+  ],
+  // The First's 2,500 m (#1625). The map is the Foot of the Fields with the
+  // First's formation in it and the Axis along its south edge. The overview
+  // draws the formation under the map and its axis leaving south. The surround
+  // carries the Foot a kilometre round the map and the Axis a kilometre west
+  // and east and a row south. South-east, its detail covers all of the Rest's
+  // map but its south kilometre and east 250 m, and draws it coarsely as its
+  // map does, but for the row touching the map, which takes this map's own
+  // edge.
+  'the-first': [
+    {
+      x: 24_500,
+      y: 55_000,
+      widthM: 6_000,
+      heightM: 4_000,
+      biome: ResonanceField,
+      floorM: 2_700,
+      note: 'The Foot of the Fields, a kilometre round the map',
+    },
+    {
+      x: 24_500,
+      y: 58_750,
+      widthM: 6_000,
+      heightM: 500,
+      biome: AbyssalTrench,
+      floorM: 3_100,
+      note: 'The Axis, a kilometre west and east and a row south',
+    },
+    {
+      x: 27_250,
+      y: 59_250,
+      widthM: 4_250,
+      heightM: 750,
+      biome: ResonanceField,
+      floorM: 1_700,
+      note: 'The Rest’s north shoulder, coarsely',
+    },
+    {
+      x: 29_250,
+      y: 59_250,
+      widthM: 1_000,
+      heightM: 500,
+      biome: ResonanceField,
+      floorM: 1_600,
+      note: 'The Rest’s Head, coarsely',
+    },
+    {
+      x: 27_250,
+      y: 60_000,
+      widthM: 4_250,
+      heightM: 1_500,
+      biome: AbyssalTrench,
+      floorM: 2_150,
+      note: 'The Rest’s trench, coarsely',
+    },
+  ],
+  // The Rest's 2,500 m (#1625). The map is a trench across crystal shoulders,
+  // its Head on the north shoulder and its Deep End falling east. The overview
+  // draws the Head where #1457 placed it, north of the moved map, the trench
+  // floor across it and the fall east of it. The surround carries the
+  // Shoulders a kilometre round the map, the Head north onto the overview's,
+  // the trench half a kilometre west and the Deep End east to the fall. Its
+  // detail covers all of the First's map, its last two rows in the seam, the
+  // Outer Formations' south-west and the Banding Ground's east edge. It draws
+  // them coarsely as their maps do, but for the row touching the map, which
+  // takes this map's own edge.
+  'the-rest': [
+    {
+      x: 26_250,
+      y: 58_000,
+      widthM: 7_000,
+      heightM: 6_000,
+      biome: ResonanceField,
+      floorM: 1_700,
+      note: 'The Shoulders, crystal a kilometre round the map',
+    },
+    {
+      x: 29_250,
+      y: 57_000,
+      widthM: 1_000,
+      heightM: 2_000,
+      biome: ResonanceField,
+      floorM: 1_600,
+      note: 'The Head, carried north onto the overview’s',
+    },
+    {
+      x: 25_500,
+      y: 56_500,
+      widthM: 4_000,
+      heightM: 2_000,
+      biome: ResonanceField,
+      floorM: 2_700,
+      note: 'The First’s Foot of the Fields, coarsely',
+    },
+    {
+      x: 25_500,
+      y: 58_500,
+      widthM: 4_000,
+      heightM: 250,
+      biome: AbyssalTrench,
+      floorM: 3_100,
+      note: 'The First’s Axis, coarsely',
+    },
+    {
+      x: 32_500,
+      y: 56_500,
+      widthM: 2_000,
+      heightM: 2_500,
+      biome: ResonanceField,
+      floorM: 1_700,
+      note: 'The Outer Formations’ Fields, coarsely',
+    },
+    {
+      x: 32_500,
+      y: 59_000,
+      widthM: 2_000,
+      heightM: 500,
+      biome: AbyssalTrench,
+      floorM: 1_750,
+      note: 'The Outer Formations’ Seam, coarsely',
+    },
+    {
+      x: 26_750,
+      y: 60_000,
+      widthM: 500,
+      heightM: 500,
+      biome: AbyssalTrench,
+      floorM: 2_050,
+      note: 'The trench’s upper wall, half a kilometre west',
+    },
+    {
+      x: 26_750,
+      y: 60_500,
+      widthM: 500,
+      heightM: 1_000,
+      biome: AbyssalTrench,
+      floorM: 2_150,
+      note: 'The trench floor, half a kilometre west',
+    },
+    {
+      x: 26_750,
+      y: 61_500,
+      widthM: 500,
+      heightM: 500,
+      biome: AbyssalTrench,
+      floorM: 2_050,
+      note: 'The trench’s lower wall, half a kilometre west',
+    },
+    {
+      x: 32_250,
+      y: 59_750,
+      widthM: 1_000,
+      heightM: 250,
+      biome: AbyssalTrench,
+      floorM: 2_050,
+      note: 'The Deep End’s north lip, a kilometre east',
+    },
+    {
+      x: 32_250,
+      y: 60_000,
+      widthM: 1_000,
+      heightM: 2_000,
+      biome: AbyssalTrench,
+      floorM: 2_400,
+      note: 'The Deep End, carried east to the overview’s fall',
+    },
+    {
+      x: 32_250,
+      y: 62_000,
+      widthM: 1_000,
+      heightM: 250,
+      biome: AbyssalTrench,
+      floorM: 2_050,
+      note: 'The Deep End’s south lip, a kilometre east',
+    },
+    {
+      x: 24_500,
+      y: 62_000,
+      widthM: 1_000,
+      heightM: 3_500,
+      biome: AbyssalTrench,
+      floorM: 2_400,
+      note: 'The Banding Ground’s upper Ninth, coarsely',
     },
   ],
 };

@@ -24,8 +24,13 @@ import {
   ATTENDING_TRENCH_AWAKENING_HEADER,
   BANDING_GROUND_GROUND,
   BANDING_GROUND_REGION,
+  CHORD_APTITUDE_HEADER,
+  CHORD_CONCLAVE_HEADER,
+  CHORD_NINETEEN_HEADER,
   CHORD_RIM_DEPOSITS_HEADER,
   CHORD_SECOND_CHORD_HEADER,
+  CHORD_STANDING_WAVE_HEADER,
+  CHORD_THE_THREE_HEADER,
   FACE_SIX_REGION,
   FOURTH_FOOT_REGION,
   HOLDING_BOARD_REGION,
@@ -39,6 +44,7 @@ import {
   LEDGER_TOLERANCE_HEADER,
   MARR_PLATEAU_REGION,
   MOUTH_RIM_REGION,
+  OUTER_FORMATIONS_REGION,
   paintGround,
   PROLOGUE_SORROWGATE_HEADER,
   SEEDING_CONVOCATION_HEADER,
@@ -51,6 +57,8 @@ import {
   SHALLOW_BAND_REGION,
   SORROWGATE_GROUND,
   SORROWGATE_REGION,
+  THE_FIRST_REGION,
+  THE_REST_REGION,
   UPPER_TERRACES_REGION,
   UPPER_WORKINGS_REGION,
   WESTERN_MARGIN_REGION,
@@ -780,6 +788,13 @@ describe('a second placed mission, in the same world (#1598)', () => {
     sameFrame(arrivalFrame(ATTENDING_GALLERIES_REGION)!, { xM: 2_500, yM: 1_000, ...home });
   });
 
+  it("ends the Fields' travels on the Third's Approach, the foot of the First and the Rest's Head (#1625)", () => {
+    const home = { distanceM: HOME_DOLLY_M, yawDeg: 0, pitchDeg: 55 };
+    sameFrame(arrivalFrame(OUTER_FORMATIONS_REGION)!, { xM: 4_500, yM: 500, ...home });
+    sameFrame(arrivalFrame(THE_FIRST_REGION)!, { xM: 2_000, yM: 375, ...home });
+    sameFrame(arrivalFrame(THE_REST_REGION)!, { xM: 2_500, yM: 375, ...home });
+  });
+
   it('gives every placed region a home to travel to', () => {
     // A region with no derived anchor would launch its mission off the world.
     for (const region of WORLD_REGIONS) assert.ok(arrivalFrame(region), region.id);
@@ -931,6 +946,19 @@ describe('which launches travel, and when a travel joins (§7.6)', () => {
     for (const mission of [ATTENDING_CONCLAVE_HEADER, ATTENDING_ATTENDANCE_HEADER]) {
       assert.equal(travelsFirst('campaign', mission.id), true, `${mission.id} is (#1624)`);
     }
+    for (const mission of [
+      CHORD_APTITUDE_HEADER,
+      CHORD_CONCLAVE_HEADER,
+      CHORD_THE_THREE_HEADER,
+      CHORD_NINETEEN_HEADER,
+    ]) {
+      assert.equal(travelsFirst('campaign', mission.id), true, `${mission.id} is (#1625)`);
+    }
+    assert.equal(
+      travelsFirst('campaign', CHORD_STANDING_WAVE_HEADER.id),
+      false,
+      'Standing Wave waits (#1625)'
+    );
   });
 
   it('joins once the match is loaded and the camera has arrived, never before', () => {

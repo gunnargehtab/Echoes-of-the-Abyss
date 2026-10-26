@@ -26,8 +26,12 @@ import {
   ATTENDING_THE_DOME_HEADER,
   ATTENDING_TRENCH_AWAKENING_HEADER,
   LEDGER_ASSET_RECOVERY_HEADER,
+  CHORD_APTITUDE_HEADER,
+  CHORD_CONCLAVE_HEADER,
+  CHORD_NINETEEN_HEADER,
   CHORD_RIM_DEPOSITS_HEADER,
   CHORD_SECOND_CHORD_HEADER,
+  CHORD_THE_THREE_HEADER,
   LEDGER_EXPOSURE_HEADER,
   LEDGER_ITEM_NINE_HEADER,
   LEDGER_PROSPECT_HEADER,
@@ -295,6 +299,49 @@ export const ATTENDING_GALLERIES_REGION: WorldRegion = {
   heightM: 4_000,
 };
 
+/**
+ * The Third's outer formations, *Aptitude*'s and the Order's *Conclave*'s map
+ * (§7.9, #1625): its Seam row on §7.2's Seam anchor, the Third 1.5 km north of
+ * its Approach. The Fifth, whose map it would overlap, is not placed (the
+ * owner's call).
+ */
+export const OUTER_FORMATIONS_REGION: WorldRegion = {
+  id: 'outer-formations',
+  mapId: 'outer-formations',
+  x: 32_250,
+  y: 55_500,
+  widthM: 5_000,
+  heightM: 4_000,
+};
+
+/**
+ * The First, *The Three*'s map (§7.9, #1625): its house over the atlas's
+ * formation and its Axis's south edge where the atlas's axis begins.
+ */
+export const THE_FIRST_REGION: WorldRegion = {
+  id: 'the-first',
+  mapId: 'the-first',
+  x: 25_500,
+  y: 56_000,
+  widthM: 4_000,
+  heightM: 3_000,
+};
+
+/**
+ * The Rest, *Nineteen*'s map (§7.9, #1625): centred on §7.2's Rest anchor,
+ * (29,750, 61,000), which moved 1.5 km south and 250 m west so the map meets
+ * the First's and the Outer Formations' edge to edge (the owner's call). It
+ * crosses the Fields' south bound into the trench country.
+ */
+export const THE_REST_REGION: WorldRegion = {
+  id: 'the-rest',
+  mapId: 'the-rest',
+  x: 27_250,
+  y: 59_000,
+  widthM: 5_000,
+  heightM: 4_000,
+};
+
 /** Every placed region. Other maps keep their own grids until migrated (§7.1). */
 export const WORLD_REGIONS: readonly WorldRegion[] = [
   SORROWGATE_REGION,
@@ -312,6 +359,9 @@ export const WORLD_REGIONS: readonly WorldRegion[] = [
   HOLDING_UNDERWORKS_REGION,
   UPPER_TERRACES_REGION,
   ATTENDING_GALLERIES_REGION,
+  OUTER_FORMATIONS_REGION,
+  THE_FIRST_REGION,
+  THE_REST_REGION,
 ];
 
 export function worldRegionById(id: string): WorldRegion | undefined {
@@ -584,8 +634,9 @@ function cellIndex(cells: GroundCells, local: PlanPoint): number {
  * (#1630), *Thin Water* and *Shallow* on the Kell Shoulder (#1633), *Deep
  * Furrow* and *In Writing* on the Furrow (#1638), the Rim's five on the Rim
  * (#1640), *Item Nine* and *Tolerance* on Board Country and the Underworks
- * (#1623), and *Conclave* and *Attendance* on the Upper Terraces and the
- * galleries (#1624). A
+ * (#1623), *Conclave* and *Attendance* on the Upper Terraces and the
+ * galleries (#1624), and *Aptitude*, the Order's *Conclave*, *The Three* and
+ * *Nineteen* on three of the Fields' maps (#1625). A
  * mission on a placed map is not placed until it is named here, so placing one
  * is a line here. On a placed shared map every mission is
  * named (the owner's call on #1505), Radicals excepted.
@@ -613,6 +664,10 @@ const MISSION_REGIONS: ReadonlyMap<string, WorldRegion> = new Map([
   [LEDGER_TOLERANCE_HEADER.id, HOLDING_UNDERWORKS_REGION],
   [ATTENDING_CONCLAVE_HEADER.id, UPPER_TERRACES_REGION],
   [ATTENDING_ATTENDANCE_HEADER.id, ATTENDING_GALLERIES_REGION],
+  [CHORD_APTITUDE_HEADER.id, OUTER_FORMATIONS_REGION],
+  [CHORD_CONCLAVE_HEADER.id, OUTER_FORMATIONS_REGION],
+  [CHORD_THE_THREE_HEADER.id, THE_FIRST_REGION],
+  [CHORD_NINETEEN_HEADER.id, THE_REST_REGION],
 ]);
 
 /**

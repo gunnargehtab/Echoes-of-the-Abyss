@@ -29,8 +29,11 @@ import {
   KELL_SHOULDER_GROUND,
   MARR_PLATEAU_GROUND,
   MOUTH_RIM_GROUND,
+  OUTER_FORMATIONS_GROUND,
   SHALLOW_BAND_GROUND,
   SORROWGATE_GROUND,
+  THE_FIRST_GROUND,
+  THE_REST_GROUND,
   UPPER_TERRACES_GROUND,
   UPPER_WORKINGS_GROUND,
   WESTERN_MARGIN_GROUND,
@@ -54,10 +57,13 @@ import {
   MOUTH_RIM,
   NINEFOLD_FACE_SIX,
   NINEFOLD_WORKINGS,
+  OUTER_FORMATIONS,
   SHALLOW_BAND,
   SORROWGATE,
   missionMapById,
   terrainFor,
+  THE_FIRST,
+  THE_REST,
   UPPER_TERRACES,
 } from '../src/sim/maps/index.ts';
 
@@ -281,6 +287,24 @@ describe("the Upper Terraces' and the galleries' shared ground (#1624)", () => {
   for (const [map, ground] of [
     [UPPER_TERRACES, UPPER_TERRACES_GROUND],
     [ATTENDING_GALLERIES, ATTENDING_GALLERIES_GROUND],
+  ] as const) {
+    it(`${map.id} is the one source: the map spreads the shared literal, not a copy`, () => {
+      assert.equal(map.regions, ground.regions);
+      assert.equal(map.widthM, ground.widthM);
+      assert.equal(map.heightM, ground.heightM);
+      assert.equal(map.cellM, ground.cellM);
+      assert.equal(map.floorM, ground.floorM);
+    });
+  }
+});
+
+describe("three Fields maps' shared ground (#1625)", () => {
+  // Their cells are held to the server's by the shared painter's test below
+  // and pinned against their missions by their own tests; this holds the move.
+  for (const [map, ground] of [
+    [OUTER_FORMATIONS, OUTER_FORMATIONS_GROUND],
+    [THE_FIRST, THE_FIRST_GROUND],
+    [THE_REST, THE_REST_GROUND],
   ] as const) {
     it(`${map.id} is the one source: the map spreads the shared literal, not a copy`, () => {
       assert.equal(map.regions, ground.regions);

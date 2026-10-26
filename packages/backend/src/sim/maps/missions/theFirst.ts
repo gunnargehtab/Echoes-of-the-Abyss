@@ -64,9 +64,14 @@
  * nothing else. No blooms and no hazard sites either, and nothing to seed:
  * below 2,700 m the column holds nothing at all (docs/bestiary.md §4), so the
  * mission runs with `fauna: false` and authors no creature.
+ *
+ * **The ground is shared's** (`THE_FIRST_GROUND`, #1625), as the Outer Formations' is: the
+ * continuous world draws this map before any room exists (docs/world-map.md
+ * §7.9), so its regions are authored once, in `@echoes/shared`, and spread in
+ * here. What stays here is the spawn.
  */
 
-import { Biome } from '@echoes/shared';
+import { THE_FIRST_GROUND } from '@echoes/shared';
 import type { MapDefinition } from '../types.ts';
 
 export const THE_FIRST: MapDefinition = {
@@ -74,97 +79,8 @@ export const THE_FIRST: MapDefinition = {
   name: 'The First',
   idealUse: 'The Second Chord, mission five. A house in working order, and nothing in it is safe.',
   seats: 1,
-  widthM: 4000,
-  heightM: 3000,
   doc: 'docs/mission-the-three.md §11; docs/maps.md — Mission maps',
-  cellM: 250,
-  floorM: 2700,
-  // One row per row of §11's table, in the document's order. Later regions
-  // overwrite earlier ones, which is what lets the Fields be painted whole and
-  // the house cut into them as four roofed rooms — every one of which is a
-  // ceiling laid over water that was open a line earlier. The Axis is painted
-  // last and clears the foot's south edge; it does not reach the rooms, which
-  // stop at y = 2500. Every number a shape states is a whole 250 m cell, and a
-  // cell is its region's when the shape holds its centre (#1158). Every
-  // authored point and mission region stands on the ground it stood on when
-  // these were all rectangles, an idle tide plays the tracks it played on
-  // them, and `missionTheThree.test.ts` pins both.
-  regions: [
-    // A box, because it is the whole map's base.
-    {
-      x: 0,
-      y: 0,
-      widthM: 4000,
-      heightM: 3000,
-      biome: Biome.ResonanceField,
-      floorM: 2700,
-      note: "The Foot of the Fields — crystal country's last ground before the trenches, PF 0.70. Painted first; everything else is cut into it. The party crosses it at 2,300 m",
-    },
-    // The four rooms are boxes, because §6 restates each as the same
-    // rectangle and the mission restates three of them; the sealed room is
-    // `sealed-room`, where the extract counts her in.
-    {
-      x: 1500,
-      y: 750,
-      widthM: 1000,
-      heightM: 1250,
-      biome: Biome.ResonanceField,
-      floorM: 2900,
-      ceilingM: 2600,
-      note: 'The Approach — the roofed way in: water only between 2,600 and 2,900 m. Entered by a deliberate dive and by nothing else',
-    },
-    {
-      x: 1500,
-      y: 2000,
-      widthM: 1000,
-      heightM: 500,
-      biome: Biome.CoralRuins,
-      floorM: 2900,
-      ceilingM: 2700,
-      note: "The Chord — the hall at the formation's heart. Cut structure is Coral Ruins (docs/habitats.md §8), PF 0.80 occluded. The First Chord stands here, and so does the hush",
-    },
-    {
-      x: 1000,
-      y: 2000,
-      widthM: 500,
-      heightM: 500,
-      biome: Biome.CoralRuins,
-      floorM: 2900,
-      ceilingM: 2750,
-      note: 'The Hospice — three cells off the chord. The Three. Heard from the hall for twelve minutes and never entered',
-    },
-    {
-      x: 2500,
-      y: 2000,
-      widthM: 500,
-      heightM: 500,
-      biome: Biome.CoralRuins,
-      floorM: 2900,
-      ceilingM: 2800,
-      note: 'The Sealed Room — the cut dry room, off the east end of the chord. The deepest ceiling on the map, so it is the last dive',
-    },
-    // The one shape on the map: a trench rather than a room, drawn widest
-    // under the house it is aimed at. Its north edge runs straight along the
-    // rooms' south side from x 1,000 to 3,000, so it still shares a column
-    // with all three, and runs out on a slant to y 2,750 at the map's west and
-    // east edges; its south row still runs the whole width. The four cells the
-    // slant gives back to the foot carry at 0.70 where they carried at 1.60,
-    // and hold a following hull at 2,670 m where it held 3,000; §11 states it.
-    {
-      shape: 'polygon',
-      points: [
-        [0, 2750],
-        [1000, 2500],
-        [3000, 2500],
-        [4000, 2750],
-        [4000, 3000],
-        [0, 3000],
-      ],
-      biome: Biome.AbyssalTrench,
-      floorM: 3100,
-      note: 'The Axis — the trench the Chord is aimed down, PF 1.60. What is heard on it is heard from the south, and its floor is a hundred metres below anywhere a hull can be ordered',
-    },
-  ],
+  ...THE_FIRST_GROUND,
   // One spawn, at the foot (§11). The offsets address a pre-built Foundry the
   // mission never places: construction is locked, `startingNodules` is 0, and
   // there is nothing on this map to build or to buy.
