@@ -98,6 +98,7 @@ import {
   YARDS,
   type AbilityLock,
   type BerthReport,
+  type BoundSig,
   type Contact,
   type DrawReport,
   type EchoMarkInfo,
@@ -1729,6 +1730,12 @@ export class EchoRenderer {
    * number again and this is it.
    */
   private peakSig = 0;
+  /**
+   * The mission order's narrower reading, when one is in force — the orders
+   * panel's header (docs/ui-ux.md §10.5). The meter does not read it; it only
+   * says, beside it, that its own count is every hull (§3, #1586).
+   */
+  private boundSig: BoundSig | null = null;
   private fleetSilent = false;
   /** What the rest of the map currently holds on the player, server-sent. */
   private exposure: ExposureReport = { tier: ResolutionTier.Silent, trackedCount: 0 };
@@ -5148,6 +5155,7 @@ export class EchoRenderer {
     this.shoals = [];
     this.jellies = [];
     this.peakSig = 0;
+    this.boundSig = null;
     this.fleetSilent = false;
     this.exposure = { tier: ResolutionTier.Silent, trackedCount: 0 };
     this.loggedTier = ResolutionTier.Silent;
@@ -5181,6 +5189,7 @@ export class EchoRenderer {
     this.structures = snapshot.structures;
     this.ordnance = snapshot.ordnance;
     this.peakSig = snapshot.peakSig;
+    this.boundSig = snapshot.boundSig ?? null;
     this.exposure = snapshot.exposure;
     this.logExposureChange(snapshot.tick);
     this.marks = snapshot.marks;
@@ -7617,7 +7626,10 @@ export class EchoRenderer {
     // directly under the label it would disagree with.
     this.loudCount = loud;
     const n = this.units.length;
-    this.loudLabel.text = `${n} unit${n === 1 ? '' : 's'} \u00b7 ${loud} loud`;
+    // `all` while a mission's order is in force: the orders panel reads the
+    // set the order binds, and the word says this figure is every hull.
+    const all = this.boundSig === null ? '' : 'all ';
+    this.loudLabel.text = `${all}${n} unit${n === 1 ? '' : 's'} \u00b7 ${loud} loud`;
     this.loudLabel.style.fill = loud > 0 ? UI.sigMid : UI.textDim;
     this.loudLabel.position.set(x, y + h + 20);
 
@@ -7813,14 +7825,16 @@ export class EchoRenderer {
         this.exposureLabel.text
       );
     }
-    this.recordDrawn(
-      'nodules',
-      this.resourceLabel.x,
-      this.resourceLabel.y,
-      this.resourceLabel.width,
-      this.resourceLabel.height,
-      this.resourceLabel.text
-    );
+    if (this.resourceLabel.visible) {
+      this.recordDrawn(
+        'nodules',
+        this.resourceLabel.x,
+        this.resourceLabel.y,
+        this.resourceLabel.width,
+        this.resourceLabel.height,
+        this.resourceLabel.text
+      );
+    }
     if (this.crystalLabel.visible) {
       this.recordDrawn(
         'crystal',
@@ -7841,28 +7855,32 @@ export class EchoRenderer {
         this.biomassLabel.text
       );
     }
-    this.recordDrawn(
-      'berths',
-      this.berthsLabel.x,
-      this.berthsLabel.y,
-      this.berthsLabel.width,
-      this.berthsLabel.height,
-      this.berthsLabel.text
-    );
+    if (this.berthsLabel.visible) {
+      this.recordDrawn(
+        'berths',
+        this.berthsLabel.x,
+        this.berthsLabel.y,
+        this.berthsLabel.width,
+        this.berthsLabel.height,
+        this.berthsLabel.text
+      );
+    }
     // The label and the segmented bar beside it are one instrument, so they
     // are one readout — the same rule §3 puts the SIG bar and its two lines
     // under. economy.md §2 makes the draw a rate that is never banked and the
     // bar is how it says so; a control that stopped at `DRAW 6/4` would leave
     // the half of the instrument that carries the meaning unexplained, and
     // leave it unseen by the refusal below (#757).
-    this.recordDrawn(
-      'draw',
-      this.drawLabel.x,
-      this.drawLabel.y,
-      Math.max(this.drawLabel.width, this.drawMeterRight - this.drawLabel.x),
-      Math.max(this.drawLabel.height, this.drawMeterBottom - this.drawLabel.y),
-      this.drawLabel.text
-    );
+    if (this.drawLabel.visible) {
+      this.recordDrawn(
+        'draw',
+        this.drawLabel.x,
+        this.drawLabel.y,
+        Math.max(this.drawLabel.width, this.drawMeterRight - this.drawLabel.x),
+        Math.max(this.drawLabel.height, this.drawMeterBottom - this.drawLabel.y),
+        this.drawLabel.text
+      );
+    }
     if (this.mapLabel.visible) {
       this.recordDrawn(
         'map',
@@ -7947,7 +7965,7 @@ export class EchoRenderer {
   private readoutDetail(key: ReadoutKey, band: string, worldGain: number, loud: number): string {
     switch (key) {
       case 'sig':
-        return sigDetail(this.peakSig, this.units.length, loud);
+        return sigDetail(this.peakSig, this.units.length, loud, this.boundSig ?? undefined);
       case 'band':
         return bandDetail(band, worldGain);
       case 'tracked':
@@ -7996,18 +8014,38 @@ export class EchoRenderer {
       alpha: 0.35,
     });
 
-    this.resourceLabel.text = `NODULES ${this.nodules.toFixed(0)}`;
-    this.resourceLabel.style.fill = RESOURCE_COLOR[ResourceKind.Nodule];
-    this.resourceLabel.position.set(stockX, 10);
+    // A mission that has locked construction has nothing to build, and the
+    // strip drops each economy readout that cannot move there (docs/ui-ux.md
+    // §2, #1586) — the premise the build and yard tabs already go on. Each
+    // keeps a way back: Shift Change locks construction and still sets its
+    // quota in Nodules, so a held or seen field keeps that readout, exactly as
+    // Crystal's rule below does. In Sorrowgate the three read `NODULES 0`,
+    // `BERTHS 6/0` in threat ink and `DRAW 0/0`, and the red read as an error.
+    const economy = this.missionLock('construction') === null;
+    // Where the next readout on the first row starts, so a dropped one leaves
+    // no gap; `firstRowEdge` is this, less the gap, if the draw meter is gone.
+    let nextX = stockX;
+
+    this.resourceLabel.visible =
+      economy || this.nodules > 0 || this.nodes.some((n) => n.kind === ResourceKind.Nodule);
+    if (this.resourceLabel.visible) {
+      this.resourceLabel.text = `NODULES ${this.nodules.toFixed(0)}`;
+      this.resourceLabel.style.fill = RESOURCE_COLOR[ResourceKind.Nodule];
+      this.resourceLabel.position.set(nextX, 10);
+      nextX += this.resourceLabel.width + 16;
+    }
 
     // Crystal appears only once a player has some or has seen a field: an
     // always-on zero would be chrome, and this HUD spends space on decisions.
     const showCrystal =
       this.crystal > 0 || this.nodes.some((n) => n.kind === ResourceKind.ResonanceCrystal);
     this.crystalLabel.visible = showCrystal;
-    this.crystalLabel.text = `CRYSTAL ${this.crystal.toFixed(0)}`;
-    this.crystalLabel.style.fill = RESOURCE_COLOR[ResourceKind.ResonanceCrystal];
-    this.crystalLabel.position.set(this.resourceLabel.x + this.resourceLabel.width + 16, 10);
+    if (showCrystal) {
+      this.crystalLabel.text = `CRYSTAL ${this.crystal.toFixed(0)}`;
+      this.crystalLabel.style.fill = RESOURCE_COLOR[ResourceKind.ResonanceCrystal];
+      this.crystalLabel.position.set(nextX, 10);
+      nextX += this.crystalLabel.width + 16;
+    }
 
     // Biomass appears only once a player has killed something. An always-on
     // zero would be chrome, and this HUD spends its space on decisions.
@@ -8015,8 +8053,22 @@ export class EchoRenderer {
     if (this.biomassLabel.visible) {
       this.biomassLabel.text = `BIOMASS ${this.biomass.toFixed(0)}`;
       this.biomassLabel.style.fill = FAUNA_COLOR;
-      const anchorLabel = showCrystal ? this.crystalLabel : this.resourceLabel;
-      this.biomassLabel.position.set(anchorLabel.x + anchorLabel.width + 16, 10);
+      this.biomassLabel.position.set(nextX, 10);
+      nextX += this.biomassLabel.width + 16;
+    }
+
+    // Berths (docs/economy.md §10): what is afloat and queued over what the
+    // base grants. Always on where there is an economy, unlike Crystal and
+    // Biomass — a commander with no hulls still has a grant, and the grant is a
+    // decision about Foundries. Threat ink at the ceiling, where the next hull
+    // is refused.
+    this.berthsLabel.visible = economy || this.berths.granted > 0;
+    if (this.berthsLabel.visible) {
+      const full = this.berths.used >= this.berths.granted;
+      this.berthsLabel.text = `BERTHS ${this.berths.used}/${this.berths.granted}`;
+      this.berthsLabel.style.fill = full ? UI.threat : UI.text;
+      this.berthsLabel.position.set(nextX, 10);
+      nextX += this.berthsLabel.width + 16;
     }
 
     // Thermal Draw, drawn as a *rate* and deliberately not like the stockpiles
@@ -8024,58 +8076,49 @@ export class EchoRenderer {
     // banked, so it reads "6/4" — what you make over what you owe — with a
     // segmented bar rather than a filling one. A number that could be mistaken
     // for a balance would be teaching the player the wrong thing about it.
-    const beforeBerths = this.biomassLabel.visible
-      ? this.biomassLabel
-      : this.crystalLabel.visible
-        ? this.crystalLabel
-        : this.resourceLabel;
-    // Berths (docs/economy.md §10): what is afloat and queued over what the
-    // base grants. Always on, unlike Crystal and Biomass — a commander with
-    // no hulls still has a grant, and the grant is a decision about Foundries.
-    // Threat ink at the ceiling, where the next hull is refused.
-    const full = this.berths.used >= this.berths.granted;
-    this.berthsLabel.text = `BERTHS ${this.berths.used}/${this.berths.granted}`;
-    this.berthsLabel.style.fill = full ? UI.threat : UI.text;
-    this.berthsLabel.position.set(beforeBerths.x + beforeBerths.width + 16, 10);
-    const drawX = this.berthsLabel.x + this.berthsLabel.width + 16;
-    const deficit = this.drawReport.satisfaction < 1;
-    this.drawLabel.text = `DRAW ${this.drawReport.capacity.toFixed(0)}/${this.drawReport.demand.toFixed(0)}`;
-    this.drawLabel.style.fill = deficit ? UI.threat : UI.accent;
-    this.drawLabel.position.set(drawX, 10);
+    this.drawLabel.visible = economy || this.drawReport.capacity > 0 || this.drawReport.demand > 0;
+    let firstRowEdge = nextX - 16;
+    if (this.drawLabel.visible) {
+      const drawX = nextX;
+      const deficit = this.drawReport.satisfaction < 1;
+      this.drawLabel.text = `DRAW ${this.drawReport.capacity.toFixed(0)}/${this.drawReport.demand.toFixed(0)}`;
+      this.drawLabel.style.fill = deficit ? UI.threat : UI.accent;
+      this.drawLabel.position.set(drawX, 10);
 
-    // Segments, one per unit of demand, filled up to what capacity covers.
-    // Discrete because draw is discrete: you have four taps or you do not.
-    const segments = Math.max(1, Math.min(12, Math.ceil(this.drawReport.demand)));
-    const covered = Math.round(segments * this.drawReport.satisfaction);
-    const segX = drawX + this.drawLabel.width + 8;
-    // The step, the segment's own width and where the bar sits in the row,
-    // named rather than inline because `firstRowEdge` below and the box
-    // `recordStrip` records are both measured from them (#743, #757). A second
-    // copy of any of them is a second thing to keep right, and the number that
-    // goes stale is the one nothing draws.
-    const segStep = 6;
-    const segWidth = 4;
-    const segTop = 13;
-    const segHeight = 9;
-    for (let i = 0; i < segments; i++) {
-      g.rect(segX + i * segStep, segTop, segWidth, segHeight).fill({
-        color: i < covered ? (deficit ? UI.threat : UI.accent) : UI.glassStroke,
-        alpha: i < covered ? 0.9 : 0.35,
-      });
+      // Segments, one per unit of demand, filled up to what capacity covers.
+      // Discrete because draw is discrete: you have four taps or you do not.
+      const segments = Math.max(1, Math.min(12, Math.ceil(this.drawReport.demand)));
+      const covered = Math.round(segments * this.drawReport.satisfaction);
+      const segX = drawX + this.drawLabel.width + 8;
+      // The step, the segment's own width and where the bar sits in the row,
+      // named rather than inline because `firstRowEdge` below and the box
+      // `recordStrip` records are both measured from them (#743, #757). A
+      // second copy of any of them is a second thing to keep right, and the
+      // number that goes stale is the one nothing draws.
+      const segStep = 6;
+      const segWidth = 4;
+      const segTop = 13;
+      const segHeight = 9;
+      for (let i = 0; i < segments; i++) {
+        g.rect(segX + i * segStep, segTop, segWidth, segHeight).fill({
+          color: i < covered ? (deficit ? UI.threat : UI.accent) : UI.glassStroke,
+          alpha: i < covered ? 0.9 : 0.35,
+        });
+      }
+      // Where the strip's first row actually ends. The draw meter is the last
+      // thing on it and its segments run past `drawLabel`, so the label's own
+      // right edge is not the row's — which is the distinction #743 turned on.
+      firstRowEdge = segX + (segments - 1) * segStep + segWidth;
+      // The bar's own extent, kept for `recordStrip` (#757). It is read here
+      // rather than recomputed there for the same reason `firstRowEdge` is
+      // measured from `segStep` and `segWidth` rather than from 6 and 4: this
+      // is where the segments are drawn, so a box taken from anywhere else is
+      // a second copy of a layout. Two numbers on the instance rather than a
+      // rect, because this is the draw path and the strip's scratch exists to
+      // allocate nothing on it.
+      this.drawMeterRight = firstRowEdge;
+      this.drawMeterBottom = segTop + segHeight;
     }
-    // Where the strip's first row actually ends. The draw meter is the last
-    // thing on it and its segments run past `drawLabel`, so the label's own
-    // right edge is not the row's — which is the distinction #743 turned on.
-    const firstRowEdge = segX + (segments - 1) * segStep + segWidth;
-    // The bar's own extent, kept for `recordStrip` (#757). It is read here
-    // rather than recomputed there for the same reason `firstRowEdge` is
-    // measured from `segStep` and `segWidth` rather than from 6 and 4: this is
-    // where the segments are drawn, so a box taken from anywhere else is a
-    // second copy of a layout. Two numbers on the instance rather than a rect,
-    // because this is the draw path and the strip's scratch exists to allocate
-    // nothing on it.
-    this.drawMeterRight = firstRowEdge;
-    this.drawMeterBottom = segTop + segHeight;
 
     // What your own noise is doing to your hearing, in words. The bed makes
     // this audible; §11 requires it also be readable.

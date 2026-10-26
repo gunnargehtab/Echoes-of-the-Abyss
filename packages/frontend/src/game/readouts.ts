@@ -32,6 +32,7 @@ import {
   StructureKind,
   THERMAL_DRAW,
   structureStatsFor,
+  type BoundSig,
   type DrawReport,
 } from '@echoes/shared';
 
@@ -179,13 +180,26 @@ export function drawDetail(report: DrawReport): string {
  * threshold five below the red one. The stops are `SIG_BANDS`, which is where
  * §3's table is transcribed, so a stop that moved in the doc moves here too.
  */
-export function sigDetail(peak: number, units: number, loud: number): string {
-  return (
+export function sigDetail(
+  peak: number,
+  units: number,
+  loud: number,
+  bound?: Pick<BoundSig, 'setName'>
+): string {
+  const line =
     `peak ${Math.round(peak)} of 100 across your own hulls, not the average` +
     ' — the loudest hull is the one that gets you found' +
     ` · green below ${SIG_BANDS.AMBER}, amber from ${SIG_BANDS.AMBER}, red from ${SIG_BANDS.RED}` +
-    ` · ${loud} of ${units} over ${SIG_BANDS.LOUD}, the count that predicts trouble`
-  );
+    ` · ${loud} of ${units} over ${SIG_BANDS.LOUD}, the count that predicts trouble`;
+  // §3's `all n units`: a mission's order reads its own authored set in the
+  // orders panel's header, and Sorrowgate's meter at 18 beside the panel's 6
+  // read as a contradiction until the strip said which of the two it was
+  // (#1586). Worded to hold where the set is every hull too — Attendance's
+  // shift is the whole roster — so it says what each reads, not that they
+  // differ.
+  if (bound === undefined) return line;
+  const set = bound.setName ?? 'hulls its order binds';
+  return line + ` · every hull of yours; the orders panel's figure reads only the ${set}`;
 }
 
 /**

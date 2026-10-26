@@ -148,12 +148,14 @@ Sorrowgate is the place that counts it in seconds.
 
 1. **The ceiling.** SIG 20, per hull, for the duration. The simulation does not clamp your
    loudness; it notices it. A Light Scout is **6 standing and 12 under way** — two states and
-   nothing between them, at any speed ([systems-echo.md](systems-echo.md) §2) — so moving
+   nothing between them, at any speed ([systems-echo.md](systems-echo.md) §2) — so speed
    never puts a hull of the flight over the ceiling. There is no faster gear to find and no
    way to shove by steering.
 
    **The ceiling is therefore a reading, not a lever, and that is deliberate.** What would
-   cross it is **descent**, which floors SIG at 72 whatever else a hull is doing, and §10
+   cross it is **descent**, which floors SIG at 72 whatever else a hull is doing — including
+   the descent a move along the seabed makes where the ground falls away
+   ([systems-depth.md](systems-depth.md) §2, "Steering along the ground") — and §10
    refuses to teach depth here; every other loud thing an escort could do — the guns, the
    mines, the noisemakers, the ping — is struck at the arch and refused by the server (§3, and
    the mission's own locks). What the player watches is the flight's own reading against the
@@ -454,7 +456,9 @@ the player's too. The reading the court's line is about is the **objectives pane
 off `boundSig` — the peak over the hulls the order actually binds, against the ceiling it binds
 them to, latched from the same ledger that charges the debt ([invariants.md](invariants.md)
 row 21). That is the instrument the line means, it is on screen for the whole window, and it is
-the only place in the mission where both of the court's two numbers appear together.
+the only place in the mission where both of the court's two numbers appear together. The
+meter's second line reads `all 6 units` while the order is in force ([ui-ux.md](ui-ux.md) §3),
+so the strip says which of the two it is (#1586).
 
 **Four lines, not more.** One per thing the window has to land: the flight is yours, here is the
 number, moving moves it, and here is the price. A fifth would be teaching a fifth system, which
@@ -479,8 +483,17 @@ lines says how to cross twenty because nothing the flight does *under way* cross
 Scout has two SIG states and nothing between them — 6 standing, 12 under way at any speed —
 and every other loud thing an escort owns is locked at the arch. One thing does cross it:
 **descent**, at a floor of 72. It is not locked, so a player who orders the band below can
-breach the ceiling — but §10 refuses to teach depth here, so no line names it, and reaching it
-by accident in a mission with nothing below to go and see takes some doing.
+breach the ceiling — but §10 refuses to teach depth here, so no line names it.
+
+**Reaching it by accident takes no doing at all**, which this section used to deny. The flight
+is seated near the floor, so a plain move is a move onto the ground and follows it
+([systems-depth.md](systems-depth.md) §2), and where the ground falls away the follow is a
+dive at 72. A newcomer's walk found it twice (#1586): two `went loud` rows at T+12:29 and
+T+12:32 from escorts following the floor, and a plain move at 16:26 that put the flight in
+debt. The ledger charged each one, and `silenceUnderWay.test.ts` holds that it charges every
+run over the ceiling in six scripted minutes of moves along the seabed; the order read met
+again by T+12:41 because the debt had paid itself off. So the silence row's debt gloss says what a dive is here, at the one moment the
+player is asking: it explains the breach that just happened and teaches no way to make one.
 
 This used to be recorded as an open question, because §4 read a flank band out of
 [systems-echo.md](systems-echo.md) §2 that the simulation has never modelled. The decision on

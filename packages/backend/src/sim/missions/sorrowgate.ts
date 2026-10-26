@@ -552,6 +552,14 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
    * ledger's `debtCapS` is 60, so "a second for every loud one" stopped being
    * true after a minute of them.
    *
+   * And it names the dive (#1586). A descent is the only thing that puts an
+   * escort over 20 here, and the flight sits near enough the floor that a
+   * plain move follows it (`orderDepthAt`) and dives wherever it falls away —
+   * so a newcomer who ordered nothing but moves read "An escort went over" with
+   * no idea how. *Following the floor* is the selection card's own words for
+   * that mode, and the line explains the breach that just happened without
+   * teaching a way to make one (§9).
+   *
    * They name no key. The panel is read on a device with no keyboard as well as
    * on one with (#722), so a gloss points at what is on screen — this panel's
    * own header reading, and the hull the row is about.
@@ -574,7 +582,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       gloss:
         'Keep every escort under SIG 20 — the reading in this panel’s header. Diving goes over.',
       debtText: 'The flight owes the court a silence.',
-      debtGloss: 'An escort went over. Go back under the ceiling and the debt pays itself off.',
+      debtGloss: 'An escort dived — following the floor down is a dive. The debt pays itself off.',
       initial: ObjectiveStatus.Pending,
       // The simulation does not clamp loudness; it notices it. Breaching this
       // costs the flight the array and never the mission, which is §4 stated

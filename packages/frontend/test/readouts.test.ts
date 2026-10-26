@@ -156,6 +156,19 @@ describe('the strip explains itself: what each line claims', () => {
       new RegExp(`1 of 5 over ${SIG_BANDS.LOUD}`),
       '§3’s second line: loud is over 60, five below the red stop'
     );
+    assert.doesNotMatch(line, /orders panel/, 'no order in force, nothing to set it beside');
+  });
+
+  it('says the meter is every hull while a mission order is in force (#1586)', () => {
+    assert.match(
+      sigDetail(18, 6, 0, { setName: 'flight' }),
+      / · every hull of yours; the orders panel's figure reads only the flight$/
+    );
+    // An unworded court still binds a set; the line names it without a word.
+    assert.match(
+      sigDetail(18, 6, 0, {}),
+      /the orders panel's figure reads only the hulls its order binds$/
+    );
   });
 
   it('says TRACKED counts the player’s own entities, not the hostiles holding them', () => {
