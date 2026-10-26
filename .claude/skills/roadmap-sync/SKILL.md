@@ -45,8 +45,8 @@ and its parent.
 ## 2. What to place
 
 - **Every `unplaced` issue** in `drift.json`. These are open work in no row and
-  under no epic that has a row. Epics, `routine-log` ledgers and `standing`
-  issues are already left out.
+  under no epic that has a row. Epics and `routine-log` ledgers are already
+  left out.
 - **Recent `unrecorded` issues only:** closed in the last 7 days, and not closed
   as a duplicate or as not planned (the build drops those). The loop closes most
   issues within hours, so this is how its work reaches the record. Older

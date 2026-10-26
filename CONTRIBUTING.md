@@ -135,7 +135,14 @@ never be removed by editing it. `documentation` sat next to `docs` that way — 
 colour, the same description, two names for one thing, and ten issues filed under the
 wrong one. Where two labels would mean the same thing, **`docs` is the name.**
 
-One label carries a routing rule rather than a category. **`fable-5.1`** marks an issue
+A label earns its line by being read. On 26 October the set dropped `invalid`,
+`question`, `good first issue` and `help wanted`, which no issue had ever carried, and
+`duplicate`, which GitHub's own close reason already records. It dropped `triage` too:
+every issue template added it, nothing removed it, and all 76 issues that carried it
+were closed. And it dropped `standing` once #703, the one issue it was cut for, closed
+(`packages/backend/src/ai/types.ts` says so).
+
+One label carries a routing rule rather than a category. **`shape-work`** marks an issue
 whose work is *shape* — a hull script, a faction module, a GLB, a prop, a prompt block —
 and is therefore executed under the design model of record that
 [docs/asset-prompts-3d.md](docs/asset-prompts-3d.md) rule 3 names for the whole series.
@@ -143,7 +150,8 @@ It does not mark an issue merely because art is mentioned in it: the gates
 (`hull-intake`, the glow calibration, the screenshot review) stay adversarial to whoever
 authored the model, and every number that is not a shape — a stat block, a doctrine, the
 wire, the balance harness — stays outside it. A hull's SIG is an argument about sound;
-its silhouette is not.
+its silhouette is not. It was `fable-5.1` until 26 October, a name that tied the label to
+one model version rather than to the work; the rule is unchanged.
 
 Routing away from a model is the other half of routing to one, so this label also takes
 the issue off the backlog Routine's list — the Routine is pinned to one model at its
@@ -151,12 +159,12 @@ trigger and cannot switch mid-run. That half was implicit until #586, which the 
 as ordinary `enhancement` work and shipped as #594: green on every gate, and three shape
 decisions authored under the wrong model. The gates could not have caught it, since they
 are adversarial to the model rather than about which one authored it. So the loop skips
-`fable-5.1` outright, and the work waits for a session running the model of record. The
+`shape-work` outright, and the work waits for a session running the model of record. The
 cost is real and worth naming: #540 carries the label across what is left of it — Phase
 6's pristine pass, now that every hull, structure and environment prop is built by a
 script — so none of it is the loop's to take.
 
-Four further labels are addressed to the unattended backlog Routine rather than to a
+Three further labels are addressed to the unattended backlog Routine rather than to a
 person, and each takes an issue off its list for a different reason. **`routine-log`**
 marks the run ledger the loop writes to, so it is never mistaken for a work item.
 **`needs-hardware`** marks work that is real but cannot be done in a container — a
@@ -176,21 +184,6 @@ recommendation posted: a reply decides it, and after 24 hours of silence the loo
 takes the recommendation (`work-issue` §7). **`automerge`** marks a `routine` pull
 request that `steward` merges once CI is green, and never one that changes what the
 client draws (`steward` §9). Removing either label hands the call back to a person.
-
-**`standing`** is the fourth, and it marks an issue that is open *because the decision
-went that way* — a permanent target something in the tree cites by number, rather than
-work anybody intends to finish. #703 is the case that cut it. `AiUnbuilt` in
-`packages/backend/src/ai/types.ts` prices each listed gap at "naming the issue that fills
-it", and an entry naming a **closed** issue names nothing — so when #621 closed, the
-three entries were re-pointed at #703, and closing #703 in its turn would have re-created
-the same defect one citation at a time. The way off that treadmill is to let one issue
-stay open on purpose and say so, which is what this label says. It differs from
-`wontfix`, which parks an investigation the build cannot act on yet, and from
-`routine-log`, which is the loop's own ledger: a `standing` issue is a live reference with
-a live citation pointing at it, and the code that cites it is correct precisely because
-the issue never closes. Like `needs-hardware` and `wontfix`, it is a statement about the
-work rather than about a run, so it is **a person's to apply and a person's to remove** —
-and removing it means the citations need somewhere else to point first.
 
 **`finding`** is the loop's own and takes nothing off its list. It marks a defect a firing
 verified while working something else (`work-issue` §4), filed as an ordinary issue that

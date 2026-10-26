@@ -91,11 +91,10 @@ labelled:
 | --- | --- |
 | `epic` | No single PR closes it; §4 files its sub-issues instead. |
 | `routine-log` | The run log, this loop's own ledger. |
-| `standing` | Open on purpose: code cites it by number. A person's to apply and remove. |
 | `needs-hardware` | Needs a real GPU or device. A person's to apply. |
 | `needs-decision` | A person reserved the call, or the rest is inside the balance freeze. |
 | `decision-proposed` | Until its proposal is 24 hours old with no reply; then it is eligible (§7). |
-| `fable-5.1` | Shape work, authored under the design model of record (`CONTRIBUTING.md`). The Routine is pinned to another model. Never apply or remove it. |
+| `shape-work` | Shape work, authored under the design model of record (`CONTRIBUTING.md`). The Routine is pinned to another model. Never apply or remove it. |
 | `wontfix` | Parked: the finding stands, the build cannot act on it yet. A person's. |
 
 **An assignee means taken, whoever it is.** The loop runs under the owner's login,
