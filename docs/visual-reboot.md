@@ -309,6 +309,7 @@ retained-geometry slice; no production code changed after the final verdict.
 
 ## Related
 
+- [Proposed arch study](sorrowgate-arch-study.md) — a later brief for owner review, not approval to replace this slice
 - [Art direction](art-direction.md)
 - [Sorrowgate](mission-sorrowgate.md)
 - [Graphics standards](graphics-standards.md)
