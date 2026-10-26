@@ -11,7 +11,8 @@
  * Dome the Fourth's Foot (#1628), Tend and Convocation Marr Plateau (#1630),
  * Thin Water and Shallow the Kell Shoulder (#1633), Deep Furrow and In Writing
  * the Furrow (#1638), the Rim's five the Rim (#1640), Item Nine and Tolerance
- * Board Country and the Underworks (#1623), and the prologue again on a
+ * Board Country and the Underworks (#1623), Conclave and Attendance the Upper
+ * Terraces and the galleries (#1624), and the prologue again on a
  * reconnection after its ground has changed, with writes that replay to the
  * live cells and the live revision, and that every other room — Radicals on the same map included —
  * names nothing.
@@ -22,7 +23,10 @@ import { afterEach, describe, it } from 'node:test';
 import type { Client } from '@colyseus/core';
 import {
   ANHOLT_FURROW_REGION,
+  ATTENDING_ATTENDANCE_HEADER,
+  ATTENDING_CONCLAVE_HEADER,
   ATTENDING_FIRST_ARRIVAL_HEADER,
+  ATTENDING_GALLERIES_REGION,
   ATTENDING_INTAKE_HEADER,
   ATTENDING_SHALLOW_HEADER,
   ATTENDING_THE_DOME_HEADER,
@@ -54,6 +58,7 @@ import {
   SERVER_MSG,
   SHALLOW_BAND_REGION,
   SORROWGATE_REGION,
+  UPPER_TERRACES_REGION,
   UPPER_WORKINGS_REGION,
   WESTERN_MARGIN_REGION,
   type TerrainMessage,
@@ -144,6 +149,8 @@ describe('the region a room names (#1460)', () => {
     [CHORD_SECOND_CHORD_HEADER, MOUTH_RIM_REGION],
     [LEDGER_ITEM_NINE_HEADER, HOLDING_BOARD_REGION],
     [LEDGER_TOLERANCE_HEADER, HOLDING_UNDERWORKS_REGION],
+    [ATTENDING_CONCLAVE_HEADER, UPPER_TERRACES_REGION],
+    [ATTENDING_ATTENDANCE_HEADER, ATTENDING_GALLERIES_REGION],
   ] as const) {
     it(`names ${region.id} on ${mission.id}'s ground at join`, async () => {
       const match = await room({ missionId: mission.id });

@@ -14,7 +14,10 @@ import { createElement } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import {
   ANHOLT_FURROW_REGION,
+  ATTENDING_ATTENDANCE_HEADER,
+  ATTENDING_CONCLAVE_HEADER,
   ATTENDING_FIRST_ARRIVAL_HEADER,
+  ATTENDING_GALLERIES_REGION,
   ATTENDING_INTAKE_HEADER,
   ATTENDING_SHALLOW_HEADER,
   ATTENDING_THE_DOME_HEADER,
@@ -48,6 +51,7 @@ import {
   SHALLOW_BAND_REGION,
   SORROWGATE_GROUND,
   SORROWGATE_REGION,
+  UPPER_TERRACES_REGION,
   UPPER_WORKINGS_REGION,
   WESTERN_MARGIN_REGION,
   WORLD,
@@ -770,6 +774,12 @@ describe('a second placed mission, in the same world (#1598)', () => {
     sameFrame(arrivalFrame(HOLDING_UNDERWORKS_REGION)!, { xM: 2_000, yM: 1_000, ...home });
   });
 
+  it("ends Conclave's travel on the Undermarshalcy and Attendance's on the stalls (#1624)", () => {
+    const home = { distanceM: HOME_DOLLY_M, yawDeg: 0, pitchDeg: 55 };
+    sameFrame(arrivalFrame(UPPER_TERRACES_REGION)!, { xM: 2_500, yM: 375, ...home });
+    sameFrame(arrivalFrame(ATTENDING_GALLERIES_REGION)!, { xM: 2_500, yM: 1_000, ...home });
+  });
+
   it('gives every placed region a home to travel to', () => {
     // A region with no derived anchor would launch its mission off the world.
     for (const region of WORLD_REGIONS) assert.ok(arrivalFrame(region), region.id);
@@ -917,6 +927,9 @@ describe('which launches travel, and when a travel joins (§7.6)', () => {
     }
     for (const mission of [LEDGER_ITEM_NINE_HEADER, LEDGER_TOLERANCE_HEADER]) {
       assert.equal(travelsFirst('campaign', mission.id), true, `${mission.id} is (#1623)`);
+    }
+    for (const mission of [ATTENDING_CONCLAVE_HEADER, ATTENDING_ATTENDANCE_HEADER]) {
+      assert.equal(travelsFirst('campaign', mission.id), true, `${mission.id} is (#1624)`);
     }
   });
 

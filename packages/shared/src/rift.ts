@@ -322,6 +322,15 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
   // Derived, as the court is: the Banding Ground's origin plus its spawn, so
   // a travel to *Intake* ends on the intake's spawn (§7.6, #1598).
   { id: 'the-muster', name: 'The muster', region: 'trench-country', x: 23_000, y: 62_750 },
+  // Derived: the Upper Terraces' origin plus its spawn on the Undermarshalcy's
+  // terrace, so a travel to *Conclave* ends there (§7.6, #1624).
+  {
+    id: 'the-undermarshalcy',
+    name: 'The Undermarshalcy',
+    region: 'trench-country',
+    x: 25_000,
+    y: 67_375,
+  },
   {
     id: 'sufficiency',
     name: 'Sufficiency',
@@ -339,6 +348,9 @@ export const RIFT_PLACES: readonly RiftPlace[] = [
     y: 71_500,
     depthM: 3_000,
   },
+  // Derived: the galleries' origin plus its spawn at the gallery face, so a
+  // travel to *Attendance* ends there (§7.6, #1624).
+  { id: 'the-stalls', name: 'The stalls', region: 'trench-country', x: 24_500, y: 72_000 },
   {
     id: 'the-sill',
     name: "The Ninth's sill",
@@ -1721,6 +1733,180 @@ const SURROUNDS: Readonly<Record<string, readonly GroundRegion[]>> = {
       biome: ThermalVein,
       floorM: 1_300,
       note: 'The Upper Workings’ Downworks',
+    },
+  ],
+  // The Upper Terraces' 2,500 m (#1624). The map is Sufficiency from above:
+  // the Head of the Ninth, the Undermarshalcy's terrace north, the Cantorate's
+  // south and the galleries' benches. The overview draws the city's terraces
+  // across it. The surround carries the Head a kilometre west and east and a
+  // row north and south, and the Undermarshalcy a row north. North, its detail
+  // covers the Banding Ground's last rows and the throat its surround carries
+  // down to the terrace; south, the galleries' top. It draws them coarsely, as
+  // their own ground and surrounds do.
+  'upper-terraces': [
+    {
+      x: 20_500,
+      y: 64_500,
+      widthM: 5_250,
+      heightM: 1_500,
+      biome: AbyssalTrench,
+      floorM: 2_400,
+      note: 'The Banding Ground’s upper Ninth, coarsely',
+    },
+    {
+      x: 22_500,
+      y: 66_000,
+      widthM: 2_500,
+      heightM: 750,
+      biome: AbyssalTrench,
+      floorM: 2_400,
+      note: 'The Banding Ground’s throat, coming down to the terrace',
+    },
+    {
+      x: 21_500,
+      y: 66_750,
+      widthM: 7_000,
+      heightM: 4_500,
+      biome: AbyssalTrench,
+      floorM: 3_400,
+      note: 'The Head, a kilometre west and east and a row north and south',
+    },
+    {
+      x: 23_500,
+      y: 66_750,
+      widthM: 3_000,
+      heightM: 250,
+      biome: CoralRuins,
+      floorM: 2_750,
+      note: 'The Undermarshalcy, a row north',
+    },
+    {
+      x: 22_000,
+      y: 71_250,
+      widthM: 5_000,
+      heightM: 500,
+      biome: CoralRuins,
+      floorM: 2_750,
+      note: 'The galleries’ Lower Rows, coarsely',
+    },
+    {
+      x: 22_000,
+      y: 71_750,
+      widthM: 5_000,
+      heightM: 1_750,
+      biome: AbyssalTrench,
+      floorM: 3_200,
+      note: 'The galleries’ Step and benches, coarsely',
+    },
+    {
+      x: 23_250,
+      y: 71_750,
+      widthM: 2_500,
+      heightM: 500,
+      biome: CoralRuins,
+      floorM: 3_000,
+      note: 'The Attending Galleries, coarsely',
+    },
+    {
+      x: 24_000,
+      y: 72_250,
+      widthM: 1_000,
+      heightM: 1_250,
+      biome: AbyssalTrench,
+      floorM: 4_100,
+      note: 'The galleries’ Axis, coarsely',
+    },
+  ],
+  // The attending galleries' 2,500 m (#1624). The map is Sufficiency's
+  // southern face over the Ninth: the Lower Rows, the galleries, the benches
+  // and the Axis leaving south through the Sill. The overview draws the
+  // galleries half a kilometre north of the map's and the axis on to the sill.
+  // The surround carries the Lower Rows and the Step and its benches a
+  // kilometre west and east, the Rows a row north, the trench's 3,400 m
+  // shoulders on round its south corners, and the Step and the Sill two rows
+  // south. North, its detail covers the Upper Terraces' south, and draws it
+  // coarsely, as their map does.
+  'attending-galleries': [
+    {
+      x: 22_500,
+      y: 68_500,
+      widthM: 5_000,
+      heightM: 2_250,
+      biome: AbyssalTrench,
+      floorM: 3_400,
+      note: 'The Upper Terraces’ Head, coarsely',
+    },
+    {
+      x: 23_500,
+      y: 69_500,
+      widthM: 3_000,
+      heightM: 750,
+      biome: CoralRuins,
+      floorM: 2_800,
+      note: 'The Cantorate’s terrace, coarsely',
+    },
+    {
+      x: 23_750,
+      y: 70_250,
+      widthM: 750,
+      heightM: 500,
+      biome: CoralRuins,
+      floorM: 3_000,
+      note: 'The terraces’ west bench, coarsely',
+    },
+    {
+      x: 25_500,
+      y: 70_250,
+      widthM: 750,
+      heightM: 500,
+      biome: CoralRuins,
+      floorM: 3_000,
+      note: 'The terraces’ east bench, coarsely',
+    },
+    {
+      x: 21_000,
+      y: 70_750,
+      widthM: 7_000,
+      heightM: 1_000,
+      biome: CoralRuins,
+      floorM: 2_750,
+      note: 'The Lower Rows, a kilometre west and east and a row north',
+    },
+    {
+      x: 21_000,
+      y: 71_750,
+      widthM: 7_000,
+      heightM: 3_750,
+      biome: AbyssalTrench,
+      floorM: 3_200,
+      note: 'The Step and its benches, a kilometre west and east and two rows south',
+    },
+    {
+      x: 21_000,
+      y: 74_250,
+      widthM: 1_750,
+      heightM: 1_250,
+      biome: AbyssalTrench,
+      floorM: 3_400,
+      note: 'The trench’s west shoulder, on round the corner',
+    },
+    {
+      x: 26_250,
+      y: 74_250,
+      widthM: 1_750,
+      heightM: 1_250,
+      biome: AbyssalTrench,
+      floorM: 3_400,
+      note: 'The trench’s east shoulder, on round the corner',
+    },
+    {
+      x: 24_000,
+      y: 75_000,
+      widthM: 1_000,
+      heightM: 500,
+      biome: AbyssalTrench,
+      floorM: 4_100,
+      note: 'The Sill, two rows south',
     },
   ],
 };

@@ -15,7 +15,11 @@ import { readFileSync, readdirSync } from 'node:fs';
 import {
   ANHOLT_FURROW_GROUND,
   ANHOLT_FURROW_REGION,
+  ATTENDING_ATTENDANCE_HEADER,
+  ATTENDING_CONCLAVE_HEADER,
   ATTENDING_FIRST_ARRIVAL_HEADER,
+  ATTENDING_GALLERIES_GROUND,
+  ATTENDING_GALLERIES_REGION,
   ATTENDING_INTAKE_HEADER,
   ATTENDING_SHALLOW_HEADER,
   ATTENDING_THE_DOME_HEADER,
@@ -61,6 +65,8 @@ import {
   SHALLOW_BAND_REGION,
   SORROWGATE_GROUND,
   SORROWGATE_REGION,
+  UPPER_TERRACES_GROUND,
+  UPPER_TERRACES_REGION,
   UPPER_WORKINGS_GROUND,
   UPPER_WORKINGS_REGION,
   WORLD,
@@ -410,6 +416,51 @@ describe('placed regions', () => {
     );
   });
 
+  it('stands the Upper Terraces on Sufficiency and the galleries edge to edge south (§7.9, #1624)', () => {
+    assert.deepEqual(UPPER_TERRACES_REGION, {
+      id: 'upper-terraces',
+      mapId: 'upper-terraces',
+      x: 22_500,
+      y: 67_000,
+      widthM: 5_000,
+      heightM: 4_000,
+    });
+    assert.deepEqual(ATTENDING_GALLERIES_REGION, {
+      id: 'attending-galleries',
+      mapId: 'attending-galleries',
+      x: 22_000,
+      y: 71_000,
+      widthM: 5_000,
+      heightM: 4_000,
+    });
+    for (const [region, ground, mission] of [
+      [UPPER_TERRACES_REGION, UPPER_TERRACES_GROUND, ATTENDING_CONCLAVE_HEADER],
+      [ATTENDING_GALLERIES_REGION, ATTENDING_GALLERIES_GROUND, ATTENDING_ATTENDANCE_HEADER],
+    ] as const) {
+      assert.equal(region.widthM, ground.widthM);
+      assert.equal(region.heightM, ground.heightM);
+      assert.equal(region.mapId, mission.mapId, mission.id);
+    }
+    const at = (id: string) => RIFT_PLACES.find((p) => p.id === id)!;
+    assert.deepEqual(
+      [UPPER_TERRACES_REGION.x + 2_500, UPPER_TERRACES_REGION.y + 2_000],
+      [at('sufficiency').x, at('sufficiency').y]
+    );
+    assert.equal(
+      UPPER_TERRACES_REGION.y + UPPER_TERRACES_REGION.heightM,
+      ATTENDING_GALLERIES_REGION.y
+    );
+    // The galleries' anchor stays (the owner's call on #1624): on the map's
+    // Lower Rows, eleven kilometres north of the Lip and three from the sill.
+    const galleries = at('attending-galleries');
+    assert.deepEqual(
+      [galleries.x - ATTENDING_GALLERIES_REGION.x, galleries.y - ATTENDING_GALLERIES_REGION.y],
+      [2_500, 500]
+    );
+    assert.equal(at('the-lip').y - galleries.y, 11_000);
+    assert.equal(at('the-sill').y - galleries.y, 3_000);
+  });
+
   it('place every map whose ground is placed, and none without', () => {
     assert.deepEqual(WORLD_REGIONS.map((r) => r.mapId).sort(), Object.keys(PLACED_GROUND).sort());
   });
@@ -689,6 +740,8 @@ describe('the placed-mission predicate', () => {
     }
     assert.equal(worldRegionForMission(LEDGER_ITEM_NINE_HEADER.id), HOLDING_BOARD_REGION);
     assert.equal(worldRegionForMission(LEDGER_TOLERANCE_HEADER.id), HOLDING_UNDERWORKS_REGION);
+    assert.equal(worldRegionForMission(ATTENDING_CONCLAVE_HEADER.id), UPPER_TERRACES_REGION);
+    assert.equal(worldRegionForMission(ATTENDING_ATTENDANCE_HEADER.id), ATTENDING_GALLERIES_REGION);
     assert.equal(worldRegionForMission(undefined), undefined);
     // Radicals plays on Sorrowgate's map and keeps its presentation: the
     // predicate is keyed on mission identity, never on the map (§7.1).
@@ -715,6 +768,8 @@ describe('the placed-mission predicate', () => {
       CHORD_SECOND_CHORD_HEADER.id,
       LEDGER_ITEM_NINE_HEADER.id,
       LEDGER_TOLERANCE_HEADER.id,
+      ATTENDING_CONCLAVE_HEADER.id,
+      ATTENDING_ATTENDANCE_HEADER.id,
     ]);
     for (const header of MISSION_HEADERS) {
       if (placed.has(header.id)) continue;
@@ -731,6 +786,7 @@ describe('the placed-mission predicate', () => {
     assert.equal(worldRegionForMission('anholt-furrow'), undefined);
     assert.equal(worldRegionForMission('mouth-rim'), undefined);
     assert.equal(worldRegionForMission('holding-board'), undefined);
+    assert.equal(worldRegionForMission('upper-terraces'), undefined);
   });
 
   it("places each mission on its own map's region", () => {

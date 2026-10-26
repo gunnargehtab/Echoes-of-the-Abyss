@@ -72,9 +72,14 @@
  * authored `creature` beats and the default seeder is a skirmish roster that
  * cannot put an animal at a named sill at a named tick (docs/mission-intake.md
  * §13).
+ *
+ * **The ground is shared's** (`UPPER_TERRACES_GROUND`, #1624), as the
+ * galleries' is: the continuous world draws this map before any room exists
+ * (docs/world-map.md §7.9), so its regions are authored once, in
+ * `@echoes/shared`, and spread in here. What stays here is the spawn.
  */
 
-import { Biome } from '@echoes/shared';
+import { UPPER_TERRACES_GROUND } from '@echoes/shared';
 import type { MapDefinition } from '../types.ts';
 
 export const UPPER_TERRACES: MapDefinition = {
@@ -83,96 +88,8 @@ export const UPPER_TERRACES: MapDefinition = {
   idealUse:
     'The Attending, mission six. Two terraces facing each other, and the water between them that carries.',
   seats: 1,
-  widthM: 5000,
-  heightM: 4000,
   doc: 'docs/mission-conclave-attending.md §11; docs/maps.md — Mission maps',
-  cellM: 250,
-  floorM: 3400,
-  // One row per row of §11's table, in the document's order. Later regions
-  // overwrite earlier ones, which is what lets the galleries be painted whole
-  // and the channel cut through the middle of them — the axis last, so the
-  // stalls become the two benches the ground beat addresses. Every number a
-  // shape states is a whole 250 m cell, and a cell is its region's when the
-  // shape holds its centre (#1156). Only the two terraces are shapes: they
-  // hand four cells, one at each terrace end on the row against the crossing,
-  // to the Head's trench, and every seat, the dome, every cell, both arrivals
-  // and all three mission regions stand on the ground they stood on when
-  // these were all rectangles — `missionConclaveAttending.test.ts` pins it.
-  regions: [
-    // A box, because it is the whole map's base.
-    {
-      x: 0,
-      y: 0,
-      widthM: 5000,
-      heightM: 4000,
-      biome: Biome.AbyssalTrench,
-      floorM: 3400,
-      note: 'The Head — the head of the Ninth. PF 1.60, painted first; everything else is cut into it',
-    },
-    // Its outer ends run on a slant from the back wall to the face, so the
-    // face over the crossing is 2,500 m long and the Head's water reaches in
-    // at both of its corners there. Every seat is between x 1,500 and 3,700.
-    {
-      shape: 'polygon',
-      points: [
-        [1000, 0],
-        [4000, 0],
-        [3750, 750],
-        [1250, 750],
-      ],
-      biome: Biome.CoralRuins,
-      floorM: 2750,
-      note: "The Undermarshalcy — the north terrace: command, the city's shallowest water, and where the called are seated",
-    },
-    // A box, because it paints the Head's own biome and floor, so a shape
-    // that kept off the Undermarshalcy would paint the same ground; §4 prices
-    // the crossing as its 1,750 m from y 750 to y 2,500.
-    {
-      x: 1000,
-      y: 750,
-      widthM: 3000,
-      heightM: 1750,
-      biome: Biome.AbyssalTrench,
-      floorM: 3400,
-      note: "The Crossing — the open water between the terraces. It takes the head's own biome and floor and repaints nothing; it is on the chart because it is the water the mission is about, and a hull under way in it is the only sound there is, the length of the trench",
-    },
-    // The Undermarshalcy's mirror image across the crossing. The cells and
-    // both arrivals' lines are between x 1,500 and 3,500, clear of the slants.
-    {
-      shape: 'polygon',
-      points: [
-        [1250, 2500],
-        [3750, 2500],
-        [4000, 3250],
-        [1000, 3250],
-      ],
-      biome: Biome.CoralRuins,
-      floorM: 2800,
-      note: "The Cantorate — the south terrace, standing over the galleries: Ossary's seat, the cells, and where a calling is attended or is not. Its floor is the line both arrivals run, because it is the deepest one the terrace admits",
-    },
-    // A box, because the Axis cuts it into the mission's `galleries-west` and
-    // `galleries-east`, the rectangles the ground beats repaint, so every cell
-    // of it is a cell one of those beats names.
-    {
-      x: 1250,
-      y: 3250,
-      widthM: 2500,
-      heightM: 500,
-      biome: Biome.CoralRuins,
-      floorM: 3000,
-      note: "The Attending Galleries — the stalls' benches and the dome, Attendance's room seen from above. Painted whole and cut in two by the axis; this is the bench as it stood at 00:00, and the 11:00 ground beat is what takes each half to 2,900 and trench",
-    },
-    // A box, because the mission's `the-axis` is this same rectangle.
-    {
-      x: 2000,
-      y: 3250,
-      widthM: 1000,
-      heightM: 750,
-      biome: Biome.AbyssalTrench,
-      floorM: 3400,
-      note: "The Axis — the Ninth's channel, leaving south between the galleries' benches. Painted last, which is what makes them two; named by neither ground beat, and still 3,400 m after 11:00",
-    },
-  ],
+  ...UPPER_TERRACES_GROUND,
   // One spawn, on the Undermarshalcy's terrace (§11), and irrelevant: every
   // party on this map is seated directly. The offsets address a pre-built
   // Foundry a mission never places — nothing is built during a calling (§2).

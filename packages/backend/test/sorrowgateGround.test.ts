@@ -18,6 +18,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import {
   ANHOLT_FURROW_GROUND,
+  ATTENDING_GALLERIES_GROUND,
   BANDING_GROUND_GROUND,
   FACE_SIX_GROUND,
   FOURTH_FOOT_GROUND,
@@ -30,6 +31,7 @@ import {
   MOUTH_RIM_GROUND,
   SHALLOW_BAND_GROUND,
   SORROWGATE_GROUND,
+  UPPER_TERRACES_GROUND,
   UPPER_WORKINGS_GROUND,
   WESTERN_MARGIN_GROUND,
   WORLD_REGIONS,
@@ -39,6 +41,7 @@ import {
 } from '@echoes/shared';
 import {
   ANHOLT_FURROW,
+  ATTENDING_GALLERIES,
   BANDING_GROUND,
   FOURTH_FOOT,
   FIRST_TRENCH_MARGIN,
@@ -55,6 +58,7 @@ import {
   SORROWGATE,
   missionMapById,
   terrainFor,
+  UPPER_TERRACES,
 } from '../src/sim/maps/index.ts';
 
 const LEGEND: Record<string, { biome: Biome; floorM: number; ceilingM: number }> = {
@@ -260,6 +264,23 @@ describe("Board Country's and the Underworks' shared ground (#1623)", () => {
   for (const [map, ground] of [
     [HOLDING_BOARD, HOLDING_BOARD_GROUND],
     [HOLDING_UNDERWORKS, HOLDING_UNDERWORKS_GROUND],
+  ] as const) {
+    it(`${map.id} is the one source: the map spreads the shared literal, not a copy`, () => {
+      assert.equal(map.regions, ground.regions);
+      assert.equal(map.widthM, ground.widthM);
+      assert.equal(map.heightM, ground.heightM);
+      assert.equal(map.cellM, ground.cellM);
+      assert.equal(map.floorM, ground.floorM);
+    });
+  }
+});
+
+describe("the Upper Terraces' and the galleries' shared ground (#1624)", () => {
+  // Their cells are held to the server's by the shared painter's test below
+  // and pinned against their missions by their own tests; this holds the move.
+  for (const [map, ground] of [
+    [UPPER_TERRACES, UPPER_TERRACES_GROUND],
+    [ATTENDING_GALLERIES, ATTENDING_GALLERIES_GROUND],
   ] as const) {
     it(`${map.id} is the one source: the map spreads the shared literal, not a copy`, () => {
       assert.equal(map.regions, ground.regions);
