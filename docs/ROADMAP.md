@@ -875,6 +875,14 @@ and no row below is open.
 | --- | --- |
 | The in-match score | [#1599](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1599) |
 
+**Defects the loop finds**
+
+| Work | Issue |
+| --- | --- |
+| A chart-framing test that failed now and then in CI | [#1610](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1610) |
+| Feedback from playing the tutorial | [#1611](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1611) |
+| Measuring the orders panel under a hold countdown | [#1622](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1622) |
+
 ---
 
 ## Phase 16 — Playable by a stranger
@@ -895,6 +903,11 @@ is tagged from a green `main`.
 | Epic — playable by a stranger, and the first tag | [#1574](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1574) |
 | Sorrowgate’s orders panel hiding its withheld list | [#1593](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1593) |
 | Prologue: nothing says the way north is the service lock | [#1594](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1594) |
+| Professionalising the game: a kind message when the server is down | [#1613](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1613) |
+| Naming the other missions’ markers on the chart | [#1617](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1617) |
+| Tend’s orders panel hiding its withheld list | [#1619](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1619) |
+| Conclave Chord’s orders panel hiding its last rows | [#1621](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1621) |
+| Sorrowgate’s orders panel outgrowing the room at large UI scales | [#1634](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1634) |
 
 ---
 
@@ -929,6 +942,7 @@ recorded and left.
 | Work | Issue |
 | --- | --- |
 | An independent read of the story | [#469](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/469) |
+| Improve the in-game graphics: three design paths, the owner picks | [#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637) |
 
 A reading of the world is worth less done by the hands that wrote it, so no unattended run
 takes this one.
