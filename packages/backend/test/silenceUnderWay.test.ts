@@ -28,20 +28,24 @@
  * cruises at 28 against a ceiling of 25. The ceiling is a real lever in the
  * campaign; it is this mission, with these hulls, where it is a reading
  * instead. Anyone tempted to widen this file should read that test first.
+ *
+ * "Under way" is speed, and only speed. A move onto the seabed follows it, and
+ * where the ground falls away that follow is a dive, which does cross: the last
+ * test here drives it, and holds that the court charges every crossing (#1586).
  */
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { DEPTH, Faction, SIM, UnitKind, statsFor } from '@echoes/shared';
-import { addComponent } from 'bitecs';
 import { Match } from '../src/sim/match.ts';
 import { MISSIONS } from '../src/sim/missions/index.ts';
 import { PROLOGUE_SORROWGATE } from '../src/sim/missions/sorrowgate.ts';
 import { acousticsSystem } from '../src/sim/systems/acoustics.ts';
-import { Acoustic, DepthOrder, Velocity } from '../src/sim/components.ts';
+import { Acoustic, DepthOrder, Owner, Position, Unit, Velocity } from '../src/sim/components.ts';
 import { spawnUnit } from '../src/sim/world.ts';
-import { SORROWGATE } from '../src/sim/maps/index.ts';
+import { SORROWGATE, missionMapById } from '../src/sim/maps/index.ts';
+import { addComponent, defineQuery } from 'bitecs';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 
@@ -191,5 +195,78 @@ describe('why this file names one mission', () => {
       crossable.length > 0,
       'no mission binds a hull that crosses its own ceiling under way — see this file’s header'
     );
+  });
+});
+
+describe('a move along the seabed, under the order (#1586)', () => {
+  it('dives where the ground falls away, and the court charges every crossing', () => {
+    // §9 used to say breaching by accident "takes some doing". A newcomer's
+    // walk did it with plain moves: the flight is seated near the floor, so a
+    // move is a move onto the ground and follows it (`orderDepthAt`), and a
+    // follow descent is a dive at 72 (docs/systems-depth.md §2). The log's
+    // `went loud` is raised on the 60 Hz step and the ledger reads at the Echo
+    // pass, so the other half of the walk's question — did the court miss it —
+    // is asked of every crossing: each run of ticks over the ceiling is seen
+    // by a pass that charges the debt, or finds it already at its cap.
+    const map = missionMapById(PROLOGUE_SORROWGATE.mapId)!;
+    const match = new Match(map, { mission: PROLOGUE_SORROWGATE, fauna: false, seed: 77 });
+    const slot = PROLOGUE_SORROWGATE.playerSlot;
+    const party = PROLOGUE_SORROWGATE.parties.find((p) => p.slot === slot)!;
+    const hulls = defineQuery([Unit, Owner, Position])(match.world);
+    const flight = party.units
+      .filter((unit) => unit.role === BOUND_ROLE)
+      .map((seat) =>
+        hulls.find(
+          (e) =>
+            Owner.slot[e] === slot &&
+            Math.hypot(Position.x[e]! - seat.x, Position.y[e]! - seat.y) < 1
+        )!
+      );
+    assert.equal(flight.length, 4, 'the premise: the flight is four seated hulls');
+
+    // A fixed walk: every eight seconds each escort is sent up to 200 m in a
+    // direction the seed picks, to a point on the ground — the click a player
+    // makes on the seabed. Six minutes is the opening window and some of the
+    // exchange, before the 10:40 transit changes the ground.
+    let seed = 1586;
+    const next = (): number => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+    const cap = PROLOGUE_SORROWGATE.debtCapS;
+    let crossings = 0;
+    let episodes = 0;
+    let missed = 0;
+    let over = false;
+    let charged = false;
+    let lastDebt = 0;
+    for (let tick = 0; tick < 6 * 60 * SIM.TICK_HZ; tick++) {
+      if (tick % (8 * SIM.TICK_HZ) === 0) {
+        for (const eid of flight) {
+          const x = Position.x[eid]! + (next() - 0.5) * 400;
+          const y = Position.y[eid]! + (next() - 0.5) * 400;
+          match.orderMove(slot, eid, x, y, false, match.world.terrain.floorAt(x, y));
+        }
+      }
+      const wasLoud = flight.map((eid) => Acoustic.loud[eid]);
+      const snapshots = match.update(STEP_MS);
+      flight.forEach((eid, i) => {
+        if (wasLoud[i] === 0 && Acoustic.loud[eid] === 1) crossings++;
+      });
+      if (snapshots !== null) {
+        const debt = match.missionView?.debtS ?? 0;
+        if (debt > lastDebt || debt >= cap) charged = true;
+        lastDebt = debt;
+      }
+      const now = flight.some((eid) => Acoustic.sig[eid]! > CEILING);
+      if (now && !over) charged = false;
+      if (!now && over) {
+        episodes++;
+        if (!charged) missed++;
+      }
+      over = now;
+      match.takeMissionView();
+    }
+
+    assert.ok(crossings > 0, 'no plain move dived — the walk’s finding no longer reproduces');
+    assert.ok(episodes > 0);
+    assert.equal(missed, 0, `${missed} of ${episodes} runs over the ceiling went uncharged`);
   });
 });

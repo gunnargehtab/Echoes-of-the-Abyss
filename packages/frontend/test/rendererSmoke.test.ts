@@ -3113,6 +3113,94 @@ describe('renderer smoke test: the strip explains itself', () => {
     booted.teardown();
   });
 
+  it('drops the economy a mission with nothing to build cannot move (#1586)', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    const keys = (): string[] =>
+      (
+        booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!
+          .args[0] as ReadoutBox[]
+      ).map((box) => box.key);
+
+    // Sorrowgate as the newcomer's walk met it: construction locked, no field
+    // anywhere, six hulls against no grant and no draw either way. docs/ui-ux.md
+    // §2 drops all three; the red `BERTHS 6/0` read as an error.
+    booted.chart.setMissionLocks([
+      { ability: 'construction', reason: "the court's water is not yours to build in" },
+    ]);
+    booted.chart.setNodes([]);
+    const prologue = {
+      ...cannedSnapshot(),
+      nodules: 0,
+      crystal: 0,
+      biomass: 0,
+      berths: { used: 6, granted: 0 },
+      draw: { capacity: 0, demand: 0, satisfaction: 1 },
+    };
+    booted.chart.applySnapshot(prologue);
+    booted.frame(2);
+    for (const key of ['nodules', 'berths', 'draw']) {
+      assert.ok(!keys().includes(key), `${key} stands on a strip with no economy`);
+    }
+    const stage = booted.app.stage as unknown as Container;
+    for (const word of ['NODULES', 'BERTHS', 'DRAW']) {
+      assert.equal(textSaying(stage, word), null, `${word} is still drawn`);
+    }
+    assert.ok(keys().includes('sig'), 'the permanent element stays');
+
+    // Each comes back on its own cue under the same lock — a seen field (Shift
+    // Change's quota is in Nodules), a grant, any draw made or asked for.
+    booted.chart.setNodes(cannedNodes());
+    booted.chart.applySnapshot({
+      ...prologue,
+      berths: { used: 2, granted: 6 },
+      draw: { capacity: 4, demand: 0, satisfaction: 1 },
+    });
+    booted.frame(2);
+    for (const key of ['nodules', 'berths', 'draw']) {
+      assert.ok(keys().includes(key), `${key} stays dropped once it has something to say`);
+    }
+
+    // And with no lock the strip is the skirmish's, zeros and all.
+    booted.chart.setMissionLocks([]);
+    booted.chart.setNodes([]);
+    booted.chart.applySnapshot(prologue);
+    booted.frame(2);
+    for (const key of ['nodules', 'berths', 'draw']) {
+      assert.ok(keys().includes(key), `${key} is dropped from a strip with an economy`);
+    }
+
+    booted.teardown();
+  });
+
+  it('says the meter counts every hull while an order reads fewer (#1586)', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    booted.frame();
+    const stage = booted.app.stage as unknown as Container;
+    const sigBox = (): ReadoutBox =>
+      (
+        booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!
+          .args[0] as ReadoutBox[]
+      ).find((box) => box.key === 'sig')!;
+
+    assert.doesNotMatch(textSaying(stage, ' loud')!, /^all /, 'no order, no second reading');
+    assert.doesNotMatch(sigBox().detail, /orders panel/);
+
+    // The orders panel's header reads `flight SIG 006 / 020` off this; the
+    // meter goes on reading the peak over all six, tenders included (§3).
+    booted.chart.applySnapshot({
+      ...cannedSnapshot(),
+      boundSig: { peak: 6, ceiling: 20, setName: 'flight' },
+    });
+    booted.frame(2);
+    const second = textSaying(stage, ' loud')!;
+    assert.match(second, /^all \d+ units · \d+ loud$/, `§3's second line reads "${second}"`);
+    assert.match(sigBox().detail, /not only the flight the orders panel reads/);
+
+    booted.teardown();
+  });
+
   it('gives each readout a control taller than its glyphs, for a touch player', async () => {
     const booted = await boot();
     booted.chart.setStatus('connected');

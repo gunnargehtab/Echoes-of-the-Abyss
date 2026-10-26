@@ -45,6 +45,14 @@ The world view is the whole screen above the console; every panel floats on it a
 glass ([art-direction.md](art-direction.md) "UI Direction"), and the centre of the water
 stays clear — contacts appear in the world, not in a list.
 
+**A mission with nothing to build drops the strip's readouts that cannot move.** Where a
+mission has locked construction (§10.5's lock list), `NODULES` stands only while the player
+holds some or has seen a Nodule field, which is `CRYSTAL`'s rule; `BERTHS` only while
+something grants a berth; and `DRAW` only while draw is made or asked for. Sorrowgate's strip
+read `NODULES 0`, `DRAW 0/0` and `BERTHS 6/0` in threat ink on a mission with no economy, and
+a newcomer read the red berths as an error (#1586). Shift Change's quota is in Nodules, and
+its fields keep that readout on the strip.
+
 Three panels float above the console, each 340 px wide at 100% UI scale and anchored to a
 corner so it scales from that corner (§11): the orders panel (§10.5) top-left, clear of the
 depth ribbon; the contact log (§10) top-right, at most 30% of the screen's height; and the
@@ -136,7 +144,7 @@ The permanent element. Top-left, 240 × 12 px at 1080p, above a two-line readout
 | Colour stops | 0–29 `#3FA86A` · 30–64 `#F2B233` · 65–100 `#E0452F` |
 | Transition | Snap at the boundary, do not blend. A threshold crossing is an event and must read as one |
 | Spikes | Firing and ping bursts render as a lighter overlay bar that decays over the burst duration, so the player sees the transient separately from their baseline |
-| Second line | `n units · m loud` where *loud* means SIG > 60 — the number that predicts trouble |
+| Second line | `n units · m loud` where *loud* means SIG > 60 — the number that predicts trouble. While a mission's order binds a narrower set, read in §10.5's header, it is `all n units · m loud`: the meter still counts every hull, and the word says so beside a panel reading fewer (#1586) |
 
 When a unit crosses into the red band, the meter flashes once and the contact log records it. Players must be able to answer *"why did they find me?"* after the fact.
 
