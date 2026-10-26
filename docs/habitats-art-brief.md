@@ -112,7 +112,8 @@ seen from and it is theirs to borrow.
 **Ground and props.** Kelp Forest fill, mid relief (65 m amplitude, 0.3 roughness — rolling
 terrace, not broken ground), light mottle. `env-kelp-cluster` at the highest density in the
 registry, with **4 m of sway** — the only prop in the game that moves (the Sorrowgate arch
-study's hung fittings apart, behind its flag, §5), and the plateau's whole sense of life; `env-coral-tower` sparse between the columns; `env-coral-growth` low on the
+study's hung fittings and collapse debris apart, behind its flag, §5), and the plateau's
+whole sense of life; `env-coral-tower` sparse between the columns; `env-coral-growth` low on the
 terrace. The southern drop authors as bare slope: kelp stops at the edge, so the eye reads
 *garden, then nothing* — the same thing the watch hears.
 

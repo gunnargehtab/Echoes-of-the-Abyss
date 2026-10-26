@@ -281,7 +281,8 @@ V3 is mostly already law. This section collects it, so that the next revision ci
   Layer resolved.
 - **The ground answers only your own ears.** The acoustic veil drains it where your hulls
   cannot hear and gives it back where they can ([ui-ux.md](ui-ux.md) §4.5). World light steps
-  on the 5 Hz grid. Nothing else moves it. It never answers another navy's activity, occupancy
+  on the 5 Hz grid. Nothing else moves it, except in the arch study, where a ground change
+  puts the arch's lamps out ([style-neon-noir.md](style-neon-noir.md#the-arch-studys-licence)). It never answers another navy's activity, occupancy
   or presence: a thing on the map that brightens when somebody else is near it is an
   instrument, and instruments live on the HUD.
 

@@ -2040,17 +2040,18 @@ detail; low-poly with crisp facets; at most four materials.
 | Sorrowgate | `env-ruin-transit-arch` | 570 m | 180 m: 150 m above its origin, 30 m of foundations below | ≤ 12,000 a state | `stone_dark`, `structure_rib`, `silt_drift`, `civic_lamp` | `civic-lamp`, four lamps, intact state only |
 
 The footprint is the span along X, the larger axis, held as every prop's is. Unlike a
-scattered prop the landmark stands at its anchor's yaw and at scale 1, and its origin, not
-its box's base, stands on the drawn seabed. Its plan, heights and clearances are the study's
-§6, and the prompt transcribes them.
+scattered prop the landmark stands at its anchor's yaw and at scale 1. Its origin, not its
+box's base, stands at its anchor cell's floor in the map's literal, 1,600 m, never on the
+received ground, so the 10:40 wall cannot lift it. Its plan, heights and clearances are the
+study's §6, and the prompt transcribes them.
 
 ```text
 LANDMARK — env-ruin-transit-arch (Sorrowgate, the transit arch): one
-landmark in two states sharing one origin, the drawn seabed at its anchor.
+landmark in two states sharing one origin, the seabed floor at its anchor.
 X runs east along the span, Y is up, and +Z faces south toward the court.
 
 INTACT: a monumental civic arch 570 m wide and 160 m deep on two piers,
-each at most 100 m wide, with a clear opening of 370 m between them. The
+100 m wide each, with a clear opening of 370 m between them. The
 underside of the crown is at least 110 m up and the top 150 m. Integral
 foundations reach 30 m below the origin, stepped and silted. The span is
 heavy masonry in dressed courses (stone_dark). Along its south face,
@@ -2066,13 +2067,14 @@ the south face, two on each pier, 20 to 40 m up and at least 40 m apart:
 warm tallow glass (civic_lamp, emissive #B8875A, dim) in plain housings.
 Nothing stands between the piers below the soffit.
 
-RUINED: the same piers broken to stumps no higher than 60 m, at the foot
-of a rock face that fills the span's row. The rock is the terrain's, not
-the model's: its face runs from about Z +62 m at the top to Z +125 m at
-the foot, and the model has nothing north of Z 0. No lintel, no soffit
-and no framed void survives. Fallen courses and a rib or two lie in a low
-skirt along the foot, nowhere higher than 5 m and nowhere south of
-Z +150 m. No lamps.
+RUINED: the arch has fallen into rock that now fills the span's row. The
+rock is the terrain's, not the model's, and it swallows the piers whole:
+its south face rises from about Z +125 m at its foot to Z +62 m at its
+top, and stands at about Z +117 m where it is 60 m up. Model nothing
+north of Z +115 m. Against the face, broken pier mass, fallen courses and
+a rib or two heap no higher than 60 m. South of Z +125 m they spread in a
+low skirt, nowhere higher than 5 m and nowhere south of Z +150 m. No
+lintel, no soffit and no framed void survives. No lamps.
 
 Desaturated, dark and still; quieter than any vessel.
 ```
@@ -2093,8 +2095,10 @@ The runtime reads the model by these part names, so no code names Sorrowgate:
 The arch is built rather than generated. `tools/hull-models/props/ruin-transit-arch.mjs`,
 composed from `seabed.mjs`, writes `docs/concept-art/models/env-ruin-transit-arch.glb`, and
 `npm run check:models` holds the two together. Intake runs `--category env` at
-`--footprint-m 570` and `--max-materials 4`, and its light check admits `civic-lamp` for
-this row alone. The hull-reviewer reviews the shape, as it reviews every new one.
+`--footprint-m 570` and `--max-materials 4`. Today intake's env light check and the
+registry's `worldLight` take only the four prop families. The commission adds a civic family
+to both, admitted for this slug alone. The hull-reviewer reviews the shape, as it reviews
+every new one.
 
 ## Consistency checklist (before accepting a model)
 

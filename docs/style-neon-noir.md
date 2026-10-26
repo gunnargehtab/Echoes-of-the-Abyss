@@ -105,7 +105,7 @@ suffix saying which. Metalness is 0 on every one; roughness is the material's ow
 | `ore-trace-base` | `#0B0805` | 1 | `ore_trace` | Nodule bed's glint facets, under `ore-trace` |
 | `civic-lamp-base` | `#0D0907` | 1 | `civic_lamp` | Transit arch's lamp glass, under `civic-lamp` |
 
-Three rules ride with the table:
+Four rules ride with the table:
 
 - **The runtime owns value.** `packages/frontend/src/game/environmentModels.ts`
   (`ENV_LUMINANCE_CEILING`) scales every prop so its brightest material sits at a 0.06
@@ -539,7 +539,9 @@ Every family obeys the same five rules, and they are gates, not suggestions:
 1. **World light is points and seams, never area glow.** No lit ground, no
    glowing fills, no halo recipe — the glow recipe above belongs to the
    interface. A world light is a small emitter in a dark world, full stop. Terrain-owned
-   light never enters the lamp halo's source, which is own agents' lamps only.
+   light never enters the lamp halo's source, which is own agents' lamps only. The arch
+   study's lamp pools are the one exception, on its landmark alone
+   ([licence](#the-arch-studys-licence)).
 2. **The vent ember is the brightness ceiling.** No family renders brighter than
    `vent-ember` does today — dim, small, swallowed by fog at any distance. The
    85–90 % darkness budget and the 5–10 % seafloor luminance floor stand
@@ -637,8 +639,9 @@ flipped.
    the sift. A hull lit by a world lamp would read louder than its SIG
    ([graphics-standards.md](graphics-standards.md#3-glow-encodes-loudness--always) gate 3),
    and lit seabed would break the 5–10 % floor. The brightest lit stone stays under the lamp
-   beside it and under a vent ember's mean breath. There is no shadow, no halo and no scene
-   light, and the lamp halo's source stays own lamps only.
+   beside it, under a vent ember's mean breath, and under the escorts' brightest lamp pixel
+   in the same frame, so the flight stays the first read. There is no shadow, no halo and no
+   scene light, and the lamp halo's source stays own lamps only.
 3. **A guttering step.** Rule 3 lets a civic lamp step on the bucket, and the row above
    holds it steady. These four hold steady and dip to 60 % for one or two buckets, each lamp
    at most once in any 2 s, never two in one bucket and never above the steady level. Their

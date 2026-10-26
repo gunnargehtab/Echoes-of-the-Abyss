@@ -69,7 +69,7 @@ not claims that the proposed study exists.
 | Arch row | Row 8 under the marker, columns 9–11, is the Districts' 1,600 m floor; the chamber's 1,500 m begins at row 9. The court's array stands in the chamber at (2550, 2750), not on the span | The arch's foot is 100 m deeper than the flight's floor, and the array is nowhere in its plan |
 | Ground | `packages/shared/src/ground.ts` owns `SORROWGATE_GROUND`; the backend map imports it | A prettier composition cannot relocate the gate, basin or lock |
 | Drawn heights | `perspectiveTerrain.ts` draws depth at 0.22 world metres a metre (`DEPTH_VISUAL_M_PER_M`); hulls and props draw at true metres, hulls up to 2.3× at the survey station (`readability.ts`) | Every height in §6 is a drawn height, never a depth |
-| Rock | Rock and a roof rise to about 190 m, the Concourse's 340 m less `ROCK_RISE_ABOVE_SHALLOWEST_M`: the lock's roof from tick 0, the whole span row from 10:40 | After the collapse the wall covers anything still standing in row 8 |
+| Rock | Rock and a roof top out at 190 m depth, the Concourse's 340 m less `ROCK_RISE_ABOVE_SHALLOWEST_M`, drawn about 310 m over a 1,600 m floor: the lock's roof from tick 0, the whole span row from 10:40 | After the collapse the wall covers anything still standing in row 8 |
 | Own force | `rosterModels.ts` resolves `light-scout-pelagia.glb` and `harvester-pelagia.glb`; there is no `cantor-pelagia.glb` | Retain six hull models and the array's sanctioned sprite fallback |
 | Surfaces and light | `tutorialLook.ts` selects the mission surface profile; `PerspectiveView.ts` uses the shared model rig, ACES and `modelLighting.ts`'s public-water environment | Improve through the actual pipeline, not an unrelated beauty renderer |
 | Dressing | `environment.ts` places registry props deterministically from public ground and published resource fields; `environmentLayer.ts` instances them. The prologue's look stands 186 props and 49,244 triangles before 10:40, 198 and 50,356 after | A fixed civic landmark is a placement decision, not an excuse for a one-off scene object; the 120,000-triangle reservation has room for one |
@@ -171,9 +171,9 @@ transit the span goes solid and the two lock columns are cut back through it: se
 [mission-sorrowgate.md §9](mission-sorrowgate.md#the-arch-as-ground).
 The ruined state must no longer advertise the intact opening as a route north.
 Preserve the existing rule that a hull caught in changed ground can leave it.
-The lock is the surviving route, not a hole an artist may relocate. The drawn rock rises
-to about 190 m across the whole row, so the new wall covers whatever stood in it; the
-collapse reads at its south face (§8).
+The lock is the surviving route, not a hole an artist may relocate. The rock tops out at
+190 m depth across the whole row, drawn about 310 m over the arch's origin, so the new wall
+covers whatever stood in it; the collapse reads at its south face (§8).
 
 The West Approach's Thermal Vein and the Commit's Abyssal Trench keep their existing
 surfaces and acoustic meaning. Only the local Coral Ruins landmark is proposed for
@@ -207,9 +207,12 @@ art ([habitats-art-brief.md §5](habitats-art-brief.md#5-sorrowgate--the-city-no
 ## 6. Dimensioned fit
 
 Plan figures are mission-local metres. Heights are drawn world metres above the model's
-origin, which is the drawn seabed at the anchor. The conn view draws depth at 0.22 world
-metres a metre and hulls and props at true metres, so no height here is a depth. In model
-space +Y is up, +X east and +Z south, the flight's side.
+origin. The origin is pinned to the anchor cell's floor in the map literal, 1,600 m, drawn at
+−352 m, in both states and every session. Neither the received ground nor the relief moves
+it, so the wall that rises under the anchor at 10:40 does not lift the ruin onto its top.
+The conn view draws depth at 0.22 world metres a metre and hulls and props at true metres,
+so no height here is a depth. In model space +Y is up, +X east and +Z south, the flight's
+side.
 
 | Item | Value | Reason |
 | --- | --- | --- |
@@ -217,12 +220,12 @@ space +Y is up, +X east and +Z south, the flight's side.
 | Anchor cells | Row 8, columns 9–11: X 2250–3000, Y 2000–2250 | The cells whose state is the arch's (§7) |
 | Intact plan | X 2265–2835, Y 2045–2205; model X ±285 m, Z ±80 m | Centred on the anchor, 15 m clear of the lock's cells at X 2250; the south face stands 75 m short of the nearest seat |
 | Opening | X 2365–2735, 370 m clear | Holds the flight's 300 m spread, X 2400–2700, with 35 m to spare each side |
-| Piers | Two, each at most 100 m wide, together at most 35 % of the width | Two masses that read before detail; no screen, gate or rubble wall between them |
-| Ruined plan | X 2265–2835, Y 2125–2275; model Z 0 to +150 m | Inside the anchor cells and their ring; 25 m into row 9 and none into the lock's columns |
+| Piers | Two, 100 m each, 35 % of the span | Two masses that read before detail; no screen, gate or rubble wall between them |
+| Ruined plan | X 2265–2835, Y 2240–2275; model Z +115 to +150 m | What the wall leaves in view. Its drawn south face runs from Z +62.5 at its top to Z +125 at its foot, at about Z +117 where it is 60 m up, so everything north of Z +115 is inside rock. 25 m into row 9 and none into the lock's columns |
 
 | Level | Height above the origin | What it is |
 | --- | --- | --- |
-| Foundations | −30 m | Coral Ruins relief is ±60 m, drawn ±13.2 m, so the ground under two piers differs by at most 26.4 m and neither floats |
+| Foundations | −30 m | Under the plan the drawn ground lies between −13.2 m (Coral Ruins relief, ±60 m) and about +27 m (relief over the chamber's and the lock's blend; the authored floor is 1,538 m at (2265, 2205)), so no pier floats |
 | Chamber floor | +22 m | 1,500 m, the floor the flight sits over in row 9 |
 | Escorts' seats | +33 m | 1,450 m, drawn at −319 m against the origin's −352 m |
 | Lamps | +20 to +40 m | Level with the flight: low over the court |
@@ -231,12 +234,14 @@ space +Y is up, +X east and +Z south, the flight's side.
 | Hung fittings' lowest point | at least +60 m | 27 m over the seated flight |
 | Crown soffit | at least +110 m | Clears the seated flight by 77 m |
 | Top | +150 m | Within 4 m of the Descent's 900 m lip (+154), two rows north |
-| Lock roof, and the span after 10:40 | about +310 m | Rock top at 190 m |
+| Lock roof, and the span after 10:40 | about +310 m | The rock top, at 190 m depth |
 
-The ruined state is held tighter. South of Y 2250 nothing rises more than 5 m over the
-drawn floor, which keeps the debris under the escorts' hulls at their seats. Stumps stand
-against the wall's south face no higher than +60 m. No piece of it spans the piers or frames
-a void, and every debris piece comes to rest inside the ruined plan.
+The wall swallows the piers: every stump at a pier's place would stand inside the drawn rock,
+so the ruined state models none. It is what heaps against the face: broken pier mass and
+fallen courses between Z +115 and +150, no higher than +60 m. South of Y 2250 (Z +125) nothing
+rises more than 5 m over the drawn floor, which keeps the debris under the escorts' hulls at
+their seats. No piece spans the piers' old line or frames a void, and every debris piece
+comes to rest inside the ruined plan.
 
 At the opening station (2,600 m dolly, 1,080 px tall, 40° field of view) the arch spans
 about 325 px and a scout about 34 px, both at true scale. At C (420 m) the arch overfills
@@ -261,13 +266,17 @@ contract reads:
 
 | Term | The arch |
 | --- | --- |
-| Where it is written | Sorrowgate's map literal, beside its regions: the slug, the anchor (2550, 2125), yaw 0 and the anchor cells. Public map data, identical for every client and every mission on the ground |
+| Where it is written | A shared table of public landmarks keyed by map id, beside `SORROWGATE_GROUND` in `packages/shared/src/ground.ts` but outside it, since `MapGround` holds ground alone by its own comment. It names the slug, the anchor (2550, 2125), yaw 0, the anchor cells and the origin's floor, 1,600 m. Public map data, identical for every client and every mission on the ground. The client imports it; the backend never does, so the simulation cannot read it |
 | State | Intact while all three anchor cells are water; ruined once any is rock in the published grid. Nothing else switches it |
 | Join | A session whose first ground already holds the collapse, such as a reload after 10:40, draws the ruined state from its first frame and plays no sequence |
+| Baseline | Every layer that stands the map's props stands the arch too, in the state its own cells give: the region's baseline detail, on the board and in travel, stands it intact from the literal, and the session's layer from the received ground. The join trades like for like ([world-map.md](world-map.md) §7.6, #1488). On the board the 570 m arch draws about 29 px, at canonical scale |
 | Locality | Both states stay inside the anchor cells and the one-cell ring a ground delta re-shades. A delta elsewhere never touches the arch |
 | Budget | One instance from the prop reservation, spent after the fields and before the scatter: four calls standing, 12,000 triangles at most. With the look's 50,356, that is 62,356 of 120,000 |
 | Scatter | Nothing on open ground whose footprint meets the plan of the state drawn. Today that removes nothing: no placement meets the intact plan, and the three crags that meet the ruined one stand on the wall's top |
-| Runtime | One registry row, read by slug. The layer draws any map's landmark list, so no code names Sorrowgate, and the simulation never reads it |
+| Runtime | One registry row, read by slug. A layer draws any map's landmark list, so no code names Sorrowgate |
+
+The baseline row took a decision. Drawing the arch in the session's layer alone would make
+it appear at the join and vanish at the swap, the defect #1488 removed for every other prop.
 
 **Isolation.** The study sits behind a development URL flag of its own, read by one
 predicate (`seabedDetailEnabled` is the shape), and draws only on the prologue's mission
@@ -286,7 +295,7 @@ gate 6 for cost. Its numbers:
 | What | Bound | Reduced motion |
 | --- | --- | --- |
 | Lamps | Four, on the intact state's south face, two on each pier, +20 to +40 m, at least 40 m apart; `civic-lamp` glass at an effective emissive luminance of at most 0.11, under the ember's 0.18. None on the ruined state | Held at their steady level |
-| Lamp pools | Each lamp lights the arch's own stone within 20 m, falling to nothing there, so no two pools overlap. The brightest lit stone stays under its lamp and under a vent ember's mean breath. Nothing else takes the light; no scene light, shadow or halo | Steady with their lamps |
+| Lamp pools | Each lamp lights the arch's own stone within 20 m, falling to nothing there, so no two pools overlap. The brightest lit stone stays under its lamp, under a vent ember's mean breath, and under the escorts' brightest lamp pixel in the same frame, so the flight stays the first read. Nothing else takes the light; no scene light, shadow or halo | Steady with their lamps |
 | Flicker | A lamp dips to 60 % for one or two 200 ms buckets, at most once in any 2 s; no two lamps dip in one bucket; never above the steady level | No dips |
 | Sift | At most 8 sites on the intact state and 4 on the ruined; at most 256 motes; sinks only, at no more than twice the marine snow's rate, stepping on the 5 Hz grid as the field haze does; the silt colour, capped at 0.10 of it | Held still |
 | Sway | At most six hung fittings, at most 1.5 m at the free end, periods 9–14 s; each fitting's axis is its own, spread over at least 120° across the set | Held at rest |
@@ -344,8 +353,9 @@ after 10:40 and show the ruin standing from the first frame, with no sequence.
 Pair C and L with the study on and off, at the same tick. Read the brightest lamp-glass
 pixel, the brightest lit-stone pixel and the frame's dark fraction, then a vent ember's
 mean breath at a C-matched station on the West Approach's nearest chimney. The lit stone
-must sit under both, and the frame inside the 85–90 % darkness budget. One escort's
-pixels at the same SIG must not change between the pair.
+must sit under both and under the escorts' brightest lamp pixel in the same frame, and the
+frame inside the 85–90 % darkness budget. One escort's pixels at the same SIG must not
+change between the pair.
 
 The non-target control is the standard `ventfront-divide` match with the study requested,
 compared with it off. Also return from the tutorial to that standard path and inspect
@@ -394,8 +404,9 @@ the paired evidence:
   without relying on a close-up, extra glow or explanatory labels to supply its volume.
 - C distinguishes masonry, exposed structure, sediment and the retained hull laminate;
   surface detail is subordinate at S and does not shimmer during camera movement.
-- The lamp pools light only the arch's stone, under their lamps and a vent ember's mean;
-  the frame keeps its darkness budget, and no hull reads brighter with the study on.
+- The lamp pools light only the arch's stone, under their lamps, a vent ember's mean and
+  the escorts' own lamps; the frame keeps its darkness budget, and no hull reads brighter
+  with the study on.
 - L conveys layered water and the authored drop; H/S still let a player understand
   the court and route without changing map geometry or revealing other parties.
 - T agrees with the received collapse, preserves the lock and leaves no intact false
@@ -420,6 +431,7 @@ round and authorizes no game-wide rollout.
 - [Graphics standards](graphics-standards.md)
 - [World light and prop tokens](style-neon-noir.md)
 - [How a map is written](maps.md#how-a-map-is-written)
+- [The placed world and its baseline](world-map.md)
 - [Environment asset pipeline](asset-prompts-3d.md#block-4--environment-props-no-faction-no-sig)
 - [Map visual hierarchy](map-visuals.md)
 - [UI and accessibility](ui-ux.md)

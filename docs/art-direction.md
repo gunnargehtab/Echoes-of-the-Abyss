@@ -1250,7 +1250,9 @@ so they never *add* information, and they obey the same silence: desaturated,
 darker than any contact, lit only within the world-light families. A public landmark
 is the one prop a map places by name rather than by cell
 ([graphics-standards.md](graphics-standards.md#1-model-backed-or-deliberately-procedural--no-third-path)
-gate 1), and it keeps the same silence. Where kelp
+gate 1), and it keeps the same silence. Its licensed lamp pools are the one exception,
+held under the flight's own lamps
+([style-neon-noir.md](style-neon-noir.md#the-arch-studys-licence)). Where kelp
 slows and hides a hull ([environments.md](environments.md)), the props are what
 the player sees; the cell grid stays what the simulation reads.
 
