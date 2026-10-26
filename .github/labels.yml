@@ -11,6 +11,9 @@
 # description until #599 folded it in. **`docs` is the name.** A label
 # missing from here is not "unmanaged", it is scheduled for deletion —
 # so add one here before it is applied to anything.
+#
+# GitHub caps a description at 100 characters, and the sync logs a longer one
+# as an error yet still passes: fable-5.1's ran at 112 and was never applied.
 
 # --- Kind: what sort of change an issue asks for ---
 
@@ -57,7 +60,7 @@
 - name: shape-work
   from_name: fable-5.1
   color: f4a6c8
-  description: Shape work, authored under the design model of record (asset-prompts-3d.md rule 3); the backlog Routine skips it
+  description: Shape work for the design model of record (asset-prompts-3d.md rule 3); the Routine skips it
 
 - name: routine
   color: 006b75
