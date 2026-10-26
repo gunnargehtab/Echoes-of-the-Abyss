@@ -59,6 +59,17 @@ export function priceWords(price: Price): string {
 }
 
 /**
+ * `Baffle Barge — 600 nodules, 120 crystal`: what a priced command-card cell
+ * makes and what it costs, for the hint bar while the pointer rests on it
+ * (docs/ui-ux.md §9, #1589). The cell has room for a code and a `priceTag`;
+ * this is the same price with its suffixes spelled out. No `  ·  `
+ * separators, so the bar's clause trimming never cuts the price off a name.
+ */
+export function hoverLine(name: string, price: Price): string {
+  return `${name} — ${priceWords(price)}`;
+}
+
+/**
  * `Cantor: 120 crystal short` — why this price is refused, or null when it
  * is not.
  *

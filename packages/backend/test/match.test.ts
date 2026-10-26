@@ -347,6 +347,25 @@ describe('economy', () => {
     );
   });
 
+  /**
+   * #1589: the skirmish orders panel names the harvester that is working and
+   * points at one waiting for a field, so the owner is told which is which.
+   * The opening kit's is sent at spawn; a move order parks it.
+   */
+  it('tells the owner whether a harvester is working a field', () => {
+    const match = twoPlayerMatch();
+    const harvester = advance(match, 0.4)!
+      .get(0)!
+      .units.find((u) => u.kind === UnitKind.Harvester)!;
+    assert.equal(harvester.harvesting, true, 'the opening harvester is sent at spawn');
+
+    match.orderMove(0, harvester.id, harvester.x, harvester.y);
+    const parked = advance(match, 0.4)!
+      .get(0)!
+      .units.find((u) => u.id === harvester.id)!;
+    assert.equal(parked.harvesting, undefined, 'a parked harvester still read as working');
+  });
+
   it('mining loudness follows the throttle', () => {
     const match = twoPlayerMatch();
     advance(match, 0.2);

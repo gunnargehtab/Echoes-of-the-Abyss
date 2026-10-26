@@ -34,10 +34,12 @@ import {
   MOVEMENT,
   MovementHoldReason,
   onTheGround,
+  priceOf,
   ResolutionTier,
   SIM,
   SelfEventKind,
   StructureKind,
+  structureStatsFor,
   type Contact,
   UnitKind,
   type MissionView,
@@ -50,6 +52,7 @@ import { readsDisplayVeil, VEIL_SHADE_ATTRIBUTE } from '../src/game/veilShading.
 import { VEIL_FLOOR_RGB } from '../src/game/acousticVeil.ts';
 import { HIT_PARTICLES_MIN } from '../src/game/hullHit.ts';
 import { LIVE_TRACK_MS } from '../src/game/trackFidelity.ts';
+import { priceTag, priceWords } from '../src/game/price.ts';
 import {
   createHost,
   dispatchWindow,
@@ -3629,6 +3632,72 @@ describe('the hint bar names the keys the player has (#1340)', () => {
       }
       world.frame(1);
       assert.ok(textSaying(world.app.stage, 'E throttle') !== null, 'the throttle named V');
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
+/**
+ * #1589 — a cell reads `REF 300`, and a newcomer had nothing saying what it
+ * builds or what a `c` suffix is. docs/ui-ux.md §9: with the pointer on a
+ * priced cell, the hint line reads the whole name and the price in words.
+ */
+describe('a priced cell names what it makes under the pointer (#1589)', () => {
+  it('puts the name and the price in words on the hint line, and only while hovered', async () => {
+    const world = await boot();
+    try {
+      world.frame(2);
+      const stats = structureStatsFor(StructureKind.Refinery);
+      const price = priceOf(stats);
+      const line = `${stats.name} — ${priceWords(price)}`;
+      assert.equal(textSaying(world.app.stage, line), null, 'the premise: not said unhovered');
+
+      const cell = barLabel(world.app, `REF ${priceTag(price)}`);
+      const move = (clientX: number, clientY: number): void =>
+        world.app.canvas.dispatch('pointermove', {
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX,
+          clientY,
+        });
+      move(cell.x, cell.y);
+      world.frame(1);
+      assert.ok(textSaying(world.app.stage, line) !== null, `the bar never said "${line}"`);
+
+      // Off the card, into the water: the line is the steady one again.
+      move(cell.x, 200);
+      world.frame(1);
+      assert.equal(textSaying(world.app.stage, line), null, 'the line outlived the hover');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('gives a refusal the line first, with the pointer still on the cell', async () => {
+    const world = await boot();
+    try {
+      // Nothing banked, so every priced cell is greyed and a press is refused.
+      const broke = cannedSnapshot();
+      broke.nodules = 0;
+      world.chart.applySnapshot(broke);
+      world.frame(2);
+      const stats = structureStatsFor(StructureKind.Refinery);
+      const price = priceOf(stats);
+      const line = `${stats.name} — ${priceWords(price)}`;
+      const cell = barLabel(world.app, `REF ${priceTag(price)}`);
+      assert.ok(barGrey(world.app, `REF ${priceTag(price)}`), 'the premise: the cell is greyed');
+      const at = { pointerId: 1, pointerType: 'mouse', clientX: cell.x, clientY: cell.y };
+      world.app.canvas.dispatch('pointermove', at);
+      world.frame(1);
+      assert.ok(textSaying(world.app.stage, line) !== null, 'the control: hovered, it is named');
+
+      world.app.canvas.dispatch('pointerdown', { ...at, button: 0 });
+      world.frame(1);
+      // §7's wording for a price, built by `shortfallLine`.
+      const refusal = `${stats.name}: ${price.nodules} nodules short`;
+      assert.ok(textSaying(world.app.stage, refusal) !== null, `no "${refusal}" on the bar`);
+      assert.equal(textSaying(world.app.stage, line), null, 'the hover line covered the refusal');
     } finally {
       world.teardown();
     }
