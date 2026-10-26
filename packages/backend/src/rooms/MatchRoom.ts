@@ -558,6 +558,18 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
 
     // --- Lifecycle messages ------------------------------------------------
 
+    // The esc menu's Resign (docs/ui-ux.md §9.5, #1588): the resignation a
+    // walk-out makes, with the seat kept. `forfeit` releases the seat in the
+    // same act, so its result has nobody to reach; this leaves the seat where
+    // it is, and the next step's result check announces the loss to it like
+    // any other. A mission refuses it, because a mission concludes on its own
+    // authored terms and `resolveVictory` is not one of them.
+    this.onClientMessage(CLIENT_MSG.resign, (client) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined || this.mission !== null) return;
+      this.match.resign(slot);
+    });
+
     this.onClientMessage(CLIENT_MSG.faction, (client, message) => {
       if (this.state.phase !== MatchPhase.Lobby) return;
       // A mission pins the navy and seats no commanders: there is nothing here
@@ -1120,7 +1132,7 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     const phase =
       this.state === undefined ? 'no state' : (MatchPhase[this.state.phase] ?? 'unknown');
     const midMatch = this.state !== undefined && this.state.phase === MatchPhase.Playing;
-    // The message name is the one fact that says which of the 31 handlers this
+    // The message name is the one fact that says which of the 32 handlers this
     // was, and it is only carried by the `onMessage` exception.
     const where =
       error instanceof OnMessageException ? `${methodName} ${String(error.type)}` : methodName;

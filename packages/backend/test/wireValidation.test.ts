@@ -90,6 +90,7 @@ const MALFORMED: Record<string, unknown> = {
   build: { kind: 0, x: 0, y: Number.NaN },
   produce: { structureId: 1, kind: Infinity },
   refit: { structureId: '1', kind: 0 },
+  resign: 'now',
 };
 
 /** A payload that should be applied, for the messages a well-formed one is easy to give. */
@@ -111,8 +112,9 @@ describe('the room refuses a malformed payload before the simulation sees it', (
     // decisions by twenty-seven authors, and #609 is what that cost; the whole
     // claim of the change is that it is now one decision, so the test that
     // holds it has to be one assertion over all of them — twenty-six since
-    // #1132 folded the floor toggle into the move.
-    assert.equal(inMatchNames.length, 26, 'the orders a seated commander may send');
+    // #1132 folded the floor toggle into the move, twenty-seven since #1588
+    // added Resign.
+    assert.equal(inMatchNames.length, 27, 'the orders a seated commander may send');
     const room = await bootRoom();
     try {
       const [client] = startPlaying(room);

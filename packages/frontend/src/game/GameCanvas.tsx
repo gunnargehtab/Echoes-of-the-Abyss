@@ -36,6 +36,7 @@ import { MatchResult } from './MatchResult.tsx';
 import { MissionLog } from './MissionLog.tsx';
 import { MissionPanel } from './MissionPanel.tsx';
 import { MissionResult } from './MissionResult.tsx';
+import { SkirmishOrders } from './SkirmishOrders.tsx';
 import { StripReadouts } from './StripReadouts.tsx';
 import type { ReadoutBox } from './readouts.ts';
 import { AudioEngine, dbToGain } from '../audio/engine.ts';
@@ -891,6 +892,16 @@ export function GameCanvas({
     void joinRef.current?.();
   }, []);
 
+  /**
+   * The esc menu's Resign (§9.5, #1588): send it and give the water back. The
+   * seat stays, so the result arrives here like any other and the result
+   * screen's own Return to port is the way out.
+   */
+  const resign = useCallback(() => {
+    clientRef.current?.resign();
+    setMenuOpen(false);
+  }, []);
+
   const focusOn = useCallback((x: number, y: number) => {
     rendererRef.current?.focusOn(x, y);
   }, []);
@@ -941,6 +952,19 @@ export function GameCanvas({
   const live = status === 'connected';
   /** This seat's own readiness — what "Again" and "Rematch" toggle. */
   const selfReady = lobby?.players.find((player) => player.sessionId === sessionId)?.ready ?? false;
+  /**
+   * A skirmish, as against a mission: the room was asked for no mission. Read
+   * off the prop rather than off `mission`, which is null in a mission room
+   * until its first view arrives.
+   */
+  const skirmish = missionId === undefined;
+  /**
+   * Commanders seated, for the goal row and for whether Resign is offered.
+   * The roster keeps a commander beaten by the Bastion rule and drops one
+   * who walked out, whose resignation already ran — so two seats here means
+   * two still standing, and a resignation decides the match (§9.5).
+   */
+  const seated = lobby?.players.length ?? 0;
 
   return (
     <div
@@ -970,6 +994,7 @@ export function GameCanvas({
             onCommanderAbility={() => clientRef.current?.commanderAbility()}
           />
         )}
+        {live && phase !== MatchPhase.Lobby && skirmish && <SkirmishOrders seated={seated} />}
         {live && phase !== MatchPhase.Lobby && missionLines.length > 0 && (
           <MissionLog lines={missionLines} />
         )}
@@ -1035,6 +1060,9 @@ export function GameCanvas({
           ended={phase === MatchPhase.Ended}
           onResume={() => setMenuOpen(false)}
           onExit={exit}
+          {...(skirmish && phase === MatchPhase.Playing && seated === 2
+            ? { onResign: resign }
+            : {})}
         />
       )}
       {glFailed && (

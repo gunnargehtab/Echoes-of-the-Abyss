@@ -160,6 +160,7 @@ const ORDERS: Array<[string, (client: GameClient) => void, SentMessage]> = [
   ],
   ['activeSonar', (c) => c.activeSonar(11), { type: 'ping', payload: { unitId: 11 } }],
   ['commanderAbility', (c) => c.commanderAbility(), { type: 'ability', payload: {} }],
+  ['resign', (c) => c.resign(), { type: 'resign', payload: {} }],
   [
     'launchTorpedo',
     (c) => c.launchTorpedo([11], 101),

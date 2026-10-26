@@ -792,6 +792,7 @@ The entries:
 | **Return to the water** | Closes the menu. Autofocused — the cheapest exit is the default one |
 | **Settings** | §14's screen, the same one, opened over the match. Every control applies live: the settings subscription does not care which door a write came through |
 | **Controls** | The rebinder (§11), likewise live — a binding you cannot try is a binding you cannot judge |
+| **Resign** | Ends the match as your loss and shows the result. Only in a skirmish of two commanders, and armed — see below |
 | **Return to port** | Leaves the match. Armed, never instant — see below |
 
 **Return to port is armed, never instant.** A seat left on purpose is not held (§14,
@@ -801,6 +802,20 @@ the cost, the second press leaves, and arming moves focus to **Stay**, so the `E
 armed it cannot also be the `Enter` that leaves. The result screen's own "Return to port"
 stays un-armed, because a resolved match has already spent everything the button could
 cost.
+
+**Resign ends at a result** (#1588). Walking out of a live match already resigns
+([tech-stack.md](tech-stack.md), "Match lifecycle"), but it gives the seat up in the same
+act, so the result never reaches the player who left. A losing newcomer had no way to a
+result short of waiting to be sunk. Resign is the same resignation with the seat kept: the
+room resigns the slot, the match resolves, and the result screen shows the loss, whose own
+Return to port then leaves. It is not the offer of surrender
+[game-identity.md](game-identity.md) refuses, because nobody is offered anything and nobody
+can decline it. It is offered only where it decides the match: a skirmish with two
+commanders seated. With a third still in the water there is no result yet to show, and
+Return to port's warning already says plainly that the match goes on without you. A mission
+does not offer it either, because a mission concludes on its own authored terms. It is armed
+like Return to port and for the same reason: the first press names the cost, *the match is
+lost*, the second pays it, and arming moves focus to **Stay**.
 
 The menu is DOM, for §10's reasons — a modal dialog, focus moved into it, every entry
 reachable by keyboard, and everything under its glass made inert so focus cannot wander
@@ -920,8 +935,14 @@ other documents ([audio-direction.md](audio-direction.md),
 citations to no purpose.
 
 A mission states what it wants of the player ([campaign.md](campaign.md) §10), and the panel
-is where it says so. It is in-match chrome, present only while a mission is running: a
-skirmish has no objectives and draws no empty box for them.
+is where it says so. It is in-match chrome, present while a mission is running. A
+skirmish has no objectives, and the panel carries one row in their place: the rule that
+wins it, *destroy the enemy Bastion*, glossed *lose yours and you are out*
+([game-identity.md](game-identity.md), "Destroy"). With three or four commanders seated it
+reads *every enemy Bastion*; with one, it says nothing ends the match but leaving. A
+newcomer met a skirmish with nothing on screen saying what wins (#1588). The row has no
+marker and its status word never moves, because the server sends nothing about any other
+Bastion and the row may not imply that it does.
 
 **DOM, not Pixi, for §10's reasons exactly.** A canvas objective is not selectable and not
 reachable by a screen reader, and an objective the player cannot copy into a bug report or

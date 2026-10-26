@@ -248,7 +248,7 @@ Silence Order
 Scuttling
 
 - The second way a commander leaves a match: a position with no harvester alive, nothing on a production line or rising, not the price of a harvester in the bank and nothing landing in any stockpile, held for sixty seconds while another commander is still earning and fields at least as many armed hulls, ends with the crew scuttling and the commander eliminated exactly as a lost Bastion eliminates them (game-identity.md "Match Structure").
-- Automatic and unilateral. It is not an offer of surrender, and it is distinct from a *resignation*, which is a player leaving a live match (tech-stack.md).
+- Automatic and unilateral. It is not an offer of surrender, and it is distinct from a *resignation*, which is a player giving up a live match: walking out, running out of grace, or the esc menu's Resign (tech-stack.md).
 
 Spectator
 

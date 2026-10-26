@@ -97,8 +97,9 @@ minute with nothing in the water is.
 The rule is automatic and cannot be invoked. There is no *offer* of surrender to accept or
 refuse — a concession an opponent could decline would be a negotiation, and nobody down here
 is talking. Walking out of a live match is still a resignation
-([tech-stack.md](tech-stack.md)), which is a different thing: that is a player leaving, this
-is a position ending.
+([tech-stack.md](tech-stack.md)), and so is the esc menu's Resign
+([ui-ux.md](ui-ux.md) §9.5). Both are a different thing: those are a player giving up,
+this is a position ending.
 
 *Beats* above means these four phases of the loop. The word does two other jobs in this
 bible — [campaign.md](campaign.md)'s mission tables head a column *Beat* for what a mission

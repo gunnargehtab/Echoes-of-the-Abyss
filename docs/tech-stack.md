@@ -140,7 +140,7 @@ the seat assignment, the mission view. That is not an optimisation, it is the fi
 model — a fact that differs by who is asking cannot live in shared state without leaking.
 
 Both directions of the message channel are declared once, in
-`packages/shared/src/wire.ts`: 31 names a client may send — 26 in a match and five only in
+`packages/shared/src/wire.ts`: 32 names a client may send — 27 in a match and five only in
 the lobby — 11 the room may send, and the payload of each. Neither package writes a message
 name as a string literal, and each side reaches the wire through a thin generic wrapper that
 takes the name and infers the payload from the same map. The result is that a message
@@ -502,8 +502,10 @@ network cable the cheapest stealth in the game — in a game whose whole subject
 heard. `PlayerState.connected` is broadcast, so the flag itself costs the dropped player
 something: an opponent who can read the roster knows whose hulls are now unattended.
 
-Running out of grace is a **resignation**, and so is walking out of a live match. Both call
-`Match.resign(slot)`, which eliminates the slot and scuttles its force down the same path a
+Running out of grace is a **resignation**, and so is walking out of a live match. So is the
+esc menu's Resign ([ui-ux.md](ui-ux.md) §9.5), the one a client asks for by name: a
+`resign` message, after which the room keeps the seat so the result reaches it. All three
+call `Match.resign(slot)`, which eliminates the slot and scuttles its force down the same path a
 lost Bastion takes. The tempting alternative — quietly drop the player from the roster —
 leaves the survivor in a game they have already won, forever, because the victory check
 needs two rosters to declare a winner.
@@ -1056,12 +1058,12 @@ the seat ignores no longer reads as a commander that chose not to act.
 **That check only ever held one of the two directions**, and the arithmetic above went stale
 while nobody noticed. A client message with *no* variant is invisible to a `never` on a switch,
 because there is nothing in the union for the switch to fail on; five more verbs accumulated
-behind `depth` in exactly that blind spot. The counts today are **24 variants against 26
-in-match client messages** — `ability` and `sow` are the difference, and `followFloor` left
-both sides together (#1132) — and the reason this
+behind `depth` in exactly that blind spot. The counts today are **24 variants against 27
+in-match client messages** — `ability`, `sow` and `resign` are the difference, and
+`followFloor` left both sides together (#1132) — and the reason this
 paragraph can state them is that both directions are now checked rather than asserted (#621). `wire.ts` declares `LOBBY_MSG` beside `CLIENT_MSG`, so
 the five phase-gated names are a type rather than a comment and the in-match set can be
-subtracted; `ai/types.ts` carries an `Exclude<>` assertion against it, and a 27th in-match
+subtracted; `ai/types.ts` carries an `Exclude<>` assertion against it, and a 28th in-match
 message fails `npm run type-check` until someone writes the verb or names it as an exception
 with the issue that fills it. `Exclude<>` and not the `Exact<>` that polices the wire, because
 `Exact<>` reports only `Type 'true' is not assignable to type 'never'` while `Exclude<>` quotes

@@ -14,9 +14,9 @@
  * Not a resemblance — "the AI plays through the interface a player plays
  * through" has to be literally true or it is decoration.
  *
- * Today it is true with **two named exceptions**: 24 variants against the 26
+ * Today it is true with **three named exceptions**: 24 variants against the 27
  * in-match client messages, the difference listed and justified in
- * `AiExempt` below — two verbs an AI seat provably cannot use, and none
+ * `AiExempt` below — three verbs an AI seat cannot or must not use, and none
  * nobody has written a rule for (`AiUnbuilt`). That is a narrower claim than
  * this comment used to make, and the reason it is written down rather than
  * asserted is #621 — this comment claimed the two sets were identical, and
@@ -305,13 +305,17 @@ type AiUnbuilt = (typeof AI_UNBUILT)[number];
  *   a room where the verb does anything.
  * - `sow` — docs/systems-flora.md §"the commander's opinion is two judgements
  *   and no more", and neither of the two is sowing.
+ * - `resign` — a person's way to a result (docs/ui-ux.md §9.5). A seat that
+ *   gave up would end a match its opponent came to play, and an AI's position
+ *   is already read for it: scuttling (docs/game-identity.md) applies to a
+ *   commander exactly as to a person.
  *
  * A tuple for the reason `AI_UNBUILT` is one: the count subtracts both lists,
  * and it can only subtract what it can measure.
  */
-export const AI_EXEMPT = ['ability', 'sow'] as const;
+export const AI_EXEMPT = ['ability', 'sow', 'resign'] as const;
 
-/** One of those two, where a type is what is wanted. */
+/** One of those three, where a type is what is wanted. */
 type AiExempt = (typeof AI_EXEMPT)[number];
 
 /**

@@ -32,24 +32,37 @@ export interface EscMenuProps {
    * which is why this component arms the entry before it will call this.
    */
   onExit(): void;
+  /**
+   * Give the match up and stay for the result (§9.5, #1588). Passed only where
+   * a resignation decides the match — a skirmish of two commanders — so its
+   * absence is the menu's whole answer to whether to offer it. Armed like the
+   * leave entry, for the same reason.
+   */
+  onResign?(): void;
 }
 
 /** Which face the menu is showing. Esc steps back the way it came (§9.5). */
 type View = 'root' | 'settings' | 'controls';
 
-export function EscMenu({ ended, onResume, onExit }: EscMenuProps) {
+/** Which of the two costly entries the first press armed, if either. */
+type Arming = 'leave' | 'resign' | null;
+
+export function EscMenu({ ended, onResume, onExit, onResign }: EscMenuProps) {
   const [view, setView] = useState<View>('root');
   /**
-   * Return to port is armed, never instant (§1.5, §9.5): the first press
-   * names the cost, the second one pays it.
+   * Return to port and Resign are armed, never instant (§1.5, §9.5): the
+   * first press names the cost, the second one pays it. One at a time, so the
+   * one Stay on screen always backs out of the cost the screen is naming.
    */
-  const [armed, setArmed] = useState(false);
+  const [arming, setArming] = useState<Arming>(null);
+  const armed = arming !== null;
+  const resignable = !ended && onResign !== undefined;
   const resumeRef = useRef<HTMLButtonElement>(null);
   const stayRef = useRef<HTMLButtonElement>(null);
 
   /**
-   * One rule for where focus lands on the root face: Stay while the leave
-   * entry is armed — so the Enter that armed it cannot also be the Enter
+   * One rule for where focus lands on the root face: Stay while an entry is
+   * armed — so the Enter that armed it cannot also be the Enter
    * that leaves — and the resume entry otherwise, because the cheapest exit
    * is the default one. One effect rather than two so returning from the
    * port screens re-places focus whatever state the entry is in; the port
@@ -57,18 +70,24 @@ export function EscMenu({ ended, onResume, onExit }: EscMenuProps) {
    */
   useEffect(() => {
     if (view !== 'root') return;
-    (armed ? stayRef : resumeRef).current?.focus();
-  }, [view, armed]);
+    // On `arming`, not `armed`: moving the arming from one entry to the other
+    // renders a different Stay, and focus has to follow it there.
+    (arming !== null ? stayRef : resumeRef).current?.focus();
+  }, [view, arming]);
 
-  // A match that resolves while the entry is armed disarms it: the cost the
-  // arming named no longer exists.
+  // A match that resolves while an entry is armed disarms it: the cost the
+  // arming named no longer exists. So does a Resign that stops being offered
+  // under its own arming, since the entry it would confirm is gone.
   useEffect(() => {
-    if (ended) setArmed(false);
+    if (ended) setArming(null);
   }, [ended]);
+  useEffect(() => {
+    if (!resignable) setArming((current) => (current === 'resign' ? null : current));
+  }, [resignable]);
 
   /**
    * Esc steps back one level: controls to settings, settings to the menu,
-   * the menu to the water — and an armed leave entry disarms first, because
+   * the menu to the water — and an armed entry disarms first, because
    * backing out of a cost must always be the nearest exit.
    *
    * While the rebinder is capturing a key, its own capture-phase handler
@@ -91,7 +110,7 @@ export function EscMenu({ ended, onResume, onExit }: EscMenuProps) {
         return;
       }
       if (armed) {
-        setArmed(false);
+        setArming(null);
         return;
       }
       onResume();
@@ -140,6 +159,38 @@ export function EscMenu({ ended, onResume, onExit }: EscMenuProps) {
               <span className="menu-entry-label">Controls</span>
               <span className="menu-entry-note">Rebind and try it without leaving the match</span>
             </button>
+            {resignable &&
+              (arming !== 'resign' ? (
+                <button
+                  type="button"
+                  className="menu-entry"
+                  // One armed entry at a time: arming this one disarms the other.
+                  onClick={() => setArming('resign')}
+                >
+                  <span className="menu-entry-label">Resign</span>
+                  <span className="menu-entry-note">
+                    Ends the match as your loss — asks once more before it does
+                  </span>
+                </button>
+              ) : (
+                <div className="esc-menu-confirm" role="group" aria-label="Resign">
+                  {/* Announced for the leave entry's reason below (§11). */}
+                  <p className="esc-menu-warning" role="alert">
+                    The match ends now, as your loss. The result follows.
+                  </p>
+                  <button
+                    type="button"
+                    ref={stayRef}
+                    className="menu-entry"
+                    onClick={() => setArming(null)}
+                  >
+                    <span className="menu-entry-label">Stay</span>
+                  </button>
+                  <button type="button" className="menu-entry esc-menu-abandon" onClick={onResign}>
+                    <span className="menu-entry-label">Give up the match</span>
+                  </button>
+                </div>
+              ))}
             {ended ? (
               // Un-armed, like the result screen's own exit: a resolved match
               // has already spent everything this button could cost (§9.5).
@@ -147,8 +198,8 @@ export function EscMenu({ ended, onResume, onExit }: EscMenuProps) {
                 <span className="menu-entry-label">Return to port</span>
                 <span className="menu-entry-note">The match is decided — nothing left to lose</span>
               </button>
-            ) : !armed ? (
-              <button type="button" className="menu-entry" onClick={() => setArmed(true)}>
+            ) : arming !== 'leave' ? (
+              <button type="button" className="menu-entry" onClick={() => setArming('leave')}>
                 <span className="menu-entry-label">Return to port</span>
                 <span className="menu-entry-note">
                   Gives up your seat — asks once more before it does
@@ -166,7 +217,7 @@ export function EscMenu({ ended, onResume, onExit }: EscMenuProps) {
                   type="button"
                   ref={stayRef}
                   className="menu-entry"
-                  onClick={() => setArmed(false)}
+                  onClick={() => setArming(null)}
                 >
                   <span className="menu-entry-label">Stay</span>
                 </button>
