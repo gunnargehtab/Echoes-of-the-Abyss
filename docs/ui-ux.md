@@ -812,12 +812,13 @@ Return to port then leaves. It is not the offer of surrender
 [game-identity.md](game-identity.md) refuses, because nobody is offered anything and nobody
 can decline it. It is offered only where it decides the match: a skirmish with two
 commanders seated. There, Return to port's warning says that leaving ends the match as your
-loss without showing the result, and that Resign shows it. With a third commander still
-seated there may be no result yet to show, and the warning says plainly that the match goes
-on without you. A mission
-does not offer it either, because a mission concludes on its own authored terms. It is armed
-like Return to port and for the same reason: the first press names the cost, *the match is
-lost*, the second pays it, and arming moves focus to **Stay**.
+loss without showing the result, and that Resign shows it. Anywhere else the warning says
+only that you will not see how the match ends, because that holds whether or not leaving
+ends it: with a third commander seated and one of them already beaten, a walk-out decides
+the match too, and the client is never told who is still standing. A mission does not offer
+Resign, because a mission concludes on its own authored terms. It is armed like Return to
+port and for the same reason: the first press names the cost, *the match is lost*, the
+second pays it, and arming moves focus to **Stay**.
 
 The menu is DOM, for §10's reasons — a modal dialog, focus moved into it, every entry
 reachable by keyboard, and everything under its glass made inert so focus cannot wander

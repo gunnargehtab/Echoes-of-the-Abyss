@@ -190,7 +190,7 @@ describe('the esc menu: a seat left on purpose is not held', () => {
       await click(view, 'Return to port');
       assert.equal(doors.exits, 0, 'nothing has been spent yet');
       assert.ok(
-        view.shows('A seat left on purpose is not held. The match goes on without you.'),
+        view.shows('A seat left on purpose is not held, and you will not see how the match ends.'),
         'and the cost is named before it is paid'
       );
       assert.equal(
@@ -406,9 +406,9 @@ describe('the esc menu: Resign ends at a result (#1588)', () => {
   });
 
   it('makes Return to port say the match ends, where Resign is offered', async () => {
-    // Walking out resigns (§9.5). With two seated that decides the match, so
-    // "the match goes on without you" — the line the other case keeps, held
-    // by "arms the leave entry rather than taking it" above — would be false.
+    // Walking out resigns (§9.5). With two seated that decides the match, and
+    // the line says so rather than the other case's, held by "arms the leave
+    // entry rather than taking it" above.
     const { view, doors } = await resignable();
     try {
       await click(view, 'Return to port');
@@ -417,7 +417,7 @@ describe('the esc menu: Resign ends at a result (#1588)', () => {
           'Leaving ends the match as your loss, and you will not see the result. Resign shows it.'
         )
       );
-      assert.equal(view.shows('The match goes on without you.'), false);
+      assert.equal(view.shows('you will not see how the match ends'), false);
       assert.equal(doors.exits, 0);
     } finally {
       await view.unmount();

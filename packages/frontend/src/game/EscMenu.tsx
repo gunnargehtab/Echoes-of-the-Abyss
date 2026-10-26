@@ -211,13 +211,15 @@ export function EscMenu({ ended, onResume, onExit, onResign }: EscMenuProps) {
                     focus moves to Stay, which would otherwise read right past
                     the one sentence the arming exists to deliver (§11). */}
                 <p className="esc-menu-warning" role="alert">
-                  {/* Two cases, because walking out resigns (§9.5): where Resign
-                      is offered, the resignation decides the match, so "the
-                      match goes on" would be false — it ends, and the seat that
-                      left is not there to see it. */}
+                  {/* Two cases, because walking out resigns (§9.5). Where Resign
+                      is offered, the resignation decides the match, and the
+                      line says so. Anywhere else it may or may not: with three
+                      seated and one already beaten it ends the match too, and
+                      the client cannot tell that from three still standing. So
+                      that line claims only what holds either way. */}
                   {resignable
                     ? 'Leaving ends the match as your loss, and you will not see the result. Resign shows it.'
-                    : 'A seat left on purpose is not held. The match goes on without you.'}
+                    : 'A seat left on purpose is not held, and you will not see how the match ends.'}
                 </p>
                 <button
                   type="button"
