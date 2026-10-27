@@ -2,15 +2,15 @@
 
 ## 1. Status and decision
 
-**Decisions taken; no model or code yet.** This is the next deliverable for
+**Decisions taken and the arch commissioned; no model or code yet.** This is the next deliverable for
 [#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637),
 not a replacement for the accepted [retained-geometry slice](visual-reboot.md).
 On 26 October the owner took the four decisions the first revision left open (§5) and asked
 for the documents authoring needs first: the dimensioned fit (§6), the placement contract
 (§7), the light and motion licence (§8) and the asset block in
 [asset-prompts-3d.md](asset-prompts-3d.md#block-4b--public-landmarks-authored-no-faction-no-sig).
-This revision writes them. It still commissions neither a model nor a renderer change;
-§10 names the approval that does.
+This revision writes them. On 27 October the owner approved the asset block by name, which
+commissions the arch model inside §6's fit (§10). No model and no renderer change exists yet.
 
 On 26 October the owner selected **monumental civic infrastructure: heavy masonry,
 exposed structural ribs and damaged transit fittings**, with four priorities: layered
@@ -126,7 +126,7 @@ all four and keeps the same information readable.
 
 | Subject | Proposed treatment | Boundary |
 | --- | --- | --- |
-| Civic arch | `env-ruin-transit-arch`: one landmark assembly, intact and ruined states on one origin; integral foundations, ribs and damaged transit fittings; four lamps and up to six hung fittings on the intact state | Commissioned only on the approval §10 names; no separate rail network, surrounding city kit or second landmark |
+| Civic arch | `env-ruin-transit-arch`: one landmark assembly, intact and ruined states on one origin; integral foundations, ribs and damaged transit fittings; four lamps and up to six hung fittings on the intact state | Commissioned by name on 27 October (§10); no separate rail network, surrounding city kit or second landmark |
 | Immediate ground | Existing court edge, public drop and retained ruin/coral kit; the scatter stands nothing on open ground inside the arch's plan | No repainted gameplay cells, enlarged existing props, new scatterer or density increase |
 | Four escorts | Retain `light-scout-pelagia.glb`; court-refitted PR-2, SIG 6 idle / 12 cruise | Keep geometry, canonical size, lamps and SIG curve; improve surface readability only. The arch's lamps never light them |
 | Two tenders | Retain `harvester-pelagia.glb` and their mission restrictions | No mining demonstration, remodel or added work lights |
@@ -391,11 +391,12 @@ visual judgement.
 ## 10. Approval and stop
 
 The owner approved the placement route and the prototype's boundaries on 26 October (§5).
-One approval remains before any model or code work: the owner names the asset commission,
-the arch's block in [asset-prompts-3d.md](asset-prompts-3d.md#block-4b--public-landmarks-authored-no-faction-no-sig)
-inside §6's fit, on #1637 or the pull request that carries it. A merged documentation pull
-request, silence or an image score is not that approval. Production remains unchanged while
-the work is reviewed.
+On 27 October the owner approved the asset commission by name: the arch's block in
+[asset-prompts-3d.md](asset-prompts-3d.md#block-4b--public-landmarks-authored-no-faction-no-sig),
+inside §6's fit, recorded on the pull request that carries it. Model and code work for the
+study start from these documents once they are on `main`. Production remains unchanged while
+that work is reviewed. Any further approval the study needs is named the same way; a merged
+documentation pull request, silence or an image score is never one.
 
 The eventual prototype succeeds only if the owner can accept all of the following in
 the paired evidence:

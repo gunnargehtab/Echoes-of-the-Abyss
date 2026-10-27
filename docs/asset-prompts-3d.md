@@ -2017,7 +2017,7 @@ gate 1). It is built, not grown, so ENV STYLE's "nothing manufactured" does not 
 LANDMARK STYLE replaces it. The rest of Block 4 holds: no faction, no SIG, light only from a
 licensed world-light family, and the same intake door. There is one row, Sorrowgate's
 transit arch, for the arch study ([sorrowgate-arch-study.md](sorrowgate-arch-study.md)). It
-is commissioned only when the owner approves this block by name (§10 there).
+was commissioned when the owner approved this block by name on 27 October (§10 there).
 
 ```text
 LANDMARK STYLE (use for every public landmark — "Echoes of the Abyss"
