@@ -699,7 +699,7 @@ id and nothing else.
 **Named on the chart** (#1617). *The Chord* and *The sounding point* are printed above their
 markers' rings while a row that names each is open ([ui-ux.md](ui-ux.md) §10.5). The second
 marker's line opens with the interval, which is a time and belongs to the lip (§1), so its name is
-the place §4 gives 4,800, 3,550: the sounding point.
+the place §3 gives 4,800, 3,550: the sounding point.
 
 ---
 
