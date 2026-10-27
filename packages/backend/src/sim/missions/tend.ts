@@ -274,6 +274,7 @@ export const SEEDING_TEND: MissionDefinition = {
     {
       id: 'holdfast',
       label: 'The Holdfast. Home — named for what anchors kelp.',
+      name: 'The Holdfast',
       x: 2625,
       y: 375,
       radiusM: 400,
@@ -281,6 +282,7 @@ export const SEEDING_TEND: MissionDefinition = {
     {
       id: 'west-lane',
       label: 'The jellies would sit better off the lane.',
+      name: 'The West Lane',
       x: 750,
       y: 1375,
       radiusM: 500,
@@ -288,6 +290,7 @@ export const SEEDING_TEND: MissionDefinition = {
     {
       id: 'landing',
       label: "Teel's landing is short of bread.",
+      name: "Teel's landing",
       x: 3750,
       y: 2000,
       radiusM: 350,

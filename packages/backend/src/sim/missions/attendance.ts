@@ -184,6 +184,7 @@ export const ATTENDING_ATTENDANCE: MissionDefinition = {
     {
       id: 'axis',
       label: 'The axis. Everything arrives through the sill.',
+      name: 'The axis',
       x: AXIS_X,
       y: 2600,
       radiusM: 500,

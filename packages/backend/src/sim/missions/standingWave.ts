@@ -336,6 +336,7 @@ export const CHORD_STANDING_WAVE: MissionDefinition = {
     {
       id: 'the-fifth',
       label: 'The Fifth. Two nodes, either wall, and the interval between them.',
+      name: 'The Fifth',
       x: AXIS_X,
       y: 1200,
       radiusM: 900,
@@ -343,6 +344,7 @@ export const CHORD_STANDING_WAVE: MissionDefinition = {
     {
       id: 'north-gallery',
       label: 'The North Gallery. North of the line, when it is laid.',
+      name: 'The North Gallery',
       x: AXIS_X,
       y: 250,
       radiusM: 700,

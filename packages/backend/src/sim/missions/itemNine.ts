@@ -88,6 +88,7 @@ export const LEDGER_ITEM_NINE: MissionDefinition = {
     {
       id: 'the-rail',
       label: 'The rail of the chamber. The sitting is listened to from here.',
+      name: 'The rail of the chamber',
       x: 2000,
       y: 1900,
       radiusM: 400,

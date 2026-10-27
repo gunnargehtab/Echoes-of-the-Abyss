@@ -527,6 +527,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
     {
       id: 'the-faces',
       label: 'The faces. Three of the six, and the only crystal the Order can reach.',
+      name: 'The faces',
       x: 4300,
       y: 2500,
       radiusM: 1200,
@@ -534,6 +535,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
     {
       id: 'the-line',
       label: 'The Staging line. The count is taken here and nowhere lower.',
+      name: 'The Staging line',
       x: 3000,
       y: 500,
       radiusM: 1000,

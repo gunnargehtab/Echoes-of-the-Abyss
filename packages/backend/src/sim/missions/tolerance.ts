@@ -91,6 +91,7 @@ export const LEDGER_TOLERANCE: MissionDefinition = {
     {
       id: 'yard',
       label: 'The casting yard. Tungsten pours for exactly one seal.',
+      name: 'The casting yard',
       x: 2000,
       y: 1000,
       radiusM: 400,
@@ -98,6 +99,7 @@ export const LEDGER_TOLERANCE: MissionDefinition = {
     {
       id: 'root',
       label: 'The root aperture, under the overhang. Below the line, the ledger runs.',
+      name: 'The root aperture',
       x: 2000,
       y: 1875,
       radiusM: 300,
@@ -105,6 +107,7 @@ export const LEDGER_TOLERANCE: MissionDefinition = {
     {
       id: 'section',
       label: "Sector Vayle's frame. The breach alarm is louder inside.",
+      name: "Sector Vayle's frame",
       x: 875,
       y: 500,
       radiusM: 400,

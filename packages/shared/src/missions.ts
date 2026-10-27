@@ -1578,7 +1578,8 @@ export interface MissionMarker {
    * Separate from `label` because `label` is a sentence in the mission's own
    * register, a line for the panel's row, and a sentence printed on the chart
    * covers the water it is about. Absent, the marker is a camera jump and
-   * nothing is drawn, which is every mission but one today (#1611).
+   * nothing is drawn. Every authored marker has one since #1617, and
+   * `missions.test.ts` holds new ones to it.
    */
   name?: string;
   x: number;

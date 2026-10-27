@@ -257,6 +257,7 @@ export const ATTENDING_INTAKE: MissionDefinition = {
     {
       id: 'the-ascent',
       label: 'The ascent. The stair north, toward the shallows.',
+      name: 'The ascent',
       x: 2500,
       y: 125,
       radiusM: 250,

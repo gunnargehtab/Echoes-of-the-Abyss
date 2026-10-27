@@ -374,6 +374,10 @@ whose water spans it, so every crossing is a climb somebody ordered
 **The Upper Workings is a mission map and is not in the public catalogue.** One seat, not
 balanced, resolved by mission id and nothing else ([maps.md](maps.md)).
 
+**Named on the chart** (#1617). *The rail transfer* is printed above its marker's ring while a row
+that names it is open ([ui-ux.md](ui-ux.md) §10.5). Its line names the Fivewell rail transfer, so
+the name is that rather than *The Rail Head*, the rectangle's name in the table above.
+
 ---
 
 ## 12. The Briefing

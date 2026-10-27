@@ -286,6 +286,7 @@ export const SEEDING_DEEP_FURROW: MissionDefinition = {
     {
       id: 'the-second-furrow',
       label: 'The second furrow. Bare rock, and the seed is aboard.',
+      name: 'The second furrow',
       x: SOWING_POINT.x,
       y: SOWING_POINT.y,
       radiusM: 400,
@@ -293,6 +294,7 @@ export const SEEDING_DEEP_FURROW: MissionDefinition = {
     {
       id: 'the-furrows',
       label: 'The furrows. Ten years of one, and room in both tonight.',
+      name: 'The furrows',
       x: 2000,
       y: 2125,
       radiusM: 750,

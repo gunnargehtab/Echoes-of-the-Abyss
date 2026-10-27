@@ -368,6 +368,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
       voice.id === 'the-drone'
         ? 'The Drone. The chord does not certify without it.'
         : `${voice.name}. A hull at the voice, under the ceiling, for the interval.`,
+    name: voice.name,
     x: voice.x,
     y: voice.y,
     radiusM: 250,

@@ -451,6 +451,7 @@ export const ATTENDING_SHALLOW: MissionDefinition = {
     {
       id: 'slope',
       label: 'The Kell Slope. The line is at four hundred, and the column is asked to be under it.',
+      name: 'The Kell Slope',
       x: 2500,
       y: 2750,
       radiusM: 1000,

@@ -306,6 +306,7 @@ export const ATTENDING_THE_DOME: MissionDefinition = {
     {
       id: 'mouth',
       label: 'The mouth. The trench is closed while the inquiry is open.',
+      name: 'The mouth',
       x: 1500,
       y: 3625,
       radiusM: 375,

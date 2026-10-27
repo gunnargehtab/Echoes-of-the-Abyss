@@ -285,6 +285,7 @@ export const SEEDING_IN_WRITING: MissionDefinition = {
     {
       id: 'the-foot',
       label: 'The Foot. Over the layer, and the first water they cannot hear us in.',
+      name: 'The Foot',
       x: 2000,
       y: 250,
       radiusM: 500,

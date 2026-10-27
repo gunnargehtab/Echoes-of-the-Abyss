@@ -682,6 +682,9 @@ no Biomass and reads no cell, so it is a fact rather than a price, and nobody is
 **The Fourth's Foot is a mission map and is not in the public catalogue.** One seat, no
 resources, not balanced, resolved by mission id and nothing else ([maps.md](maps.md)).
 
+**Named on the chart** (#1617). *The mouth* is printed above its marker's ring while a row that
+names it is open ([ui-ux.md](ui-ux.md) §10.5).
+
 ---
 
 ## 12. The Briefing

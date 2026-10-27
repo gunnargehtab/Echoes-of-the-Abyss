@@ -298,6 +298,7 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
     {
       id: 'the-rim-furrow',
       label: 'The lip. Sixty seconds, bow on, under the bed.',
+      name: 'The lip',
       x: SOWING_POINT.x,
       y: SOWING_POINT.y,
       radiusM: SOWING_RADIUS_M,

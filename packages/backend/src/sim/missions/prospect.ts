@@ -93,6 +93,7 @@ export const LEDGER_PROSPECT: MissionDefinition = {
     {
       id: 'terraces',
       label: 'The terraces. Six faces are charted; enough, read by hand, proves the field.',
+      name: 'The terraces',
       x: 3000,
       y: 2500,
       radiusM: 2500,
@@ -100,6 +101,7 @@ export const LEDGER_PROSPECT: MissionDefinition = {
     {
       id: 'return',
       label: 'The staging. The ascent begins no later than the turn.',
+      name: 'The staging',
       x: 3000,
       y: 500,
       radiusM: 1000,

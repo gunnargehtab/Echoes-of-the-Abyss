@@ -282,6 +282,7 @@ export const CHORD_THE_THREE: MissionDefinition = {
     {
       id: 'the-room',
       label: 'The sealed room. The Choirmaster reads there alone.',
+      name: 'The sealed room',
       x: 2750,
       y: 2250,
       radiusM: 250,
