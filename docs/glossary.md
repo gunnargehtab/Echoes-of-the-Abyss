@@ -196,6 +196,11 @@ Lamp halo
 
 - The conn view's soft light in the water around a loud own lamp, gated and scaled by its entity's live SIG ([art-direction.md](art-direction.md#lamp-halo--spec)). Not the glow recipe's interface halo, and not "bloom", which in-world is Deepbloom, bloom-share and the Bloom Surge.
 
+Public landmark
+
+- An environment model a map places by name, at an authored anchor and yaw, where every other prop is placed by the scatter from the cells. Its state, intact or ruined, is read off the published cells it stands on, so only a ground change can ruin it. Render-only like every prop ([graphics-standards.md](graphics-standards.md#1-model-backed-or-deliberately-procedural--no-third-path) gate 1).
+- Sorrowgate's arch is the only one, drawn only in its study ([sorrowgate-arch-study.md](sorrowgate-arch-study.md)). Not the procedural fallback's "slab-and-landmark" structure architecture, which is a structure's baked shape.
+
 Scavenger
 
 - A fauna class, not a feeding habit: the species bestiary.md §4 files under its *Scavengers* heading. Today that is the Rasp and nothing else.

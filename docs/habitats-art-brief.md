@@ -111,8 +111,9 @@ seen from and it is theirs to borrow.
 
 **Ground and props.** Kelp Forest fill, mid relief (65 m amplitude, 0.3 roughness — rolling
 terrace, not broken ground), light mottle. `env-kelp-cluster` at the highest density in the
-registry, with **4 m of sway** — the only prop in the game that moves, and the plateau's whole
-sense of life; `env-coral-tower` sparse between the columns; `env-coral-growth` low on the
+registry, with **4 m of sway** — the only prop in the game that moves (the Sorrowgate arch
+study's hung fittings and collapse debris apart, behind its flag, §5), and the plateau's
+whole sense of life; `env-coral-tower` sparse between the columns; `env-coral-growth` low on the
 terrace. The southern drop authors as bare slope: kelp stops at the edge, so the eye reads
 *garden, then nothing* — the same thing the watch hears.
 
@@ -253,7 +254,9 @@ In-engine, the court's hulls are Commune-built and carry the Commune's palette a
 (nearly black, navigation marks only), and the ruin's own light is `flora-biolight` on living
 coral, points only. The court's lamps reach the ground as the Upper Concourse's `civic-lamp`
 points: four or so, low and steady, each dimmer than a vent ember, so the way up is the one warm
-thing in the frame (#1533). Nothing here burns. The one bright thing that ever happens at Sorrowgate is
+thing in the frame (#1533). In the arch study four more stand on the arch's south face and
+light its own stone until 10:40, then go dark with it
+([style-neon-noir.md](style-neon-noir.md#the-arch-studys-licence)). Nothing here burns. The one bright thing that ever happens at Sorrowgate is
 the ping ([mission-sorrowgate.md](mission-sorrowgate.md)), and it is threat-red.
 
 **Palette.** The stone ramp `#11161C` / `#080C12` for the fallen structure; the Coral Ruins
@@ -272,6 +275,18 @@ ridge ([three-layer-ocean.md](three-layer-ocean.md) §5).
 
 **Motion.** None on the ground. This is the stillest habitat, and the prologue's whole
 dread is a still frame with something loud arriving in it.
+
+**The arch study's licence.** On 26 October the owner licensed four motions for the arch
+study ([sorrowgate-arch-study.md](sorrowgate-arch-study.md) §8), on its landmark alone and
+behind its development flag. Silt sifts down from the arch's fractures and only sinks. Up to
+six hung fittings sway at most 1.5 m, over 9–14 s, each on its own axis, the axes spread over
+at least 120° so the set states no current. The four lamps gutter on the 5 Hz grid
+([style-neon-noir.md](style-neon-noir.md#the-arch-studys-licence)). And when the 10:40 ground
+arrives, the collapse is seen: debris down the new wall's south face for at most 4 s and a
+silt cloud at its foot, settled by 14 s. The collapse starts on the received change and never
+before it. Nothing else moves: no stone sways, no fauna and no traffic are added, and reduced
+motion holds all four. Production keeps the still frame until a written decision here
+promotes the study.
 
 **Sound.** Hard occlusion behind geometry, strong early reflections; one step sideways
 restores a contact ([audio-direction.md](audio-direction.md) §9). The chamber is under the

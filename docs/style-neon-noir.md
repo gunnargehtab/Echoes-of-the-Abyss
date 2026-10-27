@@ -82,16 +82,17 @@ palest fill; rims and cliff shadows darken only ([art-direction.md](art-directio
 
 ### The props (the seabed's furniture)
 
-The fifteen environment models of [asset-prompts-3d.md](asset-prompts-3d.md) Block 4 take
-their base colours from this table. Each token is named for the glTF material that carries
+The fifteen environment models of [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, and
+the arch study's landmark in its Block 4b, take their base colours from this table. Each token is named for the glTF material that carries
 it, hyphenated. `basalt` and `coral_stone` each carry two values, so their tokens take a
 suffix saying which. Metalness is 0 on every one; roughness is the material's own:
 
 | Token | Hex | Roughness | Material | Props |
 | --- | --- | --- | --- | --- |
-| `stone-dark` | `#15181B` | 1 | `stone_dark` | Both crags, coral growth, ruin block, dome shard, nodule bed's lumps |
+| `stone-dark` | `#15181B` | 1 | `stone_dark` | Both crags, coral growth, ruin block, dome shard, nodule bed's lumps, transit arch's masonry |
 | `stone-silt` | `#17150F` | 1 | `stone_silt` | Open boulder |
-| `silt-drift` | `#211E15` | 1 | `silt_drift` | Nodule bed's drift |
+| `silt-drift` | `#211E15` | 1 | `silt_drift` | Nodule bed's drift, transit arch's sediment |
+| `structure-rib` | `#160F0C` | 0.9 | `structure_rib` | Transit arch's exposed ribs and hung fittings |
 | `basalt-trench` | `#14171A` | 0.96 | `basalt` | Trench slab, trench spire |
 | `basalt-vent` | `#121517` | 0.96 | `basalt` | Vent chimney, vent basalt |
 | `abyss-stone` | `#10161D` | 0.96 | `abyss_stone` | Resonance crystal, resonance pylon |
@@ -102,8 +103,9 @@ suffix saying which. Metalness is 0 on every one; roughness is the material's ow
 | `biolight-base` | `#0B1D19` | 1 | `biolight` | Kelp cluster, coral growth, under `flora-biolight` |
 | `violet-seam-base` | `#06050A` | 0.9 | `violet_seam` | Resonance crystal, under `crystal-seam` |
 | `ore-trace-base` | `#0B0805` | 1 | `ore_trace` | Nodule bed's glint facets, under `ore-trace` |
+| `civic-lamp-base` | `#0D0907` | 1 | `civic_lamp` | Transit arch's lamp glass, under `civic-lamp` |
 
-Three rules ride with the table:
+Four rules ride with the table:
 
 - **The runtime owns value.** `packages/frontend/src/game/environmentModels.ts`
   (`ENV_LUMINANCE_CEILING`) scales every prop so its brightest material sits at a 0.06
@@ -124,7 +126,11 @@ Three rules ride with the table:
   `stone-dark`: the nearest, `basalt-trench`, sits 6% under it. The paler tokens are growth,
   both corals and kelp, whose cast belongs to their own ground, which is why no existing
   token could do that job.
-- **A lamp's base is near-black.** The four `-base` tokens sit under the
+- **A rib is neither stone nor growth.** `structure-rib` is the built substrate that missing
+  cladding exposes on the transit arch, warm with two centuries of water. At 0.0054 it sits
+  at 0.61 of `stone-dark`, so the ribs read darker than the masonry they carry. On the arch
+  the ceiling rule puts the masonry at 0.68 of its sediment and the ribs at 0.41.
+- **A lamp's base is near-black.** The five `-base` tokens sit under the
   [World light](#world-light--the-terrain-carve-outs) families. The emissive is what reads,
   and the base does not compete with it.
 
@@ -525,7 +531,7 @@ families, and nothing else on the ground ever emits:
 | `vent-ember` | `#E06A2B` | Thermal Veins | Sparse ember points in the cracked ground — the original carve-out, unchanged — and the steam over a chimney's mouth, puffs climbing on the 5 Hz grid |
 | `flora-biolight` | `#2E8C74` | Kelp Forest, Coral Ruins | Dim tips on kelp stalks and living coral — points and short lines, never a glowing canopy |
 | `crystal-seam` | `#5B4A8C` | Resonance Fields | A dull internal seam in the crystal props — violet is already licensed here ("resonance" is one of its three contexts) |
-| `civic-lamp` | `#B8875A` | Coral Ruins with a floor at 350 m or shallower — the Upper Concourse | A steady tallow point standing low over the terminus, about one cell in three and never more than twelve to a map |
+| `civic-lamp` | `#B8875A` | Coral Ruins with a floor at 350 m or shallower — the Upper Concourse; in the arch study, its landmark ([licence](#the-arch-studys-licence)) | A steady tallow point standing low over the terminus, about one cell in three and never more than twelve to a map |
 | `ore-trace` | `#7A5634` | Resource fields, any biome — the nodule bed | A dull glint in the crust of a few nodules on each bed: facets the size of a lump, never a lit drift. The same charge a crystal seam carries whole, in the trace of it the ore keeps ([economy.md](economy.md) §2's two modelled resources are one substance at two grades) |
 
 Every family obeys the same five rules, and they are gates, not suggestions:
@@ -533,7 +539,9 @@ Every family obeys the same five rules, and they are gates, not suggestions:
 1. **World light is points and seams, never area glow.** No lit ground, no
    glowing fills, no halo recipe — the glow recipe above belongs to the
    interface. A world light is a small emitter in a dark world, full stop. Terrain-owned
-   light never enters the lamp halo's source, which is own agents' lamps only.
+   light never enters the lamp halo's source, which is own agents' lamps only. The arch
+   study's lamp pools are the one exception, on its landmark alone
+   ([licence](#the-arch-studys-licence)).
 2. **The vent ember is the brightness ceiling.** No family renders brighter than
    `vent-ember` does today — dim, small, swallowed by fog at any distance. The
    85–90 % darkness budget and the 5–10 % seafloor luminance floor stand
@@ -569,7 +577,7 @@ the same distance (0.37 against 0.43 rendered sRGB luminance). Rule 2 holds: the
 stays the ceiling by a factor of 1.6.
 
 The civic lamp is no prop, so it has no export: it is a point in the ember cloud, priced
-the way an ember is. An ember draws `vent-ember` at 0.55 times its flicker, a mean of 0.33;
+the way an ember is. The arch study's four lamps are the one exception, below. An ember draws `vent-ember` at 0.55 times its flicker, a mean of 0.33;
 a lamp draws `civic-lamp` at a steady 0.12. With each hue's luminance priced in, a lamp
 renders at about 70 % of an ember's mean and a quarter of its peak, so every lamp is
 dimmer than a vent ember (#1533). The 350 m floor is the Concourse's 340 m and nothing
@@ -590,6 +598,13 @@ to the game. A plume is the hull's, as its lamps are: a mote peaks at the thrott
 and so it may respond to the throttle. The ladder weighs neither:
 a soft fill, as §5 of [map-visuals.md](map-visuals.md) leaves a haze unweighed.
 
+The arch study adds two more kinds of the ground's matter, on its landmark alone. Silt sifts
+from the arch's fractures and fittings: at most 256 motes from at most eight sites, sinking
+and never drifting. When the arch's cells turn to rock, a cloud of at most 384 motes rises
+at most 30 m from the new wall's south foot, spreads at most 40 m and settles within 14 s.
+Both take the silt colour at the haze's cap, 0.10 of it, and keep rules 3 and 4 as the haze
+does. Reduced motion holds the sift still and draws no cloud.
+
 Per-map count caps live in code beside the emitters (the `VENT_EMBER_CAP`
 pattern in `PerspectiveView.ts`); [art-direction.md](art-direction.md) "Reading
 the Sea Floor" and [graphics-standards.md](graphics-standards.md) carry the
@@ -601,6 +616,43 @@ to neither an agent nor an instrument, and rung 5 bounds it instead: soft,
 additive dots, each at a furniture gain `ladder.ts` holds. An animal is an agent
 only as a contact, on rung 7 (§8 there). Either way its colour comes from the
 palette tables above.
+
+### The arch study's licence
+
+On 26 October the owner licensed three things the rules above do not otherwise allow, for
+the Sorrowgate arch study ([sorrowgate-arch-study.md](sorrowgate-arch-study.md) §8) and
+nowhere else. They hold behind the study's development flag, on the prologue's own look,
+and on its public landmark alone ([graphics-standards.md](graphics-standards.md#1-model-backed-or-deliberately-procedural--no-third-path)
+gate 1). Production, every other mission and every skirmish keep the five families and the
+five rules as written. Promoting any of the three is a written decision here, not a flag
+flipped.
+
+1. **Civic lamps at the court.** `civic-lamp` may stand at 1,500 m, below the family's
+   350 m floor: four lamps on the intact arch's south face, two to a pier, 20–40 m above its
+   foot and at least 40 m apart, and none on the ruined arch. They are the model's own
+   emissive, lamp glass over `civic-lamp-base`, at an effective emissive luminance of at most
+   0.11. That is the biolight's and the seam's level, under the ember's 0.18 (rule 2). They
+   sit outside `CIVIC_LAMP_CAP`, which counts the ember cloud's points.
+2. **Lamp pools, rule 1's one exception.** Each lamp lights the arch's own masonry, ribs and
+   sediment within 20 m of it, falling to nothing at 20 m, so no two pools meet. Nothing
+   else takes that light: not the seabed, a scattered prop, a hull, the water, the snow or
+   the sift. A hull lit by a world lamp would read louder than its SIG
+   ([graphics-standards.md](graphics-standards.md#3-glow-encodes-loudness--always) gate 3),
+   and lit seabed would break the 5–10 % floor. The brightest lit stone stays under the lamp
+   beside it, under a vent ember's mean breath, and under the escorts' brightest lamp pixel
+   in the same frame, so the flight stays the first read. There is no shadow, no halo and no
+   scene light, and the lamp halo's source stays own lamps only.
+3. **A guttering step.** Rule 3 lets a civic lamp step on the bucket, and the row above
+   holds it steady. These four hold steady and dip to 60 % for one or two buckets, each lamp
+   at most once in any 2 s, never two in one bucket and never above the steady level. Their
+   pools step with them. The dips are a hash of the lamp and the bucket, so nothing in the
+   match moves them (rule 4).
+
+The lamps go dark on the first bucket after the arch's cells turn to rock. Before 10:40
+they mark the station the flight holds. After it the Concourse's lamps are again the one
+warm thing in the frame, and that is the way up (#1533). Reduced motion holds the four at
+their steady level. The court's key-art cyan stays key art: rule 5 still keeps every UI hue
+off the ground.
 
 ## Don'ts
 

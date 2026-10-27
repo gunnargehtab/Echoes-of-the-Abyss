@@ -148,8 +148,10 @@ chart. Their procedural fallback is the seabed bake itself — a biome with no a
 props reads through relief and mottle alone.
 
 The front door admits one design. Every `env-*.glb` in `docs/concept-art/models/` is a
-Claude Design model from the Block 4 batch, intaken with `--category env` against its
-row's footprint, cap and licensed light and committed slug for slug; the registry, the
+Claude Design model from the Block 4 batch, or a script's model from its block where the
+block says so (the dome shard, the nodule bed, and the arch study's public landmark in
+Block 4b), intaken with `--category env` against its row's footprint, cap and licensed
+light and committed slug for slug; the registry, the
 placement rules and the kelp sway read the file, never its author. Since #869 each file
 is written by a script under `tools/hull-models/props/` that ports its approved model
 part for part, as Phase 3 of #540 ported the roster, so `npm run check:models` holds the
@@ -184,6 +186,35 @@ same rule (#1555): its position, kind and starting stock are map data like the g
 its depletion is not, so a bed reads none of it and a field looks the same full and mined
 out.
 
+**Public landmarks** ([#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637)).
+A map may name one approved `env-*` model at a fixed anchor, yaw and canonical scale, with
+the cells it stands on, in a shared table keyed by its id, beside its ground and outside it
+([maps.md](maps.md#how-a-map-is-written)). Its origin stands at its anchor cell's floor in the
+map's literal, so ground that changes under it never lifts it. That is not hand-placed decor:
+it is public map data like the grid, identical on every client, one registry row with its
+own prompt block, intake and budget. The owner approved
+the route for the Sorrowgate arch study ([sorrowgate-arch-study.md](sorrowgate-arch-study.md)
+§7), and nothing draws a landmark outside that study's development flag until a written
+decision here promotes it. Five rules hold one:
+
+1. **Its state is the cells'.** Intact while every anchor cell is water, ruined once any is
+   rock in the published grid. No mission schedule, timer, contact or occupancy switches it.
+   A session whose first ground already holds the change draws the ruined state from its
+   first frame. Every layer that stands the map's props stands it too, in the state its own
+   cells give: the region's baseline from the literal, the session from the received ground
+   ([world-map.md](world-map.md) §7.6).
+2. **It stays local.** Both states stay inside the anchor cells and the one-cell ring a
+   ground delta re-shades (gate 6), so a delta anywhere else never touches it.
+3. **It is budgeted.** One instance, spent from the prop reservation after the fields and
+   before the biome scatter, at its registry row's calls and triangles.
+4. **The scatter makes room.** No scattered prop on open ground whose footprint meets the
+   plan of the state drawn.
+5. **It stays a prop.** The simulation never reads it, and it blocks, opens, hides and
+   reveals nothing. A map names at most one until a second is approved.
+
+Its light and motion are licensed only where [style-neon-noir.md](style-neon-noir.md#the-arch-studys-licence)
+and [habitats-art-brief.md](habitats-art-brief.md#5-sorrowgate--the-city-nobody-lives-in) say so.
+
 ### 2. Intake is the gate, not a formality
 
 No GLB enters `docs/concept-art/models/` without passing the **hull-intake** skill's bake
@@ -198,8 +229,9 @@ hull is a style bug, and only a deliberately dark hull earns the
 
 Environment models pass the same gate in its env mode (`--category env`): scale against
 the prop's registry `footprintM` instead of `HULL_LENGTH_M` (props have no bow, so no
-length-on-X requirement — they stand at a random yaw), triangle and material counts
-reported against the registry's budgets (≤ 2 materials; the per-prop triangle cap), and
+length-on-X requirement — they stand at a random yaw, and a public landmark at its authored
+one), triangle and material counts reported against the registry's budgets (≤ 2 materials,
+and ≤ 4 on a public landmark by its Block 4b row; the per-prop triangle cap), and
 the emissive rule **inverted** — a prop with any emissive channel fails unless its
 world-light family ([style-neon-noir.md](style-neon-noir.md) "World light") licenses it,
 because on the ground it is the *glowing* rock that is the style bug.
@@ -360,6 +392,18 @@ The probe reports the layer separately (`props` / `propTris`) so a prop regressi
 number, not an impression, and a test sums the registry's worst case over the shipped
 maps so the reservation cannot be exceeded by accretion. Terrain never rebuilds
 per frame: props rebuild only when the ground does.
+
+The arch study's landmark (gate 1, [#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637))
+spends inside that reservation and adds no budget of its own. It is one instance at four
+draw calls standing, one a material, and at most 12,000 triangles in either state. The
+prologue's look already stands 50,356 prop triangles after the collapse, so the layer
+reaches 62,356 of 120,000. Its silt sift is one more `Points` of at most 256 motes, moved
+in its vertex shader as the vent steam is. The collapse cloud is one more of at most 384
+motes, alive only for the 14 s after the ground change, and the only cost the collapse
+adds: its debris is the ruined state's own parts, inside its four calls. The lamp pools cost no call, no
+triangle and no target: a few instructions on the landmark's own fragments, read as GPU
+time at the study's close station with the pools on and off. The probe reports the
+landmark, its triangles and both mote counts on their own, as it reports the props.
 
 The water ([art-direction.md](art-direction.md), "Reading the Water") spends **two draw
 calls and no triangles**, and its largest term spends neither. The depth-graded fog is a

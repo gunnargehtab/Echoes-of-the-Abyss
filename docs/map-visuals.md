@@ -281,7 +281,8 @@ V3 is mostly already law. This section collects it, so that the next revision ci
   Layer resolved.
 - **The ground answers only your own ears.** The acoustic veil drains it where your hulls
   cannot hear and gives it back where they can ([ui-ux.md](ui-ux.md) §4.5). World light steps
-  on the 5 Hz grid. Nothing else moves it. It never answers another navy's activity, occupancy
+  on the 5 Hz grid. Nothing else moves it, except in the arch study, where a ground change
+  puts the arch's lamps out ([style-neon-noir.md](style-neon-noir.md#the-arch-studys-licence)). It never answers another navy's activity, occupancy
   or presence: a thing on the map that brightens when somebody else is near it is an
   instrument, and instruments live on the HUD.
 
@@ -326,7 +327,9 @@ The six things a new biome supplies:
    ([graphics-standards.md](graphics-standards.md) gate 1).
 6. **Whether it admits public life** (§8), which the seeder is told, not the renderer.
 
-A new *map* supplies nothing visual. Its look is its floors, ceilings and biomes, because
+A new *map* supplies nothing visual but, at most, one public landmark under
+[graphics-standards.md](graphics-standards.md#1-model-backed-or-deliberately-procedural--no-third-path)
+gate 1's rules. Its look is its floors, ceilings and biomes, because
 the survey ink draws the shape the author wrote. An authored layout is legible by
 construction or it is a layout problem, not a rendering one.
 

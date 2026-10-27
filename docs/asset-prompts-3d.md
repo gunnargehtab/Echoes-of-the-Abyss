@@ -1876,8 +1876,8 @@ geometry, not agents, so the STYLE block changes: no faction palette, no running
 no glow-by-loudness. A prop's light, where it has any at all, comes from the four
 world-light families a prop may carry in [style-neon-noir.md](style-neon-noir.md)
 "World light" — `vent-ember`, `flora-biolight`, `crystal-seam` and `ore-trace`; the
-civic lamp is no prop — and intake fails a prop with any other emissive (gate 2's
-inverted rule).
+civic lamp is no scattered prop, and only the arch study's landmark carries it (Block 4b
+below) — and intake fails a prop with any other emissive (gate 2's inverted rule).
 
 Every environment prompt is **ENV STYLE + one row of the prop table**, the row expanded
 into a sentence or two. Same workflow rules as the roster: one Claude Design conversation
@@ -2009,6 +2009,97 @@ ember mouth) and the emissive, which is licensed at intake and passes through un
 Every base colour a prop carries is a token in [style-neon-noir.md](style-neon-noir.md)
 "The props", which is also where a new one is added first.
 
+## Block 4b — PUBLIC LANDMARKS (authored, no faction, no SIG)
+
+A public landmark is the one environment model a map places by name
+([graphics-standards.md](graphics-standards.md#1-model-backed-or-deliberately-procedural--no-third-path)
+gate 1). It is built, not grown, so ENV STYLE's "nothing manufactured" does not fit it and
+LANDMARK STYLE replaces it. The rest of Block 4 holds: no faction, no SIG, light only from a
+licensed world-light family, and the same intake door. There is one row, Sorrowgate's
+transit arch, for the arch study ([sorrowgate-arch-study.md](sorrowgate-arch-study.md)). It
+was commissioned when the owner approved this block by name on 27 October (§10 there).
+
+```text
+LANDMARK STYLE (use for every public landmark — "Echoes of the Abyss"
+civic ruins): Deep-sea civic architecture of the Surface Age, a single 3D
+model on a near-black abyssal background (#03080E). Built, not grown:
+dressed stone in deliberate courses, a structural frame showing where the
+cladding has fallen away, the fittings of a transit line that no longer
+runs. Two centuries underwater: fractures interrupt the joints, and silt
+lies in every sheltered recess and against every foundation. No faction
+markings, no machinery that works, no signage or text, no water surface.
+Desaturated and dark: it is scenery and must read quieter than any
+vessel. Lighting: one hard cyan rim light (#35E0FF) for the review render
+only; the model carries no emissive but the lamps the prompt licenses.
+Readable from a high 55-degree RTS camera as a few large masses before any
+detail; low-poly with crisp facets; at most four materials.
+```
+
+| Map | Slug | Footprint | Height | Tris | Materials | Light |
+| --- | --- | --- | --- | --- | --- | --- |
+| Sorrowgate | `env-ruin-transit-arch` | 570 m | 180 m: 150 m above its origin, 30 m of foundations below | ≤ 12,000 a state | `stone_dark`, `structure_rib`, `silt_drift`, `civic_lamp` | `civic-lamp`, four lamps, intact state only |
+
+The footprint is the span along X, the larger axis, held as every prop's is. Unlike a
+scattered prop the landmark stands at its anchor's yaw and at scale 1. Its origin, not its
+box's base, stands at its anchor cell's floor in the map's literal, 1,600 m, never on the
+received ground, so the 10:40 wall cannot lift it. Its plan, heights and clearances are the
+study's §6, and the prompt transcribes them.
+
+```text
+LANDMARK — env-ruin-transit-arch (Sorrowgate, the transit arch): one
+landmark in two states sharing one origin, the seabed floor at its anchor.
+X runs east along the span, Y is up, and +Z faces south toward the court.
+
+INTACT: a monumental civic arch 570 m wide and 160 m deep on two piers,
+100 m wide each, with a clear opening of 370 m between them. The
+underside of the crown is at least 110 m up and the top 150 m. Integral
+foundations reach 30 m below the origin, stepped and silted. The span is
+heavy masonry in dressed courses (stone_dark). Along its south face,
+where the cladding has fallen, a rank of exposed structural ribs and the
+frame behind them (structure_rib), carried down into the piers: the
+ribs are the construction, not a second decorative frame. At the
+springing, the broken fittings of a transit line run along the south
+face: a rail bed, brackets, a torn catenary. Up to six fittings hang from
+the soffit and the rail on cables, each ending at least 60 m above the
+origin. Silt (silt_drift) lies in the recesses, along the ledges and
+banked against the foundations, never spread evenly. Four small lamps on
+the south face, two on each pier, 20 to 40 m up and at least 40 m apart:
+warm tallow glass (civic_lamp, emissive #B8875A, dim) in plain housings.
+Nothing stands between the piers below the soffit.
+
+RUINED: the arch has fallen into rock that now fills the span's row. The
+rock is the terrain's, not the model's, and it swallows the piers whole:
+its south face rises from about Z +125 m at its foot to Z +62 m at its
+top, and stands at about Z +117 m where it is 60 m up. Model nothing
+north of Z +115 m. Against the face, broken pier mass, fallen courses and
+a rib or two heap no higher than 60 m. South of Z +125 m they spread in a
+low skirt, nowhere higher than 5 m and nowhere south of Z +150 m. No
+lintel, no soffit and no framed void survives. No lamps.
+
+Desaturated, dark and still; quieter than any vessel.
+```
+
+The runtime reads the model by these part names, so no code names Sorrowgate:
+
+- `state_intact` and `state_ruined`: two root groups on the shared origin.
+- `lamp_0` … `lamp_3` in `state_intact`: one connected glass part each, and each lamp's
+  pool is centred on its part.
+- `hang_0` … `hang_5` in `state_intact`: each pivots at its top, and its sway weight grows
+  with the distance below the pivot, as the kelp's grows with height.
+- `sift_0` … `sift_7` in `state_intact` and `sift_r0` … `sift_r3` in `state_ruined`: empty
+  nodes where silt falls from.
+- `fall_0` … `fall_11` in `state_ruined`: the debris that comes down the wall's face in the
+  collapse. Each rests where the model puts it, and the script records how far above its
+  rest each piece starts.
+
+The arch is built rather than generated. `tools/hull-models/props/ruin-transit-arch.mjs`,
+composed from `seabed.mjs`, writes `docs/concept-art/models/env-ruin-transit-arch.glb`, and
+`npm run check:models` holds the two together. Intake runs `--category env` at
+`--footprint-m 570` and `--max-materials 4`. Today intake's env light check and the
+registry's `worldLight` take only the four prop families. The commission adds a civic family
+to both, admitted for this slug alone. The hull-reviewer reviews the shape, as it reviews
+every new one.
+
 ## Consistency checklist (before accepting a model)
 
 For units and structures:
@@ -2027,6 +2118,14 @@ For environment props (Block 4):
 - Emissive only where the table licenses a world-light family, and dim within it?
 - At most two materials (three on `env-coral-growth` and `env-nodule-bed` alone, two
   stones under the licensed light), inside the row's triangle budget?
+
+For public landmarks (Block 4b):
+
+- Do the opening and both piers read from the 55° pitch before any surface detail?
+- Does the ruined state keep no lintel, soffit or framed void?
+- Four lamps on the intact south face and none on the ruined, dim within `civic-lamp`?
+- Inside the study's §6 plan and heights, foundations included, with at most four
+  materials and 12,000 triangles a state?
 
 ## Related
 
