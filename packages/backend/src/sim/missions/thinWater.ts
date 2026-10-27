@@ -284,6 +284,7 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
     {
       id: 'holdfast-gate',
       label: 'The Holdfast Gate. The count is taken here.',
+      name: 'The Holdfast Gate',
       x: 750,
       y: 125,
       radiusM: 400,
@@ -291,6 +292,7 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
     {
       id: 'crossing',
       label: 'The short way home crosses the corridor.',
+      name: 'The corridor',
       x: 750,
       y: 1250,
       radiusM: 500,

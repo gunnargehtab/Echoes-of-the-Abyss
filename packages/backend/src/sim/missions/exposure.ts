@@ -135,6 +135,7 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
     {
       id: 'worked-ground',
       label: "The worked ground. Three days of somebody else's economy, standing in the water.",
+      name: 'The worked ground',
       x: 2500,
       y: 2500,
       radiusM: 2000,
@@ -142,6 +143,7 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
     {
       id: 'return-line',
       label: 'The shelf lane. The record crosses the layer here, in duplicate.',
+      name: 'The shelf lane',
       x: 2500,
       y: 375,
       radiusM: 750,

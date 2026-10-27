@@ -287,6 +287,7 @@ export const ATTENDING_CONCLAVE: MissionDefinition = {
     {
       id: 'axis',
       label: 'The axis. What is assigned descends through it.',
+      name: 'The axis',
       x: 2500,
       y: 3625,
       radiusM: 500,

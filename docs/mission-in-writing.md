@@ -624,6 +624,9 @@ the plateau can hear again. Drift Health carried from *Deep Furrow* (rule 5) is 
 not balanced, resolved by mission id and nothing else ([maps.md](maps.md)) — and, once *Deep
 Furrow*'s literal lands, resolved by two.
 
+**Named on the chart** (#1617). *The Foot* is printed above its marker's ring while a row that names
+it is open ([ui-ux.md](ui-ux.md) §10.5).
+
 ---
 
 ## 12. The Briefing

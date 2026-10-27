@@ -160,6 +160,7 @@ export const LEDGER_ASSET_RECOVERY: MissionDefinition = {
     {
       id: 'railhead',
       label: 'The Rail Head. The writ closes at the count.',
+      name: 'The Rail Head',
       x: 2000,
       y: 250,
       radiusM: 500,

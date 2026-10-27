@@ -386,6 +386,7 @@ export const CHORD_NINETEEN: MissionDefinition = {
     {
       id: 'the-rest',
       label: 'The Rest. Nineteen are here, and none is entered.',
+      name: 'The Rest',
       x: 2500,
       y: 2000,
       radiusM: 2250,

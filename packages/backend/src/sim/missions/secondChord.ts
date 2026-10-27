@@ -694,6 +694,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
     {
       id: 'the-chord',
       label: 'The Chord. Two loads go into it and nowhere else.',
+      name: 'The Chord',
       x: 4800,
       y: 3150,
       radiusM: 500,
@@ -701,6 +702,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
     {
       id: 'the-mouth',
       label: 'The interval. Thirty seconds at the hundredth, bow to the south, held.',
+      name: 'The sounding point',
       x: 4800,
       y: 3550,
       radiusM: 400,

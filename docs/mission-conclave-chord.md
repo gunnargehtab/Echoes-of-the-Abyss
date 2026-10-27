@@ -703,6 +703,10 @@ building out of reach.
 one seat, no economy, not balanced, resolved by mission id and nothing else, and now resolved by two
 mission ids.
 
+**Named on the chart** (#1617). Each voice's marker is printed with the voice's own name —
+*Descant*, *Tenor*, *Treble*, *Alto*, *Bass* and *The Drone* — above its ring while the row that
+names it is open, which is from 13:30 ([ui-ux.md](ui-ux.md) §10.5).
+
 ---
 
 ## 12. The Briefing

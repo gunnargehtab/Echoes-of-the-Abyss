@@ -267,6 +267,7 @@ export const CHORD_APTITUDE: MissionDefinition = {
     {
       id: 'formations',
       label: 'Six voices stand off the house. Within four hundred metres, bow on, twenty seconds.',
+      name: 'The outer formations',
       x: 2550,
       y: 2100,
       radiusM: 2500,
@@ -274,6 +275,7 @@ export const CHORD_APTITUDE: MissionDefinition = {
     {
       id: 'approach',
       label: "The Third's approach. Six of you came out of it.",
+      name: "The Third's approach",
       x: 4500,
       y: 500,
       radiusM: 800,

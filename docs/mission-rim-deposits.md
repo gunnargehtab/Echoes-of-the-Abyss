@@ -636,6 +636,9 @@ holds the cell's centre ([maps.md](maps.md), "How a map is written"). **The Rim 
 and is not in the public catalogue.** One seat, no resources, not balanced, resolved by mission
 id and nothing else.
 
+**Named on the chart** (#1617). *The faces* and *The Staging line* are printed above their markers'
+rings while a row that names each is open ([ui-ux.md](ui-ux.md) §10.5).
+
 ---
 
 ## 12. The Briefing

@@ -292,6 +292,9 @@ can reach from the rail is the water it reached before.
 **Board Country is a mission map and is not in the public catalogue.** One seat, resolved by
 mission id and nothing else ([maps.md](maps.md)).
 
+**Named on the chart** (#1617). *The rail of the chamber* is printed above its marker's ring while a
+row that names it is open ([ui-ux.md](ui-ux.md) §10.5).
+
 ---
 
 ## 12. The Briefing

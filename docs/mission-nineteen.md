@@ -720,6 +720,9 @@ for the whole ninety seconds either way. The alternative was moving the watch, w
 cost §6's row 19, §9's six leg coordinates and this table's own row; moving one animal cost a
 coordinate.
 
+**Named on the chart** (#1617). *The Rest* is printed above its marker's ring while a row that names
+it is open ([ui-ux.md](ui-ux.md) §10.5).
+
 ## 12. The Briefing
 
 Read by Choirmaster Ivane Sull from the Ninth, to the party at the Head, at the top of the

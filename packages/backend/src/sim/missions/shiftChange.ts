@@ -97,6 +97,7 @@ export const LEDGER_SHIFT_CHANGE: MissionDefinition = {
     {
       id: 'railhead',
       label: 'The Fivewell rail transfer. Berths are held for the watches.',
+      name: 'The rail transfer',
       x: 2000,
       y: 250,
       radiusM: 500,

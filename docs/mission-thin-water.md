@@ -479,6 +479,10 @@ housings are authored emitters with staggered end-ticks (§7, §13).
 **The Kell Shoulder is a mission map and is not in the public catalogue.** One seat, not
 balanced, resolved by mission id and nothing else ([maps.md](maps.md)).
 
+**Named on the chart** (#1617). *The Holdfast Gate* and *The corridor* are printed above their
+markers' rings while a row that names each is open ([ui-ux.md](ui-ux.md) §10.5). The crossing's line
+says the short way home crosses the corridor, so its name is the corridor it crosses.
+
 ---
 
 ## 12. The Briefing

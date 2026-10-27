@@ -330,6 +330,7 @@ export const ATTENDING_FIRST_ARRIVAL: MissionDefinition = {
     {
       id: 'terraces',
       label: 'The terraces. Six faces are charted, and the rim is held by standing on them.',
+      name: 'The terraces',
       x: 3000,
       y: 2500,
       radiusM: 2500,

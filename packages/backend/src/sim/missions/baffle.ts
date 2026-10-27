@@ -95,6 +95,7 @@ export const LEDGER_BAFFLE: MissionDefinition = {
     {
       id: 'yard',
       label: 'The Deep Yard. The arithmetic closes at the whistle.',
+      name: 'The Deep Yard',
       x: 1500,
       y: 4500,
       radiusM: 500,

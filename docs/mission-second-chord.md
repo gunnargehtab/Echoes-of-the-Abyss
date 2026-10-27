@@ -696,6 +696,11 @@ holds the cell's centre ([maps.md](maps.md), "How a map is written"). **The Rim 
 and is not in the public catalogue.** One seat, no resources, not balanced, resolved by mission
 id and nothing else.
 
+**Named on the chart** (#1617). *The Chord* and *The sounding point* are printed above their
+markers' rings while a row that names each is open ([ui-ux.md](ui-ux.md) §10.5). The second
+marker's line opens with the interval, which is a time and belongs to the lip (§1), so its name is
+the place §3 gives 4,800, 3,550: the sounding point.
+
 ---
 
 ## 12. The Briefing

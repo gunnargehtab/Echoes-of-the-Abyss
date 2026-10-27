@@ -677,11 +677,13 @@ describe('the objectives', () => {
     // docs/ui-ux.md §10.5 (#1611): a marker's `name` is printed on the chart
     // above its ring, so it is the place — *The arch* — and never `label`'s
     // sentence, which would lie across the water it is about. Short, one
-    // clause, and different from the label it sits beside.
+    // clause, and different from the label it sits beside. Every marker has
+    // one since #1617: an unnamed marker is a camera jump the chart never
+    // draws, so a newcomer sent there has nothing on screen to find.
     let named = 0;
     for (const mission of MISSIONS) {
       for (const marker of mission.markers) {
-        if (marker.name === undefined) continue;
+        assert.ok(marker.name !== undefined, `${mission.id}: marker "${marker.id}" has no name`);
         named++;
         const where = `${mission.id}: marker "${marker.id}" is named "${marker.name}"`;
         assert.ok(marker.name.trim() === marker.name && marker.name.length > 0, where);

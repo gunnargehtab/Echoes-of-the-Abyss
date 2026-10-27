@@ -990,7 +990,7 @@ something new, and a log role would re-announce the whole panel every time a cou
   and a row with no marker is not. The row was the only route to Sorrowgate's Concourse and
   looked like static text, so a newcomer never took it (#1585). An underline adds no line and
   no column, which is what §2's no-scroll rule asks of anything added to this panel.
-- **A named marker is drawn on the chart while an open row names it.** A mission may give a
+- **A named marker is drawn on the chart while an open row names it.** A mission gives each
   marker a short place name — *The arch*, *The Concourse* — and the world view then draws it
   where it is: a ring of the marker's radius on the seabed, and the name above the ring, held
   at screen size, so it never sits on the hulls the ring is drawn round. A row may name a
@@ -1000,8 +1000,9 @@ something new, and a log role would re-announce the whole panel every time a cou
   the mission is sending the player now, never where it once did. The ring is an instrument
   ([map-visuals.md](map-visuals.md) §5, rung 6): it is the player's own orders drawn on the
   ground, in the interface's cyan, and like every rung-6 mark it ends at the rim. The scope
-  draws none: §5 keeps it a scope. A marker without a name stays a camera jump and nothing
-  more. A newcomer told to hold *at the arch* stood under it for ten minutes without knowing
+  draws none: §5 keeps it a scope. A marker without a name would be a camera jump and nothing
+  more, so every marker carries one since #1617 and `missions.test.ts` fails one without. A
+  newcomer told to hold *at the arch* stood under it for ten minutes without knowing
   it was there, because nothing on screen said so (#1611).
 - **A row that runs on a clock says how long is left.** A hold that ends on its own — the
   flight holding at the arch, a sitting, a tide — shows the time remaining under its status

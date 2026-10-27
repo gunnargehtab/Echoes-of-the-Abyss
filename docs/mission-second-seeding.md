@@ -903,6 +903,10 @@ depth manufactured means as terrain.
 balanced, resolved by mission id and nothing else ([maps.md](maps.md)) — and resolved now by the
 whole rim week, an id apiece, on the one literal.
 
+**Named on the chart** (#1617). *The lip* is printed above its marker's ring while a row that names
+it is open ([ui-ux.md](ui-ux.md) §10.5). The marker's id is the rim furrow; its line, and so its
+name, is the lip.
+
 ---
 
 ## 12. The Briefing

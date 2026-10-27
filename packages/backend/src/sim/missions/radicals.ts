@@ -269,6 +269,7 @@ export const SEEDING_RADICALS: MissionDefinition = {
     {
       id: 'the-far-water',
       label: "The far water. The basin's behind it, and the way south is past it.",
+      name: 'The far water',
       x: 2500,
       y: 3875,
       radiusM: 500,
