@@ -437,24 +437,33 @@ export interface JoinCall {
 export class StubClient {
   readonly calls: JoinCall[] = [];
   room: StubRoom;
-  /** Methods that should reject once, consumed in order. */
-  private readonly failures: string[] = [];
+  /** Methods that should reject once, consumed in order, with what they throw. */
+  private readonly failures: Array<{ method: string; error: Error }> = [];
   private readonly hangs = new Set<string>();
 
   constructor(room: StubRoom = new StubRoom()) {
     this.room = room;
   }
 
-  /** Make the next call to `method` reject, as a refused join would. */
-  fail(method: JoinCall['method']): void {
-    this.failures.push(method);
+  /**
+   * Make the next call to `method` reject. With no `refusal`, as a join no
+   * server answered does: the SDK's error carries no numeric code. With one,
+   * as a room that turned the join away does — colyseus's `MatchMakeError`,
+   * the room's message and its code (526 for an `onJoin` that threw).
+   */
+  fail(method: JoinCall['method'], refusal?: { code: number; message: string }): void {
+    const error =
+      refusal === undefined
+        ? new Error(`stub: ${method} not answered`)
+        : Object.assign(new Error(refusal.message), { code: refusal.code });
+    this.failures.push({ method, error });
   }
 
   /**
-   * Make every call to `method` hang for ever — a server that is simply not
-   * there. Distinct from `fail`, and worth having: a refusal produces an error
-   * status, while silence leaves the client waiting, which is the state the
-   * "Listening…" overlay exists for.
+   * Make every call to `method` hang for ever — a request nobody completes.
+   * Distinct from `fail`, and worth having: a failed join, answered or not,
+   * produces an error status, while silence leaves the client waiting, which
+   * is the state the "Listening…" overlay exists for.
    */
   hang(method: JoinCall['method']): void {
     this.hangs.add(method);
@@ -476,10 +485,9 @@ export class StubClient {
     if (this.hangs.has(call.method)) {
       return new Promise<StubRoom>((resolve) => this.held.push(resolve));
     }
-    const at = this.failures.indexOf(call.method);
+    const at = this.failures.findIndex((failure) => failure.method === call.method);
     if (at >= 0) {
-      this.failures.splice(at, 1);
-      throw new Error(`stub: ${call.method} refused`);
+      throw this.failures.splice(at, 1)[0]!.error;
     }
     return this.room;
   }

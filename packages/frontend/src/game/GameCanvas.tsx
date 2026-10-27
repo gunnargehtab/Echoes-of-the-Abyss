@@ -49,6 +49,7 @@ import {
   type LobbyView,
   type MissionLine,
 } from '../net/GameClient.ts';
+import type { JoinFailure } from '../net/failure.ts';
 import { resolveBindings } from '../input/bindings.ts';
 import type { Application } from 'pixi.js';
 import type { WebGLRenderer } from 'three';
@@ -194,8 +195,10 @@ export function GameCanvas({
    * The room refused or did not answer before this session was ever in it
    * (docs/world-map.md §7.6, "A load or join failure"): Retry and Back,
    * rather than an error a seat that never existed could not recover from.
+   * Which of the two it was decides what the player is told (docs/ui-ux.md
+   * §14, "When something fails"); null while no join has failed.
    */
-  const [joinFailed, setJoinFailed] = useState(false);
+  const [joinFailed, setJoinFailed] = useState<JoinFailure | null>(null);
   /** The join itself, kept so Retry runs exactly the one the mount began. */
   const joinRef = useRef<(() => Promise<void>) | null>(null);
   const [detail, setDetail] = useState<string>('');
@@ -750,11 +753,11 @@ export function GameCanvas({
             // so the menu does not stay open over the result card.
             if (view.phase === MatchPhase.Ended) setMenuOpen(false);
           },
-          onStatus: (next, why) => {
+          onStatus: (next, why, failure) => {
             if (cancelled) return;
             if (next === 'connected') joinedOnce = true;
-            if (next === 'connecting') setJoinFailed(false);
-            if (next === 'error' && !joinedOnce) setJoinFailed(true);
+            if (next === 'connecting') setJoinFailed(null);
+            if (next === 'error' && !joinedOnce) setJoinFailed(failure ?? 'unanswered');
             statusRef.current = next;
             setStatus(next);
             setDetail(why ?? '');
@@ -957,7 +960,7 @@ export function GameCanvas({
    * travel ended on, with the HUD detached and the wait or the failure a
    * caption at the foot (§7.6 steps 3 and the failure that interrupts them).
    */
-  const held = travelled && (status === 'connecting' || joinFailed);
+  const held = travelled && (status === 'connecting' || joinFailed !== null);
   const live = status === 'connected';
   /** This seat's own readiness — what "Again" and "Rematch" toggle. */
   const selfReady = lobby?.players.find((player) => player.sessionId === sessionId)?.ready ?? false;
@@ -1080,8 +1083,9 @@ export function GameCanvas({
         <div className="game-overlay">
           <h2>No light in the water</h2>
           <p>
-            The conn view needs WebGL, and this browser or device refused a context. Enable hardware
-            acceleration or try another browser.
+            Your browser could not start the 3D view the game draws the water with. Turning on
+            hardware acceleration in the browser&apos;s settings, or opening the game in another
+            browser, usually fixes it.
           </p>
           <button type="button" className="game-overlay-back" onClick={exit}>
             Return to port
@@ -1093,11 +1097,14 @@ export function GameCanvas({
         // ended on (docs/world-map.md §7.6 step 3): the wait is a caption at
         // the foot, not glass over the world, and so is a refused join. A
         // signal lost once in the room is information and keeps the glass.
+        // Every sentence here is the player's, never the operator's: no
+        // command, no port, no raw error where the client can say what
+        // happened itself (docs/ui-ux.md §14, "When something fails").
         <div className={held ? 'game-overlay game-overlay-held' : 'game-overlay'}>
           <h2>
             {status === 'connecting' && 'Listening…'}
             {status === 'reconnecting' && 'Signal lost — re-acquiring'}
-            {status === 'error' && 'No signal'}
+            {status === 'error' && (joinFailed === 'refused' ? 'Turned away' : 'No signal')}
             {status === 'closed' && 'Connection closed'}
           </h2>
           {status === 'reconnecting' && (
@@ -1106,25 +1113,31 @@ export function GameCanvas({
               {LIFECYCLE.RECONNECT_GRACE_S} seconds.
             </p>
           )}
-          {status === 'error' && joinFailed && (
-            // A refusal and a server that is not there both land here; the
-            // detail line below says which.
-            <>
-              <p>The room refused the join, or did not answer.</p>
-              <p>
-                If the game server is not running, start it with{' '}
-                <code>npm -w packages/backend run dev</code> and retry.
-              </p>
-            </>
-          )}
-          {status === 'error' && !joinFailed && (
+          {status === 'error' && joinFailed === 'unanswered' && (
             <p>
-              Could not reach the game server. Start it with{' '}
-              <code>npm -w packages/backend run dev</code> and reload.
+              The game server is not answering. It may be down or restarting, or your connection may
+              have dropped; nothing you did caused it. Try again in a minute.
             </p>
           )}
-          {detail !== '' && <p className="game-overlay-detail">{detail}</p>}
-          {status === 'error' && joinFailed ? (
+          {status === 'error' && joinFailed === 'refused' && (
+            // The client's sentence for the refusal, carrying the room's own
+            // reason only when the room wrote one for the player
+            // (`refusalSentence`).
+            <p>{detail}</p>
+          )}
+          {status === 'error' && joinFailed === null && (
+            // Mid-match, and not one the client can explain, so the room's
+            // text stays under it as something to quote in a report.
+            <p>The connection to the match failed.</p>
+          )}
+          {status === 'closed' && (
+            <p>
+              The room has closed, or the signal was gone too long to hold your seat. The match
+              cannot be rejoined from here.
+            </p>
+          )}
+          {detail !== '' && joinFailed === null && <p className="game-overlay-detail">{detail}</p>}
+          {status === 'error' && joinFailed !== null ? (
             // No seat was ever taken, so nothing is abandoned: Retry joins
             // the same room again, and Back goes where Return to port would.
             <div className="game-overlay-controls">

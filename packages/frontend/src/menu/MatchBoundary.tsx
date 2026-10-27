@@ -32,7 +32,14 @@ export class MatchBoundary extends Component<MatchBoundaryProps, { failure: stri
       <div className="game-root">
         <div className="game-overlay">
           <h2>The match stopped</h2>
-          <p>Its code did not load, or it failed.</p>
+          {/* The error's own text stays, small, under the sentence: this is
+              the one failure the client cannot explain, and a player quoting
+              it is how it gets fixed (docs/ui-ux.md §14, "When something
+              fails"). */}
+          <p>
+            Something went wrong with the match screen. Retry reloads the game, which usually clears
+            it.
+          </p>
           <p className="game-overlay-detail">{this.state.failure}</p>
           <div className="game-overlay-controls">
             <button

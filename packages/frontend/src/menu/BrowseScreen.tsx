@@ -40,9 +40,9 @@ export interface BrowseScreenProps {
    * reason as the other four: `listMatches` reaches a server, and a test has
    * none, so every row rule below — a full room refused up front, a row that
    * says the water and the seat count and nothing else — would be unreachable
-   * behind the empty list a refused connection returns.
+   * behind the `null` a refused connection returns.
    */
-  listRooms?: () => Promise<MatchListing[]>;
+  listRooms?: () => Promise<MatchListing[] | null>;
 }
 
 export function BrowseScreen({
@@ -52,15 +52,17 @@ export function BrowseScreen({
   onBack,
   listRooms = listMatches,
 }: BrowseScreenProps) {
-  const [rooms, setRooms] = useState<MatchListing[] | null>(null);
+  // `undefined` while looking, `null` when the server did not answer.
+  const [rooms, setRooms] = useState<MatchListing[] | null | undefined>(undefined);
   const [code, setCode] = useState('');
 
   const refresh = useCallback(() => {
     let cancelled = false;
-    // Null rather than an empty array while in flight: "nobody is playing" and
-    // "we have not looked yet" are different sentences, and showing the first
-    // one before it is true is the kind of small lie that empties a lobby.
-    setRooms(null);
+    // Not an empty array while in flight: "nobody is playing" and "we have not
+    // looked yet" are different sentences, and showing the first one before it
+    // is true is the kind of small lie that empties a lobby. So is showing it
+    // while the server is down, which is the third sentence.
+    setRooms(undefined);
     void listRooms().then((found) => {
       if (!cancelled) setRooms(found);
     });
@@ -91,13 +93,19 @@ export function BrowseScreen({
           </button>
         </div>
 
-        {rooms === null && <p className="menu-browse-empty">Listening…</p>}
-        {rooms !== null && rooms.length === 0 && (
+        {rooms === undefined && <p className="menu-browse-empty">Listening…</p>}
+        {rooms === null && (
+          <p className="menu-browse-empty">
+            The server is not answering, so no rooms can be listed. It may be down or restarting;
+            refresh in a minute.
+          </p>
+        )}
+        {Array.isArray(rooms) && rooms.length === 0 && (
           <p className="menu-browse-empty">
             No open rooms. Host one, or take a quick match and wait in the water.
           </p>
         )}
-        {rooms !== null && rooms.length > 0 && (
+        {Array.isArray(rooms) && rooms.length > 0 && (
           <ul className="menu-browse">
             {rooms.map((room) => {
               const full = room.filled >= room.seats;
