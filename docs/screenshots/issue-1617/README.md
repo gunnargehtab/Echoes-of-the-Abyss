@@ -1,8 +1,9 @@
 # Every mission's markers, named on the chart
 
 Evidence for [#1617](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1617): one
-frame for each of 26 missions with a named marker's ring and name, The Dome excepted
-(below), at 1,440 × 900 in headless Chromium (SwiftShader), driven by `frames.mjs`:
+frame for each of the 27 missions with markers other than Sorrowgate, which #1611 framed,
+showing a named marker's ring and name at 1,440 × 900 in headless Chromium (SwiftShader),
+driven by `frames.mjs`:
 
 ```bash
 FRAME_OUT=docs/screenshots/issue-1617 FRAME_NAME=<id> \
@@ -36,6 +37,7 @@ picks a later open row, `ZOOM_OUT` wheels out for a ring too wide for the focuse
 | `seeding-convocation` | The east gardens, the walk's live row | |
 | `attending-attendance` | The axis | |
 | `attending-intake` | The ascent | Opens at 19:00 |
+| `attending-the-dome` | The mouth | Opens at 19:00 |
 | `attending-shallow` | The Kell Slope | Opens at 18:00 |
 | `attending-conclave` | The axis | Opens at 17:00 |
 | `attending-first-arrival` | The terraces | Opens at 19:00; `ZOOM_OUT=12` |
@@ -46,10 +48,6 @@ picks a later open row, `ZOOM_OUT` wheels out for a ring too wide for the focuse
 | `chord-second-chord` | The Chord | |
 | `chord-aptitude` | The outer formations | `ZOOM_OUT=8` |
 | `chord-standing-wave` | The Fifth | |
-
-The Dome has no frame. Its second watch stands inside the mouth from tick zero, so the mouth
-row is met the tick it opens at 19:00 and an idle run never draws the ring
-([mission-the-dome.md](../../mission-the-dome.md) §11).
 
 A ring is cut where the map's rim cuts it, as in `seeding-radicals.jpg`, because a rung-6
 mark ends at the rim ([map-visuals.md](../../map-visuals.md) §5).
