@@ -874,6 +874,7 @@ and no row below is open.
 | Work | Issue |
 | --- | --- |
 | The in-match score | [#1599](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1599) |
+| The speaker profile silencing the score's Silent Running pedal | [#1657](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1657) |
 
 **Defects the loop finds**
 
@@ -882,6 +883,12 @@ and no row below is open.
 | A chart-framing test that failed now and then in CI | [#1610](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1610) |
 | Feedback from playing the tutorial | [#1611](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1611) |
 | Measuring the orders panel under a hold countdown | [#1622](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1622) |
+
+**Store art**
+
+| Work | Issue |
+| --- | --- |
+| Rendering the store art from the game's own logo | [#1651](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1651) |
 
 ---
 
@@ -908,6 +915,7 @@ is tagged from a green `main`.
 | Tend’s orders panel hiding its withheld list | [#1619](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1619) |
 | Conclave Chord’s orders panel hiding its last rows | [#1621](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1621) |
 | Sorrowgate’s orders panel outgrowing the room at large UI scales | [#1634](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1634) |
+| The orders panel covering the depth ribbon's band labels | [#1650](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1650) |
 
 ---
 

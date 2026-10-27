@@ -320,6 +320,7 @@ export const groups = {
   'Life in the water': 'Ships that move like ships',
   'What the chart survey found': 'A cleaner chart',
   Audio: 'Sound',
+  'Store art': 'Art for the store page',
 };
 
 export const items = {
@@ -562,6 +563,8 @@ export const items = {
   1611: 'Feedback from playing the tutorial, worked through',
   1622: 'Measuring the orders panel while a hold countdown ticks',
   1599: 'A score that plays through the match and swells when your fleet is loud',
+  1657: 'The score’s held-breath note going silent on a phone’s speaker setting',
+  1651: 'Store art drawn from the game’s own logo',
   1431: 'The Bulwark’s four stacks standing clear of the deck',
   1433: 'A seam on the Derrick running inside its own hull',
   1481: 'The Derrick’s seam hanging out past the ends of its hull',
@@ -577,6 +580,7 @@ export const items = {
   1619: 'Tend’s orders panel hiding its list of withheld orders late in the mission',
   1621: 'Conclave Chord’s orders panel cutting off its last rows late in the mission',
   1634: 'Sorrowgate’s orders panel spilling out of the room at larger interface sizes',
+  1650: 'The orders panel covering the depth ribbon’s labels',
   // Later
   1637: 'Three new looks for the game’s scenes, with the owner choosing which to follow',
   1600: 'Whether picking and ordering should make any interface sound',
