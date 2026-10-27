@@ -5,14 +5,19 @@
 // than the harness's PNG keeps twenty-seven frames to a few megabytes. A ring
 // two kilometres wide or more outgrows the focused view and puts its name off
 // screen, so ZOOM_OUT wheels the camera out that many notches first.
-const LONG = { timeout: 25 * 60 * 1000 };
+// Forty minutes: a marker row that opens at 19:00 can take over twenty-five on a
+// loaded machine, where the match clock runs behind the wall.
+const LONG = { timeout: 40 * 60 * 1000 };
 
 export default async ({ page }) => {
   const out = process.env.FRAME_OUT;
   const stem = process.env.FRAME_NAME;
   if (!out || !stem) throw new Error('FRAME_OUT and FRAME_NAME are required');
   await page.waitForSelector('button.objectives-row.pending', LONG);
-  await page.waitForTimeout(20000); // models decoded
+  // Models decode in the first twenty seconds. SETTLE_MS shortens the wait for
+  // a row that opens late, when they are long decoded and the mission may end
+  // soon after: Conclave Chord's voices open at 13:30 and an idle run is lost at 14:30.
+  await page.waitForTimeout(Number(process.env.SETTLE_MS || 20000));
   // ROW picks a later open row, for a mission whose first one closes on its own
   // within seconds of the drive pressing it (Tolerance's pour).
   const row = (await page.$$('button.objectives-row.pending'))[Number(process.env.ROW ?? 0)];

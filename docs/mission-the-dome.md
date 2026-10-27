@@ -683,7 +683,9 @@ no Biomass and reads no cell, so it is a fact rather than a price, and nobody is
 resources, not balanced, resolved by mission id and nothing else ([maps.md](maps.md)).
 
 **Named on the chart** (#1617). *The mouth* is printed above its marker's ring while a row that
-names it is open ([ui-ux.md](ui-ux.md) §10.5).
+names it is open ([ui-ux.md](ui-ux.md) §10.5). The second watch stands inside the mouth from tick
+zero, so the row is met the tick it opens at 19:00, and the chart draws the ring only for a player
+whose watch has left it by then.
 
 ---
 
