@@ -102,3 +102,62 @@ export function overlongSkillDescriptions(documents, limit = SKILL_DESCRIPTION_W
     })
     .filter(({ words }) => words === null || words > limit);
 }
+
+/**
+ * A label's `description` in `.github/labels.yml` may run to this many
+ * characters: GitHub's own cap, not a style choice.
+ *
+ * The sync workflow's labeler reports a longer one as an error and still
+ * passes, so the label silently keeps whatever GitHub already had. `fable-5.1`
+ * ran at 112 characters and never applied; when #1652 renamed it, the rename
+ * failed the same way and only the run log said so (#1654). Characters are
+ * counted as code points, as GitHub counts them: `automerge`'s 99, an em dash
+ * among them, applied.
+ */
+export const LABEL_DESCRIPTION_CHAR_LIMIT = 100;
+
+/**
+ * Each label in a `labels.yml` that states a description, with the description
+ * or null when there is none to read.
+ *
+ * Every entry here is a `- name:` line and two-space keys, the description one
+ * plain or quoted line. A block scalar (`>` or `|`) or a description continued
+ * onto a deeper-indented line reads as null, as `skillDescription` does, so a
+ * reformat fails loudly instead of measuring a fragment. A two-space comment
+ * under the key is a sibling, not a continuation.
+ */
+export function labelDescriptions(text) {
+  const lines = text.split('\n');
+  const labels = [];
+  let name = null;
+  lines.forEach((line, at) => {
+    const entry = /^- name:\s*(.+?)\s*$/.exec(line);
+    if (entry !== null) {
+      name = entry[1];
+      return;
+    }
+    if (name === null || !line.startsWith('  description:')) return;
+    const value = line.slice('  description:'.length).trim();
+    const continued = /^ {3,}\S/.test(lines[at + 1] ?? '');
+    if (value === '' || /^[>|][+-]?$/.test(value) || continued) {
+      labels.push({ name, description: null });
+      return;
+    }
+    const quoted = /^(["'])([\s\S]*)\1$/.exec(value);
+    labels.push({ name, description: quoted === null ? value : quoted[2] });
+  });
+  return labels;
+}
+
+/**
+ * The labels in a `labels.yml` whose description runs past `limit`
+ * characters, or that has none this can read (`chars: null`).
+ */
+export function overlongLabelDescriptions(text, limit = LABEL_DESCRIPTION_CHAR_LIMIT) {
+  return labelDescriptions(text)
+    .map(({ name, description }) => ({
+      name,
+      chars: description === null ? null : [...description].length,
+    }))
+    .filter(({ chars }) => chars === null || chars > limit);
+}
