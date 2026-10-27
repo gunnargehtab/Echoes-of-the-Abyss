@@ -1450,14 +1450,14 @@ an error the room raised mid-match — keeps the error's own text, small, under 
 as something the player can quote in a report.
 
 **Whether the server answered decides the sentence.** A join that got an answer and was
-turned down was refused. The room's reason is shown only when the room wrote it for the
-player (*This match is full.*, a refusal from its join). A room code that names no open
-room, the refusal a player meets most, is said in the client's words: the room is not open,
-and its match may have started, filled or closed. Any other refusal gets a plain sentence
-and none of the matchmaker's text, which is written for whoever runs the server. A join that
-got no answer — no connection, the socket closed before the room spoke, or a gateway saying
-the server behind it is down (502, 503, 504) — was not answered, and the player is told the
-server is not answering and that nothing they did caused it.
+turned down was refused. The room's reason is shown only for a refusal from the room's own
+join check, whose reasons are written for the player (*This match is full.*). A room code
+that names no open room, the refusal a player meets most, is said in the client's words: the
+room is not open, and its match may have started, filled or closed. Any other refusal gets a
+plain sentence and none of the matchmaker's text, which is written for whoever runs the
+server. A join that got no answer — no connection, the socket closed before the room spoke,
+or a gateway saying the server behind it is down (502, 503, 504) — was not answered, and the
+player is told the server is not answering and that nothing they did caused it.
 
 | What failed | Heading | What it says, and offers |
 | --- | --- | --- |

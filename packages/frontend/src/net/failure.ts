@@ -2,9 +2,10 @@
  * Whether a failed join was answered — docs/ui-ux.md §14, "When something
  * fails" (#1613).
  *
- * The player is told one of two different things: a room that turned them
- * away has a reason the room wrote for them, and a server that never spoke has
- * none, only an outage that is not their fault. The SDK reports both as a
+ * The player is told one of two different things: a join that was turned away
+ * gets a sentence saying so, carrying the room's own reason only when the room
+ * wrote one (`refusalSentence`), and a server that never spoke has no reason,
+ * only an outage that is not their fault. The SDK reports both as a
  * thrown error, so the difference has to be read off what was thrown.
  *
  * The rule is the error's numeric `code`, because the SDK copies the answer's
@@ -58,6 +59,11 @@ export function joinFailure(error: unknown): JoinFailure {
  * found`, a bare "Internal Server Error" — so the client says it in its own
  * words instead. A wrong or stale room code is the refusal a player meets most,
  * from the code field or a listing that went stale: 522.
+ *
+ * 526 means the room's `onJoin` threw, not that it threw on purpose: a bug in
+ * `onJoin` would show its own text here too. Today its only throws are the two
+ * sentences written for the player, so the code is trusted as the room's word;
+ * telling the two apart would need the backend to mark its refusals.
  */
 export function refusalSentence(error: unknown): string {
   const code = codeOf(error);
