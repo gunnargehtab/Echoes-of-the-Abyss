@@ -40,7 +40,7 @@ export interface BrowseScreenProps {
    * reason as the other four: `listMatches` reaches a server, and a test has
    * none, so every row rule below — a full room refused up front, a row that
    * says the water and the seat count and nothing else — would be unreachable
-   * behind the empty list a refused connection returns.
+   * behind the `null` a refused connection returns.
    */
   listRooms?: () => Promise<MatchListing[] | null>;
 }

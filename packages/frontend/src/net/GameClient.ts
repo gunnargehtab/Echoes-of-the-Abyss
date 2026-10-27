@@ -38,7 +38,7 @@ import {
   type MissionLine,
   type TerrainMessage,
 } from '@echoes/shared';
-import { type JoinFailure, joinFailure } from './failure.ts';
+import { type JoinFailure, joinFailure, refusalSentence } from './failure.ts';
 import { toListings } from './rooms.ts';
 import { leaveReportRoom, setReportRoom } from './reports.ts';
 
@@ -147,8 +147,8 @@ export interface GameClientHandlers {
   onMissionOver(payload: MissionResultPayload): void;
   /**
    * `failure` is set only on an `error` from a join, and says whether the
-   * server answered it (`failure.ts`); `detail` is then the room's reason, or
-   * empty when nothing answered.
+   * server answered it (`failure.ts`); `detail` is then the sentence the
+   * refusal is told in, or empty when nothing answered.
    */
   onStatus(status: ConnectionStatus, detail?: string, failure?: JoinFailure): void;
 }
@@ -475,11 +475,10 @@ export class GameClient {
     } catch (error) {
       // An unanswered join has no reason worth showing: the SDK's text for it
       // is the browser's own ("Failed to fetch"), which tells a player nothing
-      // the sentence does not (docs/ui-ux.md §14, "When something fails").
+      // the sentence does not. A refused one gets the sentence `failure.ts`
+      // makes of it (docs/ui-ux.md §14, "When something fails").
       const failure = joinFailure(error);
-      const reason =
-        failure === 'refused' ? (error instanceof Error ? error.message : String(error)) : '';
-      this.handlers.onStatus('error', reason, failure);
+      this.handlers.onStatus('error', failure === 'refused' ? refusalSentence(error) : '', failure);
     }
   }
 

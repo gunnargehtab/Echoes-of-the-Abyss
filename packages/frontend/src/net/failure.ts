@@ -29,11 +29,43 @@ export type JoinFailure = 'unanswered' | 'refused';
 
 const GATEWAY_DOWN = new Set([502, 503, 504]);
 
+/** colyseus's `ErrorCode.APPLICATION_ERROR`: what core gives an `onJoin` that threw. */
+const ROOM_REFUSED = 526;
+/** `ErrorCode.MATCHMAKE_INVALID_ROOM_ID`: no open room has the id asked for. */
+const NO_SUCH_ROOM = 522;
+
+function codeOf(error: unknown): unknown {
+  return typeof error === 'object' && error !== null
+    ? (error as { code?: unknown }).code
+    : undefined;
+}
+
 export function joinFailure(error: unknown): JoinFailure {
-  const code =
-    typeof error === 'object' && error !== null ? (error as { code?: unknown }).code : undefined;
+  const code = codeOf(error);
   if (typeof code !== 'number') return 'unanswered';
   if (code < 400 || (code >= 1000 && code < 3000)) return 'unanswered';
   if (GATEWAY_DOWN.has(code)) return 'unanswered';
   return 'refused';
+}
+
+/**
+ * What the player is told about a refusal, in a sentence.
+ *
+ * Only a room's own refusal carries a reason worth showing as it is:
+ * `MatchRoom.onJoin` throws "This match is full." for the player, and core
+ * codes a thrown `onJoin` 526. Everything else numeric is the matchmaker's or
+ * the transport's text, written for whoever runs the server — `room "ABCD" not
+ * found`, a bare "Internal Server Error" — so the client says it in its own
+ * words instead. A wrong or stale room code is the refusal a player meets most,
+ * from the code field or a listing that went stale: 522.
+ */
+export function refusalSentence(error: unknown): string {
+  const code = codeOf(error);
+  if (code === ROOM_REFUSED && error instanceof Error && error.message !== '') {
+    return `The room would not take your seat. ${error.message}`;
+  }
+  if (code === NO_SUCH_ROOM) {
+    return 'That room is not open. Its match may have started, filled or closed.';
+  }
+  return 'The server would not seat you in this match.';
 }

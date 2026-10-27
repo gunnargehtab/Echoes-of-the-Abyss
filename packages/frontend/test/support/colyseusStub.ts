@@ -449,7 +449,7 @@ export class StubClient {
    * Make the next call to `method` reject. With no `refusal`, as a join no
    * server answered does: the SDK's error carries no numeric code. With one,
    * as a room that turned the join away does — colyseus's `MatchMakeError`,
-   * the room's message and its code (523 for an `onJoin` that threw).
+   * the room's message and its code (526 for an `onJoin` that threw).
    */
   fail(method: JoinCall['method'], refusal?: { code: number; message: string }): void {
     const error =

@@ -42,7 +42,7 @@ import {
   type GameClientHandlers,
   type LobbyView,
 } from '../src/net/GameClient.ts';
-import { joinFailure } from '../src/net/failure.ts';
+import { joinFailure, refusalSentence } from '../src/net/failure.ts';
 import { cannedMap, cannedSnapshot, cannedTerrain } from './support/cannedMatch.ts';
 
 /** Everything the shell was told, in the order it was told. */
@@ -427,12 +427,16 @@ describe('the match client: getting into a room', () => {
 
   it('reports a refused join as an error carrying the room’s reason, rather than throwing', async () => {
     const net = new StubClient();
-    net.fail('joinOrCreate', { code: 523, message: 'This match is full.' });
+    net.fail('joinOrCreate', { code: 526, message: 'This match is full.' });
     const { handlers, log } = recordingHandlers();
     await new GameClient(handlers, 'ws://test', net as unknown as never, stubCallbacks).connect({});
 
     assert.deepEqual(log.statuses(), ['connecting', 'error']);
-    assert.deepEqual(log.argsOf('onStatus').at(-1), ['error', 'This match is full.', 'refused']);
+    assert.deepEqual(log.argsOf('onStatus').at(-1), [
+      'error',
+      'The room would not take your seat. This match is full.',
+      'refused',
+    ]);
   });
 
   it('reports an unanswered join with no reason to show (docs/ui-ux.md §14)', async () => {
@@ -485,9 +489,33 @@ describe('a failed join: answered or not (docs/ui-ux.md §14, "When something fa
   });
 
   it('calls a join the server turned down refused', () => {
-    for (const code of [400, 404, 500, 522, 523, 4000, 4212]) {
+    for (const code of [400, 404, 500, 522, 523, 526, 4000, 4212]) {
       const refusal = Object.assign(new Error('This match is full.'), { code });
       assert.equal(joinFailure(refusal), 'refused', `code ${code}`);
+    }
+  });
+
+  it('shows a refusal’s own text only when the room wrote it for the player', () => {
+    // MatchRoom.onJoin throws a sentence for the player, and core codes it 526.
+    const room = Object.assign(new Error('This match has already started.'), { code: 526 });
+    assert.equal(
+      refusalSentence(room),
+      'The room would not take your seat. This match has already started.'
+    );
+    // The matchmaker's text is for whoever runs the server: a wrong or stale
+    // room code, the refusal a player meets most, is said in the client's words.
+    for (const message of ['room "ABCD" not found', 'room "ABCD" is locked']) {
+      const said = refusalSentence(Object.assign(new Error(message), { code: 522 }));
+      assert.equal(said.includes('room "'), false, message);
+      assert.match(said, /That room is not open/);
+    }
+    for (const [code, message] of [
+      [500, 'Internal Server Error'],
+      [523, 'unknown mission: nowhere'],
+      [526, ''],
+    ] as const) {
+      const said = refusalSentence(Object.assign(new Error(message), { code }));
+      assert.equal(said, 'The server would not seat you in this match.', `${code} ${message}`);
     }
   });
 });

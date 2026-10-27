@@ -1450,20 +1450,23 @@ an error the room raised mid-match — keeps the error's own text, small, under 
 as something the player can quote in a report.
 
 **Whether the server answered decides the sentence.** A join that got an answer and was
-turned down was refused, and the room's reason is shown, because the room wrote it for the
-player (*This match is full.*). A join that got none — no connection, the socket closed
-before the room spoke, or a gateway saying the server behind it is down (502, 503, 504) —
-was not answered, and the player is told the server is not answering and that nothing they
-did caused it.
+turned down was refused. The room's reason is shown only when the room wrote it for the
+player (*This match is full.*, a refusal from its join). A room code that names no open
+room, the refusal a player meets most, is said in the client's words: the room is not open,
+and its match may have started, filled or closed. Any other refusal gets a plain sentence
+and none of the matchmaker's text, which is written for whoever runs the server. A join that
+got no answer — no connection, the socket closed before the room spoke, or a gateway saying
+the server behind it is down (502, 503, 504) — was not answered, and the player is told the
+server is not answering and that nothing they did caused it.
 
 | What failed | Heading | What it says, and offers |
 | --- | --- | --- |
 | A join the server did not answer | No signal | The game server is not answering, it may be down or restarting, and to try again in a minute. Retry and Back (§7.6 of [world-map.md](world-map.md)) |
-| A join the room refused | Turned away | The room would not take the seat, and its reason. Retry and Back |
+| A join the room refused | Turned away | The room would not take the seat, and its reason; or the room is not open; or the server would not seat the player. Retry and Back |
 | An error the room raised once joined | No signal | The connection to the match failed, and the error's text. Return to port |
 | The room closed on the player | Connection closed | The room has closed, or the signal was gone too long to hold the seat. Return to port |
 | No WebGL | No light in the water | The browser could not start the 3D view the game draws the water with, and the two usual fixes. Return to port |
-| The match screen crashed or did not load | The match stopped | Something went wrong opening the match, Retry reloads the game and usually clears it, and the error's text. Retry and Back |
+| The match screen crashed, or did not load outside a board launch | The match stopped | Something went wrong with the match screen, Retry reloads the game and usually clears it, and the error's text. Retry and Back |
 | The match browser got no answer | (in the list) | The server is not answering, so no rooms can be listed. The code field and both doors stay |
 
 ### The listening room

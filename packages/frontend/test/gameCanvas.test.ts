@@ -1296,7 +1296,7 @@ describe('the shell: the persistent world view', () => {
   });
 
   it('says a refusal is the room’s, with the room’s own reason', async () => {
-    const world = await mount({ refuse: { code: 523, message: 'This match is full.' } });
+    const world = await mount({ refuse: { code: 526, message: 'This match is full.' } });
     try {
       assert.ok(shows(world.tree, 'Turned away'));
       assert.ok(shows(world.tree, 'The room would not take your seat.'));
@@ -1306,6 +1306,22 @@ describe('the shell: the persistent world view', () => {
         .findAll((node) => node.type === 'button')
         .map((node) => node.children.join(''));
       assert.deepEqual(labels, ['Retry', 'Back']);
+    } finally {
+      await world.unmount();
+    }
+  });
+
+  it('says a room code that names no open room in its own words', async () => {
+    // The matchmaker's 522 text is for whoever runs the server.
+    const world = await mount({ refuse: { code: 522, message: 'room "ABCD" not found' } });
+    try {
+      assert.ok(shows(world.tree, 'Turned away'));
+      assert.ok(shows(world.tree, 'That room is not open'));
+      assert.equal(shows(world.tree, 'room "'), false, 'no matchmaker text');
+      assert.equal(
+        world.tree.root.findAll((node) => node.props.className === 'game-overlay-detail').length,
+        0
+      );
     } finally {
       await world.unmount();
     }

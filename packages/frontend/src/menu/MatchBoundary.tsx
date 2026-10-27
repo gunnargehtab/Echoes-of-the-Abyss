@@ -37,8 +37,8 @@ export class MatchBoundary extends Component<MatchBoundaryProps, { failure: stri
               it is how it gets fixed (docs/ui-ux.md §14, "When something
               fails"). */}
           <p>
-            Something went wrong while opening the match. Retry reloads the game, which usually
-            clears it.
+            Something went wrong with the match screen. Retry reloads the game, which usually clears
+            it.
           </p>
           <p className="game-overlay-detail">{this.state.failure}</p>
           <div className="game-overlay-controls">

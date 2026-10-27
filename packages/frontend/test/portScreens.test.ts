@@ -742,16 +742,23 @@ describe('the match browser: looking, and having looked', () => {
   });
 
   it('leaves the code field and the two doors working when nothing is open', async () => {
-    // A server that is down lists nothing rather than erroring, and neither
-    // the code field nor the host button stops working because of it.
-    const { view, doors } = await browse([]);
-    try {
-      await click(view, 'Host a match');
-      await click(view, 'Quick match');
-      await click(view, 'Back');
-      assert.deepEqual([doors.hosts, doors.quick, doors.backs], [1, 1, 1]);
-    } finally {
-      await view.unmount();
+    // Nothing open, or a server that is down: neither errors, and neither
+    // the code field nor the host button stops working because of it
+    // (docs/ui-ux.md §14, "When something fails").
+    for (const listing of [[], null]) {
+      const { view, doors } = await browse(listing);
+      try {
+        assert.ok(
+          view.root.find((node) => node.type === 'input' && node.props.type === 'text'),
+          'the code field'
+        );
+        await click(view, 'Host a match');
+        await click(view, 'Quick match');
+        await click(view, 'Back');
+        assert.deepEqual([doors.hosts, doors.quick, doors.backs], [1, 1, 1]);
+      } finally {
+        await view.unmount();
+      }
     }
   });
 });

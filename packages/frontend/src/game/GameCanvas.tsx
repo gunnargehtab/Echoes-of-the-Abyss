@@ -1120,9 +1120,10 @@ export function GameCanvas({
             </p>
           )}
           {status === 'error' && joinFailed === 'refused' && (
-            // The reason under it is the room's own, written for the player
-            // (MatchRoom.onJoin: "This match is full.").
-            <p>The room would not take your seat.</p>
+            // The client's sentence for the refusal, carrying the room's own
+            // reason only when the room wrote one for the player
+            // (`refusalSentence`).
+            <p>{detail}</p>
           )}
           {status === 'error' && joinFailed === null && (
             // Mid-match, and not one the client can explain, so the room's
@@ -1135,7 +1136,7 @@ export function GameCanvas({
               cannot be rejoined from here.
             </p>
           )}
-          {detail !== '' && <p className="game-overlay-detail">{detail}</p>}
+          {detail !== '' && joinFailed === null && <p className="game-overlay-detail">{detail}</p>}
           {status === 'error' && joinFailed !== null ? (
             // No seat was ever taken, so nothing is abandoned: Retry joins
             // the same room again, and Back goes where Return to port would.
