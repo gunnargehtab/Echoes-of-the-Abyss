@@ -661,17 +661,18 @@ device the profile defaults on for. The full tuned bed took the same fault, -16.
 
 The direct path's high shelf is the fix (#1603). It sits on the direct path only, so the
 harmonic path's comb is not lifted with it. Its gain is solved rather than heard: 12 dB at a
-600 Hz corner puts the profiled score at -45.2, 17.3 dB under the profiled SIG 80 scene, and
-moves every profiled scene by under half a decibel, so the reported scene keeps the level the
+600 Hz corner puts the profiled score at -45.2, 17.3 dB under the profiled SIG 80 scene, moves
+the profiled Sorrowgate scenes by 0.2 dB or less and the bed-only cases within the meter's
+half-decibel run-to-run spread, so the reported scene keeps the level the
 player called fine. It sits **before the knee**, and that was measured against after it. After
 the knee, beside the trim, it lifts the harmonic path's series above 600 Hz too: the profiled
-scenes rise 2-3 dB, their peaks from -27.1 to -12.6 dBTP, and the share above 800 Hz from 4%
-to 23%. Before it, the full tuned bed is the one layer the shelf takes into the knee: profiled
+scenes rise 2-3 dB, their peaks from -27.1 to -12.6 dBTP, and the SIG 80 scene's share above
+800 Hz from 7% to 23%. Before it, the full tuned bed is the one layer the shelf takes into the knee: profiled
 it reads -27.2 with its peak on the knee's ceiling, a loss of 11 dB like the scenes', and its
 share below 800 Hz stays under 1%, so the knee makes no difference tones in the band the hum
 was reported in. That is the knee doing what it is for, on a maximal input. Under Silent Running the profile
 still leaves the pedal below the meter's gate (-50.7 unprofiled, above). The pedal is under the
-cut, so only the harmonic path carries it, and the shelf does not reach that path.
+cut, so only the harmonic path carries it, and the shelf does not reach that path (#1657).
 
 Contacts are sonified (§3): a voice per contact, panned with the authority its tier earned,
 filtered by the biome it arrived through (§9), and carrying from Tier 3 up the timbre family

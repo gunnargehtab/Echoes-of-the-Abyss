@@ -226,9 +226,9 @@ export const SPEAKER_PROFILE = {
    * On the direct path only, so the harmonic path's comb — the hum #663 was
    * reported on three times, piled between 300 and 450 Hz — is not lifted
    * with it. The gain is solved, not heard: with the corner at 600 Hz, 12 dB
-   * puts the profiled score 17.3 dB under the profiled SIG 80 scene, and moves
-   * every scene the meter renders by under half a decibel, so TRIM's level
-   * still stands (tools/audio-meter `score-out-profile:` and `profile:`). The
+   * puts the profiled score 17.3 dB under the profiled SIG 80 scene, moves the
+   * profiled Sorrowgate scenes 0.2 dB or less and the bed-only cases within the
+   * meter's half-decibel run-to-run spread, so TRIM's level still stands (tools/audio-meter `score-out-profile:` and `profile:`). The
    * corner sits low enough that the score's lowest partial (1,046.5 Hz) gets
    * 10.6 of the 12, and high enough that 450 Hz gets 3.2 and 320 Hz 1.1.
    *
