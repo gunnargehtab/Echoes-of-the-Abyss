@@ -524,8 +524,8 @@ move at 40 m/s.
 resolved by mission id and nothing else ([maps.md](maps.md)) — and now resolved by two mission
 ids, which is the first time that has been true.
 
-**Named on the chart** (#1617). The live row's marker is printed above its ring with the place the
-table above gives it: *The east gardens*, *The west end*, *The lane's head*, *The lane's foot*,
+**Named on the chart** (#1617). The live row's marker is printed above its ring with the place its
+line names, which is the table's for every row but the first: *The east gardens*, *The west end*, *The lane's head*, *The lane's foot*,
 *Mid-terrace*, *Home's own row* and *The east rows*. *The watch's edge* and *The Holdfast* are
 printed while a row that names each is open ([ui-ux.md](ui-ux.md) §10.5).
 

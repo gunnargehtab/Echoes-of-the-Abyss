@@ -12,7 +12,9 @@ FRAME_OUT=docs/screenshots/issue-1617 FRAME_NAME=<id> \
 ```
 
 Each drive waits for the first open row with a marker, presses it so the camera goes there,
-and saves `<id>.jpg`. `ROW` picks a later open row, and `ZOOM_OUT` wheels out for a ring
+and saves `<id>.jpg`. So each frame shows one mission's first named marker, not every name:
+a marker whose row opens later, such as Deep Furrow's *The furrows* at 15:30, is held by
+`missions.test.ts` and not framed. `ROW` picks a later open row, and `ZOOM_OUT` wheels out for a ring
 too wide for the focused view.
 
 | Mission | Name in the frame | Settings |
@@ -43,7 +45,7 @@ A ring is cut where the map's rim cuts it, as in `seeding-radicals.jpg`, because
 mark ends at the rim ([map-visuals.md](../../map-visuals.md) §5).
 
 Three names sit on something at the ring's north edge: the player's hulls in
-`ledger-exposure.jpg` and `chord-second-chord.jpg`, and the Bastion in
+`ledger-exposure.jpg`, a Sounding Spire in `chord-second-chord.jpg`, and the Bastion in
 `chord-standing-wave.jpg`. The name is placed above the ring, so a hull standing on the
 ring's far side is under it. [ui-ux.md](../../ui-ux.md) §10.5 promises it never sits on the
 hulls the ring is drawn round, which holds for hulls inside the ring only.
