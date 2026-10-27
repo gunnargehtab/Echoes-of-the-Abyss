@@ -3,9 +3,12 @@ import assert from 'node:assert/strict';
 
 import {
   CLAUDE_MD_LINE_LIMIT,
+  LABEL_DESCRIPTION_CHAR_LIMIT,
   SKILL_DESCRIPTION_WORD_LIMIT,
+  labelDescriptions,
   lineCount,
   overlongClaudeFiles,
+  overlongLabelDescriptions,
   overlongSkillDescriptions,
   skillDescription,
   wordCount,
@@ -100,4 +103,51 @@ test("only a skill's own SKILL.md is measured", () => {
     { file: 'CLAUDE.md', text: long },
   ];
   assert.deepEqual(overlongSkillDescriptions(docs), []);
+});
+
+const labels = (...entries) => entries.join('\n') + '\n';
+const label = (name, description, rest = '') =>
+  `- name: ${name}\n  color: ffffff\n  description: ${description}\n${rest}`;
+
+test('each label description is read plain or quoted, with its name', () => {
+  const text = labels(
+    '# --- Kind ---\n',
+    label('bug', "Something isn't working"),
+    label('quoted', '"Has: a colon"'),
+    '- name: bare\n  color: ffffff\n'
+  );
+  assert.deepEqual(labelDescriptions(text), [
+    { name: 'bug', description: "Something isn't working" },
+    { name: 'quoted', description: 'Has: a colon' },
+  ]);
+});
+
+test('a two-space comment under a description is a sibling, not a continuation', () => {
+  const text = label('automerge', 'Merged once green', '  # Never on a drawn change.\n');
+  assert.deepEqual(labelDescriptions(text), [
+    { name: 'automerge', description: 'Merged once green' },
+  ]);
+});
+
+test('a label description this cannot read as one line is null, never a fragment', () => {
+  const text = labels(
+    label('folded', '>-', '    A call a person reserved\n    and more\n'),
+    label('continued', 'starts here', '    and continues\n')
+  );
+  assert.deepEqual(labelDescriptions(text), [
+    { name: 'folded', description: null },
+    { name: 'continued', description: null },
+  ]);
+});
+
+test('the character limit is inclusive and counts code points', () => {
+  // #1654: fable-5.1's 112-character description never applied. An em dash is
+  // one character to GitHub, as automerge's 99 showed.
+  const at = 'x'.repeat(LABEL_DESCRIPTION_CHAR_LIMIT - 2) + ' —';
+  const over = 'x'.repeat(LABEL_DESCRIPTION_CHAR_LIMIT + 1);
+  const text = labels(label('at', at), label('over', over), label('folded', '|'));
+  assert.deepEqual(overlongLabelDescriptions(text), [
+    { name: 'over', chars: LABEL_DESCRIPTION_CHAR_LIMIT + 1 },
+    { name: 'folded', chars: null },
+  ]);
 });

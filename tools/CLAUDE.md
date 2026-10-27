@@ -132,8 +132,9 @@ tools/claude-docs  markdownlint, a relative-link check, and a path check over
                    nothing names any more fails — what a link checker cannot
                    see, since prose names a file more often than it links one.
                    lib/length.mjs holds every CLAUDE.md under 200 lines (#899)
-                   and every authored skill description within 60 words (#1186),
-                   since a session loads each one unasked; lib/agents.mjs fails
+                   and each authored skill description within 60 words (#1186), as a
+                   session loads those unasked, and each labels.yml description
+                   within GitHub's 100 characters (#1654); lib/agents.mjs fails
                    an agent pinned to a model no one can spawn. Configs are
                    .claude/.markdownlint.json, which extends the root one and
                    turns MD018 off because those files open paragraphs with

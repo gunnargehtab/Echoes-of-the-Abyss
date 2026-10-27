@@ -14,6 +14,7 @@
 #
 # GitHub caps a description at 100 characters, and the sync logs a longer one
 # as an error yet still passes: fable-5.1's ran at 112 and was never applied.
+# `npm run docs:claude` now fails on one (tools/claude-docs/lib/length.mjs).
 
 # --- Kind: what sort of change an issue asks for ---
 

@@ -80,7 +80,9 @@
  * **And every `CLAUDE.md` stays under 200 lines, since #899**, and every
  * repo-authored skill's `description` within 60 words, since #1186 — the only
  * prose here a session loads without asking. `lib/length.mjs` holds both
- * ceilings and the reason for each. **Every agent under `.claude/agents/` is
+ * ceilings and the reason for each, and a third that is GitHub's rather than
+ * ours: every description in `.github/labels.yml` within 100 characters, since
+ * the label sync passes on one it failed to apply (#1654). **Every agent under `.claude/agents/` is
  * pinned to a model that exists**, since a session's critic named one that
  * did not; `lib/agents.mjs` says what that cost.
  *
@@ -95,8 +97,10 @@ import { fileURLToPath } from 'node:url';
 import { spawn } from '../lib/spawn.mjs';
 import {
   CLAUDE_MD_LINE_LIMIT,
+  LABEL_DESCRIPTION_CHAR_LIMIT,
   SKILL_DESCRIPTION_WORD_LIMIT,
   overlongClaudeFiles,
+  overlongLabelDescriptions,
   overlongSkillDescriptions,
 } from './lib/length.mjs';
 import { unknownAgentModels } from './lib/agents.mjs';
@@ -252,7 +256,10 @@ function classifySkills() {
  * built on it silently checks zero files.
  */
 function gitLs(pathspecs) {
-  const listed = spawnSync('git', ['ls-files', '-z', ...pathspecs], { cwd: repo, encoding: 'utf8' });
+  const listed = spawnSync('git', ['ls-files', '-z', ...pathspecs], {
+    cwd: repo,
+    encoding: 'utf8',
+  });
   if (listed.status !== 0) {
     process.stderr.write(listed.stderr ?? '');
     return null;
@@ -443,6 +450,23 @@ if (wordy.length > 0) {
 process.stdout.write(
   `skill descriptions: all within ${SKILL_DESCRIPTION_WORD_LIMIT} words (vendored copies excepted)\n`
 );
+
+// The label sync would pass on these and leave the label as it was, so the
+// pull request is the last place they are loud; lib/length.mjs says how.
+const longLabels = overlongLabelDescriptions(
+  readFileSync(resolve(repo, '.github/labels.yml'), 'utf8')
+);
+if (longLabels.length > 0) {
+  process.stderr.write(
+    `Label description(s) in .github/labels.yml over ${LABEL_DESCRIPTION_CHAR_LIMIT} characters, or not one readable line:\n${longLabels
+      .map(({ name, chars }) => `  ${name}: ${chars ?? 'no single-line description'}`)
+      .join('\n')}\n` +
+      "GitHub rejects a longer one, and the sync logs it and passes. Shorten it; the label's rules belong in CONTRIBUTING.md.\n"
+  );
+  process.exit(1);
+}
+
+process.stdout.write(`label descriptions: all within ${LABEL_DESCRIPTION_CHAR_LIMIT} characters\n`);
 
 // A pin no one can spawn fails at the end of a round, not here; lib/agents.mjs
 // says what that cost.
