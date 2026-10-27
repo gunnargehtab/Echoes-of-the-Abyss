@@ -214,6 +214,49 @@ describe('the speaker profile: the graph', () => {
     );
   });
 
+  it('gives the score’s band back what the trim takes, and never lifts the reconstruction', () => {
+    // #1603: TRIM was set on a scene that is almost all low band, which
+    // reaches the output through LIFT first. The band above the cut took TRIM
+    // alone, so the score — §10 puts all of it above 800 Hz — lost twice what
+    // the scenes did. The shelf is the fix, and where it sits is the whole of
+    // what it can get wrong: on the harmonic path, or after the knee where the
+    // two paths are already summed, it lifts the comb #663 was reported for —
+    // measured, the profiled scenes' peaks rose from -27.1 to -12.6 dBTP.
+    const context = new HeadlessAudioContext();
+    const out = context.createGain();
+    createSpeakerProfile(context as unknown as AudioContext, out as unknown as AudioNode);
+
+    const filters = context.nodes.filter(
+      (node): node is StubBiquadFilterNode => node instanceof StubBiquadFilterNode
+    );
+    const shelves = filters.filter((node) => node.type === 'highshelf');
+    assert.equal(shelves.length, 1, 'the direct path has no makeup shelf, or more than one');
+    const shelf = shelves[0]!;
+    assert.ok(shelf.gain.value > 0, 'the shelf takes level away rather than giving it back');
+    // Above the harmonic path's own corner and below §10's line, so the
+    // score's band gets most of the shelf and the comb's band little of it.
+    assert.ok(shelf.frequency.value > SPEAKER_PROFILE.HARMONIC_HZ);
+    assert.ok(shelf.frequency.value < 800, 'the score’s lowest partials miss the shelf');
+
+    const cut = filters.filter(
+      (node) => node.type === 'highpass' && node.frequency.value === SPEAKER_PROFILE.CUT_HZ
+    );
+    assert.ok(
+      cut.some((node) => node.reaches(shelf)),
+      'the shelf is not on the direct path'
+    );
+    const shapers = context.nodes.filter((node) => node instanceof StubWaveShaperNode);
+    const read = filters.filter((node) => node.type === 'lowpass');
+    const generator = shapers.find((shaper) => read.some((node) => node.outputs.includes(shaper)));
+    const knee = shapers.find((shaper) => shaper !== generator);
+    assert.ok(generator !== undefined && knee !== undefined);
+    assert.equal(generator.reaches(shelf), false, 'the shelf lifts the reconstruction too');
+    assert.ok(
+      shelf.reaches(knee),
+      'the shelf sits after the knee, where it lifts the reconstruction too'
+    );
+  });
+
   it('puts the profile between master and the ceiling, never after it', () => {
     const context = installHeadlessAudio();
     const engine = new AudioEngine();

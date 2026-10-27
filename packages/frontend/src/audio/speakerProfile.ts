@@ -26,9 +26,9 @@
  * Two paths in parallel, summed.
  *
  * ```text
- *          ┌─► high-pass 180 ──────────────────────────────────────────┐
+ *          ┌─► high-pass 210 ─► high shelf 600 ────────────────────────┐
  *   input ─┤                                                           ├─► out
- *          └─► low-pass 200 ─► shaper ─► high-pass 260 ─► lift ────────┘
+ *          └─► low-pass 200 ─► shaper ─► high-pass 320 ─► lift ────────┘
  * ```
  *
  * The **direct path** does not carry the low band at all. That is the whole
@@ -40,7 +40,7 @@
  * exists to remove survived its own fix. The player reported it in the same
  * word they had used before, which is what a partial fix sounds like.
  *
- * Replacement, then, not attenuation: below 180 Hz the direct path is filtered
+ * Replacement, then, not attenuation: below 210 Hz the direct path is filtered
  * away and the harmonic path is what the band becomes. This is the topology
  * every small-speaker bass processor uses, and the reason it is a *profile*
  * with a switch is exactly so it can be this aggressive — a player on speakers
@@ -48,7 +48,7 @@
  *
  * The **harmonic path** is the half §11 actually specifies. It isolates the
  * information band, generates its harmonic series with a static non-linearity,
- * and keeps only what lands above 260 Hz — where a small speaker is efficient.
+ * and keeps only what lands above 320 Hz — where a small speaker is efficient.
  * The fundamental is never sent; the ear puts it back. This is the same
  * missing-fundamental reconstruction that lets a telephone carry a 100 Hz
  * voice through a channel that starts at 300 Hz, and it is why a contact at
@@ -211,6 +211,38 @@ export const SPEAKER_PROFILE = {
    */
   TRIM: 0.0496,
 
+  /**
+   * A high shelf on the direct path, Hz and dB: where the score lives (§10,
+   * above 800 Hz), given back the level TRIM takes from it (#1603).
+   *
+   * TRIM was set on a scene whose energy is 78% below 200 Hz, and that energy
+   * reaches the output through LIFT's +15.6 dB before TRIM's -26.1. Material
+   * above the cut takes TRIM with nothing in front of it, so the profile took
+   * the score at full plant 19.4 dB down where it took the SIG 80 scene 9.1 dB
+   * — 28 dB under that scene rather than the 17.5 it sits unprofiled, which on
+   * a phone is §10's swell gone. A small speaker plays this band well; nothing
+   * about it needed taking down further than the rest of the mix.
+   *
+   * On the direct path only, so the harmonic path's comb — the hum #663 was
+   * reported on three times, piled between 300 and 450 Hz — is not lifted
+   * with it. The gain is solved, not heard: with the corner at 600 Hz, 12 dB
+   * puts the profiled score 17.3 dB under the profiled SIG 80 scene, moves the
+   * profiled Sorrowgate scenes 0.2 dB or less and the bed-only cases within the
+   * meter's half-decibel run-to-run spread, so TRIM's level still stands (tools/audio-meter `score-out-profile:` and `profile:`). The
+   * corner sits low enough that the score's lowest partial (1,046.5 Hz) gets
+   * 10.6 of the 12, and high enough that 450 Hz gets 3.2 and 320 Hz 1.1.
+   *
+   * Before the knee rather than beside TRIM, and that was measured both ways.
+   * After the knee it lifts the harmonic path's series above 600 Hz as well:
+   * the profiled scenes came up 2-3 dB, their peaks from -27.1 to -12.6 dBTP.
+   * Before it, the full tuned bed is the one layer it takes into the knee —
+   * peak on the knee's ceiling, a loss of 11 dB like the scenes' — with under
+   * 1% of the bed below 800 Hz, so no difference tones land where the hum was
+   * (`tuned-out-profile:full`).
+   */
+  SHELF_HZ: 600,
+  SHELF_DB: 12,
+
   /** Samples in each curve. Odd, so the midpoint is exactly zero. */
   POINTS: 4097,
 
@@ -351,7 +383,14 @@ export function createSpeakerProfile(
   // Direct: the mix, without the band the driver cannot play.
   const cut = cascade(context, 'highpass', SPEAKER_PROFILE.CUT_HZ);
   input.connect(cut.input);
-  cut.output.connect(summed);
+  // And the band above it given back what TRIM takes. Here, ahead of the sum
+  // and so of the knee: after the knee it would lift the harmonic path's
+  // series too (SHELF_HZ has the readings).
+  const shelf = context.createBiquadFilter();
+  shelf.type = 'highshelf';
+  shelf.frequency.value = SPEAKER_PROFILE.SHELF_HZ;
+  shelf.gain.value = SPEAKER_PROFILE.SHELF_DB;
+  cut.output.connect(shelf).connect(summed);
 
   // Harmonic: read the low band, generate its series, keep what a small
   // speaker can actually radiate.
