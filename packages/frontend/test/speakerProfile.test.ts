@@ -219,8 +219,9 @@ describe('the speaker profile: the graph', () => {
     // reaches the output through LIFT first. The band above the cut took TRIM
     // alone, so the score — §10 puts all of it above 800 Hz — lost twice what
     // the scenes did. The shelf is the fix, and where it sits is the whole of
-    // what it can get wrong: on the harmonic path it would lift the comb #663
-    // was reported for, and after the knee the knee would never see it.
+    // what it can get wrong: on the harmonic path, or after the knee where the
+    // two paths are already summed, it lifts the comb #663 was reported for —
+    // measured, the profiled scenes' peaks rose from -27.1 to -12.6 dBTP.
     const context = new HeadlessAudioContext();
     const out = context.createGain();
     createSpeakerProfile(context as unknown as AudioContext, out as unknown as AudioNode);
@@ -250,7 +251,10 @@ describe('the speaker profile: the graph', () => {
     const knee = shapers.find((shaper) => shaper !== generator);
     assert.ok(generator !== undefined && knee !== undefined);
     assert.equal(generator.reaches(shelf), false, 'the shelf lifts the reconstruction too');
-    assert.ok(shelf.reaches(knee), 'the shelf sits after the knee, which never sees it');
+    assert.ok(
+      shelf.reaches(knee),
+      'the shelf sits after the knee, where it lifts the reconstruction too'
+    );
   });
 
   it('puts the profile between master and the ceiling, never after it', () => {

@@ -224,13 +224,21 @@ export const SPEAKER_PROFILE = {
    * about it needed taking down further than the rest of the mix.
    *
    * On the direct path only, so the harmonic path's comb — the hum #663 was
-   * reported on three times, all of it between 200 and 450 Hz — is not lifted
+   * reported on three times, piled between 300 and 450 Hz — is not lifted
    * with it. The gain is solved, not heard: with the corner at 600 Hz, 12 dB
    * puts the profiled score 17.3 dB under the profiled SIG 80 scene, and moves
    * every scene the meter renders by under half a decibel, so TRIM's level
    * still stands (tools/audio-meter `score-out-profile:` and `profile:`). The
    * corner sits low enough that the score's lowest partial (1,046.5 Hz) gets
    * 10.6 of the 12, and high enough that 450 Hz gets 3.2 and 320 Hz 1.1.
+   *
+   * Before the knee rather than beside TRIM, and that was measured both ways.
+   * After the knee it lifts the harmonic path's series above 600 Hz as well:
+   * the profiled scenes came up 2-3 dB, their peaks from -27.1 to -12.6 dBTP.
+   * Before it, the full tuned bed is the one layer it takes into the knee —
+   * peak on the knee's ceiling, a loss of 11 dB like the scenes' — with under
+   * 1% of the bed below 800 Hz, so no difference tones land where the hum was
+   * (`tuned-out-profile:full`).
    */
   SHELF_HZ: 600,
   SHELF_DB: 12,
@@ -375,8 +383,9 @@ export function createSpeakerProfile(
   // Direct: the mix, without the band the driver cannot play.
   const cut = cascade(context, 'highpass', SPEAKER_PROFILE.CUT_HZ);
   input.connect(cut.input);
-  // And the band above it given back what TRIM takes, before the knee so the
-  // knee still sees everything it compresses.
+  // And the band above it given back what TRIM takes. Here, ahead of the sum
+  // and so of the knee: after the knee it would lift the harmonic path's
+  // series too (SHELF_HZ has the readings).
   const shelf = context.createBiquadFilter();
   shelf.type = 'highshelf';
   shelf.frequency.value = SPEAKER_PROFILE.SHELF_HZ;

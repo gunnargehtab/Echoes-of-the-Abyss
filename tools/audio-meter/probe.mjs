@@ -202,6 +202,19 @@ CASES['tuned-bed:full'] = (context, destination) => {
 };
 
 /**
+ * The same full tuned bed through the real output chain, with and without
+ * §11's profile (#1603). It is the hottest layer above 800 Hz, so it is the one
+ * that shows what the profile's direct-path shelf does to the knee.
+ */
+for (const speakerProfile of [false, true]) {
+  CASES[`tuned-out${speakerProfile ? '-profile' : ''}:full`] = (context, destination) => {
+    const { master, speaker } = createOutputChain(context, destination);
+    speaker.set(speakerProfile, 0);
+    return CASES['tuned-bed:full'](context, master);
+  };
+}
+
+/**
  * §10's score at each of §4's bands, and under Silent Running (#1599).
  *
  * Driven by `pump` on the Echo cadence rather than by its own timer, which
@@ -443,7 +456,7 @@ export async function render(name, seconds) {
  */
 const AT_OUTPUT = new Set(
   Object.keys(CASES).filter((name) =>
-    ['scene:', 'profile:', 'bed:', 'bed-profile:', 'score-out'].some((prefix) =>
+    ['scene:', 'profile:', 'bed:', 'bed-profile:', 'score-out', 'tuned-out'].some((prefix) =>
       name.startsWith(prefix)
     )
   )

@@ -559,8 +559,9 @@ uncomfortable has come from a phone.
 mix option on the output, after master and before the ceiling, and it is two paths summed:
 
 - a **cut** — a 24 dB/octave high-pass at 210 Hz. The direct path does not carry the low
-  band at all. Above it sits a 12 dB high shelf at 600 Hz, which gives the score's band back
-  what the output trim takes (#1603, below).
+  band at all. Above it sits a 12 dB high shelf at 600 Hz, which gives everything the direct
+  path carries above about 600 Hz back what the output trim takes: the score, the tuned bed,
+  and the upper partials of every other layer (#1603, below).
 - a **harmonic path** — the half §11 specifies. It reads everything under 200 Hz, generates
   that band's harmonic series with a static non-linearity, and keeps only what lands above
   320 Hz, at the same slope. The fundamental is never sent and the ear puts it back, which
@@ -654,14 +655,22 @@ which is #663's fault in a new layer; it is 63% at hull creak and 38% at full pl
 speaker profile used to take the score 20 dB down where it took the scenes 6-12 dB: the output
 trim was set on a scene that is almost all low band, which reaches the output through the
 harmonic path's +15.6 dB lift first, and the direct path took the trim with no lift in front
-of it. Profiled, the score at full plant read -55.9 and sat 28 dB under the SIG 80 scene,
-against 17.5 dB without the profile — §10's swell gone on the device the profile defaults on
-for. The direct path's high shelf is the fix (#1603). On the direct path only, so the harmonic
-path's comb is not lifted with it, and before the knee, so the knee still sees it. Its gain is
-solved rather than heard: 12 dB at a 600 Hz corner puts the profiled score at -45.2, 17.3 dB
-under the profiled SIG 80 scene, and moves every profiled scene by under half a decibel, so
-the reported scene keeps the level the player called fine. Under Silent Running the profile
-still leaves the pedal below the meter's gate (-50.8 LUFS unprofiled). The pedal is under the
+of it. In the run that measured the fix, the score at full plant read -36.5 and sat 17.5 dB
+under the SIG 80 scene; profiled, it read -55.9 and sat 28 dB under — §10's swell gone on the
+device the profile defaults on for. The full tuned bed took the same fault, -16.1 to -36.0.
+
+The direct path's high shelf is the fix (#1603). It sits on the direct path only, so the
+harmonic path's comb is not lifted with it. Its gain is solved rather than heard: 12 dB at a
+600 Hz corner puts the profiled score at -45.2, 17.3 dB under the profiled SIG 80 scene, and
+moves every profiled scene by under half a decibel, so the reported scene keeps the level the
+player called fine. It sits **before the knee**, and that was measured against after it. After
+the knee, beside the trim, it lifts the harmonic path's series above 600 Hz too: the profiled
+scenes rise 2-3 dB, their peaks from -27.1 to -12.6 dBTP, and the share above 800 Hz from 4%
+to 23%. Before it, the full tuned bed is the one layer the shelf takes into the knee: profiled
+it reads -27.2 with its peak on the knee's ceiling, a loss of 11 dB like the scenes', and its
+share below 800 Hz stays under 1%, so the knee makes no difference tones in the band the hum
+was reported in. That is the knee doing what it is for, on a maximal input. Under Silent Running the profile
+still leaves the pedal below the meter's gate (-50.7 unprofiled, above). The pedal is under the
 cut, so only the harmonic path carries it, and the shelf does not reach that path.
 
 Contacts are sonified (§3): a voice per contact, panned with the authority its tier earned,
