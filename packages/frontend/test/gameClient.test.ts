@@ -42,6 +42,7 @@ import {
   type GameClientHandlers,
   type LobbyView,
 } from '../src/net/GameClient.ts';
+import { joinFailure } from '../src/net/failure.ts';
 import { cannedMap, cannedSnapshot, cannedTerrain } from './support/cannedMatch.ts';
 
 /** Everything the shell was told, in the order it was told. */
@@ -424,14 +425,26 @@ describe('the match client: getting into a room', () => {
     assert.equal(net.callOf('reconnect'), undefined, 'a solo game must not resurrect an old match');
   });
 
-  it('reports a refused join as an error rather than throwing', async () => {
+  it('reports a refused join as an error carrying the room’s reason, rather than throwing', async () => {
+    const net = new StubClient();
+    net.fail('joinOrCreate', { code: 523, message: 'This match is full.' });
+    const { handlers, log } = recordingHandlers();
+    await new GameClient(handlers, 'ws://test', net as unknown as never, stubCallbacks).connect({});
+
+    assert.deepEqual(log.statuses(), ['connecting', 'error']);
+    assert.deepEqual(log.argsOf('onStatus').at(-1), ['error', 'This match is full.', 'refused']);
+  });
+
+  it('reports an unanswered join with no reason to show (docs/ui-ux.md §14)', async () => {
+    // "A raw error is not a sentence": the SDK's text for a server that never
+    // answered is the browser's own, and the overlay says it better.
     const net = new StubClient();
     net.fail('joinOrCreate');
     const { handlers, log } = recordingHandlers();
     await new GameClient(handlers, 'ws://test', net as unknown as never, stubCallbacks).connect({});
 
     assert.deepEqual(log.statuses(), ['connecting', 'error']);
-    assert.match(String(log.argsOf('onStatus').at(-1)?.[1]), /refused/);
+    assert.deepEqual(log.argsOf('onStatus').at(-1), ['error', '', 'unanswered']);
   });
 
   it('keeps one join in flight, and joins again only once it has settled (§7.6)', async () => {
@@ -450,6 +463,32 @@ describe('the match client: getting into a room', () => {
     await client.connect({ resume: false });
     assert.equal(net.calls.filter((call) => call.method === 'joinOrCreate').length, 2);
     assert.equal(log.statuses().at(-1), 'connected');
+  });
+});
+
+describe('a failed join: answered or not (docs/ui-ux.md §14, "When something fails")', () => {
+  // The SDK throws for both, so the player is told the right one only if the
+  // error is read correctly: a down server called a refusal blames the room,
+  // and a refusal called an outage hides the room's reason.
+  it('calls a join nothing answered unanswered', () => {
+    assert.equal(joinFailure(new TypeError('Failed to fetch')), 'unanswered', 'a browser fetch');
+    const node = Object.assign(new Error('fetch failed'), { code: 'ECONNREFUSED' });
+    assert.equal(joinFailure(node), 'unanswered', "Node's network error, a string code");
+    assert.equal(joinFailure(Object.assign(new Error(''), { code: 0 })), 'unanswered', 'XHR 0');
+    const socket = Object.assign(new Error(''), { code: 1006 });
+    assert.equal(joinFailure(socket), 'unanswered', 'the socket closed before the room spoke');
+    for (const code of [502, 503, 504]) {
+      const gateway = Object.assign(new Error('Bad Gateway'), { code });
+      assert.equal(joinFailure(gateway), 'unanswered', `a proxy's ${code}: the server is down`);
+    }
+    assert.equal(joinFailure('not even an error'), 'unanswered');
+  });
+
+  it('calls a join the server turned down refused', () => {
+    for (const code of [400, 404, 500, 522, 523, 4000, 4212]) {
+      const refusal = Object.assign(new Error('This match is full.'), { code });
+      assert.equal(joinFailure(refusal), 'refused', `code ${code}`);
+    }
   });
 });
 

@@ -103,7 +103,8 @@ async function mount(
   options: {
     webgl?: boolean;
     hang?: boolean;
-    refuse?: boolean;
+    /** The first join fails unanswered, or with this refusal from the room. */
+    refuse?: boolean | { code: number; message: string };
     props?: Partial<GameCanvasProps>;
   } = {}
 ): Promise<Mounted> {
@@ -111,6 +112,7 @@ async function mount(
   const net = new StubClient(room);
   if (options.hang === true) net.hang('joinOrCreate');
   if (options.refuse === true) net.fail('joinOrCreate');
+  else if (typeof options.refuse === 'object') net.fail('joinOrCreate', options.refuse);
   const app = new HeadlessApplication();
   const gl = new HeadlessWebGLRenderer();
   const hosts = new Map<string, StubElement>();
@@ -717,8 +719,8 @@ describe('the shell: what it wires to what', () => {
   });
 
   it('keeps listening while the room never answers, and still tears down', async () => {
-    // A server that is simply not there — distinct from one that refuses,
-    // which is the next test. The client waits, and the overlay says so.
+    // A join nobody completes — distinct from one that fails, which the
+    // tests of a failed join below hold. The client waits, and the overlay says so.
     const world = await mount({ hang: true });
     try {
       assert.ok(shows(world.tree, 'Listening…'), 'the overlay stands while the seat is unanswered');
@@ -737,6 +739,12 @@ describe('the shell: what it wires to what', () => {
       world.room.raiseError(4212, 'room is locked');
       await world.settle();
       assert.ok(shows(world.tree, 'No signal'), 'the player is told');
+      // docs/ui-ux.md §14: an error once joined is not one the client can
+      // explain, so the room's text stays under the sentence — and it is not
+      // a server that never answered, which the join's sentence would claim.
+      assert.ok(shows(world.tree, 'The connection to the match failed.'));
+      assert.ok(shows(world.tree, '4212: room is locked'), 'something to quote in a report');
+      assert.equal(shows(world.tree, 'not answering'), false);
       assert.ok(world.app.renderer !== null, 'and the chart is still standing');
     } finally {
       await world.unmount();
@@ -1164,10 +1172,7 @@ describe('the shell: the persistent world view', () => {
           node.props.className.split(' ').includes('game-overlay-held')
       ).length === 1;
     try {
-      assert.ok(
-        shows(world.tree, 'The room refused the join, or did not answer.'),
-        'what failed is said'
-      );
+      assert.ok(shows(world.tree, 'The game server is not answering.'), 'what failed is said');
       assert.ok(held(), 'on the bar at the foot of the frame the travel held, not glass');
       assert.ok(
         world.tree.root.find((node) => node.props.className === 'game-root game-root-held'),
@@ -1253,7 +1258,7 @@ describe('the shell: the persistent world view', () => {
     const world = await mount({ refuse: true });
     try {
       assert.ok(shows(world.tree, 'No signal'));
-      assert.ok(shows(world.tree, 'The room refused the join, or did not answer.'));
+      assert.ok(shows(world.tree, 'The game server is not answering.'));
       const labels = world.tree.root
         .findAll((node) => node.type === 'button')
         .map((node) => node.children.join(''));
@@ -1263,6 +1268,61 @@ describe('the shell: the persistent world view', () => {
         1,
         'the glass, as a lost signal has'
       );
+    } finally {
+      await world.unmount();
+    }
+  });
+
+  // docs/ui-ux.md §14, "When something fails" (#1613): said to the player,
+  // never to whoever runs the server, and the sentence follows whether the
+  // server answered.
+  it('says a server that did not answer is not the player’s doing, and names no command', async () => {
+    const world = await mount({ refuse: true });
+    try {
+      assert.ok(shows(world.tree, 'No signal'));
+      assert.ok(shows(world.tree, 'nothing you did caused it'));
+      const said = textOf(world.tree).join(' ');
+      for (const operator of ['npm', 'packages/', 'run dev', 'reload']) {
+        assert.equal(said.includes(operator), false, `the overlay says "${operator}"`);
+      }
+      assert.equal(
+        world.tree.root.findAll((node) => node.props.className === 'game-overlay-detail').length,
+        0,
+        'no raw error under a sentence that already says what happened'
+      );
+    } finally {
+      await world.unmount();
+    }
+  });
+
+  it('says a refusal is the room’s, with the room’s own reason', async () => {
+    const world = await mount({ refuse: { code: 523, message: 'This match is full.' } });
+    try {
+      assert.ok(shows(world.tree, 'Turned away'));
+      assert.ok(shows(world.tree, 'The room would not take your seat.'));
+      assert.ok(shows(world.tree, 'This match is full.'), 'the reason the room wrote');
+      assert.equal(shows(world.tree, 'not answering'), false, 'not an outage');
+      const labels = world.tree.root
+        .findAll((node) => node.type === 'button')
+        .map((node) => node.children.join(''));
+      assert.deepEqual(labels, ['Retry', 'Back']);
+    } finally {
+      await world.unmount();
+    }
+  });
+
+  it('says a closed room cannot be rejoined, and offers the way home', async () => {
+    const world = await mount();
+    try {
+      await joinMatch(world);
+      world.room.finishLeave(4002);
+      await world.settle();
+      assert.ok(shows(world.tree, 'Connection closed'));
+      assert.ok(shows(world.tree, 'The room has closed'));
+      const labels = world.tree.root
+        .findAll((node) => node.type === 'button')
+        .map((node) => node.children.join(''));
+      assert.ok(labels.includes('Return to port'));
     } finally {
       await world.unmount();
     }

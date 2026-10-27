@@ -1435,6 +1435,37 @@ question`, because a note that counted what was finished would be a number to ma
 two places. The shape of the finished game is still on screen; a menu that hid its missing
 rooms would still misrepresent the build.
 
+### When something fails
+
+**A failure is said to the player, not to whoever runs the server**
+([#1613](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1613)). It says what
+happened, whether it is on the player's side, and what to try, and the try is a button. It
+never names a command, a file or a port: a stranger cannot start the game server, and a line
+telling them how reads as the game blaming them for its own outage. The heading keeps the
+port's register; the sentence under it is plain.
+
+A raw error is not a sentence. Where the client can tell what failed, it says so in its own
+words and shows nothing else. Only a failure it cannot explain — a match screen that crashed,
+an error the room raised mid-match — keeps the error's own text, small, under the sentence,
+as something the player can quote in a report.
+
+**Whether the server answered decides the sentence.** A join that got an answer and was
+turned down was refused, and the room's reason is shown, because the room wrote it for the
+player (*This match is full.*). A join that got none — no connection, the socket closed
+before the room spoke, or a gateway saying the server behind it is down (502, 503, 504) —
+was not answered, and the player is told the server is not answering and that nothing they
+did caused it.
+
+| What failed | Heading | What it says, and offers |
+| --- | --- | --- |
+| A join the server did not answer | No signal | The game server is not answering, it may be down or restarting, and to try again in a minute. Retry and Back (§7.6 of [world-map.md](world-map.md)) |
+| A join the room refused | Turned away | The room would not take the seat, and its reason. Retry and Back |
+| An error the room raised once joined | No signal | The connection to the match failed, and the error's text. Return to port |
+| The room closed on the player | Connection closed | The room has closed, or the signal was gone too long to hold the seat. Return to port |
+| No WebGL | No light in the water | The browser could not start the 3D view the game draws the water with, and the two usual fixes. Return to port |
+| The match screen crashed or did not load | The match stopped | Something went wrong opening the match, Retry reloads the game and usually clears it, and the error's text. Retry and Back |
+| The match browser got no answer | (in the list) | The server is not answering, so no rooms can be listed. The code field and both doors stay |
+
 ### The listening room
 
 **The port has a sound, and now it has a picture of one.** The title screen is split: a

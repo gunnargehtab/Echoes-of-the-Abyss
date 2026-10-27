@@ -630,7 +630,7 @@ function listing(over: Partial<MatchListing> = {}): MatchListing {
 }
 
 async function browse(
-  rooms: MatchListing[] | 'pending' = []
+  rooms: MatchListing[] | null | 'pending' = []
 ): Promise<{ view: Rendered; doors: Doors; settle(): Promise<void> }> {
   const doors: Doors = { joined: [], hosts: 0, quick: 0, backs: 0 };
   // A promise that never settles is how "we have not looked yet" is held still
@@ -722,6 +722,20 @@ describe('the match browser: looking, and having looked', () => {
       await settle();
       assert.equal(view.shows('Listening…'), false, 'and it stops once it knows');
       assert.ok(view.shows('No open rooms.'));
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('says the server is not answering rather than saying nobody is playing', async () => {
+    // docs/ui-ux.md §14, "When something fails": an unanswered listing is not
+    // an empty one, and "No open rooms" while the server is down is false.
+    const { view } = await browse(null);
+    try {
+      assert.ok(view.shows('The server is not answering'));
+      assert.equal(view.shows('No open rooms.'), false);
+      assert.equal(view.shows('Listening…'), false);
+      assert.equal(view.allByClass('menu-browse').length, 0);
     } finally {
       await view.unmount();
     }

@@ -38,6 +38,7 @@ import {
   type MissionLine,
   type TerrainMessage,
 } from '@echoes/shared';
+import { type JoinFailure, joinFailure } from './failure.ts';
 import { toListings } from './rooms.ts';
 import { leaveReportRoom, setReportRoom } from './reports.ts';
 
@@ -144,7 +145,12 @@ export interface GameClientHandlers {
   onMissionLine(line: MissionLine): void;
   /** A mission concludes rather than resolving a winner; this is that. */
   onMissionOver(payload: MissionResultPayload): void;
-  onStatus(status: ConnectionStatus, detail?: string): void;
+  /**
+   * `failure` is set only on an `error` from a join, and says whether the
+   * server answered it (`failure.ts`); `detail` is then the room's reason, or
+   * empty when nothing answered.
+   */
+  onStatus(status: ConnectionStatus, detail?: string, failure?: JoinFailure): void;
 }
 
 export type ConnectionStatus = 'connecting' | 'connected' | 'reconnecting' | 'error' | 'closed';
@@ -154,8 +160,8 @@ export type ConnectionStatus = 'connecting' | 'connected' | 'reconnecting' | 'er
  *
  * Three things this deliberately does not do, each of them a way the shipped
  * client used to be undiagnosable (#624) — and the failure is always the same
- * screen, because `listMatches` turns an unreachable server into an empty room
- * list rather than an error:
+ * screen, because `listMatches` turns an unreachable server into the browser's
+ * "not answering" line rather than an error:
  *
  * - **It does not hard-code a scheme.** A page served over `https:` may not
  *   open a `ws:` socket; the browser blocks it as active mixed content, and
@@ -259,15 +265,19 @@ export function storedMissionId(): string | null {
  * guessed at — a row that could not say which water it was on would be asking
  * the player to click and find out.
  */
-export async function listMatches(endpoint: string = defaultEndpoint()): Promise<MatchListing[]> {
+export async function listMatches(
+  endpoint: string = defaultEndpoint()
+): Promise<MatchListing[] | null> {
   try {
     const { data: rooms } = await new Client(endpoint).http.get('/rooms/match');
     return toListings(rooms);
   } catch {
-    // A server that is down is an empty list rather than an error screen: the
-    // browser also carries a code field and a host button, and neither of them
-    // stops working because the listing endpoint did.
-    return [];
+    // A server that is down is `null` rather than an error screen: the browser
+    // also carries a code field and a host button, and neither of them stops
+    // working because the listing endpoint did. Not `[]`, which the browser
+    // reads as "nobody is playing" — a false sentence while the server is down
+    // (docs/ui-ux.md §14, "When something fails").
+    return null;
   }
 }
 
@@ -463,7 +473,13 @@ export class GameClient {
       );
       if (joined) this.handlers.onStatus('connected');
     } catch (error) {
-      this.handlers.onStatus('error', error instanceof Error ? error.message : String(error));
+      // An unanswered join has no reason worth showing: the SDK's text for it
+      // is the browser's own ("Failed to fetch"), which tells a player nothing
+      // the sentence does not (docs/ui-ux.md §14, "When something fails").
+      const failure = joinFailure(error);
+      const reason =
+        failure === 'refused' ? (error instanceof Error ? error.message : String(error)) : '';
+      this.handlers.onStatus('error', reason, failure);
     }
   }
 
