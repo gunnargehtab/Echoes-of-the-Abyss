@@ -134,13 +134,32 @@ export function readGlb(path) {
     const [tx, ty, tz] = n.translation ?? [0, 0, 0];
     const [qx, qy, qz, qw] = n.rotation ?? [0, 0, 0, 1];
     const [sx, sy, sz] = n.scale ?? [1, 1, 1];
-    const xx = qx * qx, yy = qy * qy, zz = qz * qz;
-    const xy = qx * qy, xz = qx * qz, yz = qy * qz, wx = qw * qx, wy = qw * qy, wz = qw * qz;
+    const xx = qx * qx,
+      yy = qy * qy,
+      zz = qz * qz;
+    const xy = qx * qy,
+      xz = qx * qz,
+      yz = qy * qz,
+      wx = qw * qx,
+      wy = qw * qy,
+      wz = qw * qz;
     return [
-      (1 - 2 * (yy + zz)) * sx, 2 * (xy + wz) * sx, 2 * (xz - wy) * sx, 0,
-      2 * (xy - wz) * sy, (1 - 2 * (xx + zz)) * sy, 2 * (yz + wx) * sy, 0,
-      2 * (xz + wy) * sz, 2 * (yz - wx) * sz, (1 - 2 * (xx + yy)) * sz, 0,
-      tx, ty, tz, 1,
+      (1 - 2 * (yy + zz)) * sx,
+      2 * (xy + wz) * sx,
+      2 * (xz - wy) * sx,
+      0,
+      2 * (xy - wz) * sy,
+      (1 - 2 * (xx + zz)) * sy,
+      2 * (yz + wx) * sy,
+      0,
+      2 * (xz + wy) * sz,
+      2 * (yz - wx) * sz,
+      (1 - 2 * (xx + yy)) * sz,
+      0,
+      tx,
+      ty,
+      tz,
+      1,
     ];
   };
   const mul = (a, b) => {
@@ -185,7 +204,9 @@ export function readGlb(path) {
       const count = idx ? idx.length : pos.count;
       for (let k = 0; k < count; k++) {
         const v = idx ? idx[k] : k;
-        const x = pos.data[v * 3], y = pos.data[v * 3 + 1], z = pos.data[v * 3 + 2];
+        const x = pos.data[v * 3],
+          y = pos.data[v * 3 + 1],
+          z = pos.data[v * 3 + 2];
         out.push(
           m[0] * x + m[4] * y + m[8] * z + m[12],
           m[1] * x + m[5] * y + m[9] * z + m[13],
@@ -194,7 +215,9 @@ export function readGlb(path) {
         if (uv1) uv1.push(uvs.data[v * 2], uvs.data[v * 2 + 1]);
         if (uv0) uv0.push(uvs0.data[v * 2], uvs0.data[v * 2 + 1]);
         if (normals) {
-          const nx = nrm.data[v * 3], ny = nrm.data[v * 3 + 1], nz = nrm.data[v * 3 + 2];
+          const nx = nrm.data[v * 3],
+            ny = nrm.data[v * 3 + 1],
+            nz = nrm.data[v * 3 + 2];
           const wx = nm[0] * nx + nm[3] * ny + nm[6] * nz;
           const wy = nm[1] * nx + nm[4] * ny + nm[7] * nz;
           const wz = nm[2] * nx + nm[5] * ny + nm[8] * nz;
@@ -219,11 +242,27 @@ export function readGlb(path) {
       mirrored: det3(m) < 0,
     });
   });
+  // Every node, mesh or not, in the file's order: where it stands in the
+  // world and the extras it carries. A part's shape is in `parts`; this is
+  // the rest of what a runtime reads off a node — an empty node that marks
+  // where silt falls from, a pivot a fitting sways about, a start height
+  // written in `userData` (the arch's `sift_*`, `hang_*` and `fall_*`,
+  // asset-prompts-3d.md Block 4b). Nothing in `parts` holds those, so
+  // check.mjs compares this list too (#1637).
+  const nodes = json.nodes.map((node, i) => ({
+    name: node.name ?? null,
+    at: [world[i][12], world[i][13], world[i][14]],
+    extras: node.extras ?? null,
+  }));
   return {
     name: json.nodes[json.scenes[json.scene ?? 0].nodes[0]]?.name ?? null,
     parts,
+    nodes,
     occlusion: mapOf(json, bin, path, 'occlusion', (m) => m.occlusionTexture),
-    trim: trimOf((json.materials ?? []).map((m) => [m.name, m.extras?.trim]), path),
+    trim: trimOf(
+      (json.materials ?? []).map((m) => [m.name, m.extras?.trim]),
+      path
+    ),
   };
 }
 
@@ -258,9 +297,7 @@ function mapOf(json, bin, path, kind, ref) {
     throw new Error(`${path}: the ${kind} image is not an embedded PNG`);
   const bv = json.bufferViews[image.bufferView];
   const start = bin.byteOffset + (bv.byteOffset ?? 0);
-  const { width, height, pixels } = decodeGray(
-    Buffer.from(bin.buffer, start, bv.byteLength)
-  );
+  const { width, height, pixels } = decodeGray(Buffer.from(bin.buffer, start, bv.byteLength));
   const texCoords = new Set(carrying.map((m) => ref(m).texCoord ?? 0));
   const strengths = new Set(carrying.map((m) => ref(m).strength ?? 1));
   if (texCoords.size !== 1 || strengths.size !== 1)
@@ -362,12 +399,16 @@ export function sceneParts(root) {
     const nm = normalMatrix(m);
     for (let k = 0; k < count; k++) {
       const v = idx ? idx.getX(k) : k;
-      const x = pos.getX(v), y = pos.getY(v), z = pos.getZ(v);
+      const x = pos.getX(v),
+        y = pos.getY(v),
+        z = pos.getZ(v);
       out[k * 3] = m[0] * x + m[4] * y + m[8] * z + m[12];
       out[k * 3 + 1] = m[1] * x + m[5] * y + m[9] * z + m[13];
       out[k * 3 + 2] = m[2] * x + m[6] * y + m[10] * z + m[14];
       if (normals) {
-        const nx = nrm.getX(v), ny = nrm.getY(v), nz = nrm.getZ(v);
+        const nx = nrm.getX(v),
+          ny = nrm.getY(v),
+          nz = nrm.getZ(v);
         const wx = nm[0] * nx + nm[3] * ny + nm[6] * nz;
         const wy = nm[1] * nx + nm[4] * ny + nm[7] * nz;
         const wz = nm[2] * nx + nm[5] * ny + nm[8] * nz;
@@ -484,9 +525,15 @@ export function topAt(parts, x, z) {
     if (!occludes(part.finish)) continue;
     const a = part.positions;
     for (let t = 0; t < a.length; t += 9) {
-      const x0 = a[t], y0 = a[t + 1], z0 = a[t + 2];
-      const x1 = a[t + 3], y1 = a[t + 4], z1 = a[t + 5];
-      const x2 = a[t + 6], y2 = a[t + 7], z2 = a[t + 8];
+      const x0 = a[t],
+        y0 = a[t + 1],
+        z0 = a[t + 2];
+      const x1 = a[t + 3],
+        y1 = a[t + 4],
+        z1 = a[t + 5];
+      const x2 = a[t + 6],
+        y2 = a[t + 7],
+        z2 = a[t + 8];
       const det = (x1 - x0) * (z2 - z0) - (x2 - x0) * (z1 - z0);
       if (Math.abs(det) < 1e-12) continue;
       const l1 = ((x - x0) * (z2 - z0) - (x2 - x0) * (z - z0)) / det;
@@ -520,9 +567,15 @@ export function beamAt(parts, x, y, sgn) {
     if (!occludes(part.finish)) continue;
     const a = part.positions;
     for (let t = 0; t < a.length; t += 9) {
-      const x0 = a[t], y0 = a[t + 1], z0 = a[t + 2];
-      const x1 = a[t + 3], y1 = a[t + 4], z1 = a[t + 5];
-      const x2 = a[t + 6], y2 = a[t + 7], z2 = a[t + 8];
+      const x0 = a[t],
+        y0 = a[t + 1],
+        z0 = a[t + 2];
+      const x1 = a[t + 3],
+        y1 = a[t + 4],
+        z1 = a[t + 5];
+      const x2 = a[t + 6],
+        y2 = a[t + 7],
+        z2 = a[t + 8];
       const det = (x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0);
       if (Math.abs(det) < 1e-12) continue;
       const l1 = ((x - x0) * (y2 - y0) - (x2 - x0) * (y - y0)) / det;
@@ -543,8 +596,12 @@ export function beamAt(parts, x, y, sgn) {
 /** A triangle's unit normal by its winding, turned back on a mirrored part. */
 function windingNormal(part, t) {
   const a = part.positions;
-  const ux = a[t + 3] - a[t], uy = a[t + 4] - a[t + 1], uz = a[t + 5] - a[t + 2];
-  const vx = a[t + 6] - a[t], vy = a[t + 7] - a[t + 1], vz = a[t + 8] - a[t + 2];
+  const ux = a[t + 3] - a[t],
+    uy = a[t + 4] - a[t + 1],
+    uz = a[t + 5] - a[t + 2];
+  const vx = a[t + 6] - a[t],
+    vy = a[t + 7] - a[t + 1],
+    vz = a[t + 8] - a[t + 2];
   const n = [uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx];
   const len = Math.hypot(...n) || 1;
   const sgn = part.mirrored ? -1 : 1;
@@ -583,9 +640,12 @@ export function gapBetween(part, parts, { skip = part, closedOnly = false } = {}
     // A vertex of the part inside the other: the part is sunk in it.
     for (let i = 0; i < a.length; i += 3)
       if (
-        a[i] >= qb.min[0] && a[i] <= qb.max[0] &&
-        a[i + 2] >= qb.min[2] && a[i + 2] <= qb.max[2] &&
-        a[i + 1] >= qb.min[1] && a[i + 1] <= qb.max[1] &&
+        a[i] >= qb.min[0] &&
+        a[i] <= qb.max[0] &&
+        a[i + 2] >= qb.min[2] &&
+        a[i + 2] <= qb.max[2] &&
+        a[i + 1] >= qb.min[1] &&
+        a[i + 1] <= qb.max[1] &&
         (!closedOnly || isClosed(q)) &&
         inside(b, a[i], a[i + 1], a[i + 2])
       )
@@ -632,17 +692,29 @@ function edgesCross(a, t, b, u) {
 
 /** Möller–Trumbore, the segment from p to q against triangle `u` of `b`. */
 function segmentHits(px, py, pz, qx, qy, qz, b, u) {
-  const dx = qx - px, dy = qy - py, dz = qz - pz;
-  const e1x = b[u + 3] - b[u], e1y = b[u + 4] - b[u + 1], e1z = b[u + 5] - b[u + 2];
-  const e2x = b[u + 6] - b[u], e2y = b[u + 7] - b[u + 1], e2z = b[u + 8] - b[u + 2];
-  const hx = dy * e2z - dz * e2y, hy = dz * e2x - dx * e2z, hz = dx * e2y - dy * e2x;
+  const dx = qx - px,
+    dy = qy - py,
+    dz = qz - pz;
+  const e1x = b[u + 3] - b[u],
+    e1y = b[u + 4] - b[u + 1],
+    e1z = b[u + 5] - b[u + 2];
+  const e2x = b[u + 6] - b[u],
+    e2y = b[u + 7] - b[u + 1],
+    e2z = b[u + 8] - b[u + 2];
+  const hx = dy * e2z - dz * e2y,
+    hy = dz * e2x - dx * e2z,
+    hz = dx * e2y - dy * e2x;
   const det = e1x * hx + e1y * hy + e1z * hz;
   if (Math.abs(det) < 1e-12) return false;
   const inv = 1 / det;
-  const sx = px - b[u], sy = py - b[u + 1], sz = pz - b[u + 2];
+  const sx = px - b[u],
+    sy = py - b[u + 1],
+    sz = pz - b[u + 2];
   const v = (sx * hx + sy * hy + sz * hz) * inv;
   if (v < 0 || v > 1) return false;
-  const cx = sy * e1z - sz * e1y, cy = sz * e1x - sx * e1z, cz = sx * e1y - sy * e1x;
+  const cx = sy * e1z - sz * e1y,
+    cy = sz * e1x - sx * e1z,
+    cz = sx * e1y - sy * e1x;
   const w = (dx * cx + dy * cy + dz * cz) * inv;
   if (w < 0 || v + w > 1) return false;
   const s = (e2x * cx + e2y * cy + e2z * cz) * inv;
@@ -685,9 +757,15 @@ function inside(b, x, y, z) {
   let crossings = 0;
   for (let u = 0; u < b.length; u += 9) {
     // Barycentrics in plan, as `topDown` takes them.
-    const x0 = b[u], y0 = b[u + 1], z0 = b[u + 2];
-    const x1 = b[u + 3], y1 = b[u + 4], z1 = b[u + 5];
-    const x2 = b[u + 6], y2 = b[u + 7], z2 = b[u + 8];
+    const x0 = b[u],
+      y0 = b[u + 1],
+      z0 = b[u + 2];
+    const x1 = b[u + 3],
+      y1 = b[u + 4],
+      z1 = b[u + 5];
+    const x2 = b[u + 6],
+      y2 = b[u + 7],
+      z2 = b[u + 8];
     const det = (x1 - x0) * (z2 - z0) - (x2 - x0) * (z1 - z0);
     if (Math.abs(det) < 1e-12) continue;
     const l1 = ((x - x0) * (z2 - z0) - (x2 - x0) * (z - z0)) / det;
@@ -708,15 +786,18 @@ function closestOnTriangle(px, py, pz, a, t) {
   const dot = (u, v) => u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
   const along = (P, e, s) => [P[0] + e[0] * s, P[1] + e[1] * s, P[2] + e[2] * s];
   const ap = [px - A[0], py - A[1], pz - A[2]];
-  const d1 = dot(ab, ap), d2 = dot(ac, ap);
+  const d1 = dot(ab, ap),
+    d2 = dot(ac, ap);
   if (d1 <= 0 && d2 <= 0) return A;
   const bp = [px - B[0], py - B[1], pz - B[2]];
-  const d3 = dot(ab, bp), d4 = dot(ac, bp);
+  const d3 = dot(ab, bp),
+    d4 = dot(ac, bp);
   if (d3 >= 0 && d4 <= d3) return B;
   const vc = d1 * d4 - d3 * d2;
   if (vc <= 0 && d1 >= 0 && d3 <= 0) return along(A, ab, d1 / (d1 - d3));
   const cp = [px - C[0], py - C[1], pz - C[2]];
-  const d5 = dot(ab, cp), d6 = dot(ac, cp);
+  const d5 = dot(ab, cp),
+    d6 = dot(ac, cp);
   if (d6 >= 0 && d5 <= d6) return C;
   const vb = d5 * d2 - d1 * d6;
   if (vb <= 0 && d2 >= 0 && d6 <= 0) return along(A, ac, d2 / (d2 - d6));
@@ -761,9 +842,15 @@ export function topDown(parts, ppm = 4) {
     if (!occludes(part.finish)) return;
     const a = part.positions;
     for (let t = 0; t < a.length; t += 9) {
-      const x0 = a[t], y0 = a[t + 1], z0 = a[t + 2];
-      const x1 = a[t + 3], y1 = a[t + 4], z1 = a[t + 5];
-      const x2 = a[t + 6], y2 = a[t + 7], z2 = a[t + 8];
+      const x0 = a[t],
+        y0 = a[t + 1],
+        z0 = a[t + 2];
+      const x1 = a[t + 3],
+        y1 = a[t + 4],
+        z1 = a[t + 5];
+      const x2 = a[t + 6],
+        y2 = a[t + 7],
+        z2 = a[t + 8];
       const det = (x1 - x0) * (z2 - z0) - (x2 - x0) * (z1 - z0);
       if (Math.abs(det) < 1e-9) continue; // edge-on from above: no plan area
       const cx0 = Math.max(0, Math.floor((Math.min(x0, x1, x2) - min[0]) * ppm));
@@ -797,4 +884,37 @@ export function topDown(parts, ppm = 4) {
     }
   });
   return { w, h, ppm, min, max, height, owner, cellArea: 1 / (ppm * ppm) };
+}
+
+/**
+ * Lines describing how the built file's nodes differ from the committed
+ * one's: a node's name, where it stands, and its extras. `diffParts` reads
+ * only nodes with a mesh, so an empty node and a node's extras — what the
+ * runtime reads off the arch's `sift_*` and `fall_*` (Block 4b) — would
+ * otherwise drift unheld (#1637). It lives here rather than in check.mjs
+ * because check.mjs runs on import, and the test needs the function alone. A mesh node's position is read here too,
+ * since a part built in world space under an identity node and the same
+ * part under a moved node read alike in `diffParts`.
+ */
+export function diffNodes(built, committed) {
+  const out = [];
+  if (built.length !== committed.length)
+    out.push(`${committed.length} nodes committed, ${built.length} built`);
+  const n = Math.max(built.length, committed.length);
+  for (let i = 0; i < n && out.length < 12; i++) {
+    const a = built[i];
+    const b = committed[i];
+    if (!a || !b) {
+      out.push(
+        `node ${i}: ${b ? `\`${b.name}\` missing from build` : `\`${a.name}\` not in file`}`
+      );
+      continue;
+    }
+    if (a.name !== b.name) out.push(`node ${i}: \`${b.name}\` is now \`${a.name}\``);
+    else if (a.at.join() !== b.at.join())
+      out.push(`\`${a.name}\`: stands at [${b.at}] → [${a.at}]`);
+    else if (JSON.stringify(a.extras) !== JSON.stringify(b.extras))
+      out.push(`\`${a.name}\`: extras ${JSON.stringify(b.extras)} → ${JSON.stringify(a.extras)}`);
+  }
+  return out;
 }
