@@ -91,11 +91,12 @@
  *   `rail_w` and `rail_e`, a 5 m shelf at y 123–125.5 and Z 72–77 over
  *   each pier (X ±185 to ±255), the west one torn at the opening's edge
  *   and bent down to y 120.3 (`rail_torn`, over the soffit's 113.1 there);
- *   `bracket_*` under them; six `mast_*` on them. The catenary `wire_e`
- *   still spans the opening from the east masts, 2 m over the crown's
- *   soffit, torn at X −40 with its end hanging to 130.3; `wire_w` is torn
- *   at the west springing and hangs down the face to 113. Only the six
- *   hung fittings hang below the soffit.
+ *   `bracket_*` under them; six `mast_*` on them. The catenary `wire_w`
+ *   and `wire_e` run mast to mast over each pier and are torn at the
+ *   springing: the west end hangs down the face to 113, the east a stub
+ *   past the opening's edge to 116, each from its own weight; nothing
+ *   crosses the opening unsupported. Only the six hung fittings hang below
+ *   the soffit.
  * - Silt (`silt_*`): wedges on the rail shelves, in the angle under the
  *   deck's step on both ledges, on the capitals, the course step, the
  *   recess floors and the plinth ledge, banked against the plinths and on
@@ -571,12 +572,14 @@ const wireW = [
   [-187, 124, 75],
   [-185.5, 113, 76],
 ];
+// The east wire is torn at its springing too: from the last mast a stub
+// hangs past the opening's edge from its own weight, 5 m over the loft's
+// soffit (110.8 at X 181), and nothing crosses the opening unsupported.
 const wireE = [
   ...catenary(250, 220, 1.5),
   ...catenary(220, 190, 1.5).slice(1),
-  ...catenary(190, -40, 3, 10).slice(1),
-  [-42, 131.5, 75],
-  [-43, 130.3, 76],
+  [184, 126, 75],
+  [181, 116, 76],
 ];
 solid(intact, 'wire_w', rib, tube(wireW, 0.3));
 solid(intact, 'wire_e', rib, tube(wireE, 0.3));
@@ -595,7 +598,7 @@ const HANGS = [
   ['hang_1', [-30, loftSoffit(-30), 35], 56, 'rail'],
   ['hang_2', [75, loftSoffit(75), 58], 40, 'standard'],
   ['hang_3', [-230, RAIL_Y[0], 76.2], 48, 'frame'],
-  ['hang_4', [40, loftSoffit(40), 25], 58, 'drum'],
+  ['hang_4', [40, loftSoffit(40), 40], 58, 'drum'],
   ['hang_5', [230, RAIL_Y[0], 76.2], 54, 'rail'],
 ];
 const FITTINGS = {
@@ -675,14 +678,21 @@ function drift(parent, x, z, y0, h, back = 'north') {
 // On the rail shelves' tops.
 drift(intact, [-230, -200], [72, 77], RAIL_Y[1], 1.2, 'north');
 drift(intact, [190, 230], [72, 77], RAIL_Y[1], 0.7, 'north');
-// On the top's ledges, in the angle under the deck's step.
-drift(intact, [-240, -170], [DECK, DECK + 7], LEDGE, 1.4, 'north');
-drift(intact, [-90, -30], [DECK, DECK + 5], LEDGE, 1.0, 'north');
-drift(intact, [40, 130], [DECK, DECK + 8], LEDGE, 1.6, 'north');
-drift(intact, [200, 250], [DECK, DECK + 5], LEDGE, 0.9, 'north');
-drift(intact, [-200, -120], [-DECK - 6, -DECK], LEDGE, 1.2, 'south');
-drift(intact, [20, 60], [-DECK - 4, -DECK], LEDGE, 0.8, 'south');
-drift(intact, [150, 230], [-DECK - 7, -DECK], LEDGE, 1.5, 'south');
+// On the top's ledges, in the angle under the deck's step: unequal
+// pieces, no two the same length, width or height, so they cannot read as
+// markings along the deck.
+drift(intact, [-240, -212], [DECK, DECK + 7], LEDGE, 1.4, 'north');
+drift(intact, [-206, -172], [DECK, DECK + 4.5], LEDGE, 0.9, 'north');
+drift(intact, [-88, -56], [DECK, DECK + 6], LEDGE, 1.1, 'north');
+drift(intact, [-50, -34], [DECK, DECK + 3], LEDGE, 0.6, 'north');
+drift(intact, [42, 74], [DECK, DECK + 8.5], LEDGE, 1.7, 'north');
+drift(intact, [86, 128], [DECK, DECK + 5], LEDGE, 1.0, 'north');
+drift(intact, [204, 248], [DECK, DECK + 3.5], LEDGE, 0.7, 'north');
+drift(intact, [-198, -158], [-DECK - 6, -DECK], LEDGE, 1.2, 'south');
+drift(intact, [-150, -124], [-DECK - 3.5, -DECK], LEDGE, 0.7, 'south');
+drift(intact, [22, 58], [-DECK - 4, -DECK], LEDGE, 0.8, 'south');
+drift(intact, [148, 186], [-DECK - 7.5, -DECK], LEDGE, 1.6, 'south');
+drift(intact, [196, 226], [-DECK - 4.5, -DECK], LEDGE, 0.9, 'south');
 // On the capitals' ledges outside the span.
 drift(intact, [200, 240], [72, 75], 110, 1.5, 'north');
 drift(intact, [250, 280], [-75, -72], 110, 1.1, 'south');
