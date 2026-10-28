@@ -53,6 +53,12 @@ export const TUNED_CLEARANCE_CENTS = 60;
  * the devices that cannot reproduce it, and the self bus is low-cut at 60 Hz for
  * that reason. The music bus is not, because §10 gives music this register, so
  * the restraint has to be in the level.
+ *
+ * §11's speaker profile does not carry it, by design (#1657). Its first
+ * harmonic above the profile's 320 Hz keep is the 11th, which a quiet pedal
+ * does not make. One loud enough to would be music between 320 and 800 Hz,
+ * the register §10 keeps it out of. So under Silent Running a phone hears
+ * the score fall silent rather than hold its breath.
  */
 export const SCORE_PEDAL_HZ = [31.0, 31.3] as const;
 

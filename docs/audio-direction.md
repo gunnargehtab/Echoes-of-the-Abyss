@@ -345,7 +345,7 @@ The score is the port's grammar played in the water: a pedal under 40 Hz, cold p
 
 So the swell is density, height and level together, and it is the player's own: the fleet's loudest **unit**, the figure §4's bed reads and the HUD has drawn since #623. It rises over about a second and falls back over about three, so a burst of speed is felt as a swell and its end as the swell taking its time to leave. The pedal rises with it, by less.
 
-**Under Silent Running only the pedal stays.** Every layer above 800 Hz closes on the world bus's own 0.6 s crossfade, and the pedal holds at its lowest level: a held breath. §4's inversion is the world getting louder because the player got quieter, and a score still drifting over the top of that moment would be the one thing in the mix not taking part in it.
+**Under Silent Running only the pedal stays.** Every layer above 800 Hz closes on the world bus's own 0.6 s crossfade, and the pedal holds at its lowest level: a held breath. §4's inversion is the world getting louder because the player got quieter, and a score still drifting over the top of that moment would be the one thing in the mix not taking part in it. On a speaker that does not reach 31 Hz the held breath is silence, and §11's speaker profile does not change that: the pedal's only route to a phone is a harmonic series, and that series would land between 320 and 800 Hz, the register this section keeps music out of. So the score falls silent there, which still takes part in the moment (#1657).
 
 **It never touches the tuned bed.** §9's root, third and fifth (880, 1,100 and 1,320 Hz) are the Fields' own, and the score's partials stay at least 60 cents from each of them and from their octaves, on every map rather than only where crystal is in earshot: a score that changed key where the Fields begin would be a terrain readout. The set is a pentatonic on C and D with its A removed (1,046.5, 1,174.7, 1,396.9, 1,568, 2,093 and 2,349.3 Hz), which keeps the port's property of having no semitone to grind.
 
@@ -382,7 +382,7 @@ Because audio carries primary information, every audible fact **must** have a vi
 - **Exposure indicator** — the "you have been pinged" cue also renders as a screen-edge flash on the bearing of the pinging emitter.
 - **Mono mode and HRTF off** — spatialisation is a rendering choice, never a source of information the mono mix lacks. Tier-2 bearing must remain readable in mono via the contact log and the minimap.
 - **Independent buses** — contacts, self-noise, world, music, UI, each with its own slider. Contacts may be boosted to +12 dB above the reference mix.
-- **Speaker profile** — a compressed, small-speaker mix that preserves the 40–160 Hz contact band by adding harmonics rather than relying on fundamentals no laptop can reproduce. Built; see §12's scaffold status for what it measures and why it defaults on for a phone.
+- **Speaker profile** — a compressed, small-speaker mix that preserves the 40–160 Hz contact band by adding harmonics rather than relying on fundamentals no laptop can reproduce. It carries that band, not the score's pedal below 40 Hz (§10). Built; see §12's scaffold status for what it measures and why it defaults on for a phone.
 
 ---
 
@@ -670,9 +670,17 @@ scenes rise 2-3 dB, their peaks from -27.1 to -12.6 dBTP, and the SIG 80 scene's
 800 Hz from 7% to 23%. Before it, the full tuned bed is the one layer the shelf takes into the knee: profiled
 it reads -27.2 with its peak on the knee's ceiling, a loss of 11 dB like the scenes', and its
 share below 800 Hz stays under 1%, so the knee makes no difference tones in the band the hum
-was reported in. That is the knee doing what it is for, on a maximal input. Under Silent Running the profile
-still leaves the pedal below the meter's gate (-50.7 unprofiled, above). The pedal is under the
-cut, so only the harmonic path carries it, and the shelf does not reach that path (#1657).
+was reported in. That is the knee doing what it is for, on a maximal input.
+
+Under Silent Running the profile leaves the pedal below the meter's gate: -50.8 LUFS unprofiled
+in this run (the -50.7 above, inside the meter's run-to-run spread), no reading profiled, its
+peak at -63.1 dBTP (`score-out:silent-running` and its `-profile` twin). This is §10's design,
+not a fault (#1657). The pedal is under the cut, so only the harmonic path could carry it, and
+that path rolls off below 320 Hz at 24 dB an octave: the pedal's first harmonic above 320 Hz is
+its 11th. Fed straight through `harmonicShape`, its series above 320 Hz reads -80 dB against the
+input at an input of 0.35 and -38 dB at full scale. The pedal enters at about 0.01, so no level
+the mix gives it reaches a phone. A series loud enough to hear would need a send about 40 dB
+hotter than the pedal, and would sit between 320 and 800 Hz, where §10 keeps music out.
 
 Contacts are sonified (§3): a voice per contact, panned with the authority its tier earned,
 filtered by the biome it arrived through (§9), and carrying from Tier 3 up the timbre family
