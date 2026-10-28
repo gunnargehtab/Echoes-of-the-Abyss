@@ -30,10 +30,19 @@
 const SWAY_HOLD_S = 1.7;
 
 import { Color, Group, InstancedMesh, Matrix4, Quaternion, Vector3 } from 'three';
-import type { ResourceNodeInfo } from '@echoes/shared';
+import type { PublicLandmark, ResourceNodeInfo } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
-import { ENVIRONMENT_PROPS, placeProps, propSpec, type PropPlacement } from './environment.ts';
+import {
+  ENVIRONMENT_PROPS,
+  placeProps,
+  propSpec,
+  standLandmarks,
+  type LandmarkStand,
+  type PropPlacement,
+} from './environment.ts';
 import { envTemplate, type SwayUniforms } from './environmentModels.ts';
+import { landmarkTemplate } from './landmarkModels.ts';
+import { depthToWorldY } from './perspectiveTerrain.ts';
 import type { WorldLook } from './tutorialLook.ts';
 import { VentPlume, plumeSites } from './ventPlume.ts';
 import { FieldHaze, hazeSites } from './fieldHaze.ts';
@@ -69,6 +78,19 @@ export class EnvironmentLayer {
   private generation = 0;
   private props = 0;
   private propTris = 0;
+  /** Public landmarks standing, and the triangles their drawn states cost (gate 6). */
+  private landmarksStanding = 0;
+  private landmarkTris = 0;
+  /**
+   * The map's public landmarks this layer draws (docs/graphics-standards.md
+   * gate 1): none, unless the view hands it the map's table — which it does
+   * only under the arch study's flag, on the prologue's look. Stood from the
+   * terrain each rebuild, in the state its own cells give, so a ground delta
+   * that turns the anchor cells to rock stands the ruin on the same rebuild
+   * that re-shades them, and a session whose first ground already holds the
+   * collapse stands it from its first frame.
+   */
+  private landmarks: readonly PublicLandmark[] = [];
   /** Sway handles of the templates standing in this build, ticked per frame. */
   private swaying: SwayUniforms[] = [];
   private reducedMotion = false;
@@ -106,10 +128,21 @@ export class EnvironmentLayer {
   ): void {
     const generation = ++this.generation;
     this.clear();
+    // The landmarks first: spent from the reservation after the fields and
+    // before the scatter (gate 1, rule 3), which `placeProps` does when it is
+    // handed them, and stood here whatever list the caller passed.
+    const stands = standLandmarks(terrain, this.landmarks);
     // Only the default placement stands the fields, so only it hazes them: the
     // opt-in study hands in its own budgeted list and stands no field.
     const standsFields = placements === undefined;
-    placements ??= placeProps(terrain, ENVIRONMENT_PROPS, this.look, this.fields);
+    placements ??= placeProps(terrain, ENVIRONMENT_PROPS, this.look, this.fields, stands);
+    for (const stand of stands) {
+      this.standLandmark(stand, terrain, () => {
+        if (generation === this.generation) {
+          this.rebuild(terrain, groundY, standsFields ? undefined : placements);
+        }
+      });
+    }
 
     if (placements.length === 0) return;
     // Where each standing slug tops out, per unit scale: the chimneys' mouths.
@@ -180,6 +213,55 @@ export class EnvironmentLayer {
   }
 
   /**
+   * Stand one landmark in the state its cells give it: its state's parts, one
+   * instanced mesh of one instance each, so the veil's shade reaches it the
+   * way it reaches a prop (its instance colour), at the anchor, turned by the
+   * anchor's yaw, at scale 1. Its origin stands at the literal's floor
+   * through the same depth mapping the terrain mesh uses — never on
+   * `groundY`, the drawn ground with its relief, which the received ground
+   * moves: the wall that rises under the anchor at 10:40 would lift the ruin
+   * onto its top (study §6, gate 1).
+   */
+  private standLandmark(stand: LandmarkStand, terrain: TerrainPayload, onReady: () => void): void {
+    const template = landmarkTemplate(stand.spec, onReady, this.look);
+    if (template === null) return;
+    const state = template.states[stand.state];
+    const { landmark } = stand;
+    TMP_POS.set(landmark.anchorXM, depthToWorldY(landmark.originFloorM), landmark.anchorYM);
+    TMP_QUAT.setFromAxisAngle(Y_AXIS, landmark.yawRad);
+    TMP_SCALE.setScalar(1);
+    TMP_MATRIX.compose(TMP_POS, TMP_QUAT, TMP_SCALE);
+    const at: PropPlacement = {
+      slug: landmark.slug,
+      xM: landmark.anchorXM,
+      yM: landmark.anchorYM,
+      yawRad: landmark.yawRad,
+      scale: 1,
+      cellIndex: landmark.cells.row * terrain.cols + landmark.cells.col0,
+    };
+    for (const part of state.parts) {
+      const mesh = new InstancedMesh(part.geometry, part.material, 1);
+      mesh.frustumCulled = false;
+      mesh.name = `${landmark.slug}:${stand.state}:${part.material.name}`;
+      mesh.setMatrixAt(0, TMP_MATRIX);
+      mesh.instanceMatrix.needsUpdate = true;
+      this.shaded.push({ mesh, list: [at] });
+      this.applyShade(mesh, [at]);
+      this.group.add(mesh);
+    }
+    this.landmarksStanding++;
+    this.landmarkTris += state.triangles;
+  }
+
+  /**
+   * Take the map's public landmarks. The caller rebuilds, as for the fields:
+   * the view owns *when*.
+   */
+  setLandmarks(landmarks: readonly PublicLandmark[]): void {
+    this.landmarks = landmarks;
+  }
+
+  /**
    * Per frame: advance the current. Under reduced motion the time is held,
    * and the write still happens so a toggle mid-match takes effect on the
    * next frame rather than on the next terrain rebuild.
@@ -231,13 +313,26 @@ export class EnvironmentLayer {
     if (mesh.instanceColor !== null) mesh.instanceColor.needsUpdate = true;
   }
 
-  /** Probe telemetry (gate 6): bodies standing, triangles they cost, steam columns and hazed fields. */
-  stats(): { props: number; propTris: number; ventPlumes: number; fieldHazes: number } {
+  /**
+   * Probe telemetry (gate 6): bodies standing, triangles they cost, steam
+   * columns and hazed fields, and the public landmarks on their own, as gate
+   * 6's study line asks — a landmark is one instance, not a prop count.
+   */
+  stats(): {
+    props: number;
+    propTris: number;
+    ventPlumes: number;
+    fieldHazes: number;
+    landmarks: number;
+    landmarkTris: number;
+  } {
     return {
       props: this.props,
       propTris: this.propTris,
       ventPlumes: this.plume.plumes,
       fieldHazes: this.haze.fields,
+      landmarks: this.landmarksStanding,
+      landmarkTris: this.landmarkTris,
     };
   }
 
@@ -269,6 +364,8 @@ export class EnvironmentLayer {
     this.haze.clear();
     this.props = 0;
     this.propTris = 0;
+    this.landmarksStanding = 0;
+    this.landmarkTris = 0;
     this.swaying = [];
     this.shaded = [];
   }

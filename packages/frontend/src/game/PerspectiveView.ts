@@ -88,9 +88,11 @@ import {
   type OwnStructure,
   type OwnOrdnance,
   type OwnUnit,
+  type PublicLandmark,
   type ResourceNodeInfo,
   type StructureKind,
   type UnitKind,
+  PUBLIC_LANDMARKS,
 } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import { CIVIC_LAMP, FACTION_PALETTE, sigColor, UI, VENT_EMBER } from './palette.ts';
@@ -184,6 +186,7 @@ import { columnsFor, InkOcclusion } from './inkOcclusion.ts';
 import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
 import { FaunaStipple } from './faunaStipple.ts';
 import { DREAM_LOOP } from './dreamLoop.ts';
+import { ARCH_STUDY_ON } from './archStudy.ts';
 import {
   duneSource,
   groundDetailCells,
@@ -1312,12 +1315,31 @@ export class PerspectiveView {
     this.applyVeil();
   }
 
-  /** Which map the room says this is: where its dunes' current comes from. */
+  /**
+   * Which map the room says this is: where its dunes' current comes from,
+   * and which public landmarks its ground stands (gate 1). The landmarks
+   * are the layer's to stand on the next rebuild, so a map named after the
+   * ground arrived rebuilds the dressing now.
+   */
   setMap(mapId: string): void {
     this.mapId = mapId;
     if (this.detailUniforms !== null && this.terrain !== null) {
       this.detailUniforms.uDuneSource.value = duneSource(mapId, this.terrain);
     }
+    this.environment.setLandmarks(this.studyLandmarks(mapId));
+    if (this.terrain !== null) this.rebuildDressing();
+  }
+
+  /**
+   * The public landmarks a layer draws on a map: the shared table's, under
+   * the arch study's development flag on the prologue's look alone, and none
+   * otherwise (archStudy.ts; docs/sorrowgate-arch-study.md §7 "Isolation").
+   * Radicals on the same ground is the standard look, so it draws none; no
+   * code here names Sorrowgate, a layer draws any map's list.
+   */
+  private studyLandmarks(mapId: string | null): readonly PublicLandmark[] {
+    if (!ARCH_STUDY_ON || this.look !== 'sorrowgate' || mapId === null) return [];
+    return PUBLIC_LANDMARKS[mapId] ?? [];
   }
 
   setIdentity(_slot: number, faction: Faction): void {
@@ -1586,6 +1608,7 @@ export class PerspectiveView {
     this.seabedDetail = SEABED_DETAIL_ON && look === 'standard';
     this.environment = new EnvironmentLayer(look, this.seabedDetail);
     this.environment.setReducedMotion(this.swayHeld);
+    this.environment.setLandmarks(this.studyLandmarks(this.mapId));
     // Back in its place among the scene's groups, which the ladder orders.
     this.scene.add(this.environment.group);
     if (index >= 0) {
@@ -3333,7 +3356,12 @@ export class PerspectiveView {
     const patchY = region.y - atlas.y;
     props.group.position.set(patchX, 0, patchY);
     props.setReducedMotion(this.swayHeld);
-    const placements = mapProps(region.mapId, this.look);
+    // The map's public landmarks too, in the state the literal gives them —
+    // intact — so the join and the swap trade the landmark like for like
+    // (docs/world-map.md §7.6; gate 1, rule 1).
+    const landmarks = this.studyLandmarks(region.mapId);
+    props.setLandmarks(landmarks);
+    const placements = mapProps(region.mapId, this.look, landmarks);
     props.rebuild(mission, this.detailPropGround(mission, seed, rockTopM), placements);
     mesh.add(props.group);
     return {
@@ -3367,7 +3395,9 @@ export class PerspectiveView {
     const atlas = detailRect(detail.region);
     props.group.position.set(detail.region.x - atlas.x, 0, detail.region.y - atlas.y);
     props.setReducedMotion(this.swayHeld);
-    detail.placements = mapProps(detail.region.mapId, this.look);
+    const landmarks = this.studyLandmarks(detail.region.mapId);
+    props.setLandmarks(landmarks);
+    detail.placements = mapProps(detail.region.mapId, this.look, landmarks);
     props.rebuild(
       detail.mission,
       this.detailPropGround(detail.mission, detail.seed, detail.rockTopM),

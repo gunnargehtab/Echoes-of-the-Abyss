@@ -378,6 +378,91 @@ export const SORROWGATE_GROUND: MapGround = {
 };
 
 /**
+ * A public landmark — docs/graphics-standards.md gate 1, "Public landmarks";
+ * docs/maps.md "How a map is written"; docs/sorrowgate-arch-study.md §7.
+ *
+ * One approved `env-*` model a map places by name, at a fixed anchor, yaw and
+ * canonical scale, with the cells it stands on. Public map data like the grid:
+ * identical on every client and in every mission on the ground. Beside
+ * `SORROWGATE_GROUND` and outside it, since `MapGround` holds ground alone by
+ * its own comment, and a landmark is dressing, not ground. The client imports
+ * this table; the backend never does, so the simulation cannot read it (a
+ * shared test holds that), and a landmark blocks, opens, hides and reveals
+ * nothing.
+ */
+export interface PublicLandmark {
+  /** The model: `docs/concept-art/models/<slug>.glb`, Block 4b's row. */
+  slug: string;
+  /** Where its origin stands, in the map's own metres. */
+  anchorXM: number;
+  anchorYM: number;
+  /** Its heading, radians about +Y; 0 runs the model's +X east. */
+  yawRad: number;
+  /**
+   * The cells whose state is the landmark's (`landmarkState`): one row of the
+   * grid, from `col0` to `col1` inclusive.
+   */
+  cells: { row: number; col0: number; col1: number };
+  /**
+   * The floor its origin stands at, metres of depth, from the map's literal and
+   * never from the received ground or the drawn relief: ground that changes
+   * under it never lifts it (gate 1).
+   */
+  originFloorM: number;
+}
+
+/**
+ * The public landmarks of each placed map, by map id. One row: Sorrowgate's
+ * transit arch, drawn only by the arch study behind its development flag
+ * until a written decision in graphics-standards.md promotes it.
+ *
+ * The arch's anchor (2550, 2125) is the `arch` marker over the escorts' seats,
+ * its span running east–west along row 8; its cells are row 8, columns 9–11
+ * (x 2250–3000, y 2000–2250), which the 10:40 beat turns to rock; its origin
+ * is the anchor cell's floor in the literal, 1,600 m (study §6, §7).
+ */
+export const PUBLIC_LANDMARKS: Readonly<Record<string, readonly PublicLandmark[]>> = {
+  sorrowgate: [
+    {
+      slug: 'env-ruin-transit-arch',
+      anchorXM: 2550,
+      anchorYM: 2125,
+      yawRad: 0,
+      cells: { row: 8, col0: 9, col1: 11 },
+      originFloorM: 1600,
+    },
+  ],
+};
+
+/** The two states a landmark is drawn in; gate 1's rule 1 says which. */
+export type LandmarkState = 'intact' | 'ruined';
+
+/** A landmark's anchor cells as grid indices, row-major over `cols` columns. */
+export function landmarkCells(landmark: PublicLandmark, cols: number): number[] {
+  const { row, col0, col1 } = landmark.cells;
+  const out: number[] = [];
+  for (let col = col0; col <= col1; col++) out.push(row * cols + col);
+  return out;
+}
+
+/**
+ * The state a landmark's own cells give it, in a published grid: intact while
+ * every anchor cell is water, ruined once any is rock (a cell whose ceiling is
+ * below its floor). Nothing else switches it — no schedule, timer, contact or
+ * occupancy — so a grid that already holds the collapse reads ruined from the
+ * first frame, and a change anywhere else never touches it.
+ */
+export function landmarkState(
+  landmark: PublicLandmark,
+  grid: { cols: number; floor: ArrayLike<number>; ceiling: ArrayLike<number> }
+): LandmarkState {
+  for (const index of landmarkCells(landmark, grid.cols)) {
+    if (grid.ceiling[index]! > grid.floor[index]!) return 'ruined';
+  }
+  return 'intact';
+}
+
+/**
  * The Banding Ground's ground — docs/mission-intake.md §11; docs/maps.md,
  * "Mission maps". The second map placed in the Rift (docs/world-map.md §7.9,
  * #1598), at the banding ground's anchor.

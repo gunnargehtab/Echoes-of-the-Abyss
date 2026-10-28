@@ -96,6 +96,20 @@ const templates = new Map<string, EnvTemplate | null>();
 const waiting = new Map<string, Set<() => void>>();
 let generation = 0;
 
+/**
+ * The committed file for an `env-*` slug, parsed: what a template is built
+ * from, and what the arch study's landmark loader (landmarkModels.ts) reads
+ * through the same glob, so one list of models serves both. Null when no
+ * file matches the slug.
+ */
+export function loadEnvModel(slug: string): Promise<Group> | null {
+  const load = ENV_MODEL_BY_FILE.get(`${slug}.glb`);
+  if (load === undefined) return null;
+  return load()
+    .then((url) => loader.loadAsync(url))
+    .then((gltf) => gltf.scene);
+}
+
 function luminance(material: MeshStandardMaterial): number {
   return 0.2126 * material.color.r + 0.7152 * material.color.g + 0.0722 * material.color.b;
 }
@@ -107,7 +121,7 @@ function luminance(material: MeshStandardMaterial): number {
  * export's; the absolute value is ours. Emissive is left alone — a prop's
  * light was licensed at intake and is not a diffuse property.
  */
-function normaliseLuminance(materials: Iterable<Material>): void {
+export function normaliseLuminance(materials: Iterable<Material>): void {
   const standard = [...materials].filter(
     (material): material is MeshStandardMaterial => material instanceof MeshStandardMaterial
   );
@@ -273,8 +287,8 @@ export function envTemplate(
     waiting.get(key)?.add(onReady);
     return cached;
   }
-  const load = ENV_MODEL_BY_FILE.get(`${slug}.glb`);
-  if (load === undefined) {
+  const load = loadEnvModel(slug);
+  if (load === null) {
     templates.set(key, null);
     return null;
   }
@@ -282,9 +296,8 @@ export function envTemplate(
   const listeners = new Set([onReady]);
   waiting.set(key, listeners);
   const started = generation;
-  load()
-    .then((url) => loader.loadAsync(url))
-    .then((gltf) => buildTemplate(gltf.scene, footprintM, swayM, look))
+  load
+    .then((scene) => buildTemplate(scene, footprintM, swayM, look))
     .then(
       (template) => {
         if (started !== generation) return;
