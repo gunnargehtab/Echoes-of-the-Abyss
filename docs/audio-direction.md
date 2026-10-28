@@ -672,15 +672,15 @@ it reads -27.2 with its peak on the knee's ceiling, a loss of 11 dB like the sce
 share below 800 Hz stays under 1%, so the knee makes no difference tones in the band the hum
 was reported in. That is the knee doing what it is for, on a maximal input.
 
-Under Silent Running the profile leaves the pedal below the meter's gate: -50.8 LUFS unprofiled,
-no reading profiled, its peak at -63.1 dBTP (`score-out:silent-running` and its `-profile`
-twin). This is §10's design, not a fault (#1657). The pedal is under the cut, so only the
-harmonic path could carry it, and the path keeps nothing below 320 Hz: the pedal's first
-harmonic there is its 11th. Fed straight through `harmonicShape`, its series above 320 Hz
-reads -80 dB against the input at the knee's 0.35 and -38 dB at full scale. The pedal enters at
-about 0.01, so no level the mix gives it reaches a phone. A series loud enough to hear would sit
-between 320 and 800 Hz, where §10 keeps music out. It would also need a harder DRIVE, which #663
-set by ear.
+Under Silent Running the profile leaves the pedal below the meter's gate: -50.8 LUFS unprofiled
+in this run (the -50.7 above, inside the meter's run-to-run spread), no reading profiled, its
+peak at -63.1 dBTP (`score-out:silent-running` and its `-profile` twin). This is §10's design,
+not a fault (#1657). The pedal is under the cut, so only the harmonic path could carry it, and
+that path rolls off below 320 Hz at 24 dB an octave: the pedal's first harmonic above 320 Hz is
+its 11th. Fed straight through `harmonicShape`, its series above 320 Hz reads -80 dB against the
+input at an input of 0.35 and -38 dB at full scale. The pedal enters at about 0.01, so no level
+the mix gives it reaches a phone. A series loud enough to hear would need a send about 40 dB
+hotter than the pedal, and would sit between 320 and 800 Hz, where §10 keeps music out.
 
 Contacts are sonified (§3): a voice per contact, panned with the authority its tier earned,
 filtered by the biome it arrived through (§9), and carrying from Tier 3 up the timbre family
