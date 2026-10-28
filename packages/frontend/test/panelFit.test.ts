@@ -10,10 +10,9 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { PANEL_TYPE_FLOOR, fitPanelType } from '../src/game/panelFit.ts';
-
-/** `GameCanvas`'s rule, restated so this file need not boot the renderer. */
-const panelType = (scale: number) => (scale <= 1 ? 1 : Math.sqrt(scale) / scale);
+import { PANEL_TYPE_FLOOR, fitPanel, fitPanelType } from '../src/game/panelFit.ts';
+import { panelType } from '../src/game/uiScale.ts';
+import { StubElement } from './support/headless.ts';
 
 /** A panel whose rows take `height` units at type 1, in `room` units of screen. */
 const panel = (height: number, room: number) => {
@@ -60,5 +59,54 @@ describe('fitPanelType', () => {
     const { overflows, tried } = panel(400, 100);
     assert.equal(fitPanelType(1, 1, overflows), 1);
     assert.deepEqual(tried, []);
+  });
+});
+
+/**
+ * A mounted panel whose body is `height` units tall at type 1 in `room` units,
+ * with its scale and base type set as `.game-root` would hand them down. The
+ * stub has no cascade, so they sit on the panel's own style, under the
+ * override `fitPanel` writes and clears.
+ */
+function mounted(scale: number, height: number, room: number) {
+  const panel = new StubElement('section');
+  const body = new StubElement('div');
+  const base = panelType(scale);
+  const type = () => Number(panel.style.getPropertyValue('--panel-type') || base);
+  Object.defineProperty(body, 'scrollHeight', { get: () => height * type() });
+  body.clientHeight = room;
+  // `fitPanel` clears its override first; the base must survive that, as the
+  // inherited value does in a browser.
+  const removeProperty = panel.style.removeProperty.bind(panel.style);
+  panel.style.removeProperty = (name: string) => {
+    const old = removeProperty(name);
+    if (name === '--panel-type') panel.style.setProperty(name, String(base));
+    return old;
+  };
+  panel.style.setProperty('--ui-scale', String(scale));
+  panel.style.setProperty('--panel-type', String(base));
+  return { panel, body, type, base };
+}
+
+describe('fitPanel', () => {
+  it('leaves the base in place where the rows fit', () => {
+    const { panel, body, type, base } = mounted(1.5, 300, 400);
+    fitPanel(panel as unknown as HTMLElement, body as unknown as HTMLElement);
+    assert.equal(type(), base);
+  });
+
+  it('floors the type at the lowest setting’s size as drawn at this scale', () => {
+    const { panel, body, type } = mounted(2, 400, 100);
+    fitPanel(panel as unknown as HTMLElement, body as unknown as HTMLElement);
+    assert.equal(type(), PANEL_TYPE_FLOOR / 2);
+  });
+
+  it('grows back to the base once the room returns', () => {
+    const { panel, body, type, base } = mounted(1.5, 400, 260);
+    fitPanel(panel as unknown as HTMLElement, body as unknown as HTMLElement);
+    assert.ok(type() < base, 'yielded while short');
+    body.clientHeight = 600;
+    fitPanel(panel as unknown as HTMLElement, body as unknown as HTMLElement);
+    assert.equal(type(), base, 'and grew back');
   });
 });

@@ -7,13 +7,24 @@
  * Sorrowgate at 13:40 outgrew it at 150% on a 1440x900 screen and at 125% on
  * 1366x768. §2 lets the panel neither scroll nor pass the hint line, so what is
  * left to give is the size of its type. It steps down only as far as the type
- * the 75% setting draws, the smallest a player can ask for and so the smallest
- * the game already calls legible; below that the panel keeps `overflow-y` as
- * the backstop `.objectives-body` names.
+ * the lowest setting draws, the smallest a player can ask for and so the
+ * smallest the game already calls legible; below that the panel keeps
+ * `overflow-y` as the backstop `.objectives-body` names.
+ *
+ * The cost §11 states: in a short window a raised setting can draw the orders
+ * smaller than 100% does, because the console it raised took their room.
+ *
+ * `.objectives`' width rule divides by `--panel-type` too, so the override
+ * widens the panel as its type shrinks, up to its 340-unit cap. That is wanted:
+ * a wider line wraps less, which is height the fit does not have to take out of
+ * the type.
  */
 
-/** The smallest type the panel will step down to, as a factor on screen: §11's 75%. */
-export const PANEL_TYPE_FLOOR = 0.75;
+import { UI_SCALE_MIN } from '../settings/store.ts';
+import { panelType } from './uiScale.ts';
+
+/** The smallest type the panel will step down to, as a factor on screen: the lowest setting's. */
+export const PANEL_TYPE_FLOOR = UI_SCALE_MIN * panelType(UI_SCALE_MIN);
 
 /** Halvings in the search; past six the step is under a pixel of type. */
 const STEPS = 6;

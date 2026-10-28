@@ -1720,6 +1720,8 @@
   /* One cap: the room that actually exists between the top strip and the hint
      line — 60 panel units of strip above, and below the console's 208, the
      hint's 20 and 4 of breath, all Pixi-drawn and all scaling with the HUD.
+     uiScale.ts holds the scale against the same 292 (`CHROME_UNITS`), so a
+     change here is a change there.
      A panel allowed past it would cover the line that says why a press did
      nothing, or the console, rather than the water. There was a second cap, a
      38vh share of the screen like the logs' 30% and 18%, and it is gone because

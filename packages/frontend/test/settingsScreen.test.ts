@@ -81,6 +81,26 @@ describe('the settings screen: §11 commitments', () => {
     }
   });
 
+  it('says when the window draws less of the scale than was asked for (#1634)', async () => {
+    // §11 holds the scale so the chrome takes at most half the window, and the
+    // stub window is 720 px tall: 200% is drawn at 123% there. The setting is
+    // kept, and the screen says both rather than the one the HUD is not using.
+    const view = await settings();
+    try {
+      const scale = sliders(view).find((s) => s.max === UI_SCALE_MAX * 100)!;
+      await slide(view, scale.node, 200);
+      assert.ok(view.shows('200% · 123% here'), view.text().join(' | '));
+      assert.equal(loadSettings().uiScale, 2, 'the setting is kept');
+      await slide(view, scale.node, 100);
+      assert.ok(
+        view.shows('100%') && !view.shows('% here'),
+        'and a scale the window carries reads alone'
+      );
+    } finally {
+      await view.unmount();
+    }
+  });
+
   it('lets the acoustic veil all the way down, because down costs nothing', async () => {
     // §11 owes a control to any contrast-reduced overlay, and §4.5 is one.
     // The range has to reach 0: the veil hides no information — every

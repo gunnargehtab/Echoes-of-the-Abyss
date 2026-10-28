@@ -51,7 +51,8 @@ import {
 import { installHeadlessAudio, uninstallHeadlessAudio } from './support/headlessAudio.ts';
 import { StubClient, StubRoom, stubCallbacks } from './support/colyseusStub.ts';
 import { cannedMap, cannedNodes, cannedSnapshot, cannedTerrain } from './support/cannedMatch.ts';
-import { GameCanvas, panelType, type GameCanvasProps } from '../src/game/GameCanvas.tsx';
+import { GameCanvas, type GameCanvasProps } from '../src/game/GameCanvas.tsx';
+import { heldUiScale, panelType } from '../src/game/uiScale.ts';
 import { seabedSeed } from '../src/game/seabed.ts';
 import { worldView } from '../src/game/worldView.ts';
 
@@ -1512,8 +1513,9 @@ describe('the shell: what a panel’s own type does under §11’s UI scale', ()
   // docs/ui-ux.md §11, and §2 is the reason. The strip and the console scale
   // with the HUD, so at 200% the room between them halves while a panel that
   // magnified everything wanted four times the area — the orders panel asked
-  // for 444 panel units of rows in 182 units of screen. The square root is
-  // what makes it fit while still being magnification worth asking for.
+  // for 444 panel units of rows in 182 units of screen. The square root keeps
+  // magnification worth asking for; it is not on its own what makes the panel
+  // fit, which takes the panel's own yield and the held scale below (#1634).
   it('leaves type alone at or below 100%, where shrinking the HUD already buys room', () => {
     for (const scale of [0.75, 0.9, 1]) assert.equal(panelType(scale), 1, `at ${scale}`);
   });
@@ -1533,5 +1535,33 @@ describe('the shell: what a panel’s own type does under §11’s UI scale', ()
       assert.ok(factor * scale > 1, `${scale} still magnifies`);
       assert.ok(factor * scale < scale, `${scale} magnifies less than the panel`);
     }
+  });
+});
+
+describe('the shell: the scale the HUD draws at (#1634)', () => {
+  // docs/ui-ux.md §11. The strip and the console take 292 HUD units of height,
+  // and the scale is held so they never take more than half the window.
+  it('draws the setting where the window carries it', () => {
+    assert.equal(heldUiScale(2, 1168), 2, '200% from a 1,168 px window');
+    assert.equal(heldUiScale(1.25, 900), 1.25);
+    assert.equal(heldUiScale(1, 768), 1);
+  });
+
+  it('holds it where the chrome would take more than half the height', () => {
+    for (const [height, held] of [
+      [1080, 1.85],
+      [900, 1.54],
+      [768, 1.32],
+      [720, 1.23],
+    ] as const) {
+      const scale = heldUiScale(2, height);
+      assert.equal(scale.toFixed(2), held.toFixed(2), `${height} px`);
+      assert.ok(292 * scale <= height / 2 + 1e-9, `${height} px keeps half for the water`);
+    }
+  });
+
+  it('never holds it below the smallest scale the setting offers', () => {
+    assert.equal(heldUiScale(1, 300), 0.75);
+    assert.equal(heldUiScale(0.75, 300), 0.75);
   });
 });

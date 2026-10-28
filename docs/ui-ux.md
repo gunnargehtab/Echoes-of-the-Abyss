@@ -90,7 +90,8 @@ whole map, the other is the mouse's route to every order.
 is an objective the player has not been given, and a screen that runs off the bottom hides
 a control behind a gesture the game never taught. So a screen and a panel **fit what they
 hold** — at every width the game supports and across §11's 75–200% UI scale — by dropping a
-block (above), by grouping what repeats, or by being written shorter. When something will
+block (above), by grouping what repeats, or by being written shorter, and the orders panel
+also by its type yielding to its room (§11). When something will
 not fit, what it holds is cut down; a scrollbar is not the answer, because it makes the
 part that did not fit invisible rather than absent, and the player cannot tell the
 difference.
@@ -1164,8 +1165,22 @@ Audio carries primary information, so accessibility here is a correctness requir
   So the orders panel's type **yields to its room**. It takes the square root's size where
   that fits, and otherwise the largest size at which every row is on screen, but never
   smaller than the 75% setting draws it, the smallest size a player can ask for and so the
-  smallest the game calls legible. A panel is never allowed past the console to buy the
-  difference; the console is not the water, but it is not spare room either.
+  smallest the game calls legible. That has a cost, stated rather than hidden: in a short
+  window a raised setting can draw the orders smaller than 100% does, because the console it
+  raised took their room — 0.9x at 125% on 1366 × 768. A floor at 100%'s size was weighed and
+  refused, because 1280 × 720 overflows by 40 px at 100% itself, where no scale can be held.
+  A panel is never allowed past the console to buy the difference; the console is not the
+  water, but it is not spare room either.
+  **And the scale the HUD draws at is held to what the window can carry.** The strip above
+  the water and the console, hint line and breath below it take 292 units of height, and at
+  200% on a 1366 × 768 screen they left 92 for the water, where no legible type fits the
+  orders panel. So the chrome takes at most half the window's height: the HUD draws the
+  setting where that holds and the largest scale that keeps it where it does not. 200% needs
+  a window 1,168 px tall, so a 1080 px one draws at most 185%, a 900 px one 154% and a 768 px
+  one 132%. The setting is kept rather than rewritten, a taller window draws what was asked
+  for, and the settings screen shows both — `200% · 132% here`. One held factor moves the
+  Pixi HUD, the pointer hits and every DOM panel together; holding the console alone was
+  refused, because the panels are anchored to it and would no longer line up (#1634).
 - **Full rebinding**, including a one-handed layout, and no timing-critical chords. The left + right camera drag (§9) is a chord of buttons rather than of keys, and not a timing-critical one: either button may land first, at any interval. `Shift` + wheel moves the same focus with one button, for a player who cannot hold two.
 - **A 44 px target floor.** The console's controls — a command cell, a production row, a fleet chip — are at least 44 px on the short side at 100% UI scale, because a target sized to its label is one a player with an unsteady hand misses, and §2's console is laid out from it. The strip's readouts cannot clear it at the strip's height, and each is grown toward it as far as its own row allows.
 - **Motion and flash limits** — a reduced-motion mode replaces the sonar sweep, screen-edge exposure flash and meter pulse with static equivalents that carry the same information.
@@ -1911,7 +1926,7 @@ the screen, not a technology.
 | Mono audio | toggle | The mix's existing mono spatialisation — a rendering choice, never a loss (§11) |
 | Visual-first | toggle | Removes the §1.3 fade-in delay so marks arrive at ≤ 30 ms (§11) |
 | Colour vision | standard · deuteranopia · protanopia · tritanopia | The four palettes in [style-neon-noir.md](style-neon-noir.md); tier *shape* never moves, only its ink (§11) |
-| UI scale | 75–200% | A transform on the HUD layer and the DOM panels, never on the world (§11) |
+| UI scale | 75–200% | A transform on the HUD layer and the DOM panels, never on the world, held where the window is too short for it (§11) |
 | Reduced motion | toggle | Static equivalents for the scope sweep, the exposure flash and the crush badge — same information, no movement (§11) |
 | Acoustic veil | 0–100% | How cold the ground goes where nothing of yours is listening (§4.5). Reaches off, because the veil dims no mark and withholds nothing — a player who cannot read a drained chart gives up no information by turning it down |
 | Water density | 0–100% | How much the water hides with distance, and how much marine snow drifts through it (art-direction.md, "Reading the Water"). Reaches off, because distance hides only your own force and the ground it stands on — turning it down reveals, never withholds. The depth ramp does not move |
@@ -1932,8 +1947,8 @@ renderer work rather than mixer work, so each names what it moves:
   resource fields and the fauna colour. It does not swap chrome, biome fills, or any part
   of the fidelity encoding — size, alpha, edge hardness and shape are how a tier is read
   before colour is consulted at all.
-- **UI scale** multiplies the HUD layer and the three DOM panels and leaves the world
-  transform alone, so zooming the interface never zooms the map or changes what is on
+- **UI scale** multiplies the HUD layer and the three DOM panels — by the setting, or by the
+  scale §11 holds it to in a short window — and leaves the world transform alone, so zooming the interface never zooms the map or changes what is on
   screen. The scope, the command bar and the depth ribbon re-lay out against the scaled
   viewport rather than sliding off it, and pointer hits are divided back through the same
   factor — a button that has moved must still be where the click lands. §11 names the SIG
