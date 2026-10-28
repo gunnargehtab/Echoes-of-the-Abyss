@@ -1465,6 +1465,12 @@
   accent-color: var(--neon-magenta);
 }
 
+/* UI scale held to a short window (§11) reads `200% → 132%`, which the 3.5rem
+   column would wrap; only that row widens, and only while it is held. */
+.menu-slider-row.held {
+  grid-template-columns: 8.5rem 1fr 5.6rem;
+}
+
 .menu-slider-value {
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -1720,13 +1726,15 @@
   /* One cap: the room that actually exists between the top strip and the hint
      line — 60 panel units of strip above, and below the console's 208, the
      hint's 20 and 4 of breath, all Pixi-drawn and all scaling with the HUD.
+     `--chrome-units` is that sum, set by GameCanvas from uiScale.ts, which
+     holds the UI scale against the same figure; 292px is today's value.
      A panel allowed past it would cover the line that says why a press did
      nothing, or the console, rather than the water. There was a second cap, a
      38vh share of the screen like the logs' 30% and 18%, and it is gone because
      §2 gives this panel no share: every objective has to be on screen at once
      (§10.5). At 1440x900 it held the body to 313 px while Sorrowgate's rows and
      withheld list wanted 471 from 13:40, so the list sat under the foot (#1593). */
-  max-height: calc(100vh / var(--ui-scale, 1) - 292px);
+  max-height: calc(100vh / var(--ui-scale, 1) - var(--chrome-units, 292px));
   display: flex;
   flex-direction: column;
   border: 1px solid color-mix(in srgb, var(--neon-magenta) 45%, transparent);
@@ -1762,10 +1770,11 @@
 
 /* The rows set their own type against `--panel-type` (GameCanvas says why):
    above 100% UI scale a panel's type grows by the square root of the scale, so
-   the panel keeps roughly twice the rows it otherwise would. `overflow-y` is the
-   backstop rather than the plan — §2 requires this panel to fit, and it does at
-   every scale the setting offers; a scrollbar here means a mission has authored
-   more rows than any screen can hold, and clipping them would be worse. */
+   the panel keeps roughly twice the rows it otherwise would, and where that is
+   still too many `MissionPanel` sets a smaller `--panel-type` on this panel
+   alone, down to the 75% setting's type (panelFit.ts, #1634). `overflow-y` is
+   the backstop rather than the plan: a scrollbar here means the rows outgrew
+   the room even at that floor, and clipping them would be worse. */
 .objectives-body {
   overflow-y: auto;
   padding-bottom: 2px;

@@ -30,6 +30,14 @@ import {
   type Settings,
 } from '../settings/store.ts';
 import type { TrimBus } from '../audio/engine.ts';
+import { heldUiScale } from '../game/uiScale.ts';
+
+/** The window's height, as a store `useSyncExternalStore` can read. */
+const subscribeResize = (listener: () => void) => {
+  window.addEventListener('resize', listener);
+  return () => window.removeEventListener('resize', listener);
+};
+const windowHeight = () => window.innerHeight;
 
 export interface SettingsScreenProps {
   onBack(): void;
@@ -68,6 +76,13 @@ export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
   // the choice, and this screen is where the SPEC has it say so.
   const haloState = useSyncExternalStore(subscribeLampHaloStatus, lampHaloStatus, lampHaloStatus);
   const haloUnavailable = lampHaloUnavailableReason(haloState);
+  // The same for the UI scale: a window too short for the setting draws less
+  // of it and keeps the setting (docs/ui-ux.md §11), and a value that read
+  // 200% over a HUD drawn at 132% would hide the difference rather than say it.
+  const drawnScale = heldUiScale(
+    settings.uiScale,
+    useSyncExternalStore(subscribeResize, windowHeight, windowHeight)
+  );
 
   const patch = (change: Partial<Omit<Settings, 'version'>>) => {
     setSettings(saveSettings(change));
@@ -204,8 +219,8 @@ export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
           </fieldset>
 
           <label
-            className="menu-slider-row"
-            title="The interface only — the map keeps its own zoom"
+            className={drawnScale < settings.uiScale ? 'menu-slider-row held' : 'menu-slider-row'}
+            title="The interface only — the map keeps its own zoom, and a window too short for it draws it smaller"
           >
             <span className="menu-slider-label">UI scale</span>
             <input
@@ -216,7 +231,11 @@ export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
               value={Math.round(settings.uiScale * 100)}
               onChange={(event) => patch({ uiScale: Number(event.target.value) / 100 })}
             />
-            <span className="menu-slider-value">{percent(settings.uiScale)}</span>
+            <span className="menu-slider-value">
+              {drawnScale < settings.uiScale
+                ? `${percent(settings.uiScale)} → ${percent(drawnScale)}`
+                : percent(settings.uiScale)}
+            </span>
           </label>
 
           <label

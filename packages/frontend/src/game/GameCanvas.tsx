@@ -56,6 +56,7 @@ import type { WebGLRenderer } from 'three';
 import type { createWaterEnvironment } from './modelLighting.ts';
 import type { Client } from '@colyseus/sdk';
 import { loadSettings, subscribeSettings, type Settings } from '../settings/store.ts';
+import { CHROME_UNITS, heldUiScale, panelType } from './uiScale.ts';
 
 /** Longest log a player will ever scroll back through. */
 const MAX_LOG_ENTRIES = 300;
@@ -64,32 +65,16 @@ const MAX_LOG_ENTRIES = 300;
 const hex = (color: number) => `#${color.toString(16).padStart(6, '0')}`;
 
 /**
- * How much smaller a floating panel's own type is set than the panel it sits
- * in — docs/ui-ux.md §2 and §11.
- *
- * The panels scale by a transform, so at 200% each one covers four times the
- * area while the screen between the top strip and the console stays the size
- * it was. The orders panel loses that argument outright: at 200% on a 900 px
- * screen it has about 182 panel units of room for 444 units of rows, which is
- * not a layout to be tuned but arithmetic, and §2 does not let it scroll.
- *
- * So above 100% the type inside a panel grows by the square root of the scale
- * rather than by the scale. At 200% the reader still gets type about 1.4x the
- * size it was — magnification that is worth asking for — while the panel holds
- * roughly twice the rows it otherwise would. Below 100% it is 1: shrinking the
- * HUD is a request for more room and the panels already give it.
- */
-export const panelType = (uiScale: number) => (uiScale <= 1 ? 1 : Math.sqrt(uiScale) / uiScale);
-
-/**
  * What the DOM half of the interface needs from the settings the renderer
- * already applied: the UI scale and the four tier inks.
+ * already applied: the UI scale, the chrome it is held against, and the four
+ * tier inks.
  */
 function cssVariables(uiScale: number, palette: PaletteName): CSSProperties {
   const { tier } = paletteFor(palette);
   return {
     '--ui-scale': uiScale,
     '--panel-type': panelType(uiScale),
+    '--chrome-units': `${CHROME_UNITS}px`,
     '--tier-1': hex(tier[ResolutionTier.Contact].color),
     '--tier-2': hex(tier[ResolutionTier.Bearing].color),
     '--tier-3': hex(tier[ResolutionTier.Classification].color),
@@ -262,13 +247,14 @@ export function GameCanvas({
    */
   const [readouts, setReadouts] = useState<ReadoutBox[]>([]);
   /**
-   * §11's UI scale, mirrored into React for the DOM half of the interface.
+   * §11's UI scale as drawn — the setting, held to the window (uiScale.ts) —
+   * mirrored into React for the DOM half of the interface.
    *
    * The Pixi HUD is scaled by the renderer; the contact log, the objectives
    * panel and the mission log are DOM, so they take the same factor through a
    * CSS variable. Both halves must move together or the interface would be two
-   * sizes at once. React owns this because it changes on a settings event, not
-   * on a frame.
+   * sizes at once. React owns this because it changes on a settings event or a
+   * resize, not on a frame.
    */
   const [uiScale, setUiScale] = useState(1);
   /**
@@ -812,9 +798,17 @@ export function GameCanvas({
         // view runs its capability check on the way on and may refuse.
         perspective.setLampHalos(settings.lampHalos);
         activeRenderer.setEdgeScroll(settings.edgeScroll);
-        activeRenderer.setUiScale(settings.uiScale);
-        setUiScale(settings.uiScale);
+        applyScale(settings.uiScale);
       };
+      // One held factor for the renderer and the DOM alike (uiScale.ts), held
+      // against the window's height, so a resize holds it again.
+      const applyScale = (setting: number) => {
+        const held = heldUiScale(setting, window.innerHeight);
+        activeRenderer.setUiScale(held);
+        setUiScale(held);
+      };
+      onResize = () => applyScale(loadSettings().uiScale);
+      window.addEventListener('resize', onResize);
       applySettings(loadSettings());
       // The esc menu (#187) writes settings while a match is on screen; this
       // subscription is what makes those writes apply live.
@@ -857,12 +851,14 @@ export function GameCanvas({
     };
 
     let unsubscribeSettings: (() => void) | null = null;
+    let onResize: (() => void) | null = null;
     void start();
 
     return () => {
       cancelled = true;
       joinRef.current = null;
       unsubscribeSettings?.();
+      if (onResize !== null) window.removeEventListener('resize', onResize);
       client?.disconnect();
       clientRef.current = null;
       renderer?.destroy();

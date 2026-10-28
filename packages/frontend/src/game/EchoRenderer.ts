@@ -239,6 +239,7 @@ import {
 } from './contactColumn.ts';
 import { clipPolygon, clipSegment } from './rimClip.ts';
 import { scopeBox } from './scopeBox.ts';
+import { CONSOLE_HEIGHT, HINT_LINE_HEIGHT, TOP_BAR_HEIGHT } from './uiScale.ts';
 
 /**
  * An order the player gave that the server has not yet echoed back
@@ -938,22 +939,8 @@ export function yieldToCells<T extends { yieldRank?: number }>(
 /** Command panel geometry, CSS px. docs/art-direction.md "HUD Layout". */
 const TAB_HEIGHT = 24;
 
-/**
- * The console, from docs/concept-art/hud-mockups/ — the direction chosen for
- * the in-match interface.
- *
- * It replaces an 80 px bar of one button row under a tab strip with a 208 px
- * console of fixed blocks, which is a real cost in ocean and is paid for by
- * what the blocks hold: nothing sits behind a tab, so production stops being
- * something a commander has to go and look for.
- *
- * 208 is a *pixel* height rather than a fraction, like the bar it replaces, so
- * a short window gives up proportionally more of itself — 19% of a 1080p frame
- * and 23% of a 900px one. That is inherent to a console whose rows have a
- * minimum size (§11's 44 px target floor is what sets it), and `uiScale` is the
- * knob for wanting it bigger rather than the window height.
- */
-const CONSOLE_HEIGHT = 208;
+// The console's height, the strip's and the hint line's live in uiScale.ts,
+// which holds the UI scale against their sum.
 /** Breathing room between the console's own edge and its blocks. */
 const CONSOLE_PAD = 8;
 /** A block's cyan header band — the plate VI card's rule 3. */
@@ -978,8 +965,6 @@ const BLOCK_W = {
   commands: 380,
   productionMin: 240,
 } as const;
-/** Top resource strip. */
-const TOP_BAR_HEIGHT = 52;
 
 /**
  * How far a readout's control reaches past its glyphs, each side (#724).
@@ -8255,7 +8240,7 @@ export class EchoRenderer {
       if (cut < 0) break;
       this.selectionLabel.text = this.selectionLabel.text.slice(0, cut);
     }
-    this.selectionLabel.position.set(hintX, this.hudHeight() - CONSOLE_HEIGHT - 20);
+    this.selectionLabel.position.set(hintX, this.hudHeight() - CONSOLE_HEIGHT - HINT_LINE_HEIGHT);
 
     if (this.missionOver !== null) {
       // Checked first, and never falling through to the match banner below:

@@ -21,8 +21,9 @@
  * the hold ends on, and the match clock the strip already prints.
  */
 
-import { useId, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { remaining, stamp } from './clock.ts';
+import { fitPanel } from './panelFit.ts';
 import {
   ObjectiveStatus,
   type BoundSig,
@@ -181,13 +182,33 @@ export function MissionPanel({
   const locksOpen = foldedOver !== locksKey;
   const lockListId = useId();
 
+  // §2: every row on screen at once, at every UI scale. Refitted after every
+  // render, since a row, a gloss or the fold can each change the height, and
+  // on a resize, which changes the room (panelFit.ts says why it is the type).
+  const panelRef = useRef<HTMLElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (panelRef.current !== null && bodyRef.current !== null) {
+      fitPanel(panelRef.current, bodyRef.current);
+    }
+  });
+  useEffect(() => {
+    const refit = () => {
+      if (panelRef.current !== null && bodyRef.current !== null) {
+        fitPanel(panelRef.current, bodyRef.current);
+      }
+    };
+    window.addEventListener('resize', refit);
+    return () => window.removeEventListener('resize', refit);
+  }, []);
+
   const markerFor = (objective: ObjectiveView) =>
     objective.markerId === undefined
       ? undefined
       : view.markers.find((marker) => marker.id === objective.markerId);
 
   return (
-    <section className="objectives" aria-label="Objectives">
+    <section ref={panelRef} className="objectives" aria-label="Objectives">
       <header className="objectives-title">
         <span>ORDERS</span>
         {/* Two different numbers can stand here, and which one depends on
@@ -239,7 +260,7 @@ export function MissionPanel({
         <span className="objectives-ceiling">{sigReading(view, boundSig)}</span>
       </header>
 
-      <div className="objectives-body" role="status" aria-live="polite">
+      <div ref={bodyRef} className="objectives-body" role="status" aria-live="polite">
         {view.objectives.length === 0 && <p className="objectives-empty">no orders</p>}
         {view.objectives.map((objective) => {
           const marker = markerFor(objective);
