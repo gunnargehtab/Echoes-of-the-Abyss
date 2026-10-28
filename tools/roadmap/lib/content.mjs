@@ -577,6 +577,7 @@ export const items = {
   1594: 'The prologue never saying the way north is the service lock',
   1613: 'A kind, plain message when the server is down, and the same care for the game’s other failure screens',
   1617: 'Names for the other missions’ markers on the chart',
+  1662: 'A marker’s name sometimes covering a ship, and sometimes missing when its ring is very wide',
   1619: 'Tend’s orders panel hiding its list of withheld orders late in the mission',
   1621: 'Conclave Chord’s orders panel cutting off its last rows late in the mission',
   1634: 'Sorrowgate’s orders panel spilling out of the room at larger interface sizes',

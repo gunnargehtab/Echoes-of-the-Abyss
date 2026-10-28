@@ -912,6 +912,7 @@ is tagged from a green `main`.
 | Prologue: nothing says the way north is the service lock | [#1594](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1594) |
 | Professionalising the game: a kind message when the server is down | [#1613](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1613) |
 | Naming the other missions’ markers on the chart | [#1617](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1617) |
+| A marker’s name sitting on a hull, or missing for a wide ring | [#1662](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1662) |
 | Tend’s orders panel hiding its withheld list | [#1619](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1619) |
 | Conclave Chord’s orders panel hiding its last rows | [#1621](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1621) |
 | Sorrowgate’s orders panel outgrowing the room at large UI scales | [#1634](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1634) |
