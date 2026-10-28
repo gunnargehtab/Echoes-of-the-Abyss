@@ -49,6 +49,56 @@ proxy under one host name, and `.github/workflows/deploy.yml` ships each green
 commands and the environment variables, including `CORS_ORIGIN`, which the
 server refuses to start without when `NODE_ENV=production`.
 
+## Audio assets: size budget and loading
+
+The client ships no audio file. Every voice, bed and cue is synthesised in code
+([audio-direction.md](audio-direction.md) §12), and the score is built the same way. This
+section is the budget a file must fit when the first one comes, whether a sample bank or a
+recorded line (audio-direction §13, "The cast"). The owner set it in #1601, before any file exists, so that
+the first asset meets a limit rather than setting one.
+
+For scale, the built client was about 20 MB uncompressed on 26 October 2026: 11 MB in 121
+GLBs, 2.4 MB of JavaScript, and textures for the rest. Audio is the one part of that the
+game is required to work without (audio-direction §11: playable muted), so it is the one part that never
+makes a player wait.
+
+| Tier | Cap | What it holds |
+| --- | --- | --- |
+| Before the first match | **0 MB** | Nothing. No audio file is on the path to a playable match |
+| Per match, fetched behind it | **1 MB** | That mission's recorded lines and the banks its factions and biome use |
+| The library on the host, per format | **15 MB** | Every recorded line and every bank |
+
+**The rates.** Speech is mono Opus at 24 kbps. Opus speech is already clear at that rate, and it keeps the whole cast
+under 10 MB.
+Banks are mono Opus at 64 kbps, since fauna and impacts carry content above the voice band.
+At those rates the 233 `say` beats, about 42 minutes at audio-direction §13's reading rate, come to 7.6 MB,
+and a performance that runs to 55 minutes comes to 9.9 MB. That leaves 5 MB of the library
+for banks, which at 64 kbps is about ten minutes of one-shots. A mission authors at most 15
+lines, about 0.5 MB, so the per-match cap holds a mission's speech with half of it left for
+its banks.
+
+**The loading story.** A file is optional at every step:
+
+- Nothing audio is fetched until the match has started. The fetch runs at low priority
+  behind the match's own traffic and stops at the per-match cap.
+- Until a line's file arrives, the synthesised voice reads it: the hail and the murmur bed,
+  exactly as audio-direction §13 built them. A file that arrives after its line has begun waits for the next
+  line. A line never changes voice partway through.
+- A fetch that fails is silent. The synthesised voice stays, and nothing retries inside the
+  match.
+- Files carry content-hashed names, as Vite already gives every built asset, so the browser
+  caches each one once and a changed file is a new name.
+
+**The format.** Each client fetches one format, never both. It probes
+`canPlayType('audio/webm; codecs="opus"')` once at start-up, takes Opus if the answer is not
+empty, and takes the AAC fallback in MP4 otherwise. The fallback therefore doubles what the
+host stores, not what a player downloads, and the 15 MB cap binds each format on its own.
+Before the first file ships, check whether any browser the game supports still lacks Opus in
+WebM. If none does, drop the fallback, changing audio-direction §12's "Format" row first.
+
+Nothing enforces these caps yet, since there is nothing to measure. The pull request that
+adds the first file adds the check that fails the build over a cap.
+
 ## Echo Layer Implementation Notes
 
 Detection (see [systems-echo.md](systems-echo.md)) is **server-authoritative and per-player** — in a game about hidden information, a client-side maphack is the whole threat model, so acoustic resolution tiers must be computed server-side and only the resolved result sent to each client.
