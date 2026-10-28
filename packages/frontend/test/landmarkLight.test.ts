@@ -370,6 +370,43 @@ describe('the layer’s sequence', () => {
     }
   });
 
+  it('flips the pools and the glass for the harness, and tells it where the lamps stand', async () => {
+    const template = buildLandmarkTemplate(await parseArch(), SPEC, 'sorrowgate');
+    primeLandmarkTemplate(template, 'sorrowgate');
+    try {
+      const layer = new EnvironmentLayer('sorrowgate');
+      layer.setLandmarks([ARCH]);
+      stand(layer, sorrowgate());
+      const u = template.uniforms!;
+      assert.equal(u.uPoolCount.value, LAMP_COUNT);
+      assert.deepEqual(layer.setStudySwitches({ pools: false }), { pools: false, lamps: true });
+      assert.equal(u.uPoolCount.value, 0, 'pools off at once');
+      layer.setStudySwitches({ pools: true, lamps: false });
+      assert.equal(u.uPoolCount.value, LAMP_COUNT);
+      layer.tick(BUCKET_MS * 7);
+      assert.deepEqual(
+        Array.from(u.uLampLevel.value),
+        [0, 0, 0, 0],
+        'the glass dark on the next bucket'
+      );
+      layer.setStudySwitches({ lamps: true });
+      layer.tick(BUCKET_MS * 8);
+      assert.ok(Array.from(u.uLampLevel.value).every((l) => l > 0));
+      // The lamps in world units: the anchor plus each glass centre, at the
+      // literal's floor plus its height.
+      const lamps = layer.lampPositions();
+      const centres = lampCentres(template.states.intact);
+      assert.equal(lamps.length, centres.length);
+      lamps.forEach((at, i) => {
+        assert.ok(Math.abs(at.x - (ARCH.anchorXM + centres[i]!.x)) < 1e-3);
+        assert.ok(Math.abs(at.z - (ARCH.anchorYM + centres[i]!.z)) < 1e-3);
+        assert.ok(Math.abs(at.y - (-352 + centres[i]!.y)) < 1e-3);
+      });
+    } finally {
+      resetLandmarkModels();
+    }
+  });
+
   it('holds the lamps steady and the sway still under reduced motion, and steps them otherwise', async () => {
     const template = buildLandmarkTemplate(await parseArch(), SPEC, 'sorrowgate');
     primeLandmarkTemplate(template, 'sorrowgate');

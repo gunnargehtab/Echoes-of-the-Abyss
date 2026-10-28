@@ -1670,6 +1670,7 @@ export class PerspectiveView {
     this.renderer?.domElement.remove();
     this.renderer = null;
     delete (window as unknown as { __perspectiveProbe?: unknown }).__perspectiveProbe;
+    delete (window as unknown as { __archStudy?: unknown }).__archStudy;
     delete (window as unknown as { __perspectiveStation?: unknown }).__perspectiveStation;
     delete (window as unknown as { __perspectiveCamera?: unknown }).__perspectiveCamera;
     delete (window as unknown as { __perspectiveLamps?: unknown }).__perspectiveLamps;
@@ -4729,6 +4730,13 @@ export class PerspectiveView {
   private exposeProbe(): void {
     (window as unknown as { __perspectiveProbe?: () => unknown }).__perspectiveProbe = () =>
       this.probeReading();
+    // The arch study's switches (environmentLayer.ts `setStudySwitches`),
+    // for the §9 readings that need the pools or the glass alone (#1637).
+    (
+      window as unknown as {
+        __archStudy?: (s: Partial<{ pools: boolean; lamps: boolean }>) => unknown;
+      }
+    ).__archStudy = (switches) => this.environment.setStudySwitches(switches ?? {});
 
     // The station boundary gate 6's drive walks. It closes the station being
     // measured, hands back its reading, and opens the next one — one call
@@ -5038,6 +5046,15 @@ export class PerspectiveView {
       // The prop layer's own ledger (gate 6): a prop regression is a
       // number, not an impression.
       ...this.environment.stats(),
+      // The arch study's own rows (#1637): whether its debris is still coming
+      // down, and its lamps' screen positions, so a capture can read the lamp
+      // glass and the lit stone round each one.
+      collapsing: this.environment.collapsing,
+      landmarkLampsPx: this.environment.lampPositions().map((at) => {
+        const out: ProjectedPoint = { x: 0, y: 0, pxPerM: 0, visible: false };
+        this.projectWorld(PROJECT_TMP.copy(at), out);
+        return { x: out.x, y: out.y };
+      }),
       modelBacked:
         [...this.unitHandles.values()].filter((h) => h.model !== null).length +
         [...this.structureHandles.values()].filter((h) => h.model !== null).length,

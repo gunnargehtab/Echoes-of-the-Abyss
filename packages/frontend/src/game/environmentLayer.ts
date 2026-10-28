@@ -128,6 +128,15 @@ export class EnvironmentLayer {
   private lastStates = new Map<string, LandmarkState>();
   /** The sonar bucket the lamps were last stepped on. */
   private lampBucket = -1;
+  /**
+   * The study's development switches (§9: "Read C's GPU time with the pools
+   * on and off", and the lamp-glass and lit-stone readings, which need each
+   * alone): pools off zeroes every pool, lamps off darkens the glass. Both on
+   * is the study; the harness flips them through the view's probe hook.
+   */
+  private switches = { pools: true, lamps: true };
+  /** The lit landmarks standing, with their stands, for the lamp positions the probe projects. */
+  private litStands: { template: LandmarkTemplate; stand: LandmarkStand }[] = [];
   /** The collapse's clock, milliseconds on the bucket, while the debris falls; null at rest. */
   private fallStartedMs: number | null = null;
   private falling = false;
@@ -197,6 +206,7 @@ export class EnvironmentLayer {
       this.lastStates.set(stand.landmark.slug, stand.state);
       if (template.uniforms === null) continue;
       this.lit.push(template);
+      this.litStands.push({ template, stand });
       const state = template.states[stand.state];
       const { landmark } = stand;
       const originY = depthToWorldY(landmark.originFloorM);
@@ -205,7 +215,9 @@ export class EnvironmentLayer {
       // is switched with the state and the lamps go dark on this rebuild —
       // the first bucket after the cells turned to rock.
       template.uniforms.uPoolCount.value =
-        stand.state === 'intact' ? Math.min(state.nodes.size, LAMP_COUNT, lampCount(state)) : 0;
+        stand.state === 'intact' && this.switches.pools
+          ? Math.min(state.nodes.size, LAMP_COUNT, lampCount(state))
+          : 0;
       for (const at of siftSites(state, stand.state).slice(0, SIFT_SITE_CAP[stand.state])) {
         const [x, z] = turned(at.x, at.z, landmark.yawRad);
         sifts.push({
@@ -408,6 +420,8 @@ export class EnvironmentLayer {
         for (let i = 0; i < uniforms.uPoolCount.value; i++) {
           uniforms.uPool.value[i * 4 + 3] = uniforms.uLampLevel.value[i]!;
         }
+        // The harness's switch: the glass dark, so the lit stone can be read alone.
+        if (!this.switches.lamps) uniforms.uLampLevel.value.fill(0);
       }
       uniforms.uHangTime.value = this.reducedMotion ? SWAY_HOLD_S : stepped / 1000;
       uniforms.uFallT.value = fallT;
@@ -500,6 +514,40 @@ export class EnvironmentLayer {
   }
 
   /**
+   * Flip the study's development switches (above); the pools take effect on
+   * this call, the glass on the next bucket. Returns the switches as they
+   * stand, so a harness can read them too.
+   */
+  setStudySwitches(switches: Partial<{ pools: boolean; lamps: boolean }>): {
+    pools: boolean;
+    lamps: boolean;
+  } {
+    this.switches = { ...this.switches, ...switches };
+    for (const { template, stand } of this.litStands) {
+      if (template.uniforms === null) continue;
+      template.uniforms.uPoolCount.value =
+        stand.state === 'intact' && this.switches.pools ? lampCount(template.states.intact) : 0;
+    }
+    this.lampBucket = -1;
+    return { ...this.switches };
+  }
+
+  /** Where the lit landmarks' lamps stand, world units, for the probe to project. */
+  lampPositions(): Vector3[] {
+    const out: Vector3[] = [];
+    for (const { template, stand } of this.litStands) {
+      if (stand.state !== 'intact') continue;
+      const { landmark } = stand;
+      const originY = depthToWorldY(landmark.originFloorM);
+      for (const at of lampCentres(template.states.intact)) {
+        const [x, z] = turned(at.x, at.z, landmark.yawRad);
+        out.push(new Vector3(landmark.anchorXM + x, originY + at.y, landmark.anchorYM + z));
+      }
+    }
+    return out;
+  }
+
+  /**
    * Stand nothing, and let no template still loading stand anything again: a
    * session's ground let go (`PerspectiveView.clearTerrain`, #1460). The next
    * `rebuild` starts the layer afresh.
@@ -535,6 +583,7 @@ export class EnvironmentLayer {
     this.haze.clear();
     this.sift.clear();
     this.lit = [];
+    this.litStands = [];
     this.props = 0;
     this.propTris = 0;
     this.landmarksStanding = 0;

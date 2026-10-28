@@ -21,6 +21,10 @@
  * REDUCED_MOTION=1 starts the browser preferring reduced motion, which the
  * game takes as its default (docs/ui-ux.md §11): the camera sway, the snow
  * and the collar crackle hold still, so two shots of one view match.
+ * SETTINGS_JSON='{"palette":"deuteranopia"}' seeds the page's stored settings
+ * before it boots (settings/store.ts reads `echoes.settings` once), which is
+ * how a capture takes a colour-vision palette: the settings panel is Pixi,
+ * so no selector reaches it (#1637).
  *
  * With no --steps it runs the default smoke: connect, select a unit, ping.
  * A steps file is an ES module with `export default async ({ page, shot }) => {...}`.
@@ -123,13 +127,20 @@ const browser = await chromium.launch({
   headless: !HEADED,
   ...(CHANNEL === null ? {} : { channel: CHANNEL }),
 });
-const page = await (
-  await browser.newContext({
-    viewport: { width: Number(process.env.VIEW_W ?? 1440), height: Number(process.env.VIEW_H ?? 900) },
-    deviceScaleFactor: Number(process.env.VIEW_DPR ?? 1),
-    ...(process.env.REDUCED_MOTION === '1' ? { reducedMotion: 'reduce' } : {}),
-  })
-).newPage();
+const context = await browser.newContext({
+  viewport: { width: Number(process.env.VIEW_W ?? 1440), height: Number(process.env.VIEW_H ?? 900) },
+  deviceScaleFactor: Number(process.env.VIEW_DPR ?? 1),
+  ...(process.env.REDUCED_MOTION === '1' ? { reducedMotion: 'reduce' } : {}),
+});
+if (process.env.SETTINGS_JSON) {
+  // Merged over the store's defaults by the page itself: an unknown key is
+  // dropped there, so a typo here seeds nothing rather than something wrong.
+  const seed = JSON.parse(process.env.SETTINGS_JSON);
+  await context.addInitScript((settings) => {
+    window.localStorage.setItem('echoes.settings', JSON.stringify(settings));
+  }, seed);
+}
+const page = await context.newPage();
 
 const errors = [];
 page.on('console', (m) => {

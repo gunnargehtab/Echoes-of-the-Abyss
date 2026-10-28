@@ -2027,6 +2027,10 @@ export class EchoRenderer {
   private detachInput: (() => void) | null = null;
 
   constructor(callbacks: RendererCallbacks, app: Application = new Application()) {
+    // Read-only telemetry for the harness, beside the conn view's probes: the
+    // newest snapshot's tick, so a capture can take two sessions at one
+    // mission time (docs/sorrowgate-arch-study.md §9, #1637).
+    (window as unknown as { __echoClock?: () => number }).__echoClock = () => this.lastTick;
     this.callbacks = callbacks;
     this.app = app;
   }
@@ -9486,6 +9490,7 @@ export class EchoRenderer {
   }
 
   destroy(): void {
+    delete (window as unknown as { __echoClock?: unknown }).__echoClock;
     this.destroyed = true;
     this.detachInput?.();
     this.detachInput = null;
