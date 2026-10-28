@@ -21,6 +21,24 @@ triangles, and the landmark's own ledger (`landmarks`, `landmarkTris`).
 | L, low court (focus 2550, 2750 at 1,450 m; dolly 650; pitch 12°, yaw 0) | `a-L-court-on.png` | `a-L-court-off.png` | The opening framed between the piers behind the flight; calls 64 against 60 |
 | S, survey (focus 2500, 2000 on the seabed; dolly 6,500; pitch 55°, yaw 0) | `a-S-survey-on.png` | `a-S-survey-off.png` | Its HUD clock reads T+12:00, after the 10:40 ground change: the landmark reads ruined, 732 triangles, and props stand 198 at 50,356, the collapse's count. The off half's S came before 10:40 (its clock reads T+10:26) and read 186. The `file` fields in both JSONs name the frames as committed here |
 
-No light and no motion yet: the lamps are the model's own emissive at the licence's
-level, with no pool, no flicker, no sift, no sway and no collapse sequence. Those are
-increment B, and the §9 pairs, clips and readings are increment C.
+Increment A alone drew no light and no motion: the lamps were the model's own emissive at
+the licence's level, with no pool, no flicker, no sift, no sway and no collapse sequence.
+
+## Increment B — light and motion (`b-*`)
+
+The study's licence on the landmark alone: the four lamps' guttering and their pools on the
+arch's own stone, the hung fittings' sway, the silt sift, and the collapse sequence on the
+received ground change. `b-readings.json` carries each frame's probe, with `siftMotes` and
+`cloudMotes` beside the landmark's ledger. The study's calls standing are five: four for
+the landmark and one for the sift (H read 56 against increment A's 55, and the ruin 45
+against 42 with the cloud gone).
+
+| Frame | Pose | Read |
+| --- | --- | --- |
+| `b-C-escorts-a.png`, `b-C-escorts-b.png` | C, 3 s apart | The ribs, the rail and the hung fittings over the escorts; the sift's 256 motes stand. The pools are faint at this exposure and the fittings' 1.5 m is under a pixel at this dolly: the §9 pixel readings and clips are increment C's |
+| `b-T-before.png` | H's pose, T+10:22 | The intact arch, lamps lit, the flight under it |
+| `b-T-after-0.4s.png` … `b-T-after-16s.png` | H's pose, the first probe reads after the ruined state | The arch gone into the wall, the lamps dark from the first frame, the landmark 732 triangles; the cloud's 384 motes stand in the first two frames and are gone by the third (the software rasteriser took longer between shots than their names say), and the sift stands on the ruin's four sites. The ruin itself is a dark line against the dark wall from this pose: C's station after the change is increment C's |
+
+The clips §9 asks for are not here: this container draws through SwiftShader at a few
+frames a second, so a clip from it would be a slideshow. They are increment C's, on a
+machine with a GPU, with the pixel readings and the performance stations.
