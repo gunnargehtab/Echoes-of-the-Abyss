@@ -95,23 +95,24 @@ frame and 20 in the other.
 
 ### The transit pair and the reload
 
-At C's pose, on one session through the 10:40 change (`c-T-*.png`, `c-readings-collapse2.json`); the matching intact frame at C before the change is `b-C-escorts-a.png`, from increment B's session:
+At C's pose, on one session through the 10:40 change (`c-T-*.png`, `c-readings-collapse.json`):
 
 | Frame | Tick | Landmark | Sift | Cloud | Calls |
 | --- | --- | --- | --- | --- | --- |
-| `c-T-after-C-fall.png` | 38556 | ruined, 732, debris still falling | 256 | 384 | 37 |
-| `c-T-after-C-0s.png` | 38892 | ruined, 732 | 256 | 384 | 38 |
-| `c-T-after-C-2s.png` | 39324 | ruined, 732 | 256 | 384 | 38 |
-| `c-T-after-C-6s.png` | 39852 | ruined, 732 | 256 | 0 | 38 |
-| `c-T-after-C-15s.png` | 40692 | ruined, 732 | 256 | 0 | 38 |
-| `c-T-reload-C.png` | 41856 | ruined, 732 | 256 | 0 | 37 |
+| `c-T-before-C.png` | 37704 | intact, 2,412 | 256 | 0 | 36 |
+| `c-T-after-C-0s.png` | 38496 | ruined, 732 | 256 | 384 | 37 |
+| `c-T-after-C-2s.png` | 38808 | ruined, 732 | 256 | 384 | 38 |
+| `c-T-after-C-6s.png` | 39240 | ruined, 732 | 256 | 384 | 38 |
+| `c-T-after-C-15s.png` | 39984 | ruined, 732 | 256 | 0 | 38 |
+| `c-T-reload-C.png` | 41016 | ruined, 732 | 256 | 0 | 37 |
 
-The lamps are dark from the first ruined frame (the ruined state stands no glass and the pool
-count is zero), the cloud's 384 motes stand in the first two frames and are gone by the third
-(the rasteriser's screenshots stretch the named seconds), and the ruin's four sift sites
-carry the sift on. The reload row is the same session rejoined through the parked
-reconnection token after the change: the probe read the ruined state, no cloud and no
-sequence on its first frame (`atOnce` in the JSON), as gate 1's join clause requires.
+The before frame is T+10:28, the first after frame T+10:41, the first the probe read after
+the change on this rasteriser. The lamps are dark from that frame (the ruined state stands
+no glass and the pool count is zero), the cloud's 384 motes stand in the first three frames
+and are gone by the fourth, and the ruin's four sift sites carry the sift on. The reload row
+is the same session rejoined through the parked reconnection token after the change: the
+probe read the ruined state, no cloud and no sequence on its first frame (`atOnce` in the
+JSON), as gate 1's join clause requires.
 
 ### Not taken here
 
