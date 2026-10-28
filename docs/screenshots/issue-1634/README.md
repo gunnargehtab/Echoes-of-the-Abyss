@@ -34,3 +34,7 @@ to.
 window, from `settings.mjs` run as a drive's `--steps` (`VIEW_W=1366 VIEW_H=768`). The row
 reads `200% → 132%` on one line; the drive printed
 `{"text":"200% → 132%","spanHeight":22,"overflowX":0}` and the HUD's `--ui-scale` as 1.315.
+
+In that frame the UI scale row's track ends short of its neighbours'. The value column widens
+on that row only, and only while the scale is held, so the screen is unchanged whenever the
+window carries the setting; a wider column on every row would shorten every track for one case.

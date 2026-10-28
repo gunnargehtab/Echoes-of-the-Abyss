@@ -51,7 +51,10 @@ export const TOP_BAR_HEIGHT = 52;
 /** The hint line over the console — why a press did nothing (§2). */
 export const HINT_LINE_HEIGHT = 20;
 
-/** Between the strip's foot and a floating panel's head: `.objectives`' top is the strip and this. */
+/**
+ * Between the strip's foot and a floating panel's head. App.css restates the
+ * strip and this as the `60px` in `.objectives`' and the contact log's `top`.
+ */
 const PANEL_GAP = 8;
 
 /** Between a floating panel's foot and the hint line. */
