@@ -45,7 +45,9 @@
  * GLTFLoader decomposes back into position, rotation and scale:
  * - `hang_0` … `hang_5` (intact): a mesh whose origin is its pivot at the
  *   top, the cable and the fitting hanging below in local space, the node
- *   at the pivot's world point. The runtime sways it about that pivot.
+ *   at the pivot's world point — on the loft's own soffit or the shelf's
+ *   underside, the cable's top sunk 0.4 m into it so `contacts.mjs` lists
+ *   each against what it hangs from. The runtime sways it about that pivot.
  * - `lamp_0` … `lamp_3` (intact): a mesh at its glass's centre, the glass
  *   centred in local space, so a pool centred on the node is centred on
  *   the glass. Its housing (`lamp_N_housing`, structure_rib) is world-built.
@@ -70,27 +72,34 @@
  *   y 20 to 100 over X 200–270, the west from 45 to 100 over X −255 to
  *   −205. Foundations in three steps from y −30 to 0, the outer X face
  *   flush with the plan at ±285 and each step 2 m wider toward the opening.
- * - The span, `span`: one loft of ten-cornered sections along X, Z ±72,
- *   top 150, the course above 138 set in 1.5 m. Its soffit is 110 at the
- *   piers and 120 at the crown (110 + 10 (1 − (x/185)²)), 110 over the
- *   piers. On the south face the section steps back 7 m where the cladding
- *   has fallen: X 60–270 up to y 132, and X −160 to −110 up to 126.
- * - The frame, `rib_*` and `girt_*` (structure_rib): 17 ribs at 12.5 m
- *   pitch over X 66–266, 2.4 by 3.5 m, standing in the recess 1.5 m proud
- *   of its back; the six over the east pier's recess run from y 20 to 132
- *   through the capital, the rest from the soffit to 132. Five more in the
+ * - The span, `span`: one loft of fourteen-cornered sections along X,
+ *   Z ±72. Its soffit is 110 at the springing over each pier and rises to
+ *   130 at the crown (110 + 20 (1 − (x/185)²), a polyline over 23
+ *   stations), under 20 m of masonry at the crown; the top is a deck at
+ *   150 over Z ±36 with a 3 m step down to ledges at 147, and the course
+ *   above 142 is set in 1.5 m. On the south face the section steps back
+ *   7 m where the cladding has fallen: X 60–270 up to y 138, and X −160
+ *   to −110 up to 134. Anything seated on the soffit uses `loftSoffit`,
+ *   the loft's own height between stations, not the curve's.
+ * - The frame, `rib_*` and `girt_*` (structure_rib): 19 ribs at 11 m
+ *   pitch over X 64–262, 3 by 3.5 m, standing in the recess 1.5 m proud
+ *   of its back; the six over the east pier's recess run from y 20 to 138
+ *   through the capital, the rest from the soffit to 138. Four more in the
  *   west patch and five in the west pier's recess. Girts behind them.
- * - The transit line at the springing (structure_rib): `rail_w` and
- *   `rail_e`, a 4 m shelf at y 123–125.5 and Z 72–76 from X −255 to 255,
- *   torn between −45 and −5 with the east end bent down to y 120.3
- *   (`rail_torn`); `bracket_*` under it where the face is tall enough;
- *   nine `mast_*` on it and the catenary `wire_w` (torn at −60, its free
- *   end hanging to 120.5) and `wire_e`. Both torn ends stay over the
- *   soffit: only the six hung fittings hang below it. A stone string course, `course`,
- *   runs under the rail from X −185 to 60 and stops at the recess.
- * - Silt (`silt_*`): wedges on the rail, the capitals, the course step, the
- *   recess floors, the plinth ledge, and banked against the plinths and the
- *   footing steps, each its own size.
+ * - The transit line at the springing (structure_rib): the rail bed stops
+ *   at the springing, so the intrados reads as an arc in elevation —
+ *   `rail_w` and `rail_e`, a 5 m shelf at y 123–125.5 and Z 72–77 over
+ *   each pier (X ±185 to ±255), the west one torn at the opening's edge
+ *   and bent down to y 120.3 (`rail_torn`, over the soffit's 113.1 there);
+ *   `bracket_*` under them; six `mast_*` on them. The catenary `wire_e`
+ *   still spans the opening from the east masts, 2 m over the crown's
+ *   soffit, torn at X −40 with its end hanging to 130.3; `wire_w` is torn
+ *   at the west springing and hangs down the face to 113. Only the six
+ *   hung fittings hang below the soffit.
+ * - Silt (`silt_*`): wedges on the rail shelves, in the angle under the
+ *   deck's step on both ledges, on the capitals, the course step, the
+ *   recess floors and the plinth ledge, banked against the plinths and on
+ *   the footing's −10 ledge, each its own size.
  *
  * RUINED (`state_ruined`): "The rock is the terrain's, not the model's":
  * its face runs from Z 125 at the floor to 117 at y 60, so a heap piece's
@@ -282,10 +291,12 @@ function sift(parent, name, at) {
 // ---------------------------------------------------------------------------
 const W = 72; // the span's half-depth
 const TOP = 150;
-const COURSE = 138; // the top course steps in here
+const COURSE = 142; // the top course steps in here
 const BACK = 65; // the south face where the cladding has fallen, Z
 const SOFFIT_PIER = 110;
-const soffit = (x) => (Math.abs(x) >= 185 ? SOFFIT_PIER : SOFFIT_PIER + 10 * (1 - (x / 185) ** 2));
+const CROWN_RISE = 20; // the soffit's rise from the springing to the crown
+const soffit = (x) =>
+  Math.abs(x) >= 185 ? SOFFIT_PIER : SOFFIT_PIER + CROWN_RISE * (1 - (x / 185) ** 2);
 
 // --- the piers -------------------------------------------------------------
 // A pier is built at its east station and mirrored in X for the west by
@@ -415,25 +426,45 @@ pier('w', -1, (i, d) => {
 
 // --- the span ----------------------------------------------------------------
 // Stations (x, recess depth, recess top); a step station is listed twice.
+// The soffit is a polyline between them, so anything hung from it is
+// seated on `loftSoffit`, the loft's own height, not the curve's.
 const STATIONS = [
-  [-285, 0, 132],
-  [-185, 0, 132],
-  [-160, 0, 126],
-  [-160, 7, 126],
-  [-110, 7, 126],
-  [-110, 0, 126],
-  [-60, 0, 132],
-  [0, 0, 132],
-  [60, 0, 132],
-  [60, 7, 132],
-  [110, 7, 132],
-  [150, 7, 132],
-  [185, 7, 132],
-  [230, 7, 132],
-  [270, 7, 132],
-  [270, 0, 132],
-  [285, 0, 132],
+  [-285, 0, 138],
+  [-185, 0, 138],
+  [-160, 0, 134],
+  [-160, 7, 134],
+  [-135, 7, 134],
+  [-110, 7, 134],
+  [-110, 0, 134],
+  [-85, 0, 138],
+  [-60, 0, 138],
+  [-30, 0, 138],
+  [0, 0, 138],
+  [30, 0, 138],
+  [60, 0, 138],
+  [60, 7, 138],
+  [85, 7, 138],
+  [110, 7, 138],
+  [135, 7, 138],
+  [160, 7, 138],
+  [185, 7, 138],
+  [230, 7, 138],
+  [270, 7, 138],
+  [270, 0, 138],
+  [285, 0, 138],
 ];
+function loftSoffit(x) {
+  const xs = STATIONS.map(([sx]) => sx);
+  let i = 0;
+  while (i + 1 < xs.length && xs[i + 1] < x) i++;
+  const [x0, x1] = [xs[i], xs[i + 1]];
+  const u = x1 === x0 ? 0 : (x - x0) / (x1 - x0);
+  return soffit(x0) * (1 - u) + soffit(x1) * u;
+}
+// The top is two levels: a deck at 150 over Z ±36 and ledges at 147 to the
+// course step, which is set in 1.5 m above 142.
+const DECK = 36;
+const LEDGE = 147;
 function spanRing([x, d, t]) {
   const s = soffit(x);
   return [
@@ -443,8 +474,12 @@ function spanRing([x, d, t]) {
     [W, t],
     [W, COURSE],
     [W - 1.5, COURSE],
-    [W - 1.5, TOP],
-    [-W + 1.5, TOP],
+    [W - 1.5, LEDGE],
+    [DECK, LEDGE],
+    [DECK, TOP],
+    [-DECK, TOP],
+    [-DECK, LEDGE],
+    [-W + 1.5, LEDGE],
     [-W + 1.5, COURSE],
     [-W, COURSE],
   ].map(([z, y]) => [x, y, z]);
@@ -452,37 +487,37 @@ function spanRing([x, d, t]) {
 solid(intact, 'span', stone, oriented(loft(STATIONS.map(spanRing)), { convex: false }));
 
 // --- the frame: ribs and girts in the recesses ---------------------------------
-const RIB_W = 2.4;
+const RIB_W = 3.0;
 const RIB_D = 3.5;
+const RIB_PITCH = 11;
 const RIB_Z = [BACK + 1.5, BACK + 1.5 + RIB_D]; // 66.5–70, 1.5 m proud of the back
 let ribN = 0;
 function ribAt(x, y0, y1) {
   solid(intact, `rib_${ribN++}`, rib, slab([x - RIB_W / 2, x + RIB_W / 2], [y0, y1], RIB_Z));
 }
-// A rib from the soffit starts at the higher of the soffit's two heights
+// A rib from the soffit starts at the higher of the loft's two heights
 // across its own width, since the soffit rises toward the crown.
-const springing = (x) => Math.max(soffit(x - RIB_W / 2), soffit(x + RIB_W / 2));
-for (let k = 0; k < 17; k++) {
-  const x = 66 + 12.5 * k;
-  ribAt(x, x >= 200 ? 20 : springing(x), 132);
-}
-for (const x of [-155, -145, -135, -125, -115]) ribAt(x, springing(x), 126);
+const springing = (x) => Math.max(loftSoffit(x - RIB_W / 2), loftSoffit(x + RIB_W / 2));
+const RIBS_E = Array.from({ length: 19 }, (_, k) => 64 + RIB_PITCH * k); // 64 … 262
+for (const x of RIBS_E) ribAt(x, x >= 200 ? 20 : springing(x), 138);
+for (const x of [-152, -141, -130, -119]) ribAt(x, springing(x), 134);
 for (const x of [-250, -240, -230, -220, -210]) ribAt(x, 45, 100);
 const GIRT_Z = [BACK, BACK + 1.5];
-solid(intact, 'girt_0', rib, slab([60, 270], [127, 129.5], GIRT_Z));
+solid(intact, 'girt_0', rib, slab([60, 270], [133, 135.5], GIRT_Z));
 solid(intact, 'girt_1', rib, slab([200, 270], [58, 60.5], GIRT_Z));
-solid(intact, 'girt_2', rib, slab([-160, -110], [121, 123.5], GIRT_Z));
+solid(intact, 'girt_2', rib, slab([-160, -110], [129, 131.5], GIRT_Z));
 solid(intact, 'girt_3', rib, slab([-255, -205], [70, 72.5], GIRT_Z));
 
 // --- the transit line at the springing ----------------------------------------
+// The rail bed stops at the springing: a shelf over each pier on the span's
+// south face, torn at the opening's edge, so the intrados reads as an arc.
 const RAIL_Y = [123, 125.5];
-const RAIL_Z = [72, 76];
-solid(intact, 'course', stone, slab([-185, 60], [120, 123], [72, 74]));
-solid(intact, 'rail_w', rib, slab([-255, -45], RAIL_Y, RAIL_Z));
-solid(intact, 'rail_e', rib, slab([-5, 255], RAIL_Y, RAIL_Z));
-// The east segment's torn end, bent down from the break to y 120.3, which
-// keeps it over the soffit (119.8 there): only the six hung fittings may
-// hang below it.
+const RAIL_Z = [72, 77];
+solid(intact, 'rail_w', rib, slab([-255, -185], RAIL_Y, RAIL_Z));
+solid(intact, 'rail_e', rib, slab([185, 255], RAIL_Y, RAIL_Z));
+// The west shelf's torn end, bent down over the opening from the springing
+// to y 120.3, over the soffit (113.1 at X −170): only the six hung fittings
+// may hang below it.
 solid(
   intact,
   'rail_torn',
@@ -490,37 +525,34 @@ solid(
   oriented(
     loft([
       [
-        [-5, 123, 72],
-        [-5, 123, 76],
-        [-5, 125.5, 76],
-        [-5, 125.5, 72],
+        [-185, 123, 72],
+        [-185, 123, 77],
+        [-185, 125.5, 77],
+        [-185, 125.5, 72],
       ],
       [
-        [-24, 120.3, 72.5],
-        [-24, 120.3, 76.5],
-        [-24, 122.8, 76.5],
-        [-24, 122.8, 72.5],
+        [-170, 120.3, 72.5],
+        [-170, 120.3, 77.5],
+        [-170, 122.8, 77.5],
+        [-170, 122.8, 72.5],
       ],
     ])
   )
 );
-// Brackets under the rail where the face is tall enough; in a recess they
-// reach back to a rib's face.
+// Brackets under the shelves; in the east recess they reach back to a rib's face.
 const BRACKETS = [
   [-240, 72],
   [-205, 72],
-  [-175, 72],
-  [-125, RIB_Z[1]],
-  [166, RIB_Z[1]],
-  [216, RIB_Z[1]],
-  [253.5, RIB_Z[1]],
+  [218, RIB_Z[1]],
+  [251, RIB_Z[1]],
 ];
-BRACKETS.forEach(([x, zb], i) => {
-  const y0 = Math.max(114, soffit(x) + 1);
-  solid(intact, `bracket_${i}`, rib, slab([x - 1, x + 1], [y0, RAIL_Y[0]], [zb, 75.5]));
-});
-// Catenary masts on the rail and the wire between them, torn west of the break.
-const MAST_X = [-240, -180, -120, -60, 0, 60, 120, 180, 240];
+BRACKETS.forEach(([x, zb], i) =>
+  solid(intact, `bracket_${i}`, rib, slab([x - 1, x + 1], [114, RAIL_Y[0]], [zb, 75.5]))
+);
+// Catenary masts on the shelves and the wire between them. The east wire
+// still spans the opening, torn at X −40 with its end hanging a few metres;
+// the west wire's torn end hangs down the face at the springing.
+const MAST_X = [-250, -220, -190, 190, 220, 250];
 const MAST_TOP = 135.5;
 MAST_X.forEach((x, i) =>
   solid(intact, `mast_${i}`, rib, slab([x - 1, x + 1], [RAIL_Y[1], MAST_TOP], [73, 75]))
@@ -534,35 +566,37 @@ function catenary(from, to, sag = 2.5, n = 4) {
   return pts;
 }
 const wireW = [
-  ...catenary(-240, -180),
-  ...catenary(-180, -120).slice(1),
-  ...catenary(-120, -60).slice(1),
-  [-58, 126, 75],
-  [-53, 120.5, 76],
+  ...catenary(-250, -220, 1.5),
+  ...catenary(-220, -190, 1.5).slice(1),
+  [-187, 124, 75],
+  [-185.5, 113, 76],
 ];
 const wireE = [
-  ...catenary(0, 60),
-  ...catenary(60, 120).slice(1),
-  ...catenary(120, 180).slice(1),
-  ...catenary(180, 240).slice(1),
+  ...catenary(250, 220, 1.5),
+  ...catenary(220, 190, 1.5).slice(1),
+  ...catenary(190, -40, 3, 10).slice(1),
+  [-42, 131.5, 75],
+  [-43, 130.3, 76],
 ];
 solid(intact, 'wire_w', rib, tube(wireW, 0.3));
 solid(intact, 'wire_e', rib, tube(wireE, 0.3));
 
 // --- the hung fittings ------------------------------------------------------------
 // Each a node at its pivot, geometry hanging below in local space: a cable
-// (square, 0.5 m) from the pivot to −L, then the fitting. Lowest point
-// measured and reported after the build.
+// (square, 0.5 m) from 0.4 m above the pivot — sunk into what it hangs
+// from, so contacts lists each against it — to −L, then the fitting. A
+// soffit pivot sits on `loftSoffit`; a rail pivot on the shelf's
+// underside at Z 76.2, clear of the capital's Z 75 below it. Lowest points
+// are measured and reported after the build.
+const SINK = 0.4;
 const HANGS = [
   // [name, pivot, cable length, fitting]
-  ['hang_0', [-120, soffit(-120) - 0.3, -25], 40, 'frame'],
-  ['hang_1', [-30, soffit(-30) - 0.3, 30], 46, 'rail'],
-  ['hang_2', [75, soffit(75) - 0.3, -50], 30, 'standard'],
-  // Off the rail bed's underside, at Z 75 so the cable clears the string
-  // course (Z 72–74) and over the opening so it clears the piers' faces.
-  ['hang_3', [-165, RAIL_Y[0], 75], 48, 'frame'],
-  ['hang_4', [40, RAIL_Y[0], 75], 40, 'drum'],
-  ['hang_5', [150, RAIL_Y[0], 75], 54, 'rail'],
+  ['hang_0', [-120, loftSoffit(-120), 45], 48, 'frame'],
+  ['hang_1', [-30, loftSoffit(-30), 35], 56, 'rail'],
+  ['hang_2', [75, loftSoffit(75), 58], 40, 'standard'],
+  ['hang_3', [-230, RAIL_Y[0], 76.2], 48, 'frame'],
+  ['hang_4', [40, loftSoffit(40), 25], 58, 'drum'],
+  ['hang_5', [230, RAIL_Y[0], 76.2], 54, 'rail'],
 ];
 const FITTINGS = {
   // A signal frame: an upright and a crossbar.
@@ -594,7 +628,7 @@ const FITTINGS = {
   ],
 };
 const hangs = HANGS.map(([name, pivot, L, kind]) =>
-  solid(intact, name, rib, [slab([-0.25, 0.25], [-L, 0], [-0.25, 0.25]), ...FITTINGS[kind](L)], {
+  solid(intact, name, rib, [slab([-0.25, 0.25], [-L, SINK], [-0.25, 0.25]), ...FITTINGS[kind](L)], {
     at: pivot,
   })
 );
@@ -638,16 +672,22 @@ function drift(parent, x, z, y0, h, back = 'north') {
   }[back];
   solid(parent, `silt_${siltN++}`, silt, slab(x, [y0 - sink, y0 + h], z, tops));
 }
-// On the rail bed's top.
-drift(intact, [-230, -200], [72, 76], RAIL_Y[1], 1.2, 'north');
-drift(intact, [-150, -140], [72, 76], RAIL_Y[1], 0.8, 'north');
-drift(intact, [30, 65], [72, 76], RAIL_Y[1], 1.0, 'north');
-drift(intact, [190, 230], [72, 76], RAIL_Y[1], 0.7, 'north');
+// On the rail shelves' tops.
+drift(intact, [-230, -200], [72, 77], RAIL_Y[1], 1.2, 'north');
+drift(intact, [190, 230], [72, 77], RAIL_Y[1], 0.7, 'north');
+// On the top's ledges, in the angle under the deck's step.
+drift(intact, [-240, -170], [DECK, DECK + 7], LEDGE, 1.4, 'north');
+drift(intact, [-90, -30], [DECK, DECK + 5], LEDGE, 1.0, 'north');
+drift(intact, [40, 130], [DECK, DECK + 8], LEDGE, 1.6, 'north');
+drift(intact, [200, 250], [DECK, DECK + 5], LEDGE, 0.9, 'north');
+drift(intact, [-200, -120], [-DECK - 6, -DECK], LEDGE, 1.2, 'south');
+drift(intact, [20, 60], [-DECK - 4, -DECK], LEDGE, 0.8, 'south');
+drift(intact, [150, 230], [-DECK - 7, -DECK], LEDGE, 1.5, 'south');
 // On the capitals' ledges outside the span.
 drift(intact, [200, 240], [72, 75], 110, 1.5, 'north');
 drift(intact, [250, 280], [-75, -72], 110, 1.1, 'south');
 drift(intact, [-280, -230], [72, 75], 110, 1.8, 'north');
-// On the course step at 138.
+// On the course step at 142.
 drift(intact, [-100, -40], [W - 1.5, W], COURSE, 0.9, 'north');
 drift(intact, [140, 200], [W - 1.5, W], COURSE, 0.7, 'north');
 drift(intact, [-250, -190], [-W, -W + 1.5], COURSE, 1.0, 'south');
@@ -663,8 +703,8 @@ drift(intact, [195, 270], [76, 80], 0, 5, 'north');
 drift(intact, [200, 250], [-80, -76], 0, 3.5, 'south');
 drift(intact, [-275, -215], [76, 80], 0, 4, 'north');
 drift(intact, [-280, -200], [-80, -76], 0, 6, 'south');
-drift(intact, [181, 185], [-60, 10], -20, 3, 'east');
-drift(intact, [-185, -181], [-30, 50], -20, 4, 'west');
+drift(intact, [183, 185], [-60, 10], -10, 2.5, 'east');
+drift(intact, [-185, -183], [-30, 50], -10, 3, 'west');
 
 // --- where silt falls from --------------------------------------------------------
 [
@@ -672,10 +712,10 @@ drift(intact, [-185, -181], [-30, 50], -20, 4, 'west');
   [230, RAIL_Y[1], 76],
   [-270, 110, 75],
   [205, 20, 70],
-  [-24, 120.3, 74.5],
+  [-170, 120.3, 75],
   [255, 12, 78.5],
-  [-125, 126, W],
-  [120, 132, W],
+  [-125, 134, W],
+  [120, LEDGE, DECK],
 ].forEach((at, i) => sift(intact, `sift_${i}`, at));
 
 // ---------------------------------------------------------------------------
@@ -785,7 +825,7 @@ const FALLS = [
   [225, 133, 7, 5, 4, 0.5, 180, stone],
   [265, 141, 4, 3, 3, -0.3, 95, stone],
   [-270, 145, 5, 3.5, 4, 0.6, 100, stone],
-  [-10, 121, 12, 5, 8, 0.0, 210, stone],
+  [90, 140, 12, 5, 8, 0.2, 210, stone],
 ];
 const falls = FALLS.map(([x, z, w, h, d, yaw, start, mat], i) =>
   solid(ruined, `fall_${i}`, mat, localBox(w, h, d), {
@@ -847,7 +887,7 @@ intact.traverse((o) => {
     if (Math.abs(p.x) > 285 + 1e-3 || Math.abs(p.z) > 80 + 1e-3)
       fail(`${o.name} leaves the intact plan at (${p.x.toFixed(1)}, ${p.z.toFixed(1)})`);
     if (p.y < -30 - 1e-3 || p.y > TOP + 1e-3) fail(`${o.name} leaves the levels at y ${p.y}`);
-    if (!hung && p.y >= 0 && Math.abs(p.x) < 185 - 1e-3 && p.y < soffit(p.x) - 1e-3)
+    if (!hung && p.y >= 0 && Math.abs(p.x) < 185 - 1e-3 && p.y < loftSoffit(p.x) - 1e-3)
       fail(`${o.name} stands in the opening at (${p.x.toFixed(1)}, ${p.y.toFixed(1)})`);
   });
 });
@@ -861,6 +901,9 @@ for (let i = 0; i < lampAt.length; i++)
     lampGap = Math.min(lampGap, v3(lampAt[i]).distanceTo(v3(lampAt[j])));
 if (lampGap < 40) fail(`two lamps ${lampGap.toFixed(1)} m apart`);
 const soffitMin = Math.min(...STATIONS.map(([x]) => soffit(x)));
+const crownThick = TOP - soffit(0);
+if (soffitMin < SOFFIT_PIER - 1e-9 || crownThick < 20)
+  fail(`crown: soffit ${soffitMin}, ${crownThick} m thick`);
 
 // Ruined: X ±285, Z 115–150, no higher than 60, and 5 south of Z 125.
 let heapTop = -Infinity;
@@ -901,8 +944,8 @@ console.log(
 );
 if (process.argv.includes('--report')) {
   console.log(
-    `  soffit: ${soffitMin.toFixed(1)} at the piers, ${soffit(0).toFixed(1)} at the crown; top ${TOP}; ` +
-      `foundations ${box.min.y.toFixed(1)}`
+    `  soffit: ${soffitMin.toFixed(1)} at the springing, ${soffit(0).toFixed(1)} at the crown ` +
+      `(${crownThick} m of masonry under the top ${TOP}); foundations ${box.min.y.toFixed(1)}`
   );
   lampAt.forEach(([x, y, z], i) =>
     console.log(`  lamp_${i}: x ${x} y ${y} z ${z.toFixed(2)} (glass ${GLASS.join('×')})`)
