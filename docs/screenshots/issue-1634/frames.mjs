@@ -10,7 +10,7 @@ const SCREENS = [
   [1280, 720],
 ];
 const SCALES = [1, 1.25, 1.5, 1.75, 2];
-const SHOTS = new Set(['1440x900@1.5', '1366x768@1.25', '1920x1080@2']);
+const SHOTS = new Set(['1440x900@1.5', '1366x768@1.25', '1366x768@2', '1920x1080@2']);
 
 export default async ({ page, shot }) => {
   await page.waitForFunction(
