@@ -29,3 +29,8 @@ shipped stylesheets, headless and uncommitted as #1593's table was, overflowed i
 `yield-1366x768-125.png` is the panel's type yielding to 0.9x at 125%, a scale the window
 carries. `held-1366x768-200.png` is the setting at 200%, drawn at the 132% the window holds it
 to.
+
+`settings-held-1366x768-200.png` is the esc menu's settings with UI scale at 200% in the same
+window, from `settings.mjs` run as a drive's `--steps` (`VIEW_W=1366 VIEW_H=768`). The row
+reads `200% → 132%` on one line; the drive printed
+`{"text":"200% → 132%","spanHeight":22,"overflowX":0}` and the HUD's `--ui-scale` as 1.315.

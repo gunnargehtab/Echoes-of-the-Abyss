@@ -2,7 +2,9 @@
 // time, read at four screens and five UI scales. Nothing is ordered, so the
 // panel holds four rows and the withheld list, open, as in #1593's drive. Each
 // case reads the scale the HUD drew at, the body's overflow, the type the
-// panel settled on as drawn on screen, and its foot against the hint line.
+// panel settled on as drawn on screen, and its foot against its cap: the
+// hint line's top less 4 units of breath. The panel's 1-unit border sits
+// outside that content-box cap, so the foot can pass it by 2 units.
 const SCREENS = [
   [1440, 900],
   [1366, 768],
@@ -39,7 +41,7 @@ export default async ({ page, shot }) => {
           overflowPx: body.scrollHeight - body.clientHeight,
           typeOnScreen: Number((type * s).toFixed(2)),
           footPx: Math.round(panel.getBoundingClientRect().bottom),
-          hintTopPx: Math.round(innerHeight - 232 * s),
+          capPx: Math.round(innerHeight - 232 * s),
           listShown: !panel.querySelector('.objectives-lock-list')?.hidden,
         };
       });

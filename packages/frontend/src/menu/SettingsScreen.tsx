@@ -219,7 +219,7 @@ export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
           </fieldset>
 
           <label
-            className="menu-slider-row"
+            className={drawnScale < settings.uiScale ? 'menu-slider-row held' : 'menu-slider-row'}
             title="The interface only — the map keeps its own zoom, and a window too short for it draws it smaller"
           >
             <span className="menu-slider-label">UI scale</span>
@@ -233,7 +233,7 @@ export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
             />
             <span className="menu-slider-value">
               {drawnScale < settings.uiScale
-                ? `${percent(settings.uiScale)} · ${percent(drawnScale)} here`
+                ? `${percent(settings.uiScale)} → ${percent(drawnScale)}`
                 : percent(settings.uiScale)}
             </span>
           </label>

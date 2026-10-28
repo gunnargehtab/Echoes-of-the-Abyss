@@ -89,11 +89,11 @@ describe('the settings screen: §11 commitments', () => {
     try {
       const scale = sliders(view).find((s) => s.max === UI_SCALE_MAX * 100)!;
       await slide(view, scale.node, 200);
-      assert.ok(view.shows('200% · 123% here'), view.text().join(' | '));
+      assert.ok(view.shows('200% → 123%'), view.text().join(' | '));
       assert.equal(loadSettings().uiScale, 2, 'the setting is kept');
       await slide(view, scale.node, 100);
       assert.ok(
-        view.shows('100%') && !view.shows('% here'),
+        view.shows('100%') && !view.shows('→'),
         'and a scale the window carries reads alone'
       );
     } finally {

@@ -1178,7 +1178,7 @@ Audio carries primary information, so accessibility here is a correctness requir
   setting where that holds and the largest scale that keeps it where it does not. 200% needs
   a window 1,168 px tall, so a 1080 px one draws at most 185%, a 900 px one 154% and a 768 px
   one 132%. The setting is kept rather than rewritten, a taller window draws what was asked
-  for, and the settings screen shows both — `200% · 132% here`. One held factor moves the
+  for, and the settings screen shows both — `200% → 132%`. One held factor moves the
   Pixi HUD, the pointer hits and every DOM panel together; holding the console alone was
   refused, because the panels are anchored to it and would no longer line up (#1634).
 - **Full rebinding**, including a one-handed layout, and no timing-critical chords. The left + right camera drag (§9) is a chord of buttons rather than of keys, and not a timing-critical one: either button may land first, at any interval. `Shift` + wheel moves the same focus with one button, for a player who cannot hold two.

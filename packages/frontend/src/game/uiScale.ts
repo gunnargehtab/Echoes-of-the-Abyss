@@ -16,8 +16,8 @@ import { UI_SCALE_MIN } from '../settings/store.ts';
  *
  * The panels scale by a transform, so at 200% each one covers four times the
  * area while the screen between the top strip and the console stays the size
- * it was. The orders panel loses that argument outright: at 200% on a 900 px
- * screen it has about 182 panel units of room for 444 units of rows, which is
+ * it was. The orders panel lost that argument outright: at 200% on a 900 px
+ * screen it had about 182 panel units of room for 444 units of rows, which is
  * not a layout to be tuned but arithmetic, and §2 does not let it scroll.
  *
  * So above 100% the type inside a panel grows by the square root of the scale
@@ -29,11 +29,41 @@ import { UI_SCALE_MIN } from '../settings/store.ts';
 export const panelType = (uiScale: number) => (uiScale <= 1 ? 1 : Math.sqrt(uiScale) / uiScale);
 
 /**
- * The chrome above and below the water, in HUD units: the strip's 60, and the
- * console's 208, the hint line's 20 and its 4 of breath below. `.objectives`'
- * max-height in App.css is the screen less these same 292.
+ * The console, from docs/concept-art/hud-mockups/ — the direction chosen for
+ * the in-match interface.
+ *
+ * It replaces an 80 px bar of one button row under a tab strip with a 208 px
+ * console of fixed blocks, which is a real cost in ocean and is paid for by
+ * what the blocks hold: nothing sits behind a tab, so production stops being
+ * something a commander has to go and look for.
+ *
+ * 208 is a *pixel* height rather than a fraction, like the bar it replaces, so
+ * a short window gives up proportionally more of itself — 19% of a 1080p frame
+ * and 23% of a 900px one. That is inherent to a console whose rows have a
+ * minimum size (§11's 44 px target floor is what sets it), and `uiScale` is the
+ * knob for wanting it bigger rather than the window height.
  */
-const CHROME_UNITS = 292;
+export const CONSOLE_HEIGHT = 208;
+
+/** Top resource strip. */
+export const TOP_BAR_HEIGHT = 52;
+
+/** The hint line over the console — why a press did nothing (§2). */
+export const HINT_LINE_HEIGHT = 20;
+
+/** Between the strip's foot and a floating panel's head: `.objectives`' top is the strip and this. */
+const PANEL_GAP = 8;
+
+/** Between a floating panel's foot and the hint line. */
+const HINT_BREATH = 4;
+
+/**
+ * The chrome above and below the water, in HUD units: 292 today. GameCanvas
+ * hands it to CSS as `--chrome-units`, which `.objectives`' max-height takes
+ * off the screen, so the panel's cap and the held scale read one sum.
+ */
+export const CHROME_UNITS =
+  TOP_BAR_HEIGHT + PANEL_GAP + CONSOLE_HEIGHT + HINT_LINE_HEIGHT + HINT_BREATH;
 
 /** SPEC — docs/ui-ux.md §11: the most of the window's height chrome may take. */
 const CHROME_SHARE_MAX = 0.5;
