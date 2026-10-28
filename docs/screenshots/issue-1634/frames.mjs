@@ -1,8 +1,8 @@
 // #1634: the prologue's orders panel once Tender Two loads at 13:40, in real
 // time, read at four screens and five UI scales. Nothing is ordered, so the
 // panel holds four rows and the withheld list, open, as in #1593's drive. Each
-// case reads the body's overflow, the type the panel settled on as drawn on
-// screen, and its foot against the top of the hint line.
+// case reads the scale the HUD drew at, the body's overflow, the type the
+// panel settled on as drawn on screen, and its foot against the hint line.
 const SCREENS = [
   [1440, 900],
   [1366, 768],
@@ -27,18 +27,22 @@ export default async ({ page, shot }) => {
         store.saveSettings({ uiScale });
       }, scale);
       await page.waitForTimeout(600);
-      const fit = await page.evaluate((s) => {
+      const fit = await page.evaluate(() => {
+        const s = Number(
+          getComputedStyle(document.querySelector('.game-root')).getPropertyValue('--ui-scale')
+        );
         const panel = document.querySelector('.objectives');
         const body = panel.querySelector('.objectives-body');
         const type = Number(getComputedStyle(panel).getPropertyValue('--panel-type'));
         return {
+          drawnScale: Number(s.toFixed(2)),
           overflowPx: body.scrollHeight - body.clientHeight,
           typeOnScreen: Number((type * s).toFixed(2)),
           footPx: Math.round(panel.getBoundingClientRect().bottom),
           hintTopPx: Math.round(innerHeight - 232 * s),
           listShown: !panel.querySelector('.objectives-lock-list')?.hidden,
         };
-      }, scale);
+      });
       console.log(`fit ${width}x${height}@${scale}: ${JSON.stringify(fit)}`);
       if (SHOTS.has(`${width}x${height}@${scale}`))
         await shot(`tender-two-${width}x${height}-${scale * 100}`);
