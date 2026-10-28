@@ -103,16 +103,23 @@
  *   the footing's −10 ledge, each its own size.
  *
  * RUINED (`state_ruined`): "The rock is the terrain's, not the model's":
- * its face runs from Z 125 at the floor to 117 at y 60, so a heap piece's
- * north face follows z = 125 − 0.1333 y and nothing is north of Z 115.
- * - `heap_*` (stone_dark): eight leaning masses of broken pier and fallen
- *   course between Z 115 and 125, tallest at the piers' X (58 and 55 m),
- *   lowest across the opening. `rib_r0` leans against the face to y 50,
- *   `rib_r1` lies in the skirt.
- * - `skirt_*` and `silt_r*`: fallen courses and drifts south of Z 125 and
- *   north of 150, nowhere higher than 5 m.
+ * its face runs from Z 125 at the floor to 117 at y 60, so a heap's wall
+ * lies on z = 125 − 0.1333 y and nothing is north of Z 115.
+ * - `heap_*` (stone_dark): eight fallen masses, each an apron spreading
+ *   from the floor (Z 116–119 south to 130–141, widest at the piers' X)
+ *   up to a shoulder at y 15 on Z 125, and a wall from there up against
+ *   the rock, tallest at the piers' X (58 and 55 m), lowest across the
+ *   opening. South of Z 125 nothing is over 15 m (§6 as amended), and the
+ *   aprons taper to the floor inside Z 150. `rib_r0` leans on a heap
+ *   against the face to y 50, its foot in the heap; `rib_r1` lies on the
+ *   floor in the skirt.
+ * - `skirt_*` and `silt_r*`: fallen courses on the floor south of the
+ *   aprons' feet, 2–7.5 m tall, and drifts banked 3 m up the aprons and
+ *   round the courses, north of 150.
  * - `fall_0` … `fall_11`: the debris that comes down the face, resting on
- *   the floor at the heap's foot and in the skirt.
+ *   the floor south of the aprons' feet. No course or fall piece has a
+ *   corner inside a heap; the script tests each against the aprons and
+ *   walls, which are convex.
  * No lintel, soffit or framed void, no lamp.
  *
  * The script measures every claim after building and prints them (see
@@ -122,7 +129,7 @@
  * the footing steps 2 m toward the opening under y −10 are buried, the
  * relief there bottoming at −13.2), a hang ending
  * under +60, a lamp outside +20..+40 or nearer than 40 m to another, a
- * ruined vertex over +60 or over +5 south of Z 125, a state over the row's
+ * ruined vertex over +60 or over +15 south of Z 125, a state over the row's
  * 12,000 triangles, or a fifth material.
  */
 import { THREE, add, faceted, exportGlb } from '../kit.mjs';
@@ -736,63 +743,80 @@ const FACE_SLOPE = 8 / 60; // Z lost per metre up
 const faceZ = (y) => FACE_FOOT - FACE_SLOPE * y;
 const NORTH_LIMIT = 115;
 const SKIRT_Z = 125;
-const SKIRT_H = 5;
+const SKIRT_H = 15;
 const SOUTH_LIMIT = 150;
 const HEAP_H = 60;
 
-/** A leaning mass against the face: bottom over X `xb` from Z `zn` to 125, top over `xt` at `yt`, `thick` deep. */
-function heap(name, xb, xt, yt, zn = 119, thick = 6, mat = stone) {
+/**
+ * A fallen mass against the face, two convex frusta merged into one part:
+ * an apron from its base on the floor (Z `zn` south to `zb` over X `xb`)
+ * up to a shoulder at y 15 on Z 125 — south of which nothing is over
+ * 15 m — and a wall from the shoulder up to its top at `yt` over `xt`,
+ * lying against the rock (z = 125 − 0.1333 y) and `thick` deep. The
+ * shoulder is a concave corner, which is why the two are built apart;
+ * each is convex, so `insideHeap` can test a piece against them.
+ */
+const heaps = [];
+function heap(name, xb, xt, yt, zn, zb, thick = 6, mat = stone) {
   const zt = faceZ(yt) + 0.3;
-  // The top's south edge never crosses Z 125: south of it nothing is over 5 m.
   const zs = Math.min(zt + thick, FACE_FOOT - 0.5);
-  solid(ruined, name, mat, [
-    oriented(
-      loft([
-        [
-          [xb[0], 0, zn],
-          [xb[1], 0, zn],
-          [xb[1], 0, FACE_FOOT],
-          [xb[0], 0, FACE_FOOT],
-        ],
-        [
-          [xt[0], yt, zt],
-          [xt[1], yt, zt],
-          [xt[1], yt, zs],
-          [xt[0], yt, zs],
-        ],
-      ])
-    ),
-  ]);
+  const u = SKIRT_H / yt;
+  const xm = [xb[0] + (xt[0] - xb[0]) * u, xb[1] + (xt[1] - xb[1]) * u];
+  const ring = (x, y, z0, z1) => [
+    [x[0], y, z0],
+    [x[1], y, z0],
+    [x[1], y, z1],
+    [x[0], y, z1],
+  ];
+  const shoulder = ring(xm, SKIRT_H, zn + (zt - zn) * u, FACE_FOOT);
+  const apron = oriented(loft([ring(xb, 0, zn, zb), shoulder]), { label: `${name} apron` });
+  const wall = oriented(loft([shoulder, ring(xt, yt, zt, zs)]), { label: `${name} wall` });
+  heaps.push(apron, wall);
+  solid(ruined, name, mat, [apron, wall]);
 }
-heap('heap_e0', [200, 285], [215, 275], 58, 119, 5);
-heap('heap_e1', [150, 205], [160, 198], 38, 118, 6);
-heap('heap_w0', [-285, -195], [-272, -210], 55, 119, 5);
-heap('heap_w1', [-200, -140], [-190, -150], 30, 118, 6);
-heap('heap_m0', [-140, -60], [-130, -70], 22, 117, 7);
-heap('heap_m1', [-65, 30], [-55, 20], 28, 117.5, 6);
-heap('heap_m2', [25, 100], [35, 90], 18, 116, 8);
-heap('heap_m3', [95, 155], [105, 145], 26, 117, 6);
-// A rib leaning against the face, and one lying in the skirt.
+/** Whether a world point lies inside one of the heaps (all convex, wound out). */
+function insideHeap(p) {
+  return heaps.some(({ points, tris }) =>
+    tris.every(([i, j, k]) => {
+      const A = v3(points[i]);
+      const n = v3(points[j]).sub(A).cross(v3(points[k]).sub(A));
+      return n.dot(p.clone().sub(A)) < -1e-6;
+    })
+  );
+}
+// Thickest at the piers' X, lowest across the opening; the bases spread to
+// Z 130–141 and taper to the floor well inside Z 150.
+heap('heap_e0', [195, 285], [215, 275], 58, 119, 141, 5);
+heap('heap_e1', [148, 200], [160, 195], 38, 118, 137, 6);
+heap('heap_w0', [-285, -192], [-272, -210], 55, 119, 141, 5);
+heap('heap_w1', [-198, -140], [-190, -150], 30, 118, 137, 6);
+heap('heap_m0', [-136, -62], [-130, -70], 22, 117, 132, 7);
+heap('heap_m1', [-58, 28], [-50, 20], 28, 117.5, 134, 6);
+heap('heap_m2', [32, 98], [40, 90], 18, 116, 130, 8);
+heap('heap_m3', [102, 146], [108, 140], 26, 117, 133, 6);
+// A rib leaning on the heap against the face, its foot in the heap, and
+// one lying on the floor in the skirt.
 solid(ruined, 'rib_r0', rib, beam([62, 1.8, 123], [80, 50, faceZ(50) + 2], RIB_W, RIB_D));
-solid(ruined, 'rib_r1', rib, beam([-160, 1.2, 129.5], [-100, 1.2, 131], RIB_W, 2.4));
+solid(ruined, 'rib_r1', rib, beam([-140, 1.2, 146], [-102, 1.2, 147.5], RIB_W, 2.4));
 
-// The skirt: fallen courses, yawed, bottoms on the floor, no top over 5 m.
+// The skirt: fallen courses on the floor south of the heaps' feet, yawed,
+// no top over 15 m and none inside a heap (checked below).
 const SKIRT = [
   // [x, z, w, d, h, yaw, a top corner dropped]
-  [-262, 133, 14, 7, 4.2, 0.3, 1.1],
-  [-205, 139, 10, 6, 3.4, -0.5, 0.8],
-  [-170, 145, 8, 5, 2.6, 0.9, 0.6],
-  [-120, 128, 16, 6, 4.8, 0.15, 1.4],
+  [-262, 146, 8, 5, 4.2, 0.3, 1.1],
+  [-205, 145, 10, 4, 3.4, -0.2, 0.8],
+  [-170, 144, 8, 5, 2.6, 0.9, 0.6],
+  [-120, 140, 16, 6, 4.8, 0.15, 1.4],
   [-75, 141, 9, 7, 3.0, -0.8, 0.7],
-  [-30, 134, 12, 5, 3.8, 0.4, 1.0],
-  [25, 144, 7, 6, 2.4, 1.1, 0.5],
-  [70, 130, 15, 7, 4.5, -0.2, 1.2],
-  [110, 141, 9, 5, 3.1, 0.7, 0.9],
-  [160, 135, 11, 6, 3.6, -0.6, 0.8],
-  [205, 128, 13, 6, 4.9, 0.25, 1.5],
-  [240, 143, 8, 5, 2.8, -1.0, 0.6],
-  [270, 134, 9, 7, 3.3, 0.5, 0.9],
-  [-10, 127, 10, 4, 2.2, 0.0, 0.4],
+  [-30, 141, 12, 5, 6.5, 0.4, 1.6],
+  [25, 145, 7, 6, 2.4, 1.1, 0.5],
+  [70, 138, 15, 7, 7.5, -0.2, 2.0],
+  [106, 143, 9, 5, 3.1, 0.7, 0.9],
+  [160, 144, 11, 6, 3.6, -0.6, 0.8],
+  [205, 146, 10, 5, 4.9, 0.25, 1.5],
+  [240, 146, 8, 4, 2.8, -0.4, 0.6],
+  [270, 146, 9, 5, 3.3, 0.2, 0.9],
+  [-10, 142, 10, 4, 2.2, 0.0, 0.4],
 ];
 // One top corner of each is dropped (the `i`-th round), so no two read alike.
 SKIRT.forEach(([x, z, w, d, h, yaw, drop], i) => {
@@ -810,32 +834,36 @@ SKIRT.forEach(([x, z, w, d, h, yaw, drop], i) => {
   );
 });
 
-// Drifts banked against the heap's foot and round the skirt.
-drift(ruined, [-280, -220], [125, 134], 0, 3.0, 'north');
-drift(ruined, [-150, -95], [125, 132], 0, 2.4, 'north');
-drift(ruined, [-50, 10], [125, 136], 0, 3.2, 'north');
-drift(ruined, [60, 140], [125, 131], 0, 2.0, 'north');
-drift(ruined, [180, 270], [125, 135], 0, 3.4, 'north');
-drift(ruined, [-200, -180], [140, 149], 0, 1.2, 'north');
-drift(ruined, [40, 60], [142, 150], 0, 1.0, 'north');
-drift(ruined, [225, 245], [144, 150], 0, 0.9, 'north');
+// Drifts banked into the heaps' feet, their backs 3 m up the slope, and
+// round the skirt.
+drift(ruined, [-280, -220], [138, 146], 0, 3.0, 'north');
+drift(ruined, [-190, -160], [134, 141], 0, 2.4, 'north');
+drift(ruined, [-130, -100], [129, 136], 0, 2.0, 'north');
+drift(ruined, [-22, 2], [131, 140], 0, 3.2, 'north');
+drift(ruined, [40, 60], [127, 134], 0, 2.0, 'north');
+drift(ruined, [126, 144], [130, 137], 0, 2.2, 'north');
+drift(ruined, [180, 194], [134, 141], 0, 2.5, 'north');
+drift(ruined, [246, 262], [138, 144], 0, 2.0, 'north');
+drift(ruined, [-200, -180], [145, 150], 0, 1.2, 'north');
+drift(ruined, [30, 48], [142, 150], 0, 1.0, 'north');
+drift(ruined, [212, 219], [145, 150], 0, 0.9, 'north');
 
-// The debris that comes down the face: at rest here, and each node carries
-// how far above its rest it starts.
+// The debris that comes down the face: at rest on the floor south of the
+// heaps' feet, and each node carries how far above its rest it starts.
 const FALLS = [
   // [x, z, w, h, d, yaw, start above rest (m), material]
-  [-230, 134, 9, 4.5, 6, 0.3, 190, stone],
-  [-150, 142, 7, 5, 5, -0.4, 165, stone],
-  [-95, 138, 2.4, 3.5, 14, 0.4, 150, rib],
-  [-40, 146, 6, 4, 4, 0.8, 140, stone],
-  [10, 131, 8, 5, 6, -0.2, 175, stone],
-  [55, 144, 5, 3, 4, 1.2, 125, stone],
-  [120, 136, 10, 4.8, 7, 0.1, 160, stone],
+  [-230, 146, 9, 4.5, 5, 0.3, 190, stone],
+  [-150, 146, 7, 5, 5, -0.4, 165, stone],
+  [-95, 141, 2.4, 3.5, 14, 0.4, 150, rib],
+  [-44, 146, 6, 4, 4, 0.8, 140, stone],
+  [10, 140, 8, 5, 6, -0.2, 175, stone],
+  [55, 146, 5, 3, 4, 1.2, 125, stone],
+  [120, 139, 10, 4.8, 7, 0.1, 160, stone],
   [175, 145, 6, 4, 5, -0.7, 110, stone],
-  [225, 133, 7, 5, 4, 0.5, 180, stone],
-  [265, 141, 4, 3, 3, -0.3, 95, stone],
-  [-270, 145, 5, 3.5, 4, 0.6, 100, stone],
-  [90, 140, 12, 5, 8, 0.2, 210, stone],
+  [225, 146, 7, 5, 4, 0.5, 180, stone],
+  [258, 146, 4, 3, 3, -0.3, 95, stone],
+  [-270, 146, 5, 3.5, 4, 0.6, 100, stone],
+  [90, 141, 12, 5, 8, 0.2, 210, stone],
 ];
 const falls = FALLS.map(([x, z, w, h, d, yaw, start, mat], i) =>
   solid(ruined, `fall_${i}`, mat, localBox(w, h, d), {
@@ -844,6 +872,16 @@ const falls = FALLS.map(([x, z, w, h, d, yaw, start, mat], i) =>
     userData: { startAboveRestM: start },
   })
 );
+// No course or fall piece has a corner inside a heap.
+ruined.updateMatrixWorld(true);
+ruined.traverse((o) => {
+  if (!o.isMesh || !/^(skirt|fall)_/.test(o.name)) return;
+  const pos = o.geometry.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const w = new THREE.Vector3().fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld);
+    if (insideHeap(w)) throw new Error(`env_ruin_transit_arch: ${o.name} is buried in a heap`);
+  }
+});
 
 [
   [-240, 55, faceZ(55) + 2],
@@ -919,6 +957,7 @@ if (soffitMin < SOFFIT_PIER - 1e-9 || crownThick < 20)
 let heapTop = -Infinity;
 let heapZ = [Infinity, -Infinity];
 let skirtTop = -Infinity;
+const apronFoot = Math.max(...heaps.flatMap(({ points }) => points.map(([, , z]) => z)));
 ruined.traverse((o) => {
   if (!o.isMesh) return;
   eachVertex(o, (p) => {
@@ -968,7 +1007,7 @@ if (process.argv.includes('--report')) {
   );
   console.log(
     `  ruined heap: top ${heapTop.toFixed(1)} over Z ${heapZ[0].toFixed(1)}..${heapZ[1].toFixed(1)}; ` +
-      `skirt top ${skirtTop.toFixed(2)} south of Z 125`
+      `aprons' feet to Z ${apronFoot.toFixed(1)}; skirt top ${skirtTop.toFixed(2)} south of Z 125 (cap ${SKIRT_H})`
   );
   falls.forEach((f, i) => {
     const b = worldBox(f);
