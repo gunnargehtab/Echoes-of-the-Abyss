@@ -4,7 +4,7 @@
   "readings": [
     {
       "name": "H-opening",
-      "file": "/home/user/Echoes-of-the-Abyss/.dev-loop/A-off/03-H-opening.png",
+      "file": "a-H-opening-off.png",
       "active": true,
       "look": "sorrowgate",
       "programHold": {
@@ -134,7 +134,7 @@
     },
     {
       "name": "C-escorts",
-      "file": "/home/user/Echoes-of-the-Abyss/.dev-loop/A-off/04-C-escorts.png",
+      "file": "a-C-escorts-off.png",
       "active": true,
       "look": "sorrowgate",
       "programHold": {
@@ -264,7 +264,7 @@
     },
     {
       "name": "L-court",
-      "file": "/home/user/Echoes-of-the-Abyss/.dev-loop/A-off/05-L-court.png",
+      "file": "a-L-court-off.png",
       "active": true,
       "look": "sorrowgate",
       "programHold": {
@@ -398,7 +398,7 @@
     },
     {
       "name": "S-survey",
-      "file": "/home/user/Echoes-of-the-Abyss/.dev-loop/A-off/06-S-survey.png",
+      "file": "a-S-survey-off.png",
       "active": true,
       "look": "sorrowgate",
       "programHold": {

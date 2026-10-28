@@ -22,7 +22,9 @@ import { archStudyEnabled } from '../src/game/archStudy.ts';
 import {
   ENVIRONMENT_PROPS,
   LANDMARK_TRI_CAP,
+  mapPlacements,
   mapProps,
+  placeAll,
   placeProps,
   PROP_TRI_RESERVATION,
   PUBLIC_LANDMARK_SPECS,
@@ -142,7 +144,7 @@ describe('the budget and the room the scatter makes', () => {
     };
     const terrain = sorrowgate();
     const alone = placeProps(terrain, [greedy], 'standard');
-    const withArch = placeProps(terrain, [greedy], 'standard', [], standLandmarks(terrain, [ARCH]));
+    const withArch = placeProps(terrain, [greedy], 'standard', [], [ARCH]);
     const spent = (list: typeof alone) => list.length * greedy.triBudget;
     assert.ok(
       spent(alone) > PROP_TRI_RESERVATION - greedy.triBudget,
@@ -153,6 +155,21 @@ describe('the budget and the room the scatter makes', () => {
       'the arch is inside the reservation'
     );
     assert.ok(withArch.length < alone.length, 'the landmark was spent');
+    assert.equal(placeAll(terrain, [greedy], 'standard', [], [ARCH]).landmarks.length, 1);
+  });
+
+  it('refuses a landmark the reservation cannot hold, and stands only what it admitted', () => {
+    const terrain = sorrowgate();
+    const dear = {
+      ...SPEC,
+      triBudget: { intact: PROP_TRI_RESERVATION + 1, ruined: PROP_TRI_RESERVATION + 1 },
+    };
+    const stands = standLandmarks(terrain, [ARCH], [dear]);
+    assert.equal(stands.length, 1, 'the row stands it');
+    // Through the spend, the caps refuse it: admitted lists nothing.
+    const admitted = placeAll(terrain, [], 'standard', [], [ARCH]).landmarks;
+    assert.equal(admitted.length, 1, 'the real row is admitted');
+    assert.ok(admitted[0]!.spec.triBudget.intact <= PROP_TRI_RESERVATION);
   });
 
   it('keeps every scattered prop off the drawn state’s plan (rule 4)', () => {
@@ -177,19 +194,45 @@ describe('the budget and the room the scatter makes', () => {
       meets(placement.xM, placement.yM, (spec.footprintM * placement.scale) / 2)
     );
     assert.ok(onPlan.length > 0, 'the control stands something on the plan');
-    const placed = placeProps(terrain, [dense], 'standard', [], stands);
+    const placed = placeProps(terrain, [dense], 'standard', [], [ARCH]);
     for (const placement of placed) {
       assert.ok(
         !meets(placement.xM, placement.yM, (dense.footprintM * placement.scale) / 2),
         `${placement.xM}, ${placement.yM} meets the plan`
       );
     }
+    // A prop that stands on rock is not on open ground, so the rule leaves
+    // it: a crag whose footprint meets the plan keeps its place.
+    collapse(terrain);
+    const crag: PropSpec = {
+      ...ENVIRONMENT_PROPS.find((s) => s.slug === 'env-rock-crag-a')!,
+      footprintM: 60,
+      scaleJitter: [1, 1],
+      density: 3,
+    };
+    assert.equal(crag.stands, 'rock');
+    const ruinedPlan = standLandmarks(terrain, [ARCH])[0]!.plan;
+    const onRock = placeProps(terrain, [crag], 'standard');
+    assert.ok(
+      onRock.some((p) => meets(p.xM, p.yM, 30) && p.cellIndex >= 0),
+      'the control: a crag on the wall meets the plan'
+    );
+    void ruinedPlan;
+    assert.deepEqual(placeProps(terrain, [crag], 'standard', [], [ARCH]), onRock);
   });
 
-  it('removes nothing from the prologue’s own scatter today (§7 “Scatter”)', () => {
+  it('removes nothing from the prologue’s own scatter today, intact or ruined (§7 “Scatter”)', () => {
     const without = mapProps('sorrowgate', 'sorrowgate');
     const withArch = mapProps('sorrowgate', 'sorrowgate', [ARCH]);
     assert.deepEqual(withArch, without);
+    assert.equal(mapPlacements('sorrowgate', 'sorrowgate', [ARCH]).landmarks[0]?.state, 'intact');
+    // The grid after 10:40, as the session's layer sees it.
+    const terrain = sorrowgate();
+    collapse(terrain);
+    const ruinedWithout = placeProps(terrain, ENVIRONMENT_PROPS, 'sorrowgate');
+    const ruinedWith = placeAll(terrain, ENVIRONMENT_PROPS, 'sorrowgate', [], [ARCH]);
+    assert.deepEqual(ruinedWith.placements, ruinedWithout);
+    assert.equal(ruinedWith.landmarks[0]?.state, 'ruined');
   });
 });
 
@@ -245,7 +288,9 @@ describe('the layer stands the landmark', () => {
   const place = (terrain: ReturnType<typeof sorrowgate>) => {
     const layer = new EnvironmentLayer('sorrowgate');
     layer.setLandmarks([ARCH]);
-    layer.rebuild(terrain, () => -999, []);
+    // No scattered props, so no prop template loads: the landmark alone,
+    // admitted beside an empty list as a caller hands them in together.
+    layer.rebuild(terrain, () => -999, [], standLandmarks(terrain, [ARCH]));
     const meshes = layer.group.children.filter(
       (child): child is InstancedMesh =>
         child instanceof InstancedMesh && child.name.startsWith(ARCH.slug)
@@ -276,6 +321,25 @@ describe('the layer stands the landmark', () => {
       const ruined = place(terrain);
       for (const mesh of ruined.meshes) assert.match(mesh.name, /:ruined:/);
       assert.equal(ruined.layer.stats().landmarkTris, SPEC.triBudget.ruined);
+    } finally {
+      resetLandmarkModels();
+    }
+  });
+
+  it('stands what a caller hands in beside its placements, as the baseline detail does', async () => {
+    primeLandmarkTemplate(
+      buildLandmarkTemplate(await parseArch(), SPEC, 'sorrowgate'),
+      'sorrowgate'
+    );
+    try {
+      const layer = new EnvironmentLayer('sorrowgate');
+      const stood = mapPlacements('sorrowgate', 'sorrowgate', [ARCH]);
+      assert.ok(stood.placements.length > 0 && stood.landmarks.length === 1);
+      // The prop templates are not primed here, so the props wait on their
+      // loads; the landmark, primed, stands at once beside them.
+      layer.rebuild(sorrowgate(), () => 0, stood.placements, stood.landmarks);
+      assert.equal(layer.stats().landmarks, 1);
+      assert.equal(layer.stats().landmarkTris, SPEC.triBudget.intact);
     } finally {
       resetLandmarkModels();
     }

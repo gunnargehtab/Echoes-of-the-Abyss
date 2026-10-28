@@ -18,8 +18,8 @@ triangles, and the landmark's own ledger (`landmarks`, `landmarkTris`).
 | --- | --- | --- | --- |
 | H, the unmodified opening camera (pitch 55°, yaw 0) | `a-H-opening-on.png` | `a-H-opening-off.png` | The span and both piers stand over the flight; four lamps on the south face read as four small marks. Calls 55 against 51: the landmark's four. Landmark 2,412 triangles, props 186 at 49,244 in both halves |
 | C, construction (focus 2550, 2200 at 1,450 m; dolly 420; pitch 35°, yaw 25°) | `a-C-escorts-on.png` | `a-C-escorts-off.png` | The soffit, the ribs and the hung fittings over the escorts; calls 35 against 31 |
-| L, low court (focus 2550, 2750 at 1,450 m; dolly 650; pitch 12°, yaw 0) | `a-L-court-on.png` | — | The opening framed between the piers behind the flight; calls 64 against 60 |
-| S, survey (focus 2500, 2000 on the seabed; dolly 6,500; pitch 55°, yaw 0) | `a-S-survey-on.png` | — | Taken at T+12:00, after the 10:40 ground change: the landmark reads ruined, 732 triangles, and props stand 198 at 50,356, the collapse's count. The off half's S came before 10:40 and read 186 |
+| L, low court (focus 2550, 2750 at 1,450 m; dolly 650; pitch 12°, yaw 0) | `a-L-court-on.png` | `a-L-court-off.png` | The opening framed between the piers behind the flight; calls 64 against 60 |
+| S, survey (focus 2500, 2000 on the seabed; dolly 6,500; pitch 55°, yaw 0) | `a-S-survey-on.png` | `a-S-survey-off.png` | Its HUD clock reads T+12:00, after the 10:40 ground change: the landmark reads ruined, 732 triangles, and props stand 198 at 50,356, the collapse's count. The off half's S came before 10:40 (its clock reads T+10:26) and read 186. The `file` fields in both JSONs name the frames as committed here |
 
 No light and no motion yet: the lamps are the model's own emissive at the licence's
 level, with no pool, no flicker, no sift, no sway and no collapse sequence. Those are

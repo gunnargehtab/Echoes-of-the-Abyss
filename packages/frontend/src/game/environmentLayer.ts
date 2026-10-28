@@ -34,9 +34,8 @@ import type { PublicLandmark, ResourceNodeInfo } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import {
   ENVIRONMENT_PROPS,
-  placeProps,
+  placeAll,
   propSpec,
-  standLandmarks,
   type LandmarkStand,
   type PropPlacement,
 } from './environment.ts';
@@ -85,7 +84,7 @@ export class EnvironmentLayer {
    * The map's public landmarks this layer draws (docs/graphics-standards.md
    * gate 1): none, unless the view hands it the map's table — which it does
    * only under the arch study's flag, on the prologue's look. Stood from the
-   * terrain each rebuild, in the state its own cells give, so a ground delta
+   * terrain each default rebuild, in the state its own cells give, so a ground delta
    * that turns the anchor cells to rock stands the ruin on the same rebuild
    * that re-shades them, and a session whose first ground already holds the
    * collapse stands it from its first frame.
@@ -124,22 +123,25 @@ export class EnvironmentLayer {
   rebuild(
     terrain: TerrainPayload,
     groundY: (xM: number, yM: number) => number,
-    placements?: readonly PropPlacement[]
+    placements?: readonly PropPlacement[],
+    stands?: readonly LandmarkStand[]
   ): void {
     const generation = ++this.generation;
     this.clear();
-    // The landmarks first: spent from the reservation after the fields and
-    // before the scatter (gate 1, rule 3), which `placeProps` does when it is
-    // handed them, and stood here whatever list the caller passed.
-    const stands = standLandmarks(terrain, this.landmarks);
     // Only the default placement stands the fields, so only it hazes them: the
-    // opt-in study hands in its own budgeted list and stands no field.
+    // opt-in study hands in its own budgeted list and stands no field. A
+    // caller that hands in placements hands in the landmarks admitted beside
+    // them (environment.ts `placeAll`), or none.
     const standsFields = placements === undefined;
-    placements ??= placeProps(terrain, ENVIRONMENT_PROPS, this.look, this.fields, stands);
-    for (const stand of stands) {
+    if (placements === undefined) {
+      const all = placeAll(terrain, ENVIRONMENT_PROPS, this.look, this.fields, this.landmarks);
+      placements = all.placements;
+      stands = all.landmarks;
+    }
+    for (const stand of stands ?? []) {
       this.standLandmark(stand, terrain, () => {
         if (generation === this.generation) {
-          this.rebuild(terrain, groundY, standsFields ? undefined : placements);
+          this.rebuild(terrain, groundY, standsFields ? undefined : placements, stands);
         }
       });
     }

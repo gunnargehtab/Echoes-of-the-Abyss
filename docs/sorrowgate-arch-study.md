@@ -276,7 +276,7 @@ contract reads:
 | Baseline | Every layer that stands the map's props stands the arch too, in the state its own cells give: the region's baseline detail, on the board and in travel, stands it intact from the literal, and the session's layer from the received ground. The join trades like for like ([world-map.md](world-map.md) §7.6, #1488). On the board the 570 m arch draws about 29 px, at canonical scale |
 | Locality | Both states stay inside the anchor cells and the one-cell ring a ground delta re-shades. A delta elsewhere never touches the arch |
 | Budget | One instance from the prop reservation, spent after the fields and before the scatter: four calls standing, 12,000 triangles at most. With the look's 50,356, that is 62,356 of 120,000 |
-| Scatter | Nothing on open ground whose footprint meets the plan of the state drawn. Today that removes nothing: no placement meets the intact plan, and the three crags that meet the ruined one stand on the wall's top |
+| Scatter | Nothing on open ground whose footprint meets the plan of the state drawn. Today that removes nothing: on the literal no placement meets the intact plan, and after 10:40 none on open ground meets the ruined one; a crag on the wall's top stands on rock, outside the rule (held by `archStudy.test.ts`, both grids) |
 | Runtime | One registry row, read by slug. A layer draws any map's landmark list, so no code names Sorrowgate |
 
 The baseline row took a decision. Drawing the arch in the session's layer alone would make

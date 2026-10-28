@@ -196,7 +196,13 @@ import {
   SEABED_DETAIL_ON,
   type GroundDetailUniforms,
 } from './seabedDetail.ts';
-import { mapProps, stoneSeats, type PropPlacement, type StoneSeat } from './environment.ts';
+import {
+  mapPlacements,
+  stoneSeats,
+  type LandmarkStand,
+  type PropPlacement,
+  type StoneSeat,
+} from './environment.ts';
 import { installGroundSurface, type WorldLook } from './tutorialLook.ts';
 import {
   apronFrame,
@@ -617,6 +623,8 @@ interface RegionDetail {
   rival: DetailRival;
   /** Every prop its map stands, and the drawn set its layer last stood them for. */
   placements: readonly PropPlacement[];
+  /** The public landmarks admitted beside them, stood in the literal's state (#1637). */
+  landmarks: readonly LandmarkStand[];
   propsFor: string;
 }
 
@@ -1334,8 +1342,9 @@ export class PerspectiveView {
    * The public landmarks a layer draws on a map: the shared table's, under
    * the arch study's development flag on the prologue's look alone, and none
    * otherwise (archStudy.ts; docs/sorrowgate-arch-study.md §7 "Isolation").
-   * Radicals on the same ground is the standard look, so it draws none; no
-   * code here names Sorrowgate, a layer draws any map's list.
+   * Radicals on the same ground is the standard look, so it draws none. This
+   * names the prologue's look, as Isolation requires, never a map: a layer
+   * draws any map's list.
    */
   private studyLandmarks(mapId: string | null): readonly PublicLandmark[] {
     if (!ARCH_STUDY_ON || this.look !== 'sorrowgate' || mapId === null) return [];
@@ -3120,18 +3129,26 @@ export class PerspectiveView {
     detailProps: number;
     detailPropTris: number;
     detailVentPlumes: number;
+    detailLandmarks: number;
+    detailLandmarkTris: number;
   } {
     let detailProps = 0;
     let detailPropTris = 0;
     let detailVentPlumes = 0;
+    let detailLandmarks = 0;
+    let detailLandmarkTris = 0;
     for (const detail of this.drawnDetails()) {
       if (!detail.mesh.visible) continue;
-      const { props, propTris, ventPlumes } = detail.props.stats();
+      const { props, propTris, ventPlumes, landmarks, landmarkTris } = detail.props.stats();
       detailProps += props;
       detailPropTris += propTris;
       detailVentPlumes += ventPlumes;
+      // The landmark on its own, as gate 6's study line asks of every probe
+      // that reports the props (#1637).
+      detailLandmarks += landmarks;
+      detailLandmarkTris += landmarkTris;
     }
-    return { detailProps, detailPropTris, detailVentPlumes };
+    return { detailProps, detailPropTris, detailVentPlumes, detailLandmarks, detailLandmarkTris };
   }
 
   /** The other regions' detail drawn this frame (`syncDetail`). */
@@ -3361,8 +3378,14 @@ export class PerspectiveView {
     // (docs/world-map.md §7.6; gate 1, rule 1).
     const landmarks = this.studyLandmarks(region.mapId);
     props.setLandmarks(landmarks);
-    const placements = mapProps(region.mapId, this.look, landmarks);
-    props.rebuild(mission, this.detailPropGround(mission, seed, rockTopM), placements);
+    const stood = mapPlacements(region.mapId, this.look, landmarks);
+    const placements = stood.placements;
+    props.rebuild(
+      mission,
+      this.detailPropGround(mission, seed, rockTopM),
+      placements,
+      stood.landmarks
+    );
     mesh.add(props.group);
     return {
       mesh,
@@ -3379,6 +3402,7 @@ export class PerspectiveView {
       region,
       rival,
       placements,
+      landmarks: stood.landmarks,
       propsFor: region.id,
     };
   }
@@ -3397,11 +3421,14 @@ export class PerspectiveView {
     props.setReducedMotion(this.swayHeld);
     const landmarks = this.studyLandmarks(detail.region.mapId);
     props.setLandmarks(landmarks);
-    detail.placements = mapProps(detail.region.mapId, this.look, landmarks);
+    const stood = mapPlacements(detail.region.mapId, this.look, landmarks);
+    detail.placements = stood.placements;
+    detail.landmarks = stood.landmarks;
     props.rebuild(
       detail.mission,
       this.detailPropGround(detail.mission, detail.seed, detail.rockTopM),
-      detail.placements
+      detail.placements,
+      detail.landmarks
     );
     detail.mesh.add(props.group);
     detail.props = props;
@@ -3434,7 +3461,8 @@ export class PerspectiveView {
     detail.props.rebuild(
       detail.mission,
       this.detailPropGround(detail.mission, detail.seed, detail.rockTopM),
-      owned
+      owned,
+      detail.landmarks
     );
   }
 
