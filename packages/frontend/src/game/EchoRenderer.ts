@@ -1601,6 +1601,7 @@ export class EchoRenderer {
   private clockLabel!: Text;
   /** The newest snapshot's tick, which is the only time this HUD believes in. */
   private lastTick = 0;
+  private readonly readClock = (): number => this.lastTick;
   /**
    * Whether the map has told us its name yet. Kept apart from the label's own
    * `visible`, which `drawHud` reclaims each frame as the first thing to drop
@@ -2027,10 +2028,6 @@ export class EchoRenderer {
   private detachInput: (() => void) | null = null;
 
   constructor(callbacks: RendererCallbacks, app: Application = new Application()) {
-    // Read-only telemetry for the harness, beside the conn view's probes: the
-    // newest snapshot's tick, so a capture can take two sessions at one
-    // mission time (docs/sorrowgate-arch-study.md §9, #1637).
-    (window as unknown as { __echoClock?: () => number }).__echoClock = () => this.lastTick;
     this.callbacks = callbacks;
     this.app = app;
   }
@@ -5180,6 +5177,11 @@ export class EchoRenderer {
 
   applySnapshot(snapshot: EchoSnapshot): void {
     this.lastTick = snapshot.tick;
+    // Read-only telemetry for the harness, beside the conn view's probes: the
+    // newest snapshot's tick, so a capture can take two sessions at one
+    // mission time (docs/sorrowgate-arch-study.md §9, #1637). Claimed by the
+    // renderer the snapshots reach, since the shell may hold more than one.
+    (window as unknown as { __echoClock?: () => number }).__echoClock = this.readClock;
     this.snapshotSeq++;
     // A pending order has had its two snapshots: the server's plan carries
     // it now, or it was refused and there is nothing to draw.
