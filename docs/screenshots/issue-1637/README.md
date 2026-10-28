@@ -43,3 +43,79 @@ and 2 s, 45 after).
 The clips §9 asks for are not here: this container draws through SwiftShader at a few
 frames a second, so a clip from it would be a slideshow. They are increment C's, on a
 machine with a GPU, with the pixel readings and the performance stations.
+
+## Increment C — the §9 pairs and readings this container can take (`c-*`)
+
+Two fresh tutorial sessions, the study on and off, each station taken once the probe's
+mission clock (`__echoClock`, the HUD's own tick) passed T+01:30, so H and C are matched
+within a second; L and S of the on half came later because the on half also took the
+pools-off and glass-dark readings at C. Every reading is off the conn canvas alone, read in
+the frame that drew it (`tools/render-stack/halo.mjs`'s method), so the HUD's panels are
+not in it. `c-readings-*.json` carry each frame's probe and its conn readings.
+
+| Station | Tick on / off | Calls on / off | Triangles on / off | Near-black (luma < 10) on / off |
+| --- | --- | --- | --- | --- |
+| H | 5676 / 5640 | 56 / 51 | 123,375 / 120,963 | 98.5 % / 99.4 % |
+| C | 6192 / 6132 | 36 / 31 | 106,127 / 103,715 | 87.2 % / 99.2 % |
+| L | 7968 / 6600 | 54 / 49 | 115,410 / 112,998 | 97.9 % / 98.0 % |
+| S | 8616 / 7224 | 56 / 51 | 123,375 / 120,963 | 98.8 % / 99.0 % |
+
+The study is five calls and 2,412 triangles at every station: the landmark's four and the
+sift's one. At C the arch fills the frame and its stone, at the prop luminance ceiling,
+takes the near-black share from 99 % to 87 %, inside the 85–90 % budget; the pools and the
+glass move it by under half a point (pools off 87.1 %, glass dark 86.7 %).
+
+### The lamp glass, the lit stone and what they must stay under
+
+Read in a 28 px window round each lamp the probe projects (`landmarkLampsPx`), at C, with
+the study's switches (`__archStudy`): the glass alone with the pools off, the stone alone
+with the glass dark. Lamp 1 is off screen at C's pose.
+
+| Reading | Lamp 0 | Lamp 2 | Lamp 3 |
+| --- | --- | --- | --- |
+| Lamp glass, pools off (max luma, RGB) | 88 (113, 84, 59) | 83 (106, 79, 57) | 85 (107, 81, 57) |
+| Lit stone, glass dark (max luma, RGB) | 36 (29, 37, 46) | 45 (28, 48, 65) | 48 (21, 54, 74) |
+
+With the glass dark the brightest pixel under each lamp is the stone's own key-lit face,
+blue-grey, not the pool: the pool sits under that. So the lit stone stays under the lamp
+glass beside it (36–48 against 83–88) and under the escorts' brightest lamp pixel, a green
+navigation mark at luma 215 in the same frame (RGB 153, 243, 118). The ember's mean breath, read the same way at a C-matched station on the probe's first standing chimney (`c-ember.png`, `c-readings-ember.json`: the brightest warm pixel in a 60 px window round the mouth on twelve sonar buckets, their mean), is luma 83: the lit stone sits under it, and the lamp glass reads level with it.
+
+The three colour-vision palettes and reduced motion read the glass identically (world light
+takes no UI hue, style-neon-noir.md rule 5) and the stone within a few levels:
+`c-H-*.png` and `c-C-*.png` for `deuteranopia`, `protanopia`, `tritanopia` and
+`reduced-motion`, each with its `c-readings-*.json`.
+
+### The non-target control
+
+`ventfront-divide` with the flag on and off at the home station, tick 5688 / 5712: the
+landmark, the sift and the cloud read 0 in both, triangles 166,978 in both; the one call's
+difference (69 against 68) is the harvester's dredging plume, which read 17 motes in one
+frame and 20 in the other.
+
+### The transit pair and the reload
+
+At C's pose, on one session through the 10:40 change (`c-T-*.png`, `c-readings-collapse2.json`); the matching intact frame at C before the change is `b-C-escorts-a.png`, from increment B's session:
+
+| Frame | Tick | Landmark | Sift | Cloud | Calls |
+| --- | --- | --- | --- | --- | --- |
+| `c-T-after-C-fall.png` | 38556 | ruined, 732, debris still falling | 256 | 384 | 37 |
+| `c-T-after-C-0s.png` | 38892 | ruined, 732 | 256 | 384 | 38 |
+| `c-T-after-C-2s.png` | 39324 | ruined, 732 | 256 | 384 | 38 |
+| `c-T-after-C-6s.png` | 39852 | ruined, 732 | 256 | 0 | 38 |
+| `c-T-after-C-15s.png` | 40692 | ruined, 732 | 256 | 0 | 38 |
+| `c-T-reload-C.png` | 41856 | ruined, 732 | 256 | 0 | 37 |
+
+The lamps are dark from the first ruined frame (the ruined state stands no glass and the pool
+count is zero), the cloud's 384 motes stand in the first two frames and are gone by the third
+(the rasteriser's screenshots stretch the named seconds), and the ruin's four sift sites
+carry the sift on. The reload row is the same session rejoined through the parked
+reconnection token after the change: the probe read the ruined state, no cloud and no
+sequence on its first frame (`atOnce` in the JSON), as gate 1's join clause requires.
+
+### Not taken here
+
+The clips, the GPU time at C with the pools on and off, DPR 1.5, and the 240-frame
+performance stations: this container draws through SwiftShader, whose milliseconds measure
+the rasteriser. They need the named desktop GPU (`docs/screenshots/issue-1001/README.md`),
+and are listed in the pull request's open findings.
