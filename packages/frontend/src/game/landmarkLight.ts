@@ -18,8 +18,9 @@
  *   seabed, a scattered prop, a hull, the water or the snow. No shadow, no
  *   halo. The pool steps with its lamp.
  * - **The hung fittings' sway.** Six fittings pivot at their tops, each on its
- *   own axis and period, the axes spread over 180° so the set states no
- *   current, at most 1.5 m at the free end. Per-vertex weight, as the kelp's.
+ *   own axis and period, the axes spread over 150° (the licence asks at least
+ *   120°) so the set states no current, at most 1.5 m at the free end.
+ *   Per-vertex weight, as the kelp's.
  * - **The collapse's debris.** The ruined state's twelve fall pieces start the
  *   height the model records above their rest and come down the wall's face
  *   over at most 4 s, staggered, on one uniform.
@@ -38,9 +39,10 @@ export const POOL_RADIUS_M = 20;
 /**
  * TUNABLE — how much of the lamp's hue the stone takes under it, before the
  * pool's falloff and the stone's own albedo. Bounded by §8's reading, not by
- * taste: the brightest lit stone stays under the lamp glass beside it, under
- * a vent ember's mean breath and under the escorts' brightest lamp pixel,
- * which the §9 pixel readings hold.
+ * taste: the brightest lit stone must stay under the lamp glass beside it,
+ * under a vent ember's mean breath and under the escorts' brightest lamp
+ * pixel, which increment C's §9 pixel readings are to hold; until they are
+ * taken this value is unverified against them.
  */
 export const POOL_LEVEL = 0.9;
 /** SPEC — a dipped lamp's level (§8): 60 %, never above the steady level. */
@@ -279,8 +281,8 @@ export function hangMotion(
   index: number,
   count: number
 ): { axis: [number, number]; periodS: number; phase: number } {
-  // Axes spread over 180° across the set, so no two share a bearing and
-  // the set states no current (habitats §5).
+  // Bearings at i/count of a half turn: 0° to 150° over six, so no two share
+  // a bearing and the set states no current (habitats §5 asks at least 120°).
   const bearing = (index / Math.max(1, count)) * Math.PI;
   const [lo, hi] = HANG_PERIOD_S;
   const periodS = count > 1 ? lo + ((hi - lo) * index) / (count - 1) : lo;

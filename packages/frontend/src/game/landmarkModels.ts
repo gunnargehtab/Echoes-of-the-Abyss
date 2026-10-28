@@ -117,7 +117,8 @@ export function siftSites(state: LandmarkStateTemplate, which: LandmarkState): V
 export function buildLandmarkTemplate(
   scene: Group,
   spec: LandmarkSpec,
-  look: WorldLook = 'standard'
+  look: WorldLook = 'standard',
+  { still = false }: { still?: boolean } = {}
 ): LandmarkTemplate {
   // Clone materials through an identity map, so a material two states share
   // stays one material and one draw call's program.
@@ -142,8 +143,12 @@ export function buildLandmarkTemplate(
   // every ruined part the debris's drop, and the glass its lamp's level.
   // Installed before the glow and the veil, which wrap what the pools add.
   // A later patch's text lands before an earlier one's, so the pools go in
-  // first and read the position after every displacement.
-  const uniforms = look === 'sorrowgate' ? landmarkUniforms(lampHue()) : null;
+  // first and read the position after every displacement. A `still` template
+  // carries none of it: the board's baseline detail, drawn without its
+  // session and without the look's ground hooks (PerspectiveView.ts
+  // `loadRegionDetail`), stands the landmark still and dark on its own
+  // materials, so the session's clocks never reach it.
+  const uniforms = look === 'sorrowgate' && !still ? landmarkUniforms(lampHue()) : null;
   for (const material of clones.values()) {
     if (look === 'sorrowgate') installPropSurface(material);
     if (uniforms !== null) {
@@ -320,9 +325,10 @@ let generation = 0;
 export function landmarkTemplate(
   spec: LandmarkSpec,
   onReady: () => void,
-  look: WorldLook = 'standard'
+  look: WorldLook = 'standard',
+  still = false
 ): LandmarkTemplate | null {
-  const key = `${spec.slug}:${look}`;
+  const key = templateKey(spec.slug, look, still);
   const cached = templates.get(key);
   if (cached !== undefined) {
     waiting.get(key)?.add(onReady);
@@ -337,7 +343,7 @@ export function landmarkTemplate(
   load.then(
     (scene) => {
       if (started !== generation) return;
-      templates.set(key, buildLandmarkTemplate(scene, spec, look));
+      templates.set(key, buildLandmarkTemplate(scene, spec, look, { still }));
       waiting.delete(key);
       for (const notify of listeners) notify();
     },
@@ -350,9 +356,18 @@ export function landmarkTemplate(
   return null;
 }
 
+/** One cache entry a slug, look and stillness: the still copy is its own geometry and materials. */
+function templateKey(slug: string, look: WorldLook, still: boolean): string {
+  return `${slug}:${look}${still ? ':still' : ''}`;
+}
+
 /** For tests: hand the cache a template built from a parsed file. */
-export function primeLandmarkTemplate(template: LandmarkTemplate, look: WorldLook): void {
-  templates.set(`${template.slug}:${look}`, template);
+export function primeLandmarkTemplate(
+  template: LandmarkTemplate,
+  look: WorldLook,
+  still = false
+): void {
+  templates.set(templateKey(template.slug, look, still), template);
 }
 
 /** For tests and teardown: forget every cached template. */

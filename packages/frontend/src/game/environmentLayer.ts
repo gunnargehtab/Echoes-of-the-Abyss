@@ -40,9 +40,15 @@ import {
   type PropPlacement,
 } from './environment.ts';
 import { envTemplate, type SwayUniforms } from './environmentModels.ts';
-import { landmarkTemplate, siftSites, type LandmarkTemplate } from './landmarkModels.ts';
+import {
+  lampCentres,
+  landmarkTemplate,
+  siftSites,
+  type LandmarkStateTemplate,
+  type LandmarkTemplate,
+} from './landmarkModels.ts';
 import { depthToWorldY } from './perspectiveTerrain.ts';
-import { FALL_SECONDS, lampLevels, LIGHT_BUCKET_MS } from './landmarkLight.ts';
+import { FALL_SECONDS, LAMP_COUNT, lampLevels, LIGHT_BUCKET_MS } from './landmarkLight.ts';
 import { CollapseCloud, LandmarkSift, SIFT_SITE_CAP, type SiftSite } from './landmarkSift.ts';
 import type { LandmarkState } from '@echoes/shared';
 import type { WorldLook } from './tutorialLook.ts';
@@ -55,6 +61,11 @@ const TMP_POS = new Vector3();
 const TMP_SCALE = new Vector3();
 const Y_AXIS = new Vector3(0, 1, 0);
 const TMP_COLOR = new Color();
+
+/** How many lamps a state carries: the intact state's four, the ruined state's none. */
+function lampCount(state: LandmarkStateTemplate): number {
+  return lampCentres(state).length;
+}
 
 /** A model-space plan offset turned by a landmark's yaw, as the instance matrix turns it. */
 function turned(x: number, z: number, yawRad: number): [number, number] {
@@ -170,11 +181,13 @@ export class EnvironmentLayer {
     }
     // The study's light and motion ride the default rebuild alone: the
     // session's layer, on the received ground. A layer handed its placements
-    // (the region's baseline detail, drawn on the board) stands the landmark
-    // still, as it stands every prop still, and raises no cloud.
+    // (the region's baseline detail, drawn on the board without its session)
+    // stands the landmark from a still template of its own, with no pool, no
+    // guttering, no sway and no sift, so the session's clocks never reach the
+    // board's arch and the session's state never switches the board's pools.
     const sifts: SiftSite[] = [];
     for (const stand of stands ?? []) {
-      const template = this.standLandmark(stand, terrain, () => {
+      const template = this.standLandmark(stand, terrain, !standsFields, () => {
         if (generation === this.generation) {
           this.rebuild(terrain, groundY, standsFields ? undefined : placements, stands);
         }
@@ -187,6 +200,12 @@ export class EnvironmentLayer {
       const state = template.states[stand.state];
       const { landmark } = stand;
       const originY = depthToWorldY(landmark.originFloorM);
+      // The pools are the intact state's lamps': none on the ruined state
+      // (§8), whose stone shares the intact state's materials, so the count
+      // is switched with the state and the lamps go dark on this rebuild —
+      // the first bucket after the cells turned to rock.
+      template.uniforms.uPoolCount.value =
+        stand.state === 'intact' ? Math.min(state.nodes.size, LAMP_COUNT, lampCount(state)) : 0;
       for (const at of siftSites(state, stand.state).slice(0, SIFT_SITE_CAP[stand.state])) {
         const [x, z] = turned(at.x, at.z, landmark.yawRad);
         sifts.push({
@@ -204,9 +223,12 @@ export class EnvironmentLayer {
         this.falling = true;
         this.fallStartedMs = null;
         template.uniforms.uFallT.value = 0;
+        // Along the wall's foot, where the face meets the floor (§6), from
+        // the plan's west end to its east.
         const plan = stand.spec.plan.ruined;
-        const [wx, wz] = turned(plan.x[0], plan.z[0], landmark.yawRad);
-        const [ex, ez] = turned(plan.x[1], plan.z[0], landmark.yawRad);
+        const foot = stand.spec.faceFootZ;
+        const [wx, wz] = turned(plan.x[0], foot, landmark.yawRad);
+        const [ex, ez] = turned(plan.x[1], foot, landmark.yawRad);
         const [sx, sz] = turned(0, 1, landmark.yawRad);
         this.cloud.build(
           [
@@ -302,9 +324,10 @@ export class EnvironmentLayer {
   private standLandmark(
     stand: LandmarkStand,
     terrain: TerrainPayload,
+    still: boolean,
     onReady: () => void
   ): LandmarkTemplate | null {
-    const template = landmarkTemplate(stand.spec, onReady, this.look);
+    const template = landmarkTemplate(stand.spec, onReady, this.look, still);
     if (template === null) return null;
     const state = template.states[stand.state];
     const { landmark } = stand;

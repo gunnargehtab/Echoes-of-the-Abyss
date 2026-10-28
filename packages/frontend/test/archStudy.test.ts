@@ -288,9 +288,10 @@ describe('the layer stands the landmark', () => {
   const place = (terrain: ReturnType<typeof sorrowgate>) => {
     const layer = new EnvironmentLayer('sorrowgate');
     layer.setLandmarks([ARCH]);
-    // No scattered props, so no prop template loads: the landmark alone,
-    // admitted beside an empty list as a caller hands them in together.
-    layer.rebuild(terrain, () => -999, [], standLandmarks(terrain, [ARCH]));
+    // The session's own path: the layer places everything itself. The prop
+    // templates are not primed, so the props wait on their loads and the
+    // landmark, primed, stands at once.
+    layer.rebuild(terrain, () => -999);
     const meshes = layer.group.children.filter(
       (child): child is InstancedMesh =>
         child instanceof InstancedMesh && child.name.startsWith(ARCH.slug)
@@ -326,20 +327,25 @@ describe('the layer stands the landmark', () => {
     }
   });
 
-  it('stands what a caller hands in beside its placements, as the baseline detail does', async () => {
-    primeLandmarkTemplate(
-      buildLandmarkTemplate(await parseArch(), SPEC, 'sorrowgate'),
-      'sorrowgate'
-    );
+  it('stands what a caller hands in beside its placements, as the baseline detail does, still and dark', async () => {
+    const scene = await parseArch();
+    const lit = buildLandmarkTemplate(scene, SPEC, 'sorrowgate');
+    const still = buildLandmarkTemplate(scene, SPEC, 'sorrowgate', { still: true });
+    assert.ok(lit.uniforms !== null && still.uniforms === null, 'the still copy carries no clock');
+    // The lit template alone does not serve the baseline: its key differs,
+    // so the session's uniforms never reach the board's arch.
+    primeLandmarkTemplate(lit, 'sorrowgate');
     try {
       const layer = new EnvironmentLayer('sorrowgate');
       const stood = mapPlacements('sorrowgate', 'sorrowgate', [ARCH]);
       assert.ok(stood.placements.length > 0 && stood.landmarks.length === 1);
-      // The prop templates are not primed here, so the props wait on their
-      // loads; the landmark, primed, stands at once beside them.
+      layer.rebuild(sorrowgate(), () => 0, stood.placements, stood.landmarks);
+      assert.equal(layer.stats().landmarks, 0, 'the lit template does not serve the baseline');
+      primeLandmarkTemplate(still, 'sorrowgate', true);
       layer.rebuild(sorrowgate(), () => 0, stood.placements, stood.landmarks);
       assert.equal(layer.stats().landmarks, 1);
       assert.equal(layer.stats().landmarkTris, SPEC.triBudget.intact);
+      assert.equal(layer.stats().siftMotes, 0, 'no sift on the board');
     } finally {
       resetLandmarkModels();
     }

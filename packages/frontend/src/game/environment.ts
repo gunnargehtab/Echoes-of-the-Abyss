@@ -508,6 +508,11 @@ export interface LandmarkSpec {
    * study's §6: what the scatter keeps clear of.
    */
   plan: Record<LandmarkState, { x: readonly [number, number]; z: readonly [number, number] }>;
+  /**
+   * Where the ruined state's wall meets the floor, model metres along +Z:
+   * the study's §6 face foot, which the collapse's cloud rises from.
+   */
+  faceFootZ: number;
 }
 
 /** Block 4b's row: at most 12,000 triangles a state. */
@@ -528,6 +533,7 @@ export const PUBLIC_LANDMARK_SPECS: readonly LandmarkSpec[] = [
       intact: { x: [-285, 285], z: [-80, 80] },
       ruined: { x: [-285, 285], z: [115, 150] },
     },
+    faceFootZ: 125,
   },
 ];
 

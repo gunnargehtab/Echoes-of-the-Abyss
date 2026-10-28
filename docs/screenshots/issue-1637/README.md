@@ -30,8 +30,9 @@ The study's licence on the landmark alone: the four lamps' guttering and their p
 arch's own stone, the hung fittings' sway, the silt sift, and the collapse sequence on the
 received ground change. `b-readings.json` carries each frame's probe, with `siftMotes` and
 `cloudMotes` beside the landmark's ledger. The study's calls standing are five: four for
-the landmark and one for the sift (H read 56 against increment A's 55, and the ruin 45
-against 42 with the cloud gone).
+the landmark and one for the sift (H read 56 against increment A's 55); on the ruin they
+are the landmark's three, the sift's one and, while it lives, the cloud's one (50 at 0.4 s
+and 2 s, 45 after).
 
 | Frame | Pose | Read |
 | --- | --- | --- |

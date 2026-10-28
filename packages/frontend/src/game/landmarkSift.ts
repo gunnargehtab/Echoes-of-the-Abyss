@@ -40,7 +40,7 @@ export const CLOUD_MOTE_CAP = 384;
 export const CLOUD_OUT_M = 40;
 export const CLOUD_UP_M = 30;
 export const CLOUD_SECONDS = 14;
-/** SPEC — the sift sinks at no more than twice the snow's rate; this is its share of that. */
+/** TUNABLE — the sift's share of the snow's rate, under §8's SPEC bound of twice it. */
 export const SIFT_SINK_RATIO = 1.5;
 /** SPEC — the silt colour (`silt-drift`, style-neon-noir.md "The props"), and the cap on it. */
 export const SILT_DRIFT = 0x211e15;
@@ -297,9 +297,9 @@ vCloudFade = ( 1.0 - cloudU ) * smoothstep( 0.0, 0.1, cloudU );`
   }
 
   /**
-   * Raise the cloud along the ruin's foot: `foot` is the line the debris
-   * comes to rest on, world units, from west to east, and `south` the way
-   * out from the face. Started on the first tick after.
+   * Raise the cloud along the ruin's foot: `foot` is the line where the
+   * wall's face meets the floor, world units, from west to east, and `south`
+   * the way out from the face. Started on the first tick after.
    */
   build(foot: readonly [Vector3, Vector3], south: Vector3, motes = CLOUD_MOTE_CAP): void {
     const n = Math.min(CLOUD_MOTE_CAP, motes);
@@ -310,7 +310,9 @@ vCloudFade = ( 1.0 - cloudU ) * smoothstep( 0.0, 0.1, cloudU );`
     for (let i = 0; i < n; i++) {
       const u = cloudHash(i, 1);
       positions[i * 3] = a.x + (b.x - a.x) * u;
-      positions[i * 3 + 1] = a.y + (b.y - a.y) * u + 2 * cloudHash(i, 2);
+      // On the foot itself: the rise alone takes a mote up, so the cloud's
+      // top is the rise's 30 m and nothing more (§8).
+      positions[i * 3 + 1] = a.y + (b.y - a.y) * u;
       positions[i * 3 + 2] = a.z + (b.z - a.z) * u;
       // Out along the way from the face, within ±50° of it, never past 40 m.
       cloud[i * 4] = CLOUD_OUT_M * (0.3 + 0.7 * cloudHash(i, 3));
