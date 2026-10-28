@@ -106,13 +106,16 @@
  * its face runs from Z 125 at the floor to 117 at y 60, so a heap's wall
  * lies on z = 125 − 0.1333 y and nothing is north of Z 115.
  * - `heap_*` (stone_dark): eight fallen masses, each an apron spreading
- *   from the floor (Z 116–119 south to 130–141, widest at the piers' X)
- *   up to a shoulder at y 15 on Z 125, and a wall from there up against
- *   the rock, tallest at the piers' X (58 and 55 m), lowest across the
- *   opening. South of Z 125 nothing is over 15 m (§6 as amended), and the
- *   aprons taper to the floor inside Z 150. `rib_r0` leans on a heap
- *   against the face to y 50, its foot in the heap; `rib_r1` lies on the
- *   floor in the skirt.
+ *   from the floor (Z 116–119 south to 130–141, widest at the piers' X,
+ *   its X taper asymmetric) up to a shoulder at y 15 on Z 125. The four at
+ *   the piers' X carry two or three tumbled blocks each, leaning their own
+ *   ways to 58 and 55 m at the highest corner, one block each leaning out
+ *   past the shoulder where it stays under 15 m; the four across the
+ *   opening carry a low wall whose four top corners are at their own
+ *   heights (at least a quarter of the tallest apart). South of Z 125
+ *   nothing is over 15 m (§6 as amended), and the aprons taper to the
+ *   floor inside Z 150. `rib_r0` leans against the face to y 50, its foot
+ *   in a heap; `rib_r1` lies on the floor in the skirt.
  * - `skirt_*` and `silt_r*`: fallen courses on the floor south of the
  *   aprons' feet, 2–7.5 m tall, and drifts banked 3 m up the aprons and
  *   round the courses, north of 150.
@@ -159,7 +162,7 @@ const v3 = (p) => new THREE.Vector3(...p);
 // purpose), and a convex solid checked face by face against its centroid.
 // Every part here is one or more of these merged into one faceted buffer.
 // ---------------------------------------------------------------------------
-function loft(rings) {
+function loft(rings, { adapt = false } = {}) {
   const n = rings[0].length;
   const points = rings.flat();
   const at = (r, i) => r * n + i;
@@ -172,7 +175,40 @@ function loft(rings) {
     }
   const last = rings.length - 1;
   for (let j = 1; j + 1 < n; j++) tris.push([at(last, 0), at(last, j), at(last, j + 1)]);
-  return { points, tris };
+  if (!adapt) return { points, tris };
+  // A tumbled block's quads are not planar: each is cut along whichever
+  // diagonal leaves both triangles facing away from the centroid, so a
+  // convex eight-corner solid passes `oriented`'s check however its corners
+  // lean. The sense of the rings is read off the naive stitch's volume.
+  const P = points.map(v3);
+  const c = P.reduce((a, q) => a.add(q), new THREE.Vector3()).divideScalar(P.length);
+  const normal = ([a, b, d]) => P[b].clone().sub(P[a]).cross(P[d].clone().sub(P[a]));
+  let vol = 0;
+  for (const [a, b, d] of tris) vol += P[a].dot(P[b].clone().cross(P[d])) / 6;
+  const sgn = vol < 0 ? -1 : 1;
+  const out = (t) => sgn * normal(t).dot(P[t[0]].clone().sub(c)) > 0;
+  const quad = (a, b, d, e) => {
+    const A = [
+      [a, b, d],
+      [a, d, e],
+    ];
+    const B = [
+      [a, b, e],
+      [b, d, e],
+    ];
+    return A.every(out) ? A : B.every(out) ? B : A;
+  };
+  const cut = [];
+  if (n === 4) cut.push(...quad(at(0, 0), at(0, 3), at(0, 2), at(0, 1)));
+  else for (let j = 1; j + 1 < n; j++) cut.push([at(0, 0), at(0, j + 1), at(0, j)]);
+  for (let r = 0; r + 1 < rings.length; r++)
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n;
+      cut.push(...quad(at(r, i), at(r, j), at(r + 1, j), at(r + 1, i)));
+    }
+  if (n === 4) cut.push(...quad(at(last, 0), at(last, 1), at(last, 2), at(last, 3)));
+  else for (let j = 1; j + 1 < n; j++) cut.push([at(last, 0), at(last, j), at(last, j + 1)]);
+  return { points, tris: cut };
 }
 
 function oriented(piece, { convex = true, label = 'piece' } = {}) {
@@ -748,31 +784,53 @@ const SOUTH_LIMIT = 150;
 const HEAP_H = 60;
 
 /**
- * A fallen mass against the face, two convex frusta merged into one part:
- * an apron from its base on the floor (Z `zn` south to `zb` over X `xb`)
- * up to a shoulder at y 15 on Z 125 — south of which nothing is over
- * 15 m — and a wall from the shoulder up to its top at `yt` over `xt`,
- * lying against the rock (z = 125 − 0.1333 y) and `thick` deep. The
- * shoulder is a concave corner, which is why the two are built apart;
- * each is convex, so `insideHeap` can test a piece against them.
+ * A fallen mass against the face. Every heap is an apron, a convex frustum
+ * from its base on the floor (Z `zn` south to `zb` over X `xb`) up to a
+ * shoulder at y 15 on Z 125 over X `xm` — south of which nothing is over
+ * 15 m — and what it carries above the shoulder is one of two things. A
+ * low heap carries a wall: a frustum from the shoulder to a top over `xt`
+ * whose four corners are at their own heights `yts` (north-west,
+ * north-east, south-east, south-west), lying against the rock
+ * (z = 125 − 0.1333 y) and `thick` deep. A tall heap carries `blocks`:
+ * tumbled eight-corner solids, each leaning its own way, resting in the
+ * apron. The aprons' X tapers are asymmetric and no two heaps share a
+ * profile, so the row reads as courses that came down rather than a run
+ * of plinths. Every piece is convex (`loft`'s adaptive cut), so
+ * `insideHeap` can test the skirt and the fall pieces against it.
  */
 const heaps = [];
-function heap(name, xb, xt, yt, zn, zb, thick = 6, mat = stone) {
-  const zt = faceZ(yt) + 0.3;
-  const zs = Math.min(zt + thick, FACE_FOOT - 0.5);
-  const u = SKIRT_H / yt;
-  const xm = [xb[0] + (xt[0] - xb[0]) * u, xb[1] + (xt[1] - xb[1]) * u];
+const SHOULDER_N = 119; // the shoulder ring's north edge, 4 m inside the rock's face at y 15
+function apronOf(xb, xm, zn, zb) {
   const ring = (x, y, z0, z1) => [
     [x[0], y, z0],
     [x[1], y, z0],
     [x[1], y, z1],
     [x[0], y, z1],
   ];
-  const shoulder = ring(xm, SKIRT_H, zn + (zt - zn) * u, FACE_FOOT);
-  const apron = oriented(loft([ring(xb, 0, zn, zb), shoulder]), { label: `${name} apron` });
-  const wall = oriented(loft([shoulder, ring(xt, yt, zt, zs)]), { label: `${name} wall` });
+  return { shoulder: ring(xm, SKIRT_H, SHOULDER_N, FACE_FOOT), base: ring(xb, 0, zn, zb) };
+}
+function heap(name, xb, xm, xt, yts, zn, zb, thick = 6, mat = stone) {
+  const { base, shoulder } = apronOf(xb, xm, zn, zb);
+  const top = [
+    [xt[0], yts[0], faceZ(yts[0]) + 0.3],
+    [xt[1], yts[1], faceZ(yts[1]) + 0.3],
+    [xt[1], yts[2], Math.min(faceZ(yts[2]) + 0.3 + thick, FACE_FOOT - 0.5)],
+    [xt[0], yts[3], Math.min(faceZ(yts[3]) + 0.3 + thick, FACE_FOOT - 0.5)],
+  ];
+  const apron = oriented(loft([base, shoulder], { adapt: true }), { label: `${name} apron` });
+  const wall = oriented(loft([shoulder, top], { adapt: true }), { label: `${name} wall` });
   heaps.push(apron, wall);
   solid(ruined, name, mat, [apron, wall]);
+}
+function heapTall(name, xb, xm, zn, zb, blocks, mat = stone) {
+  const { base, shoulder } = apronOf(xb, xm, zn, zb);
+  const apron = oriented(loft([base, shoulder], { adapt: true }), { label: `${name} apron` });
+  const pieces = [apron];
+  blocks.forEach(([bottom, top], i) =>
+    pieces.push(oriented(loft([bottom, top], { adapt: true }), { label: `${name} block ${i}` }))
+  );
+  heaps.push(...pieces);
+  solid(ruined, name, mat, pieces);
 }
 /** Whether a world point lies inside one of the heaps (all convex, wound out). */
 function insideHeap(p) {
@@ -784,16 +842,164 @@ function insideHeap(p) {
     })
   );
 }
-// Thickest at the piers' X, lowest across the opening; the bases spread to
-// Z 130–141 and taper to the floor well inside Z 150.
-heap('heap_e0', [195, 285], [215, 275], 58, 119, 141, 5);
-heap('heap_e1', [148, 200], [160, 195], 38, 118, 137, 6);
-heap('heap_w0', [-285, -192], [-272, -210], 55, 119, 141, 5);
-heap('heap_w1', [-198, -140], [-190, -150], 30, 118, 137, 6);
-heap('heap_m0', [-136, -62], [-130, -70], 22, 117, 132, 7);
-heap('heap_m1', [-58, 28], [-50, 20], 28, 117.5, 134, 6);
-heap('heap_m2', [32, 98], [40, 90], 18, 116, 130, 8);
-heap('heap_m3', [102, 146], [108, 140], 26, 117, 133, 6);
+// The piers' broken mass: aprons to Z 141 carrying two or three tumbled
+// blocks each, 58 and 55 m at the tallest corner, one block of each
+// leaning out past the shoulder where it stays under 15 m.
+heapTall('heap_e0', [195, 285], [202, 282], 119, 141, [
+  [
+    [
+      [206, 9, 118],
+      [250, 9, 118],
+      [250, 10, 129],
+      [206, 8, 129],
+    ],
+    [
+      [212, 58, 117.5],
+      [246, 52, 118.2],
+      [244, 55, 122.5],
+      [214, 46, 123.5],
+    ],
+  ],
+  [
+    [
+      [246, 5, 119],
+      [285, 6, 119],
+      [285, 8, 131],
+      [248, 4, 131],
+    ],
+    [
+      [252, 40, 119.5],
+      [281, 34, 120],
+      [280, 44, 124],
+      [250, 30, 123],
+    ],
+  ],
+  [
+    [
+      [197, 1, 120],
+      [224, 2, 120],
+      [222, 2, 135],
+      [199, 1, 134],
+    ],
+    [
+      [200, 24, 121],
+      [221, 20, 122],
+      [219, 15, 128],
+      [201, 12, 130],
+    ],
+  ],
+]);
+heapTall('heap_e1', [148, 200], [152, 196], 118, 137, [
+  [
+    [
+      [150, 4, 118],
+      [180, 5, 118],
+      [178, 6, 130],
+      [152, 3, 130],
+    ],
+    [
+      [154, 38, 120.2],
+      [176, 30, 121],
+      [175, 34, 124.5],
+      [156, 26, 124],
+    ],
+  ],
+  [
+    [
+      [174, 2, 119],
+      [200, 3, 119],
+      [199, 4, 133],
+      [176, 2, 133],
+    ],
+    [
+      [178, 18, 122],
+      [197, 22, 122.5],
+      [196, 15, 127],
+      [180, 13, 129],
+    ],
+  ],
+]);
+heapTall('heap_w0', [-285, -192], [-283, -198], 119, 141, [
+  [
+    [
+      [-280, 6, 118],
+      [-236, 7, 118],
+      [-238, 9, 130],
+      [-282, 5, 129],
+    ],
+    [
+      [-274, 47, 119],
+      [-242, 55, 117.8],
+      [-244, 50, 123],
+      [-272, 40, 123.8],
+    ],
+  ],
+  [
+    [
+      [-240, 3, 119],
+      [-200, 4, 119],
+      [-198, 5, 132],
+      [-242, 2, 132],
+    ],
+    [
+      [-234, 36, 120.5],
+      [-206, 28, 121.5],
+      [-204, 31, 124.5],
+      [-232, 22, 124],
+    ],
+  ],
+  [
+    [
+      [-262, 1, 121],
+      [-230, 2, 121],
+      [-228, 1, 136],
+      [-264, 1, 135],
+    ],
+    [
+      [-258, 21, 121.5],
+      [-233, 17, 122],
+      [-231, 15, 126.5],
+      [-259, 10, 131],
+    ],
+  ],
+]);
+heapTall('heap_w1', [-198, -140], [-196, -146], 118, 137, [
+  [
+    [
+      [-196, 3, 118],
+      [-160, 4, 118],
+      [-162, 5, 131],
+      [-198, 3, 130],
+    ],
+    [
+      [-192, 30, 121.5],
+      [-166, 24, 122],
+      [-168, 27, 124.5],
+      [-190, 19, 124.5],
+    ],
+  ],
+  [
+    [
+      [-170, 1, 119],
+      [-140, 2, 119],
+      [-141, 3, 134],
+      [-172, 1, 133],
+    ],
+    [
+      [-167, 16, 122.5],
+      [-143, 20, 122],
+      [-144, 14, 128],
+      [-168, 10, 130],
+    ],
+  ],
+]);
+// The fallen courses across the opening: low walls with broken tops, each
+// corner at its own height (all above the shoulder's 15, or the frustum
+// would fold), each taper its own.
+heap('heap_m0', [-136, -62], [-134, -68], [-131, -80], [22, 17, 20, 16], 117, 132, 7);
+heap('heap_m1', [-58, 28], [-56, 24], [-44, 18], [20, 28, 24, 17], 117.5, 134, 6);
+heap('heap_m2', [32, 98], [34, 94], [36, 78], [23, 17, 18, 16], 116, 130, 8);
+heap('heap_m3', [102, 146], [106, 145], [116, 143], [19, 26, 22, 17], 117, 133, 6);
 // A rib leaning on the heap against the face, its foot in the heap, and
 // one lying on the floor in the skirt.
 solid(ruined, 'rib_r0', rib, beam([62, 1.8, 123], [80, 50, faceZ(50) + 2], RIB_W, RIB_D));
@@ -885,8 +1091,8 @@ ruined.traverse((o) => {
 
 [
   [-240, 55, faceZ(55) + 2],
-  [170, 38, faceZ(38) + 3],
-  [-20, 28, faceZ(28) + 3],
+  [160, 36, 122],
+  [10, 26, 123.5],
   [80, 50, faceZ(50) + 3],
 ].forEach((at, i) => sift(ruined, `sift_r${i}`, at));
 
