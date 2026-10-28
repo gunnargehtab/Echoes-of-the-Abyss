@@ -98,6 +98,13 @@ import { ROOF_OPEN_OPACITY } from '../src/game/passages.ts';
 import { FURNITURE_OUTLINE_ALPHA } from '../src/game/ladder.ts';
 import { ONE_HANDED_BINDINGS } from '../src/input/bindings.ts';
 import { NO_DECOY_TEXT } from '../src/game/dredge.ts';
+import {
+  RIBBON_LABEL_GAP,
+  RIBBON_LABEL_ROOM,
+  RIBBON_UNITS,
+  RIBBON_WIDTH,
+  RIBBON_X,
+} from '../src/game/uiScale.ts';
 import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
 import { FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
@@ -2589,6 +2596,59 @@ describe('renderer smoke test: input and teardown', () => {
       } finally {
         world.teardown();
       }
+    }
+  });
+
+  /**
+   * docs/ui-ux.md §2 puts the orders panel top-left, "clear of the depth
+   * ribbon". The panel's `left` is `RIBBON_UNITS`, so the ribbon's labels have
+   * to end inside that claim, or `SHELF` is drawn under the panel as it was at
+   * x = 40 (#1650). Measured from the labels the ribbon actually drew.
+   */
+  it("keeps the ribbon's labels inside the edge the orders panel stands clear of (#1650)", async () => {
+    const world = await boot();
+    try {
+      const corvette = cannedSnapshot().units.find((unit) => unit.id === 11)!;
+      world.chart.focusOn(corvette.x, corvette.y);
+      world.frame(2);
+      const at = world.conn.projectPoint(corvette.x, corvette.y, corvette.depth);
+      for (const type of ['pointerdown', 'pointerup']) {
+        world.app.canvas.dispatch(type, {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x,
+          clientY: at.y,
+        });
+      }
+      world.frame(1);
+
+      const labels: Text[] = [];
+      const walk = (node: Container): void => {
+        if (!node.visible) return;
+        if (node instanceof Text && ['SHELF', 'MID', 'ABYSS', 'DUCT'].includes(node.text)) {
+          labels.push(node);
+        }
+        for (const child of node.children) walk(child as Container);
+      };
+      walk(world.app.stage);
+      assert.deepEqual(
+        labels.map((label) => label.text).sort(),
+        ['ABYSS', 'DUCT', 'MID', 'SHELF'],
+        'the premise: a selection draws the ribbon and all four of its labels'
+      );
+
+      const column = RIBBON_X + RIBBON_WIDTH + RIBBON_LABEL_GAP;
+      for (const label of labels) {
+        assert.equal(label.x, column, `${label.text} left the label column`);
+        assert.ok(
+          label.x + label.width <= column + RIBBON_LABEL_ROOM,
+          `${label.text} ends at ${label.x + label.width}, past the ${column + RIBBON_LABEL_ROOM} the panel clears`
+        );
+      }
+      assert.ok(RIBBON_UNITS > column + RIBBON_LABEL_ROOM, 'the panel stands on the labels');
+    } finally {
+      world.teardown();
     }
   });
 
