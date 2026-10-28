@@ -79,8 +79,11 @@ export interface PropSpec {
   /** Uniform scale jitter range; yaw is always randomised. */
   scaleJitter: readonly [number, number];
   /** The licensed world-light family (docs/style-neon-noir.md "World light").
-   * 'none' means intake fails the model if it carries any emissive. */
-  worldLight: 'none' | 'vent' | 'flora' | 'crystal' | 'ore';
+   * 'none' means intake fails the model if it carries any emissive. 'civic'
+   * is the arch study's licence (asset-prompts-3d.md Block 4b) and is
+   * admitted for its one landmark, `env-ruin-transit-arch`, alone: intake
+   * refuses the flag on any other slug, and no scattered row below takes it. */
+  worldLight: 'none' | 'vent' | 'flora' | 'crystal' | 'ore' | 'civic';
   /** Current sway, metres of lateral displacement at the prop's top (0 for
    * everything that is stone). Vertex-only: the instance matrix never moves,
    * so placement, the probe and the budget are untouched by it. */

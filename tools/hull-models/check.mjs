@@ -72,7 +72,7 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readGlb, boundsOf, finishFields } from './glb.mjs';
+import { readGlb, boundsOf, finishFields, diffNodes } from './glb.mjs';
 import { decodeGray } from './png.mjs';
 import { drawTrimSheet } from './trim.mjs';
 import { navyTrims, sheetPath } from './sheets.mjs';
@@ -144,7 +144,8 @@ function normalsTurned(built, committed) {
     }
   }
   const out = [];
-  if (turned) out.push(`normals turned at ${turned} of ${corners} corners, up to ${worst.toFixed(1)}°`);
+  if (turned)
+    out.push(`normals turned at ${turned} of ${corners} corners, up to ${worst.toFixed(1)}°`);
   if (inFile) out.push(`${inFile} of ${corners} corners' normals not a number in the file`);
   if (inBuild)
     out.push(
@@ -226,7 +227,9 @@ export function diffMap(kind, built, committed) {
     }
   }
   if (differ)
-    out.push(`${kind} map differs at ${differ} of ${built.pixels.length} texels, up to ${worst} levels`);
+    out.push(
+      `${kind} map differs at ${differ} of ${built.pixels.length} texels, up to ${worst} levels`
+    );
   return out;
 }
 
@@ -275,7 +278,9 @@ export function diffParts(built, committed) {
     const a = built[i];
     const b = committed[i];
     if (!a || !b) {
-      out.push(`part ${i}: ${b ? `\`${b.name}\` missing from build` : `\`${a.name}\` not in file`}`);
+      out.push(
+        `part ${i}: ${b ? `\`${b.name}\` missing from build` : `\`${a.name}\` not in file`}`
+      );
       continue;
     }
     if (a.name !== b.name) out.push(`part ${i}: \`${b.name}\` is now \`${a.name}\``);
@@ -283,9 +288,7 @@ export function diffParts(built, committed) {
       out.push(`\`${a.name}\`: material ${b.material} → ${a.material}`);
     else if (a.tris !== b.tris) out.push(`\`${a.name}\`: ${b.tris} tris → ${a.tris}`);
     else if (a.min.join() !== b.min.join() || a.max.join() !== b.max.join())
-      out.push(
-        `\`${a.name}\`: bounds [${b.min}]..[${b.max}] → [${a.min}]..[${a.max}]`
-      );
+      out.push(`\`${a.name}\`: bounds [${b.min}]..[${b.max}] → [${a.min}]..[${a.max}]`);
     else {
       // Last in the chain: a part whose shape moved has had its line, and a
       // normal buffer is the one change left that moves no bound.
@@ -355,13 +358,12 @@ try {
       committed = summarise(committedModel.parts);
     } catch {
       failed++;
-      console.error(
-        `✗ ${dir}/${script}: ${file} is not committed — run the script and commit it`
-      );
+      console.error(`✗ ${dir}/${script}: ${file} is not committed — run the script and commit it`);
       continue;
     }
     const drift = [
       ...diffParts(built, committed),
+      ...diffNodes(builtModel.nodes, committedModel.nodes),
       ...diffMap('occlusion', builtModel.occlusion, committedModel.occlusion),
       ...diffTrim(builtModel.trim, committedModel.trim),
     ];
@@ -428,7 +430,8 @@ try {
   // file with none would be read by no navy and pass unread: every model names
   // one, or is an `env-` prop, which belongs to none.
   const unplaced = readdirSync(models).filter(
-    (f) => f.endsWith('.glb') && !f.startsWith('env-') && !NAVIES.some((n) => f.endsWith(`-${n}.glb`))
+    (f) =>
+      f.endsWith('.glb') && !f.startsWith('env-') && !NAVIES.some((n) => f.endsWith(`-${n}.glb`))
   );
   if (unplaced.length) {
     failed++;

@@ -124,7 +124,7 @@ mode:
 ```bash
 node .claude/skills/hull-intake/scripts/bake.mjs <env-model.glb> \
   --category env --footprint-m <metres> --out /tmp/hull-intake/<slug> \
-  [--world-light <vent|flora|crystal>]
+  [--world-light <vent|flora|crystal|ore|civic>]
 ```
 
 What changes against the hull run, per `docs/graphics-standards.md` gate 2:
@@ -135,7 +135,10 @@ What changes against the hull run, per `docs/graphics-standards.md` gate 2:
   a prop has no bow and stands at a random yaw per instance.
 - **The emissive rule is inverted.** Any emissive **fails** unless
   `--world-light` names the family Block 4 licenses for this prop — on the
-  ground, the glowing rock is the style bug. `--glow-e` is rejected outright:
+  ground, the glowing rock is the style bug. `civic` is Block 4b's licence
+  and the door takes it for `env-ruin-transit-arch` alone, at
+  `--footprint-m 570 --max-materials 4 --max-tris 24000` (12,000 a state,
+  two states in one file). `--glow-e` is rejected outright:
   props have no SIG, and gate 3 does not apply to them.
 - **Budgets are checked**: triangles against `--max-tris` (default 800, the
   registry fence) and distinct materials against `--max-materials` (default

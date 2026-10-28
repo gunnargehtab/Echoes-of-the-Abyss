@@ -103,6 +103,14 @@ export const ground = {
    * at 0.68 of it.
    */
   siltDrift: () => clad('silt_drift', hex('#211E15'), 0, 1),
+  /**
+   * Structural rib, `structure-rib`: the transit arch's exposed frame and
+   * its hung fittings (#1637). "A rib is neither stone nor growth" — the
+   * built substrate the fallen cladding exposes, warm with two centuries of
+   * water, at 0.61 of `stone-dark`'s linear luminance so the ribs read
+   * darker than the masonry they carry. Roughness 0.9, the doc's own.
+   */
+  structureRib: () => clad('structure_rib', hex('#160F0C'), 0, 0.9),
   /** Trench basalt, `basalt-trench`: the slab's and the spire's `basalt`. */
   basaltTrench: () => clad('basalt', hex('#14171A'), 0, 0.96),
   /** Vent basalt, `basalt-vent`: the chimney's and the basalt pile's `basalt`, its own value. */
@@ -134,6 +142,17 @@ export const ground = {
    * four, and the owner asked for a brighter glint.
    */
   oreTrace: () => lamp('ore_trace', hex('#7A5634'), hex('#0B0805'), 1, 1.268),
+  /**
+   * `civic-lamp` at 0.389 over `civic-lamp-base`, the transit arch's four
+   * lamps (#1637): docs/style-neon-noir.md "The arch study's licence",
+   * "lamp glass over `civic-lamp-base`, at an effective emissive luminance
+   * of at most 0.11", the biolight's and the seam's level under the ember's
+   * 0.18. #B8875A is 0.2826 linear (0.2126 · 0.4793 + 0.7152 · 0.2423 +
+   * 0.0722 · 0.1022), times 0.389 is 0.1099, the nearest three-figure
+   * strength under the cap (0.390 reads 0.1102). Roughness 1, the base's
+   * token row. The intact state's `lamp_0` … `lamp_3` alone carry it.
+   */
+  civicLamp: () => lamp('civic_lamp', hex('#B8875A'), hex('#0D0907'), 1, 0.389),
 };
 
 /**
