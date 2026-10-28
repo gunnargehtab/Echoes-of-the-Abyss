@@ -2170,9 +2170,10 @@ button.objectives-row .objectives-text {
 
 @media (max-width: 900px) {
   /* The contact log hides at this width; the orders panel may not. It is the
-     only place the mission states what it wants, so it shrinks instead. */
+     only place the mission states what it wants, so it shrinks instead. It
+     keeps the base rule's `left`, clear of the ribbon's labels: at 32px it sat
+     on `SHELF` here as it did at 40 everywhere else (#1650). */
   .objectives {
-    left: 32px;
     width: 46vw;
     max-height: 26vh;
   }

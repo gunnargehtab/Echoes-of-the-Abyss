@@ -54,6 +54,7 @@ export const HINT_LINE_HEIGHT = 20;
 /**
  * Between the strip's foot and a floating panel's head. App.css restates the
  * strip and this as the `60px` in `.objectives`' and the contact log's `top`.
+ * Also the gap between the ribbon's label column and the orders panel.
  */
 const PANEL_GAP = 8;
 
@@ -63,7 +64,7 @@ const HINT_BREATH = 4;
 /** The depth ribbon's strip: its left edge, in from the window's (§8). */
 export const RIBBON_X = 12;
 
-/** The depth ribbon's strip, wide enough for a hull marker and nothing more. */
+/** The depth ribbon's strip width; a hull's marker overhangs it by 3 a side. */
 export const RIBBON_WIDTH = 14;
 
 /** Between the strip's right edge and its band and duct labels. */
@@ -72,7 +73,8 @@ export const RIBBON_LABEL_GAP = 5;
 /**
  * The label column right of the strip: `SHELF` and `ABYSS`, five characters
  * of 9 px monospace. A monospace advance runs 0.55 to 0.6 em across the
- * `FONT_DATA` stack, so 28 holds five at 0.62 with a pixel to spare. The
+ * `FONT_DATA` stack, so 28 holds five at 0.6 with a pixel to spare, and
+ * still five at 0.62. The
  * renderer smoke test measures the real labels against it.
  */
 export const RIBBON_LABEL_ROOM = 28;
