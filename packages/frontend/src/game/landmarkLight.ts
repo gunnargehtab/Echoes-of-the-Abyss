@@ -41,8 +41,11 @@ export const POOL_RADIUS_M = 20;
  * pool's falloff and the stone's own albedo. Bounded by §8's reading, not by
  * taste: the brightest lit stone must stay under the lamp glass beside it,
  * under a vent ember's mean breath and under the escorts' brightest lamp
- * pixel, which increment C's §9 pixel readings are to hold; until they are
- * taken this value is unverified against them.
+ * pixel. The §9 readings hold it (docs/screenshots/issue-1637/README.md,
+ * "The lamp glass, the lit stone and what they must stay under"): the
+ * stone is read on the key-lit face with the glass dark, an upper bound on
+ * what any pool adds, so a level that keeps that face under every limit
+ * keeps the pool under them too.
  */
 export const POOL_LEVEL = 0.9;
 /** SPEC — a dipped lamp's level (§8): 60 %, never above the steady level. */

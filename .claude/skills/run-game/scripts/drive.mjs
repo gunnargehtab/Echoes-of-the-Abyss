@@ -133,9 +133,12 @@ const context = await browser.newContext({
   ...(process.env.REDUCED_MOTION === '1' ? { reducedMotion: 'reduce' } : {}),
 });
 if (process.env.SETTINGS_JSON) {
-  // Merged over the store's defaults by the page itself: an unknown key is
-  // dropped there, so a typo here seeds nothing rather than something wrong.
-  const seed = JSON.parse(process.env.SETTINGS_JSON);
+  // Merged over the store's defaults by the page itself, field by field: an
+  // unknown key is dropped there, so a typo here seeds nothing rather than
+  // something wrong. The record's version is set here, since the store loads
+  // defaults from any record without the version it understands (#1637's
+  // palette captures were in the standard palette for want of it).
+  const seed = { version: 1, ...JSON.parse(process.env.SETTINGS_JSON) };
   await context.addInitScript((settings) => {
     window.localStorage.setItem('echoes.settings', JSON.stringify(settings));
   }, seed);

@@ -288,8 +288,11 @@ describe('the sift and the cloud (§8, gate 6)', () => {
     );
     assert.equal(cloud.motes, CLOUD_MOTE_CAP);
     const attr = cloud.points.geometry.getAttribute('aCloud');
+    const start = cloud.points.geometry.getAttribute('position');
     for (let i = 0; i < attr.count; i++) {
-      assert.ok(attr.getX(i) <= CLOUD_OUT_M && attr.getY(i) <= CLOUD_UP_M);
+      // A mote starts on the foot itself, so its rise alone is its height.
+      assert.equal(start.getY(i), 0);
+      assert.ok(attr.getX(i) <= CLOUD_OUT_M && start.getY(i) + attr.getY(i) <= CLOUD_UP_M);
     }
     assert.equal(cloud.tick(1000), false);
     assert.equal(cloud.tick(1000 + CLOUD_SECONDS * 1000 - 1), false);
@@ -304,10 +307,10 @@ describe('the layer’s sequence', () => {
     layer.rebuild(terrain, ground);
 
   it('starts the collapse on the ground change it received, lamps dark, cloud up, settled by 14 s', async () => {
-    primeLandmarkTemplate(
-      buildLandmarkTemplate(await parseArch(), SPEC, 'sorrowgate'),
-      'sorrowgate'
-    );
+    const template = buildLandmarkTemplate(await parseArch(), SPEC, 'sorrowgate');
+    primeLandmarkTemplate(template, 'sorrowgate');
+    const lampParts = (layer: EnvironmentLayer) =>
+      layer.group.children.filter((child) => child.name.endsWith(':civic_lamp')).length;
     try {
       const layer = new EnvironmentLayer('sorrowgate');
       layer.setLandmarks([ARCH]);
@@ -317,13 +320,16 @@ describe('the layer’s sequence', () => {
       assert.equal(layer.stats().siftMotes, SIFT_MOTE_CAP);
       assert.equal(layer.stats().cloudMotes, 0);
       layer.tick(0);
-      const template = buildLandmarkTemplate(await parseArch(), SPEC, 'sorrowgate');
-      void template;
+      assert.equal(lampParts(layer), 1, 'the intact state stands its glass');
+      assert.equal(template.uniforms?.uPoolCount.value, LAMP_COUNT);
       // The change arrives: the ruin stands, the sequence starts, the lamps
-      // are the ruined state's, which has none.
+      // are the ruined state's, which has none, and the pools go with them.
       collapse(terrain);
       stand(layer, terrain);
       assert.equal(layer.collapsing, true);
+      assert.equal(lampParts(layer), 0, 'no glass stands on the ruin');
+      assert.equal(layer.lampPositions().length, 0);
+      assert.equal(template.uniforms?.uPoolCount.value, 0, 'the pools are off on the ruin');
       assert.equal(layer.stats().cloudMotes, CLOUD_MOTE_CAP);
       assert.equal(
         layer.stats().siftMotes,

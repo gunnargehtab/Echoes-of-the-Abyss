@@ -1,0 +1,36 @@
+{
+  "readings": [
+    {
+      "name": "tutorial-on",
+      "file": "/home/user/Echoes-of-the-Abyss/.dev-loop/C/return/03-tutorial-on.png",
+      "url": "http://localhost:5173/?arch-study=1",
+      "look": "sorrowgate",
+      "landmarks": 1,
+      "landmarkTris": 2412,
+      "siftMotes": 256,
+      "cloudMotes": 0,
+      "collapsing": false,
+      "props": 186,
+      "propTris": 49244,
+      "drawCalls": 56,
+      "triangles": 123375,
+      "textures": 18
+    },
+    {
+      "name": "solo-after-return",
+      "file": "/home/user/Echoes-of-the-Abyss/.dev-loop/C/return/06-solo-after-return.png",
+      "url": "http://localhost:5173/?arch-study=1",
+      "look": "standard",
+      "landmarks": 0,
+      "landmarkTris": 0,
+      "siftMotes": 0,
+      "cloudMotes": 0,
+      "collapsing": false,
+      "props": 430,
+      "propTris": 115802,
+      "drawCalls": 67,
+      "triangles": 166978,
+      "textures": 21
+    }
+  ]
+}

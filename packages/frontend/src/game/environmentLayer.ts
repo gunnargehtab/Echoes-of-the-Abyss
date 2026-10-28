@@ -192,8 +192,9 @@ export class EnvironmentLayer {
     // session's layer, on the received ground. A layer handed its placements
     // (the region's baseline detail, drawn on the board without its session)
     // stands the landmark from a still template of its own, with no pool, no
-    // guttering, no sway and no sift, so the session's clocks never reach the
-    // board's arch and the session's state never switches the board's pools.
+    // guttering, no sway and no sift, the glass at its steady level, so the
+    // session's clocks never reach the board's arch and the session's state
+    // never switches the board's pools.
     const sifts: SiftSite[] = [];
     for (const stand of stands ?? []) {
       const template = this.standLandmark(stand, terrain, !standsFields, () => {

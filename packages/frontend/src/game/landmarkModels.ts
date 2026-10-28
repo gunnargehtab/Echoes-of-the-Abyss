@@ -146,8 +146,9 @@ export function buildLandmarkTemplate(
   // first and read the position after every displacement. A `still` template
   // carries none of it: the board's baseline detail, drawn without its
   // session and without the look's ground hooks (PerspectiveView.ts
-  // `loadRegionDetail`), stands the landmark still and dark on its own
-  // materials, so the session's clocks never reach it.
+  // `loadRegionDetail`), stands the landmark still on its own materials:
+  // no pool, no guttering, no sway, the glass at its steady emissive level,
+  // so the session's clocks never reach it.
   const uniforms = look === 'sorrowgate' && !still ? landmarkUniforms(lampHue()) : null;
   for (const material of clones.values()) {
     if (look === 'sorrowgate') installPropSurface(material);

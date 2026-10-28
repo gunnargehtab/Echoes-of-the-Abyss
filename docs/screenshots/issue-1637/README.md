@@ -46,14 +46,19 @@ machine with a GPU, with the pixel readings and the performance stations.
 
 ## Increment C — the §9 pairs and readings this container can take (`c-*`)
 
-Two fresh tutorial sessions, the study on and off, each station taken once the probe's
-mission clock (`__echoClock`, the HUD's own tick) passed T+01:30, so H and C are matched
-within a second; L and S of the on half came later because the on half also took the
-pools-off and glass-dark readings at C. Every reading is off the conn canvas alone, read in
-the frame that drew it (`tools/render-stack/halo.mjs`'s method), so the HUD's panels are
-not in it. `c-readings-*.json` carry each frame's probe and its conn readings.
+Base `26042db6`, candidate `19837d38` (every `c-*` frame). Two fresh tutorial sessions, the
+study on and off, each station taken once the probe's mission clock (`__echoClock`, the
+HUD's own tick) passed T+01:30, so H and C are matched within a second; L and S of the on
+half came 23 s later because the on half also took the pools-off and glass-dark readings
+at C, which is short of §9's "at the same tick" for those two. The viewport is the drive's
+1440 × 900 at DPR 1, not §9's 1920 × 1080, and the quartet opens at T+01:34 rather than
+§9's T+00:30: this rasteriser draws under two frames a second, and the first station could
+not be taken before the probe's clock passed the window. Both departures are the pull
+request's open findings. Every reading is off the conn canvas alone, read in the frame
+that drew it (`tools/render-stack/halo.mjs`'s method), so the HUD's panels are not in it.
+`c-readings-*.json` carry each frame's probe and its conn readings.
 
-| Station | Tick on / off | Calls on / off | Triangles on / off | Near-black (luma < 10) on / off |
+| Station | Tick on / off | Calls on / off | Triangles on / off | Near-black (luma < 10 %) on / off |
 | --- | --- | --- | --- | --- |
 | H | 5676 / 5640 | 56 / 51 | 123,375 / 120,963 | 98.5 % / 99.4 % |
 | C | 6192 / 6132 | 36 / 31 | 106,127 / 103,715 | 87.2 % / 99.2 % |
@@ -63,7 +68,10 @@ not in it. `c-readings-*.json` carry each frame's probe and its conn readings.
 The study is five calls and 2,412 triangles at every station: the landmark's four and the
 sift's one. At C the arch fills the frame and its stone, at the prop luminance ceiling,
 takes the near-black share from 99 % to 87 %, inside the 85–90 % budget; the pools and the
-glass move it by under half a point (pools off 87.1 %, glass dark 86.7 %).
+glass move it by under half a point (pools off 87.1 %, glass dark 86.7 %). L sits outside
+the budget on both halves (97.9 % against 98.0 %), as do H and S: at those dollies the
+baseline's own share of near-black is over the budget before the study adds anything, so
+only C reads inside it.
 
 ### The lamp glass, the lit stone and what they must stay under
 
@@ -79,23 +87,46 @@ with the glass dark. Lamp 1 is off screen at C's pose.
 With the glass dark the brightest pixel under each lamp is the stone's own key-lit face,
 blue-grey, not the pool: the pool sits under that. So the lit stone stays under the lamp
 glass beside it (36–48 against 83–88) and under the escorts' brightest lamp pixel, a green
-navigation mark at luma 215 in the same frame (RGB 153, 243, 118). The ember's mean breath, read the same way at a C-matched station on the probe's first standing chimney (`c-ember.png`, `c-readings-ember.json`: the brightest warm pixel in a 60 px window round the mouth on twelve sonar buckets, their mean), is luma 83: the lit stone sits under it, and the lamp glass reads level with it.
+navigation mark at luma 215 in the same frame (RGB 153, 243, 118). The escorts read the
+same on and off: in the C pair, the three escorts under the arch whose marks the frame
+resolves read a brightest pixel of 206.1, 207.7 and 207.7 with the study on against 206.1,
+207.8 and 207.7 off (the marks sit 2–5 px apart, the hulls' way in the second between the
+ticks). The ember's mean breath, read the same way at a C-matched station on the
+probe's first standing chimney, a West Approach vent at its western end (208, 2184,
+1,415 m) rather than §9's nearest to the arch, with the camera at C's dolly and angles
+over its mouth (`c-ember.png`, `c-readings-ember.json`: the brightest warm pixel in a
+60 px window round the mouth on twelve sonar buckets, their mean), is luma 83: the lit
+stone sits under it, and the lamp glass reads level with it.
 
-The three colour-vision palettes and reduced motion read the glass identically (world light
-takes no UI hue, style-neon-noir.md rule 5) and the stone within a few levels:
-`c-H-*.png` and `c-C-*.png` for `deuteranopia`, `protanopia`, `tritanopia` and
-`reduced-motion`, each with its `c-readings-*.json`.
+Reduced motion reads the glass identically (`c-H-reduced-motion.png`,
+`c-C-reduced-motion.png`, `c-readings-reduced-motion.json`): 88, 83 and 85 at C. The
+colour-vision palettes are not taken: the drive's settings seed carried no record version,
+so the store loaded its defaults and the frames came out in the standard palette (the
+`TRACKED` label read the standard threat red). The seed is fixed and the palette captures
+are the pull request's open finding.
 
 ### The non-target control
 
 `ventfront-divide` with the flag on and off at the home station, tick 5688 / 5712: the
-landmark, the sift and the cloud read 0 in both, triangles 166,978 in both; the one call's
-difference (69 against 68) is the harvester's dredging plume, which read 17 motes in one
-frame and 20 in the other.
+landmark, the sift and the cloud read 0 in both, triangles 166,978 in both, textures 21 in
+both. The first pair read 69 calls against 68; repeated, the flag on reads 68 (tick 5676)
+and the flag off 68 and 68 (`c-readings-control-spread.json`, the five sessions' probe
+counts), so the one call is a frame's own spread on this map and not the flag's.
+
+The return (`c-readings-return.json`, `c-return-tutorial-on.png`, `c-return-solo.png`): the
+tutorial with the flag on (landmark 1, sift 256), left through the Esc menu's "Return to
+port", then the standard solo path to `ventfront-divide` in the same page, with the
+study's template still resident. The solo match reads look `standard`, landmark 0, sift 0,
+cloud 0, textures 21 as the control's: nothing of the study is in use after the return.
+The template cache itself is not in the probe; what it holds is read by `landmarks` and
+`textures` alone.
 
 ### The transit pair and the reload
 
-At C's pose, on one session through the 10:40 change (`c-T-*.png`, `c-readings-collapse.json`):
+At C's pose with the study on, one session through the 10:40 change (`c-T-*.png`,
+`c-readings-collapse.json`). This is not §9's T, which pairs H's pose at 10:35 and 10:55 with
+the study on and off; that pair is the pull request's open finding, and these frames stay as
+the collapse sequence's record:
 
 | Frame | Tick | Landmark | Sift | Cloud | Calls |
 | --- | --- | --- | --- | --- | --- |
@@ -112,7 +143,9 @@ no glass and the pool count is zero), the cloud's 384 motes stand in the first t
 and are gone by the fourth, and the ruin's four sift sites carry the sift on. The reload row
 is the same session rejoined through the parked reconnection token after the change: the
 probe read the ruined state, no cloud and no sequence on its first frame (`atOnce` in the
-JSON), as gate 1's join clause requires.
+JSON), as gate 1's join clause requires. Its camera is not C's: the rejoin's ground clamped
+the 1,450 m focus to 200 m (`focus.depthM` in the JSON), the ground-driven clamp §9 asks to
+be recorded.
 
 ### Not taken here
 
