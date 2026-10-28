@@ -491,6 +491,12 @@ const SNOW_FADE_TO_M = 5000;
  * suspicion rather than weather, and against the column rather than the dolly
  * so a zoom never changes how fast the water is falling. */
 const SNOW_SINK_PER_S = 0.002;
+/**
+ * The snow's sink, world units a second: the column's height a second at
+ * `SNOW_SINK_PER_S`. Exported for the arch study's sift, which §8 bounds to
+ * at most twice the snow's rate (landmarkSift.ts).
+ */
+export const SNOW_SINK_WORLD_PER_S = COLUMN_HEIGHT * SNOW_SINK_PER_S;
 
 /**
  * Marine snow: detritus in the near column.

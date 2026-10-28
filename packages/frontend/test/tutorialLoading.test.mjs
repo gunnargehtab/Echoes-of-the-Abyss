@@ -194,6 +194,8 @@ describe('pending prop delivery', () => {
       fieldHazes: 0,
       landmarks: 0,
       landmarkTris: 0,
+      siftMotes: 0,
+      cloudMotes: 0,
     });
     assert.equal(disposed, 0, 'a match must not dispose the page-owned surface texture');
   });

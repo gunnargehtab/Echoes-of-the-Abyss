@@ -24,6 +24,7 @@
 import {
   Box3,
   BufferGeometry,
+  Float32BufferAttribute,
   Group,
   Material,
   Mesh,
@@ -38,6 +39,21 @@ import { loadEnvModel, normaliseLuminance, propFootprint } from './environmentMo
 import { installPropSurface, type WorldLook } from './tutorialLook.ts';
 import { keepGlowOutsideToneMapping } from './modelLighting.ts';
 import { installPropVeil } from './veilShading.ts';
+import { CIVIC_LAMP } from './palette.ts';
+import {
+  FALL_ATTRIBUTE,
+  FALL_COUNT,
+  HANG_ATTRIBUTE,
+  HANG_PHASE_ATTRIBUTE,
+  hangMotion,
+  installFallDrop,
+  installHangSway,
+  installLampLevels,
+  installLampPools,
+  LAMP_INDEX_ATTRIBUTE,
+  landmarkUniforms,
+  type LandmarkUniforms,
+} from './landmarkLight.ts';
 
 /** The root group names Block 4b gives the two states. */
 export const STATE_NODE: Record<LandmarkState, string> = {
@@ -63,6 +79,34 @@ export interface LandmarkStateTemplate {
 export interface LandmarkTemplate {
   slug: string;
   states: Record<LandmarkState, LandmarkStateTemplate>;
+  /**
+   * The light and motion uniforms the template's materials share
+   * (landmarkLight.ts), written by the layer that stands it. Present under
+   * the prologue's look alone, where the study's licence holds; elsewhere the
+   * materials carry no patch and the handle is null.
+   */
+  uniforms: LandmarkUniforms | null;
+}
+
+/** The lamps' glass centres in model metres, from the `lamp_*` nodes, in index order. */
+export function lampCentres(state: LandmarkStateTemplate): Vector3[] {
+  const out: Vector3[] = [];
+  for (let i = 0; ; i++) {
+    const at = state.nodes.get(`lamp_${i}`);
+    if (at === undefined) return out;
+    out.push(at);
+  }
+}
+
+/** Where silt falls from, model metres: the `sift_*` (intact) or `sift_r*` (ruined) nodes. */
+export function siftSites(state: LandmarkStateTemplate, which: LandmarkState): Vector3[] {
+  const out: Vector3[] = [];
+  const prefix = which === 'intact' ? 'sift_' : 'sift_r';
+  for (let i = 0; ; i++) {
+    const at = state.nodes.get(`${prefix}${i}`);
+    if (at === undefined) return out;
+    out.push(at);
+  }
 }
 
 /**
@@ -93,8 +137,24 @@ export function buildLandmarkTemplate(
     }
   });
   normaliseLuminance(clones.values());
+  // The study's light and motion ride the prologue's look alone (§7
+  // "Isolation"): under it the stone takes the lamp pools, the ribs the sway,
+  // every ruined part the debris's drop, and the glass its lamp's level.
+  // Installed before the glow and the veil, which wrap what the pools add.
+  // A later patch's text lands before an earlier one's, so the pools go in
+  // first and read the position after every displacement.
+  const uniforms = look === 'sorrowgate' ? landmarkUniforms(lampHue()) : null;
   for (const material of clones.values()) {
     if (look === 'sorrowgate') installPropSurface(material);
+    if (uniforms !== null) {
+      if (material.name === 'civic_lamp') {
+        installLampLevels(material, uniforms);
+      } else {
+        installLampPools(material, uniforms);
+        installFallDrop(material, uniforms);
+        if (material.name === 'structure_rib') installHangSway(material, uniforms);
+      }
+    }
     if (material instanceof MeshStandardMaterial && material.emissive.getHex() !== 0) {
       keepGlowOutsideToneMapping(material);
     }
@@ -116,7 +176,26 @@ export function buildLandmarkTemplate(
     const root = copy.getObjectByName(STATE_NODE[state]);
     states[state] = root === undefined ? emptyState() : mergeState(root, rootInverse, scale);
   }
-  return { slug: spec.slug, states };
+  if (uniforms !== null) {
+    // The pools' lamps: the intact state's glass centres, model metres, at
+    // the steady level; the layer steps each level with its lamp.
+    const lamps = lampCentres(states.intact);
+    uniforms.uPoolCount.value = Math.min(lamps.length, uniforms.uLampLevel.value.length);
+    lamps.forEach((at, i) => {
+      if (i >= uniforms.uPoolCount.value) return;
+      uniforms.uPool.value.set([at.x, at.y, at.z, 1], i * 4);
+    });
+  }
+  return { slug: spec.slug, states, uniforms };
+}
+
+/** The civic lamp's hue, linear, for the stone under it (palette.ts `CIVIC_LAMP`). */
+function lampHue(): [number, number, number] {
+  const r = ((CIVIC_LAMP >> 16) & 0xff) / 255;
+  const g = ((CIVIC_LAMP >> 8) & 0xff) / 255;
+  const b = (CIVIC_LAMP & 0xff) / 255;
+  const linear = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  return [linear(r), linear(g), linear(b)];
 }
 
 function emptyState(): LandmarkStateTemplate {
@@ -138,6 +217,10 @@ function mergeState(root: Object3D, rootInverse: Object3D['matrixWorld'], scale:
     }
     if (!(child instanceof Mesh) || Array.isArray(child.material)) return;
     const geometry = (child.geometry as BufferGeometry).clone();
+    // What the study's shaders read off a vertex, laid before the node's
+    // transform is baked in, since a hung fitting's weight is its depth below
+    // the node's own origin, the pivot (landmarkLight.ts).
+    layMotionAttributes(geometry, child.name, child.userData);
     geometry.applyMatrix4(inModel);
     geometry.scale(scale, scale, scale);
     const position = geometry.getAttribute('position');
@@ -163,6 +246,54 @@ function mergeState(root: Object3D, rootInverse: Object3D['matrixWorld'], scale:
   }
   return { parts, triangles, nodes, extras };
 }
+
+/**
+ * Lay the study's per-vertex attributes on one node's geometry, every
+ * geometry alike so a material's bucket merges: the lamp's index on a
+ * `lamp_N`, the hung fitting's axis, period and weight on a `hang_N` (weight
+ * zero at the pivot, one at its lowest point, quadratic between, as the
+ * kelp's), the piece's start height and index on a `fall_N`, and zeros on
+ * everything else, which the shaders read as "does not move".
+ */
+export function layMotionAttributes(
+  geometry: BufferGeometry,
+  name: string,
+  userData: Record<string, unknown>
+): void {
+  const position = geometry.getAttribute('position');
+  const n = position.count;
+  const lamp = new Float32Array(n);
+  const hang = new Float32Array(n * 4);
+  const hangPhase = new Float32Array(n);
+  const fall = new Float32Array(n * 2);
+  let match = /^lamp_(\d+)$/.exec(name);
+  if (match !== null) lamp.fill(Number(match[1]));
+  match = /^hang_(\d+)$/.exec(name);
+  if (match !== null) {
+    const index = Number(match[1]);
+    const { axis, periodS, phase } = hangMotion(index, HANG_SET);
+    let lowest = 0;
+    for (let i = 0; i < n; i++) lowest = Math.min(lowest, position.getY(i));
+    for (let i = 0; i < n; i++) {
+      const below = lowest < 0 ? Math.max(0, -position.getY(i)) / -lowest : 0;
+      hang.set([axis[0], axis[1], periodS, below * below], i * 4);
+      hangPhase[i] = phase;
+    }
+  }
+  match = /^fall_(\d+)$/.exec(name);
+  if (match !== null) {
+    const start = userData['startAboveRestM'];
+    const height = typeof start === 'number' && start > 0 ? start : 0;
+    for (let i = 0; i < n; i++) fall.set([height, Number(match[1]) % FALL_COUNT], i * 2);
+  }
+  geometry.setAttribute(LAMP_INDEX_ATTRIBUTE, new Float32BufferAttribute(lamp, 1));
+  geometry.setAttribute(HANG_ATTRIBUTE, new Float32BufferAttribute(hang, 4));
+  geometry.setAttribute(HANG_PHASE_ATTRIBUTE, new Float32BufferAttribute(hangPhase, 1));
+  geometry.setAttribute(FALL_ATTRIBUTE, new Float32BufferAttribute(fall, 2));
+}
+
+/** The hung fittings Block 4b gives the intact state, for spreading their axes. */
+const HANG_SET = 6;
 
 /** The bounds of a state's merged parts, model metres: for the tests and the probe. */
 export function stateBounds(state: LandmarkStateTemplate): Box3 {

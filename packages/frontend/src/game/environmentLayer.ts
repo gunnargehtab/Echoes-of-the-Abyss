@@ -40,8 +40,11 @@ import {
   type PropPlacement,
 } from './environment.ts';
 import { envTemplate, type SwayUniforms } from './environmentModels.ts';
-import { landmarkTemplate } from './landmarkModels.ts';
+import { landmarkTemplate, siftSites, type LandmarkTemplate } from './landmarkModels.ts';
 import { depthToWorldY } from './perspectiveTerrain.ts';
+import { FALL_SECONDS, lampLevels, LIGHT_BUCKET_MS } from './landmarkLight.ts';
+import { CollapseCloud, LandmarkSift, SIFT_SITE_CAP, type SiftSite } from './landmarkSift.ts';
+import type { LandmarkState } from '@echoes/shared';
 import type { WorldLook } from './tutorialLook.ts';
 import { VentPlume, plumeSites } from './ventPlume.ts';
 import { FieldHaze, hazeSites } from './fieldHaze.ts';
@@ -52,6 +55,13 @@ const TMP_POS = new Vector3();
 const TMP_SCALE = new Vector3();
 const Y_AXIS = new Vector3(0, 1, 0);
 const TMP_COLOR = new Color();
+
+/** A model-space plan offset turned by a landmark's yaw, as the instance matrix turns it. */
+function turned(x: number, z: number, yawRad: number): [number, number] {
+  const cos = Math.cos(yawRad);
+  const sin = Math.sin(yawRad);
+  return [x * cos + z * sin, -x * sin + z * cos];
+}
 
 export class EnvironmentLayer {
   /**
@@ -71,6 +81,10 @@ export class EnvironmentLayer {
   readonly plume = new VentPlume();
   /** Every field's sediment haze, one draw; in the group while a field stands (#1555). */
   readonly haze = new FieldHaze();
+  /** The arch study's silt sift, one draw; in the group while a landmark stands under the study (#1637). */
+  readonly sift = new LandmarkSift();
+  /** The collapse's cloud, one draw, alive for the 14 s after the ground change. */
+  readonly cloud = new CollapseCloud();
 
   /** Guards late template loads: a load that finishes after another rebuild
    * (new terrain, teardown) must not resurrect stale placements. */
@@ -90,6 +104,22 @@ export class EnvironmentLayer {
    * collapse stands it from its first frame.
    */
   private landmarks: readonly PublicLandmark[] = [];
+  /** The templates standing in this build whose light and motion this layer drives. */
+  private lit: LandmarkTemplate[] = [];
+  /**
+   * The state each landmark last stood in here, across rebuilds: the collapse
+   * sequence starts only on a rebuild that turns an intact landmark ruined in
+   * this same layer (the received ground change), never on a layer whose
+   * first ground already holds the ruin (a reload after 10:40), which stands
+   * it from its first frame and plays nothing. Cleared with `reset`, not
+   * `clear`, since a rebuild is exactly the moment it is read.
+   */
+  private lastStates = new Map<string, LandmarkState>();
+  /** The sonar bucket the lamps were last stepped on. */
+  private lampBucket = -1;
+  /** The collapse's clock, milliseconds on the bucket, while the debris falls; null at rest. */
+  private fallStartedMs: number | null = null;
+  private falling = false;
   /** Sway handles of the templates standing in this build, ticked per frame. */
   private swaying: SwayUniforms[] = [];
   private reducedMotion = false;
@@ -138,13 +168,58 @@ export class EnvironmentLayer {
       placements = all.placements;
       stands = all.landmarks;
     }
+    // The study's light and motion ride the default rebuild alone: the
+    // session's layer, on the received ground. A layer handed its placements
+    // (the region's baseline detail, drawn on the board) stands the landmark
+    // still, as it stands every prop still, and raises no cloud.
+    const sifts: SiftSite[] = [];
     for (const stand of stands ?? []) {
-      this.standLandmark(stand, terrain, () => {
+      const template = this.standLandmark(stand, terrain, () => {
         if (generation === this.generation) {
           this.rebuild(terrain, groundY, standsFields ? undefined : placements, stands);
         }
       });
+      if (template === null || !standsFields) continue;
+      const prior = this.lastStates.get(stand.landmark.slug);
+      this.lastStates.set(stand.landmark.slug, stand.state);
+      if (template.uniforms === null) continue;
+      this.lit.push(template);
+      const state = template.states[stand.state];
+      const { landmark } = stand;
+      const originY = depthToWorldY(landmark.originFloorM);
+      for (const at of siftSites(state, stand.state).slice(0, SIFT_SITE_CAP[stand.state])) {
+        const [x, z] = turned(at.x, at.z, landmark.yawRad);
+        sifts.push({
+          x: landmark.anchorXM + x,
+          y: originY + at.y,
+          z: landmark.anchorYM + z,
+          xM: landmark.anchorXM,
+          yM: landmark.anchorYM,
+        });
+      }
+      // The collapse: this layer stood it intact and now stands it ruined,
+      // on the ground change it just received. Reduced motion cuts to the
+      // ruin with no sequence and no cloud (§8).
+      if (prior === 'intact' && stand.state === 'ruined' && !this.reducedMotion) {
+        this.falling = true;
+        this.fallStartedMs = null;
+        template.uniforms.uFallT.value = 0;
+        const plan = stand.spec.plan.ruined;
+        const [wx, wz] = turned(plan.x[0], plan.z[0], landmark.yawRad);
+        const [ex, ez] = turned(plan.x[1], plan.z[0], landmark.yawRad);
+        const [sx, sz] = turned(0, 1, landmark.yawRad);
+        this.cloud.build(
+          [
+            new Vector3(landmark.anchorXM + wx, originY, landmark.anchorYM + wz),
+            new Vector3(landmark.anchorXM + ex, originY, landmark.anchorYM + ez),
+          ],
+          new Vector3(sx, 0, sz)
+        );
+        this.group.add(this.cloud.points);
+      }
     }
+    this.sift.build(sifts, this.shade);
+    if (sifts.length > 0) this.group.add(this.sift.points);
 
     if (placements.length === 0) return;
     // Where each standing slug tops out, per unit scale: the chimneys' mouths.
@@ -224,9 +299,13 @@ export class EnvironmentLayer {
    * moves: the wall that rises under the anchor at 10:40 would lift the ruin
    * onto its top (study §6, gate 1).
    */
-  private standLandmark(stand: LandmarkStand, terrain: TerrainPayload, onReady: () => void): void {
+  private standLandmark(
+    stand: LandmarkStand,
+    terrain: TerrainPayload,
+    onReady: () => void
+  ): LandmarkTemplate | null {
     const template = landmarkTemplate(stand.spec, onReady, this.look);
-    if (template === null) return;
+    if (template === null) return null;
     const state = template.states[stand.state];
     const { landmark } = stand;
     TMP_POS.set(landmark.anchorXM, depthToWorldY(landmark.originFloorM), landmark.anchorYM);
@@ -253,6 +332,7 @@ export class EnvironmentLayer {
     }
     this.landmarksStanding++;
     this.landmarkTris += state.triangles;
+    return template;
   }
 
   /**
@@ -271,15 +351,63 @@ export class EnvironmentLayer {
   tick(nowMs: number, waterReachM?: number): void {
     this.plume.tick(nowMs, waterReachM);
     this.haze.tick(nowMs, waterReachM);
+    this.tickLandmarks(nowMs);
     if (this.swaying.length === 0) return;
     const time = this.reducedMotion ? SWAY_HOLD_S : nowMs / 1000;
     for (const sway of this.swaying) sway.uSwayTime.value = time;
+  }
+
+  /**
+   * The study's clocks, each on the 5 Hz bucket (rule 3): the four lamps'
+   * levels and their pools with them, held at 1 under reduced motion; the
+   * hung fittings' clock, held still; the debris's progress over
+   * `FALL_SECONDS` from the first tick after the change, and the cloud's
+   * over its 14 s, after which the cloud leaves the group.
+   */
+  private tickLandmarks(nowMs: number): void {
+    this.sift.tick(nowMs);
+    if (this.lit.length === 0) return;
+    const stepped = Math.floor(nowMs / LIGHT_BUCKET_MS) * LIGHT_BUCKET_MS;
+    const bucket = stepped / LIGHT_BUCKET_MS;
+    const bucketChanged = bucket !== this.lampBucket;
+    this.lampBucket = bucket;
+    if (this.falling && this.fallStartedMs === null) this.fallStartedMs = stepped;
+    const fallT =
+      this.falling && this.fallStartedMs !== null
+        ? Math.min(1, (stepped - this.fallStartedMs) / 1000 / FALL_SECONDS)
+        : 1;
+    if (fallT >= 1) this.falling = false;
+    for (const { uniforms } of this.lit) {
+      if (uniforms === null) continue;
+      if (bucketChanged) {
+        if (this.reducedMotion) uniforms.uLampLevel.value.fill(1);
+        else lampLevels(bucket, uniforms.uLampLevel.value.length, uniforms.uLampLevel.value);
+        for (let i = 0; i < uniforms.uPoolCount.value; i++) {
+          uniforms.uPool.value[i * 4 + 3] = uniforms.uLampLevel.value[i]!;
+        }
+      }
+      uniforms.uHangTime.value = this.reducedMotion ? SWAY_HOLD_S : stepped / 1000;
+      uniforms.uFallT.value = fallT;
+    }
+    if (this.cloud.motes > 0 && this.cloud.tick(nowMs)) this.group.remove(this.cloud.points);
   }
 
   setReducedMotion(reduced: boolean): void {
     this.reducedMotion = reduced;
     this.plume.setReducedMotion(reduced);
     this.haze.setReducedMotion(reduced);
+    this.sift.setReducedMotion(reduced);
+    if (reduced) {
+      // A sequence under way cuts to the ruin (§8), and the lamps settle on
+      // the next bucket.
+      this.falling = false;
+      this.fallStartedMs = null;
+      if (this.cloud.motes > 0) {
+        this.cloud.clear();
+        this.group.remove(this.cloud.points);
+      }
+      this.lampBucket = -1;
+    }
   }
 
   /**
@@ -302,6 +430,7 @@ export class EnvironmentLayer {
     for (const { mesh, list } of this.shaded) this.applyShade(mesh, list);
     this.plume.setShade(shade);
     this.haze.setShade(shade);
+    this.sift.setShade(shade);
   }
 
   private applyShade(mesh: InstancedMesh, list: readonly PropPlacement[]): void {
@@ -327,6 +456,8 @@ export class EnvironmentLayer {
     fieldHazes: number;
     landmarks: number;
     landmarkTris: number;
+    siftMotes: number;
+    cloudMotes: number;
   } {
     return {
       props: this.props,
@@ -335,7 +466,14 @@ export class EnvironmentLayer {
       fieldHazes: this.haze.fields,
       landmarks: this.landmarksStanding,
       landmarkTris: this.landmarkTris,
+      siftMotes: this.sift.motes,
+      cloudMotes: this.cloud.motes,
     };
+  }
+
+  /** Whether the collapse's debris is still coming down, for the tests and the probe. */
+  get collapsing(): boolean {
+    return this.falling;
   }
 
   /**
@@ -346,12 +484,18 @@ export class EnvironmentLayer {
   reset(): void {
     this.generation++;
     this.clear();
+    this.lastStates.clear();
+    this.falling = false;
+    this.fallStartedMs = null;
+    this.cloud.clear();
   }
 
   destroy(): void {
     this.reset();
     this.plume.dispose();
     this.haze.dispose();
+    this.sift.dispose();
+    this.cloud.dispose();
   }
 
   private clear(): void {
@@ -361,9 +505,13 @@ export class EnvironmentLayer {
       // belong to the template cache and must survive the rebuild.
       if (child instanceof InstancedMesh) child.dispose();
     }
-    // Emptied, not disposed: their materials outlive the rebuild.
+    // Emptied, not disposed: their materials outlive the rebuild. The cloud
+    // is not emptied here: a rebuild mid-sequence (a second delta in the 14 s)
+    // leaves it settling, and the group it is re-added to is this one.
     this.plume.clear();
     this.haze.clear();
+    this.sift.clear();
+    this.lit = [];
     this.props = 0;
     this.propTris = 0;
     this.landmarksStanding = 0;
