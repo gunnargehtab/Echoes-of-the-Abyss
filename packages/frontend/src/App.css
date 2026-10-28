@@ -1715,8 +1715,11 @@
 .objectives {
   position: absolute;
   top: calc(60px * var(--ui-scale, 1));
-  /* Clear of the depth ribbon, which owns the first 26 px of the left edge. */
-  left: calc(40px * var(--ui-scale, 1));
+  /* Clear of the depth ribbon, its labels included (§2, #1650): the strip and
+     the label column right of it. `--ribbon-units` is that edge plus a panel's
+     gap, set by GameCanvas from uiScale.ts, where the renderer reads the same
+     geometry; 67px is today's value. */
+  left: calc(var(--ribbon-units, 67px) * var(--ui-scale, 1));
   transform: scale(var(--ui-scale, 1));
   transform-origin: top left;
   /* Divided by `--panel-type` as well as by the scale, so the panel keeps its
@@ -2167,9 +2170,10 @@ button.objectives-row .objectives-text {
 
 @media (max-width: 900px) {
   /* The contact log hides at this width; the orders panel may not. It is the
-     only place the mission states what it wants, so it shrinks instead. */
+     only place the mission states what it wants, so it shrinks instead. It
+     keeps the base rule's `left`, clear of the ribbon's labels: at 32px it sat
+     on `SHELF` here as it did at 40 everywhere else (#1650). */
   .objectives {
-    left: 32px;
     width: 46vw;
     max-height: 26vh;
   }

@@ -239,7 +239,14 @@ import {
 } from './contactColumn.ts';
 import { clipPolygon, clipSegment } from './rimClip.ts';
 import { scopeBox } from './scopeBox.ts';
-import { CONSOLE_HEIGHT, HINT_LINE_HEIGHT, TOP_BAR_HEIGHT } from './uiScale.ts';
+import {
+  CONSOLE_HEIGHT,
+  HINT_LINE_HEIGHT,
+  RIBBON_LABEL_GAP,
+  RIBBON_WIDTH,
+  RIBBON_X,
+  TOP_BAR_HEIGHT,
+} from './uiScale.ts';
 
 /**
  * An order the player gave that the server has not yet echoed back
@@ -1407,9 +1414,11 @@ const SCOPE_RETURN_RADIUS_PX: Record<1 | 2 | 3 | 4, number> = { 1: 7, 2: 4.5, 3:
 /** One sweep revolution. Deliberately not a multiple of the 5 Hz Echo tick. */
 const SCOPE_SWEEP_MS = 4000;
 
-/** Depth ribbon geometry — a narrow strip down the left edge. */
-const RIBBON_X = 12;
-const RIBBON_WIDTH = 14;
+/**
+ * Depth ribbon geometry — a narrow strip down the left edge. Its x, width and
+ * label gap live in uiScale.ts, because the orders panel is laid out clear of
+ * them (§2).
+ */
 const RIBBON_TOP_PAD = 18;
 const RIBBON_BOTTOM_PAD = 16;
 /**
@@ -8791,7 +8800,7 @@ export class EchoRenderer {
     // boundary and not the water under it.
     this.ductLabel.visible = ductHeight >= RIBBON_DUCT_MIN_PX;
     this.ductLabel.position.set(
-      RIBBON_X + RIBBON_WIDTH + 5,
+      RIBBON_X + RIBBON_WIDTH + RIBBON_LABEL_GAP,
       this.ribbonY(THERMOCLINE.DEPTH_M, top, height) - this.ductLabel.height / 2
     );
 
@@ -8800,7 +8809,7 @@ export class EchoRenderer {
       const band = [DepthBand.Shelf, DepthBand.MidWater, DepthBand.Abyssal][i]!;
       label.visible = true;
       label.position.set(
-        RIBBON_X + RIBBON_WIDTH + 5,
+        RIBBON_X + RIBBON_WIDTH + RIBBON_LABEL_GAP,
         this.ribbonY(DEPTH_BANDS[band].min, top, height) + 2
       );
     });
