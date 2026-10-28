@@ -16,7 +16,7 @@
  *   node bake.mjs <model.glb> --length-m <metres> [--out <dir>] [--ppm <px>]
  *                 [--allow-no-emissive] [--glow-e <target>]
  *   node bake.mjs <model.glb> --category env --footprint-m <metres>
- *                 [--out <dir>] [--ppm <px>] [--world-light <vent|flora|crystal|ore>]
+ *                 [--out <dir>] [--ppm <px>] [--world-light <vent|flora|crystal|ore|civic>]
  *                 [--max-tris <n>] [--max-materials <n>]
  *
  * --length-m is the design hull length: HULL_LENGTH_M in
@@ -32,7 +32,11 @@
  * emissive rule is INVERTED — on the ground it is the glowing rock that is
  * the style bug, so any emissive fails unless `--world-light` names the
  * licensed family (docs/style-neon-noir.md "World light"). `--glow-e` is a
- * SIG instrument and is rejected in env mode: props have no SIG.
+ * SIG instrument and is rejected in env mode: props have no SIG. The fifth
+ * family, `civic`, is the arch study's licence (style-neon-noir.md "The arch
+ * study's licence", asset-prompts-3d.md Block 4b) and is admitted for its one
+ * landmark alone, `env-ruin-transit-arch`: on any other file the flag fails,
+ * so the licence cannot leak onto a scattered prop by a typo at the door.
  *
  * Exits non-zero when the model fails to load or fails its category's rules.
  */
@@ -42,7 +46,7 @@ import { execSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, extname, join, normalize, resolve } from 'node:path';
+import { basename, dirname, extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from '../../../../tools/lib/spawn.mjs';
 
@@ -65,7 +69,10 @@ const allowNoEmissive = args.includes('--allow-no-emissive');
 // Env mode: the licensed world-light family, and the registry budgets the
 // export is held to (PropSpec.triBudget caps at 800 in the registry fence;
 // two materials is the draw-call contract).
-const WORLD_LIGHT_FAMILIES = ['vent', 'flora', 'crystal', 'ore'];
+const WORLD_LIGHT_FAMILIES = ['vent', 'flora', 'crystal', 'ore', 'civic'];
+// The civic family is licensed to one slug (Block 4b); every other prop that
+// asks for it is refused before the browser starts.
+const CIVIC_LIGHT_SLUGS = ['env-ruin-transit-arch'];
 const worldLight = flag('--world-light');
 const maxTris = Number(flag('--max-tris') || 800);
 const maxMaterials = Number(flag('--max-materials') || 2);
@@ -91,6 +98,13 @@ if (!modelPath || !existsSync(modelPath) || !(lengthM > 0)) {
 }
 if (isEnv && worldLight !== undefined && !WORLD_LIGHT_FAMILIES.includes(worldLight)) {
   console.error(`unknown --world-light: ${worldLight} (${WORLD_LIGHT_FAMILIES.join(' | ')})`);
+  process.exit(1);
+}
+if (isEnv && worldLight === 'civic' && !CIVIC_LIGHT_SLUGS.includes(basename(modelPath, '.glb'))) {
+  console.error(
+    `--world-light civic is licensed to ${CIVIC_LIGHT_SLUGS.join(', ')} alone ` +
+      '(docs/asset-prompts-3d.md Block 4b); this file is not it.'
+  );
   process.exit(1);
 }
 if (isEnv && glowE > 0) {
@@ -305,7 +319,8 @@ try {
       console.error(
         '\nFAIL: this prop carries emissive but no world-light family was licensed. On the ' +
           'ground the glowing rock is the style bug (docs/style-neon-noir.md "World light") — ' +
-          'pass --world-light <vent|flora|crystal|ore> only if Block 4 licenses this prop.'
+          'pass --world-light <vent|flora|crystal|ore|civic> only if Block 4 (4b for civic) ' +
+          'licenses this prop.'
       );
       failed = true;
     }
