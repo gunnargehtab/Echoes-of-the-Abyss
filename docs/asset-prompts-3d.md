@@ -2073,7 +2073,7 @@ its south face rises from about Z +125 m at its foot to Z +62 m at its
 top, and stands at about Z +117 m where it is 60 m up. Model nothing
 north of Z +115 m. Against the face, broken pier mass, fallen courses and
 a rib or two heap no higher than 60 m. South of Z +125 m they spread in a
-low skirt, nowhere higher than 5 m and nowhere south of Z +150 m. No
+skirt, nowhere higher than 15 m and nowhere south of Z +150 m. No
 lintel, no soffit and no framed void survives. No lamps.
 
 Desaturated, dark and still; quieter than any vessel.

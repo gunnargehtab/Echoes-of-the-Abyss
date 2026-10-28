@@ -2,7 +2,7 @@
 
 ## 1. Status and decision
 
-**Decisions taken and the arch commissioned; no model or code yet.** This is the next deliverable for
+**Decisions taken, the arch commissioned and its model authored; no code yet.** This is the next deliverable for
 [#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637),
 not a replacement for the accepted [retained-geometry slice](visual-reboot.md).
 On 26 October the owner took the four decisions the first revision left open (§5) and asked
@@ -10,7 +10,8 @@ for the documents authoring needs first: the dimensioned fit (§6), the placemen
 (§7), the light and motion licence (§8) and the asset block in
 [asset-prompts-3d.md](asset-prompts-3d.md#block-4b--public-landmarks-authored-no-faction-no-sig).
 This revision writes them. On 27 October the owner approved the asset block by name, which
-commissions the arch model inside §6's fit (§10). No model and no renderer change exists yet.
+commissions the arch model inside §6's fit (§10). On 28 October, with the model authored, the
+owner loosened the ruined skirt's ceiling from 5 m to 15 m (§6). No renderer change exists yet.
 
 On 26 October the owner selected **monumental civic infrastructure: heavy masonry,
 exposed structural ribs and damaged transit fittings**, with four priorities: layered
@@ -239,9 +240,12 @@ side.
 The wall swallows the piers: every stump at a pier's place would stand inside the drawn rock,
 so the ruined state models none. It is what heaps against the face: broken pier mass and
 fallen courses between Z +115 and +150, no higher than +60 m. South of Y 2250 (Z +125) nothing
-rises more than 5 m over the drawn floor, which keeps the debris under the escorts' hulls at
-their seats. No piece spans the piers' old line or frames a void, and every debris piece
-comes to rest inside the ruined plan.
+rises more than 15 m over the drawn floor, which keeps the debris under the escorts' hulls at
+their seats, 75 m further south at +33 m. The rule was 5 m until 28 October: with the face
+sloping north as it rises, 5 m left the heap a wedge no thicker than 8 m at its top, which
+read as a facing on the rock rather than fallen masonry, and the owner loosened it. No piece
+spans the piers' old line or frames a void, and every debris piece comes to rest inside the
+ruined plan.
 
 At the opening station (2,600 m dolly, 1,080 px tall, 40° field of view) the arch spans
 about 325 px and a scout about 34 px, both at true scale. At C (420 m) the arch overfills
