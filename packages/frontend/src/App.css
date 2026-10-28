@@ -1762,10 +1762,11 @@
 
 /* The rows set their own type against `--panel-type` (GameCanvas says why):
    above 100% UI scale a panel's type grows by the square root of the scale, so
-   the panel keeps roughly twice the rows it otherwise would. `overflow-y` is the
-   backstop rather than the plan — §2 requires this panel to fit, and it does at
-   every scale the setting offers; a scrollbar here means a mission has authored
-   more rows than any screen can hold, and clipping them would be worse. */
+   the panel keeps roughly twice the rows it otherwise would, and where that is
+   still too many `MissionPanel` sets a smaller `--panel-type` on this panel
+   alone, down to the 75% setting's type (panelFit.ts, #1634). `overflow-y` is
+   the backstop rather than the plan: a scrollbar here means the rows outgrew
+   the room even at that floor, and clipping them would be worse. */
 .objectives-body {
   overflow-y: auto;
   padding-bottom: 2px;

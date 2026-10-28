@@ -1159,7 +1159,12 @@ Audio carries primary information, so accessibility here is a correctness requir
   that magnified everything needed four times the area — the orders panel wanted 444 units of rows
   in 182 units of screen, which is arithmetic rather than a layout to tune. Under the square root
   a reader still gets type about 1.4x the size at 200%, and the panel holds roughly twice the
-  rows, which is what makes it fit. A panel is never allowed past the console to buy the
+  rows. That alone did not make the orders panel fit: from 13:40 Sorrowgate's rows outgrew the
+  room by 55 px at 150% on a 1440 × 900 screen and by 77 px at 125% on 1366 × 768 (#1634).
+  So the orders panel's type **yields to its room**. It takes the square root's size where
+  that fits, and otherwise the largest size at which every row is on screen, but never
+  smaller than the 75% setting draws it, the smallest size a player can ask for and so the
+  smallest the game calls legible. A panel is never allowed past the console to buy the
   difference; the console is not the water, but it is not spare room either.
 - **Full rebinding**, including a one-handed layout, and no timing-critical chords. The left + right camera drag (§9) is a chord of buttons rather than of keys, and not a timing-critical one: either button may land first, at any interval. `Shift` + wheel moves the same focus with one button, for a player who cannot hold two.
 - **A 44 px target floor.** The console's controls — a command cell, a production row, a fleet chip — are at least 44 px on the short side at 100% UI scale, because a target sized to its label is one a player with an unsteady hand misses, and §2's console is laid out from it. The strip's readouts cannot clear it at the strip's height, and each is grown toward it as far as its own row allows.

@@ -63,6 +63,34 @@ interface Registered {
 }
 
 /**
+ * An element's inline style: what the client writes by name, and the three
+ * custom-property calls the orders panel fits itself with (#1634).
+ *
+ * There is no cascade to model, so a property reads back exactly what was set
+ * on this node and `getComputedStyle` (below) answers with this same object:
+ * a value set on `.game-root` never reaches a child here, and the panel reads
+ * scale 1 and base type 1, which is the 100% it would read in a browser.
+ */
+export class StubStyle {
+  [property: string]: unknown;
+
+  setProperty(name: string, value: string): void {
+    this[name] = value;
+  }
+
+  removeProperty(name: string): string {
+    const old = this.getPropertyValue(name);
+    delete this[name];
+    return old;
+  }
+
+  getPropertyValue(name: string): string {
+    const value = this[name];
+    return typeof value === 'string' ? value : '';
+  }
+}
+
+/**
  * One node of the stub tree.
  *
  * Listeners are held rather than swallowed, because "did teardown actually
@@ -71,7 +99,7 @@ interface Registered {
  */
 export class StubElement {
   readonly tagName: string;
-  readonly style: Record<string, string> = {};
+  readonly style = new StubStyle();
   readonly childNodes: StubElement[] = [];
   parentNode: StubElement | null = null;
   clientWidth = 0;
@@ -593,6 +621,8 @@ export function installHeadlessDom(): void {
   // client never reads it, and Pixi takes its own from the adapter below.
   g.devicePixelRatio = 1;
   g.HTMLElement = StubElement;
+  // No layout and no cascade: an element's computed style is its own inline one.
+  g.getComputedStyle = (element: StubElement) => element.style;
   g.HTMLCanvasElement = StubCanvas;
   g.ResizeObserver = StubResizeObserver;
   g.requestAnimationFrame = scheduleFrame;
