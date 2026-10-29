@@ -5,42 +5,45 @@ Three of the four [sorrowgate-arch-study.md](../../sorrowgate-arch-study.md) §9
 did not meet: the colour-vision palettes, the stations at §9's viewport and times, and the
 transit pair. The fourth, GPU time, needs the named desktop GPU and is not here.
 
-Every frame is the real client at `6021dd06` through Tutorial → briefing → Descend, one fresh
-session each, 1920 × 1080 at device pixel ratio 1, the HUD on, default water and halo
-settings and motion. The study is on with `?arch-study=1` on the title URL and off without
-it. The renderer is SwiftShader (`ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device
-(Subzero)))`), so no frame time here is evidence; calls and triangles are. Each frame is
-from [`capture.mjs`](capture.mjs), driven by `.claude/skills/run-game/scripts/drive.mjs`; its
-header says how a frame is timed without stopping or accelerating the server clock.
+Every frame is the real client at `6021dd06` through Tutorial → briefing → Descend: one fresh
+session per station, and one per half for the transit pair. Each is 1920 × 1080 at device pixel
+ratio 1, with the HUD on and default water, halo and motion settings. The study is on with
+`?arch-study=1` on the title URL and off without it. The renderer is SwiftShader (`ANGLE
+(Google, Vulkan 1.3.0 (SwiftShader Device (Subzero)))`), so no frame time here is evidence;
+calls and triangles are. Each frame is from [`capture.mjs`](capture.mjs), driven by
+`.claude/skills/run-game/scripts/drive.mjs`. Its header says how a frame is timed without
+stopping or accelerating the server clock.
 
-Each `d-*.json` carries the session's settings record, viewport, renderer, the tick the six
-hull models stood (`modelsTick`), the requested and actual pose, the probe, and the conn
-canvas read in the frame after the capture (`connTick`): its near-black share (luma under
-10 %), its brightest pixel and a 28 px window round each lamp. The image's own time is the
-HUD clock in its top right. Six hull models stood in every session; none counted the array
-fallback.
+Two clocks are recorded per frame. The image's time is the HUD clock in its top right. The
+readings' time is `readingTick`: the conn canvas and the probe, read together in the first
+animation frame whose tick reached the requested time. Each `d-*.json` also carries the
+session's settings record, `leadS` (0 for every frame here), the tick the six hull models
+stood (`modelsTick`), and the requested and actual pose. The conn readings are its near-black
+share (luma under 10 %), its brightest pixel and a 28 px window round each standing lamp. Six
+hull models stood in every session; none counted the array fallback.
 
 ## The quartet at T+00:30, on and off
 
-Each station is its own session, and every frame's HUD clock reads T+00:30. So H, C, L and
-S are within one second of each other, and each on/off pair is at the same second.
+Every frame's HUD clock reads T+00:30, so H, C, L and S are within one second of each other.
+Two were retaken for that: a first C-on session drew T+00:31 and a first C-deuteranopia
+session T+00:29. Every reading is between ticks 1800 and 1848, the first 0.8 s of that second.
 
-| Station | Pose (focus, dolly, pitch, yaw) | On | Off | Calls on / off | Triangles on / off | Near-black on / off |
-| --- | --- | --- | --- | --- | --- | --- |
-| H | Unmodified opening: (2550, 2553) on the seabed, 2,600, 55°, 0° | `d-H-on-H-030s.png` | `d-H-off-H-030s.png` | 56 / 51 | 123,375 / 120,963 | 98.7 % / 99.5 % |
-| C | (2550, 2200) at 1,450 m, 420, 35°, 25° | `d-C-on-C-030s.png` | `d-C-off-C-030s.png` | 36 / 31 | 106,127 / 103,715 | 87.3 % / 99.3 % |
-| L | (2550, 2750) at 1,450 m, 650, 12°, 0° | `d-L-on-L-030s.png` | `d-L-off-L-030s.png` | 54 / 49 | 115,410 / 112,998 | 98.1 % / 98.3 % |
-| S | (2500, 2000) on the seabed, 6,500, 55°, 0° | `d-S-on-S-030s.png` | `d-S-off-S-030s.png` | 56 / 51 | 123,375 / 120,963 | 99.1 % / 99.3 % |
+| Station | Pose (focus, dolly, pitch, yaw) | On | Off | Reading tick on / off | Calls on / off | Triangles on / off | Near-black on / off |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| H | Unmodified opening: (2550, 2553) on the seabed, 2,600, 55°, 0° | `d-H-on-H-030s.png` | `d-H-off-H-030s.png` | 1848 / 1800 | 56 / 51 | 123,375 / 120,963 | 98.7 % / 99.5 % |
+| C | (2550, 2200) at 1,450 m, 420, 35°, 25° | `d-C-on-C-030s.png` | `d-C-off-C-030s.png` | 1800 / 1800 | 36 / 31 | 106,127 / 103,715 | 86.8 % / 99.3 % |
+| L | (2550, 2750) at 1,450 m, 650, 12°, 0° | `d-L-on-L-030s.png` | `d-L-off-L-030s.png` | 1824 / 1848 | 54 / 49 | 115,410 / 112,998 | 98.1 % / 98.3 % |
+| S | (2500, 2000) on the seabed, 6,500, 55°, 0° | `d-S-on-S-030s.png` | `d-S-off-S-030s.png` | 1836 / 1800 | 56 / 51 | 123,375 / 120,963 | 99.1 % / 99.2 % |
 
 The opening camera at 1920 × 1080 is the pose increment C recorded at 1440 × 900. The study
 is five calls and 2,412 triangles at every station, as in increment C, with the landmark
 intact and the sift's 256 motes. Only C sits inside the 85–90 % darkness budget; at H, L and
 S the baseline is over it before the study adds anything, as increment C found.
 
-At C the lamp glass reads 88.4, 83.9 and 84.8 (lamps 0, 2 and 3; lamp 1 is off screen),
-increment C's values at 1440 × 900. The frame's brightest pixel is an escort's green
-navigation mark at 215.6, RGB (153, 244, 118) on and (153, 244, 119) off, so the escort reads
-the same between the pair.
+The C pair was read at the same tick, 1800. Its lamp glass reads 88.4, 83.9 and 84.8 (lamps
+0, 2 and 3; lamp 1 is off screen), increment C's values at 1440 × 900. The frame's brightest
+pixel in both halves is an escort's green navigation mark, luma 215.6 and RGB (153, 244, 118)
+at (1601, 958) on and (1602, 958) off. So the escort reads the same between the pair.
 
 ## The colour-vision palettes
 
@@ -55,28 +58,30 @@ in protanopia and red with white bars in tritanopia, against the standard red.
 | Protanopia | `d-H-protanopia-H-030s.png` | `d-C-protanopia-C-030s.png` |
 | Tritanopia | `d-H-tritanopia-H-030s.png` | `d-C-tritanopia-C-030s.png` |
 
-The arch, its lamps and the sift are the same in all three: calls 56 at H and 36 at C, the
-landmark 2,412 triangles, C's near-black 87.3 %. C's lamp glass reads 88.4, 83.9 and 84.8 in
-every palette, so no palette moves the licensed light.
+The arch and the sift are the same in all three: calls 56 at H and 36 at C, the landmark
+2,412 triangles. C's near-black is 86.8–86.9 %. At C the lamp glass reads 88.4, 83.9 and
+84.8 in every palette, except that lamp 3 read 68.0 in the tritanopia session's frame. At H
+the 28 px lamp windows read between 31.9 and 84.9 across the four sessions with no pattern by
+palette. Each session's reading is its own frame, between ticks 1824 and 1848, and at H's
+dolly a window holds stone and water as well as glass.
 
 ## The transit pair
 
 Two sessions, the study on and off, each taken at H's pose re-applied at T+10:35 and T+10:55,
-either side of the 10:40 ground change. Every frame's HUD clock reads its time. The pose held:
-the actual focus read (2550, 2553) on the seabed, dolly 2,600, 55° and 0° in all four frames,
-so the ground change drove no focus clamp at this pose.
+either side of the 10:40 ground change. Every frame's HUD clock reads its time, and the
+readings are within 0.4 s of it. The pose held: the actual focus read (2550, 2553) on the
+seabed, dolly 2,600, 55° and 0° in all four readings. So the ground change drove no focus
+clamp at this pose.
 
-| Time | On | Off | Landmark on | Lamps standing on | Calls on / off | Props on / off |
-| --- | --- | --- | --- | --- | --- | --- |
-| T+10:35 | `d-T-on-H-635s.png` | `d-T-off-H-635s.png` | intact, 2,412 triangles | 4 | 56 / 52 | 186 / 177 |
-| T+10:55 | `d-T-on-H-655s.png` | `d-T-off-H-655s.png` | ruined, 732 triangles | 0 | 45 / 41 | 198 / 198 |
+| Time | On | Off | Reading tick on / off | Landmark on | Lamps standing on | Calls on / off | Props on / off |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| T+10:35 | `d-T-on-H-635s.png` | `d-T-off-H-635s.png` | 38124 / 38112 | intact, 2,412 triangles | 4 | 56 / 51 | 186 / 186 |
+| T+10:55 | `d-T-on-H-655s.png` | `d-T-off-H-655s.png` | 39324 / 39324 | ruined, 732 triangles | 0 | 45 / 41 | 198 / 198 |
 
 At 10:35 the intact arch stands over the flight with its four lamps. At 10:55 the span is gone
 into the new wall, the ruined state stands no lamp, and the sift's 256 motes carry on; the
-cloud has settled (0 motes). The props read 198 at 50,356 triangles in both halves after the change, the collapse's count
-increment A recorded. Before it the off half read 177 props against the on half's 186. Both
-read 186 at T+00:30, so the nine went during the off session rather than at the flag; the
-cause was not traced here.
+cloud has settled (0 motes). The props read 186 at 49,244 triangles in both halves before the
+change and 198 at 50,356 after it, the collapse's count increment A recorded.
 
 ## Not taken here
 

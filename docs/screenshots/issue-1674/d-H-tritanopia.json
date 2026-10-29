@@ -8,7 +8,7 @@
   "settings": "{\"version\":1,\"palette\":\"tritanopia\"}",
   "reducedMotion": false,
   "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
-  "modelsTick": 1524,
+  "modelsTick": 1476,
   "openingPose": {
     "focus": {
       "xM": 2550,
@@ -24,11 +24,12 @@
       "name": "H",
       "file": "d-H-tritanopia-H-030s.png",
       "requestedTick": 1800,
+      "leadS": 0,
       "captureTicks": [
         1800,
-        1908
+        1944
       ],
-      "connTick": 1968,
+      "readingTick": 1824,
       "requested": "opening, unmodified",
       "actual": {
         "focus": {
@@ -48,77 +49,77 @@
         "frame": {
           "maxLuma": 221.2,
           "brightest": {
-            "x": 1405,
-            "y": 606,
+            "x": 1406,
+            "y": 608,
             "rgb": [
               233,
               220,
               198
             ]
           },
-          "meanLuma": 14.42,
-          "under10": 0.9871,
+          "meanLuma": 14.44,
+          "under10": 0.987,
           "pixels": 2073600
         },
         "windows": {
           "lamp_0": {
-            "maxLuma": 50.5,
+            "maxLuma": 84.9,
             "brightest": {
-              "x": 1062,
-              "y": 390,
+              "x": 1063,
+              "y": 392,
               "rgb": [
-                65,
-                48,
-                33
+                108,
+                81,
+                56
               ]
             },
-            "meanLuma": 13.43,
-            "under10": 0.8941,
+            "meanLuma": 14.45,
+            "under10": 0.9158,
             "pixels": 784
           },
           "lamp_1": {
-            "maxLuma": 84.1,
+            "maxLuma": 64.4,
             "brightest": {
-              "x": 1103,
-              "y": 386,
+              "x": 1104,
+              "y": 388,
               "rgb": [
-                108,
-                80,
-                54
+                83,
+                61,
+                43
               ]
             },
-            "meanLuma": 11.2,
-            "under10": 0.9388,
+            "meanLuma": 12.23,
+            "under10": 0.9324,
             "pixels": 784
           },
           "lamp_2": {
-            "maxLuma": 43.8,
+            "maxLuma": 70.5,
             "brightest": {
-              "x": 813,
-              "y": 389,
+              "x": 814,
+              "y": 391,
               "rgb": [
-                55,
-                42,
-                29
+                90,
+                67,
+                48
               ]
             },
-            "meanLuma": 10.86,
-            "under10": 0.9719,
+            "meanLuma": 11.85,
+            "under10": 0.9745,
             "pixels": 784
           },
           "lamp_3": {
-            "maxLuma": 71.4,
+            "maxLuma": 45.5,
             "brightest": {
-              "x": 845,
-              "y": 385,
+              "x": 846,
+              "y": 387,
               "rgb": [
-                90,
-                68,
-                50
+                59,
+                43,
+                30
               ]
             },
-            "meanLuma": 7.7,
-            "under10": 0.9171,
+            "meanLuma": 9.04,
+            "under10": 0.9273,
             "pixels": 784
           }
         }
@@ -139,9 +140,9 @@
           "depthM": null
         },
         "eye": {
-          "xM": 2553,
-          "zM": 4047,
-          "depthM": -8200
+          "xM": 2552,
+          "zM": 4040,
+          "depthM": -8225
         },
         "distance": 2600,
         "waterReachM": 8320,
@@ -194,17 +195,17 @@
         "environmentIntensity": 0.35,
         "environmentBytes": 344064,
         "station": null,
-        "stationMs": 38576.8,
-        "stationFrames": 41,
-        "avgFrames": 41,
+        "stationMs": 34561.3,
+        "stationFrames": 37,
+        "avgFrames": 37,
         "fps": 1.1,
-        "avgFrameMs": 918.84,
-        "worstFrameMs": 4529.1,
-        "avgConnMs": 42.24,
-        "worstConnMs": 569.1,
-        "avgOverlayMs": 4.4,
-        "worstOverlayMs": 36.9,
-        "overlayFrames": 33,
+        "avgFrameMs": 914.82,
+        "worstFrameMs": 4545,
+        "avgConnMs": 46.5,
+        "worstConnMs": 761.8,
+        "avgOverlayMs": 4.31,
+        "worstOverlayMs": 19.6,
+        "overlayFrames": 29,
         "gpuTimer": "software",
         "avgGpuMs": null,
         "worstGpuMs": null,
@@ -218,9 +219,9 @@
         "tracks": 4,
         "structureTracks": 0,
         "trackAt": {
-          "x": 3350,
-          "z": 2700,
-          "depthM": 1450
+          "x": 2550,
+          "z": 2950,
+          "depthM": 1490
         },
         "ordnance": 0,
         "wakeBubbles": 0,
@@ -251,20 +252,20 @@
         "collapsing": false,
         "landmarkLampsPx": [
           {
-            "x": 1063.0687248121294,
-            "y": 387.64970993186995
+            "x": 1063.47638837402,
+            "y": 392.677855074695
           },
           {
-            "x": 1103.7804050879563,
-            "y": 383.45960529792563
+            "x": 1104.189502620875,
+            "y": 388.5054371195068
           },
           {
-            "x": 814.2455411432237,
-            "y": 386.25627602266457
+            "x": 814.6536815771807,
+            "y": 391.29030293219313
           },
           {
-            "x": 845.6913075441746,
-            "y": 382.75838695861387
+            "x": 846.1006450536262,
+            "y": 387.80717866415716
           }
         ],
         "modelBacked": 6,

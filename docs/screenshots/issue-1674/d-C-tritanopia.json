@@ -8,7 +8,7 @@
   "settings": "{\"version\":1,\"palette\":\"tritanopia\"}",
   "reducedMotion": false,
   "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
-  "modelsTick": 1488,
+  "modelsTick": 1452,
   "openingPose": {
     "focus": {
       "xM": 2550,
@@ -24,11 +24,12 @@
       "name": "C",
       "file": "d-C-tritanopia-C-030s.png",
       "requestedTick": 1800,
+      "leadS": 0,
       "captureTicks": [
         1800,
-        2040
+        2064
       ],
-      "connTick": 2136,
+      "readingTick": 1836,
       "requested": [
         2550,
         2200,
@@ -57,63 +58,63 @@
         "frame": {
           "maxLuma": 215.6,
           "brightest": {
-            "x": 1603,
-            "y": 949,
+            "x": 1601,
+            "y": 956,
             "rgb": [
               153,
               244,
-              118
+              119
             ]
           },
-          "meanLuma": 17.38,
-          "under10": 0.8725,
+          "meanLuma": 17.43,
+          "under10": 0.869,
           "pixels": 2073600
         },
         "windows": {
           "lamp_0": {
             "maxLuma": 88.4,
             "brightest": {
-              "x": 1703,
-              "y": 770,
+              "x": 1702,
+              "y": 776,
               "rgb": [
                 113,
                 84,
                 59
               ]
             },
-            "meanLuma": 20.91,
-            "under10": 0.6224,
+            "meanLuma": 20.28,
+            "under10": 0.6582,
             "pixels": 784
           },
           "lamp_1": null,
           "lamp_2": {
             "maxLuma": 83.9,
             "brightest": {
-              "x": 243,
-              "y": 361,
+              "x": 242,
+              "y": 365,
               "rgb": [
                 106,
                 80,
                 57
               ]
             },
-            "meanLuma": 13.24,
-            "under10": 0.9298,
+            "meanLuma": 13.83,
+            "under10": 0.9311,
             "pixels": 784
           },
           "lamp_3": {
-            "maxLuma": 84.8,
+            "maxLuma": 68,
             "brightest": {
-              "x": 369,
-              "y": 370,
+              "x": 368,
+              "y": 375,
               "rgb": [
-                107,
-                81,
-                57
+                85,
+                65,
+                47
               ]
             },
-            "meanLuma": 9.48,
-            "under10": 0.9222,
+            "meanLuma": 7.7,
+            "under10": 0.9235,
             "pixels": 784
           }
         }
@@ -134,9 +135,9 @@
           "depthM": 1450
         },
         "eye": {
-          "xM": 2695,
-          "zM": 2512,
-          "depthM": 356
+          "xM": 2696,
+          "zM": 2511,
+          "depthM": 353
         },
         "distance": 420,
         "waterReachM": 1344,
@@ -189,17 +190,17 @@
         "environmentIntensity": 0.35,
         "environmentBytes": 344064,
         "station": null,
-        "stationMs": 42998.3,
-        "stationFrames": 41,
-        "avgFrames": 41,
+        "stationMs": 36798.4,
+        "stationFrames": 37,
+        "avgFrames": 37,
         "fps": 1,
-        "avgFrameMs": 1013.12,
-        "worstFrameMs": 4407,
-        "avgConnMs": 36.67,
-        "worstConnMs": 634,
-        "avgOverlayMs": 7.47,
-        "worstOverlayMs": 52.5,
-        "overlayFrames": 33,
+        "avgFrameMs": 951.35,
+        "worstFrameMs": 4508.7,
+        "avgConnMs": 46.48,
+        "worstConnMs": 702.1,
+        "avgOverlayMs": 8.03,
+        "worstOverlayMs": 41.1,
+        "overlayFrames": 29,
         "gpuTimer": "software",
         "avgGpuMs": null,
         "worstGpuMs": null,
@@ -213,9 +214,9 @@
         "tracks": 4,
         "structureTracks": 0,
         "trackAt": {
-          "x": 2550,
-          "z": 2950,
-          "depthM": 1490
+          "x": 3400,
+          "z": 2920,
+          "depthM": 1450
         },
         "ordnance": 0,
         "wakeBubbles": 0,
@@ -246,20 +247,20 @@
         "collapsing": false,
         "landmarkLampsPx": [
           {
-            "x": 1706.985770139297,
-            "y": 777.2016971307997
+            "x": 1703.5531490755986,
+            "y": 780.4233576760271
           },
           {
-            "x": 2102.250537192371,
-            "y": 841.3912038542362
+            "x": 2098.463262299488,
+            "y": 844.9457220693007
           },
           {
-            "x": 246.8259016994745,
-            "y": 365.56562565339993
+            "x": 244.46274062839538,
+            "y": 367.7835526087597
           },
           {
-            "x": 373.31533159915585,
-            "y": 375.39703762729323
+            "x": 370.8239063902106,
+            "y": 377.7353459194399
           }
         ],
         "modelBacked": 6,

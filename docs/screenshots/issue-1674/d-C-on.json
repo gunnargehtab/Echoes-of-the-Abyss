@@ -8,7 +8,7 @@
   "settings": null,
   "reducedMotion": false,
   "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
-  "modelsTick": 1452,
+  "modelsTick": 1344,
   "openingPose": {
     "focus": {
       "xM": 2550,
@@ -24,11 +24,12 @@
       "name": "C",
       "file": "d-C-on-C-030s.png",
       "requestedTick": 1800,
+      "leadS": 0,
       "captureTicks": [
         1800,
-        2028
+        2004
       ],
-      "connTick": 2136,
+      "readingTick": 1800,
       "requested": [
         2550,
         2200,
@@ -57,63 +58,63 @@
         "frame": {
           "maxLuma": 215.6,
           "brightest": {
-            "x": 1603,
-            "y": 949,
+            "x": 1601,
+            "y": 958,
             "rgb": [
               153,
               244,
-              119
+              118
             ]
           },
-          "meanLuma": 17.39,
-          "under10": 0.8725,
+          "meanLuma": 17.44,
+          "under10": 0.8684,
           "pixels": 2073600
         },
         "windows": {
           "lamp_0": {
             "maxLuma": 88.4,
             "brightest": {
-              "x": 1704,
-              "y": 770,
+              "x": 1702,
+              "y": 778,
               "rgb": [
                 113,
                 84,
                 59
               ]
             },
-            "meanLuma": 20.36,
-            "under10": 0.639,
+            "meanLuma": 19.61,
+            "under10": 0.6773,
             "pixels": 784
           },
           "lamp_1": null,
           "lamp_2": {
             "maxLuma": 83.9,
             "brightest": {
-              "x": 243,
-              "y": 361,
+              "x": 242,
+              "y": 366,
               "rgb": [
                 106,
                 80,
                 57
               ]
             },
-            "meanLuma": 13.26,
+            "meanLuma": 13.6,
             "under10": 0.9311,
             "pixels": 784
           },
           "lamp_3": {
             "maxLuma": 84.8,
             "brightest": {
-              "x": 370,
-              "y": 370,
+              "x": 369,
+              "y": 375,
               "rgb": [
                 107,
                 81,
                 57
               ]
             },
-            "meanLuma": 9.45,
-            "under10": 0.9235,
+            "meanLuma": 9.5,
+            "under10": 0.9209,
             "pixels": 784
           }
         }
@@ -134,9 +135,9 @@
           "depthM": 1450
         },
         "eye": {
-          "xM": 2695,
-          "zM": 2512,
-          "depthM": 355
+          "xM": 2696,
+          "zM": 2511,
+          "depthM": 352
         },
         "distance": 420,
         "waterReachM": 1344,
@@ -189,17 +190,17 @@
         "environmentIntensity": 0.35,
         "environmentBytes": 344064,
         "station": null,
-        "stationMs": 43640.3,
-        "stationFrames": 39,
-        "avgFrames": 39,
-        "fps": 0.9,
-        "avgFrameMs": 1073.57,
-        "worstFrameMs": 4217.5,
-        "avgConnMs": 40.25,
-        "worstConnMs": 682.1,
-        "avgOverlayMs": 8.08,
-        "worstOverlayMs": 22.2,
-        "overlayFrames": 32,
+        "stationMs": 35628.5,
+        "stationFrames": 36,
+        "avgFrames": 36,
+        "fps": 1,
+        "avgFrameMs": 950.31,
+        "worstFrameMs": 4350.3,
+        "avgConnMs": 37.99,
+        "worstConnMs": 567.1,
+        "avgOverlayMs": 7.25,
+        "worstOverlayMs": 21.9,
+        "overlayFrames": 29,
         "gpuTimer": "software",
         "avgGpuMs": null,
         "worstGpuMs": null,
@@ -213,9 +214,9 @@
         "tracks": 4,
         "structureTracks": 0,
         "trackAt": {
-          "x": 2550,
-          "z": 2950,
-          "depthM": 1490
+          "x": 3400,
+          "z": 2920,
+          "depthM": 1450
         },
         "ordnance": 0,
         "wakeBubbles": 0,
@@ -246,20 +247,20 @@
         "collapsing": false,
         "landmarkLampsPx": [
           {
-            "x": 1707.4014797356388,
-            "y": 778.29486033398
+            "x": 1704.0887335626692,
+            "y": 781.7531344727197
           },
           {
-            "x": 2102.70919734965,
-            "y": 842.5973112212889
+            "x": 2099.0541826612925,
+            "y": 846.412889630705
           },
           {
-            "x": 247.11209371330827,
-            "y": 366.31820529390006
+            "x": 244.83145957133627,
+            "y": 368.69902702345763
           },
           {
-            "x": 373.61705711697624,
-            "y": 376.19046466492836
+            "x": 371.21263811091336,
+            "y": 378.7005090912763
           }
         ],
         "modelBacked": 6,

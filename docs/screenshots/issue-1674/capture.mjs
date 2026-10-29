@@ -1,6 +1,6 @@
 /**
  * #1674's captures of the arch study's §9 stations, as a run-game `--steps`
- * module: stations at matched mission times, one fresh tutorial session each.
+ * module: stations at matched mission times, each in a fresh tutorial session.
  *
  *   VIEW_W=1920 VIEW_H=1080 SHOTS=C@30 TAG=d-C-on \
  *     node .claude/skills/run-game/scripts/drive.mjs --entry tutorial \
@@ -18,11 +18,12 @@
  * The frame is a CDP capture, not Playwright's `page.screenshot`: on the
  * container's SwiftShader a 1920 × 1080 frame takes about 1.8 s to draw, the
  * Playwright call spent 11 s waiting on frames, and the CDP one about 3 s. Its
- * image is a frame drawn after the call, and a call at the time drew that
- * second on the HUD clock in 17 of 18 frames (LEAD_S moves the call; the
- * JSON records it). The HUD's own clock in the image is the frame's time;
- * `captureTicks`, the wall clock at the call and a tick read after it, only
- * approximates it.
+ * image is a frame drawn about when the call lands: a call at the time drew
+ * that second on the HUD clock in the first session for 16 of #1674's 18
+ * frames, and the other two (one a second late, one a second early) were
+ * retaken. LEAD_S moves the call, and the JSON records it. The HUD's own clock
+ * in the image is the frame's time; `captureTicks`, the wall clock at the call
+ * and a tick read after it, only approximates it.
  *
  * The readings are §9's "at the same tick": a hook armed before the call
  * reads the conn canvas and the probe in one animation frame, the first whose

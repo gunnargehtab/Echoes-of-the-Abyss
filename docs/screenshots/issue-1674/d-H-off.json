@@ -8,7 +8,7 @@
   "settings": null,
   "reducedMotion": false,
   "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
-  "modelsTick": 1296,
+  "modelsTick": 1164,
   "openingPose": {
     "focus": {
       "xM": 2550,
@@ -24,11 +24,12 @@
       "name": "H",
       "file": "d-H-off-H-030s.png",
       "requestedTick": 1800,
+      "leadS": 0,
       "captureTicks": [
         1800,
         1944
       ],
-      "connTick": 1992,
+      "readingTick": 1800,
       "requested": "opening, unmodified",
       "actual": {
         "focus": {
@@ -48,15 +49,15 @@
         "frame": {
           "maxLuma": 177.9,
           "brightest": {
-            "x": 1405,
-            "y": 605,
+            "x": 1437,
+            "y": 607,
             "rgb": [
               233,
               174,
               54
             ]
           },
-          "meanLuma": 14.34,
+          "meanLuma": 14.37,
           "under10": 0.9952,
           "pixels": 2073600
         },
@@ -78,9 +79,9 @@
           "depthM": null
         },
         "eye": {
-          "xM": 2554,
-          "zM": 4044,
-          "depthM": -8210
+          "xM": 2551,
+          "zM": 4040,
+          "depthM": -8224
         },
         "distance": 2600,
         "waterReachM": 8320,
@@ -133,17 +134,17 @@
         "environmentIntensity": 0.35,
         "environmentBytes": 344064,
         "station": null,
-        "stationMs": 38061.7,
-        "stationFrames": 45,
-        "avgFrames": 45,
-        "fps": 1.2,
-        "avgFrameMs": 809.1,
-        "worstFrameMs": 3876.2,
-        "avgConnMs": 23.3,
-        "worstConnMs": 241.7,
-        "avgOverlayMs": 3.54,
-        "worstOverlayMs": 19.6,
-        "overlayFrames": 38,
+        "stationMs": 33615.8,
+        "stationFrames": 43,
+        "avgFrames": 43,
+        "fps": 1.3,
+        "avgFrameMs": 766.97,
+        "worstFrameMs": 3440.4,
+        "avgConnMs": 26.43,
+        "worstConnMs": 399.4,
+        "avgOverlayMs": 3.89,
+        "worstOverlayMs": 32.1,
+        "overlayFrames": 35,
         "gpuTimer": "software",
         "avgGpuMs": null,
         "worstGpuMs": null,
@@ -157,8 +158,8 @@
         "tracks": 4,
         "structureTracks": 0,
         "trackAt": {
-          "x": 3350,
-          "z": 2700,
+          "x": 3400,
+          "z": 2480,
           "depthM": 1450
         },
         "ordnance": 0,
