@@ -61,7 +61,10 @@ depth ribbon and the band labels beside it (#1650); the contact log (§10) top-r
 whole claim on the water, and they were cut from 40% and 24% (#1532) because at 1440 × 900
 the three together covered a third of what the console leaves. The orders panel has no
 share of its own: it is as tall as what it holds, up to the room between the strip and the
-hint line, because every objective in it has to be on screen at once (§10.5). A 38% share hid
+hint line, because every objective in it has to be on screen at once (§10.5). Its foot also
+stops above the depth ribbon's readout, which stands 10 units taller over the console than
+the hint line does: a preview such as `DIVE · BREAKS SILENCE` runs under the panel, and a cap
+read off the hint line alone covered its top (#1668). A 38% share hid
 Sorrowgate's withheld list under the panel's foot from 13:40 at 1440 × 900 (#1593).
 
 **The console is a deliberate break with this section's old 22% chrome budget, and the

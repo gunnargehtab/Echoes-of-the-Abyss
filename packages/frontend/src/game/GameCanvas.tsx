@@ -56,7 +56,7 @@ import type { WebGLRenderer } from 'three';
 import type { createWaterEnvironment } from './modelLighting.ts';
 import type { Client } from '@colyseus/sdk';
 import { loadSettings, subscribeSettings, type Settings } from '../settings/store.ts';
-import { CHROME_UNITS, heldUiScale, panelType, RIBBON_UNITS } from './uiScale.ts';
+import { heldUiScale, PANEL_CAP_UNITS, panelType, RIBBON_UNITS } from './uiScale.ts';
 
 /** Longest log a player will ever scroll back through. */
 const MAX_LOG_ENTRIES = 300;
@@ -66,15 +66,15 @@ const hex = (color: number) => `#${color.toString(16).padStart(6, '0')}`;
 
 /**
  * What the DOM half of the interface needs from the settings the renderer
- * already applied: the UI scale, the chrome it is held against, the depth
- * ribbon's claim on the left edge, and the four tier inks.
+ * already applied: the UI scale, the height the orders panel's cap takes, the
+ * depth ribbon's claim on the left edge, and the four tier inks.
  */
 function cssVariables(uiScale: number, palette: PaletteName): CSSProperties {
   const { tier } = paletteFor(palette);
   return {
     '--ui-scale': uiScale,
     '--panel-type': panelType(uiScale),
-    '--chrome-units': `${CHROME_UNITS}px`,
+    '--panel-cap-units': `${PANEL_CAP_UNITS}px`,
     '--ribbon-units': `${RIBBON_UNITS}px`,
     '--tier-1': hex(tier[ResolutionTier.Contact].color),
     '--tier-2': hex(tier[ResolutionTier.Bearing].color),
