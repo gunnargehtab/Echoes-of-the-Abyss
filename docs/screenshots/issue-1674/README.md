@@ -10,9 +10,9 @@ session per station, and one per half for the transit pair. Each is 1920 × 1080
 ratio 1, with the HUD on and default water, halo and motion settings. The study is on with
 `?arch-study=1` on the title URL and off without it. The renderer is SwiftShader, `ANGLE
 (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)` in
-every JSON, so no frame time here is evidence; calls and triangles are. Each frame is from [`capture.mjs`](capture.mjs), driven by
-`.claude/skills/run-game/scripts/drive.mjs`. Its header says how a frame is timed without
-stopping or accelerating the server clock.
+every JSON, so no frame time here is evidence; calls and triangles are. Each frame is from
+[`capture.mjs`](capture.mjs), driven by `.claude/skills/run-game/scripts/drive.mjs`. Its
+header says how a frame is timed without stopping or accelerating the server clock.
 
 Two clocks are recorded per frame. The image's time is the HUD clock in its top right. The
 readings' time is `readingTick`: the conn canvas and the probe, read together in the first
@@ -43,10 +43,11 @@ is five calls and 2,412 triangles at every station, as in increment C, with the 
 intact and the sift's 256 motes. Only C sits inside the 85–90 % darkness budget; at H, L and
 S the baseline is over it before the study adds anything, as increment C found.
 
-The C pair was read at the same tick, 1800, and the L pair at 1848. Its lamp glass reads 88.4, 83.9 and 84.8 (lamps
-0, 2 and 3; lamp 1 is off screen), increment C's values at 1440 × 900. The frame's brightest
-pixel in both halves is an escort's green navigation mark, luma 215.6 and RGB (153, 244, 118)
-at (1601, 958) on and (1602, 958) off. So the escort reads the same between the pair.
+The C pair was read at the same tick, 1800, and the L pair at 1848. C's lamp glass reads
+88.4, 83.9 and 84.8 (lamps 0, 2 and 3; lamp 1 is off screen), increment C's values at
+1440 × 900. C's brightest pixel in both halves is an escort's green navigation mark, luma
+215.6 and RGB (153, 244, 118) at (1601, 958) on and (1602, 958) off. So the escort reads the
+same between the pair.
 
 ## The colour-vision palettes
 
