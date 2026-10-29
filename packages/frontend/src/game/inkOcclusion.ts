@@ -266,14 +266,22 @@ export class InkOcclusion {
     return false;
   }
 
-  /** Whether the screen segment from a to b passes over any model's screen box. */
-  crosses(ax: number, ay: number, bx: number, by: number): boolean {
+  /**
+   * Whether the screen segment from a to b passes over any model's screen box.
+   * Its bounding box is what is tested, so a and b may as well be a rect's
+   * corners. `bounded` leaves out a model with a corner behind the eye, whose
+   * box is the whole screen: right for a line that must break behind it, and
+   * wrong for a mission marker's name (#1662), which would find no place at
+   * all while one hull stood behind the camera.
+   */
+  crosses(ax: number, ay: number, bx: number, by: number, bounded = false): boolean {
     const x0 = Math.min(ax, bx);
     const x1 = Math.max(ax, bx);
     const y0 = Math.min(ay, by);
     const y1 = Math.max(ay, by);
     for (let i = 0; i < this.count; i++) {
       const s = this.slots[i]!;
+      if (bounded && s.minX === -Infinity) continue;
       if (x1 >= s.minX && x0 <= s.maxX && y1 >= s.minY && y0 <= s.maxY) return true;
     }
     return false;

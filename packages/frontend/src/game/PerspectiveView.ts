@@ -1952,9 +1952,12 @@ export class PerspectiveView {
     return ink.end();
   }
 
-  /** Whether the screen segment between two projected points crosses a model's screen box. */
-  inkCrosses(ax: number, ay: number, bx: number, by: number): boolean {
-    return this.ink.size > 0 && this.ink.crosses(ax, ay, bx, by);
+  /**
+   * Whether the screen segment between two projected points crosses a model's
+   * screen box; `bounded` as `InkOcclusion.crosses` has it.
+   */
+  inkCrosses(ax: number, ay: number, bx: number, by: number, bounded = false): boolean {
+    return this.ink.size > 0 && this.ink.crosses(ax, ay, bx, by, bounded);
   }
 
   /**

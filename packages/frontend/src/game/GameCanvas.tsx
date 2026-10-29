@@ -35,6 +35,7 @@ import { Lobby } from './Lobby.tsx';
 import { MatchResult } from './MatchResult.tsx';
 import { MissionLog } from './MissionLog.tsx';
 import { MissionPanel } from './MissionPanel.tsx';
+import { watchPanels } from './panelRects.ts';
 import { MissionResult } from './MissionResult.tsx';
 import { SkirmishOrders, harvestRow, sameHarvestRow, type HarvestRow } from './SkirmishOrders.tsx';
 import { StripReadouts } from './StripReadouts.tsx';
@@ -559,6 +560,13 @@ export function GameCanvas({
       // One camera, two painters: every world mark and every aimed pointer in
       // the Pixi layer goes through the conn view from here on.
       activeRenderer.setConn(perspective);
+      // Where the floating panels cover the water, for the one chart mark
+      // that keeps out from under them: a marker's name (§10.5, #1662).
+      if (underRef.current !== null) {
+        stopPanels = watchPanels(underRef.current, host, (rects) =>
+          activeRenderer.setPanelRects(rects)
+        );
+      }
 
       client = new GameClient(
         {
@@ -855,12 +863,14 @@ export function GameCanvas({
 
     let unsubscribeSettings: (() => void) | null = null;
     let onResize: (() => void) | null = null;
+    let stopPanels: (() => void) | null = null;
     void start();
 
     return () => {
       cancelled = true;
       joinRef.current = null;
       unsubscribeSettings?.();
+      stopPanels?.();
       if (onResize !== null) window.removeEventListener('resize', onResize);
       client?.disconnect();
       clientRef.current = null;
