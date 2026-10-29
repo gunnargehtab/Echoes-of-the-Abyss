@@ -997,8 +997,9 @@ something new, and a log role would re-announce the whole panel every time a cou
   no column, which is what §2's no-scroll rule asks of anything added to this panel.
 - **A named marker is drawn on the chart while an open row names it.** A mission gives each
   marker a short place name — *The arch*, *The Concourse* — and the world view then draws it
-  where it is: a ring of the marker's radius on the seabed, and the name above the ring, held
-  at screen size, so it never sits on the hulls the ring is drawn round. A row may name a
+  where it is: a ring of the marker's radius on the seabed, and the name with the ring, held
+  at screen size where the next bullet's rule places it: over the ring's far side, off the
+  hulls the ring is drawn round. A row may name a
   second marker as the place on its way, Sorrowgate's service lock for its tenders (#1594):
   the chart draws it beside the row's own, and focusing the row still goes to the row's own.
   The row that names it going met or failed takes it off the chart, so the chart says where
@@ -1009,6 +1010,26 @@ something new, and a log role would re-announce the whole panel every time a cou
   more, so every marker carries one since #1617 and `missions.test.ts` fails one without. A
   newcomer told to hold *at the arch* stood under it for ten minutes without knowing
   it was there, because nothing on screen said so (#1611).
+- **A marker's name stands over the far side of its ring, on clear water** (#1662). The far
+  side is the arc the camera sees run left to right over the top of the ring. The name stands
+  4 px outside that line, at its highest point where the whole name fits on the water: the
+  screen the top strip, the console and its hint line, the depth ribbon's column and the
+  floating panels leave clear. So a ring wider than the view is named beside where it comes
+  in, as the scope names a ring its frame cuts (§5), and a ring the map's rim cuts is named
+  over the line where it meets the rim rather than astride its own line at one side. The name
+  never crosses its own ring or an earlier marker's name, and it keeps off the hulls: the
+  player's own hulls and structures with their collars and bars, and every contact drawn at a
+  depth once its mark has finished arriving. That last condition keeps the name from stepping
+  aside for a contact before the mark is drawn, which would show the contact ahead of its
+  sound ([audio-direction.md](audio-direction.md) §2). Blocked, the name moves along the far
+  side to the next point with room, off other markers' rings where it can. It holds the point
+  it has rather than hopping between two that stand level on the screen as the camera sways.
+  Where no point is clear it sits on a hull rather than vanish, because a place the row names
+  and the chart does not is #1611 again. Where the far side has no room on the water, a view
+  standing inside the ring names it at the head of the water, since everything on screen is
+  in that place; a view outside it names it on the outside of the near side, as high on the
+  water as there is room. Outside a ring with none of its line on the water, or with no room
+  for the name beside it on either side, the chart draws no name, and its row still names it.
 - **A row that runs on a clock says how long is left.** A hold that ends on its own — the
   flight holding at the arch, a sitting, a tide — shows the time remaining under its status
   word, `OPEN` over `10:10`, until the row is met. A player told to hold and not told for how

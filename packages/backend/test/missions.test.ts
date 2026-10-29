@@ -675,7 +675,7 @@ describe('the objectives', () => {
 
   it('names a marker for the chart with a place, not a sentence', () => {
     // docs/ui-ux.md §10.5 (#1611): a marker's `name` is printed on the chart
-    // above its ring, so it is the place — *The arch* — and never `label`'s
+    // with its ring, so it is the place — *The arch* — and never `label`'s
     // sentence, which would lie across the water it is about. Short, one
     // clause, and different from the label it sits beside. Every marker has
     // one since #1617: an unnamed marker is a camera jump the chart never
