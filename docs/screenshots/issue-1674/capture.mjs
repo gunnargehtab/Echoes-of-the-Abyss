@@ -29,8 +29,8 @@
  * probe in one animation frame, the first whose tick is at or past the time,
  * after the game's own callback drew it (tools/render-stack/halo.mjs's
  * method), and records that tick (`readingTick`). Two sessions' readings can
- * so differ by up to a frame; §9 pairs C and L "at the same tick", so a half
- * whose `readingTick` differs is retaken until the two match.
+ * so differ by up to a frame; §9 pairs C and L "at the same tick", and #1674
+ * L and S, so a half whose `readingTick` differs is retaken until they match.
  *
  * Writes `<TAG>.json` beside the frames: the ticks, LEAD_S, the requested and
  * actual pose, the probe, and the conn canvas's near-black share (luma under

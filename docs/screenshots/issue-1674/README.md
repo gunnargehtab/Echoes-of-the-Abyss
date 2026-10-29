@@ -28,26 +28,27 @@ Every frame's HUD clock reads T+00:30, so H, C, L and S are within one second of
 Two were retaken for that: a first C-on session drew T+00:31 and a first C-deuteranopia
 session T+00:29. Every reading is between ticks 1800 and 1848, the first 0.8 s of that second.
 A reading is the first frame at or past its time, so two sessions' readings can differ by up
-to a frame. §9 pairs C and L at the same tick, so L-on was retaken until its reading matched
-L-off's 1848. The committed L-on is its third session; the first two read 1824 and 1812.
+to a frame. §9 pairs C and L at the same tick, and #1674 L and S, so a half was retaken until
+its reading matched the other's. The committed L-on is its third session (the first two read
+1824 and 1812), and S-on its second (the first read 1836).
 
 | Station | Pose (focus, dolly, pitch, yaw) | On | Off | Reading tick on / off | Calls on / off | Triangles on / off | Near-black on / off |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | H | Unmodified opening: (2550, 2553) on the seabed, 2,600, 55°, 0° | `d-H-on-H-030s.png` | `d-H-off-H-030s.png` | 1848 / 1800 | 56 / 51 | 123,375 / 120,963 | 98.7 % / 99.5 % |
 | C | (2550, 2200) at 1,450 m, 420, 35°, 25° | `d-C-on-C-030s.png` | `d-C-off-C-030s.png` | 1800 / 1800 | 36 / 31 | 106,127 / 103,715 | 86.8 % / 99.3 % |
 | L | (2550, 2750) at 1,450 m, 650, 12°, 0° | `d-L-on-L-030s.png` | `d-L-off-L-030s.png` | 1848 / 1848 | 54 / 49 | 115,410 / 112,998 | 98.1 % / 98.3 % |
-| S | (2500, 2000) on the seabed, 6,500, 55°, 0° | `d-S-on-S-030s.png` | `d-S-off-S-030s.png` | 1836 / 1800 | 56 / 51 | 123,375 / 120,963 | 99.1 % / 99.2 % |
+| S | (2500, 2000) on the seabed, 6,500, 55°, 0° | `d-S-on-S-030s.png` | `d-S-off-S-030s.png` | 1800 / 1800 | 56 / 51 | 123,375 / 120,963 | 99.1 % / 99.2 % |
 
 The opening camera at 1920 × 1080 is the pose increment C recorded at 1440 × 900. The study
 is five calls and 2,412 triangles at every station, as in increment C, with the landmark
 intact and the sift's 256 motes. Only C sits inside the 85–90 % darkness budget; at H, L and
 S the baseline is over it before the study adds anything, as increment C found.
 
-The C pair was read at the same tick, 1800, and the L pair at 1848. C's lamp glass reads
-88.4, 83.9 and 84.8 (lamps 0, 2 and 3; lamp 1 is off screen), increment C's values at
-1440 × 900. C's brightest pixel in both halves is an escort's green navigation mark, luma
-215.6 and RGB (153, 244, 118) at (1601, 958) on and (1602, 958) off. So the escort reads the
-same between the pair.
+The C pair was read at the same tick, 1800, the L pair at 1848 and the S pair at 1800. C's
+lamp glass reads 88.4, 83.9 and 84.8 (lamps 0, 2 and 3; lamp 1 is off screen), increment C's
+values at 1440 × 900. C's brightest pixel in both halves is an escort's green navigation
+mark, luma 215.6 and RGB (153, 244, 118) at (1601, 958) on and (1602, 958) off. So the escort
+reads the same between the pair.
 
 ## The colour-vision palettes
 
