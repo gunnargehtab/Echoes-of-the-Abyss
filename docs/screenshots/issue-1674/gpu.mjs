@@ -36,7 +36,12 @@
  *
  * CLIP=C-still holds C with no input for 12 s (the sift, the sway and the
  * lamps). CLIP=C-move holds C for 4 s, selects one escort, orders a short
- * horizontal move within the court, then Stop, and holds the settling view.
+ * move within the court (the click carries its own depth, so the JSON
+ * records the hull's depth before and after and holds it to §9's "no
+ * dive"), presses Stop on the first reading that shows the hull under way,
+ * and holds the settling view: the proof of Stop is a hull settled well
+ * short of the order, which a GPU run asserts and a software run, whose
+ * frames outrun the key, records and warns of.
  * CLIP=H-change holds H's pose from 10:38 to 10:56 of the mission clock
  * through the received ground change, and records the tick the ruin arrived
  * and the frame the sequence began. `REDUCED_MOTION=1` on the drive repeats
@@ -126,7 +131,7 @@ export default async ({ page, shot, recordingStartedMs = null }) => {
         assert.equal(p.gpuTimer, software ? 'software' : 'timing', `${name}: GPU timer`);
       }
       // §9's stations are the intact arch with its lamps. A GPU run holds
-      // all four inside a minute; SwiftShader's took eighteen and reached
+      // all four inside a minute; SwiftShader's took sixteen and reached
       // the 10:40 change, so a software run warns where a GPU one fails.
       if (study && p.landmarkTris !== 2412) {
         const past = `${name}: the ruin stands (${p.landmarkTris} triangles), so the run reached the 10:40 change`;
@@ -212,20 +217,64 @@ export default async ({ page, shot, recordingStartedMs = null }) => {
       await page.mouse.click(unit.x, unit.y);
       await page.waitForTimeout(800);
       record.selected = { unit, ...(await mark()) };
-      await page.mouse.click(unit.x + 160, unit.y + 20, { button: 'right' });
-      record.moved = await hold(4000);
-      const afterMove = await unitAt(unit.id);
+      // A long order, about 200 m east at C's dolly, with Stop pressed on
+      // the first reading that shows the hull under way. The order's round
+      // trip is tens of milliseconds on a GPU and seconds on SwiftShader,
+      // and a frame there can take seconds, so the page polls for the
+      // reading rather than a timer, and the proof of Stop is where the
+      // hull settles: metres from where it was and well short of the order.
+      await page.mouse.click(unit.x + 800, unit.y + 20, { button: 'right' });
+      record.moved = { from: await mark() };
+      const underWay = await page.evaluate(
+        ({ id, start }) =>
+          new Promise((resolve) => {
+            const t0 = performance.now();
+            const poll = () => {
+              const u = window.__perspectiveLamps().units.find((u) => u.id === id);
+              const now = u ? { id, xM: u.xM, zM: u.zM, depthM: u.depthM, tick: window.__echoClock() } : null;
+              if (now !== null && Math.hypot(now.xM - start.xM, now.zM - start.zM) >= 2) return resolve(now);
+              if (performance.now() - t0 > 15000) return resolve(null);
+              setTimeout(poll, 50);
+            };
+            poll();
+          }),
+        { id: unit.id, start: before }
+      );
       await page.keyboard.press('KeyX');
       const stopped = await mark();
+      record.moved.to = stopped;
       await page.waitForTimeout(2000);
       const settling = await unitAt(unit.id);
       await page.waitForTimeout(2000);
       const settled = await unitAt(unit.id);
       record.stopped = { from: stopped, to: await mark() };
-      // The order took: the hull is metres from where it was, and the JSON
-      // says how far it still drifted in the last two seconds after Stop.
-      record.escort = { before, afterMove, settled, movedM: Number(metres(before, afterMove).toFixed(1)), driftAfterStopM: Number(metres(settling, settled).toFixed(2)) };
-      assert.ok(record.escort.movedM >= 2, `the escort moved ${record.escort.movedM} m on the order`);
+      // The order took and Stop took: the hull was under way when Stop was
+      // pressed, it holds still from two to four seconds after, and it
+      // settled far short of the order's length. The depth the click carried
+      // is recorded, and bounded well under anything a dive order would do.
+      record.escort = {
+        before,
+        underWay,
+        settled,
+        orderM: 200,
+        movedAtStopM: underWay === null ? null : Number(metres(before, underWay).toFixed(1)),
+        settledM: Number(metres(before, settled).toFixed(1)),
+        driftAfterStopM: Number(metres(settling, settled).toFixed(2)),
+        depthChangeM: Number((settled.depthM - before.depthM).toFixed(1)),
+      };
+      writeFileSync(join(OUT, `${TAG}.json`), JSON.stringify(record, null, 2) + '\n');
+      assert.ok(underWay !== null, 'the escort moved on the order within 15 s');
+      assert.ok(record.escort.settledM >= 2, `the escort moved ${record.escort.settledM} m on the order`);
+      // A Light Scout makes about 53 m a second, so on SwiftShader the key,
+      // a frame or two behind the reading, lands after the order has
+      // arrived: a software run records that and warns, a GPU run fails.
+      const short = `Stop cut the order short (${record.escort.settledM} m of about 200)`;
+      if (record.escort.settledM >= 120) {
+        if (software) console.log(`WARNING: not ${short}: the hull arrived before the key landed`);
+        else assert.fail(short);
+      }
+      assert.ok(record.escort.driftAfterStopM <= 1, `the escort held after Stop (${record.escort.driftAfterStopM} m of drift)`);
+      assert.ok(Math.abs(record.escort.depthChangeM) <= 50, `no dive: the order changed depth by ${record.escort.depthChangeM} m`);
     } else if (CLIP === 'H-change') {
       await poseAt('H');
       await waitTick((10 * 60 + 38) * TICK_HZ);
