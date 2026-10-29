@@ -6098,18 +6098,23 @@ describe("where a marker's name stands (#1662)", () => {
 
   // A track's model shows the instant it resolves, so the name waits for the
   // mark; once arrived, the model counts as well as the mark, because a
-  // structure stands far above its mark — a Sounding Spire is 265 m tall.
+  // structure stands far above its mark — a Sounding Spire is 265 m tall. A
+  // track whose model has not loaded is its mark alone, and so is a ghost.
   for (const track of [
     { as: 'a hull', slug: 'corvette-hadron', inside: 0 },
     { as: 'a tall structure', slug: 'sounding-spire-hadron', inside: 120 },
+    { as: 'a mark with no model', slug: null, inside: 0 },
   ]) {
-    it(`steps aside for ${track.as} only once its mark has arrived, model and all`, async () => {
-      const template = buildTemplate(
-        await parsedModel(track.slug),
-        track.slug === 'corvette-hadron'
-          ? { unit: UnitKind.Corvette, faction: Faction.Hadron }
-          : { structure: StructureKind.SoundingSpire, faction: Faction.Hadron }
-      );
+    it(`steps aside for ${track.as} only once its mark has arrived`, async () => {
+      const template =
+        track.slug === null
+          ? null
+          : buildTemplate(
+              await parsedModel(track.slug),
+              track.slug === 'corvette-hadron'
+                ? { unit: UnitKind.Corvette, faction: Faction.Hadron }
+                : { structure: StructureKind.SoundingSpire, faction: Faction.Hadron }
+            );
       // The Tier-4 track laid on the seabed under this ring's top, or `inside`
       // metres in from it: there a structure's mark sits clear below the name
       // and only its model reaches up through it.
@@ -6121,7 +6126,7 @@ describe("where a marker's name stands (#1662)", () => {
           ...snapshot,
           contacts: snapshot.contacts.map((c) => {
             if (c.id !== 104) return c;
-            if (track.slug === 'corvette-hadron') return { ...c, depth: seabed };
+            if (track.slug !== 'sounding-spire-hadron') return { ...c, depth: seabed };
             const { kind: _kind, heading: _heading, ...rest } = c;
             return { ...rest, structure: StructureKind.SoundingSpire, depth: seabed };
           }),
@@ -6138,22 +6143,29 @@ describe("where a marker's name stands (#1662)", () => {
       );
       try {
         // The model handed to the track's handle as the loader would.
-        const conn = world.conn as unknown as {
-          trackHandles: Map<number, { model: unknown; modelKey: string }>;
-          syncTracks(): void;
-        };
-        const handle = conn.trackHandles.get(104);
-        assert.ok(handle !== undefined, 'the premise: the track is drawn as a model');
-        handle.model = instantiate(template);
-        handle.modelKey = 'test';
-        conn.syncTracks();
-        world.chart.applySnapshot(contactsOn(world));
-        world.frame(2);
+        if (template !== null) {
+          const conn = world.conn as unknown as {
+            trackHandles: Map<number, { model: unknown; modelKey: string }>;
+            syncTracks(): void;
+          };
+          const handle = conn.trackHandles.get(104);
+          assert.ok(handle !== undefined, 'the premise: the track is drawn as a model');
+          handle.model = instantiate(template);
+          handle.modelKey = 'test';
+          conn.syncTracks();
+          world.chart.applySnapshot(contactsOn(world));
+          world.frame(2);
+        }
+        // The mark's core: its figure and the bar and glyph above it.
+        const p = world.conn.projectPoint(2800, 2600, world.conn.seabedDepthAt(2800, 2600));
+        const core = { x0: p.x - 8, y0: p.y - 30, x1: p.x + 8, y1: p.y };
         const [before] = nameBoxes(world);
         assert.ok(before !== undefined, 'the name is drawn');
         assert.ok(
-          world.conn.inkCrosses(before.x0, before.y0, before.x1, before.y1),
-          "the premise: the track's model stands under the name"
+          template === null
+            ? meets(before, core)
+            : world.conn.inkCrosses(before.x0, before.y0, before.x1, before.y1),
+          'the premise: the track stands under the name'
         );
         assert.ok(centredOver(before, highest(ringOf(world, mark))), 'it waits for the mark');
         chartOf(world).tracked.get(104)!.firstSeenMs = performance.now() - 60_000;
@@ -6165,6 +6177,7 @@ describe("where a marker's name stands (#1662)", () => {
           !world.conn.inkCrosses(after.x0, after.y0, after.x1, after.y1),
           "the name sits on the arrived track's model"
         );
+        if (track.inside === 0) assert.ok(!meets(after, core), 'the name sits on the arrived mark');
         holdsTheRule(world, mark, after);
       } finally {
         world.teardown();

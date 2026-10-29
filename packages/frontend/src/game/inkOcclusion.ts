@@ -302,7 +302,8 @@ export class InkOcclusion {
    * at all. And any other track: a track's model shows the instant it is
    * resolved, and the name keeps off a contact only once its mark has arrived,
    * which `drawContacts` knows and this does not. A tall structure stands far
-   * above its mark, so an arrived track is tested by its model, not its mark.
+   * above its mark, so an arrived track is tested by its model as well as its
+   * mark (`drawContacts`' footprint).
    */
   crossesHulls(
     x0: number,
