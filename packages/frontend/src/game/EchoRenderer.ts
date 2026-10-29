@@ -9894,13 +9894,21 @@ export class EchoRenderer {
   private drawDoctrineMark(g: Graphics, line: Text, token: string): void {
     const at = line.text.lastIndexOf(token);
     if (at < 0) return;
-    const end = line.x + (line.width * (at + token.length)) / line.text.length;
+    const charW = line.width / line.text.length;
+    const end = line.x + charW * (at + token.length);
+    // Sized to the line's own type rather than to the world view's
+    // GLYPH_MIN_PX: that floor keeps a glyph legible under a pulled-back
+    // camera, and a card's type does not zoom. At the floor the mark filled
+    // the three spaces before `TORP` edge to edge; at seven-tenths of a
+    // character it stands half a character off the value and over a whole
+    // character short of the next word.
+    const size = charW * 0.7;
     drawFactionGlyph(
       g,
       this.faction,
-      end + 4 + GLYPH_MIN_PX,
+      end + charW * 0.5 + size,
       line.y + line.height / 2,
-      GLYPH_MIN_PX,
+      size,
       FACTION_PALETTE[this.faction].consoleAccent,
       1,
       1.5

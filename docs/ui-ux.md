@@ -1323,9 +1323,9 @@ loud, go silent, go shallow, fire.
 | Directorate | Above 400 m: −20% speed, and the hull bleeds to 85% | Beside the selection's depth | While above 400 m |
 | Knights | A shot is +10 SIG, not a kinetic +25 | Beside a weapon cell's SIG price | Always |
 
-A **doctrine mark** is the navy's glyph, drawn in its console accent at the glyph's minimum
-size ([style-neon-noir.md](style-neon-noir.md), "Console accent"), beside the bent value
-and never in place of its ink. The SIG bands, the depth ladder and the price ink keep their
+A **doctrine mark** is the navy's glyph, drawn in its console accent at the size of the
+line's own type ([style-neon-noir.md](style-neon-noir.md), "Console accent"), half a
+character clear of the bent value and never in place of its ink. The SIG bands, the depth ladder and the price ink keep their
 own colours, because the accent is identity and those are information. The two rule lines
 take the same ink and are the marks' legend: they say which ink means *yours*.
 
