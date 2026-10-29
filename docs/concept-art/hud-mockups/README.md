@@ -180,8 +180,9 @@ so a named contact that would be the player's own navy becomes a Consortium boat
   [style-neon-noir.md](../../style-neon-noir.md#console-accent--proposed), which lists what
   it still owes.
 
-**Not owed.** §12.5 ships the accent only with an argument in sound or depth. These frames
-make none. They show what the dress costs, so the question can be settled by looking.
+**The argument.** §12.5's "Doctrine marks" argues the accent in sound or depth: the navy's
+glyph in accent ink beside each number its doctrine bends, with the rule lines as legend.
+These frames draw the rule lines only. They predate the marks and draw none of them.
 
 ## C · Improved
 
