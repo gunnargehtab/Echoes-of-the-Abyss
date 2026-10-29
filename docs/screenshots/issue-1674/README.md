@@ -88,9 +88,25 @@ into the new wall, the ruined state stands no lamp, and the sift's 256 motes car
 cloud has settled (0 motes). The props read 186 at 49,244 triangles in both halves before the
 change and 198 at 50,356 after it, the collapse's count increment A recorded.
 
-## Not taken here
+## Not taken here: the GPU run
 
 GPU time at C with the pools on and off, DPR 1.5, the 240-frame performance stations and
 the clips: SwiftShader's milliseconds measure the rasteriser, and its frames take about
 1.8 s at C, so a clip would be a slideshow. They need the named desktop GPU
-([issue-1001](../issue-1001/README.md)).
+([issue-1001](../issue-1001/README.md)), and [`gpu.mjs`](gpu.mjs) is the run for it, driven
+headed by `.claude/skills/run-game/scripts/drive.mjs` on that machine. Its header gives the
+commands. One session per half and per pixel ratio holds H, C, L and S for 240 frames of
+both painters and 240 GPU frames, reads each unqueued and behind the queue load, and reads C
+again with the pools off through the study's switch, writing `<TAG>.json` beside the frames
+with the renderer string: a software one is flagged there and in the console, and its
+milliseconds are not evidence. The clips are the drive's own recording (`RECORD_VIDEO`),
+a WebM of the whole session, cut by the HUD clock to the holds the JSON records: C with no
+input for 12 s, C with one escort's short move and Stop, and H's pose from 10:38 to 10:56
+with the ticks the ruin arrived and the sequence began. `REDUCED_MOTION=1` repeats each.
+
+The module was run once here under SwiftShader to prove its mechanics, not its numbers: the
+stations read `gpuTimer: software` with no queued reading, and the run took eighteen minutes
+of mission time, so H and C read the intact arch and the three stations after them the ruin
+past 10:40, which the module warns of on a software run and fails on a GPU one; the C-move
+clip selected an escort and ordered it; each recording landed with its JSON. None of those
+frames is filed.
