@@ -490,9 +490,9 @@ Every change holds behind the study's flag, on the prologue's look (§7, "Isolat
 | Court bounce | A diffuse term on the landmark's own materials, as from the court floor: from the south and 30° below level, so the south faces and the soffit take it and the deck does not. At full incidence at most the rig's ambient again, `MODEL_LIGHTING.AMBIENT` in its colour, so a south face takes at most twice its ambient today; no hue of its own. The board's still copy takes none, as it takes no pool |
 | Diffuse ceiling | The landmark's brightest material at most 0.10 linear diffuse luminance, up from the props' 0.06; the materials keep their tokens' hues and ratios. This crosses the 0.067 cladding floor, so "H, order" below bounds it against the escorts' cladding. The board's still copy takes it too, since it is a material value |
 | Roughness | `structure_rib` 0.55–0.7, so the frame takes a sheen from the existing environment; `stone_dark` and `silt_drift` stay 0.9–1; metalness 0 throughout. The board's still copy takes it too |
-| Distance grade | Public ground beyond the focus fades further into the water it stands in. The measure is a fragment's range from the camera less the camera's distance to its focus. The fog factor is production's plus 0.35 × that excess over the reach, clamped to 0–0.35 extra and to 1 in all, linear between, and the extra is multiplied by `waterDensity`, so 0 draws none. The reach is 0.58 of the dolly, 1,500 m at the opening's 2,600 m, so it breathes with the dolly as the falloff does. Terrain and props only: the landmark keeps production's falloff, so at L, whose reach is 377 m, the Descent wall takes the full 0.35 and the arch none, and C's close-up is untouched. Never a hull, contact, glow, lamp, survey ink or HUD. No hue and no new pass |
+| Distance grade | Public ground beyond the focus fades further into the water it stands in. The measure is a fragment's range from the camera less the camera's distance to its focus. The fog factor is production's plus 0.35 × that excess over the reach, clamped to 0–0.35 extra and to 1 in all, linear between, and the extra is multiplied by `waterDensity`, so 0 draws none. The reach is 0.58 of the dolly, 1,500 m at the opening's 2,600 m, so it breathes with the dolly as the falloff does. Terrain and props only: the landmark keeps production's falloff, so at L, whose reach is 377 m, the Descent wall takes the full 0.35 and the arch none. The arch takes none at C either; C's far ground takes the grade, so C's darkness is read with it on. Never a hull, contact, glow, lamp, survey ink or HUD. No hue and no new pass |
 | Proud piers | The span's south face set back from Z +72 to no further north than Z +45, the plinth and footings staying where they are. The rail bed, brackets and catenary move with the face or onto the capitals; the hung fittings stay six at most, each still at least +60 m at its lowest |
-| Drum setbacks | On the piers' south faces only: drum 0 stays at Z +76, so the lamps on it do not move; drums 1 and 2 each step back 5–6 m from the one below, from 1.5 m, and the capital stands proud again at about Z +75. The east and west faces stay, so §6's 370 m opening holds |
+| Drum setbacks | On the piers' south faces only: drum 0 stays at Z +76, so the lamps on it do not move; drums 1 and 2 each step back 5–6 m from the one below, from 1.5 m, and the capital stands proud again at about Z +75. Each drum's core steps back with it, so the cladding stays 8–11 m thick, the fallen-cladding recesses keep their depth and the ribs follow the core. The east and west faces stay, so §6's 370 m opening holds |
 | Ribs | At most 8 m deep, from 3.5 m, inside a recess at most 12 m deep, from 7 m, whose back moves with the span face |
 | Drifts | Five or six on the deck's ledges, from twelve, on ridged plans; silt stays banked in recesses and at foundations |
 
@@ -513,13 +513,16 @@ These are necessary, never sufficient: §10's criteria still hold, and the owner
 judgement decides. Each is read on §9's matched frames, before and after. A window is a
 square centred on a model-space point projected through the frame's recorded camera, as the
 probe already projects `lamp_N`: 16 × 16 px at H and 8 × 8 px at L. A mask is the probe's
-per-material render of the same frame, a material's pixels outside the pools. The before
-readings are taken on #1683's before set by the same windows and masks, and each window is
+per-material render of the same frame, a material's pixels outside the pools. No such render
+exists yet: #1683 first adds a development-only per-material mask read to the probe, as the
+lamp mask was added. The probe changes nothing in the scene, so the before set is captured
+with it over the base commit's scene. The before readings are taken on #1683's before set
+by the same windows and masks, and each window is
 drawn on that before frame to show where it fell. The points, in model metres:
 
 | Window | Point |
 | --- | --- |
-| Pier mass, west and east, at H | (∓235, +100, +76): the upper drum and capital, south face |
+| Pier mass, west and east, at H | (∓235, +100, +76): the capital over the fallen-cladding recess |
 | Court floor, west and east, at H | (∓235, +12, +130): the floor ramping into the chamber, 50 m south of each pier |
 | Opening floor, at H | (0, 0, 0): the anchor |
 | Span face, at L | (0, +136, +72), moving with the face |
@@ -527,8 +530,9 @@ drawn on that before frame to show where it fell. The points, in model metres:
 
 Under the full bounds a pier's south face gains at most about 3.3× in linear light (2× from
 the bounce, 1.67× from the ceiling). On the measured 5/7/10 that is about 16/20/26, luma
-about 19.5 against the floor's 17.7: above the floor, short of the 5 luma the criterion asks. The pier criterion therefore leans on the proud piers' lit capitals and drum bands,
-and the window takes in whichever of them it falls on.
+about 19.5 against the floor's 17.7: above the floor, short of the 5 luma the criterion
+asks. The pier criterion therefore leans on the proud piers' lit capitals, which the window
+takes in over the fallen-cladding recess.
 
 - **H, masses.** Each pier's window reads at least 5 luma brighter, by mean, than the court
   floor's beside it, and the opening floor's at least 5 darker than both piers'. The
