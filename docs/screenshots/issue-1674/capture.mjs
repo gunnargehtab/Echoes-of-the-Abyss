@@ -20,8 +20,8 @@
  * Playwright call spent 11 s waiting on frames, and the CDP one about 3 s. Its
  * image is the frame drawn about a second after the call (a call at tick 1932
  * drew T+00:33 on the HUD clock), so the call leads its time by LEAD_S. The
- * HUD's own clock in the image is the frame's time; the ticks either side of
- * the call bracket it.
+ * HUD's own clock in the image is the frame's time; `captureTicks` brackets
+ * it, the first from the wall clock at the call, the second read after it.
  *
  * Writes `<TAG>.json` beside the frames: the ticks, the requested and actual
  * pose, the probe, and the conn canvas read in the frame after the capture
@@ -111,7 +111,7 @@ const clock = (page) => page.evaluate(() => window.__echoClock());
  */
 async function missionWall(page) {
   let zero = Infinity;
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 2; i++) {
     const tick = await clock(page);
     zero = Math.min(zero, Date.now() - (tick / TICK_HZ) * 1000);
   }
@@ -173,16 +173,18 @@ export default async ({ page }) => {
           ]
         : STATIONS[name];
     if (reposed) await page.evaluate((args) => window.__perspectiveCamera(...args), requested);
+    const posedTick = await clock(page);
     // Sampled once the first station is posed: the samples cost seconds of
     // a mission whose first station is due 30 s in.
     zero ??= await missionWall(page);
-    const posedTick = await clock(page);
-    const callAt = tick - Math.round(LEAD_S * TICK_HZ);
-    if (posedTick >= callAt) {
-      throw new Error(`${name}: posed at tick ${posedTick}, past its call at ${callAt}`);
+    const callWall = zero + (tick / TICK_HZ - LEAD_S) * 1000;
+    if (Date.now() >= callWall) {
+      throw new Error(`${name}: posed at tick ${posedTick}, too late for its time, ${tick}`);
     }
-    await page.waitForTimeout(Math.max(0, zero + (callAt / TICK_HZ) * 1000 - Date.now()));
-    const before = await clock(page);
+    await page.waitForTimeout(callWall - Date.now());
+    // The call's own mission time from the wall clock: a tick read here would
+    // wait on the frame in hand and delay the call by up to its 1.8 s.
+    const before = Math.round(((Date.now() - zero) / 1000) * TICK_HZ);
     const { data } = await cdp.send('Page.captureScreenshot', {
       format: 'png',
       optimizeForSpeed: true,
