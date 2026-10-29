@@ -8,7 +8,7 @@
   "settings": null,
   "reducedMotion": false,
   "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
-  "modelsTick": 1452,
+  "modelsTick": 1296,
   "openingPose": {
     "focus": {
       "xM": 2550,
@@ -27,9 +27,9 @@
       "leadS": 0,
       "captureTicks": [
         1800,
-        2004
+        2028
       ],
-      "readingTick": 1824,
+      "readingTick": 1848,
       "requested": [
         2550,
         2750,
@@ -82,8 +82,8 @@
                 53
               ]
             },
-            "meanLuma": 8.45,
-            "under10": 0.926,
+            "meanLuma": 8.35,
+            "under10": 0.9349,
             "pixels": 784
           },
           "lamp_1": {
@@ -97,8 +97,8 @@
                 55
               ]
             },
-            "meanLuma": 9.23,
-            "under10": 0.9796,
+            "meanLuma": 9.29,
+            "under10": 0.9809,
             "pixels": 784
           },
           "lamp_2": {
@@ -112,8 +112,8 @@
                 54
               ]
             },
-            "meanLuma": 7.46,
-            "under10": 0.9898,
+            "meanLuma": 7.53,
+            "under10": 0.986,
             "pixels": 784
           },
           "lamp_3": {
@@ -127,8 +127,8 @@
                 48
               ]
             },
-            "meanLuma": 8.02,
-            "under10": 0.9375,
+            "meanLuma": 7.84,
+            "under10": 0.9388,
             "pixels": 784
           }
         }
@@ -151,7 +151,7 @@
         "eye": {
           "xM": 2551,
           "zM": 3386,
-          "depthM": 830
+          "depthM": 831
         },
         "distance": 650,
         "waterReachM": 2080,
@@ -208,17 +208,17 @@
         "environmentIntensity": 0.35,
         "environmentBytes": 344064,
         "station": null,
-        "stationMs": 35654.8,
-        "stationFrames": 35,
-        "avgFrames": 35,
-        "fps": 1,
-        "avgFrameMs": 980.88,
-        "worstFrameMs": 4476,
-        "avgConnMs": 45.33,
-        "worstConnMs": 706.5,
-        "avgOverlayMs": 5.33,
-        "worstOverlayMs": 52.5,
-        "overlayFrames": 28,
+        "stationMs": 35931,
+        "stationFrames": 38,
+        "avgFrames": 38,
+        "fps": 1.1,
+        "avgFrameMs": 912.26,
+        "worstFrameMs": 3998.9,
+        "avgConnMs": 39.87,
+        "worstConnMs": 649.8,
+        "avgOverlayMs": 4.26,
+        "worstOverlayMs": 21.3,
+        "overlayFrames": 31,
         "gpuTimer": "software",
         "avgGpuMs": null,
         "worstGpuMs": null,
@@ -232,8 +232,8 @@
         "tracks": 4,
         "structureTracks": 0,
         "trackAt": {
-          "x": 3350,
-          "z": 2700,
+          "x": 3400,
+          "z": 2920,
           "depthM": 1450
         },
         "ordnance": 0,
@@ -265,20 +265,20 @@
         "collapsing": false,
         "landmarkLampsPx": [
           {
-            "x": 1206.5070374587071,
-            "y": 410.39676306122277
+            "x": 1206.461454769617,
+            "y": 410.2958493837273
           },
           {
-            "x": 1302.217886925555,
-            "y": 395.4219705475537
+            "x": 1302.1722082262588,
+            "y": 395.3208443169345
           },
           {
-            "x": 618.8202222994086,
-            "y": 405.4121648847984
+            "x": 618.774607651792,
+            "y": 405.31118045561055
           },
           {
-            "x": 693.3988417631923,
-            "y": 392.9200366295793
+            "x": 693.3531470228598,
+            "y": 392.81887488635664
           }
         ],
         "modelBacked": 6,
