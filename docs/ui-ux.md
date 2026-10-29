@@ -1214,6 +1214,7 @@ The parity table. Every row is a claim that the mix tells the player nothing the
 | Industrial hum in the mix | The same stain in a cooler colour and a wider radius, so an economy reads differently from a fight at a glance |
 | **Hull impact** — a blow on your own plating, once per engagement | **Scope pulse on the hull that was hit** and a log row for the first blow; the world view already carries the health bar |
 | **Idle notice** — two soft taps in the interface's voice, on the ui bus | The dim scope marker holding on the stalled harvester, and its log row naming the reason |
+| **Interface cues** — off by default; a tap for an order, a placement or a refusal, on the ui bus | The order's contracting marker (§12), the placement ghost and its `placing` line leaving the hint bar, and the hint bar's reason (§7), each drawn by the same click ([audio-direction.md](audio-direction.md) §12) |
 
 Three rows are genuinely *new* information in the mix — the Tier-4 lock tone, the exposure strike, and the hull impact — and each ships with the visual half in the same change. The idle notice is the odd one out in the other direction: the interface speaking rather than the water, and the first sound the ui bus has ever carried. Everything else restates something the renderer already draws. That is the intended ratio.
 

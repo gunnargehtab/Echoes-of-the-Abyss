@@ -748,8 +748,8 @@ the 40–160 Hz contact band, claims no precedence rung and ducks nothing. They 
 click, as the marker paints there (ui-ux.md §12), so they say the interface took the input and
 never that the room did. The room refuses a bad order or an illegal site silently
 (`wire.ts`), and a cue that waited for the room's answer would wait forever on a move it
-accepted. Nothing they say is audio-only: the marker, the placed site and the hint bar's
-reason carry each one (§11). A cue of the same kind within 60 ms of the last is dropped, so
+accepted. Nothing they say is audio-only: the marker, the placement ghost leaving the cursor
+and the hint bar's reason carry each one (§11). A cue of the same kind within 60 ms of the last is dropped, so
 one click that sends harvesters and their escort is heard once.
 
 **Speech has a bus** (§13). A `say` beat is hailed in its speaker's register — five

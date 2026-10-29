@@ -146,7 +146,7 @@ export interface Settings {
    *
    * Off by default, `contactTimbre`'s precedent: in this game a sound means
    * something is in the water, so a cue on every click is opt-in. Off costs
-   * nothing — the marker, the placed site and the hint bar say all three.
+   * nothing — the marker, the placement ghost going and the hint bar say all three.
    */
   interfaceCues: boolean;
   /**
