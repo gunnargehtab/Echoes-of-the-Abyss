@@ -20,13 +20,22 @@
 import { readFileSync } from 'node:fs';
 
 const input = JSON.parse(readFileSync(0, 'utf8'));
-const path = input.tool_input?.file_path ?? '';
+const path = input.tool_input?.file_path ?? input.tool_input?.path ?? '';
 
 if (/\.glb$/i.test(path)) {
-  process.stderr.write(
+  const reason =
     `${path} is a binary glTF; Read would print it into context as text.\n` +
-      'Read it with `node tools/hull-models/parts.mjs <file>` (nodes, buffers, materials)\n' +
-      "or the hull-intake bake's meta.json (inventory, sizes, glow energy).\n"
+    'Read it with `node tools/hull-models/parts.mjs <file>` (nodes, buffers, materials)\n' +
+    "or the hull-intake bake's meta.json (inventory, sizes, glow energy).";
+  process.stdout.write(
+    JSON.stringify({
+      permissionDecision: 'deny',
+      permissionDecisionReason: reason,
+      hookSpecificOutput: {
+        hookEventName: 'PreToolUse',
+        permissionDecision: 'deny',
+        permissionDecisionReason: reason,
+      },
+    })
   );
-  process.exit(2);
 }
