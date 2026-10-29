@@ -883,6 +883,7 @@ and no row below is open.
 | A chart-framing test that failed now and then in CI | [#1610](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1610) |
 | Feedback from playing the tutorial | [#1611](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1611) |
 | Measuring the orders panel under a hold countdown | [#1622](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1622) |
+| The orders panel covering the depth ribbon's readout | [#1668](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1668) |
 
 **Store art**
 
