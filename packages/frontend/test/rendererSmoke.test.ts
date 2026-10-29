@@ -32,6 +32,7 @@ import {
   Faction,
   FOLLOW_FLOOR,
   FaunaSpecies,
+  LID,
   MOVEMENT,
   MovementHoldReason,
   onTheGround,
@@ -6389,19 +6390,44 @@ describe('doctrine marks (docs/ui-ux.md §12.5)', () => {
     }
   });
 
-  it('stands the Klaxon mark right of the SIG it marks, on its line', async () => {
+  it('stands the Klaxon mark between the SIG it marks and the next word', async () => {
     const world = await selected(Faction.Bathyarch, { sig: 72 });
     try {
       const line = (world.chart as unknown as { infoLine1: Text }).infoLine1;
-      const bounds = chartOf(world).infoGraphics.bounds;
-      const sigEnd =
-        line.x + (line.width * (line.text.indexOf('SIG 72') + 'SIG 72'.length)) / line.text.length;
-      assert.ok(marksIn(world, accentOf(Faction.Bathyarch)).length > 0, 'the premise: a mark');
-      assert.ok(bounds.maxX >= sigEnd, 'the mark stands past the SIG token');
-      assert.ok(
-        bounds.maxY >= line.y && bounds.minY <= line.y + line.height,
-        'the mark shares the line it marks'
-      );
+      const cell = line.width / line.text.length;
+      const sigEnd = line.x + cell * (line.text.indexOf('SIG 72') + 'SIG 72'.length);
+      const torp = line.x + cell * line.text.indexOf('TORP');
+      // The mark's own strokes, not the card's bounds: the hull bar alone
+      // spans most of the card and would pass any test of the whole.
+      const marks = marksIn(world, accentOf(Faction.Bathyarch));
+      assert.ok(marks.length > 0, 'the premise: a mark');
+      for (const mark of marks) {
+        const box = (mark.data as { path: GraphicsPath }).path.bounds;
+        assert.ok(box.minX >= sigEnd, `the mark starts past SIG 72 (${box.minX} < ${sigEnd})`);
+        assert.ok(box.maxX <= torp, `the mark ends before TORP (${box.maxX} > ${torp})`);
+        assert.ok(
+          box.maxY >= line.y && box.minY <= line.y + line.height,
+          'the mark shares the line it marks'
+        );
+      }
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it("waits on the SOUR line, rather than marking the Lid's depth or the separator", async () => {
+    // `SOUR — BLEEDING at 50m · dive below 150m`: the hull's `50m` has a `·`
+    // a cell after it, so there is no room, and the `50m` at the tail of the
+    // Lid's `150m` is not the hull's depth.
+    const world = await selected(Faction.Directorate, {
+      depth: 50,
+      sourS: LID.GRACE_S + 5,
+      pressureRating: 3,
+    });
+    try {
+      const line = (world.chart as unknown as { infoLine2: Text }).infoLine2;
+      assert.ok(line.text.startsWith('SOUR'), `the premise: the SOUR line, not ${line.text}`);
+      assert.equal(marksIn(world, accentOf(Faction.Directorate)).length, 0);
     } finally {
       world.teardown();
     }

@@ -300,7 +300,8 @@ Every accent but the Consortium's, below, clears its palette's SIG bands, threat
 track, nodules and friendly ink by 25 ΔE (26 under the red-green pair), the SIG floor in
 that test; clears `neon-cyan`, `neon-magenta` and `text-dim` by 15; sits 30 from every
 other navy's accent, the faction floor; and holds 3:1 against `abyss-glass`, the fill the
-client's plates draw. Each stays in the hue families its table already keeps to: blue,
+client's plates draw. Plate VI's rule 1 above names `abyss-panel` for that fill; the two
+disagree, this section measures what is drawn, and it does not settle which is right. Each stays in the hue families its table already keeps to: blue,
 amber and neutral for the red-green pair; red, teal, blue and neutral for tritanopia. The
 Consortium keeps its iron grey in all four, as its cladding does.
 

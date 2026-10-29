@@ -9892,10 +9892,19 @@ export class EchoRenderer {
    * line's width rather than a second measurement.
    */
   private drawDoctrineMark(g: Graphics, line: Text, token: string): void {
-    const at = line.text.lastIndexOf(token);
+    const text = line.text;
+    // The token where it starts a word: `50m` is not the tail of the SOUR
+    // line's `150m`, which is the Lid's depth and not the hull's.
+    let at = text.indexOf(token);
+    while (at > 0 && text[at - 1] !== ' ') at = text.indexOf(token, at + 1);
     if (at < 0) return;
-    const charW = line.width / line.text.length;
-    const end = line.x + charW * (at + token.length);
+    // The glyph spans the two cells after the token. Where they are not blank
+    // — the SOUR line's ` · ` — there is no room, and §12.5 says a mark waits
+    // rather than drawing over what the line already prints.
+    const after = at + token.length;
+    if ([after, after + 1].some((i) => i < text.length && text[i] !== ' ')) return;
+    const charW = line.width / text.length;
+    const end = line.x + charW * after;
     // Sized to the line's own type rather than to the world view's
     // GLYPH_MIN_PX: that floor keeps a glyph legible under a pulled-back
     // camera, and a card's type does not zoom. At the floor the mark filled
