@@ -88,9 +88,11 @@ import {
   type OwnStructure,
   type OwnOrdnance,
   type OwnUnit,
+  type PublicLandmark,
   type ResourceNodeInfo,
   type StructureKind,
   type UnitKind,
+  PUBLIC_LANDMARKS,
 } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import { CIVIC_LAMP, FACTION_PALETTE, sigColor, UI, VENT_EMBER } from './palette.ts';
@@ -184,6 +186,7 @@ import { columnsFor, InkOcclusion } from './inkOcclusion.ts';
 import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
 import { FaunaStipple } from './faunaStipple.ts';
 import { DREAM_LOOP } from './dreamLoop.ts';
+import { ARCH_STUDY_ON } from './archStudy.ts';
 import {
   duneSource,
   groundDetailCells,
@@ -193,7 +196,13 @@ import {
   SEABED_DETAIL_ON,
   type GroundDetailUniforms,
 } from './seabedDetail.ts';
-import { mapProps, stoneSeats, type PropPlacement, type StoneSeat } from './environment.ts';
+import {
+  mapPlacements,
+  stoneSeats,
+  type LandmarkStand,
+  type PropPlacement,
+  type StoneSeat,
+} from './environment.ts';
 import { installGroundSurface, type WorldLook } from './tutorialLook.ts';
 import {
   apronFrame,
@@ -614,6 +623,8 @@ interface RegionDetail {
   rival: DetailRival;
   /** Every prop its map stands, and the drawn set its layer last stood them for. */
   placements: readonly PropPlacement[];
+  /** The public landmarks admitted beside them, stood in the literal's state (#1637). */
+  landmarks: readonly LandmarkStand[];
   propsFor: string;
 }
 
@@ -1312,12 +1323,32 @@ export class PerspectiveView {
     this.applyVeil();
   }
 
-  /** Which map the room says this is: where its dunes' current comes from. */
+  /**
+   * Which map the room says this is: where its dunes' current comes from,
+   * and which public landmarks its ground stands (gate 1). The landmarks
+   * are the layer's to stand on the next rebuild, so a map named after the
+   * ground arrived rebuilds the dressing now.
+   */
   setMap(mapId: string): void {
     this.mapId = mapId;
     if (this.detailUniforms !== null && this.terrain !== null) {
       this.detailUniforms.uDuneSource.value = duneSource(mapId, this.terrain);
     }
+    this.environment.setLandmarks(this.studyLandmarks(mapId));
+    if (this.terrain !== null) this.rebuildDressing();
+  }
+
+  /**
+   * The public landmarks a layer draws on a map: the shared table's, under
+   * the arch study's development flag on the prologue's look alone, and none
+   * otherwise (archStudy.ts; docs/sorrowgate-arch-study.md §7 "Isolation").
+   * Radicals on the same ground is the standard look, so it draws none. This
+   * names the prologue's look, as Isolation requires, never a map: a layer
+   * draws any map's list.
+   */
+  private studyLandmarks(mapId: string | null): readonly PublicLandmark[] {
+    if (!ARCH_STUDY_ON || this.look !== 'sorrowgate' || mapId === null) return [];
+    return PUBLIC_LANDMARKS[mapId] ?? [];
   }
 
   setIdentity(_slot: number, faction: Faction): void {
@@ -1586,6 +1617,7 @@ export class PerspectiveView {
     this.seabedDetail = SEABED_DETAIL_ON && look === 'standard';
     this.environment = new EnvironmentLayer(look, this.seabedDetail);
     this.environment.setReducedMotion(this.swayHeld);
+    this.environment.setLandmarks(this.studyLandmarks(this.mapId));
     // Back in its place among the scene's groups, which the ladder orders.
     this.scene.add(this.environment.group);
     if (index >= 0) {
@@ -1638,6 +1670,7 @@ export class PerspectiveView {
     this.renderer?.domElement.remove();
     this.renderer = null;
     delete (window as unknown as { __perspectiveProbe?: unknown }).__perspectiveProbe;
+    delete (window as unknown as { __archStudy?: unknown }).__archStudy;
     delete (window as unknown as { __perspectiveStation?: unknown }).__perspectiveStation;
     delete (window as unknown as { __perspectiveCamera?: unknown }).__perspectiveCamera;
     delete (window as unknown as { __perspectiveLamps?: unknown }).__perspectiveLamps;
@@ -3097,18 +3130,26 @@ export class PerspectiveView {
     detailProps: number;
     detailPropTris: number;
     detailVentPlumes: number;
+    detailLandmarks: number;
+    detailLandmarkTris: number;
   } {
     let detailProps = 0;
     let detailPropTris = 0;
     let detailVentPlumes = 0;
+    let detailLandmarks = 0;
+    let detailLandmarkTris = 0;
     for (const detail of this.drawnDetails()) {
       if (!detail.mesh.visible) continue;
-      const { props, propTris, ventPlumes } = detail.props.stats();
+      const { props, propTris, ventPlumes, landmarks, landmarkTris } = detail.props.stats();
       detailProps += props;
       detailPropTris += propTris;
       detailVentPlumes += ventPlumes;
+      // The landmark on its own, as gate 6's study line asks of every probe
+      // that reports the props (#1637).
+      detailLandmarks += landmarks;
+      detailLandmarkTris += landmarkTris;
     }
-    return { detailProps, detailPropTris, detailVentPlumes };
+    return { detailProps, detailPropTris, detailVentPlumes, detailLandmarks, detailLandmarkTris };
   }
 
   /** The other regions' detail drawn this frame (`syncDetail`). */
@@ -3333,8 +3374,19 @@ export class PerspectiveView {
     const patchY = region.y - atlas.y;
     props.group.position.set(patchX, 0, patchY);
     props.setReducedMotion(this.swayHeld);
-    const placements = mapProps(region.mapId, this.look);
-    props.rebuild(mission, this.detailPropGround(mission, seed, rockTopM), placements);
+    // The map's public landmarks too, in the state the literal gives them —
+    // intact — so the join and the swap trade the landmark like for like
+    // (docs/world-map.md §7.6; gate 1, rule 1).
+    const landmarks = this.studyLandmarks(region.mapId);
+    props.setLandmarks(landmarks);
+    const stood = mapPlacements(region.mapId, this.look, landmarks);
+    const placements = stood.placements;
+    props.rebuild(
+      mission,
+      this.detailPropGround(mission, seed, rockTopM),
+      placements,
+      stood.landmarks
+    );
     mesh.add(props.group);
     return {
       mesh,
@@ -3351,6 +3403,7 @@ export class PerspectiveView {
       region,
       rival,
       placements,
+      landmarks: stood.landmarks,
       propsFor: region.id,
     };
   }
@@ -3367,11 +3420,16 @@ export class PerspectiveView {
     const atlas = detailRect(detail.region);
     props.group.position.set(detail.region.x - atlas.x, 0, detail.region.y - atlas.y);
     props.setReducedMotion(this.swayHeld);
-    detail.placements = mapProps(detail.region.mapId, this.look);
+    const landmarks = this.studyLandmarks(detail.region.mapId);
+    props.setLandmarks(landmarks);
+    const stood = mapPlacements(detail.region.mapId, this.look, landmarks);
+    detail.placements = stood.placements;
+    detail.landmarks = stood.landmarks;
     props.rebuild(
       detail.mission,
       this.detailPropGround(detail.mission, detail.seed, detail.rockTopM),
-      detail.placements
+      detail.placements,
+      detail.landmarks
     );
     detail.mesh.add(props.group);
     detail.props = props;
@@ -3404,7 +3462,8 @@ export class PerspectiveView {
     detail.props.rebuild(
       detail.mission,
       this.detailPropGround(detail.mission, detail.seed, detail.rockTopM),
-      owned
+      owned,
+      detail.landmarks
     );
   }
 
@@ -4671,6 +4730,13 @@ export class PerspectiveView {
   private exposeProbe(): void {
     (window as unknown as { __perspectiveProbe?: () => unknown }).__perspectiveProbe = () =>
       this.probeReading();
+    // The arch study's switches (environmentLayer.ts `setStudySwitches`),
+    // for the §9 readings that need the pools or the glass alone (#1637).
+    (
+      window as unknown as {
+        __archStudy?: (s: Partial<{ pools: boolean; lamps: boolean }>) => unknown;
+      }
+    ).__archStudy = (switches) => this.environment.setStudySwitches(switches ?? {});
 
     // The station boundary gate 6's drive walks. It closes the station being
     // measured, hands back its reading, and opens the next one — one call
@@ -4980,6 +5046,15 @@ export class PerspectiveView {
       // The prop layer's own ledger (gate 6): a prop regression is a
       // number, not an impression.
       ...this.environment.stats(),
+      // The arch study's own rows (#1637): whether its debris is still coming
+      // down, and its lamps' screen positions, so a capture can read the lamp
+      // glass and the lit stone round each one.
+      collapsing: this.environment.collapsing,
+      landmarkLampsPx: this.environment.lampPositions().map((at) => {
+        const out: ProjectedPoint = { x: 0, y: 0, pxPerM: 0, visible: false };
+        this.projectWorld(PROJECT_TMP.copy(at), out);
+        return { x: out.x, y: out.y };
+      }),
       modelBacked:
         [...this.unitHandles.values()].filter((h) => h.model !== null).length +
         [...this.structureHandles.values()].filter((h) => h.model !== null).length,

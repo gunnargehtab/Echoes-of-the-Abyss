@@ -30,10 +30,27 @@
 const SWAY_HOLD_S = 1.7;
 
 import { Color, Group, InstancedMesh, Matrix4, Quaternion, Vector3 } from 'three';
-import type { ResourceNodeInfo } from '@echoes/shared';
+import type { PublicLandmark, ResourceNodeInfo } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
-import { ENVIRONMENT_PROPS, placeProps, propSpec, type PropPlacement } from './environment.ts';
+import {
+  ENVIRONMENT_PROPS,
+  placeAll,
+  propSpec,
+  type LandmarkStand,
+  type PropPlacement,
+} from './environment.ts';
 import { envTemplate, type SwayUniforms } from './environmentModels.ts';
+import {
+  lampCentres,
+  landmarkTemplate,
+  siftSites,
+  type LandmarkStateTemplate,
+  type LandmarkTemplate,
+} from './landmarkModels.ts';
+import { depthToWorldY } from './perspectiveTerrain.ts';
+import { FALL_SECONDS, LAMP_COUNT, lampLevels, LIGHT_BUCKET_MS } from './landmarkLight.ts';
+import { CollapseCloud, LandmarkSift, SIFT_SITE_CAP, type SiftSite } from './landmarkSift.ts';
+import type { LandmarkState } from '@echoes/shared';
 import type { WorldLook } from './tutorialLook.ts';
 import { VentPlume, plumeSites } from './ventPlume.ts';
 import { FieldHaze, hazeSites } from './fieldHaze.ts';
@@ -44,6 +61,18 @@ const TMP_POS = new Vector3();
 const TMP_SCALE = new Vector3();
 const Y_AXIS = new Vector3(0, 1, 0);
 const TMP_COLOR = new Color();
+
+/** How many lamps a state carries: the intact state's four, the ruined state's none. */
+function lampCount(state: LandmarkStateTemplate): number {
+  return lampCentres(state).length;
+}
+
+/** A model-space plan offset turned by a landmark's yaw, as the instance matrix turns it. */
+function turned(x: number, z: number, yawRad: number): [number, number] {
+  const cos = Math.cos(yawRad);
+  const sin = Math.sin(yawRad);
+  return [x * cos + z * sin, -x * sin + z * cos];
+}
 
 export class EnvironmentLayer {
   /**
@@ -63,12 +92,54 @@ export class EnvironmentLayer {
   readonly plume = new VentPlume();
   /** Every field's sediment haze, one draw; in the group while a field stands (#1555). */
   readonly haze = new FieldHaze();
+  /** The arch study's silt sift, one draw; in the group while a landmark stands under the study (#1637). */
+  readonly sift = new LandmarkSift();
+  /** The collapse's cloud, one draw, alive for the 14 s after the ground change. */
+  readonly cloud = new CollapseCloud();
 
   /** Guards late template loads: a load that finishes after another rebuild
    * (new terrain, teardown) must not resurrect stale placements. */
   private generation = 0;
   private props = 0;
   private propTris = 0;
+  /** Public landmarks standing, and the triangles their drawn states cost (gate 6). */
+  private landmarksStanding = 0;
+  private landmarkTris = 0;
+  /**
+   * The map's public landmarks this layer draws (docs/graphics-standards.md
+   * gate 1): none, unless the view hands it the map's table — which it does
+   * only under the arch study's flag, on the prologue's look. Stood from the
+   * terrain each default rebuild, in the state its own cells give, so a ground delta
+   * that turns the anchor cells to rock stands the ruin on the same rebuild
+   * that re-shades them, and a session whose first ground already holds the
+   * collapse stands it from its first frame.
+   */
+  private landmarks: readonly PublicLandmark[] = [];
+  /** The templates standing in this build whose light and motion this layer drives. */
+  private lit: LandmarkTemplate[] = [];
+  /**
+   * The state each landmark last stood in here, across rebuilds: the collapse
+   * sequence starts only on a rebuild that turns an intact landmark ruined in
+   * this same layer (the received ground change), never on a layer whose
+   * first ground already holds the ruin (a reload after 10:40), which stands
+   * it from its first frame and plays nothing. Cleared with `reset`, not
+   * `clear`, since a rebuild is exactly the moment it is read.
+   */
+  private lastStates = new Map<string, LandmarkState>();
+  /** The sonar bucket the lamps were last stepped on. */
+  private lampBucket = -1;
+  /**
+   * The study's development switches (§9: "Read C's GPU time with the pools
+   * on and off", and the lamp-glass and lit-stone readings, which need each
+   * alone): pools off zeroes every pool, lamps off darkens the glass. Both on
+   * is the study; the harness flips them through the view's probe hook.
+   */
+  private switches = { pools: true, lamps: true };
+  /** The lit landmarks standing, with their stands, for the lamp positions the probe projects. */
+  private litStands: { template: LandmarkTemplate; stand: LandmarkStand }[] = [];
+  /** The collapse's clock, milliseconds on the bucket, while the debris falls; null at rest. */
+  private fallStartedMs: number | null = null;
+  private falling = false;
   /** Sway handles of the templates standing in this build, ticked per frame. */
   private swaying: SwayUniforms[] = [];
   private reducedMotion = false;
@@ -102,14 +173,88 @@ export class EnvironmentLayer {
   rebuild(
     terrain: TerrainPayload,
     groundY: (xM: number, yM: number) => number,
-    placements?: readonly PropPlacement[]
+    placements?: readonly PropPlacement[],
+    stands?: readonly LandmarkStand[]
   ): void {
     const generation = ++this.generation;
     this.clear();
     // Only the default placement stands the fields, so only it hazes them: the
-    // opt-in study hands in its own budgeted list and stands no field.
+    // opt-in study hands in its own budgeted list and stands no field. A
+    // caller that hands in placements hands in the landmarks admitted beside
+    // them (environment.ts `placeAll`), or none.
     const standsFields = placements === undefined;
-    placements ??= placeProps(terrain, ENVIRONMENT_PROPS, this.look, this.fields);
+    if (placements === undefined) {
+      const all = placeAll(terrain, ENVIRONMENT_PROPS, this.look, this.fields, this.landmarks);
+      placements = all.placements;
+      stands = all.landmarks;
+    }
+    // The study's light and motion ride the default rebuild alone: the
+    // session's layer, on the received ground. A layer handed its placements
+    // (the region's baseline detail, drawn on the board without its session)
+    // stands the landmark from a still template of its own, with no pool, no
+    // guttering, no sway and no sift, the glass at its steady level, so the
+    // session's clocks never reach the board's arch and the session's state
+    // never switches the board's pools.
+    const sifts: SiftSite[] = [];
+    for (const stand of stands ?? []) {
+      const template = this.standLandmark(stand, terrain, !standsFields, () => {
+        if (generation === this.generation) {
+          this.rebuild(terrain, groundY, standsFields ? undefined : placements, stands);
+        }
+      });
+      if (template === null || !standsFields) continue;
+      const prior = this.lastStates.get(stand.landmark.slug);
+      this.lastStates.set(stand.landmark.slug, stand.state);
+      if (template.uniforms === null) continue;
+      this.lit.push(template);
+      this.litStands.push({ template, stand });
+      const state = template.states[stand.state];
+      const { landmark } = stand;
+      const originY = depthToWorldY(landmark.originFloorM);
+      // The pools are the intact state's lamps': none on the ruined state
+      // (§8), whose stone shares the intact state's materials, so the count
+      // is switched with the state and the lamps go dark on this rebuild —
+      // the first bucket after the cells turned to rock.
+      template.uniforms.uPoolCount.value =
+        stand.state === 'intact' && this.switches.pools
+          ? Math.min(state.nodes.size, LAMP_COUNT, lampCount(state))
+          : 0;
+      for (const at of siftSites(state, stand.state).slice(0, SIFT_SITE_CAP[stand.state])) {
+        const [x, z] = turned(at.x, at.z, landmark.yawRad);
+        sifts.push({
+          x: landmark.anchorXM + x,
+          y: originY + at.y,
+          z: landmark.anchorYM + z,
+          xM: landmark.anchorXM,
+          yM: landmark.anchorYM,
+        });
+      }
+      // The collapse: this layer stood it intact and now stands it ruined,
+      // on the ground change it just received. Reduced motion cuts to the
+      // ruin with no sequence and no cloud (§8).
+      if (prior === 'intact' && stand.state === 'ruined' && !this.reducedMotion) {
+        this.falling = true;
+        this.fallStartedMs = null;
+        template.uniforms.uFallT.value = 0;
+        // Along the wall's foot, where the face meets the floor (§6), from
+        // the plan's west end to its east.
+        const plan = stand.spec.plan.ruined;
+        const foot = stand.spec.faceFootZ;
+        const [wx, wz] = turned(plan.x[0], foot, landmark.yawRad);
+        const [ex, ez] = turned(plan.x[1], foot, landmark.yawRad);
+        const [sx, sz] = turned(0, 1, landmark.yawRad);
+        this.cloud.build(
+          [
+            new Vector3(landmark.anchorXM + wx, originY, landmark.anchorYM + wz),
+            new Vector3(landmark.anchorXM + ex, originY, landmark.anchorYM + ez),
+          ],
+          new Vector3(sx, 0, sz)
+        );
+        this.group.add(this.cloud.points);
+      }
+    }
+    this.sift.build(sifts, this.shade);
+    if (sifts.length > 0) this.group.add(this.sift.points);
 
     if (placements.length === 0) return;
     // Where each standing slug tops out, per unit scale: the chimneys' mouths.
@@ -180,6 +325,61 @@ export class EnvironmentLayer {
   }
 
   /**
+   * Stand one landmark in the state its cells give it: its state's parts, one
+   * instanced mesh of one instance each, so the veil's shade reaches it the
+   * way it reaches a prop (its instance colour), at the anchor, turned by the
+   * anchor's yaw, at scale 1. Its origin stands at the literal's floor
+   * through the same depth mapping the terrain mesh uses — never on
+   * `groundY`, the drawn ground with its relief, which the received ground
+   * moves: the wall that rises under the anchor at 10:40 would lift the ruin
+   * onto its top (study §6, gate 1).
+   */
+  private standLandmark(
+    stand: LandmarkStand,
+    terrain: TerrainPayload,
+    still: boolean,
+    onReady: () => void
+  ): LandmarkTemplate | null {
+    const template = landmarkTemplate(stand.spec, onReady, this.look, still);
+    if (template === null) return null;
+    const state = template.states[stand.state];
+    const { landmark } = stand;
+    TMP_POS.set(landmark.anchorXM, depthToWorldY(landmark.originFloorM), landmark.anchorYM);
+    TMP_QUAT.setFromAxisAngle(Y_AXIS, landmark.yawRad);
+    TMP_SCALE.setScalar(1);
+    TMP_MATRIX.compose(TMP_POS, TMP_QUAT, TMP_SCALE);
+    const at: PropPlacement = {
+      slug: landmark.slug,
+      xM: landmark.anchorXM,
+      yM: landmark.anchorYM,
+      yawRad: landmark.yawRad,
+      scale: 1,
+      cellIndex: landmark.cells.row * terrain.cols + landmark.cells.col0,
+    };
+    for (const part of state.parts) {
+      const mesh = new InstancedMesh(part.geometry, part.material, 1);
+      mesh.frustumCulled = false;
+      mesh.name = `${landmark.slug}:${stand.state}:${part.material.name}`;
+      mesh.setMatrixAt(0, TMP_MATRIX);
+      mesh.instanceMatrix.needsUpdate = true;
+      this.shaded.push({ mesh, list: [at] });
+      this.applyShade(mesh, [at]);
+      this.group.add(mesh);
+    }
+    this.landmarksStanding++;
+    this.landmarkTris += state.triangles;
+    return template;
+  }
+
+  /**
+   * Take the map's public landmarks. The caller rebuilds, as for the fields:
+   * the view owns *when*.
+   */
+  setLandmarks(landmarks: readonly PublicLandmark[]): void {
+    this.landmarks = landmarks;
+  }
+
+  /**
    * Per frame: advance the current. Under reduced motion the time is held,
    * and the write still happens so a toggle mid-match takes effect on the
    * next frame rather than on the next terrain rebuild.
@@ -187,15 +387,65 @@ export class EnvironmentLayer {
   tick(nowMs: number, waterReachM?: number): void {
     this.plume.tick(nowMs, waterReachM);
     this.haze.tick(nowMs, waterReachM);
+    this.tickLandmarks(nowMs);
     if (this.swaying.length === 0) return;
     const time = this.reducedMotion ? SWAY_HOLD_S : nowMs / 1000;
     for (const sway of this.swaying) sway.uSwayTime.value = time;
+  }
+
+  /**
+   * The study's clocks, each on the 5 Hz bucket (rule 3): the four lamps'
+   * levels and their pools with them, held at 1 under reduced motion; the
+   * hung fittings' clock, held still; the debris's progress over
+   * `FALL_SECONDS` from the first tick after the change, and the cloud's
+   * over its 14 s, after which the cloud leaves the group.
+   */
+  private tickLandmarks(nowMs: number): void {
+    this.sift.tick(nowMs);
+    if (this.lit.length === 0) return;
+    const stepped = Math.floor(nowMs / LIGHT_BUCKET_MS) * LIGHT_BUCKET_MS;
+    const bucket = stepped / LIGHT_BUCKET_MS;
+    const bucketChanged = bucket !== this.lampBucket;
+    this.lampBucket = bucket;
+    if (this.falling && this.fallStartedMs === null) this.fallStartedMs = stepped;
+    const fallT =
+      this.falling && this.fallStartedMs !== null
+        ? Math.min(1, (stepped - this.fallStartedMs) / 1000 / FALL_SECONDS)
+        : 1;
+    if (fallT >= 1) this.falling = false;
+    for (const { uniforms } of this.lit) {
+      if (uniforms === null) continue;
+      if (bucketChanged) {
+        if (this.reducedMotion) uniforms.uLampLevel.value.fill(1);
+        else lampLevels(bucket, uniforms.uLampLevel.value.length, uniforms.uLampLevel.value);
+        for (let i = 0; i < uniforms.uPoolCount.value; i++) {
+          uniforms.uPool.value[i * 4 + 3] = uniforms.uLampLevel.value[i]!;
+        }
+        // The harness's switch: the glass dark, so the lit stone can be read alone.
+        if (!this.switches.lamps) uniforms.uLampLevel.value.fill(0);
+      }
+      uniforms.uHangTime.value = this.reducedMotion ? SWAY_HOLD_S : stepped / 1000;
+      uniforms.uFallT.value = fallT;
+    }
+    if (this.cloud.motes > 0 && this.cloud.tick(nowMs)) this.group.remove(this.cloud.points);
   }
 
   setReducedMotion(reduced: boolean): void {
     this.reducedMotion = reduced;
     this.plume.setReducedMotion(reduced);
     this.haze.setReducedMotion(reduced);
+    this.sift.setReducedMotion(reduced);
+    if (reduced) {
+      // A sequence under way cuts to the ruin (§8), and the lamps settle on
+      // the next bucket.
+      this.falling = false;
+      this.fallStartedMs = null;
+      if (this.cloud.motes > 0) {
+        this.cloud.clear();
+        this.group.remove(this.cloud.points);
+      }
+      this.lampBucket = -1;
+    }
   }
 
   /**
@@ -218,6 +468,7 @@ export class EnvironmentLayer {
     for (const { mesh, list } of this.shaded) this.applyShade(mesh, list);
     this.plume.setShade(shade);
     this.haze.setShade(shade);
+    this.sift.setShade(shade);
   }
 
   private applyShade(mesh: InstancedMesh, list: readonly PropPlacement[]): void {
@@ -231,14 +482,70 @@ export class EnvironmentLayer {
     if (mesh.instanceColor !== null) mesh.instanceColor.needsUpdate = true;
   }
 
-  /** Probe telemetry (gate 6): bodies standing, triangles they cost, steam columns and hazed fields. */
-  stats(): { props: number; propTris: number; ventPlumes: number; fieldHazes: number } {
+  /**
+   * Probe telemetry (gate 6): bodies standing, triangles they cost, steam
+   * columns and hazed fields, and the public landmarks on their own, as gate
+   * 6's study line asks — a landmark is one instance, not a prop count.
+   */
+  stats(): {
+    props: number;
+    propTris: number;
+    ventPlumes: number;
+    fieldHazes: number;
+    landmarks: number;
+    landmarkTris: number;
+    siftMotes: number;
+    cloudMotes: number;
+  } {
     return {
       props: this.props,
       propTris: this.propTris,
       ventPlumes: this.plume.plumes,
       fieldHazes: this.haze.fields,
+      landmarks: this.landmarksStanding,
+      landmarkTris: this.landmarkTris,
+      siftMotes: this.sift.motes,
+      cloudMotes: this.cloud.motes,
     };
+  }
+
+  /** Whether the collapse's debris is still coming down, for the tests and the probe. */
+  get collapsing(): boolean {
+    return this.falling;
+  }
+
+  /**
+   * Flip the study's development switches (above); the pools take effect on
+   * this call, the glass on the next bucket. Returns the switches as they
+   * stand, so a harness can read them too.
+   */
+  setStudySwitches(switches: Partial<{ pools: boolean; lamps: boolean }>): {
+    pools: boolean;
+    lamps: boolean;
+  } {
+    this.switches = { ...this.switches, ...switches };
+    for (const { template, stand } of this.litStands) {
+      if (template.uniforms === null) continue;
+      template.uniforms.uPoolCount.value =
+        stand.state === 'intact' && this.switches.pools ? lampCount(template.states.intact) : 0;
+    }
+    this.lampBucket = -1;
+    return { ...this.switches };
+  }
+
+  /** Where the lit landmarks' lamps stand, world units, for the probe to project. */
+  lampPositions(): Vector3[] {
+    const out: Vector3[] = [];
+    for (const { template, stand } of this.litStands) {
+      if (stand.state !== 'intact') continue;
+      const { landmark } = stand;
+      const originY = depthToWorldY(landmark.originFloorM);
+      for (const at of lampCentres(template.states.intact)) {
+        const [x, z] = turned(at.x, at.z, landmark.yawRad);
+        out.push(new Vector3(landmark.anchorXM + x, originY + at.y, landmark.anchorYM + z));
+      }
+    }
+    return out;
   }
 
   /**
@@ -249,12 +556,18 @@ export class EnvironmentLayer {
   reset(): void {
     this.generation++;
     this.clear();
+    this.lastStates.clear();
+    this.falling = false;
+    this.fallStartedMs = null;
+    this.cloud.clear();
   }
 
   destroy(): void {
     this.reset();
     this.plume.dispose();
     this.haze.dispose();
+    this.sift.dispose();
+    this.cloud.dispose();
   }
 
   private clear(): void {
@@ -264,11 +577,18 @@ export class EnvironmentLayer {
       // belong to the template cache and must survive the rebuild.
       if (child instanceof InstancedMesh) child.dispose();
     }
-    // Emptied, not disposed: their materials outlive the rebuild.
+    // Emptied, not disposed: their materials outlive the rebuild. The cloud
+    // is not emptied here: a rebuild mid-sequence (a second delta in the 14 s)
+    // leaves it settling, and the group it is re-added to is this one.
     this.plume.clear();
     this.haze.clear();
+    this.sift.clear();
+    this.lit = [];
+    this.litStands = [];
     this.props = 0;
     this.propTris = 0;
+    this.landmarksStanding = 0;
+    this.landmarkTris = 0;
     this.swaying = [];
     this.shaded = [];
   }

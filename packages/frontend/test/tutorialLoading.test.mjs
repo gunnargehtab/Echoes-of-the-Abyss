@@ -187,7 +187,16 @@ describe('pending prop delivery', () => {
     texture.addEventListener('dispose', () => disposed++);
     live.destroy();
     assert.equal(live.group.children.length, 0);
-    assert.deepEqual(live.stats(), { props: 0, propTris: 0, ventPlumes: 0, fieldHazes: 0 });
+    assert.deepEqual(live.stats(), {
+      props: 0,
+      propTris: 0,
+      ventPlumes: 0,
+      fieldHazes: 0,
+      landmarks: 0,
+      landmarkTris: 0,
+      siftMotes: 0,
+      cloudMotes: 0,
+    });
     assert.equal(disposed, 0, 'a match must not dispose the page-owned surface texture');
   });
 

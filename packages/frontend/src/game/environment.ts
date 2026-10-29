@@ -26,8 +26,15 @@
  *   review to notice, so no future map or density tune can exceed them.
  */
 
-import { Biome, ECONOMY, PLACED_GROUND, paintGround, ResourceKind } from '@echoes/shared';
-import type { ResourceNodeInfo } from '@echoes/shared';
+import {
+  Biome,
+  ECONOMY,
+  landmarkState,
+  PLACED_GROUND,
+  paintGround,
+  ResourceKind,
+} from '@echoes/shared';
+import type { LandmarkState, PublicLandmark, ResourceNodeInfo } from '@echoes/shared';
 import type { WorldLook } from './tutorialLook.ts';
 
 /**
@@ -414,24 +421,185 @@ export function placeProps(
   terrain: TerrainGrid,
   specs: readonly PropSpec[] = ENVIRONMENT_PROPS,
   look: WorldLook = 'standard',
-  fields: readonly ResourceNodeInfo[] = []
+  fields: readonly ResourceNodeInfo[] = [],
+  landmarks: readonly PublicLandmark[] = []
 ): PropPlacement[] {
+  return placeAll(terrain, specs, look, fields, landmarks).placements;
+}
+
+/**
+ * Every placement and every public landmark a terrain stands, through one
+ * spend: the fields first, then each landmark in the state its cells give
+ * (gate 1, rule 3: one instance from the reservation, after the fields and
+ * before the scatter, at its row's triangles for the state drawn), then the
+ * scatter, which keeps off the plan of each landmark admitted (rule 4).
+ * A landmark the caps refuse is not stood — `landmarks` lists the admitted
+ * ones alone — so the layer never draws past the reservation. Normal play
+ * never reaches a refusal: the fields and the arch together stand about a
+ * twentieth of it.
+ */
+export function placeAll(
+  terrain: TerrainGrid,
+  specs: readonly PropSpec[] = ENVIRONMENT_PROPS,
+  look: WorldLook = 'standard',
+  fields: readonly ResourceNodeInfo[] = [],
+  landmarks: readonly PublicLandmark[] = []
+): { placements: PropPlacement[]; landmarks: LandmarkStand[] } {
   const placements: PropPlacement[] = [];
+  const admitted: LandmarkStand[] = [];
   let trisSpent = 0;
+  let instances = 0;
+  const admit = (tris: number): boolean => {
+    if (instances >= PROP_INSTANCE_CAP) return false;
+    if (trisSpent + tris > PROP_TRI_RESERVATION) return false;
+    trisSpent += tris;
+    instances++;
+    return true;
+  };
   const spend = (placement: PropPlacement, spec: PropSpec): boolean => {
-    if (placements.length >= PROP_INSTANCE_CAP) return false;
-    if (trisSpent + spec.triBudget > PROP_TRI_RESERVATION) return false;
-    trisSpent += spec.triBudget;
+    if (!admit(spec.triBudget)) return false;
     placements.push(placement);
     return true;
   };
   for (const { placement, spec } of scatterFields(terrain, fields, specs)) {
-    if (!spend(placement, spec)) return placements;
+    if (!spend(placement, spec)) return { placements, landmarks: admitted };
+  }
+  for (const stand of standLandmarks(terrain, landmarks)) {
+    if (admit(stand.spec.triBudget[stand.state])) admitted.push(stand);
   }
   for (const { placement, spec } of scatterProps(terrain, specs, look)) {
+    // The scatter makes room (gate 1, rule 4): nothing on open ground whose
+    // footprint meets the plan of the state drawn. A prop that stands on rock
+    // is not on open ground, so a crag on the wall's top keeps its place
+    // (study §7, "Scatter").
+    if (
+      spec.stands !== 'rock' &&
+      admitted.some((stand) => meetsPlan(placement, spec, stand.plan))
+    ) {
+      continue;
+    }
     if (!spend(placement, spec)) break;
   }
-  return placements;
+  return { placements, landmarks: admitted };
+}
+
+// ----------------------------------------------------------- public landmarks
+
+/**
+ * A public landmark's registry row — docs/asset-prompts-3d.md Block 4b, and
+ * docs/graphics-standards.md gate 1, "Public landmarks". The table of where
+ * one stands is the shared `PUBLIC_LANDMARKS` (public map data); this row is
+ * what it costs and what it covers, which the client alone needs.
+ */
+export interface LandmarkSpec {
+  slug: string;
+  /** Canonical scale: the model's larger horizontal axis, held as a prop's is. */
+  footprintM: number;
+  /** Draw calls standing: one a material (gate 6's study line). */
+  calls: number;
+  /**
+   * Triangles standing in each state — the count hull-intake reported for
+   * the committed model's state groups, spent against the prop reservation.
+   * Block 4b caps either at `LANDMARK_TRI_CAP`.
+   */
+  triBudget: Record<LandmarkState, number>;
+  /**
+   * Each state's plan in model metres (X along the span, Z toward +Z), the
+   * study's §6: what the scatter keeps clear of.
+   */
+  plan: Record<LandmarkState, { x: readonly [number, number]; z: readonly [number, number] }>;
+  /**
+   * Where the ruined state's wall meets the floor, model metres along +Z:
+   * the study's §6 face foot, which the collapse's cloud rises from.
+   */
+  faceFootZ: number;
+}
+
+/** Block 4b's row: at most 12,000 triangles a state. */
+export const LANDMARK_TRI_CAP = 12_000;
+
+/**
+ * Block 4b's one row, the Sorrowgate transit arch: 570 m along X, four
+ * materials, 2,412 triangles intact and 732 ruined by intake's count, its
+ * plans the study's §6 (intact X ±285, Z ±80; ruined X ±285, Z +115 to +150).
+ */
+export const PUBLIC_LANDMARK_SPECS: readonly LandmarkSpec[] = [
+  {
+    slug: 'env-ruin-transit-arch',
+    footprintM: 570,
+    calls: 4,
+    triBudget: { intact: 2412, ruined: 732 },
+    plan: {
+      intact: { x: [-285, 285], z: [-80, 80] },
+      ruined: { x: [-285, 285], z: [115, 150] },
+    },
+    faceFootZ: 125,
+  },
+];
+
+export function landmarkSpec(slug: string): LandmarkSpec | undefined {
+  return PUBLIC_LANDMARK_SPECS.find((spec) => spec.slug === slug);
+}
+
+/** A landmark as a terrain stands it: which state, and the plan it covers in map metres. */
+export interface LandmarkStand {
+  landmark: PublicLandmark;
+  spec: LandmarkSpec;
+  state: LandmarkState;
+  /** The drawn state's plan on the map, metres: `x0..x1` east, `y0..y1` south. */
+  plan: { x0: number; x1: number; y0: number; y1: number };
+}
+
+/**
+ * Every landmark a terrain stands, in the state its own cells give it (gate 1,
+ * rule 1): a pure function of the published grid and the shared table, so
+ * every client and every layer stands the same thing, and a grid that already
+ * holds the collapse stands the ruin from its first frame. A landmark with no
+ * registry row stands nothing.
+ *
+ * The plan is the model's plan turned by the anchor's yaw and boxed: exact at
+ * yaw 0, which is the one landmark there is, and the box of the turned
+ * rectangle otherwise, so the scatter keeps clear of all of it.
+ */
+export function standLandmarks(
+  terrain: TerrainGrid,
+  landmarks: readonly PublicLandmark[],
+  specs: readonly LandmarkSpec[] = PUBLIC_LANDMARK_SPECS
+): LandmarkStand[] {
+  const stands: LandmarkStand[] = [];
+  for (const landmark of landmarks) {
+    const spec = specs.find((candidate) => candidate.slug === landmark.slug);
+    if (spec === undefined) continue;
+    const state = landmarkState(landmark, terrain);
+    const { x, z } = spec.plan[state];
+    const cos = Math.cos(landmark.yawRad);
+    const sin = Math.sin(landmark.yawRad);
+    let x0 = Infinity;
+    let x1 = -Infinity;
+    let y0 = Infinity;
+    let y1 = -Infinity;
+    for (const cx of x) {
+      for (const cz of z) {
+        // Model +X east and +Z south turn about +Y as three.js turns them.
+        const px = landmark.anchorXM + cx * cos + cz * sin;
+        const py = landmark.anchorYM - cx * sin + cz * cos;
+        x0 = Math.min(x0, px);
+        x1 = Math.max(x1, px);
+        y0 = Math.min(y0, py);
+        y1 = Math.max(y1, py);
+      }
+    }
+    stands.push({ landmark, spec, state, plan: { x0, x1, y0, y1 } });
+  }
+  return stands;
+}
+
+/** Whether a placement's footprint circle meets a plan rectangle. */
+function meetsPlan(placement: PropPlacement, spec: PropSpec, plan: LandmarkStand['plan']): boolean {
+  const radius = (spec.footprintM * placement.scale) / 2;
+  const dx = Math.max(plan.x0 - placement.xM, 0, placement.xM - plan.x1);
+  const dy = Math.max(plan.y0 - placement.yM, 0, placement.yM - plan.y1);
+  return dx * dx + dy * dy < radius * radius;
 }
 
 // ------------------------------------------------------------ resource fields
@@ -550,22 +718,35 @@ export function* scatterFields(
  * alone, so these are the placements the session's layer stands on the room's
  * first ground, and the join and the return's swap trade like for like.
  */
-export function mapProps(mapId: string, look: WorldLook = 'standard'): PropPlacement[] {
+export function mapProps(
+  mapId: string,
+  look: WorldLook = 'standard',
+  landmarks: readonly PublicLandmark[] = []
+): PropPlacement[] {
+  return mapPlacements(mapId, look, landmarks).placements;
+}
+
+/**
+ * `mapProps` and the landmarks it admitted, together: what a region's
+ * baseline detail stands (PerspectiveView.ts `loadRegionDetail`).
+ */
+export function mapPlacements(
+  mapId: string,
+  look: WorldLook = 'standard',
+  landmarks: readonly PublicLandmark[] = []
+): { placements: PropPlacement[]; landmarks: LandmarkStand[] } {
   const ground = PLACED_GROUND[mapId];
-  if (ground === undefined) return [];
+  if (ground === undefined) return { placements: [], landmarks: [] };
   const cells = paintGround(ground);
-  return placeProps(
-    {
-      cols: cells.cols,
-      rows: cells.rows,
-      cellM: cells.cellM,
-      biomes: Array.from(cells.biomes),
-      floor: Array.from(cells.floor),
-      ceiling: Array.from(cells.ceiling),
-    },
-    ENVIRONMENT_PROPS,
-    look
-  );
+  const terrain = {
+    cols: cells.cols,
+    rows: cells.rows,
+    cellM: cells.cellM,
+    biomes: Array.from(cells.biomes),
+    floor: Array.from(cells.floor),
+    ceiling: Array.from(cells.ceiling),
+  };
+  return placeAll(terrain, ENVIRONMENT_PROPS, look, [], landmarks);
 }
 
 /** Unbudgeted candidates, shared with the opt-in view-bounded material study.
