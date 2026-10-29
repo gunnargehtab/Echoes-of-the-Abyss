@@ -144,6 +144,20 @@ describe('the settings store', () => {
     assert.equal(loadSettings().contactTimbre, false);
   });
 
+  it('loads the interface cues off, from any record and from none (#1600)', () => {
+    // docs/audio-direction.md §12: off is the game §1 describes, where a sound
+    // means something is in the water. A record older than the control loads
+    // it off, and a choice of on is kept.
+    assert.equal(DEFAULT_SETTINGS.interfaceCues, false);
+    assert.equal(loadSettings().interfaceCues, false);
+    backing.set('echoes.settings', JSON.stringify({ version: 1, masterVolume: 0.5 }));
+    assert.equal(loadSettings().interfaceCues, false);
+    saveSettings({ interfaceCues: true });
+    assert.equal(loadSettings().interfaceCues, true);
+    backing.set('echoes.settings', JSON.stringify({ version: 1, interfaceCues: 1 }));
+    assert.equal(loadSettings().interfaceCues, false);
+  });
+
   it('loads the lamp halos at the build default, and keeps an explicit choice', () => {
     // art-direction.md "Lamp halo — SPEC": the halo is on by default since the
     // owner approved its frames. The default is the build's, not a hard-coded

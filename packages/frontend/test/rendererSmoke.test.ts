@@ -2986,6 +2986,92 @@ describe('one click is armed at a time (#1335)', () => {
 });
 
 /**
+ * docs/audio-direction.md §12, "Three interface cues" (#1600): the renderer
+ * says which of the three a click was, where the thing it says is drawn.
+ * Whether it sounds is the engine's setting, asserted in audioEngine.test.ts.
+ */
+describe('the interface cues the renderer reports (#1600)', () => {
+  const cues = (world: Booted): unknown[] =>
+    world.log.calls.filter((call) => call.name === 'onInterfaceCue').map((call) => call.args[0]);
+
+  it('reports an order where its marker paints, and nothing for a selection', async () => {
+    const world = await boot();
+    try {
+      const hull = cannedSnapshot().units[0]!;
+      world.chart.focusOn(hull.x, hull.y);
+      world.frame(2);
+      const at = world.conn.projectPoint(hull.x, hull.y, hull.depth);
+      for (const type of ['pointerdown', 'pointerup']) {
+        world.app.canvas.dispatch(type, {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x,
+          clientY: at.y,
+        });
+      }
+      world.frame(1);
+      assert.deepEqual(cues(world), [], 'selecting a hull is not an order');
+
+      for (const type of ['pointerdown', 'pointerup']) {
+        world.app.canvas.dispatch(type, {
+          button: 2,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x + 120,
+          clientY: at.y + 40,
+        });
+      }
+      assert.ok(world.log.first('onMoveOrder') !== undefined, 'the premise: a move was sent');
+      assert.deepEqual(cues(world), ['order'], 'one move, one order cue');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('reports a placement when the armed build is sent', async () => {
+    const world = await boot();
+    try {
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'KeyR' });
+      world.frame(1);
+      assert.deepEqual(cues(world), [], 'arming is not placing');
+      for (const type of ['pointerdown', 'pointerup']) {
+        world.app.canvas.dispatch(type, {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: 700,
+          clientY: 400,
+        });
+      }
+      assert.equal(world.log.first('onBuild')?.[0], StructureKind.Refinery, 'the premise: placed');
+      assert.deepEqual(cues(world), ['placed']);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('reports a refusal when the hint bar is handed its reason', async () => {
+    const world = await boot();
+    try {
+      const broke = cannedSnapshot();
+      broke.nodules = 0;
+      world.chart.applySnapshot(broke);
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'KeyR' });
+      world.frame(1);
+      const stats = structureStatsFor(StructureKind.Refinery);
+      const refusal = `${stats.name}: ${priceOf(stats).nodules} nodules short`;
+      assert.ok(textSaying(world.app.stage, refusal) !== null, 'the premise: the bar says why');
+      assert.deepEqual(cues(world), ['refused'], 'the refusal the bar names, and only it');
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
+/**
  * The top strip's explanations (#724) — docs/ui-ux.md §2, §7.
  *
  * The strip is Pixi text and its explanation is DOM, so the renderer's half of

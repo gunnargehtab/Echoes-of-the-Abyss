@@ -65,6 +65,7 @@ import {
 } from './selfVoice.ts';
 import { MAX_CONTACT_VOICES, VoiceAllocator } from './voiceAllocator.ts';
 import { createSpeakerProfile, type SpeakerProfile } from './speakerProfile.ts';
+import { InterfaceCueGate, playInterfaceCue, type InterfaceCue } from './interfaceCue.ts';
 
 /** SPEC — docs/audio-direction.md §12. Milliseconds per Echo tick. */
 export const AUDIO_BUDGET_MS = 1;
@@ -338,6 +339,8 @@ export class AudioEngine {
   private mixer: ContactMixer | null = null;
   /** §8's timbre families, off by default (#731). Buffered like the volumes. */
   private contactTimbre = false;
+  /** §12's interface cues, off by default (#1600). The gate holds the setting. */
+  private readonly cues = new InterfaceCueGate();
   private selfMixer: SelfMixer | null = null;
   private selfBed: SelfBed | null = null;
   private sourBed: SourBed | null = null;
@@ -581,8 +584,8 @@ export class AudioEngine {
       exposure: (at, pan) => playExposure(context, self, at, this.heardPan(pan)),
       breakSilence: (at) => playBreakSilence(context, self, at),
       underFire: (at) => playUnderFire(context, self, at),
-      // The interface's own voice: the one producer the ui bus has, and the
-      // reason its slider finally trims something.
+      // The interface's own voice, the ui bus's first producer. The other is
+      // `interfaceCue` below, which answers a click rather than the tick.
       notice: (at) => playNotice(context, ui, at),
     });
     this.mixer.setSpatialisation(this.spatialisation);
@@ -969,6 +972,35 @@ export class AudioEngine {
 
   get contactTimbreOn(): boolean {
     return this.contactTimbre;
+  }
+
+  /**
+   * Whether the interface taps when an order paints its marker, a structure
+   * is placed or a press is refused — docs/audio-direction.md §12, off by
+   * default (#1600, docs/ui-ux.md §14). Off is the game §1 describes.
+   */
+  setInterfaceCues(on: boolean): void {
+    this.cues.on = on;
+  }
+
+  get interfaceCuesOn(): boolean {
+    return this.cues.on;
+  }
+
+  /**
+   * One interface cue, now, on the ui bus.
+   *
+   * Played on arrival rather than on the Echo tick: it answers a click, not
+   * the server, and §12 of ui-ux.md makes order feedback immediate and local.
+   * Before the graph exists a cue is dropped rather than held: a tap that
+   * arrives late answers no click.
+   */
+  interfaceCue(cue: InterfaceCue): void {
+    const context = this.context;
+    const buses = this.buses;
+    if (context === null || buses === null) return;
+    if (!this.cues.admit(cue, context.currentTime)) return;
+    playInterfaceCue(context, buses.ui, context.currentTime, cue);
   }
 
   /**

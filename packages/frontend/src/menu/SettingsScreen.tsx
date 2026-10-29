@@ -162,6 +162,21 @@ export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
           <label className="menu-toggle-row">
             <input
               type="checkbox"
+              checked={settings.interfaceCues}
+              onChange={(event) => patch({ interfaceCues: event.target.checked })}
+            />
+            <span className="menu-toggle-label">Interface cues</span>
+            <span className="menu-toggle-note">
+              A soft tap when an order paints its marker, a structure is placed or a press is
+              refused. Off by default, because here a sound means something is in the water. The tap
+              says the interface took the click, not that it worked; the marker and the hint bar say
+              the same either way.
+            </span>
+          </label>
+
+          <label className="menu-toggle-row">
+            <input
+              type="checkbox"
               checked={settings.speakerProfile}
               onChange={(event) => patch({ speakerProfile: event.target.checked })}
             />
