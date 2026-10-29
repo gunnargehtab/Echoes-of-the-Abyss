@@ -12,8 +12,8 @@
  * models stand, well before its time. The server clock is never stopped or
  * accelerated (docs/sorrowgate-arch-study.md §9), so a session that reaches a
  * time before it is posed fails rather than shooting late. H is the unmodified
- * opening camera; a later H re-applies the pose the session opened on, and the
- * reading records where the ground's focus clamp put it.
+ * opening camera; an H past the first minute re-applies the pose the session
+ * opened on, and the reading records where the ground's focus clamp put it.
  *
  * The frame is a CDP capture, not Playwright's `page.screenshot`: on the
  * container's SwiftShader a 1920 × 1080 frame takes about 1.8 s to draw, the
@@ -155,7 +155,8 @@ export default async ({ page }) => {
   const readings = [];
   for (const { name, seconds } of shots) {
     const tick = Math.round(seconds * TICK_HZ);
-    const reposed = name !== 'H' || readings.length > 0;
+    // An H past the opening minute is H's pose re-applied, as §9's T asks.
+    const reposed = name !== 'H' || seconds > 60;
     const requested =
       name === 'H'
         ? [
@@ -169,7 +170,8 @@ export default async ({ page }) => {
             },
           ]
         : STATIONS[name];
-    if (reposed && readings.length > 0) {
+    // The setup call already posed a first station other than H.
+    if (reposed && (name === 'H' || readings.length > 0)) {
       await page.evaluate((args) => window.__perspectiveCamera(...args), requested);
     }
     const callWall = zero + (tick / TICK_HZ - LEAD_S) * 1000;
