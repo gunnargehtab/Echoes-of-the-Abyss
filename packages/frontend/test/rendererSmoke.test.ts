@@ -23,7 +23,7 @@
 
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { describe, it, mock } from 'node:test';
+import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 import { CanvasTextMetrics, Container, Graphics, Text, type GraphicsPath } from 'pixi.js';
 import {
   ACTIVE_SONAR,
@@ -5622,6 +5622,18 @@ describe("a mission's named markers on the chart (#1611)", () => {
  * file projects it rather than as the renderer recorded it.
  */
 describe("where a marker's name stands (#1662)", () => {
+  // One instant per test. The rule reads the clock three ways — the camera's
+  // sway, how long a name holds its place, and when a track's mark has
+  // arrived — and the cases here are drawn frame by frame at the runner's pace,
+  // so a slow runner moved the answer: a name held, or a mark arrived, that a
+  // fast one never saw. Pinned, every case draws one instant; the two arrival
+  // cases still age their marks against it.
+  let clock: ReturnType<typeof mock.method> | undefined;
+  beforeEach(() => {
+    const now = performance.now();
+    clock = mock.method(performance, 'now', () => now);
+  });
+  afterEach(() => clock?.mock.restore());
   type Chart = {
     units: OwnUnit[];
     markNames: Container;
