@@ -1231,6 +1231,18 @@ and §11 makes that a control rather than a preference — and it can be one wit
 because the only things distance hides are the player's own hulls and the ground they stand
 on, so turning it down can only ever reveal more. The ramp does not move with it.
 
+**The arch study's distance grade.** On 29 October the owner licensed one exception, for the
+Sorrowgate arch study's normal-view refinement
+([sorrowgate-arch-study.md](sorrowgate-arch-study.md) §11) and nowhere else. Behind the
+study's flag, on the prologue's look, public ground beyond the focus fades further into the
+water it stands in. A fragment's range past the focus distance adds to the fog factor,
+linearly up to 0.35 extra at a reach of 0.58 of the dolly, 1,500 m at the opening, so the
+reach still breathes with the dolly and the ramp does not move. It takes the fade's colour from the fragment's depth, as above, so it carries no
+hue. It reaches terrain and props only, never the landmark, a hull, contact, glow, lamp or
+survey ink, so it still hides nothing but ground, and its extra is multiplied by
+`waterDensity`, so 0 draws none.
+Production keeps the falloff above until a written decision promotes it.
+
 ### Environmental Shapes
 
 - Jagged rock formations

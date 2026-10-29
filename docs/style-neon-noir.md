@@ -661,10 +661,10 @@ palette tables above.
 
 On 26 October the owner licensed three things the rules above do not otherwise allow, for
 the Sorrowgate arch study ([sorrowgate-arch-study.md](sorrowgate-arch-study.md) §8) and
-nowhere else. They hold behind the study's development flag, on the prologue's own look,
+nowhere else, and a fourth on 29 October (§11). They hold behind the study's development flag, on the prologue's own look,
 and on its public landmark alone ([graphics-standards.md](graphics-standards.md#1-model-backed-or-deliberately-procedural--no-third-path)
 gate 1). Production, every other mission and every skirmish keep the five families and the
-five rules as written. Promoting any of the three is a written decision here, not a flag
+five rules as written. Promoting any of the four is a written decision here, not a flag
 flipped.
 
 1. **Civic lamps at the court.** `civic-lamp` may stand at 1,500 m, below the family's
@@ -687,6 +687,14 @@ flipped.
    at most once in any 2 s, never two in one bucket and never above the steady level. Their
    pools step with them. The dips are a hash of the lamp and the bucket, so nothing in the
    match moves them (rule 4).
+4. **Court bounce and material contrast.** Licensed on 29 October for the study's
+   normal-view refinement ([sorrowgate-arch-study.md](sorrowgate-arch-study.md) §11). The
+   arch's own materials take a diffuse term as from the court floor, from the south and 30°
+   below level, at most the rig's ambient again and with no hue of its own. Nothing else
+   takes it. The landmark's diffuse ceiling rises from 0.06 to at most 0.10, and
+   `structure_rib` drops to roughness 0.55–0.7 while the stone and silt stay matte. It is
+   surface light, not emission, so rule 2's ceiling is untouched, and the pools' ceilings
+   above bind it.
 
 The lamps go dark on the first bucket after the arch's cells turn to rock. Before 10:40
 they mark the station the flight holds. After it the Concourse's lamps are again the one
