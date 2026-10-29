@@ -25,11 +25,12 @@
  * in the image is the frame's time; `captureTicks`, the wall clock at the call
  * and a tick read after it, only approximates it.
  *
- * The readings are §9's "at the same tick": a hook armed before the call
- * reads the conn canvas and the probe in one animation frame, the first whose
- * tick reaches the time, after the game's own callback drew it
- * (tools/render-stack/halo.mjs's method), and records that tick
- * (`readingTick`). So an on/off pair's readings are a frame apart at most.
+ * The readings: a hook armed before the call reads the conn canvas and the
+ * probe in one animation frame, the first whose tick is at or past the time,
+ * after the game's own callback drew it (tools/render-stack/halo.mjs's
+ * method), and records that tick (`readingTick`). Two sessions' readings can
+ * so differ by up to a frame; §9 pairs C and L "at the same tick", so a half
+ * whose `readingTick` differs is retaken until the two match.
  *
  * Writes `<TAG>.json` beside the frames: the ticks, LEAD_S, the requested and
  * actual pose, the probe, and the conn canvas's near-black share (luma under

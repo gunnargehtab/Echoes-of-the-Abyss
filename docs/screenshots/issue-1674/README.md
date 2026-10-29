@@ -8,9 +8,9 @@ transit pair. The fourth, GPU time, needs the named desktop GPU and is not here.
 Every frame is the real client at `6021dd06` through Tutorial → briefing → Descend: one fresh
 session per station, and one per half for the transit pair. Each is 1920 × 1080 at device pixel
 ratio 1, with the HUD on and default water, halo and motion settings. The study is on with
-`?arch-study=1` on the title URL and off without it. The renderer is SwiftShader (`ANGLE
-(Google, Vulkan 1.3.0 (SwiftShader Device (Subzero)))`), so no frame time here is evidence;
-calls and triangles are. Each frame is from [`capture.mjs`](capture.mjs), driven by
+`?arch-study=1` on the title URL and off without it. The renderer is SwiftShader, `ANGLE
+(Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)` in
+every JSON, so no frame time here is evidence; calls and triangles are. Each frame is from [`capture.mjs`](capture.mjs), driven by
 `.claude/skills/run-game/scripts/drive.mjs`. Its header says how a frame is timed without
 stopping or accelerating the server clock.
 
