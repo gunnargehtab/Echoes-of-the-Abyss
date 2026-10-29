@@ -26,9 +26,11 @@
  * how a capture takes a colour-vision palette: the settings panel is Pixi,
  * so no selector reaches it (#1637).
  * RECORD_VIDEO=<dir> records the whole session as a WebM in that directory,
- * the viewport's size, and prints its path when the browser closes: §9's
- * clips (docs/screenshots/issue-1674/gpu.mjs) are cut from it by the HUD
- * clock, since Playwright records a context from its first page to its close.
+ * the viewport's size, and prints its path when the browser closes. It is
+ * Playwright's screencast, VP8 at 25 fps and about 1 Mbit/s: a timing
+ * reference for a clip, not the clip itself (docs/screenshots/issue-1674/
+ * gpu.mjs), and a steps module gets `recordingStartedMs` to write offsets
+ * into it, since a context records from its first page to its close.
  *
  * With no --steps it runs the default smoke: connect, select a unit, ping.
  * A steps file is an ES module with `export default async ({ page, shot }) => {...}`.
@@ -150,6 +152,8 @@ if (process.env.SETTINGS_JSON) {
   }, seed);
 }
 const page = await context.newPage();
+const recordingStartedMs = process.env.RECORD_VIDEO ? Date.now() : null;
+if (recordingStartedMs !== null) console.log(`recording started at ${new Date(recordingStartedMs).toISOString()}`);
 
 const errors = [];
 page.on('console', (m) => {
@@ -277,7 +281,7 @@ try {
     if (typeof mod.default !== 'function') {
       throw new TypeError(`${STEPS} must default-export an async function ({ page, shot }) => {}`);
     }
-    await mod.default({ page, shot });
+    await mod.default({ page, shot, recordingStartedMs });
   } else {
     await shot('connected');
 

@@ -21,7 +21,13 @@
  * probe and both readings; a markdown row per station is printed.
  *
  * Clips, paced (no UNPACED), with the drive recording the session
- * (`RECORD_VIDEO=<dir>`, a WebM of the whole page from the title screen on):
+ * (`RECORD_VIDEO=<dir>`, a WebM of the whole page from the title screen on).
+ * That recording is Playwright's screencast re-encoded as VP8 at 25 fps and
+ * about 1 Mbit/s, which smears a dark frame of 256 motes: it is the timing
+ * reference, not the clip §9 judges on motion. The filed clip is a screen
+ * recording of the same headed run at the display's rate and a high or
+ * lossless quality, cut to the holds this module records; `<TAG>.json`
+ * carries each hold's ticks and its offset into the recording.
  *
  *   RECORD_VIDEO=<dir> VIEW_W=1920 VIEW_H=1080 MODE=clip CLIP=C-still TAG=clip-C-still \
  *     node .claude/skills/run-game/scripts/drive.mjs --headed --channel msedge \
@@ -35,8 +41,10 @@
  * through the received ground change, and records the tick the ruin arrived
  * and the frame the sequence began. `REDUCED_MOTION=1` on the drive repeats
  * any clip with reduced motion. The HUD clock in the video says where each
- * hold starts and ends; `<TAG>.json` records the same ticks, so the clip can
- * be cut from the recording without re-timing it (ffmpeg -c copy).
+ * hold starts and ends; `<TAG>.json` records the same ticks and the seconds
+ * from the recording's start, so a cut re-encodes from that offset
+ * (ffmpeg -i … -ss <offset>, never -c copy: a stream copy starts at the
+ * previous keyframe, which Playwright leaves seconds apart).
  */
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
@@ -59,7 +67,7 @@ const STATIONS = {
 
 const seconds = (tick) => `${Math.floor(tick / TICK_HZ / 60)}:${String(Math.floor((tick / TICK_HZ) % 60)).padStart(2, '0')}`;
 
-export default async ({ page, shot }) => {
+export default async ({ page, shot, recordingStartedMs = null }) => {
   await page.waitForFunction(
     () => window.__perspectiveProbe?.().modelBacked === 6 && typeof window.__echoClock === 'function',
     null,
@@ -105,7 +113,7 @@ export default async ({ page, shot }) => {
           return p.stationFrames >= 240 && p.overlayFrames >= 240 && gpu;
         },
         null,
-        // 240 frames is four seconds on a GPU and over seven minutes on
+        // 240 frames is four seconds on a GPU and about five minutes on
         // SwiftShader at 1920 × 1080, whose run proves the mechanics only.
         { timeout: 15 * 60 * 1000 }
       );
@@ -161,11 +169,22 @@ export default async ({ page, shot }) => {
     }
     record.readings = readings;
   } else if (MODE === 'clip') {
+    // The recording's encoder, so a reader of the JSON knows what the WebM
+    // can show (playwright-core's screencast: VP8, 25 fps, about 1 Mbit/s).
+    record.video = recordingStartedMs === null ? null : { codec: 'vp8', fps: 25, bitrate: '1M', startedMs: recordingStartedMs };
+    const offset = () => (recordingStartedMs === null ? null : Number(((Date.now() - recordingStartedMs) / 1000).toFixed(1)));
+    const mark = async () => ({ tick: await clock(), videoS: offset() });
     const hold = async (ms) => {
-      const from = await clock();
+      const from = await mark();
       await page.waitForTimeout(ms);
-      return { from, to: await clock() };
+      return { from, to: await mark() };
     };
+    const unitAt = (id) =>
+      page.evaluate((id) => {
+        const u = window.__perspectiveLamps().units.find((u) => u.id === id);
+        return u ? { id, xM: u.xM, zM: u.zM, depthM: u.depthM } : null;
+      }, id);
+    const metres = (a, b) => Math.hypot(a.xM - b.xM, a.zM - b.zM);
     const waitTick = (tick) =>
       page.waitForFunction((t) => window.__echoClock() >= t, tick, { timeout: 20 * 60 * 1000 });
     if (CLIP === 'C-still') {
@@ -184,20 +203,33 @@ export default async ({ page, shot }) => {
         const seen = units.find(
           ({ screen }) => screen !== null && screen.x0 > 0 && screen.x1 < innerWidth && screen.y0 > 0 && screen.y1 < innerHeight
         );
-        return seen ? { x: (seen.screen.x0 + seen.screen.x1) / 2, y: (seen.screen.y0 + seen.screen.y1) / 2 } : null;
+        return seen
+          ? { id: seen.id, name: seen.name, x: (seen.screen.x0 + seen.screen.x1) / 2, y: (seen.screen.y0 + seen.screen.y1) / 2 }
+          : null;
       });
       assert.ok(unit, 'an escort on screen at C');
+      const before = await unitAt(unit.id);
       await page.mouse.click(unit.x, unit.y);
       await page.waitForTimeout(800);
-      record.selected = { at: unit, tick: await clock() };
+      record.selected = { unit, ...(await mark()) };
       await page.mouse.click(unit.x + 160, unit.y + 20, { button: 'right' });
       record.moved = await hold(4000);
+      const afterMove = await unitAt(unit.id);
       await page.keyboard.press('KeyX');
-      record.stopped = await hold(4000);
+      const stopped = await mark();
+      await page.waitForTimeout(2000);
+      const settling = await unitAt(unit.id);
+      await page.waitForTimeout(2000);
+      const settled = await unitAt(unit.id);
+      record.stopped = { from: stopped, to: await mark() };
+      // The order took: the hull is metres from where it was, and the JSON
+      // says how far it still drifted in the last two seconds after Stop.
+      record.escort = { before, afterMove, settled, movedM: Number(metres(before, afterMove).toFixed(1)), driftAfterStopM: Number(metres(settling, settled).toFixed(2)) };
+      assert.ok(record.escort.movedM >= 2, `the escort moved ${record.escort.movedM} m on the order`);
     } else if (CLIP === 'H-change') {
       await poseAt('H');
       await waitTick((10 * 60 + 38) * TICK_HZ);
-      record.hold = { from: await clock() };
+      record.hold = { from: await mark() };
       // The ruin arrives on the received ground: the first probe that reads
       // the ruined state, and the first that reads the sequence running.
       const arrived = await page.evaluate(
@@ -216,7 +248,7 @@ export default async ({ page, shot }) => {
           }),
         { end: (10 * 60 + 56) * TICK_HZ }
       );
-      record.hold.to = await clock();
+      record.hold.to = await mark();
       Object.assign(record, arrived);
     } else {
       throw new Error(`CLIP must be C-still, C-move or H-change, not ${CLIP}`);
