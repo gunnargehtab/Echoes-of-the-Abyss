@@ -1323,9 +1323,9 @@ loud, go silent, go shallow, fire.
 | Directorate | Above 400 m: −20% speed, and the hull bleeds to 85% | Beside the selection's depth | While above 400 m |
 | Knights | A shot is +10 SIG, not a kinetic +25 | Beside a weapon cell's SIG price | Always |
 
-A **doctrine mark** is the navy's glyph, drawn in its console accent at the glyph's minimum
-size ([style-neon-noir.md](style-neon-noir.md), "Console accent"), beside the bent value
-and never in place of its ink. The SIG bands, the depth ladder and the price ink keep their
+A **doctrine mark** is the navy's glyph, drawn in its console accent at the size of the
+line's own type ([style-neon-noir.md](style-neon-noir.md), "Console accent"), half a
+character clear of the bent value and never in place of its ink. The SIG bands, the depth ladder and the price ink keep their
 own colours, because the accent is identity and those are information. The two rule lines
 take the same ink and are the marks' legend: they say which ink means *yours*.
 
@@ -1384,7 +1384,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | The esc menu | Implemented (§9.5, #187) — settings and the rebinder open over a live match; leaving is armed |
 | Attention on the scope | Implemented (§5, #206, #209) — exposure wedge, under-fire pulse, idle marker, each with its audio half and its reduced-motion equivalent |
 | Faction glyphs | Implemented (§12.5, #207) — one glyph per navy beside the mark's ink at Tier 3 and Tier 4, in the world view; the scope names no faction, so it owes none |
-| Doctrine marks (§12.5) | Specified, not implemented — the four marks, the accent rule lines and the colour-vision inks are written; nothing in `palette.ts` or the renderer draws them yet. The Commune's and the Knights' marks also wait on §7's speed penalty and a weapon cell's SIG price, which the client does not print |
+| Doctrine marks (§12.5) | Partly implemented — `FactionInk.consoleAccent` carries each navy's accent in all four palettes, held to the style guide's floors by `palette.test.ts`. The selection and command rules take it, and the selection card draws the Consortium's mark beside SIG over 60 and the Directorate's beside a depth above 400 m, through the same `damageMultiplierFor` and `inDirectorateShallows` the server reads; `rendererSmoke.test.ts` ("doctrine marks") holds both. On the SOUR line the Directorate's mark waits, because the `·` after the depth leaves it no room. The Commune's and the Knights' marks wait on §7's speed penalty and a weapon cell's SIG price, which the client does not print |
 | The match clock | Implemented (#208) — the log's T+ axis live in the top strip, from the server tick both share |
 | Own-force log rows | Implemented (§10, #206, #209, #623) — `you were pinged`, `under fire`, `idle — mined out`, `went loud` |
 | The passive exposure record (§10) | Implemented (#623) — an edge detector on the server-sent `ExposureReport` writes a row each time the best tier anyone holds on the player settles on a new value, in both directions: `you were heard`, `they have your bearing`, `they have you classified`, `they have you tracked`, `they lost you`. Under the `---` tier and carrying no bearing, range or focus, because the report is a tier and a count and a row that pointed anywhere would be inventing a listener. A tier has to hold for `PERSISTENCE.EXPOSURE_SETTLE_S` before the log claims it — the pass recomputes it at 5 Hz, and a hull parked on a detection threshold would otherwise write ten rows a second saying nothing |

@@ -56,6 +56,15 @@ export interface FactionInk {
   primary: number;
   accent: number;
   glow: number;
+  /**
+   * The navy's ink on the console's chrome — docs/ui-ux.md §12.5 "Doctrine
+   * marks" and docs/style-neon-noir.md "Console accent, per colour-vision
+   * palette". Not `glow`: two navies' glows sit on ink the console already
+   * speaks in (the Consortium's amber is the price and SIG-mid ink, the
+   * Directorate's crimson reads as threat), and each colour-vision palette
+   * moves its own four for the eye it is for.
+   */
+  consoleAccent: number;
 }
 
 /** Only the colours that carry information. Chrome is shared — see `CHROME`. */
@@ -165,10 +174,30 @@ const CHROME = {
 const STANDARD: Palette = {
   name: 'standard',
   faction: {
-    [Faction.Bathyarch]: { primary: 0xf2b233, accent: 0x8c8378, glow: 0xf2b233 },
-    [Faction.Pelagia]: { primary: 0x1fa67a, accent: 0x8fe36b, glow: 0x8fe36b },
-    [Faction.Directorate]: { primary: 0x7a1b2e, accent: 0xc2465e, glow: 0xc2465e },
-    [Faction.Hadron]: { primary: 0x8b5cf6, accent: 0xc9a6ff, glow: 0xc9a6ff },
+    [Faction.Bathyarch]: {
+      primary: 0xf2b233,
+      accent: 0x8c8378,
+      glow: 0xf2b233,
+      consoleAccent: 0x8c8378,
+    },
+    [Faction.Pelagia]: {
+      primary: 0x1fa67a,
+      accent: 0x8fe36b,
+      glow: 0x8fe36b,
+      consoleAccent: 0x8fe36b,
+    },
+    [Faction.Directorate]: {
+      primary: 0x7a1b2e,
+      accent: 0xc2465e,
+      glow: 0xc2465e,
+      consoleAccent: 0x7a5a9e,
+    },
+    [Faction.Hadron]: {
+      primary: 0x8b5cf6,
+      accent: 0xc9a6ff,
+      glow: 0xc9a6ff,
+      consoleAccent: 0xc9a6ff,
+    },
   },
   tier: tiers({
     [ResolutionTier.Contact]: 0x4a7a8c,
@@ -204,10 +233,30 @@ const STANDARD: Palette = {
 const DEUTERANOPIA: Palette = {
   name: 'deuteranopia',
   faction: {
-    [Faction.Bathyarch]: { primary: 0xf5c542, accent: 0x8c8378, glow: 0xf5c542 },
-    [Faction.Pelagia]: { primary: 0x2e9bd6, accent: 0x9be0ff, glow: 0x9be0ff },
-    [Faction.Directorate]: { primary: 0x5e3a0f, accent: 0xa8701c, glow: 0xa8701c },
-    [Faction.Hadron]: { primary: 0x2323a0, accent: 0x6660d8, glow: 0x6660d8 },
+    [Faction.Bathyarch]: {
+      primary: 0xf5c542,
+      accent: 0x8c8378,
+      glow: 0xf5c542,
+      consoleAccent: 0x8c8378,
+    },
+    [Faction.Pelagia]: {
+      primary: 0x2e9bd6,
+      accent: 0x9be0ff,
+      glow: 0x9be0ff,
+      consoleAccent: 0x247c98,
+    },
+    [Faction.Directorate]: {
+      primary: 0x5e3a0f,
+      accent: 0xa8701c,
+      glow: 0xa8701c,
+      consoleAccent: 0x845c2c,
+    },
+    [Faction.Hadron]: {
+      primary: 0x2323a0,
+      accent: 0x6660d8,
+      glow: 0x6660d8,
+      consoleAccent: 0x6454d8,
+    },
   },
   tier: tiers({
     [ResolutionTier.Contact]: 0x3e6e8a,
@@ -242,10 +291,30 @@ const DEUTERANOPIA: Palette = {
 const PROTANOPIA: Palette = {
   name: 'protanopia',
   faction: {
-    [Faction.Bathyarch]: { primary: 0xffcf5c, accent: 0x8c8378, glow: 0xffcf5c },
-    [Faction.Pelagia]: { primary: 0x2e9bd6, accent: 0x9be0ff, glow: 0x9be0ff },
-    [Faction.Directorate]: { primary: 0x7a5218, accent: 0xc98a2e, glow: 0xc98a2e },
-    [Faction.Hadron]: { primary: 0x2323a0, accent: 0x6660d8, glow: 0x6660d8 },
+    [Faction.Bathyarch]: {
+      primary: 0xffcf5c,
+      accent: 0x8c8378,
+      glow: 0xffcf5c,
+      consoleAccent: 0x8c8378,
+    },
+    [Faction.Pelagia]: {
+      primary: 0x2e9bd6,
+      accent: 0x9be0ff,
+      glow: 0x9be0ff,
+      consoleAccent: 0xa0acd0,
+    },
+    [Faction.Directorate]: {
+      primary: 0x7a5218,
+      accent: 0xc98a2e,
+      glow: 0xc98a2e,
+      consoleAccent: 0xbcac70,
+    },
+    [Faction.Hadron]: {
+      primary: 0x2323a0,
+      accent: 0x6660d8,
+      glow: 0x6660d8,
+      consoleAccent: 0x6660d8,
+    },
   },
   tier: tiers({
     [ResolutionTier.Contact]: 0x3e6e8a,
@@ -282,10 +351,30 @@ const PROTANOPIA: Palette = {
 const TRITANOPIA: Palette = {
   name: 'tritanopia',
   faction: {
-    [Faction.Bathyarch]: { primary: 0xf0e0c8, accent: 0x8c8378, glow: 0xf0e0c8 },
-    [Faction.Pelagia]: { primary: 0x1fa67a, accent: 0x8fe36b, glow: 0x8fe36b },
-    [Faction.Directorate]: { primary: 0xa02030, accent: 0xe0566b, glow: 0xe0566b },
-    [Faction.Hadron]: { primary: 0x0a3348, accent: 0x1f6ea0, glow: 0x1f6ea0 },
+    [Faction.Bathyarch]: {
+      primary: 0xf0e0c8,
+      accent: 0x8c8378,
+      glow: 0xf0e0c8,
+      consoleAccent: 0x8c8378,
+    },
+    [Faction.Pelagia]: {
+      primary: 0x1fa67a,
+      accent: 0x8fe36b,
+      glow: 0x8fe36b,
+      consoleAccent: 0xa0ece8,
+    },
+    [Faction.Directorate]: {
+      primary: 0xa02030,
+      accent: 0xe0566b,
+      glow: 0xe0566b,
+      consoleAccent: 0xe8ccfc,
+    },
+    [Faction.Hadron]: {
+      primary: 0x0a3348,
+      accent: 0x1f6ea0,
+      glow: 0x1f6ea0,
+      consoleAccent: 0x04749c,
+    },
   },
   tier: tiers({
     [ResolutionTier.Contact]: 0x2e6a72,

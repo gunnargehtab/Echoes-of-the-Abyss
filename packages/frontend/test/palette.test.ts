@@ -99,6 +99,20 @@ function lightness(hex: number, kind: Deficiency): number {
   return lab(simulate(hex, kind))[0];
 }
 
+/** WCAG contrast ratio between two inks, as the eye `kind` receives them. */
+function contrast(a: number, b: number, kind: Deficiency): number {
+  const y = (hex: number) => {
+    const [r, g, bl] = simulate(hex, kind).map((c) => Math.min(1, Math.max(0, c))) as [
+      number,
+      number,
+      number,
+    ];
+    return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+  };
+  const [hi, lo] = [y(a), y(b)].sort((m, n) => n - m) as [number, number];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
 // --- What the palettes hold -------------------------------------------------
 
 const FACTIONS = [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate, Faction.Hadron];
@@ -210,6 +224,7 @@ describe('the palette tables', () => {
           [`${FACTION_NAME[f]}.primary`, p.faction[f].primary],
           [`${FACTION_NAME[f]}.accent`, p.faction[f].accent],
           [`${FACTION_NAME[f]}.glow`, p.faction[f].glow],
+          [`${FACTION_NAME[f]}.consoleAccent`, p.faction[f].consoleAccent],
         ]),
         ...TIERS.map((t): [string, number] => [`tier ${t}`, p.tier[t].color]),
         ['nodule', p.resource[ResourceKind.Nodule]],
@@ -557,5 +572,66 @@ describe('reliefTextureGain', () => {
         );
       }
     }
+  });
+});
+
+/**
+ * The console accent — docs/style-neon-noir.md "Console accent, per
+ * colour-vision palette", the ink of docs/ui-ux.md §12.5's doctrine marks and
+ * the two rule lines that are their legend.
+ *
+ * Each accent sits on the console beside information inks, so it must not be
+ * mistaken for one: the floors are the doc's, which are this file's own SIG
+ * and faction floors, measured for the eye each palette is for. The
+ * Consortium's grey misses three, and the doc keeps it and records them,
+ * because every grey that clears them is too close to read as another colour.
+ * Those three are pinned here exactly, so a fourth miss fails rather than
+ * hiding among them.
+ */
+describe('the console accent', () => {
+  const RECORDED_MISSES = [
+    'deuteranopia Bathyarch vs friendly',
+    'deuteranopia Bathyarch vs chrome glassStroke',
+    'protanopia Bathyarch vs friendly',
+  ];
+
+  it('clears the inks it sits beside, the other navies and the glass, bar the recorded misses', () => {
+    const misses: string[] = [];
+    for (const name of PALETTE_NAMES) {
+      const p = PALETTES[name];
+      const kind = FOR[name];
+      // The red-green pair's floor is a step higher in the doc (26), because
+      // two of its accents would otherwise sit exactly on 25.
+      const infoFloor = name === 'deuteranopia' || name === 'protanopia' ? 26 : 25;
+      const info: Array<[string, number]> = [
+        ['sigLow', p.ui.sigLow],
+        ['sigMid', p.ui.sigMid],
+        ['sigHigh', p.ui.sigHigh],
+        ['threat', p.ui.threat],
+        ['track', p.tier[ResolutionTier.Track].color],
+        ['nodule', p.resource[ResourceKind.Nodule]],
+        ['friendly', p.ui.friendly],
+      ];
+      for (const faction of FACTIONS) {
+        const ink = p.faction[faction].consoleAccent;
+        const who = `${name} ${FACTION_NAME[faction]}`;
+        for (const [label, other] of info) {
+          if (deltaE(ink, other, kind) < infoFloor) misses.push(`${who} vs ${label}`);
+        }
+        for (const key of ['accent', 'glassStroke', 'textDim'] as const) {
+          if (deltaE(ink, p.ui[key], kind) < 15) misses.push(`${who} vs chrome ${key}`);
+        }
+        for (const peer of FACTIONS) {
+          if (peer === faction) continue;
+          const d = deltaE(ink, p.faction[peer].consoleAccent, kind);
+          assert.ok(d >= 30, `${who} sits ${d.toFixed(1)} dE from ${FACTION_NAME[peer]}`);
+        }
+        // Against the fill the console's plates draw, not the doc's
+        // abyss-panel: the rule and the marks are drawn on glass.
+        const c = contrast(ink, p.ui.glass, kind);
+        assert.ok(c >= 3, `${who} holds ${c.toFixed(2)}:1 on the glass, needs 3`);
+      }
+    }
+    assert.deepEqual(misses.sort(), [...RECORDED_MISSES].sort());
   });
 });

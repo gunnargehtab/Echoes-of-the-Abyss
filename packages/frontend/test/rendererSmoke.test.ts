@@ -32,6 +32,7 @@ import {
   Faction,
   FOLLOW_FLOOR,
   FaunaSpecies,
+  LID,
   MOVEMENT,
   MovementHoldReason,
   onTheGround,
@@ -119,7 +120,7 @@ import { buildTemplate, instantiate } from '../src/game/rosterModels.ts';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
-import { FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
+import { FACTION_PALETTE, FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
 import { RING_FAR_ALPHA, RING_NEAR_ALPHA } from '../src/game/scopeSweep.ts';
 import { BufferAttribute, FogExp2, Mesh, MeshBasicMaterial, Points, type Scene } from 'three';
 
@@ -6308,6 +6309,169 @@ describe('a hull with its dredge struck (#1283)', () => {
         textSaying(world.app.stage, army) !== null,
         `\`0\` took the barge into the army, or left a fighter out: wanted ${army}`
       );
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
+/**
+ * Doctrine marks — docs/ui-ux.md §12.5. The navy's glyph, in its console
+ * accent, beside a number its doctrine bends, while the bend is live; the
+ * selection and command cards' rules take the same ink as the legend.
+ *
+ * Read off the draw instructions: a mark is a stroke in the accent on the
+ * selection card, and a rule is a 1 px fill in the accent across a block.
+ */
+describe('doctrine marks (docs/ui-ux.md §12.5)', () => {
+  type Chart = { selected: Set<number>; infoGraphics: Graphics; hudGraphics: Graphics };
+  const chartOf = (world: Booted) => world.chart as unknown as Chart;
+  const accentOf = (faction: Faction) => FACTION_PALETTE[faction].consoleAccent;
+
+  /** Every stroke on the selection card in `color`, by the rect or path it bounds. */
+  const marksIn = (world: Booted, color: number) =>
+    chartOf(world).infoGraphics.context.instructions.filter(
+      (instruction) =>
+        instruction.action === 'stroke' &&
+        (instruction.data.style as { color: number }).color === color
+    );
+
+  /** The 1 px block rules filled in `color`. */
+  const rulesIn = (world: Booted, color: number) =>
+    chartOf(world)
+      .hudGraphics.context.instructions.filter(
+        (instruction) =>
+          instruction.action === 'fill' &&
+          (instruction.data.style as { color: number }).color === color
+      )
+      .flatMap((instruction) =>
+        ((instruction.data as { path?: GraphicsPath }).path?.instructions ?? []).filter(
+          (step) => step.action === 'rect' && (step.data as number[])[3] === 1
+        )
+      );
+
+  /** The canned match with the Corvette selected, as `faction`, with `patch` on it. */
+  async function selected(faction: Faction, patch: Partial<OwnUnit>): Promise<Booted> {
+    const world = await boot();
+    world.chart.setIdentity(0, faction);
+    const base = cannedSnapshot(301);
+    world.chart.applySnapshot({
+      ...base,
+      units: base.units.map((unit) => (unit.id === 11 ? { ...unit, ...patch } : unit)),
+    });
+    chartOf(world).selected.add(11);
+    world.frame(2);
+    return world;
+  }
+
+  it('inks the selection and command rules, and only those two', async () => {
+    const world = await selected(Faction.Bathyarch, {});
+    try {
+      assert.equal(rulesIn(world, accentOf(Faction.Bathyarch)).length, 2);
+      assert.ok(rulesIn(world, UI.accent).length > 0, 'the other blocks keep the cyan rule');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('lights the Klaxon beside SIG only while the SIG is over 60', async () => {
+    const ink = accentOf(Faction.Bathyarch);
+    for (const [sig, lit] of [
+      [48, false],
+      [60, false],
+      [61, true],
+    ] as const) {
+      const world = await selected(Faction.Bathyarch, { sig });
+      try {
+        assert.equal(marksIn(world, ink).length > 0, lit, `SIG ${sig}`);
+      } finally {
+        world.teardown();
+      }
+    }
+  });
+
+  it('stands the Klaxon mark between the SIG it marks and the next word', async () => {
+    const world = await selected(Faction.Bathyarch, { sig: 72 });
+    try {
+      const line = (world.chart as unknown as { infoLine1: Text }).infoLine1;
+      const cell = line.width / line.text.length;
+      const sigEnd = line.x + cell * (line.text.indexOf('SIG 72') + 'SIG 72'.length);
+      const torp = line.x + cell * line.text.indexOf('TORP');
+      // The mark's own strokes, not the card's bounds: the hull bar alone
+      // spans most of the card and would pass any test of the whole.
+      const marks = marksIn(world, accentOf(Faction.Bathyarch));
+      assert.ok(marks.length > 0, 'the premise: a mark');
+      for (const mark of marks) {
+        const box = (mark.data as { path: GraphicsPath }).path.bounds;
+        assert.ok(box.minX >= sigEnd, `the mark starts past SIG 72 (${box.minX} < ${sigEnd})`);
+        assert.ok(box.maxX <= torp, `the mark ends before TORP (${box.maxX} > ${torp})`);
+        assert.ok(
+          box.maxY >= line.y && box.minY <= line.y + line.height,
+          'the mark shares the line it marks'
+        );
+      }
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it("waits on the SOUR line, rather than marking the Lid's depth or the separator", async () => {
+    // `SOUR — BLEEDING at 50m · dive below 150m`: the hull's `50m` has a `·`
+    // a cell after it, so there is no room, and the `50m` at the tail of the
+    // Lid's `150m` is not the hull's depth.
+    const world = await selected(Faction.Directorate, {
+      depth: 50,
+      sourS: LID.GRACE_S + 5,
+      pressureRating: 3,
+    });
+    try {
+      const line = (world.chart as unknown as { infoLine2: Text }).infoLine2;
+      assert.ok(line.text.startsWith('SOUR'), `the premise: the SOUR line, not ${line.text}`);
+      assert.equal(marksIn(world, accentOf(Faction.Directorate)).length, 0);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('marks a Directorate depth above 400 m, and not below it', async () => {
+    const ink = accentOf(Faction.Directorate);
+    for (const [depth, lit] of [
+      [300, true],
+      [1200, false],
+    ] as const) {
+      const world = await selected(Faction.Directorate, { depth, pressureRating: 3 });
+      try {
+        assert.equal(marksIn(world, ink).length > 0, lit, `${depth} m`);
+      } finally {
+        world.teardown();
+      }
+    }
+  });
+
+  it('marks no depth the card does not print as where the hull is', async () => {
+    // Diving from the shallows prints where the hull is going, not where it
+    // is, so there is no depth on the card for the mark to stand beside. A
+    // target of 1,300 m carries the current `300m` inside its own text, which
+    // is the case a search for the token alone would mark.
+    const world = await selected(Faction.Directorate, {
+      depth: 300,
+      depthOrder: 1300,
+      pressureRating: 3,
+    });
+    try {
+      assert.equal(marksIn(world, accentOf(Faction.Directorate)).length, 0);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it("marks only the player's own navy's doctrine", async () => {
+    // A Consortium hull in the shallows is not poisoned by them, so it wears
+    // no Directorate mark, nor a Consortium one at a quiet SIG.
+    const world = await selected(Faction.Bathyarch, { depth: 300, sig: 20 });
+    try {
+      assert.equal(marksIn(world, accentOf(Faction.Directorate)).length, 0);
+      assert.equal(marksIn(world, accentOf(Faction.Bathyarch)).length, 0);
     } finally {
       world.teardown();
     }
