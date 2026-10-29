@@ -44,6 +44,7 @@ import {
   affords,
   BERTHS,
   Biome,
+  damageMultiplierFor,
   DEPTH,
   DEPTH_BANDS,
   DepthBand,
@@ -58,6 +59,7 @@ import {
   HarvestIdleReason,
   HarvestThrottle,
   HazardPhase,
+  inDirectorateShallows,
   inLid,
   LID,
   maxAudibleRangeM,
@@ -4026,6 +4028,13 @@ export class EchoRenderer {
       this.plate(g, slot.x, blocks.y, slot.w, blocks.h, {
         headerH: BLOCK_HEAD_H,
         quiet: true,
+        // docs/ui-ux.md §12.5: the selection and command cards' rules take the
+        // navy's console accent, the legend for the doctrine marks drawn in
+        // the same ink. Every other block keeps the interface's own rule.
+        rule:
+          title === 'SELECTION' || title === 'COMMANDS'
+            ? FACTION_PALETTE[this.faction].consoleAccent
+            : undefined,
       });
       const label = this.blockTitle(shown++);
       label.visible = true;
@@ -7701,7 +7710,7 @@ export class EchoRenderer {
     y: number,
     w: number,
     h: number,
-    opts: { headerH?: number; quiet?: boolean } = {}
+    opts: { headerH?: number; quiet?: boolean; rule?: number } = {}
   ): void {
     const quiet = opts.quiet === true;
     g.rect(x, y, w, h).fill({
@@ -7722,7 +7731,7 @@ export class EchoRenderer {
     });
     if (opts.headerH !== undefined) {
       g.rect(x, y + opts.headerH, w, 1).fill({
-        color: UI.accent,
+        color: opts.rule ?? UI.accent,
         alpha: PLATE.HEADER_RULE_ALPHA,
       });
     }
@@ -9738,6 +9747,13 @@ export class EchoRenderer {
       `HULL ${any.hp.toFixed(0)}/${any.maxHp.toFixed(0)}   SIG ${any.sig.toFixed(0)}` +
       (aboard === undefined ? '' : `   TORP ${aboard.toFixed(0)}`);
     this.infoLine1.position.set(x + 12, y + 48);
+    // The Klaxon's doctrine mark (docs/ui-ux.md §12.5): lit while this SIG is
+    // one the Consortium's doctrine pays for. Read through the function combat
+    // multiplies by, so the mark and the +12% cannot disagree about where the
+    // threshold is.
+    if (damageMultiplierFor(this.faction, any.sig) > 1) {
+      this.drawDoctrineMark(g, this.infoLine1, `SIG ${any.sig.toFixed(0)}`);
+    }
 
     // PR badge. A rented rating is drawn as rented — it evaporates the moment
     // the hull leaves the aura that granted it (docs/systems-depth.md §3).
@@ -9787,6 +9803,10 @@ export class EchoRenderer {
 
     this.infoLine2.visible = true;
     const hold = unit === undefined ? null : this.movementHold(unit.id);
+    // Whether the line below prints where the hull *is*, for the Directorate's
+    // mark: a dive or a rise prints where it is going instead, and a mark
+    // beside an ordered depth would claim the shallows of somewhere it is not.
+    let printsDepth = false;
     if (structure !== undefined) {
       this.infoLine2.text =
         structure.buildProgress < 1
@@ -9805,10 +9825,12 @@ export class EchoRenderer {
         : `rising to ${unit.depthOrder.toFixed(0)}m · ${seconds.toFixed(0)}s`;
     } else if (unit !== undefined && this.isCrushing(unit)) {
       this.infoLine2.text = `CRUSHING at ${unit.depth.toFixed(0)}m · rise or lose the hull`;
+      printsDepth = true;
     } else if (unit !== undefined && (unit.sourS ?? 0) >= LID.GRACE_S) {
       // The other end of the column (docs/systems-depth.md §2): the grace is
       // spent and the water is keeping the hull.
       this.infoLine2.text = `SOUR — BLEEDING at ${unit.depth.toFixed(0)}m · dive below ${LID.DEPTH_M}m`;
+      printsDepth = true;
     } else if (unit !== undefined && (unit.sourS ?? 0) > 0 && inLid(unit.depth)) {
       this.infoLine2.text = `SOUR · ${Math.max(0, LID.GRACE_S - (unit.sourS ?? 0)).toFixed(0)}s of grace`;
     } else if (hold !== null) {
@@ -9825,17 +9847,21 @@ export class EchoRenderer {
       // A countdown the player has to act inside (docs/units.md, Antiphon):
       // what was landed below its rating has this long before it crushes.
       this.infoLine2.text = `LANDED · +1 PR for ${Math.ceil(unit.landingGrantS)}s · ${unit.depth.toFixed(0)}m`;
+      printsDepth = true;
     } else if (unit !== undefined && unit.hold !== undefined) {
       const aboard = this.cargo.filter((c) => c.aboard === unit.id);
       const manifest =
         aboard.length === 0 ? 'empty' : aboard.map((c) => UNIT_SHORT[c.kind]).join(' ');
       this.infoLine2.text = `HOLD ${unit.hold.used}/${unit.hold.berths} · ${manifest} · ${unit.depth.toFixed(0)}m`;
+      printsDepth = true;
     } else if (unit !== undefined && dredgeStruck(unit)) {
       // Said on the card as well as the bar: the absent throttle row is
       // otherwise the only sign this hull will not work a field (#1283).
       this.infoLine2.text = `${DREDGE_STRUCK_TEXT.toUpperCase()} · ${unit.depth.toFixed(0)}m`;
+      printsDepth = true;
     } else if (unit !== undefined && unit.followFloor === true && unit.throttle === undefined) {
       this.infoLine2.text = `FOLLOWING FLOOR · ${unit.depth.toFixed(0)}m`;
+      printsDepth = true;
     } else if (unit !== undefined && unit.throttle !== undefined) {
       const held =
         unit.cargoKind === ResourceKind.ResonanceCrystal && (unit.cargo ?? 0) > 0 ? ' crystal' : '';
@@ -9844,8 +9870,41 @@ export class EchoRenderer {
       this.infoLine2.text = unit.silentRunning
         ? `SILENT RUNNING · ${unit.depth.toFixed(0)}m`
         : `systems live · ${unit.depth.toFixed(0)}m`;
+      printsDepth = true;
     }
     this.infoLine2.position.set(x + 12, y + 68);
+    // The Directorate's doctrine mark (§12.5): beside the depth while the hull
+    // is in the water that poisons it, on the same test movement slows it by.
+    if (unit !== undefined && printsDepth && inDirectorateShallows(this.faction, unit.depth)) {
+      this.drawDoctrineMark(g, this.infoLine2, `${unit.depth.toFixed(0)}m`);
+    }
+  }
+
+  /**
+   * A doctrine mark (docs/ui-ux.md §12.5): the player's own navy's glyph, in
+   * its console accent, just right of `token` where `line` prints it. Beside
+   * the value and never over it, because the value keeps its own ink — the
+   * accent is identity and the value is information — and nothing at all
+   * where the line does not print the token: a mark only stands beside a value
+   * the console already shows.
+   *
+   * The data face is monospace, so where the token ends is its share of the
+   * line's width rather than a second measurement.
+   */
+  private drawDoctrineMark(g: Graphics, line: Text, token: string): void {
+    const at = line.text.lastIndexOf(token);
+    if (at < 0) return;
+    const end = line.x + (line.width * (at + token.length)) / line.text.length;
+    drawFactionGlyph(
+      g,
+      this.faction,
+      end + 4 + GLYPH_MIN_PX,
+      line.y + line.height / 2,
+      GLYPH_MIN_PX,
+      FACTION_PALETTE[this.faction].consoleAccent,
+      1,
+      1.5
+    );
   }
 
   private hintLine(): string {

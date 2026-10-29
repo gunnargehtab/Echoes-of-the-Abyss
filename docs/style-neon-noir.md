@@ -274,7 +274,7 @@ and the command card's rule line. It is proposed, not adopted, and drawn in the
 
 `directorate-console` is the one token here no faction table carries. It is faction ink,
 not `neon-violet`, the same way the Knights' violet is, so violet's reservation for the
-unresolved still holds on the chrome. It holds 3.3:1 against `abyss-panel`, over the 3:1 a
+unresolved still holds on the chrome. It holds 3.1:1 against `abyss-glass`, over the 3:1 a
 non-text mark needs, and sits 1.75 stops below the Knights' accent; the glyph beside it
 resolves the rest (§11).
 
@@ -292,16 +292,17 @@ protanopia (7.3).
 | Bathyarch Consortium | `#8C8378` | `#8C8378` | `#8C8378` | `#8C8378` |
 | Pelagia Commune | `#8FE36B` | `#247C98` | `#A0ACD0` | `#A0ECE8` |
 | Abyssal Directorate | `#7A5A9E` | `#845C2C` | `#BCAC70` | `#E8CCFC` |
-| Hadron Knights | `#C9A6FF` | `#6454D8` | `#6660D8` | `#046C98` |
+| Hadron Knights | `#C9A6FF` | `#6454D8` | `#6660D8` | `#04749C` |
 
 Each row is measured the way `packages/frontend/test/palette.test.ts` measures the
 palettes: the Viénot–Brettel–Mollon simulation and CIE76 ΔE, for the eye the palette is for.
 Every accent but the Consortium's, below, clears its palette's SIG bands, threat, Tier-4
 track, nodules and friendly ink by 25 ΔE (26 under the red-green pair), the SIG floor in
 that test; clears `neon-cyan`, `neon-magenta` and `text-dim` by 15; sits 30 from every
-other navy's accent, the faction floor; and holds 3:1 against `abyss-panel`. Each stays in
-the hue families its table already keeps to: blue, amber and neutral for the red-green
-pair; red, teal, blue and neutral for tritanopia. The Consortium keeps its iron grey in all four, as its cladding does.
+other navy's accent, the faction floor; and holds 3:1 against `abyss-glass`, the fill the
+client's plates draw. Each stays in the hue families its table already keeps to: blue,
+amber and neutral for the red-green pair; red, teal, blue and neutral for tritanopia. The
+Consortium keeps its iron grey in all four, as its cladding does.
 
 The margins are thin, and that is the finding: a dichromat's few hues are already spoken
 for by the console's information inks. Nine of the twelve sit within 2 ΔE of a floor.
@@ -319,8 +320,9 @@ the Directorate. For the Directorate's own accent that drift is the point. Pale 
 `#E8CCFC` clears nodules by 25.8 and the Consortium's grey by 30.7.
 
 §12.5's "Doctrine marks" is the accent's argument in sound or depth: the accent marks
-where a navy's doctrine bends a sound or depth number. These rows are its inks. Once
-`palette.ts` transcribes them, they join the pairs `palette.test.ts` holds.
+where a navy's doctrine bends a sound or depth number. These rows are its inks.
+`palette.ts` transcribes them as `FactionInk.consoleAccent`, and `palette.test.ts` holds
+them to the floors above, the Consortium's three misses pinned by name.
 
 ### The Directorate's one area glow: a maw is not livery
 
