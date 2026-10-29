@@ -738,8 +738,10 @@ incidental.
 tap of their own on the ui bus, behind **Interface cues** ([ui-ux.md](ui-ux.md) §14): an order
 that paints a marker (move, attack-move, attack, harvest, board and rally,
 [ui-ux.md](ui-ux.md) §12), a structure placed, and a press the shell refuses with its reason on
-the hint bar ([ui-ux.md](ui-ux.md) §7). Stop, hold, the toggles and the ability keys stay
-silent. Off is the game §1 describes, where a sound means something is in the water and a cue
+the hint bar ([ui-ux.md](ui-ux.md) §7). Stop, hold, the toggles and the ability keys give no
+order cue. A refused one sounds the refusal like any other press, because the refusal covers
+every press the shell turns down with a reason (#1600's "a failed command"), so a player never
+has to guess which refusals tap. Off is the game §1 describes, where a sound means something is in the water and a cue
 on every click would teach the player to stop listening. The toggle exists for the player who
 cannot yet read the water and gets no word that a click landed. It is the timbre toggle's
 precedent (§8, [#731](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/731)): what

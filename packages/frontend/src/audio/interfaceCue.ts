@@ -55,8 +55,10 @@ export class InterfaceCueGate {
 }
 
 /**
- * Each cue's taps, as [offset s, frequency Hz]. Pure sines, so the frequency
- * is the whole spectrum and the contact band is cleared by reading this table.
+ * TUNABLE — each cue's taps, as [offset s, frequency Hz]. The voicing is free
+ * to move; what §12 pins is that every partial clears the 40–160 Hz contact
+ * band. Pure sines, so the frequency is the whole spectrum and the band is
+ * cleared by reading this table.
  *
  * Shaped against the notice's two *descending* taps (620 → 430) so none of the
  * four is another's: an order is one bright tap, a placement two rising, a
@@ -74,7 +76,7 @@ export const INTERFACE_CUE_TAPS: Record<InterfaceCue, ReadonlyArray<readonly [nu
   ],
 };
 
-/** Peak gain of one tap: the notice's, so no cue is louder than the chore. */
+/** TUNABLE — peak gain of one tap: the notice's, so no cue is louder than the chore. */
 const TAP_PEAK = 0.16;
 
 export function playInterfaceCue(

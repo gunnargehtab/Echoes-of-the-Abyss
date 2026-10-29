@@ -167,10 +167,10 @@ export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
             />
             <span className="menu-toggle-label">Interface cues</span>
             <span className="menu-toggle-note">
-              A soft tap when an order is given, a structure is placed or a press is refused. Off by
-              default, because here a sound means something is in the water. The tap says the
-              interface took the click, not that it worked; the marker and the hint bar say the same
-              either way.
+              A soft tap when an order paints its marker, a structure is placed or a press is
+              refused. Off by default, because here a sound means something is in the water. The tap
+              says the interface took the click, not that it worked; the marker and the hint bar say
+              the same either way.
             </span>
           </label>
 
