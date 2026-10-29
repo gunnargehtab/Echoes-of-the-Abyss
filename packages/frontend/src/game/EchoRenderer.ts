@@ -246,6 +246,7 @@ import {
   RIBBON_BOTTOM_PAD,
   RIBBON_LABEL_GAP,
   RIBBON_READOUT_RISE,
+  RIBBON_UNITS,
   RIBBON_WIDTH,
   RIBBON_X,
   TOP_BAR_HEIGHT,
@@ -268,6 +269,24 @@ interface PendingOrder {
   seq: number;
 }
 
+/**
+ * Where a marker's name stood last pass (`placeMarkName`, #1662): how it was
+ * placed (`MARK_FAR`, `MARK_HEAD`, `MARK_NEAR`), and where — the point's
+ * position along the ring in vertices, or the head slot's index.
+ */
+interface MarkHold {
+  mode: number;
+  at: number;
+}
+
+/** A floating DOM panel, in the chart's canvas pixels — off the water a name may stand on. */
+export interface PanelRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 /** The ring painted at the point ordered, the instant it was ordered. */
 interface OrderMarker {
   kind: QueuedOrderView['kind'];
@@ -279,19 +298,50 @@ interface OrderMarker {
 }
 
 const ORDER_MARKER_MS = 600;
-/**
- * The four points of a mission marker's ring its name may stand over, as unit
- * offsets in plan (`drawMissionMarks`). Four, not the ring's 48: the name only
- * needs the side of the ring nearest the top of the screen.
- */
-const MARK_COMPASS: ReadonlyArray<readonly [number, number]> = [
-  [0, -1],
-  [1, 0],
-  [0, 1],
-  [-1, 0],
-];
-/** How far above its ring a marker's name stands, in screen px. */
+/** How far outside its ring a marker's name stands, in screen px. */
 const MARK_NAME_GAP_PX = 4;
+/**
+ * Between the points along a ring's drawn line a marker's name is tried at, in
+ * screen px (`placeMarkName`, #1662). The ring's own vertices are about 155 px
+ * apart on a 2,500 m ring at the home dolly, too coarse to step past a hull.
+ */
+const MARK_NAME_STEP_PX = 24;
+/**
+ * About the most points a name is tried at per side of its ring: a longer
+ * line spaces them wider. Each segment on the water adds its own two ends.
+ */
+const MARK_NAME_POINTS_MAX = 64;
+/**
+ * How much higher, in screen px, another point must stand before a name leaves
+ * the one it holds. Two points level on the screen trade places as the camera
+ * sways, and a name that followed them would hop along its ring for nothing.
+ */
+const MARK_NAME_HOLD_PX = 6;
+/**
+ * How far clear of a hull a name must be to move to a new point, in screen px;
+ * the point it holds needs only to be clear. Without it a hull gliding along
+ * the edge of a name's box would push it off and let it back every snapshot.
+ */
+const MARK_NAME_CLEAR_PX = 3;
+/** Places along the head of the water for the name of a ring the view stands inside. */
+const MARK_HEAD_SLOTS = 7;
+/** The ways a name can be placed (`MarkHold.mode`), in the order they are tried. */
+const MARK_FAR = 0;
+const MARK_HEAD = 1;
+const MARK_NEAR = 2;
+/**
+ * Whether any of `boxes` — four numbers each, x0, y0, x1, y1 — overlaps the
+ * box from (x0, y0) to (x1, y1). A mission marker's name against what it keeps
+ * off (#1662).
+ */
+function boxesMeet(boxes: readonly number[], x0: number, y0: number, x1: number, y1: number) {
+  for (let i = 0; i < boxes.length; i += 4) {
+    if (x1 > boxes[i]! && x0 < boxes[i + 2]! && y1 > boxes[i + 1]! && y0 < boxes[i + 3]!) {
+      return true;
+    }
+  }
+  return false;
+}
 /** Projected-point scratch depth; see `project`. */
 const PROJECT_RING = 16;
 /** The strip of screen, in px, that counts as its edge for scrolling (§9). */
@@ -1910,6 +1960,52 @@ export class EchoRenderer {
   /** One pooled name per drawn marker, in the overlay under the HUD. */
   private readonly markNames = new Container();
   /**
+   * Every drawn marker's ring as `traceCircle` drew it this pass, four numbers
+   * a point: screen x and y, 1 when the point joins the one before it, and its
+   * place along the ring in vertices. `markTraceEnds` is where each ring's
+   * points end. The names are placed against these (#1662), so a name is
+   * tested against the line actually on the screen and costs no projection.
+   */
+  private readonly markTrace: number[] = [];
+  private readonly markTraceEnds: number[] = [];
+  /**
+   * The screen boxes a name keeps off (#1662), four numbers each: the ink
+   * about every own hull and structure, written by `drawStructures` and
+   * `drawUnits`, and about every contact drawn at a depth whose mark has
+   * arrived, written by `drawContacts`. Both run before `drawMissionMarks`.
+   */
+  private readonly figureFootprints: number[] = [];
+  private readonly contactFootprints: number[] = [];
+  /**
+   * The tracks drawn as models whose marks have arrived (`drawContacts`): a
+   * name keeps off their models as well as their marks, since a structure's
+   * model stands far above its mark (#1662).
+   */
+  private readonly arrivedTracks = new Set<number>();
+  /** The boxes of the names placed so far this pass. */
+  private readonly placedNames: number[] = [];
+  /** Where each shown marker's name stood last pass, by marker id. */
+  private readonly markHolds = new Map<string, MarkHold>();
+  /** Scratch for `markAlongRing`'s points, six numbers each (written there). */
+  private readonly markPoints: number[] = [];
+  /** `markPoints` indices in the order they are tried. */
+  private readonly markOrder: number[] = [];
+  /** A box for `clipSegment`'s rect test, reused; its fields are screen px whatever their names. */
+  private readonly markRect: PlanRect = { x: 0, y: 0, widthM: 0, heightM: 0 };
+  /** The water a name may stand on, in screen px, set per name (`placeMarkName`). */
+  private readonly markWater: PlanRect = { x: 0, y: 0, widthM: 0, heightM: 0 };
+  private readonly markSpan: [number, number] = [0, 0];
+  /** The best box found so far for the name being placed: its fault, top-left and hold. */
+  private readonly markBest = { fault: Infinity, x: 0, y: 0, mode: MARK_FAR, at: 0 };
+  /**
+   * The floating panels over the water (GameCanvas, `watchPanels`), in canvas
+   * px: a name does not stand under one. `panelKey` rides the force key.
+   */
+  private panelRects: readonly PanelRect[] = [];
+  private panelKey = '';
+  /** Boxes the last name pass tried, for the counted-work assertion. */
+  markBoxesTried = 0;
+  /**
    * The last refused press, and when: a locked key pressed anyway, or a
    * priced button the player could not cover. The orders panel carries the
    * standing lock list and the top strip the balances; this is what the hint
@@ -2450,7 +2546,10 @@ export class EchoRenderer {
     // (`insideAnotherReach`). It breaks the run exactly as an off-frustum
     // vertex does, which is why a circle can already come back as several arcs
     // and nothing downstream had to learn anything new.
-    skip?: (x: number, y: number) => boolean
+    skip?: (x: number, y: number) => boolean,
+    // Where each point landed on the screen, appended as `markTrace` reads it:
+    // the mission markers' names are placed against the line as drawn (#1662).
+    trace?: number[]
   ): boolean {
     if (this.conn === null) return false;
     const bounds = this.conn.inkBounds();
@@ -2459,10 +2558,15 @@ export class EchoRenderer {
     pen.open = false;
     pen.held = false;
     pen.any = false;
-    // One world point onto the run: a break first when asked.
-    const emit = (x: number, y: number, breakBefore: boolean): void => {
+    // One world point onto the run: a break first when asked. `at` is its
+    // place along the ring in vertices, for the trace.
+    const emit = (x: number, y: number, breakBefore: boolean, at: number): void => {
       if (breakBefore) pen.open = false;
+      const joined = pen.held;
       this.penTo(g, x, y, depthM);
+      // `pen.held` comes back true exactly when the point was in front of the
+      // eye, and `pen.sx`/`pen.sy` are then where it landed.
+      if (trace !== undefined && pen.held) trace.push(pen.sx, pen.sy, joined ? 1 : 0, at);
     };
     // A world-space skip or a rim cut ends the run, and the next point starts
     // a new one rather than being tested along a segment that was never drawn.
@@ -2484,7 +2588,7 @@ export class EchoRenderer {
         continue;
       }
       if (bounds === null) {
-        emit(x, y, false);
+        emit(x, y, false, i);
         continue;
       }
       if (!held) {
@@ -2492,7 +2596,7 @@ export class EchoRenderer {
         // for the segment that brings it back in.
         if (clipSegment(bounds, x, y, x, y, span)) {
           lift();
-          emit(x, y, true);
+          emit(x, y, true, i);
         } else lift();
       } else if (clipSegment(bounds, px, py, x, y, span)) {
         const dx = x - px;
@@ -2500,9 +2604,9 @@ export class EchoRenderer {
         // Entering from off the map: the run starts on the rim.
         if (span[0] > 0) {
           lift();
-          emit(px + dx * span[0], py + dy * span[0], true);
+          emit(px + dx * span[0], py + dy * span[0], true, i - 1 + span[0]);
         }
-        emit(px + dx * span[1], py + dy * span[1], false);
+        emit(px + dx * span[1], py + dy * span[1], false, i - 1 + span[1]);
         // Leaving it: the run ends on the rim.
         if (span[1] < 1) lift();
       } else {
@@ -5018,6 +5122,24 @@ export class EchoRenderer {
   }
 
   /**
+   * The floating DOM panels over the water, in canvas px (GameCanvas,
+   * `watchPanels`). The chart draws nothing for them; a mission marker's name
+   * only keeps out from under them (docs/ui-ux.md §10.5, #1662), because the
+   * panels are opaque glass and a name under one is no name.
+   */
+  setPanelRects(rects: readonly PanelRect[]): void {
+    const key = rects
+      .map(
+        (r) =>
+          `${Math.round(r.x)},${Math.round(r.y)},${Math.round(r.width)},${Math.round(r.height)}`
+      )
+      .join(';');
+    if (key === this.panelKey) return;
+    this.panelKey = key;
+    this.panelRects = rects;
+  }
+
+  /**
    * The places to draw on the chart, off the mission view (docs/ui-ux.md
    * §10.5, #1611): a marker with a `name`, while a row that names it is open
    * — as where it sends the camera, or as the place on its way (#1594's
@@ -5041,6 +5163,7 @@ export class EchoRenderer {
     if (key === this.missionMarksKey) return;
     this.missionMarksKey = key;
     this.missionMarks = marks;
+    this.markHolds.clear();
     this.missionEars = ears;
     this.missionEarsAsking = new Set(
       view.held
@@ -5988,7 +6111,7 @@ export class EchoRenderer {
       this.ordnance.length > 0 ||
       this.orderMarkers.length > 0 ||
       this.brokeSilence.size > 0;
-    const force = `${base}|${this.previewPing}|${this.ordersSeq}|${moving ? now : 0}|${this.inkRevision}|${this.missionMarksKey}`;
+    const force = `${base}|${this.previewPing}|${this.ordersSeq}|${moving ? now : 0}|${this.inkRevision}|${this.missionMarksKey}|${this.panelKey}`;
     const forceStale = this.stale('force', force);
     if (forceStale) this.drawRings();
     this.drawContacts();
@@ -6142,6 +6265,8 @@ export class EchoRenderer {
    */
   private drawStructures(): void {
     const palette = FACTION_PALETTE[this.faction];
+    // Own structures here, own hulls in `drawUnits`, which runs next.
+    this.figureFootprints.length = 0;
 
     for (const structure of this.structures) {
       const p = this.project(structure.x, structure.y, null);
@@ -6175,6 +6300,22 @@ export class EchoRenderer {
       const cx = c === null ? 0 : (c.x - p.x) * inverseScale;
       const cy = c === null ? 0 : (c.y - p.y) * inverseScale;
       const ringScale = c === null ? 1 : c.pxPerM * inverseScale;
+
+      // What a mission marker's name keeps off (§10.5, #1662): the collar,
+      // halo and all, about the figure as drawn, and the bars' slots at the
+      // footing whether or not a bar is up, so one coming up moves no name.
+      const collar =
+        collarRadius(radius, SELECTION_GAP_M.STRUCTURE) * ringScale * p.pxPerM +
+        LOUDNESS_COLLAR.HALO_OUTER_PX / 2;
+      const footing = radius * p.pxPerM;
+      const ox = c === null ? p.x : c.x;
+      const oy = c === null ? p.y : c.y;
+      this.figureFootprints.push(
+        Math.min(ox - collar, p.x - footing),
+        Math.min(oy - collar, p.y - footing - 14),
+        Math.max(ox + collar, p.x + footing),
+        Math.max(oy + collar, p.y + footing + 12)
+      );
 
       if (isSelected) {
         g.circle(cx, cy, (radius + SELECTION_GAP_M.STRUCTURE) * ringScale).stroke({
@@ -6998,6 +7139,8 @@ export class EchoRenderer {
 
     this.trackHits.prune(now);
     this.modelTracks.length = 0;
+    this.contactFootprints.length = 0;
+    this.arrivedTracks.clear();
     for (const [id, entry] of this.tracked) {
       const age = now - entry.lastSeenMs;
       if (age > decayMs) {
@@ -7085,6 +7228,33 @@ export class EchoRenderer {
       const worldFade = worldFadeMs(this.precedence);
       const arrival = markOpacity(now - entry.firstSeenMs, worldFade.start, worldFade.full);
       const alpha = style.alpha * freshness * arrival;
+
+      // What a mission marker's name keeps off (§10.5, #1662): a mark drawn at
+      // a depth, from its glyph or bar down, once it has fully arrived. A name
+      // stepping aside earlier would show the contact before its sound.
+      if (column === null && arrival >= 1) {
+        if (modelled) this.arrivedTracks.add(id);
+        const r = style.radius;
+        let figure = r * 1.6;
+        if (contact.kind !== undefined && contact.faction !== undefined) {
+          const size = hullSpriteSizeM(contact.kind, contact.faction);
+          figure = Math.max(figure, Math.hypot(size.widthM, size.heightM) / 2);
+        } else if (contact.structure !== undefined) {
+          figure = Math.max(figure, structureStatsFor(contact.structure).radiusM);
+        }
+        const glyph = Math.max(r * 0.55, GLYPH_MIN_PX * inverseScale);
+        const up =
+          contact.faction !== undefined
+            ? Math.max(figure, r * 2.4 + glyph * 2.3)
+            : Math.max(figure, r * 2.4);
+        const k = anchor.pxPerM;
+        this.contactFootprints.push(
+          anchor.x - figure * k,
+          anchor.y - up * k,
+          anchor.x + figure * k,
+          anchor.y + figure * k
+        );
+      }
 
       this.drawLockFlash(sg, id, contact, now, inverseScale);
 
@@ -7353,6 +7523,19 @@ export class EchoRenderer {
       // reach floors below are deliberately still in true metres.
       const radius = (HULL_LENGTH_M[unit.kind] / 2) * this.hullDrawScale();
       const isSelected = this.selected.has(unit.id);
+
+      // What a mission marker's name keeps off (§10.5, #1662): the collar,
+      // halo and all, and the health bar's slot whether or not it is drawn.
+      // The break-silence ring is left out: it is gone in a second.
+      const collar =
+        collarRadius(radius, SELECTION_GAP_M.HULL) * p.pxPerM + LOUDNESS_COLLAR.HALO_OUTER_PX / 2;
+      const reach = Math.max(collar, radius * 1.2 * p.pxPerM);
+      this.figureFootprints.push(
+        p.x - reach,
+        Math.min(p.y - collar, p.y - radius * p.pxPerM - 12),
+        p.x + reach,
+        p.y + collar
+      );
 
       if (isSelected) {
         g.circle(0, 0, radius + SELECTION_GAP_M.HULL).stroke({
@@ -8422,39 +8605,34 @@ export class EchoRenderer {
    * route's argument for the placement. The ring is a course on the chart
    * floor at the marker's radius, cut at the rim and broken behind models as
    * every ground ring is (`traceCircle`). The name is a symbol and billboards
-   * (gate 8), held at screen size above the ring's highest point on screen, so
-   * it never sits on the hulls the ring is drawn round — the arch's ring takes
-   * in all four escorts.
+   * (gate 8), held at screen size where §10.5's rule puts it (`placeMarkName`,
+   * #1662): over the ring's far side, on clear water, off the hulls the ring is
+   * drawn round — the arch's ring takes in all four escorts.
+   *
+   * Every ring is traced before any name is placed, so each name knows every
+   * line it could cross; and the names go in the mission's own marker order,
+   * so an earlier one keeps its place and a later one moves along its ring.
    */
   private drawMissionMarks(): void {
     const g = this.ringLayer;
     this.drawTenderEars(g);
-    const names = this.markNames.children as Text[];
-    let shown = 0;
+    const trace = this.markTrace;
+    const ends = this.markTraceEnds;
+    trace.length = 0;
+    ends.length = 0;
     for (const mark of this.missionMarks) {
-      if (this.traceCircle(g, mark.x, mark.y, mark.radiusM, null)) {
+      if (this.traceCircle(g, mark.x, mark.y, mark.radiusM, null, undefined, trace)) {
         g.stroke({ width: 1.5, color: UI.accent, alpha: INSTRUMENT_OUTLINE_ALPHA.missionMarker });
       }
-      // The ring's compass points, and the one highest on screen: whichever
-      // way the free camera faces, the name stands over the ring and not in
-      // it. A point off the frustum or past the rim is not a place to stand it.
-      const bounds = this.conn?.inkBounds() ?? null;
-      let top: { x: number; y: number } | null = null;
-      for (const [dx, dy] of MARK_COMPASS) {
-        const x = mark.x + dx * mark.radiusM;
-        const y = mark.y + dy * mark.radiusM;
-        const past =
-          bounds !== null &&
-          (x < bounds.x ||
-            x > bounds.x + bounds.widthM ||
-            y < bounds.y ||
-            y > bounds.y + bounds.heightM);
-        if (past) continue;
-        const p = this.project(x, y, null);
-        if (p === null || !p.visible) continue;
-        if (top === null || p.y < top.y) top = { x: p.x, y: p.y };
-      }
-      if (top === null) continue;
+      ends.push(trace.length);
+    }
+    const names = this.markNames.children as Text[];
+    const placed = this.placedNames;
+    placed.length = 0;
+    this.markBoxesTried = 0;
+    let shown = 0;
+    for (let m = 0; m < this.missionMarks.length; m++) {
+      const mark = this.missionMarks[m]!;
       let name = names[shown];
       if (name === undefined) {
         name = new Text({
@@ -8466,11 +8644,269 @@ export class EchoRenderer {
       }
       name.text = mark.name!;
       name.style.fill = UI.textDim;
-      name.position.set(Math.round(top.x), Math.round(top.y - MARK_NAME_GAP_PX));
+      const w = name.width;
+      const h = name.height;
+      if (!this.placeMarkName(m, w, h)) {
+        this.markHolds.delete(mark.id);
+        continue;
+      }
+      const box = this.markBest;
+      placed.push(box.x, box.y, box.x + w, box.y + h);
+      // Anchored at the foot of its box, as the name always was.
+      name.position.set(Math.round(box.x + w / 2), Math.round(box.y + h));
       name.visible = true;
       shown++;
     }
     for (let i = shown; i < names.length; i++) names[i]!.visible = false;
+  }
+
+  /**
+   * Where marker `m`'s name stands — docs/ui-ux.md §10.5's rule (#1662) — as
+   * the top-left of its box in `markBest`; false when the chart draws none.
+   *
+   * Three ways, each tried only when the one before found no box with room on
+   * the water: over the ring's far side; then, for a view standing inside the
+   * ring, along the head of the water, or, for one outside it, outside the
+   * near side. Within a way the first box clear of everything wins. One that
+   * only crosses another marker's ring, or else only sits on a hull, is kept
+   * in case nothing clear turns up: a name on a hull beats no name (#1611).
+   */
+  private placeMarkName(m: number, w: number, h: number): boolean {
+    const mark = this.missionMarks[m]!;
+    const scale = this.uiScale;
+    const water = this.markWater;
+    // Below the strip, above the console and its hint line, and right of the
+    // depth ribbon's column — kept whether or not the ribbon is drawn, so
+    // selecting a hull never moves a name. The panels come out box by box.
+    water.x = RIBBON_UNITS * scale;
+    water.y = TOP_BAR_HEIGHT * scale;
+    water.widthM = this.app.screen.width - water.x;
+    water.heightM = this.app.screen.height - (CONSOLE_HEIGHT + HINT_LINE_HEIGHT) * scale - water.y;
+    if (water.widthM < w || water.heightM < h) return false;
+    const held = this.markHolds.get(mark.id);
+    const best = this.markBest;
+    best.fault = Infinity;
+    this.markAlongRing(m, MARK_FAR, w, h, held);
+    if (best.fault === Infinity) {
+      const frame = this.conn?.frame;
+      const inside =
+        frame !== undefined && Math.hypot(frame.xM - mark.x, frame.yM - mark.y) < mark.radiusM;
+      if (inside) this.markAtHead(m, w, h, held);
+      else this.markAlongRing(m, MARK_NEAR, w, h, held);
+    }
+    if (best.fault === Infinity) return false;
+    if (held === undefined) this.markHolds.set(mark.id, { mode: best.mode, at: best.at });
+    else {
+      held.mode = best.mode;
+      held.at = best.at;
+    }
+    return true;
+  }
+
+  /**
+   * Try marker `m`'s name along one side of its ring as drawn: the far side,
+   * where the line runs left to right on the screen, or the near side. The
+   * points are `MARK_NAME_STEP_PX` apart on the water, tried highest first,
+   * and each box stands `MARK_NAME_GAP_PX` off the line along its outward
+   * normal: straight above the ring's top, leaning out the way the ring falls
+   * on a shoulder. The ring is traced clockwise on the screen whatever the
+   * camera's yaw, which is what puts the far side on top and its outside on
+   * the left of the line's travel.
+   */
+  private markAlongRing(
+    m: number,
+    mode: number,
+    w: number,
+    h: number,
+    held: MarkHold | undefined
+  ): void {
+    const trace = this.markTrace;
+    const start = m === 0 ? 0 : this.markTraceEnds[m - 1]!;
+    const end = this.markTraceEnds[m]!;
+    const water = this.markWater;
+    const span = this.markSpan;
+    const far = mode === MARK_FAR;
+    const holdAt = held !== undefined && held.mode === mode ? held.at : null;
+    // The side's length on the water first, so a long line spaces its points
+    // wider rather than trying more of them.
+    let length = 0;
+    for (let i = start + 4; i < end; i += 4) {
+      if (trace[i + 2] !== 1) continue;
+      const ax = trace[i - 4]!;
+      const ay = trace[i - 3]!;
+      const bx = trace[i]!;
+      const by = trace[i + 1]!;
+      if (bx > ax !== far || !clipSegment(water, ax, ay, bx, by, span)) continue;
+      length += Math.hypot(bx - ax, by - ay) * (span[1] - span[0]);
+    }
+    if (length === 0) return;
+    const step = Math.max(MARK_NAME_STEP_PX, length / MARK_NAME_POINTS_MAX);
+    // Six numbers a point: where, its place along the ring, the line's unit
+    // direction there, and 1 for the point the name held last pass.
+    const points = this.markPoints;
+    points.length = 0;
+    for (let i = start + 4; i < end; i += 4) {
+      if (trace[i + 2] !== 1) continue;
+      const ax = trace[i - 4]!;
+      const ay = trace[i - 3]!;
+      const bx = trace[i]!;
+      const by = trace[i + 1]!;
+      if (bx > ax !== far || !clipSegment(water, ax, ay, bx, by, span)) continue;
+      const dx = bx - ax;
+      const dy = by - ay;
+      const len = Math.hypot(dx, dy);
+      const t0 = span[0];
+      const t1 = span[1];
+      const at0 = trace[i - 1]!;
+      const at1 = trace[i + 3]!;
+      const n = Math.max(1, Math.ceil((len * (t1 - t0)) / step));
+      for (let k = 0; k <= n; k++) {
+        const t = t0 + ((t1 - t0) * k) / n;
+        points.push(ax + dx * t, ay + dy * t, at0 + (at1 - at0) * t, dx / len, dy / len, 0);
+      }
+      // The point held last pass, exactly where it now is, so a sway that
+      // slides it between two of the evenly spaced points does not drop it.
+      if (holdAt !== null && at1 > at0) {
+        const t = (holdAt - at0) / (at1 - at0);
+        if (t >= t0 && t <= t1) {
+          points.push(ax + dx * t, ay + dy * t, holdAt, dx / len, dy / len, 1);
+        }
+      }
+    }
+    const order = this.markOrder;
+    order.length = 0;
+    for (let p = 0; p < points.length; p += 6) order.push(p);
+    // Highest first, the held point counted `MARK_NAME_HOLD_PX` higher than it
+    // stands; left before right between two level points, for a fixed answer.
+    const rank = (p: number): number =>
+      points[p + 1]! - (points[p + 5] === 1 ? MARK_NAME_HOLD_PX : 0);
+    order.sort((a, b) => rank(a) - rank(b) || points[a]! - points[b]!);
+    const best = this.markBest;
+    for (const p of order) {
+      const nx = points[p + 4]!;
+      const ny = -points[p + 3]!;
+      const lift = MARK_NAME_GAP_PX + (Math.abs(nx) * w) / 2 + (Math.abs(ny) * h) / 2;
+      const x0 = points[p]! + nx * lift - w / 2;
+      const y0 = points[p + 1]! + ny * lift - h / 2;
+      const fault = this.markFault(m, x0, y0, w, h, points[p + 5] === 1);
+      if (fault < 0 || fault >= best.fault) continue;
+      best.fault = fault;
+      best.x = x0;
+      best.y = y0;
+      best.mode = mode;
+      best.at = points[p + 2]!;
+      if (fault === 0) return;
+    }
+  }
+
+  /**
+   * Try marker `m`'s name along the head of the water, centred first and then
+   * a name's width either side, left before right: for a view standing inside
+   * a ring whose far side has no room on the water (§10.5). Fixed to the
+   * screen, so it neither sways nor needs holding by height.
+   */
+  private markAtHead(m: number, w: number, h: number, held: MarkHold | undefined): void {
+    const water = this.markWater;
+    const centre = water.x + water.widthM / 2;
+    const y0 = water.y + MARK_NAME_GAP_PX;
+    const best = this.markBest;
+    for (let i = 0; i < MARK_HEAD_SLOTS; i++) {
+      const k = i % 2 === 1 ? -(i + 1) / 2 : i / 2;
+      const x0 = centre + k * (w + 2 * MARK_NAME_GAP_PX) - w / 2;
+      const kept = held !== undefined && held.mode === MARK_HEAD && held.at === k;
+      const fault = this.markFault(m, x0, y0, w, h, kept);
+      if (fault < 0 || fault >= best.fault) continue;
+      best.fault = fault;
+      best.x = x0;
+      best.y = y0;
+      best.mode = MARK_HEAD;
+      best.at = k;
+      if (fault === 0) return;
+    }
+  }
+
+  /**
+   * How badly a name's box at (x0, y0) sits (#1662): -1 where it may not stand
+   * at all — off the water, under a floating panel, on an earlier name, across
+   * its own ring — then 2 on a hull, 1 across another marker's ring, 0 clear.
+   * A new place has to clear the hulls by `MARK_NAME_CLEAR_PX`; the place the
+   * name `held` last pass only has to clear them.
+   */
+  private markFault(
+    m: number,
+    x0: number,
+    y0: number,
+    w: number,
+    h: number,
+    held: boolean
+  ): number {
+    this.markBoxesTried++;
+    const x1 = x0 + w;
+    const y1 = y0 + h;
+    const water = this.markWater;
+    if (
+      x0 < water.x ||
+      y0 < water.y ||
+      x1 > water.x + water.widthM ||
+      y1 > water.y + water.heightM
+    ) {
+      return -1;
+    }
+    for (const panel of this.panelRects) {
+      if (
+        x1 > panel.x &&
+        x0 < panel.x + panel.width &&
+        y1 > panel.y &&
+        y0 < panel.y + panel.height
+      ) {
+        return -1;
+      }
+    }
+    const gap = MARK_NAME_GAP_PX;
+    if (boxesMeet(this.placedNames, x0 - gap, y0 - gap, x1 + gap, y1 + gap)) return -1;
+    if (this.markRingCrosses(m, x0, y0, x1, y1)) return -1;
+    const pad = held ? 0 : MARK_NAME_CLEAR_PX;
+    if (
+      boxesMeet(this.figureFootprints, x0 - pad, y0 - pad, x1 + pad, y1 + pad) ||
+      boxesMeet(this.contactFootprints, x0 - pad, y0 - pad, x1 + pad, y1 + pad) ||
+      (this.conn?.inkCrossesHulls(x0 - pad, y0 - pad, x1 + pad, y1 + pad, this.arrivedTracks) ??
+        false)
+    ) {
+      return 2;
+    }
+    for (let r = 0; r < this.markTraceEnds.length; r++) {
+      if (r !== m && this.markRingCrosses(r, x0, y0, x1, y1)) return 1;
+    }
+    return 0;
+  }
+
+  /** Whether marker `r`'s ring, as drawn this pass, crosses the box. */
+  private markRingCrosses(r: number, x0: number, y0: number, x1: number, y1: number): boolean {
+    const trace = this.markTrace;
+    const start = r === 0 ? 0 : this.markTraceEnds[r - 1]!;
+    const end = this.markTraceEnds[r]!;
+    const rect = this.markRect;
+    rect.x = x0;
+    rect.y = y0;
+    rect.widthM = x1 - x0;
+    rect.heightM = y1 - y0;
+    for (let i = start + 4; i < end; i += 4) {
+      if (trace[i + 2] !== 1) continue;
+      const ax = trace[i - 4]!;
+      const ay = trace[i - 3]!;
+      const bx = trace[i]!;
+      const by = trace[i + 1]!;
+      if (
+        Math.max(ax, bx) < x0 ||
+        Math.min(ax, bx) > x1 ||
+        Math.max(ay, by) < y0 ||
+        Math.min(ay, by) > y1
+      ) {
+        continue;
+      }
+      if (clipSegment(rect, ax, ay, bx, by, this.markSpan)) return true;
+    }
+    return false;
   }
 
   /**

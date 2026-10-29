@@ -54,6 +54,7 @@ mark ends at the rim ([map-visuals.md](../../map-visuals.md) §5).
 
 Three names sit on something at the ring's north edge: the player's hulls in
 `ledger-exposure.jpg`, a Sounding Spire in `chord-second-chord.jpg`, and the Bastion in
-`chord-standing-wave.jpg`. The name is placed above the ring, so a hull standing on the
-ring's far side is under it. [ui-ux.md](../../ui-ux.md) §10.5 promises it never sits on the
-hulls the ring is drawn round, which holds for hulls inside the ring only.
+`chord-standing-wave.jpg`. The name was placed above the ring, so a hull standing on the
+ring's far side was under it. [ui-ux.md](../../ui-ux.md) §10.5 promised it never sat on the
+hulls the ring is drawn round, which held for hulls inside the ring only. Since #1662 the
+name keeps off them: [issue-1662](../issue-1662/README.md) has the same frames after it.

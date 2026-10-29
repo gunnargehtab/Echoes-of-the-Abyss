@@ -871,7 +871,7 @@ and the only ground on it the far water can be reached across.
 balanced, resolved by mission id and nothing else ([maps.md](maps.md)) — and now, with the
 prologue's, by two.
 
-**Named on the chart** (#1617). *The far water* is printed above its marker's ring while a row that
+**Named on the chart** (#1617). *The far water* is printed with its marker's ring while a row that
 names it is open ([ui-ux.md](ui-ux.md) §10.5).
 
 ---

@@ -303,7 +303,7 @@ Vayle's frame is still reached from the yard in water with no roof over it.
 resources, not balanced, resolved by mission id and nothing else ([maps.md](maps.md)).
 
 **Named on the chart** (#1617). *The casting yard*, *The root aperture* and *Sector Vayle's frame*
-are printed above their markers' rings while a row that names each is open ([ui-ux.md](ui-ux.md)
+are printed with their markers' rings while a row that names each is open ([ui-ux.md](ui-ux.md)
 §10.5).
 
 ---

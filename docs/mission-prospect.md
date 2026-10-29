@@ -331,7 +331,7 @@ about the deep field, lived in whole.
 **The Rim is a mission map and is not in the public catalogue.** One seat, no resources, not
 balanced, resolved by mission id and nothing else ([maps.md](maps.md)).
 
-**Named on the chart** (#1617). *The terraces* and *The staging* are printed above their markers'
+**Named on the chart** (#1617). *The terraces* and *The staging* are printed with their markers'
 rings while a row that names each is open ([ui-ux.md](ui-ux.md) §10.5).
 
 ---

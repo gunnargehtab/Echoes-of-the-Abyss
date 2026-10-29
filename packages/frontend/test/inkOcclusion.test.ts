@@ -146,6 +146,37 @@ describe('InkOcclusion', () => {
     assert.equal(ink.crosses(x, y, bx, by), true);
   });
 
+  // What a mission marker's name keeps off (#1662): own models in front of
+  // the eye, and a track's once its mark has arrived. One hull behind the
+  // camera would otherwise leave the name no place at all.
+  it('tests a box against own models in front of the eye, and arrived tracks', () => {
+    const { ink, camera } = frame();
+    ink.begin(camera, 1280, 720);
+    ink.add(modelColumns(boxRoot(40, 0)), new Matrix4(), 11);
+    ink.add(modelColumns(boxRoot(40, 0)), new Matrix4().makeTranslation(0, 800, 800), 12);
+    ink.markOwn();
+    ink.add(modelColumns(boxRoot(40, 0)), new Matrix4().makeTranslation(300, 0, 0), 104);
+    ink.end();
+    const none = new Set<number>();
+    const [x, y] = pixel(camera, -300, 0, 0);
+    assert.equal(ink.crosses(x, y, x + 10, y), true, 'the model behind the eye is everywhere');
+    assert.equal(ink.crossesHulls(x, y, x + 10, y, none), false, 'and left out');
+    const [tx, ty] = pixel(camera, 300, 0, 0);
+    assert.equal(ink.crosses(tx, ty, tx + 1, ty + 1), true, "the premise: the track's model");
+    assert.equal(ink.crossesHulls(tx, ty, tx + 1, ty + 1, none), false, 'left out unarrived');
+    assert.equal(
+      ink.crossesHulls(tx, ty, tx + 1, ty + 1, new Set([104])),
+      true,
+      'and tested once its mark has arrived'
+    );
+    const [bx, by] = pixel(camera, 0, 0, -30);
+    assert.equal(
+      ink.crossesHulls(bx, by, bx + 1, by + 1, none),
+      true,
+      'the own one in front is not'
+    );
+  });
+
   it('moves its revision only when a model moves', () => {
     const { ink, camera } = frame();
     const first = ink.revision;

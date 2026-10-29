@@ -22,6 +22,7 @@
  */
 
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { describe, it, mock } from 'node:test';
 import { CanvasTextMetrics, Container, Graphics, Text, type GraphicsPath } from 'pixi.js';
 import {
@@ -83,7 +84,9 @@ import {
   ROWS,
 } from './support/cannedMatch.ts';
 import {
+  collarRadius,
   EchoRenderer,
+  SELECTION_GAP_M,
   YIELD,
   yieldToCells,
   type RendererCallbacks,
@@ -100,13 +103,20 @@ import { ONE_HANDED_BINDINGS } from '../src/input/bindings.ts';
 import { NO_DECOY_TEXT } from '../src/game/dredge.ts';
 import {
   CHROME_UNITS,
+  CONSOLE_HEIGHT,
+  HINT_LINE_HEIGHT,
   PANEL_CAP_UNITS,
   RIBBON_LABEL_GAP,
   RIBBON_LABEL_ROOM,
   RIBBON_UNITS,
   RIBBON_WIDTH,
   RIBBON_X,
+  TOP_BAR_HEIGHT,
 } from '../src/game/uiScale.ts';
+import { clipSegment } from '../src/game/rimClip.ts';
+import { HULL_LENGTH_M } from '../src/game/silhouettes.ts';
+import { buildTemplate, instantiate } from '../src/game/rosterModels.ts';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
 import { FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
@@ -5601,6 +5611,614 @@ describe("a mission's named markers on the chart (#1611)", () => {
       assert.deepEqual(names, []);
     } finally {
       world.teardown();
+    }
+  });
+});
+
+/**
+ * Where a marker's name stands — docs/ui-ux.md §10.5's placement rule (#1662).
+ * Each case is one the rule was written for, driven through the real draw
+ * pass on the canned match at 1280 × 720, and checked against the ring as this
+ * file projects it rather than as the renderer recorded it.
+ */
+describe("where a marker's name stands (#1662)", () => {
+  type Chart = {
+    units: OwnUnit[];
+    markNames: Container;
+    markBoxesTried: number;
+    markHolds: Map<string, { mode: number; at: number }>;
+    tracked: Map<number, { firstSeenMs: number }>;
+    drawnPosition(unit: OwnUnit): { x: number; y: number; depth: number };
+    hullDrawScale(): number;
+  };
+  type Box = { x0: number; y0: number; x1: number; y1: number };
+  type Mark = { id: string; name: string; x: number; y: number; radiusM: number };
+  type Segment = [number, number, number, number];
+  type World = Booted;
+
+  /** The water at UI scale `s`: right of the ribbon's column, between the strip and the hint line. */
+  const waterAt = (s = 1): Box => ({
+    x0: RIBBON_UNITS * s,
+    y0: TOP_BAR_HEIGHT * s,
+    x1: 1280,
+    y1: 720 - (CONSOLE_HEIGHT + HINT_LINE_HEIGHT) * s,
+  });
+  const WATER = waterAt();
+  /** How far outside its ring a name stands. */
+  const GAP = 4;
+  /** The head-of-water placement's index (`MARK_HEAD`), as `markHolds` records it. */
+  const HEAD = 1;
+
+  const missionOf = (marks: Mark[]): MissionView => ({
+    missionId: 'sorrowgate',
+    tick: 0,
+    objectives: marks.map((mark) => ({
+      id: `row-${mark.id}`,
+      text: 'Hold there.',
+      status: ObjectiveStatus.Pending,
+      markerId: mark.id,
+    })),
+    markers: marks.map((mark) => ({ ...mark, label: `${mark.name}.` })),
+    locks: [],
+    held: [],
+    sigBudget: 20,
+    debtS: 0,
+  });
+
+  /** The canned match with these markers' rows open, the camera framed, then drawn. */
+  async function placed(
+    marks: Mark[],
+    frame: (world: World) => void,
+    before?: (world: World) => void
+  ): Promise<World> {
+    const world = await boot();
+    before?.(world);
+    world.frame(2);
+    world.chart.setMissionMarkers(missionOf(marks));
+    frame(world);
+    world.frame(2);
+    return world;
+  }
+
+  const chartOf = (world: World) => world.chart as unknown as Chart;
+
+  /** Every name on the chart, as the box it is drawn in: anchored at the foot's centre. */
+  const nameBoxes = (world: World): Array<Box & { text: string }> =>
+    (chartOf(world).markNames.children as Text[])
+      .filter((name) => name.visible)
+      .map((name) => ({
+        text: name.text,
+        x0: name.x - name.width / 2,
+        y0: name.y - name.height,
+        x1: name.x + name.width / 2,
+        y1: name.y,
+      }));
+
+  /**
+   * A ring as the chart draws it: 48 segments on the seabed, cut at the rim,
+   * each kept where both ends are in front of the eye.
+   */
+  function ringOf(world: World, mark: Mark): Segment[] {
+    const bounds = world.conn.inkBounds();
+    const span: [number, number] = [0, 0];
+    const segments: Segment[] = [];
+    for (let i = 1; i <= 48; i++) {
+      const a = ((i - 1) / 48) * Math.PI * 2;
+      const b = (i / 48) * Math.PI * 2;
+      let ax = mark.x + Math.cos(a) * mark.radiusM;
+      let ay = mark.y + Math.sin(a) * mark.radiusM;
+      let bx = mark.x + Math.cos(b) * mark.radiusM;
+      let by = mark.y + Math.sin(b) * mark.radiusM;
+      if (bounds !== null) {
+        if (!clipSegment(bounds, ax, ay, bx, by, span)) continue;
+        [ax, ay, bx, by] = [
+          ax + (bx - ax) * span[0],
+          ay + (by - ay) * span[0],
+          ax + (bx - ax) * span[1],
+          ay + (by - ay) * span[1],
+        ];
+      }
+      const p = world.conn.projectPoint(ax, ay, null);
+      const q = world.conn.projectPoint(bx, by, null);
+      if (p.visible && q.visible) segments.push([p.x, p.y, q.x, q.y]);
+    }
+    return segments;
+  }
+
+  /** The highest point of a drawn ring on the screen. */
+  const highest = (ring: Segment[]): { x: number; y: number } =>
+    ring
+      .flatMap(([ax, ay, bx, by]) => [
+        { x: ax, y: ay },
+        { x: bx, y: by },
+      ])
+      .reduce((top, p) => (p.y < top.y ? p : top));
+
+  /**
+   * Whether a box is centred over a point. Within 3 px: a name over a vertex
+   * stands off the segment that ends there, and the terrain tilts it.
+   */
+  const centredOver = (box: Box, p: { x: number; y: number }): boolean =>
+    Math.abs((box.x0 + box.x1) / 2 - p.x) <= 3;
+  /** Whether any of a drawn ring is on the canvas. */
+  const onCanvas = (ring: Segment[]): boolean =>
+    ring.some(([ax, ay, bx, by]) =>
+      clipSegment({ x: 0, y: 0, widthM: 1280, heightM: 720 }, ax, ay, bx, by, [0, 0])
+    );
+  const crosses = (box: Box, ring: Segment[]): boolean => {
+    const rect = { x: box.x0, y: box.y0, widthM: box.x1 - box.x0, heightM: box.y1 - box.y0 };
+    return ring.some(([ax, ay, bx, by]) => clipSegment(rect, ax, ay, bx, by, [0, 0]));
+  };
+
+  /** Whether a screen point lies inside the ring's whole outline; null when some of it is behind the eye. */
+  function insideRing(world: World, mark: Mark, px: number, py: number): boolean | null {
+    const outline: Array<{ x: number; y: number }> = [];
+    for (let i = 0; i < 48; i++) {
+      const a = (i / 48) * Math.PI * 2;
+      const p = world.conn.projectPoint(
+        mark.x + Math.cos(a) * mark.radiusM,
+        mark.y + Math.sin(a) * mark.radiusM,
+        null
+      );
+      if (!p.visible) return null;
+      outline.push({ x: p.x, y: p.y });
+    }
+    let inside = false;
+    for (let i = 0, j = outline.length - 1; i < outline.length; j = i++) {
+      const a = outline[i]!;
+      const b = outline[j]!;
+      if (a.y > py !== b.y > py && px < ((b.x - a.x) * (py - a.y)) / (b.y - a.y) + a.x) {
+        inside = !inside;
+      }
+    }
+    return inside;
+  }
+
+  /** Within the water, give or take the pixel the name's position is rounded by. */
+  const inWater = (box: Box, water = WATER): boolean =>
+    box.x0 >= water.x0 - 1 &&
+    box.y0 >= water.y0 - 1 &&
+    box.x1 <= water.x1 + 1 &&
+    box.y1 <= water.y1 + 1;
+  const meets = (a: Box, b: Box): boolean =>
+    a.x1 > b.x0 && a.x0 < b.x1 && a.y1 > b.y0 && a.y0 < b.y1;
+  /** The box the rule before #1662 drew a name in: centred, 4 px over a point. */
+  const over = (p: { x: number; y: number }, like: Box): Box => {
+    const w = like.x1 - like.x0;
+    const h = like.y1 - like.y0;
+    return { x0: p.x - w / 2, y0: p.y - GAP - h, x1: p.x + w / 2, y1: p.y - GAP };
+  };
+
+  /** The rule's three promises for every name drawn: on the water, off its own line, out of its ring. */
+  function holdsTheRule(world: World, mark: Mark, box: Box, water = WATER): void {
+    const where = `${mark.id} at ${JSON.stringify(world.conn.frame)}`;
+    assert.ok(inWater(box, water), `${where}: the name left the water, ${JSON.stringify(box)}`);
+    assert.ok(!crosses(box, ringOf(world, mark)), `${where}: the name crosses its own ring`);
+    if (chartOf(world).markHolds.get(mark.id)?.mode === HEAD) return;
+    const inside = insideRing(world, mark, (box.x0 + box.x1) / 2, (box.y0 + box.y1) / 2);
+    assert.notEqual(inside, true, `${where}: the name stands inside its ring`);
+  }
+
+  const QUIET: Mark = { id: 'arch', name: 'The arch', x: 1000, y: 3000, radiusM: 350 };
+
+  /**
+   * A committed model, parsed as the loader would. The runner's manifest is
+   * empty, so a test hands one to its handle itself (inkOcclusion.test.ts).
+   * These two carry no image for the loader to decode.
+   */
+  async function parsedModel(slug: string) {
+    const bytes = readFileSync(
+      new URL(`../../../docs/concept-art/models/${slug}.glb`, import.meta.url)
+    );
+    const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+    return (await new GLTFLoader().parseAsync(buffer, '')).scene;
+  }
+
+  it('stands straight over the top of a ring with nothing on it, at the first box tried', async () => {
+    const world = await placed([QUIET], (w) => w.chart.focusOn(QUIET.x, QUIET.y));
+    try {
+      const [box] = nameBoxes(world);
+      assert.ok(box !== undefined, 'the name is drawn');
+      const top = highest(ringOf(world, QUIET));
+      assert.ok(centredOver(box, top), 'centred over the top');
+      assert.ok(Math.abs(box.y1 - (top.y - GAP)) <= 1, `${GAP} px over it`);
+      assert.equal(chartOf(world).markBoxesTried, 1, 'and nothing was in the way');
+      holdsTheRule(world, QUIET, box);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('steps along the ring off an own hull standing on its top, collar and all', async () => {
+    // The Corvette at (800, 900) stands on this ring's top.
+    const mark: Mark = { ...QUIET, x: 800, y: 1250 };
+    const world = await placed([mark], (w) => w.chart.focusOn(mark.x, mark.y));
+    try {
+      const chart = chartOf(world);
+      const hull = chart.units.find((unit) => unit.id === 11)!;
+      const at = chart.drawnPosition(hull);
+      const p = world.conn.projectPoint(at.x, at.y, at.depth);
+      const collar =
+        collarRadius((HULL_LENGTH_M[hull.kind] / 2) * chart.hullDrawScale(), SELECTION_GAP_M.HULL) *
+        p.pxPerM;
+      const onCollar = (box: Box): boolean =>
+        Math.hypot(
+          Math.max(box.x0 - p.x, 0, p.x - box.x1),
+          Math.max(box.y0 - p.y, 0, p.y - box.y1)
+        ) < collar;
+      const [box] = nameBoxes(world);
+      assert.ok(box !== undefined, 'the name is drawn');
+      assert.ok(onCollar(over(highest(ringOf(world, mark)), box)), 'the premise: the top is taken');
+      assert.ok(!onCollar(box), 'the name sits on the hull it is drawn round');
+      holdsTheRule(world, mark, box);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it("keeps off a structure's model", async () => {
+    const template = buildTemplate(await parsedModel('bastion-bathyarch'), {
+      structure: StructureKind.Bastion,
+      faction: Faction.Bathyarch,
+    });
+    // The Bastion at (600, 600) stands over this ring's top: the frame
+    // `chord-standing-wave.jpg` caught, where it swallowed "The Fifth".
+    const mark: Mark = { ...QUIET, x: 600, y: 950 };
+    const world = await placed(
+      [mark],
+      (w) => w.chart.focusOn(mark.x, mark.y),
+      (w) => {
+        // The runner's model manifest is empty, so the model is handed to its
+        // handle as the loader would, as inkOcclusion.test.ts does.
+        const handles = (w.conn as unknown as { structureHandles: Map<number, unknown> })
+          .structureHandles;
+        const handle = handles.get(21) as { model: unknown; modelKey: string };
+        handle.model = instantiate(template);
+        handle.modelKey = 'test';
+        w.conn.applySnapshot(cannedSnapshot());
+      }
+    );
+    try {
+      const [box] = nameBoxes(world);
+      assert.ok(box !== undefined, 'the name is drawn');
+      const old = over(highest(ringOf(world, mark)), box);
+      assert.ok(
+        world.conn.inkCrossesHulls(old.x0, old.y0, old.x1, old.y1, new Set()),
+        'the premise'
+      );
+      assert.ok(
+        !world.conn.inkCrossesHulls(box.x0, box.y0, box.x1, box.y1, new Set()),
+        'on the model'
+      );
+      holdsTheRule(world, mark, box);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  const WIDE: Mark = { id: 'rest', name: 'The Rest', x: 2000, y: 2000, radiusM: 1900 };
+
+  it('names a ring wider than the view beside where it comes in', async () => {
+    const world = await placed([WIDE], (w) => w.conn.focusWorld(2000, 1200, 2600));
+    try {
+      const [box] = nameBoxes(world);
+      assert.ok(box !== undefined, 'a ring on the water went unnamed');
+      const top = over(highest(ringOf(world, WIDE)), box);
+      assert.ok(!inWater(top), 'the premise: there is no room over its top');
+      holdsTheRule(world, WIDE, box);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('keeps out from under the floating panels', async () => {
+    const world = await placed([WIDE], (w) => w.conn.focusWorld(2000, 2000, 2600));
+    try {
+      // The orders panel and the contact log at 1280 wide (App.css).
+      const panels = [
+        { x: 67, y: 60, width: 340, height: 300 },
+        { x: 930, y: 60, width: 340, height: 216 },
+      ];
+      const under = (box: Box): boolean =>
+        panels.some((r) => meets(box, { x0: r.x, y0: r.y, x1: r.x + r.width, y1: r.y + r.height }));
+      const [bare] = nameBoxes(world);
+      assert.ok(bare !== undefined && under(bare), 'the premise: the ring comes in under a panel');
+      world.chart.setPanelRects(panels);
+      world.frame(2);
+      const [box] = nameBoxes(world);
+      assert.ok(box !== undefined, 'the name went with the panels');
+      assert.ok(!under(box), 'the name is under a panel');
+      holdsTheRule(world, WIDE, box);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('names the ring a view stands inside at the head of the water', async () => {
+    const world = await placed([WIDE], (w) => w.conn.focusWorld(2000, 2000, 250));
+    try {
+      assert.ok(!onCanvas(ringOf(world, WIDE)), 'the premise: none of the ring is in view');
+      const [box] = nameBoxes(world);
+      assert.ok(box !== undefined, 'the name is drawn');
+      assert.ok(Math.abs(box.y0 - (WATER.y0 + GAP)) <= 1, 'at the head of the water');
+      assert.ok(
+        Math.abs((box.x0 + box.x1) / 2 - (WATER.x0 + WATER.x1) / 2) <= 1,
+        'and centred on it'
+      );
+      holdsTheRule(world, WIDE, box);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('draws no name for a ring off the water with the view outside it', async () => {
+    const far: Mark = { ...QUIET, x: 3500, y: 3500, radiusM: 200 };
+    const world = await placed([far], (w) => w.conn.focusWorld(500, 500, 1500));
+    try {
+      // In front of the eye, so the compass rule drew its name off the canvas.
+      const ring = ringOf(world, far);
+      assert.ok(ring.length > 0, 'the premise: the ring is in front of the eye');
+      assert.ok(!onCanvas(ring), 'the premise: and off the canvas');
+      assert.deepEqual(nameBoxes(world), []);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('names a ring seen from outside on the outside of its near side', async () => {
+    const lane: Mark = { id: 'lane', name: 'The shelf lane', x: 2000, y: 1500, radiusM: 1000 };
+    const world = await placed([lane], (w) => w.conn.focusWorld(2000, 3200, 2600));
+    try {
+      assert.ok(highest(ringOf(world, lane)).y < WATER.y0, 'the premise: its top is off the water');
+      const [box] = nameBoxes(world);
+      assert.ok(box !== undefined, 'a ring on the water went unnamed');
+      holdsTheRule(world, lane, box);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('names a ring the rim cuts over the line where it meets the rim', async () => {
+    const rim: Mark = { ...QUIET, x: 2000, y: 250, radiusM: 500 };
+    const world = await placed([rim], (w) => w.chart.focusOn(rim.x, rim.y));
+    try {
+      const ring = ringOf(world, rim);
+      const [box] = nameBoxes(world);
+      assert.ok(box !== undefined, 'the name is drawn');
+      // Its north point is past the rim, so the compass rule stood the name
+      // on the west point, astride the line.
+      const west = world.conn.projectPoint(rim.x - rim.radiusM, rim.y, null);
+      assert.ok(crosses(over(west, box), ring), 'the premise');
+      // The ring meets the rim at 210° and 330°; the name stands over one.
+      const cuts = [210, 330].map((deg) =>
+        world.conn.projectPoint(rim.x + Math.cos((deg * Math.PI) / 180) * rim.radiusM, 0, null)
+      );
+      // Off the line by the gap along its normal, which on a shoulder leaves
+      // the box's foot up to a name's height above the cut.
+      const near = cuts.some(
+        (p) =>
+          box.y1 <= p.y &&
+          Math.hypot(Math.max(box.x0 - p.x, 0, p.x - box.x1), p.y - box.y1) <=
+            GAP + (box.y1 - box.y0) + 2
+      );
+      assert.ok(near, `the name is not over the rim cut, ${JSON.stringify(box)}`);
+      holdsTheRule(world, rim, box);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it("keeps a later marker's name off an earlier one's, and off both rings", async () => {
+    const chord: Mark = { id: 'chord', name: 'The Chord', x: 2000, y: 2000, radiusM: 500 };
+    const mouth: Mark = { id: 'mouth', name: 'The mouth', x: 2000, y: 2100, radiusM: 600 };
+    const world = await placed([chord, mouth], (w) => w.chart.focusOn(2000, 2000));
+    try {
+      const boxes = nameBoxes(world);
+      assert.deepEqual(
+        boxes.map((box) => box.text),
+        ['The Chord', 'The mouth']
+      );
+      const a = boxes[0]!;
+      const b = boxes[1]!;
+      const grown = {
+        x0: a.x0 - GAP + 1,
+        y0: a.y0 - GAP + 1,
+        x1: a.x1 + GAP - 1,
+        y1: a.y1 + GAP - 1,
+      };
+      assert.ok(!meets(grown, b), 'the names touch');
+      for (const box of [a, b]) {
+        assert.ok(!crosses(box, ringOf(world, chord)) && !crosses(box, ringOf(world, mouth)));
+      }
+      holdsTheRule(world, chord, a);
+      holdsTheRule(world, mouth, b);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('holds its point while two stand level, as the camera sways', async () => {
+    const at = (deg: number) => ({
+      xM: QUIET.x,
+      yM: QUIET.y,
+      distanceM: 2600,
+      yawDeg: deg,
+      pitchDeg: 55,
+    });
+    /** Which of the ring's 48 vertices stands highest on the screen. */
+    const topVertex = (world: World): number => {
+      let best = 0;
+      let bestY = Infinity;
+      for (let i = 0; i < 48; i++) {
+        const a = (i / 48) * Math.PI * 2;
+        const p = world.conn.projectPoint(
+          QUIET.x + Math.cos(a) * QUIET.radiusM,
+          QUIET.y + Math.sin(a) * QUIET.radiusM,
+          null
+        );
+        if (p.y < bestY) [best, bestY] = [i, p.y];
+      }
+      return best;
+    };
+    const world = await placed([QUIET], (w) => w.conn.setFrame(at(0)));
+    try {
+      // Turn until the top passes to the next vertex: there the two stand
+      // level, and a tenth of a degree either way swaps which is higher.
+      let deg = 0;
+      const first = topVertex(world);
+      while (deg < 15) {
+        world.conn.setFrame(at(deg + 0.1));
+        world.frame(1);
+        if (topVertex(world) !== first) break;
+        deg += 0.1;
+      }
+      assert.ok(deg < 15, 'the premise: the top passes to another vertex');
+      const seen: number[] = [];
+      const tops: number[] = [];
+      for (const turn of [deg, deg + 0.1, deg, deg + 0.1]) {
+        world.conn.setFrame(at(turn));
+        world.frame(2);
+        const [box] = nameBoxes(world);
+        assert.ok(box !== undefined);
+        seen.push((box.x0 + box.x1) / 2);
+        tops.push(highest(ringOf(world, QUIET)).x);
+      }
+      assert.ok(
+        Math.max(...tops) - Math.min(...tops) > 10,
+        'the premise: the highest point swaps ends'
+      );
+      assert.ok(
+        Math.max(...seen) - Math.min(...seen) <= 3,
+        `the name hopped along its ring: ${seen.map((x) => x.toFixed(1)).join(', ')}`
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  // A track's model shows the instant it resolves, so the name waits for the
+  // mark; once arrived, the model counts as well as the mark, because a
+  // structure stands far above its mark — a Sounding Spire is 265 m tall. A
+  // track whose model has not loaded is its mark alone, and so is a ghost.
+  for (const track of [
+    { as: 'a hull', slug: 'corvette-hadron', inside: 0 },
+    { as: 'a tall structure', slug: 'sounding-spire-hadron', inside: 120 },
+    { as: 'a mark with no model', slug: null, inside: 0 },
+  ]) {
+    it(`steps aside for ${track.as} only once its mark has arrived`, async () => {
+      const template =
+        track.slug === null
+          ? null
+          : buildTemplate(
+              await parsedModel(track.slug),
+              track.slug === 'corvette-hadron'
+                ? { unit: UnitKind.Corvette, faction: Faction.Hadron }
+                : { structure: StructureKind.SoundingSpire, faction: Faction.Hadron }
+            );
+      // The Tier-4 track laid on the seabed under this ring's top, or `inside`
+      // metres in from it: there a structure's mark sits clear below the name
+      // and only its model reaches up through it.
+      const mark: Mark = { ...QUIET, x: 2800, y: 2950 - track.inside };
+      const contactsOn = (world: World) => {
+        const snapshot = cannedSnapshot();
+        const seabed = world.conn.seabedDepthAt(2800, 2600);
+        return {
+          ...snapshot,
+          contacts: snapshot.contacts.map((c) => {
+            if (c.id !== 104) return c;
+            if (track.slug !== 'sounding-spire-hadron') return { ...c, depth: seabed };
+            const { kind: _kind, heading: _heading, ...rest } = c;
+            return { ...rest, structure: StructureKind.SoundingSpire, depth: seabed };
+          }),
+        };
+      };
+      const world = await placed(
+        [mark],
+        (w) => w.chart.focusOn(mark.x, mark.y),
+        (w) => {
+          w.chart.applySnapshot(contactsOn(w));
+          // Not yet arrived, whatever the runner's clock does meanwhile.
+          chartOf(w).tracked.get(104)!.firstSeenMs = performance.now() + 60_000;
+        }
+      );
+      try {
+        // The model handed to the track's handle as the loader would.
+        if (template !== null) {
+          const conn = world.conn as unknown as {
+            trackHandles: Map<number, { model: unknown; modelKey: string }>;
+            syncTracks(): void;
+          };
+          const handle = conn.trackHandles.get(104);
+          assert.ok(handle !== undefined, 'the premise: the track is drawn as a model');
+          handle.model = instantiate(template);
+          handle.modelKey = 'test';
+          conn.syncTracks();
+          world.chart.applySnapshot(contactsOn(world));
+          world.frame(2);
+        }
+        // The mark's core: its figure and the bar and glyph above it.
+        const p = world.conn.projectPoint(2800, 2600, world.conn.seabedDepthAt(2800, 2600));
+        const core = { x0: p.x - 8, y0: p.y - 30, x1: p.x + 8, y1: p.y };
+        const [before] = nameBoxes(world);
+        assert.ok(before !== undefined, 'the name is drawn');
+        assert.ok(
+          template === null
+            ? meets(before, core)
+            : world.conn.inkCrosses(before.x0, before.y0, before.x1, before.y1),
+          'the premise: the track stands under the name'
+        );
+        assert.ok(centredOver(before, highest(ringOf(world, mark))), 'it waits for the mark');
+        chartOf(world).tracked.get(104)!.firstSeenMs = performance.now() - 60_000;
+        world.chart.applySnapshot(contactsOn(world));
+        world.frame(2);
+        const [after] = nameBoxes(world);
+        assert.ok(after !== undefined, 'the name is drawn');
+        assert.ok(
+          !world.conn.inkCrosses(after.x0, after.y0, after.x1, after.y1),
+          "the name sits on the arrived track's model"
+        );
+        if (track.inside === 0) assert.ok(!meets(after, core), 'the name sits on the arrived mark');
+        holdsTheRule(world, mark, after);
+      } finally {
+        world.teardown();
+      }
+    });
+  }
+
+  it('holds the rule at every yaw, pitch, dolly and UI scale, in bounded work', async () => {
+    const marks: Mark[] = [
+      { id: 'mid', name: 'The arch', x: 2000, y: 2000, radiusM: 350 },
+      { id: 'rim', name: 'The service lock', x: 2000, y: 250, radiusM: 500 },
+      WIDE,
+    ];
+    for (const mark of marks) {
+      const world = await placed([mark], () => {});
+      try {
+        for (const scale of [1, 1.5]) {
+          world.chart.setUiScale(scale);
+          for (const yawDeg of [0, 90, 180, 270]) {
+            for (const pitchDeg of [10, 55, 88]) {
+              for (const distanceM of [250, 2600, 9000]) {
+                world.conn.setFrame({ xM: mark.x, yM: mark.y, distanceM, yawDeg, pitchDeg });
+                world.frame(2);
+                // Every view stands at the ring's centre, inside it, so its
+                // name is on the ring or at the head of the water: never gone.
+                const boxes = nameBoxes(world);
+                assert.equal(
+                  boxes.length,
+                  1,
+                  `${mark.id} unnamed at ${JSON.stringify(world.conn.frame)}`
+                );
+                holdsTheRule(world, mark, boxes[0]!, waterAt(scale));
+                // Two sides' points at most, plus the head's slots.
+                assert.ok(chartOf(world).markBoxesTried <= 400, 'unbounded work');
+              }
+            }
+          }
+        }
+      } finally {
+        world.teardown();
+      }
     }
   });
 });

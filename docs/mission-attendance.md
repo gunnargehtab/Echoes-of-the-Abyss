@@ -518,7 +518,7 @@ walls do, and the floor under them is a number the return comes up out of
 **The Attending Galleries is a mission map and is not in the public catalogue.** One seat, no
 resources, not balanced, resolved by mission id and nothing else ([maps.md](maps.md)).
 
-**Named on the chart** (#1617). *The axis* is printed above its marker's ring while a row that names
+**Named on the chart** (#1617). *The axis* is printed with its marker's ring while a row that names
 it is open ([ui-ux.md](ui-ux.md) §10.5).
 
 ---
