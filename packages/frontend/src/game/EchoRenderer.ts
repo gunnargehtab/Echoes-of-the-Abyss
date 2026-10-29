@@ -1977,7 +1977,7 @@ export class EchoRenderer {
   private readonly placedNames: number[] = [];
   /** Where each shown marker's name stood last pass, by marker id. */
   private readonly markHolds = new Map<string, MarkHold>();
-  /** Scratch for `placeMarkName`'s points: x, y, place along the ring, then the line's direction. */
+  /** Scratch for `markAlongRing`'s points, six numbers each (written there). */
   private readonly markPoints: number[] = [];
   /** `markPoints` indices in the order they are tried. */
   private readonly markOrder: number[] = [];
