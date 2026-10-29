@@ -1730,6 +1730,7 @@
      stands over the console — 60 panel units of strip above, and below the
      console's 208, the ribbon's depth readout 30 above it (taller than the
      hint's 20) and 4 of breath, all Pixi-drawn and all scaling with the HUD.
+     The border sits outside the max-height and spends 2 of the breath.
      `--panel-cap-units` is that sum, set by GameCanvas from uiScale.ts;
      302px is today's value. A panel allowed past it would cover the selected
      hull's depth (#1668), the line that says why a press did nothing, or the

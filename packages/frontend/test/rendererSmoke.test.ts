@@ -2659,7 +2659,7 @@ describe('renderer smoke test: input and teardown', () => {
    * and is capped at the screen less `PANEL_CAP_UNITS`, so at its cap its foot
    * has to stay above the ribbon's depth readout, whose previews run under the
    * panel's left edge. Capped off the hint line alone, the foot covered the
-   * readout's top 6 units (#1668). Measured from the readout the ribbon drew.
+   * readout's top 8 units (#1668). Measured from the readout the ribbon drew.
    */
   it("keeps the orders panel's cap clear of the ribbon's depth readout (#1668)", async () => {
     const world = await boot();
@@ -2692,8 +2692,9 @@ describe('renderer smoke test: input and teardown', () => {
       assert.equal(readouts.length, 1, 'the premise: a selection draws the depth readout');
       const readout = readouts[0]!;
 
-      // App.css's `top: 60px`, the strip and its gap; the scale is 100%.
-      const footAt = (capUnits: number) => 60 + (world.app.screen.height - capUnits);
+      // App.css's `top: 60px`, the strip and its gap, and the 1 px border top
+      // and bottom outside the content-box max-height; the scale is 100%.
+      const footAt = (capUnits: number) => 60 + (world.app.screen.height - capUnits) + 2;
       assert.ok(
         footAt(PANEL_CAP_UNITS) < readout.y,
         `the panel's foot at ${footAt(PANEL_CAP_UNITS)} covers the readout at ${readout.y}`

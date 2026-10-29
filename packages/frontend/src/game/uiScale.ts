@@ -112,8 +112,8 @@ export const CHROME_UNITS =
  * console: the hint line, or the ribbon's depth readout at its foot. The
  * readout's top is 30 units above the console and the hint line's 20, and a
  * preview such as `DIVE · BREAKS SILENCE` runs right under the panel, so a cap
- * read off the hint line alone let the panel's foot cover the readout's top 6
- * units (#1668). Not folded into `CHROME_UNITS`: the readout is drawn over the
+ * read off the hint line alone let the panel's foot, border and all, cover
+ * the readout's top 8 units (#1668). Not folded into `CHROME_UNITS`: the readout is drawn over the
  * water rather than taken from it, so the held scale does not spend it.
  */
 export const PANEL_CAP_UNITS =
