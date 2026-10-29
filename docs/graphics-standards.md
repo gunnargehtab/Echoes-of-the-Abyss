@@ -402,7 +402,10 @@ in its vertex shader as the vent steam is. The collapse cloud is one more of at 
 motes, alive only for the 14 s after the ground change, and the only cost the collapse
 adds: its debris is the ruined state's own parts, inside its four calls. The lamp pools cost no call, no
 triangle and no target: a few instructions on the landmark's own fragments, read as GPU
-time at the study's close station with the pools on and off. The probe reports the
+time at the study's close station with the pools on and off. The refinement's court bounce
+and distance grade ([sorrowgate-arch-study.md](sorrowgate-arch-study.md) §11) are fragment
+work of the same kind, the grade on every terrain and prop fragment of the prologue's look,
+read as GPU time with each on and off. The probe reports the
 landmark, its triangles and both mote counts on their own, as it reports the props.
 
 The water ([art-direction.md](art-direction.md), "Reading the Water") spends **two draw

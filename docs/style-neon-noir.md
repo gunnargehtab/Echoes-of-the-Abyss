@@ -693,7 +693,7 @@ flipped.
    below level, at most the rig's ambient again and with no hue of its own. Nothing else
    takes it. The landmark's diffuse ceiling rises from 0.06 to at most 0.10, and
    `structure_rib` drops to roughness 0.55–0.7 while the stone and silt stay matte. It is
-   surface light, not emission, so rule 2's ladder is untouched, and the pools' ceilings
+   surface light, not emission, so rule 2's ceiling is untouched, and the pools' ceilings
    above bind it.
 
 The lamps go dark on the first bucket after the arch's cells turn to rock. Before 10:40

@@ -1235,8 +1235,9 @@ on, so turning it down can only ever reveal more. The ramp does not move with it
 Sorrowgate arch study's normal-view refinement
 ([sorrowgate-arch-study.md](sorrowgate-arch-study.md) §11) and nowhere else. Behind the
 study's flag, on the prologue's look, public ground beyond the focus fades further into the
-water it stands in: none at the focus distance, rising to at most 0.35 extra at 1,500 m
-beyond it. It takes the fade's colour from the fragment's depth, as above, so it carries no
+water it stands in. A fragment's range past the focus distance adds to the fog factor,
+linearly up to 0.35 extra at a reach of 0.58 of the dolly, 1,500 m at the opening, so the
+reach still breathes with the dolly and the ramp does not move. It takes the fade's colour from the fragment's depth, as above, so it carries no
 hue. It reaches terrain, props and the landmark only, never a hull, contact, glow, lamp or
 survey ink, so it still hides nothing but ground, and `waterDensity` scales it with the rest.
 Production keeps the falloff above until a written decision promotes it.
