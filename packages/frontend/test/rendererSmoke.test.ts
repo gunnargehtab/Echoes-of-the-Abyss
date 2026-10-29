@@ -99,6 +99,8 @@ import { FURNITURE_OUTLINE_ALPHA } from '../src/game/ladder.ts';
 import { ONE_HANDED_BINDINGS } from '../src/input/bindings.ts';
 import { NO_DECOY_TEXT } from '../src/game/dredge.ts';
 import {
+  CHROME_UNITS,
+  PANEL_CAP_UNITS,
   RIBBON_LABEL_GAP,
   RIBBON_LABEL_ROOM,
   RIBBON_UNITS,
@@ -2647,6 +2649,60 @@ describe('renderer smoke test: input and teardown', () => {
         );
       }
       assert.ok(RIBBON_UNITS > column + RIBBON_LABEL_ROOM, 'the panel stands on the labels');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  /**
+   * The same promise at the panel's foot. `.objectives` stands 60 units down
+   * and is capped at the screen less `PANEL_CAP_UNITS`, so at its cap its foot
+   * has to stay above the ribbon's depth readout, whose previews run under the
+   * panel's left edge. Capped off the hint line alone, the foot covered the
+   * readout's top 8 units (#1668). Measured from the readout the ribbon drew.
+   */
+  it("keeps the orders panel's cap clear of the ribbon's depth readout (#1668)", async () => {
+    const world = await boot();
+    try {
+      const corvette = cannedSnapshot().units.find((unit) => unit.id === 11)!;
+      world.chart.focusOn(corvette.x, corvette.y);
+      world.frame(2);
+      const at = world.conn.projectPoint(corvette.x, corvette.y, corvette.depth);
+      for (const type of ['pointerdown', 'pointerup']) {
+        world.app.canvas.dispatch(type, {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x,
+          clientY: at.y,
+        });
+      }
+      world.frame(1);
+
+      const readouts: Text[] = [];
+      const walk = (node: Container): void => {
+        if (!node.visible) return;
+        // The ribbon's own column: the scope's range rings read in metres too.
+        if (node instanceof Text && /^\d+m/.test(node.text) && node.x < RIBBON_UNITS) {
+          readouts.push(node);
+        }
+        for (const child of node.children) walk(child as Container);
+      };
+      walk(world.app.stage);
+      assert.equal(readouts.length, 1, 'the premise: a selection draws the depth readout');
+      const readout = readouts[0]!;
+
+      // App.css's `top: 60px`, the strip and its gap, and the 1 px border top
+      // and bottom outside the content-box max-height; the scale is 100%.
+      const footAt = (capUnits: number) => 60 + (world.app.screen.height - capUnits) + 2;
+      assert.ok(
+        footAt(PANEL_CAP_UNITS) < readout.y,
+        `the panel's foot at ${footAt(PANEL_CAP_UNITS)} covers the readout at ${readout.y}`
+      );
+      assert.ok(
+        footAt(CHROME_UNITS) > readout.y,
+        "the control: a cap off the hint line alone reaches past the readout's top"
+      );
     } finally {
       world.teardown();
     }

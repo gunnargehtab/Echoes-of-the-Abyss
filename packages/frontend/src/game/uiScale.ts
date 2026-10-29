@@ -89,13 +89,39 @@ export const RIBBON_LABEL_ROOM = 28;
 export const RIBBON_UNITS =
   RIBBON_X + RIBBON_WIDTH + RIBBON_LABEL_GAP + RIBBON_LABEL_ROOM + PANEL_GAP;
 
+/** Between the depth ribbon's foot and the console's top. */
+export const RIBBON_BOTTOM_PAD = 16;
+
+/** How far above the ribbon's foot its depth readout's top is drawn. */
+export const RIBBON_READOUT_RISE = 14;
+
 /**
- * The chrome above and below the water, in HUD units: 292 today. GameCanvas
- * hands it to CSS as `--chrome-units`, which `.objectives`' max-height takes
- * off the screen, so the panel's cap and the held scale read one sum.
+ * The chrome above and below the water, in HUD units: 292 today. The held
+ * scale reads it, so the strip, console, hint line and breath take at most
+ * §11's share of the window.
  */
 export const CHROME_UNITS =
   TOP_BAR_HEIGHT + PANEL_GAP + CONSOLE_HEIGHT + HINT_LINE_HEIGHT + HINT_BREATH;
+
+/**
+ * The height the orders panel's cap takes off the screen, in HUD units: 302
+ * today. GameCanvas hands it to CSS as `--panel-cap-units`, which
+ * `.objectives`' max-height takes.
+ *
+ * It is the chrome less the hint line, plus whichever stands taller over the
+ * console: the hint line, or the ribbon's depth readout at its foot. The
+ * readout's top is 30 units above the console and the hint line's 20, and a
+ * preview such as `DIVE · BREAKS SILENCE` runs right under the panel, so a cap
+ * read off the hint line alone let the panel's foot, border and all, cover
+ * the readout's top 8 units (#1668). Not folded into `CHROME_UNITS`: the readout is drawn over the
+ * water rather than taken from it, so the held scale does not spend it.
+ */
+export const PANEL_CAP_UNITS =
+  TOP_BAR_HEIGHT +
+  PANEL_GAP +
+  CONSOLE_HEIGHT +
+  Math.max(HINT_LINE_HEIGHT, RIBBON_BOTTOM_PAD + RIBBON_READOUT_RISE) +
+  HINT_BREATH;
 
 /** SPEC — docs/ui-ux.md §11: the most of the window's height chrome may take. */
 const CHROME_SHARE_MAX = 0.5;

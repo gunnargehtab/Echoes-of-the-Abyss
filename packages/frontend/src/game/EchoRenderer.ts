@@ -242,7 +242,9 @@ import { scopeBox } from './scopeBox.ts';
 import {
   CONSOLE_HEIGHT,
   HINT_LINE_HEIGHT,
+  RIBBON_BOTTOM_PAD,
   RIBBON_LABEL_GAP,
+  RIBBON_READOUT_RISE,
   RIBBON_WIDTH,
   RIBBON_X,
   TOP_BAR_HEIGHT,
@@ -1415,12 +1417,11 @@ const SCOPE_RETURN_RADIUS_PX: Record<1 | 2 | 3 | 4, number> = { 1: 7, 2: 4.5, 3:
 const SCOPE_SWEEP_MS = 4000;
 
 /**
- * Depth ribbon geometry — a narrow strip down the left edge. Its x, width and
- * label gap live in uiScale.ts, because the orders panel is laid out clear of
- * them (§2).
+ * Depth ribbon geometry — a narrow strip down the left edge. Its x, width,
+ * label gap, foot and readout live in uiScale.ts, because the orders panel is
+ * laid out clear of them (§2).
  */
 const RIBBON_TOP_PAD = 18;
-const RIBBON_BOTTOM_PAD = 16;
 /**
  * Below this, the duct is drawn as its centre line alone.
  *
@@ -8906,7 +8907,7 @@ export class EchoRenderer {
           : preview.dives
             ? sigColor(DEPTH.DESCENT_SIG)
             : UI.accent;
-    this.ribbonReadout.position.set(RIBBON_X + RIBBON_WIDTH + 6, bottom - 14);
+    this.ribbonReadout.position.set(RIBBON_X + RIBBON_WIDTH + 6, bottom - RIBBON_READOUT_RISE);
   }
 
   /**
