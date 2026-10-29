@@ -25,6 +25,12 @@
  * before it boots (settings/store.ts reads `echoes.settings` once), which is
  * how a capture takes a colour-vision palette: the settings panel is Pixi,
  * so no selector reaches it (#1637).
+ * RECORD_VIDEO=<dir> records the whole session as a WebM in that directory,
+ * the viewport's size, and prints its path when the browser closes. It is
+ * Playwright's screencast, VP8 at 25 fps and about 1 Mbit/s: a timing
+ * reference for a clip, not the clip itself (docs/screenshots/issue-1674/
+ * gpu.mjs), and a steps module gets `recordingStartedMs` to write offsets
+ * into it, since a context records from its first page to its close.
  *
  * With no --steps it runs the default smoke: connect, select a unit, ping.
  * A steps file is an ES module with `export default async ({ page, shot }) => {...}`.
@@ -127,10 +133,12 @@ const browser = await chromium.launch({
   headless: !HEADED,
   ...(CHANNEL === null ? {} : { channel: CHANNEL }),
 });
+const viewport = { width: Number(process.env.VIEW_W ?? 1440), height: Number(process.env.VIEW_H ?? 900) };
 const context = await browser.newContext({
-  viewport: { width: Number(process.env.VIEW_W ?? 1440), height: Number(process.env.VIEW_H ?? 900) },
+  viewport,
   deviceScaleFactor: Number(process.env.VIEW_DPR ?? 1),
   ...(process.env.REDUCED_MOTION === '1' ? { reducedMotion: 'reduce' } : {}),
+  ...(process.env.RECORD_VIDEO ? { recordVideo: { dir: process.env.RECORD_VIDEO, size: viewport } } : {}),
 });
 if (process.env.SETTINGS_JSON) {
   // Merged over the store's defaults by the page itself, field by field: an
@@ -144,6 +152,8 @@ if (process.env.SETTINGS_JSON) {
   }, seed);
 }
 const page = await context.newPage();
+const recordingStartedMs = process.env.RECORD_VIDEO ? Date.now() : null;
+if (recordingStartedMs !== null) console.log(`recording started at ${new Date(recordingStartedMs).toISOString()}`);
 
 const errors = [];
 page.on('console', (m) => {
@@ -271,7 +281,7 @@ try {
     if (typeof mod.default !== 'function') {
       throw new TypeError(`${STEPS} must default-export an async function ({ page, shot }) => {}`);
     }
-    await mod.default({ page, shot });
+    await mod.default({ page, shot, recordingStartedMs });
   } else {
     await shot('connected');
 
@@ -299,7 +309,11 @@ try {
   await shot('steps-failed').catch(() => {});
   console.error(`steps failed: ${err?.stack ?? err}`);
 } finally {
+  // The recording is written when the context closes, so its path is read
+  // first and printed after.
+  const video = process.env.RECORD_VIDEO ? await page.video()?.path() : null;
   await browser.close();
+  if (video) console.log(`video: ${video}`);
 }
 
 console.log(errors.length ? `console errors:\n${errors.join('\n')}` : 'console errors: none');

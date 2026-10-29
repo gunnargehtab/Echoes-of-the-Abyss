@@ -88,9 +88,35 @@ into the new wall, the ruined state stands no lamp, and the sift's 256 motes car
 cloud has settled (0 motes). The props read 186 at 49,244 triangles in both halves before the
 change and 198 at 50,356 after it, the collapse's count increment A recorded.
 
-## Not taken here
+## Not taken here: the GPU run
 
 GPU time at C with the pools on and off, DPR 1.5, the 240-frame performance stations and
 the clips: SwiftShader's milliseconds measure the rasteriser, and its frames take about
 1.8 s at C, so a clip would be a slideshow. They need the named desktop GPU
-([issue-1001](../issue-1001/README.md)).
+([issue-1001](../issue-1001/README.md)), and [`gpu.mjs`](gpu.mjs) is the run for it, driven
+headed by `.claude/skills/run-game/scripts/drive.mjs` on that machine. Its header gives the
+commands. One session per half and per pixel ratio holds H, C, L and S for 240 frames of
+both painters and 240 GPU frames, reads each unqueued and behind the queue load, and reads C
+again with the pools off through the study's switch, writing `<TAG>.json` beside the frames
+with the renderer string: a software one is flagged there and in the console, and its
+milliseconds are not evidence. The clips are the holds the module drives and its JSON
+records: C with no input for 12 s, C with one escort's short move and Stop (the hull's
+position before, under way at Stop and after, its drift after Stop, and the depth the
+click's order carried), and H's pose from 10:38 to 10:56
+with the ticks the ruin arrived and the sequence began. `REDUCED_MOTION=1` repeats each.
+The drive records the session too (`RECORD_VIDEO`), but that WebM is Playwright's
+screencast, VP8 at 25 fps and about 1 Mbit/s, which smears a dark frame of motes: it is
+the timing reference, with each hold's offset into it in the JSON, and the filed clip is a
+screen recording of the same headed run at the display's rate and a high or lossless
+quality, cut to those holds with a re-encode (never a stream copy, whose cut starts at a
+keyframe seconds away).
+
+The module was run once here under SwiftShader to prove its mechanics, not its numbers: the
+stations read `gpuTimer: software` with no queued reading, and the run took sixteen minutes
+of mission time, so H, C and C-pools-off read the intact arch and L and S the ruin past
+10:40, which the module warned of, as it does on a software run and fails on a GPU one; the
+C-move clip selected a Light Scout and ordered it 216 m east, but at 53 m a second it had
+arrived before the Stop key landed a frame behind the under-way reading, which the module
+records and warns of on a software run and fails on a GPU one;
+the H-change clip read the ruin and the sequence on one tick inside its hold; each recording
+landed with its JSON and offsets. None of those frames is filed.
