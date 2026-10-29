@@ -1238,8 +1238,9 @@ study's flag, on the prologue's look, public ground beyond the focus fades furth
 water it stands in. A fragment's range past the focus distance adds to the fog factor,
 linearly up to 0.35 extra at a reach of 0.58 of the dolly, 1,500 m at the opening, so the
 reach still breathes with the dolly and the ramp does not move. It takes the fade's colour from the fragment's depth, as above, so it carries no
-hue. It reaches terrain, props and the landmark only, never a hull, contact, glow, lamp or
-survey ink, so it still hides nothing but ground, and `waterDensity` scales it with the rest.
+hue. It reaches terrain and props only, never the landmark, a hull, contact, glow, lamp or
+survey ink, so it still hides nothing but ground, and its extra is multiplied by
+`waterDensity`, so 0 draws none.
 Production keeps the falloff above until a written decision promotes it.
 
 ### Environmental Shapes
