@@ -1,0 +1,279 @@
+{
+  "url": "http://localhost:5173/?arch-study=1",
+  "viewport": [
+    1920,
+    1080
+  ],
+  "dpr": 1,
+  "settings": "{\"version\":1,\"palette\":\"deuteranopia\"}",
+  "reducedMotion": false,
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "modelsTick": 1332,
+  "openingPose": {
+    "focus": {
+      "xM": 2550,
+      "zM": 2553,
+      "depthM": null
+    },
+    "distance": 2600,
+    "pitchDeg": 55,
+    "yawDeg": 0
+  },
+  "readings": [
+    {
+      "name": "H",
+      "file": "d-H-deuteranopia-H-030s.png",
+      "requestedTick": 1800,
+      "captureTicks": [
+        1800,
+        1944
+      ],
+      "connTick": 2004,
+      "requested": "opening, unmodified",
+      "actual": {
+        "focus": {
+          "xM": 2550,
+          "zM": 2553,
+          "depthM": null
+        },
+        "distance": 2600,
+        "pitchDeg": 55,
+        "yawDeg": 0
+      },
+      "conn": {
+        "buffer": [
+          1920,
+          1080
+        ],
+        "frame": {
+          "maxLuma": 190.3,
+          "brightest": {
+            "x": 1436,
+            "y": 603,
+            "rgb": [
+              233,
+              190,
+              67
+            ]
+          },
+          "meanLuma": 14.41,
+          "under10": 0.987,
+          "pixels": 2073600
+        },
+        "windows": {
+          "lamp_0": {
+            "maxLuma": 45.5,
+            "brightest": {
+              "x": 1062,
+              "y": 388,
+              "rgb": [
+                59,
+                43,
+                30
+              ]
+            },
+            "meanLuma": 13.61,
+            "under10": 0.9171,
+            "pixels": 784
+          },
+          "lamp_1": {
+            "maxLuma": 84.1,
+            "brightest": {
+              "x": 1103,
+              "y": 384,
+              "rgb": [
+                108,
+                80,
+                55
+              ]
+            },
+            "meanLuma": 11.9,
+            "under10": 0.9426,
+            "pixels": 784
+          },
+          "lamp_2": {
+            "maxLuma": 45.1,
+            "brightest": {
+              "x": 813,
+              "y": 387,
+              "rgb": [
+                57,
+                43,
+                31
+              ]
+            },
+            "meanLuma": 11.42,
+            "under10": 0.9732,
+            "pixels": 784
+          },
+          "lamp_3": {
+            "maxLuma": 64.5,
+            "brightest": {
+              "x": 845,
+              "y": 383,
+              "rgb": [
+                84,
+                61,
+                42
+              ]
+            },
+            "meanLuma": 8.2,
+            "under10": 0.9235,
+            "pixels": 784
+          }
+        }
+      },
+      "probe": {
+        "active": true,
+        "look": "sorrowgate",
+        "programHold": {
+          "holding": false,
+          "heldFrames": 0
+        },
+        "pitchDeg": 55,
+        "yawDeg": 0,
+        "sway": "on",
+        "focus": {
+          "xM": 2550,
+          "zM": 2553,
+          "depthM": null
+        },
+        "eye": {
+          "xM": 2553,
+          "zM": 4048,
+          "depthM": -8197
+        },
+        "distance": 2600,
+        "waterReachM": 8320,
+        "waterDensity": 1,
+        "hullScale": 1,
+        "drawCalls": 56,
+        "triangles": 123375,
+        "passes": [
+          "canvas",
+          "split-copy",
+          "split"
+        ],
+        "world": {
+          "borderStrength": 1,
+          "overviewDrawn": false,
+          "sessionGround": true,
+          "groundLeaving": false,
+          "frame": {
+            "xM": 2550,
+            "yM": 2552.8571428571427,
+            "distanceM": 2600,
+            "yawDeg": 0,
+            "pitchDeg": 55
+          },
+          "detailDrawn": [],
+          "detailResident": [],
+          "detailPending": 0,
+          "detailProps": 0,
+          "detailPropTris": 0,
+          "detailVentPlumes": 0,
+          "detailLandmarks": 0,
+          "detailLandmarkTris": 0
+        },
+        "halo": "idle",
+        "haloSites": 0,
+        "haloDropped": 0,
+        "haloCalls": 0,
+        "haloTriangles": 0,
+        "haloBytes": 35835136,
+        "split": "on",
+        "splitBytes": 8294400,
+        "canvasStencilBits": 8,
+        "textures": 17,
+        "pixelRatio": 1,
+        "drawingBuffer": {
+          "width": 1920,
+          "height": 1080
+        },
+        "toneMapping": 4,
+        "environmentIntensity": 0.35,
+        "environmentBytes": 344064,
+        "station": null,
+        "stationMs": 39318.2,
+        "stationFrames": 44,
+        "avgFrames": 44,
+        "fps": 1.1,
+        "avgFrameMs": 871.49,
+        "worstFrameMs": 3854,
+        "avgConnMs": 36.83,
+        "worstConnMs": 772.3,
+        "avgOverlayMs": 3.26,
+        "worstOverlayMs": 15,
+        "overlayFrames": 37,
+        "gpuTimer": "software",
+        "avgGpuMs": null,
+        "worstGpuMs": null,
+        "gpuFrames": 0,
+        "gpuDropped": 0,
+        "gpuQueue": null,
+        "gpuSplit": false,
+        "gpuParts": null,
+        "units": 6,
+        "structures": 1,
+        "tracks": 4,
+        "structureTracks": 0,
+        "trackAt": {
+          "x": 2550,
+          "z": 2950,
+          "depthM": 1490
+        },
+        "ordnance": 0,
+        "wakeBubbles": 0,
+        "hits": 0,
+        "hitParticles": 0,
+        "plumeMotes": 0,
+        "workLightsLit": 0,
+        "sparks": 0,
+        "plumeAt": null,
+        "ventPlumeAt": {
+          "x": 208.1782446675934,
+          "z": 2183.766434970312,
+          "depthM": 1414.9942847085467
+        },
+        "hitAt": null,
+        "shots": 0,
+        "shotParticles": 0,
+        "recoiling": 0,
+        "shotAt": null,
+        "props": 186,
+        "propTris": 49244,
+        "ventPlumes": 3,
+        "fieldHazes": 0,
+        "landmarks": 1,
+        "landmarkTris": 2412,
+        "siftMotes": 256,
+        "cloudMotes": 0,
+        "collapsing": false,
+        "landmarkLampsPx": [
+          {
+            "x": 1063.3896382028986,
+            "y": 386.96537007949223
+          },
+          {
+            "x": 1104.1024473029518,
+            "y": 382.7728582558616
+          },
+          {
+            "x": 814.566829928426,
+            "y": 385.57113565096154
+          },
+          {
+            "x": 846.0135386690705,
+            "y": 382.071237070869
+          }
+        ],
+        "modelBacked": 6,
+        "modelMeshes": 23,
+        "ownCentre": {
+          "x": 2550,
+          "z": 2552.8571428571427
+        }
+      }
+    }
+  ]
+}

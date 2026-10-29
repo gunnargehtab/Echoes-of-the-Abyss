@@ -1,0 +1,71 @@
+# #1674 — the arch study's §9 evidence, retaken
+
+Three of the four [sorrowgate-arch-study.md](../../sorrowgate-arch-study.md) §9 clauses that
+[#1637's increment C](../issue-1637/README.md#increment-c--the-9-pairs-and-readings-this-container-can-take-c-)
+did not meet: the colour-vision palettes, the stations at §9's viewport and times, and the
+transit pair. The fourth, GPU time, needs the named desktop GPU and is not here.
+
+Every frame is the real client at `6021dd06` through Tutorial → briefing → Descend, one fresh
+session each, 1920 × 1080 at device pixel ratio 1, the HUD on, default water and halo
+settings and motion. The study is on with `?arch-study=1` on the title URL and off without
+it. The renderer is SwiftShader (`ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device
+(Subzero)))`), so no frame time here is evidence; calls and triangles are. Each frame is
+from [`capture.mjs`](capture.mjs), driven by `.claude/skills/run-game/scripts/drive.mjs`; its
+header says how a frame is timed without stopping or accelerating the server clock.
+
+Each `d-*.json` carries the session's settings record, viewport, renderer, the tick the six
+hull models stood (`modelsTick`), the requested and actual pose, the probe, and the conn
+canvas read in the frame after the capture (`connTick`): its near-black share (luma under
+10 %), its brightest pixel and a 28 px window round each lamp. The image's own time is the
+HUD clock in its top right. Six hull models stood in every session; none counted the array
+fallback.
+
+## The quartet at T+00:30, on and off
+
+Each station is its own session, and every frame's HUD clock reads T+00:30. So H, C, L and
+S are within one second of each other, and each on/off pair is at the same second.
+
+| Station | Pose (focus, dolly, pitch, yaw) | On | Off | Calls on / off | Triangles on / off | Near-black on / off |
+| --- | --- | --- | --- | --- | --- | --- |
+| H | Unmodified opening: (2550, 2553) on the seabed, 2,600, 55°, 0° | `d-H-on-H-030s.png` | `d-H-off-H-030s.png` | 56 / 51 | 123,375 / 120,963 | 98.7 % / 99.5 % |
+| C | (2550, 2200) at 1,450 m, 420, 35°, 25° | `d-C-on-C-030s.png` | `d-C-off-C-030s.png` | 36 / 31 | 106,127 / 103,715 | 87.3 % / 99.3 % |
+| L | (2550, 2750) at 1,450 m, 650, 12°, 0° | `d-L-on-L-030s.png` | `d-L-off-L-030s.png` | 54 / 49 | 115,410 / 112,998 | 98.1 % / 98.3 % |
+| S | (2500, 2000) on the seabed, 6,500, 55°, 0° | `d-S-on-S-030s.png` | `d-S-off-S-030s.png` | 56 / 51 | 123,375 / 120,963 | 99.1 % / 99.3 % |
+
+The opening camera at 1920 × 1080 is the pose increment C recorded at 1440 × 900. The study
+is five calls and 2,412 triangles at every station, as in increment C, with the landmark
+intact and the sift's 256 motes. Only C sits inside the 85–90 % darkness budget; at H, L and
+S the baseline is over it before the study adds anything, as increment C found.
+
+At C the lamp glass reads 88.4, 83.9 and 84.8 (lamps 0, 2 and 3; lamp 1 is off screen),
+increment C's values at 1440 × 900. The frame's brightest pixel is an escort's green
+navigation mark at 215.6, RGB (153, 244, 118) on and (153, 244, 119) off, so the escort reads
+the same between the pair.
+
+## The colour-vision palettes
+
+H and C with the study on, each its own session at T+00:30, seeded through `SETTINGS_JSON`
+with the record version the store reads. Each JSON's `settings` field is the record the page
+held. The palette is in the frames: the threat marks draw red-orange in deuteranopia, orange
+in protanopia and red with white bars in tritanopia, against the standard red.
+
+| Palette | H | C |
+| --- | --- | --- |
+| Deuteranopia | `d-H-deuteranopia-H-030s.png` | `d-C-deuteranopia-C-030s.png` |
+| Protanopia | `d-H-protanopia-H-030s.png` | `d-C-protanopia-C-030s.png` |
+| Tritanopia | `d-H-tritanopia-H-030s.png` | `d-C-tritanopia-C-030s.png` |
+
+The arch, its lamps and the sift are the same in all three: calls 56 at H and 36 at C, the
+landmark 2,412 triangles, C's near-black 87.3 %. C's lamp glass reads 88.4, 83.9 and 84.8 in
+every palette, so no palette moves the licensed light.
+
+## The transit pair
+
+TRANSIT
+
+## Not taken here
+
+GPU time at C with the pools on and off, DPR 1.5, the 240-frame performance stations and
+the clips: SwiftShader's milliseconds measure the rasteriser, and its frames take about
+1.8 s at C, so a clip would be a slideshow. They need the named desktop GPU
+([issue-1001](../issue-1001/README.md)).
