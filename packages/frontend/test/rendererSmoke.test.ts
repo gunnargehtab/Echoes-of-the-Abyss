@@ -5882,8 +5882,14 @@ describe("where a marker's name stands (#1662)", () => {
       const [box] = nameBoxes(world);
       assert.ok(box !== undefined, 'the name is drawn');
       const old = over(highest(ringOf(world, mark)), box);
-      assert.ok(world.conn.inkCrossesOwn(old.x0, old.y0, old.x1, old.y1), 'the premise');
-      assert.ok(!world.conn.inkCrossesOwn(box.x0, box.y0, box.x1, box.y1), 'on the model');
+      assert.ok(
+        world.conn.inkCrossesHulls(old.x0, old.y0, old.x1, old.y1, new Set()),
+        'the premise'
+      );
+      assert.ok(
+        !world.conn.inkCrossesHulls(box.x0, box.y0, box.x1, box.y1, new Set()),
+        'on the model'
+      );
       holdsTheRule(world, mark, box);
     } finally {
       world.teardown();
@@ -6090,70 +6096,81 @@ describe("where a marker's name stands (#1662)", () => {
     }
   });
 
-  it('steps aside for a contact only once its mark has arrived, model and all', async () => {
-    // The Tier-4 track laid on the seabed, under this ring's top, and drawn as
-    // its model: the conn view shows a track's model the instant it resolves.
-    const corvette = buildTemplate(await parsedModel('corvette-hadron'), {
-      unit: UnitKind.Corvette,
-      faction: Faction.Hadron,
-    });
-    const mark: Mark = { ...QUIET, x: 2800, y: 2950 };
-    const contactsOn = (world: World) => {
-      const snapshot = cannedSnapshot();
-      const seabed = world.conn.seabedDepthAt(2800, 2600);
-      return {
-        ...snapshot,
-        contacts: snapshot.contacts.map((c) => (c.id === 104 ? { ...c, depth: seabed } : c)),
+  // A track's model shows the instant it resolves, so the name waits for the
+  // mark; once arrived, the model counts as well as the mark, because a
+  // structure stands far above its mark — a Sounding Spire is 265 m tall.
+  for (const track of [
+    { as: 'a hull', slug: 'corvette-hadron', inside: 0 },
+    { as: 'a tall structure', slug: 'sounding-spire-hadron', inside: 120 },
+  ]) {
+    it(`steps aside for ${track.as} only once its mark has arrived, model and all`, async () => {
+      const template = buildTemplate(
+        await parsedModel(track.slug),
+        track.slug === 'corvette-hadron'
+          ? { unit: UnitKind.Corvette, faction: Faction.Hadron }
+          : { structure: StructureKind.SoundingSpire, faction: Faction.Hadron }
+      );
+      // The Tier-4 track laid on the seabed under this ring's top, or `inside`
+      // metres in from it: there a structure's mark sits clear below the name
+      // and only its model reaches up through it.
+      const mark: Mark = { ...QUIET, x: 2800, y: 2950 - track.inside };
+      const contactsOn = (world: World) => {
+        const snapshot = cannedSnapshot();
+        const seabed = world.conn.seabedDepthAt(2800, 2600);
+        return {
+          ...snapshot,
+          contacts: snapshot.contacts.map((c) => {
+            if (c.id !== 104) return c;
+            if (track.slug === 'corvette-hadron') return { ...c, depth: seabed };
+            const { kind: _kind, heading: _heading, ...rest } = c;
+            return { ...rest, structure: StructureKind.SoundingSpire, depth: seabed };
+          }),
+        };
       };
-    };
-    const world = await placed(
-      [mark],
-      (w) => w.chart.focusOn(mark.x, mark.y),
-      (w) => {
-        w.chart.applySnapshot(contactsOn(w));
-        // Not yet arrived, whatever the runner's clock does meanwhile.
-        chartOf(w).tracked.get(104)!.firstSeenMs = performance.now() + 60_000;
+      const world = await placed(
+        [mark],
+        (w) => w.chart.focusOn(mark.x, mark.y),
+        (w) => {
+          w.chart.applySnapshot(contactsOn(w));
+          // Not yet arrived, whatever the runner's clock does meanwhile.
+          chartOf(w).tracked.get(104)!.firstSeenMs = performance.now() + 60_000;
+        }
+      );
+      try {
+        // The model handed to the track's handle as the loader would.
+        const conn = world.conn as unknown as {
+          trackHandles: Map<number, { model: unknown; modelKey: string }>;
+          syncTracks(): void;
+        };
+        const handle = conn.trackHandles.get(104);
+        assert.ok(handle !== undefined, 'the premise: the track is drawn as a model');
+        handle.model = instantiate(template);
+        handle.modelKey = 'test';
+        conn.syncTracks();
+        world.chart.applySnapshot(contactsOn(world));
+        world.frame(2);
+        const [before] = nameBoxes(world);
+        assert.ok(before !== undefined, 'the name is drawn');
+        assert.ok(
+          world.conn.inkCrosses(before.x0, before.y0, before.x1, before.y1),
+          "the premise: the track's model stands under the name"
+        );
+        assert.ok(centredOver(before, highest(ringOf(world, mark))), 'it waits for the mark');
+        chartOf(world).tracked.get(104)!.firstSeenMs = performance.now() - 60_000;
+        world.chart.applySnapshot(contactsOn(world));
+        world.frame(2);
+        const [after] = nameBoxes(world);
+        assert.ok(after !== undefined, 'the name is drawn');
+        assert.ok(
+          !world.conn.inkCrosses(after.x0, after.y0, after.x1, after.y1),
+          "the name sits on the arrived track's model"
+        );
+        holdsTheRule(world, mark, after);
+      } finally {
+        world.teardown();
       }
-    );
-    try {
-      // The model handed to the track's handle as the loader would.
-      const conn = world.conn as unknown as {
-        trackHandles: Map<number, { model: unknown; modelKey: string }>;
-        syncTracks(): void;
-      };
-      const handle = conn.trackHandles.get(104);
-      assert.ok(handle !== undefined, 'the premise: the track is drawn as a model');
-      handle.model = instantiate(corvette);
-      handle.modelKey = 'test';
-      conn.syncTracks();
-      world.chart.applySnapshot(contactsOn(world));
-      world.frame(2);
-      const [before] = nameBoxes(world);
-      assert.ok(before !== undefined, 'the name is drawn');
-      assert.ok(
-        world.conn.inkCrosses(before.x0, before.y0, before.x1, before.y1),
-        "the premise: the track's model stands under the name"
-      );
-      assert.ok(centredOver(before, highest(ringOf(world, mark))), 'it waits for the mark');
-      chartOf(world).tracked.get(104)!.firstSeenMs = performance.now() - 60_000;
-      world.chart.applySnapshot(contactsOn(world));
-      world.frame(2);
-      const [after] = nameBoxes(world);
-      assert.ok(after !== undefined, 'the name is drawn');
-      assert.ok(
-        !world.conn.inkCrosses(after.x0, after.y0, after.x1, after.y1),
-        "the name sits on the arrived track's model"
-      );
-      const p = world.conn.projectPoint(2800, 2600, world.conn.seabedDepthAt(2800, 2600));
-      assert.ok(
-        !meets(after, { x0: p.x - 8, y0: p.y - 30, x1: p.x + 8, y1: p.y }),
-        'the name sits on the arrived mark'
-      );
-      holdsTheRule(world, mark, after);
-    } finally {
-      world.teardown();
-    }
-  });
+    });
+  }
 
   it('holds the rule at every yaw, pitch, dolly and UI scale, in bounded work', async () => {
     const marks: Mark[] = [

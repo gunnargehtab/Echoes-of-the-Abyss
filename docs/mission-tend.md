@@ -404,7 +404,7 @@ the metre, and the lane's foot is outside every cluster's reach.
 resolved by mission id and nothing else ([maps.md](maps.md)).
 
 **Named on the chart** (#1617). *The Holdfast*, *The West Lane* and *Teel's landing* are printed
-above their markers' rings while a row that names each is open ([ui-ux.md](ui-ux.md) §10.5). The
+with their markers' rings while a row that names each is open ([ui-ux.md](ui-ux.md) §10.5). The
 last two lines are a request and a complaint rather than a place, so their names are the places they
 are about: the lane the jellies sit off, and the landing that is short.
 

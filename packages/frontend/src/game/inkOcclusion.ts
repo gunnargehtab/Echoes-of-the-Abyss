@@ -154,6 +154,8 @@ export function modelColumns(root: Object3D): ModelColumns {
 /** One model in this frame: its columns, where it stands and its screen box. */
 interface Occluder {
   columns: ModelColumns;
+  /** The entity the model stands for: a unit, structure or contact id. */
+  id: number;
   /** World to the columns' space. */
   readonly inverse: Matrix4;
   minX: number;
@@ -199,16 +201,17 @@ export class InkOcclusion {
   }
 
   /** One model, by its columns and its root's world matrix. */
-  add(columns: ModelColumns, world: Matrix4): void {
+  add(columns: ModelColumns, world: Matrix4, id = -1): void {
     const camera = this.camera;
     if (camera === null) return;
     let slot = this.slots[this.count];
     if (slot === undefined) {
-      slot = { columns, inverse: new Matrix4(), minX: 0, minY: 0, maxX: 0, maxY: 0 };
+      slot = { columns, id, inverse: new Matrix4(), minX: 0, minY: 0, maxX: 0, maxY: 0 };
       this.slots.push(slot);
     }
     this.count++;
     slot.columns = columns;
+    slot.id = id;
     slot.inverse.copy(world).invert();
     const e = world.elements;
     this.print += this.count * (e[12]! + 3 * e[13]! + 7 * e[14]! + 11 * e[0]! + 13 * e[2]!);
@@ -291,18 +294,26 @@ export class InkOcclusion {
   }
 
   /**
-   * Whether the screen box from (x0, y0) to (x1, y1) meets an own model's —
-   * what a mission marker's name keeps off (docs/ui-ux.md §10.5, #1662). Two
-   * kinds are left out. A model with a corner behind the eye, whose box is the
-   * whole screen: right for a line that must break behind it, and wrong for a
-   * name, which would find no place at all. And a contact's track, which shows
-   * the instant it is resolved: the name keeps off a contact only once its
-   * mark has arrived, so the chart answers for tracks (`drawContacts`).
+   * Whether the screen box from (x0, y0) to (x1, y1) meets an own model's, or
+   * the model of a track in `tracks` — what a mission marker's name keeps off
+   * (docs/ui-ux.md §10.5, #1662). Two kinds are left out. A model with a
+   * corner behind the eye, whose box is the whole screen: right for a line
+   * that must break behind it, and wrong for a name, which would find no place
+   * at all. And any other track: a track's model shows the instant it is
+   * resolved, and the name keeps off a contact only once its mark has arrived,
+   * which `drawContacts` knows and this does not. A tall structure stands far
+   * above its mark, so an arrived track is tested by its model, not its mark.
    */
-  crossesOwn(x0: number, y0: number, x1: number, y1: number): boolean {
-    for (let i = 0; i < this.own; i++) {
+  crossesHulls(
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    tracks: ReadonlySet<number>
+  ): boolean {
+    for (let i = 0; i < this.count; i++) {
       const s = this.slots[i]!;
-      if (s.minX === -Infinity) continue;
+      if (s.minX === -Infinity || (i >= this.own && !tracks.has(s.id))) continue;
       if (x1 >= s.minX && x0 <= s.maxX && y1 >= s.minY && y0 <= s.maxY) return true;
     }
     return false;

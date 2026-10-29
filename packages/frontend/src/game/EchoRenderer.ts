@@ -1976,6 +1976,12 @@ export class EchoRenderer {
    */
   private readonly figureFootprints: number[] = [];
   private readonly contactFootprints: number[] = [];
+  /**
+   * The tracks drawn as models whose marks have arrived (`drawContacts`): a
+   * name keeps off their models as well as their marks, since a structure's
+   * model stands far above its mark (#1662).
+   */
+  private readonly arrivedTracks = new Set<number>();
   /** The boxes of the names placed so far this pass. */
   private readonly placedNames: number[] = [];
   /** Where each shown marker's name stood last pass, by marker id. */
@@ -7134,6 +7140,7 @@ export class EchoRenderer {
     this.trackHits.prune(now);
     this.modelTracks.length = 0;
     this.contactFootprints.length = 0;
+    this.arrivedTracks.clear();
     for (const [id, entry] of this.tracked) {
       const age = now - entry.lastSeenMs;
       if (age > decayMs) {
@@ -7226,6 +7233,7 @@ export class EchoRenderer {
       // a depth, from its glyph or bar down, once it has fully arrived. A name
       // stepping aside earlier would show the contact before its sound.
       if (column === null && arrival >= 1) {
+        if (modelled) this.arrivedTracks.add(id);
         const r = style.radius;
         let figure = r * 1.6;
         if (contact.kind !== undefined && contact.faction !== undefined) {
@@ -8861,7 +8869,8 @@ export class EchoRenderer {
     if (
       boxesMeet(this.figureFootprints, x0 - pad, y0 - pad, x1 + pad, y1 + pad) ||
       boxesMeet(this.contactFootprints, x0 - pad, y0 - pad, x1 + pad, y1 + pad) ||
-      (this.conn?.inkCrossesOwn(x0 - pad, y0 - pad, x1 + pad, y1 + pad) ?? false)
+      (this.conn?.inkCrossesHulls(x0 - pad, y0 - pad, x1 + pad, y1 + pad, this.arrivedTracks) ??
+        false)
     ) {
       return 2;
     }
