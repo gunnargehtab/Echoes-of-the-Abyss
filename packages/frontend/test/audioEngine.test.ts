@@ -44,6 +44,7 @@ import {
   type TrimBus,
 } from '../src/audio/engine.ts';
 import { MAX_CONTACT_VOICES } from '../src/audio/voiceAllocator.ts';
+import { INTERFACE_CUE_GAP_S, INTERFACE_CUE_TAPS } from '../src/audio/interfaceCue.ts';
 import { duckFor } from '../src/audio/precedence.ts';
 import { MARK_CEILING } from '../src/audio/markBed.ts';
 import { SILENT_MIX, selfMixFor } from '../src/audio/selfNoise.ts';
@@ -1206,6 +1207,77 @@ describe('the audio engine: mono centres every pan, not just the contacts', () =
   });
 });
 
+describe('the audio engine: the interface cues (§12, #1600)', () => {
+  /** The oscillators a call built, in creation order. */
+  const oscillatorsBuilt = (context: HeadlessAudioContext, from: number): StubOscillatorNode[] =>
+    context.nodes
+      .slice(from)
+      .filter((node): node is StubOscillatorNode => node instanceof StubOscillatorNode);
+
+  it('is off by default, and off builds nothing', () => {
+    const { engine, context } = boot();
+    try {
+      assert.equal(engine.interfaceCuesOn, false, 'off is the default — §1, a sound is the water');
+      const before = context.createdCount;
+      engine.interfaceCue('order');
+      engine.interfaceCue('placed');
+      engine.interfaceCue('refused');
+      assert.equal(context.createdCount, before, 'no node for a cue switched off');
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+
+  it('taps on the ui bus alone, above the contact band', () => {
+    const { engine, context } = boot();
+    try {
+      engine.setInterfaceCues(true);
+      const graph = engine.graph!;
+      const ui = graph.ui as unknown as StubAudioNode;
+      for (const cue of ['order', 'placed', 'refused'] as const) {
+        const from = context.nodes.length;
+        engine.interfaceCue(cue);
+        const built = oscillatorsBuilt(context, from);
+        assert.equal(built.length, INTERFACE_CUE_TAPS[cue].length, `${cue}: one sine per tap`);
+        for (const osc of built) {
+          assert.equal(osc.type, 'sine', `${cue}: a sine, so its frequency is its spectrum`);
+          assert.ok(osc.frequency.value > 160, `${cue}: ${osc.frequency.value} Hz is in the band`);
+          assert.equal(hops(osc, ui), 2, `${cue}: through its own envelope to the ui bus`);
+          for (const bus of BUSES.filter((name) => name !== 'ui')) {
+            const other = graph[bus] as unknown as StubAudioNode;
+            assert.equal(hops(osc, other), -1, `${cue}: reaches the ${bus} bus`);
+          }
+        }
+      }
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+
+  it('hears one gesture once, and two different cues both', () => {
+    const { engine, context } = boot();
+    try {
+      engine.setInterfaceCues(true);
+      const from = context.nodes.length;
+      // A right-click that sends harvesters and their escort: two orders, one click.
+      engine.interfaceCue('order');
+      engine.interfaceCue('order');
+      assert.equal(oscillatorsBuilt(context, from).length, 1, 'the second order was heard');
+      // The held half of the same selection, refused on the same click.
+      engine.interfaceCue('refused');
+      assert.equal(oscillatorsBuilt(context, from).length, 3, 'the refusal was swallowed');
+      context.advance(INTERFACE_CUE_GAP_S);
+      engine.interfaceCue('order');
+      assert.equal(oscillatorsBuilt(context, from).length, 4, 'the next click was swallowed');
+    } finally {
+      void engine.destroy();
+      uninstallHeadlessAudio();
+    }
+  });
+});
+
 describe('the audio engine: no audio device at all', () => {
   it('stays playable in silence — docs/ui-ux.md §11', async () => {
     // A browser that refuses an AudioContext, or a platform without one. §11
@@ -1226,6 +1298,8 @@ describe('the audio engine: no audio device at all', () => {
     engine.setBusTrim('contact', 2);
     engine.setMasterVolume(0.3);
     engine.setSpatialisation('mono');
+    engine.setInterfaceCues(true);
+    engine.interfaceCue('order');
     engine.onEchoTick();
 
     assert.equal(engine.activeContactVoices, 0, 'nothing sounded, and nothing threw');

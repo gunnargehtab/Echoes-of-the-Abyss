@@ -140,6 +140,16 @@ export interface Settings {
    */
   contactTimbre: boolean;
   /**
+   * Whether the interface taps when an order paints its marker, a structure
+   * is placed or a press is refused (docs/audio-direction.md §12, docs/ui-ux.md
+   * §14, #1600).
+   *
+   * Off by default, `contactTimbre`'s precedent: in this game a sound means
+   * something is in the water, so a cue on every click is opt-in. Off costs
+   * nothing — the marker, the placed site and the hint bar say all three.
+   */
+  interfaceCues: boolean;
+  /**
    * The lamp halo, the soft light a loud own lamp spreads into the water
    * (docs/art-direction.md "Lamp halo — SPEC", docs/ui-ux.md §14, #1001).
    *
@@ -195,6 +205,7 @@ export const DEFAULT_SETTINGS: Settings = {
   speakerProfile: false,
   speakerProfileChosen: false,
   contactTimbre: false,
+  interfaceCues: false,
   lampHalos: LAMP_HALOS_DEFAULT,
   lampHalosChosen: false,
 };
@@ -277,6 +288,8 @@ function sanitise(raw: unknown): Settings {
     // written before this field existed loads it off, which is where a build
     // that has never offered the control would have left it anyway.
     contactTimbre: record.contactTimbre === true,
+    // As `contactTimbre`: a record older than the control loads it off.
+    interfaceCues: record.interfaceCues === true,
     // The build default unless the player chose: a record that only carries
     // the default it was saved at follows the default when it moves, since
     // that player never chose otherwise. An explicit choice is kept either way.

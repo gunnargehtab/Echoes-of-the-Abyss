@@ -173,6 +173,7 @@ import {
 } from './scopeSweep.ts';
 import type { ContactAudioEntry, ContactAudioFrame } from '../audio/contactMixer.ts';
 import type { PingReturn, SelfAudioFrame } from '../audio/selfMixer.ts';
+import type { InterfaceCue } from '../audio/interfaceCue.ts';
 import { TUNED, corridorFrom, type TunedInputs, type TunedNode } from '../audio/tunedBed.ts';
 import { screenBearing, screenPan } from '../audio/screenPan.ts';
 import {
@@ -366,6 +367,13 @@ export interface RendererCallbacks {
   onContactAudio(frame: ContactAudioFrame): void;
   /** What is true of the player's own force, once per Echo tick. */
   onSelfAudio(frame: SelfAudioFrame): void;
+  /**
+   * The interface took a click — docs/audio-direction.md §12 (#1600). Emitted
+   * where the thing it says is drawn: an order where its marker is painted, a
+   * placement where it is sent, a refusal where the hint bar is handed its
+   * reason. Whether it sounds is the audio layer's setting, not this one's.
+   */
+  onInterfaceCue(cue: InterfaceCue): void;
   /** How much residue of each kind the player can hear (§6). */
   onMarkAudio(intensityByKind: Map<EchoMarkKind, number>): void;
   /**
@@ -4366,6 +4374,7 @@ export class EchoRenderer {
     const stats = structureStatsFor(this.pendingBuild);
     if (this.refusedByPrice(stats.name, priceOf(stats))) return;
     this.callbacks.onBuild(this.pendingBuild, water.x, water.y);
+    this.callbacks.onInterfaceCue('placed');
     this.pendingBuild = null;
   }
 
@@ -4703,6 +4712,7 @@ export class EchoRenderer {
         this.callbacks.onRallyOrder(yards, place.x, place.y);
         this.orderMarkers.push({ kind: 'move', x: place.x, y: place.y, atMs: performance.now() });
         this.ordersSeq++;
+        this.callbacks.onInterfaceCue('order');
       }
       return;
     }
@@ -5111,6 +5121,7 @@ export class EchoRenderer {
   /** Put a reason on the hint bar for the next few seconds. */
   private refuse(reason: string): void {
     this.refusal = { reason, atMs: performance.now() };
+    this.callbacks.onInterfaceCue('refused');
   }
 
   /**
@@ -8357,6 +8368,9 @@ export class EchoRenderer {
         : { kind, x, y, depth, atMs: performance.now() }
     );
     this.ordersSeq++;
+    // Every marker-painting order passes here but the rally, which paints its
+    // own: the cue's visual twin is the marker (docs/audio-direction.md §12).
+    this.callbacks.onInterfaceCue('order');
     for (const id of unitIds) {
       let pending = this.pendingOrders.get(id);
       if (pending === undefined) {

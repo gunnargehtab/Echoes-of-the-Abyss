@@ -501,6 +501,7 @@ export function GameCanvas({
           onContactAudio: (frame) => audio.applyContacts(frame),
           // The other half of the mix: what is true of the player's own force.
           onSelfAudio: (frame) => audio.applySelf(frame),
+          onInterfaceCue: (cue) => audio.interfaceCue(cue),
           onReadouts: setReadouts,
           onHazards: (hazards) => {
             // Read-only, for the headless harness. Hazards are public anyway.
@@ -782,6 +783,7 @@ export function GameCanvas({
         audio.setSpatialisation(settings.mono ? 'mono' : 'stereo');
         audio.setSpeakerProfile(settings.speakerProfile);
         audio.setContactTimbre(settings.contactTimbre);
+        audio.setInterfaceCues(settings.interfaceCues);
         activeRenderer.setPrecedenceMode(settings.visualFirst ? 'visual-first' : 'ear-first');
         // §11's full rebinding. Applied through the same subscription as the
         // rest, so rebinding from the esc menu takes effect without leaving
