@@ -278,10 +278,49 @@ unresolved still holds on the chrome. It holds 3.3:1 against `abyss-panel`, over
 non-text mark needs, and sits 1.75 stops below the Knights' accent; the glyph beside it
 resolves the rest (§11).
 
-Two things stay owed before the accent ships. §12.5 wants its argument in sound or depth,
-and each colour-vision palette below needs a console-accent row of its own. Their faction
-accents cannot stand in: under deuteranopia the Directorate's ochre sits on `SIG mid`.
-Until both land, nothing transcribes these into `palette.ts`.
+#### Console accent, per colour-vision palette
+
+The palettes below cannot reuse their own faction accents here. Under the eye each palette
+is for, four of them land on an ink the console already speaks in: Pelagia's sky blue reads
+as `neon-cyan` (2.8 ΔE under protanopia), the Directorate's ochre as the threat ink (4.6
+under deuteranopia) or `SIG mid` (5.3 under protanopia), and its tritanopia crimson as
+`SIG high` (8.3). Neither does `directorate-console`, which falls on `neon-magenta` under
+protanopia (7.3).
+
+| Faction | Standard | Deuteranopia | Protanopia | Tritanopia |
+| --- | --- | --- | --- | --- |
+| Bathyarch Consortium | `#8C8378` | `#8C8378` | `#8C8378` | `#8C8378` |
+| Pelagia Commune | `#8FE36B` | `#247C98` | `#A0ACD0` | `#A0ECE8` |
+| Abyssal Directorate | `#7A5A9E` | `#845C2C` | `#BCAC70` | `#E8CCFC` |
+| Hadron Knights | `#C9A6FF` | `#6454D8` | `#6660D8` | `#046C98` |
+
+Each row is measured the way `packages/frontend/test/palette.test.ts` measures the
+palettes: the Viénot–Brettel–Mollon simulation and CIE76 ΔE, for the eye the palette is for.
+Every accent but the Consortium's, below, clears its palette's SIG bands, threat, Tier-4
+track, nodules and friendly ink by 25 ΔE (26 under the red-green pair), the SIG floor in
+that test; clears `neon-cyan`, `neon-magenta` and `text-dim` by 15; sits 30 from every
+other navy's accent, the faction floor; and holds 3:1 against `abyss-panel`. Each stays in
+the hue families its table already keeps to: blue, amber and neutral for the red-green
+pair; red, teal, blue and neutral for tritanopia. The Consortium keeps its iron grey in all four, as its cladding does.
+
+The margins are thin, and that is the finding: a dichromat's few hues are already spoken
+for by the console's information inks. Nine of the twelve sit within 2 ΔE of a floor.
+The Consortium's grey misses three: under deuteranopia it is 23.7 from the friendly teal
+and 14.7 from `neon-magenta`, and under protanopia 25.5 from the friendly teal. The nearest
+greys that clear them sit 3.1 ΔE (deuteranopia) and 1.3 ΔE (protanopia) from `#8C8378`,
+too close to read as a different colour, so the row keeps the cladding grey and records
+the miss. On the deuteranopia console its rule barely differs from the magenta it
+replaces, and the glyph carries identity there, as it does everywhere (§11).
+
+**The tritanopia Directorate is violet, and that is the one exception to its table.**
+Tritanopia makes red the warning family — `SIG mid`, `SIG high`, threat and the track — so
+no red accent clears them. The table bars violet because, to this eye, violet drifts toward
+the Directorate. For the Directorate's own accent that drift is the point. Pale violet
+`#E8CCFC` clears nodules by 25.8 and the Consortium's grey by 30.7.
+
+One thing stays owed before the accent ships: §12.5's argument in sound or depth. Until it
+lands, nothing transcribes these into `palette.ts`. When it does, these rows join the pairs
+`palette.test.ts` holds.
 
 ### The Directorate's one area glow: a maw is not livery
 
@@ -408,7 +447,8 @@ fed throat aside.)
 Tritanopia confuses blue with green and yellow with pink, and leaves the
 red-green axis intact — so this palette is nearly the inverse of the two above.
 Crimson and algae teal are *already* correct and do not move. Amber and violet
-both go.
+both go, save one proposed violet: the Directorate's console accent, under
+"Console accent, per colour-vision palette" above.
 
 | Role | Standard | Tritanopia |
 | --- | --- | --- |
