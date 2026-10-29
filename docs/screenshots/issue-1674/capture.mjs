@@ -104,19 +104,6 @@ const connPixels = async (page) => {
 
 const clock = (page) => page.evaluate(() => window.__echoClock());
 
-/**
- * The wall time at which the mission clock read zero. A tick read waits on
- * a main thread drawing 1.8 s frames, so it comes back late by up to a frame:
- * the earliest of several readings is the closest, within the 5 Hz snapshot.
- */
-async function missionWall(page) {
-  let zero = Infinity;
-  for (let i = 0; i < 2; i++) {
-    const tick = await clock(page);
-    zero = Math.min(zero, Date.now() - (tick / TICK_HZ) * 1000);
-  }
-  return zero;
-}
 const probe = (page) => page.evaluate(() => window.__perspectiveProbe());
 const pose = (p) => ({
   focus: p.focus,
@@ -126,36 +113,44 @@ const pose = (p) => ({
 });
 
 export default async ({ page }) => {
-  await page.waitForFunction(
-    () => {
+  // One page call does the setup: each call waits on the frame in hand, a
+  // second or more here, and the first station is due 30 s in. It waits for
+  // the six models, records the opening, and poses the first station.
+  const first = shots[0].name === 'H' ? null : STATIONS[shots[0].name];
+  const sent = Date.now();
+  const opened = await page.evaluate(async (firstPose) => {
+    for (;;) {
       const p = window.__perspectiveProbe?.();
-      return p && p.modelBacked === 6 && typeof window.__echoClock === 'function';
-    },
-    null,
-    { timeout: 120000, polling: 250 }
-  );
-  const opening = await probe(page);
-  const openingPose = pose(opening);
-  const env = await page.evaluate(() => {
+      if (p && p.modelBacked === 6 && typeof window.__echoClock === 'function') break;
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    const opening = window.__perspectiveProbe();
+    const tick = window.__echoClock();
+    if (firstPose !== null) window.__perspectiveCamera(...firstPose);
     let renderer = 'unavailable';
     const gl = document.querySelector('.perspective-host canvas').getContext('webgl2');
     const ext = gl.getExtension('WEBGL_debug_renderer_info');
     if (ext) renderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
     return {
-      url: location.href,
-      viewport: [innerWidth, innerHeight],
-      dpr: devicePixelRatio,
-      settings: localStorage.getItem('echoes.settings'),
-      reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
-      renderer,
-      modelsTick: window.__echoClock(),
+      opening,
+      env: {
+        url: location.href,
+        viewport: [innerWidth, innerHeight],
+        dpr: devicePixelRatio,
+        settings: localStorage.getItem('echoes.settings'),
+        reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+        renderer,
+        modelsTick: tick,
+      },
     };
-  });
+  }, first);
+  // The wall time the mission clock read zero: the tick was read between the
+  // send and the return, so the midpoint, within the 5 Hz snapshot.
+  const zero = (sent + Date.now()) / 2 - (opened.env.modelsTick / TICK_HZ) * 1000;
+  const { env } = opened;
+  const openingPose = pose(opened.opening);
   console.log(`six models at tick ${env.modelsTick}`);
   const cdp = await page.context().newCDPSession(page);
-  // Sampled before the first pose, while frames still cost the opening's
-  // second rather than a close station's 1.8 s.
-  const zero = await missionWall(page);
 
   const readings = [];
   for (const { name, seconds } of shots) {
@@ -174,11 +169,12 @@ export default async ({ page }) => {
             },
           ]
         : STATIONS[name];
-    if (reposed) await page.evaluate((args) => window.__perspectiveCamera(...args), requested);
-    const posedTick = await clock(page);
+    if (reposed && readings.length > 0) {
+      await page.evaluate((args) => window.__perspectiveCamera(...args), requested);
+    }
     const callWall = zero + (tick / TICK_HZ - LEAD_S) * 1000;
     if (Date.now() >= callWall) {
-      throw new Error(`${name}: posed at tick ${posedTick}, too late for its time, ${tick}`);
+      throw new Error(`${name}: posed too late for its time, ${tick}`);
     }
     await page.waitForTimeout(callWall - Date.now());
     // The call's own mission time from the wall clock: a tick read here would
