@@ -562,6 +562,7 @@ export const items = {
   1610: 'A flaky check on the map’s first framing, made steady',
   1611: 'Feedback from playing the tutorial, worked through',
   1622: 'Measuring the orders panel while a hold countdown ticks',
+  1668: 'The orders panel kept clear of your depth readout',
   1599: 'A score that plays through the match and swells when your fleet is loud',
   1657: 'The score’s held-breath note going silent on a phone’s speaker setting',
   1651: 'Store art drawn from the game’s own logo',
