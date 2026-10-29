@@ -487,7 +487,7 @@ Silent Running trades away most of what a unit can do ([systems-echo.md](systems
 
 - Silent units render at **0.45 alpha** — quiet is a visible state.
 - Weapon, shield, repair, mine and build actions grey out **with a reason attached** (`disabled — silent running`, or `disabled — silence order` where a mission rule is what withholds them), never silently.
-- The selection panel shows the live speed penalty as a number, and shows the Commune's reduced penalty as the same number, differently — no faction reads a different UI.
+- The selection panel shows the live speed penalty as a number, and shows the Commune's reduced penalty as the same number with its doctrine mark (§12.5) — no faction reads a different UI.
 - Issuing an attack order to a silent unit raises a **break-silence confirmation** the first three times per match, showing the +40 SIG spike it will produce. After that it is trusted and the confirmation stops.
 
 ---
@@ -1306,10 +1306,41 @@ Where faction identity *does* reach the interface, it already has its places:
   the court says *the flight stays under twenty*, and no template flattens four navies
   into one sentence.
 
-What remains open, and stays open until somebody makes the argument in sound or depth: a
-faction accent on the selection card or the command bar's rule line. That is licensed
-dress — ink on chrome, never a moved panel or a re-shaped meter — and it is not owed. If
-it ships, it ships under this section's law.
+### Doctrine marks — the accent's argument
+
+The faction accent on the selection card and the command card's rule line was left open
+until somebody argued it in sound or depth. Ownership was never that argument: the player
+knows which navy they chose. The argument is the exception to this section's own promise.
+A player who learned to read the water on one navy has learned it for all four, *except
+where their doctrine bends the number*. Every doctrine is such a bend
+([factions.md](factions.md)), and each one is a number the player decides against: go
+loud, go silent, go shallow, fire.
+
+| Navy | The bend | Where the mark stands | When |
+| --- | --- | --- | --- |
+| Consortium | The Klaxon: +12% damage while the hull's SIG is over 60 | Beside the selection's SIG | While that SIG reads over 60 |
+| Commune | Silent Running costs −20% speed, not −45% | Beside §7's speed penalty | While silent |
+| Directorate | Above 400 m: −20% speed, and the hull bleeds to 85% | Beside the selection's depth | While above 400 m |
+| Knights | A shot is +10 SIG, not a kinetic +25 | Beside a weapon cell's SIG price | Always |
+
+A **doctrine mark** is the navy's glyph, drawn in its console accent at the glyph's minimum
+size ([style-neon-noir.md](style-neon-noir.md), "Console accent"), beside the bent value
+and never in place of its ink. The SIG bands, the depth ladder and the price ink keep their
+own colours, because the accent is identity and those are information. The two rule lines
+take the same ink and are the marks' legend: they say which ink means *yours*.
+
+Three rules bound it:
+
+- **Own force only.** A mark never stands on a contact. A hostile hull's doctrine state is
+  the server's to resolve and never crosses the wire (§1).
+- **Live only.** A mark shows while its bend is in effect and is gone when it is not. The
+  Consortium's mark lit is the Klaxon paying for the noise, which is the point of reading
+  it at the moment of the trade (§7).
+- **Dress, not layout.** No panel moves and no meter changes shape. A mark sits in the
+  space beside a value the console already prints, or it waits.
+
+Two marks wait. The client does not yet print §7's speed penalty or a weapon cell's SIG
+price, so the Commune's and the Knights' marks have nothing to stand beside until it does.
 
 ---
 
@@ -1353,6 +1384,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | The esc menu | Implemented (§9.5, #187) — settings and the rebinder open over a live match; leaving is armed |
 | Attention on the scope | Implemented (§5, #206, #209) — exposure wedge, under-fire pulse, idle marker, each with its audio half and its reduced-motion equivalent |
 | Faction glyphs | Implemented (§12.5, #207) — one glyph per navy beside the mark's ink at Tier 3 and Tier 4, in the world view; the scope names no faction, so it owes none |
+| Doctrine marks (§12.5) | Specified, not implemented — the four marks, the accent rule lines and the colour-vision inks are written; nothing in `palette.ts` or the renderer draws them yet. The Commune's and the Knights' marks also wait on §7's speed penalty and a weapon cell's SIG price, which the client does not print |
 | The match clock | Implemented (#208) — the log's T+ axis live in the top strip, from the server tick both share |
 | Own-force log rows | Implemented (§10, #206, #209, #623) — `you were pinged`, `under fire`, `idle — mined out`, `went loud` |
 | The passive exposure record (§10) | Implemented (#623) — an edge detector on the server-sent `ExposureReport` writes a row each time the best tier anyone holds on the player settles on a new value, in both directions: `you were heard`, `they have your bearing`, `they have you classified`, `they have you tracked`, `they lost you`. Under the `---` tier and carrying no bearing, range or focus, because the report is a tier and a count and a row that pointed anywhere would be inventing a listener. A tier has to hold for `PERSISTENCE.EXPOSURE_SETTLE_S` before the log claims it — the pass recomputes it at 5 Hz, and a hull parked on a detection threshold would otherwise write ten rows a second saying nothing |

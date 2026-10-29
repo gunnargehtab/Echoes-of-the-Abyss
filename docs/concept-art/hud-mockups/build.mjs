@@ -252,8 +252,8 @@ WHAT THE FRAMES SHOW
 · The Consortium uses its own iron grey, not its glow. Hazard amber is already the console's price, idle and SIG-caution ink, so it read as one more warning.
 · The Directorate uses its bruise violet lifted to #7A5A9E. Its crimson read as threat red, and nothing else in its palette is readable on a panel. It is the one ink the client does not carry: directorate-console in style-neon-noir.md, which lists what it still owes before it ships.
 
-NOT OWED
-§12.5 says it ships only with an argument in sound or depth. These frames carry none. They show what the dress costs.`,
+THE ARGUMENT
+ui-ux.md §12.5 "Doctrine marks": the navy's glyph in accent ink beside each number its doctrine bends, with the rule lines as legend. These frames predate the marks and draw the rule lines only.`,
   },
   {
     id: 'note-improved',

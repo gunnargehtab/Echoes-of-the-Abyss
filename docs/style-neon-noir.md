@@ -318,9 +318,9 @@ no red accent clears them. The table bars violet because, to this eye, violet dr
 the Directorate. For the Directorate's own accent that drift is the point. Pale violet
 `#E8CCFC` clears nodules by 25.8 and the Consortium's grey by 30.7.
 
-One thing stays owed before the accent ships: §12.5's argument in sound or depth. Until it
-lands, nothing transcribes these into `palette.ts`. When it does, these rows join the pairs
-`palette.test.ts` holds.
+§12.5's "Doctrine marks" is the accent's argument in sound or depth: the accent marks
+where a navy's doctrine bends a sound or depth number. These rows are its inks. Once
+`palette.ts` transcribes them, they join the pairs `palette.test.ts` holds.
 
 ### The Directorate's one area glow: a maw is not livery
 
