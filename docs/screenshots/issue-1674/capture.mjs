@@ -153,7 +153,7 @@ export default async ({ page }) => {
   });
   console.log(`six models at tick ${env.modelsTick}`);
   const cdp = await page.context().newCDPSession(page);
-  const zero = await missionWall(page);
+  let zero = null;
 
   const readings = [];
   for (const { name, seconds } of shots) {
@@ -173,6 +173,9 @@ export default async ({ page }) => {
           ]
         : STATIONS[name];
     if (reposed) await page.evaluate((args) => window.__perspectiveCamera(...args), requested);
+    // Sampled once the first station is posed: the samples cost seconds of
+    // a mission whose first station is due 30 s in.
+    zero ??= await missionWall(page);
     const posedTick = await clock(page);
     const callAt = tick - Math.round(LEAD_S * TICK_HZ);
     if (posedTick >= callAt) {
