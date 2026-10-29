@@ -61,7 +61,22 @@ every palette, so no palette moves the licensed light.
 
 ## The transit pair
 
-TRANSIT
+Two sessions, the study on and off, each taken at H's pose re-applied at T+10:35 and T+10:55,
+either side of the 10:40 ground change. Every frame's HUD clock reads its time. The pose held:
+the actual focus read (2550, 2553) on the seabed, dolly 2,600, 55° and 0° in all four frames,
+so the ground change drove no focus clamp at this pose.
+
+| Time | On | Off | Landmark on | Lamps standing on | Calls on / off | Props on / off |
+| --- | --- | --- | --- | --- | --- | --- |
+| T+10:35 | `d-T-on-H-635s.png` | `d-T-off-H-635s.png` | intact, 2,412 triangles | 4 | 56 / 52 | 186 / 177 |
+| T+10:55 | `d-T-on-H-655s.png` | `d-T-off-H-655s.png` | ruined, 732 triangles | 0 | 45 / 41 | 198 / 198 |
+
+At 10:35 the intact arch stands over the flight with its four lamps. At 10:55 the span is gone
+into the new wall, the ruined state stands no lamp, and the sift's 256 motes carry on; the
+cloud has settled (0 motes). The props read 198 at 50,356 triangles in both halves after the change, the collapse's count
+increment A recorded. Before it the off half read 177 props against the on half's 186. Both
+read 186 at T+00:30, so the nine went during the off session rather than at the flag; the
+cause was not traced here.
 
 ## Not taken here
 
