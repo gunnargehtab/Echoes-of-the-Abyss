@@ -153,3 +153,9 @@ The clips, the GPU time at C with the pools on and off, DPR 1.5, and the 240-fra
 performance stations: this container draws through SwiftShader, whose milliseconds measure
 the rasteriser. They need the named desktop GPU (`docs/screenshots/issue-1001/README.md`),
 and are listed in the pull request's open findings.
+
+## Retaken under #1674
+
+The palettes, the stations at 1920 × 1080 with the quartet at T+00:30 and L and S paired at
+the same second, and the transit pair at H's pose are retaken in
+[issue-1674](../issue-1674/README.md). GPU time is still the desktop GPU's.

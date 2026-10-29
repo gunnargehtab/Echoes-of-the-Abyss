@@ -232,7 +232,15 @@ await page.waitForSelector('canvas', { timeout: 15000 });
  * The default faction is whichever navy was free when this client joined; pass
  * --steps if you want to click a specific card first.
  */
-const readyButton = await page.waitForSelector('.lobby-ready', { timeout: 15000 }).catch(() => null);
+// A mission that starts without a lobby, the tutorial among them, never
+// shows the button: a stepping clock ends the wait, which otherwise spent 15 s
+// of a mission whose §9 stations are timed from its start (#1674).
+const readyButton = await Promise.race([
+  page.waitForSelector('.lobby-ready', { timeout: 15000 }).catch(() => null),
+  page
+    .waitForFunction(() => (window.__echoClock?.() ?? 0) > 0, null, { timeout: 15000 })
+    .then(() => null, () => null),
+]);
 if (readyButton !== null) {
   await shot('lobby');
   await readyButton.click();
