@@ -153,7 +153,9 @@ export default async ({ page }) => {
   });
   console.log(`six models at tick ${env.modelsTick}`);
   const cdp = await page.context().newCDPSession(page);
-  let zero = null;
+  // Sampled before the first pose, while frames still cost the opening's
+  // second rather than a close station's 1.8 s.
+  const zero = await missionWall(page);
 
   const readings = [];
   for (const { name, seconds } of shots) {
@@ -174,9 +176,6 @@ export default async ({ page }) => {
         : STATIONS[name];
     if (reposed) await page.evaluate((args) => window.__perspectiveCamera(...args), requested);
     const posedTick = await clock(page);
-    // Sampled once the first station is posed: the samples cost seconds of
-    // a mission whose first station is due 30 s in.
-    zero ??= await missionWall(page);
     const callWall = zero + (tick / TICK_HZ - LEAD_S) * 1000;
     if (Date.now() >= callWall) {
       throw new Error(`${name}: posed at tick ${posedTick}, too late for its time, ${tick}`);
