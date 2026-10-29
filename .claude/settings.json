@@ -18,7 +18,7 @@
           {
             "type": "command",
             "if": "Read(//**/*.glb)",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/no-glb-read.mjs\"",
+            "command": "node -e \"import(require('node:url').pathToFileURL(require('node:path').join(process.env.CLAUDE_PROJECT_DIR||require('node:child_process').execFileSync('git',['rev-parse','--show-toplevel'],{encoding:'utf8'}).trim(),'.claude','hooks','no-glb-read.mjs')).href)\"",
             "timeout": 10
           }
         ]
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh",
+            "command": "node -e \"import(require('node:url').pathToFileURL(require('node:path').join(process.env.CLAUDE_PROJECT_DIR||require('node:child_process').execFileSync('git',['rev-parse','--show-toplevel'],{encoding:'utf8'}).trim(),'.claude','hooks','session-start.mjs')).href)\"",
             "timeout": 600
           }
         ]
