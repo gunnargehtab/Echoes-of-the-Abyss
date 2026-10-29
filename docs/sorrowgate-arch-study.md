@@ -2,7 +2,7 @@
 
 ## 1. Status and decision
 
-**Decisions taken, the arch commissioned and its model authored; no code yet.** This is the next deliverable for
+**Decisions taken, the arch authored and the study built behind its flag; production unchanged.** This is the next deliverable for
 [#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637),
 not a replacement for the accepted [retained-geometry slice](visual-reboot.md).
 On 26 October the owner took the four decisions the first revision left open (§5) and asked
@@ -11,7 +11,9 @@ for the documents authoring needs first: the dimensioned fit (§6), the placemen
 [asset-prompts-3d.md](asset-prompts-3d.md#block-4b--public-landmarks-authored-no-faction-no-sig).
 This revision writes them. On 27 October the owner approved the asset block by name, which
 commissions the arch model inside §6's fit (§10). On 28 October, with the model authored, the
-owner loosened the ruined skirt's ceiling from 5 m to 15 m (§6). No renderer change exists yet.
+owner loosened the ruined skirt's ceiling from 5 m to 15 m (§6). The study has since been
+built behind its flag (#1669). On 29 October the owner approved its normal-view refinement
+target and a new round cap (§11).
 
 On 26 October the owner selected **monumental civic infrastructure: heavy masonry,
 exposed structural ribs and damaged transit fittings**, with four priorities: layered
@@ -426,6 +428,111 @@ failed study. A missing light permission, placement contract or affordable geome
 is a reported blocker, not a licence to bypass a gate. Later implementation uses one
 development loop with its existing three-round cap; this brief spends no implementation
 round and authorizes no game-wide rollout.
+
+## 11. The normal-view refinement
+
+On 29 October the owner reviewed [#1676](https://github.com/gunnargehtab/Echoes-of-the-Abyss/pull/1676)'s
+frames ([issue-1674](screenshots/issue-1674/README.md)) and approved one further refinement,
+for [#1683](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1683). H shows a real
+landmark, but it reads as a dark slab in a sparse court. C does not separate masonry, ribs
+and sediment, and L and S lack depth separation. Those were visual findings. This section
+records what was measured behind them, what the owner permitted, its bounds and the cap
+([#1682](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1682)).
+
+### What the frames show
+
+- **The rig lights the far side.** The conn view's key stands at (−1400, 2600, −900) and its
+  rim at (0, 900, −3000), both north of the arch (`PerspectiveView.ts`). The arch's working
+  face is +Z, south. A south face takes the ambient alone; a top takes 0.84 of the key. At H
+  the model draws in two tones: the deck at about sRGB 21/30/40, the span's south face
+  13/19/25, the court floor 12/19/22, the floor inside the opening 11/18/22 and the pier
+  faces 5/7/10. The piers read darker than the floor, as holes rather than masses, and the
+  opening matches the court.
+- **The materials sit at one dark matte value.** After the prop ceiling (style-neon-noir's
+  "The runtime owns value") the arch's diffuse is 0.060 silt, 0.041 masonry and 0.025 ribs,
+  all at roughness 0.9–1 and metalness 0. Under the ambient alone, ribs and masonry at C sit
+  within 10 of 255 of each other.
+- **H, L and S are darker than the budget.** Near-black, luma under 25.5, is 98.7 % of H with
+  the study on and 99.5 % off, 98.1 % of L and 99.1 % of S. Only C, at 86.8 %, is inside the
+  85–90 % budget.
+- **The relief is below a pixel's reach at H.** H draws 0.57 px a metre, so the 7 m recess,
+  3 m ribs and 1.5 m drum setbacks draw 1–4 px. The twelve deck-ledge drifts, the brightest
+  material on lit tops, read as warm dashes at H and S, the second chart grid §9 warns of.
+- **L has no plane between the arch and the wall.** The arch's south face and the Descent's
+  wall 500 m behind it face the same way under the same ambient, with no grade between.
+- **No surface map can land yet.** The model's buffers carry no UV0, so a course map needs the
+  script to lay UVs and §3's map ledger first.
+
+The shape reading is the model-of-record author's, taken read-only for this section.
+
+### Decisions of 29 October
+
+| Question | Recommended | Owner's decision |
+| --- | --- | --- |
+| Light and material | Reflected court light and material contrast on the landmark alone, behind the flag. Retaining today's limits leaves shape alone to act, which the author expects to give "a slab on two supports". Moving the shared rig relights every hull and prop, a production change | **As recommended** |
+| Shape | Proud piers, real drum setbacks and fewer drifts; deeper ribs buy nothing at H | **All four, deeper ribs included** |
+| Water at L | Unchanged, expecting the bounce to lift the arch off the unlit wall | **A study-only distance grade** |
+| Further rounds | One new development loop of three rounds | **As recommended** |
+
+The water decision went past the recommendation, so
+[art-direction.md](art-direction.md#reading-the-water) carries it as a licence, as
+[style-neon-noir.md](style-neon-noir.md#the-arch-studys-licence) carries the light.
+
+### Permitted changes and their bounds
+
+Every change holds behind the study's flag, on the prologue's look (§7, "Isolation").
+
+| Change | Bound |
+| --- | --- |
+| Court bounce | A diffuse term on the landmark's own materials, as from the court floor: from the south and 30° below level, so the south faces and the soffit take it and the deck does not. At full incidence at most the rig's ambient again, `MODEL_LIGHTING.AMBIENT` in its colour, so a south face takes at most twice its light today; no hue of its own. The board's still copy takes none, as it takes no pool |
+| Diffuse ceiling | The landmark's brightest material at most 0.10 linear diffuse luminance, up from the props' 0.06; the materials keep their tokens' hues and ratios |
+| Roughness | `structure_rib` 0.55–0.7, so the frame takes a sheen from the existing environment; `stone_dark` and `silt_drift` stay 0.9–1; metalness 0 throughout |
+| Distance grade | Public ground beyond the focus fades further into the water it stands in: none at the focus distance, rising to at most 0.35 extra at 1,500 m beyond it. Terrain, props and the landmark only; never a hull, contact, glow, lamp, survey ink or HUD. No hue, no new pass, and `waterDensity` scales it with the rest |
+| Proud piers | The span's south face set back from Z +72 to no further north than Z +45, the piers staying at Z ±80. The rail bed, brackets and catenary move with the face or onto the capitals; the hung fittings stay six at most, each still at least +60 m at its lowest |
+| Drum setbacks | 5–6 m a drum, from 1.5 m, inside the ±80 m plan |
+| Ribs | At most 8 m deep, from 3.5 m, inside the face |
+| Drifts | Five or six on the deck's ledges, from twelve, on ridged plans; silt stays banked in recesses and at foundations |
+
+The shape changes sit inside §6's plan and levels and
+[Block 4b](asset-prompts-3d.md#block-4b--public-landmarks-authored-no-faction-no-sig)'s
+text, so neither is amended. The ruined state, the lamps' places, the node names and gate 6's
+study line, four calls and 12,000 triangles a state, are unchanged: the committed model is
+2,644 triangles for both states. The author builds them; intake and the hull reviewer
+grade them before the integrated loop critic does.
+
+Unchanged too: §8's lamps and pools, every hull's pixels and SIG, hidden information, the
+gameplay ground, the flight, the HUD, the shared rig, exposure, bloom, the acoustic veil and
+every non-target render. No surface map is licensed this round.
+
+### Acceptance at the opening
+
+These are necessary, never sufficient: §10's criteria still hold, and the owner's visual
+judgement decides. Each is read on §9's matched frames, before and after.
+
+- **H, masses.** Each pier's south face reads at least 5 luma brighter, by mean, than the
+  court floor beside it, and the floor inside the opening at least 5 darker than both piers.
+  The capitals and the drum bands draw as separate lit bands at least 3 px tall.
+- **H, order.** The flight stays the first read: an escort's pixels do not change with the
+  study on, and no arch pixel outside a pool is brighter than the escorts' brightest lamp
+  pixel in the same frame.
+- **H, darkness.** Near-black falls from 98.7 % and stays at or above 85 %, as at every station.
+- **C.** Rib faces and masonry faces in the same light differ by at least 5 luma, by mean,
+  and the soffit reads above near-black.
+- **L.** The arch's south face and the Descent's wall behind it differ by at least 5 luma,
+  by mean.
+- **S.** No drift line reads as a chart mark, and no surface shimmers in motion.
+
+The evidence is §9's whole set: H, C, L and S at T+00:30, the transit pair, the motion clips,
+reduced motion, the palettes, the `ventfront-divide` control, and GPU time with the bounce and
+grade on and off on a named desktop GPU. The before set is today's study at the
+refinement's base commit, beside the study off.
+
+### The cap
+
+The owner granted #1683 one new development loop of three rounds. Reaching it is a stall:
+the pull request stays open with its findings listed, and there is no reset and no fourth
+round without a new written grant. Production is unchanged; promotion remains a separate
+written decision (§5).
 
 ## Related
 

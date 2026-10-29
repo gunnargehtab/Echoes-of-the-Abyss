@@ -1231,6 +1231,16 @@ and §11 makes that a control rather than a preference — and it can be one wit
 because the only things distance hides are the player's own hulls and the ground they stand
 on, so turning it down can only ever reveal more. The ramp does not move with it.
 
+**The arch study's distance grade.** On 29 October the owner licensed one exception, for the
+Sorrowgate arch study's normal-view refinement
+([sorrowgate-arch-study.md](sorrowgate-arch-study.md) §11) and nowhere else. Behind the
+study's flag, on the prologue's look, public ground beyond the focus fades further into the
+water it stands in: none at the focus distance, rising to at most 0.35 extra at 1,500 m
+beyond it. It takes the fade's colour from the fragment's depth, as above, so it carries no
+hue. It reaches terrain, props and the landmark only, never a hull, contact, glow, lamp or
+survey ink, so it still hides nothing but ground, and `waterDensity` scales it with the rest.
+Production keeps the falloff above until a written decision promotes it.
+
 ### Environmental Shapes
 
 - Jagged rock formations
