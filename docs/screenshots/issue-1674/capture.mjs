@@ -117,7 +117,6 @@ export default async ({ page }) => {
   // second or more here, and the first station is due 30 s in. It waits for
   // the six models, records the opening, and poses the first station.
   const first = shots[0].name === 'H' ? null : STATIONS[shots[0].name];
-  const sent = Date.now();
   const opened = await page.evaluate(async (firstPose) => {
     for (;;) {
       const p = window.__perspectiveProbe?.();
@@ -142,11 +141,12 @@ export default async ({ page }) => {
         renderer,
         modelsTick: tick,
       },
+      wall: Date.now(),
     };
   }, first);
-  // The wall time the mission clock read zero: the tick was read between the
-  // send and the return, so the midpoint, within the 5 Hz snapshot.
-  const zero = (sent + Date.now()) / 2 - (opened.env.modelsTick / TICK_HZ) * 1000;
+  // The wall time the mission clock read zero. The page shares the machine's
+  // clock, so its own reading beside the tick is exact, within the 5 Hz snapshot.
+  const zero = opened.wall - (opened.env.modelsTick / TICK_HZ) * 1000;
   const { env } = opened;
   const openingPose = pose(opened.opening);
   console.log(`six models at tick ${env.modelsTick}`);
