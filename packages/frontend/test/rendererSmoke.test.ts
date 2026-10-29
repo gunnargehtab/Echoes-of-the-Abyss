@@ -2682,7 +2682,7 @@ describe('renderer smoke test: input and teardown', () => {
       const readouts: Text[] = [];
       const walk = (node: Container): void => {
         if (!node.visible) return;
-        // The ribbon's own column: the console's cards print depths too.
+        // The ribbon's own column: the scope's range rings read in metres too.
         if (node instanceof Text && /^\d+m/.test(node.text) && node.x < RIBBON_UNITS) {
           readouts.push(node);
         }
