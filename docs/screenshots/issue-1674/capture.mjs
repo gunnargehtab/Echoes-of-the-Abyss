@@ -18,22 +18,27 @@
  * The frame is a CDP capture, not Playwright's `page.screenshot`: on the
  * container's SwiftShader a 1920 × 1080 frame takes about 1.8 s to draw, the
  * Playwright call spent 11 s waiting on frames, and the CDP one about 3 s. Its
- * image is the frame drawn about a second after the call (a call at tick 1932
- * drew T+00:33 on the HUD clock), so the call leads its time by LEAD_S. The
- * HUD's own clock in the image is the frame's time; `captureTicks` brackets
- * it, the first from the wall clock at the call, the second read after it.
+ * image is a frame drawn after the call, and a call at the time drew that
+ * second on the HUD clock in 17 of 18 frames (LEAD_S moves the call; the
+ * JSON records it). The HUD's own clock in the image is the frame's time;
+ * `captureTicks`, the wall clock at the call and a tick read after it, only
+ * approximates it.
  *
- * Writes `<TAG>.json` beside the frames: the ticks, the requested and actual
- * pose, the probe, and the conn canvas read in the frame after the capture
- * (tools/render-stack/halo.mjs's method, its tick recorded) — the near-black
- * share, the brightest pixel and a 28 px window round each lamp the probe
- * projects.
+ * The readings are §9's "at the same tick": a hook armed before the call
+ * reads the conn canvas and the probe in one animation frame, the first whose
+ * tick reaches the time, after the game's own callback drew it
+ * (tools/render-stack/halo.mjs's method), and records that tick
+ * (`readingTick`). So an on/off pair's readings are a frame apart at most.
+ *
+ * Writes `<TAG>.json` beside the frames: the ticks, LEAD_S, the requested and
+ * actual pose, the probe, and the conn canvas's near-black share (luma under
+ * 10 %), brightest pixel and a 28 px window round each lamp the probe projects.
  */
 import { writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const TICK_HZ = 60;
-const LEAD_S = Number(process.env.LEAD_S ?? 1);
+const LEAD_S = Number(process.env.LEAD_S ?? 0);
 const STATIONS = {
   C: [2550, 2200, 420, { pitchDeg: 35, yawDeg: 25, focusDepthM: 1450 }],
   L: [2550, 2750, 650, { pitchDeg: 12, yawDeg: 0, focusDepthM: 1450 }],
@@ -48,10 +53,12 @@ const shots = (process.env.SHOTS ?? 'H@30').split(',').map((s) => {
 const TAG = process.env.TAG ?? 'capture';
 const OUT = resolve(process.argv[process.argv.indexOf('--out') + 1]);
 
-const luma = (r, g, b) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
-
-/** Luma statistics over a rectangle of a bottom-up RGBA buffer, in top-down coordinates. */
+/**
+ * Luma statistics over a rectangle of a bottom-up RGBA buffer, in top-down
+ * coordinates. Self-contained, because its source runs in the page.
+ */
 function stats(px, w, h, x0 = 0, y0 = 0, x1 = w, y1 = h) {
+  const luma = (r, g, b) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
   let max = -1;
   let at = null;
   let sum = 0;
@@ -81,30 +88,48 @@ function stats(px, w, h, x0 = 0, y0 = 0, x1 = w, y1 = h) {
   };
 }
 
-/** The conn canvas, read in the animation frame that drew it. */
-const connPixels = async (page) => {
-  const frame = await page.evaluate(
-    () =>
-      new Promise((resolve) =>
-        requestAnimationFrame(() => {
-          const gl = document.querySelector('.perspective-host canvas').getContext('webgl2');
-          const w = gl.drawingBufferWidth;
-          const h = gl.drawingBufferHeight;
-          const px = new Uint8Array(w * h * 4);
-          gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, px);
-          let s = '';
-          for (let i = 0; i < px.length; i += 0x8000)
-            s += String.fromCharCode(...px.subarray(i, i + 0x8000));
-          resolve({ w, h, b64: btoa(s), tick: window.__echoClock() });
-        })
-      )
+/**
+ * Arm the reading: from the next animation frame on, the first frame whose
+ * tick reaches `tick` reads the conn canvas and the probe and leaves both on
+ * `window.__captureReading`. Arming waits on the frame in hand, so it is done
+ * well before the capture call, never just ahead of it.
+ */
+const armReading = (page, tick) =>
+  page.evaluate(
+    ({ tick, window: side, statsSrc }) => {
+      const stats = new Function(`return ${statsSrc}`)();
+      window.__captureReading = null;
+      const frame = () => {
+        if (window.__echoClock() < tick) {
+          requestAnimationFrame(frame);
+          return;
+        }
+        const gl = document.querySelector('.perspective-host canvas').getContext('webgl2');
+        const w = gl.drawingBufferWidth;
+        const h = gl.drawingBufferHeight;
+        const px = new Uint8Array(w * h * 4);
+        gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, px);
+        const probe = window.__perspectiveProbe();
+        const windows = {};
+        (probe.landmarkLampsPx ?? []).forEach(({ x, y }, i) => {
+          const cx = Math.round(x * devicePixelRatio);
+          const cy = Math.round(y * devicePixelRatio);
+          const r = side / 2;
+          windows[`lamp_${i}`] = stats(px, w, h, cx - r, cy - r, cx + r, cy + r);
+        });
+        window.__captureReading = {
+          tick: window.__echoClock(),
+          conn: { buffer: [w, h], frame: stats(px, w, h), windows },
+          probe,
+        };
+      };
+      requestAnimationFrame(frame);
+    },
+    { tick, window: LAMP_WINDOW, statsSrc: String(stats) }
   );
-  return { ...frame, px: Buffer.from(frame.b64, 'base64') };
-};
 
 const clock = (page) => page.evaluate(() => window.__echoClock());
 
-const probe = (page) => page.evaluate(() => window.__perspectiveProbe());
 const pose = (p) => ({
   focus: p.focus,
   distance: p.distance,
@@ -174,6 +199,7 @@ export default async ({ page }) => {
     if (reposed && (name === 'H' || readings.length > 0)) {
       await page.evaluate((args) => window.__perspectiveCamera(...args), requested);
     }
+    await armReading(page, tick);
     const callWall = zero + (tick / TICK_HZ - LEAD_S) * 1000;
     if (Date.now() >= callWall) {
       throw new Error(`${name}: posed too late for its time, ${tick}`);
@@ -190,28 +216,23 @@ export default async ({ page }) => {
     const file = `${TAG}-${name}-${String(seconds).padStart(3, '0')}s.png`;
     writeFileSync(join(OUT, file), Buffer.from(data, 'base64'));
     console.log(`shot: ${join(OUT, file)}`);
-    const conn = await connPixels(page);
-    const p = await probe(page);
-    const windows = {};
-    (p.landmarkLampsPx ?? []).forEach(({ x, y }, i) => {
-      const cx = Math.round(x * env.dpr);
-      const cy = Math.round(y * env.dpr);
-      const r = LAMP_WINDOW / 2;
-      windows[`lamp_${i}`] = stats(conn.px, conn.w, conn.h, cx - r, cy - r, cx + r, cy + r);
-    });
+    await page.waitForFunction(() => window.__captureReading !== null, null, { timeout: 60000 });
+    const reading = await page.evaluate(() => window.__captureReading);
+    const p = reading.probe;
     readings.push({
       name,
       file,
       requestedTick: tick,
+      leadS: LEAD_S,
       captureTicks: [before, after],
-      connTick: conn.tick,
+      readingTick: reading.tick,
       requested: reposed ? requested : 'opening, unmodified',
       actual: pose(p),
-      conn: { buffer: [conn.w, conn.h], frame: stats(conn.px, conn.w, conn.h), windows },
+      conn: reading.conn,
       probe: p,
     });
     console.log(
-      `${name}: capture ticks ${before}–${after} (time ${tick}), conn ${conn.tick}, ` +
+      `${name}: capture ticks ${before}–${after} (time ${tick}), reading ${reading.tick}, ` +
         `calls ${p.drawCalls}, landmark ${p.landmarks} at ${p.landmarkTris}`
     );
   }
