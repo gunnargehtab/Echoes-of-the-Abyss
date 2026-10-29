@@ -5801,6 +5801,19 @@ describe("where a marker's name stands (#1662)", () => {
 
   const QUIET: Mark = { id: 'arch', name: 'The arch', x: 1000, y: 3000, radiusM: 350 };
 
+  /**
+   * A committed model, parsed as the loader would. The runner's manifest is
+   * empty, so a test hands one to its handle itself (inkOcclusion.test.ts).
+   * These two carry no image for the loader to decode.
+   */
+  async function parsedModel(slug: string) {
+    const bytes = readFileSync(
+      new URL(`../../../docs/concept-art/models/${slug}.glb`, import.meta.url)
+    );
+    const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+    return (await new GLTFLoader().parseAsync(buffer, '')).scene;
+  }
+
   it('stands straight over the top of a ring with nothing on it, at the first box tried', async () => {
     const world = await placed([QUIET], (w) => w.chart.focusOn(QUIET.x, QUIET.y));
     try {
@@ -5844,12 +5857,7 @@ describe("where a marker's name stands (#1662)", () => {
   });
 
   it("keeps off a structure's model", async () => {
-    const bytes = readFileSync(
-      new URL('../../../docs/concept-art/models/bastion-bathyarch.glb', import.meta.url)
-    );
-    const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-    const scene = (await new GLTFLoader().parseAsync(buffer, '')).scene;
-    const template = buildTemplate(scene, {
+    const template = buildTemplate(await parsedModel('bastion-bathyarch'), {
       structure: StructureKind.Bastion,
       faction: Faction.Bathyarch,
     });
@@ -5874,8 +5882,8 @@ describe("where a marker's name stands (#1662)", () => {
       const [box] = nameBoxes(world);
       assert.ok(box !== undefined, 'the name is drawn');
       const old = over(highest(ringOf(world, mark)), box);
-      assert.ok(world.conn.inkCrosses(old.x0, old.y0, old.x1, old.y1, true), 'the premise');
-      assert.ok(!world.conn.inkCrosses(box.x0, box.y0, box.x1, box.y1, true), 'on the model');
+      assert.ok(world.conn.inkCrossesOwn(old.x0, old.y0, old.x1, old.y1), 'the premise');
+      assert.ok(!world.conn.inkCrossesOwn(box.x0, box.y0, box.x1, box.y1), 'on the model');
       holdsTheRule(world, mark, box);
     } finally {
       world.teardown();
@@ -6082,8 +6090,13 @@ describe("where a marker's name stands (#1662)", () => {
     }
   });
 
-  it('steps aside for a contact only once its mark has arrived', async () => {
-    // The Tier-4 track laid on the seabed, under this ring's top.
+  it('steps aside for a contact only once its mark has arrived, model and all', async () => {
+    // The Tier-4 track laid on the seabed, under this ring's top, and drawn as
+    // its model: the conn view shows a track's model the instant it resolves.
+    const corvette = buildTemplate(await parsedModel('corvette-hadron'), {
+      unit: UnitKind.Corvette,
+      faction: Faction.Hadron,
+    });
     const mark: Mark = { ...QUIET, x: 2800, y: 2950 };
     const contactsOn = (world: World) => {
       const snapshot = cannedSnapshot();
@@ -6103,20 +6116,38 @@ describe("where a marker's name stands (#1662)", () => {
       }
     );
     try {
+      // The model handed to the track's handle as the loader would.
+      const conn = world.conn as unknown as {
+        trackHandles: Map<number, { model: unknown; modelKey: string }>;
+        syncTracks(): void;
+      };
+      const handle = conn.trackHandles.get(104);
+      assert.ok(handle !== undefined, 'the premise: the track is drawn as a model');
+      handle.model = instantiate(corvette);
+      handle.modelKey = 'test';
+      conn.syncTracks();
+      world.chart.applySnapshot(contactsOn(world));
+      world.frame(2);
       const [before] = nameBoxes(world);
       assert.ok(before !== undefined, 'the name is drawn');
-      const top = highest(ringOf(world, mark));
-      assert.ok(centredOver(before, top), 'it waits for the mark');
+      assert.ok(
+        world.conn.inkCrosses(before.x0, before.y0, before.x1, before.y1),
+        "the premise: the track's model stands under the name"
+      );
+      assert.ok(centredOver(before, highest(ringOf(world, mark))), 'it waits for the mark');
       chartOf(world).tracked.get(104)!.firstSeenMs = performance.now() - 60_000;
       world.chart.applySnapshot(contactsOn(world));
       world.frame(2);
       const [after] = nameBoxes(world);
       assert.ok(after !== undefined, 'the name is drawn');
+      assert.ok(
+        !world.conn.inkCrosses(after.x0, after.y0, after.x1, after.y1),
+        "the name sits on the arrived track's model"
+      );
       const p = world.conn.projectPoint(2800, 2600, world.conn.seabedDepthAt(2800, 2600));
-      assert.ok(meets(before, { x0: p.x - 8, y0: p.y - 30, x1: p.x + 8, y1: p.y }), 'the premise');
       assert.ok(
         !meets(after, { x0: p.x - 8, y0: p.y - 30, x1: p.x + 8, y1: p.y }),
-        'the name sits on the arrived contact'
+        'the name sits on the arrived mark'
       );
       holdsTheRule(world, mark, after);
     } finally {
@@ -6133,7 +6164,6 @@ describe("where a marker's name stands (#1662)", () => {
     for (const mark of marks) {
       const world = await placed([mark], () => {});
       try {
-        let shown = 0;
         for (const scale of [1, 1.5]) {
           world.chart.setUiScale(scale);
           for (const yawDeg of [0, 90, 180, 270]) {
@@ -6141,16 +6171,21 @@ describe("where a marker's name stands (#1662)", () => {
               for (const distanceM of [250, 2600, 9000]) {
                 world.conn.setFrame({ xM: mark.x, yM: mark.y, distanceM, yawDeg, pitchDeg });
                 world.frame(2);
+                // Every view stands at the ring's centre, inside it, so its
+                // name is on the ring or at the head of the water: never gone.
                 const boxes = nameBoxes(world);
-                for (const box of boxes) holdsTheRule(world, mark, box, waterAt(scale));
-                shown += boxes.length;
+                assert.equal(
+                  boxes.length,
+                  1,
+                  `${mark.id} unnamed at ${JSON.stringify(world.conn.frame)}`
+                );
+                holdsTheRule(world, mark, boxes[0]!, waterAt(scale));
                 // Two sides' points at most, plus the head's slots.
                 assert.ok(chartOf(world).markBoxesTried <= 400, 'unbounded work');
               }
             }
           }
         }
-        assert.ok(shown >= 48, `${mark.id} was named in only ${shown} of 72 views`);
       } finally {
         world.teardown();
       }

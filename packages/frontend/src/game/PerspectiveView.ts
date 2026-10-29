@@ -1940,6 +1940,9 @@ export class PerspectiveView {
     ink.begin(this.camera, this.viewWidth, this.viewHeight);
     if (this.renderer !== null) {
       for (const handles of [this.unitHandles, this.structureHandles, this.trackHandles]) {
+        // Own models first, and the boundary marked: a marker's name keeps
+        // off own models at once and off a track only once its mark arrives.
+        if (handles === this.trackHandles) ink.markOwn();
         for (const handle of handles.values()) {
           // The sync hides the sprite exactly when the model is showing.
           const model = handle.mesh.visible ? null : handle.model;
@@ -1952,12 +1955,14 @@ export class PerspectiveView {
     return ink.end();
   }
 
-  /**
-   * Whether the screen segment between two projected points crosses a model's
-   * screen box; `bounded` as `InkOcclusion.crosses` has it.
-   */
-  inkCrosses(ax: number, ay: number, bx: number, by: number, bounded = false): boolean {
-    return this.ink.size > 0 && this.ink.crosses(ax, ay, bx, by, bounded);
+  /** Whether the screen segment between two projected points crosses a model's screen box. */
+  inkCrosses(ax: number, ay: number, bx: number, by: number): boolean {
+    return this.ink.size > 0 && this.ink.crosses(ax, ay, bx, by);
+  }
+
+  /** Whether a screen box meets an own model's, as `InkOcclusion.crossesOwn` has it. */
+  inkCrossesOwn(x0: number, y0: number, x1: number, y1: number): boolean {
+    return this.ink.crossesOwn(x0, y0, x1, y1);
   }
 
   /**

@@ -997,9 +997,9 @@ something new, and a log role would re-announce the whole panel every time a cou
   no column, which is what §2's no-scroll rule asks of anything added to this panel.
 - **A named marker is drawn on the chart while an open row names it.** A mission gives each
   marker a short place name — *The arch*, *The Concourse* — and the world view then draws it
-  where it is: a ring of the marker's radius on the seabed, and the name above the ring, held
-  at screen size, where the next bullet's rule keeps it off the hulls the ring is drawn
-  round. A row may name a
+  where it is: a ring of the marker's radius on the seabed, and the name with the ring, held
+  at screen size where the next bullet's rule places it: over the ring's far side, off the
+  hulls the ring is drawn round. A row may name a
   second marker as the place on its way, Sorrowgate's service lock for its tenders (#1594):
   the chart draws it beside the row's own, and focusing the row still goes to the row's own.
   The row that names it going met or failed takes it off the chart, so the chart says where
@@ -1028,8 +1028,8 @@ something new, and a log role would re-announce the whole panel every time a cou
   and the chart does not is #1611 again. Where the far side has no room on the water, a view
   standing inside the ring names it at the head of the water, since everything on screen is
   in that place; a view outside it names it on the outside of the near side, as high on the
-  water as there is room. Outside a ring with none of its line on the water, the chart draws
-  no name, and its row still names it.
+  water as there is room. Outside a ring with none of its line on the water, or with no room
+  for the name beside it on either side, the chart draws no name, and its row still names it.
 - **A row that runs on a clock says how long is left.** A hold that ends on its own — the
   flight holding at the arch, a sitting, a tide — shows the time remaining under its status
   word, `OPEN` over `10:10`, until the row is met. A player told to hold and not told for how

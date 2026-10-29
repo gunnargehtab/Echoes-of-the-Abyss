@@ -306,7 +306,10 @@ const MARK_NAME_GAP_PX = 4;
  * apart on a 2,500 m ring at the home dolly, too coarse to step past a hull.
  */
 const MARK_NAME_STEP_PX = 24;
-/** The most points a name is tried at per side of its ring; a longer line spaces them wider. */
+/**
+ * About the most points a name is tried at per side of its ring: a longer
+ * line spaces them wider. Each segment on the water adds its own two ends.
+ */
 const MARK_NAME_POINTS_MAX = 64;
 /**
  * How much higher, in screen px, another point must stand before a name leaves
@@ -8858,7 +8861,7 @@ export class EchoRenderer {
     if (
       boxesMeet(this.figureFootprints, x0 - pad, y0 - pad, x1 + pad, y1 + pad) ||
       boxesMeet(this.contactFootprints, x0 - pad, y0 - pad, x1 + pad, y1 + pad) ||
-      (this.conn?.inkCrosses(x0 - pad, y0 - pad, x1 + pad, y1 + pad, true) ?? false)
+      (this.conn?.inkCrossesOwn(x0 - pad, y0 - pad, x1 + pad, y1 + pad) ?? false)
     ) {
       return 2;
     }

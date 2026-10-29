@@ -176,6 +176,8 @@ const POINT_LOCAL = new Vector3();
 export class InkOcclusion {
   private readonly slots: Occluder[] = [];
   private count = 0;
+  /** How many of the first slots are the player's own models (`markOwn`). */
+  private own = 0;
   private readonly eye = new Vector3();
   private camera: PerspectiveCamera | null = null;
   private width = 0;
@@ -188,6 +190,7 @@ export class InkOcclusion {
   /** Start a frame from the camera both canvases draw through, in CSS pixels. */
   begin(camera: PerspectiveCamera, width: number, height: number): void {
     this.count = 0;
+    this.own = 0;
     this.camera = camera;
     this.width = width;
     this.height = height;
@@ -267,21 +270,39 @@ export class InkOcclusion {
   }
 
   /**
-   * Whether the screen segment from a to b passes over any model's screen box.
-   * Its bounding box is what is tested, so a and b may as well be a rect's
-   * corners. `bounded` leaves out a model with a corner behind the eye, whose
-   * box is the whole screen: right for a line that must break behind it, and
-   * wrong for a mission marker's name (#1662), which would find no place at
-   * all while one hull stood behind the camera.
+   * The models added so far are the player's own; the rest of the frame's are
+   * contacts' tracks. Called once, between the two (`PerspectiveView.beginInk`).
    */
-  crosses(ax: number, ay: number, bx: number, by: number, bounded = false): boolean {
+  markOwn(): void {
+    this.own = this.count;
+  }
+
+  /** Whether the screen segment from a to b passes over any model's screen box. */
+  crosses(ax: number, ay: number, bx: number, by: number): boolean {
     const x0 = Math.min(ax, bx);
     const x1 = Math.max(ax, bx);
     const y0 = Math.min(ay, by);
     const y1 = Math.max(ay, by);
     for (let i = 0; i < this.count; i++) {
       const s = this.slots[i]!;
-      if (bounded && s.minX === -Infinity) continue;
+      if (x1 >= s.minX && x0 <= s.maxX && y1 >= s.minY && y0 <= s.maxY) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Whether the screen box from (x0, y0) to (x1, y1) meets an own model's —
+   * what a mission marker's name keeps off (docs/ui-ux.md §10.5, #1662). Two
+   * kinds are left out. A model with a corner behind the eye, whose box is the
+   * whole screen: right for a line that must break behind it, and wrong for a
+   * name, which would find no place at all. And a contact's track, which shows
+   * the instant it is resolved: the name keeps off a contact only once its
+   * mark has arrived, so the chart answers for tracks (`drawContacts`).
+   */
+  crossesOwn(x0: number, y0: number, x1: number, y1: number): boolean {
+    for (let i = 0; i < this.own; i++) {
+      const s = this.slots[i]!;
+      if (s.minX === -Infinity) continue;
       if (x1 >= s.minX && x0 <= s.maxX && y1 >= s.minY && y0 <= s.maxY) return true;
     }
     return false;

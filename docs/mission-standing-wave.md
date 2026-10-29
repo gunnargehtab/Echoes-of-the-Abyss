@@ -682,7 +682,7 @@ took in rectangles. Played with no input, every hull and the Bastion keep the tr
 rectangles, sampled every five seconds to 18:00, to the same reading and the same lines
 (`missionStandingWave.test.ts`).
 
-**Named on the chart** (#1617). *The Fifth* and *The North Gallery* are printed above their markers'
+**Named on the chart** (#1617). *The Fifth* and *The North Gallery* are printed with their markers'
 rings while a row that names each is open ([ui-ux.md](ui-ux.md) §10.5).
 
 ---

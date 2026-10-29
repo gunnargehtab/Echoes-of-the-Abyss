@@ -35,7 +35,7 @@ import { Lobby } from './Lobby.tsx';
 import { MatchResult } from './MatchResult.tsx';
 import { MissionLog } from './MissionLog.tsx';
 import { MissionPanel } from './MissionPanel.tsx';
-import { watchPanels } from './panelRects.ts';
+import { watchPanels, type PanelWatch } from './panelRects.ts';
 import { MissionResult } from './MissionResult.tsx';
 import { SkirmishOrders, harvestRow, sameHarvestRow, type HarvestRow } from './SkirmishOrders.tsx';
 import { StripReadouts } from './StripReadouts.tsx';
@@ -286,6 +286,8 @@ export function GameCanvas({
    */
   const [joinedRoomId, setJoinedRoomId] = useState<string | null>(null);
   const rendererRef = useRef<EchoRenderer | null>(null);
+  /** The floating panels' watch (`watchPanels`), while the renderer is up. */
+  const panelsRef = useRef<PanelWatch | null>(null);
   const clientRef = useRef<GameClient | null>(null);
   /**
    * The conn view (docs/three-layer-ocean.md): since Phase 5 it is not a
@@ -563,7 +565,7 @@ export function GameCanvas({
       // Where the floating panels cover the water, for the one chart mark
       // that keeps out from under them: a marker's name (§10.5, #1662).
       if (underRef.current !== null) {
-        stopPanels = watchPanels(underRef.current, host, (rects) =>
+        panelsRef.current = watchPanels(underRef.current, host, (rects) =>
           activeRenderer.setPanelRects(rects)
         );
       }
@@ -863,14 +865,14 @@ export function GameCanvas({
 
     let unsubscribeSettings: (() => void) | null = null;
     let onResize: (() => void) | null = null;
-    let stopPanels: (() => void) | null = null;
     void start();
 
     return () => {
       cancelled = true;
       joinRef.current = null;
       unsubscribeSettings?.();
-      stopPanels?.();
+      panelsRef.current?.stop();
+      panelsRef.current = null;
       if (onResize !== null) window.removeEventListener('resize', onResize);
       client?.disconnect();
       clientRef.current = null;
@@ -942,6 +944,15 @@ export function GameCanvas({
     rendererRef.current?.setMenuOpen(menuOpen);
     if (underRef.current !== null) underRef.current.inert = menuOpen;
   }, [menuOpen]);
+
+  /**
+   * The panels again once a new UI scale is on them: three scale by a CSS
+   * transform, which no observer sees, and a marker's name keeps out from
+   * under where they now stand (docs/ui-ux.md §10.5, #1662).
+   */
+  useEffect(() => {
+    panelsRef.current?.measure();
+  }, [uiScale]);
 
   const chooseFaction = useCallback((faction: Faction) => {
     clientRef.current?.chooseFaction(faction);

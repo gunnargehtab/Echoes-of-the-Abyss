@@ -521,7 +521,7 @@ shape for anybody else. It is the *only* moving thing in the mission and it move
 `fauna` off. **The Third's Outer Formations is a mission map and is not in the public catalogue** —
 one seat, no economy, not balanced, resolved by mission id and nothing else.
 
-**Named on the chart** (#1617). *The outer formations* and *The Third's approach* are printed above
+**Named on the chart** (#1617). *The outer formations* and *The Third's approach* are printed with
 their markers' rings while a row that names each is open ([ui-ux.md](ui-ux.md) §10.5). The
 formations' line is an instruction rather than a place, so its name is the ground it rings: the six
 outer formations off the house. The approach is named by the party's count alone, a standing row

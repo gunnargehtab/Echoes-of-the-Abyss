@@ -733,7 +733,7 @@ every five seconds to the tide, to the same close and the same six lines
 balanced, resolved by mission id and nothing else. The id is checked against `maps/index.ts`: no
 collision.
 
-**Named on the chart** (#1617). *The sealed room* is printed above its marker's ring while a row
+**Named on the chart** (#1617). *The sealed room* is printed with its marker's ring while a row
 that names it is open ([ui-ux.md](ui-ux.md) §10.5).
 
 ---

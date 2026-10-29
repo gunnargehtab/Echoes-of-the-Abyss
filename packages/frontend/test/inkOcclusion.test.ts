@@ -146,19 +146,24 @@ describe('InkOcclusion', () => {
     assert.equal(ink.crosses(x, y, bx, by), true);
   });
 
-  // A mission marker's name asks with `bounded` (#1662): one hull behind the
-  // camera would otherwise leave it no place on the screen at all.
-  it('leaves a model behind the eye out of a bounded test, and only that one', () => {
+  // What a mission marker's name keeps off (#1662): own models in front of
+  // the eye. One hull behind the camera would otherwise leave the name no
+  // place at all, and a track shows before its mark has arrived.
+  it('tests a box against own models in front of the eye, and only those', () => {
     const { ink, camera } = frame();
     ink.begin(camera, 1280, 720);
     ink.add(modelColumns(boxRoot(40, 0)), new Matrix4());
     ink.add(modelColumns(boxRoot(40, 0)), new Matrix4().makeTranslation(0, 800, 800));
+    ink.markOwn();
+    ink.add(modelColumns(boxRoot(40, 0)), new Matrix4().makeTranslation(300, 0, 0));
     ink.end();
-    const [x, y] = pixel(camera, 300, 0, 0);
+    const [x, y] = pixel(camera, -300, 0, 0);
     assert.equal(ink.crosses(x, y, x + 10, y), true, 'the model behind the eye is everywhere');
-    assert.equal(ink.crosses(x, y, x + 10, y, true), false, 'bounded, it is left out');
+    assert.equal(ink.crossesOwn(x, y, x + 10, y), false, 'and left out');
+    const [tx, ty] = pixel(camera, 300, 0, 0);
+    assert.equal(ink.crossesOwn(tx, ty, tx + 1, ty + 1), false, "a track's model is left out");
     const [bx, by] = pixel(camera, 0, 0, -30);
-    assert.equal(ink.crosses(bx, by, bx + 1, by + 1, true), true, 'and the one in front is not');
+    assert.equal(ink.crossesOwn(bx, by, bx + 1, by + 1), true, 'and the own one in front is not');
   });
 
   it('moves its revision only when a model moves', () => {
