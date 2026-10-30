@@ -175,9 +175,9 @@ re-encode (libx264, CRF 16, 60 fps). Playwright's own screencast is off: at C it
 overlay at 10.4 ms a frame against 7.4 under the screen recorder alone
 ([`screencast-C-still.json`](screencast-C-still.json)), so each hold is timed against the
 recorder's start instead (`SCREEN_START_MS`, each mark's `screenS`). Every cut's first and
-last frame read the HUD clock its ticks give. The recorder keeps 92–97 % of a C hold's
-frames, 97 % of the reload's and 99.7 % of a change hold's; the cut repeats the frame
-before for each one missed. The page read 16.7 ms a frame at the end of every hold but the
+last frame read the HUD clock its ticks give. Counted inside each cut's window, the
+recorder keeps 91–98 % of a C hold's frames, 98 % of the reload's and 99.7–99.9 % of a
+change hold's; the cut repeats the frame before for each one missed. The page read 16.7 ms a frame at the end of every hold but the
 C move, so those gaps are the recorder's, not the scene's.
 
 | Clip | File | Ticks | What it shows | Page frame / overlay ms |
@@ -195,10 +195,11 @@ Each clip's JSON beside it holds its ticks, offsets and the probe at its end.
 - **The move.** A Light Scout under the arch, ordered about 200 m east, ran 132 m in 1.2
   s (136 m with reduced motion) before Stop, and settled at 134 m (138 m), with no drift
   from two to four seconds after Stop and no change of depth (1,450 m throughout). The
-  flight reading and the hull's depth strip are on screen; nothing dives or unlocks. Its
-  wake peaked at two bubbles while it ran: 2.5 px each at SIG 12, so faint at this dolly,
-  as `hullWake.ts` floors a quiet hull's wake. A first take pressed Stop on the first
-  reading under way, a 4 m twitch with no wake, and was replaced.
+  flight reading and the hull's depth strip are on screen; nothing dives or unlocks. The
+  probe counted a wake of two bubbles while it ran, 2.5 px each at the 0.06 floor
+  `hullWake.ts` gives a hull at SIG 12. They cannot be told from the marine snow in the
+  cut, even brightened threefold. A first take pressed Stop on the first reading under
+  way, a 4 m twitch with no wake, and was replaced.
 - **The change.** The ruin arrived at tick 38388, 10:39.8, and the sequence began on the
   same tick. With reduced motion the ruin arrived on the same tick and no sequence ran.
   The debris reads in the cut; the cloud's motes do not at H's dolly, and the module

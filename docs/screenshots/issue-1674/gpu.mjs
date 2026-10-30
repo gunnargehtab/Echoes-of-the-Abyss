@@ -23,9 +23,10 @@
  *
  * Clips, paced (no UNPACED), full screen, filmed by a screen recorder at the
  * display's rate. The drive's window must fill the display, which drive.mjs
- * does not do: #1674's run used a copy of it that, after `context.newPage()`,
- * opens a CDP session and sends `Browser.setWindowBounds` with
- * `windowState: 'fullscreen'` for the window `Browser.getWindowForTarget`
+ * does not do: #1674's run used a copy of it that launches with
+ * `--start-fullscreen` (which alone did not fill the display) and, after
+ * `context.newPage()`, opens a CDP session and sends `Browser.setWindowBounds`
+ * with `windowState: 'fullscreen'` for the window `Browser.getWindowForTarget`
  * names. The recorder was ffmpeg 7.1.1's `ddagrab` at 60 fps into lossless
  * `h264_nvenc`, with the display held awake (a sleeping display hands it the
  * last image again). `SCREEN_START_MS` is the recorder's wall-clock start in
@@ -83,8 +84,9 @@ const QUEUE_STEPS = Number(process.env.QUEUE_STEPS ?? 12000);
 const QUEUE_STEPS_C = Number(process.env.QUEUE_STEPS_C ?? 40000);
 /**
  * C-move's run before Stop, about a second of a Light Scout at 105–120 m/s.
- * Its wake sheds a bubble every 44 m at that speed (hullWake.ts), the first
- * about 0.75 s after the order, so a 48 m run left none on the named desktop.
+ * Its wake sheds a bubble every 44 m at that speed (hullWake.ts); a scratch
+ * probe at C saw the first about 0.55 s and 55 m after the order, and a 48 m
+ * take, not kept, shed none.
  */
 const RUN_M = Number(process.env.RUN_M ?? 120);
 const OUT = resolve(process.argv[process.argv.indexOf('--out') + 1]);
@@ -297,7 +299,7 @@ export default async ({ page, shot, recordingStartedMs = null }) => {
       await page.waitForTimeout(2000);
       const settled = await unitAt(unit.id);
       // §9's clip is twelve seconds from the hold; the move and Stop take
-      // about nine, so the settled view stays on screen for the rest.
+      // about ten, so the settled view stays on screen for the rest.
       await page.waitForTimeout(Math.max(0, heldAt + 12500 - Date.now()));
       record.stopped = { from: stopped, to: await mark() };
       // The order took and Stop took: the hull was under way when Stop was
@@ -319,7 +321,9 @@ export default async ({ page, shot, recordingStartedMs = null }) => {
       writeFileSync(join(OUT, `${TAG}.json`), JSON.stringify(record, null, 2) + '\n');
       assert.ok(underWay !== null, 'the escort moved on the order within 15 s');
       // §9's "existing wake": a hull under way sheds bubbles (hullWake.ts).
-      if (!software) assert.ok(run.wakePeak > 0, 'the escort left a wake while it moved');
+      // The probe's count is the whole fleet's, so this holds that a wake
+      // appeared during the move, not that it is this hull's alone.
+      if (!software) assert.ok(run.wakePeak > 0, 'a wake appeared while the escort moved');
       assert.ok(record.escort.settledM >= 2, `the escort moved ${record.escort.settledM} m on the order`);
       // A Light Scout makes 105–120 m a second on the named desktop, so on
       // SwiftShader, whose frames take seconds, the key lands after the
