@@ -92,7 +92,8 @@ change and 198 at 50,356 after it, the collapse's count increment A recorded.
 ## The GPU run
 
 [`gpu.mjs`](gpu.mjs), driven headed by `.claude/skills/run-game/scripts/drive.mjs --channel
-msedge` on the named desktop: a GTX 1070 through `ANGLE (NVIDIA, NVIDIA GeForce GTX 1070
+msedge` for the stations and by a full-screen copy of it for the clips (the module's header
+names the change), on the named desktop: a GTX 1070 through `ANGLE (NVIDIA, NVIDIA GeForce GTX 1070
 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)` and the i7-6700K of
 [gate 6's first reading](../../graphics-standards.md#6-performance-one-world-scene-on-measured-budgets),
 on a 1920 × 1080, 60 Hz display, with the dev servers on the same machine. The client is
@@ -103,8 +104,9 @@ container frames above have 2,412. The ruin is 732 in both.
 
 One session per half and per pixel ratio, two runs of each: eight sessions, 1920 × 1080,
 unpaced (`UNPACED=1`). Each station holds 240 frames of both painters and 240 GPU frames
-unqueued, then 240 behind the queue load. All eight read `gpuTimer: timing`, no dropped GPU
-frame and the intact arch with its 256 motes. The JSONs are `gpu-<half>-dpr<ratio>-r<run>.json`;
+unqueued, then 240 behind the queue load. All eight read `gpuTimer: timing` and no dropped
+GPU frame, and the four on sessions the intact arch, 2,626 triangles, with its 256 motes.
+The JSONs are `gpu-<half>-dpr<ratio>-r<run>.json`;
 run 1's frames at ratio 1 are `gpu-<half>-dpr1-<station>.png`.
 
 Two things in the module changed to get readings that repeat:
@@ -112,10 +114,10 @@ Two things in the module changed to get readings that repeat:
 - **C is read behind a 12 ms load, the rest behind 3.6 ms.** The overlay spends about 7 ms
   a frame at C, in both halves, so C's frames ship every 10 ms. Behind the default load
   the GPU idled for most of each one, and C read 2.0–3.6 ms queued, with the pools off
-  above the pools on in three runs of four. Behind 40,000 steps (`QUEUE_STEPS_C`) it reads
+  above the pools on in two runs of four. Behind 40,000 steps (`QUEUE_STEPS_C`) it reads
   within 0.03 ms of itself. The module now asserts every load outlasts the frame interval.
-- **C is read last.** C's heavier load and its pools-off station run in the on half only.
-  Taken second, they put that half's L and S one to two minutes of mission time behind
+- **C is read last.** The pools-off station, behind C's heavier load, runs in the on half
+  only. Taken second, it put that half's L and S one to two minutes of mission time behind
   the off half's, at another scene: L read 65 calls on against 49 off.
 
 Queued `avgGpuMs`, in ms. On − off is the mean of the two runs on less the mean of the two
@@ -138,7 +140,9 @@ off. C-pools-off is set against C off. The clock is the mission time of run 1's 
 
 The study costs the GPU 0.03–0.09 ms at H, L and S at ratio 1, and 0.05–0.17 ms at 1.5. At
 C, where the arch fills the frame, it costs 0.38 ms at ratio 1 and 0.91 ms at 1.5. The lamp
-pools are 0.01 ms of that at ratio 1 and 0.17 ms at 1.5. Run 1's 6.28 ms worst at C, ratio
+pools are 0.01 ms of that at ratio 1 and 0.17 ms at 1.5. At 1.5 the pools-off station read
+1.6 minutes after C with another hull in view (112,101 triangles against 106,341), which
+can only make that station dearer, so 0.17 ms is a lower bound. Run 1's 6.28 ms worst at C, ratio
 1.5, is one frame; run 2's worst there is 3.06 ms.
 
 Counts and CPU, ratio 1, run 1, in ms (average / worst):
@@ -151,8 +155,8 @@ Counts and CPU, ratio 1, run 1, in ms (average / worst):
 | C | on / off | 36 / 31 | 106,341 / 103,715 | 9.56 / 12.50 · 9.66 / 16.90 | 0.73 / 1.40 · 0.63 / 0.90 | 6.90 / 10.10 · 7.13 / 14.20 |
 | C-pools-off | on | 36 | 106,341 | 9.55 / 14.20 | 0.73 / 1.20 | 6.92 / 10.50 |
 
-The study is five calls and 2,626 triangles at every station, both ratios. Its CPU cost is
-the conn view's, 0.06–0.23 ms; the overlay reads the same in both halves. Every station
+The study is five calls and 2,626 triangles at every station, both ratios. At ratio 1 its
+CPU cost is the conn view's, 0.06–0.23 ms, and the overlay reads the same in both halves. Every station
 draws `canvas`, `split-copy` and `split`, and L also the lamp halo's `depth-copy`,
 `halo-source`, `halo-spread` and `halo-composite`. Textures read 18 at H and 24 elsewhere,
 and the render targets (halo, split and environment) 42.4 MiB at ratio 1 and 94.9 MiB at
@@ -168,43 +172,47 @@ Paced, one session per clip, the study on, ratio 1, recorded full screen. The pa
 Edge set full screen through the DevTools protocol, and the screen is recorded with
 ffmpeg 7.1.1's `ddagrab` at 60 fps into lossless NVENC H.264, then cut to the hold with a
 re-encode (libx264, CRF 16, 60 fps). Playwright's own screencast is off: at C it put the
-overlay at 11.7–14.5 ms a frame and the frame interval at 17.6–21.6 ms, against 7.3 and
-16.7 without it, so each hold is timed against the recorder's start instead
-(`SCREEN_START_MS`, each mark's `screenS`). Every cut's first and last frame read the
-HUD clock its ticks give. The recorder keeps 93–97 % of a C hold's frames, 97 % of the
-reload's and 99.7 % of a change hold's; the cut repeats the frame before for each one
-missed. The page held 16.7 ms a frame through every hold but the C move, so those gaps are
-the recorder's, not the scene's.
+overlay at 10.4 ms a frame against 7.4 under the screen recorder alone
+([`screencast-C-still.json`](screencast-C-still.json)), so each hold is timed against the
+recorder's start instead (`SCREEN_START_MS`, each mark's `screenS`). Every cut's first and
+last frame read the HUD clock its ticks give. The recorder keeps 92–97 % of a C hold's
+frames, 97 % of the reload's and 99.7 % of a change hold's; the cut repeats the frame
+before for each one missed. The page read 16.7 ms a frame at the end of every hold but the
+C move, so those gaps are the recorder's, not the scene's.
 
 | Clip | File | Ticks | What it shows | Page frame / overlay ms |
 | --- | --- | --- | --- | --- |
 | C, no input | `clip-C-still.mp4` | 1092–1812 | The sift, the sway and the lamps | 16.67 / 7.37 |
 | C, no input, reduced motion | `clip-C-still-reduced.mp4` | 1104–1824 | All three hold | 16.67 / 0.91 |
-| C, one escort's move and Stop | `clip-C-move.mp4` | 1092–1836 | Four seconds held, the order at 1380, Stop at 1392, the settled view | 24.46 / 19.38 |
-| The same, reduced motion | `clip-C-move-reduced.mp4` | 1080–1836 | Order at 1368, Stop at 1380 | 16.74 / 2.22 |
+| C, one escort's move and Stop | `clip-C-move.mp4` | 1080–1800 | Four seconds held, the order at 1380, Stop at 1452 after 132 m, the settled view | 23.73 / 18.87 |
+| The same, reduced motion | `clip-C-move-reduced.mp4` | 1080–1800 | The order at 1380, Stop at 1452 after 136 m | 16.67 / 2.00 |
 | H, 10:38 to 10:56 | `clip-H-change.mp4` | 38280–39360 | The change, the debris falling, the settled ruin | 16.67 / 0.76 |
 | The same, reduced motion | `clip-H-change-reduced.mp4` | 38280–39360 | A cut to the ruin, no debris | 16.67 / 0.64 |
-| H, reload after 10:40 | `clip-H-reload.mp4` | 38640–39336 | The ruin standing from the first frame | 16.66 / 0.76 |
+| H, reload after 10:40 | `clip-H-reload.mp4` | 38520–39336 | Two seconds before the reload at 38640, then the ruin standing from the first frame | 16.66 / 0.76 |
 
 Each clip's JSON beside it holds its ticks, offsets and the probe at its end.
 
-- **The move.** A Light Scout under the arch, ordered about 200 m east; Stop landed with
-  the hull 4 m under way, and it settled 12 m from where it started (16 m with reduced
-  motion), with no drift from two to four seconds after Stop and no change of depth (1,450
-  m throughout). The flight reading and the hull's depth strip are on screen; nothing
-  dives or unlocks. No wake reads at C's dolly once the hull is settled.
+- **The move.** A Light Scout under the arch, ordered about 200 m east, ran 132 m in 1.2
+  s (136 m with reduced motion) before Stop, and settled at 134 m (138 m), with no drift
+  from two to four seconds after Stop and no change of depth (1,450 m throughout). The
+  flight reading and the hull's depth strip are on screen; nothing dives or unlocks. Its
+  wake peaked at two bubbles while it ran: 2.5 px each at SIG 12, so faint at this dolly,
+  as `hullWake.ts` floors a quiet hull's wake. A first take pressed Stop on the first
+  reading under way, a 4 m twitch with no wake, and was replaced.
 - **The change.** The ruin arrived at tick 38388, 10:39.8, and the sequence began on the
   same tick. With reduced motion the ruin arrived on the same tick and no sequence ran.
   The debris reads in the cut; the cloud's motes do not at H's dolly, and the module
   counts them only at the hold's end, when the cloud has settled (0 motes).
-- **The reload.** At tick 38640, 10:44, the page reloaded and Resume redeemed the tab's
-  seat. Every frame from the first that drew a landmark, tick 38844, drew the ruin: 481
+- **The reload.** The cut opens two seconds before the reload, while the old page still
+  runs the sequence (at 10:44 its probe read `collapsing` and 384 cloud motes). At tick
+  38640 the page reloaded and Resume redeemed the tab's seat. Every frame from the first
+  that drew a landmark, tick 38844, drew the ruin: 481
   frames, none intact, none collapsing, no cloud. For the 2.1 s before that frame, the
   view is empty water under a HUD reading T+00:00 with the skirmish economy and build
   tabs; that is not the arch's, and is filed as #1693.
 - **The move clip's frame rate.** With the escort selected and the sway on, the overlay
-  spends 19.4 ms a frame and the page ships 41 frames a second. With reduced motion it is
-  2.2 ms. That is #1692 too.
+  spends 18.9 ms a frame and the page ships 42 frames a second. With reduced motion it is
+  2.0 ms. That is #1692 too.
 
-§9 also asks for sonar and construction refusal shown separately; #1674 does not list them,
-and they are not here.
+§9 also asks for sonar and construction refusal shown separately. #1674 does not list them,
+so they are not here; #1695 carries them.

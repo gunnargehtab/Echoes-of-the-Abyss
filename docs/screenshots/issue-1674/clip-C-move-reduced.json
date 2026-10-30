@@ -14,78 +14,87 @@
   "url": "/?arch-study=1",
   "video": null,
   "screen": {
-    "startedMs": 1793400504637
+    "startedMs": 1793402925327
   },
   "held": {
     "from": {
       "tick": 1080,
       "videoS": null,
-      "screenS": 23.9
+      "screenS": 23.63
     },
     "to": {
       "tick": 1320,
       "videoS": null,
-      "screenS": 27.92
+      "screenS": 27.65
     }
   },
   "selected": {
     "unit": {
-      "id": 790,
+      "id": 69,
       "name": "Light Scout",
       "x": 349.5,
       "y": 561.5
     },
-    "tick": 1368,
+    "tick": 1380,
     "videoS": null,
-    "screenS": 28.76
+    "screenS": 28.51
   },
   "moved": {
     "from": {
-      "tick": 1368,
-      "videoS": null,
-      "screenS": 28.77
-    },
-    "to": {
       "tick": 1380,
       "videoS": null,
-      "screenS": 28.93
+      "screenS": 28.56
+    },
+    "to": {
+      "tick": 1452,
+      "videoS": null,
+      "screenS": 29.73
     }
   },
   "stopped": {
     "from": {
-      "tick": 1380,
+      "tick": 1452,
       "videoS": null,
-      "screenS": 28.93
+      "screenS": 29.73
     },
     "to": {
       "tick": 1836,
       "videoS": null,
-      "screenS": 36.42
+      "screenS": 36.13
     }
   },
   "escort": {
     "before": {
-      "id": 790,
+      "id": 69,
       "xM": 2400,
       "zM": 2280,
       "depthM": 1450
     },
     "underWay": {
-      "id": 790,
-      "xM": 2403.70166015625,
-      "zM": 2278.484375,
-      "depthM": 1450,
-      "tick": 1380
-    },
-    "settled": {
-      "id": 790,
+      "id": 69,
       "xM": 2414.806640625,
       "zM": 2273.937744140625,
+      "depthM": 1450,
+      "tick": 1392,
+      "ms": 25311.69999998808
+    },
+    "settled": {
+      "id": 69,
+      "xM": 2527.707275390625,
+      "zM": 2227.720703125,
       "depthM": 1450
     },
     "orderM": 200,
-    "movedAtStopM": 4,
-    "settledM": 16,
+    "atStop": {
+      "id": 69,
+      "xM": 2525.8564453125,
+      "zM": 2228.478515625,
+      "depthM": 1450,
+      "tick": 1452
+    },
+    "movedAtStopM": 136,
+    "wakePeakWhileMoving": 2,
+    "settledM": 138,
     "driftAfterStopM": 0,
     "depthChangeM": 0
   },
@@ -95,7 +104,7 @@
     "look": "sorrowgate",
     "programHold": {
       "holding": false,
-      "heldFrames": 19
+      "heldFrames": 20
     },
     "pitchDeg": 35,
     "yawDeg": 25,
@@ -161,21 +170,21 @@
     "environmentIntensity": 0.35,
     "environmentBytes": 344064,
     "station": null,
-    "stationMs": 31244.6,
-    "stationFrames": 1524,
+    "stationMs": 31297.6,
+    "stationFrames": 1511,
     "avgFrames": 240,
-    "fps": 48.8,
-    "avgFrameMs": 16.74,
-    "worstFrameMs": 2021,
-    "avgConnMs": 0.95,
-    "worstConnMs": 1022.8,
-    "avgOverlayMs": 2.22,
-    "worstOverlayMs": 32,
-    "overlayFrames": 1517,
+    "fps": 48.3,
+    "avgFrameMs": 16.67,
+    "worstFrameMs": 2006.3,
+    "avgConnMs": 0.98,
+    "worstConnMs": 1013.5,
+    "avgOverlayMs": 2,
+    "worstOverlayMs": 31.1,
+    "overlayFrames": 1504,
     "gpuTimer": "timing",
-    "avgGpuMs": 1.97,
-    "worstGpuMs": 392.6,
-    "gpuFrames": 1504,
+    "avgGpuMs": 1.85,
+    "worstGpuMs": 104.09,
+    "gpuFrames": 1490,
     "gpuDropped": 0,
     "gpuQueue": null,
     "gpuSplit": false,
@@ -185,9 +194,9 @@
     "tracks": 4,
     "structureTracks": 0,
     "trackAt": {
-      "x": 3400,
-      "z": 2480,
-      "depthM": 1450
+      "x": 2550,
+      "z": 2950,
+      "depthM": 1490
     },
     "ordnance": 0,
     "wakeBubbles": 0,
@@ -237,8 +246,8 @@
     "modelBacked": 6,
     "modelMeshes": 23,
     "ownCentre": {
-      "x": 2552.115234375,
-      "z": 2551.9911063058034
+      "x": 2568.243896484375,
+      "z": 2545.388671875
     }
   },
   "clip": "clip-C-move-reduced.mp4"
