@@ -693,8 +693,10 @@ flipped.
 4. **Court bounce and material contrast.** Licensed on 29 October for the study's
    normal-view refinement ([sorrowgate-arch-study.md](sorrowgate-arch-study.md) §11). The
    arch's own materials take a diffuse term as from the court floor, from the south and 30°
-   below level, at most the rig's ambient again and with no hue of its own. Nothing else
-   takes it. The landmark's diffuse ceiling rises from 0.06 to at most 0.10, and
+   below level, in the rig's ambient colour and with no hue of its own. Nothing else takes
+   it. On 30 October the owner restated its strength in display terms: the least that lifts
+   H's piers 5 luma over the court floor, never past the escorts' laminate, their brightest
+   lamp pixel or the ember's mean breath (§11). The landmark's diffuse ceiling rises from 0.06 to at most 0.10, and
    `structure_rib` drops to roughness 0.55–0.7 while the stone and silt stay matte. It is
    surface light, not emission, so rule 2's ceiling is untouched, and the pools' ceilings
    above bind it.

@@ -13,7 +13,8 @@ This revision writes them. On 27 October the owner approved the asset block by n
 commissions the arch model inside §6's fit (§10). On 28 October, with the model authored, the
 owner loosened the ruined skirt's ceiling from 5 m to 15 m (§6). The study has since been
 built behind its flag (#1669). On 29 October the owner approved its normal-view refinement
-target and a new round cap (§11).
+target and a new round cap (§11). On 30 October, with its first round measured, the owner
+restated the court bounce's bound in display terms (§11).
 
 On 26 October the owner selected **monumental civic infrastructure: heavy masonry,
 exposed structural ribs and damaged transit fittings**, with four priorities: layered
@@ -481,13 +482,31 @@ The water decision went past the recommendation, so
 [art-direction.md](art-direction.md#reading-the-water) carries it as a licence, as
 [style-neon-noir.md](style-neon-noir.md#the-arch-studys-licence) carries the light.
 
+### Decision of 30 October
+
+#1683's first round built every change at its bound and read H against the criteria below
+([issue-1683](screenshots/issue-1683/README.md)). The piers read 1.1 and 0.9 luma over their
+floors, against 5, and near-black rose from 98.7 % to 98.8 %. The projection under
+"Acceptance at the opening" had been taken in linear light. The view tone-maps the arch with
+ACES at exposure 1, which divides by 0.6, and three's fit returns zero below about 0.0034. A
+south face lit by the ambient, the bounce and the environment alone sits in that toe, so the
+3.3× gain moved it from about 2 luma to 4. The court floor is unlit and not tone-mapped, so
+it reads 17 either way.
+
+| Question | Recommended | Owner's decision |
+| --- | --- | --- |
+| The court bounce's bound | State it in display terms, as the outcome the 29 October projection promised; the alternative was to amend H's acceptance and keep the faces dark | **As recommended** |
+
+The bounce's row below carries the new bound. Nothing else in the table moves, and the
+round cap stands: round 1 is spent.
+
 ### Permitted changes and their bounds
 
 Every change holds behind the study's flag, on the prologue's look (§7, "Isolation").
 
 | Change | Bound |
 | --- | --- |
-| Court bounce | A diffuse term on the landmark's own materials, as from the court floor: from the south and 30° below level, so the south faces and the soffit take it and the deck does not. At full incidence at most the rig's ambient again, `MODEL_LIGHTING.AMBIENT` in its colour, so a south face takes at most twice its ambient today; no hue of its own. The board's still copy takes none, as it takes no pool |
+| Court bounce | A diffuse term on the landmark's own materials, as from the court floor: from the south and 30° below level, so the south faces and the soffit take it and the deck does not. In the rig's ambient colour, `MODEL_LIGHTING.AMBIENT_COLOR`, with no hue of its own. Its strength is bounded in display terms (30 October): the least gain on the ambient at which "H, masses" below holds, and never one at which "H, order" fails, an arch pixel outside a pool reads over the escorts' brightest lamp pixel or the ember's mean breath, or an arch window over the escorts' laminate mean. The board's still copy takes none, as it takes no pool |
 | Diffuse ceiling | The landmark's brightest material at most 0.10 linear diffuse luminance, up from the props' 0.06; the materials keep their tokens' hues and ratios. This crosses the 0.067 cladding floor, so "H, order" below bounds it against the escorts' cladding. The board's still copy takes it too, since it is a material value |
 | Roughness | `structure_rib` 0.55–0.7, so the frame takes a sheen from the existing environment; `stone_dark` and `silt_drift` stay 0.9–1; metalness 0 throughout. The board's still copy takes it too |
 | Distance grade | Public ground beyond the focus fades further into the water it stands in. The measure is a fragment's range from the camera less the camera's distance to its focus. The fog factor is production's plus 0.35 × that excess over the reach, clamped to 0–0.35 extra and to 1 in all, linear between, and the extra is multiplied by `waterDensity`, so 0 draws none. The reach is 0.58 of the dolly, 1,500 m at the opening's 2,600 m, so it breathes with the dolly as the falloff does. Terrain and props only: the landmark keeps production's falloff, so at L, whose reach is 377 m, the Descent wall takes the full 0.35 and the arch none. The arch takes none at C either; C's far ground takes the grade, so C's darkness is read with it on. Never a hull, contact, glow, lamp, survey ink or HUD. No hue and no new pass |
@@ -529,11 +548,11 @@ drawn on that before frame to show where it fell. The points, in model metres:
 | Span face, at L | (0, +136, +72), moving with the face |
 | Descent wall, at L | (0, +60, −375): the Descent's wall two rows north, seen through the opening |
 
-Under the full bounds a pier's south face gains at most about 3.3× in linear light (2× from
-the bounce, 1.67× from the ceiling). On the measured 5/7/10 that is about 16/20/26, luma
-about 19.5 against the floor's 17.7: above the floor, short of the 5 luma the criterion
-asks. The pier criterion therefore leans on the proud piers' lit capitals, which the window
-takes in over the fallen-cladding recess.
+On 29 October this section projected that a pier's south face would gain at most about 3.3×
+in linear light (2× from the bounce, 1.67× from the ceiling), on the measured 5/7/10 about
+16/20/26, luma about 19.5. That projection ignored the tone curve's toe, and the first round
+measured about 4 (the decision of 30 October above). The bounce's bound is now the reading
+itself.
 
 - **H, masses.** Each pier's window reads at least 5 luma brighter, by mean, than the court
   floor's beside it, and the opening floor's at least 5 darker than both piers'. The
