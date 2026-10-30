@@ -85,17 +85,17 @@ export const RIB_ROUGHNESS = 0.6;
 export const BOUNCE_BELOW_DEG = 30;
 /**
  * TUNABLE — the bounce's irradiance at full incidence, in multiples of the
- * rig's ambient. §11 bounds it in display terms, not here (decision of 30
+ * rig's ambient. §11 bounds it in display terms, not here (decisions of 30
  * October): the least gain at which H's piers read 5 luma over the court
- * floor, and never one at which an arch pixel or window outside a pool
- * passes the escorts' lamp marks, their laminate or the ember's mean breath.
- * The ambient again, 1, left the south faces in ACES's toe (#1683, round 1),
- * so the number is read off the stations (docs/screenshots/issue-1683/): 6
- * held the west pier at 5.0 and 5.2 in two sessions, inside a reading's
- * spread of failing, and 7 read 6.7 to 7.2 with the piers still under the
- * laminate.
+ * floor and L's span face 5 off the Descent wall, and never one at which an
+ * arch pixel or window outside a pool passes the escorts' lamp marks, their
+ * laminate or the ember's mean breath. The ambient again, 1, left the south
+ * faces in ACES's toe (#1683, round 1). The sweep (docs/screenshots/
+ * issue-1683/): 7 held H but brought the span face within 3.4 of the wall at
+ * L; 10 held both, the piers 10 over their floors and under the laminate; 12
+ * met the laminate.
  */
-export const BOUNCE_GAIN = 7;
+export const BOUNCE_GAIN = 10;
 
 /** The bounce's irradiance at full incidence for a gain on the ambient, linear RGB. */
 export function bounceIrradiance(gain: number, out = new Color()): Color {

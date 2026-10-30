@@ -497,8 +497,22 @@ it reads 17 either way.
 | --- | --- | --- |
 | The court bounce's bound | State it in display terms, as the outcome the 29 October projection promised; the alternative was to amend H's acceptance and keep the faces dark | **As recommended** |
 
-The bounce's row below carries the new bound. Nothing else in the table moves, and the
-round cap stands: round 1 is spent.
+The second round swept the gain on the ambient at H, L and C. At 7, the least that held "H,
+masses", the span face at L rose to within 3.4 luma of the Descent wall; at 10 it stood 8.1
+over it, H's piers 10 over their floors and under the escorts' laminate, and C's near-black
+88.7 %. At 12 H's piers met the laminate and C fell to 83.4 %. With the grade off, H's
+near-black read 98.71–98.73 %, and with it on 98.72–98.77 %: the grade, the owner's own
+decision of 29 October, is what holds H's darkness from falling. At C's fixed pose the west
+capital lies under the HUD's orders panel and the east one off the frame; at H both read
+about 29.5 at a gain of 10.
+
+| Question | Recommended | Owner's decision |
+| --- | --- | --- |
+| The bounce's gain | The least at which "H, masses" and "L" both hold, 10; the bound as first worded gave 7 and failed L | **As recommended** |
+| "H, darkness" and "C"'s capitals | Read H's darkness with the grade on as a rise of at most 0.1 point, and the capitals at H, where both stand on screen; the alternative was to leave both as open findings | **As recommended** |
+
+The bounce's row and the acceptance below carry both decisions. Nothing else in the table
+moves, and the round cap stands: rounds 1 and 2 are spent.
 
 ### Permitted changes and their bounds
 
@@ -506,7 +520,7 @@ Every change holds behind the study's flag, on the prologue's look (§7, "Isolat
 
 | Change | Bound |
 | --- | --- |
-| Court bounce | A diffuse term on the landmark's own materials, as from the court floor: from the south and 30° below level, so the south faces and the soffit take it and the deck does not. In the rig's ambient colour, `MODEL_LIGHTING.AMBIENT_COLOR`, with no hue of its own. Its strength is bounded in display terms (30 October): the least gain on the ambient at which "H, masses" below holds, and never one at which "H, order" fails, an arch pixel outside a pool reads over the escorts' brightest lamp pixel or the ember's mean breath, or an arch window over the escorts' laminate mean. The board's still copy takes none, as it takes no pool |
+| Court bounce | A diffuse term on the landmark's own materials, as from the court floor: from the south and 30° below level, so the south faces and the soffit take it and the deck does not. In the rig's ambient colour, `MODEL_LIGHTING.AMBIENT_COLOR`, with no hue of its own. Its strength is bounded in display terms (30 October): the least gain on the ambient at which "H, masses" and "L" below both hold, and never one at which "H, order" fails, an arch pixel outside a pool reads over the escorts' brightest lamp pixel or the ember's mean breath, or an arch window over the escorts' laminate mean. The board's still copy takes none, as it takes no pool |
 | Diffuse ceiling | The landmark's brightest material at most 0.10 linear diffuse luminance, up from the props' 0.06; the materials keep their tokens' hues and ratios. This crosses the 0.067 cladding floor, so "H, order" below bounds it against the escorts' cladding. The board's still copy takes it too, since it is a material value |
 | Roughness | `structure_rib` 0.55–0.7, so the frame takes a sheen from the existing environment; `stone_dark` and `silt_drift` stay 0.9–1; metalness 0 throughout. The board's still copy takes it too |
 | Distance grade | Public ground beyond the focus fades further into the water it stands in. The measure is a fragment's range from the camera less the camera's distance to its focus. The fog factor is production's plus 0.35 × that excess over the reach, clamped to 0–0.35 extra and to 1 in all, linear between, and the extra is multiplied by `waterDensity`, so 0 draws none. The reach is 0.58 of the dolly, 1,500 m at the opening's 2,600 m, so it breathes with the dolly as the falloff does. Terrain and props only: the landmark keeps production's falloff, so at L, whose reach is 377 m, the Descent wall takes the full 0.35 and the arch none. The arch takes none at C either; C's far ground takes the grade, so C's darkness is read with it on. Never a hull, contact, glow, lamp, survey ink or HUD. No hue and no new pass |
@@ -561,9 +575,11 @@ itself.
   study on, no arch pixel outside a pool is brighter than the escorts' brightest lamp pixel
   or a vent ember's mean breath (§9), and no arch window outside a pool reads brighter, by
   mean, than the escorts' laminate mask in the same frame.
-- **H, darkness.** Near-black falls from 98.7 % and stays at or above 85 %, as at every station.
-- **C.** The `structure_rib` and `stone_dark` masks differ by at least 5 luma, by mean, and
-  the capitals' south faces read above near-black.
+- **H, darkness.** Near-black, read with the distance grade on, rises at most 0.1 point from
+  98.7 % and stays at or above 85 %, as at every station (30 October).
+- **H, capitals.** Each capital's south face reads above near-black, by mean, at H, where both
+  stand on screen (30 October; C's pose puts one under the HUD and the other off the frame).
+- **C.** The `structure_rib` and `stone_dark` masks differ by at least 5 luma, by mean.
 - **L.** The span face's window and the Descent wall's differ by at least 5 luma, by mean.
 - **S.** No drift line reads as a chart mark, and no surface shimmers in motion.
 
