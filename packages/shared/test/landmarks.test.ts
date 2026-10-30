@@ -10,6 +10,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   landmarkCells,
   landmarkState,
@@ -66,7 +67,8 @@ describe('the public landmark table', () => {
 
 describe('the simulation never reads a landmark', () => {
   it('no backend source names the table or its state', () => {
-    const root = new URL('../../backend/src/', import.meta.url).pathname;
+    // `URL.pathname` keeps a Windows drive as `/D:/…`, which resolves to `D:\D:\…`.
+    const root = fileURLToPath(new URL('../../backend/src/', import.meta.url));
     const files: string[] = [];
     const walk = (dir: string) => {
       for (const entry of readdirSync(dir)) {
