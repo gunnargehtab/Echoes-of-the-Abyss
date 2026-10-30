@@ -520,7 +520,7 @@ export const LANDMARK_TRI_CAP = 12_000;
 
 /**
  * Block 4b's one row, the Sorrowgate transit arch: 570 m along X, four
- * materials, 2,412 triangles intact and 732 ruined by intake's count, its
+ * materials, 2,624 triangles intact and 732 ruined by intake's count, its
  * plans the study's §6 (intact X ±285, Z ±80; ruined X ±285, Z +115 to +150).
  */
 export const PUBLIC_LANDMARK_SPECS: readonly LandmarkSpec[] = [
@@ -528,7 +528,7 @@ export const PUBLIC_LANDMARK_SPECS: readonly LandmarkSpec[] = [
     slug: 'env-ruin-transit-arch',
     footprintM: 570,
     calls: 4,
-    triBudget: { intact: 2412, ruined: 732 },
+    triBudget: { intact: 2624, ruined: 732 },
     plan: {
       intact: { x: [-285, 285], z: [-80, 80] },
       ruined: { x: [-285, 285], z: [115, 150] },
