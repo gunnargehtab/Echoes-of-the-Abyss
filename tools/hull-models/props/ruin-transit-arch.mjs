@@ -105,9 +105,11 @@
  *   at the springing and sits on the capitals, so the intrados reads as an
  *   arc in elevation — `rail_w` and `rail_e`, a 6 m shelf at y 110–112.5
  *   and Z 70.5–76.5 along each capital's proud edge, overhanging its face
- *   at 75 by 1.5 m, over X ±185 to ±255; the west one's last 8 m wrenched
- *   over the capital's edge (`rail_torn`, its south edge dropped to 107.7
- *   at X −185, in front of the capital's face). It cannot droop over the
+ *   at 75 by 1.5 m, over X ±185 to ±255; the west one's last 8 m tipped
+ *   30° over the capital's edge (`rail_torn`, hinged where the capital's
+ *   top meets its face, so its inner edge lifts to 112.25 and only the
+ *   overhang drops, to 109.25 in front of the face; it ends 10 cm short
+ *   of X −185 and nowhere enters the capital). It cannot droop over the
  *   opening as it did from y 123: the soffit rises from 110 at the
  *   springing. `bracket_*` are knees on the capitals' faces under the
  *   overhang; six `mast_*` stand on the shelves to 122.5. The catenary
@@ -626,28 +628,44 @@ const RAIL_Z = [70.5, 76.5];
 const CAPITAL_FACE = 75;
 solid(intact, 'rail_w', rib, slab([-255, -193], RAIL_Y, RAIL_Z));
 solid(intact, 'rail_e', rib, slab([185, 255], RAIL_Y, RAIL_Z));
-// The west shelf's torn end: its last 8 m wrenched over the capital's edge,
-// the south edge dropped to 107.7 in front of the capital's face. It cannot
-// droop over the opening as it did at y 120: the loft's soffit rises from
-// 110 at the springing, and only the six hung fittings hang below it.
+// The west shelf's torn end: its last 8 m tipped over the capital's edge,
+// the section turned 30° about the hinge where the capital's top meets its
+// south face (y 110, Z 75). Everything north of the hinge lifts off the
+// capital, so nothing at Z ≤ 75 is under y 110 and the part cannot enter
+// the capital; only the 1.5 m overhang drops, to 109.25 in front of the
+// face. It ends 10 cm short of X −185, off the plane of the capital's east
+// face. It cannot droop over the opening as it did at y 120: the loft's
+// soffit rises from 110 at the springing, and only the six hung fittings
+// hang below it.
+const TIP = Math.PI / 6;
+const tipped = ([y, z]) => {
+  const dz = z - CAPITAL_FACE;
+  const dy = y - RAIL_Y[0];
+  return [
+    RAIL_Y[0] - dz * Math.sin(TIP) + dy * Math.cos(TIP),
+    CAPITAL_FACE + dz * Math.cos(TIP) + dy * Math.sin(TIP),
+  ];
+};
+// The section carries a corner at the hinge, so the bottom face is two
+// quads: one whose every vertex is at y ≥ 110 (north of the hinge) and one
+// whose every vertex is at Z ≥ 75 (the overhang). A triangle stays in the
+// half-space its three corners share, where one quad across the hinge
+// would bow under the capital's top between its diagonal and its corners.
+const RAIL_SECTION = [
+  [RAIL_Y[0], RAIL_Z[0]],
+  [RAIL_Y[0], CAPITAL_FACE],
+  [RAIL_Y[0], RAIL_Z[1]],
+  [RAIL_Y[1], RAIL_Z[1]],
+  [RAIL_Y[1], RAIL_Z[0]],
+];
 solid(
   intact,
   'rail_torn',
   rib,
   oriented(
     loft([
-      [
-        [-193, 110, 70.5],
-        [-193, 110, 76.5],
-        [-193, 112.5, 76.5],
-        [-193, 112.5, 70.5],
-      ],
-      [
-        [-185, 110, 70.5],
-        [-185, 107.7, 77.2],
-        [-185, 110.1, 78.1],
-        [-185, 112.4, 71.3],
-      ],
+      RAIL_SECTION.map(([y, z]) => [-193, y, z]),
+      RAIL_SECTION.map(tipped).map(([y, z]) => [-185.1, y, z]),
     ])
   )
 );
@@ -834,16 +852,19 @@ drift(intact, [-240, -204], [71, 76], RAIL_Y[1], 1.2, 'north');
 drift(intact, [196, 214], [71, 76], RAIL_Y[1], 0.7, 'north');
 // On the top's ledges, against the deck's step: six crested drifts (§11:
 // five or six, from twelve), no two the same length, width, height or
-// bearing, at no regular spacing, so they cannot read as markings along
-// the deck. The ledges are 21 m wide; each lies inside its own.
+// bearing. Along X they run s, s, n, s, n, n at gaps of 42, 106, 160, 80
+// and 86 m — two neighbours share a ledge at each end and no gap repeats
+// — so they neither alternate nor space evenly and cannot read as a row
+// of markings along the deck. The ledges are 21 m wide; each lies inside
+// its own.
 const DECK_DRIFTS = [
   // [x, ledge, length, width, height, yaw]
-  [-226, 's', 38, 9, 1.6, 0.12],
-  [-62, 's', 26, 7, 1.1, -0.18],
-  [118, 's', 32, 8, 1.4, 0.08],
-  [-158, 'n', 22, 6, 0.9, -0.1],
-  [34, 'n', 40, 9, 1.8, 0.14],
-  [214, 'n', 28, 7, 1.2, -0.2],
+  [-238, 's', 38, 9, 1.6, 0.12],
+  [-196, 's', 24, 7, 1.0, -0.15],
+  [-90, 'n', 30, 8, 1.3, -0.1],
+  [70, 's', 34, 8, 1.4, 0.08],
+  [150, 'n', 20, 6, 0.9, 0.16],
+  [236, 'n', 28, 7, 1.2, -0.2],
 ];
 for (const [x, side, len, wid, h, yaw] of DECK_DRIFTS)
   crest(
