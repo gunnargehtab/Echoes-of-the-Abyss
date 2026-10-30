@@ -503,17 +503,27 @@ masses", the span face at L rose to within 3.4 luma of the Descent wall; at 10 i
 over it, H's piers 10 over their floors and under the escorts' laminate, and C's near-black
 88.7 %. At 12 H's piers met the laminate and C fell to 83.4 %. H's near-black read
 98.71–98.77 % at gains 7 to 11, with the grade on or off, against 98.71 % before the
-refinement, and fell to 98.63 % only at 12; the grade adds 0.03–0.06 point of it. At C's fixed pose the west
-capital lies under the HUD's orders panel and the east one off the frame; at H both read
-about 29.5 at a gain of 10.
+refinement, and fell to 98.63 % only at 12; the grade adds 0.03–0.06 point of it. At C's fixed
+pose the west capital lies under the HUD's orders panel, where the GL canvas reads it at 20.4,
+and the east one off the frame.
+
+The third round read each pier face on its own rows, between its edges projected through the
+frame's camera, and swept whole gains from 5. At 8 the span face at L stood 4.97 over the wall;
+at 9 it stood 6.5 in two readings, with H's piers 8.3–9.2 over their floors and about 4 under
+the escorts' laminate. So 9, not 10, is the least that holds both. At H the capitals' south
+faces are 2–3 px tall: they read 19.0–19.1 and 20.3 at 9 and 24.0 and 25.7 at 12, where "H,
+order" already fails, so no gain inside the bounds lifts both over near-black. The 16 px
+windows had read 29.5 because they took in the key-lit tops.
 
 | Question | Recommended | Owner's decision |
 | --- | --- | --- |
-| The bounce's gain | The least at which "H, masses" and "L" both hold, 10; the bound as first worded gave 7 and failed L | **As recommended** |
+| The bounce's gain | The least at which "H, masses" and "L" both hold, 10 as first read; the bound as first worded gave 7 and failed L | **As recommended**, then 9 (below) |
 | "H, darkness" and "C"'s capitals | Read H's darkness with the grade on as a rise of at most 0.1 point, and the capitals at H, where both stand on screen; the alternative was to leave both as open findings | **As recommended** |
+| The gain, in whole steps | 9, the least whole gain holding "H, masses" and "L"; keeping 10 was the alternative | **As recommended** |
+| "H, capitals", read on the faces | Each face reads above the court floor's window beside it; the alternatives were the capital top and face together, or an open finding | **As recommended** |
 
-The bounce's row and the acceptance below carry both decisions. Nothing else in the table
-moves, and the round cap stands: rounds 1 and 2 are spent.
+The bounce's row and the acceptance below carry these decisions. Nothing else in the table
+moves, and the round cap stands: rounds 1 and 2 are spent, and the third is the last.
 
 ### Permitted changes and their bounds
 
@@ -521,7 +531,7 @@ Every change holds behind the study's flag, on the prologue's look (§7, "Isolat
 
 | Change | Bound |
 | --- | --- |
-| Court bounce | A diffuse term on the landmark's own materials, as from the court floor: from the south and 30° below level, so the south faces and the soffit take it and the deck does not. In the rig's ambient colour, `MODEL_LIGHTING.AMBIENT_COLOR`, with no hue of its own. Its strength is bounded in display terms (30 October): the least gain on the ambient at which "H, masses" and "L" below both hold, and never one at which "H, order" fails, an arch pixel outside a pool reads over the escorts' brightest lamp pixel or the ember's mean breath, or an arch window over the escorts' laminate mean. The board's still copy takes none, as it takes no pool |
+| Court bounce | A diffuse term on the landmark's own materials, as from the court floor: from the south and 30° below level, so the south faces and the soffit take it and the deck does not. In the rig's ambient colour, `MODEL_LIGHTING.AMBIENT_COLOR`, with no hue of its own. Its strength is bounded in display terms (30 October): the least whole gain on the ambient at which "H, masses" and "L" below both hold, and never one at which "H, order" fails, an arch pixel outside a pool reads over the escorts' brightest lamp pixel or the ember's mean breath, or an arch window over the escorts' laminate mean. The board's still copy takes none, as it takes no pool |
 | Diffuse ceiling | The landmark's brightest material at most 0.10 linear diffuse luminance, up from the props' 0.06; the materials keep their tokens' hues and ratios. This crosses the 0.067 cladding floor, so "H, order" below bounds it against the escorts' cladding. The board's still copy takes it too, since it is a material value |
 | Roughness | `structure_rib` 0.55–0.7, so the frame takes a sheen from the existing environment; `stone_dark` and `silt_drift` stay 0.9–1; metalness 0 throughout. The board's still copy takes it too |
 | Distance grade | Public ground beyond the focus fades further into the water it stands in. The measure is a fragment's range from the camera less the camera's distance to its focus. The fog factor is production's plus 0.35 × that excess over the reach, clamped to 0–0.35 extra and to 1 in all, linear between, and the extra is multiplied by `waterDensity`, so 0 draws none. The reach is 0.58 of the dolly, 1,500 m at the opening's 2,600 m, so it breathes with the dolly as the falloff does. Terrain and props only: the landmark keeps production's falloff, so at L, whose reach is 377 m, the Descent wall takes the full 0.35 and the arch none. The arch takes none at C either; C's far ground takes the grade, so C's darkness is read with it on. Never a hull, contact, glow, lamp, survey ink or HUD. No hue and no new pass |
@@ -578,8 +588,9 @@ itself.
   mean, than the escorts' laminate mask in the same frame.
 - **H, darkness.** Near-black, read with the distance grade on, rises at most 0.1 point from
   98.7 % and stays at or above 85 %, as at every station (30 October).
-- **H, capitals.** Each capital's south face reads above near-black, by mean, at H, where both
-  stand on screen (30 October; C's pose puts one under the HUD and the other off the frame).
+- **H, capitals.** Each capital's south face, read on its own rows, reads above the court
+  floor's window beside it, by mean, at H, where both stand on screen (30 October; C's pose
+  puts one under the HUD and the other off the frame).
 - **C.** The `structure_rib` and `stone_dark` masks differ by at least 5 luma, by mean.
 - **L.** The span face's window and the Descent wall's differ by at least 5 luma, by mean.
 - **S.** No drift line reads as a chart mark, and no surface shimmers in motion.
