@@ -500,7 +500,7 @@ The shape changes sit inside §6's plan and levels and
 [Block 4b](asset-prompts-3d.md#block-4b--public-landmarks-authored-no-faction-no-sig)'s
 text, so neither is amended. The ruined state, the lamps, the node names and gate 6's
 study line, four calls and 12,000 triangles a state, are unchanged: the model was 2,412
-triangles intact and 732 ruined before the refinement, and is 2,624 and 732 after it (#1683).
+triangles intact and 732 ruined before the refinement, and is 2,626 and 732 after it (#1683).
 The author builds them; intake and the hull reviewer grade them before the integrated loop
 critic does.
 
