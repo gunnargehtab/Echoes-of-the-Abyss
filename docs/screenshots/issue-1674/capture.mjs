@@ -114,11 +114,6 @@ const FACES = {
     [235, 12, 76],
   ],
 };
-/**
- * #1683's bands: a column down each pier, from the capital top's north edge
- * to the plinth's front foot, 5 px wide and one mean luma a row, so §11's
- * "separate lit bands at least 2 px tall" is read row by row.
- */
 /** #1683's band columns: five a pier, every 20 m across it, from the capital top's north edge to the plinth's foot (round 4). */
 const BAND_COLUMNS = Object.fromEntries(
   [195, 215, 235, 255, 275].flatMap((x) => [
@@ -138,6 +133,11 @@ const BAND_COLUMNS = Object.fromEntries(
     ],
   ])
 );
+/**
+ * #1683's profiles: a column down each pier, from the capital top's north edge
+ * to the plinth's front foot, 5 px wide and one mean luma a row, so §11's
+ * "separate lit bands at least 2 px tall" is read row by row.
+ */
 const PIER_COLUMNS = {
   west: [
     [-235, 110, -75],
@@ -200,12 +200,6 @@ function stats(px, w, h, x0 = 0, y0 = 0, x1 = w, y1 = h) {
   };
 }
 
-/**
- * Arm the reading: from the next animation frame on, the first frame whose
- * tick reaches `tick` reads the conn canvas and the probe and leaves both on
- * `window.__captureReading`. Arming waits on the frame in hand, so it is done
- * well before the capture call, never just ahead of it.
- */
 // The bands, off the mask's blue channel (archMask.ts `MASK_BAND`): down a
 // 16 px column, each row's most common band tag and the
 // mean luma of those pixels, then consecutive rows with one tag as a run.
@@ -249,6 +243,12 @@ function bandRuns(mask, px, w, h, ends) {
   };
 }
 
+/**
+ * Arm the reading: from the next animation frame on, the first frame whose
+ * tick reaches `tick` reads the conn canvas and the probe and leaves both on
+ * `window.__captureReading`. Arming waits on the frame in hand, so it is done
+ * well before the capture call, never just ahead of it.
+ */
 const armReading = (page, tick, archSide) =>
   page.evaluate(
     ({

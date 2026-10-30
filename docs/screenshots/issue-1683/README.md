@@ -32,8 +32,8 @@ VIEW_W=1920 VIEW_H=1080 SHOTS=H@30 TAG=a-H-on SPAN_Z=45 \
   superseded and not kept. The study-off halves `r-H-off.json` and `r-C-off.json` are from the
   same branch at `8b774ba3`, whose scene with the study off is the same, and read the escorts'
   masks with the study off.
-- **Round 4** (`u-H-on*`): `b0587061`'s capture over the round-3 scene, H only, with each
-  pier column read on the mask's band tags (`arch.bands`).
+- **Round 4** (`u-H-on*`): H only, over the round-3 scene with the band tags and their silt
+  and span corrections, each pier column read on the mask's band tags (`arch.bands`).
 - **Round 3** (`t-*`): `4a2db756`, the bounce at 9 times the ambient. Each JSON also carries
   every pier face read on its own rows (`arch.faces`), between its top and bottom edges
   projected through the frame's camera.
@@ -93,31 +93,35 @@ tags instead.
 ### The bands, round 4
 
 The mask's blue channel tags every pier fragment with its mass (plinth, drums 0–2, capital) and
-whether it is a top or a south face (`archMask.ts` `MASK_BAND`). `u-H-on.json`, H at T+00:30
-(tick 1824, gain 9), reads five 16 px columns a pier, every 20 m from X 195 to 275, from the
-capital top's north edge to the plinth's foot, each row taking its most common tag. Rows and
-mean luma of each mass, top and face together, against the court floor's 17.18 west and 17.17
-east (§11 "H, masses" as amended on 30 October: the capital, drum 1 and drum 0 each at least
-2 px tall over the floor; drum 2 excepted):
+whether it is a top or a south face (`archMask.ts` `MASK_BAND`). A top is banded by the height
+just under it, 2 m for silt so a ledge's drift stays its ledge's; a face at the capital's
+heights counts only in front of Z 70, so the span's face is not the capital's. `u-H-on.json`,
+H at T+00:30 (tick 1800, gain 9), reads five 16 px columns a pier, every 20 m from X 195 to
+275, from the capital top's north edge to the plinth's foot, each row taking its most common
+tag. Rows and mean luma of each mass, top and face together, against the court floor's 17.21
+west and 17.12 east (§11 "H, masses" as amended on 30 October: the capital, drum 1 and drum 0
+each at least 2 px tall over the floor; drum 2 excepted):
 
 | Column | Capital | Drum 2 | Drum 1 | Drum 0 |
 | --- | --- | --- | --- | --- |
-| West 195 | 16 @ 34.6 | 4 @ 22.0 | 14 @ 21.8 | 14 @ 23.3 |
-| West 215 | 16 @ 36.0 | 1 @ 19.3 | 14 @ 21.5 | 18 @ 27.8 |
-| West 235 | 16 @ 34.7 | — | 18 @ 27.2 | 13 @ 24.6 |
-| West 255 | 16 @ 36.9 | 3 @ 18.2 | 15 @ 20.7 | 13 @ 24.9 |
-| West 275 | 16 @ 36.4 | 4 @ 22.9 | 14 @ 22.9 | 13 @ 25.4 |
-| East 195 | 21 @ 35.8 | 3 @ 21.9 | 15 @ 21.2 | 15 @ 24.4 |
-| East 215 | 21 @ 37.1 | — | 14 @ 21.5 | 19 @ 28.8 |
-| East 235 | 21 @ 37.5 | — | 15 @ 21.5 | 18 @ 26.9 |
-| East 255 | 21 @ 35.6 | — | 14 @ 20.6 | 19 @ 27.0 |
-| East 275 | 21 @ 36.8 | — | 17 @ 22.5 | 15 @ 23.9 |
+| West 195 | 16 @ 34.0 | 3 @ 22.3 | 14 @ 22.2 | 14 @ 23.3 |
+| West 215 | 16 @ 35.9 | 3 @ 20.5 | 12 @ 21.9 | 16 @ 26.9 |
+| West 235 | 17 @ 34.9 | — | 13 @ 20.8 | 18 @ 28.6 |
+| West 255 | 17 @ 36.2 | 3 @ 19.6 | 14 @ 21.4 | 13 @ 24.8 |
+| West 275 | 17 @ 35.6 | 3 @ 22.4 | 14 @ 23.3 | 13 @ 25.5 |
+| East 195 | 22 @ 36.3 | 2 @ 22.3 | 15 @ 22.2 | 14 @ 24.7 |
+| East 215 | 22 @ 36.8 | — | 13 @ 20.9 | 18 @ 29.3 |
+| East 235 | 22 @ 37.7 | — | 14 @ 20.6 | 17 @ 26.7 |
+| East 255 | 22 @ 36.5 | — | 13 @ 19.4 | 18 @ 26.2 |
+| East 275 | 21 @ 37.1 | — | 16 @ 19.9 | 15 @ 23.1 |
 
-Every capital, drum 1 and drum 0 holds. The capital is lit by its key-lit top; the drums' faces
-read 19–23 and their ledges about 35–43 for about 2 px, the east drum 1's ledge mostly in 1 px
-runs, which is why the owner read the clause on each mass rather than each ledge. Drum 2 draws
-0–4 rows: the capital stands 10 m proud of it. `sweep-H-bands.json` is the same reading in an
-untimed session, with each mass's top and face apart.
+Every capital, drum 1 and drum 0 holds. Apart, the capital's top reads 39.1–41.4 over 12–18
+rows and its face 18.7–21.5 over 4. Drum 1's face reads 18.0–20.5 and its ledge 33.0–39.8 over
+1–2 rows, one row in four of the five east columns; drum 0's face reads 20.0–22.8 and its
+ledge 34.6–41.4 over 2–7, the east pier's from the ledge at 20 m where its cladding fell.
+Drum 2 draws at most 3 rows, of face, where its cladding stands, and none where it has fallen:
+the capital stands 10 m proud of it. `sweep-H-bands.json` is an earlier untimed session,
+taken before the silt and span corrections.
 
 `H-arch-before-after-x3.png` crops the arch from `b-H-on-H-030s.png` and `t-H-on-H-030s.png`
 and scales both three times, nearest neighbour, at the frames' own values.

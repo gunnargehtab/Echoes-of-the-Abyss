@@ -527,9 +527,10 @@ The bounce's row and the acceptance below carry these decisions. Nothing else in
 moves, and the round cap stands: rounds 1 and 2 are spent, and the third is the last.
 
 In the fourth round the mask tagged each pier fragment with its mass and facing. Down five
-columns a pier at H, the capital drew 17–21 rows at about 35 luma, drums 1 and 0 13–18 rows
-each at 20–29 against the floor's 17.2, and their lit ledges about 2 px, the east drum 1's
-mostly split into 1 px runs; drum 2 drew 0–3 rows behind the capital.
+columns a pier at H, in an untimed session (`sweep-H-bands.json` in
+[issue-1683](screenshots/issue-1683/README.md)), the capital drew 17–21 rows at about 35 luma,
+drums 1 and 0 13–18 rows each at 20–29 against the floor's 17.2, and their lit ledges about
+2 px or less; drum 2 drew 0–3 rows under the capital.
 
 | Question | Recommended | Owner's decision |
 | --- | --- | --- |
@@ -594,8 +595,8 @@ itself.
   capitals and the drum bands draw as separate lit bands at least 2 px tall: read on the
   mask's band tags down five columns a pier, the capital, drum 1 and drum 0 each draw at
   least 2 px tall with a mean over the court floor's window, each a separate mass. Drum 2 is
-  excepted: the capital stands 10 m proud of it, so at H it hides behind the capital (30
-  October).
+  excepted: the capital stands 10 m proud of it, so at H it draws at most a few rows under the
+  capital, and none where its cladding has fallen (30 October).
 - **H, order.** The flight stays the first read: an escort's pixels do not change with the
   study on, no arch pixel outside a pool is brighter than the escorts' brightest lamp pixel
   or a vent ember's mean breath (§9), and no arch window outside a pool reads brighter, by
