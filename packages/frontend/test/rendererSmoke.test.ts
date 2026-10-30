@@ -6240,7 +6240,8 @@ describe("where a marker's name stands (#1662)", () => {
     // pixel, and at these instants a corner of the box tested stood under a
     // pixel off the line beside its point, so rounding the foot to the pixel
     // drew the name across it. The suite pins the runner's own instant, and
-    // 24 of 4,000 swept put the sway there: about one run in 170.
+    // 24 of 4,000 frames swept (2,000 instants at two UI scales) put the sway
+    // there: about one run in 170.
     clock?.mock.restore();
     let at = 0;
     clock = mock.method(performance, 'now', () => at);

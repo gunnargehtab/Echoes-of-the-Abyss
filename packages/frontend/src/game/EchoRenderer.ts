@@ -8663,7 +8663,8 @@ export class EchoRenderer {
       placed.push(box.x, box.y, box.x + w, box.y + h);
       // Anchored at the foot of its box, as the name always was. The box was
       // placed with its foot on a whole pixel, so the rounding only sheds the
-      // float error of `- w / 2`; it never moves the name off the box tested.
+      // float error of `- w / 2` and `- h`; it never moves the name off the box
+      // tested.
       name.position.set(Math.round(box.x + w / 2), Math.round(box.y + h));
       name.visible = true;
       shown++;
