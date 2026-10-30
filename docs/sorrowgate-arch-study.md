@@ -511,8 +511,9 @@ The third round read each pier face on its own rows, between its edges projected
 frame's camera, and swept whole gains from 5. At 8 the span face at L stood 4.95 over the wall;
 at 9 it stood 6.5 in two readings, with H's piers 8.3–9.2 over their floors and about 4 under
 the escorts' laminate. So 9, not 10, is the least that holds both. At H the capitals' south
-faces are 2–3 px tall: they read 19.0–19.1 and 20.3 at 9 and 24.0 and 25.7 at 12, where "H,
-order" already fails, so no gain inside the bounds lifts both over near-black. The 16 px
+faces are 2–3 px tall: they read 18.9–19.1 and 20.2–20.3 at 9 and 24.0 and 25.7 at 12, where the
+capital windows already pass the escorts' laminate, so no gain read inside the bounds lifts both
+over near-black. The 16 px
 windows had read 29.5 because they took in the key-lit tops.
 
 | Question | Recommended | Owner's decision |

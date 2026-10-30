@@ -74,9 +74,10 @@ const ARCH_POINTS = {
   capE: [235, 105, 75],
 };
 const FACES = {
-  // #1683's faces: each one's own rows, between its top and bottom edges
-  // projected through the frame's camera, so a window cannot take in the
-  // lit top above a face (round 2's finding). Model metres, south faces.
+  // #1683's faces: the rows between each face's top and bottom edges
+  // projected through the frame's camera, so a capital's reading leaves out
+  // its lit top (round 2's finding). A face set behind the one above it is
+  // partly hidden, and those rows are the nearer face's. Model metres.
   capW: [
     [-235, 110, 75],
     [-235, 100, 75],
@@ -85,6 +86,9 @@ const FACES = {
     [235, 110, 75],
     [235, 100, 75],
   ],
+  // Drum 2 stands 10 m behind the capital: from H its top edge projects
+  // above the capital's, so its upper rows are the capital's own and its
+  // reading is not drum 2's alone (#1683, round 3).
   drum2W: [
     [-235, 100, 65],
     [-235, 80, 65],

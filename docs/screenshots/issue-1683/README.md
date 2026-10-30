@@ -66,7 +66,7 @@ The study-off halves read the same calls and triangles before and after (120,963
 | H, each pier window at least 5 over its floor window | −12.65 W, −9.79 E | +1.09, +0.85: fails | +8.34, +8.77: holds |
 | H, the opening at least 5 under both piers | 12.05 over | 1.47 under: fails | 8.98 under: holds |
 | H, no arch pixel outside a pool over the escorts' brightest lamp pixel or the ember's 83 | 44.4 | 63.7: holds | 63.6 against 177.9: holds |
-| H, no §11 window over the escorts' laminate mean | 17.4 < 29.3 | 18.3 < 29.3: holds | 25.87 against 29.92: holds |
+| H, no arch window over the escorts' laminate mean, the capital windows included | 17.4 < 29.3 | 18.3 < 29.3: holds | 29.74, the west capital's, against 29.92: holds |
 | H, near-black rises at most 0.1 point from 98.71 % | 98.71 % | 98.80 %: holds | 98.75 %: holds |
 | H, each capital's south face over its floor window, on its own rows | — | — | 18.88 against 17.18 W, 20.16 against 17.10 E: holds |
 | C, `structure_rib` and `stone_dark` masks at least 5 apart | 3.5 / 19.5 | 8.1 / 23.2 | holds, 16.9 |
@@ -74,15 +74,20 @@ The study-off halves read the same calls and triangles before and after (120,963
 | L, span face and Descent wall windows at least 5 apart | 5.4 / 12.7 | 8.1 / 14.3 | 20.76 / 14.31: holds, 6.45 |
 
 Three margins are thin. The west capital's face clears its floor by 1.7. The capital windows
-`capW` and `capE`, which are not §11's and take in the key-lit tops, read 29.74 and 29.30
-against the laminate's 29.92. L's span face clears the wall by 6.45, where gain 8 gave 4.95.
+`capW` and `capE`, which take in the key-lit tops, read 29.74 and 29.30 against the laminate's
+29.92; §11's own windows read at most 25.87. L's span face clears the wall by 6.45, where gain 8
+gave 4.95.
 C's west capital, under the HUD's orders panel and read on the GL canvas, is 17.7 on its rows.
 
-The faces: at H a capital's south face is 2 px tall, drum 2's 6, drum 1's and drum 0's 11.
-West and east, they read 18.9 and 20.2, 20.8 and 21.7, 24.1 and 21.7, and 20.2 and 27.1, all
-over the court floor's 17.2. The 5 px column down each pier (`arch.profiles`) shows what lies
-between them: the capital's top and each drum's ledge read about 40, key-lit, so the pier
-reads as stacked bands, lit ledges over faces at 19–27.
+The faces: at H a capital's south face is 2 px tall and reads 18.9 west and 20.2 east, over
+the court floor's 17.2. The other face rows are not each face's own: drum 2 stands 10 m behind
+the capital, so its projected top lies above the capital's and its upper rows are the capital's
+(round 3's critic, from the rows in `t-H-on.json`), and drum 1's mean is carried by its lit
+ledge, its face rows reading 14.4–17.7. So "the capitals and the drum bands draw as separate
+lit bands at least 2 px tall" is not shown here. Round 3's critic read a 1 px row profile of
+the frame: the capital's top about 40 over 8 rows, a band at 23–29 over 2, drum 1's ledge 24–44
+over 2 and drum 0's ledge 24–41 over 2, with the east drum 1 at 24–27 marginal. That is the
+open finding below.
 
 `H-arch-before-after-x3.png` crops the arch from `b-H-on-H-030s.png` and `t-H-on-H-030s.png`
 and scales both three times, nearest neighbour, at the frames' own values.
@@ -99,8 +104,9 @@ and scales both three times, nearest neighbour, at the frames' own values.
 | 12 | +11.53, +12.30 | 10.9 (round 2) | 28.7 / 29.5 against 29.9 |
 
 From `sweep-H-faces.json` and `sweep-L-whole.json`, one session a station. Nine is the least
-whole gain holding both. At 12 H's capital faces reach 24.0 and 25.7, the only gain at which
-both near the 25.5 near-black line, and the piers meet the laminate there.
+whole gain holding both. At 12, of the gains read, H's capital faces reach 24.0 and 25.7,
+nearest the 25.5 near-black line, and the capital windows pass the laminate there (30.79 and
+31.04 against 29.89). Gain 11 was not read with the faces.
 
 ## Why round 1 fell short
 
@@ -133,6 +139,10 @@ near-black at H; with it off, H read 98.71–98.73 %.
 ## Not taken here
 
 §11 asks for §9's whole set. These are left:
+
+- The band clause of "H, masses", above: no row of the table shows it, and the face rows'
+  drum 2 is mostly the capital's. Round 3's critic left it blocking, and the round cap is
+  reached.
 
 - An escort's pixels unchanged with the study on. At C's matched tick 1800 (`r-C-*` at
   `8b774ba3`) the escorts' laminate mean reads 31.12 on and 31.10 off, but pixels differ

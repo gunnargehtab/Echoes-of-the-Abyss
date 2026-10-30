@@ -694,7 +694,7 @@ flipped.
    normal-view refinement ([sorrowgate-arch-study.md](sorrowgate-arch-study.md) §11). The
    arch's own materials take a diffuse term as from the court floor, from the south and 30°
    below level, in the rig's ambient colour and with no hue of its own. Nothing else takes
-   it. On 30 October the owner restated its strength in display terms: the least that lifts
+   it. On 30 October the owner restated its strength in display terms: the least whole gain that lifts
    H's piers 5 luma over the court floor and holds L's span face 5 off the Descent wall,
    never past the escorts' laminate, their brightest lamp pixel or the ember's mean breath
    (§11). The landmark's diffuse ceiling rises from 0.06 to at most 0.10, and
