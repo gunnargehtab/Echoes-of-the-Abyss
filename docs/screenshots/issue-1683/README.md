@@ -170,7 +170,6 @@ near-black at H; with it off, H read 98.71–98.73 %.
 
 §11 asks for §9's whole set. These are left:
 
-
 - An escort's pixels unchanged with the study on. At C's matched tick 1800 (`r-C-*` at
   `8b774ba3`) the escorts' laminate mean reads 31.12 on and 31.10 off, but pixels differ
   everywhere by up to 115 levels, in boxes with and without an escort, because the snow and
