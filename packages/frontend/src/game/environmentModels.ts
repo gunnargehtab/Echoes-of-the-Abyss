@@ -45,6 +45,8 @@ import { swayWeight } from './environment.ts';
 import { installPropSurface, type WorldLook } from './tutorialLook.ts';
 import { keepGlowOutsideToneMapping } from './modelLighting.ts';
 import { installPropVeil } from './veilShading.ts';
+import { ARCH_STUDY_ON } from './archStudy.ts';
+import { installDistanceGrade } from './distanceGrade.ts';
 
 /**
  * TUNABLE — the diffuse luminance a prop's brightest material is set to,
@@ -121,13 +123,16 @@ function luminance(material: MeshStandardMaterial): number {
  * export's; the absolute value is ours. Emissive is left alone — a prop's
  * light was licensed at intake and is not a diffuse property.
  */
-export function normaliseLuminance(materials: Iterable<Material>): void {
+export function normaliseLuminance(
+  materials: Iterable<Material>,
+  ceiling = ENV_LUMINANCE_CEILING
+): void {
   const standard = [...materials].filter(
     (material): material is MeshStandardMaterial => material instanceof MeshStandardMaterial
   );
   const brightest = Math.max(0, ...standard.map(luminance));
   if (brightest <= 0) return;
-  const gain = ENV_LUMINANCE_CEILING / brightest;
+  const gain = ceiling / brightest;
   for (const material of standard) material.color.multiplyScalar(gain);
 }
 
@@ -262,6 +267,9 @@ export function buildTemplate(
     }
     // Last: it wraps the glow's surface term (veilShading.ts).
     installPropVeil(material);
+    // The arch study's distance grade (§11) on the prologue's props, after
+    // the fog it extends; the landmark's templates never come through here.
+    if (look === 'sorrowgate' && ARCH_STUDY_ON) installDistanceGrade(material);
     parts.push({ geometry, material });
   });
   return { parts, trianglesPerInstance: triangles, sway, heightM };

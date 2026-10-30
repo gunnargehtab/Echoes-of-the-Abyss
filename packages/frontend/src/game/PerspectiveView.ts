@@ -188,6 +188,7 @@ import { FaunaStipple } from './faunaStipple.ts';
 import { DREAM_LOOP } from './dreamLoop.ts';
 import { ARCH_STUDY_ON } from './archStudy.ts';
 import { maskTarget, readMaterialMask, type MaskPixels } from './archMask.ts';
+import { installDistanceGrade, setDistanceGrade } from './distanceGrade.ts';
 import {
   duneSource,
   groundDetailCells,
@@ -2363,6 +2364,9 @@ export class PerspectiveView {
     // Between the two: the veil drains the finished ground, surface and
     // detail and all, and the ink goes over it (veilShading.ts).
     installDisplayVeil(material);
+    // The arch study's distance grade (§11): the prologue's ground beyond the
+    // focus fades further into its water, after the fog it extends.
+    if (this.look === 'sorrowgate' && ARCH_STUDY_ON) installDistanceGrade(material);
     if (this.look === 'sorrowgate') installGroundSurface(material);
     else if (this.seabedDetail) {
       // After the ink, whose world position it reads and whose hook it chains.
@@ -3008,6 +3012,8 @@ export class PerspectiveView {
       }
     );
     if (this.look === 'sorrowgate') installGroundSurface(material);
+    // The arch study's distance grade (§11) reaches the apron's ground too.
+    if (this.look === 'sorrowgate' && ARCH_STUDY_ON) installDistanceGrade(material);
     const mesh = new Mesh(geometry, material);
     this.scene.add(mesh);
     apron.mesh = mesh;
@@ -4551,6 +4557,8 @@ export class PerspectiveView {
     if (this.scene.fog instanceof FogExp2) {
       this.scene.fog.density = fogDensityFor(this.distance, this.waterDensity);
     }
+    // The arch study's distance grade breathes with the same dolly (§11).
+    if (ARCH_STUDY_ON) setDistanceGrade(this.distance, this.waterDensity);
 
     // Ember flicker steps on the 5 Hz sonar bucket, never smoothly — the
     // seabed's one light keeps the register (docs/art-direction.md).
