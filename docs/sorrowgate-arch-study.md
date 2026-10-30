@@ -484,7 +484,7 @@ The water decision went past the recommendation, so
 
 ### Decision of 30 October
 
-#1683's first round built every change at its bound and read H against the criteria below
+The first round of #1683 built every change at its bound and read H against the criteria below
 ([issue-1683](screenshots/issue-1683/README.md)). The piers read 1.1 and 0.9 luma over their
 floors, against 5, and near-black rose from 98.7 % to 98.8 %. The projection under
 "Acceptance at the opening" had been taken in linear light. The view tone-maps the arch with
