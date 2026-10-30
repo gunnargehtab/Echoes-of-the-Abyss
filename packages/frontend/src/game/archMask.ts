@@ -54,6 +54,40 @@ export const MASK_CODE = {
   hullLamp: 6,
 } as const;
 
+/**
+ * The pier bands §11's "H, masses" reads, in the mask's blue channel (#1683,
+ * round 4): which of a pier's stacked masses a landmark fragment belongs to,
+ * and whether it is that mass's top or its south face. A drum's top is its
+ * ledge, so a top is banded by the height just under it. 0 is anything else:
+ * the span, an east or west side, a fragment outside the piers' X. The
+ * heights are §6's and the model script's (ruin-transit-arch.mjs): plinth
+ * 0–12, drums 12–45, 45–80 and 80–100, the capital 100–110 with the rail
+ * shelf on it to 112.5.
+ */
+export const MASK_BAND = ['plinth', 'drum0', 'drum1', 'drum2', 'capital'] as const;
+const BAND_FLOORS = [0, 12, 45, 80, 100, 113];
+
+/** The blue code of a band and a facing: 1 + 2 × band + (face ? 1 : 0). */
+export function maskBandCode(band: (typeof MASK_BAND)[number], face: boolean): number {
+  return 1 + 2 * MASK_BAND.indexOf(band) + (face ? 1 : 0);
+}
+
+const BAND_GLSL = `float maskBand( vec3 p, vec3 n ) {
+	float ax = abs( p.x );
+	if ( ax < 185.0 || ax > 285.0 ) return 0.0;
+	bool top = n.y > 0.7;
+	bool face = n.z > 0.7;
+	if ( !top && !face ) return 0.0;
+	float y = top ? p.y - 0.5 : p.y;
+	${BAND_FLOORS.slice(1)
+    .map(
+      (ceiling, band) =>
+        `if ( y >= ${BAND_FLOORS[band]!.toFixed(1)} && y < ${ceiling.toFixed(1)} ) return float( ${1 + 2 * band} + ( face ? 1 : 0 ) );`
+    )
+    .join('\n\t')}
+	return 0.0;
+}`;
+
 /** One landmark part standing: its mesh, its material's name and its pools' uniforms. */
 export interface MaskLandmarkPart {
   mesh: InstancedMesh;
@@ -207,15 +241,23 @@ function landmarkMask(code: number, side: Side, uniforms: LandmarkUniforms): Mes
     shader.uniforms.uPool = uniforms.uPool;
     shader.uniforms.uPoolCount = uniforms.uPoolCount;
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vMaskPos;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvMaskPos = transformed;');
+      .replace(
+        '#include <common>',
+        '#include <common>\nvarying vec3 vMaskPos;\nvarying vec3 vMaskNormal;'
+      )
+      .replace(
+        '#include <begin_vertex>',
+        '#include <begin_vertex>\nvMaskPos = transformed;\nvMaskNormal = normal;'
+      );
     shader.fragmentShader = shader.fragmentShader
       .replace(
         '#include <common>',
         `#include <common>
 uniform vec4 uPool[${LAMP_COUNT}];
 uniform int uPoolCount;
-varying vec3 vMaskPos;`
+varying vec3 vMaskPos;
+varying vec3 vMaskNormal;
+${BAND_GLSL}`
       )
       .replace(
         '#include <dithering_fragment>',
@@ -225,9 +267,9 @@ for ( int i = 0; i < ${LAMP_COUNT}; i ++ ) {
 	if ( i >= uPoolCount ) break;
 	if ( uPool[ i ].w > 0.0 && length( uPool[ i ].xyz - vMaskPos ) < ${POOL_RADIUS_M.toFixed(1)} ) inPool = 1.0;
 }
-gl_FragColor = vec4( ${(code / 255).toFixed(6)}, inPool, 0.0, 1.0 );`
+gl_FragColor = vec4( ${(code / 255).toFixed(6)}, inPool, maskBand( vMaskPos, normalize( vMaskNormal ) ) / 255.0, 1.0 );`
       );
   };
-  material.customProgramCacheKey = () => `arch-mask-pool-${code}`;
+  material.customProgramCacheKey = () => `arch-mask-pool-band-${code}`;
   return material;
 }

@@ -609,6 +609,9 @@ the pull request stays open with its findings listed, and there is no reset and 
 round without a new written grant. Production is unchanged; promotion remains a separate
 written decision (§5).
 
+On 30 October, with round 3's critic leaving "H, masses"'s band clause open, the owner granted
+#1683 a fourth and a fifth round for that clause alone. Reaching the fifth is a stall as above.
+
 ## Related
 
 - [Existing Sorrowgate visual slice](visual-reboot.md)

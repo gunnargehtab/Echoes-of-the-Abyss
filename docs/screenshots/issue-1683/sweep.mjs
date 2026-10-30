@@ -60,6 +60,67 @@ const FACES = {
     [235, 12, 76],
   ],
 };
+const BAND_COLUMNS = Object.fromEntries(
+  [195, 215, 235, 255, 275].flatMap((x) => [
+    [
+      `west${x}`,
+      [
+        [-x, 113, -75],
+        [-x, 0, 80],
+      ],
+    ],
+    [
+      `east${x}`,
+      [
+        [x, 113, -75],
+        [x, 0, 80],
+      ],
+    ],
+  ])
+);
+// The bands, off the mask's blue channel (archMask.ts `MASK_BAND`): down a
+// 16 px column, each row's most common band tag and the
+// mean luma of those pixels, then consecutive rows with one tag as a run.
+function bandRuns(mask, px, w, h, ends) {
+  const ats = window.__archStudyPoints?.(ends) ?? null;
+  if (ats === null) return null;
+  const x = Math.round(((ats[0].x + ats[1].x) / 2) * devicePixelRatio);
+  const y0 = Math.round(Math.min(ats[0].y, ats[1].y) * devicePixelRatio);
+  const y1 = Math.round(Math.max(ats[0].y, ats[1].y) * devicePixelRatio);
+  const L = (i) => 0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2];
+  const runs = [];
+  for (let y = Math.max(0, y0); y <= Math.min(h - 1, y1); y++) {
+    const tally = new Map();
+    for (let xx = Math.max(0, x - 8); xx < Math.min(w, x + 8); xx++) {
+      const i = ((h - 1 - y) * w + xx) * 4;
+      const code = mask.pixels[i + 2];
+      if (code === 0) continue;
+      const t = tally.get(code) ?? { n: 0, sum: 0 };
+      t.n++;
+      t.sum += L(i);
+      tally.set(code, t);
+    }
+    let code = 0;
+    let best = { n: 0, sum: 0 };
+    for (const [c, t] of tally) if (t.n > best.n) [code, best] = [c, t];
+    const last = runs[runs.length - 1];
+    if (last !== undefined && last.code === code) {
+      last.rows++;
+      last.sum += best.sum;
+      last.n += best.n;
+    } else runs.push({ code, top: y, rows: 1, sum: best.sum, n: best.n });
+  }
+  return {
+    x,
+    runs: runs.map(({ code, top, rows, sum, n }) => ({
+      code,
+      top,
+      rows,
+      meanLuma: n === 0 ? null : Number((sum / n).toFixed(2)),
+    })),
+  };
+}
+
 const POSE = process.env.POSE ? JSON.parse(process.env.POSE) : null;
 const SIDE = Number(process.env.SIDE ?? 16);
 const POINTS = {
@@ -90,7 +151,7 @@ export default async ({ page }) => {
     );
     await page.waitForTimeout(4000);
     const r = await page.evaluate(
-      ({ POINTS, SIDE, FACES }) =>
+      ({ POINTS, SIDE, FACES, BAND_COLUMNS, bandSrc }) =>
         new Promise((done) =>
           requestAnimationFrame(() => {
             const gl = document.querySelector('.perspective-host canvas').getContext('webgl2');
@@ -147,6 +208,13 @@ export default async ({ page }) => {
             let under = 0;
             for (let i = 0; i < w * h * 4; i += 4) if (L(i) < 25.5) under++;
             const mask = window.__archStudyMask();
+            const runsOf = new Function(`return ${bandSrc}`)();
+            const bands = Object.fromEntries(
+              Object.entries(BAND_COLUMNS).map(([pier, ends]) => [
+                pier,
+                runsOf(mask, px, w, h, ends),
+              ])
+            );
             const m = {};
             for (const [name, code] of Object.entries({
               stone: 1,
@@ -173,10 +241,11 @@ export default async ({ page }) => {
               nearBlack: +((under / (w * h)) * 100).toFixed(2),
               m,
               faces,
+              bands,
             });
           })
         ),
-      { POINTS, SIDE, FACES }
+      { POINTS, SIDE, FACES, BAND_COLUMNS, bandSrc: String(bandRuns) }
     );
     rows.push({
       gain,
@@ -186,6 +255,31 @@ export default async ({ page }) => {
       ...r,
     });
     const { win } = r;
+    const NAMES = ['plinth', 'drum0', 'drum1', 'drum2', 'capital'];
+    // Per column, each band's rows (top and face together) and mean luma.
+    for (const [col, b] of Object.entries(r.bands)) {
+      if (b === null) continue;
+      const per = {};
+      for (const u of b.runs) {
+        if (u.code === 0 || u.meanLuma === null) continue;
+        const band = NAMES[(u.code - 1) >> 1];
+        const t = (per[band] ??= { rows: 0, sum: 0, top: 0, face: 0 });
+        t.rows += u.rows;
+        t.sum += u.meanLuma * u.rows;
+        if ((u.code - 1) & 1) t.face += u.rows;
+        else t.top += u.rows;
+      }
+      console.log(
+        `  ${col}: ${NAMES.slice()
+          .reverse()
+          .map((n) =>
+            per[n]
+              ? `${n} ${per[n].rows}r(${per[n].top}T/${per[n].face}F)@${(per[n].sum / per[n].rows).toFixed(1)}`
+              : `${n} -`
+          )
+          .join(' | ')}`
+      );
+    }
     const face = (k) => `${r.faces[k].meanLuma}(${r.faces[k].rows.length})`;
     console.log(
       `bounce ${gain} c ${ceiling} g ${grade ? 1 : 0} span ${win.span} wall ${win.wall} capFace ${face('capW')}/${face('capE')} drum2 ${face('drum2W')}/${face('drum2E')} drum1 ${face('drum1W')}/${face('drum1E')} drum0 ${face('drum0W')}/${face('drum0E')} | nb ${r.nearBlack}% pier ${win.pierW}/${win.pierE} floor ${win.floorW}/${win.floorE} opening ${win.opening} | masses ${(win.pierW - win.floorW).toFixed(2)} ${(win.pierE - win.floorE).toFixed(2)} | lam ${r.m.laminate[1]} archmax ${Math.max(r.m.stone[2], r.m.rib[2], r.m.silt[2])}`

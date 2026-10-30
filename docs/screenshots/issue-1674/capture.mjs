@@ -119,6 +119,25 @@ const FACES = {
  * to the plinth's front foot, 5 px wide and one mean luma a row, so §11's
  * "separate lit bands at least 2 px tall" is read row by row.
  */
+/** #1683's band columns: five a pier, every 20 m across it, from the capital top's north edge to the plinth's foot (round 4). */
+const BAND_COLUMNS = Object.fromEntries(
+  [195, 215, 235, 255, 275].flatMap((x) => [
+    [
+      `west${x}`,
+      [
+        [-x, 113, -75],
+        [-x, 0, 80],
+      ],
+    ],
+    [
+      `east${x}`,
+      [
+        [x, 113, -75],
+        [x, 0, 80],
+      ],
+    ],
+  ])
+);
 const PIER_COLUMNS = {
   west: [
     [-235, 110, -75],
@@ -187,10 +206,65 @@ function stats(px, w, h, x0 = 0, y0 = 0, x1 = w, y1 = h) {
  * `window.__captureReading`. Arming waits on the frame in hand, so it is done
  * well before the capture call, never just ahead of it.
  */
+// The bands, off the mask's blue channel (archMask.ts `MASK_BAND`): down a
+// 16 px column, each row's most common band tag and the
+// mean luma of those pixels, then consecutive rows with one tag as a run.
+function bandRuns(mask, px, w, h, ends) {
+  const ats = window.__archStudyPoints?.(ends) ?? null;
+  if (ats === null) return null;
+  const x = Math.round(((ats[0].x + ats[1].x) / 2) * devicePixelRatio);
+  const y0 = Math.round(Math.min(ats[0].y, ats[1].y) * devicePixelRatio);
+  const y1 = Math.round(Math.max(ats[0].y, ats[1].y) * devicePixelRatio);
+  const L = (i) => 0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2];
+  const runs = [];
+  for (let y = Math.max(0, y0); y <= Math.min(h - 1, y1); y++) {
+    const tally = new Map();
+    for (let xx = Math.max(0, x - 8); xx < Math.min(w, x + 8); xx++) {
+      const i = ((h - 1 - y) * w + xx) * 4;
+      const code = mask.pixels[i + 2];
+      if (code === 0) continue;
+      const t = tally.get(code) ?? { n: 0, sum: 0 };
+      t.n++;
+      t.sum += L(i);
+      tally.set(code, t);
+    }
+    let code = 0;
+    let best = { n: 0, sum: 0 };
+    for (const [c, t] of tally) if (t.n > best.n) [code, best] = [c, t];
+    const last = runs[runs.length - 1];
+    if (last !== undefined && last.code === code) {
+      last.rows++;
+      last.sum += best.sum;
+      last.n += best.n;
+    } else runs.push({ code, top: y, rows: 1, sum: best.sum, n: best.n });
+  }
+  return {
+    x,
+    runs: runs.map(({ code, top, rows, sum, n }) => ({
+      code,
+      top,
+      rows,
+      meanLuma: n === 0 ? null : Number((sum / n).toFixed(2)),
+    })),
+  };
+}
+
 const armReading = (page, tick, archSide) =>
   page.evaluate(
-    ({ tick, window: side, statsSrc, archSide, archPoints, maskCodes, pierColumns, faces }) => {
+    ({
+      tick,
+      window: side,
+      statsSrc,
+      bandSrc,
+      archSide,
+      archPoints,
+      maskCodes,
+      pierColumns,
+      faces,
+      bandColumns,
+    }) => {
       const stats = new Function(`return ${statsSrc}`)();
+      const bandRuns = new Function(`return ${bandSrc}`)();
       const faceRows = (ends, read) => {
         const ats = window.__archStudyPoints?.(ends) ?? null;
         if (ats === null) return null;
@@ -305,6 +379,15 @@ const armReading = (page, tick, archSide) =>
             masks,
             profiles,
             faces: faceReadings,
+            bands:
+              mask === null
+                ? null
+                : Object.fromEntries(
+                    Object.entries(bandColumns).map(([pier, ends]) => [
+                      pier,
+                      bandRuns(mask, px, w, h, ends),
+                    ])
+                  ),
             shade: window.__archStudyShade?.() ?? null,
             switches: window.__archStudy?.({}) ?? null,
           };
@@ -327,6 +410,8 @@ const armReading = (page, tick, archSide) =>
       maskCodes: MASK_CODES,
       pierColumns: PIER_COLUMNS,
       faces: FACES,
+      bandColumns: BAND_COLUMNS,
+      bandSrc: String(bandRuns),
     }
   );
 
