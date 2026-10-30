@@ -84,6 +84,9 @@ over the court floor's 17.2. The 5 px column down each pier (`arch.profiles`) sh
 between them: the capital's top and each drum's ledge read about 40, key-lit, so the pier
 reads as stacked bands, lit ledges over faces at 19–27.
 
+`H-arch-before-after-x3.png` crops the arch from `b-H-on-H-030s.png` and `t-H-on-H-030s.png`
+and scales both three times, nearest neighbour, at the frames' own values.
+
 ### How the gain was set
 
 | Gain | H piers over the floor | L span over the wall | H piers against the laminate |
