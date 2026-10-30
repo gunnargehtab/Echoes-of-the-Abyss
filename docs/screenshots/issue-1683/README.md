@@ -3,8 +3,9 @@
 The readings [sorrowgate-arch-study.md](../../sorrowgate-arch-study.md) §11 asks of the
 refinement, at §9's four stations. Round 1 built every change at its 29 October bound and failed
 H: its critic stopped the loop. On 30 October the owner restated the court bounce's bound in
-display terms, and then its gain and two criteria, from round 2's sweeps (§11, the decisions of
-30 October). Round 2, at a bounce gain of 10, meets every criterion this container can read.
+display terms, then set its gain and amended three criteria from rounds 2 and 3's sweeps (§11,
+the decisions of 30 October). Round 3, at a bounce gain of 9, meets every criterion this
+container can read; what it cannot read is listed at the foot.
 
 ## How the frames were taken
 
@@ -26,56 +27,77 @@ VIEW_W=1920 VIEW_H=1080 SHOTS=H@30 TAG=a-H-on SPAN_Z=45 \
 - **Round 1** (`a-*.json`): `db269506`, with the bounce at the ambient again, the 0.10 ceiling,
   rib roughness 0.6, the distance grade and the reshaped model. `SPAN_Z` 45, the span face's
   new Z. Its frames are superseded and not kept.
-- **Round 2** (`g-*`): `20bd0000`, the bounce at 10 times the ambient, `SPAN_Z` 45. The study-off
-  halves `r-H-off.json` and `r-C-off.json` are from the same branch at `8b774ba3`, whose
-  scene with the study off is the same, and read the escorts' masks with the study off.
+- **Round 2** (`g-*.json`): `20bd0000`, the bounce at 10 times the ambient. Its frames are
+  superseded and not kept. The study-off halves `r-H-off.json` and `r-C-off.json` are from the
+  same branch at `8b774ba3`, whose scene with the study off is the same, and read the escorts'
+  masks with the study off.
+- **Round 3** (`t-*`): `4a2db756`, the bounce at 9 times the ambient. Each JSON also carries
+  every pier face read on its own rows (`arch.faces`), between its top and bottom edges
+  projected through the frame's camera.
 
 `*-windows.png` is the frame with each §11 window drawn where it fell. Each `*.json` carries
 the reading tick, the pose, the probe, the windows and the per-material masks (`arch.masks`:
 pixels outside the pools, mean and brightest luma, and the pixels inside the pools).
 
 Sessions on this container stand the six hull models between ticks 1,730 and 2,150, so in round
-1 a station at T+00:30 failed on most tries: C with the study on took thirty-one. Round 2's
-four took one each. Reading ticks run 1,800 to 1,884, so a pair's halves are up to 1.2 s apart,
+1 a station at T+00:30 failed on most tries: C with the study on took thirty-one. Rounds 2 and
+3 took one try each. Reading ticks run 1,800 to 1,884, so a pair's halves are up to 1.2 s apart,
 not matched to the tick.
 
 [`sweep.mjs`](sweep.mjs) reads the same windows and masks at several settings of the study's
 switches in one session; `sweep-H.json`, `sweep-L.json`, `sweep-C.json` and
-`diagnosis-H.json` are its runs.
+`diagnosis-H.json` are round 2's runs, and `sweep-H-faces.json` and `sweep-L-whole.json`
+round 3's, with the faces and whole gains from 5.
 
 ## The readings
 
-| Station | Reading tick before / round 2 | Calls on / off | Landmark triangles | Near-black before → round 1 → round 2 |
+| Station | Reading tick before / round 3 | Calls on / off | Landmark triangles | Near-black before → round 1 → round 3 |
 | --- | --- | --- | --- | --- |
-| H | 1824 / 1824 | 56 / 51 | 2,412 → 2,626 | 98.71 % → 98.80 % → 98.73 % |
-| C | 1848 / 1848 | 36 / 31 | 2,412 → 2,626 | 86.9 % → 89.3 % → 88.7 % |
-| L | 1872 / 1824 | 54 / 49 | 2,412 → 2,626 | 98.1 % → 97.9 % → 97.8 % |
-| S | 1848 / 1824 | 56 / 51 | 2,412 → 2,626 | 99.1 % → 99.0 % → 98.9 % |
+| H | 1824 / 1812 | 56 / 51 | 2,412 → 2,626 | 98.71 % → 98.80 % → 98.75 % |
+| C | 1848 / 1824 | 36 / 31 | 2,412 → 2,626 | 86.9 % → 89.3 % → 88.8 % |
+| L | 1872 / 1800 | 54 / 49 | 2,412 → 2,626 | 98.1 % → 97.9 % → 97.9 % |
+| S | 1848 / 1800 | 56 / 51 | 2,412 → 2,626 | 99.1 % → 99.0 % → 98.9 % |
 
 The study-off halves read the same calls and triangles before and after (120,963 at H and S,
 103,715 at C, 112,998 at L), so nothing outside the flag moved.
 
-| §11 criterion, as amended on 30 October | Before | Round 1 | Round 2 |
+| §11 criterion, as amended on 30 October | Before | Round 1, gain 1 | Round 3, gain 9 |
 | --- | --- | --- | --- |
-| H, each pier window at least 5 over its floor window | −12.65 W, −9.79 E | +1.09, +0.85: fails | +10.17, +10.08: holds |
-| H, the opening at least 5 under both piers | 12.05 over | 1.47 under: fails | 10.85 under: holds |
-| H, no arch pixel outside a pool over the escorts' brightest lamp pixel or the ember's 83 | 44.4 | 63.7: holds | 63.9 against 177.9: holds |
-| H, no arch window over the escorts' laminate mean | 17.4 < 29.3 | 18.3 < 29.3: holds | 29.98, the west capital, against 30.51: holds |
-| H, near-black rises at most 0.1 point from 98.7 % | 98.71 % | 98.80 %: holds as amended | 98.73 %: holds |
-| H, each capital's south face above near-black | — | — | 29.98 W, 29.65 E: holds |
-| C, `structure_rib` and `stone_dark` masks at least 5 apart | 3.5 / 19.5 | 8.1 / 23.2 | 14.2 / 31.2: holds, 17.0 |
-| C, near-black inside 85–90 % | 86.9 % | 89.3 % | 88.7 %: holds |
-| L, span face and Descent wall windows at least 5 apart | 5.4 / 12.7 | 8.1 / 14.3 | 22.3 / 14.3: holds, 8.0 |
+| H, each pier window at least 5 over its floor window | −12.65 W, −9.79 E | +1.09, +0.85: fails | +8.34, +8.77: holds |
+| H, the opening at least 5 under both piers | 12.05 over | 1.47 under: fails | 8.98 under: holds |
+| H, no arch pixel outside a pool over the escorts' brightest lamp pixel or the ember's 83 | 44.4 | 63.7: holds | 63.6 against 177.9: holds |
+| H, no §11 window over the escorts' laminate mean | 17.4 < 29.3 | 18.3 < 29.3: holds | 25.87 against 29.92: holds |
+| H, near-black rises at most 0.1 point from 98.71 % | 98.71 % | 98.80 %: holds | 98.75 %: holds |
+| H, each capital's south face over its floor window, on its own rows | — | — | 18.88 against 17.18 W, 20.16 against 17.10 E: holds |
+| C, `structure_rib` and `stone_dark` masks at least 5 apart | 3.5 / 19.5 | 8.1 / 23.2 | holds, 16.9 |
+| C, near-black inside 85–90 % | 86.9 % | 89.3 % | 88.8 %: holds |
+| L, span face and Descent wall windows at least 5 apart | 5.4 / 12.7 | 8.1 / 14.3 | 20.76 / 14.31: holds, 6.45 |
 
-The laminate clause is the tightest: the west capital's window sits 0.5 under the escorts'
-laminate at H. At a gain of 12 the sweep put the piers level with it (`sweep-H.json`), which is
-why §11 now bounds the gain by the least that holds H and L, 10.
+Three margins are thin. The west capital's face clears its floor by 1.7. The capital windows
+`capW` and `capE`, which are not §11's and take in the key-lit tops, read 29.74 and 29.30
+against the laminate's 29.92. L's span face clears the wall by 6.45, where gain 8 gave 4.95.
+C's west capital, under the HUD's orders panel and read on the GL canvas, is 17.7 on its rows.
 
-The bands: each `g-H-on.json` carries a 5 px column down each pier (`arch.profiles`), one mean
-luma a row. Down the west pier at H, from the capital's top, the column reads 39–41 for 23
-rows, 26–46 for ten, 21–26 for fourteen, 36–47 for twelve, then alternates between 12 and 44
-down to the plinth's 16–22: lit bands several rows tall between darker ones. Which part each
-band is, the rows do not say. The east pier reads the same order.
+The faces: at H a capital's south face is 2 px tall, drum 2's 6, drum 1's and drum 0's 11.
+West and east, they read 18.9 and 20.2, 20.8 and 21.7, 24.1 and 21.7, and 20.2 and 27.1, all
+over the court floor's 17.2. The 5 px column down each pier (`arch.profiles`) shows what lies
+between them: the capital's top and each drum's ledge read about 40, key-lit, so the pier
+reads as stacked bands, lit ledges over faces at 19–27.
+
+### How the gain was set
+
+| Gain | H piers over the floor | L span over the wall | H piers against the laminate |
+| --- | --- | --- | --- |
+| 5 | +3.99, +4.62 | 0.10 | 21.2 / 21.8 against 30.1 |
+| 6 | +5.38, +5.75 | 1.71 | 22.6 / 22.9 against 30.2 |
+| 8 | +8.10, +8.15 | 4.95 | 25.3 / 25.3 against 29.7 |
+| 9 | +8.65, +9.23; +8.25, +8.94 | 6.46; 6.45 | 25.8 / 26.4 against 29.9 |
+| 10 | +9.15, +10.14 | 8.02 | 26.4 / 27.3 against 29.5 |
+| 12 | +11.53, +12.30 | 10.9 (round 2) | 28.7 / 29.5 against 29.9 |
+
+From `sweep-H-faces.json` and `sweep-L-whole.json`, one session a station. Nine is the least
+whole gain holding both. At 12 H's capital faces reach 24.0 and 25.7, the only gain at which
+both near the 25.5 near-black line, and the piers meet the laminate there.
 
 ## Why round 1 fell short
 

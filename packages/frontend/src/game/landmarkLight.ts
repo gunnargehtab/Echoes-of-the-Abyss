@@ -91,7 +91,7 @@ export const BOUNCE_BELOW_DEG = 30;
  * the Descent wall, never one past the escorts' lamp marks, their laminate or
  * the ember's mean breath. The ambient again, 1, left the south faces in
  * ACES's toe (#1683, round 1). The sweeps (docs/screenshots/issue-1683/): at 8
- * L's span face stood 4.97 off the wall; at 9, 6.5, with H's piers about 4
+ * L's span face stood 4.95 off the wall; at 9, 6.5, with H's piers about 4
  * under the laminate.
  */
 export const BOUNCE_GAIN = 9;

@@ -508,7 +508,7 @@ pose the west capital lies under the HUD's orders panel, where the GL canvas rea
 and the east one off the frame.
 
 The third round read each pier face on its own rows, between its edges projected through the
-frame's camera, and swept whole gains from 5. At 8 the span face at L stood 4.97 over the wall;
+frame's camera, and swept whole gains from 5. At 8 the span face at L stood 4.95 over the wall;
 at 9 it stood 6.5 in two readings, with H's piers 8.3–9.2 over their floors and about 4 under
 the escorts' laminate. So 9, not 10, is the least that holds both. At H the capitals' south
 faces are 2–3 px tall: they read 19.0–19.1 and 20.3 at 9 and 24.0 and 25.7 at 12, where "H,
