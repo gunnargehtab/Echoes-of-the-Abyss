@@ -14,7 +14,8 @@ commissions the arch model inside §6's fit (§10). On 28 October, with the mode
 owner loosened the ruined skirt's ceiling from 5 m to 15 m (§6). The study has since been
 built behind its flag (#1669). On 29 October the owner approved its normal-view refinement
 target and a new round cap (§11). On 30 October, with its first round measured, the owner
-restated the court bounce's bound in display terms (§11).
+restated the court bounce's bound in display terms, and after its second round set the
+bounce's gain and amended two of the opening's criteria (§11).
 
 On 26 October the owner selected **monumental civic infrastructure: heavy masonry,
 exposed structural ribs and damaged transit fittings**, with four priorities: layered
@@ -500,9 +501,9 @@ it reads 17 either way.
 The second round swept the gain on the ambient at H, L and C. At 7, the least that held "H,
 masses", the span face at L rose to within 3.4 luma of the Descent wall; at 10 it stood 8.1
 over it, H's piers 10 over their floors and under the escorts' laminate, and C's near-black
-88.7 %. At 12 H's piers met the laminate and C fell to 83.4 %. With the grade off, H's
-near-black read 98.71–98.73 %, and with it on 98.72–98.77 %: the grade, the owner's own
-decision of 29 October, is what holds H's darkness from falling. At C's fixed pose the west
+88.7 %. At 12 H's piers met the laminate and C fell to 83.4 %. H's near-black read
+98.71–98.77 % at gains 7 to 11, with the grade on or off, against 98.71 % before the
+refinement, and fell to 98.63 % only at 12; the grade adds 0.03–0.06 point of it. At C's fixed pose the west
 capital lies under the HUD's orders panel and the east one off the frame; at H both read
 about 29.5 at a gain of 10.
 

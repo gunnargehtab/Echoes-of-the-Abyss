@@ -68,9 +68,47 @@ const ARCH_POINTS = {
   opening: [0, 0, 0],
   span: [0, 136, SPAN_Z],
   wall: [0, 60, -375],
-  // #1683's capitals: the south faces themselves, for C's "above near-black".
+  // #1683's capitals: a window centred on each south face. At H it takes
+  // in the lit top too, so "H, capitals" is read on FACES' rows instead.
   capW: [-235, 105, 75],
   capE: [235, 105, 75],
+};
+const FACES = {
+  // #1683's faces: each one's own rows, between its top and bottom edges
+  // projected through the frame's camera, so a window cannot take in the
+  // lit top above a face (round 2's finding). Model metres, south faces.
+  capW: [
+    [-235, 110, 75],
+    [-235, 100, 75],
+  ],
+  capE: [
+    [235, 110, 75],
+    [235, 100, 75],
+  ],
+  drum2W: [
+    [-235, 100, 65],
+    [-235, 80, 65],
+  ],
+  drum2E: [
+    [235, 100, 65],
+    [235, 80, 65],
+  ],
+  drum1W: [
+    [-235, 80, 70.5],
+    [-235, 45, 70.5],
+  ],
+  drum1E: [
+    [235, 80, 70.5],
+    [235, 45, 70.5],
+  ],
+  drum0W: [
+    [-235, 45, 76],
+    [-235, 12, 76],
+  ],
+  drum0E: [
+    [235, 45, 76],
+    [235, 12, 76],
+  ],
 };
 /**
  * #1683's bands: a column down each pier, from the capital top's north edge
@@ -147,8 +185,27 @@ function stats(px, w, h, x0 = 0, y0 = 0, x1 = w, y1 = h) {
  */
 const armReading = (page, tick, archSide) =>
   page.evaluate(
-    ({ tick, window: side, statsSrc, archSide, archPoints, maskCodes, pierColumns }) => {
+    ({ tick, window: side, statsSrc, archSide, archPoints, maskCodes, pierColumns, faces }) => {
       const stats = new Function(`return ${statsSrc}`)();
+      const faceRows = (ends, read) => {
+        const ats = window.__archStudyPoints?.(ends) ?? null;
+        if (ats === null) return null;
+        const x = Math.round(((ats[0].x + ats[1].x) / 2) * devicePixelRatio);
+        const top = Math.round(Math.min(ats[0].y, ats[1].y) * devicePixelRatio);
+        const bottom = Math.round(Math.max(ats[0].y, ats[1].y) * devicePixelRatio);
+        // The rows strictly between the edges, so neither edge's neighbour counts.
+        const rows = [];
+        for (let y = top + 1; y < bottom; y++) rows.push(read(x - 8, y, x + 8, y + 1));
+        const valid = rows.filter((v) => v !== null);
+        const mean = valid.length === 0 ? null : valid.reduce((a, b) => a + b, 0) / valid.length;
+        return {
+          x,
+          top,
+          bottom,
+          rows: rows.map((v) => (v === null ? null : Number(v.toFixed(1)))),
+          meanLuma: mean === null ? null : Number(mean.toFixed(2)),
+        };
+      };
       window.__captureReading = null;
       const frame = () => {
         if (window.__echoClock() < tick) {
@@ -200,6 +257,13 @@ const armReading = (page, tick, archSide) =>
               rows.push(stats(px, w, h, x - 2, y, x + 3, y + 1)?.meanLuma);
             profiles[pier] = { x, y0, rows };
           }
+          const faceReadings = {};
+          for (const [face, ends] of Object.entries(faces)) {
+            faceReadings[face] = faceRows(
+              ends,
+              (...box) => stats(px, w, h, ...box)?.meanLuma ?? null
+            );
+          }
           const mask = window.__archStudyMask();
           const masks = {};
           if (mask !== null && mask.width === w && mask.height === h) {
@@ -236,6 +300,7 @@ const armReading = (page, tick, archSide) =>
             windows: archWindows,
             masks,
             profiles,
+            faces: faceReadings,
             shade: window.__archStudyShade?.() ?? null,
             switches: window.__archStudy?.({}) ?? null,
           };
@@ -257,6 +322,7 @@ const armReading = (page, tick, archSide) =>
       archPoints: ARCH_POINTS,
       maskCodes: MASK_CODES,
       pierColumns: PIER_COLUMNS,
+      faces: FACES,
     }
   );
 
