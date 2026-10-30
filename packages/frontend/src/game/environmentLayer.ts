@@ -29,7 +29,15 @@
  */
 const SWAY_HOLD_S = 1.7;
 
-import { Color, Group, InstancedMesh, Matrix4, Quaternion, Vector3 } from 'three';
+import {
+  Color,
+  Group,
+  InstancedMesh,
+  Matrix4,
+  MeshStandardMaterial,
+  Quaternion,
+  Vector3,
+} from 'three';
 import type { PublicLandmark, ResourceNodeInfo } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import {
@@ -48,11 +56,20 @@ import {
   type LandmarkTemplate,
 } from './landmarkModels.ts';
 import { depthToWorldY } from './perspectiveTerrain.ts';
-import { FALL_SECONDS, LAMP_COUNT, lampLevels, LIGHT_BUCKET_MS } from './landmarkLight.ts';
+import {
+  BOUNCE_GAIN,
+  bounceIrradiance,
+  LANDMARK_LUMINANCE_CEILING,
+  FALL_SECONDS,
+  LAMP_COUNT,
+  lampLevels,
+  LIGHT_BUCKET_MS,
+} from './landmarkLight.ts';
 import { CollapseCloud, LandmarkSift, SIFT_SITE_CAP, type SiftSite } from './landmarkSift.ts';
 import type { LandmarkState } from '@echoes/shared';
 import type { WorldLook } from './tutorialLook.ts';
 import type { MaskLandmarkPart } from './archMask.ts';
+import { setDistanceGradeOn } from './distanceGrade.ts';
 import { VentPlume, plumeSites } from './ventPlume.ts';
 import { FieldHaze, hazeSites } from './fieldHaze.ts';
 
@@ -62,6 +79,17 @@ const TMP_POS = new Vector3();
 const TMP_SCALE = new Vector3();
 const Y_AXIS = new Vector3(0, 1, 0);
 const TMP_COLOR = new Color();
+
+/** The arch study's development switches (`EnvironmentLayer.setStudySwitches`). */
+export interface StudySwitches {
+  pools: boolean;
+  lamps: boolean;
+  bounce: number;
+  /** The distance grade (distanceGrade.ts), on the ground and props rather than the landmark. */
+  grade: boolean;
+  /** The landmark's diffuse ceiling (landmarkLight.ts `LANDMARK_LUMINANCE_CEILING`). */
+  ceiling: number;
+}
 
 /** How many lamps a state carries: the intact state's four, the ruined state's none. */
 function lampCount(state: LandmarkStateTemplate): number {
@@ -135,7 +163,13 @@ export class EnvironmentLayer {
    * alone): pools off zeroes every pool, lamps off darkens the glass. Both on
    * is the study; the harness flips them through the view's probe hook.
    */
-  private switches = { pools: true, lamps: true };
+  private switches: StudySwitches = {
+    pools: true,
+    lamps: true,
+    bounce: BOUNCE_GAIN,
+    grade: true,
+    ceiling: LANDMARK_LUMINANCE_CEILING,
+  };
   /**
    * Every landmark part this layer stands, with its stand and its pools'
    * uniforms: the study's per-material mask (archMask.ts) and the model-space
@@ -528,19 +562,32 @@ export class EnvironmentLayer {
   }
 
   /**
-   * Flip the study's development switches (above); the pools take effect on
-   * this call, the glass on the next bucket. Returns the switches as they
+   * Flip the study's development switches (above); the pools and the
+   * bounce take effect on this call, the glass on the next bucket. `bounce`
+   * is the court bounce's gain on the ambient (landmarkLight.ts
+   * `BOUNCE_GAIN`), 0 for none: §11's display bound is read by sweeping it,
+   * and #1683's diagnosis reads H without it, without the grade and at the
+   * props' 0.06 ceiling. The ceiling scales the lit template's materials in
+   * place, which the ruined state shares. Returns the switches as they
    * stand, so a harness can read them too.
    */
-  setStudySwitches(switches: Partial<{ pools: boolean; lamps: boolean }>): {
-    pools: boolean;
-    lamps: boolean;
-  } {
+  setStudySwitches(switches: Partial<StudySwitches>): StudySwitches {
+    const ceilingWas = this.switches.ceiling;
     this.switches = { ...this.switches, ...switches };
+    setDistanceGradeOn(this.switches.grade);
     for (const { template, stand } of this.litStands) {
       if (template.uniforms === null) continue;
+      // The materials are this template's own clones, so the ceiling scales
+      // them in place, hue and ratios kept, as the template laid them.
+      if (this.switches.ceiling !== ceilingWas) {
+        const gain = this.switches.ceiling / ceilingWas;
+        for (const { material } of template.states.intact.parts) {
+          if (material instanceof MeshStandardMaterial) material.color.multiplyScalar(gain);
+        }
+      }
       template.uniforms.uPoolCount.value =
         stand.state === 'intact' && this.switches.pools ? lampCount(template.states.intact) : 0;
+      bounceIrradiance(this.switches.bounce, template.uniforms.uBounce.value);
     }
     this.lampBucket = -1;
     return { ...this.switches };
@@ -559,6 +606,18 @@ export class EnvironmentLayer {
       }
     }
     return out;
+  }
+
+  /**
+   * The veil's shade on the first landmark standing, its instance colour, for
+   * #1683's diagnosis: the share of the arch's darkness that is the veil's.
+   */
+  landmarkShade(): [number, number, number] | null {
+    const mesh = this.landmarkParts[0]?.mesh;
+    if (mesh === undefined || mesh.instanceColor === null) return null;
+    const c = new Color();
+    mesh.getColorAt(0, c);
+    return [c.r, c.g, c.b];
   }
 
   /** The landmark parts standing, for the study's per-material mask (archMask.ts). */

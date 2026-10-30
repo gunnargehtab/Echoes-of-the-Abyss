@@ -385,7 +385,8 @@ describe('the layer’s sequence', () => {
       stand(layer, sorrowgate());
       const u = template.uniforms!;
       assert.equal(u.uPoolCount.value, LAMP_COUNT);
-      assert.deepEqual(layer.setStudySwitches({ pools: false }), { pools: false, lamps: true });
+      const flipped = layer.setStudySwitches({ pools: false });
+      assert.deepEqual([flipped.pools, flipped.lamps], [false, true]);
       assert.equal(u.uPoolCount.value, 0, 'pools off at once');
       layer.setStudySwitches({ pools: true, lamps: false });
       assert.equal(u.uPoolCount.value, LAMP_COUNT);

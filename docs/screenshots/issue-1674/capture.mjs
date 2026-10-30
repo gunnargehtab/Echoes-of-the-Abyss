@@ -43,7 +43,9 @@
  * the pools, read through the view's per-material mask (archMask.ts). SPAN_Z
  * moves the span face's point with the face (§11: Z +72 before the
  * refinement). `<file>-windows.png` is the frame with each square drawn where
- * it fell.
+ * it fell. The masks are read with the study off too, for the escorts; the
+ * capitals' faces, a luma profile down each pier, the veil's shade on the arch
+ * and the study's switches are #1683's second round.
  */
 import { writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -66,6 +68,24 @@ const ARCH_POINTS = {
   opening: [0, 0, 0],
   span: [0, 136, SPAN_Z],
   wall: [0, 60, -375],
+  // #1683's capitals: the south faces themselves, for C's "above near-black".
+  capW: [-235, 105, 75],
+  capE: [235, 105, 75],
+};
+/**
+ * #1683's bands: a column down each pier, from the capital top's north edge
+ * to the plinth's front foot, 5 px wide and one mean luma a row, so §11's
+ * "separate lit bands at least 2 px tall" is read row by row.
+ */
+const PIER_COLUMNS = {
+  west: [
+    [-235, 110, -75],
+    [-235, 0, 80],
+  ],
+  east: [
+    [235, 110, -75],
+    [235, 0, 80],
+  ],
 };
 /** The mask's codes (archMask.ts `MASK_CODE`). */
 const MASK_CODES = {
@@ -127,7 +147,7 @@ function stats(px, w, h, x0 = 0, y0 = 0, x1 = w, y1 = h) {
  */
 const armReading = (page, tick, archSide) =>
   page.evaluate(
-    ({ tick, window: side, statsSrc, archSide, archPoints, maskCodes }) => {
+    ({ tick, window: side, statsSrc, archSide, archPoints, maskCodes, pierColumns }) => {
       const stats = new Function(`return ${statsSrc}`)();
       window.__captureReading = null;
       const frame = () => {
@@ -152,9 +172,12 @@ const armReading = (page, tick, archSide) =>
         let arch = null;
         const names = Object.keys(archPoints);
         const projected = window.__archStudyPoints?.(names.map((n) => archPoints[n])) ?? null;
-        if (projected !== null) {
+        // The masks are read with the study off as well, where no landmark
+        // stands, so the escorts' laminate and lamps compare between halves.
+        if (window.__archStudyMask !== undefined) {
           const archWindows = {};
-          projected.forEach((at, i) => {
+          const profiles = {};
+          (projected ?? []).forEach((at, i) => {
             const cx = Math.round(at.x * devicePixelRatio);
             const cy = Math.round(at.y * devicePixelRatio);
             const r = archSide / 2;
@@ -166,7 +189,18 @@ const armReading = (page, tick, archSide) =>
               ...stats(px, w, h, ...box),
             };
           });
-          const mask = window.__archStudyMask?.() ?? null;
+          for (const [pier, ends] of Object.entries(pierColumns)) {
+            const ats = window.__archStudyPoints?.(ends) ?? null;
+            if (ats === null) continue;
+            const x = Math.round(((ats[0].x + ats[1].x) / 2) * devicePixelRatio);
+            const y0 = Math.round(Math.min(ats[0].y, ats[1].y) * devicePixelRatio);
+            const y1 = Math.round(Math.max(ats[0].y, ats[1].y) * devicePixelRatio);
+            const rows = [];
+            for (let y = y0; y <= y1; y++)
+              rows.push(stats(px, w, h, x - 2, y, x + 3, y + 1)?.meanLuma);
+            profiles[pier] = { x, y0, rows };
+          }
+          const mask = window.__archStudyMask();
           const masks = {};
           if (mask !== null && mask.width === w && mask.height === h) {
             const luma = (i) => 0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2];
@@ -197,7 +231,14 @@ const armReading = (page, tick, archSide) =>
               };
             }
           }
-          arch = { side: archSide, windows: archWindows, masks };
+          arch = {
+            side: archSide,
+            windows: archWindows,
+            masks,
+            profiles,
+            shade: window.__archStudyShade?.() ?? null,
+            switches: window.__archStudy?.({}) ?? null,
+          };
         }
         window.__captureReading = {
           tick: window.__echoClock(),
@@ -215,6 +256,7 @@ const armReading = (page, tick, archSide) =>
       archSide,
       archPoints: ARCH_POINTS,
       maskCodes: MASK_CODES,
+      pierColumns: PIER_COLUMNS,
     }
   );
 
@@ -339,7 +381,7 @@ export default async ({ page }) => {
     console.log(`shot: ${join(OUT, file)}`);
     await page.waitForFunction(() => window.__captureReading !== null, null, { timeout: 60000 });
     const reading = await page.evaluate(() => window.__captureReading);
-    if (reading.arch !== null) {
+    if (reading.arch !== null && Object.keys(reading.arch.windows).length > 0) {
       const marked = file.replace(/\.png$/, '-windows.png');
       writeFileSync(join(OUT, marked), await drawWindows(page, data, reading.arch.windows));
       reading.arch.marked = marked;

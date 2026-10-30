@@ -29,6 +29,7 @@ import { PUBLIC_LANDMARK_SPECS } from '../src/game/environment.ts';
 import { buildLandmarkTemplate } from '../src/game/landmarkModels.ts';
 import {
   BOUNCE_BELOW_DEG,
+  BOUNCE_GAIN,
   LANDMARK_LUMINANCE_CEILING,
   RIB_ROUGHNESS,
 } from '../src/game/landmarkLight.ts';
@@ -109,8 +110,10 @@ describe('the landmark’s surface under the study (§11)', () => {
 
   it('bounces the ambient off the court onto the landmark’s own materials, from the south and 30° below', async () => {
     const study = buildLandmarkTemplate(await parseArch(), SPEC, 'sorrowgate');
-    const ambient = new Color(MODEL_LIGHTING.AMBIENT_COLOR).multiplyScalar(MODEL_LIGHTING.AMBIENT);
-    assert.ok(study.uniforms!.uBounce.value.equals(ambient), 'the ambient again, in its colour');
+    const ambient = new Color(MODEL_LIGHTING.AMBIENT_COLOR).multiplyScalar(
+      MODEL_LIGHTING.AMBIENT * BOUNCE_GAIN
+    );
+    assert.ok(study.uniforms!.uBounce.value.equals(ambient), 'the ambient, in its colour');
     const below = (BOUNCE_BELOW_DEG * Math.PI) / 180;
     const from = `vec3( 0.0, ${(-Math.sin(below)).toFixed(6)}, ${Math.cos(below).toFixed(6)} )`;
     for (const { material } of study.states.intact.parts) {
@@ -174,5 +177,62 @@ describe('the distance grade (§11)', () => {
     assert.ok(ShaderChunk.fog_fragment.includes('waterAtFragment'), 'the water it mixes toward');
     // Nothing else is graded: a hull's material, a lamp's, the landmark's.
     assert.ok(!readsDistanceGrade(new MeshStandardMaterial()));
+  });
+});
+
+describe('the study’s switches for #1683’s readings', () => {
+  it('sweep the bounce, the props’ ceiling and the grade, and say what they stand at', async () => {
+    const { EnvironmentLayer } = await import('../src/game/environmentLayer.ts');
+    const { primeLandmarkTemplate, resetLandmarkModels } =
+      await import('../src/game/landmarkModels.ts');
+    const { PUBLIC_LANDMARKS, paintGround, SORROWGATE_GROUND } = await import('@echoes/shared');
+    const template = buildLandmarkTemplate(await parseArch(), SPEC, 'sorrowgate');
+    primeLandmarkTemplate(template, 'sorrowgate');
+    try {
+      const cells = paintGround(SORROWGATE_GROUND);
+      const layer = new EnvironmentLayer('sorrowgate');
+      layer.setLandmarks([PUBLIC_LANDMARKS['sorrowgate']![0]!]);
+      layer.rebuild(
+        {
+          cols: cells.cols,
+          rows: cells.rows,
+          cellM: cells.cellM,
+          biomes: Array.from(cells.biomes),
+          floor: Array.from(cells.floor),
+          ceiling: Array.from(cells.ceiling),
+        },
+        () => -999
+      );
+      const brightest = () =>
+        Math.max(
+          ...template.states.intact.parts.map(({ material }) =>
+            luminance((material as MeshStandardMaterial).color)
+          )
+        );
+      const stands = layer.setStudySwitches({});
+      assert.equal(stands.bounce, BOUNCE_GAIN);
+      assert.equal(stands.ceiling, LANDMARK_LUMINANCE_CEILING);
+      assert.equal(stands.grade, true);
+      layer.setStudySwitches({ bounce: 0, ceiling: 0.06, grade: false });
+      assert.equal(template.uniforms!.uBounce.value.getHex(), 0, 'no bounce');
+      assert.ok(Math.abs(brightest() - 0.06) < 1e-6, 'the props’ ceiling');
+      setDistanceGrade(2600, 1);
+      assert.equal(gradeUniforms.uGradeAmount.value, 0, 'no grade');
+      layer.setStudySwitches({
+        bounce: BOUNCE_GAIN,
+        ceiling: LANDMARK_LUMINANCE_CEILING,
+        grade: true,
+      });
+      const ambient = new Color(MODEL_LIGHTING.AMBIENT_COLOR).multiplyScalar(
+        MODEL_LIGHTING.AMBIENT * BOUNCE_GAIN
+      );
+      assert.ok(template.uniforms!.uBounce.value.equals(ambient), 'the bounce back');
+      assert.ok(Math.abs(brightest() - LANDMARK_LUMINANCE_CEILING) < 1e-6, 'the ceiling back');
+      setDistanceGrade(2600, 1);
+      assert.equal(gradeUniforms.uGradeAmount.value, GRADE_MAX, 'the grade back');
+      assert.ok(layer.landmarkShade() !== null, 'the veil’s shade on the arch');
+    } finally {
+      resetLandmarkModels();
+    }
   });
 });

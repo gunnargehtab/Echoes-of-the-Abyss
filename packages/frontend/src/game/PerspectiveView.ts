@@ -153,7 +153,7 @@ import { HullHits, flashedGlow, hitStrength } from './hullHit.ts';
 import { GunFire, isSiegeHull } from './gunFire.ts';
 import { SiltPlume, plumeStrength, type PlumeSource } from './siltPlume.ts';
 import { WorkLights } from './workLight.ts';
-import { EnvironmentLayer } from './environmentLayer.ts';
+import { EnvironmentLayer, type StudySwitches } from './environmentLayer.ts';
 import { createWaterEnvironment, keepsGlowOutsideToneMapping } from './modelLighting.ts';
 import { GLOW_FACTOR_MAX, GLOW_FACTOR_MIN, SIG_GLOW_EFOLD } from './glow.ts';
 import { VeilField, VEIL_FLOOR_RGB, veilShade, type VeilListener } from './acousticVeil.ts';
@@ -1688,6 +1688,7 @@ export class PerspectiveView {
     delete (window as unknown as { __perspectiveSeabedM?: unknown }).__perspectiveSeabedM;
     delete (window as unknown as { __archStudyPoints?: unknown }).__archStudyPoints;
     delete (window as unknown as { __archStudyMask?: unknown }).__archStudyMask;
+    delete (window as unknown as { __archStudyShade?: unknown }).__archStudyShade;
     this.archMask?.dispose();
     this.archMask = null;
     for (const resolve of this.haloFrameWaiters) resolve(null);
@@ -4766,7 +4767,7 @@ export class PerspectiveView {
     // for the §9 readings that need the pools or the glass alone (#1637).
     (
       window as unknown as {
-        __archStudy?: (s: Partial<{ pools: boolean; lamps: boolean }>) => unknown;
+        __archStudy?: (s: Partial<StudySwitches>) => unknown;
       }
     ).__archStudy = (switches) => this.environment.setStudySwitches(switches ?? {});
 
@@ -4892,6 +4893,8 @@ export class PerspectiveView {
           this.projectWorld(at, out);
           return { x: out.x, y: out.y, pxPerM: out.pxPerM, visible: out.visible };
         }) ?? null;
+      (window as unknown as { __archStudyShade?: () => unknown }).__archStudyShade = () =>
+        this.environment.landmarkShade();
       (window as unknown as { __archStudyMask?: () => MaskPixels | null }).__archStudyMask = () => {
         if (this.renderer === null) return null;
         this.archMask ??= maskTarget();

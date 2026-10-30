@@ -39,11 +39,22 @@ export const gradeUniforms = {
   uGradeAmount: { value: 0 },
 };
 
+/**
+ * The harness's switch (environmentLayer.ts `setStudySwitches`): §11 reads GPU
+ * time with the grade on and off, and #1683 reads its share of H's darkness.
+ */
+let gradeOn = true;
+export function setDistanceGradeOn(on: boolean): void {
+  gradeOn = on;
+}
+
 /** Settle the grade for this frame's dolly and water setting. */
 export function setDistanceGrade(dollyM: number, waterDensity: number): void {
   gradeUniforms.uGradeFocusM.value = dollyM;
   gradeUniforms.uGradeReachM.value = Math.max(1, dollyM * GRADE_REACH_DOLLIES);
-  gradeUniforms.uGradeAmount.value = GRADE_MAX * Math.min(1, Math.max(0, waterDensity));
+  gradeUniforms.uGradeAmount.value = gradeOn
+    ? GRADE_MAX * Math.min(1, Math.max(0, waterDensity))
+    : 0;
 }
 
 /**

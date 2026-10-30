@@ -34,9 +34,9 @@
  * of the arch, so its working south face took the ambient and the environment
  * and nothing else, and drew as a hole. The bounce comes from the south and
  * 30° below level, so the south faces and the soffit take it and the deck
- * does not; at full incidence it is the rig's ambient again, in the ambient's
- * colour, so it has no hue of its own. No scene light: the same few
- * instructions on the landmark's own fragments as the pools.
+ * does not; at full incidence it is `BOUNCE_GAIN` times the rig's ambient, in
+ * the ambient's colour, so it has no hue of its own. No scene light: the same
+ * few instructions on the landmark's own fragments as the pools.
  */
 import { Color, type Material } from 'three';
 import { MODEL_LIGHTING, SIM } from '@echoes/shared';
@@ -83,6 +83,24 @@ export const LANDMARK_LUMINANCE_CEILING = 0.1;
 export const RIB_ROUGHNESS = 0.6;
 /** SPEC — the bounce's elevation below level, toward the court (§11). */
 export const BOUNCE_BELOW_DEG = 30;
+/**
+ * TUNABLE — the bounce's irradiance at full incidence, in multiples of the
+ * rig's ambient. §11 bounds it in display terms, not here (decision of 30
+ * October): the least gain at which H's piers read 5 luma over the court
+ * floor, and never one at which an arch pixel or window outside a pool
+ * passes the escorts' lamp marks, their laminate or the ember's mean breath.
+ * The ambient again, 1, left the south faces in ACES's toe (#1683, round 1),
+ * so the number is read off the stations (docs/screenshots/issue-1683/): 6
+ * held the west pier at 5.0 and 5.2 in two sessions, inside a reading's
+ * spread of failing, and 7 read 6.7 to 7.2 with the piers still under the
+ * laminate.
+ */
+export const BOUNCE_GAIN = 7;
+
+/** The bounce's irradiance at full incidence for a gain on the ambient, linear RGB. */
+export function bounceIrradiance(gain: number, out = new Color()): Color {
+  return out.set(MODEL_LIGHTING.AMBIENT_COLOR).multiplyScalar(MODEL_LIGHTING.AMBIENT * gain);
+}
 
 /**
  * Each lamp's level for one sonar bucket: 1, or `LAMP_DIP` for one or two
@@ -135,7 +153,7 @@ export interface LandmarkUniforms {
   uHangTime: { value: number };
   /** The collapse's progress, 0 to 1 over `FALL_SECONDS`; 1 is at rest. */
   uFallT: { value: number };
-  /** The court bounce's irradiance at full incidence, linear RGB: the rig's ambient (§11). */
+  /** The court bounce's irradiance at full incidence, linear RGB (§11, `BOUNCE_GAIN`). */
   uBounce: { value: Color };
 }
 
@@ -153,9 +171,7 @@ export function landmarkUniforms(poolColor: readonly [number, number, number]): 
     },
     uHangTime: { value: 0 },
     uFallT: { value: 1 },
-    uBounce: {
-      value: new Color(MODEL_LIGHTING.AMBIENT_COLOR).multiplyScalar(MODEL_LIGHTING.AMBIENT),
-    },
+    uBounce: { value: bounceIrradiance(BOUNCE_GAIN) },
   };
 }
 
@@ -251,11 +267,11 @@ varying vec3 vPoolNormal;`
 }
 
 /**
- * The court bounce (§11): the ambient again, as an irradiance from the south
- * and `BOUNCE_BELOW_DEG` below level, on the model-space normal, through the
- * same Lambert the ambient takes (three's `getAmbientLightIrradiance` and
- * `BRDF_Lambert`), so at full incidence a face takes exactly what the
- * ambient gives it a second time. +Z is south in the model (Block 4b), and the
+ * The court bounce (§11): `BOUNCE_GAIN` times the ambient, as an irradiance
+ * from the south and `BOUNCE_BELOW_DEG` below level, on the model-space
+ * normal, through the same Lambert the ambient takes (three's
+ * `getAmbientLightIrradiance` and `BRDF_Lambert`), so at full incidence a
+ * face takes that many more of what the ambient gives it. +Z is south in the model (Block 4b), and the
  * landmark stands at its anchor's yaw alone, so the model's south is the
  * court's. Taken off the normal before any displacement: the sway turns a
  * fitting by under a degree.
