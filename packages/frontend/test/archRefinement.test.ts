@@ -107,7 +107,7 @@ describe('the landmark’s surface under the study (§11)', () => {
     assert.ok(Math.abs(propBrightest - 0.06) < 1e-6);
   });
 
-  it('bounces the ambient off the court onto the stone alone, from the south and 30° below', async () => {
+  it('bounces the ambient off the court onto the landmark’s own materials, from the south and 30° below', async () => {
     const study = buildLandmarkTemplate(await parseArch(), SPEC, 'sorrowgate');
     const ambient = new Color(MODEL_LIGHTING.AMBIENT_COLOR).multiplyScalar(MODEL_LIGHTING.AMBIENT);
     assert.ok(study.uniforms!.uBounce.value.equals(ambient), 'the ambient again, in its colour');
