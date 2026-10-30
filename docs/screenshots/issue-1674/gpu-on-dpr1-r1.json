@@ -1,0 +1,841 @@
+{
+  "tag": "gpu-on-dpr1",
+  "mode": "stations",
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "software": false,
+  "unpaced": true,
+  "reducedMotion": false,
+  "study": true,
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "dpr": 1
+  },
+  "url": "/?arch-study=1",
+  "readings": [
+    {
+      "name": "H",
+      "tick": 3132,
+      "file": "gpu-on-dpr1-H.png",
+      "probe": {
+        "active": true,
+        "look": "sorrowgate",
+        "programHold": {
+          "holding": false,
+          "heldFrames": 36
+        },
+        "pitchDeg": 55,
+        "yawDeg": 0,
+        "sway": "on",
+        "focus": {
+          "xM": 2550,
+          "zM": 2553,
+          "depthM": null
+        },
+        "eye": {
+          "xM": 2554,
+          "zM": 4047,
+          "depthM": -8202
+        },
+        "distance": 2600,
+        "waterReachM": 8320,
+        "waterDensity": 1,
+        "hullScale": 1,
+        "drawCalls": 56,
+        "triangles": 123589,
+        "passes": [
+          "canvas",
+          "split-copy",
+          "split"
+        ],
+        "world": {
+          "borderStrength": 1,
+          "overviewDrawn": false,
+          "sessionGround": true,
+          "groundLeaving": false,
+          "frame": {
+            "xM": 2550,
+            "yM": 2553,
+            "distanceM": 2600,
+            "yawDeg": 0,
+            "pitchDeg": 55
+          },
+          "detailDrawn": [],
+          "detailResident": [],
+          "detailPending": 0,
+          "detailProps": 0,
+          "detailPropTris": 0,
+          "detailVentPlumes": 0,
+          "detailLandmarks": 0,
+          "detailLandmarkTris": 0
+        },
+        "halo": "idle",
+        "haloSites": 0,
+        "haloDropped": 0,
+        "haloCalls": 0,
+        "haloTriangles": 0,
+        "haloBytes": 35835136,
+        "split": "on",
+        "splitBytes": 8294400,
+        "canvasStencilBits": 8,
+        "textures": 18,
+        "pixelRatio": 1,
+        "drawingBuffer": {
+          "width": 1920,
+          "height": 1080
+        },
+        "toneMapping": 4,
+        "environmentIntensity": 0.35,
+        "environmentBytes": 344064,
+        "station": "H",
+        "stationMs": 639.5,
+        "stationFrames": 244,
+        "avgFrames": 240,
+        "fps": 381.5,
+        "avgFrameMs": 2.61,
+        "worstFrameMs": 6,
+        "avgConnMs": 0.82,
+        "worstConnMs": 1.1,
+        "avgOverlayMs": 0.55,
+        "worstOverlayMs": 0.8,
+        "overlayFrames": 244,
+        "gpuTimer": "timing",
+        "avgGpuMs": 0.84,
+        "worstGpuMs": 1.74,
+        "gpuFrames": 241,
+        "gpuDropped": 0,
+        "gpuQueue": null,
+        "gpuSplit": false,
+        "gpuParts": null,
+        "units": 6,
+        "structures": 1,
+        "tracks": 4,
+        "structureTracks": 0,
+        "trackAt": {
+          "x": 3400,
+          "z": 2920,
+          "depthM": 1450
+        },
+        "ordnance": 0,
+        "wakeBubbles": 0,
+        "hits": 0,
+        "hitParticles": 0,
+        "plumeMotes": 0,
+        "workLightsLit": 0,
+        "sparks": 0,
+        "plumeAt": null,
+        "ventPlumeAt": {
+          "x": 208.1782446675934,
+          "z": 2183.766434970312,
+          "depthM": 1414.9942847085467
+        },
+        "hitAt": null,
+        "shots": 0,
+        "shotParticles": 0,
+        "recoiling": 0,
+        "shotAt": null,
+        "props": 186,
+        "propTris": 49244,
+        "ventPlumes": 3,
+        "fieldHazes": 0,
+        "landmarks": 1,
+        "landmarkTris": 2626,
+        "siftMotes": 256,
+        "cloudMotes": 0,
+        "collapsing": false,
+        "landmarkLampsPx": [
+          {
+            "x": 1062.751123814891,
+            "y": 388.0825013767435
+          },
+          {
+            "x": 1103.4604936712253,
+            "y": 383.89404187146306
+          },
+          {
+            "x": 813.9348447056036,
+            "y": 386.6896144652984
+          },
+          {
+            "x": 845.378777629327,
+            "y": 383.19309893019914
+          }
+        ],
+        "modelBacked": 6,
+        "modelMeshes": 23,
+        "ownCentre": {
+          "x": 2550,
+          "z": 2552.8571428571427
+        }
+      },
+      "queued": {
+        "steps": 12000,
+        "gpuMs": 0.77,
+        "worstGpuMs": 1.26,
+        "loadMs": 3.74,
+        "gpuDropped": 0,
+        "loadDropped": 0
+      }
+    },
+    {
+      "name": "L",
+      "tick": 5628,
+      "file": "gpu-on-dpr1-L.png",
+      "probe": {
+        "active": true,
+        "look": "sorrowgate",
+        "programHold": {
+          "holding": false,
+          "heldFrames": 36
+        },
+        "pitchDeg": 12,
+        "yawDeg": 0,
+        "sway": "on",
+        "focus": {
+          "xM": 2550,
+          "zM": 2750,
+          "depthM": 1450
+        },
+        "eye": {
+          "xM": 2550,
+          "zM": 3386,
+          "depthM": 832
+        },
+        "distance": 650,
+        "waterReachM": 2080,
+        "waterDensity": 1,
+        "hullScale": 1,
+        "drawCalls": 54,
+        "triangles": 115624,
+        "passes": [
+          "canvas",
+          "depth-copy",
+          "halo-source",
+          "halo-spread",
+          "halo-composite",
+          "split-copy",
+          "split"
+        ],
+        "world": {
+          "borderStrength": 1,
+          "overviewDrawn": false,
+          "sessionGround": true,
+          "groundLeaving": false,
+          "frame": {
+            "xM": 2550,
+            "yM": 2750,
+            "distanceM": 650,
+            "yawDeg": 0,
+            "pitchDeg": 12
+          },
+          "detailDrawn": [],
+          "detailResident": [],
+          "detailPending": 0,
+          "detailProps": 0,
+          "detailPropTris": 0,
+          "detailVentPlumes": 0,
+          "detailLandmarks": 0,
+          "detailLandmarkTris": 0
+        },
+        "halo": "drawn",
+        "haloSites": 10,
+        "haloDropped": 0,
+        "haloCalls": 8,
+        "haloTriangles": 27,
+        "haloBytes": 35835136,
+        "split": "on",
+        "splitBytes": 8294400,
+        "canvasStencilBits": 8,
+        "textures": 24,
+        "pixelRatio": 1,
+        "drawingBuffer": {
+          "width": 1920,
+          "height": 1080
+        },
+        "toneMapping": 4,
+        "environmentIntensity": 0.35,
+        "environmentBytes": 344064,
+        "station": "L",
+        "stationMs": 700.8,
+        "stationFrames": 243,
+        "avgFrames": 240,
+        "fps": 346.7,
+        "avgFrameMs": 2.88,
+        "worstFrameMs": 5.6,
+        "avgConnMs": 0.99,
+        "worstConnMs": 1.4,
+        "avgOverlayMs": 0.64,
+        "worstOverlayMs": 1.2,
+        "overlayFrames": 243,
+        "gpuTimer": "timing",
+        "avgGpuMs": 1.68,
+        "worstGpuMs": 3.73,
+        "gpuFrames": 240,
+        "gpuDropped": 0,
+        "gpuQueue": null,
+        "gpuSplit": false,
+        "gpuParts": null,
+        "units": 6,
+        "structures": 1,
+        "tracks": 4,
+        "structureTracks": 0,
+        "trackAt": {
+          "x": 3400,
+          "z": 2920,
+          "depthM": 1450
+        },
+        "ordnance": 0,
+        "wakeBubbles": 0,
+        "hits": 0,
+        "hitParticles": 0,
+        "plumeMotes": 0,
+        "workLightsLit": 0,
+        "sparks": 0,
+        "plumeAt": null,
+        "ventPlumeAt": {
+          "x": 208.1782446675934,
+          "z": 2183.766434970312,
+          "depthM": 1414.9942847085467
+        },
+        "hitAt": null,
+        "shots": 0,
+        "shotParticles": 0,
+        "recoiling": 0,
+        "shotAt": null,
+        "props": 186,
+        "propTris": 49244,
+        "ventPlumes": 3,
+        "fieldHazes": 0,
+        "landmarks": 1,
+        "landmarkTris": 2626,
+        "siftMotes": 256,
+        "cloudMotes": 0,
+        "collapsing": false,
+        "landmarkLampsPx": [
+          {
+            "x": 1207.422500946437,
+            "y": 409.8950721225522
+          },
+          {
+            "x": 1303.1352786417347,
+            "y": 394.9192229039965
+          },
+          {
+            "x": 619.7363276286868,
+            "y": 404.91012220507724
+          },
+          {
+            "x": 694.3165556407747,
+            "y": 392.41711243560957
+          }
+        ],
+        "modelBacked": 6,
+        "modelMeshes": 23,
+        "ownCentre": {
+          "x": 2550,
+          "z": 2552.8571428571427
+        }
+      },
+      "queued": {
+        "steps": 12000,
+        "gpuMs": 1.14,
+        "worstGpuMs": 1.61,
+        "loadMs": 3.82,
+        "gpuDropped": 0,
+        "loadDropped": 0
+      }
+    },
+    {
+      "name": "S",
+      "tick": 7920,
+      "file": "gpu-on-dpr1-S.png",
+      "probe": {
+        "active": true,
+        "look": "sorrowgate",
+        "programHold": {
+          "holding": false,
+          "heldFrames": 36
+        },
+        "pitchDeg": 55,
+        "yawDeg": 0,
+        "sway": "on",
+        "focus": {
+          "xM": 2500,
+          "zM": 2000,
+          "depthM": null
+        },
+        "eye": {
+          "xM": 2496,
+          "zM": 5718,
+          "depthM": -22658
+        },
+        "distance": 6500,
+        "waterReachM": 20800,
+        "waterDensity": 1,
+        "hullScale": 2.28,
+        "drawCalls": 56,
+        "triangles": 123589,
+        "passes": [
+          "canvas",
+          "split-copy",
+          "split"
+        ],
+        "world": {
+          "borderStrength": 1,
+          "overviewDrawn": false,
+          "sessionGround": true,
+          "groundLeaving": false,
+          "frame": {
+            "xM": 2500,
+            "yM": 2000,
+            "distanceM": 6500,
+            "yawDeg": 0,
+            "pitchDeg": 55
+          },
+          "detailDrawn": [],
+          "detailResident": [],
+          "detailPending": 0,
+          "detailProps": 0,
+          "detailPropTris": 0,
+          "detailVentPlumes": 0,
+          "detailLandmarks": 0,
+          "detailLandmarkTris": 0
+        },
+        "halo": "idle",
+        "haloSites": 0,
+        "haloDropped": 0,
+        "haloCalls": 0,
+        "haloTriangles": 0,
+        "haloBytes": 35835136,
+        "split": "on",
+        "splitBytes": 8294400,
+        "canvasStencilBits": 8,
+        "textures": 24,
+        "pixelRatio": 1,
+        "drawingBuffer": {
+          "width": 1920,
+          "height": 1080
+        },
+        "toneMapping": 4,
+        "environmentIntensity": 0.35,
+        "environmentBytes": 344064,
+        "station": "S",
+        "stationMs": 625.7,
+        "stationFrames": 244,
+        "avgFrames": 240,
+        "fps": 390,
+        "avgFrameMs": 2.56,
+        "worstFrameMs": 5.3,
+        "avgConnMs": 0.82,
+        "worstConnMs": 1.2,
+        "avgOverlayMs": 0.54,
+        "worstOverlayMs": 1.6,
+        "overlayFrames": 244,
+        "gpuTimer": "timing",
+        "avgGpuMs": 0.86,
+        "worstGpuMs": 1.87,
+        "gpuFrames": 241,
+        "gpuDropped": 0,
+        "gpuQueue": null,
+        "gpuSplit": false,
+        "gpuParts": null,
+        "units": 6,
+        "structures": 1,
+        "tracks": 4,
+        "structureTracks": 0,
+        "trackAt": {
+          "x": 3400,
+          "z": 2920,
+          "depthM": 1450
+        },
+        "ordnance": 0,
+        "wakeBubbles": 0,
+        "hits": 0,
+        "hitParticles": 0,
+        "plumeMotes": 0,
+        "workLightsLit": 0,
+        "sparks": 0,
+        "plumeAt": null,
+        "ventPlumeAt": {
+          "x": 208.1782446675934,
+          "z": 2183.766434970312,
+          "depthM": 1414.9942847085467
+        },
+        "hitAt": null,
+        "shots": 0,
+        "shotParticles": 0,
+        "recoiling": 0,
+        "shotAt": null,
+        "props": 186,
+        "propTris": 49244,
+        "ventPlumes": 3,
+        "fieldHazes": 0,
+        "landmarks": 1,
+        "landmarkTris": 2626,
+        "siftMotes": 256,
+        "cloudMotes": 0,
+        "collapsing": false,
+        "landmarkLampsPx": [
+          {
+            "x": 1018.7079868064312,
+            "y": 579.0733337285734
+          },
+          {
+            "x": 1036.5320282326875,
+            "y": 577.5277294712155
+          },
+          {
+            "x": 909.1847669291652,
+            "y": 578.55866274404
+          },
+          {
+            "x": 923.1228533047542,
+            "y": 577.2696640333066
+          }
+        ],
+        "modelBacked": 6,
+        "modelMeshes": 23,
+        "ownCentre": {
+          "x": 2550,
+          "z": 2552.8571428571427
+        }
+      },
+      "queued": {
+        "steps": 12000,
+        "gpuMs": 0.73,
+        "worstGpuMs": 1.25,
+        "loadMs": 3.9,
+        "gpuDropped": 0,
+        "loadDropped": 0
+      }
+    },
+    {
+      "name": "C",
+      "tick": 13164,
+      "file": "gpu-on-dpr1-C.png",
+      "probe": {
+        "active": true,
+        "look": "sorrowgate",
+        "programHold": {
+          "holding": false,
+          "heldFrames": 36
+        },
+        "pitchDeg": 35,
+        "yawDeg": 25,
+        "sway": "on",
+        "focus": {
+          "xM": 2550,
+          "zM": 2200,
+          "depthM": 1450
+        },
+        "eye": {
+          "xM": 2696,
+          "zM": 2512,
+          "depthM": 358
+        },
+        "distance": 420,
+        "waterReachM": 1344,
+        "waterDensity": 1,
+        "hullScale": 1,
+        "drawCalls": 36,
+        "triangles": 106341,
+        "passes": [
+          "canvas",
+          "split-copy",
+          "split"
+        ],
+        "world": {
+          "borderStrength": 1,
+          "overviewDrawn": false,
+          "sessionGround": true,
+          "groundLeaving": false,
+          "frame": {
+            "xM": 2550,
+            "yM": 2200,
+            "distanceM": 420,
+            "yawDeg": 25,
+            "pitchDeg": 35
+          },
+          "detailDrawn": [],
+          "detailResident": [],
+          "detailPending": 0,
+          "detailProps": 0,
+          "detailPropTris": 0,
+          "detailVentPlumes": 0,
+          "detailLandmarks": 0,
+          "detailLandmarkTris": 0
+        },
+        "halo": "idle",
+        "haloSites": 0,
+        "haloDropped": 0,
+        "haloCalls": 0,
+        "haloTriangles": 0,
+        "haloBytes": 35835136,
+        "split": "on",
+        "splitBytes": 8294400,
+        "canvasStencilBits": 8,
+        "textures": 24,
+        "pixelRatio": 1,
+        "drawingBuffer": {
+          "width": 1920,
+          "height": 1080
+        },
+        "toneMapping": 4,
+        "environmentIntensity": 0.35,
+        "environmentBytes": 344064,
+        "station": "C",
+        "stationMs": 2326.8,
+        "stationFrames": 243,
+        "avgFrames": 240,
+        "fps": 104.4,
+        "avgFrameMs": 9.56,
+        "worstFrameMs": 12.5,
+        "avgConnMs": 0.73,
+        "worstConnMs": 1.4,
+        "avgOverlayMs": 6.9,
+        "worstOverlayMs": 10.1,
+        "overlayFrames": 243,
+        "gpuTimer": "timing",
+        "avgGpuMs": 2.27,
+        "worstGpuMs": 8.28,
+        "gpuFrames": 241,
+        "gpuDropped": 0,
+        "gpuQueue": null,
+        "gpuSplit": false,
+        "gpuParts": null,
+        "units": 6,
+        "structures": 1,
+        "tracks": 4,
+        "structureTracks": 0,
+        "trackAt": {
+          "x": 3400,
+          "z": 2920,
+          "depthM": 1450
+        },
+        "ordnance": 0,
+        "wakeBubbles": 0,
+        "hits": 0,
+        "hitParticles": 0,
+        "plumeMotes": 0,
+        "workLightsLit": 0,
+        "sparks": 0,
+        "plumeAt": null,
+        "ventPlumeAt": {
+          "x": 208.1782446675934,
+          "z": 2183.766434970312,
+          "depthM": 1414.9942847085467
+        },
+        "hitAt": null,
+        "shots": 0,
+        "shotParticles": 0,
+        "recoiling": 0,
+        "shotAt": null,
+        "props": 186,
+        "propTris": 49244,
+        "ventPlumes": 3,
+        "fieldHazes": 0,
+        "landmarks": 1,
+        "landmarkTris": 2626,
+        "siftMotes": 256,
+        "cloudMotes": 0,
+        "collapsing": false,
+        "landmarkLampsPx": [
+          {
+            "x": 1703.4460075411168,
+            "y": 774.3510578926185
+          },
+          {
+            "x": 2098.34505104459,
+            "y": 838.2460403727192
+          },
+          {
+            "x": 244.38897987861247,
+            "y": 363.60312540931517
+          },
+          {
+            "x": 370.7461421642808,
+            "y": 373.3280197171253
+          }
+        ],
+        "modelBacked": 6,
+        "modelMeshes": 23,
+        "ownCentre": {
+          "x": 2550,
+          "z": 2552.8571428571427
+        }
+      },
+      "queued": {
+        "steps": 40000,
+        "gpuMs": 1.06,
+        "worstGpuMs": 2.26,
+        "loadMs": 13.07,
+        "gpuDropped": 0,
+        "loadDropped": 0
+      }
+    },
+    {
+      "name": "C-pools-off",
+      "tick": 17640,
+      "file": "gpu-on-dpr1-C-pools-off.png",
+      "probe": {
+        "active": true,
+        "look": "sorrowgate",
+        "programHold": {
+          "holding": false,
+          "heldFrames": 36
+        },
+        "pitchDeg": 35,
+        "yawDeg": 25,
+        "sway": "on",
+        "focus": {
+          "xM": 2550,
+          "zM": 2200,
+          "depthM": 1450
+        },
+        "eye": {
+          "xM": 2696,
+          "zM": 2512,
+          "depthM": 358
+        },
+        "distance": 420,
+        "waterReachM": 1344,
+        "waterDensity": 1,
+        "hullScale": 1,
+        "drawCalls": 36,
+        "triangles": 106341,
+        "passes": [
+          "canvas",
+          "split-copy",
+          "split"
+        ],
+        "world": {
+          "borderStrength": 1,
+          "overviewDrawn": false,
+          "sessionGround": true,
+          "groundLeaving": false,
+          "frame": {
+            "xM": 2550,
+            "yM": 2200,
+            "distanceM": 420,
+            "yawDeg": 25,
+            "pitchDeg": 35
+          },
+          "detailDrawn": [],
+          "detailResident": [],
+          "detailPending": 0,
+          "detailProps": 0,
+          "detailPropTris": 0,
+          "detailVentPlumes": 0,
+          "detailLandmarks": 0,
+          "detailLandmarkTris": 0
+        },
+        "halo": "idle",
+        "haloSites": 0,
+        "haloDropped": 0,
+        "haloCalls": 0,
+        "haloTriangles": 0,
+        "haloBytes": 35835136,
+        "split": "on",
+        "splitBytes": 8294400,
+        "canvasStencilBits": 8,
+        "textures": 24,
+        "pixelRatio": 1,
+        "drawingBuffer": {
+          "width": 1920,
+          "height": 1080
+        },
+        "toneMapping": 4,
+        "environmentIntensity": 0.35,
+        "environmentBytes": 344064,
+        "station": "C-pools-off",
+        "stationMs": 2319.5,
+        "stationFrames": 243,
+        "avgFrames": 240,
+        "fps": 104.8,
+        "avgFrameMs": 9.55,
+        "worstFrameMs": 14.2,
+        "avgConnMs": 0.73,
+        "worstConnMs": 1.2,
+        "avgOverlayMs": 6.92,
+        "worstOverlayMs": 10.5,
+        "overlayFrames": 243,
+        "gpuTimer": "timing",
+        "avgGpuMs": 1.92,
+        "worstGpuMs": 8.55,
+        "gpuFrames": 241,
+        "gpuDropped": 0,
+        "gpuQueue": null,
+        "gpuSplit": false,
+        "gpuParts": null,
+        "units": 6,
+        "structures": 1,
+        "tracks": 4,
+        "structureTracks": 0,
+        "trackAt": {
+          "x": 3400,
+          "z": 2920,
+          "depthM": 1450
+        },
+        "ordnance": 0,
+        "wakeBubbles": 0,
+        "hits": 0,
+        "hitParticles": 0,
+        "plumeMotes": 0,
+        "workLightsLit": 0,
+        "sparks": 0,
+        "plumeAt": null,
+        "ventPlumeAt": {
+          "x": 208.1782446675934,
+          "z": 2183.766434970312,
+          "depthM": 1414.9942847085467
+        },
+        "hitAt": null,
+        "shots": 0,
+        "shotParticles": 0,
+        "recoiling": 0,
+        "shotAt": null,
+        "props": 186,
+        "propTris": 49244,
+        "ventPlumes": 3,
+        "fieldHazes": 0,
+        "landmarks": 1,
+        "landmarkTris": 2626,
+        "siftMotes": 256,
+        "cloudMotes": 0,
+        "collapsing": false,
+        "landmarkLampsPx": [
+          {
+            "x": 1704.609173724254,
+            "y": 774.2634793198355
+          },
+          {
+            "x": 2099.6283940061053,
+            "y": 838.1494132986262
+          },
+          {
+            "x": 245.18975252207582,
+            "y": 363.54283262720475
+          },
+          {
+            "x": 371.59037795293455,
+            "y": 373.2644544531635
+          }
+        ],
+        "modelBacked": 6,
+        "modelMeshes": 23,
+        "ownCentre": {
+          "x": 2550,
+          "z": 2552.8571428571427
+        }
+      },
+      "queued": {
+        "steps": 40000,
+        "gpuMs": 1.04,
+        "worstGpuMs": 1.85,
+        "loadMs": 12.68,
+        "gpuDropped": 0,
+        "loadDropped": 0
+      }
+    }
+  ]
+}
