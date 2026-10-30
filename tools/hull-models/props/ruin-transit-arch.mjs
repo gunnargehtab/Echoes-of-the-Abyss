@@ -851,8 +851,8 @@ function crest(parent, [cx, cz], len, wid, h, yaw, y0, skew = 0.2) {
 drift(intact, [-240, -204], [71, 76], RAIL_Y[1], 1.2, 'north');
 drift(intact, [196, 214], [71, 76], RAIL_Y[1], 0.7, 'north');
 // On the top's ledges, against the deck's step: six crested drifts (§11:
-// five or six, from twelve), no two the same length, width, height or
-// bearing. Along X they run s, s, n, s, n, n at gaps of 42, 106, 160, 80
+// five or six, from twelve), no two the same length, height or bearing
+// (two widths repeat, 7 m and 8 m). Along X they run s, s, n, s, n, n at gaps of 42, 106, 160, 80
 // and 86 m — two neighbours share a ledge at each end and no gap repeats
 // — so they neither alternate nor space evenly and cannot read as a row
 // of markings along the deck. The ledges are 21 m wide; each lies inside
