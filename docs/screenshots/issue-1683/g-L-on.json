@@ -1,0 +1,874 @@
+{
+  "url": "http://localhost:5173/?arch-study=1",
+  "viewport": [
+    1920,
+    1080
+  ],
+  "dpr": 1,
+  "settings": null,
+  "reducedMotion": false,
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "modelsTick": 984,
+  "openingPose": {
+    "focus": {
+      "xM": 2550,
+      "zM": 2553,
+      "depthM": null
+    },
+    "distance": 2600,
+    "pitchDeg": 55,
+    "yawDeg": 0
+  },
+  "readings": [
+    {
+      "name": "L",
+      "file": "g-L-on-L-030s.png",
+      "requestedTick": 1800,
+      "leadS": 0,
+      "captureTicks": [
+        1800,
+        1968
+      ],
+      "readingTick": 1824,
+      "requested": [
+        2550,
+        2750,
+        650,
+        {
+          "pitchDeg": 12,
+          "yawDeg": 0,
+          "focusDepthM": 1450
+        }
+      ],
+      "actual": {
+        "focus": {
+          "xM": 2550,
+          "zM": 2750,
+          "depthM": 1450
+        },
+        "distance": 650,
+        "pitchDeg": 12,
+        "yawDeg": 0
+      },
+      "conn": {
+        "buffer": [
+          1920,
+          1080
+        ],
+        "frame": {
+          "maxLuma": 237.6,
+          "brightest": {
+            "x": 990,
+            "y": 694,
+            "rgb": [
+              235,
+              238,
+              241
+            ]
+          },
+          "meanLuma": 13.73,
+          "under10": 0.9782,
+          "pixels": 2073600
+        },
+        "windows": {
+          "lamp_0": {
+            "maxLuma": 80.4,
+            "brightest": {
+              "x": 1206,
+              "y": 411,
+              "rgb": [
+                89,
+                79,
+                69
+              ]
+            },
+            "meanLuma": 22.76,
+            "under10": 0.861,
+            "pixels": 784
+          },
+          "lamp_1": {
+            "maxLuma": 79.8,
+            "brightest": {
+              "x": 1308,
+              "y": 383,
+              "rgb": [
+                47,
+                86,
+                115
+              ]
+            },
+            "meanLuma": 21.42,
+            "under10": 0.8814,
+            "pixels": 784
+          },
+          "lamp_2": {
+            "maxLuma": 74.5,
+            "brightest": {
+              "x": 619,
+              "y": 406,
+              "rgb": [
+                84,
+                73,
+                62
+              ]
+            },
+            "meanLuma": 22.38,
+            "under10": 0.9426,
+            "pixels": 784
+          },
+          "lamp_3": {
+            "maxLuma": 70.1,
+            "brightest": {
+              "x": 693,
+              "y": 392,
+              "rgb": [
+                88,
+                67,
+                48
+              ]
+            },
+            "meanLuma": 25.08,
+            "under10": 0.8431,
+            "pixels": 784
+          }
+        }
+      },
+      "arch": {
+        "side": 8,
+        "windows": {
+          "pierW": {
+            "box": [
+              658,
+              310,
+              666,
+              318
+            ],
+            "pxPerM": 1.226,
+            "visible": true,
+            "maxLuma": 60,
+            "brightest": {
+              "x": 661,
+              "y": 313,
+              "rgb": [
+                28,
+                66,
+                95
+              ]
+            },
+            "meanLuma": 18.51,
+            "under10": 0.9531,
+            "pixels": 64
+          },
+          "pierE": {
+            "box": [
+              1253,
+              310,
+              1261,
+              318
+            ],
+            "pxPerM": 1.227,
+            "visible": true,
+            "maxLuma": 22.2,
+            "brightest": {
+              "x": 1253,
+              "y": 310,
+              "rgb": [
+                11,
+                24,
+                38
+              ]
+            },
+            "meanLuma": 19.2,
+            "under10": 1,
+            "pixels": 64
+          },
+          "floorW": {
+            "box": [
+              649,
+              430,
+              657,
+              438
+            ],
+            "pxPerM": 1.273,
+            "visible": true,
+            "maxLuma": 16.3,
+            "brightest": {
+              "x": 655,
+              "y": 433,
+              "rgb": [
+                8,
+                18,
+                24
+              ]
+            },
+            "meanLuma": 15.71,
+            "under10": 1,
+            "pixels": 64
+          },
+          "floorE": {
+            "box": [
+              1262,
+              430,
+              1270,
+              438
+            ],
+            "pxPerM": 1.273,
+            "visible": true,
+            "maxLuma": 18.3,
+            "brightest": {
+              "x": 1262,
+              "y": 437,
+              "rgb": [
+                10,
+                20,
+                26
+              ]
+            },
+            "meanLuma": 16.01,
+            "under10": 1,
+            "pixels": 64
+          },
+          "opening": {
+            "box": [
+              956,
+              423,
+              964,
+              431
+            ],
+            "pxPerM": 1.167,
+            "visible": true,
+            "maxLuma": 27,
+            "brightest": {
+              "x": 959,
+              "y": 428,
+              "rgb": [
+                6,
+                33,
+                30
+              ]
+            },
+            "meanLuma": 7.07,
+            "under10": 0.9844,
+            "pixels": 64
+          },
+          "span": {
+            "box": [
+              956,
+              263,
+              964,
+              271
+            ],
+            "pxPerM": 1.22,
+            "visible": true,
+            "maxLuma": 23,
+            "brightest": {
+              "x": 963,
+              "y": 268,
+              "rgb": [
+                11,
+                25,
+                39
+              ]
+            },
+            "meanLuma": 22.28,
+            "under10": 1,
+            "pixels": 64
+          },
+          "wall": {
+            "box": [
+              956,
+              323,
+              964,
+              331
+            ],
+            "pxPerM": 0.905,
+            "visible": true,
+            "maxLuma": 14.5,
+            "brightest": {
+              "x": 958,
+              "y": 324,
+              "rgb": [
+                6,
+                16,
+                24
+              ]
+            },
+            "meanLuma": 14.31,
+            "under10": 1,
+            "pixels": 64
+          },
+          "capW": {
+            "box": [
+              658,
+              304,
+              666,
+              312
+            ],
+            "pxPerM": 1.226,
+            "visible": true,
+            "maxLuma": 20.5,
+            "brightest": {
+              "x": 663,
+              "y": 307,
+              "rgb": [
+                10,
+                22,
+                36
+              ]
+            },
+            "meanLuma": 19.78,
+            "under10": 1,
+            "pixels": 64
+          },
+          "capE": {
+            "box": [
+              1253,
+              304,
+              1261,
+              312
+            ],
+            "pxPerM": 1.226,
+            "visible": true,
+            "maxLuma": 22.2,
+            "brightest": {
+              "x": 1253,
+              "y": 309,
+              "rgb": [
+                11,
+                24,
+                38
+              ]
+            },
+            "meanLuma": 20.81,
+            "under10": 1,
+            "pixels": 64
+          }
+        },
+        "masks": {
+          "stone_dark": {
+            "pixels": 47269,
+            "inPools": 4810,
+            "meanLuma": 22.03,
+            "maxLuma": 110.3,
+            "under10": 0.915
+          },
+          "structure_rib": {
+            "pixels": 9957,
+            "inPools": 547,
+            "meanLuma": 15.13,
+            "maxLuma": 85.4,
+            "under10": 0.9674
+          },
+          "silt_drift": {
+            "pixels": 848,
+            "inPools": 96,
+            "meanLuma": 39.41,
+            "maxLuma": 91.3,
+            "under10": 0.0083
+          },
+          "civic_lamp": {
+            "pixels": 0,
+            "inPools": 25,
+            "meanLuma": null,
+            "maxLuma": null,
+            "under10": null
+          },
+          "laminate": {
+            "pixels": 37750,
+            "inPools": 0,
+            "meanLuma": 25.04,
+            "maxLuma": 237.6,
+            "under10": 0.7037
+          },
+          "hullLamp": {
+            "pixels": 1440,
+            "inPools": 0,
+            "meanLuma": 47.68,
+            "maxLuma": 208.2,
+            "under10": 0.5292
+          }
+        },
+        "profiles": {
+          "west": {
+            "x": 681,
+            "y0": 293,
+            "rows": [
+              15.86,
+              16.42,
+              16.19,
+              22.89,
+              43.47,
+              21.45,
+              13.68,
+              13.68,
+              16.18,
+              21.75,
+              21.89,
+              21.79,
+              21.79,
+              21.5,
+              21.47,
+              21.46,
+              21.46,
+              20.77,
+              20.46,
+              20.46,
+              20.42,
+              18.04,
+              16.79,
+              16.74,
+              16.91,
+              17.09,
+              17.19,
+              17.88,
+              18.25,
+              18.25,
+              18.28,
+              18.28,
+              18.28,
+              18.28,
+              18.28,
+              18.62,
+              18.64,
+              18.64,
+              18.64,
+              18.64,
+              18.65,
+              18.94,
+              18.95,
+              18.95,
+              27.76,
+              32.06,
+              27.01,
+              18.28,
+              18.12,
+              17.82,
+              17.82,
+              17.81,
+              17.81,
+              18.15,
+              30.21,
+              13.18,
+              12.91,
+              13.35,
+              19.04,
+              19.04,
+              18.94,
+              18.28,
+              18.28,
+              18.28,
+              18.27,
+              18.62,
+              18.61,
+              18.62,
+              18.62,
+              18.62,
+              18.5,
+              18.98,
+              18.97,
+              18.95,
+              18.75,
+              18.54,
+              18.01,
+              17.77,
+              17.97,
+              17.97,
+              17.97,
+              17.81,
+              17.75,
+              18.1,
+              18.1,
+              18.26,
+              18.78,
+              32.09,
+              32.83,
+              49.79,
+              58.98,
+              21.07,
+              21.23,
+              21.23,
+              21.41,
+              21.46,
+              21.31,
+              21.31,
+              21.31,
+              21.69,
+              21.84,
+              21.8,
+              21.8,
+              21.61,
+              21.47,
+              21.29,
+              21.24,
+              21.39,
+              21.56,
+              21.56,
+              21.37,
+              21.37,
+              21.17,
+              21.13,
+              21.03,
+              20.7,
+              20.37,
+              20.43,
+              20.46,
+              20.49,
+              20.63,
+              20.46,
+              20.27,
+              20.13,
+              19.97,
+              19.96,
+              19.96,
+              19.82,
+              19.67,
+              19.96,
+              16.34,
+              15.58,
+              15.59,
+              15.52,
+              16.31,
+              16.31,
+              15.52,
+              15.52,
+              15.52,
+              15.52,
+              15.53,
+              15.52,
+              15.59,
+              15.52,
+              16.31,
+              18.31,
+              16.31,
+              16.02,
+              15.56
+            ]
+          },
+          "east": {
+            "x": 1238,
+            "y0": 293,
+            "rows": [
+              16.38,
+              17.33,
+              15.7,
+              15.36,
+              16.91,
+              44.84,
+              13.86,
+              13.88,
+              20.27,
+              20.28,
+              20.28,
+              20.43,
+              20.57,
+              20.44,
+              20.43,
+              21.8,
+              21.63,
+              21.42,
+              21.17,
+              21.17,
+              21.42,
+              21.49,
+              21.65,
+              21.59,
+              21.73,
+              21.59,
+              21.26,
+              21.26,
+              20.6,
+              20.46,
+              20.6,
+              20.62,
+              20.6,
+              20.6,
+              20.89,
+              21.13,
+              21.09,
+              20.46,
+              20.46,
+              20.46,
+              20.46,
+              20.46,
+              20.46,
+              20.6,
+              31.25,
+              31.26,
+              20.6,
+              20.6,
+              20.62,
+              20.82,
+              20.86,
+              21.02,
+              21.42,
+              21.46,
+              21.52,
+              21.5,
+              21.46,
+              21.3,
+              20.82,
+              20.96,
+              21.35,
+              21.46,
+              21.46,
+              21.46,
+              21.95,
+              22.12,
+              22.27,
+              22.27,
+              22.23,
+              20.57,
+              14.13,
+              14.48,
+              14.68,
+              22.53,
+              22.49,
+              22.1,
+              21.5,
+              21.46,
+              21.46,
+              21.46,
+              21.46,
+              21.46,
+              21.46,
+              21.5,
+              21.8,
+              21.49,
+              21.46,
+              20.86,
+              30.68,
+              40.04,
+              20.46,
+              20.46,
+              20.43,
+              20.46,
+              20.46,
+              20.46,
+              20.46,
+              20.46,
+              20.46,
+              20.46,
+              20.45,
+              20.46,
+              20.46,
+              20.46,
+              20.46,
+              20.43,
+              20.42,
+              20.42,
+              20.42,
+              20.43,
+              20.46,
+              20.46,
+              20.5,
+              21.05,
+              21.1,
+              21.1,
+              21.05,
+              34.01,
+              46.37,
+              49.33,
+              49.81,
+              41.81,
+              24.65,
+              20.63,
+              20.67,
+              21.3,
+              21.47,
+              21.63,
+              21.83,
+              21.79,
+              30.72,
+              29.22,
+              15.52,
+              15.52,
+              15.52,
+              15.55,
+              15.52,
+              15.52,
+              15.52,
+              15.52,
+              15.59,
+              15.59,
+              15.52,
+              15.52,
+              19.15,
+              17.24,
+              22.99,
+              17.45,
+              17.15
+            ]
+          }
+        },
+        "shade": [
+          1,
+          1,
+          1
+        ],
+        "switches": {
+          "pools": true,
+          "lamps": true,
+          "bounce": 10,
+          "grade": true,
+          "ceiling": 0.1
+        },
+        "marked": "g-L-on-L-030s-windows.png"
+      },
+      "probe": {
+        "active": true,
+        "look": "sorrowgate",
+        "programHold": {
+          "holding": false,
+          "heldFrames": 0
+        },
+        "pitchDeg": 12,
+        "yawDeg": 0,
+        "sway": "on",
+        "focus": {
+          "xM": 2550,
+          "zM": 2750,
+          "depthM": 1450
+        },
+        "eye": {
+          "xM": 2550,
+          "zM": 3386,
+          "depthM": 830
+        },
+        "distance": 650,
+        "waterReachM": 2080,
+        "waterDensity": 1,
+        "hullScale": 1,
+        "drawCalls": 54,
+        "triangles": 115624,
+        "passes": [
+          "canvas",
+          "depth-copy",
+          "halo-source",
+          "halo-spread",
+          "halo-composite",
+          "split-copy",
+          "split"
+        ],
+        "world": {
+          "borderStrength": 1,
+          "overviewDrawn": false,
+          "sessionGround": true,
+          "groundLeaving": false,
+          "frame": {
+            "xM": 2550,
+            "yM": 2750,
+            "distanceM": 650,
+            "yawDeg": 0,
+            "pitchDeg": 12
+          },
+          "detailDrawn": [],
+          "detailResident": [],
+          "detailPending": 0,
+          "detailProps": 0,
+          "detailPropTris": 0,
+          "detailVentPlumes": 0,
+          "detailLandmarks": 0,
+          "detailLandmarkTris": 0
+        },
+        "halo": "drawn",
+        "haloSites": 10,
+        "haloDropped": 0,
+        "haloCalls": 8,
+        "haloTriangles": 27,
+        "haloBytes": 35835136,
+        "split": "on",
+        "splitBytes": 8294400,
+        "canvasStencilBits": 8,
+        "textures": 23,
+        "pixelRatio": 1,
+        "drawingBuffer": {
+          "width": 1920,
+          "height": 1080
+        },
+        "toneMapping": 4,
+        "environmentIntensity": 0.35,
+        "environmentBytes": 344064,
+        "station": null,
+        "stationMs": 34110.2,
+        "stationFrames": 50,
+        "avgFrames": 50,
+        "fps": 1.5,
+        "avgFrameMs": 665.6,
+        "worstFrameMs": 2645.9,
+        "avgConnMs": 25.66,
+        "worstConnMs": 482.4,
+        "avgOverlayMs": 2.61,
+        "worstOverlayMs": 17,
+        "overlayFrames": 41,
+        "gpuTimer": "software",
+        "avgGpuMs": null,
+        "worstGpuMs": null,
+        "gpuFrames": 0,
+        "gpuDropped": 0,
+        "gpuQueue": null,
+        "gpuSplit": false,
+        "gpuParts": null,
+        "units": 6,
+        "structures": 1,
+        "tracks": 4,
+        "structureTracks": 0,
+        "trackAt": {
+          "x": 3400,
+          "z": 2480,
+          "depthM": 1450
+        },
+        "ordnance": 0,
+        "wakeBubbles": 0,
+        "hits": 0,
+        "hitParticles": 0,
+        "plumeMotes": 0,
+        "workLightsLit": 0,
+        "sparks": 0,
+        "plumeAt": null,
+        "ventPlumeAt": {
+          "x": 208.1782446675934,
+          "z": 2183.766434970312,
+          "depthM": 1414.9942847085467
+        },
+        "hitAt": null,
+        "shots": 0,
+        "shotParticles": 0,
+        "recoiling": 0,
+        "shotAt": null,
+        "props": 186,
+        "propTris": 49244,
+        "ventPlumes": 3,
+        "fieldHazes": 0,
+        "landmarks": 1,
+        "landmarkTris": 2626,
+        "siftMotes": 256,
+        "cloudMotes": 0,
+        "collapsing": false,
+        "landmarkLampsPx": [
+          {
+            "x": 1207.032602167423,
+            "y": 410.4623304514454
+          },
+          {
+            "x": 1302.7445586241586,
+            "y": 395.48767604148975
+          },
+          {
+            "x": 619.3461554873383,
+            "y": 405.4777782450415
+          },
+          {
+            "x": 693.9256984136438,
+            "y": 392.985765197382
+          }
+        ],
+        "modelBacked": 6,
+        "modelMeshes": 23,
+        "ownCentre": {
+          "x": 2550,
+          "z": 2552.8571428571427
+        }
+      }
+    }
+  ]
+}

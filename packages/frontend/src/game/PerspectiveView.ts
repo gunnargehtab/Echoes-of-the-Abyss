@@ -153,7 +153,7 @@ import { HullHits, flashedGlow, hitStrength } from './hullHit.ts';
 import { GunFire, isSiegeHull } from './gunFire.ts';
 import { SiltPlume, plumeStrength, type PlumeSource } from './siltPlume.ts';
 import { WorkLights } from './workLight.ts';
-import { EnvironmentLayer } from './environmentLayer.ts';
+import { EnvironmentLayer, type StudySwitches } from './environmentLayer.ts';
 import { createWaterEnvironment, keepsGlowOutsideToneMapping } from './modelLighting.ts';
 import { GLOW_FACTOR_MAX, GLOW_FACTOR_MIN, SIG_GLOW_EFOLD } from './glow.ts';
 import { VeilField, VEIL_FLOOR_RGB, veilShade, type VeilListener } from './acousticVeil.ts';
@@ -187,6 +187,8 @@ import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
 import { FaunaStipple } from './faunaStipple.ts';
 import { DREAM_LOOP } from './dreamLoop.ts';
 import { ARCH_STUDY_ON } from './archStudy.ts';
+import { maskTarget, readMaterialMask, type MaskPixels } from './archMask.ts';
+import { installDistanceGrade, setDistanceGrade } from './distanceGrade.ts';
 import {
   duneSource,
   groundDetailCells,
@@ -863,6 +865,8 @@ export class PerspectiveView {
   /** Every own model, one draw a template material (rosterBatches.ts, #1079):
    * the two groups above hold the sprites a model replaces, never the model. */
   private readonly models = new RosterBatches();
+  /** The arch study's mask target (archMask.ts), made on its first development read. */
+  private archMask: WebGLRenderTarget | null = null;
   /** The models the chart's ground ink passes behind this frame (`beginInk`). */
   private readonly ink = new InkOcclusion();
   /** Every plumb and every shadow, two draw calls in all (#434). */
@@ -1682,6 +1686,11 @@ export class PerspectiveView {
     delete (window as unknown as { __perspectiveHaloFrame?: unknown }).__perspectiveHaloFrame;
     delete (window as unknown as { __perspectiveHaloOnly?: unknown }).__perspectiveHaloOnly;
     delete (window as unknown as { __perspectiveSeabedM?: unknown }).__perspectiveSeabedM;
+    delete (window as unknown as { __archStudyPoints?: unknown }).__archStudyPoints;
+    delete (window as unknown as { __archStudyMask?: unknown }).__archStudyMask;
+    delete (window as unknown as { __archStudyShade?: unknown }).__archStudyShade;
+    this.archMask?.dispose();
+    this.archMask = null;
     for (const resolve of this.haloFrameWaiters) resolve(null);
     this.haloFrameWaiters = [];
     for (const resolve of this.splitFrameWaiters) resolve(null);
@@ -2356,6 +2365,9 @@ export class PerspectiveView {
     // Between the two: the veil drains the finished ground, surface and
     // detail and all, and the ink goes over it (veilShading.ts).
     installDisplayVeil(material);
+    // The arch study's distance grade (§11): the prologue's ground beyond the
+    // focus fades further into its water, after the fog it extends.
+    if (this.look === 'sorrowgate' && ARCH_STUDY_ON) installDistanceGrade(material);
     if (this.look === 'sorrowgate') installGroundSurface(material);
     else if (this.seabedDetail) {
       // After the ink, whose world position it reads and whose hook it chains.
@@ -3001,6 +3013,8 @@ export class PerspectiveView {
       }
     );
     if (this.look === 'sorrowgate') installGroundSurface(material);
+    // The arch study's distance grade (§11) reaches the apron's ground too.
+    if (this.look === 'sorrowgate' && ARCH_STUDY_ON) installDistanceGrade(material);
     const mesh = new Mesh(geometry, material);
     this.scene.add(mesh);
     apron.mesh = mesh;
@@ -4544,6 +4558,8 @@ export class PerspectiveView {
     if (this.scene.fog instanceof FogExp2) {
       this.scene.fog.density = fogDensityFor(this.distance, this.waterDensity);
     }
+    // The arch study's distance grade breathes with the same dolly (§11).
+    if (ARCH_STUDY_ON) setDistanceGrade(this.distance, this.waterDensity);
 
     // Ember flicker steps on the 5 Hz sonar bucket, never smoothly — the
     // seabed's one light keeps the register (docs/art-direction.md).
@@ -4751,7 +4767,7 @@ export class PerspectiveView {
     // for the §9 readings that need the pools or the glass alone (#1637).
     (
       window as unknown as {
-        __archStudy?: (s: Partial<{ pools: boolean; lamps: boolean }>) => unknown;
+        __archStudy?: (s: Partial<StudySwitches>) => unknown;
       }
     ).__archStudy = (switches) => this.environment.setStudySwitches(switches ?? {});
 
@@ -4862,6 +4878,33 @@ export class PerspectiveView {
         this.gpuTimer?.reset();
         this.queueTimer?.reset();
         return this.queueLoad.steps;
+      };
+      // The arch study's §11 readings (docs/sorrowgate-arch-study.md, #1683):
+      // model-space points of the landmark standing, in CSS pixels as the
+      // lamps are, and the per-material mask (archMask.ts). Both read what
+      // the view already draws and change nothing in it.
+      (
+        window as unknown as {
+          __archStudyPoints?: (points: [number, number, number][]) => unknown;
+        }
+      ).__archStudyPoints = (points) =>
+        this.environment.landmarkPoints(points)?.map((at) => {
+          const out: ProjectedPoint = { x: 0, y: 0, pxPerM: 0, visible: false };
+          this.projectWorld(at, out);
+          return { x: out.x, y: out.y, pxPerM: out.pxPerM, visible: out.visible };
+        }) ?? null;
+      (window as unknown as { __archStudyShade?: () => unknown }).__archStudyShade = () =>
+        this.environment.landmarkShade();
+      (window as unknown as { __archStudyMask?: () => MaskPixels | null }).__archStudyMask = () => {
+        if (this.renderer === null) return null;
+        this.archMask ??= maskTarget();
+        return readMaterialMask(
+          this.renderer,
+          this.scene,
+          this.camera,
+          { landmarkParts: this.environment.maskParts(), hulls: this.models.group },
+          this.archMask
+        );
       };
     }
   }

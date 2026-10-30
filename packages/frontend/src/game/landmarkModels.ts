@@ -47,11 +47,14 @@ import {
   HANG_PHASE_ATTRIBUTE,
   hangMotion,
   installFallDrop,
+  installCourtBounce,
   installHangSway,
   installLampLevels,
   installLampPools,
   LAMP_INDEX_ATTRIBUTE,
+  LANDMARK_LUMINANCE_CEILING,
   landmarkUniforms,
+  RIB_ROUGHNESS,
   type LandmarkUniforms,
 } from './landmarkLight.ts';
 
@@ -137,7 +140,20 @@ export function buildLandmarkTemplate(
       child.material = cloneOf(child.material);
     }
   });
-  normaliseLuminance(clones.values());
+  // Under the study a landmark's diffuse ceiling is §11's 0.10, not a prop's
+  // 0.06, and its frame takes a sheen from the environment (§11): the
+  // materials keep their tokens' hues and ratios. Material values, so the
+  // board's still copy takes them too.
+  if (look === 'sorrowgate') {
+    normaliseLuminance(clones.values(), LANDMARK_LUMINANCE_CEILING);
+    for (const material of clones.values()) {
+      if (material.name === 'structure_rib' && material instanceof MeshStandardMaterial) {
+        material.roughness = RIB_ROUGHNESS;
+      }
+    }
+  } else {
+    normaliseLuminance(clones.values());
+  }
   // The study's light and motion ride the prologue's look alone (§7
   // "Isolation"): under it the stone takes the lamp pools, the ribs the sway,
   // every ruined part the debris's drop, and the glass its lamp's level.
@@ -157,6 +173,7 @@ export function buildLandmarkTemplate(
         installLampLevels(material, uniforms);
       } else {
         installLampPools(material, uniforms);
+        installCourtBounce(material, uniforms);
         installFallDrop(material, uniforms);
         if (material.name === 'structure_rib') installHangSway(material, uniforms);
       }

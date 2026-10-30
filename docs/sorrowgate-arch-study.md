@@ -13,7 +13,9 @@ This revision writes them. On 27 October the owner approved the asset block by n
 commissions the arch model inside §6's fit (§10). On 28 October, with the model authored, the
 owner loosened the ruined skirt's ceiling from 5 m to 15 m (§6). The study has since been
 built behind its flag (#1669). On 29 October the owner approved its normal-view refinement
-target and a new round cap (§11).
+target and a new round cap (§11). On 30 October, with its first round measured, the owner
+restated the court bounce's bound in display terms, and after its second round set the
+bounce's gain and amended two of the opening's criteria (§11).
 
 On 26 October the owner selected **monumental civic infrastructure: heavy masonry,
 exposed structural ribs and damaged transit fittings**, with four priorities: layered
@@ -481,13 +483,66 @@ The water decision went past the recommendation, so
 [art-direction.md](art-direction.md#reading-the-water) carries it as a licence, as
 [style-neon-noir.md](style-neon-noir.md#the-arch-studys-licence) carries the light.
 
+### Decision of 30 October
+
+The first round of #1683 built every change at its bound and read H against the criteria below
+([issue-1683](screenshots/issue-1683/README.md)). The piers read 1.1 and 0.9 luma over their
+floors, against 5, and near-black rose from 98.7 % to 98.8 %. The projection under
+"Acceptance at the opening" had been taken in linear light. The view tone-maps the arch with
+ACES at exposure 1, which divides by 0.6, and three's fit returns zero below about 0.0034. A
+south face lit by the ambient, the bounce and the environment alone sits in that toe, so the
+3.3× gain moved it from about 2 luma to 4. The court floor is unlit and not tone-mapped, so
+it reads 17 either way.
+
+| Question | Recommended | Owner's decision |
+| --- | --- | --- |
+| The court bounce's bound | State it in display terms, as the outcome the 29 October projection promised; the alternative was to amend H's acceptance and keep the faces dark | **As recommended** |
+
+The second round swept the gain on the ambient at H, L and C. At 7, the least that held "H,
+masses", the span face at L rose to within 3.4 luma of the Descent wall; at 10 it stood 8.1
+over it, H's piers 10 over their floors and under the escorts' laminate, and C's near-black
+88.7 %. At 12 H's piers met the laminate and C fell to 83.4 %. H's near-black read
+98.71–98.77 % at gains 7 to 11, with the grade on or off, against 98.71 % before the
+refinement, and fell to 98.63 % only at 12; the grade adds 0.03–0.06 point of it. At C's fixed
+pose the west capital lies under the HUD's orders panel, where the GL canvas reads it at 20.4,
+and the east one off the frame.
+
+The third round read each pier face on its own rows, between its edges projected through the
+frame's camera, and swept whole gains from 5. At 8 the span face at L stood 4.95 over the wall;
+at 9 it stood 6.5 in two readings, with H's piers 8.3–9.2 over their floors and about 4 under
+the escorts' laminate. So 9, not 10, is the least that holds both. At H the capitals' south
+faces are 2–3 px tall: they read 18.9–19.1 and 20.2–20.3 at 9 and 24.0 and 25.7 at 12, where the
+capital windows already pass the escorts' laminate, so no gain read inside the bounds lifts both
+over near-black. The 16 px
+windows had read 29.5 because they took in the key-lit tops.
+
+| Question | Recommended | Owner's decision |
+| --- | --- | --- |
+| The bounce's gain | The least at which "H, masses" and "L" both hold, 10 as first read; the bound as first worded gave 7 and failed L | **As recommended**, then 9 (below) |
+| "H, darkness" and "C"'s capitals | Read H's darkness with the grade on as a rise of at most 0.1 point, and the capitals at H, where both stand on screen; the alternative was to leave both as open findings | **As recommended** |
+| The gain, in whole steps | 9, the least whole gain holding "H, masses" and "L"; keeping 10 was the alternative | **As recommended** |
+| "H, capitals", read on the faces | Each face reads above the court floor's window beside it; the alternatives were the capital top and face together, or an open finding | **As recommended** |
+
+The bounce's row and the acceptance below carry these decisions. Nothing else in the table
+moves, and the round cap stands: rounds 1 and 2 are spent, and the third is the last.
+
+In the fourth round the mask tagged each pier fragment with its mass and facing. Down five
+columns a pier at H, in an untimed session (`sweep-H-bands.json` in
+[issue-1683](screenshots/issue-1683/README.md)), the capital drew 17–21 rows at about 35 luma,
+drums 1 and 0 13–18 rows each at 20–29 against the floor's 17.2, and their lit ledges about
+2 px or less; drum 2 drew 0–3 rows under the capital.
+
+| Question | Recommended | Owner's decision |
+| --- | --- | --- |
+| "The drum bands" | Each visible mass, at least 2 px tall over the court floor, drum 2 excepted as hidden by the proud capital; the alternatives were each lit ledge as a 2 px band, which the east pier fails, or an open finding | **As recommended** |
+
 ### Permitted changes and their bounds
 
 Every change holds behind the study's flag, on the prologue's look (§7, "Isolation").
 
 | Change | Bound |
 | --- | --- |
-| Court bounce | A diffuse term on the landmark's own materials, as from the court floor: from the south and 30° below level, so the south faces and the soffit take it and the deck does not. At full incidence at most the rig's ambient again, `MODEL_LIGHTING.AMBIENT` in its colour, so a south face takes at most twice its ambient today; no hue of its own. The board's still copy takes none, as it takes no pool |
+| Court bounce | A diffuse term on the landmark's own materials, as from the court floor: from the south and 30° below level, so the south faces and the soffit take it and the deck does not. In the rig's ambient colour, `MODEL_LIGHTING.AMBIENT_COLOR`, with no hue of its own. Its strength is bounded in display terms (30 October): the least whole gain on the ambient at which "H, masses" and "L" below both hold, and never one at which "H, order" fails, an arch pixel outside a pool reads over the escorts' brightest lamp pixel or the ember's mean breath, or an arch window over the escorts' laminate mean. The board's still copy takes none, as it takes no pool |
 | Diffuse ceiling | The landmark's brightest material at most 0.10 linear diffuse luminance, up from the props' 0.06; the materials keep their tokens' hues and ratios. This crosses the 0.067 cladding floor, so "H, order" below bounds it against the escorts' cladding. The board's still copy takes it too, since it is a material value |
 | Roughness | `structure_rib` 0.55–0.7, so the frame takes a sheen from the existing environment; `stone_dark` and `silt_drift` stay 0.9–1; metalness 0 throughout. The board's still copy takes it too |
 | Distance grade | Public ground beyond the focus fades further into the water it stands in. The measure is a fragment's range from the camera less the camera's distance to its focus. The fog factor is production's plus 0.35 × that excess over the reach, clamped to 0–0.35 extra and to 1 in all, linear between, and the extra is multiplied by `waterDensity`, so 0 draws none. The reach is 0.58 of the dolly, 1,500 m at the opening's 2,600 m, so it breathes with the dolly as the falloff does. Terrain and props only: the landmark keeps production's falloff, so at L, whose reach is 377 m, the Descent wall takes the full 0.35 and the arch none. The arch takes none at C either; C's far ground takes the grade, so C's darkness is read with it on. Never a hull, contact, glow, lamp, survey ink or HUD. No hue and no new pass |
@@ -499,9 +554,10 @@ Every change holds behind the study's flag, on the prologue's look (§7, "Isolat
 The shape changes sit inside §6's plan and levels and
 [Block 4b](asset-prompts-3d.md#block-4b--public-landmarks-authored-no-faction-no-sig)'s
 text, so neither is amended. The ruined state, the lamps, the node names and gate 6's
-study line, four calls and 12,000 triangles a state, are unchanged: the committed model is
-2,412 triangles intact and 732 ruined. The author builds them; intake and the hull reviewer
-grade them before the integrated loop critic does.
+study line, four calls and 12,000 triangles a state, are unchanged: the model was 2,412
+triangles intact and 732 ruined before the refinement, and is 2,626 and 732 after it (#1683).
+The author builds them; intake and the hull reviewer grade them before the integrated loop
+critic does.
 
 Unchanged too: §8's lamps and pools, every hull's pixels and SIG, hidden information, the
 gameplay ground, the flight, the HUD, the shared rig, exposure, bloom, the acoustic veil and
@@ -528,22 +584,29 @@ drawn on that before frame to show where it fell. The points, in model metres:
 | Span face, at L | (0, +136, +72), moving with the face |
 | Descent wall, at L | (0, +60, −375): the Descent's wall two rows north, seen through the opening |
 
-Under the full bounds a pier's south face gains at most about 3.3× in linear light (2× from
-the bounce, 1.67× from the ceiling). On the measured 5/7/10 that is about 16/20/26, luma
-about 19.5 against the floor's 17.7: above the floor, short of the 5 luma the criterion
-asks. The pier criterion therefore leans on the proud piers' lit capitals, which the window
-takes in over the fallen-cladding recess.
+On 29 October this section projected that a pier's south face would gain at most about 3.3×
+in linear light (2× from the bounce, 1.67× from the ceiling), on the measured 5/7/10 about
+16/20/26, luma about 19.5. That projection ignored the tone curve's toe, and the first round
+measured about 4 (the decision of 30 October above). The bounce's bound is now the reading
+itself.
 
 - **H, masses.** Each pier's window reads at least 5 luma brighter, by mean, than the court
   floor's beside it, and the opening floor's at least 5 darker than both piers'. The
-  capitals and the drum bands draw as separate lit bands at least 2 px tall.
+  capitals and the drum bands draw as separate lit bands at least 2 px tall: read on the
+  mask's band tags down five columns a pier, the capital, drum 1 and drum 0 each draw at
+  least 2 px tall with a mean over the court floor's window, each a separate mass. Drum 2 is
+  excepted: the capital stands 10 m proud of it, so at H it draws at most a few rows under the
+  capital, and none where its cladding has fallen (30 October).
 - **H, order.** The flight stays the first read: an escort's pixels do not change with the
   study on, no arch pixel outside a pool is brighter than the escorts' brightest lamp pixel
   or a vent ember's mean breath (§9), and no arch window outside a pool reads brighter, by
   mean, than the escorts' laminate mask in the same frame.
-- **H, darkness.** Near-black falls from 98.7 % and stays at or above 85 %, as at every station.
-- **C.** The `structure_rib` and `stone_dark` masks differ by at least 5 luma, by mean, and
-  the capitals' south faces read above near-black.
+- **H, darkness.** Near-black, read with the distance grade on, rises at most 0.1 point from
+  98.7 % and stays at or above 85 %, as at every station (30 October).
+- **H, capitals.** Each capital's south face, read on its own rows, reads above the court
+  floor's window beside it, by mean, at H, where both stand on screen (30 October; C's pose
+  puts one under the HUD and the other off the frame).
+- **C.** The `structure_rib` and `stone_dark` masks differ by at least 5 luma, by mean.
 - **L.** The span face's window and the Descent wall's differ by at least 5 luma, by mean.
 - **S.** No drift line reads as a chart mark, and no surface shimmers in motion.
 
@@ -559,6 +622,9 @@ The owner granted #1683 one new development loop of three rounds. Reaching it is
 the pull request stays open with its findings listed, and there is no reset and no fourth
 round without a new written grant. Production is unchanged; promotion remains a separate
 written decision (§5).
+
+On 30 October, with round 3's critic leaving "H, masses"'s band clause open, the owner granted
+a fourth and a fifth round of #1683 for that clause alone. Reaching the fifth is a stall as above.
 
 ## Related
 
