@@ -884,6 +884,8 @@ and no row below is open.
 | Feedback from playing the tutorial | [#1611](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1611) |
 | Measuring the orders panel under a hold countdown | [#1622](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1622) |
 | The orders panel covering the depth ribbon's readout | [#1668](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1668) |
+| A marker-name test that failed once in CI | [#1681](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1681) |
+| A shared test's backend path breaking on Windows | [#1687](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1687) |
 
 **Store art**
 
