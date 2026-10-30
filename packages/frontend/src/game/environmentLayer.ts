@@ -52,6 +52,7 @@ import { FALL_SECONDS, LAMP_COUNT, lampLevels, LIGHT_BUCKET_MS } from './landmar
 import { CollapseCloud, LandmarkSift, SIFT_SITE_CAP, type SiftSite } from './landmarkSift.ts';
 import type { LandmarkState } from '@echoes/shared';
 import type { WorldLook } from './tutorialLook.ts';
+import type { MaskLandmarkPart } from './archMask.ts';
 import { VentPlume, plumeSites } from './ventPlume.ts';
 import { FieldHaze, hazeSites } from './fieldHaze.ts';
 
@@ -135,6 +136,12 @@ export class EnvironmentLayer {
    * is the study; the harness flips them through the view's probe hook.
    */
   private switches = { pools: true, lamps: true };
+  /**
+   * Every landmark part this layer stands, with its stand and its pools'
+   * uniforms: the study's per-material mask (archMask.ts) and the model-space
+   * windows the §11 readings project (#1683).
+   */
+  private landmarkParts: (MaskLandmarkPart & { stand: LandmarkStand })[] = [];
   /** The lit landmarks standing, with their stands, for the lamp positions the probe projects. */
   private litStands: { template: LandmarkTemplate; stand: LandmarkStand }[] = [];
   /** The collapse's clock, milliseconds on the bucket, while the debris falls; null at rest. */
@@ -365,6 +372,12 @@ export class EnvironmentLayer {
       this.shaded.push({ mesh, list: [at] });
       this.applyShade(mesh, [at]);
       this.group.add(mesh);
+      this.landmarkParts.push({
+        mesh,
+        material: part.material.name,
+        uniforms: template.uniforms,
+        stand,
+      });
     }
     this.landmarksStanding++;
     this.landmarkTris += state.triangles;
@@ -548,6 +561,27 @@ export class EnvironmentLayer {
     return out;
   }
 
+  /** The landmark parts standing, for the study's per-material mask (archMask.ts). */
+  maskParts(): readonly MaskLandmarkPart[] {
+    return this.landmarkParts;
+  }
+
+  /**
+   * Model-space points of the first landmark standing, in world units, for
+   * the probe to project: §11's windows are named in the model's metres.
+   * Null while no landmark stands.
+   */
+  landmarkPoints(points: readonly (readonly [number, number, number])[]): Vector3[] | null {
+    const first = this.landmarkParts[0];
+    if (first === undefined) return null;
+    const { landmark } = first.stand;
+    const originY = depthToWorldY(landmark.originFloorM);
+    return points.map(([mx, my, mz]) => {
+      const [x, z] = turned(mx, mz, landmark.yawRad);
+      return new Vector3(landmark.anchorXM + x, originY + my, landmark.anchorYM + z);
+    });
+  }
+
   /**
    * Stand nothing, and let no template still loading stand anything again: a
    * session's ground let go (`PerspectiveView.clearTerrain`, #1460). The next
@@ -585,6 +619,7 @@ export class EnvironmentLayer {
     this.sift.clear();
     this.lit = [];
     this.litStands = [];
+    this.landmarkParts = [];
     this.props = 0;
     this.propTris = 0;
     this.landmarksStanding = 0;

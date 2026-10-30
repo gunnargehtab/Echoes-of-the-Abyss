@@ -187,6 +187,7 @@ import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
 import { FaunaStipple } from './faunaStipple.ts';
 import { DREAM_LOOP } from './dreamLoop.ts';
 import { ARCH_STUDY_ON } from './archStudy.ts';
+import { maskTarget, readMaterialMask, type MaskPixels } from './archMask.ts';
 import {
   duneSource,
   groundDetailCells,
@@ -863,6 +864,8 @@ export class PerspectiveView {
   /** Every own model, one draw a template material (rosterBatches.ts, #1079):
    * the two groups above hold the sprites a model replaces, never the model. */
   private readonly models = new RosterBatches();
+  /** The arch study's mask target (archMask.ts), made on its first development read. */
+  private archMask: WebGLRenderTarget | null = null;
   /** The models the chart's ground ink passes behind this frame (`beginInk`). */
   private readonly ink = new InkOcclusion();
   /** Every plumb and every shadow, two draw calls in all (#434). */
@@ -1682,6 +1685,10 @@ export class PerspectiveView {
     delete (window as unknown as { __perspectiveHaloFrame?: unknown }).__perspectiveHaloFrame;
     delete (window as unknown as { __perspectiveHaloOnly?: unknown }).__perspectiveHaloOnly;
     delete (window as unknown as { __perspectiveSeabedM?: unknown }).__perspectiveSeabedM;
+    delete (window as unknown as { __archStudyPoints?: unknown }).__archStudyPoints;
+    delete (window as unknown as { __archStudyMask?: unknown }).__archStudyMask;
+    this.archMask?.dispose();
+    this.archMask = null;
     for (const resolve of this.haloFrameWaiters) resolve(null);
     this.haloFrameWaiters = [];
     for (const resolve of this.splitFrameWaiters) resolve(null);
@@ -4862,6 +4869,31 @@ export class PerspectiveView {
         this.gpuTimer?.reset();
         this.queueTimer?.reset();
         return this.queueLoad.steps;
+      };
+      // The arch study's §11 readings (docs/sorrowgate-arch-study.md, #1683):
+      // model-space points of the landmark standing, in CSS pixels as the
+      // lamps are, and the per-material mask (archMask.ts). Both read what
+      // the view already draws and change nothing in it.
+      (
+        window as unknown as {
+          __archStudyPoints?: (points: [number, number, number][]) => unknown;
+        }
+      ).__archStudyPoints = (points) =>
+        this.environment.landmarkPoints(points)?.map((at) => {
+          const out: ProjectedPoint = { x: 0, y: 0, pxPerM: 0, visible: false };
+          this.projectWorld(at, out);
+          return { x: out.x, y: out.y, pxPerM: out.pxPerM, visible: out.visible };
+        }) ?? null;
+      (window as unknown as { __archStudyMask?: () => MaskPixels | null }).__archStudyMask = () => {
+        if (this.renderer === null) return null;
+        this.archMask ??= maskTarget();
+        return readMaterialMask(
+          this.renderer,
+          this.scene,
+          this.camera,
+          { landmarkParts: this.environment.maskParts(), hulls: this.models.group },
+          this.archMask
+        );
       };
     }
   }
