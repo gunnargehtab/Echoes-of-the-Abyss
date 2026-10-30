@@ -6234,6 +6234,35 @@ describe("where a marker's name stands (#1662)", () => {
       }
     }
   });
+
+  it('is tested on the pixels it is drawn on, at any phase of the sway (#1681)', async () => {
+    // The frame CI failed on once. The sway moved the line by a fraction of a
+    // pixel, and at these instants a corner of the box tested stood under a
+    // pixel off the line beside its point, so rounding the foot to the pixel
+    // drew the name across it. The suite pins the runner's own instant, and
+    // 24 of 4,000 frames swept (2,000 instants at two UI scales) put the sway
+    // there: about one run in 170.
+    clock?.mock.restore();
+    let at = 0;
+    clock = mock.method(performance, 'now', () => at);
+    const world = await placed([WIDE], () => {});
+    try {
+      for (const now of [1874, 1967.7, 4872.4, 5809.4, 6746.4, 6840.1]) {
+        at = now;
+        world.conn.setFrame({ xM: WIDE.x, yM: WIDE.y, distanceM: 9000, yawDeg: 270, pitchDeg: 10 });
+        world.frame(2);
+        const [box] = nameBoxes(world);
+        assert.ok(box !== undefined, `named at ${now} ms`);
+        // The premise: placed along the line, where the sway moves it, not
+        // at the head of the water, which is fixed to the screen.
+        const hold = chartOf(world).markHolds.get(WIDE.id);
+        assert.ok(hold !== undefined && hold.mode !== HEAD, `on the far side at ${now} ms`);
+        holdsTheRule(world, WIDE, box);
+      }
+    } finally {
+      world.teardown();
+    }
+  });
 });
 
 /**

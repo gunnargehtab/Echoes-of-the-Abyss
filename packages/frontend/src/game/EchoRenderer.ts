@@ -8661,7 +8661,10 @@ export class EchoRenderer {
       }
       const box = this.markBest;
       placed.push(box.x, box.y, box.x + w, box.y + h);
-      // Anchored at the foot of its box, as the name always was.
+      // Anchored at the foot of its box, as the name always was. The box was
+      // placed with its foot on a whole pixel, so the rounding only sheds the
+      // float error of `- w / 2` and `- h`; it never moves the name off the box
+      // tested.
       name.position.set(Math.round(box.x + w / 2), Math.round(box.y + h));
       name.visible = true;
       shown++;
@@ -8795,8 +8798,11 @@ export class EchoRenderer {
       const nx = points[p + 4]!;
       const ny = -points[p + 3]!;
       const lift = MARK_NAME_GAP_PX + (Math.abs(nx) * w) / 2 + (Math.abs(ny) * h) / 2;
-      const x0 = points[p]! + nx * lift - w / 2;
-      const y0 = points[p + 1]! + ny * lift - h / 2;
+      // The box as it will be drawn, its foot on a whole pixel: tested where
+      // it stood before rounding, a corner half a pixel off the line beside
+      // its point was drawn across it (#1681).
+      const x0 = Math.round(points[p]! + nx * lift) - w / 2;
+      const y0 = Math.round(points[p + 1]! + ny * lift + h / 2) - h;
       const fault = this.markFault(m, x0, y0, w, h, points[p + 5] === 1);
       if (fault < 0 || fault >= best.fault) continue;
       best.fault = fault;
@@ -8817,11 +8823,12 @@ export class EchoRenderer {
   private markAtHead(m: number, w: number, h: number, held: MarkHold | undefined): void {
     const water = this.markWater;
     const centre = water.x + water.widthM / 2;
-    const y0 = water.y + MARK_NAME_GAP_PX;
+    // On whole pixels, as `markAlongRing`'s boxes are: tested as drawn.
+    const y0 = Math.round(water.y + MARK_NAME_GAP_PX + h) - h;
     const best = this.markBest;
     for (let i = 0; i < MARK_HEAD_SLOTS; i++) {
       const k = i % 2 === 1 ? -(i + 1) / 2 : i / 2;
-      const x0 = centre + k * (w + 2 * MARK_NAME_GAP_PX) - w / 2;
+      const x0 = Math.round(centre + k * (w + 2 * MARK_NAME_GAP_PX)) - w / 2;
       const kept = held !== undefined && held.mode === MARK_HEAD && held.at === k;
       const fault = this.markFault(m, x0, y0, w, h, kept);
       if (fault < 0 || fault >= best.fault) continue;
