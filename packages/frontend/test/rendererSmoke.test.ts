@@ -3416,6 +3416,9 @@ describe('renderer smoke test: the strip explains itself', () => {
     for (const tab of ['BUILD', 'FOUNDRY', 'SLIPWAY']) {
       assert.ok(!shown().includes(tab), `${tab} is on the tab strip before the view says`);
     }
+    // The hint bar names no build key it would not honour (§7), pending or locked.
+    const hinted = (): boolean => shown().some((line) => line.includes(' build  ·  '));
+    assert.ok(!hinted(), 'the hint bar offers build keys before the view says');
 
     // A view that leaves construction open hands the strip and the tabs back:
     // unknown was the only bar.
@@ -3427,6 +3430,7 @@ describe('renderer smoke test: the strip explains itself', () => {
     for (const tab of ['BUILD', 'FOUNDRY', 'SLIPWAY']) {
       assert.ok(shown().includes(tab), `${tab} stays off the strip once the view says`);
     }
+    assert.ok(hinted(), 'the hint bar keeps the build keys back once the view says');
 
     booted.teardown();
   });
