@@ -3846,6 +3846,83 @@ describe('the console drops its blocks in §2’s order', () => {
   });
 });
 
+function selectHull(
+  world: Booted,
+  unit: { x: number; y: number; depth: number },
+  add = false
+): void {
+  world.chart.focusOn(unit.x, unit.y);
+  world.frame(2);
+  const at = world.conn.projectPoint(unit.x, unit.y, unit.depth);
+  assert.ok(at.visible, 'the camera is looking at the hull we are about to select');
+  for (const type of ['pointerdown', 'pointerup']) {
+    world.app.canvas.dispatch(type, {
+      button: 0,
+      pointerId: 1,
+      pointerType: 'mouse',
+      clientX: at.x,
+      clientY: at.y,
+      shiftKey: add,
+    });
+  }
+  world.frame(1);
+}
+
+describe('independent unit depth (#1694)', () => {
+  it('explains a depth limit and respects a mission movement hold', async () => {
+    const world = await boot();
+    try {
+      const snapshot = cannedSnapshot();
+      const hull = snapshot.units[0]!;
+      hull.depthOrder = DEPTH.MIN_M;
+      world.chart.applySnapshot(snapshot);
+      world.conn.applySnapshot(snapshot);
+      world.frame(1);
+      selectHull(world, hull);
+      dispatchWindow('keydown', { code: 'KeyS' });
+      world.frame(1);
+      assert.equal(world.log.first('onDepthOffset'), undefined);
+      assert.ok(textSaying(world.app.stage, 'already at the surface target') !== null);
+      world.chart.setMissionHolds([{ unitId: hull.id, reason: MovementHoldReason.Unreleased }]);
+      dispatchWindow('keydown', { code: 'KeyD' });
+      assert.equal(world.log.first('onDepthOffset'), undefined);
+      world.chart.setMissionHolds([]);
+      dispatchWindow('keydown', { code: 'KeyD' });
+      assert.deepEqual(world.log.first('onDepthOffset'), [[hull.id], DEPTH.CONTROL_STEP_M]);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('routes rise and dive without a move or camera change, including a rebind', async () => {
+    const world = await boot();
+    try {
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      const focus = world.conn.focusDepth();
+      dispatchWindow('keydown', { code: 'KeyS' });
+      dispatchWindow('keydown', { code: 'KeyD' });
+      const ids = world.log.first('onDepthOffset')?.[0];
+      assert.ok(Array.isArray(ids) && ids.length > 0, 'rise commands the selected fleet');
+      assert.deepEqual(
+        world.log.calls.filter((call) => call.name === 'onDepthOffset').map((call) => call.args[1]),
+        [-DEPTH.CONTROL_STEP_M, DEPTH.CONTROL_STEP_M]
+      );
+      assert.equal(world.log.first('onMoveOrder'), undefined);
+      assert.equal(world.conn.focusDepth(), focus);
+      world.chart.setBindings({ ...ONE_HANDED_BINDINGS, rise: 'KeyK' });
+      dispatchWindow('keydown', { code: 'KeyK' });
+      dispatchWindow('keydown', { code: 'KeyK', repeat: true });
+      assert.equal(world.log.calls.filter((call) => call.name === 'onDepthOffset').length, 3);
+      world.frame(1);
+      assert.ok(textSaying(world.app.stage, 'RISE') !== null);
+      assert.ok(textSaying(world.app.stage, 'DIVE') !== null);
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
 describe('the hint bar names the keys the player has (#1340)', () => {
   it('names the bound keys, not the defaults, after a layout change', async () => {
     // docs/ui-ux.md §9: "Every key in that table is a default, not a fact."
@@ -3976,28 +4053,6 @@ describe('a priced cell names what it makes under the pointer (#1589)', () => {
  */
 describe('the command card when it is offered more than it holds', () => {
   /** Click a hull on the conn view, the way the attack-move tests do. */
-  const selectHull = (
-    world: Booted,
-    unit: { x: number; y: number; depth: number },
-    add = false
-  ): void => {
-    world.chart.focusOn(unit.x, unit.y);
-    world.frame(2);
-    const at = world.conn.projectPoint(unit.x, unit.y, unit.depth);
-    assert.ok(at.visible, 'the camera is looking at the hull we are about to select');
-    for (const type of ['pointerdown', 'pointerup']) {
-      world.app.canvas.dispatch(type, {
-        button: 0,
-        pointerId: 1,
-        pointerType: 'mouse',
-        clientX: at.x,
-        clientY: at.y,
-        shiftKey: add,
-      });
-    }
-    world.frame(1);
-  };
-
   it('keeps every order a torpedo hull can give, and moves the count to the stat line', async () => {
     const world = await boot();
     try {
@@ -4238,14 +4293,15 @@ describe('the command card when it is offered more than it holds', () => {
 
   /**
    * The selection §9 names, offering more than the card holds: a screen hull,
-   * a transport and a harvester make thirteen entries, so one has to yield —
+   * a transport and a harvester make fifteen entries, so three have to yield —
    * and it is the deselect, the one entry whose loss costs nothing (a click on
    * empty water does the same), while `SCREEN` and `LAND`, which nothing but
    * the card reaches, both stay. Since Dive, Rise and Follow left the page
    * (#1132) a torpedo hull alone fits with room, so this is the case that
-   * still makes the yield order decide anything.
+   * still makes the yield order decide anything. The restored depth shortcuts
+   * yield before these existing mouse routes.
    */
-  it('yields the deselect and keeps every only-route entry when a selection offers thirteen', async () => {
+  it('yields deselect and depth shortcuts before existing mixed-selection orders', async () => {
     const world = await boot();
     try {
       const snapshot = cannedSnapshot();
@@ -4273,7 +4329,7 @@ describe('the command card when it is offered more than it holds', () => {
       }
       assert.ok(
         !lines.some((line) => line.trim() === '✕'),
-        'the deselect is still on a card that was offered thirteen'
+        'the deselect is still on a card that was offered fifteen'
       );
     } finally {
       world.teardown();

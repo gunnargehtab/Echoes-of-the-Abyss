@@ -145,6 +145,11 @@ const ORDERS: Array<[string, (client: GameClient) => void, SentMessage]> = [
   ],
   ['stop', (c) => c.stop([11]), { type: 'stop', payload: { unitIds: [11] } }],
   [
+    'changeDepthBy',
+    (c) => c.changeDepthBy([11, 12], -150),
+    { type: 'depth', payload: { unitIds: [11, 12], depth: -150, relative: true } },
+  ],
+  [
     'setHoldPosition',
     (c) => c.setHoldPosition([11], true),
     { type: 'hold', payload: { unitIds: [11], active: true } },

@@ -780,6 +780,11 @@ export class GameClient {
     this.order(CLIENT_MSG.stop, { unitIds });
   }
 
+  changeDepthBy(unitIds: number[], metres: number): void {
+    if (unitIds.length === 0) return;
+    this.order(CLIENT_MSG.depth, { unitIds, depth: metres, relative: true });
+  }
+
   setHoldPosition(unitIds: number[], active: boolean): void {
     if (unitIds.length === 0) return;
     this.order(CLIENT_MSG.hold, { unitIds, active });

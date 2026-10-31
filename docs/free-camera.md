@@ -97,8 +97,9 @@ you are inside.
 
 **Since #1132 the focus depth is also where an order goes.** Raised into the column, the
 focus is a plane a click into open water lands on ([ui-ux.md](ui-ux.md) §9), so moving the
-focus is how a commander picks the depth of the next move, and there is no separate depth
-order left to give. Attached to the seabed — from `Home` or a fit to the map, or sunk back
+focus picks the depth of the next move. The direct rise/sink controls added for #1694
+change a selected hull's depth without moving that focus or replacing its course.
+Attached to the seabed — from `Home` or a fit to the map, or sunk back
 to it — the focus makes no plane, and a click is on the ground under the cursor. The camera
 still commits nothing: it chooses where a click *would* land, and the
 click is the player's.

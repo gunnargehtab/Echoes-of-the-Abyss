@@ -544,6 +544,7 @@ Implemented in the client scaffold today (`packages/frontend/src/game/EchoRender
 | `Shift` + right click | Queue the order behind the unit's current plan |
 | `W`, then click | Attack-move: go there, and stop to fight whatever is met on the way, then carry on. The one order that advances a force into water it cannot hear — which is most of it. `Esc` disarms; `Shift` + click queues it |
 | `X` | Stop: drop the plan, the route, the chase and the posture, and stand. Depth is a commitment and is left alone, floor-following included |
+| `S` / `D` | Rise / dive the selected hulls by 150 m, without moving the camera or cancelling their horizontal orders. The SQUAD card offers the same two controls |
 | `H` | Hold position: fire at what comes into range, chase nothing, go nowhere. Any move releases it |
 | `1`–`9` | Recall control group; `Ctrl` + digit assigns; `Shift` + digit adds the selection; recall twice to centre. A hull aboard a transport stays in its group, and is in hand again when it lands; it counts at its transport when the group is centred (#1337) |
 | `0` | Select the army — every hull that fights, wherever it is |
@@ -634,10 +635,24 @@ attack-move, and `W` drops a pending build (#1335). The order goes to where the 
 the press's modifiers. What the click asked for is drawn where it asked (§12): the ring that
 acknowledges it closes on the point at its depth, with a plumb line to the ground below it.
 
-Nothing is left of Dive, Rise or the floor-following toggle. `D` and `S` are unbound, and `A`
-is bound only in the one-handed layout below, where it cuts the drive.
-A step order between rungs answered "how deep" with a list of four depths; a click answers it
-with the depth the player is looking at. The depth charge still drops into the band below
+**Independent rise and dive (#1694).** Keeping depth only on the camera's focus is the
+smaller control scheme, but makes looking and commanding inseparable. The chosen first
+increment restores direct rise and dive alongside the existing click: `S` and `D`, also
+on the SQUAD card, move each selected hull's own depth target by **150 m** (TUNABLE).
+These are metre offsets, not jumps between bands. The server offsets an active target
+rather than the last displayed depth, so quick presses accumulate and mixed-depth hulls
+keep their separation until one reaches the 0–3,000 m order limits. At a limit the target
+stops there; the card and keys refuse a selection already at that limit with a reason.
+Mission movement holds still apply. A roof or floor holds travel by the ordinary terrain
+rules, never by teleporting the hull.
+
+The order ends floor-following but keeps the horizontal order, hold-position posture and queued legs;
+a later queued move still takes its own depth. Descent remains loud, ascent remains slow,
+and pressure is still paid. The card warns of those costs before the press, and the depth
+ribbon and selection readout report the server's resulting target. Both bindings fit the
+one-handed layout. `A` remains its engine-off key.
+
+The depth charge still drops into the band below
 ([systems-combat.md](systems-combat.md) §8): 1,000 m from the Shelf and 2,400 m from Mid-Water,
 read off the hull's own depth wherever it is headed, since a charge set inside its dropper's band
 is refused. So is one its dropper's rating cannot carry there, and CHARGE greys with that reason
@@ -737,7 +752,7 @@ hand on it is the one asking.
 ### What yields when the card is full
 
 A squad page can be offered more than twelve entries too, without a roster in sight: a mixed
-selection holding a screen hull, a transport and a harvester offers thirteen. **Which entries yield
+selection holding a screen hull, a transport and a harvester offers fifteen with rise and dive. **Which entries yield
 is written here**, rather than being whatever the model happened to push last. That was the bug
 in #815 — the depth charge went on every hull carrying torpedoes, which is ten of them, because
 the torpedo readout made them the thirteenth and the charge was pushed after it.
@@ -752,6 +767,7 @@ Lowest yields first:
 | Rank | What it holds | What it costs to lose |
 | --- | --- | --- |
 | Deselect | `✕` | Nothing: a click on empty water clears the selection |
+| Depth shortcut | `RISE`, `DIVE` | The direct shortcut; its key and the existing depth-bearing click remain |
 | Situational | `DECOY`, `MINE`, `CHARGE`, the harvest throttle | An order reached for occasionally, never in the same breath as a move |
 | Core | Every other order on the page | An order given all match |
 | Only route | `SCREEN`, `LAND`, and every production button | The action itself — no key and no gesture reaches it |
@@ -763,7 +779,9 @@ that order, so a cell moves only when something above it actually left.
 selection block's stat line now, beside `HULL` and `SIG`, where this hull's other numbers already
 are — and a launch was never on the card anyway, being `Ctrl` + right-click on a contact. That one
 move is what made a torpedo hull's squad page fit its twelve, with the deselect the only thing
-yielding. Since Dive, Rise and Follow left the page (#1132) it fits with two cells to spare.
+yielding. Direct rise and dive use the two cells freed in #1132. On a crowded mixed
+selection they yield before existing situational orders: preserving the existing mouse
+routes is preferable to dropping throttle or ordnance to make room for the new shortcuts.
 
 ### What a shot costs
 

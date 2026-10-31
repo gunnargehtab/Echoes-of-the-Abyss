@@ -195,15 +195,15 @@ export interface AttackMessage {
 }
 
 /**
- * A depth alone, with no place. The client stopped sending it when depth moved
- * onto the click (#1132, `MoveMessage.depth`); it stays because the skirmish
- * commander says it, and every verb the commander says has to be one a client
- * could send (`packages/backend/src/ai/types.ts`).
+ * A depth alone, with no place. Direct rise/dive sends an offset (#1694);
+ * absolute targets remain the commander's and replay's existing contract.
  */
 export interface DepthMessage {
   unitIds: number[];
   /** Ordered depth in metres. Validated and range-checked in the sim. */
   depth: number;
+  /** Offset each hull's active target (or current depth) on the server. */
+  relative?: boolean;
 }
 
 export interface SilentRunningMessage {
@@ -496,7 +496,7 @@ export const CLIENT_SHAPE: { readonly [K in keyof ClientMessages]: ShapeOf<Clien
   embark: { unitIds: IDS, carrierId: NUM },
   disembark: { unitIds: IDS },
   attack: { unitIds: IDS, contactId: NUM, queued: OPTIONAL_FLAG },
-  depth: { unitIds: IDS, depth: NUM },
+  depth: { unitIds: IDS, depth: NUM, relative: OPTIONAL_FLAG },
   silent: { unitIds: IDS, active: FLAG },
   engineOff: { unitIds: IDS, active: FLAG },
   ping: { unitId: NUM },
