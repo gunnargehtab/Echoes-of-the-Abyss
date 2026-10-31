@@ -345,6 +345,11 @@ The gate has **two rules**:
   `packages/frontend/test/rendererSmoke.test.ts` asserts the canned scene holds exactly
   its live tracks, and that a ghosted or classified one leaves it.
 
+The future [free-water study](free-water-slice.md) §5 licenses public decorative
+microfauna as environment props, never as a handover from the contact list. They
+must be independent of hidden state and pass the normal model and prop budgets.
+This is not permission to mesh a gameplay animal at any tier or to replace its tell.
+
 **A live track, not a window.** Every contact decays on one twenty-second ghost clock
 (`PERSISTENCE.GHOST_MARKER_DECAY_S`). The model, or the overlay sprite where no conn view
 draws one, is drawn only while the track is live —

@@ -1,19 +1,18 @@
 # The Free Camera — Presentation Revision
 
-> The water was always three kilometres deep and the hulls always swam in all of it. The
-> camera is the last thing in this game still bolted to a board.
+> The orbit left the board. Flight is the next revision, not a name for what already shipped.
 
 This document turns September 2026 owner feedback into a plan. The feedback, in full:
 
 > Think about a free, vast 3D game underwater world. Ships can freely move everywhere — the
 > player's camera as well.
 
-Three claims sit inside that sentence, and they are not in the same state of repair. Two of
-them the game already honours in the simulation and has honoured since Phase 0. The third —
-the camera — is a locked rig, and it is locked *on purpose*, by a rule written down as SPEC
-with a mechanical argument behind it. So this revision is not "add camera controls". It is
-the argument for retiring a load-bearing rule, and the account of where each thing that rule
-protected goes instead.
+The bounded orbit described in §4 has shipped: free yaw, 10°–88° pitch and a focus that
+leaves the seabed. It is not six-degree flight and has no roll. The next target is
+[free-water-slice.md](free-water-slice.md), the #1694 contract: opt-in flight, independent
+destination depth and a crater/kelp-jungle study. Its controls remain future work.
+This document keeps the argument that retired the old yaw lock and the default rig it
+produced; neither that history nor continuous hull depth proves volumetric pathfinding.
 
 The lineage is [three-layer-ocean.md](three-layer-ocean.md), which did the same job for the
 same reason: playtest feedback said the screen was lying about the ocean, canon agreed, and
@@ -32,27 +31,23 @@ the plan-view camera lost an argument it had won fairly when it was written.
 
 ## 2. What already exists
 
-Worth answering honestly before proposing anything, because for two of these four the answer
-is "this shipped, and here is the file".
+The current build, distinguished from the original feedback and the next target:
 
 | Goal | What the build already has | Where |
 | --- | --- | --- |
 | F1 — a volume | Continuous depth 0–3,000 m. Every cell carries a **floor and a ceiling**, so the map can say "there is rock above this water" — tunnels, overhangs, cavern mouths. A thermocline at 1,200 m that splits the column acoustically in two | [systems-depth.md](systems-depth.md) §1, `DEPTH` / `DEPTH_BANDS` in shared constants |
-| F2 — hulls go anywhere | A move takes any depth in the map (`Match.orderMove()`, a click's depth since #1132). Movement resolves against the water column each step, routes around ground that will not admit the hull at its depth, and slides along ground it grazes. A move onto the ground follows it | [systems-depth.md](systems-depth.md) §2, §6; `sim/systems/depth.ts`, `sim/pathfinding.ts` |
-| F2 — what *does* limit it | Crush attrition below a hull's Pressure Rating, sour bleed inside the Lid, and terrain that raises a hull but never lowers it. Every one is a **priced cost**, not a rail | [systems-depth.md](systems-depth.md) §2–§3 |
-| F3 — the camera | **This is the gap.** Pitch pinned at 55°, yaw locked to north, the focus glued to the seabed, dolly the only freedom | [art-direction.md](art-direction.md) "Camera & Projection", `PerspectiveView.ts` |
+| F2 — depth orders | A move names plan position and depth; direct rise/dive preserves the current course. Routing is planar at current depth, not a search through a 3D volume. A move onto the ground follows it | [systems-depth.md](systems-depth.md) §2, §6; `sim/systems/depth.ts`, `sim/pathfinding.ts` |
+| F2 — limits | PR and sour exposure price depth. Terrain admits one water interval per cell; structures block at every depth, and hull separation is planar. Terrain never automatically dives a hull around an obstacle | [systems-depth.md](systems-depth.md) §2–§3; `sim/systems/separation.ts` |
+| F3 — the camera | Free yaw, bounded pitch, dolly and vertical focus; no roll or independently translated flight eye | [art-direction.md](art-direction.md) "Camera & Projection", `PerspectiveView.ts` |
 | F4 — vast | Maps are 8,000 × 8,000 m and 10,000 × 6,000 m by 3,000 m deep. Large; finite, and finite on purpose | [maps.md](maps.md), `MAP_HEADERS` in shared |
 
-So F1 and F2 are **already true of the simulation and untrue of the screen**, for exactly one
-reason: a camera that cannot lower itself into the water, cannot turn, and cannot look along
-the horizontal draws a three-kilometre column as a shaded plan. F3 is the whole revision. F4
-is real, is not free, and gets §7 rather than a promise.
-
-The one-line version: *the ocean is already free; the eye is not.*
+Continuous depth is real; unrestricted 3D routing is not. The shipped orbit reaches the
+water, while [the new contract](free-water-slice.md) separates flight, explicit destination
+controls and world integration without silently changing those simulation limits.
 
 ## 3. The rule this revision retires
 
-[art-direction.md](art-direction.md) "Rotation and zoom" is SPEC, and it says:
+The former [art-direction.md](art-direction.md) "Rotation and zoom" SPEC said:
 
 > **No camera rotation, ever.** Rotation breaks the minimap correspondence (the sonar scope
 > and the viewport must agree on north) and the one-glance legibility of a fixed frame. There
@@ -66,13 +61,13 @@ survive the retirement; neither survives unchanged.
 rule with the same job: the frame the player can always get back to, in one key, is the frame
 the old rule made permanent. What changes is that it is now a *home* rather than a *cage*.
 
-## 4. The camera — SPEC
+## 4. The shipped orbit camera — SPEC
 
-The rig gains three freedoms and keeps its fourth. All four are one camera, still shared by
+The rig gained three freedoms and kept its fourth. All four are one camera, still shared by
 both painters (`EchoRenderer.setConn`), because "one projection, two painters, no second
 opinion about where anything is" is not what this revision touches.
 
-| | Today | This revision |
+| | Before the orbit revision | Shipped orbit |
 | --- | --- | --- |
 | **Focus** | A point on the seabed | A point **anywhere in the water column**: plan position plus a focus depth |
 | **Yaw** | Locked to north | **Free**, 360°, continuous |
@@ -155,8 +150,9 @@ The old rule carried four loads. Each moves; none is dropped.
   never really about north; it was about the player being able to point at the scope and the
   world and know they are the same water. That job now belongs to the **camera box**, which
   the scope already draws as the view's true ground footprint — a trapezoid, from
-  `groundQuad()`, computed by unprojecting the screen corners and therefore already correct
-  under any yaw and any pitch, with no change at all. Under a free camera that box *rotates*,
+  `groundQuad()`, computed by unprojecting the screen corners for the bounded orbit.
+  This does not prove a finite footprint for upward or rolled flight: the new contract
+  requires clipping and an explicit no-footprint state. Under the orbit that box *rotates*,
   and a rotating box in a north-up frame is a compass. It gains one mark: the far edge is
   drawn heavier, so the box says which way the camera is facing as well as where it is. The
   scope becomes the instrument that answers "which way am I looking" — which is what an
@@ -170,8 +166,8 @@ The old rule carried four loads. Each moves; none is dropped.
 - **Honest measurement.** Untouched, and this is the part that costs nothing — which is worth
   saying plainly, because it is the payoff of a decision made two revisions ago. Range rings
   are already projected **vertex by vertex** onto the terrain through the shared camera rather
-  than approximated as screen ellipses, so they conform correctly at any yaw and any pitch
-  without a line of new code. A camera revision that had to renegotiate the 2,400 m ping ring
+  than approximated as screen ellipses, so they conform through the orbit's yaw and pitch
+  band. Flight must still verify near-plane and behind-camera clipping. A camera revision that had to renegotiate the 2,400 m ping ring
   would not be worth having; this one does not, because the Phase-1 renderer was built
   camera-agnostic on purpose.
 - **No atmosphere pass may rotate the projection.** Survives **verbatim**, and the distinction
@@ -341,6 +337,7 @@ What the phase settled:
 
 ## Related
 
+- **[free-water-slice.md](free-water-slice.md)** — the future six-degree flight, destination and integrated-world contract
 - **[three-layer-ocean.md](three-layer-ocean.md)** — the revision this one continues: the camera that replaced the plan view, and the phases that landed it
 - **[art-direction.md](art-direction.md)** — "Camera & Projection", the SPEC §4 rewrites, and "Reading the Water", the medium phase 5 landed
 - **[graphics-standards.md](graphics-standards.md)** — gate 8, and the gates now judged at every angle
