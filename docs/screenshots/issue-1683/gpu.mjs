@@ -39,7 +39,25 @@ const STATIONS = {
   L: [2550, 2750, 650, { pitchDeg: 12, yawDeg: 0, focusDepthM: 1450 }],
   S: [2500, 2000, 6500, { pitchDeg: 55, yawDeg: 0, focusDepthM: null }],
 };
-const SETTINGS = ['on', 'bounce-off', 'grade-off', 'both-off'];
+/**
+ * The stations this session reads, `STATIONS=L` for one. On the named GPU a
+ * queued window took about 30 s, so a station's nine took about 4.7 minutes,
+ * and a session reading all four reached the 10:40 change before S. One
+ * session a station also reads each at the same mission time in every run.
+ */
+const STATION_NAMES = (process.env.STATIONS ?? 'H,L,S,C').split(',');
+/**
+ * The settings this session reads, `on` first. Behind C's 12 ms load about
+ * three frames a second are timed, so a 240-frame window takes about 75 s and
+ * eight of them reach the 10:40 change: C is read in two sessions,
+ * `SETTINGS=on,bounce-off` and `SETTINGS=on,grade-off`.
+ */
+const SETTINGS = (process.env.SETTINGS ?? 'on,bounce-off,grade-off,both-off').split(',');
+const ALL_SETTINGS = ['on', 'bounce-off', 'grade-off', 'both-off'];
+assert.ok(
+  SETTINGS[0] === 'on' && SETTINGS.every((s) => ALL_SETTINGS.includes(s)),
+  `SETTINGS: on first, then any of ${ALL_SETTINGS.join(', ')}`
+);
 const ORDER = [...SETTINGS, ...[...SETTINGS].reverse()];
 
 const clockOf = (tick) =>
@@ -121,9 +139,14 @@ export default async ({ page, shot }) => {
     '| station | clock | load ms | on | bounce off | grade off | both off | bounce | grade | both |'
   );
   console.log('| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |');
-  for (const name of ['H', 'L', 'S', 'C']) {
+  for (const name of STATION_NAMES) {
     await poseAt(name);
     await page.waitForTimeout(2500);
+    // The frame interval unqueued, which the load must outlast or the GPU
+    // idles between frames and the timer reads its clock dropping (#1674).
+    await page.evaluate((label) => window.__perspectiveStation(label), `${name}-unqueued`);
+    await windowful();
+    const unqueued = await probe();
     const steps = name === 'C' ? QUEUE_STEPS_C : QUEUE_STEPS;
     await page.evaluate((steps) => window.__perspectiveGpuQueue(steps), steps);
     await page.waitForTimeout(400);
@@ -147,8 +170,8 @@ export default async ({ page, shot }) => {
         else assert.fail(past);
       }
       assert.ok(
-        p.gpuQueue.avgMs > p.avgFrameMs,
-        `${name} ${setting}: the load (${p.gpuQueue.avgMs} ms) is shorter than the frame interval (${p.avgFrameMs} ms)`
+        p.gpuQueue.avgMs > unqueued.avgFrameMs,
+        `${name} ${setting}: the load (${p.gpuQueue.avgMs} ms) is shorter than the unqueued frame interval (${unqueued.avgFrameMs} ms)`
       );
       readings.push({
         setting,
@@ -172,14 +195,30 @@ export default async ({ page, shot }) => {
     const by = Object.fromEntries(
       SETTINGS.map((s) => [s, mean(readings.filter((r) => r.setting === s).map((r) => r.gpuMs))])
     );
+    const less = (off) => (off in by ? by.on - by[off] : null);
     const cost = {
-      bounce: by.on - by['bounce-off'],
-      grade: by.on - by['grade-off'],
-      both: by.on - by['both-off'],
+      bounce: less('bounce-off'),
+      grade: less('grade-off'),
+      both: less('both-off'),
     };
-    record.stations.push({ name, from, file, steps, means: by, cost, readings });
+    record.stations.push({
+      name,
+      from,
+      file,
+      steps,
+      unqueued: {
+        gpuMs: unqueued.avgGpuMs,
+        frameMs: unqueued.avgFrameMs,
+        drawCalls: unqueued.drawCalls,
+        triangles: unqueued.triangles,
+      },
+      means: by,
+      cost,
+      readings,
+    });
+    const cell = (x) => (x === null || x === undefined ? '-' : ms(x));
     console.log(
-      `| ${name} | ${clockOf(from)} | ${ms(mean(readings.map((r) => r.loadMs)))} | ${SETTINGS.map((s) => ms(by[s])).join(' | ')} | ${ms(cost.bounce)} | ${ms(cost.grade)} | ${ms(cost.both)} |`
+      `| ${name} | ${clockOf(from)} | ${ms(mean(readings.map((r) => r.loadMs)))} | ${ALL_SETTINGS.map((s) => cell(by[s])).join(' | ')} | ${cell(cost.bounce)} | ${cell(cost.grade)} | ${cell(cost.both)} |`
     );
   }
   writeFileSync(join(OUT, `${TAG}.json`), `${JSON.stringify(record, null, 2)}\n`);
