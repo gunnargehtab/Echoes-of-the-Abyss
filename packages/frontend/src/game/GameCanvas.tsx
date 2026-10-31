@@ -547,6 +547,9 @@ export function GameCanvas({
         harness?.application()
       );
 
+      // A mission's locks ride its first view, which can trail the room's
+      // other state by seconds on a resume; unknown is not unlocked (#1693).
+      if (missionId !== undefined) activeRenderer.awaitMissionView();
       await activeRenderer.init(host);
       if (cancelled) {
         activeRenderer.destroy();

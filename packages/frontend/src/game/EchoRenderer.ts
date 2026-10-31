@@ -1935,6 +1935,14 @@ export class EchoRenderer {
    */
   private missionLocks: AbilityLock[] = [];
   /**
+   * A mission room whose first view has not landed yet. Its locks are unknown
+   * rather than empty, and until they arrive the HUD must not draw the
+   * skirmish's economy over water that may have none: a resumed Sorrowgate
+   * read `NODULES 0 BERTHS 0/0 DRAW 0/0` and three build tabs for two seconds
+   * (#1693). Set once by the shell, cleared by the first `setMissionLocks`.
+   */
+  private missionViewPending = false;
+  /**
    * The player's own hulls this mission is holding still, each with the reason
    * — `missionLocks`' arrangement for an *order* rather than for a button.
    *
@@ -3619,7 +3627,7 @@ export class EchoRenderer {
    * player's own last choice survives a mission that merely hid it.
    */
   private get shownTab(): CommandTab {
-    return this.missionLock('construction') === null ? this.activeTab : 'squad';
+    return this.economyShown() ? this.activeTab : 'squad';
   }
 
   /** Auto-open the page that matches what was just selected. */
@@ -4301,7 +4309,7 @@ export class EchoRenderer {
     // so offering five structures nobody can afford is a menu of refusals. The
     // reason is not lost — it stands in the orders panel's lock list with the
     // other six, which is where docs/ui-ux.md §7 wants it.
-    const canBuild = this.missionLock('construction') === null;
+    const canBuild = this.economyShown();
     // One production tab per yard rather than a single UNITS tab, because a
     // whole navy's roster does not fit twelve cells and §9 makes the yard the
     // page. BUILD, FOUNDRY and SLIPWAY never move; only the tail of the strip
@@ -5119,6 +5127,12 @@ export class EchoRenderer {
    */
   setMissionLocks(locks: AbilityLock[]): void {
     this.missionLocks = locks;
+    this.missionViewPending = false;
+  }
+
+  /** This is a mission room: hold the economy back until its view says (#1693). */
+  awaitMissionView(): void {
+    this.missionViewPending = true;
   }
 
   setMissionHolds(held: readonly MovementHold[]): void {
@@ -5183,6 +5197,16 @@ export class EchoRenderer {
 
   setMissionOver(payload: MissionResultPayload): void {
     this.missionOver = payload;
+  }
+
+  /**
+   * Whether the HUD offers the economy: construction not locked by the
+   * mission, and a mission room's view in hand to say so (#1693). Every HUD
+   * surface that hides with construction reads this, so none flashes the
+   * skirmish set while another waits.
+   */
+  private economyShown(): boolean {
+    return !this.missionViewPending && this.missionLock('construction') === null;
   }
 
   /** The reason this ability is refused, or null while it is available. */
@@ -8245,7 +8269,7 @@ export class EchoRenderer {
     // quota in Nodules, so a held or seen field keeps that readout, exactly as
     // Crystal's rule below does. In Sorrowgate the three read `NODULES 0`,
     // `BERTHS 6/0` in threat ink and `DRAW 0/0`, and the red read as an error.
-    const economy = this.missionLock('construction') === null;
+    const economy = this.economyShown();
     // Where the next readout on the first row starts, so a dropped one leaves
     // no gap; `firstRowEdge` is this, less the gap, if the draw meter is gone.
     let nextX = stockX;
@@ -9955,7 +9979,7 @@ export class EchoRenderer {
     // The build keys are not advertised where they will not work. A hint bar
     // naming a binding the mission refuses is the same silent lie as a dead
     // button (§7) — worse, because a hint reads as instruction.
-    const canBuild = this.missionLock('construction') === null;
+    const canBuild = this.economyShown();
     if (this.selected.size === 0) {
       return canBuild
         ? `LMB drag select  ·  MMB pan  ·  L+R drag depth  ·  ${this.buildKeyHint()} build  ·  1-9 groups  ·  wheel zoom`

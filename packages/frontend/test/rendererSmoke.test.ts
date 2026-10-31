@@ -3389,6 +3389,52 @@ describe('renderer smoke test: the strip explains itself', () => {
     booted.teardown();
   });
 
+  it('holds the economy back until a mission room’s first view lands (#1693)', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    const stage = booted.app.stage as unknown as Container;
+    const shown = (): string[] => textContents(stage).map((line) => line.trim());
+
+    // A resumed Sorrowgate: the room's own state lands, the mission's view has
+    // not, so nobody has said yet whether there is an economy. For 2.1 s that
+    // read `NODULES 0 BERTHS 0/0 DRAW 0/0` and three build tabs over empty
+    // water, then the court's lock arrived and took them all away.
+    booted.chart.awaitMissionView();
+    booted.chart.setNodes([]);
+    booted.chart.applySnapshot({
+      ...cannedSnapshot(),
+      nodules: 0,
+      crystal: 0,
+      biomass: 0,
+      berths: { used: 0, granted: 0 },
+      draw: { capacity: 0, demand: 0, satisfaction: 1 },
+    });
+    booted.frame(2);
+    for (const word of ['NODULES', 'BERTHS', 'DRAW']) {
+      assert.equal(textSaying(stage, word), null, `${word} is drawn before the view says`);
+    }
+    for (const tab of ['BUILD', 'FOUNDRY', 'SLIPWAY']) {
+      assert.ok(!shown().includes(tab), `${tab} is on the tab strip before the view says`);
+    }
+    // The hint bar names no build key it would not honour (§7), pending or locked.
+    const hinted = (): boolean => shown().some((line) => line.includes(' build  ·  '));
+    assert.ok(!hinted(), 'the hint bar offers build keys before the view says');
+
+    // A view that leaves construction open hands the strip and the tabs back:
+    // unknown was the only bar.
+    booted.chart.setMissionLocks([]);
+    booted.frame(2);
+    for (const word of ['NODULES', 'BERTHS', 'DRAW']) {
+      assert.notEqual(textSaying(stage, word), null, `${word} stays hidden once the view says`);
+    }
+    for (const tab of ['BUILD', 'FOUNDRY', 'SLIPWAY']) {
+      assert.ok(shown().includes(tab), `${tab} stays off the strip once the view says`);
+    }
+    assert.ok(hinted(), 'the hint bar keeps the build keys back once the view says');
+
+    booted.teardown();
+  });
+
   it('says the meter counts every hull while an order is in force (#1586)', async () => {
     const booted = await boot();
     booted.chart.setStatus('connected');
