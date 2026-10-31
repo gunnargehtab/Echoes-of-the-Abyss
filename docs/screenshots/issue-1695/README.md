@@ -18,8 +18,8 @@ time is recorded.
 The module selects the flight with a marquee, presses P, waits out the hint bar's four
 seconds, presses R, then left-clicks one fixed point of the view (55 %, 40 %), where an armed
 placement would land. It logs every message the page sends on the room's socket from the first
-press on. `court.json` and
-`control.json` carry the log, each frame's tick and the opening probe.
+press on. `court.json` and `control.json` carry the log, each frame's tick and the opening
+probe.
 
 | Frame | Court (`court-*.png`) | Control (`control-*.png`) |
 | --- | --- | --- |
