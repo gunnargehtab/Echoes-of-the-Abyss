@@ -385,6 +385,12 @@ export interface ProjectedPoint {
   pxPerM: number;
   /** False when the point is behind the camera; skip drawing. */
   visible: boolean;
+  /**
+   * The world height it was projected at: the ground under it for a null
+   * depth. What the chart's occlusion walk interpolates between two of them
+   * rather than reading the ground again (`projectHeight`, #1692).
+   */
+  worldY: number;
 }
 
 /**
@@ -1895,7 +1901,7 @@ export class PerspectiveView {
     xM: number,
     yM: number,
     depthM: number | null,
-    out: ProjectedPoint = { x: 0, y: 0, pxPerM: 1, visible: false }
+    out: ProjectedPoint = { x: 0, y: 0, pxPerM: 1, visible: false, worldY: 0 }
   ): ProjectedPoint {
     // Written into `out` when the caller hands one over (#432): the chart
     // projects a few thousand points a frame at survey zoom, and an object
@@ -1905,14 +1911,35 @@ export class PerspectiveView {
       out.y = 0;
       out.pxPerM = 1;
       out.visible = false;
+      out.worldY = 0;
       return out;
     }
     const y = depthM === null ? this.groundYAt(xM, yM) : depthToWorldY(depthM);
     return this.projectWorld(PROJECT_TMP.set(xM, y, yM), out);
   }
 
+  /**
+   * A plan point at a world height to pixels, as `projectPoint` reports it,
+   * with no read of the ground. For a point on the straight line between two
+   * projected points, at the height interpolated between theirs: that line is
+   * what the chart strokes between two vertices, and the ground under it is
+   * not (#1692).
+   */
+  projectHeight(xM: number, worldY: number, yM: number, out: ProjectedPoint): ProjectedPoint {
+    if (this.renderer === null) {
+      out.x = 0;
+      out.y = 0;
+      out.pxPerM = 1;
+      out.visible = false;
+      out.worldY = worldY;
+      return out;
+    }
+    return this.projectWorld(PROJECT_TMP.set(xM, worldY, yM), out);
+  }
+
   /** A point in world space to pixels, as `projectPoint` reports it. Consumes `point`. */
   private projectWorld(point: Vector3, out: ProjectedPoint): ProjectedPoint {
+    out.worldY = point.y;
     const viewDistance = point.distanceTo(this.camera.position);
     point.project(this.camera);
     const pxPerM =
@@ -1985,13 +2012,15 @@ export class PerspectiveView {
 
   /**
    * Whether a model stands between the eye and a point in the water, given
-   * the pixel `projectPoint` put it at. `depthM` reads as there: null is the
-   * seabed under the point.
+   * the pixel it was projected to and the world height it was projected at
+   * (`ProjectedPoint.worldY`). The height is taken, not read off the ground
+   * again: the ground was most of the chart's occlusion walk, read twice a
+   * sample, every 2 px, wherever a traced line crossed a model's screen box
+   * (#1692).
    */
-  inkHidden(xM: number, yM: number, depthM: number | null, sx: number, sy: number): boolean {
+  inkHidden(xM: number, worldY: number, yM: number, sx: number, sy: number): boolean {
     if (this.ink.size === 0 || !this.ink.covers(sx, sy)) return false;
-    const y = depthM === null ? this.groundYAt(xM, yM) : depthToWorldY(depthM);
-    return this.ink.hides(sx, sy, xM, y, yM);
+    return this.ink.hides(sx, sy, xM, worldY, yM);
   }
 
   /**
@@ -4889,7 +4918,7 @@ export class PerspectiveView {
         }
       ).__archStudyPoints = (points) =>
         this.environment.landmarkPoints(points)?.map((at) => {
-          const out: ProjectedPoint = { x: 0, y: 0, pxPerM: 0, visible: false };
+          const out: ProjectedPoint = { x: 0, y: 0, pxPerM: 0, visible: false, worldY: 0 };
           this.projectWorld(at, out);
           return { x: out.x, y: out.y, pxPerM: out.pxPerM, visible: out.visible };
         }) ?? null;
@@ -5111,7 +5140,7 @@ export class PerspectiveView {
       // glass and the lit stone round each one.
       collapsing: this.environment.collapsing,
       landmarkLampsPx: this.environment.lampPositions().map((at) => {
-        const out: ProjectedPoint = { x: 0, y: 0, pxPerM: 0, visible: false };
+        const out: ProjectedPoint = { x: 0, y: 0, pxPerM: 0, visible: false, worldY: 0 };
         this.projectWorld(PROJECT_TMP.copy(at), out);
         return { x: out.x, y: out.y };
       }),

@@ -146,20 +146,42 @@ describe('InkOcclusion', () => {
     assert.equal(ink.crosses(x, y, bx, by), true);
   });
 
+  // A hull the camera has passed can hide nothing it sees: the eye's ray to
+  // any point in front runs away from it. Tested everywhere, the six such
+  // hulls at the arch study's C station were most of the overlay's frame
+  // (#1692).
+  it('holds a model wholly behind the eye nowhere on screen', () => {
+    const { ink, camera } = frame();
+    ink.begin(camera, 1280, 720);
+    ink.add(modelColumns(boxRoot(40, 0)), new Matrix4().makeTranslation(0, 800, 800));
+    ink.end();
+    const [x, y] = pixel(camera, -300, 0, 0);
+    assert.equal(ink.covers(x, y), false);
+    assert.equal(ink.crosses(x, y, x + 10, y), false);
+    const [bx, by] = pixel(camera, 0, 0, -30);
+    assert.equal(ink.covers(bx, by), false);
+    assert.equal(ink.hides(bx, by, 0, 0, -30), false);
+    // The control: one that reaches the eye has no box, so it is everywhere.
+    ink.begin(camera, 1280, 720);
+    ink.add(modelColumns(boxRoot(40, 0)), new Matrix4().makeTranslation(0, 380, 400));
+    ink.end();
+    assert.equal(ink.covers(x, y), true);
+  });
+
   // What a mission marker's name keeps off (#1662): own models in front of
-  // the eye, and a track's once its mark has arrived. One hull behind the
-  // camera would otherwise leave the name no place at all.
+  // the eye, and a track's once its mark has arrived. One hull the eye stands
+  // in would otherwise leave the name no place at all.
   it('tests a box against own models in front of the eye, and arrived tracks', () => {
     const { ink, camera } = frame();
     ink.begin(camera, 1280, 720);
     ink.add(modelColumns(boxRoot(40, 0)), new Matrix4(), 11);
-    ink.add(modelColumns(boxRoot(40, 0)), new Matrix4().makeTranslation(0, 800, 800), 12);
+    ink.add(modelColumns(boxRoot(40, 0)), new Matrix4().makeTranslation(0, 380, 400), 12);
     ink.markOwn();
     ink.add(modelColumns(boxRoot(40, 0)), new Matrix4().makeTranslation(300, 0, 0), 104);
     ink.end();
     const none = new Set<number>();
     const [x, y] = pixel(camera, -300, 0, 0);
-    assert.equal(ink.crosses(x, y, x + 10, y), true, 'the model behind the eye is everywhere');
+    assert.equal(ink.crosses(x, y, x + 10, y), true, 'the model at the eye is everywhere');
     assert.equal(ink.crossesHulls(x, y, x + 10, y, none), false, 'and left out');
     const [tx, ty] = pixel(camera, 300, 0, 0);
     assert.equal(ink.crosses(tx, ty, tx + 1, ty + 1), true, "the premise: the track's model");
@@ -200,10 +222,12 @@ afterEach(() => {
  */
 const NEIGHBOUR_PX = 40;
 
-/** One point the chart asked about: plan metres, its pixel, and the answer. */
+/** One point the chart asked about: plan metres, its height, its pixel, and the answer. */
 interface Asked {
   x: number;
   y: number;
+  /** The world height the chart projected it at. */
+  wy: number;
   sx: number;
   sy: number;
   hidden: boolean;
@@ -264,7 +288,14 @@ describe('the chart behind a model', () => {
     const inkHidden = conn.inkHidden.bind(conn);
     mock.method(conn, 'inkHidden', (...args: Parameters<PerspectiveView['inkHidden']>) => {
       const answer = inkHidden(...args);
-      const point = { x: args[0], y: args[1], sx: args[3], sy: args[4], hidden: answer };
+      const point = {
+        x: args[0],
+        wy: args[1],
+        y: args[2],
+        sx: args[3],
+        sy: args[4],
+        hidden: answer,
+      };
       asked.push(point);
       if (answer) hidden.push(point);
       return cut && answer;
@@ -306,7 +337,7 @@ describe('the chart behind a model', () => {
   const key = (p: { sx: number; sy: number }) => `${p.sx.toFixed(3)},${p.sy.toFixed(3)}`;
 
   it('draws no point of ground ink the Bastion stands in front of', async () => {
-    const { app, conn, hidden, box, eye, frame, teardown } = await boot();
+    const { app, hidden, box, eye, frame, teardown } = await boot();
     try {
       frame();
       frame();
@@ -320,17 +351,60 @@ describe('the chart behind a model', () => {
       // Behind the Bastion, and not merely behind something: the eye's ray to
       // each hidden point passes through the box the model is drawn in, read
       // off the model itself rather than off the columns or their screen box.
-      const groundY = (conn as unknown as { groundYAt(x: number, z: number): number }).groundYAt;
       const ray = new Ray();
       const point = new Vector3();
       const met = new Vector3();
       const strays = hidden.filter((p) => {
-        point.set(p.x, groundY.call(conn, p.x, p.y), p.y);
+        point.set(p.x, p.wy, p.y);
         ray.set(eye, point.clone().sub(eye).normalize());
         const at = ray.intersectBox(box, met);
         return at === null || at.distanceTo(eye) > point.distanceTo(eye);
       });
       assert.deepEqual(strays, [], 'every hidden point lies behind the Bastion');
+    } finally {
+      teardown();
+    }
+  });
+
+  it('walks a segment past the Bastion without reading the ground (#1692)', async () => {
+    const { conn, asked, frame, teardown } = await boot();
+    try {
+      frame();
+      // The ground is read where a ring's vertex is projected. The walk's
+      // samples between two vertices take their height from the vertices',
+      // and the test of what hides a point takes the height it was projected
+      // at, so neither reads the ground at all. They read it twice a sample,
+      // every 2 px, until #1692.
+      let within = '';
+      const reads = new Map<string, number>();
+      const seabed = conn.seabedDepthAt.bind(conn);
+      mock.method(
+        conn,
+        'seabedDepthAt',
+        (...args: Parameters<PerspectiveView['seabedDepthAt']>) => {
+          if (within !== '') reads.set(within, (reads.get(within) ?? 0) + 1);
+          return seabed(...args);
+        }
+      );
+      const calls = new Map<string, number>();
+      for (const name of ['projectHeight', 'inkHidden'] as const) {
+        const real = (conn[name] as (...args: unknown[]) => unknown).bind(conn);
+        mock.method(conn, name, (...args: unknown[]) => {
+          calls.set(name, (calls.get(name) ?? 0) + 1);
+          within = name;
+          try {
+            return real(...args);
+          } finally {
+            within = '';
+          }
+        });
+      }
+      asked.length = 0;
+      frame();
+      const walked = calls.get('projectHeight') ?? 0;
+      assert.ok(walked > 50, `the walk tests samples past the Bastion (${walked})`);
+      assert.ok((calls.get('inkHidden') ?? 0) > walked, 'and asks what hides each');
+      assert.deepEqual(Object.fromEntries(reads), {}, 'reads of the ground, by caller');
     } finally {
       teardown();
     }

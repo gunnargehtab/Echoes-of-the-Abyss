@@ -158,6 +158,12 @@ interface Occluder {
   id: number;
   /** World to the columns' space. */
   readonly inverse: Matrix4;
+  /**
+   * The eye in the columns' space. Fixed for the frame, so taken once in
+   * `add` rather than once a test: the chart's occlusion walk asks `hides`
+   * every 2 px along a line that crosses the model's screen box (#1692).
+   */
+  readonly eyeLocal: Vector3;
   minX: number;
   minY: number;
   maxX: number;
@@ -166,7 +172,6 @@ interface Occluder {
 
 const CORNER = new Vector3();
 const VIEW = new Vector3();
-const EYE_LOCAL = new Vector3();
 const POINT_LOCAL = new Vector3();
 
 /**
@@ -206,32 +211,42 @@ export class InkOcclusion {
     if (camera === null) return;
     let slot = this.slots[this.count];
     if (slot === undefined) {
-      slot = { columns, id, inverse: new Matrix4(), minX: 0, minY: 0, maxX: 0, maxY: 0 };
+      slot = {
+        columns,
+        id,
+        inverse: new Matrix4(),
+        eyeLocal: new Vector3(),
+        minX: 0,
+        minY: 0,
+        maxX: 0,
+        maxY: 0,
+      };
       this.slots.push(slot);
     }
     this.count++;
     slot.columns = columns;
     slot.id = id;
     slot.inverse.copy(world).invert();
+    slot.eyeLocal.copy(this.eye).applyMatrix4(slot.inverse);
     const e = world.elements;
     this.print += this.count * (e[12]! + 3 * e[13]! + 7 * e[14]! + 11 * e[0]! + 13 * e[2]!);
-    // The screen box of the solid's eight corners. A corner at or behind the
-    // eye has no screen position, so that model is tested everywhere.
+    // The screen box of the solid's eight corners. A corner short of the near
+    // plane has no screen position, so that model is tested everywhere...
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
     let maxY = -Infinity;
+    let unbounded = false;
+    let behind = 0;
     const { min, max } = columns.box;
     for (let c = 0; c < 8; c++) {
       CORNER.set(c & 1 ? max.x : min.x, c & 2 ? max.y : min.y, c & 4 ? max.z : min.z);
       CORNER.applyMatrix4(world);
       VIEW.copy(CORNER).applyMatrix4(camera.matrixWorldInverse);
+      if (VIEW.z >= 0) behind++;
       if (VIEW.z > -camera.near) {
-        minX = -Infinity;
-        minY = -Infinity;
-        maxX = Infinity;
-        maxY = Infinity;
-        break;
+        unbounded = true;
+        continue;
       }
       CORNER.project(camera);
       const sx = ((CORNER.x + 1) / 2) * this.width;
@@ -240,6 +255,26 @@ export class InkOcclusion {
       if (sx > maxX) maxX = sx;
       if (sy < minY) minY = sy;
       if (sy > maxY) maxY = sy;
+    }
+    // ...unless every corner is level with the eye or behind it. Then the
+    // whole solid is, and the eye's ray to any point it can see runs the
+    // other way, so the model hides nothing: an empty box, which no pixel or
+    // segment meets. Tested everywhere instead, the hulls behind the camera
+    // at the arch study's close C station were six of ten models, each tested
+    // at every 2 px of the chart's occlusion walk (#1692).
+    if (behind === 8) {
+      slot.minX = Infinity;
+      slot.minY = Infinity;
+      slot.maxX = -Infinity;
+      slot.maxY = -Infinity;
+      return;
+    }
+    if (unbounded) {
+      slot.minX = -Infinity;
+      slot.minY = -Infinity;
+      slot.maxX = Infinity;
+      slot.maxY = Infinity;
+      return;
     }
     // A pixel's grace, so a line grazing the box is still tested.
     slot.minX = minX - 1;
@@ -297,9 +332,9 @@ export class InkOcclusion {
    * Whether the screen box from (x0, y0) to (x1, y1) meets an own model's, or
    * the model of a track in `tracks` — what a mission marker's name keeps off
    * (docs/ui-ux.md §10.5, #1662). Two kinds are left out. A model with a
-   * corner behind the eye, whose box is the whole screen: right for a line
-   * that must break behind it, and wrong for a name, which would find no place
-   * at all. And any other track: a track's model shows the instant it is
+   * corner short of the near plane, not wholly behind the eye, whose box is
+   * the whole screen: right for a line that must break behind it, and wrong
+   * for a name, which would find no place at all. And any other track: a track's model shows the instant it is
    * resolved, and the name keeps off a contact only once its mark has arrived,
    * which `drawContacts` knows and this does not. A tall structure stands far
    * above its mark, so an arrived track is tested by its model as well as its
@@ -331,9 +366,8 @@ export class InkOcclusion {
     for (let i = 0; i < this.count; i++) {
       const s = this.slots[i]!;
       if (sx < s.minX || sx > s.maxX || sy < s.minY || sy > s.maxY) continue;
-      EYE_LOCAL.copy(this.eye).applyMatrix4(s.inverse);
       POINT_LOCAL.set(x, y, z).applyMatrix4(s.inverse);
-      if (rayMeetsColumns(s.columns, EYE_LOCAL, POINT_LOCAL, tMax)) return true;
+      if (rayMeetsColumns(s.columns, s.eyeLocal, POINT_LOCAL, tMax)) return true;
     }
     return false;
   }
