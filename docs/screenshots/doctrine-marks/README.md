@@ -15,5 +15,9 @@ the first free navy.
   pass put it on the first line, where `TORP 2` ran off the card's right edge in Chromium.
   Twice actual size.
 
-The Commune's `SPEED −20%` mark and the Directorate's mark are not pictured: a drive cannot
+- [engage-shot-price.png](engage-shot-price.png): the Consortium's squad page with the
+  Caisson selected. `ENGAGE` carries §9's `+25 SIG`, unmarked: a kinetic shot is the
+  general case. Twice actual size.
+
+The Commune's, the Directorate's and the Knights' marks are not pictured: a drive cannot
 choose a navy before it readies. Both are held by `rendererSmoke.test.ts`, "doctrine marks".
