@@ -15,5 +15,6 @@
 # naming them means no heuristic ever gets to guess about a GLB or a baked map.
 *.glb binary
 *.jpg binary
+*.mp4 binary
 *.png binary
 *.woff2 binary

@@ -15,41 +15,54 @@
  *
  * The off half drops `?arch-study=1`. Each station is held for 240 frames of
  * both painters and 240 GPU frames, read unqueued and then behind the queue
- * load (`__perspectiveGpuQueue`, tools/render-stack/capture.mjs's method), and
- * C is read again with the pools off through the study's switch. `<TAG>.json`
+ * load (`__perspectiveGpuQueue`, tools/render-stack/capture.mjs's method; C's
+ * is heavier, `QUEUE_STEPS_C`), and C is read again with the pools off
+ * through the study's switch. `<TAG>.json`
  * lands beside the frames with the renderer, the pixel ratio, every station's
  * probe and both readings; a markdown row per station is printed.
  *
- * Clips, paced (no UNPACED), with the drive recording the session
- * (`RECORD_VIDEO=<dir>`, a WebM of the whole page from the title screen on).
- * That recording is Playwright's screencast re-encoded as VP8 at 25 fps and
- * about 1 Mbit/s, which smears a dark frame of 256 motes: it is the timing
- * reference, not the clip §9 judges on motion. The filed clip is a screen
- * recording of the same headed run at the display's rate and a high or
- * lossless quality, cut to the holds this module records; `<TAG>.json`
- * carries each hold's ticks and its offset into the recording.
+ * Clips, paced (no UNPACED), full screen, filmed by a screen recorder at the
+ * display's rate. The drive's window must fill the display, which drive.mjs
+ * does not do: #1674's run used a copy of it that launches with
+ * `--start-fullscreen` (which alone did not fill the display) and, after
+ * `context.newPage()`, opens a CDP session and sends `Browser.setWindowBounds`
+ * with `windowState: 'fullscreen'` for the window `Browser.getWindowForTarget`
+ * names. The recorder was ffmpeg 7.1.1's `ddagrab` at 60 fps into lossless
+ * `h264_nvenc`, with the display held awake (a sleeping display hands it the
+ * last image again). `SCREEN_START_MS` is the recorder's wall-clock start in
+ * epoch milliseconds; each hold carries `screenS`, its offset into the
+ * recording, so a cut re-encodes from there:
  *
- *   RECORD_VIDEO=<dir> VIEW_W=1920 VIEW_H=1080 MODE=clip CLIP=C-still TAG=clip-C-still \
- *     node .claude/skills/run-game/scripts/drive.mjs --headed --channel msedge \
+ *   SCREEN_START_MS=<ms> VIEW_W=1920 VIEW_H=1080 MODE=clip CLIP=C-still TAG=clip-C-still \
+ *     node <drive.mjs, full screen> --headed --channel msedge \
  *     --entry tutorial --url 'http://localhost:5173/?arch-study=1' --out <dir> \
  *     --steps docs/screenshots/issue-1674/gpu.mjs
+ *
+ * `RECORD_VIDEO=<dir>` instead records Playwright's screencast, VP8 at 25 fps
+ * and about 1 Mbit/s, which smears a dark frame of 256 motes, and each hold
+ * then carries `videoS`. It also costs the overlay: at C on the named desktop
+ * 10.4 ms a frame against 7.4 under the screen recorder alone
+ * (`screencast-C-still.json`), so the filed clips run without it.
  *
  * CLIP=C-still holds C with no input for 12 s (the sift, the sway and the
  * lamps). CLIP=C-move holds C for 4 s, selects one escort, orders a short
  * move within the court (the click carries its own depth, so the JSON
  * records the hull's depth before and after and holds it to §9's "no
- * dive"), presses Stop on the first reading that shows the hull under way,
- * and holds the settling view: the proof of Stop is a hull settled well
+ * dive"), presses Stop once the hull has run RUN_M, records the wake it shed,
+ * and holds the settling view to 12 s: the proof of Stop is a hull settled
  * short of the order, which a GPU run asserts and a software run, whose
  * frames outrun the key, records and warns of.
  * CLIP=H-change holds H's pose from 10:38 to 10:56 of the mission clock
  * through the received ground change, and records the tick the ruin arrived
- * and the frame the sequence began. `REDUCED_MOTION=1` on the drive repeats
+ * and the frame the sequence began. CLIP=H-reload holds H's pose past the
+ * ruin at 10:44, reloads, presses Resume and reads every frame from the first
+ * that draws a landmark: §9 holds that one to the ruin, with no intact frame,
+ * no sequence and no cloud after it. `REDUCED_MOTION=1` on the drive repeats
  * any clip with reduced motion. The HUD clock in the video says where each
  * hold starts and ends; `<TAG>.json` records the same ticks and the seconds
  * from the recording's start, so a cut re-encodes from that offset
- * (ffmpeg -i … -ss <offset>, never -c copy: a stream copy starts at the
- * previous keyframe, which Playwright leaves seconds apart).
+ * (ffmpeg -ss <offset> -i …, never -c copy: a stream copy starts at the
+ * previous keyframe, which can be seconds away).
  */
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
@@ -61,6 +74,21 @@ const CLIP = process.env.CLIP ?? 'C-still';
 const TAG = process.env.TAG ?? (MODE === 'clip' ? `clip-${CLIP}` : 'gpu');
 /** halo-cost.mjs's load: about 3.6 ms on the named GPU (gpuQueueLoad.ts). */
 const QUEUE_STEPS = Number(process.env.QUEUE_STEPS ?? 12000);
+/**
+ * C's load, about 12 ms. The overlay spends about 7 ms a frame at C, so its
+ * frames ship every 10 ms and the default load left the GPU idle for most of
+ * each: C read 2.0–3.6 ms queued, the pools off above the pools on in two
+ * runs of four. Behind this load it read within 0.03 ms of itself. A load at
+ * every station slows the run until L and S reach a later, different scene.
+ */
+const QUEUE_STEPS_C = Number(process.env.QUEUE_STEPS_C ?? 40000);
+/**
+ * C-move's run before Stop, about a second of a Light Scout at 105–120 m/s.
+ * Its wake sheds a bubble every 44 m at that speed (hullWake.ts); a scratch
+ * probe at C saw the first about 0.55 s and 55 m after the order, and a 48 m
+ * take, not kept, shed none.
+ */
+const RUN_M = Number(process.env.RUN_M ?? 120);
 const OUT = resolve(process.argv[process.argv.indexOf('--out') + 1]);
 
 /** §9's stations; H is the opening camera, re-applied so a half matches. */
@@ -133,21 +161,27 @@ export default async ({ page, shot, recordingStartedMs = null }) => {
       // §9's stations are the intact arch with its lamps. A GPU run holds
       // all four inside a minute; SwiftShader's took sixteen and reached
       // the 10:40 change, so a software run warns where a GPU one fails.
-      if (study && p.landmarkTris !== 2412) {
+      // The intact model is 2,626 triangles since #1683's refinement (2,412
+      // before it); environment.ts's triBudget holds the count.
+      if (study && p.landmarkTris !== 2626) {
         const past = `${name}: the ruin stands (${p.landmarkTris} triangles), so the run reached the 10:40 change`;
         if (software) console.log(`WARNING: ${past}`);
         else assert.fail(past);
       }
       let queued = null;
       if (queueable && p.gpuTimer === 'timing') {
-        await page.evaluate((steps) => window.__perspectiveGpuQueue(steps), QUEUE_STEPS);
+        const steps = name.startsWith('C') ? QUEUE_STEPS_C : QUEUE_STEPS;
+        await page.evaluate((steps) => window.__perspectiveGpuQueue(steps), steps);
         await page.waitForTimeout(400);
         await page.evaluate((label) => window.__perspectiveStation(label), name);
         await windowful();
         const q = await probe();
         await page.evaluate(() => window.__perspectiveGpuQueue(0));
-        queued = { gpuMs: q.avgGpuMs, worstGpuMs: q.worstGpuMs, loadMs: q.gpuQueue.avgMs, gpuDropped: q.gpuDropped, loadDropped: q.gpuQueue.dropped };
+        queued = { steps, gpuMs: q.avgGpuMs, worstGpuMs: q.worstGpuMs, loadMs: q.gpuQueue.avgMs, gpuDropped: q.gpuDropped, loadDropped: q.gpuQueue.dropped };
         assert.ok(queued.loadMs > p.avgGpuMs, `${name}: the load (${queued.loadMs} ms) ran out before the unqueued frame (${p.avgGpuMs} ms)`);
+        // A load shorter than the interval between frames lets the GPU idle
+        // and drop its clock, which the timer then reads as frame cost.
+        assert.ok(queued.loadMs > p.avgFrameMs, `${name}: the load (${queued.loadMs} ms) is shorter than the frame interval (${p.avgFrameMs} ms)`);
       }
       const tick = await clock();
       const file = await shot(`${TAG}-${name}`);
@@ -159,7 +193,10 @@ export default async ({ page, shot, recordingStartedMs = null }) => {
     console.log(`renderer: ${renderer}${software ? ' (software)' : ''}; dpr ${viewport.dpr}; ${unpaced ? 'unpaced' : 'paced'}; study ${study ? 'on' : 'off'}`);
     console.log('| station | clock | calls | triangles | landmark (tris) | sift / cloud | gpuTimer | gpu avg / worst ms | queued avg / worst ms | conn ms | overlay ms | frame ms |');
     console.log('| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |');
-    for (const name of ['H', 'C', 'L', 'S']) {
+    // C goes last: the pools-off station, behind C's heavier load, runs only
+    // in the on half, and taken second it put that half's L and S a minute
+    // or two of mission time behind the off half's, at another scene.
+    for (const name of ['H', 'L', 'S', 'C']) {
       await poseAt(name);
       await page.waitForTimeout(2500);
       await station(name);
@@ -178,7 +215,10 @@ export default async ({ page, shot, recordingStartedMs = null }) => {
     // can show (playwright-core's screencast: VP8, 25 fps, about 1 Mbit/s).
     record.video = recordingStartedMs === null ? null : { codec: 'vp8', fps: 25, bitrate: '1M', startedMs: recordingStartedMs };
     const offset = () => (recordingStartedMs === null ? null : Number(((Date.now() - recordingStartedMs) / 1000).toFixed(1)));
-    const mark = async () => ({ tick: await clock(), videoS: offset() });
+    const screenStartMs = process.env.SCREEN_START_MS ? Number(process.env.SCREEN_START_MS) : null;
+    record.screen = screenStartMs === null ? null : { startedMs: screenStartMs };
+    const screenOffset = () => (screenStartMs === null ? null : Number(((Date.now() - screenStartMs) / 1000).toFixed(2)));
+    const mark = async () => ({ tick: await clock(), videoS: offset(), screenS: screenOffset() });
     const hold = async (ms) => {
       const from = await mark();
       await page.waitForTimeout(ms);
@@ -199,6 +239,7 @@ export default async ({ page, shot, recordingStartedMs = null }) => {
     } else if (CLIP === 'C-move') {
       await poseAt('C');
       await page.waitForTimeout(2500);
+      const heldAt = Date.now();
       record.held = await hold(4000);
       // One escort under the arch: the first own unit with a screen box on
       // screen, clicked at its centre; then a short move to its right on the
@@ -217,29 +258,39 @@ export default async ({ page, shot, recordingStartedMs = null }) => {
       await page.mouse.click(unit.x, unit.y);
       await page.waitForTimeout(800);
       record.selected = { unit, ...(await mark()) };
-      // A long order, about 200 m east at C's dolly, with Stop pressed on
-      // the first reading that shows the hull under way. The order's round
+      // A long order, about 200 m east at C's dolly, with Stop pressed once
+      // the hull has run RUN_M, or for a second and a half: an ordinary short
+      // move with a wake behind it, as §9 asks, where Stop on the first
+      // reading under way showed a 4 m twitch and no wake. The order's round
       // trip is tens of milliseconds on a GPU and seconds on SwiftShader,
       // and a frame there can take seconds, so the page polls for the
       // reading rather than a timer, and the proof of Stop is where the
       // hull settles: metres from where it was and well short of the order.
       await page.mouse.click(unit.x + 800, unit.y + 20, { button: 'right' });
       record.moved = { from: await mark() };
-      const underWay = await page.evaluate(
-        ({ id, start }) =>
+      const run = await page.evaluate(
+        ({ id, start, runM }) =>
           new Promise((resolve) => {
             const t0 = performance.now();
+            const out = { underWay: null, atStop: null, wakePeak: 0 };
             const poll = () => {
               const u = window.__perspectiveLamps().units.find((u) => u.id === id);
               const now = u ? { id, xM: u.xM, zM: u.zM, depthM: u.depthM, tick: window.__echoClock() } : null;
-              if (now !== null && Math.hypot(now.xM - start.xM, now.zM - start.zM) >= 2) return resolve(now);
-              if (performance.now() - t0 > 15000) return resolve(null);
+              out.wakePeak = Math.max(out.wakePeak, window.__perspectiveProbe().wakeBubbles ?? 0);
+              const m = now === null ? 0 : Math.hypot(now.xM - start.xM, now.zM - start.zM);
+              if (out.underWay === null && m >= 2) out.underWay = { ...now, ms: performance.now() };
+              if (out.underWay !== null && (m >= runM || performance.now() - out.underWay.ms > 1500)) {
+                out.atStop = now;
+                return resolve(out);
+              }
+              if (performance.now() - t0 > 15000) return resolve(out);
               setTimeout(poll, 50);
             };
             poll();
           }),
-        { id: unit.id, start: before }
+        { id: unit.id, start: before, runM: RUN_M }
       );
+      const underWay = run.underWay;
       await page.keyboard.press('KeyX');
       const stopped = await mark();
       record.moved.to = stopped;
@@ -247,6 +298,9 @@ export default async ({ page, shot, recordingStartedMs = null }) => {
       const settling = await unitAt(unit.id);
       await page.waitForTimeout(2000);
       const settled = await unitAt(unit.id);
+      // §9's clip is twelve seconds from the hold; the move and Stop take
+      // about ten, so the settled view stays on screen for the rest.
+      await page.waitForTimeout(Math.max(0, heldAt + 12500 - Date.now()));
       record.stopped = { from: stopped, to: await mark() };
       // The order took and Stop took: the hull was under way when Stop was
       // pressed, it holds still from two to four seconds after, and it
@@ -257,19 +311,26 @@ export default async ({ page, shot, recordingStartedMs = null }) => {
         underWay,
         settled,
         orderM: 200,
-        movedAtStopM: underWay === null ? null : Number(metres(before, underWay).toFixed(1)),
+        atStop: run.atStop,
+        movedAtStopM: run.atStop === null ? null : Number(metres(before, run.atStop).toFixed(1)),
+        wakePeakWhileMoving: run.wakePeak,
         settledM: Number(metres(before, settled).toFixed(1)),
         driftAfterStopM: Number(metres(settling, settled).toFixed(2)),
         depthChangeM: Number((settled.depthM - before.depthM).toFixed(1)),
       };
       writeFileSync(join(OUT, `${TAG}.json`), JSON.stringify(record, null, 2) + '\n');
       assert.ok(underWay !== null, 'the escort moved on the order within 15 s');
+      // §9's "existing wake": a hull under way sheds bubbles (hullWake.ts).
+      // The probe's count is the whole fleet's, so this holds that a wake
+      // appeared during the move, not that it is this hull's alone.
+      if (!software) assert.ok(run.wakePeak > 0, 'a wake appeared while the escort moved');
       assert.ok(record.escort.settledM >= 2, `the escort moved ${record.escort.settledM} m on the order`);
-      // A Light Scout makes about 53 m a second, so on SwiftShader the key,
-      // a frame or two behind the reading, lands after the order has
-      // arrived: a software run records that and warns, a GPU run fails.
+      // A Light Scout makes 105–120 m a second on the named desktop, so on
+      // SwiftShader, whose frames take seconds, the key lands after the
+      // order has arrived: a software run records that and warns, a GPU run
+      // fails.
       const short = `Stop cut the order short (${record.escort.settledM} m of about 200)`;
-      if (record.escort.settledM >= 120) {
+      if (record.escort.settledM >= 180) {
         if (software) console.log(`WARNING: not ${short}: the hull arrived before the key landed`);
         else assert.fail(short);
       }
@@ -299,8 +360,48 @@ export default async ({ page, shot, recordingStartedMs = null }) => {
       );
       record.hold.to = await mark();
       Object.assign(record, arrived);
+    } else if (CLIP === 'H-reload') {
+      // §9: reload after 10:40 and the ruin stands from the first frame,
+      // with no sequence. Resume redeems the tab's parked seat (GameClient's
+      // sessionStorage token), so the reload lands in the same match.
+      await poseAt('H');
+      await waitTick((10 * 60 + 44) * TICK_HZ);
+      await page.waitForFunction(() => window.__perspectiveProbe().landmarkTris === 732, null, { timeout: 60000 });
+      record.before = { ...(await mark()), probe: await probe() };
+      const reloadedAt = await mark();
+      await page.reload();
+      // The watcher starts on the title screen, before Resume mounts the
+      // view, so the first frame that draws a landmark is the one it reads.
+      await page.evaluate(() => {
+        const out = { frames: 0, first: null, intactFrames: 0, collapsingFrames: 0, cloudFrames: 0 };
+        window.__reloadWatch = out;
+        const frame = () => {
+          const p = window.__perspectiveProbe?.();
+          if (p && p.landmarks > 0) {
+            out.frames += 1;
+            if (out.first === null) out.first = { tick: window.__echoClock(), landmarkTris: p.landmarkTris, collapsing: p.collapsing, cloudMotes: p.cloudMotes };
+            if (p.landmarkTris !== 732) out.intactFrames += 1;
+            if (p.collapsing) out.collapsingFrames += 1;
+            if (p.cloudMotes > 0) out.cloudFrames += 1;
+          }
+          requestAnimationFrame(frame);
+        };
+        requestAnimationFrame(frame);
+      });
+      await page.getByRole('button', { name: /^Resume match/ }).click();
+      await page.waitForFunction(() => (window.__reloadWatch?.frames ?? 0) > 0, null, { timeout: 120000 });
+      record.reload = { from: reloadedAt, firstDrawn: await mark() };
+      await page.waitForTimeout(8000);
+      record.reload.to = await mark();
+      record.reload.watch = await page.evaluate(() => window.__reloadWatch);
+      writeFileSync(join(OUT, `${TAG}.json`), JSON.stringify(record, null, 2) + '\n');
+      const { first, intactFrames, collapsingFrames, cloudFrames } = record.reload.watch;
+      assert.equal(first.landmarkTris, 732, `the first drawn frame after the reload is the ruin (${first.landmarkTris} triangles)`);
+      assert.equal(intactFrames, 0, 'no frame after the reload drew the intact arch');
+      assert.equal(collapsingFrames, 0, 'no frame after the reload ran the sequence');
+      assert.equal(cloudFrames, 0, 'no frame after the reload drew the cloud');
     } else {
-      throw new Error(`CLIP must be C-still, C-move or H-change, not ${CLIP}`);
+      throw new Error(`CLIP must be C-still, C-move, H-change or H-reload, not ${CLIP}`);
     }
     record.frame = await shot(`${TAG}-end`);
     record.probe = await probe();

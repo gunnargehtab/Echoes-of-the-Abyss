@@ -1,0 +1,323 @@
+{
+  "tag": "clip-H-reload",
+  "mode": "clip",
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "software": false,
+  "unpaced": false,
+  "reducedMotion": false,
+  "study": true,
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "dpr": 1
+  },
+  "url": "/?arch-study=1",
+  "video": null,
+  "screen": {
+    "startedMs": 1793399774149
+  },
+  "before": {
+    "tick": 38640,
+    "videoS": null,
+    "screenS": 649.65,
+    "probe": {
+      "active": true,
+      "look": "sorrowgate",
+      "programHold": {
+        "holding": false,
+        "heldFrames": 23
+      },
+      "pitchDeg": 55,
+      "yawDeg": 0,
+      "sway": "on",
+      "focus": {
+        "xM": 2550,
+        "zM": 2553,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 2550,
+        "zM": 4049,
+        "depthM": -8195
+      },
+      "distance": 2600,
+      "waterReachM": 8320,
+      "waterDensity": 1,
+      "hullScale": 1,
+      "drawCalls": 50,
+      "triangles": 123695,
+      "passes": [
+        "canvas",
+        "split-copy",
+        "split"
+      ],
+      "world": {
+        "borderStrength": 1,
+        "overviewDrawn": false,
+        "sessionGround": true,
+        "groundLeaving": false,
+        "frame": {
+          "xM": 2550,
+          "yM": 2553,
+          "distanceM": 2600,
+          "yawDeg": 0,
+          "pitchDeg": 55
+        },
+        "detailDrawn": [],
+        "detailResident": [],
+        "detailPending": 0,
+        "detailProps": 0,
+        "detailPropTris": 0,
+        "detailVentPlumes": 0,
+        "detailLandmarks": 0,
+        "detailLandmarkTris": 0
+      },
+      "halo": "idle",
+      "haloSites": 0,
+      "haloDropped": 0,
+      "haloCalls": 0,
+      "haloTriangles": 0,
+      "haloBytes": 35835136,
+      "split": "on",
+      "splitBytes": 8294400,
+      "canvasStencilBits": 8,
+      "textures": 18,
+      "pixelRatio": 1,
+      "drawingBuffer": {
+        "width": 1920,
+        "height": 1080
+      },
+      "toneMapping": 4,
+      "environmentIntensity": 0.35,
+      "environmentBytes": 344064,
+      "station": null,
+      "stationMs": 644358.9,
+      "stationFrames": 38303,
+      "avgFrames": 240,
+      "fps": 59.4,
+      "avgFrameMs": 17.85,
+      "worstFrameMs": 2093,
+      "avgConnMs": 1.69,
+      "worstConnMs": 1046.3,
+      "avgOverlayMs": 0.85,
+      "worstOverlayMs": 14.4,
+      "overlayFrames": 38297,
+      "gpuTimer": "timing",
+      "avgGpuMs": 2.15,
+      "worstGpuMs": 598.81,
+      "gpuFrames": 38279,
+      "gpuDropped": 0,
+      "gpuQueue": null,
+      "gpuSplit": false,
+      "gpuParts": null,
+      "units": 6,
+      "structures": 0,
+      "tracks": 5,
+      "structureTracks": 0,
+      "trackAt": {
+        "x": 1739.27392578125,
+        "z": 2360.710693359375,
+        "depthM": 1450
+      },
+      "ordnance": 0,
+      "wakeBubbles": 0,
+      "hits": 0,
+      "hitParticles": 0,
+      "plumeMotes": 0,
+      "workLightsLit": 0,
+      "sparks": 0,
+      "plumeAt": null,
+      "ventPlumeAt": {
+        "x": 398.9916015663184,
+        "z": 2292.7595673110336,
+        "depthM": 1409.149066763696
+      },
+      "hitAt": null,
+      "shots": 0,
+      "shotParticles": 0,
+      "recoiling": 0,
+      "shotAt": null,
+      "props": 198,
+      "propTris": 50356,
+      "ventPlumes": 2,
+      "fieldHazes": 0,
+      "landmarks": 1,
+      "landmarkTris": 732,
+      "siftMotes": 256,
+      "cloudMotes": 384,
+      "collapsing": true,
+      "landmarkLampsPx": [],
+      "modelBacked": 6,
+      "modelMeshes": 17,
+      "ownCentre": {
+        "x": 2550,
+        "z": 2520
+      }
+    }
+  },
+  "reload": {
+    "from": {
+      "tick": 38640,
+      "videoS": null,
+      "screenS": 649.66
+    },
+    "firstDrawn": {
+      "tick": 38844,
+      "videoS": null,
+      "screenS": 653.27
+    },
+    "to": {
+      "tick": 39336,
+      "videoS": null,
+      "screenS": 661.28
+    },
+    "watch": {
+      "frames": 481,
+      "first": {
+        "tick": 38844,
+        "landmarkTris": 732,
+        "collapsing": false,
+        "cloudMotes": 0
+      },
+      "intactFrames": 0,
+      "collapsingFrames": 0,
+      "cloudFrames": 0
+    }
+  },
+  "frame": null,
+  "probe": {
+    "active": true,
+    "look": "sorrowgate",
+    "programHold": {
+      "holding": false,
+      "heldFrames": 3
+    },
+    "pitchDeg": 55,
+    "yawDeg": 0,
+    "sway": "on",
+    "focus": {
+      "xM": 2550,
+      "zM": 2520,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 2546,
+      "zM": 4009,
+      "depthM": -8218
+    },
+    "distance": 2600,
+    "waterReachM": 8320,
+    "waterDensity": 1,
+    "hullScale": 1,
+    "drawCalls": 44,
+    "triangles": 114771,
+    "passes": [
+      "canvas",
+      "split-copy",
+      "split"
+    ],
+    "world": {
+      "borderStrength": 1,
+      "overviewDrawn": false,
+      "sessionGround": true,
+      "groundLeaving": false,
+      "frame": {
+        "xM": 2550,
+        "yM": 2520,
+        "distanceM": 2600,
+        "yawDeg": 0,
+        "pitchDeg": 55
+      },
+      "detailDrawn": [],
+      "detailResident": [],
+      "detailPending": 0,
+      "detailProps": 0,
+      "detailPropTris": 0,
+      "detailVentPlumes": 0,
+      "detailLandmarks": 0,
+      "detailLandmarkTris": 0
+    },
+    "halo": "idle",
+    "haloSites": 0,
+    "haloDropped": 0,
+    "haloCalls": 0,
+    "haloTriangles": 0,
+    "haloBytes": 35835136,
+    "split": "on",
+    "splitBytes": 8294400,
+    "canvasStencilBits": 8,
+    "textures": 16,
+    "pixelRatio": 1,
+    "drawingBuffer": {
+      "width": 1920,
+      "height": 1080
+    },
+    "toneMapping": 4,
+    "environmentIntensity": 0.35,
+    "environmentBytes": 344064,
+    "station": null,
+    "stationMs": 11161.5,
+    "stationFrames": 517,
+    "avgFrames": 240,
+    "fps": 46.3,
+    "avgFrameMs": 16.66,
+    "worstFrameMs": 2124.8,
+    "avgConnMs": 1.08,
+    "worstConnMs": 71.4,
+    "avgOverlayMs": 0.76,
+    "worstOverlayMs": 16.1,
+    "overlayFrames": 512,
+    "gpuTimer": "timing",
+    "avgGpuMs": 1.59,
+    "worstGpuMs": 71.85,
+    "gpuFrames": 513,
+    "gpuDropped": 0,
+    "gpuQueue": null,
+    "gpuSplit": false,
+    "gpuParts": null,
+    "units": 6,
+    "structures": 0,
+    "tracks": 1,
+    "structureTracks": 0,
+    "trackAt": {
+      "x": 2550,
+      "z": 2950,
+      "depthM": 1490
+    },
+    "ordnance": 0,
+    "wakeBubbles": 0,
+    "hits": 0,
+    "hitParticles": 0,
+    "plumeMotes": 0,
+    "workLightsLit": 0,
+    "sparks": 0,
+    "plumeAt": null,
+    "ventPlumeAt": {
+      "x": 398.9916015663184,
+      "z": 2292.7595673110336,
+      "depthM": 1409.149066763696
+    },
+    "hitAt": null,
+    "shots": 0,
+    "shotParticles": 0,
+    "recoiling": 0,
+    "shotAt": null,
+    "props": 198,
+    "propTris": 50356,
+    "ventPlumes": 2,
+    "fieldHazes": 0,
+    "landmarks": 1,
+    "landmarkTris": 732,
+    "siftMotes": 256,
+    "cloudMotes": 0,
+    "collapsing": false,
+    "landmarkLampsPx": [],
+    "modelBacked": 6,
+    "modelMeshes": 12,
+    "ownCentre": {
+      "x": 2550,
+      "z": 2520
+    }
+  },
+  "clip": "clip-H-reload.mp4"
+}
