@@ -21,7 +21,8 @@
 .flight-panel {
   position: absolute;
   top: 62px;
-  left: calc(var(--ribbon-units) * var(--ui-scale) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
   max-width: 290px;
   padding: 8px;
   color: var(--text-bright);

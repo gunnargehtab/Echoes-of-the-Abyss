@@ -1,0 +1,104 @@
+{
+  "before": {
+    "id": 58,
+    "kind": 0,
+    "name": "Light Scout",
+    "sig": 6,
+    "ink": "#3fa86a",
+    "restSig": 6,
+    "silentRunning": false,
+    "engineOff": false,
+    "xM": 602.887451171875,
+    "zM": 1158.1165771484375,
+    "depthM": 600,
+    "lamps": [
+      {
+        "sitesPx": [
+          6.64,
+          6.5,
+          6.7,
+          20.76,
+          10.57
+        ],
+        "areaPx": 327.1,
+        "hex": "#f2b233",
+        "exportIntensity": 3.5,
+        "restIntensity": 1.1262236334021603,
+        "intensity": 1.1262236334021603,
+        "afterToneMapping": true
+      }
+    ],
+    "screen": {
+      "x0": 565,
+      "y0": 392,
+      "x1": 875,
+      "y1": 510
+    }
+  },
+  "after": {
+    "id": 58,
+    "kind": 0,
+    "name": "Light Scout",
+    "sig": 6,
+    "ink": "#3fa86a",
+    "restSig": 6,
+    "silentRunning": false,
+    "engineOff": false,
+    "xM": 644.887451171875,
+    "zM": 1158.1165771484375,
+    "depthM": 574,
+    "lamps": [
+      {
+        "sitesPx": [
+          6.67,
+          6.53,
+          6.73,
+          20.86,
+          10.61
+        ],
+        "areaPx": 328.5,
+        "hex": "#f2b233",
+        "exportIntensity": 3.5,
+        "restIntensity": 1.1262236334021603,
+        "intensity": 1.1262236334021603,
+        "afterToneMapping": true
+      }
+    ],
+    "screen": {
+      "x0": 777,
+      "y0": 367,
+      "x1": 1092,
+      "y1": 484
+    }
+  },
+  "camera": {
+    "eye": {
+      "xM": 603,
+      "zM": 1403,
+      "depthM": 364
+    },
+    "focus": {
+      "xM": 603,
+      "zM": 1158,
+      "depthM": 600
+    },
+    "orientation": [
+      -0.10452846326765342,
+      0,
+      0,
+      0.9945218953682733
+    ],
+    "flight": {
+      "flying": false,
+      "navigating": false,
+      "depthM": 364,
+      "bearingDeg": 0,
+      "upX": 0,
+      "upY": -0.9781476007338057,
+      "inverted": false,
+      "blocked": false
+    },
+    "drawCalls": 52,
+    "triangles": 144918
+  }
+}

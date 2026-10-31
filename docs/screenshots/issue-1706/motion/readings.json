@@ -1,0 +1,248 @@
+{
+  "entry": {
+    "eye": {
+      "xM": 603,
+      "zM": 1403,
+      "depthM": 364
+    },
+    "focus": {
+      "xM": 603,
+      "zM": 1158,
+      "depthM": 600
+    },
+    "orientation": [
+      -0.10452846326765342,
+      0,
+      0,
+      0.9945218953682733
+    ],
+    "flight": {
+      "flying": true,
+      "navigating": false,
+      "depthM": 364,
+      "bearingDeg": 0,
+      "upX": 0,
+      "upY": -0.9781476007338057,
+      "inverted": false,
+      "blocked": false
+    },
+    "drawCalls": 52,
+    "triangles": 144918
+  },
+  "motions": [
+    {
+      "key": "KeyF",
+      "from": {
+        "xM": 603,
+        "zM": 1403,
+        "depthM": 364
+      },
+      "to": {
+        "xM": 603,
+        "zM": 1408,
+        "depthM": 482
+      }
+    },
+    {
+      "key": "KeyR",
+      "from": {
+        "xM": 603,
+        "zM": 1408,
+        "depthM": 482
+      },
+      "to": {
+        "xM": 603,
+        "zM": 1403,
+        "depthM": 364
+      }
+    },
+    {
+      "key": "KeyD",
+      "from": {
+        "xM": 603,
+        "zM": 1403,
+        "depthM": 364
+      },
+      "to": {
+        "xM": 629,
+        "zM": 1403,
+        "depthM": 364
+      }
+    },
+    {
+      "key": "KeyA",
+      "from": {
+        "xM": 629,
+        "zM": 1403,
+        "depthM": 364
+      },
+      "to": {
+        "xM": 603,
+        "zM": 1403,
+        "depthM": 364
+      }
+    },
+    {
+      "key": "KeyS",
+      "from": {
+        "xM": 603,
+        "zM": 1403,
+        "depthM": 364
+      },
+      "to": {
+        "xM": 603,
+        "zM": 1429,
+        "depthM": 339
+      }
+    },
+    {
+      "key": "KeyW",
+      "from": {
+        "xM": 603,
+        "zM": 1429,
+        "depthM": 339
+      },
+      "to": {
+        "xM": 603,
+        "zM": 1403,
+        "depthM": 364
+      }
+    }
+  ],
+  "rolled": {
+    "eye": {
+      "xM": 603,
+      "zM": 1403,
+      "depthM": 364
+    },
+    "focus": {
+      "xM": 603,
+      "zM": 1158,
+      "depthM": 600
+    },
+    "orientation": [
+      -3.989863994746657e-17,
+      0.10452846326765344,
+      0.9945218953682735,
+      -2.775557561562892e-17
+    ],
+    "flight": {
+      "flying": true,
+      "navigating": false,
+      "depthM": 364,
+      "bearingDeg": 0,
+      "upX": -6.35481423769416e-17,
+      "upY": 0.9781476007338064,
+      "inverted": true,
+      "blocked": false
+    },
+    "drawCalls": 52,
+    "triangles": 144918
+  },
+  "pitchTurn": {
+    "eye": {
+      "xM": 603,
+      "zM": 1403,
+      "depthM": 364
+    },
+    "focus": {
+      "xM": 603,
+      "zM": 1158,
+      "depthM": 600
+    },
+    "orientation": [
+      3.989863994746655e-17,
+      -0.10452846326765347,
+      -0.9945218953682735,
+      2.775557561562893e-17
+    ],
+    "flight": {
+      "flying": true,
+      "navigating": false,
+      "depthM": 364,
+      "bearingDeg": 0,
+      "upX": -6.354814237694162e-17,
+      "upY": 0.9781476007338064,
+      "inverted": true,
+      "blocked": false
+    },
+    "drawCalls": 52,
+    "triangles": 144918
+  },
+  "home": {
+    "eye": {
+      "xM": 603,
+      "zM": 1302,
+      "depthM": 855
+    },
+    "focus": {
+      "xM": 603,
+      "zM": 1158,
+      "depthM": null
+    },
+    "orientation": [
+      -0.4617486132350339,
+      0,
+      0,
+      0.8870108331782216
+    ],
+    "flight": {
+      "flying": false,
+      "navigating": false,
+      "depthM": 855,
+      "bearingDeg": 0,
+      "upX": 0,
+      "upY": -0.5735764363510462,
+      "inverted": false,
+      "blocked": false
+    },
+    "drawCalls": 52,
+    "triangles": 144918
+  },
+  "vertical": {
+    "eye": {
+      "xM": 603,
+      "zM": 1158,
+      "depthM": 600
+    },
+    "focus": {
+      "xM": 603,
+      "zM": 1158,
+      "depthM": 600
+    },
+    "orientation": [
+      -0.7071067811865475,
+      0,
+      0,
+      0.7071067811865477
+    ],
+    "flight": {
+      "flying": true,
+      "navigating": false,
+      "depthM": 600,
+      "bearingDeg": null,
+      "upX": 0,
+      "upY": -2.220446049250313e-16,
+      "inverted": false,
+      "blocked": false
+    },
+    "drawCalls": 43,
+    "triangles": 139773
+  },
+  "before": {
+    "id": 492,
+    "name": "Light Scout",
+    "xM": 602.887451171875,
+    "zM": 1158.1165771484375,
+    "depthM": 600,
+    "sig": 6
+  },
+  "rising": {
+    "id": 492,
+    "name": "Light Scout",
+    "xM": 644.887451171875,
+    "zM": 1158.1165771484375,
+    "depthM": 572,
+    "sig": 6
+  }
+}
