@@ -519,6 +519,8 @@ export const ACTIVE_SONAR = {
  * cruise SIG in the roster (loudest: Cruiser, 65) and below the ping's 95.
  */
 export const DEPTH = {
+  /** TUNABLE — direct rise/dive target offset, docs/ui-ux.md §9. */
+  CONTROL_STEP_M: 150,
   /** Metres per second while diving. */
   DESCENT_RATE_MPS: 45,
   /** Metres per second while rising — deliberately a third of the descent. */

@@ -38,6 +38,7 @@ import {
   Position,
   Acoustic,
   DepthOrder,
+  MoveOrder,
   Harvester,
   HarvestMode,
   Health,
@@ -991,6 +992,52 @@ describe('structures in the Echo Layer', () => {
 });
 
 describe('depth', () => {
+  it('accumulates relative depth orders without replacing the course or queued legs', () => {
+    const match = new Match(undefined, { fauna: false });
+    match.addPlayer(0, Faction.Directorate);
+    const sub = spawnUnit(match.world, {
+      kind: UnitKind.AbyssalSubmersible,
+      slot: 0,
+      faction: Faction.Directorate,
+      x: 4000,
+      y: 4000,
+      depth: 600,
+    });
+    match.orderMove(0, sub, 4500, 4000);
+    match.orderMove(0, sub, 4600, 4000, true);
+    const before = [MoveOrder.x[sub], MoveOrder.y[sub], MoveOrder.active[sub]];
+    const queue = structuredClone(match.world.orderQueues.get(sub));
+    assert.equal(queue?.length, 1);
+    assert.equal(match.offsetDepth(0, sub, DEPTH.CONTROL_STEP_M), true);
+    assert.equal(match.offsetDepth(0, sub, DEPTH.CONTROL_STEP_M), true);
+    assert.equal(DepthOrder.targetM[sub], 600 + 2 * DEPTH.CONTROL_STEP_M);
+    assert.deepEqual([MoveOrder.x[sub], MoveOrder.y[sub], MoveOrder.active[sub]], before);
+    assert.equal(match.offsetDepth(0, sub, -DEPTH.CONTROL_STEP_M), true);
+    assert.equal(DepthOrder.targetM[sub], 600 + DEPTH.CONTROL_STEP_M);
+    assert.equal(Position.depth[sub], 600, 'orders do not teleport');
+    assert.deepEqual(match.world.orderQueues.get(sub), queue);
+  });
+
+  it('bounds relative depth, refuses other owners and retains absolute refusal', () => {
+    const match = new Match(undefined, { fauna: false });
+    match.addPlayer(0, Faction.Directorate);
+    const sub = spawnUnit(match.world, {
+      kind: UnitKind.AbyssalSubmersible,
+      slot: 0,
+      faction: Faction.Directorate,
+      x: 4000,
+      y: 4000,
+      depth: 600,
+    });
+    assert.equal(match.offsetDepth(1, sub, 150), false);
+    assert.equal(match.offsetDepth(0, sub, Number.NaN), false);
+    assert.equal(match.offsetDepth(0, sub, -10_000), true);
+    assert.equal(DepthOrder.targetM[sub], DEPTH.MIN_M);
+    assert.equal(match.offsetDepth(0, sub, 10_000), true);
+    assert.equal(DepthOrder.targetM[sub], DEPTH.MAX_M);
+    assert.equal(match.orderDepth(0, sub, DEPTH.MAX_M + 1), false);
+  });
+
   it("inflicts unhealable crush attrition below a unit's pressure rating", () => {
     const match = new Match(undefined, { fauna: false });
     match.addPlayer(0, Faction.Bathyarch);

@@ -1994,6 +1994,15 @@ export class Match {
     return this.applyDepth(slot, eid, depthM);
   }
 
+  /** Resolve against the server's target so rapid presses cannot lose an offset. */
+  offsetDepth(slot: number, eid: number, metres: number): boolean {
+    // Refuse before recording when no owned, finite absolute target can be resolved.
+    if (!this.owns(slot, eid) || !hasComponent(this.world, DepthOrder, eid)) return false;
+    if (!Number.isFinite(metres)) return false;
+    const from = DepthOrder.active[eid] ? DepthOrder.targetM[eid]! : Position.depth[eid]!;
+    return this.orderDepth(slot, eid, Math.max(DEPTH.MIN_M, Math.min(DEPTH.MAX_M, from + metres)));
+  }
+
   /** The unrecorded half of `orderDepth` — see `applyMove`. */
   private applyDepth(slot: number, eid: number, depthM: number): boolean {
     if (!this.owns(slot, eid) || !hasComponent(this.world, DepthOrder, eid)) return false;
