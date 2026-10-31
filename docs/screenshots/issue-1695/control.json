@@ -1,0 +1,171 @@
+{
+  "url": "http://localhost:5173/?map=ventfront-divide",
+  "viewport": [
+    1920,
+    1080
+  ],
+  "dpr": 1,
+  "settings": null,
+  "opening": {
+    "active": true,
+    "look": "standard",
+    "programHold": {
+      "holding": false,
+      "heldFrames": 0
+    },
+    "pitchDeg": 55,
+    "yawDeg": 0,
+    "sway": "on",
+    "focus": {
+      "xM": 1276,
+      "zM": 1418,
+      "depthM": null
+    },
+    "eye": {
+      "xM": 1277,
+      "zM": 2914,
+      "depthM": -8960
+    },
+    "distance": 2600,
+    "waterReachM": 8320,
+    "waterDensity": 1,
+    "hullScale": 1,
+    "drawCalls": 69,
+    "triangles": 166978,
+    "passes": [
+      "canvas",
+      "depth-copy",
+      "halo-source",
+      "halo-spread",
+      "halo-composite",
+      "split-copy",
+      "split"
+    ],
+    "world": null,
+    "halo": "drawn",
+    "haloSites": 108,
+    "haloDropped": 0,
+    "haloCalls": 8,
+    "haloTriangles": 223,
+    "haloBytes": 35835136,
+    "split": "on",
+    "splitBytes": 8294400,
+    "canvasStencilBits": 8,
+    "textures": 21,
+    "pixelRatio": 1,
+    "drawingBuffer": {
+      "width": 1920,
+      "height": 1080
+    },
+    "toneMapping": 4,
+    "environmentIntensity": 0.35,
+    "environmentBytes": 344064,
+    "station": null,
+    "stationMs": 85528.2,
+    "stationFrames": 65,
+    "avgFrames": 65,
+    "fps": 0.8,
+    "avgFrameMs": 1288.02,
+    "worstFrameMs": 18497,
+    "avgConnMs": 25.86,
+    "worstConnMs": 392.1,
+    "avgOverlayMs": 13.08,
+    "worstOverlayMs": 387.6,
+    "overlayFrames": 57,
+    "gpuTimer": "software",
+    "avgGpuMs": null,
+    "worstGpuMs": null,
+    "gpuFrames": 0,
+    "gpuDropped": 0,
+    "gpuQueue": null,
+    "gpuSplit": false,
+    "gpuParts": null,
+    "units": 4,
+    "structures": 2,
+    "tracks": 0,
+    "structureTracks": 0,
+    "trackAt": null,
+    "ordnance": 0,
+    "wakeBubbles": 0,
+    "hits": 0,
+    "hitParticles": 0,
+    "plumeMotes": 24,
+    "workLightsLit": 1,
+    "sparks": 16,
+    "plumeAt": {
+      "x": 1820.6488037109375,
+      "z": 1450.8499755859375,
+      "depthM": 600
+    },
+    "ventPlumeAt": {
+      "x": 4357.840016028844,
+      "z": 2806.244862870779,
+      "depthM": 2486.404387606084
+    },
+    "hitAt": null,
+    "shots": 0,
+    "shotParticles": 0,
+    "recoiling": 0,
+    "shotAt": null,
+    "props": 430,
+    "propTris": 115802,
+    "ventPlumes": 34,
+    "fieldHazes": 7,
+    "landmarks": 0,
+    "landmarkTris": 0,
+    "siftMotes": 0,
+    "cloudMotes": 0,
+    "collapsing": false,
+    "landmarkLampsPx": [],
+    "modelBacked": 6,
+    "modelMeshes": 27,
+    "ownCentre": {
+      "x": 1378.4414672851562,
+      "z": 1416.808329264323
+    }
+  },
+  "frames": [
+    {
+      "name": "selected",
+      "file": "control-selected.png",
+      "tick": 4776
+    },
+    {
+      "name": "after-P",
+      "file": "control-after-P.png",
+      "tick": 4992
+    },
+    {
+      "name": "after-R",
+      "file": "control-after-R.png",
+      "tick": 5688
+    },
+    {
+      "name": "after-click",
+      "file": "control-after-click.png",
+      "tick": 6048
+    }
+  ],
+  "presses": [
+    {
+      "key": "P",
+      "sent": [
+        {
+          "tick": 4944,
+          "type": "ping",
+          "other": null
+        }
+      ]
+    },
+    {
+      "key": "R, then a click on the water",
+      "sent": [
+        {
+          "tick": 5880,
+          "type": "build",
+          "other": null
+        }
+      ]
+    }
+  ]
+}
