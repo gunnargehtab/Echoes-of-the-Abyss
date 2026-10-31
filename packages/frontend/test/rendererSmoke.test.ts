@@ -5351,6 +5351,40 @@ describe('renderer smoke test: the halo frame reading (#1001, development only)'
     assert.equal(probes.__perspectiveHaloOnly, undefined);
   });
 
+  it('leaves the drifting motes out of a frame for #1683’s escort pair, and only that frame', async () => {
+    type Probes = { __perspectiveMotes?: (drawn: boolean) => void };
+    const world = await boot();
+    try {
+      const probes = (globalThis as unknown as { window: Probes }).window;
+      assert.ok(probes.__perspectiveMotes);
+      // The snow is in every session's water, once the eye is under the
+      // surface. What a pass draws is what is visible while it draws.
+      const snow = (world.conn as unknown as { snow: { points: Points } }).snow.points;
+      const atDraw: boolean[] = [];
+      const render = world.gl.render.bind(world.gl);
+      world.gl.render = (scene, camera) => {
+        atDraw.push(snow.visible);
+        render(scene, camera);
+      };
+      world.conn.focusWorld(CELL_M * COLS * 0.5, CELL_M * COLS * 0.5, 600);
+      world.frame(2);
+      assert.ok(atDraw.length > 0 && atDraw.every(Boolean), 'the snow draws by default');
+      probes.__perspectiveMotes!(false);
+      atDraw.length = 0;
+      world.frame(1);
+      assert.ok(atDraw.length > 0 && !atDraw.some(Boolean), 'left out of every pass');
+      assert.ok(snow.visible, 'and shown again once drawn, for its own tick to judge');
+      probes.__perspectiveMotes!(true);
+      atDraw.length = 0;
+      world.frame(1);
+      assert.ok(atDraw.every(Boolean), 'drawn again');
+    } finally {
+      world.teardown();
+    }
+    const probes = (globalThis as unknown as { window: Probes }).window;
+    assert.equal(probes.__perspectiveMotes, undefined, 'the switch goes with the view');
+  });
+
   it('reads the seabed the view draws for the ridge case, and goes with the view', async () => {
     type Probes = { __perspectiveSeabedM?: (x: number, z: number) => number };
     const world = await boot();

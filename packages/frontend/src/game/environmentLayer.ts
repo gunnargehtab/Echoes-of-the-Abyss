@@ -37,6 +37,7 @@ import {
   MeshStandardMaterial,
   Quaternion,
   Vector3,
+  type Points,
 } from 'three';
 import type { PublicLandmark, ResourceNodeInfo } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
@@ -625,6 +626,16 @@ export class EnvironmentLayer {
     const c = new Color();
     mesh.getColorAt(0, c);
     return [c.r, c.g, c.b];
+  }
+
+  /**
+   * The drifting motes this layer draws: the sift, the cloud, the vent plumes
+   * and the field haze. A per-pixel pair of two sessions leaves them out,
+   * since they move between the two frames (PerspectiveView.ts
+   * `__perspectiveMotes`, #1683).
+   */
+  motes(): Points[] {
+    return [this.sift.points, this.cloud.points, this.plume.points, this.haze.points];
   }
 
   /** The landmark parts standing, for the study's per-material mask (archMask.ts). */

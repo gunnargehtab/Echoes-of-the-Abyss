@@ -1036,6 +1036,8 @@ export class PerspectiveView {
   private splitFrameWaiters: ((frame: SplitFramePixels | null) => void)[] = [];
   /** Development only: draw one entity's halo alone (`__perspectiveHaloOnly`). */
   private haloOnly: string | null = null;
+  /** Development only: leave the drifting motes out of the frame (`__perspectiveMotes`). */
+  private motesHidden = false;
   private queueTimer: GpuTimer | null = null;
   /** The station these three are measuring, or null before one is named. */
   private stationLabel: string | null = null;
@@ -1685,6 +1687,7 @@ export class PerspectiveView {
     delete (window as unknown as { __perspectiveGpuQueue?: unknown }).__perspectiveGpuQueue;
     delete (window as unknown as { __perspectiveHaloFrame?: unknown }).__perspectiveHaloFrame;
     delete (window as unknown as { __perspectiveHaloOnly?: unknown }).__perspectiveHaloOnly;
+    delete (window as unknown as { __perspectiveMotes?: unknown }).__perspectiveMotes;
     delete (window as unknown as { __perspectiveSeabedM?: unknown }).__perspectiveSeabedM;
     delete (window as unknown as { __archStudyPoints?: unknown }).__archStudyPoints;
     delete (window as unknown as { __archStudyMask?: unknown }).__archStudyMask;
@@ -4663,6 +4666,12 @@ export class PerspectiveView {
       this.connCost.add(performance.now() - now);
       return;
     }
+    // Each mote sets its own visibility in its tick, so the hidden ones are
+    // hidden after every tick and shown again once the frame is drawn.
+    const motes = this.motesHidden
+      ? [this.snow.points, ...this.environment.motes()].filter((points) => points.visible)
+      : [];
+    for (const points of motes) points.visible = false;
     // Every pass of the frame goes inside this bracket, so a pass added later
     // is timed with the rest (gate 6). Ended even if a pass throws: a query
     // left open would stop every later frame from starting its own.
@@ -4719,6 +4728,7 @@ export class PerspectiveView {
       if (this.splitFrameWaiters.length > 0) this.resolveSplitFrame(renderer, splitBefore);
     } finally {
       this.gpuTimer?.end();
+      for (const points of motes) points.visible = true;
     }
     this.framePasses = passes;
     this.connCost.add(performance.now() - now);
@@ -4855,6 +4865,14 @@ export class PerspectiveView {
       ).__perspectiveHaloOnly = (key: string | null) => {
         this.haloOnly = key;
       };
+      // Leave the drifting motes out (false) or draw them (true): the snow,
+      // the sift, the cloud, the vent plumes and the field haze move between
+      // two sessions' frames, so #1683's per-pixel escort pair reads without
+      // them. Every pass of the frame draws without them.
+      (window as unknown as { __perspectiveMotes?: (drawn: boolean) => void }).__perspectiveMotes =
+        (drawn: boolean) => {
+          this.motesHidden = !drawn;
+        };
       // The seabed's depth under a point, for #1001's ridge case: a capture
       // that finds a lamp hidden at the low camera has to tell relief from a
       // structure, and the map's ground is no hidden information.
