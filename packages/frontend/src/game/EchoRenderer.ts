@@ -54,6 +54,8 @@ import {
   EchoMarkKind,
   Faction,
   FACTION_STRUCTURE,
+  firesEnergy,
+  firingSigFor,
   FOLLOW_FLOOR,
   faunaStatsFor,
   HarvestIdleReason,
@@ -964,6 +966,13 @@ interface BarButton {
    * first; `YIELD.CORE` when absent.
    */
   yieldRank?: number;
+  /**
+   * A second line under the label: what pressing costs that is not a
+   * resource, as `+25 SIG` on ENGAGE (docs/ui-ux.md §9, "What a shot costs").
+   */
+  price?: string;
+  /** Wear the player's doctrine mark beside `price` (§12.5) — the Knights' shot. */
+  priceMark?: boolean;
 }
 
 /**
@@ -1585,6 +1594,8 @@ export class EchoRenderer {
   private readonly barGraphics = new Graphics();
   /** Pooled Text objects for bar labels — button count varies per context. */
   private readonly barTexts: Text[] = [];
+  /** The cells' second lines, pooled like `barTexts`. */
+  private readonly barPriceTexts: Text[] = [];
   /** One pooled header label per console block — see `blockTitle`. */
   private readonly blockTitles: Text[] = [];
   /** Two pooled labels per production row: what it is making, and how long. */
@@ -3815,6 +3826,16 @@ export class EchoRenderer {
         // strike weapons, and the button greyed under every one of them with
         // nothing to say when pressed — the silent drop §7 forbids (#989).
         label: 'ENGAGE',
+        // What a shot costs in loudness (§9): the selection's loudest, since
+        // the meter reads the loudest hull, through the burst combat charges.
+        price: fighters
+          ? `+${Math.max(
+              ...units
+                .filter(fights)
+                .map((u) => firingSigFor(this.faction, statsFor(u.kind).sigFiringBurst))
+            )} SIG`
+          : undefined,
+        priceMark: fighters && firesEnergy(this.faction),
         enabled: fighters && heldAll === null && this.missionLock('weapons') === null,
         active: this.pendingAttackMove,
         refusal: heldAll ?? this.missionLock('weapons') ?? undefined,
@@ -4276,6 +4297,20 @@ export class EchoRenderer {
     return text;
   }
 
+  private barPriceText(index: number): Text {
+    let text = this.barPriceTexts[index];
+    if (text === undefined) {
+      text = new Text({
+        text: '',
+        style: { fontFamily: FONT_DATA, fontSize: 10, fill: UI.textDim },
+      });
+      text.anchor.set(0.5);
+      this.barPriceTexts.push(text);
+      this.hud.addChild(text);
+    }
+    return text;
+  }
+
   private drawCommandBar(): void {
     const g = this.barGraphics;
     g.clear();
@@ -4453,10 +4488,23 @@ export class EchoRenderer {
       text.visible = true;
       text.text = button.label;
       text.style.fill = button.enabled ? UI.text : UI.textDim;
-      text.position.set(button.x + button.w / 2, button.y + button.h / 2);
+      // A priced cell shares its height between the label and the price.
+      const lift = button.price === undefined ? 0 : 8;
+      text.position.set(button.x + button.w / 2, button.y + button.h / 2 - lift);
+      const price = this.barPriceText(i);
+      price.visible = button.price !== undefined;
+      if (button.price !== undefined) {
+        price.text = button.price;
+        price.alpha = alpha;
+        price.position.set(button.x + button.w / 2, button.y + button.h / 2 + lift);
+        if (button.priceMark === true) this.drawDoctrineMark(g, price, button.price);
+      }
     });
     for (let i = this.barButtons.length; i < this.barTexts.length; i++) {
       this.barTexts[i]!.visible = false;
+    }
+    for (let i = this.barButtons.length; i < this.barPriceTexts.length; i++) {
+      this.barPriceTexts[i]!.visible = false;
     }
   }
 
@@ -9964,7 +10012,10 @@ export class EchoRenderer {
     const after = at + token.length;
     if ([after, after + 1].some((i) => i < text.length && text[i] !== ' ')) return;
     const charW = line.width / text.length;
-    const end = line.x + charW * after;
+    // Measured from the line's left edge, wherever its anchor puts it: the
+    // card's lines hang from their left, a command cell's price from its centre.
+    const left = line.x - line.anchor.x * line.width;
+    const end = left + charW * after;
     // Sized to the line's own type rather than to the world view's
     // GLYPH_MIN_PX: that floor keeps a glyph legible under a pulled-back
     // camera, and a card's type does not zoom. At the floor the mark filled
@@ -9976,7 +10027,7 @@ export class EchoRenderer {
       g,
       this.faction,
       end + charW * 0.5 + size,
-      line.y + line.height / 2,
+      line.y + (0.5 - line.anchor.y) * line.height,
       size,
       FACTION_PALETTE[this.faction].consoleAccent,
       1,

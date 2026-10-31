@@ -6538,6 +6538,101 @@ describe('doctrine marks (docs/ui-ux.md §12.5)', () => {
     }
   });
 
+  /**
+   * The canned match as `faction`, with `ids` clicked on the conn view the way
+   * a player selects them, shift adding — the click is what opens the SQUAD
+   * page the ENGAGE cell lives on, and a bare `selected.add` never does.
+   */
+  async function selecting(faction: Faction, ids: number[]): Promise<Booted> {
+    const world = await boot();
+    world.chart.setIdentity(0, faction);
+    world.frame(2);
+    ids.forEach((id, i) => {
+      const unit = cannedSnapshot().units.find((u) => u.id === id)!;
+      world.chart.focusOn(unit.x, unit.y);
+      world.frame(2);
+      const at = world.conn.projectPoint(unit.x, unit.y, unit.depth);
+      assert.ok(at.visible, `the camera is looking at hull ${id}`);
+      for (const type of ['pointerdown', 'pointerup']) {
+        world.app.canvas.dispatch(type, {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x,
+          clientY: at.y,
+          shiftKey: i > 0,
+        });
+      }
+      world.frame(1);
+    });
+    assert.deepEqual([...chartOf(world).selected].sort(), [...ids].sort(), 'the premise');
+    world.frame(2);
+    return world;
+  }
+
+  type Bar = {
+    barButtons: Array<{ label: string; price?: string; x: number; w: number }>;
+    barGraphics: Graphics;
+    barPriceTexts: Text[];
+  };
+  const barOf = (world: Booted) => world.chart as unknown as Bar;
+  const engage = (world: Booted) => barOf(world).barButtons.find((b) => b.label === 'ENGAGE');
+
+  it('prices ENGAGE in loudness: the loudest shot in the selection (§9)', async () => {
+    for (const [ids, price] of [
+      [[11], '+25 SIG'],
+      [[12], '+15 SIG'],
+      [[11, 12], '+25 SIG'],
+      [[13], undefined],
+    ] as const) {
+      const world = await selecting(Faction.Bathyarch, [...ids]);
+      try {
+        assert.equal(engage(world)?.price, price, `selection ${ids.join(', ')}`);
+        const shown = barOf(world)
+          .barPriceTexts.filter((t) => t.visible)
+          .map((t) => t.text);
+        assert.deepEqual(shown, price === undefined ? [] : [price], 'only ENGAGE prints one');
+      } finally {
+        world.teardown();
+      }
+    }
+  });
+
+  it("marks the Knights' +10 beside the price, inside its cell, and no one else's", async () => {
+    const strokesIn = (world: Booted, color: number) =>
+      barOf(world).barGraphics.context.instructions.filter(
+        (instruction) =>
+          instruction.action === 'stroke' &&
+          (instruction.data.style as { color: number }).color === color
+      );
+    const knights = await selecting(Faction.Hadron, [11]);
+    try {
+      const cell = engage(knights)!;
+      assert.equal(cell.price, '+10 SIG', 'the energy shot');
+      const price = barOf(knights).barPriceTexts.find((t) => t.visible)!;
+      const priceEnd = price.x + price.width / 2;
+      const marks = strokesIn(knights, accentOf(Faction.Hadron));
+      assert.ok(marks.length > 0, "the Knights' price wears its mark");
+      for (const mark of marks) {
+        const box = (mark.data as { path: GraphicsPath }).path.bounds;
+        assert.ok(box.minX >= priceEnd, `past the price (${box.minX} < ${priceEnd})`);
+        assert.ok(box.maxX <= cell.x + cell.w, 'inside the cell');
+      }
+    } finally {
+      knights.teardown();
+    }
+    const consortium = await selecting(Faction.Bathyarch, [11]);
+    try {
+      assert.equal(
+        strokesIn(consortium, accentOf(Faction.Bathyarch)).length,
+        0,
+        'kinetic: no mark'
+      );
+    } finally {
+      consortium.teardown();
+    }
+  });
+
   it("waits on the SOUR line, rather than marking the Lid's depth or the separator", async () => {
     // `SOUR — BLEEDING at 50m · dive below 150m`: the hull's `50m` has a `·`
     // a cell after it, so there is no room, and the `50m` at the tail of the

@@ -765,6 +765,16 @@ are — and a launch was never on the card anyway, being `Ctrl` + right-click on
 move is what made a torpedo hull's squad page fit its twelve, with the deselect the only thing
 yielding. Since Dive, Rise and Follow left the page (#1132) it fits with two cells to spare.
 
+### What a shot costs
+
+`ENGAGE` carries its price as a second line, as a production button carries its own: not in
+nodules but in loudness, `+25 SIG`. Firing is a trade of sound for damage, and §7's rule is that
+a trade's cost is legible at the moment it is made. The figure is the selection's loudest shot,
+because the meter reads the loudest hull (§3), and it is read through the same `firingSigFor`
+combat charges, so the cell and the burst cannot disagree. A selection with nothing that fights
+prints no price, the cell being greyed already. The Knights' energy shot is `+10 SIG`, and it
+wears their doctrine mark (§12.5).
+
 ---
 
 ## 9.5 The Esc Menu
@@ -1321,7 +1331,7 @@ loud, go silent, go shallow, fire.
 | Consortium | The Klaxon: +12% damage while the hull's SIG is over 60 | Beside the selection's SIG | While that SIG reads over 60 |
 | Commune | Silent Running costs −20% speed, not −45% | Beside §7's speed penalty | While silent |
 | Directorate | Above 400 m: −20% speed, and the hull bleeds to 85% | Beside the selection's depth | While above 400 m |
-| Knights | A shot is +10 SIG, not a kinetic +25 | Beside a weapon cell's SIG price | Always |
+| Knights | A shot is +10 SIG, not a kinetic +25 | Beside `ENGAGE`'s SIG price (§9) | Always |
 
 A **doctrine mark** is the navy's glyph, drawn in its console accent at the size of the
 line's own type ([style-neon-noir.md](style-neon-noir.md), "Console accent"), half a
@@ -1339,8 +1349,8 @@ Three rules bound it:
 - **Dress, not layout.** No panel moves and no meter changes shape. A mark sits in the
   space beside a value the console already prints, or it waits.
 
-One mark waits. No weapon cell prints a SIG price yet, so the Knights' mark has nothing to
-stand beside until one does.
+`ENGAGE` prints a shot's price in loudness (§9, "What a shot costs"), and the Knights' mark
+stands beside it.
 
 ---
 
@@ -1384,7 +1394,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | The esc menu | Implemented (§9.5, #187) — settings and the rebinder open over a live match; leaving is armed |
 | Attention on the scope | Implemented (§5, #206, #209) — exposure wedge, under-fire pulse, idle marker, each with its audio half and its reduced-motion equivalent |
 | Faction glyphs | Implemented (§12.5, #207) — one glyph per navy beside the mark's ink at Tier 3 and Tier 4, in the world view; the scope names no faction, so it owes none |
-| Doctrine marks (§12.5) | Partly implemented — `FactionInk.consoleAccent` carries each navy's accent in all four palettes, held to the style guide's floors by `palette.test.ts`. The selection and command rules take it, and the selection card draws the Consortium's mark beside SIG over 60 and the Directorate's beside a depth above 400 m, through the same `damageMultiplierFor` and `inDirectorateShallows` the server reads; `rendererSmoke.test.ts` ("doctrine marks") holds both. On the SOUR line the Directorate's mark waits, because the `·` after the depth leaves it no room. The card prints §7's speed penalty while a hull runs silent, through the `silentSpeedMultiplierFor` movement reads, on a third line of its own, and the Commune's `SPEED −20%` wears its mark. The Knights' mark waits on a weapon cell's SIG price, which the client does not print |
+| Doctrine marks (§12.5) | Implemented — `FactionInk.consoleAccent` carries each navy's accent in all four palettes, held to the style guide's floors by `palette.test.ts`. The selection and command rules take it. The selection card draws the Consortium's mark beside SIG over 60 and the Directorate's beside a depth above 400 m, through the same `damageMultiplierFor` and `inDirectorateShallows` the server reads; on the SOUR line the Directorate's waits, because the `·` after the depth leaves it no room. The card prints §7's speed penalty while a hull runs silent, through the `silentSpeedMultiplierFor` movement reads, on a third line of its own, and the Commune's `SPEED −20%` wears its mark. `ENGAGE` prints the selection's loudest shot through `firingSigFor`, and the Knights' `+10 SIG` wears theirs (`firesEnergy`). `rendererSmoke.test.ts` ("doctrine marks") holds all four |
 | The match clock | Implemented (#208) — the log's T+ axis live in the top strip, from the server tick both share |
 | Own-force log rows | Implemented (§10, #206, #209, #623) — `you were pinged`, `under fire`, `idle — mined out`, `went loud` |
 | The passive exposure record (§10) | Implemented (#623) — an edge detector on the server-sent `ExposureReport` writes a row each time the best tier anyone holds on the player settles on a new value, in both directions: `you were heard`, `they have your bearing`, `they have you classified`, `they have you tracked`, `they lost you`. Under the `---` tier and carrying no bearing, range or focus, because the report is a tier and a count and a row that pointed anywhere would be inventing a listener. A tier has to hold for `PERSISTENCE.EXPOSURE_SETTLE_S` before the log claims it — the pass recomputes it at 5 Hz, and a hull parked on a detection threshold would otherwise write ten rows a second saying nothing |

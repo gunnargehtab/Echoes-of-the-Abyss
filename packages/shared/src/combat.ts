@@ -35,9 +35,19 @@ export function damageMultiplierFor(faction: Faction, sig: number): number {
  * the two classes as different weapons, not as a discount on one.
  */
 export function firingSigFor(faction: Faction, hullFiringSig: number): number {
-  return faction === FACTION_COMBAT.ENERGY.FACTION
-    ? FACTION_COMBAT.ENERGY.FIRING_SIG
-    : hullFiringSig;
+  return firesEnergy(faction) ? FACTION_COMBAT.ENERGY.FIRING_SIG : hullFiringSig;
+}
+
+/**
+ * Whether this faction's guns are the quiet, energy class — the Knights'
+ * doctrine, and the condition their doctrine mark is drawn on beside a shot's
+ * price (docs/ui-ux.md §12.5). Always true for them, whatever the hull: the
+ * Order's own hulls already carry the 10 in their stat line, so "differs from
+ * the hull's figure" would never light the mark on the hulls that are most
+ * theirs.
+ */
+export function firesEnergy(faction: Faction): boolean {
+  return faction === FACTION_COMBAT.ENERGY.FACTION;
 }
 
 /** Seeker sensitivity for a torpedo launched by this faction. */
