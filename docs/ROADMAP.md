@@ -886,6 +886,9 @@ and no row below is open.
 | The orders panel covering the depth ribbon's readout | [#1668](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1668) |
 | A marker-name test that failed once in CI | [#1681](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1681) |
 | A shared test's backend path breaking on Windows | [#1687](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1687) |
+| The overlay's cost at a close camera, worse with a hull selected | [#1692](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1692) |
+| A resumed mission drawing the skirmish economy for two seconds | [#1693](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1693) |
+| The clock and unit count before a room's first snapshot | [#1697](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1697) |
 
 **Store art**
 
