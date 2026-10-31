@@ -1,0 +1,162 @@
+{
+  "tag": "gpu-dpr1.5-r1-L",
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "software": false,
+  "unpaced": true,
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "dpr": 1.5
+  },
+  "url": "http://localhost:5173/?arch-study=1",
+  "gain": 9,
+  "order": [
+    "on",
+    "bounce-off",
+    "grade-off",
+    "both-off",
+    "both-off",
+    "grade-off",
+    "bounce-off",
+    "on"
+  ],
+  "stations": [
+    {
+      "name": "L",
+      "from": 1284,
+      "file": "D:\\Claude\\.dev-loop\\gpu1683\\gpu-dpr1.5-r1-L/03-gpu-dpr1.5-r1-L-L.png",
+      "steps": 12000,
+      "unqueued": {
+        "gpuMs": 2.48,
+        "frameMs": 2.65,
+        "drawCalls": 54,
+        "triangles": 115624
+      },
+      "means": {
+        "on": 2.3049999999999997,
+        "bounce-off": 2.33,
+        "grade-off": 2.3049999999999997,
+        "both-off": 2.2699999999999996
+      },
+      "cost": {
+        "bounce": -0.025000000000000355,
+        "grade": 0,
+        "both": 0.03500000000000014
+      },
+      "readings": [
+        {
+          "setting": "on",
+          "tick": 4164,
+          "gpuMs": 2.32,
+          "worstGpuMs": 2.8,
+          "gpuDropped": 0,
+          "loadMs": 3.88,
+          "loadDropped": 0,
+          "frameMs": 6.57,
+          "connMs": 0.87,
+          "drawCalls": 54,
+          "triangles": 115624,
+          "landmarkTris": 2626
+        },
+        {
+          "setting": "bounce-off",
+          "tick": 6828,
+          "gpuMs": 2.38,
+          "worstGpuMs": 3.04,
+          "gpuDropped": 0,
+          "loadMs": 3.87,
+          "loadDropped": 0,
+          "frameMs": 6.71,
+          "connMs": 0.83,
+          "drawCalls": 54,
+          "triangles": 115624,
+          "landmarkTris": 2626
+        },
+        {
+          "setting": "grade-off",
+          "tick": 9492,
+          "gpuMs": 2.34,
+          "worstGpuMs": 3.11,
+          "gpuDropped": 0,
+          "loadMs": 3.9,
+          "loadDropped": 0,
+          "frameMs": 6.76,
+          "connMs": 0.76,
+          "drawCalls": 54,
+          "triangles": 115624,
+          "landmarkTris": 2626
+        },
+        {
+          "setting": "both-off",
+          "tick": 12396,
+          "gpuMs": 2.28,
+          "worstGpuMs": 2.95,
+          "gpuDropped": 0,
+          "loadMs": 4.04,
+          "loadDropped": 0,
+          "frameMs": 6.62,
+          "connMs": 0.85,
+          "drawCalls": 54,
+          "triangles": 115624,
+          "landmarkTris": 2626
+        },
+        {
+          "setting": "both-off",
+          "tick": 15252,
+          "gpuMs": 2.26,
+          "worstGpuMs": 3.02,
+          "gpuDropped": 0,
+          "loadMs": 4.12,
+          "loadDropped": 0,
+          "frameMs": 6.71,
+          "connMs": 4.48,
+          "drawCalls": 65,
+          "triangles": 129376,
+          "landmarkTris": 2626
+        },
+        {
+          "setting": "grade-off",
+          "tick": 18036,
+          "gpuMs": 2.27,
+          "worstGpuMs": 3.43,
+          "gpuDropped": 0,
+          "loadMs": 4.13,
+          "loadDropped": 0,
+          "frameMs": 6.61,
+          "connMs": 4.02,
+          "drawCalls": 65,
+          "triangles": 129376,
+          "landmarkTris": 2626
+        },
+        {
+          "setting": "bounce-off",
+          "tick": 20820,
+          "gpuMs": 2.28,
+          "worstGpuMs": 3.06,
+          "gpuDropped": 0,
+          "loadMs": 4.14,
+          "loadDropped": 0,
+          "frameMs": 6.97,
+          "connMs": 3.81,
+          "drawCalls": 65,
+          "triangles": 129376,
+          "landmarkTris": 2626
+        },
+        {
+          "setting": "on",
+          "tick": 23628,
+          "gpuMs": 2.29,
+          "worstGpuMs": 2.93,
+          "gpuDropped": 0,
+          "loadMs": 4.12,
+          "loadDropped": 0,
+          "frameMs": 7.08,
+          "connMs": 4.59,
+          "drawCalls": 65,
+          "triangles": 129376,
+          "landmarkTris": 2626
+        }
+      ]
+    }
+  ]
+}

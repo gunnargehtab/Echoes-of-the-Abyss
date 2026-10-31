@@ -64,6 +64,7 @@ import {
   LAMP_COUNT,
   lampLevels,
   LIGHT_BUCKET_MS,
+  setCourtBounceCompiled,
 } from './landmarkLight.ts';
 import { CollapseCloud, LandmarkSift, SIFT_SITE_CAP, type SiftSite } from './landmarkSift.ts';
 import type { LandmarkState } from '@echoes/shared';
@@ -588,6 +589,12 @@ export class EnvironmentLayer {
       template.uniforms.uPoolCount.value =
         stand.state === 'intact' && this.switches.pools ? lampCount(template.states.intact) : 0;
       bounceIrradiance(this.switches.bounce, template.uniforms.uBounce.value);
+      // Gain 0 compiles the term out, so §11's GPU reading times its cost.
+      for (const state of [template.states.intact, template.states.ruined]) {
+        for (const { material } of state.parts) {
+          setCourtBounceCompiled(material, this.switches.bounce > 0);
+        }
+      }
     }
     this.lampBucket = -1;
     return { ...this.switches };

@@ -1,0 +1,100 @@
+{
+  "tag": "gpu-dpr1-r2-C-grade-off",
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "software": false,
+  "unpaced": true,
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "dpr": 1
+  },
+  "url": "http://localhost:5173/?arch-study=1",
+  "gain": 9,
+  "order": [
+    "on",
+    "grade-off",
+    "grade-off",
+    "on"
+  ],
+  "stations": [
+    {
+      "name": "C",
+      "from": 1248,
+      "file": "D:\\Claude\\.dev-loop\\gpu1683\\gpu-dpr1-r2-C-grade-off/03-gpu-dpr1-r2-C-grade-off-C.png",
+      "steps": 40000,
+      "unqueued": {
+        "gpuMs": 2.05,
+        "frameMs": 9.98,
+        "drawCalls": 36,
+        "triangles": 106341
+      },
+      "means": {
+        "on": 1.0350000000000001,
+        "grade-off": 1.0550000000000002
+      },
+      "cost": {
+        "bounce": null,
+        "grade": -0.020000000000000018,
+        "both": null
+      },
+      "readings": [
+        {
+          "setting": "on",
+          "tick": 6288,
+          "gpuMs": 1.05,
+          "worstGpuMs": 1.81,
+          "gpuDropped": 0,
+          "loadMs": 12.91,
+          "loadDropped": 0,
+          "frameMs": 14.2,
+          "connMs": 0.66,
+          "drawCalls": 36,
+          "triangles": 106341,
+          "landmarkTris": 2626
+        },
+        {
+          "setting": "grade-off",
+          "tick": 10308,
+          "gpuMs": 1.1,
+          "worstGpuMs": 1.83,
+          "gpuDropped": 0,
+          "loadMs": 12.88,
+          "loadDropped": 0,
+          "frameMs": 14.21,
+          "connMs": 0.64,
+          "drawCalls": 36,
+          "triangles": 106341,
+          "landmarkTris": 2626
+        },
+        {
+          "setting": "grade-off",
+          "tick": 15852,
+          "gpuMs": 1.01,
+          "worstGpuMs": 1.7,
+          "gpuDropped": 0,
+          "loadMs": 13.22,
+          "loadDropped": 0,
+          "frameMs": 14.67,
+          "connMs": 0.66,
+          "drawCalls": 36,
+          "triangles": 112101,
+          "landmarkTris": 2626
+        },
+        {
+          "setting": "on",
+          "tick": 21552,
+          "gpuMs": 1.02,
+          "worstGpuMs": 1.89,
+          "gpuDropped": 0,
+          "loadMs": 13.2,
+          "loadDropped": 0,
+          "frameMs": 14.69,
+          "connMs": 0.65,
+          "drawCalls": 36,
+          "triangles": 112101,
+          "landmarkTris": 2626
+        }
+      ]
+    }
+  ]
+}

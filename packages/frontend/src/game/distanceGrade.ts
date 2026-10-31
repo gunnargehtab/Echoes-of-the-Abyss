@@ -42,10 +42,27 @@ export const gradeUniforms = {
 /**
  * The harness's switch (environmentLayer.ts `setStudySwitches`): §11 reads GPU
  * time with the grade on and off, and #1683 reads its share of H's darkness.
+ * Off compiles the grade out of every graded material, not just its amount to
+ * 0, so the GPU reading times the code and not a zeroed uniform.
  */
 let gradeOn = true;
+/** The define the grade compiles under. */
+const GRADE_DEFINE = 'ARCH_GRADE';
+/** Every material `installDistanceGrade` patched and not yet disposed. */
+const graded = new Set<Material>();
+
+function compileGrade(material: Material): void {
+  const defines = (material.defines ??= {});
+  if (GRADE_DEFINE in defines === gradeOn) return;
+  if (gradeOn) defines[GRADE_DEFINE] = '';
+  else delete defines[GRADE_DEFINE];
+  material.needsUpdate = true;
+}
+
 export function setDistanceGradeOn(on: boolean): void {
+  if (on === gradeOn) return;
   gradeOn = on;
+  for (const material of graded) compileGrade(material);
 }
 
 /** Settle the grade for this frame's dolly and water setting. */
@@ -89,7 +106,7 @@ export function installDistanceGrade(material: Material): void {
       .replace('#include <common>', '#include <common>\nvarying float vGradeRange;')
       .replace(
         '#include <fog_vertex>',
-        '#include <fog_vertex>\nvGradeRange = length( mvPosition.xyz );'
+        `#include <fog_vertex>\n#ifdef ${GRADE_DEFINE}\nvGradeRange = length( mvPosition.xyz );\n#endif`
       );
     // Survey ink is drawn inside the ground's own fragment (surveyInk.ts),
     // before the fog, and the grade never reaches it: the ink's weight at
@@ -109,7 +126,7 @@ varying float vGradeRange;`
       .replace(
         '#include <fog_fragment>',
         `#include <fog_fragment>
-#ifdef USE_FOG
+#if defined( USE_FOG ) && defined( ${GRADE_DEFINE} )
 {
 	float gradeExtra = uGradeAmount * ( 1.0 - gradeInk ) * clamp( ( vGradeRange - uGradeFocusM ) / uGradeReachM, 0.0, 1.0 );
 	float gradeLeft = 1.0 - fogFactor;
@@ -127,6 +144,9 @@ varying float vGradeRange;`
   };
   material.customProgramCacheKey = () => `${previousKey}:${KEY}`;
   material.needsUpdate = true;
+  graded.add(material);
+  material.addEventListener('dispose', () => graded.delete(material));
+  compileGrade(material);
 }
 
 /** Whether `installDistanceGrade` patched this material, as the key says. */
