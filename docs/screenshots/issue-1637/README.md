@@ -159,3 +159,8 @@ and are listed in the pull request's open findings.
 The palettes, the stations at 1920 × 1080 with the quartet at T+00:30 and L and S paired at
 the same second, and the transit pair at H's pose are retaken in
 [issue-1674](../issue-1674/README.md). GPU time is still the desktop GPU's.
+
+## The refusals, under #1695
+
+§9's demonstration of sonar and construction refusal, with the hint bar's reasons and the
+room's socket logged, is in [issue-1695](../issue-1695/README.md).
