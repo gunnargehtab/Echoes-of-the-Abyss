@@ -1641,6 +1641,8 @@ export class EchoRenderer {
   private infoName!: Text;
   private infoLine1!: Text;
   private infoLine2!: Text;
+  /** §7's speed penalty while silent: a line of its own, see `drawInfoPanel`. */
+  private infoLine3!: Text;
   private infoBadge!: Text;
 
   private sigLabel!: Text;
@@ -2391,6 +2393,7 @@ export class EchoRenderer {
     });
     this.infoLine1 = new Text({ text: '', style: { ...mono, fontSize: 12, fill: UI.textDim } });
     this.infoLine2 = new Text({ text: '', style: { ...mono, fontSize: 12, fill: UI.textDim } });
+    this.infoLine3 = new Text({ text: '', style: { ...mono, fontSize: 12, fill: UI.textDim } });
     this.infoBadge = new Text({ text: '', style: { ...mono, fontSize: 10, fill: UI.textDim } });
     this.infoBadge.anchor.set(0.5);
 
@@ -2451,6 +2454,7 @@ export class EchoRenderer {
       this.infoName,
       this.infoLine1,
       this.infoLine2,
+      this.infoLine3,
       this.infoBadge,
       this.ribbonReadout,
       this.ductLabel,
@@ -9719,6 +9723,7 @@ export class EchoRenderer {
       this.infoName.visible = false;
       this.infoLine1.visible = false;
       this.infoLine2.visible = false;
+      this.infoLine3.visible = false;
       this.infoBadge.visible = false;
       return;
     }
@@ -9732,6 +9737,7 @@ export class EchoRenderer {
       this.infoName.visible = false;
       this.infoLine1.visible = false;
       this.infoLine2.visible = false;
+      this.infoLine3.visible = false;
       this.infoBadge.visible = false;
       return;
     }
@@ -9776,27 +9782,10 @@ export class EchoRenderer {
     // a number about this hull, not an order, and the card's twelve cells are
     // for orders the pointer gives.
     const aboard = unit?.torpedoes;
-    // §7's live speed penalty, while the hull runs silent: what Silent Running
-    // costs it, printed where the trade is made. Not with the engine off — a
-    // hull under no power is not moving, and a penalty on nothing misleads.
-    // On this line rather than the next because its three-space gaps leave a
-    // doctrine mark room; the next line's ` · ` does not.
-    const silentKeeps =
-      unit?.silentRunning === true && unit.engineOff !== true
-        ? silentSpeedMultiplierFor(this.faction)
-        : undefined;
-    const penalty = silentKeeps === undefined ? '' : `SPD −${Math.round((1 - silentKeeps) * 100)}%`;
     this.infoLine1.text =
       `HULL ${any.hp.toFixed(0)}/${any.maxHp.toFixed(0)}   SIG ${any.sig.toFixed(0)}` +
-      (penalty === '' ? '' : `   ${penalty}`) +
       (aboard === undefined ? '' : `   TORP ${aboard.toFixed(0)}`);
     this.infoLine1.position.set(x + 12, y + 48);
-    // The Commune's doctrine mark (§12.5): beside the penalty while it is not
-    // the general case, which for now means the Commune's −20% against
-    // everybody else's −45%.
-    if (silentKeeps !== undefined && silentKeeps !== SILENT_RUNNING.SPEED_MULTIPLIER) {
-      this.drawDoctrineMark(g, this.infoLine1, penalty);
-    }
     // The Klaxon's doctrine mark (docs/ui-ux.md §12.5): lit while this SIG is
     // one the Consortium's doctrine pays for. Read through the function combat
     // multiplies by, so the mark and the +12% cannot disagree about where the
@@ -9927,6 +9916,27 @@ export class EchoRenderer {
     // is in the water that poisons it, on the same test movement slows it by.
     if (unit !== undefined && printsDepth && inDirectorateShallows(this.faction, unit.depth)) {
       this.drawDoctrineMark(g, this.infoLine2, `${unit.depth.toFixed(0)}m`);
+    }
+
+    // §7's live speed penalty, while the hull runs silent: what Silent Running
+    // costs it, printed where the trade is made, whatever the line above says.
+    // A line of its own because neither line above has room: the first at
+    // 41 characters overran a 300 px card in Chromium's data face, and the
+    // second's ` · ` leaves a doctrine mark none. Not with the engine off — a
+    // hull under no power is not moving, and a penalty on nothing misleads.
+    const silentKeeps =
+      unit?.silentRunning === true && unit.engineOff !== true
+        ? silentSpeedMultiplierFor(this.faction)
+        : undefined;
+    this.infoLine3.visible = silentKeeps !== undefined;
+    if (silentKeeps !== undefined) {
+      this.infoLine3.text = `SPEED −${Math.round((1 - silentKeeps) * 100)}%`;
+      this.infoLine3.position.set(x + 12, y + 88);
+      // The Commune's doctrine mark (§12.5): beside the penalty while it is
+      // not the general case — the Commune's −20% against everybody's −45%.
+      if (silentKeeps !== SILENT_RUNNING.SPEED_MULTIPLIER) {
+        this.drawDoctrineMark(g, this.infoLine3, this.infoLine3.text);
+      }
     }
   }
 

@@ -6491,35 +6491,36 @@ describe('doctrine marks (docs/ui-ux.md §12.5)', () => {
   });
 
   it("prints Silent Running's speed penalty, and marks the Commune's alone", async () => {
-    // docs/ui-ux.md §7: the live penalty as a number, the Commune's the same
-    // number with its mark. SIG 8 keeps the Klaxon out of the reading.
-    const line = (world: Booted) => (world.chart as unknown as { infoLine1: Text }).infoLine1;
+    // docs/ui-ux.md §7: the live penalty as a number on a line of its own, the
+    // Commune's the same number with its mark. SIG 8 keeps the Klaxon out.
+    type Card = { infoLine1: Text; infoLine3: Text };
+    const card = (world: Booted) => world.chart as unknown as Card;
     const commune = await selected(Faction.Pelagia, { silentRunning: true, sig: 8 });
     try {
-      const text = line(commune).text;
-      assert.ok(text.includes('SPD −20%'), `the Commune pays −20%: ${text}`);
-      const cell = line(commune).width / text.length;
-      const penaltyEnd = line(commune).x + cell * (text.indexOf('SPD −20%') + 'SPD −20%'.length);
-      const torp = line(commune).x + cell * text.indexOf('TORP');
+      const line = card(commune).infoLine3;
+      assert.ok(line.visible && line.text === 'SPEED −20%', `the Commune pays −20%: ${line.text}`);
+      assert.ok(!card(commune).infoLine1.text.includes('SPEED'), 'the first line keeps its room');
+      const end = line.x + line.width;
       const marks = marksIn(commune, accentOf(Faction.Pelagia));
       assert.ok(marks.length > 0, 'the Commune penalty wears its mark');
       for (const mark of marks) {
         const box = (mark.data as { path: GraphicsPath }).path.bounds;
-        assert.ok(box.minX >= penaltyEnd && box.maxX <= torp, 'between the penalty and TORP');
+        assert.ok(box.minX >= end, `the mark stands past the penalty (${box.minX} < ${end})`);
+        assert.ok(box.maxY >= line.y && box.minY <= line.y + line.height, 'on the line it marks');
       }
     } finally {
       commune.teardown();
     }
     const consortium = await selected(Faction.Bathyarch, { silentRunning: true, sig: 8 });
     try {
-      assert.ok(line(consortium).text.includes('SPD −45%'), 'everybody else pays −45%');
+      assert.equal(card(consortium).infoLine3.text, 'SPEED −45%', 'everybody else pays −45%');
       assert.equal(marksIn(consortium, accentOf(Faction.Bathyarch)).length, 0, 'unbent: no mark');
     } finally {
       consortium.teardown();
     }
     const loud = await selected(Faction.Pelagia, { silentRunning: false, sig: 30 });
     try {
-      assert.ok(!line(loud).text.includes('SPD'), 'no penalty while not silent');
+      assert.equal(card(loud).infoLine3.visible, false, 'no penalty while not silent');
       assert.equal(marksIn(loud, accentOf(Faction.Pelagia)).length, 0);
     } finally {
       loud.teardown();
@@ -6529,8 +6530,8 @@ describe('doctrine marks (docs/ui-ux.md §12.5)', () => {
   it('prints no speed penalty for a hull with its engine off', async () => {
     const world = await selected(Faction.Pelagia, { silentRunning: true, engineOff: true, sig: 4 });
     try {
-      const text = (world.chart as unknown as { infoLine1: Text }).infoLine1.text;
-      assert.ok(!text.includes('SPD'), `an engine-off hull is not moving: ${text}`);
+      const line = (world.chart as unknown as { infoLine3: Text }).infoLine3;
+      assert.equal(line.visible, false, `an engine-off hull is not moving: ${line.text}`);
       assert.equal(marksIn(world, accentOf(Faction.Pelagia)).length, 0);
     } finally {
       world.teardown();
