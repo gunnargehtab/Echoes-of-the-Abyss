@@ -1,0 +1,81 @@
+{
+  "on": "e-C-on",
+  "off": "e-C-off",
+  "ticks": [
+    1800,
+    1800
+  ],
+  "motes": [
+    false,
+    false
+  ],
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "units": [
+    {
+      "ids": [
+        52,
+        69
+      ],
+      "name": "Light Scout",
+      "restSig": [
+        6,
+        6
+      ],
+      "box": [
+        230,
+        486,
+        472,
+        633
+      ],
+      "hullPixels": 4425,
+      "hullPixelsInBoth": 4425,
+      "changed": 337,
+      "changedInBoth": 337,
+      "maxDiff": 23
+    },
+    {
+      "ids": [
+        54,
+        71
+      ],
+      "name": "Light Scout",
+      "restSig": [
+        6,
+        6
+      ],
+      "box": [
+        1294,
+        803,
+        1622,
+        1034
+      ],
+      "hullPixels": 9853,
+      "hullPixelsInBoth": 9847,
+      "changed": 647,
+      "changedInBoth": 645,
+      "maxDiff": 54
+    },
+    {
+      "ids": [
+        55,
+        72
+      ],
+      "name": "Light Scout",
+      "restSig": [
+        6,
+        6
+      ],
+      "box": [
+        559,
+        746,
+        860,
+        960
+      ],
+      "hullPixels": 8118,
+      "hullPixelsInBoth": 8114,
+      "changed": 593,
+      "changedInBoth": 593,
+      "maxDiff": 18
+    }
+  ]
+}

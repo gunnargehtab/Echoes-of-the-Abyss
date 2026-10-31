@@ -1,0 +1,118 @@
+{
+  "tag": "e-H-off",
+  "mode": "escorts",
+  "study": false,
+  "motes": false,
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "url": "http://localhost:5173/",
+  "station": "H",
+  "at": 30,
+  "tick": 1800,
+  "frame": "e-H-off-frame.png",
+  "hulls": "e-H-off-hulls.png",
+  "readingTick": 1800,
+  "width": 1920,
+  "height": 1080,
+  "dpr": 1,
+  "units": [
+    {
+      "id": 154,
+      "name": "Light Scout",
+      "xM": 2400,
+      "zM": 2280,
+      "depthM": 1450,
+      "restSig": 6,
+      "screen": {
+        "x0": 864,
+        "y0": 408,
+        "x1": 898,
+        "y1": 425
+      }
+    },
+    {
+      "id": 155,
+      "name": "Light Scout",
+      "xM": 2550,
+      "zM": 2430,
+      "depthM": 1450,
+      "restSig": 6,
+      "screen": {
+        "x0": 945,
+        "y0": 472,
+        "x1": 979,
+        "y1": 489
+      }
+    },
+    {
+      "id": 156,
+      "name": "Light Scout",
+      "xM": 2700,
+      "zM": 2280,
+      "depthM": 1450,
+      "restSig": 6,
+      "screen": {
+        "x0": 1026,
+        "y0": 408,
+        "x1": 1059,
+        "y1": 425
+      }
+    },
+    {
+      "id": 157,
+      "name": "Light Scout",
+      "xM": 2550,
+      "zM": 2330,
+      "depthM": 1450,
+      "restSig": 6,
+      "screen": {
+        "x0": 945,
+        "y0": 429,
+        "x1": 978,
+        "y1": 446
+      }
+    },
+    {
+      "id": 158,
+      "name": "Harvester",
+      "xM": 2420,
+      "zM": 2900,
+      "depthM": 1470,
+      "restSig": 18,
+      "screen": {
+        "x0": 857,
+        "y0": 694,
+        "x1": 906,
+        "y1": 734
+      }
+    },
+    {
+      "id": 159,
+      "name": "Harvester",
+      "xM": 2680,
+      "zM": 2900,
+      "depthM": 1470,
+      "restSig": 18,
+      "screen": {
+        "x0": 1018,
+        "y0": 694,
+        "x1": 1067,
+        "y1": 734
+      }
+    }
+  ],
+  "probe": {
+    "drawCalls": 50,
+    "triangles": 120963,
+    "landmarks": 0,
+    "landmarkTris": 0,
+    "siftMotes": 0,
+    "focus": {
+      "xM": 2550,
+      "zM": 2553,
+      "depthM": null
+    },
+    "distance": 2600,
+    "pitchDeg": 55,
+    "yawDeg": 0
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "on": "e-H-on",
+  "off": "e-H-off",
+  "ticks": [
+    1800,
+    1800
+  ],
+  "motes": [
+    false,
+    false
+  ],
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "units": [
+    {
+      "ids": [
+        120,
+        154
+      ],
+      "name": "Light Scout",
+      "restSig": [
+        6,
+        6
+      ],
+      "box": [
+        864,
+        408,
+        898,
+        425
+      ],
+      "hullPixels": 116,
+      "hullPixelsInBoth": 113,
+      "changed": 54,
+      "changedInBoth": 53,
+      "maxDiff": 16
+    },
+    {
+      "ids": [
+        121,
+        155
+      ],
+      "name": "Light Scout",
+      "restSig": [
+        6,
+        6
+      ],
+      "box": [
+        945,
+        472,
+        979,
+        489
+      ],
+      "hullPixels": 117,
+      "hullPixelsInBoth": 116,
+      "changed": 50,
+      "changedInBoth": 50,
+      "maxDiff": 8
+    },
+    {
+      "ids": [
+        122,
+        156
+      ],
+      "name": "Light Scout",
+      "restSig": [
+        6,
+        6
+      ],
+      "box": [
+        1026,
+        408,
+        1059,
+        425
+      ],
+      "hullPixels": 113,
+      "hullPixelsInBoth": 112,
+      "changed": 51,
+      "changedInBoth": 50,
+      "maxDiff": 57
+    },
+    {
+      "ids": [
+        123,
+        157
+      ],
+      "name": "Light Scout",
+      "restSig": [
+        6,
+        6
+      ],
+      "box": [
+        945,
+        429,
+        978,
+        446
+      ],
+      "hullPixels": 120,
+      "hullPixelsInBoth": 117,
+      "changed": 55,
+      "changedInBoth": 55,
+      "maxDiff": 57
+    },
+    {
+      "ids": [
+        124,
+        158
+      ],
+      "name": "Harvester",
+      "restSig": [
+        18,
+        18
+      ],
+      "box": [
+        857,
+        694,
+        906,
+        734
+      ],
+      "hullPixels": 574,
+      "hullPixelsInBoth": 574,
+      "changed": 160,
+      "changedInBoth": 160,
+      "maxDiff": 16
+    },
+    {
+      "ids": [
+        125,
+        159
+      ],
+      "name": "Harvester",
+      "restSig": [
+        18,
+        18
+      ],
+      "box": [
+        1018,
+        694,
+        1067,
+        734
+      ],
+      "hullPixels": 568,
+      "hullPixelsInBoth": 567,
+      "changed": 133,
+      "changedInBoth": 133,
+      "maxDiff": 18
+    }
+  ]
+}

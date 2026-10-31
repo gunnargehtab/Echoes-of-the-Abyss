@@ -213,17 +213,63 @@ At L and S, where the grade covers most of the frame, it reads −0.02 to +0.02 
 two read at most +0.04 ms. #1674 read the whole study at +0.09 ms at L and ratio 1, so most of
 that is the model and its pools, not these two terms.
 
+## The escorts' pixels
+
+"H, order" holds an escort's pixels unchanged with the study on, and §9 pairs them "at the same
+tick". [`pair.mjs`](pair.mjs) reads the frame at the first animation frame whose tick reaches
+T+00:30, losslessly (`e-<station>-<half>-frame.png`), with the hull pixels of the same frame
+from the study's per-material mask (`-hulls.png`, codes 5 and 6), since a hull's box also
+holds the ground behind it. The drifting motes are left out of every frame
+(`__perspectiveMotes`): the snow, the sift, the cloud, the plumes and the haze moved between
+sessions by up to 115 levels. Each half is its own session on the GTX 1070 of the GPU run, at
+`e18d150d`, every reading at tick 1800. [`compare.py`](compare.py) reads each escort's hull
+pixels inside its box, where either half's mask is set (`compare-<station>-<pair>.json`).
+
+The pair is set against two controls: two sessions with the study on, and two with it off.
+
+| Station, escorts | Pair | Hull pixels changed | Largest difference |
+| --- | --- | --- | --- |
+| C, three on screen | on / off | 7–8 % of 4,425–9,853 | 18–54 |
+| | on / on | 23–25 % | 46–57 |
+| | off / off | 32–36 % | 60–116 |
+| H, six | on / off | 23–47 % of 113–574 | 8–57 |
+| | on / on | 62–86 % | 17–58 |
+| | off / off | 86–97 % | 48–61 |
+
+No pair reads identical: two sessions with the same flag differ on every hull, at its
+silhouette and in a faint grain over its body, a sub-pixel shift of the hull between sessions.
+The study's pair differs less than either control at both stations, so it changes no escort
+pixel beyond what a second session changes. A reading of "unchanged" to the pixel would need
+a hull that holds still between sessions, which the scene does not give.
+
+## The ember's mean breath
+
+§9 reads a vent ember's mean breath at a C-matched station on the West Approach's nearest
+chimney. `pair.mjs` (`MODE=ember`) poses C's dolly and angles over the probe's first standing
+chimney, the West Approach vent at (208, 2184), 1,415 m, which #1637 read. For 60 of the
+ember's 5 Hz buckets it takes the brightest warm pixel, red over blue by at least 40, and
+averages them.
+
+The ember's sprite stands at its vent cell, 102 px west of the chimney's mouth at this pose
+(`m-on-nomotes-400.png`). A 60 px window round the mouth, #1637's, never reaches it: it reads
+the plume's puffs and the warm water over the mouth, 85.1 with the motes and 70.3 without
+(`m-on.json`, `m-on-nomotes.json`). #1637's 83 was that reading. With the motes left out, a
+400 px window holds the sprite as its only warm pixel over 120:
+
+| Half | Session a | Session b |
+| --- | --- | --- |
+| On | 136.3 | 136.2 |
+| Off | 155.0 | 133.0 |
+
+The flicker is keyed to the page's own clock, so the two "on" sessions read the same buckets.
+The two "off" sessions read 22 apart, one under "on", so the spread is the buckets', not the
+study's. The ember's mean breath is 133–155. Round 3's brightest arch pixel outside a pool,
+63.6, stays under it, as under 83.
+
 ## Not taken here
 
 §11 asks for §9's whole set. These are left:
 
-- An escort's pixels unchanged with the study on. At C's matched tick 1800 (`r-C-*` at
-  `8b774ba3`) the escorts' laminate mean reads 31.12 on and 31.10 off, but pixels differ
-  everywhere by up to 115 levels, in boxes with and without an escort, because the snow and
-  the sift move between the two sessions' frames. A per-pixel reading needs a render without
-  the particles.
-- A vent ember's mean breath at this branch: #1637 read it at 83, and the refinement does not
-  touch the embers.
 - No drift line reading as a chart mark at S, which is the owner's look, and no surface
   shimmering in motion.
 - The transit pair, the palettes and the `ventfront-divide` control. The motion clips and

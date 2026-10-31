@@ -1,0 +1,627 @@
+{
+  "tag": "m-off",
+  "mode": "ember",
+  "study": false,
+  "motes": true,
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "url": "http://localhost:5173/",
+  "vent": {
+    "x": 208.1782446675934,
+    "z": 2183.766434970312,
+    "depthM": 1414.9942847085467
+  },
+  "pose": {
+    "dolly": 420,
+    "pitchDeg": 35,
+    "yawDeg": 25,
+    "focusDepthM": 1414.9942847085467
+  },
+  "reads": [
+    {
+      "bucket": 67,
+      "tick": 684,
+      "warmMax": 76.6,
+      "rgb": [
+        131,
+        65,
+        32
+      ]
+    },
+    {
+      "bucket": 68,
+      "tick": 684,
+      "warmMax": 89.5,
+      "rgb": [
+        161,
+        74,
+        33
+      ]
+    },
+    {
+      "bucket": 69,
+      "tick": 696,
+      "warmMax": 113.1,
+      "rgb": [
+        203,
+        94,
+        38
+      ]
+    },
+    {
+      "bucket": 70,
+      "tick": 708,
+      "warmMax": 85.5,
+      "rgb": [
+        158,
+        70,
+        25
+      ]
+    },
+    {
+      "bucket": 71,
+      "tick": 720,
+      "warmMax": 99,
+      "rgb": [
+        174,
+        83,
+        36
+      ]
+    },
+    {
+      "bucket": 72,
+      "tick": 732,
+      "warmMax": 103.4,
+      "rgb": [
+        185,
+        86,
+        36
+      ]
+    },
+    {
+      "bucket": 73,
+      "tick": 744,
+      "warmMax": 59.1,
+      "rgb": [
+        100,
+        50,
+        29
+      ]
+    },
+    {
+      "bucket": 74,
+      "tick": 756,
+      "warmMax": 76.3,
+      "rgb": [
+        143,
+        62,
+        22
+      ]
+    },
+    {
+      "bucket": 75,
+      "tick": 768,
+      "warmMax": 96.9,
+      "rgb": [
+        177,
+        80,
+        29
+      ]
+    },
+    {
+      "bucket": 76,
+      "tick": 780,
+      "warmMax": 92.2,
+      "rgb": [
+        168,
+        76,
+        29
+      ]
+    },
+    {
+      "bucket": 77,
+      "tick": 792,
+      "warmMax": 76.6,
+      "rgb": [
+        131,
+        65,
+        32
+      ]
+    },
+    {
+      "bucket": 78,
+      "tick": 804,
+      "warmMax": 71,
+      "rgb": [
+        121,
+        60,
+        33
+      ]
+    },
+    {
+      "bucket": 79,
+      "tick": 816,
+      "warmMax": 76.6,
+      "rgb": [
+        131,
+        65,
+        32
+      ]
+    },
+    {
+      "bucket": 80,
+      "tick": 828,
+      "warmMax": 78,
+      "rgb": [
+        134,
+        66,
+        32
+      ]
+    },
+    {
+      "bucket": 81,
+      "tick": 840,
+      "warmMax": 73.5,
+      "rgb": [
+        130,
+        61,
+        31
+      ]
+    },
+    {
+      "bucket": 82,
+      "tick": 852,
+      "warmMax": 83.9,
+      "rgb": [
+        158,
+        68,
+        23
+      ]
+    },
+    {
+      "bucket": 83,
+      "tick": 864,
+      "warmMax": 109.9,
+      "rgb": [
+        203,
+        90,
+        33
+      ]
+    },
+    {
+      "bucket": 84,
+      "tick": 876,
+      "warmMax": 89.9,
+      "rgb": [
+        164,
+        74,
+        29
+      ]
+    },
+    {
+      "bucket": 85,
+      "tick": 888,
+      "warmMax": 85.2,
+      "rgb": [
+        147,
+        72,
+        34
+      ]
+    },
+    {
+      "bucket": 86,
+      "tick": 900,
+      "warmMax": 77.1,
+      "rgb": [
+        133,
+        65,
+        32
+      ]
+    },
+    {
+      "bucket": 87,
+      "tick": 912,
+      "warmMax": 76.5,
+      "rgb": [
+        134,
+        64,
+        31
+      ]
+    },
+    {
+      "bucket": 88,
+      "tick": 924,
+      "warmMax": 116.3,
+      "rgb": [
+        207,
+        97,
+        40
+      ]
+    },
+    {
+      "bucket": 89,
+      "tick": 936,
+      "warmMax": 96.3,
+      "rgb": [
+        172,
+        80,
+        35
+      ]
+    },
+    {
+      "bucket": 90,
+      "tick": 948,
+      "warmMax": 80.1,
+      "rgb": [
+        146,
+        66,
+        26
+      ]
+    },
+    {
+      "bucket": 91,
+      "tick": 960,
+      "warmMax": 66.6,
+      "rgb": [
+        121,
+        55,
+        22
+      ]
+    },
+    {
+      "bucket": 92,
+      "tick": 972,
+      "warmMax": 76.6,
+      "rgb": [
+        131,
+        65,
+        32
+      ]
+    },
+    {
+      "bucket": 93,
+      "tick": 984,
+      "warmMax": 109.5,
+      "rgb": [
+        196,
+        91,
+        38
+      ]
+    },
+    {
+      "bucket": 94,
+      "tick": 996,
+      "warmMax": 92.2,
+      "rgb": [
+        163,
+        77,
+        34
+      ]
+    },
+    {
+      "bucket": 95,
+      "tick": 1008,
+      "warmMax": 90.2,
+      "rgb": [
+        166,
+        74,
+        27
+      ]
+    },
+    {
+      "bucket": 96,
+      "tick": 1020,
+      "warmMax": 85,
+      "rgb": [
+        155,
+        70,
+        27
+      ]
+    },
+    {
+      "bucket": 97,
+      "tick": 1032,
+      "warmMax": 54.6,
+      "rgb": [
+        89,
+        47,
+        28
+      ]
+    },
+    {
+      "bucket": 98,
+      "tick": 1044,
+      "warmMax": 57.6,
+      "rgb": [
+        97,
+        49,
+        27
+      ]
+    },
+    {
+      "bucket": 99,
+      "tick": 1056,
+      "warmMax": 83.1,
+      "rgb": [
+        144,
+        70,
+        33
+      ]
+    },
+    {
+      "bucket": 100,
+      "tick": 1068,
+      "warmMax": 87.4,
+      "rgb": [
+        160,
+        72,
+        26
+      ]
+    },
+    {
+      "bucket": 101,
+      "tick": 1080,
+      "warmMax": 76.6,
+      "rgb": [
+        131,
+        65,
+        32
+      ]
+    },
+    {
+      "bucket": 102,
+      "tick": 1092,
+      "warmMax": 55.3,
+      "rgb": [
+        89,
+        48,
+        29
+      ]
+    },
+    {
+      "bucket": 103,
+      "tick": 1104,
+      "warmMax": 89.5,
+      "rgb": [
+        161,
+        74,
+        33
+      ]
+    },
+    {
+      "bucket": 104,
+      "tick": 1116,
+      "warmMax": 112.2,
+      "rgb": [
+        202,
+        93,
+        38
+      ]
+    },
+    {
+      "bucket": 105,
+      "tick": 1128,
+      "warmMax": 85.6,
+      "rgb": [
+        149,
+        72,
+        34
+      ]
+    },
+    {
+      "bucket": 106,
+      "tick": 1140,
+      "warmMax": 93.6,
+      "rgb": [
+        171,
+        77,
+        30
+      ]
+    },
+    {
+      "bucket": 107,
+      "tick": 1152,
+      "warmMax": 81.1,
+      "rgb": [
+        142,
+        68,
+        32
+      ]
+    },
+    {
+      "bucket": 108,
+      "tick": 1164,
+      "warmMax": 81.9,
+      "rgb": [
+        142,
+        69,
+        33
+      ]
+    },
+    {
+      "bucket": 109,
+      "tick": 1176,
+      "warmMax": 79.4,
+      "rgb": [
+        137,
+        67,
+        32
+      ]
+    },
+    {
+      "bucket": 110,
+      "tick": 1188,
+      "warmMax": 96.9,
+      "rgb": [
+        177,
+        80,
+        29
+      ]
+    },
+    {
+      "bucket": 111,
+      "tick": 1200,
+      "warmMax": 83.4,
+      "rgb": [
+        151,
+        69,
+        27
+      ]
+    },
+    {
+      "bucket": 112,
+      "tick": 1212,
+      "warmMax": 76.6,
+      "rgb": [
+        131,
+        65,
+        32
+      ]
+    },
+    {
+      "bucket": 113,
+      "tick": 1224,
+      "warmMax": 91.4,
+      "rgb": [
+        163,
+        76,
+        33
+      ]
+    },
+    {
+      "bucket": 114,
+      "tick": 1236,
+      "warmMax": 56.2,
+      "rgb": [
+        89,
+        49,
+        31
+      ]
+    },
+    {
+      "bucket": 115,
+      "tick": 1248,
+      "warmMax": 65.7,
+      "rgb": [
+        120,
+        54,
+        22
+      ]
+    },
+    {
+      "bucket": 116,
+      "tick": 1260,
+      "warmMax": 95.6,
+      "rgb": [
+        172,
+        79,
+        35
+      ]
+    },
+    {
+      "bucket": 117,
+      "tick": 1272,
+      "warmMax": 83.9,
+      "rgb": [
+        158,
+        68,
+        23
+      ]
+    },
+    {
+      "bucket": 118,
+      "tick": 1284,
+      "warmMax": 109.7,
+      "rgb": [
+        202,
+        90,
+        33
+      ]
+    },
+    {
+      "bucket": 119,
+      "tick": 1296,
+      "warmMax": 109.3,
+      "rgb": [
+        200,
+        90,
+        34
+      ]
+    },
+    {
+      "bucket": 120,
+      "tick": 1308,
+      "warmMax": 85.2,
+      "rgb": [
+        147,
+        72,
+        34
+      ]
+    },
+    {
+      "bucket": 121,
+      "tick": 1320,
+      "warmMax": 77.1,
+      "rgb": [
+        133,
+        65,
+        32
+      ]
+    },
+    {
+      "bucket": 122,
+      "tick": 1332,
+      "warmMax": 98.6,
+      "rgb": [
+        176,
+        82,
+        35
+      ]
+    },
+    {
+      "bucket": 123,
+      "tick": 1344,
+      "warmMax": 72.8,
+      "rgb": [
+        123,
+        62,
+        32
+      ]
+    },
+    {
+      "bucket": 124,
+      "tick": 1356,
+      "warmMax": 96.3,
+      "rgb": [
+        172,
+        80,
+        35
+      ]
+    },
+    {
+      "bucket": 125,
+      "tick": 1368,
+      "warmMax": 91.6,
+      "rgb": [
+        160,
+        77,
+        35
+      ]
+    },
+    {
+      "bucket": 126,
+      "tick": 1380,
+      "warmMax": 99,
+      "rgb": [
+        174,
+        83,
+        36
+      ]
+    }
+  ],
+  "meanBreath": 85.5,
+  "meanFirst12": 86.6,
+  "range": [
+    54.6,
+    116.3
+  ]
+}

@@ -7,7 +7,9 @@
  * once the six hull models stand, and at the first animation frame whose tick
  * reaches AT seconds of the mission clock reads that frame's conn canvas:
  * `<TAG>-frame.png` is that frame, lossless, and `<TAG>.json` carries the
- * reading tick, every own unit's screen box and the probe. With MOTES=0 the
+ * reading tick, every own unit's screen box and the probe; `<TAG>-hulls.png`
+ * is the same frame's hull pixels, from the study's per-material mask, since a
+ * box also holds the ground behind its hull. With MOTES=0 the
  * drifting motes are left out of every frame (`__perspectiveMotes`): the snow,
  * the sift and the plumes move between two sessions' frames and differed by
  * up to 115 levels in boxes with and without an escort (#1683's README). Two
@@ -23,8 +25,12 @@
  * Approach vent #1637 read) with the camera over its mouth at C's dolly and
  * angles, so the mouth is the frame's centre. For BUCKETS of the ember's 5 Hz
  * buckets (`emberFlicker`), one frame a bucket, it reads the brightest warm
- * pixel (red over blue by at least 40) in a 60 px window round the centre.
- * The mean is the ember's mean breath; #1637 read 83 over twelve.
+ * pixel (red over blue by at least 40) in an EMBER_PX window round the centre.
+ * The mean is the ember's mean breath. The ember's sprite stands at its vent
+ * cell, 102 px west of the chimney's mouth at this pose, so a 60 px window
+ * reads the plume's puffs and the warm water over the mouth instead: 85 with
+ * the motes, 70 without, where #1637 read 83 over twelve. Read with MOTES=0
+ * and the 400 px default, where the sprite is the only warm pixel over 120.
  */
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
@@ -37,6 +43,7 @@ const AT = Number(process.env.AT ?? 30);
 const TAG = process.env.TAG ?? `${MODE}-${STATION}`;
 const MOTES = process.env.MOTES !== '0';
 const BUCKETS = Number(process.env.BUCKETS ?? 60);
+const EMBER_PX = Number(process.env.EMBER_PX ?? 400);
 const OUT = resolve(process.argv[process.argv.indexOf('--out') + 1]);
 
 const STATIONS = {
@@ -105,6 +112,27 @@ export default async ({ page }) => {
               image.data.set(px.subarray((h - 1 - y) * w * 4, (h - y) * w * 4), y * w * 4);
             }
             g.putImageData(image, 0, 0);
+            const png = canvas.toDataURL('image/png').slice('data:image/png;base64,'.length);
+            // The same frame's hull pixels, from the study's per-material mask
+            // (archMask.ts: 5 a hull's laminate, 6 its lamp glass), white on
+            // black: a box round a hull also holds the ground behind it, and
+            // the ground takes the study's grade.
+            const mask = window.__archStudyMask?.() ?? null;
+            let hulls = null;
+            if (mask !== null) {
+              const out = g.createImageData(w, h);
+              for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                  const code = mask.pixels[((h - 1 - y) * w + x) * 4];
+                  const v = code === 5 || code === 6 ? 255 : 0;
+                  const o = (y * w + x) * 4;
+                  out.data[o] = out.data[o + 1] = out.data[o + 2] = v;
+                  out.data[o + 3] = 255;
+                }
+              }
+              g.putImageData(out, 0, 0);
+              hulls = canvas.toDataURL('image/png').slice('data:image/png;base64,'.length);
+            }
             done({
               readingTick,
               width: w,
@@ -122,7 +150,8 @@ export default async ({ page }) => {
                 pitchDeg: probe.pitchDeg,
                 yawDeg: probe.yawDeg,
               },
-              png: canvas.toDataURL('image/png').slice('data:image/png;base64,'.length),
+              png,
+              hulls,
             });
           };
           requestAnimationFrame(frame);
@@ -130,8 +159,18 @@ export default async ({ page }) => {
       tick
     );
     writeFileSync(join(OUT, `${TAG}-frame.png`), Buffer.from(reading.png, 'base64'));
+    assert.ok(reading.hulls !== null, 'the per-material mask is read (a development build)');
+    writeFileSync(join(OUT, `${TAG}-hulls.png`), Buffer.from(reading.hulls, 'base64'));
     delete reading.png;
-    Object.assign(record, { station: STATION, at: AT, tick, frame: `${TAG}-frame.png`, ...reading });
+    delete reading.hulls;
+    Object.assign(record, {
+      station: STATION,
+      at: AT,
+      tick,
+      frame: `${TAG}-frame.png`,
+      hulls: `${TAG}-hulls.png`,
+      ...reading,
+    });
     console.log(
       `${TAG}: tick ${reading.readingTick}, ${reading.units.length} units, ${reading.units.filter((u) => u.screen).length} on screen, calls ${reading.probe.drawCalls}`
     );
@@ -145,7 +184,7 @@ export default async ({ page }) => {
     );
     await page.waitForTimeout(2500);
     const reads = await page.evaluate(
-      (buckets) =>
+      ({ buckets, side }) =>
         new Promise((done) => {
           const out = [];
           let last = -1;
@@ -165,7 +204,7 @@ export default async ({ page }) => {
             const gl = document.querySelector('.perspective-host canvas').getContext('webgl2');
             const w = gl.drawingBufferWidth;
             const h = gl.drawingBufferHeight;
-            const r = Math.round(30 * devicePixelRatio);
+            const r = Math.round((side / 2) * devicePixelRatio);
             const px = new Uint8Array(4 * r * 2 * r * 2);
             gl.readPixels(Math.round(w / 2) - r, Math.round(h / 2) - r, 2 * r, 2 * r, gl.RGBA, gl.UNSIGNED_BYTE, px);
             let best = { luma: 0, rgb: null };
@@ -181,13 +220,14 @@ export default async ({ page }) => {
           };
           requestAnimationFrame(frame);
         }),
-      BUCKETS
+      { buckets: BUCKETS, side: EMBER_PX }
     );
     const mean = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length;
     const warm = reads.map((x) => x.warmMax);
     Object.assign(record, {
       vent,
       pose: { dolly, ...angles, focusDepthM: vent.depthM },
+      windowPx: EMBER_PX,
       reads,
       meanBreath: Number(mean(warm).toFixed(1)),
       meanFirst12: Number(mean(warm.slice(0, 12)).toFixed(1)),
