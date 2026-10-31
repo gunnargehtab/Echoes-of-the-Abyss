@@ -265,6 +265,14 @@ varying vec3 vPoolNormal;`
   });
 }
 
+const BOUNCE_KEY = 'arch-court-bounce-1';
+/**
+ * The define the bounce's term compiles under. §11 reads GPU time with the
+ * bounce on and off; a zeroed `uBounce` still runs the term, so the study's
+ * switch compiles it out instead (#1683).
+ */
+const BOUNCE_DEFINE = 'ARCH_BOUNCE';
+
 /**
  * The court bounce (§11): `BOUNCE_GAIN` times the ambient, as an irradiance
  * from the south and `BOUNCE_BELOW_DEG` below level, on the model-space
@@ -278,7 +286,7 @@ varying vec3 vPoolNormal;`
 export function installCourtBounce(material: Material, uniforms: LandmarkUniforms): void {
   const below = (BOUNCE_BELOW_DEG * Math.PI) / 180;
   const from = `vec3( 0.0, ${(-Math.sin(below)).toFixed(6)}, ${Math.cos(below).toFixed(6)} )`;
-  chain(material, 'arch-court-bounce-1', (shader) => {
+  chain(material, BOUNCE_KEY, (shader) => {
     shader.uniforms.uBounce = uniforms.uBounce;
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vBounceNormal;')
@@ -294,9 +302,26 @@ export function installCourtBounce(material: Material, uniforms: LandmarkUniform
       .replace(
         '#include <lights_fragment_end>',
         `#include <lights_fragment_end>
-reflectedLight.indirectDiffuse += getAmbientLightIrradiance( uBounce ) * BRDF_Lambert( material.diffuseColor ) * max( 0.0, dot( normalize( vBounceNormal ), ${from} ) );`
+#ifdef ${BOUNCE_DEFINE}
+reflectedLight.indirectDiffuse += getAmbientLightIrradiance( uBounce ) * BRDF_Lambert( material.diffuseColor ) * max( 0.0, dot( normalize( vBounceNormal ), ${from} ) );
+#endif`
       );
   });
+  setCourtBounceCompiled(material, true);
+}
+
+/**
+ * Compile the court bounce's term into a material `installCourtBounce`
+ * patched, or out of it; any other material is left alone. A change
+ * recompiles the program on its next draw.
+ */
+export function setCourtBounceCompiled(material: Material, on: boolean): void {
+  if (!material.customProgramCacheKey().includes(BOUNCE_KEY)) return;
+  const defines = (material.defines ??= {});
+  if (BOUNCE_DEFINE in defines === on) return;
+  if (on) defines[BOUNCE_DEFINE] = '';
+  else delete defines[BOUNCE_DEFINE];
+  material.needsUpdate = true;
 }
 
 /**

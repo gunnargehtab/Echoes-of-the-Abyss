@@ -41,6 +41,7 @@ import {
   installDistanceGrade,
   readsDistanceGrade,
   setDistanceGrade,
+  setDistanceGradeOn,
 } from '../src/game/distanceGrade.ts';
 import { installWaterFog } from '../src/game/water.ts';
 import { installSurveyInk } from '../src/game/surveyInk.ts';
@@ -127,6 +128,9 @@ describe('the landmark’s surface under the study (§11)', () => {
         'the ambient’s Lambert'
       );
       assert.equal(uniforms.uBounce, study.uniforms!.uBounce);
+      // Compiled under its define, so the switch can compile it out (#1683).
+      assert.ok(fragment.includes('#ifdef ARCH_BOUNCE\nreflectedLight.indirectDiffuse +='));
+      assert.equal(material.defines?.ARCH_BOUNCE, '', `${material.name} compiles it in`);
     }
     // The board's still copy takes none, nor a prop's material.
     const still = buildLandmarkTemplate(await parseArch(), SPEC, 'sorrowgate', { still: true });
@@ -177,6 +181,35 @@ describe('the distance grade (§11)', () => {
     assert.ok(ShaderChunk.fog_fragment.includes('waterAtFragment'), 'the water it mixes toward');
     // Nothing else is graded: a hull's material, a lamp's, the landmark's.
     assert.ok(!readsDistanceGrade(new MeshStandardMaterial()));
+    // Compiled under its define, so the switch can compile it out (#1683).
+    assert.ok(vertex.includes('#ifdef ARCH_GRADE\nvGradeRange'));
+    assert.ok(fragment.includes('#if defined( USE_FOG ) && defined( ARCH_GRADE )'));
+    assert.equal(ground.defines?.ARCH_GRADE, '');
+  });
+
+  it('compiles out of every graded material with the switch off, and back in', () => {
+    const ground = new MeshBasicMaterial();
+    const gone = new MeshBasicMaterial();
+    installDistanceGrade(ground);
+    installDistanceGrade(gone);
+    gone.dispose();
+    const goneVersion = gone.version;
+    try {
+      const version = ground.version;
+      setDistanceGradeOn(false);
+      assert.ok(!('ARCH_GRADE' in ground.defines!), 'off compiles it out');
+      assert.ok(ground.version > version, 'and recompiles on the next draw');
+      assert.equal(gone.version, goneVersion, 'a disposed material is let go');
+      // A material graded while the switch is off starts without it.
+      const late = new MeshBasicMaterial();
+      installDistanceGrade(late);
+      assert.ok(!('ARCH_GRADE' in late.defines!));
+      setDistanceGradeOn(true);
+      assert.equal(ground.defines!.ARCH_GRADE, '');
+      assert.equal(late.defines!.ARCH_GRADE, '');
+    } finally {
+      setDistanceGradeOn(true);
+    }
   });
 });
 
@@ -213,8 +246,15 @@ describe('the study’s switches for #1683’s readings', () => {
       assert.equal(stands.bounce, BOUNCE_GAIN);
       assert.equal(stands.ceiling, LANDMARK_LUMINANCE_CEILING);
       assert.equal(stands.grade, true);
+      const bounced = template.states.intact.parts
+        .map(({ material }) => material)
+        .filter((material) => material.name !== 'civic_lamp');
+      assert.ok(bounced.length > 0);
       layer.setStudySwitches({ bounce: 0, ceiling: 0.06, grade: false });
       assert.equal(template.uniforms!.uBounce.value.getHex(), 0, 'no bounce');
+      for (const material of bounced) {
+        assert.ok(!('ARCH_BOUNCE' in material.defines!), `${material.name}: compiled out`);
+      }
       assert.ok(Math.abs(brightest() - 0.06) < 1e-6, 'the props’ ceiling');
       setDistanceGrade(2600, 1);
       assert.equal(gradeUniforms.uGradeAmount.value, 0, 'no grade');
@@ -227,6 +267,9 @@ describe('the study’s switches for #1683’s readings', () => {
         MODEL_LIGHTING.AMBIENT * BOUNCE_GAIN
       );
       assert.ok(template.uniforms!.uBounce.value.equals(ambient), 'the bounce back');
+      for (const material of bounced) {
+        assert.equal(material.defines!.ARCH_BOUNCE, '', `${material.name}: compiled back in`);
+      }
       assert.ok(Math.abs(brightest() - LANDMARK_LUMINANCE_CEILING) < 1e-6, 'the ceiling back');
       setDistanceGrade(2600, 1);
       assert.equal(gradeUniforms.uGradeAmount.value, GRADE_MAX, 'the grade back');
