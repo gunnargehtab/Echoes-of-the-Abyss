@@ -2682,11 +2682,10 @@ export class EchoRenderer {
    * The walk's samples lie on the straight world line between the two
    * vertices, their height interpolated between the vertices' rather than read
    * off the ground (#1692). That line is what a segment no model crosses is
-   * stroked as, so a ring reads the same beside a hull as away from one. And
-   * the ground was most of the walk's cost, read twice a sample: at a close
-   * dolly a hull's screen box is hundreds of pixels wide and a ring crosses it
-   * in long segments, so the walk was most of the overlay's 7 ms a frame at
-   * the arch study's C station on the named desktop, 19 with a hull selected.
+   * stroked as, so a ring reads the same beside a hull as away from one, and
+   * the test is of the line drawn. The ground was also most of the walk's
+   * cost, read twice a sample: at a close dolly a model's screen box is
+   * hundreds of pixels wide and a traced line crosses it in long segments.
    */
   private penTo(g: Graphics, x: number, y: number, depthM: number | null): void {
     const pen = this.pen;

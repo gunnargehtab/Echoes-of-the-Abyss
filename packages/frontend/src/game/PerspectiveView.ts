@@ -2014,8 +2014,9 @@ export class PerspectiveView {
    * Whether a model stands between the eye and a point in the water, given
    * the pixel it was projected to and the world height it was projected at
    * (`ProjectedPoint.worldY`). The height is taken, not read off the ground
-   * again: the ground was the cost of the chart's occlusion walk, read twice a
-   * sample, every 2 px, wherever a ring crossed a hull's screen box (#1692).
+   * again: the ground was most of the chart's occlusion walk, read twice a
+   * sample, every 2 px, wherever a traced line crossed a model's screen box
+   * (#1692).
    */
   inkHidden(xM: number, worldY: number, yM: number, sx: number, sy: number): boolean {
     if (this.ink.size === 0 || !this.ink.covers(sx, sy)) return false;
