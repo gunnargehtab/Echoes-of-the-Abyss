@@ -82,6 +82,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[sorrowgate-arch-study.md](sorrowgate-arch-study.md)** | Civic-arch study: the owner's decisions, the dimensioned fit, the placement contract, the light and motion licence and the paired shot specification; the arch model is commissioned, and the model and prototype come next |
 | **[three-layer-ocean.md](three-layer-ocean.md)** | The presentation revision: WC3-lineage perspective camera, the visible seabed, band navigation, and the Lid — proposed in §7 and adopted |
 | **[free-camera.md](free-camera.md)** | The camera revision: free yaw and pitch, a focus that leaves the seabed, and the retirement of the no-rotation rule |
+| **[free-water-slice.md](free-water-slice.md)** | The unbuilt crater/kelp-jungle contract: six-degree flight, independent destination depth, bounded public wildlife and integrated acceptance |
 | **[map-visuals.md](map-visuals.md)** | The map revision: survey ink for silhouettes at every zoom, one loudness ladder for every layer, a biome's visual contract, stipple life |
 | **[graphics-standards.md](graphics-standards.md)** | The acceptance bar: pipeline of record, seven shipping gates, art PR checklist |
 | **[audio-direction.md](audio-direction.md)** | The mix as the primary information channel; tier sonification |

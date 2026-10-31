@@ -84,6 +84,14 @@ dive whoever asked for it. Pointing at the ground *is* the order. The rule that 
 spend a descent the player never made survives because the player made this one: they sent
 the hull along the floor rather than through the water above it.
 
+**An order in three dimensions is not a volumetric pathfinder.** Routes are planned
+in the map plane at the hull's current depth and reconsidered as depth changes.
+They do not search for a climb or dive around an obstacle. Each terrain cell holds
+one water interval; it cannot model two separate traversable layers at the same plan
+position. Hull separation is planar too, and structures' footprints exclude hulls at
+every depth, regardless of their rendered height. The
+[free-water slice](free-water-slice.md) retains these limits.
+
 Three things end it. A new depth order replaces it, whether a move into open water or a
 direct rise or dive, because the newer instruction is the player's current mind. So does a task that keeps
 a depth of its own: an attack on a contact, which chases at the depth the hull is on rather
@@ -119,6 +127,12 @@ course. It ends floor-following, offsets each hull's active depth target (or its
 depth when idle), and preserves its horizontal order and queue. Relative targets stop at
 the map's order limits; absolute orders outside them remain refused. Both use the same
 travel, noise, pressure and terrain rules, with no automatic dive around an obstacle.
+
+The future independent destination preview in [free-water-slice.md](free-water-slice.md)
+§6 will carry explicit fixed-depth intent instead of applying the ordinary click's
+100 m floor-following inference. That is an unimplemented order-semantics extension:
+ordinary clicks and direct steps retain the shipped behaviour above, including their
+noise, travel, pressure and queue rules.
 
 ### The other end of the column: sour exposure
 

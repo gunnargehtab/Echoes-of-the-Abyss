@@ -660,6 +660,12 @@ additive dots, each at a furniture gain `ladder.ts` holds. An animal is an agent
 only as a contact, on rung 7 (§8 there). Either way its colour comes from the
 palette tables above.
 
+The planned [free-water slice](free-water-slice.md) §5 applies this same public-life
+point channel to its decorative deep fish, not to a gameplay animal: non-emissive
+bodies with at most six soft photophore dots each, bounded by rung 5. No lit skin,
+halo, new ground-light family or response to a participant is licensed. Its other
+decorative animals carry no emission; this exception remains confined to the study.
+
 ### The arch study's licence
 
 On 26 October the owner licensed three things the rules above do not otherwise allow, for
