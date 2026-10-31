@@ -187,9 +187,41 @@ mostly empty, so the forest ends rather than dissolving into props at every dept
 | Place / purpose | Retained or commissioned kit | Boundary |
 | --- | --- | --- |
 | Garden flanks / close jungle | Retain `env-kelp-cluster`; commission `env-kelp-stand`, a denser stand of 40 m stalks within a 120 m footprint | No giant rescaling of the approved cluster; no plants in the central clearing, roofed cut or deep pocket |
-| Rim / worn ground | Existing coral/stone props and the current terrain material | No new walls, cover or PF; no apparent solid prop across a traversable route |
+| Rim / worn ground | Current terrain material and surveyed wall; no extra stone/coral instances in the first fixture | No new walls, cover or PF; no apparent solid prop across a traversable route |
 | Crater / distance | Existing authored-floor relief and water | Bare drop, no illuminated floor, false cave mouth or copy of Sorrowgate's arch |
 | Small life / close inspection | The four shapes below, public decoration | No dependency on own or enemy positions, contacts, occupancy, fauna AI or future events |
+
+Two placement options were considered:
+
+- **Fixture scatter.** Add density/exclusion rules to the registry; valid, but counts
+  depend on candidate placement.
+- **Authored slots (recommended, taken).** Use explicit fixture slots and existing
+  batches; a longer list buys exact counts and clearance.
+
+**Placement is an authored list, not the biome scatter.** For this fixture, disable
+the registry's automatic biome placement, including its existing kelp, coral and trench
+rows. Feed the slots below through the existing template, instancing and lifecycle
+machinery under a fixture-specific look key; never draw both placement paths. The list
+has no position or scale jitter and no budget-driven truncation. Other maps retain their
+ordinary registry scatter. The opening list has exactly these counts, provided every
+asset loaded; a missing model is a failed acceptance row, not a quieter forest.
+
+| Kit | Authored placement list, map metres | Opening count |
+| --- | --- | --- |
+| New kelp stands | Cell origins `x=1,000,1,250,...,2,750` at each of `y=500,750`, plus `x=1,000,1,250,2,500,2,750` at `y=1,250`; two slots per cell at offsets `(62.5,125)` and `(187.5,125)` | 40 |
+| Retained kelp clusters | Cell origins `x=1,500,1,750,2,000,2,250`, `y=1,250`; four slots per cell at every pair of offsets from `{62.5,187.5}` | 16 |
+| Rim crabs | Four floor patches centred on `(1,625,1,375)`, `(1,875,1,375)`, `(2,125,1,375)`, `(2,375,1,375)`; each patch has a 25 m radius and four crabs | 16 |
+| Fry shoals | Centres `(1,375,875)`, `(1,875,875)`, `(2,375,875)`, `(2,875,875)`; each school stays within 25 m horizontally and 250..300 m depth | 4 schools / 96 fish |
+| Outer fish | Every pair of `x=1,750,2,000,2,250,2,500` and `y=1,750,2,500`; each path stays within 40 m horizontally and 700..1,000 m depth | 8 |
+| Deep fish | Every pair of `x=1,875,2,125,2,375,2,625` and `y=2,125,2,375`; each path stays within 25 m horizontally and 1,900..2,100 m depth | 8 |
+| All other dressing | No automatic rock, coral, resource, trench, civic or fauna placement | 0 |
+
+Plant roots use the public rendered floor. A stand's plan envelope is at most 120 m
+across; each slot leaves it wholly inside its 250 m cell. Retained clusters stay at
+their approved 18 m footprint. The clearing row receives neither plant list. Animals'
+closed paths, phases and poses are authored within their listed patches in #1713,
+checked against public ground, and cannot migrate to another patch. No deep-pocket
+plants or bowl-wide kelp are inherited just because those cells have a kelp biome.
 
 **The wildlife choice is an explicit, narrow extension of the bible.** Keeping only
 the existing stipples would preserve today's presentation but not the requested close
@@ -234,11 +266,22 @@ using normal detection; decoration must be byte-for-byte independent of that var
 hidden state. Neither extra participant is exposed by the study entry.
 
 **Shape lane.** The five new slugs, including the kelp stand, are commissions, not
-approved files. Each needs its STYLE + FACTION + UNIT/PROP block, script, outline, GLB,
-intake report, neutral-light review, contact sweep and separate hull-reviewer before
-integration. Use the design model of record in [asset-prompts-3d.md](asset-prompts-3d.md);
-the contract author does not author or approve these shapes. No links to nonexistent
-exports, placeholder primitives passed off as finished assets, or one-off fish loader.
+approved files. Environment props have no faction: each shape PR authors
+**ENV STYLE + one prop-table row** in [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, including
+Footprint, Height, Tris and Light, plus its script, outline, GLB, intake report,
+neutral-light review, contact sweep and separate hull-reviewer before integration.
+Use that document's design model of record; the contract author does not author or
+approve these shapes.
+
+Block 4 currently describes stone, coral, kelp and crystal standing on the seabed.
+The #1711 shape PR must first add the scoped public-microfauna variant: the crab may
+stand on the floor, while the three swimming slugs may be suspended in the column.
+Retain its no-faction, low-luminance, material-count and intake constraints; the exception
+is for these four decorative forms, not gameplay fauna or other floating props.
+All four rows carry **Light `none`**, including `env-deep-fish`: its GLB has no emissive,
+and runtime supplies the separately budgeted rung-5 photophore dots described above.
+This preserves the inverted intake light gate. No links to nonexistent exports,
+placeholder primitives passed off as finished assets, or one-off fish loader.
 
 ## 6. Camera and command contract
 
@@ -267,6 +310,13 @@ rise and dive. Provide focusable, labelled motion buttons as the mouse-only alte
 keyboard look and the latch avoid a mandatory simultaneous mouse/key chord. Bindings
 are contextual, validated for conflicts, and exposed in Controls rather than hardcoded
 beside the existing binding registry. Home and Escape cannot be rebound away.
+
+Escape has one owner per press: an open menu first; otherwise leave NAV, cancel MOVE 3D,
+cancel a pending build, then open the menu, in that order. Leaving NAV preserves a
+pending preview, so the next Escape cancels it rather than also doing so on the first
+press. Arming MOVE 3D cancels pending build/attack-move placement. Opening a menu leaves
+NAV and clears held movement; closing the menu never resumes motion. Focused fields
+and menus consume their events before the world handler.
 
 Initial translation speed is 200 rendered metres/s, adjustable in Controls over
 50..800; keyboard rotation is 60 degrees/s. These are camera-only TUNABLEs, not unit
@@ -313,6 +363,11 @@ move; Escape cancels without sending. Queue is an explicit toggle in this previe
 inferred from the wheel's Shift. Unpin returns to plan placement. Camera movement can
 continue while previewing; it cannot change a pinned point or the numeric depth.
 
+Wheel ownership is menu/focused field first, then NAV, then a pinned MOVE 3D preview,
+then ordinary flight. Outside NAV, `Shift` + wheel over the world edits the pinned
+preview's depth and does not move the camera. Inside NAV it moves camera depth and
+leaves the preview unchanged. Unmodified wheel remains camera travel in either case.
+
 Show plan position, target depth, terrain interval, vertical tether, pressure warning
 and ascent/descent cost. A ray parallel to the command plane, behind the eye or outside
 the map has **NO WATER TARGET** and cannot confirm; offer the north-up scope as an
@@ -321,7 +376,17 @@ targets require an explicit correction, not silent clamping to another destinati
 Pressure risk is a warning, not a prohibition. A legal endpoint is not a promise of a
 3D path: show **ROUTE AT CURRENT DEPTH — CLIMB/DIVE MANUALLY**.
 
-The preview commits a **fixed-depth** move, even inside the ordinary click's 100 m
+Three order-semantics options were considered:
+
+- **Fixed-depth preview (recommended, taken).** Keep the numeric depth even within
+  100 m of the floor; legacy clicks retain their inference, while the preview's explicit
+  intent must survive the wire, queue and replay.
+- **Existing inference.** Apply the ordinary 100 m floor-following inference to the
+  preview too, but silently reinterpret a numeric depth as a clearance above the floor.
+- **Follow-floor toggle.** Add a labelled mode inside the preview; the intent is explicit,
+  but it adds another control and a mode to carry through the command.
+
+The chosen preview commits a **fixed-depth** move, even inside the ordinary click's 100 m
 floor-following threshold. Carry that explicit intent through server validation,
 queue and replay; legacy clicks retain their existing inference. This is an intentional
 order-semantics extension, not changed travel costs or an accidental floor-following
@@ -357,10 +422,11 @@ evidence folders unchanged. A standalone model viewer cannot pass the integrated
 **Budgets are gates, not forecasts.** Retain [graphics-standards.md](graphics-standards.md)
 gate 6: at most 150 draw calls and 400,000 triangles over every pass, DPR at most 1.5.
 Reserve at most 30 calls / 120,000 triangles for all props and decorative life together:
-40 new kelp stands at at most 1,200 triangles each (48,000), 16 retained clusters
-(6,208), the wildlife caps above (31,680), and at most 32,000 for other dressing total
-117,888. These are ceilings, not minimum populations or permission to exceed the whole
-frame. Share instanced batches per template/material; no per-fish draw.
+The authored list totals at most 85,888 triangles: 40 new kelp stands at at most 1,200
+each (48,000), 16 retained clusters (6,208), wildlife (31,680), and zero other dressing.
+The remaining reservation is unused, not permission to fill the bowl. Counts are the
+opening list's contract; per-model triangle limits remain ceilings. Share instanced
+batches per template/material; no per-fish draw or relaxation of the whole-frame limit.
 
 Record actual whole-frame calls, triangles, instances, texture/target bytes, hardware,
 and gate-6 unpaced/queued GPU timing at DPR 1 and 1.5. Exercise motion, not only stills.
@@ -375,7 +441,7 @@ these checks.
 | #1706, six-degree camera | Flight, navigation ownership, recovery, projection/scope/audio consequences; no new models | Merged #1705 contract; real-client movement/roll and non-target evidence |
 | #1707, remaining independent destination | Fixed-depth preview, invalid picking, queue/replay intent; direct S/D already shipped | Merged contract; integrate and exercise with #1706's rolled camera before closing |
 | #1712, dense kelp stand asset | One new `env-kelp-stand` shape; retained clusters unchanged | Merged contract, owner-applied shape routing; approved script/GLB/outline and independent intake/review |
-| #1711, public microfauna kit | Four named shapes, no behaviours or stat blocks | Merged contract, owner-applied shape routing; separate model gates for each, no runtime promotion |
+| #1711, public microfauna kit | Scoped ENV STYLE amendment and four prop-table rows/shapes, no behaviours or stat blocks | Merged contract, owner-applied shape routing; separate model gates for each, no runtime promotion |
 | #1713, integrated crater fixture | Authored ground/spawns, gated entry, approved dressing and decorative motion, full evidence matrix | Camera, destination and all five assets merged; no closure on a registry-only or standalone scene |
 
 Asset authorship and runtime integration are different jobs. A shape author may not

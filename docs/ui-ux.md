@@ -673,7 +673,8 @@ SQUAD cell. It pins plan position, edits a numeric depth, then confirms one fixe
 move, with a separate queue toggle. Invalid rays and solid columns refuse with a reason;
 the scope offers a plan-picker alternative. It does not silently change ordinary
 right-click or claim a 3D route through obstacles. These additions were recommended in
-the shared brief; the owner's approval was of the experience, not this particular input.
+[the #1705 contract](free-water-slice.md); the owner's approval was of the experience,
+not this particular input.
 
 ### The one-handed layout
 
