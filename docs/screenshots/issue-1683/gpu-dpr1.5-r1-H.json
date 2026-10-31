@@ -1,0 +1,162 @@
+{
+  "tag": "gpu-dpr1.5-r1-H",
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "software": false,
+  "unpaced": true,
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "dpr": 1.5
+  },
+  "url": "http://localhost:5173/?arch-study=1",
+  "gain": 9,
+  "order": [
+    "on",
+    "bounce-off",
+    "grade-off",
+    "both-off",
+    "both-off",
+    "grade-off",
+    "bounce-off",
+    "on"
+  ],
+  "stations": [
+    {
+      "name": "H",
+      "from": 1152,
+      "file": "D:\\Claude\\.dev-loop\\gpu1683\\gpu-dpr1.5-r1-H/03-gpu-dpr1.5-r1-H-H.png",
+      "steps": 12000,
+      "unqueued": {
+        "gpuMs": 1.65,
+        "frameMs": 2.69,
+        "drawCalls": 56,
+        "triangles": 123589
+      },
+      "means": {
+        "on": 1.495,
+        "bounce-off": 1.49,
+        "grade-off": 1.505,
+        "both-off": 1.4649999999999999
+      },
+      "cost": {
+        "bounce": 0.0050000000000001155,
+        "grade": -0.009999999999999787,
+        "both": 0.03000000000000025
+      },
+      "readings": [
+        {
+          "setting": "on",
+          "tick": 3804,
+          "gpuMs": 1.53,
+          "worstGpuMs": 3.03,
+          "gpuDropped": 0,
+          "loadMs": 3.9,
+          "loadDropped": 0,
+          "frameMs": 5.71,
+          "connMs": 0.75,
+          "drawCalls": 56,
+          "triangles": 123589,
+          "landmarkTris": 2626
+        },
+        {
+          "setting": "bounce-off",
+          "tick": 6132,
+          "gpuMs": 1.53,
+          "worstGpuMs": 1.98,
+          "gpuDropped": 0,
+          "loadMs": 3.9,
+          "loadDropped": 0,
+          "frameMs": 5.82,
+          "connMs": 0.76,
+          "drawCalls": 56,
+          "triangles": 123589,
+          "landmarkTris": 2626
+        },
+        {
+          "setting": "grade-off",
+          "tick": 8460,
+          "gpuMs": 1.56,
+          "worstGpuMs": 2.16,
+          "gpuDropped": 0,
+          "loadMs": 3.9,
+          "loadDropped": 0,
+          "frameMs": 5.71,
+          "connMs": 0.72,
+          "drawCalls": 56,
+          "triangles": 123589,
+          "landmarkTris": 2626
+        },
+        {
+          "setting": "both-off",
+          "tick": 11112,
+          "gpuMs": 1.5,
+          "worstGpuMs": 4.98,
+          "gpuDropped": 0,
+          "loadMs": 4.1,
+          "loadDropped": 0,
+          "frameMs": 6.32,
+          "connMs": 0.87,
+          "drawCalls": 56,
+          "triangles": 123589,
+          "landmarkTris": 2626
+        },
+        {
+          "setting": "both-off",
+          "tick": 13764,
+          "gpuMs": 1.43,
+          "worstGpuMs": 2.61,
+          "gpuDropped": 0,
+          "loadMs": 4.11,
+          "loadDropped": 0,
+          "frameMs": 5.61,
+          "connMs": 0.75,
+          "drawCalls": 56,
+          "triangles": 123589,
+          "landmarkTris": 2626
+        },
+        {
+          "setting": "grade-off",
+          "tick": 16512,
+          "gpuMs": 1.45,
+          "worstGpuMs": 3.74,
+          "gpuDropped": 0,
+          "loadMs": 4.11,
+          "loadDropped": 0,
+          "frameMs": 5.66,
+          "connMs": 0.76,
+          "drawCalls": 56,
+          "triangles": 129349,
+          "landmarkTris": 2626
+        },
+        {
+          "setting": "bounce-off",
+          "tick": 19332,
+          "gpuMs": 1.45,
+          "worstGpuMs": 2.18,
+          "gpuDropped": 0,
+          "loadMs": 4.12,
+          "loadDropped": 0,
+          "frameMs": 5.74,
+          "connMs": 0.79,
+          "drawCalls": 56,
+          "triangles": 129349,
+          "landmarkTris": 2626
+        },
+        {
+          "setting": "on",
+          "tick": 22104,
+          "gpuMs": 1.46,
+          "worstGpuMs": 2.23,
+          "gpuDropped": 0,
+          "loadMs": 4.13,
+          "loadDropped": 0,
+          "frameMs": 6.1,
+          "connMs": 0.77,
+          "drawCalls": 56,
+          "triangles": 129349,
+          "landmarkTris": 2626
+        }
+      ]
+    }
+  ]
+}
