@@ -6633,6 +6633,21 @@ describe('doctrine marks (docs/ui-ux.md §12.5)', () => {
     }
   });
 
+  it('never lights the Klaxon on a loud hull with no gun', async () => {
+    // The canned Harvester runs at SIG 62: over the line, and no gun to pay.
+    const world = await boot();
+    try {
+      world.chart.setIdentity(0, Faction.Bathyarch);
+      chartOf(world).selected.add(13);
+      world.frame(2);
+      const line = (world.chart as unknown as { infoLine1: Text }).infoLine1;
+      assert.ok(line.text.includes('SIG 62'), `the premise: the card reads ${line.text}`);
+      assert.equal(marksIn(world, accentOf(Faction.Bathyarch)).length, 0);
+    } finally {
+      world.teardown();
+    }
+  });
+
   it('lights the Klaxon on a loud turret, and never on a structure with no gun', async () => {
     const structureAt = async (kind: StructureKind): Promise<Booted> => {
       const world = await boot();
