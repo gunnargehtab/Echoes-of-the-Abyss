@@ -1328,7 +1328,7 @@ loud, go silent, go shallow, fire.
 
 | Navy | The bend | Where the mark stands | When |
 | --- | --- | --- | --- |
-| Consortium | The Klaxon: +12% damage while the hull's SIG is over 60 | Beside the selection's SIG | While that SIG reads over 60 |
+| Consortium | The Klaxon: +12% damage while the hull's SIG is over 60 | Beside the selection's SIG | While that SIG reads over 60, on anything with a gun: never on a Harvester or a Bastion |
 | Commune | Silent Running costs −20% speed, not −45% | Beside §7's speed penalty | While silent |
 | Directorate | Above 400 m: −20% speed, and the hull bleeds to 85% | Beside the selection's depth | While above 400 m |
 | Knights | A shot is +10 SIG, not a kinetic +25 | Beside `ENGAGE`'s SIG price (§9) | Always |

@@ -6633,6 +6633,50 @@ describe('doctrine marks (docs/ui-ux.md §12.5)', () => {
     }
   });
 
+  it('never lights the Klaxon on a loud hull with no gun', async () => {
+    // The canned Harvester runs at SIG 62: over the line, and no gun to pay.
+    const world = await boot();
+    try {
+      world.chart.setIdentity(0, Faction.Bathyarch);
+      chartOf(world).selected.add(13);
+      world.frame(2);
+      const line = (world.chart as unknown as { infoLine1: Text }).infoLine1;
+      assert.ok(line.text.includes('SIG 62'), `the premise: the card reads ${line.text}`);
+      assert.equal(marksIn(world, accentOf(Faction.Bathyarch)).length, 0);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('lights the Klaxon on a loud turret, and never on a structure with no gun', async () => {
+    const structureAt = async (kind: StructureKind): Promise<Booted> => {
+      const world = await boot();
+      world.chart.setIdentity(0, Faction.Bathyarch);
+      const base = cannedSnapshot(301);
+      world.chart.applySnapshot({
+        ...base,
+        structures: base.structures.map((s) => (s.id === 22 ? { ...s, kind, sig: 70 } : s)),
+      });
+      chartOf(world).selected.add(22);
+      world.frame(2);
+      return world;
+    };
+    const ink = accentOf(Faction.Bathyarch);
+    for (const [kind, lit] of [
+      [StructureKind.SentinelTurret, true],
+      [StructureKind.Refinery, false],
+    ] as const) {
+      const world = await structureAt(kind);
+      try {
+        const line = (world.chart as unknown as { infoLine1: Text }).infoLine1;
+        assert.ok(line.text.includes('SIG 70'), `the premise: the card reads ${line.text}`);
+        assert.equal(marksIn(world, ink).length > 0, lit, `${kind} at SIG 70`);
+      } finally {
+        world.teardown();
+      }
+    }
+  });
+
   it("waits on the SOUR line, rather than marking the Lid's depth or the separator", async () => {
     // `SOUR — BLEEDING at 50m · dive below 150m`: the hull's `50m` has a `·`
     // a cell after it, so there is no room, and the `50m` at the tail of the
