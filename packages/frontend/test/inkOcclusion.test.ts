@@ -200,10 +200,12 @@ afterEach(() => {
  */
 const NEIGHBOUR_PX = 40;
 
-/** One point the chart asked about: plan metres, its pixel, and the answer. */
+/** One point the chart asked about: plan metres, its height, its pixel, and the answer. */
 interface Asked {
   x: number;
   y: number;
+  /** The world height the chart projected it at. */
+  wy: number;
   sx: number;
   sy: number;
   hidden: boolean;
@@ -264,7 +266,14 @@ describe('the chart behind a model', () => {
     const inkHidden = conn.inkHidden.bind(conn);
     mock.method(conn, 'inkHidden', (...args: Parameters<PerspectiveView['inkHidden']>) => {
       const answer = inkHidden(...args);
-      const point = { x: args[0], y: args[1], sx: args[3], sy: args[4], hidden: answer };
+      const point = {
+        x: args[0],
+        wy: args[1],
+        y: args[2],
+        sx: args[3],
+        sy: args[4],
+        hidden: answer,
+      };
       asked.push(point);
       if (answer) hidden.push(point);
       return cut && answer;
@@ -306,7 +315,7 @@ describe('the chart behind a model', () => {
   const key = (p: { sx: number; sy: number }) => `${p.sx.toFixed(3)},${p.sy.toFixed(3)}`;
 
   it('draws no point of ground ink the Bastion stands in front of', async () => {
-    const { app, conn, hidden, box, eye, frame, teardown } = await boot();
+    const { app, hidden, box, eye, frame, teardown } = await boot();
     try {
       frame();
       frame();
@@ -320,17 +329,60 @@ describe('the chart behind a model', () => {
       // Behind the Bastion, and not merely behind something: the eye's ray to
       // each hidden point passes through the box the model is drawn in, read
       // off the model itself rather than off the columns or their screen box.
-      const groundY = (conn as unknown as { groundYAt(x: number, z: number): number }).groundYAt;
       const ray = new Ray();
       const point = new Vector3();
       const met = new Vector3();
       const strays = hidden.filter((p) => {
-        point.set(p.x, groundY.call(conn, p.x, p.y), p.y);
+        point.set(p.x, p.wy, p.y);
         ray.set(eye, point.clone().sub(eye).normalize());
         const at = ray.intersectBox(box, met);
         return at === null || at.distanceTo(eye) > point.distanceTo(eye);
       });
       assert.deepEqual(strays, [], 'every hidden point lies behind the Bastion');
+    } finally {
+      teardown();
+    }
+  });
+
+  it('walks a segment past the Bastion without reading the ground (#1692)', async () => {
+    const { conn, asked, frame, teardown } = await boot();
+    try {
+      frame();
+      // The ground is read where a ring's vertex is projected; the walk's
+      // samples between two vertices take their height from the vertices',
+      // so a frame reads it about once a vertex, however many samples the
+      // walk tests. Read once a sample, twice in fact, it was most of the
+      // overlay's frame at a close dolly (#1692).
+      let reads = 0;
+      const seabed = conn.seabedDepthAt.bind(conn);
+      mock.method(
+        conn,
+        'seabedDepthAt',
+        (...args: Parameters<PerspectiveView['seabedDepthAt']>) => {
+          reads++;
+          return seabed(...args);
+        }
+      );
+      let vertices = 0;
+      const project = conn.projectPoint.bind(conn);
+      mock.method(conn, 'projectPoint', (...args: Parameters<PerspectiveView['projectPoint']>) => {
+        if (args[2] === null) vertices++;
+        return project(...args);
+      });
+      let walked = 0;
+      const projectHeight = conn.projectHeight.bind(conn);
+      mock.method(
+        conn,
+        'projectHeight',
+        (...args: Parameters<PerspectiveView['projectHeight']>) => {
+          walked++;
+          return projectHeight(...args);
+        }
+      );
+      asked.length = 0;
+      frame();
+      assert.ok(walked > 50, `the walk tests samples past the Bastion (${walked})`);
+      assert.ok(reads <= vertices + 8, `${reads} reads of the ground for ${vertices} vertices`);
     } finally {
       teardown();
     }

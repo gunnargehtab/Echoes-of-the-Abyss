@@ -1755,12 +1755,27 @@ export class EchoRenderer {
   /** Scratch for `drawnPosition`, consumed before the next call. */
   private readonly drawnScratch = { x: 0, y: 0, depth: 0 };
   /** Scratch for a structure's drawn centre (`drawStructures`), consumed at once. */
-  private readonly centreScratch: ProjectedPoint = { x: 0, y: 0, pxPerM: 1, visible: false };
+  private readonly centreScratch: ProjectedPoint = {
+    x: 0,
+    y: 0,
+    pxPerM: 1,
+    visible: false,
+    worldY: 0,
+  };
+  /** Scratch for one sample of `penTo`'s occlusion walk, consumed at once. */
+  private readonly walkScratch: ProjectedPoint = {
+    x: 0,
+    y: 0,
+    pxPerM: 1,
+    visible: false,
+    worldY: 0,
+  };
   private readonly projectRing: ProjectedPoint[] = Array.from({ length: PROJECT_RING }, () => ({
     x: 0,
     y: 0,
     pxPerM: 1,
     visible: false,
+    worldY: 0,
   }));
   private projectNext = 0;
   /** Scratch for `clipSegment`'s two parameters, consumed at once. */
@@ -1770,7 +1785,17 @@ export class EchoRenderer {
    * open, whether the last point projected (so the next segment is tested
    * from it), and where that point was, in world metres and on screen.
    */
-  private readonly pen = { open: false, held: false, any: false, x: 0, y: 0, sx: 0, sy: 0 };
+  private readonly pen = {
+    open: false,
+    held: false,
+    any: false,
+    x: 0,
+    y: 0,
+    /** The world height the held point was projected at. */
+    wy: 0,
+    sx: 0,
+    sy: 0,
+  };
   /** The conn view's occluder revision as of this frame (`beginInk`). */
   private inkRevision = 0;
   /**
@@ -2653,6 +2678,15 @@ export class EchoRenderer {
    * #1557): the run resumes at the first point past it. A segment whose screen
    * path crosses a model's screen box is walked at `OCCLUSION_STEP_PX`, in
    * plan, so the break lands on the silhouette rather than at the next vertex.
+   *
+   * The walk's samples lie on the straight world line between the two
+   * vertices, their height interpolated between the vertices' rather than read
+   * off the ground (#1692). That line is what a segment no model crosses is
+   * stroked as, so a ring reads the same beside a hull as away from one. And
+   * the ground was most of the walk's cost, read twice a sample: at a close
+   * dolly a hull's screen box is hundreds of pixels wide and a ring crosses it
+   * in long segments, so the walk was most of the overlay's 7 ms a frame at
+   * the arch study's C station on the named desktop, 19 with a hull selected.
    */
   private penTo(g: Graphics, x: number, y: number, depthM: number | null): void {
     const pen = this.pen;
@@ -2663,12 +2697,13 @@ export class EchoRenderer {
       pen.held = false;
       return;
     }
-    // Copied: the walk below projects more than the ring holds.
     const sx = p.x;
     const sy = p.y;
+    const wy = p.worldY;
     if (pen.held && conn.inkCrosses(pen.sx, pen.sy, sx, sy)) {
       const x0 = pen.x;
       const y0 = pen.y;
+      const wy0 = pen.wy;
       const steps = Math.min(
         OCCLUSION_STEPS_MAX,
         Math.ceil(Math.hypot(sx - pen.sx, sy - pen.sy) / OCCLUSION_STEP_PX)
@@ -2677,18 +2712,20 @@ export class EchoRenderer {
         const t = k / steps;
         const qx = x0 + (x - x0) * t;
         const qy = y0 + (y - y0) * t;
-        const q = this.project(qx, qy, depthM);
-        if (q === null || !q.visible) {
+        const qwy = wy0 + (wy - wy0) * t;
+        const q = conn.projectHeight(qx, qwy, qy, this.walkScratch);
+        if (!q.visible) {
           pen.open = false;
           continue;
         }
-        this.penPoint(g, q.x, q.y, conn.inkHidden(qx, qy, depthM, q.x, q.y));
+        this.penPoint(g, q.x, q.y, conn.inkHidden(qx, qwy, qy, q.x, q.y));
       }
     }
-    this.penPoint(g, sx, sy, conn.inkHidden(x, y, depthM, sx, sy));
+    this.penPoint(g, sx, sy, conn.inkHidden(x, wy, y, sx, sy));
     pen.held = true;
     pen.x = x;
     pen.y = y;
+    pen.wy = wy;
     pen.sx = sx;
     pen.sy = sy;
   }
