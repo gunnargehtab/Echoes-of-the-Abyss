@@ -332,9 +332,9 @@ export class InkOcclusion {
    * Whether the screen box from (x0, y0) to (x1, y1) meets an own model's, or
    * the model of a track in `tracks` — what a mission marker's name keeps off
    * (docs/ui-ux.md §10.5, #1662). Two kinds are left out. A model with a
-   * corner behind the eye, whose box is the whole screen: right for a line
-   * that must break behind it, and wrong for a name, which would find no place
-   * at all. And any other track: a track's model shows the instant it is
+   * corner short of the near plane, not wholly behind the eye, whose box is
+   * the whole screen: right for a line that must break behind it, and wrong
+   * for a name, which would find no place at all. And any other track: a track's model shows the instant it is
    * resolved, and the name keeps off a contact only once its mark has arrived,
    * which `drawContacts` knows and this does not. A tall structure stands far
    * above its mark, so an arrived track is tested by its model as well as its
