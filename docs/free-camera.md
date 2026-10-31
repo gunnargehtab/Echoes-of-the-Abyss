@@ -165,6 +165,9 @@ focus and orbit dolly. Escape leaves NAV before cancelling placement or opening 
 menu. Blur, focused controls, mode exit, disconnect and menus clear held movement.
 Flight has neither edge scroll nor sway. The upright EYE instrument distinguishes
 camera depth from hull depth, displays world up and marks a pole VERTICAL.
+Hull models stay at canonical 1× scale in flight rather than inheriting the saved
+orbit's survey enlargement; marine snow follows the free eye. The MENU button remains
+available in NAV and opening it releases navigation immediately.
 The scope clips the forward ground footprint against the frustum and map; when it
 has none, only the eye and orientation cue remain. Audio uses the final rolled basis
 for earned bearings, never for a directionless contact.

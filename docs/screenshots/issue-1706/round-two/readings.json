@@ -1,0 +1,102 @@
+{
+  "entries": [
+    {
+      "distance": 1000,
+      "eye": {
+        "xM": 603,
+        "zM": 1158,
+        "depthM": 600
+      },
+      "orientation": [
+        -0.4617486132350339,
+        0,
+        0,
+        0.8870108331782216
+      ],
+      "flight": {
+        "flying": true,
+        "navigating": false,
+        "depthM": 600,
+        "bearingDeg": 0,
+        "upX": 0,
+        "upY": -0.5735764363510462,
+        "inverted": false,
+        "blocked": false
+      },
+      "hullScale": 1
+    },
+    {
+      "distance": 18000,
+      "eye": {
+        "xM": 603,
+        "zM": 1158,
+        "depthM": 600
+      },
+      "orientation": [
+        -0.461748613235034,
+        0,
+        0,
+        0.8870108331782216
+      ],
+      "flight": {
+        "flying": true,
+        "navigating": false,
+        "depthM": 600,
+        "bearingDeg": 0,
+        "upX": 0,
+        "upY": -0.5735764363510459,
+        "inverted": false,
+        "blocked": false
+      },
+      "hullScale": 1
+    }
+  ],
+  "beforeMenu": {
+    "eye": {
+      "xM": 1106,
+      "zM": 1403,
+      "depthM": 366
+    },
+    "orientation": [
+      -0.10452846326765342,
+      0,
+      0,
+      0.9945218953682733
+    ],
+    "flight": {
+      "flying": true,
+      "navigating": false,
+      "depthM": 366,
+      "bearingDeg": 0,
+      "upX": 0,
+      "upY": -0.9781476007338057,
+      "inverted": false,
+      "blocked": false
+    },
+    "hullScale": 1
+  },
+  "resumed": {
+    "eye": {
+      "xM": 1106,
+      "zM": 1403,
+      "depthM": 366
+    },
+    "orientation": [
+      -0.10452846326765342,
+      0,
+      0,
+      0.9945218953682733
+    ],
+    "flight": {
+      "flying": true,
+      "navigating": false,
+      "depthM": 366,
+      "bearingDeg": 0,
+      "upX": 0,
+      "upY": -0.9781476007338057,
+      "inverted": false,
+      "blocked": false
+    },
+    "hullScale": 1
+  }
+}

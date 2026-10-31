@@ -4699,8 +4699,8 @@ export class PerspectiveView {
     this.snow.update(
       now,
       this.camera.position,
-      this.target.x,
-      this.target.z,
+      this.flight ? this.camera.position.x : this.target.x,
+      this.flight ? this.camera.position.z : this.target.z,
       this.waterReach,
       this.waterDensity,
       projectionScalePx,
@@ -4825,7 +4825,9 @@ export class PerspectiveView {
     // frame rather than on the 5 Hz snapshot: a wheel zoom must not wait up to
     // 200 ms for the fleet to reach its drawn size. Re-syncing only on an
     // actual change keeps a still camera free.
-    const scale = hullReadabilityScale(groundPxPerM(this.viewHeight, FOV_DEG, this.distance));
+    const scale = this.flight
+      ? 1
+      : hullReadabilityScale(groundPxPerM(this.viewHeight, FOV_DEG, this.distance));
     if (Math.abs(scale - this.drawScale) > 1e-3) {
       this.drawScale = scale;
       this.syncEntities();

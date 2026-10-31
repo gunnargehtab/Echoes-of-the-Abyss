@@ -123,7 +123,15 @@ import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
 import { FACTION_PALETTE, FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
 import { RING_FAR_ALPHA, RING_NEAR_ALPHA } from '../src/game/scopeSweep.ts';
-import { BufferAttribute, FogExp2, Mesh, MeshBasicMaterial, Points, type Scene } from 'three';
+import {
+  BufferAttribute,
+  FogExp2,
+  Mesh,
+  MeshBasicMaterial,
+  Points,
+  ShaderMaterial,
+  type Scene,
+} from 'three';
 
 /** What the shell was told, in the order it was told. */
 interface CallbackLog {
@@ -458,6 +466,38 @@ describe('free-water camera integration', () => {
     }
   });
 
+  it('uses canonical flight scale and carries snow with the eye, not the recovery focus', async () => {
+    const world = await boot({ controlsStudy: true });
+    try {
+      world.conn.setReducedMotion(true);
+      let first: typeof world.conn.eyePosition | undefined;
+      for (const distance of [1000, 18000]) {
+        world.chart.homeCamera();
+        world.conn.focusWorld(2000, 2000, distance);
+        world.conn.raiseFocusBy(world.conn.focusDepth() - 300);
+        world.frame();
+        world.chart.toggleFlight();
+        world.frame();
+        if (first === undefined) first = world.conn.eyePosition;
+        else assert.deepEqual(world.conn.eyePosition, first);
+        assert.equal(
+          world.conn.hullDrawScale(),
+          1,
+          'saved survey dolly must not enlarge flight hulls'
+        );
+      }
+      world.conn.flyLocal(600, 0, 0);
+      world.frame();
+      const { snow } = world.conn as unknown as { snow: import('../src/game/water.ts').MarineSnow };
+      assert.ok(snow.points.material instanceof ShaderMaterial);
+      const anchor = snow.points.material.uniforms.uFocus!.value;
+      assert.equal(anchor.x, world.conn.eyePosition.x);
+      assert.equal(anchor.y, world.conn.eyePosition.y);
+    } finally {
+      world.teardown();
+    }
+  });
+
   it('refuses invalid preview rays, solids and depths without issuing or clamping an order', async () => {
     const world = await boot({ controlsStudy: true });
     const reading = () =>
@@ -495,6 +535,41 @@ describe('free-water camera integration', () => {
       assert.equal(reading(), null, 'Escape owns preview even from an input');
       assert.equal(world.log.names().includes('onOpenMenu'), false);
     } finally {
+      world.teardown();
+    }
+  });
+
+  it('keeps MENU clickable in NAV and releases held camera movement immediately', async () => {
+    const world = await boot({ controlsStudy: true });
+    let now = 1000;
+    const clock = mock.method(performance, 'now', () => now);
+    try {
+      world.conn.setReducedMotion(true);
+      world.conn.focusWorld(2000, 2000, 1000);
+      world.conn.raiseFocusBy(world.conn.focusDepth() - 300);
+      world.frame();
+      world.chart.toggleNavigation();
+      dispatchWindow('keydown', { code: 'KeyA' });
+      now += 100;
+      world.frame();
+      const { barButtons } = world.chart as unknown as {
+        barButtons: { label: string; x: number; y: number; w: number; h: number }[];
+      };
+      const menu = barButtons.find((button) => button.label === 'MENU');
+      assert.ok(menu);
+      world.app.canvas.dispatch('pointerdown', {
+        button: 0,
+        clientX: menu.x + menu.w / 2,
+        clientY: menu.y + menu.h / 2,
+        pointerId: 1,
+      });
+      assert.ok(world.log.names().includes('onOpenMenu'));
+      const eye = world.conn.eyePosition;
+      now += 100;
+      world.frame();
+      assert.deepEqual(world.conn.eyePosition, eye);
+    } finally {
+      clock.mock.restore();
       world.teardown();
     }
   });
