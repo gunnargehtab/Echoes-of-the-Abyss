@@ -487,7 +487,7 @@ Silent Running trades away most of what a unit can do ([systems-echo.md](systems
 
 - Silent units render at **0.45 alpha** — quiet is a visible state.
 - Weapon, shield, repair, mine and build actions grey out **with a reason attached** (`disabled — silent running`, or `disabled — silence order` where a mission rule is what withholds them), never silently.
-- The selection panel shows the live speed penalty as a number, and shows the Commune's reduced penalty as the same number with its doctrine mark (§12.5) — no faction reads a different UI.
+- The selection panel shows the live speed penalty as a number — `SPD −45%` on the card's first line while the hull runs silent with its engine on — and shows the Commune's reduced penalty as the same number with its doctrine mark (§12.5), `SPD −20%` — no faction reads a different UI. A mission commander's silence immunity lifts the penalty on the server without telling the client, so the card still prints it then.
 - Issuing an attack order to a silent unit raises a **break-silence confirmation** the first three times per match, showing the +40 SIG spike it will produce. After that it is trusted and the confirmation stops.
 
 ---
@@ -1339,8 +1339,8 @@ Three rules bound it:
 - **Dress, not layout.** No panel moves and no meter changes shape. A mark sits in the
   space beside a value the console already prints, or it waits.
 
-Two marks wait. The client does not yet print §7's speed penalty or a weapon cell's SIG
-price, so the Commune's and the Knights' marks have nothing to stand beside until it does.
+One mark waits. No weapon cell prints a SIG price yet, so the Knights' mark has nothing to
+stand beside until one does.
 
 ---
 
@@ -1384,7 +1384,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | The esc menu | Implemented (§9.5, #187) — settings and the rebinder open over a live match; leaving is armed |
 | Attention on the scope | Implemented (§5, #206, #209) — exposure wedge, under-fire pulse, idle marker, each with its audio half and its reduced-motion equivalent |
 | Faction glyphs | Implemented (§12.5, #207) — one glyph per navy beside the mark's ink at Tier 3 and Tier 4, in the world view; the scope names no faction, so it owes none |
-| Doctrine marks (§12.5) | Partly implemented — `FactionInk.consoleAccent` carries each navy's accent in all four palettes, held to the style guide's floors by `palette.test.ts`. The selection and command rules take it, and the selection card draws the Consortium's mark beside SIG over 60 and the Directorate's beside a depth above 400 m, through the same `damageMultiplierFor` and `inDirectorateShallows` the server reads; `rendererSmoke.test.ts` ("doctrine marks") holds both. On the SOUR line the Directorate's mark waits, because the `·` after the depth leaves it no room. The Commune's and the Knights' marks wait on §7's speed penalty and a weapon cell's SIG price, which the client does not print |
+| Doctrine marks (§12.5) | Partly implemented — `FactionInk.consoleAccent` carries each navy's accent in all four palettes, held to the style guide's floors by `palette.test.ts`. The selection and command rules take it, and the selection card draws the Consortium's mark beside SIG over 60 and the Directorate's beside a depth above 400 m, through the same `damageMultiplierFor` and `inDirectorateShallows` the server reads; `rendererSmoke.test.ts` ("doctrine marks") holds both. On the SOUR line the Directorate's mark waits, because the `·` after the depth leaves it no room. The card prints §7's speed penalty while a hull runs silent, through the `silentSpeedMultiplierFor` movement reads, and the Commune's `SPD −20%` wears its mark. The Knights' mark waits on a weapon cell's SIG price, which the client does not print |
 | The match clock | Implemented (#208) — the log's T+ axis live in the top strip, from the server tick both share |
 | Own-force log rows | Implemented (§10, #206, #209, #623) — `you were pinged`, `under fire`, `idle — mined out`, `went loud` |
 | The passive exposure record (§10) | Implemented (#623) — an edge detector on the server-sent `ExposureReport` writes a row each time the best tier anyone holds on the player settles on a new value, in both directions: `you were heard`, `they have your bearing`, `they have you classified`, `they have you tracked`, `they lost you`. Under the `---` tier and carrying no bearing, range or focus, because the report is a tier and a count and a row that pointed anywhere would be inventing a listener. A tier has to hold for `PERSISTENCE.EXPOSURE_SETTLE_S` before the log claims it — the pass recomputes it at 5 Hz, and a hull parked on a detection threshold would otherwise write ten rows a second saying nothing |

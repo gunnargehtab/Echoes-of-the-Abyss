@@ -86,6 +86,8 @@ import {
   ResourceKind,
   SelfEventKind,
   SIG_BANDS,
+  SILENT_RUNNING,
+  silentSpeedMultiplierFor,
   SIM,
   statsFor,
   StructureKind,
@@ -9774,10 +9776,27 @@ export class EchoRenderer {
     // a number about this hull, not an order, and the card's twelve cells are
     // for orders the pointer gives.
     const aboard = unit?.torpedoes;
+    // §7's live speed penalty, while the hull runs silent: what Silent Running
+    // costs it, printed where the trade is made. Not with the engine off — a
+    // hull under no power is not moving, and a penalty on nothing misleads.
+    // On this line rather than the next because its three-space gaps leave a
+    // doctrine mark room; the next line's ` · ` does not.
+    const silentKeeps =
+      unit?.silentRunning === true && unit.engineOff !== true
+        ? silentSpeedMultiplierFor(this.faction)
+        : undefined;
+    const penalty = silentKeeps === undefined ? '' : `SPD −${Math.round((1 - silentKeeps) * 100)}%`;
     this.infoLine1.text =
       `HULL ${any.hp.toFixed(0)}/${any.maxHp.toFixed(0)}   SIG ${any.sig.toFixed(0)}` +
+      (penalty === '' ? '' : `   ${penalty}`) +
       (aboard === undefined ? '' : `   TORP ${aboard.toFixed(0)}`);
     this.infoLine1.position.set(x + 12, y + 48);
+    // The Commune's doctrine mark (§12.5): beside the penalty while it is not
+    // the general case, which for now means the Commune's −20% against
+    // everybody else's −45%.
+    if (silentKeeps !== undefined && silentKeeps !== SILENT_RUNNING.SPEED_MULTIPLIER) {
+      this.drawDoctrineMark(g, this.infoLine1, penalty);
+    }
     // The Klaxon's doctrine mark (docs/ui-ux.md §12.5): lit while this SIG is
     // one the Consortium's doctrine pays for. Read through the function combat
     // multiplies by, so the mark and the +12% cannot disagree about where the

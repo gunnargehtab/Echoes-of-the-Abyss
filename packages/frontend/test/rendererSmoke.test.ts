@@ -6490,6 +6490,53 @@ describe('doctrine marks (docs/ui-ux.md §12.5)', () => {
     }
   });
 
+  it("prints Silent Running's speed penalty, and marks the Commune's alone", async () => {
+    // docs/ui-ux.md §7: the live penalty as a number, the Commune's the same
+    // number with its mark. SIG 8 keeps the Klaxon out of the reading.
+    const line = (world: Booted) => (world.chart as unknown as { infoLine1: Text }).infoLine1;
+    const commune = await selected(Faction.Pelagia, { silentRunning: true, sig: 8 });
+    try {
+      const text = line(commune).text;
+      assert.ok(text.includes('SPD −20%'), `the Commune pays −20%: ${text}`);
+      const cell = line(commune).width / text.length;
+      const penaltyEnd = line(commune).x + cell * (text.indexOf('SPD −20%') + 'SPD −20%'.length);
+      const torp = line(commune).x + cell * text.indexOf('TORP');
+      const marks = marksIn(commune, accentOf(Faction.Pelagia));
+      assert.ok(marks.length > 0, 'the Commune penalty wears its mark');
+      for (const mark of marks) {
+        const box = (mark.data as { path: GraphicsPath }).path.bounds;
+        assert.ok(box.minX >= penaltyEnd && box.maxX <= torp, 'between the penalty and TORP');
+      }
+    } finally {
+      commune.teardown();
+    }
+    const consortium = await selected(Faction.Bathyarch, { silentRunning: true, sig: 8 });
+    try {
+      assert.ok(line(consortium).text.includes('SPD −45%'), 'everybody else pays −45%');
+      assert.equal(marksIn(consortium, accentOf(Faction.Bathyarch)).length, 0, 'unbent: no mark');
+    } finally {
+      consortium.teardown();
+    }
+    const loud = await selected(Faction.Pelagia, { silentRunning: false, sig: 30 });
+    try {
+      assert.ok(!line(loud).text.includes('SPD'), 'no penalty while not silent');
+      assert.equal(marksIn(loud, accentOf(Faction.Pelagia)).length, 0);
+    } finally {
+      loud.teardown();
+    }
+  });
+
+  it('prints no speed penalty for a hull with its engine off', async () => {
+    const world = await selected(Faction.Pelagia, { silentRunning: true, engineOff: true, sig: 4 });
+    try {
+      const text = (world.chart as unknown as { infoLine1: Text }).infoLine1.text;
+      assert.ok(!text.includes('SPD'), `an engine-off hull is not moving: ${text}`);
+      assert.equal(marksIn(world, accentOf(Faction.Pelagia)).length, 0);
+    } finally {
+      world.teardown();
+    }
+  });
+
   it("waits on the SOUR line, rather than marking the Lid's depth or the separator", async () => {
     // `SOUR — BLEEDING at 50m · dive below 150m`: the hull's `50m` has a `·`
     // a cell after it, so there is no room, and the `50m` at the tail of the
