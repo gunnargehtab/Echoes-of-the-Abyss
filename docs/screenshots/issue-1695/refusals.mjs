@@ -3,12 +3,15 @@
  * module (docs/sorrowgate-arch-study.md §9: "Demonstrate sonar and
  * construction refusal separately, with their real feedback").
  *
+ *   .claude/skills/run-game/scripts/dev.sh start
  *   VIEW_W=1920 VIEW_H=1080 TAG=court \
  *     node .claude/skills/run-game/scripts/drive.mjs --entry tutorial \
+ *     --url 'http://localhost:5173/?arch-study=1' \
  *     --out <dir> --steps docs/screenshots/issue-1695/refusals.mjs
  *
  * In the court it selects the flight, presses P, waits out the hint bar's
- * refusal, then presses R and clicks the water where a placement would land.
+ * refusal, then presses R and left-clicks one fixed point of the view
+ * (55 %, 40 %), where an armed placement would land.
  * A frame is taken before each press and after it, at H's unmodified opening
  * camera, so neither refusal is staged to light the frame.
  *
@@ -117,8 +120,8 @@ export default async ({ page }) => {
   await page.keyboard.press('KeyR');
   await page.waitForTimeout(600);
   await take('after-R');
-  // A click where the placement would go: with no ghost armed it selects,
-  // and no `build` leaves the page.
+  // A fixed point of the view, where an armed placement would land: with no
+  // ghost armed it selects whatever is nearest, and no `build` leaves the page.
   await page.mouse.click(w * 0.55, h * 0.4);
   await page.waitForTimeout(1500);
   await take('after-click');
