@@ -3294,10 +3294,12 @@ export class EchoRenderer {
       if (this.menuOpen) return;
       if (document.activeElement?.matches?.('input, textarea, select, [contenteditable="true"]'))
         return;
-      if (!this.navigating && this.destination?.pinned && e.shiftKey && e.deltaY !== 0) {
-        this.setDestinationDepth(
-          this.destination.depthM + Math.sign(e.deltaY) * DEPTH.CONTROL_STEP_M
-        );
+      if (!this.navigating && this.destination?.pinned && e.shiftKey) {
+        const notch = e.deltaY !== 0 ? e.deltaY : e.deltaX;
+        if (notch !== 0)
+          this.setDestinationDepth(
+            this.destination.depthM + Math.sign(notch) * DEPTH.CONTROL_STEP_M
+          );
         return;
       }
       // Shift + wheel moves the focus through the column instead of zooming
@@ -4201,6 +4203,7 @@ export class EchoRenderer {
         active: this.pendingAttackMove,
         refusal: heldAll ?? this.missionLock('weapons') ?? undefined,
         action: () => {
+          this.cancelDestination();
           this.pendingBuild = null;
           this.pendingAttackMove = !this.pendingAttackMove;
         },

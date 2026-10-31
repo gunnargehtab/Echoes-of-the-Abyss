@@ -430,6 +430,47 @@ async function boot(
  * than booted, so a failure here is the probe's and not the renderer's.
  */
 describe('free-water camera integration', () => {
+  it('uses the north-up scope without moving the camera and keeps queueing separate from Shift-wheel', async () => {
+    const world = await boot({ controlsStudy: true });
+    const reading = () =>
+      world.log.calls.filter((call) => call.name === 'onDestination').at(-1)
+        ?.args[0] as MovePreviewReading | null;
+    try {
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.frame();
+      world.chart.armDestination();
+      const before = world.conn.frame;
+      const scope = (
+        world.chart as unknown as {
+          minimapRect(): { x: number; y: number; size: number };
+        }
+      ).minimapRect();
+      const press = {
+        button: 0,
+        buttons: 1,
+        pointerId: 1,
+        clientX: scope.x + scope.size / 2,
+        clientY: scope.y + scope.size / 2,
+      };
+      world.app.canvas.dispatch('pointerdown', press);
+      world.app.canvas.dispatch('pointerup', { ...press, buttons: 0 });
+      assert.ok(Math.abs(reading()!.point!.x - 2000) < 1e-6);
+      assert.ok(Math.abs(reading()!.point!.y - 2000) < 1e-6);
+      assert.equal(reading()!.pinned, true);
+      const depth = reading()!.depthM;
+      world.app.canvas.dispatch('wheel', { deltaY: 0, deltaX: -1, shiftKey: true });
+      assert.equal(reading()!.depthM, depth - DEPTH.CONTROL_STEP_M);
+      assert.equal(reading()!.queued, false);
+      assert.deepEqual(world.conn.frame, before);
+      const engage = barLabel(world.app, 'ENGAGE');
+      world.app.canvas.dispatch('pointerdown', { ...press, clientX: engage.x, clientY: engage.y });
+      assert.equal(reading(), null, 'a command-card mode replaces the preview too');
+      assert.equal(world.log.names().includes('onMoveOrder'), false);
+    } finally {
+      world.teardown();
+    }
+  });
+
   it('pins an independent destination, keeps it through camera motion, and confirms one fixed move', async () => {
     const world = await boot({ controlsStudy: true });
     const reading = () =>

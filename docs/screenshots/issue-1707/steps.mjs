@@ -8,7 +8,7 @@ export default async ({ page, shot }) => {
   const hull = (await units()).find((unit) => unit.depthM >= 300 && unit.screen);
   assert.ok(hull);
   await page.evaluate((unit) => {
-    window.__perspectiveCamera(unit.xM, unit.zM, 400, { pitchDeg: 35, focusDepthM: unit.depthM });
+    window.__perspectiveCamera(unit.xM, unit.zM, 200, { pitchDeg: 12, focusDepthM: unit.depthM });
   }, hull);
   await page.waitForTimeout(350);
   await page.mouse.click(720, 450);
@@ -19,8 +19,10 @@ export default async ({ page, shot }) => {
   await page.getByRole('button', { name: 'MOVE 3D', exact: true }).click();
   await page.mouse.move(900, 450);
   await page.mouse.click(900, 450);
+  await page.getByRole('button', { name: 'UNPIN', exact: true }).waitFor();
   const x = await page.getByLabel('Map x (m)').inputValue();
   const y = await page.getByLabel('Map y (m)').inputValue();
+  assert.ok(x && y, 'rolled click pins a finite plan point');
   await page.getByLabel('Destination depth (m)').fill('3100');
   assert.equal(await page.getByRole('button', { name: 'CONFIRM', exact: true }).isEnabled(), false);
   await shot('rolled-invalid-depth');
