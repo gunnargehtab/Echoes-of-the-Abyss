@@ -206,6 +206,11 @@ has no position or scale jitter and no budget-driven truncation. Other maps reta
 ordinary registry scatter. The opening list has exactly these counts, provided every
 asset loaded; a missing model is a failed acceptance row, not a quieter forest.
 
+In #1713, register all five new rows with `stands: []` and `density: 0`, so only the
+fixture's list places them; that PR also adds stand-only allowances of 1,200 triangles
+and 120 m footprint to the registry checks, retaining the existing 800/60 bounds for
+every other row.
+
 | Kit | Authored placement list, map metres | Opening count |
 | --- | --- | --- |
 | New kelp stands | Cell origins `x=1,000,1,250,...,2,750` at each of `y=500,750`, plus `x=1,000,1,250,2,500,2,750` at `y=1,250`; two slots per cell at offsets `(62.5,125)` and `(187.5,125)` | 40 |
@@ -317,6 +322,9 @@ pending preview, so the next Escape cancels it rather than also doing so on the 
 press. Arming MOVE 3D cancels pending build/attack-move placement. Opening a menu leaves
 NAV and clears held movement; closing the menu never resumes motion. Focused fields
 and menus consume their events before the world handler.
+Escape in the preview's metre field follows this same chain: leave NAV if active,
+otherwise cancel the whole preview, not merely blur the field; the press never also
+opens the menu.
 
 Initial translation speed is 200 rendered metres/s, adjustable in Controls over
 50..800; keyboard rotation is 60 degrees/s. These are camera-only TUNABLEs, not unit
@@ -364,9 +372,10 @@ inferred from the wheel's Shift. Unpin returns to plan placement. Camera movemen
 continue while previewing; it cannot change a pinned point or the numeric depth.
 
 Wheel ownership is menu/focused field first, then NAV, then a pinned MOVE 3D preview,
-then ordinary flight. Outside NAV, `Shift` + wheel over the world edits the pinned
+then the ordinary camera (orbit or flight). Outside NAV, `Shift` + wheel over the world edits the pinned
 preview's depth and does not move the camera. Inside NAV it moves camera depth and
-leaves the preview unchanged. Unmodified wheel remains camera travel in either case.
+leaves the preview unchanged. Over the world, unmodified wheel keeps the ordinary
+camera action: orbit dolly or flight travel.
 
 Show plan position, target depth, terrain interval, vertical tether, pressure warning
 and ascent/descent cost. A ray parallel to the command plane, behind the eye or outside
@@ -421,7 +430,7 @@ evidence folders unchanged. A standalone model viewer cannot pass the integrated
 
 **Budgets are gates, not forecasts.** Retain [graphics-standards.md](graphics-standards.md)
 gate 6: at most 150 draw calls and 400,000 triangles over every pass, DPR at most 1.5.
-Reserve at most 30 calls / 120,000 triangles for all props and decorative life together:
+Reserve at most 30 calls / 120,000 triangles for all props and decorative life together.
 The authored list totals at most 85,888 triangles: 40 new kelp stands at at most 1,200
 each (48,000), 16 retained clusters (6,208), wildlife (31,680), and zero other dressing.
 The remaining reservation is unused, not permission to fill the bowl. Counts are the
