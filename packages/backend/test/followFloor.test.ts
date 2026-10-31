@@ -55,6 +55,55 @@ function onTheGround(m: Match, eid: number, floorM: number): void {
 }
 
 describe('floor-following', () => {
+  it('keeps an explicit near-floor destination fixed across mixed hulls and queued legs', () => {
+    const m = match(1000);
+    const shallow = seat(m, 300);
+    const deep = seat(m, 500);
+    m.orderMoves(0, [shallow, deep], 1500, 4000, false, 950, true);
+    for (const eid of [shallow, deep]) {
+      assert.equal(DepthOrder.follow[eid], 0);
+      assert.equal(DepthOrder.targetM[eid], 950);
+    }
+    m.orderMoves(0, [shallow], 2000, 4000, true, 975, true);
+    advance(m, 60);
+    assert.equal(DepthOrder.follow[shallow], 0);
+    assert.ok(Math.abs(Position.depth[shallow]! - 975) <= EPS);
+    assert.ok(Math.abs(Position.x[shallow]! - 2000) <= 5);
+  });
+
+  it('refuses invalid fixed endpoints without replacing the active course or queue', () => {
+    const m = match(1000);
+    const eid = seat(m, 300);
+    m.orderMove(0, eid, 1500, 4000, false, 600);
+    m.orderMove(0, eid, 2000, 4000, true, 700);
+    m.world.terrain.fillGround(3000, 3000, 250, 250, { floorM: 500, ceilingM: 500 });
+    for (const [x, y, depth] of [
+      [-1, 4000, 600],
+      [MAP_M, 4000, 600],
+      [3000, 4000, 1001],
+      [3000, 3000, 500],
+      [3000, 4000, undefined],
+    ]) {
+      m.orderMoves(0, [eid], x!, y!, false, depth, true);
+      assert.equal(MoveOrder.x[eid], 1500);
+      assert.equal(DepthOrder.targetM[eid], 600);
+      assert.equal(m.world.orderQueues.get(eid)?.length, 1);
+    }
+  });
+
+  it('rechecks a queued fixed endpoint if the ground changes before it begins', () => {
+    const m = match(1000);
+    const eid = seat(m, 300);
+    m.orderMoves(0, [eid], 1500, 4000, false, 600, true);
+    m.orderMoves(0, [eid], 2000, 4000, true, 950, true);
+    m.world.terrain.fillGround(2000, 4000, 250, 250, { floorM: 800 });
+    advance(m, 60);
+    assert.equal(DepthOrder.follow[eid], 0);
+    assert.ok(Math.abs(Position.x[eid]! - 1500) <= 5);
+    assert.ok(Math.abs(Position.depth[eid]! - 600) <= EPS);
+    assert.equal(m.world.orderQueues.get(eid), undefined);
+  });
+
   it('is engaged by a move onto the ground, and settles at the clearance', () => {
     const m = match(1000);
     const eid = seat(m, 300);

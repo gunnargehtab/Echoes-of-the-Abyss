@@ -115,7 +115,13 @@ import { standingWaveSystem } from './systems/standingWave.ts';
 import { combatSystem } from './systems/combat.ts';
 import { orderTarget } from './systems/chase.ts';
 import { constructionSystem } from './systems/construction.ts';
-import { depthSystem, leaveFloor, orderDepthAt, setDepthTarget } from './systems/depth.ts';
+import {
+  depthSystem,
+  fixedDepthFits,
+  leaveFloor,
+  orderDepthAt,
+  setDepthTarget,
+} from './systems/depth.ts';
 import { separationSystem } from './systems/separation.ts';
 import { clearQueue, enqueue, orderQueueSystem, queueView } from './systems/orderQueue.ts';
 import {
@@ -1261,11 +1267,12 @@ export class Match {
     x: number,
     y: number,
     queued = false,
-    depthM?: number
+    depthM?: number,
+    fixedDepth = false
   ): void {
     const pace = this.missionRuntime?.paceFor(slot, eids) ?? 0;
     for (const eid of eids) {
-      this.orderMove(slot, eid, x, y, queued, depthM, eid === pace ? 0 : pace);
+      this.orderMove(slot, eid, x, y, queued, depthM, eid === pace ? 0 : pace, fixedDepth);
     }
   }
 
@@ -1283,7 +1290,8 @@ export class Match {
     y: number,
     queued = false,
     depthM?: number,
-    paceEid = 0
+    paceEid = 0,
+    fixedDepth = false
   ): void {
     this.recordCommand({
       tick: this.world.tick,
@@ -1295,13 +1303,14 @@ export class Match {
       queued,
       ...(depthM === undefined ? {} : { depth: depthM }),
       ...(paceEid === 0 ? {} : { pace: this.localId(paceEid) }),
+      ...(fixedDepth ? { fixedDepth: true } : {}),
     });
     // A mission may be holding this hull still — the court's tenders do not
     // move before they are loaded, and do not move at all without an escort
     // close enough to hear for them. Refused after the recording, like every
     // other refusal on this path.
     if (this.missionRuntime?.holdsMovement(slot, eid) === true) return;
-    this.applyMove(slot, eid, x, y, queued, depthM, paceEid);
+    this.applyMove(slot, eid, x, y, queued, depthM, paceEid, fixedDepth);
   }
 
   /**
@@ -1463,10 +1472,12 @@ export class Match {
     y: number,
     queued: boolean,
     depthM?: number,
-    paceEid = 0
+    paceEid = 0,
+    fixedDepth = false
   ): void {
     if (!this.owns(slot, eid) || !hasComponent(this.world, MoveOrder, eid)) return;
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    if (fixedDepth && !fixedDepthFits(this.world, x, y, depthM)) return;
     // The depth half is refused rather than clamped, as `orderDepth` refuses
     // one, and it takes the place with it: a half-applied order is a worse
     // answer than none (`isValidClientMessage`). Unlike the place — a click
@@ -1493,6 +1504,7 @@ export class Match {
         y,
         ...(depthM === undefined ? {} : { depth: depthM }),
         ...(paceEid === 0 ? {} : { pace: paceEid }),
+        ...(fixedDepth ? { fixedDepth: true } : {}),
       });
       return;
     }
@@ -1522,7 +1534,7 @@ export class Match {
     }
     cancelEmbark(this.world, eid);
     // After the plan, so the floor the rule reads is the clamped point's.
-    if (depthM !== undefined) orderDepthAt(this.world, eid, x, y, depthM);
+    if (depthM !== undefined) orderDepthAt(this.world, eid, x, y, depthM, fixedDepth);
   }
 
   /**

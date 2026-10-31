@@ -355,7 +355,8 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
         message.x,
         message.y,
         message.queued === true,
-        message.depth
+        message.depth,
+        message.fixedDepth === true
       );
     });
 

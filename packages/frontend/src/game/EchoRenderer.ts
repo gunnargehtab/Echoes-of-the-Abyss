@@ -163,6 +163,7 @@ import {
 } from '../input/bindings.ts';
 import { FREE_WATER_CONTROLS } from './freeWaterControls.ts';
 import type { FlightReading } from './flightCamera.ts';
+import { readMovePreview, type MovePreview, type MovePreviewReading } from './movePreview.ts';
 import { DEPTH_VISUAL_M_PER_M } from './perspectiveTerrain.ts';
 import { FACTION_NAME } from './factions.ts';
 import { DREDGE_STRUCK_TEXT, NO_DECOY_TEXT, carriesDecoy, dredgeStruck, fights } from './dredge.ts';
@@ -379,11 +380,19 @@ interface TrackedContact {
 
 export interface RendererCallbacks {
   onFlight?(reading: FlightReading): void;
+  onDestination?(reading: MovePreviewReading | null): void;
   /**
    * Go there. `depth` is the click's (#1132): a click is a point in the water
    * (docs/ui-ux.md §9), and absent only where the order is a place alone.
    */
-  onMoveOrder(unitIds: number[], x: number, y: number, queued: boolean, depth?: number): void;
+  onMoveOrder(
+    unitIds: number[],
+    x: number,
+    y: number,
+    queued: boolean,
+    depth?: number,
+    fixedDepth?: boolean
+  ): void;
   /** Attack-move (§9, #435): go there and fight what you meet on the way. */
   onAttackMoveOrder(unitIds: number[], x: number, y: number, queued: boolean, depth?: number): void;
   onStopOrder(unitIds: number[]): void;
@@ -1760,6 +1769,7 @@ export class EchoRenderer {
   private flightSpeed: number = FLIGHT_CAMERA.SPEED_M_S;
   private cancelGesture = (): void => {};
   private flightPublishedAt = -Infinity;
+  private destination: MovePreview | null = null;
   /** The previous frame's clock, for the pan's dt. */
   private lastFrameMs = 0;
   private readonly orderMarkers: OrderMarker[] = [];
@@ -2601,7 +2611,95 @@ export class EchoRenderer {
   private publishFlight(): void {
     if (!this.controlsStudy || this.conn === null) return;
     this.callbacks.onFlight?.(this.conn.flightReading(this.navigating));
+    this.publishDestination();
     this.flightPublishedAt = performance.now();
+  }
+
+  armDestination(): void {
+    if (!this.controlsStudy || this.menuOpen) return;
+    const units = this.selectedUnits();
+    const lead = units[0];
+    if (lead === undefined) {
+      this.refuse('SELECT HULLS FIRST');
+      return;
+    }
+    this.pendingBuild = null;
+    this.pendingAttackMove = false;
+    this.clearCameraInput();
+    this.destination = {
+      unitIds: units.map((unit) => unit.id),
+      planeDepthM: lead.depth,
+      point: { x: lead.x, y: lead.y },
+      depthM: lead.depth,
+      pinned: false,
+      queued: false,
+    };
+    this.publishDestination();
+  }
+
+  cancelDestination(): void {
+    this.destination = null;
+    this.publishDestination();
+  }
+
+  private publishDestination(): void {
+    if (!this.controlsStudy) return;
+    this.callbacks.onDestination?.(
+      this.destination === null ? null : readMovePreview(this.destination, this.terrain, this.units)
+    );
+  }
+
+  setDestinationPlan(axis: 'x' | 'y', value: number): void {
+    if (this.destination === null || this.destination.pinned) return;
+    const point = this.destination.point ?? { x: Number.NaN, y: Number.NaN };
+    this.destination.point = { ...point, [axis]: value };
+    this.publishDestination();
+  }
+
+  setDestinationDepth(value: number): void {
+    if (this.destination === null) return;
+    this.destination.depthM = value;
+    this.publishDestination();
+  }
+
+  pinDestination(pinned: boolean): void {
+    if (this.destination === null) return;
+    if (pinned && this.destination.point === null) {
+      this.refuse('NO WATER TARGET');
+      return;
+    }
+    this.destination.pinned = pinned;
+    this.publishDestination();
+  }
+
+  queueDestination(queued: boolean): void {
+    if (this.destination === null) return;
+    this.destination.queued = queued;
+    this.publishDestination();
+  }
+
+  confirmDestination(): void {
+    const preview = this.destination;
+    if (preview === null || this.menuOpen || this.navigating) return;
+    const reading = readMovePreview(preview, this.terrain, this.units);
+    if (reading.reason !== null || !preview.pinned || preview.point === null) {
+      this.refuse(reading.reason ?? 'PIN POSITION FIRST');
+      return;
+    }
+    const ids = this.movable(
+      preview.unitIds.filter((id) => this.units.some((unit) => unit.id === id))
+    );
+    if (ids.length === 0) return;
+    const { x, y } = preview.point;
+    this.callbacks.onMoveOrder(ids, x, y, preview.queued, preview.depthM, true);
+    this.noteOrder(ids, 'move', x, y, preview.queued, preview.depthM);
+    this.cancelDestination();
+  }
+
+  private aimDestination(x: number, y: number): void {
+    if (this.destination === null || this.destination.pinned || this.navigating) return;
+    this.destination.point = this.conn?.pickPlane(x, y, this.destination.planeDepthM) ?? null;
+    this.publishDestination();
   }
 
   /**
@@ -3054,6 +3152,13 @@ export class EchoRenderer {
         return;
       }
       if (this.navigating) return;
+      if (this.destination !== null) {
+        if (e.button === 0) {
+          pendingAim = { x: e.clientX, y: e.clientY, queued: false };
+          capture(e.pointerId);
+        }
+        return;
+      }
 
       if (e.button === 2) {
         // Shift queues the order behind whatever the unit is already doing,
@@ -3123,7 +3228,10 @@ export class EchoRenderer {
         return;
       }
 
-      if (!panning) return;
+      if (!panning) {
+        this.aimDestination(e.clientX, e.clientY);
+        return;
+      }
       this.conn?.panBy(e.clientX - lastX, e.clientY - lastY);
       lastX = e.clientX;
       lastY = e.clientY;
@@ -3161,7 +3269,10 @@ export class EchoRenderer {
         const press = pendingAim;
         pendingAim = null;
         if (!released) return;
-        if (this.pendingAttackMove) this.commandAttackMove(press.x, press.y, press.queued);
+        if (this.destination !== null) {
+          this.aimDestination(press.x, press.y);
+          this.pinDestination(true);
+        } else if (this.pendingAttackMove) this.commandAttackMove(press.x, press.y, press.queued);
         else if (this.pendingBuild !== null) this.commandPlace(press.x, press.y);
         return;
       }
@@ -3180,6 +3291,14 @@ export class EchoRenderer {
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       if (this.menuOpen) return;
+      if (document.activeElement?.matches?.('input, textarea, select, [contenteditable="true"]'))
+        return;
+      if (!this.navigating && this.destination?.pinned && e.shiftKey && e.deltaY !== 0) {
+        this.setDestinationDepth(
+          this.destination.depthM + Math.sign(e.deltaY) * DEPTH.CONTROL_STEP_M
+        );
+        return;
+      }
       // Shift + wheel moves the focus through the column instead of zooming
       // (docs/free-camera.md §4, docs/ui-ux.md §9). This gesture zoomed before
       // the camera was freed; the reassignment is deliberate, is written into
@@ -3217,6 +3336,11 @@ export class EchoRenderer {
           this.leaveNavigation();
           return;
         }
+        if (this.destination !== null) {
+          e.preventDefault();
+          this.cancelDestination();
+          return;
+        }
         if (this.pendingAttackMove) {
           this.pendingAttackMove = false;
           return;
@@ -3241,9 +3365,19 @@ export class EchoRenderer {
         }
       }
       const target = e.target as HTMLElement | null;
+      if (e.code === 'Enter' && this.destination !== null && !target?.closest?.('button')) {
+        e.preventDefault();
+        if (!e.repeat) this.confirmDestination();
+        return;
+      }
       if (target?.closest?.('input, textarea, select, button, [contenteditable="true"]')) return;
       if (this.controlsStudy) {
         const cameraAction = actionFor(this.bindings, e.code, this.navigating);
+        if (cameraAction === 'move3d') {
+          e.preventDefault();
+          if (!e.repeat) this.armDestination();
+          return;
+        }
         if (cameraAction === 'toggleFlight' || cameraAction === 'toggleNav') {
           e.preventDefault();
           if (!e.repeat) {
@@ -3357,6 +3491,7 @@ export class EchoRenderer {
 
       switch (action) {
         case 'attackMove': {
+          this.cancelDestination();
           // Armed, then aimed: the next click on the water is the point, as a
           // build key arms a placement. A press with a build pending drops
           // the build — one thing armed at a time.
@@ -3820,6 +3955,13 @@ export class EchoRenderer {
     if (px < x || px > x + size || py < y || py > y + size) return false;
     const k = this.minimapScale(size);
     if (k <= 0) return true;
+    if (this.destination !== null && !this.navigating) {
+      if (!this.destination.pinned) {
+        this.destination.point = { x: (px - x) / k, y: (py - y) / k };
+        this.pinDestination(true);
+      }
+      return true;
+    }
     this.conn?.focusWorld((px - x) / k, (py - y) / k);
     return true;
   }
@@ -3852,6 +3994,7 @@ export class EchoRenderer {
 
   /** Auto-open the page that matches what was just selected. */
   private onSelectionChanged(): void {
+    this.cancelDestination();
     this.selectionSeq++;
     const structuresById = new Map(this.structures.map((s) => [s.id, s] as const));
     let structure: (typeof this.structures)[number] | undefined;
@@ -4746,6 +4889,7 @@ export class EchoRenderer {
    * promised the build (#1335).
    */
   private armBuild(kind: StructureKind): void {
+    this.cancelDestination();
     this.pendingAttackMove = false;
     this.pendingBuild = kind;
   }
@@ -5607,6 +5751,7 @@ export class EchoRenderer {
    * survive because they are the same ground; nodes do not, and arrive again.
    */
   resetForNewMatch(): void {
+    this.cancelDestination();
     this.homeCamera();
     this.gameOver = null;
     // Both of these, and this is not optional: a mission followed by another
@@ -9397,6 +9542,20 @@ export class EchoRenderer {
       });
     }
     this.orderMarkers.length = keep;
+    const preview = this.destination;
+    if (
+      preview?.point &&
+      Number.isFinite(preview.point.x) &&
+      Number.isFinite(preview.point.y) &&
+      Number.isFinite(preview.depthM)
+    ) {
+      const { x, y } = preview.point;
+      const reading = readMovePreview(preview, this.terrain, this.units);
+      const color = reading.reason === null ? UI.accent : UI.threat;
+      if (this.plumbTo(g, x, y, preview.depthM)) g.stroke({ width: 1.5, color, alpha: 0.9 });
+      const p = this.project(x, y, preview.depthM);
+      if (p?.visible) g.circle(p.x, p.y, 9 * this.uiScale).stroke({ width: 2, color });
+    }
   }
 
   /**

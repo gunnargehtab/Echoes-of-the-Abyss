@@ -50,6 +50,7 @@ import {
 } from '@echoes/shared';
 import { FOCUS_DRAG_M_PER_PX, FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
 import { swayAt } from '../src/game/cameraSway.ts';
+import type { MovePreviewReading } from '../src/game/movePreview.ts';
 import { readsDisplayVeil, VEIL_SHADE_ATTRIBUTE } from '../src/game/veilShading.ts';
 import { VEIL_FLOOR_RGB } from '../src/game/acousticVeil.ts';
 import { HIT_PARTICLES_MIN } from '../src/game/hullHit.ts';
@@ -421,6 +422,83 @@ async function boot(
  * than booted, so a failure here is the probe's and not the renderer's.
  */
 describe('free-water camera integration', () => {
+  it('pins an independent destination, keeps it through camera motion, and confirms one fixed move', async () => {
+    const world = await boot({ controlsStudy: true });
+    const reading = () =>
+      world.log.calls.filter((call) => call.name === 'onDestination').at(-1)
+        ?.args[0] as MovePreviewReading | null;
+    try {
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.chart.armDestination();
+      assert.ok(reading());
+      world.chart.setDestinationPlan('x', 2000);
+      world.chart.setDestinationPlan('y', 2000);
+      world.chart.pinDestination(true);
+      world.chart.setDestinationDepth(900);
+      world.chart.queueDestination(true);
+      const pinned = structuredClone(reading());
+      world.chart.toggleNavigation();
+      world.chart.stepFlight('rollLeft');
+      world.chart.stepFlight('flyRight');
+      world.chart.confirmDestination();
+      assert.equal(world.log.names().includes('onMoveOrder'), false, 'NAV cannot confirm');
+      dispatchWindow('keydown', { code: 'Escape' });
+      assert.deepEqual(reading(), pinned, 'leaving NAV preserves preview and depth');
+      world.app.canvas.dispatch('wheel', { deltaY: 1, shiftKey: true });
+      assert.equal(reading()!.depthM, 1050);
+      assert.equal(reading()!.queued, true);
+      dispatchWindow('keydown', { code: 'Enter', target: { closest: () => null } });
+      world.chart.confirmDestination();
+      const commands = world.log.calls.filter((call) => call.name === 'onMoveOrder');
+      assert.equal(commands.length, 1);
+      assert.deepEqual(commands[0]!.args, [pinned!.unitIds, 2000, 2000, true, 1050, true]);
+      assert.equal(reading(), null);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('refuses invalid preview rays, solids and depths without issuing or clamping an order', async () => {
+    const world = await boot({ controlsStudy: true });
+    const reading = () =>
+      world.log.calls.filter((call) => call.name === 'onDestination').at(-1)
+        ?.args[0] as MovePreviewReading | null;
+    try {
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.chart.armDestination();
+      world.chart.setDestinationPlan('x', 2000);
+      world.chart.setDestinationPlan('y', 2000);
+      world.chart.pinDestination(true);
+      world.chart.setDestinationDepth(3100);
+      world.chart.confirmDestination();
+      assert.equal(reading()!.depthM, 3100);
+      assert.equal(reading()!.reason, 'DEPTH OUTSIDE WATER INTERVAL');
+      const terrain = cannedTerrain();
+      terrain.ceiling.fill(500);
+      terrain.floor.fill(500);
+      world.chart.setTerrain(terrain);
+      world.chart.setDestinationDepth(500);
+      world.chart.confirmDestination();
+      assert.equal(reading()!.reason, 'NO WATER COLUMN');
+      world.chart.setTerrain(cannedTerrain());
+      world.chart.pinDestination(false);
+      world.conn.setReducedMotion(true);
+      world.conn.focusWorld(2000, 2000, 1000);
+      world.conn.raiseFocusBy(world.conn.focusDepth() - 300);
+      world.chart.toggleFlight();
+      world.conn.turnFlight(0, Math.PI, 0);
+      world.app.canvas.dispatch('pointermove', { clientX: 640, clientY: 360, buttons: 0 });
+      assert.equal(reading()!.reason, 'NO WATER TARGET');
+      world.chart.confirmDestination();
+      assert.equal(world.log.names().includes('onMoveOrder'), false);
+      dispatchWindow('keydown', { code: 'Escape', target: { closest: () => ({}) } });
+      assert.equal(reading(), null, 'Escape owns preview even from an input');
+      assert.equal(world.log.names().includes('onOpenMenu'), false);
+    } finally {
+      world.teardown();
+    }
+  });
+
   it('flies all local axes, crosses poles, rolls, picks through the shared camera and recovers Home', async () => {
     const world = await boot({ controlsStudy: true });
     try {

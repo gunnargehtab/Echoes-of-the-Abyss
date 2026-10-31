@@ -1,0 +1,58 @@
+import assert from 'node:assert/strict';
+import { writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+
+export default async ({ page, shot }) => {
+  await page.waitForTimeout(6000);
+  const units = () => page.evaluate(() => window.__perspectiveLamps().units);
+  const hull = (await units()).find((unit) => unit.depthM >= 300 && unit.screen);
+  assert.ok(hull);
+  await page.evaluate((unit) => {
+    window.__perspectiveCamera(unit.xM, unit.zM, 400, { pitchDeg: 35, focusDepthM: unit.depthM });
+  }, hull);
+  await page.waitForTimeout(350);
+  await page.mouse.click(720, 450);
+  await page.keyboard.press('F9');
+  for (let i = 0; i < 6; i++)
+    await page.getByRole('button', { name: 'Roll left', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'MOVE 3D', exact: true }).click();
+  await page.mouse.move(900, 450);
+  await page.mouse.click(900, 450);
+  const x = await page.getByLabel('Map x (m)').inputValue();
+  const y = await page.getByLabel('Map y (m)').inputValue();
+  await page.getByLabel('Destination depth (m)').fill('3100');
+  assert.equal(await page.getByRole('button', { name: 'CONFIRM', exact: true }).isEnabled(), false);
+  await shot('rolled-invalid-depth');
+  const depth = Math.round(hull.depthM - 150);
+  await page.getByLabel('Destination depth (m)').fill(String(depth));
+  await page.getByRole('button', { name: 'NAV', exact: true }).click();
+  await page.getByRole('button', { name: 'Look right', exact: true }).click();
+  await page.keyboard.press('Escape');
+  assert.equal(await page.getByLabel('Map x (m)').inputValue(), x);
+  assert.equal(await page.getByLabel('Map y (m)').inputValue(), y);
+  assert.equal(await page.getByLabel('Destination depth (m)').inputValue(), String(depth));
+  await shot('pinned-after-camera-motion');
+  await page.getByLabel('Destination depth (m)').focus();
+  await page.keyboard.press('Enter');
+  await page.getByRole('button', { name: 'MOVE 3D', exact: true }).waitFor();
+  await page.waitForTimeout(12000);
+  const arrived = (await units()).find((unit) => unit.id === hull.id);
+  assert.ok(Math.abs(arrived.depthM - depth) <= 2, `authoritative depth: ${arrived.depthM}`);
+  assert.ok(Math.hypot(arrived.xM - hull.xM, arrived.zM - hull.zM) > 5, 'the hull also moved');
+  await shot('authoritative-arrival');
+  // Keyboard-only fields and an explicit queued leg; the point never comes from camera focus.
+  await page.getByRole('button', { name: 'MOVE 3D', exact: true }).click();
+  await page.getByLabel('Map x (m)').fill(x);
+  await page.getByLabel('Map y (m)').fill(y);
+  await page.getByRole('button', { name: 'PIN POSITION', exact: true }).click();
+  await page.getByLabel('Destination depth (m)').fill(String(depth + 50));
+  await page.getByLabel('Queue after current orders').check();
+  await shot('queued-numeric-destination');
+  await page.getByRole('button', { name: 'CONFIRM', exact: true }).click();
+  await page.waitForTimeout(5000);
+  const queued = (await units()).find((unit) => unit.id === hull.id);
+  assert.ok(Math.abs(queued.depthM - depth - 50) <= 2, `queued depth: ${queued.depthM}`);
+  const dir = dirname(await shot('queued-arrival'));
+  writeFileSync(join(dir, 'readings.json'), JSON.stringify({ hull, x, y, depth, arrived, queued }, null, 2));
+};

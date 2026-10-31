@@ -164,7 +164,9 @@ export function ControlsScreen({ onBack }: ControlsScreenProps) {
           {GROUP_ORDER.map((group) => (
             <section key={group} className="menu-binding-group">
               <h3>{GROUP_LABEL[group]}</h3>
-              {ACTIONS.filter((spec) => spec.group === group).map((spec) => (
+              {ACTIONS.filter(
+                (spec) => spec.group === group && (FREE_WATER_CONTROLS || spec.action !== 'move3d')
+              ).map((spec) => (
                 <div
                   key={spec.action}
                   className={`menu-binding-row${conflicted.has(spec.action) ? ' clash' : ''}`}
