@@ -37,6 +37,7 @@ export function MovePreviewPanel({
             <label key={axis}>
               Map {axis} (m)
               <input
+                className="move-preview-number"
                 type="number"
                 disabled={reading.pinned}
                 value={number(reading.point?.[axis])}
@@ -50,6 +51,7 @@ export function MovePreviewPanel({
           <label>
             Destination depth (m)
             <input
+              className="move-preview-number"
               type="number"
               value={number(reading.depthM)}
               onChange={(event) => onDepth(event.currentTarget.valueAsNumber)}

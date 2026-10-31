@@ -3689,7 +3689,7 @@ button.objectives-row .objectives-text {
   margin: 8px 0;
 }
 
-.move-preview input[type='number'] {
+.move-preview-number {
   width: 90px;
 }
 

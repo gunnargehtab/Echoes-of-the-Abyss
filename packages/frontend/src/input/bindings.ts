@@ -83,12 +83,6 @@ export interface ActionSpec {
  */
 export const ACTIONS: readonly ActionSpec[] = [
   {
-    action: 'move3d',
-    label: 'Move 3D',
-    hint: 'Pin plan position, then confirm a fixed depth',
-    group: 'fleet',
-  },
-  {
     action: 'attackMove',
     label: 'Attack-move',
     hint: 'Arm, then click: go there and fight what you meet',
@@ -156,6 +150,12 @@ export const ACTIONS: readonly ActionSpec[] = [
     label: 'Faction structure',
     hint: "Arm your navy's own, when it has one",
     group: 'build',
+  },
+  {
+    action: 'move3d',
+    label: 'Move 3D',
+    hint: 'Pin plan position, then confirm a fixed depth',
+    group: 'fleet',
   },
   {
     action: 'toggleFlight',
