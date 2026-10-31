@@ -379,9 +379,8 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
       const slot = this.commandSlot(client);
       if (slot === undefined) return;
       for (const unitId of message.unitIds) {
-        // Range and ownership are both re-checked inside the sim; an
-        // out-of-range depth is refused there rather than clamped here.
-        this.match.orderDepth(slot, unitId, message.depth);
+        if (message.relative) this.match.offsetDepth(slot, unitId, message.depth);
+        else this.match.orderDepth(slot, unitId, message.depth);
       }
     });
 

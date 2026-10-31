@@ -161,6 +161,28 @@ describe('the room refuses a malformed payload before the simulation sees it', (
       await shutdown(room);
     }
   });
+
+  it('routes relative depths separately and refuses a malformed relative flag', async () => {
+    const room = await bootRoom();
+    try {
+      const [client] = startPlaying(room);
+      const calls = recordCalls(room);
+      deliver(room, CLIENT_MSG.depth, client as FakeClient, {
+        unitIds: [1],
+        depth: -150,
+        relative: 'yes',
+      });
+      assert.deepEqual(calls, []);
+      deliver(room, CLIENT_MSG.depth, client as FakeClient, {
+        unitIds: [1, 2],
+        depth: -150,
+        relative: true,
+      });
+      assert.deepEqual(calls, ['offsetDepth', 'offsetDepth']);
+    } finally {
+      await shutdown(room);
+    }
+  });
 });
 
 describe('the declared bounds', () => {

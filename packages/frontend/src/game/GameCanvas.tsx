@@ -479,6 +479,7 @@ export function GameCanvas({
           onAttackMoveOrder: (unitIds, x, y, queued, depth) =>
             client?.attackMoveTo(unitIds, x, y, queued, depth),
           onStopOrder: (unitIds) => client?.stop(unitIds),
+          onDepthOffset: (unitIds, metres) => client?.changeDepthBy(unitIds, metres),
           onHoldOrder: (unitIds, active) => client?.setHoldPosition(unitIds, active),
           onEmbarkOrder: (unitIds, carrierId) => client?.embark(unitIds, carrierId),
           onDisembarkOrder: (unitIds) => client?.disembark(unitIds),

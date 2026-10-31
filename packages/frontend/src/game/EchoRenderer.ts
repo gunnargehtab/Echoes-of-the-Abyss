@@ -380,6 +380,7 @@ export interface RendererCallbacks {
   /** Attack-move (§9, #435): go there and fight what you meet on the way. */
   onAttackMoveOrder(unitIds: number[], x: number, y: number, queued: boolean, depth?: number): void;
   onStopOrder(unitIds: number[]): void;
+  onDepthOffset(unitIds: number[], metres: number): void;
   onHoldOrder(unitIds: number[], active: boolean): void;
   /** Board a friendly transport (docs/systems-echo.md §3): the hulls close on the carrier. */
   onEmbarkOrder(unitIds: number[], carrierId: number): void;
@@ -987,12 +988,14 @@ interface BarButton {
 export const YIELD = {
   /** A click on empty water does the same thing (`resolveSelection`). */
   DESELECT: 0,
+  /** Direct depth shortcuts retain their keys and the existing click route. */
+  DEPTH_SHORTCUT: 1,
   /** Reached for occasionally, and never in the same breath as a move order. */
-  SITUATIONAL: 1,
+  SITUATIONAL: 2,
   /** The orders a player gives all match. The default. */
-  CORE: 2,
+  CORE: 3,
   /** Nothing but this button reaches it. Yields only to another of its own. */
-  ONLY_ROUTE: 3,
+  ONLY_ROUTE: 4,
 } as const;
 
 /**
@@ -3212,6 +3215,11 @@ export class EchoRenderer {
           e.preventDefault();
           this.commandStop();
           return;
+        case 'rise':
+        case 'dive':
+          e.preventDefault();
+          this.commandDepthOffset(action === 'rise' ? -DEPTH.CONTROL_STEP_M : DEPTH.CONTROL_STEP_M);
+          return;
         case 'holdPosition':
           e.preventDefault();
           this.commandHold();
@@ -3805,9 +3813,22 @@ export class EchoRenderer {
         active: false,
         action: () => this.commandPing(),
       });
-      // No DIVE, RISE or FOLLOW: depth is the click's now (§9, #1132), and a
-      // move onto the ground is the one that follows it.
       const heldAll = this.heldSelection(units);
+      for (const direction of [-1, 1] as const) {
+        const refusal = heldAll ?? this.depthOffsetRefusal(units, direction);
+        buttons.push({
+          label: direction < 0 ? 'RISE' : 'DIVE',
+          yieldRank: YIELD.DEPTH_SHORTCUT,
+          enabled: units.length > 0 && refusal === null,
+          active: false,
+          refusal: refusal ?? undefined,
+          hover:
+            direction < 0
+              ? `Rise ${DEPTH.CONTROL_STEP_M} m: slow and silent; the surface is sour`
+              : `Dive ${DEPTH.CONTROL_STEP_M} m: loud; pressure beyond your rating costs hull`,
+          action: () => this.commandDepthOffset(direction * DEPTH.CONTROL_STEP_M),
+        });
+      }
       // The three standing orders (§9, #435). ENGAGE arms an attack-move the
       // way a build button arms a placement, and it is the pointer's way to
       // give one. HOLD is lit while the selection holds.
@@ -4730,6 +4751,30 @@ export class EchoRenderer {
     // Nothing pending is worth drawing for a hull that was told to stand.
     for (const id of ids) this.pendingOrders.delete(id);
     this.ordersSeq++;
+  }
+
+  private depthOffsetRefusal(units: readonly OwnUnit[], direction: number): string | null {
+    const canMove = units.some((unit) => {
+      const target = unit.depthOrder ?? unit.depth;
+      return direction < 0 ? target > DEPTH.MIN_M : target < DEPTH.MAX_M;
+    });
+    return canMove
+      ? null
+      : direction < 0
+        ? 'RISE: already at the surface target'
+        : 'DIVE: already at maximum depth';
+  }
+
+  private commandDepthOffset(metres: number): void {
+    const units = this.selectedUnits();
+    if (units.length === 0) return;
+    const refusal = this.heldSelection(units) ?? this.depthOffsetRefusal(units, metres);
+    if (refusal !== null) {
+      this.refuse(refusal);
+      return;
+    }
+    const ids = this.movable(units.map((unit) => unit.id));
+    if (ids.length > 0) this.callbacks.onDepthOffset(ids, metres);
   }
 
   /** Land the whole hold of every selected transport where it stands. */

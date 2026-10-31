@@ -27,6 +27,8 @@ import { StructureKind } from '@echoes/shared';
 export type BindableAction =
   | 'attackMove'
   | 'stop'
+  | 'rise'
+  | 'dive'
   | 'holdPosition'
   | 'silentRunning'
   | 'engineOff'
@@ -71,6 +73,18 @@ export const ACTIONS: readonly ActionSpec[] = [
     group: 'fleet',
   },
   { action: 'stop', label: 'Stop', hint: 'Drop the plan and stand where you are', group: 'fleet' },
+  {
+    action: 'rise',
+    label: 'Rise',
+    hint: 'Raise each depth target; keep the course',
+    group: 'fleet',
+  },
+  {
+    action: 'dive',
+    label: 'Dive',
+    hint: 'Lower each depth target; loud, pressure still applies',
+    group: 'fleet',
+  },
   {
     action: 'holdPosition',
     label: 'Hold position',
@@ -139,6 +153,8 @@ export const DEFAULT_BINDINGS: Bindings = {
   // free", and it sits under the same finger.
   attackMove: 'KeyW',
   stop: 'KeyX',
+  rise: 'KeyS',
+  dive: 'KeyD',
   holdPosition: 'KeyH',
   silentRunning: 'Space',
   // Beside Silent Running in meaning, and the only left-hand key the default
@@ -186,7 +202,7 @@ export const ONE_HANDED_BINDINGS: Bindings = {
   mine: 'KeyX',
   buildSignature: 'KeyV',
   // Q is the ping here, so engine off takes the `A` beside it, free in both
-  // layouts since Dive and Rise went (#1132). Not the `B` the signature
+  // layouts after the earlier Rise binding went (#1132). Not the `B` the signature
   // structure vacated: that one sits under the right hand too (#1436).
   engineOff: 'KeyA',
   // V was the throttle; the throttle moved to E, so V is free for the

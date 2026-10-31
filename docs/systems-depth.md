@@ -84,8 +84,8 @@ dive whoever asked for it. Pointing at the ground *is* the order. The rule that 
 spend a descent the player never made survives because the player made this one: they sent
 the hull along the floor rather than through the water above it.
 
-Three things end it. A move into open water replaces it, because the newer instruction is the
-player's current mind, and the hull takes that move's depth instead. So does a task that keeps
+Three things end it. A new depth order replaces it, whether a move into open water or a
+direct rise or dive, because the newer instruction is the player's current mind. So does a task that keeps
 a depth of its own: an attack on a contact, which chases at the depth the hull is on rather
 than down the seabed after it, and a harvest, whose loop orders its own descents and climbs
 ([economy.md](economy.md) §7). Left for a task, the mode lets the hull finish the climb or
@@ -113,6 +113,12 @@ clearance over the shallower of the two: it rises before the edge, at the silent
 and crosses where it would otherwise be refused. Toward its route and not the straight line to
 its order, because a route goes round ground the line crosses, and a hull that rose beside a
 ridge it never crossed would dive back over nothing, loud (#1193).
+
+A direct rise or dive ([ui-ux.md](ui-ux.md) §9) is a new depth order, not a new
+course. It ends floor-following, offsets each hull's active depth target (or its current
+depth when idle), and preserves its horizontal order and queue. Relative targets stop at
+the map's order limits; absolute orders outside them remain refused. Both use the same
+travel, noise, pressure and terrain rules, with no automatic dive around an obstacle.
 
 ### The other end of the column: sour exposure
 
