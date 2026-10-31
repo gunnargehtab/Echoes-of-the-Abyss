@@ -954,6 +954,7 @@ interface BarButton {
   /** Rendered highlighted (e.g. Silent Running currently on). */
   active: boolean;
   action: () => void;
+  navigationSafe?: boolean;
   /**
    * What the hint bar says when the button is pressed while disabled — the
    * reason attached to the grey-out that docs/ui-ux.md §7 asks for. A priced
@@ -3039,7 +3040,7 @@ export class EchoRenderer {
         capture(e.pointerId);
         return;
       }
-      if (!this.navigating && e.button === 0 && this.pressBarButton(e.clientX, e.clientY)) return;
+      if (e.button === 0 && this.pressBarButton(e.clientX, e.clientY)) return;
 
       if (e.button === 1) {
         // Shift makes the middle drag an orbit (§9). Held at press, read once:
@@ -3674,6 +3675,7 @@ export class EchoRenderer {
     if (y < this.hudHeight() - CONSOLE_HEIGHT) return false;
     const button = this.barButtonAt(clientX, clientY);
     if (button !== null) {
+      if (this.navigating && !button.navigationSafe) return true;
       if (button.enabled) button.action();
       else if (button.refusal !== undefined) this.refuse(button.refusal);
     }
@@ -4637,7 +4639,11 @@ export class EchoRenderer {
       label: 'MENU',
       enabled: true,
       active: false,
-      action: () => this.callbacks.onOpenMenu(),
+      navigationSafe: true,
+      action: () => {
+        this.leaveNavigation();
+        this.callbacks.onOpenMenu();
+      },
     });
 
     const model = this.buildBarModel();
