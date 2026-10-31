@@ -9837,8 +9837,12 @@ export class EchoRenderer {
     // The Klaxon's doctrine mark (docs/ui-ux.md §12.5): lit while this SIG is
     // one the Consortium's doctrine pays for. Read through the function combat
     // multiplies by, so the mark and the +12% cannot disagree about where the
-    // threshold is.
-    if (damageMultiplierFor(this.faction, any.sig) > 1) {
+    // threshold is. Not on a structure that never fires: combat multiplies a
+    // Bastion's damage too, but it has none, and a mark promising +12% on
+    // nothing says nothing.
+    const fires =
+      structure === undefined || (structureStatsFor(structure.kind).attackDamage ?? 0) > 0;
+    if (fires && damageMultiplierFor(this.faction, any.sig) > 1) {
       this.drawDoctrineMark(g, this.infoLine1, `SIG ${any.sig.toFixed(0)}`);
     }
 
