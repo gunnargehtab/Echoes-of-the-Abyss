@@ -1996,6 +1996,7 @@ export class Match {
 
   /** Resolve against the server's target so rapid presses cannot lose an offset. */
   offsetDepth(slot: number, eid: number, metres: number): boolean {
+    // Refuse before recording when no owned, finite absolute target can be resolved.
     if (!this.owns(slot, eid) || !hasComponent(this.world, DepthOrder, eid)) return false;
     if (!Number.isFinite(metres)) return false;
     const from = DepthOrder.active[eid] ? DepthOrder.targetM[eid]! : Position.depth[eid]!;

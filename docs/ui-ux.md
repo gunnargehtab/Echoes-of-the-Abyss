@@ -677,7 +677,7 @@ player knows is a worse layout.
 | Mine | `M` | `X` |
 | Faction structure | `B` | `V` |
 
-Everything else — `Space`, `W`, `C`, `R`, `F`, `T`, `G` and `Alt` — is unchanged.
+Everything else — `Space`, `W`, `S`, `D`, `C`, `R`, `F`, `T`, `G` and `Alt` — is unchanged.
 Control groups are the one thing this cannot fix: the digits are fixed for the reason above,
 and `6`–`9` are out of reach. That is a real limitation of playing one-handed rather than
 something the layout is hiding.

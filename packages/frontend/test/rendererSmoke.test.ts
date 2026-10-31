@@ -4061,12 +4061,14 @@ describe('the command card when it is offered more than it holds', () => {
       selectHull(world, corvette);
 
       const lines = textContents(world.app.stage);
-      // The squad page's nine orders. CHARGE is the one #815 lost; since Dive,
-      // Rise and Follow left the page (#1132) the deselect fits beside them.
+      // Eleven orders and the deselect fill the squad page. CHARGE is the
+      // order #815 lost; direct rise and dive use the two spare cells.
       for (const label of [
         'SILENT',
         'DRIVE OFF',
         'PING',
+        'RISE',
+        'DIVE',
         'ENGAGE',
         'STOP',
         'HOLD',
@@ -4337,11 +4339,10 @@ describe('the command card when it is offered more than it holds', () => {
   });
 
   /**
-   * The order itself, over a list whose push order disagrees with its ranks —
-   * which no page the card is offered today does, since the most a page holds
-   * is thirteen and the deselect is both last and lowest. Fourteen offers with
-   * the two only-route entries pushed last: a card that kept whatever was
-   * pushed first would drop both.
+   * The mixed-selection page now has a push order that disagrees with its
+   * ranks. Keep the property pinned independently of that page: fourteen
+   * offers with the two only-route entries pushed last, so keeping whatever
+   * was pushed first would drop both.
    */
   it('yields lowest rank first, and the later of two equals, whatever the push order', () => {
     const entry = (label: string, yieldRank?: number) => ({ label, yieldRank });

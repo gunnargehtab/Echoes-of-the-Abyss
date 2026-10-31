@@ -180,7 +180,7 @@ export const DEFAULT_BINDINGS: Bindings = {
  * sit under a right hand that is on the mouse, which for a player using one
  * hand means the binding may as well not exist. This moves those five and the
  * three they displace on the way — `X` to the mine, `V` to the signature
- * structure, `Q` to the ping — and leaves the other eight alone, because a
+ * structure, `Q` to the ping — and leaves the other ten alone, because a
  * layout that also shuffles the keys a player already knows is a worse
  * layout.
  *
@@ -192,8 +192,7 @@ export const ONE_HANDED_BINDINGS: Bindings = {
   ...DEFAULT_BINDINGS,
   // `H` is a right-hand key; `X` is left-hand but the mine takes it here.
   // The two keys left of the top row were the only left-hand keys nothing
-  // else in either layout wanted when this layout landed; `S` and `D` have
-  // been free too since #1132.
+  // else in either layout wanted when this layout landed.
   stop: 'Backquote',
   holdPosition: 'Tab',
   ping: 'KeyQ',
