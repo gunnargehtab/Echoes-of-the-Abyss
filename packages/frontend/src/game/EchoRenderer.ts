@@ -57,6 +57,7 @@ import {
   firesEnergy,
   firingSigFor,
   FOLLOW_FLOOR,
+  FLIGHT_CAMERA,
   faunaStatsFor,
   HarvestIdleReason,
   HarvestThrottle,
@@ -156,8 +157,13 @@ import {
   DEFAULT_BINDINGS,
   keyLabel,
   type BindableAction,
+  isFlightAction,
+  type FlightAction,
   type Bindings,
 } from '../input/bindings.ts';
+import { FREE_WATER_CONTROLS } from './freeWaterControls.ts';
+import type { FlightReading } from './flightCamera.ts';
+import { DEPTH_VISUAL_M_PER_M } from './perspectiveTerrain.ts';
 import { FACTION_NAME } from './factions.ts';
 import { DREDGE_STRUCK_TEXT, NO_DECOY_TEXT, carriesDecoy, dredgeStruck, fights } from './dredge.ts';
 import { heldWholly, missionLineFor, movableIn } from './movementHolds.ts';
@@ -372,6 +378,7 @@ interface TrackedContact {
 }
 
 export interface RendererCallbacks {
+  onFlight?(reading: FlightReading): void;
   /**
    * Go there. `depth` is the click's (#1132): a click is a point in the water
    * (docs/ui-ux.md §9), and absent only where the order is a place alone.
@@ -1748,6 +1755,11 @@ export class EchoRenderer {
   private readonly pointerClient = { x: 0, y: 0 };
   private pointerOverWater = false;
   private readonly arrowsDown = new Set<string>();
+  private readonly flightKeys = new Set<FlightAction>();
+  private navigating = false;
+  private flightSpeed: number = FLIGHT_CAMERA.SPEED_M_S;
+  private cancelGesture = (): void => {};
+  private flightPublishedAt = -Infinity;
   /** The previous frame's clock, for the pan's dt. */
   private lastFrameMs = 0;
   private readonly orderMarkers: OrderMarker[] = [];
@@ -2194,7 +2206,11 @@ export class EchoRenderer {
   private destroyed = false;
   private detachInput: (() => void) | null = null;
 
-  constructor(callbacks: RendererCallbacks, app: Application = new Application()) {
+  constructor(
+    callbacks: RendererCallbacks,
+    app: Application = new Application(),
+    private readonly controlsStudy = FREE_WATER_CONTROLS
+  ) {
     this.callbacks = callbacks;
     this.app = app;
   }
@@ -2510,6 +2526,82 @@ export class EchoRenderer {
    */
   setConn(conn: PerspectiveView): void {
     this.conn = conn;
+  }
+
+  toggleFlight(): void {
+    if (!this.controlsStudy || this.menuOpen || this.conn === null) return;
+    this.leaveNavigation();
+    if (!this.conn.toggleFlight()) this.refuse('NO CAMERA CLEARANCE');
+    this.publishFlight();
+  }
+
+  toggleNavigation(): void {
+    if (!this.controlsStudy || this.menuOpen || this.conn === null) return;
+    if (this.navigating) {
+      this.leaveNavigation();
+    } else {
+      if (!this.conn.flying && !this.conn.toggleFlight()) {
+        this.refuse('NO CAMERA CLEARANCE');
+        return;
+      }
+      this.clearCameraInput();
+      this.navigating = true;
+    }
+    this.publishFlight();
+  }
+
+  clearCameraInput(): void {
+    this.arrowsDown.clear();
+    this.flightKeys.clear();
+    this.previewPing = false;
+    this.cancelGesture();
+  }
+
+  leaveNavigation(): void {
+    this.navigating = false;
+    this.clearCameraInput();
+    this.publishFlight();
+  }
+
+  homeCamera(): void {
+    this.leaveNavigation();
+    this.conn?.home();
+    this.publishFlight();
+  }
+
+  setFlightSpeed(speed: number): void {
+    this.flightSpeed = speed;
+  }
+
+  stepFlight(action: FlightAction): void {
+    if (!this.controlsStudy || !this.navigating || this.menuOpen) return;
+    this.advanceFlight(new Set([action]), FLIGHT_CAMERA.BUTTON_STEP_S);
+    this.publishFlight();
+  }
+
+  private advanceFlight(keys: ReadonlySet<FlightAction>, dt: number): void {
+    const axis = (plus: FlightAction, minus: FlightAction) =>
+      Number(keys.has(plus)) - Number(keys.has(minus));
+    const x = axis('flyRight', 'flyLeft');
+    const y = axis('flyUp', 'flyDown');
+    const z = axis('flyForward', 'flyBack');
+    const length = Math.hypot(x, y, z);
+    if (length > 0) {
+      const step = (this.flightSpeed * dt) / length;
+      this.conn?.flyLocal(x * step, y * step, z * step);
+    }
+    const angle = ((FLIGHT_CAMERA.ROTATION_DEG_S * Math.PI) / 180) * dt;
+    this.conn?.turnFlight(
+      axis('lookLeft', 'lookRight') * angle,
+      axis('lookUp', 'lookDown') * angle,
+      axis('rollLeft', 'rollRight') * angle
+    );
+  }
+
+  private publishFlight(): void {
+    if (!this.controlsStudy || this.conn === null) return;
+    this.callbacks.onFlight?.(this.conn.flightReading(this.navigating));
+    this.flightPublishedAt = performance.now();
   }
 
   /**
@@ -2863,6 +2955,15 @@ export class EchoRenderer {
     let pendingRight: { x: number; y: number; queued: boolean; torpedo: boolean } | null = null;
     /** A left press aimed by an armed attack-move or a pending build, likewise. */
     let pendingAim: { x: number; y: number; queued: boolean } | null = null;
+    this.cancelGesture = () => {
+      minimapDrag = false;
+      panning = false;
+      orbiting = false;
+      chord = false;
+      pendingRight = null;
+      pendingAim = null;
+      this.marquee = null;
+    };
 
     const onContextMenu = (e: Event) => e.preventDefault();
 
@@ -2938,7 +3039,7 @@ export class EchoRenderer {
         capture(e.pointerId);
         return;
       }
-      if (e.button === 0 && this.pressBarButton(e.clientX, e.clientY)) return;
+      if (!this.navigating && e.button === 0 && this.pressBarButton(e.clientX, e.clientY)) return;
 
       if (e.button === 1) {
         // Shift makes the middle drag an orbit (§9). Held at press, read once:
@@ -2952,6 +3053,7 @@ export class EchoRenderer {
         capture(e.pointerId);
         return;
       }
+      if (this.navigating) return;
 
       if (e.button === 2) {
         // Shift queues the order behind whatever the unit is already doing,
@@ -3043,6 +3145,10 @@ export class EchoRenderer {
         minimapDrag = false;
         return;
       }
+      if (this.navigating) {
+        endGesture(e);
+        return;
+      }
       // A cancelled pointer — a gesture the browser took — gives no order.
       const released = e.type === 'pointerup';
       if (pendingRight !== null) {
@@ -3073,6 +3179,7 @@ export class EchoRenderer {
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
+      if (this.menuOpen) return;
       // Shift + wheel moves the focus through the column instead of zooming
       // (docs/free-camera.md §4, docs/ui-ux.md §9). This gesture zoomed before
       // the camera was freed; the reassignment is deliberate, is written into
@@ -3105,6 +3212,11 @@ export class EchoRenderer {
         // and the menu's own listener closed it again, until the release
         // (#1348).
         if (e.repeat) return;
+        if (this.navigating) {
+          e.preventDefault();
+          this.leaveNavigation();
+          return;
+        }
         if (this.pendingAttackMove) {
           this.pendingAttackMove = false;
           return;
@@ -3120,6 +3232,33 @@ export class EchoRenderer {
         // Nothing left to cancel: the same key is the way out of the water.
         this.callbacks.onOpenMenu();
         return;
+      }
+      if (this.controlsStudy) {
+        if (e.code === 'Home') {
+          e.preventDefault();
+          if (!e.repeat) this.homeCamera();
+          return;
+        }
+      }
+      const target = e.target as HTMLElement | null;
+      if (target?.closest?.('input, textarea, select, button, [contenteditable="true"]')) return;
+      if (this.controlsStudy) {
+        const cameraAction = actionFor(this.bindings, e.code, this.navigating);
+        if (cameraAction === 'toggleFlight' || cameraAction === 'toggleNav') {
+          e.preventDefault();
+          if (!e.repeat) {
+            if (cameraAction === 'toggleFlight') this.toggleFlight();
+            else this.toggleNavigation();
+          }
+          return;
+        }
+        if (this.navigating) {
+          if (cameraAction !== null && isFlightAction(cameraAction)) {
+            e.preventDefault();
+            this.flightKeys.add(cameraAction);
+          }
+          return;
+        }
       }
       // Digits are control groups (docs/ui-ux.md §9), Ctrl to assign. They
       // used to produce units; production keeps its command-bar buttons, and
@@ -3167,7 +3306,13 @@ export class EchoRenderer {
       }
 
       const action = actionFor(this.bindings, e.code);
-      if (action === null) return;
+      if (
+        action === null ||
+        action === 'toggleFlight' ||
+        action === 'toggleNav' ||
+        isFlightAction(action)
+      )
+        return;
       // A held key's auto-repeat is not another press (docs/ui-ux.md §9). The
       // toggles read the selection off the last snapshot, so a held Space
       // flipped Silent Running at the snapshot rate, and a held M laid mines
@@ -3288,6 +3433,8 @@ export class EchoRenderer {
 
     const onKeyUp = (e: KeyboardEvent) => {
       this.arrowsDown.delete(e.code);
+      const action = actionFor(this.bindings, e.code, true);
+      if (action !== null && isFlightAction(action)) this.flightKeys.delete(action);
       if (this.menuOpen) return;
       if (actionFor(this.bindings, e.code) === 'pingPreview') this.previewPing = false;
     };
@@ -3306,6 +3453,14 @@ export class EchoRenderer {
     canvas.addEventListener('pointerleave', onPointerLeave);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
+    const onBlur = () => this.clearCameraInput();
+    const onFocus = (event: FocusEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest?.('input, textarea, select, button, [contenteditable="true"]'))
+        this.clearCameraInput();
+    };
+    window.addEventListener('blur', onBlur);
+    window.addEventListener('focusin', onFocus);
 
     this.detachInput = () => {
       canvas.removeEventListener('contextmenu', onContextMenu);
@@ -3317,6 +3472,10 @@ export class EchoRenderer {
       canvas.removeEventListener('wheel', onWheel);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', onBlur);
+      window.removeEventListener('focusin', onFocus);
+      this.clearCameraInput();
+      this.cancelGesture = () => {};
     };
   }
 
@@ -4604,7 +4763,10 @@ export class EchoRenderer {
   private commandPlace(clientX: number, clientY: number): void {
     if (this.pendingBuild === null) return;
     const water = this.screenToWorld(clientX, clientY);
-    if (water === null) return;
+    if (water === null) {
+      if (this.conn?.flying) this.refuse('NO WATER TARGET');
+      return;
+    }
     const stats = structureStatsFor(this.pendingBuild);
     if (this.refusedByPrice(stats.name, priceOf(stats))) return;
     this.callbacks.onBuild(this.pendingBuild, water.x, water.y);
@@ -4772,7 +4934,11 @@ export class EchoRenderer {
     const units = this.selectedUnits();
     // A point in the water, as a move's is (§9): an attack-move lands the same way.
     const water = this.screenToWater(clientX, clientY);
-    if (units.length === 0 || water === null) return;
+    if (units.length === 0) return;
+    if (water === null) {
+      if (this.conn?.flying) this.refuse('NO WATER TARGET');
+      return;
+    }
     const ids = this.movable(units.map((u) => u.id));
     if (ids.length === 0) return;
     this.callbacks.onAttackMoveOrder(ids, water.x, water.y, queued, water.depthM);
@@ -4971,6 +5137,8 @@ export class EchoRenderer {
         this.orderMarkers.push({ kind: 'move', x: place.x, y: place.y, atMs: performance.now() });
         this.ordersSeq++;
         this.callbacks.onInterfaceCue('order');
+      } else if (yards.length > 0 && this.conn?.flying) {
+        this.refuse('NO WATER TARGET');
       }
       return;
     }
@@ -5042,6 +5210,8 @@ export class EchoRenderer {
       if (moving.length === 0) return;
       this.callbacks.onMoveOrder(moving, water.x, water.y, queued, water.depthM);
       this.noteOrder(moving, 'move', water.x, water.y, queued, water.depthM);
+    } else if (water === null && this.conn?.flying) {
+      this.refuse('NO WATER TARGET');
     }
   }
 
@@ -5232,6 +5402,7 @@ export class EchoRenderer {
    * does not have to leave the water to find out whether it suits them.
    */
   setBindings(bindings: Bindings): void {
+    this.clearCameraInput();
     this.bindings = { ...bindings };
     // A preview held down when its key moved would stick on forever, because
     // the keyup that would have cleared it names a code nothing matches now.
@@ -5245,6 +5416,7 @@ export class EchoRenderer {
   setMenuOpen(open: boolean): void {
     this.menuOpen = open;
     if (open) {
+      this.leaveNavigation();
       // Holds do not survive the menu: the keyup that would have ended the
       // preview lands on the menu's glass, where this renderer is not
       // listening. A drag is the same story with a pointer.
@@ -5435,6 +5607,7 @@ export class EchoRenderer {
    * survive because they are the same ground; nodes do not, and arrive again.
    */
   resetForNewMatch(): void {
+    this.homeCamera();
     this.gameOver = null;
     // Both of these, and this is not optional: a mission followed by another
     // run would otherwise keep a greyed-out ping key and a concluded mission's
@@ -5771,6 +5944,7 @@ export class EchoRenderer {
       events: snapshot.selfEvents,
       returns: this.pingReturns(now),
       yawRad: this.earYawRad(),
+      ...(this.conn?.flying ? { right: this.conn.audioRight } : {}),
     };
   }
 
@@ -5790,7 +5964,7 @@ export class EchoRenderer {
     }
 
     const out: PingReturn[] = [];
-    const yaw = this.earYawRad();
+    const yaw = this.conn?.flying ? this.conn.audioRight : this.earYawRad();
     for (const entry of this.tracked.values()) {
       const contact = entry.contact;
       if (contact.tier < ResolutionTier.Track) continue;
@@ -5817,6 +5991,7 @@ export class EchoRenderer {
    * would put the water and the things in it in different rooms.
    */
   private earPosition(): { x: number; y: number } {
+    if (this.conn?.flying) return this.conn.eyePosition;
     const rect = this.app.canvas.getBoundingClientRect();
     // The ground itself rather than `screenToWorld`: the ear is not an order,
     // so a centre ray that meets a placed mission's exterior first still puts
@@ -5863,7 +6038,7 @@ export class EchoRenderer {
   private contactAudioFrame(tick: number, now: number): ContactAudioFrame {
     const decayMs = PERSISTENCE.GHOST_MARKER_DECAY_S * 1000;
     const ear = this.earPosition();
-    const yaw = this.earYawRad();
+    const yaw = this.conn?.flying ? this.conn.audioRight : this.earYawRad();
 
     const entries: ContactAudioEntry[] = [];
     for (const entry of this.tracked.values()) {
@@ -5891,7 +6066,14 @@ export class EchoRenderer {
       if (contact.tier >= ResolutionTier.Bearing) {
         const dx = contact.x - ear.x;
         const dy = contact.y - ear.y;
-        audio.bearing = screenBearing(Math.atan2(dy, dx), yaw);
+        const height =
+          this.conn?.flying && contact.depth !== undefined
+            ? (this.conn.eyePosition.depthM - contact.depth) * DEPTH_VISUAL_M_PER_M
+            : 0;
+        audio.bearing =
+          typeof yaw === 'number'
+            ? screenBearing(Math.atan2(dy, dx), yaw)
+            : Math.acos(screenPan(dx, dy, yaw, height));
         audio.rangeM = Math.hypot(dx, dy);
       }
       entries.push(audio);
@@ -5978,7 +6160,7 @@ export class EchoRenderer {
       tracked.push({ x: contact.x, y: contact.y, hpFraction: contact.hp / contact.maxHp });
     }
 
-    const yaw = this.earYawRad();
+    const yaw = this.conn?.flying ? this.conn.audioRight : this.earYawRad();
     const mine = corridorFrom(own, ear, yaw);
     const theirs = corridorFrom(tracked, ear, yaw);
     const corridor =
@@ -6232,6 +6414,11 @@ export class EchoRenderer {
     const dt = this.lastFrameMs > 0 ? Math.min(0.1, (now - this.lastFrameMs) / 1000) : 0;
     this.lastFrameMs = now;
     if (this.menuOpen || this.conn === null || dt === 0) return;
+    if (this.navigating) {
+      this.advanceFlight(this.flightKeys, dt);
+      return;
+    }
+    if (this.conn.flying) return;
     let vx = 0;
     let vy = 0;
     if (this.arrowsDown.has('ArrowLeft')) vx -= 1;
@@ -6256,6 +6443,7 @@ export class EchoRenderer {
   private draw(): void {
     this.frameNowMs = performance.now();
     this.panFromInput(this.frameNowMs);
+    if (this.frameNowMs - this.flightPublishedAt >= 100) this.publishFlight();
     // The world under these marks — seabed, routes, rim, embers, own hulls —
     // is the conn view's. This pass draws only what the chart language owes
     // on top, everything projected through the one shared camera.
@@ -7129,8 +7317,10 @@ export class EchoRenderer {
       // rather than when the flash is pushed, because the scope's wedge reads
       // the same entry on a north-up instrument and must not turn.
       const onScreen = screenBearing(flash.bearing, this.earYawRad());
-      const dx = Math.cos(onScreen);
-      const dy = Math.sin(onScreen);
+      const direction = this.conn?.flying ? this.conn.screenDirection(flash.bearing) : null;
+      const dx = direction?.x ?? Math.cos(onScreen);
+      const dy = direction?.y ?? Math.sin(onScreen);
+      if (Math.hypot(dx, dy) < 1e-6) continue;
       // Where a ray on this bearing leaves the screen. Scaling by the larger
       // of the two axis ratios lands it on the nearer edge either way.
       const scale = Math.min(
@@ -9746,10 +9936,12 @@ export class EchoRenderer {
     // derived from a heading. Cut to the map as a polygon, never clamped
     // corner by corner: a camera looking past the edge put two corners on one
     // side of the frame and drew a slash (#1558).
-    const box =
-      terrain === null
+    const footprint = this.conn?.groundQuad() ?? [];
+    const box = this.conn?.flying
+      ? { outline: footprint.flatMap((p) => [p.x, p.y]), far: null }
+      : terrain === null
         ? null
-        : scopeBox(this.conn?.groundQuad() ?? [], {
+        : scopeBox(footprint, {
             x: 0,
             y: 0,
             widthM: terrain.cols * terrain.cellM,
@@ -9767,6 +9959,25 @@ export class EchoRenderer {
       og.moveTo(x0 * k, y0 * k)
         .lineTo(x1 * k, y1 * k)
         .stroke({ width: 2, color: UI.text, alpha: 0.85 });
+    }
+    if (this.conn?.flying) {
+      const eye = this.conn.eyePosition;
+      const attitude = this.conn.flightReading();
+      const x = eye.x * k;
+      const y = eye.y * k;
+      og.circle(x, y, 3).stroke({ width: 1, color: UI.text });
+      if (attitude.bearingDeg !== null) {
+        const bearing = (attitude.bearingDeg * Math.PI) / 180;
+        og.moveTo(x, y)
+          .lineTo(x + Math.sin(bearing) * 12, y - Math.cos(bearing) * 12)
+          .stroke({ width: 2, color: UI.text });
+      } else {
+        og.moveTo(x - 5, y)
+          .lineTo(x + 5, y)
+          .moveTo(x, y - 5)
+          .lineTo(x, y + 5)
+          .stroke({ width: 1, color: UI.text });
+      }
     }
   }
 

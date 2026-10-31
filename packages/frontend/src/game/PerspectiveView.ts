@@ -10,8 +10,8 @@
  * roster models (rosterModels.ts) at true depth, with the flat baked sprites
  * as the loading fallback. A live Tier-4 enemy hull or structure track is
  * drawn the same way (#1531, #1539): EchoRenderer hands it over with
- * `setTracks`, and nothing else about the enemy ever reaches this class. A WC3-lineage camera looks down and along at a
- * fixed 55° pitch; yaw is locked, per the no-rotation rule the revision kept.
+ * `setTracks`, and nothing else about the enemy ever reaches this class.
+ * Bounded orbit is the default; the development flight study shares its projection.
  *
  * Everything else on screen — contacts, rings, hazards, marks, bars, the whole
  * HUD — is drawn by EchoRenderer on the transparent Pixi canvas composited
@@ -53,6 +53,7 @@ import {
   PlaneGeometry,
   Points,
   PointsMaterial,
+  Quaternion,
   Raycaster,
   Scene,
   SRGBColorSpace,
@@ -67,6 +68,7 @@ import {
 import {
   DEPTH,
   Faction,
+  FLIGHT_CAMERA,
   MODEL_LIGHTING,
   MOVEMENT,
   SelfEventKind,
@@ -248,6 +250,7 @@ import { DreamGroundCover } from './dreamGroundCover.ts';
 import { DreamLightHalos } from './dreamLightHalos.ts';
 import { swayAt, type SwayOffset } from './cameraSway.ts';
 import { installDisplayVeil, VEIL_SHADE_ATTRIBUTE } from './veilShading.ts';
+import { flightInterval, rotateFlight, sweepFlight, type FlightReading } from './flightCamera.ts';
 
 /**
  * SPEC — docs/art-direction.md "Camera & Projection": 55° below horizontal,
@@ -664,6 +667,10 @@ export class PerspectiveView {
    * than sample it once.
    */
   private focusDepthM: number | null = null;
+  private flight = false;
+  private readonly flightEye = new Vector3();
+  private readonly flightOrientation = new Quaternion();
+  private flightBlocked = false;
   /**
    * The sway's clock (cameraSway.ts): the frame's own time, set once a frame
    * before the camera is applied. A pan between frames re-applies the camera
@@ -2067,6 +2074,10 @@ export class PerspectiveView {
    * is why the locked rig could get away with the simpler one.
    */
   panBy(dxPx: number, dyPx: number): void {
+    if (this.flight) {
+      this.flyLocal(-dxPx, dyPx, 0);
+      return;
+    }
     const canvas = this.renderer?.domElement;
     const height = canvas?.clientHeight ?? 900;
     const worldPerPx = (2 * this.distance * Math.tan(((FOV_DEG / 2) * Math.PI) / 180)) / height;
@@ -2095,6 +2106,10 @@ export class PerspectiveView {
    * both of them are spec'd rather than chosen here.
    */
   orbitBy(dxPx: number, dyPx: number): void {
+    if (this.flight) {
+      this.turnFlight(-dxPx * ORBIT_YAW_PER_PX, -dyPx * ORBIT_PITCH_PER_PX, 0);
+      return;
+    }
     this.yaw = (this.yaw + dxPx * ORBIT_YAW_PER_PX) % (Math.PI * 2);
     // setPitch re-applies, so the yaw above rides along and the camera moves
     // once per event rather than twice.
@@ -2123,6 +2138,10 @@ export class PerspectiveView {
    */
   raiseFocusBy(metres: number): void {
     if (metres === 0) return;
+    if (this.flight) {
+      this.moveFlight(new Vector3(0, metres * DEPTH_VISUAL_M_PER_M, 0));
+      return;
+    }
     const seabed = this.seabedDepthAt(this.target.x, this.target.z);
     const next = (this.focusDepthM ?? seabed) - metres;
     this.focusDepthM = next >= seabed ? null : next;
@@ -2147,6 +2166,8 @@ export class PerspectiveView {
    * they had navigated to would answer a question they did not ask.
    */
   home(): void {
+    this.flight = false;
+    this.flightBlocked = false;
     this.yaw = 0;
     this.pitch = (HOME_PITCH_DEG * Math.PI) / 180;
     this.focusDepthM = null;
@@ -2160,7 +2181,114 @@ export class PerspectiveView {
    * picture (`audio/screenPan.ts`, #1324).
    */
   get headingRad(): number {
+    if (this.flight) {
+      const direction = new Vector3(0, 0, -1).applyQuaternion(this.flightOrientation);
+      return Math.hypot(direction.x, direction.z) < 1e-6
+        ? 0
+        : Math.atan2(-direction.x, -direction.z);
+    }
     return this.yaw;
+  }
+
+  get flying(): boolean {
+    return this.flight;
+  }
+
+  toggleFlight(): boolean {
+    if (this.flight) {
+      this.home();
+      return true;
+    }
+    const terrain = this.terrain;
+    const grid = this.terrainGrid;
+    if (terrain === null || grid === null) return false;
+    const eye = this.camera.position;
+    let interval = flightInterval(terrain, grid, eye.x, eye.z);
+    this.flightEye.copy(eye);
+    if (interval === null || eye.y < interval.minY || eye.y > interval.maxY) {
+      this.flightEye.set(this.target.x, this.focusY(), this.target.z);
+      interval = flightInterval(terrain, grid, this.target.x, this.target.z);
+      if (interval === null) {
+        this.flightBlocked = true;
+        return false;
+      }
+      this.flightEye.y = Math.min(interval.maxY, Math.max(interval.minY, this.flightEye.y));
+    }
+    this.flightOrientation.copy(this.camera.quaternion);
+    this.flight = true;
+    this.flightBlocked = false;
+    this.applyCamera();
+    return true;
+  }
+
+  turnFlight(yaw: number, pitch: number, roll: number): void {
+    if (!this.flight) return;
+    rotateFlight(this.flightOrientation, yaw, pitch, roll);
+    this.applyCamera();
+  }
+
+  flyLocal(right: number, up: number, forward: number): void {
+    if (!this.flight) return;
+    this.moveFlight(new Vector3(right, up, -forward).applyQuaternion(this.flightOrientation));
+  }
+
+  private moveFlight(delta: Vector3): void {
+    if (!this.flight || this.terrain === null || this.terrainGrid === null) return;
+    this.flightBlocked = !sweepFlight(this.flightEye, delta, this.terrain, this.terrainGrid);
+    this.applyCamera();
+  }
+
+  flightReading(navigating = false): FlightReading {
+    const q = this.camera.quaternion;
+    const forward = new Vector3(0, 0, -1).applyQuaternion(q);
+    const up = new Vector3(0, 1, 0).applyQuaternion(q);
+    const right = new Vector3(1, 0, 0).applyQuaternion(q);
+    return {
+      flying: this.flight,
+      navigating,
+      depthM: Math.round(-this.camera.position.y / DEPTH_VISUAL_M_PER_M),
+      bearingDeg:
+        Math.hypot(forward.x, forward.z) < 1e-4
+          ? null
+          : ((Math.atan2(forward.x, -forward.z) * 180) / Math.PI + 360) % 360,
+      upX: right.y,
+      upY: -up.y,
+      inverted: up.y < 0,
+      blocked: this.flightBlocked,
+    };
+  }
+
+  /** Final screen-right basis, including roll; bearings need no invented depth. */
+  get audioRight(): { x: number; y: number; z: number } {
+    return new Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion);
+  }
+
+  screenDirection(bearing: number): { x: number; y: number } {
+    const direction = new Vector3(Math.cos(bearing), 0, Math.sin(bearing)).applyQuaternion(
+      this.camera.quaternion.clone().invert()
+    );
+    return { x: direction.x, y: -direction.y };
+  }
+
+  get eyePosition(): { x: number; y: number; depthM: number } {
+    return {
+      x: this.camera.position.x,
+      y: this.camera.position.z,
+      depthM: -this.camera.position.y / DEPTH_VISUAL_M_PER_M,
+    };
+  }
+
+  /** A finite forward plane pick. No horizon fallback or map-edge clamp. */
+  pickPlane(clientX: number, clientY: number, depthM: number): { x: number; y: number } | null {
+    if (!this.castPointer(clientX, clientY) || this.terrain === null) return null;
+    const { origin, direction } = RAY_TMP.ray;
+    if (Math.abs(direction.y) < 1e-8) return null;
+    const t = (depthToWorldY(depthM) - origin.y) / direction.y;
+    if (t <= this.camera.near || t > this.camera.far) return null;
+    const x = origin.x + direction.x * t;
+    const y = origin.z + direction.z * t;
+    const { cols, rows, cellM } = this.terrain;
+    return x >= 0 && y >= 0 && x < cols * cellM && y < rows * cellM ? { x, y } : null;
   }
 
   private setPitch(radians: number): void {
@@ -2172,6 +2300,10 @@ export class PerspectiveView {
 
   /** Dolly about the cursor: the water under the pointer stays under it. */
   zoomAt(clientX: number, clientY: number, factor: number): void {
+    if (this.flight) {
+      this.flyLocal(0, 0, Math.log(factor) * FLIGHT_CAMERA.SPEED_M_S);
+      return;
+    }
     const diagonal = this.mapDiagonal();
     const next = Math.min(diagonal * 2.2, Math.max(250, this.distance / factor));
     const cursor = this.resolveGround(clientX, clientY);
@@ -2185,6 +2317,10 @@ export class PerspectiveView {
 
   /** Centre the camera on a world point; optionally set the dolly too. */
   focusWorld(xM: number, yM: number, distanceM?: number): void {
+    if (this.flight) {
+      this.moveFlight(new Vector3(xM - this.flightEye.x, 0, yM - this.flightEye.z));
+      return;
+    }
     this.target.x = xM;
     this.target.z = yM;
     this.clampTarget();
@@ -2196,6 +2332,7 @@ export class PerspectiveView {
 
   /** Frame the whole map — the opening shot, and the scope's double-tap out. */
   fitToMap(): void {
+    if (this.flight) this.home();
     const terrain = this.terrain;
     if (terrain === null) return;
     const opening = openingFrame(terrain.cols * terrain.cellM, terrain.rows * terrain.cellM);
@@ -2226,6 +2363,7 @@ export class PerspectiveView {
    * board stands farther back than a player may zoom.
    */
   setFrame(frame: CameraFrame): void {
+    this.flight = false;
     this.target.x = frame.xM;
     this.target.z = frame.yM;
     this.focusDepthM = null;
@@ -2252,6 +2390,30 @@ export class PerspectiveView {
     const terrain = this.terrain;
     if (terrain === null || this.renderer === null) return [];
     const groundY = this.groundYAt(this.target.x, this.target.z);
+    if (this.flight) {
+      const frustum = new Frustum().setFromProjectionMatrix(
+        new Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse)
+      );
+      let polygon = [
+        new Vector3(0, groundY, 0),
+        new Vector3(terrain.cols * terrain.cellM, groundY, 0),
+        new Vector3(terrain.cols * terrain.cellM, groundY, terrain.rows * terrain.cellM),
+        new Vector3(0, groundY, terrain.rows * terrain.cellM),
+      ];
+      for (const plane of frustum.planes) {
+        const clipped: Vector3[] = [];
+        for (let i = 0; i < polygon.length; i++) {
+          const a = polygon[i]!;
+          const b = polygon[(i + 1) % polygon.length]!;
+          const da = plane.distanceToPoint(a);
+          const db = plane.distanceToPoint(b);
+          if (da >= 0) clipped.push(a);
+          if (da >= 0 !== db >= 0) clipped.push(a.clone().lerp(b, da / (da - db)));
+        }
+        polygon = clipped;
+      }
+      return polygon.map((point) => ({ x: point.x, y: point.z }));
+    }
     // The same four objects every frame, rewritten in place (#432): each
     // caller reads them and keeps nothing. A perspective camera's ray from a
     // screen corner is the unprojected corner minus the eye, which needs no
@@ -3652,6 +3814,13 @@ export class PerspectiveView {
    * bounds stay the authority either way.
    */
   refusesPick(clientX: number, clientY: number): boolean {
+    if (this.flight) {
+      if (!this.castPointer(clientX, clientY)) return true;
+      if (this.groundHit() !== undefined) return false;
+      return (
+        this.focusDepthM === null || this.pickPlane(clientX, clientY, this.focusDepth()) === null
+      );
+    }
     const rect = this.missionRect();
     if (this.worldRegion === null || rect === null || !this.castPointer(clientX, clientY)) {
       return false;
@@ -4420,26 +4589,31 @@ export class PerspectiveView {
   // ----------------------------------------------------------------- frame
 
   private applyCamera(): void {
-    const look = LOOK_TMP.set(this.target.x, this.focusY(), this.target.z);
-    const reach = Math.cos(this.pitch) * this.distance;
-    // yaw 0 puts the eye south of the focus looking north. That was the whole
-    // rig once (the viewport and the scope had to agree on north); it is now
-    // just where the dial starts, and the scope's camera box carries the
-    // agreement instead — docs/free-camera.md §5.
-    const eyeX = look.x + Math.sin(this.yaw) * reach;
-    const eyeZ = look.z + Math.cos(this.yaw) * reach;
-    let eyeY = look.y + Math.sin(this.pitch) * this.distance;
+    if (this.flight) {
+      this.camera.position.copy(this.flightEye);
+      this.camera.quaternion.copy(this.flightOrientation);
+    } else {
+      const look = LOOK_TMP.set(this.target.x, this.focusY(), this.target.z);
+      const reach = Math.cos(this.pitch) * this.distance;
+      // yaw 0 puts the eye south of the focus looking north. That was the whole
+      // rig once (the viewport and the scope had to agree on north); it is now
+      // just where the dial starts, and the scope's camera box carries the
+      // agreement instead — docs/free-camera.md §5.
+      const eyeX = look.x + Math.sin(this.yaw) * reach;
+      const eyeZ = look.z + Math.cos(this.yaw) * reach;
+      let eyeY = look.y + Math.sin(this.pitch) * this.distance;
 
-    // The rig's one hard clamp (§4). The eye is raised rather than the dolly
-    // shortened: the player keeps the framing they asked for, and the camera
-    // keeps looking at the thing they pointed it at — a shortened dolly would
-    // silently zoom them in every time they swung past a ridge.
-    const floorY = this.groundYAt(eyeX, eyeZ) + EYE_CLEARANCE_M * DEPTH_VISUAL_M_PER_M;
-    if (eyeY < floorY) eyeY = floorY;
+      // The rig's one hard clamp (§4). The eye is raised rather than the dolly
+      // shortened: the player keeps the framing they asked for, and the camera
+      // keeps looking at the thing they pointed it at — a shortened dolly would
+      // silently zoom them in every time they swung past a ridge.
+      const floorY = this.groundYAt(eyeX, eyeZ) + EYE_CLEARANCE_M * DEPTH_VISUAL_M_PER_M;
+      if (eyeY < floorY) eyeY = floorY;
 
-    this.camera.position.set(eyeX, eyeY, eyeZ);
-    this.camera.lookAt(look);
-    this.applySway();
+      this.camera.position.set(eyeX, eyeY, eyeZ);
+      this.camera.lookAt(look);
+      this.applySway();
+    }
     this.camera.updateMatrixWorld();
     const camera = this.camera;
     if (
@@ -4497,7 +4671,9 @@ export class PerspectiveView {
     // always in water. `focusY` resolves "on the seabed" against the ground
     // under the focus, so this follows a pan across a trench the way the
     // camera does.
-    const focusDepthM = -this.focusY() / DEPTH_VISUAL_M_PER_M;
+    const focusDepthM = this.flight
+      ? -this.camera.position.y / DEPTH_VISUAL_M_PER_M
+      : -this.focusY() / DEPTH_VISUAL_M_PER_M;
     this.backdrop.update(this.camera, focusDepthM);
     const rect = this.worldRegion === null ? null : this.missionRect();
     if (rect !== null) {
@@ -4971,7 +5147,9 @@ export class PerspectiveView {
       yawDeg: Number((((this.yaw * 180) / Math.PI + 360) % 360).toFixed(1)),
       // Whether `eye` below includes the sway (cameraSway.ts): a capture
       // compared pixel for pixel across two revisions wants it held.
-      sway: this.swayHeld || this.dreamStudy ? 'held' : 'on',
+      sway: this.swayHeld || this.dreamStudy || this.flight ? 'held' : 'on',
+      flight: this.flightReading(),
+      orientation: this.camera.quaternion.toArray(),
       // Where the camera is looking, and from where. A screenshot review
       // judging gates 6 and 7 across the pitch band has to be able to caption
       // the shot with the frame it was taken in; before the camera was freed

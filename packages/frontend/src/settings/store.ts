@@ -21,6 +21,7 @@ import {
 import { PALETTES, type PaletteName } from '../game/palette.ts';
 import { LAMP_HALOS_DEFAULT } from '../game/lampHalo.ts';
 import type { TrimBus } from '../audio/engine.ts';
+import { FLIGHT_CAMERA } from '@echoes/shared';
 import { prefersSpeakerProfile } from '../audio/speakerProfile.ts';
 
 /** docs/ui-ux.md §11: "UI scale 75%-200%". */
@@ -109,6 +110,7 @@ export interface Settings {
    * lands by accident.
    */
   edgeScroll: boolean;
+  flightSpeed: number;
   /**
    * §11's speaker profile — the small-speaker mix (docs/audio-direction.md
    * §11, docs/audio-direction.md §12's scaffold status).
@@ -202,6 +204,7 @@ export const DEFAULT_SETTINGS: Settings = {
   acousticVeil: 1,
   waterDensity: 1,
   edgeScroll: true,
+  flightSpeed: FLIGHT_CAMERA.SPEED_M_S,
   speakerProfile: false,
   speakerProfileChosen: false,
   contactTimbre: false,
@@ -279,6 +282,13 @@ function sanitise(raw: unknown): Settings {
     acousticVeil: clamp01(record.acousticVeil, DEFAULT_SETTINGS.acousticVeil),
     waterDensity: clamp01(record.waterDensity, DEFAULT_SETTINGS.waterDensity),
     edgeScroll: typeof record.edgeScroll === 'boolean' ? record.edgeScroll : true,
+    flightSpeed:
+      typeof record.flightSpeed === 'number' && Number.isFinite(record.flightSpeed)
+        ? Math.min(
+            FLIGHT_CAMERA.MAX_SPEED_M_S,
+            Math.max(FLIGHT_CAMERA.MIN_SPEED_M_S, record.flightSpeed)
+          )
+        : FLIGHT_CAMERA.SPEED_M_S,
     speakerProfileChosen: record.speakerProfileChosen === true,
     speakerProfile:
       record.speakerProfileChosen === true && typeof record.speakerProfile === 'boolean'

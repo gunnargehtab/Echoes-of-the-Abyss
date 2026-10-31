@@ -26,6 +26,9 @@ import {
 } from '@echoes/shared';
 import { EchoRenderer, type ContactLogEntry } from './EchoRenderer.ts';
 import { PerspectiveView } from './PerspectiveView.ts';
+import { FlightPanel } from './FlightPanel.tsx';
+import type { FlightReading } from './flightCamera.ts';
+import { FREE_WATER_CONTROLS } from './freeWaterControls.ts';
 import { lookForMission } from './tutorialLook.ts';
 import { worldView } from './worldView.ts';
 import { paletteFor, type PaletteName } from './palette.ts';
@@ -275,6 +278,7 @@ export function GameCanvas({
    * menu is up.
    */
   const [menuOpen, setMenuOpen] = useState(false);
+  const [flight, setFlight] = useState<FlightReading | null>(null);
   /** Seats this map has. A map's spawn list is its player count. */
   const [maxSlots, setMaxSlots] = useState(4);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -474,6 +478,7 @@ export function GameCanvas({
 
       const activeRenderer = new EchoRenderer(
         {
+          onFlight: setFlight,
           onMoveOrder: (unitIds, x, y, queued, depth) =>
             client?.moveTo(unitIds, x, y, queued, depth),
           onAttackMoveOrder: (unitIds, x, y, queued, depth) =>
@@ -768,6 +773,7 @@ export function GameCanvas({
             // let go here too; a reconnection's first snapshot brings back
             // whatever the chart still tracks (#1326).
             if (next !== 'connected') audio.releasePicture();
+            if (next !== 'connected') activeRenderer.leaveNavigation();
             // A lost signal closes the menu: the reconnect overlay is
             // information the player must see, and the menu would otherwise sit
             // invisible but clickable beneath its wash — one blind click from
@@ -803,6 +809,7 @@ export function GameCanvas({
         // rest, so rebinding from the esc menu takes effect without leaving
         // the water — a binding you cannot try is a binding you cannot judge.
         activeRenderer.setBindings(resolveBindings(settings.bindingLayout, settings.bindings));
+        activeRenderer.setFlightSpeed(settings.flightSpeed);
         // §11's accessibility wave 2. The palette and the reduced-motion rules
         // are wholly the renderer's; the scale is shared with the DOM panels.
         activeRenderer.setPalette(settings.palette);
@@ -1020,6 +1027,15 @@ export function GameCanvas({
             pointer input lands on the top canvas and is interpreted there. */}
         <div ref={perspectiveHostRef} className="perspective-host" />
         <div ref={hostRef} className="game-host" />
+        {FREE_WATER_CONTROLS && live && phase === MatchPhase.Playing && (
+          <FlightPanel
+            reading={flight}
+            onFlight={() => rendererRef.current?.toggleFlight()}
+            onNav={() => rendererRef.current?.toggleNavigation()}
+            onHome={() => rendererRef.current?.homeCamera()}
+            onStep={(action) => rendererRef.current?.stepFlight(action)}
+          />
+        )}
         {live && phase !== MatchPhase.Lobby && <ContactLog entries={log} onFocus={focusOn} />}
         {live && phase !== MatchPhase.Lobby && mission !== null && (
           <MissionPanel

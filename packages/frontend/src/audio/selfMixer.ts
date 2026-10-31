@@ -17,7 +17,7 @@ import { PERSISTENCE, SIM, SelfEventKind, type SelfEvent } from '@echoes/shared'
 import { PING_RETURN_WINDOW_S } from './selfVoice.ts';
 import { SOUR_BITE_S, selfMixFor, sourMixFor, type SelfMix, type SourMix } from './selfNoise.ts';
 import { duckFor, louderRung, type BusRung } from './precedence.ts';
-import { screenBearing } from './screenPan.ts';
+import { screenBearing, type ScreenRight } from './screenPan.ts';
 
 /**
  * How long one engagement lasts, in simulation ticks — the same window the
@@ -72,6 +72,7 @@ export interface SelfAudioFrame {
    * (#1324).
    */
   yawRad: number;
+  right?: ScreenRight;
 }
 
 /** The Web Audio side, injected so the decisions above can be tested alone. */
@@ -118,7 +119,7 @@ export class SelfMixer {
   /** §4's world-bus figure from the last frame, for `applyChain` to multiply. */
   private worldGain = 1;
   /** The camera's turn on the frame being voiced: `SelfAudioFrame.yawRad`. */
-  private yawRad = 0;
+  private yawRad: number | ScreenRight = 0;
 
   constructor(private readonly sink: SelfSink) {}
 
@@ -160,7 +161,7 @@ export class SelfMixer {
     this.tickHasBearing = frame.events.some(
       (event) => event.kind === SelfEventKind.Exposed && event.bearing !== undefined
     );
-    this.yawRad = frame.yawRad;
+    this.yawRad = frame.right ?? frame.yawRad;
     for (const event of frame.events) {
       // Keyed by tick as well as unit: the same unit breaking silence twice in
       // one match is two events, but one event redelivered is not two. And by

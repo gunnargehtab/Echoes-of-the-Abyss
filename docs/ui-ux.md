@@ -658,17 +658,22 @@ read off the hull's own depth wherever it is headed, since a charge set inside i
 is refused. So is one its dropper's rating cannot carry there, and CHARGE greys with that reason
 when no selected hull's charge would be taken.
 
-### Planned free-water controls
+### Opt-in free-water controls
 
 [free-water-slice.md](free-water-slice.md) §6 is the implementation contract for #1706
-and the rest of #1707, not the shipped controls table. The bounded orbit remains
-the default. The proposed opt-in flight uses F8/FLIGHT, a visible F9/NAV keyboard latch,
+and the rest of #1707. The bounded orbit remains the default. Development-only
+`?freeWaterControls=1` enables flight with F8/FLIGHT, a visible F9/NAV keyboard latch,
 local translation and unrestricted quaternion rotation including roll; Home returns
 to the saved orbit frame. NAV owns its keys and suspends fleet shortcuts, not the
 simulation; outside it S/D still commands hulls, never the camera. Focusable controls,
-keyboard look, conflict-checked rebinding and blur/menu release are part of the contract.
+keyboard look, conflict-checked rebinding and blur/menu release implement that contract.
+W/S, A/D and R/F translate in the camera's local axes; Q/E roll and arrows look.
+The upright EYE readout includes world up, INVERTED and VERTICAL feedback. Controls
+sets flight speed over 50–800 rendered m/s, initially 200; rotation is 60 degrees/s.
+Motion buttons step for a quarter-second, so navigation also has a mouse-only route.
+Home and Escape remain reserved. No camera movement emits a fleet order.
 
-The recommended MOVE 3D preview lives beside the depth ribbon, not in another crowded
+The still-planned MOVE 3D preview lives beside the depth ribbon, not in another crowded
 SQUAD cell. It pins plan position, edits a numeric depth, then confirms one fixed-depth
 move, with a separate queue toggle. Invalid rays and solid columns refuse with a reason;
 the scope offers a plan-picker alternative. It does not silently change ordinary

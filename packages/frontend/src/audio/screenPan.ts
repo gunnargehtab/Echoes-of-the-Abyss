@@ -17,10 +17,24 @@
  */
 
 /** The pan, -1 to 1, of a sound `dx`, `dy` metres from the ear. */
-export function screenPan(dx: number, dy: number, yawRad: number): number {
-  const rangeM = Math.hypot(dx, dy);
+export interface ScreenRight {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export function screenPan(
+  dx: number,
+  dy: number,
+  yawRad: number | ScreenRight,
+  height = 0
+): number {
+  const rangeM = Math.hypot(dx, dy, height);
   if (rangeM === 0) return 0;
-  const pan = (dx * Math.cos(yawRad) - dy * Math.sin(yawRad)) / rangeM;
+  const pan =
+    typeof yawRad === 'number'
+      ? (dx * Math.cos(yawRad) - dy * Math.sin(yawRad)) / rangeM
+      : (dx * yawRad.x + height * yawRad.y + dy * yawRad.z) / rangeM;
   return Math.max(-1, Math.min(1, pan));
 }
 
@@ -28,6 +42,8 @@ export function screenPan(dx: number, dy: number, yawRad: number): number {
  * A world bearing (radians from world +x, toward +y) turned into the camera's
  * frame: its cosine is the pan `screenPan` gives for the same direction.
  */
-export function screenBearing(bearing: number, yawRad: number): number {
-  return bearing + yawRad;
+export function screenBearing(bearing: number, yawRad: number | ScreenRight): number {
+  return typeof yawRad === 'number'
+    ? bearing + yawRad
+    : Math.acos(screenPan(Math.cos(bearing), Math.sin(bearing), yawRad));
 }

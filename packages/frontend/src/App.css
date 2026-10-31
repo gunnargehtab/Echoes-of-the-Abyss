@@ -18,6 +18,34 @@
   height: 100%;
 }
 
+.flight-panel {
+  position: absolute;
+  top: 62px;
+  left: calc(var(--ribbon-units) * var(--ui-scale) + 12px);
+  max-width: 290px;
+  padding: 8px;
+  color: var(--text-bright);
+  background: var(--abyss-void);
+  border: 1px solid currentColor;
+  font-size: var(--panel-type);
+}
+
+.flight-panel button {
+  min-height: 28px;
+  margin: 2px;
+}
+
+.flight-attitude {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.flight-motion {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
 /* Everything the esc menu floats over, so one `inert` covers the lot (§9.5).
    Unpositioned on purpose: the absolute panels inside keep .game-root as
    their containing block, so nothing moves for being wrapped. */

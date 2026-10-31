@@ -43,9 +43,24 @@ export type BindableAction =
   | 'buildTurret'
   | 'buildVentTap'
   | 'buildSignature';
+export type FlightAction =
+  | 'flyForward'
+  | 'flyBack'
+  | 'flyLeft'
+  | 'flyRight'
+  | 'flyUp'
+  | 'flyDown'
+  | 'rollLeft'
+  | 'rollRight'
+  | 'lookLeft'
+  | 'lookRight'
+  | 'lookUp'
+  | 'lookDown';
+export type CameraAction = 'toggleFlight' | 'toggleNav' | FlightAction;
+export type InputAction = BindableAction | CameraAction;
 
 export interface ActionSpec {
-  action: BindableAction;
+  action: InputAction;
   /** Shown in the rebinder, in the register the command bar uses. */
   label: string;
   /** What it does, for the row's second line. */
@@ -57,7 +72,7 @@ export interface ActionSpec {
    */
   hold?: boolean;
   /** Grouping in the rebinder, so the list reads like §9's table. */
-  group: 'fleet' | 'ordnance' | 'build';
+  group: 'fleet' | 'ordnance' | 'build' | 'camera' | 'nav';
 }
 
 /**
@@ -135,15 +150,51 @@ export const ACTIONS: readonly ActionSpec[] = [
     hint: "Arm your navy's own, when it has one",
     group: 'build',
   },
+  {
+    action: 'toggleFlight',
+    label: 'Flight',
+    hint: 'Development study: free camera / Home',
+    group: 'camera',
+  },
+  {
+    action: 'toggleNav',
+    label: 'Camera NAV',
+    hint: 'Latch camera keys; suspend fleet shortcuts',
+    group: 'camera',
+  },
+  ...(
+    [
+      ['flyForward', 'Forward'],
+      ['flyBack', 'Back'],
+      ['flyLeft', 'Left'],
+      ['flyRight', 'Right'],
+      ['flyUp', 'Local up'],
+      ['flyDown', 'Local down'],
+      ['rollLeft', 'Roll left'],
+      ['rollRight', 'Roll right'],
+      ['lookLeft', 'Look left'],
+      ['lookRight', 'Look right'],
+      ['lookUp', 'Look up'],
+      ['lookDown', 'Look down'],
+    ] as const
+  ).map(([action, label]): ActionSpec => ({
+    action,
+    label,
+    hint: 'Camera-local; only while NAV is latched',
+    hold: true,
+    group: 'nav',
+  })),
 ];
 
 export const GROUP_LABEL: Record<ActionSpec['group'], string> = {
   fleet: 'The fleet',
   ordnance: 'Ordnance',
   build: 'Construction',
+  camera: 'Free-water study',
+  nav: 'Camera NAV only',
 };
 
-export type Bindings = Record<BindableAction, string>;
+export type Bindings = Record<InputAction, string>;
 
 /** §9's table, exactly. Changing one of these changes the document first. */
 export const DEFAULT_BINDINGS: Bindings = {
@@ -171,6 +222,20 @@ export const DEFAULT_BINDINGS: Bindings = {
   buildTurret: 'KeyT',
   buildVentTap: 'KeyG',
   buildSignature: 'KeyB',
+  toggleFlight: 'F8',
+  toggleNav: 'F9',
+  flyForward: 'KeyW',
+  flyBack: 'KeyS',
+  flyLeft: 'KeyA',
+  flyRight: 'KeyD',
+  flyUp: 'KeyR',
+  flyDown: 'KeyF',
+  rollLeft: 'KeyQ',
+  rollRight: 'KeyE',
+  lookLeft: 'ArrowLeft',
+  lookRight: 'ArrowRight',
+  lookUp: 'ArrowUp',
+  lookDown: 'ArrowDown',
 };
 
 /**
@@ -310,7 +375,7 @@ export const BUILD_ACTION_KIND: Partial<Record<BindableAction, StructureKind>> =
 export interface Conflict {
   code: string;
   /** Two or more actions on one code, or one action on a reserved code. */
-  actions: BindableAction[];
+  actions: InputAction[];
   /** Set when the code is reserved rather than doubly bound. */
   reservedFor?: string;
 }
@@ -325,7 +390,7 @@ export interface Conflict {
  * bound code in the order `ACTIONS` lists, which is at least deterministic.
  */
 export function conflictsIn(bindings: Bindings): Conflict[] {
-  const byCode = new Map<string, BindableAction[]>();
+  const byCode = new Map<string, InputAction[]>();
   for (const { action } of ACTIONS) {
     const code = bindings[action];
     const list = byCode.get(code);
@@ -335,16 +400,34 @@ export function conflictsIn(bindings: Bindings): Conflict[] {
 
   const conflicts: Conflict[] = [];
   for (const [code, actions] of byCode) {
-    const reservedFor = RESERVED_CODES.get(code);
+    const reservedFor = actions.every((action) => isBindable(code, action))
+      ? undefined
+      : RESERVED_CODES.get(code);
     if (reservedFor !== undefined) conflicts.push({ code, actions, reservedFor });
-    else if (actions.length > 1) conflicts.push({ code, actions });
+    else {
+      const colliding = actions.filter((action) =>
+        actions.some((other) => action !== other && contextsOverlap(action, other))
+      );
+      if (colliding.length > 1) conflicts.push({ code, actions: colliding });
+    }
   }
   return conflicts;
 }
 
 /** Whether this code may be bound at all. The screen refuses the capture. */
-export function isBindable(code: string): boolean {
+export function isBindable(code: string, action?: InputAction): boolean {
+  if (action !== undefined && isFlightAction(action) && code.startsWith('Arrow')) return true;
   return !RESERVED_CODES.has(code) && code.length > 0;
+}
+
+export function isFlightAction(action: InputAction): action is FlightAction {
+  return ACTIONS.some((spec) => spec.action === action && spec.group === 'nav');
+}
+
+function contextsOverlap(a: InputAction, b: InputAction): boolean {
+  if (a === 'toggleNav' || a === 'toggleFlight' || b === 'toggleNav' || b === 'toggleFlight')
+    return true;
+  return isFlightAction(a) === isFlightAction(b);
 }
 
 /**
@@ -414,7 +497,7 @@ export function resolveBindings(
   }
 
   const merged: Partial<Bindings> = {};
-  const missing: BindableAction[] = [];
+  const missing: InputAction[] = [];
   for (const { action } of ACTIONS) {
     const code = overrides?.[action];
     if (typeof code === 'string' && code.length > 0) merged[action] = code;
@@ -422,19 +505,25 @@ export function resolveBindings(
   }
   // Filled in `ACTIONS` order, each fill taking its key before the next looks,
   // so two new actions cannot both claim one free key.
-  const taken = new Set(Object.values(merged));
   for (const action of missing) {
+    const taken = new Set(
+      ACTIONS.filter((spec) => contextsOverlap(action, spec.action)).map(
+        (spec) => merged[spec.action]
+      )
+    );
     const standard = DEFAULT_BINDINGS[action];
     const oneHanded = ONE_HANDED_BINDINGS[action];
     const code = !taken.has(standard) || taken.has(oneHanded) ? standard : oneHanded;
     merged[action] = code;
-    taken.add(code);
   }
   return merged as Bindings;
 }
 
 /** The action a code fires, or null. Ties resolve in `ACTIONS` order. */
-export function actionFor(bindings: Bindings, code: string): BindableAction | null {
-  for (const { action } of ACTIONS) if (bindings[action] === code) return action;
+export function actionFor(bindings: Bindings, code: string, nav = false): InputAction | null {
+  for (const { action, group } of ACTIONS) {
+    if (bindings[action] === code && (group === 'camera' || (group === 'nav') === nav))
+      return action;
+  }
   return null;
 }

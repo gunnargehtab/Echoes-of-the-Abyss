@@ -352,7 +352,11 @@ interface Booted {
  * is a renderer with a latent bug.
  */
 async function boot(
-  options: { webgl?: boolean; gpu?: Partial<Pick<HeadlessGL, 'timer' | 'rendererName'>> } = {}
+  options: {
+    webgl?: boolean;
+    controlsStudy?: boolean;
+    gpu?: Partial<Pick<HeadlessGL, 'timer' | 'rendererName'>>;
+  } = {}
 ): Promise<Booted> {
   const gl = new HeadlessWebGLRenderer();
   Object.assign(gl.context, options.gpu);
@@ -373,7 +377,7 @@ async function boot(
   assert.equal(mounted, options.webgl !== false, 'mount reports whether it got a context');
   conn.setActive(true);
 
-  const chart = new EchoRenderer(callbacks, app.asApplication());
+  const chart = new EchoRenderer(callbacks, app.asApplication(), options.controlsStudy ?? false);
   await chart.init(chartHost as unknown as HTMLElement);
   chart.setConn(conn);
 
@@ -416,6 +420,179 @@ async function boot(
  * for, and a contract quotes only the ones on the glass. Hand-built rather
  * than booted, so a failure here is the probe's and not the renderer's.
  */
+describe('free-water camera integration', () => {
+  it('flies all local axes, crosses poles, rolls, picks through the shared camera and recovers Home', async () => {
+    const world = await boot({ controlsStudy: true });
+    try {
+      world.conn.setReducedMotion(true);
+      world.conn.focusWorld(2000, 2000, 1000);
+      world.conn.raiseFocusBy(world.conn.focusDepth() - 300);
+      const saved = world.conn.frame;
+      world.chart.toggleFlight();
+      assert.equal(world.conn.flying, true);
+      const camera = (world.conn as unknown as { camera: import('three').PerspectiveCamera })
+        .camera;
+      const initialQ = camera.quaternion.clone();
+      for (const [x, y, z] of [
+        [10, 0, 0],
+        [0, 10, 0],
+        [0, 0, 10],
+      ]) {
+        const before = camera.position.clone();
+        const expected = new (await import('three')).Vector3(x, y, -z).applyQuaternion(
+          camera.quaternion
+        );
+        world.conn.flyLocal(x!, y!, z!);
+        assert.ok(camera.position.clone().sub(before).distanceTo(expected) < 1e-6);
+      }
+      world.conn.turnFlight(0, 0, Math.PI);
+      assert.equal(world.conn.flightReading().inverted, true);
+      const eye = world.conn.eyePosition;
+      const target = camera.position
+        .clone()
+        .add(new (await import('three')).Vector3(0, 0, -100).applyQuaternion(camera.quaternion));
+      const p = world.conn.projectPoint(target.x, target.z, -target.y / 0.22);
+      assert.ok(p.visible && Math.abs(p.x - 640) < 1e-5 && Math.abs(p.y - 360) < 1e-5);
+      const picked = world.conn.pickPlane(p.x, p.y, -target.y / 0.22);
+      assert.ok(picked !== null && Math.hypot(picked.x - target.x, picked.y - target.z) < 1e-5);
+      const behind = camera.position.clone().sub(target.clone().sub(camera.position));
+      assert.equal(world.conn.projectPoint(behind.x, behind.z, -behind.y / 0.22).visible, false);
+      // Move from the initial downward gaze through both vertical poles.
+      for (let i = 0; i < 360; i++) {
+        world.conn.turnFlight(0, Math.PI / 180, 0);
+        assert.ok(camera.quaternion.toArray().every(Number.isFinite));
+        assert.deepEqual(world.conn.eyePosition, eye, 'rotation does not translate');
+        for (const corner of world.conn.groundQuad()) {
+          assert.ok(Number.isFinite(corner.x) && Number.isFinite(corner.y));
+          assert.ok(corner.x >= -1e-6 && corner.x <= 4000 + 1e-6);
+        }
+      }
+      world.conn.turnFlight(0, 0, Math.PI);
+      assert.ok(camera.quaternion.angleTo(initialQ) < 1e-6, 'full roll restores orientation');
+      world.conn.turnFlight(0, (55 * Math.PI) / 180 + Math.PI / 2, 0);
+      assert.equal(
+        world.conn.flightReading().bearingDeg,
+        null,
+        'vertical is not a fabricated north'
+      );
+      assert.deepEqual(world.conn.groundQuad(), [], 'upward gaze has no ground footprint');
+      assert.equal(world.conn.pickPlane(640, 360, 2500), null, 'behind-plane pick refused');
+      world.chart.homeCamera();
+      assert.equal(world.conn.flying, false);
+      assert.equal(world.conn.frame.yawDeg, 0);
+      assert.equal(world.conn.frame.pitchDeg, HOME_PITCH_DEG);
+      assert.equal(world.conn.frame.distanceM, saved.distanceM);
+      assert.equal(world.conn.frame.xM, saved.xM);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('owns NAV keys and gestures, clears holds on blur/menu, and preserves fleet shortcuts outside NAV', async () => {
+    const world = await boot({ controlsStudy: true });
+    let now = 1000;
+    const clock = mock.method(performance, 'now', () => now);
+    try {
+      world.conn.setReducedMotion(true);
+      world.conn.focusWorld(2000, 2000, 1000);
+      world.conn.raiseFocusBy(world.conn.focusDepth() - 300);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.frame();
+      world.log.calls.length = 0;
+      dispatchWindow('keydown', { code: 'F9' });
+      dispatchWindow('keydown', { code: 'KeyW' });
+      const before = world.conn.eyePosition;
+      now += 100;
+      world.frame();
+      assert.notDeepEqual(world.conn.eyePosition, before);
+      world.app.canvas.dispatch('pointerdown', {
+        button: 2,
+        buttons: 2,
+        clientX: 640,
+        clientY: 360,
+        pointerId: 1,
+      });
+      dispatchWindow('keydown', { code: 'Escape' });
+      world.app.canvas.dispatch('pointerup', {
+        button: 2,
+        buttons: 0,
+        clientX: 640,
+        clientY: 360,
+        pointerId: 1,
+      });
+      assert.ok(!world.log.names().some((name) => /Order$|onDepthOffset|onOpenMenu/.test(name)));
+      const left = world.conn.eyePosition;
+      now += 100;
+      world.frame();
+      assert.deepEqual(world.conn.eyePosition, left, 'release does not resume a held key');
+      dispatchWindow('keydown', { code: 'KeyS' });
+      assert.ok(world.log.names().includes('onDepthOffset'), 'S is fleet Rise outside NAV');
+      dispatchWindow('keydown', { code: 'F9' });
+      dispatchWindow('keydown', { code: 'KeyA' });
+      dispatchWindow('blur', {});
+      const blurred = world.conn.eyePosition;
+      now += 100;
+      world.frame();
+      assert.deepEqual(world.conn.eyePosition, blurred);
+      dispatchWindow('keydown', { code: 'KeyA' });
+      world.chart.setMenuOpen(true);
+      world.chart.setMenuOpen(false);
+      now += 100;
+      world.frame();
+      assert.deepEqual(world.conn.eyePosition, blurred, 'menu never resumes motion');
+      world.chart.toggleNavigation();
+      const focusedButton = { closest: () => ({}) };
+      dispatchWindow('keydown', { code: 'Escape', target: focusedButton });
+      dispatchWindow('keydown', { code: 'Home', target: focusedButton });
+      assert.equal(world.conn.flying, false);
+    } finally {
+      clock.mock.restore();
+      world.teardown();
+    }
+  });
+
+  it('selects and queues orders through a rolled view, refusing a sky pick', async () => {
+    const world = await boot({ controlsStudy: true });
+    try {
+      const hull = cannedSnapshot().units[0]!;
+      world.conn.setReducedMotion(true);
+      world.conn.focusWorld(hull.x, hull.y, 100);
+      world.conn.raiseFocusBy(world.conn.focusDepth() - hull.depth);
+      world.chart.toggleFlight();
+      world.conn.turnFlight(0, 0, Math.PI);
+      world.frame();
+      const at = world.conn.projectPoint(hull.x, hull.y, hull.depth);
+      assert.ok(at.visible);
+      const click = (button: number, x: number, y: number, shiftKey = false) => {
+        for (const type of ['pointerdown', 'pointerup']) {
+          world.app.canvas.dispatch(type, {
+            button,
+            clientX: x,
+            clientY: y,
+            shiftKey,
+            pointerId: 1,
+            pointerType: 'mouse',
+          });
+        }
+      };
+      click(0, at.x, at.y);
+      click(2, at.x + 120, at.y + 40, true);
+      const order = world.log.first('onMoveOrder');
+      assert.ok(order, `rolled order missing: ${world.log.names()}`);
+      assert.deepEqual(order[0], [hull.id]);
+      assert.equal(order[3], true, 'queue survives the rolled projection');
+      world.log.calls.length = 0;
+      world.conn.turnFlight(0, -Math.PI, 0);
+      click(2, 640, 360);
+      world.frame();
+      assert.equal(world.log.first('onMoveOrder'), undefined);
+      assert.ok(textContents(world.app.stage).some((text) => text.includes('NO WATER TARGET')));
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
 describe('renderer smoke test: the scene-graph probes', () => {
   it('quotes the labels that are drawn, and counts the ones that are not', () => {
     const stage = new Container();
