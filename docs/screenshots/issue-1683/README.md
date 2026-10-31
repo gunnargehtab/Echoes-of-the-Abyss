@@ -6,7 +6,9 @@ H: its critic stopped the loop. On 30 October the owner restated the court bounc
 display terms, then set its gain and amended three criteria from rounds 2 and 3's sweeps (§11,
 the decisions of 30 October). Round 3, at a bounce gain of 9, met every criterion this
 container can read but the band clause; round 4, granted with a fifth for that clause, reads it
-on the mask's band tags (below). What this container cannot read is listed at the foot.
+on the mask's band tags (below). The rest of §9's set was taken on the named desktop after
+round 4: GPU time with the bounce and the grade on and off, the escorts' pixels, the ember, the
+transit pair, the palettes and the control. What only the owner can judge is listed at the foot.
 
 ## How the frames were taken
 
@@ -266,15 +268,59 @@ The two "off" sessions read 22 apart, one under "on", so the spread is the bucke
 study's. The ember's mean breath is 133–155. Round 3's brightest arch pixel outside a pool,
 63.6, stays under it, as under 83.
 
+## The transit pair, the palettes and the control
+
+Taken at `e18d150d` on the GTX 1070, 1920 × 1080 at ratio 1, one fresh session each, by #1674's
+[`capture.mjs`](../issue-1674/capture.mjs) (`SPAN_Z=45`) and, for the control and the return,
+[`control.mjs`](control.mjs). #1674 took the first two before the refinement, with 2,412
+triangles; these are the refined arch. The motion clips and reduced motion are #1674's,
+filmed at `710ba338` after this refinement ([its clips](../issue-1674/README.md#clips)).
+
+**The transit pair.** H's pose re-applied at T+10:35 and T+10:55, the study on and off
+(`T-<half>-H-635s.png`, `T-<half>-H-655s.png`), every reading at ticks 38100 and 39300 in
+both halves. The pose held at focus (2550, 2553), 2,600 m, 55° and 0° in all four, so the
+ground change drove no focus clamp.
+
+| Time | Landmark on | Lamps standing on | Calls on / off | Props on / off |
+| --- | --- | --- | --- | --- |
+| T+10:35 | intact, 2,626 triangles | 4 | 56 / 51 | 186 / 186 |
+| T+10:55 | ruined, 732 triangles | 0 | 45 / 41 | 198 / 198 |
+
+At 10:55 the span is gone into the new wall, a ruined pier stands with no lamp, and the sift's
+256 motes carry on; the cloud has settled. The orange disc over the court at 10:55 is the
+mission's order marking, in both halves.
+
+**The palettes.** H and C with the study on at T+00:30, seeded through `SETTINGS_JSON`; each
+JSON's `settings` is the record the page held (`p-<station>-<palette>-*.png`). Every reading
+is at tick 1800, with 56 calls at H and 36 at C and the landmark at 2,626 triangles. The threat
+marks draw in each palette's colours, red with white bars in tritanopia.
+
+| Palette | H near-black | H lamp windows | C near-black | C lamp glass |
+| --- | --- | --- | --- | --- |
+| Deuteranopia | 98.76 % | 57.6–69.8 | 89.1 % | 89.4 / 84.7 / 85.9 |
+| Protanopia | 98.75 % | 55.6–85.0 | 89.1 % | 89.4 / 84.7 / 85.9 |
+| Tritanopia | 98.75 % | 49.5–84.1 | 89.1 % | 89.4 / 84.7 / 85.9 |
+
+C's lamp 1 stands off the frame. At H's dolly a 28 px lamp window holds stone and water as well
+as glass, so its readings vary by session, not by palette (#1674 read 31.9–84.9).
+
+**The non-target control.** `ventfront-divide` at the home station at T+01:00, the study
+requested and not (`v-on.json`, `v-off.json`): both read tick 3612, look `standard`, no
+landmark, sift or cloud, 430 props at 115,802 triangles, 68 calls, 166,978 triangles and 21
+textures. #1637 read the same triangles and textures before the refinement.
+
+**The return.** The tutorial with the study on (landmark 2,626 triangles, sift 256, 56 calls),
+left through the Esc menu's "Return to port" and its "Abandon the water", then the standard
+solo path in the same page, whose URL still carries `?arch-study=1` (`ret.json`,
+`ret-tutorial.png`, `ret-solo.png`). The solo match reads look `standard`, no landmark, sift
+or cloud, and the control's 430 props, 68 calls, 166,978 triangles and 21 textures: nothing of
+the study is in use after the return.
+
 ## Not taken here
 
-§11 asks for §9's whole set. These are left:
-
-- No drift line reading as a chart mark at S, which is the owner's look, and no surface
-  shimmering in motion.
-- The transit pair, the palettes and the `ventfront-divide` control. The motion clips and
-  reduced motion are #1674's, filmed at `710ba338` after this refinement
-  ([its clips](../issue-1674/README.md#clips)).
+§11 asks for §9's whole set, and this README now holds the readings this machine can take.
+Left for the owner: whether a drift line reads as a chart mark at S, whether any surface
+shimmers in motion, and §10's acceptance.
 
 ## Related
 

@@ -12,7 +12,8 @@
  *
  * MODE=return enters the tutorial with the study on (`--entry tutorial`, the
  * flag on the title URL), reads it once the six hull models stand, leaves
- * through the Esc menu's "Return to port", takes the standard solo path to
+ * through the Esc menu's "Return to port" and its "Abandon the water"
+ * confirmation, takes the standard solo path to
  * `ventfront-divide` in the same page, and reads that match: nothing of the
  * study may be in use after the return.
  *
@@ -74,6 +75,8 @@ export default async ({ page, shot }) => {
     await read('tutorial');
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Return to port' }).click();
+    // Leaving asks first: a seat left on purpose is not held.
+    await page.getByRole('button', { name: /abandon the water/i }).click();
     await page.getByRole('button', { name: 'Solo game' }).click();
     await page.waitForSelector('.menu-commit', { timeout: 10000 });
     await page.click('.menu-commit');

@@ -1,0 +1,28 @@
+{
+  "tag": "v-on",
+  "mode": "control",
+  "readings": [
+    {
+      "name": "home",
+      "file": "D:\\Claude\\.dev-loop\\ev1683\\v-on/02-v-on-home.png",
+      "url": "http://localhost:5173/?map=ventfront-divide&arch-study=1",
+      "tick": 3612,
+      "look": "standard",
+      "landmarks": 0,
+      "landmarkTris": 0,
+      "siftMotes": 0,
+      "cloudMotes": 0,
+      "props": 430,
+      "propTris": 115802,
+      "drawCalls": 68,
+      "triangles": 166978,
+      "textures": 21,
+      "focus": {
+        "xM": 1276,
+        "zM": 1418,
+        "depthM": null
+      },
+      "distance": 2600
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "tag": "ret",
+  "mode": "return",
+  "readings": [
+    {
+      "name": "tutorial",
+      "file": "D:\\Claude\\.dev-loop\\ev1683\\ret/03-ret-tutorial.png",
+      "url": "http://localhost:5173/?arch-study=1",
+      "tick": 828,
+      "look": "sorrowgate",
+      "landmarks": 1,
+      "landmarkTris": 2626,
+      "siftMotes": 256,
+      "cloudMotes": 0,
+      "props": 186,
+      "propTris": 49244,
+      "drawCalls": 56,
+      "triangles": 123589,
+      "textures": 18,
+      "focus": {
+        "xM": 2550,
+        "zM": 2553,
+        "depthM": null
+      },
+      "distance": 2600
+    },
+    {
+      "name": "solo",
+      "file": "D:\\Claude\\.dev-loop\\ev1683\\ret/04-ret-solo.png",
+      "url": "http://localhost:5173/?arch-study=1",
+      "tick": 480,
+      "look": "standard",
+      "landmarks": 0,
+      "landmarkTris": 0,
+      "siftMotes": 0,
+      "cloudMotes": 0,
+      "props": 430,
+      "propTris": 115802,
+      "drawCalls": 68,
+      "triangles": 166978,
+      "textures": 21,
+      "focus": {
+        "xM": 1276,
+        "zM": 1418,
+        "depthM": null
+      },
+      "distance": 2600
+    }
+  ]
+}

@@ -1,0 +1,2600 @@
+{
+  "url": "http://localhost:5173/?arch-study=1",
+  "viewport": [
+    1920,
+    1080
+  ],
+  "dpr": 1,
+  "settings": null,
+  "reducedMotion": false,
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "modelsTick": 576,
+  "openingPose": {
+    "focus": {
+      "xM": 2550,
+      "zM": 2553,
+      "depthM": null
+    },
+    "distance": 2600,
+    "pitchDeg": 55,
+    "yawDeg": 0
+  },
+  "readings": [
+    {
+      "name": "H",
+      "file": "T-on-H-635s.png",
+      "requestedTick": 38100,
+      "leadS": 0,
+      "captureTicks": [
+        38101,
+        38064
+      ],
+      "readingTick": 38100,
+      "requested": [
+        2550,
+        2553,
+        2600,
+        {
+          "pitchDeg": 55,
+          "yawDeg": 0,
+          "focusDepthM": null
+        }
+      ],
+      "actual": {
+        "focus": {
+          "xM": 2550,
+          "zM": 2553,
+          "depthM": null
+        },
+        "distance": 2600,
+        "pitchDeg": 55,
+        "yawDeg": 0
+      },
+      "conn": {
+        "buffer": [
+          1920,
+          1080
+        ],
+        "frame": {
+          "maxLuma": 190.7,
+          "brightest": {
+            "x": 160,
+            "y": 127,
+            "rgb": [
+              255,
+              183,
+              78
+            ]
+          },
+          "meanLuma": 14.27,
+          "under10": 0.9875,
+          "pixels": 2073600
+        },
+        "windows": {
+          "lamp_0": {
+            "maxLuma": 53.5,
+            "brightest": {
+              "x": 1065,
+              "y": 389,
+              "rgb": [
+                66,
+                51,
+                41
+              ]
+            },
+            "meanLuma": 22.07,
+            "under10": 0.7717,
+            "pixels": 784
+          },
+          "lamp_1": {
+            "maxLuma": 75.4,
+            "brightest": {
+              "x": 1105,
+              "y": 385,
+              "rgb": [
+                94,
+                72,
+                54
+              ]
+            },
+            "meanLuma": 20.24,
+            "under10": 0.8431,
+            "pixels": 784
+          },
+          "lamp_2": {
+            "maxLuma": 58.3,
+            "brightest": {
+              "x": 816,
+              "y": 388,
+              "rgb": [
+                71,
+                56,
+                44
+              ]
+            },
+            "meanLuma": 20.21,
+            "under10": 0.9005,
+            "pixels": 784
+          },
+          "lamp_3": {
+            "maxLuma": 67.5,
+            "brightest": {
+              "x": 847,
+              "y": 384,
+              "rgb": [
+                87,
+                64,
+                45
+              ]
+            },
+            "meanLuma": 22.28,
+            "under10": 0.7908,
+            "pixels": 784
+          }
+        }
+      },
+      "arch": {
+        "side": 16,
+        "windows": {
+          "pierW": {
+            "box": [
+              825,
+              354,
+              841,
+              370
+            ],
+            "pxPerM": 0.535,
+            "visible": true,
+            "maxLuma": 53.4,
+            "brightest": {
+              "x": 828,
+              "y": 355,
+              "rgb": [
+                49,
+                54,
+                61
+              ]
+            },
+            "meanLuma": 24.1,
+            "under10": 0.6719,
+            "pixels": 256
+          },
+          "pierE": {
+            "box": [
+              1079,
+              354,
+              1095,
+              370
+            ],
+            "pxPerM": 0.535,
+            "visible": true,
+            "maxLuma": 49.5,
+            "brightest": {
+              "x": 1088,
+              "y": 355,
+              "rgb": [
+                45,
+                50,
+                58
+              ]
+            },
+            "meanLuma": 25.51,
+            "under10": 0.668,
+            "pixels": 256
+          },
+          "floorW": {
+            "box": [
+              827,
+              407,
+              843,
+              423
+            ],
+            "pxPerM": 0.529,
+            "visible": true,
+            "maxLuma": 18.8,
+            "brightest": {
+              "x": 827,
+              "y": 407,
+              "rgb": [
+                13,
+                20,
+                24
+              ]
+            },
+            "meanLuma": 17.14,
+            "under10": 1,
+            "pixels": 256
+          },
+          "floorE": {
+            "box": [
+              1078,
+              407,
+              1094,
+              423
+            ],
+            "pxPerM": 0.529,
+            "visible": true,
+            "maxLuma": 18.8,
+            "brightest": {
+              "x": 1078,
+              "y": 417,
+              "rgb": [
+                13,
+                20,
+                24
+              ]
+            },
+            "meanLuma": 17.06,
+            "under10": 1,
+            "pixels": 256
+          },
+          "opening": {
+            "box": [
+              952,
+              359,
+              968,
+              375
+            ],
+            "pxPerM": 0.514,
+            "visible": true,
+            "maxLuma": 18.8,
+            "brightest": {
+              "x": 967,
+              "y": 365,
+              "rgb": [
+                13,
+                20,
+                24
+              ]
+            },
+            "meanLuma": 16.5,
+            "under10": 1,
+            "pixels": 256
+          },
+          "span": {
+            "box": [
+              952,
+              328,
+              968,
+              344
+            ],
+            "pxPerM": 0.538,
+            "visible": true,
+            "maxLuma": 43,
+            "brightest": {
+              "x": 962,
+              "y": 329,
+              "rgb": [
+                31,
+                45,
+                58
+              ]
+            },
+            "meanLuma": 24.15,
+            "under10": 0.7266,
+            "pixels": 256
+          },
+          "wall": {
+            "box": [
+              952,
+              201,
+              968,
+              217
+            ],
+            "pxPerM": 0.477,
+            "visible": true,
+            "maxLuma": 18.8,
+            "brightest": {
+              "x": 952,
+              "y": 209,
+              "rgb": [
+                13,
+                20,
+                24
+              ]
+            },
+            "meanLuma": 12.65,
+            "under10": 1,
+            "pixels": 256
+          },
+          "capW": {
+            "box": [
+              825,
+              351,
+              841,
+              367
+            ],
+            "pxPerM": 0.536,
+            "visible": true,
+            "maxLuma": 53.4,
+            "brightest": {
+              "x": 828,
+              "y": 355,
+              "rgb": [
+                49,
+                54,
+                61
+              ]
+            },
+            "meanLuma": 28.32,
+            "under10": 0.4883,
+            "pixels": 256
+          },
+          "capE": {
+            "box": [
+              1080,
+              351,
+              1096,
+              367
+            ],
+            "pxPerM": 0.536,
+            "visible": true,
+            "maxLuma": 49.5,
+            "brightest": {
+              "x": 1088,
+              "y": 355,
+              "rgb": [
+                45,
+                50,
+                58
+              ]
+            },
+            "meanLuma": 28.97,
+            "under10": 0.5078,
+            "pixels": 256
+          }
+        },
+        "masks": {
+          "stone_dark": {
+            "pixels": 19834,
+            "inPools": 690,
+            "meanLuma": 35.83,
+            "maxLuma": 54.1,
+            "under10": 0.2119
+          },
+          "structure_rib": {
+            "pixels": 1118,
+            "inPools": 60,
+            "meanLuma": 19.27,
+            "maxLuma": 54.8,
+            "under10": 0.7925
+          },
+          "silt_drift": {
+            "pixels": 562,
+            "inPools": 38,
+            "meanLuma": 40.56,
+            "maxLuma": 62.9,
+            "under10": 0.0071
+          },
+          "civic_lamp": {
+            "pixels": 0,
+            "inPools": 5,
+            "meanLuma": null,
+            "maxLuma": null,
+            "under10": null
+          },
+          "laminate": {
+            "pixels": 3896,
+            "inPools": 0,
+            "meanLuma": 29.66,
+            "maxLuma": 136,
+            "under10": 0.4209
+          },
+          "hullLamp": {
+            "pixels": 147,
+            "inPools": 0,
+            "meanLuma": 69.63,
+            "maxLuma": 177.3,
+            "under10": 0.1837
+          }
+        },
+        "profiles": {
+          "west": {
+            "x": 837,
+            "y0": 299,
+            "rows": [
+              39.96,
+              40.57,
+              40.99,
+              40.37,
+              40.37,
+              40.79,
+              41.17,
+              40.37,
+              40.77,
+              40.73,
+              40.37,
+              40.66,
+              40.22,
+              39.57,
+              39.2,
+              39,
+              38.86,
+              39.59,
+              39.63,
+              39.93,
+              40.26,
+              40.26,
+              34.96,
+              24.13,
+              42.54,
+              44.4,
+              39.06,
+              38.87,
+              40.37,
+              40.22,
+              40.16,
+              40.62,
+              23.79,
+              18.99,
+              35.26,
+              19.7,
+              19.7,
+              19.84,
+              20.23,
+              20.17,
+              20.5,
+              20.04,
+              20.3,
+              20.36,
+              20.14,
+              20.67,
+              32.67,
+              39.24,
+              37.92,
+              38.24,
+              38.23,
+              38.94,
+              38.86,
+              39.85,
+              35.2,
+              40.85,
+              43.51,
+              45.01,
+              14.97,
+              16.54,
+              17.93,
+              17.35,
+              23.63,
+              22.03,
+              16.12,
+              21.96,
+              35.4,
+              15.72,
+              14.57,
+              14.17,
+              14.25,
+              14.86,
+              14.33,
+              14.33,
+              17.43,
+              26.4,
+              31.1,
+              31.33,
+              33.9,
+              41.8,
+              45.44,
+              40.26,
+              24.67,
+              20.07,
+              20.24,
+              20.7,
+              20.1,
+              20.23,
+              20.24,
+              20.04,
+              20.23,
+              19.67,
+              19.1,
+              17.79,
+              17.8,
+              15.9,
+              16.76,
+              16.8,
+              17,
+              17.2,
+              17
+            ]
+          },
+          "east": {
+            "x": 1084,
+            "y0": 299,
+            "rows": [
+              42.5,
+              41.47,
+              41.19,
+              41.53,
+              41.59,
+              41.55,
+              41.5,
+              41.39,
+              41,
+              40.57,
+              40.72,
+              40.62,
+              40.73,
+              41.72,
+              42.45,
+              42.48,
+              42.43,
+              42.33,
+              41.9,
+              42.39,
+              41.6,
+              41.9,
+              36.7,
+              26.52,
+              41.39,
+              41.28,
+              41.13,
+              41.2,
+              40.82,
+              40.02,
+              40.77,
+              40.6,
+              26.46,
+              21.35,
+              35.26,
+              20.69,
+              18.08,
+              17.48,
+              16.97,
+              17.4,
+              16.75,
+              28.56,
+              32.26,
+              31.87,
+              32.17,
+              36.01,
+              40.37,
+              41.19,
+              41.62,
+              41.76,
+              42.19,
+              41.6,
+              41.27,
+              40.41,
+              37.28,
+              41.22,
+              47.73,
+              47.71,
+              21.15,
+              18.39,
+              21.54,
+              21.09,
+              25.46,
+              23.18,
+              17.1,
+              25.36,
+              27.83,
+              20.12,
+              15.9,
+              16.7,
+              25.28,
+              11.32,
+              17.21,
+              17.48,
+              17.89,
+              27.5,
+              23.23,
+              34.61,
+              18.7,
+              20.55,
+              24.57,
+              24.51,
+              18.82,
+              18.68,
+              18.21,
+              19.52,
+              28.13,
+              34.65,
+              34.75,
+              38.2,
+              40.9,
+              20.86,
+              20.04,
+              32.19,
+              26.82,
+              17.39,
+              16.14,
+              16.6,
+              16.44,
+              16.41,
+              16.4
+            ]
+          }
+        },
+        "faces": {
+          "capW": {
+            "x": 833,
+            "top": 358,
+            "bottom": 361,
+            "rows": [
+              18.6,
+              19
+            ],
+            "meanLuma": 18.83
+          },
+          "capE": {
+            "x": 1088,
+            "top": 358,
+            "bottom": 361,
+            "rows": [
+              20.1,
+              19.9
+            ],
+            "meanLuma": 20.02
+          },
+          "drum2W": {
+            "x": 834,
+            "top": 357,
+            "bottom": 364,
+            "rows": [
+              16.5,
+              18.6,
+              18.9,
+              25.4,
+              22.5,
+              17
+            ],
+            "meanLuma": 19.81
+          },
+          "drum2E": {
+            "x": 1087,
+            "top": 357,
+            "bottom": 364,
+            "rows": [
+              17.6,
+              20.4,
+              20.1,
+              28,
+              24.7,
+              17.9
+            ],
+            "meanLuma": 21.44
+          },
+          "drum1W": {
+            "x": 835,
+            "top": 367,
+            "bottom": 379,
+            "rows": [
+              15.2,
+              15.1,
+              15.3,
+              15,
+              15.2,
+              16,
+              25.6,
+              31.2,
+              32.4,
+              34.1,
+              40.3
+            ],
+            "meanLuma": 23.21
+          },
+          "drum1E": {
+            "x": 1086,
+            "top": 367,
+            "bottom": 379,
+            "rows": [
+              17.8,
+              26.1,
+              11.6,
+              17.3,
+              17.4,
+              17.2,
+              21.1,
+              27.2,
+              31.3,
+              17.4,
+              20.5
+            ],
+            "meanLuma": 20.43
+          },
+          "drum0W": {
+            "x": 836,
+            "top": 381,
+            "bottom": 393,
+            "rows": [
+              20.5,
+              20.7,
+              21.1,
+              20.8,
+              20.6,
+              20.4,
+              20.3,
+              20.2,
+              19.8,
+              19.6,
+              17.9
+            ],
+            "meanLuma": 20.18
+          },
+          "drum0E": {
+            "x": 1085,
+            "top": 381,
+            "bottom": 393,
+            "rows": [
+              18,
+              17.8,
+              19.4,
+              26.7,
+              31.7,
+              33.4,
+              34.1,
+              38.6,
+              21,
+              20.1,
+              32
+            ],
+            "meanLuma": 26.61
+          }
+        },
+        "bands": {
+          "west195": {
+            "x": 858,
+            "runs": [
+              {
+                "code": 0,
+                "top": 297,
+                "rows": 48,
+                "meanLuma": null
+              },
+              {
+                "code": 3,
+                "top": 345,
+                "rows": 1,
+                "meanLuma": 25.74
+              },
+              {
+                "code": 9,
+                "top": 346,
+                "rows": 11,
+                "meanLuma": 39.94
+              },
+              {
+                "code": 10,
+                "top": 357,
+                "rows": 4,
+                "meanLuma": 19.37
+              },
+              {
+                "code": 8,
+                "top": 361,
+                "rows": 3,
+                "meanLuma": 20.37
+              },
+              {
+                "code": 5,
+                "top": 364,
+                "rows": 3,
+                "meanLuma": 35.49
+              },
+              {
+                "code": 6,
+                "top": 367,
+                "rows": 12,
+                "meanLuma": 18.84
+              },
+              {
+                "code": 3,
+                "top": 379,
+                "rows": 2,
+                "meanLuma": 38.56
+              },
+              {
+                "code": 4,
+                "top": 381,
+                "rows": 11,
+                "meanLuma": 19.76
+              },
+              {
+                "code": 1,
+                "top": 392,
+                "rows": 2,
+                "meanLuma": 32.46
+              },
+              {
+                "code": 0,
+                "top": 394,
+                "rows": 6,
+                "meanLuma": null
+              }
+            ]
+          },
+          "east195": {
+            "x": 1063,
+            "runs": [
+              {
+                "code": 0,
+                "top": 297,
+                "rows": 43,
+                "meanLuma": null
+              },
+              {
+                "code": 9,
+                "top": 340,
+                "rows": 17,
+                "meanLuma": 40.29
+              },
+              {
+                "code": 10,
+                "top": 357,
+                "rows": 4,
+                "meanLuma": 18.32
+              },
+              {
+                "code": 8,
+                "top": 361,
+                "rows": 3,
+                "meanLuma": 21.76
+              },
+              {
+                "code": 5,
+                "top": 364,
+                "rows": 2,
+                "meanLuma": 35.8
+              },
+              {
+                "code": 6,
+                "top": 366,
+                "rows": 13,
+                "meanLuma": 18.97
+              },
+              {
+                "code": 3,
+                "top": 379,
+                "rows": 2,
+                "meanLuma": 38.14
+              },
+              {
+                "code": 4,
+                "top": 381,
+                "rows": 11,
+                "meanLuma": 22.15
+              },
+              {
+                "code": 1,
+                "top": 392,
+                "rows": 1,
+                "meanLuma": 33
+              },
+              {
+                "code": 0,
+                "top": 393,
+                "rows": 7,
+                "meanLuma": null
+              }
+            ]
+          },
+          "west215": {
+            "x": 847,
+            "runs": [
+              {
+                "code": 0,
+                "top": 297,
+                "rows": 49,
+                "meanLuma": null
+              },
+              {
+                "code": 9,
+                "top": 346,
+                "rows": 11,
+                "meanLuma": 41.14
+              },
+              {
+                "code": 10,
+                "top": 357,
+                "rows": 4,
+                "meanLuma": 19.42
+              },
+              {
+                "code": 8,
+                "top": 361,
+                "rows": 3,
+                "meanLuma": 18.18
+              },
+              {
+                "code": 5,
+                "top": 364,
+                "rows": 2,
+                "meanLuma": 35.83
+              },
+              {
+                "code": 6,
+                "top": 366,
+                "rows": 9,
+                "meanLuma": 17.92
+              },
+              {
+                "code": 3,
+                "top": 375,
+                "rows": 6,
+                "meanLuma": 39.81
+              },
+              {
+                "code": 4,
+                "top": 381,
+                "rows": 11,
+                "meanLuma": 22.23
+              },
+              {
+                "code": 1,
+                "top": 392,
+                "rows": 2,
+                "meanLuma": 28.66
+              },
+              {
+                "code": 0,
+                "top": 394,
+                "rows": 6,
+                "meanLuma": null
+              }
+            ]
+          },
+          "east215": {
+            "x": 1073,
+            "runs": [
+              {
+                "code": 0,
+                "top": 297,
+                "rows": 43,
+                "meanLuma": null
+              },
+              {
+                "code": 9,
+                "top": 340,
+                "rows": 17,
+                "meanLuma": 40.93
+              },
+              {
+                "code": 10,
+                "top": 357,
+                "rows": 4,
+                "meanLuma": 18.23
+              },
+              {
+                "code": 5,
+                "top": 361,
+                "rows": 1,
+                "meanLuma": 33.9
+              },
+              {
+                "code": 6,
+                "top": 362,
+                "rows": 7,
+                "meanLuma": 20.68
+              },
+              {
+                "code": 5,
+                "top": 369,
+                "rows": 1,
+                "meanLuma": 31.11
+              },
+              {
+                "code": 6,
+                "top": 370,
+                "rows": 5,
+                "meanLuma": 16.7
+              },
+              {
+                "code": 3,
+                "top": 375,
+                "rows": 2,
+                "meanLuma": 39.05
+              },
+              {
+                "code": 4,
+                "top": 377,
+                "rows": 8,
+                "meanLuma": 19.59
+              },
+              {
+                "code": 3,
+                "top": 385,
+                "rows": 5,
+                "meanLuma": 41.08
+              },
+              {
+                "code": 4,
+                "top": 390,
+                "rows": 2,
+                "meanLuma": 22.06
+              },
+              {
+                "code": 1,
+                "top": 392,
+                "rows": 2,
+                "meanLuma": 31.54
+              },
+              {
+                "code": 0,
+                "top": 394,
+                "rows": 6,
+                "meanLuma": null
+              }
+            ]
+          },
+          "west235": {
+            "x": 837,
+            "runs": [
+              {
+                "code": 0,
+                "top": 297,
+                "rows": 48,
+                "meanLuma": null
+              },
+              {
+                "code": 9,
+                "top": 345,
+                "rows": 12,
+                "meanLuma": 40.04
+              },
+              {
+                "code": 10,
+                "top": 357,
+                "rows": 4,
+                "meanLuma": 17.47
+              },
+              {
+                "code": 5,
+                "top": 361,
+                "rows": 1,
+                "meanLuma": 32.69
+              },
+              {
+                "code": 6,
+                "top": 362,
+                "rows": 3,
+                "meanLuma": 23.02
+              },
+              {
+                "code": 5,
+                "top": 365,
+                "rows": 1,
+                "meanLuma": 35.42
+              },
+              {
+                "code": 6,
+                "top": 366,
+                "rows": 9,
+                "meanLuma": 16.02
+              },
+              {
+                "code": 3,
+                "top": 375,
+                "rows": 6,
+                "meanLuma": 42.76
+              },
+              {
+                "code": 4,
+                "top": 381,
+                "rows": 11,
+                "meanLuma": 20.94
+              },
+              {
+                "code": 0,
+                "top": 392,
+                "rows": 8,
+                "meanLuma": null
+              }
+            ]
+          },
+          "east235": {
+            "x": 1084,
+            "runs": [
+              {
+                "code": 0,
+                "top": 297,
+                "rows": 43,
+                "meanLuma": null
+              },
+              {
+                "code": 9,
+                "top": 340,
+                "rows": 17,
+                "meanLuma": 41.17
+              },
+              {
+                "code": 10,
+                "top": 357,
+                "rows": 4,
+                "meanLuma": 19.66
+              },
+              {
+                "code": 5,
+                "top": 361,
+                "rows": 1,
+                "meanLuma": 32.91
+              },
+              {
+                "code": 6,
+                "top": 362,
+                "rows": 7,
+                "meanLuma": 20.11
+              },
+              {
+                "code": 5,
+                "top": 369,
+                "rows": 1,
+                "meanLuma": 31.74
+              },
+              {
+                "code": 6,
+                "top": 370,
+                "rows": 6,
+                "meanLuma": 16.84
+              },
+              {
+                "code": 3,
+                "top": 376,
+                "rows": 1,
+                "meanLuma": 39.62
+              },
+              {
+                "code": 4,
+                "top": 377,
+                "rows": 9,
+                "meanLuma": 19.39
+              },
+              {
+                "code": 3,
+                "top": 386,
+                "rows": 4,
+                "meanLuma": 40.38
+              },
+              {
+                "code": 4,
+                "top": 390,
+                "rows": 2,
+                "meanLuma": 20.69
+              },
+              {
+                "code": 1,
+                "top": 392,
+                "rows": 2,
+                "meanLuma": 29.57
+              },
+              {
+                "code": 0,
+                "top": 394,
+                "rows": 6,
+                "meanLuma": null
+              }
+            ]
+          },
+          "west255": {
+            "x": 826,
+            "runs": [
+              {
+                "code": 0,
+                "top": 297,
+                "rows": 48,
+                "meanLuma": null
+              },
+              {
+                "code": 9,
+                "top": 345,
+                "rows": 12,
+                "meanLuma": 41.33
+              },
+              {
+                "code": 10,
+                "top": 357,
+                "rows": 4,
+                "meanLuma": 19.54
+              },
+              {
+                "code": 8,
+                "top": 361,
+                "rows": 3,
+                "meanLuma": 18.03
+              },
+              {
+                "code": 5,
+                "top": 364,
+                "rows": 2,
+                "meanLuma": 35.55
+              },
+              {
+                "code": 6,
+                "top": 366,
+                "rows": 13,
+                "meanLuma": 18.16
+              },
+              {
+                "code": 3,
+                "top": 379,
+                "rows": 2,
+                "meanLuma": 40.84
+              },
+              {
+                "code": 4,
+                "top": 381,
+                "rows": 11,
+                "meanLuma": 21.44
+              },
+              {
+                "code": 0,
+                "top": 392,
+                "rows": 8,
+                "meanLuma": null
+              }
+            ]
+          },
+          "east255": {
+            "x": 1094,
+            "runs": [
+              {
+                "code": 0,
+                "top": 297,
+                "rows": 43,
+                "meanLuma": null
+              },
+              {
+                "code": 9,
+                "top": 340,
+                "rows": 17,
+                "meanLuma": 39.96
+              },
+              {
+                "code": 10,
+                "top": 357,
+                "rows": 4,
+                "meanLuma": 18.77
+              },
+              {
+                "code": 5,
+                "top": 361,
+                "rows": 1,
+                "meanLuma": 33.11
+              },
+              {
+                "code": 6,
+                "top": 362,
+                "rows": 7,
+                "meanLuma": 20.14
+              },
+              {
+                "code": 5,
+                "top": 369,
+                "rows": 1,
+                "meanLuma": 31.8
+              },
+              {
+                "code": 6,
+                "top": 370,
+                "rows": 5,
+                "meanLuma": 15.3
+              },
+              {
+                "code": 3,
+                "top": 375,
+                "rows": 2,
+                "meanLuma": 37.37
+              },
+              {
+                "code": 4,
+                "top": 377,
+                "rows": 9,
+                "meanLuma": 18.99
+              },
+              {
+                "code": 3,
+                "top": 386,
+                "rows": 4,
+                "meanLuma": 37.98
+              },
+              {
+                "code": 4,
+                "top": 390,
+                "rows": 2,
+                "meanLuma": 19.88
+              },
+              {
+                "code": 1,
+                "top": 392,
+                "rows": 2,
+                "meanLuma": 29.12
+              },
+              {
+                "code": 0,
+                "top": 394,
+                "rows": 6,
+                "meanLuma": null
+              }
+            ]
+          },
+          "west275": {
+            "x": 816,
+            "runs": [
+              {
+                "code": 0,
+                "top": 297,
+                "rows": 48,
+                "meanLuma": null
+              },
+              {
+                "code": 9,
+                "top": 345,
+                "rows": 13,
+                "meanLuma": 40.13
+              },
+              {
+                "code": 10,
+                "top": 358,
+                "rows": 3,
+                "meanLuma": 20.35
+              },
+              {
+                "code": 8,
+                "top": 361,
+                "rows": 3,
+                "meanLuma": 20.8
+              },
+              {
+                "code": 5,
+                "top": 364,
+                "rows": 3,
+                "meanLuma": 35.77
+              },
+              {
+                "code": 6,
+                "top": 367,
+                "rows": 12,
+                "meanLuma": 20.2
+              },
+              {
+                "code": 3,
+                "top": 379,
+                "rows": 2,
+                "meanLuma": 38.39
+              },
+              {
+                "code": 4,
+                "top": 381,
+                "rows": 11,
+                "meanLuma": 22.82
+              },
+              {
+                "code": 0,
+                "top": 392,
+                "rows": 8,
+                "meanLuma": null
+              }
+            ]
+          },
+          "east275": {
+            "x": 1105,
+            "runs": [
+              {
+                "code": 0,
+                "top": 297,
+                "rows": 44,
+                "meanLuma": null
+              },
+              {
+                "code": 9,
+                "top": 341,
+                "rows": 17,
+                "meanLuma": 40.26
+              },
+              {
+                "code": 10,
+                "top": 358,
+                "rows": 3,
+                "meanLuma": 20.73
+              },
+              {
+                "code": 5,
+                "top": 361,
+                "rows": 1,
+                "meanLuma": 33.68
+              },
+              {
+                "code": 8,
+                "top": 362,
+                "rows": 1,
+                "meanLuma": 18.73
+              },
+              {
+                "code": 6,
+                "top": 363,
+                "rows": 1,
+                "meanLuma": 20.73
+              },
+              {
+                "code": 5,
+                "top": 364,
+                "rows": 1,
+                "meanLuma": 35.19
+              },
+              {
+                "code": 6,
+                "top": 365,
+                "rows": 12,
+                "meanLuma": 18.19
+              },
+              {
+                "code": 4,
+                "top": 377,
+                "rows": 2,
+                "meanLuma": 19.17
+              },
+              {
+                "code": 3,
+                "top": 379,
+                "rows": 2,
+                "meanLuma": 38.2
+              },
+              {
+                "code": 4,
+                "top": 381,
+                "rows": 8,
+                "meanLuma": 21.57
+              },
+              {
+                "code": 3,
+                "top": 389,
+                "rows": 1,
+                "meanLuma": 37.98
+              },
+              {
+                "code": 4,
+                "top": 390,
+                "rows": 3,
+                "meanLuma": 21.31
+              },
+              {
+                "code": 1,
+                "top": 393,
+                "rows": 1,
+                "meanLuma": 32.79
+              },
+              {
+                "code": 0,
+                "top": 394,
+                "rows": 6,
+                "meanLuma": null
+              }
+            ]
+          }
+        },
+        "shade": [
+          1,
+          1,
+          1
+        ],
+        "switches": {
+          "pools": true,
+          "lamps": true,
+          "bounce": 9,
+          "grade": true,
+          "ceiling": 0.1
+        },
+        "marked": "T-on-H-635s-windows.png"
+      },
+      "probe": {
+        "active": true,
+        "look": "sorrowgate",
+        "programHold": {
+          "holding": false,
+          "heldFrames": 28
+        },
+        "pitchDeg": 55,
+        "yawDeg": 0,
+        "sway": "on",
+        "focus": {
+          "xM": 2550,
+          "zM": 2553,
+          "depthM": null
+        },
+        "eye": {
+          "xM": 2549,
+          "zM": 4045,
+          "depthM": -8209
+        },
+        "distance": 2600,
+        "waterReachM": 8320,
+        "waterDensity": 1,
+        "hullScale": 1,
+        "drawCalls": 56,
+        "triangles": 129349,
+        "passes": [
+          "canvas",
+          "split-copy",
+          "split"
+        ],
+        "world": {
+          "borderStrength": 1,
+          "overviewDrawn": false,
+          "sessionGround": true,
+          "groundLeaving": false,
+          "frame": {
+            "xM": 2550,
+            "yM": 2553,
+            "distanceM": 2600,
+            "yawDeg": 0,
+            "pitchDeg": 55
+          },
+          "detailDrawn": [],
+          "detailResident": [],
+          "detailPending": 0,
+          "detailProps": 0,
+          "detailPropTris": 0,
+          "detailVentPlumes": 0,
+          "detailLandmarks": 0,
+          "detailLandmarkTris": 0
+        },
+        "halo": "idle",
+        "haloSites": 0,
+        "haloDropped": 0,
+        "haloCalls": 0,
+        "haloTriangles": 0,
+        "haloBytes": 35835136,
+        "split": "on",
+        "splitBytes": 8294400,
+        "canvasStencilBits": 8,
+        "textures": 18,
+        "pixelRatio": 1,
+        "drawingBuffer": {
+          "width": 1920,
+          "height": 1080
+        },
+        "toneMapping": 4,
+        "environmentIntensity": 0.35,
+        "environmentBytes": 344064,
+        "station": null,
+        "stationMs": 636140.4,
+        "stationFrames": 37815,
+        "avgFrames": 240,
+        "fps": 59.4,
+        "avgFrameMs": 16.67,
+        "worstFrameMs": 2039.7,
+        "avgConnMs": 1.51,
+        "worstConnMs": 1140.9,
+        "avgOverlayMs": 0.69,
+        "worstOverlayMs": 49.2,
+        "overlayFrames": 37807,
+        "gpuTimer": "timing",
+        "avgGpuMs": 1.55,
+        "worstGpuMs": 86.64,
+        "gpuFrames": 37786,
+        "gpuDropped": 0,
+        "gpuQueue": null,
+        "gpuSplit": false,
+        "gpuParts": null,
+        "units": 6,
+        "structures": 1,
+        "tracks": 7,
+        "structureTracks": 0,
+        "trackAt": {
+          "x": 2550,
+          "z": 2950,
+          "depthM": 1490
+        },
+        "ordnance": 0,
+        "wakeBubbles": 0,
+        "hits": 0,
+        "hitParticles": 0,
+        "plumeMotes": 0,
+        "workLightsLit": 0,
+        "sparks": 0,
+        "plumeAt": null,
+        "ventPlumeAt": {
+          "x": 208.1782446675934,
+          "z": 2183.766434970312,
+          "depthM": 1414.9942847085467
+        },
+        "hitAt": null,
+        "shots": 0,
+        "shotParticles": 0,
+        "recoiling": 0,
+        "shotAt": null,
+        "props": 186,
+        "propTris": 49244,
+        "ventPlumes": 3,
+        "fieldHazes": 0,
+        "landmarks": 1,
+        "landmarkTris": 2626,
+        "siftMotes": 256,
+        "cloudMotes": 0,
+        "collapsing": false,
+        "landmarkLampsPx": [
+          {
+            "x": 1065.0452427230466,
+            "y": 389.4556755778402
+          },
+          {
+            "x": 1105.7626819874274,
+            "y": 385.2720461199073
+          },
+          {
+            "x": 816.2316471237316,
+            "y": 388.0643949155957
+          },
+          {
+            "x": 847.68231636914,
+            "y": 384.57191149196007
+          }
+        ],
+        "modelBacked": 6,
+        "modelMeshes": 23,
+        "ownCentre": {
+          "x": 2550,
+          "z": 2552.8571428571427
+        }
+      }
+    },
+    {
+      "name": "H",
+      "file": "T-on-H-655s.png",
+      "requestedTick": 39300,
+      "leadS": 0,
+      "captureTicks": [
+        39300,
+        39264
+      ],
+      "readingTick": 39300,
+      "requested": [
+        2550,
+        2553,
+        2600,
+        {
+          "pitchDeg": 55,
+          "yawDeg": 0,
+          "focusDepthM": null
+        }
+      ],
+      "actual": {
+        "focus": {
+          "xM": 2550,
+          "zM": 2553,
+          "depthM": null
+        },
+        "distance": 2600,
+        "pitchDeg": 55,
+        "yawDeg": 0
+      },
+      "conn": {
+        "buffer": [
+          1920,
+          1080
+        ],
+        "frame": {
+          "maxLuma": 197.2,
+          "brightest": {
+            "x": 161,
+            "y": 125,
+            "rgb": [
+              255,
+              192,
+              79
+            ]
+          },
+          "meanLuma": 13.73,
+          "under10": 0.9981,
+          "pixels": 2073600
+        },
+        "windows": {}
+      },
+      "arch": {
+        "side": 16,
+        "windows": {
+          "pierW": {
+            "box": [
+              827,
+              351,
+              843,
+              367
+            ],
+            "pxPerM": 0.535,
+            "visible": true,
+            "maxLuma": 13.3,
+            "brightest": {
+              "x": 839,
+              "y": 351,
+              "rgb": [
+                9,
+                14,
+                19
+              ]
+            },
+            "meanLuma": 11.92,
+            "under10": 1,
+            "pixels": 256
+          },
+          "pierE": {
+            "box": [
+              1081,
+              351,
+              1097,
+              367
+            ],
+            "pxPerM": 0.535,
+            "visible": true,
+            "maxLuma": 14.2,
+            "brightest": {
+              "x": 1082,
+              "y": 351,
+              "rgb": [
+                10,
+                15,
+                19
+              ]
+            },
+            "meanLuma": 12.41,
+            "under10": 1,
+            "pixels": 256
+          },
+          "floorW": {
+            "box": [
+              829,
+              404,
+              845,
+              420
+            ],
+            "pxPerM": 0.529,
+            "visible": true,
+            "maxLuma": 19.7,
+            "brightest": {
+              "x": 830,
+              "y": 405,
+              "rgb": [
+                10,
+                21,
+                35
+              ]
+            },
+            "meanLuma": 13.04,
+            "under10": 1,
+            "pixels": 256
+          },
+          "floorE": {
+            "box": [
+              1079,
+              404,
+              1095,
+              420
+            ],
+            "pxPerM": 0.529,
+            "visible": true,
+            "maxLuma": 19.7,
+            "brightest": {
+              "x": 1087,
+              "y": 404,
+              "rgb": [
+                10,
+                21,
+                35
+              ]
+            },
+            "meanLuma": 13.59,
+            "under10": 1,
+            "pixels": 256
+          },
+          "opening": {
+            "box": [
+              954,
+              356,
+              970,
+              372
+            ],
+            "pxPerM": 0.514,
+            "visible": true,
+            "maxLuma": 13.2,
+            "brightest": {
+              "x": 954,
+              "y": 356,
+              "rgb": [
+                9,
+                14,
+                17
+              ]
+            },
+            "meanLuma": 11.84,
+            "under10": 1,
+            "pixels": 256
+          },
+          "span": {
+            "box": [
+              954,
+              325,
+              970,
+              341
+            ],
+            "pxPerM": 0.538,
+            "visible": true,
+            "maxLuma": 16,
+            "brightest": {
+              "x": 954,
+              "y": 325,
+              "rgb": [
+                11,
+                17,
+                21
+              ]
+            },
+            "meanLuma": 14.1,
+            "under10": 1,
+            "pixels": 256
+          },
+          "wall": {
+            "box": [
+              954,
+              199,
+              970,
+              215
+            ],
+            "pxPerM": 0.477,
+            "visible": true,
+            "maxLuma": 19.8,
+            "brightest": {
+              "x": 954,
+              "y": 200,
+              "rgb": [
+                14,
+                21,
+                25
+              ]
+            },
+            "meanLuma": 13.38,
+            "under10": 1,
+            "pixels": 256
+          },
+          "capW": {
+            "box": [
+              827,
+              349,
+              843,
+              365
+            ],
+            "pxPerM": 0.536,
+            "visible": true,
+            "maxLuma": 13.3,
+            "brightest": {
+              "x": 838,
+              "y": 349,
+              "rgb": [
+                9,
+                14,
+                19
+              ]
+            },
+            "meanLuma": 12.04,
+            "under10": 1,
+            "pixels": 256
+          },
+          "capE": {
+            "box": [
+              1081,
+              349,
+              1097,
+              365
+            ],
+            "pxPerM": 0.535,
+            "visible": true,
+            "maxLuma": 14.2,
+            "brightest": {
+              "x": 1081,
+              "y": 349,
+              "rgb": [
+                10,
+                15,
+                19
+              ]
+            },
+            "meanLuma": 12.64,
+            "under10": 1,
+            "pixels": 256
+          }
+        },
+        "masks": {
+          "stone_dark": {
+            "pixels": 663,
+            "inPools": 0,
+            "meanLuma": 19.49,
+            "maxLuma": 43.7,
+            "under10": 0.9532
+          },
+          "structure_rib": {
+            "pixels": 13,
+            "inPools": 0,
+            "meanLuma": 13.73,
+            "maxLuma": 26.1,
+            "under10": 0.9231
+          },
+          "silt_drift": {
+            "pixels": 0,
+            "inPools": 0,
+            "meanLuma": null,
+            "maxLuma": null,
+            "under10": null
+          },
+          "civic_lamp": {
+            "pixels": 0,
+            "inPools": 0,
+            "meanLuma": null,
+            "maxLuma": null,
+            "under10": null
+          },
+          "laminate": {
+            "pixels": 2148,
+            "inPools": 0,
+            "meanLuma": 29.12,
+            "maxLuma": 137,
+            "under10": 0.4697
+          },
+          "hullLamp": {
+            "pixels": 64,
+            "inPools": 0,
+            "meanLuma": 37.33,
+            "maxLuma": 104.7,
+            "under10": 0.4063
+          }
+        },
+        "profiles": {
+          "west": {
+            "x": 838,
+            "y0": 296,
+            "rows": [
+              17.01,
+              16.86,
+              16.48,
+              16.48,
+              16.33,
+              16.23,
+              16.08,
+              16.01,
+              16.01,
+              15.87,
+              15.73,
+              15.58,
+              15.58,
+              15.58,
+              15.58,
+              15.26,
+              15.26,
+              15.24,
+              15.16,
+              15.04,
+              14.9,
+              14.74,
+              14.58,
+              14.54,
+              14.53,
+              14.38,
+              14.38,
+              14.58,
+              14.73,
+              14.71,
+              14.71,
+              14.56,
+              14.36,
+              14.3,
+              14.18,
+              14.14,
+              14.14,
+              14.18,
+              14.18,
+              14.18,
+              14.23,
+              14.23,
+              14.23,
+              14.23,
+              14.23,
+              14.1,
+              14.1,
+              13.96,
+              13.77,
+              13.43,
+              13.28,
+              13.14,
+              13.08,
+              12.94,
+              12.93,
+              12.91,
+              12.77,
+              12.7,
+              12.54,
+              12.34,
+              12.2,
+              12.05,
+              12.04,
+              11.97,
+              11.93,
+              11.91,
+              11.91,
+              11.91,
+              11.91,
+              11.74,
+              11.58,
+              11.44,
+              11.34,
+              11.08,
+              11.07,
+              11.01,
+              11.01,
+              11.01,
+              11.01,
+              11.05,
+              11,
+              10.85,
+              10.84,
+              10.7,
+              10.68,
+              10.68,
+              10.37,
+              10.37,
+              10.37,
+              10.37,
+              10.37,
+              10.37,
+              10.37,
+              10.37,
+              10.37,
+              10.34,
+              10.04,
+              9.88,
+              9.74,
+              9.74,
+              9.74
+            ]
+          },
+          "east": {
+            "x": 1085,
+            "y0": 296,
+            "rows": [
+              16.89,
+              16.84,
+              16.33,
+              16.29,
+              16.29,
+              16.13,
+              16.09,
+              16.09,
+              16.09,
+              16.06,
+              15.91,
+              15.9,
+              15.76,
+              15.76,
+              15.58,
+              15.44,
+              15.3,
+              15.44,
+              15.73,
+              15.73,
+              15.73,
+              15.73,
+              15.89,
+              15.73,
+              15.7,
+              15.3,
+              15.3,
+              15.3,
+              15.3,
+              15.3,
+              15.3,
+              15.3,
+              15.3,
+              15.3,
+              15.3,
+              15.28,
+              15.28,
+              15.3,
+              15.3,
+              15.3,
+              15.3,
+              15.28,
+              15.27,
+              15.08,
+              15.04,
+              15.03,
+              14.88,
+              14.54,
+              14.34,
+              14.14,
+              14.18,
+              14.15,
+              14.07,
+              14.07,
+              14.03,
+              14.01,
+              13.87,
+              13.68,
+              13.2,
+              13.07,
+              13.04,
+              12.7,
+              12.4,
+              12.4,
+              12.31,
+              12.21,
+              12.21,
+              12.05,
+              12.01,
+              11.58,
+              11.58,
+              11.44,
+              11.4,
+              11.38,
+              11.38,
+              11.38,
+              11.24,
+              11.24,
+              11.27,
+              11.11,
+              11.11,
+              11.11,
+              11.09,
+              10.79,
+              10.65,
+              10.65,
+              10.65,
+              10.61,
+              10.75,
+              10.75,
+              10.55,
+              10.55,
+              10.54,
+              10.54,
+              10.49,
+              10.34,
+              28.4,
+              20.67,
+              21.08,
+              20.81,
+              19.51
+            ]
+          }
+        },
+        "faces": {
+          "capW": {
+            "x": 835,
+            "top": 355,
+            "bottom": 359,
+            "rows": [
+              12,
+              12,
+              11.9
+            ],
+            "meanLuma": 11.96
+          },
+          "capE": {
+            "x": 1089,
+            "top": 355,
+            "bottom": 359,
+            "rows": [
+              12.7,
+              12.6,
+              12.4
+            ],
+            "meanLuma": 12.57
+          },
+          "drum2W": {
+            "x": 836,
+            "top": 355,
+            "bottom": 362,
+            "rows": [
+              12.1,
+              12,
+              11.9,
+              11.8,
+              11.9,
+              11.8
+            ],
+            "meanLuma": 11.93
+          },
+          "drum2E": {
+            "x": 1088,
+            "top": 355,
+            "bottom": 362,
+            "rows": [
+              12.8,
+              12.6,
+              12.4,
+              12.4,
+              12.3,
+              12.1
+            ],
+            "meanLuma": 12.44
+          },
+          "drum1W": {
+            "x": 836,
+            "top": 364,
+            "bottom": 376,
+            "rows": [
+              11.5,
+              11.5,
+              11.4,
+              11.4,
+              11.2,
+              11.2,
+              11.1,
+              11.1,
+              11,
+              11,
+              11
+            ],
+            "meanLuma": 11.21
+          },
+          "drum1E": {
+            "x": 1087,
+            "top": 364,
+            "bottom": 376,
+            "rows": [
+              11.6,
+              11.6,
+              11.5,
+              11.5,
+              11.4,
+              11.4,
+              11.4,
+              11.4,
+              11.4,
+              11.3,
+              11.1
+            ],
+            "meanLuma": 11.41
+          },
+          "drum0W": {
+            "x": 837,
+            "top": 379,
+            "bottom": 390,
+            "rows": [
+              10.6,
+              10.6,
+              10.5,
+              10.5,
+              10.4,
+              10.4,
+              10.4,
+              10.4,
+              10.4,
+              10.4
+            ],
+            "meanLuma": 10.45
+          },
+          "drum0E": {
+            "x": 1086,
+            "top": 379,
+            "bottom": 390,
+            "rows": [
+              10.7,
+              10.7,
+              10.7,
+              10.7,
+              10.6,
+              10.6,
+              10.5,
+              10.5,
+              10.5,
+              10.5
+            ],
+            "meanLuma": 10.6
+          }
+        },
+        "bands": {
+          "west195": {
+            "x": 859,
+            "runs": [
+              {
+                "code": 0,
+                "top": 295,
+                "rows": 102,
+                "meanLuma": null
+              }
+            ]
+          },
+          "east195": {
+            "x": 1064,
+            "runs": [
+              {
+                "code": 0,
+                "top": 295,
+                "rows": 102,
+                "meanLuma": null
+              }
+            ]
+          },
+          "west215": {
+            "x": 849,
+            "runs": [
+              {
+                "code": 0,
+                "top": 295,
+                "rows": 102,
+                "meanLuma": null
+              }
+            ]
+          },
+          "east215": {
+            "x": 1075,
+            "runs": [
+              {
+                "code": 0,
+                "top": 295,
+                "rows": 96,
+                "meanLuma": null
+              },
+              {
+                "code": 6,
+                "top": 391,
+                "rows": 6,
+                "meanLuma": 20.48
+              }
+            ]
+          },
+          "west235": {
+            "x": 838,
+            "runs": [
+              {
+                "code": 0,
+                "top": 295,
+                "rows": 98,
+                "meanLuma": null
+              },
+              {
+                "code": 5,
+                "top": 393,
+                "rows": 3,
+                "meanLuma": 24.93
+              },
+              {
+                "code": 6,
+                "top": 396,
+                "rows": 1,
+                "meanLuma": 14.88
+              }
+            ]
+          },
+          "east235": {
+            "x": 1085,
+            "runs": [
+              {
+                "code": 0,
+                "top": 295,
+                "rows": 96,
+                "meanLuma": null
+              },
+              {
+                "code": 6,
+                "top": 391,
+                "rows": 6,
+                "meanLuma": 20.44
+              }
+            ]
+          },
+          "west255": {
+            "x": 828,
+            "runs": [
+              {
+                "code": 0,
+                "top": 295,
+                "rows": 98,
+                "meanLuma": null
+              },
+              {
+                "code": 5,
+                "top": 393,
+                "rows": 3,
+                "meanLuma": 24.99
+              },
+              {
+                "code": 6,
+                "top": 396,
+                "rows": 1,
+                "meanLuma": 21.95
+              }
+            ]
+          },
+          "east255": {
+            "x": 1096,
+            "runs": [
+              {
+                "code": 0,
+                "top": 295,
+                "rows": 98,
+                "meanLuma": null
+              },
+              {
+                "code": 5,
+                "top": 393,
+                "rows": 1,
+                "meanLuma": 39.71
+              },
+              {
+                "code": 6,
+                "top": 394,
+                "rows": 3,
+                "meanLuma": 17.96
+              }
+            ]
+          },
+          "west275": {
+            "x": 817,
+            "runs": [
+              {
+                "code": 0,
+                "top": 295,
+                "rows": 99,
+                "meanLuma": null
+              },
+              {
+                "code": 5,
+                "top": 394,
+                "rows": 2,
+                "meanLuma": 22.83
+              },
+              {
+                "code": 6,
+                "top": 396,
+                "rows": 1,
+                "meanLuma": 22.12
+              }
+            ]
+          },
+          "east275": {
+            "x": 1107,
+            "runs": [
+              {
+                "code": 0,
+                "top": 295,
+                "rows": 102,
+                "meanLuma": null
+              }
+            ]
+          }
+        },
+        "shade": [
+          1,
+          1,
+          1
+        ],
+        "switches": {
+          "pools": true,
+          "lamps": true,
+          "bounce": 9,
+          "grade": true,
+          "ceiling": 0.1
+        },
+        "marked": "T-on-H-655s-windows.png"
+      },
+      "probe": {
+        "active": true,
+        "look": "sorrowgate",
+        "programHold": {
+          "holding": false,
+          "heldFrames": 28
+        },
+        "pitchDeg": 55,
+        "yawDeg": 0,
+        "sway": "on",
+        "focus": {
+          "xM": 2550,
+          "zM": 2553,
+          "depthM": null
+        },
+        "eye": {
+          "xM": 2546,
+          "zM": 4049,
+          "depthM": -8196
+        },
+        "distance": 2600,
+        "waterReachM": 8320,
+        "waterDensity": 1,
+        "hullScale": 1,
+        "drawCalls": 45,
+        "triangles": 114871,
+        "passes": [
+          "canvas",
+          "split-copy",
+          "split"
+        ],
+        "world": {
+          "borderStrength": 1,
+          "overviewDrawn": false,
+          "sessionGround": true,
+          "groundLeaving": false,
+          "frame": {
+            "xM": 2550,
+            "yM": 2553,
+            "distanceM": 2600,
+            "yawDeg": 0,
+            "pitchDeg": 55
+          },
+          "detailDrawn": [],
+          "detailResident": [],
+          "detailPending": 0,
+          "detailProps": 0,
+          "detailPropTris": 0,
+          "detailVentPlumes": 0,
+          "detailLandmarks": 0,
+          "detailLandmarkTris": 0
+        },
+        "halo": "idle",
+        "haloSites": 0,
+        "haloDropped": 0,
+        "haloCalls": 0,
+        "haloTriangles": 0,
+        "haloBytes": 35835136,
+        "split": "on",
+        "splitBytes": 8294400,
+        "canvasStencilBits": 8,
+        "textures": 19,
+        "pixelRatio": 1,
+        "drawingBuffer": {
+          "width": 1920,
+          "height": 1080
+        },
+        "toneMapping": 4,
+        "environmentIntensity": 0.35,
+        "environmentBytes": 344064,
+        "station": null,
+        "stationMs": 656140,
+        "stationFrames": 38977,
+        "avgFrames": 240,
+        "fps": 59.4,
+        "avgFrameMs": 16.67,
+        "worstFrameMs": 2039.7,
+        "avgConnMs": 1.35,
+        "worstConnMs": 1140.9,
+        "avgOverlayMs": 0.82,
+        "worstOverlayMs": 49.2,
+        "overlayFrames": 38969,
+        "gpuTimer": "timing",
+        "avgGpuMs": 1.26,
+        "worstGpuMs": 86.64,
+        "gpuFrames": 38948,
+        "gpuDropped": 0,
+        "gpuQueue": null,
+        "gpuSplit": false,
+        "gpuParts": null,
+        "units": 6,
+        "structures": 0,
+        "tracks": 1,
+        "structureTracks": 0,
+        "trackAt": {
+          "x": 2550,
+          "z": 2950,
+          "depthM": 1490
+        },
+        "ordnance": 0,
+        "wakeBubbles": 0,
+        "hits": 0,
+        "hitParticles": 0,
+        "plumeMotes": 0,
+        "workLightsLit": 0,
+        "sparks": 0,
+        "plumeAt": null,
+        "ventPlumeAt": {
+          "x": 398.9916015663184,
+          "z": 2292.7595673110336,
+          "depthM": 1409.149066763696
+        },
+        "hitAt": null,
+        "shots": 0,
+        "shotParticles": 0,
+        "recoiling": 0,
+        "shotAt": null,
+        "props": 198,
+        "propTris": 50356,
+        "ventPlumes": 2,
+        "fieldHazes": 0,
+        "landmarks": 1,
+        "landmarkTris": 732,
+        "siftMotes": 256,
+        "cloudMotes": 0,
+        "collapsing": false,
+        "landmarkLampsPx": [],
+        "modelBacked": 6,
+        "modelMeshes": 12,
+        "ownCentre": {
+          "x": 2550,
+          "z": 2520
+        }
+      }
+    }
+  ]
+}
