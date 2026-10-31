@@ -23,7 +23,7 @@ import {
   DIRECTORATE_SHALLOW,
   Faction,
   MOVEMENT,
-  SILENT_RUNNING,
+  silentSpeedMultiplierFor,
   inDirectorateShallows,
   statsFor,
   unitRadiusM,
@@ -315,12 +315,7 @@ function speedMultiplier(world: SimWorld, eid: number): number {
   // 0.8 → 1.0 → 1.25 — fifteen seconds of a hull that moves half again as fast
   // as it was moving and is still silent.
   if (world.commanderSilentImmune.has(eid)) return act;
-  return (
-    act *
-    (Owner.faction[eid] === Faction.Pelagia
-      ? SILENT_RUNNING.PELAGIA_SPEED_MULTIPLIER
-      : SILENT_RUNNING.SPEED_MULTIPLIER)
-  );
+  return act * silentSpeedMultiplierFor(Owner.faction[eid] as Faction);
 }
 
 export function movementSystem(world: SimWorld): void {

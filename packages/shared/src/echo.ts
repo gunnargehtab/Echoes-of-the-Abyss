@@ -27,6 +27,7 @@ import {
   DIRECTORATE_SHALLOW_BLEED_PER_S,
   LID,
   SCATTER,
+  SILENT_RUNNING,
   SIM,
 } from './constants.js';
 import { ResolutionTier, DepthBand, Faction, ThermoclineZone } from './types.js';
@@ -541,6 +542,18 @@ export function crushAttritionPerSecond(pressureRating: number, depthM: number):
  */
 export function inDirectorateShallows(faction: Faction, depthM: number): boolean {
   return faction === Faction.Directorate && depthBandFor(depthM) === DepthBand.Shelf;
+}
+
+/**
+ * The share of its speed a hull keeps while running silent — 0.55 for every
+ * navy but the Commune, whose 0.8 is doctrine (docs/systems-echo.md §6,
+ * docs/factions.md). One reader, so the server's movement and the penalty the
+ * selection card prints (docs/ui-ux.md §7) cannot disagree about it.
+ */
+export function silentSpeedMultiplierFor(faction: Faction): number {
+  return faction === Faction.Pelagia
+    ? SILENT_RUNNING.PELAGIA_SPEED_MULTIPLIER
+    : SILENT_RUNNING.SPEED_MULTIPLIER;
 }
 
 /**
