@@ -170,6 +170,49 @@ veil's shade on the arch reads 1, 1, 1 in every reading, so the veil takes nothi
 T+00:30. The grade darkens the court floor's windows by about 0.2 and adds 0.03–0.06 point of
 near-black at H; with it off, H read 98.71–98.73 %.
 
+## GPU time with the bounce and the grade
+
+§11 asks for GPU time with the bounce and the grade on and off, on a named desktop GPU, the
+grade read at L and S. The study's switches had only zeroed a uniform, so the code still ran.
+Off now compiles the term out: `ARCH_BOUNCE` on the landmark's materials at gain 0, and
+`ARCH_GRADE` on every graded ground and prop material with the grade off
+(`archRefinement.test.ts` holds both).
+
+[`gpu.mjs`](gpu.mjs) read §9's stations on the GTX 1070 of
+[#1674's GPU run](../issue-1674/README.md#the-gpu-run): `ANGLE (NVIDIA, NVIDIA GeForce GTX
+1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)`, 1920 × 1080, unpaced, the client at
+`74b498c2`. Each session holds one station with the study on, from 0:18–0:21 of the mission
+clock. It reads the settings in the order on, bounce off, grade off, both off, then back,
+each for 240 GPU frames behind #1674's queue load, 3.6 ms, and 12 ms at C. Behind C's load
+about three frames a second are timed, so its eight windows outran the 10:40 change. C is
+read in two sessions instead, the bounce in one and the grade in the other, with no "both"
+reading. Two runs at each ratio, 20 sessions; no frame or load was dropped. The JSONs are
+`gpu-dpr<ratio>-r<run>-<station>.json`, and run 1's frames at ratio 1 are
+`gpu-dpr1-r1-<station>.png`.
+
+Queued `avgGpuMs`, in ms. A term's cost is the mean of its two "on" readings less the mean
+of its two "off" readings, in one session. C's "on" is each session's.
+
+| Station | On, r1 / r2 | Bounce, r1 / r2 | Grade, r1 / r2 | Both, r1 / r2 | Worst queued |
+| --- | --- | --- | --- | --- | --- |
+| **Ratio 1** | | | | | |
+| H | 0.73 / 0.77 | −0.01 / +0.00 | −0.02 / −0.00 | +0.00 / +0.01 | 2.06 |
+| L | 1.11 / 1.09 | −0.01 / +0.00 | +0.01 / +0.00 | +0.04 / +0.03 | 1.99 |
+| S | 0.72 / 0.72 | −0.01 / −0.02 | +0.01 / +0.01 | +0.02 / +0.04 | 1.86 |
+| C | 1.04, 1.04 / 1.03, 1.04 | −0.01 / −0.03 | −0.02 / −0.02 | — | 2.60 |
+| **Ratio 1.5** | | | | | |
+| H | 1.50 / 1.47 | +0.01 / −0.03 | −0.01 / −0.02 | +0.03 / −0.01 | 5.30 |
+| L | 2.30 / 2.30 | −0.03 / −0.03 | +0.00 / −0.02 | +0.04 / +0.01 | 5.15 |
+| S | 1.38 / 1.38 | −0.04 / −0.03 | +0.00 / +0.02 | +0.04 / +0.04 | 3.02 |
+| C | 2.12, 2.21 / 2.11, 2.12 | +0.01 / −0.03 | −0.01 / +0.01 | — | 5.60 |
+
+Neither term has a cost the GTX 1070 can read. Every difference lies within 0.04 ms of zero,
+either side, at both ratios. The "on" readings differ between runs by up to 0.04 ms at ratio
+1 and 0.09 ms at C at ratio 1.5, so the differences are inside the instrument's spread.
+At L and S, where the grade covers most of the frame, it reads −0.02 to +0.02 ms. Together the
+two read at most +0.04 ms. #1674 read the whole study at +0.09 ms at L and ratio 1, so most of
+that is the model and its pools, not these two terms.
+
 ## Not taken here
 
 §11 asks for §9's whole set. These are left:
@@ -183,10 +226,9 @@ near-black at H; with it off, H read 98.71–98.73 %.
   touch the embers.
 - No drift line reading as a chart mark at S, which is the owner's look, and no surface
   shimmering in motion.
-- The transit pair, the motion clips, reduced motion, the palettes and the
-  `ventfront-divide` control.
-- GPU time with the bounce and the grade on and off, on a named desktop GPU, which this
-  container cannot give.
+- The transit pair, the palettes and the `ventfront-divide` control. The motion clips and
+  reduced motion are #1674's, filmed at `710ba338` after this refinement
+  ([its clips](../issue-1674/README.md#clips)).
 
 ## Related
 
