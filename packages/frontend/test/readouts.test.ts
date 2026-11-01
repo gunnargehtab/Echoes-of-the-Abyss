@@ -159,6 +159,12 @@ describe('the strip explains itself: what each line claims', () => {
     assert.doesNotMatch(line, /orders panel/, 'no order in force, nothing to set it beside');
   });
 
+  it('quotes no count while the strip holds its count line back (#1697)', () => {
+    const line = sigDetail(0, null, 0);
+    assert.match(line, /not the average/, 'the rest of the line still explains the bar');
+    assert.doesNotMatch(line, / of \d+ over /, `a count nothing has said yet: ${line}`);
+  });
+
   it('says the meter is every hull while a mission order is in force (#1586)', () => {
     assert.match(
       sigDetail(18, 6, 0, { setName: 'flight' }),

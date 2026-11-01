@@ -8522,7 +8522,11 @@ export class EchoRenderer {
 
     // §3 makes the bar, `SIG 042 / 100` and `n units · m loud` one instrument,
     // so they are one readout: the second line explains the first.
-    const meterW = Math.max(SIG_METER.W, this.sigLabel.width, this.loudLabel.width);
+    // The second line counts only once it is drawn: before a room's first
+    // snapshot it is held back (#1697), and the box covers the bar and its
+    // first line alone, watching no count.
+    const second = this.loudLabel.visible ? this.loudLabel : null;
+    const meterW = Math.max(SIG_METER.W, this.sigLabel.width, second?.width ?? 0);
     // Origin from the readout's own `Text` rather than from the two literals
     // `drawHud` hands `drawSigMeter`: this method's whole rule is that it reads
     // what the strip just laid out instead of keeping a second copy of the
@@ -8534,13 +8538,13 @@ export class EchoRenderer {
       this.sigLabel.x,
       meterTop,
       meterW,
-      this.loudLabel.y + this.loudLabel.height - meterTop,
+      (second ?? this.sigLabel).y + (second ?? this.sigLabel).height - meterTop,
       this.sigLabel.text,
       // §3's second line is the other half of this instrument and the line
       // quotes both of its figures, but the box is named by the first — so
       // without watching it, `4 units · 2 loud` becoming `5 units · 2 loud`
       // republishes nothing and the explanation keeps the old count.
-      this.loudLabel.text
+      second?.text ?? ''
     );
     this.recordDrawn(
       'band',
@@ -8700,7 +8704,12 @@ export class EchoRenderer {
   private readoutDetail(key: ReadoutKey, band: string, worldGain: number, loud: number): string {
     switch (key) {
       case 'sig':
-        return sigDetail(this.peakSig, this.units.length, loud, this.boundSig ?? undefined);
+        return sigDetail(
+          this.peakSig,
+          this.loudLabel.visible ? this.units.length : null,
+          loud,
+          this.boundSig ?? undefined
+        );
       case 'band':
         return bandDetail(band, worldGain);
       case 'tracked':

@@ -182,15 +182,20 @@ export function drawDetail(report: DrawReport): string {
  */
 export function sigDetail(
   peak: number,
-  units: number,
+  units: number | null,
   loud: number,
   bound?: Pick<BoundSig, 'setName'>
 ): string {
+  // `units` is null while the strip holds its count line back, before a
+  // room's first snapshot (#1697): the line is silent about a count the strip
+  // is not drawing, rather than quoting the `0 of 0` nothing has said yet.
   const line =
     `peak ${Math.round(peak)} of 100 across your own hulls, not the average` +
     ' — the loudest hull is the one that gets you found' +
     ` · green below ${SIG_BANDS.AMBER}, amber from ${SIG_BANDS.AMBER}, red from ${SIG_BANDS.RED}` +
-    ` · ${loud} of ${units} over ${SIG_BANDS.LOUD}, the count that predicts trouble`;
+    (units === null
+      ? ''
+      : ` · ${loud} of ${units} over ${SIG_BANDS.LOUD}, the count that predicts trouble`);
   // §3's `all n units`: a mission's order reads its own authored set in the
   // orders panel's header, and Sorrowgate's meter at 18 beside the panel's 6
   // read as a contradiction until the strip said which of the two it was
