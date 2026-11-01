@@ -234,19 +234,21 @@ check them all again just before merging:
 - Every check on the head commit passed, and it is mergeable: not a draft, no
   conflict.
 - No review requests changes, and no review thread is unresolved.
-- The body has no `## Open findings` and no `## Screenshots`.
-- The diff touches none of these: `packages/frontend/`, `tools/hull-models/`, any
-  `.glb`, `docs/screenshots/`, `tools/balance/baselines/`, `.claude/` or
-  `.github/`. The first four change what the client draws, which a person reviews
-  from the frames. A refreshed baseline sits next to the balance freeze. The last
-  two hold the loop's own rules, which it may not land for itself.
+- **`automerge-guard` passed on the head commit.** Missing, skipped or still
+  running is not passed. It fails a body with an `## Open findings` or
+  `## Screenshots` heading, and a diff touching a path that
+  `tools/automerge-guard/lib/rules.mjs` lists, read from `main` (#1722). Those
+  paths change what the client draws, which a person reviews from the frames; a
+  balance baseline, which sits next to the balance freeze; or the loop's own
+  rules, which it may not land for itself.
 
 Merge with a merge commit (`CONTRIBUTING.md`). The title is the pull request's
 title followed by `(#<pr>)`, and the message is its body. Then follow §8.
 
 When a push of yours breaks a condition, remove the label. Only `work-issue` §6
 and `roadmap-sync` §6 apply it. A person removes it to hold a
-merge, and nothing puts it back.
+merge, and nothing puts it back. A red guard is fixed the same way, by removing
+the label: never by changing the diff or the guard to pass it.
 
 Every comment in this skill — the stand-down, a reply to a reviewer, a status
 refresh — is under 100 words and in short sentences, per `CLAUDE.md`'s "Write

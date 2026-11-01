@@ -214,7 +214,7 @@ it**:
   the author (its file, its missing edit tools) and §8's rounds line;
 - `dev-loop`'s three-round cap and the verification pass that is not a round;
 - §7's `decision-proposed` scope and its 24 hours, and §6's `automerge` conditions
-  with `steward` §9's.
+  with `steward` §9's and the list in `tools/automerge-guard/lib/rules.mjs`.
 
 For those, **write the issue and stop**: what the rule costs and what you would
 put in its place. A person decides. A generator that widens its own bounds is
@@ -242,10 +242,17 @@ Then open the pull request against `main`: not a draft, labelled **`routine`**,
 the body in `.github/PULL_REQUEST_TEMPLATE.md`'s shape.
 
 **Add `automerge` too** when `dev-loop` met its exit criteria, so no
-`## Open findings`, and the diff touches none of the paths `steward` §9 lists:
-what the client draws, the balance baselines and the loop's own rules. The steward
-merges it once CI is green. The owner chose this on 21 October
-(#1483): green pull requests sat for hours waiting on a manual merge.
+`## Open findings`, and the guard `steward` §9 requires passes on the diff and on
+the body you will post:
+
+```bash
+git diff -z --name-only --no-renames origin/main...HEAD \
+  | node tools/automerge-guard/check.mjs --body=body.md
+```
+
+Its list keeps what the client draws, the balance baselines and the loop's own
+rules off this path. The steward merges it once CI is green. The owner chose this
+on 21 October (#1483): green pull requests sat for hours waiting on a manual merge.
 
 - **Problem**, at most three sentences.
 - **Options**, only when the work needed a decision: at most three sentences each,

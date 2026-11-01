@@ -1,0 +1,74 @@
+name: Automerge guard
+
+# The code half of steward §9 (#1722). A pull request labelled `automerge` is
+# merged by the steward once its checks pass, with no person in between, so what
+# keeps a drawn change, a balance baseline or the loop's own rules off that path
+# was only as strong as the session reading §9. This check fails such a pull
+# request instead, and §9 merges only past it. tools/automerge-guard/ holds the
+# list, and its header says why it is the only copy.
+#
+# `pull_request_target` rather than `pull_request`, because this file and the list
+# are then read from main, not from the pull request being judged. Under
+# `pull_request` the pull request's own copy of this file runs, and a pull request
+# that edits it could stop the check from reading main's list at all. The cost
+# is real and worth naming: the check first runs on the pull request after the
+# one that adds it, and a change to it is judged by the copy it replaces.
+#
+# That trigger runs with this repository's token, so the job never checks out
+# the pull request's code. It reads the diff from the API as names and the body
+# through the environment, and runs nothing from either. Interpolating the body
+# into `run:` would let anything that can open a pull request run shell here.
+#
+# The job runs only while `automerge` is on, so a pull request without it pays
+# nothing. `labeled` runs it the moment the label lands, `synchronize` on every
+# push after, and `edited` when the body changes: an `## Open findings` added to
+# a green pull request is still caught.
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, edited, labeled, unlabeled]
+
+# One verdict per pull request. Each event carries the labels as they stand, so
+# the newest run is the one that describes the pull request.
+concurrency:
+  group: automerge-guard-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  # The check's name is what §9 asks for on the head commit; keep the two equal.
+  automerge-guard:
+    if: contains(github.event.pull_request.labels.*.name, 'automerge')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # main's copy, which is the default ref under this trigger; only the guard.
+      - uses: actions/checkout@v7.0.1
+        with:
+          sparse-checkout: tools/automerge-guard
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '22'
+
+      # A rename prints as `new<TAB>old`, so check.mjs judges both names, and the
+      # pull request's own file count is the control that every page arrived.
+      #
+      # `pipefail` is load-bearing. A step that names no shell runs `bash -e`
+      # without it, and a pipeline's status is then its last command's: `tee`
+      # exits 0, and every verdict, blocked included, would read green.
+      - name: Judge the diff and the body against main's list
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          CHANGED_FILES: ${{ github.event.pull_request.changed_files }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" \
+            --jq '.[] | if .previous_filename then "\(.filename)\t\(.previous_filename)" else .filename end' \
+            | node tools/automerge-guard/check.mjs --env=PR_BODY --files-expected="$CHANGED_FILES" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
