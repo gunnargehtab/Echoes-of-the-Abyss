@@ -15,6 +15,16 @@ import {
   VENTFRONT_DIVIDE_HEADER,
 } from './maps.js';
 
+/** TUNABLE — docs/free-water-slice.md §6. Camera only, never hull movement. */
+export const FLIGHT_CAMERA = {
+  SPEED_M_S: 200,
+  MIN_SPEED_M_S: 50,
+  MAX_SPEED_M_S: 800,
+  ROTATION_DEG_S: 60,
+  CLEARANCE_M: 25,
+  BUTTON_STEP_S: 0.25,
+} as const;
+
 /** SPEC — docs/art-direction.md, Shared model lighting. Presentation only. */
 export const MODEL_LIGHTING = {
   AMBIENT: 0.75,

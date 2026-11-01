@@ -17,6 +17,14 @@ const QUARTER = Math.PI / 2;
 const close = (a: number, b: number) => Math.abs(a - b) < 1e-9;
 
 describe('the screen’s axis', () => {
+  it('uses the final rolled screen-right axis without inventing vertical bearing', () => {
+    const inverted = { x: -1, y: 0, z: 0 };
+    assert.equal(screenPan(300, 0, inverted), -1);
+    assert.equal(Math.cos(screenBearing(0, inverted)), -1);
+    const sideways = { x: 0, y: 1, z: 0 };
+    assert.equal(screenPan(300, 0, sideways), 0, 'unresolved height supplies no vertical bearing');
+    assert.ok(screenPan(300, 0, sideways, 300) > 0.7, 'earned height pans with roll');
+  });
   it('pans where the conn view draws, at every turn of the camera', () => {
     assert.ok(close(screenPan(300, 0, 0), 1), 'east, facing the top of the map: right');
     assert.ok(close(screenPan(300, 0, QUARTER), 0), 'east, a quarter turn: below, centre');

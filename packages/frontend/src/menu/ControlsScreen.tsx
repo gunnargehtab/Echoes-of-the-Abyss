@@ -33,21 +33,28 @@ import {
   RESERVED_CODES,
   resolveBindings,
   type ActionSpec,
-  type BindableAction,
+  type InputAction,
   type Bindings,
 } from '../input/bindings.ts';
 import { loadSettings, saveSettings, type Settings } from '../settings/store.ts';
+import { FLIGHT_CAMERA } from '@echoes/shared';
+import { FREE_WATER_CONTROLS } from '../game/freeWaterControls.ts';
 
 export interface ControlsScreenProps {
   onBack(): void;
 }
 
-const GROUP_ORDER: ActionSpec['group'][] = ['fleet', 'ordnance', 'build'];
+const GROUP_ORDER: ActionSpec['group'][] = [
+  'fleet',
+  'ordnance',
+  'build',
+  ...(FREE_WATER_CONTROLS ? (['camera', 'nav'] as const) : []),
+];
 
 export function ControlsScreen({ onBack }: ControlsScreenProps) {
   const [settings, setSettings] = useState<Settings>(() => loadSettings());
   /** The action currently listening for a key, or null. */
-  const [capturing, setCapturing] = useState<BindableAction | null>(null);
+  const [capturing, setCapturing] = useState<InputAction | null>(null);
   /** Why the last capture was refused, shown until the next one starts. */
   const [refusal, setRefusal] = useState<string>('');
 
@@ -81,7 +88,7 @@ export function ControlsScreen({ onBack }: ControlsScreenProps) {
         setRefusal('');
         return;
       }
-      if (!isBindable(event.code)) {
+      if (!isBindable(event.code, capturing)) {
         setRefusal(
           `${keyLabel(event.code)} is reserved — it ${RESERVED_CODES.get(event.code) ?? 'cannot be bound'}.`
         );
@@ -139,6 +146,21 @@ export function ControlsScreen({ onBack }: ControlsScreenProps) {
         )}
 
         <div className="menu-bindings">
+          {FREE_WATER_CONTROLS && (
+            <label>
+              Flight speed: {settings.flightSpeed} rendered m/s
+              <input
+                type="range"
+                min={FLIGHT_CAMERA.MIN_SPEED_M_S}
+                max={FLIGHT_CAMERA.MAX_SPEED_M_S}
+                step={10}
+                value={settings.flightSpeed}
+                onChange={(event) =>
+                  setSettings(saveSettings({ flightSpeed: Number(event.currentTarget.value) }))
+                }
+              />
+            </label>
+          )}
           {GROUP_ORDER.map((group) => (
             <section key={group} className="menu-binding-group">
               <h3>{GROUP_LABEL[group]}</h3>

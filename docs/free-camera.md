@@ -7,10 +7,11 @@ This document turns September 2026 owner feedback into a plan. The feedback, in 
 > Think about a free, vast 3D game underwater world. Ships can freely move everywhere — the
 > player's camera as well.
 
-The bounded orbit described in §4 has shipped: free yaw, 10°–88° pitch and a focus that
-leaves the seabed. It is not six-degree flight and has no roll. The next target is
+The bounded orbit described in §4 remains the default: free yaw, 10°–88° pitch and a focus that
+leaves the seabed. It is not six-degree flight and has no roll. The opt-in target is
 [free-water-slice.md](free-water-slice.md), the #1694 contract: opt-in flight, independent
-destination depth and a crater/kelp-jungle study. Its controls remain future work.
+destination depth and a crater/kelp-jungle study. Flight is implemented in #1706;
+the destination preview and integrated world remain separate increments.
 This document keeps the argument that retired the old yaw lock and the default rig it
 produced; neither that history nor continuous hull depth proves volumetric pathfinding.
 
@@ -140,6 +141,36 @@ is a disoriented player who cannot find their fleet, and the answer is a key tha
 works, needs no aim, and restores the exact frame the old SPEC made permanent. It joins the
 arrows in `RESERVED_CODES` for the reason the arrows are there: a rebind that took it would
 take the way out of a frame a player cannot otherwise read.
+
+### Opt-in six-degree flight
+
+In development, `?freeWaterControls=1` enables the controls study without replacing
+the map. Production ignores the flag. F8 or FLIGHT enters a quaternion camera;
+F9 or NAV latches camera keys. W/S travel forward/back, A/D sideways, R/F local
+up/down, Q/E roll, and arrows look. All are rebindable in Controls, with conflicts
+checked within their active context. NAV suspends every fleet shortcut and world
+order click, not existing orders or the simulation. Its labelled motion buttons
+provide a mouse-only route; the one-handed fleet layout is unchanged.
+
+Middle drag translates on the final camera right/up axes; Shift-middle turns locally.
+Wheel travels forward/back and Shift-wheel changes world depth by 150 m. Travel is
+200 rendered m/s by default, adjustable over 50–800 in Controls; keyboard rotation
+is 60 degrees/s. The eye sweeps the rendered terrain triangles and authored roof/rock
+boundaries, maintaining 25 m depth clearance. A blocked move stops without levelling.
+Entry retains the current orientation and uses the legal command focus when the
+orbit eye is outside water; a focus without clearance refuses entry.
+
+Home leaves both modes and restores north/55 degrees/seabed at the saved command
+focus and orbit dolly. Escape leaves NAV before cancelling placement or opening the
+menu. Blur, focused controls, mode exit, disconnect and menus clear held movement.
+Flight has neither edge scroll nor sway. The upright EYE instrument distinguishes
+camera depth from hull depth, displays world up and marks a pole VERTICAL.
+Hull models stay at canonical 1× scale in flight rather than inheriting the saved
+orbit's survey enlargement; marine snow follows the free eye. The MENU button remains
+available in NAV and opening it releases navigation immediately.
+The scope clips the forward ground footprint against the frustum and map; when it
+has none, only the eye and orientation cue remain. Audio uses the final rolled basis
+for earned bearings, never for a directionless contact.
 
 ## 5. What the yaw lock protected, and where each protection goes
 

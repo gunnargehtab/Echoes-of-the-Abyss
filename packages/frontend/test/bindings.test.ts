@@ -26,7 +26,6 @@ import {
   ONE_HANDED_BINDINGS,
   RESERVED_CODES,
   resolveBindings,
-  type BindableAction,
   type Bindings,
 } from '../src/input/bindings.ts';
 
@@ -82,7 +81,9 @@ describe('the shipped layouts', () => {
       'Digit4',
       'Digit5',
     ]);
-    for (const { action, label } of ACTIONS) {
+    for (const { action, label } of ACTIONS.filter(
+      (spec) => spec.group !== 'camera' && spec.group !== 'nav'
+    )) {
       const code = ONE_HANDED_BINDINGS[action];
       assert.ok(leftHand.has(code), `one-handed puts "${label}" on ${keyLabel(code)}`);
     }
@@ -227,6 +228,16 @@ describe('resolving a stored table', () => {
 });
 
 describe('dispatch', () => {
+  it('shares fleet keys only across mutually exclusive NAV contexts', () => {
+    assert.equal(actionFor(DEFAULT_BINDINGS, 'KeyW'), 'attackMove');
+    assert.equal(actionFor(DEFAULT_BINDINGS, 'KeyW', true), 'flyForward');
+    assert.equal(actionFor(DEFAULT_BINDINGS, 'KeyS'), 'rise');
+    assert.equal(actionFor(DEFAULT_BINDINGS, 'KeyS', true), 'flyBack');
+    assert.equal(isBindable('ArrowUp', 'lookUp'), true);
+    assert.equal(isBindable('ArrowUp', 'rise'), false);
+    assert.ok(conflictsIn({ ...DEFAULT_BINDINGS, toggleNav: 'KeyW' }).length > 0);
+    assert.ok(conflictsIn({ ...DEFAULT_BINDINGS, flyLeft: 'KeyW' }).length > 0);
+  });
   it('finds the action a code fires', () => {
     assert.equal(actionFor(DEFAULT_BINDINGS, DEFAULT_BINDINGS.ping), 'ping');
     assert.equal(actionFor(DEFAULT_BINDINGS, 'KeyJ'), null);
@@ -238,7 +249,7 @@ describe('dispatch', () => {
     // that array would otherwise quietly make the warning untrue.
     const clashing: Bindings = { ...DEFAULT_BINDINGS, mine: DEFAULT_BINDINGS.ping };
     const first = ACTIONS.map(({ action }) => action).find(
-      (action: BindableAction) => clashing[action] === DEFAULT_BINDINGS.ping
+      (action) => clashing[action] === DEFAULT_BINDINGS.ping
     );
     assert.equal(actionFor(clashing, DEFAULT_BINDINGS.ping), first);
   });

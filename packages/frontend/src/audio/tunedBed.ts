@@ -39,7 +39,7 @@
  */
 
 import { STANDING_WAVE } from '@echoes/shared';
-import { screenPan } from './screenPan.ts';
+import { screenPan, type ScreenRight } from './screenPan.ts';
 
 /**
  * SPEC — docs/audio-direction.md §9, "Tuned water".
@@ -229,7 +229,7 @@ export function corridorFrom(
   nodes: readonly TunedNode[],
   ear: { x: number; y: number },
   /** The conn camera's turn, radians anticlockwise from north (`screenPan.ts`, #1324). */
-  yawRad = 0
+  yawRad: number | ScreenRight = 0
 ): CorridorReading | null {
   let best: CorridorReading | null = null;
   for (let i = 0; i < nodes.length; i++) {
