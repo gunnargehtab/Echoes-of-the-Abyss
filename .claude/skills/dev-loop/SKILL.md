@@ -48,9 +48,10 @@ Seven steps, cheapest failure first.
    label, a sentence in the pull request. The target says what the game *should*
    do; only the code says what it *does*. Issue bodies are the worst source: they
    describe a past state in the present tense. False sentences are the finding
-   this loop's critics raise most. **For a `fix:`, read the history too:**
-   `git log --first-parent --format='%cs %h %s' origin/main -- <files> | grep -m 10 ' fix'`.
-   Two earlier fixes there within 30 days to the same property make that property,
+   this loop's critics raise most. **For a `fix:`, read the history too**, over the
+   files the fix touches:
+   `git log --first-parent --since=30.days.ago --format='%cs %h %s' origin/main -- <files> | grep ' fix'`.
+   Two earlier fixes there to the same property make that property,
    over its whole input, the target, and the pull request adds or extends a
    `docs/invariants.md` row instead of proving one more case. The orders panel took
    four fixes in five days (#1635 to #1671), each a case of one property. Deciding
