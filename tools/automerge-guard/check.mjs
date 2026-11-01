@@ -44,9 +44,18 @@ if (Boolean(bodyFile) === Boolean(envName)) {
 }
 // An empty body is a body; an unset variable is a workflow that passed none.
 if (envName && !(envName in process.env)) cannotJudge(`--env=${envName}: no such variable.`);
-const body = envName ? process.env[envName] : readFileSync(bodyFile, 'utf8');
 
-const input = readFileSync(0, 'utf8');
+// A read that throws would exit 1 with nothing printed, and 1 means blocked.
+function read(what, source) {
+  try {
+    return readFileSync(source, 'utf8');
+  } catch (error) {
+    return cannotJudge(`${what} cannot be read: ${error.message}`);
+  }
+}
+
+const body = envName ? process.env[envName] : read(`--body=${bodyFile}`, bodyFile);
+const input = read('stdin', 0);
 const entries = (input.includes('\0') ? input.split('\0') : input.split(/\r?\n/)).filter(Boolean);
 if (entries.length === 0) {
   cannotJudge(

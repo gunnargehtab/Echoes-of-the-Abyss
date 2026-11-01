@@ -81,6 +81,13 @@ test('the body must be given once, and an unset variable is not an empty body', 
   assert.equal(guard('docs/a.md\n', { body: '' }).status, 0);
 });
 
+test('a body file that cannot be read cannot be judged, and says so', () => {
+  const missing = join(tmpdir(), 'automerge-guard-no-such-body.md');
+  const { status, out } = guard('docs/a.md\n', { args: [`--body=${missing}`] });
+  assert.equal(status, 2);
+  assert.match(out, /cannot judge[\s\S]*cannot be read: ENOENT/);
+});
+
 test('an unknown flag cannot be judged', () => {
   assert.equal(guard('docs/a.md\n', { args: ['--env=PR_BODY', '--strict'] }).status, 2);
 });
