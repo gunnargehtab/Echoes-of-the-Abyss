@@ -51,7 +51,8 @@ skim the rest for regressions.
 **1. Is the evidence real?** A test not run, a stale screenshot, an
 `.expected.json` regenerated to match rather than checked: each makes the rest
 unanswerable. So does a `fix:` with no red run and no line saying why none can
-exist (`dev-loop`'s "Evidence, by what changed"). If it does not reproduce, say `evidence-missing` and stop.
+exist (`dev-loop`'s "Evidence, by what changed"). If it does not reproduce, say
+`evidence-missing` and stop.
 
 **2. Does the diff do what the target says?** Clause by clause, not "is it
 reasonable". Quote the doc line and the code line side by side when they disagree.
