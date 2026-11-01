@@ -10607,16 +10607,29 @@ export class EchoRenderer {
     // a right click on a field is a plain move for it, and it has no gun.
     const crew = this.selectedUnits();
     if (crew.length > 0 && crew.every(dredgeStruck)) {
-      const bearing =
-        `${this.keyHint('stop')} stop  ·  ${this.keyHint('holdPosition')} hold  ·  ` +
-        `${this.keyHint('silentRunning')} silent  ·  ${this.keyHint('ping')} ping`;
+      const bearing = this.unlockedHints([
+        `${this.keyHint('stop')} stop`,
+        `${this.keyHint('holdPosition')} hold`,
+        `${this.keyHint('silentRunning')} silent`,
+        ['activeSonar', `${this.keyHint('ping')} ping`],
+      ]);
       const state = `${this.selected.size} selected  ·  ${DREDGE_STRUCK_TEXT}`;
       if (heldAll !== null) return `${state}  ·  ${heldAll}  ·  ${bearing}`;
       return `${state}  ·  RMB move  ·  ${bearing}`;
     }
-    const standing =
-      `${this.keyHint('stop')} stop  ·  ${this.keyHint('holdPosition')} hold  ·  ` +
-      `CTRL+RMB torpedo  ·  ${this.keyHint('silentRunning')} silent  ·  ${this.keyHint('ping')} ping`;
+    // The locked keys go where the build keys went, and for their reason: the
+    // court locks weapons, torpedoes and active sonar, and a bar offering
+    // `W attack-move`, `CTRL+RMB torpedo` and `P ping` there promised three
+    // presses that each earn only a refusal (#1701). The reason stays on the
+    // objectives panel's withheld list and on each key's own refusal; the
+    // bar, which reads as instruction, just stops offering.
+    const standing = this.unlockedHints([
+      `${this.keyHint('stop')} stop`,
+      `${this.keyHint('holdPosition')} hold`,
+      ['torpedoes', 'CTRL+RMB torpedo'],
+      `${this.keyHint('silentRunning')} silent`,
+      ['activeSonar', `${this.keyHint('ping')} ping`],
+    ]);
     if (heldAll !== null) {
       // What is left of the generic line once every way to move is off it.
       return `${this.selected.size} selected  ·  ${heldAll}  ·  ${standing}`;
@@ -10625,8 +10638,25 @@ export class EchoRenderer {
     // left + right drag is how the depth it carries is chosen (§9, #1132).
     return this.pendingAttackMove
       ? `${this.selected.size} selected  ·  ATTACK-MOVE armed: click the water (SHIFT queues, ESC cancels)`
-      : `${this.selected.size} selected  ·  RMB move (SHIFT queue)  ·  L+R drag depth  ·  ` +
-          `${this.keyHint('attackMove')} attack-move  ·  ${standing}`;
+      : `${this.selected.size} selected  ·  ` +
+          this.unlockedHints([
+            'RMB move (SHIFT queue)',
+            'L+R drag depth',
+            // The `W` handler refuses on `weapons`, so the bar asks the same.
+            ['weapons', `${this.keyHint('attackMove')} attack-move`],
+            standing,
+          ]);
+  }
+
+  /**
+   * Joins hint clauses with the bar's separator, leaving out each one paired
+   * with an ability the mission has locked.
+   */
+  private unlockedHints(clauses: (string | [MissionAbility, string])[]): string {
+    return clauses
+      .filter((clause) => typeof clause === 'string' || this.missionLock(clause[0]) === null)
+      .map((clause) => (typeof clause === 'string' ? clause : clause[1]))
+      .join('  ·  ');
   }
 
   destroy(): void {
