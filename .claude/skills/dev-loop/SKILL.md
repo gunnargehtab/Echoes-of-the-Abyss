@@ -55,7 +55,8 @@ Seven steps, cheapest failure first.
    over its whole input, the target, and the pull request adds or extends a
    `docs/invariants.md` row instead of proving one more case. The orders panel took
    four fixes in five days (#1635 to #1671), each a case of one property. Step 1
-   sets that target, so `work-issue` §7 does not count it as widening.
+   sets that target, so neither `work-issue` §7 nor the guardrail against widening
+   counts it as widening.
 2. **Implement** one self-contained increment, not the whole issue.
 3. **Self-validate** with `npm run gates`. Iterate with `-- --only=`; drop the
    filter before the round ends. Run it; never predict it. A full run can outlast
