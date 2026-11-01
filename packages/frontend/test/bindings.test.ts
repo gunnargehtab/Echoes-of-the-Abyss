@@ -30,12 +30,28 @@ import {
 } from '../src/input/bindings.ts';
 
 describe('the shipped layouts', () => {
-  it('binds every action, in both layouts', () => {
+  it('reserves confirmation only in the study and exposes saved Enter conflicts', () => {
+    const bindings = { ...DEFAULT_BINDINGS, toggleNav: 'Enter' };
+    assert.equal(isBindable('Enter', 'toggleNav'), true);
+    assert.equal(isBindable('Enter', 'toggleNav', true), false);
+    assert.deepEqual(conflictsIn(bindings), []);
+    const conflicts = conflictsIn(bindings, true);
+    assert.equal(conflicts.length, 1);
+    assert.deepEqual(conflicts[0]!.actions, ['toggleNav']);
+    assert.match(conflicts[0]!.reservedFor!, /MOVE 3D/);
+    assert.equal(resolveBindings('custom', bindings).toggleNav, 'Enter');
+  });
+  it('binds ordinary actions and leaves the opt-in destination preview unbound', () => {
     // An unbound action is a control the player cannot reach *and cannot see
     // is missing*: the command bar still lists it, the key just does nothing.
     for (const [name, layout] of Object.entries(LAYOUTS)) {
       for (const { action, label } of ACTIONS) {
         const code = layout[action];
+        if (action === 'move3d') {
+          assert.equal(code, '');
+          assert.equal(actionFor(layout, code), null);
+          continue;
+        }
         assert.ok(typeof code === 'string' && code.length > 0, `${name} leaves "${label}" unbound`);
       }
     }
@@ -82,7 +98,7 @@ describe('the shipped layouts', () => {
       'Digit5',
     ]);
     for (const { action, label } of ACTIONS.filter(
-      (spec) => spec.group !== 'camera' && spec.group !== 'nav'
+      (spec) => spec.group !== 'camera' && spec.group !== 'nav' && spec.action !== 'move3d'
     )) {
       const code = ONE_HANDED_BINDINGS[action];
       assert.ok(leftHand.has(code), `one-handed puts "${label}" on ${keyLabel(code)}`);

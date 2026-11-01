@@ -46,6 +46,9 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * 33: explicit fixed-depth moves bypass floor-following inference (#1707).
+ * The queue fingerprint includes that intent, so older checkpoints differ.
+ *
  * 32: a hull sent with a mission's tender keeps its pace (#1594). A move
  * names the tender it was given with, and movement caps the hull's speed at
  * the tender's while the order stands, a queued leg included; the fingerprint
@@ -318,7 +321,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 32;
+export const REPLAY_FORMAT_VERSION = 33;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
@@ -332,6 +335,7 @@ export type ReplayCommand =
       queued: boolean;
       /** The depth the move was given (#1132); absent for a place alone. */
       depth?: number;
+      fixedDepth?: boolean;
       /** The tender this hull was sent with, by local id (#1594); absent for its own pace. */
       pace?: number;
     }
@@ -660,7 +664,8 @@ function applyCommand(match: Match, command: ReplayCommand): void {
         command.y,
         command.queued,
         command.depth,
-        command.pace === undefined ? 0 : eid(command.pace)
+        command.pace === undefined ? 0 : eid(command.pace),
+        command.fixedDepth
       );
       break;
     case 'depth':

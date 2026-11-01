@@ -95,10 +95,11 @@ export function orderDepthAt(
   eid: number,
   x: number,
   y: number,
-  depthM: number
+  depthM: number,
+  fixedDepth = false
 ): void {
   if (!hasComponent(world, DepthOrder, eid)) return;
-  if (!onTheGround(world.terrain.floorAt(x, y), depthM)) {
+  if (fixedDepth || !onTheGround(world.terrain.floorAt(x, y), depthM)) {
     setDepthTarget(world, eid, depthM);
     return;
   }
@@ -112,6 +113,25 @@ export function orderDepthAt(
   // descending are a few ticks at a dive's SIG, for a dive nobody now wants.
   DepthOrder.active[eid] = 0;
   DepthOrder.descending[eid] = 0;
+}
+
+/** A numeric destination is refused, never moved into a neighbouring column. */
+export function fixedDepthFits(world: SimWorld, x: number, y: number, depth?: number): boolean {
+  const terrain = world.terrain;
+  return (
+    Number.isFinite(x) &&
+    Number.isFinite(y) &&
+    x >= 0 &&
+    y >= 0 &&
+    x < terrain.widthM &&
+    y < terrain.heightM &&
+    depth !== undefined &&
+    Number.isFinite(depth) &&
+    depth >= DEPTH.MIN_M &&
+    depth <= DEPTH.MAX_M &&
+    terrain.ceilingAt(x, y) < terrain.floorAt(x, y) &&
+    terrain.admits(x, y, depth)
+  );
 }
 
 /**

@@ -26,6 +26,7 @@ import { StructureKind } from '@echoes/shared';
  */
 export type BindableAction =
   | 'attackMove'
+  | 'move3d'
   | 'stop'
   | 'rise'
   | 'dive'
@@ -151,6 +152,12 @@ export const ACTIONS: readonly ActionSpec[] = [
     group: 'build',
   },
   {
+    action: 'move3d',
+    label: 'Move 3D',
+    hint: 'Pin plan position, then confirm a fixed depth',
+    group: 'fleet',
+  },
+  {
     action: 'toggleFlight',
     label: 'Flight',
     hint: 'Development study: free camera / Home',
@@ -198,6 +205,7 @@ export type Bindings = Record<InputAction, string>;
 
 /** §9's table, exactly. Changing one of these changes the document first. */
 export const DEFAULT_BINDINGS: Bindings = {
+  move3d: '',
   // Attack-move is `W` rather than the genre's `A`. `A` was *rise* until a
   // click took over the depth (#1132), and moving a key players have already
   // learned would cost them more than the convention buys. `W` is "weapons
@@ -389,10 +397,11 @@ export interface Conflict {
  * mid-rebind — but the screen says so, and the renderer resolves a doubly
  * bound code in the order `ACTIONS` lists, which is at least deterministic.
  */
-export function conflictsIn(bindings: Bindings): Conflict[] {
+export function conflictsIn(bindings: Bindings, freeWater = false): Conflict[] {
   const byCode = new Map<string, InputAction[]>();
   for (const { action } of ACTIONS) {
     const code = bindings[action];
+    if (code === '') continue;
     const list = byCode.get(code);
     if (list === undefined) byCode.set(code, [action]);
     else list.push(action);
@@ -400,9 +409,9 @@ export function conflictsIn(bindings: Bindings): Conflict[] {
 
   const conflicts: Conflict[] = [];
   for (const [code, actions] of byCode) {
-    const reservedFor = actions.every((action) => isBindable(code, action))
+    const reservedFor = actions.every((action) => isBindable(code, action, freeWater))
       ? undefined
-      : RESERVED_CODES.get(code);
+      : reservedCode(code, freeWater);
     if (reservedFor !== undefined) conflicts.push({ code, actions, reservedFor });
     else {
       const colliding = actions.filter((action) =>
@@ -415,9 +424,14 @@ export function conflictsIn(bindings: Bindings): Conflict[] {
 }
 
 /** Whether this code may be bound at all. The screen refuses the capture. */
-export function isBindable(code: string, action?: InputAction): boolean {
+export function isBindable(code: string, action?: InputAction, freeWater = false): boolean {
   if (action !== undefined && isFlightAction(action) && code.startsWith('Arrow')) return true;
-  return !RESERVED_CODES.has(code) && code.length > 0;
+  return reservedCode(code, freeWater) === undefined && code.length > 0;
+}
+
+export function reservedCode(code: string, freeWater = false): string | undefined {
+  if (freeWater && code === 'Enter') return 'confirms the pinned MOVE 3D destination';
+  return RESERVED_CODES.get(code);
 }
 
 export function isFlightAction(action: InputAction): action is FlightAction {
@@ -438,6 +452,7 @@ function contextsOverlap(a: InputAction, b: InputAction): boolean {
  * a binding is worse than an ugly one.
  */
 export function keyLabel(code: string): string {
+  if (code === '') return 'Unbound';
   if (code.startsWith('Key')) return code.slice(3);
   if (code.startsWith('Digit')) return code.slice(5);
   if (code.startsWith('Numpad')) return `Num ${code.slice(6)}`;
@@ -521,6 +536,7 @@ export function resolveBindings(
 
 /** The action a code fires, or null. Ties resolve in `ACTIONS` order. */
 export function actionFor(bindings: Bindings, code: string, nav = false): InputAction | null {
+  if (code === '') return null;
   for (const { action, group } of ACTIONS) {
     if (bindings[action] === code && (group === 'camera' || (group === 'nav') === nav))
       return action;

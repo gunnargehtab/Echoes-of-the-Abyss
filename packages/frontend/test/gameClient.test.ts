@@ -134,6 +134,14 @@ const ORDERS: Array<[string, (client: GameClient) => void, SentMessage]> = [
     { type: 'move', payload: { unitIds: [11], x: 100, y: 200, depth: 1250, queued: false } },
   ],
   [
+    'moveTo, at an explicit fixed depth',
+    (c) => c.moveTo([11, 12], 100, 200, true, 1250, true),
+    {
+      type: 'move',
+      payload: { unitIds: [11, 12], x: 100, y: 200, depth: 1250, queued: true, fixedDepth: true },
+    },
+  ],
+  [
     'attackMoveTo',
     (c) => c.attackMoveTo([11], 100, 200, false),
     { type: 'attackMove', payload: { unitIds: [11], x: 100, y: 200, queued: false } },

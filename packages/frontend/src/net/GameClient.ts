@@ -758,12 +758,23 @@ export class GameClient {
    * the water (docs/ui-ux.md §9). The server decides whether that depth is on
    * the ground and follows it, and refuses one outside the column whole.
    */
-  moveTo(unitIds: number[], x: number, y: number, queued = false, depth?: number): void {
+  moveTo(
+    unitIds: number[],
+    x: number,
+    y: number,
+    queued = false,
+    depth?: number,
+    fixedDepth = false
+  ): void {
     if (unitIds.length === 0) return;
-    this.order(
-      CLIENT_MSG.move,
-      depth === undefined ? { unitIds, x, y, queued } : { unitIds, x, y, depth, queued }
-    );
+    this.order(CLIENT_MSG.move, {
+      unitIds,
+      x,
+      y,
+      queued,
+      ...(depth === undefined ? {} : { depth }),
+      ...(fixedDepth ? { fixedDepth: true } : {}),
+    });
   }
 
   /** Attack-move (#435): go there, and fight whatever is met on the way. */

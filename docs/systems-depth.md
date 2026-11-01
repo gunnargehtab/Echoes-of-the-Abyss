@@ -128,11 +128,15 @@ depth when idle), and preserves its horizontal order and queue. Relative targets
 the map's order limits; absolute orders outside them remain refused. Both use the same
 travel, noise, pressure and terrain rules, with no automatic dive around an obstacle.
 
-The future independent destination preview in [free-water-slice.md](free-water-slice.md)
-§6 will carry explicit fixed-depth intent instead of applying the ordinary click's
-100 m floor-following inference. That is an unimplemented order-semantics extension:
-ordinary clicks and direct steps retain the shipped behaviour above, including their
-noise, travel, pressure and queue rules.
+An explicitly fixed-depth move carries its numeric depth through validation, queued
+legs and replay, even inside the ordinary click's 100 m floor-following band.
+Its endpoint must be inside the map and its open water column; an invalid endpoint
+is refused whole, never clamped into a different destination. A queued fixed-depth
+leg is checked again when it begins, against the public ground then present.
+The independent preview in [free-water-slice.md](free-water-slice.md) §6 uses this
+intent. Ordinary clicks and direct steps retain the shipped behaviour above, including
+their noise, travel, pressure and queue rules; a legal endpoint still grants no
+automatic climb or dive through an obstructed route.
 
 ### The other end of the column: sour exposure
 

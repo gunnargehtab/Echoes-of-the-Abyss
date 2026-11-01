@@ -141,6 +141,8 @@ export interface MoveMessage {
    * Range-checked in the sim, which refuses the whole move for a bad one.
    */
   depth?: number;
+  /** Explicit numeric depth, not the ordinary click's floor-following inference. */
+  fixedDepth?: boolean;
   /** Append to the unit's plan instead of replacing it. */
   queued?: boolean;
 }
@@ -488,7 +490,14 @@ const IDS: FieldShape = { type: 'idList', max: WIRE.MAX_IDS };
  * and a missing one would say nobody had thought about it.
  */
 export const CLIENT_SHAPE: { readonly [K in keyof ClientMessages]: ShapeOf<ClientMessages[K]> } = {
-  move: { unitIds: IDS, x: NUM, y: NUM, depth: OPTIONAL_NUM, queued: OPTIONAL_FLAG },
+  move: {
+    unitIds: IDS,
+    x: NUM,
+    y: NUM,
+    depth: OPTIONAL_NUM,
+    fixedDepth: OPTIONAL_FLAG,
+    queued: OPTIONAL_FLAG,
+  },
   attackMove: { unitIds: IDS, x: NUM, y: NUM, depth: OPTIONAL_NUM, queued: OPTIONAL_FLAG },
   stop: { unitIds: IDS },
   hold: { unitIds: IDS, active: FLAG },

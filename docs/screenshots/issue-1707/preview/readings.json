@@ -1,0 +1,113 @@
+{
+  "hull": {
+    "id": 238,
+    "kind": 0,
+    "name": "Light Scout",
+    "sig": 6,
+    "ink": "#3fa86a",
+    "restSig": 6,
+    "silentRunning": false,
+    "engineOff": false,
+    "xM": 602.887451171875,
+    "zM": 1158.1165771484375,
+    "depthM": 600,
+    "lamps": [
+      {
+        "sitesPx": [
+          0.76,
+          0.76,
+          0.76,
+          2.39,
+          1.22
+        ],
+        "areaPx": 6.4,
+        "hex": "#f2b233",
+        "exportIntensity": 3.5,
+        "restIntensity": 1.1262236334021603,
+        "intensity": 1.1262236334021603,
+        "afterToneMapping": true
+      }
+    ],
+    "screen": {
+      "x0": 545,
+      "y0": 374,
+      "x1": 582,
+      "y1": 389
+    }
+  },
+  "x": "602.8115099734873",
+  "y": "602.1526624562148",
+  "depth": 450,
+  "arrived": {
+    "id": 238,
+    "kind": 0,
+    "name": "Light Scout",
+    "sig": 6,
+    "ink": "#3fa86a",
+    "restSig": 6,
+    "silentRunning": false,
+    "engineOff": false,
+    "xM": 602.8120727539062,
+    "zM": 606.1165771484375,
+    "depthM": 450,
+    "lamps": [
+      {
+        "sitesPx": [
+          2.05,
+          2.07,
+          2.07,
+          6.59,
+          3.45
+        ],
+        "areaPx": 25.3,
+        "hex": "#f2b233",
+        "exportIntensity": 3.5,
+        "restIntensity": 1.1262236334021603,
+        "intensity": 1.1262236334021603,
+        "afterToneMapping": true
+      }
+    ],
+    "screen": {
+      "x0": 607,
+      "y0": 437,
+      "x1": 643,
+      "y1": 463
+    }
+  },
+  "queued": {
+    "id": 238,
+    "kind": 0,
+    "name": "Light Scout",
+    "sig": 6,
+    "ink": "#3fa86a",
+    "restSig": 6,
+    "silentRunning": false,
+    "engineOff": false,
+    "xM": 602.8120727539062,
+    "zM": 606.1165771484375,
+    "depthM": 500,
+    "lamps": [
+      {
+        "sitesPx": [
+          2.05,
+          2.07,
+          2.07,
+          6.59,
+          3.45
+        ],
+        "areaPx": 25.8,
+        "hex": "#f2b233",
+        "exportIntensity": 3.5,
+        "restIntensity": 1.1262236334021603,
+        "intensity": 1.1262236334021603,
+        "afterToneMapping": true
+      }
+    ],
+    "screen": {
+      "x0": 589,
+      "y0": 437,
+      "x1": 626,
+      "y1": 463
+    }
+  }
+}

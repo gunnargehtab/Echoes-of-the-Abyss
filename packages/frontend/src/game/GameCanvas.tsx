@@ -27,6 +27,8 @@ import {
 import { EchoRenderer, type ContactLogEntry } from './EchoRenderer.ts';
 import { PerspectiveView } from './PerspectiveView.ts';
 import { FlightPanel } from './FlightPanel.tsx';
+import { MovePreviewPanel } from './MovePreviewPanel.tsx';
+import type { MovePreviewReading } from './movePreview.ts';
 import type { FlightReading } from './flightCamera.ts';
 import { FREE_WATER_CONTROLS } from './freeWaterControls.ts';
 import { lookForMission } from './tutorialLook.ts';
@@ -279,6 +281,7 @@ export function GameCanvas({
    */
   const [menuOpen, setMenuOpen] = useState(false);
   const [flight, setFlight] = useState<FlightReading | null>(null);
+  const [destination, setDestination] = useState<MovePreviewReading | null>(null);
   /** Seats this map has. A map's spawn list is its player count. */
   const [maxSlots, setMaxSlots] = useState(4);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -479,8 +482,9 @@ export function GameCanvas({
       const activeRenderer = new EchoRenderer(
         {
           onFlight: setFlight,
-          onMoveOrder: (unitIds, x, y, queued, depth) =>
-            client?.moveTo(unitIds, x, y, queued, depth),
+          onDestination: setDestination,
+          onMoveOrder: (unitIds, x, y, queued, depth, fixedDepth) =>
+            client?.moveTo(unitIds, x, y, queued, depth, fixedDepth),
           onAttackMoveOrder: (unitIds, x, y, queued, depth) =>
             client?.attackMoveTo(unitIds, x, y, queued, depth),
           onStopOrder: (unitIds) => client?.stop(unitIds),
@@ -1027,6 +1031,19 @@ export function GameCanvas({
             pointer input lands on the top canvas and is interpreted there. */}
         <div ref={perspectiveHostRef} className="perspective-host" />
         <div ref={hostRef} className="game-host" />
+        {FREE_WATER_CONTROLS && live && phase === MatchPhase.Playing && (
+          <MovePreviewPanel
+            reading={destination}
+            navigating={flight?.navigating ?? false}
+            onArm={() => rendererRef.current?.armDestination()}
+            onPlan={(axis, value) => rendererRef.current?.setDestinationPlan(axis, value)}
+            onDepth={(value) => rendererRef.current?.setDestinationDepth(value)}
+            onPin={(pinned) => rendererRef.current?.pinDestination(pinned)}
+            onQueue={(queued) => rendererRef.current?.queueDestination(queued)}
+            onConfirm={() => rendererRef.current?.confirmDestination()}
+            onCancel={() => rendererRef.current?.cancelDestination()}
+          />
+        )}
         {FREE_WATER_CONTROLS && live && phase === MatchPhase.Playing && (
           <FlightPanel
             reading={flight}

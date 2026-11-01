@@ -50,6 +50,7 @@ import {
 } from '@echoes/shared';
 import { FOCUS_DRAG_M_PER_PX, FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
 import { swayAt } from '../src/game/cameraSway.ts';
+import type { MovePreviewReading } from '../src/game/movePreview.ts';
 import { readsDisplayVeil, VEIL_SHADE_ATTRIBUTE } from '../src/game/veilShading.ts';
 import { VEIL_FLOOR_RGB } from '../src/game/acousticVeil.ts';
 import { HIT_PARTICLES_MIN } from '../src/game/hullHit.ts';
@@ -429,6 +430,118 @@ async function boot(
  * than booted, so a failure here is the probe's and not the renderer's.
  */
 describe('free-water camera integration', () => {
+  it('never turns a stored Enter NAV binding into preview confirmation', async () => {
+    const world = await boot({ controlsStudy: true });
+    const nav = () =>
+      (
+        world.log.calls.filter((call) => call.name === 'onFlight').at(-1)?.args[0] as {
+          navigating: boolean;
+        }
+      ).navigating;
+    try {
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.chart.setBindings({ ...ONE_HANDED_BINDINGS, toggleNav: 'Enter' });
+      world.chart.armDestination();
+      world.chart.setDestinationPlan('x', 2000);
+      world.chart.setDestinationPlan('y', 2000);
+      world.chart.setDestinationDepth(900);
+      world.chart.pinDestination(true);
+      dispatchWindow('keydown', { code: 'Enter' });
+      assert.equal(nav(), true);
+      assert.equal(world.log.names().includes('onMoveOrder'), false);
+      dispatchWindow('keydown', { code: 'Enter' });
+      assert.equal(nav(), false);
+      assert.equal(world.log.names().includes('onMoveOrder'), false);
+      dispatchWindow('keydown', {
+        code: 'Enter',
+        target: { closest: (selector: string) => (selector.includes('input') ? {} : null) },
+      });
+      assert.equal(
+        world.log.calls.filter((call) => call.name === 'onMoveOrder').length,
+        1,
+        'a focused depth field still owns explicit confirmation'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+  it('uses the north-up scope without moving the camera and keeps queueing separate from Shift-wheel', async () => {
+    const world = await boot({ controlsStudy: true });
+    const reading = () =>
+      world.log.calls.filter((call) => call.name === 'onDestination').at(-1)
+        ?.args[0] as MovePreviewReading | null;
+    try {
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.frame();
+      world.chart.armDestination();
+      const before = world.conn.frame;
+      const scope = (
+        world.chart as unknown as {
+          minimapRect(): { x: number; y: number; size: number };
+        }
+      ).minimapRect();
+      const press = {
+        button: 0,
+        buttons: 1,
+        pointerId: 1,
+        clientX: scope.x + scope.size / 2,
+        clientY: scope.y + scope.size / 2,
+      };
+      world.app.canvas.dispatch('pointerdown', press);
+      world.app.canvas.dispatch('pointerup', { ...press, buttons: 0 });
+      assert.ok(Math.abs(reading()!.point!.x - 2000) < 1e-6);
+      assert.ok(Math.abs(reading()!.point!.y - 2000) < 1e-6);
+      assert.equal(reading()!.pinned, true);
+      const depth = reading()!.depthM;
+      world.app.canvas.dispatch('wheel', { deltaY: 0, deltaX: -1, shiftKey: true });
+      assert.equal(reading()!.depthM, depth - DEPTH.CONTROL_STEP_M);
+      assert.equal(reading()!.queued, false);
+      assert.deepEqual(world.conn.frame, before);
+      const engage = barLabel(world.app, 'ENGAGE');
+      world.app.canvas.dispatch('pointerdown', { ...press, clientX: engage.x, clientY: engage.y });
+      assert.equal(reading(), null, 'a command-card mode replaces the preview too');
+      assert.equal(world.log.names().includes('onMoveOrder'), false);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('pins an independent destination, keeps it through camera motion, and confirms one fixed move', async () => {
+    const world = await boot({ controlsStudy: true });
+    const reading = () =>
+      world.log.calls.filter((call) => call.name === 'onDestination').at(-1)
+        ?.args[0] as MovePreviewReading | null;
+    try {
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.chart.armDestination();
+      assert.ok(reading());
+      world.chart.setDestinationPlan('x', 2000);
+      world.chart.setDestinationPlan('y', 2000);
+      world.chart.pinDestination(true);
+      world.chart.setDestinationDepth(900);
+      world.chart.queueDestination(true);
+      const pinned = structuredClone(reading());
+      world.chart.toggleNavigation();
+      world.chart.stepFlight('rollLeft');
+      world.chart.stepFlight('flyRight');
+      world.chart.confirmDestination();
+      assert.equal(world.log.names().includes('onMoveOrder'), false, 'NAV cannot confirm');
+      dispatchWindow('keydown', { code: 'Escape' });
+      assert.deepEqual(reading(), pinned, 'leaving NAV preserves preview and depth');
+      world.app.canvas.dispatch('wheel', { deltaY: 1, shiftKey: true });
+      assert.equal(reading()!.depthM, 1050);
+      assert.equal(reading()!.queued, true);
+      dispatchWindow('keydown', { code: 'Enter', target: { closest: () => null } });
+      world.chart.confirmDestination();
+      const commands = world.log.calls.filter((call) => call.name === 'onMoveOrder');
+      assert.equal(commands.length, 1);
+      assert.deepEqual(commands[0]!.args, [pinned!.unitIds, 2000, 2000, true, 1050, true]);
+      assert.equal(reading(), null);
+    } finally {
+      world.teardown();
+    }
+  });
+
   it('uses canonical flight scale and carries snow with the eye, not the recovery focus', async () => {
     const world = await boot({ controlsStudy: true });
     try {
@@ -456,6 +569,47 @@ describe('free-water camera integration', () => {
       const anchor = snow.points.material.uniforms.uFocus!.value;
       assert.equal(anchor.x, world.conn.eyePosition.x);
       assert.equal(anchor.y, world.conn.eyePosition.y);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('refuses invalid preview rays, solids and depths without issuing or clamping an order', async () => {
+    const world = await boot({ controlsStudy: true });
+    const reading = () =>
+      world.log.calls.filter((call) => call.name === 'onDestination').at(-1)
+        ?.args[0] as MovePreviewReading | null;
+    try {
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.chart.armDestination();
+      world.chart.setDestinationPlan('x', 2000);
+      world.chart.setDestinationPlan('y', 2000);
+      world.chart.pinDestination(true);
+      world.chart.setDestinationDepth(3100);
+      world.chart.confirmDestination();
+      assert.equal(reading()!.depthM, 3100);
+      assert.equal(reading()!.reason, 'DEPTH OUTSIDE WATER INTERVAL');
+      const terrain = cannedTerrain();
+      terrain.ceiling.fill(500);
+      terrain.floor.fill(500);
+      world.chart.setTerrain(terrain);
+      world.chart.setDestinationDepth(500);
+      world.chart.confirmDestination();
+      assert.equal(reading()!.reason, 'NO WATER COLUMN');
+      world.chart.setTerrain(cannedTerrain());
+      world.chart.pinDestination(false);
+      world.conn.setReducedMotion(true);
+      world.conn.focusWorld(2000, 2000, 1000);
+      world.conn.raiseFocusBy(world.conn.focusDepth() - 300);
+      world.chart.toggleFlight();
+      world.conn.turnFlight(0, Math.PI, 0);
+      world.app.canvas.dispatch('pointermove', { clientX: 640, clientY: 360, buttons: 0 });
+      assert.equal(reading()!.reason, 'NO WATER TARGET');
+      world.chart.confirmDestination();
+      assert.equal(world.log.names().includes('onMoveOrder'), false);
+      dispatchWindow('keydown', { code: 'Escape', target: { closest: () => ({}) } });
+      assert.equal(reading(), null, 'Escape owns preview even from an input');
+      assert.equal(world.log.names().includes('onOpenMenu'), false);
     } finally {
       world.teardown();
     }

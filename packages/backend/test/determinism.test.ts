@@ -312,6 +312,33 @@ describe('the Tier-2 blur is stable across matches', () => {
 });
 
 describe('replay', () => {
+  it('records and replays explicit depth, and fingerprints its queued intent', () => {
+    const live = twoPlayers(new Match(undefined, { fauna: false, seed: SEED, record: true }));
+    matchWorld = live.world;
+    const eid = firstUnit(live, 0);
+    const x = 3000;
+    const y = 3000;
+    const depth = live.world.terrain.floorAt(x, y) - 25;
+    live.orderMove(0, eid, x, y, false, depth, 0, true);
+    live.orderMove(0, eid, x, y, true, depth, 0, true);
+    const queue = live.world.orderQueues.get(eid)!;
+    assert.equal(queue.length, 1);
+    assert.equal(queue[0]!.kind, 'move');
+    const fixedHash = hashWorld(live.world);
+    if (queue[0]!.kind !== 'move') assert.fail('move queue required');
+    queue[0]!.fixedDepth = false;
+    assert.notEqual(hashWorld(live.world), fixedHash);
+    queue[0]!.fixedDepth = true;
+    for (let tick = 0; tick < 300; tick++) live.stepOnce();
+    const replay = live.replay()!;
+    const moves = replay.commands.filter((command) => command.type === 'move');
+    assert.equal(moves.length, 2);
+    assert.ok(moves.every((command) => command.fixedDepth && command.depth === depth));
+    const played = playReplay(replay);
+    assert.equal(played.divergedAtTick, null);
+    assert.equal(played.finalHash, hashWorld(live.world));
+  });
+
   function record(ticks: number): { replay: Replay; hash: number } {
     const match = twoPlayers(new Match(undefined, { fauna: false, seed: SEED, record: true }));
     runScripted(match, ticks);

@@ -30,7 +30,7 @@ import {
   isBindable,
   keyLabel,
   LAYOUTS,
-  RESERVED_CODES,
+  reservedCode,
   resolveBindings,
   type ActionSpec,
   type InputAction,
@@ -59,7 +59,7 @@ export function ControlsScreen({ onBack }: ControlsScreenProps) {
   const [refusal, setRefusal] = useState<string>('');
 
   const bindings = resolveBindings(settings.bindingLayout, settings.bindings);
-  const conflicts = conflictsIn(bindings);
+  const conflicts = conflictsIn(bindings, FREE_WATER_CONTROLS);
   const conflicted = new Set(conflicts.flatMap((conflict) => conflict.actions));
 
   const write = (next: Bindings, layout: Settings['bindingLayout']) => {
@@ -88,9 +88,9 @@ export function ControlsScreen({ onBack }: ControlsScreenProps) {
         setRefusal('');
         return;
       }
-      if (!isBindable(event.code, capturing)) {
+      if (!isBindable(event.code, capturing, FREE_WATER_CONTROLS)) {
         setRefusal(
-          `${keyLabel(event.code)} is reserved — it ${RESERVED_CODES.get(event.code) ?? 'cannot be bound'}.`
+          `${keyLabel(event.code)} is reserved — it ${reservedCode(event.code, FREE_WATER_CONTROLS) ?? 'cannot be bound'}.`
         );
         setCapturing(null);
         return;
@@ -140,8 +140,14 @@ export function ControlsScreen({ onBack }: ControlsScreenProps) {
         )}
         {conflicts.length > 0 && (
           <p className="menu-refusal" role="status">
-            {conflicts.length === 1 ? 'One key is' : `${conflicts.length} keys are`} bound twice.
-            The first action in the list wins; the other will not fire.
+            {conflicts.some((conflict) => conflict.reservedFor !== undefined) ? (
+              'A binding uses a reserved key. Rebind the marked rows.'
+            ) : (
+              <>
+                {conflicts.length === 1 ? 'One key is' : `${conflicts.length} keys are`} bound
+                twice. The first action in the list wins; the other will not fire.
+              </>
+            )}
           </p>
         )}
 
@@ -164,7 +170,9 @@ export function ControlsScreen({ onBack }: ControlsScreenProps) {
           {GROUP_ORDER.map((group) => (
             <section key={group} className="menu-binding-group">
               <h3>{GROUP_LABEL[group]}</h3>
-              {ACTIONS.filter((spec) => spec.group === group).map((spec) => (
+              {ACTIONS.filter(
+                (spec) => spec.group === group && (FREE_WATER_CONTROLS || spec.action !== 'move3d')
+              ).map((spec) => (
                 <div
                   key={spec.action}
                   className={`menu-binding-row${conflicted.has(spec.action) ? ' clash' : ''}`}
@@ -192,6 +200,7 @@ export function ControlsScreen({ onBack }: ControlsScreenProps) {
 
           <section className="menu-binding-group">
             <h3>Fixed</h3>
+            {FREE_WATER_CONTROLS && <p>Enter confirms the pinned MOVE 3D destination.</p>}
             {/* Shown rather than hidden: a player looking for the queue
                 modifier should find it here and learn it is not movable,
                 rather than conclude the rebinder forgot it. */}

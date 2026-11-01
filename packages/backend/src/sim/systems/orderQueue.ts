@@ -31,7 +31,7 @@ import {
   Weapon,
 } from '../components.ts';
 import type { SimWorld } from '../world.ts';
-import { leaveFloor, orderDepthAt } from './depth.ts';
+import { fixedDepthFits, leaveFloor, orderDepthAt } from './depth.ts';
 import { orderTarget } from './chase.ts';
 
 // `Position`, so a hull in a hold (systems/carrying.ts) never pops a leg it
@@ -50,7 +50,7 @@ export type QueuedOrder =
    * slot and the leg under way is still using it. Server-side only: the
    * snapshot copies a queued leg's place and depth and nothing else.
    */
-  | { kind: 'move'; x: number; y: number; depth?: number; pace?: number }
+  | { kind: 'move'; x: number; y: number; depth?: number; pace?: number; fixedDepth?: boolean }
   | { kind: 'attackMove'; x: number; y: number; depth?: number }
   | { kind: 'attack'; x: number; y: number; target: number }
   | { kind: 'harvest'; x: number; y: number; node: number };
@@ -94,6 +94,7 @@ function busy(world: SimWorld, eid: number): boolean {
 function begin(world: SimWorld, eid: number, order: QueuedOrder): void {
   switch (order.kind) {
     case 'move':
+      if (order.fixedDepth && !fixedDepthFits(world, order.x, order.y, order.depth)) return;
       MoveOrder.x[eid] = order.x;
       MoveOrder.y[eid] = order.y;
       MoveOrder.active[eid] = 1;
@@ -112,7 +113,8 @@ function begin(world: SimWorld, eid: number, order: QueuedOrder): void {
       }
       // Decided as the leg begins, by the rule an immediate move is
       // (docs/systems-depth.md §2), against the ground as it stands now.
-      if (order.depth !== undefined) orderDepthAt(world, eid, order.x, order.y, order.depth);
+      if (order.depth !== undefined)
+        orderDepthAt(world, eid, order.x, order.y, order.depth, order.fixedDepth);
       break;
     case 'attackMove':
       MoveOrder.x[eid] = order.x;

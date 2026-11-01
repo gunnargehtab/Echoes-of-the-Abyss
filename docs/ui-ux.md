@@ -673,11 +673,20 @@ sets flight speed over 50–800 rendered m/s, initially 200; rotation is 60 degr
 Motion buttons step for a quarter-second, so navigation also has a mouse-only route.
 Home and Escape remain reserved. No camera movement emits a fleet order.
 
-The still-planned MOVE 3D preview lives beside the depth ribbon, not in another crowded
+The opt-in MOVE 3D preview lives beside the depth ribbon, not in another crowded
 SQUAD cell. It pins plan position, edits a numeric depth, then confirms one fixed-depth
 move, with a separate queue toggle. Invalid rays and solid columns refuse with a reason;
 the scope offers a plan-picker alternative. It does not silently change ordinary
-right-click or claim a 3D route through obstacles. These additions were recommended in
+right-click or claim a 3D route through obstacles. It starts unbound. Map-coordinate
+fields and a PIN POSITION button offer a keyboard-only placement route; Enter confirms
+the pinned destination even from its depth field. Shift-wheel changes only a pinned
+preview's numeric depth when NAV and focused fields do not own input; it never queues.
+Enter is reserved for confirmation while the study is enabled, not in ordinary Controls.
+Existing camera bindings on Enter are flagged rather than silently rewritten: outside
+focused controls, their navigation action takes precedence over confirmation until rebound.
+The preview reports the water interval, maximum rise/dive time across the selection,
+descent SIG, silence-breaking and pressure risk. Its tether runs to the ground.
+These additions were recommended in
 [the #1705 contract](free-water-slice.md); the owner's approval was of the experience,
 not this particular input.
 
