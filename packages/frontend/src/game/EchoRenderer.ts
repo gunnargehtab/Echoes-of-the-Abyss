@@ -3368,13 +3368,11 @@ export class EchoRenderer {
         }
       }
       const target = e.target as HTMLElement | null;
-      if (e.code === 'Enter' && this.destination !== null && !target?.closest?.('button')) {
-        e.preventDefault();
-        if (!e.repeat) this.confirmDestination();
-        return;
-      }
-      if (target?.closest?.('input, textarea, select, button, [contenteditable="true"]')) return;
-      if (this.controlsStudy) {
+      const focusedControl = target?.closest?.(
+        'input, textarea, select, button, [contenteditable="true"]'
+      );
+      // Stored camera bindings must never turn into fleet confirmation.
+      if (this.controlsStudy && !focusedControl) {
         const cameraAction = actionFor(this.bindings, e.code, this.navigating);
         if (cameraAction === 'move3d') {
           e.preventDefault();
@@ -3397,6 +3395,12 @@ export class EchoRenderer {
           return;
         }
       }
+      if (e.code === 'Enter' && this.destination !== null && !target?.closest?.('button')) {
+        e.preventDefault();
+        if (!e.repeat) this.confirmDestination();
+        return;
+      }
+      if (focusedControl) return;
       // Digits are control groups (docs/ui-ux.md §9), Ctrl to assign. They
       // used to produce units; production keeps its command-bar buttons, and
       // the doc's binding wins because control groups have no alternative

@@ -681,6 +681,9 @@ right-click or claim a 3D route through obstacles. It starts unbound. Map-coordi
 fields and a PIN POSITION button offer a keyboard-only placement route; Enter confirms
 the pinned destination even from its depth field. Shift-wheel changes only a pinned
 preview's numeric depth when NAV and focused fields do not own input; it never queues.
+Enter is reserved for confirmation while the study is enabled, not in ordinary Controls.
+Existing camera bindings on Enter are flagged rather than silently rewritten: outside
+focused controls, their navigation action takes precedence over confirmation until rebound.
 The preview reports the water interval, maximum rise/dive time across the selection,
 descent SIG, silence-breaking and pressure risk. Its tether runs to the ground.
 These additions were recommended in

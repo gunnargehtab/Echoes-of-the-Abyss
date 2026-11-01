@@ -430,6 +430,41 @@ async function boot(
  * than booted, so a failure here is the probe's and not the renderer's.
  */
 describe('free-water camera integration', () => {
+  it('never turns a stored Enter NAV binding into preview confirmation', async () => {
+    const world = await boot({ controlsStudy: true });
+    const nav = () =>
+      (
+        world.log.calls.filter((call) => call.name === 'onFlight').at(-1)?.args[0] as {
+          navigating: boolean;
+        }
+      ).navigating;
+    try {
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.chart.setBindings({ ...ONE_HANDED_BINDINGS, toggleNav: 'Enter' });
+      world.chart.armDestination();
+      world.chart.setDestinationPlan('x', 2000);
+      world.chart.setDestinationPlan('y', 2000);
+      world.chart.setDestinationDepth(900);
+      world.chart.pinDestination(true);
+      dispatchWindow('keydown', { code: 'Enter' });
+      assert.equal(nav(), true);
+      assert.equal(world.log.names().includes('onMoveOrder'), false);
+      dispatchWindow('keydown', { code: 'Enter' });
+      assert.equal(nav(), false);
+      assert.equal(world.log.names().includes('onMoveOrder'), false);
+      dispatchWindow('keydown', {
+        code: 'Enter',
+        target: { closest: (selector: string) => (selector.includes('input') ? {} : null) },
+      });
+      assert.equal(
+        world.log.calls.filter((call) => call.name === 'onMoveOrder').length,
+        1,
+        'a focused depth field still owns explicit confirmation'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
   it('uses the north-up scope without moving the camera and keeps queueing separate from Shift-wheel', async () => {
     const world = await boot({ controlsStudy: true });
     const reading = () =>

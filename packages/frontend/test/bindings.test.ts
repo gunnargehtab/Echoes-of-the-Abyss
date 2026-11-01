@@ -30,6 +30,17 @@ import {
 } from '../src/input/bindings.ts';
 
 describe('the shipped layouts', () => {
+  it('reserves confirmation only in the study and exposes saved Enter conflicts', () => {
+    const bindings = { ...DEFAULT_BINDINGS, toggleNav: 'Enter' };
+    assert.equal(isBindable('Enter', 'toggleNav'), true);
+    assert.equal(isBindable('Enter', 'toggleNav', true), false);
+    assert.deepEqual(conflictsIn(bindings), []);
+    const conflicts = conflictsIn(bindings, true);
+    assert.equal(conflicts.length, 1);
+    assert.deepEqual(conflicts[0]!.actions, ['toggleNav']);
+    assert.match(conflicts[0]!.reservedFor!, /MOVE 3D/);
+    assert.equal(resolveBindings('custom', bindings).toggleNav, 'Enter');
+  });
   it('binds ordinary actions and leaves the opt-in destination preview unbound', () => {
     // An unbound action is a control the player cannot reach *and cannot see
     // is missing*: the command bar still lists it, the key just does nothing.

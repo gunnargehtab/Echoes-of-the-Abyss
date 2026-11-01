@@ -397,7 +397,7 @@ export interface Conflict {
  * mid-rebind — but the screen says so, and the renderer resolves a doubly
  * bound code in the order `ACTIONS` lists, which is at least deterministic.
  */
-export function conflictsIn(bindings: Bindings): Conflict[] {
+export function conflictsIn(bindings: Bindings, freeWater = false): Conflict[] {
   const byCode = new Map<string, InputAction[]>();
   for (const { action } of ACTIONS) {
     const code = bindings[action];
@@ -409,9 +409,9 @@ export function conflictsIn(bindings: Bindings): Conflict[] {
 
   const conflicts: Conflict[] = [];
   for (const [code, actions] of byCode) {
-    const reservedFor = actions.every((action) => isBindable(code, action))
+    const reservedFor = actions.every((action) => isBindable(code, action, freeWater))
       ? undefined
-      : RESERVED_CODES.get(code);
+      : reservedCode(code, freeWater);
     if (reservedFor !== undefined) conflicts.push({ code, actions, reservedFor });
     else {
       const colliding = actions.filter((action) =>
@@ -424,9 +424,14 @@ export function conflictsIn(bindings: Bindings): Conflict[] {
 }
 
 /** Whether this code may be bound at all. The screen refuses the capture. */
-export function isBindable(code: string, action?: InputAction): boolean {
+export function isBindable(code: string, action?: InputAction, freeWater = false): boolean {
   if (action !== undefined && isFlightAction(action) && code.startsWith('Arrow')) return true;
-  return !RESERVED_CODES.has(code) && code.length > 0;
+  return reservedCode(code, freeWater) === undefined && code.length > 0;
+}
+
+export function reservedCode(code: string, freeWater = false): string | undefined {
+  if (freeWater && code === 'Enter') return 'confirms the pinned MOVE 3D destination';
+  return RESERVED_CODES.get(code);
 }
 
 export function isFlightAction(action: InputAction): action is FlightAction {
