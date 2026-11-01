@@ -48,7 +48,15 @@ Seven steps, cheapest failure first.
    label, a sentence in the pull request. The target says what the game *should*
    do; only the code says what it *does*. Issue bodies are the worst source: they
    describe a past state in the present tense. False sentences are the finding
-   this loop's critics raise most.
+   this loop's critics raise most. **For a `fix:`, read the history too**, over the
+   files the fix touches:
+   `git log --first-parent --since=30.days.ago --format='%cs %h %s' origin/main -- <files> | grep ' fix'`.
+   Two earlier fixes there to the same property make that property,
+   over its whole input, the target, and the pull request adds or extends a
+   `docs/invariants.md` row instead of proving one more case. The orders panel took
+   four fixes in five days (#1635 to #1671), each a case of one property. Step 1
+   sets that target, so neither `work-issue` §7 nor the guardrail against widening
+   counts it as widening.
 2. **Implement** one self-contained increment, not the whole issue.
 3. **Self-validate** with `npm run gates`. Iterate with `-- --only=`; drop the
    filter before the round ends. Run it; never predict it. A full run can outlast
@@ -77,6 +85,16 @@ doc; a passing critic says nothing about the build.
 | The mix | `tools/audio-meter` readings, taken at the bus |
 | A performance path | Counted work (`Match.worstStepWork`, `Match.contactPathWalksLastPass`, nodes per tick), never a stopwatch |
 
+**A fix shows its test failing first.** A test that passes before the fix proves
+nothing, so a `fix:` captures its test failing with the fix undone, beside it
+passing. Write the test first and keep the red output, or, once the fix is committed,
+run the test on the base's copy of the fixed files: check them out with
+`git checkout $(git merge-base origin/main HEAD) -- <files>`, run it, and restore them
+with `git checkout HEAD -- <files>`. On an uncommitted fix that first checkout
+overwrites the fix. For a visual fix the before frame is the red run.
+Where nothing can fail here, such as a fault only another platform shows, one line
+says why.
+
 ### The critic's brief
 
 The critic reads what you hand it, and a vague brief costs it an hour. Give it,
@@ -86,7 +104,8 @@ as text:
 - **Diff:** `git diff origin/main...HEAD` right after `git fetch origin main` (a
   stale ref turns fourteen files into four hundred), or name the base sha; from
   round 2, also the delta since the last verdict (`git diff <sha>..HEAD`).
-- **Evidence:** the commands you ran and their output; the gates' summary line.
+- **Evidence:** the commands you ran and their output, among them a fix's red run or
+  its line saying why none can exist; the gates' summary line.
 - **Decisions:** the options you wrote and the one you took, if any.
 - **Previous verdict**, verbatim, from round 2 on. Never its context.
 
@@ -128,7 +147,8 @@ Stop when **all** hold:
 - `npm run gates` is green, every gate.
 - The last verdict is **pass**, or its open findings are minor and fixed, or
   carry a written reason.
-- Every acceptance condition **the issue states** is met, with evidence for each.
+- Every acceptance condition **the issue states** is met, with evidence for each, and
+  for a repeat fix step 1's whole property with its row.
   Not a stricter bar you set on the way: a critic calling a bar self-imposed is a
   stop signal, not a finding.
 - The change is still one instalment.

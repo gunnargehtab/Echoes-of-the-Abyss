@@ -76,11 +76,30 @@ test('a model file is caught wherever it sits, in any case, and nothing else is'
   assert.deepEqual(blockedPaths(['docs/model.glb.md', 'docs/glb-notes.md']), []);
 });
 
-test('every entry is either a directory prefix or a suffix', () => {
+test("the root CLAUDE.md holds the freeze, so it is the loop's own rules", () => {
+  assert.deepEqual(kinds(['CLAUDE.md']), [['CLAUDE.md', RULES]]);
+});
+
+test('a nested CLAUDE.md or a near name is not the root file', () => {
+  assert.deepEqual(
+    blockedPaths([
+      'docs/CLAUDE.md',
+      'tools/CLAUDE.md',
+      'packages/backend/CLAUDE.md',
+      'CLAUDE.md.orig',
+      'claude.md',
+    ]),
+    []
+  );
+});
+
+test('every entry is exactly one of a directory prefix, a file or a suffix', () => {
   for (const entry of BLOCKED_PATHS) {
     const prefix = typeof entry.prefix === 'string' && entry.prefix.endsWith('/');
+    const file = typeof entry.file === 'string' && !entry.file.endsWith('/');
     const suffix = typeof entry.suffix === 'string' && entry.suffix.startsWith('.');
-    assert.ok(prefix !== suffix, JSON.stringify(entry));
+    assert.equal([prefix, file, suffix].filter(Boolean).length, 1, JSON.stringify(entry));
+    assert.equal(Object.keys(entry).length, 2, JSON.stringify(entry));
   }
 });
 

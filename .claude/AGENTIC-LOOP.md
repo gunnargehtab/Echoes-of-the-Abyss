@@ -151,7 +151,7 @@ the `automerge` scope is code as well: `tools/automerge-guard/` fails a pull
 request outside it, run from `main`'s copy so a pull request cannot loosen it,
 and §9 merges only past that check.
 
-The same change cut what a firing reads and what a round spends. The pull request
+The 25 September change also cut what a firing reads and what a round spends. The pull request
 body is three sections of at most three sentences each, which
 `tools/prose-budget` measures. Findings are **blocking** or **minor**, and only
 blocking ones buy a round: of the 26 firings #580 logs from 19 to 25 September

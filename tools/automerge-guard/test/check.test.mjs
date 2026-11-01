@@ -37,6 +37,12 @@ test('a blocked path fails, and the report names it and its kind', () => {
   assert.doesNotMatch(out, /ROADMAP/);
 });
 
+test('a blocked file is reported by its own path', () => {
+  const { status, out } = guard('CLAUDE.md\n');
+  assert.equal(status, 1);
+  assert.match(out, /`CLAUDE\.md`: the loop's own rules \(`CLAUDE\.md`\)/);
+});
+
 test('a blocked heading fails', () => {
   const { status, out } = guard('docs/ROADMAP.md\n', {
     body: '## Solution\nDone.\n## Screenshots\n',

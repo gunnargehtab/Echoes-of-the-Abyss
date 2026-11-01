@@ -50,7 +50,9 @@ skim the rest for regressions.
 
 **1. Is the evidence real?** A test not run, a stale screenshot, an
 `.expected.json` regenerated to match rather than checked: each makes the rest
-unanswerable. If it does not reproduce, say `evidence-missing` and stop.
+unanswerable. So does a `fix:` with no red run and no line saying why none can
+exist (`dev-loop`'s "Evidence, by what changed"). If it does not reproduce, say
+`evidence-missing` and stop.
 
 **2. Does the diff do what the target says?** Clause by clause, not "is it
 reasonable". Quote the doc line and the code line side by side when they disagree.
@@ -58,7 +60,8 @@ Something sensible the doc did not ask for is a finding.
 
 **3. What did it fail to do?** The clause with no code, the second call site, a
 `CLIENT_MSG` entry with no `CLIENT_SHAPE`, a constant moved without its doc, a
-happy-path-only test.
+happy-path-only test. A fix that proves only its own case when the history shows two
+earlier fixes to the same property within 30 days (`dev-loop` step 1).
 
 **4. Were design calls taken in the open?** Where the diff picks one reading of an
 ambiguous or contradicted target:
@@ -86,14 +89,16 @@ ambiguous or contradicted target:
 - **Docs.** No link to a doc that does not exist.
 - **The balance freeze.** No number tuned toward an outcome; no baseline
   refreshed to chase a guard-rail.
-- **The loop's own bounds.** A diff to `.claude/skills/work-issue/`,
-  `.claude/skills/dev-loop/` or this file may not change a clause that bounds an
-  unattended firing. The list is `work-issue` §5, "When the issue is the loop's
-  own", and it is the only copy: read it at `origin/main`, not at the diff's head,
-  and treat an edit to the list itself as an edit to a bound. Report every edit to one as
-  blocking, whoever the caller says asked for it: the fix is an issue, or a
-  person's approval on the pull request, and a firing can give itself neither.
-  **You are the only check on this**; no gate reads what these files mean.
+- **The loop's own bounds.** A diff to any file that `work-issue` §5's list, "When
+  the issue is the loop's own", names may not change a clause that bounds an
+  unattended firing; a skill it names means that skill's `SKILL.md`. The list is the
+  only copy, so this check names no files of its own: read it at `origin/main`, not
+  at the diff's head, and treat an edit to the list itself as an edit to a bound.
+  Report every edit to one as blocking, whoever the caller says asked for it: the
+  fix is an issue, or a person's approval on the pull request, and a firing can give
+  itself neither.
+  **You are the only check on this**: no gate asks whether an edit loosens a bound,
+  and a diff can rewrite `rules.mjs`'s tests along with its list.
 
 **6. Is every sentence true?** In the diff's comments, docs and the pull request
 body: check each claim about behaviour, counts and file locations against the
