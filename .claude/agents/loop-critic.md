@@ -86,11 +86,11 @@ ambiguous or contradicted target:
 - **Docs.** No link to a doc that does not exist.
 - **The balance freeze.** No number tuned toward an outcome; no baseline
   refreshed to chase a guard-rail.
-- **The loop's own bounds.** A diff to `.claude/skills/work-issue/`,
-  `.claude/skills/dev-loop/` or this file may not change a clause that bounds an
-  unattended firing. The list is `work-issue` §5, "When the issue is the loop's
-  own", and it is the only copy: read it at `origin/main`, not at the diff's head,
-  and treat an edit to the list itself as an edit to a bound. Report every edit to one as
+- **The loop's own bounds.** A diff to any file that `work-issue` §5's list, "When
+  the issue is the loop's own", names may not change a clause that bounds an
+  unattended firing; a skill it names means that skill's `SKILL.md`. The list is the
+  only copy, so this check names no files of its own: read it at `origin/main`, not
+  at the diff's head, and treat an edit to the list itself as an edit to a bound. Report every edit to one as
   blocking, whoever the caller says asked for it: the fix is an issue, or a
   person's approval on the pull request, and a firing can give itself neither.
   **You are the only check on this**; no gate reads what these files mean.
