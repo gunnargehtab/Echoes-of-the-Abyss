@@ -96,7 +96,7 @@ import {
 import type { ReadoutBox } from '../src/game/readouts.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { panFor } from '../src/audio/contactVoice.ts';
-import { selfMixFor } from '../src/audio/selfNoise.ts';
+import { SELF_BANDS, selfMixFor } from '../src/audio/selfNoise.ts';
 import type { ContactAudioFrame } from '../src/audio/contactMixer.ts';
 import type { SelfAudioFrame } from '../src/audio/selfMixer.ts';
 import { LampHaloPass } from '../src/game/lampHaloPass.ts';
@@ -3855,11 +3855,13 @@ describe('renderer smoke test: the strip explains itself', () => {
     fireResizeObservers();
     const stage = booted.app.stage as unknown as Container;
     // docs/ui-ux.md §2's list, each as the pattern its readout draws. The band
-    // word is the one this renderer would print at the reset's peak SIG of 0.
-    const band = selfMixFor(0, false).label.toUpperCase();
+    // word is any line opening on one of the words the mix can print.
+    const bands = [...SELF_BANDS.map((b) => b.label), selfMixFor(0, true).label].map((label) =>
+      label.toUpperCase()
+    );
     const figures: Array<[string, (line: string) => boolean]> = [
-      ['the SIG meter', (line) => /^SIG \d+ \/ 100$/.test(line)],
-      ['the band word', (line) => line.startsWith(band)],
+      ['the SIG figure', (line) => /^SIG \d+ \/ 100$/.test(line)],
+      ['the band word', (line) => bands.some((band) => line.startsWith(band))],
       ['a stockpile', (line) => /^(NODULES|CRYSTAL|BIOMASS) \d/.test(line)],
       ['BERTHS', (line) => /^BERTHS \d+\/\d+$/.test(line)],
       ['DRAW', (line) => /^DRAW \d+\/\d+$/.test(line)],
@@ -3876,13 +3878,15 @@ describe('renderer smoke test: the strip explains itself', () => {
           .args[0] as ReadoutBox[]
       ).map((box) => box.key);
 
-    // The positive control: with the boot's snapshot in hand, the band word is
-    // whatever its peak makes it, and every other figure is drawn.
+    // The positive control: with the boot's snapshot in hand, every figure is
+    // drawn and the ones with a control offer it.
     booted.frame(2);
-    for (const [name] of figures.filter(([n]) => n !== 'the band word')) {
+    for (const [name] of figures) {
       assert.notDeepEqual(drawn(name), [], `${name} is missing with a snapshot in hand`);
     }
-    assert.ok(keys().includes('sig') && keys().includes('contacts'), `${keys()}`);
+    for (const key of ['sig', 'band', 'contacts']) {
+      assert.ok(keys().includes(key), `no ${key} control with a snapshot in hand: ${keys()}`);
+    }
 
     // Back to a room that has heard nothing, as a rematch or a resumed match
     // is. Every figure is then a default `resetForNewMatch` left, and the
@@ -3895,13 +3899,18 @@ describe('renderer smoke test: the strip explains itself', () => {
     // What a hover or a screen reader is offered: the map name alone, which
     // the room sent with the map rather than with a snapshot.
     assert.deepEqual(keys(), ['map'], 'a readout control answers for a figure nobody sent');
+    // §1.4 keeps the meter itself on screen, in §3's unheard form.
+    assert.ok(textSaying(stage, 'SIG --- / 100'), 'the SIG meter left the screen');
     assert.ok(textSaying(stage, 'connected'), 'the status stands in for the contact count');
 
     // The first snapshot hands them back, at the time it says.
     booted.chart.applySnapshot({ ...cannedSnapshot(), tick: 644 * SIM.TICK_HZ });
     booted.frame(2);
-    for (const [name] of figures.filter(([n]) => n !== 'the band word')) {
+    for (const [name] of figures) {
       assert.notDeepEqual(drawn(name), [], `${name} stays hidden after a snapshot`);
+    }
+    for (const key of ['sig', 'band', 'contacts']) {
+      assert.ok(keys().includes(key), `no ${key} control after a snapshot: ${keys()}`);
     }
     assert.ok(textSaying(stage, 'T+10:44'), `the clock does not read T+10:44`);
 

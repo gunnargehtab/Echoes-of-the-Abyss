@@ -8320,13 +8320,22 @@ export class EchoRenderer {
    * Returns the width it occupied, so the strip can lay out after it.
    */
   private drawSigMeter(g: Graphics, x: number, now: number): number {
-    // Nothing drawn before the room's first snapshot (`heard`), not even the
-    // empty bar, which is a picture of SIG 0. The width is still returned, so
-    // the strip keeps the meter's place and nothing moves when the first
-    // snapshot lands.
-    this.sigLabel.visible = this.heard;
+    // Before the room's first snapshot (`heard`) the meter states no figure
+    // and still stands, because §1.4 keeps own loudness always on screen: an
+    // empty frame over `SIG --- / 100` in dim ink, the unheard form §3 defines.
+    // `---` keeps the readout's three digits, so nothing shifts when the first
+    // snapshot lands, and the count line waits with the figure it explains.
+    const y = 8;
     this.loudLabel.visible = this.heard;
-    if (!this.heard) return SIG_METER.W;
+    if (!this.heard) {
+      g.rect(x, y, SIG_METER.W, SIG_METER.H)
+        .fill({ color: 0x000000, alpha: 0.5 })
+        .stroke({ width: 1, color: UI.glassStroke });
+      this.sigLabel.text = 'SIG --- / 100';
+      this.sigLabel.style.fill = UI.textDim;
+      this.sigLabel.position.set(x, y + SIG_METER.H + 4);
+      return SIG_METER.W;
+    }
 
     const peak = this.peakSig;
     const ink = sigColor(peak);
@@ -8345,7 +8354,6 @@ export class EchoRenderer {
     if (red && !this.sigBandWasRed) this.sigFlashAt = now;
     this.sigBandWasRed = red;
 
-    const y = 8;
     const w = SIG_METER.W;
     const h = SIG_METER.H;
     g.rect(x, y, w, h).fill({ color: 0x000000, alpha: 0.5 });
@@ -8542,9 +8550,9 @@ export class EchoRenderer {
 
     // §3 makes the bar, `SIG 042 / 100` and `n units · m loud` one instrument,
     // so they are one readout: the second line explains the first. Before a
-    // room's first snapshot the whole instrument and its band word are held
-    // back (`heard`), and a readout that is not drawn has no control.
-    if (this.sigLabel.visible) {
+    // room's first snapshot the instrument states no figure and its band word
+    // is held back (`heard`), so neither has a control to explain one.
+    if (this.loudLabel.visible) {
       const meterW = Math.max(SIG_METER.W, this.sigLabel.width, this.loudLabel.width);
       // Origin from the readout's own `Text` rather than from the two literals
       // `drawHud` hands `drawSigMeter`: this method's whole rule is that it reads
