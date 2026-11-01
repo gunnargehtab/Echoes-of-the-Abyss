@@ -5787,8 +5787,8 @@ export class EchoRenderer {
     this.pendingAttackMove = false;
     this.arrowsDown.clear();
     this.layerStamps.clear();
-    // A rematch is T+00:00 again, and the water carries none of the last
-    // match's blows into it.
+    // A rematch's clock starts again from its own first snapshot, and the
+    // water carries none of the last match's blows into it.
     this.lastTick = 0;
     this.underFire.clear();
     this.exposureFlashes.length = 0;
@@ -8361,6 +8361,10 @@ export class EchoRenderer {
     // set the order binds, and the word says this figure is every hull.
     const all = this.boundSig === null ? '' : 'all ';
     this.loudLabel.text = `${all}${n} unit${n === 1 ? '' : 's'} \u00b7 ${loud} loud`;
+    // Held back until a snapshot has said how many there are (#1697). Before
+    // it `units` is empty because nothing has arrived, not because the fleet
+    // is, and a resumed mission read `0 units · 0 loud` for two seconds.
+    this.loudLabel.visible = this.snapshotSeq > 0;
     this.loudLabel.style.fill = loud > 0 ? UI.sigMid : UI.textDim;
     this.loudLabel.position.set(x, y + h + 20);
 
@@ -8518,7 +8522,11 @@ export class EchoRenderer {
 
     // §3 makes the bar, `SIG 042 / 100` and `n units · m loud` one instrument,
     // so they are one readout: the second line explains the first.
-    const meterW = Math.max(SIG_METER.W, this.sigLabel.width, this.loudLabel.width);
+    // The second line counts only once it is drawn: before a room's first
+    // snapshot it is held back (#1697), and the box covers the bar and its
+    // first line alone, watching no count.
+    const second = this.loudLabel.visible ? this.loudLabel : null;
+    const meterW = Math.max(SIG_METER.W, this.sigLabel.width, second?.width ?? 0);
     // Origin from the readout's own `Text` rather than from the two literals
     // `drawHud` hands `drawSigMeter`: this method's whole rule is that it reads
     // what the strip just laid out instead of keeping a second copy of the
@@ -8530,13 +8538,13 @@ export class EchoRenderer {
       this.sigLabel.x,
       meterTop,
       meterW,
-      this.loudLabel.y + this.loudLabel.height - meterTop,
+      (second ?? this.sigLabel).y + (second ?? this.sigLabel).height - meterTop,
       this.sigLabel.text,
       // §3's second line is the other half of this instrument and the line
       // quotes both of its figures, but the box is named by the first — so
       // without watching it, `4 units · 2 loud` becoming `5 units · 2 loud`
       // republishes nothing and the explanation keeps the old count.
-      this.loudLabel.text
+      second?.text ?? ''
     );
     this.recordDrawn(
       'band',
@@ -8696,7 +8704,12 @@ export class EchoRenderer {
   private readoutDetail(key: ReadoutKey, band: string, worldGain: number, loud: number): string {
     switch (key) {
       case 'sig':
-        return sigDetail(this.peakSig, this.units.length, loud, this.boundSig ?? undefined);
+        return sigDetail(
+          this.peakSig,
+          this.loudLabel.visible ? this.units.length : null,
+          loud,
+          this.boundSig ?? undefined
+        );
       case 'band':
         return bandDetail(band, worldGain);
       case 'tracked':
@@ -8928,11 +8941,17 @@ export class EchoRenderer {
     // monospace and the stamp zero-padded, §3's rule, so its width follows
     // from its length. Hence the one exception, a stamp that gains or loses
     // a digit — the hundredth minute, or a rematch after one.
+    //
+    // Nor is there a clock before the first snapshot (#1697): `lastTick` is 0
+    // until one lands, and a resumed mission at 10:44 read `T+00:00` for two
+    // seconds. No time is truer than a wrong one, and the strip already knows
+    // how to lay out without it.
     const clock = stamp(this.lastTick);
     if (this.clockLabel.visible || clock.length !== this.clockLabel.text.length) {
       this.clockLabel.text = clock;
     }
-    this.clockLabel.visible = this.statusLabel.x - 16 - firstRowEdge >= this.clockLabel.width + 16;
+    this.clockLabel.visible =
+      this.snapshotSeq > 0 && this.statusLabel.x - 16 - firstRowEdge >= this.clockLabel.width + 16;
     if (this.clockLabel.visible) this.clockLabel.text = clock;
     const rightEdge = this.clockLabel.visible
       ? this.statusLabel.x - this.clockLabel.width - 16

@@ -3841,6 +3841,46 @@ describe('renderer smoke test: the strip explains itself', () => {
     booted.teardown();
   });
 
+  it('draws no clock and no unit count before the first snapshot (#1697)', async () => {
+    const booted = await boot();
+    booted.chart.setStatus('connected');
+    const stage = booted.app.stage as unknown as Container;
+    const clock = (): string | null => textSaying(stage, 'T+');
+    const count = (): string | null => textSaying(stage, ' loud');
+    // The hover and screen-reader line under the SIG readout quotes the same
+    // count, so it goes silent with the strip rather than outliving it.
+    const sigLine = (): string =>
+      (
+        booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!
+          .args[0] as ReadoutBox[]
+      ).find((box) => box.key === 'sig')!.detail;
+    const counted = /\d+ of \d+ over /;
+
+    // The positive control: the boot's snapshot is in, so both are drawn.
+    booted.frame(2);
+    assert.notEqual(clock(), null, 'the clock is missing with a snapshot in hand');
+    assert.notEqual(count(), null, 'the unit count is missing with a snapshot in hand');
+    assert.match(sigLine(), counted, 'the SIG line lost its count with a snapshot in hand');
+
+    // Back to a room that has heard nothing, as a rematch or a fresh join is.
+    // `lastTick` reads 0 and `units` is empty, so the two would say `T+00:00`
+    // and `0 units · 0 loud`: a resumed mission at 10:44 read both for 2 s.
+    booted.chart.resetForNewMatch();
+    booted.frame(2);
+    assert.equal(clock(), null, `the clock reads ${clock()} before any snapshot`);
+    assert.equal(count(), null, `the strip reads ${count()} before any snapshot`);
+    assert.doesNotMatch(sigLine(), counted, `the SIG line quotes a count: ${sigLine()}`);
+
+    // The first snapshot hands both back, at the time it says.
+    booted.chart.applySnapshot({ ...cannedSnapshot(), tick: 644 * SIM.TICK_HZ });
+    booted.frame(2);
+    assert.notEqual(count(), null, 'the unit count stays hidden after a snapshot');
+    assert.ok(clock()?.includes('T+10:44'), `the clock reads ${clock()}, not T+10:44`);
+    assert.match(sigLine(), counted, 'the SIG line stays silent after a snapshot');
+
+    booted.teardown();
+  });
+
   it('says the meter counts every hull while an order is in force (#1586)', async () => {
     const booted = await boot();
     booted.chart.setStatus('connected');
