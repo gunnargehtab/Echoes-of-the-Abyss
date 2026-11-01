@@ -59,8 +59,8 @@ word, the stockpiles, `BERTHS`, `DRAW`, the contact count, the clock, the unit c
 the fleet block's hull and structure count are all held back. The SIG meter's place stays
 empty, so the strip does not shift when the first snapshot arrives, and the contact count's
 place shows the connection status, as it does before the room connects. A resumed skirmish
-read `SIG 000`, a zero economy, `0 HULLS` and `T+00:00` for about 1.5 s (#1693, #1697,
-#1719).
+read `SIG 000`, a zero economy, `0 HULLS` and `T+00:00` for about 1.5 s, and it took three
+fixes to hold all of them (#1693, #1697, #1719).
 
 Three panels float above the console, each 340 px wide at 100% UI scale and anchored to a
 corner so it scales from that corner (§11): the orders panel (§10.5) top-left, clear of the
