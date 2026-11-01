@@ -60,7 +60,8 @@ Something sensible the doc did not ask for is a finding.
 
 **3. What did it fail to do?** The clause with no code, the second call site, a
 `CLIENT_MSG` entry with no `CLIENT_SHAPE`, a constant moved without its doc, a
-happy-path-only test.
+happy-path-only test. A fix that proves only its own case when the history shows two
+earlier fixes to the same property within 30 days (`dev-loop` step 1).
 
 **4. Were design calls taken in the open?** Where the diff picks one reading of an
 ambiguous or contradicted target:
