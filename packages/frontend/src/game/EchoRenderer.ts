@@ -3991,6 +3991,18 @@ export class EchoRenderer {
   }
 
   /**
+   * Whether this room has sent a snapshot yet (docs/ui-ux.md §2). Before one,
+   * every figure a snapshot carries holds the default `resetForNewMatch` left,
+   * which is nobody's reading: a resumed skirmish drew `SIG 000`, a zero
+   * economy and `0 HULLS` for 1.5 s (#1719). Each HUD figure that comes from a
+   * snapshot reads this rather than its own zero test, because zero is also a
+   * true reading once the room has spoken.
+   */
+  private get heard(): boolean {
+    return this.snapshotSeq > 0;
+  }
+
+  /**
    * The page actually shown, which is `activeTab` unless the mission has taken
    * construction away — then there is only one page there is anything to put
    * on. Read everywhere rather than coercing `activeTab` itself, so the
@@ -4610,15 +4622,19 @@ export class EchoRenderer {
     }
     band += ROW + 6;
 
-    const hulls = this.units.length;
-    const built = this.structures.length;
-    text(
-      `${hulls} HULL${hulls === 1 ? '' : 'S'} \u00b7 ${built} STRUCTURE${built === 1 ? '' : 'S'}`,
-      slot.x + pad,
-      Math.min(band, y + h - 18),
-      UI.text,
-      10
-    );
+    // Held back until the room has said how many there are (`heard`): an
+    // empty `units` before the first snapshot is nothing heard, not no fleet.
+    if (this.heard) {
+      const hulls = this.units.length;
+      const built = this.structures.length;
+      text(
+        `${hulls} HULL${hulls === 1 ? '' : 'S'} \u00b7 ${built} STRUCTURE${built === 1 ? '' : 'S'}`,
+        slot.x + pad,
+        Math.min(band, y + h - 18),
+        UI.text,
+        10
+      );
+    }
 
     for (let i = label; i < this.fleetTexts.length; i++) this.fleetTexts[i]!.visible = false;
   }
@@ -8304,6 +8320,14 @@ export class EchoRenderer {
    * Returns the width it occupied, so the strip can lay out after it.
    */
   private drawSigMeter(g: Graphics, x: number, now: number): number {
+    // Nothing drawn before the room's first snapshot (`heard`), not even the
+    // empty bar, which is a picture of SIG 0. The width is still returned, so
+    // the strip keeps the meter's place and nothing moves when the first
+    // snapshot lands.
+    this.sigLabel.visible = this.heard;
+    this.loudLabel.visible = this.heard;
+    if (!this.heard) return SIG_METER.W;
+
     const peak = this.peakSig;
     const ink = sigColor(peak);
 
@@ -8361,10 +8385,6 @@ export class EchoRenderer {
     // set the order binds, and the word says this figure is every hull.
     const all = this.boundSig === null ? '' : 'all ';
     this.loudLabel.text = `${all}${n} unit${n === 1 ? '' : 's'} \u00b7 ${loud} loud`;
-    // Held back until a snapshot has said how many there are (#1697). Before
-    // it `units` is empty because nothing has arrived, not because the fleet
-    // is, and a resumed mission read `0 units · 0 loud` for two seconds.
-    this.loudLabel.visible = this.snapshotSeq > 0;
     this.loudLabel.style.fill = loud > 0 ? UI.sigMid : UI.textDim;
     this.loudLabel.position.set(x, y + h + 20);
 
@@ -8521,39 +8541,41 @@ export class EchoRenderer {
     this.drawnN = 0;
 
     // §3 makes the bar, `SIG 042 / 100` and `n units · m loud` one instrument,
-    // so they are one readout: the second line explains the first.
-    // The second line counts only once it is drawn: before a room's first
-    // snapshot it is held back (#1697), and the box covers the bar and its
-    // first line alone, watching no count.
-    const second = this.loudLabel.visible ? this.loudLabel : null;
-    const meterW = Math.max(SIG_METER.W, this.sigLabel.width, second?.width ?? 0);
-    // Origin from the readout's own `Text` rather than from the two literals
-    // `drawHud` hands `drawSigMeter`: this method's whole rule is that it reads
-    // what the strip just laid out instead of keeping a second copy of the
-    // layout, and `12, 8` was a second copy. `drawSigMeter` puts the label at
-    // `y + SIG_METER.H + 4`, so the bar's top is that much back up.
-    const meterTop = this.sigLabel.y - SIG_METER.H - 4;
-    this.recordDrawn(
-      'sig',
-      this.sigLabel.x,
-      meterTop,
-      meterW,
-      (second ?? this.sigLabel).y + (second ?? this.sigLabel).height - meterTop,
-      this.sigLabel.text,
-      // §3's second line is the other half of this instrument and the line
-      // quotes both of its figures, but the box is named by the first — so
-      // without watching it, `4 units · 2 loud` becoming `5 units · 2 loud`
-      // republishes nothing and the explanation keeps the old count.
-      second?.text ?? ''
-    );
-    this.recordDrawn(
-      'band',
-      this.bandLabel.x,
-      this.bandLabel.y,
-      this.bandLabel.width,
-      this.bandLabel.height,
-      this.bandLabel.text
-    );
+    // so they are one readout: the second line explains the first. Before a
+    // room's first snapshot the whole instrument and its band word are held
+    // back (`heard`), and a readout that is not drawn has no control.
+    if (this.sigLabel.visible) {
+      const meterW = Math.max(SIG_METER.W, this.sigLabel.width, this.loudLabel.width);
+      // Origin from the readout's own `Text` rather than from the two literals
+      // `drawHud` hands `drawSigMeter`: this method's whole rule is that it reads
+      // what the strip just laid out instead of keeping a second copy of the
+      // layout, and `12, 8` was a second copy. `drawSigMeter` puts the label at
+      // `y + SIG_METER.H + 4`, so the bar's top is that much back up.
+      const meterTop = this.sigLabel.y - SIG_METER.H - 4;
+      this.recordDrawn(
+        'sig',
+        this.sigLabel.x,
+        meterTop,
+        meterW,
+        this.loudLabel.y + this.loudLabel.height - meterTop,
+        this.sigLabel.text,
+        // §3's second line is the other half of this instrument and the line
+        // quotes both of its figures, but the box is named by the first — so
+        // without watching it, `4 units · 2 loud` becoming `5 units · 2 loud`
+        // republishes nothing and the explanation keeps the old count.
+        this.loudLabel.text
+      );
+    }
+    if (this.bandLabel.visible) {
+      this.recordDrawn(
+        'band',
+        this.bandLabel.x,
+        this.bandLabel.y,
+        this.bandLabel.width,
+        this.bandLabel.height,
+        this.bandLabel.text
+      );
+    }
     if (this.exposureLabel.visible) {
       this.recordDrawn(
         'tracked',
@@ -8642,8 +8664,9 @@ export class EchoRenderer {
     }
     // The status label is the contact count only while it *is* one: before the
     // room is live it carries the connection state instead, and a line about
-    // what your ears hold would be a lie over the word `connecting`.
-    if (this.status === 'connected') {
+    // what your ears hold would be a lie over the word `connecting`. Nor before
+    // the room's first snapshot (`heard`), when it carries the status too.
+    if (this.status === 'connected' && this.heard) {
       this.recordDrawn(
         'contacts',
         this.statusLabel.x,
@@ -8704,12 +8727,7 @@ export class EchoRenderer {
   private readoutDetail(key: ReadoutKey, band: string, worldGain: number, loud: number): string {
     switch (key) {
       case 'sig':
-        return sigDetail(
-          this.peakSig,
-          this.loudLabel.visible ? this.units.length : null,
-          loud,
-          this.boundSig ?? undefined
-        );
+        return sigDetail(this.peakSig, this.units.length, loud, this.boundSig ?? undefined);
       case 'band':
         return bandDetail(band, worldGain);
       case 'tracked':
@@ -8765,13 +8783,18 @@ export class EchoRenderer {
     // quota in Nodules, so a held or seen field keeps that readout, exactly as
     // Crystal's rule below does. In Sorrowgate the three read `NODULES 0`,
     // `BERTHS 6/0` in threat ink and `DRAW 0/0`, and the red read as an error.
-    const economy = this.economyShown();
+    // And none of the row before the room's first snapshot (`heard`): every
+    // figure on it is one the snapshot carries, so a seen Crystal field or a
+    // skirmish's economy would otherwise print the zeros nobody sent (#1719).
+    const heard = this.heard;
+    const economy = heard && this.economyShown();
     // Where the next readout on the first row starts, so a dropped one leaves
     // no gap; `firstRowEdge` is this, less the gap, if the draw meter is gone.
     let nextX = stockX;
 
     this.resourceLabel.visible =
-      economy || this.nodules > 0 || this.nodes.some((n) => n.kind === ResourceKind.Nodule);
+      heard &&
+      (economy || this.nodules > 0 || this.nodes.some((n) => n.kind === ResourceKind.Nodule));
     if (this.resourceLabel.visible) {
       this.resourceLabel.text = `NODULES ${this.nodules.toFixed(0)}`;
       this.resourceLabel.style.fill = RESOURCE_COLOR[ResourceKind.Nodule];
@@ -8782,7 +8805,8 @@ export class EchoRenderer {
     // Crystal appears only once a player has some or has seen a field: an
     // always-on zero would be chrome, and this HUD spends space on decisions.
     const showCrystal =
-      this.crystal > 0 || this.nodes.some((n) => n.kind === ResourceKind.ResonanceCrystal);
+      heard &&
+      (this.crystal > 0 || this.nodes.some((n) => n.kind === ResourceKind.ResonanceCrystal));
     this.crystalLabel.visible = showCrystal;
     if (showCrystal) {
       this.crystalLabel.text = `CRYSTAL ${this.crystal.toFixed(0)}`;
@@ -8793,7 +8817,7 @@ export class EchoRenderer {
 
     // Biomass appears only once a player has killed something. An always-on
     // zero would be chrome, and this HUD spends its space on decisions.
-    this.biomassLabel.visible = this.biomass > 0;
+    this.biomassLabel.visible = heard && this.biomass > 0;
     if (this.biomassLabel.visible) {
       this.biomassLabel.text = `BIOMASS ${this.biomass.toFixed(0)}`;
       this.biomassLabel.style.fill = FAUNA_COLOR;
@@ -8806,7 +8830,7 @@ export class EchoRenderer {
     // Biomass — a commander with no hulls still has a grant, and the grant is a
     // decision about Foundries. Threat ink at the ceiling, where the next hull
     // is refused.
-    this.berthsLabel.visible = economy || this.berths.granted > 0;
+    this.berthsLabel.visible = heard && (economy || this.berths.granted > 0);
     if (this.berthsLabel.visible) {
       const full = this.berths.used >= this.berths.granted;
       this.berthsLabel.text = `BERTHS ${this.berths.used}/${this.berths.granted}`;
@@ -8820,7 +8844,8 @@ export class EchoRenderer {
     // banked, so it reads "6/4" — what you make over what you owe — with a
     // segmented bar rather than a filling one. A number that could be mistaken
     // for a balance would be teaching the player the wrong thing about it.
-    this.drawLabel.visible = economy || this.drawReport.capacity > 0 || this.drawReport.demand > 0;
+    this.drawLabel.visible =
+      heard && (economy || this.drawReport.capacity > 0 || this.drawReport.demand > 0);
     let firstRowEdge = nextX - 16;
     if (this.drawLabel.visible) {
       const drawX = nextX;
@@ -8869,6 +8894,8 @@ export class EchoRenderer {
     const mix = selfMixFor(this.peakSig, this.fleetSilent);
     const deaf = mix.worldGain < 1 ? '  \u2013 masking' : mix.worldGain > 1 ? '  \u2013 open' : '';
     this.bandLabel.text = `${mix.label.toUpperCase()}${deaf}`;
+    // The word is read off the peak SIG, so it waits for the meter (`heard`).
+    this.bandLabel.visible = heard;
     this.bandLabel.style.fill = this.fleetSilent ? UI.accent : UI.textDim;
     this.bandLabel.position.set(12 + meterW + 22, 30);
 
@@ -8887,8 +8914,10 @@ export class EchoRenderer {
     }
 
     const contactCount = this.tracked.size;
+    // The connection status stands in for the count until the room has sent a
+    // snapshot (`heard`): `0 contacts` before one is a count nobody made.
     this.statusLabel.text =
-      this.status === 'connected'
+      this.status === 'connected' && heard
         ? `${contactCount} contact${contactCount === 1 ? '' : 's'}`
         : this.status;
     this.statusLabel.position.set(screenWidth - this.statusLabel.width - 12, 9);
@@ -8951,7 +8980,7 @@ export class EchoRenderer {
       this.clockLabel.text = clock;
     }
     this.clockLabel.visible =
-      this.snapshotSeq > 0 && this.statusLabel.x - 16 - firstRowEdge >= this.clockLabel.width + 16;
+      heard && this.statusLabel.x - 16 - firstRowEdge >= this.clockLabel.width + 16;
     if (this.clockLabel.visible) this.clockLabel.text = clock;
     const rightEdge = this.clockLabel.visible
       ? this.statusLabel.x - this.clockLabel.width - 16

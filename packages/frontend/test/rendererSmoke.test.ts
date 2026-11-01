@@ -96,6 +96,7 @@ import {
 import type { ReadoutBox } from '../src/game/readouts.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
 import { panFor } from '../src/audio/contactVoice.ts';
+import { selfMixFor } from '../src/audio/selfNoise.ts';
 import type { ContactAudioFrame } from '../src/audio/contactMixer.ts';
 import type { SelfAudioFrame } from '../src/audio/selfMixer.ts';
 import { LampHaloPass } from '../src/game/lampHaloPass.ts';
@@ -3841,42 +3842,68 @@ describe('renderer smoke test: the strip explains itself', () => {
     booted.teardown();
   });
 
-  it('draws no clock and no unit count before the first snapshot (#1697)', async () => {
+  it('states no figure a snapshot carries before the first snapshot (#1719)', async () => {
     const booted = await boot();
     booted.chart.setStatus('connected');
+    // Wide enough for the fleet block, whose `n HULLS · m STRUCTURES` line is
+    // the console's one snapshot count; the strip carries every other.
+    booted.chartHost.clientWidth = 1920;
+    booted.chartHost.clientHeight = 1080;
+    booted.connHost.clientWidth = 1920;
+    booted.connHost.clientHeight = 1080;
+    booted.app.resize(1920, 1080);
+    fireResizeObservers();
     const stage = booted.app.stage as unknown as Container;
-    const clock = (): string | null => textSaying(stage, 'T+');
-    const count = (): string | null => textSaying(stage, ' loud');
-    // The hover and screen-reader line under the SIG readout quotes the same
-    // count, so it goes silent with the strip rather than outliving it.
-    const sigLine = (): string =>
+    // docs/ui-ux.md §2's list, each as the pattern its readout draws. The band
+    // word is the one this renderer would print at the reset's peak SIG of 0.
+    const band = selfMixFor(0, false).label.toUpperCase();
+    const figures: Array<[string, (line: string) => boolean]> = [
+      ['the SIG meter', (line) => /^SIG \d+ \/ 100$/.test(line)],
+      ['the band word', (line) => line.startsWith(band)],
+      ['a stockpile', (line) => /^(NODULES|CRYSTAL|BIOMASS) \d/.test(line)],
+      ['BERTHS', (line) => /^BERTHS \d+\/\d+$/.test(line)],
+      ['DRAW', (line) => /^DRAW \d+\/\d+$/.test(line)],
+      ['the contact count', (line) => /^\d+ contacts?$/.test(line)],
+      ['the clock', (line) => /^T\+\d/.test(line)],
+      ['the unit count', (line) => / units? \u00b7 \d+ loud$/.test(line)],
+      ['the fleet count', (line) => /^\d+ HULLS? \u00b7 \d+ STRUCTURES?$/.test(line)],
+    ];
+    const drawn = (name: string): string[] =>
+      textContents(stage).filter((line) => figures.find(([n]) => n === name)![1](line));
+    const keys = (): string[] =>
       (
         booted.log.calls.filter((call) => call.name === 'onReadouts').at(-1)!
           .args[0] as ReadoutBox[]
-      ).find((box) => box.key === 'sig')!.detail;
-    const counted = /\d+ of \d+ over /;
+      ).map((box) => box.key);
 
-    // The positive control: the boot's snapshot is in, so both are drawn.
+    // The positive control: with the boot's snapshot in hand, the band word is
+    // whatever its peak makes it, and every other figure is drawn.
     booted.frame(2);
-    assert.notEqual(clock(), null, 'the clock is missing with a snapshot in hand');
-    assert.notEqual(count(), null, 'the unit count is missing with a snapshot in hand');
-    assert.match(sigLine(), counted, 'the SIG line lost its count with a snapshot in hand');
+    for (const [name] of figures.filter(([n]) => n !== 'the band word')) {
+      assert.notDeepEqual(drawn(name), [], `${name} is missing with a snapshot in hand`);
+    }
+    assert.ok(keys().includes('sig') && keys().includes('contacts'), `${keys()}`);
 
-    // Back to a room that has heard nothing, as a rematch or a fresh join is.
-    // `lastTick` reads 0 and `units` is empty, so the two would say `T+00:00`
-    // and `0 units · 0 loud`: a resumed mission at 10:44 read both for 2 s.
+    // Back to a room that has heard nothing, as a rematch or a resumed match
+    // is. Every figure is then a default `resetForNewMatch` left, and the
+    // canned map's Crystal field would keep `CRYSTAL 0` up on its own.
     booted.chart.resetForNewMatch();
     booted.frame(2);
-    assert.equal(clock(), null, `the clock reads ${clock()} before any snapshot`);
-    assert.equal(count(), null, `the strip reads ${count()} before any snapshot`);
-    assert.doesNotMatch(sigLine(), counted, `the SIG line quotes a count: ${sigLine()}`);
+    for (const [name] of figures) {
+      assert.deepEqual(drawn(name), [], `${name} reads ${drawn(name)} before any snapshot`);
+    }
+    // What a hover or a screen reader is offered: the map name alone, which
+    // the room sent with the map rather than with a snapshot.
+    assert.deepEqual(keys(), ['map'], 'a readout control answers for a figure nobody sent');
+    assert.ok(textSaying(stage, 'connected'), 'the status stands in for the contact count');
 
-    // The first snapshot hands both back, at the time it says.
+    // The first snapshot hands them back, at the time it says.
     booted.chart.applySnapshot({ ...cannedSnapshot(), tick: 644 * SIM.TICK_HZ });
     booted.frame(2);
-    assert.notEqual(count(), null, 'the unit count stays hidden after a snapshot');
-    assert.ok(clock()?.includes('T+10:44'), `the clock reads ${clock()}, not T+10:44`);
-    assert.match(sigLine(), counted, 'the SIG line stays silent after a snapshot');
+    for (const [name] of figures.filter(([n]) => n !== 'the band word')) {
+      assert.notDeepEqual(drawn(name), [], `${name} stays hidden after a snapshot`);
+    }
+    assert.ok(textSaying(stage, 'T+10:44'), `the clock does not read T+10:44`);
 
     booted.teardown();
   });

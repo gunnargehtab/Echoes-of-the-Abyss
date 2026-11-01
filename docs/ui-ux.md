@@ -53,6 +53,15 @@ read `NODULES 0`, `DRAW 0/0` and `BERTHS 6/0` in threat ink on a mission with no
 a newcomer read the red berths as an error (#1586). Shift Change's quota is in Nodules, and
 its fields keep that readout on the strip.
 
+**Nothing on the HUD states a figure before the room's first snapshot.** Until one lands,
+every figure a snapshot carries is a default nobody has sent. So the SIG meter and its band
+word, the stockpiles, `BERTHS`, `DRAW`, the contact count, the clock, the unit count and
+the fleet block's hull and structure count are all held back. The SIG meter's place stays
+empty, so the strip does not shift when the first snapshot arrives, and the contact count's
+place shows the connection status, as it does before the room connects. A resumed skirmish
+read `SIG 000`, a zero economy, `0 HULLS` and `T+00:00` for about 1.5 s (#1693, #1697,
+#1719).
+
 Three panels float above the console, each 340 px wide at 100% UI scale and anchored to a
 corner so it scales from that corner (§11): the orders panel (§10.5) top-left, clear of the
 depth ribbon and the band labels beside it (#1650); the contact log (§10) top-right, at most
