@@ -57,7 +57,7 @@ its fields keep that readout on the strip.
 every figure a snapshot carries is a default nobody has sent. So the SIG figure and its band
 word, the stockpiles, `BERTHS`, `DRAW`, the contact count, the clock, the unit count and
 the fleet block's hull and structure count are all held back. The SIG meter itself stays,
-in §3's unheard form, and the contact count's place shows the connection status, as it does
+in §3's pre-snapshot form, and the contact count's place shows the connection status, as it does
 before the room connects. A resumed match read `SIG 000`, a zero economy, `0 HULLS` and
 `T+00:00` for about 1.5 s, and three fixes held them (#1693, #1697, #1719).
 
@@ -158,7 +158,7 @@ The permanent element. Top-left, 240 × 12 px at 1080p, above a two-line readout
 | Transition | Snap at the boundary, do not blend. A threshold crossing is an event and must read as one |
 | Spikes | Firing and ping bursts render as a lighter overlay bar that decays over the burst duration, so the player sees the transient separately from their baseline |
 | Second line | `n units · m loud` where *loud* means SIG > 60 — the number that predicts trouble. While a mission's silence order is in force, read in §10.5's header, it is `all n units · m loud`: the order binds an authored set, the meter still counts every hull, and the word says which of the two this is (#1586) |
-| Unheard | Before the room's first snapshot (§2), an empty bar over `SIG --- / 100` in dim ink, with no second line. The meter stays on screen, as §1.4 requires, and states no figure; `---` holds the three digits' width |
+| Before the first snapshot | Per §2, an empty bar over `SIG --- / 100` in dim ink, with no second line. The meter stays on screen, as §1.4 requires, and states no figure; `---` holds the three digits' width |
 
 When a unit crosses into the red band, the meter flashes once and the contact log records it. Players must be able to answer *"why did they find me?"* after the fact.
 

@@ -3899,7 +3899,7 @@ describe('renderer smoke test: the strip explains itself', () => {
     // What a hover or a screen reader is offered: the map name alone, which
     // the room sent with the map rather than with a snapshot.
     assert.deepEqual(keys(), ['map'], 'a readout control answers for a figure nobody sent');
-    // §1.4 keeps the meter itself on screen, in §3's unheard form.
+    // §1.4 keeps the meter itself on screen, in §3's pre-snapshot form.
     assert.ok(textSaying(stage, 'SIG --- / 100'), 'the SIG meter left the screen');
     assert.ok(textSaying(stage, 'connected'), 'the status stands in for the contact count');
 

@@ -8322,7 +8322,7 @@ export class EchoRenderer {
   private drawSigMeter(g: Graphics, x: number, now: number): number {
     // Before the room's first snapshot (`heard`) the meter states no figure
     // and still stands, because §1.4 keeps own loudness always on screen: an
-    // empty frame over `SIG --- / 100` in dim ink, the unheard form §3 defines.
+    // empty frame over `SIG --- / 100` in dim ink, the pre-snapshot form §3 defines.
     // `---` keeps the readout's three digits, so nothing shifts when the first
     // snapshot lands, and the count line waits with the figure it explains.
     const y = 8;
