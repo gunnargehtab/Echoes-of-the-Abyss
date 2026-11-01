@@ -85,9 +85,11 @@ doc; a passing critic says nothing about the build.
 
 **A fix shows its test failing first.** A test that passes before the fix proves
 nothing, so a `fix:` captures its test failing with the fix undone, beside it
-passing. Write the test first and keep the red output, or later run it on the base's
-copy of the fixed files (`git checkout origin/main -- <files>`, then
-`git checkout HEAD -- <files>`). For a visual fix the before frame is the red run.
+passing. Write the test first and keep the red output, or, once the fix is committed,
+run the test on the base's copy of the fixed files: check them out with
+`git checkout $(git merge-base origin/main HEAD) -- <files>`, run it, and restore them
+with `git checkout HEAD -- <files>`. On an uncommitted fix that first checkout
+overwrites the fix. For a visual fix the before frame is the red run.
 Where nothing can fail here, such as a fault only another platform shows, one line
 says why.
 
