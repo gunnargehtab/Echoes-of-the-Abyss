@@ -21,7 +21,7 @@ export const RULES = "the loop's own rules";
 export const OPEN = 'work the loop left open';
 
 /**
- * A directory prefix, or a file suffix. Each prefix ends in `/`, so
+ * A directory prefix, one file, or a file suffix. Each prefix ends in `/`, so
  * `packages/frontend/` never catches a sibling such as `packages/frontend-notes.md`.
  */
 export const BLOCKED_PATHS = [
@@ -33,6 +33,10 @@ export const BLOCKED_PATHS = [
   { prefix: '.claude/', kind: RULES },
   { prefix: '.github/', kind: RULES },
   { prefix: 'tools/automerge-guard/', kind: RULES },
+  // The balance freeze lifts "by a decision written here", and the three rules that
+  // bind every session live here too (#1725). A nested CLAUDE.md holds one
+  // directory's conventions, not the loop's rules, so the entry is this path alone.
+  { file: 'CLAUDE.md', kind: RULES },
 ];
 
 /** Body headings that hand the merge to a person: findings still open, frames to judge. */
@@ -41,14 +45,16 @@ export const BLOCKED_HEADINGS = [
   { name: 'Screenshots', kind: DRAWN },
 ];
 
-/** How an entry reads in a report: its prefix, or its suffix as a glob. */
-export const pattern = (entry) => entry.prefix ?? `*${entry.suffix}`;
+/** How an entry reads in a report: its prefix or file, or its suffix as a glob. */
+export const pattern = (entry) => entry.prefix ?? entry.file ?? `*${entry.suffix}`;
 
 /** The entry that catches `path`, or undefined. A suffix ignores case: `.GLB` is a model too. */
 export function entryFor(path) {
-  return BLOCKED_PATHS.find((entry) =>
-    entry.prefix ? path.startsWith(entry.prefix) : path.toLowerCase().endsWith(entry.suffix)
-  );
+  return BLOCKED_PATHS.find((entry) => {
+    if (entry.prefix) return path.startsWith(entry.prefix);
+    if (entry.file) return path === entry.file;
+    return path.toLowerCase().endsWith(entry.suffix);
+  });
 }
 
 /** Each path the list catches, with the entry that caught it, in input order. */
