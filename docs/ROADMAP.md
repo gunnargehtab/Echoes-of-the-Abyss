@@ -889,6 +889,8 @@ and no row below is open.
 | The overlay's cost at a close camera, worse with a hull selected | [#1692](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1692) |
 | A resumed mission drawing the skirmish economy for two seconds | [#1693](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1693) |
 | The clock and unit count before a room's first snapshot | [#1697](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1697) |
+| The hint bar offering keys the court refuses | [#1701](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1701) |
+| The loop critic's model alias failing in Copilot CLI | [#1708](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1708) |
 
 **Store art**
 
@@ -961,6 +963,14 @@ recorded and left.
 
 A reading of the world is worth less done by the hands that wrote it, so no unattended run
 takes this one.
+
+**A study in free water**
+
+| Work | Issue |
+| --- | --- |
+| Epic — fleet command in a free, three-dimensional ocean | [#1694](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1694) |
+
+A development-only slice ([free-water-slice.md](free-water-slice.md)), not a shipped map.
 
 **Built when a branch wants it**
 
