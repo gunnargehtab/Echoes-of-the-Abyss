@@ -103,8 +103,8 @@ as text:
 - **Diff:** `git diff origin/main...HEAD` right after `git fetch origin main` (a
   stale ref turns fourteen files into four hundred), or name the base sha; from
   round 2, also the delta since the last verdict (`git diff <sha>..HEAD`).
-- **Evidence:** the commands you ran and their output, a fix's red run among them;
-  the gates' summary line.
+- **Evidence:** the commands you ran and their output, among them a fix's red run or
+  its line saying why none can exist; the gates' summary line.
 - **Decisions:** the options you wrote and the one you took, if any.
 - **Previous verdict**, verbatim, from round 2 on. Never its context.
 
