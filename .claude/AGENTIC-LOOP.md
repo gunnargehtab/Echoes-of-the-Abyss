@@ -146,7 +146,10 @@ On 21 October the owner moved two more things off their own desk (#1483).
 A small correctness call labelled `decision-proposed` is taken after 24 hours of
 silence (`work-issue` §7). A green `routine` pull request labelled `automerge` is
 merged by `steward` §9. Neither covers what the client draws, the balance freeze,
-or these files. Both scopes are on §5's list of the loop's own bounds.
+or these files. Both scopes are on §5's list of the loop's own bounds. Since #1722
+the `automerge` scope is code as well: `tools/automerge-guard/` fails a pull
+request outside it, run from `main`'s copy so a pull request cannot loosen it,
+and §9 merges only past that check.
 
 The same change cut what a firing reads and what a round spends. The pull request
 body is three sections of at most three sentences each, which
@@ -180,8 +183,10 @@ Two things close that, decided on 15 September:
 - **A firing may edit its own rules, except the ones that bound it.** The list
   is `work-issue` §5, "When the issue is the loop's own", and only there, so the
   critic and this file cannot drift from it. A firing writes an issue about those
-  and stops. The critic's check 5 fails a round that edits one, which is the only
-  enforcement there is: `npm run gates` does not read `.claude/`.
+  and stops. The critic's check 5 fails a round that edits one, and it is the only
+  check on what an edit means: `npm run gates` does not read `.claude/`. An edit it
+  misses still reaches a person, because `automerge-guard` keeps every change to
+  `.claude/` off the automerge path (#1722).
 
 So the loop improves itself the way it improves anything else: an issue, a claim,
 rounds, a critic, a reviewed pull request. The one thing it may not do is author

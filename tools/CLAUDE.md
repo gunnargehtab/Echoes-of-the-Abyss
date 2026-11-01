@@ -152,6 +152,7 @@ tools/prose-budget How long a GitHub body is, in the words a person reads —
                    each option, Solution: three each). check.mjs is the CLI
                    the PR body workflow runs, advisory there and --strict
                    locally. Tested under npm test.
+tools/automerge-guard lib/rules.mjs is steward §9's list; check.mjs fails a match (#1722).
 tools/roadmap      docs/ROADMAP.md rendered against live GitHub issue state, for
                    GitHub Pages, and beside it lib/renderStack.mjs's page: #974's
                    dated render-stack audit, each upgrade tagged with live state.

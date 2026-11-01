@@ -183,7 +183,8 @@ Two labels hand a person's wait to the loop, both added on 21 October (#1483).
 recommendation posted: a reply decides it, and after 24 hours of silence the loop
 takes the recommendation (`work-issue` §7). **`automerge`** marks a `routine` pull
 request that `steward` merges once CI is green, and never one that changes what the
-client draws (`steward` §9). Removing either label hands the call back to a person.
+client draws: the `automerge-guard` check fails that one (`steward` §9). Removing
+either label hands the call back to a person.
 
 **`finding`** is the loop's own and takes nothing off its list. It marks a defect a firing
 verified while working something else (`work-issue` §4), filed as an ordinary issue that

@@ -157,6 +157,7 @@ design-side companion (SIG scale, biome PF, depth bands, doctrines).
 `.github/workflows/ci.yml` runs on every push to `main` and every pull request: `checks`,
 `models`, two test shards and `docs` run in parallel; `build` requires checks and models
 to pass. All three doc gates block, so a dead link in `docs/` fails the build.
+`automerge-guard.yml` gates only the steward's merge of an `automerge` pull request, and
 `pages.yml`, `pr-body.yml`, `labels.yml` and `deploy.yml` gate nothing; each header says what it does.
 
 ## Contributing
