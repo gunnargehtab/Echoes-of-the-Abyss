@@ -4421,6 +4421,56 @@ describe('the hint bar names the keys the player has (#1340)', () => {
 });
 
 /**
+ * #1701 — Sorrowgate's court locks `weapons`, `torpedoes` and `activeSonar`,
+ * and the bar over a selected scout still offered `W attack-move`,
+ * `CTRL+RMB torpedo` and `P ping`. docs/ui-ux.md §7: an action that will not
+ * happen is never offered silently, and the build keys already left the bar
+ * under the `construction` lock for that reason.
+ */
+describe('the hint bar offers no key the mission locks (#1701)', () => {
+  it('drops attack-move, torpedo and ping under their locks and keeps the rest', async () => {
+    const world = await boot();
+    try {
+      world.frame(2);
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.frame(1);
+      // The control: unlocked, the generic line names all three.
+      for (const key of ['W attack-move', 'CTRL+RMB torpedo', 'P ping']) {
+        assert.ok(textSaying(world.app.stage, key) !== null, `the premise: ${key} is offered`);
+      }
+
+      const reason = 'disabled — silence order';
+      world.chart.setMissionLocks([
+        { ability: 'weapons', reason },
+        { ability: 'torpedoes', reason },
+        { ability: 'activeSonar', reason },
+      ]);
+      world.frame(1);
+      const bar = textSaying(world.app.stage, 'selected  ·  RMB move');
+      assert.ok(bar !== null, 'the generic selection line is the one on the bar');
+      for (const key of ['attack-move', 'torpedo', 'ping']) {
+        assert.ok(!bar.includes(key), `the bar still offered ${key}: ${bar}`);
+      }
+      // What the locks do not refuse stays: a bar that hides a working key is
+      // the same fault inverted (the hold's comment in `hintLine`).
+      for (const key of ['X stop', 'H hold', 'SPACE silent', 'L+R drag depth']) {
+        assert.ok(bar.includes(key), `the bar dropped ${key}: ${bar}`);
+      }
+
+      // One lock removes its own key only.
+      world.chart.setMissionLocks([{ ability: 'activeSonar', reason }]);
+      world.frame(1);
+      const sonarOnly = textSaying(world.app.stage, 'selected  ·  RMB move');
+      assert.ok(sonarOnly !== null && !sonarOnly.includes('ping'), 'ping survived its lock');
+      assert.ok(sonarOnly.includes('W attack-move'), 'attack-move went with the sonar lock');
+      assert.ok(sonarOnly.includes('CTRL+RMB torpedo'), 'torpedo went with the sonar lock');
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
+/**
  * #1589 — a cell reads `REF 300`, and a newcomer had nothing saying what it
  * builds or what a `c` suffix is. docs/ui-ux.md §9: with the pointer on a
  * priced cell, the hint line reads the whole name and the price in words.
