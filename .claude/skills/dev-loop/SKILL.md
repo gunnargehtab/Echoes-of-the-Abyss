@@ -77,6 +77,14 @@ doc; a passing critic says nothing about the build.
 | The mix | `tools/audio-meter` readings, taken at the bus |
 | A performance path | Counted work (`Match.worstStepWork`, `Match.contactPathWalksLastPass`, nodes per tick), never a stopwatch |
 
+**A fix shows its test failing first.** A test that passes before the fix proves
+nothing, so a `fix:` captures its test failing with the fix undone, beside it
+passing. Write the test first and keep the red output, or later run it on the base's
+copy of the fixed files (`git checkout origin/main -- <files>`, then
+`git checkout HEAD -- <files>`). For a visual fix the before frame is the red run.
+Where nothing can fail here, such as a fault only another platform shows, one line
+says why.
+
 ### The critic's brief
 
 The critic reads what you hand it, and a vague brief costs it an hour. Give it,
@@ -86,7 +94,8 @@ as text:
 - **Diff:** `git diff origin/main...HEAD` right after `git fetch origin main` (a
   stale ref turns fourteen files into four hundred), or name the base sha; from
   round 2, also the delta since the last verdict (`git diff <sha>..HEAD`).
-- **Evidence:** the commands you ran and their output; the gates' summary line.
+- **Evidence:** the commands you ran and their output, a fix's red run among them;
+  the gates' summary line.
 - **Decisions:** the options you wrote and the one you took, if any.
 - **Previous verdict**, verbatim, from round 2 on. Never its context.
 
