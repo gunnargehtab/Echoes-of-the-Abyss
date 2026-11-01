@@ -10617,11 +10617,12 @@ export class EchoRenderer {
       if (heldAll !== null) return `${state}  ·  ${heldAll}  ·  ${bearing}`;
       return `${state}  ·  RMB move  ·  ${bearing}`;
     }
-    // The weapon keys go where the build keys went, and for their reason: the
+    // The locked keys go where the build keys went, and for their reason: the
     // court locks weapons, torpedoes and active sonar, and a bar offering
     // `W attack-move`, `CTRL+RMB torpedo` and `P ping` there promised three
-    // presses that each earn only a refusal (#1701). The card's buttons carry
-    // the reason; the bar, which reads as instruction, just stops offering.
+    // presses that each earn only a refusal (#1701). The reason stays on the
+    // objectives panel's withheld list and on each key's own refusal; the
+    // bar, which reads as instruction, just stops offering.
     const standing = this.unlockedHints([
       `${this.keyHint('stop')} stop`,
       `${this.keyHint('holdPosition')} hold`,

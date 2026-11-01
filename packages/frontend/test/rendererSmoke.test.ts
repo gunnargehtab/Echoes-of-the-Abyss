@@ -6906,6 +6906,15 @@ describe('a hull with its dredge struck (#1283)', () => {
       assert.ok(bar !== null, 'nothing on screen says the dredge is struck');
       assert.ok(!bar.includes('RMB node'), `the bar still offers the field: ${bar}`);
       assert.ok(!bar.includes('torpedo'), `the bar offers a gunless hull a torpedo: ${bar}`);
+      // Its ping asks the sonar lock as the generic line's does (#1701).
+      assert.ok(bar.includes('P ping'), `the premise: the struck line offers ping: ${bar}`);
+      world.chart.setMissionLocks([{ ability: 'activeSonar', reason: 'disabled — silence order' }]);
+      world.frame(1);
+      const locked = textSaying(world.app.stage, 'dredge struck');
+      assert.ok(locked !== null && !locked.includes('ping'), `ping survived its lock: ${locked}`);
+      assert.ok(locked.includes('SPACE silent'), `the lock took silent with it: ${locked}`);
+      world.chart.setMissionLocks([]);
+      world.frame(1);
 
       // A right click on the field is a move for it, never a harvest order.
       const node = cannedNodes()[0]!;
