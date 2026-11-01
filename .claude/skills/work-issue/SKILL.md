@@ -311,7 +311,8 @@ and your recommendation to the person at the keyboard and take their answer.
    `git log --first-parent --grep='## Options'` lists every call the loop took.
 
 A decision rides the pull request that needed it. One that would widen the change
-beyond the issue is filed labelled `finding`, with its options, instead.
+beyond the issue is filed labelled `finding`, with its options, instead. A `fix:`
+whose history made the whole property its target (`dev-loop` step 1) is not widening.
 
 ### A proposed decision: 24 hours, then the recommendation
 

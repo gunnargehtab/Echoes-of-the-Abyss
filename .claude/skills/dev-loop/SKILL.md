@@ -54,8 +54,8 @@ Seven steps, cheapest failure first.
    Two earlier fixes there to the same property make that property,
    over its whole input, the target, and the pull request adds or extends a
    `docs/invariants.md` row instead of proving one more case. The orders panel took
-   four fixes in five days (#1635 to #1671), each a case of one property. Deciding
-   it here, before the round, is setting the target, not widening the change.
+   four fixes in five days (#1635 to #1671), each a case of one property. Step 1
+   sets that target, so `work-issue` §7 does not count it as widening.
 2. **Implement** one self-contained increment, not the whole issue.
 3. **Self-validate** with `npm run gates`. Iterate with `-- --only=`; drop the
    filter before the round ends. Run it; never predict it. A full run can outlast
@@ -146,7 +146,8 @@ Stop when **all** hold:
 - `npm run gates` is green, every gate.
 - The last verdict is **pass**, or its open findings are minor and fixed, or
   carry a written reason.
-- Every acceptance condition **the issue states** is met, with evidence for each.
+- Every acceptance condition **the issue states** is met, with evidence for each, and
+  for a repeat fix step 1's whole property with its row.
   Not a stricter bar you set on the way: a critic calling a bar self-imposed is a
   stop signal, not a finding.
 - The change is still one instalment.
