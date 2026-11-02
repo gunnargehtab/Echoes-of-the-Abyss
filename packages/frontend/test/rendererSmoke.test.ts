@@ -4928,6 +4928,135 @@ describe('the command card when it is offered more than it holds', () => {
   });
 
   /**
+   * docs/ui-ux.md §7 again, over every cause rather than the mission's: a cell
+   * greys "with a reason attached", never silently. The locks were fixed twice
+   * (#989, #1721) and SCREEN still greyed between decoys with nothing to say
+   * (#1732), beside an empty magazine, a recharging DECOY, ENGAGE over
+   * harvesters and a squad page with nothing selected. So every drawn cell
+   * that greys, in each state below, carries a refusal, and a press says it
+   * and sends no order.
+   *
+   * The states are the causes the card greys on: nothing selected on the
+   * squad page (a mission that withholds construction leaves only that page),
+   * a Harvester, a Corvette whose suite recharges with its magazine empty,
+   * and one between decoys. The build page with nothing selected is the
+   * control: its cells already named their shortfall.
+   */
+  it('says why when any greyed command-card cell is pressed', async () => {
+    type Cell = { label: string; enabled: boolean; refusal?: string };
+    const states: Array<{
+      name: string;
+      setup(world: Booted, units: Map<number, OwnUnit>): void;
+    }> = [
+      {
+        name: 'nothing selected, construction withheld',
+        setup: (world) => {
+          world.chart.setMissionLocks([
+            { ability: 'construction', reason: 'withheld by the mission' },
+          ]);
+        },
+      },
+      { name: 'a Harvester', setup: (world, units) => selectHull(world, units.get(13)!) },
+      {
+        name: 'a Corvette recharging, magazine empty',
+        setup: (world, units) => selectHull(world, units.get(11)!),
+      },
+      {
+        name: 'a Corvette between decoys',
+        setup: (world, units) => selectHull(world, units.get(11)!),
+      },
+      { name: 'the build page, nothing selected', setup: () => {} },
+    ];
+
+    const greyed: Record<string, string[]> = {};
+    for (const state of states) {
+      const world = await boot();
+      try {
+        const snapshot = cannedSnapshot();
+        const corvette = snapshot.units.find((unit) => unit.id === 11)!;
+        if (state.name === 'a Corvette recharging, magazine empty') {
+          corvette.decoyCooldownS = 7.2;
+          corvette.decoys = 0;
+        } else if (state.name === 'a Corvette between decoys') {
+          corvette.decoys = 3;
+          corvette.decoyLayCooldownS = 2.1;
+        }
+        world.chart.applySnapshot(snapshot);
+        world.conn.applySnapshot(snapshot);
+        world.frame(1);
+        state.setup(world, new Map(snapshot.units.map((unit) => [unit.id, unit])));
+        world.frame(1);
+
+        // The drawn cells, not the model: a cell the card yielded cannot be
+        // pressed, and the tab strip's are always lit.
+        const drawn = (world.chart as unknown as { barButtons: Cell[] }).barButtons;
+        const dead = drawn.filter((cell) => !cell.enabled);
+        for (const cell of dead) {
+          assert.ok(
+            (cell.refusal ?? '').length > 0,
+            `${cell.label} greys with no reason (${state.name})`
+          );
+        }
+        for (const cell of dead) {
+          world.log.calls.length = 0;
+          const at = barLabel(world.app, cell.label);
+          world.app.canvas.dispatch('pointerdown', {
+            button: 0,
+            pointerId: 1,
+            pointerType: 'mouse',
+            clientX: at.x,
+            clientY: at.y,
+          });
+          world.frame(1);
+          assert.ok(
+            textSaying(world.app.stage, cell.refusal!) !== null,
+            `a press on ${cell.label} said nothing (${state.name})`
+          );
+          assert.deepEqual(
+            world.log.calls.map((call) => call.name),
+            ['onInterfaceCue'],
+            `a press on ${cell.label} sent an order, or no refusal cue (${state.name})`
+          );
+        }
+        if (state.name === 'a Corvette recharging, magazine empty') {
+          // `N` is the same refusal as the cell, not a silent drop beside it.
+          world.log.calls.length = 0;
+          dispatchWindow('keydown', { code: 'KeyN' });
+          dispatchWindow('keyup', { code: 'KeyN' });
+          world.frame(1);
+          assert.deepEqual(
+            world.log.calls.map((call) => call.name),
+            ['onInterfaceCue'],
+            'N sent a recharging decoy, or refused without a cue'
+          );
+        }
+        greyed[state.name] = dead.map((cell) => cell.label);
+      } finally {
+        world.teardown();
+      }
+    }
+    // The premise: each state greys the cells it is here for, so the property
+    // is not held by a card that greyed nothing.
+    assert.deepEqual(greyed, {
+      'nothing selected, construction withheld': [
+        'SILENT',
+        'DRIVE OFF',
+        'PING',
+        'RISE',
+        'DIVE',
+        'ENGAGE',
+        'STOP',
+        'HOLD',
+      ],
+      // CHARGE is the canned PR-2 hulls' implosion, already with its reason.
+      'a Harvester': ['ENGAGE', 'DECOY', 'CHARGE'],
+      'a Corvette recharging, magazine empty': ['DECOY 8', 'SCREEN 0', 'CHARGE'],
+      'a Corvette between decoys': ['SCREEN 3', 'CHARGE'],
+      'the build page, nothing selected': [],
+    });
+  });
+
+  /**
    * The selection §9 names, offering more than the card holds: a screen hull,
    * a transport and a harvester make fifteen entries, so three have to yield —
    * and it is the deselect, the one entry whose loss costs nothing (a click on
