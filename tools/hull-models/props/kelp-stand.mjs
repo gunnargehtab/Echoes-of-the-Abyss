@@ -29,9 +29,9 @@
  * plan and held at the footprint before the bake (seabed.mjs `bake`), so
  * the root is an identity and seabed.mjs `stand` finds ×1.000. The fit is
  * two numbers: ×1.2016 on the plan, solved so the stand is 120 m across
- * with its tips counted, and ×1.1014 on the height, so whichever
- * reaches higher — the tallest lit head with its tip over it, or a frond's
- * end rising past its stalk — lands on the row's 40 m exactly; the plan
+ * with its tips counted, and ×1.1014 on the height, so the tallest lit
+ * head with its tip over it lands on the row's 40 m exactly and every
+ * frond is fenced under that top; the plan
  * fit alone left the top anywhere from 38.7 to 41.1 m, since a stalk's
  * redraw reshuffles every draw after it. The ranges below are the nominal
  * ones the stream draws from; the file's are those times the fit, and the
@@ -133,8 +133,9 @@
  *   twenty do not crowd one level. A frond's path leaves its stalk
  *   down-current, on the stem's own lean bearing spread ±1.2 rad and never
  *   past the cross-current line, so every frond streams with the current
- *   (read root to end, the sideways sweep and the twist carry 63 of 936
- *   ends past 90° of +x and none past 135°), rising as it goes and settling toward the end (its height along the path is L(a·u − b·u²) for a
+ *   (read root to end, no frond's end lies past 90° of +x, and 77 of
+ *   the 936 sit on that line where the clamp holds them), rising as it
+ *   goes and settling toward the end (its height along the path is L(a·u − b·u²) for a
  *   0.5–0.9 and b 0.1–0.5 at u from 0 to 1, so every frond ends above its
  *   root), swept sideways by up to a quarter of its reach, and twisted
  *   about its own path by a quarter to three quarters of a turn, which is
@@ -167,7 +168,8 @@
  *   stalks, never a glowing canopy" (docs/style-neon-noir.md "World
  *   light"). 48 triangles. kit.mjs `lightAudit` runs on the baked stand
  *   and the script fails on a tip it reads under 0.25 m² of plan or
- *   floating; it reads them at 0.25–0.56 m² (6 at 0.25 m², 5 at 0.38 m², 1 at 0.56 m²),
+ *   floating; it reads them at 0.25–0.56 m² (6 at 0.25 m², 5 at 0.38 m², 1 at
+ *   0.56 m²), none hidden and none floating.
  *
  * The sway (environmentModels.ts) is a vertex weight computed at load from
  * each vertex's height over the prop's, so it needs nothing from the file;
@@ -860,10 +862,8 @@ for (const s of stalks) {
     throw new Error(`env_kelp_stand: stalk ${s.index + 1} heads up-current of its foot`);
 }
 
-// The fit: the disc's, on the plan; and on the height, whichever reaches
-// higher — the tallest lit head with its tip over it, or a frond's end
-// rising past its stalk's head — lands on the row's 40 m exactly, so the
-// figure is the script's and not the stream's.
+// The fit: the disc's on the plan, and on the height the tallest lit
+// head's, solved before the fronds above.
 const fit = fence.fit;
 
 // The centring: a point p of the nominal frame lands at S · (p − M) in the
