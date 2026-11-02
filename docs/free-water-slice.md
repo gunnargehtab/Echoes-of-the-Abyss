@@ -207,7 +207,7 @@ ordinary registry scatter. The opening list has exactly these counts, provided e
 asset loaded; a missing model is a failed acceptance row, not a quieter forest.
 
 In #1713, register all five new rows with `stands: []` and `density: 0`, so only the
-fixture's list places them; that PR also adds stand-only allowances of 1,200 triangles
+fixture's list places them; that PR also adds stand-only allowances of 6,000 triangles
 and 120 m footprint to the registry checks, retaining the existing 800/60 bounds for
 every other row.
 
@@ -429,10 +429,13 @@ before/after sequence for each implemented camera or world increment, keeping me
 evidence folders unchanged. A standalone model viewer cannot pass the integrated row.
 
 **Budgets are gates, not forecasts.** Retain [graphics-standards.md](graphics-standards.md)
-gate 6: at most 150 draw calls and 400,000 triangles over every pass, DPR at most 1.5.
-Reserve at most 30 calls / 120,000 triangles for all props and decorative life together.
-The authored list totals at most 85,888 triangles: 40 new kelp stands at at most 1,200
-each (48,000), 16 retained clusters (6,208), wildlife (31,680), and zero other dressing.
+gate 6's 150 draw calls and DPR of at most 1.5. This study's frame cap is 600,000 triangles
+over every pass rather than gate 6's 400,000, by the owner's decision on #1712
+(2 November 2026): the kelp forest is a development slice for map design patterns and may
+spend what a shipped map may not; shipped maps keep 400,000. Reserve at most 30 calls /
+280,000 triangles for all props and decorative life together. The authored list totals at
+most 277,888 triangles: 40 new kelp stands at at most 6,000 each (240,000), 16 retained
+clusters (6,208), wildlife (31,680), and zero other dressing.
 The remaining reservation is unused, not permission to fill the bowl. Counts are the
 opening list's contract; per-model triangle limits remain ceilings. Share instanced
 batches per template/material; no per-fish draw or relaxation of the whole-frame limit.
