@@ -891,6 +891,20 @@ and no row below is open.
 | The clock and unit count before a room's first snapshot | [#1697](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1697) |
 | The hint bar offering keys the court refuses | [#1701](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1701) |
 | The loop critic's model alias failing in Copilot CLI | [#1708](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1708) |
+| The signal, economy and fleet readouts before a resumed skirmish's first snapshot | [#1719](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1719) |
+| The greyed PING button refusing in silence under a mission lock | [#1721](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1721) |
+| SCREEN greying between decoys with no reason | [#1732](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1732) |
+
+**How the project runs**
+
+| Work | Issue |
+| --- | --- |
+| Steward §9's automerge conditions checked in CI | [#1722](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1722) |
+| The critic's bounds check reading every file the bounds list names | [#1724](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1724) |
+| The balance freeze on the automerge guard's list | [#1725](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1725) |
+| A fix showing its test failing before the fix | [#1726](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1726) |
+| A repeat fix to one property targeting the whole property | [#1727](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1727) |
+| The loop map's misdated severity change | [#1728](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1728) |
 
 **Store art**
 
