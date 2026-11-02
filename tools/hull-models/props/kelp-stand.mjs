@@ -29,7 +29,7 @@
  * plan and held at the footprint before the bake (seabed.mjs `bake`), so
  * the root is an identity and seabed.mjs `stand` finds ×1.000. The fit is
  * two numbers: ×1.2016 on the plan, solved so the stand is 120 m across
- * with its tips counted, and ×0.9518 on the height, so whichever
+ * with its tips counted, and ×1.1014 on the height, so whichever
  * reaches higher — the tallest lit head with its tip over it, or a frond's
  * end rising past its stalk — lands on the row's 40 m exactly; the plan
  * fit alone left the top anywhere from 38.7 to 41.1 m, since a stalk's
@@ -79,7 +79,7 @@
  * reviewer read as bamboo still; it read 24.3 % of its box from the conn
  * camera on 84 stems with five or six fronds each, most of each column
  * bare, and the owner halved the stems and raised the budget to 9,000 for
- * fronds. This build reads 36.8 % of its box from the conn camera and
+ * fronds. This build reads 38.2 % of its box from the conn camera and
  * 44.9 % of its plan (the cluster reads
  * 21.4 % of its own box at 18 m across). #1713 tiles one file forty times
  * at 125 m; the registry's yaw per instance is what hides the repeat.
@@ -91,7 +91,8 @@
  *   cluster's are. The first two stand off the plan's ±x ends; the other
  *   ten are drawn inside an ellipse 92 by 64 m and redrawn while any would
  *   stand within 14 m of one already set, so no two clumps merge; two are
- *   then moved along z for the fence above. 240 triangles.
+ *   then moved along z for the fence above, which can bring a pair nearer
+ *   (this file's nearest holdfasts are 15.25 m apart). 240 triangles.
  * - Forty-eight `stalk_NN`, in `kelp`: a column of five three-cornered
  *   rings from the foot to the head (seabed.mjs `column` with its foot cap
  *   taken off, so a stalk is open at both ends as the cluster's stipes
@@ -108,8 +109,9 @@
  *   rather than tapering straight; rings wander up to 0.4 m in height and
  *   every corner 8 % in radius, and each stalk's corners start at their
  *   own bearing, so no two show the same facet. Heights: each clump's
- *   tallest stalk is drawn at 90–100 % of the stand's top and the rest at
- *   60–88 % of it, ranges that do not overlap, so the lit tip is on the
+ *   tallest stalk is drawn at 92–100 % of the stand's top (the stalks
+ *   stand 24–40 m in the file, the tallest head at 39.6 m under its tip)
+ *   and the rest at 60–88 % of it, ranges that do not overlap, so the lit tip is on the
  *   clump's tallest whatever the stream draws and the stand steps rather
  *   than crops level. Every stalk
  *   leans by 15–25 % of its height at the head, down-current (+x, the
@@ -117,7 +119,7 @@
  *   centre with any up-current part folded down-current, ±0.2 rad drawn,
  *   bending as t^1.6 so the foot stands near-vertical and the head carries
  *   the lean, and no head stands up-current of its foot, which the script
- *   asserts (19–32 % in the file, where the plan's fit is larger than the
+ *   asserts (14–29 % in the file, where the plan's fit is larger than the
  *   height's, the wander counted). A stalk whose
  *   axis, wander included, would come within the two radii and 0.15 m of
  *   another's anywhere above three tenths of its height is redrawn, foot,
@@ -128,9 +130,11 @@
  *   each, four quads cut as eight triangles, 7,488 in all — nineteen to a
  *   stalk and twenty on the first two of each clump, so the count is the
  *   script's, each drawn within its own share of the stalk's height so
- *   twenty do not crowd one level. A frond's path leaves its stalk down-current, on the stem's
- *   own lean bearing spread ±1.2 rad, rising as it goes and settling
- *   toward the end (its height along the path is L(a·u − b·u²) for a
+ *   twenty do not crowd one level. A frond's path leaves its stalk
+ *   down-current, on the stem's own lean bearing spread ±1.2 rad and never
+ *   past the cross-current line, so every frond streams with the current
+ *   (read root to end, the sideways sweep and the twist carry 63 of 936
+ *   ends past 90° of +x and none past 135°), rising as it goes and settling toward the end (its height along the path is L(a·u − b·u²) for a
  *   0.5–0.9 and b 0.1–0.5 at u from 0 to 1, so every frond ends above its
  *   root), swept sideways by up to a quarter of its reach, and twisted
  *   about its own path by a quarter to three quarters of a turn, which is
@@ -141,8 +145,8 @@
  *   script refuses a frond whose root corners are not inside that triangle,
  *   so every frond pierces its own stalk's skin and the sweep lists the
  *   pair — through 0.7 and the full width to 0.85 and a blunt 0.45 at the
- *   end, at 15–97 % of the stalk's nominal height (16–99 % of its head as
- *   built, the head ring's wander counted). A frond is redrawn, its swing
+ *   end, at 15–97 % of the stalk's nominal height (15–97 % of its head
+ *   as built, the head ring's wander counted). A frond is redrawn, its swing
  *   widening by 0.05 rad a redraw and its reach shortening after fifty,
  *   if any point of its faces on a 0.2 m grid comes within 0.15 m of
  *   another stalk's prism as built, of its own stalk past the root that
@@ -163,11 +167,14 @@
  *   stalks, never a glowing canopy" (docs/style-neon-noir.md "World
  *   light"). 48 triangles. kit.mjs `lightAudit` runs on the baked stand
  *   and the script fails on a tip it reads under 0.25 m² of plan or
- *   floating; it reads them at 0.25–0.56 m² (6 at 0.25 m², 5 at 0.38 m², 1 at 0.56 m²), none hidden and none floating.
+ *   floating; it reads them at 0.25–0.56 m² (6 at 0.25 m², 5 at 0.38 m², 1 at 0.56 m²),
  *
  * The sway (environmentModels.ts) is a vertex weight computed at load from
  * each vertex's height over the prop's, so it needs nothing from the file;
- * #1713 sets the stand's `swayM` in the registry row it adds. The runtime
+ * #1713 sets the stand's `swayM` in the registry row it adds, and a sway
+ * pushes the fence: a top vertex at the disc's edge swings `swayM`
+ * further, so the stand keeps inside the 62.5 m from a slot to its cell's
+ * edge at a `swayM` under 2.5 m (the cluster's is 4). The runtime
  * owns value (`ENV_LUMINANCE_CEILING`), so the two materials are the
  * cluster's tokens and nothing is tuned here.
  *
@@ -179,7 +186,7 @@
  * Nothing in it is a table, so the stand can be re-drawn by editing `SEED`
  * or the ranges above — and a seed that packs a clump too tight for its
  * fronds, or whose extremes fall in one clump, throws rather than builds,
- * so pick another; four of the six seeds beside 1712 did.
+ * so pick another; two of the six seeds beside 1712 did.
  */
 import { THREE, add, faceted, exportGlb, lightAudit } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
@@ -549,9 +556,23 @@ const fence = (() => {
       );
   return { x, z, r, h, fit: e.fit };
 })();
-// Outside the disc, or at or past the z extremes, which stay the stalks'.
+// The height's fit: the tallest lit head, with its tip over it, lands on
+// the row's 40 m exactly, so the figure is the script's and not the
+// stream's, and the forty-metre stalk the row names is a stalk; a frond
+// that would rise past that top is redrawn (`outside`, below), so the
+// fronds never set the height, as an earlier build's did with the
+// stalks topping out at 34 m.
+const HEIGHT = 40;
+const tipTop = 0.15 + tipGeo.boundingBox.max.y;
+const headTop = Math.max(...tipHeads.map(([, hy]) => hy));
+const rise = (HEIGHT - tipTop) / (headTop * fence.fit);
+const ceiling = HEIGHT / (fence.fit * rise);
+// Outside the disc, at or past the z extremes (which stay the stalks'), or
+// over the stand's top.
 const outside = (q) =>
-  Math.hypot(q[0] - fence.x, q[2] - fence.z) > fence.r || Math.abs(q[2] - fence.z) >= fence.h;
+  Math.hypot(q[0] - fence.x, q[2] - fence.z) > fence.r ||
+  Math.abs(q[2] - fence.z) >= fence.h ||
+  q[1] > ceiling;
 
 // --- the fronds ------------------------------------------------------------------
 // A ribbon: five stations along its path, two corners each, the quads
@@ -630,7 +651,7 @@ function samples(points) {
  * Whether a frond comes within `margin` of any stalk but its own: every
  * sample of its faces against each other stalk's prism as built
  * (`section`, the rings' wander and pushed corners included), over the
- * stalks whose foot is within 25 m of the frond's root.
+ * stalks whose foot is within 40 m of the frond's root.
  */
 function clips(points, own, margin = 0.15) {
   const root = points[0];
@@ -757,7 +778,15 @@ for (const s of stalks) {
       // as kelp streams in a current; a frond boxed in by its neighbours
       // swings wider each redraw.
       const swing = tries * 0.05;
-      const beta = s.leanDir + draw.between(-1.2, 1.2) + draw.between(-swing, swing);
+      // Clamped to the down-current half, so every frond streams with the
+      // current whatever its redraws swung it to.
+      const beta = Math.max(
+        CURRENT - Math.PI / 2,
+        Math.min(
+          CURRENT + Math.PI / 2,
+          s.leanDir + draw.between(-1.2, 1.2) + draw.between(-swing, swing)
+        )
+      );
       // A frond still boxed in after fifty redraws shortens, to 0.4 at most.
       const length = draw.between(6, 14) * Math.max(0.4, 1 - Math.max(0, tries - 50) * 0.02);
       const spec = {
@@ -836,12 +865,6 @@ for (const s of stalks) {
 // rising past its stalk's head — lands on the row's 40 m exactly, so the
 // figure is the script's and not the stream's.
 const fit = fence.fit;
-stand.updateMatrixWorld(true);
-const box = new THREE.Box3().setFromObject(stand, true);
-const HEIGHT = 40;
-const tipTop = 0.15 + tipGeo.boundingBox.max.y;
-const headTop = Math.max(...tipHeads.map(([, hy]) => hy));
-const rise = Math.min((HEIGHT - tipTop) / (headTop * fit), HEIGHT / (box.max.y * fit));
 
 // The centring: a point p of the nominal frame lands at S · (p − M) in the
 // file, M the plan's centre, so the box's centre is the origin.

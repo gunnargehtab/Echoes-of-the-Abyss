@@ -407,7 +407,7 @@ and a wider one, by the owner's decision on #1712 (2 November 2026): a developme
 for map design patterns, it spends up to 720,000 triangles a frame and 400,000 on props
 and decorative life, forty kelp stands of 9,000 among them
 ([free-water-slice.md](free-water-slice.md) §7); shipped maps keep this gate's 400,000 and
-120,000. Its silt sift is one more `Points` of at most 256 motes, moved
+120,000. The landmark's silt sift is one more `Points` of at most 256 motes, moved
 in its vertex shader as the vent steam is. The collapse cloud is one more of at most 384
 motes, alive only for the 14 s after the ground change, and the only cost the collapse
 adds: its debris is the ruined state's own parts, inside its four calls. The lamp pools cost no call, no
