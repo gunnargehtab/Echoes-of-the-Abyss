@@ -44,6 +44,7 @@ import {
   structureStatsFor,
   type Contact,
   UnitKind,
+  type MissionAbility,
   type MissionView,
   ObjectiveStatus,
   type OwnUnit,
@@ -4823,6 +4824,107 @@ describe('the command card when it is offered more than it holds', () => {
     } finally {
       world.teardown();
     }
+  });
+
+  /**
+   * docs/ui-ux.md §7: an action a mission withholds greys "with a reason
+   * attached", never silently. ENGAGE took that fix alone (#989), and PING
+   * was still greyed with nothing to say when pressed (#1721), with MINE and
+   * SCREEN as silent beside it. So the property is held over every ability
+   * and every cell rather than one more case: a cell a lock greys refuses
+   * with that lock's reason, and a press says it and sends nothing.
+   *
+   * Two pages, because a lock can only grey what is drawn: the squad page of
+   * a PR-3 Corvette given a magazine of decoys (so SCREEN is on it), and the
+   * build page with nothing selected. The record lists every ability, so a new one
+   * fails type-check here until it is added.
+   */
+  it('says the lock when a cell a mission lock greys is pressed', async () => {
+    const abilities = Object.keys({
+      weapons: true,
+      torpedoes: true,
+      mines: true,
+      depthCharges: true,
+      noisemakers: true,
+      activeSonar: true,
+      construction: true,
+    } satisfies Record<MissionAbility, true>) as MissionAbility[];
+    type Cell = { label: string; enabled: boolean; refusal?: string };
+    const model = (world: Booted): Cell[] =>
+      (world.chart as unknown as { buildBarModel(): Cell[] }).buildBarModel();
+
+    const greyed: Record<string, string[]> = {};
+    for (const ability of abilities) {
+      for (const page of ['squad', 'build'] as const) {
+        const world = await boot();
+        try {
+          const snapshot = cannedSnapshot();
+          const corvette = snapshot.units.find((unit) => unit.id === 11)!;
+          corvette.decoys = 3;
+          // PR-3, so a charge reaches the band below and CHARGE is live
+          // until the lock greys it, not greyed already by the rating.
+          corvette.pressureRating = 3;
+          world.chart.applySnapshot(snapshot);
+          world.conn.applySnapshot(snapshot);
+          world.frame(1);
+          if (page === 'squad') selectHull(world, corvette);
+
+          const open = new Map(model(world).map((cell) => [cell.label, cell.enabled]));
+          const reason = `withheld by the mission — ${ability}`;
+          world.chart.setMissionLocks([{ ability, reason }]);
+          world.frame(1);
+          const dead = model(world).filter(
+            (cell) => open.get(cell.label) === true && !cell.enabled
+          );
+          for (const cell of dead) {
+            assert.equal(
+              cell.refusal,
+              reason,
+              `${cell.label} greys under ${ability} with no reason`
+            );
+          }
+
+          // Each press through the pointer, with its own words, so a reason
+          // still standing from the cell before cannot answer for this one.
+          for (const cell of dead) {
+            const words = `${reason} (${cell.label})`;
+            world.chart.setMissionLocks([{ ability, reason: words }]);
+            world.frame(1);
+            world.log.calls.length = 0;
+            const at = barLabel(world.app, cell.label);
+            world.app.canvas.dispatch('pointerdown', {
+              button: 0,
+              pointerId: 1,
+              pointerType: 'mouse',
+              clientX: at.x,
+              clientY: at.y,
+            });
+            world.frame(1);
+            assert.ok(
+              textSaying(world.app.stage, words) !== null,
+              `a press on ${cell.label} under ${ability} said nothing`
+            );
+            assert.deepEqual(
+              world.log.calls.map((call) => call.name),
+              ['onInterfaceCue'],
+              `a press on ${cell.label} under ${ability} sent an order, or no refusal cue`
+            );
+          }
+          if (dead.length > 0) greyed[`${ability} · ${page}`] = dead.map((cell) => cell.label);
+        } finally {
+          world.teardown();
+        }
+      }
+    }
+    // The premise: the locks reached the cells this test is about, so a
+    // property that held only because nothing greyed is not mistaken for one.
+    assert.deepEqual(greyed, {
+      'weapons · squad': ['ENGAGE'],
+      'mines · squad': ['MINE'],
+      'depthCharges · squad': ['CHARGE'],
+      'noisemakers · squad': ['DECOY', 'SCREEN 3'],
+      'activeSonar · squad': ['PING'],
+    });
   });
 
   /**
