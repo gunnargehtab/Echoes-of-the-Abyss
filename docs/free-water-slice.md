@@ -273,7 +273,7 @@ hidden state. Neither extra participant is exposed by the study entry.
 **Shape lane.** The five new slugs, including the kelp stand, are commissions, not
 approved files. Environment props have no faction: each shape PR authors
 **ENV STYLE + one prop-table row** in [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, including
-Footprint, Height, Tris and Light, plus its script, outline, GLB, intake report,
+Footprint, Height, Tris and Light, plus its script, GLB, intake report,
 neutral-light review, contact sweep and separate hull-reviewer before integration.
 Use that document's design model of record; the contract author does not author or
 approve these shapes.
@@ -449,7 +449,7 @@ these checks.
 | --- | --- | --- |
 | #1706, six-degree camera | Flight, navigation ownership, recovery, projection/scope/audio consequences; no new models | Merged #1705 contract; real-client movement/roll and non-target evidence |
 | #1707, remaining independent destination | Fixed-depth preview, invalid picking, queue/replay intent; direct S/D already shipped | Merged contract; integrate and exercise with #1706's rolled camera before closing |
-| #1712, dense kelp stand asset | One new `env-kelp-stand` shape; retained clusters unchanged | Merged contract, owner-applied shape routing; approved script/GLB/outline and independent intake/review |
+| #1712, dense kelp stand asset | One new `env-kelp-stand` shape; retained clusters unchanged | Merged contract, owner-applied shape routing; approved script/GLB and independent intake/review |
 | #1711, public microfauna kit | Scoped ENV STYLE amendment and four prop-table rows/shapes, no behaviours or stat blocks | Merged contract, owner-applied shape routing; separate model gates for each, no runtime promotion |
 | #1713, integrated crater fixture | Authored ground/spawns, gated entry, approved dressing and decorative motion, full evidence matrix | Camera, destination and all five assets merged; no closure on a registry-only or standalone scene |
 

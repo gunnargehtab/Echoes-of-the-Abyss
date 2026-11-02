@@ -82,7 +82,7 @@ palest fill; rims and cliff shadows darken only ([art-direction.md](art-directio
 
 ### The props (the seabed's furniture)
 
-The fifteen environment models of [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, and
+The sixteen environment models of [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, and
 the arch study's landmark in its Block 4b, take their base colours from this table. Each token is named for the glTF material that carries
 it, hyphenated. `basalt` and `coral_stone` each carry two values, so their tokens take a
 suffix saying which. Metalness is 0 on every one; roughness is the material's own:
@@ -98,9 +98,9 @@ suffix saying which. Metalness is 0 on every one; roughness is the material's ow
 | `abyss-stone` | `#10161D` | 0.96 | `abyss_stone` | Resonance crystal, resonance pylon |
 | `coral-stone-ruin` | `#3A2B24` | 0.95 | `coral_stone` | Coral growth, ruin block, dome shard |
 | `coral-stone-living` | `#171D19` | 1 | `coral_stone` | Coral tower |
-| `kelp` | `#2A2916` | 0.96 | `kelp` | Kelp cluster (two-sided) |
+| `kelp` | `#2A2916` | 0.96 | `kelp` | Kelp cluster, kelp stand (two-sided) |
 | `ember-base` | `#0B0806` | 1 | `ember` | Vent chimney, under `vent-ember` |
-| `biolight-base` | `#0B1D19` | 1 | `biolight` | Kelp cluster, coral growth, under `flora-biolight` |
+| `biolight-base` | `#0B1D19` | 1 | `biolight` | Kelp cluster, kelp stand, coral growth, under `flora-biolight` |
 | `violet-seam-base` | `#06050A` | 0.9 | `violet_seam` | Resonance crystal, under `crystal-seam` |
 | `ore-trace-base` | `#0B0805` | 1 | `ore_trace` | Nodule bed's glint facets, under `ore-trace` |
 | `civic-lamp-base` | `#0D0907` | 1 | `civic_lamp` | Transit arch's lamp glass, under `civic-lamp` |

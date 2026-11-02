@@ -10,7 +10,8 @@
  * so a prop script composes from here rather than from `factions/`: the
  * Block 4 materials as the fourteen approved files carry them (and the
  * fifteenth, the nodule bed, takes one of the same tokens, `stone_dark`,
- * and two of its own, `silt_drift` and `ore_trace` — #1555), the builders
+ * and two of its own, `silt_drift` and `ore_trace` — #1555; the sixteenth,
+ * the kelp stand, the cluster's two — #1712), the builders
  * more than one prop needs, and the root every prop stands on.
  *
  * Three things about the fourteen batch files are worth knowing before
@@ -129,7 +130,7 @@ export const ground = {
   },
   /** `vent-ember` at 0.7 over `ember-base`, the chimney's mouth. */
   ember: () => lamp('ember', hex('#E06A2B'), hex('#0B0806'), 1, 0.7),
-  /** `flora-biolight` at 0.55 over `biolight-base`, the kelp cluster's tips. */
+  /** `flora-biolight` at 0.55 over `biolight-base`, the kelp cluster's and the kelp stand's tips. */
   biolight: () => lamp('biolight', hex('#2E8C74'), hex('#0B1D19'), 1, 0.55),
   /** `crystal-seam` at 1.2 over `violet-seam-base`, the resonance crystal's seam. */
   violetSeam: () => lamp('violet_seam', hex('#5B4A8C'), hex('#06050A'), 0.9, 1.2),
