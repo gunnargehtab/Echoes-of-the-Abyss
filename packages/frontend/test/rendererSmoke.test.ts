@@ -4873,9 +4873,15 @@ describe('the command card when it is offered more than it holds', () => {
           const reason = `withheld by the mission — ${ability}`;
           world.chart.setMissionLocks([{ ability, reason }]);
           world.frame(1);
-          const dead = model(world).filter((cell) => open.get(cell.label) === true && !cell.enabled);
+          const dead = model(world).filter(
+            (cell) => open.get(cell.label) === true && !cell.enabled
+          );
           for (const cell of dead) {
-            assert.equal(cell.refusal, reason, `${cell.label} greys under ${ability} with no reason`);
+            assert.equal(
+              cell.refusal,
+              reason,
+              `${cell.label} greys under ${ability} with no reason`
+            );
           }
 
           // Each press through the pointer, with its own words, so a reason
