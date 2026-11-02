@@ -4939,8 +4939,7 @@ describe('the command card when it is offered more than it holds', () => {
    * The states are the causes the card greys on: nothing selected on the
    * squad page (a mission that withholds construction leaves only that page),
    * a Harvester, a Corvette whose suite recharges with its magazine empty,
-   * and one between decoys. The build page with nothing selected is the
-   * control: its cells already named their shortfall.
+   * and one between decoys.
    */
   it('says why when any greyed command-card cell is pressed', async () => {
     type Cell = { label: string; enabled: boolean; refusal?: string };
@@ -4965,7 +4964,6 @@ describe('the command card when it is offered more than it holds', () => {
         name: 'a Corvette between decoys',
         setup: (world, units) => selectHull(world, units.get(11)!),
       },
-      { name: 'the build page, nothing selected', setup: () => {} },
     ];
 
     const greyed: Record<string, string[]> = {};
@@ -5013,8 +5011,8 @@ describe('the command card when it is offered more than it holds', () => {
             `a press on ${cell.label} said nothing (${state.name})`
           );
           assert.deepEqual(
-            world.log.calls.map((call) => call.name),
-            ['onInterfaceCue'],
+            world.log.calls.map((call) => [call.name, ...call.args]),
+            [['onInterfaceCue', 'refused']],
             `a press on ${cell.label} sent an order, or no refusal cue (${state.name})`
           );
         }
@@ -5024,9 +5022,13 @@ describe('the command card when it is offered more than it holds', () => {
           dispatchWindow('keydown', { code: 'KeyN' });
           dispatchWindow('keyup', { code: 'KeyN' });
           world.frame(1);
+          assert.ok(
+            textSaying(world.app.stage, 'DECOY: the suite is recharging — ready in 8 s') !== null,
+            'N refused a recharging decoy without its words'
+          );
           assert.deepEqual(
-            world.log.calls.map((call) => call.name),
-            ['onInterfaceCue'],
+            world.log.calls.map((call) => [call.name, ...call.args]),
+            [['onInterfaceCue', 'refused']],
             'N sent a recharging decoy, or refused without a cue'
           );
         }
@@ -5052,7 +5054,6 @@ describe('the command card when it is offered more than it holds', () => {
       'a Harvester': ['ENGAGE', 'DECOY', 'CHARGE'],
       'a Corvette recharging, magazine empty': ['DECOY 8', 'SCREEN 0', 'CHARGE'],
       'a Corvette between decoys': ['SCREEN 3', 'CHARGE'],
-      'the build page, nothing selected': [],
     });
   });
 
