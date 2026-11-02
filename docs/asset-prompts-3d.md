@@ -1947,8 +1947,9 @@ row's height is what that file measures.
 flanks (#1712), beside the retained cluster, which it leaves unchanged. It is twelve clumps
 across a 120 m plan — an octahedral holdfast with six open-ended stalks rooted on it, a
 cluster's count twelve times, 72 stalks in all as thick at the foot as the cluster's stipes,
-with a blade on five in six, leaning down-current as the cluster's stipes do — with open
-water between the clumps, so it reads as forest and never as a wall: no canopy, and nothing
+leaning down-current as the cluster's stipes do, with three blades to a stalk along its
+whole height, two hundred fronds in all, which is what reads as dense — with open water
+between the clumps, so it reads as forest and never as a wall: no canopy, and nothing
 wider than a holdfast on the ground. Twelve tips carry
 `flora-biolight`, one at the head of each clump's tallest stalk, the cluster's `biolight`
 to the digit. It is authored as a seeded formula in `tools/hull-models/props/kelp-stand.mjs`

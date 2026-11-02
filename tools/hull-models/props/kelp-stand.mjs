@@ -10,7 +10,7 @@
  * "Natural or ruined form — stone, coral, kelp ... nothing manufactured ...
  * low-poly with crisp facets, at most two materials", the one licensed
  * light being `flora-biolight` at the tips. Two materials, the cluster's
- * `kelp` and `biolight` to the digit; 1,188 triangles; 40.0 m tall at its
+ * `kelp` and `biolight` to the digit; 1,176 triangles; 40.0 m tall at its
  * 120 m by intake's measure (`sizeM`), the row's 40 m exactly, which takes
  * `--world-light flora --max-tris 1200` for this row (hull-intake's default
  * cap is the registry's 800, which #1713 raises for stands alone).
@@ -22,8 +22,8 @@
  * the script to it. The whole is built at a nominal size, centred on its
  * plan and held at the footprint before the bake (seabed.mjs `bake`), so
  * the root is an identity and seabed.mjs `stand` finds ×1.000. The fit is
- * two numbers: ×1.1444 on the plan, solved so the stand is 120 m across
- * with its tips counted, and ×1.1271 on the height, so the tallest head
+ * two numbers: ×1.1609 on the plan, solved so the stand is 120 m across
+ * with its tips counted, and ×1.1031 on the height, so the tallest head
  * ring with its tip over it lands on the row's 40 m exactly — the plan fit
  * alone left the top anywhere from 38.7 to 41.1 m, since a stalk's redraw
  * reshuffles every draw after it. The ranges below are the nominal ones
@@ -31,84 +31,84 @@
  * figures quoted as the file's say so.
  *
  * What it is made of, and why this shape. The slice wants "dense kelp
- * without suggesting collision or cover": a stand a hull reads as forest
- * and never as a wall. So the stand is twelve clumps, each a holdfast with
- * six stalks rooted on it — a cluster's count, twelve times — set apart
- * across the plan with open water between them, the gaps being what say
- * "no cover", and the stalks are the cluster's vocabulary at the slice's
- * height: open-ended columns of rings, as thick at the foot as the
- * cluster's stipes, each leaning down-current and spread across it by
- * the way out from its clump, so the crowns fan over the lanes the feet
- * leave open and reach toward the next clump downstream, with blades
- * standing off the stalks and a lit tip on each clump's tallest.
- * Nothing closes over the plan: there is no canopy, no mass wider than a
- * holdfast at the ground, and the tallest thing is a stalk a hull passes
- * beside. The first build had twelve clumps of three to five thinner
- * stalks on three bands, and the reviewer read it as tufts of reed on open
- * floor, at 6 % of its plan against the cluster's 42 %; the bands and
- * blades paid for the stalks. The second had six to a clump, leaning
- * down-current alone, and read as twelve fuller tufts at 7.8 % of its
- * plan and 10.4 % of its box from the conn camera. The third fanned each
- * stalk out from its clump unfolded, and 21 of 72 leaned against the
- * current, each clump a starburst. This build folds the fan down-current
- * and leans further: 10.4 % of its plan and 12.8 % of its box from the
- * conn camera, where the cluster reads 21.4 % of its own box at 18 m
- * across, and no head stands up-current of its foot. #1713 tiles one
- * file forty times at 125 m; the registry's yaw per instance is what
- * hides the repeat.
+ * without suggesting collision or cover", and the owner's references for
+ * "dense" (#1712, the session of 2 November) are photographs of a kelp
+ * forest: columns close enough to fill the view, fronds hanging off them
+ * the whole way up, and open floor beneath that a diver swims across. So
+ * the stand is twelve clumps, each a holdfast with six stalks rooted on it
+ * — a cluster's count, twelve times — 14 m or more apart across the plan,
+ * and most of the budget is fronds: three blades to a stalk along its
+ * whole height, two hundred in all, which is what fills the view, while
+ * the stalks are one straight band each, as thick at the foot as the
+ * cluster's stipes, leaning down-current and spread across it. Nothing
+ * closes over the plan: there is no canopy, no mass wider than a holdfast
+ * at the ground, and the tallest thing is a stalk a hull passes beside.
+ * The builds before this one, for the record of what the reviewer sent
+ * back: twelve clumps of three to five thinner stalks on three bands read
+ * as tufts of reed at 6 % of the plan; six to a clump on two bands, one
+ * blade each, read as twelve fuller tufts at 7.8 %; fanning those out from
+ * each clump unfolded leaned 21 stalks against the current; folding the
+ * fan down-current reached 10.4 % of the plan and 12.8 % of the box from
+ * the conn camera, and the reviewer passed every gate with the density
+ * left as the owner's judgement; the owner's references then paid the
+ * stalks' second band for 140 more blades, and this build reads 17.5 % of
+ * its plan and 18.2 % of its box from the conn camera (the cluster reads
+ * 21.4 % of its own box at 18 m across). #1713 tiles one file forty times
+ * at 125 m; the registry's yaw per instance is what hides the repeat.
  *
  * - Twelve `holdfast_NN`, in `kelp`: octahedra (seabed.mjs `octa`, 8
  *   triangles — the cluster's are icosahedra, and the twelve extra
- *   triangles each would cost went to stalks) under a scale triple 3.5–4.5
+ *   triangles each would cost went to fronds) under a scale triple 3.5–4.5
  *   by 0.8–1.3 by 2.8–3.6 m, yawed (the cluster's main holdfast is 4.86 by
- *   2.23 by 3.96), each sat with its lowest vertex on y = 0 as
- *   the cluster's are. The first two stand off the plan's ±x ends; the
- *   other ten are drawn inside an ellipse 92 by 72 m and redrawn while any
- *   would stand within 18 m of one already set, so no two clumps merge.
- *   96 triangles.
- * - Seventy-two `stalk_NN`, in `kelp`: a column of three three-cornered
+ *   2.23 by 3.96), each sat with its lowest vertex on y = 0 as the
+ *   cluster's are. The first two stand off the plan's ±x ends; the other
+ *   ten are drawn inside an ellipse 92 by 72 m and redrawn while any would
+ *   stand within 14 m of one already set, so no two clumps merge. 96
+ *   triangles.
+ * - Seventy-two `stalk_NN`, in `kelp`: one band of two three-cornered
  *   rings from the foot to the head (seabed.mjs `column` with its foot cap
  *   taken off, so a stalk is open at both ends as the cluster's stipes
- *   are), two bands, 12 triangles each, 864 in all. Six to a clump. A
- *   stalk's foot ring sits on y = 0 at 50–100 % of the way from its
- *   holdfast's centre to the holdfast's edge on the foot's own bearing, so
- *   every foot stands on its holdfast and the sweep lists each pair — the
- *   script casts a ray down over each foot's centre and refuses a stalk
- *   whose ray misses its holdfast (the second build's reach had the yaw's
- *   sign the other way and stood three feet past their diamond); it is
- *   0.75–1.05 m in radius at the foot (the cluster's stipes are 0.81–1.22
- *   in the file) and narrows to 0.25 m at the head; the middle and head rings
- *   wander up to 0.4 m in height and every corner 8 % in radius, and each
- *   stalk's corners start at their own bearing, so no two show the same
- *   facet. Heights: each clump's tallest stalk is drawn at 88–100 % of the
- *   stand's top and the rest at 60–92 % of it, so the stand steps rather
- *   than crops level. Every stalk leans by 25–40 % of its height at the
- *   head, down-current (+x, the cluster's lean) spread across it by the
+ *   are), 6 triangles each, 432 in all — the references' columns are
+ *   straight, and the second band each stalk had bought the fronds. Six to
+ *   a clump. A stalk's foot ring sits on y = 0 at 50–100 % of the way from
+ *   its holdfast's centre to the holdfast's edge on the foot's own
+ *   bearing, so every foot stands on its holdfast and the sweep lists each
+ *   pair — the script casts a ray down over each foot's centre and refuses
+ *   a stalk whose ray misses its holdfast (an earlier build's reach had the
+ *   yaw's sign the other way and stood three feet past their diamond); it
+ *   is 0.75–1.05 m in radius at the foot (the cluster's stipes are
+ *   0.81–1.22 in the file) and narrows to 0.25 m at the head; the head
+ *   ring wanders up to 0.4 m in height and every corner 8 % in radius, and
+ *   each stalk's corners start at their own bearing, so no two show the
+ *   same facet. Heights: each clump's tallest stalk is drawn at 88–100 % of
+ *   the stand's top and the rest at 60–92 % of it, so the stand steps
+ *   rather than crops level. Every stalk leans by 15–25 % of its height at
+ *   the head, down-current (+x, the cluster's lean) spread across it by the
  *   way out from its clump's centre with any up-current part folded
  *   down-current, ±0.2 rad drawn, so no head stands up-current of its
- *   foot: 69 of the 72 lean within 45° of the current and the widest is
- *   51°, where the cluster's six stipes lean 5–28° to one side at 14–17 %
- *   of their height, so the stand leans about twice as hard and spreads
- *   wider; bending as t^1.6 so the foot stands near-vertical and the head
- *   carries the lean. A stalk whose axis would come within the two
- *   radii and 0.2 m of another's anywhere above a quarter of its height is
- *   redrawn, foot and lean, so no stalk passes through another above the
- *   feet, which may touch where six fan out of one holdfast; and the
- *   script checks every band faces out of its stalk before it writes.
- * - Sixty `blade_NN`, in `kelp`: the cluster's five-point blade — a quad
- *   fanned from its first corner and a tip triangle off the far edge, 3
- *   triangles — on five stalks in every six, each rooted on the stalk as
+ *   foot. A stalk whose axis would come within the two radii and 0.2 m of
+ *   another's anywhere above a quarter of its height is redrawn, foot and
+ *   lean, so no stalk passes through another above the feet, which may
+ *   touch where six fan out of one holdfast (the sweep lists five such
+ *   pairs, every crossing under 2.2 m); and the script checks every band
+ *   faces out of its stalk before it writes.
+ * - Two hundred `blade_NNN`, in `kelp`: the cluster's five-point blade — a
+ *   quad fanned from its first corner and a tip triangle off the far edge,
+ *   3 triangles — three to a stalk and two on every ninth stalk's fifth and
+ *   ninth, so the count is the script's, each rooted on the stalk as
  *   built: its two root corners, 0.2 m apart, stand inside the prism's
- *   section at the blade's height, found between the two rings that bound
- *   it, and the script refuses a blade whose root corners are not inside
- *   that triangle, so every blade pierces its own stalk's skin and the
- *   sweep lists the pair. A blade is 4–9 m long, 1–2 m wide, rising
- *   0.3–0.6 rad from level, at 45–85 % of the stalk's height, pointed away
- *   from the clump's centre within ±0.7 rad so it stands off its stalk
- *   into open water; a blade any edge or face of which would pass within
- *   0.2 m of another stalk's prism as built is redrawn, so no blade passes
- *   through a neighbour and the sweep lists each blade against its own
- *   stalk alone. 180 triangles.
+ *   section at the blade's height, and the script refuses a blade whose
+ *   root corners are not inside that triangle, so every blade pierces its
+ *   own stalk's skin and the sweep lists the pair. A blade is 4–10 m long,
+ *   1–2.5 m wide, from 0.2 rad below level to 0.6 rad above it (the
+ *   references' fronds hang as often as they rise), at 20–95 % of the
+ *   stalk's height, its three set round the stalk by thirds from the way
+ *   out of the clump, ±0.5 rad, so a stalk's own blades never cross. A
+ *   blade any edge or face of which would pass within 0.15 m of another
+ *   stalk's prism as built, or of a blade already set, is redrawn, its
+ *   swing widening by 0.05 rad a redraw, so no blade passes through a
+ *   neighbour or another frond and the sweep lists each blade against its
+ *   own stalk alone. 600 triangles.
  * - Twelve `biolight_NN`, in `biolight`: three's tetrahedron (seabed.mjs
  *   `tetra`), one at the head of each clump's tallest stalk, centred 0.15 m
  *   over the head ring so the tetra stands clear of the ring's corners
@@ -158,7 +158,7 @@ const stand = new THREE.Group();
 stand.name = 'env_kelp_stand';
 
 const draw = seabed.seeded(SEED);
-const nn = (i) => String(i + 1).padStart(2, '0');
+const nn = (i, w = 2) => String(i + 1).padStart(w, '0');
 
 // --- the clumps ------------------------------------------------------------
 const CLUMPS = 12;
@@ -167,7 +167,7 @@ const PER_CLUMP = 6;
 // distance between two clump centres.
 const PLAN_A = 46;
 const PLAN_B = 36;
-const APART = 18;
+const APART = 14;
 // Down-current is +x, the cluster's lean. A stalk leans that way spread
 // across the current by the way out from its clump's centre, never
 // against it: the lean is `1 − AWAY` down-current plus `AWAY` of the
@@ -229,7 +229,7 @@ const holdfasts = centres.map(([x, z], i) => {
 
 // --- the stalks ----------------------------------------------------------------
 const RING = 3;
-const RINGS = 3;
+const RINGS = 2;
 // The spire's band rule ring to ring, with the foot cap (`RING − 2`
 // triangles of `fan`) taken off: open at both ends.
 const STALK_CUT = seabed
@@ -242,9 +242,9 @@ const STALK_CUT = seabed
 function stalkCurve({ foot, height, leanDir, lean, r0, rh }) {
   return {
     axis: (t) => [
-      foot[0] + Math.cos(leanDir) * lean * t ** 1.6,
+      foot[0] + Math.cos(leanDir) * lean * t,
       height * t,
-      foot[1] + Math.sin(leanDir) * lean * t ** 1.6,
+      foot[1] + Math.sin(leanDir) * lean * t,
     ],
     radius: (t) => r0 + (rh - r0) * t,
   };
@@ -282,7 +282,7 @@ holdfasts.forEach((hold, c) => {
         foot,
         height,
         leanDir: CURRENT + Math.atan2(fan[1], fan[0]) + draw.between(-0.2, 0.2),
-        lean: height * draw.between(0.25, 0.4),
+        lean: height * draw.between(0.15, 0.25),
         r0: draw.between(0.75, 1.05),
         rh: 0.25,
         phase: draw() * 2 * Math.PI,
@@ -394,7 +394,7 @@ function inside([x, z], corners) {
  * along against each other stalk's prism as built (`section`, the rings'
  * wandered heights and pushed corners included), not its nominal curve.
  */
-function clips(points, own, margin = 0.2) {
+function clips(points, own, margin = 0.15) {
   const [r1, w1, w2, r2, tip] = points;
   const mid = (a, b, c) => a.map((v, i) => (v + b[i] + c[i]) / 3);
   const segments = [
@@ -423,53 +423,107 @@ function clips(points, own, margin = 0.2) {
   return false;
 }
 
+/**
+ * Whether a blade comes within `margin` of a blade already set: the same
+ * samples `clips` takes, each against both triangles of every earlier
+ * blade whose box is near, so a stand's fronds stand off one another and
+ * the sweep lists no blade against a blade.
+ */
+const setBlades = [];
+function crowds(points, margin = 0.15) {
+  const [r1, w1, w2, r2, tip] = points;
+  const mid = (a, b, c) => a.map((v, i) => (v + b[i] + c[i]) / 3);
+  const segments = [
+    [r1, w1],
+    [r2, w2],
+    [w1, w2],
+    [w1, tip],
+    [w2, tip],
+    [mid(r1, w1, w2), mid(w1, w2, tip)],
+  ];
+  const box = new THREE.Box3();
+  for (const q of points) box.expandByPoint(new THREE.Vector3(...q));
+  box.expandByScalar(margin);
+  const near = setBlades.filter((o) => o.box.intersectsBox(box));
+  if (near.length === 0) return false;
+  const at = new THREE.Vector3();
+  const closest = new THREE.Vector3();
+  for (const [a, b] of segments)
+    for (let f = 0; f <= 1.0001; f += 0.1) {
+      at.set(a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f);
+      for (const o of near)
+        for (const tri of o.tris) {
+          tri.closestPointToPoint(at, closest);
+          if (closest.distanceTo(at) < margin) return true;
+        }
+    }
+  return false;
+}
+
 let bladeIndex = 0;
 for (const s of stalks) {
-  if (s.index % PER_CLUMP === PER_CLUMP - 1) continue;
   const hold = holdfasts[s.clump];
   const away = Math.atan2(s.foot[1] - hold.z, s.foot[0] - hold.x);
-  let points;
-  let corners;
-  for (let tries = 0; ; tries++) {
-    const t = draw.between(0.45, 0.85);
-    const beta = away + draw.between(-0.7, 0.7);
-    const length = draw.between(4, 9);
-    const width = draw.between(1, 2);
-    const rise = draw.between(0.3, 0.6);
-    const lead = draw.between(-0.3, 0.3);
-    const y = s.height * t;
-    const sec = section(s, y);
-    corners = sec.corners;
-    const out = [Math.cos(beta), 0, Math.sin(beta)];
-    const side = [-Math.sin(beta), 0, Math.cos(beta)];
-    // Rooted inside the prism's section, so the blade pierces the stalk's skin.
-    const r = 0.3 * s.radius(t);
-    const root = [sec.centre[0] + out[0] * r, y, sec.centre[2] + out[2] * r];
-    const at = (along, up, across) => [
-      root[0] + out[0] * along + side[0] * across,
-      root[1] + up,
-      root[2] + out[2] * along + side[2] * across,
-    ];
-    const reach = (f) => [f * length * Math.cos(rise), f * length * Math.sin(rise)];
-    const [wa, wu] = reach(0.6);
-    const [ta, tu] = reach(1);
-    points = [
-      at(0, 0, 0.1),
-      at(wa, wu, width / 2),
-      at(wa, wu, -width / 2),
-      at(0, 0, -0.1),
-      at(ta, tu, lead),
-    ];
-    // A blade that would pass through a neighbour is redrawn.
-    if (!clips(points, s)) break;
-    if (tries > 60)
-      throw new Error(`env_kelp_stand: blade ${bladeIndex + 1} finds no clear bearing`);
+  // Three blades to a stalk, two on every ninth stalk's fifth and ninth:
+  // 200 in all, the budget's.
+  const count = s.index % 9 === 4 || s.index % 9 === 8 ? 2 : 3;
+  for (let b = 0; b < count; b++) {
+    let points;
+    let corners;
+    for (let tries = 0; ; tries++) {
+      const t = draw.between(0.2, 0.95);
+      // Round the stalk by thirds from the way out of the clump, so a
+      // stalk's own blades never cross each other.
+      // A blade boxed in by its neighbours swings wider each redraw.
+      const swing = 0.5 + tries * 0.05;
+      const beta = away + (b * 2 * Math.PI) / count + draw.between(-swing, swing);
+      const length = draw.between(4, 10);
+      const width = draw.between(1, 2.5);
+      const rise = draw.between(-0.2, 0.6);
+      const lead = draw.between(-0.3, 0.3);
+      const y = s.height * t;
+      const sec = section(s, y);
+      corners = sec.corners;
+      const out = [Math.cos(beta), 0, Math.sin(beta)];
+      const side = [-Math.sin(beta), 0, Math.cos(beta)];
+      // Rooted inside the prism's section, so the blade pierces the stalk's skin.
+      const r = 0.3 * s.radius(t);
+      const root = [sec.centre[0] + out[0] * r, y, sec.centre[2] + out[2] * r];
+      const at = (along, up, across) => [
+        root[0] + out[0] * along + side[0] * across,
+        root[1] + up,
+        root[2] + out[2] * along + side[2] * across,
+      ];
+      const reach = (f) => [f * length * Math.cos(rise), f * length * Math.sin(rise)];
+      const [wa, wu] = reach(0.6);
+      const [ta, tu] = reach(1);
+      points = [
+        at(0, 0, 0.1),
+        at(wa, wu, width / 2),
+        at(wa, wu, -width / 2),
+        at(0, 0, -0.1),
+        at(ta, tu, lead),
+      ];
+      // A blade that would pass through a neighbour, or another blade, is
+      // redrawn.
+      if (!clips(points, s) && !crowds(points)) break;
+      if (tries > 200)
+        throw new Error(`env_kelp_stand: blade ${bladeIndex + 1} finds no clear bearing`);
+    }
+    for (const corner of [points[0], points[3]])
+      if (!inside([corner[0], corner[2]], corners))
+        throw new Error(`env_kelp_stand: blade ${bladeIndex + 1} roots off stalk ${s.index + 1}`);
+    add(stand, `blade_${nn(bladeIndex, 3)}`, faceted(points, BLADE_CUT), kelp);
+    {
+      const v = points.map((q) => new THREE.Vector3(...q));
+      const box = new THREE.Box3().setFromPoints(v);
+      setBlades.push({
+        box,
+        tris: BLADE_CUT.map(([a, b, c]) => new THREE.Triangle(v[a], v[b], v[c])),
+      });
+    }
+    bladeIndex++;
   }
-  for (const corner of [points[0], points[3]])
-    if (!inside([corner[0], corner[2]], corners))
-      throw new Error(`env_kelp_stand: blade ${bladeIndex + 1} roots off stalk ${s.index + 1}`);
-  add(stand, `blade_${nn(bladeIndex)}`, faceted(points, BLADE_CUT), kelp);
-  bladeIndex++;
 }
 
 // --- the budget, the fit and the bake ---------------------------------------------------
