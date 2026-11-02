@@ -404,8 +404,8 @@ draw calls standing, one a material, and at most 12,000 triangles in either stat
 prologue's look already stands 50,356 prop triangles after the collapse, so the layer
 reaches 62,356 of 120,000. The free-water slice's crater fixture is the one other carve-out,
 and a wider one, by the owner's decision on #1712 (2 November 2026): a development slice
-for map design patterns, it spends up to 600,000 triangles a frame and 280,000 on props
-and decorative life, forty kelp stands of 6,000 among them
+for map design patterns, it spends up to 720,000 triangles a frame and 400,000 on props
+and decorative life, forty kelp stands of 9,000 among them
 ([free-water-slice.md](free-water-slice.md) §7); shipped maps keep this gate's 400,000 and
 120,000. Its silt sift is one more `Points` of at most 256 motes, moved
 in its vertex shader as the vent steam is. The collapse cloud is one more of at most 384

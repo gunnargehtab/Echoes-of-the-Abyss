@@ -5,19 +5,21 @@
  * stand of 40 m stalks within a 120 m footprint", beside the retained
  * `env-kelp-cluster`, which this file leaves untouched.
  *
- * "Kelp Forest | env-kelp-stand | 120 m | 40 m | ≤ 6,000 | `flora-biolight`,
+ * "Kelp Forest | env-kelp-stand | 120 m | 40 m | ≤ 9,000 | `flora-biolight`,
  * tip points" (docs/asset-prompts-3d.md, Block 4), under ENV STYLE:
  * "Natural or ruined form — stone, coral, kelp ... nothing manufactured ...
  * low-poly with crisp facets, at most two materials", the one licensed
  * light being `flora-biolight` at the tips. Two materials, the cluster's
- * `kelp` and `biolight` to the digit; 5,952 triangles; 40.0 m tall at its
+ * `kelp` and `biolight` to the digit; 8,928 triangles; 40.0 m tall at its
  * 120 m by intake's measure (`sizeM`), the row's 40 m exactly, which takes
- * `--world-light flora --max-tris 6000` for this row (hull-intake's default
+ * `--world-light flora --max-tris 9000` for this row (hull-intake's default
  * cap is the registry's 800, which #1713 raises for stands alone). The
  * budget is the owner's: the row was commissioned at 1,200, and on 2
  * November the owner raised it to 6,000 for this fixture, a development
  * slice for map design patterns that may spend what a shipped map may not
- * (docs/free-water-slice.md §7 carries the study's own frame cap).
+ * (docs/free-water-slice.md §7 carries the study's own frame cap), and
+ * then to 9,000 with the rise spent on fronds, on the reading that the
+ * references show few, full columns rather than many bare ones.
  *
  * Authored as a formula rather than ported: there is no export, as the
  * nodule bed has none (#1555). Every number below is drawn from one seeded
@@ -26,8 +28,8 @@
  * the script to it. The whole is built at a nominal size, centred on its
  * plan and held at the footprint before the bake (seabed.mjs `bake`), so
  * the root is an identity and seabed.mjs `stand` finds ×1.000. The fit is
- * two numbers: ×1.2116 on the plan, solved so the stand is 120 m across
- * with its tips counted, and ×0.9710 on the height, so whichever
+ * two numbers: ×1.2016 on the plan, solved so the stand is 120 m across
+ * with its tips counted, and ×0.9518 on the height, so whichever
  * reaches higher — the tallest lit head with its tip over it, or a frond's
  * end rising past its stalk — lands on the row's 40 m exactly; the plan
  * fit alone left the top anywhere from 38.7 to 41.1 m, since a stalk's
@@ -40,10 +42,10 @@
  * "dense" (#1712, the session of 2 November) are photographs of a kelp
  * forest: thin columns close enough to fill the view, long wide fronds
  * curling off them the whole way up, and open floor beneath that a diver
- * swims across. So the stand is twelve clumps, each a holdfast with seven
+ * swims across. So the stand is twelve clumps, each a holdfast with four
  * stalks rooted on it, 14 m or more apart across the plan, and most of
- * the budget is fronds: ribbons five or six to a stalk along its whole
- * height, 456 in all, each a strip of four quads on a path that rises
+ * the budget is fronds: ribbons nineteen or twenty to a stalk along its
+ * whole height, 936 in all, each a strip of four quads on a path that rises
  * off the stem, streams down-current with the stem's own lean and twists
  * as it goes — buoyant, as a kelp blade is, which is what reads as kelp
  * rather than the reeds and bamboo the earlier builds read as — while the
@@ -72,10 +74,13 @@
  * 18.2 % at 1,200 triangles; the owner then raised the budget, and 84
  * five-cornered stalks under 780 short leaves read 29 % of the box — and
  * as bamboo, the owner said: the leaf should be long, wide and curled, the
- * stem thinner and more organic. This build is that, with the fronds
- * streaming down-current rather than drooping all round, which the
- * reviewer read as bamboo still. It reads 24.3 % of its box from the conn
- * camera and 27.1 % of its plan (the cluster reads
+ * stem thinner and more organic. The ribbon build was that, with the
+ * fronds streaming down-current rather than drooping all round, which the
+ * reviewer read as bamboo still; it read 24.3 % of its box from the conn
+ * camera on 84 stems with five or six fronds each, most of each column
+ * bare, and the owner halved the stems and raised the budget to 9,000 for
+ * fronds. This build reads 36.8 % of its box from the conn camera and
+ * 44.9 % of its plan (the cluster reads
  * 21.4 % of its own box at 18 m across). #1713 tiles one file forty times
  * at 125 m; the registry's yaw per instance is what hides the repeat.
  *
@@ -87,10 +92,10 @@
  *   ten are drawn inside an ellipse 92 by 64 m and redrawn while any would
  *   stand within 14 m of one already set, so no two clumps merge; two are
  *   then moved along z for the fence above. 240 triangles.
- * - Eighty-four `stalk_NN`, in `kelp`: a column of five three-cornered
+ * - Forty-eight `stalk_NN`, in `kelp`: a column of five three-cornered
  *   rings from the foot to the head (seabed.mjs `column` with its foot cap
  *   taken off, so a stalk is open at both ends as the cluster's stipes
- *   are), four bands, 24 triangles each, 2,016 in all. Seven to a clump. A
+ *   are), four bands, 24 triangles each, 1,152 in all. Four to a clump. A
  *   stalk's foot ring sits on y = 0 at 45–100 % of the way from its
  *   holdfast's centre to the holdfast's edge on the foot's own bearing —
  *   the script casts a ray down over each foot's centre and redraws a
@@ -112,17 +117,18 @@
  *   centre with any up-current part folded down-current, ±0.2 rad drawn,
  *   bending as t^1.6 so the foot stands near-vertical and the head carries
  *   the lean, and no head stands up-current of its foot, which the script
- *   asserts (19–31 % in the file, where the plan's fit is larger than the
+ *   asserts (19–32 % in the file, where the plan's fit is larger than the
  *   height's, the wander counted). A stalk whose
  *   axis, wander included, would come within the two radii and 0.15 m of
  *   another's anywhere above three tenths of its height is redrawn, foot,
  *   lean and wander, so no stalk passes through another above the feet,
- *   which may touch where seven fan out of one holdfast; and the script
+ *   which may touch where four fan out of one holdfast; and the script
  *   checks every band faces out of its stalk before it writes.
- * - 456 `frond_NNN`, in `kelp`: a ribbon of five stations, two corners
- *   each, four quads cut as eight triangles, 3,648 in all — five to a stalk
- *   and six on the first three of each clump, so the count is the
- *   script's. A frond's path leaves its stalk down-current, on the stem's
+ * - 936 `frond_NNN`, in `kelp`: a ribbon of five stations, two corners
+ *   each, four quads cut as eight triangles, 7,488 in all — nineteen to a
+ *   stalk and twenty on the first two of each clump, so the count is the
+ *   script's, each drawn within its own share of the stalk's height so
+ *   twenty do not crowd one level. A frond's path leaves its stalk down-current, on the stem's
  *   own lean bearing spread ±1.2 rad, rising as it goes and settling
  *   toward the end (its height along the path is L(a·u − b·u²) for a
  *   0.5–0.9 and b 0.1–0.5 at u from 0 to 1, so every frond ends above its
@@ -152,12 +158,12 @@
  *   file, 0.4938 (its `TIP` of 0.6 under its root's ×0.823, #890), so a
  *   stand's tips and a cluster's are one size in the game; the fit is
  *   solved with the tips' reach counted in, so a tip at a leaning head on
- *   the plan's edge is inside the 120 m. Twelve points over eighty-four
- *   stalks — a seventh, against the cluster's half — "dim tips on kelp
+ *   the plan's edge is inside the 120 m. Twelve points over forty-eight
+ *   stalks — a quarter, against the cluster's half — "dim tips on kelp
  *   stalks, never a glowing canopy" (docs/style-neon-noir.md "World
  *   light"). 48 triangles. kit.mjs `lightAudit` runs on the baked stand
  *   and the script fails on a tip it reads under 0.25 m² of plan or
- *   floating; it reads them at 0.25–0.38 m² (9 at 0.25 m², 3 at 0.38 m²), none hidden and none floating.
+ *   floating; it reads them at 0.25–0.56 m² (6 at 0.25 m², 5 at 0.38 m², 1 at 0.56 m²), none hidden and none floating.
  *
  * The sway (environmentModels.ts) is a vertex weight computed at load from
  * each vertex's height over the prop's, so it needs nothing from the file;
@@ -179,7 +185,7 @@ import { THREE, add, faceted, exportGlb, lightAudit } from '../kit.mjs';
 import * as seabed from '../seabed.mjs';
 
 const FOOTPRINT = 120;
-const MAX_TRIS = 6000;
+const MAX_TRIS = 9000;
 const SEED = 1712;
 // A tip's radius in the file: the cluster's, 0.6 under its root's ×0.823.
 const TIP = 0.6 * 0.823;
@@ -198,7 +204,7 @@ const nn = (i, w = 2) => String(i + 1).padStart(w, '0');
 
 // --- the clumps ------------------------------------------------------------
 const CLUMPS = 12;
-const PER_CLUMP = 7;
+const PER_CLUMP = 4;
 // The ellipse the clumps are drawn in, nominal semi-axes, and the least
 // distance between two clump centres.
 const PLAN_A = 46;
@@ -513,9 +519,20 @@ const fence = (() => {
   shiftClump(e.lo.clump, e.hi.z - e.lo.z);
   e = extremes(e.fit);
   const mz = (e.lo.z + e.hi.z) / 2;
-  if ([e.bot.clump, e.top.clump].some((c) => c === e.lo.clump || c === e.hi.clump))
-    throw new Error('env_kelp_stand: an end clump holds a z extreme');
-  shiftClump(e.bot.clump, 2 * mz - e.top.z - e.bot.z);
+  // The lowest clump is raised until the extremes mirror; raising it can
+  // make another clump the lowest, so this goes round until the mirror
+  // holds, each turn a smaller shift than the last.
+  for (let turn = 0; ; turn++) {
+    e = extremes(e.fit);
+    const shortfall = 2 * mz - e.top.z - e.bot.z;
+    if (Math.abs(shortfall) < 1e-9) break;
+    if (turn > 40) throw new Error('env_kelp_stand: the z extremes will not mirror');
+    if (e.bot.clump === e.top.clump)
+      throw new Error('env_kelp_stand: one clump holds both z extremes');
+    if ([e.bot.clump, e.top.clump].some((c) => c === e.lo.clump || c === e.hi.clump))
+      throw new Error('env_kelp_stand: an end clump holds a z extreme');
+    shiftClump(e.bot.clump, shortfall);
+  }
   for (let i = 0; i < 6; i++) e = extremes(e.fit);
   const x = (e.lo.x + e.hi.x) / 2;
   const z = (e.lo.z + e.hi.z) / 2;
@@ -726,14 +743,16 @@ function topples(points, margin = 0.15) {
 
 let frondIndex = 0;
 for (const s of stalks) {
-  // Five fronds to a stalk and six on each clump's first three: 456 in
-  // all, the budget's.
-  const count = s.index % PER_CLUMP < 3 ? 6 : 5;
+  // Nineteen fronds to a stalk and twenty on each clump's first two: 936
+  // in all, the budget's.
+  const count = s.index % PER_CLUMP < 2 ? 20 : 19;
   for (let b = 0; b < count; b++) {
     let points;
     let corners;
     for (let tries = 0; ; tries++) {
-      const t = draw.between(0.15, 0.97);
+      // Spaced up the stalk by share, each drawn within its own share, so
+      // twenty fronds do not crowd one height.
+      const t = 0.15 + (0.82 * (b + draw())) / count;
       // Down-current with the stem's own lean, spread ±1.2 rad about it,
       // as kelp streams in a current; a frond boxed in by its neighbours
       // swings wider each redraw.
@@ -770,7 +789,7 @@ for (const s of stalks) {
         !topples(points)
       )
         break;
-      if (tries > 400)
+      if (tries > 800)
         throw new Error(`env_kelp_stand: frond ${frondIndex + 1} finds no clear bearing`);
     }
     for (const corner of [points[0], points[1]])

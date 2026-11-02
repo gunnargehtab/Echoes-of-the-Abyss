@@ -1912,7 +1912,7 @@ metre, a range the band a generated one lands in; `Tris` is the per-instance bud
 | Thermal Veins | `env-vent-chimney` | 12 m | 25–40 m | ≤ 800 | `vent-ember`, tip only |
 | Thermal Veins | `env-vent-basalt` | 15 m | 8 m | ≤ 400 | none |
 | Kelp Forest | `env-kelp-cluster` | 18 m | 60–80 m | ≤ 400 | `flora-biolight`, tip points |
-| Kelp Forest | `env-kelp-stand` | 120 m | 40 m | ≤ 6,000 | `flora-biolight`, tip points |
+| Kelp Forest | `env-kelp-stand` | 120 m | 40 m | ≤ 9,000 | `flora-biolight`, tip points |
 | Kelp Forest | `env-coral-tower` | 15 m | 25–35 m | ≤ 600 | none |
 | Abyssal Trench | `env-trench-spire` | 20 m | 40–60 m | ≤ 600 | none |
 | Abyssal Trench | `env-trench-slab` | 25 m | 14 m | ≤ 300 | none |
@@ -1945,23 +1945,23 @@ row's height is what that file measures.
 `env-kelp-stand` is the dense stand of forty-metre stalks that
 [free-water-slice.md](free-water-slice.md) §5 commissions for the crater fixture's garden
 flanks (#1712), beside the retained cluster, which it leaves unchanged. It is twelve clumps
-across a 120 m plan — a holdfast with seven open-ended stalks rooted on it, 84 thin stems
+across a 120 m plan — a holdfast with four open-ended stalks rooted on it, 48 thin stems
 in all whose rings wander as they climb, leaning down-current as the cluster's stipes do,
-with five or six ribbon fronds to a stem along its whole height, 456 in all, each a strip
-of four quads on a path that rises off the stem, streams down-current and twists, which is
-what reads as kelp; and no vertex stands more than 60 m from its centre, so a yawed
-instance keeps inside its 125 m slot — with
+with nineteen or twenty ribbon fronds to a stem along its whole height, 936 in all, each a
+strip of four quads on a path that rises off the stem, streams down-current and twists,
+which is what reads as kelp; and no vertex stands more than 60 m from its centre, so a
+yawed instance keeps inside its 125 m slot — with
 open water between the clumps, so it reads as forest and never as a wall: no canopy, and
-nothing wider than a holdfast on the ground. Its budget is 6,000 rather than the 800 the
+nothing wider than a holdfast on the ground. Its budget is 9,000 rather than the 800 the
 registry fences, by the owner's decision on #1712: the fixture is a development slice for
 map design patterns, and the owner's reference is a kelp forest's long curling fronds on
-thin stems. Twelve tips carry
+few, full columns. Twelve tips carry
 `flora-biolight`, one at the head of each clump's tallest stalk, the cluster's `biolight`
 to the digit. It is authored as a seeded formula in `tools/hull-models/props/kelp-stand.mjs`
 with no export behind it, as the nodule bed is, and its row's height is what that file
-measures. Its 120 m and 6,000 triangles are the stand-only allowances #1713 adds to the
+measures. Its 120 m and 9,000 triangles are the stand-only allowances #1713 adds to the
 registry checks when it registers the row with no biome scatter, so only the fixture's
-authored list places it; intake takes `--max-tris 6000` for this row, over its default of
+authored list places it; intake takes `--max-tris 9000` for this row, over its default of
 800.
 
 Shape cues, so the prompts land in each biome's materials brief
