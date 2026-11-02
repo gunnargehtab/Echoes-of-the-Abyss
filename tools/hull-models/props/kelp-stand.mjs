@@ -85,9 +85,12 @@
  *   than crops level. Every stalk leans by 25–40 % of its height at the
  *   head, down-current (+x, the cluster's lean) spread across it by the
  *   way out from its clump's centre with any up-current part folded
- *   down-current, so within ±45° of the current as the cluster's stipes
- *   are, ±0.2 rad drawn, bending as t^1.6 so the foot stands
- *   near-vertical and the head carries the lean. A stalk whose axis would come within the two
+ *   down-current, ±0.2 rad drawn, so no head stands up-current of its
+ *   foot: 69 of the 72 lean within 45° of the current and the widest is
+ *   51°, where the cluster's six stipes lean 5–28° to one side at 14–17 %
+ *   of their height, so the stand leans about twice as hard and spreads
+ *   wider; bending as t^1.6 so the foot stands near-vertical and the head
+ *   carries the lean. A stalk whose axis would come within the two
  *   radii and 0.2 m of another's anywhere above a quarter of its height is
  *   redrawn, foot and lean, so no stalk passes through another above the
  *   feet, which may touch where six fan out of one holdfast; and the
@@ -119,7 +122,8 @@
  *   stalks, never a glowing canopy" (docs/style-neon-noir.md "World
  *   light"). 48 triangles. kit.mjs `lightAudit` runs on the baked stand
  *   and the script fails on a tip it reads under 0.25 m² of plan or
- *   floating; the figures it read are in the pull request.
+ *   floating; it reads them at 0.25–0.56 m², six at the floor exactly as
+ *   the cluster's `biolight_2` reads, none hidden and none floating.
  *
  * The sway (environmentModels.ts) is a vertex weight computed at load from
  * each vertex's height over the prop's, so it needs nothing from the file;
@@ -168,8 +172,9 @@ const APART = 18;
 // across the current by the way out from its clump's centre, never
 // against it: the lean is `1 − AWAY` down-current plus `AWAY` of the
 // outward bearing with its up-current component folded down-current, so
-// the spread is within ±45° of the current at `AWAY` 0.5, the cluster's
-// own spread, and the crowns fan over the lanes the feet leave open. The
+// the spread is within ±45° of the current at `AWAY` 0.5 before the ±0.2
+// rad drawn on top, and the crowns fan over the lanes the feet leave
+// open. The
 // third build blended the outward bearing unfolded, and 21 stalks leaned
 // against the current, each clump a starburst.
 const CURRENT = 0;
