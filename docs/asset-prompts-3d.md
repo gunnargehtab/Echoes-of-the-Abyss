@@ -1948,7 +1948,9 @@ flanks (#1712), beside the retained cluster, which it leaves unchanged. It is tw
 across a 120 m plan — a holdfast with seven open-ended stalks rooted on it, 84 thin stems
 in all whose rings wander as they climb, leaning down-current as the cluster's stipes do,
 with five or six ribbon fronds to a stem along its whole height, 456 in all, each a strip
-of four quads on a path that rises, droops and twists, which is what reads as kelp — with
+of four quads on a path that rises off the stem, streams down-current and twists, which is
+what reads as kelp; and no vertex stands more than 60 m from its centre, so a yawed
+instance keeps inside its 125 m slot — with
 open water between the clumps, so it reads as forest and never as a wall: no canopy, and
 nothing wider than a holdfast on the ground. Its budget is 6,000 rather than the 800 the
 registry fences, by the owner's decision on #1712: the fixture is a development slice for

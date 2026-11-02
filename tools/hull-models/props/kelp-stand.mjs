@@ -26,8 +26,8 @@
  * the script to it. The whole is built at a nominal size, centred on its
  * plan and held at the footprint before the bake (seabed.mjs `bake`), so
  * the root is an identity and seabed.mjs `stand` finds ×1.000. The fit is
- * two numbers: ×1.0674 on the plan, solved so the stand is 120 m across
- * with its tips counted, and ×1.0985 on the height, so whichever
+ * two numbers: ×1.2116 on the plan, solved so the stand is 120 m across
+ * with its tips counted, and ×1.0522 on the height, so whichever
  * reaches higher — the tallest lit head with its tip over it, or a frond's
  * end rising past its stalk — lands on the row's 40 m exactly; the plan
  * fit alone left the top anywhere from 38.7 to 41.1 m, since a stalk's
@@ -43,11 +43,16 @@
  * swims across. So the stand is twelve clumps, each a holdfast with seven
  * stalks rooted on it, 14 m or more apart across the plan, and most of
  * the budget is fronds: ribbons five or six to a stalk along its whole
- * height, 456 in all, each a strip of four quads on a path that rises,
- * droops and twists — which is what reads as kelp rather than the reeds
- * and bamboo the earlier builds read as — while the stalks are thin
- * columns whose rings wander as they climb, leaning down-current and
- * spread across it. Nothing closes over the plan: there is no canopy, no
+ * height, 456 in all, each a strip of four quads on a path that rises
+ * off the stem, streams down-current with the stem's own lean and twists
+ * as it goes — buoyant, as a kelp blade is, which is what reads as kelp
+ * rather than the reeds and bamboo the earlier builds read as — while the
+ * stalks are thin columns whose rings wander as they climb, leaning
+ * down-current and spread across it. And because the runtime yaws each
+ * instance, the stand is fenced: no vertex stands further from the plan's
+ * centre than 60 m in the file (the end of the script asserts it, to a
+ * quarter metre), where the first ribbon build reached 64.8 m on a
+ * diagonal, 4.8 m into the neighbouring slot at the wrong yaw. Nothing closes over the plan: there is no canopy, no
  * mass wider than a holdfast at the ground, and the tallest thing is a
  * stalk a hull passes beside. For the record of what the reviewer and the
  * owner sent back: twelve clumps of three to five stalks on three bands
@@ -60,8 +65,10 @@
  * 18.2 % at 1,200 triangles; the owner then raised the budget, and 84
  * five-cornered stalks under 780 short leaves read 29 % of the box — and
  * as bamboo, the owner said: the leaf should be long, wide and curled, the
- * stem thinner and more organic. This build is that. It reads 21.8 % of its
- * box from the conn camera and 20.4 % of its plan (the cluster reads
+ * stem thinner and more organic. This build is that, with the fronds
+ * streaming down-current rather than drooping all round, which the
+ * reviewer read as bamboo still. It reads 22.9 % of its box from the conn
+ * camera and 24.4 % of its plan (the cluster reads
  * 21.4 % of its own box at 18 m across). #1713 tiles one file forty times
  * at 125 m; the registry's yaw per instance is what hides the repeat.
  *
@@ -89,13 +96,16 @@
  *   rather than tapering straight; rings wander up to 0.4 m in height and
  *   every corner 8 % in radius, and each stalk's corners start at their
  *   own bearing, so no two show the same facet. Heights: each clump's
- *   tallest stalk is drawn at 88–100 % of the stand's top and the rest at
- *   60–92 % of it, so the stand steps rather than crops level. Every stalk
+ *   tallest stalk is drawn at 90–100 % of the stand's top and the rest at
+ *   60–88 % of it, ranges that do not overlap, so the lit tip is on the
+ *   clump's tallest whatever the stream draws and the stand steps rather
+ *   than crops level. Every stalk
  *   leans by 15–25 % of its height at the head, down-current (+x, the
  *   cluster's lean) spread across it by the way out from its clump's
  *   centre with any up-current part folded down-current, ±0.2 rad drawn,
  *   bending as t^1.6 so the foot stands near-vertical and the head carries
- *   the lean, and no head stands up-current of its foot. A stalk whose
+ *   the lean, and no head stands up-current of its foot (13–27 % in the
+ *   file, the wander counted). A stalk whose
  *   axis, wander included, would come within the two radii and 0.15 m of
  *   another's anywhere above three tenths of its height is redrawn, foot,
  *   lean and wander, so no stalk passes through another above the feet,
@@ -104,25 +114,28 @@
  * - 456 `frond_NNN`, in `kelp`: a ribbon of five stations, two corners
  *   each, four quads cut as eight triangles, 3,648 in all — five to a stalk
  *   and six on the first three of each clump, so the count is the
- *   script's. A frond's path leaves its stalk on a bearing of its own, set
- *   round the stalk by its share of the turn from the way out of the clump
- *   (±0.5 rad), rising at first and drooping as it goes (its height along
- *   the path is L(a·u − b·u²) for a 0.3–0.7 and b 0.5–1.2 at u from 0 to
- *   1), swept sideways by up to a quarter of its length, and twisted about
- *   its own path by half to one and a half turns, which is the curl; it is
- *   6–14 m long and 0.8–1.6 m wide at its widest, tapering from a 0.1 m
- *   root — the two root corners stand inside the prism's section at the
+ *   script's. A frond's path leaves its stalk down-current, on the stem's
+ *   own lean bearing spread ±1.2 rad, rising as it goes and settling
+ *   toward the end (its height along the path is L(a·u − b·u²) for a
+ *   0.5–0.9 and b 0.1–0.5 at u from 0 to 1, so every frond ends above its
+ *   root), swept sideways by up to a quarter of its reach, and twisted
+ *   about its own path by a quarter to three quarters of a turn, which is
+ *   the curl; its reach L is 6–14 m (the path itself, rise and sweep
+ *   counted, runs 7–21 m) and it is 0.8–1.6 m wide at its widest,
+ *   tapering from a 0.1 m root — the two root corners stand inside the prism's section at the
  *   frond's height, found between the two rings that bound it, and the
  *   script refuses a frond whose root corners are not inside that triangle,
  *   so every frond pierces its own stalk's skin and the sweep lists the
  *   pair — through 0.7 and the full width to 0.85 and a blunt 0.45 at the
- *   end, at 15–97 % of the stalk's height. A frond is redrawn, its swing
- *   widening by 0.05 rad a redraw and its length shortening after fifty,
+ *   end, at 15–97 % of the stalk's nominal height (16–99 % of its head as
+ *   built, the head ring's wander counted). A frond is redrawn, its swing
+ *   widening by 0.05 rad a redraw and its reach shortening after fifty,
  *   if any point of its faces on a 0.2 m grid comes within 0.15 m of
- *   another stalk's prism as built or of a frond already set, so no frond
- *   passes through a neighbour or another frond and the sweep lists each
- *   frond against its own stalk alone; a frond that would droop under the
- *   floor is redrawn the same way, so the stand's lowest point is its feet.
+ *   another stalk's prism as built, of its own stalk past the root that
+ *   pierces it, of a frond already set, or of a holdfast's skin, or if it
+ *   would stand outside the fence or droop under the floor; so no frond
+ *   passes through anything, the sweep lists each frond against its own
+ *   stalk alone, and the stand's lowest point is its feet.
  * - Twelve `biolight_NN`, in `biolight`: three's tetrahedron (seabed.mjs
  *   `tetra`), one at the head of each clump's tallest stalk, centred 0.15 m
  *   over the head ring so the tetra stands clear of the ring's corners
@@ -136,7 +149,7 @@
  *   stalks, never a glowing canopy" (docs/style-neon-noir.md "World
  *   light"). 48 triangles. kit.mjs `lightAudit` runs on the baked stand
  *   and the script fails on a tip it reads under 0.25 m² of plan or
- *   floating; it reads them at 0.25–0.56 m² (6 at 0.25 m², 5 at 0.38 m², 1 at 0.56 m²), none hidden and none floating.
+ *   floating; it reads them at 0.25–0.56 m² (7 at 0.25 m², 5 at 0.38 m²), none hidden and none floating.
  *
  * The sway (environmentModels.ts) is a vertex weight computed at load from
  * each vertex's height over the prop's, so it needs nothing from the file;
@@ -179,7 +192,7 @@ const PER_CLUMP = 7;
 // The ellipse the clumps are drawn in, nominal semi-axes, and the least
 // distance between two clump centres.
 const PLAN_A = 46;
-const PLAN_B = 36;
+const PLAN_B = 32;
 const APART = 14;
 // Down-current is +x, the cluster's lean. A stalk leans that way spread
 // across the current by the way out from its clump's centre, never
@@ -197,7 +210,7 @@ for (let i = 0; i < CLUMPS; i++) {
   if (i < 2) {
     // The two end clumps stand off the plan's ends.
     const sgn = i === 0 ? -1 : 1;
-    centres.push([sgn * (PLAN_A - 4) + draw.between(-2, 2), draw.between(-8, 8)]);
+    centres.push([sgn * (PLAN_A - 4) + draw.between(-2, 2), draw.between(-3, 3)]);
     continue;
   }
   for (let tries = 0; ; tries++) {
@@ -301,7 +314,9 @@ let stalkIndex = 0;
 holdfasts.forEach((hold, c) => {
   const tallest = Math.floor(draw() * PER_CLUMP);
   for (let k = 0; k < PER_CLUMP; k++) {
-    const height = k === tallest ? TOP * draw.between(0.88, 1) : TOP * draw.between(0.6, 0.92);
+    // The tallest's range and the rest's do not overlap, so the lit tip is
+    // on the clump's tallest whatever the stream draws.
+    const height = k === tallest ? TOP * draw.between(0.9, 1) : TOP * draw.between(0.6, 0.88);
     let spec;
     for (let tries = 0; ; tries++) {
       const bearing = (k * 2 * Math.PI) / PER_CLUMP + draw.between(-0.4, 0.4);
@@ -393,6 +408,65 @@ holdfasts.forEach((hold, c) => {
   }
 });
 
+// --- the fence ----------------------------------------------------------------
+// The runtime yaws each instance (environment.ts), so what must fit the
+// slot is the stand's reach from its centre, not its box: a frond 64.8 m
+// out on a diagonal sat inside a 120 m box and 4.8 m into the neighbouring
+// slot at the wrong yaw. The plan's x extent is the stalks' and the tips'
+// — the end clumps carry it — and every frond keeps inside the disc of
+// that half-extent about the plan's centre, so the box the fit measures is
+// this one and the reach is 60 m in the file, which the end of the script
+// asserts.
+const tipGeo = seabed.tetra(TIP);
+tipGeo.computeBoundingBox();
+const tipReach = Math.max(tipGeo.boundingBox.max.x, tipGeo.boundingBox.max.z);
+const tipHeads = stalks.filter((s) => s.tip).map((s) => s.head);
+
+/**
+ * The plan a root would have with the tips on it, and the fit that holds
+ * it at the footprint: a tip is added after the fit at its file radius, so
+ * the plan it would extend is solved for here, a fixed point that settles
+ * in a few turns since a tip is half a metre on a 120 m plan. Precise:
+ * the vertices through their transforms, which is what the bake leaves
+ * and what `stand` then measures; a yawed holdfast's box overhangs them.
+ */
+function planOf(root) {
+  root.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(root, true);
+  let fit = 1;
+  let plan;
+  for (let i = 0; i < 8; i++) {
+    plan = box.clone();
+    for (const [hx, hy, hz] of tipHeads) {
+      const r = tipReach / fit;
+      plan.expandByPoint(new THREE.Vector3(hx - r, hy, hz - r));
+      plan.expandByPoint(new THREE.Vector3(hx + r, hy, hz + r));
+    }
+    const size = plan.getSize(new THREE.Vector3());
+    fit = FOOTPRINT / Math.max(size.x, size.z);
+  }
+  return { box, plan, fit };
+}
+
+const fence = (() => {
+  const { plan } = planOf(stand);
+  const size = plan.getSize(new THREE.Vector3());
+  const c = plan.getCenter(new THREE.Vector3());
+  if (size.x < size.z)
+    throw new Error('env_kelp_stand: the plan is longer on z; the fence takes x');
+  return { x: c.x, z: c.z, r: size.x / 2 };
+})();
+const outside = (q) => Math.hypot(q[0] - fence.x, q[2] - fence.z) > fence.r;
+// A stalk may overshoot the disc by the little its x-extreme foot stands
+// off the axis: the point that sets the box's x edge is on the disc only
+// if it lies on the axis, so the end clumps' feet sit within 3 m of it,
+// and the reach the end of the script asserts allows that quarter metre.
+for (const s of stalks)
+  for (const ring of s.rings)
+    for (const q of ring.corners)
+      if (Math.hypot(q[0] - fence.x, q[2] - fence.z) > fence.r + 0.3)
+        throw new Error(`env_kelp_stand: stalk ${s.index + 1} stands outside the fence`);
+
 // --- the fronds ------------------------------------------------------------------
 // A ribbon: five stations along its path, two corners each, the quads
 // between them cut on one diagonal. Two-sided `kelp`, so the winding is
@@ -474,13 +548,13 @@ function samples(points) {
  */
 function clips(points, own, margin = 0.15) {
   const root = points[0];
-  const near = stalks.filter(
-    (o) => o !== own && Math.hypot(o.foot[0] - root[0], o.foot[1] - root[2]) < 25
-  );
-  if (near.length === 0) return false;
+  const near = stalks.filter((o) => Math.hypot(o.foot[0] - root[0], o.foot[1] - root[2]) < 40);
   for (const [x, y, z] of samples(points))
     for (const o of near) {
       if (y < 0 || y > o.head[1]) continue;
+      // The frond's own stalk, past the root that pierces it: a frond that
+      // curled back into its stem would be the sweep's expected pair.
+      if (o === own && Math.hypot(x - root[0], y - root[1], z - root[2]) < 1.2) continue;
       const sec = section(o, y);
       const reach = Math.max(
         ...sec.corners.map(([cx, , cz]) => Math.hypot(cx - sec.centre[0], cz - sec.centre[2]))
@@ -548,10 +622,28 @@ function ribbon({ root, beta, length, width, rise, droop, sweep, twist }) {
   return points;
 }
 
+/**
+ * Whether a frond passes into a holdfast: every sample of its faces low
+ * enough to, against the skin of each holdfast within 8 m, by the ray
+ * that proves a foot stands on one.
+ */
+function buried(points) {
+  const low = samples(points).filter((q) => q[1] < 2.5);
+  if (low.length === 0) return false;
+  for (const hold of holdfasts) {
+    if (!low.some((q) => Math.hypot(q[0] - hold.x, q[2] - hold.z) < 8)) continue;
+    hold.mesh.updateMatrixWorld(true);
+    for (const [x, y, z] of low) {
+      caster.set(new THREE.Vector3(x, 10, z), new THREE.Vector3(0, -1, 0));
+      const hit = caster.intersectObject(hold.mesh, false)[0];
+      if (hit && hit.point.y > y) return true;
+    }
+  }
+  return false;
+}
+
 let frondIndex = 0;
 for (const s of stalks) {
-  const hold = holdfasts[s.clump];
-  const away = Math.atan2(s.foot[1] - hold.z, s.foot[0] - hold.x);
   // Five fronds to a stalk and six on each clump's first three: 456 in
   // all, the budget's.
   const count = s.index % PER_CLUMP < 3 ? 6 : 5;
@@ -560,18 +652,19 @@ for (const s of stalks) {
     let corners;
     for (let tries = 0; ; tries++) {
       const t = draw.between(0.15, 0.97);
-      // Round the stalk by its share of the turn from the way out of the
-      // clump; a frond boxed in by its neighbours swings wider each redraw.
-      const swing = 0.5 + tries * 0.05;
-      const beta = away + (b * 2 * Math.PI) / count + draw.between(-swing, swing);
+      // Down-current with the stem's own lean, spread ±1.2 rad about it,
+      // as kelp streams in a current; a frond boxed in by its neighbours
+      // swings wider each redraw.
+      const swing = tries * 0.05;
+      const beta = s.leanDir + draw.between(-1.2, 1.2) + draw.between(-swing, swing);
       // A frond still boxed in after fifty redraws shortens, to 0.4 at most.
       const length = draw.between(6, 14) * Math.max(0.4, 1 - Math.max(0, tries - 50) * 0.02);
       const spec = {
         beta,
         length,
         width: draw.between(0.8, 1.6),
-        rise: draw.between(0.3, 0.7),
-        droop: draw.between(0.5, 1.2),
+        rise: draw.between(0.5, 0.9),
+        droop: draw.between(0.1, 0.5),
         sweep: draw.between(0.05, 0.25) * (draw() < 0.5 ? -1 : 1),
         twist: draw.between(0.5, 1.5) * Math.PI * (draw() < 0.5 ? -1 : 1),
       };
@@ -585,7 +678,8 @@ for (const s of stalks) {
       // A frond that would droop under the floor, pass through a
       // neighbour, or through another frond, is redrawn.
       const underground = points.some((q) => q[1] < 0.1);
-      if (!underground && !clips(points, s) && !crowds(points)) break;
+      const fenced = points.some(outside);
+      if (!underground && !fenced && !clips(points, s) && !crowds(points) && !buried(points)) break;
       if (tries > 400)
         throw new Error(`env_kelp_stand: frond ${frondIndex + 1} finds no clear bearing`);
     }
@@ -611,33 +705,11 @@ stand.traverse((o) => {
   if (o.isMesh) tris += o.geometry.attributes.position.count / 3;
 });
 const TIP_TRIS = 4;
-const tipHeads = stalks.filter((s) => s.tip).map((s) => s.head);
 tris += TIP_TRIS * tipHeads.length;
 if (tris > MAX_TRIS) throw new Error(`env_kelp_stand: ${tris} triangles over ${MAX_TRIS}`);
 
-// The fit, with the tips' reach counted in: a tip is added after the fit at
-// its file radius, so the plan it would extend is solved for here, a fixed
-// point that settles in a few turns since a tip is half a metre on a 120 m
-// plan. Precise: the vertices through their transforms, which is what the
-// bake leaves and what `stand` then measures; a yawed holdfast's box
-// overhangs them.
-stand.updateMatrixWorld(true);
-const box = new THREE.Box3().setFromObject(stand, true);
-const tipGeo = seabed.tetra(TIP);
-tipGeo.computeBoundingBox();
-const tipReach = Math.max(tipGeo.boundingBox.max.x, tipGeo.boundingBox.max.z);
-let fit = 1;
-let plan;
-for (let i = 0; i < 8; i++) {
-  plan = box.clone();
-  for (const [hx, hy, hz] of tipHeads) {
-    const r = tipReach / fit;
-    plan.expandByPoint(new THREE.Vector3(hx - r, hy, hz - r));
-    plan.expandByPoint(new THREE.Vector3(hx + r, hy, hz + r));
-  }
-  const size = plan.getSize(new THREE.Vector3());
-  fit = FOOTPRINT / Math.max(size.x, size.z);
-}
+// The fit: the plan the fence was taken from, now with the fronds on it.
+const { box, plan, fit } = planOf(stand);
 // The height's fit: whichever reaches higher — the tallest lit head with
 // its tip over it, or a frond's end rising past its stalk's head — lands
 // on the row's 40 m exactly, so the figure is the script's and not the
@@ -671,10 +743,23 @@ const { drawn, k } = seabed.stand(stand, FOOTPRINT, { drawn: FOOTPRINT });
 const final = new THREE.Box3().setFromObject(stand);
 const size = final.getSize(new THREE.Vector3());
 const off = final.getCenter(new THREE.Vector3());
+// The reach: no vertex further from the plan's centre than half the
+// footprint, so a yawed instance stays inside its slot.
+let reach = 0;
+stand.traverse((o) => {
+  if (!o.isMesh) return;
+  const pos = o.geometry.attributes.position;
+  for (let i = 0; i < pos.count; i++)
+    reach = Math.max(reach, Math.hypot(pos.getX(i) - off.x, pos.getZ(i) - off.z));
+});
+if (reach > FOOTPRINT / 2 + 0.3)
+  throw new Error(
+    `env_kelp_stand: reaches ${reach.toFixed(3)} m from its centre, past ${FOOTPRINT / 2}`
+  );
 console.log(
   `env_kelp_stand: ${tris} triangles, fit ×${fit.toFixed(4)} (height ×${(fit * rise).toFixed(4)}), drawn ${drawn.toFixed(4)} across, ` +
     `held at ${FOOTPRINT} m (×${k.toFixed(5)}), ${size.x.toFixed(2)} by ${size.z.toFixed(2)} by ` +
-    `${size.y.toFixed(2)} m tall, plan centre off (${off.x.toFixed(3)}, ${off.z.toFixed(3)}); ` +
+    `${size.y.toFixed(2)} m tall, plan centre off (${off.x.toFixed(3)}, ${off.z.toFixed(3)}), reach ${reach.toFixed(3)} m; ` +
     `tips ${audit.lit.map((l) => `${l.name} ${l.m2} m²`).join(', ')}`
 );
 await exportGlb(stand, 'env-kelp-stand.glb');
