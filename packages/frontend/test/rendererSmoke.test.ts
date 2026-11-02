@@ -5058,6 +5058,132 @@ describe('the command card when it is offered more than it holds', () => {
   });
 
   /**
+   * docs/invariants.md row 51. The grey is a promise about the press: a lit
+   * ordnance cell sends its order and a grey one sends none. DECOY and SCREEN
+   * once read the first hull while their orders searched the whole selection
+   * (#1735), so a recharging Corvette selected beside a ready hull greyed a
+   * cell whose order would have worked. The states are mixed selections, the
+   * input that tells "the first hull" from "the hulls the order uses".
+   */
+  it('lights an ordnance cell exactly when a press sends its order, over a mixed selection', async () => {
+    type Cell = { label: string; enabled: boolean; refusal?: string; action(): void };
+    const ORDERS = ['onDeployNoisemaker', 'onLayDecoy', 'onLayMine', 'onDepthCharge'];
+    const ORDNANCE = /^(DECOY|SCREEN|MINE|CHARGE)\b/;
+    type Hull = Pick<OwnUnit, 'decoyCooldownS' | 'decoys' | 'decoyLayCooldownS'>;
+    // Hull 11, a Corvette, comes first in the snapshot and so first in the
+    // selection; hull 14, an Abyssal Submersible, carries the suite too.
+    const states: Array<{ name: string; corvette: Hull; sub: Hull; expect: unknown }> = [
+      {
+        name: 'a recharging, empty Corvette beside a ready Submersible',
+        corvette: { decoyCooldownS: 7.2, decoys: 0 },
+        sub: { decoys: 3 },
+        expect: {
+          DECOY: { enabled: true, sent: [[14]] },
+          'SCREEN 3': { enabled: true, sent: [14] },
+        },
+      },
+      {
+        name: 'a rack on the second hull only',
+        corvette: {},
+        sub: { decoys: 2 },
+        expect: {
+          DECOY: { enabled: true, sent: [[11, 14]] },
+          'SCREEN 2': { enabled: true, sent: [14] },
+        },
+      },
+      {
+        name: 'both recharging, both between decoys',
+        corvette: { decoyCooldownS: 7.2, decoys: 2, decoyLayCooldownS: 4 },
+        sub: { decoyCooldownS: 3.1, decoys: 3, decoyLayCooldownS: 1.2 },
+        expect: {
+          'DECOY 4': {
+            enabled: false,
+            refusal: 'DECOY: the suite is recharging — ready in 4 s',
+          },
+          'SCREEN 3': { enabled: false, refusal: 'SCREEN: next decoy in 2 s' },
+        },
+      },
+      {
+        name: 'both magazines empty',
+        corvette: { decoys: 0 },
+        sub: { decoys: 0, decoyLayCooldownS: 1.2 },
+        expect: {
+          DECOY: { enabled: true, sent: [[11, 14]] },
+          'SCREEN 0': {
+            enabled: false,
+            refusal: 'SCREEN: magazine empty — rearm at a Bastion or a Foundry',
+          },
+        },
+      },
+    ];
+
+    for (const state of states) {
+      const world = await boot();
+      try {
+        const snapshot = cannedSnapshot();
+        const corvette = snapshot.units.find((unit) => unit.id === 11)!;
+        const sub = snapshot.units.find((unit) => unit.id === 14)!;
+        Object.assign(corvette, state.corvette);
+        Object.assign(sub, state.sub);
+        world.chart.applySnapshot(snapshot);
+        world.conn.applySnapshot(snapshot);
+        world.frame(1);
+        selectHull(world, corvette);
+        selectHull(world, sub, true);
+
+        const drawn = (world.chart as unknown as { barButtons: Cell[] }).barButtons.filter((cell) =>
+          ORDNANCE.test(cell.label)
+        );
+        const seen: Record<string, unknown> = {};
+        for (const cell of drawn) {
+          world.log.calls.length = 0;
+          const at = barLabel(world.app, cell.label);
+          world.app.canvas.dispatch('pointerdown', {
+            button: 0,
+            pointerId: 1,
+            pointerType: 'mouse',
+            clientX: at.x,
+            clientY: at.y,
+          });
+          world.frame(1);
+          const orders = world.log.calls.filter((call) => ORDERS.includes(call.name));
+          // The property, over every ordnance cell the card drew.
+          assert.equal(
+            orders.length > 0,
+            cell.enabled,
+            `${cell.label} is ${cell.enabled ? 'lit' : 'grey'} but a press ` +
+              `${orders.length > 0 ? 'sent' : 'sent nothing'} (${state.name})`
+          );
+          if (!cell.enabled) {
+            assert.ok(
+              textSaying(world.app.stage, cell.refusal ?? '\u0000') !== null,
+              `a press on ${cell.label} did not say why (${state.name})`
+            );
+            // A grey press never reaches the order, so the press alone cannot
+            // tell a true grey from a false one. Run the order past the grey:
+            // it must find no hull to send either.
+            world.log.calls.length = 0;
+            cell.action();
+            assert.deepEqual(
+              world.log.calls.filter((call) => ORDERS.includes(call.name)),
+              [],
+              `${cell.label} greys, but its order sends (${state.name})`
+            );
+          }
+          if (/^(DECOY|SCREEN)/.test(cell.label)) {
+            seen[cell.label] = cell.enabled
+              ? { enabled: true, sent: orders[0]!.args }
+              : { enabled: false, refusal: cell.refusal };
+          }
+        }
+        assert.deepEqual(seen, state.expect, state.name);
+      } finally {
+        world.teardown();
+      }
+    }
+  });
+
+  /**
    * The selection §9 names, offering more than the card holds: a screen hull,
    * a transport and a harvester make fifteen entries, so three have to yield —
    * and it is the deselect, the one entry whose loss costs nothing (a click on

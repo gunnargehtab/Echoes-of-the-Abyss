@@ -960,6 +960,50 @@ function decoyRechargeText(seconds: number): string {
 /** SCREEN with its magazine spent: where it refills (docs/systems-combat.md §5). */
 const SCREEN_EMPTY_TEXT = 'SCREEN: magazine empty — rearm at a Bastion or a Foundry';
 
+/**
+ * The hulls a DECOY press sends, or why it sends none. The cell and its order
+ * both read this, so the grey cannot name a hull the order does not use: the
+ * cell once read the first armed hull while `N` sent every ready one (#1735).
+ */
+function decoyOrder(units: readonly OwnUnit[]): {
+  ready: OwnUnit[];
+  /** The soonest recharge, when every suite is recharging. */
+  coolingS?: number;
+  refusal: string | null;
+} {
+  const armed = units.filter(carriesDecoy);
+  if (armed.length === 0) return { ready: [], refusal: NO_DECOY_TEXT };
+  const ready = armed.filter((u) => u.decoyCooldownS === undefined);
+  if (ready.length > 0) return { ready, refusal: null };
+  const coolingS = Math.min(...armed.map((u) => u.decoyCooldownS!));
+  return { ready, coolingS, refusal: decoyRechargeText(coolingS) };
+}
+
+/**
+ * The hull a SCREEN press lays from, or the rack it waits on and why;
+ * undefined when no selected hull has a rack, and the cell is not drawn.
+ *
+ * The cell's count is this hull's magazine. One hull lays (`commandLayDecoy`
+ * says why), so the cell shows the hull that would, not the first selected:
+ * that once greyed SCREEN over a ready rack behind an empty one (#1735).
+ */
+function screenOrder(
+  units: readonly OwnUnit[]
+): { hull: OwnUnit; refusal: string | null } | undefined {
+  const racks = units.filter((u) => u.decoys !== undefined);
+  if (racks.length === 0) return undefined;
+  const stocked = racks.filter((u) => u.decoys! > 0);
+  const layer = stocked.find((u) => u.decoyLayCooldownS === undefined);
+  if (layer !== undefined) return { hull: layer, refusal: null };
+  if (stocked.length === 0) return { hull: racks[0]!, refusal: SCREEN_EMPTY_TEXT };
+  // Every stocked rack is between decoys: the one that is ready soonest.
+  const soonest = stocked.reduce((a, b) => (b.decoyLayCooldownS! < a.decoyLayCooldownS! ? b : a));
+  return {
+    hull: soonest,
+    refusal: `SCREEN: next decoy in ${Math.ceil(soonest.decoyLayCooldownS!)} s`,
+  };
+}
+
 /** One command-bar button: screen-space bounds plus what pressing it does. */
 interface BarButton {
   x: number;
@@ -4278,24 +4322,18 @@ export class EchoRenderer {
       // selection block's own stat line now, beside HULL and SIG, which is
       // where this hull's other numbers already live.
       if (units.length > 0) {
-        // The cooldown is read off the first hull that has the suite: an
-        // absent one means "ready" only there, and "no suite" on a gunless
-        // hull, which a press would send for the server to drop (#1363).
-        const suite = units.find(carriesDecoy);
-        const cooling = suite?.decoyCooldownS;
-        const noDecoy = suite === undefined ? NO_DECOY_TEXT : null;
+        // Lit while any selected suite is ready, since the order sends every
+        // ready one (#1735); "no suite" on a gunless selection, which a press
+        // would otherwise send for the server to drop (#1363).
+        const decoy = decoyOrder(units);
         buttons.push({
-          label: cooling === undefined ? 'DECOY' : `DECOY ${Math.ceil(cooling)}`,
-          enabled:
-            noDecoy === null && cooling === undefined && this.missionLock('noisemakers') === null,
+          label: decoy.coolingS === undefined ? 'DECOY' : `DECOY ${Math.ceil(decoy.coolingS)}`,
+          enabled: decoy.refusal === null && this.missionLock('noisemakers') === null,
           active: false,
           action: () => this.commandNoisemaker(),
           // The label counts the recharge down; a press while it does says so
           // rather than nothing (#1732).
-          refusal:
-            noDecoy ??
-            this.missionLock('noisemakers') ??
-            (cooling === undefined ? undefined : decoyRechargeText(cooling)),
+          refusal: this.missionLock('noisemakers') ?? decoy.refusal ?? undefined,
           yieldRank: YIELD.SITUATIONAL,
         });
         // The screen, for the one hull that carries a magazine of decoys
@@ -4303,23 +4341,16 @@ export class EchoRenderer {
         // promise is about the keys that exist rather than a promise that
         // everything gets one. TORP is the precedent — it is a readout and a
         // right-click.
-        if (first?.decoys !== undefined) {
-          const spacing = first.decoyLayCooldownS;
+        const screen = screenOrder(units);
+        if (screen !== undefined) {
           buttons.push({
-            label: `SCREEN ${first.decoys}`,
-            enabled:
-              first.decoys > 0 && spacing === undefined && this.missionLock('noisemakers') === null,
+            label: `SCREEN ${screen.hull.decoys}`,
+            enabled: screen.refusal === null && this.missionLock('noisemakers') === null,
             active: false,
             action: () => this.commandLayDecoy(),
             // The label shows the magazine and never the spacing, so a press
             // between decoys has to say what the grey is waiting on (#1732).
-            refusal:
-              this.missionLock('noisemakers') ??
-              (first.decoys === 0
-                ? SCREEN_EMPTY_TEXT
-                : spacing === undefined
-                  ? undefined
-                  : `SCREEN: next decoy in ${Math.ceil(spacing)} s`),
+            refusal: this.missionLock('noisemakers') ?? screen.refusal ?? undefined,
             // Button only, no key — so it outlasts every entry that has one.
             yieldRank: YIELD.ONLY_ROUTE,
           });
@@ -5248,18 +5279,15 @@ export class EchoRenderer {
     // order strikes it with the tubes rather than leaving it as the one loud
     // thing a stripped hull can still do (docs/mission-sorrowgate.md §3).
     if (this.refusedByMission('noisemakers')) return;
-    const armed = this.selectedUnits().filter(carriesDecoy);
-    if (armed.length === 0) {
-      if (this.selectedUnits().length > 0) this.refuse(NO_DECOY_TEXT);
+    const selected = this.selectedUnits();
+    if (selected.length === 0) return;
+    // `N` refuses with the cell's words, not a silent drop beside it.
+    const { ready, refusal } = decoyOrder(selected);
+    if (refusal !== null) {
+      this.refuse(refusal);
       return;
     }
-    const units = armed.filter((u) => u.decoyCooldownS === undefined);
-    if (units.length === 0) {
-      // `N` while every suite recharges: the cell's words, not a silent drop.
-      this.refuse(decoyRechargeText(Math.min(...armed.map((u) => u.decoyCooldownS!))));
-      return;
-    }
-    this.callbacks.onDeployNoisemaker(units.map((u) => u.id));
+    this.callbacks.onDeployNoisemaker(ready.map((u) => u.id));
   }
 
   /**
@@ -5268,16 +5296,18 @@ export class EchoRenderer {
    * One hull, unlike every other ordnance order on this bar: the magazine and
    * its spacing are per hull, so a selection-wide lay would silently drop every
    * hull that was still between decoys and read as a button that sometimes did
-   * nothing. The first selected hull that actually has a rack is the one that
-   * lays, which is the same rule the TORP readout uses.
+   * nothing. The first selected hull ready to lay is the one that lays, and
+   * the cell names it (`screenOrder`).
    */
   private commandLayDecoy(): void {
     if (this.refusedByMission('noisemakers')) return;
-    const layer = this.selectedUnits().find(
-      (u) => (u.decoys ?? 0) > 0 && u.decoyLayCooldownS === undefined
-    );
-    if (layer === undefined) return;
-    this.callbacks.onLayDecoy(layer.id);
+    const screen = screenOrder(this.selectedUnits());
+    if (screen === undefined) return;
+    if (screen.refusal !== null) {
+      this.refuse(screen.refusal);
+      return;
+    }
+    this.callbacks.onLayDecoy(screen.hull.id);
   }
 
   private commandLayMine(): void {
