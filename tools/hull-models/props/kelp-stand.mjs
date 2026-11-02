@@ -10,8 +10,8 @@
  * "Natural or ruined form — stone, coral, kelp ... nothing manufactured ...
  * low-poly with crisp facets, at most two materials", the one licensed
  * light being `flora-biolight` at the tips. Two materials, the cluster's
- * `kelp` and `biolight` to the digit; 1,188 triangles; 39.9 m tall at its
- * 120 m by intake's measure (`sizeM`), the row's 40 m, which takes
+ * `kelp` and `biolight` to the digit; 1,188 triangles; 40.0 m tall at its
+ * 120 m by intake's measure (`sizeM`), the row's 40 m exactly, which takes
  * `--world-light flora --max-tris 1200` for this row (hull-intake's default
  * cap is the registry's 800, which #1713 raises for stands alone).
  *
@@ -22,8 +22,8 @@
  * the script to it. The whole is built at a nominal size, centred on its
  * plan and held at the footprint before the bake (seabed.mjs `bake`), so
  * the root is an identity and seabed.mjs `stand` finds ×1.000. The fit is
- * two numbers: ×1.0782 on the plan, solved so the stand is 120 m across
- * with its tips counted, and ×1.1065 on the height, so the tallest head
+ * two numbers: ×1.1310 on the plan, solved so the stand is 120 m across
+ * with its tips counted, and ×1.1268 on the height, so the tallest head
  * ring with its tip over it lands on the row's 40 m exactly — the plan fit
  * alone left the top anywhere from 38.7 to 41.1 m, since a stalk's redraw
  * reshuffles every draw after it. The ranges below are the nominal ones
@@ -37,13 +37,22 @@
  * across the plan with open water between them, the gaps being what say
  * "no cover", and the stalks are the cluster's vocabulary at the slice's
  * height: open-ended columns of rings, as thick at the foot as the
- * cluster's stipes, leaning down-current, with blades standing off them
- * and a lit tip on each clump's tallest. Nothing closes over the plan:
- * there is no canopy, no mass wider than a holdfast at the ground, and the
- * tallest thing is a stalk a hull passes beside. The first build had
- * twelve clumps of three to five thinner stalks on three bands, and the
- * reviewer read it as tufts of reed on open floor, at 6 % of its plan
- * against the cluster's 42 %; the bands and blades paid for the stalks.
+ * cluster's stipes, each leaning out from its clump as much as
+ * down-current, so the crowns fan over the lanes the feet leave open and
+ * the stand closes at height where it stays open on the floor, with
+ * blades standing off the stalks and a lit tip on each clump's tallest.
+ * Nothing closes over the plan: there is no canopy, no mass wider than a
+ * holdfast at the ground, and the tallest thing is a stalk a hull passes
+ * beside. The first build had twelve clumps of three to five thinner
+ * stalks on three bands, and the reviewer read it as tufts of reed on open
+ * floor, at 6 % of its plan against the cluster's 42 %; the bands and
+ * blades paid for the stalks. The second had six to a clump, leaning
+ * down-current alone, and read as twelve fuller tufts at 7.8 % of its
+ * plan and 10.4 % of its box from the conn camera; the fan took that to
+ * 9.3 and 12.7 % (the cluster reads 21.4 % of its box from the conn
+ * camera, at 18 m across), which is as far as 1,200 triangles over 120 m
+ * go. #1713 tiles one file forty times at 125 m; a yaw per slot is what
+ * hides the repeat, and the fixture's list has none.
  *
  * - Twelve `holdfast_NN`, in `kelp`: octahedra (seabed.mjs `octa`, 8
  *   triangles — the cluster's are icosahedra, and the twelve extra
@@ -51,7 +60,7 @@
  *   by 0.8–1.3 by 2.8–3.6 m, yawed (the cluster's main holdfast is 4.86 by
  *   2.23 by 3.96), each sat with its lowest vertex on y = 0 as
  *   the cluster's are. The first two stand off the plan's ±x ends; the
- *   other ten are drawn inside an ellipse 100 by 80 m and redrawn while any
+ *   other ten are drawn inside an ellipse 92 by 72 m and redrawn while any
  *   would stand within 18 m of one already set, so no two clumps merge.
  *   96 triangles.
  * - Seventy-two `stalk_NN`, in `kelp`: a column of three three-cornered
@@ -60,17 +69,21 @@
  *   are), two bands, 12 triangles each, 864 in all. Six to a clump. A
  *   stalk's foot ring sits on y = 0 at 50–100 % of the way from its
  *   holdfast's centre to the holdfast's edge on the foot's own bearing, so
- *   every foot stands on its holdfast and the sweep lists each pair; it is
- *   0.7–1 m in radius at the foot (the cluster's stipes are 0.81–1.22 in
- *   the file) and narrows to 0.25 m at the head; the middle and head rings
+ *   every foot stands on its holdfast and the sweep lists each pair — the
+ *   script casts a ray down over each foot's centre and refuses a stalk
+ *   whose ray misses its holdfast (the second build's reach had the yaw's
+ *   sign the other way and stood three feet past their diamond); it is
+ *   0.75–1.05 m in radius at the foot (the cluster's stipes are 0.81–1.22
+ *   in the file) and narrows to 0.25 m at the head; the middle and head rings
  *   wander up to 0.4 m in height and every corner 8 % in radius, and each
  *   stalk's corners start at their own bearing, so no two show the same
  *   facet. Heights: each clump's tallest stalk is drawn at 88–100 % of the
  *   stand's top and the rest at 60–92 % of it, so the stand steps rather
- *   than crops level. Every stalk leans down-current (+x, the cluster's
- *   lean) by 12–24 % of its height at the head, within ±0.5 rad of that
- *   bearing, bending as t^1.6 so the foot stands near-vertical and the
- *   head carries the lean. A stalk whose axis would come within the two
+ *   than crops level. Every stalk leans by 18–30 % of its height at the
+ *   head, on a bearing blended three parts out from its clump's centre to
+ *   two parts down-current (+x, the cluster's lean), within ±0.3 rad of
+ *   that, bending as t^1.6 so the foot stands near-vertical and the head
+ *   carries the lean. A stalk whose axis would come within the two
  *   radii and 0.2 m of another's anywhere above a quarter of its height is
  *   redrawn, foot and lean, so no stalk passes through another above the
  *   feet, which may touch where six fan out of one holdfast; and the
@@ -85,7 +98,10 @@
  *   sweep lists the pair. A blade is 3–7 m long, 1–1.8 m wide, rising
  *   0.3–0.6 rad from level, at 40–80 % of the stalk's height, pointed away
  *   from the clump's centre within ±0.7 rad so it stands off its stalk
- *   into open water rather than through a neighbour. 180 triangles.
+ *   into open water; a blade whose root-to-corner and root-to-tip edges
+ *   would pass within 0.2 m of another stalk's curve is redrawn, so no
+ *   blade passes through a neighbour and the sweep lists each blade
+ *   against its own stalk alone. 180 triangles.
  * - Twelve `biolight_NN`, in `biolight`: three's tetrahedron (seabed.mjs
  *   `tetra`), one at the head of each clump's tallest stalk, centred 0.15 m
  *   over the head ring so the tetra stands clear of the ring's corners
@@ -141,11 +157,15 @@ const CLUMPS = 12;
 const PER_CLUMP = 6;
 // The ellipse the clumps are drawn in, nominal semi-axes, and the least
 // distance between two clump centres.
-const PLAN_A = 50;
-const PLAN_B = 40;
+const PLAN_A = 46;
+const PLAN_B = 36;
 const APART = 18;
-// Down-current is +x, the cluster's lean.
+// Down-current is +x, the cluster's lean. A stalk leans that way blended
+// with the way out from its clump's centre, so the crowns fan over the
+// lanes the feet leave open: the lean is `AWAY` parts out to `1 − AWAY`
+// down-current, as unit vectors.
 const CURRENT = 0;
+const AWAY = 0.6;
 
 const centres = [];
 for (let i = 0; i < CLUMPS; i++) {
@@ -173,15 +193,25 @@ const holdfasts = centres.map(([x, z], i) => {
   const yaw = draw() * 2 * Math.PI;
   const geo = seabed.octa(s);
   geo.computeBoundingBox();
-  add(stand, `holdfast_${nn(i)}`, geo, kelp, [x, -geo.boundingBox.min.y, z], [0, yaw, 0]);
+  const mesh = add(
+    stand,
+    `holdfast_${nn(i)}`,
+    geo,
+    kelp,
+    [x, -geo.boundingBox.min.y, z],
+    [0, yaw, 0]
+  );
   // The diamond's reach from its centre on a bearing, in plan: an
   // octahedron's section at its waist is |x / a| + |z / c| = 1 in its own
-  // frame, which `yaw` turns.
+  // frame, which `yaw` turns — a world bearing is `yaw` further round in
+  // the local frame (three's `rotation.y` takes local to world by
+  // subtracting it; the first build had the sign the other way and stood
+  // three feet past their diamond).
   const reach = (bearing) => {
-    const b = bearing - yaw;
+    const b = bearing + yaw;
     return 1 / (Math.abs(Math.cos(b)) / s[0] + Math.abs(Math.sin(b)) / s[2]);
   };
-  return { x, z, reach };
+  return { x, z, reach, mesh };
 });
 
 // --- the stalks ----------------------------------------------------------------
@@ -221,6 +251,7 @@ function crosses(a, b, margin = 0.2) {
   return false;
 }
 
+const caster = new THREE.Raycaster();
 const stalks = [];
 let stalkIndex = 0;
 holdfasts.forEach((hold, c) => {
@@ -232,12 +263,16 @@ holdfasts.forEach((hold, c) => {
       const bearing = (k * 2 * Math.PI) / PER_CLUMP + draw.between(-0.4, 0.4);
       const reach = hold.reach(bearing) * draw.between(0.5, 1);
       const foot = [hold.x + reach * Math.cos(bearing), hold.z + reach * Math.sin(bearing)];
+      const fan = [
+        AWAY * Math.cos(bearing) + (1 - AWAY) * Math.cos(CURRENT),
+        AWAY * Math.sin(bearing) + (1 - AWAY) * Math.sin(CURRENT),
+      ];
       spec = {
         foot,
         height,
-        leanDir: CURRENT + draw.between(-0.5, 0.5),
-        lean: height * draw.between(0.12, 0.24),
-        r0: draw.between(0.7, 1),
+        leanDir: Math.atan2(fan[1], fan[0]) + draw.between(-0.3, 0.3),
+        lean: height * draw.between(0.18, 0.3),
+        r0: draw.between(0.75, 1.05),
         rh: 0.25,
         phase: draw() * 2 * Math.PI,
         tip: k === tallest,
@@ -246,6 +281,14 @@ holdfasts.forEach((hold, c) => {
       Object.assign(spec, stalkCurve(spec));
       if (!stalks.some((other) => crosses(spec, other) || crosses(other, spec))) break;
       if (tries > 200) throw new Error(`env_kelp_stand: stalk ${stalkIndex + 1} finds no lean`);
+    }
+    // The foot stands under its holdfast's skin: a ray down from over the
+    // foot's centre hits the holdfast, so the stalk's wall passes through it.
+    {
+      hold.mesh.updateMatrixWorld(true);
+      caster.set(new THREE.Vector3(spec.foot[0], 10, spec.foot[1]), new THREE.Vector3(0, -1, 0));
+      if (caster.intersectObject(hold.mesh, false).length === 0)
+        throw new Error(`env_kelp_stand: stalk ${stalkIndex + 1} stands off holdfast ${c + 1}`);
     }
     const points = [];
     const rings = [];
@@ -334,39 +377,71 @@ function inside([x, z], corners) {
   return true;
 }
 
+/**
+ * Whether a blade's three edges from its root — to each wide corner and to
+ * the tip — pass within `margin` of any stalk but its own, against the
+ * stalks' nominal curves with their corners' 8 % push allowed for.
+ */
+function clips(points, own, margin = 0.2) {
+  const root = [(points[0][0] + points[3][0]) / 2, points[0][1], (points[0][2] + points[3][2]) / 2];
+  for (const end of [points[1], points[2], points[4]])
+    for (let f = 0; f <= 1.0001; f += 0.1) {
+      const x = root[0] + (end[0] - root[0]) * f;
+      const y = root[1] + (end[1] - root[1]) * f;
+      const z = root[2] + (end[2] - root[2]) * f;
+      for (const o of stalks) {
+        if (o === own) continue;
+        const t = y / o.height;
+        if (t < 0 || t > 1) continue;
+        const [ox, , oz] = o.axis(t);
+        if (Math.hypot(x - ox, z - oz) < o.radius(t) * 1.08 + margin) return true;
+      }
+    }
+  return false;
+}
+
 let bladeIndex = 0;
 for (const s of stalks) {
   if (s.index % PER_CLUMP === PER_CLUMP - 1) continue;
-  const t = draw.between(0.4, 0.8);
   const hold = holdfasts[s.clump];
   const away = Math.atan2(s.foot[1] - hold.z, s.foot[0] - hold.x);
-  const beta = away + draw.between(-0.7, 0.7);
-  const length = draw.between(3, 7);
-  const width = draw.between(1, 1.8);
-  const rise = draw.between(0.3, 0.6);
-  const lead = draw.between(-0.3, 0.3);
-  const y = s.height * t;
-  const { centre, corners } = section(s, y);
-  const out = [Math.cos(beta), 0, Math.sin(beta)];
-  const side = [-Math.sin(beta), 0, Math.cos(beta)];
-  // Rooted inside the prism's section, so the blade pierces the stalk's skin.
-  const r = 0.3 * s.radius(t);
-  const root = [centre[0] + out[0] * r, y, centre[2] + out[2] * r];
-  const at = (along, up, across) => [
-    root[0] + out[0] * along + side[0] * across,
-    root[1] + up,
-    root[2] + out[2] * along + side[2] * across,
-  ];
-  const reach = (f) => [f * length * Math.cos(rise), f * length * Math.sin(rise)];
-  const [wa, wu] = reach(0.6);
-  const [ta, tu] = reach(1);
-  const points = [
-    at(0, 0, 0.1),
-    at(wa, wu, width / 2),
-    at(wa, wu, -width / 2),
-    at(0, 0, -0.1),
-    at(ta, tu, lead),
-  ];
+  let points;
+  let corners;
+  for (let tries = 0; ; tries++) {
+    const t = draw.between(0.4, 0.8);
+    const beta = away + draw.between(-0.7, 0.7);
+    const length = draw.between(3, 7);
+    const width = draw.between(1, 1.8);
+    const rise = draw.between(0.3, 0.6);
+    const lead = draw.between(-0.3, 0.3);
+    const y = s.height * t;
+    const sec = section(s, y);
+    corners = sec.corners;
+    const out = [Math.cos(beta), 0, Math.sin(beta)];
+    const side = [-Math.sin(beta), 0, Math.cos(beta)];
+    // Rooted inside the prism's section, so the blade pierces the stalk's skin.
+    const r = 0.3 * s.radius(t);
+    const root = [sec.centre[0] + out[0] * r, y, sec.centre[2] + out[2] * r];
+    const at = (along, up, across) => [
+      root[0] + out[0] * along + side[0] * across,
+      root[1] + up,
+      root[2] + out[2] * along + side[2] * across,
+    ];
+    const reach = (f) => [f * length * Math.cos(rise), f * length * Math.sin(rise)];
+    const [wa, wu] = reach(0.6);
+    const [ta, tu] = reach(1);
+    points = [
+      at(0, 0, 0.1),
+      at(wa, wu, width / 2),
+      at(wa, wu, -width / 2),
+      at(0, 0, -0.1),
+      at(ta, tu, lead),
+    ];
+    // A blade that would pass through a neighbour is redrawn.
+    if (!clips(points, s)) break;
+    if (tries > 60)
+      throw new Error(`env_kelp_stand: blade ${bladeIndex + 1} finds no clear bearing`);
+  }
   for (const corner of [points[0], points[3]])
     if (!inside([corner[0], corner[2]], corners))
       throw new Error(`env_kelp_stand: blade ${bladeIndex + 1} roots off stalk ${s.index + 1}`);
