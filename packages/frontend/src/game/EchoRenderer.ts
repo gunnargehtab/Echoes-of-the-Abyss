@@ -4170,6 +4170,9 @@ export class EchoRenderer {
         enabled: units.length > 0 && this.missionLock('activeSonar') === null,
         active: false,
         action: () => this.commandPing(),
+        // The `P` key refuses with the mission's words; the button greyed
+        // with none, so a press said nothing (#1721).
+        refusal: this.missionLock('activeSonar') ?? undefined,
       });
       const heldAll = this.heldSelection(units);
       for (const direction of [-1, 1] as const) {
@@ -4275,6 +4278,7 @@ export class EchoRenderer {
               first.decoys > 0 && spacing === undefined && this.missionLock('noisemakers') === null,
             active: false,
             action: () => this.commandLayDecoy(),
+            refusal: this.missionLock('noisemakers') ?? undefined,
             // Button only, no key — so it outlasts every entry that has one.
             yieldRank: YIELD.ONLY_ROUTE,
           });
@@ -4284,6 +4288,7 @@ export class EchoRenderer {
           enabled: this.missionLock('mines') === null,
           active: false,
           action: () => this.commandLayMine(),
+          refusal: this.missionLock('mines') ?? undefined,
           yieldRank: YIELD.SITUATIONAL,
         });
         buttons.push({
@@ -4714,7 +4719,10 @@ export class EchoRenderer {
       this.pendingAttackMove,
       this.snapshotSeq,
       this.selectionSeq,
-      this.missionLocks.length,
+      // The locks themselves, not their count: a cell carries its lock's words
+      // as its refusal, and one lock swapped for another kept the count and
+      // the old words until the next snapshot rebuilt the bar (#1721).
+      this.missionLocks.map((lock) => `${lock.ability}:${lock.reason}`).join(','),
       screenWidth,
       barY,
     ].join('|');
