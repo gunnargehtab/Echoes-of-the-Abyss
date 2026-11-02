@@ -22,8 +22,8 @@
  * the script to it. The whole is built at a nominal size, centred on its
  * plan and held at the footprint before the bake (seabed.mjs `bake`), so
  * the root is an identity and seabed.mjs `stand` finds ×1.000. The fit is
- * two numbers: ×1.1310 on the plan, solved so the stand is 120 m across
- * with its tips counted, and ×1.1268 on the height, so the tallest head
+ * two numbers: ×1.1444 on the plan, solved so the stand is 120 m across
+ * with its tips counted, and ×1.1271 on the height, so the tallest head
  * ring with its tip over it lands on the row's 40 m exactly — the plan fit
  * alone left the top anywhere from 38.7 to 41.1 m, since a stalk's redraw
  * reshuffles every draw after it. The ranges below are the nominal ones
@@ -37,10 +37,10 @@
  * across the plan with open water between them, the gaps being what say
  * "no cover", and the stalks are the cluster's vocabulary at the slice's
  * height: open-ended columns of rings, as thick at the foot as the
- * cluster's stipes, each leaning out from its clump as much as
- * down-current, so the crowns fan over the lanes the feet leave open and
- * the stand closes at height where it stays open on the floor, with
- * blades standing off the stalks and a lit tip on each clump's tallest.
+ * cluster's stipes, each leaning down-current and spread across it by
+ * the way out from its clump, so the crowns fan over the lanes the feet
+ * leave open and reach toward the next clump downstream, with blades
+ * standing off the stalks and a lit tip on each clump's tallest.
  * Nothing closes over the plan: there is no canopy, no mass wider than a
  * holdfast at the ground, and the tallest thing is a stalk a hull passes
  * beside. The first build had twelve clumps of three to five thinner
@@ -48,11 +48,14 @@
  * floor, at 6 % of its plan against the cluster's 42 %; the bands and
  * blades paid for the stalks. The second had six to a clump, leaning
  * down-current alone, and read as twelve fuller tufts at 7.8 % of its
- * plan and 10.4 % of its box from the conn camera; the fan took that to
- * 9.3 and 12.7 % (the cluster reads 21.4 % of its box from the conn
- * camera, at 18 m across), which is as far as 1,200 triangles over 120 m
- * go. #1713 tiles one file forty times at 125 m; a yaw per slot is what
- * hides the repeat, and the fixture's list has none.
+ * plan and 10.4 % of its box from the conn camera. The third fanned each
+ * stalk out from its clump unfolded, and 21 of 72 leaned against the
+ * current, each clump a starburst. This build folds the fan down-current
+ * and leans further: 10.4 % of its plan and 12.8 % of its box from the
+ * conn camera, where the cluster reads 21.4 % of its own box at 18 m
+ * across, and no head stands up-current of its foot. #1713 tiles one
+ * file forty times at 125 m; the registry's yaw per instance is what
+ * hides the repeat.
  *
  * - Twelve `holdfast_NN`, in `kelp`: octahedra (seabed.mjs `octa`, 8
  *   triangles — the cluster's are icosahedra, and the twelve extra
@@ -79,11 +82,12 @@
  *   stalk's corners start at their own bearing, so no two show the same
  *   facet. Heights: each clump's tallest stalk is drawn at 88–100 % of the
  *   stand's top and the rest at 60–92 % of it, so the stand steps rather
- *   than crops level. Every stalk leans by 18–30 % of its height at the
- *   head, on a bearing blended three parts out from its clump's centre to
- *   two parts down-current (+x, the cluster's lean), within ±0.3 rad of
- *   that, bending as t^1.6 so the foot stands near-vertical and the head
- *   carries the lean. A stalk whose axis would come within the two
+ *   than crops level. Every stalk leans by 25–40 % of its height at the
+ *   head, down-current (+x, the cluster's lean) spread across it by the
+ *   way out from its clump's centre with any up-current part folded
+ *   down-current, so within ±45° of the current as the cluster's stipes
+ *   are, ±0.2 rad drawn, bending as t^1.6 so the foot stands
+ *   near-vertical and the head carries the lean. A stalk whose axis would come within the two
  *   radii and 0.2 m of another's anywhere above a quarter of its height is
  *   redrawn, foot and lean, so no stalk passes through another above the
  *   feet, which may touch where six fan out of one holdfast; and the
@@ -95,13 +99,13 @@
  *   section at the blade's height, found between the two rings that bound
  *   it, and the script refuses a blade whose root corners are not inside
  *   that triangle, so every blade pierces its own stalk's skin and the
- *   sweep lists the pair. A blade is 3–7 m long, 1–1.8 m wide, rising
- *   0.3–0.6 rad from level, at 40–80 % of the stalk's height, pointed away
+ *   sweep lists the pair. A blade is 4–9 m long, 1–2 m wide, rising
+ *   0.3–0.6 rad from level, at 45–85 % of the stalk's height, pointed away
  *   from the clump's centre within ±0.7 rad so it stands off its stalk
- *   into open water; a blade whose root-to-corner and root-to-tip edges
- *   would pass within 0.2 m of another stalk's curve is redrawn, so no
- *   blade passes through a neighbour and the sweep lists each blade
- *   against its own stalk alone. 180 triangles.
+ *   into open water; a blade any edge or face of which would pass within
+ *   0.2 m of another stalk's prism as built is redrawn, so no blade passes
+ *   through a neighbour and the sweep lists each blade against its own
+ *   stalk alone. 180 triangles.
  * - Twelve `biolight_NN`, in `biolight`: three's tetrahedron (seabed.mjs
  *   `tetra`), one at the head of each clump's tallest stalk, centred 0.15 m
  *   over the head ring so the tetra stands clear of the ring's corners
@@ -160,12 +164,16 @@ const PER_CLUMP = 6;
 const PLAN_A = 46;
 const PLAN_B = 36;
 const APART = 18;
-// Down-current is +x, the cluster's lean. A stalk leans that way blended
-// with the way out from its clump's centre, so the crowns fan over the
-// lanes the feet leave open: the lean is `AWAY` parts out to `1 − AWAY`
-// down-current, as unit vectors.
+// Down-current is +x, the cluster's lean. A stalk leans that way spread
+// across the current by the way out from its clump's centre, never
+// against it: the lean is `1 − AWAY` down-current plus `AWAY` of the
+// outward bearing with its up-current component folded down-current, so
+// the spread is within ±45° of the current at `AWAY` 0.5, the cluster's
+// own spread, and the crowns fan over the lanes the feet leave open. The
+// third build blended the outward bearing unfolded, and 21 stalks leaned
+// against the current, each clump a starburst.
 const CURRENT = 0;
-const AWAY = 0.6;
+const AWAY = 0.5;
 
 const centres = [];
 for (let i = 0; i < CLUMPS; i++) {
@@ -263,15 +271,13 @@ holdfasts.forEach((hold, c) => {
       const bearing = (k * 2 * Math.PI) / PER_CLUMP + draw.between(-0.4, 0.4);
       const reach = hold.reach(bearing) * draw.between(0.5, 1);
       const foot = [hold.x + reach * Math.cos(bearing), hold.z + reach * Math.sin(bearing)];
-      const fan = [
-        AWAY * Math.cos(bearing) + (1 - AWAY) * Math.cos(CURRENT),
-        AWAY * Math.sin(bearing) + (1 - AWAY) * Math.sin(CURRENT),
-      ];
+      const across = bearing - CURRENT;
+      const fan = [1 - AWAY + AWAY * Math.abs(Math.cos(across)), AWAY * Math.sin(across)];
       spec = {
         foot,
         height,
-        leanDir: Math.atan2(fan[1], fan[0]) + draw.between(-0.3, 0.3),
-        lean: height * draw.between(0.18, 0.3),
+        leanDir: CURRENT + Math.atan2(fan[1], fan[0]) + draw.between(-0.2, 0.2),
+        lean: height * draw.between(0.25, 0.4),
         r0: draw.between(0.75, 1.05),
         rh: 0.25,
         phase: draw() * 2 * Math.PI,
@@ -378,23 +384,35 @@ function inside([x, z], corners) {
 }
 
 /**
- * Whether a blade's three edges from its root — to each wide corner and to
- * the tip — pass within `margin` of any stalk but its own, against the
- * stalks' nominal curves with their corners' 8 % push allowed for.
+ * Whether a blade passes within `margin` of any stalk but its own: every
+ * edge of its quad and tip triangle, and the two faces' centroids, sampled
+ * along against each other stalk's prism as built (`section`, the rings'
+ * wandered heights and pushed corners included), not its nominal curve.
  */
 function clips(points, own, margin = 0.2) {
-  const root = [(points[0][0] + points[3][0]) / 2, points[0][1], (points[0][2] + points[3][2]) / 2];
-  for (const end of [points[1], points[2], points[4]])
+  const [r1, w1, w2, r2, tip] = points;
+  const mid = (a, b, c) => a.map((v, i) => (v + b[i] + c[i]) / 3);
+  const segments = [
+    [r1, w1],
+    [r2, w2],
+    [w1, w2],
+    [w1, tip],
+    [w2, tip],
+    [mid(r1, w1, w2), mid(w1, w2, tip)],
+  ];
+  for (const [a, b] of segments)
     for (let f = 0; f <= 1.0001; f += 0.1) {
-      const x = root[0] + (end[0] - root[0]) * f;
-      const y = root[1] + (end[1] - root[1]) * f;
-      const z = root[2] + (end[2] - root[2]) * f;
+      const x = a[0] + (b[0] - a[0]) * f;
+      const y = a[1] + (b[1] - a[1]) * f;
+      const z = a[2] + (b[2] - a[2]) * f;
       for (const o of stalks) {
         if (o === own) continue;
-        const t = y / o.height;
-        if (t < 0 || t > 1) continue;
-        const [ox, , oz] = o.axis(t);
-        if (Math.hypot(x - ox, z - oz) < o.radius(t) * 1.08 + margin) return true;
+        if (y < 0 || y > o.head[1]) continue;
+        const sec = section(o, y);
+        const reach = Math.max(
+          ...sec.corners.map(([cx, , cz]) => Math.hypot(cx - sec.centre[0], cz - sec.centre[2]))
+        );
+        if (Math.hypot(x - sec.centre[0], z - sec.centre[2]) < reach + margin) return true;
       }
     }
   return false;
@@ -408,10 +426,10 @@ for (const s of stalks) {
   let points;
   let corners;
   for (let tries = 0; ; tries++) {
-    const t = draw.between(0.4, 0.8);
+    const t = draw.between(0.45, 0.85);
     const beta = away + draw.between(-0.7, 0.7);
-    const length = draw.between(3, 7);
-    const width = draw.between(1, 1.8);
+    const length = draw.between(4, 9);
+    const width = draw.between(1, 2);
     const rise = draw.between(0.3, 0.6);
     const lead = draw.between(-0.3, 0.3);
     const y = s.height * t;
