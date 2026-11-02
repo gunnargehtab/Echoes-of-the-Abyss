@@ -952,6 +952,14 @@ const STRUCTURE_SHORT: Record<StructureKind, string> = {
   [StructureKind.BioReactor]: 'BIO',
 };
 
+/** A recharging DECOY's refusal (docs/ui-ux.md §7), on the cell and on `N`. */
+function decoyRechargeText(seconds: number): string {
+  return `DECOY: the suite is recharging — ready in ${Math.ceil(seconds)} s`;
+}
+
+/** SCREEN with its magazine spent: where it refills (docs/systems-combat.md §5). */
+const SCREEN_EMPTY_TEXT = 'SCREEN: magazine empty — rearm at a Bastion or a Foundry';
+
 /** One command-bar button: screen-space bounds plus what pressing it does. */
 interface BarButton {
   x: number;
@@ -4147,11 +4155,17 @@ export class EchoRenderer {
     } else if (this.shownTab === 'squad') {
       const units = this.selectedUnits();
       const first = units[0];
+      // The page is drawn with nothing selected while a mission withholds
+      // construction (`shownTab`), and every order on it greys then. §7 wants
+      // the reason on each, not a row of cells a press cannot explain (#1732).
+      const unselected = (label: string): string | undefined =>
+        units.length === 0 ? `${label}: no hull selected` : undefined;
       buttons.push({
         label: 'SILENT',
         enabled: units.length > 0,
         active: first?.silentRunning ?? false,
         action: () => this.commandToggleSilent(),
+        refusal: unselected('SILENT'),
       });
       // A locked ability is dead on the bar, not merely refused on the press.
       // §7 wants the affordance to be visibly gone *before* the player reaches
@@ -4164,6 +4178,7 @@ export class EchoRenderer {
         enabled: units.length > 0,
         active: first?.engineOff ?? false,
         action: () => this.commandToggleEngineOff(),
+        refusal: unselected('DRIVE OFF'),
       });
       buttons.push({
         label: 'PING',
@@ -4172,13 +4187,16 @@ export class EchoRenderer {
         action: () => this.commandPing(),
         // The `P` key refuses with the mission's words; the button greyed
         // with none, so a press said nothing (#1721).
-        refusal: this.missionLock('activeSonar') ?? undefined,
+        refusal: this.missionLock('activeSonar') ?? unselected('PING'),
       });
       const heldAll = this.heldSelection(units);
       for (const direction of [-1, 1] as const) {
-        const refusal = heldAll ?? this.depthOffsetRefusal(units, direction);
+        const label = direction < 0 ? 'RISE' : 'DIVE';
+        // Nothing selected first: `depthOffsetRefusal` of no hulls reads as
+        // every hull already at its limit, which would be a false reason.
+        const refusal = unselected(label) ?? heldAll ?? this.depthOffsetRefusal(units, direction);
         buttons.push({
-          label: direction < 0 ? 'RISE' : 'DIVE',
+          label,
           yieldRank: YIELD.DEPTH_SHORTCUT,
           enabled: units.length > 0 && refusal === null,
           active: false,
@@ -4220,7 +4238,15 @@ export class EchoRenderer {
         priceMark: fighters && firesEnergy(this.faction),
         enabled: fighters && heldAll === null && this.missionLock('weapons') === null,
         active: this.pendingAttackMove,
-        refusal: heldAll ?? this.missionLock('weapons') ?? undefined,
+        // Greyed too for a selection with no hull that fights (`fights`): only
+        // Harvester hulls, or none at all.
+        refusal:
+          heldAll ??
+          this.missionLock('weapons') ??
+          (fighters
+            ? undefined
+            : (unselected('ENGAGE') ??
+              'ENGAGE: no fighting hull selected — a Harvester does not fight')),
         action: () => {
           this.cancelDestination();
           this.pendingBuild = null;
@@ -4232,12 +4258,14 @@ export class EchoRenderer {
         enabled: units.length > 0,
         active: false,
         action: () => this.commandStop(),
+        refusal: unselected('STOP'),
       });
       buttons.push({
         label: 'HOLD',
         enabled: units.length > 0,
         active: units.some((u) => u.holding === true),
         action: () => this.commandHold(),
+        refusal: unselected('HOLD'),
       });
       // Ordnance, docs/systems-combat.md §5, §6, §8. Each button reports its
       // own scarcity rather than merely greying out: a decoy cooldown is a
@@ -4262,7 +4290,12 @@ export class EchoRenderer {
             noDecoy === null && cooling === undefined && this.missionLock('noisemakers') === null,
           active: false,
           action: () => this.commandNoisemaker(),
-          refusal: noDecoy ?? this.missionLock('noisemakers') ?? undefined,
+          // The label counts the recharge down; a press while it does says so
+          // rather than nothing (#1732).
+          refusal:
+            noDecoy ??
+            this.missionLock('noisemakers') ??
+            (cooling === undefined ? undefined : decoyRechargeText(cooling)),
           yieldRank: YIELD.SITUATIONAL,
         });
         // The screen, for the one hull that carries a magazine of decoys
@@ -4278,7 +4311,15 @@ export class EchoRenderer {
               first.decoys > 0 && spacing === undefined && this.missionLock('noisemakers') === null,
             active: false,
             action: () => this.commandLayDecoy(),
-            refusal: this.missionLock('noisemakers') ?? undefined,
+            // The label shows the magazine and never the spacing, so a press
+            // between decoys has to say what the grey is waiting on (#1732).
+            refusal:
+              this.missionLock('noisemakers') ??
+              (first.decoys === 0
+                ? SCREEN_EMPTY_TEXT
+                : spacing === undefined
+                  ? undefined
+                  : `SCREEN: next decoy in ${Math.ceil(spacing)} s`),
             // Button only, no key — so it outlasts every entry that has one.
             yieldRank: YIELD.ONLY_ROUTE,
           });
@@ -5213,7 +5254,11 @@ export class EchoRenderer {
       return;
     }
     const units = armed.filter((u) => u.decoyCooldownS === undefined);
-    if (units.length === 0) return;
+    if (units.length === 0) {
+      // `N` while every suite recharges: the cell's words, not a silent drop.
+      this.refuse(decoyRechargeText(Math.min(...armed.map((u) => u.decoyCooldownS!))));
+      return;
+    }
     this.callbacks.onDeployNoisemaker(units.map((u) => u.id));
   }
 
