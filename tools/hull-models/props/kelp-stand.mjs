@@ -874,10 +874,19 @@ stand.scale.set(fit, fit * rise, fit);
 stand.position.copy(place([0, 0, 0]));
 seabed.bake(stand);
 
-// The lit tips, in the file's frame.
+// The lit tips, in the file's frame. Their translations are the one
+// float64 the file keeps (the buffers are float32), rounded to the
+// micrometre so a last-digit difference between one Node's Math and
+// another's — the drift that fails bower-pelagia here under Node 24
+// against its Node 22 bake — cannot reach the file.
 tipHeads.forEach((head, i) => {
   const at = place(head);
-  add(stand, `biolight_${nn(i)}`, seabed.tetra(TIP), biolight, [at.x, at.y + 0.15, at.z]);
+  const um = (v) => Math.round(v * 1e6) / 1e6;
+  add(stand, `biolight_${nn(i)}`, seabed.tetra(TIP), biolight, [
+    um(at.x),
+    um(at.y + 0.15),
+    um(at.z),
+  ]);
 });
 
 const audit = lightAudit(stand);

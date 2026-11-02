@@ -67,7 +67,7 @@
 import { THREE, clad, lamp, hex, box, flatShaded, tabled } from './kit.mjs';
 
 /**
- * The palette, as the fifteen files carry it: nine stones and four
+ * The palette, as the sixteen files carry it: nine stones and four
  * lights, each named by its docs/style-neon-noir.md "The props" token.
  * Metalness is 0 on every material in the set — "nothing manufactured"
  * (ENV STYLE) — and roughness the file's own. A lamp is kit.mjs `lamp`:

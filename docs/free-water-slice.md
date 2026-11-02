@@ -438,13 +438,14 @@ most 397,888 triangles: 40 new kelp stands at at most 9,000 each (360,000), 16 r
 clusters (6,208), wildlife (31,680), and zero other dressing.
 The remaining reservation is unused, not permission to fill the bowl. Counts are the
 opening list's contract; per-model triangle limits remain ceilings. Share instanced
-batches per template/material; no per-fish draw or relaxation of the whole-frame limit.
+batches per template/material; no per-fish draw or further relaxation of this study's
+720,000.
 
 Record actual whole-frame calls, triangles, instances, texture/target bytes, hardware,
 and gate-6 unpaced/queued GPU timing at DPR 1 and 1.5. Exercise motion, not only stills.
 CPU frame intervals and software rendering are not GPU evidence; unavailable hardware
-leaves that criterion open. No new "AAA" score, beauty score or relaxed budget replaces
-these checks.
+leaves that criterion open. No new "AAA" score, beauty score or budget beyond the one
+above replaces these checks.
 
 ## 8. Follow-up boundaries
 
