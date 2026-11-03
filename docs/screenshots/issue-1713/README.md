@@ -58,6 +58,10 @@ then passed 74 focused asset/lifecycle tests, frontend types, ESLint and formatt
 the six named seats contain baked vertices, so node origins incorrectly collapsed them
 to one position. The new distinct-seat regression failed before that correction.
 
+The independent loop critic could not start: its configured `opus` model was rejected
+as unavailable by the agent runtime. There is no critic verdict and no self-review
+substituted for that gate.
+
 ## Acceptance still open
 
 The complete route and depth-checkpoint journey, incurred unhealable crush, a completed
