@@ -21,9 +21,10 @@
  * export of the early pass, the same pass as the Tender's — part for part
  * in its order, every number the export's own, read off parts.mjs. Every
  * part comes from `factions/bathyarch.mjs`'s Chorister section or is a kit
- * box, in `ink`, which the file's six materials match to the value. Nothing
- * here is a shape decision; where the export is odd the script is odd with
- * it:
+ * box, in `ink`, which the file's six materials match to the value. The
+ * port itself takes no shape decision; where the export is odd the port is
+ * odd with it, and the passes below (FACETS, PANELS, WINGS) say what each
+ * one then changed:
  *
  * - RELABELLED, as #642 relabelled the eleven `bothSides` hulls: the file's
  *   `pipe_p`, `fin_p` and `stub_wing_p` sit at +z, which is starboard, and
@@ -75,14 +76,15 @@
  * fore can's patch, which lies flush on the facet at 0.00 mm and crosses no
  * edge of it.
  *
- * WINGS (#1740). The export's stub wings floated: a box 4 wide centred
- * 10.5 off the axis, its inner edge at 8.5 where the middle can's
- * half-width is 4.3 at that height, so each hung 3 m clear of the hull and
- * the sweep listed neither against anything. This is the one place the
- * script corrects the export rather than carrying it: each wing is now 9
- * wide, centred at 8, so its root runs from 3.5 — a unit inside the can's
- * facet — to the same tip at 12.5. The plan outline is unchanged, since
- * the tip is; the maps gain the wing's inboard span.
+ * WINGS (#1740). The export's stub wings floated, in drawn units: a box 4
+ * wide centred 10.5 off the axis, its inner edge at 8.5 where the middle
+ * can's half-width is 4.3 at that height, so each hung 4.2 units (3.3 m)
+ * clear of the hull and the sweep listed neither against anything. This is
+ * the one part of the export's own that the script moves rather than
+ * carries: each wing is now 9 wide, centred at 8, so its root runs from
+ * 3.5 — 0.7 unit or more (0.53 m) inside the can's flank across the
+ * wing's height — to the same tip at 12.5. The plan outline is
+ * unchanged, since the tip is; the maps gain the wing's inboard span.
  */
 import { THREE, add, box, bothSides, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
