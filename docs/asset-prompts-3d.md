@@ -1899,6 +1899,42 @@ env-coral-growth and env-nodule-bed: two stones under a light). No text, no wate
 surface — this stands on the seabed, deep underwater.
 ```
 
+```text
+ENV STYLE, public-microfauna variant (for exactly four models of the
+"Echoes of the Abyss" environment set, the decorative bodies
+docs/free-water-slice.md section 5 commissions: env-rim-crab,
+env-shoal-fry, env-outer-fish, env-deep-fish): everything in ENV STYLE
+holds — no faction, nothing manufactured, desaturated dark low-luminance
+materials, at most two, crisp low-poly facets, no lights and no emissive —
+with two lines changed. The natural form is a small living body rather
+than stone, coral, kelp or crystal: a crab standing on its own legs on
+the seabed, or a fish in one still swimming pose with nothing under it —
+no base, no rock, no stand, no water. "This stands on the seabed" holds
+for the crab alone; the three swimmers hang free in the column, built
+with their lowest vertex on the ground plane like every prop, and the
+runtime hangs each at an authored depth. Decoration, not an animal of the
+bestiary: no silhouette borrowed from a classified predator — nothing
+coiled to strike, no pack hunter's jaw, no colossus — no eye that glows,
+no lure, no lit skin, no photophore in the file; the deep fish marks six
+photophore seats as dark facets and the runtime lights them.
+```
+
+The variant is the scoped amendment [free-water-slice.md](free-water-slice.md) §5 asks of
+this block for #1711, under the licence [bestiary.md](bestiary.md) §3 writes: four public
+decorative bodies, environment geometry with no SIG, entity, yield, collision or response
+to anything, never a scenic copy of a hidden gameplay animal. It covers those four slugs
+and nothing else — no other floating prop, no gameplay fauna — and the rest of ENV STYLE
+binds them as it binds a crag. All four rows carry Light `none`, the deep fish included:
+its photophores are the runtime's, at most six soft rung-5 dots on the public-life channel
+([style-neon-noir.md](style-neon-noir.md) "World light"), and its file marks where they sit
+with six named `photophore_NN` facets in the body's own material, 2 cm proud and
+non-emissive, so #1713 reads the seats off the file rather than inventing them (the
+owner's call, 3 November 2026). The swimmers are built as every prop is, lowest vertex on
+y = 0 (`seabed.mjs` `stand`), and the fixture hangs each at its listed depth; nothing in
+the file says where in the column it belongs (the owner's call, the same day). Their
+footprint is the body's length, the slice's canonical size; the crab's is its spread
+across the legs.
+
 The prop table — one row per asset, with the numbers intake and the registry check.
 `Footprint` is the canonical scale hull-intake sizes against (`--footprint-m`) and the
 runtime draws at, taken over the parts' own boxes rather than their vertices (#876);
@@ -1924,6 +1960,10 @@ metre, a range the band a generated one lands in; `Tris` is the per-instance bud
 | Rock (any biome) | `env-rock-crag-a` / `-b` | 30 m | 30–50 m | ≤ 500 | none |
 | Open Water | `env-open-boulder` | 12 m | 6 m | ≤ 300 | none |
 | Resource field (any biome) | `env-nodule-bed` | 12 m | 2 m | ≤ 240 | `ore-trace`, glint facets |
+| Crater garden floor | `env-rim-crab` | 2 m | HEIGHT_TBD | ≤ 400 | none |
+| Crater garden, suspended | `env-shoal-fry` | 0.5 m | HEIGHT_TBD | ≤ 180 | none |
+| Crater bowl, suspended | `env-outer-fish` | 4 m | HEIGHT_TBD | ≤ 600 | none |
+| Crater deep pocket, suspended | `env-deep-fish` | 2 m | HEIGHT_TBD | ≤ 400 | none |
 
 Four heights moved to their approved models (#879): the trench slab from 10 m, the
 resonance pylon from 25 m, the dome shard from 20 m to 14 m and the coral growth from

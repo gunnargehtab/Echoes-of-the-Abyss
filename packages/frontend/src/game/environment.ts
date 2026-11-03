@@ -113,7 +113,8 @@ export interface PropSpec {
 
 /**
  * The registry — one row per `env-*.glb` in docs/concept-art/models/ (but
- * `env-kelp-stand`, whose row #1713 adds with the fixture that places it), the
+ * `env-kelp-stand` and the four microfauna bodies of #1711, whose rows #1713
+ * adds with the fixture that places them), the
  * contract rows of docs/asset-prompts-3d.md Block 4 with the triangle count
  * intake reported for each committed model (all well inside the table's
  * per-row caps; a replacement export is held to the same cap by intake).

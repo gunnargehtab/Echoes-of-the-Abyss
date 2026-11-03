@@ -100,8 +100,11 @@ the brief; the numbers are constraints, not suggestions.
 - **Concrete nouns, no adjectives doing structural work.** "Two great hold doors along the
   flank with hinge rails and dogging wheels" is the register. "Imposing industrial vessel"
   is not.
-- **No fauna, ever.** Animals are contacts drawn at earned fidelity, never world meshes
-  (`docs/bestiary.md` §3).
+- **No fauna, ever**, with the one exception the bestiary itself writes. Animals are
+  contacts drawn at earned fidelity, never world meshes (`docs/bestiary.md` §3); the four
+  public decorative bodies `docs/free-water-slice.md` §5 commissions (#1711) are
+  environment geometry under Block 4's public-microfauna variant, and a shape that
+  borrows a classified animal's silhouette is refused even there.
 - **Look at the whole, lit, every round.** Run
   `node tools/hull-renders/inspect.mjs <slug> --before <base-sha>`. The maps are straight
   down and the beauty rig hides geometry, so a run of fixes, each right against its audit
