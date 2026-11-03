@@ -11,8 +11,10 @@
  * Block 4 materials as the fourteen approved files carry them (and the
  * fifteenth, the nodule bed, takes one of the same tokens, `stone_dark`,
  * and two of its own, `silt_drift` and `ore_trace` — #1555; the sixteenth,
- * the kelp stand, the cluster's two — #1712), the builders
- * more than one prop needs, and the root every prop stands on.
+ * the kelp stand, the cluster's two — #1712; the four microfauna that make
+ * twenty, `stone_dark` again under two skins of their own, `carapace` and
+ * `fish_flank` — #1711), the builders more than one prop needs, and the
+ * root every prop stands on.
  *
  * Three things about the fourteen batch files are worth knowing before
  * reading one, and this module is where they are written down:
@@ -64,11 +66,12 @@
  * XYZ Euler the generator set (the crag's `peak_fourth` prints as
  * (−π, 1.34, −π), which is a yaw of 1.8).
  */
-import { THREE, clad, lamp, hex, box, flatShaded, tabled } from './kit.mjs';
+import { THREE, clad, lamp, hex, box, flatShaded, tabled, faceted } from './kit.mjs';
 
 /**
- * The palette, as the sixteen files carry it: nine stones and four
- * lights, each named by its docs/style-neon-noir.md "The props" token.
+ * The palette, as the twenty Block 4 files and the arch carry it: ten
+ * stones, sediments and growths, two living skins and five lights, each
+ * named by its docs/style-neon-noir.md "The props" token.
  * Metalness is 0 on every material in the set — "nothing manufactured"
  * (ENV STYLE) — and roughness the file's own. A lamp is kit.mjs `lamp`:
  * the file's near-black base, its emissive at the doc's world-light token,
@@ -128,6 +131,27 @@ export const ground = {
     m.side = THREE.DoubleSide;
     return m;
   },
+  /**
+   * Carapace, `carapace`: the rim crab's shell, claws and eyestalks (#1711),
+   * the first of the two skins the public-microfauna variant of ENV STYLE
+   * adds (docs/asset-prompts-3d.md Block 4). A dark russet — hue 7°,
+   * 42 % saturated — redder than `coral-stone-ruin` (hue 16°) and at
+   * 0.0167 linear luminance 1.9× `stone-dark`, which its legs carry, so
+   * under the runtime's ceiling the shell reads warm on dark stilts and the
+   * legs sit at 0.53 of it. Roughness 0.9: chitin under silt, a shade less
+   * matte than stone.
+   */
+  carapace: () => clad('carapace', hex('#2F1F1C'), 0, 0.9),
+  /**
+   * Fish flank, `fish-flank`: the one skin all three swimmers share (#1711),
+   * the fry, the outer fish and the deep fish, their photophore seats
+   * included. A cold pewter — hue 187°, 23 % saturated — between the
+   * stones' blue (204–212°) and the living coral's green, so a fish reads
+   * as a body and not as a chip of the rock it passes; 0.0215 linear
+   * luminance, 2.4× `stone-dark`, which the fins and eyes carry at 0.41
+   * of it: a pale flank under darker fins. Roughness 0.8, a wet scale.
+   */
+  fishFlank: () => clad('fish_flank', hex('#212A2B'), 0, 0.8),
   /** `vent-ember` at 0.7 over `ember-base`, the chimney's mouth. */
   ember: () => lamp('ember', hex('#E06A2B'), hex('#0B0806'), 1, 0.7),
   /** `flora-biolight` at 0.55 over `biolight-base`, the kelp cluster's and the kelp stand's tips. */
@@ -546,4 +570,512 @@ export function bake(root) {
   root.rotation.set(0, 0, 0);
   root.scale.set(1, 1, 1);
   root.updateMatrixWorld(true);
+}
+
+/* --------------------------------------------------------------------------
+ * The microfauna — env-rim-crab, env-shoal-fry, env-outer-fish and
+ * env-deep-fish (#1711), the four public decorative bodies
+ * docs/free-water-slice.md §5 commissions under Block 4's public-microfauna
+ * variant of ENV STYLE. Four files, one grammar: a body is a `shaft`, a
+ * closed run of corner rings whose facets are crisp because every corner is
+ * drawn with a little jitter from a seeded stream; everything flat on it
+ * — a fin, a claw's hand — is a `blade`, a thin closed slab on a convex
+ * outline. The three fish differ in proportion and fin plan and in nothing
+ * else: the same shaft from nose to tail, the same blades rooted through
+ * the skin, the same two materials. The crab's legs and claw arms are the
+ * same shaft along a bent axis, its shell the same shaft stood on end. Both
+ * builders wind every triangle against a point inside the part it belongs
+ * to, so no script here checks a facet's facing after the fact as the
+ * nodule bed and the kelp stand do: the wind is the construction.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * A triangle over `points` wound to face away from `inside`: `tri` as given
+ * if its normal already points from `inside` toward it, else with its last
+ * two corners swapped. A degenerate triangle, or one whose plane passes
+ * through `inside`, throws rather than guess.
+ */
+export function facing(points, tri, inside) {
+  const [a, b, c] = tri.map((k) => new THREE.Vector3(...points[k]));
+  const n = new THREE.Vector3().subVectors(b, a).cross(new THREE.Vector3().subVectors(c, a));
+  const centroid = a.add(b).add(c).divideScalar(3);
+  const d = n.dot(centroid.sub(new THREE.Vector3(...inside)));
+  if (!(Math.abs(d) > 1e-12)) throw new Error(`facing: triangle ${tri} is edge-on to its inside`);
+  return d > 0 ? tri : [tri[0], tri[2], tri[1]];
+}
+
+/** The mean of a ring's corners. */
+const middle = (ring) =>
+  ring.reduce((m, p) => m.map((v, i) => v + p[i] / ring.length), [0, 0, 0]);
+
+/**
+ * A shaft: a closed body over a run of corner rings, `rings` from one end
+ * to the other, each the same number of `[x, y, z]` corners in the same
+ * sense round. Each end is `start` and `end`: a point, fanned to from the
+ * end ring (a nose, a leg's tip, a whip tail's end), or absent, which caps
+ * the end flat (a peduncle a tail fin roots on, a hip under a shell). Every
+ * band is wound against the midpoint of its two rings' middles and every
+ * end against its ring's middle pulled a little back along the shaft, so
+ * the axis may bend as it likes — a crab's leg climbs and descends — and
+ * the skin still faces out. Flat and non-indexed (kit.mjs `faceted`).
+ *
+ * Each band quad is cut on one diagonal, and which one is `splitAC`'s
+ * rule: facets in the first half of the ring on one diagonal and the
+ * second half on the other, so facet i and facet n − 1 − i are cut as
+ * mirror images. On a fish whose corners mirror about its vertical plane
+ * (`fishBody`) the whole skin is then mirror-symmetric, triangles
+ * included, and a point on a starboard facet's diagonal has its mirror on
+ * the port facet's diagonal — the reviewer's finding A on #1711: cut on
+ * one diagonal throughout, a mirrored target fell on a different half of
+ * the quad, or the next facet, and no two eyes sat alike.
+ */
+/** Whether band facet `i` of `n` is cut on the (b,i)–(b+1,i+1) diagonal, or on (b,i+1)–(b+1,i). */
+export const splitAC = (n, i) => i < n / 2;
+
+export function shaft(rings, { start = null, end = null } = {}) {
+  const n = rings[0].length;
+  const points = rings.flat();
+  const tris = [];
+  const at = (b, i) => b * n + (i % n);
+  for (let b = 0; b + 1 < rings.length; b++) {
+    const lo = middle(rings[b]);
+    const hi = middle(rings[b + 1]);
+    const inside = lo.map((v, i) => (v + hi[i]) / 2);
+    for (let i = 0; i < n; i++) {
+      const [A, B, C, D] = [at(b, i), at(b, i + 1), at(b + 1, i + 1), at(b + 1, i)];
+      const pair = splitAC(n, i) ? [[A, B, C], [A, C, D]] : [[A, B, D], [B, C, D]];
+      tris.push(facing(points, pair[0], inside), facing(points, pair[1], inside));
+    }
+  }
+  const cap = (b, tip, towards) => {
+    const m = middle(rings[b]);
+    const back = middle(rings[towards]);
+    const inside = m.map((v, i) => v + 0.1 * (back[i] - v));
+    if (tip) {
+      points.push(tip);
+      const t = points.length - 1;
+      for (let i = 0; i < n; i++) tris.push(facing(points, [at(b, i), at(b, i + 1), t], inside));
+    } else {
+      for (let i = 1; i + 1 < n; i++)
+        tris.push(facing(points, [at(b, 0), at(b, i), at(b, i + 1)], inside));
+    }
+  };
+  cap(0, start, 1);
+  cap(rings.length - 1, end, rings.length - 2);
+  return faceted(points, tris);
+}
+
+/** Twice the signed area of a planar polygon about `n`, for `blade`'s sense. */
+function signedArea(o, n) {
+  const sum = new THREE.Vector3();
+  for (let i = 0; i < o.length; i++)
+    sum.add(new THREE.Vector3().crossVectors(o[i], o[(i + 1) % o.length]));
+  return sum.dot(n);
+}
+
+/**
+ * A blade: a thin closed slab on a planar outline — `outline` as `[x, y,
+ * z]` points in order round, convex, `normal` the plane's, `thickness`
+ * across it — fanned on both faces and walled round, wound against its own
+ * centre. The fins and tail lobes of the fish, the crab's claw hands and
+ * fingers. A fin roots inside the body it belongs to, as the kelp stand's
+ * fronds root inside their stalk, so the sweep lists each against its body
+ * and nothing floats. A concave outline throws: the wind against one centre
+ * is only sound on a convex one, so a forked tail is two blades.
+ */
+export function blade(outline, normal, thickness) {
+  const m = outline.length;
+  const n = new THREE.Vector3(...normal).normalize();
+  const o = outline.map((p) => new THREE.Vector3(...p));
+  const sense = Math.sign(signedArea(o, n));
+  for (let i = 0; i < m; i++) {
+    const a = o[i];
+    const b = o[(i + 1) % m];
+    const c = o[(i + 2) % m];
+    const turn = new THREE.Vector3().subVectors(b, a).cross(new THREE.Vector3().subVectors(c, b));
+    if (Math.sign(turn.dot(n)) !== sense)
+      throw new Error(`blade: outline is not convex at corner ${i + 1}`);
+  }
+  const lift = n.clone().multiplyScalar(thickness / 2);
+  const points = [
+    ...o.map((p) => p.clone().add(lift).toArray()),
+    ...o.map((p) => p.clone().sub(lift).toArray()),
+  ];
+  const inside = middle(points);
+  const tris = [];
+  for (let i = 1; i + 1 < m; i++)
+    tris.push(facing(points, [0, i, i + 1], inside), facing(points, [m, m + i, m + i + 1], inside));
+  for (let i = 0; i < m; i++) {
+    const j = (i + 1) % m;
+    tris.push(facing(points, [i, j, m + j], inside), facing(points, [i, m + j, m + i], inside));
+  }
+  return faceted(points, tris);
+}
+
+/**
+ * The facet of a flat-shaded part nearest a point: its centroid and its
+ * normal, in the part's own frame. The measure a script asserts a seat's
+ * stand-off by, against the triangles the file carries; not what places
+ * one (`fishBody` `facetAt` does, on the band quad), since a nearest
+ * triangle's mirror is the other half of the mirrored quad.
+ */
+export function nearestFacet(geo, target) {
+  const p = geo.attributes.position;
+  const nrm = geo.attributes.normal;
+  const t = new THREE.Vector3(...target);
+  let best = null;
+  for (let f = 0; f < p.count / 3; f++) {
+    const c = new THREE.Vector3();
+    for (let k = 0; k < 3; k++) c.add(new THREE.Vector3().fromBufferAttribute(p, 3 * f + k));
+    c.divideScalar(3);
+    const d = c.distanceTo(t);
+    if (!best || d < best.d)
+      best = { d, centroid: c, normal: new THREE.Vector3().fromBufferAttribute(nrm, 3 * f) };
+  }
+  return best;
+}
+
+/**
+ * A fish's body: a `shaft` from a nose point at u = 0 along −x through
+ * `stations` — `{ u, ry, rz }`, the fraction of `length` back from the nose
+ * and the half-height and half-width there, nose to tail — to the last
+ * station, capped flat for a tail fin to root on (`tail: 'cap'`) or fanned
+ * to a point at u = 1 (`tail: 'point'`, a whip). The axis cambers by
+ * `camber(u)` in y and bends by `bend(u)` in z, the one still swimming
+ * pose; `sides` corners a ring (even), the first at the top so the back
+ * is a ridge and the belly a keel, each pushed in or out by up to `jitter`
+ * of its radius and slipped along the axis by as much, drawn from `draw`
+ * ring by ring for the corners from the ridge round to the keel on the
+ * starboard side and reused for their port mirrors, so the skin is
+ * mirror-symmetric about the axis's vertical plane and still no two
+ * facets alike. Returns the geometry; the analytic skin, `point(u, phi)` —
+ * phi 0 on the starboard beam (+z), π/2 on the back, −π/2 under the keel
+ * — and `half(u)` for where a fin roots; and `facetAt(u, phi)`, the band
+ * quad of the skin as built that the point falls on: its four corners,
+ * the diagonal `shaft` cut it on (front ring to back ring), `at(u)` for
+ * the point on that diagonal at u — on the surface exactly, on both
+ * triangles — `mid` for its middle (at `midU`), `axisAt(u)` for the
+ * band's own axis there, the plane its corners mirror about, `normal` for
+ * the quad's (the mean of its two triangles') and `size` for its shortest
+ * edge. An eye or a seat
+ * sits on a quad by `facetAt`, never on the ellipse (which the facets lie
+ * inside by up to r(1 − cos π/n)) and never on a nearest triangle (whose
+ * mirror is the other half of the mirrored quad).
+ */
+export function fishBody(
+  draw,
+  { length, sides, stations, tail = 'cap', camber = () => 0, bend = () => 0, jitter = 0.04 }
+) {
+  const x = (u) => length / 2 - u * length;
+  const axis = (u) => [x(u), camber(u), bend(u)];
+  const half = (u) => {
+    const run = [{ u: 0, ry: 0, rz: 0 }, ...stations];
+    if (tail === 'point') run.push({ u: 1, ry: 0, rz: 0 });
+    for (let i = 0; i + 1 < run.length; i++) {
+      const a = run[i];
+      const b = run[i + 1];
+      if (u >= a.u && u <= b.u) {
+        const f = (u - a.u) / (b.u - a.u);
+        return { ry: a.ry + (b.ry - a.ry) * f, rz: a.rz + (b.rz - a.rz) * f };
+      }
+    }
+    throw new Error(`fishBody: u ${u} is off the body`);
+  };
+  const point = (u, phi) => {
+    const [ax, ay, az] = axis(u);
+    const { ry, rz } = half(u);
+    return [ax, ay + ry * Math.sin(phi), az + rz * Math.cos(phi)];
+  };
+  if (sides % 2) throw new Error(`fishBody: ${sides} sides; the ring must mirror, so even`);
+  const rings = stations.map(({ u, ry, rz }) => {
+    const [ax, ay, az] = axis(u);
+    // One draw a corner from the ridge (k = 0) round to the keel (k =
+    // sides / 2); corner k past the keel is the mirror of corner sides − k.
+    const drawn = Array.from({ length: sides / 2 + 1 }, () => ({
+      push: 1 + draw.between(-jitter, jitter),
+      slip: draw.between(-jitter, jitter) * ry,
+    }));
+    return Array.from({ length: sides }, (_, k) => {
+      const phi = Math.PI / 2 - (2 * Math.PI * k) / sides;
+      const { push, slip } = drawn[Math.min(k, sides - k)];
+      return [ax + slip, ay + ry * push * Math.sin(phi), az + rz * push * Math.cos(phi)];
+    });
+  });
+  const geo = shaft(rings, { start: axis(0), end: tail === 'point' ? axis(1) : null });
+  const facetAt = (u, phi) => {
+    const b = stations.findIndex(
+      (st, i) => i + 1 < stations.length && u >= st.u && u <= stations[i + 1].u
+    );
+    if (b < 0) throw new Error(`fishBody: u ${u} is on no band`);
+    const step = (2 * Math.PI) / sides;
+    const i = (((Math.floor((Math.PI / 2 - phi) / step) % sides) + sides) % sides);
+    const j = (i + 1) % sides;
+    const V = (p) => new THREE.Vector3(...p);
+    const [A, B, C, D] = [V(rings[b][i]), V(rings[b][j]), V(rings[b + 1][j]), V(rings[b + 1][i])];
+    const pair = splitAC(sides, i) ? [[A, B, C], [A, C, D]] : [[A, B, D], [B, C, D]];
+    const [P, Q] = splitAC(sides, i) ? [A, C] : [B, D];
+    const inside = V(axis((stations[b].u + stations[b + 1].u) / 2));
+    const normal = new THREE.Vector3();
+    for (const [a, c, d] of pair) {
+      const nn = new THREE.Vector3().subVectors(c, a).cross(new THREE.Vector3().subVectors(d, a));
+      const centre = a.clone().add(c).add(d).divideScalar(3);
+      if (nn.dot(centre.sub(inside)) < 0) nn.negate();
+      normal.add(nn.normalize());
+    }
+    normal.normalize();
+    const u0 = stations[b].u;
+    const u1 = stations[b + 1].u;
+    const at = (uu) => P.clone().lerp(Q, (uu - u0) / (u1 - u0));
+    // The band's own axis: straight between its two ring centres, which is
+    // the plane the band's corners mirror about (the bend is sampled at
+    // the stations, and a corner's slip moves it along x off that curve).
+    const axisAt = (uu) => V(axis(u0)).lerp(V(axis(u1)), (uu - u0) / (u1 - u0));
+    const size = Math.min(A.distanceTo(B), B.distanceTo(C), C.distanceTo(D), D.distanceTo(A));
+    return {
+      corners: [A, B, C, D],
+      diagonal: [P, Q],
+      at,
+      axisAt,
+      mid: P.clone().lerp(Q, 0.5),
+      midU: (u0 + u1) / 2,
+      normal,
+      size,
+      band: b,
+      facet: i,
+    };
+  };
+  return { geo, rings, axis, half, point, facetAt, length };
+}
+
+/**
+ * A fin: a `blade` on an outline drawn in its own plane — `outline` as
+ * `[a, b]` pairs in metres, `a` along `along` from `root` and `b` along
+ * `span` (made perpendicular to `along` here) — so a dorsal fin is drawn
+ * with `along` down the back and `span` up, a pectoral with `along` swept
+ * aft and `span` out from the flank, a tail lobe with `along` the
+ * peduncle's tangent. The crab's claw hands and fingers are the same with
+ * `along` forward out of the wrist.
+ */
+export function fin({ root, along, span, outline, thickness }) {
+  const a = new THREE.Vector3(...along).normalize();
+  const b = new THREE.Vector3(...span);
+  b.addScaledVector(a, -b.dot(a)).normalize();
+  const n = new THREE.Vector3().crossVectors(a, b);
+  const o = new THREE.Vector3(...root);
+  return blade(
+    outline.map(([p, q]) => o.clone().addScaledVector(a, p).addScaledVector(b, q).toArray()),
+    n.toArray(),
+    thickness
+  );
+}
+
+/**
+ * A tangent basis `[t1, t2]` across a normal: `t1` along the body (x
+ * with the normal's share taken out), `t2` across it. Built from x rather
+ * than from a cross product with up, so a port normal gives the mirror of
+ * a starboard basis and a lozenge or a lens ring mirrors with its seat.
+ */
+function tangents(n) {
+  const x = Math.abs(n.x) < 0.9 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
+  const t1 = x.addScaledVector(n, -x.dot(n)).normalize();
+  const t2 = new THREE.Vector3().crossVectors(n, t1).normalize();
+  return [t1, t2];
+}
+
+/**
+ * An eye: a six-sided pyramid on a band quad of the skin (`fishBody`
+ * `facetAt`), centred on the quad's middle, the middle of the diagonal it
+ * is cut on; its base ring in the quad's plane sunk `sink` under it and
+ * its apex `proud` of it, open at the base, which the body hides. The
+ * radius is capped at 0.45 of the quad's shortest edge so the base stays
+ * on its facet — the fry's first lens stood past its head like a horn — and
+ * the radius used is returned with the geometry. A dark lens in the skin
+ * and no light: the variant's "no eye that glows".
+ */
+export function lens(facet, radius, { sink = 0.1, proud = 0.25 } = {}) {
+  const r = Math.min(radius, 0.45 * facet.size);
+  const n = facet.normal;
+  const [t1, t2] = tangents(n);
+  const base = facet.mid.clone().addScaledVector(n, -sink * r);
+  const points = Array.from({ length: 6 }, (_, k) => {
+    const a = (2 * Math.PI * k) / 6;
+    return base
+      .clone()
+      .addScaledVector(t1, r * Math.cos(a))
+      .addScaledVector(t2, r * Math.sin(a))
+      .toArray();
+  });
+  points.push(facet.mid.clone().addScaledVector(n, proud * r).toArray());
+  const tris = Array.from({ length: 6 }, (_, k) =>
+    facing(points, [k, (k + 1) % 6, 6], base.toArray())
+  );
+  return { geo: faceted(points, tris), centre: facet.mid.clone(), normal: n, radius: r, facet };
+}
+
+/**
+ * A seat: a lozenge of two triangles, `w` along the body and `h` across,
+ * lying `proud` of a band quad of the skin (`fishBody` `facetAt`) at the
+ * point of its cut diagonal at `u`, in the quad's plane and facing its way
+ * — the deep fish's photophore seats, dark facets in the body's own
+ * material that the runtime lights and the file does not. Returns the
+ * geometry and the skin point it stands off.
+ */
+export function seat(facet, u, [w, h], proud) {
+  const on = facet.at(u);
+  const n = facet.normal;
+  const [t1, t2] = tangents(n);
+  const c = on.clone().addScaledVector(n, proud);
+  const points = [
+    c.clone().addScaledVector(t1, w / 2).toArray(),
+    c.clone().addScaledVector(t2, h / 2).toArray(),
+    c.clone().addScaledVector(t1, -w / 2).toArray(),
+    c.clone().addScaledVector(t2, -h / 2).toArray(),
+  ];
+  const inside = on.toArray();
+  return {
+    geo: faceted(points, [facing(points, [0, 1, 2], inside), facing(points, [0, 2, 3], inside)]),
+    on,
+    normal: n,
+    facet,
+  };
+}
+
+/**
+ * Whether a point is inside a closed flat-shaded body: the parity of the
+ * crossings of one ray from it through the body's triangles
+ * (Möller–Trumbore), the ray on a fixed odd bearing so it meets no edge
+ * square on. The reviewer's probe on #1711, kept here as the test a fin's
+ * root is held to.
+ */
+export function insideBody(geo, point) {
+  const p = geo.attributes.position;
+  const o = new THREE.Vector3(...point);
+  const d = new THREE.Vector3(0.3127, 0.9411, 0.1287);
+  let hits = 0;
+  const a = new THREE.Vector3();
+  const b = new THREE.Vector3();
+  const c = new THREE.Vector3();
+  const e1 = new THREE.Vector3();
+  const e2 = new THREE.Vector3();
+  const pv = new THREE.Vector3();
+  const sv = new THREE.Vector3();
+  const qv = new THREE.Vector3();
+  for (let t = 0; t < p.count; t += 3) {
+    a.fromBufferAttribute(p, t);
+    b.fromBufferAttribute(p, t + 1);
+    c.fromBufferAttribute(p, t + 2);
+    e1.subVectors(b, a);
+    e2.subVectors(c, a);
+    pv.crossVectors(d, e2);
+    const det = e1.dot(pv);
+    if (Math.abs(det) < 1e-12) continue;
+    sv.subVectors(o, a);
+    const u = sv.dot(pv) / det;
+    if (u < 0 || u > 1) continue;
+    qv.crossVectors(sv, e1);
+    const v = d.dot(qv) / det;
+    if (v < 0 || u + v > 1) continue;
+    if (e2.dot(qv) / det > 0) hits++;
+  }
+  return hits % 2 === 1;
+}
+
+/**
+ * A median fin — a dorsal, an anal, a blade of a ribbon — on a `fishBody`:
+ * a `blade` whose root chord runs from `inset(u0)` under the ridge (`sign`
+ * 1) or keel (−1) at u0 to the same under it at u1, and whose plane is
+ * yawed to that chord, so it follows a body that bends and tapers under
+ * it rather than standing in the plane of its front root (the round-2
+ * finding on #1711: a dorsal drawn at the front root's z ran straight
+ * while the back curved away under it, and its rear root stood 5 cm
+ * outside the skin). `tops` is the free edge, `[u, h]` from the rear
+ * forward, each h metres out of the ridge or keel at that u, projected
+ * into the plane. `inset` is a function of u or a number, the number
+ * capped at four tenths of the half-height where the body is thinner
+ * than it (a whip). The root chord is then sampled at `samples` points
+ * and every one must be inside the closed body (`insideBody`), or this
+ * throws naming the first that is not: a straight chord through a bend is
+ * off the axis's curve by its sagitta, and a fin long enough for that to
+ * reach the skin is split, or set deeper, by its script. Returns the
+ * geometry and the root chord's ends.
+ */
+export function median(body, { u0, u1, sign = 1, inset, tops, thickness, samples = 21 }) {
+  const under = typeof inset === 'function' ? inset : (u) => Math.min(inset, 0.4 * body.half(u).ry);
+  const edge = (u, off) => {
+    const [x, y, z] = body.axis(u);
+    return new THREE.Vector3(x, y + sign * (body.half(u).ry + off), z);
+  };
+  const r0 = edge(u0, -under(u0));
+  const r1 = edge(u1, -under(u1));
+  const along = new THREE.Vector3().subVectors(r1, r0);
+  const a = along.clone().normalize();
+  const b = new THREE.Vector3(0, sign, 0);
+  b.addScaledVector(a, -b.dot(a)).normalize();
+  const local = (pt) => {
+    const d = new THREE.Vector3().subVectors(pt, r0);
+    return [d.dot(a), d.dot(b)];
+  };
+  const outline = [[0, 0], [along.length(), 0], ...tops.map(([u, h]) => local(edge(u, h)))];
+  for (let k = 0; k < samples; k++) {
+    const pt = r0.clone().lerp(r1, k / (samples - 1));
+    if (!insideBody(body.geo, pt.toArray()))
+      throw new Error(
+        `median: root sample ${k} of ${samples} at (${pt.toArray().map((v) => v.toFixed(4))}) is outside the body`
+      );
+  }
+  return {
+    geo: fin({ root: r0.toArray(), along: a.toArray(), span: b.toArray(), outline, thickness }),
+    root: [r0, r1],
+  };
+}
+
+/**
+ * Where a body built at a nominal size comes to rest: its plan's box
+ * centred on the origin, its lowest vertex on y = 0, held at `footprintM`
+ * by intake's measure (the larger of its x and z extents) and baked, so
+ * the root is an identity and `stand` finds ×1.000. The crab is built with
+ * its tips on the floor and the swimmers with nothing under them, and both
+ * go out the same way: every prop's lowest vertex is on y = 0 and the
+ * runtime hangs a swimmer at its depth (Block 4, the variant's paragraph).
+ * Returns the fit.
+ */
+export function settle(root, footprintM) {
+  root.updateMatrixWorld(true);
+  const bb = new THREE.Box3().setFromObject(root, true);
+  const size = bb.getSize(new THREE.Vector3());
+  const c = bb.getCenter(new THREE.Vector3());
+  const fit = footprintM / Math.max(size.x, size.z);
+  root.scale.setScalar(fit);
+  root.position.set(-c.x * fit, -bb.min.y * fit, -c.z * fit);
+  bake(root);
+  return fit;
+}
+
+/**
+ * What a baked body is, for a script to assert its header by: triangles,
+ * the material names it carries, the lowest vertex, how far any vertex
+ * stands from the origin on x and on z, and which parts reach the floor
+ * (a vertex within a tenth of a millimetre of y = 0).
+ */
+export function tally(root) {
+  let tris = 0;
+  let lowest = Infinity;
+  const reach = { x: 0, z: 0 };
+  const materials = new Set();
+  const onFloor = [];
+  root.traverse((o) => {
+    if (!o.isMesh) return;
+    const p = o.geometry.attributes.position;
+    tris += p.count / 3;
+    materials.add(o.material.name);
+    let low = Infinity;
+    for (let i = 0; i < p.count; i++) {
+      low = Math.min(low, p.getY(i));
+      reach.x = Math.max(reach.x, Math.abs(p.getX(i)));
+      reach.z = Math.max(reach.z, Math.abs(p.getZ(i)));
+    }
+    lowest = Math.min(lowest, low);
+    if (low < 1e-4) onFloor.push(o.name);
+  });
+  return { tris, lowest, reach, materials, onFloor };
 }
