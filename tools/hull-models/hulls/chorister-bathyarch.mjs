@@ -74,6 +74,15 @@
  * 1,152. The sweep (contacts.mjs) reads every one on its plate but the
  * fore can's patch, which lies flush on the facet at 0.00 mm and crosses no
  * edge of it.
+ *
+ * WINGS (#1740). The export's stub wings floated: a box 4 wide centred
+ * 10.5 off the axis, its inner edge at 8.5 where the middle can's
+ * half-width is 4.3 at that height, so each hung 3 m clear of the hull and
+ * the sweep listed neither against anything. This is the one place the
+ * script corrects the export rather than carrying it: each wing is now 9
+ * wide, centred at 8, so its root runs from 3.5 — a unit inside the can's
+ * facet — to the same tip at 12.5. The plan outline is unchanged, since
+ * the tip is; the maps gain the wing's inboard span.
  */
 import { THREE, add, box, bothSides, metreTrue, exportGlb } from '../kit.mjs';
 import * as bathyarch from '../factions/bathyarch.mjs';
@@ -147,10 +156,11 @@ bar('hazard_stripe', amber, [12, 0.3, 1], [-2, 5.05, 0]);
 bar('patch', rust, [5, 0.4, 4], [-14, 3.7, 1.5]);
 
 // A fin astern and a stub wing amidships a side: the +z pair first, which
-// is starboard, then the −z pair (#642).
+// is starboard, then the −z pair (#642). The wings are rooted (WINGS,
+// header): 9 wide from 3.5 to 12.5, not the export's 4 from 8.5.
 bothSides((side, sgn) => {
   bar(`fin_${side}`, grey, [6, 0.6, 5], [-22, 0, sgn * 6]);
-  bar(`stub_wing_${side}`, grey, [8, 0.6, 4], [4, -1, sgn * 10.5]);
+  bar(`stub_wing_${side}`, grey, [8, 0.6, 9], [4, -1, sgn * 8]);
 });
 
 // The stack, and the light: two ports on the deck walk, the bow lamp on the
