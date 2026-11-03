@@ -410,7 +410,16 @@ triangle and no target: a few instructions on the landmark's own fragments, read
 time at the study's close station with the pools on and off. The refinement's court bounce
 and distance grade ([sorrowgate-arch-study.md](sorrowgate-arch-study.md) §11) are fragment
 work of the same kind, the grade on every terrain and prop fragment of the prologue's look,
-read as GPU time with each on and off, the grade at the low and survey stations. The probe reports the
+read as GPU time with each on and off, the grade at the low and survey stations.
+
+The free-water slice's crater fixture is the one carve-out from this reservation and from
+the frame's 400,000, by the owner's decision on #1712 (2 November 2026): a development
+slice for map design patterns, it spends up to 720,000 triangles a frame and 400,000 on
+props and decorative life, forty kelp stands of 9,000 among them
+([free-water-slice.md](free-water-slice.md) §7); shipped maps keep this gate's 400,000 and
+120,000.
+
+The probe reports the
 landmark, its triangles and both mote counts on their own, as it reports the props.
 
 The water ([art-direction.md](art-direction.md), "Reading the Water") spends **two draw

@@ -207,7 +207,7 @@ ordinary registry scatter. The opening list has exactly these counts, provided e
 asset loaded; a missing model is a failed acceptance row, not a quieter forest.
 
 In #1713, register all five new rows with `stands: []` and `density: 0`, so only the
-fixture's list places them; that PR also adds stand-only allowances of 1,200 triangles
+fixture's list places them; that PR also adds stand-only allowances of 9,000 triangles
 and 120 m footprint to the registry checks, retaining the existing 800/60 bounds for
 every other row.
 
@@ -273,7 +273,7 @@ hidden state. Neither extra participant is exposed by the study entry.
 **Shape lane.** The five new slugs, including the kelp stand, are commissions, not
 approved files. Environment props have no faction: each shape PR authors
 **ENV STYLE + one prop-table row** in [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, including
-Footprint, Height, Tris and Light, plus its script, outline, GLB, intake report,
+Footprint, Height, Tris and Light, plus its script, GLB, intake report,
 neutral-light review, contact sweep and separate hull-reviewer before integration.
 Use that document's design model of record; the contract author does not author or
 approve these shapes.
@@ -429,19 +429,23 @@ before/after sequence for each implemented camera or world increment, keeping me
 evidence folders unchanged. A standalone model viewer cannot pass the integrated row.
 
 **Budgets are gates, not forecasts.** Retain [graphics-standards.md](graphics-standards.md)
-gate 6: at most 150 draw calls and 400,000 triangles over every pass, DPR at most 1.5.
-Reserve at most 30 calls / 120,000 triangles for all props and decorative life together.
-The authored list totals at most 85,888 triangles: 40 new kelp stands at at most 1,200
-each (48,000), 16 retained clusters (6,208), wildlife (31,680), and zero other dressing.
+gate 6's 150 draw calls and DPR of at most 1.5. This study's frame cap is 720,000 triangles
+over every pass rather than gate 6's 400,000, by the owner's decision on #1712
+(2 November 2026): the kelp forest is a development slice for map design patterns and may
+spend what a shipped map may not; shipped maps keep 400,000. Reserve at most 30 calls /
+400,000 triangles for all props and decorative life together. The authored list totals at
+most 397,888 triangles: 40 new kelp stands at at most 9,000 each (360,000), 16 retained
+clusters (6,208), wildlife (31,680), and zero other dressing.
 The remaining reservation is unused, not permission to fill the bowl. Counts are the
 opening list's contract; per-model triangle limits remain ceilings. Share instanced
-batches per template/material; no per-fish draw or relaxation of the whole-frame limit.
+batches per template/material; no per-fish draw or further relaxation of this study's
+720,000.
 
 Record actual whole-frame calls, triangles, instances, texture/target bytes, hardware,
 and gate-6 unpaced/queued GPU timing at DPR 1 and 1.5. Exercise motion, not only stills.
 CPU frame intervals and software rendering are not GPU evidence; unavailable hardware
-leaves that criterion open. No new "AAA" score, beauty score or relaxed budget replaces
-these checks.
+leaves that criterion open. No new "AAA" score, beauty score or budget beyond the one
+above replaces these checks.
 
 ## 8. Follow-up boundaries
 
@@ -449,7 +453,7 @@ these checks.
 | --- | --- | --- |
 | #1706, six-degree camera | Flight, navigation ownership, recovery, projection/scope/audio consequences; no new models | Merged #1705 contract; real-client movement/roll and non-target evidence |
 | #1707, remaining independent destination | Fixed-depth preview, invalid picking, queue/replay intent; direct S/D already shipped | Merged contract; integrate and exercise with #1706's rolled camera before closing |
-| #1712, dense kelp stand asset | One new `env-kelp-stand` shape; retained clusters unchanged | Merged contract, owner-applied shape routing; approved script/GLB/outline and independent intake/review |
+| #1712, dense kelp stand asset | One new `env-kelp-stand` shape; retained clusters unchanged | Merged contract, owner-applied shape routing; approved script/GLB and independent intake/review |
 | #1711, public microfauna kit | Scoped ENV STYLE amendment and four prop-table rows/shapes, no behaviours or stat blocks | Merged contract, owner-applied shape routing; separate model gates for each, no runtime promotion |
 | #1713, integrated crater fixture | Authored ground/spawns, gated entry, approved dressing and decorative motion, full evidence matrix | Camera, destination and all five assets merged; no closure on a registry-only or standalone scene |
 

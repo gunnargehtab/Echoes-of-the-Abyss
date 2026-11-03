@@ -1912,6 +1912,7 @@ metre, a range the band a generated one lands in; `Tris` is the per-instance bud
 | Thermal Veins | `env-vent-chimney` | 12 m | 25–40 m | ≤ 800 | `vent-ember`, tip only |
 | Thermal Veins | `env-vent-basalt` | 15 m | 8 m | ≤ 400 | none |
 | Kelp Forest | `env-kelp-cluster` | 18 m | 60–80 m | ≤ 400 | `flora-biolight`, tip points |
+| Kelp Forest | `env-kelp-stand` | 120 m | 40 m | ≤ 9,000 | `flora-biolight`, tip points |
 | Kelp Forest | `env-coral-tower` | 15 m | 25–35 m | ≤ 600 | none |
 | Abyssal Trench | `env-trench-spire` | 20 m | 40–60 m | ≤ 600 | none |
 | Abyssal Trench | `env-trench-slab` | 25 m | 14 m | ≤ 300 | none |
@@ -1940,6 +1941,30 @@ top, four ribs that each stop under, past or short of the tear, and its fallen p
 inside the arc. It is authored as a formula in
 `tools/hull-models/props/ruin-dome-shard.mjs` rather than ported from an export, and its
 row's height is what that file measures.
+
+`env-kelp-stand` is the dense stand of forty-metre stalks that
+[free-water-slice.md](free-water-slice.md) §5 commissions for the crater fixture's garden
+flanks (#1712), beside the retained cluster, which it leaves unchanged. It is twelve clumps
+across a 120 m plan — a holdfast with four open-ended stalks rooted on it, 48 thin stems
+in all whose rings wander as they climb, leaning down-current as the cluster's stipes do,
+with nineteen or twenty ribbon fronds to a stem along its whole height, 936 in all, each a
+strip of four quads on a path that rises off the stem, streams down-current and twists,
+which is what reads as kelp; and no vertex stands more than 60 m from its centre, so a
+yawed instance keeps inside its cell, 62.5 m from a slot to the cell's edge, as long as
+its registry `swayM` stays under 2.5 m (the cluster's is 4: a sway swings the top
+vertices past the fence by its own amplitude) — with
+open water between the clumps, so it reads as forest and never as a wall: no canopy, and
+nothing wider than a holdfast on the ground. Its budget is 9,000 rather than the 800 the
+registry fences, by the owner's decision on #1712: the fixture is a development slice for
+map design patterns, and the owner's reference is a kelp forest's long curling fronds on
+few, full columns. Twelve tips carry
+`flora-biolight`, one at the head of each clump's tallest stalk, the cluster's `biolight`
+to the digit. It is authored as a seeded formula in `tools/hull-models/props/kelp-stand.mjs`
+with no export behind it, as the nodule bed is, and its row's height is what that file
+measures. Its 120 m and 9,000 triangles are the stand-only allowances #1713 adds to the
+registry checks when it registers the row with no biome scatter, so only the fixture's
+authored list places it; intake takes `--max-tris 9000` for this row, over its default of
+800.
 
 Shape cues, so the prompts land in each biome's materials brief
 ([environments.md](environments.md)): vent props are basalt and magma glass, cracked
@@ -1979,13 +2004,13 @@ roster. Props ship as meshes, not baked maps, so the sprite-density contract
 (4 / 1.5 px/m) does not apply to them — the triangle column above is their density
 contract.
 
-Every row of this table but the nodule bed's was filled by a Claude Design model from
+Every row of this table but the nodule bed's and the kelp stand's was filled by a Claude Design model from
 the Block 4 batch; the deterministic generator that stood in for the batch was retired
 when the last row landed ([graphics-standards.md](graphics-standards.md), "The
 environment branch"). Each file is now written by a script under
 `tools/hull-models/props/` (#869) that ports that model part for part — or, for the
-dome shard, replaces it (#883), and for the nodule bed authors it from a seeded formula
-with no export behind it (#1555) — composed from `tools/hull-models/seabed.mjs`, and
+dome shard, replaces it (#883), and for the nodule bed and the kelp stand authors it from
+a seeded formula with no export behind it (#1555, #1712) — composed from `tools/hull-models/seabed.mjs`, and
 held at the row's footprint. A model generated from the prompts above replaces its row through that
 script: port the export into it, run it, run intake with the row's footprint, cap and
 light, commit the GLB with the script, and update the registry row's triangle count from
