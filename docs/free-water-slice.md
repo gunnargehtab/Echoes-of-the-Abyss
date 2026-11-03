@@ -6,7 +6,7 @@ easy ascent/descent, full six-degree camera freedom including roll, and one inte
 crater/kelp-jungle slice with wildlife. Those are the approved goals, not approval of
 every input or asset below. Direct rise/dive shipped in #1709, flight in #1706 and the
 independent destination preview in #1707. The development fixture is integrated in
-issue #1713; its evidence and remaining acceptance work are recorded
+issue #1713; its acceptance matrix and hardware evidence are recorded
 [beside the captures](screenshots/issue-1713/README.md).
 
 ## 1. Decision and boundary

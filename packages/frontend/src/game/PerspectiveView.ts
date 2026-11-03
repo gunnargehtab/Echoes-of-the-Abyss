@@ -5586,6 +5586,11 @@ export class PerspectiveView {
         xM: unit.x,
         zM: unit.y,
         depthM: unit.depth,
+        hp: unit.hp,
+        maxHp: unit.maxHp,
+        unhealableDamage: unit.unhealableDamage,
+        depthOrder: unit.depthOrder,
+        queuedOrders: unit.queuedOrders,
         ...shown(this.unitHandles.get(unit.id)),
       })),
       structures: this.structures.map((structure) => ({

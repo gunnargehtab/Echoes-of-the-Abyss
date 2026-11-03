@@ -1,0 +1,13 @@
+{
+  "leftAndDisposed": true,
+  "studyTokenCleared": true,
+  "freshRoom": true,
+  "reading": {
+    "props": 184,
+    "photophores": 48,
+    "units": 3,
+    "environmentBytes": 344064,
+    "haloBytes": 22422976,
+    "splitBytes": 5184000
+  }
+}

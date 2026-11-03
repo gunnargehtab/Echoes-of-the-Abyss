@@ -22,7 +22,13 @@ export default async ({ page, shot }) => {
         return p.stationFrames >= 240 && p.gpuFrames >= 240;
       }, null, { timeout: 120000 });
     } catch (error) {
-      console.error(JSON.stringify(await page.evaluate(() => window.__perspectiveProbe())));
+      console.error(JSON.stringify(await page.evaluate(() => ({
+        probe: window.__perspectiveProbe(),
+        contexts: [...document.querySelectorAll('canvas')].map((canvas) => {
+          const gl = canvas.getContext('webgl2');
+          return gl ? { lost: gl.isContextLost(), error: gl.getError() } : null;
+        }),
+      }))));
       throw error;
     }
   };
@@ -50,7 +56,7 @@ export default async ({ page, shot }) => {
     assert.ok(p.drawCalls <= 150 && p.triangles <= 720000);
     assert.ok(p.propTris <= 400000);
     dir = dirname(await shot(name));
-    await page.evaluate(() => window.__perspectiveGpuQueue(24000));
+    await page.evaluate(() => window.__perspectiveGpuQueue(12000));
     await page.waitForTimeout(400);
     await page.evaluate((name) => window.__perspectiveStation(name), `${name}-queued`);
     await waitWindow();

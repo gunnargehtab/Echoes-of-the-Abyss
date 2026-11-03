@@ -1,0 +1,2572 @@
+{
+  "opening": [
+    {
+      "id": 21,
+      "kind": 0,
+      "name": "Light Scout",
+      "sig": 6,
+      "ink": "#3fa86a",
+      "restSig": 6,
+      "silentRunning": false,
+      "engineOff": false,
+      "xM": 625,
+      "zM": 1875,
+      "depthM": 300,
+      "hp": 180,
+      "maxHp": 180,
+      "unhealableDamage": 0,
+      "lamps": [
+        {
+          "sitesPx": [
+            0.4,
+            0.37,
+            0.37,
+            0.31,
+            0.31
+          ],
+          "areaPx": 0.7,
+          "hex": "#8fe36b",
+          "exportIntensity": 1.6,
+          "restIntensity": 1.3018271255464278,
+          "intensity": 1.3018271255464278,
+          "afterToneMapping": true
+        }
+      ],
+      "screen": {
+        "x0": 743,
+        "y0": 390,
+        "x1": 775,
+        "y1": 406
+      }
+    },
+    {
+      "id": 22,
+      "kind": 1,
+      "name": "Corvette",
+      "sig": 28,
+      "ink": "#3fa86a",
+      "restSig": 28,
+      "silentRunning": false,
+      "engineOff": false,
+      "xM": 625,
+      "zM": 2125,
+      "depthM": 300,
+      "hp": 420,
+      "maxHp": 420,
+      "unhealableDamage": 0,
+      "lamps": [
+        {
+          "sitesPx": [
+            0.47,
+            0.38,
+            0.38,
+            0.38,
+            0.38,
+            0.38,
+            0.35
+          ],
+          "areaPx": 1.1,
+          "hex": "#8fe36b",
+          "exportIntensity": 1.3,
+          "restIntensity": 1.3,
+          "intensity": 1.3,
+          "afterToneMapping": true
+        }
+      ],
+      "screen": {
+        "x0": 739,
+        "y0": 488,
+        "x1": 784,
+        "y1": 509
+      }
+    },
+    {
+      "id": 23,
+      "kind": 4,
+      "name": "Harvester",
+      "sig": 18,
+      "ink": "#3fa86a",
+      "restSig": 18,
+      "silentRunning": false,
+      "engineOff": false,
+      "xM": 375,
+      "zM": 1875,
+      "depthM": 300,
+      "hp": 300,
+      "maxHp": 300,
+      "unhealableDamage": 0,
+      "lamps": [
+        {
+          "sitesPx": [
+            0.62,
+            0.49,
+            0.5,
+            0.49,
+            0.43
+          ],
+          "areaPx": 1.4,
+          "hex": "#8fe36b",
+          "exportIntensity": 0.9,
+          "restIntensity": 0.9,
+          "intensity": 0.9,
+          "afterToneMapping": true
+        }
+      ],
+      "screen": {
+        "x0": 619,
+        "y0": 381,
+        "x1": 661,
+        "y1": 415
+      }
+    }
+  ],
+  "checkpoints": [
+    {
+      "name": "mixed-rise-preserves-queued-depth",
+      "units": [
+        {
+          "id": 21,
+          "kind": 0,
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "restSig": 6,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "hp": 180,
+          "maxHp": 180,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                1.89,
+                1.75,
+                1.77,
+                1.46,
+                1.47
+              ],
+              "areaPx": 16.7,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.6,
+              "restIntensity": 1.3018271255464278,
+              "intensity": 1.3018271255464278,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 1251,
+            "y0": 410,
+            "x1": 1432,
+            "y1": 484
+          }
+        },
+        {
+          "id": 22,
+          "kind": 1,
+          "name": "Corvette",
+          "sig": 28,
+          "ink": "#3fa86a",
+          "restSig": 28,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 656.1671142578125,
+          "zM": 2125,
+          "depthM": 305.5,
+          "hp": 420,
+          "maxHp": 420,
+          "unhealableDamage": 0,
+          "depthOrder": 300,
+          "queuedOrders": [
+            {
+              "kind": "move",
+              "x": 875,
+              "y": 2375,
+              "depth": 450
+            }
+          ],
+          "lamps": [
+            {
+              "sitesPx": [
+                2.91,
+                2.33,
+                2.35,
+                2.36,
+                2.37,
+                2.39,
+                2.24
+              ],
+              "areaPx": 60.2,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.3,
+              "restIntensity": 1.3,
+              "intensity": 1.3,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 1451,
+            "y0": 1099,
+            "x1": 1842,
+            "y1": 1211
+          }
+        },
+        {
+          "id": 23,
+          "kind": 4,
+          "name": "Harvester",
+          "sig": 40,
+          "ink": "#f2b233",
+          "restSig": 18,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 388.11822509765625,
+          "zM": 1881.55810546875,
+          "depthM": 305.5,
+          "hp": 300,
+          "maxHp": 300,
+          "unhealableDamage": 0,
+          "depthOrder": 300,
+          "queuedOrders": [
+            {
+              "kind": "move",
+              "x": 875,
+              "y": 2375,
+              "depth": 450
+            }
+          ],
+          "lamps": [
+            {
+              "sitesPx": [
+                3,
+                2.36,
+                2.42,
+                2.3,
+                2.04
+              ],
+              "areaPx": 30.8,
+              "hex": "#8fe36b",
+              "exportIntensity": 0.9,
+              "restIntensity": 0.9,
+              "intensity": 4.332167959213257,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 614,
+            "y0": 344,
+            "x1": 848,
+            "y1": 558
+          }
+        }
+      ]
+    },
+    {
+      "name": "mixed-queued-leg-completed",
+      "units": [
+        {
+          "id": 21,
+          "kind": 0,
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "restSig": 6,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "hp": 180,
+          "maxHp": 180,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                1.89,
+                1.75,
+                1.77,
+                1.46,
+                1.47
+              ],
+              "areaPx": 16.7,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.6,
+              "restIntensity": 1.3018271255464278,
+              "intensity": 1.3018271255464278,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 1251,
+            "y0": 415,
+            "x1": 1432,
+            "y1": 489
+          }
+        },
+        {
+          "id": 22,
+          "kind": 1,
+          "name": "Corvette",
+          "sig": 28,
+          "ink": "#3fa86a",
+          "restSig": 28,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 874.9027099609375,
+          "zM": 2370.05517578125,
+          "depthM": 450,
+          "hp": 420,
+          "maxHp": 420,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                4.75,
+                3.68,
+                3.57,
+                3.43,
+                3.65,
+                3.53,
+                3.05
+              ],
+              "areaPx": 297.6,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.3,
+              "restIntensity": 1.3,
+              "intensity": 1.3,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 2891,
+            "y0": 2242,
+            "x1": 3761,
+            "y1": 3119
+          }
+        },
+        {
+          "id": 23,
+          "kind": 4,
+          "name": "Harvester",
+          "sig": 40,
+          "ink": "#f2b233",
+          "restSig": 18,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 873.3756713867188,
+          "zM": 2270.34130859375,
+          "depthM": 450,
+          "hp": 300,
+          "maxHp": 300,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                5.12,
+                3.99,
+                3.98,
+                3.81,
+                3.23
+              ],
+              "areaPx": 192.9,
+              "hex": "#8fe36b",
+              "exportIntensity": 0.9,
+              "restIntensity": 0.9,
+              "intensity": 4.332167959213257,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 2411,
+            "y0": 1592,
+            "x1": 3172,
+            "y1": 2118
+          }
+        }
+      ]
+    },
+    {
+      "name": "A",
+      "units": [
+        {
+          "id": 21,
+          "kind": 0,
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "restSig": 6,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "hp": 180,
+          "maxHp": 180,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                1.25,
+                1.16,
+                1.17,
+                0.96,
+                0.97
+              ],
+              "areaPx": 7.4,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.6,
+              "restIntensity": 1.3018271255464278,
+              "intensity": 1.3018271255464278,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 255,
+            "y0": -269,
+            "x1": 367,
+            "y1": -221
+          }
+        },
+        {
+          "id": 22,
+          "kind": 1,
+          "name": "Corvette",
+          "sig": 28,
+          "ink": "#3fa86a",
+          "restSig": 28,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 1123.8043212890625,
+          "zM": 1132.337890625,
+          "depthM": 300,
+          "hp": 420,
+          "maxHp": 420,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                0.88,
+                0.71,
+                0.72,
+                0.72,
+                0.71,
+                0.72,
+                0.69
+              ],
+              "areaPx": 5.3,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.3,
+              "restIntensity": 1.3,
+              "intensity": 1.3,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 952,
+            "y0": -658,
+            "x1": 1004,
+            "y1": -591
+          }
+        },
+        {
+          "id": 23,
+          "kind": 4,
+          "name": "Harvester",
+          "sig": 18,
+          "ink": "#3fa86a",
+          "restSig": 18,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 852.6622924804688,
+          "zM": 2314.83349609375,
+          "depthM": 450,
+          "hp": 300,
+          "maxHp": 300,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                2.74,
+                2.25,
+                2.19,
+                2.22,
+                1.96
+              ],
+              "areaPx": 27.8,
+              "hex": "#8fe36b",
+              "exportIntensity": 0.9,
+              "restIntensity": 0.9,
+              "intensity": 0.9,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 562,
+            "y0": 257,
+            "x1": 773,
+            "y1": 440
+          }
+        }
+      ]
+    },
+    {
+      "name": "B",
+      "units": [
+        {
+          "id": 21,
+          "kind": 0,
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "restSig": 6,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "hp": 180,
+          "maxHp": 180,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                18.96,
+                16.53,
+                18.31,
+                13.61,
+                14.82
+              ],
+              "areaPx": 21439.2,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.6,
+              "restIntensity": 1.3018271255464278,
+              "intensity": 1.3018271255464278,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -16790,
+            "y0": 11674,
+            "x1": -8253,
+            "y1": 20272
+          }
+        },
+        {
+          "id": 22,
+          "kind": 1,
+          "name": "Corvette",
+          "sig": 28,
+          "ink": "#3fa86a",
+          "restSig": 28,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 2117.32080078125,
+          "zM": 1125.0347900390625,
+          "depthM": 300,
+          "hp": 420,
+          "maxHp": 420,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                2.19,
+                1.75,
+                1.76,
+                1.76,
+                1.77,
+                1.78,
+                1.65
+              ],
+              "areaPx": 55.7,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.3,
+              "restIntensity": 1.3,
+              "intensity": 1.3,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 3042,
+            "y0": 342,
+            "x1": 3443,
+            "y1": 439
+          }
+        },
+        {
+          "id": 23,
+          "kind": 4,
+          "name": "Harvester",
+          "sig": 18,
+          "ink": "#3fa86a",
+          "restSig": 18,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 852.6622924804688,
+          "zM": 2314.83349609375,
+          "depthM": 450,
+          "hp": 300,
+          "maxHp": 300,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                8.52,
+                6.36,
+                6.84,
+                6.58,
+                5.65
+              ],
+              "areaPx": 0,
+              "hex": "#8fe36b",
+              "exportIntensity": 0.9,
+              "restIntensity": 0.9,
+              "intensity": 0.9,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 2050,
+            "y0": -7913,
+            "x1": 3448,
+            "y1": -5373
+          }
+        }
+      ]
+    },
+    {
+      "name": "C",
+      "units": [
+        {
+          "id": 21,
+          "kind": 0,
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "restSig": 6,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "hp": 180,
+          "maxHp": 180,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                18.96,
+                16.53,
+                18.31,
+                13.61,
+                14.82
+              ],
+              "areaPx": 21460.6,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.6,
+              "restIntensity": 1.3018271255464278,
+              "intensity": 1.3018271255464278,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -16817,
+            "y0": 11681,
+            "x1": -8268,
+            "y1": 20284
+          }
+        },
+        {
+          "id": 22,
+          "kind": 1,
+          "name": "Corvette",
+          "sig": 28,
+          "ink": "#3fa86a",
+          "restSig": 28,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 3113.294677734375,
+          "zM": 1125.00048828125,
+          "depthM": 300,
+          "hp": 420,
+          "maxHp": 420,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                2.19,
+                1.75,
+                1.76,
+                1.76,
+                1.77,
+                1.78,
+                1.65
+              ],
+              "areaPx": 103.6,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.3,
+              "restIntensity": 1.3,
+              "intensity": 1.3,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 5503,
+            "y0": 343,
+            "x1": 6103,
+            "y1": 439
+          }
+        },
+        {
+          "id": 23,
+          "kind": 4,
+          "name": "Harvester",
+          "sig": 18,
+          "ink": "#3fa86a",
+          "restSig": 18,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 852.6622924804688,
+          "zM": 2314.83349609375,
+          "depthM": 450,
+          "hp": 300,
+          "maxHp": 300,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                8.52,
+                6.36,
+                6.84,
+                6.58,
+                5.65
+              ],
+              "areaPx": 0,
+              "hex": "#8fe36b",
+              "exportIntensity": 0.9,
+              "restIntensity": 0.9,
+              "intensity": 0.9,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 2054,
+            "y0": -7917,
+            "x1": 3455,
+            "y1": -5375
+          }
+        }
+      ]
+    },
+    {
+      "name": "D-shallow",
+      "units": [
+        {
+          "id": 21,
+          "kind": 0,
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "restSig": 6,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "hp": 180,
+          "maxHp": 180,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                18.96,
+                16.53,
+                18.31,
+                13.61,
+                14.82
+              ],
+              "areaPx": 21485.9,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.6,
+              "restIntensity": 1.3018271255464278,
+              "intensity": 1.3018271255464278,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -16821,
+            "y0": 11701,
+            "x1": -8270,
+            "y1": 20318
+          }
+        },
+        {
+          "id": 22,
+          "kind": 1,
+          "name": "Corvette",
+          "sig": 28,
+          "ink": "#3fa86a",
+          "restSig": 28,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 2129.975830078125,
+          "zM": 2120.0009765625,
+          "depthM": 300,
+          "hp": 420,
+          "maxHp": 420,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                11.04,
+                9.12,
+                9.53,
+                10.44,
+                9.67,
+                10.23,
+                11.39
+              ],
+              "areaPx": 0,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.3,
+              "restIntensity": 1.3,
+              "intensity": 1.3,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -25229,
+            "y0": -18320,
+            "x1": -10082,
+            "y1": -8346
+          }
+        },
+        {
+          "id": 23,
+          "kind": 4,
+          "name": "Harvester",
+          "sig": 18,
+          "ink": "#3fa86a",
+          "restSig": 18,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 852.6622924804688,
+          "zM": 2314.83349609375,
+          "depthM": 450,
+          "hp": 300,
+          "maxHp": 300,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                8.52,
+                6.36,
+                6.84,
+                6.58,
+                5.65
+              ],
+              "areaPx": 0,
+              "hex": "#8fe36b",
+              "exportIntensity": 0.9,
+              "restIntensity": 0.9,
+              "intensity": 0.9,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 2055,
+            "y0": -7926,
+            "x1": 3456,
+            "y1": -5381
+          }
+        }
+      ]
+    },
+    {
+      "name": "D-900",
+      "units": [
+        {
+          "id": 21,
+          "kind": 0,
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "restSig": 6,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "hp": 180,
+          "maxHp": 180,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                18.96,
+                16.53,
+                18.31,
+                13.61,
+                14.82
+              ],
+              "areaPx": 21463,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.6,
+              "restIntensity": 1.3018271255464278,
+              "intensity": 1.3018271255464278,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -16838,
+            "y0": 11675,
+            "x1": -8280,
+            "y1": 20273
+          }
+        },
+        {
+          "id": 22,
+          "kind": 1,
+          "name": "Corvette",
+          "sig": 28,
+          "ink": "#3fa86a",
+          "restSig": 28,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 2127.976806640625,
+          "zM": 2122.00927734375,
+          "depthM": 900,
+          "hp": 420,
+          "maxHp": 420,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                93.53,
+                75.65,
+                74.3,
+                53.44,
+                53.8,
+                52.12,
+                35.37
+              ],
+              "areaPx": 3289303.4,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.3,
+              "restIntensity": 1.3,
+              "intensity": 1.3,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -59101,
+            "y0": -50138,
+            "x1": 92208,
+            "y1": 80008
+          }
+        },
+        {
+          "id": 23,
+          "kind": 4,
+          "name": "Harvester",
+          "sig": 18,
+          "ink": "#3fa86a",
+          "restSig": 18,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 852.6622924804688,
+          "zM": 2314.83349609375,
+          "depthM": 450,
+          "hp": 300,
+          "maxHp": 300,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                8.52,
+                6.36,
+                6.84,
+                6.58,
+                5.65
+              ],
+              "areaPx": 0,
+              "hex": "#8fe36b",
+              "exportIntensity": 0.9,
+              "restIntensity": 0.9,
+              "intensity": 0.9,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 2058,
+            "y0": -7914,
+            "x1": 3461,
+            "y1": -5373
+          }
+        }
+      ]
+    },
+    {
+      "name": "D-1350",
+      "units": [
+        {
+          "id": 21,
+          "kind": 0,
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "restSig": 6,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "hp": 180,
+          "maxHp": 180,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                18.96,
+                16.53,
+                18.31,
+                13.61,
+                14.82
+              ],
+              "areaPx": 21450.2,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.6,
+              "restIntensity": 1.3018271255464278,
+              "intensity": 1.3018271255464278,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -16794,
+            "y0": 11682,
+            "x1": -8255,
+            "y1": 20286
+          }
+        },
+        {
+          "id": 22,
+          "kind": 1,
+          "name": "Corvette",
+          "sig": 28,
+          "ink": "#3fa86a",
+          "restSig": 28,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 2127.976806640625,
+          "zM": 2122.00927734375,
+          "depthM": 1350,
+          "hp": 420,
+          "maxHp": 420,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                11.35,
+                9.1,
+                9.08,
+                8.67,
+                8.67,
+                8.63,
+                7.61
+              ],
+              "areaPx": 8531.6,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.3,
+              "restIntensity": 1.3,
+              "intensity": 1.3,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 9578,
+            "y0": 8716,
+            "x1": 22095,
+            "y1": 19685
+          }
+        },
+        {
+          "id": 23,
+          "kind": 4,
+          "name": "Harvester",
+          "sig": 18,
+          "ink": "#3fa86a",
+          "restSig": 18,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 852.6622924804688,
+          "zM": 2314.83349609375,
+          "depthM": 450,
+          "hp": 300,
+          "maxHp": 300,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                8.52,
+                6.36,
+                6.84,
+                6.58,
+                5.65
+              ],
+              "areaPx": 0,
+              "hex": "#8fe36b",
+              "exportIntensity": 0.9,
+              "restIntensity": 0.9,
+              "intensity": 0.9,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 2050,
+            "y0": -7917,
+            "x1": 3449,
+            "y1": -5375
+          }
+        }
+      ]
+    },
+    {
+      "name": "D-crush-incurred",
+      "units": [
+        {
+          "id": 21,
+          "kind": 0,
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "restSig": 6,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "hp": 180,
+          "maxHp": 180,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                1.36,
+                1.26,
+                1.28,
+                1.06,
+                1.06
+              ],
+              "areaPx": 18.7,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.6,
+              "restIntensity": 1.3018271255464278,
+              "intensity": 1.3018271255464278,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -2066,
+            "y0": -65,
+            "x1": -1853,
+            "y1": -26
+          }
+        },
+        {
+          "id": 22,
+          "kind": 1,
+          "name": "Corvette",
+          "sig": 72,
+          "ink": "#e0452f",
+          "restSig": 28,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 2127.976806640625,
+          "zM": 2122.00927734375,
+          "depthM": 1997.25,
+          "hp": 402.396240234375,
+          "maxHp": 420,
+          "unhealableDamage": 17.600008010864258,
+          "depthOrder": 2000,
+          "lamps": [
+            {
+              "sitesPx": [
+                2.09,
+                1.65,
+                1.62,
+                1.59,
+                1.62,
+                1.59,
+                1.45
+              ],
+              "areaPx": 21.1,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.3,
+              "restIntensity": 1.3,
+              "intensity": 7.800000000000001,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 638,
+            "y0": 683,
+            "x1": 817,
+            "y1": 852
+          }
+        },
+        {
+          "id": 23,
+          "kind": 4,
+          "name": "Harvester",
+          "sig": 18,
+          "ink": "#3fa86a",
+          "restSig": 18,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 852.6622924804688,
+          "zM": 2314.83349609375,
+          "depthM": 450,
+          "hp": 300,
+          "maxHp": 300,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                5.19,
+                4.46,
+                4.13,
+                4.53,
+                3.96
+              ],
+              "areaPx": 523.1,
+              "hex": "#8fe36b",
+              "exportIntensity": 0.9,
+              "restIntensity": 0.9,
+              "intensity": 0.9,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -6396,
+            "y0": -431,
+            "x1": -4246,
+            "y1": -130
+          }
+        }
+      ]
+    },
+    {
+      "name": "D-pressure-loss-persists",
+      "units": [
+        {
+          "id": 21,
+          "kind": 0,
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "restSig": 6,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "hp": 180,
+          "maxHp": 180,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                1.36,
+                1.26,
+                1.28,
+                1.06,
+                1.06
+              ],
+              "areaPx": 18.7,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.6,
+              "restIntensity": 1.3018271255464278,
+              "intensity": 1.3018271255464278,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -2066,
+            "y0": -65,
+            "x1": -1853,
+            "y1": -25
+          }
+        },
+        {
+          "id": 22,
+          "kind": 1,
+          "name": "Corvette",
+          "sig": 28,
+          "ink": "#3fa86a",
+          "restSig": 28,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 2127.976806640625,
+          "zM": 2122.00927734375,
+          "depthM": 1000,
+          "hp": 348.0513000488281,
+          "maxHp": 420,
+          "unhealableDamage": 71.93292236328125,
+          "lamps": [
+            {
+              "sitesPx": [
+                2.31,
+                1.82,
+                1.78,
+                1.74,
+                1.79,
+                1.74,
+                1.57
+              ],
+              "areaPx": 25.3,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.3,
+              "restIntensity": 1.3,
+              "intensity": 1.3,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 625,
+            "y0": 208,
+            "x1": 826,
+            "y1": 331
+          }
+        },
+        {
+          "id": 23,
+          "kind": 4,
+          "name": "Harvester",
+          "sig": 18,
+          "ink": "#3fa86a",
+          "restSig": 18,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 852.6622924804688,
+          "zM": 2314.83349609375,
+          "depthM": 450,
+          "hp": 300,
+          "maxHp": 300,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                5.19,
+                4.46,
+                4.13,
+                4.53,
+                3.96
+              ],
+              "areaPx": 523.1,
+              "hex": "#8fe36b",
+              "exportIntensity": 0.9,
+              "restIntensity": 0.9,
+              "intensity": 0.9,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -6397,
+            "y0": -429,
+            "x1": -4246,
+            "y1": -128
+          }
+        }
+      ]
+    },
+    {
+      "name": "E",
+      "units": [
+        {
+          "id": 21,
+          "kind": 0,
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "restSig": 6,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "hp": 180,
+          "maxHp": 180,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                1,
+                0.93,
+                0.94,
+                0.78,
+                0.78
+              ],
+              "areaPx": 8.7,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.6,
+              "restIntensity": 1.3018271255464278,
+              "intensity": 1.3018271255464278,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -1321,
+            "y0": -751,
+            "x1": -1185,
+            "y1": -712
+          }
+        },
+        {
+          "id": 22,
+          "kind": 1,
+          "name": "Corvette",
+          "sig": 28,
+          "ink": "#3fa86a",
+          "restSig": 28,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 2125.046630859375,
+          "zM": 2862.968505859375,
+          "depthM": 1000,
+          "hp": 348.0513000488281,
+          "maxHp": 420,
+          "unhealableDamage": 71.93292236328125,
+          "lamps": [
+            {
+              "sitesPx": [
+                2.2,
+                1.73,
+                1.71,
+                1.67,
+                1.72,
+                1.7,
+                1.53
+              ],
+              "areaPx": 22.4,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.3,
+              "restIntensity": 1.3,
+              "intensity": 1.3,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 685,
+            "y0": 344,
+            "x1": 752,
+            "y1": 544
+          }
+        },
+        {
+          "id": 23,
+          "kind": 4,
+          "name": "Harvester",
+          "sig": 18,
+          "ink": "#3fa86a",
+          "restSig": 18,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 852.6622924804688,
+          "zM": 2314.83349609375,
+          "depthM": 450,
+          "hp": 300,
+          "maxHp": 300,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                2.04,
+                1.66,
+                1.63,
+                1.65,
+                1.45
+              ],
+              "areaPx": 33.2,
+              "hex": "#8fe36b",
+              "exportIntensity": 0.9,
+              "restIntensity": 0.9,
+              "intensity": 0.9,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -1673,
+            "y0": -506,
+            "x1": -1310,
+            "y1": -384
+          }
+        }
+      ]
+    },
+    {
+      "name": "F",
+      "units": [
+        {
+          "id": 21,
+          "kind": 0,
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "restSig": 6,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "hp": 180,
+          "maxHp": 180,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                0.87,
+                0.81,
+                0.81,
+                0.67,
+                0.67
+              ],
+              "areaPx": 6.2,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.6,
+              "restIntensity": 1.3018271255464278,
+              "intensity": 1.3018271255464278,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -1040,
+            "y0": -825,
+            "x1": -929,
+            "y1": -792
+          }
+        },
+        {
+          "id": 22,
+          "kind": 1,
+          "name": "Corvette",
+          "sig": 28,
+          "ink": "#3fa86a",
+          "restSig": 28,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 2125.000244140625,
+          "zM": 3120.816650390625,
+          "depthM": 1000,
+          "hp": 348.0513000488281,
+          "maxHp": 420,
+          "unhealableDamage": 71.93292236328125,
+          "lamps": [
+            {
+              "sitesPx": [
+                2.19,
+                1.73,
+                1.71,
+                1.67,
+                1.72,
+                1.69,
+                1.53
+              ],
+              "areaPx": 22.3,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.3,
+              "restIntensity": 1.3,
+              "intensity": 1.3,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 686,
+            "y0": 347,
+            "x1": 752,
+            "y1": 546
+          }
+        },
+        {
+          "id": 23,
+          "kind": 4,
+          "name": "Harvester",
+          "sig": 18,
+          "ink": "#3fa86a",
+          "restSig": 18,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 852.6622924804688,
+          "zM": 2314.83349609375,
+          "depthM": 450,
+          "hp": 300,
+          "maxHp": 300,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                1.69,
+                1.37,
+                1.35,
+                1.36,
+                1.2
+              ],
+              "areaPx": 20.8,
+              "hex": "#8fe36b",
+              "exportIntensity": 0.9,
+              "restIntensity": 0.9,
+              "intensity": 0.9,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -1245,
+            "y0": -641,
+            "x1": -975,
+            "y1": -543
+          }
+        }
+      ]
+    },
+    {
+      "name": "F-roof-holds-ascent",
+      "units": [
+        {
+          "id": 21,
+          "kind": 0,
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "restSig": 6,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "hp": 180,
+          "maxHp": 180,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                0.87,
+                0.81,
+                0.81,
+                0.67,
+                0.67
+              ],
+              "areaPx": 6.2,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.6,
+              "restIntensity": 1.3018271255464278,
+              "intensity": 1.3018271255464278,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -1040,
+            "y0": -826,
+            "x1": -930,
+            "y1": -793
+          }
+        },
+        {
+          "id": 22,
+          "kind": 1,
+          "name": "Corvette",
+          "sig": 28,
+          "ink": "#3fa86a",
+          "restSig": 28,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 2125.000244140625,
+          "zM": 3120.816650390625,
+          "depthM": 800,
+          "hp": 348.0513000488281,
+          "maxHp": 420,
+          "unhealableDamage": 71.93292236328125,
+          "depthOrder": 700,
+          "lamps": [
+            {
+              "sitesPx": [
+                2.39,
+                1.88,
+                1.85,
+                1.81,
+                1.87,
+                1.84,
+                1.65
+              ],
+              "areaPx": 26.4,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.3,
+              "restIntensity": 1.3,
+              "intensity": 1.3,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 682,
+            "y0": 281,
+            "x1": 754,
+            "y1": 496
+          }
+        },
+        {
+          "id": 23,
+          "kind": 4,
+          "name": "Harvester",
+          "sig": 18,
+          "ink": "#3fa86a",
+          "restSig": 18,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 852.6622924804688,
+          "zM": 2314.83349609375,
+          "depthM": 450,
+          "hp": 300,
+          "maxHp": 300,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                1.69,
+                1.37,
+                1.35,
+                1.36,
+                1.2
+              ],
+              "areaPx": 20.8,
+              "hex": "#8fe36b",
+              "exportIntensity": 0.9,
+              "restIntensity": 0.9,
+              "intensity": 0.9,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -1245,
+            "y0": -642,
+            "x1": -975,
+            "y1": -543
+          }
+        }
+      ]
+    },
+    {
+      "name": "H-deep",
+      "units": [
+        {
+          "id": 21,
+          "kind": 0,
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "restSig": 6,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "hp": 180,
+          "maxHp": 180,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                0.87,
+                0.81,
+                0.81,
+                0.67,
+                0.67
+              ],
+              "areaPx": 6.2,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.6,
+              "restIntensity": 1.3018271255464278,
+              "intensity": 1.3018271255464278,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -1039,
+            "y0": -825,
+            "x1": -928,
+            "y1": -792
+          }
+        },
+        {
+          "id": 22,
+          "kind": 1,
+          "name": "Corvette",
+          "sig": 28,
+          "ink": "#3fa86a",
+          "restSig": 28,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 2125.000244140625,
+          "zM": 3605.344482421875,
+          "depthM": 1000,
+          "hp": 348.0513000488281,
+          "maxHp": 420,
+          "unhealableDamage": 71.93292236328125,
+          "lamps": [
+            {
+              "sitesPx": [
+                5.01,
+                3.88,
+                3.76,
+                3.6,
+                3.84,
+                3.7,
+                3.19
+              ],
+              "areaPx": 215.2,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.3,
+              "restIntensity": 1.3,
+              "intensity": 1.3,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 647,
+            "y0": 2130,
+            "x1": 802,
+            "y1": 3014
+          }
+        },
+        {
+          "id": 23,
+          "kind": 4,
+          "name": "Harvester",
+          "sig": 18,
+          "ink": "#3fa86a",
+          "restSig": 18,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 852.6622924804688,
+          "zM": 2314.83349609375,
+          "depthM": 450,
+          "hp": 300,
+          "maxHp": 300,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                1.69,
+                1.37,
+                1.35,
+                1.36,
+                1.2
+              ],
+              "areaPx": 20.8,
+              "hex": "#8fe36b",
+              "exportIntensity": 0.9,
+              "restIntensity": 0.9,
+              "intensity": 0.9,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -1243,
+            "y0": -641,
+            "x1": -973,
+            "y1": -543
+          }
+        }
+      ]
+    },
+    {
+      "name": "H-shallow",
+      "units": [
+        {
+          "id": 21,
+          "kind": 0,
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "restSig": 6,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "hp": 180,
+          "maxHp": 180,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                0.87,
+                0.81,
+                0.81,
+                0.67,
+                0.67
+              ],
+              "areaPx": 6.2,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.6,
+              "restIntensity": 1.3018271255464278,
+              "intensity": 1.3018271255464278,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -1039,
+            "y0": -827,
+            "x1": -928,
+            "y1": -794
+          }
+        },
+        {
+          "id": 22,
+          "kind": 1,
+          "name": "Corvette",
+          "sig": 28,
+          "ink": "#3fa86a",
+          "restSig": 28,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 2125.000244140625,
+          "zM": 3620.9287109375,
+          "depthM": 302.5,
+          "hp": 348.0513000488281,
+          "maxHp": 420,
+          "unhealableDamage": 71.93292236328125,
+          "depthOrder": 300,
+          "lamps": [
+            {
+              "sitesPx": [
+                17.72,
+                12.12,
+                10.54,
+                9.11,
+                11.67,
+                9.99,
+                7.18
+              ],
+              "areaPx": 4574.7,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.3,
+              "restIntensity": 1.3,
+              "intensity": 1.3,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": 416,
+            "y0": 3293,
+            "x1": 1041,
+            "y1": 9182
+          }
+        },
+        {
+          "id": 23,
+          "kind": 4,
+          "name": "Harvester",
+          "sig": 18,
+          "ink": "#3fa86a",
+          "restSig": 18,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 852.6622924804688,
+          "zM": 2314.83349609375,
+          "depthM": 450,
+          "hp": 300,
+          "maxHp": 300,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                1.69,
+                1.37,
+                1.35,
+                1.36,
+                1.2
+              ],
+              "areaPx": 20.8,
+              "hex": "#8fe36b",
+              "exportIntensity": 0.9,
+              "restIntensity": 0.9,
+              "intensity": 0.9,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -1243,
+            "y0": -643,
+            "x1": -973,
+            "y1": -545
+          }
+        }
+      ]
+    },
+    {
+      "name": "G",
+      "units": [
+        {
+          "id": 21,
+          "kind": 0,
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "restSig": 6,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "hp": 180,
+          "maxHp": 180,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                0.87,
+                0.81,
+                0.81,
+                0.67,
+                0.67
+              ],
+              "areaPx": 6.2,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.6,
+              "restIntensity": 1.3018271255464278,
+              "intensity": 1.3018271255464278,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -1040,
+            "y0": -827,
+            "x1": -930,
+            "y1": -794
+          }
+        },
+        {
+          "id": 22,
+          "kind": 1,
+          "name": "Corvette",
+          "sig": 28,
+          "ink": "#3fa86a",
+          "restSig": 28,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 1129.1055908203125,
+          "zM": 3624.9833984375,
+          "depthM": 300,
+          "hp": 348.0513000488281,
+          "maxHp": 420,
+          "unhealableDamage": 71.93292236328125,
+          "lamps": [
+            {
+              "sitesPx": [
+                12.07,
+                10.05,
+                10.38,
+                10.17,
+                9.44,
+                9.74,
+                9.18
+              ],
+              "areaPx": 9368.2,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.3,
+              "restIntensity": 1.3,
+              "intensity": 1.3,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -18409,
+            "y0": 4286,
+            "x1": -10503,
+            "y1": 6558
+          }
+        },
+        {
+          "id": 23,
+          "kind": 4,
+          "name": "Harvester",
+          "sig": 18,
+          "ink": "#3fa86a",
+          "restSig": 18,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 852.6622924804688,
+          "zM": 2314.83349609375,
+          "depthM": 450,
+          "hp": 300,
+          "maxHp": 300,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                1.69,
+                1.37,
+                1.35,
+                1.36,
+                1.2
+              ],
+              "areaPx": 20.8,
+              "hex": "#8fe36b",
+              "exportIntensity": 0.9,
+              "restIntensity": 0.9,
+              "intensity": 0.9,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -1245,
+            "y0": -644,
+            "x1": -975,
+            "y1": -545
+          }
+        }
+      ]
+    },
+    {
+      "name": "west-south",
+      "units": [
+        {
+          "id": 21,
+          "kind": 0,
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "restSig": 6,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "hp": 180,
+          "maxHp": 180,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                0.87,
+                0.81,
+                0.81,
+                0.67,
+                0.67
+              ],
+              "areaPx": 6.2,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.6,
+              "restIntensity": 1.3018271255464278,
+              "intensity": 1.3018271255464278,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -1040,
+            "y0": -827,
+            "x1": -929,
+            "y1": -794
+          }
+        },
+        {
+          "id": 22,
+          "kind": 1,
+          "name": "Corvette",
+          "sig": 28,
+          "ink": "#3fa86a",
+          "restSig": 28,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 879.773193359375,
+          "zM": 3624.99951171875,
+          "depthM": 300,
+          "hp": 348.0513000488281,
+          "maxHp": 420,
+          "unhealableDamage": 71.93292236328125,
+          "lamps": [
+            {
+              "sitesPx": [
+                12.07,
+                10.05,
+                10.38,
+                10.17,
+                9.44,
+                9.75,
+                9.2
+              ],
+              "areaPx": 11547,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.3,
+              "restIntensity": 1.3,
+              "intensity": 1.3,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -23084,
+            "y0": 4301,
+            "x1": -13494,
+            "y1": 6571
+          }
+        },
+        {
+          "id": 23,
+          "kind": 4,
+          "name": "Harvester",
+          "sig": 18,
+          "ink": "#3fa86a",
+          "restSig": 18,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 852.6622924804688,
+          "zM": 2314.83349609375,
+          "depthM": 450,
+          "hp": 300,
+          "maxHp": 300,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                1.69,
+                1.37,
+                1.35,
+                1.36,
+                1.2
+              ],
+              "areaPx": 20.8,
+              "hex": "#8fe36b",
+              "exportIntensity": 0.9,
+              "restIntensity": 0.9,
+              "intensity": 0.9,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -1244,
+            "y0": -643,
+            "x1": -974,
+            "y1": -544
+          }
+        }
+      ]
+    },
+    {
+      "name": "west-north",
+      "units": [
+        {
+          "id": 21,
+          "kind": 0,
+          "name": "Light Scout",
+          "sig": 6,
+          "ink": "#3fa86a",
+          "restSig": 6,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "hp": 180,
+          "maxHp": 180,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                0.87,
+                0.81,
+                0.81,
+                0.67,
+                0.67
+              ],
+              "areaPx": 6.2,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.6,
+              "restIntensity": 1.3018271255464278,
+              "intensity": 1.3018271255464278,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -1039,
+            "y0": -827,
+            "x1": -928,
+            "y1": -794
+          }
+        },
+        {
+          "id": 22,
+          "kind": 1,
+          "name": "Corvette",
+          "sig": 28,
+          "ink": "#3fa86a",
+          "restSig": 28,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 875.6022338867188,
+          "zM": 1884.3837890625,
+          "depthM": 300,
+          "hp": 348.0513000488281,
+          "maxHp": 420,
+          "unhealableDamage": 71.93292236328125,
+          "lamps": [
+            {
+              "sitesPx": [
+                0.96,
+                0.78,
+                0.79,
+                0.79,
+                0.78,
+                0.79,
+                0.75
+              ],
+              "areaPx": 8.7,
+              "hex": "#8fe36b",
+              "exportIntensity": 1.3,
+              "restIntensity": 1.3,
+              "intensity": 1.3,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -780,
+            "y0": -838,
+            "x1": -654,
+            "y1": -769
+          }
+        },
+        {
+          "id": 23,
+          "kind": 4,
+          "name": "Harvester",
+          "sig": 18,
+          "ink": "#3fa86a",
+          "restSig": 18,
+          "silentRunning": false,
+          "engineOff": false,
+          "xM": 823.3583984375,
+          "zM": 2279.7802734375,
+          "depthM": 450,
+          "hp": 300,
+          "maxHp": 300,
+          "unhealableDamage": 0,
+          "lamps": [
+            {
+              "sitesPx": [
+                1.67,
+                1.35,
+                1.32,
+                1.33,
+                1.16
+              ],
+              "areaPx": 19.6,
+              "hex": "#8fe36b",
+              "exportIntensity": 0.9,
+              "restIntensity": 0.9,
+              "intensity": 0.9,
+              "afterToneMapping": true
+            }
+          ],
+          "screen": {
+            "x0": -1222,
+            "y0": -656,
+            "x1": -991,
+            "y1": -568
+          }
+        }
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "action": "Look left",
+      "degrees": 90,
+      "orientation": [
+        -0.3265055756219769,
+        0.6272113751262499,
+        -0.3265055756219769,
+        0.6272113751262501
+      ],
+      "flight": {
+        "flying": true,
+        "navigating": false,
+        "depthM": 300,
+        "bearingDeg": 270,
+        "upX": -0.8191520442889918,
+        "upY": -0.573576436351046,
+        "inverted": false,
+        "blocked": false
+      }
+    },
+    {
+      "action": "Look left",
+      "degrees": 180,
+      "orientation": [
+        -9.020562075079397e-17,
+        0.8870108331782218,
+        -0.46174861323503386,
+        2.3592239273284576e-16
+      ],
+      "flight": {
+        "flying": true,
+        "navigating": false,
+        "depthM": 300,
+        "bearingDeg": 180.00000000000006,
+        "upX": -3.7790040099000605e-16,
+        "upY": -0.5735764363510463,
+        "inverted": false,
+        "blocked": false
+      }
+    },
+    {
+      "action": "Look left",
+      "degrees": 360,
+      "orientation": [
+        0.46174861323503374,
+        3.7470027081099033e-16,
+        -2.220446049250313e-16,
+        -0.8870108331782219
+      ],
+      "flight": {
+        "flying": true,
+        "navigating": false,
+        "depthM": 300,
+        "bearingDeg": 1.1368683772161603e-13,
+        "upX": 7.399466008860951e-16,
+        "upY": -0.5735764363510465,
+        "inverted": false,
+        "blocked": false
+      }
+    },
+    {
+      "action": "Look up",
+      "degrees": 90,
+      "orientation": [
+        -0.3007057995042733,
+        1.0794385653450962e-16,
+        -4.219623482712646e-16,
+        -0.953716950748227
+      ],
+      "flight": {
+        "flying": true,
+        "navigating": false,
+        "depthM": 300,
+        "bearingDeg": 0,
+        "upX": 7.399466008860953e-16,
+        "upY": -0.8191520442889916,
+        "inverted": false,
+        "blocked": false
+      }
+    },
+    {
+      "action": "Look up",
+      "degrees": 180,
+      "orientation": [
+        -0.8870108331782216,
+        -2.220446049250312e-16,
+        -3.7470027081099043e-16,
+        -0.46174861323503413
+      ],
+      "flight": {
+        "flying": true,
+        "navigating": false,
+        "depthM": 300,
+        "bearingDeg": 180.00000000000006,
+        "upX": 7.399466008860951e-16,
+        "upY": 0.5735764363510458,
+        "inverted": true,
+        "blocked": false
+      }
+    },
+    {
+      "action": "Look up",
+      "degrees": 360,
+      "orientation": [
+        -0.46174861323503436,
+        -3.7470027081099063e-16,
+        2.220446049250312e-16,
+        0.8870108331782216
+      ],
+      "flight": {
+        "flying": true,
+        "navigating": false,
+        "depthM": 300,
+        "bearingDeg": 1.1368683772161603e-13,
+        "upX": 7.399466008860955e-16,
+        "upY": -0.5735764363510454,
+        "inverted": false,
+        "blocked": false
+      }
+    },
+    {
+      "action": "Roll left",
+      "degrees": 90,
+      "orientation": [
+        -0.32650557562197735,
+        0.32650557562197685,
+        0.62721137512625,
+        0.6272113751262499
+      ],
+      "flight": {
+        "flying": true,
+        "navigating": false,
+        "depthM": 300,
+        "bearingDeg": 5.684341886080802e-14,
+        "upX": 0.5735764363510457,
+        "upY": 5.551115123125783e-16,
+        "inverted": true,
+        "blocked": false
+      }
+    },
+    {
+      "action": "Roll left",
+      "degrees": 180,
+      "orientation": [
+        -4.2327252813834093e-16,
+        0.46174861323503413,
+        0.8870108331782216,
+        -9.71445146547012e-17
+      ],
+      "flight": {
+        "flying": true,
+        "navigating": false,
+        "depthM": 300,
+        "bearingDeg": 5.684341886080802e-14,
+        "upX": -5.632274795418527e-16,
+        "upY": 0.5735764363510458,
+        "inverted": true,
+        "blocked": false
+      }
+    },
+    {
+      "action": "Roll left",
+      "degrees": 360,
+      "orientation": [
+        0.46174861323503397,
+        5.204170427930421e-16,
+        -1.3877787807814457e-17,
+        -0.8870108331782217
+      ],
+      "flight": {
+        "flying": true,
+        "navigating": false,
+        "depthM": 300,
+        "bearingDeg": 1.1368683772161603e-13,
+        "upX": 5.052231918792892e-16,
+        "upY": -0.573576436351046,
+        "inverted": false,
+        "blocked": false
+      }
+    }
+  ],
+  "oneHandedPing": true,
+  "vertical": {
+    "flying": true,
+    "navigating": false,
+    "depthM": 300,
+    "bearingDeg": null,
+    "upX": 0,
+    "upY": 2.220446049250313e-16,
+    "inverted": true,
+    "blocked": false
+  },
+  "reconnected": true
+}
