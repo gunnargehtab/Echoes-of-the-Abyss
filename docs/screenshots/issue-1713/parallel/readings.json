@@ -1,0 +1,52 @@
+{
+  "forwardY": -1.6653345369377353e-16,
+  "orientation": [
+    -8.326672684688677e-17,
+    0,
+    0,
+    1
+  ],
+  "reason": "NO WATER TARGET",
+  "confirmDisabled": true,
+  "fleetUnchanged": true,
+  "before": [
+    {
+      "id": 5,
+      "x": 625,
+      "z": 1875,
+      "depth": 300
+    },
+    {
+      "id": 6,
+      "x": 625,
+      "z": 2125,
+      "depth": 300
+    },
+    {
+      "id": 7,
+      "x": 375,
+      "z": 1875,
+      "depth": 300
+    }
+  ],
+  "after": [
+    {
+      "id": 5,
+      "x": 625,
+      "z": 1875,
+      "depth": 300
+    },
+    {
+      "id": 6,
+      "x": 625,
+      "z": 2125,
+      "depth": 300
+    },
+    {
+      "id": 7,
+      "x": 375,
+      "z": 1875,
+      "depth": 300
+    }
+  ]
+}

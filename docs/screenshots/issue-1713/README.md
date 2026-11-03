@@ -16,6 +16,7 @@ $env:SETTINGS_JSON='{"bindingLayout":"oneHanded"}'
 node .claude\skills\run-game\scripts\drive.mjs --headed --channel msedge --url "http://localhost:5173/?study=free-water" --out docs\screenshots\issue-1713\journey --steps docs\screenshots\issue-1713\journey.mjs
 Remove-Item Env:\SETTINGS_JSON
 node .claude\skills\run-game\scripts\drive.mjs --headed --channel msedge --url "http://localhost:5173/?study=free-water" --out docs\screenshots\issue-1713\lifecycle --steps docs\screenshots\issue-1713\lifecycle.mjs
+node .claude\skills\run-game\scripts\drive.mjs --headed --channel msedge --url "http://localhost:5173/?study=free-water" --out docs\screenshots\issue-1713\parallel --steps docs\screenshots\issue-1713\parallel.mjs
 node .claude\skills\run-game\scripts\drive.mjs --headed --channel msedge --url "http://localhost:5173/?map=kelp-labyrinth" --out docs\screenshots\issue-1713\control --steps docs\screenshots\issue-1713\control.mjs
 $env:UNPACED='1'
 Remove-Item Env:\GPU_STATIONS -ErrorAction SilentlyContinue
@@ -51,7 +52,7 @@ closed paths are recorded in the contract.
 | Contract row | Evidence |
 | --- | --- |
 | Painted map and routes | `freeWaterSlice.test.ts` asserts literal intervals and both route choices; [journey readings](journey/readings.json) record A-B-C-D-E-F-H-G and the shallow return. Existing footprint/separation tests remain green. |
-| Input and projection | `flightCamera.test.ts` and `rendererSmoke.test.ts` cover swept clearance, poles, picking, NAV ownership and blur; the journey records each axis at 90/180/360 degrees, vertical bearing and Home. |
+| Input and projection | `flightCamera.test.ts` and `rendererSmoke.test.ts` cover swept clearance, poles, picking, NAV ownership and blur; the journey records each axis at 90/180/360 degrees, vertical bearing and Home. [Parallel-ray readings](parallel/readings.json) verify a horizontal centre-row ray, NO WATER TARGET, disabled confirmation and unchanged own orders. |
 | Moving fleet | [Interaction readings](interaction/readings.json) prove on-course dive/rise; journey records acknowledged mixed selection, completed queued intent, an untouched scout and simultaneous low-camera/fleet movement. |
 | Refused and costly actions | Interaction refuses the solid column; journey shows the warning before confirming 2,000 m, incurred permanent hull loss and the roof holding ascent. |
 | Integrated views | Interaction has canonical-scale wildlife and rolled preview; both GPU directories contain home, close garden, low and survey; journey adds moving-low, inverted and vertical views with HUD/scope/depth present. |
@@ -103,9 +104,20 @@ The own-state probe follow-up passed frontend type-check, targeted ESLint/Pretti
 npm -w packages/frontend exec -- node --import tsx --import file:///D:/Claude/packages/frontend/test/support/viteAssets.mjs --test test\rendererSmoke.test.ts test\freeWaterDecoration.test.ts test\flightCamera.test.ts test\faunaAgentStipple.test.ts test\faunaStipple.test.ts
 ```
 
-Independent review is pending. The custom critic's configured `opus` alias was rejected
-by the agent runtime; a fresh read-only reviewer will apply the same loop-critic rubric
-without changing the model configuration or substituting author self-review.
+Independent code review found no significant issues. A separate read-only acceptance
+audit opened the captures and mapped every matrix row; it found one missing observation,
+the parallel-ray refusal. The new `parallel.mjs` capture and focused test above the
+existing behind-eye case close that evidence gap without changing runtime behavior:
+
+```powershell
+npm -w packages/frontend exec -- node --import tsx --import file:///D:/Claude/packages/frontend/test/support/viteAssets.mjs --test --test-name-pattern='refuses invalid preview rays' test\rendererSmoke.test.ts
+```
+
+That command passed (1 test), including a forward-ray positive control, a verified
+horizontal ray and no emitted move order; the browser drive passed without console errors.
+The custom critic's configured `opus` alias was rejected by the runtime, so these are
+supported-default independent reviewers, not a changed model configuration or author
+self-review. PR #1743 records the final review verdict.
 
 ## Related
 
