@@ -21,7 +21,9 @@ generated from this kit is:
 Nothing here weakens the Asymmetric Fidelity Law: full-detail unit and structure models
 describe *own-force* rendering only, and no prompt in this kit generates fauna — animals
 are contacts, drawn at earned fidelity, never world meshes
-([bestiary.md](bestiary.md) §3).
+([bestiary.md](bestiary.md) §3) — but for the four public decorative bodies Block 4's
+public-microfauna variant scopes under that section's own licence (#1711), environment
+geometry that is no animal of the roster.
 
 ## Workflow rules
 
@@ -1940,7 +1942,7 @@ The prop table — one row per asset, with the numbers intake and the registry c
 runtime draws at, taken over the parts' own boxes rather than their vertices (#876);
 `Height` is the vertical silhouette the 55° camera actually reads, by intake's measure
 (`sizeM.height`) at the row's footprint — a single figure is the approved model's to the
-metre, a range the band a generated one lands in; `Tris` is the per-instance budget;
+metre (to the centimetre for the four microfauna), a range the band a generated one lands in; `Tris` is the per-instance budget;
 `Light` names the licensed world-light family, `none` meaning any emissive fails intake:
 
 | Biome | Slug | Footprint | Height | Tris | Light |

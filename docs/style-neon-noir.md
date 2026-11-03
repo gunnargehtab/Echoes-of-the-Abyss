@@ -134,8 +134,8 @@ Five rules ride with the table:
   the ceiling rule puts the masonry at 0.68 of its sediment and the ribs at 0.41.
 - **A body is neither, and is its own colour.** `carapace` and `fish-flank` are the four
   public microfauna's (#1711, [asset-prompts-3d.md](asset-prompts-3d.md) Block 4's
-  variant): the carapace a dark russet at hue 7°, redder than `coral-stone-ruin`; the
-  flank a cold pewter at hue 187°, between the stones' blue and the living coral's green,
+  variant): the carapace a dark russet at sRGB hue 9°, redder than `coral-stone-ruin`; the
+  flank a cold pewter at sRGB hue 186°, between the stones' blue and the living coral's green,
   so a fish reads as a body against rock and kelp alike. Under the ceiling rule the crab's
   `stone-dark` legs sit at 0.53 of its shell and a fish's fins at 0.41 of its flank.
 - **A lamp's base is near-black.** The five `-base` tokens sit under the

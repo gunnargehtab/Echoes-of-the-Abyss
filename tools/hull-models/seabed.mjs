@@ -134,8 +134,8 @@ export const ground = {
   /**
    * Carapace, `carapace`: the rim crab's shell, claws and eyestalks (#1711),
    * the first of the two skins the public-microfauna variant of ENV STYLE
-   * adds (docs/asset-prompts-3d.md Block 4). A dark russet — hue 7°,
-   * 42 % saturated — redder than `coral-stone-ruin` (hue 16°) and at
+   * adds (docs/asset-prompts-3d.md Block 4). A dark russet — sRGB hue 9°,
+   * 40 % saturated — redder than `coral-stone-ruin` (hue 19°) and at
    * 0.0167 linear luminance 1.9× `stone-dark`, which its legs carry, so
    * under the runtime's ceiling the shell reads warm on dark stilts and the
    * legs sit at 0.53 of it. Roughness 0.9: chitin under silt, a shade less
@@ -145,7 +145,7 @@ export const ground = {
   /**
    * Fish flank, `fish-flank`: the one skin all three swimmers share (#1711),
    * the fry, the outer fish and the deep fish, their photophore seats
-   * included. A cold pewter — hue 187°, 23 % saturated — between the
+   * included. A cold pewter — sRGB hue 186°, 23 % saturated — between the
    * stones' blue (204–212°) and the living coral's green, so a fish reads
    * as a body and not as a chip of the rock it passes; 0.0215 linear
    * luminance, 2.4× `stone-dark`, which the fins and eyes carry at 0.41
