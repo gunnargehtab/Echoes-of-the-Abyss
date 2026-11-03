@@ -1134,7 +1134,11 @@ export class Match {
     if (!this.slots.includes(slot)) this.slots.push(slot);
     this.factionBySlot.set(slot, faction);
     economyFor(this.world, slot);
-    this.spawnStartingBase(slot, faction);
+    if (this.map.openingFleet === undefined) {
+      this.spawnStartingBase(slot, faction);
+    } else if (this.map.spawns[slot] !== undefined) {
+      for (const unit of this.map.openingFleet) spawnUnit(this.world, { ...unit, slot, faction });
+    }
   }
 
   // There is deliberately no `removePlayer`. It spliced a slot out of the

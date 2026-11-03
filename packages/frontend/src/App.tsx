@@ -25,7 +25,12 @@
 import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import './App.css';
 import { useMenuAudio } from './audio/useMenuAudio.ts';
-import { DEFAULT_MAP_ID, missionHeaderById, PROLOGUE_SORROWGATE_HEADER } from '@echoes/shared';
+import {
+  DEFAULT_MAP_ID,
+  FREE_WATER_MAP_ID,
+  missionHeaderById,
+  PROLOGUE_SORROWGATE_HEADER,
+} from '@echoes/shared';
 import { BriefingScreen } from './menu/BriefingScreen.tsx';
 import { CampaignScreen } from './menu/CampaignScreen.tsx';
 import { CreditsScreen } from './menu/CreditsScreen.tsx';
@@ -175,6 +180,16 @@ function mapForMission(missionId: string): string {
  */
 function initialScreen(): Screen {
   const query = new URLSearchParams(window.location.search);
+  if (query.get('study') === 'free-water') {
+    // The connection gate reports a production refusal rather than silently opening the title.
+    return {
+      kind: 'match',
+      name: loadSettings().profileName,
+      mapId: FREE_WATER_MAP_ID,
+      resume: true,
+      create: 'private',
+    };
+  }
   const missionId = query.get('mission');
   if (missionId !== null) {
     return {

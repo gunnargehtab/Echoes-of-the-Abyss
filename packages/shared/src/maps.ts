@@ -65,6 +65,9 @@ export const MAP_HEADERS: readonly MapHeader[] = [
 
 export const DEFAULT_MAP_ID = VENTFRONT_DIVIDE_HEADER.id;
 
+/** Development fixture only; deliberately absent from the public map catalogue. */
+export const FREE_WATER_MAP_ID = 'free-water-slice';
+
 /**
  * What the setup screen says about each map, in plain words — docs/maps.md,
  * "On the setup card"; docs/ui-ux.md §14.

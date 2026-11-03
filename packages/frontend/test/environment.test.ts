@@ -221,7 +221,10 @@ describe('prop placement', () => {
       assert.match(spec.slug, /^env-[a-z0-9-]+$/, `${spec.slug} breaks the naming convention`);
       assert.ok(!seen.has(spec.slug), `${spec.slug} is registered twice`);
       seen.add(spec.slug);
-      assert.ok(spec.triBudget > 0 && spec.triBudget <= 800, `${spec.slug} triangle budget`);
+      assert.ok(
+        spec.triBudget > 0 && spec.triBudget <= (spec.slug === 'env-kelp-stand' ? 9000 : 800),
+        `${spec.slug} triangle budget`
+      );
       // A row stood by the fields alone names no biome and scatters at no
       // density (#1555); every other row must dress something.
       if (spec.stands !== 'rock' && spec.stands.length === 0) {
@@ -229,7 +232,10 @@ describe('prop placement', () => {
       } else {
         assert.ok(spec.density > 0 && spec.density <= 3, `${spec.slug} density`);
       }
-      assert.ok(spec.footprintM > 0 && spec.footprintM <= 60, `${spec.slug} footprint`);
+      assert.ok(
+        spec.footprintM > 0 && spec.footprintM <= (spec.slug === 'env-kelp-stand' ? 120 : 60),
+        `${spec.slug} footprint`
+      );
       const [lo, hi] = spec.scaleJitter;
       assert.ok(lo > 0 && hi >= lo && hi <= 2, `${spec.slug} scale jitter`);
       assert.ok(spec.swayM >= 0 && spec.swayM <= 10, `${spec.slug} sway`);
@@ -252,6 +258,7 @@ describe('prop placement', () => {
       'env-coral-growth': 'flora',
       'env-resonance-crystal': 'crystal',
       'env-nodule-bed': 'ore',
+      'env-kelp-stand': 'flora',
     });
   });
 });

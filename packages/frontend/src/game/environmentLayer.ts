@@ -47,7 +47,10 @@ import {
   type LandmarkStand,
   type PropPlacement,
 } from './environment.ts';
-import { envTemplate, type SwayUniforms } from './environmentModels.ts';
+import { envTemplate, type EnvTemplate, type SwayUniforms } from './environmentModels.ts';
+import { decorationPose, freeWaterPlacements } from './freeWaterDecoration.ts';
+import { StippleCloud, type StippleFrame } from './faunaStipple.ts';
+import { FURNITURE_DOT_GAIN } from './ladder.ts';
 import {
   lampCentres,
   landmarkTemplate,
@@ -114,7 +117,35 @@ export class EnvironmentLayer {
   constructor(
     private readonly look: WorldLook = 'standard',
     private readonly seatStones = false
-  ) {}
+  ) {
+    this.decorativeDots =
+      look === 'free-water'
+        ? new StippleCloud('decoration', {
+            periodS: 1,
+            squeeze: 0,
+            stretch: 0,
+            trailSqueeze: 0,
+            trailLag: 0,
+            twinkle: 0,
+            twinkleS: 1,
+            lift: 0,
+            burst: false,
+          })
+        : null;
+  }
+
+  private readonly decorativeDots: StippleCloud | null;
+  private fixtureBatches = new Map<
+    string,
+    {
+      template: EnvTemplate;
+      meshes: InstancedMesh[];
+      list: PropPlacement[];
+      keys: string[];
+    }
+  >();
+  private fixtureGround: ((x: number, y: number) => number) | null = null;
+  private matchMs = 0;
 
   /** Added to the scene once by the view; rebuilt in place. */
   readonly group = new Group();
@@ -219,6 +250,10 @@ export class EnvironmentLayer {
     stands?: readonly LandmarkStand[]
   ): void {
     const generation = ++this.generation;
+    if (this.look === 'free-water' && placements === undefined) {
+      this.rebuildFixture(terrain, groundY, generation);
+      return;
+    }
     this.clear();
     // Only the default placement stands the fields, so only it hazes them: the
     // opt-in study hands in its own budgeted list and stands no field. A
@@ -366,6 +401,112 @@ export class EnvironmentLayer {
     if (hazes.length > 0) this.group.add(this.haze.points);
   }
 
+  private rebuildFixture(
+    terrain: TerrainPayload,
+    groundY: (x: number, y: number) => number,
+    generation: number
+  ): void {
+    this.fixtureGround = groundY;
+    this.props = this.propTris = 0;
+    const bySlug = new Map<string, PropPlacement[]>();
+    for (const p of freeWaterPlacements(terrain, true)) {
+      const list = bySlug.get(p.slug) ?? [];
+      list.push(p);
+      bySlug.set(p.slug, list);
+    }
+    for (const [slug, list] of bySlug) {
+      const spec = propSpec(slug)!;
+      const template = envTemplate(
+        slug,
+        spec.footprintM,
+        spec.swayM,
+        () => {
+          if (generation === this.generation) this.rebuild(terrain, groundY);
+        },
+        this.look
+      );
+      if (template === null) continue;
+      let batch = this.fixtureBatches.get(slug);
+      if (batch === undefined) {
+        const meshes = template.parts.map((part) => {
+          const mesh = new InstancedMesh(part.geometry, part.material, list.length);
+          mesh.name = slug;
+          mesh.frustumCulled = false;
+          this.group.add(mesh);
+          return mesh;
+        });
+        batch = { template, meshes, list, keys: [] };
+        this.fixtureBatches.set(slug, batch);
+      }
+      batch.list = list;
+      list.forEach((p, i) => {
+        const key = `${p.disabled === true}:${groundY(p.xM, p.yM)}`;
+        if (key !== batch.keys[i]) {
+          batch.keys[i] = key;
+          this.writeFixturePose(batch.meshes, p, i);
+        }
+      });
+      for (const mesh of batch.meshes) this.applyShade(mesh, list);
+      this.props += list.filter((p) => p.disabled !== true).length;
+      // Disabled slots retain zero-scale matrices, but are still submitted.
+      this.propTris += list.length * template.trianglesPerInstance;
+    }
+    if (this.decorativeDots !== null) this.group.add(this.decorativeDots.points);
+    this.tickFixture();
+  }
+
+  private writeFixturePose(meshes: readonly InstancedMesh[], p: PropPlacement, i: number): void {
+    const pose = decorationPose(p, this.reducedMotion ? 0 : this.matchMs, this.fixtureGround!);
+    TMP_POS.set(pose.x, pose.y, pose.z);
+    TMP_QUAT.setFromAxisAngle(Y_AXIS, pose.yaw);
+    TMP_SCALE.setScalar(p.disabled === true ? 0 : p.scale);
+    TMP_MATRIX.compose(TMP_POS, TMP_QUAT, TMP_SCALE);
+    for (const mesh of meshes) {
+      mesh.setMatrixAt(i, TMP_MATRIX);
+      mesh.instanceMatrix.needsUpdate = true;
+    }
+  }
+
+  private tickFixture(): void {
+    const points: Vector3[] = [];
+    for (const { template, meshes, list } of this.fixtureBatches.values()) {
+      if (template.sway !== null) {
+        template.sway.uSwayTime.value = this.reducedMotion ? SWAY_HOLD_S : this.matchMs / 1000;
+      }
+      list.forEach((p, i) => {
+        if (p.motion === undefined || p.disabled === true) return;
+        this.writeFixturePose(meshes, p, i);
+        for (const seat of template.photophores ?? [])
+          points.push(seat.clone().applyMatrix4(TMP_MATRIX));
+      });
+    }
+    this.decorativeDots?.write(points.length, (anchor, dot, seed) => {
+      dot.fill(0);
+      points.forEach((point, i) => {
+        point.toArray(anchor, i * 3);
+        seed[i * 2] = 0;
+        seed[i * 2 + 1] = FURNITURE_DOT_GAIN.shoalFormed;
+      });
+    });
+  }
+
+  setDecorationFrame(frame: StippleFrame): void {
+    this.decorativeDots?.setFrame(frame);
+  }
+
+  /** Public authored positions only, for the integrated close-frame evidence. */
+  decorationReading(): { slug: string; x: number; y: number; z: number; yaw: number }[] {
+    if (this.fixtureGround === null) return [];
+    return [...this.fixtureBatches.values()].flatMap(({ list }) =>
+      list
+        .filter((p) => p.disabled !== true)
+        .map((p) => ({
+          slug: p.slug,
+          ...decorationPose(p, this.reducedMotion ? 0 : this.matchMs, this.fixtureGround!),
+        }))
+    );
+  }
+
   /**
    * Stand one landmark in the state its cells give it: its state's parts, one
    * instanced mesh of one instance each, so the veil's shade reaches it the
@@ -432,7 +573,9 @@ export class EnvironmentLayer {
    * and the write still happens so a toggle mid-match takes effect on the
    * next frame rather than on the next terrain rebuild.
    */
-  tick(nowMs: number, waterReachM?: number): void {
+  tick(nowMs: number, waterReachM?: number, matchMs = 0): void {
+    this.matchMs = matchMs;
+    if (this.look === 'free-water') this.tickFixture();
     this.plume.tick(nowMs, waterReachM);
     this.haze.tick(nowMs, waterReachM);
     this.tickLandmarks(nowMs);
@@ -514,6 +657,9 @@ export class EnvironmentLayer {
   setShade(shade: ((xM: number, yM: number, out: Color) => void) | null): void {
     this.shade = shade;
     for (const { mesh, list } of this.shaded) this.applyShade(mesh, list);
+    for (const { meshes, list } of this.fixtureBatches.values()) {
+      for (const mesh of meshes) this.applyShade(mesh, list);
+    }
     this.plume.setShade(shade);
     this.haze.setShade(shade);
     this.sift.setShade(shade);
@@ -523,7 +669,7 @@ export class EnvironmentLayer {
     const shade = this.shade;
     for (let i = 0; i < list.length; i++) {
       const placement = list[i]!;
-      if (shade === null) TMP_COLOR.setRGB(1, 1, 1);
+      if (shade === null || placement.motion !== undefined) TMP_COLOR.setRGB(1, 1, 1);
       else shade(placement.xM, placement.yM, TMP_COLOR);
       mesh.setColorAt(i, TMP_COLOR);
     }
@@ -544,6 +690,8 @@ export class EnvironmentLayer {
     landmarkTris: number;
     siftMotes: number;
     cloudMotes: number;
+    decorativePhotophores: number;
+    fixtureAssets: Record<string, number>;
   } {
     return {
       props: this.props,
@@ -554,6 +702,13 @@ export class EnvironmentLayer {
       landmarkTris: this.landmarkTris,
       siftMotes: this.sift.motes,
       cloudMotes: this.cloud.motes,
+      decorativePhotophores: this.decorativeDots?.dotCount ?? 0,
+      fixtureAssets: Object.fromEntries(
+        [...this.fixtureBatches].map(([slug, batch]) => [
+          slug,
+          batch.list.filter((p) => p.disabled !== true).length,
+        ])
+      ),
     };
   }
 
@@ -668,6 +823,7 @@ export class EnvironmentLayer {
     this.haze.dispose();
     this.sift.dispose();
     this.cloud.dispose();
+    this.decorativeDots?.dispose();
   }
 
   private clear(): void {
@@ -692,5 +848,9 @@ export class EnvironmentLayer {
     this.landmarkTris = 0;
     this.swaying = [];
     this.shaded = [];
+    this.fixtureBatches.clear();
+    this.fixtureGround = null;
+    this.matchMs = 0;
+    this.decorativeDots?.write(0, () => {});
   }
 }

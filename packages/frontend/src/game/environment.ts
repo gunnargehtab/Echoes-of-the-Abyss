@@ -112,9 +112,7 @@ export interface PropSpec {
 }
 
 /**
- * The registry — one row per `env-*.glb` in docs/concept-art/models/ (but
- * `env-kelp-stand` and the four microfauna bodies of #1711, whose rows #1713
- * adds with the fixture that places them), the
+ * The registry — the scattered and authored-slot props in docs/concept-art/models/, the
  * contract rows of docs/asset-prompts-3d.md Block 4 with the triangle count
  * intake reported for each committed model (all well inside the table's
  * per-row caps; a replacement export is held to the same cap by intake).
@@ -339,6 +337,39 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     worldLight: 'ore',
     swayM: 0,
   },
+  {
+    slug: 'env-kelp-stand',
+    footprintM: 120,
+    triBudget: 8928,
+    density: 0,
+    stands: [],
+    nearRock: 'any',
+    maxSlopeM: 0,
+    excludeRoofed: true,
+    scaleJitter: [1, 1],
+    worldLight: 'flora',
+    swayM: 4,
+  },
+  ...(
+    [
+      ['env-rim-crab', 2, 316],
+      ['env-shoal-fry', 0.5, 150],
+      ['env-outer-fish', 4, 342],
+      ['env-deep-fish', 2, 304],
+    ] as const
+  ).map(([slug, footprintM, triBudget]): PropSpec => ({
+    slug,
+    footprintM,
+    triBudget,
+    density: 0,
+    stands: [],
+    nearRock: 'any',
+    maxSlopeM: 0,
+    excludeRoofed: true,
+    scaleJitter: [1, 1],
+    worldLight: 'none',
+    swayM: 0,
+  })),
 ];
 
 /** Gate-6 reservation, both halves (docs/graphics-standards.md): instancing
@@ -369,6 +400,7 @@ export const PROP_INSTANCE_CAP = 600;
 export const LOOK_DENSITY: Record<WorldLook, Partial<Record<Biome, number>>> = {
   standard: {},
   sorrowgate: { [Biome.CoralRuins]: 3, [Biome.AbyssalTrench]: 2 },
+  'free-water': {},
 };
 export const PROP_TRI_RESERVATION = 120_000;
 
@@ -381,6 +413,17 @@ export interface PropPlacement {
   scale: number;
   /** The cell the placement belongs to — the delta-locality unit. */
   cellIndex: number;
+  /** A fixture retains its slot when public ground no longer admits it. */
+  disabled?: boolean;
+  /** Public, fixture-authored motion only; never an entity or a fauna contact. */
+  motion?: {
+    radiusM: number;
+    periodS: number;
+    phase: number;
+    depthM: number | null;
+    depthSwingM: number;
+    axisM: number;
+  };
 }
 
 /** Registry lookup for the scene layer. */

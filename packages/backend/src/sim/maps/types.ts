@@ -28,6 +28,7 @@ import type {
   RectShape,
   RegionGround,
   ResourceKind,
+  UnitKind,
 } from '@echoes/shared';
 
 /**
@@ -194,6 +195,14 @@ export interface MapDefinition<Region extends MapRegion = MapRegion> extends Map
    */
   regions: readonly Region[];
   spawns: MapSpawn[];
+  /** A development fixture's exact fleet instead of the normal starting base. */
+  openingFleet?: readonly {
+    kind: UnitKind;
+    x: number;
+    y: number;
+    depth: number;
+    heading: number;
+  }[];
   resources: MapResource[];
   /** Bloom-share nodes — see `MapBloom`. Omitted is none, and no map is owed any. */
   blooms?: MapBloom[];

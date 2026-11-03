@@ -22,6 +22,7 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import {
   AiDifficulty,
   Faction,
+  FREE_WATER_MAP_ID,
   HarvestThrottle,
   MatchPhase,
   encodeEcho,
@@ -96,6 +97,24 @@ beforeEach(() => {
 
 afterEach(() => {
   clearStorage();
+});
+
+describe('development study isolation', () => {
+  it('refuses the fixture outside its development entry, before opening a socket', async () => {
+    const { net, log } = await connected({ mapId: FREE_WATER_MAP_ID });
+    assert.equal(net.calls.length, 0);
+    assert.deepEqual(log.statuses(), ['connecting', 'error']);
+  });
+
+  it('never resumes a study token into a normal match', async () => {
+    window.sessionStorage.setItem('echoes.reconnection', 'study-seat');
+    window.sessionStorage.setItem('echoes.reconnection.mission', '');
+    window.sessionStorage.setItem('echoes.reconnection.study', FREE_WATER_MAP_ID);
+    assert.equal(hasStoredSession(), false);
+    const { net } = await connected();
+    assert.equal(net.callOf('reconnect'), undefined);
+    assert.ok(net.callOf('joinOrCreate'));
+  });
 });
 
 /** Every intent, and the message the room is listening for. */

@@ -19,7 +19,7 @@ import {
 } from '@echoes/shared';
 import { propHash } from './environment.ts';
 
-export type WorldLook = 'standard' | 'sorrowgate';
+export type WorldLook = 'standard' | 'sorrowgate' | 'free-water';
 
 export function lookForMission(missionId?: string): WorldLook {
   return missionId === PROLOGUE_SORROWGATE_HEADER.id ? 'sorrowgate' : 'standard';

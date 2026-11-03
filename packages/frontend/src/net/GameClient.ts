@@ -12,6 +12,7 @@ import {
   // A value, not just a type: `pushLobby` names the phase an undecoded state
   // stands in for.
   MatchPhase,
+  FREE_WATER_MAP_ID,
   type AiDifficulty,
   type EchoSnapshot,
   type Faction,
@@ -41,6 +42,7 @@ import {
 import { type JoinFailure, joinFailure, refusalSentence } from './failure.ts';
 import { toListings } from './rooms.ts';
 import { leaveReportRoom, setReportRoom } from './reports.ts';
+import { FREE_WATER_SLICE } from '../game/freeWaterControls.ts';
 
 /**
  * The wire payloads, re-exported.
@@ -206,6 +208,7 @@ const TOKEN_KEY = 'echoes.reconnection';
  * else's water. Stored beside the token and cleared with it.
  */
 const TOKEN_MISSION_KEY = 'echoes.reconnection.mission';
+const TOKEN_STUDY_KEY = 'echoes.reconnection.study';
 
 /** Storage throws in some privacy modes; a missing token is only a re-join. */
 function rememberToken(token: string | null, missionId = ''): void {
@@ -213,9 +216,11 @@ function rememberToken(token: string | null, missionId = ''): void {
     if (token === null) {
       window.sessionStorage.removeItem(TOKEN_KEY);
       window.sessionStorage.removeItem(TOKEN_MISSION_KEY);
+      window.sessionStorage.removeItem(TOKEN_STUDY_KEY);
     } else {
       window.sessionStorage.setItem(TOKEN_KEY, token);
       window.sessionStorage.setItem(TOKEN_MISSION_KEY, missionId);
+      window.sessionStorage.setItem(TOKEN_STUDY_KEY, FREE_WATER_SLICE ? FREE_WATER_MAP_ID : '');
     }
   } catch {
     // Nothing to do: the player re-joins instead of resuming.
@@ -236,7 +241,17 @@ function recallToken(): string | null {
  * whether the server is in fact still holding the other end.
  */
 export function hasStoredSession(): boolean {
-  return recallToken() !== null;
+  return recallToken() !== null && storedStudyMatches();
+}
+
+function storedStudyMatches(): boolean {
+  try {
+    return (
+      (window.sessionStorage.getItem(TOKEN_STUDY_KEY) === FREE_WATER_MAP_ID) === FREE_WATER_SLICE
+    );
+  } catch {
+    return !FREE_WATER_SLICE;
+  }
 }
 
 /**
@@ -399,6 +414,30 @@ export class GameClient {
 
   private async join(options: ConnectOptions): Promise<void> {
     this.handlers.onStatus('connecting');
+    const mapId =
+      options.mapId ??
+      (typeof window === 'undefined'
+        ? undefined
+        : (new URLSearchParams(window.location.search).get('map') ?? undefined));
+    if (mapId === FREE_WATER_MAP_ID && !FREE_WATER_SLICE) {
+      this.handlers.onStatus(
+        'error',
+        'Free Water requires the development-only ?study=free-water entry.',
+        'refused'
+      );
+      return;
+    }
+    if (
+      FREE_WATER_SLICE &&
+      (mapId !== FREE_WATER_MAP_ID || !!options.missionId || !!options.roomId)
+    ) {
+      this.handlers.onStatus(
+        'error',
+        'The Free Water study cannot join another map or mission.',
+        'refused'
+      );
+      return;
+    }
     // Always a string, and `''` for a skirmish. The server filters rooms on
     // this key, and Colyseus matches filter keys by equality — a client
     // sending `undefined` and one sending `''` would be asking for two
@@ -417,7 +456,7 @@ export class GameClient {
     // simply succeed and hand back the wrong match. Skipped rather than
     // cleared: the caller wants a different room, not the end of that seat,
     // and `attach` overwrites the token with the new room's anyway.
-    if (stored !== null && storedMissionId() === wanted) {
+    if (stored !== null && storedMissionId() === wanted && storedStudyMatches()) {
       try {
         if (this.attach(await this.client.reconnect<MatchLobbyState>(stored))) {
           this.handlers.onStatus('connected');
@@ -445,11 +484,6 @@ export class GameClient {
       // right map. Either selects only when this client creates the room;
       // joining an existing room takes the map it is on, and the server sends
       // back which that was either way.
-      const mapId =
-        options.mapId ??
-        (typeof window === 'undefined'
-          ? undefined
-          : (new URLSearchParams(window.location.search).get('map') ?? undefined));
       const name = options.name === undefined || options.name === '' ? undefined : options.name;
       const joinOptions = {
         name,

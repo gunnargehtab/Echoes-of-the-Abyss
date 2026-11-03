@@ -30,7 +30,7 @@ import { FlightPanel } from './FlightPanel.tsx';
 import { MovePreviewPanel } from './MovePreviewPanel.tsx';
 import type { MovePreviewReading } from './movePreview.ts';
 import type { FlightReading } from './flightCamera.ts';
-import { FREE_WATER_CONTROLS } from './freeWaterControls.ts';
+import { FREE_WATER_CONTROLS, FREE_WATER_SLICE } from './freeWaterControls.ts';
 import { lookForMission } from './tutorialLook.ts';
 import { worldView } from './worldView.ts';
 import { paletteFor, type PaletteName } from './palette.ts';
@@ -464,7 +464,9 @@ export function GameCanvas({
         perspectiveRef.current = perspective;
       } else {
         worldView.dispose();
-        perspective = new PerspectiveView(lookForMission(missionId));
+        perspective = new PerspectiveView(
+          FREE_WATER_SLICE ? 'free-water' : lookForMission(missionId)
+        );
         perspectiveRef.current = perspective;
         if (
           perspectiveHost === null ||
@@ -1046,6 +1048,7 @@ export function GameCanvas({
         )}
         {FREE_WATER_CONTROLS && live && phase === MatchPhase.Playing && (
           <FlightPanel
+            decorativeLife={FREE_WATER_SLICE}
             reading={flight}
             onFlight={() => rendererRef.current?.toggleFlight()}
             onNav={() => rendererRef.current?.toggleNavigation()}
