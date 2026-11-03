@@ -82,14 +82,14 @@ palest fill; rims and cliff shadows darken only ([art-direction.md](art-directio
 
 ### The props (the seabed's furniture)
 
-The sixteen environment models of [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, and
+The twenty environment models of [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, and
 the arch study's landmark in its Block 4b, take their base colours from this table. Each token is named for the glTF material that carries
 it, hyphenated. `basalt` and `coral_stone` each carry two values, so their tokens take a
 suffix saying which. Metalness is 0 on every one; roughness is the material's own:
 
 | Token | Hex | Roughness | Material | Props |
 | --- | --- | --- | --- | --- |
-| `stone-dark` | `#15181B` | 1 | `stone_dark` | Both crags, coral growth, ruin block, dome shard, nodule bed's lumps, transit arch's masonry |
+| `stone-dark` | `#15181B` | 1 | `stone_dark` | Both crags, coral growth, ruin block, dome shard, nodule bed's lumps, transit arch's masonry, rim crab's legs, the three swimmers' fins and eyes |
 | `stone-silt` | `#17150F` | 1 | `stone_silt` | Open boulder |
 | `silt-drift` | `#211E15` | 1 | `silt_drift` | Nodule bed's drift, transit arch's sediment |
 | `structure-rib` | `#160F0C` | 0.9 | `structure_rib` | Transit arch's exposed ribs and hung fittings |
@@ -99,13 +99,15 @@ suffix saying which. Metalness is 0 on every one; roughness is the material's ow
 | `coral-stone-ruin` | `#3A2B24` | 0.95 | `coral_stone` | Coral growth, ruin block, dome shard |
 | `coral-stone-living` | `#171D19` | 1 | `coral_stone` | Coral tower |
 | `kelp` | `#2A2916` | 0.96 | `kelp` | Kelp cluster, kelp stand (two-sided) |
+| `carapace` | `#2F1F1C` | 0.9 | `carapace` | Rim crab's shell, claws and eyestalks |
+| `fish-flank` | `#212A2B` | 0.8 | `fish_flank` | Shoal fry, outer fish and deep fish: the body, and the deep fish's photophore seats |
 | `ember-base` | `#0B0806` | 1 | `ember` | Vent chimney, under `vent-ember` |
 | `biolight-base` | `#0B1D19` | 1 | `biolight` | Kelp cluster, kelp stand, coral growth, under `flora-biolight` |
 | `violet-seam-base` | `#06050A` | 0.9 | `violet_seam` | Resonance crystal, under `crystal-seam` |
 | `ore-trace-base` | `#0B0805` | 1 | `ore_trace` | Nodule bed's glint facets, under `ore-trace` |
 | `civic-lamp-base` | `#0D0907` | 1 | `civic_lamp` | Transit arch's lamp glass, under `civic-lamp` |
 
-Four rules ride with the table:
+Five rules ride with the table:
 
 - **The runtime owns value.** `packages/frontend/src/game/environmentModels.ts`
   (`ENV_LUMINANCE_CEILING`) scales every prop so its brightest material sits at a 0.06
@@ -130,6 +132,12 @@ Four rules ride with the table:
   cladding exposes on the transit arch, warm with two centuries of water. At 0.0054 it sits
   at 0.61 of `stone-dark`, so the ribs read darker than the masonry they carry. On the arch
   the ceiling rule puts the masonry at 0.68 of its sediment and the ribs at 0.41.
+- **A body is neither, and is its own colour.** `carapace` and `fish-flank` are the four
+  public microfauna's (#1711, [asset-prompts-3d.md](asset-prompts-3d.md) Block 4's
+  variant): the carapace a dark russet at sRGB hue 9°, redder than `coral-stone-ruin`; the
+  flank a cold pewter at sRGB hue 186°, between the stones' blue and the living coral's green,
+  so a fish reads as a body against rock and kelp alike. Under the ceiling rule the crab's
+  `stone-dark` legs sit at 0.53 of its shell and a fish's fins at 0.41 of its flank.
 - **A lamp's base is near-black.** The five `-base` tokens sit under the
   [World light](#world-light--the-terrain-carve-outs) families. The emissive is what reads,
   and the base does not compete with it.
