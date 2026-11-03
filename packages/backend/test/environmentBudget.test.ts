@@ -52,7 +52,9 @@ function fieldsOf(map: MapDefinition): ResourceNodeInfo[] {
 }
 
 describe('environment prop budget over the shipped maps', () => {
-  const heaviest = Math.max(...ENVIRONMENT_PROPS.map((spec) => spec.triBudget));
+  const heaviest = Math.max(
+    ...ENVIRONMENT_PROPS.filter((spec) => spec.density > 0).map((spec) => spec.triBudget)
+  );
 
   for (const map of [...MAPS, ...MISSION_MAPS]) {
     it(`${map.id} dresses inside the gate-6 reservation without a cut`, () => {

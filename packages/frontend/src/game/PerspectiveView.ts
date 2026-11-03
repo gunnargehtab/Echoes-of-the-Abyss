@@ -72,6 +72,7 @@ import {
   MODEL_LIGHTING,
   MOVEMENT,
   SelfEventKind,
+  SIM,
   WORLD,
   WORLD_REGIONS,
   clampToRect,
@@ -863,6 +864,8 @@ export class PerspectiveView {
    * nothing the Echo Layer resolved.
    */
   private readonly life = new FaunaStipple();
+  private decorationTickMs = 0;
+  private decorationArrivedMs = 0;
   /** The player's setting, 0-1 (docs/ui-ux.md §11). Scales how far the water
    * hides, never what colour it is. */
   private waterDensity = 1;
@@ -1459,6 +1462,8 @@ export class PerspectiveView {
     // died, or a shoal scattered or reformed. A still sea costs nothing here.
     this.life.setLife(snapshot.jellies, snapshot.shoals);
     const arrivedAt = performance.now();
+    this.decorationTickMs = (snapshot.tick * 1000) / SIM.TICK_HZ;
+    this.decorationArrivedMs = arrivedAt;
     this.motion.record(snapshot.units, arrivedAt);
     this.ordnanceMotion.record(snapshot.ordnance, arrivedAt);
     // Headings from motion, exactly as the chart derived them. Since #839 the
@@ -1691,6 +1696,7 @@ export class PerspectiveView {
     delete (window as unknown as { __perspectiveStation?: unknown }).__perspectiveStation;
     delete (window as unknown as { __perspectiveCamera?: unknown }).__perspectiveCamera;
     delete (window as unknown as { __perspectiveLamps?: unknown }).__perspectiveLamps;
+    delete (window as unknown as { __freeWaterDecoration?: unknown }).__freeWaterDecoration;
     delete (window as unknown as { __perspectiveHalo?: unknown }).__perspectiveHalo;
     delete (window as unknown as { __perspectiveSplit?: unknown }).__perspectiveSplit;
     delete (window as unknown as { __perspectiveSplitFrame?: unknown }).__perspectiveSplitFrame;
@@ -4716,6 +4722,14 @@ export class PerspectiveView {
       projectionScalePx,
       pixelRatio,
     });
+    this.environment.setDecorationFrame({
+      now,
+      eye: this.camera.position,
+      reachM: this.waterReach,
+      waterDensity: this.waterDensity,
+      projectionScalePx,
+      pixelRatio,
+    });
   }
 
   /** See `cameraRevision`. */
@@ -4808,7 +4822,12 @@ export class PerspectiveView {
     // The kelp current: one uniform per bending template, nothing per prop.
     // The chimneys' steam rides the same tick, with the water's reach so a
     // far column swims out as the embers do (ventPlume.ts).
-    this.environment.tick(now, this.waterReach);
+    this.environment.tick(
+      now,
+      this.waterReach,
+      this.decorationTickMs +
+        Math.min(1000 / SIM.ECHO_HZ, Math.max(0, now - this.decorationArrivedMs))
+    );
     for (const detail of this.drawnDetails()) detail.props.tick(now, this.waterReach);
 
     this.swayClockMs = now;
@@ -5020,6 +5039,13 @@ export class PerspectiveView {
     // Gate 3's quiet-and-loud reading (tools/render-stack/lamps.mjs). Kept
     // out of production builds: only a capture against the dev server reads it.
     if (import.meta.env?.PROD !== true) {
+      if (this.look === 'free-water') {
+        (window as unknown as { __freeWaterDecoration?: () => unknown }).__freeWaterDecoration =
+          () => ({
+            terrain: this.terrain,
+            positions: this.environment.decorationReading(),
+          });
+      }
       (window as unknown as { __perspectiveLamps?: () => unknown }).__perspectiveLamps = () =>
         this.lampReading();
       // The capture switch (tools/render-stack/capture.mjs, HALO=on): an
@@ -5560,6 +5586,11 @@ export class PerspectiveView {
         xM: unit.x,
         zM: unit.y,
         depthM: unit.depth,
+        hp: unit.hp,
+        maxHp: unit.maxHp,
+        unhealableDamage: unit.unhealableDamage,
+        depthOrder: unit.depthOrder,
+        queuedOrders: unit.queuedOrders,
         ...shown(this.unitHandles.get(unit.id)),
       })),
       structures: this.structures.map((structure) => ({

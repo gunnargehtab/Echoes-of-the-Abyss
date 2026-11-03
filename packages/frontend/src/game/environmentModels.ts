@@ -90,6 +90,8 @@ export interface EnvTemplate {
   sway: SwayUniforms | null;
   /** Its height at canonical scale, base to top: what a seated stone sinks a share of. */
   heightM: number;
+  /** Named public-life seats, transformed exactly like the baked vertices. */
+  photophores?: readonly Vector3[];
 }
 
 const loader = new GLTFLoader();
@@ -238,6 +240,21 @@ export function buildTemplate(
   const centre = box.getCenter(new Vector3());
   merged.updateMatrixWorld(true);
   const heightM = size.y * scale;
+  const photophores: Vector3[] = [];
+  copy.updateMatrixWorld(true);
+  for (let i = 1; i <= 6; i++) {
+    const node = copy.getObjectByName(`photophore_${String(i).padStart(2, '0')}`);
+    if (node !== undefined) {
+      photophores.push(
+        // These seats bake their placement into vertices, not node translations.
+        new Box3()
+          .setFromObject(node)
+          .getCenter(new Vector3())
+          .sub(new Vector3(centre.x, box.min.y, centre.z))
+          .multiplyScalar(scale)
+      );
+    }
+  }
 
   const sway: SwayUniforms | null =
     swayM > 0 ? { uSwayTime: { value: 0 }, uSwayAmpM: { value: swayM } } : null;
@@ -272,7 +289,7 @@ export function buildTemplate(
     if (look === 'sorrowgate' && ARCH_STUDY_ON) installDistanceGrade(material);
     parts.push({ geometry, material });
   });
-  return { parts, trianglesPerInstance: triangles, sway, heightM };
+  return { parts, trianglesPerInstance: triangles, sway, heightM, photophores };
 }
 
 /**

@@ -212,7 +212,7 @@ const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
  *   dot, or how far down its tentacle a trailing dot is (0-1].
  * - `aSeed` — x, the anchor's phase in radians; y, the dot's brightness.
  */
-class StippleCloud {
+export class StippleCloud {
   readonly points: Points;
   private capacity = 0;
   readonly uniforms: {
@@ -227,7 +227,7 @@ class StippleCloud {
   };
 
   constructor(
-    readonly kind: 'jelly' | 'shoal',
+    readonly kind: 'jelly' | 'shoal' | 'decoration',
     motion: {
       periodS: number;
       squeeze: number;
@@ -382,6 +382,20 @@ class StippleCloud {
     return this.points.geometry.drawRange.count;
   }
 
+  setFrame(frame: StippleFrame): void {
+    const u = this.uniforms;
+    u.uEye.value.copy(frame.eye);
+    u.uReachM.value = frame.reachM;
+    u.uClearness.value = Math.min(1, Math.max(0, frame.waterDensity));
+    u.uPixelScale.value = DOT_M * frame.projectionScalePx;
+    // `gl_PointSize` is device pixels: a dot never shrinks below one CSS
+    // pixel on a dense screen, or the stipple flickers out at the dolly.
+    u.uSizePx.value.set(frame.pixelRatio, DOT_MAX_PX * frame.pixelRatio);
+    // Read at draw time, never captured: the palette is a live binding and
+    // §8 keeps fauna in `FAUNA_COLOR` in all four (palette.ts).
+    u.uColor.value.set(FAUNA_COLOR);
+  }
+
   dispose(): void {
     this.points.geometry.dispose();
     (this.points.material as ShaderMaterial).dispose();
@@ -530,16 +544,7 @@ export class FaunaStipple {
     for (const cloud of [this.jellies, this.shoals]) {
       const u = cloud.uniforms;
       u.uTime.value = this.clockS;
-      u.uEye.value.copy(frame.eye);
-      u.uReachM.value = frame.reachM;
-      u.uClearness.value = Math.min(1, Math.max(0, frame.waterDensity));
-      u.uPixelScale.value = DOT_M * frame.projectionScalePx;
-      // `gl_PointSize` is device pixels: a dot never shrinks below one CSS
-      // pixel on a dense screen, or the stipple flickers out at the dolly.
-      u.uSizePx.value.set(frame.pixelRatio, DOT_MAX_PX * frame.pixelRatio);
-      // Read at draw time, never captured: the palette is a live binding and
-      // §8 keeps fauna in `FAUNA_COLOR` in all four (palette.ts).
-      u.uColor.value.set(FAUNA_COLOR);
+      cloud.setFrame(frame);
     }
   }
 

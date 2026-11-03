@@ -25,6 +25,7 @@ import {
 import {
   AiDifficulty,
   Faction,
+  FREE_WATER_MAP_ID,
   LIFECYCLE,
   MatchPhase,
   SIM,
@@ -50,6 +51,7 @@ import { describeThrown, logFailure } from '../log.ts';
 import { Match } from '../sim/match.ts';
 import { DEFAULT_MAP_ID, mapById, missionMapById } from '../sim/maps/index.ts';
 import type { MapDefinition } from '../sim/maps/types.ts';
+import { freeWaterMap } from '../sim/maps/freeWaterSlice.ts';
 import { missionById } from '../sim/missions/index.ts';
 import { validateSpent } from '../sim/missions/roster.ts';
 import type { MissionDefinition } from '../sim/missions/types.ts';
@@ -289,6 +291,10 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
   }
 
   override async onCreate(options?: MatchRoomOptions): Promise<void> {
+    const study = freeWaterMap(options?.mapId, process.env.NODE_ENV);
+    if (study !== null && options?.missionId) {
+      throw new Error('Free Water cannot be combined with a mission.');
+    }
     const requested = options?.missionId ?? '';
     this.mission = requested === '' ? null : (missionById(requested) ?? null);
     // A mission that does not resolve fails the room, and deliberately does not
@@ -317,7 +323,7 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     this.map =
       this.mission !== null
         ? missionMapById(this.mission.mapId)!
-        : (mapById(options?.mapId ?? DEFAULT_MAP_ID) ?? mapById(DEFAULT_MAP_ID)!);
+        : (study ?? mapById(options?.mapId ?? DEFAULT_MAP_ID) ?? mapById(DEFAULT_MAP_ID)!);
     // Validated before the world is built, and only for a mission: what
     // arrives here is a number the client chose.
     this.driftCarry = this.mission === null ? null : validDriftCarry(options?.driftCarry);
@@ -337,7 +343,8 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     //
     // A mission is private whatever the client asked for: it seats one
     // commander and writes its own opposition, so it is nobody else's to join.
-    if (this.mission !== null || options?.private === true) await this.setPrivate(true);
+    if (this.mission !== null || study !== null || options?.private === true)
+      await this.setPrivate(true);
     await this.publishListing();
 
     this.onClientMessage(CLIENT_MSG.move, (client, message) => {
@@ -724,17 +731,17 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     this.slotBySession.set(client.sessionId, slot);
     void this.publishListing();
 
-    if (this.mission !== null) {
+    if (this.mission !== null || this.map.id === FREE_WATER_MAP_ID) {
       // A mission pins the navy and seats no commanders, so there is nothing
       // to negotiate and no readiness question worth asking. The faction cards
       // never appear; this room goes straight from joined to playing.
-      player.faction = this.mission.playerFaction;
+      player.faction = this.mission?.playerFaction ?? Faction.Pelagia;
       player.ready = true;
     }
 
     this.sendMapData(client);
     this.sendTo(client, SERVER_MSG.assigned, { slot, faction: player.faction });
-    if (this.mission !== null) this.startIfEveryoneIsReady();
+    if (this.mission !== null || this.map.id === FREE_WATER_MAP_ID) this.startIfEveryoneIsReady();
   }
 
   /**
@@ -746,7 +753,7 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
    */
   private newMatch(): Match {
     return this.mission === null
-      ? new Match(this.map)
+      ? new Match(this.map, this.map.id === FREE_WATER_MAP_ID ? { fauna: false } : {})
       : new Match(this.map, {
           mission: this.mission,
           fauna: this.mission.fauna,

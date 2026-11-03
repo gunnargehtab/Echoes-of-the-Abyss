@@ -1,0 +1,311 @@
+{
+  "opening": [
+    {
+      "id": 75,
+      "kind": 0,
+      "name": "Light Scout",
+      "sig": 6,
+      "ink": "#3fa86a",
+      "restSig": 6,
+      "silentRunning": false,
+      "engineOff": false,
+      "xM": 625,
+      "zM": 1875,
+      "depthM": 300,
+      "lamps": [
+        {
+          "sitesPx": [
+            0.4,
+            0.37,
+            0.37,
+            0.31,
+            0.31
+          ],
+          "areaPx": 0.7,
+          "hex": "#8fe36b",
+          "exportIntensity": 1.6,
+          "restIntensity": 1.3018271255464278,
+          "intensity": 1.3018271255464278,
+          "afterToneMapping": true
+        }
+      ],
+      "screen": {
+        "x0": 743,
+        "y0": 390,
+        "x1": 775,
+        "y1": 406
+      }
+    },
+    {
+      "id": 76,
+      "kind": 1,
+      "name": "Corvette",
+      "sig": 28,
+      "ink": "#3fa86a",
+      "restSig": 28,
+      "silentRunning": false,
+      "engineOff": false,
+      "xM": 625,
+      "zM": 2125,
+      "depthM": 300,
+      "lamps": [
+        {
+          "sitesPx": [
+            0.47,
+            0.38,
+            0.38,
+            0.38,
+            0.38,
+            0.38,
+            0.35
+          ],
+          "areaPx": 1.1,
+          "hex": "#8fe36b",
+          "exportIntensity": 1.3,
+          "restIntensity": 1.3,
+          "intensity": 1.3,
+          "afterToneMapping": true
+        }
+      ],
+      "screen": {
+        "x0": 739,
+        "y0": 488,
+        "x1": 784,
+        "y1": 509
+      }
+    },
+    {
+      "id": 77,
+      "kind": 4,
+      "name": "Harvester",
+      "sig": 18,
+      "ink": "#3fa86a",
+      "restSig": 18,
+      "silentRunning": false,
+      "engineOff": false,
+      "xM": 375,
+      "zM": 1875,
+      "depthM": 300,
+      "lamps": [
+        {
+          "sitesPx": [
+            0.62,
+            0.49,
+            0.5,
+            0.49,
+            0.43
+          ],
+          "areaPx": 1.4,
+          "hex": "#8fe36b",
+          "exportIntensity": 0.9,
+          "restIntensity": 0.9,
+          "intensity": 0.9,
+          "afterToneMapping": true
+        }
+      ],
+      "screen": {
+        "x0": 619,
+        "y0": 381,
+        "x1": 661,
+        "y1": 415
+      }
+    }
+  ],
+  "diving": {
+    "id": 76,
+    "kind": 1,
+    "name": "Corvette",
+    "sig": 72,
+    "ink": "#e0452f",
+    "restSig": 28,
+    "silentRunning": false,
+    "engineOff": false,
+    "xM": 738.3349609375,
+    "zM": 2125,
+    "depthM": 358.5,
+    "lamps": [
+      {
+        "sitesPx": [
+          3.33,
+          2.67,
+          2.72,
+          2.74,
+          2.72,
+          2.77,
+          2.63
+        ],
+        "areaPx": 61.2,
+        "hex": "#8fe36b",
+        "exportIntensity": 1.3,
+        "restIntensity": 1.3,
+        "intensity": 7.800000000000001,
+        "afterToneMapping": true
+      }
+    ],
+    "screen": {
+      "x0": 929,
+      "y0": 376,
+      "x1": 1318,
+      "y1": 557
+    }
+  },
+  "rising": {
+    "id": 76,
+    "kind": 1,
+    "name": "Corvette",
+    "sig": 28,
+    "ink": "#3fa86a",
+    "restSig": 28,
+    "silentRunning": false,
+    "engineOff": false,
+    "xM": 857.336669921875,
+    "zM": 2125,
+    "depthM": 345.5,
+    "lamps": [
+      {
+        "sitesPx": [
+          3.48,
+          2.75,
+          2.75,
+          2.73,
+          2.79,
+          2.79,
+          2.55
+        ],
+        "areaPx": 74.4,
+        "hex": "#8fe36b",
+        "exportIntensity": 1.3,
+        "restIntensity": 1.3,
+        "intensity": 1.3,
+        "afterToneMapping": true
+      }
+    ],
+    "screen": {
+      "x0": 1384,
+      "y0": 392,
+      "x1": 1839,
+      "y1": 559
+    }
+  },
+  "wildlife": [
+    {
+      "slug": "env-rim-crab",
+      "at": {
+        "slug": "env-rim-crab",
+        "x": 1623.0351177418456,
+        "y": -89.24362407989132,
+        "z": 1385.8230881781305,
+        "yaw": -3.3211821224033296
+      },
+      "camera": {
+        "xM": 1623,
+        "zM": 1407,
+        "depthM": 384
+      }
+    },
+    {
+      "slug": "env-shoal-fry",
+      "at": {
+        "slug": "env-shoal-fry",
+        "x": 1369.99803168231,
+        "y": -64.11749388615421,
+        "z": 881.8724313709797,
+        "yaw": -3.770753957005425
+      },
+      "camera": {
+        "xM": 1370,
+        "zM": 903,
+        "depthM": 269
+      }
+    },
+    {
+      "slug": "env-outer-fish",
+      "at": {
+        "slug": "env-outer-fish",
+        "x": 1770.0588636834013,
+        "y": -211.21707581335596,
+        "z": 1778.6817361352257,
+        "yaw": -2.5312962385204916
+      },
+      "camera": {
+        "xM": 1770,
+        "zM": 1799,
+        "depthM": 939
+      }
+    },
+    {
+      "slug": "env-deep-fish",
+      "at": {
+        "slug": "env-deep-fish",
+        "x": 1878.2941409532343,
+        "y": -422.9203714544796,
+        "z": 2105.2731493800907,
+        "yaw": -6.448646302393281
+      },
+      "camera": {
+        "xM": 1878,
+        "zM": 2126,
+        "depthM": 1903
+      }
+    }
+  ],
+  "lifecycle": {
+    "retained": true,
+    "distantUnchanged": true,
+    "reducedMotion": true,
+    "paletteColors": {
+      "standard": {
+        "drawn": 6269066,
+        "expected": 6269066
+      },
+      "deuteranopia": {
+        "drawn": 7244932,
+        "expected": 7244932
+      },
+      "protanopia": {
+        "drawn": 7244932,
+        "expected": 7244932
+      },
+      "tritanopia": {
+        "drawn": 8026760,
+        "expected": 8026760
+      }
+    },
+    "stats": {
+      "props": 182,
+      "propTris": 387952,
+      "ventPlumes": 0,
+      "fieldHazes": 0,
+      "landmarks": 0,
+      "landmarkTris": 0,
+      "siftMotes": 0,
+      "cloudMotes": 0,
+      "decorativePhotophores": 48,
+      "fixtureAssets": {
+        "env-kelp-stand": 38,
+        "env-kelp-cluster": 16,
+        "env-rim-crab": 16,
+        "env-shoal-fry": 96,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8
+      }
+    },
+    "calls": 13,
+    "reset": true,
+    "rejoined": 184,
+    "destroyed": true,
+    "lateLoadStayedDestroyed": true
+  },
+  "views": [
+    {
+      "name": "low",
+      "calls": 38,
+      "triangles": 399792
+    },
+    {
+      "name": "survey",
+      "calls": 45,
+      "triangles": 405088
+    }
+  ]
+}

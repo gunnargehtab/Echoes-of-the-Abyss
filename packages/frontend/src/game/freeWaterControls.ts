@@ -8,3 +8,8 @@ export const FREE_WATER_CONTROLS = freeWaterControlsEnabled(
   import.meta.env?.DEV === true,
   typeof window === 'undefined' ? '' : window.location.search
 );
+
+export const FREE_WATER_SLICE =
+  FREE_WATER_CONTROLS &&
+  typeof window !== 'undefined' &&
+  new URLSearchParams(window.location.search).get('study') === 'free-water';

@@ -25,6 +25,16 @@ export const FLIGHT_CAMERA = {
   BUTTON_STEP_S: 0.25,
 } as const;
 
+/** SPEC — docs/free-water-slice.md §5, public decoration only, never gameplay fauna. */
+export const FREE_WATER_LIFE = {
+  SEED: 1713,
+  CRAB: { radiusM: 20, periodS: 240, depthM: null, depthSwingM: 0, axisM: 0 },
+  FRY: { radiusM: 20, periodS: 90, depthM: 275, depthSwingM: 20, axisM: 0.06 },
+  OUTER: { radiusM: 35, periodS: 180, depthM: 850, depthSwingM: 130, axisM: 0.78 },
+  DEEP: { radiusM: 20, periodS: 240, depthM: 2000, depthSwingM: 80, axisM: 0.28 },
+  INNER_RADIUS_SHARE: 0.4,
+} as const;
+
 /** SPEC — docs/art-direction.md, Shared model lighting. Presentation only. */
 export const MODEL_LIGHTING = {
   AMBIENT: 0.75,

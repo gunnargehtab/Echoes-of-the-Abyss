@@ -4,8 +4,10 @@
 The owner asked for Homeworld-like fleet command inside a Subnautica-like ocean,
 easy ascent/descent, full six-degree camera freedom including roll, and one integrated
 crater/kelp-jungle slice with wildlife. Those are the approved goals, not approval of
-every input or asset below. Direct rise/dive shipped in #1709; flight, the independent
-destination preview and this world remain to be built.
+every input or asset below. Direct rise/dive shipped in #1709, flight in #1706 and the
+independent destination preview in #1707. The development fixture is integrated in
+issue #1713; its acceptance matrix and hardware evidence are recorded
+[beside the captures](screenshots/issue-1713/README.md).
 
 ## 1. Decision and boundary
 
@@ -22,13 +24,13 @@ Its input and decorative-life choices are specified below, not attributed to the
 Merge of the contract is the prerequisite for #1706 and the remaining #1707 work.
 This is not a new faction, campaign mission, competitive map or visual reboot.
 
-The planned entry is `?study=free-water`, accepted only by a development client and a
+The entry is `?study=free-water`, accepted only by a development client and a
 development server, selecting the authored `free-water-slice` fixture. Both ends must
 refuse it in production, rather than silently starting another map. One predicate owns
 the client gate; it defaults off, including after reload without the parameter. The
 server still runs a normal authoritative match and publishes only legal player state.
 No server debug snapshot, omniscience toggle or client-side simulation is part of it.
-Before the fixture lands, `?freeWaterControls=1` enables only the camera/order study on
+`?freeWaterControls=1` enables only the camera/order study on
 an existing development map. The same client predicate owns both entry modes; the
 controls-only mode never adds scenery or selects a different map. Promotion to normal
 play requires a separate decision.
@@ -228,6 +230,19 @@ closed paths, phases and poses are authored within their listed patches in #1713
 checked against public ground, and cannot migrate to another patch. No deep-pocket
 plants or bowl-wide kelp are inherited just because those cells have a kelp biome.
 
+Swim depths place the **body axis**, not the lowest fin tip (owner decision in #1713).
+The approved fry, outer fish and deep fish axes stand 0.06, 0.78 and 0.28 rendered
+metres above their model origins respectively. Subtract that offset after mapping
+depth through the retained 0.22 display scale; do not squash or rescale the bodies.
+
+The fixture uses closed circular plan paths: crab radius 20 m over 240 s, fry
+radius 20 m over 90 s, outer fish radius 35 m over 180 s and deep fish radius
+20 m over 240 s. Within a patch, crab and fry radii range from 40% to 100% of
+that radius, with evenly spaced phases; a fixed seed of 1713 offsets each patch.
+Swimming depth follows the same phase: fry 275 ± 20 m, outer fish 850 ± 130 m,
+deep fish 2,000 ± 80 m. Crabs follow the public rendered floor.
+These smaller envelopes leave room for the full body inside the licensed bounds.
+
 **The wildlife choice is an explicit, narrow extension of the bible.** Keeping only
 the existing stipples would preserve today's presentation but not the requested close
 wildlife. Converting gameplay fauna into public fish would disclose hidden state and is
@@ -270,8 +285,8 @@ variant adds a server-only existing Hollow and an opposing observer in the deep 
 using normal detection; decoration must be byte-for-byte independent of that variant's
 hidden state. Neither extra participant is exposed by the study entry.
 
-**Shape lane.** The five new slugs, including the kelp stand, are commissions, not
-approved files. Environment props have no faction: each shape PR authors
+**Shape lane.** The five new slugs were approved in #1711 and #1712 before integration.
+Environment props have no faction: each shape PR authors
 **ENV STYLE + one prop-table row** in [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, including
 Footprint, Height, Tris and Light, plus its script, GLB, intake report,
 neutral-light review, contact sweep and separate hull-reviewer before integration.

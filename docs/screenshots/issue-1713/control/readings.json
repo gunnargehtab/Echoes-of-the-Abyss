@@ -1,0 +1,102 @@
+{
+  "look": "standard",
+  "props": 363,
+  "propTriangles": 104958,
+  "decorativePhotophores": 0,
+  "fixtureAssets": {},
+  "calls": 74,
+  "triangles": 160006,
+  "textures": 21,
+  "environmentBytes": 344064,
+  "haloBytes": 22422976,
+  "splitBytes": 5184000,
+  "before": {
+    "id": 110,
+    "kind": 0,
+    "name": "Light Scout",
+    "sig": 6,
+    "ink": "#3fa86a",
+    "restSig": 6,
+    "silentRunning": false,
+    "engineOff": false,
+    "xM": 602.887451171875,
+    "zM": 1158.1165771484375,
+    "depthM": 600,
+    "hp": 180,
+    "maxHp": 180,
+    "unhealableDamage": 0,
+    "lamps": [
+      {
+        "sitesPx": [
+          0.76,
+          0.76,
+          0.76,
+          2.39,
+          1.22
+        ],
+        "areaPx": 6.4,
+        "hex": "#f2b233",
+        "exportIntensity": 3.5,
+        "restIntensity": 1.1262236334021603,
+        "intensity": 1.1262236334021603,
+        "afterToneMapping": true
+      }
+    ],
+    "screen": {
+      "x0": 546,
+      "y0": 376,
+      "x1": 583,
+      "y1": 391
+    }
+  },
+  "after": {
+    "id": 110,
+    "kind": 0,
+    "name": "Light Scout",
+    "sig": 6,
+    "ink": "#3fa86a",
+    "restSig": 6,
+    "silentRunning": false,
+    "engineOff": false,
+    "xM": 690.87939453125,
+    "zM": 1156.9722900390625,
+    "depthM": 574.75,
+    "hp": 180,
+    "maxHp": 180,
+    "unhealableDamage": 0,
+    "depthOrder": 450,
+    "lamps": [
+      {
+        "sitesPx": [
+          3.37,
+          3.31,
+          3.34,
+          10.43,
+          5.26
+        ],
+        "areaPx": 122.8,
+        "hex": "#f2b233",
+        "exportIntensity": 3.5,
+        "restIntensity": 1.1262236334021603,
+        "intensity": 1.1262236334021603,
+        "afterToneMapping": true
+      }
+    ],
+    "screen": {
+      "x0": 857,
+      "y0": 399,
+      "x1": 1028,
+      "y1": 481
+    }
+  },
+  "focusBefore": {
+    "xM": 603,
+    "zM": 1158,
+    "depthM": 600
+  },
+  "focusAfter": {
+    "xM": 571,
+    "zM": 1148,
+    "depthM": 600
+  }
+}

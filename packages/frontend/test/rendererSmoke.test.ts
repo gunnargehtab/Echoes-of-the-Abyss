@@ -604,7 +604,19 @@ describe('free-water camera integration', () => {
       world.conn.focusWorld(2000, 2000, 1000);
       world.conn.raiseFocusBy(world.conn.focusDepth() - 300);
       world.chart.toggleFlight();
-      world.conn.turnFlight(0, Math.PI, 0);
+      assert.notEqual(world.conn.pickPlane(640, 360, 500), null, 'forward control reaches water');
+      const horizonTurn = (HOME_PITCH_DEG * Math.PI) / 180;
+      world.conn.turnFlight(0, horizonTurn, 0);
+      const camera = (world.conn as unknown as { camera: import('three').PerspectiveCamera })
+        .camera;
+      const direction = camera.getWorldDirection(new (await import('three')).Vector3());
+      assert.ok(Math.abs(direction.y) < 1e-10, 'the centre ray is parallel to the depth plane');
+      assert.equal(world.conn.pickPlane(640, 360, 500), null);
+      world.app.canvas.dispatch('pointermove', { clientX: 640, clientY: 360, buttons: 0 });
+      assert.equal(reading()!.reason, 'NO WATER TARGET');
+      world.chart.confirmDestination();
+      assert.equal(world.log.names().includes('onMoveOrder'), false);
+      world.conn.turnFlight(0, Math.PI - horizonTurn, 0);
       world.app.canvas.dispatch('pointermove', { clientX: 640, clientY: 360, buttons: 0 });
       assert.equal(reading()!.reason, 'NO WATER TARGET');
       world.chart.confirmDestination();
