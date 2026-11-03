@@ -894,6 +894,7 @@ and no row below is open.
 | The signal, economy and fleet readouts before a resumed skirmish's first snapshot | [#1719](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1719) |
 | The greyed PING button refusing in silence under a mission lock | [#1721](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1721) |
 | SCREEN greying between decoys with no reason | [#1732](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1732) |
+| DECOY and SCREEN greying on a hull their orders skip | [#1735](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1735) |
 
 **How the project runs**
 

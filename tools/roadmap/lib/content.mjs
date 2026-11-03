@@ -574,6 +574,7 @@ export const items = {
   1719: 'A resumed skirmish showing no false zeros for noise, resources or fleet before it loads',
   1721: 'The sonar ping button saying why a mission has switched it off',
   1732: 'The decoy button saying why it is waiting between decoys',
+  1735: 'The decoy buttons judging readiness by every selected ship, not just the first',
   1722: 'The project’s rules for merging without a person checked by machine',
   1724: 'The project’s independent reviewer checking every rule that limits it',
   1725: 'The project’s freeze on balance changes kept from merging without a person',
