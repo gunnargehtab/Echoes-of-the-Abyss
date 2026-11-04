@@ -55,6 +55,23 @@ test('an empty node that moved, a renamed node, a changed extra and a missing no
   );
 });
 
+test('a node off by platform rounding drifts nowhere, and a tenth of a millimetre still does', () => {
+  // #1742: Windows builds of bower and refinery-directorate put
+  // `edge_lobe_s_4` 3.6e-15 m and `silo_2_crown` 1.4e-14 m from the
+  // committed file, a double's last bits through another libm.
+  const committed = [node('edge_lobe_s_4', [12.5, -3.25, 7]), node('silo_2_crown', [-40, 118, 0])];
+  const rounded = [
+    node('edge_lobe_s_4', [12.5 + 3.6e-15, -3.25, 7]),
+    node('silo_2_crown', [-40, 118 + 1.4e-14, 0]),
+  ];
+  assert.deepEqual(diffNodes(rounded, committed), []);
+  const moved = [node('edge_lobe_s_4', [12.5, -3.25, 7.0001]), committed[1]];
+  assert.match(
+    diffNodes(moved, committed)[0],
+    /`edge_lobe_s_4`: stands at \[12.5,-3.25,7\] → \[12.5,-3.25,7.0001\]/
+  );
+});
+
 test('readGlb lists every node in file order, empties and extras included', async () => {
   const root = new THREE.Group();
   root.name = 'yard';

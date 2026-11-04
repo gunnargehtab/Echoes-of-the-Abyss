@@ -887,6 +887,22 @@ export function topDown(parts, ppm = 4) {
 }
 
 /**
+ * How far a node may stand from the committed file's place, in metres per
+ * axis. A node's world position is a double composed through the script's
+ * trigonometry, and another platform's floating point moves its last bits
+ * (the cause was not traced further): on Windows
+ * `edge_lobe_s_4` (bower) read 3.6e-15 m and `silo_2_crown`
+ * (refinery-directorate) 1.4e-14 m off unchanged files (#1742). A
+ * micrometre is eight orders above that and a ten-thousandth of the
+ * centimetre check.mjs holds a part's bounds to, so a move anyone could see
+ * still fails. Regenerating an approved GLB to absorb the rounding would
+ * only move the failure to the other platform.
+ */
+const NODE_SLACK_M = 1e-6;
+const sameAt = (a, b) =>
+  a.length === b.length && a.every((v, k) => Math.abs(v - b[k]) <= NODE_SLACK_M);
+
+/**
  * Lines describing how the built file's nodes differ from the committed
  * one's: a node's name, where it stands, and its extras. `diffParts` reads
  * only nodes with a mesh, so an empty node and a node's extras — what the
@@ -895,6 +911,8 @@ export function topDown(parts, ppm = 4) {
  * because check.mjs runs on import, and the test needs the function alone. A mesh node's position is read here too,
  * since a part built in world space under an identity node and the same
  * part under a moved node read alike in `diffParts`.
+ *
+ * A place is held to `NODE_SLACK_M` on each axis, not exactly (`sameAt`).
  */
 export function diffNodes(built, committed) {
   const out = [];
@@ -911,8 +929,7 @@ export function diffNodes(built, committed) {
       continue;
     }
     if (a.name !== b.name) out.push(`node ${i}: \`${b.name}\` is now \`${a.name}\``);
-    else if (a.at.join() !== b.at.join())
-      out.push(`\`${a.name}\`: stands at [${b.at}] → [${a.at}]`);
+    else if (!sameAt(a.at, b.at)) out.push(`\`${a.name}\`: stands at [${b.at}] → [${a.at}]`);
     else if (JSON.stringify(a.extras) !== JSON.stringify(b.extras))
       out.push(`\`${a.name}\`: extras ${JSON.stringify(b.extras)} → ${JSON.stringify(a.extras)}`);
   }
