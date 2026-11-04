@@ -89,7 +89,7 @@ through a correctness review while `CLAUDE.md`'s balance freeze is in force.
 
 | #709 guardrail | Here |
 | --- | --- |
-| Max cycles per task | Three rounds, hard, in `dev-loop` — reaching it is a stall, and the pull request stays open with what is left written in its body. Only a **blocking** finding buys a round; a **minor** one is fixed and checked by the verification pass |
+| Max cycles per task | Three rounds, hard, in `dev-loop`, unless an owner-approved brief records its own for the work it names (`docs/free-water-slice.md` §9: five) — reaching it is a stall, and the pull request stays open with what is left written in its body. Only a **blocking** finding buys a round; a **minor** one is fixed and checked by the verification pass |
 | Max patch size | Not a line count: one increment per round, and a round whose diff outgrows its target is a finding `loop-critic` raises |
 | Schema validation for patches | `npm run gates` — type-check, lint, format, the model round-trip, all three doc gates |
 | Crash detection | The suites, and the evidence step: a harness run that does not reproduce is `evidence-missing` |

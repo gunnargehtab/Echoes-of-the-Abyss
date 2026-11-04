@@ -48,7 +48,7 @@ of a standalone scene does not prove a playable slice. Compare the same cameras 
 and after, and include a non-target control: a mission outside the slice or, for a
 game-wide change, the path it must leave alone (#974's was the baked chart and overlay).
 
-The coordinator runs **one** [dev-loop](../dev-loop/SKILL.md), with its three-round cap
+The coordinator runs **one** [dev-loop](../dev-loop/SKILL.md), with its round cap
 and fresh independent critic. Specialists do not start nested loops or approve their own
 outputs. Any GLB change also goes through the separate hull-reviewer.
 

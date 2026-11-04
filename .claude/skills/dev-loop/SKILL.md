@@ -194,7 +194,9 @@ raise it. Round three ends one of two ways:
 
 Do not buy a round back by skipping the critic, folding two increments into one
 round, or calling the verification pass a round. Interactively, the person at the
-keyboard may grant a fourth; unattended, three is the end.
+keyboard may grant a fourth; unattended, three is the end. The one standing exception
+is a cap the owner records in an approved brief for the work it names:
+`docs/free-water-slice.md` §9 sets five, for every loop of #1694's feel pass.
 
 ## Guardrails
 
