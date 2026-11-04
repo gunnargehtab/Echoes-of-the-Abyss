@@ -895,6 +895,9 @@ and no row below is open.
 | The greyed PING button refusing in silence under a mission lock | [#1721](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1721) |
 | SCREEN greying between decoys with no reason | [#1732](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1732) |
 | DECOY and SCREEN greying on a hull their orders skip | [#1735](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1735) |
+| Model node places failing on another platform's rounding | [#1742](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1742) |
+| The Chorister's stub wings floating clear of the hull | [#1740](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1740) |
+| A tutorial loading test that timed out once in CI | [#1745](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1745) |
 
 **How the project runs**
 
