@@ -617,7 +617,7 @@ Mid-Water, to 1,500 m; the pocket in the Abyssal, to 2,400 m; and the thermoclin
 fast and loud, and rises at a third of the speed with three times the warning. A torpedo
 implodes below its launcher's PR, and crush-baiting is intended play, with its warning.
 
-#1754 seats a second player and tests that with existing weapons only. It succeeds when
+Issue #1754 seats a second player and tests that with existing weapons only. It succeeds when
 each player can tell from the instruments alone which band a Tier 3 enemy holds, which
 band a charge must cross, and when an order carries a hull below its PR, without flight.
 
