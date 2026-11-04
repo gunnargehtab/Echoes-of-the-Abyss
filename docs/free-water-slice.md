@@ -619,19 +619,21 @@ plane, so depth reads at any camera angle without flight.
   depth: the alternate depth picker, as the north-up scope is the alternate plan picker.
   The preview's rules in §6 apply unchanged.
 - **Edge marks.** An earned contact outside the view marks the screen edge. A Tier 3+
-  contact says ABOVE or BELOW, with its metres to the plane; a Tier 2 contact marks its
-  bearing only; a Tier 1 contact marks nothing, since its report carries the listener's
-  own position. Nothing behind the eye is mirrored.
+  contact says ABOVE or BELOW, with its metres to the plane. With no plane, as after Home,
+  it gives the depth in metres it already carries, rather than falling back to bearing
+  only. A Tier 2 contact marks its bearing only; a Tier 1 contact marks nothing, since its
+  report carries the listener's own position. Nothing behind the eye is mirrored.
 - **Looking up.** In the study only, the orbit's SPEC pitch band
   ([free-camera.md](free-camera.md) §4, 10–88 degrees) widens to −60–88. The commander
   can then look up at the water over the fleet while staying in the orbit around its
   focus, with Home and the focus plane's orders unchanged, without entering flight. The
   eye's 25 m clamp raises the eye rather than shortening the dolly, so the full band is
-  reachable only over deep water, the bowl and the pocket. Over the garden's 400 m floor a
-  300 m focus allows only a few degrees of look-up. §4 stops at 10 degrees because range
-  rings turn edge-on there; within 10 degrees of level they stay that unreadable, so the
-  section scope carries range in that band. Home still restores 55 degrees, shipped maps
-  keep 10–88, and #1753 proves the band at a bowl pose.
+  reachable only at close dollies where the floor lies about 1,000 m or more below the
+  focus: for a 300 m focus, over the bowl, the pocket and the exit pool. Over the garden's
+  400 m floor a 300 m focus allows only a few degrees of look-up. §4 stops at 10 degrees
+  because range rings turn edge-on there; within 10 degrees of level they stay that
+  unreadable, so the section scope carries range in that band. Home still restores 55
+  degrees, shipped maps keep 10–88, and #1753 proves the band at a bowl pose.
 
 No new order, wire field or simulation change. Everything drawn comes from own state,
 public terrain or a contact the client received.
@@ -661,8 +663,9 @@ anchored to depth. No new weapon, and no balance tuning.
 
 ### Frames and the last gate
 
-The poses come from `docs/screenshots/issue-1713/gpu.mjs`, at yaw 0 except the new
-opening, with the HUD on. The owner's baseline is the failure's record, not a station:
+The low and survey poses come from `docs/screenshots/issue-1713/gpu.mjs`, at yaw 0. The
+opening and garden close are new and give their own headings. All four are captured with
+the HUD on. The owner's baseline is the failure's record, not a station:
 each child's frames answer what it shows.
 
 | Frame | Pose: plan x / y, dolly, pitch, focus depth | Before | Must read as |
