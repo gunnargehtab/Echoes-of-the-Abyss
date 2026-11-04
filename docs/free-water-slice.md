@@ -483,28 +483,31 @@ matrix is satisfied, not merely until this document or the camera lands.
 
 ## 9. Feel pass: the approved look target
 
-**Status: approved by the owner on #1748, 4 November 2026.** The integrated slice passed
-§7 and still failed the owner's reading of it: it does not feel like an AAA underwater
-RTS. The frame the owner judged is [owner-baseline.png](screenshots/issue-1748/owner-baseline.png),
-the Home view, north and 55 degrees down into the bowl. It shows the rim and the southern
-wall as boxes under contour ink, no water between the eye and the floor, the kelp garden
-as thin strips along the north edge, and the decorative-life legend boxed over the top of
-the world. §7 names no feel, by design, so this section is the target the pass builds
-against. It changes no gameplay ground, cost, stat or disclosure, and tunes nothing for
-balance.
+**Status: decisions 1–7 approved by the owner on #1748, 4 November 2026.** Three parts
+below are the author's, written to carry those decisions out, and await the owner's
+review on the pull request that adds this section: the kelp flanks under decision 5, and
+the #1753 and #1754 designs under decision 6. The integrated slice passed §7 and still
+failed the owner's reading of it: it does not feel like an AAA underwater RTS. The frame
+the owner judged is [owner-baseline.png](screenshots/issue-1748/owner-baseline.png), a
+steep north-up orbit over the whole bowl; its pose was not recorded. It shows the rim and
+the southern wall as boxes under contour ink, no water between the eye and the floor, the
+kelp garden as thin strips along the north edge, and the decorative-life legend boxed
+over the top of the world. §7 names no feel, by design, so this section is the target the
+pass builds against. It changes no gameplay ground, cost, stat or disclosure, and tunes
+nothing for balance.
 
 | Decision | Taken | Rejected | Child |
 | --- | --- | --- | --- |
 | 1. Light | Stay inside the canon: no sunlight below the Lid | Sunlit water in the manner of the owner's ocean reference, which would first amend [world.md](world.md) and art direction's "Shallow caustics" | Every child |
-| 2. Opening camera | A low orbit behind the fleet at hull depth | Today's Home frame; opening in flight, which hands the keys to the camera | #1752 |
-| 3. Water medium | Reach and near-eye particulate first; one world-ray pass only if they fail | Light shafts, caustics or hue in the water | #1749 |
-| 4. Crater walls | A study-only relief override between cell centres | Changing the rim's biome, which changes its PF; re-cutting the literal | #1750 |
-| 5. Kelp | The prop reservation may rise to 600,000 triangles, and the flanks fill to the clearing | Scaling stands up, which breaks canonical scale; stands in the clearing, which breaks §5 | #1751 |
-| 6. HUD and vertical command | A one-line legend, the camera buttons by the console, and vertical instruments | Leaving vertical reading to flight | #1752, #1753, #1754 |
-| 7. Iteration cap | Five rounds per change, every loop | The default three | Every child |
+| 2. Opening camera | A low orbit behind the fleet at hull depth | Today's opening at Home pitch from 2,600 m; opening in flight, which §6 rules out by keeping the bounded orbit as the default | #1752 |
+| 3. Water medium | Reach and near-eye particulate, inside the existing ramp | Light shafts, caustics, hue in the water, or a new full-screen pass | #1749 |
+| 4. Crater walls | Reshape the drawn cell transitions, adding nothing at a cell centre | Changing the rim's biome, which changes its PF; re-cutting the literal | #1750 |
+| 5. Kelp | The prop reservation may rise to 600,000 triangles; the flanks fill to the clearing, the author's call pending review | Scaling stands up, which breaks canonical scale; stands in the clearing, which breaks §5 | #1751 |
+| 6. HUD and vertical command | A one-line legend and the camera panel by the console; vertical instruments, the author's design pending review | Leaving vertical reading to flight | #1752, #1753, #1754 |
+| 7. Iteration cap | Five rounds per change, every loop, held in `dev-loop` | The default three | Every child |
 
 Order: #1749, #1750, #1751 and #1753 in any order, one at a time where they share files;
-then #1752, which captures the re-acceptance set; then #1754.
+then #1752, which captures the re-acceptance set; then #1754, after that re-acceptance.
 
 ### Light: an ocean without a sun
 
@@ -513,36 +516,40 @@ refuses them as a licence to add sunlight. The Lid is milky and the light under 
 from everywhere above and nowhere in particular
 ([art-direction.md](art-direction.md#shallow-caustics--spec)). So the ocean is built from
 what this one has: water graded by depth, drifting snow at the eye, hull and kelp
-silhouettes against the brighter water above them, and the five world-light families,
-the deep fish's photophores among them. The aim is dread rather than spectacle, and depth
-stays luminance.
+silhouettes against the brighter water above them, the five world-light families, and the
+deep fish's public-life photophores (§5). The aim is dread rather than spectacle, and
+depth stays luminance.
 
 ### Opening view (#1752)
 
-Entry opens the ordinary orbit, not flight, with its focus on the three hulls' centroid at
-their 300 m depth, pitched 15 degrees, inside the 10–88 degree band, and yawed about 34
-degrees east of north, from START toward mark A. The dolly is a TUNABLE chosen by frame:
-the three hulls in the lower third, the garden beyond them, and water rather than clear
-colour above the far rim. Home is unchanged and still restores north, 55 degrees and the
-seabed.
+Today the study opens at Home pitch, 55 degrees down from 2,600 m (`HOME_DOLLY_M`) over the
+fleet's centroid on the west rim: the opening row's before frame below. Entry instead opens
+the ordinary orbit, not flight, with its focus on the three hulls' centroid at their 300 m
+depth, pitched 15 degrees, inside the 10–88 degree band, and yawed about 34 degrees east
+of north, from START toward mark A. The dolly is a TUNABLE chosen against the opening
+row. Home is unchanged and still restores north, 55 degrees and the seabed.
 
 The legend becomes one line with no box, in the bottom-right corner, which the study
 leaves free because it runs no mission log. FLIGHT, NAV and HOME move beside the console's
-command panel, keeping their labels, focus order and shortcuts. Survey ink is unchanged:
-it already fades into the water with the ground under it.
+command panel, keeping their labels, focus order and shortcuts. The rest of the panel
+moves with them and keeps its conditions: the EYE and world-up readout and NO CAMERA
+CLEARANCE in flight, and the NAV status line and motion buttons in NAV. Survey ink is
+unchanged: it already fades into the water with the ground under it.
 
 ### Water medium (#1749)
 
-Three permitted changes, tried in order, each study-only:
+Two permitted changes, each study-only and inside §4's zero added texture and target
+memory:
 
 1. **Reach.** A study-only curve for how far the water lets you see, in
-   `packages/frontend/src/game/water.ts`; the ramp's stops and its single hue stay.
+   `packages/frontend/src/game/water.ts`. The ramp's stops and its single hue stay
+   ([art-direction.md](art-direction.md#reading-the-water)).
 2. **Particulate.** Denser, nearer marine snow with parallax at the eye, in flight and
    orbit alike.
-3. **One world-ray pass,** only if the first two fail the frames below. It is specified in
-   [art-direction.md](art-direction.md#reading-the-water) before it is built, unprojects
-   per pixel rather than grading the screen, and costs at most 0.40 ms at DPR 1 and
-   0.75 ms at DPR 1.5, on minus off, which are the lamp halo's ceilings.
+
+This brief licenses no new full-screen pass. If reach and particulate cannot meet the
+garden-close and low rows below, #1749 stops and puts a pass to the owner, with its
+options and cost.
 
 Prohibited: light shafts, caustics, a sun, hue in the water, an effect that rotates with
 the projection, and glow on terrain. Retained: the ground's 5–10% luminance, and gate 7's
@@ -550,37 +557,48 @@ rule that readability outranks richness ([graphics-standards.md](graphics-standa
 
 ### Crater walls (#1750)
 
-The rim, the southern wall and the exit pool are Coral Ruins, drawn as terraced right
-angles on purpose (`BIOME_RELIEF` blockiness 1 in `seabed.ts`), and the biome sets
-propagation, so it stays. The study may override that relief between cell centres only.
-At every cell centre the drawn floor and ceiling equal the literal, and a solid cell is
-rock at its centre. Terraces stay terraces, with eroded lips and faces rather than box
-edges. Survey ink keeps tracing the authored floor, not the override. The flight eye
-already sweeps the drawn triangles, so its clearance follows the override; #1750 proves
-that with a test. No new model: rock props would be a separate `shape-work` child.
+The boxes are the 250 m cell transitions, not the coral texture. Three mechanisms draw
+them:
+
+- **Rock.** The southern wall is solid, floor 200 m and ceiling 3,000 m in the map literal,
+  so it is drawn as rock: `rockSurfaceDepthM` in `perspectiveTerrain.ts`, its crag from
+  `ROCK_RELIEF`.
+- **The roof.** The cut's roof is stone that `passages.ts` raises over the passage.
+- **Ramps.** Between open cell centres the floor is the bilinear blend of the authored
+  depths (`authoredFloorAtM`), so the rim's 600 m and the bowl's 1,500 m meet in straight
+  slopes along the cell grid.
+
+Coral Ruins' blockiness, a 60 m relief sampled on a 90 m grid (`BIOME_RELIEF` and `BLOCK_M`
+in `seabed.ts`), is the terracing, and it stays. The study may reshape the drawn floor,
+rock faces and roof between cell centres, so that cell edges read as eroded rock. The
+override adds nothing at a cell centre, and a solid cell stays rock at its centre. Survey
+ink keeps tracing the authored floor, not the override. The flight eye already sweeps the
+drawn triangles, so its clearance follows the override; #1750 proves that with a test. No
+new model: rock props would be a separate `shape-work` child.
 
 ### Kelp (#1751)
 
-The prop reservation may rise from 400,000 to 600,000 triangles. The study's 720,000-
-triangle frame cap, gate 6's 150 calls, the prop layer's 30 calls and DPR of at most 1.5
+The prop reservation may rise from 400,000 to 600,000 triangles. The study's frame cap of
+720,000 triangles, gate 6's 150 calls, the prop layer's 30 calls and DPR of at most 1.5
 are unchanged. At the per-model ceilings, 600,000 admits at most 62 stands of 9,000 beside
 the 16 retained clusters (6,208) and the wildlife (31,680). Until #1751 merges, §7's
 400,000 binds, and its test moves with the new figure in that pull request.
 
 More stands fill the garden's flanks to the edges of the clearing, north and south, so the
 clearing reads as a cut through one forest rather than a lane between two strips. The
-clearing row `y=1,000..1,250`, the roofed cut and the deep pocket stay bare (§3, §5); the
-owner's approval said stands under the route, and that would have broken §5, so the flanks
-are taken instead. The garden floor is 400 m and a stand is 40 m tall, so the fleet at its
-300 m exercise depth looks down on a canopy 60 m below it. Hulls among the stalks would
-need taller stands, which is `shape-work`, or a deeper exercise, which changes §3; neither
-is taken here.
+clearing row `y=1,000..1,250`, the roofed cut and the deep pocket stay bare (§3, §5). The
+owner's approval said stands under the route, which would break §5 and §3's clear row;
+filling the flanks instead is the author's call, pending the owner's review. The garden
+floor is 400 m and a stand is 40 m tall, so the fleet at its 300 m exercise depth looks
+down on a canopy 60 m below it. Hulls among the stalks would need taller stands, which is
+`shape-work`, or a deeper exercise, which changes §3; neither is taken here.
 
 ### Vertical command (#1753)
 
-A three-dimensional order is two two-dimensional readings. The north-up scope already
-picks a plan position; a section scope picks a depth. In the world, stalks tie every hull
-to one plane, so depth reads at any camera angle without flight.
+This is the author's design for the owner's amendment to decision 6, pending review. A
+three-dimensional order is two two-dimensional readings. The north-up scope already picks
+a plan position; a section scope picks a depth. In the world, stalks tie every hull to one
+plane, so depth reads at any camera angle without flight.
 
 - **Command plane.** The lead selected hull's depth, or the camera focus depth when
   nothing is selected: the plane MOVE 3D already arms with (§6).
@@ -596,48 +614,70 @@ to one plane, so depth reads at any camera angle without flight.
 - **Depth picking.** With MOVE 3D pinned, a click in the section sets the destination
   depth: the alternate depth picker, as the north-up scope is the alternate plan picker.
   The preview's rules in §6 apply unchanged.
-- **Edge marks.** An earned contact outside the view, above or below it, marks the screen
-  edge ABOVE or BELOW; Tier 3+ add the metres to the plane. Tier 2 marks carry their
-  bearing only, and nothing behind the eye is mirrored.
-- **Looking up.** In the study only, the orbit band widens from 10–88 degrees to −60–88,
-  so the eye can sit under the focus and look up at the water over the fleet while fleet
-  keys stay live. The eye keeps flight's 25 m clearance; Home still restores 55 degrees,
-  and shipped maps keep 10–88.
+- **Edge marks.** An earned contact outside the view marks the screen edge. A Tier 3+
+  contact says ABOVE or BELOW, with its metres to the plane; a Tier 2 contact marks its
+  bearing only; a Tier 1 contact marks nothing, since its report carries the listener's
+  own position. Nothing behind the eye is mirrored.
+- **Looking up.** In the study only, the orbit's SPEC pitch band
+  ([free-camera.md](free-camera.md) §4, 10–88 degrees) widens to −60–88. The commander
+  can then look up at the water over the fleet while staying in the orbit around its
+  focus, with Home and the focus plane's orders unchanged, without entering flight. §4
+  stops at 10 degrees because range rings turn edge-on there; within 10 degrees of level
+  they stay that unreadable, so the section scope carries range in that band. The eye
+  keeps the orbit's 25 m clearance, Home still restores 55 degrees, and shipped maps keep
+  10–88.
 
 No new order, wire field or simulation change. Everything drawn comes from own state,
 public terrain or a contact the client received.
 
 ### Toward a vertical multiplayer match (#1754)
 
-The end target is a match where players attack from above or below each other's units.
-The crater already stages one: the garden on the Shelf, floor 400 m; the bowl in
-Mid-Water, to 1,500 m; the pocket in the Abyssal, to 2,400 m; and the thermocline at
-1,200 m deciding who hears whom. The weapons already argue vertically
-([systems-combat.md](systems-combat.md) §8). A depth charge must cross a band; it falls
-fast and loud, and rises at a third of the speed with three times the warning. A torpedo
-implodes below its launcher's PR, and crush-baiting is intended play, with its warning.
+This is the author's design for the owner's end goal, pending review: a match where
+players attack from above or below each other's units. The crater already stages one: the
+garden on the Shelf, floor 400 m; the bowl in Mid-Water, to 1,500 m; the pocket in the
+Abyssal, to 2,400 m; and the thermocline at 1,200 m deciding who hears whom. The weapons
+already argue vertically ([systems-combat.md](systems-combat.md) §8). A depth charge must
+cross a band; it falls fast and loud, and rises at a third of the speed with three times
+the warning. A torpedo implodes below its launcher's PR, and crush-baiting is intended
+play, with its warning.
 
-Issue #1754 seats a second player and tests that with existing weapons only. It succeeds when
-each player can tell from the instruments alone which band a Tier 3 enemy holds, which
-band a charge must cross, and when an order carries a hull below its PR, without flight.
+Issue #1754 seats a second player and tests that with existing weapons only. It succeeds
+when each player can tell from the instruments alone which band a Tier 3 enemy holds,
+which band a charge must cross, and when an order carries a hull below its PR, without
+flight.
 
 Three retained limits from §2 shape that fight. Separation is planar, so a hull cannot
 hold station directly under another; pathfinding plans at the current depth; structure
 footprints block every depth. Keeping or changing each is #1754's call to make in the
-open, and any change is a mechanic anchored to depth. No new weapon, and no balance
-tuning.
+open, inside the development fixture only; a change that reaches shipped maps is its own
+issue, with [systems-depth.md](systems-depth.md) amended first. Any change is a mechanic
+anchored to depth. No new weapon, and no balance tuning.
 
-### Iteration cap and acceptance
+### Frames and the last gate
 
-The owner set the cap for this pass at **five rounds per change, for every loop**: each
+The poses come from `docs/screenshots/issue-1713/gpu.mjs`, at yaw 0 except the new
+opening, with the HUD on. The owner's baseline is the failure's record, not a station:
+each child's frames answer what it shows.
+
+| Frame | Pose: plan x / y, dolly, pitch, focus depth | Before | Must read as |
+| --- | --- | --- | --- |
+| Opening | The hulls' centroid at 300 m, 15 degrees, yaw about 34 degrees, dolly by frame | [01-home.png](screenshots/issue-1713/dpr-1/01-home.png): 542 / 1,958, 2,600 m, 55 degrees, seabed | The three hulls in the lower third, the garden canopy beyond them, water rather than clear colour above the far rim, and the legend as one line in its corner |
+| Garden close | 1,875 / 875, 250 m, 12 degrees, 275 m | [02-garden-close.png](screenshots/issue-1713/dpr-1/02-garden-close.png) | Kelp at canonical scale as one forest on both flanks of a bare clearing, with near stands separated from far ones by the water |
+| Low | 2,000 / 2,000, 1,600 m, 12 degrees, 850 m | [03-low.png](screenshots/issue-1713/dpr-1/03-low.png) | Water visibly between the eye and the floor, the bowl's edges as eroded rock terraces rather than 250 m boxes, and depth still darkening downward |
+| Survey | 2,000 / 2,000, 10,000 m, 88 degrees, seabed | [04-survey.png](screenshots/issue-1713/dpr-1/04-survey.png) | Decoration below tactical ink, own hulls and contacts readable, and the crater's outline no longer a grid of boxes |
+
+Each child captures the rows it touches before and after, plus motion, reduced motion, an
+unchanged Kelp Labyrinth control and GPU readings at DPR 1 and 1.5 on named hardware,
+under §7's rules. #1753 adds its instruments to the same four frames. #1752 captures all
+four for the owner's re-acceptance on #1694, which is the pass's last gate, and no score
+replaces it. #1754 follows that re-acceptance, and #1694 closes only when both are done.
+
+### Iteration cap
+
+The owner set this pass's cap at **five rounds per change, for every loop**: each
 `dev-loop` round with its critic, art-direction reviews, and hull-designer and
-hull-reviewer passes. It binds #1748 and every child above, attended or not; other work
-keeps `dev-loop`'s three.
-
-Each child captures matched opening, low, close and survey frames with the HUD on, against
-the owner's baseline, plus motion, reduced motion, an unchanged Kelp Labyrinth control and
-GPU readings at DPR 1 and 1.5 on named hardware, under §7's rules. The pass's last gate is
-the owner's: re-acceptance on #1694 once #1752 captures the full set. No score replaces it.
+hull-reviewer passes. It binds #1748 to #1754, attended or not, until #1694 closes. The
+number is held in `dev-loop` itself, so editing this section does not move it.
 
 ## Related
 
