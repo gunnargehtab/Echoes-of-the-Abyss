@@ -153,11 +153,17 @@ describe('pending prop delivery', () => {
     live.rebuild(changed, () => -200);
     dead.rebuild(old, () => -100);
     dead.destroy();
-    await until(() => pending.length > 0);
-    pending.forEach((p) => p.resolve(source()));
     const expected = placeProps(changed);
     assert.ok(expected.length > 0);
+    // Every slug either map stands is requested, and each request reaches
+    // loadAsync only once its own URL module resolves, so the loads arrive
+    // apart. Resolving whatever had arrived by the first poll left a later
+    // one pending for good, which reads as a delivery that never came (#1745).
+    const slugs = new Set([...placeProps(old), ...expected].map((p) => p.slug));
+    await until(() => pending.length === slugs.size);
+    pending.forEach((p) => p.resolve(source()));
     await until(() => live.stats().props === expected.length);
+    assert.equal(pending.length, slugs.size, 'a delivery must not start another load');
     assert.equal(dead.group.children.length, 0);
     assert.equal(dead.stats().props, 0);
     for (const mesh of live.group.children) {
