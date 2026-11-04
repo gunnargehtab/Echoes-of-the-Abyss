@@ -895,7 +895,18 @@ export function topDown(parts, ppm = 4) {
  * because check.mjs runs on import, and the test needs the function alone. A mesh node's position is read here too,
  * since a part built in world space under an identity node and the same
  * part under a moved node read alike in `diffParts`.
+ *
+ * A place is held to `NODE_SLACK_M` on each axis, not exactly. A node's
+ * world position is a double composed from the script's trigonometry, and
+ * another platform's libm moves its last bits: on Windows `edge_lobe_s_4`
+ * read 3.6e-15 m and `silo_2_crown` 1.4e-14 m off unchanged files (#1742).
+ * A micrometre is eight orders above that and far under any place a
+ * script authors, so a node moved on purpose still fails.
  */
+const NODE_SLACK_M = 1e-6;
+const sameAt = (a, b) =>
+  a.length === b.length && a.every((v, k) => Math.abs(v - b[k]) <= NODE_SLACK_M);
+
 export function diffNodes(built, committed) {
   const out = [];
   if (built.length !== committed.length)
@@ -911,8 +922,7 @@ export function diffNodes(built, committed) {
       continue;
     }
     if (a.name !== b.name) out.push(`node ${i}: \`${b.name}\` is now \`${a.name}\``);
-    else if (a.at.join() !== b.at.join())
-      out.push(`\`${a.name}\`: stands at [${b.at}] → [${a.at}]`);
+    else if (!sameAt(a.at, b.at)) out.push(`\`${a.name}\`: stands at [${b.at}] → [${a.at}]`);
     else if (JSON.stringify(a.extras) !== JSON.stringify(b.extras))
       out.push(`\`${a.name}\`: extras ${JSON.stringify(b.extras)} → ${JSON.stringify(a.extras)}`);
   }
