@@ -889,7 +889,8 @@ export function topDown(parts, ppm = 4) {
 /**
  * How far a node may stand from the committed file's place, in metres per
  * axis. A node's world position is a double composed through the script's
- * trigonometry, and another platform's libm moves its last bits: on Windows
+ * trigonometry, and another platform's floating point moves its last bits
+ * (the cause was not traced further): on Windows
  * `edge_lobe_s_4` (bower) read 3.6e-15 m and `silo_2_crown`
  * (refinery-directorate) 1.4e-14 m off unchanged files (#1742). A
  * micrometre is eight orders above that and a ten-thousandth of the

@@ -25,7 +25,9 @@
  * (glb.mjs) and compared part by part — name, material, finish, triangle
  * count, bounds to the centimetre and every corner's normal to a degree —
  * which is close enough to catch any edit that moves a vertex and loose
- * enough not to care which three.js wrote the bytes.
+ * enough not to care which three.js wrote the bytes. Every node, mesh or
+ * empty, is held to its place within a micrometre (glb.mjs `diffNodes`,
+ * #1742), since an empty pivot has no bounds to read.
  *
  * Since #1002 it reads the textures a model can carry: each part's
  * `uv1` and the occlusion map its materials name (glb.mjs `readGlb`,
