@@ -524,10 +524,12 @@ depth stays luminance.
 
 Today the study opens at Home pitch, 55 degrees down from 2,600 m (`HOME_DOLLY_M`) over the
 fleet's centroid on the west rim: the opening row's before frame below. Entry instead opens
-the ordinary orbit, not flight, with its focus on the three hulls' centroid at their 300 m
-depth, pitched 15 degrees, inside the 10–88 degree band, and yawed about 34 degrees east
-of north, from START toward mark A. The dolly is a TUNABLE chosen against the opening
-row. Home is unchanged and still restores north, 55 degrees and the seabed.
+the ordinary orbit, not flight. Its focus sits at the hulls' 300 m depth on the line from
+their centroid toward mark A, far enough ahead that the hulls fall in the lower third,
+since the orbit aims at its focus. It is pitched 15 degrees, inside the 10–88 degree band,
+and heads about 34 degrees east of north, toward A, which is `yawDeg` −34 in the code. The
+focus offset and the dolly are TUNABLEs chosen against the opening row. Home is unchanged
+and still restores north, 55 degrees and the seabed.
 
 The legend becomes one line with no box, in the bottom-right corner, which the study
 leaves free because it runs no mission log. FLIGHT, NAV and HOME move beside the console's
@@ -600,8 +602,10 @@ three-dimensional order is two two-dimensional readings. The north-up scope alre
 a plan position; a section scope picks a depth. In the world, stalks tie every hull to one
 plane, so depth reads at any camera angle without flight.
 
-- **Command plane.** The lead selected hull's depth, or the camera focus depth when
-  nothing is selected: the plane MOVE 3D already arms with (§6).
+- **Command plane.** The lead selected hull's depth, which MOVE 3D already arms with
+  (§6). With nothing selected it is a raised focus's depth; with the focus on the seabed
+  there is no plane and no stalks, as [free-camera.md](free-camera.md) §4 says of a seabed
+  focus.
 - **Stalks.** Each own hull and each Tier 3+ contact draws a hairline from its depth to
   the plane, with a foot ring on it: solid above the plane, dashed below. Hue stays the
   faction's. A Tier 2 contact carries no depth, so it has no stalk, and none is inferred.
@@ -621,11 +625,13 @@ plane, so depth reads at any camera angle without flight.
 - **Looking up.** In the study only, the orbit's SPEC pitch band
   ([free-camera.md](free-camera.md) §4, 10–88 degrees) widens to −60–88. The commander
   can then look up at the water over the fleet while staying in the orbit around its
-  focus, with Home and the focus plane's orders unchanged, without entering flight. §4
-  stops at 10 degrees because range rings turn edge-on there; within 10 degrees of level
-  they stay that unreadable, so the section scope carries range in that band. The eye
-  keeps the orbit's 25 m clearance, Home still restores 55 degrees, and shipped maps keep
-  10–88.
+  focus, with Home and the focus plane's orders unchanged, without entering flight. The
+  eye's 25 m clamp raises the eye rather than shortening the dolly, so the full band is
+  reachable only over deep water, the bowl and the pocket. Over the garden's 400 m floor a
+  300 m focus allows only a few degrees of look-up. §4 stops at 10 degrees because range
+  rings turn edge-on there; within 10 degrees of level they stay that unreadable, so the
+  section scope carries range in that band. Home still restores 55 degrees, shipped maps
+  keep 10–88, and #1753 proves the band at a bowl pose.
 
 No new order, wire field or simulation change. Everything drawn comes from own state,
 public terrain or a contact the client received.
@@ -661,10 +667,17 @@ each child's frames answer what it shows.
 
 | Frame | Pose: plan x / y, dolly, pitch, focus depth | Before | Must read as |
 | --- | --- | --- | --- |
-| Opening | The hulls' centroid at 300 m, 15 degrees, yaw about 34 degrees, dolly by frame | [01-home.png](screenshots/issue-1713/dpr-1/01-home.png): 542 / 1,958, 2,600 m, 55 degrees, seabed | The three hulls in the lower third, the garden canopy beyond them, water rather than clear colour above the far rim, and the legend as one line in its corner |
-| Garden close | 1,875 / 875, 250 m, 12 degrees, 275 m | [02-garden-close.png](screenshots/issue-1713/dpr-1/02-garden-close.png) | Kelp at canonical scale as one forest on both flanks of a bare clearing, with near stands separated from far ones by the water |
-| Low | 2,000 / 2,000, 1,600 m, 12 degrees, 850 m | [03-low.png](screenshots/issue-1713/dpr-1/03-low.png) | Water visibly between the eye and the floor, the bowl's edges as eroded rock terraces rather than 250 m boxes, and depth still darkening downward |
-| Survey | 2,000 / 2,000, 10,000 m, 88 degrees, seabed | [04-survey.png](screenshots/issue-1713/dpr-1/04-survey.png) | Decoration below tactical ink, own hulls and contacts readable, and the crater's outline no longer a grid of boxes |
+| Opening | On the centroid-to-A line ahead of the hulls, at 300 m; 15 degrees; heading about 34 degrees east of north (`yawDeg` −34); offset and dolly by frame | [01-home.png](screenshots/issue-1713/dpr-1/01-home.png): 542 / 1,958, 2,600 m, 55 degrees, seabed | The three hulls in the lower third, the garden canopy beyond them, water rather than clear colour above the far rim, and the legend as one line in its corner |
+| Garden close | 1,875 / 1,125 in the clearing, 250 m, 12 degrees, 275 m; heading west along it (`yawDeg` 90) | Captured on its base by the first child that touches this row; no committed frame has this pose, and the nearest is [02-garden-close.png](screenshots/issue-1713/dpr-1/02-garden-close.png), the yaw-0 station | Kelp at canonical scale as one forest on both flanks of a bare clearing, with near stands separated from far ones by the water |
+| Low | 2,000 / 2,000, 1,600 m, 12 degrees, 850 m | [03-low.png](screenshots/issue-1713/dpr-1/03-low.png) | Water visibly between the eye and the floor, the bowl's drawn edges as eroded rock terraces rather than 250 m boxes under unchanged ink, and depth still darkening downward |
+| Survey | 2,000 / 2,000, 10,000 m, 88 degrees, seabed | [04-survey.png](screenshots/issue-1713/dpr-1/04-survey.png) | Decoration below tactical ink, own hulls and contacts readable, and the ink unchanged: coastlines on the cell edges and isobaths of the authored floor ([map-visuals.md](map-visuals.md) §4) |
+
+Two pose calls were taken here. For the opening, a focus ahead of the hulls puts them in
+the lower third; keeping the focus on their centroid would centre them, because the orbit
+aims at its focus. For garden close, a pose along the clearing shows both flanks; the
+yaw-0 station looks north from over the clearing, so its south flank is behind the eye.
+A survey frame without the cell-edge outline would be an ink change, which is the owner's
+decision with map-visuals.md §4 amended first, not this pass's.
 
 Each child captures the rows it touches before and after, plus motion, reduced motion, an
 unchanged Kelp Labyrinth control and GPU readings at DPR 1 and 1.5 on named hardware,

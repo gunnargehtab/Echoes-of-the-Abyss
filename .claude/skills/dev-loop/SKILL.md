@@ -181,7 +181,8 @@ what you tried and what the critic keeps saying. Under `work-issue` that is §7'
 ### The cap: three rounds
 
 **Three rounds per change, hard.** A person set it (18 September); a firing may not
-raise it. Round three ends one of two ways:
+raise it. The last round, the third or the fifth under the exception below, ends one of
+two ways:
 
 - **Exit criteria met:** done.
 - **Not met:** run the verification pass anyway, push what is green, and list the
