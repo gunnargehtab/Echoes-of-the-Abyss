@@ -63,7 +63,14 @@ import type { WebGLRenderer } from 'three';
 import type { createWaterEnvironment } from './modelLighting.ts';
 import type { Client } from '@colyseus/sdk';
 import { loadSettings, subscribeSettings, type Settings } from '../settings/store.ts';
-import { heldUiScale, PANEL_CAP_UNITS, panelType, RIBBON_UNITS } from './uiScale.ts';
+import {
+  CONSOLE_HEIGHT,
+  heldUiScale,
+  HINT_ROW_UNITS,
+  PANEL_CAP_UNITS,
+  panelType,
+  RIBBON_UNITS,
+} from './uiScale.ts';
 
 /** Longest log a player will ever scroll back through. */
 const MAX_LOG_ENTRIES = 300;
@@ -83,6 +90,8 @@ function cssVariables(uiScale: number, palette: PaletteName, commandsX: number):
     // Where the console's command block stands at this width, in HUD px: the
     // free-water camera panel is placed beside it (docs/free-water-slice.md §9).
     '--commands-x': `${commandsX}px`,
+    '--console-units': `${CONSOLE_HEIGHT}px`,
+    '--hint-row-units': `${HINT_ROW_UNITS}px`,
     '--panel-type': panelType(uiScale),
     '--panel-cap-units': `${PANEL_CAP_UNITS}px`,
     '--ribbon-units': `${RIBBON_UNITS}px`,

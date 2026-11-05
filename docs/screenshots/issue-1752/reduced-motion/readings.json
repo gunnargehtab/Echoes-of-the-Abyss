@@ -58,7 +58,13 @@
           "w": 296,
           "h": 18,
           "text": "DECORATIVE LIFE — NO TACTICAL SIGNAL"
-        }
+        },
+        "hint": {
+          "x": 176,
+          "width": 693.5625,
+          "text": "LMB drag select  ·  MMB pan  ·  L+R drag depth  ·  R/F/T/G/B build  ·  1-9 groups  ·  wheel zoom"
+        },
+        "uiScale": "1"
       }
     }
   ]

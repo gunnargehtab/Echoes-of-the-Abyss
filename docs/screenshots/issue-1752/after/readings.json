@@ -19,15 +19,15 @@
         "depthM": 300
       },
       "eye": {
-        "xM": 63,
+        "xM": 62,
         "zM": 2671,
-        "depthM": -1120
+        "depthM": -1123
       },
       "distance": 1200,
       "flight": {
         "flying": false,
         "navigating": false,
-        "depthM": -1120,
+        "depthM": -1123,
         "bearingDeg": 34,
         "upX": -1.3877787807814457e-17,
         "upY": -0.9659258262890683,
@@ -58,7 +58,72 @@
           "w": 296,
           "h": 18,
           "text": "DECORATIVE LIFE — NO TACTICAL SIGNAL"
-        }
+        },
+        "hint": {
+          "x": 176,
+          "width": 693.5625,
+          "text": "LMB drag select  ·  MMB pan  ·  L+R drag depth  ·  R/F/T/G/B build  ·  1-9 groups  ·  wheel zoom"
+        },
+        "uiScale": "1"
+      }
+    },
+    {
+      "name": "home",
+      "look": "free-water",
+      "pitchDeg": 55,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 709,
+        "zM": 1710,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 711,
+        "zM": 2398,
+        "depthM": -3883
+      },
+      "distance": 1200,
+      "flight": {
+        "flying": false,
+        "navigating": false,
+        "depthM": -3883,
+        "bearingDeg": 0,
+        "upX": 0,
+        "upY": -0.573576436351046,
+        "inverted": false,
+        "blocked": false
+      },
+      "ownCentre": {
+        "x": 541.6666666666666,
+        "z": 1958.3333333333333
+      },
+      "waterReachM": 1805,
+      "calls": 43,
+      "triangles": 547546,
+      "props": 200,
+      "propTriangles": 530800,
+      "sway": "on",
+      "panels": {
+        "flightPanel": {
+          "x": 734,
+          "y": 618,
+          "w": 192,
+          "h": 50,
+          "text": "FLIGHTNAVHOME"
+        },
+        "legend": {
+          "x": 1132,
+          "y": 671,
+          "w": 296,
+          "h": 18,
+          "text": "DECORATIVE LIFE — NO TACTICAL SIGNAL"
+        },
+        "hint": {
+          "x": 176,
+          "width": 693.5625,
+          "text": "LMB drag select  ·  MMB pan  ·  L+R drag depth  ·  R/F/T/G/B build  ·  1-9 groups  ·  wheel zoom"
+        },
+        "uiScale": "1"
       }
     },
     {
@@ -111,7 +176,13 @@
           "w": 296,
           "h": 18,
           "text": "DECORATIVE LIFE — NO TACTICAL SIGNAL"
-        }
+        },
+        "hint": {
+          "x": 176,
+          "width": 693.5625,
+          "text": "LMB drag select  ·  MMB pan  ·  L+R drag depth  ·  R/F/T/G/B build  ·  1-9 groups  ·  wheel zoom"
+        },
+        "uiScale": "1"
       }
     },
     {
@@ -154,7 +225,7 @@
         "flightPanel": {
           "x": 734,
           "y": 378,
-          "w": 398,
+          "w": 380,
           "h": 290,
           "text": "FLIGHTNAVHOMEEYE 559 m · 0°CAMERA NAV — FLEET SHORTCUTS SUSPENDEDForwardBackLeftRightLocal upLocal downRoll leftRoll rightLook leftLook rightLook upLook down"
         },
@@ -164,60 +235,13 @@
           "w": 296,
           "h": 18,
           "text": "DECORATIVE LIFE — NO TACTICAL SIGNAL"
-        }
-      }
-    },
-    {
-      "name": "home",
-      "look": "free-water",
-      "pitchDeg": 55,
-      "yawDeg": 0,
-      "focus": {
-        "xM": 709,
-        "zM": 1710,
-        "depthM": null
-      },
-      "eye": {
-        "xM": 711,
-        "zM": 2396,
-        "depthM": -3889
-      },
-      "distance": 1200,
-      "flight": {
-        "flying": false,
-        "navigating": false,
-        "depthM": -3889,
-        "bearingDeg": 0,
-        "upX": 0,
-        "upY": -0.573576436351046,
-        "inverted": false,
-        "blocked": false
-      },
-      "ownCentre": {
-        "x": 541.6666666666666,
-        "z": 1958.3333333333333
-      },
-      "waterReachM": 1805,
-      "calls": 43,
-      "triangles": 547546,
-      "props": 200,
-      "propTriangles": 530800,
-      "sway": "on",
-      "panels": {
-        "flightPanel": {
-          "x": 734,
-          "y": 618,
-          "w": 192,
-          "h": 50,
-          "text": "FLIGHTNAVHOME"
         },
-        "legend": {
-          "x": 1132,
-          "y": 671,
-          "w": 296,
-          "h": 18,
-          "text": "DECORATIVE LIFE — NO TACTICAL SIGNAL"
-        }
+        "hint": {
+          "x": 176,
+          "width": 693.5625,
+          "text": "LMB drag select  ·  MMB pan  ·  L+R drag depth  ·  R/F/T/G/B build  ·  1-9 groups  ·  wheel zoom"
+        },
+        "uiScale": "1"
       }
     },
     {
@@ -231,15 +255,15 @@
         "depthM": 300
       },
       "eye": {
-        "xM": 61,
-        "zM": 2671,
-        "depthM": -1110
+        "xM": 62,
+        "zM": 2672,
+        "depthM": -1118
       },
       "distance": 1200,
       "flight": {
         "flying": false,
         "navigating": false,
-        "depthM": -1110,
+        "depthM": -1118,
         "bearingDeg": 34,
         "upX": -1.3877787807814457e-17,
         "upY": -0.9659258262890683,
@@ -270,7 +294,13 @@
           "w": 296,
           "h": 18,
           "text": "DECORATIVE LIFE — NO TACTICAL SIGNAL"
-        }
+        },
+        "hint": {
+          "x": 176,
+          "width": 693.5625,
+          "text": "LMB drag select  ·  MMB pan  ·  L+R drag depth  ·  R/F/T/G/B build  ·  1-9 groups  ·  wheel zoom"
+        },
+        "uiScale": "1"
       }
     },
     {
@@ -323,7 +353,13 @@
           "w": 296,
           "h": 18,
           "text": "DECORATIVE LIFE — NO TACTICAL SIGNAL"
-        }
+        },
+        "hint": {
+          "x": 176,
+          "width": 693.5625,
+          "text": "LMB drag select  ·  MMB pan  ·  L+R drag depth  ·  R/F/T/G/B build  ·  1-9 groups  ·  wheel zoom"
+        },
+        "uiScale": "1"
       }
     },
     {
@@ -337,15 +373,15 @@
         "depthM": 850
       },
       "eye": {
-        "xM": 2002,
-        "zM": 3564,
-        "depthM": -677
+        "xM": 1998,
+        "zM": 3565,
+        "depthM": -661
       },
       "distance": 1600,
       "flight": {
         "flying": false,
         "navigating": false,
-        "depthM": -677,
+        "depthM": -661,
         "bearingDeg": 0,
         "upX": 0,
         "upY": -0.9781476007338057,
@@ -376,7 +412,13 @@
           "w": 296,
           "h": 18,
           "text": "DECORATIVE LIFE — NO TACTICAL SIGNAL"
-        }
+        },
+        "hint": {
+          "x": 176,
+          "width": 693.5625,
+          "text": "LMB drag select  ·  MMB pan  ·  L+R drag depth  ·  R/F/T/G/B build  ·  1-9 groups  ·  wheel zoom"
+        },
+        "uiScale": "1"
       }
     },
     {
@@ -390,15 +432,15 @@
         "depthM": null
       },
       "eye": {
-        "xM": 1995,
-        "zM": 2329,
-        "depthM": -43042
+        "xM": 1994,
+        "zM": 2362,
+        "depthM": -43037
       },
       "distance": 10000,
       "flight": {
         "flying": false,
         "navigating": false,
-        "depthM": -43042,
+        "depthM": -43037,
         "bearingDeg": 0,
         "upX": 0,
         "upY": -0.03489949670250103,
@@ -429,7 +471,13 @@
           "w": 296,
           "h": 18,
           "text": "DECORATIVE LIFE — NO TACTICAL SIGNAL"
-        }
+        },
+        "hint": {
+          "x": 176,
+          "width": 693.5625,
+          "text": "LMB drag select  ·  MMB pan  ·  L+R drag depth  ·  R/F/T/G/B build  ·  1-9 groups  ·  wheel zoom"
+        },
+        "uiScale": "1"
       }
     }
   ]

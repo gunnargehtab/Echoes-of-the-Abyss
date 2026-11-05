@@ -20,14 +20,14 @@
       },
       "eye": {
         "xM": 907,
-        "zM": 2625,
-        "depthM": -7891
+        "zM": 2630,
+        "depthM": -7875
       },
       "distance": 2600,
       "flight": {
         "flying": false,
         "navigating": false,
-        "depthM": -7891,
+        "depthM": -7875,
         "bearingDeg": 0,
         "upX": 0,
         "upY": -0.5735764363510462,
@@ -35,8 +35,8 @@
         "blocked": false
       },
       "ownCentre": {
-        "x": 970.2796122233073,
-        "z": 1139.0467529296875
+        "x": 971.3439636230469,
+        "z": 1141.9422200520833
       },
       "waterReachM": 8320,
       "calls": 74,
@@ -46,7 +46,13 @@
       "sway": "on",
       "panels": {
         "flightPanel": null,
-        "legend": null
+        "legend": null,
+        "hint": {
+          "x": 176,
+          "width": 693.5625,
+          "text": "LMB drag select  ·  MMB pan  ·  L+R drag depth  ·  R/F/T/G/B build  ·  1-9 groups  ·  wheel zoom"
+        },
+        "uiScale": "1"
       }
     },
     {
@@ -60,15 +66,15 @@
         "depthM": 850
       },
       "eye": {
-        "xM": 1998,
-        "zM": 3565,
-        "depthM": -671
+        "xM": 2000,
+        "zM": 3566,
+        "depthM": -648
       },
       "distance": 1600,
       "flight": {
         "flying": false,
         "navigating": false,
-        "depthM": -671,
+        "depthM": -648,
         "bearingDeg": 0,
         "upX": 0,
         "upY": -0.9781476007338057,
@@ -76,8 +82,8 @@
         "blocked": false
       },
       "ownCentre": {
-        "x": 987.1475118001302,
-        "z": 1158.6883544921875
+        "x": 1003.5203348795573,
+        "z": 1162.014892578125
       },
       "waterReachM": 5120,
       "calls": 75,
@@ -87,7 +93,13 @@
       "sway": "on",
       "panels": {
         "flightPanel": null,
-        "legend": null
+        "legend": null,
+        "hint": {
+          "x": 176,
+          "width": 693.5625,
+          "text": "LMB drag select  ·  MMB pan  ·  L+R drag depth  ·  R/F/T/G/B build  ·  1-9 groups  ·  wheel zoom"
+        },
+        "uiScale": "1"
       }
     },
     {
@@ -101,15 +113,15 @@
         "depthM": null
       },
       "eye": {
-        "xM": 2001,
-        "zM": 2335,
-        "depthM": -42806
+        "xM": 1986,
+        "zM": 2371,
+        "depthM": -42800
       },
       "distance": 10000,
       "flight": {
         "flying": false,
         "navigating": false,
-        "depthM": -42806,
+        "depthM": -42800,
         "bearingDeg": 0,
         "upX": 0,
         "upY": -0.03489949670250103,
@@ -121,14 +133,20 @@
         "z": 1137.8668416341145
       },
       "waterReachM": 32000,
-      "calls": 76,
+      "calls": 77,
       "triangles": 163878,
       "props": 363,
       "propTriangles": 104958,
       "sway": "on",
       "panels": {
         "flightPanel": null,
-        "legend": null
+        "legend": null,
+        "hint": {
+          "x": 176,
+          "width": 693.5625,
+          "text": "LMB drag select  ·  MMB pan  ·  L+R drag depth  ·  R/F/T/G/B build  ·  1-9 groups  ·  wheel zoom"
+        },
+        "uiScale": "1"
       }
     }
   ]

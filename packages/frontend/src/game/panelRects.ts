@@ -14,8 +14,13 @@
  */
 import type { PanelRect } from './EchoRenderer.ts';
 
-/** The panels that float over the water: orders or objectives, the contact log, the mission log. */
-export const FLOATING_PANELS = '.objectives, .contact-log, .mission-log';
+/**
+ * The panels that float over the water: orders or objectives, the contact log,
+ * the mission log, and the free-water study's decorative-life legend, which
+ * stands on the hint line's row and which the hint yields to (`EchoRenderer`,
+ * the hint line).
+ */
+export const FLOATING_PANELS = '.objectives, .contact-log, .mission-log, .decorative-life';
 
 /** A running watch: measure again now, or stop. */
 export interface PanelWatch {

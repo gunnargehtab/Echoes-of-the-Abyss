@@ -1,8 +1,8 @@
 // The §9 frames for the opening view and the study HUD (docs/free-water-slice.md
 // §9, "Opening view" and "Frames and the last gate"), as a run-game steps module.
 // First the frame the study opens on, untouched: no camera call, the match as
-// it stands when the force is first seen. Then the HUD's three states at that
-// frame, FLIGHT, NAV and after Home, each left again before the next. Then the
+// it stands when the force is first seen. Then Home from it, and FLIGHT and
+// NAV from the opening pose set again, each left before the next. Then the
 // four §9 poses set explicitly, the re-acceptance set. Each frame's probe
 // reading lands beside it. Timings are not read here: the GPU rows come from
 // docs/screenshots/issue-1713/gpu.mjs on named hardware.
@@ -13,6 +13,10 @@
 // FRAMES=low,survey limits the explicit poses. HUD=0 skips the three HUD
 // states. CONTROL=1 drives the unchanged Kelp Labyrinth control instead
 // (`?map=kelp-labyrinth`): its opening frame and the low and survey poses.
+// SETTINGS_JSON='{"uiScale":2}' with FRAMES=none HUD=0 shoots the opening at
+// the largest UI scale a 900 px window holds (154%), where the hint line
+// yields to the legend; each reading carries the hint's and the legend's
+// rects in window px.
 import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
@@ -57,6 +61,8 @@ export default async ({ page, shot }) => {
       return {
         flightPanel: rect(document.querySelector('.flight-panel')),
         legend: rect(document.querySelector('.decorative-life')),
+        hint: window.__echoHint?.() ?? null,
+        uiScale: getComputedStyle(document.querySelector('.game-root')).getPropertyValue('--ui-scale'),
       };
     });
     readings.push({
@@ -80,13 +86,26 @@ export default async ({ page, shot }) => {
     return p;
   };
   // The frame the study opens on: the camera as the first sight of the force
-  // left it, with the match running.
+  // left it, with the match running. Then the Home key from it, which restores
+  // north, 55 degrees and the seabed and keeps the dolly and the place.
   await settle();
   await read('opening');
   dir = dirname(await shot('opening'));
   if (process.env.HUD !== '0' && !control) {
-    // F8 enters flight from the opening frame, and F8 again leaves it; F9
-    // latches NAV. The Home key restores north, 55 degrees and the seabed.
+    await page.keyboard.press('Home');
+    await settle();
+    await read('home');
+    await shot('home');
+    // Back on the opening pose, set explicitly: F8 enters flight from it, and
+    // F8 again leaves it, homing the camera; F9 then latches NAV.
+    const [, x, z, distance, yawDeg, pitchDeg, focusDepthM] = POSES[0];
+    await page.evaluate(
+      ({ x, z, distance, yawDeg, pitchDeg, focusDepthM }) => {
+        window.__perspectiveCamera(x, z, distance, { yawDeg, pitchDeg, focusDepthM });
+      },
+      { x, z, distance, yawDeg, pitchDeg, focusDepthM }
+    );
+    await settle();
     await page.keyboard.press('F8');
     await settle();
     await read('flight');
@@ -96,11 +115,11 @@ export default async ({ page, shot }) => {
     await settle();
     await read('nav');
     await shot('nav');
+    // Leaving NAV keeps flight on; Home leaves both, so the poses below are
+    // the orbit's.
     await page.keyboard.press('F9');
     await page.keyboard.press('Home');
     await settle();
-    await read('home');
-    await shot('home');
   }
   for (const [name, x, z, distance, yawDeg, pitchDeg, focusDepthM] of POSES) {
     if (only && !only.includes(name)) continue;

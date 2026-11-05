@@ -3748,6 +3748,46 @@ describe('the interface cues the renderer reports (#1600)', () => {
     }
   });
 
+  it('yields the hint line to a panel standing on its row, a clause at a time', async () => {
+    // docs/free-water-slice.md §9: the study's legend takes the hint row's
+    // right end, and at a raised UI scale a hint run under it reads as
+    // covered. The shell hands the legend across as a floating panel, in
+    // canvas px (panelRects.ts); the host here is 1280 by 720 at scale 1.
+    const world = await boot();
+    try {
+      world.frame(2);
+      const hint = (): Text => {
+        let found: Text | undefined;
+        const walk = (node: Container): void => {
+          if (node instanceof Text && node.visible && node.text.includes('\u00b7')) found = node;
+          for (const child of node.children) walk(child as Container);
+        };
+        walk(world.app.stage);
+        assert.ok(found !== undefined, 'the premise: the hint line is drawn');
+        return found;
+      };
+      const whole = hint().text;
+      const rowTop = 720 - CONSOLE_HEIGHT - HINT_LINE_HEIGHT;
+      // A panel over the water, clear of the row: the hint is untouched.
+      world.chart.setPanelRects([{ x: 800, y: 300, width: 470, height: 40 }]);
+      world.frame(2);
+      assert.equal(hint().text, whole, 'a panel off the row takes nothing');
+      // The legend's place: the row's right end.
+      const legend = { x: 800, y: rowTop + 3, width: 470, height: 16 };
+      world.chart.setPanelRects([legend]);
+      world.frame(2);
+      const yielded = hint();
+      assert.notEqual(yielded.text, whole, 'the hint gave up a clause');
+      assert.ok(whole.startsWith(yielded.text), 'and only from its end');
+      assert.ok(yielded.x + yielded.width <= legend.x - 12, 'clear of the legend, with a gap');
+      world.chart.setPanelRects([]);
+      world.frame(2);
+      assert.equal(hint().text, whole, 'and takes it back when the row is free');
+    } finally {
+      world.teardown();
+    }
+  });
+
   it('reports a refusal when the hint bar is handed its reason', async () => {
     const world = await boot();
     try {
@@ -5989,7 +6029,7 @@ describe('renderer smoke test: the free camera', () => {
     }
   });
 
-  it('opens every other map on the home frame over the force, as it did', async () => {
+  it('opens on the home frame over the force with the study off, as it did', async () => {
     const world = await boot({ controlsStudy: true });
     try {
       world.frame(3);

@@ -5868,6 +5868,15 @@ export class EchoRenderer {
     // mission time (docs/sorrowgate-arch-study.md §9, #1637). Claimed by the
     // renderer the snapshots reach, since the shell may hold more than one.
     (window as unknown as { __echoClock?: () => number }).__echoClock = this.readClock;
+    // And where the hint line stands, in canvas px, so a capture can show the
+    // hint clear of a panel on its row (docs/screenshots/issue-1752).
+    (
+      window as unknown as { __echoHint?: () => { x: number; width: number; text: string } }
+    ).__echoHint = () => ({
+      x: this.selectionLabel.x * this.uiScale,
+      width: this.selectionLabel.width * this.uiScale,
+      text: this.selectionLabel.text,
+    });
     this.snapshotSeq++;
     // A pending order has had its two snapshots: the server's plan carries
     // it now, or it was refused and there is nothing to draw.
@@ -9043,7 +9052,22 @@ export class EchoRenderer {
     // gets shortened.
     const scope = this.minimapRect();
     const hintX = scope.x + scope.size + 12;
-    const hintRoom = this.hudWidth() - hintX - 12;
+    // The hint yields to a panel standing on its row: the free-water study's
+    // legend takes the row's right end (App.css `.decorative-life`), and at a
+    // raised UI scale a hint run under it reads as covered rather than as
+    // long. The rects arrive in canvas px, so the HUD's are those over the
+    // scale; a panel wholly left of the hint's start is the scope's business.
+    const rowTop = this.hudHeight() - CONSOLE_HEIGHT - HINT_LINE_HEIGHT;
+    let hintEnd = this.hudWidth() - 12;
+    for (const panel of this.panelRects) {
+      const left = panel.x / this.uiScale;
+      const top = panel.y / this.uiScale;
+      const bottom = top + panel.height / this.uiScale;
+      if (bottom > rowTop && top < rowTop + HINT_LINE_HEIGHT && left > hintX) {
+        hintEnd = Math.min(hintEnd, left - 12);
+      }
+    }
+    const hintRoom = hintEnd - hintX;
     this.selectionLabel.text = this.hintLine();
     while (this.selectionLabel.width > hintRoom) {
       const cut = this.selectionLabel.text.lastIndexOf('  \u00b7  ');

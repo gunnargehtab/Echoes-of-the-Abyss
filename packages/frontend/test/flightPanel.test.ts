@@ -66,6 +66,11 @@ describe('free-water camera panel', () => {
     assert.match(text, /EYE\s+300\s+m/);
     assert.match(text, /NO CAMERA CLEARANCE/);
     assert.doesNotMatch(text, /DECORATIVE LIFE/);
+    for (const idle of [render(null), render(reading({ blocked: true }))]) {
+      const outside = textOf(idle).join(' ');
+      assert.doesNotMatch(outside, /EYE/);
+      assert.doesNotMatch(outside, /NO CAMERA CLEARANCE/);
+    }
   });
 
   it('shows the NAV status line and its motion buttons only in NAV', () => {
