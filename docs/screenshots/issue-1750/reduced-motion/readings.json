@@ -33,11 +33,11 @@
       "propTriangles": 387952,
       "instances": {
         "env-kelp-stand": 40,
-        "env-kelp-cluster": 16,
         "env-rim-crab": 16,
         "env-shoal-fry": 96,
+        "env-deep-fish": 8,
         "env-outer-fish": 8,
-        "env-deep-fish": 8
+        "env-kelp-cluster": 16
       },
       "passes": [
         "canvas",
@@ -72,11 +72,11 @@
       "propTriangles": 387952,
       "instances": {
         "env-kelp-stand": 40,
-        "env-kelp-cluster": 16,
         "env-rim-crab": 16,
         "env-shoal-fry": 96,
+        "env-deep-fish": 8,
         "env-outer-fish": 8,
-        "env-deep-fish": 8
+        "env-kelp-cluster": 16
       },
       "passes": [
         "canvas",

@@ -22,9 +22,9 @@
         "depthM": null
       },
       "eye": {
-        "xM": 539,
-        "zM": 3449,
-        "depthM": -9096
+        "xM": 538,
+        "zM": 3454,
+        "depthM": -9082
       },
       "distance": 2600,
       "waterReachM": 4487,
@@ -32,12 +32,12 @@
       "triangles": 405088,
       "propTriangles": 387952,
       "instances": {
-        "env-kelp-cluster": 16,
         "env-kelp-stand": 40,
-        "env-rim-crab": 16,
+        "env-kelp-cluster": 16,
         "env-shoal-fry": 96,
-        "env-deep-fish": 8,
-        "env-outer-fish": 8
+        "env-rim-crab": 16,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8
       },
       "passes": [
         "canvas",
@@ -65,9 +65,9 @@
         "depthM": 275
       },
       "eye": {
-        "xM": 2120,
+        "xM": 2119,
         "zM": 1125,
-        "depthM": 40
+        "depthM": 36
       },
       "distance": 250,
       "waterReachM": 600,
@@ -75,12 +75,12 @@
       "triangles": 402015,
       "propTriangles": 387952,
       "instances": {
-        "env-kelp-cluster": 16,
         "env-kelp-stand": 40,
-        "env-rim-crab": 16,
+        "env-kelp-cluster": 16,
         "env-shoal-fry": 96,
-        "env-deep-fish": 8,
-        "env-outer-fish": 8
+        "env-rim-crab": 16,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8
       },
       "passes": [
         "canvas",
@@ -104,9 +104,9 @@
         "depthM": 850
       },
       "eye": {
-        "xM": 2001,
-        "zM": 3564,
-        "depthM": -677
+        "xM": 1998,
+        "zM": 3566,
+        "depthM": -647
       },
       "distance": 1600,
       "waterReachM": 2457,
@@ -114,12 +114,12 @@
       "triangles": 397119,
       "propTriangles": 387952,
       "instances": {
-        "env-kelp-cluster": 16,
         "env-kelp-stand": 40,
-        "env-rim-crab": 16,
+        "env-kelp-cluster": 16,
         "env-shoal-fry": 96,
-        "env-deep-fish": 8,
-        "env-outer-fish": 8
+        "env-rim-crab": 16,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8
       },
       "passes": [
         "canvas",
@@ -143,9 +143,9 @@
         "depthM": null
       },
       "eye": {
-        "xM": 2009,
-        "zM": 2370,
-        "depthM": -43036
+        "xM": 1986,
+        "zM": 2327,
+        "depthM": -43042
       },
       "distance": 10000,
       "waterReachM": 32000,
@@ -153,12 +153,12 @@
       "triangles": 405088,
       "propTriangles": 387952,
       "instances": {
-        "env-kelp-cluster": 16,
         "env-kelp-stand": 40,
-        "env-rim-crab": 16,
+        "env-kelp-cluster": 16,
         "env-shoal-fry": 96,
-        "env-deep-fish": 8,
-        "env-outer-fish": 8
+        "env-rim-crab": 16,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8
       },
       "passes": [
         "canvas",
@@ -186,9 +186,9 @@
         "depthM": null
       },
       "eye": {
-        "xM": 2005,
-        "zM": 3530,
-        "depthM": -16848
+        "xM": 1996,
+        "zM": 3547,
+        "depthM": -16819
       },
       "distance": 4500,
       "waterReachM": 10575,
@@ -196,12 +196,12 @@
       "triangles": 405088,
       "propTriangles": 387952,
       "instances": {
-        "env-kelp-cluster": 16,
         "env-kelp-stand": 40,
-        "env-rim-crab": 16,
+        "env-kelp-cluster": 16,
         "env-shoal-fry": 96,
-        "env-deep-fish": 8,
-        "env-outer-fish": 8
+        "env-rim-crab": 16,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8
       },
       "passes": [
         "canvas",
@@ -230,8 +230,8 @@
       },
       "eye": {
         "xM": 2124,
-        "zM": 2196,
-        "depthM": 129
+        "zM": 2195,
+        "depthM": 136
       },
       "distance": 700,
       "waterReachM": 1050,
@@ -239,12 +239,12 @@
       "triangles": 397119,
       "propTriangles": 387952,
       "instances": {
-        "env-kelp-cluster": 16,
         "env-kelp-stand": 40,
-        "env-rim-crab": 16,
+        "env-kelp-cluster": 16,
         "env-shoal-fry": 96,
-        "env-deep-fish": 8,
-        "env-outer-fish": 8
+        "env-rim-crab": 16,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8
       },
       "passes": [
         "canvas",
@@ -269,8 +269,8 @@
       },
       "eye": {
         "xM": 1679,
-        "zM": 1875,
-        "depthM": 124
+        "zM": 1876,
+        "depthM": 133
       },
       "distance": 700,
       "waterReachM": 1050,
@@ -278,12 +278,12 @@
       "triangles": 404688,
       "propTriangles": 387952,
       "instances": {
-        "env-kelp-cluster": 16,
         "env-kelp-stand": 40,
-        "env-rim-crab": 16,
+        "env-kelp-cluster": 16,
         "env-shoal-fry": 96,
-        "env-deep-fish": 8,
-        "env-outer-fish": 8
+        "env-rim-crab": 16,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8
       },
       "passes": [
         "canvas",
@@ -301,20 +301,20 @@
       "name": "wall-pan",
       "strip": [
         {
-          "tMs": 123459,
+          "tMs": 127908,
           "focus": {
             "xM": 2125,
             "zM": 2875,
             "depthM": 900
           },
           "eye": {
-            "xM": 2124,
+            "xM": 2125,
             "zM": 2196,
-            "depthM": 124
+            "depthM": 133
           }
         },
         {
-          "tMs": 128950,
+          "tMs": 133075,
           "focus": {
             "xM": 2102,
             "zM": 2875,
@@ -322,25 +322,25 @@
           },
           "eye": {
             "xM": 2103,
-            "zM": 2195,
-            "depthM": 136
+            "zM": 2196,
+            "depthM": 128
           }
         },
         {
-          "tMs": 134378,
+          "tMs": 138056,
           "focus": {
             "xM": 2080,
             "zM": 2875,
             "depthM": 900
           },
           "eye": {
-            "xM": 2080,
+            "xM": 2079,
             "zM": 2196,
-            "depthM": 124
+            "depthM": 130
           }
         },
         {
-          "tMs": 139519,
+          "tMs": 143002,
           "focus": {
             "xM": 2057,
             "zM": 2875,
@@ -349,7 +349,7 @@
           "eye": {
             "xM": 2056,
             "zM": 2196,
-            "depthM": 135
+            "depthM": 133
           }
         }
       ]
