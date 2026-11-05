@@ -11,7 +11,7 @@
 //   node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost:5173/?study=free-water' \
 //     --out docs/screenshots/issue-1751/after --steps docs/screenshots/issue-1751/frames.mjs
 //
-// PROPS=184 waits for the base commit's list instead of this one's 204.
+// PROPS=184 waits for the base commit's list instead of this one's 200.
 // FRAMES=low,survey limits the poses. PAN=0 skips the drag. CONTROL=1 drives
 // the unchanged Kelp Labyrinth control instead (`?map=kelp-labyrinth`), where
 // no study prop stands.
@@ -38,7 +38,7 @@ const POSES = [
 
 export default async ({ page, shot }) => {
   const control = process.env.CONTROL === '1';
-  const props = Number(process.env.PROPS ?? 204);
+  const props = Number(process.env.PROPS ?? 200);
   if (control) {
     await page.waitForFunction(() => window.__perspectiveProbe?.().modelBacked >= 1, null, {
       timeout: 120000,

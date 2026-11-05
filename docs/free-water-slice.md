@@ -217,8 +217,8 @@ every other row.
 
 | Kit | Authored placement list, map metres | Opening count |
 | --- | --- | --- |
-| New kelp stands | Cell origins `x=1,000,1,250,...,2,750` at `y=750`, slots at `x` offsets `{62.5,187.5}` and `y` offsets `{62.5,185}`; the same at `y=1,250` with `y` offsets `{65,187.5}`; each flank's outer row (`y` offset 62.5 north, 187.5 south) leaves its slots at `x=1,062.5` and `x=2,937.5` open | 60 |
-| Retained kelp clusters | Cell origins `x=1,500,1,750,2,000,2,250`, `y=500`; four slots per cell at every pair of offsets from `{62.5,187.5}` | 16 |
+| New kelp stands | Four rows at `y=687.5`, `812.5`, `935` and `1,315`: cell origins `x=1,000,1,250,...,2,750` with slots at `x` offsets `{62.5,187.5}`, less the two end slots `x=1,062.5` and `x=2,937.5` of every row; so `y` offset 187.5 in the `y=500` cells, `{62.5,185}` in the `y=750` cells and 65 in the `y=1,250` cells | 56 |
+| Retained kelp clusters | Cell origins `x=1,000,1,250,...,2,750`, `y=500`; two slots per cell at offsets `(62.5,62.5)` and `(187.5,62.5)` | 16 |
 | Rim crabs | Four floor patches centred on `(1,625,1,375)`, `(1,875,1,375)`, `(2,125,1,375)`, `(2,375,1,375)`; each patch has a 25 m radius and four crabs | 16 |
 | Fry shoals | Centres `(1,375,875)`, `(1,875,875)`, `(2,375,875)`, `(2,875,875)`; each school stays within 25 m horizontally and 250..300 m depth | 4 schools / 96 fish |
 | Outer fish | Every pair of `x=1,750,2,000,2,250,2,500` and `y=1,750,2,500`; each path stays within 40 m horizontally and 700..1,000 m depth | 8 |
@@ -227,11 +227,16 @@ every other row.
 
 Plant roots use the public rendered floor. A stand's plan envelope is at most 120 m
 across; each slot leaves it wholly inside its 250 m cell, and no two plant envelopes
-overlap. The stands sit at one 125 m pitch, two rows on each flank of the clearing, the
-rows mirrored about its axis `y=1,125` (§9, Kelp): the inner rows stand 5 m back from the
-clearing's edges, so a 4 m sway never crosses them, and the outer rows end one slot short
-of the garden's corners. Retained clusters stay at their approved 18 m footprint, behind
-the forest at the garden's north edge. The clearing row receives neither plant list. Animals'
+overlap. A stand stands only on the garden's 400 m tread, whole: the rendered floor
+interpolates between cell centres, so every cell centre around a stand's envelope must be
+a garden centre, which keeps the rows inside `y=685..1,315` and the columns inside
+`x=1,185..2,815`, off the ramps to the rim, the bowl and the pocket. Across any stand's
+envelope the eroded floor stays within 40 m of its root, a stand's height. With the
+clearing's row bare and the inner rows 5 m back from its edges, so a 4 m sway never
+crosses them, that admits three rows north of the clearing and one south, 14 stands each
+at one 125 m pitch (§9, Kelp). Retained clusters stay at their approved 18 m footprint, a
+fringe along the garden's north edge behind the outermost row, on the gentle ramp up to
+the rim. The clearing row receives neither plant list. Animals'
 closed paths, phases and poses are authored within their listed patches in #1713,
 checked against public ground, and cannot migrate to another patch. No deep-pocket
 plants or bowl-wide kelp are inherited just because those cells have a kelp biome.
@@ -456,7 +461,7 @@ over every pass rather than gate 6's 400,000, by the owner's decision on #1712
 spend what a shipped map may not; shipped maps keep 400,000. Reserve at most 30 calls /
 600,000 triangles for all props and decorative life together, raised from 400,000 by
 decision 5 on #1748 (§9). The authored list totals at
-most 577,888 triangles: 60 new kelp stands at at most 9,000 each (540,000), 16 retained
+most 541,888 triangles: 56 new kelp stands at at most 9,000 each (504,000), 16 retained
 clusters (6,208), wildlife (31,680), and zero other dressing.
 The remaining reservation is unused, not permission to fill the bowl. Counts are the
 opening list's contract; per-model triangle limits remain ceilings. Share instanced
@@ -597,18 +602,23 @@ floor is 400 m and a stand is 40 m tall, so the fleet at its 300 m exercise dept
 down on a canopy 60 m below it. Hulls among the stalks would need taller stands, which is
 `shape-work`, or a deeper exercise, which changes §3; neither is taken here.
 
-The list §5 carries is one forest of 60 stands. Before it, the 40 stands stood in three
-rows 250 m apart, one stand deep each, 65 m back from the clearing: two strips north of it
-and a half-row south, which is what the owner's frame showed. Now each flank holds two
-rows at the stands' own 125 m pitch, the inner row 5 m from the clearing's edge, so the
-canopy is continuous across each flank and the clearing is the one gap in it. Both flanks
-read the same, mirrored about the clearing's axis, and the outer rows end one slot short
-of the garden's corners, so the forest ends at a ragged edge rather than a box. Two
-alternatives were set aside: three rows north and one south, which fills the budget to 62
-but keeps the south flank a strip; and four full rows, which is 64 stands and over the
-reservation. The 16 retained clusters, which stood among the south flank's stands, move
-behind the forest to the garden's north edge, where the stands do not reach. Two stands'
-worth of reservation stays unused.
+The list §5 carries is one forest of 56 stands. Before it, the 40 stands stood one stand
+deep in rows at `y=625`, `875` and `1,375`, each 65 m back from the clearing: two strips
+north of it and a half-row south, which is what the owner's frame showed, and the south
+row's envelopes already reached the scarp into the bowl. Now the forest is three rows
+deep north of the clearing and one row deep south of it, every row at the stands' own
+125 m pitch and the inner rows 5 m from the clearing's edges, so the canopy is continuous
+on each flank and the clearing is the one gap in it. The south flank cannot be deeper:
+its row of cells has about 125 m of tread before the rendered floor drops toward the
+bowl, and a stand is one rigid 120 m instance, so a second row there would float over
+the drop and bury itself in the scarp (measured in #1751's review). Every row ends one
+slot short of the garden's east and west edges, whose cells ramp to the rim and the bowl,
+so the forest ends short of the garden's corners. Two alternatives were set aside: two
+rows on each flank, mirrored about the clearing, whose south outer row stood on the
+scarp; and four full rows, which is 64 stands and over the reservation. The 16 retained
+clusters, which stood among the south flank's stands, become the forest's fringe along
+the garden's north edge, where the stands do not reach. Six stands' worth of the
+reservation stays unused.
 
 ### Vertical command (#1753)
 

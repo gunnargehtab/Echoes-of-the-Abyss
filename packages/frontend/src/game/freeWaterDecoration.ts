@@ -61,29 +61,30 @@ export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false)
         ...(motion === undefined ? {} : { motion }),
       });
   };
-  // Two rows of stands on each flank of the clearing at one 125 m pitch, the
-  // inner rows set 5 m back from the clearing so a 4 m sway never crosses it
-  // (§3's bounds rule), and the outer rows' corner slots left open so the
-  // forest ends at the garden's corners rather than at a box (#1751).
-  const GARDEN_X = [1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750];
-  for (const [y, dy, corners] of [
-    [750, 62.5, false],
-    [750, 185, true],
-    [1250, 65, true],
-    [1250, 187.5, false],
+  // Stands sit only where the rendered floor is the garden's 400 m tread: the
+  // view interpolates between cell centres, so a plan envelope that reaches
+  // past the last tread centre, toward the rim, the bowl or the pocket, would
+  // hang over the ramp. That bounds the rows to y=685..1,315 and the columns
+  // to x=1,185..2,815, and with the clearing's row bare, inner rows 5 m from
+  // its edges so a 4 m sway never crosses them, it admits three rows north of
+  // the clearing and one south, 14 stands each (#1751).
+  for (const [y, dy] of [
+    [500, 187.5],
+    [750, 62.5],
+    [750, 185],
+    [1250, 65],
   ] as const) {
-    for (const x of GARDEN_X) {
+    for (const x of [1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750]) {
       for (const dx of [62.5, 187.5]) {
-        if (!corners && ((x === 1000 && dx === 62.5) || (x === 2750 && dx === 187.5))) continue;
+        if ((x === 1000 && dx === 62.5) || (x === 2750 && dx === 187.5)) continue;
         add('env-kelp-stand', x + dx, y + dy);
       }
     }
   }
-  // The retained clusters stand behind the forest at the garden's north edge.
-  for (const x of [1500, 1750, 2000, 2250]) {
-    for (const dx of [62.5, 187.5]) {
-      for (const dy of [62.5, 187.5]) add('env-kelp-cluster', x + dx, 500 + dy);
-    }
+  // The retained clusters are the forest's fringe along the garden's north
+  // edge, on the gentle ramp up to the rim behind the outermost stands.
+  for (const x of [1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750]) {
+    for (const dx of [62.5, 187.5]) add('env-kelp-cluster', x + dx, 500 + 62.5);
   }
   const life = (
     slug: string,

@@ -26,16 +26,16 @@
       "distance": 250,
       "waterReachM": 600,
       "calls": 30,
-      "triangles": 580575,
-      "props": 204,
-      "propTriangles": 566512,
+      "triangles": 544863,
+      "props": 200,
+      "propTriangles": 530800,
       "instances": {
         "env-kelp-cluster": 16,
+        "env-kelp-stand": 56,
         "env-rim-crab": 16,
         "env-shoal-fry": 96,
-        "env-kelp-stand": 60,
-        "env-deep-fish": 8,
-        "env-outer-fish": 8
+        "env-outer-fish": 8,
+        "env-deep-fish": 8
       },
       "photophores": 48,
       "passes": [
@@ -67,16 +67,16 @@
       "distance": 250,
       "waterReachM": 600,
       "calls": 22,
-      "triangles": 575279,
-      "props": 204,
-      "propTriangles": 566512,
+      "triangles": 539567,
+      "props": 200,
+      "propTriangles": 530800,
       "instances": {
         "env-kelp-cluster": 16,
+        "env-kelp-stand": 56,
         "env-rim-crab": 16,
         "env-shoal-fry": 96,
-        "env-kelp-stand": 60,
-        "env-deep-fish": 8,
-        "env-outer-fish": 8
+        "env-outer-fish": 8,
+        "env-deep-fish": 8
       },
       "photophores": 48,
       "passes": [

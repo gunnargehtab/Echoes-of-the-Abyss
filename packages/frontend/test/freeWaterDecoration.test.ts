@@ -8,8 +8,13 @@ import { FREE_WATER_SLICE } from '../../backend/src/sim/maps/freeWaterSlice.ts';
 import { decorationPose, freeWaterPlacements } from '../src/game/freeWaterDecoration.ts';
 import { ENVIRONMENT_PROPS, placeProps, propSpec } from '../src/game/environment.ts';
 import { buildTemplate } from '../src/game/environmentModels.ts';
-import { DEPTH_VISUAL_M_PER_M } from '../src/game/perspectiveTerrain.ts';
-import { Faction, FaunaSpecies, ResolutionTier, UnitKind } from '@echoes/shared';
+import {
+  DEPTH_VISUAL_M_PER_M,
+  rockTopDepthM,
+  seabedDepthAtM,
+} from '../src/game/perspectiveTerrain.ts';
+import { seabedSeed } from '../src/game/seabed.ts';
+import { Biome, Faction, FaunaSpecies, ResolutionTier, UnitKind } from '@echoes/shared';
 import { Match } from '../../backend/src/sim/match.ts';
 import { spawnFauna, spawnUnit } from '../../backend/src/sim/world.ts';
 
@@ -42,16 +47,49 @@ describe('authored public decoration', () => {
         assert.ok(Math.hypot(a.xM - b.xM, a.yM - b.yM) >= apart - 1e-8, `${a.slug} overlaps`);
       }
     }
-    // §9: the inner rows hug the clearing on both flanks, mirrored about its axis.
+    // §5: a stand's whole envelope lies where every surrounding cell centre is
+    // the garden's 400 m tread, so the view's interpolation never puts a ramp
+    // under it; and the rendered floor, eroded, stays within a stand's height
+    // of its root across the envelope.
+    const terrain = ground();
+    const seed = seabedSeed(terrain);
+    const rockTop = rockTopDepthM(terrain);
     const stands = plants.filter((p) => p.slug === 'env-kelp-stand');
+    for (const p of stands) {
+      const half = propSpec(p.slug)!.footprintM / 2;
+      for (const x of [p.xM - half, p.xM + half]) {
+        for (const y of [p.yM - half, p.yM + half]) {
+          for (const col of [Math.floor(x / 250 - 0.5), Math.ceil(x / 250 - 0.5)]) {
+            for (const row of [Math.floor(y / 250 - 0.5), Math.ceil(y / 250 - 0.5)]) {
+              const i = row * terrain.cols + col;
+              assert.equal(terrain.floor[i], 400, `${p.xM},${p.yM} reaches a ramp`);
+              assert.equal(terrain.biomes[i], Biome.KelpForest);
+            }
+          }
+        }
+      }
+      const root = seabedDepthAtM(terrain, seed, rockTop, p.xM, p.yM, true);
+      for (let a = 0; a < 32; a++) {
+        for (const f of [0.5, 1]) {
+          const x = p.xM + Math.cos((a * Math.PI) / 16) * half * f;
+          const y = p.yM + Math.sin((a * Math.PI) / 16) * half * f;
+          const floor = seabedDepthAtM(terrain, seed, rockTop, x, y, true);
+          assert.ok(
+            Math.abs(floor - root) <= 40,
+            `${p.xM},${p.yM}: floor ${floor} from root ${root}`
+          );
+        }
+      }
+    }
+    // §9: three rows north of the clearing and one south, each 14 stands.
     const rows = [...new Set(stands.map((p) => p.yM))].sort((a, b) => a - b);
-    assert.deepEqual(rows, [812.5, 935, 1315, 1437.5]);
+    assert.deepEqual(rows, [687.5, 812.5, 935, 1315]);
     assert.deepEqual(
       rows.map((y) => stands.filter((p) => p.yM === y).length),
-      [14, 16, 16, 14]
+      [14, 14, 14, 14]
     );
     assert.deepEqual(counts, {
-      'env-kelp-stand': 60,
+      'env-kelp-stand': 56,
       'env-kelp-cluster': 16,
       'env-rim-crab': 16,
       'env-shoal-fry': 96,
