@@ -40,6 +40,7 @@
 
 import { Application, Container, Graphics, Sprite, Text, type GraphicsContext } from 'pixi.js';
 import {
+  FREE_WATER_OPENING,
   ACTIVE_SONAR,
   affords,
   BERTHS,
@@ -161,7 +162,8 @@ import {
   type FlightAction,
   type Bindings,
 } from '../input/bindings.ts';
-import { FREE_WATER_CONTROLS } from './freeWaterControls.ts';
+import { FREE_WATER_CONTROLS, FREE_WATER_SLICE } from './freeWaterControls.ts';
+import { consoleBlocks, TAB_HEIGHT, type ConsoleBlocks } from './consoleLayout.ts';
 import type { FlightReading } from './flightCamera.ts';
 import { readMovePreview, type MovePreview, type MovePreviewReading } from './movePreview.ts';
 import { DEPTH_VISUAL_M_PER_M } from './perspectiveTerrain.ts';
@@ -1088,35 +1090,12 @@ export function yieldToCells<T extends { yieldRank?: number }>(
     .map((held) => held.entry);
 }
 
-/** Command panel geometry, CSS px. docs/art-direction.md "HUD Layout". */
-const TAB_HEIGHT = 24;
-
-// The console's height, the strip's and the hint line's live in uiScale.ts,
-// which holds the UI scale against their sum.
-/** Breathing room between the console's own edge and its blocks. */
-const CONSOLE_PAD = 8;
+// The console's block geometry — the tab row, the pad, the gap and each
+// block's width — lives in consoleLayout.ts, which the shell reads too to
+// stand the free-water camera panel beside the command block.
 /** A block's cyan header band — the plate VI card's rule 3. */
 const BLOCK_HEAD_H = 22;
-/** Between two blocks. Tight: the blocks are the instrument, the gaps are not. */
-const BLOCK_GAP = 8;
 const BAR_BUTTON_HEIGHT = 40;
-
-/**
- * What each block needs to say, in px.
- *
- * Four of the five are fixed because their content is: a scope is square, a
- * command card is four columns of a known width, a selection card holds six
- * stats. Production takes whatever is left, because a queue is the one block
- * that reads better wider. Which blocks go when the width runs out, and in
- * what order, is decided in `consoleBlocks`.
- */
-const BLOCK_W = {
-  scope: 170,
-  selection: 300,
-  fleet: 230,
-  commands: 380,
-  productionMin: 240,
-} as const;
 
 /**
  * How far a readout's control reaches past its glyphs, each side (#724).
@@ -2272,7 +2251,9 @@ export class EchoRenderer {
   constructor(
     callbacks: RendererCallbacks,
     app: Application = new Application(),
-    private readonly controlsStudy = FREE_WATER_CONTROLS
+    private readonly controlsStudy = FREE_WATER_CONTROLS,
+    /** The free-water fixture itself, whose orbit opens low behind the fleet (§9). */
+    private readonly studySlice = FREE_WATER_SLICE
   ) {
     this.callbacks = callbacks;
     this.app = app;
@@ -3896,69 +3877,8 @@ export class EchoRenderer {
    * order: fleet, then production, then selection. The list in the body says
    * why each goes where it does.
    */
-  private consoleBlocks(): {
-    y: number;
-    h: number;
-    scope: { x: number; w: number };
-    commands: { x: number; w: number };
-    selection?: { x: number; w: number };
-    fleet?: { x: number; w: number };
-    production?: { x: number; w: number };
-  } {
-    const width = this.hudWidth();
-    const y = this.hudHeight() - CONSOLE_HEIGHT + TAB_HEIGHT + 4;
-    const h = CONSOLE_HEIGHT - TAB_HEIGHT - 4 - CONSOLE_PAD;
-    const left = CONSOLE_PAD + 2;
-    const right = width - CONSOLE_PAD - 2;
-
-    // Blocks are dropped rather than squeezed when the width runs out, because
-    // a block narrower than its content is a block that lies about holding it.
-    // The order is what each one costs to lose:
-    //
-    // - **Fleet first.** Its facts have somewhere else to be — the hulls in
-    //   hand are also the selection card's, and the groups are also the
-    //   digits. It is the block that makes them quick, not the only one that
-    //   makes them reachable.
-    // - **Production next**, and reluctantly: production being visible without
-    //   a tab is this console's whole argument.
-    // - **Selection after that**, because the world view carries a hull's state
-    //   on the hull itself.
-    //
-    // Scope and commands never go. One is the only view of the whole map, and
-    // the other is the mouse's route to every order.
-    //
-    // So a block is kept only when every block that outlasts it fits too: each
-    // test below adds its own cost to theirs. Testing a block against the room
-    // left after the others let the fleet come back once selection had gone
-    // (#957), and gave production the longest life of the three.
-    const fixed = BLOCK_W.scope + BLOCK_GAP + BLOCK_W.commands;
-    const room = right - left - fixed;
-    const selectionCost = BLOCK_GAP + BLOCK_W.selection;
-    const productionCost = BLOCK_GAP + BLOCK_W.productionMin;
-    const fleetCost = BLOCK_GAP + BLOCK_W.fleet;
-    const wantsSelection = room >= selectionCost;
-    const wantsProduction = room >= selectionCost + productionCost;
-    const wantsFleet = room >= selectionCost + productionCost + fleetCost;
-
-    let x = left;
-    const scope = { x, w: BLOCK_W.scope };
-    x += scope.w + BLOCK_GAP;
-
-    const selection = wantsSelection ? { x, w: BLOCK_W.selection } : undefined;
-    if (selection !== undefined) x += selection.w + BLOCK_GAP;
-
-    const fleet = wantsFleet ? { x, w: BLOCK_W.fleet } : undefined;
-    if (fleet !== undefined) x += fleet.w + BLOCK_GAP;
-
-    const commands = { x, w: BLOCK_W.commands };
-    x += commands.w + BLOCK_GAP;
-
-    // At least `productionMin` wide by `wantsProduction`, and wider whenever
-    // the room is. Once production has gone, what it held stays bare glass on
-    // purpose: the other four blocks are as wide as their content (`BLOCK_W`),
-    // and giving the room to one would only pad it.
-    const production = wantsProduction ? { x, w: right - x } : undefined;
-    return { y, h, scope, commands, selection, fleet, production };
+  private consoleBlocks(): ConsoleBlocks {
+    return consoleBlocks(this.hudWidth(), this.hudHeight());
   }
 
   /**
@@ -5600,6 +5520,30 @@ export class EchoRenderer {
   }
 
   /**
+   * The free-water study opens on the ordinary orbit, low behind the fleet
+   * (docs/free-water-slice.md §9, Opening view): the focus ahead of the
+   * force's centroid along the heading toward mark A, at the hulls' depth,
+   * pitched inside the band. The orbit's eye stands at (sin yaw, cos yaw)
+   * from its focus, so "ahead" along the heading is the opposite way. Home
+   * is untouched and still restores north, 55 degrees and the seabed.
+   */
+  private openStudy(cx: number, cy: number): void {
+    if (this.conn === null) return;
+    const yaw = (FREE_WATER_OPENING.YAW_DEG * Math.PI) / 180;
+    this.conn.aimFrame(
+      {
+        xM: cx - Math.sin(yaw) * FREE_WATER_OPENING.AHEAD_M,
+        yM: cy - Math.cos(yaw) * FREE_WATER_OPENING.AHEAD_M,
+        distanceM: FREE_WATER_OPENING.DOLLY_M,
+        yawDeg: FREE_WATER_OPENING.YAW_DEG,
+        pitchDeg: FREE_WATER_OPENING.PITCH_DEG,
+      },
+      FREE_WATER_OPENING.FOCUS_DEPTH_M
+    );
+    this.publishFlight();
+  }
+
+  /**
    * Keep the frame the camera already stands on when the force is first seen,
    * rather than recentring on it: a launch's travel has already brought the
    * camera home, on the spawn at the home dolly (docs/world-map.md §7.6), and
@@ -5978,7 +5922,8 @@ export class EchoRenderer {
       }
       if (this.conn !== null) {
         this.cameraCentered = true;
-        this.conn.focusWorld(cx / count, cy / count, HOME_DOLLY_M);
+        if (this.studySlice) this.openStudy(cx / count, cy / count);
+        else this.conn.focusWorld(cx / count, cy / count, HOME_DOLLY_M);
       }
     }
 

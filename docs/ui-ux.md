@@ -680,7 +680,12 @@ W/S, A/D and R/F translate in the camera's local axes; Q/E roll and arrows look.
 The upright EYE readout includes world up, INVERTED and VERTICAL feedback. Controls
 sets flight speed over 50–800 rendered m/s, initially 200; rotation is 60 degrees/s.
 Motion buttons step for a quarter-second, so navigation also has a mouse-only route.
-Home and Escape remain reserved. No camera movement emits a fleet order.
+Home and Escape remain reserved. No camera movement emits a fleet order. The panel
+stands beside the console's command block, on the hint line above it and on the block's
+left edge, read off the console's own layout, and grows upward in flight and in NAV
+([free-water-slice.md](free-water-slice.md) §9). The crater fixture's decorative-life
+disclosure is one line in the bottom-right corner on the same row, where the study, which
+runs no mission log, has the corner free.
 
 The opt-in MOVE 3D preview lives beside the depth ribbon, not in another crowded
 SQUAD cell. It pins plan position, edits a numeric depth, then confirms one fixed-depth

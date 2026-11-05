@@ -26,6 +26,7 @@ import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 import { CanvasTextMetrics, Container, Graphics, Text, type GraphicsPath } from 'pixi.js';
 import {
+  FREE_WATER_OPENING,
   ACTIVE_SONAR,
   DEPTH,
   DRIFT_ROSTER,
@@ -49,7 +50,12 @@ import {
   ObjectiveStatus,
   type OwnUnit,
 } from '@echoes/shared';
-import { FOCUS_DRAG_M_PER_PX, FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
+import {
+  FOCUS_DRAG_M_PER_PX,
+  FOCUS_STEP_M,
+  HOME_DOLLY_M,
+  HOME_PITCH_DEG,
+} from '../src/game/PerspectiveView.ts';
 import { swayAt } from '../src/game/cameraSway.ts';
 import type { MovePreviewReading } from '../src/game/movePreview.ts';
 import type { WorldLook } from '../src/game/tutorialLook.ts';
@@ -370,6 +376,8 @@ async function boot(
   options: {
     webgl?: boolean;
     controlsStudy?: boolean;
+    /** The free-water fixture itself, whose orbit opens low behind the fleet. */
+    studySlice?: boolean;
     look?: WorldLook;
     gpu?: Partial<Pick<HeadlessGL, 'timer' | 'rendererName'>>;
   } = {}
@@ -393,7 +401,12 @@ async function boot(
   assert.equal(mounted, options.webgl !== false, 'mount reports whether it got a context');
   conn.setActive(true);
 
-  const chart = new EchoRenderer(callbacks, app.asApplication(), options.controlsStudy ?? false);
+  const chart = new EchoRenderer(
+    callbacks,
+    app.asApplication(),
+    options.controlsStudy ?? false,
+    options.studySlice ?? false
+  );
   await chart.init(chartHost as unknown as HTMLElement);
   chart.setConn(conn);
 
@@ -5925,6 +5938,66 @@ describe('renderer smoke test: the free camera', () => {
         { x: turned.focus.xM, z: turned.focus.zM },
         'and keeps the place'
       );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('opens the free-water study low behind the fleet, and Home still restores north, 55° and the seabed', async () => {
+    // docs/free-water-slice.md §9, Opening view: the orbit, not flight, with
+    // its focus ahead of the force's centroid along the heading toward A at
+    // the hulls' depth, pitched 15°, at the opening dolly.
+    const world = await boot({ controlsStudy: true, studySlice: true, look: 'free-water' });
+    try {
+      world.frame(3);
+      const snapshot = cannedSnapshot();
+      const force = [...snapshot.units, ...snapshot.structures];
+      const cx = force.reduce((n, e) => n + e.x, 0) / force.length;
+      const cy = force.reduce((n, e) => n + e.y, 0) / force.length;
+      const yaw = (FREE_WATER_OPENING.YAW_DEG * Math.PI) / 180;
+      const opening = rig();
+      assert.equal(opening.yawDeg, (FREE_WATER_OPENING.YAW_DEG + 360) % 360, 'toward A');
+      assert.equal(opening.pitchDeg, FREE_WATER_OPENING.PITCH_DEG, 'inside the band, low');
+      assert.equal(opening.distance, FREE_WATER_OPENING.DOLLY_M, 'at the opening dolly');
+      assert.equal(opening.focus.depthM, FREE_WATER_OPENING.FOCUS_DEPTH_M, "at the hulls' depth");
+      assert.deepEqual(
+        { x: opening.focus.xM, z: opening.focus.zM },
+        {
+          x: Math.round(cx - Math.sin(yaw) * FREE_WATER_OPENING.AHEAD_M),
+          z: Math.round(cy - Math.cos(yaw) * FREE_WATER_OPENING.AHEAD_M),
+        },
+        'the focus ahead of the centroid along the heading, so the hulls fall in the lower third'
+      );
+      assert.equal(world.conn.flying, false, 'the orbit, not flight');
+      assert.ok(
+        world.log.names().includes('onFlight'),
+        'the panel is told where the camera stands'
+      );
+
+      world.conn.home();
+      const homed = rig();
+      assert.equal(homed.yawDeg, 0, 'Home is north');
+      assert.equal(homed.pitchDeg, HOME_PITCH_DEG, 'Home is 55°');
+      assert.equal(homed.focus.depthM, null, 'Home is the seabed');
+      assert.equal(
+        homed.distance,
+        FREE_WATER_OPENING.DOLLY_M,
+        'and keeps the dolly, as it keeps any'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('opens every other map on the home frame over the force, as it did', async () => {
+    const world = await boot({ controlsStudy: true });
+    try {
+      world.frame(3);
+      const opening = rig();
+      assert.equal(opening.yawDeg, 0);
+      assert.equal(opening.pitchDeg, HOME_PITCH_DEG);
+      assert.equal(opening.focus.depthM, null);
+      assert.equal(opening.distance, HOME_DOLLY_M);
     } finally {
       world.teardown();
     }

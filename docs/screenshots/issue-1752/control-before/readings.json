@@ -1,0 +1,135 @@
+{
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "software": true,
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "reducedMotion": false,
+  "readings": [
+    {
+      "name": "opening",
+      "look": "standard",
+      "pitchDeg": 55,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 904,
+        "zM": 1136,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 907,
+        "zM": 2627,
+        "depthM": -7886
+      },
+      "distance": 2600,
+      "flight": {
+        "flying": false,
+        "navigating": false,
+        "depthM": -7886,
+        "bearingDeg": 0,
+        "upX": 0,
+        "upY": -0.5735764363510462,
+        "inverted": false,
+        "blocked": false
+      },
+      "ownCentre": {
+        "x": 970.4341939290365,
+        "z": 1139.5243530273438
+      },
+      "waterReachM": 8320,
+      "calls": 74,
+      "triangles": 160006,
+      "props": 363,
+      "propTriangles": 104958,
+      "sway": "on",
+      "panels": {
+        "flightPanel": null,
+        "legend": null
+      }
+    },
+    {
+      "name": "low",
+      "look": "standard",
+      "pitchDeg": 12,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": 850
+      },
+      "eye": {
+        "xM": 1998,
+        "zM": 3565,
+        "depthM": -669
+      },
+      "distance": 1600,
+      "flight": {
+        "flying": false,
+        "navigating": false,
+        "depthM": -669,
+        "bearingDeg": 0,
+        "upX": 0,
+        "upY": -0.9781476007338057,
+        "inverted": false,
+        "blocked": false
+      },
+      "ownCentre": {
+        "x": 987.9177958170573,
+        "z": 1159.0548299153645
+      },
+      "waterReachM": 5120,
+      "calls": 75,
+      "triangles": 160006,
+      "props": 363,
+      "propTriangles": 104958,
+      "sway": "on",
+      "panels": {
+        "flightPanel": null,
+        "legend": null
+      }
+    },
+    {
+      "name": "survey",
+      "look": "standard",
+      "pitchDeg": 88,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 1993,
+        "zM": 2353,
+        "depthM": -42803
+      },
+      "distance": 10000,
+      "flight": {
+        "flying": false,
+        "navigating": false,
+        "depthM": -42803,
+        "bearingDeg": 0,
+        "upX": 0,
+        "upY": -0.03489949670250103,
+        "inverted": false,
+        "blocked": false
+      },
+      "ownCentre": {
+        "x": 1041.7073059082031,
+        "z": 1137.8668416341145
+      },
+      "waterReachM": 32000,
+      "calls": 78,
+      "triangles": 163878,
+      "props": 363,
+      "propTriangles": 104958,
+      "sway": "on",
+      "panels": {
+        "flightPanel": null,
+        "legend": null
+      }
+    }
+  ]
+}
