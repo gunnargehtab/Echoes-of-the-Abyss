@@ -321,8 +321,12 @@ function softSnap(vM: number): number {
   return (iu + smooth(edge)) * BLOCK_M;
 }
 
-/** Value noise in [-1, 1] at a world position, one wavelength. */
-function valueNoise(xM: number, yM: number, wavelengthM: number, seed: number): number {
+/**
+ * Value noise in [-1, 1] at a world position, one wavelength. Exported for
+ * the roof's brow (passages.ts), which erodes on the same field the ground
+ * does, so the two meet along a jamb as one stone.
+ */
+export function valueNoise(xM: number, yM: number, wavelengthM: number, seed: number): number {
   const x = xM / wavelengthM;
   const y = yM / wavelengthM;
   const ix = Math.floor(x);

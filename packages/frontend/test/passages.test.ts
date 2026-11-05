@@ -15,14 +15,17 @@ import { describe, it } from 'node:test';
 import { Biome } from '@echoes/shared';
 import {
   buildRoofGeometry,
+  ERODED_BROW,
   isRoofed,
   roofedPassages,
   roofOver,
+  roofSurfaceDepthM,
   roofTopDepthM,
   ROOF_OPEN_OPACITY,
 } from '../src/game/passages.ts';
 import {
   buildHeightGrid,
+  DEPTH_VISUAL_M_PER_M,
   depthToWorldY,
   rockSurfaceDepthM,
   ROCK_RISE_ABOVE_SHALLOWEST_M,
@@ -304,5 +307,125 @@ describe('opening a roof', () => {
 
   it('turns a roof to glass rather than removing it', () => {
     assert.ok(ROOF_OPEN_OPACITY > 0 && ROOF_OPEN_OPACITY < 1);
+  });
+});
+
+/**
+ * The free-water study's eroded brow over a mouth (docs/free-water-slice.md
+ * §9, "Crater walls"; `ERODED_BROW`). The promises: the top slopes down to a
+ * lip over each mouth and nowhere else, nothing moves at a cell's centre, the
+ * hole under the lintel is still the ceiling, and a shipped map's roof is
+ * the plain one to the bit.
+ */
+describe('the eroded brow over a mouth', () => {
+  const terrain = slotTerrain();
+  const seed = seabedSeed(terrain);
+  const rockTop = rockTopDepthM(terrain);
+  const grid = buildHeightGrid(terrain, seed, rockTop);
+  const passage = roofedPassages(terrain).list[0]!;
+  const plain = buildRoofGeometry(terrain, passage, grid, seed, rockTop);
+  const eroded = buildRoofGeometry(terrain, passage, grid, seed, rockTop, true);
+  const step = CELL / VERTS_PER_CELL;
+  const topAt = (shape: typeof plain, x: number, z: number) => {
+    let best = -Infinity;
+    for (let i = 0; i < shape.positions.length; i += 3) {
+      if (
+        Math.abs(shape.positions[i]! - x) < 1e-3 &&
+        Math.abs(shape.positions[i + 2]! - z) < 1e-3
+      ) {
+        best = Math.max(best, shape.positions[i + 1]!);
+      }
+    }
+    return best;
+  };
+
+  it('is off unless asked', () => {
+    const again = buildRoofGeometry(terrain, passage, grid, seed, rockTop, false);
+    assert.deepEqual([...again.positions], [...plain.positions]);
+    assert.equal(
+      roofSurfaceDepthM(terrain, passage, seed, rockTop, 3.5 * CELL, 2.5 * CELL),
+      roofSurfaceDepthM(terrain, passage, seed, rockTop, 3.5 * CELL, 2.5 * CELL, false)
+    );
+  });
+
+  it('moves nothing at a roofed cell centre', () => {
+    for (const index of passage.cells) {
+      const x = ((index % 8) + 0.5) * CELL;
+      const z = (Math.floor(index / 8) + 0.5) * CELL;
+      assert.equal(topAt(eroded, x, z), topAt(plain, x, z), `cell ${index}`);
+      assert.equal(
+        roofSurfaceDepthM(terrain, passage, seed, rockTop, x, z, true),
+        roofSurfaceDepthM(terrain, passage, seed, rockTop, x, z)
+      );
+    }
+  });
+
+  it('slopes the top down to a lip over each mouth, clear of the ceiling', () => {
+    // The west mouth, x = 750, rows 2–3; the east mouth, x = 1,500.
+    const ceilingY = depthToWorldY(520);
+    let dipped = 0;
+    for (const x of [3 * CELL, 6 * CELL]) {
+      for (let iz = 2 * VERTS_PER_CELL; iz <= 4 * VERTS_PER_CELL; iz++) {
+        const z = iz * step;
+        const top = topAt(eroded, x, z);
+        assert.ok(top < topAt(plain, x, z), `the brow at (${x}, ${z}) is below the plain top`);
+        assert.ok(top >= ceilingY + ERODED_BROW.LIP_MIN_M * DEPTH_VISUAL_M_PER_M - 1e-6);
+        dipped++;
+      }
+    }
+    assert.ok(dipped > 0);
+    // The lip's height wanders along the mouth.
+    const lips = new Set<number>();
+    for (let iz = 2 * VERTS_PER_CELL; iz <= 4 * VERTS_PER_CELL; iz++) {
+      lips.add(Math.round(topAt(eroded, 3 * CELL, iz * step) * 100));
+    }
+    assert.ok(lips.size > 2, 'one lip height along the whole mouth would be a box again');
+  });
+
+  it('keeps the hole under the lintel at the ceiling', () => {
+    const mouth: number[] = [];
+    for (let i = 0; i < eroded.positions.length; i += 3) {
+      const z = eroded.positions[i + 2]!;
+      if (Math.abs(eroded.positions[i]! - 3 * CELL) < 1e-3 && z > 2 * CELL && z < 4 * CELL) {
+        mouth.push(eroded.positions[i + 1]!);
+      }
+    }
+    assert.ok(Math.abs(Math.min(...mouth) - depthToWorldY(520)) < 1e-3);
+  });
+
+  it('leaves a side against ground, and the top beyond the brow, where the stone was', () => {
+    // The north side at z = 500 is a curtain; its mid-edge top is half a
+    // cell from either mouth, past the brow's reach, so it is the rock
+    // surface still: the roof merges with the ridge it stands in.
+    const z = 2 * CELL;
+    for (const x of [3.5 * CELL, 4.5 * CELL, 5.5 * CELL]) {
+      assert.equal(topAt(eroded, x, z), topAt(plain, x, z), `the curtain's top at x=${x}`);
+    }
+    // And the interior cell's top, which has no mouth, is untouched.
+    for (let iz = 2 * VERTS_PER_CELL; iz <= 4 * VERTS_PER_CELL; iz++) {
+      for (let ix = 4 * VERTS_PER_CELL; ix <= 5 * VERTS_PER_CELL; ix++) {
+        assert.equal(topAt(eroded, ix * step, iz * step), topAt(plain, ix * step, iz * step));
+      }
+    }
+  });
+
+  it('never dips into the water it roofs, however shallow the ceiling', () => {
+    const shallow = wallTerrain();
+    const ceiling = shallow.ceiling.map((c) => (c === 700 ? 30 : c));
+    const lid = { ...shallow, ceiling };
+    const lidSeed = seabedSeed(lid);
+    const lidRock = rockTopDepthM(lid);
+    const shape = buildRoofGeometry(
+      lid,
+      roofedPassages(lid).list[0]!,
+      buildHeightGrid(lid, lidSeed, lidRock),
+      lidSeed,
+      lidRock,
+      true
+    );
+    const ceilingY = depthToWorldY(30);
+    for (let i = 1; i < shape.positions.length; i += 3) {
+      assert.ok(shape.positions[i]! >= ceilingY - 1e-3, 'no part of the roof below its ceiling');
+    }
   });
 });

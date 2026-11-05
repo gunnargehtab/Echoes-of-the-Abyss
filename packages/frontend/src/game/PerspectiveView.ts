@@ -2844,7 +2844,14 @@ export class PerspectiveView {
     this.passages = passages;
     const linear = new Color();
     for (const passage of passages.list) {
-      const shape = buildRoofGeometry(terrain, passage, grid, this.groundSeed, this.groundRockTopM);
+      const shape = buildRoofGeometry(
+        terrain,
+        passage,
+        grid,
+        this.groundSeed,
+        this.groundRockTopM,
+        this.erodedGround
+      );
       const base = new Float32Array(shape.colors.length);
       for (let i = 0; i < base.length; i += 3) {
         linear.setRGB(shape.colors[i]!, shape.colors[i + 1]!, shape.colors[i + 2]!, SRGBColorSpace);
@@ -2884,7 +2891,15 @@ export class PerspectiveView {
     for (const passage of passages.list) {
       const roofY = (xM: number, yM: number) =>
         depthToWorldY(
-          roofSurfaceDepthM(terrain, passage, this.groundSeed, this.groundRockTopM, xM, yM)
+          roofSurfaceDepthM(
+            terrain,
+            passage,
+            this.groundSeed,
+            this.groundRockTopM,
+            xM,
+            yM,
+            this.erodedGround
+          )
         ) + 12;
       const route = passage.route;
       for (let i = 1; i < route.length; i++) {
