@@ -7,7 +7,8 @@ description: Run one change as a closed loop — build against an authored targe
 
 The inner loop. [`work-issue`](../work-issue/SKILL.md) picks the issue and opens
 the pull request; [`steward`](../steward/SKILL.md) drives it to green. This file
-takes one change from "claimed" to "correct" in at most three rounds, each graded
+takes one change from "claimed" to "correct" in at most three rounds, or five for
+issues #1748 to #1754 as "The cap" says, each graded
 by a fresh [`loop-critic`](../../agents/loop-critic.md).
 [`.claude/AGENTIC-LOOP.md`](../../AGENTIC-LOOP.md) records where the shape came
 from and where each guardrail is enforced.
@@ -180,7 +181,8 @@ what you tried and what the critic keeps saying. Under `work-issue` that is §7'
 ### The cap: three rounds
 
 **Three rounds per change, hard.** A person set it (18 September); a firing may not
-raise it. Round three ends one of two ways:
+raise it. The last round, the third or the fifth under the exception below, ends one of
+two ways:
 
 - **Exit criteria met:** done.
 - **Not met:** run the verification pass anyway, push what is green, and list the
@@ -194,7 +196,10 @@ raise it. Round three ends one of two ways:
 
 Do not buy a round back by skipping the critic, folding two increments into one
 round, or calling the verification pass a round. Interactively, the person at the
-keyboard may grant a fourth; unattended, three is the end.
+keyboard may grant a fourth; unattended, three is the end. One exception stands, set by
+the owner on 4 November 2026 (#1748): **five rounds per change for #1748 to #1754**,
+for every loop, attended or not, until #1694 closes. Any other exception is a person's
+to write here.
 
 ## Guardrails
 
