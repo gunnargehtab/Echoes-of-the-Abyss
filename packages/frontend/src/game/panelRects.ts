@@ -14,13 +14,17 @@
  */
 import type { PanelRect } from './EchoRenderer.ts';
 
+/** The panels that float over the water: orders or objectives, the contact log, the mission log. */
+export const FLOATING_PANELS = '.objectives, .contact-log, .mission-log';
+
 /**
- * The panels that float over the water: orders or objectives, the contact log,
- * the mission log, and the free-water study's decorative-life legend, which
- * stands on the hint line's row and which the hint yields to (`EchoRenderer`,
- * the hint line).
+ * The free-water study's decorative-life legend, which stands on the hint
+ * line's row and which the hint yields to (`EchoRenderer`, the hint line). Its
+ * own path, not a floating panel: the mission log's foot stands 8 units into
+ * that row too, and a hint that yielded to every panel would be cut on every
+ * mission map, which is docs/ui-ux.md §2's call and not the study's.
  */
-export const FLOATING_PANELS = '.objectives, .contact-log, .mission-log, .decorative-life';
+export const HINT_ROW_PANELS = '.decorative-life';
 
 /** A running watch: measure again now, or stop. */
 export interface PanelWatch {
@@ -35,7 +39,8 @@ export interface PanelWatch {
 export function watchPanels(
   layer: HTMLElement,
   canvasHost: HTMLElement,
-  push: (rects: PanelRect[]) => void
+  push: (rects: PanelRect[]) => void,
+  pushHintRow: (rects: PanelRect[]) => void = () => {}
 ): PanelWatch {
   // The headless test runner has no MutationObserver, and lays nothing out.
   if (typeof ResizeObserver === 'undefined' || typeof MutationObserver === 'undefined') {
@@ -43,25 +48,31 @@ export function watchPanels(
   }
   const measure = (): void => {
     const origin = canvasHost.getBoundingClientRect();
-    const rects: PanelRect[] = [];
-    for (const panel of layer.querySelectorAll(FLOATING_PANELS)) {
-      const r = panel.getBoundingClientRect();
-      // The contact log is `display: none` under 900 px wide, and covers nothing.
-      if (r.width === 0 || r.height === 0) continue;
-      rects.push({
-        x: r.left - origin.left,
-        y: r.top - origin.top,
-        width: r.width,
-        height: r.height,
-      });
-    }
-    push(rects);
+    const rectsOf = (selector: string): PanelRect[] => {
+      const rects: PanelRect[] = [];
+      for (const panel of layer.querySelectorAll(selector)) {
+        const r = panel.getBoundingClientRect();
+        // The contact log is `display: none` under 900 px wide, and covers nothing.
+        if (r.width === 0 || r.height === 0) continue;
+        rects.push({
+          x: r.left - origin.left,
+          y: r.top - origin.top,
+          width: r.width,
+          height: r.height,
+        });
+      }
+      return rects;
+    };
+    push(rectsOf(FLOATING_PANELS));
+    pushHintRow(rectsOf(HINT_ROW_PANELS));
   };
   const sizes = new ResizeObserver(measure);
   const watchAll = (): void => {
     sizes.disconnect();
     sizes.observe(canvasHost);
-    for (const panel of layer.querySelectorAll(FLOATING_PANELS)) sizes.observe(panel);
+    for (const panel of layer.querySelectorAll(`${FLOATING_PANELS}, ${HINT_ROW_PANELS}`)) {
+      sizes.observe(panel);
+    }
     measure();
   };
   const mounts = new MutationObserver(watchAll);

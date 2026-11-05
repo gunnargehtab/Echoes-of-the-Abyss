@@ -597,8 +597,11 @@ export function GameCanvas({
       // Where the floating panels cover the water, for the one chart mark
       // that keeps out from under them: a marker's name (§10.5, #1662).
       if (underRef.current !== null) {
-        panelsRef.current = watchPanels(underRef.current, host, (rects) =>
-          activeRenderer.setPanelRects(rects)
+        panelsRef.current = watchPanels(
+          underRef.current,
+          host,
+          (rects) => activeRenderer.setPanelRects(rects),
+          (rects) => activeRenderer.setHintRowPanels(rects)
         );
       }
 

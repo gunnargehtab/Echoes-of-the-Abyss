@@ -21,13 +21,13 @@
       "eye": {
         "xM": 61,
         "zM": 2670,
-        "depthM": -1116
+        "depthM": -1111
       },
       "distance": 1200,
       "flight": {
         "flying": false,
         "navigating": false,
-        "depthM": -1116,
+        "depthM": -1111,
         "bearingDeg": 34,
         "upX": -1.3877787807814457e-17,
         "upY": -0.9659258262890683,

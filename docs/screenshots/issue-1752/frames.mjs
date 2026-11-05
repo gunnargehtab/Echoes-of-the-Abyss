@@ -1,8 +1,9 @@
 // The §9 frames for the opening view and the study HUD (docs/free-water-slice.md
 // §9, "Opening view" and "Frames and the last gate"), as a run-game steps module.
 // First the frame the study opens on, untouched: no camera call, the match as
-// it stands when the force is first seen. Then Home from it, and FLIGHT and
-// NAV from the opening pose set again, each left before the next. Then the
+// it stands when the force is first seen. Then Home from it, FLIGHT from the
+// opening pose set again, and NAV from the Home pose that leaving flight
+// leaves. Then the
 // four §9 poses set explicitly, the re-acceptance set. Each frame's probe
 // reading lands beside it. Timings are not read here: the GPU rows come from
 // docs/screenshots/issue-1713/gpu.mjs on named hardware.

@@ -2109,6 +2109,8 @@ export class EchoRenderer {
    * px: a name does not stand under one. `panelKey` rides the force key.
    */
   private panelRects: readonly PanelRect[] = [];
+  /** The panels on the hint line's row, which the hint yields to: the study's legend. */
+  private hintRowPanels: readonly PanelRect[] = [];
   private panelKey = '';
   /** Boxes the last name pass tried, for the counted-work assertion. */
   markBoxesTried = 0;
@@ -5670,6 +5672,17 @@ export class EchoRenderer {
   }
 
   /**
+   * The DOM panels standing on the hint line's row, in canvas px (GameCanvas,
+   * `watchPanels`): the free-water study's legend (docs/free-water-slice.md
+   * §9). The hint yields to these alone, a clause at a time, and not to the
+   * floating panels over the water, whose rects keep a marker's name out from
+   * under them and nothing else.
+   */
+  setHintRowPanels(rects: readonly PanelRect[]): void {
+    this.hintRowPanels = rects;
+  }
+
+  /**
    * The places to draw on the chart, off the mission view (docs/ui-ux.md
    * §10.5, #1611): a marker with a `name`, while a row that names it is open
    * — as where it sends the camera, or as the place on its way (#1594's
@@ -9055,11 +9068,14 @@ export class EchoRenderer {
     // The hint yields to a panel standing on its row: the free-water study's
     // legend takes the row's right end (App.css `.decorative-life`), and at a
     // raised UI scale a hint run under it reads as covered rather than as
-    // long. The rects arrive in canvas px, so the HUD's are those over the
-    // scale; a panel wholly left of the hint's start is the scope's business.
+    // long. Only the panels handed over for this row (`setHintRowPanels`): the
+    // floating panels over the water are not read here, since the mission
+    // log's foot stands 8 units into the row and the hint on a mission map
+    // is docs/ui-ux.md §2's, not the study's. The rects arrive in canvas px,
+    // so the HUD's are those over the scale.
     const rowTop = this.hudHeight() - CONSOLE_HEIGHT - HINT_LINE_HEIGHT;
     let hintEnd = this.hudWidth() - 12;
-    for (const panel of this.panelRects) {
+    for (const panel of this.hintRowPanels) {
       const left = panel.x / this.uiScale;
       const top = panel.y / this.uiScale;
       const bottom = top + panel.height / this.uiScale;

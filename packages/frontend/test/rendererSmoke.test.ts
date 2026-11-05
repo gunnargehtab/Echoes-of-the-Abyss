@@ -3768,19 +3768,28 @@ describe('the interface cues the renderer reports (#1600)', () => {
       };
       const whole = hint().text;
       const rowTop = 720 - CONSOLE_HEIGHT - HINT_LINE_HEIGHT;
-      // A panel over the water, clear of the row: the hint is untouched.
-      world.chart.setPanelRects([{ x: 800, y: 300, width: 470, height: 40 }]);
+      // The floating panels over the water take nothing, wherever they stand:
+      // the mission log's foot is 8 units into the row (App.css, 220 against
+      // HINT_ROW_UNITS), and a hint on a mission map is not the study's to cut.
+      world.chart.setPanelRects([
+        { x: 800, y: 300, width: 470, height: 40 },
+        { x: 800, y: 720 - 220 - 150, width: 470, height: 150 },
+      ]);
+      world.frame(2);
+      assert.equal(hint().text, whole, 'the floating panels take nothing');
+      // A hint-row panel clear of the row takes nothing either.
+      world.chart.setHintRowPanels([{ x: 800, y: 300, width: 470, height: 40 }]);
       world.frame(2);
       assert.equal(hint().text, whole, 'a panel off the row takes nothing');
       // The legend's place: the row's right end.
       const legend = { x: 800, y: rowTop + 3, width: 470, height: 16 };
-      world.chart.setPanelRects([legend]);
+      world.chart.setHintRowPanels([legend]);
       world.frame(2);
       const yielded = hint();
       assert.notEqual(yielded.text, whole, 'the hint gave up a clause');
       assert.ok(whole.startsWith(yielded.text), 'and only from its end');
       assert.ok(yielded.x + yielded.width <= legend.x - 12, 'clear of the legend, with a gap');
-      world.chart.setPanelRects([]);
+      world.chart.setHintRowPanels([]);
       world.frame(2);
       assert.equal(hint().text, whole, 'and takes it back when the row is free');
     } finally {

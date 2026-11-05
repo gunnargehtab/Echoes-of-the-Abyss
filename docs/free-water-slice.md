@@ -539,7 +539,7 @@ band, and heads about 34 degrees east of north, toward A, which is `yawDeg` −3
 code. The focus offset and the dolly are TUNABLEs chosen against the opening row
 (`FREE_WATER_OPENING` in `packages/shared/src/constants.ts`): the focus 300 m ahead of the
 centroid, and a dolly of 1,200 m. The eye is then 1,110 m above the Lid, as the Home frame's
-is 8,900 m above it: the field of view is 40 degrees and the console takes the bottom
+is about 9,100 m above it: the field of view is 40 degrees and the console takes the bottom
 quarter of the window, so a nearer eye at this pitch loses the hulls under the console,
 and a focus nearer the centroid lifts them to the centre. At this dolly the water reaches
 about 1,800 m (§9, Water medium), so the hulls, about 900 m off, read through it, and the
@@ -548,8 +548,8 @@ degrees and the seabed, and keeps this dolly and place as it keeps any.
 
 The legend is one line with no box, in the bottom-right corner, which the study leaves
 free because it runs no mission log: on the hint line's row, right-aligned, in the hint's
-own dim type, and the hint yields to it, trimming a clause at a time as it does for a
-narrow window. FLIGHT, NAV and HOME stand beside the console's command block, on the hint
+own dim type, and the hint yields to it alone, trimming a clause at a time as it does for
+a narrow window; the panels over the water move no hint. FLIGHT, NAV and HOME stand beside the console's command block, on the hint
 line above it and on the block's left edge, which the shell reads off the console's own
 layout, keeping their labels, focus order and shortcuts. The rest of the panel stands with
 them and keeps its conditions: the EYE and world-up readout and NO CAMERA CLEARANCE in
