@@ -70,8 +70,8 @@ export function watchPanels(
   const watchAll = (): void => {
     sizes.disconnect();
     sizes.observe(canvasHost);
-    for (const panel of layer.querySelectorAll(`${FLOATING_PANELS}, ${HINT_ROW_PANELS}`)) {
-      sizes.observe(panel);
+    for (const selector of [FLOATING_PANELS, HINT_ROW_PANELS]) {
+      for (const panel of layer.querySelectorAll(selector)) sizes.observe(panel);
     }
     measure();
   };
