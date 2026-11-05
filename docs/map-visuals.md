@@ -97,7 +97,10 @@ Seven rules ride with the ink, and each is a review question:
 
 1. **Ink traces the authored floor, never the texture.** The detail relief is render-only
    texture; contouring it would dress noise up as measurement. The floor the isobaths read is
-   the same bilinear upsample the heightfield uses, minus the detail field.
+   the same bilinear upsample the heightfield uses, minus the detail field. Where a
+   development study reshapes its heightfield between cell centres, as the free-water study
+   does ([free-water-slice.md](free-water-slice.md) §9, "Crater walls"), the ink keeps the
+   bilinear: the reshaping is texture with a third dimension, not ground.
 2. **Ink reveals nothing a client does not already hold.** The floor, the ceiling and the biome
    of every cell are public map data. Ink reads nothing else — no contact, no field, no veil.
 3. **Ink is hue-neutral.** One colour, near-grey with the canvas's blue memory, no more
