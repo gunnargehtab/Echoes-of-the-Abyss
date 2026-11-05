@@ -29,7 +29,7 @@ node --import tsx docs/screenshots/issue-1750/bake.mjs
 ```
 
 `before/` and `control-before/` are the same runs against the base commit (d5c8c9884).
-The after and reduced-motion sets were captured at 39181d805, the last commit that changes what is drawn; the control at 1badc2602, since nothing after it touches a shipped map's path. `bake.mjs` needs no browser: it bakes the
+The after and reduced-motion sets were captured at a9c9fa020, the last commit that changes what is drawn; the control at 1badc2602, since nothing after it touches a shipped map's path. `bake.mjs` needs no browser: it bakes the
 crater's skin and samples its drawn surface from the pure functions the view draws from.
 
 ## The drawn surface, without the water
