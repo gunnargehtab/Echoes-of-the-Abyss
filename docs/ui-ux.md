@@ -726,8 +726,8 @@ vertical one without flight:
   scale along its top edge with a tick every 500 m from the focus and each of the ping's two
   radii the span reaches in that ring's ink, which is the range the world's rings lose
   within 10° of level ([free-camera.md](free-camera.md) §4): on the 4 km crater the slice
-  runs ±2,000 m, so it names the 900 m radius and not the 2,400 m one. Then the command
-  plane, own hulls and structures,
+  runs ±2,000 m, so it names the 900 m radius and not the 2,400 m one. It then draws the
+  command plane, own hulls and structures,
   Tier 3+ contacts at their depths, and a Tier 2 contact as a tick down its public water
   interval, marked `DEPTH UNKNOWN`. Every own hull and
   contact is placed by its distance along the heading; the ground is the slice through the
