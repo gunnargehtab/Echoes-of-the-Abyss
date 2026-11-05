@@ -108,11 +108,32 @@ decoration with and without a hidden Hollow byte for byte, and no wire field cha
   metres apart under the sway between runs: a frustum-edge batch, not a draw this change
   adds, which the study's own rows show as exactly one.
 
-## Hardware and what is open
+## Hardware
 
-These frames come from this container's software rasteriser (SwiftShader, in each
-`readings.json`), which is why no millisecond is recorded here: the call and triangle
-columns are real, the timings are not (`run-game`, "The gate-6 review drive"). The study's
-GPU rows, unpaced and queued at DPR 1 and 1.5 on named hardware, are
-`docs/screenshots/issue-1713/gpu.mjs` run as its README says; §7 leaves that criterion
-open until a GPU reads it.
+The frames above come from a software rasteriser (SwiftShader, in each `readings.json`),
+so they carry no millisecond: their call and triangle columns are real, their timings are
+not (`run-game`, "The gate-6 review drive"). The GPU rows below are
+`docs/screenshots/issue-1713/gpu.mjs` run as its README says: an NVIDIA GeForce GTX 1070
+through Edge/ANGLE D3D11, unpaced, animation running, every window at least 240 samples.
+Each revision was read twice at each DPR, the revisions interleaved, and the table gives
+the mean of the two runs. `before` is the base, 398322fd; `after` is the merge, d5c8c988.
+The raw runs are `gpu/{before,after}/dpr-{1,1.5}/run-{1,2}.json`, for example
+[gpu/after/dpr-1/run-1.json](gpu/after/dpr-1/run-1.json).
+
+| Station | Calls | DPR 1 GPU / queued ms, before → after | DPR 1.5 GPU / queued ms, before → after |
+| --- | --- | --- | --- |
+| Home | 43 → 43 | 1.03 / 0.94 → 1.03 / 0.94 | 1.71 / 1.64 → 1.72 / 1.64 |
+| Garden close | 21 → 22 | 0.93 / 0.84 → 0.95 / 0.86 | 1.41 / 1.40 → 1.42 / 1.45 |
+| Low | 24 → 25 | 0.91 / 0.83 → 0.92 / 0.85 | 1.39 / 1.30 → 1.42 / 1.31 |
+| Survey | 44 → 44 | 1.09 / 0.80 → 1.01 / 0.81 | 1.51 / 1.34 → 1.52 / 1.34 |
+
+The near cloud costs at most 0.05 ms queued: garden close at DPR 1.5, 1.40 → 1.45. Two
+runs of one revision differ by up to 0.04 ms queued, so every other step is within the
+spread. The one added call is the near cloud's, at the two stations whose eye is in the
+water; home and survey draw neither cloud. Triangles are unchanged at every station
+(405,088 / 396,719 / 397,119 / 405,088), and queue loads read 3.61–3.82 ms, each longer
+than the frame it measures. Unpaced survey scatters most, 1.02 to 1.15 ms between the
+base's two runs at DPR 1, while its queued time holds to 0.03 ms.
+
+The `gpu.mjs` garden station is its own yaw-0 pose at 1,875 / 875, not §9's garden-close
+row. [#1750's readings](../issue-1750/README.md#hardware) start from this `after`.

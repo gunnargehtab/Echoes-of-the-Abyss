@@ -119,10 +119,28 @@ where it did.
   the sway. `perspectiveTerrain.test.ts` and `seabedRegion.test.ts` hold the stronger
   claim: with the switch off the grid and the skin are the shipped ones to the bit.
 
-## Hardware and what is open
+## Hardware
 
-These frames come from this container's software rasteriser (SwiftShader, in each
-`readings.json`), which is why no millisecond is recorded here. The study's GPU rows,
-unpaced and queued at DPR 1 and 1.5 on named hardware, are
-`docs/screenshots/issue-1713/gpu.mjs` run as its README says; §7 leaves that criterion
-open until a GPU reads it.
+The frames above come from a software rasteriser (SwiftShader, in each `readings.json`),
+so they carry no millisecond. The GPU rows below are `docs/screenshots/issue-1713/gpu.mjs`
+run as its README says: an NVIDIA GeForce GTX 1070 through Edge/ANGLE D3D11, unpaced,
+animation running, every window at least 240 samples. Each revision was read twice at each
+DPR, interleaved with #1749's, and the table gives the mean of the two runs. `before` is
+the base, d5c8c988, whose runs are
+[#1749's after](../issue-1749/README.md#hardware); `after` is the merge, 043bf6d6, in
+`gpu/after/dpr-{1,1.5}/run-{1,2}.json`, for example
+[gpu/after/dpr-1/run-1.json](gpu/after/dpr-1/run-1.json).
+
+| Station | Calls | DPR 1 GPU / queued ms, before → after | DPR 1.5 GPU / queued ms, before → after |
+| --- | --- | --- | --- |
+| Home | 43 → 43 | 1.03 / 0.94 → 1.04 / 0.94 | 1.72 / 1.64 → 1.71 / 1.65 |
+| Garden close | 22 → 22 | 0.95 / 0.86 → 0.94 / 0.86 | 1.42 / 1.45 → 1.40 / 1.44 |
+| Low | 25 → 25 | 0.92 / 0.85 → 0.90 / 0.85 | 1.42 / 1.31 → 1.42 / 1.31 |
+| Survey | 44 → 44 | 1.01 / 0.81 → 1.01 / 0.81 | 1.52 / 1.34 → 1.61 / 1.34 |
+
+The eroded ground costs nothing measurable: queued time moves −0.01 to +0.015 ms, inside
+the 0.04 ms two runs of one revision differ by, and calls and triangles are unchanged, as
+one terrain mesh of the same vertex count predicts. Unpaced survey at DPR 1.5 read 1.67 and
+1.55 ms in the two runs while its queued time held at 1.34; unpaced survey is the noisiest
+reading at every revision. Queue loads read 3.68–3.82 ms, each longer than the frame it
+measures.
