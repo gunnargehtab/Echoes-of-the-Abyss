@@ -537,11 +537,26 @@ export function erodedGroundAtM(
   };
   const wTop = edge(i00, i10, px, e.wanderX);
   const wBottom = edge(i01, i11, px, e.wanderX);
-  const v = edge(i00, i01, py, e.wanderY) * (1 - px) + edge(i10, i11, py, e.wanderY) * px;
-  const w00 = (1 - wTop) * (1 - v);
-  const w10 = wTop * (1 - v);
-  const w01 = (1 - wBottom) * v;
-  const w11 = wBottom * v;
+  const wLeft = edge(i00, i01, py, e.wanderY);
+  const wRight = edge(i10, i11, py, e.wanderY);
+  // Each centre's share is the product of its own two edges' profiles,
+  // normalised: with four linear profiles this is the bilinear exactly, and
+  // with a face on one edge a rock centre's share ends where that face ends,
+  // in both axes. Blending the two columns' profiles by `px` instead let a
+  // rock corner's share leak diagonally past its face into the open cells
+  // beside it, and ran a jamb's step on down the open water past the wall.
+  // The sum is never zero: two profiles at one point cannot say 0 and 1 of
+  // the same axis, since a face or a step reaches 1 only past the edge and
+  // leaves 0 only before it.
+  let w00 = (1 - wTop) * (1 - wLeft);
+  let w10 = wTop * (1 - wRight);
+  let w01 = (1 - wBottom) * wLeft;
+  let w11 = wBottom * wRight;
+  const sum = w00 + w10 + w01 + w11;
+  w00 /= sum;
+  w10 /= sum;
+  w01 /= sum;
+  w11 /= sum;
   const g = (i: number) => (rock(i) ? rockTopM : terrain.floor[i]!);
   return {
     stepM: w00 * g(i00) + w10 * g(i10) + w01 * g(i01) + w11 * g(i11),
