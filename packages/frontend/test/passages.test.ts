@@ -34,6 +34,8 @@ import {
 } from '../src/game/perspectiveTerrain.ts';
 import { seabedSeed } from '../src/game/seabed.ts';
 import type { TerrainPayload } from '../src/net/GameClient.ts';
+import { terrainFor } from '../../backend/src/sim/maps/index.ts';
+import { FREE_WATER_SLICE } from '../../backend/src/sim/maps/freeWaterSlice.ts';
 
 const CELL = 250;
 
@@ -137,6 +139,59 @@ describe('roofed passages', () => {
     const route = roofedPassages({ ...terrain, ceiling, floor }).list[0]!.route;
     assert.equal(route[0]!.xM, 2.5 * CELL, 'starts on the northern half');
     assert.equal(route.at(-1)!.xM, 3.5 * CELL, 'ends on the southern half');
+  });
+
+  // #1759: a square passage has no longer side, so its mouths say which way
+  // it runs. The free-water cut is 2 × 2, walled east and west, and its only
+  // route is north–south (docs/free-water-slice.md §3, D-E-F-H).
+  it('runs a square passage between its mouths, not across its walls', () => {
+    const terrain = terrainFor(FREE_WATER_SLICE).serialize();
+    const { list, of } = roofedPassages(terrain);
+    const f = Math.floor(3125 / terrain.cellM) * terrain.cols + Math.floor(2125 / terrain.cellM);
+    const cut = list[of[f]!]!.route;
+    assert.deepEqual(cut[0], { xM: 2000, yM: 3000 }, 'north mouth, under E');
+    assert.deepEqual(cut.at(-1), { xM: 2000, yM: 3500 }, 'south mouth, toward H');
+    assert.ok(
+      cut.every((p) => p.xM === 2000),
+      'the cut runs north–south'
+    );
+
+    // The same square both ways round: the mouths decide, not a default.
+    const square = (walled: 'east-west' | 'north-south'): TerrainPayload => {
+      const cols = 6;
+      const rows = 6;
+      const biomes = new Array(cols * rows).fill(Biome.OpenWater);
+      const floor = new Array(cols * rows).fill(2000);
+      const ceiling = new Array(cols * rows).fill(0);
+      for (let row = 2; row <= 3; row++) {
+        for (let col = 2; col <= 3; col++) {
+          ceiling[row * cols + col] = 700;
+          floor[row * cols + col] = 1800;
+        }
+      }
+      for (const k of [2, 3]) {
+        const walls =
+          walled === 'east-west' ? [k * cols + 1, k * cols + 4] : [1 * cols + k, 4 * cols + k];
+        for (const i of walls) ceiling[i] = 3000; // rock: a ceiling below the floor
+      }
+      return { cols, rows, cellM: CELL, biomes, floor, ceiling };
+    };
+    const ns = roofedPassages(square('east-west')).list[0]!.route;
+    assert.deepEqual(
+      [ns[0], ns.at(-1)],
+      [
+        { xM: 3 * CELL, yM: 2 * CELL },
+        { xM: 3 * CELL, yM: 4 * CELL },
+      ]
+    );
+    const ew = roofedPassages(square('north-south')).list[0]!.route;
+    assert.deepEqual(
+      [ew[0], ew.at(-1)],
+      [
+        { xM: 2 * CELL, yM: 3 * CELL },
+        { xM: 4 * CELL, yM: 3 * CELL },
+      ]
+    );
   });
 });
 
