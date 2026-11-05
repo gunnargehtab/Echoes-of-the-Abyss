@@ -20,6 +20,12 @@ import {
   fogDensityFor,
   installWaterFog,
   MarineSnow,
+  SNOW_FAR,
+  STUDY_REACH_KNEE_M,
+  STUDY_REACH_MIN_M,
+  STUDY_REACH_NEAR_DOLLIES,
+  STUDY_SNOW_NEAR,
+  STUDY_SNOW_NEAR_COUNT,
   WATER_RAMP_GLSL,
   WATER_REACH_DOLLIES,
   WATER_REACH_MIN_M,
@@ -228,5 +234,107 @@ describe('the fog patch', () => {
       assert.ok(encode >= 0 && encode < fog, `${name} fogs before it encodes`);
     }
     assert.ok(fogged > 0, 'no three shader fogs, so the order above was never checked');
+  });
+});
+
+describe("the free-water study's water (docs/free-water-slice.md §9, water medium)", () => {
+  it('shortens the reach where the frame is a scene and keeps it where it is a chart', () => {
+    // §9's low row wants water visibly between the eye and the floor; its
+    // survey row wants the ink unchanged. One curve serves both: shorter
+    // than the shipped reach at a short dolly, the shipped reach itself past
+    // the knee.
+    const [, knee] = STUDY_REACH_KNEE_M;
+    assert.ok(waterReachM(1600, true) < waterReachM(1600), 'the low pose sees less far');
+    const [from] = STUDY_REACH_KNEE_M;
+    assert.equal(waterReachM(from, true), from * STUDY_REACH_NEAR_DOLLIES, 'flat to the knee');
+    assert.equal(waterReachM(knee, true), waterReachM(knee), 'the survey reads as it did');
+    assert.equal(waterReachM(10_000, true), waterReachM(10_000));
+    assert.equal(waterReachM(250, true), STUDY_REACH_MIN_M, 'the garden close has its own floor');
+    assert.ok(STUDY_REACH_MIN_M < WATER_REACH_MIN_M, 'and it is nearer than the shipped one');
+    let previous = 0;
+    for (let dollyM = 250; dollyM <= 12_000; dollyM += 50) {
+      const reach = waterReachM(dollyM, true);
+      assert.ok(reach >= previous, `the reach falls between ${dollyM - 50} and ${dollyM}`);
+      assert.ok(reach <= waterReachM(dollyM) + 1e-9, 'the study never sees further than shipped');
+      previous = reach;
+    }
+  });
+
+  it('keeps the subject of a scene readable through the medium', () => {
+    // Gate 7 (docs/graphics-standards.md): readability outranks richness. The
+    // thing the camera is pointed at, one dolly out, stays mostly itself; the
+    // far field is where the water goes.
+    const dollyM = 1600;
+    const density = fogDensityFor(dollyM, 1, true);
+    assert.equal(density, 1 / waterReachM(dollyM, true));
+    const fogAt = (distanceM: number): number => 1 - Math.exp(-((density * distanceM) ** 2));
+    assert.ok(fogAt(dollyM) < 0.4, 'the focus is never more than two fifths water');
+    assert.ok(fogAt(dollyM * 2) > 0.7, 'two dollies out is water');
+    assert.equal(fogDensityFor(dollyM, 0, true), 0, 'the setting still turns the term off');
+  });
+
+  it('is off on every shipped map', () => {
+    // The flag is the study look (`PerspectiveView.waterStudy`), and the
+    // default argument is what every caller outside it gets.
+    assert.equal(waterReachM(1600), 1600 * WATER_REACH_DOLLIES);
+    assert.equal(fogDensityFor(1600, 1), 1 / waterReachM(1600));
+  });
+
+  it('draws a second, nearer cloud that outlasts the far one as the eye climbs', () => {
+    const far = new MarineSnow(32, false, SNOW_FAR);
+    const near = new MarineSnow(32, false, STUDY_SNOW_NEAR);
+    try {
+      const eye = new Vector3(0, 0, 0);
+      const reachM = 2400;
+      for (const snow of [far, near]) snow.update(0, eye, 0, 0, reachM, 1, 1000, 1);
+      const farUniforms = (far.points.material as ShaderMaterial).uniforms;
+      const nearUniforms = (near.points.material as ShaderMaterial).uniforms;
+      // Nearer: a slab a quarter of the reach across rather than six tenths.
+      assert.equal(nearUniforms.uSpreadM!.value, reachM * STUDY_SNOW_NEAR.spreadReaches);
+      assert.ok(nearUniforms.uSpreadM!.value < farUniforms.uSpreadM!.value);
+      // Denser: more motes in less water.
+      assert.ok(STUDY_SNOW_NEAR_COUNT > 7000);
+      // A soft disc rather than a grain, and dimmer for it.
+      assert.equal(nearUniforms.uSizePx!.value.x, STUDY_SNOW_NEAR.minPx);
+      assert.equal(nearUniforms.uSizePx!.value.y, STUDY_SNOW_NEAR.maxPx);
+      assert.ok(STUDY_SNOW_NEAR.gain < SNOW_FAR.gain);
+      assert.equal(nearUniforms.uGain!.value, STUDY_SNOW_NEAR.gain);
+      assert.equal(farUniforms.uGain!.value, SNOW_FAR.gain);
+      assert.equal(far.motes, 32);
+      assert.equal(near.motes, 32);
+      // From the air the view hands in a floor on the slab, so the cloud
+      // fills the frustum where the sight line meets the water instead of
+      // sitting in it as a patch; the floor only ever widens it.
+      near.update(0, eye, 0, 0, reachM, 1, 1000, 1, 1200);
+      assert.equal(nearUniforms.uSpreadM!.value, 1200);
+      near.update(0, eye, 0, 0, reachM, 1, 1000, 1, 100);
+      assert.equal(nearUniforms.uSpreadM!.value, reachM * STUDY_SNOW_NEAR.spreadReaches);
+
+      // §9's low pose, 1,600 m out at 12°: the eye is about 680 m above the
+      // surface (its probe reading), and both clouds are whole.
+      eye.y = 680 * 0.22;
+      for (const snow of [far, near]) snow.update(1, eye, 0, 0, reachM, 1, 1000, 1);
+      assert.equal(farUniforms.uStrength!.value, 1);
+      assert.equal(nearUniforms.uStrength!.value, 1);
+
+      // A 15° orbit 2,600 m out, about 3,000 m up: the shipped cloud is
+      // fading and the study's is still most of itself.
+      eye.y = 3000 * 0.22;
+      for (const snow of [far, near]) snow.update(2, eye, 0, 0, reachM, 1, 1000, 1);
+      assert.ok(farUniforms.uStrength!.value < 0.7);
+      assert.ok(nearUniforms.uStrength!.value > 0.8);
+      assert.ok(nearUniforms.uStrength!.value > farUniforms.uStrength!.value);
+
+      // The 55° home orbit, 2,600 m out, about 9,100 m up: neither draws, so
+      // no mote lands as dust over the lit ground of the overview.
+      eye.y = 9100 * 0.22;
+      for (const snow of [far, near]) snow.update(3, eye, 0, 0, reachM, 1, 1000, 1);
+      assert.equal(far.motes, 0);
+      assert.equal(near.motes, 0);
+      assert.equal(nearUniforms.uStrength!.value, 0);
+    } finally {
+      far.dispose();
+      near.dispose();
+    }
   });
 });

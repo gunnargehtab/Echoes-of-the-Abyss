@@ -1,0 +1,123 @@
+{
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "software": true,
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "reducedMotion": false,
+  "readings": [
+    {
+      "name": "low",
+      "look": "standard",
+      "pitchDeg": 12,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": 850
+      },
+      "eye": {
+        "xM": 2002,
+        "zM": 3565,
+        "depthM": -664
+      },
+      "distance": 1600,
+      "waterReachM": 5120,
+      "subject": {
+        "fogAtDolly": 0.093,
+        "haloAtDolly": 0.807
+      },
+      "calls": 75,
+      "triangles": 160006,
+      "propTriangles": 104958,
+      "instances": {},
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "gpuTimer": "software"
+    },
+    {
+      "name": "low-panned",
+      "look": "standard",
+      "pitchDeg": 12,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2200,
+        "zM": 2000,
+        "depthM": 850
+      },
+      "eye": {
+        "xM": 2202,
+        "zM": 3565,
+        "depthM": -672
+      },
+      "distance": 1600,
+      "waterReachM": 5120,
+      "subject": {
+        "fogAtDolly": 0.093,
+        "haloAtDolly": 0.807
+      },
+      "calls": 72,
+      "triangles": 159044,
+      "propTriangles": 104958,
+      "instances": {},
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "gpuTimer": "software"
+    },
+    {
+      "name": "survey",
+      "look": "standard",
+      "pitchDeg": 88,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 1997,
+        "zM": 2368,
+        "depthM": -42801
+      },
+      "distance": 10000,
+      "waterReachM": 32000,
+      "subject": {
+        "fogAtDolly": 0.093,
+        "haloAtDolly": 0.807
+      },
+      "calls": 76,
+      "triangles": 163878,
+      "propTriangles": 104958,
+      "instances": {},
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "gpuTimer": "software"
+    }
+  ]
+}

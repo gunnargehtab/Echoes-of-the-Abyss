@@ -170,6 +170,10 @@ import {
   BACKDROP_SPAN_M,
   installWaterFog,
   MarineSnow,
+  STUDY_SNOW_NEAR,
+  STUDY_SNOW_NEAR_COUNT,
+  STUDY_SNOW_NEAR_SEABED_FOCUS_M,
+  STUDY_SNOW_NEAR_SPREAD_PER_ENTRY_M,
   waterColorAt,
   WaterBackdrop,
   fogDensityFor,
@@ -854,9 +858,32 @@ export class PerspectiveView {
    * `backdrop` draws the medium where there is no geometry, which is most of
    * a low-pitch frame and was flat void before it. `snow` is the particulate
    * that gives the medium something to parallax.
+   *
+   * `nearSnow` is the free-water study's second cloud, wrapped on the eye
+   * (water.ts `STUDY_SNOW_NEAR`; docs/free-water-slice.md §9, "Water
+   * medium"): one more draw call under that look and nothing under any other.
+   * The study's reach curve rides the same look (`waterStudy`).
    */
   private readonly backdrop = new WaterBackdrop();
   private readonly snow: MarineSnow;
+  private nearSnow: MarineSnow | null = null;
+  /**
+   * The eye before the sway (cameraSway.ts), as `applyCamera` placed it. The
+   * near cloud's slab is sized from here rather than from the drawn eye: its
+   * motes sit on a lattice the slab's side scales, so a side that breathed
+   * with the heave would slide every mote sideways while the camera rests,
+   * which states a current (`MarineSnow`, "It sinks, and it only sinks").
+   */
+  private readonly restEye = new Vector3();
+  /**
+   * The depth the player last asked the focus to hold, for the near slab's
+   * side alone (`nearSnowSpreadFloor`). `focusDepthM` is not that number:
+   * `clampTarget` writes the seabed over it whenever a pan climbs onto ground
+   * shallower than the pin, so the side would follow the ground through it.
+   * Set by the depth verbs, nulled where `focusDepthM` is nulled, and never
+   * written by the clamp.
+   */
+  private nearSnowDepthM: number | null = null;
   /**
    * Tetherjelly fields and Lampfry shoals as stipple in the water column
    * (faunaStipple.ts, docs/map-visuals.md §8): two draw calls, the pulse on
@@ -1091,6 +1118,9 @@ export class PerspectiveView {
     this.dreamCover = this.dreamStudy ? new DreamGroundCover() : null;
     this.dreamLights = this.dreamStudy ? new DreamLightHalos() : null;
     this.snow = new MarineSnow(this.dreamStudy ? 1200 : undefined, this.dreamStudy);
+    if (look === 'free-water') {
+      this.nearSnow = new MarineSnow(STUDY_SNOW_NEAR_COUNT, false, STUDY_SNOW_NEAR);
+    }
     // Before the first material compiles: the water's fog is a patch on
     // three's global shader chunks, so a material built ahead of it would
     // carry the old distance fog for the life of the scene (water.ts).
@@ -1127,6 +1157,7 @@ export class PerspectiveView {
       this.cues.group,
       this.snow.points
     );
+    if (this.nearSnow !== null) this.scene.add(this.nearSnow.points);
     if (this.dreamLights !== null) this.scene.add(this.dreamLights.group);
     // The clear colour under the backdrop, and the deepest water there is —
     // the ramp's bottom stop is `UI.background` exactly, so the abyss is the
@@ -1291,6 +1322,7 @@ export class PerspectiveView {
       this.residency!.get(id)!.props.setReducedMotion(reduced);
     }
     this.snow.setReducedMotion(reduced);
+    this.nearSnow?.setReducedMotion(reduced);
     this.ordnanceLayer.setReducedMotion(reduced);
     this.wake.setReducedMotion(reduced);
     this.hits.setReducedMotion(reduced);
@@ -1322,8 +1354,18 @@ export class PerspectiveView {
     if (clamped === this.waterDensity) return;
     this.waterDensity = clamped;
     if (this.scene.fog instanceof FogExp2) {
-      this.scene.fog.density = fogDensityFor(this.distance, clamped);
+      this.scene.fog.density = fogDensityFor(this.distance, clamped, this.waterStudy);
     }
+  }
+
+  /**
+   * Whether the water is the free-water study's (docs/free-water-slice.md §9,
+   * "Water medium"): its reach curve and its near cloud, development-only and
+   * off on every shipped map. The look is the switch, as it is for the
+   * fixture's props, so the two can never disagree.
+   */
+  private get waterStudy(): boolean {
+    return this.look === 'free-water';
   }
 
   /**
@@ -1639,6 +1681,16 @@ export class PerspectiveView {
     this.seabedDetail = SEABED_DETAIL_ON && look === 'standard';
     this.environment = new EnvironmentLayer(look, this.seabedDetail);
     this.environment.setReducedMotion(this.swayHeld);
+    // The study's near cloud comes and goes with the look, as the props do.
+    if (this.nearSnow !== null && !this.waterStudy) {
+      this.scene.remove(this.nearSnow.points);
+      this.nearSnow.dispose();
+      this.nearSnow = null;
+    } else if (this.nearSnow === null && this.waterStudy) {
+      this.nearSnow = new MarineSnow(STUDY_SNOW_NEAR_COUNT, false, STUDY_SNOW_NEAR);
+      this.nearSnow.setReducedMotion(this.swayHeld);
+      this.scene.add(this.nearSnow.points);
+    }
     this.environment.setLandmarks(this.studyLandmarks(this.mapId));
     // Back in its place among the scene's groups, which the ladder orders.
     this.scene.add(this.environment.group);
@@ -1670,6 +1722,7 @@ export class PerspectiveView {
     this.cues.dispose();
     this.backdrop.dispose();
     this.snow.dispose();
+    this.nearSnow?.dispose();
     this.dreamLights?.dispose();
     this.life.dispose();
     for (const texture of this.spriteTextures.values()) texture.dispose();
@@ -2151,6 +2204,7 @@ export class PerspectiveView {
     const seabed = this.seabedDepthAt(this.target.x, this.target.z);
     const next = (this.focusDepthM ?? seabed) - metres;
     this.focusDepthM = next >= seabed ? null : next;
+    this.nearSnowDepthM = this.focusDepthM;
     this.clampTarget();
     this.applyCamera();
   }
@@ -2177,6 +2231,7 @@ export class PerspectiveView {
     this.yaw = 0;
     this.pitch = (HOME_PITCH_DEG * Math.PI) / 180;
     this.focusDepthM = null;
+    this.nearSnowDepthM = null;
     this.applyCamera();
   }
 
@@ -2347,6 +2402,7 @@ export class PerspectiveView {
     // lifted into the column comes back down. The angles are theirs and are
     // left alone — `home()` is the verb that takes those back.
     this.focusDepthM = null;
+    this.nearSnowDepthM = null;
     this.distance = opening.distanceM;
     this.applyCamera();
   }
@@ -2373,6 +2429,7 @@ export class PerspectiveView {
     this.target.x = frame.xM;
     this.target.z = frame.yM;
     this.focusDepthM = null;
+    this.nearSnowDepthM = null;
     this.clampTarget();
     this.distance = Math.max(250, frame.distanceM);
     this.yaw = (frame.yawDeg * Math.PI) / 180;
@@ -2595,7 +2652,10 @@ export class PerspectiveView {
     // nothing draws would be a trap for the next reader, so it is the
     // deepest water rather than an arbitrary one.
     const deepest = waterColorAt(DEPTH.MAX_M);
-    const fog = new FogExp2(0x000000, fogDensityFor(this.distance, this.waterDensity));
+    const fog = new FogExp2(
+      0x000000,
+      fogDensityFor(this.distance, this.waterDensity, this.waterStudy)
+    );
     fog.color.setRGB(deepest.r, deepest.g, deepest.b);
     this.scene.fog = fog;
 
@@ -4597,6 +4657,7 @@ export class PerspectiveView {
   private applyCamera(): void {
     if (this.flight) {
       this.camera.position.copy(this.flightEye);
+      this.restEye.copy(this.flightEye);
       this.camera.quaternion.copy(this.flightOrientation);
     } else {
       const look = LOOK_TMP.set(this.target.x, this.focusY(), this.target.z);
@@ -4617,6 +4678,7 @@ export class PerspectiveView {
       if (eyeY < floorY) eyeY = floorY;
 
       this.camera.position.set(eyeX, eyeY, eyeZ);
+      this.restEye.set(eyeX, eyeY, eyeZ);
       this.camera.lookAt(look);
       this.applySway();
     }
@@ -4712,6 +4774,23 @@ export class PerspectiveView {
       projectionScalePx,
       pixelRatio
     );
+    // The study's near cloud wraps on the nearest water the eye looks into,
+    // in orbit and flight alike (`nearSnowAnchor`): the parallax it is for
+    // is the eye's, wherever the focus is.
+    if (this.nearSnow !== null) {
+      const anchor = this.nearSnowAnchor();
+      this.nearSnow.update(
+        now,
+        this.camera.position,
+        anchor.x,
+        anchor.z,
+        this.waterReach,
+        this.waterDensity,
+        projectionScalePx,
+        pixelRatio,
+        this.nearSnowSpreadFloor()
+      );
+    }
     // Not the water, but it swims in it: the stipple fades with the same
     // reach and sizes its dots on the same projection scale as the snow.
     this.life.update({
@@ -4730,6 +4809,77 @@ export class PerspectiveView {
       projectionScalePx,
       pixelRatio,
     });
+  }
+
+  /**
+   * Where the study's near cloud wraps, on the plan: the eye itself while it
+   * is in the water, and otherwise the point where its sight line enters the
+   * water (docs/free-water-slice.md §9, "Water medium", change 2).
+   *
+   * The column is drawn at 0.22, so the orbit's eye is in the air at every
+   * dolly past a few hundred units: at the low pose it is about 680 m up,
+   * and a slab wrapped on its plan lies under the frame's lower edge, behind
+   * the HUD, where nobody sees it. The nearest water the eye *looks into* is
+   * where the sight line crosses the surface, so the cloud wraps there
+   * instead, and the two anchors meet as the eye sinks through the surface.
+   * It is a world point, not a screen one: between wraps a mote holds still
+   * under a pan and the sway, while a zoom, a pitch or a depth change re-sizes
+   * the slab (`nearSnowSpreadFloor`), and nothing turns with the projection
+   * (docs/free-camera.md §5). A camera in the air looking level or up has no
+   * entry and keeps the eye. Worked from `restEye`, the eye before the sway,
+   * for the reason given there; the sway translates the eye and never turns
+   * it, so the camera's own forward is the rest forward too. The anchor only
+   * picks which copies of the lattice are drawn, so it may follow the ground;
+   * the slab's side may not (`nearSnowSpreadFloor`).
+   */
+  private nearSnowAnchor(): { x: number; z: number } {
+    const eye = this.restEye;
+    if (eye.y <= 0) return { x: eye.x, z: eye.z };
+    const forward = this.camera.getWorldDirection(DIR_TMP);
+    if (forward.y >= -1e-3) return { x: eye.x, z: eye.z };
+    const t = eye.y / -forward.y;
+    return { x: eye.x + forward.x * t, z: eye.z + forward.z * t };
+  }
+
+  /**
+   * The floor on the near slab's side, in world units: the entry distance the
+   * sight line would have from the orbit's geometry alone, times
+   * `STUDY_SNOW_NEAR_SPREAD_PER_ENTRY_M`.
+   *
+   * The motes sit on a lattice the side scales about the origin, so every
+   * change of side slides every mote, and the side may change only with the
+   * player's own zoom, pitch and pinned depth: the far cloud's side follows
+   * the dolly the same way, and a frame already moving under the player's
+   * hand hides it. The ground may not move it. With the focus on the seabed,
+   * `focusY()` is the ground under the focus, so an ordinary pan over relief
+   * would re-lattice the cloud mid-pan, radially from the map origin, which
+   * states a current; the side is worked out at `STUDY_SNOW_NEAR_SEABED_FOCUS_M`
+   * instead, and the anchor alone follows the real entry. A pinned depth is
+   * read from `nearSnowDepthM`, the one the player asked for, since the clamp
+   * writes the seabed over `focusDepthM` on a pan onto shallower ground. The
+   * reference has a cost: off its depth the slab is sized for the wrong
+   * height, so over the 1,500 m bowl or the 2,400 m pocket, where the eye is
+   * at or under the surface, the cloud at the eye is sparser than the at-eye
+   * slab's 420 m side would make it, though still several times the far
+   * cloud's density. In flight the side follows the eye's own height, which
+   * only the player's hand moves, and is nought while the eye is in the water.
+   */
+  private nearSnowSpreadFloor(): number {
+    let eyeY: number;
+    let cot: number;
+    if (this.flight) {
+      const eye = this.restEye;
+      const forward = this.camera.getWorldDirection(DIR_TMP);
+      if (eye.y <= 0 || forward.y >= -1e-3) return 0;
+      eyeY = eye.y;
+      cot = Math.hypot(forward.x, forward.z) / -forward.y;
+    } else {
+      const focusDepthM = this.nearSnowDepthM ?? STUDY_SNOW_NEAR_SEABED_FOCUS_M;
+      eyeY = -focusDepthM * DEPTH_VISUAL_M_PER_M + Math.sin(this.pitch) * this.distance;
+      if (eyeY <= 0) return 0;
+      cot = 1 / Math.tan(this.pitch);
+    }
+    return eyeY * cot * STUDY_SNOW_NEAR_SPREAD_PER_ENTRY_M;
   }
 
   /** See `cameraRevision`. */
@@ -4773,9 +4923,9 @@ export class PerspectiveView {
     // (water.ts), so a wheel notch moves it and it is cheapest to settle once
     // a frame rather than to recompute it in each of the four places that
     // read it.
-    this.waterReach = waterReachM(this.distance);
+    this.waterReach = waterReachM(this.distance, this.waterStudy);
     if (this.scene.fog instanceof FogExp2) {
-      this.scene.fog.density = fogDensityFor(this.distance, this.waterDensity);
+      this.scene.fog.density = fogDensityFor(this.distance, this.waterDensity, this.waterStudy);
     }
     // The arch study's distance grade breathes with the same dolly (§11).
     if (ARCH_STUDY_ON) setDistanceGrade(this.distance, this.waterDensity);
@@ -5028,7 +5178,10 @@ export class PerspectiveView {
       this.focusWorld(x, z, distance);
       if (aim === undefined) return;
       if (aim.yawDeg !== undefined) this.yaw = (aim.yawDeg * Math.PI) / 180;
-      if (aim.focusDepthM !== undefined) this.focusDepthM = aim.focusDepthM;
+      if (aim.focusDepthM !== undefined) {
+        this.focusDepthM = aim.focusDepthM;
+        this.nearSnowDepthM = aim.focusDepthM;
+      }
       // Last, because it clamps and re-applies — and because the clamp has to
       // see the focus the other two just set.
       this.setPitch(aim.pitchDeg === undefined ? this.pitch : (aim.pitchDeg * Math.PI) / 180);
@@ -5199,6 +5352,20 @@ export class PerspectiveView {
       // at different zooms are two different waters.
       waterReachM: Math.round(this.waterReach),
       waterDensity: Number(this.waterDensity.toFixed(2)),
+      // The particulate this frame: the motes each cloud is drawing, zero for
+      // a cloud the eye has climbed out of. The study's near cloud is `near`;
+      // a shipped map reports none (docs/free-water-slice.md §9).
+      snow: {
+        far: this.snow.motes,
+        near: this.nearSnow?.motes ?? 0,
+        nearAnchor:
+          this.nearSnow === null
+            ? null
+            : (({ x, z }) => ({ xM: Math.round(x), zM: Math.round(z) }))(this.nearSnowAnchor()),
+        // The near slab's side as drawn: a strip whose frames pan or rest
+        // must read one value here, or the lattice slid between them.
+        nearSpreadM: this.nearSnow === null ? null : Math.round(this.nearSnow.spreadM),
+      },
       hullScale: Number(this.drawScale.toFixed(2)),
       // The whole last frame's, every pass summed: info is reset once a frame
       // (renderFrame), not on every render(). `passes` names the renders.

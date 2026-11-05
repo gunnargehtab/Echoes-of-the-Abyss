@@ -1,0 +1,141 @@
+{
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "software": true,
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "reducedMotion": false,
+  "readings": [
+    {
+      "name": "low",
+      "look": "standard",
+      "pitchDeg": 12,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": 850
+      },
+      "eye": {
+        "xM": 2000,
+        "zM": 3565,
+        "depthM": -673
+      },
+      "distance": 1600,
+      "waterReachM": 5120,
+      "snow": {
+        "far": 7000,
+        "near": 0,
+        "nearAnchor": null,
+        "nearSpreadM": null
+      },
+      "subject": {
+        "fogAtDolly": 0.093,
+        "haloAtDolly": 0.807
+      },
+      "calls": 75,
+      "triangles": 160006,
+      "propTriangles": 104958,
+      "instances": {},
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "gpuTimer": "software"
+    },
+    {
+      "name": "low-panned",
+      "look": "standard",
+      "pitchDeg": 12,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2200,
+        "zM": 2000,
+        "depthM": 850
+      },
+      "eye": {
+        "xM": 2199,
+        "zM": 3565,
+        "depthM": -668
+      },
+      "distance": 1600,
+      "waterReachM": 5120,
+      "snow": {
+        "far": 7000,
+        "near": 0,
+        "nearAnchor": null,
+        "nearSpreadM": null
+      },
+      "subject": {
+        "fogAtDolly": 0.093,
+        "haloAtDolly": 0.807
+      },
+      "calls": 70,
+      "triangles": 159044,
+      "propTriangles": 104958,
+      "instances": {},
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "gpuTimer": "software"
+    },
+    {
+      "name": "survey",
+      "look": "standard",
+      "pitchDeg": 88,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 1988,
+        "zM": 2371,
+        "depthM": -42800
+      },
+      "distance": 10000,
+      "waterReachM": 32000,
+      "snow": {
+        "far": 0,
+        "near": 0,
+        "nearAnchor": null,
+        "nearSpreadM": null
+      },
+      "subject": {
+        "fogAtDolly": 0.093,
+        "haloAtDolly": 0.807
+      },
+      "calls": 76,
+      "triangles": 163878,
+      "propTriangles": 104958,
+      "instances": {},
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "gpuTimer": "software"
+    }
+  ]
+}

@@ -215,8 +215,40 @@ export const WATER_RAMP_GLSL = rampGlsl();
 export const WATER_REACH_DOLLIES = 3.2;
 export const WATER_REACH_MIN_M = 900;
 
-export function waterReachM(dollyM: number): number {
-  return Math.max(WATER_REACH_MIN_M, dollyM * WATER_REACH_DOLLIES);
+/**
+ * The free-water study's reach — TUNABLE, development-only
+ * (docs/free-water-slice.md §9, "Water medium", change 1).
+ *
+ * The owner's frame of the crater showed no water between the eye and the
+ * floor, and the shipped curve is why: at the low pose's 1,600 m dolly it
+ * reaches 5,120 m, so the bowl floor a dolly away sits at 10% fog. The study
+ * shortens the reach where the frame is a scene and keeps it where the frame
+ * is a chart. At a short dolly a subject one dolly out sits at
+ * 1 - exp(-(1/1.5)²) ≈ 36% fog, two dollies at 83%, three at 98%; past
+ * `STUDY_REACH_KNEE_M` the multiplier eases back up to the shipped 3.2, so the
+ * survey pose reads exactly as it did and gate 7's chart is never a wash
+ * (docs/graphics-standards.md). The floor is lower than the shipped one for
+ * the garden close: with stands 300 to 600 m off at a 250 m dolly, 600 m of
+ * reach parts near stands from far ones instead of drawing them as one wall.
+ *
+ * Only the reach moves. The ramp's stops and its single hue are the column's
+ * (`WATER_RAMP`), and the study reads them unchanged.
+ */
+export const STUDY_REACH_NEAR_DOLLIES = 1.5;
+export const STUDY_REACH_MIN_M = 600;
+export const STUDY_REACH_KNEE_M: readonly [number, number] = [1000, 8000];
+
+/**
+ * How far the water lets you see, in world units, at a given dolly. `study`
+ * selects the free-water curve above; every shipped map reads the first.
+ */
+export function waterReachM(dollyM: number, study = false): number {
+  if (!study) return Math.max(WATER_REACH_MIN_M, dollyM * WATER_REACH_DOLLIES);
+  const [from, to] = STUDY_REACH_KNEE_M;
+  const dollies =
+    STUDY_REACH_NEAR_DOLLIES +
+    (WATER_REACH_DOLLIES - STUDY_REACH_NEAR_DOLLIES) * smoothstepAt(from, to, dollyM);
+  return Math.max(STUDY_REACH_MIN_M, dollyM * dollies);
 }
 
 /**
@@ -229,9 +261,9 @@ export function waterReachM(dollyM: number): number {
  * the medium stops hiding distance — instead of leaving a uniform half-fog
  * over everything. At 0 there is no distance term at all.
  */
-export function fogDensityFor(dollyM: number, waterDensity: number): number {
+export function fogDensityFor(dollyM: number, waterDensity: number, study = false): number {
   if (waterDensity <= 0) return 0;
-  return Math.min(1, waterDensity) / waterReachM(dollyM);
+  return Math.min(1, waterDensity) / waterReachM(dollyM, study);
 }
 
 /**
@@ -454,11 +486,6 @@ export class WaterBackdrop {
 /** TUNABLE — motes in the cloud. One draw call whatever this says; the cost
  * is a few thousand vertices and about as many pixels. */
 export const MARINE_SNOW_COUNT = 7000;
-/** TUNABLE — the wrapped slab's side on the plan, as a multiple of the water's
- * reach, so the snow fills the water the player can see through and no more. */
-const SNOW_SPREAD_REACHES = 0.6;
-const SNOW_SPREAD_MIN_M = 500;
-const SNOW_SPREAD_MAX_M = 20_000;
 /** The column, in world units: the cloud's height is the ocean's, always. */
 const COLUMN_HEIGHT = DEPTH.MAX_M * DEPTH_VISUAL_M_PER_M;
 /** TUNABLE — how much brighter than its own water a mote is. A ratio rather
@@ -486,6 +513,95 @@ const SNOW_MAX_PX = 2.6;
  */
 const SNOW_FADE_FROM_M = 800;
 const SNOW_FADE_TO_M = 5000;
+
+/**
+ * What one cloud is: how wide its wrapped slab is for the water's reach, where
+ * it fades as the eye climbs out of the column, and the widest a mote may
+ * rasterise. The shipped water draws one cloud, `SNOW_FAR`; the free-water
+ * study adds a second, nearer one. Every number is TUNABLE.
+ */
+export interface SnowProfile {
+  /** The wrapped slab's side on the plan, as a multiple of the water's reach,
+   * so the snow fills the water the player can see through and no more. */
+  readonly spreadReaches: number;
+  readonly spreadMinM: number;
+  readonly spreadMaxM: number;
+  /** Where the cloud fades out: metres of the eye above the surface, see
+   * `SNOW_FADE_FROM_M`. */
+  readonly fadeFromM: number;
+  readonly fadeToM: number;
+  /** The narrowest and widest a mote may rasterise, CSS pixels. */
+  readonly minPx: number;
+  readonly maxPx: number;
+  /** How much brighter than its own water a mote is, see `SNOW_GAIN`. */
+  readonly gain: number;
+}
+
+/** The shipped cloud: the water the player is looking at, wrapped on the focus. */
+export const SNOW_FAR: SnowProfile = {
+  spreadReaches: 0.6,
+  spreadMinM: 500,
+  spreadMaxM: 20_000,
+  fadeFromM: SNOW_FADE_FROM_M,
+  fadeToM: SNOW_FADE_TO_M,
+  minPx: 1,
+  maxPx: SNOW_MAX_PX,
+  gain: SNOW_GAIN,
+};
+
+/**
+ * The free-water study's near cloud — development-only
+ * (docs/free-water-slice.md §9, "Water medium", change 2: "denser, nearer
+ * marine snow with parallax at the eye, in flight and orbit alike").
+ *
+ * The shipped cloud wraps on the focus, and at the low pose the eye is a
+ * dolly from it, at the slab's fade edge: the motes nearest the lens are the
+ * faintest, and the water reads as a few stars over the floor. This cloud
+ * wraps on the nearest water the eye looks into instead — the eye itself
+ * under water, the point its sight line enters the water from the air
+ * (`PerspectiveView.nearSnowAnchor`) — with a slab a quarter of the reach
+ * across and `STUDY_SNOW_NEAR_COUNT` motes in it, so a pan carries the near
+ * motes across more of the frame than the floor behind them: the parallax
+ * that reads as a medium. From the air the slab widens with the distance to
+ * that water (`STUDY_SNOW_NEAR_SPREAD_PER_ENTRY_M`), so it fills the frustum
+ * where the sight line meets the surface instead of sitting in it as a
+ * patch, at the depth the player pinned or a fixed reference while the focus
+ * rests on the seabed. Its motes sit on a lattice the side scales, so the side
+ * follows only the player's own zoom, pitch and depth verbs, as the far
+ * cloud's follows the dolly, and never the sway or the ground under a pan. Its motes may rasterise wider than the far cloud's, so the nearest
+ * read nearer by size as well as by speed, and it fades later than the far
+ * cloud as the eye climbs: whole at a low orbit, gone by the home orbit.
+ *
+ * The column is the same column: the slab's height is the ocean's and never
+ * wraps against the eye, so an eye above the surface sees the cloud below it
+ * and nothing in the air. One more draw call and 24,000 points; no pass, no
+ * target, no texture (docs/free-water-slice.md §4).
+ */
+export const STUDY_SNOW_NEAR_COUNT = 24_000;
+/** TUNABLE — the near slab's side per world unit between the eye and the
+ * water its sight line enters, when the eye is in the air. */
+export const STUDY_SNOW_NEAR_SPREAD_PER_ENTRY_M = 1.6;
+/** TUNABLE — the focus depth the slab's side is worked out at while the
+ * focus rests on the seabed: §9's low row, mid-column. The side may follow
+ * the dolly, the pitch and a depth the player pinned, never the ground under
+ * a pan (`PerspectiveView.nearSnowSpreadFloor`). */
+export const STUDY_SNOW_NEAR_SEABED_FOCUS_M = 850;
+export const STUDY_SNOW_NEAR: SnowProfile = {
+  spreadReaches: 0.25,
+  spreadMinM: 420,
+  spreadMaxM: 4000,
+  // Gone by the 55° home orbit, 9,100 m up, where its motes would be two
+  // pixels of dust over lit ground; still whole at the low pose's 680 m.
+  fadeFromM: 1500,
+  fadeToM: 9000,
+  // Wider and dimmer than the far cloud's: a mote near the lens is a soft
+  // disc rather than a star, and it must not shout over what it drifts past.
+  // The floor keeps the farthest of them a disc too, not a one-pixel grain
+  // the eye reads as noise on the ground.
+  minPx: 2,
+  maxPx: 6,
+  gain: 2.2,
+};
 /** TUNABLE — the sink, as a fraction of the whole column per second: a mote
  * takes about eight minutes to fall three kilometres. Slow enough to be a
  * suspicion rather than weather, and against the column rather than the dolly
@@ -530,6 +646,7 @@ export class MarineSnow {
     uReachM: { value: 4000 },
     uPixelScale: { value: 600 },
     uSizePx: { value: new Vector2(1, 3.5) },
+    uGain: { value: SNOW_GAIN },
     /**
      * A placed mission's rectangle and how far its border fade has ramped in
      * (worldBorder.ts): the snow is water, and §7.4 fades exterior water as it
@@ -542,11 +659,16 @@ export class MarineSnow {
   private reducedMotion = false;
   private sunkM = 0;
   private lastTickAt: number | null = null;
+  /** Motes in the cloud, for the probe's count. */
+  private readonly count: number;
 
   constructor(
     count: number = MARINE_SNOW_COUNT,
-    private readonly dreamStudy = DREAM_LOOP
+    private readonly dreamStudy = DREAM_LOOP,
+    private readonly profile: SnowProfile = SNOW_FAR
   ) {
+    this.count = count;
+    this.uniforms.uGain.value = profile.gain;
     // Positions are the unit cube; the shader scales them to whatever the box
     // is this frame, so a dolly never rebuilds the buffer.
     const positions = new Float32Array(count * 3);
@@ -601,12 +723,14 @@ export class MarineSnow {
         // fixed and never wrapped against the camera — the ocean does not move
         // when the eye does.
         `  float yy = mod( position.y * ${f(COLUMN_HEIGHT)} + uSinkM, ${f(COLUMN_HEIGHT)} );`,
-        // The plan wraps around the **focus** rather than the eye, for the
-        // reason the backdrop anchors there: at a long dolly the eye is out of
-        // the water entirely, and the snow belongs in the water the player is
-        // looking at. The wrap is in world space, which is the whole point —
-        // between wraps a mote holds still while the camera moves past it, and
-        // that stillness is the parallax that reads as a medium.
+        // The plan wraps around `uFocus`: the **focus** rather than the eye
+        // for the shipped cloud, for the reason the backdrop anchors there —
+        // at a long dolly the eye is out of the water entirely, and the snow
+        // belongs in the water the player is looking at. The study's near
+        // cloud hands in the eye instead (`STUDY_SNOW_NEAR`). The wrap is in
+        // world space, which is the whole point — between wraps a mote holds
+        // still while the camera moves past it, and that stillness is the
+        // parallax that reads as a medium.
         '  vec2 plan = mod( position.xz * uSpreadM - uFocus + 0.5 * uSpreadM, uSpreadM )',
         '    - 0.5 * uSpreadM;',
         '  vec3 world = vec3( uFocus.x + plan.x, -yy, uFocus.y + plan.y );',
@@ -630,6 +754,7 @@ export class MarineSnow {
         '}',
       ].join('\n'),
       fragmentShader: [
+        'uniform float uGain;',
         'varying vec3 vMote;',
         'varying float vAlpha;',
         'void main() {',
@@ -638,7 +763,7 @@ export class MarineSnow {
         // than clipping it, or the cloud reads as pixel dust.
         '  float r = length( gl_PointCoord - vec2( 0.5 ) );',
         `  float sprite = smoothstep( 0.5, 0.08, r );`,
-        `  gl_FragColor = vec4( vMote * ${f(SNOW_GAIN)} * vAlpha * sprite, 1.0 );`,
+        '  gl_FragColor = vec4( vMote * uGain * vAlpha * sprite, 1.0 );',
         '  #include <colorspace_fragment>',
         '}',
       ].join('\n'),
@@ -681,11 +806,17 @@ export class MarineSnow {
     reachM: number,
     strength: number,
     projectionScalePx: number,
-    pixelRatio: number
+    pixelRatio: number,
+    spreadFloorM = 0
   ): void {
+    const { profile } = this;
+    // `spreadFloorM` widens the slab past the reach's share of it: the
+    // study's near cloud hands in a multiple of how far off its anchor is,
+    // so a cloud wrapped on water ahead of the eye fills the frustum there
+    // rather than sitting in it as a patch (PerspectiveView.ts `syncWater`).
     const spreadM = Math.min(
-      SNOW_SPREAD_MAX_M,
-      Math.max(SNOW_SPREAD_MIN_M, reachM * SNOW_SPREAD_REACHES)
+      profile.spreadMaxM,
+      Math.max(profile.spreadMinM, reachM * profile.spreadReaches, spreadFloorM)
     );
     if (this.lastTickAt !== null && !this.reducedMotion) {
       // Clamped so a tab that was hidden, or a first frame after a stall, does
@@ -706,14 +837,28 @@ export class MarineSnow {
     const aboveM = Math.max(0, eye.y) / DEPTH_VISUAL_M_PER_M;
     const near = this.dreamStudy
       ? dreamSnowNear(aboveM)
-      : 1 - smoothstepAt(SNOW_FADE_FROM_M, SNOW_FADE_TO_M, aboveM);
+      : 1 - smoothstepAt(profile.fadeFromM, profile.fadeToM, aboveM);
     this.uniforms.uStrength.value = near * Math.min(1, Math.max(0, strength));
     this.uniforms.uReachM.value = reachM;
     this.uniforms.uPixelScale.value = (this.dreamStudy ? 4.5 : SNOW_MOTE_M) * projectionScalePx;
     // `gl_PointSize` is device pixels, so the clamp is too — a mote must not
     // shrink to a sub-pixel flicker on a 3× phone screen.
-    this.uniforms.uSizePx.value.set(pixelRatio, (this.dreamStudy ? 4 : SNOW_MAX_PX) * pixelRatio);
+    this.uniforms.uSizePx.value.set(
+      profile.minPx * pixelRatio,
+      (this.dreamStudy ? 4 : profile.maxPx) * pixelRatio
+    );
     this.points.visible = strength > 0 && near > 0.002;
+  }
+
+  /** The motes this frame draws: the cloud's count, or none once the eye has
+   * climbed out of it or the player turned the water off. */
+  get motes(): number {
+    return this.points.visible ? this.count : 0;
+  }
+
+  /** The slab's side as last drawn, world units, for the probe. */
+  get spreadM(): number {
+    return this.uniforms.uSpreadM.value;
   }
 
   dispose(): void {

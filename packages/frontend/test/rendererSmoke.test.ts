@@ -52,6 +52,8 @@ import {
 import { FOCUS_DRAG_M_PER_PX, FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
 import { swayAt } from '../src/game/cameraSway.ts';
 import type { MovePreviewReading } from '../src/game/movePreview.ts';
+import type { WorldLook } from '../src/game/tutorialLook.ts';
+import { STUDY_SNOW_NEAR_COUNT, waterReachM } from '../src/game/water.ts';
 import { readsDisplayVeil, VEIL_SHADE_ATTRIBUTE } from '../src/game/veilShading.ts';
 import { VEIL_FLOOR_RGB } from '../src/game/acousticVeil.ts';
 import { HIT_PARTICLES_MIN } from '../src/game/hullHit.ts';
@@ -366,6 +368,7 @@ async function boot(
   options: {
     webgl?: boolean;
     controlsStudy?: boolean;
+    look?: WorldLook;
     gpu?: Partial<Pick<HeadlessGL, 'timer' | 'rendererName'>>;
   } = {}
 ): Promise<Booted> {
@@ -376,7 +379,7 @@ async function boot(
   const chartHost = createHost(1280, 720);
   const { callbacks, log } = recordingShell();
 
-  const conn = new PerspectiveView();
+  const conn = new PerspectiveView(options.look);
   const mounted = conn.mount(
     connHost as unknown as HTMLElement,
     () => {
@@ -2192,6 +2195,202 @@ describe('renderer smoke test: the water', () => {
       assert.ok(fog.density > 0, 'and it comes back');
     } finally {
       world.teardown();
+    }
+  });
+
+  it('gives the free-water study its reach and a second cloud on the eye, and no other look', async () => {
+    // docs/free-water-slice.md §9, "Water medium": a study-only reach curve
+    // and denser, nearer snow with parallax at the eye. Both ride the look,
+    // so a shipped map gets neither.
+    const snowClouds = (scene: Scene | null): Points[] => {
+      assert.ok(scene !== null);
+      const found: Points[] = [];
+      scene.traverse((object) => {
+        if (object instanceof Points && object.geometry.getAttribute('snowSize') !== undefined) {
+          found.push(object);
+        }
+      });
+      return found;
+    };
+    const probe = () =>
+      (
+        globalThis as unknown as {
+          window: {
+            __perspectiveProbe: () => {
+              distance: number;
+              pitchDeg: number;
+              waterReachM: number;
+              focus: { xM: number; zM: number; depthM: number | null };
+              eye: { xM: number; zM: number; depthM: number };
+              snow: {
+                far: number;
+                near: number;
+                nearAnchor: { xM: number; zM: number } | null;
+                nearSpreadM: number | null;
+              };
+            };
+          };
+        }
+      ).window.__perspectiveProbe();
+
+    const shipped = await boot();
+    try {
+      shipped.frame(3);
+      assert.equal(snowClouds(shipped.gl.lastScene).length, 1, 'one cloud on a shipped map');
+      const report = probe();
+      assert.equal(report.snow.near, 0);
+      assert.equal(report.snow.nearAnchor, null);
+      assert.equal(report.waterReachM, Math.round(waterReachM(report.distance)));
+    } finally {
+      shipped.teardown();
+    }
+
+    const study = await boot({ look: 'free-water' });
+    try {
+      study.frame(3);
+      const clouds = snowClouds(study.gl.lastScene);
+      assert.equal(clouds.length, 2, 'the study draws a second cloud');
+      const report = probe();
+      assert.equal(report.snow.near, STUDY_SNOW_NEAR_COUNT);
+      assert.equal(report.waterReachM, Math.round(waterReachM(report.distance, true)));
+      assert.ok(report.waterReachM < waterReachM(report.distance), 'and sees less far');
+      // In orbit the shipped cloud wraps on the focus and the study's on the
+      // nearest water the eye looks into: the one is the water the player
+      // looks at, the other the water that parallaxes past the lens. The
+      // orbit's eye here is in the air, so that is where its sight line
+      // enters the water, eye height / tan(pitch) ahead on the plan.
+      const anchor = report.snow.nearAnchor;
+      assert.ok(anchor !== null);
+      const anchors = clouds.map(
+        (cloud) => (cloud.material as ShaderMaterial).uniforms.uFocus!.value
+      );
+      const onAnchor = anchors.filter(
+        (a) => Math.round(a.x) === anchor.xM && Math.round(a.y) === anchor.zM
+      );
+      assert.equal(onAnchor.length, 1, 'exactly one cloud wraps on the reported anchor');
+      assert.ok(report.eye.depthM < 0, 'the orbit eye is above the surface');
+      const heightWorld = -report.eye.depthM * 0.22;
+      const ahead = Math.hypot(anchor.xM - report.eye.xM, anchor.zM - report.eye.zM);
+      const want = heightWorld / Math.tan((report.pitchDeg * Math.PI) / 180);
+      assert.ok(Math.abs(ahead - want) < want * 0.02 + 2, `anchor ${ahead} ahead, wanted ${want}`);
+      assert.ok(ahead > 10, 'and it is not the eye');
+      const fog = study.gl.lastScene?.fog as FogExp2;
+      assert.ok(Math.abs(fog.density - 1 / waterReachM(report.distance, true)) < 1e-9);
+
+      // The slab's side is sized from the eye before the sway. Its motes sit
+      // on a lattice that side scales, so a side that breathed with the heave
+      // would slide every mote sideways while the camera rests: a current's
+      // bearing, which the snow may never state. Across a heave the side holds
+      // exactly, while the drawn eye moves.
+      // Both anchors share x at yaw 0, so the near cloud is the one on the
+      // anchor's z as well.
+      const near = clouds.find((cloud) => {
+        const at = (cloud.material as ShaderMaterial).uniforms.uFocus!.value;
+        return Math.round(at.x) === anchor.xM && Math.round(at.y) === anchor.zM;
+      })!;
+      assert.ok(near !== undefined);
+      const spread = (near.material as ShaderMaterial).uniforms.uSpreadM!.value as number;
+      let nowMs = 0;
+      const clock = mock.method(performance, 'now', () => nowMs);
+      const eyes = new Set<number>();
+      try {
+        for (const at of [2_000, 6_500, 13_250]) {
+          nowMs = at;
+          study.frame(1);
+          eyes.add(probe().eye.depthM);
+          assert.equal(
+            (near.material as ShaderMaterial).uniforms.uSpreadM!.value,
+            spread,
+            `the slab's side moved with the sway at ${at} ms`
+          );
+        }
+      } finally {
+        clock.mock.restore();
+      }
+      assert.ok(eyes.size > 1, 'the camera did sway while the side held');
+
+      // Nor may the ground move it. With the focus on the seabed a pan over
+      // relief lifts and drops the eye with the floor under the focus (the
+      // canned shelf falls away south-east); the side is worked out at a
+      // fixed depth instead, so a pan never re-lattices the cloud. A zoom
+      // may, as the far cloud's side follows the dolly.
+      assert.equal(probe().snow.nearSpreadM, Math.round(spread));
+      const depths = new Set<number>();
+      for (const [x, z] of [
+        [600, 600],
+        [1800, 1800],
+        [3000, 2600],
+      ]) {
+        study.conn.focusWorld(x, z);
+        study.frame(1);
+        const after = probe();
+        assert.equal(after.focus.depthM, null, 'the focus rests on the seabed');
+        depths.add(after.eye.depthM);
+        assert.equal(
+          after.snow.nearSpreadM,
+          Math.round(spread),
+          `the side moved on the pan to ${x}, ${z}`
+        );
+      }
+      assert.ok(depths.size > 1, 'the ground under the focus did change across the pan');
+      study.conn.focusWorld(3000, 2600, report.distance * 2);
+      study.frame(1);
+      const zoomed = probe().snow.nearSpreadM!;
+      assert.ok(zoomed > spread, 'a zoom out widens the slab');
+
+      // A pinned depth is the player's own, and the side is sized at it even
+      // where the clamp lifts the focus onto shallower ground: pin deeper than
+      // the shelf's shallow north-west, pan onto it, and the focus rises with
+      // the seabed while the side holds.
+      // Back to the opening dolly first: zoomed out, both sides would meet
+      // the slab's cap and the assertion would hold for the wrong reason.
+      study.conn.focusWorld(3000, 2600, report.distance);
+      study.conn.raiseFocusBy(100);
+      study.frame(1);
+      const pinned = probe();
+      assert.ok(pinned.focus.depthM !== null, 'the focus is pinned in the column');
+      const pinnedSide = pinned.snow.nearSpreadM!;
+      study.conn.focusWorld(200, 200);
+      study.frame(1);
+      const lifted = probe();
+      assert.ok(
+        lifted.focus.depthM !== null && lifted.focus.depthM < pinned.focus.depthM!,
+        'the clamp lifted the pin onto the shallow shelf'
+      );
+      assert.equal(lifted.snow.nearSpreadM, pinnedSide, 'and the side did not follow it');
+    } finally {
+      study.teardown();
+    }
+
+    // The look can also change between sessions (`setLook`, before any
+    // terrain): the cloud comes with it and goes with it, disposed.
+    const gl = new HeadlessWebGLRenderer();
+    const late = new PerspectiveView();
+    try {
+      late.mount(
+        createHost(1280, 720) as unknown as HTMLElement,
+        () => gl.asRenderer(),
+        gl.environment
+      );
+      late.setActive(true);
+      pumpAnimationFrames();
+      assert.equal(snowClouds(gl.lastScene).length, 1);
+      assert.equal(late.setLook('free-water'), true);
+      pumpAnimationFrames();
+      const clouds = snowClouds(gl.lastScene);
+      assert.equal(clouds.length, 2, 'entering the study adds the cloud');
+      // The default camera sits 4,000 m out at 55°, past the near cloud's
+      // fade, so the probe reports its anchor rather than its motes here.
+      assert.ok(probe().snow.nearAnchor !== null);
+      let disposed = 0;
+      for (const cloud of clouds) cloud.geometry.addEventListener('dispose', () => disposed++);
+      assert.equal(late.setLook('standard'), true);
+      pumpAnimationFrames();
+      assert.equal(snowClouds(gl.lastScene).length, 1, 'leaving it removes the cloud');
+      assert.equal(disposed, 1, 'and disposes it');
+      assert.equal(probe().snow.nearAnchor, null);
+    } finally {
+      late.destroy();
     }
   });
 });
