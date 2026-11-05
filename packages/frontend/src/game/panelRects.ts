@@ -1,6 +1,8 @@
 /**
  * The floating panels' rects, for the one chart mark that has to keep out from
- * under them: a mission marker's name (docs/ui-ux.md §10.5, #1662).
+ * under them: a mission marker's name (docs/ui-ux.md §10.5, #1662); and, on
+ * its own path, the free-water legend's rect on the hint row, for the hint to
+ * yield to (`HINT_ROW_PANELS`).
  *
  * The panels are DOM glass over the canvas (§2), opaque, and the renderer
  * knows nothing of the DOM. A name the rule put beside where a wide ring comes

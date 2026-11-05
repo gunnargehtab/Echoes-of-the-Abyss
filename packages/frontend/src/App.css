@@ -41,8 +41,8 @@
 /* The public decoration's disclosure (free-water-slice.md §5), one line and
    no box in the bottom-right corner, on the hint line's row: the corner the
    mission log would take, and the study runs none. The hint line yields to
-   it (EchoRenderer, the hint line), which is why it is a floating panel to
-   panelRects.ts. */
+   it (EchoRenderer, the hint line), which is why panelRects.ts hands it over
+   on its own path (HINT_ROW_PANELS). */
 .decorative-life {
   position: absolute;
   right: calc(12px * var(--ui-scale, 1));

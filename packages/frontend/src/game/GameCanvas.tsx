@@ -595,7 +595,8 @@ export function GameCanvas({
       // the Pixi layer goes through the conn view from here on.
       activeRenderer.setConn(perspective);
       // Where the floating panels cover the water, for the one chart mark
-      // that keeps out from under them: a marker's name (§10.5, #1662).
+      // that keeps out from under them: a marker's name (§10.5, #1662); and
+      // where the study's legend stands on the hint row, for the hint to yield.
       if (underRef.current !== null) {
         panelsRef.current = watchPanels(
           underRef.current,
