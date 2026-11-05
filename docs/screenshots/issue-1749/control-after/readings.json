@@ -19,9 +19,9 @@
         "depthM": 850
       },
       "eye": {
-        "xM": 1999,
+        "xM": 2000,
         "zM": 3565,
-        "depthM": -661
+        "depthM": -653
       },
       "distance": 1600,
       "waterReachM": 5120,
@@ -61,9 +61,9 @@
         "depthM": 850
       },
       "eye": {
-        "xM": 2202,
+        "xM": 2198,
         "zM": 3565,
-        "depthM": -667
+        "depthM": -656
       },
       "distance": 1600,
       "waterReachM": 5120,
@@ -103,8 +103,8 @@
         "depthM": null
       },
       "eye": {
-        "xM": 2005,
-        "zM": 2327,
+        "xM": 1986,
+        "zM": 2328,
         "depthM": -42807
       },
       "distance": 10000,
@@ -118,7 +118,7 @@
         "fogAtDolly": 0.093,
         "haloAtDolly": 0.807
       },
-      "calls": 77,
+      "calls": 76,
       "triangles": 163878,
       "propTriangles": 104958,
       "instances": {},

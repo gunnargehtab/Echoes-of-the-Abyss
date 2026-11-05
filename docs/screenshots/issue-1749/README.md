@@ -48,8 +48,8 @@ issue's, for the lamp reading, and is not a §9 row.
 
 | Pose | Reach before → after (m) | Snow far / near | Fog on the subject, before → after | Halo kept, before → after | Calls before → after |
 | --- | --- | --- | --- | --- | --- |
-| Home | 8,320 → 4,487 | 0 / 0 | 9% → 29% | 80% → 48% | 43 → 43 |
-| Garden close | 900 → 600 | 7,000 / 24,000 | 7% → 16% | 85% → 68% | 29 → 30 |
+| Home | 8,320 → 4,487 | 0 / 0 | 9% → 29% | 81% → 48% | 43 → 43 |
+| Garden close | 900 → 600 | 7,000 / 24,000 | 7% → 16% | 84% → 68% | 29 → 30 |
 | Low | 5,120 → 2,457 | 7,000 / 24,000 | 9% → 35% | 81% → 39% | 24 → 25 |
 | Fleet | 3,840 → 1,805 | 7,000 / 24,000 | 9% → 36% | 81% → 38% | 42 → 43 |
 | Survey | 32,000 → 32,000 | 0 / 0 | 9% → 9% | 81% → 81% | 44 → 44 |
@@ -80,15 +80,20 @@ decoration with and without a hidden Hollow byte for byte, and no wire field cha
   [step 5](after/08-garden-close-pan-5.png), and [low](after/11-low-pan-0.png) to
   [step 5](after/16-low-pan-5.png). Each strip's entry in `readings.json` carries the page
   clock, focus and eye per frame: the low focus walks 39 m east a frame, the garden focus
-  6 m along the clearing. The near motes cross more of the frame than the floor behind
-  them; the sink runs throughout (`sway: on`).
+  6 m along the clearing. Under this rasteriser the frames are about 11 s apart, so each
+  carries the pan, a heave of the sway and some 70 m of sink; the near motes, nearer than
+  the floor, shift more with the pan than it does.
+- **At rest.** [low-rest-0](after/19-low-rest-0.png) to [low-rest-3](after/22-low-rest-3.png):
+  the low pose with no input and the sway on, 2.5 s and more apart. The slab's side is
+  sized from the eye before the sway, so the near motes only sink between these frames;
+  `rendererSmoke.test.ts` holds the side exact across a heave.
 - **Reduced motion.** [reduced-motion/01-low.png](reduced-motion/01-low.png): both clouds
   drawn with the sink held, as docs/ui-ux.md §11 asks, since the parallax belongs to the
   camera and not to an animation.
 - **Kelp Labyrinth control.** [control-before](control-before/readings.json) and
   [control-after](control-after/readings.json) at the low and survey poses: the standard
   look's reach and triangles are the same in both and the probe reports no near cloud and
-  no anchor. Calls read 75 / 72 / 76 before and 75 / 70 / 77 after, with the eye a few
+  no anchor. Calls read 75 / 72 / 76 before and 75 / 70 / 76 after, with the eye a few
   metres apart under the sway between runs: a frustum-edge batch, not a draw this change
   adds, which the study's own rows show as exactly one.
 

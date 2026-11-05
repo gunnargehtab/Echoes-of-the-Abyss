@@ -2270,6 +2270,35 @@ describe('renderer smoke test: the water', () => {
       assert.ok(ahead > 10, 'and it is not the eye');
       const fog = study.gl.lastScene?.fog as FogExp2;
       assert.ok(Math.abs(fog.density - 1 / waterReachM(report.distance, true)) < 1e-9);
+
+      // The slab's side is sized from the eye before the sway. Its motes sit
+      // on a lattice that side scales, so a side that breathed with the heave
+      // would slide every mote sideways while the camera rests: a current's
+      // bearing, which the snow may never state. Across a heave the side holds
+      // exactly, while the drawn eye moves.
+      const near = clouds.find(
+        (cloud) =>
+          Math.round((cloud.material as ShaderMaterial).uniforms.uFocus!.value.x) === anchor.xM
+      )!;
+      const spread = (near.material as ShaderMaterial).uniforms.uSpreadM!.value as number;
+      let nowMs = 0;
+      const clock = mock.method(performance, 'now', () => nowMs);
+      const eyes = new Set<number>();
+      try {
+        for (const at of [2_000, 6_500, 13_250]) {
+          nowMs = at;
+          study.frame(1);
+          eyes.add(probe().eye.depthM);
+          assert.equal(
+            (near.material as ShaderMaterial).uniforms.uSpreadM!.value,
+            spread,
+            `the slab's side moved with the sway at ${at} ms`
+          );
+        }
+      } finally {
+        clock.mock.restore();
+      }
+      assert.ok(eyes.size > 1, 'the camera did sway while the side held');
     } finally {
       study.teardown();
     }

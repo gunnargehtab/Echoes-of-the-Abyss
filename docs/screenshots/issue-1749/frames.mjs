@@ -4,7 +4,8 @@
 // strip of frames through a continuous middle-drag pan at the garden close and
 // the low pose, and the probe's reading of each frame beside them. Timings are
 // not read here: the GPU rows come from docs/screenshots/issue-1713/gpu.mjs on
-// named hardware.
+// named hardware. Last, a strip at the low pose with no input and the sway on:
+// the near motes may only sink between its frames.
 //
 //   node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost:5173/?study=free-water' \
 //     --out docs/screenshots/issue-1749/after --steps docs/screenshots/issue-1749/frames.mjs
@@ -130,6 +131,27 @@ export default async ({ page, shot }) => {
       await page.mouse.up({ button: 'middle' });
       readings.push({ name: `${name}-pan`, strip });
     }
+  }
+  if (process.env.PAN !== '0' && (!only || only.includes('low'))) {
+    const [, x, z, distance, yawDeg, pitchDeg, focusDepthM] = POSES[2];
+    await page.evaluate(
+      ({ x, z, distance, yawDeg, pitchDeg, focusDepthM }) => {
+        window.__perspectiveCamera(x, z, distance, { yawDeg, pitchDeg, focusDepthM });
+      },
+      { x, z, distance, yawDeg, pitchDeg, focusDepthM }
+    );
+    await settle();
+    const strip = [];
+    for (let step = 0; step < 4; step++) {
+      if (step > 0) await page.waitForTimeout(2500);
+      const at = await page.evaluate(() => {
+        const p = window.__perspectiveProbe();
+        return { tMs: Math.round(performance.now()), focus: p.focus, eye: p.eye, sway: p.sway };
+      });
+      strip.push(at);
+      await shot(`low-rest-${step}`);
+    }
+    readings.push({ name: 'low-rest', strip });
   }
   const renderer = await page.evaluate(() => {
     const gl = document.createElement('canvas').getContext('webgl2');

@@ -867,6 +867,14 @@ export class PerspectiveView {
   private readonly snow: MarineSnow;
   private nearSnow: MarineSnow | null = null;
   /**
+   * The eye before the sway (cameraSway.ts), as `applyCamera` placed it. The
+   * near cloud's slab is sized from here rather than from the drawn eye: its
+   * motes sit on a lattice the slab's side scales, so a side that breathed
+   * with the heave would slide every mote sideways while the camera rests,
+   * which states a current (`MarineSnow`, "It sinks, and it only sinks").
+   */
+  private readonly restEye = new Vector3();
+  /**
    * Tetherjelly fields and Lampfry shoals as stipple in the water column
    * (faunaStipple.ts, docs/map-visuals.md §8): two draw calls, the pulse on
    * the GPU. Public chart data, so it takes the snapshot's public layers and
@@ -4635,6 +4643,7 @@ export class PerspectiveView {
   private applyCamera(): void {
     if (this.flight) {
       this.camera.position.copy(this.flightEye);
+      this.restEye.copy(this.flightEye);
       this.camera.quaternion.copy(this.flightOrientation);
     } else {
       const look = LOOK_TMP.set(this.target.x, this.focusY(), this.target.z);
@@ -4655,6 +4664,7 @@ export class PerspectiveView {
       if (eyeY < floorY) eyeY = floorY;
 
       this.camera.position.set(eyeX, eyeY, eyeZ);
+      this.restEye.set(eyeX, eyeY, eyeZ);
       this.camera.lookAt(look);
       this.applySway();
     }
@@ -4755,11 +4765,11 @@ export class PerspectiveView {
     // is the eye's, wherever the focus is.
     if (this.nearSnow !== null) {
       const anchor = this.nearSnowAnchor();
-      const eye = this.camera.position;
-      const entryM = Math.hypot(anchor.x - eye.x, anchor.z - eye.z);
+      const rest = this.restEye;
+      const entryM = Math.hypot(anchor.x - rest.x, anchor.z - rest.z);
       this.nearSnow.update(
         now,
-        eye,
+        this.camera.position,
         anchor.x,
         anchor.z,
         this.waterReach,
@@ -4803,10 +4813,12 @@ export class PerspectiveView {
    * It is a world point, not a screen one: between wraps a mote holds still
    * while the camera moves, and nothing turns with the projection
    * (docs/free-camera.md §5). A camera in the air looking level or up has no
-   * entry and keeps the eye.
+   * entry and keeps the eye. Worked from `restEye`, the eye before the sway,
+   * for the reason given there; the sway translates the eye and never turns
+   * it, so the camera's own forward is the rest forward too.
    */
   private nearSnowAnchor(): { x: number; z: number } {
-    const eye = this.camera.position;
+    const eye = this.restEye;
     if (eye.y <= 0) return { x: eye.x, z: eye.z };
     const forward = this.camera.getWorldDirection(DIR_TMP);
     if (forward.y >= -1e-3) return { x: eye.x, z: eye.z };
