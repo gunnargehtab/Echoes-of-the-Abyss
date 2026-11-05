@@ -87,7 +87,6 @@ import {
   CELL_M,
   COLS,
   ROWS,
-  ROWS,
 } from './support/cannedMatch.ts';
 import {
   collarRadius,
