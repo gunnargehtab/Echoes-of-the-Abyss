@@ -163,6 +163,19 @@ import {
   type Bindings,
 } from '../input/bindings.ts';
 import { FREE_WATER_CONTROLS, FREE_WATER_SLICE } from './freeWaterControls.ts';
+import {
+  commandPlaneM,
+  edgeMark,
+  edgeMarkText,
+  sectionAlongM,
+  sectionDepthAt,
+  sectionProfile,
+  sectionX,
+  sectionY,
+  stalkSide,
+  waterIntervalAt,
+  type SectionFrame,
+} from './verticalCommand.ts';
 import { consoleBlocks, TAB_HEIGHT, type ConsoleBlocks } from './consoleLayout.ts';
 import type { FlightReading } from './flightCamera.ts';
 import { readMovePreview, type MovePreview, type MovePreviewReading } from './movePreview.ts';
@@ -1539,6 +1552,20 @@ const SCOPE_RETURN_RADIUS_PX: Record<1 | 2 | 3 | 4, number> = { 1: 7, 2: 4.5, 3:
 const SCOPE_SWEEP_MS = 4000;
 
 /**
+ * The free-water study's vertical instruments (verticalCommand.ts, #1753).
+ * A stalk is a hairline: it ties a hull to the command plane and must never
+ * out-ink the hull. Its foot ring and the edge chevron are screen-sized, as
+ * symbols are (gate 8), and the dash is screen-sized so above and below read
+ * the same at every dolly.
+ */
+const STALK_ALPHA = 0.55;
+const STALK_FOOT_PX = 3;
+const STALK_DASH_PX = 4;
+/** An edge mark stands this far inside the world view's frame. */
+const EDGE_MARK_INSET_PX = 16;
+const EDGE_MARK_PX = 7;
+
+/**
  * Depth ribbon geometry — a narrow strip down the left edge. Its x, width,
  * label gap, foot and readout live in uiScale.ts, because the orders panel is
  * laid out clear of them (§2).
@@ -1682,6 +1709,14 @@ export class EchoRenderer {
   private readonly minimapTerrainG = new Graphics();
   private readonly minimapOverlayG = new Graphics();
   private minimapCachedSize = 0;
+  /** The study's section scope beside it, and its two labels (#1753). */
+  private readonly sectionG = new Graphics();
+  private readonly sectionTexts: Text[] = [];
+  /** The heading the section last drew, held through a vertical gaze. */
+  private sectionHeadingRad = 0;
+  /** Edge marks for earned contacts off the frame, and their labels. */
+  private readonly edgeMarkG = new Graphics();
+  private readonly edgeTexts: Text[] = [];
 
   /** Selected-entity panel (wide screens). */
   private readonly ribbonGraphics = new Graphics();
@@ -2374,9 +2409,13 @@ export class EchoRenderer {
     );
     this.hud.addChild(
       this.hudGraphics,
+      // Screen space, since they stand on the frame's edge, and under every
+      // panel: they are inset inside the world view and never cross one.
+      this.edgeMarkG,
       this.ribbonGraphics,
       this.minimapTerrainG,
       this.minimapOverlayG,
+      this.sectionG,
       this.infoGraphics,
       this.barGraphics,
       // Last, so the one texture lies over every panel rather than under them.
@@ -3091,6 +3130,7 @@ export class EchoRenderer {
     let pendingAim: { x: number; y: number; queued: boolean } | null = null;
     this.cancelGesture = () => {
       minimapDrag = false;
+      sectionDrag = false;
       panning = false;
       orbiting = false;
       chord = false;
@@ -3114,6 +3154,8 @@ export class EchoRenderer {
 
     /** True while a press is scrubbing the sonar scope. */
     let minimapDrag = false;
+    /** True while a press is scrubbing a depth off the section scope (#1753). */
+    let sectionDrag = false;
 
     /**
      * End every in-flight gesture. Pointer capture retargets a held drag to
@@ -3124,6 +3166,7 @@ export class EchoRenderer {
      */
     const endGesture = (e: PointerEvent) => {
       minimapDrag = false;
+      sectionDrag = false;
       panning = false;
       orbiting = false;
       chord = false;
@@ -3170,6 +3213,11 @@ export class EchoRenderer {
       // interpretation happens.
       if (e.button === 0 && this.pressMinimap(e.clientX, e.clientY)) {
         minimapDrag = true;
+        capture(e.pointerId);
+        return;
+      }
+      if (e.button === 0 && this.pressSection(e.clientX, e.clientY)) {
+        sectionDrag = true;
         capture(e.pointerId);
         return;
       }
@@ -3250,6 +3298,10 @@ export class EchoRenderer {
         this.pressMinimap(e.clientX, e.clientY);
         return;
       }
+      if (sectionDrag) {
+        this.pressSection(e.clientX, e.clientY);
+        return;
+      }
 
       if (this.marquee !== null) {
         this.marquee.x1 = e.clientX;
@@ -3287,6 +3339,10 @@ export class EchoRenderer {
       }
       if (minimapDrag) {
         minimapDrag = false;
+        return;
+      }
+      if (sectionDrag) {
+        sectionDrag = false;
         return;
       }
       if (this.navigating) {
@@ -3880,7 +3936,7 @@ export class EchoRenderer {
    * why each goes where it does.
    */
   private consoleBlocks(): ConsoleBlocks {
-    return consoleBlocks(this.hudWidth(), this.hudHeight());
+    return consoleBlocks(this.hudWidth(), this.hudHeight(), this.studySlice);
   }
 
   /**
@@ -4431,6 +4487,7 @@ export class EchoRenderer {
     const blocks = this.consoleBlocks();
     const slots: Array<[{ x: number; w: number } | undefined, string]> = [
       [blocks.scope, 'SCOPE'],
+      [blocks.section, 'SECTION'],
       [blocks.selection, 'SELECTION'],
       [blocks.fleet, 'FLEET'],
       [blocks.commands, 'COMMANDS'],
@@ -6695,6 +6752,7 @@ export class EchoRenderer {
     const forceStale = this.stale('force', force);
     if (forceStale) this.drawRings();
     this.drawContacts();
+    this.drawEdgeMarks();
     if (forceStale) {
       this.drawStructures();
       this.drawUnits();
@@ -6711,6 +6769,7 @@ export class EchoRenderer {
     this.drawDepthRibbon();
     this.drawCommandBar();
     this.drawMinimap();
+    this.drawSection();
     this.drawInfoPanel();
   }
 
@@ -7723,6 +7782,9 @@ export class EchoRenderer {
     this.modelTracks.length = 0;
     this.contactFootprints.length = 0;
     this.arrivedTracks.clear();
+    // The study's command plane, for a Tier 3+ contact's stalk (§9). A Tier
+    // 2 contact carries no depth and gets no stalk: nothing here infers one.
+    const plane = this.studySlice ? this.commandPlaneM() : null;
     for (const [id, entry] of this.tracked) {
       const age = now - entry.lastSeenMs;
       if (age > decayMs) {
@@ -7738,6 +7800,22 @@ export class EchoRenderer {
 
       const style = TIER_STYLE[contact.tier as Exclude<ResolutionTier, ResolutionTier.Silent>];
       if (style === undefined) continue;
+
+      if (
+        plane !== null &&
+        contact.depth !== undefined &&
+        contact.tier >= ResolutionTier.Classification
+      ) {
+        this.drawStalk(
+          g,
+          contact.x,
+          contact.y,
+          contact.depth,
+          plane,
+          this.contactColor(contact, style.color),
+          STALK_ALPHA * Math.max(0, 1 - age / decayMs)
+        );
+      }
 
       // What this contact has earned the right to be drawn as — gate 5, in
       // one call (trackFidelity.ts). `age` is time since it was last
@@ -8074,6 +8152,20 @@ export class EchoRenderer {
     for (const [id, at] of this.brokeSilence) {
       if (now - at >= BREAK_SILENCE_FLASH_MS || !this.units.some((u) => u.id === id)) {
         this.brokeSilence.delete(id);
+      }
+    }
+
+    // The study's stalks (docs/free-water-slice.md §9, "Vertical command"):
+    // every own hull tied to the command plane, in the navy's own ink, on the
+    // ring layer with the rest of rung 6's instruments. The plane follows the
+    // selection and the raised focus, both of which already repaint this
+    // layer.
+    const plane = this.studySlice ? this.commandPlaneM() : null;
+    if (plane !== null) {
+      const accent = FACTION_PALETTE[this.faction].accent;
+      for (const unit of this.units) {
+        const d = this.drawnPosition(unit);
+        this.drawStalk(this.ringLayer, d.x, d.y, d.depth, plane, accent, STALK_ALPHA);
       }
     }
 
@@ -10275,6 +10367,332 @@ export class EchoRenderer {
           .stroke({ width: 1, color: UI.text });
       }
     }
+  }
+
+  // --- The study's vertical command instruments (#1753) ----------------------
+
+  /**
+   * The command plane (verticalCommand.ts): the lead selected hull's depth,
+   * else a raised focus's depth, else none. Study only; a shipped map draws
+   * no stalks and no section.
+   */
+  private commandPlaneM(): number | null {
+    if (!this.studySlice) return null;
+    return commandPlaneM(this.selectedUnits()[0]?.depth, this.conn?.raisedFocusDepthM() ?? null);
+  }
+
+  /**
+   * One stalk: a hairline from a depth to the command plane at the same plan
+   * position, with a foot ring on the plane. Solid above the plane, dashed
+   * below; hue is the caller's, never a line style's, so the side reads
+   * without colour (docs/ui-ux.md §11). The dash is laid in screen space.
+   */
+  private drawStalk(
+    g: Graphics,
+    x: number,
+    y: number,
+    depthM: number,
+    planeM: number,
+    color: number,
+    alpha: number
+  ): void {
+    const foot = this.project(x, y, planeM);
+    if (foot === null || !foot.visible) return;
+    const fx = foot.x;
+    const fy = foot.y;
+    const side = stalkSide(depthM, planeM);
+    if (side !== null) {
+      const head = this.project(x, y, depthM);
+      if (head !== null && head.visible) {
+        if (side === 'above') {
+          g.moveTo(head.x, head.y).lineTo(fx, fy);
+        } else {
+          const length = Math.hypot(fx - head.x, fy - head.y);
+          const steps = Math.ceil(length / (STALK_DASH_PX * 2));
+          for (let i = 0; i < steps; i++) {
+            const t0 = (i * STALK_DASH_PX * 2) / length;
+            const t1 = Math.min(1, t0 + STALK_DASH_PX / length);
+            g.moveTo(head.x + (fx - head.x) * t0, head.y + (fy - head.y) * t0).lineTo(
+              head.x + (fx - head.x) * t1,
+              head.y + (fy - head.y) * t1
+            );
+          }
+        }
+        g.stroke({ width: 1, color, alpha });
+      }
+    }
+    g.circle(fx, fy, STALK_FOOT_PX).stroke({ width: 1, color, alpha });
+  }
+
+  /**
+   * Edge marks (§9): an earned contact outside the view marks the frame's
+   * edge, inset inside the world view between the top strip and the console.
+   * A Tier 3+ contact says ABOVE or BELOW with its metres to the plane, or
+   * its own depth with no plane; a Tier 2 contact marks its bearing only;
+   * a Tier 1 contact marks nothing. Only a contact in front of the eye is
+   * marked: a projection from behind lands mirrored, and nothing behind the
+   * eye is mirrored.
+   */
+  private drawEdgeMarks(): void {
+    const g = this.edgeMarkG;
+    g.clear();
+    let shown = 0;
+    if (this.studySlice && this.conn !== null) {
+      const rect = {
+        x: 0,
+        y: TOP_BAR_HEIGHT,
+        w: this.hudWidth(),
+        h: this.hudHeight() - TOP_BAR_HEIGHT - CONSOLE_HEIGHT,
+      };
+      const plane = this.commandPlaneM();
+      const now = performance.now();
+      const decayMs = PERSISTENCE.GHOST_MARKER_DECAY_S * 1000;
+      for (const { contact, lastSeenMs } of this.tracked.values()) {
+        if (contact.tier === ResolutionTier.Silent || now - lastSeenMs > decayMs) continue;
+        const say = edgeMarkText(contact.tier, contact.depth, plane);
+        if (!say.mark) continue;
+        const p = this.project(contact.x, contact.y, contact.depth ?? null);
+        if (p === null || !p.visible) continue;
+        const mark = edgeMark(rect, EDGE_MARK_INSET_PX, p.x, p.y);
+        if (mark === null) continue;
+        const style = TIER_STYLE[contact.tier as Exclude<ResolutionTier, ResolutionTier.Silent>];
+        if (style === undefined) continue;
+        const color = this.contactColor(contact, style.color);
+        // A chevron pointing out of the frame, its two arms 40° off the ray.
+        const out = mark.angle;
+        for (const arm of [out + Math.PI - 0.7, out + Math.PI + 0.7]) {
+          g.moveTo(mark.x, mark.y).lineTo(
+            mark.x + Math.cos(arm) * EDGE_MARK_PX,
+            mark.y + Math.sin(arm) * EDGE_MARK_PX
+          );
+        }
+        g.stroke({ width: 2, color, alpha: 0.9 });
+        if (say.text === '') continue;
+        const text = this.edgeText(shown++);
+        text.visible = true;
+        text.text = say.text;
+        text.style.fill = color;
+        // Inward of the chevron, anchored on the side away from the edge.
+        const cos = Math.cos(out);
+        const sin = Math.sin(out);
+        text.anchor.set(0.5 + 0.5 * cos, 0.5 + 0.5 * sin);
+        text.position.set(mark.x - cos * (EDGE_MARK_PX + 4), mark.y - sin * (EDGE_MARK_PX + 4));
+      }
+    }
+    for (let i = shown; i < this.edgeTexts.length; i++) this.edgeTexts[i]!.visible = false;
+  }
+
+  private edgeText(index: number): Text {
+    let text = this.edgeTexts[index];
+    if (text === undefined) {
+      text = new Text({
+        text: '',
+        style: { fontFamily: FONT_DATA, fontSize: 11, letterSpacing: 1, fill: UI.text },
+      });
+      this.edgeTexts.push(text);
+      this.hud.addChild(text);
+    }
+    return text;
+  }
+
+  /** The section scope's screen rect, square inside its block; null off the study. */
+  private sectionRect(): { x: number; y: number; size: number } | null {
+    const blocks = this.consoleBlocks();
+    const slot = blocks.section;
+    if (slot === undefined) return null;
+    const inner = 6;
+    const size = Math.min(slot.w - inner * 2, blocks.h - BLOCK_HEAD_H - inner * 2);
+    return {
+      x: slot.x + (slot.w - size) / 2,
+      y: blocks.y + BLOCK_HEAD_H + (blocks.h - BLOCK_HEAD_H - size) / 2,
+      size,
+    };
+  }
+
+  /**
+   * A press on the section scope picks a depth for a pinned MOVE 3D preview
+   * (§9): the alternate depth picker, as the north-up scope is the alternate
+   * plan picker. Returns true when the point was inside the section, which
+   * swallows the press as the scope's does. An armed preview that is not yet
+   * pinned is told to pin first rather than silently ignored.
+   */
+  private pressSection(clientX: number, clientY: number): boolean {
+    const rect = this.sectionRect();
+    if (rect === null) return false;
+    const bounds = this.app.canvas.getBoundingClientRect();
+    const px = (clientX - bounds.left) / this.uiScale;
+    const py = (clientY - bounds.top) / this.uiScale;
+    const { x, y, size } = rect;
+    if (px < x || px > x + size || py < y || py > y + size) return false;
+    if (this.destination !== null && !this.navigating) {
+      if (!this.destination.pinned) {
+        this.refuse('PIN POSITION FIRST');
+        return true;
+      }
+      this.setDestinationDepth(sectionDepthAt(size, py - y));
+    }
+    return true;
+  }
+
+  /**
+   * The section scope (§9): a vertical slice along the camera's horizontal
+   * heading through the command focus, as wide as the plan scope's range and
+   * the whole column deep, forward to the right. It draws the public floor
+   * and roof profile, the band hairlines at 400 m and 1,800 m, the Lid and the
+   * thermocline in the ribbon's inks (§8), the command plane, own hulls and
+   * structures, Tier 3+ contacts at their depths, and a Tier 2 contact as a
+   * tick down its public water interval, marked DEPTH UNKNOWN. In flight at a
+   * vertical gaze it holds the last heading and says so. Every own hull and
+   * contact on the map is placed by its distance along the heading; the
+   * ground is the slice through the focus alone.
+   */
+  private drawSection(): void {
+    const g = this.sectionG;
+    g.clear();
+    const rect = this.sectionRect();
+    const terrain = this.terrain;
+    const conn = this.conn;
+    if (rect === null || terrain === null || conn === null) {
+      for (const text of this.sectionTexts) text.visible = false;
+      return;
+    }
+    const { x, y, size } = rect;
+    g.position.set(x, y);
+    g.rect(0, 0, size, size).fill({ color: 0x000000, alpha: 0.85 });
+
+    const held = conn.flying && conn.flightReading().bearingDeg === null;
+    if (!held) this.sectionHeadingRad = conn.headingRad;
+    const heading = this.sectionHeadingRad;
+    const frame: SectionFrame = {
+      focusX: conn.frame.xM,
+      focusY: conn.frame.yM,
+      headingRad: heading,
+      spanM: size / this.minimapScale(size),
+      size,
+    };
+
+    // The ground: a column of rock per scope pixel, from the authored floor
+    // down and from the roof up, the floor's line traced over it.
+    const profile = sectionProfile(terrain, frame);
+    let open = false;
+    for (let i = 0; i < profile.length; i++) {
+      const column = profile[i];
+      if (column === null || column === undefined) {
+        open = false;
+        continue;
+      }
+      if (column.rock) {
+        g.rect(i, 0, 1, size).fill({ color: UI.glass, alpha: 0.9 });
+        open = false;
+        continue;
+      }
+      const floor = sectionY(size, column.floorM);
+      g.rect(i, floor, 1, size - floor).fill({ color: UI.glass, alpha: 0.9 });
+      if (column.ceilingM > 0) {
+        g.rect(i, 0, 1, sectionY(size, column.ceilingM)).fill({ color: UI.glass, alpha: 0.9 });
+      }
+      if (open) g.lineTo(i + 1, floor);
+      else g.moveTo(i, floor);
+      open = true;
+    }
+    g.stroke({ width: 1, color: UI.textDim, alpha: 0.8 });
+
+    // The column's rules, in the ribbon's inks (§8): band edges, the Lid and
+    // the thermocline, which is a different rule and so a different ink.
+    for (const band of [DepthBand.MidWater, DepthBand.Abyssal]) {
+      const by = sectionY(size, DEPTH_BANDS[band].min);
+      g.rect(0, by, size, 1).fill({ color: UI.glassStroke, alpha: 0.7 });
+    }
+    g.rect(0, sectionY(size, LID.DEPTH_M), size, 1).fill({ color: UI.threat, alpha: 0.5 });
+    g.rect(0, sectionY(size, THERMOCLINE.DEPTH_M), size, 1).fill({ color: UI.accent, alpha: 0.85 });
+
+    // The command plane across the slice, and the focus at its centre.
+    const plane = this.commandPlaneM();
+    if (plane !== null) {
+      g.rect(0, sectionY(size, plane), size, 1).fill({ color: UI.text, alpha: 0.6 });
+    }
+    g.moveTo(size / 2, 0)
+      .lineTo(size / 2, 5)
+      .stroke({ width: 1, color: UI.text, alpha: 0.6 });
+
+    const palette = FACTION_PALETTE[this.faction];
+    for (const structure of this.structures) {
+      const sx = sectionX(frame, sectionAlongM(frame, structure.x, structure.y));
+      if (sx === null) continue;
+      g.rect(sx - 2, sectionY(size, structure.depth) - 2, 4, 4).fill({ color: palette.primary });
+    }
+    for (const unit of this.units) {
+      const d = this.drawnPosition(unit);
+      const sx = sectionX(frame, sectionAlongM(frame, d.x, d.y));
+      if (sx === null) continue;
+      g.circle(sx, sectionY(size, d.depth), 1.5).fill({ color: palette.accent });
+    }
+
+    let unknown = false;
+    const now = performance.now();
+    const decayMs = PERSISTENCE.GHOST_MARKER_DECAY_S * 1000;
+    for (const { contact, lastSeenMs } of this.tracked.values()) {
+      if (contact.tier < ResolutionTier.Bearing || now - lastSeenMs > decayMs) continue;
+      const style = TIER_STYLE[contact.tier as Exclude<ResolutionTier, ResolutionTier.Silent>];
+      if (style === undefined) continue;
+      const sx = sectionX(frame, sectionAlongM(frame, contact.x, contact.y));
+      if (sx === null) continue;
+      const color = this.contactColor(contact, style.color);
+      if (contact.tier < ResolutionTier.Classification || contact.depth === undefined) {
+        // No depth is earned below Tier 3, so none is drawn: the tick spans
+        // the public water under the blurred position, and the label says so.
+        const water = waterIntervalAt(terrain, contact.x, contact.y);
+        if (water === null) continue;
+        g.moveTo(sx, sectionY(size, water.ceilingM))
+          .lineTo(sx, sectionY(size, water.floorM))
+          .stroke({ width: 1, color, alpha: 0.35 });
+        unknown = true;
+        continue;
+      }
+      const smear = SCOPE_RETURN_RADIUS_PX[contact.tier as 1 | 2 | 3 | 4];
+      g.circle(sx, sectionY(size, contact.depth), smear)
+        .fill({ color, alpha: 0.85 })
+        .stroke({ width: 1, color, alpha: 0.9 });
+    }
+
+    // A pinned or placed MOVE 3D destination, where the section would send it.
+    const destination = this.destination;
+    if (destination !== null && destination.point !== null && Number.isFinite(destination.depthM)) {
+      const sx = sectionX(frame, sectionAlongM(frame, destination.point.x, destination.point.y));
+      if (sx !== null) {
+        const sy = sectionY(size, destination.depthM);
+        g.moveTo(sx - 4, sy)
+          .lineTo(sx + 4, sy)
+          .moveTo(sx, sy - 4)
+          .lineTo(sx, sy + 4)
+          .stroke({ width: 1, color: UI.text, alpha: 0.9 });
+      }
+    }
+
+    g.rect(0, 0, size, size).stroke({ width: 1, color: UI.glassStroke });
+
+    const compass = ((((-heading * 180) / Math.PI) % 360) + 360) % 360;
+    const readout = this.sectionText(0);
+    readout.visible = true;
+    readout.text = `${String(Math.round(compass) % 360).padStart(3, '0')}° →${held ? ' HELD' : ''}`;
+    readout.position.set(x + 4, y + 2);
+    const legend = this.sectionText(1);
+    legend.visible = unknown;
+    legend.text = 'DEPTH UNKNOWN';
+    legend.position.set(x + size - legend.width - 4, y + size - legend.height - 2);
+  }
+
+  private sectionText(index: number): Text {
+    let text = this.sectionTexts[index];
+    if (text === undefined) {
+      text = new Text({
+        text: '',
+        style: { fontFamily: FONT_DATA, fontSize: 9, letterSpacing: 1, fill: UI.textDim },
+      });
+      this.sectionTexts.push(text);
+      this.hud.addChild(text);
+    }
+    return text;
   }
 
   /**

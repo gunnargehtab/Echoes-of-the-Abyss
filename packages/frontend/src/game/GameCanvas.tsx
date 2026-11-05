@@ -279,7 +279,7 @@ export function GameCanvas({
   const [uiScale, setUiScale] = useState(1);
   /** The command block's left edge in HUD px, read off the console's own layout. */
   const [commandsX, setCommandsX] = useState(
-    () => consoleBlocks(window.innerWidth, window.innerHeight).commands.x
+    () => consoleBlocks(window.innerWidth, window.innerHeight, FREE_WATER_SLICE).commands.x
   );
   /**
    * The active palette, for the DOM half of the interface.
@@ -857,7 +857,10 @@ export function GameCanvas({
         const held = heldUiScale(setting, window.innerHeight);
         activeRenderer.setUiScale(held);
         setUiScale(held);
-        setCommandsX(consoleBlocks(window.innerWidth / held, window.innerHeight / held).commands.x);
+        setCommandsX(
+          consoleBlocks(window.innerWidth / held, window.innerHeight / held, FREE_WATER_SLICE)
+            .commands.x
+        );
       };
       onResize = () => applyScale(loadSettings().uiScale);
       window.addEventListener('resize', onResize);
