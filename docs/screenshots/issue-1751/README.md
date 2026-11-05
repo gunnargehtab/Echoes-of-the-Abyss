@@ -84,11 +84,30 @@ instanced batch. Every study frame stays under the 720,000 cap and the props und
   props, triangles and calls. `freeWaterDecoration.test.ts` holds the stronger claim: the
   registry's placement on the control is unchanged by the fixture's rows.
 
-## Hardware and what is open
+## Hardware
 
-These frames come from this container's software rasteriser (SwiftShader, in each
-`readings.json`), which is why no millisecond is recorded here. The study's GPU rows,
-unpaced and queued at DPR 1 and 1.5 on named hardware, are
-`docs/screenshots/issue-1713/gpu.mjs` run as its README says, with its prop count and
-reservation read against this list (200 props, 600,000); §7 leaves that criterion open
-until a GPU reads it, as #1749 and #1750 left theirs.
+The frames above come from a software rasteriser (SwiftShader, in each `readings.json`),
+so they carry no millisecond. The GPU rows below are `docs/screenshots/issue-1713/gpu.mjs`
+run as its README says: an NVIDIA GeForce GTX 1070 through Edge/ANGLE D3D11, unpaced,
+animation running, every window at least 240 samples. Its prop count and reservation are
+read against each revision's list: 184 under 400,000 before, 200 under 600,000 after.
+Each revision was read twice at each DPR, interleaved with #1752's, and the table gives
+the mean of the two runs. `before` is the base, 043bf6d6; `after` is the merge, c3cef492.
+The raw runs are `gpu/{before,after}/dpr-{1,1.5}/run-{1,2}.json`, for example
+[gpu/after/dpr-1/run-1.json](gpu/after/dpr-1/run-1.json).
+
+| Station | Triangles, before → after | DPR 1 GPU / queued ms, before → after | DPR 1.5 GPU / queued ms, before → after |
+| --- | --- | --- | --- |
+| Home | 405,088 → 547,936 | 1.01 / 0.93 → 1.17 / 1.07 | 1.69 / 1.63 → 1.89 / 1.81 |
+| Garden close | 396,719 → 539,567 | 0.92 / 0.87 → 1.28 / 1.18 | 1.41 / 1.44 → 2.01 / 2.05 |
+| Low | 397,119 → 539,967 | 0.90 / 0.84 → 1.05 / 0.98 | 1.38 / 1.30 → 1.52 / 1.49 |
+| Survey | 405,088 → 547,936 | 1.04 / 0.80 → 1.09 / 0.90 | 1.49 / 1.33 → 1.59 / 1.46 |
+
+The 16 added stands cost 0.10–0.31 ms queued at DPR 1 and 0.13–0.61 ms at DPR 1.5. The
+garden station, which looks along the forest from inside it, rises most: 0.87 → 1.18 and
+1.44 → 2.05 ms. Calls are unchanged at 43 / 22 / 25 / 44, since the stands join the
+existing instanced batch. Prop triangles read 387,952 → 530,800, under the 600,000
+reservation, and every frame stays under the study's 720,000. Two runs of one revision
+differ by up to 0.04 ms queued, and the base reproduces #1750's `after` (the same commit,
+read an hour earlier) to 0.02 ms. Queue loads read 3.61–3.80 ms, each longer than the
+frame it measures.

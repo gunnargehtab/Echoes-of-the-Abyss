@@ -2,8 +2,13 @@ import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
+// The fixture's list and its reservation (docs/free-water-slice.md §7): 200 props under
+// 600,000 since #1751. GPU_PROPS=184 GPU_PROP_CAP=400000 reads a revision before it.
+const PROPS = Number(process.env.GPU_PROPS ?? 200);
+const PROP_CAP = Number(process.env.GPU_PROP_CAP ?? 600000);
+
 export default async ({ page, shot }) => {
-  await page.waitForFunction(() => window.__perspectiveProbe?.().props === 184);
+  await page.waitForFunction((n) => window.__perspectiveProbe?.().props === n, PROPS);
   const renderer = await page.evaluate(() => {
     const gl = document.createElement('canvas').getContext('webgl2');
     const ext = gl.getExtension('WEBGL_debug_renderer_info');
@@ -42,7 +47,7 @@ export default async ({ page, shot }) => {
     // Independent stations also start independent WebGL query pools.
     if (readings.length > 0) {
       await page.reload();
-      await page.waitForFunction(() => window.__perspectiveProbe?.().props === 184);
+      await page.waitForFunction((n) => window.__perspectiveProbe?.().props === n, PROPS);
     }
     await page.evaluate(({ name, x, z, distance, pitchDeg, focusDepthM }) => {
       window.__perspectiveCamera(x, z, distance, { yawDeg: 0, pitchDeg, focusDepthM });
@@ -51,10 +56,10 @@ export default async ({ page, shot }) => {
     await waitWindow();
     const p = await page.evaluate(() => window.__perspectiveProbe());
     assert.equal(p.modelBacked, 3);
-    assert.equal(p.props, 184);
+    assert.equal(p.props, PROPS);
     assert.equal(p.decorativePhotophores, 48);
     assert.ok(p.drawCalls <= 150 && p.triangles <= 720000);
-    assert.ok(p.propTris <= 400000);
+    assert.ok(p.propTris <= PROP_CAP);
     dir = dirname(await shot(name));
     await page.evaluate(() => window.__perspectiveGpuQueue(12000));
     await page.waitForTimeout(400);
