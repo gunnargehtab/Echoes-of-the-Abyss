@@ -603,9 +603,9 @@ down on a canopy 60 m below it. Hulls among the stalks would need taller stands,
 `shape-work`, or a deeper exercise, which changes §3; neither is taken here.
 
 The list §5 carries is one forest of 56 stands. Before it, the 40 stands stood one stand
-deep in rows at `y=625`, `875` and `1,375`, each 65 m back from the clearing: two strips
-north of it and a half-row south, which is what the owner's frame showed, and the south
-row's envelopes already reached the scarp into the bowl. Now the forest is three rows
+deep in rows at `y=625`, `875` and `1,375`, the two nearest 65 m back from the clearing:
+two strips north of it and a half-row south, which is what the owner's frame showed, and
+the south row's envelopes already reached the scarp into the bowl. Now the forest is three rows
 deep north of the clearing and one row deep south of it, every row at the stands' own
 125 m pitch and the inner rows 5 m from the clearing's edges, so the canopy is continuous
 on each flank and the clearing is the one gap in it. The south flank cannot be deeper:
