@@ -557,26 +557,35 @@ export const SNOW_FAR: SnowProfile = {
  * The shipped cloud wraps on the focus, and at the low pose the eye is a
  * dolly from it, at the slab's fade edge: the motes nearest the lens are the
  * faintest, and the water reads as a few stars over the floor. This cloud
- * wraps on the **eye** instead, in orbit as the shipped one already does in
- * flight, with a slab a quarter of the reach across and `STUDY_SNOW_NEAR_COUNT`
- * motes in it, so a pan carries the near motes across more of the frame than
- * the floor behind them: the parallax that reads as a medium. Its motes may
- * rasterise wider than the far cloud's, so the nearest read nearer by size as
- * well as by speed, and it fades later than the far cloud as the eye climbs,
- * so a 2,600 m orbit still has water in it while the survey pose has none.
+ * wraps on the nearest water the eye looks into instead — the eye itself
+ * under water, the point its sight line enters the water from the air
+ * (`PerspectiveView.nearSnowAnchor`) — with a slab a quarter of the reach
+ * across and `STUDY_SNOW_NEAR_COUNT` motes in it, so a pan carries the near
+ * motes across more of the frame than the floor behind them: the parallax
+ * that reads as a medium. From the air the slab widens with the distance to
+ * that water (`STUDY_SNOW_NEAR_SPREAD_PER_ENTRY_M`), so it fills the frustum
+ * where the sight line meets the surface instead of sitting in it as a
+ * patch. Its motes may rasterise wider than the far cloud's, so the nearest
+ * read nearer by size as well as by speed, and it fades later than the far
+ * cloud as the eye climbs: whole at a low orbit, gone by the home orbit.
  *
  * The column is the same column: the slab's height is the ocean's and never
  * wraps against the eye, so an eye above the surface sees the cloud below it
- * and nothing in the air. One more draw call and a few thousand points; no
- * pass, no target, no texture (docs/free-water-slice.md §4).
+ * and nothing in the air. One more draw call and 24,000 points; no pass, no
+ * target, no texture (docs/free-water-slice.md §4).
  */
 export const STUDY_SNOW_NEAR_COUNT = 24_000;
+/** TUNABLE — the near slab's side per world unit between the eye and the
+ * water its sight line enters, when the eye is in the air. */
+export const STUDY_SNOW_NEAR_SPREAD_PER_ENTRY_M = 1.6;
 export const STUDY_SNOW_NEAR: SnowProfile = {
   spreadReaches: 0.25,
   spreadMinM: 420,
   spreadMaxM: 4000,
-  fadeFromM: 3000,
-  fadeToM: 14_000,
+  // Gone by the 55° home orbit, 9,100 m up, where its motes would be two
+  // pixels of dust over lit ground; still whole at the low pose's 680 m.
+  fadeFromM: 1500,
+  fadeToM: 9000,
   // Wider and dimmer than the far cloud's: a mote near the lens is a soft
   // disc rather than a star, and it must not shout over what it drifts past.
   // The floor keeps the farthest of them a disc too, not a one-pixel grain
@@ -789,12 +798,17 @@ export class MarineSnow {
     reachM: number,
     strength: number,
     projectionScalePx: number,
-    pixelRatio: number
+    pixelRatio: number,
+    spreadFloorM = 0
   ): void {
     const { profile } = this;
+    // `spreadFloorM` widens the slab past the reach's share of it: the
+    // study's near cloud hands in a multiple of how far off its anchor is,
+    // so a cloud wrapped on water ahead of the eye fills the frustum there
+    // rather than sitting in it as a patch (PerspectiveView.ts `syncWater`).
     const spreadM = Math.min(
       profile.spreadMaxM,
-      Math.max(profile.spreadMinM, reachM * profile.spreadReaches)
+      Math.max(profile.spreadMinM, reachM * profile.spreadReaches, spreadFloorM)
     );
     if (this.lastTickAt !== null && !this.reducedMotion) {
       // Clamped so a tab that was hidden, or a first frame after a stall, does

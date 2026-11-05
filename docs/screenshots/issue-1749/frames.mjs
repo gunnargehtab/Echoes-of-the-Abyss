@@ -1,8 +1,10 @@
 // The §9 frames for the water medium (docs/free-water-slice.md §9, "Frames and
-// the last gate"), as a run-game steps module. Four poses, the low pose again
-// after a 200 m pan for the particulate's parallax, and the probe's reading of
-// each frame beside them. Timings are not read here: the GPU rows come from
-// docs/screenshots/issue-1713/gpu.mjs on named hardware.
+// the last gate"), as a run-game steps module. Four poses, a fifth on the fleet
+// for the lamps through the medium, the low pose again after a 200 m pan, a
+// strip of frames through a continuous middle-drag pan at the garden close and
+// the low pose, and the probe's reading of each frame beside them. Timings are
+// not read here: the GPU rows come from docs/screenshots/issue-1713/gpu.mjs on
+// named hardware.
 //
 //   node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost:5173/?study=free-water' \
 //     --out docs/screenshots/issue-1749/after --steps docs/screenshots/issue-1749/frames.mjs
@@ -18,7 +20,18 @@ const POSES = [
   ['garden-close', 1875, 1125, 250, 90, 12, 275],
   ['low', 2000, 2000, 1600, 0, 12, 850],
   ['survey', 2000, 2000, 10000, 0, 88, null],
+  // The fleet from a low orbit at hull depth, the lamp/SIG reading: the three
+  // hulls sit about a dolly from the eye, in the water the study thickens.
+  ['fleet', 542, 1958, 1200, 0, 12, 300],
 ];
+
+/** How much of a subject one dolly out the water takes, and how much of a
+ * lamp's halo survives it (lampHaloPass.ts raises the fog's transmittance to
+ * 2.2), from the probe's reach. */
+const medium = (p) => {
+  const tau = Math.exp(-((p.distance / p.waterReachM) ** 2));
+  return { fogAtDolly: Number((1 - tau).toFixed(3)), haloAtDolly: Number((tau ** 2.2).toFixed(3)) };
+};
 
 export default async ({ page, shot }) => {
   const control = process.env.CONTROL === '1';
@@ -55,6 +68,7 @@ export default async ({ page, shot }) => {
       distance: p.distance,
       waterReachM: p.waterReachM,
       snow: p.snow,
+      subject: medium(p),
       calls: p.drawCalls,
       triangles: p.triangles,
       propTriangles: p.propTris,
@@ -89,6 +103,32 @@ export default async ({ page, shot }) => {
       await settle();
       await read('low-panned');
       await shot('low-panned');
+    }
+    if (process.env.PAN !== '0' && (name === 'garden-close' || name === 'low')) {
+      // Motion, not stills (§7): a continuous middle-drag pan across the
+      // playfield while the match runs, one frame per step of the drag, with
+      // the page clock and the camera's focus beside each.
+      await page.evaluate(
+        ({ x, z, distance, yawDeg, pitchDeg, focusDepthM }) => {
+          window.__perspectiveCamera(x, z, distance, { yawDeg, pitchDeg, focusDepthM });
+        },
+        { x, z, distance, yawDeg, pitchDeg, focusDepthM }
+      );
+      await settle();
+      await page.mouse.move(720, 420);
+      await page.mouse.down({ button: 'middle' });
+      const strip = [];
+      for (let step = 0; step < 6; step++) {
+        await page.mouse.move(720 - 30 * step, 420, { steps: 3 });
+        const at = await page.evaluate(() => {
+          const p = window.__perspectiveProbe();
+          return { tMs: Math.round(performance.now()), focus: p.focus, eye: p.eye };
+        });
+        strip.push(at);
+        await shot(`${name}-pan-${step}`);
+      }
+      await page.mouse.up({ button: 'middle' });
+      readings.push({ name: `${name}-pan`, strip });
     }
   }
   const renderer = await page.evaluate(() => {

@@ -2218,8 +2218,10 @@ describe('renderer smoke test: the water', () => {
           window: {
             __perspectiveProbe: () => {
               distance: number;
+              pitchDeg: number;
               waterReachM: number;
-              snow: { far: number; near: number };
+              eye: { xM: number; zM: number; depthM: number };
+              snow: { far: number; near: number; nearAnchor: { xM: number; zM: number } | null };
             };
           };
         }
@@ -2231,6 +2233,7 @@ describe('renderer smoke test: the water', () => {
       assert.equal(snowClouds(shipped.gl.lastScene).length, 1, 'one cloud on a shipped map');
       const report = probe();
       assert.equal(report.snow.near, 0);
+      assert.equal(report.snow.nearAnchor, null);
       assert.equal(report.waterReachM, Math.round(waterReachM(report.distance)));
     } finally {
       shipped.teardown();
@@ -2246,19 +2249,60 @@ describe('renderer smoke test: the water', () => {
       assert.equal(report.waterReachM, Math.round(waterReachM(report.distance, true)));
       assert.ok(report.waterReachM < waterReachM(report.distance), 'and sees less far');
       // In orbit the shipped cloud wraps on the focus and the study's on the
-      // eye: the one is the water the player looks at, the other the water
-      // that parallaxes past the lens.
-      const eye = study.conn.eyePosition;
+      // nearest water the eye looks into: the one is the water the player
+      // looks at, the other the water that parallaxes past the lens. The
+      // orbit's eye here is in the air, so that is where its sight line
+      // enters the water, eye height / tan(pitch) ahead on the plan.
+      const anchor = report.snow.nearAnchor;
+      assert.ok(anchor !== null);
       const anchors = clouds.map(
         (cloud) => (cloud.material as ShaderMaterial).uniforms.uFocus!.value
       );
-      // `eyePosition` reports plan x and plan y, the world's z.
-      const onEye = anchors.filter((a) => a.x === eye.x && a.y === eye.y);
-      assert.equal(onEye.length, 1, 'exactly one cloud is anchored on the eye');
+      const onAnchor = anchors.filter(
+        (a) => Math.round(a.x) === anchor.xM && Math.round(a.y) === anchor.zM
+      );
+      assert.equal(onAnchor.length, 1, 'exactly one cloud wraps on the reported anchor');
+      assert.ok(report.eye.depthM < 0, 'the orbit eye is above the surface');
+      const heightWorld = -report.eye.depthM * 0.22;
+      const ahead = Math.hypot(anchor.xM - report.eye.xM, anchor.zM - report.eye.zM);
+      const want = heightWorld / Math.tan((report.pitchDeg * Math.PI) / 180);
+      assert.ok(Math.abs(ahead - want) < want * 0.02 + 2, `anchor ${ahead} ahead, wanted ${want}`);
+      assert.ok(ahead > 10, 'and it is not the eye');
       const fog = study.gl.lastScene?.fog as FogExp2;
       assert.ok(Math.abs(fog.density - 1 / waterReachM(report.distance, true)) < 1e-9);
     } finally {
       study.teardown();
+    }
+
+    // The look can also change between sessions (`setLook`, before any
+    // terrain): the cloud comes with it and goes with it, disposed.
+    const gl = new HeadlessWebGLRenderer();
+    const late = new PerspectiveView();
+    try {
+      late.mount(
+        createHost(1280, 720) as unknown as HTMLElement,
+        () => gl.asRenderer(),
+        gl.environment
+      );
+      late.setActive(true);
+      pumpAnimationFrames();
+      assert.equal(snowClouds(gl.lastScene).length, 1);
+      assert.equal(late.setLook('free-water'), true);
+      pumpAnimationFrames();
+      const clouds = snowClouds(gl.lastScene);
+      assert.equal(clouds.length, 2, 'entering the study adds the cloud');
+      // The default camera sits 4,000 m out at 55°, past the near cloud's
+      // fade, so the probe reports its anchor rather than its motes here.
+      assert.ok(probe().snow.nearAnchor !== null);
+      let disposed = 0;
+      for (const cloud of clouds) cloud.geometry.addEventListener('dispose', () => disposed++);
+      assert.equal(late.setLook('standard'), true);
+      pumpAnimationFrames();
+      assert.equal(snowClouds(gl.lastScene).length, 1, 'leaving it removes the cloud');
+      assert.equal(disposed, 1, 'and disposes it');
+      assert.equal(probe().snow.nearAnchor, null);
+    } finally {
+      late.destroy();
     }
   });
 });

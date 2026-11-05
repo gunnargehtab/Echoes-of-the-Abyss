@@ -172,6 +172,7 @@ import {
   MarineSnow,
   STUDY_SNOW_NEAR,
   STUDY_SNOW_NEAR_COUNT,
+  STUDY_SNOW_NEAR_SPREAD_PER_ENTRY_M,
   waterColorAt,
   WaterBackdrop,
   fogDensityFor,
@@ -4749,18 +4750,25 @@ export class PerspectiveView {
       projectionScalePx,
       pixelRatio
     );
-    // The study's near cloud wraps on the eye in orbit and flight alike: the
-    // parallax it is for is the eye's, wherever the focus is.
-    this.nearSnow?.update(
-      now,
-      this.camera.position,
-      this.camera.position.x,
-      this.camera.position.z,
-      this.waterReach,
-      this.waterDensity,
-      projectionScalePx,
-      pixelRatio
-    );
+    // The study's near cloud wraps on the nearest water the eye looks into,
+    // in orbit and flight alike (`nearSnowAnchor`): the parallax it is for
+    // is the eye's, wherever the focus is.
+    if (this.nearSnow !== null) {
+      const anchor = this.nearSnowAnchor();
+      const eye = this.camera.position;
+      const entryM = Math.hypot(anchor.x - eye.x, anchor.z - eye.z);
+      this.nearSnow.update(
+        now,
+        eye,
+        anchor.x,
+        anchor.z,
+        this.waterReach,
+        this.waterDensity,
+        projectionScalePx,
+        pixelRatio,
+        entryM * STUDY_SNOW_NEAR_SPREAD_PER_ENTRY_M
+      );
+    }
     // Not the water, but it swims in it: the stipple fades with the same
     // reach and sizes its dots on the same projection scale as the snow.
     this.life.update({
@@ -4779,6 +4787,31 @@ export class PerspectiveView {
       projectionScalePx,
       pixelRatio,
     });
+  }
+
+  /**
+   * Where the study's near cloud wraps, on the plan: the eye itself while it
+   * is in the water, and otherwise the point where its sight line enters the
+   * water (docs/free-water-slice.md §9, "Water medium", change 2).
+   *
+   * The column is drawn at 0.22, so the orbit's eye is in the air at every
+   * dolly past a few hundred units: at the low pose it is about 680 m up,
+   * and a slab wrapped on its plan lies under the frame's lower edge, behind
+   * the HUD, where nobody sees it. The nearest water the eye *looks into* is
+   * where the sight line crosses the surface, so the cloud wraps there
+   * instead, and the two anchors meet as the eye sinks through the surface.
+   * It is a world point, not a screen one: between wraps a mote holds still
+   * while the camera moves, and nothing turns with the projection
+   * (docs/free-camera.md §5). A camera in the air looking level or up has no
+   * entry and keeps the eye.
+   */
+  private nearSnowAnchor(): { x: number; z: number } {
+    const eye = this.camera.position;
+    if (eye.y <= 0) return { x: eye.x, z: eye.z };
+    const forward = this.camera.getWorldDirection(DIR_TMP);
+    if (forward.y >= -1e-3) return { x: eye.x, z: eye.z };
+    const t = eye.y / -forward.y;
+    return { x: eye.x + forward.x * t, z: eye.z + forward.z * t };
   }
 
   /** See `cameraRevision`. */
@@ -5251,7 +5284,14 @@ export class PerspectiveView {
       // The particulate this frame: the motes each cloud is drawing, zero for
       // a cloud the eye has climbed out of. The study's near cloud is `near`;
       // a shipped map reports none (docs/free-water-slice.md §9).
-      snow: { far: this.snow.motes, near: this.nearSnow?.motes ?? 0 },
+      snow: {
+        far: this.snow.motes,
+        near: this.nearSnow?.motes ?? 0,
+        nearAnchor:
+          this.nearSnow === null
+            ? null
+            : (({ x, z }) => ({ xM: Math.round(x), zM: Math.round(z) }))(this.nearSnowAnchor()),
+      },
       hullScale: Number(this.drawScale.toFixed(2)),
       // The whole last frame's, every pass summed: info is reset once a frame
       // (renderFrame), not on every render(). `passes` names the renders.

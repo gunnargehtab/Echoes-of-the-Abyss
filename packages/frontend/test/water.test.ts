@@ -302,21 +302,36 @@ describe("the free-water study's water (docs/free-water-slice.md §9, water medi
       assert.equal(farUniforms.uGain!.value, SNOW_FAR.gain);
       assert.equal(far.motes, 32);
       assert.equal(near.motes, 32);
+      // From the air the view hands in a floor on the slab, so the cloud
+      // fills the frustum where the sight line meets the water instead of
+      // sitting in it as a patch; the floor only ever widens it.
+      near.update(0, eye, 0, 0, reachM, 1, 1000, 1, 1200);
+      assert.equal(nearUniforms.uSpreadM!.value, 1200);
+      near.update(0, eye, 0, 0, reachM, 1, 1000, 1, 100);
+      assert.equal(nearUniforms.uSpreadM!.value, reachM * STUDY_SNOW_NEAR.spreadReaches);
 
-      // The 55° home orbit, 2,600 m out: the eye is about 9,700 m above the
-      // surface. The shipped cloud has faded there; the study's has not.
-      eye.y = 9700 * 0.22;
+      // §9's low pose, 1,600 m out at 12°: the eye is about 680 m above the
+      // surface (its probe reading), and both clouds are whole.
+      eye.y = 680 * 0.22;
       for (const snow of [far, near]) snow.update(1, eye, 0, 0, reachM, 1, 1000, 1);
-      assert.equal(farUniforms.uStrength!.value, 0);
-      assert.equal(far.motes, 0);
-      assert.ok(nearUniforms.uStrength!.value > 0.2);
-      assert.equal(near.motes, 32);
+      assert.equal(farUniforms.uStrength!.value, 1);
+      assert.equal(nearUniforms.uStrength!.value, 1);
 
-      // The survey, 10,000 m out at 88°: no water in either.
-      eye.y = 45_000 * 0.22;
+      // A 15° orbit 2,600 m out, about 3,000 m up: the shipped cloud is
+      // fading and the study's is still most of itself.
+      eye.y = 3000 * 0.22;
       for (const snow of [far, near]) snow.update(2, eye, 0, 0, reachM, 1, 1000, 1);
-      assert.equal(nearUniforms.uStrength!.value, 0);
+      assert.ok(farUniforms.uStrength!.value < 0.7);
+      assert.ok(nearUniforms.uStrength!.value > 0.8);
+      assert.ok(nearUniforms.uStrength!.value > farUniforms.uStrength!.value);
+
+      // The 55° home orbit, 2,600 m out, about 9,100 m up: neither draws, so
+      // no mote lands as dust over the lit ground of the overview.
+      eye.y = 9100 * 0.22;
+      for (const snow of [far, near]) snow.update(3, eye, 0, 0, reachM, 1, 1000, 1);
+      assert.equal(far.motes, 0);
       assert.equal(near.motes, 0);
+      assert.equal(nearUniforms.uStrength!.value, 0);
     } finally {
       far.dispose();
       near.dispose();
