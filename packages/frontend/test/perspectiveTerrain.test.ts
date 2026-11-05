@@ -426,17 +426,31 @@ describe('eroded cell edges (docs/free-water-slice.md §9)', () => {
     const at = (y: number) => erodedGroundAtM(terrain, seed, rockTop, x, y).rockWeight;
     assert.equal(at(2875), 0, 'the bowl centre');
     assert.equal(at(3125), 1, 'the rock centre');
-    const foot = ERODED_EDGES.FOOT_M;
-    const setback = ERODED_EDGES.SETBACK_M + ERODED_EDGES.WANDER_M;
-    assert.equal(at(3000 - foot - ERODED_EDGES.WANDER_M - 1), 0, 'open water before the foot');
-    assert.equal(at(3000 + setback + 1), 1, 'stone past the setback');
-    let rises = 0;
-    for (let y = 2875; y < 3125; y += 5) if (at(y) > 0 && at(y) < 1) rises++;
-    assert.ok(rises > 0, 'and a face between the two');
-    const y = 3000 + setback + 1;
+    // Walk the 11/12 patch from the bowl's centre to the rock's: water, then
+    // the face, then stone, each a run, and the stone run beginning before
+    // the rock's centre at 3,125 and no further from the edge than the
+    // setback and the wander allow.
+    const runs: string[] = [];
+    let stoneFrom = Infinity;
+    for (let y = 2875; y <= 3125; y += 1) {
+      const w = at(y);
+      const kind = w === 0 ? 'water' : w === 1 ? 'stone' : 'face';
+      if (runs.at(-1) !== kind) runs.push(kind);
+      if (kind === 'stone') stoneFrom = Math.min(stoneFrom, y);
+    }
+    assert.deepEqual(runs, ['water', 'face', 'stone']);
+    assert.ok(
+      stoneFrom > 3000 && stoneFrom <= 3000 + ERODED_EDGES.SETBACK_M + ERODED_EDGES.WANDER_M,
+      `stone from y=${stoneFrom}`
+    );
     assert.equal(
-      seabedDepthAtM(terrain, seed, rockTop, x, y, true),
-      rockSurfaceDepthM(seed, rockTop, x, y),
+      at(3000 - ERODED_EDGES.FOOT_M - ERODED_EDGES.WANDER_M - 1),
+      0,
+      'water before the foot'
+    );
+    assert.equal(
+      seabedDepthAtM(terrain, seed, rockTop, x, stoneFrom, true),
+      rockSurfaceDepthM(seed, rockTop, x, stoneFrom),
       'stone past the setback is the rock surface, crag and all'
     );
   });

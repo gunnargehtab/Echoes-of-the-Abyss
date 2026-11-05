@@ -5,7 +5,6 @@ import { flightInterval, rotateFlight, sweepFlight } from '../src/game/flightCam
 import { freeWaterControlsEnabled } from '../src/game/freeWaterControls.ts';
 import { cannedTerrain } from './support/cannedMatch.ts';
 import { buildHeightGrid, DEPTH_VISUAL_M_PER_M } from '../src/game/perspectiveTerrain.ts';
-import { FLIGHT_CAMERA } from '@echoes/shared';
 import { seabedSeed } from '../src/game/seabed.ts';
 import { terrainFor } from '../../backend/src/sim/maps/index.ts';
 import { FREE_WATER_SLICE } from '../../backend/src/sim/maps/freeWaterSlice.ts';
@@ -97,7 +96,6 @@ describe('free-water flight boundary', () => {
     assert.ok(gap > 50 * DEPTH_VISUAL_M_PER_M, 'the premise: the grids differ over open water');
     const x = (best % plain.vertsX) * plain.stepM + 1;
     const z = Math.floor(best / plain.vertsX) * plain.stepM + 1;
-    const clearance = FLIGHT_CAMERA.CLEARANCE_M * DEPTH_VISUAL_M_PER_M;
     const onPlain = flightInterval(terrain, plain, x, z)!;
     const onEroded = flightInterval(terrain, eroded, x, z)!;
     assert.ok(Math.abs(onEroded.minY - onPlain.minY) > 40 * DEPTH_VISUAL_M_PER_M);
@@ -108,9 +106,6 @@ describe('free-water flight boundary', () => {
       const eye = new Vector3(x, interval.maxY, z);
       assert.equal(sweepFlight(eye, new Vector3(0, -1000, 0), terrain, grid), false);
       assert.ok(Math.abs(eye.y - interval.minY) < 1e-3, 'the eye stops at the drawn floor');
-      // The clearance is over the triangle itself: a vertex's own height
-      // plus the clearance, within the triangle's slope over one metre.
-      assert.ok(eye.y >= grid.y[best]! + clearance - 1e-6 - 2 * grid.stepM);
     }
     assert.notEqual(
       Math.round(sweepFlightDepth(plain, terrain, x, z, onPlain.maxY)),

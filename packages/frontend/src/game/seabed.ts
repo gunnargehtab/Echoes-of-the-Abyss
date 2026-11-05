@@ -403,8 +403,9 @@ export const ERODED_EDGES = {
   /**
    * How much of an open ramp's rise moves into a scarp midway between the
    * centres, at most; 0 is the shipped linear ramp. The slope at a centre
-   * stays at least 1 − SCARP of linear, so a run of cells climbs as a ramp
-   * with terraces rather than as #1532's staircase of flat treads.
+   * stays positive, at least (1 − SCARP)(1 − 4 WANDER_M / cell) of linear,
+   * under one percent at the worst wander: a tread, not #1532's flat step,
+   * and on a crater's rim a terrace is the aim.
    */
   SCARP: 0.8,
   SCARP_WAVELENGTH_M: 520,
@@ -413,7 +414,7 @@ export const ERODED_EDGES = {
   /**
    * How far the face is set back into the rock, metres: an eroded lip. The
    * least is under a vertex step (62.5 m), so the steepest face is still a
-   * wall between two vertices; foot and setback together stay under half a
+   * wall between two vertices; the most, with the wander, stays under half a
    * cell, so the face ends before the rock's centre.
    */
   SETBACK_MIN_M: 40,
@@ -873,6 +874,9 @@ export function shadeSeabed(
   // the authored floor alone beside it, whose slope stays darken-only.
   const height = new Float32Array(ew * (ey1 - ey0));
   const ground = new Float32Array(ew * (ey1 - ey0));
+  // Under the study's eroded edges, how much of each pixel is rock: the
+  // rim's and the cliff shadow's place, since the face is no longer the edge.
+  const share = new Float32Array(ew * (ey1 - ey0));
   const mPerPx = cellM / ppc;
   for (let py = ey0; py < ey1; py++) {
     // Continuous cell coordinate of this pixel's centre.
@@ -895,6 +899,7 @@ export function shadeSeabed(
         const drawn = erodedGroundAtM(terrain, seed, eroded.rockTopM, xM, yM);
         floor = drawn.stepM;
         rockShare = drawn.rockWeight;
+        share[(py - ey0) * ew + (px - ex0)] = rockShare;
       } else {
         const homeIndex = clampRow(Math.round(cy)) * cols + clampCol(Math.round(cx));
         const f00 = floorAt(r0, c0, homeIndex);
@@ -951,6 +956,19 @@ export function shadeSeabed(
   /** Darken-only gain ramping from `gain` at the boundary to 1 at `reachM`. */
   const edgeGain = (distM: number, reachM: number, gain: number) =>
     distM >= reachM ? 1 : gain + (1 - gain) * smooth(distM / reachM);
+  /**
+   * The same two treatments under the study's eroded edges, where the face is
+   * no longer on the cell edge but wherever the rock's share runs from 1 to 0:
+   * the rim darkens down the face from its lip, the lee darkens the foot up
+   * to the face. Both still darken only, and the stone fill stays the cell's,
+   * so the coast the ink dashes on the edge is still where the stone begins
+   * (docs/art-direction.md "Rock speaks in stone"; docs/map-visuals.md §4).
+   */
+  const rimGainOf = (rockShare: number) =>
+    ROCK_EDGE_GAIN + (1 - ROCK_EDGE_GAIN) * smooth(Math.min(1, Math.max(0, 2 * rockShare - 1)));
+  const leeGainOf = (rockShare: number) =>
+    CLIFF_SHADOW_GAIN +
+    (1 - CLIFF_SHADOW_GAIN) * smooth(Math.min(1, Math.max(0, 1 - 2 * rockShare)));
 
   for (let py = y0; py < y1; py++) {
     const row = clampRow(Math.floor(py / ppc));
@@ -996,7 +1014,9 @@ export function shadeSeabed(
           texture *
             // The rim: darkened toward ROCK_SHADOW where the mesa meets open
             // water, so a flat top reads as raised ground with an edge.
-            edgeGain(oppositeDistM(xM, yM, row, col, false), ROCK_EDGE_M, ROCK_EDGE_GAIN)
+            (eroded !== undefined
+              ? rimGainOf(share[(py - ey0) * ew + (px - ex0)]!)
+              : edgeGain(oppositeDistM(xM, yM, row, col, false), ROCK_EDGE_M, ROCK_EDGE_GAIN))
         );
       } else {
         const i = (py - ey0) * ew + (px - ex0);
@@ -1043,7 +1063,13 @@ export function shadeSeabed(
           texture *
             // The wall's lee: open floor darkens where it meets a mesa, so
             // the rock reads as standing on the seabed, not pasted over it.
-            edgeGain(oppositeDistM(xM, yM, row, col, true), CLIFF_SHADOW_M, CLIFF_SHADOW_GAIN) *
+            (eroded !== undefined
+              ? leeGainOf(share[i]!)
+              : edgeGain(
+                  oppositeDistM(xM, yM, row, col, true),
+                  CLIFF_SHADOW_M,
+                  CLIFF_SHADOW_GAIN
+                )) *
             scour
         );
       }

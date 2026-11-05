@@ -87,6 +87,7 @@ import {
   CELL_M,
   COLS,
   ROWS,
+  ROWS,
 } from './support/cannedMatch.ts';
 import {
   collarRadius,
@@ -98,6 +99,8 @@ import {
 } from '../src/game/EchoRenderer.ts';
 import type { ReadoutBox } from '../src/game/readouts.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
+import { rockTopDepthM, seabedDepthAtM } from '../src/game/perspectiveTerrain.ts';
+import { seabedSeed } from '../src/game/seabed.ts';
 import { panFor } from '../src/audio/contactVoice.ts';
 import { SELF_BANDS, selfMixFor } from '../src/audio/selfNoise.ts';
 import type { ContactAudioFrame } from '../src/audio/contactMixer.ts';
@@ -2201,24 +2204,49 @@ describe('renderer smoke test: the water', () => {
   it('draws the free-water study on eroded cell edges, and no other look', async () => {
     // docs/free-water-slice.md §9, "Crater walls": the study's ground is the
     // eroded heightfield (perspectiveTerrain.ts `seabedDepthAtM`, eroded),
-    // and the probe says so; a shipped map stands on the bilinear one.
-    const probe = () =>
+    // and the probe says so; a shipped map stands on the bilinear one. The
+    // ground read is the view's own (`__perspectiveSeabedM`, what the eye
+    // clears and the props stand on), asked at a point between a rock
+    // centre and an open one on the canned map, where the two differ.
+    const probes = () =>
       (
         globalThis as unknown as {
-          window: { __perspectiveProbe: () => { ground: { eroded: boolean } } };
+          window: {
+            __perspectiveProbe: () => { ground: { eroded: boolean } };
+            __perspectiveSeabedM: (x: number, z: number) => number;
+          };
         }
-      ).window.__perspectiveProbe();
+      ).window;
+    const terrain = cannedTerrain();
+    const seed = seabedSeed(terrain);
+    const rockTop = rockTopDepthM(terrain);
+    // The point on the canned map where the two samples differ most: on a
+    // scarp between two centres, since nothing differs at a centre.
+    let x = 0;
+    let z = 0;
+    let plain = 0;
+    let eroded = 0;
+    for (let zi = 20; zi < ROWS * CELL_M; zi += 35) {
+      for (let xi = 20; xi < COLS * CELL_M; xi += 35) {
+        const a = seabedDepthAtM(terrain, seed, rockTop, xi, zi);
+        const b = seabedDepthAtM(terrain, seed, rockTop, xi, zi, true);
+        if (Math.abs(a - b) > Math.abs(plain - eroded)) [x, z, plain, eroded] = [xi, zi, a, b];
+      }
+    }
+    assert.ok(Math.abs(plain - eroded) > 10, 'the premise: the two differ between centres');
     const shipped = await boot();
     try {
       shipped.frame(1);
-      assert.equal(probe().ground.eroded, false);
+      assert.equal(probes().__perspectiveProbe().ground.eroded, false);
+      assert.equal(probes().__perspectiveSeabedM(x, z), plain);
     } finally {
       shipped.teardown();
     }
     const study = await boot({ look: 'free-water' });
     try {
       study.frame(1);
-      assert.equal(probe().ground.eroded, true);
+      assert.equal(probes().__perspectiveProbe().ground.eroded, true);
+      assert.equal(probes().__perspectiveSeabedM(x, z), eroded);
     } finally {
       study.teardown();
     }
