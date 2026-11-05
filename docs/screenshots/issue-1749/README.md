@@ -25,6 +25,9 @@ CONTROL=1 FRAMES=low,survey PAN=0 node .claude/skills/run-game/scripts/drive.mjs
 ```
 
 `before/` and `control-before/` are the same runs against the base commit (398322fdd).
+The after sets were captured at 9799cd8ba; the one change after it, a pinned depth of the
+slab's own that the focus clamp never writes, alters no captured pose, since no strip pans
+onto ground shallower than its pin.
 Every `readings.json` carries the probe's reach, mote counts, the near cloud's anchor and
 side, calls and triangles per frame, and `subject`: the fog on a subject one dolly out and
 the share of a lamp's halo that survives it.
@@ -92,8 +95,9 @@ decoration with and without a hidden Hollow byte for byte, and no wire field cha
   side that followed the sway or the ground would slide every mote sideways, a current's
   bearing; the side is worked out from the dolly, the pitch and the depth the player
   pinned, at 850 m while the focus rests on the seabed, and `rendererSmoke.test.ts` holds
-  it exact across a heave and across a seabed-focus pan over relief. A zoom or a pitch
-  change still re-sizes it, as the dolly re-sizes the shipped cloud's.
+  it exact across a heave, across a seabed-focus pan over relief, and across a pan that
+  lifts a pinned focus onto shallower ground. A zoom, a pitch or a depth change still
+  re-sizes it, as the dolly re-sizes the shipped cloud's.
 - **Reduced motion.** [reduced-motion/01-low.png](reduced-motion/01-low.png): both clouds
   drawn with the sink held, as docs/ui-ux.md §11 asks, since the parallax belongs to the
   camera and not to an animation.

@@ -2335,7 +2335,29 @@ describe('renderer smoke test: the water', () => {
       assert.ok(depths.size > 1, 'the ground under the focus did change across the pan');
       study.conn.focusWorld(3000, 2600, report.distance * 2);
       study.frame(1);
-      assert.ok(probe().snow.nearSpreadM! > spread, 'a zoom out widens the slab');
+      const zoomed = probe().snow.nearSpreadM!;
+      assert.ok(zoomed > spread, 'a zoom out widens the slab');
+
+      // A pinned depth is the player's own, and the side is sized at it even
+      // where the clamp lifts the focus onto shallower ground: pin deeper than
+      // the shelf's shallow north-west, pan onto it, and the focus rises with
+      // the seabed while the side holds.
+      // Back to the opening dolly first: zoomed out, both sides would meet
+      // the slab's cap and the assertion would hold for the wrong reason.
+      study.conn.focusWorld(3000, 2600, report.distance);
+      study.conn.raiseFocusBy(100);
+      study.frame(1);
+      const pinned = probe();
+      assert.ok(pinned.focus.depthM !== null, 'the focus is pinned in the column');
+      const pinnedSide = pinned.snow.nearSpreadM!;
+      study.conn.focusWorld(200, 200);
+      study.frame(1);
+      const lifted = probe();
+      assert.ok(
+        lifted.focus.depthM !== null && lifted.focus.depthM < pinned.focus.depthM!,
+        'the clamp lifted the pin onto the shallow shelf'
+      );
+      assert.equal(lifted.snow.nearSpreadM, pinnedSide, 'and the side did not follow it');
     } finally {
       study.teardown();
     }

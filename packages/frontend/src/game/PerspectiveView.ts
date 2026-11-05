@@ -876,6 +876,15 @@ export class PerspectiveView {
    */
   private readonly restEye = new Vector3();
   /**
+   * The depth the player last asked the focus to hold, for the near slab's
+   * side alone (`nearSnowSpreadFloor`). `focusDepthM` is not that number:
+   * `clampTarget` writes the seabed over it whenever a pan climbs onto ground
+   * shallower than the pin, so the side would follow the ground through it.
+   * Set by the depth verbs, nulled where `focusDepthM` is nulled, and never
+   * written by the clamp.
+   */
+  private nearSnowDepthM: number | null = null;
+  /**
    * Tetherjelly fields and Lampfry shoals as stipple in the water column
    * (faunaStipple.ts, docs/map-visuals.md §8): two draw calls, the pulse on
    * the GPU. Public chart data, so it takes the snapshot's public layers and
@@ -2195,6 +2204,7 @@ export class PerspectiveView {
     const seabed = this.seabedDepthAt(this.target.x, this.target.z);
     const next = (this.focusDepthM ?? seabed) - metres;
     this.focusDepthM = next >= seabed ? null : next;
+    this.nearSnowDepthM = this.focusDepthM;
     this.clampTarget();
     this.applyCamera();
   }
@@ -2221,6 +2231,7 @@ export class PerspectiveView {
     this.yaw = 0;
     this.pitch = (HOME_PITCH_DEG * Math.PI) / 180;
     this.focusDepthM = null;
+    this.nearSnowDepthM = null;
     this.applyCamera();
   }
 
@@ -2391,6 +2402,7 @@ export class PerspectiveView {
     // lifted into the column comes back down. The angles are theirs and are
     // left alone — `home()` is the verb that takes those back.
     this.focusDepthM = null;
+    this.nearSnowDepthM = null;
     this.distance = opening.distanceM;
     this.applyCamera();
   }
@@ -2417,6 +2429,7 @@ export class PerspectiveView {
     this.target.x = frame.xM;
     this.target.z = frame.yM;
     this.focusDepthM = null;
+    this.nearSnowDepthM = null;
     this.clampTarget();
     this.distance = Math.max(250, frame.distanceM);
     this.yaw = (frame.yawDeg * Math.PI) / 180;
@@ -4810,7 +4823,8 @@ export class PerspectiveView {
    * where the sight line crosses the surface, so the cloud wraps there
    * instead, and the two anchors meet as the eye sinks through the surface.
    * It is a world point, not a screen one: between wraps a mote holds still
-   * while the camera moves, and nothing turns with the projection
+   * under a pan and the sway, while a zoom, a pitch or a depth change re-sizes
+   * the slab (`nearSnowSpreadFloor`), and nothing turns with the projection
    * (docs/free-camera.md §5). A camera in the air looking level or up has no
    * entry and keeps the eye. Worked from `restEye`, the eye before the sway,
    * for the reason given there; the sway translates the eye and never turns
@@ -4840,9 +4854,15 @@ export class PerspectiveView {
    * `focusY()` is the ground under the focus, so an ordinary pan over relief
    * would re-lattice the cloud mid-pan, radially from the map origin, which
    * states a current; the side is worked out at `STUDY_SNOW_NEAR_SEABED_FOCUS_M`
-   * instead, and the anchor alone follows the real entry. In flight the side
-   * follows the eye's own height, which only the player's hand moves, and is
-   * nought while the eye is in the water.
+   * instead, and the anchor alone follows the real entry. A pinned depth is
+   * read from `nearSnowDepthM`, the one the player asked for, since the clamp
+   * writes the seabed over `focusDepthM` on a pan onto shallower ground. The
+   * reference has a cost: off its depth the slab is sized for the wrong
+   * height, so over the 1,500 m bowl or the 2,400 m pocket, where the eye is
+   * at or under the surface, the cloud at the eye is sparser than the at-eye
+   * slab's 420 m side would make it, though still several times the far
+   * cloud's density. In flight the side follows the eye's own height, which
+   * only the player's hand moves, and is nought while the eye is in the water.
    */
   private nearSnowSpreadFloor(): number {
     let eyeY: number;
@@ -4854,7 +4874,7 @@ export class PerspectiveView {
       eyeY = eye.y;
       cot = Math.hypot(forward.x, forward.z) / -forward.y;
     } else {
-      const focusDepthM = this.focusDepthM ?? STUDY_SNOW_NEAR_SEABED_FOCUS_M;
+      const focusDepthM = this.nearSnowDepthM ?? STUDY_SNOW_NEAR_SEABED_FOCUS_M;
       eyeY = -focusDepthM * DEPTH_VISUAL_M_PER_M + Math.sin(this.pitch) * this.distance;
       if (eyeY <= 0) return 0;
       cot = 1 / Math.tan(this.pitch);
@@ -5158,7 +5178,10 @@ export class PerspectiveView {
       this.focusWorld(x, z, distance);
       if (aim === undefined) return;
       if (aim.yawDeg !== undefined) this.yaw = (aim.yawDeg * Math.PI) / 180;
-      if (aim.focusDepthM !== undefined) this.focusDepthM = aim.focusDepthM;
+      if (aim.focusDepthM !== undefined) {
+        this.focusDepthM = aim.focusDepthM;
+        this.nearSnowDepthM = aim.focusDepthM;
+      }
       // Last, because it clamps and re-applies — and because the clamp has to
       // see the focus the other two just set.
       this.setPitch(aim.pitchDeg === undefined ? this.pitch : (aim.pitchDeg * Math.PI) / 180);
