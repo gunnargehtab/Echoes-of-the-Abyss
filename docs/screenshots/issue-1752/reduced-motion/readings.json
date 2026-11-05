@@ -1,0 +1,71 @@
+{
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "software": true,
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "reducedMotion": true,
+  "readings": [
+    {
+      "name": "opening",
+      "look": "free-water",
+      "pitchDeg": 15,
+      "yawDeg": 326,
+      "focus": {
+        "xM": 709,
+        "zM": 1710,
+        "depthM": 300
+      },
+      "eye": {
+        "xM": 61,
+        "zM": 2671,
+        "depthM": -1112
+      },
+      "distance": 1200,
+      "flight": {
+        "flying": false,
+        "navigating": false,
+        "depthM": -1112,
+        "bearingDeg": 34,
+        "upX": -1.3877787807814457e-17,
+        "upY": -0.9659258262890683,
+        "inverted": false,
+        "blocked": false
+      },
+      "ownCentre": {
+        "x": 541.6666666666666,
+        "z": 1958.3333333333333
+      },
+      "waterReachM": 1805,
+      "calls": 43,
+      "triangles": 547546,
+      "props": 200,
+      "propTriangles": 530800,
+      "sway": "held",
+      "panels": {
+        "flightPanel": {
+          "x": 734,
+          "y": 618,
+          "w": 192,
+          "h": 50,
+          "text": "FLIGHTNAVHOME"
+        },
+        "legend": {
+          "x": 1132,
+          "y": 671,
+          "w": 296,
+          "h": 18,
+          "text": "DECORATIVE LIFE — NO TACTICAL SIGNAL"
+        },
+        "hint": {
+          "x": 176,
+          "width": 693.5625,
+          "text": "LMB drag select  ·  MMB pan  ·  L+R drag depth  ·  R/F/T/G/B build  ·  1-9 groups  ·  wheel zoom"
+        },
+        "uiScale": "1"
+      }
+    }
+  ]
+}

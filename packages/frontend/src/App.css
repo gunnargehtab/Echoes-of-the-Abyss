@@ -18,17 +18,41 @@
   height: 100%;
 }
 
+/* The free-water camera panel (docs/free-water-slice.md §9, "Opening view"):
+   beside the console's command block, standing on the hint line above it and
+   on the block's left edge, both read off the HUD's own layout (`--commands-x`
+   from consoleLayout.ts, `--hint-row-units` from uiScale.ts). Anchored at its
+   foot so flight's EYE readout and NAV's motion buttons grow upward over the
+   water and never into the console, and never wider than the block it stands
+   by, border and padding included. */
 .flight-panel {
+  box-sizing: border-box;
   position: absolute;
-  top: 62px;
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: 290px;
+  left: calc(var(--commands-x) * var(--ui-scale, 1));
+  bottom: calc(var(--hint-row-units) * var(--ui-scale, 1));
+  max-width: calc(380px * var(--ui-scale, 1));
   padding: 8px;
   color: var(--text-bright);
   background: var(--abyss-void);
   border: 1px solid currentColor;
   font-size: var(--panel-type);
+}
+
+/* The public decoration's disclosure (free-water-slice.md §5), one line and
+   no box in the bottom-right corner, on the hint line's row: the corner the
+   mission log would take, and the study runs none. The hint line yields to
+   it (EchoRenderer, the hint line), which is why panelRects.ts hands it over
+   on its own path (HINT_ROW_PANELS). */
+.decorative-life {
+  position: absolute;
+  right: calc(12px * var(--ui-scale, 1));
+  bottom: calc((var(--console-units) + 3px) * var(--ui-scale, 1));
+  margin: 0;
+  color: var(--text-dim);
+  font-family: var(--font-data);
+  font-size: calc(12px * var(--ui-scale, 1));
+  letter-spacing: 1px;
+  pointer-events: none;
 }
 
 .flight-panel button {

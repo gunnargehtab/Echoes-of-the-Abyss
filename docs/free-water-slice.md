@@ -530,21 +530,32 @@ depth stays luminance.
 
 ### Opening view (#1752)
 
-Today the study opens at Home pitch, 55 degrees down from 2,600 m (`HOME_DOLLY_M`) over the
-fleet's centroid on the west rim: the opening row's before frame below. Entry instead opens
-the ordinary orbit, not flight. Its focus sits at the hulls' 300 m depth on the line from
-their centroid toward mark A, far enough ahead that the hulls fall in the lower third,
-since the orbit aims at its focus. It is pitched 15 degrees, inside the 10–88 degree band,
-and heads about 34 degrees east of north, toward A, which is `yawDeg` −34 in the code. The
-focus offset and the dolly are TUNABLEs chosen against the opening row. Home is unchanged
-and still restores north, 55 degrees and the seabed.
+Before #1752 the study opened at Home pitch, 55 degrees down from 2,600 m (`HOME_DOLLY_M`)
+over the fleet's centroid on the west rim: the opening row's before frame below. Entry
+now opens the ordinary orbit, not flight. Its focus sits at the hulls' 300 m depth on the
+line from their centroid toward mark A, far enough ahead that the hulls fall in the lower
+third, since the orbit aims at its focus. It is pitched 15 degrees, inside the 10–88 degree
+band, and heads about 34 degrees east of north, toward A, which is `yawDeg` −34 in the
+code. The focus offset and the dolly are TUNABLEs chosen against the opening row
+(`FREE_WATER_OPENING` in `packages/shared/src/constants.ts`): the focus 300 m ahead of the
+centroid, and a dolly of 1,200 m. The eye is then 1,110 m above the Lid, as the Home frame's
+is about 9,100 m above it: the field of view is 40 degrees and the console takes the bottom
+quarter of the window, so a nearer eye at this pitch loses the hulls under the console,
+and a focus nearer the centroid lifts them to the centre. At this dolly the water reaches
+about 1,800 m (§9, Water medium), so the hulls, about 900 m off, read through it, and the
+garden's canopy stands beyond them at the top right of the frame. Home is unchanged and still restores north, 55
+degrees and the seabed, and keeps this dolly and place as it keeps any.
 
-The legend becomes one line with no box, in the bottom-right corner, which the study
-leaves free because it runs no mission log. FLIGHT, NAV and HOME move beside the console's
-command panel, keeping their labels, focus order and shortcuts. The rest of the panel
-moves with them and keeps its conditions: the EYE and world-up readout and NO CAMERA
-CLEARANCE in flight, and the NAV status line and motion buttons in NAV. Survey ink is
-unchanged: it already fades into the water with the ground under it.
+The legend is one line with no box, in the bottom-right corner, which the study leaves
+free because it runs no mission log: on the hint line's row, right-aligned, in the hint's
+own dim type, and the hint yields to it alone, trimming a clause at a time as it does for
+a narrow window; the panels over the water move no hint. FLIGHT, NAV and HOME stand beside the console's command block, on the hint
+line above it and on the block's left edge, which the shell reads off the console's own
+layout, keeping their labels, focus order and shortcuts. The rest of the panel stands with
+them and keeps its conditions: the EYE and world-up readout and NO CAMERA CLEARANCE in
+flight, and the NAV status line and motion buttons in NAV, growing upward over the water
+rather than into the console. Survey ink is unchanged: it already fades into the water
+with the ground under it.
 
 ### Water medium (#1749)
 
@@ -695,7 +706,7 @@ each child's frames answer what it shows.
 
 | Frame | Pose: plan x / y, dolly, pitch, focus depth | Before | Must read as |
 | --- | --- | --- | --- |
-| Opening | On the centroid-to-A line ahead of the hulls, at 300 m; 15 degrees; heading about 34 degrees east of north (`yawDeg` −34); offset and dolly by frame | [01-home.png](screenshots/issue-1713/dpr-1/01-home.png): 542 / 1,958, 2,600 m, 55 degrees, seabed | The three hulls in the lower third, the garden canopy beyond them, water rather than clear colour above the far rim, and the legend as one line in its corner |
+| Opening | 300 m ahead of the hulls' centroid on the centroid-to-A line, at 300 m; 1,200 m; 15 degrees; heading about 34 degrees east of north (`yawDeg` −34) | [01-home.png](screenshots/issue-1713/dpr-1/01-home.png): 542 / 1,958, 2,600 m, 55 degrees, seabed | The three hulls in the lower third, the garden canopy beyond them, water rather than clear colour above the far rim, and the legend as one line in its corner |
 | Garden close | 1,875 / 1,125 in the clearing, 250 m, 12 degrees, 275 m; heading west along it (`yawDeg` 90) | Captured on its base by the first child that touches this row; no committed frame has this pose, and the nearest is [02-garden-close.png](screenshots/issue-1713/dpr-1/02-garden-close.png), the yaw-0 station | Kelp at canonical scale as one forest on both flanks of a bare clearing, with near stands separated from far ones by the water |
 | Low | 2,000 / 2,000, 1,600 m, 12 degrees, 850 m | [03-low.png](screenshots/issue-1713/dpr-1/03-low.png) | Water visibly between the eye and the floor, the bowl's drawn edges as eroded rock terraces rather than 250 m boxes under unchanged ink, and depth still darkening downward |
 | Survey | 2,000 / 2,000, 10,000 m, 88 degrees, seabed | [04-survey.png](screenshots/issue-1713/dpr-1/04-survey.png) | Decoration below tactical ink, own hulls and contacts readable, and the ink unchanged: coastlines on the cell edges and isobaths of the authored floor ([map-visuals.md](map-visuals.md) §4) |

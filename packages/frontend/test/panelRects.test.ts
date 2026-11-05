@@ -8,7 +8,7 @@
  */
 import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { FLOATING_PANELS, watchPanels } from '../src/game/panelRects.ts';
+import { FLOATING_PANELS, HINT_ROW_PANELS, watchPanels } from '../src/game/panelRects.ts';
 import type { PanelRect } from '../src/game/EchoRenderer.ts';
 
 type Rect = { left: number; top: number; width: number; height: number };
@@ -21,12 +21,17 @@ class Boxed {
   }
 }
 
-/** The layer the panels float in, answering the one query `watchPanels` makes. */
+/**
+ * The layer the panels float in, answering the two queries `watchPanels`
+ * makes: the floating panels, and the panels on the hint line's row.
+ */
 class Layer {
   panels: Boxed[] = [];
+  hintRow: Boxed[] = [];
   querySelectorAll(selector: string): Boxed[] {
-    assert.equal(selector, FLOATING_PANELS);
-    return this.panels;
+    if (selector === FLOATING_PANELS) return this.panels;
+    assert.equal(selector, HINT_ROW_PANELS);
+    return this.hintRow;
   }
 }
 
@@ -63,16 +68,19 @@ afterEach(() => {
   Observer.live.clear();
 });
 
-/** A watch over a canvas at (10, 20), with every set it pushed. */
-function watching(panels: Boxed[]) {
+/** A watch over a canvas at (10, 20), with every set it pushed, on each path. */
+function watching(panels: Boxed[], hintRow: Boxed[] = []) {
   const layer = new Layer();
   layer.panels = panels;
+  layer.hintRow = hintRow;
   const host = new Boxed({ left: 10, top: 20, width: 1280, height: 720 });
   const pushed: PanelRect[][] = [];
+  const pushedHintRow: PanelRect[][] = [];
   const watch = watchPanels(
     layer as unknown as HTMLElement,
     host as unknown as HTMLElement,
-    (rects) => pushed.push(rects)
+    (rects) => pushed.push(rects),
+    (rects) => pushedHintRow.push(rects)
   );
   const observer = <T extends Observer>(kind: new (cb: () => void) => T): T =>
     [...Observer.live].find((o) => o instanceof kind) as T;
@@ -80,6 +88,7 @@ function watching(panels: Boxed[]) {
     layer,
     host,
     pushed,
+    pushedHintRow,
     watch,
     resize: observer(ResizeStub),
     mounts: observer(MutationStub),
@@ -114,6 +123,18 @@ describe('the floating panels, measured for the chart (#1662)', () => {
     log.rect = { left: 855, top: 95, width: 425, height: 270 };
     watch.measure();
     assert.deepEqual(pushed.at(-1)![1], { x: 845, y: 75, width: 425, height: 270 });
+  });
+
+  it("hands the hint row's panel over on its own path, and watches it too", () => {
+    // The free-water legend (docs/free-water-slice.md §9): the hint line yields
+    // to it, and a marker's name has no business with it, so it never joins
+    // the floating panels' set.
+    const orders = new Boxed({ left: 77, top: 80, width: 340, height: 300 });
+    const legend = new Boxed({ left: 1142, top: 691, width: 296, height: 18 });
+    const { pushed, pushedHintRow, resize } = watching([orders], [legend]);
+    assert.deepEqual(pushed.at(-1), [{ x: 67, y: 60, width: 340, height: 300 }]);
+    assert.deepEqual(pushedHintRow.at(-1), [{ x: 1132, y: 671, width: 296, height: 18 }]);
+    assert.ok(resize.watched.has(legend), 'watched like any panel');
   });
 
   it('stops watching when stopped', () => {

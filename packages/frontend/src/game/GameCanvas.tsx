@@ -31,6 +31,7 @@ import { MovePreviewPanel } from './MovePreviewPanel.tsx';
 import type { MovePreviewReading } from './movePreview.ts';
 import type { FlightReading } from './flightCamera.ts';
 import { FREE_WATER_CONTROLS, FREE_WATER_SLICE } from './freeWaterControls.ts';
+import { consoleBlocks } from './consoleLayout.ts';
 import { lookForMission } from './tutorialLook.ts';
 import { worldView } from './worldView.ts';
 import { paletteFor, type PaletteName } from './palette.ts';
@@ -62,7 +63,14 @@ import type { WebGLRenderer } from 'three';
 import type { createWaterEnvironment } from './modelLighting.ts';
 import type { Client } from '@colyseus/sdk';
 import { loadSettings, subscribeSettings, type Settings } from '../settings/store.ts';
-import { heldUiScale, PANEL_CAP_UNITS, panelType, RIBBON_UNITS } from './uiScale.ts';
+import {
+  CONSOLE_HEIGHT,
+  heldUiScale,
+  HINT_ROW_UNITS,
+  PANEL_CAP_UNITS,
+  panelType,
+  RIBBON_UNITS,
+} from './uiScale.ts';
 
 /** Longest log a player will ever scroll back through. */
 const MAX_LOG_ENTRIES = 300;
@@ -75,10 +83,15 @@ const hex = (color: number) => `#${color.toString(16).padStart(6, '0')}`;
  * already applied: the UI scale, the height the orders panel's cap takes, the
  * depth ribbon's claim on the left edge, and the four tier inks.
  */
-function cssVariables(uiScale: number, palette: PaletteName): CSSProperties {
+function cssVariables(uiScale: number, palette: PaletteName, commandsX: number): CSSProperties {
   const { tier } = paletteFor(palette);
   return {
     '--ui-scale': uiScale,
+    // Where the console's command block stands at this width, in HUD px: the
+    // free-water camera panel is placed beside it (docs/free-water-slice.md §9).
+    '--commands-x': `${commandsX}px`,
+    '--console-units': `${CONSOLE_HEIGHT}px`,
+    '--hint-row-units': `${HINT_ROW_UNITS}px`,
     '--panel-type': panelType(uiScale),
     '--panel-cap-units': `${PANEL_CAP_UNITS}px`,
     '--ribbon-units': `${RIBBON_UNITS}px`,
@@ -264,6 +277,10 @@ export function GameCanvas({
    * resize, not on a frame.
    */
   const [uiScale, setUiScale] = useState(1);
+  /** The command block's left edge in HUD px, read off the console's own layout. */
+  const [commandsX, setCommandsX] = useState(
+    () => consoleBlocks(window.innerWidth, window.innerHeight).commands.x
+  );
   /**
    * The active palette, for the DOM half of the interface.
    *
@@ -578,10 +595,14 @@ export function GameCanvas({
       // the Pixi layer goes through the conn view from here on.
       activeRenderer.setConn(perspective);
       // Where the floating panels cover the water, for the one chart mark
-      // that keeps out from under them: a marker's name (§10.5, #1662).
+      // that keeps out from under them: a marker's name (§10.5, #1662); and
+      // where the study's legend stands on the hint row, for the hint to yield.
       if (underRef.current !== null) {
-        panelsRef.current = watchPanels(underRef.current, host, (rects) =>
-          activeRenderer.setPanelRects(rects)
+        panelsRef.current = watchPanels(
+          underRef.current,
+          host,
+          (rects) => activeRenderer.setPanelRects(rects),
+          (rects) => activeRenderer.setHintRowPanels(rects)
         );
       }
 
@@ -836,6 +857,7 @@ export function GameCanvas({
         const held = heldUiScale(setting, window.innerHeight);
         activeRenderer.setUiScale(held);
         setUiScale(held);
+        setCommandsX(consoleBlocks(window.innerWidth / held, window.innerHeight / held).commands.x);
       };
       onResize = () => applyScale(loadSettings().uiScale);
       window.addEventListener('resize', onResize);
@@ -1020,7 +1042,7 @@ export function GameCanvas({
       // A travelled entry waiting on its room shows the held world and
       // nothing of the HUD, which attaches with the first state (§7.6 step 3).
       className={held ? 'game-root game-root-held' : 'game-root'}
-      style={cssVariables(uiScale, palette)}
+      style={cssVariables(uiScale, palette, commandsX)}
     >
       {/* Everything the esc menu floats over, gathered so one `inert` can
           silence the lot of it while the menu is up (§9.5). The wrapper is
@@ -1048,13 +1070,18 @@ export function GameCanvas({
         )}
         {FREE_WATER_CONTROLS && live && phase === MatchPhase.Playing && (
           <FlightPanel
-            decorativeLife={FREE_WATER_SLICE}
             reading={flight}
             onFlight={() => rendererRef.current?.toggleFlight()}
             onNav={() => rendererRef.current?.toggleNavigation()}
             onHome={() => rendererRef.current?.homeCamera()}
             onStep={(action) => rendererRef.current?.stepFlight(action)}
           />
+        )}
+        {/* docs/free-water-slice.md §5 and §9: the public decoration's
+            disclosure, one line in the bottom-right corner the study leaves
+            free, since it runs no mission log. */}
+        {FREE_WATER_SLICE && live && phase === MatchPhase.Playing && (
+          <p className="decorative-life">DECORATIVE LIFE — NO TACTICAL SIGNAL</p>
         )}
         {live && phase !== MatchPhase.Lobby && <ContactLog entries={log} onFocus={focusOn} />}
         {live && phase !== MatchPhase.Lobby && mission !== null && (

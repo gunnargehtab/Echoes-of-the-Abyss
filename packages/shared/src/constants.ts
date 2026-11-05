@@ -35,6 +35,25 @@ export const FREE_WATER_LIFE = {
   INNER_RADIUS_SHARE: 0.4,
 } as const;
 
+/**
+ * docs/free-water-slice.md §9, Opening view: how the study's orbit opens on the
+ * first sight of the force. SPEC: the heading toward mark A, 34 degrees east
+ * of north; 15 degrees of pitch; the focus at the hulls' 300 m exercise depth.
+ * TUNABLE, chosen against the opening frame (docs/screenshots/issue-1752): the
+ * focus 300 m ahead of the fleet's centroid along that heading, which puts the
+ * hulls in the lower third because the orbit aims at its focus, and a 1,200 m
+ * dolly, which lets all three hulls into the frame under the strip and over
+ * the console. Presentation only; Home still restores north, 55 degrees and
+ * the seabed.
+ */
+export const FREE_WATER_OPENING = {
+  YAW_DEG: -34,
+  PITCH_DEG: 15,
+  FOCUS_DEPTH_M: 300,
+  AHEAD_M: 300,
+  DOLLY_M: 1200,
+} as const;
+
 /** SPEC — docs/art-direction.md, Shared model lighting. Presentation only. */
 export const MODEL_LIGHTING = {
   AMBIENT: 0.75,

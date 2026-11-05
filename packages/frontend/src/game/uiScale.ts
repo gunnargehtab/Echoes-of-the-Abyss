@@ -61,6 +61,14 @@ const PANEL_GAP = 8;
 /** Between a floating panel's foot and the hint line. */
 const HINT_BREATH = 4;
 
+/**
+ * The hint line's row and the console under it, from the window's foot: where
+ * a panel standing on the console's edge puts its foot. GameCanvas hands it and
+ * `CONSOLE_HEIGHT` to CSS as `--hint-row-units` and `--console-units`, which
+ * `.flight-panel`'s and `.decorative-life`'s `bottom` take.
+ */
+export const HINT_ROW_UNITS = CONSOLE_HEIGHT + HINT_LINE_HEIGHT + HINT_BREATH;
+
 /** The depth ribbon's strip: its left edge, in from the window's (§8). */
 export const RIBBON_X = 12;
 

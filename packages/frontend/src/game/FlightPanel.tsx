@@ -7,18 +7,15 @@ export function FlightPanel({
   onNav,
   onHome,
   onStep,
-  decorativeLife = false,
 }: {
   reading: FlightReading | null;
   onFlight(): void;
   onNav(): void;
   onHome(): void;
   onStep(action: FlightAction): void;
-  decorativeLife?: boolean;
 }) {
   return (
     <section className="flight-panel" aria-label="Free-water camera">
-      {decorativeLife && <p>DECORATIVE LIFE — NO TACTICAL SIGNAL</p>}
       <div>
         <button
           type="button"

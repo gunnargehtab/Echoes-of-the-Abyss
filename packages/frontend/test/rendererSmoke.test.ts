@@ -26,6 +26,7 @@ import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 import { CanvasTextMetrics, Container, Graphics, Text, type GraphicsPath } from 'pixi.js';
 import {
+  FREE_WATER_OPENING,
   ACTIVE_SONAR,
   DEPTH,
   DRIFT_ROSTER,
@@ -49,7 +50,12 @@ import {
   ObjectiveStatus,
   type OwnUnit,
 } from '@echoes/shared';
-import { FOCUS_DRAG_M_PER_PX, FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
+import {
+  FOCUS_DRAG_M_PER_PX,
+  FOCUS_STEP_M,
+  HOME_DOLLY_M,
+  HOME_PITCH_DEG,
+} from '../src/game/PerspectiveView.ts';
 import { swayAt } from '../src/game/cameraSway.ts';
 import type { MovePreviewReading } from '../src/game/movePreview.ts';
 import type { WorldLook } from '../src/game/tutorialLook.ts';
@@ -370,6 +376,8 @@ async function boot(
   options: {
     webgl?: boolean;
     controlsStudy?: boolean;
+    /** The free-water fixture itself, whose orbit opens low behind the fleet. */
+    studySlice?: boolean;
     look?: WorldLook;
     gpu?: Partial<Pick<HeadlessGL, 'timer' | 'rendererName'>>;
   } = {}
@@ -393,7 +401,12 @@ async function boot(
   assert.equal(mounted, options.webgl !== false, 'mount reports whether it got a context');
   conn.setActive(true);
 
-  const chart = new EchoRenderer(callbacks, app.asApplication(), options.controlsStudy ?? false);
+  const chart = new EchoRenderer(
+    callbacks,
+    app.asApplication(),
+    options.controlsStudy ?? false,
+    options.studySlice ?? false
+  );
   await chart.init(chartHost as unknown as HTMLElement);
   chart.setConn(conn);
 
@@ -3735,6 +3748,55 @@ describe('the interface cues the renderer reports (#1600)', () => {
     }
   });
 
+  it('yields the hint line to a panel standing on its row, a clause at a time', async () => {
+    // docs/free-water-slice.md §9: the study's legend takes the hint row's
+    // right end, and at a raised UI scale a hint run under it reads as
+    // covered. The shell hands the legend across as a floating panel, in
+    // canvas px (panelRects.ts); the host here is 1280 by 720 at scale 1.
+    const world = await boot();
+    try {
+      world.frame(2);
+      const hint = (): Text => {
+        let found: Text | undefined;
+        const walk = (node: Container): void => {
+          if (node instanceof Text && node.visible && node.text.includes('\u00b7')) found = node;
+          for (const child of node.children) walk(child as Container);
+        };
+        walk(world.app.stage);
+        assert.ok(found !== undefined, 'the premise: the hint line is drawn');
+        return found;
+      };
+      const whole = hint().text;
+      const rowTop = 720 - CONSOLE_HEIGHT - HINT_LINE_HEIGHT;
+      // The floating panels over the water take nothing, wherever they stand:
+      // the mission log's foot is 8 units into the row (App.css, 220 against
+      // HINT_ROW_UNITS), and a hint on a mission map is not the study's to cut.
+      world.chart.setPanelRects([
+        { x: 800, y: 300, width: 470, height: 40 },
+        { x: 800, y: 720 - 220 - 150, width: 470, height: 150 },
+      ]);
+      world.frame(2);
+      assert.equal(hint().text, whole, 'the floating panels take nothing');
+      // A hint-row panel clear of the row takes nothing either.
+      world.chart.setHintRowPanels([{ x: 800, y: 300, width: 470, height: 40 }]);
+      world.frame(2);
+      assert.equal(hint().text, whole, 'a panel off the row takes nothing');
+      // The legend's place: the row's right end.
+      const legend = { x: 800, y: rowTop + 3, width: 470, height: 16 };
+      world.chart.setHintRowPanels([legend]);
+      world.frame(2);
+      const yielded = hint();
+      assert.notEqual(yielded.text, whole, 'the hint gave up a clause');
+      assert.ok(whole.startsWith(yielded.text), 'and only from its end');
+      assert.ok(yielded.x + yielded.width <= legend.x - 12, 'clear of the legend, with a gap');
+      world.chart.setHintRowPanels([]);
+      world.frame(2);
+      assert.equal(hint().text, whole, 'and takes it back when the row is free');
+    } finally {
+      world.teardown();
+    }
+  });
+
   it('reports a refusal when the hint bar is handed its reason', async () => {
     const world = await boot();
     try {
@@ -5925,6 +5987,66 @@ describe('renderer smoke test: the free camera', () => {
         { x: turned.focus.xM, z: turned.focus.zM },
         'and keeps the place'
       );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('opens the free-water study low behind the fleet, and Home still restores north, 55° and the seabed', async () => {
+    // docs/free-water-slice.md §9, Opening view: the orbit, not flight, with
+    // its focus ahead of the force's centroid along the heading toward A at
+    // the hulls' depth, pitched 15°, at the opening dolly.
+    const world = await boot({ controlsStudy: true, studySlice: true, look: 'free-water' });
+    try {
+      world.frame(3);
+      const snapshot = cannedSnapshot();
+      const force = [...snapshot.units, ...snapshot.structures];
+      const cx = force.reduce((n, e) => n + e.x, 0) / force.length;
+      const cy = force.reduce((n, e) => n + e.y, 0) / force.length;
+      const yaw = (FREE_WATER_OPENING.YAW_DEG * Math.PI) / 180;
+      const opening = rig();
+      assert.equal(opening.yawDeg, (FREE_WATER_OPENING.YAW_DEG + 360) % 360, 'toward A');
+      assert.equal(opening.pitchDeg, FREE_WATER_OPENING.PITCH_DEG, 'inside the band, low');
+      assert.equal(opening.distance, FREE_WATER_OPENING.DOLLY_M, 'at the opening dolly');
+      assert.equal(opening.focus.depthM, FREE_WATER_OPENING.FOCUS_DEPTH_M, "at the hulls' depth");
+      assert.deepEqual(
+        { x: opening.focus.xM, z: opening.focus.zM },
+        {
+          x: Math.round(cx - Math.sin(yaw) * FREE_WATER_OPENING.AHEAD_M),
+          z: Math.round(cy - Math.cos(yaw) * FREE_WATER_OPENING.AHEAD_M),
+        },
+        'the focus ahead of the centroid along the heading, so the hulls fall in the lower third'
+      );
+      assert.equal(world.conn.flying, false, 'the orbit, not flight');
+      assert.ok(
+        world.log.names().includes('onFlight'),
+        'the panel is told where the camera stands'
+      );
+
+      world.conn.home();
+      const homed = rig();
+      assert.equal(homed.yawDeg, 0, 'Home is north');
+      assert.equal(homed.pitchDeg, HOME_PITCH_DEG, 'Home is 55°');
+      assert.equal(homed.focus.depthM, null, 'Home is the seabed');
+      assert.equal(
+        homed.distance,
+        FREE_WATER_OPENING.DOLLY_M,
+        'and keeps the dolly, as it keeps any'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('opens on the home frame over the force with the study off, as it did', async () => {
+    const world = await boot({ controlsStudy: true });
+    try {
+      world.frame(3);
+      const opening = rig();
+      assert.equal(opening.yawDeg, 0);
+      assert.equal(opening.pitchDeg, HOME_PITCH_DEG);
+      assert.equal(opening.focus.depthM, null);
+      assert.equal(opening.distance, HOME_DOLLY_M);
     } finally {
       world.teardown();
     }

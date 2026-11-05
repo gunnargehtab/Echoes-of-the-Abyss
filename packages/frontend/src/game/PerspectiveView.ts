@@ -2457,6 +2457,20 @@ export class PerspectiveView {
   }
 
   /**
+   * Stand the camera on a frame with its focus in the water column rather
+   * than on the ground: the free-water study's opening (docs/free-water-slice.md
+   * §9), whose focus sits at the hulls' depth. The same clamps as every verb's:
+   * the focus to its rectangle and the column under it, the pitch to the band.
+   */
+  aimFrame(frame: CameraFrame, focusDepthM: number | null): void {
+    this.setFrame(frame);
+    this.focusDepthM = focusDepthM;
+    this.nearSnowDepthM = focusDepthM;
+    this.clampTarget();
+    this.applyCamera();
+  }
+
+  /**
    * The view's footprint on the ground, for the sonar scope's camera box and
    * the overlay painter's culling bounds: the four screen corners dropped
    * onto the target's ground plane. A trapezoid, not a rect — that is what a
