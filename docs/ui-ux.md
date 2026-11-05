@@ -722,9 +722,12 @@ vertical one without flight:
   vertical slice along the camera's horizontal heading through the command focus, as wide
   as the scope's range, forward to the right, its heading read out as a compass bearing.
   It draws the public floor and roof profile off the terrain payload, the band hairlines
-  at 400 m and 1,800 m, the Lid and the thermocline in the ribbon's inks (§8), the command
-  plane, own hulls and structures, Tier 3+ contacts at their depths, and a Tier 2 contact
-  as a tick down its public water interval, marked `DEPTH UNKNOWN`. Every own hull and
+  at 400 m and 1,800 m, the Lid and the thermocline in the ribbon's inks (§8), a range
+  scale along its top edge with a tick every 500 m from the focus and the ping's 900 m and
+  2,400 m in the rings' inks, which is the range the world's rings lose within 10° of level
+  ([free-camera.md](free-camera.md) §4), the command plane, own hulls and structures,
+  Tier 3+ contacts at their depths, and a Tier 2 contact as a tick down its public water
+  interval, marked `DEPTH UNKNOWN`. Every own hull and
   contact is placed by its distance along the heading; the ground is the slice through the
   focus alone, so a hull over other ground can stand off its own floor there. In flight at
   a vertical gaze it holds the last heading and says `HELD`.
@@ -733,7 +736,9 @@ vertical one without flight:
   plan picker. Armed but unpinned, the press refuses with `PIN POSITION FIRST`; the
   preview's rules above apply unchanged.
 - **Edge marks.** An earned contact outside the view marks the frame's edge, inset inside
-  the world view between the top strip and the console, with a chevron in its ink. A
+  the world view between the top strip and the console, and right of the depth ribbon
+  while a selection draws it, with a chevron in its ink; a panel standing on the frame's
+  edge may cover one. A
   Tier 3+ contact says `ABOVE` or `BELOW` with its metres to the plane, `LEVEL` within the
   arrival epsilon, or, with no plane, the depth it already carries; a Tier 2 contact marks
   its bearing only; a Tier 1 contact marks nothing, since its report carries the listener's

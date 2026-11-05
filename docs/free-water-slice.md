@@ -668,7 +668,8 @@ plane, so depth reads at any camera angle without flight.
   focus: for a 300 m focus, over the bowl, the pocket and the exit pool. Over the garden's
   400 m floor a 300 m focus allows only a few degrees of look-up. §4 stops at 10 degrees
   because range rings turn edge-on there; within 10 degrees of level they stay that
-  unreadable, so the section scope carries range in that band. Home still restores 55
+  unreadable, so the section scope carries range in that band, as a scale along its top
+  edge. Home still restores 55
   degrees, shipped maps keep 10–88, and #1753 proves the band at a bowl pose.
 
 No new order, wire field or simulation change. Everything drawn comes from own state,

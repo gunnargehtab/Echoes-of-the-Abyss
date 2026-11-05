@@ -7,7 +7,7 @@
  */
 import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
-import type { Graphics } from 'pixi.js';
+import type { Graphics, GraphicsPath } from 'pixi.js';
 import { DEPTH, Faction, ResolutionTier } from '@echoes/shared';
 import {
   createHost,
@@ -22,6 +22,7 @@ import { BLOCK_GAP, BLOCK_W, consoleBlocks } from '../src/game/consoleLayout.ts'
 import type { MovePreviewReading } from '../src/game/movePreview.ts';
 import { FACTION_PALETTE } from '../src/game/palette.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
+import { RIBBON_UNITS } from '../src/game/uiScale.ts';
 import type { WorldLook } from '../src/game/tutorialLook.ts';
 import {
   commandPlaneM,
@@ -218,6 +219,7 @@ async function boot(options: { study: boolean; look?: WorldLook }) {
   const privates = chart as unknown as {
     ringLayer: Graphics;
     contactLayer: Graphics;
+    edgeMarkG: Graphics;
     sectionG: Graphics;
     selected: Set<number>;
     selectionSeq: number;
@@ -229,46 +231,83 @@ async function boot(options: { study: boolean; look?: WorldLook }) {
   return { chart, conn, app, frame, privates, reading, teardown: () => chart.destroy() };
 }
 
-/** Strokes on a layer in one ink: the stalks are the only hairlines at their alpha. */
-function strokesInk(g: Graphics, color: number, alpha: number): number {
-  let count = 0;
+/**
+ * The stalks on a layer, read off its stroke instructions. A stalk is one
+ * stroke holding its foot ring, a circle of `STALK_FOOT_PX`, and its line: no
+ * `lineTo` on the plane, one for a solid line above it, several for a dashed
+ * line below it. Segments rather than `moveTo`s, since a run another painter
+ * left open on the layer leaves a stray `moveTo` in the next stroke. Own
+ * stalks are told by their ink; a contact's ink varies, so `color` is
+ * optional and the ring is what names a stalk.
+ */
+function stalks(g: Graphics, color?: number): { feet: number; solid: number; dashed: number } {
+  const out = { feet: 0, solid: 0, dashed: 0 };
   for (const instruction of g.context.instructions) {
     if (instruction.action !== 'stroke') continue;
-    const style = (instruction.data as { style?: { color?: number; alpha?: number } }).style;
-    if (
-      style?.color === color &&
-      style.alpha !== undefined &&
-      Math.abs(style.alpha - alpha) < 1e-9
-    ) {
-      count++;
+    const data = instruction.data as { style?: { color?: number }; path?: GraphicsPath };
+    if (color !== undefined && data.style?.color !== color) continue;
+    const steps = (data.path?.instructions ?? []) as Array<{ action: string; data: unknown[] }>;
+    if (!steps.some((step) => step.action === 'circle' && step.data[2] === STALK_FOOT_PX)) {
+      continue;
     }
+    out.feet++;
+    const segments = steps.filter((step) => step.action === 'lineTo').length;
+    if (segments === 1) out.solid++;
+    else if (segments > 1) out.dashed++;
   }
-  return count;
+  return out;
 }
 
+/** The first point of each stroke on a layer, for where an edge mark stands. */
+function strokeStarts(g: Graphics): Array<{ x: number; y: number }> {
+  const out: Array<{ x: number; y: number }> = [];
+  for (const instruction of g.context.instructions) {
+    if (instruction.action !== 'stroke') continue;
+    const steps = ((instruction.data as { path?: GraphicsPath }).path?.instructions ??
+      []) as Array<{
+      action: string;
+      data: number[];
+    }>;
+    const first = steps.find((step) => step.action === 'moveTo');
+    if (first !== undefined) out.push({ x: first.data[0]!, y: first.data[1]! });
+  }
+  return out;
+}
+
+/** `STALK_FOOT_PX` in EchoRenderer.ts: the foot ring's radius names a stalk. */
+const STALK_FOOT_PX = 3;
+
 describe('the instruments on the study', () => {
-  it('draws a stalk per own hull to the plane, and none without one', async () => {
+  it('draws a stalk per own hull and Tier 3+ contact to the plane, solid above and dashed below', async () => {
     const world = await boot({ study: true });
     try {
       const accent = FACTION_PALETTE[Faction.Bathyarch].accent;
-      // Home: the focus on the seabed, nothing selected, so no plane.
+      // Home: the focus on the seabed, nothing selected, so no plane and no
+      // stalk anywhere, own or contact.
       world.conn.setFrame({ xM: 1000, yM: 1000, distanceM: 2600, yawDeg: 0, pitchDeg: 55 });
       world.frame();
-      assert.equal(strokesInk(world.privates.ringLayer, accent, 0.55), 0);
-      // A raised focus is the plane with nothing selected: each of the four
-      // hulls gets a foot ring and, off the plane, a line.
+      assert.deepEqual(stalks(world.privates.ringLayer, accent), { feet: 0, solid: 0, dashed: 0 });
+      assert.deepEqual(stalks(world.privates.contactLayer), { feet: 0, solid: 0, dashed: 0 });
+      // A raised focus is the plane with nothing selected. Own hulls stand at
+      // 1,200, 900, 1,400 and 3,100 m: at a 1,200 m plane the Corvette is on
+      // it (a foot ring alone), the Scout above it (solid), the other two
+      // below it (dashed).
       world.conn.aimFrame({ xM: 1000, yM: 1000, distanceM: 2600, yawDeg: 0, pitchDeg: 55 }, 1200);
       world.frame();
-      const raised = strokesInk(world.privates.ringLayer, accent, 0.55);
-      // The Corvette at 1,200 m stands on the plane: a foot ring alone. The
-      // other three are off it: a line and a ring each.
-      assert.equal(raised, 1 + 3 * 2);
-      // The lead selected hull's depth takes over: the Scout at 900 m.
+      assert.deepEqual(stalks(world.privates.ringLayer, accent), { feet: 4, solid: 1, dashed: 2 });
+      // Five contacts earned a depth at Tier 3 or 4 (103 to 107): one stalk
+      // each. The Tier 2 contact's payload carries a depth the type says is
+      // never sent, and it still gets none; the Tier 1 contact has nothing.
+      // Their depths, 2,000 / 2,400 / 1,100 / 2,600 / 1,100 m, put one above
+      // the plane... none: the turret and torpedo at 1,100 m are above it.
+      assert.deepEqual(stalks(world.privates.contactLayer), { feet: 5, solid: 2, dashed: 3 });
+      // The lead selected hull's depth takes over: the Scout at 900 m, which
+      // then stands on the plane while the three others hang below it.
       world.privates.selected.add(12);
       world.privates.selectionSeq++;
       world.frame();
-      assert.equal(strokesInk(world.privates.ringLayer, accent, 0.55), 1 + 3 * 2);
-      assert.equal(world.chart.probeReading !== undefined, true);
+      assert.deepEqual(stalks(world.privates.ringLayer, accent), { feet: 4, solid: 0, dashed: 3 });
+      assert.deepEqual(stalks(world.privates.contactLayer), { feet: 5, solid: 0, dashed: 5 });
     } finally {
       world.teardown();
     }
@@ -280,7 +319,8 @@ describe('the instruments on the study', () => {
       world.conn.aimFrame({ xM: 1000, yM: 1000, distanceM: 2600, yawDeg: 0, pitchDeg: 55 }, 1200);
       world.frame();
       const accent = FACTION_PALETTE[Faction.Bathyarch].accent;
-      assert.equal(strokesInk(world.privates.ringLayer, accent, 0.55), 0);
+      assert.deepEqual(stalks(world.privates.ringLayer, accent), { feet: 0, solid: 0, dashed: 0 });
+      assert.deepEqual(stalks(world.privates.contactLayer), { feet: 0, solid: 0, dashed: 0 });
       assert.equal(world.privates.sectionRect(), null);
       assert.ok(!textContents(world.app.stage).includes('SECTION'));
     } finally {
@@ -316,6 +356,29 @@ describe('the instruments on the study', () => {
       const read = labels();
       assert.ok(read.includes('BELOW 500 m'), `the cruiser against a 1,500 m plane: ${read}`);
       assert.ok(read.includes('ABOVE 400 m'), `the turret at 1,100 m: ${read}`);
+      // Every mark stands inside the world view's frame, and once a selection
+      // draws the depth ribbon down the left edge, right of it (§8): a mark
+      // under the ribbon is a mark nobody sees. Looking south from the north
+      // rim at x = 3,000 on the shortest dolly, the eye 146 m north of the
+      // rim: the turret at (3,600, 600) is 39° off to the left (east) and the
+      // torpedo at (2,000, 1,200) 37° off to the right, past the frame's 33°
+      // half-width, while the cruiser at x = 3,000 is dead ahead.
+      world.conn.setFrame({ xM: 3000, yM: 100, distanceM: 250, yawDeg: 180, pitchDeg: 10 });
+      world.frame();
+      const unribboned = strokeStarts(world.privates.edgeMarkG);
+      assert.ok(
+        unribboned.some((p) => p.x < RIBBON_UNITS),
+        `a mark on the left edge: ${unribboned.length}`
+      );
+      world.privates.selected.add(12);
+      world.privates.selectionSeq++;
+      world.frame();
+      const ribboned = strokeStarts(world.privates.edgeMarkG);
+      assert.ok(ribboned.length > 0);
+      assert.ok(
+        ribboned.every((p) => p.x >= RIBBON_UNITS),
+        `no mark under the ribbon: ${ribboned.map((p) => Math.round(p.x))}`
+      );
     } finally {
       world.teardown();
     }
@@ -329,8 +392,15 @@ describe('the instruments on the study', () => {
       const rect = world.privates.sectionRect()!;
       assert.notEqual(rect, null);
       // The Tier 2 contact is on the map, so the section says a depth is
-      // unknown; its tick is drawn, and no dot at a depth it did not earn.
+      // unknown: its tick is the one stroke at the tick's alpha, and the
+      // depth its payload carries draws nothing.
       assert.ok(textContents(world.app.stage).includes('DEPTH UNKNOWN'));
+      const ticks = world.privates.sectionG.context.instructions.filter(
+        (instruction) =>
+          instruction.action === 'stroke' &&
+          (instruction.data as { style?: { alpha?: number } }).style?.alpha === 0.35
+      );
+      assert.equal(ticks.length, 1);
       // Arm MOVE 3D on the Scout, and press the section before pinning.
       world.privates.selected.add(12);
       world.privates.selectionSeq++;

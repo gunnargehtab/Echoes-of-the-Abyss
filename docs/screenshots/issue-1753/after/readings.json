@@ -13,14 +13,14 @@
       },
       "eye": {
         "xM": 62,
-        "zM": 2671,
-        "depthM": -1121
+        "zM": 2670,
+        "depthM": -1123
       },
       "distance": 1200,
       "flight": {
         "flying": false,
         "navigating": false,
-        "depthM": -1121,
+        "depthM": -1123,
         "bearingDeg": 34,
         "upX": -1.3877787807814457e-17,
         "upY": -0.9659258262890683,
@@ -56,13 +56,13 @@
       "eye": {
         "xM": 61,
         "zM": 2672,
-        "depthM": -1101
+        "depthM": -1100
       },
       "distance": 1200,
       "flight": {
         "flying": false,
         "navigating": false,
-        "depthM": -1101,
+        "depthM": -1100,
         "bearingDeg": 34,
         "upX": -1.3877787807814457e-17,
         "upY": -0.9659258262890683,
@@ -138,15 +138,15 @@
         "depthM": 850
       },
       "eye": {
-        "xM": 2001,
-        "zM": 3564,
-        "depthM": -676
+        "xM": 2002,
+        "zM": 3565,
+        "depthM": -668
       },
       "distance": 1600,
       "flight": {
         "flying": false,
         "navigating": false,
-        "depthM": -676,
+        "depthM": -668,
         "bearingDeg": 0,
         "upX": 0,
         "upY": -0.9781476007338057,
@@ -180,15 +180,15 @@
         "depthM": null
       },
       "eye": {
-        "xM": 1995,
-        "zM": 2366,
-        "depthM": -43036
+        "xM": 2000,
+        "zM": 2371,
+        "depthM": -43035
       },
       "distance": 10000,
       "flight": {
         "flying": false,
         "navigating": false,
-        "depthM": -43036,
+        "depthM": -43035,
         "bearingDeg": 0,
         "upX": 0,
         "upY": -0.03489949670250103,
@@ -222,15 +222,15 @@
         "depthM": 586
       },
       "eye": {
-        "xM": 59,
+        "xM": 60,
         "zM": 2670,
-        "depthM": -820
+        "depthM": -831
       },
       "distance": 1200,
       "flight": {
         "flying": false,
         "navigating": false,
-        "depthM": -820,
+        "depthM": -831,
         "bearingDeg": 34,
         "upX": -1.3877787807814457e-17,
         "upY": -0.9659258262890683,
@@ -265,14 +265,14 @@
       },
       "eye": {
         "xM": 60,
-        "zM": 2670,
-        "depthM": -1267
+        "zM": 2671,
+        "depthM": -1252
       },
       "distance": 1200,
       "flight": {
         "flying": false,
         "navigating": false,
-        "depthM": -1267,
+        "depthM": -1252,
         "bearingDeg": 34,
         "upX": -1.3877787807814457e-17,
         "upY": -0.9659258262890683,
@@ -306,15 +306,15 @@
         "depthM": 300
       },
       "eye": {
-        "xM": 1400,
+        "xM": 1399,
         "zM": 2250,
-        "depthM": 1480
+        "depthM": 1482
       },
       "distance": 300,
       "flight": {
         "flying": false,
         "navigating": false,
-        "depthM": 1480,
+        "depthM": 1482,
         "bearingDeg": 270,
         "upX": 5.551115123125783e-17,
         "upY": -0.4999999999999998,
@@ -348,15 +348,15 @@
         "depthM": 300
       },
       "eye": {
-        "xM": 2001,
+        "xM": 2000,
         "zM": 1117,
-        "depthM": 382
+        "depthM": 378
       },
       "distance": 400,
       "flight": {
         "flying": false,
         "navigating": false,
-        "depthM": 382,
+        "depthM": 378,
         "bearingDeg": 180,
         "upX": 0,
         "upY": -0.9979718748091843,
@@ -390,15 +390,15 @@
         "depthM": 300
       },
       "eye": {
-        "xM": 1546,
+        "xM": 1545,
         "zM": 2250,
-        "depthM": 65
+        "depthM": 64
       },
       "distance": 300,
       "flight": {
         "flying": false,
         "navigating": false,
-        "depthM": 65,
+        "depthM": 64,
         "bearingDeg": 270,
         "upX": 0,
         "upY": -0.9848077530122081,
@@ -432,15 +432,15 @@
         "depthM": 850
       },
       "eye": {
-        "xM": 2002,
-        "zM": 3565,
-        "depthM": -653
+        "xM": 1999,
+        "zM": 3564,
+        "depthM": -677
       },
       "distance": 1600,
       "flight": {
         "flying": false,
         "navigating": false,
-        "depthM": -653,
+        "depthM": -677,
         "bearingDeg": 0,
         "upX": 0,
         "upY": -0.9781476007338057,

@@ -184,7 +184,9 @@ reachable whole where the floor lies well below the focus. For a 300 m focus tha
 the crater's bowl, pocket and exit pool; over the garden's 400 m floor a 300 m focus allows
 a few degrees of look-up. The band stops at 10° above because range rings turn edge-on
 there; within 10° of level they stay that unreadable, so the study's section scope
-([ui-ux.md](ui-ux.md) §9) carries range in that band. The band's floor is
+([ui-ux.md](ui-ux.md) §9) carries range in that band, as a scale along its top edge: a tick
+every 500 m from the focus along the heading, and the ping's 900 m and 2,400 m in the rings'
+inks. The band's floor is
 `STUDY_PITCH_MIN_DEG` in `PerspectiveView.ts`, switched on the view's look as the study's
 water is, so the two cannot disagree.
 

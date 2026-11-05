@@ -1561,6 +1561,10 @@ const SCOPE_SWEEP_MS = 4000;
 const STALK_ALPHA = 0.55;
 const STALK_FOOT_PX = 3;
 const STALK_DASH_PX = 4;
+/** The section's range ticks, metres apart along the heading. */
+const SECTION_TICK_M = 500;
+/** A Tier 2 contact's tick down the section's water column. */
+const SECTION_TICK_ALPHA = 0.35;
 /** An edge mark stands this far inside the world view's frame. */
 const EDGE_MARK_INSET_PX = 16;
 const EDGE_MARK_PX = 7;
@@ -1709,7 +1713,13 @@ export class EchoRenderer {
   private readonly minimapTerrainG = new Graphics();
   private readonly minimapOverlayG = new Graphics();
   private minimapCachedSize = 0;
-  /** The study's section scope beside it, and its two labels (#1753). */
+  /**
+   * The study's section scope beside it (#1753): the slice's ground and
+   * scale, cached on the focus, heading and size as the scope caches its
+   * terrain; the marks over it, redrawn per frame; and its labels.
+   */
+  private readonly sectionTerrainG = new Graphics();
+  private sectionProfileKey = '';
   private readonly sectionG = new Graphics();
   private readonly sectionTexts: Text[] = [];
   /** The heading the section last drew, held through a vertical gaze. */
@@ -2410,11 +2420,13 @@ export class EchoRenderer {
     this.hud.addChild(
       this.hudGraphics,
       // Screen space, since they stand on the frame's edge, and under every
-      // panel: they are inset inside the world view and never cross one.
+      // panel: a mark keeps off the top strip, the console and the depth
+      // ribbon, and a DOM panel standing on the frame's edge may cover one.
       this.edgeMarkG,
       this.ribbonGraphics,
       this.minimapTerrainG,
       this.minimapOverlayG,
+      this.sectionTerrainG,
       this.sectionG,
       this.infoGraphics,
       this.barGraphics,
@@ -3216,7 +3228,7 @@ export class EchoRenderer {
         capture(e.pointerId);
         return;
       }
-      if (e.button === 0 && this.pressSection(e.clientX, e.clientY)) {
+      if (e.button === 0 && this.pressSection(e.clientX, e.clientY, true)) {
         sectionDrag = true;
         capture(e.pointerId);
         return;
@@ -3299,7 +3311,7 @@ export class EchoRenderer {
         return;
       }
       if (sectionDrag) {
-        this.pressSection(e.clientX, e.clientY);
+        this.pressSection(e.clientX, e.clientY, false);
         return;
       }
 
@@ -10386,6 +10398,8 @@ export class EchoRenderer {
    * position, with a foot ring on the plane. Solid above the plane, dashed
    * below; hue is the caller's, never a line style's, so the side reads
    * without colour (docs/ui-ux.md §11). The dash is laid in screen space.
+   * Line and ring are one stroke, so a stalk is one instruction a test can
+   * name by its ring.
    */
   private drawStalk(
     g: Graphics,
@@ -10418,7 +10432,6 @@ export class EchoRenderer {
             );
           }
         }
-        g.stroke({ width: 1, color, alpha });
       }
     }
     g.circle(fx, fy, STALK_FOOT_PX).stroke({ width: 1, color, alpha });
@@ -10426,22 +10439,25 @@ export class EchoRenderer {
 
   /**
    * Edge marks (§9): an earned contact outside the view marks the frame's
-   * edge, inset inside the world view between the top strip and the console.
-   * A Tier 3+ contact says ABOVE or BELOW with its metres to the plane, or
-   * its own depth with no plane; a Tier 2 contact marks its bearing only;
-   * a Tier 1 contact marks nothing. Only a contact in front of the eye is
-   * marked: a projection from behind lands mirrored, and nothing behind the
-   * eye is mirrored.
+   * edge, inset inside the world view between the top strip and the console,
+   * and right of the depth ribbon while a selection draws it (§8). A Tier 3+
+   * contact says ABOVE or BELOW with its metres to the plane, or its own
+   * depth with no plane; a Tier 2 contact marks its bearing only, and is
+   * placed by its blurred plan position on the ground, since it earned no
+   * depth; a Tier 1 contact marks nothing. Only a contact in front of the eye
+   * is marked: a projection from behind lands mirrored, and nothing behind
+   * the eye is mirrored.
    */
   private drawEdgeMarks(): void {
     const g = this.edgeMarkG;
     g.clear();
     let shown = 0;
     if (this.studySlice && this.conn !== null) {
+      const left = this.selectedUnits().length > 0 ? RIBBON_UNITS : 0;
       const rect = {
-        x: 0,
+        x: left,
         y: TOP_BAR_HEIGHT,
-        w: this.hudWidth(),
+        w: this.hudWidth() - left,
         h: this.hudHeight() - TOP_BAR_HEIGHT - CONSOLE_HEIGHT,
       };
       const plane = this.commandPlaneM();
@@ -10451,7 +10467,9 @@ export class EchoRenderer {
         if (contact.tier === ResolutionTier.Silent || now - lastSeenMs > decayMs) continue;
         const say = edgeMarkText(contact.tier, contact.depth, plane);
         if (!say.mark) continue;
-        const p = this.project(contact.x, contact.y, contact.depth ?? null);
+        const earnedDepth =
+          contact.tier >= ResolutionTier.Classification ? (contact.depth ?? null) : null;
+        const p = this.project(contact.x, contact.y, earnedDepth);
         if (p === null || !p.visible) continue;
         const mark = edgeMark(rect, EDGE_MARK_INSET_PX, p.x, p.y);
         if (mark === null) continue;
@@ -10514,9 +10532,10 @@ export class EchoRenderer {
    * (§9): the alternate depth picker, as the north-up scope is the alternate
    * plan picker. Returns true when the point was inside the section, which
    * swallows the press as the scope's does. An armed preview that is not yet
-   * pinned is told to pin first rather than silently ignored.
+   * pinned is told to pin first rather than silently ignored, on the press
+   * alone: a scrub's every move would otherwise sound the refusal cue again.
    */
-  private pressSection(clientX: number, clientY: number): boolean {
+  private pressSection(clientX: number, clientY: number, press: boolean): boolean {
     const rect = this.sectionRect();
     if (rect === null) return false;
     const bounds = this.app.canvas.getBoundingClientRect();
@@ -10526,7 +10545,7 @@ export class EchoRenderer {
     if (px < x || px > x + size || py < y || py > y + size) return false;
     if (this.destination !== null && !this.navigating) {
       if (!this.destination.pinned) {
-        this.refuse('PIN POSITION FIRST');
+        if (press) this.refuse('PIN POSITION FIRST');
         return true;
       }
       this.setDestinationDepth(sectionDepthAt(size, py - y));
@@ -10537,14 +10556,18 @@ export class EchoRenderer {
   /**
    * The section scope (§9): a vertical slice along the camera's horizontal
    * heading through the command focus, as wide as the plan scope's range and
-   * the whole column deep, forward to the right. It draws the public floor
-   * and roof profile, the band hairlines at 400 m and 1,800 m, the Lid and the
-   * thermocline in the ribbon's inks (§8), the command plane, own hulls and
-   * structures, Tier 3+ contacts at their depths, and a Tier 2 contact as a
-   * tick down its public water interval, marked DEPTH UNKNOWN. In flight at a
-   * vertical gaze it holds the last heading and says so. Every own hull and
-   * contact on the map is placed by its distance along the heading; the
-   * ground is the slice through the focus alone.
+   * the whole column deep, forward to the right. Its ground and scale are
+   * cached on the focus, heading and size, as the plan scope caches its
+   * terrain: the public floor and roof profile, the band hairlines at 400 m
+   * and 1,800 m, the Lid and the thermocline in the ribbon's inks (§8), and
+   * along the top edge the range the world's rings cannot carry near level:
+   * a tick every 500 m from the focus, and the ping's two radii in the rings'
+   * inks. Over it, each frame: the command plane, own hulls and structures,
+   * Tier 3+ contacts at their depths, a Tier 2 contact as a tick down its
+   * public water interval marked DEPTH UNKNOWN, and a MOVE 3D destination.
+   * In flight at a vertical gaze it holds the last heading and says so.
+   * Every own hull and contact on the map is placed by its distance along
+   * the heading; the ground is the slice through the focus alone.
    */
   private drawSection(): void {
     const g = this.sectionG;
@@ -10553,13 +10576,12 @@ export class EchoRenderer {
     const terrain = this.terrain;
     const conn = this.conn;
     if (rect === null || terrain === null || conn === null) {
+      this.sectionTerrainG.clear();
+      this.sectionProfileKey = '';
       for (const text of this.sectionTexts) text.visible = false;
       return;
     }
     const { x, y, size } = rect;
-    g.position.set(x, y);
-    g.rect(0, 0, size, size).fill({ color: 0x000000, alpha: 0.85 });
-
     const held = conn.flying && conn.flightReading().bearingDeg === null;
     if (!held) this.sectionHeadingRad = conn.headingRad;
     const heading = this.sectionHeadingRad;
@@ -10571,40 +10593,13 @@ export class EchoRenderer {
       size,
     };
 
-    // The ground: a column of rock per scope pixel, from the authored floor
-    // down and from the roof up, the floor's line traced over it.
-    const profile = sectionProfile(terrain, frame);
-    let open = false;
-    for (let i = 0; i < profile.length; i++) {
-      const column = profile[i];
-      if (column === null || column === undefined) {
-        open = false;
-        continue;
-      }
-      if (column.rock) {
-        g.rect(i, 0, 1, size).fill({ color: UI.glass, alpha: 0.9 });
-        open = false;
-        continue;
-      }
-      const floor = sectionY(size, column.floorM);
-      g.rect(i, floor, 1, size - floor).fill({ color: UI.glass, alpha: 0.9 });
-      if (column.ceilingM > 0) {
-        g.rect(i, 0, 1, sectionY(size, column.ceilingM)).fill({ color: UI.glass, alpha: 0.9 });
-      }
-      if (open) g.lineTo(i + 1, floor);
-      else g.moveTo(i, floor);
-      open = true;
+    const key = `${Math.round(frame.focusX)}|${Math.round(frame.focusY)}|${heading.toFixed(3)}|${size}|${this.worldRev}`;
+    if (key !== this.sectionProfileKey) {
+      this.sectionProfileKey = key;
+      this.drawSectionGround(this.sectionTerrainG, terrain, frame);
     }
-    g.stroke({ width: 1, color: UI.textDim, alpha: 0.8 });
-
-    // The column's rules, in the ribbon's inks (§8): band edges, the Lid and
-    // the thermocline, which is a different rule and so a different ink.
-    for (const band of [DepthBand.MidWater, DepthBand.Abyssal]) {
-      const by = sectionY(size, DEPTH_BANDS[band].min);
-      g.rect(0, by, size, 1).fill({ color: UI.glassStroke, alpha: 0.7 });
-    }
-    g.rect(0, sectionY(size, LID.DEPTH_M), size, 1).fill({ color: UI.threat, alpha: 0.5 });
-    g.rect(0, sectionY(size, THERMOCLINE.DEPTH_M), size, 1).fill({ color: UI.accent, alpha: 0.85 });
+    this.sectionTerrainG.position.set(x, y);
+    g.position.set(x, y);
 
     // The command plane across the slice, and the focus at its centre.
     const plane = this.commandPlaneM();
@@ -10645,7 +10640,7 @@ export class EchoRenderer {
         if (water === null) continue;
         g.moveTo(sx, sectionY(size, water.ceilingM))
           .lineTo(sx, sectionY(size, water.floorM))
-          .stroke({ width: 1, color, alpha: 0.35 });
+          .stroke({ width: 1, color, alpha: SECTION_TICK_ALPHA });
         unknown = true;
         continue;
       }
@@ -10669,8 +10664,6 @@ export class EchoRenderer {
       }
     }
 
-    g.rect(0, 0, size, size).stroke({ width: 1, color: UI.glassStroke });
-
     const compass = ((((-heading * 180) / Math.PI) % 360) + 360) % 360;
     const readout = this.sectionText(0);
     readout.visible = true;
@@ -10680,6 +10673,98 @@ export class EchoRenderer {
     legend.visible = unknown;
     legend.text = 'DEPTH UNKNOWN';
     legend.position.set(x + size - legend.width - 4, y + size - legend.height - 2);
+    // The ping's two radii named on the scale, where they fit inside the glass.
+    const scale = this.sectionScaleLabels(frame);
+    for (let i = 0; i < 4; i++) {
+      const text = this.sectionText(2 + i);
+      const spot = scale[i];
+      text.visible = spot !== undefined;
+      if (spot === undefined) continue;
+      text.text = spot.text;
+      text.position.set(x + spot.x - text.width / 2, y + 6);
+    }
+  }
+
+  /**
+   * The section's ground and scale (`drawSection`): a column of rock per
+   * scope pixel from the authored floor down and the roof up, the floor's
+   * line traced over it, the column's rules, and the range scale along the
+   * top edge. Read off the terrain payload's cells rather than the drawn
+   * relief: the section is a chart, and its ground is the authored floor the
+   * survey ink traces (§9, "Crater walls").
+   */
+  private drawSectionGround(g: Graphics, terrain: TerrainPayload, frame: SectionFrame): void {
+    const size = frame.size;
+    g.clear();
+    g.rect(0, 0, size, size).fill({ color: 0x000000, alpha: 0.85 });
+    const profile = sectionProfile(terrain, frame);
+    let open = false;
+    for (let i = 0; i < profile.length; i++) {
+      const column = profile[i];
+      if (column === null || column === undefined) {
+        open = false;
+        continue;
+      }
+      if (column.rock) {
+        g.rect(i, 0, 1, size).fill({ color: UI.glass, alpha: 0.9 });
+        open = false;
+        continue;
+      }
+      const floor = sectionY(size, column.floorM);
+      g.rect(i, floor, 1, size - floor).fill({ color: UI.glass, alpha: 0.9 });
+      if (column.ceilingM > 0) {
+        g.rect(i, 0, 1, sectionY(size, column.ceilingM)).fill({ color: UI.glass, alpha: 0.9 });
+      }
+      if (open) g.lineTo(i + 1, floor);
+      else g.moveTo(i, floor);
+      open = true;
+    }
+    g.stroke({ width: 1, color: UI.textDim, alpha: 0.8 });
+
+    // The column's rules, in the ribbon's inks (§8): band edges, the Lid and
+    // the thermocline, which is a different rule and so a different ink.
+    for (const band of [DepthBand.MidWater, DepthBand.Abyssal]) {
+      const by = sectionY(size, DEPTH_BANDS[band].min);
+      g.rect(0, by, size, 1).fill({ color: UI.glassStroke, alpha: 0.7 });
+    }
+    g.rect(0, sectionY(size, LID.DEPTH_M), size, 1).fill({ color: UI.threat, alpha: 0.5 });
+    g.rect(0, sectionY(size, THERMOCLINE.DEPTH_M), size, 1).fill({ color: UI.accent, alpha: 0.85 });
+
+    // Range along the heading, on the top edge: a tick every 500 m from the
+    // focus, and the ping's two radii in the rings' inks, so the section
+    // carries the range the world's rings lose within 10° of level.
+    const pxPerM = size / frame.spanM;
+    for (let m = SECTION_TICK_M; m * pxPerM < size / 2; m += SECTION_TICK_M) {
+      for (const sign of [-1, 1]) {
+        const tx = size / 2 + sign * m * pxPerM;
+        g.rect(tx, 0, 1, 3).fill({ color: UI.textDim, alpha: 0.8 });
+      }
+    }
+    for (const [radiusM, color, alpha] of [
+      [ACTIVE_SONAR.REVEAL_RADIUS_M, UI.accent, RING_NEAR_ALPHA],
+      [ACTIVE_SONAR.SELF_REVEAL_RADIUS_M, UI.threat, RING_FAR_ALPHA],
+    ] as const) {
+      for (const sign of [-1, 1]) {
+        const tx = size / 2 + sign * radiusM * pxPerM;
+        if (tx < 0 || tx > size) continue;
+        g.rect(tx, 0, 1, 6).fill({ color, alpha: Math.min(1, alpha * 2) });
+      }
+    }
+    g.rect(0, 0, size, size).stroke({ width: 1, color: UI.glassStroke });
+  }
+
+  /** Where the two ring numbers stand on the section's scale, when inside it. */
+  private sectionScaleLabels(frame: SectionFrame): Array<{ x: number; text: string }> {
+    const pxPerM = frame.size / frame.spanM;
+    const out: Array<{ x: number; text: string }> = [];
+    for (const radiusM of [ACTIVE_SONAR.REVEAL_RADIUS_M, ACTIVE_SONAR.SELF_REVEAL_RADIUS_M]) {
+      for (const sign of [-1, 1]) {
+        const tx = frame.size / 2 + sign * radiusM * pxPerM;
+        if (tx < 10 || tx > frame.size - 10) continue;
+        out.push({ x: tx, text: `${radiusM}` });
+      }
+    }
+    return out;
   }
 
   private sectionText(index: number): Text {

@@ -19,15 +19,24 @@ reading of each beside it:
 ```bash
 node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost:5173/?study=free-water' \
   --out docs/screenshots/issue-1753/after --steps docs/screenshots/issue-1753/frames.mjs
+CONTROL=1 node .claude/skills/run-game/scripts/drive.mjs \
+  --url 'http://localhost:5173/?map=kelp-labyrinth' \
+  --out docs/screenshots/issue-1753/control --steps docs/screenshots/issue-1753/frames.mjs
+SETTINGS_JSON='{"reducedMotion":true,"reducedMotionChosen":true}' FRAMES=none INSTRUMENTS=0 \
+  node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost:5173/?study=free-water' \
+  --out docs/screenshots/issue-1753/reduced-motion --steps docs/screenshots/issue-1753/frames.mjs
 ```
 
 The before frames for the four §9 poses are [issue-1752/after](../issue-1752/README.md),
-captured at 4919493d4 with the same poses and no instruments. The set here was captured on
-SwiftShader at 1440 × 900 and DPR 1, so the readings carry draw calls and triangles and no
-GPU timing; the GPU rows stay with `docs/screenshots/issue-1713/gpu.mjs` on named hardware.
-The crater fixture seats one player and has no contacts, so the contact stalks and the edge
-marks are proven by `packages/frontend/test/verticalCommand.test.ts` against the canned
-match, not by a frame.
+captured at 4919493d4 with the same poses and no instruments. The sets here were captured on
+SwiftShader at 1440 × 900 and DPR 1, with motion on except where named, so the readings
+carry draw calls and triangles and no GPU timing; the GPU rows stay with
+`docs/screenshots/issue-1713/gpu.mjs` on named hardware. The crater fixture seats one
+player and has no contacts, so the contact stalks and the edge marks are proven by
+`packages/frontend/test/verticalCommand.test.ts` against the canned match, not by a frame:
+one stalk per Tier 3+ contact, solid above the plane and dashed below, none for the Tier 2
+contact whose payload carries a depth, and every edge mark right of the ribbon once a
+selection draws it.
 
 ## The frames
 
@@ -40,10 +49,12 @@ match, not by a frame.
 | Survey, 2,000 / 2,000, 10,000 m, 88°, seabed | [05-survey](after/05-survey.png) | No plane on the seabed, so no stalks and no plane line; the ink unchanged |
 | Stalks above the plane: the opening pose, focus 600 m | [06-stalks-above](after/06-stalks-above.png) | Nothing selected, so the raised focus is the plane; the three hulls at 300 m stand 286 m above it (the focus clamps to the drawn seabed, 586 m) and each draws a solid hairline down to a foot ring on the plane |
 | Stalks below the plane: the opening pose, focus 150 m | [07-stalks-below](after/07-stalks-below.png) | The same hulls 150 m below the plane: a dashed hairline up to the foot ring, the side read by line style and never by hue |
-| Bowl look-up, 1,250 / 2,250, 300 m, −60°, 300 m, `yawDeg` 90 | [08-bowl-lookup](after/08-bowl-lookup.png) | The band's floor, proven: the probe reads −60°, the eye at 1,480 m under a 300 m focus, in the water looking up. The frame is water and snow because the reach at a 300 m dolly is 600 m (#1749), and the rim wall stands farther than that; the section still reads the slope ahead |
-| Garden look-up, 2,000 / 1,400, 400 m, −45°, 300 m, `yawDeg` 180 | [09-garden-lookup](after/09-garden-lookup.png) | What §4 predicts over the garden: the rig at −45°, the clamp holding the eye 25 m over the 400 m floor at 382 m, so the gaze is a few degrees up, through the stands at canopy height |
-| Bowl level, the look-up pose at the shipped floor, 10° | [10-bowl-level](after/10-bowl-level.png) | The pair for the look-up: from 65 m the hulls on the rim ahead, each with its foot ring on the 300 m plane |
+| Bowl look-up, 1,250 / 2,250, 300 m, −60°, 300 m, `yawDeg` 90 | [08-bowl-lookup](after/08-bowl-lookup.png) | The band's floor, proven: the probe reads −60°, the eye at 1,482 m under a 300 m focus, in the water looking up. The frame is water and snow because the reach at a 300 m dolly is 600 m (#1749), and the rim wall stands farther than that; the section still reads the slope ahead, with its range ticks along the top edge |
+| Garden look-up, 2,000 / 1,400, 400 m, −45°, 300 m, `yawDeg` 180 | [09-garden-lookup](after/09-garden-lookup.png) | What §4 predicts over the garden: the rig at −45°, the clamp holding the eye 25 m over the drawn floor there, at 378 m, so the gaze is a few degrees up, through the stands at canopy height |
+| Bowl level, the look-up pose at the shipped floor, 10° | [10-bowl-level](after/10-bowl-level.png) | The pair for the look-up: from 64 m the hulls on the rim ahead, each with its foot ring on the 300 m plane |
 | Depth pick: the low pose, army selected, MOVE 3D pinned at 2,000 / 2,000, the section pressed three quarters down | [11-depth-pick](after/11-depth-pick.png) | The destination depth reads 2,250 m in the panel, the section marks it with a cross under the plane line at the lead hull's 300 m, and the tether in the world runs to the pinned point |
+| Kelp Labyrinth control: its opening, the low and the survey poses, study off | [control/02-opening](control/02-opening.png), [03-low](control/03-low.png), [04-survey](control/04-survey.png) (01 is its lobby, which the study skips) | A shipped map draws none of it: no SECTION block, so the console keeps its five blocks, no stalk and no plane line, and the orbit's band still stops at 10° |
+| Reduced motion: the opening, `reducedMotion` on | [reduced-motion/01-opening](reduced-motion/01-opening.png) | The same opening as the first row: the instruments carry no motion of their own, and the scope's sweep is its fixed cross-hair as §11 asks |
 
 The opening pose and the garden close, low and survey rows are §9's four frames, with
 the instruments on them as §9 asks of #1753; #1752 recaptures them for the owner's

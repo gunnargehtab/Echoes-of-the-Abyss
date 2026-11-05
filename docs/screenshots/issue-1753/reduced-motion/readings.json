@@ -1,0 +1,47 @@
+{
+  "dpr": 1,
+  "readings": [
+    {
+      "name": "opening",
+      "look": "free-water",
+      "pitchDeg": 15,
+      "yawDeg": 326,
+      "focus": {
+        "xM": 709,
+        "zM": 1710,
+        "depthM": 300
+      },
+      "eye": {
+        "xM": 61,
+        "zM": 2671,
+        "depthM": -1112
+      },
+      "distance": 1200,
+      "flight": {
+        "flying": false,
+        "navigating": false,
+        "depthM": -1112,
+        "bearingDeg": 34,
+        "upX": -1.3877787807814457e-17,
+        "upY": -0.9659258262890683,
+        "inverted": false,
+        "blocked": false
+      },
+      "ownCentre": {
+        "x": 541.6666666666666,
+        "z": 1958.3333333333333
+      },
+      "waterReachM": 1805,
+      "calls": 43,
+      "triangles": 547546,
+      "props": 200,
+      "propTriangles": 530800,
+      "sway": "held",
+      "dom": {
+        "uiScale": "1",
+        "preview": "MOVE 3D",
+        "previewDepth": null
+      }
+    }
+  ]
+}

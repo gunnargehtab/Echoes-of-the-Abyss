@@ -11,7 +11,10 @@
 //     --out docs/screenshots/issue-1753/after --steps docs/screenshots/issue-1753/frames.mjs
 //
 // FRAMES=low,survey limits the explicit poses. INSTRUMENTS=0 skips the
-// instruments' frames, for a before set on the base commit.
+// instruments' frames, for a before set on the base commit or a reduced-motion
+// opening (SETTINGS_JSON, as issue-1752/README.md runs it). CONTROL=1 drives
+// the unchanged Kelp Labyrinth control instead (`?map=kelp-labyrinth`): its
+// opening frame and the low and survey poses, with no instrument on them.
 import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
@@ -37,9 +40,16 @@ const SCOPE = squareAt(10);
 const SECTION = squareAt(10 + 170 + 8);
 
 export default async ({ page, shot }) => {
-  await page.waitForFunction(() => window.__perspectiveProbe?.().props === 200, null, {
-    timeout: 120000,
-  });
+  const control = process.env.CONTROL === '1';
+  if (control) {
+    await page.waitForFunction(() => window.__perspectiveProbe?.().modelBacked >= 1, null, {
+      timeout: 120000,
+    });
+  } else {
+    await page.waitForFunction(() => window.__perspectiveProbe?.().props === 200, null, {
+      timeout: 120000,
+    });
+  }
   const only = process.env.FRAMES?.split(',');
   const readings = [];
   let dir;
@@ -99,12 +109,13 @@ export default async ({ page, shot }) => {
   dir = dirname(await shot('opening'));
   for (const pose of POSES) {
     if (only && !only.includes(pose[0])) continue;
+    if (control && !['low', 'survey'].includes(pose[0])) continue;
     await aim(pose);
     await read(pose[0]);
     await shot(pose[0]);
   }
 
-  if (process.env.INSTRUMENTS !== '0') {
+  if (process.env.INSTRUMENTS !== '0' && !control) {
     // Stalks: nothing selected, so the plane is the raised focus. At 600 m the
     // hulls, at their 300 m exercise depth, stand above it and their stalks
     // are solid; at 150 m they stand below it and the stalks are dashed.
