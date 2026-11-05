@@ -414,8 +414,8 @@ read as GPU time with each on and off, the grade at the low and survey stations.
 
 The free-water slice's crater fixture is the one carve-out from this reservation and from
 the frame's 400,000, by the owner's decision on #1712 (2 November 2026): a development
-slice for map design patterns, it spends up to 720,000 triangles a frame and 400,000 on
-props and decorative life, forty kelp stands of 9,000 among them
+slice for map design patterns, it spends up to 720,000 triangles a frame and 600,000 on
+props and decorative life, sixty kelp stands of 9,000 among them
 ([free-water-slice.md](free-water-slice.md) §7); shipped maps keep this gate's 400,000 and
 120,000.
 

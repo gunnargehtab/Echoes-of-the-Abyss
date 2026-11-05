@@ -1,0 +1,88 @@
+{
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "software": true,
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "reducedMotion": false,
+  "readings": [
+    {
+      "name": "low",
+      "look": "standard",
+      "pitchDeg": 12,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": 850
+      },
+      "eye": {
+        "xM": 1998,
+        "zM": 3564,
+        "depthM": -676
+      },
+      "distance": 1600,
+      "waterReachM": 5120,
+      "calls": 75,
+      "triangles": 160006,
+      "props": 363,
+      "propTriangles": 104958,
+      "instances": {},
+      "photophores": 0,
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "ownCentre": {
+        "x": 975.1124165852865,
+        "z": 1148.592997233073
+      }
+    },
+    {
+      "name": "survey",
+      "look": "standard",
+      "pitchDeg": 88,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 1994,
+        "zM": 2350,
+        "depthM": -42803
+      },
+      "distance": 10000,
+      "waterReachM": 32000,
+      "calls": 76,
+      "triangles": 163878,
+      "props": 363,
+      "propTriangles": 104958,
+      "instances": {},
+      "photophores": 0,
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "ownCentre": {
+        "x": 1031.0852152506511,
+        "z": 1147.1572265625
+      }
+    }
+  ]
+}

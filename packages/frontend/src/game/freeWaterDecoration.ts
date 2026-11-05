@@ -61,15 +61,28 @@ export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false)
         ...(motion === undefined ? {} : { motion }),
       });
   };
-  for (const y of [500, 750, 1250]) {
-    for (const x of [1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750]) {
-      if (y === 1250 && x >= 1500 && x <= 2250) continue;
-      for (const dx of [62.5, 187.5]) add('env-kelp-stand', x + dx, y + 125);
+  // Two rows of stands on each flank of the clearing at one 125 m pitch, the
+  // inner rows set 5 m back from the clearing so a 4 m sway never crosses it
+  // (§3's bounds rule), and the outer rows' corner slots left open so the
+  // forest ends at the garden's corners rather than at a box (#1751).
+  const GARDEN_X = [1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750];
+  for (const [y, dy, corners] of [
+    [750, 62.5, false],
+    [750, 185, true],
+    [1250, 65, true],
+    [1250, 187.5, false],
+  ] as const) {
+    for (const x of GARDEN_X) {
+      for (const dx of [62.5, 187.5]) {
+        if (!corners && ((x === 1000 && dx === 62.5) || (x === 2750 && dx === 187.5))) continue;
+        add('env-kelp-stand', x + dx, y + dy);
+      }
     }
   }
+  // The retained clusters stand behind the forest at the garden's north edge.
   for (const x of [1500, 1750, 2000, 2250]) {
     for (const dx of [62.5, 187.5]) {
-      for (const dy of [62.5, 187.5]) add('env-kelp-cluster', x + dx, 1250 + dy);
+      for (const dy of [62.5, 187.5]) add('env-kelp-cluster', x + dx, 500 + dy);
     }
   }
   const life = (

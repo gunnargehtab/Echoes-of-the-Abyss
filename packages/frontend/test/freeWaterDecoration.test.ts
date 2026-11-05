@@ -18,23 +18,47 @@ describe('authored public decoration', () => {
   it('places every commissioned instance without scatter, scale jitter or truncation', () => {
     const placements = freeWaterPlacements(ground());
     const counts: Record<string, number> = {};
+    const plants = placements.filter((p) => p.motion === undefined);
     for (const p of placements) {
       counts[p.slug] = (counts[p.slug] ?? 0) + 1;
       assert.equal(p.scale, 1);
       if (p.motion === undefined) {
-        const radius = propSpec(p.slug)!.footprintM / 2;
-        assert.ok(p.yM + radius <= 1000 || p.yM - radius >= 1250, 'clearing stays clear');
+        // §3: bounds, not origins, stay out of the clearing, swaying tips included.
+        const { footprintM, swayM } = propSpec(p.slug)!;
+        const reach = footprintM / 2 + swayM;
+        assert.ok(p.yM + reach <= 1000 || p.yM - reach >= 1250, 'clearing stays clear');
+        // §5: each slot leaves the plan envelope wholly inside its 250 m cell.
+        const cellX = Math.floor(p.xM / 250) * 250;
+        const cellY = Math.floor(p.yM / 250) * 250;
+        assert.ok(p.xM - footprintM / 2 >= cellX && p.xM + footprintM / 2 <= cellX + 250);
+        assert.ok(p.yM - footprintM / 2 >= cellY && p.yM + footprintM / 2 <= cellY + 250);
       }
     }
+    // §5: a longer list buys clearance, so no two plan envelopes overlap.
+    for (const a of plants) {
+      for (const b of plants) {
+        if (a === b) continue;
+        const apart = (propSpec(a.slug)!.footprintM + propSpec(b.slug)!.footprintM) / 2;
+        assert.ok(Math.hypot(a.xM - b.xM, a.yM - b.yM) >= apart - 1e-8, `${a.slug} overlaps`);
+      }
+    }
+    // §9: the inner rows hug the clearing on both flanks, mirrored about its axis.
+    const stands = plants.filter((p) => p.slug === 'env-kelp-stand');
+    const rows = [...new Set(stands.map((p) => p.yM))].sort((a, b) => a - b);
+    assert.deepEqual(rows, [812.5, 935, 1315, 1437.5]);
+    assert.deepEqual(
+      rows.map((y) => stands.filter((p) => p.yM === y).length),
+      [14, 16, 16, 14]
+    );
     assert.deepEqual(counts, {
-      'env-kelp-stand': 40,
+      'env-kelp-stand': 60,
       'env-kelp-cluster': 16,
       'env-rim-crab': 16,
       'env-shoal-fry': 96,
       'env-outer-fish': 8,
       'env-deep-fish': 8,
     });
-    assert.ok(placements.reduce((n, p) => n + propSpec(p.slug)!.triBudget, 0) <= 400000);
+    assert.ok(placements.reduce((n, p) => n + propSpec(p.slug)!.triBudget, 0) <= 600000);
     const control = terrainFor(KELP_LABYRINTH).serialize();
     assert.deepEqual(
       placeProps(control),
@@ -75,17 +99,17 @@ describe('authored public decoration', () => {
   it('a public delta invalidates only placements whose envelopes touch its cells', () => {
     const terrain = ground();
     const before = freeWaterPlacements(terrain, true);
-    terrain.ceiling[2 * 16 + 4] = 3000;
+    terrain.ceiling[3 * 16 + 6] = 3000;
     const after = freeWaterPlacements(terrain, true);
     assert.equal(before.length, after.length);
     let removed = 0;
     after.forEach((p, i) => {
       if (p.disabled === true) {
         removed++;
-        assert.equal(p.cellIndex, 2 * 16 + 4);
+        assert.equal(p.cellIndex, 3 * 16 + 6);
       } else assert.deepEqual(p, before[i]);
     });
-    assert.equal(removed, 2);
+    assert.equal(removed, 4);
   });
 
   it('is byte-identical with hidden opposition and a server-only Hollow', () => {
