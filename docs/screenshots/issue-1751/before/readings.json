@@ -1,0 +1,368 @@
+{
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "software": true,
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "reducedMotion": false,
+  "readings": [
+    {
+      "name": "home",
+      "look": "free-water",
+      "pitchDeg": 55,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 542,
+        "zM": 1958,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 539,
+        "zM": 3451,
+        "depthM": -9090
+      },
+      "distance": 2600,
+      "waterReachM": 4487,
+      "calls": 43,
+      "triangles": 405088,
+      "props": 184,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-stand": 40,
+        "env-rim-crab": 16,
+        "env-shoal-fry": 96,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8,
+        "env-kelp-cluster": 16
+      },
+      "photophores": 48,
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "ownCentre": {
+        "x": 541.6666666666666,
+        "z": 1958.3333333333333
+      }
+    },
+    {
+      "name": "opening",
+      "look": "free-water",
+      "pitchDeg": 15,
+      "yawDeg": 326,
+      "focus": {
+        "xM": 760,
+        "zM": 1650,
+        "depthM": 300
+      },
+      "eye": {
+        "xM": 625,
+        "zM": 1850,
+        "depthM": 4
+      },
+      "distance": 250,
+      "waterReachM": 600,
+      "calls": 22,
+      "triangles": 396719,
+      "props": 184,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-stand": 40,
+        "env-rim-crab": 16,
+        "env-shoal-fry": 96,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8,
+        "env-kelp-cluster": 16
+      },
+      "photophores": 48,
+      "passes": [
+        "canvas",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "ownCentre": {
+        "x": 541.6666666666666,
+        "z": 1958.3333333333333
+      }
+    },
+    {
+      "name": "garden-close",
+      "look": "free-water",
+      "pitchDeg": 12,
+      "yawDeg": 90,
+      "focus": {
+        "xM": 1875,
+        "zM": 1125,
+        "depthM": 275
+      },
+      "eye": {
+        "xM": 2120,
+        "zM": 1125,
+        "depthM": 41
+      },
+      "distance": 250,
+      "waterReachM": 600,
+      "calls": 30,
+      "triangles": 402015,
+      "props": 184,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-stand": 40,
+        "env-rim-crab": 16,
+        "env-shoal-fry": 96,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8,
+        "env-kelp-cluster": 16
+      },
+      "photophores": 48,
+      "passes": [
+        "canvas",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "ownCentre": {
+        "x": 541.6666666666666,
+        "z": 1958.3333333333333
+      }
+    },
+    {
+      "name": "garden-east",
+      "look": "free-water",
+      "pitchDeg": 12,
+      "yawDeg": 270,
+      "focus": {
+        "xM": 1375,
+        "zM": 1125,
+        "depthM": 275
+      },
+      "eye": {
+        "xM": 1130,
+        "zM": 1125,
+        "depthM": 38
+      },
+      "distance": 250,
+      "waterReachM": 600,
+      "calls": 22,
+      "triangles": 396719,
+      "props": 184,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-stand": 40,
+        "env-rim-crab": 16,
+        "env-shoal-fry": 96,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8,
+        "env-kelp-cluster": 16
+      },
+      "photophores": 48,
+      "passes": [
+        "canvas",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "ownCentre": {
+        "x": 541.6666666666666,
+        "z": 1958.3333333333333
+      }
+    },
+    {
+      "name": "low",
+      "look": "free-water",
+      "pitchDeg": 12,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": 850
+      },
+      "eye": {
+        "xM": 1999,
+        "zM": 3566,
+        "depthM": -650
+      },
+      "distance": 1600,
+      "waterReachM": 2457,
+      "calls": 25,
+      "triangles": 397119,
+      "props": 184,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-stand": 40,
+        "env-rim-crab": 16,
+        "env-shoal-fry": 96,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8,
+        "env-kelp-cluster": 16
+      },
+      "photophores": 48,
+      "passes": [
+        "canvas",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "ownCentre": {
+        "x": 541.6666666666666,
+        "z": 1958.3333333333333
+      }
+    },
+    {
+      "name": "survey",
+      "look": "free-water",
+      "pitchDeg": 88,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 1996,
+        "zM": 2334,
+        "depthM": -43041
+      },
+      "distance": 10000,
+      "waterReachM": 32000,
+      "calls": 44,
+      "triangles": 405088,
+      "props": 184,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-stand": 40,
+        "env-rim-crab": 16,
+        "env-shoal-fry": 96,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8,
+        "env-kelp-cluster": 16
+      },
+      "photophores": 48,
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "ownCentre": {
+        "x": 541.6666666666666,
+        "z": 1958.3333333333333
+      }
+    },
+    {
+      "name": "bowl",
+      "look": "free-water",
+      "pitchDeg": 70,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 2002,
+        "zM": 3540,
+        "depthM": -16831
+      },
+      "distance": 4500,
+      "waterReachM": 10575,
+      "calls": 44,
+      "triangles": 405088,
+      "props": 184,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-stand": 40,
+        "env-rim-crab": 16,
+        "env-shoal-fry": 96,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8,
+        "env-kelp-cluster": 16
+      },
+      "photophores": 48,
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "ownCentre": {
+        "x": 541.6666666666666,
+        "z": 1958.3333333333333
+      }
+    },
+    {
+      "name": "clearing-pan",
+      "strip": [
+        {
+          "tMs": 148561,
+          "focus": {
+            "xM": 1875,
+            "zM": 1125,
+            "depthM": 275
+          },
+          "eye": {
+            "xM": 2119,
+            "zM": 1125,
+            "depthM": 37
+          }
+        },
+        {
+          "tMs": 158589,
+          "focus": {
+            "xM": 1836,
+            "zM": 1125,
+            "depthM": 275
+          },
+          "eye": {
+            "xM": 2081,
+            "zM": 1125,
+            "depthM": 37
+          }
+        },
+        {
+          "tMs": 168170,
+          "focus": {
+            "xM": 1797,
+            "zM": 1125,
+            "depthM": 275
+          },
+          "eye": {
+            "xM": 2042,
+            "zM": 1125,
+            "depthM": 36
+          }
+        },
+        {
+          "tMs": 177844,
+          "focus": {
+            "xM": 1758,
+            "zM": 1125,
+            "depthM": 275
+          },
+          "eye": {
+            "xM": 2003,
+            "zM": 1125,
+            "depthM": 38
+          }
+        }
+      ]
+    }
+  ]
+}

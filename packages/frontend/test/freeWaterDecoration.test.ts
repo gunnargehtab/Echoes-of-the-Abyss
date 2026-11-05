@@ -8,8 +8,13 @@ import { FREE_WATER_SLICE } from '../../backend/src/sim/maps/freeWaterSlice.ts';
 import { decorationPose, freeWaterPlacements } from '../src/game/freeWaterDecoration.ts';
 import { ENVIRONMENT_PROPS, placeProps, propSpec } from '../src/game/environment.ts';
 import { buildTemplate } from '../src/game/environmentModels.ts';
-import { DEPTH_VISUAL_M_PER_M } from '../src/game/perspectiveTerrain.ts';
-import { Faction, FaunaSpecies, ResolutionTier, UnitKind } from '@echoes/shared';
+import {
+  DEPTH_VISUAL_M_PER_M,
+  rockTopDepthM,
+  seabedDepthAtM,
+} from '../src/game/perspectiveTerrain.ts';
+import { seabedSeed } from '../src/game/seabed.ts';
+import { Biome, Faction, FaunaSpecies, ResolutionTier, UnitKind } from '@echoes/shared';
 import { Match } from '../../backend/src/sim/match.ts';
 import { spawnFauna, spawnUnit } from '../../backend/src/sim/world.ts';
 
@@ -18,23 +23,80 @@ describe('authored public decoration', () => {
   it('places every commissioned instance without scatter, scale jitter or truncation', () => {
     const placements = freeWaterPlacements(ground());
     const counts: Record<string, number> = {};
+    const plants = placements.filter((p) => p.motion === undefined);
     for (const p of placements) {
       counts[p.slug] = (counts[p.slug] ?? 0) + 1;
       assert.equal(p.scale, 1);
       if (p.motion === undefined) {
-        const radius = propSpec(p.slug)!.footprintM / 2;
-        assert.ok(p.yM + radius <= 1000 || p.yM - radius >= 1250, 'clearing stays clear');
+        // §3: bounds, not origins, stay out of the clearing, swaying tips included.
+        const { footprintM, swayM } = propSpec(p.slug)!;
+        const reach = footprintM / 2 + swayM;
+        assert.ok(p.yM + reach <= 1000 || p.yM - reach >= 1250, 'clearing stays clear');
+        // §5: each slot leaves the plan envelope wholly inside its 250 m cell.
+        const cellX = Math.floor(p.xM / 250) * 250;
+        const cellY = Math.floor(p.yM / 250) * 250;
+        assert.ok(p.xM - footprintM / 2 >= cellX && p.xM + footprintM / 2 <= cellX + 250);
+        assert.ok(p.yM - footprintM / 2 >= cellY && p.yM + footprintM / 2 <= cellY + 250);
       }
     }
+    // §5: a longer list buys clearance, so no two plan envelopes overlap.
+    for (const a of plants) {
+      for (const b of plants) {
+        if (a === b) continue;
+        const apart = (propSpec(a.slug)!.footprintM + propSpec(b.slug)!.footprintM) / 2;
+        assert.ok(Math.hypot(a.xM - b.xM, a.yM - b.yM) >= apart - 1e-8, `${a.slug} overlaps`);
+      }
+    }
+    // §5: a stand's whole envelope lies where every surrounding cell centre is
+    // the garden's 400 m tread, so the view's interpolation never puts a ramp
+    // under it; and the rendered floor, eroded, stays within a stand's height
+    // of its root across the envelope.
+    const terrain = ground();
+    const seed = seabedSeed(terrain);
+    const rockTop = rockTopDepthM(terrain);
+    const stands = plants.filter((p) => p.slug === 'env-kelp-stand');
+    for (const p of stands) {
+      const half = propSpec(p.slug)!.footprintM / 2;
+      for (const x of [p.xM - half, p.xM + half]) {
+        for (const y of [p.yM - half, p.yM + half]) {
+          for (const col of [Math.floor(x / 250 - 0.5), Math.ceil(x / 250 - 0.5)]) {
+            for (const row of [Math.floor(y / 250 - 0.5), Math.ceil(y / 250 - 0.5)]) {
+              const i = row * terrain.cols + col;
+              assert.equal(terrain.floor[i], 400, `${p.xM},${p.yM} reaches a ramp`);
+              assert.equal(terrain.biomes[i], Biome.KelpForest);
+            }
+          }
+        }
+      }
+      const root = seabedDepthAtM(terrain, seed, rockTop, p.xM, p.yM, true);
+      for (let a = 0; a < 32; a++) {
+        for (const f of [0.5, 1]) {
+          const x = p.xM + Math.cos((a * Math.PI) / 16) * half * f;
+          const y = p.yM + Math.sin((a * Math.PI) / 16) * half * f;
+          const floor = seabedDepthAtM(terrain, seed, rockTop, x, y, true);
+          assert.ok(
+            Math.abs(floor - root) <= 40,
+            `${p.xM},${p.yM}: floor ${floor} from root ${root}`
+          );
+        }
+      }
+    }
+    // §9: three rows north of the clearing and one south, each 14 stands.
+    const rows = [...new Set(stands.map((p) => p.yM))].sort((a, b) => a - b);
+    assert.deepEqual(rows, [687.5, 812.5, 935, 1315]);
+    assert.deepEqual(
+      rows.map((y) => stands.filter((p) => p.yM === y).length),
+      [14, 14, 14, 14]
+    );
     assert.deepEqual(counts, {
-      'env-kelp-stand': 40,
+      'env-kelp-stand': 56,
       'env-kelp-cluster': 16,
       'env-rim-crab': 16,
       'env-shoal-fry': 96,
       'env-outer-fish': 8,
       'env-deep-fish': 8,
     });
-    assert.ok(placements.reduce((n, p) => n + propSpec(p.slug)!.triBudget, 0) <= 400000);
+    assert.ok(placements.reduce((n, p) => n + propSpec(p.slug)!.triBudget, 0) <= 600000);
     const control = terrainFor(KELP_LABYRINTH).serialize();
     assert.deepEqual(
       placeProps(control),
@@ -75,17 +137,17 @@ describe('authored public decoration', () => {
   it('a public delta invalidates only placements whose envelopes touch its cells', () => {
     const terrain = ground();
     const before = freeWaterPlacements(terrain, true);
-    terrain.ceiling[2 * 16 + 4] = 3000;
+    terrain.ceiling[3 * 16 + 6] = 3000;
     const after = freeWaterPlacements(terrain, true);
     assert.equal(before.length, after.length);
     let removed = 0;
     after.forEach((p, i) => {
       if (p.disabled === true) {
         removed++;
-        assert.equal(p.cellIndex, 2 * 16 + 4);
+        assert.equal(p.cellIndex, 3 * 16 + 6);
       } else assert.deepEqual(p, before[i]);
     });
-    assert.equal(removed, 2);
+    assert.equal(removed, 4);
   });
 
   it('is byte-identical with hidden opposition and a server-only Hollow', () => {

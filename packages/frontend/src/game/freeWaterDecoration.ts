@@ -61,16 +61,30 @@ export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false)
         ...(motion === undefined ? {} : { motion }),
       });
   };
-  for (const y of [500, 750, 1250]) {
+  // Stands sit only where the rendered floor is the garden's 400 m tread: the
+  // view interpolates between cell centres, so a plan envelope that reaches
+  // past the last tread centre, toward the rim, the bowl or the pocket, would
+  // hang over the ramp. That bounds the rows to y=685..1,315 and the columns
+  // to x=1,185..2,815, and with the clearing's row bare, inner rows 5 m from
+  // its edges so a 4 m sway never crosses them, it admits three rows north of
+  // the clearing and one south, 14 stands each (#1751).
+  for (const [y, dy] of [
+    [500, 187.5],
+    [750, 62.5],
+    [750, 185],
+    [1250, 65],
+  ] as const) {
     for (const x of [1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750]) {
-      if (y === 1250 && x >= 1500 && x <= 2250) continue;
-      for (const dx of [62.5, 187.5]) add('env-kelp-stand', x + dx, y + 125);
+      for (const dx of [62.5, 187.5]) {
+        if ((x === 1000 && dx === 62.5) || (x === 2750 && dx === 187.5)) continue;
+        add('env-kelp-stand', x + dx, y + dy);
+      }
     }
   }
-  for (const x of [1500, 1750, 2000, 2250]) {
-    for (const dx of [62.5, 187.5]) {
-      for (const dy of [62.5, 187.5]) add('env-kelp-cluster', x + dx, 1250 + dy);
-    }
+  // The retained clusters are the forest's fringe along the garden's north
+  // edge, on the gentle ramp up to the rim behind the outermost stands.
+  for (const x of [1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750]) {
+    for (const dx of [62.5, 187.5]) add('env-kelp-cluster', x + dx, 500 + 62.5);
   }
   const life = (
     slug: string,
