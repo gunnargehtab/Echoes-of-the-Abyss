@@ -1,0 +1,104 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "unpaced": true,
+  "motion": true,
+  "dpr": 1.5,
+  "readings": [
+    {
+      "name": "home",
+      "calls": 43,
+      "triangles": 405088,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-stand": 40,
+        "env-kelp-cluster": 16,
+        "env-shoal-fry": 96,
+        "env-outer-fish": 8,
+        "env-rim-crab": 16,
+        "env-deep-fish": 8
+      },
+      "photophores": 48,
+      "textures": 15,
+      "environmentBytes": 344064,
+      "haloBytes": 50371936,
+      "splitBytes": 11664000,
+      "gpuFrames": 240,
+      "gpuMs": 1.7,
+      "queuedGpuMs": 1.64,
+      "queueLoadMs": 3.77,
+      "queueFrames": 240
+    },
+    {
+      "name": "garden-close",
+      "calls": 22,
+      "triangles": 396719,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-stand": 40,
+        "env-kelp-cluster": 16,
+        "env-rim-crab": 16,
+        "env-shoal-fry": 96,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8
+      },
+      "photophores": 48,
+      "textures": 6,
+      "environmentBytes": 344064,
+      "haloBytes": 50371936,
+      "splitBytes": 11664000,
+      "gpuFrames": 241,
+      "gpuMs": 1.44,
+      "queuedGpuMs": 1.43,
+      "queueLoadMs": 3.8,
+      "queueFrames": 240
+    },
+    {
+      "name": "low",
+      "calls": 25,
+      "triangles": 397119,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-stand": 40,
+        "env-kelp-cluster": 16,
+        "env-rim-crab": 16,
+        "env-shoal-fry": 96,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8
+      },
+      "photophores": 48,
+      "textures": 6,
+      "environmentBytes": 344064,
+      "haloBytes": 50371936,
+      "splitBytes": 11664000,
+      "gpuFrames": 241,
+      "gpuMs": 1.37,
+      "queuedGpuMs": 1.31,
+      "queueLoadMs": 3.78,
+      "queueFrames": 240
+    },
+    {
+      "name": "survey",
+      "calls": 44,
+      "triangles": 405088,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-stand": 40,
+        "env-kelp-cluster": 16,
+        "env-rim-crab": 16,
+        "env-shoal-fry": 96,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8
+      },
+      "photophores": 48,
+      "textures": 15,
+      "environmentBytes": 344064,
+      "haloBytes": 50371936,
+      "splitBytes": 11664000,
+      "gpuFrames": 241,
+      "gpuMs": 1.47,
+      "queuedGpuMs": 1.31,
+      "queueLoadMs": 3.78,
+      "queueFrames": 240
+    }
+  ]
+}

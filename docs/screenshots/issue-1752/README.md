@@ -119,10 +119,28 @@ controls did; its triangles and its opening frame are the same to the number.
   `rendererSmoke.test.ts` holds the stronger claim on the real class: with the study off
   the opening is the Home frame, as before, and with it on, §9's pose.
 
-## Hardware and what is open
+## Hardware
 
-These frames come from this container's software rasteriser (SwiftShader, in each
-`readings.json`), which is why no millisecond is recorded here. The study's GPU rows,
-unpaced and queued at DPR 1 and 1.5 on named hardware, are
-`docs/screenshots/issue-1713/gpu.mjs` run as its README says; §7 leaves that criterion
-open until a GPU reads it, as #1749, #1750 and #1751 left theirs.
+The frames above come from a software rasteriser (SwiftShader, in each `readings.json`),
+so they carry no millisecond. The GPU rows below are `docs/screenshots/issue-1713/gpu.mjs`
+run as its README says: an NVIDIA GeForce GTX 1070 through Edge/ANGLE D3D11, unpaced,
+animation running, every window at least 240 samples. Each revision was read twice at each
+DPR, interleaved with #1751's, and the table gives the mean of the two runs. `before` is
+the base, c3cef492, whose runs are
+[#1751's after](../issue-1751/README.md#hardware); `after` is the merge, c48618e9, in
+`gpu/after/dpr-{1,1.5}/run-{1,2}.json`, for example
+[gpu/after/dpr-1/run-1.json](gpu/after/dpr-1/run-1.json).
+
+| Station | Calls | DPR 1 GPU / queued ms, before → after | DPR 1.5 GPU / queued ms, before → after |
+| --- | --- | --- | --- |
+| Home | 43 → 43 | 1.17 / 1.07 → 1.15 / 1.07 | 1.89 / 1.81 → 1.89 / 1.82 |
+| Garden close | 22 → 22 | 1.28 / 1.18 → 1.29 / 1.18 | 2.01 / 2.05 → 2.05 / 2.07 |
+| Low | 25 → 25 | 1.05 / 0.98 → 1.07 / 0.99 | 1.52 / 1.49 → 1.53 / 1.47 |
+| Survey | 44 → 44 | 1.09 / 0.90 → 1.07 / 0.90 | 1.59 / 1.46 → 1.52 / 1.45 |
+
+Queued time moves −0.02 to +0.02 ms, inside the 0.04 ms two runs of one revision differ
+by, and calls and triangles are unchanged (547,936 / 539,567 / 539,967 / 547,936). That is
+what the change predicts at these stations: `gpu.mjs` pins its own four poses, so the new
+opening pose is not one of them, and the HUD's layout is drawn by the overlay, not by the
+world's passes these timers read. Queue loads read 3.68–3.82 ms, each longer than the
+frame it measures.
