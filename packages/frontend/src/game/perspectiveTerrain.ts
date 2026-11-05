@@ -23,7 +23,14 @@
  */
 
 import type { TerrainPayload } from '../net/GameClient.ts';
-import { cellBlend, detailM, reliefAtCell, rockDetailM, seabedSeed } from './seabed.ts';
+import {
+  cellBlend,
+  detailM,
+  erodedGroundAtM,
+  reliefAtCell,
+  rockDetailM,
+  seabedSeed,
+} from './seabed.ts';
 
 /**
  * TUNABLE — metres of world height per metre of depth. 0.22 keeps a full
@@ -86,19 +93,35 @@ export function rockTopDepthM(terrain: TerrainPayload): number {
  * `ROCK_RELIEF.amplitudeM` < `ROCK_RISE_ABOVE_SHALLOWEST_M`, so a mesa's
  * lowest notch still stands above every open floor, and clamped at the
  * surface so no spire ever pierces depth 0.
+ *
+ * `eroded` is the free-water study's reshaping of the cell transitions
+ * (seabed.ts `erodedGroundAtM`, docs/free-water-slice.md §9): the same
+ * centres, the same fields, the blend between centres given a scarp and
+ * each rock face a foot and a set-back lip. Off, which every shipped map
+ * is, this is the bilinear above to the bit.
  */
 export function seabedDepthAtM(
   terrain: TerrainPayload,
   seed: number,
   rockTopM: number,
   xM: number,
-  yM: number
+  yM: number,
+  eroded = false
 ): number {
+  const relief = reliefAtCell(terrain, xM / terrain.cellM - 0.5, yM / terrain.cellM - 0.5);
+  if (eroded) {
+    const { stepM, rockWeight } = erodedGroundAtM(terrain, seed, rockTopM, xM, yM);
+    // The biome field over the open share, the crag over the rock share, and
+    // the rock share clamped at the surface as a mesa is: at a centre, one or
+    // the other whole, so the point reads exactly what the plain sample does.
+    const open = detailM(xM, yM, seed, relief.amplitudeM, relief.roughness, relief.blockiness);
+    const crag = rockSurfaceDepthM(seed, rockTopM, xM, yM) - rockTopM;
+    return stepM + (1 - rockWeight) * open + rockWeight * crag;
+  }
   const homeIndex = homeCellIndex(terrain, xM, yM);
   if (isRock(terrain, homeIndex)) return rockSurfaceDepthM(seed, rockTopM, xM, yM);
 
   const floor = authoredFloorAtM(terrain, xM, yM);
-  const relief = reliefAtCell(terrain, xM / terrain.cellM - 0.5, yM / terrain.cellM - 0.5);
   return floor + detailM(xM, yM, seed, relief.amplitudeM, relief.roughness, relief.blockiness);
 }
 
@@ -202,7 +225,8 @@ export interface HeightGrid {
 export function buildHeightGrid(
   terrain: TerrainPayload,
   seed = seabedSeed(terrain),
-  rockTop = rockTopDepthM(terrain)
+  rockTop = rockTopDepthM(terrain),
+  eroded = false
 ): HeightGrid {
   const vertsX = terrain.cols * VERTS_PER_CELL + 1;
   const vertsZ = terrain.rows * VERTS_PER_CELL + 1;
@@ -212,7 +236,7 @@ export function buildHeightGrid(
   for (let iz = 0; iz < vertsZ; iz++) {
     for (let ix = 0; ix < vertsX; ix++) {
       y[iz * vertsX + ix] = depthToWorldY(
-        seabedDepthAtM(terrain, seed, rockTop, ix * stepM, iz * stepM)
+        seabedDepthAtM(terrain, seed, rockTop, ix * stepM, iz * stepM, eroded)
       );
       floor[iz * vertsX + ix] = authoredFloorAtM(terrain, ix * stepM, iz * stepM);
     }
@@ -231,8 +255,9 @@ export function buildHeightGrid(
 /**
  * Recompute the vertices a ground delta moved, in place (#434).
  *
- * The heightfield interpolates the floor between cell centres and the rock
- * relief reaches one cell past its own edge, so a changed cell moves every
+ * The heightfield interpolates the floor between cell centres, the rock
+ * relief reaches one cell past its own edge, and the study's eroded edges
+ * read the same four centres, so a changed cell moves every
  * vertex within one cell of it and none further: the touched rectangle plus
  * a one-cell ring is recomputed, and the rest of the grid is left exactly as
  * the full build made it. With the same seed and rock top, the result is the
@@ -245,7 +270,8 @@ export function patchHeightGrid(
   terrain: TerrainPayload,
   seed: number,
   rockTop: number,
-  touched: { col0: number; row0: number; col1: number; row1: number }
+  touched: { col0: number; row0: number; col1: number; row1: number },
+  eroded = false
 ): { first: number; last: number } {
   const ix0 = Math.max(0, (touched.col0 - 1) * VERTS_PER_CELL);
   const iz0 = Math.max(0, (touched.row0 - 1) * VERTS_PER_CELL);
@@ -254,7 +280,7 @@ export function patchHeightGrid(
   for (let iz = iz0; iz <= iz1; iz++) {
     for (let ix = ix0; ix <= ix1; ix++) {
       grid.y[iz * grid.vertsX + ix] = depthToWorldY(
-        seabedDepthAtM(terrain, seed, rockTop, ix * grid.stepM, iz * grid.stepM)
+        seabedDepthAtM(terrain, seed, rockTop, ix * grid.stepM, iz * grid.stepM, eroded)
       );
       grid.floor[iz * grid.vertsX + ix] = authoredFloorAtM(
         terrain,

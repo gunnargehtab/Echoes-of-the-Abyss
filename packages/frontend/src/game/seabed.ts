@@ -56,6 +56,12 @@ export interface BakeOptions {
   pxPerCell?: number;
   /** Whether the detail field and the mottle shape the bake; true unless given. */
   detail?: boolean;
+  /**
+   * The free-water study's eroded cell edges (`erodedGroundAtM`), given the
+   * rock top the heightfield stands its mesas on; undefined on every shipped
+   * map, which bakes the authored step as it always has.
+   */
+  eroded?: { rockTopM: number };
 }
 
 /**
@@ -315,8 +321,12 @@ function softSnap(vM: number): number {
   return (iu + smooth(edge)) * BLOCK_M;
 }
 
-/** Value noise in [-1, 1] at a world position, one wavelength. */
-function valueNoise(xM: number, yM: number, wavelengthM: number, seed: number): number {
+/**
+ * Value noise in [-1, 1] at a world position, one wavelength. Exported for
+ * the roof's brow (passages.ts), which erodes on the same field the ground
+ * does, so the two meet along a jamb as one stone.
+ */
+export function valueNoise(xM: number, yM: number, wavelengthM: number, seed: number): number {
   const x = xM / wavelengthM;
   const y = yM / wavelengthM;
   const ix = Math.floor(x);
@@ -368,6 +378,196 @@ export function mottleFactor(xM: number, yM: number, seed: number, mottle: numbe
     0.35 * valueNoise(xM, yM, MOTTLE_FAST_WAVELENGTH_M, salt ^ 0x2545f491);
   // n is in [-1, 1] and averages 0: half the span either side of the fill.
   return 1 - 0.5 * mottle * Math.max(-1, Math.min(1, n));
+}
+
+/**
+ * TUNABLE — the free-water study's eroded cell edges, development-only
+ * (docs/free-water-slice.md §9, "Crater walls"). Off on every shipped map.
+ *
+ * The 250 m boxes the owner rejected are the cell transitions: a straight
+ * bilinear ramp between two open centres, and a vertical drop on the cell
+ * edge where open water meets rock. These numbers reshape what is drawn
+ * *between* centres and nothing at one: every profile below is 0 at one
+ * centre and 1 at the next, so an open centre keeps its authored floor and a
+ * solid cell stays rock at its centre. The survey ink keeps tracing the
+ * authored floor (`authoredFloorAtM`), not this.
+ */
+export const ERODED_EDGES = {
+  /**
+   * How far a cell edge wanders off the grid line, metres. Under a quarter
+   * cell, so the blend between two centres stays monotone: a wider wander
+   * folds a ramp back on itself and draws a bump on a slope.
+   */
+  WANDER_M: 60,
+  WANDER_WAVELENGTH_M: 180,
+  /**
+   * How much of an open ramp's rise moves into a scarp midway between the
+   * centres, at most; 0 is the shipped linear ramp. The slope at a centre
+   * stays positive, at least (1 − SCARP)(1 − 4 WANDER_M / cell) of linear,
+   * under one percent at the worst wander: a tread, not #1532's flat step,
+   * and on a crater's rim a terrace is the aim.
+   */
+  SCARP: 0.8,
+  SCARP_WAVELENGTH_M: 520,
+  /** A rock face's foot into the open cell, metres, at most: a talus apron. */
+  FOOT_M: 60,
+  /**
+   * How far the face is set back into the rock, metres: an eroded lip. The
+   * least is under a vertex step (62.5 m), so the steepest face is still a
+   * wall between two vertices; the most, with the wander, stays under half a
+   * cell, so the face ends before the rock's centre.
+   */
+  SETBACK_MIN_M: 40,
+  SETBACK_M: 110,
+  FACE_WAVELENGTH_M: 160,
+  /** The face's profile exponent: a gentle foot rising to a steep lip. */
+  LIP: 2,
+} as const;
+
+/** Salts for the erosion's noise channels: each a field of its own. */
+const WANDER_X_SALT = 0x3c6ef372;
+const WANDER_Y_SALT = 0xa54ff53a;
+const SCARP_SALT = 0x510e527f;
+const FOOT_SALT = 0x9b05688c;
+const SETBACK_SALT = 0x1f83d9ab;
+
+/** The erosion's readings at a world position, in fractions of a cell. */
+interface Erosion {
+  wanderX: number;
+  wanderY: number;
+  scarp: number;
+  foot: number;
+  setback: number;
+}
+
+function erosionAt(xM: number, yM: number, seed: number, cellM: number): Erosion {
+  const E = ERODED_EDGES;
+  const n = (salt: number, wavelengthM: number) => valueNoise(xM, yM, wavelengthM, seed ^ salt);
+  const unit = (salt: number, wavelengthM: number) => 0.5 + 0.5 * n(salt, wavelengthM);
+  return {
+    wanderX: (E.WANDER_M / cellM) * n(WANDER_X_SALT, E.WANDER_WAVELENGTH_M),
+    wanderY: (E.WANDER_M / cellM) * n(WANDER_Y_SALT, E.WANDER_WAVELENGTH_M),
+    scarp: E.SCARP * unit(SCARP_SALT, E.SCARP_WAVELENGTH_M),
+    foot: (E.FOOT_M / cellM) * unit(FOOT_SALT, E.FACE_WAVELENGTH_M),
+    setback:
+      (E.SETBACK_MIN_M +
+        (E.SETBACK_M - E.SETBACK_MIN_M) * unit(SETBACK_SALT, E.FACE_WAVELENGTH_M)) /
+      cellM,
+  };
+}
+
+/** `t` wandered off the grid line, still 0 at one centre and 1 at the next. */
+function wander(t: number, w: number): number {
+  return Math.min(1, Math.max(0, t + w * 4 * t * (1 - t)));
+}
+
+/** An open ramp's weight toward the second centre: linear eased toward a scarp midway. */
+function rampWeight(t: number, w: number, scarp: number): number {
+  const u = wander(t, w);
+  return u + scarp * (smooth(u) - u);
+}
+
+/**
+ * A rock face's weight toward the rock: 0 until the foot, 1 from the setback
+ * on, the lip profile between.
+ */
+function faceWeight(t: number, w: number, e: Erosion): number {
+  const u = wander(t, w);
+  const v = Math.min(1, Math.max(0, (u - (0.5 - e.foot)) / (e.foot + e.setback)));
+  return v ** ERODED_EDGES.LIP;
+}
+
+export interface ErodedGround {
+  /**
+   * The drawn step, metres of depth: the floor between open centres with its
+   * scarps, risen to the rock top across each face. The darken-only slope
+   * the bake lights, and the surface the heightfield stands on.
+   */
+  stepM: number;
+  /** How much of the point is rock, 0–1: 1 from a face's setback inward. */
+  rockWeight: number;
+}
+
+/**
+ * The ground between cell centres with its edges eroded
+ * (docs/free-water-slice.md §9, "Crater walls"), for the heightfield and the
+ * bake alike: a bilinear blend of the four nearest centres, each edge of the
+ * patch weighted by its own profile rather than linearly. An edge between two
+ * open centres climbs by `rampWeight`, so a step reads as a wandering scarp
+ * with a tread either side; an edge between open water and rock rises by
+ * `faceWeight`, so the wall has a foot in the water and an eroded lip set
+ * back into the stone. The weights sum to one, and a rock centre's share of
+ * the blend is `rockWeight`.
+ *
+ * Reads the four nearest centres and nothing further, as the bilinear does,
+ * so a ground delta still moves only the vertices within a cell of it
+ * (`patchHeightGrid`). Deterministic from the seed, and render-only like the
+ * detail field: the server's cells stay the truth about where a hull fits.
+ */
+export function erodedGroundAtM(
+  terrain: TerrainPayload,
+  seed: number,
+  rockTopM: number,
+  xM: number,
+  yM: number
+): ErodedGround {
+  const { cols, rows, cellM } = terrain;
+  const cx = xM / cellM - 0.5;
+  const cy = yM / cellM - 0.5;
+  const c0 = Math.floor(cx);
+  const r0 = Math.floor(cy);
+  const px = cx - c0;
+  const py = cy - r0;
+  const e = erosionAt(xM, yM, seed, cellM);
+  const at = (r: number, c: number) =>
+    Math.min(rows - 1, Math.max(0, r)) * cols + Math.min(cols - 1, Math.max(0, c));
+  const i00 = at(r0, c0);
+  const i10 = at(r0, c0 + 1);
+  const i01 = at(r0 + 1, c0);
+  const i11 = at(r0 + 1, c0 + 1);
+  const rock = (i: number) => terrain.ceiling[i]! > terrain.floor[i]!;
+  const roofed = (i: number) => terrain.ceiling[i]! > 0 && !rock(i);
+  // The weight of an edge's second centre, Q, at fraction t of the way from P.
+  const edge = (iP: number, iQ: number, t: number, w: number): number => {
+    const rP = rock(iP);
+    const rQ = rock(iQ);
+    if (rP === rQ) return rampWeight(t, w, e.scarp);
+    // A face toward the stone over a roofed passage keeps the step on the
+    // edge itself, and the edge with the second cell, as the plain sample's
+    // nearest-centre rule does: that stone stands a curtain on the edge
+    // (passages.ts), and a face set back from it would open a trench along
+    // the curtain's foot.
+    if (rP ? roofed(iQ) : roofed(iP)) return t >= 0.5 ? 1 : 0;
+    return rQ ? faceWeight(t, w, e) : 1 - faceWeight(1 - t, -w, e);
+  };
+  const wTop = edge(i00, i10, px, e.wanderX);
+  const wBottom = edge(i01, i11, px, e.wanderX);
+  const wLeft = edge(i00, i01, py, e.wanderY);
+  const wRight = edge(i10, i11, py, e.wanderY);
+  // Each centre's share is the product of its own two edges' profiles,
+  // normalised: with four linear profiles this is the bilinear exactly, and
+  // with a face on one edge a rock centre's share ends where that face ends,
+  // in both axes. Blending the two columns' profiles by `px` instead let a
+  // rock corner's share leak diagonally past its face into the open cells
+  // beside it, and ran a jamb's step on down the open water past the wall.
+  // The sum is never zero: two profiles at one point cannot say 0 and 1 of
+  // the same axis, since a face or a step reaches 1 only past the edge and
+  // leaves 0 only before it.
+  let w00 = (1 - wTop) * (1 - wLeft);
+  let w10 = wTop * (1 - wRight);
+  let w01 = (1 - wBottom) * wLeft;
+  let w11 = wBottom * wRight;
+  const sum = w00 + w10 + w01 + w11;
+  w00 /= sum;
+  w10 /= sum;
+  w01 /= sum;
+  w11 /= sum;
+  const g = (i: number) => (rock(i) ? rockTopM : terrain.floor[i]!);
+  return {
+    stepM: w00 * g(i00) + w10 * g(i10) + w01 * g(i01) + w11 * g(i11),
+    rockWeight:
+      (rock(i00) ? w00 : 0) + (rock(i10) ? w10 : 0) + (rock(i01) ? w01 : 0) + (rock(i11) ? w11 : 0),
+  };
 }
 
 /** One vent ember: a lit point in a thermal field. World metres; phase 0..1. */
@@ -634,6 +834,7 @@ export function shadeSeabed(
   const { cols, rows, cellM } = terrain;
   const ppc = options.pxPerCell ?? SEABED_PX_PER_CELL;
   const detail = options.detail ?? true;
+  const eroded = options.eroded;
   const w = cols * ppc;
   const h = rows * ppc;
   const { shallowest, deepest } = range;
@@ -673,6 +874,9 @@ export function shadeSeabed(
   // the authored floor alone beside it, whose slope stays darken-only.
   const height = new Float32Array(ew * (ey1 - ey0));
   const ground = new Float32Array(ew * (ey1 - ey0));
+  // Under the study's eroded edges, how much of each pixel is rock: the
+  // rim's and the cliff shadow's place, since the face is no longer the edge.
+  const share = new Float32Array(ew * (ey1 - ey0));
   const mPerPx = cellM / ppc;
   for (let py = ey0; py < ey1; py++) {
     // Continuous cell coordinate of this pixel's centre.
@@ -684,26 +888,35 @@ export function shadeSeabed(
       const c0 = Math.floor(cx);
       const fx = cellBlend(cx - c0);
 
-      const homeIndex = clampRow(Math.round(cy)) * cols + clampCol(Math.round(cx));
-      const f00 = floorAt(r0, c0, homeIndex);
-      const f10 = floorAt(r0, c0 + 1, homeIndex);
-      const f01 = floorAt(r0 + 1, c0, homeIndex);
-      const f11 = floorAt(r0 + 1, c0 + 1, homeIndex);
-      const floor = f00 + (f10 - f00) * fx + (f01 + (f11 - f01) * fx - f00 - (f10 - f00) * fx) * fy;
+      const xM = px * mPerPx;
+      const yM = py * mPerPx;
+      let floor: number;
+      // The share of this pixel that is rock, under the study's eroded edges:
+      // its detail is the crag's by that share. Rock pixels off the study
+      // take the crag alone in pass 2 and read nothing here.
+      let rockShare = 0;
+      if (eroded !== undefined) {
+        const drawn = erodedGroundAtM(terrain, seed, eroded.rockTopM, xM, yM);
+        floor = drawn.stepM;
+        rockShare = drawn.rockWeight;
+        share[(py - ey0) * ew + (px - ex0)] = rockShare;
+      } else {
+        const homeIndex = clampRow(Math.round(cy)) * cols + clampCol(Math.round(cx));
+        const f00 = floorAt(r0, c0, homeIndex);
+        const f10 = floorAt(r0, c0 + 1, homeIndex);
+        const f01 = floorAt(r0 + 1, c0, homeIndex);
+        const f11 = floorAt(r0 + 1, c0 + 1, homeIndex);
+        floor = f00 + (f10 - f00) * fx + (f01 + (f11 - f01) * fx - f00 - (f10 - f00) * fx) * fy;
+      }
 
       ground[(py - ey0) * ew + (px - ex0)] = floor;
       if (detail) {
         const relief = reliefAtCell(terrain, cx, cy);
         height[(py - ey0) * ew + (px - ex0)] =
           floor +
-          detailM(
-            px * mPerPx,
-            py * mPerPx,
-            seed,
-            relief.amplitudeM,
-            relief.roughness,
-            relief.blockiness
-          );
+          (1 - rockShare) *
+            detailM(xM, yM, seed, relief.amplitudeM, relief.roughness, relief.blockiness) +
+          rockShare * rockDetailM(xM, yM, seed);
       } else {
         height[(py - ey0) * ew + (px - ex0)] = floor;
       }
@@ -743,6 +956,44 @@ export function shadeSeabed(
   /** Darken-only gain ramping from `gain` at the boundary to 1 at `reachM`. */
   const edgeGain = (distM: number, reachM: number, gain: number) =>
     distM >= reachM ? 1 : gain + (1 - gain) * smooth(distM / reachM);
+  /**
+   * The same two treatments under the study's eroded edges, where the face is
+   * no longer on the cell edge but wherever the rock's share runs from 1 to 0:
+   * one gain of the share, the rim darkening down the face from its lip and
+   * the lee darkening the foot up to the face, darkest where the two meet.
+   * The same share gives the same darkening on either side of the cell edge,
+   * so the fill is the only thing the edge changes. Both still darken only,
+   * and the stone fill stays the cell's, so the coast the ink dashes on the
+   * edge is still where the stone begins (docs/art-direction.md "Rock speaks
+   * in stone"; docs/map-visuals.md §4).
+   */
+  const faceGainOf = (rockShare: number) =>
+    rockShare >= 0.5
+      ? ROCK_EDGE_GAIN + (1 - ROCK_EDGE_GAIN) * smooth(Math.min(1, Math.max(0, 2 * rockShare - 1)))
+      : CLIFF_SHADOW_GAIN +
+        (1 - CLIFF_SHADOW_GAIN) * smooth(Math.min(1, Math.max(0, 1 - 2 * rockShare)));
+  /**
+   * Where a rock cell meets the stone over a roofed passage, the share steps
+   * from 1 to 0 on the edge (`erodedGroundAtM`), so the face gain has nothing
+   * to draw there; the rim keeps its plain treatment against that edge, as
+   * the roof's own rim vertices keep theirs (passages.ts), and the two tops
+   * meet in one seam. Distance to the nearest roofed cell among the
+   * neighbours, in metres, or none.
+   */
+  const roofedDistM = (xM: number, yM: number, row: number, col: number) => {
+    let best = Number.POSITIVE_INFINITY;
+    for (let r = row - 1; r <= row + 1; r++) {
+      for (let c = col - 1; c <= col + 1; c++) {
+        if (r < 0 || r >= rows || c < 0 || c >= cols) continue;
+        const i = r * cols + c;
+        if (isRock(i) || terrain.ceiling[i]! <= 0) continue;
+        const dx = Math.max(c * cellM - xM, 0, xM - (c + 1) * cellM);
+        const dy = Math.max(r * cellM - yM, 0, yM - (r + 1) * cellM);
+        best = Math.min(best, Math.hypot(dx, dy));
+      }
+    }
+    return best;
+  };
 
   for (let py = y0; py < y1; py++) {
     const row = clampRow(Math.floor(py / ppc));
@@ -759,22 +1010,41 @@ export function shadeSeabed(
         // depthShade, no biome hue — the stone ramp under its own hillshade.
         // Gradients come off the rock detail field at bake-pixel step, scaled
         // to metres-per-cell exactly as the water pass scales its own.
-        const hL = rockDetailM(xM - mPerPx, yM, seed);
-        const hR = rockDetailM(xM + mPerPx, yM, seed);
-        const hU = rockDetailM(xM, yM - mPerPx, seed);
-        const hD = rockDetailM(xM, yM + mPerPx, seed);
         // The crag is all texture: rock has no authored step to keep dark.
+        // Under the study's eroded edges the stone has a face as well, set
+        // back from the cell edge, and the face's slope is a step that
+        // darkens only, as a wall's does across the water.
+        let shade: number;
+        if (eroded !== undefined) {
+          const i = (py - ey0) * ew + (px - ex0);
+          shade = reliefTextureGain(
+            (ground[i + (px < w - 1 ? 1 : 0)]! - ground[i - (px > 0 ? 1 : 0)]!) * dropScale,
+            (ground[i + (py < h - 1 ? ew : 0)]! - ground[i - (py > 0 ? ew : 0)]!) * dropScale,
+            (height[i + (px < w - 1 ? 1 : 0)]! - height[i - (px > 0 ? 1 : 0)]!) * dropScale,
+            (height[i + (py < h - 1 ? ew : 0)]! - height[i - (py > 0 ? ew : 0)]!) * dropScale
+          );
+        } else {
+          const hL = rockDetailM(xM - mPerPx, yM, seed);
+          const hR = rockDetailM(xM + mPerPx, yM, seed);
+          const hU = rockDetailM(xM, yM - mPerPx, seed);
+          const hD = rockDetailM(xM, yM + mPerPx, seed);
+          shade = reliefTextureGain(0, 0, (hR - hL) * dropScale, (hD - hU) * dropScale);
+        }
         const texture = Math.min(
           1 + TERRAIN_LIFT.BAKE,
-          reliefTextureGain(0, 0, (hR - hL) * dropScale, (hD - hU) * dropScale) *
-            mottleFactor(xM, yM, seed, ROCK_RELIEF.mottle)
+          shade * mottleFactor(xM, yM, seed, ROCK_RELIEF.mottle)
         );
         color = scaleRgb(
           ROCK_FACE,
           texture *
             // The rim: darkened toward ROCK_SHADOW where the mesa meets open
             // water, so a flat top reads as raised ground with an edge.
-            edgeGain(oppositeDistM(xM, yM, row, col, false), ROCK_EDGE_M, ROCK_EDGE_GAIN)
+            (eroded !== undefined
+              ? Math.min(
+                  faceGainOf(share[(py - ey0) * ew + (px - ex0)]!),
+                  edgeGain(roofedDistM(xM, yM, row, col), ROCK_EDGE_M, ROCK_EDGE_GAIN)
+                )
+              : edgeGain(oppositeDistM(xM, yM, row, col, false), ROCK_EDGE_M, ROCK_EDGE_GAIN))
         );
       } else {
         const i = (py - ey0) * ew + (px - ex0);
@@ -821,7 +1091,13 @@ export function shadeSeabed(
           texture *
             // The wall's lee: open floor darkens where it meets a mesa, so
             // the rock reads as standing on the seabed, not pasted over it.
-            edgeGain(oppositeDistM(xM, yM, row, col, true), CLIFF_SHADOW_M, CLIFF_SHADOW_GAIN) *
+            (eroded !== undefined
+              ? faceGainOf(share[i]!)
+              : edgeGain(
+                  oppositeDistM(xM, yM, row, col, true),
+                  CLIFF_SHADOW_M,
+                  CLIFF_SHADOW_GAIN
+                )) *
             scour
         );
       }
@@ -976,7 +1252,8 @@ export function rebakeSeabedCells(
   seed: number,
   range: SeabedRange,
   touched: CellRect,
-  stones: readonly StoneSeat[] = []
+  stones: readonly StoneSeat[] = [],
+  options: BakeOptions = {}
 ): void {
   paintSeabed(
     canvas,
@@ -990,7 +1267,8 @@ export function rebakeSeabedCells(
         col1: touched.col1 + 1,
         row1: touched.row1 + 1,
       },
-      stones
+      stones,
+      options
     )
   );
 }

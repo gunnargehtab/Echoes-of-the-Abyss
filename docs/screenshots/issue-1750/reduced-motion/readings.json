@@ -1,0 +1,90 @@
+{
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "software": true,
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "reducedMotion": true,
+  "readings": [
+    {
+      "name": "low",
+      "look": "free-water",
+      "ground": {
+        "eroded": true
+      },
+      "pitchDeg": 12,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": 850
+      },
+      "eye": {
+        "xM": 2000,
+        "zM": 3565,
+        "depthM": -662
+      },
+      "distance": 1600,
+      "waterReachM": 2457,
+      "calls": 25,
+      "triangles": 397119,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-stand": 40,
+        "env-rim-crab": 16,
+        "env-shoal-fry": 96,
+        "env-deep-fish": 8,
+        "env-outer-fish": 8,
+        "env-kelp-cluster": 16
+      },
+      "passes": [
+        "canvas",
+        "split-copy",
+        "split"
+      ],
+      "sway": "held",
+      "gpuTimer": "software"
+    },
+    {
+      "name": "wall",
+      "look": "free-water",
+      "ground": {
+        "eroded": true
+      },
+      "pitchDeg": 14,
+      "yawDeg": 180,
+      "focus": {
+        "xM": 2125,
+        "zM": 2875,
+        "depthM": 900
+      },
+      "eye": {
+        "xM": 2125,
+        "zM": 2196,
+        "depthM": 130
+      },
+      "distance": 700,
+      "waterReachM": 1050,
+      "calls": 25,
+      "triangles": 397119,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-stand": 40,
+        "env-rim-crab": 16,
+        "env-shoal-fry": 96,
+        "env-deep-fish": 8,
+        "env-outer-fish": 8,
+        "env-kelp-cluster": 16
+      },
+      "passes": [
+        "canvas",
+        "split-copy",
+        "split"
+      ],
+      "sway": "held",
+      "gpuTimer": "software"
+    }
+  ]
+}

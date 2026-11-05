@@ -233,3 +233,36 @@ describe('the bake with seated stones', () => {
     }
   });
 });
+
+/**
+ * The free-water study's eroded edges in the bake (docs/free-water-slice.md
+ * §9, "Crater walls"): the skin shades the surface the heightfield stands
+ * on, and a rectangle of it is still the full bake's rectangle, so a ground
+ * delta under the study rebakes without a seam.
+ */
+describe('the eroded bake', () => {
+  const terrain = demoTerrain();
+  const seed = seabedSeed(terrain);
+  const range = seabedRange(terrain);
+  const whole = { col0: 0, row0: 0, col1: terrain.cols - 1, row1: terrain.rows - 1 };
+  const eroded = { rockTopM: Math.max(0, range.shallowest - 150) };
+
+  it('shades a rectangle, rock included, exactly as the full eroded bake does', () => {
+    const full = shadeSeabed(terrain, seed, range, whole, [], { eroded });
+    const rect = { col0: 2, row0: 1, col1: 5, row1: 3 };
+    const part = shadeSeabed(terrain, seed, range, rect, [], { eroded });
+    assert.deepEqual(part.data, sliceOf(full.data, full.w, rect));
+  });
+
+  it('is a different skin from the shipped bake, and the shipped bake is unchanged', () => {
+    const plain = shadeSeabed(terrain, seed, range, whole);
+    const again = shadeSeabed(terrain, seed, range, whole, [], {});
+    assert.deepEqual(again.data, plain.data, 'no option, no change');
+    const study = shadeSeabed(terrain, seed, range, whole, [], { eroded });
+    let differ = 0;
+    for (let i = 0; i < plain.data.length; i += 4) {
+      if (plain.data[i] !== study.data[i] || plain.data[i + 1] !== study.data[i + 1]) differ++;
+    }
+    assert.ok(differ > 1000, `${differ} pixels differ under the study`);
+  });
+});

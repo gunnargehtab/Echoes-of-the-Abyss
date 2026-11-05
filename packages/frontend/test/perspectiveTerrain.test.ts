@@ -16,6 +16,8 @@ import { Biome } from '@echoes/shared';
 import {
   BIOME_RELIEF,
   detailM,
+  ERODED_EDGES,
+  erodedGroundAtM,
   reliefAtCell,
   ROCK_RELIEF,
   seabedSeed,
@@ -27,12 +29,15 @@ import {
   patchHeightGrid,
   DEPTH_VISUAL_M_PER_M,
   depthToWorldY,
+  rockSurfaceDepthM,
   rockTopDepthM,
   ROCK_RISE_ABOVE_SHALLOWEST_M,
   seabedDepthAtM,
   VERTS_PER_CELL,
 } from '../src/game/perspectiveTerrain.ts';
 import type { TerrainPayload } from '../src/net/GameClient.ts';
+import { terrainFor } from '../../backend/src/sim/maps/index.ts';
+import { FREE_WATER_SLICE } from '../../backend/src/sim/maps/freeWaterSlice.ts';
 
 /** A 4×4 map: a shallow plateau, deep water, and one rock cell. */
 function demoTerrain(): TerrainPayload {
@@ -310,6 +315,201 @@ describe('authored floor for the survey ink', () => {
     for (const y of [0, 125, 250, 400, 625, 1000]) {
       assert.equal(authoredFloorAtM(terrain, 250, y), 1500, `west edge at y=${y}`);
       assert.equal(authoredFloorAtM(terrain, 500, y), 1500, `east edge at y=${y}`);
+    }
+  });
+});
+
+/**
+ * The free-water study's eroded cell edges (docs/free-water-slice.md §9,
+ * "Crater walls"; seabed.ts `erodedGroundAtM`). What the section promises:
+ * the drawn floor, rock faces and roof are reshaped between cell centres;
+ * nothing is added at a centre, and a solid cell stays rock at its centre;
+ * the survey ink keeps tracing the authored floor; the shipped ground is
+ * untouched. The picture is the run-game frames' to review.
+ */
+describe('eroded cell edges (docs/free-water-slice.md §9)', () => {
+  const terrain = terrainFor(FREE_WATER_SLICE).serialize();
+  const seed = seabedSeed(terrain);
+  const rockTop = rockTopDepthM(terrain);
+  const plain = buildHeightGrid(terrain, seed, rockTop);
+  const eroded = buildHeightGrid(terrain, seed, rockTop, true);
+  const isRock = (i: number) => terrain.ceiling[i]! > terrain.floor[i]!;
+
+  it('is off unless asked: the shipped grid is the bilinear one to the bit', () => {
+    assert.deepEqual([...buildHeightGrid(terrain, seed, rockTop, false).y], [...plain.y]);
+    assert.deepEqual([...buildHeightGrid(terrain).y], [...plain.y]);
+  });
+
+  it('adds nothing at a cell centre, and a solid cell stays rock at its centre', () => {
+    for (let row = 0; row < terrain.rows; row++) {
+      for (let col = 0; col < terrain.cols; col++) {
+        const x = (col + 0.5) * terrain.cellM;
+        const y = (row + 0.5) * terrain.cellM;
+        const want = seabedDepthAtM(terrain, seed, rockTop, x, y);
+        assert.equal(seabedDepthAtM(terrain, seed, rockTop, x, y, true), want);
+        const { stepM, rockWeight } = erodedGroundAtM(terrain, seed, rockTop, x, y);
+        if (isRock(row * terrain.cols + col)) {
+          assert.equal(rockWeight, 1);
+          assert.equal(stepM, rockTop);
+          assert.equal(want, rockSurfaceDepthM(seed, rockTop, x, y));
+        } else {
+          assert.equal(rockWeight, 0);
+          assert.equal(stepM, terrain.floor[row * terrain.cols + col]);
+        }
+      }
+    }
+  });
+
+  it('reshapes the ground between centres: the positive control', () => {
+    let moved = 0;
+    for (let i = 0; i < plain.y.length; i++) {
+      moved = Math.max(moved, Math.abs(plain.y[i]! - eroded.y[i]!) / DEPTH_VISUAL_M_PER_M);
+    }
+    assert.ok(moved > 100, `the drawn ground moved at most ${moved} m between centres`);
+  });
+
+  it('stays between the four centres it blends, like the bilinear it replaces', () => {
+    // A visual slope never opens a route the grid refuses
+    // (docs/three-layer-ocean.md §5): the drawn step is never shallower than
+    // the shallowest of its patch's centres, nor deeper than the deepest.
+    const { cols, rows, cellM } = terrain;
+    for (let y = 3; y < rows * cellM; y += 23) {
+      for (let x = 3; x < cols * cellM; x += 23) {
+        const c0 = Math.floor(x / cellM - 0.5);
+        const r0 = Math.floor(y / cellM - 0.5);
+        const corners = [
+          [r0, c0],
+          [r0, c0 + 1],
+          [r0 + 1, c0],
+          [r0 + 1, c0 + 1],
+        ].map(([r, c]) => {
+          const i =
+            Math.min(rows - 1, Math.max(0, r!)) * cols + Math.min(cols - 1, Math.max(0, c!));
+          return isRock(i) ? rockTop : terrain.floor[i]!;
+        });
+        const { stepM } = erodedGroundAtM(terrain, seed, rockTop, x, y);
+        assert.ok(stepM >= Math.min(...corners) - 1e-6 && stepM <= Math.max(...corners) + 1e-6);
+      }
+    }
+  });
+
+  it('tears no seam where one patch of four centres hands over to the next', () => {
+    // A centre line is where the blend changes its four corners. The face
+    // and the scarp are steep, so the bound is a slope's, not a tear's: the
+    // narrowest face climbs 1,250 m over 40 m with a lip twice as steep,
+    // 0.6 m a centimetre, and a seam in the blend would jump tens of metres.
+    const { cols, rows, cellM } = terrain;
+    let worst = 0;
+    for (let k = 1; k < cols; k++) {
+      const line = (k + 0.5) * cellM;
+      for (let s = 7; s < rows * cellM; s += 31) {
+        for (const [ax, ay, bx, by] of [
+          [line - 0.005, s, line + 0.005, s],
+          [s, line - 0.005, s, line + 0.005],
+        ] as const) {
+          const a = seabedDepthAtM(terrain, seed, rockTop, ax, ay, true);
+          const b = seabedDepthAtM(terrain, seed, rockTop, bx, by, true);
+          worst = Math.max(worst, Math.abs(a - b));
+        }
+      }
+    }
+    assert.ok(worst < 3, `the ground jumps ${worst} m across a centre line`);
+  });
+
+  it('gives a wall a foot in the water and a lip set back into the stone', () => {
+    // The southern wall's north face at x = 1,625 (col 6's centre line): open
+    // bowl at row 11, rock at row 12, the edge at y = 3,000. Drawn plain, the
+    // face is the vertical drop on the edge; eroded, the rock's share rises
+    // from the water side of the edge to the stone side, and reaches 1 well
+    // before the rock's centre.
+    const x = 1625;
+    const at = (y: number) => erodedGroundAtM(terrain, seed, rockTop, x, y).rockWeight;
+    assert.equal(at(2875), 0, 'the bowl centre');
+    assert.equal(at(3125), 1, 'the rock centre');
+    // Walk the 11/12 patch from the bowl's centre to the rock's: water, then
+    // the face, then stone, each a run, and the stone run beginning before
+    // the rock's centre at 3,125 and no further from the edge than the
+    // setback and the wander allow.
+    const runs: string[] = [];
+    let stoneFrom = Infinity;
+    for (let y = 2875; y <= 3125; y += 1) {
+      const w = at(y);
+      const kind = w === 0 ? 'water' : w === 1 ? 'stone' : 'face';
+      if (runs.at(-1) !== kind) runs.push(kind);
+      if (kind === 'stone') stoneFrom = Math.min(stoneFrom, y);
+    }
+    assert.deepEqual(runs, ['water', 'face', 'stone']);
+    assert.ok(
+      stoneFrom > 3000 && stoneFrom <= 3000 + ERODED_EDGES.SETBACK_M + ERODED_EDGES.WANDER_M,
+      `stone from y=${stoneFrom}`
+    );
+    assert.equal(
+      at(3000 - ERODED_EDGES.FOOT_M - ERODED_EDGES.WANDER_M - 1),
+      0,
+      'water before the foot'
+    );
+    assert.equal(
+      seabedDepthAtM(terrain, seed, rockTop, x, stoneFrom, true),
+      rockSurfaceDepthM(seed, rockTop, x, stoneFrom),
+      'stone past the setback is the rock surface, crag and all'
+    );
+  });
+
+  it('keeps the step on the edge against the stone over a roofed passage', () => {
+    // The cut's west jamb: rock at col 6, the roofed cells at col 7, rows 12
+    // and 13. The roof stands a curtain on x = 1,750 (passages.ts), so the
+    // face is not set back from it: stone to the edge, the passage floor from
+    // it, the whole step in no width. Near the wall's north edge the stone
+    // side is still on the north face, which runs into the jamb.
+    for (const y of [3062.5, 3125, 3187.5, 3250, 3375]) {
+      const stone = erodedGroundAtM(terrain, seed, rockTop, 1749.99, y);
+      const passage = erodedGroundAtM(terrain, seed, rockTop, 1750, y);
+      assert.ok(stone.rockWeight > 0.5 && stone.stepM < 1500, `stone at y=${y}`);
+      assert.equal(passage.rockWeight, 0, `no stone in the passage at y=${y}`);
+      if (y >= 3125) {
+        assert.equal(stone.stepM, rockTop, `the rock top at y=${y}`);
+        assert.equal(passage.stepM, 1500, `the passage floor at y=${y}`);
+      } else {
+        // The mouth's row: the floor still ramps from the pocket's 2,400 m
+        // down to the cut's 1,500 m, as the authored centres have it.
+        assert.ok(passage.stepM >= 1500 && passage.stepM <= 2400, `the mouth's ramp at y=${y}`);
+      }
+    }
+  });
+
+  it('leaves the survey floor the authored one', () => {
+    assert.deepEqual([...eroded.floor], [...plain.floor]);
+  });
+
+  it('patches a ground delta into the grid a full eroded build would make (#434)', () => {
+    const grid = buildHeightGrid(terrain, seed, rockTop, true);
+    const after = { ...terrain, floor: [...terrain.floor], ceiling: [...terrain.ceiling] };
+    after.floor[7 * terrain.cols + 7] = 2600; // the bowl's floor drops
+    after.ceiling[11 * terrain.cols + 5] = 3000; // a bowl cell becomes rock
+    after.floor[11 * terrain.cols + 5] = 1500;
+    const span = patchHeightGrid(
+      grid,
+      after,
+      seed,
+      rockTop,
+      { col0: 5, row0: 7, col1: 7, row1: 11 },
+      true
+    );
+    const fresh = buildHeightGrid(after, seed, rockTop, true);
+    assert.deepEqual([...grid.y], [...fresh.y]);
+    assert.ok(span.first < span.last);
+    // And nothing outside the ring moved between the two full builds.
+    const ring = {
+      ix0: 4 * VERTS_PER_CELL,
+      ix1: 9 * VERTS_PER_CELL,
+      iz0: 6 * VERTS_PER_CELL,
+      iz1: 13 * VERTS_PER_CELL,
+    };
+    for (let iz = 0; iz < fresh.vertsZ; iz++) {
+      for (let ix = 0; ix < fresh.vertsX; ix++) {
+        if (ix >= ring.ix0 && ix <= ring.ix1 && iz >= ring.iz0 && iz <= ring.iz1) continue;
+        assert.equal(fresh.y[iz * fresh.vertsX + ix], eroded.y[iz * fresh.vertsX + ix]);
+      }
     }
   });
 });

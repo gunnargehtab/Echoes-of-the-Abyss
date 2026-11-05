@@ -28,7 +28,7 @@ import {
   ROCK_RISE_ABOVE_SHALLOWEST_M,
   VERTS_PER_CELL,
 } from './perspectiveTerrain.ts';
-import { ROCK_EDGE_GAIN } from './seabed.ts';
+import { ROCK_EDGE_GAIN, valueNoise } from './seabed.ts';
 
 type Terrain = Pick<TerrainPayload, 'cols' | 'rows' | 'cellM' | 'floor' | 'ceiling'>;
 
@@ -40,6 +40,33 @@ type Terrain = Pick<TerrainPayload, 'cols' | 'rows' | 'cellM' | 'floor' | 'ceili
  * vanish the moment you enter it.
  */
 export const ROOF_OPEN_OPACITY = 0.3;
+
+/**
+ * TUNABLE — the free-water study's eroded brow over a mouth
+ * (docs/free-water-slice.md §9, "Crater walls"), development-only and off
+ * on every shipped map. Drawn plain, a mouth is a lintel: a vertical face
+ * from the roof's top down to the ceiling, the whole cell wide, which with
+ * the roof's flat top and square sides is the box the owner rejected. Eroded,
+ * the top slopes down toward the mouth from part way across the cell and
+ * ends in a lip a little above the ceiling, the slope's reach and the lip's
+ * height wandering along the mouth. Nothing moves at the cell's centre, the
+ * underside stays the ceiling, and the lip never dips into the water it
+ * roofs (`roofSurfaceDepthM` clamps it).
+ */
+export const ERODED_BROW = {
+  /** How far back from a mouth the stone slopes down, fraction of a cell, under half. */
+  REACH_MIN: 0.2,
+  REACH: 0.45,
+  /** The lip left standing over the mouth, metres above the ceiling. */
+  LIP_MIN_M: 40,
+  LIP_M: 160,
+  WAVELENGTH_M: 170,
+  /** The slope's profile exponent: a rounded shoulder steepening into the lip. */
+  SHOULDER: 1.6,
+} as const;
+
+const BROW_REACH_SALT = 0xcbbb9d5d;
+const BROW_LIP_SALT = 0x629a292a;
 
 /** Ground that admits nothing at any depth: a ceiling below the floor. */
 function isRock(terrain: Terrain, index: number): boolean {
@@ -177,6 +204,109 @@ export function roofTopDepthM(terrain: Terrain, passage: Passage, rockTopM: numb
   return Math.max(0, Math.min(rockTopM, ceiling - ROCK_RISE_ABOVE_SHALLOWEST_M));
 }
 
+type Across = 'none' | 'lintel' | 'curtain';
+
+/**
+ * What lies across each edge of one roofed cell: more of this roof, water
+ * deeper than this cell's ceiling (a mouth, under a lintel), or ground the
+ * side is closed against (a curtain).
+ */
+function edgesOf(
+  terrain: Terrain,
+  member: ReadonlySet<number>,
+  index: number
+): { north: Across; south: Across; west: Across; east: Across } {
+  const { cols, rows } = terrain;
+  const row = Math.floor(index / cols);
+  const col = index % cols;
+  const across = (r: number, c: number): Across => {
+    if (r < 0 || r >= rows || c < 0 || c >= cols) return 'curtain';
+    const other = r * cols + c;
+    if (member.has(other)) return 'none';
+    if (isRock(terrain, other)) return 'curtain';
+    return terrain.floor[other]! > terrain.ceiling[index]! ? 'lintel' : 'curtain';
+  };
+  return {
+    north: across(row - 1, col),
+    south: across(row + 1, col),
+    west: across(row, col - 1),
+    east: across(row, col + 1),
+  };
+}
+
+/**
+ * The eroded brow's pull on the top at a world position, 0–1: 0 at and
+ * beyond its reach from every mouth of the cell, 1 on a mouth's edge. The
+ * nearest mouth decides, so two mouths on one cell meet in the deeper of
+ * their slopes rather than adding.
+ */
+function browAt(
+  terrain: Terrain,
+  member: ReadonlySet<number>,
+  index: number,
+  seed: number,
+  xM: number,
+  yM: number
+): number {
+  const { cols, cellM } = terrain;
+  const edges = edgesOf(terrain, member, index);
+  const fx = xM / cellM - (index % cols);
+  const fy = yM / cellM - Math.floor(index / cols);
+  const B = ERODED_BROW;
+  const reach =
+    B.REACH_MIN +
+    (B.REACH - B.REACH_MIN) *
+      (0.5 + 0.5 * valueNoise(xM, yM, B.WAVELENGTH_M, seed ^ BROW_REACH_SALT));
+  let pull = 0;
+  for (const [kind, d] of [
+    [edges.north, fy],
+    [edges.south, 1 - fy],
+    [edges.west, fx],
+    [edges.east, 1 - fx],
+  ] as const) {
+    if (kind !== 'lintel') continue;
+    const w = Math.min(1, Math.max(0, 1 - d / reach)) ** B.SHOULDER;
+    pull = Math.max(pull, w);
+  }
+  return pull;
+}
+
+/** The lip's height above the ceiling at a world position, metres. */
+function lipM(seed: number, xM: number, yM: number): number {
+  const B = ERODED_BROW;
+  return (
+    B.LIP_MIN_M +
+    (B.LIP_M - B.LIP_MIN_M) * (0.5 + 0.5 * valueNoise(xM, yM, B.WAVELENGTH_M, seed ^ BROW_LIP_SALT))
+  );
+}
+
+/**
+ * The passage's cell a world position falls in, or -1. A position on a cell
+ * edge belongs to every cell that edge bounds, and the passage's own wins:
+ * the top grid's edge vertices are the roof's, whatever lies across the
+ * edge, and reading the cell beyond would leave them plain on a mouth's
+ * outer corner while the vertex a step in dipped.
+ */
+function cellOf(terrain: Terrain, passage: Passage, xM: number, yM: number): number {
+  const { cols, rows, cellM } = terrain;
+  const cx = xM / cellM;
+  const cy = yM / cellM;
+  const col = Math.floor(cx);
+  const row = Math.floor(cy);
+  const onColumn = Math.abs(cx - col) < 1e-6;
+  const onRow = Math.abs(cy - row) < 1e-6;
+  for (const dc of onColumn ? [0, -1] : [0]) {
+    for (const dr of onRow ? [0, -1] : [0]) {
+      const c = col + dc;
+      const r = row + dr;
+      if (c < 0 || c >= cols || r < 0 || r >= rows) continue;
+      const index = r * cols + c;
+      if (passage.cells.includes(index)) return index;
+    }
+  }
+  return -1;
+}
+
 /**
  * A roof's surface at a world position, in metres: its top plus the crag, the
  * way a mesa's is (`rockSurfaceDepthM`), and never deeper than the shallowest
@@ -184,6 +314,14 @@ export function roofTopDepthM(terrain: Terrain, passage: Passage, rockTopM: numb
  * only under a ceiling too shallow for the rise, where the stone would
  * otherwise dip into the water it roofs. The roof and its route line both
  * stand on this, so the line never sinks into the stone.
+ *
+ * `eroded` is the free-water study's brow (`ERODED_BROW`): within a cell of
+ * the passage, the top slopes from the stone down to a lip over each mouth
+ * (`cellOf` says which cell). Two cells of one passage agree along their
+ * shared edge wherever both have the same mouths, since the pull is a
+ * distance and the noise a field; where one has a mouth the other closes
+ * with a curtain, the brow ends in a step on their edge, the jamb's own
+ * line continued.
  */
 export function roofSurfaceDepthM(
   terrain: Terrain,
@@ -191,11 +329,21 @@ export function roofSurfaceDepthM(
   seed: number,
   rockTopM: number,
   xM: number,
-  yM: number
+  yM: number,
+  eroded = false
 ): number {
   let ceiling = Infinity;
   for (const index of passage.cells) ceiling = Math.min(ceiling, terrain.ceiling[index]!);
-  const top = rockSurfaceDepthM(seed, roofTopDepthM(terrain, passage, rockTopM), xM, yM);
+  let top = rockSurfaceDepthM(seed, roofTopDepthM(terrain, passage, rockTopM), xM, yM);
+  if (eroded) {
+    const index = cellOf(terrain, passage, xM, yM);
+    if (index !== -1) {
+      const member = new Set(passage.cells);
+      const pull = browAt(terrain, member, index, seed, xM, yM);
+      const lip = terrain.ceiling[index]! - lipM(seed, xM, yM);
+      top = top + (Math.max(top, lip) - top) * pull;
+    }
+  }
   return Math.min(top, Math.max(0, ceiling - 1));
 }
 
@@ -238,9 +386,10 @@ export function buildRoofGeometry(
   passage: Passage,
   grid: HeightGrid,
   seed: number,
-  rockTopM: number
+  rockTopM: number,
+  eroded = false
 ): RoofGeometry {
-  const { cols, rows, cellM } = terrain;
+  const { cols, cellM } = terrain;
   const n = VERTS_PER_CELL;
   const step = cellM / n;
   const face = rgb(ROCK_FACE);
@@ -257,7 +406,8 @@ export function buildRoofGeometry(
   };
   // a–b along one row, c–d the row after: two triangles.
   const quad = (a: number, b: number, c: number, d: number) => indices.push(a, c, b, b, c, d);
-  const top = (x: number, z: number) => roofSurfaceDepthM(terrain, passage, seed, rockTopM, x, z);
+  const top = (x: number, z: number) =>
+    roofSurfaceDepthM(terrain, passage, seed, rockTopM, x, z, eroded);
   // The crag's light, as the bake reads it for a mesa: the rock detail's
   // drop across the step, scaled to metres per cell.
   const crag = (x: number, z: number) => {
@@ -279,17 +429,7 @@ export function buildRoofGeometry(
 
     // What lies across each edge: 'none' (more of this roof), 'lintel'
     // (water deeper than this ceiling), or 'curtain'.
-    const across = (r: number, c: number): 'none' | 'lintel' | 'curtain' => {
-      if (r < 0 || r >= rows || c < 0 || c >= cols) return 'curtain';
-      const other = r * cols + c;
-      if (member.has(other)) return 'none';
-      if (isRock(terrain, other)) return 'curtain';
-      return terrain.floor[other]! > terrain.ceiling[index]! ? 'lintel' : 'curtain';
-    };
-    const north = across(row - 1, col);
-    const south = across(row + 1, col);
-    const west = across(row, col - 1);
-    const east = across(row, col + 1);
+    const { north, south, west, east } = edgesOf(terrain, member, index);
 
     // The top, with the rim darkened where the stone ends over open ground.
     const base = positions.length / 3;
@@ -322,13 +462,7 @@ export function buildRoofGeometry(
     quad(u[0]!, u[1]!, u[2]!, u[3]!);
 
     // The sides. Each walks its edge's n + 1 grid vertices.
-    const side = (
-      kind: 'none' | 'lintel' | 'curtain',
-      ix0: number,
-      iz0: number,
-      dx: number,
-      dz: number
-    ) => {
+    const side = (kind: Across, ix0: number, iz0: number, dx: number, dz: number) => {
       if (kind === 'none') return;
       let prevTop = -1;
       let prevBottom = -1;
