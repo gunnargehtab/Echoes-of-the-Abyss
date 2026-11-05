@@ -19,15 +19,20 @@
         "depthM": 850
       },
       "eye": {
-        "xM": 2002,
+        "xM": 1999,
         "zM": 3565,
-        "depthM": -662
+        "depthM": -661
       },
       "distance": 1600,
       "waterReachM": 5120,
       "snow": {
         "far": 7000,
-        "near": 0
+        "near": 0,
+        "nearAnchor": null
+      },
+      "subject": {
+        "fogAtDolly": 0.093,
+        "haloAtDolly": 0.807
       },
       "calls": 75,
       "triangles": 160006,
@@ -56,15 +61,20 @@
         "depthM": 850
       },
       "eye": {
-        "xM": 2198,
-        "zM": 3564,
-        "depthM": -677
+        "xM": 2202,
+        "zM": 3565,
+        "depthM": -667
       },
       "distance": 1600,
       "waterReachM": 5120,
       "snow": {
         "far": 7000,
-        "near": 0
+        "near": 0,
+        "nearAnchor": null
+      },
+      "subject": {
+        "fogAtDolly": 0.093,
+        "haloAtDolly": 0.807
       },
       "calls": 70,
       "triangles": 159044,
@@ -93,17 +103,22 @@
         "depthM": null
       },
       "eye": {
-        "xM": 2006,
-        "zM": 2335,
-        "depthM": -42806
+        "xM": 2005,
+        "zM": 2327,
+        "depthM": -42807
       },
       "distance": 10000,
       "waterReachM": 32000,
       "snow": {
         "far": 0,
-        "near": 0
+        "near": 0,
+        "nearAnchor": null
       },
-      "calls": 76,
+      "subject": {
+        "fogAtDolly": 0.093,
+        "haloAtDolly": 0.807
+      },
+      "calls": 77,
       "triangles": 163878,
       "propTriangles": 104958,
       "instances": {},

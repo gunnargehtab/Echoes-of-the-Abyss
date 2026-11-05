@@ -19,22 +19,26 @@
         "depthM": null
       },
       "eye": {
-        "xM": 540,
-        "zM": 3451,
-        "depthM": -9090
+        "xM": 538,
+        "zM": 3454,
+        "depthM": -9082
       },
       "distance": 2600,
       "waterReachM": 8320,
+      "subject": {
+        "fogAtDolly": 0.093,
+        "haloAtDolly": 0.807
+      },
       "calls": 43,
       "triangles": 405088,
       "propTriangles": 387952,
       "instances": {
-        "env-kelp-stand": 40,
         "env-kelp-cluster": 16,
-        "env-deep-fish": 8,
-        "env-rim-crab": 16,
+        "env-kelp-stand": 40,
+        "env-outer-fish": 8,
         "env-shoal-fry": 96,
-        "env-outer-fish": 8
+        "env-deep-fish": 8,
+        "env-rim-crab": 16
       },
       "passes": [
         "canvas",
@@ -59,22 +63,26 @@
         "depthM": 275
       },
       "eye": {
-        "xM": 2120,
+        "xM": 2119,
         "zM": 1125,
-        "depthM": 40
+        "depthM": 36
       },
       "distance": 250,
       "waterReachM": 900,
+      "subject": {
+        "fogAtDolly": 0.074,
+        "haloAtDolly": 0.844
+      },
       "calls": 29,
       "triangles": 402015,
       "propTriangles": 387952,
       "instances": {
-        "env-kelp-stand": 40,
         "env-kelp-cluster": 16,
-        "env-deep-fish": 8,
-        "env-rim-crab": 16,
+        "env-kelp-stand": 40,
+        "env-outer-fish": 8,
         "env-shoal-fry": 96,
-        "env-outer-fish": 8
+        "env-deep-fish": 8,
+        "env-rim-crab": 16
       },
       "passes": [
         "canvas",
@@ -83,6 +91,89 @@
       ],
       "sway": "on",
       "gpuTimer": "software"
+    },
+    {
+      "name": "garden-close-pan",
+      "strip": [
+        {
+          "tMs": 68936,
+          "focus": {
+            "xM": 1875,
+            "zM": 1125,
+            "depthM": 275
+          },
+          "eye": {
+            "xM": 2119,
+            "zM": 1125,
+            "depthM": 37
+          }
+        },
+        {
+          "tMs": 80605,
+          "focus": {
+            "xM": 1875,
+            "zM": 1119,
+            "depthM": 275
+          },
+          "eye": {
+            "xM": 2119,
+            "zM": 1119,
+            "depthM": 36
+          }
+        },
+        {
+          "tMs": 92242,
+          "focus": {
+            "xM": 1875,
+            "zM": 1113,
+            "depthM": 275
+          },
+          "eye": {
+            "xM": 2119,
+            "zM": 1113,
+            "depthM": 36
+          }
+        },
+        {
+          "tMs": 103465,
+          "focus": {
+            "xM": 1875,
+            "zM": 1107,
+            "depthM": 275
+          },
+          "eye": {
+            "xM": 2119,
+            "zM": 1107,
+            "depthM": 36
+          }
+        },
+        {
+          "tMs": 115413,
+          "focus": {
+            "xM": 1875,
+            "zM": 1101,
+            "depthM": 275
+          },
+          "eye": {
+            "xM": 2119,
+            "zM": 1101,
+            "depthM": 37
+          }
+        },
+        {
+          "tMs": 126917,
+          "focus": {
+            "xM": 1875,
+            "zM": 1095,
+            "depthM": 275
+          },
+          "eye": {
+            "xM": 2119,
+            "zM": 1094,
+            "depthM": 38
+          }
+        }
+      ]
     },
     {
       "name": "low",
@@ -95,22 +186,26 @@
         "depthM": 850
       },
       "eye": {
-        "xM": 2000,
+        "xM": 1999,
         "zM": 3564,
         "depthM": -677
       },
       "distance": 1600,
       "waterReachM": 5120,
+      "subject": {
+        "fogAtDolly": 0.093,
+        "haloAtDolly": 0.807
+      },
       "calls": 24,
       "triangles": 397119,
       "propTriangles": 387952,
       "instances": {
-        "env-kelp-stand": 40,
         "env-kelp-cluster": 16,
-        "env-deep-fish": 8,
-        "env-rim-crab": 16,
+        "env-kelp-stand": 40,
+        "env-outer-fish": 8,
         "env-shoal-fry": 96,
-        "env-outer-fish": 8
+        "env-deep-fish": 8,
+        "env-rim-crab": 16
       },
       "passes": [
         "canvas",
@@ -131,22 +226,26 @@
         "depthM": 850
       },
       "eye": {
-        "xM": 2202,
-        "zM": 3565,
-        "depthM": -671
+        "xM": 2198,
+        "zM": 3564,
+        "depthM": -675
       },
       "distance": 1600,
       "waterReachM": 5120,
+      "subject": {
+        "fogAtDolly": 0.093,
+        "haloAtDolly": 0.807
+      },
       "calls": 24,
       "triangles": 397119,
       "propTriangles": 387952,
       "instances": {
-        "env-kelp-stand": 40,
         "env-kelp-cluster": 16,
-        "env-deep-fish": 8,
-        "env-rim-crab": 16,
+        "env-kelp-stand": 40,
+        "env-outer-fish": 8,
         "env-shoal-fry": 96,
-        "env-outer-fish": 8
+        "env-deep-fish": 8,
+        "env-rim-crab": 16
       },
       "passes": [
         "canvas",
@@ -155,6 +254,89 @@
       ],
       "sway": "on",
       "gpuTimer": "software"
+    },
+    {
+      "name": "low-pan",
+      "strip": [
+        {
+          "tMs": 196180,
+          "focus": {
+            "xM": 2000,
+            "zM": 2000,
+            "depthM": 850
+          },
+          "eye": {
+            "xM": 2001,
+            "zM": 3566,
+            "depthM": -648
+          }
+        },
+        {
+          "tMs": 211565,
+          "focus": {
+            "xM": 2039,
+            "zM": 2000,
+            "depthM": 850
+          },
+          "eye": {
+            "xM": 2041,
+            "zM": 3565,
+            "depthM": -671
+          }
+        },
+        {
+          "tMs": 226263,
+          "focus": {
+            "xM": 2078,
+            "zM": 2000,
+            "depthM": 850
+          },
+          "eye": {
+            "xM": 2080,
+            "zM": 3565,
+            "depthM": -669
+          }
+        },
+        {
+          "tMs": 240121,
+          "focus": {
+            "xM": 2116,
+            "zM": 2000,
+            "depthM": 850
+          },
+          "eye": {
+            "xM": 2117,
+            "zM": 3566,
+            "depthM": -647
+          }
+        },
+        {
+          "tMs": 253770,
+          "focus": {
+            "xM": 2155,
+            "zM": 2000,
+            "depthM": 850
+          },
+          "eye": {
+            "xM": 2153,
+            "zM": 3565,
+            "depthM": -656
+          }
+        },
+        {
+          "tMs": 268325,
+          "focus": {
+            "xM": 2194,
+            "zM": 2000,
+            "depthM": 850
+          },
+          "eye": {
+            "xM": 2192,
+            "zM": 3564,
+            "depthM": -678
+          }
+        }
+      ]
     },
     {
       "name": "survey",
@@ -167,22 +349,70 @@
         "depthM": null
       },
       "eye": {
-        "xM": 2012,
-        "zM": 2369,
-        "depthM": -43036
+        "xM": 1992,
+        "zM": 2332,
+        "depthM": -43041
       },
       "distance": 10000,
       "waterReachM": 32000,
+      "subject": {
+        "fogAtDolly": 0.093,
+        "haloAtDolly": 0.807
+      },
       "calls": 44,
       "triangles": 405088,
       "propTriangles": 387952,
       "instances": {
-        "env-kelp-stand": 40,
         "env-kelp-cluster": 16,
-        "env-deep-fish": 8,
-        "env-rim-crab": 16,
+        "env-kelp-stand": 40,
+        "env-outer-fish": 8,
         "env-shoal-fry": 96,
-        "env-outer-fish": 8
+        "env-deep-fish": 8,
+        "env-rim-crab": 16
+      },
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "gpuTimer": "software"
+    },
+    {
+      "name": "fleet",
+      "look": "free-water",
+      "pitchDeg": 12,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 542,
+        "zM": 1958,
+        "depthM": 300
+      },
+      "eye": {
+        "xM": 542,
+        "zM": 3132,
+        "depthM": -825
+      },
+      "distance": 1200,
+      "waterReachM": 3840,
+      "subject": {
+        "fogAtDolly": 0.093,
+        "haloAtDolly": 0.807
+      },
+      "calls": 42,
+      "triangles": 404698,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-cluster": 16,
+        "env-kelp-stand": 40,
+        "env-outer-fish": 8,
+        "env-shoal-fry": 96,
+        "env-deep-fish": 8,
+        "env-rim-crab": 16
       },
       "passes": [
         "canvas",

@@ -19,17 +19,25 @@
         "depthM": null
       },
       "eye": {
-        "xM": 539,
-        "zM": 3453,
-        "depthM": -9085
+        "xM": 540,
+        "zM": 3449,
+        "depthM": -9097
       },
       "distance": 2600,
       "waterReachM": 4487,
       "snow": {
         "far": 0,
-        "near": 24000
+        "near": 0,
+        "nearAnchor": {
+          "xM": 540,
+          "zM": 2048
+        }
       },
-      "calls": 44,
+      "subject": {
+        "fogAtDolly": 0.285,
+        "haloAtDolly": 0.478
+      },
+      "calls": 43,
       "triangles": 405088,
       "propTriangles": 387952,
       "instances": {
@@ -63,15 +71,23 @@
         "depthM": 275
       },
       "eye": {
-        "xM": 2119,
+        "xM": 2120,
         "zM": 1125,
-        "depthM": 38
+        "depthM": 40
       },
       "distance": 250,
       "waterReachM": 600,
       "snow": {
         "far": 7000,
-        "near": 24000
+        "near": 24000,
+        "nearAnchor": {
+          "xM": 2120,
+          "zM": 1125
+        }
+      },
+      "subject": {
+        "fogAtDolly": 0.159,
+        "haloAtDolly": 0.683
       },
       "calls": 30,
       "triangles": 402015,
@@ -93,6 +109,89 @@
       "gpuTimer": "software"
     },
     {
+      "name": "garden-close-pan",
+      "strip": [
+        {
+          "tMs": 65719,
+          "focus": {
+            "xM": 1875,
+            "zM": 1125,
+            "depthM": 275
+          },
+          "eye": {
+            "xM": 2120,
+            "zM": 1125,
+            "depthM": 41
+          }
+        },
+        {
+          "tMs": 79814,
+          "focus": {
+            "xM": 1875,
+            "zM": 1119,
+            "depthM": 275
+          },
+          "eye": {
+            "xM": 2119,
+            "zM": 1119,
+            "depthM": 37
+          }
+        },
+        {
+          "tMs": 90920,
+          "focus": {
+            "xM": 1875,
+            "zM": 1113,
+            "depthM": 275
+          },
+          "eye": {
+            "xM": 2119,
+            "zM": 1113,
+            "depthM": 37
+          }
+        },
+        {
+          "tMs": 102230,
+          "focus": {
+            "xM": 1875,
+            "zM": 1107,
+            "depthM": 275
+          },
+          "eye": {
+            "xM": 2119,
+            "zM": 1107,
+            "depthM": 36
+          }
+        },
+        {
+          "tMs": 113857,
+          "focus": {
+            "xM": 1875,
+            "zM": 1101,
+            "depthM": 275
+          },
+          "eye": {
+            "xM": 2119,
+            "zM": 1101,
+            "depthM": 36
+          }
+        },
+        {
+          "tMs": 125332,
+          "focus": {
+            "xM": 1875,
+            "zM": 1095,
+            "depthM": 275
+          },
+          "eye": {
+            "xM": 2119,
+            "zM": 1094,
+            "depthM": 36
+          }
+        }
+      ]
+    },
+    {
       "name": "low",
       "look": "free-water",
       "pitchDeg": 12,
@@ -103,15 +202,23 @@
         "depthM": 850
       },
       "eye": {
-        "xM": 2000,
-        "zM": 3564,
-        "depthM": -676
+        "xM": 2001,
+        "zM": 3565,
+        "depthM": -663
       },
       "distance": 1600,
       "waterReachM": 2457,
       "snow": {
         "far": 7000,
-        "near": 24000
+        "near": 24000,
+        "nearAnchor": {
+          "xM": 2001,
+          "zM": 2878
+        }
+      },
+      "subject": {
+        "fogAtDolly": 0.346,
+        "haloAtDolly": 0.393
       },
       "calls": 25,
       "triangles": 397119,
@@ -143,15 +250,23 @@
         "depthM": 850
       },
       "eye": {
-        "xM": 2202,
-        "zM": 3565,
-        "depthM": -669
+        "xM": 2199,
+        "zM": 3566,
+        "depthM": -647
       },
       "distance": 1600,
       "waterReachM": 2457,
       "snow": {
         "far": 7000,
-        "near": 24000
+        "near": 24000,
+        "nearAnchor": {
+          "xM": 2199,
+          "zM": 2896
+        }
+      },
+      "subject": {
+        "fogAtDolly": 0.346,
+        "haloAtDolly": 0.393
       },
       "calls": 25,
       "triangles": 397119,
@@ -173,6 +288,89 @@
       "gpuTimer": "software"
     },
     {
+      "name": "low-pan",
+      "strip": [
+        {
+          "tMs": 191183,
+          "focus": {
+            "xM": 2000,
+            "zM": 2000,
+            "depthM": 850
+          },
+          "eye": {
+            "xM": 2002,
+            "zM": 3564,
+            "depthM": -678
+          }
+        },
+        {
+          "tMs": 204713,
+          "focus": {
+            "xM": 2039,
+            "zM": 2000,
+            "depthM": 850
+          },
+          "eye": {
+            "xM": 2038,
+            "zM": 3565,
+            "depthM": -663
+          }
+        },
+        {
+          "tMs": 218712,
+          "focus": {
+            "xM": 2078,
+            "zM": 2000,
+            "depthM": 850
+          },
+          "eye": {
+            "xM": 2075,
+            "zM": 3566,
+            "depthM": -647
+          }
+        },
+        {
+          "tMs": 231934,
+          "focus": {
+            "xM": 2116,
+            "zM": 2000,
+            "depthM": 850
+          },
+          "eye": {
+            "xM": 2116,
+            "zM": 3565,
+            "depthM": -657
+          }
+        },
+        {
+          "tMs": 246325,
+          "focus": {
+            "xM": 2155,
+            "zM": 2000,
+            "depthM": 850
+          },
+          "eye": {
+            "xM": 2157,
+            "zM": 3564,
+            "depthM": -678
+          }
+        },
+        {
+          "tMs": 260962,
+          "focus": {
+            "xM": 2194,
+            "zM": 2000,
+            "depthM": 850
+          },
+          "eye": {
+            "xM": 2196,
+            "zM": 3565,
+            "depthM": -654
+          }
+        }
+      ]
+    },
+    {
       "name": "survey",
       "look": "free-water",
       "pitchDeg": 88,
@@ -183,18 +381,78 @@
         "depthM": null
       },
       "eye": {
-        "xM": 2007,
-        "zM": 2359,
-        "depthM": -43037
+        "xM": 2004,
+        "zM": 2339,
+        "depthM": -43040
       },
       "distance": 10000,
       "waterReachM": 32000,
       "snow": {
         "far": 0,
-        "near": 0
+        "near": 0,
+        "nearAnchor": {
+          "xM": 2004,
+          "zM": 2009
+        }
+      },
+      "subject": {
+        "fogAtDolly": 0.093,
+        "haloAtDolly": 0.807
       },
       "calls": 44,
       "triangles": 405088,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-stand": 40,
+        "env-kelp-cluster": 16,
+        "env-rim-crab": 16,
+        "env-shoal-fry": 96,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8
+      },
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "gpuTimer": "software"
+    },
+    {
+      "name": "fleet",
+      "look": "free-water",
+      "pitchDeg": 12,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 542,
+        "zM": 1958,
+        "depthM": 300
+      },
+      "eye": {
+        "xM": 543,
+        "zM": 3132,
+        "depthM": -825
+      },
+      "distance": 1200,
+      "waterReachM": 1805,
+      "snow": {
+        "far": 7000,
+        "near": 24000,
+        "nearAnchor": {
+          "xM": 543,
+          "zM": 2278
+        }
+      },
+      "subject": {
+        "fogAtDolly": 0.357,
+        "haloAtDolly": 0.378
+      },
+      "calls": 43,
+      "triangles": 404688,
       "propTriangles": 387952,
       "instances": {
         "env-kelp-stand": 40,

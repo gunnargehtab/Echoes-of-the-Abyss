@@ -27,7 +27,15 @@
       "waterReachM": 2457,
       "snow": {
         "far": 7000,
-        "near": 24000
+        "near": 24000,
+        "nearAnchor": {
+          "xM": 2000,
+          "zM": 2880
+        }
+      },
+      "subject": {
+        "fogAtDolly": 0.346,
+        "haloAtDolly": 0.393
       },
       "calls": 25,
       "triangles": 397119,
@@ -35,10 +43,10 @@
       "instances": {
         "env-rim-crab": 16,
         "env-kelp-stand": 40,
-        "env-kelp-cluster": 16,
         "env-shoal-fry": 96,
-        "env-deep-fish": 8,
-        "env-outer-fish": 8
+        "env-kelp-cluster": 16,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8
       },
       "passes": [
         "canvas",
@@ -67,7 +75,15 @@
       "waterReachM": 2457,
       "snow": {
         "far": 7000,
-        "near": 24000
+        "near": 24000,
+        "nearAnchor": {
+          "xM": 2200,
+          "zM": 2880
+        }
+      },
+      "subject": {
+        "fogAtDolly": 0.346,
+        "haloAtDolly": 0.393
       },
       "calls": 25,
       "triangles": 397119,
@@ -75,10 +91,10 @@
       "instances": {
         "env-rim-crab": 16,
         "env-kelp-stand": 40,
-        "env-kelp-cluster": 16,
         "env-shoal-fry": 96,
-        "env-deep-fish": 8,
-        "env-outer-fish": 8
+        "env-kelp-cluster": 16,
+        "env-outer-fish": 8,
+        "env-deep-fish": 8
       },
       "passes": [
         "canvas",

@@ -19,12 +19,16 @@
         "depthM": 850
       },
       "eye": {
-        "xM": 2000,
-        "zM": 3566,
-        "depthM": -651
+        "xM": 2002,
+        "zM": 3565,
+        "depthM": -664
       },
       "distance": 1600,
       "waterReachM": 5120,
+      "subject": {
+        "fogAtDolly": 0.093,
+        "haloAtDolly": 0.807
+      },
       "calls": 75,
       "triangles": 160006,
       "propTriangles": 104958,
@@ -52,13 +56,17 @@
         "depthM": 850
       },
       "eye": {
-        "xM": 2198,
-        "zM": 3566,
-        "depthM": -649
+        "xM": 2202,
+        "zM": 3565,
+        "depthM": -672
       },
       "distance": 1600,
       "waterReachM": 5120,
-      "calls": 70,
+      "subject": {
+        "fogAtDolly": 0.093,
+        "haloAtDolly": 0.807
+      },
+      "calls": 72,
       "triangles": 159044,
       "propTriangles": 104958,
       "instances": {},
@@ -85,12 +93,16 @@
         "depthM": null
       },
       "eye": {
-        "xM": 2009,
-        "zM": 2370,
-        "depthM": -42800
+        "xM": 1997,
+        "zM": 2368,
+        "depthM": -42801
       },
       "distance": 10000,
       "waterReachM": 32000,
+      "subject": {
+        "fogAtDolly": 0.093,
+        "haloAtDolly": 0.807
+      },
       "calls": 76,
       "triangles": 163878,
       "propTriangles": 104958,
