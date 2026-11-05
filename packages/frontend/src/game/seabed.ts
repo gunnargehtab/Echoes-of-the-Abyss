@@ -959,16 +959,41 @@ export function shadeSeabed(
   /**
    * The same two treatments under the study's eroded edges, where the face is
    * no longer on the cell edge but wherever the rock's share runs from 1 to 0:
-   * the rim darkens down the face from its lip, the lee darkens the foot up
-   * to the face. Both still darken only, and the stone fill stays the cell's,
-   * so the coast the ink dashes on the edge is still where the stone begins
-   * (docs/art-direction.md "Rock speaks in stone"; docs/map-visuals.md §4).
+   * one gain of the share, the rim darkening down the face from its lip and
+   * the lee darkening the foot up to the face, darkest where the two meet.
+   * The same share gives the same darkening on either side of the cell edge,
+   * so the fill is the only thing the edge changes. Both still darken only,
+   * and the stone fill stays the cell's, so the coast the ink dashes on the
+   * edge is still where the stone begins (docs/art-direction.md "Rock speaks
+   * in stone"; docs/map-visuals.md §4).
    */
-  const rimGainOf = (rockShare: number) =>
-    ROCK_EDGE_GAIN + (1 - ROCK_EDGE_GAIN) * smooth(Math.min(1, Math.max(0, 2 * rockShare - 1)));
-  const leeGainOf = (rockShare: number) =>
-    CLIFF_SHADOW_GAIN +
-    (1 - CLIFF_SHADOW_GAIN) * smooth(Math.min(1, Math.max(0, 1 - 2 * rockShare)));
+  const faceGainOf = (rockShare: number) =>
+    rockShare >= 0.5
+      ? ROCK_EDGE_GAIN + (1 - ROCK_EDGE_GAIN) * smooth(Math.min(1, Math.max(0, 2 * rockShare - 1)))
+      : CLIFF_SHADOW_GAIN +
+        (1 - CLIFF_SHADOW_GAIN) * smooth(Math.min(1, Math.max(0, 1 - 2 * rockShare)));
+  /**
+   * Where a rock cell meets the stone over a roofed passage, the share steps
+   * from 1 to 0 on the edge (`erodedGroundAtM`), so the face gain has nothing
+   * to draw there; the rim keeps its plain treatment against that edge, as
+   * the roof's own rim vertices keep theirs (passages.ts), and the two tops
+   * meet in one seam. Distance to the nearest roofed cell among the
+   * neighbours, in metres, or none.
+   */
+  const roofedDistM = (xM: number, yM: number, row: number, col: number) => {
+    let best = Number.POSITIVE_INFINITY;
+    for (let r = row - 1; r <= row + 1; r++) {
+      for (let c = col - 1; c <= col + 1; c++) {
+        if (r < 0 || r >= rows || c < 0 || c >= cols) continue;
+        const i = r * cols + c;
+        if (isRock(i) || terrain.ceiling[i]! <= 0) continue;
+        const dx = Math.max(c * cellM - xM, 0, xM - (c + 1) * cellM);
+        const dy = Math.max(r * cellM - yM, 0, yM - (r + 1) * cellM);
+        best = Math.min(best, Math.hypot(dx, dy));
+      }
+    }
+    return best;
+  };
 
   for (let py = y0; py < y1; py++) {
     const row = clampRow(Math.floor(py / ppc));
@@ -1015,7 +1040,10 @@ export function shadeSeabed(
             // The rim: darkened toward ROCK_SHADOW where the mesa meets open
             // water, so a flat top reads as raised ground with an edge.
             (eroded !== undefined
-              ? rimGainOf(share[(py - ey0) * ew + (px - ex0)]!)
+              ? Math.min(
+                  faceGainOf(share[(py - ey0) * ew + (px - ex0)]!),
+                  edgeGain(roofedDistM(xM, yM, row, col), ROCK_EDGE_M, ROCK_EDGE_GAIN)
+                )
               : edgeGain(oppositeDistM(xM, yM, row, col, false), ROCK_EDGE_M, ROCK_EDGE_GAIN))
         );
       } else {
@@ -1064,7 +1092,7 @@ export function shadeSeabed(
             // The wall's lee: open floor darkens where it meets a mesa, so
             // the rock reads as standing on the seabed, not pasted over it.
             (eroded !== undefined
-              ? leeGainOf(share[i]!)
+              ? faceGainOf(share[i]!)
               : edgeGain(
                   oppositeDistM(xM, yM, row, col, true),
                   CLIFF_SHADOW_M,

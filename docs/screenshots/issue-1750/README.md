@@ -51,9 +51,11 @@ north and south faces a foot and a wavy lip, and the two rock blocks' corners ro
 jambs of the cut keep their step on the edge, where the roof's curtains stand: two straight
 500 m lines, with the curtain standing proud of the set-back north face at the mouth's
 corner, a limit taken in the open in the pull request. The skin is the same hillshade in
-the bake's own colour; its stone fill stays the cell's, which is what admits no water and
-where the coastline ink says the stone begins, while the rim darkens down the face from its
-lip and the lee darkens the foot, so the skin no longer outlines the cell under the mesh.
+the bake's own colour. Its stone fill stays the cell's, which is what admits no water and
+where the coastline ink says the stone begins, so the fill still marks the cell edge; the
+rim and the lee are one gain of the rock's share, darkest where the lip meets the foot, so
+the shading no longer does. Along the jambs, where the share steps on the edge, the rim keeps
+its plain treatment against the roof's own.
 
 ## The frames
 
