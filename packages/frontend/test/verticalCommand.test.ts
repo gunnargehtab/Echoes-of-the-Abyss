@@ -298,8 +298,9 @@ describe('the instruments on the study', () => {
       // Five contacts earned a depth at Tier 3 or 4 (103 to 107): one stalk
       // each. The Tier 2 contact's payload carries a depth the type says is
       // never sent, and it still gets none; the Tier 1 contact has nothing.
-      // Their depths, 2,000 / 2,400 / 1,100 / 2,600 / 1,100 m, put one above
-      // the plane... none: the turret and torpedo at 1,100 m are above it.
+      // Their depths are 2,000 / 2,400 / 1,100 / 2,600 / 1,100 m: the turret
+      // and the torpedo at 1,100 m stand above the 1,200 m plane (solid), and
+      // the other three hang below it (dashed).
       assert.deepEqual(stalks(world.privates.contactLayer), { feet: 5, solid: 2, dashed: 3 });
       // The lead selected hull's depth takes over: the Scout at 900 m, which
       // then stands on the plane while the three others hang below it.

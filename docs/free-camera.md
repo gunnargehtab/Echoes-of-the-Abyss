@@ -185,8 +185,10 @@ the crater's bowl, pocket and exit pool; over the garden's 400 m floor a 300 m f
 a few degrees of look-up. The band stops at 10° above because range rings turn edge-on
 there; within 10° of level they stay that unreadable, so the study's section scope
 ([ui-ux.md](ui-ux.md) §9) carries range in that band, as a scale along its top edge: a tick
-every 500 m from the focus along the heading, and the ping's 900 m and 2,400 m in the rings'
-inks. The band's floor is
+every 500 m from the focus along the heading, and each of the ping's two radii its span
+reaches, in that ring's ink. The span is the plan scope's, the map's longer side centred on
+the focus, so on the 4 km crater the slice runs ±2,000 m, reaches the 900 m radius and not
+the 2,400 m one. The band's floor is
 `STUDY_PITCH_MIN_DEG` in `PerspectiveView.ts`, switched on the view's look as the study's
 water is, so the two cannot disagree.
 
