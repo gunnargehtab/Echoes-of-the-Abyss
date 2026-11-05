@@ -112,6 +112,7 @@ import {
   seabedRange,
   seabedSeed,
   ventEmbers,
+  type BakeOptions,
   type CellRect,
   type SeabedRange,
 } from './seabed.ts';
@@ -1369,6 +1370,23 @@ export class PerspectiveView {
   }
 
   /**
+   * Whether the ground's cell transitions are drawn eroded
+   * (docs/free-water-slice.md §9, "Crater walls"; seabed.ts
+   * `erodedGroundAtM`): the free-water study's, on the same switch as its
+   * water, and off on every shipped map. The heightfield, the bake and
+   * every ground read of the view's own take it, so what the eye clears
+   * and what the props stand on is what is drawn.
+   */
+  private get erodedGround(): boolean {
+    return this.look === 'free-water';
+  }
+
+  /** The bake's options under this view's look: the eroded edges, or none. */
+  private bakeOptions(): BakeOptions {
+    return this.erodedGround ? { eroded: { rockTopM: this.groundRockTopM } } : {};
+  }
+
+  /**
    * The acoustic veil's strength, 0-1 (docs/ui-ux.md §4.5 and §11).
    *
    * A setting because the veil is a contrast-reduced overlay and §11 makes
@@ -2541,7 +2559,7 @@ export class PerspectiveView {
     // and cliff shadows are rung 2, its biome fills, relief and mottle rung
     // 3, and the survey ink its shader draws rung 4. The veil below is a
     // drain on this ground, not a mark on it.
-    const grid = buildHeightGrid(terrain, this.groundSeed, this.groundRockTopM);
+    const grid = buildHeightGrid(terrain, this.groundSeed, this.groundRockTopM, this.erodedGround);
     const positions = new Float32Array(grid.vertsX * grid.vertsZ * 3);
     const uvs = new Float32Array(grid.vertsX * grid.vertsZ * 2);
     for (let iz = 0; iz < grid.vertsZ; iz++) {
@@ -2603,7 +2621,7 @@ export class PerspectiveView {
             cols: terrain.cols,
             rows: terrain.rows,
           })
-        : bakeSeabed(terrain, this.groundSeed, this.seabedRange, this.stones);
+        : bakeSeabed(terrain, this.groundSeed, this.seabedRange, this.stones, this.bakeOptions());
     const texture = new CanvasTexture(canvas);
     // The bake's row 0 is the map's north edge, and so is the grid's iz 0;
     // an unflipped texture keeps the two aligned without inverting the v axis.
@@ -2756,7 +2774,14 @@ export class PerspectiveView {
       this.rebuildTerrain();
       return;
     }
-    const span = patchHeightGrid(grid, terrain, this.groundSeed, this.groundRockTopM, touched);
+    const span = patchHeightGrid(
+      grid,
+      terrain,
+      this.groundSeed,
+      this.groundRockTopM,
+      touched,
+      this.erodedGround
+    );
     const positions = mesh.geometry.getAttribute('position') as BufferAttribute;
     for (let i = span.first; i <= span.last; i++) positions.setY(i, grid.y[i]!);
     positions.needsUpdate = true;
@@ -2779,7 +2804,15 @@ export class PerspectiveView {
       // Seats read their cell and its ring, which the rebake below covers.
       this.stones = stoneSeats(terrain, duneSource(this.mapId, terrain));
     }
-    rebakeSeabedCells(canvas, terrain, this.groundSeed, this.seabedRange, touched, this.stones);
+    rebakeSeabedCells(
+      canvas,
+      terrain,
+      this.groundSeed,
+      this.seabedRange,
+      touched,
+      this.stones,
+      this.bakeOptions()
+    );
     texture.needsUpdate = true;
 
     this.rebuildDressing();
@@ -3950,7 +3983,7 @@ export class PerspectiveView {
       }
       return this.atlasGroundAt(xM, yM);
     }
-    return seabedDepthAtM(terrain, this.groundSeed, this.groundRockTopM, xM, yM);
+    return seabedDepthAtM(terrain, this.groundSeed, this.groundRockTopM, xM, yM, this.erodedGround);
   }
 
   /**
@@ -5366,6 +5399,9 @@ export class PerspectiveView {
         // must read one value here, or the lattice slid between them.
         nearSpreadM: this.nearSnow === null ? null : Math.round(this.nearSnow.spreadM),
       },
+      // The ground as drawn: whether its cell transitions are the study's
+      // eroded ones (docs/free-water-slice.md §9, "Crater walls").
+      ground: { eroded: this.erodedGround },
       hullScale: Number(this.drawScale.toFixed(2)),
       // The whole last frame's, every pass summed: info is reset once a frame
       // (renderFrame), not on every render(). `passes` names the renders.

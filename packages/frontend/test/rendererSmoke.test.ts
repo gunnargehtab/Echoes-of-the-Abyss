@@ -2198,6 +2198,32 @@ describe('renderer smoke test: the water', () => {
     }
   });
 
+  it('draws the free-water study on eroded cell edges, and no other look', async () => {
+    // docs/free-water-slice.md §9, "Crater walls": the study's ground is the
+    // eroded heightfield (perspectiveTerrain.ts `seabedDepthAtM`, eroded),
+    // and the probe says so; a shipped map stands on the bilinear one.
+    const probe = () =>
+      (
+        globalThis as unknown as {
+          window: { __perspectiveProbe: () => { ground: { eroded: boolean } } };
+        }
+      ).window.__perspectiveProbe();
+    const shipped = await boot();
+    try {
+      shipped.frame(1);
+      assert.equal(probe().ground.eroded, false);
+    } finally {
+      shipped.teardown();
+    }
+    const study = await boot({ look: 'free-water' });
+    try {
+      study.frame(1);
+      assert.equal(probe().ground.eroded, true);
+    } finally {
+      study.teardown();
+    }
+  });
+
   it('gives the free-water study its reach and a second cloud on the eye, and no other look', async () => {
     // docs/free-water-slice.md §9, "Water medium": a study-only reach curve
     // and denser, nearer snow with parallax at the eye. Both ride the look,
