@@ -89,7 +89,7 @@ export interface Passage {
   cells: number[];
   /**
    * The line the map marks it with, mouth to mouth along its longer axis
-   * (or, for a square one, between its mouths).
+   * (or, for a square one, between its mouths, east to west when they tie).
    * One point per slice across that axis, at the mean of the slice's cell
    * centres, so a passage that bends is followed rather than chorded; the
    * two ends sit on the passage's outer edges, where the mouths are.
