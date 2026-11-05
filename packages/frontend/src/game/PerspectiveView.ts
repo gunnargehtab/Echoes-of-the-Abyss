@@ -172,6 +172,7 @@ import {
   MarineSnow,
   STUDY_SNOW_NEAR,
   STUDY_SNOW_NEAR_COUNT,
+  STUDY_SNOW_NEAR_SEABED_FOCUS_M,
   STUDY_SNOW_NEAR_SPREAD_PER_ENTRY_M,
   waterColorAt,
   WaterBackdrop,
@@ -4765,8 +4766,6 @@ export class PerspectiveView {
     // is the eye's, wherever the focus is.
     if (this.nearSnow !== null) {
       const anchor = this.nearSnowAnchor();
-      const rest = this.restEye;
-      const entryM = Math.hypot(anchor.x - rest.x, anchor.z - rest.z);
       this.nearSnow.update(
         now,
         this.camera.position,
@@ -4776,7 +4775,7 @@ export class PerspectiveView {
         this.waterDensity,
         projectionScalePx,
         pixelRatio,
-        entryM * STUDY_SNOW_NEAR_SPREAD_PER_ENTRY_M
+        this.nearSnowSpreadFloor()
       );
     }
     // Not the water, but it swims in it: the stipple fades with the same
@@ -4815,7 +4814,9 @@ export class PerspectiveView {
    * (docs/free-camera.md §5). A camera in the air looking level or up has no
    * entry and keeps the eye. Worked from `restEye`, the eye before the sway,
    * for the reason given there; the sway translates the eye and never turns
-   * it, so the camera's own forward is the rest forward too.
+   * it, so the camera's own forward is the rest forward too. The anchor only
+   * picks which copies of the lattice are drawn, so it may follow the ground;
+   * the slab's side may not (`nearSnowSpreadFloor`).
    */
   private nearSnowAnchor(): { x: number; z: number } {
     const eye = this.restEye;
@@ -4824,6 +4825,41 @@ export class PerspectiveView {
     if (forward.y >= -1e-3) return { x: eye.x, z: eye.z };
     const t = eye.y / -forward.y;
     return { x: eye.x + forward.x * t, z: eye.z + forward.z * t };
+  }
+
+  /**
+   * The floor on the near slab's side, in world units: the entry distance the
+   * sight line would have from the orbit's geometry alone, times
+   * `STUDY_SNOW_NEAR_SPREAD_PER_ENTRY_M`.
+   *
+   * The motes sit on a lattice the side scales about the origin, so every
+   * change of side slides every mote, and the side may change only with the
+   * player's own zoom, pitch and pinned depth: the far cloud's side follows
+   * the dolly the same way, and a frame already moving under the player's
+   * hand hides it. The ground may not move it. With the focus on the seabed,
+   * `focusY()` is the ground under the focus, so an ordinary pan over relief
+   * would re-lattice the cloud mid-pan, radially from the map origin, which
+   * states a current; the side is worked out at `STUDY_SNOW_NEAR_SEABED_FOCUS_M`
+   * instead, and the anchor alone follows the real entry. In flight the side
+   * follows the eye's own height, which only the player's hand moves, and is
+   * nought while the eye is in the water.
+   */
+  private nearSnowSpreadFloor(): number {
+    let eyeY: number;
+    let cot: number;
+    if (this.flight) {
+      const eye = this.restEye;
+      const forward = this.camera.getWorldDirection(DIR_TMP);
+      if (eye.y <= 0 || forward.y >= -1e-3) return 0;
+      eyeY = eye.y;
+      cot = Math.hypot(forward.x, forward.z) / -forward.y;
+    } else {
+      const focusDepthM = this.focusDepthM ?? STUDY_SNOW_NEAR_SEABED_FOCUS_M;
+      eyeY = -focusDepthM * DEPTH_VISUAL_M_PER_M + Math.sin(this.pitch) * this.distance;
+      if (eyeY <= 0) return 0;
+      cot = 1 / Math.tan(this.pitch);
+    }
+    return eyeY * cot * STUDY_SNOW_NEAR_SPREAD_PER_ENTRY_M;
   }
 
   /** See `cameraRevision`. */
@@ -5303,6 +5339,9 @@ export class PerspectiveView {
           this.nearSnow === null
             ? null
             : (({ x, z }) => ({ xM: Math.round(x), zM: Math.round(z) }))(this.nearSnowAnchor()),
+        // The near slab's side as drawn: a strip whose frames pan or rest
+        // must read one value here, or the lattice slid between them.
+        nearSpreadM: this.nearSnow === null ? null : Math.round(this.nearSnow.spreadM),
       },
       hullScale: Number(this.drawScale.toFixed(2)),
       // The whole last frame's, every pass summed: info is reset once a frame

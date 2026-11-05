@@ -2220,8 +2220,14 @@ describe('renderer smoke test: the water', () => {
               distance: number;
               pitchDeg: number;
               waterReachM: number;
+              focus: { xM: number; zM: number; depthM: number | null };
               eye: { xM: number; zM: number; depthM: number };
-              snow: { far: number; near: number; nearAnchor: { xM: number; zM: number } | null };
+              snow: {
+                far: number;
+                near: number;
+                nearAnchor: { xM: number; zM: number } | null;
+                nearSpreadM: number | null;
+              };
             };
           };
         }
@@ -2276,10 +2282,13 @@ describe('renderer smoke test: the water', () => {
       // would slide every mote sideways while the camera rests: a current's
       // bearing, which the snow may never state. Across a heave the side holds
       // exactly, while the drawn eye moves.
-      const near = clouds.find(
-        (cloud) =>
-          Math.round((cloud.material as ShaderMaterial).uniforms.uFocus!.value.x) === anchor.xM
-      )!;
+      // Both anchors share x at yaw 0, so the near cloud is the one on the
+      // anchor's z as well.
+      const near = clouds.find((cloud) => {
+        const at = (cloud.material as ShaderMaterial).uniforms.uFocus!.value;
+        return Math.round(at.x) === anchor.xM && Math.round(at.y) === anchor.zM;
+      })!;
+      assert.ok(near !== undefined);
       const spread = (near.material as ShaderMaterial).uniforms.uSpreadM!.value as number;
       let nowMs = 0;
       const clock = mock.method(performance, 'now', () => nowMs);
@@ -2299,6 +2308,34 @@ describe('renderer smoke test: the water', () => {
         clock.mock.restore();
       }
       assert.ok(eyes.size > 1, 'the camera did sway while the side held');
+
+      // Nor may the ground move it. With the focus on the seabed a pan over
+      // relief lifts and drops the eye with the floor under the focus (the
+      // canned shelf falls away south-east); the side is worked out at a
+      // fixed depth instead, so a pan never re-lattices the cloud. A zoom
+      // may, as the far cloud's side follows the dolly.
+      assert.equal(probe().snow.nearSpreadM, Math.round(spread));
+      const depths = new Set<number>();
+      for (const [x, z] of [
+        [600, 600],
+        [1800, 1800],
+        [3000, 2600],
+      ]) {
+        study.conn.focusWorld(x, z);
+        study.frame(1);
+        const after = probe();
+        assert.equal(after.focus.depthM, null, 'the focus rests on the seabed');
+        depths.add(after.eye.depthM);
+        assert.equal(
+          after.snow.nearSpreadM,
+          Math.round(spread),
+          `the side moved on the pan to ${x}, ${z}`
+        );
+      }
+      assert.ok(depths.size > 1, 'the ground under the focus did change across the pan');
+      study.conn.focusWorld(3000, 2600, report.distance * 2);
+      study.frame(1);
+      assert.ok(probe().snow.nearSpreadM! > spread, 'a zoom out widens the slab');
     } finally {
       study.teardown();
     }

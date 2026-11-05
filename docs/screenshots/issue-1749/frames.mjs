@@ -123,7 +123,7 @@ export default async ({ page, shot }) => {
         await page.mouse.move(720 - 30 * step, 420, { steps: 3 });
         const at = await page.evaluate(() => {
           const p = window.__perspectiveProbe();
-          return { tMs: Math.round(performance.now()), focus: p.focus, eye: p.eye };
+          return { tMs: Math.round(performance.now()), focus: p.focus, eye: p.eye, snow: p.snow };
         });
         strip.push(at);
         await shot(`${name}-pan-${step}`);
@@ -146,7 +146,13 @@ export default async ({ page, shot }) => {
       if (step > 0) await page.waitForTimeout(2500);
       const at = await page.evaluate(() => {
         const p = window.__perspectiveProbe();
-        return { tMs: Math.round(performance.now()), focus: p.focus, eye: p.eye, sway: p.sway };
+        return {
+          tMs: Math.round(performance.now()),
+          focus: p.focus,
+          eye: p.eye,
+          sway: p.sway,
+          snow: p.snow,
+        };
       });
       strip.push(at);
       await shot(`low-rest-${step}`);

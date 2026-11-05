@@ -565,7 +565,9 @@ export const SNOW_FAR: SnowProfile = {
  * that reads as a medium. From the air the slab widens with the distance to
  * that water (`STUDY_SNOW_NEAR_SPREAD_PER_ENTRY_M`), so it fills the frustum
  * where the sight line meets the surface instead of sitting in it as a
- * patch. Its motes may rasterise wider than the far cloud's, so the nearest
+ * patch. Its motes sit on a lattice the side scales, so the side follows only
+ * the player's own zoom, pitch and pinned depth, as the far cloud's follows
+ * the dolly, and never the sway or the ground under a pan. Its motes may rasterise wider than the far cloud's, so the nearest
  * read nearer by size as well as by speed, and it fades later than the far
  * cloud as the eye climbs: whole at a low orbit, gone by the home orbit.
  *
@@ -578,6 +580,11 @@ export const STUDY_SNOW_NEAR_COUNT = 24_000;
 /** TUNABLE — the near slab's side per world unit between the eye and the
  * water its sight line enters, when the eye is in the air. */
 export const STUDY_SNOW_NEAR_SPREAD_PER_ENTRY_M = 1.6;
+/** TUNABLE — the focus depth the slab's side is worked out at while the
+ * focus rests on the seabed: §9's low row, mid-column. The side may follow
+ * the dolly, the pitch and a depth the player pinned, never the ground under
+ * a pan (`PerspectiveView.nearSnowSpreadFloor`). */
+export const STUDY_SNOW_NEAR_SEABED_FOCUS_M = 850;
 export const STUDY_SNOW_NEAR: SnowProfile = {
   spreadReaches: 0.25,
   spreadMinM: 420,
@@ -846,6 +853,11 @@ export class MarineSnow {
    * climbed out of it or the player turned the water off. */
   get motes(): number {
     return this.points.visible ? this.count : 0;
+  }
+
+  /** The slab's side as last drawn, world units, for the probe. */
+  get spreadM(): number {
+    return this.uniforms.uSpreadM.value;
   }
 
   dispose(): void {

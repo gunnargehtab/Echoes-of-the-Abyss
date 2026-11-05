@@ -25,9 +25,9 @@ CONTROL=1 FRAMES=low,survey PAN=0 node .claude/skills/run-game/scripts/drive.mjs
 ```
 
 `before/` and `control-before/` are the same runs against the base commit (398322fdd).
-Every `readings.json` carries the probe's reach, mote counts, the near cloud's anchor,
-calls and triangles per frame, and `subject`: the fog on a subject one dolly out and the
-share of a lamp's halo that survives it.
+Every `readings.json` carries the probe's reach, mote counts, the near cloud's anchor and
+side, calls and triangles per frame, and `subject`: the fog on a subject one dolly out and
+the share of a lamp's halo that survives it.
 
 ## The frames
 
@@ -80,13 +80,20 @@ decoration with and without a hidden Hollow byte for byte, and no wire field cha
   [step 5](after/08-garden-close-pan-5.png), and [low](after/11-low-pan-0.png) to
   [step 5](after/16-low-pan-5.png). Each strip's entry in `readings.json` carries the page
   clock, focus and eye per frame: the low focus walks 39 m east a frame, the garden focus
-  6 m along the clearing. Under this rasteriser the frames are about 11 s apart, so each
-  carries the pan, a heave of the sway and some 70 m of sink; the near motes, nearer than
+  6 m along the clearing. Under this rasteriser the frames are 13 to 18 s apart, so each
+  carries the pan, a heave of the sway and some 100 m of sink; the near motes, nearer than
   the floor, shift more with the pan than it does.
 - **At rest.** [low-rest-0](after/19-low-rest-0.png) to [low-rest-3](after/22-low-rest-3.png):
-  the low pose with no input and the sway on, 2.5 s and more apart. The slab's side is
-  sized from the eye before the sway, so the near motes only sink between these frames;
-  `rendererSmoke.test.ts` holds the side exact across a heave.
+  the low pose with no input and the sway on. Under this rasteriser the frames land about
+  13 s apart, more than a heave and some 85 m of sink, so the images alone cannot show a
+  mote holding still; the proof is in the readings and the test. Every strip frame
+  carries `snow.nearSpreadM`, the slab's side as drawn, and it reads one value across the
+  rest strip and across each pan. The near motes sit on a lattice that side scales, so a
+  side that followed the sway or the ground would slide every mote sideways, a current's
+  bearing; the side is worked out from the dolly, the pitch and the depth the player
+  pinned, at 850 m while the focus rests on the seabed, and `rendererSmoke.test.ts` holds
+  it exact across a heave and across a seabed-focus pan over relief. A zoom or a pitch
+  change still re-sizes it, as the dolly re-sizes the shipped cloud's.
 - **Reduced motion.** [reduced-motion/01-low.png](reduced-motion/01-low.png): both clouds
   drawn with the sink held, as docs/ui-ux.md §11 asks, since the parallax belongs to the
   camera and not to an animation.

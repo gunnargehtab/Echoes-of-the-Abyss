@@ -21,14 +21,15 @@
       "eye": {
         "xM": 2000,
         "zM": 3565,
-        "depthM": -653
+        "depthM": -673
       },
       "distance": 1600,
       "waterReachM": 5120,
       "snow": {
         "far": 7000,
         "near": 0,
-        "nearAnchor": null
+        "nearAnchor": null,
+        "nearSpreadM": null
       },
       "subject": {
         "fogAtDolly": 0.093,
@@ -61,16 +62,17 @@
         "depthM": 850
       },
       "eye": {
-        "xM": 2198,
+        "xM": 2199,
         "zM": 3565,
-        "depthM": -656
+        "depthM": -668
       },
       "distance": 1600,
       "waterReachM": 5120,
       "snow": {
         "far": 7000,
         "near": 0,
-        "nearAnchor": null
+        "nearAnchor": null,
+        "nearSpreadM": null
       },
       "subject": {
         "fogAtDolly": 0.093,
@@ -103,16 +105,17 @@
         "depthM": null
       },
       "eye": {
-        "xM": 1986,
-        "zM": 2328,
-        "depthM": -42807
+        "xM": 1988,
+        "zM": 2371,
+        "depthM": -42800
       },
       "distance": 10000,
       "waterReachM": 32000,
       "snow": {
         "far": 0,
         "near": 0,
-        "nearAnchor": null
+        "nearAnchor": null,
+        "nearSpreadM": null
       },
       "subject": {
         "fogAtDolly": 0.093,
