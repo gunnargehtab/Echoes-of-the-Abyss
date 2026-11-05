@@ -3,10 +3,11 @@
 Evidence for the kelp part of the feel pass
 ([free-water-slice.md §9](../../free-water-slice.md#9-feel-pass-the-approved-look-target),
 "Kelp"). One placement change, study-only: §5's authored list and `freeWaterPlacements`
-in `packages/frontend/src/game/freeWaterDecoration.ts` now carry 60 kelp stands in two
-rows on each flank of the clearing at one 125 m pitch, the inner rows 5 m from its edges,
-and the 16 retained clusters behind the forest at the garden's north edge. The prop
-reservation is 600,000 triangles (§7). No model, scale, material or shipped map changes.
+in `packages/frontend/src/game/freeWaterDecoration.ts` now carry 56 kelp stands in three
+rows north of the clearing and one south, at one 125 m pitch with the inner rows 5 m from
+its edges, every stand whole on the garden's 400 m tread, and the 16 retained clusters as
+a fringe along the garden's north edge. The prop reservation is 600,000 triangles (§7). No
+model, scale, material or shipped map changes.
 
 ## Reproduce
 
@@ -27,7 +28,9 @@ CONTROL=1 PAN=0 node .claude/skills/run-game/scripts/drive.mjs \
 
 `before/` and `control-before/` are the same runs against the base commit (043bf6d67),
 with `PROPS=184` for the base's list. The after, reduced-motion and control sets were
-captured at d32aecb14, the commit that changes the list.
+captured at 95b8e8940, the commit that re-lays the list on the tread; the first after set, at
+d32aecb14, stood a south outer row on the scarp into the bowl, which round 1's critic
+measured, and was replaced.
 
 ## The frames
 
@@ -35,33 +38,36 @@ captured at d32aecb14, the commit that changes the list.
 | --- | --- | --- | --- |
 | Garden close, 1,875 / 1,125, 250 m, 12°, 275 m, `yawDeg` 90 | [before](before/03-garden-close.png) | [after](after/03-garden-close.png) | One forest on both flanks of a bare clearing, the near stands parted from the far ones by the water. Before, the south flank (left) was the four clusters' cell and the north flank one row set back from the edge |
 | Garden east, 1,375 / 1,125, 250 m, 12°, 275 m, `yawDeg` −90 | [before](before/04-garden-east.png) | [after](after/04-garden-east.png) | The same clearing from its west end: both flanks filled to the edge, the canopy continuous along each |
-| Bowl, 2,000 / 2,000, 4,500 m, 70°, seabed | [before](before/07-bowl.png) | [after](after/07-bowl.png) | The owner's kind of pose. Before: three thin strips along the north edge. After: two bands with the clearing as the one cut between them |
+| Bowl, 2,000 / 2,000, 4,500 m, 70°, seabed | [before](before/07-bowl.png) | [after](after/07-bowl.png) | The owner's kind of pose. Before: three thin strips along the north edge. After: a deep band north of the clearing and a row south of it, the clearing the one cut between them, and the scarp into the bowl bare |
 | Opening, 760 / 1,650, 240 m, 15°, 300 m, `yawDeg` −34 | [before](before/02-opening.png) | [after](after/02-opening.png) | Of #1752's kind, low behind the scout toward A: the garden's south flank as a dark canopy beyond the water's reach at upper right, denser after. #1752 sets the pose and judges the row |
-| Home, 542 / 1,958, 2,600 m, 55°, seabed | [before](before/01-home.png) | [after](after/01-home.png) | The opening row's before pose: the garden's two bands at upper right instead of three strips |
-| Low, 2,000 / 2,000, 1,600 m, 12°, 850 m | [before](before/05-low.png) | [after](after/05-low.png) | Unchanged: no stand is in frame from the bowl's floor, and the water reads as it did |
+| Home, 542 / 1,958, 2,600 m, 55°, seabed | [before](before/01-home.png) | [after](after/01-home.png) | The opening row's before pose: the garden's bands at upper right instead of three strips |
+| Low, 2,000 / 2,000, 1,600 m, 12°, 850 m | [before](before/05-low.png) | [after](after/05-low.png) | From the bowl's floor looking north, the garden's south row of stands stands along the top of the far scarp, on the tread, in both frames; before, that row's stands reached over the scarp's edge. The water reads as it did |
 | Survey, 2,000 / 2,000, 10,000 m, 88°, seabed | [before](before/06-survey.png) | [after](after/06-survey.png) | Decoration below tactical ink, the ink unchanged; the garden's bands under it |
 
 The clearing row `y=1,000..1,250` holds no stand: the test's clearance check now adds the
-4 m sway to the 60 m plan radius, and the inner rows stand at `y=935` and `y=1,315`. Stands
-are at canonical scale throughout (`scale` 1 on every placement).
+4 m sway to the 60 m plan radius, and the inner rows stand at `y=935` and `y=1,315`. Every
+stand's envelope lies where all four surrounding cell centres are the garden's tread, and
+the eroded floor under it stays within 40 m of its root (`freeWaterDecoration.test.ts`,
+reading `seabedDepthAtM` as the view does; the measured worst case is 26 m). Stands are at
+canonical scale throughout (`scale` 1 on every placement).
 
 ## What the probe read
 
 | Pose | Props before → after | Prop triangles before → after | Frame triangles before → after | Calls |
 | --- | --- | --- | --- | --- |
-| Home | 184 → 204 | 387,952 → 566,512 | 405,088 → 583,648 | 43 → 43 |
-| Opening | 184 → 204 | 387,952 → 566,512 | 396,719 → 575,279 | 22 → 22 |
-| Garden close | 184 → 204 | 387,952 → 566,512 | 402,015 → 580,575 | 30 → 30 |
-| Garden east | 184 → 204 | 387,952 → 566,512 | 396,719 → 575,279 | 22 → 22 |
-| Low | 184 → 204 | 387,952 → 566,512 | 397,119 → 575,679 | 25 → 25 |
-| Survey | 184 → 204 | 387,952 → 566,512 | 405,088 → 583,648 | 44 → 44 |
-| Bowl | 184 → 204 | 387,952 → 566,512 | 405,088 → 583,648 | 44 → 44 |
+| Home | 184 → 200 | 387,952 → 530,800 | 405,088 → 547,936 | 43 → 43 |
+| Opening | 184 → 200 | 387,952 → 530,800 | 396,719 → 539,567 | 22 → 22 |
+| Garden close | 184 → 200 | 387,952 → 530,800 | 402,015 → 544,863 | 30 → 30 |
+| Garden east | 184 → 200 | 387,952 → 530,800 | 396,719 → 539,567 | 22 → 22 |
+| Low | 184 → 200 | 387,952 → 530,800 | 397,119 → 539,967 | 25 → 25 |
+| Survey | 184 → 200 | 387,952 → 530,800 | 405,088 → 547,936 | 44 → 44 |
+| Bowl | 184 → 200 | 387,952 → 530,800 | 405,088 → 547,936 | 44 → 44 |
 | Control, low | 363 → 363 | 104,958 → 104,958 | 160,006 → 160,006 | 75 → 75 |
 | Control, survey | 363 → 363 | 104,958 → 104,958 | 163,878 → 163,878 | 76 → 76 |
 
-The 20 stands add 178,560 triangles (20 × 8,928) and no call: the stands share one
+The 16 stands add 142,848 triangles (16 × 8,928) and no call: the stands share one
 instanced batch. Every study frame stays under the 720,000 cap and the props under the
-600,000 reservation; the opening list's counts (60, 16, 16, 96, 8, 8) are in each
+600,000 reservation; the opening list's counts (56, 16, 16, 96, 8, 8) are in each
 `readings.json` as `instances`, with the deep fish's 48 photophores.
 
 ## Motion, reduced motion and the control
@@ -84,5 +90,5 @@ These frames come from this container's software rasteriser (SwiftShader, in eac
 `readings.json`), which is why no millisecond is recorded here. The study's GPU rows,
 unpaced and queued at DPR 1 and 1.5 on named hardware, are
 `docs/screenshots/issue-1713/gpu.mjs` run as its README says, with its prop count and
-reservation read against this list (204 props, 600,000); §7 leaves that criterion open
-until a GPU reads it.
+reservation read against this list (200 props, 600,000); §7 leaves that criterion open
+until a GPU reads it, as #1749 and #1750 left theirs.
