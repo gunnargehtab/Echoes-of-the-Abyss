@@ -19,6 +19,9 @@ issue's own, pans the wall pose, and writes the probe's reading of each frame be
 ```bash
 node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost:5173/?study=free-water' \
   --out docs/screenshots/issue-1750/after --steps docs/screenshots/issue-1750/frames.mjs
+SETTINGS_JSON='{"reducedMotion":true,"reducedMotionChosen":true}' FRAMES=low,wall PAN=0 \
+  node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost:5173/?study=free-water' \
+  --out docs/screenshots/issue-1750/reduced-motion --steps docs/screenshots/issue-1750/frames.mjs
 CONTROL=1 node .claude/skills/run-game/scripts/drive.mjs \
   --url 'http://localhost:5173/?map=kelp-labyrinth' \
   --out docs/screenshots/issue-1750/control-after --steps docs/screenshots/issue-1750/frames.mjs
@@ -26,7 +29,7 @@ node --import tsx docs/screenshots/issue-1750/bake.mjs
 ```
 
 `before/` and `control-before/` are the same runs against the base commit (d5c8c9884).
-The after sets were captured at 1badc2602, the last commit that changes what is drawn. `bake.mjs` needs no browser: it bakes the
+The after and reduced-motion sets were captured at 39181d805, the last commit that changes what is drawn; the control at 1badc2602, since nothing after it touches a shipped map's path. `bake.mjs` needs no browser: it bakes the
 crater's skin and samples its drawn surface from the pure functions the view draws from.
 
 ## The drawn surface, without the water
@@ -45,8 +48,12 @@ plain and eroded. These are review aids, not what the game draws.
 In the eroded relief the bowl's rim is a wandering scarp with the Coral Ruins' 90 m
 terracing on the tread above it, the pocket's edge a second scarp, the southern wall's
 north and south faces a foot and a wavy lip, and the two rock blocks' corners rounded. The
-jambs of the cut keep their step on the edge, where the roof's curtains stand. The skin is
-the same hillshade in the bake's own colour, so the mesh and its texture agree.
+jambs of the cut keep their step on the edge, where the roof's curtains stand: two straight
+500 m lines, with the curtain standing proud of the set-back north face at the mouth's
+corner, a limit taken in the open in the pull request. The skin is the same hillshade in
+the bake's own colour; its stone fill stays the cell's, which is what admits no water and
+where the coastline ink says the stone begins, while the rim darkens down the face from its
+lip and the lee darkens the foot, so the skin no longer outlines the cell under the mesh.
 
 ## The frames
 
@@ -93,8 +100,11 @@ where it did.
 - **Motion.** A continuous middle-drag pan along the wall while the match runs, 40 px of
   drag a frame, four frames: [wall-pan-0](after/08-wall-pan-0.png) to
   [wall-pan-3](after/11-wall-pan-3.png), with the page clock, focus and eye per frame in
-  `readings.json`. Reduced motion changes nothing here: the ground is static geometry and
-  the sway is the camera's.
+  `readings.json`.
+- **Reduced motion.** [reduced-motion/01-low.png](reduced-motion/01-low.png) and
+  [02-wall.png](reduced-motion/02-wall.png), with the sway held as docs/ui-ux.md §11 asks:
+  the ground is static geometry, so the frames differ from `after/` only by the sway and
+  the snow.
 - **Clearance.** The flight eye sweeps the drawn triangles (`flightCamera.ts`), so its
   clearance follows the override. `flightCamera.test.ts` holds it on the crater: the vertex
   where the two grids differ most over open water stops a diving eye at two different
