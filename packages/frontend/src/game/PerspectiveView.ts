@@ -170,6 +170,8 @@ import {
   BACKDROP_SPAN_M,
   installWaterFog,
   MarineSnow,
+  STUDY_SNOW_NEAR,
+  STUDY_SNOW_NEAR_COUNT,
   waterColorAt,
   WaterBackdrop,
   fogDensityFor,
@@ -854,9 +856,15 @@ export class PerspectiveView {
    * `backdrop` draws the medium where there is no geometry, which is most of
    * a low-pitch frame and was flat void before it. `snow` is the particulate
    * that gives the medium something to parallax.
+   *
+   * `nearSnow` is the free-water study's second cloud, wrapped on the eye
+   * (water.ts `STUDY_SNOW_NEAR`; docs/free-water-slice.md §9, "Water
+   * medium"): one more draw call under that look and nothing under any other.
+   * The study's reach curve rides the same look (`waterStudy`).
    */
   private readonly backdrop = new WaterBackdrop();
   private readonly snow: MarineSnow;
+  private nearSnow: MarineSnow | null = null;
   /**
    * Tetherjelly fields and Lampfry shoals as stipple in the water column
    * (faunaStipple.ts, docs/map-visuals.md §8): two draw calls, the pulse on
@@ -1091,6 +1099,9 @@ export class PerspectiveView {
     this.dreamCover = this.dreamStudy ? new DreamGroundCover() : null;
     this.dreamLights = this.dreamStudy ? new DreamLightHalos() : null;
     this.snow = new MarineSnow(this.dreamStudy ? 1200 : undefined, this.dreamStudy);
+    if (look === 'free-water') {
+      this.nearSnow = new MarineSnow(STUDY_SNOW_NEAR_COUNT, false, STUDY_SNOW_NEAR);
+    }
     // Before the first material compiles: the water's fog is a patch on
     // three's global shader chunks, so a material built ahead of it would
     // carry the old distance fog for the life of the scene (water.ts).
@@ -1127,6 +1138,7 @@ export class PerspectiveView {
       this.cues.group,
       this.snow.points
     );
+    if (this.nearSnow !== null) this.scene.add(this.nearSnow.points);
     if (this.dreamLights !== null) this.scene.add(this.dreamLights.group);
     // The clear colour under the backdrop, and the deepest water there is —
     // the ramp's bottom stop is `UI.background` exactly, so the abyss is the
@@ -1291,6 +1303,7 @@ export class PerspectiveView {
       this.residency!.get(id)!.props.setReducedMotion(reduced);
     }
     this.snow.setReducedMotion(reduced);
+    this.nearSnow?.setReducedMotion(reduced);
     this.ordnanceLayer.setReducedMotion(reduced);
     this.wake.setReducedMotion(reduced);
     this.hits.setReducedMotion(reduced);
@@ -1322,8 +1335,18 @@ export class PerspectiveView {
     if (clamped === this.waterDensity) return;
     this.waterDensity = clamped;
     if (this.scene.fog instanceof FogExp2) {
-      this.scene.fog.density = fogDensityFor(this.distance, clamped);
+      this.scene.fog.density = fogDensityFor(this.distance, clamped, this.waterStudy);
     }
+  }
+
+  /**
+   * Whether the water is the free-water study's (docs/free-water-slice.md §9,
+   * "Water medium"): its reach curve and its near cloud, development-only and
+   * off on every shipped map. The look is the switch, as it is for the
+   * fixture's props, so the two can never disagree.
+   */
+  private get waterStudy(): boolean {
+    return this.look === 'free-water';
   }
 
   /**
@@ -1639,6 +1662,16 @@ export class PerspectiveView {
     this.seabedDetail = SEABED_DETAIL_ON && look === 'standard';
     this.environment = new EnvironmentLayer(look, this.seabedDetail);
     this.environment.setReducedMotion(this.swayHeld);
+    // The study's near cloud comes and goes with the look, as the props do.
+    if (this.nearSnow !== null && !this.waterStudy) {
+      this.scene.remove(this.nearSnow.points);
+      this.nearSnow.dispose();
+      this.nearSnow = null;
+    } else if (this.nearSnow === null && this.waterStudy) {
+      this.nearSnow = new MarineSnow(STUDY_SNOW_NEAR_COUNT, false, STUDY_SNOW_NEAR);
+      this.nearSnow.setReducedMotion(this.swayHeld);
+      this.scene.add(this.nearSnow.points);
+    }
     this.environment.setLandmarks(this.studyLandmarks(this.mapId));
     // Back in its place among the scene's groups, which the ladder orders.
     this.scene.add(this.environment.group);
@@ -1670,6 +1703,7 @@ export class PerspectiveView {
     this.cues.dispose();
     this.backdrop.dispose();
     this.snow.dispose();
+    this.nearSnow?.dispose();
     this.dreamLights?.dispose();
     this.life.dispose();
     for (const texture of this.spriteTextures.values()) texture.dispose();
@@ -2595,7 +2629,10 @@ export class PerspectiveView {
     // nothing draws would be a trap for the next reader, so it is the
     // deepest water rather than an arbitrary one.
     const deepest = waterColorAt(DEPTH.MAX_M);
-    const fog = new FogExp2(0x000000, fogDensityFor(this.distance, this.waterDensity));
+    const fog = new FogExp2(
+      0x000000,
+      fogDensityFor(this.distance, this.waterDensity, this.waterStudy)
+    );
     fog.color.setRGB(deepest.r, deepest.g, deepest.b);
     this.scene.fog = fog;
 
@@ -4712,6 +4749,18 @@ export class PerspectiveView {
       projectionScalePx,
       pixelRatio
     );
+    // The study's near cloud wraps on the eye in orbit and flight alike: the
+    // parallax it is for is the eye's, wherever the focus is.
+    this.nearSnow?.update(
+      now,
+      this.camera.position,
+      this.camera.position.x,
+      this.camera.position.z,
+      this.waterReach,
+      this.waterDensity,
+      projectionScalePx,
+      pixelRatio
+    );
     // Not the water, but it swims in it: the stipple fades with the same
     // reach and sizes its dots on the same projection scale as the snow.
     this.life.update({
@@ -4773,9 +4822,9 @@ export class PerspectiveView {
     // (water.ts), so a wheel notch moves it and it is cheapest to settle once
     // a frame rather than to recompute it in each of the four places that
     // read it.
-    this.waterReach = waterReachM(this.distance);
+    this.waterReach = waterReachM(this.distance, this.waterStudy);
     if (this.scene.fog instanceof FogExp2) {
-      this.scene.fog.density = fogDensityFor(this.distance, this.waterDensity);
+      this.scene.fog.density = fogDensityFor(this.distance, this.waterDensity, this.waterStudy);
     }
     // The arch study's distance grade breathes with the same dolly (§11).
     if (ARCH_STUDY_ON) setDistanceGrade(this.distance, this.waterDensity);
@@ -5199,6 +5248,10 @@ export class PerspectiveView {
       // at different zooms are two different waters.
       waterReachM: Math.round(this.waterReach),
       waterDensity: Number(this.waterDensity.toFixed(2)),
+      // The particulate this frame: the motes each cloud is drawing, zero for
+      // a cloud the eye has climbed out of. The study's near cloud is `near`;
+      // a shipped map reports none (docs/free-water-slice.md §9).
+      snow: { far: this.snow.motes, near: this.nearSnow?.motes ?? 0 },
       hullScale: Number(this.drawScale.toFixed(2)),
       // The whole last frame's, every pass summed: info is reset once a frame
       // (renderFrame), not on every render(). `passes` names the renders.

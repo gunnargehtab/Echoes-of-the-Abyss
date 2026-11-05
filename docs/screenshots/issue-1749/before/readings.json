@@ -1,0 +1,200 @@
+{
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "software": true,
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "reducedMotion": false,
+  "readings": [
+    {
+      "name": "home",
+      "look": "free-water",
+      "pitchDeg": 55,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 542,
+        "zM": 1958,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 540,
+        "zM": 3451,
+        "depthM": -9090
+      },
+      "distance": 2600,
+      "waterReachM": 8320,
+      "calls": 43,
+      "triangles": 405088,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-stand": 40,
+        "env-kelp-cluster": 16,
+        "env-deep-fish": 8,
+        "env-rim-crab": 16,
+        "env-shoal-fry": 96,
+        "env-outer-fish": 8
+      },
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "gpuTimer": "software"
+    },
+    {
+      "name": "garden-close",
+      "look": "free-water",
+      "pitchDeg": 12,
+      "yawDeg": 90,
+      "focus": {
+        "xM": 1875,
+        "zM": 1125,
+        "depthM": 275
+      },
+      "eye": {
+        "xM": 2120,
+        "zM": 1125,
+        "depthM": 40
+      },
+      "distance": 250,
+      "waterReachM": 900,
+      "calls": 29,
+      "triangles": 402015,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-stand": 40,
+        "env-kelp-cluster": 16,
+        "env-deep-fish": 8,
+        "env-rim-crab": 16,
+        "env-shoal-fry": 96,
+        "env-outer-fish": 8
+      },
+      "passes": [
+        "canvas",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "gpuTimer": "software"
+    },
+    {
+      "name": "low",
+      "look": "free-water",
+      "pitchDeg": 12,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": 850
+      },
+      "eye": {
+        "xM": 2000,
+        "zM": 3564,
+        "depthM": -677
+      },
+      "distance": 1600,
+      "waterReachM": 5120,
+      "calls": 24,
+      "triangles": 397119,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-stand": 40,
+        "env-kelp-cluster": 16,
+        "env-deep-fish": 8,
+        "env-rim-crab": 16,
+        "env-shoal-fry": 96,
+        "env-outer-fish": 8
+      },
+      "passes": [
+        "canvas",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "gpuTimer": "software"
+    },
+    {
+      "name": "low-panned",
+      "look": "free-water",
+      "pitchDeg": 12,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2200,
+        "zM": 2000,
+        "depthM": 850
+      },
+      "eye": {
+        "xM": 2202,
+        "zM": 3565,
+        "depthM": -671
+      },
+      "distance": 1600,
+      "waterReachM": 5120,
+      "calls": 24,
+      "triangles": 397119,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-stand": 40,
+        "env-kelp-cluster": 16,
+        "env-deep-fish": 8,
+        "env-rim-crab": 16,
+        "env-shoal-fry": 96,
+        "env-outer-fish": 8
+      },
+      "passes": [
+        "canvas",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "gpuTimer": "software"
+    },
+    {
+      "name": "survey",
+      "look": "free-water",
+      "pitchDeg": 88,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 2012,
+        "zM": 2369,
+        "depthM": -43036
+      },
+      "distance": 10000,
+      "waterReachM": 32000,
+      "calls": 44,
+      "triangles": 405088,
+      "propTriangles": 387952,
+      "instances": {
+        "env-kelp-stand": 40,
+        "env-kelp-cluster": 16,
+        "env-deep-fish": 8,
+        "env-rim-crab": 16,
+        "env-shoal-fry": 96,
+        "env-outer-fish": 8
+      },
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "sway": "on",
+      "gpuTimer": "software"
+    }
+  ]
+}

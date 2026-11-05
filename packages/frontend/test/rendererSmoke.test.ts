@@ -52,6 +52,8 @@ import {
 import { FOCUS_DRAG_M_PER_PX, FOCUS_STEP_M, HOME_PITCH_DEG } from '../src/game/PerspectiveView.ts';
 import { swayAt } from '../src/game/cameraSway.ts';
 import type { MovePreviewReading } from '../src/game/movePreview.ts';
+import type { WorldLook } from '../src/game/tutorialLook.ts';
+import { STUDY_SNOW_NEAR_COUNT, waterReachM } from '../src/game/water.ts';
 import { readsDisplayVeil, VEIL_SHADE_ATTRIBUTE } from '../src/game/veilShading.ts';
 import { VEIL_FLOOR_RGB } from '../src/game/acousticVeil.ts';
 import { HIT_PARTICLES_MIN } from '../src/game/hullHit.ts';
@@ -366,6 +368,7 @@ async function boot(
   options: {
     webgl?: boolean;
     controlsStudy?: boolean;
+    look?: WorldLook;
     gpu?: Partial<Pick<HeadlessGL, 'timer' | 'rendererName'>>;
   } = {}
 ): Promise<Booted> {
@@ -376,7 +379,7 @@ async function boot(
   const chartHost = createHost(1280, 720);
   const { callbacks, log } = recordingShell();
 
-  const conn = new PerspectiveView();
+  const conn = new PerspectiveView(options.look);
   const mounted = conn.mount(
     connHost as unknown as HTMLElement,
     () => {
@@ -2192,6 +2195,70 @@ describe('renderer smoke test: the water', () => {
       assert.ok(fog.density > 0, 'and it comes back');
     } finally {
       world.teardown();
+    }
+  });
+
+  it('gives the free-water study its reach and a second cloud on the eye, and no other look', async () => {
+    // docs/free-water-slice.md §9, "Water medium": a study-only reach curve
+    // and denser, nearer snow with parallax at the eye. Both ride the look,
+    // so a shipped map gets neither.
+    const snowClouds = (scene: Scene | null): Points[] => {
+      assert.ok(scene !== null);
+      const found: Points[] = [];
+      scene.traverse((object) => {
+        if (object instanceof Points && object.geometry.getAttribute('snowSize') !== undefined) {
+          found.push(object);
+        }
+      });
+      return found;
+    };
+    const probe = () =>
+      (
+        globalThis as unknown as {
+          window: {
+            __perspectiveProbe: () => {
+              distance: number;
+              waterReachM: number;
+              snow: { far: number; near: number };
+            };
+          };
+        }
+      ).window.__perspectiveProbe();
+
+    const shipped = await boot();
+    try {
+      shipped.frame(3);
+      assert.equal(snowClouds(shipped.gl.lastScene).length, 1, 'one cloud on a shipped map');
+      const report = probe();
+      assert.equal(report.snow.near, 0);
+      assert.equal(report.waterReachM, Math.round(waterReachM(report.distance)));
+    } finally {
+      shipped.teardown();
+    }
+
+    const study = await boot({ look: 'free-water' });
+    try {
+      study.frame(3);
+      const clouds = snowClouds(study.gl.lastScene);
+      assert.equal(clouds.length, 2, 'the study draws a second cloud');
+      const report = probe();
+      assert.equal(report.snow.near, STUDY_SNOW_NEAR_COUNT);
+      assert.equal(report.waterReachM, Math.round(waterReachM(report.distance, true)));
+      assert.ok(report.waterReachM < waterReachM(report.distance), 'and sees less far');
+      // In orbit the shipped cloud wraps on the focus and the study's on the
+      // eye: the one is the water the player looks at, the other the water
+      // that parallaxes past the lens.
+      const eye = study.conn.eyePosition;
+      const anchors = clouds.map(
+        (cloud) => (cloud.material as ShaderMaterial).uniforms.uFocus!.value
+      );
+      // `eyePosition` reports plan x and plan y, the world's z.
+      const onEye = anchors.filter((a) => a.x === eye.x && a.y === eye.y);
+      assert.equal(onEye.length, 1, 'exactly one cloud is anchored on the eye');
+      const fog = study.gl.lastScene?.fog as FogExp2;
+      assert.ok(Math.abs(fog.density - 1 / waterReachM(report.distance, true)) < 1e-9);
+    } finally {
+      study.teardown();
     }
   });
 });
