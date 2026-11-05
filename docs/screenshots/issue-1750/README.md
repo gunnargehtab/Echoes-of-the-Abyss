@@ -55,7 +55,8 @@ the bake's own colour. Its stone fill stays the cell's, which is what admits no 
 where the coastline ink says the stone begins, so the fill still marks the cell edge; the
 rim and the lee are one gain of the rock's share, darkest where the lip meets the foot, so
 the shading no longer does. Along the jambs, where the share steps on the edge, the rim keeps
-its plain treatment against the roof's own.
+its plain treatment against the roof's own; the passage floor under the roof carries no
+lee there under the study.
 
 ## The frames
 
