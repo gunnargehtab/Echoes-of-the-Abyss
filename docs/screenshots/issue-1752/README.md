@@ -14,8 +14,8 @@ opening are unchanged.
 ## Reproduce
 
 Run the dev servers, then the frames module. It shoots the frame the study opens on with
-no camera call, then Home from it, then FLIGHT and NAV from the opening pose set again,
-then the four §9 poses set explicitly, and writes the probe's reading of each frame beside
+no camera call, then Home from it, then FLIGHT from the opening pose set again and NAV
+from the Home pose that leaving flight leaves, then the four §9 poses set explicitly, and writes the probe's reading of each frame beside
 it, with where the panel, the legend and the hint line stand in the window:
 
 ```bash
@@ -33,7 +33,7 @@ CONTROL=1 node .claude/skills/run-game/scripts/drive.mjs \
 ```
 
 `before/` and `control-before/` are the same runs against the base commit (c3cef4927).
-The after, reduced-motion, 154% and control sets were captured at 4919493d4; the first after set, at c89f9bd1f, had the legend over the hint's end above about 122% UI scale, which round 1's critic measured, and was replaced.
+The after, reduced-motion and control sets were captured at 4919493d4, and the 154% set at 1dc01e780, which gave the legend its own path to the hint line and changes no other frame; the first after set, at c89f9bd1f, had the legend over the hint's end above about 122% UI scale, which round 1's critic measured, and was replaced.
 
 ## The frames
 
@@ -44,7 +44,7 @@ The after, reduced-motion, 154% and control sets were captured at 4919493d4; the
 | Home, the Home key pressed on the opening frame | [before](before/04-home.png) | [after](after/02-home.png) | North, 55° and the seabed, keeping the 1,200 m dolly and the place, as Home keeps any |
 | Flight, F8 from the opening pose | [before](before/02-flight.png) | [after](after/03-flight.png) | Entry takes the command focus, since the orbit eye is above the Lid: EYE 300 m, bearing 34°, the garden ahead. The readout stands with its buttons beside the command block |
 | NAV, F9 after leaving flight | [before](before/03-nav.png) | [after](after/04-nav.png) | The status line and the twelve motion buttons, grown upward from the same foot and exactly the command block's width |
-| Opening at 154% UI scale, the most a 900 px window holds | none: the legend was boxed over the top centre | [scale-154](scale-154/01-opening.png) | The hint line trimmed to "LMB drag select · MMB pan · L+R drag depth", ending at x=783, and the legend from x=985: the hint yields to the panel on its row rather than running under it |
+| Opening at 154% UI scale, the most a 900 px window holds | none: the legend was boxed over the top centre | [scale-154](scale-154/01-opening.png) | The hint line trimmed to "LMB drag select · MMB pan · L+R drag depth", ending at x=783, and the legend from x=985: the hint yields to the panel on its row rather than running under it. The larger console puts the hulls on the hint row: one stern behind the hint's first clause, one at the panel's foot, the scout between |
 | Garden close, 1,875 / 1,125, 250 m, 12°, 275 m, `yawDeg` 90 | [before](before/06-garden-close.png) | [after](after/06-garden-close.png) | One forest on both flanks of a bare clearing (#1751); the panel and the legend in their places |
 | Low, 2,000 / 2,000, 1,600 m, 12°, 850 m | [before](before/07-low.png) | [after](after/07-low.png) | Water between the eye and the floor, the bowl's edges eroded (#1749, #1750) |
 | Survey, 2,000 / 2,000, 10,000 m, 88°, seabed | [before](before/08-survey.png) | [after](after/08-survey.png) | Decoration below tactical ink, the ink unchanged |
@@ -56,7 +56,7 @@ not yet the one the owner re-accepts on #1694: #1752 stays open, and once #1753 
 recaptures the four frames as the last child before #1754, which keeps §9's order and its
 "#1752 captures all four" true without moving a duty onto #1753.
 The opening dolly leaves the orbit eye 1,110 m above the Lid, as the Home frame's eye is
-8,900 m above it: with a 40° field of view and the console over the bottom quarter of the
+about 9,100 m above it: with a 40° field of view and the console over the bottom quarter of the
 window, a nearer eye at 15° loses the hulls under the console, and a focus nearer the
 centroid lifts them to the centre, so the offset and the dolly are TUNABLEs chosen here.
 
@@ -77,9 +77,12 @@ left edge from `consoleBlocks`, which the console draws from too: at 154% the HU
 units wide, the fleet and production blocks are dropped, and the panel moves with the
 block. Its foot stands on `--hint-row-units`, where the hint line's row begins, so the hulls
 of the opening frame sit above it; the corvette's loudness ring at the right edge of that
-frame touches the panel's corner. The legend is a floating panel to `panelRects.ts`, and
-the hint trims a clause at a time to clear it, which `rendererSmoke.test.ts` holds on the
-real class with a rect on the row and one off it.
+frame touches the panel's corner. The legend reaches the renderer by its own path
+(`HINT_ROW_PANELS` in `panelRects.ts`, `setHintRowPanels`), and the hint trims a clause at
+a time to clear it; the floating panels over the water are not read, since the mission
+log's foot stands 8 units into the row and a hint on a mission map is not the study's to
+cut. `rendererSmoke.test.ts` holds it on the real class: the floating panels take nothing,
+a hint-row rect off the row takes nothing, one on the row trims from the end with a gap.
 
 ## What the probe read
 
