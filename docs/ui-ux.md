@@ -411,6 +411,7 @@ Not a map with markers on it. A scope.
 - **Returns** — same tier fidelity as the world view, scaled down. A Tier-1 haze on the scope is a large soft smear, and a player must not be able to click one to select it.
 - **Echo Marks** — a separate dimmer layer, drawn beneath returns, in a colder hue. Past and present must never share an ink.
 - **The camera box is the compass.** The scope stays north-up, always; the world camera does not ([free-camera.md](free-camera.md)). So the box — the view's true ground footprint, a trapezoid — turns with the camera, and its far edge is drawn heavier to say which way that is. A view that runs past the map's edge is cut there as a polygon, never clamped corner by corner, so the box keeps its true sides and stops at the frame; when the far edge is off the map, the heavy edge is the box's side on the rim the view leaves by (#1558). This is where the correspondence the old yaw lock enforced now lives: the player reads their heading off the instrument built for measuring, rather than off a frame that can no longer be assumed.
+- **The section scope is the study's second reading.** In the free-water study only, a vertical slice along the camera's heading stands beside this scope, in the same ink rules: the plan scope picks a position, the section picks a depth (§9, "Vertical command").
 - **No fog.** There is no explored/unexplored state anywhere in this game. Terrain is always fully drawn; what is hidden is *occupancy*, and occupancy is drawn only as returns. Any "unexplored black" would be the wrong game. §4.5's acoustic veil is not a counter-example and is not drawn here: it is present tense rather than memory, it drains the ground rather than withholding it, and it stays in the world view — this instrument's promise is own force at full clarity, and a mark's own size already says how much to trust it.
 
 Implemented: terrain wash, tier-fidelity returns, the sweep, the two labelled range rings,
@@ -703,6 +704,44 @@ descent SIG, silence-breaking and pressure risk. Its tether runs to the ground.
 These additions were recommended in
 [the #1705 contract](free-water-slice.md); the owner's approval was of the experience,
 not this particular input.
+
+**Vertical command, in the crater study only** (`?study=free-water`,
+[free-water-slice.md](free-water-slice.md) §9, "Vertical command", #1753). A
+three-dimensional order is two two-dimensional readings, and four instruments carry the
+vertical one without flight:
+
+- **The command plane** is the lead selected hull's depth, which MOVE 3D arms with; with
+  nothing selected, a raised focus's depth; with the focus on the seabed there is no plane
+  ([free-camera.md](free-camera.md) §4).
+- **Stalks.** Every own hull and every Tier 3+ contact draws a hairline from its depth to
+  the plane with a foot ring on it: solid above the plane, dashed below, in the navy's own
+  ink, so the side reads without colour (§11). A Tier 2 contact carries no depth and has no
+  stalk; none is inferred.
+- **The section scope** stands beside the north-up scope in the console, a block of the
+  scope's own size that never yields, so at 1,440 px it costs the fleet block. It is a
+  vertical slice along the camera's horizontal heading through the command focus, as wide
+  as the scope's range, forward to the right, its heading read out as a compass bearing.
+  It draws the public floor and roof profile off the terrain payload, the band hairlines
+  at 400 m and 1,800 m, the Lid and the thermocline in the ribbon's inks (§8), the command
+  plane, own hulls and structures, Tier 3+ contacts at their depths, and a Tier 2 contact
+  as a tick down its public water interval, marked `DEPTH UNKNOWN`. Every own hull and
+  contact is placed by its distance along the heading; the ground is the slice through the
+  focus alone, so a hull over other ground can stand off its own floor there. In flight at
+  a vertical gaze it holds the last heading and says `HELD`.
+- **Depth picking.** With MOVE 3D pinned, a press or scrub on the section sets the
+  destination depth: the alternate depth picker, as the north-up scope is the alternate
+  plan picker. Armed but unpinned, the press refuses with `PIN POSITION FIRST`; the
+  preview's rules above apply unchanged.
+- **Edge marks.** An earned contact outside the view marks the frame's edge, inset inside
+  the world view between the top strip and the console, with a chevron in its ink. A
+  Tier 3+ contact says `ABOVE` or `BELOW` with its metres to the plane, `LEVEL` within the
+  arrival epsilon, or, with no plane, the depth it already carries; a Tier 2 contact marks
+  its bearing only; a Tier 1 contact marks nothing, since its report carries the listener's
+  own position. Only a contact in front of the eye is marked: nothing behind the eye is
+  mirrored.
+
+Everything drawn comes from own state, public terrain or a contact the client received;
+no new order, wire field or simulation change. Shipped maps draw none of it.
 
 ### The one-handed layout
 

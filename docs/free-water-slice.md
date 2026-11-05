@@ -674,6 +674,14 @@ plane, so depth reads at any camera angle without flight.
 No new order, wire field or simulation change. Everything drawn comes from own state,
 public terrain or a contact the client received.
 
+Shipped in #1753 as [ui-ux.md](ui-ux.md) §9 records it, with two calls taken in the open
+there: the section scope is a console block beside the plan scope, of the scope's own size,
+which at 1,440 px costs the fleet block; and every own hull and contact is placed on the
+section by its distance along the heading, while the ground drawn is the slice through
+the focus alone. The band is `STUDY_PITCH_MIN_DEG` in `PerspectiveView.ts`
+([free-camera.md](free-camera.md) §4, "Looking up in the study"), and the instruments'
+frames are in `docs/screenshots/issue-1753/`.
+
 ### Toward a vertical multiplayer match (#1754)
 
 This is the author's design for the owner's end goal, pending review: a match where
