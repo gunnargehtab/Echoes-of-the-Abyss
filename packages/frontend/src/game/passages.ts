@@ -88,7 +88,8 @@ export interface Passage {
   /** Its roofed cells, ascending. */
   cells: number[];
   /**
-   * The line the map marks it with, mouth to mouth along its longer axis.
+   * The line the map marks it with, mouth to mouth along its longer axis
+   * (or, for a square one, between its mouths, east to west when they tie).
    * One point per slice across that axis, at the mean of the slice's cell
    * centres, so a passage that bends is followed rather than chorded; the
    * two ends sit on the passage's outer edges, where the mouths are.
@@ -143,7 +144,11 @@ export function roofedPassages(terrain: Terrain): Passages {
 /**
  * The route through one passage. The longer side of its bounding box is the
  * way through: a tunnel is longer than it is wide, which is what makes it a
- * tunnel. A square one runs east to west, since it has no better answer.
+ * tunnel. A square one has no longer side, so its mouths decide (#1759): it
+ * runs between the edges that open on deeper water, not across the ones
+ * closed against the ground. The free-water cut is 2 × 2 and walled east and
+ * west, and an east–west line drew it as the wall's own crossing. Mouths
+ * that tie leave it east to west, since then nothing says otherwise.
  */
 function routeOf(terrain: Terrain, cells: readonly number[]): RoutePoint[] {
   const { cols, cellM } = terrain;
@@ -159,7 +164,9 @@ function routeOf(terrain: Terrain, cells: readonly number[]): RoutePoint[] {
     row0 = Math.min(row0, row);
     row1 = Math.max(row1, row);
   }
-  const alongX = col1 - col0 >= row1 - row0;
+  const spanX = col1 - col0;
+  const spanY = row1 - row0;
+  const alongX = spanX !== spanY ? spanX > spanY : mouthsAcross(terrain, cells) !== 'north-south';
 
   // Slice by slice along the axis: the mean of the cross-axis cell centres.
   const slices = new Map<number, { sum: number; n: number }>();
@@ -184,6 +191,26 @@ function routeOf(terrain: Terrain, cells: readonly number[]): RoutePoint[] {
   for (const key of keys) route.push(point(key + 0.5, crossAt(key)));
   route.push(point(keys[keys.length - 1]! + 1, crossAt(keys[keys.length - 1]!)));
   return route;
+}
+
+/**
+ * Which pair of sides holds more of a passage's mouths: its north and south
+ * edges, its west and east ones, or neither, when they hold as many.
+ */
+function mouthsAcross(
+  terrain: Terrain,
+  cells: readonly number[]
+): 'north-south' | 'west-east' | 'neither' {
+  const member = new Set(cells);
+  let northSouth = 0;
+  let westEast = 0;
+  for (const index of cells) {
+    const { north, south, west, east } = edgesOf(terrain, member, index);
+    northSouth += Number(north === 'lintel') + Number(south === 'lintel');
+    westEast += Number(west === 'lintel') + Number(east === 'lintel');
+  }
+  if (northSouth === westEast) return 'neither';
+  return northSouth > westEast ? 'north-south' : 'west-east';
 }
 
 /**
