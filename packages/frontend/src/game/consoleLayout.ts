@@ -25,6 +25,8 @@ export const BLOCK_GAP = 8;
  */
 export const BLOCK_W = {
   scope: 170,
+  /** The free-water study's section scope, a square beside the plan scope. */
+  section: 170,
   selection: 300,
   fleet: 230,
   commands: 380,
@@ -35,14 +37,21 @@ export interface ConsoleBlocks {
   y: number;
   h: number;
   scope: { x: number; w: number };
+  /** Beside the scope, in the free-water study only (verticalCommand.ts). */
+  section?: { x: number; w: number };
   commands: { x: number; w: number };
   selection?: { x: number; w: number };
   fleet?: { x: number; w: number };
   production?: { x: number; w: number };
 }
 
-/** The blocks a HUD `width` by `height` px holds, and where each stands. */
-export function consoleBlocks(width: number, height: number): ConsoleBlocks {
+/**
+ * The blocks a HUD `width` by `height` px holds, and where each stands.
+ * `section` adds the free-water study's section scope beside the plan scope
+ * (docs/free-water-slice.md §9, "Vertical command"): a second instrument that
+ * never goes, so at a given width it costs the blocks that do.
+ */
+export function consoleBlocks(width: number, height: number, section = false): ConsoleBlocks {
   const y = height - CONSOLE_HEIGHT + TAB_HEIGHT + 4;
   const h = CONSOLE_HEIGHT - TAB_HEIGHT - 4 - CONSOLE_PAD;
   const left = CONSOLE_PAD + 2;
@@ -68,7 +77,8 @@ export function consoleBlocks(width: number, height: number): ConsoleBlocks {
   // test below adds its own cost to theirs. Testing a block against the room
   // left after the others let the fleet come back once selection had gone
   // (#957), and gave production the longest life of the three.
-  const fixed = BLOCK_W.scope + BLOCK_GAP + BLOCK_W.commands;
+  const fixed =
+    BLOCK_W.scope + BLOCK_GAP + BLOCK_W.commands + (section ? BLOCK_GAP + BLOCK_W.section : 0);
   const room = right - left - fixed;
   const selectionCost = BLOCK_GAP + BLOCK_W.selection;
   const productionCost = BLOCK_GAP + BLOCK_W.productionMin;
@@ -80,6 +90,9 @@ export function consoleBlocks(width: number, height: number): ConsoleBlocks {
   let x = left;
   const scope = { x, w: BLOCK_W.scope };
   x += scope.w + BLOCK_GAP;
+
+  const sectionBlock = section ? { x, w: BLOCK_W.section } : undefined;
+  if (sectionBlock !== undefined) x += sectionBlock.w + BLOCK_GAP;
 
   const selection = wantsSelection ? { x, w: BLOCK_W.selection } : undefined;
   if (selection !== undefined) x += selection.w + BLOCK_GAP;
@@ -95,5 +108,5 @@ export function consoleBlocks(width: number, height: number): ConsoleBlocks {
   // purpose: the other four blocks are as wide as their content (`BLOCK_W`),
   // and giving the room to one would only pad it.
   const production = wantsProduction ? { x, w: right - x } : undefined;
-  return { y, h, scope, commands, selection, fleet, production };
+  return { y, h, scope, section: sectionBlock, commands, selection, fleet, production };
 }

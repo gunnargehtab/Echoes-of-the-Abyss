@@ -172,6 +172,26 @@ The scope clips the forward ground footprint against the frustum and map; when i
 has none, only the eye and orientation cue remain. Audio uses the final rolled basis
 for earned bearings, never for a directionless contact.
 
+### Looking up in the study
+
+In the free-water study only (`?study=free-water`, [free-water-slice.md](free-water-slice.md)
+§9, "Vertical command"), the orbit's pitch band widens to **−60°–88°**, so the commander can
+look up at the water over the fleet while staying in the orbit around its focus, without
+entering flight. Shipped maps keep 10°–88°, `Home` still restores 55°, the focus plane and
+its orders are unchanged, and the one hard clamp holds: the eye stays its 25 m above the
+local floor by being raised, never by shortening the dolly, so the band below level is only
+reachable whole where the floor lies well below the focus. For a 300 m focus that is over
+the crater's bowl, pocket and exit pool; over the garden's 400 m floor a 300 m focus allows
+a few degrees of look-up. The band stops at 10° above because range rings turn edge-on
+there; within 10° of level they stay that unreadable, so the study's section scope
+([ui-ux.md](ui-ux.md) §9) carries range in that band, as a scale along its top edge: a tick
+every 500 m from the focus along the heading, and each of the ping's two radii its span
+reaches, in that ring's ink. The span is the plan scope's, the map's longer side centred on
+the focus, so on the 4 km crater the slice runs ±2,000 m, reaches the 900 m radius and not
+the 2,400 m one. The band's floor is
+`STUDY_PITCH_MIN_DEG` in `PerspectiveView.ts`, switched on the view's look as the study's
+water is, so the two cannot disagree.
+
 ## 5. What the yaw lock protected, and where each protection goes
 
 The old rule carried four loads. Each moves; none is dropped.

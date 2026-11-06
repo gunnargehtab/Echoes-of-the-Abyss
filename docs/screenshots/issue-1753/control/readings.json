@@ -1,0 +1,131 @@
+{
+  "dpr": 1,
+  "readings": [
+    {
+      "name": "opening",
+      "look": "standard",
+      "pitchDeg": 55,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 904,
+        "zM": 1136,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 901,
+        "zM": 2628,
+        "depthM": -7882
+      },
+      "distance": 2600,
+      "flight": {
+        "flying": false,
+        "navigating": false,
+        "depthM": -7882,
+        "bearingDeg": 0,
+        "upX": 0,
+        "upY": -0.5735764363510462,
+        "inverted": false,
+        "blocked": false
+      },
+      "ownCentre": {
+        "x": 969.491933186849,
+        "z": 1136.0687052408855
+      },
+      "waterReachM": 8320,
+      "calls": 74,
+      "triangles": 160006,
+      "props": 363,
+      "propTriangles": 104958,
+      "sway": "on",
+      "dom": {
+        "uiScale": "1",
+        "preview": null,
+        "previewDepth": null
+      }
+    },
+    {
+      "name": "low",
+      "look": "standard",
+      "pitchDeg": 12,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": 850
+      },
+      "eye": {
+        "xM": 2001,
+        "zM": 3564,
+        "depthM": -674
+      },
+      "distance": 1600,
+      "flight": {
+        "flying": false,
+        "navigating": false,
+        "depthM": -674,
+        "bearingDeg": 0,
+        "upX": 0,
+        "upY": -0.9781476007338057,
+        "inverted": false,
+        "blocked": false
+      },
+      "ownCentre": {
+        "x": 972.730946858724,
+        "z": 1144.8296305338542
+      },
+      "waterReachM": 5120,
+      "calls": 75,
+      "triangles": 160006,
+      "props": 363,
+      "propTriangles": 104958,
+      "sway": "on",
+      "dom": {
+        "uiScale": "1",
+        "preview": null,
+        "previewDepth": null
+      }
+    },
+    {
+      "name": "survey",
+      "look": "standard",
+      "pitchDeg": 88,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 2001,
+        "zM": 2367,
+        "depthM": -42801
+      },
+      "distance": 10000,
+      "flight": {
+        "flying": false,
+        "navigating": false,
+        "depthM": -42801,
+        "bearingDeg": 0,
+        "upX": 0,
+        "upY": -0.03489949670250103,
+        "inverted": false,
+        "blocked": false
+      },
+      "ownCentre": {
+        "x": 990.3791198730469,
+        "z": 1160.0685017903645
+      },
+      "waterReachM": 32000,
+      "calls": 76,
+      "triangles": 163878,
+      "props": 363,
+      "propTriangles": 104958,
+      "sway": "on",
+      "dom": {
+        "uiScale": "1",
+        "preview": null,
+        "previewDepth": null
+      }
+    }
+  ]
+}

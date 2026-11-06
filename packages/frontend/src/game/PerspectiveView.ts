@@ -315,6 +315,15 @@ export function openingFrame(widthM: number, heightM: number): CameraFrame {
  */
 const PITCH_MIN_DEG = 10;
 const PITCH_MAX_DEG = 88;
+/**
+ * SPEC — docs/free-camera.md §4, "Looking up in the study": the free-water
+ * study's floor, so the commander can look up at the water over the fleet
+ * from inside the orbit (docs/free-water-slice.md §9, "Vertical command").
+ * Shipped maps keep `PITCH_MIN_DEG`: the study is the one look that widens
+ * it, and the eye clamp still raises the eye over the floor, so the band is
+ * only reachable whole where the floor lies well below the focus.
+ */
+const STUDY_PITCH_MIN_DEG = -60;
 
 /**
  * SPEC — docs/free-camera.md §4, the one hard clamp on the rig: metres of
@@ -2237,6 +2246,15 @@ export class PerspectiveView {
   }
 
   /**
+   * The focus's depth only while it is raised into the column, metres: the
+   * command plane with nothing selected (verticalCommand.ts). Null on the
+   * seabed, where there is no plane (docs/free-camera.md §4).
+   */
+  raisedFocusDepthM(): number | null {
+    return this.focusDepthM;
+  }
+
+  /**
    * Home — docs/free-camera.md §4: north, 55°, focus back on the seabed.
    *
    * The dolly and the plan position are deliberately left alone. A player who
@@ -2370,8 +2388,13 @@ export class PerspectiveView {
     return x >= 0 && y >= 0 && x < cols * cellM && y < rows * cellM ? { x, y } : null;
   }
 
+  /** The band's floor, degrees: the study's below level, the SPEC's elsewhere. */
+  private pitchMinDeg(): number {
+    return this.look === 'free-water' ? STUDY_PITCH_MIN_DEG : PITCH_MIN_DEG;
+  }
+
   private setPitch(radians: number): void {
-    const min = (PITCH_MIN_DEG * Math.PI) / 180;
+    const min = (this.pitchMinDeg() * Math.PI) / 180;
     const max = (PITCH_MAX_DEG * Math.PI) / 180;
     this.pitch = Math.min(max, Math.max(min, radians));
     this.applyCamera();
@@ -2451,7 +2474,7 @@ export class PerspectiveView {
     this.clampTarget();
     this.distance = Math.max(250, frame.distanceM);
     this.yaw = (frame.yawDeg * Math.PI) / 180;
-    const pitch = Math.min(PITCH_MAX_DEG, Math.max(PITCH_MIN_DEG, frame.pitchDeg));
+    const pitch = Math.min(PITCH_MAX_DEG, Math.max(this.pitchMinDeg(), frame.pitchDeg));
     this.pitch = (pitch * Math.PI) / 180;
     this.applyCamera();
   }
@@ -4938,7 +4961,9 @@ export class PerspectiveView {
     } else {
       const focusDepthM = this.nearSnowDepthM ?? STUDY_SNOW_NEAR_SEABED_FOCUS_M;
       eyeY = -focusDepthM * DEPTH_VISUAL_M_PER_M + Math.sin(this.pitch) * this.distance;
-      if (eyeY <= 0) return 0;
+      // Level or looking up, the sight line never enters the water from the
+      // air: the study's band reaches below level (#1753).
+      if (eyeY <= 0 || this.pitch <= 0) return 0;
       cot = 1 / Math.tan(this.pitch);
     }
     return eyeY * cot * STUDY_SNOW_NEAR_SPREAD_PER_ENTRY_M;
