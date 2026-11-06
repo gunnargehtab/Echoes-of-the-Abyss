@@ -283,7 +283,7 @@ than moved from it, by the owner's calls of that day:
   frame is nearer than about 550 m, at the console's edge, where a 4 m fish would draw
   9 px; ahead of the hulls, 900 m and more out, it draws about 5 px, and a school placed
   there drew nothing visible. The pocket shows only at the frame's right edge, where two
-  of the low pose's deep-fish patches read as photophore pinpricks about 2.6 km out; no
+  of the low pose's deep-fish patches read as photophore pinpricks 2.2 to 2.5 km out; no
   body reads there. A larger animal is `shape-work`, and a nearer opening is §9's call;
   neither is taken here.
 - **Survey** keeps decoration below tactical ink; the new deep-fish patches add faint

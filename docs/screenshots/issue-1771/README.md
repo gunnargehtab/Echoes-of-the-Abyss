@@ -41,7 +41,7 @@ the GPU frames carry none.
 
 | Row | Before | After | Reads as |
 | --- | --- | --- | --- |
-| Opening pose, 709 / 1,710, 1,200 m, 15°, 300 m, `yawDeg` −34 | [before](before/02-opening-pose.png) | [after](after/02-opening-pose.png) | Nothing placed for it: no water in frame is nearer than about 550 m to the eye, and no body draws wider than 2.8 px. Two of the low pose's deep-fish patches now show at the right edge as photophore pinpricks, about 2.6 km out |
+| Opening pose, 709 / 1,710, 1,200 m, 15°, 300 m, `yawDeg` −34 | [before](before/02-opening-pose.png) | [after](after/02-opening-pose.png) | Nothing placed for it: no water in frame is nearer than about 550 m to the eye, and no body draws wider than 2.8 px. Two of the low pose's deep-fish patches now show at the right edge as photophore pinpricks, 2.2 to 2.5 km out |
 | Garden close, 1,875 / 1,125, 250 m, 12°, 275 m, `yawDeg` 90 | [before](before/03-garden-close.png) | [after](after/03-garden-close.png) | Before: four crabs at 5 px and 24 fry under a pixel. After: four outer fish crossing the clearing, a fry school as a knot of small fish in the lower half, and crabs as specks on the floor |
 | Garden close, ten seconds later | [before](before/04-garden-close-later.png) | [after](after/04-garden-close-later.png) | The schools and the crabs have moved along their loops; the outer fish now face the eye |
 | Low, 2,000 / 2,000, 1,600 m, 12°, 850 m | [before](before/05-low.png) | [after](after/05-low.png) | Before: one photophore pinprick at the console's edge. After: three rings of photophore pinpricks along the pocket's north edge, above the camera panel |
