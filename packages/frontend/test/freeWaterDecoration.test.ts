@@ -221,7 +221,8 @@ describe('authored public decoration', () => {
     const gardenClose = pose(1875, 1125, 250, 90, 12, 275);
     const low = pose(2000, 2000, 1600, 0, 12, 850);
     const placements = freeWaterPlacements(terrain);
-    // Each patch §5 adds, the frame it is for, and how far out §5 says it reads.
+    // Each patch §5 adds, the frame it is for, and the farthest §5 places it from
+    // that frame's eye: 65 to 140 m, 185 to 385 m, 220 to 395 m, and about 2 km.
     const rows = [
       [
         'env-shoal-fry',
@@ -230,7 +231,7 @@ describe('authored public decoration', () => {
           [2010, 1160],
         ],
         gardenClose,
-        160,
+        140,
       ],
       [
         'env-outer-fish',
@@ -239,7 +240,7 @@ describe('authored public decoration', () => {
           [1780, 1080],
         ],
         gardenClose,
-        400,
+        385,
       ],
       [
         'env-rim-crab',
@@ -250,7 +251,7 @@ describe('authored public decoration', () => {
           [1760, 1200],
         ],
         gardenClose,
-        400,
+        395,
       ],
       [
         'env-deep-fish',
@@ -260,7 +261,7 @@ describe('authored public decoration', () => {
           [2350, 1650],
         ],
         low,
-        2200,
+        2100,
       ],
     ] as const;
     for (const [slug, centres, frame, reachM] of rows) {
@@ -276,6 +277,59 @@ describe('authored public decoration', () => {
           assert.ok(distance <= reachM, `${slug} of ${p.xM},${p.yM} at ${distance} m`);
         }
       }
+    }
+  });
+
+  it("holds every patch inside §5's plan radius and depth band, the whole body included", () => {
+    // §5's placement table, row by row: how far from its centre a body may
+    // stand and the depths it may span. A school's fish hold station off its
+    // loop, so a path's own radius no longer says the row's bound holds. The
+    // body's extent comes from Block 4's heights and §5's body axes.
+    const heightM: Record<string, number> = {
+      'env-rim-crab': 0.6,
+      'env-shoal-fry': 0.15,
+      'env-outer-fish': 1.69,
+      'env-deep-fish': 0.84,
+    };
+    const at = (x: number, y: number) => (p: { xM: number; yM: number }) =>
+      p.xM === x && p.yM === y;
+    const rows: {
+      slug: string;
+      of: (p: { xM: number; yM: number }) => boolean;
+      radiusM: number;
+      band: readonly [number, number] | null;
+    }[] = [
+      { slug: 'env-rim-crab', of: () => true, radiusM: 25, band: null },
+      { slug: 'env-shoal-fry', of: (p) => p.yM === 875, radiusM: 25, band: [250, 300] },
+      { slug: 'env-shoal-fry', of: at(2035, 1120), radiusM: 25, band: [105, 160] },
+      { slug: 'env-shoal-fry', of: at(2010, 1160), radiusM: 25, band: [120, 170] },
+      {
+        slug: 'env-outer-fish',
+        of: (p) => p.yM === 1750 || p.yM === 2500,
+        radiusM: 40,
+        band: [700, 1000],
+      },
+      {
+        slug: 'env-outer-fish',
+        of: (p) => at(1900, 1150)(p) || at(1780, 1080)(p),
+        radiusM: 45,
+        band: [200, 300],
+      },
+      { slug: 'env-deep-fish', of: () => true, radiusM: 25, band: [1900, 2100] },
+    ];
+    for (const p of freeWaterPlacements(ground())) {
+      if (p.motion === undefined) continue;
+      const matching = rows.filter((row) => row.slug === p.slug && row.of(p));
+      assert.equal(matching.length, 1, `${p.slug} of ${p.xM},${p.yM} has one §5 row`);
+      const row = matching[0]!;
+      const m = p.motion;
+      assert.ok(m.radiusM + propSpec(p.slug)!.footprintM / 2 <= row.radiusM, `${p.slug} plan`);
+      if (row.band === null || m.depthM === null) continue;
+      const deepest = m.depthM + m.depthSwingM + m.axisM / DEPTH_VISUAL_M_PER_M;
+      const shallowest =
+        m.depthM - m.depthSwingM - (heightM[p.slug]! - m.axisM) / DEPTH_VISUAL_M_PER_M;
+      assert.ok(deepest <= row.band[1], `${p.slug} of ${p.xM},${p.yM} reaches ${deepest} m`);
+      assert.ok(shallowest >= row.band[0], `${p.slug} of ${p.xM},${p.yM} rises to ${shallowest} m`);
     }
   });
 

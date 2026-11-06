@@ -142,7 +142,8 @@ export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false)
   // looks west along the clearing from 41 m deep: crabs on its floor from
   // about 220 m out, as near as the floor shows above the console; two fry
   // schools 65 to 140 m out, which only the shallower band reaches; and
-  // outer fish crossing 185 to 385 m out, where a 4 m body still reads.
+  // outer fish crossing 185 to 385 m out, the nearer school within the
+  // 300 m where a 4 m body reads as a fish.
   for (const [x, y] of [
     [1900, 1060],
     [1880, 1165],

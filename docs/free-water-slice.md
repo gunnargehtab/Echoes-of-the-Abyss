@@ -265,7 +265,7 @@ licensed bounds.
 **Life in the frames.** The owner's re-acceptance of 6 November 2026 found no crabs or
 fish in §9's four frames (#1771): #1713's patches lay where no pose reads a body of
 canonical size. Measured in the real client at 1,440 by 900, an outer fish reads as a
-fish out to about 300 m, 16 px and more, and is gone at 1,100 m; a fry school reads as
+fish out to about 300 m, 16 px and more, and is gone at 1,190 m; a fry school reads as
 a knot of fish within about 100 m and as a smudge at 150 m; a crab's metre-wide shell
 is a speck at 220 m; and the deep fish's photophores read as pinpricks at 2 km against
 the pocket. So each frame takes the life it can carry, added to #1713's list rather
@@ -279,12 +279,15 @@ than moved from it, by the owner's calls of that day:
 - **Low** looks into the pocket over the southern wall, and only its northern part
   clears the console, so its three new deep-fish patches stand along the north edge, as
   rings of photophore pinpricks.
-- **Opening** carries none. Its eye stands above the Lid, so no water in the frame is
-  nearer than about 550 m, at the console's edge, where a 4 m fish would draw 9 px;
-  ahead of the hulls, 900 m and more out, it draws about 5 px, and a school placed
-  there drew nothing visible. A larger animal is `shape-work`, and a nearer opening is
-  §9's call; neither is taken here.
-- **Survey** is unchanged: decoration stays below tactical ink.
+- **Opening** gets nothing of its own. Its eye stands above the Lid, so no water in the
+  frame is nearer than about 550 m, at the console's edge, where a 4 m fish would draw
+  9 px; ahead of the hulls, 900 m and more out, it draws about 5 px, and a school placed
+  there drew nothing visible. The pocket shows only at the frame's right edge, where two
+  of the low pose's deep-fish patches read as photophore pinpricks about 2.6 km out; no
+  body reads there. A larger animal is `shape-work`, and a nearer opening is §9's call;
+  neither is taken here.
+- **Survey** keeps decoration below tactical ink; the new deep-fish patches add faint
+  pinpricks along the pocket's north edge.
 
 Life may cross the clearing row although plants may not: a crab, a fry or a fish is
 neither a tall prop nor a blocker (§3).
@@ -763,7 +766,8 @@ aims at its focus. For garden close, a pose along the clearing shows both flanks
 yaw-0 station looks north from over the clearing, so its south flank is behind the eye.
 A survey frame without the cell-edge outline would be an ink change, which is the owner's
 decision with map-visuals.md §4 amended first, not this pass's. Since #1771 the garden
-close and the low frame also carry life, and the opening carries none (§5, Life in the
+close and the low frame also carry life; the opening gets none of its own, and shows two
+of the low pose's deep-fish patches at its right edge as pinpricks (§5, Life in the
 frames).
 
 Each child captures the rows it touches before and after, plus motion, reduced motion, an
