@@ -51,14 +51,36 @@ The after, reduced-motion and control sets were captured at 4919493d4, and the 1
 
 The opening pose and the last three rows are §9's four frames, captured with the HUD on.
 They predate #1753, which was open when the owner asked for this issue in the session the
-pull request links, and which adds its instruments to the same four frames. So this set is
-not yet the one the owner re-accepts on #1694: #1752 stays open, and once #1753 lands it
-recaptures the four frames as the last child before #1754, which keeps §9's order and its
-"#1752 captures all four" true without moving a duty onto #1753.
+pull request links, and which adds its instruments to the same four frames. So `after/` is
+not the set the owner re-accepts on #1694; `re-acceptance/` below is.
 The opening dolly leaves the orbit eye 1,110 m above the Lid, as the Home frame's eye is
 about 9,100 m above it: with a 40° field of view and the console over the bottom quarter of the
 window, a nearer eye at 15° loses the hulls under the console, and a focus nearer the
 centroid lifts them to the centre, so the offset and the dolly are TUNABLEs chosen here.
+
+## The re-acceptance set
+
+`re-acceptance/` is the same run as `after/`, taken at 5fcce335b, the head of `main` once
+#1753 (abd4d8089) had landed, so these frames carry every child of the feel pass: #1749's
+water, #1750's walls, #1751's forest, #1753's instruments and this issue's opening and HUD.
+It is the set §9's "Frames and the last gate" asks #1752 to capture for the owner's
+re-acceptance on #1694, the pass's last gate. The four rows below are §9's four frames,
+each with the HUD on; the other four frames in the directory are the HUD states, for the
+record.
+
+| Frame | Pose | Must read as (§9) | What the frame shows |
+| --- | --- | --- | --- |
+| [05-opening-pose](re-acceptance/05-opening-pose.png) | 709 / 1,710, 1,200 m, 15°, 300 m, `yawDeg` −34 | The three hulls in the lower third, the garden canopy beyond them, water rather than clear colour above the far rim, and the legend as one line in its corner | The hulls under their rings in the lower third of the water above the console, each with a foot ring on the 300 m plane and no stalk, the canopy's crest along the top right, haze between the eye and the rim, the legend in the bottom-right corner, and the SECTION block beside the scope reading the 034° slice |
+| [06-garden-close](re-acceptance/06-garden-close.png) | 1,875 / 1,125, 250 m, 12°, 275 m, `yawDeg` 90 | Kelp at canonical scale as one forest on both flanks of a bare clearing, with near stands separated from far ones by the water | Stands on both flanks with the clearing bare between them, the far stands greyed by the 600 m reach, and two hull rings at the top left, 25 m under the plane |
+| [07-low](re-acceptance/07-low.png) | 2,000 / 2,000, 1,600 m, 12°, 850 m | Water visibly between the eye and the floor, the bowl's drawn edges as eroded rock terraces rather than 250 m boxes under unchanged ink, and depth still darkening downward | Snow and haze over the bowl, its terraces stepped rather than boxed under the isobaths, the floor darkening toward the pocket, and the section's stepped profile under the 850 m plane line |
+| [08-survey](re-acceptance/08-survey.png) | 2,000 / 2,000, 10,000 m, 88°, seabed | Decoration below tactical ink, own hulls and contacts readable, and the ink unchanged: coastlines on the cell edges and isobaths of the authored floor | The three hulls and their rings on the west rim over the dimmed forest and bowl, the cell-edge coastlines and isobaths as before, and no plane line or stalk, since the focus is on the seabed |
+
+[re-acceptance/readings.json](re-acceptance/readings.json) reads each pose back as the
+table gives it, and every calls and triangles figure is the number
+[#1753's after set](../issue-1753/after/readings.json) read at the same pose: 43 / 547,546
+at the opening, 30 / 544,863 at garden close, 25 / 539,967 low and 44 / 547,936 at survey.
+SwiftShader at 1,440 × 900 and DPR 1, motion on, so no millisecond is read; the GPU rows
+stand in "Hardware" below and in #1753's README.
 
 ## Where the HUD stands
 
