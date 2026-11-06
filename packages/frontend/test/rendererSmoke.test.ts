@@ -3769,8 +3769,9 @@ describe('the interface cues the renderer reports (#1600)', () => {
       const whole = hint().text;
       const rowTop = 720 - CONSOLE_HEIGHT - HINT_LINE_HEIGHT;
       // The floating panels over the water take nothing, wherever they stand:
-      // the mission log's foot is 8 units into the row (App.css, 220 against
-      // HINT_ROW_UNITS), and a hint on a mission map is not the study's to cut.
+      // they are handed over on their own path, and App.css stands them clear
+      // of the row (panelRects.test.ts holds their feet, #1762), so even one
+      // handed over across it is not read.
       world.chart.setPanelRects([
         { x: 800, y: 300, width: 470, height: 40 },
         { x: 800, y: 720 - 220 - 150, width: 470, height: 150 },

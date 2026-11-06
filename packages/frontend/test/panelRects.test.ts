@@ -10,6 +10,8 @@ import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { FLOATING_PANELS, HINT_ROW_PANELS, watchPanels } from '../src/game/panelRects.ts';
 import type { PanelRect } from '../src/game/EchoRenderer.ts';
+import { CONSOLE_HEIGHT, HINT_ROW_UNITS } from '../src/game/uiScale.ts';
+import { APP_CSS, parseCss } from './support/cssBox.ts';
 
 type Rect = { left: number; top: number; width: number; height: number };
 
@@ -150,5 +152,53 @@ describe('the floating panels, measured for the chart (#1662)', () => {
     watch.measure();
     watch.stop();
     assert.deepEqual(pushed, []);
+  });
+});
+
+/**
+ * A floating panel's foot, in HUD units from the window's foot, as the shipped
+ * sheet sets it: the custom properties GameCanvas hands CSS put in, at scale
+ * 1, since every offset here scales with the HUD (`* var(--ui-scale, 1)`).
+ * Anything else in the value throws rather than reading as a number.
+ */
+function footUnits(bottom: string): number {
+  const units = bottom
+    .replace(/var\(--ui-scale, 1\)/g, '1')
+    .replace(/var\(--hint-row-units\)/g, String(HINT_ROW_UNITS))
+    .replace(/var\(--console-units\)/g, String(CONSOLE_HEIGHT))
+    .replace(/(\d)px/g, '$1')
+    .replace(/calc/g, '');
+  assert.match(units, /^[\d\s+*/().-]+$/, `a foot this reader can resolve: ${bottom}`);
+  return Function(`return (${units});`)() as number;
+}
+
+describe("the floating panels' feet (docs/ui-ux.md §2, #1762)", () => {
+  // §2 gives the hint line a row of its own between the panels over the water
+  // and the console. A panel whose foot stood inside that row covered the
+  // hint's last clause: the mission log's sat at 220, 8 units into a row whose
+  // top is 228, and HINT_ROW_UNITS adds the 4-unit breath above it.
+  const floating = new Set(FLOATING_PANELS.split(',').map((s) => s.trim()));
+  const feet = parseCss(APP_CSS).flatMap((rule) => {
+    if (!floating.has(rule.selector)) return [];
+    return rule.declarations
+      .filter(([property]) => property === 'bottom')
+      .map(([, value]) => ({ selector: rule.selector, condition: rule.condition, value }));
+  });
+
+  it('finds the mission log standing on its foot', () => {
+    assert.ok(
+      feet.some((foot) => foot.selector === '.mission-log'),
+      'the premise: the mission log is anchored at the bottom'
+    );
+  });
+
+  it('stands every floating panel above the hint line, with its breath', () => {
+    for (const foot of feet) {
+      assert.ok(
+        footUnits(foot.value) >= HINT_ROW_UNITS,
+        `${foot.selector}${foot.condition === null ? '' : ` under ${foot.condition}`}: ` +
+          `foot at ${footUnits(foot.value)}, below the hint row and its breath at ${HINT_ROW_UNITS}`
+      );
+    }
   });
 });
