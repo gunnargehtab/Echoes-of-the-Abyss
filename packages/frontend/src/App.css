@@ -2242,13 +2242,15 @@ button.objectives-row .objectives-text {
 .mission-log {
   position: absolute;
   right: calc(10px * var(--ui-scale, 1));
-  /* Clear of the console with a hand's breadth to spare. 208 px is
-     `EchoRenderer`'s `CONSOLE_HEIGHT`, and it is the number that matters: this
-     rule still cleared the *old* 80 px command bar §2 replaced, so the panel
-     sat 116 px inside the console and covered the production block. Scaled by
-     `--ui-scale` rather than divided, because the console is Pixi-drawn and
-     scales with the HUD — the same reasoning the panel offsets above use. */
-  bottom: calc(220px * var(--ui-scale, 1));
+  /* Above the hint line's row, with its breath: `--hint-row-units` from
+     uiScale.ts, as `.flight-panel`'s foot. §2 gives the hint line its own row,
+     and a hand-set 220 cleared the console but stood 8 units into that row,
+     over the hint's last clause on a map wide enough for the two to meet
+     (#1762). Before that it cleared only the *old* 80 px command bar and sat
+     inside the console. Scaled by `--ui-scale` rather than divided,
+     because the console is Pixi-drawn and scales with the HUD — the same
+     reasoning the panel offsets above use. */
+  bottom: calc(var(--hint-row-units) * var(--ui-scale, 1));
   transform: scale(var(--ui-scale, 1));
   transform-origin: bottom right;
   /* The other two panels' width, and the smallest of the three heights:

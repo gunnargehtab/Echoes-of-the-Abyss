@@ -22,9 +22,9 @@ export const FLOATING_PANELS = '.objectives, .contact-log, .mission-log';
 /**
  * The free-water study's decorative-life legend, which stands on the hint
  * line's row and which the hint yields to (`EchoRenderer`, the hint line). Its
- * own path, not a floating panel: the mission log's foot stands 8 units into
- * that row too, and a hint that yielded to every panel would be cut on every
- * mission map, which is docs/ui-ux.md §2's call and not the study's.
+ * own path, not a floating panel: the floating panels stand clear of that row
+ * (the mission log's foot is on `HINT_ROW_UNITS`, #1762), so only a panel
+ * placed on the row itself has anything for the hint to yield to.
  */
 export const HINT_ROW_PANELS = '.decorative-life';
 

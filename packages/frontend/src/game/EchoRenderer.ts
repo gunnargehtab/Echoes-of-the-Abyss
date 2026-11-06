@@ -9173,10 +9173,10 @@ export class EchoRenderer {
     // legend takes the row's right end (App.css `.decorative-life`), and at a
     // raised UI scale a hint run under it reads as covered rather than as
     // long. Only the panels handed over for this row (`setHintRowPanels`): the
-    // floating panels over the water are not read here, since the mission
-    // log's foot stands 8 units into the row and the hint on a mission map
-    // is docs/ui-ux.md §2's, not the study's. The rects arrive in canvas px,
-    // so the HUD's are those over the scale.
+    // floating panels over the water stand clear of the row (docs/ui-ux.md §2;
+    // the mission log's foot is on `HINT_ROW_UNITS`, #1762), so they are not
+    // read here. The rects arrive in canvas px, so the HUD's are those over
+    // the scale.
     const rowTop = this.hudHeight() - CONSOLE_HEIGHT - HINT_LINE_HEIGHT;
     let hintEnd = this.hudWidth() - 12;
     for (const panel of this.hintRowPanels) {
