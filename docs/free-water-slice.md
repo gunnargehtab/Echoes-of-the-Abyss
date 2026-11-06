@@ -193,7 +193,8 @@ mostly empty, so the forest ends rather than dissolving into props at every dept
 | Garden flanks / close jungle | Retain `env-kelp-cluster`; commission `env-kelp-stand`, a denser stand of 40 m stalks within a 120 m footprint | No giant rescaling of the approved cluster; no plants in the central clearing, roofed cut or deep pocket |
 | Rim / worn ground | Current terrain material and surveyed wall; no extra stone/coral instances in the first fixture | No new walls, cover or PF; no apparent solid prop across a traversable route |
 | Crater / distance | Existing authored-floor relief and water | Bare drop, no illuminated floor, false cave mouth or copy of Sorrowgate's arch |
-| Small life / close inspection | The four shapes below, public decoration | No dependency on own or enemy positions, contacts, occupancy, fauna AI or future events |
+| Small life / close inspection | The four small shapes below, public decoration | No dependency on own or enemy positions, contacts, occupancy, fauna AI or future events |
+| Large life / the opening | The ray below, one public decorative body of 18 m (#1777) | The same independence; no silhouette of a classified animal, and nothing of the colossus |
 
 Two placement options were considered:
 
@@ -223,6 +224,7 @@ every other row.
 | Fry shoals | Centres `(1,375,875)`, `(1,875,875)`, `(2,375,875)`, `(2,875,875)`, each school within 25 m horizontally and 250..300 m depth; and two over the clearing, `(2,035,1,120)` within 105..160 m depth and `(2,010,1,160)` within 120..170 m | 6 schools / 144 fish |
 | Outer fish | Every pair of `x=1,750,2,000,2,250,2,500` and `y=1,750,2,500`, each path within 40 m horizontally and 700..1,000 m depth; and two schools of four over the clearing, centred `(1,900,1,150)` and `(1,780,1,080)`, within 45 m horizontally and 200..300 m depth | 16 |
 | Deep fish | Every pair of `x=1,875,2,125,2,375,2,625` and `y=2,125,2,375`, and three patches of six along the pocket's north edge, centred `(1,950,1,640)`, `(2,150,1,630)`, `(2,350,1,650)`; each path stays within 25 m horizontally and 1,900..2,100 m depth | 26 |
+| Rim ray | One loop centred `(735,2,210)`, over the outside rim south-east of the fleet's start, within 70 m horizontally and 200..300 m depth | 1 |
 | All other dressing | No automatic rock, coral, resource, trench, civic or fauna placement | 0 |
 
 Plant roots use the public rendered floor. A stand's plan envelope is at most 120 m
@@ -242,13 +244,13 @@ checked against public ground, and cannot migrate to another patch. No deep-pock
 plants or bowl-wide kelp are inherited just because those cells have a kelp biome.
 
 Swim depths place the **body axis**, not the lowest fin tip (owner decision in #1713).
-The approved fry, outer fish and deep fish axes stand 0.06, 0.78 and 0.28 rendered
-metres above their model origins respectively. Subtract that offset after mapping
+The approved fry, outer fish, deep fish and ray axes stand 0.06, 0.78, 0.28 and
+AXIS_M_PENDING rendered metres above their model origins respectively. Subtract that offset after mapping
 depth through the retained 0.22 display scale; do not squash or rescale the bodies.
 
 The fixture uses closed circular plan paths: crab radius 20 m over 240 s, fry
-radius 20 m over 90 s, outer fish radius 35 m over 180 s and deep fish radius
-20 m over 240 s. Within a crab or deep-fish patch, radii range from 40% to 100% of
+radius 20 m over 90 s, outer fish radius 35 m over 180 s, deep fish radius
+20 m over 240 s and the ray radius 60 m over 300 s, a walking pace. Within a crab or deep-fish patch, radii range from 40% to 100% of
 that radius, with evenly spaced phases; a fixed seed of 1713 offsets each patch.
 A school keeps station instead (#1771): its fish share the school's loop, each held
 at a fixed seeded offset from the school's own point, at most 1.5 m along the loop,
@@ -258,8 +260,8 @@ fish over a spiral up to 40 m wide that read as nothing, and an outer school is 
 group.
 Swimming depth follows the same phase: fry 275 ± 20 m over the north flank and
 132 or 145 ± 20 m over the clearing, outer fish 850 ± 130 m over the bowl and
-250 ± 35 m over the clearing, deep fish 2,000 ± 80 m. Crabs follow the public
-rendered floor. These smaller envelopes leave room for the full body inside the
+250 ± 35 m over the clearing, deep fish 2,000 ± 80 m, the ray 250 ± 30 m beside
+the hulls' 300 m. Crabs follow the public rendered floor. These smaller envelopes leave room for the full body inside the
 licensed bounds.
 
 **Life in the frames.** The owner's re-acceptance of 6 November 2026 found no crabs or
@@ -279,13 +281,16 @@ than moved from it, by the owner's calls of that day:
 - **Low** looks into the pocket over the southern wall, and only its northern part
   clears the console, so its three new deep-fish patches stand along the north edge, as
   rings of photophore pinpricks.
-- **Opening** gets nothing of its own. Its eye stands above the Lid, so no water in the
+- **Opening** carries the one body large enough to read there, the ray (#1777, the
+  owner's call of 6 November 2026). Its eye stands above the Lid, so no water in the
   frame is nearer than about 550 m, at the console's edge, where a 4 m fish would draw
   9 px; ahead of the hulls, 900 m and more out, it draws about 5 px, and a school placed
-  there drew nothing visible. The pocket shows only at the frame's right edge, where two
-  of the low pose's deep-fish patches read as photophore pinpricks 2.2 to 2.5 km out; no
-  body reads there. A larger animal is `shape-work`, and a nearer opening is §9's call;
-  neither is taken here.
+  there drew nothing visible, so #1771 placed nothing for it. The ray, 18 m across,
+  glides on one loop south-east of the fleet's start, 810 to 930 m from the eye, where
+  its span draws 26 to 30 px, in the open water at the lower right between the corvette
+  and the legend, 40 px clear of the corvette's ring. The pocket shows only at the
+  frame's right edge, where two of the low pose's deep-fish patches read as photophore
+  pinpricks 2.2 to 2.5 km out. A nearer opening is §9's call, not taken.
 - **Survey** keeps decoration below tactical ink; the new deep-fish patches add faint
   pinpricks along the pocket's north edge.
 
@@ -298,6 +303,9 @@ wildlife. Converting gameplay fauna into public fish would disclose hidden state
 not an option. The chosen alternative is public microfauna decoration, only in this
 opt-in fixture, independent of the bestiary's simulated roster. These are descriptive
 asset names, not new gameplay species; no statistics or ecological powers are implied.
+The ray is the one large body, added on #1777 when the opening frame could read none of
+the four small ones: 18 m across, under a third of the smallest Sounder, a grazer of the
+water and nothing of a hunter.
 
 | New asset slug | Canonical rendered size | Maximum instances / triangles per instance | Placement and motion |
 | --- | --- | --- | --- |
@@ -305,6 +313,7 @@ asset names, not new gameplay species; no statistics or ecological powers are im
 | `env-shoal-fry` | 0.5 m long | 6 shoals of 24 / 180 | Garden, 100..300 m depth; fixed looping schools, never proximity scatter |
 | `env-outer-fish` | 4 m long | 16 / 600 | Open bowl, 700..1,000 m depth, and the garden clearing, 200..300 m; slow closed swimming paths |
 | `env-deep-fish` | 2 m long | 26 / 400 | Deep pocket, 1,900..2,100 m depth; sparse photophore points |
+| `env-rim-ray` | 18 m across | 1 / 800 | Outside rim south-east of the start, 200..300 m depth; one slow closed glide |
 
 All motion is deterministic from published placement, a fixed seed and shared match
 time. It never reacts to a hull, a shot, a ping, damage or the camera. Reduced motion
@@ -334,7 +343,8 @@ variant adds a server-only existing Hollow and an opposing observer in the deep 
 using normal detection; decoration must be byte-for-byte independent of that variant's
 hidden state. Neither extra participant is exposed by the study entry.
 
-**Shape lane.** The five new slugs were approved in #1711 and #1712 before integration.
+**Shape lane.** The five new slugs were approved in #1711 and #1712 before integration,
+and the ray's answers the same gates in the pull request that places it (#1777).
 Environment props have no faction: each shape PR authors
 **ENV STYLE + one prop-table row** in [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, including
 Footprint, Height, Tris and Light, plus its script, GLB, intake report,
@@ -346,8 +356,9 @@ Block 4 currently describes stone, coral, kelp and crystal standing on the seabe
 The #1711 shape PR must first add the scoped public-microfauna variant: the crab may
 stand on the floor, while the three swimming slugs may be suspended in the column.
 Retain its no-faction, low-luminance, material-count and intake constraints; the exception
-is for these four decorative forms, not gameplay fauna or other floating props.
-All four rows carry **Light `none`**, including `env-deep-fish`: its GLB has no emissive,
+is for these five decorative forms, the ray under its own large-body clause, not
+gameplay fauna or other floating props.
+All five rows carry **Light `none`**, including `env-deep-fish`: its GLB has no emissive,
 and runtime supplies the separately budgeted rung-5 photophore dots described above.
 This preserves the inverted intake light gate. No links to nonexistent exports,
 placeholder primitives passed off as finished assets, or one-off fish loader.
@@ -755,7 +766,7 @@ each child's frames answer what it shows.
 
 | Frame | Pose: plan x / y, dolly, pitch, focus depth | Before | Must read as |
 | --- | --- | --- | --- |
-| Opening | 300 m ahead of the hulls' centroid on the centroid-to-A line, at 300 m; 1,200 m; 15 degrees; heading about 34 degrees east of north (`yawDeg` −34) | [01-home.png](screenshots/issue-1713/dpr-1/01-home.png): 542 / 1,958, 2,600 m, 55 degrees, seabed | The three hulls in the lower third, the garden canopy beyond them, water rather than clear colour above the far rim, and the legend as one line in its corner |
+| Opening | 300 m ahead of the hulls' centroid on the centroid-to-A line, at 300 m; 1,200 m; 15 degrees; heading about 34 degrees east of north (`yawDeg` −34) | [01-home.png](screenshots/issue-1713/dpr-1/01-home.png): 542 / 1,958, 2,600 m, 55 degrees, seabed | The three hulls in the lower third, the ray gliding lower right of them, the garden canopy beyond them, water rather than clear colour above the far rim, and the legend as one line in its corner |
 | Garden close | 1,875 / 1,125 in the clearing, 250 m, 12 degrees, 275 m; heading west along it (`yawDeg` 90) | Captured on its base by the first child that touches this row; no committed frame has this pose, and the nearest is [02-garden-close.png](screenshots/issue-1713/dpr-1/02-garden-close.png), the yaw-0 station | Kelp at canonical scale as one forest on both flanks of a bare clearing, with near stands separated from far ones by the water |
 | Low | 2,000 / 2,000, 1,600 m, 12 degrees, 850 m | [03-low.png](screenshots/issue-1713/dpr-1/03-low.png) | Water visibly between the eye and the floor, the bowl's drawn edges as eroded rock terraces rather than 250 m boxes under unchanged ink, and depth still darkening downward |
 | Survey | 2,000 / 2,000, 10,000 m, 88 degrees, seabed | [04-survey.png](screenshots/issue-1713/dpr-1/04-survey.png) | Decoration below tactical ink, own hulls and contacts readable, and the ink unchanged: coastlines on the cell edges and isobaths of the authored floor ([map-visuals.md](map-visuals.md) §4) |
@@ -766,7 +777,8 @@ aims at its focus. For garden close, a pose along the clearing shows both flanks
 yaw-0 station looks north from over the clearing, so its south flank is behind the eye.
 A survey frame without the cell-edge outline would be an ink change, which is the owner's
 decision with map-visuals.md §4 amended first, not this pass's. Since #1771 the garden
-close and the low frame also carry life; the opening gets none of its own, and shows two
+close and the low frame also carry life, and since #1777 the opening carries the ray,
+18 m across, gliding at the lower right between the corvette and the legend, besides two
 of the low pose's deep-fish patches at its right edge as pinpricks (§5, Life in the
 frames).
 

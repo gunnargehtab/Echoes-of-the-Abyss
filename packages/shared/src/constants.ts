@@ -34,6 +34,12 @@ export const FREE_WATER_LIFE = {
   /** The outer fish that cross the garden clearing, where §9's garden close reads them (#1771). */
   GARDEN_OUTER: { radiusM: 35, periodS: 180, depthM: 250, depthSwingM: 35, axisM: 0.78 },
   DEEP: { radiusM: 20, periodS: 240, depthM: 2000, depthSwingM: 80, axisM: 0.28 },
+  /**
+   * The ray that glides over the outside rim south-east of the fleet's start,
+   * where §9's opening reads it (#1777): one loop, 60 m round over 300 s, a
+   * walking pace, at 250 ± 30 m beside the hulls' 300 m.
+   */
+  RAY: { radiusM: 60, periodS: 300, depthM: 250, depthSwingM: 30, axisM: 0 },
   INNER_RADIUS_SHARE: 0.4,
   /**
    * How far a schooling fish keeps from its school's own point on the shared

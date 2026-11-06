@@ -127,7 +127,8 @@ export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false)
       });
     }
   };
-  const { CRAB, FRY, OUTER, GARDEN_OUTER, DEEP, FRY_SCHOOL, OUTER_SCHOOL } = FREE_WATER_LIFE;
+  const { CRAB, FRY, OUTER, GARDEN_OUTER, DEEP, RAY, FRY_SCHOOL, OUTER_SCHOOL } =
+    FREE_WATER_LIFE;
   // #1713's patches: crabs among the south flank's stands, fry over the north
   // canopy, outer fish over the bowl and deep fish in the pocket.
   for (const x of [1625, 1875, 2125, 2375]) life('env-rim-crab', x, 1375, 4, CRAB);
@@ -174,6 +175,12 @@ export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false)
   ] as const) {
     life('env-deep-fish', x, y, 6, DEEP);
   }
+  // #1777's: the opening's eye stands above the Lid, so no water in its frame
+  // is nearer than about 550 m and no 4 m body reads there. The ray, 18 m
+  // across, glides on one loop south-east of the fleet's start, 810 to 930 m
+  // from the eye, where its span draws 26 to 30 px in the open water at the
+  // lower right between the corvette and the legend.
+  life('env-rim-ray', 735, 2210, 1, RAY);
   return slots;
 }
 

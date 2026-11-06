@@ -101,8 +101,8 @@ the brief; the numbers are constraints, not suggestions.
   flank with hinge rails and dogging wheels" is the register. "Imposing industrial vessel"
   is not.
 - **No fauna, ever**, with the one exception the bestiary itself writes. Animals are
-  contacts drawn at earned fidelity, never world meshes (`docs/bestiary.md` §3); the four
-  public decorative bodies `docs/free-water-slice.md` §5 commissions (#1711) are
+  contacts drawn at earned fidelity, never world meshes (`docs/bestiary.md` §3); the five
+  public decorative bodies `docs/free-water-slice.md` §5 commissions (#1711, #1777) are
   environment geometry under Block 4's public-microfauna variant, and a shape that
   borrows a classified animal's silhouette is refused even there.
 - **Look at the whole, lit, every round.** Run
