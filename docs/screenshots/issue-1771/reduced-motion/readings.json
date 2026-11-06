@@ -1,0 +1,204 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "software": false,
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "reducedMotion": true,
+  "readings": [
+    {
+      "name": "opening",
+      "look": "free-water",
+      "pitchDeg": 15,
+      "yawDeg": 326,
+      "focus": {
+        "xM": 709,
+        "zM": 1710,
+        "depthM": 300
+      },
+      "eye": {
+        "xM": 61,
+        "zM": 2671,
+        "depthM": -1112
+      },
+      "distance": 1200,
+      "waterReachM": 1805,
+      "calls": 43,
+      "triangles": 568010,
+      "props": 290,
+      "propTriangles": 551264,
+      "instances": {
+        "env-kelp-stand": 56,
+        "env-kelp-cluster": 16,
+        "env-rim-crab": 32,
+        "env-shoal-fry": 144,
+        "env-outer-fish": 16,
+        "env-deep-fish": 26
+      },
+      "photophores": 156,
+      "sway": "held",
+      "life": {
+        "env-rim-crab": {
+          "placed": 32,
+          "inFrame": 32,
+          "px": [
+            1,
+            1.3
+          ]
+        },
+        "env-shoal-fry": {
+          "placed": 144,
+          "inFrame": 144,
+          "px": [
+            0.2,
+            0.3
+          ]
+        },
+        "env-outer-fish": {
+          "placed": 16,
+          "inFrame": 10,
+          "px": [
+            2.2,
+            2.8
+          ]
+        },
+        "env-deep-fish": {
+          "placed": 26,
+          "inFrame": 12,
+          "px": [
+            1.1,
+            1.2
+          ]
+        }
+      }
+    },
+    {
+      "name": "garden-close",
+      "look": "free-water",
+      "pitchDeg": 12,
+      "yawDeg": 90,
+      "focus": {
+        "xM": 1875,
+        "zM": 1125,
+        "depthM": 275
+      },
+      "eye": {
+        "xM": 2120,
+        "zM": 1125,
+        "depthM": 39
+      },
+      "distance": 250,
+      "waterReachM": 600,
+      "calls": 30,
+      "triangles": 565327,
+      "props": 290,
+      "propTriangles": 551264,
+      "instances": {
+        "env-kelp-stand": 56,
+        "env-kelp-cluster": 16,
+        "env-rim-crab": 32,
+        "env-shoal-fry": 144,
+        "env-outer-fish": 16,
+        "env-deep-fish": 26
+      },
+      "photophores": 156,
+      "sway": "held",
+      "life": {
+        "env-rim-crab": {
+          "placed": 32,
+          "inFrame": 20,
+          "px": [
+            4.8,
+            11.3
+          ]
+        },
+        "env-shoal-fry": {
+          "placed": 144,
+          "inFrame": 72,
+          "px": [
+            0.8,
+            9.1
+          ]
+        },
+        "env-outer-fish": {
+          "placed": 16,
+          "inFrame": 8,
+          "px": [
+            14.8,
+            19.4
+          ]
+        },
+        "env-deep-fish": {
+          "placed": 26,
+          "inFrame": 0,
+          "px": null
+        }
+      }
+    },
+    {
+      "name": "garden-close-later",
+      "look": "free-water",
+      "pitchDeg": 12,
+      "yawDeg": 90,
+      "focus": {
+        "xM": 1875,
+        "zM": 1125,
+        "depthM": 275
+      },
+      "eye": {
+        "xM": 2120,
+        "zM": 1125,
+        "depthM": 39
+      },
+      "distance": 250,
+      "waterReachM": 600,
+      "calls": 30,
+      "triangles": 565327,
+      "props": 290,
+      "propTriangles": 551264,
+      "instances": {
+        "env-kelp-stand": 56,
+        "env-kelp-cluster": 16,
+        "env-rim-crab": 32,
+        "env-shoal-fry": 144,
+        "env-outer-fish": 16,
+        "env-deep-fish": 26
+      },
+      "photophores": 156,
+      "sway": "held",
+      "life": {
+        "env-rim-crab": {
+          "placed": 32,
+          "inFrame": 20,
+          "px": [
+            4.8,
+            11.3
+          ]
+        },
+        "env-shoal-fry": {
+          "placed": 144,
+          "inFrame": 72,
+          "px": [
+            0.8,
+            9.1
+          ]
+        },
+        "env-outer-fish": {
+          "placed": 16,
+          "inFrame": 8,
+          "px": [
+            14.8,
+            19.4
+          ]
+        },
+        "env-deep-fish": {
+          "placed": 26,
+          "inFrame": 0,
+          "px": null
+        }
+      }
+    }
+  ]
+}

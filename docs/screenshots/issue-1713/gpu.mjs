@@ -2,9 +2,12 @@ import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-// The fixture's list and its reservation (docs/free-water-slice.md §7): 200 props under
-// 600,000 since #1751. GPU_PROPS=184 GPU_PROP_CAP=400000 reads a revision before it.
-const PROPS = Number(process.env.GPU_PROPS ?? 200);
+// The fixture's list and its reservation (docs/free-water-slice.md §7): 290 props and
+// 26 deep fish's 156 photophores under 600,000 since #1771. GPU_PROPS=200
+// GPU_PHOTOPHORES=48 reads a revision before it, and GPU_PROPS=184
+// GPU_PHOTOPHORES=48 GPU_PROP_CAP=400000 one before #1751.
+const PROPS = Number(process.env.GPU_PROPS ?? 290);
+const PHOTOPHORES = Number(process.env.GPU_PHOTOPHORES ?? 156);
 const PROP_CAP = Number(process.env.GPU_PROP_CAP ?? 600000);
 
 export default async ({ page, shot }) => {
@@ -57,7 +60,7 @@ export default async ({ page, shot }) => {
     const p = await page.evaluate(() => window.__perspectiveProbe());
     assert.equal(p.modelBacked, 3);
     assert.equal(p.props, PROPS);
-    assert.equal(p.decorativePhotophores, 48);
+    assert.equal(p.decorativePhotophores, PHOTOPHORES);
     assert.ok(p.drawCalls <= 150 && p.triangles <= 720000);
     assert.ok(p.propTris <= PROP_CAP);
     dir = dirname(await shot(name));

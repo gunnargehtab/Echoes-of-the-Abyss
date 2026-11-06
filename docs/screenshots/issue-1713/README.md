@@ -26,9 +26,10 @@ $env:VIEW_DPR='1.5'
 node .claude\skills\run-game\scripts\drive.mjs --headed --channel msedge --url "http://localhost:5173/?study=free-water" --out docs\screenshots\issue-1713\dpr-1.5 --steps docs\screenshots\issue-1713\gpu.mjs
 ```
 
-Since #1751, `gpu.mjs` expects 200 props under the 600,000 prop reservation; to read a
-revision before it, set `GPU_PROPS=184` and `GPU_PROP_CAP=400000`. The readings below
-predate that change.
+Since #1771, `gpu.mjs` expects 290 props and 156 photophores under the 600,000 prop
+reservation; to read a revision before it, set `GPU_PROPS=200` and `GPU_PHOTOPHORES=48`,
+and before #1751 also `GPU_PROPS=184` and `GPU_PROP_CAP=400000`. The readings below
+predate both changes.
 
 `steps.mjs` checks authoritative on-course descent and ascent while the scout remains
 at 300 m; invalid columns, a queued PR warning, independent camera movement, Home,

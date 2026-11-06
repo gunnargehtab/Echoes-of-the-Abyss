@@ -219,10 +219,10 @@ every other row.
 | --- | --- | --- |
 | New kelp stands | Four rows at `y=687.5`, `812.5`, `935` and `1,315`: cell origins `x=1,000,1,250,...,2,750` with slots at `x` offsets `{62.5,187.5}`, less the two end slots `x=1,062.5` and `x=2,937.5` of every row; so `y` offset 187.5 in the `y=500` cells, `{62.5,185}` in the `y=750` cells and 65 in the `y=1,250` cells | 56 |
 | Retained kelp clusters | Cell origins `x=1,000,1,250,...,2,750`, `y=500`; two slots per cell at offsets `(62.5,62.5)` and `(187.5,62.5)` | 16 |
-| Rim crabs | Four floor patches centred on `(1,625,1,375)`, `(1,875,1,375)`, `(2,125,1,375)`, `(2,375,1,375)`; each patch has a 25 m radius and four crabs | 16 |
-| Fry shoals | Centres `(1,375,875)`, `(1,875,875)`, `(2,375,875)`, `(2,875,875)`; each school stays within 25 m horizontally and 250..300 m depth | 4 schools / 96 fish |
-| Outer fish | Every pair of `x=1,750,2,000,2,250,2,500` and `y=1,750,2,500`; each path stays within 40 m horizontally and 700..1,000 m depth | 8 |
-| Deep fish | Every pair of `x=1,875,2,125,2,375,2,625` and `y=2,125,2,375`; each path stays within 25 m horizontally and 1,900..2,100 m depth | 8 |
+| Rim crabs | Four floor patches among the south flank's stands, centred on `(1,625,1,375)`, `(1,875,1,375)`, `(2,125,1,375)`, `(2,375,1,375)`, and four on the clearing's floor, centred on `(1,900,1,060)`, `(1,880,1,165)`, `(1,800,1,110)`, `(1,760,1,200)`; each patch has a 25 m radius and four crabs | 32 |
+| Fry shoals | Centres `(1,375,875)`, `(1,875,875)`, `(2,375,875)`, `(2,875,875)`, each school within 25 m horizontally and 250..300 m depth; and two over the clearing, `(2,035,1,120)` within 105..160 m depth and `(2,010,1,160)` within 120..170 m | 6 schools / 144 fish |
+| Outer fish | Every pair of `x=1,750,2,000,2,250,2,500` and `y=1,750,2,500`, each path within 40 m horizontally and 700..1,000 m depth; and two schools of four over the clearing, centred `(1,900,1,150)` and `(1,780,1,080)`, within 45 m horizontally and 200..300 m depth | 16 |
+| Deep fish | Every pair of `x=1,875,2,125,2,375,2,625` and `y=2,125,2,375`, and three patches of six along the pocket's north edge, centred `(1,950,1,640)`, `(2,150,1,630)`, `(2,350,1,650)`; each path stays within 25 m horizontally and 1,900..2,100 m depth | 26 |
 | All other dressing | No automatic rock, coral, resource, trench, civic or fauna placement | 0 |
 
 Plant roots use the public rendered floor. A stand's plan envelope is at most 120 m
@@ -248,11 +248,49 @@ depth through the retained 0.22 display scale; do not squash or rescale the bodi
 
 The fixture uses closed circular plan paths: crab radius 20 m over 240 s, fry
 radius 20 m over 90 s, outer fish radius 35 m over 180 s and deep fish radius
-20 m over 240 s. Within a patch, crab and fry radii range from 40% to 100% of
+20 m over 240 s. Within a crab or deep-fish patch, radii range from 40% to 100% of
 that radius, with evenly spaced phases; a fixed seed of 1713 offsets each patch.
-Swimming depth follows the same phase: fry 275 ± 20 m, outer fish 850 ± 130 m,
-deep fish 2,000 ± 80 m. Crabs follow the public rendered floor.
-These smaller envelopes leave room for the full body inside the licensed bounds.
+A school keeps station instead (#1771): its fish share the school's loop, each held
+at a fixed seeded offset from the school's own point, at most 1.5 m along the loop,
+1 m across it and 4 m of depth for fry, and 12 m, 6 m and 10 m for outer fish. A fry
+school is then a knot a few metres across, where evenly spaced phases spread its 24
+fish over a spiral up to 40 m wide that read as nothing, and an outer school is a loose
+group.
+Swimming depth follows the same phase: fry 275 ± 20 m over the north flank and
+132 or 145 ± 20 m over the clearing, outer fish 850 ± 130 m over the bowl and
+250 ± 35 m over the clearing, deep fish 2,000 ± 80 m. Crabs follow the public
+rendered floor. These smaller envelopes leave room for the full body inside the
+licensed bounds.
+
+**Life in the frames.** The owner's re-acceptance of 6 November 2026 found no crabs or
+fish in §9's four frames (#1771): #1713's patches lay where no pose reads a body of
+canonical size. Measured in the real client at 1,440 by 900, an outer fish reads as a
+fish out to about 300 m, 16 px and more, and is gone at 1,190 m; a fry school reads as
+a knot of fish within about 100 m and as a smudge at 150 m; a crab's metre-wide shell
+is a speck at 220 m; and the deep fish's photophores read as pinpricks at 2 km against
+the pocket. So each frame takes the life it can carry, added to #1713's list rather
+than moved from it, by the owner's calls of that day:
+
+- **Garden close** looks west along the clearing from 41 m deep. Two fry schools loop
+  65 to 140 m from the eye, which only the shallower fry band reaches; two schools of
+  outer fish cross the clearing 185 to 385 m out, which is why they are licensed over
+  the garden; and four crab patches stand on its floor 220 to 395 m out, as near as the
+  floor shows above the console, where a crab is a speck.
+- **Low** looks into the pocket over the southern wall, and only its northern part
+  clears the console, so its three new deep-fish patches stand along the north edge, as
+  rings of photophore pinpricks.
+- **Opening** gets nothing of its own. Its eye stands above the Lid, so no water in the
+  frame is nearer than about 550 m, at the console's edge, where a 4 m fish would draw
+  9 px; ahead of the hulls, 900 m and more out, it draws about 5 px, and a school placed
+  there drew nothing visible. The pocket shows only at the frame's right edge, where two
+  of the low pose's deep-fish patches read as photophore pinpricks 2.2 to 2.5 km out; no
+  body reads there. A larger animal is `shape-work`, and a nearer opening is §9's call;
+  neither is taken here.
+- **Survey** keeps decoration below tactical ink; the new deep-fish patches add faint
+  pinpricks along the pocket's north edge.
+
+Life may cross the clearing row although plants may not: a crab, a fry or a fish is
+neither a tall prop nor a blocker (§3).
 
 **The wildlife choice is an explicit, narrow extension of the bible.** Keeping only
 the existing stipples would preserve today's presentation but not the requested close
@@ -263,10 +301,10 @@ asset names, not new gameplay species; no statistics or ecological powers are im
 
 | New asset slug | Canonical rendered size | Maximum instances / triangles per instance | Placement and motion |
 | --- | --- | --- | --- |
-| `env-rim-crab` | 2 m across | 16 / 400 | Garden floor; slow, closed crawling loops inside its public patch |
-| `env-shoal-fry` | 0.5 m long | 4 shoals of 24 / 180 | Garden, 250..300 m depth; fixed looping schools, never proximity scatter |
-| `env-outer-fish` | 4 m long | 8 / 600 | Open bowl, 700..1,000 m depth; slow closed swimming paths |
-| `env-deep-fish` | 2 m long | 8 / 400 | Deep pocket, 1,900..2,100 m depth; sparse photophore points |
+| `env-rim-crab` | 2 m across | 32 / 400 | Garden floor, the clearing's included; slow, closed crawling loops inside its public patch |
+| `env-shoal-fry` | 0.5 m long | 6 shoals of 24 / 180 | Garden, 100..300 m depth; fixed looping schools, never proximity scatter |
+| `env-outer-fish` | 4 m long | 16 / 600 | Open bowl, 700..1,000 m depth, and the garden clearing, 200..300 m; slow closed swimming paths |
+| `env-deep-fish` | 2 m long | 26 / 400 | Deep pocket, 1,900..2,100 m depth; sparse photophore points |
 
 All motion is deterministic from published placement, a fixed seed and shared match
 time. It never reacts to a hull, a shot, a ping, damage or the camera. Reduced motion
@@ -461,8 +499,8 @@ over every pass rather than gate 6's 400,000, by the owner's decision on #1712
 spend what a shipped map may not; shipped maps keep 400,000. Reserve at most 30 calls /
 600,000 triangles for all props and decorative life together, raised from 400,000 by
 decision 5 on #1748 (§9). The authored list totals at
-most 541,888 triangles: 56 new kelp stands at at most 9,000 each (504,000), 16 retained
-clusters (6,208), wildlife (31,680), and zero other dressing.
+most 568,928 triangles: 56 new kelp stands at at most 9,000 each (504,000), 16 retained
+clusters (6,208), wildlife (58,720 since #1771, from 31,680), and zero other dressing.
 The remaining reservation is unused, not permission to fill the bowl. Counts are the
 opening list's contract; per-model triangle limits remain ceilings. Share instanced
 batches per template/material; no per-fish draw or further relaxation of this study's
@@ -602,7 +640,8 @@ new model: rock props would be a separate `shape-work` child.
 The prop reservation rose from 400,000 to 600,000 triangles in #1751; §7 carries the
 figure. The study's frame cap of 720,000 triangles, gate 6's 150 calls, the prop layer's
 30 calls and DPR of at most 1.5 are unchanged. At the per-model ceilings, 600,000 admits at
-most 62 stands of 9,000 beside the 16 retained clusters (6,208) and the wildlife (31,680).
+most 62 stands of 9,000 beside the 16 retained clusters (6,208) and the wildlife (31,680),
+as it stood before #1771.
 
 More stands fill the garden's flanks to the edges of the clearing, north and south, so the
 clearing reads as a cut through one forest rather than a lane between two strips. The
@@ -629,7 +668,8 @@ rows on each flank, mirrored about the clearing, whose south outer row stood on 
 scarp; and four full rows, which is 64 stands and over the reservation. The 16 retained
 clusters, which stood among the south flank's stands, become the forest's fringe along
 the garden's north edge, where the stands do not reach. Six stands' worth of the
-reservation stays unused.
+reservation stayed unused, and #1771's added life spends three of them (§5, Life in the
+frames).
 
 ### Vertical command (#1753)
 
@@ -725,7 +765,10 @@ the lower third; keeping the focus on their centroid would centre them, because 
 aims at its focus. For garden close, a pose along the clearing shows both flanks; the
 yaw-0 station looks north from over the clearing, so its south flank is behind the eye.
 A survey frame without the cell-edge outline would be an ink change, which is the owner's
-decision with map-visuals.md §4 amended first, not this pass's.
+decision with map-visuals.md §4 amended first, not this pass's. Since #1771 the garden
+close and the low frame also carry life; the opening gets none of its own, and shows two
+of the low pose's deep-fish patches at its right edge as pinpricks (§5, Life in the
+frames).
 
 Each child captures the rows it touches before and after, plus motion, reduced motion, an
 unchanged Kelp Labyrinth control and GPU readings at DPR 1 and 1.5 on named hardware,

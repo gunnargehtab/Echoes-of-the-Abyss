@@ -1,0 +1,87 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "software": false,
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "reducedMotion": false,
+  "readings": [
+    {
+      "name": "opening",
+      "look": "standard",
+      "pitchDeg": 55,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 904,
+        "zM": 1136,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 902,
+        "zM": 2630,
+        "depthM": -7874
+      },
+      "distance": 2600,
+      "waterReachM": 8320,
+      "calls": 74,
+      "triangles": 160006,
+      "props": 363,
+      "propTriangles": 104958,
+      "instances": {},
+      "photophores": 0,
+      "sway": "on"
+    },
+    {
+      "name": "low",
+      "look": "standard",
+      "pitchDeg": 12,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": 850
+      },
+      "eye": {
+        "xM": 1999,
+        "zM": 3565,
+        "depthM": -655
+      },
+      "distance": 1600,
+      "waterReachM": 5120,
+      "calls": 75,
+      "triangles": 160006,
+      "props": 363,
+      "propTriangles": 104958,
+      "instances": {},
+      "photophores": 0,
+      "sway": "on"
+    },
+    {
+      "name": "survey",
+      "look": "standard",
+      "pitchDeg": 88,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 1990,
+        "zM": 2356,
+        "depthM": -42802
+      },
+      "distance": 10000,
+      "waterReachM": 32000,
+      "calls": 76,
+      "triangles": 163878,
+      "props": 363,
+      "propTriangles": 104958,
+      "instances": {},
+      "photophores": 0,
+      "sway": "on"
+    }
+  ]
+}
