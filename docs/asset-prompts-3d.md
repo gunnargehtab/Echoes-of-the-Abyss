@@ -1964,7 +1964,7 @@ metre (to the centimetre for the four microfauna), a range the band a generated 
 | Resource field (any biome) | `env-nodule-bed` | 12 m | 2 m | ≤ 240 | `ore-trace`, glint facets |
 | Crater garden floor | `env-rim-crab` | 2 m | 0.60 m | ≤ 400 | none |
 | Crater garden, suspended | `env-shoal-fry` | 0.5 m | 0.15 m | ≤ 180 | none |
-| Crater bowl, suspended | `env-outer-fish` | 4 m | 1.69 m | ≤ 600 | none |
+| Crater bowl and garden, suspended | `env-outer-fish` | 4 m | 1.69 m | ≤ 600 | none |
 | Crater deep pocket, suspended | `env-deep-fish` | 2 m | 0.84 m | ≤ 400 | none |
 
 Four heights moved to their approved models (#879): the trench slab from 10 m, the
