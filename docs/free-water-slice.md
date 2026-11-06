@@ -254,7 +254,8 @@ A school keeps station instead (#1771): its fish share the school's loop, each h
 at a fixed seeded offset from the school's own point, at most 1.5 m along the loop,
 1 m across it and 4 m of depth for fry, and 12 m, 6 m and 10 m for outer fish. A fry
 school is then a knot a few metres across, where evenly spaced phases spread its 24
-fish round a 40 m ring that read as nothing, and an outer school is a loose group.
+fish over a spiral up to 40 m wide that read as nothing, and an outer school is a loose
+group.
 Swimming depth follows the same phase: fry 275 ± 20 m over the north flank and
 132 or 145 ± 20 m over the clearing, outer fish 850 ± 130 m over the bowl and
 250 ± 35 m over the clearing, deep fish 2,000 ± 80 m. Crabs follow the public
@@ -266,21 +267,23 @@ fish in §9's four frames (#1771): #1713's patches lay where no pose reads a bod
 canonical size. Measured in the real client at 1,440 by 900, an outer fish reads as a
 fish out to about 300 m, 16 px and more, and is gone at 1,100 m; a fry school reads as
 a knot of fish within about 100 m and as a smudge at 150 m; a crab's metre-wide shell
-is a speck at 200 m; and the deep fish's photophores read as pinpricks at 2 km against
+is a speck at 220 m; and the deep fish's photophores read as pinpricks at 2 km against
 the pocket. So each frame takes the life it can carry, added to #1713's list rather
 than moved from it, by the owner's calls of that day:
 
 - **Garden close** looks west along the clearing from 41 m deep. Two fry schools loop
-  65 to 155 m ahead of the eye, which only the shallower fry band reaches; two schools
-  of outer fish cross the clearing 190 to 380 m out, which is why they are licensed
-  over the garden; and four crab patches stand on its floor 220 to 390 m out, as near
-  as the floor shows above the console, where a crab is a speck.
-- **Low** sees the pocket only along its north edge, over the southern wall, so its
-  three new deep-fish patches stand there, as rings of photophore pinpricks.
-- **Opening** carries none. Its eye stands above the Lid, so the nearest water is about
-  700 m off, where a 4 m fish draws at most 7 px; a school placed ahead of the hulls
-  drew nothing visible. A larger animal is `shape-work`, and a nearer opening is §9's
-  call; neither is taken here.
+  65 to 140 m from the eye, which only the shallower fry band reaches; two schools of
+  outer fish cross the clearing 185 to 385 m out, which is why they are licensed over
+  the garden; and four crab patches stand on its floor 220 to 395 m out, as near as the
+  floor shows above the console, where a crab is a speck.
+- **Low** looks into the pocket over the southern wall, and only its northern part
+  clears the console, so its three new deep-fish patches stand along the north edge, as
+  rings of photophore pinpricks.
+- **Opening** carries none. Its eye stands above the Lid, so no water in the frame is
+  nearer than about 550 m, at the console's edge, where a 4 m fish would draw 9 px;
+  ahead of the hulls, 900 m and more out, it draws about 5 px, and a school placed
+  there drew nothing visible. A larger animal is `shape-work`, and a nearer opening is
+  §9's call; neither is taken here.
 - **Survey** is unchanged: decoration stays below tactical ink.
 
 Life may cross the clearing row although plants may not: a crab, a fry or a fish is

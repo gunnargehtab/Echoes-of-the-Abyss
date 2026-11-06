@@ -140,9 +140,9 @@ export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false)
   }
   // #1771's, where §9's frames read a body of canonical size. Garden close
   // looks west along the clearing from 41 m deep: crabs on its floor from
-  // about 200 m out, as near as the floor shows above the console; two fry
-  // schools 50 to 150 m ahead, which only the shallower band reaches; and
-  // outer fish crossing 150 to 380 m out, where a 4 m body still reads.
+  // about 220 m out, as near as the floor shows above the console; two fry
+  // schools 65 to 140 m out, which only the shallower band reaches; and
+  // outer fish crossing 185 to 385 m out, where a 4 m body still reads.
   for (const [x, y] of [
     [1900, 1060],
     [1880, 1165],
@@ -163,8 +163,9 @@ export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false)
   ] as const) {
     school('env-outer-fish', x, y, 4, GARDEN_OUTER, OUTER_SCHOOL);
   }
-  // The low pose sees the pocket only along its north edge, over the southern
-  // wall: three patches there, read as photophores against its dark.
+  // The low pose looks into the pocket over the southern wall, and only its
+  // northern part clears the console: three patches along the north edge,
+  // read as photophores against its dark.
   for (const [x, y] of [
     [1950, 1640],
     [2150, 1630],
