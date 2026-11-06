@@ -2242,7 +2242,7 @@ button.objectives-row .objectives-text {
 .mission-log {
   position: absolute;
   right: calc(10px * var(--ui-scale, 1));
-  /* On the hint line's row, with its breath: `--hint-row-units` from
+  /* Above the hint line's row, with its breath: `--hint-row-units` from
      uiScale.ts, as `.flight-panel`'s foot. §2 gives the hint line its own row,
      and a hand-set 220 cleared the console but stood 8 units into that row,
      over the hint's last clause on a map wide enough for the two to meet
