@@ -61,8 +61,9 @@ centroid lifts them to the centre, so the offset and the dolly are TUNABLEs chos
 ## The re-acceptance set
 
 `re-acceptance/` is the same run as `after/`, taken at 5fcce335b, the head of `main` once
-#1753 (abd4d8089) had landed, so these frames carry every child of the feel pass: #1749's
-water, #1750's walls, #1751's forest, #1753's instruments and this issue's opening and HUD.
+the merge of #1753 (abd4d8089) had landed, so these frames carry every child of the feel
+pass: #1749's water, #1750's walls, #1751's forest, #1753's instruments and this issue's
+opening and HUD.
 It is the set §9's "Frames and the last gate" asks #1752 to capture for the owner's
 re-acceptance on #1694, the pass's last gate. The four rows below are §9's four frames,
 each with the HUD on; the other four frames in the directory are the HUD states, for the
