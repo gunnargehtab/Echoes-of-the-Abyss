@@ -31,8 +31,17 @@ export const FREE_WATER_LIFE = {
   CRAB: { radiusM: 20, periodS: 240, depthM: null, depthSwingM: 0, axisM: 0 },
   FRY: { radiusM: 20, periodS: 90, depthM: 275, depthSwingM: 20, axisM: 0.06 },
   OUTER: { radiusM: 35, periodS: 180, depthM: 850, depthSwingM: 130, axisM: 0.78 },
+  /** The outer fish that cross the garden clearing, where §9's garden close reads them (#1771). */
+  GARDEN_OUTER: { radiusM: 35, periodS: 180, depthM: 250, depthSwingM: 35, axisM: 0.78 },
   DEEP: { radiusM: 20, periodS: 240, depthM: 2000, depthSwingM: 80, axisM: 0.28 },
   INNER_RADIUS_SHARE: 0.4,
+  /**
+   * How far a schooling fish keeps from its school's own point on the shared
+   * loop: along it, across it and in metres of depth (#1771). A fry school is
+   * then a knot a few metres across, and an outer school a loose group.
+   */
+  FRY_SCHOOL: { alongM: 1.5, acrossM: 1, depthM: 4 },
+  OUTER_SCHOOL: { alongM: 12, acrossM: 6, depthM: 10 },
 } as const;
 
 /**

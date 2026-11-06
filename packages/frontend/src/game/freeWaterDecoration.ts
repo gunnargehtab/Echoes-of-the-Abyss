@@ -103,13 +103,74 @@ export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false)
       });
     }
   };
-  for (const x of [1625, 1875, 2125, 2375]) life('env-rim-crab', x, 1375, 4, FREE_WATER_LIFE.CRAB);
-  for (const x of [1375, 1875, 2375, 2875]) life('env-shoal-fry', x, 875, 24, FREE_WATER_LIFE.FRY);
+  // A school keeps station on one loop (#1771): each fish holds a fixed
+  // seeded offset from the school's own point, along the loop, across it and
+  // in depth, on the shared period, so the formation turns with the school and
+  // reads as one knot of fish. `life` instead spreads a patch round its whole
+  // loop at evenly spaced phases, which at canonical size reads as nothing.
+  const school = (
+    slug: string,
+    x: number,
+    y: number,
+    count: number,
+    motion: Omit<NonNullable<PropPlacement['motion']>, 'phase'>,
+    station: { readonly alongM: number; readonly acrossM: number; readonly depthM: number }
+  ) => {
+    const phase = propHash([FREE_WATER_LIFE.SEED, x, y]) * Math.PI * 2;
+    for (let i = 0; i < count; i++) {
+      const offset = (axis: number) => propHash([FREE_WATER_LIFE.SEED, x, y, i, axis]) * 2 - 1;
+      add(slug, x, y, {
+        ...motion,
+        radiusM: motion.radiusM + offset(1) * station.acrossM,
+        phase: phase + (offset(2) * station.alongM) / motion.radiusM,
+        depthM: motion.depthM === null ? null : motion.depthM + offset(3) * station.depthM,
+      });
+    }
+  };
+  const { CRAB, FRY, OUTER, GARDEN_OUTER, DEEP, FRY_SCHOOL, OUTER_SCHOOL } = FREE_WATER_LIFE;
+  // #1713's patches: crabs among the south flank's stands, fry over the north
+  // canopy, outer fish over the bowl and deep fish in the pocket.
+  for (const x of [1625, 1875, 2125, 2375]) life('env-rim-crab', x, 1375, 4, CRAB);
+  for (const x of [1375, 1875, 2375, 2875]) school('env-shoal-fry', x, 875, 24, FRY, FRY_SCHOOL);
   for (const x of [1750, 2000, 2250, 2500]) {
-    for (const y of [1750, 2500]) life('env-outer-fish', x, y, 1, FREE_WATER_LIFE.OUTER);
+    for (const y of [1750, 2500]) life('env-outer-fish', x, y, 1, OUTER);
   }
   for (const x of [1875, 2125, 2375, 2625]) {
-    for (const y of [2125, 2375]) life('env-deep-fish', x, y, 1, FREE_WATER_LIFE.DEEP);
+    for (const y of [2125, 2375]) life('env-deep-fish', x, y, 1, DEEP);
+  }
+  // #1771's, where §9's frames read a body of canonical size. Garden close
+  // looks west along the clearing from 41 m deep: crabs on its floor from
+  // about 200 m out, as near as the floor shows above the console; two fry
+  // schools 50 to 150 m ahead, which only the shallower band reaches; and
+  // outer fish crossing 150 to 380 m out, where a 4 m body still reads.
+  for (const [x, y] of [
+    [1900, 1060],
+    [1880, 1165],
+    [1800, 1110],
+    [1760, 1200],
+  ] as const) {
+    life('env-rim-crab', x, y, 4, CRAB);
+  }
+  for (const [x, y, depthM] of [
+    [2035, 1120, 132],
+    [2010, 1160, 145],
+  ] as const) {
+    school('env-shoal-fry', x, y, 24, { ...FRY, depthM }, FRY_SCHOOL);
+  }
+  for (const [x, y] of [
+    [1900, 1150],
+    [1780, 1080],
+  ] as const) {
+    school('env-outer-fish', x, y, 4, GARDEN_OUTER, OUTER_SCHOOL);
+  }
+  // The low pose sees the pocket only along its north edge, over the southern
+  // wall: three patches there, read as photophores against its dark.
+  for (const [x, y] of [
+    [1950, 1640],
+    [2150, 1630],
+    [2350, 1650],
+  ] as const) {
+    life('env-deep-fish', x, y, 6, DEEP);
   }
   return slots;
 }

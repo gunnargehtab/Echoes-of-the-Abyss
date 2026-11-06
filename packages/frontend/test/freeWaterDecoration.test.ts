@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { readFileSync } from 'node:fs';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { MeshStandardMaterial } from 'three';
+import { MeshStandardMaterial, Vector3 } from 'three';
 import { terrainFor, KELP_LABYRINTH } from '../../backend/src/sim/maps/index.ts';
 import { FREE_WATER_SLICE } from '../../backend/src/sim/maps/freeWaterSlice.ts';
 import { decorationPose, freeWaterPlacements } from '../src/game/freeWaterDecoration.ts';
@@ -14,6 +14,7 @@ import {
   seabedDepthAtM,
 } from '../src/game/perspectiveTerrain.ts';
 import { seabedSeed } from '../src/game/seabed.ts';
+import { CONN_FOV_DEG } from '../src/game/readability.ts';
 import { Biome, Faction, FaunaSpecies, ResolutionTier, UnitKind } from '@echoes/shared';
 import { Match } from '../../backend/src/sim/match.ts';
 import { spawnFauna, spawnUnit } from '../../backend/src/sim/world.ts';
@@ -91,10 +92,10 @@ describe('authored public decoration', () => {
     assert.deepEqual(counts, {
       'env-kelp-stand': 56,
       'env-kelp-cluster': 16,
-      'env-rim-crab': 16,
-      'env-shoal-fry': 96,
-      'env-outer-fish': 8,
-      'env-deep-fish': 8,
+      'env-rim-crab': 32,
+      'env-shoal-fry': 144,
+      'env-outer-fish': 16,
+      'env-deep-fish': 26,
     });
     assert.ok(placements.reduce((n, p) => n + propSpec(p.slug)!.triBudget, 0) <= 600000);
     const control = terrainFor(KELP_LABYRINTH).serialize();
@@ -130,6 +131,150 @@ describe('authored public decoration', () => {
           const bodyDepth = -(pose.y + m.axisM) / DEPTH_VISUAL_M_PER_M;
           assert.ok(Math.abs(bodyDepth - m.depthM) <= m.depthSwingM + 1e-8);
         } else assert.equal(pose.y, -88);
+      }
+    }
+  });
+
+  // The drawn floor, eroded as the study draws it, in world units.
+  const drawnGround = (terrain: ReturnType<typeof ground>) => {
+    const seed = seabedSeed(terrain);
+    const rockTop = rockTopDepthM(terrain);
+    return (x: number, y: number) =>
+      -seabedDepthAtM(terrain, seed, rockTop, x, y, true) * DEPTH_VISUAL_M_PER_M;
+  };
+
+  it('keeps every swimmer above the drawn floor all loop long', () => {
+    // §5 checks paths against public ground. The slot guard reads the literal
+    // cell floors, and the drawn floor blends between cell centres, so a patch
+    // beside a ramp, as the deep fish along the pocket's north edge stand, is
+    // held here against the floor the view draws, nose and tail included.
+    const terrain = ground();
+    const groundY = drawnGround(terrain);
+    for (const p of freeWaterPlacements(terrain)) {
+      if (p.motion === undefined || p.motion.depthM === null) continue;
+      const half = propSpec(p.slug)!.footprintM / 2;
+      for (let step = 0; step < 48; step++) {
+        const pose = decorationPose(p, (p.motion.periodS * 1000 * step) / 48, groundY);
+        for (const [dx, dz] of [
+          [0, 0],
+          [half, 0],
+          [-half, 0],
+          [0, half],
+          [0, -half],
+        ] as const) {
+          assert.ok(
+            pose.y > groundY(pose.x + dx, pose.z + dz),
+            `${p.slug} of ${p.xM},${p.yM} meets the floor`
+          );
+        }
+      }
+    }
+  });
+
+  it('stands the life §5 adds for garden close and the low pose in those frames all loop long', () => {
+    // §5, Life in the frames: §9's poses through the conn camera's field at
+    // 1,440 × 900, the eye where the orbit puts it, a body counted only between
+    // the top bar's foot (52 px) and the console's top edge (692 px) and only
+    // where no drawn ground or rock stands between it and the eye.
+    const terrain = ground();
+    const groundY = drawnGround(terrain);
+    const focal = 450 / Math.tan((CONN_FOV_DEG / 2) * (Math.PI / 180));
+    const pose = (
+      x: number,
+      z: number,
+      dolly: number,
+      yawDeg: number,
+      pitchDeg: number,
+      focusDepthM: number
+    ) => {
+      const yaw = (yawDeg * Math.PI) / 180;
+      const pitch = (pitchDeg * Math.PI) / 180;
+      const focus = new Vector3(x, -focusDepthM * DEPTH_VISUAL_M_PER_M, z);
+      const eye = new Vector3(
+        Math.sin(yaw) * Math.cos(pitch),
+        Math.sin(pitch),
+        Math.cos(yaw) * Math.cos(pitch)
+      )
+        .multiplyScalar(dolly)
+        .add(focus);
+      const forward = focus.clone().sub(eye).normalize();
+      const right = forward
+        .clone()
+        .cross(new Vector3(0, 1, 0))
+        .normalize();
+      const up = right.clone().cross(forward);
+      // The body's distance from the eye if the frame shows it, else null.
+      return (at: { x: number; y: number; z: number }): number | null => {
+        const d = new Vector3(at.x, at.y, at.z).sub(eye);
+        const ahead = d.dot(forward);
+        if (ahead <= 1) return null;
+        const sx = 720 + (d.dot(right) / ahead) * focal;
+        const sy = 450 - (d.dot(up) / ahead) * focal;
+        if (sx < 0 || sx >= 1440 || sy < 52 || sy >= 692) return null;
+        for (let i = 1; i < 100; i++) {
+          const q = eye.clone().addScaledVector(d, i / 100);
+          if (q.y < groundY(q.x, q.z) && d.length() * (1 - i / 100) > 3) return null;
+        }
+        return d.length();
+      };
+    };
+    const gardenClose = pose(1875, 1125, 250, 90, 12, 275);
+    const low = pose(2000, 2000, 1600, 0, 12, 850);
+    const placements = freeWaterPlacements(terrain);
+    // Each patch §5 adds, the frame it is for, and how far out §5 says it reads.
+    const rows = [
+      [
+        'env-shoal-fry',
+        [
+          [2035, 1120],
+          [2010, 1160],
+        ],
+        gardenClose,
+        160,
+      ],
+      [
+        'env-outer-fish',
+        [
+          [1900, 1150],
+          [1780, 1080],
+        ],
+        gardenClose,
+        400,
+      ],
+      [
+        'env-rim-crab',
+        [
+          [1900, 1060],
+          [1880, 1165],
+          [1800, 1110],
+          [1760, 1200],
+        ],
+        gardenClose,
+        400,
+      ],
+      [
+        'env-deep-fish',
+        [
+          [1950, 1640],
+          [2150, 1630],
+          [2350, 1650],
+        ],
+        low,
+        2200,
+      ],
+    ] as const;
+    for (const [slug, centres, frame, reachM] of rows) {
+      const bodies = placements.filter(
+        (p) => p.slug === slug && centres.some(([x, y]) => p.xM === x && p.yM === y)
+      );
+      assert.ok(bodies.length >= centres.length, `${slug}: every patch §5 lists stands`);
+      for (const p of bodies) {
+        for (let step = 0; step < 48; step++) {
+          const at = decorationPose(p, (p.motion!.periodS * 1000 * step) / 48, groundY);
+          const distance = frame(at);
+          assert.ok(distance !== null, `${slug} of ${p.xM},${p.yM} leaves its frame`);
+          assert.ok(distance <= reachM, `${slug} of ${p.xM},${p.yM} at ${distance} m`);
+        }
       }
     }
   });
