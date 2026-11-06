@@ -127,8 +127,7 @@ export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false)
       });
     }
   };
-  const { CRAB, FRY, OUTER, GARDEN_OUTER, DEEP, RAY, FRY_SCHOOL, OUTER_SCHOOL } =
-    FREE_WATER_LIFE;
+  const { CRAB, FRY, OUTER, GARDEN_OUTER, DEEP, RAY, FRY_SCHOOL, OUTER_SCHOOL } = FREE_WATER_LIFE;
   // #1713's patches: crabs among the south flank's stands, fry over the north
   // canopy, outer fish over the bowl and deep fish in the pocket.
   for (const x of [1625, 1875, 2125, 2375]) life('env-rim-crab', x, 1375, 4, CRAB);
