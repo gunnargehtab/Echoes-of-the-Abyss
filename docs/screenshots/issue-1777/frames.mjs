@@ -11,7 +11,7 @@
 //
 // PROPS=290 reads a revision before #1777 (its list placed 290 props; this
 // one 291). FRAMES=low,survey limits the explicit poses. MOTION=1 shoots
-// garden close again ten seconds of match later. CONTROL=1 drives the
+// the opening pose again ten seconds of match later. CONTROL=1 drives the
 // unchanged Kelp Labyrinth control instead (`?map=kelp-labyrinth`): its
 // opening frame and the low and survey poses.
 import { writeFileSync } from 'node:fs';
@@ -142,9 +142,9 @@ export default async ({ page, shot }) => {
     await settle();
     await read(name);
     dir = dirname(await shot(name));
-    // The same pose ten seconds of match later, for motion: the schools and
-    // crabs on their loops, nothing reacting to the camera.
-    if (process.env.MOTION === '1' && name === 'garden-close') {
+    // The same pose ten seconds of match later, for motion: the ray along its
+    // loop, nothing reacting to the camera.
+    if (process.env.MOTION === '1' && name === 'opening-pose') {
       await page.waitForTimeout(10000);
       await settle();
       await read(`${name}-later`);

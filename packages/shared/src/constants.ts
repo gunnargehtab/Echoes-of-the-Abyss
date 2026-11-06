@@ -39,7 +39,7 @@ export const FREE_WATER_LIFE = {
    * where §9's opening reads it (#1777): one loop, 60 m round over 300 s, a
    * walking pace, at 250 ± 30 m beside the hulls' 300 m.
    */
-  RAY: { radiusM: 60, periodS: 300, depthM: 250, depthSwingM: 30, axisM: 0 },
+  RAY: { radiusM: 60, periodS: 300, depthM: 250, depthSwingM: 30, axisM: 0.76 },
   INNER_RADIUS_SHARE: 0.4,
   /**
    * How far a schooling fish keeps from its school's own point on the shared

@@ -245,7 +245,7 @@ plants or bowl-wide kelp are inherited just because those cells have a kelp biom
 
 Swim depths place the **body axis**, not the lowest fin tip (owner decision in #1713).
 The approved fry, outer fish, deep fish and ray axes stand 0.06, 0.78, 0.28 and
-AXIS_M_PENDING rendered metres above their model origins respectively. Subtract that offset after mapping
+0.76 rendered metres above their model origins respectively. Subtract that offset after mapping
 depth through the retained 0.22 display scale; do not squash or rescale the bodies.
 
 The fixture uses closed circular plan paths: crab radius 20 m over 240 s, fry

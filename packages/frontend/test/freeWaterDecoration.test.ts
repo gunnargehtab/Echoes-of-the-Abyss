@@ -295,7 +295,7 @@ describe('authored public decoration', () => {
       'env-shoal-fry': 0.15,
       'env-outer-fish': 1.69,
       'env-deep-fish': 0.84,
-      'env-rim-ray': 0,
+      'env-rim-ray': 4.05,
     };
     const at = (x: number, y: number) => (p: { xM: number; yM: number }) =>
       p.xM === x && p.yM === y;
