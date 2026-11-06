@@ -898,6 +898,8 @@ and no row below is open.
 | Model node places failing on another platform's rounding | [#1742](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1742) |
 | The Chorister's stub wings floating clear of the hull | [#1740](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1740) |
 | A tutorial loading test that timed out once in CI | [#1745](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1745) |
+| A square passage’s route line running across its way | [#1759](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1759) |
+| The mission log standing in the hint line’s row | [#1762](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1762) |
 
 **How the project runs**
 
@@ -909,6 +911,7 @@ and no row below is open.
 | A fix showing its test failing before the fix | [#1726](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1726) |
 | A repeat fix to one property targeting the whole property | [#1727](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1727) |
 | The loop map's misdated severity change | [#1728](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1728) |
+| Confirming the five-round cap exception for the free-water slice | [#1756](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1756) |
 
 **Store art**
 
