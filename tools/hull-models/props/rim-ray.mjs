@@ -42,8 +42,9 @@
  * +x. The still pose is the wings mid-stroke: the chord line climbs from
  * the centreline's 0 to 3.15 m at the last ring and 3.45 m at the tip
  * points, and the body under it is a shallow hump 1.51 m thick on a
- * 8.7 m chord, thickest 0.42 of the way back; from §9's opening pitch of
- * 21° the raised tips and the hump are the vertical silhouette.
+ * 8.7 m chord, thickest 0.42 of the way back; down the opening's 21°
+ * sightline (its eye is pitched 15°) the raised tips and the hump are the
+ * vertical silhouette.
  *
  * - `body`, in `fish_flank`: a shaft of nineteen twelve-cornered rings,
  *   one per station across the span at z 0, ±1.1, ±2.2, ±2.9, ±3.8, ±4.9,
@@ -78,8 +79,8 @@
  *   at the centreline (x −2.4 nominal, root inside the body, asserted),
  *   four four-cornered rings fanned to a point 5.0 m aft of the root, a
  *   radius of 0.24 m there falling to 0.06 at the last ring and drooping
- *   0.34 m; its end is the aft end of the 13.60 m. 3.1 m of it shows
- *   past the trailing edge, a third of the body's chord. 30 triangles.
+ *   0.34 m; its end is the aft end of the 13.60 m. 3.7 m of it shows
+ *   past the trailing edge, 0.43 of the body's chord. 30 triangles.
  * - `eye_p` / `eye_s`, in `stone_dark`: six-sided lenses on the head's
  *   shoulder, the band between the stations at ±2.2 and ±2.9 where the
  *   head drops to the wing, on the top facet over the leading edge

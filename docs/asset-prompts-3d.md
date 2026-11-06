@@ -2114,14 +2114,16 @@ blunt head, its leading edge nearly straight across to ±2.2 m and swept back fr
 to rounded tips, the trailing edge concave; the body 1.51 m thick at the centreline,
 0.16 m at the last ring. The still pose is the wings mid-stroke, tips raised: the chord
 line climbs from 0 at the centreline to 3.15 m at the last ring and 3.45 m at the tips,
-which with the hump is all the vertical silhouette the opening's 21° pitch reads, its plan
-foreshortened to 0.36 of its height. Two short cephalic lobes forward of the head at
+which with the hump is all the vertical silhouette the opening reads: its eye, pitched
+15°, looks down a 21° sightline at the ray, so the plan is foreshortened to 0.36 of its
+depth. Two short cephalic lobes forward of the head at
 z ∓1.38, paddles of four six-cornered rings each, 2.0 m long and wider than deep,
 flat-capped; a short whip of a tail from inside the trailing edge, four four-cornered
-rings fanned to a point, 3.1 m of it showing, drooping 0.34 m; two lenses for eyes on the
-head's shoulder where it drops to the wing, 0.20 m in radius. No jaw, nothing swept to
-a point, no coil, no armour, no lure, no eye that glows, and under a third of the
-smallest Sounder. Port rings mirror starboard ones triangle for triangle, so the eyes
+rings fanned to a point, 3.7 m of it showing, drooping 0.34 m; two lenses for eyes on the
+head's shoulder where it drops to the wing, 0.20 m in radius. No jaw, no fin swept to a
+point (the wings round off through a short fan to their tip points, the lobes are
+flat-capped, and the whip alone ends on one), no coil, no armour, no lure, no eye that
+glows, and under a third of the smallest Sounder. Port rings mirror starboard ones triangle for triangle, so the eyes
 mirror exactly, which the script asserts. `fish_flank` on the body, `stone_dark` on the
 lobes, tail and eyes; 586 triangles; 4.05 m tall (4.0482) at its 18 m, 13.60 m long from
 the lobes' ends to the tail's, the belly at the centreline on y = 0 and the body's
