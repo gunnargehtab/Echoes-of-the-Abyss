@@ -2350,6 +2350,13 @@ export class Match {
     const faction = this.factionOf(slot);
     if (!refitOfferedTo(kind, faction)) return false;
     if (this.world.refits.get(slot)?.has(kind) === true) return false;
+    // Once each across lines as well as across time (§2: "five, fleet-wide,
+    // once each"). A second Slipway buys a second line, never a second copy of
+    // the refit the first is running: without this the second yard took the
+    // price, and its grant found the refit already owned and granted nothing.
+    for (const [line, running] of this.world.production) {
+      if (running.refit?.kind === kind && Owner.slot[line] === slot) return false;
+    }
     // The yard §2 names for this refit and this navy, and no other — the
     // Slipway's line for every refit but one, and the Bastion for the Order's
     // Pressure Refit, whose purchase is a chord rather than a shift. The

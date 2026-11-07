@@ -645,6 +645,30 @@ describe('the Hold Refit', () => {
   });
 });
 
+describe('one copy of a refit a navy', () => {
+  it('refuses a second yard the refit another is already running (#1785)', () => {
+    // §2: "five, fleet-wide, once each". A second Slipway buys a second line
+    // for a different refit or a hull, never a second copy of the one running.
+    const { match, yard } = withYard(Faction.Bathyarch, StructureKind.Slipway);
+    const home = bastionOf(match, 0);
+    const second = spawnStructure(match.world, {
+      kind: StructureKind.Slipway,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: home.x,
+      y: home.y + 600,
+      prebuilt: true,
+    });
+    const economy = match.world.economies.get(0)!;
+    assert.equal(match.refit(0, yard, RefitKind.Plate), true, 'the first yard takes it');
+    const charged = { nodules: economy.nodules, crystal: economy.crystal };
+    assert.equal(match.refit(0, second, RefitKind.Plate), false, 'the second may not run it too');
+    assert.deepEqual({ nodules: economy.nodules, crystal: economy.crystal }, charged, 'nor charge');
+    assert.equal(match.world.production.get(second)?.refit, undefined, 'nor take its line');
+    assert.equal(match.refit(0, second, RefitKind.Drive), true, 'a different refit, it may');
+  });
+});
+
 describe('the Order’s other four refits', () => {
   it('are bought on a Slipway’s line at the standard terms, not struck at the Bastion', () => {
     // §2's Knights row: "Standard on the line — except the one below". Only the

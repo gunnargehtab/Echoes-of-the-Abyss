@@ -4172,10 +4172,13 @@ export class EchoRenderer {
         const refit = REFIT_STATS[kind];
         const price = refitPriceFor(kind, this.faction);
         const owned = this.refits.includes(kind);
+        // Running on a line already counts as bought: the server takes one
+        // copy of a refit a navy, across every yard (§2, "once each").
+        const running = this.structures.some((s) => s.refit?.kind === kind);
         const yard = this.refitTargetFor(kind);
         buttons.push({
           label: `${REFIT_SHORT[kind]} ${owned ? 'FITTED' : priceTag(price)}`,
-          enabled: !owned && yard !== undefined && affords(stockpile, price),
+          enabled: !owned && !running && yard !== undefined && affords(stockpile, price),
           active: owned,
           action: () => this.commandRefit(kind),
           hover: owned ? `${refit.name} — fitted` : hoverLine(refit.name, price),
@@ -4186,10 +4189,12 @@ export class EchoRenderer {
           // a Slipway for it would be the bar inventing a rule.
           refusal: owned
             ? `${refit.name}: bought — a refit is fleet-wide and bought once`
-            : yard === undefined
-              ? `${refit.name}: no ${structureStatsFor(refitTermsFor(kind, this.faction).boughtAt).name} ` +
-                `with a free line`
-              : (shortfallLine(refit.name, stockpile, price) ?? undefined),
+            : running
+              ? `${refit.name}: already on a line — a refit is fleet-wide and bought once`
+              : yard === undefined
+                ? `${refit.name}: no ${structureStatsFor(refitTermsFor(kind, this.faction).boughtAt).name} ` +
+                  `with a free line`
+                : (shortfallLine(refit.name, stockpile, price) ?? undefined),
         });
       }
     } else if (this.shownTab === 'squad') {
