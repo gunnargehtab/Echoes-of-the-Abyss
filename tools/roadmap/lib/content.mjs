@@ -610,6 +610,7 @@ export const items = {
   // Later
   1637: 'Three new looks for the game’s scenes, with the owner choosing which to follow',
   1694: 'A test patch of open water: a crater and a kelp jungle, with a camera and fleet free to move in every direction',
+  1777: 'The opening view of the open-water patch showing no sea life large enough to see',
   1600: 'Whether picking and ordering should make any interface sound',
   1601: 'How big the game’s sound files may be, and how they load',
   1603: 'The score going almost silent on a phone’s speaker setting',

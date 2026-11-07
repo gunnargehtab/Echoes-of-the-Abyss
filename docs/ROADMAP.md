@@ -990,6 +990,7 @@ takes this one.
 | Work | Issue |
 | --- | --- |
 | Epic — fleet command in a free, three-dimensional ocean | [#1694](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1694) |
+| No body of canonical size reads in the opening frame | [#1777](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1777) |
 
 A development-only slice ([free-water-slice.md](free-water-slice.md)), not a shipped map.
 
