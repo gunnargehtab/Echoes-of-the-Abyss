@@ -108,7 +108,9 @@ what it does to a hull mid-match. Both rulings are SPEC (#1785):
 - **Plate keeps a hull's condition.** Current hull scales with the maximum, so a full hull
   stays full and a half-sunk one stays half-sunk, its permanently lost share included. A
   refit is bought, not earned, and a fleet-wide heal for money would make §3's rank-up
-  something other than the one heal a hull can earn under fire.
+  something other than the one heal a hull can earn under fire. An enemy that resolves a
+  plated hull to Track reads that condition against the kind's own maximum, never the plate
+  ([systems-echo.md](systems-echo.md) §4): the plate is a purchase, and a purchase is not told.
 - **Magazine grows the roster's standard magazine, and only it.** Two becomes three
   ([systems-combat.md](systems-combat.md) §5). The Broadside's four and the Lance's one are
   each that hull's own argument ([units.md](units.md)), and the refit leaves both. A hull

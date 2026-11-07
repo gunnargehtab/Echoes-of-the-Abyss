@@ -226,8 +226,8 @@ instead: the navy, the hull and the authored depth of a hull another side's part
 from the mission file and never from the map, so it tells nothing the file does not and goes on
 claiming a seat whose hull is gone. Where the water at its point could not hold that depth — above the
 Lid or a roof, or below the seabed — it is drawn again (#1319). Health and the bow are vouched the same way. A phantom claims full health, as most hulls
-on the map have it, at its kind's own maximum and never a Plate Refit's, so a hurt return is a
-hull and so is a plated one; and it all but never draws a bow of exactly zero,
+on the map have it, so a hurt return is a hull. It claims its kind's own maximum, and so does
+every true return, a plated one included (§4); and it all but never draws a bow of exactly zero,
 the one a hull keeps from its yard until it first moves. Every heading a contact reports, true or
 false, is told as a bow is stored, single precision in the half turn either side of zero, so its
 precision and its range sort nothing (#1307). Every depth a contact reports, true or false, is
@@ -329,6 +329,13 @@ Detection is **graded**, not binary. This is the system's most important design 
 | **2 — Bearing** | Direction and rough distance. Blurred blob at true position ±15% | 1.5× threshold |
 | **3 — Classification** | Unit *type* and count estimate | 2.5× threshold |
 | **4 — Track** | Full resolution: exact unit, health, facing | 4× threshold, or active sonar |
+
+Health at Track is the hull's condition, told against its kind's own maximum. A Plate Refit's
+extra hull ([systems-progression.md](systems-progression.md) §2) is its owner's purchase and is
+never told: a plated hull at full health reads exactly as any other of its kind, and a hurt one
+reads the share of its hull it has left. Were the plate told, every true return of a plated navy
+would sort from the phantoms of §3, which claim their kind's own maximum because a phantom that
+carried the enemy's purchases would announce them (#1785).
 
 Tier 1 and 2 contacts **persist as ghost markers** and decay over 20 seconds. A retreating enemy leaves a fading trail of last-known positions — readable, but lying to you by exactly as much as they've moved.
 
