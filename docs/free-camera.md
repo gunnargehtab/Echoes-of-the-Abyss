@@ -297,7 +297,7 @@ at its depth, drawn between Echo ticks as the hull itself is (`ownMotion.ts`).
 | Right drag past the 6 px click slop | Orbit; in NAV, look. No order is given on release | Unchanged: the order goes to the press point on release |
 | Right click, inside the slop | The context order on release, as before | Unchanged |
 | `Shift` + middle drag | Orbit, as before | Unchanged |
-| Double click on an own hull | Selects its class, then glides to the hull and follows it | Selects its class |
+| Double click on an own hull | Selects its class, then glides to the hull and follows it; in NAV, whose flight follows nothing, it only selects | Selects its class |
 | Recall a control group twice | Glides to the group and follows it | Centres on it |
 | F8 / FLIGHT | Retired | — |
 | F9 / NAV | Enters keyboard flight, roll included, as the accessibility route, with flight's own rules: constant speed, no momentum. The mouse keeps every click it has outside NAV. Leaving glides back to the orbit | — |
