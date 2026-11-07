@@ -1886,10 +1886,10 @@ export class EchoLayer {
         }
 
         if (resolved.tier >= ResolutionTier.Track) {
-          // Health is the hull's condition, told against its kind's own
-          // maximum (docs/systems-echo.md §4). Only a plated hull's maximum is
-          // not its kind's, and the plate is its owner's purchase
-          // (docs/systems-progression.md §2): told, it would sort every true
+          // Health is the hull's condition (docs/systems-echo.md §4), and a
+          // Plate's extra hull is never told: a plated hull reads its condition
+          // against its kind's own maximum. The plate is its owner's purchase
+          // (docs/systems-progression.md §2); told, it would sort every true
           // return of a plated navy from §3's phantoms, which claim the kind's
           // own maximum because a phantom that carried a purchase would
           // announce it (#1785). At full health the ratio is exactly one, so
