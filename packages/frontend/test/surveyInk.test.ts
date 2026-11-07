@@ -11,7 +11,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { MeshBasicMaterial, ShaderLib } from 'three';
+import { FloatType, MeshBasicMaterial, NearestFilter, RedFormat, ShaderLib } from 'three';
 import { Biome, DEPTH, DEPTH_BANDS, TERRAIN_LIFT, THERMOCLINE } from '@echoes/shared';
 import { BIOME_COLOR, PALETTE_NAMES, PALETTES, ROCK_FACE, scaleRgb } from '../src/game/palette.ts';
 import {
@@ -31,6 +31,7 @@ import {
   SURVEY_WIDTH_PX,
   surveyCellClasses,
   surveyCellTexture,
+  surveyFloorTexture,
   THERMOCLINE_GAP_EDGE_PX,
   THERMOCLINE_ISOBATH_M,
   THERMOCLINE_RULE_GAP_PX,
@@ -130,6 +131,69 @@ describe('survey ink levels', () => {
     const shader = { ...ShaderLib.basic, uniforms: {} };
     material.onBeforeCompile(shader as never, {} as never);
     assert.match(shader.fragmentShader, new RegExp(`d - ${THERMOCLINE.DEPTH_M}\\.0 `));
+  });
+
+  /**
+   * The free-water study's pass (docs/map-visuals.md §4, the study's clause):
+   * coastlines on the zeros of the fields its heightfield carries, isobaths
+   * of its rounded floor read from the bake's samples, and every other
+   * ground's pass unchanged.
+   */
+  describe("the study's pass", () => {
+    const terrain: TerrainPayload = {
+      cols: 2,
+      rows: 1,
+      cellM: 250,
+      biomes: [Biome.KelpForest, Biome.CoralRuins],
+      floor: [1000, 600],
+      ceiling: [0, 0],
+    };
+    const compile = (drawn: boolean) => {
+      const material = new MeshBasicMaterial();
+      const cells = surveyCellTexture(terrain, surveyCellClasses(terrain));
+      const samples = {
+        nx: 64,
+        nz: 32,
+        stepM: 7.8125,
+        originM: 3.90625,
+        data: new Float32Array(64 * 32),
+      };
+      const floor = surveyFloorTexture(samples);
+      installSurveyInk(material, terrain, cells, drawn ? { floor, samples } : null);
+      const shader = { ...ShaderLib.basic, uniforms: {} as Record<string, unknown> };
+      material.onBeforeCompile(shader as never, {} as never);
+      return { material, shader, floor };
+    };
+
+    it('draws its coasts on the fields its vertices carry, not the cell edges', () => {
+      const { shader, material } = compile(true);
+      for (const attribute of ['surveyCoast', 'surveyBiomeA', 'surveyBiomeB']) {
+        assert.match(shader.vertexShader, new RegExp(`attribute \\w+ ${attribute};`));
+      }
+      assert.match(shader.fragmentShader, /surveyFieldPx\( vSurveyCoast/);
+      assert.match(shader.fragmentShader, /surveyFloorAt\( vSurveyXZ \)/);
+      assert.doesNotMatch(shader.fragmentShader, /surveyEdge\( here/);
+      assert.ok('uSurveyFloor' in shader.uniforms && 'uSurveyFloorGrid' in shader.uniforms);
+      assert.equal(material.customProgramCacheKey(), 'survey-ink-drawn');
+    });
+
+    it('leaves every other ground drawing its coasts on the cell edges', () => {
+      const { shader, material } = compile(false);
+      assert.match(shader.fragmentShader, /surveyEdge\( here/);
+      assert.doesNotMatch(shader.fragmentShader, /vSurveyCoast/);
+      assert.doesNotMatch(shader.vertexShader, /surveyCoast/);
+      assert.equal(material.customProgramCacheKey(), 'survey-ink');
+    });
+
+    it('takes its floor as one float a sample, unfiltered, for the pass to blend', () => {
+      const { floor } = compile(true);
+      assert.equal(floor.format, RedFormat);
+      assert.equal(floor.type, FloatType);
+      assert.equal(floor.magFilter, NearestFilter);
+      assert.equal(floor.minFilter, NearestFilter);
+      assert.equal(floor.image.width, 64);
+      assert.equal(floor.image.height, 32);
+    });
   });
 });
 

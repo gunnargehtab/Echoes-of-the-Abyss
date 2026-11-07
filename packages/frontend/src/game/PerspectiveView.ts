@@ -43,6 +43,8 @@ import {
   FogExp2,
   Frustum,
   Group,
+  InterleavedBuffer,
+  InterleavedBufferAttribute,
   LineBasicMaterial,
   LineLoop,
   LineSegments,
@@ -109,6 +111,7 @@ import {
   EMBER_GAIN,
   emberFlicker,
   rebakeSeabedCells,
+  SEABED_PX_PER_CELL,
   seabedRange,
   seabedSeed,
   ventEmbers,
@@ -117,6 +120,7 @@ import {
   type SeabedRange,
 } from './seabed.ts';
 import {
+  BIOME_FIELDS,
   buildHeightGrid,
   edgeRing,
   patchHeightGrid,
@@ -166,7 +170,10 @@ import {
   patchSurveyCellClasses,
   surveyCellClasses,
   surveyCellTexture,
+  surveyFloorTexture,
+  type SurveyFloorSamples,
 } from './surveyInk.ts';
+import { forgetRoundedCells } from './roundedCells.ts';
 import {
   BACKDROP_SPAN_M,
   installWaterFog,
@@ -807,6 +814,13 @@ export class PerspectiveView {
   private surveyClasses: Uint8Array<ArrayBuffer> | null = null;
   private surveyCells: DataTexture | null = null;
   /**
+   * The free-water study's survey floor, finer than the mesh, which its
+   * isobaths contour: the bake's own floor at each pixel it reads
+   * (seabed.ts `BakeOptions.eroded.floors`). Null on every other ground.
+   */
+  private surveyFloor: DataTexture | null = null;
+  private surveyFloorSamples: SurveyFloorSamples | null = null;
+  /**
    * The silt detail (seabedDetail.ts, docs/art-direction.md "Silt detail and
    * seated stones — SPEC"): its per-cell strengths, the texture the terrain
    * shader reads them through, and the seated stones the bake scours. Patched
@@ -1405,9 +1419,14 @@ export class PerspectiveView {
     return this.look !== 'free-water';
   }
 
-  /** The bake's options under this view's look: the eroded edges, or none. */
-  private bakeOptions(): BakeOptions {
-    return this.erodedGround ? { eroded: { rockTopM: this.groundRockTopM } } : {};
+  /**
+   * The bake's options under this view's look: the eroded edges, with the
+   * study's survey floor taken beside the skin, or none.
+   */
+  private bakeOptions(floors?: Float32Array): BakeOptions {
+    return this.erodedGround
+      ? { eroded: { rockTopM: this.groundRockTopM, ...(floors !== undefined ? { floors } : {}) } }
+      : {};
   }
 
   /**
@@ -1521,6 +1540,9 @@ export class PerspectiveView {
       }
     }
     if (touched === null) return;
+    // The study's rounded ground was read off the cells these replaced
+    // (roundedCells.ts), so it is read again; no other ground keeps one.
+    forgetRoundedCells(terrain);
     // The seed, the rock top and the depth ramp stay what the join set them
     // to: a delta changes the cells it names, and re-deriving any of the
     // three from the new ground would move every cell on the map to change a
@@ -2581,12 +2603,15 @@ export class PerspectiveView {
       (this.terrainMesh.material as MeshBasicMaterial).dispose();
       this.terrainMesh = null;
       this.surveyCells?.dispose();
+      this.surveyFloor?.dispose();
       this.detailTexture?.dispose();
       this.terrainGrid = null;
       this.seabedCanvas = null;
       this.seabedTexture = null;
       this.surveyClasses = null;
       this.surveyCells = null;
+      this.surveyFloor = null;
+      this.surveyFloorSamples = null;
       this.detailCells = null;
       this.detailTexture = null;
       this.detailUniforms = null;
@@ -2656,6 +2681,16 @@ export class PerspectiveView {
     // (docs/map-visuals.md §4). Shared with the grid rather than copied, so a
     // ground delta that patches the grid has patched the attribute too.
     geometry.setAttribute('surveyFloor', new BufferAttribute(grid.floor, 1));
+    // The free-water study's coastlines, on its rounded ground's own edges
+    // (docs/map-visuals.md §4, the study's clause), shared with the grid the
+    // same way: the rock coast's field, and the six biomes' three to an
+    // attribute.
+    if (grid.coast !== undefined && grid.biomes !== undefined) {
+      geometry.setAttribute('surveyCoast', new BufferAttribute(grid.coast, 1));
+      const biomes = new InterleavedBuffer(grid.biomes, BIOME_FIELDS);
+      geometry.setAttribute('surveyBiomeA', new InterleavedBufferAttribute(biomes, 3, 0));
+      geometry.setAttribute('surveyBiomeB', new InterleavedBufferAttribute(biomes, 3, 3));
+    }
     geometry.setIndex(new BufferAttribute(indices, 1));
 
     // Seated stones scour the bake (seabed.ts `stoneScourGain`) only where
@@ -2667,6 +2702,18 @@ export class PerspectiveView {
     // seating any still bakes its own; so does every entry with no baseline.
     const baseline = this.baselineSkin();
     const apron = this.apron;
+    // The study's isobaths read its rounded floor finer than the mesh can
+    // carry it, at the bake's own pixels.
+    const floorSamples: SurveyFloorSamples | null =
+      grid.coast !== undefined
+        ? {
+            nx: terrain.cols * SEABED_PX_PER_CELL,
+            nz: terrain.rows * SEABED_PX_PER_CELL,
+            stepM: terrain.cellM / SEABED_PX_PER_CELL,
+            originM: 0,
+            data: new Float32Array(terrain.cols * terrain.rows * SEABED_PX_PER_CELL ** 2),
+          }
+        : null;
     const canvas =
       baseline !== null && apron !== null && this.stones.length === 0
         ? cutSeabed(baseline, {
@@ -2675,7 +2722,13 @@ export class PerspectiveView {
             cols: terrain.cols,
             rows: terrain.rows,
           })
-        : bakeSeabed(terrain, this.groundSeed, this.seabedRange, this.stones, this.bakeOptions());
+        : bakeSeabed(
+            terrain,
+            this.groundSeed,
+            this.seabedRange,
+            this.stones,
+            this.bakeOptions(floorSamples?.data)
+          );
     const texture = new CanvasTexture(canvas);
     // The bake's row 0 is the map's north edge, and so is the grid's iz 0;
     // an unflipped texture keeps the two aligned without inverting the v axis.
@@ -2687,7 +2740,15 @@ export class PerspectiveView {
     // fragment shader, so the ground's silhouette costs no draw call.
     const classes = surveyCellClasses(terrain);
     const cells = surveyCellTexture(terrain, classes);
-    installSurveyInk(material, terrain, cells);
+    const surveyFloor = floorSamples !== null ? surveyFloorTexture(floorSamples) : null;
+    installSurveyInk(
+      material,
+      terrain,
+      cells,
+      floorSamples !== null && surveyFloor !== null
+        ? { floor: surveyFloor, samples: floorSamples }
+        : null
+    );
     // Between the two: the veil drains the finished ground, surface and
     // detail and all, and the ink goes over it (veilShading.ts).
     installDisplayVeil(material);
@@ -2715,6 +2776,8 @@ export class PerspectiveView {
     this.seabedTexture = texture;
     this.surveyClasses = classes;
     this.surveyCells = cells;
+    this.surveyFloor = surveyFloor;
+    this.surveyFloorSamples = floorSamples;
 
     // The fog is the water (water.ts). Exponential rather than linear, and
     // its density follows the dolly rather than the map: the colour is what
@@ -2843,6 +2906,13 @@ export class PerspectiveView {
     // needs re-uploading. A delta can also turn water to rock or change a
     // biome, which moves a coastline.
     (mesh.geometry.getAttribute('surveyFloor') as BufferAttribute).needsUpdate = true;
+    if (grid.coast !== undefined) {
+      (mesh.geometry.getAttribute('surveyCoast') as BufferAttribute).needsUpdate = true;
+      (mesh.geometry.getAttribute('surveyBiomeA') as InterleavedBufferAttribute).data.needsUpdate =
+        true;
+      // The survey floor is the bake's, re-baked whole below.
+      if (this.surveyFloor !== null) this.surveyFloor.needsUpdate = true;
+    }
     if (this.surveyClasses !== null && this.surveyCells !== null) {
       patchSurveyCellClasses(this.surveyClasses, terrain, touched);
       this.surveyCells.needsUpdate = true;
@@ -2865,7 +2935,7 @@ export class PerspectiveView {
       this.seabedRange,
       touched,
       this.stones,
-      this.bakeOptions()
+      this.bakeOptions(this.surveyFloorSamples?.data)
     );
     texture.needsUpdate = true;
 
