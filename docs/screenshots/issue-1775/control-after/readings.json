@@ -1,0 +1,4367 @@
+{
+ "url": "http://localhost:5173/?map=kelp-labyrinth",
+ "viewport": {
+  "width": 1440,
+  "height": 900
+ },
+ "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+ "target": {
+  "id": 62,
+  "name": "Light Scout",
+  "x": 946,
+  "y": 390
+ },
+ "summary": [
+  {
+   "mark": "wheel: three notches in",
+   "frames": 17,
+   "ms": 10169,
+   "distance": {
+    "from": 2600,
+    "to": 1953,
+    "biggestFrameShare": 0.365
+   },
+   "yaw": {
+    "from": 0,
+    "to": 0,
+    "biggestFrameShare": null
+   },
+   "pitch": {
+    "from": 55,
+    "to": 55,
+    "biggestFrameShare": null
+   },
+   "focus": {
+    "from": {
+     "xM": 904,
+     "zM": 1136,
+     "depthM": null
+    },
+    "to": {
+     "xM": 904,
+     "zM": 1077,
+     "depthM": null
+    },
+    "travelledM": 59,
+    "biggestFrameShare": 0.356
+   },
+   "eye": {
+    "travelledM": 2481,
+    "biggestFrameShare": 0.361
+   },
+   "settledAfterFrames": 7,
+   "stillAtEnd": true,
+   "flyingAtEnd": false,
+   "followingAtEnd": null,
+   "followGapToDrawnM": null,
+   "followGapM": null,
+   "followDepthGapM": null
+  },
+  {
+   "mark": "pan: let go moving",
+   "frames": 42,
+   "ms": 25284,
+   "distance": {
+    "from": 1953,
+    "to": 1953,
+    "biggestFrameShare": null
+   },
+   "yaw": {
+    "from": 0,
+    "to": 0,
+    "biggestFrameShare": null
+   },
+   "pitch": {
+    "from": 55,
+    "to": 55,
+    "biggestFrameShare": null
+   },
+   "focus": {
+    "from": {
+     "xM": 904,
+     "zM": 1077,
+     "depthM": null
+    },
+    "to": {
+     "xM": 601,
+     "zM": 1077,
+     "depthM": null
+    },
+    "travelledM": 303,
+    "biggestFrameShare": 1
+   },
+   "eye": {
+    "travelledM": 406,
+    "biggestFrameShare": 0.746
+   },
+   "settledAfterFrames": 1,
+   "stillAtEnd": true,
+   "flyingAtEnd": false,
+   "followingAtEnd": null,
+   "followGapToDrawnM": null,
+   "followGapM": null,
+   "followDepthGapM": null
+  },
+  {
+   "mark": "pan: held still, then let go",
+   "frames": 13,
+   "ms": 6895,
+   "distance": {
+    "from": 1953,
+    "to": 1953,
+    "biggestFrameShare": null
+   },
+   "yaw": {
+    "from": 0,
+    "to": 0,
+    "biggestFrameShare": null
+   },
+   "pitch": {
+    "from": 55,
+    "to": 55,
+    "biggestFrameShare": null
+   },
+   "focus": {
+    "from": {
+     "xM": 601,
+     "zM": 1077,
+     "depthM": null
+    },
+    "to": {
+     "xM": 297,
+     "zM": 1077,
+     "depthM": null
+    },
+    "travelledM": 304,
+    "biggestFrameShare": 1
+   },
+   "eye": {
+    "travelledM": 331,
+    "biggestFrameShare": 0.918
+   },
+   "settledAfterFrames": 1,
+   "stillAtEnd": true,
+   "flyingAtEnd": false,
+   "followingAtEnd": null,
+   "followGapToDrawnM": null,
+   "followGapM": null,
+   "followDepthGapM": null
+  },
+  {
+   "mark": "orbit: right drag, let go moving",
+   "frames": 54,
+   "ms": 29379,
+   "distance": {
+    "from": 1953,
+    "to": 1953,
+    "biggestFrameShare": null
+   },
+   "yaw": {
+    "from": 0,
+    "to": 0,
+    "biggestFrameShare": null
+   },
+   "pitch": {
+    "from": 55,
+    "to": 55,
+    "biggestFrameShare": null
+   },
+   "focus": {
+    "from": {
+     "xM": 297,
+     "zM": 1077,
+     "depthM": null
+    },
+    "to": {
+     "xM": 297,
+     "zM": 1077,
+     "depthM": null
+    },
+    "travelledM": 0,
+    "biggestFrameShare": null
+   },
+   "eye": {
+    "travelledM": 130,
+    "biggestFrameShare": 0.033
+   },
+   "settledAfterFrames": 0,
+   "stillAtEnd": true,
+   "flyingAtEnd": false,
+   "followingAtEnd": null,
+   "followGapToDrawnM": null,
+   "followGapM": null,
+   "followDepthGapM": null
+  },
+  {
+   "mark": "follow: double-click the Light Scout (62)",
+   "frames": 22,
+   "ms": 12060,
+   "distance": {
+    "from": 1953,
+    "to": 1953,
+    "biggestFrameShare": null
+   },
+   "yaw": {
+    "from": 0,
+    "to": 0,
+    "biggestFrameShare": null
+   },
+   "pitch": {
+    "from": 55,
+    "to": 55,
+    "biggestFrameShare": null
+   },
+   "focus": {
+    "from": {
+     "xM": 297,
+     "zM": 1077,
+     "depthM": null
+    },
+    "to": {
+     "xM": 297,
+     "zM": 1077,
+     "depthM": null
+    },
+    "travelledM": 0,
+    "biggestFrameShare": null
+   },
+   "eye": {
+    "travelledM": 53,
+    "biggestFrameShare": 0.078
+   },
+   "settledAfterFrames": 0,
+   "stillAtEnd": true,
+   "flyingAtEnd": false,
+   "followingAtEnd": null,
+   "followGapToDrawnM": null,
+   "followGapM": null,
+   "followDepthGapM": null
+  },
+  {
+   "mark": "follow: the hull sent across the water",
+   "frames": 23,
+   "ms": 12498,
+   "distance": {
+    "from": 1953,
+    "to": 1953,
+    "biggestFrameShare": null
+   },
+   "yaw": {
+    "from": 0,
+    "to": 0,
+    "biggestFrameShare": null
+   },
+   "pitch": {
+    "from": 55,
+    "to": 55,
+    "biggestFrameShare": null
+   },
+   "focus": {
+    "from": {
+     "xM": 297,
+     "zM": 1077,
+     "depthM": null
+    },
+    "to": {
+     "xM": 297,
+     "zM": 1077,
+     "depthM": null
+    },
+    "travelledM": 0,
+    "biggestFrameShare": null
+   },
+   "eye": {
+    "travelledM": 59,
+    "biggestFrameShare": 0.076
+   },
+   "settledAfterFrames": 0,
+   "stillAtEnd": true,
+   "flyingAtEnd": false,
+   "followingAtEnd": null,
+   "followGapToDrawnM": null,
+   "followGapM": null,
+   "followDepthGapM": null
+  },
+  {
+   "mark": "follow: an arrow pan lets go",
+   "frames": 7,
+   "ms": 3127,
+   "distance": {
+    "from": 1953,
+    "to": 1953,
+    "biggestFrameShare": null
+   },
+   "yaw": {
+    "from": 0,
+    "to": 0,
+    "biggestFrameShare": null
+   },
+   "pitch": {
+    "from": 55,
+    "to": 55,
+    "biggestFrameShare": null
+   },
+   "focus": {
+    "from": {
+     "xM": 297,
+     "zM": 1077,
+     "depthM": null
+    },
+    "to": {
+     "xM": 155,
+     "zM": 1077,
+     "depthM": null
+    },
+    "travelledM": 142,
+    "biggestFrameShare": 1
+   },
+   "eye": {
+    "travelledM": 150,
+    "biggestFrameShare": 0.949
+   },
+   "settledAfterFrames": 1,
+   "stillAtEnd": true,
+   "flyingAtEnd": false,
+   "followingAtEnd": null,
+   "followGapToDrawnM": null,
+   "followGapM": null,
+   "followDepthGapM": null
+  },
+  {
+   "mark": "home",
+   "frames": 14,
+   "ms": 7280,
+   "distance": {
+    "from": 1953,
+    "to": 1953,
+    "biggestFrameShare": null
+   },
+   "yaw": {
+    "from": 0,
+    "to": 0,
+    "biggestFrameShare": null
+   },
+   "pitch": {
+    "from": 55,
+    "to": 55,
+    "biggestFrameShare": null
+   },
+   "focus": {
+    "from": {
+     "xM": 155,
+     "zM": 1077,
+     "depthM": null
+    },
+    "to": {
+     "xM": 155,
+     "zM": 1077,
+     "depthM": null
+    },
+    "travelledM": 0,
+    "biggestFrameShare": null
+   },
+   "eye": {
+    "travelledM": 36,
+    "biggestFrameShare": 0.124
+   },
+   "settledAfterFrames": 0,
+   "stillAtEnd": true,
+   "flyingAtEnd": false,
+   "followingAtEnd": null,
+   "followGapToDrawnM": null,
+   "followGapM": null,
+   "followDepthGapM": null
+  },
+  {
+   "mark": "nav: in, flying forward",
+   "frames": 13,
+   "ms": 6576,
+   "distance": {
+    "from": 1953,
+    "to": 1953,
+    "biggestFrameShare": null
+   },
+   "yaw": {
+    "from": 0,
+    "to": 0,
+    "biggestFrameShare": null
+   },
+   "pitch": {
+    "from": 55,
+    "to": 55,
+    "biggestFrameShare": null
+   },
+   "focus": {
+    "from": {
+     "xM": 155,
+     "zM": 1077,
+     "depthM": null
+    },
+    "to": {
+     "xM": 155,
+     "zM": 1077,
+     "depthM": null
+    },
+    "travelledM": 0,
+    "biggestFrameShare": null
+   },
+   "eye": {
+    "travelledM": 28,
+    "biggestFrameShare": 0.149
+   },
+   "settledAfterFrames": 0,
+   "stillAtEnd": true,
+   "flyingAtEnd": false,
+   "followingAtEnd": null,
+   "followGapToDrawnM": null,
+   "followGapM": null,
+   "followDepthGapM": null
+  },
+  {
+   "mark": "nav: out",
+   "frames": 14,
+   "ms": 6931,
+   "distance": {
+    "from": 1953,
+    "to": 1953,
+    "biggestFrameShare": null
+   },
+   "yaw": {
+    "from": 0,
+    "to": 0,
+    "biggestFrameShare": null
+   },
+   "pitch": {
+    "from": 55,
+    "to": 55,
+    "biggestFrameShare": null
+   },
+   "focus": {
+    "from": {
+     "xM": 155,
+     "zM": 1077,
+     "depthM": null
+    },
+    "to": {
+     "xM": 155,
+     "zM": 1077,
+     "depthM": null
+    },
+    "travelledM": 0,
+    "biggestFrameShare": null
+   },
+   "eye": {
+    "travelledM": 34,
+    "biggestFrameShare": 0.125
+   },
+   "settledAfterFrames": 0,
+   "stillAtEnd": true,
+   "flyingAtEnd": false,
+   "followingAtEnd": null,
+   "followGapToDrawnM": null,
+   "followGapM": null,
+   "followDepthGapM": null
+  }
+ ],
+ "rows": [
+  {
+   "t": 34703,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 2600,
+   "focus": {
+    "xM": 904,
+    "zM": 1136,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 905,
+    "zM": 2624,
+    "depthM": -7895
+   },
+   "flying": false
+  },
+  {
+   "t": 35274,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 2600,
+   "focus": {
+    "xM": 904,
+    "zM": 1136,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 905,
+    "zM": 2623,
+    "depthM": -7897
+   },
+   "flying": false
+  },
+  {
+   "t": 35796,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 2600,
+   "focus": {
+    "xM": 904,
+    "zM": 1136,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 906,
+    "zM": 2623,
+    "depthM": -7898
+   },
+   "flying": false
+  },
+  {
+   "t": 36363,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 2600,
+   "focus": {
+    "xM": 904,
+    "zM": 1136,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 906,
+    "zM": 2623,
+    "depthM": -7897
+   },
+   "flying": false
+  },
+  {
+   "t": 36936,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 2600,
+   "focus": {
+    "xM": 904,
+    "zM": 1136,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 907,
+    "zM": 2624,
+    "depthM": -7894
+   },
+   "flying": false
+  },
+  {
+   "t": 37487,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 2600,
+   "focus": {
+    "xM": 904,
+    "zM": 1136,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 907,
+    "zM": 2625,
+    "depthM": -7891
+   },
+   "flying": false
+  },
+  {
+   "t": 38099,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 2600,
+   "focus": {
+    "xM": 904,
+    "zM": 1136,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 907,
+    "zM": 2626,
+    "depthM": -7886
+   },
+   "flying": false
+  },
+  {
+   "t": 38663,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 2600,
+   "focus": {
+    "xM": 904,
+    "zM": 1136,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 907,
+    "zM": 2628,
+    "depthM": -7882
+   },
+   "flying": false
+  },
+  {
+   "t": 39214,
+   "mark": "wheel: three notches in"
+  },
+  {
+   "t": 39224,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 2600,
+   "focus": {
+    "xM": 904,
+    "zM": 1136,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 907,
+    "zM": 2629,
+    "depthM": -7877
+   },
+   "flying": false
+  },
+  {
+   "t": 39817,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 2600,
+   "focus": {
+    "xM": 904,
+    "zM": 1136,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 907,
+    "zM": 2631,
+    "depthM": -7873
+   },
+   "flying": false
+  },
+  {
+   "t": 40367,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 2600,
+   "focus": {
+    "xM": 904,
+    "zM": 1136,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 906,
+    "zM": 2631,
+    "depthM": -7870
+   },
+   "flying": false
+  },
+  {
+   "t": 40928,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 2364,
+   "focus": {
+    "xM": 904,
+    "zM": 1115,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 906,
+    "zM": 2474,
+    "depthM": -6987
+   },
+   "flying": false
+  },
+  {
+   "t": 41524,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 2364,
+   "focus": {
+    "xM": 904,
+    "zM": 1115,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 905,
+    "zM": 2474,
+    "depthM": -6987
+   },
+   "flying": false
+  },
+  {
+   "t": 42150,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 2149,
+   "focus": {
+    "xM": 904,
+    "zM": 1095,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 904,
+    "zM": 2331,
+    "depthM": -6190
+   },
+   "flying": false
+  },
+  {
+   "t": 42786,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 2149,
+   "focus": {
+    "xM": 904,
+    "zM": 1095,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 904,
+    "zM": 2330,
+    "depthM": -6193
+   },
+   "flying": false
+  },
+  {
+   "t": 43393,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 904,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 903,
+    "zM": 2199,
+    "depthM": -5470
+   },
+   "flying": false
+  },
+  {
+   "t": 44096,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 904,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 902,
+    "zM": 2198,
+    "depthM": -5474
+   },
+   "flying": false
+  },
+  {
+   "t": 44736,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 904,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 902,
+    "zM": 2196,
+    "depthM": -5478
+   },
+   "flying": false
+  },
+  {
+   "t": 45407,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 904,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 901,
+    "zM": 2195,
+    "depthM": -5482
+   },
+   "flying": false
+  },
+  {
+   "t": 46079,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 904,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 901,
+    "zM": 2194,
+    "depthM": -5484
+   },
+   "flying": false
+  },
+  {
+   "t": 46731,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 904,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 901,
+    "zM": 2194,
+    "depthM": -5485
+   },
+   "flying": false
+  },
+  {
+   "t": 47363,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 904,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 901,
+    "zM": 2194,
+    "depthM": -5484
+   },
+   "flying": false
+  },
+  {
+   "t": 48022,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 904,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 901,
+    "zM": 2195,
+    "depthM": -5482
+   },
+   "flying": false
+  },
+  {
+   "t": 48706,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 904,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 902,
+    "zM": 2196,
+    "depthM": -5479
+   },
+   "flying": false
+  },
+  {
+   "t": 49393,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 904,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 902,
+    "zM": 2197,
+    "depthM": -5474
+   },
+   "flying": false
+  },
+  {
+   "t": 50017,
+   "mark": "pan: let go moving"
+  },
+  {
+   "t": 50028,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 904,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 903,
+    "zM": 2199,
+    "depthM": -5470
+   },
+   "flying": false
+  },
+  {
+   "t": 50812,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 600,
+    "zM": 2200,
+    "depthM": -5472
+   },
+   "flying": false
+  },
+  {
+   "t": 51457,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 601,
+    "zM": 2201,
+    "depthM": -5470
+   },
+   "flying": false
+  },
+  {
+   "t": 52056,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 602,
+    "zM": 2201,
+    "depthM": -5469
+   },
+   "flying": false
+  },
+  {
+   "t": 52665,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 602,
+    "zM": 2201,
+    "depthM": -5469
+   },
+   "flying": false
+  },
+  {
+   "t": 53302,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 603,
+    "zM": 2201,
+    "depthM": -5471
+   },
+   "flying": false
+  },
+  {
+   "t": 53900,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 603,
+    "zM": 2200,
+    "depthM": -5473
+   },
+   "flying": false
+  },
+  {
+   "t": 54517,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 603,
+    "zM": 2199,
+    "depthM": -5477
+   },
+   "flying": false
+  },
+  {
+   "t": 55135,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 603,
+    "zM": 2197,
+    "depthM": -5481
+   },
+   "flying": false
+  },
+  {
+   "t": 55711,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 603,
+    "zM": 2196,
+    "depthM": -5484
+   },
+   "flying": false
+  },
+  {
+   "t": 56297,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 603,
+    "zM": 2195,
+    "depthM": -5487
+   },
+   "flying": false
+  },
+  {
+   "t": 56890,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 603,
+    "zM": 2195,
+    "depthM": -5490
+   },
+   "flying": false
+  },
+  {
+   "t": 57477,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 602,
+    "zM": 2194,
+    "depthM": -5491
+   },
+   "flying": false
+  },
+  {
+   "t": 58082,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 602,
+    "zM": 2194,
+    "depthM": -5491
+   },
+   "flying": false
+  },
+  {
+   "t": 58660,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 601,
+    "zM": 2195,
+    "depthM": -5490
+   },
+   "flying": false
+  },
+  {
+   "t": 59250,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 601,
+    "zM": 2195,
+    "depthM": -5487
+   },
+   "flying": false
+  },
+  {
+   "t": 59883,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 600,
+    "zM": 2197,
+    "depthM": -5484
+   },
+   "flying": false
+  },
+  {
+   "t": 60434,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 600,
+    "zM": 2198,
+    "depthM": -5480
+   },
+   "flying": false
+  },
+  {
+   "t": 61003,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 599,
+    "zM": 2199,
+    "depthM": -5477
+   },
+   "flying": false
+  },
+  {
+   "t": 61563,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 599,
+    "zM": 2200,
+    "depthM": -5474
+   },
+   "flying": false
+  },
+  {
+   "t": 62159,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 598,
+    "zM": 2201,
+    "depthM": -5471
+   },
+   "flying": false
+  },
+  {
+   "t": 62755,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 598,
+    "zM": 2201,
+    "depthM": -5469
+   },
+   "flying": false
+  },
+  {
+   "t": 63377,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 598,
+    "zM": 2201,
+    "depthM": -5469
+   },
+   "flying": false
+  },
+  {
+   "t": 63955,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 598,
+    "zM": 2201,
+    "depthM": -5470
+   },
+   "flying": false
+  },
+  {
+   "t": 64563,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 598,
+    "zM": 2200,
+    "depthM": -5472
+   },
+   "flying": false
+  },
+  {
+   "t": 65188,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 598,
+    "zM": 2199,
+    "depthM": -5475
+   },
+   "flying": false
+  },
+  {
+   "t": 65870,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 598,
+    "zM": 2198,
+    "depthM": -5479
+   },
+   "flying": false
+  },
+  {
+   "t": 66461,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 599,
+    "zM": 2197,
+    "depthM": -5483
+   },
+   "flying": false
+  },
+  {
+   "t": 67021,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 600,
+    "zM": 2196,
+    "depthM": -5486
+   },
+   "flying": false
+  },
+  {
+   "t": 67595,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 600,
+    "zM": 2195,
+    "depthM": -5489
+   },
+   "flying": false
+  },
+  {
+   "t": 68261,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 601,
+    "zM": 2194,
+    "depthM": -5491
+   },
+   "flying": false
+  },
+  {
+   "t": 68831,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 601,
+    "zM": 2194,
+    "depthM": -5491
+   },
+   "flying": false
+  },
+  {
+   "t": 69637,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 602,
+    "zM": 2195,
+    "depthM": -5490
+   },
+   "flying": false
+  },
+  {
+   "t": 70203,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 603,
+    "zM": 2195,
+    "depthM": -5487
+   },
+   "flying": false
+  },
+  {
+   "t": 70777,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 603,
+    "zM": 2196,
+    "depthM": -5484
+   },
+   "flying": false
+  },
+  {
+   "t": 71347,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 603,
+    "zM": 2197,
+    "depthM": -5481
+   },
+   "flying": false
+  },
+  {
+   "t": 71994,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 603,
+    "zM": 2199,
+    "depthM": -5477
+   },
+   "flying": false
+  },
+  {
+   "t": 72584,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 603,
+    "zM": 2200,
+    "depthM": -5473
+   },
+   "flying": false
+  },
+  {
+   "t": 73238,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 603,
+    "zM": 2201,
+    "depthM": -5471
+   },
+   "flying": false
+  },
+  {
+   "t": 73882,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 603,
+    "zM": 2201,
+    "depthM": -5469
+   },
+   "flying": false
+  },
+  {
+   "t": 74599,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 602,
+    "zM": 2201,
+    "depthM": -5469
+   },
+   "flying": false
+  },
+  {
+   "t": 75312,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 602,
+    "zM": 2201,
+    "depthM": -5471
+   },
+   "flying": false
+  },
+  {
+   "t": 75985,
+   "mark": "pan: held still, then let go"
+  },
+  {
+   "t": 75991,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 601,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 601,
+    "zM": 2200,
+    "depthM": -5474
+   },
+   "flying": false
+  },
+  {
+   "t": 76979,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 297,
+    "zM": 2198,
+    "depthM": -5460
+   },
+   "flying": false
+  },
+  {
+   "t": 77556,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 296,
+    "zM": 2197,
+    "depthM": -5464
+   },
+   "flying": false
+  },
+  {
+   "t": 78145,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 296,
+    "zM": 2196,
+    "depthM": -5467
+   },
+   "flying": false
+  },
+  {
+   "t": 78709,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2195,
+    "depthM": -5469
+   },
+   "flying": false
+  },
+  {
+   "t": 79247,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2194,
+    "depthM": -5471
+   },
+   "flying": false
+  },
+  {
+   "t": 79753,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2194,
+    "depthM": -5471
+   },
+   "flying": false
+  },
+  {
+   "t": 80325,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 294,
+    "zM": 2194,
+    "depthM": -5471
+   },
+   "flying": false
+  },
+  {
+   "t": 80842,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 294,
+    "zM": 2195,
+    "depthM": -5469
+   },
+   "flying": false
+  },
+  {
+   "t": 81376,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 294,
+    "zM": 2196,
+    "depthM": -5467
+   },
+   "flying": false
+  },
+  {
+   "t": 81876,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2196,
+    "depthM": -5464
+   },
+   "flying": false
+  },
+  {
+   "t": 82367,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2197,
+    "depthM": -5461
+   },
+   "flying": false
+  },
+  {
+   "t": 82886,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2198,
+    "depthM": -5458
+   },
+   "flying": false
+  },
+  {
+   "t": 83440,
+   "mark": "orbit: right drag, let go moving"
+  },
+  {
+   "t": 83446,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 296,
+    "zM": 2200,
+    "depthM": -5455
+   },
+   "flying": false
+  },
+  {
+   "t": 84089,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 296,
+    "zM": 2200,
+    "depthM": -5451
+   },
+   "flying": false
+  },
+  {
+   "t": 84593,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 297,
+    "zM": 2201,
+    "depthM": -5450
+   },
+   "flying": false
+  },
+  {
+   "t": 85122,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 297,
+    "zM": 2201,
+    "depthM": -5449
+   },
+   "flying": false
+  },
+  {
+   "t": 85630,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 298,
+    "zM": 2201,
+    "depthM": -5449
+   },
+   "flying": false
+  },
+  {
+   "t": 86178,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 298,
+    "zM": 2201,
+    "depthM": -5451
+   },
+   "flying": false
+  },
+  {
+   "t": 86749,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 299,
+    "zM": 2200,
+    "depthM": -5453
+   },
+   "flying": false
+  },
+  {
+   "t": 87290,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 299,
+    "zM": 2199,
+    "depthM": -5456
+   },
+   "flying": false
+  },
+  {
+   "t": 87816,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 300,
+    "zM": 2198,
+    "depthM": -5459
+   },
+   "flying": false
+  },
+  {
+   "t": 88366,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 300,
+    "zM": 2197,
+    "depthM": -5462
+   },
+   "flying": false
+  },
+  {
+   "t": 88901,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 300,
+    "zM": 2196,
+    "depthM": -5466
+   },
+   "flying": false
+  },
+  {
+   "t": 89447,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 300,
+    "zM": 2195,
+    "depthM": -5468
+   },
+   "flying": false
+  },
+  {
+   "t": 89983,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 300,
+    "zM": 2195,
+    "depthM": -5470
+   },
+   "flying": false
+  },
+  {
+   "t": 90527,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 300,
+    "zM": 2194,
+    "depthM": -5471
+   },
+   "flying": false
+  },
+  {
+   "t": 91030,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 299,
+    "zM": 2194,
+    "depthM": -5471
+   },
+   "flying": false
+  },
+  {
+   "t": 91553,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 299,
+    "zM": 2195,
+    "depthM": -5470
+   },
+   "flying": false
+  },
+  {
+   "t": 92083,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 299,
+    "zM": 2195,
+    "depthM": -5468
+   },
+   "flying": false
+  },
+  {
+   "t": 92662,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 298,
+    "zM": 2196,
+    "depthM": -5465
+   },
+   "flying": false
+  },
+  {
+   "t": 93230,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 297,
+    "zM": 2197,
+    "depthM": -5462
+   },
+   "flying": false
+  },
+  {
+   "t": 93798,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 297,
+    "zM": 2198,
+    "depthM": -5458
+   },
+   "flying": false
+  },
+  {
+   "t": 94327,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 296,
+    "zM": 2199,
+    "depthM": -5455
+   },
+   "flying": false
+  },
+  {
+   "t": 94840,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 296,
+    "zM": 2200,
+    "depthM": -5453
+   },
+   "flying": false
+  },
+  {
+   "t": 95370,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2201,
+    "depthM": -5450
+   },
+   "flying": false
+  },
+  {
+   "t": 95915,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2201,
+    "depthM": -5449
+   },
+   "flying": false
+  },
+  {
+   "t": 96534,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2201,
+    "depthM": -5449
+   },
+   "flying": false
+  },
+  {
+   "t": 97100,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 294,
+    "zM": 2201,
+    "depthM": -5450
+   },
+   "flying": false
+  },
+  {
+   "t": 97642,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 294,
+    "zM": 2200,
+    "depthM": -5452
+   },
+   "flying": false
+  },
+  {
+   "t": 98241,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 294,
+    "zM": 2199,
+    "depthM": -5456
+   },
+   "flying": false
+  },
+  {
+   "t": 98813,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2198,
+    "depthM": -5459
+   },
+   "flying": false
+  },
+  {
+   "t": 99345,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2197,
+    "depthM": -5462
+   },
+   "flying": false
+  },
+  {
+   "t": 99890,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2196,
+    "depthM": -5466
+   },
+   "flying": false
+  },
+  {
+   "t": 100443,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 296,
+    "zM": 2195,
+    "depthM": -5468
+   },
+   "flying": false
+  },
+  {
+   "t": 101021,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 296,
+    "zM": 2195,
+    "depthM": -5470
+   },
+   "flying": false
+  },
+  {
+   "t": 101528,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 297,
+    "zM": 2194,
+    "depthM": -5471
+   },
+   "flying": false
+  },
+  {
+   "t": 102068,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 297,
+    "zM": 2194,
+    "depthM": -5471
+   },
+   "flying": false
+  },
+  {
+   "t": 102606,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 298,
+    "zM": 2195,
+    "depthM": -5470
+   },
+   "flying": false
+  },
+  {
+   "t": 103153,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 298,
+    "zM": 2195,
+    "depthM": -5468
+   },
+   "flying": false
+  },
+  {
+   "t": 103725,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 299,
+    "zM": 2196,
+    "depthM": -5465
+   },
+   "flying": false
+  },
+  {
+   "t": 104283,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 299,
+    "zM": 2197,
+    "depthM": -5462
+   },
+   "flying": false
+  },
+  {
+   "t": 104881,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 300,
+    "zM": 2198,
+    "depthM": -5458
+   },
+   "flying": false
+  },
+  {
+   "t": 105453,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 300,
+    "zM": 2200,
+    "depthM": -5455
+   },
+   "flying": false
+  },
+  {
+   "t": 106118,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 300,
+    "zM": 2200,
+    "depthM": -5451
+   },
+   "flying": false
+  },
+  {
+   "t": 106725,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 300,
+    "zM": 2201,
+    "depthM": -5450
+   },
+   "flying": false
+  },
+  {
+   "t": 107272,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 300,
+    "zM": 2201,
+    "depthM": -5449
+   },
+   "flying": false
+  },
+  {
+   "t": 107830,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 300,
+    "zM": 2201,
+    "depthM": -5450
+   },
+   "flying": false
+  },
+  {
+   "t": 108387,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 299,
+    "zM": 2201,
+    "depthM": -5451
+   },
+   "flying": false
+  },
+  {
+   "t": 108930,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 299,
+    "zM": 2200,
+    "depthM": -5454
+   },
+   "flying": false
+  },
+  {
+   "t": 109462,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 298,
+    "zM": 2199,
+    "depthM": -5457
+   },
+   "flying": false
+  },
+  {
+   "t": 110002,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 298,
+    "zM": 2198,
+    "depthM": -5460
+   },
+   "flying": false
+  },
+  {
+   "t": 110569,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 297,
+    "zM": 2197,
+    "depthM": -5464
+   },
+   "flying": false
+  },
+  {
+   "t": 111148,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 296,
+    "zM": 2196,
+    "depthM": -5467
+   },
+   "flying": false
+  },
+  {
+   "t": 111696,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 296,
+    "zM": 2195,
+    "depthM": -5469
+   },
+   "flying": false
+  },
+  {
+   "t": 112279,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2194,
+    "depthM": -5471
+   },
+   "flying": false
+  },
+  {
+   "t": 112825,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2194,
+    "depthM": -5471
+   },
+   "flying": false
+  },
+  {
+   "t": 113362,
+   "mark": "follow: double-click the Light Scout (62)"
+  },
+  {
+   "t": 113368,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2194,
+    "depthM": -5471
+   },
+   "flying": false
+  },
+  {
+   "t": 114075,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 294,
+    "zM": 2195,
+    "depthM": -5468
+   },
+   "flying": false
+  },
+  {
+   "t": 114610,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 294,
+    "zM": 2196,
+    "depthM": -5466
+   },
+   "flying": false
+  },
+  {
+   "t": 115193,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 294,
+    "zM": 2197,
+    "depthM": -5462
+   },
+   "flying": false
+  },
+  {
+   "t": 115752,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2198,
+    "depthM": -5459
+   },
+   "flying": false
+  },
+  {
+   "t": 116332,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2199,
+    "depthM": -5455
+   },
+   "flying": false
+  },
+  {
+   "t": 116857,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2200,
+    "depthM": -5452
+   },
+   "flying": false
+  },
+  {
+   "t": 117425,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 296,
+    "zM": 2201,
+    "depthM": -5450
+   },
+   "flying": false
+  },
+  {
+   "t": 117998,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 296,
+    "zM": 2201,
+    "depthM": -5449
+   },
+   "flying": false
+  },
+  {
+   "t": 118542,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 297,
+    "zM": 2201,
+    "depthM": -5449
+   },
+   "flying": false
+  },
+  {
+   "t": 119090,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 297,
+    "zM": 2201,
+    "depthM": -5450
+   },
+   "flying": false
+  },
+  {
+   "t": 119688,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 298,
+    "zM": 2200,
+    "depthM": -5453
+   },
+   "flying": false
+  },
+  {
+   "t": 120267,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 298,
+    "zM": 2199,
+    "depthM": -5456
+   },
+   "flying": false
+  },
+  {
+   "t": 120811,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 299,
+    "zM": 2198,
+    "depthM": -5459
+   },
+   "flying": false
+  },
+  {
+   "t": 121328,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 299,
+    "zM": 2197,
+    "depthM": -5462
+   },
+   "flying": false
+  },
+  {
+   "t": 121861,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 300,
+    "zM": 2196,
+    "depthM": -5465
+   },
+   "flying": false
+  },
+  {
+   "t": 122457,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 300,
+    "zM": 2195,
+    "depthM": -5468
+   },
+   "flying": false
+  },
+  {
+   "t": 123081,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 300,
+    "zM": 2194,
+    "depthM": -5471
+   },
+   "flying": false
+  },
+  {
+   "t": 123671,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 300,
+    "zM": 2194,
+    "depthM": -5471
+   },
+   "flying": false
+  },
+  {
+   "t": 124256,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 300,
+    "zM": 2194,
+    "depthM": -5471
+   },
+   "flying": false
+  },
+  {
+   "t": 124820,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 300,
+    "zM": 2195,
+    "depthM": -5469
+   },
+   "flying": false
+  },
+  {
+   "t": 125428,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 299,
+    "zM": 2196,
+    "depthM": -5467
+   },
+   "flying": false
+  },
+  {
+   "t": 125985,
+   "mark": "follow: the hull sent across the water"
+  },
+  {
+   "t": 125991,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 299,
+    "zM": 2197,
+    "depthM": -5463
+   },
+   "flying": false
+  },
+  {
+   "t": 126529,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 298,
+    "zM": 2198,
+    "depthM": -5460
+   },
+   "flying": false
+  },
+  {
+   "t": 127053,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 298,
+    "zM": 2199,
+    "depthM": -5457
+   },
+   "flying": false
+  },
+  {
+   "t": 127810,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 297,
+    "zM": 2200,
+    "depthM": -5453
+   },
+   "flying": false
+  },
+  {
+   "t": 128375,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 296,
+    "zM": 2201,
+    "depthM": -5450
+   },
+   "flying": false
+  },
+  {
+   "t": 128930,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 296,
+    "zM": 2201,
+    "depthM": -5449
+   },
+   "flying": false
+  },
+  {
+   "t": 129547,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2201,
+    "depthM": -5449
+   },
+   "flying": false
+  },
+  {
+   "t": 130108,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2201,
+    "depthM": -5450
+   },
+   "flying": false
+  },
+  {
+   "t": 130677,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2200,
+    "depthM": -5453
+   },
+   "flying": false
+  },
+  {
+   "t": 131216,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 294,
+    "zM": 2199,
+    "depthM": -5455
+   },
+   "flying": false
+  },
+  {
+   "t": 131773,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 294,
+    "zM": 2198,
+    "depthM": -5459
+   },
+   "flying": false
+  },
+  {
+   "t": 132275,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 294,
+    "zM": 2197,
+    "depthM": -5462
+   },
+   "flying": false
+  },
+  {
+   "t": 132820,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2196,
+    "depthM": -5465
+   },
+   "flying": false
+  },
+  {
+   "t": 133372,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2195,
+    "depthM": -5468
+   },
+   "flying": false
+  },
+  {
+   "t": 133997,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 295,
+    "zM": 2195,
+    "depthM": -5470
+   },
+   "flying": false
+  },
+  {
+   "t": 134560,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 296,
+    "zM": 2194,
+    "depthM": -5471
+   },
+   "flying": false
+  },
+  {
+   "t": 135100,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 296,
+    "zM": 2194,
+    "depthM": -5471
+   },
+   "flying": false
+  },
+  {
+   "t": 135641,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 297,
+    "zM": 2195,
+    "depthM": -5470
+   },
+   "flying": false
+  },
+  {
+   "t": 136264,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 297,
+    "zM": 2195,
+    "depthM": -5467
+   },
+   "flying": false
+  },
+  {
+   "t": 136828,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 298,
+    "zM": 2196,
+    "depthM": -5464
+   },
+   "flying": false
+  },
+  {
+   "t": 137379,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 299,
+    "zM": 2197,
+    "depthM": -5461
+   },
+   "flying": false
+  },
+  {
+   "t": 137889,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 299,
+    "zM": 2198,
+    "depthM": -5458
+   },
+   "flying": false
+  },
+  {
+   "t": 138489,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 299,
+    "zM": 2200,
+    "depthM": -5454
+   },
+   "flying": false
+  },
+  {
+   "t": 139044,
+   "mark": "follow: an arrow pan lets go"
+  },
+  {
+   "t": 139052,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 297,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 300,
+    "zM": 2200,
+    "depthM": -5452
+   },
+   "flying": false
+  },
+  {
+   "t": 139568,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 158,
+    "zM": 2201,
+    "depthM": -5440
+   },
+   "flying": false
+  },
+  {
+   "t": 140076,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 158,
+    "zM": 2201,
+    "depthM": -5439
+   },
+   "flying": false
+  },
+  {
+   "t": 140606,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 158,
+    "zM": 2201,
+    "depthM": -5440
+   },
+   "flying": false
+  },
+  {
+   "t": 141120,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 158,
+    "zM": 2201,
+    "depthM": -5441
+   },
+   "flying": false
+  },
+  {
+   "t": 141655,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 157,
+    "zM": 2200,
+    "depthM": -5443
+   },
+   "flying": false
+  },
+  {
+   "t": 142179,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 157,
+    "zM": 2199,
+    "depthM": -5445
+   },
+   "flying": false
+  },
+  {
+   "t": 142737,
+   "mark": "home"
+  },
+  {
+   "t": 142744,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 157,
+    "zM": 2198,
+    "depthM": -5449
+   },
+   "flying": false
+  },
+  {
+   "t": 143269,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 156,
+    "zM": 2197,
+    "depthM": -5452
+   },
+   "flying": false
+  },
+  {
+   "t": 143815,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 156,
+    "zM": 2196,
+    "depthM": -5455
+   },
+   "flying": false
+  },
+  {
+   "t": 144363,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 155,
+    "zM": 2195,
+    "depthM": -5458
+   },
+   "flying": false
+  },
+  {
+   "t": 144964,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 154,
+    "zM": 2195,
+    "depthM": -5460
+   },
+   "flying": false
+  },
+  {
+   "t": 145545,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 154,
+    "zM": 2194,
+    "depthM": -5462
+   },
+   "flying": false
+  },
+  {
+   "t": 146060,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 153,
+    "zM": 2194,
+    "depthM": -5461
+   },
+   "flying": false
+  },
+  {
+   "t": 146725,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 153,
+    "zM": 2195,
+    "depthM": -5460
+   },
+   "flying": false
+  },
+  {
+   "t": 147235,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 153,
+    "zM": 2195,
+    "depthM": -5458
+   },
+   "flying": false
+  },
+  {
+   "t": 147827,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 152,
+    "zM": 2196,
+    "depthM": -5455
+   },
+   "flying": false
+  },
+  {
+   "t": 148440,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 152,
+    "zM": 2198,
+    "depthM": -5451
+   },
+   "flying": false
+  },
+  {
+   "t": 148958,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 152,
+    "zM": 2199,
+    "depthM": -5448
+   },
+   "flying": false
+  },
+  {
+   "t": 149471,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 152,
+    "zM": 2200,
+    "depthM": -5445
+   },
+   "flying": false
+  },
+  {
+   "t": 150024,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 152,
+    "zM": 2200,
+    "depthM": -5442
+   },
+   "flying": false
+  },
+  {
+   "t": 150559,
+   "mark": "nav: in, flying forward"
+  },
+  {
+   "t": 150566,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 153,
+    "zM": 2201,
+    "depthM": -5440
+   },
+   "flying": false
+  },
+  {
+   "t": 151088,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 153,
+    "zM": 2201,
+    "depthM": -5439
+   },
+   "flying": false
+  },
+  {
+   "t": 151635,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 154,
+    "zM": 2201,
+    "depthM": -5440
+   },
+   "flying": false
+  },
+  {
+   "t": 152196,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 154,
+    "zM": 2201,
+    "depthM": -5441
+   },
+   "flying": false
+  },
+  {
+   "t": 152746,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 155,
+    "zM": 2200,
+    "depthM": -5443
+   },
+   "flying": false
+  },
+  {
+   "t": 153396,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 155,
+    "zM": 2199,
+    "depthM": -5447
+   },
+   "flying": false
+  },
+  {
+   "t": 153923,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 156,
+    "zM": 2198,
+    "depthM": -5450
+   },
+   "flying": false
+  },
+  {
+   "t": 154450,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 156,
+    "zM": 2197,
+    "depthM": -5453
+   },
+   "flying": false
+  },
+  {
+   "t": 154962,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 157,
+    "zM": 2196,
+    "depthM": -5456
+   },
+   "flying": false
+  },
+  {
+   "t": 155511,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 157,
+    "zM": 2195,
+    "depthM": -5459
+   },
+   "flying": false
+  },
+  {
+   "t": 156036,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 158,
+    "zM": 2195,
+    "depthM": -5461
+   },
+   "flying": false
+  },
+  {
+   "t": 156555,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 158,
+    "zM": 2194,
+    "depthM": -5462
+   },
+   "flying": false
+  },
+  {
+   "t": 157142,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 158,
+    "zM": 2194,
+    "depthM": -5461
+   },
+   "flying": false
+  },
+  {
+   "t": 157711,
+   "mark": "nav: out"
+  },
+  {
+   "t": 157720,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 158,
+    "zM": 2195,
+    "depthM": -5460
+   },
+   "flying": false
+  },
+  {
+   "t": 158258,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 158,
+    "zM": 2195,
+    "depthM": -5458
+   },
+   "flying": false
+  },
+  {
+   "t": 158862,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 157,
+    "zM": 2196,
+    "depthM": -5454
+   },
+   "flying": false
+  },
+  {
+   "t": 159369,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 157,
+    "zM": 2197,
+    "depthM": -5451
+   },
+   "flying": false
+  },
+  {
+   "t": 159949,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 157,
+    "zM": 2199,
+    "depthM": -5448
+   },
+   "flying": false
+  },
+  {
+   "t": 160454,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 156,
+    "zM": 2200,
+    "depthM": -5445
+   },
+   "flying": false
+  },
+  {
+   "t": 160971,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 156,
+    "zM": 2200,
+    "depthM": -5442
+   },
+   "flying": false
+  },
+  {
+   "t": 161469,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 155,
+    "zM": 2201,
+    "depthM": -5440
+   },
+   "flying": false
+  },
+  {
+   "t": 162036,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 154,
+    "zM": 2201,
+    "depthM": -5439
+   },
+   "flying": false
+  },
+  {
+   "t": 162559,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 154,
+    "zM": 2201,
+    "depthM": -5440
+   },
+   "flying": false
+  },
+  {
+   "t": 163051,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 153,
+    "zM": 2201,
+    "depthM": -5440
+   },
+   "flying": false
+  },
+  {
+   "t": 163566,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 153,
+    "zM": 2200,
+    "depthM": -5442
+   },
+   "flying": false
+  },
+  {
+   "t": 164074,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 153,
+    "zM": 2199,
+    "depthM": -5445
+   },
+   "flying": false
+  },
+  {
+   "t": 164651,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 1953,
+   "focus": {
+    "xM": 155,
+    "zM": 1077,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 152,
+    "zM": 2198,
+    "depthM": -5448
+   },
+   "flying": false
+  }
+ ]
+}
