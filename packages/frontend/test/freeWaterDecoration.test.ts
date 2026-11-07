@@ -94,8 +94,9 @@ const offRow = (a: PropPlacement, b: PropPlacement, c: PropPlacement): number | 
 
 // How far a swimmer reaches above and below its own axis, rendered metres: a
 // body of Block 4's height and its footprint across, rolled by §5's bank about
-// an axis `axisM` over its origin. Exact for the ray, whose high wingtip is its
-// highest and outermost point at once; a bound for any other body.
+// an axis `axisM` over its origin. Exact above the ray's axis, whose high
+// wingtip is its highest and outermost point at once; below it, and for any
+// other body, a bound.
 const BLOCK_4_HEIGHT_M: Record<string, number> = {
   'env-rim-crab': 0.6,
   'env-shoal-fry': 0.15,

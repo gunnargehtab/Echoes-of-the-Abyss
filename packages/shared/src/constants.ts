@@ -41,7 +41,7 @@ export const FREE_WATER_LIFE = {
    * into its turn and stands `startDeg` round its loop when the match starts,
    * measured as the loop's own phase (0 east, 90 south), so the opening's first
    * minute sees its back (#1780). Its bank lifts the high wingtip 33 m of depth
-   * over its axis, which is why the swing is narrower than a level body needs.
+   * over its axis, which is why the swing is half the level ray's ±30 m.
    */
   RAY: {
     radiusM: 60,

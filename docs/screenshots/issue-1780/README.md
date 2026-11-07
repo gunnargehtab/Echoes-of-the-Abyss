@@ -79,6 +79,15 @@ by its blue cast, or with `--dark` more than 8 under it.
   start, 300 degrees round its loop and banked, showing the eye 0.71 of its plan: 104 px of
   pale body, and the 40 px box about it is pixel-identical between the two.
 
+## No Kelp Labyrinth control
+
+§9's sets carry an unchanged Kelp Labyrinth control; this one does not, because nothing it
+touches runs on a shipped map. The bank and the authored start are poses of the fixture's
+own list, built and ticked by `rebuildFixture` and `tickFixture`, which the layer enters only
+when its look is `'free-water'` (`packages/frontend/src/game/environmentLayer.ts`). A shipped
+map's props keep the heading-only matrices of the registry's scatter, which this change
+leaves alone.
+
 ## What the probe read
 
 The opening pose draws 44 calls and 568,596 triangles before and after: a bank is a

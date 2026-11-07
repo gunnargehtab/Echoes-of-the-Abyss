@@ -264,10 +264,10 @@ export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false)
   // across, glides on one loop south-east of the fleet's start, 810 to 930 m
   // from the eye, where its span draws 26 to 30 px in the open water at the
   // lower right between the corvette and the legend. Level, it showed that
-  // eye a third of its plan and drew as a sliver where its loop turned it
-  // edge-on (#1780), so its phase is authored rather than seeded: it starts
-  // where its bank turns its back to the eye, over the dark water beyond the
-  // shelf's edge, for the opening's first minute.
+  // eye a third of its plan and drew as a sliver of lit back where it swam
+  // away from the eye (#1780), so its phase is authored rather than seeded: it
+  // starts where its bank turns its back to the eye, over the dark water past
+  // the rim's edge, for the opening's first minute.
   const { startDeg, ...ray } = RAY;
   add('env-rim-ray', 735, 2210, { ...ray, phase: (startDeg * Math.PI) / 180 });
   return slots;

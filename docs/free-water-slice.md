@@ -319,8 +319,8 @@ than moved from it, by the owner's calls of that day:
   glides on one loop south-east of the fleet's start, 810 to 930 m from the eye, where
   its span projects 26 to 30 px, in the open water at the lower right between the
   corvette and the legend, 40 px clear of the corvette's ring. Level, it showed that
-  eye about a third of its plan down a 21 degree sightline, and where its loop turned
-  it edge-on it drew as a sliver of lit back
+  eye about a third of its plan down a 21 degree sightline, and where it swam away
+  from the eye it drew as a sliver of lit back
   ([issue-1777](screenshots/issue-1777/README.md), "What the frame shows"). So it
   banks into its turn and starts its loop on the far side from the eye (#1780, the
   owner's call of 7 November 2026): through the match's first minute the eye sees
