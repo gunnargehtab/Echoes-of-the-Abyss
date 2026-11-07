@@ -1115,6 +1115,17 @@ describe("the free-water study's camera feel (#1775)", () => {
       const orbitEye = world.conn.eyePosition;
       world.chart.toggleNavigation();
       world.conn.flyLocal(0, 0, 400);
+      // Entering glides too: the orbit's eye stood out of the water, which
+      // flight cannot keep, so it starts where the orbit drew it and arrives.
+      const entered = world.conn.eyePosition;
+      assert.ok(
+        Math.hypot(entered.x - orbitEye.x, entered.y - orbitEye.y) < 10,
+        'entry leaves from the orbit eye'
+      );
+      for (let t = 0; t <= CAMERA_FEEL.GLIDE_S * 1000 + 100; t += 50) {
+        now += 50;
+        world.frame();
+      }
       const flightEye = world.conn.eyePosition;
       const apart = Math.hypot(flightEye.x - orbitEye.x, flightEye.y - orbitEye.y);
       assert.ok(apart > 300, 'flight carried the eye away');

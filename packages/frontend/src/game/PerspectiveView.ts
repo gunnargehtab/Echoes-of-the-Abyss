@@ -435,9 +435,9 @@ const BOX_TMP = new Box3();
 const SWAY_TMP: SwayOffset = { right: 0, up: 0 };
 const SWAY_RIGHT = new Vector3();
 const SWAY_UP = new Vector3();
-/** The orbit's own eye and turn while a flight exit blends into them. */
-const EXIT_EYE = new Vector3();
-const EXIT_TURN = new Quaternion();
+/** The new mode's own eye and turn while a change of mode blends into them. */
+const BLEND_EYE = new Vector3();
+const BLEND_TURN = new Quaternion();
 /** One followed hull's drawn place, written per frame (`followedFocus`). */
 const FOLLOW_AT = { x: 0, y: 0, depth: 0 };
 /** The lamp reading's box and corner; a capture reads it once a frame at most. */
@@ -705,10 +705,11 @@ export class PerspectiveView {
   /** When the feel last stepped, `performance.now()` ms; negative before the first. */
   private feelSteppedAt = -1;
   /**
-   * Leaving flight: the camera the flight left, blended into the orbit's own
-   * over a glide (rule 4), `t` running 0..1. Null when nothing is blending.
+   * Entering or leaving NAV's flight: the camera the last mode drew, blended
+   * into the new mode's own over a glide (rule 4), `t` running 0..1. Null when
+   * nothing is blending.
    */
-  private flightExit: { position: Vector3; quaternion: Quaternion; t: number } | null = null;
+  private modeBlend: { position: Vector3; quaternion: Quaternion; t: number } | null = null;
   /**
    * The sway's clock (cameraSway.ts): the frame's own time, set once a frame
    * before the camera is applied. A pan between frames re-applies the camera
@@ -2465,8 +2466,10 @@ export class PerspectiveView {
     // The orbit waits where it is drawn, for the way back out; nothing it was
     // easing toward or following carries into flight (docs/free-camera.md §4).
     this.followIds = null;
-    this.flightExit = null;
     this.feel?.settle(this.drawnPose());
+    // From where the camera is drawn to where flight puts the eye, which
+    // differ where the orbit's eye was out of the water (rule 4).
+    this.blendFromDrawn();
     this.flight = true;
     this.flightBlocked = false;
     this.applyCamera();
@@ -2480,16 +2483,43 @@ export class PerspectiveView {
    */
   leaveFlight(): void {
     if (!this.flight) return;
-    if (this.feel !== null && !this.swayHeld) {
-      this.flightExit = {
-        position: this.camera.position.clone(),
-        quaternion: this.camera.quaternion.clone(),
-        t: 0,
-      };
-    }
+    this.blendFromDrawn();
     this.flight = false;
     this.flightBlocked = false;
     this.applyCamera();
+  }
+
+  /**
+   * Start a change of mode's blend from the camera as drawn this moment,
+   * mid-blend included, so a quick NAV in and out never jumps. In the study
+   * outside reduced motion only; elsewhere the change cuts, as it always has.
+   */
+  private blendFromDrawn(): void {
+    this.modeBlend =
+      this.feel !== null && !this.swayHeld
+        ? {
+            position: this.camera.position.clone(),
+            quaternion: this.camera.quaternion.clone(),
+            t: 0,
+          }
+        : null;
+  }
+
+  /**
+   * A change of camera mode (docs/free-camera.md §4, rule 4): the camera the
+   * last mode drew blends into the one this mode just placed, rest to rest,
+   * the eye held over the floor on every frame as the orbit's own is.
+   */
+  private blendModes(): void {
+    const blend = this.modeBlend;
+    if (blend === null) return;
+    const s = glideShare(blend.t);
+    BLEND_EYE.copy(this.camera.position);
+    BLEND_TURN.copy(this.camera.quaternion);
+    const eye = this.camera.position.lerpVectors(blend.position, BLEND_EYE, s);
+    this.camera.quaternion.slerpQuaternions(blend.quaternion, BLEND_TURN, s);
+    const floor = this.groundYAt(eye.x, eye.z) + EYE_CLEARANCE_M * DEPTH_VISUAL_M_PER_M;
+    if (eye.y < floor) eye.y = floor;
   }
 
   turnFlight(yaw: number, pitch: number, roll: number): void {
@@ -2770,7 +2800,7 @@ export class PerspectiveView {
    */
   setFrame(frame: CameraFrame): void {
     this.flight = false;
-    this.flightExit = null;
+    this.modeBlend = null;
     this.target.x = frame.xM;
     this.target.z = frame.yM;
     this.focusDepthM = null;
@@ -2806,7 +2836,7 @@ export class PerspectiveView {
     if (on === (this.feel !== null)) return;
     this.feel = on ? new OrbitFeel(this.drawnPose()) : null;
     this.followIds = null;
-    this.flightExit = null;
+    this.modeBlend = null;
   }
 
   /**
@@ -2908,10 +2938,10 @@ export class PerspectiveView {
     const dtS =
       this.feelSteppedAt < 0 ? 0 : Math.min(0.1, Math.max(0, (nowMs - this.feelSteppedAt) / 1000));
     this.feelSteppedAt = nowMs;
-    const exit = this.flightExit;
-    if (exit !== null) {
-      exit.t = this.swayHeld ? 1 : exit.t + dtS / CAMERA_FEEL.GLIDE_S;
-      if (exit.t >= 1) this.flightExit = null;
+    const blend = this.modeBlend;
+    if (blend !== null) {
+      blend.t = this.swayHeld ? 1 : blend.t + dtS / CAMERA_FEEL.GLIDE_S;
+      if (blend.t >= 1) this.modeBlend = null;
     }
     const feel = this.feel;
     if (feel === null || this.flight) return;
@@ -5199,8 +5229,9 @@ export class PerspectiveView {
   private applyCamera(): void {
     if (this.flight) {
       this.camera.position.copy(this.flightEye);
-      this.restEye.copy(this.flightEye);
       this.camera.quaternion.copy(this.flightOrientation);
+      this.blendModes();
+      this.restEye.copy(this.camera.position);
     } else {
       const look = LOOK_TMP.set(this.target.x, this.focusY(), this.target.z);
       const reach = Math.cos(this.pitch) * this.distance;
@@ -5221,19 +5252,7 @@ export class PerspectiveView {
 
       this.camera.position.set(eyeX, eyeY, eyeZ);
       this.camera.lookAt(look);
-      const exit = this.flightExit;
-      if (exit !== null) {
-        // Leaving flight (docs/free-camera.md §4, rule 4): the flight's eye
-        // and turn blend into the orbit's, rest to rest, the eye held over the
-        // floor on every frame as the orbit's own is.
-        const s = glideShare(exit.t);
-        EXIT_EYE.copy(this.camera.position);
-        EXIT_TURN.copy(this.camera.quaternion);
-        const eye = this.camera.position.lerpVectors(exit.position, EXIT_EYE, s);
-        this.camera.quaternion.slerpQuaternions(exit.quaternion, EXIT_TURN, s);
-        const floor = this.groundYAt(eye.x, eye.z) + EYE_CLEARANCE_M * DEPTH_VISUAL_M_PER_M;
-        if (eye.y < floor) eye.y = floor;
-      }
+      this.blendModes();
       this.restEye.copy(this.camera.position);
       this.applySway();
     }

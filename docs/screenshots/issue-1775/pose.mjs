@@ -66,6 +66,7 @@ export default async ({ page, shot }) => {
         flying: p.flight?.flying ?? false,
       };
       if (feel !== null) {
+        row.goal = { x: Math.round(feel.goal.x), z: Math.round(feel.goal.z) };
         row.goalDistance = Math.round(feel.goal.distance);
         row.gliding = feel.gliding;
         row.coasting = feel.coasting;
@@ -287,8 +288,17 @@ function summarise(rows) {
       flyingAtEnd: last.flying,
       followingAtEnd: last.following ?? null,
       // With a hull followed and no glide under way: how far the focus sat from
-      // the hull's last reported place, which leads the drawn hull by up to
-      // one Echo tick's travel.
+      // the hull as it is drawn between ticks, which is the follow's goal (0 is
+      // held), and from its last reported place, which leads the drawn hull by
+      // a tick's travel or more while frames run slow.
+      followGapToDrawnM:
+        tracked.length === 0
+          ? null
+          : Math.max(
+              ...tracked.map((row) =>
+                Math.hypot(row.focus.xM - row.goal.x, row.focus.zM - row.goal.z)
+              )
+            ),
       followGapM:
         tracked.length === 0
           ? null

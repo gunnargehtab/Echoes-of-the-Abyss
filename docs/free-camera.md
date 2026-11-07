@@ -252,8 +252,9 @@ camera above, and promoting the feel to them is a separate decision.
    the zoom still holds the water under the cursor.
 4. **Jumps glide.** `Home`, a press on the scope or on a log entry, a group recalled twice
    and a double-click on a hull travel over **0.6 s** (`GLIDE_S`), starting and ending at
-   rest. They swing about the focus rather than cutting across to the new eye. Leaving NAV
-   glides from the flight eye back to the orbit it left.
+   rest. They swing about the focus rather than cutting across to the new eye. Entering NAV
+   glides from the orbit's eye to flight's, which differ where flight brings an eye out of
+   the air into the water, and leaving NAV glides back to the orbit it left.
 5. **Input takes over.** A drag stops a coast and takes the numbers it moves from where
    the camera is drawn, and a glide under way carries the rest to their end: `Home` still
    arrives at north while the player pans, and a glide to a hull still lands on it while
@@ -267,8 +268,8 @@ All five numbers are TUNABLEs in `CAMERA_FEEL` (`packages/shared/src/constants.t
 eye's 25 m clamp and the focus's clamps hold on every frame of an ease, a coast and a glide.
 
 **Reduced motion** ([ui-ux.md](ui-ux.md) §11) keeps every input and takes the motion out:
-a step arrives in the frame it is made, a jump or leaving NAV cuts, and a release does not
-coast. A followed hull is still held, from the frame it is chosen. The motion carries no
+a step arrives in the frame it is made, a jump or a change into or out of NAV cuts, and a
+release does not coast. A followed hull is still held, from the frame it is chosen. The motion carries no
 information the pose it ends on does not, so nothing is lost with it.
 
 **Focus and follow.** Double-clicking an own hull still selects every visible hull of its
@@ -302,7 +303,7 @@ at its depth, drawn between Echo ticks as the hull itself is (`ownMotion.ts`).
 | Double click on an own hull | Selects its class, then glides to the hull and follows it; in NAV, whose flight follows nothing, it only selects | Selects its class |
 | Recall a control group twice | Glides to the group and follows it | Centres on it |
 | F8 / FLIGHT | Retired | — |
-| F9 / NAV | Enters keyboard flight, roll included, as the accessibility route, with flight's own rules: constant speed, no momentum. The mouse keeps every click it has outside NAV. Leaving glides back to the orbit | — |
+| F9 / NAV | Glides into keyboard flight, roll included, as the accessibility route, with flight's own rules: constant speed, no momentum. The mouse keeps every click it has outside NAV. Leaving glides back to the orbit | — |
 
 The right drag changes what a mouse gesture means, so §9 of [ui-ux.md](ui-ux.md) records it
 in its table and the Controls screen states it. Under the slop a right press is still a

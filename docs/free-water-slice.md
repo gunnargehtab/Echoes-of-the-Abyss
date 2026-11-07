@@ -378,7 +378,7 @@ world-up `lookAt` reset or automatic levelling may undo the player's roll.
 
 | Action | Flight input and ownership |
 | --- | --- |
-| Toggle flight | Retired by #1775: NAV enters flight. Entering retains orientation and moves the eye only if needed for legal clearance |
+| Toggle flight | Retired by #1775: NAV enters flight. Entering retains orientation and moves the eye only if needed for legal clearance, gliding it there ([free-camera.md](free-camera.md) §4) |
 | Look | `Shift` + middle drag or a right drag, local yaw/pitch; no pitch limit |
 | Translate | Middle drag in camera right/up; wheel along camera forward; `Shift` + wheel moves world depth by 150 m |
 | Keyboard navigation | Rebindable `F9` or a focusable NAV latch, which enters flight; while latched, W/S forward/back, A/D left/right, R/F local up/down, Q/E roll, arrows yaw/pitch |
