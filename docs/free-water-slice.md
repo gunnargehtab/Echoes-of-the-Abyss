@@ -281,16 +281,20 @@ than moved from it, by the owner's calls of that day:
 - **Low** looks into the pocket over the southern wall, and only its northern part
   clears the console, so its three new deep-fish patches stand along the north edge, as
   rings of photophore pinpricks.
-- **Opening** carries the one body large enough to read there, the ray (#1777, the
+- **Opening** gets the ray, the one body large enough to project there (#1777, the
   owner's call of 6 November 2026). Its eye stands above the Lid, so no water in the
   frame is nearer than about 550 m, at the console's edge, where a 4 m fish would draw
   9 px; ahead of the hulls, 900 m and more out, it draws about 5 px, and a school placed
   there drew nothing visible, so #1771 placed nothing for it. The ray, 18 m across,
   glides on one loop south-east of the fleet's start, 810 to 930 m from the eye, where
-  its span draws 26 to 30 px, in the open water at the lower right between the corvette
-  and the legend, 40 px clear of the corvette's ring. The pocket shows only at the
-  frame's right edge, where two of the low pose's deep-fish patches read as photophore
-  pinpricks 2.2 to 2.5 km out. A nearer opening is §9's call, not taken.
+  its span projects 26 to 30 px, in the open water at the lower right between the
+  corvette and the legend, 40 px clear of the corvette's ring. Whether it reads as a
+  body is open on #1777: in the frames taken so far it draws as a sliver of lit back,
+  dark on the dark shelf floor, and a 30 m span or a far-water placement drew no better
+  ([issue-1777](screenshots/issue-1777/README.md), "What the frame shows"). The pocket
+  shows only at the frame's right edge, where two of the low pose's deep-fish patches
+  read as photophore pinpricks 2.2 to 2.5 km out. A nearer opening is §9's call, not
+  taken.
 - **Survey** keeps decoration below tactical ink; the new deep-fish patches add faint
   pinpricks along the pocket's north edge.
 

@@ -1028,12 +1028,7 @@ export function lens(facet, radius, { sink = 0.1, proud = 0.25 } = {}) {
       .addScaledVector(t2, r * Math.sin(a))
       .toArray();
   });
-  points.push(
-    facet.mid
-      .clone()
-      .addScaledVector(n, proud * r)
-      .toArray()
-  );
+  points.push(facet.mid.clone().addScaledVector(n, proud * r).toArray());
   const tris = Array.from({ length: 6 }, (_, k) =>
     facing(points, [k, (k + 1) % 6, 6], base.toArray())
   );
@@ -1054,22 +1049,10 @@ export function seat(facet, u, [w, h], proud) {
   const [t1, t2] = tangents(n);
   const c = on.clone().addScaledVector(n, proud);
   const points = [
-    c
-      .clone()
-      .addScaledVector(t1, w / 2)
-      .toArray(),
-    c
-      .clone()
-      .addScaledVector(t2, h / 2)
-      .toArray(),
-    c
-      .clone()
-      .addScaledVector(t1, -w / 2)
-      .toArray(),
-    c
-      .clone()
-      .addScaledVector(t2, -h / 2)
-      .toArray(),
+    c.clone().addScaledVector(t1, w / 2).toArray(),
+    c.clone().addScaledVector(t2, h / 2).toArray(),
+    c.clone().addScaledVector(t1, -w / 2).toArray(),
+    c.clone().addScaledVector(t2, -h / 2).toArray(),
   ];
   const inside = on.toArray();
   return {
