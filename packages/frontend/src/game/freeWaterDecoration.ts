@@ -10,7 +10,7 @@ import { DEPTH_VISUAL_M_PER_M, depthToWorldY } from './perspectiveTerrain.ts';
  * is 120 by 69 m, so the forest drew as strips with bare lanes between them.
  * docs/screenshots/issue-1773/layout.mjs drew this list once, by a seeded
  * anneal from those rows under §5's rules, and nothing redraws it at play
- * time; the decoration test holds every rule on it. The south flank's 121 m
+ * time; the decoration test holds every rule on it. The south flank's 125 m
  * of tread holds one band of stands, so four of #1751's fourteen there moved
  * north, 46 against 10, and the band opens four gaps instead of reading as
  * one line.

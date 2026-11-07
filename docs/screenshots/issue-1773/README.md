@@ -91,8 +91,8 @@ heading, the way its stalks lean.
   (24,304 at garden close), marine snow included.
 - **Reduced motion.** [reduced-motion/04](reduced-motion/04-north-flank.png) and
   [reduced-motion/05](reduced-motion/05-north-flank-later.png), and 02 and 03, are the
-  same pairs with reduced motion stored: no pixel changes by more than one level, the sway
-  held.
+  same pairs with reduced motion stored: no pixel in those rows changes by more than one
+  level, the sway held. Outside them only the HUD's clock and one panel border change.
 
 ## Hardware
 

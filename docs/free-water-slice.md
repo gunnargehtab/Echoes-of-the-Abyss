@@ -717,7 +717,7 @@ those rows left them, cleared by their outlines and held to §5's No rows. Four 
 south row's fourteen moved north, the owner's split: 46 north of the clearing and 10
 south, so no lane runs through the north flank, the south band opens four gaps instead
 of reading as one line, and the clearing is still the one cut through the forest. The
-clusters' fringe is scattered the same way. Five other ways were weighed with the owner
+clusters' fringe is scattered the same way. Among the other ways weighed with the owner
 on #1773: keeping each outline inside its cell, which drew the cell grid as empty seams;
 holding each stand within 40 m of its row slot, which left three wavy rows; fewer stands
 under the discs, which gave up the fill above; any heading, which turns each stand's lean
