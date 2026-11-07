@@ -38,7 +38,9 @@ import {
   FOLLOW_FLOOR,
   LID,
   MOVEMENT,
+  REFIT_KINDS,
   RefitKind,
+  refitOfferedTo,
   effectivePressureRating,
   ResolutionTier,
   SCATTER,
@@ -53,7 +55,7 @@ import {
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnUnit } from '../src/sim/world.ts';
-import { phantomDepthM } from '../src/sim/systems/echoLayer.ts';
+import { PHANTOM_HULLS_BY_NAVY, phantomDepthM } from '../src/sim/systems/echoLayer.ts';
 import { grantRefit } from '../src/sim/systems/refit.ts';
 import {
   ActivePing,
@@ -587,6 +589,62 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
         Math.fround(cruiser * condition),
         `its condition, at f32 (${condition})`
       );
+    }
+  });
+
+  it('reads a whole true return at the maximum a phantom claims, for every navy, hull and refit', () => {
+    // docs/invariants.md: nothing on the wire separates a phantom from a true
+    // hull return but a value only a true hull can carry. A phantom claims its
+    // kind's own maximum, whole, so every whole true return must read exactly
+    // that — over every navy, every hull its phantoms may claim, and every
+    // refit that navy can buy, on hulls afloat when it landed and on hulls
+    // launched after it (#1785). The case above is one Cruiser; this is the
+    // property's whole input.
+    const navies = [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate, Faction.Hadron];
+    for (const navy of navies) {
+      const match = new Match(VENTFRONT_DIVIDE, {
+        fauna: false,
+        seed: 31,
+        terrain: new Terrain(MAP_M, MAP_M, 250),
+      });
+      const pinger = spawnUnit(match.world, {
+        kind: UnitKind.Corvette,
+        slot: 0,
+        faction: navy === Faction.Bathyarch ? Faction.Pelagia : Faction.Bathyarch,
+        x: 4000,
+        y: 4000,
+      });
+      const kinds = PHANTOM_HULLS_BY_NAVY.get(navy)!;
+      const seat = (ring: number) =>
+        kinds.map((kind, i) =>
+          spawnUnit(match.world, {
+            kind,
+            slot: 1,
+            faction: navy,
+            x: 4000 + Math.cos((2 * Math.PI * i) / kinds.length) * ring,
+            y: 4000 + Math.sin((2 * Math.PI * i) / kinds.length) * ring,
+          })
+        );
+      const afloat = seat(400);
+      const bought = REFIT_KINDS.filter((refit) => refitOfferedTo(refit, navy));
+      for (const refit of bought) grantRefit(match.world, 1, refit);
+      const launched = seat(700);
+      assert.ok(bought.includes(RefitKind.Plate), `${Faction[navy]} is offered the Plate`);
+
+      match.activeSonar(0, pinger);
+      const contacts = match.echo.run(match.world, [0, 1]).contactsBySlot.get(0) ?? [];
+      for (const eid of [...afloat, ...launched]) {
+        const kind = Unit.kind[eid] as UnitKind;
+        const label = `${Faction[navy]} ${UnitKind[kind]}, ${afloat.includes(eid) ? 'afloat' : 'launched'}`;
+        const contact = contacts.find((c) => match.echo.entityForHandle(0, c.id) === eid);
+        assert.equal(contact?.tier, ResolutionTier.Track, `${label}: lit at Track by the ping`);
+        assert.equal(
+          contact!.maxHp,
+          UNIT_STATS[kind].maxHp,
+          `${label}: the maximum a phantom claims`
+        );
+        assert.equal(contact!.hp, contact!.maxHp, `${label}: whole, as a phantom is`);
+      }
     }
   });
 

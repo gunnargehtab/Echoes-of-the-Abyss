@@ -242,7 +242,7 @@ const NAVIES: readonly Faction[] = [
  * In `UnitKind` order, which is stable across builds, so the kind die lands
  * on the same hull in a replay.
  */
-const PHANTOM_HULLS_BY_NAVY: ReadonlyMap<Faction, readonly UnitKind[]> = new Map(
+export const PHANTOM_HULLS_BY_NAVY: ReadonlyMap<Faction, readonly UnitKind[]> = new Map(
   NAVIES.map((navy) => [
     navy,
     (Object.values(UNIT_STATS) as UnitStats[])
