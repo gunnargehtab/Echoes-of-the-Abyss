@@ -177,6 +177,7 @@ import {
 } from './verticalCommand.ts';
 import { consoleBlocks, TAB_HEIGHT, type ConsoleBlocks } from './consoleLayout.ts';
 import type { FlightReading } from './flightCamera.ts';
+import { DragSpeed } from './cameraFeel.ts';
 import { readMovePreview, type MovePreview, type MovePreviewReading } from './movePreview.ts';
 import { DEPTH_VISUAL_M_PER_M } from './perspectiveTerrain.ts';
 import { FACTION_NAME } from './factions.ts';
@@ -1029,7 +1030,6 @@ interface BarButton {
   /** Rendered highlighted (e.g. Silent Running currently on). */
   active: boolean;
   action: () => void;
-  navigationSafe?: boolean;
   /**
    * What the hint bar says when the button is pressed while disabled — the
    * reason attached to the grey-out that docs/ui-ux.md §7 asks for. A priced
@@ -2622,21 +2622,23 @@ export class EchoRenderer {
    */
   setConn(conn: PerspectiveView): void {
     this.conn = conn;
+    // The free-water study's camera eases, coasts, glides and follows
+    // (docs/free-camera.md §4, "The study's camera feel"); every other match
+    // keeps the instant camera, so the switch is the study's own predicate.
+    conn.setCameraFeel(this.controlsStudy);
   }
 
-  toggleFlight(): void {
-    if (!this.controlsStudy || this.menuOpen || this.conn === null) return;
-    this.leaveNavigation();
-    if (!this.conn.toggleFlight()) this.refuse('NO CAMERA CLEARANCE');
-    this.publishFlight();
-  }
-
+  /**
+   * NAV, the one way into flight since #1775 retired FLIGHT: the keys fly,
+   * fleet shortcuts wait, and the mouse keeps every click it has outside
+   * (docs/free-water-slice.md §6). Leaving glides back to the orbit it left.
+   */
   toggleNavigation(): void {
     if (!this.controlsStudy || this.menuOpen || this.conn === null) return;
     if (this.navigating) {
       this.leaveNavigation();
     } else {
-      if (!this.conn.flying && !this.conn.toggleFlight()) {
+      if (!this.conn.flying && !this.conn.enterFlight()) {
         this.refuse('NO CAMERA CLEARANCE');
         return;
       }
@@ -2656,6 +2658,8 @@ export class EchoRenderer {
   leaveNavigation(): void {
     this.navigating = false;
     this.clearCameraInput();
+    // Flight lives inside NAV now, so leaving one leaves the other.
+    this.conn?.leaveFlight();
     this.publishFlight();
   }
 
@@ -2765,8 +2769,10 @@ export class EchoRenderer {
   }
 
   confirmDestination(): void {
+    // Not refused in NAV: NAV takes the keys, never the mouse (#1775). Its own
+    // keys never reach here, and a focused field's Enter is the field's.
     const preview = this.destination;
-    if (preview === null || this.menuOpen || this.navigating) return;
+    if (preview === null || this.menuOpen) return;
     const reading = readMovePreview(preview, this.terrain, this.units);
     if (reading.reason !== null || !preview.pinned || preview.point === null) {
       this.refuse(reading.reason ?? 'PIN POSITION FIRST');
@@ -2783,7 +2789,7 @@ export class EchoRenderer {
   }
 
   private aimDestination(x: number, y: number): void {
-    if (this.destination === null || this.destination.pinned || this.navigating) return;
+    if (this.destination === null || this.destination.pinned) return;
     this.destination.point = this.conn?.pickPlane(x, y, this.destination.planeDepthM) ?? null;
     this.publishDestination();
   }
@@ -3139,6 +3145,32 @@ export class EchoRenderer {
     let pendingRight: { x: number; y: number; queued: boolean; torpedo: boolean } | null = null;
     /** A left press aimed by an armed attack-move or a pending build, likewise. */
     let pendingAim: { x: number; y: number; queued: boolean } | null = null;
+    /**
+     * A right press in the free-water study that has not yet moved past the
+     * click slop (docs/free-camera.md §4, decision 3): past it the press is an
+     * orbit and its click is dropped; released inside it, it was the click.
+     */
+    let rightPress: { x: number; y: number; atMs: number } | null = null;
+    /** Where a drag's pointer has been lately, for the speed it is let go at (rule 2). */
+    const dragSpeed = new DragSpeed();
+    /**
+     * When the pointer was there, not when this handler heard of it: a frame
+     * that runs long delivers moves late and in a bunch, and timed on arrival a
+     * hand still moving would read as one held still. Falls back to the clock
+     * for an event that carries no time.
+     */
+    const eventMs = (e: Event) => (e.timeStamp > 0 ? e.timeStamp : performance.now());
+    /**
+     * Every place the pointer passed since the last move: the browser hands one
+     * move a frame, keeping the rest as coalesced events, and a drag sampled once
+     * a long frame has no two places close enough in time to measure a speed by.
+     */
+    const sampleDrag = (e: PointerEvent, sideways = false) => {
+      const passed = e.getCoalescedEvents?.() ?? [];
+      for (const at of passed.length > 0 ? passed : [e]) {
+        dragSpeed.move(eventMs(at), at.clientX, sideways ? 0 : at.clientY);
+      }
+    };
     this.cancelGesture = () => {
       minimapDrag = false;
       sectionDrag = false;
@@ -3147,6 +3179,8 @@ export class EchoRenderer {
       chord = false;
       pendingRight = null;
       pendingAim = null;
+      rightPress = null;
+      dragSpeed.clear();
       this.marquee = null;
     };
 
@@ -3183,6 +3217,8 @@ export class EchoRenderer {
       chord = false;
       pendingRight = null;
       pendingAim = null;
+      rightPress = null;
+      dragSpeed.clear();
       this.marquee = null;
       if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
     };
@@ -3202,9 +3238,13 @@ export class EchoRenderer {
       orbiting = false;
       pendingRight = null;
       pendingAim = null;
+      rightPress = null;
       this.marquee = null;
       lastX = e.clientX;
       lastY = e.clientY;
+      // Only the chord's sideways half may coast: the focus depth is where
+      // the next order goes, so it never moves after the hand (rule 2).
+      dragSpeed.begin(eventMs(e), e.clientX, 0);
       capture(e.pointerId);
     };
 
@@ -3243,10 +3283,19 @@ export class EchoRenderer {
         panning = !orbiting;
         lastX = e.clientX;
         lastY = e.clientY;
+        dragSpeed.begin(eventMs(e), e.clientX, e.clientY);
         capture(e.pointerId);
         return;
       }
-      if (this.navigating) return;
+      // In the study a right press may yet become an orbit (docs/free-camera.md
+      // §4, decision 3), whatever else it is waiting to be: an order below, or
+      // nothing while a MOVE 3D preview is armed.
+      if (e.button === 2 && this.controlsStudy) {
+        rightPress = { x: e.clientX, y: e.clientY, atMs: eventMs(e) };
+        capture(e.pointerId);
+      }
+      // NAV does not stop here: since #1775 it takes the keys, never the mouse,
+      // so clicks select and order through the flight's view as they do outside.
       if (this.destination !== null) {
         if (e.button === 0) {
           pendingAim = { x: e.clientX, y: e.clientY, queued: false };
@@ -3303,10 +3352,27 @@ export class EchoRenderer {
         if (dy !== 0) this.conn?.raiseFocusBy(dy * FOCUS_DRAG_M_PER_PX);
         lastX = e.clientX;
         lastY = e.clientY;
+        sampleDrag(e, true);
         return;
       }
+      // A right press past the click slop is an orbit (decision 3), and the
+      // click it was waiting to give is dropped. From the press, so the turn
+      // keeps up with the whole of the hand's travel (rule 1).
+      if (
+        rightPress !== null &&
+        !orbiting &&
+        (e.buttons & 2) !== 0 &&
+        Math.hypot(e.clientX - rightPress.x, e.clientY - rightPress.y) > DRAG_SLOP_PX
+      ) {
+        pendingRight = null;
+        orbiting = true;
+        lastX = rightPress.x;
+        lastY = rightPress.y;
+        dragSpeed.begin(rightPress.atMs, rightPress.x, rightPress.y);
+        rightPress = null;
+      }
       if (minimapDrag) {
-        this.pressMinimap(e.clientX, e.clientY);
+        this.pressMinimap(e.clientX, e.clientY, false);
         return;
       }
       if (sectionDrag) {
@@ -3324,6 +3390,7 @@ export class EchoRenderer {
         this.conn?.orbitBy(e.clientX - lastX, e.clientY - lastY);
         lastX = e.clientX;
         lastY = e.clientY;
+        sampleDrag(e);
         return;
       }
 
@@ -3334,6 +3401,7 @@ export class EchoRenderer {
       this.conn?.panBy(e.clientX - lastX, e.clientY - lastY);
       lastX = e.clientX;
       lastY = e.clientY;
+      sampleDrag(e);
     };
 
     const onPointerUp = (e: PointerEvent) => {
@@ -3342,10 +3410,16 @@ export class EchoRenderer {
         return;
       }
       if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+      rightPress = null;
+      // A cancelled pointer — a gesture the browser took — gives no order, and
+      // leaves nothing coasting.
+      const released = e.type === 'pointerup';
       // A pointerup arrives once, when the last button comes up; a button let
       // go while another is held is a move. So whatever this was ends here.
       if (chord) {
         chord = false;
+        const speed = dragSpeed.release(eventMs(e));
+        if (released) this.conn?.coastPan(speed.x, 0);
         return;
       }
       if (minimapDrag) {
@@ -3356,12 +3430,6 @@ export class EchoRenderer {
         sectionDrag = false;
         return;
       }
-      if (this.navigating) {
-        endGesture(e);
-        return;
-      }
-      // A cancelled pointer — a gesture the browser took — gives no order.
-      const released = e.type === 'pointerup';
       if (pendingRight !== null) {
         const press = pendingRight;
         pendingRight = null;
@@ -3387,6 +3455,13 @@ export class EchoRenderer {
         return;
       }
 
+      // A pan or an orbit let go while moving carries on in the study (rule
+      // 2); held still first, it stops where it is.
+      if (orbiting || panning) {
+        const speed = dragSpeed.release(eventMs(e));
+        if (released && orbiting) this.conn?.coastOrbit(speed.x, speed.y);
+        else if (released) this.conn?.coastPan(speed.x, speed.y);
+      }
       panning = false;
       orbiting = false;
     };
@@ -3413,9 +3488,10 @@ export class EchoRenderer {
       // macOS turns Shift + wheel into a sideways scroll, so there the notch
       // arrives on `deltaX` with `deltaY` at 0 — which read as down, and sank
       // the focus whichever way the wheel turned (#1338).
+      // A notch is a step, which the study's camera eases toward (rule 3).
       if (e.shiftKey) {
         const notch = e.deltaY !== 0 ? e.deltaY : e.deltaX;
-        if (notch !== 0) this.conn?.raiseFocusBy(notch < 0 ? FOCUS_STEP_M : -FOCUS_STEP_M);
+        if (notch !== 0) this.conn?.stepFocusBy(notch < 0 ? FOCUS_STEP_M : -FOCUS_STEP_M);
         return;
       }
       // A sideways scroll is not a zoom: a trackpad's sideways swipe has
@@ -3481,12 +3557,9 @@ export class EchoRenderer {
           if (!e.repeat) this.armDestination();
           return;
         }
-        if (cameraAction === 'toggleFlight' || cameraAction === 'toggleNav') {
+        if (cameraAction === 'toggleNav') {
           e.preventDefault();
-          if (!e.repeat) {
-            if (cameraAction === 'toggleFlight') this.toggleFlight();
-            else this.toggleNavigation();
-          }
+          if (!e.repeat) this.toggleNavigation();
           return;
         }
         if (this.navigating) {
@@ -3549,13 +3622,7 @@ export class EchoRenderer {
       }
 
       const action = actionFor(this.bindings, e.code);
-      if (
-        action === null ||
-        action === 'toggleFlight' ||
-        action === 'toggleNav' ||
-        isFlightAction(action)
-      )
-        return;
+      if (action === null || action === 'toggleNav' || isFlightAction(action)) return;
       // A held key's auto-repeat is not another press (docs/ui-ux.md §9). The
       // toggles read the selection off the last snapshot, so a held Space
       // flipped Silent Running at the snapshot rate, and a held M laid mines
@@ -3780,6 +3847,9 @@ export class EchoRenderer {
             if (unit.kind === kind) this.selected.add(unit.id);
           }
           this.onSelectionChanged();
+          // In the study a double-click also follows the hull it landed on
+          // (docs/free-camera.md §4, decision 2); Alt-click only selects.
+          if (doubled && this.controlsStudy) this.conn?.follow([hit]);
           return;
         }
       }
@@ -3877,7 +3947,13 @@ export class EchoRenderer {
 
     const now = performance.now();
     if (this.lastGroupRecall.group === group && now - this.lastGroupRecall.at < DOUBLE_TAP_MS) {
-      this.centreOnSelection();
+      // In the study the second recall glides to the group and follows it
+      // (docs/free-camera.md §4, "Focus and follow"). Only its hulls in the
+      // water can be followed; a group of structures, or of hulls all aboard
+      // a transport, is centred on as before.
+      const hulls = alive.filter((id) => this.units.some((u) => u.id === id));
+      if (this.controlsStudy && hulls.length > 0) this.conn?.follow(hulls);
+      else this.centreOnSelection();
     }
     this.lastGroupRecall = { group, at: now };
   }
@@ -3918,7 +3994,6 @@ export class EchoRenderer {
     if (y < this.hudHeight() - CONSOLE_HEIGHT) return false;
     const button = this.barButtonAt(clientX, clientY);
     if (button !== null) {
-      if (this.navigating && !button.navigationSafe) return true;
       if (button.enabled) button.action();
       else if (button.refusal !== undefined) this.refuse(button.refusal);
     }
@@ -3994,9 +4069,11 @@ export class EchoRenderer {
 
   /**
    * A press on the scope jumps the camera there; a drag scrubs it. Returns
-   * true when the point was inside the scope.
+   * true when the point was inside the scope. In the free-water study the
+   * press glides (docs/free-camera.md §4, rule 4) and the scrub stays under
+   * the hand (rule 1).
    */
-  private pressMinimap(clientX: number, clientY: number): boolean {
+  private pressMinimap(clientX: number, clientY: number, press = true): boolean {
     const rect = this.app.canvas.getBoundingClientRect();
     const px = (clientX - rect.left) / this.uiScale;
     const py = (clientY - rect.top) / this.uiScale;
@@ -4004,14 +4081,15 @@ export class EchoRenderer {
     if (px < x || px > x + size || py < y || py > y + size) return false;
     const k = this.minimapScale(size);
     if (k <= 0) return true;
-    if (this.destination !== null && !this.navigating) {
+    if (this.destination !== null) {
       if (!this.destination.pinned) {
         this.destination.point = { x: (px - x) / k, y: (py - y) / k };
         this.pinDestination(true);
       }
       return true;
     }
-    this.conn?.focusWorld((px - x) / k, (py - y) / k);
+    if (press) this.conn?.glideTo((px - x) / k, (py - y) / k);
+    else this.conn?.focusWorld((px - x) / k, (py - y) / k);
     return true;
   }
 
@@ -4875,7 +4953,6 @@ export class EchoRenderer {
       label: 'MENU',
       enabled: true,
       active: false,
-      navigationSafe: true,
       action: () => {
         this.leaveNavigation();
         this.callbacks.onOpenMenu();
@@ -6690,9 +6767,9 @@ export class EchoRenderer {
     return 'contact';
   }
 
-  /** Move the camera to a logged position. */
+  /** Move the camera to a logged position: a glide in the study (docs/free-camera.md §4). */
   focusOn(x: number, y: number): void {
-    this.conn?.focusWorld(x, y);
+    this.conn?.glideTo(x, y);
   }
 
   // --- Draw ----------------------------------------------------------------
@@ -6728,8 +6805,10 @@ export class EchoRenderer {
     }
     if (vx === 0 && vy === 0) return;
     // `panBy` moves the ground with the pointer; looking right means the
-    // ground goes left.
-    this.conn.panBy(-vx * EDGE_SCROLL_PX_PER_S * dt, -vy * EDGE_SCROLL_PX_PER_S * dt);
+    // ground goes left. A step, so the study's camera gathers speed and
+    // settles rather than starting and stopping dead (docs/free-camera.md §4,
+    // rule 3).
+    this.conn.panStep(-vx * EDGE_SCROLL_PX_PER_S * dt, -vy * EDGE_SCROLL_PX_PER_S * dt);
   }
 
   private draw(): void {
@@ -10518,7 +10597,7 @@ export class EchoRenderer {
     const py = (clientY - bounds.top) / this.uiScale;
     const { x, y, size } = rect;
     if (px < x || px > x + size || py < y || py > y + size) return false;
-    if (this.destination !== null && !this.navigating) {
+    if (this.destination !== null) {
       if (!this.destination.pinned) {
         if (press) this.refuse('PIN POSITION FIRST');
         return true;

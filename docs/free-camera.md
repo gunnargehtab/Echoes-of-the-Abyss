@@ -250,12 +250,13 @@ camera above, and promoting the feel to them is a separate decision.
    **0.1 s** (`EASE_S`), settling in about 0.3 s instead of in one frame. Notches add to the
    destination rather than to the drawn camera, so a fast scroll is one smooth zoom, and
    the zoom still holds the water under the cursor.
-4. **Jumps glide.** `Home`, a press on the scope, a group recalled twice and a double-click
-   on a hull travel over **0.6 s** (`GLIDE_S`), starting and ending at rest. They swing
-   about the focus rather than cutting across to the new eye. Leaving NAV glides from the
-   flight eye back to the orbit it left.
-5. **Input takes over.** Any drag, step or jump starts from where the camera is drawn, not
-   from where it was going, and stops a coast.
+4. **Jumps glide.** `Home`, a press on the scope or on a log entry, a group recalled twice
+   and a double-click on a hull travel over **0.6 s** (`GLIDE_S`), starting and ending at
+   rest. They swing about the focus rather than cutting across to the new eye. Leaving NAV
+   glides from the flight eye back to the orbit it left.
+5. **Input takes over.** A drag or a jump starts from where the camera is drawn, not from
+   where it was going, and stops a glide or a coast under way. A step adds to where the
+   camera is going, as rule 3 says.
 6. **Nothing turns by itself.** Every motion above finishes a gesture the player made, and
    following moves the focus without turning the camera. §5's rule holds: no effect rotates
    the projection, and the sway stays a translation.

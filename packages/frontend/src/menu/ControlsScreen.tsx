@@ -26,6 +26,7 @@ import {
   ACTIONS,
   conflictsIn,
   FIXED_CONTROLS,
+  FREE_WATER_FIXED_CONTROLS,
   GROUP_LABEL,
   isBindable,
   keyLabel,
@@ -204,16 +205,18 @@ export function ControlsScreen({ onBack }: ControlsScreenProps) {
             {/* Shown rather than hidden: a player looking for the queue
                 modifier should find it here and learn it is not movable,
                 rather than conclude the rebinder forgot it. */}
-            {FIXED_CONTROLS.map((fixed) => (
-              // Keyed on label *and* keys: two fixed controls are both called
-              // `Pan` (the arrows and the middle button), and a bare label put
-              // React's duplicate-key warning on the console every render.
-              <div key={`${fixed.label}-${fixed.keys}`} className="menu-binding-row fixed">
-                <span className="menu-binding-label">{fixed.label}</span>
-                <span className="menu-binding-hint">{fixed.why}</span>
-                <span className="menu-binding-key static">{fixed.keys}</span>
-              </div>
-            ))}
+            {[...(FREE_WATER_CONTROLS ? FREE_WATER_FIXED_CONTROLS : []), ...FIXED_CONTROLS].map(
+              (fixed) => (
+                // Keyed on label *and* keys: two fixed controls are both called
+                // `Pan` (the arrows and the middle button), and a bare label put
+                // React's duplicate-key warning on the console every render.
+                <div key={`${fixed.label}-${fixed.keys}`} className="menu-binding-row fixed">
+                  <span className="menu-binding-label">{fixed.label}</span>
+                  <span className="menu-binding-hint">{fixed.why}</span>
+                  <span className="menu-binding-key static">{fixed.keys}</span>
+                </div>
+              )
+            )}
           </section>
         </div>
 

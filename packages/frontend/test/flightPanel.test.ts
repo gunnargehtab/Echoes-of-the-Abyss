@@ -33,9 +33,11 @@ const reading = (over: Partial<FlightReading>): FlightReading => ({
 const noop = () => {};
 
 /**
- * docs/free-water-slice.md §9, Opening view: the camera panel keeps its three
- * verbs in their order and its conditions, and the decorative-life disclosure
- * is no longer its first line but the shell's own, in the corner.
+ * docs/free-water-slice.md §9, Opening view: the camera panel keeps its verbs
+ * in their order and its conditions, and the decorative-life disclosure is no
+ * longer its first line but the shell's own, in the corner. FLIGHT left the
+ * panel with #1775, when NAV became the one way into flight
+ * (docs/free-camera.md §4, "The study's camera feel", decision 4).
  */
 describe('free-water camera panel', () => {
   const render = (flight: FlightReading | null) => {
@@ -44,7 +46,6 @@ describe('free-water camera panel', () => {
       tree = create(
         createElement(FlightPanel, {
           reading: flight,
-          onFlight: noop,
           onNav: noop,
           onHome: noop,
           onStep: noop,
@@ -54,9 +55,9 @@ describe('free-water camera panel', () => {
     return tree;
   };
 
-  it('keeps FLIGHT, NAV and HOME in that order, and carries no legend', () => {
+  it('keeps NAV and HOME in that order, with no FLIGHT, and carries no legend', () => {
     const tree = render(null);
-    assert.deepEqual(textOf(tree), ['FLIGHT', 'NAV', 'HOME']);
+    assert.deepEqual(textOf(tree), ['NAV', 'HOME']);
     assert.equal(tree.root.findByType('section').props['aria-label'], 'Free-water camera');
   });
 
@@ -77,7 +78,7 @@ describe('free-water camera panel', () => {
     const tree = render(reading({ navigating: true }));
     const text = textOf(tree).join(' ');
     assert.match(text, /FLEET SHORTCUTS SUSPENDED/);
-    assert.ok(tree.root.findAllByType('button').length > 3, 'the motion buttons');
+    assert.ok(tree.root.findAllByType('button').length > 2, 'the motion buttons');
     assert.doesNotMatch(textOf(render(null)).join(' '), /FLEET SHORTCUTS SUSPENDED/);
   });
 });

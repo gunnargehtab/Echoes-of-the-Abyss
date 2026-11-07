@@ -1,15 +1,18 @@
 import { ACTIONS, isFlightAction, type FlightAction } from '../input/bindings.ts';
 import type { FlightReading } from './flightCamera.ts';
 
+/**
+ * The free-water study's camera panel (docs/free-water-slice.md §6 and §9):
+ * NAV, which since #1775 is the one way into flight, and HOME, with the
+ * flight's readouts while flying and NAV's motion buttons while latched.
+ */
 export function FlightPanel({
   reading,
-  onFlight,
   onNav,
   onHome,
   onStep,
 }: {
   reading: FlightReading | null;
-  onFlight(): void;
   onNav(): void;
   onHome(): void;
   onStep(action: FlightAction): void;
@@ -17,16 +20,6 @@ export function FlightPanel({
   return (
     <section className="flight-panel" aria-label="Free-water camera">
       <div>
-        <button
-          type="button"
-          aria-pressed={reading?.flying ?? false}
-          onClick={(event) => {
-            onFlight();
-            event.currentTarget.blur();
-          }}
-        >
-          FLIGHT
-        </button>
         <button
           type="button"
           aria-pressed={reading?.navigating ?? false}

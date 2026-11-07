@@ -25,6 +25,24 @@ export const FLIGHT_CAMERA = {
   BUTTON_STEP_S: 0.25,
 } as const;
 
+/**
+ * TUNABLE — docs/free-camera.md §4, "The study's camera feel" (#1775). How the
+ * free-water study's orbit moves between the poses the player asks for. Camera
+ * only, never hull movement, and never read outside the study.
+ */
+export const CAMERA_FEEL = {
+  /** A step (wheel, arrows, edge) closes its gap by a factor of e in this time. */
+  EASE_S: 0.1,
+  /** A released drag's speed falls by a factor of e in this time. */
+  COAST_S: 0.3,
+  /** A pointer this still before its release does not coast. */
+  COAST_STILL_MS: 80,
+  /** The release speed's cap, screen pixels a second. */
+  COAST_MAX_PX_S: 1200,
+  /** A jump (Home, a scope press, a followed hull) travels this long, rest to rest. */
+  GLIDE_S: 0.6,
+} as const;
+
 /** SPEC — docs/free-water-slice.md §5, public decoration only, never gameplay fauna. */
 export const FREE_WATER_LIFE = {
   SEED: 1713,
