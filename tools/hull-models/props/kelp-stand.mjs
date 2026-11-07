@@ -175,16 +175,17 @@
  * each vertex's height over the prop's, so it needs nothing from the file;
  * #1713 sets the stand's `swayM` in the registry row it adds, and a sway
  * pushes the fence: a top vertex at the disc's edge swings `swayM`
- * further, so the stand keeps inside the 62.5 m from a slot to its cell's
- * edge at a `swayM` under 2.5 m (the cluster's is 4). The runtime
+ * further, which docs/free-water-slice.md §5 counts at the clearing's
+ * edges, the one line a stand keeps off (#1773). The runtime
  * owns value (`ENV_LUMINANCE_CEILING`), so the two materials are the
  * cluster's tokens and nothing is tuned here.
  *
  * The root is `env_kelp_stand`, an identity: every placement and the fit
  * are baked into the buffers as the nodule bed's are, the whole standing
  * on y = 0 at the holdfasts and the foot rings, and the plan centred on
- * the origin to the millimetre, since #1713's slots are 125 m apart and a
- * stand that sat 3 m off its origin would lean into its neighbour's cell.
+ * the origin to the millimetre, since §5 clears each stand by its outline
+ * about its slot, and a stand that sat 3 m off its origin would lean 3 m
+ * into its neighbour.
  * Nothing in it is a table, so the stand can be re-drawn by editing `SEED`
  * or the ranges above — and a seed that packs a clump too tight for its
  * fronds, or whose extremes fall in one clump, throws rather than builds,

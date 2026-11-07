@@ -1999,10 +1999,10 @@ across a 120 m plan — a holdfast with four open-ended stalks rooted on it, 48 
 in all whose rings wander as they climb, leaning down-current as the cluster's stipes do,
 with nineteen or twenty ribbon fronds to a stem along its whole height, 936 in all, each a
 strip of four quads on a path that rises off the stem, streams down-current and twists,
-which is what reads as kelp; and no vertex stands more than 60 m from its centre, so a
-yawed instance keeps inside its cell, 62.5 m from a slot to the cell's edge, as long as
-its registry `swayM` stays under 2.5 m (the cluster's is 4: a sway swings the top
-vertices past the fence by its own amplitude) — with
+which is what reads as kelp; and no vertex stands more than 60 m from its centre, so at
+any heading the stand keeps inside the 120 m footprint the fixture's ground checks take
+about its slot, though a sway swings the top vertices past that fence by the registry's
+`swayM`, 4 m as the cluster's, which §5 counts at the clearing's edges (#1773) — with
 open water between the clumps, so it reads as forest and never as a wall: no canopy, and
 nothing wider than a holdfast on the ground. Its budget is 9,000 rather than the 800 the
 registry fences, by the owner's decision on #1712: the fixture is a development slice for
