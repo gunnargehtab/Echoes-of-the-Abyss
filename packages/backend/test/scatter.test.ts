@@ -38,11 +38,13 @@ import {
   FOLLOW_FLOOR,
   LID,
   MOVEMENT,
+  RefitKind,
   effectivePressureRating,
   ResolutionTier,
   SCATTER,
   SIM,
   STANDING_WAVE,
+  UNIT_STATS,
   UnitKind,
   unitAvailableTo,
   type Contact,
@@ -52,6 +54,7 @@ import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnUnit } from '../src/sim/world.ts';
 import { phantomDepthM } from '../src/sim/systems/echoLayer.ts';
+import { grantRefit } from '../src/sim/systems/refit.ts';
 import {
   ActivePing,
   Health,
@@ -442,8 +445,16 @@ describe('two ears solve the Fields — docs/systems-echo.md §3, "Two ears"', (
 });
 
 describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.md §5', () => {
-  /** A pinger in the water the caller paints, and one enemy hull far off. */
-  function ping(terrain: Terrain, seed = 31, enemyHeading?: number) {
+  /**
+   * A pinger in the water the caller paints, and one enemy hull far off.
+   * `before` runs on the seated world just ahead of the transmission.
+   */
+  function ping(
+    terrain: Terrain,
+    seed = 31,
+    enemyHeading?: number,
+    before?: (match: Match, enemy: number) => void
+  ) {
     const match = new Match(VENTFRONT_DIVIDE, { fauna: false, seed, terrain });
     const pinger = spawnUnit(match.world, {
       kind: UnitKind.Corvette,
@@ -462,6 +473,7 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
       y: 4000,
       heading: enemyHeading,
     });
+    before?.(match, enemy);
     match.activeSonar(0, pinger);
     const result = match.echo.run(match.world, [0, 1]);
     const contacts = result.contactsBySlot.get(0) ?? [];
@@ -543,6 +555,39 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
       .contactsBySlot.get(0)!
       .map((c) => c.id);
     assert.equal(new Set(handles).size, handles.length, 'every handle distinct');
+  });
+
+  it('tells a plated hull at its kind’s own maximum, so the plate sorts no phantom (#1785)', () => {
+    // The Plate is its owner's purchase (docs/systems-progression.md §2). A
+    // phantom claims its kind's own maximum, because a phantom that carried a
+    // purchase would announce it; so a true plated return has to claim the same,
+    // or every return at the kind's maximum would be a lie (docs/systems-echo.md
+    // §4). Whole and hurt, both, since a phantom is always whole and a true
+    // return is not.
+    const cruiser = UNIT_STATS[UnitKind.Cruiser].maxHp;
+    for (const condition of [1, 0.5]) {
+      const { phantoms, real } = ping(fieldsMap(), 31, undefined, (match, hull) => {
+        grantRefit(match.world, 1, RefitKind.Plate);
+        assert.equal(Health.max[hull], Math.fround(cruiser * 1.15), 'the premise: it is plated');
+        Health.hp[hull] = Health.max[hull]! * condition;
+      });
+      assert.ok(phantoms.length > 0, 'the premise: the Fields conjured phantoms');
+      for (const phantom of phantoms) {
+        assert.equal(phantom.maxHp, UNIT_STATS[phantom.kind!].maxHp, 'a phantom claims its kind');
+        assert.equal(phantom.hp, phantom.maxHp, 'and claims it whole');
+      }
+      const truth = real[0]!;
+      assert.equal(
+        truth.maxHp,
+        cruiser,
+        `the kind's own maximum, never the plate (at ${condition})`
+      );
+      assert.equal(
+        truth.hp,
+        Math.fround(cruiser * condition),
+        `its condition, at f32 (${condition})`
+      );
+    }
   });
 
   it('tells every heading at one precision and in one range, so neither sorts a phantom', () => {

@@ -48,6 +48,7 @@ import {
   type ExposureReport,
   type OrdnanceKind,
   Faction,
+  RefitKind,
   type StructureKind,
   UnitKind,
   type UnitStats,
@@ -1885,8 +1886,28 @@ export class EchoLayer {
         }
 
         if (resolved.tier >= ResolutionTier.Track) {
-          contact.hp = Health.hp[eid]!;
-          contact.maxHp = Health.max[eid]!;
+          // Health is the hull's condition, told against its kind's own
+          // maximum (docs/systems-echo.md §4). Only a plated hull's maximum is
+          // not its kind's, and the plate is its owner's purchase
+          // (docs/systems-progression.md §2): told, it would sort every true
+          // return of a plated navy from §3's phantoms, which claim the kind's
+          // own maximum because a phantom that carried a purchase would
+          // announce it (#1785). At full health the ratio is exactly one, so
+          // the hull reads its kind's maximum to the bit, as a phantom does;
+          // hurt, it reads its share at f32, the precision every hull is kept
+          // at, so the precision sorts nothing either (#1294).
+          const plated =
+            world.refits.size !== 0 &&
+            hasComponent(world, Unit, eid) &&
+            world.refits.get(Owner.slot[eid]!)?.has(RefitKind.Plate) === true;
+          if (plated) {
+            const own = UNIT_STATS[Unit.kind[eid] as UnitKind].maxHp;
+            contact.maxHp = own;
+            contact.hp = Math.fround((Health.hp[eid]! / Health.max[eid]!) * own);
+          } else {
+            contact.hp = Health.hp[eid]!;
+            contact.maxHp = Health.max[eid]!;
+          }
           // The bow if the entity keeps one, the course of travel otherwise.
           //
           // Not a new disclosure: §4 already puts facing at Track and this is
