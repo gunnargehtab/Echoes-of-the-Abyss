@@ -3,12 +3,113 @@ import { propHash, propSpec, type PropPlacement, type TerrainGrid } from './envi
 import { DEPTH_VISUAL_M_PER_M, depthToWorldY } from './perspectiveTerrain.ts';
 
 /**
+ * docs/free-water-slice.md §5, "No rows" (#1773): every plant as map metres
+ * and a heading in degrees, +x down-current and positive turning toward
+ * north, as the instance's yaw about +y does. #1751 stood the stands in four
+ * rows of fourteen at one 125 m pitch, all facing down-current, and a stand
+ * is 120 by 69 m, so the forest drew as strips with bare lanes between them.
+ * docs/screenshots/issue-1773/layout.mjs drew this list once, by a seeded
+ * anneal from those rows under §5's rules, and nothing redraws it at play
+ * time; the decoration test holds every rule on it. The south flank's 125 m
+ * of tread holds one band of stands, so four of #1751's fourteen there moved
+ * north, 46 against 10, and the band opens four gaps instead of reading as
+ * one line.
+ */
+const KELP_STANDS = [
+  [1898.2, 661.2, 0],
+  [2518.2, 661.2, 1],
+  [2192.2, 663.6, 3],
+  [1613.7, 664.9, -1],
+  [2807.9, 670.1, -10],
+  [1343.6, 670.4, 6],
+  [1191.2, 671.4, -8],
+  [2061.1, 679, 19],
+  [1760.2, 680.8, -17],
+  [2368.9, 681.2, 22],
+  [2656.7, 687.4, 27],
+  [1480.5, 702.1, 43],
+  [2527.5, 741.5, -9],
+  [1922.5, 745, 15],
+  [2735.4, 746.5, 8],
+  [2207, 747.7, -12],
+  [1588.4, 756.7, 21],
+  [2077.7, 762.6, 4],
+  [2382.2, 765.6, 7],
+  [1214.7, 768.1, 20],
+  [1733.5, 773.6, -37],
+  [1360, 787.4, -38],
+  [2594.5, 823, 43],
+  [2791.1, 826.3, 24],
+  [1886.1, 839.9, -23],
+  [2162.4, 846.8, 38],
+  [1505.1, 851.1, 1],
+  [1187.1, 857.8, 2],
+  [2021, 861.9, 21],
+  [1658.5, 862.3, -4],
+  [2462.8, 862.4, 28],
+  [1323.9, 871, -16],
+  [2323.1, 872.9, -15],
+  [2688.2, 885.2, -39],
+  [1765, 916.7, 35],
+  [2806.3, 925.1, 45],
+  [2183.7, 933.6, 18],
+  [1486.2, 940.4, -19],
+  [1210.4, 940.5, 17],
+  [2479.4, 946.9, 15],
+  [1634.9, 949.1, 12],
+  [1924.4, 956.3, 5],
+  [2053.1, 960.2, -2],
+  [2337.6, 961.2, 0],
+  [1343.7, 962.2, 0],
+  [2613.4, 962.6, 0],
+  [2409.2, 1295.2, 2],
+  [2785.8, 1302.1, 6],
+  [2085.1, 1306.1, 6],
+  [1337.2, 1310.4, -14],
+  [1735.4, 1311.2, -8],
+  [2609.8, 1319.1, -13],
+  [2271.8, 1320.4, 18],
+  [1199.3, 1327, 5],
+  [1955.2, 1327.7, -11],
+  [1550.4, 1328.9, 0],
+] as const;
+
+/**
+ * The retained clusters' fringe, on the ramp up to the rim north of every
+ * stand, drawn with them and held to the same rules.
+ */
+const KELP_CLUSTERS = [
+  [2935.2, 515, -36],
+  [2227.3, 531.6, 8],
+  [1642.4, 532.5, -43],
+  [1289.7, 537.2, 29],
+  [2514.2, 542.8, -9],
+  [1794.9, 543.5, -13],
+  [2918.2, 552.8, 28],
+  [1131.9, 556.1, -30],
+  [2149.5, 559.4, -39],
+  [2452.4, 576.1, 41],
+  [1883.4, 591.4, -12],
+  [1377.8, 594.3, 10],
+  [2497.1, 598.2, -13],
+  [2166.9, 598.6, -41],
+  [2203.1, 607.3, 38],
+  [2741.5, 611.5, -6],
+] as const;
+
+/**
  * docs/free-water-slice.md §5. Slots, not scatter: neither hidden state nor the
  * camera is an input. Every closed path's entire envelope stays in its patch.
  */
 export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false): PropPlacement[] {
   const slots: PropPlacement[] = [];
-  const add = (slug: string, xM: number, yM: number, motion?: PropPlacement['motion']) => {
+  const add = (
+    slug: string,
+    xM: number,
+    yM: number,
+    motion?: PropPlacement['motion'],
+    yawRad = 0
+  ) => {
     const col = Math.floor(xM / terrain.cellM);
     const row = Math.floor(yM / terrain.cellM);
     const cellIndex = row * terrain.cols + col;
@@ -33,7 +134,9 @@ export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false)
           terrain.floor[i] === 400 &&
           terrain.ceiling[i] === 0;
     valid &&= admits(cellIndex);
-    // Test the whole swept plan envelope, including neighbouring cells.
+    // Test the whole swept plan envelope, including neighbouring cells. The
+    // footprint's disc holds a turned stand whole: its script fences every
+    // vertex within 60 m of its centre (tools/hull-models/props/kelp-stand.mjs).
     const radius = (motion?.radiusM ?? 0) + spec.footprintM / 2;
     for (
       let y = Math.floor((yM - radius) / terrain.cellM);
@@ -54,37 +157,18 @@ export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false)
         slug,
         xM,
         yM,
-        yawRad: 0,
+        yawRad,
         scale: 1,
         cellIndex,
         ...(valid ? {} : { disabled: true }),
         ...(motion === undefined ? {} : { motion }),
       });
   };
-  // Stands sit only where the rendered floor is the garden's 400 m tread: the
-  // view interpolates between cell centres, so a plan envelope that reaches
-  // past the last tread centre, toward the rim, the bowl or the pocket, would
-  // hang over the ramp. That bounds the rows to y=685..1,315 and the columns
-  // to x=1,185..2,815, and with the clearing's row bare, inner rows 5 m from
-  // its edges so a 4 m sway never crosses them, it admits three rows north of
-  // the clearing and one south, 14 stands each (#1751).
-  for (const [y, dy] of [
-    [500, 187.5],
-    [750, 62.5],
-    [750, 185],
-    [1250, 65],
-  ] as const) {
-    for (const x of [1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750]) {
-      for (const dx of [62.5, 187.5]) {
-        if ((x === 1000 && dx === 62.5) || (x === 2750 && dx === 187.5)) continue;
-        add('env-kelp-stand', x + dx, y + dy);
-      }
-    }
+  for (const [x, y, yawDeg] of KELP_STANDS) {
+    add('env-kelp-stand', x, y, undefined, (yawDeg * Math.PI) / 180);
   }
-  // The retained clusters are the forest's fringe along the garden's north
-  // edge, on the gentle ramp up to the rim behind the outermost stands.
-  for (const x of [1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750]) {
-    for (const dx of [62.5, 187.5]) add('env-kelp-cluster', x + dx, 500 + 62.5);
+  for (const [x, y, yawDeg] of KELP_CLUSTERS) {
+    add('env-kelp-cluster', x, y, undefined, (yawDeg * Math.PI) / 180);
   }
   const life = (
     slug: string,
