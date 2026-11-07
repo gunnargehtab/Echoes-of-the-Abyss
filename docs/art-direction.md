@@ -1591,8 +1591,9 @@ The projection change moved the old plan-view protections; it did not drop them:
   ground shadow; a hull's height above its own shadow *is* its depth. Verticality keeps
   its luminance-and-fog language ("Reading the Sea Floor" above); the tilt supports it
   rather than competing with it. One look is the exception, at the owner's call (#1772):
-  the development-only free-water study hangs nothing on a plumb and keeps the shadows,
-  and its command plane's foot rings and section scope carry the depth there
+  the development-only free-water study hangs no hull, structure, shot or track on a
+  plumb and keeps their shadows, and its command plane's foot rings and section scope
+  carry the depth there
   ([free-water-slice.md](free-water-slice.md) §9, "Vertical command").
 - **A structure stands on its depth.** A hull is a point in the water and hangs by its
   centre. A structure is built up from a footing: its model's ground, the y 0 it was

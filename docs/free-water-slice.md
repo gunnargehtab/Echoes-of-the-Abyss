@@ -702,9 +702,9 @@ every hull stands against one plane, and no line is drawn under or over a hull.
   stands over or under it, and the section scope, which draws the plane and the hulls
   against the column, shows which at any camera angle. A Tier 2 contact carries no depth,
   so it has no ring, and none is inferred.
-- **No altitude lines.** No line joins a hull to its ring, and nothing in the study
-  hangs on a plumb: hulls, structures, shots and live tracks keep their ground shadows
-  alone. The owner asked on 6 November 2026 for the grey lines under the hulls to go
+- **No altitude lines.** No line joins a hull to its ring, and in the study no hull,
+  structure, shot or live track hangs on a plumb: each keeps its ground shadow alone.
+  The owner asked on 6 November 2026 for the grey lines under the hulls to go
   (#1772). An order's ring and the MOVE 3D preview keep their lines to the ground
   ([ui-ux.md](ui-ux.md) §9), since they mark where a hull is sent rather than a hull.
   Shipped maps keep the plumb ([art-direction.md](art-direction.md), "Depth is drawn,

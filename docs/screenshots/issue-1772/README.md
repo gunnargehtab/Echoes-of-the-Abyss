@@ -2,9 +2,10 @@
 
 Evidence for §9's "Vertical command" as #1772 amends it
 ([free-water-slice.md §9](../../free-water-slice.md#9-feel-pass-the-approved-look-target)).
-In the study nothing hangs on a plumb, and #1753's stalks have lost their lines: each own
-hull and Tier 3+ contact keeps its foot ring on the command plane, and every entity keeps
-its ground shadow. Shipped maps keep the plumb
+In the study no hull, structure, shot or live track hangs on a plumb, and #1753's stalks
+have lost their lines: each own hull and Tier 3+ contact keeps its foot ring on the
+command plane, and every hull, structure, shot and live track keeps its ground shadow. An
+order's ring and the MOVE 3D preview keep their lines to the ground. Shipped maps keep the plumb
 ([art-direction.md](../../art-direction.md), "Depth is drawn, not implied"). The switch is
 `plumbsDrawn` in `packages/frontend/src/game/PerspectiveView.ts`, keyed on the look as the
 study's water and ground are; the rings are `drawFootRing` in `EchoRenderer.ts`.
@@ -58,19 +59,22 @@ fewer. A line has no triangles, so the triangle counts hold, and the control's c
 ## Tests
 
 - `packages/frontend/test/verticalCommand.test.ts`, "marks the plane under or over each own
-  hull and Tier 3+ contact with a foot ring and no line": four own rings and five contact
-  rings at a 1,200 m plane, and again at the Scout's 900 m once it is selected, with no
-  segment in any ring's stroke.
-- The same file, "hangs nothing on a plumb in the study, over the shadows a shipped map also
-  draws". Read through the renderer's walk of the visible scene, a shipped look draws a plumb
-  for every cue slot and the study draws none, over the same shadows. A view moved between
-  looks before its session (`setLook`) takes the new look's rule both ways.
+  hull and Tier 3+ contact with a foot ring and no line". At a 1,200 m plane the four own
+  rings and five contact rings each lie where the plane projects at that hull's or
+  contact's plan position, through the conn's own projection. Once the Scout is selected,
+  every ring moves to its 900 m plane and the Corvette's leaves the 1,200 m one. No ring's
+  stroke holds a segment.
+- The same file, "hangs no entity on a plumb in the study, over the shadows a shipped map
+  also draws". Read through the renderer's walk of the visible scene, a shipped look draws a
+  plumb for every cue slot and the study draws none, over the same shadows. A view moved
+  between looks before its session (`setLook`) takes the new look's rule both ways.
 - `packages/frontend/test/depthCues.test.ts`, "takes the plumbs off as one and keeps them off
   across a growth, the shadows drawn".
 
-Each test fails without the rule it holds: with a line drawn into the ring, without either
-`plumbsShown` assignment in `PerspectiveView.ts`, or with a growth building the plumbs again
-without the switch.
+Each test fails without the rule it holds: with a line drawn into the ring, a ring drawn on
+the ground or at its own hull's depth, a plane that ignores the selection, either
+`plumbsShown` assignment in `PerspectiveView.ts` removed, or a growth building the plumbs
+again without the switch.
 
 ## Not captured
 
