@@ -221,7 +221,7 @@ every other row.
 | Kit | Authored placement list, map metres | Opening count |
 | --- | --- | --- |
 | New kelp stands | 56 authored slots, each a position and a heading (`KELP_STANDS` in `freeWaterDecoration.ts`): 42 north of the clearing, every outline inside `x=1,125..2,875` and `y=625..996`, and 14 south of it, inside the same `x` and `y=1,254..1,375` | 56 |
-| Retained kelp clusters | 16 authored slots along the garden's north fringe, each a position and a heading (`KELP_CLUSTERS`), centred inside `x=1,011..2,989` and `y=511..614` | 16 |
+| Retained kelp clusters | 16 authored slots along the garden's north fringe, each a position and a heading (`KELP_CLUSTERS`), centred inside `x=1,011..2,989` and `y=511..614`, so a turned cluster's 9.9 m reach stays on the garden's cells and north of every stand | 16 |
 | Rim crabs | Four floor patches among the south flank's stands, centred on `(1,625,1,375)`, `(1,875,1,375)`, `(2,125,1,375)`, `(2,375,1,375)`, and four on the clearing's floor, centred on `(1,900,1,060)`, `(1,880,1,165)`, `(1,800,1,110)`, `(1,760,1,200)`; each patch has a 25 m radius and four crabs | 32 |
 | Fry shoals | Centres `(1,375,875)`, `(1,875,875)`, `(2,375,875)`, `(2,875,875)`, each school within 25 m horizontally and 250..300 m depth; and two over the clearing, `(2,035,1,120)` within 105..160 m depth and `(2,010,1,160)` within 120..170 m | 6 schools / 144 fish |
 | Outer fish | Every pair of `x=1,750,2,000,2,250,2,500` and `y=1,750,2,500`, each path within 40 m horizontally and 700..1,000 m depth; and two schools of four over the clearing, centred `(1,900,1,150)` and `(1,780,1,080)`, within 45 m horizontally and 200..300 m depth | 16 |
@@ -253,9 +253,10 @@ rows (#1773). Two readings hold that off. No plant stands within 10 m of the lin
 two others of its kind when it lies between them, at least a fifth of the way in from
 each, and within 260 m of both. And every east-west line across the north flank, from
 `y=650` to `970`, meets stand outlines over at least a quarter of the tread's 1,750 m, so
-no lane runs between stands. The roots stand on one floor, and a camera maps a plane to
-the screen through a homography, which keeps a line a line: no three roots in line in
-plan means none in the garden-close or survey frame. Each plant turns at most 45 degrees
+no lane runs between stands. Both are read in plan: the roots stand on one floor, near
+enough a plane, and a camera maps a plane to the screen through a homography, which keeps
+a line a line, so three roots in line on the floor stand in line in the garden-close and
+survey frames alike. Each plant turns at most 45 degrees
 from the current, +x in the stand's and the cluster's scripts, so the forest keeps one
 prevailing current while its turned plans break the strips. The south flank is one stand
 deep (§9, Kelp), so it stays a band along the clearing, its stands wandering across the
@@ -708,10 +709,10 @@ The owner's re-acceptance of 6 November 2026 read those rows as planted (#1773).
 is 120 m long and 69 m wide, and every one faced down-current with its length along its
 row, so the forest drew as four strips with lanes about 55 m wide between them. §5 then
 cleared each stand by a 120 m disc kept inside its own 250 m cell, which left every row at
-most 6 m of play north or south. Since #1773 the same 56 stand where a
-seeded anneal from those rows left them, cleared by their outlines and held to §5's
-No rows: 42 north of the clearing and 14 south, the canopy still continuous on each flank
-and the clearing still the one gap in it. The clusters' fringe is scattered the same way.
+most 6 m of play north or south. Since #1773 the same 56 stand where a seeded anneal from
+those rows left them, cleared by their outlines and held to §5's No rows: 42 north of the
+clearing and 14 south, the canopy still continuous on each flank and the clearing still
+the one gap in it. The clusters' fringe is scattered the same way.
 Four other ways were weighed with the owner on #1773: keeping each outline inside its
 cell, which drew the cell grid as empty seams; holding each stand within 40 m of its row
 slot, which left three wavy rows; fewer stands under the discs, which gave up the fill

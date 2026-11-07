@@ -176,7 +176,7 @@
  * #1713 sets the stand's `swayM` in the registry row it adds, and a sway
  * pushes the fence: a top vertex at the disc's edge swings `swayM`
  * further, which docs/free-water-slice.md §5 counts at the clearing's
- * edges, the one line a stand keeps off (#1773). The runtime
+ * edges (#1773). The runtime
  * owns value (`ENV_LUMINANCE_CEILING`), so the two materials are the
  * cluster's tokens and nothing is tuned here.
  *

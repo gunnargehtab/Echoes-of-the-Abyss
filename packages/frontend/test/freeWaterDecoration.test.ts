@@ -183,6 +183,11 @@ describe('authored public decoration', () => {
     // §5: the north flank's tread holds 42 stands and the south flank's 14.
     assert.equal(stands.filter((p) => p.yM < 1000).length, 42);
     assert.equal(stands.filter((p) => p.yM > 1250).length, 14);
+    // §5: the clusters' fringe, where a turned cluster's 9.9 m reach stays on
+    // the garden's cells and north of every stand.
+    for (const p of plants.filter((q) => q.slug === 'env-kelp-cluster')) {
+      assert.ok(p.xM >= 1011 && p.xM <= 2989 && p.yM >= 511 && p.yM <= 614, `${p.xM},${p.yM}`);
+    }
     assert.deepEqual(counts, {
       'env-kelp-stand': 56,
       'env-kelp-cluster': 16,
