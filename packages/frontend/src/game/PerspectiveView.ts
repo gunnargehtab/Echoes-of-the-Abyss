@@ -1393,12 +1393,13 @@ export class PerspectiveView {
   }
 
   /**
-   * Whether own entities hang on plumb lines (docs/art-direction.md, "Depth
-   * is drawn, not implied"): on every look but the free-water study's, which
-   * takes the altitude lines off the hulls and leaves depth to the shadows,
-   * the command plane's foot rings and the section scope
-   * (docs/free-water-slice.md §9, "Vertical command", #1772). The same switch
-   * as its water and ground, so a shipped map keeps its plumbs.
+   * Whether hulls, structures, shots and live tracks hang on plumb lines
+   * (docs/art-direction.md, "Depth is drawn, not implied"): on every look but
+   * the free-water study's, which takes the altitude lines off the hulls and
+   * leaves depth to the shadows, the command plane's foot rings and the
+   * section scope (docs/free-water-slice.md §9, "Vertical command", #1772).
+   * The same switch as its water and ground, so a shipped map keeps its
+   * plumbs.
    */
   private get plumbsDrawn(): boolean {
     return this.look !== 'free-water';

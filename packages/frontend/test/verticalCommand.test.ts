@@ -233,30 +233,58 @@ async function boot(options: { study: boolean; look?: WorldLook; relook?: WorldL
   return { chart, conn, gl, app, frame, privates, reading, teardown: () => chart.destroy() };
 }
 
+/** A foot ring's centre, and the segments its stroke holds besides the circle. */
+interface FootRing {
+  x: number;
+  y: number;
+  lines: number;
+}
+
 /**
  * The foot rings on a layer, read off its stroke instructions: each is a
  * stroke holding a circle of `FOOT_RING_PX`. `lines` counts the segments
- * those strokes also hold, which is where #1753's stalk drew its line to the
+ * such a stroke also holds, which is where #1753's stalk drew its line to the
  * hull, one segment solid and several dashed; #1772 draws none. Segments
  * rather than `moveTo`s, since a run another painter left open on the layer
  * leaves a stray `moveTo` in the next stroke. Own rings are told by their
  * ink; a contact's ink varies, so `color` is optional and the radius is what
  * names a ring.
  */
-function footRings(g: Graphics, color?: number): { rings: number; lines: number } {
-  const out = { rings: 0, lines: 0 };
+function footRings(g: Graphics, color?: number): FootRing[] {
+  const out: FootRing[] = [];
   for (const instruction of g.context.instructions) {
     if (instruction.action !== 'stroke') continue;
     const data = instruction.data as { style?: { color?: number }; path?: GraphicsPath };
     if (color !== undefined && data.style?.color !== color) continue;
-    const steps = (data.path?.instructions ?? []) as Array<{ action: string; data: unknown[] }>;
-    if (!steps.some((step) => step.action === 'circle' && step.data[2] === FOOT_RING_PX)) {
-      continue;
-    }
-    out.rings++;
-    out.lines += steps.filter((step) => step.action === 'lineTo').length;
+    const steps = (data.path?.instructions ?? []) as Array<{ action: string; data: number[] }>;
+    const circle = steps.find((step) => step.action === 'circle' && step.data[2] === FOOT_RING_PX);
+    if (circle === undefined) continue;
+    const lines = steps.filter((step) => step.action === 'lineTo').length;
+    out.push({ x: circle.data[0]!, y: circle.data[1]!, lines });
   }
   return out;
+}
+
+/** How many rings a layer holds, and how many segments their strokes hold besides. */
+function tally(rings: FootRing[]): { rings: number; lines: number } {
+  return { rings: rings.length, lines: rings.reduce((sum, ring) => sum + ring.lines, 0) };
+}
+
+/**
+ * Whether every plan position has a ring where the plane at `planeM` lies
+ * under or over it, to a hundredth of a pixel, through the conn's own
+ * projection: a ring on the plane, not at the hull and not on the ground.
+ */
+function ringsOnPlane(
+  conn: PerspectiveView,
+  rings: FootRing[],
+  points: Array<{ x: number; y: number }>,
+  planeM: number
+): boolean {
+  return points.every((point) => {
+    const at = conn.projectPoint(point.x, point.y, planeM);
+    return rings.some((ring) => Math.hypot(ring.x - at.x, ring.y - at.y) < 0.01);
+  });
 }
 
 /**
@@ -315,32 +343,57 @@ describe('the instruments on the study', () => {
     const world = await boot({ study: true });
     try {
       const accent = FACTION_PALETTE[Faction.Bathyarch].accent;
+      const snapshot = cannedSnapshot();
+      const hulls = snapshot.units;
+      const scout = hulls.find((unit) => unit.id === 12)!;
+      const corvette = hulls.find((unit) => unit.id === 11)!;
+      // Five contacts earned a depth at Tier 3 or 4 (103 to 107), at 2,000 /
+      // 2,400 / 1,100 / 2,600 / 1,100 m. The Tier 2 contact's payload carries
+      // a depth the type says is never sent, and it still gets no ring; the
+      // Tier 1 contact has nothing.
+      const earned = snapshot.contacts.filter((contact) => contact.id >= 103 && contact.id <= 107);
       // Home: the focus on the seabed, nothing selected, so no plane and no
       // ring anywhere, own or contact.
       world.conn.setFrame({ xM: 1000, yM: 1000, distanceM: 2600, yawDeg: 0, pitchDeg: 55 });
       world.frame();
-      assert.deepEqual(footRings(world.privates.ringLayer, accent), { rings: 0, lines: 0 });
-      assert.deepEqual(footRings(world.privates.contactLayer), { rings: 0, lines: 0 });
+      assert.deepEqual(tally(footRings(world.privates.ringLayer, accent)), { rings: 0, lines: 0 });
+      assert.deepEqual(tally(footRings(world.privates.contactLayer)), { rings: 0, lines: 0 });
       // A raised focus is the plane with nothing selected. Own hulls stand at
       // 1,200, 900, 1,400 and 3,100 m: at a 1,200 m plane the Corvette is on
-      // it, the Scout above it and the other two below it, and each wears a
-      // ring there with no line to it, on the plane or off it.
+      // it, the Scout above it and the other two below it. Each wears its
+      // ring where the plane lies under or over it, with no line to it.
       world.conn.aimFrame({ xM: 1000, yM: 1000, distanceM: 2600, yawDeg: 0, pitchDeg: 55 }, 1200);
       world.frame();
-      assert.deepEqual(footRings(world.privates.ringLayer, accent), { rings: 4, lines: 0 });
-      // Five contacts earned a depth at Tier 3 or 4 (103 to 107): one ring
-      // each, at 2,000 / 2,400 / 1,100 / 2,600 / 1,100 m, above and below the
-      // plane alike. The Tier 2 contact's payload carries a depth the type
-      // says is never sent, and it still gets none; the Tier 1 contact has
-      // nothing.
-      assert.deepEqual(footRings(world.privates.contactLayer), { rings: 5, lines: 0 });
+      const own = footRings(world.privates.ringLayer, accent);
+      assert.deepEqual(tally(own), { rings: 4, lines: 0 });
+      assert.ok(ringsOnPlane(world.conn, own, hulls, 1200), 'every own ring on the 1,200 m plane');
+      // The premise that a ring's place can tell: off the plane, a hull and
+      // its ring stand apart on the screen.
+      const scoutHull = world.conn.projectPoint(scout.x, scout.y, scout.depth);
+      const scoutRing = world.conn.projectPoint(scout.x, scout.y, 1200);
+      assert.ok(Math.hypot(scoutHull.x - scoutRing.x, scoutHull.y - scoutRing.y) > 1);
+      const theirs = footRings(world.privates.contactLayer);
+      assert.deepEqual(tally(theirs), { rings: 5, lines: 0 });
+      assert.ok(ringsOnPlane(world.conn, theirs, earned, 1200), 'every contact ring on the plane');
       // The lead selected hull's depth takes over: the Scout at 900 m, which
-      // then stands on the plane while the three others hang below it.
+      // then wears its ring at its own drawn point, while every other ring
+      // moves to the 900 m plane.
       world.privates.selected.add(12);
       world.privates.selectionSeq++;
       world.frame();
-      assert.deepEqual(footRings(world.privates.ringLayer, accent), { rings: 4, lines: 0 });
-      assert.deepEqual(footRings(world.privates.contactLayer), { rings: 5, lines: 0 });
+      const ownLed = footRings(world.privates.ringLayer, accent);
+      assert.deepEqual(tally(ownLed), { rings: 4, lines: 0 });
+      assert.ok(
+        ringsOnPlane(world.conn, ownLed, hulls, 900),
+        "every own ring on the Scout's plane"
+      );
+      assert.ok(
+        !ringsOnPlane(world.conn, ownLed, [corvette], 1200),
+        "the Corvette's ring left the 1,200 m plane"
+      );
+      const theirsLed = footRings(world.privates.contactLayer);
+      assert.deepEqual(tally(theirsLed), { rings: 5, lines: 0 });
+      assert.ok(ringsOnPlane(world.conn, theirsLed, earned, 900), 'every contact ring follows');
     } finally {
       world.teardown();
     }
@@ -352,8 +405,8 @@ describe('the instruments on the study', () => {
       world.conn.aimFrame({ xM: 1000, yM: 1000, distanceM: 2600, yawDeg: 0, pitchDeg: 55 }, 1200);
       world.frame();
       const accent = FACTION_PALETTE[Faction.Bathyarch].accent;
-      assert.deepEqual(footRings(world.privates.ringLayer, accent), { rings: 0, lines: 0 });
-      assert.deepEqual(footRings(world.privates.contactLayer), { rings: 0, lines: 0 });
+      assert.deepEqual(tally(footRings(world.privates.ringLayer, accent)), { rings: 0, lines: 0 });
+      assert.deepEqual(tally(footRings(world.privates.contactLayer)), { rings: 0, lines: 0 });
       assert.equal(world.privates.sectionRect(), null);
       assert.ok(!textContents(world.app.stage).includes('SECTION'));
     } finally {
@@ -361,7 +414,7 @@ describe('the instruments on the study', () => {
     }
   });
 
-  it('hangs nothing on a plumb in the study, over the shadows a shipped map also draws', async () => {
+  it('hangs no entity on a plumb in the study, over the shadows a shipped map also draws', async () => {
     const study = await boot({ study: true });
     const shipped = await boot({ study: false });
     // A persistent view moved between missions before its session takes the
