@@ -562,7 +562,7 @@ nothing for balance.
 | 1. Light | Stay inside the canon: no sunlight below the Lid | Sunlit water in the manner of the owner's ocean reference, which would first amend [world.md](world.md) and art direction's "Shallow caustics" | Every child |
 | 2. Opening camera | A low orbit behind the fleet at hull depth | Today's opening at Home pitch from 2,600 m; opening in flight, which §6 rules out by keeping the bounded orbit as the default | #1752 |
 | 3. Water medium | Reach and near-eye particulate, inside the existing ramp | Light shafts, caustics, hue in the water, or a new full-screen pass | #1749 |
-| 4. Crater walls | Reshape the drawn cell transitions, adding nothing at a cell centre | Changing the rim's biome, which changes its PF; re-cutting the literal | #1750 |
+| 4. Crater walls | Reshape the drawn cell transitions, adding nothing at a cell centre; since #1774 rounded, with the study's ink on them | Changing the rim's biome, which changes its PF; re-cutting the literal; keeping the ink on the cell edges under a rounded floor | #1750, #1774 |
 | 5. Kelp | The prop reservation may rise to 600,000 triangles; the flanks fill to the clearing, the author's call pending review | Scaling stands up, which breaks canonical scale; stands in the clearing, which breaks §5 | #1751 |
 | 6. HUD and vertical command | A one-line legend and the camera panel by the console; vertical instruments, the author's design pending review | Leaving vertical reading to flight | #1752, #1753, #1754 |
 | 7. Iteration cap | Five rounds per change, every loop, held in `dev-loop` | The default three | Every child |
@@ -607,8 +607,8 @@ line above it and on the block's left edge, which the shell reads off the consol
 layout, keeping their labels, focus order and shortcuts. The rest of the panel stands with
 them and keeps its conditions: the EYE and world-up readout and NO CAMERA CLEARANCE in
 flight, and the NAV status line and motion buttons in NAV, growing upward over the water
-rather than into the console. Survey ink is unchanged: it already fades into the water
-with the ground under it.
+rather than into the console. The opening asks nothing of the survey ink: it already fades
+into the water with the ground under it.
 
 ### Water medium (#1749)
 
@@ -629,10 +629,10 @@ Prohibited: light shafts, caustics, a sun, hue in the water, an effect that rota
 the projection, and glow on terrain. Retained: the ground's 5–10% luminance, and gate 7's
 rule that readability outranks richness ([graphics-standards.md](graphics-standards.md)).
 
-### Crater walls (#1750)
+### Crater walls (#1750, #1774)
 
-The boxes are the 250 m cell transitions, not the coral texture. Three mechanisms draw
-them:
+From a low eye the boxes are the 250 m cell transitions, not the coral texture. Three
+mechanisms draw them:
 
 - **Rock.** The southern wall is solid, floor 200 m and ceiling 3,000 m in the map literal,
   so it is drawn as rock: `rockSurfaceDepthM` in `perspectiveTerrain.ts`, its crag from
@@ -642,13 +642,37 @@ them:
   depths (`authoredFloorAtM`), so the rim's 600 m and the bowl's 1,500 m meet in straight
   slopes along the cell grid.
 
-Coral Ruins' blockiness, a 60 m relief sampled on a 90 m grid (`BIOME_RELIEF` and `BLOCK_M`
-in `seabed.ts`), is the terracing, and it stays. The study may reshape the drawn floor,
-rock faces and roof between cell centres, so that cell edges read as eroded rock. The
-override adds nothing at a cell centre, and a solid cell stays rock at its centre. Survey
-ink keeps tracing the authored floor, not the override. The flight eye already sweeps the
-drawn triangles, so its clearance follows the override; #1750 proves that with a test. No
-new model: rock props would be a separate `shape-work` child.
+The study may reshape the drawn floor, rock faces and roof between cell centres, so that
+cell edges read as eroded rock. The override adds nothing at a cell centre, a solid cell
+stays rock at its centre, and the drawn floor stays between the four centres it blends.
+The flight eye already sweeps the drawn triangles, so its clearance follows the override,
+and a test in #1750 proves it. No new model: rock props would be a separate `shape-work`
+child.
+
+The first pass, #1750, wandered each transition and gave each face a foot and a lip, but
+kept every edge on its grid line. From the survey dolly the owner still saw squares on the
+floor on 6 November 2026 (#1774). The survey ink drew the cell edges, by the rule this section then
+kept. The bowl's ramps climbed a cell at a time. Coral Ruins' blockiness, a 60 m relief
+sampled on a 90 m grid (`BIOME_RELIEF` and `BLOCK_M` in `seabed.ts`), terraced the whole
+rim in blocks. So since #1774 the study draws its cells rounded (`roundedCells.ts`), and
+its ink with them:
+
+- **Rounded edges.** Each kind of ground, rock or one biome at one floor and ceiling, keeps
+  a signed distance to its own cell edges. Blurred, a one-cell jog in the staircase spreads
+  into a curve and a corner rounds. A licence well inside half a cell bounds how far an
+  edge moves, and a wander of a few tens of metres keeps the curve from reading as drawn.
+  A cell centre lies half a cell from every other kind's cells, so it keeps its own.
+- **Ramps and faces.** The floor climbs across the rounded edge: centre to centre where
+  the edge runs straight, steeper where a corner was cut. A rock face rises from a gentle
+  foot to a steep lip. Within a cell of the roofed cut nothing rounds, because the roof's
+  curtains stand on the cell edges, and each jamb keeps its step on them.
+- **Terraces.** Coral's blocks become benches cut in the relief's own depth, so their edges
+  wander with the ground rather than marching on the 90 m grid. Every shipped map keeps
+  the blocks.
+- **Ink and fills.** The coastlines run where the rounded ground changes kind, the isobaths
+  contour its floor without the relief, and the fills ease across its edges
+  ([map-visuals.md](map-visuals.md) §4, the study's clause). The cells stay the truth the
+  simulation plays on and the scope draws.
 
 ### Kelp (#1751)
 
@@ -783,15 +807,15 @@ each child's frames answer what it shows.
 | --- | --- | --- | --- |
 | Opening | 300 m ahead of the hulls' centroid on the centroid-to-A line, at 300 m; 1,200 m; 15 degrees; heading about 34 degrees east of north (`yawDeg` −34) | [01-home.png](screenshots/issue-1713/dpr-1/01-home.png): 542 / 1,958, 2,600 m, 55 degrees, seabed | The three hulls in the lower third, the ray gliding lower right of them, the garden canopy beyond them, water rather than clear colour above the far rim, and the legend as one line in its corner |
 | Garden close | 1,875 / 1,125 in the clearing, 250 m, 12 degrees, 275 m; heading west along it (`yawDeg` 90) | Captured on its base by the first child that touches this row; no committed frame has this pose, and the nearest is [02-garden-close.png](screenshots/issue-1713/dpr-1/02-garden-close.png), the yaw-0 station | Kelp at canonical scale as one forest on both flanks of a bare clearing, with near stands separated from far ones by the water |
-| Low | 2,000 / 2,000, 1,600 m, 12 degrees, 850 m | [03-low.png](screenshots/issue-1713/dpr-1/03-low.png) | Water visibly between the eye and the floor, the bowl's drawn edges as eroded rock terraces rather than 250 m boxes under unchanged ink, and depth still darkening downward |
-| Survey | 2,000 / 2,000, 10,000 m, 88 degrees, seabed | [04-survey.png](screenshots/issue-1713/dpr-1/04-survey.png) | Decoration below tactical ink, own hulls and contacts readable, and the ink unchanged: coastlines on the cell edges and isobaths of the authored floor ([map-visuals.md](map-visuals.md) §4) |
+| Low | 2,000 / 2,000, 1,600 m, 12 degrees, 850 m | [03-low.png](screenshots/issue-1713/dpr-1/03-low.png) | Water visibly between the eye and the floor, the bowl's drawn edges as eroded rock terraces rather than 250 m boxes under ink that follows them, and depth still darkening downward |
+| Survey | 2,000 / 2,000, 10,000 m, 88 degrees, seabed | [04-survey.png](screenshots/issue-1713/dpr-1/04-survey.png) | Decoration below tactical ink, own hulls and contacts readable, and the crater as ground rather than squares: no 250 m staircase in the coastlines, isobaths or fills, and no 90 m block grid on the rim ([map-visuals.md](map-visuals.md) §4, the study's clause) |
 
 Two pose calls were taken here. For the opening, a focus ahead of the hulls puts them in
 the lower third; keeping the focus on their centroid would centre them, because the orbit
 aims at its focus. For garden close, a pose along the clearing shows both flanks; the
 yaw-0 station looks north from over the clearing, so its south flank is behind the eye.
-A survey frame without the cell-edge outline would be an ink change, which is the owner's
-decision with map-visuals.md §4 amended first, not this pass's. Since #1771 the garden
+A survey frame without the cell-edge outline is an ink change. The owner made it in the
+issue #1774, with map-visuals.md §4 amended first. Since #1771 the garden
 close and the low frame also carry life, and since #1777 the opening carries the ray,
 18 m across, gliding at the lower right between the corvette and the legend, besides two
 of the low pose's deep-fish patches at its right edge as pinpricks (§5, Life in the
