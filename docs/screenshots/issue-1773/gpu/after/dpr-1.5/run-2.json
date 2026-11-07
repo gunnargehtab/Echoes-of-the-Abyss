@@ -15,8 +15,8 @@
         "env-rim-crab": 32,
         "env-shoal-fry": 144,
         "env-outer-fish": 16,
-        "env-rim-ray": 1,
-        "env-deep-fish": 26
+        "env-deep-fish": 26,
+        "env-rim-ray": 1
       },
       "photophores": 156,
       "textures": 15,
@@ -25,8 +25,8 @@
       "splitBytes": 11664000,
       "gpuFrames": 240,
       "gpuMs": 1.9,
-      "queuedGpuMs": 1.82,
-      "queueLoadMs": 3.75,
+      "queuedGpuMs": 1.84,
+      "queueLoadMs": 3.74,
       "queueFrames": 240
     },
     {
@@ -38,8 +38,8 @@
         "env-kelp-stand": 56,
         "env-kelp-cluster": 16,
         "env-rim-crab": 32,
-        "env-shoal-fry": 144,
         "env-outer-fish": 16,
+        "env-shoal-fry": 144,
         "env-deep-fish": 26,
         "env-rim-ray": 1
       },
@@ -49,8 +49,8 @@
       "haloBytes": 50371936,
       "splitBytes": 11664000,
       "gpuFrames": 240,
-      "gpuMs": 2.09,
-      "queuedGpuMs": 2.08,
+      "gpuMs": 1.96,
+      "queuedGpuMs": 2.03,
       "queueLoadMs": 3.79,
       "queueFrames": 240
     },
@@ -61,22 +61,22 @@
       "propTriangles": 551850,
       "instances": {
         "env-kelp-stand": 56,
-        "env-rim-crab": 32,
         "env-kelp-cluster": 16,
+        "env-rim-crab": 32,
         "env-shoal-fry": 144,
         "env-outer-fish": 16,
         "env-deep-fish": 26,
         "env-rim-ray": 1
       },
       "photophores": 156,
-      "textures": 9,
+      "textures": 7,
       "environmentBytes": 344064,
       "haloBytes": 50371936,
       "splitBytes": 11664000,
       "gpuFrames": 241,
-      "gpuMs": 1.58,
+      "gpuMs": 1.59,
       "queuedGpuMs": 1.5,
-      "queueLoadMs": 3.8,
+      "queueLoadMs": 3.79,
       "queueFrames": 240
     },
     {
@@ -99,8 +99,8 @@
       "haloBytes": 50371936,
       "splitBytes": 11664000,
       "gpuFrames": 241,
-      "gpuMs": 1.69,
-      "queuedGpuMs": 1.49,
+      "gpuMs": 1.71,
+      "queuedGpuMs": 1.48,
       "queueLoadMs": 3.76,
       "queueFrames": 240
     }

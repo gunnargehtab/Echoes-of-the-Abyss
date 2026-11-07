@@ -24,9 +24,9 @@
       "haloBytes": 22422976,
       "splitBytes": 5184000,
       "gpuFrames": 241,
-      "gpuMs": 1.17,
+      "gpuMs": 1.2,
       "queuedGpuMs": 1.09,
-      "queueLoadMs": 3.7,
+      "queueLoadMs": 3.69,
       "queueFrames": 240
     },
     {
@@ -35,10 +35,10 @@
       "triangles": 560617,
       "propTriangles": 551850,
       "instances": {
-        "env-kelp-stand": 56,
         "env-rim-crab": 32,
         "env-kelp-cluster": 16,
         "env-shoal-fry": 144,
+        "env-kelp-stand": 56,
         "env-outer-fish": 16,
         "env-deep-fish": 26,
         "env-rim-ray": 1
@@ -49,9 +49,9 @@
       "haloBytes": 22422976,
       "splitBytes": 5184000,
       "gpuFrames": 241,
-      "gpuMs": 1.33,
+      "gpuMs": 1.32,
       "queuedGpuMs": 1.21,
-      "queueLoadMs": 3.72,
+      "queueLoadMs": 3.69,
       "queueFrames": 240
     },
     {
@@ -60,11 +60,11 @@
       "triangles": 561017,
       "propTriangles": 551850,
       "instances": {
-        "env-kelp-stand": 56,
         "env-kelp-cluster": 16,
+        "env-kelp-stand": 56,
         "env-rim-crab": 32,
-        "env-outer-fish": 16,
         "env-shoal-fry": 144,
+        "env-outer-fish": 16,
         "env-deep-fish": 26,
         "env-rim-ray": 1
       },
@@ -74,9 +74,9 @@
       "haloBytes": 22422976,
       "splitBytes": 5184000,
       "gpuFrames": 241,
-      "gpuMs": 1.08,
-      "queuedGpuMs": 1.02,
-      "queueLoadMs": 3.73,
+      "gpuMs": 1.09,
+      "queuedGpuMs": 1,
+      "queueLoadMs": 3.72,
       "queueFrames": 240
     },
     {
@@ -86,12 +86,12 @@
       "propTriangles": 551850,
       "instances": {
         "env-kelp-stand": 56,
-        "env-kelp-cluster": 16,
         "env-rim-crab": 32,
+        "env-kelp-cluster": 16,
         "env-shoal-fry": 144,
         "env-outer-fish": 16,
-        "env-rim-ray": 1,
-        "env-deep-fish": 26
+        "env-deep-fish": 26,
+        "env-rim-ray": 1
       },
       "photophores": 156,
       "textures": 15,
@@ -99,9 +99,9 @@
       "haloBytes": 22422976,
       "splitBytes": 5184000,
       "gpuFrames": 241,
-      "gpuMs": 1.21,
+      "gpuMs": 1.38,
       "queuedGpuMs": 0.94,
-      "queueLoadMs": 3.76,
+      "queueLoadMs": 3.73,
       "queueFrames": 240
     }
   ]

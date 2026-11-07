@@ -18,9 +18,9 @@
         "depthM": 300
       },
       "eye": {
-        "xM": 62,
+        "xM": 61,
         "zM": 2671,
-        "depthM": -1102
+        "depthM": -1101
       },
       "distance": 1200,
       "modelBacked": 3,
@@ -62,7 +62,7 @@
       "eye": {
         "xM": 2120,
         "zM": 1125,
-        "depthM": 40
+        "depthM": 41
       },
       "distance": 250,
       "modelBacked": 3,

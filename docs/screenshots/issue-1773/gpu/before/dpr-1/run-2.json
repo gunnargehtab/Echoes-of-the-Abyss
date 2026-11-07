@@ -12,9 +12,9 @@
       "instances": {
         "env-kelp-stand": 56,
         "env-rim-crab": 32,
+        "env-kelp-cluster": 16,
         "env-shoal-fry": 144,
         "env-outer-fish": 16,
-        "env-kelp-cluster": 16,
         "env-deep-fish": 26,
         "env-rim-ray": 1
       },
@@ -23,10 +23,10 @@
       "environmentBytes": 344064,
       "haloBytes": 22422976,
       "splitBytes": 5184000,
-      "gpuFrames": 243,
-      "gpuMs": 1.2,
+      "gpuFrames": 241,
+      "gpuMs": 1.22,
       "queuedGpuMs": 1.1,
-      "queueLoadMs": 3.69,
+      "queueLoadMs": 3.7,
       "queueFrames": 240
     },
     {
@@ -36,11 +36,11 @@
       "propTriangles": 551850,
       "instances": {
         "env-kelp-stand": 56,
+        "env-outer-fish": 16,
+        "env-deep-fish": 26,
         "env-kelp-cluster": 16,
         "env-rim-crab": 32,
         "env-shoal-fry": 144,
-        "env-outer-fish": 16,
-        "env-deep-fish": 26,
         "env-rim-ray": 1
       },
       "photophores": 156,
@@ -49,8 +49,8 @@
       "haloBytes": 22422976,
       "splitBytes": 5184000,
       "gpuFrames": 241,
-      "gpuMs": 1.29,
-      "queuedGpuMs": 1.2,
+      "gpuMs": 1.32,
+      "queuedGpuMs": 1.21,
       "queueLoadMs": 3.7,
       "queueFrames": 240
     },
@@ -61,9 +61,9 @@
       "propTriangles": 551850,
       "instances": {
         "env-kelp-stand": 56,
-        "env-kelp-cluster": 16,
-        "env-rim-crab": 32,
         "env-shoal-fry": 144,
+        "env-rim-crab": 32,
+        "env-kelp-cluster": 16,
         "env-outer-fish": 16,
         "env-deep-fish": 26,
         "env-rim-ray": 1
@@ -73,10 +73,10 @@
       "environmentBytes": 344064,
       "haloBytes": 22422976,
       "splitBytes": 5184000,
-      "gpuFrames": 241,
-      "gpuMs": 1.04,
-      "queuedGpuMs": 1.01,
-      "queueLoadMs": 3.72,
+      "gpuFrames": 242,
+      "gpuMs": 1.09,
+      "queuedGpuMs": 1.03,
+      "queueLoadMs": 3.68,
       "queueFrames": 240
     },
     {
@@ -86,8 +86,8 @@
       "propTriangles": 551850,
       "instances": {
         "env-kelp-stand": 56,
-        "env-kelp-cluster": 16,
         "env-rim-crab": 32,
+        "env-kelp-cluster": 16,
         "env-shoal-fry": 144,
         "env-outer-fish": 16,
         "env-deep-fish": 26,
@@ -99,9 +99,9 @@
       "haloBytes": 22422976,
       "splitBytes": 5184000,
       "gpuFrames": 241,
-      "gpuMs": 1.16,
-      "queuedGpuMs": 0.92,
-      "queueLoadMs": 3.74,
+      "gpuMs": 1.26,
+      "queuedGpuMs": 0.93,
+      "queueLoadMs": 3.73,
       "queueFrames": 240
     }
   ]

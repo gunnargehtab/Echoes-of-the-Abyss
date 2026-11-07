@@ -20,7 +20,7 @@
       "eye": {
         "xM": 61,
         "zM": 2671,
-        "depthM": -1100
+        "depthM": -1101
       },
       "distance": 1200,
       "modelBacked": 3,
@@ -81,7 +81,7 @@
         "depthM": null
       },
       "eye": {
-        "xM": 1999,
+        "xM": 2000,
         "zM": 1089,
         "depthM": -10484
       },
@@ -90,6 +90,27 @@
       "props": 291,
       "calls": 25,
       "triangles": 562517
+    },
+    {
+      "name": "low",
+      "look": "free-water",
+      "pitchDeg": 12,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": 850
+      },
+      "eye": {
+        "xM": 2000,
+        "zM": 3566,
+        "depthM": -647
+      },
+      "distance": 1600,
+      "modelBacked": 3,
+      "props": 291,
+      "calls": 26,
+      "triangles": 561017
     },
     {
       "name": "survey",
@@ -102,8 +123,8 @@
         "depthM": null
       },
       "eye": {
-        "xM": 1996,
-        "zM": 2368,
+        "xM": 1998,
+        "zM": 2369,
         "depthM": -43036
       },
       "distance": 10000,
