@@ -386,8 +386,11 @@ world-up `lookAt` reset or automatic levelling may undo the player's roll.
 | Recover | `Home` always leaves NAV and flight, zeroes roll, restores north/55 degrees/seabed focus at the last command focus and saved orbit dolly |
 
 NAV is a visibly labelled input mode, **CAMERA NAV — FLEET SHORTCUTS SUSPENDED**, not a
-simulation pause. It consumes its keys before fleet shortcuts, suppresses clicks on the
-world as orders, and leaves existing orders running. Outside NAV the fleet bindings,
+simulation pause. It consumes its keys before fleet shortcuts and leaves existing orders
+running. It suppressed clicks on the world as orders until #1775 made it the only way
+into flight; now it takes the keys but not the mouse, so the keys fly while clicks on the
+world, the card and the scopes select and order through the rolled view
+([free-camera.md](free-camera.md) §4, "The study's camera feel"). Outside NAV the fleet bindings,
 including S/D, retain their meaning; the direct controls remain camera-independent.
 This explicit latch is chosen over reusing WASD globally, which would steal attack-move,
 rise and dive. Provide focusable, labelled motion buttons as the mouse-only alternative;

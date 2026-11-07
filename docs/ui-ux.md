@@ -677,7 +677,8 @@ and the rest of #1707. The bounded orbit remains the default. Development-only
 was retired in #1775),
 local translation and unrestricted quaternion rotation including roll; Home returns
 to the saved orbit frame. NAV owns its keys and suspends fleet shortcuts, not the
-simulation; outside it S/D still commands hulls, never the camera. Focusable controls,
+simulation and, since #1775, not the mouse: clicks still select and order through the
+rolled view. Outside NAV, S/D still commands hulls, never the camera. Focusable controls,
 keyboard look, conflict-checked rebinding and blur/menu release implement that contract.
 W/S, A/D and R/F translate in the camera's local axes; Q/E roll and arrows look.
 The upright EYE readout includes world up, INVERTED and VERTICAL feedback. Controls

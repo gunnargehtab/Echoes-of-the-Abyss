@@ -150,8 +150,9 @@ the map. Production ignores the flag. F9 or NAV enters a quaternion camera and
 latches camera keys; F8 and FLIGHT, which entered it without the latch, were retired
 by #1775 ("The study's camera feel" below). W/S travel forward/back, A/D sideways, R/F local
 up/down, Q/E roll, and arrows look. All are rebindable in Controls, with conflicts
-checked within their active context. NAV suspends every fleet shortcut and world
-order click, not existing orders or the simulation. Its labelled motion buttons
+checked within their active context. NAV suspends every fleet shortcut, not existing
+orders or the simulation, and since #1775 not the mouse: clicks on the world, the card
+and the scopes select and order as they do outside it. Its labelled motion buttons
 provide a mouse-only route; the one-handed fleet layout is unchanged.
 
 Middle drag translates on the final camera right/up axes; Shift-middle and a right drag
@@ -199,12 +200,12 @@ water is, so the two cannot disagree.
 
 ### The study's camera feel (#1775)
 
-**Status: the owner chose the three decisions below on #1775, 7 November 2026,** as their
+**Status: the owner chose the four decisions below on #1775, 7 November 2026,** as their
 options described them: steps easing in about 0.1 s, drags coasting on release, jumps
 gliding in about 0.6 s, a followed hull held centred at its depth until a pan or a focus
-step, and F8 retired with NAV kept. The other numbers and rules are the author's, written
-to carry those choices out, and await the owner's review on the pull request that adds
-this section.
+step, and F8 retired with NAV kept and taking clicks. The other numbers and rules are the
+author's, written to carry those choices out, and await the owner's review on the pull
+request that adds this section.
 
 The owner's re-acceptance of 6 November 2026 found the camera cumbersome and clunky (#1694).
 Nothing eased. A wheel notch jumped the dolly by a factor of 1.1 and `Shift` + wheel jumped
@@ -226,6 +227,7 @@ hull's band and holds the hull there while the player turns about it.
 | 1. Model | The orbit is the whole camera: eased, coasting, gliding, and able to follow a hull | Mouse-first flight as the main camera, which takes `W`, `S` and `D` from attack-move, rise and dive; both models at once |
 | 2. Follow | Double-click a hull: it selects the class as before, then glides to that hull and follows it | Middle-click a hull, which needs a middle button |
 | 3. Orbit | A right drag past the click slop orbits; a right click still orders | `Shift` + middle drag alone; middle drag orbiting with `Shift` + middle drag panning |
+| 4. Flight | F8 and FLIGHT retire. NAV is the way into flight, and takes the keys but not the mouse: the keys fly, and clicks on the world still select and order through the rolled view | NAV refusing world clicks, which would end ordering through a rolled view (#1706); keeping FLIGHT |
 
 The rest of this section holds in the free-water study only, under both of its entry
 flags (`?study=free-water` and `?freeWaterControls=1`). Shipped maps keep the instant
@@ -261,6 +263,11 @@ camera above, and promoting the feel to them is a separate decision.
 All five numbers are TUNABLEs in `CAMERA_FEEL` (`packages/shared/src/constants.ts`). The
 eye's 25 m clamp and the focus's clamps hold on every frame of an ease, a coast and a glide.
 
+**Reduced motion** ([ui-ux.md](ui-ux.md) §11) keeps every input and takes the motion out:
+a step arrives in the frame it is made, a jump or leaving NAV cuts, and a release does not
+coast. A followed hull is still held, from the frame it is chosen. The motion carries no
+information the pose it ends on does not, so nothing is lost with it.
+
 **Focus and follow.** Double-clicking an own hull still selects every visible hull of its
 class ([ui-ux.md](ui-ux.md) §9), and in the study it also glides the focus to the hull
 clicked and follows it. Recalling a control group twice glides to the group and follows
@@ -292,7 +299,7 @@ at its depth, drawn between Echo ticks as the hull itself is (`ownMotion.ts`).
 | Double click on an own hull | Selects its class, then glides to the hull and follows it | Selects its class |
 | Recall a control group twice | Glides to the group and follows it | Centres on it |
 | F8 / FLIGHT | Retired | — |
-| F9 / NAV | Enters keyboard flight, roll included, as the accessibility route, with flight's own rules: constant speed, no momentum. Leaving glides back to the orbit | — |
+| F9 / NAV | Enters keyboard flight, roll included, as the accessibility route, with flight's own rules: constant speed, no momentum. The mouse keeps every click it has outside NAV. Leaving glides back to the orbit | — |
 
 The right drag changes what a mouse gesture means, so §9 of [ui-ux.md](ui-ux.md) records it
 in its table and the Controls screen states it. Under the slop a right press is still a
