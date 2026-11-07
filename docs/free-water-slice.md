@@ -276,6 +276,10 @@ The fixture uses closed circular plan paths: crab radius 20 m over 240 s, fry
 radius 20 m over 90 s, outer fish radius 35 m over 180 s, deep fish radius
 20 m over 240 s and the ray radius 60 m over 300 s, a walking pace. Within a crab or deep-fish patch, radii range from 40% to 100% of
 that radius, with evenly spaced phases; a fixed seed of 1713 offsets each patch.
+The ray alone takes an authored phase and a bank (#1780): it circles clockwise seen
+from above, stands at `(765, 2,158)` when the match starts, and banks 30 degrees into
+its turn, its starboard wing low, rolled about its body axis so the axis keeps its path
+and depth (Life in the frames, below).
 A school keeps station instead (#1771): its fish share the school's loop, each held
 at a fixed seeded offset from the school's own point, at most 1.5 m along the loop,
 1 m across it and 4 m of depth for fry, and 12 m, 6 m and 10 m for outer fish. A fry
@@ -284,8 +288,10 @@ fish over a spiral up to 40 m wide that read as nothing, and an outer school is 
 group.
 Swimming depth follows the same phase: fry 275 ± 20 m over the north flank and
 132 or 145 ± 20 m over the clearing, outer fish 850 ± 130 m over the bowl and
-250 ± 35 m over the clearing, deep fish 2,000 ± 80 m, the ray 250 ± 30 m beside
-the hulls' 300 m. Crabs follow the public rendered floor. These smaller envelopes leave room for the full body inside the
+250 ± 35 m over the clearing, deep fish 2,000 ± 80 m, the ray 250 ± 15 m beside
+the hulls' 300 m, a narrower swing than a level body needs because its bank lifts the
+high wingtip 7.35 m over its axis, 33 m of depth at the display scale, so its whole body
+spans 202 to 275 m. Crabs follow the public rendered floor. These smaller envelopes leave room for the full body inside the
 licensed bounds.
 
 **Life in the frames.** The owner's re-acceptance of 6 November 2026 found no crabs or
@@ -312,10 +318,16 @@ than moved from it, by the owner's calls of that day:
   there drew nothing visible, so #1771 placed nothing for it. The ray, 18 m across,
   glides on one loop south-east of the fleet's start, 810 to 930 m from the eye, where
   its span projects 26 to 30 px, in the open water at the lower right between the
-  corvette and the legend, 40 px clear of the corvette's ring. Whether it reads as a
-  body is open on #1777: in the frames taken so far it draws as a sliver of lit back,
-  dark on the dark shelf floor, and a 30 m span or a far-water placement drew no better
-  ([issue-1777](screenshots/issue-1777/README.md), "What the frame shows"). The pocket
+  corvette and the legend, 40 px clear of the corvette's ring. Level, it showed that
+  eye about a third of its plan down a 21 degree sightline, and where its loop turned
+  it edge-on it drew as a sliver of lit back
+  ([issue-1777](screenshots/issue-1777/README.md), "What the frame shows"). So it
+  banks into its turn and starts its loop on the far side from the eye (#1780, the
+  owner's call of 7 November 2026): through the match's first minute the eye sees
+  0.63 to 0.75 of its plan, a pale body against the dark water beyond the shelf's
+  edge, where the level ray drew a smaller one against the paler shelf; on the near
+  side it draws as a dark silhouette on the shelf, and one arc still turns it edge-on
+  ([issue-1780](screenshots/issue-1780/README.md)). The pocket
   shows only at the frame's right edge, where two of the low pose's deep-fish patches
   read as photophore pinpricks 2.2 to 2.5 km out. A nearer opening is §9's call, not
   taken.
@@ -341,7 +353,7 @@ water and nothing of a hunter.
 | `env-shoal-fry` | 0.5 m long | 6 shoals of 24 / 180 | Garden, 100..300 m depth; fixed looping schools, never proximity scatter |
 | `env-outer-fish` | 4 m long | 16 / 600 | Open bowl, 700..1,000 m depth, and the garden clearing, 200..300 m; slow closed swimming paths |
 | `env-deep-fish` | 2 m long | 26 / 400 | Deep pocket, 1,900..2,100 m depth; sparse photophore points |
-| `env-rim-ray` | 18 m across | 1 / 800 | Outside rim south-east of the start, 200..300 m depth; one slow closed glide |
+| `env-rim-ray` | 18 m across | 1 / 800 | Outside rim south-east of the start, 200..300 m depth; one slow closed glide, banked 30 degrees into its turn |
 
 All motion is deterministic from published placement, a fixed seed and shared match
 time. It never reacts to a hull, a shot, a ping, damage or the camera. Reduced motion
