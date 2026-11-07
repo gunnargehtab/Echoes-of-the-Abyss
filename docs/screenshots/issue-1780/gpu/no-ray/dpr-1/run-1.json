@@ -1,0 +1,80 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "unpaced": true,
+  "motion": true,
+  "dpr": 1,
+  "readings": [
+    {
+      "name": "opening-pose",
+      "calls": 43,
+      "triangles": 568010,
+      "propTriangles": 551264,
+      "instances": {
+        "env-kelp-stand": 56,
+        "env-kelp-cluster": 16,
+        "env-rim-crab": 32,
+        "env-shoal-fry": 144,
+        "env-outer-fish": 16,
+        "env-deep-fish": 26
+      },
+      "photophores": 156,
+      "textures": 15,
+      "environmentBytes": 344064,
+      "haloBytes": 22422976,
+      "splitBytes": 5184000,
+      "gpuFrames": 241,
+      "gpuMs": 1.32,
+      "queuedGpuMs": 1.21,
+      "queueLoadMs": 3.69,
+      "queueFrames": 240
+    },
+    {
+      "name": "home",
+      "calls": 43,
+      "triangles": 568400,
+      "propTriangles": 551264,
+      "instances": {
+        "env-kelp-cluster": 16,
+        "env-kelp-stand": 56,
+        "env-rim-crab": 32,
+        "env-shoal-fry": 144,
+        "env-outer-fish": 16,
+        "env-deep-fish": 26
+      },
+      "photophores": 156,
+      "textures": 15,
+      "environmentBytes": 344064,
+      "haloBytes": 22422976,
+      "splitBytes": 5184000,
+      "gpuFrames": 241,
+      "gpuMs": 1.23,
+      "queuedGpuMs": 1.09,
+      "queueLoadMs": 3.73,
+      "queueFrames": 240
+    },
+    {
+      "name": "survey",
+      "calls": 44,
+      "triangles": 568400,
+      "propTriangles": 551264,
+      "instances": {
+        "env-kelp-stand": 56,
+        "env-kelp-cluster": 16,
+        "env-rim-crab": 32,
+        "env-shoal-fry": 144,
+        "env-outer-fish": 16,
+        "env-deep-fish": 26
+      },
+      "photophores": 156,
+      "textures": 15,
+      "environmentBytes": 344064,
+      "haloBytes": 22422976,
+      "splitBytes": 5184000,
+      "gpuFrames": 241,
+      "gpuMs": 1.09,
+      "queuedGpuMs": 0.92,
+      "queueLoadMs": 3.73,
+      "queueFrames": 240
+    }
+  ]
+}

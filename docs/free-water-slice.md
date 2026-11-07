@@ -325,9 +325,11 @@ than moved from it, by the owner's calls of that day:
   banks into its turn and starts its loop on the far side from the eye (#1780, the
   owner's call of 7 November 2026): through the match's first minute the eye sees
   0.63 to 0.75 of its plan, a pale body against the dark water past the rim's edge,
-  where the level ray drew a smaller one against the paler rim floor; on the near
-  side it draws as a dark silhouette on the rim floor, and one arc still turns it
-  edge-on ([issue-1780](screenshots/issue-1780/README.md)). The pocket
+  where the level ray drew a smaller one against the paler rim floor. The rest of the
+  loop is a trade: on the near side it draws as a dark silhouette on the rim floor,
+  and where it swims toward or away from the eye it thins to a crescent or a sliver,
+  thinner than the level ray drew there
+  ([issue-1780](screenshots/issue-1780/README.md)). The pocket
   shows only at the frame's right edge, where two of the low pose's deep-fish patches
   read as photophore pinpricks 2.2 to 2.5 km out. A nearer opening is §9's call, not
   taken.
