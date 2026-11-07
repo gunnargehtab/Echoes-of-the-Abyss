@@ -922,7 +922,8 @@ export class PerspectiveView {
   private archMask: WebGLRenderTarget | null = null;
   /** The models the chart's ground ink passes behind this frame (`beginInk`). */
   private readonly ink = new InkOcclusion();
-  /** Every plumb and every shadow, two draw calls in all (#434). */
+  /** Every plumb and every shadow, two draw calls in all (#434); the
+   * free-water study draws the shadows alone (`plumbsDrawn`). */
   private readonly cues = new DepthCues(UI.accent);
   /** The player's own ordnance, instanced (ordnanceLayer.ts); shares the cues. */
   private readonly ordnanceLayer = new OrdnanceLayer(this.cues);
@@ -1131,6 +1132,7 @@ export class PerspectiveView {
     if (look === 'free-water') {
       this.nearSnow = new MarineSnow(STUDY_SNOW_NEAR_COUNT, false, STUDY_SNOW_NEAR);
     }
+    this.cues.plumbsShown = this.plumbsDrawn;
     // Before the first material compiles: the water's fog is a patch on
     // three's global shader chunks, so a material built ahead of it would
     // carry the old distance fog for the life of the scene (water.ts).
@@ -1388,6 +1390,19 @@ export class PerspectiveView {
    */
   private get erodedGround(): boolean {
     return this.look === 'free-water';
+  }
+
+  /**
+   * Whether hulls, structures, shots and live tracks hang on plumb lines
+   * (docs/art-direction.md, "Depth is drawn, not implied"): on every look but
+   * the free-water study's, which takes the altitude lines off the hulls and
+   * leaves depth to the shadows, the command plane's foot rings and the
+   * section scope (docs/free-water-slice.md §9, "Vertical command", #1772).
+   * The same switch as its water and ground, so a shipped map keeps its
+   * plumbs.
+   */
+  private get plumbsDrawn(): boolean {
+    return this.look !== 'free-water';
   }
 
   /** The bake's options under this view's look: the eroded edges, or none. */
@@ -1708,7 +1723,9 @@ export class PerspectiveView {
     this.seabedDetail = SEABED_DETAIL_ON && look === 'standard';
     this.environment = new EnvironmentLayer(look, this.seabedDetail);
     this.environment.setReducedMotion(this.swayHeld);
-    // The study's near cloud comes and goes with the look, as the props do.
+    // The plumbs and the study's near cloud come and go with the look, as the
+    // props do.
+    this.cues.plumbsShown = this.plumbsDrawn;
     if (this.nearSnow !== null && !this.waterStudy) {
       this.scene.remove(this.nearSnow.points);
       this.nearSnow.dispose();
@@ -4256,6 +4273,7 @@ export class PerspectiveView {
     // The plumb is never scaled — its length is the depth, and a scaled plumb
     // would be the one place this factor told a lie. The shadow is, because a
     // true-scale shadow under an exaggerated hull reads as the wrong depth.
+    // Both are placed on every look; the study's plumbs are kept undrawn.
     this.cues.setPlumb(handle.cue, x, y, groundY + 1, z);
     this.cues.setShadow(handle.cue, x, groundY + 2, z, handle.shadowRadius);
   }

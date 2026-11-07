@@ -172,7 +172,6 @@ import {
   sectionProfile,
   sectionX,
   sectionY,
-  stalkSide,
   waterIntervalAt,
   type SectionFrame,
 } from './verticalCommand.ts';
@@ -1553,14 +1552,14 @@ const SCOPE_SWEEP_MS = 4000;
 
 /**
  * The free-water study's vertical instruments (verticalCommand.ts, #1753).
- * A stalk is a hairline: it ties a hull to the command plane and must never
- * out-ink the hull. Its foot ring and the edge chevron are screen-sized, as
- * symbols are (gate 8), and the dash is screen-sized so above and below read
- * the same at every dolly.
+ * A foot ring marks where a hull's vertical meets the command plane, and no
+ * line joins the two (#1772): the hull's height over or under its ring is
+ * what the world shows, and the section scope shows the same at any camera
+ * angle. The ring and the edge chevron are screen-sized, as symbols are
+ * (gate 8).
  */
-const STALK_ALPHA = 0.55;
-const STALK_FOOT_PX = 3;
-const STALK_DASH_PX = 4;
+const FOOT_RING_ALPHA = 0.55;
+const FOOT_RING_PX = 3;
 /** The section's range ticks, metres apart along the heading. */
 const SECTION_TICK_M = 500;
 /** A Tier 2 contact's tick down the section's water column. */
@@ -7794,8 +7793,8 @@ export class EchoRenderer {
     this.modelTracks.length = 0;
     this.contactFootprints.length = 0;
     this.arrivedTracks.clear();
-    // The study's command plane, for a Tier 3+ contact's stalk (§9). A Tier
-    // 2 contact carries no depth and gets no stalk: nothing here infers one.
+    // The study's command plane, for a Tier 3+ contact's foot ring (§9). A
+    // Tier 2 contact carries no depth and gets no ring: nothing here infers one.
     const plane = this.studySlice ? this.commandPlaneM() : null;
     for (const [id, entry] of this.tracked) {
       const age = now - entry.lastSeenMs;
@@ -7818,14 +7817,13 @@ export class EchoRenderer {
         contact.depth !== undefined &&
         contact.tier >= ResolutionTier.Classification
       ) {
-        this.drawStalk(
+        this.drawFootRing(
           g,
           contact.x,
           contact.y,
-          contact.depth,
           plane,
           this.contactColor(contact, style.color),
-          STALK_ALPHA * Math.max(0, 1 - age / decayMs)
+          FOOT_RING_ALPHA * Math.max(0, 1 - age / decayMs)
         );
       }
 
@@ -8167,17 +8165,17 @@ export class EchoRenderer {
       }
     }
 
-    // The study's stalks (docs/free-water-slice.md §9, "Vertical command"):
-    // every own hull tied to the command plane, in the navy's own ink, on the
-    // ring layer with the rest of rung 6's instruments. The plane follows the
-    // selection and the raised focus, both of which already repaint this
-    // layer.
+    // The study's foot rings (docs/free-water-slice.md §9, "Vertical
+    // command"): every own hull's place on the command plane, in the navy's
+    // own ink, on the ring layer with the rest of rung 6's instruments. The
+    // plane follows the selection and the raised focus, both of which already
+    // repaint this layer.
     const plane = this.studySlice ? this.commandPlaneM() : null;
     if (plane !== null) {
       const accent = FACTION_PALETTE[this.faction].accent;
       for (const unit of this.units) {
         const d = this.drawnPosition(unit);
-        this.drawStalk(this.ringLayer, d.x, d.y, d.depth, plane, accent, STALK_ALPHA);
+        this.drawFootRing(this.ringLayer, d.x, d.y, plane, accent, FOOT_RING_ALPHA);
       }
     }
 
@@ -10386,7 +10384,7 @@ export class EchoRenderer {
   /**
    * The command plane (verticalCommand.ts): the lead selected hull's depth,
    * else a raised focus's depth, else none. Study only; a shipped map draws
-   * no stalks and no section.
+   * no foot rings and no section.
    */
   private commandPlaneM(): number | null {
     if (!this.studySlice) return null;
@@ -10394,47 +10392,24 @@ export class EchoRenderer {
   }
 
   /**
-   * One stalk: a hairline from a depth to the command plane at the same plan
-   * position, with a foot ring on the plane. Solid above the plane, dashed
-   * below; hue is the caller's, never a line style's, so the side reads
-   * without colour (docs/ui-ux.md §11). The dash is laid in screen space.
-   * Line and ring are one stroke, so a stalk is one instruction a test can
-   * name by its ring.
+   * One foot ring: the command plane at a hull's plan position, so a hull on
+   * the plane wears its ring and one off it stands over or under it. No line
+   * runs from the hull to the ring (#1772); the side reads from where the
+   * hull stands against its ring, and on the section scope, so neither leans
+   * on hue (docs/ui-ux.md §11). One stroke a ring, so a test can name each by
+   * its radius.
    */
-  private drawStalk(
+  private drawFootRing(
     g: Graphics,
     x: number,
     y: number,
-    depthM: number,
     planeM: number,
     color: number,
     alpha: number
   ): void {
     const foot = this.project(x, y, planeM);
     if (foot === null || !foot.visible) return;
-    const fx = foot.x;
-    const fy = foot.y;
-    const side = stalkSide(depthM, planeM);
-    if (side !== null) {
-      const head = this.project(x, y, depthM);
-      if (head !== null && head.visible) {
-        if (side === 'above') {
-          g.moveTo(head.x, head.y).lineTo(fx, fy);
-        } else {
-          const length = Math.hypot(fx - head.x, fy - head.y);
-          const steps = Math.ceil(length / (STALK_DASH_PX * 2));
-          for (let i = 0; i < steps; i++) {
-            const t0 = (i * STALK_DASH_PX * 2) / length;
-            const t1 = Math.min(1, t0 + STALK_DASH_PX / length);
-            g.moveTo(head.x + (fx - head.x) * t0, head.y + (fy - head.y) * t0).lineTo(
-              head.x + (fx - head.x) * t1,
-              head.y + (fy - head.y) * t1
-            );
-          }
-        }
-      }
-    }
-    g.circle(fx, fy, STALK_FOOT_PX).stroke({ width: 1, color, alpha });
+    g.circle(foot.x, foot.y, FOOT_RING_PX).stroke({ width: 1, color, alpha });
   }
 
   /**

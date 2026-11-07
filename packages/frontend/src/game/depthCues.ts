@@ -2,21 +2,24 @@
  * The depth cues of the conn view — every own hull's plumb line to the seabed
  * and its ground shadow — as two draw calls instead of two per hull (#434).
  *
- * A hull's height above its own shadow *is* its depth (docs/ui-ux.md §12),
- * so every own entity carries a plumb and a shadow, and each used to be its
- * own `Line` and `Mesh`: two unbatched draw calls per hull, ninety-six at the
- * berth ceiling, against the ≤150 whole-frame budget docs/graphics-standards.md
- * sets with thirty already reserved for the prop layer. All the plumbs are
- * one `LineSegments` here and all the shadows one `InstancedMesh`, each
- * entity holding a slot in both, updated in place from wherever the view
- * puts the hull — the same instancing argument the environment layer makes,
- * applied to the fleet.
+ * A hull's height above its own shadow *is* its depth (docs/art-direction.md,
+ * "Depth is drawn, not implied"), so every own entity carries a plumb and a
+ * shadow, and each used to be its own `Line` and `Mesh`: two unbatched draw
+ * calls per hull, ninety-six at the berth ceiling, against the ≤150
+ * whole-frame budget docs/graphics-standards.md sets with thirty already
+ * reserved for the prop layer. All the plumbs are one `LineSegments` here and
+ * all the shadows one `InstancedMesh`, each entity holding a slot in both,
+ * updated in place from wherever the view puts the hull — the same instancing
+ * argument the environment layer makes, applied to the fleet.
  *
  * Slots are recycled rather than compacted: a released slot is zeroed (a
  * zero-length segment and a zero-scale disc draw nothing) and handed to the
  * next entity, so the buffers never shuffle and a handle's slot is stable for
  * the life of the entity. The draw range and instance count cover the
  * high-water mark, which is bounded by the most entities alive at once.
+ *
+ * The plumbs can be taken off as one (`plumbsShown`): the free-water study
+ * draws the shadows alone (docs/free-water-slice.md §9, "Vertical command").
  */
 
 import {
@@ -47,6 +50,8 @@ export class DepthCues {
   private highWater = 0;
   private readonly free: number[] = [];
   private live = 0;
+  /** Whether the plumbs draw; a growth builds them again, so it is kept here. */
+  private plumbsDrawn = true;
 
   private readonly plumbMaterial: LineBasicMaterial;
   private readonly shadowMaterial: MeshBasicMaterial;
@@ -82,6 +87,19 @@ export class DepthCues {
   /** Slots the buffers can hold before the next growth. */
   get slotCapacity(): number {
     return this.capacity;
+  }
+
+  /**
+   * Whether the plumbs draw. Off, the shadows still draw, and every slot keeps
+   * its plumb's ends up to date, so turning them back on needs no resync.
+   */
+  get plumbsShown(): boolean {
+    return this.plumbsDrawn;
+  }
+
+  set plumbsShown(shown: boolean) {
+    this.plumbsDrawn = shown;
+    this.plumbs.visible = shown;
   }
 
   /** Claim a slot. Grows the buffers when every slot is taken. */
@@ -160,6 +178,7 @@ export class DepthCues {
     geometry.setAttribute('position', positions);
     geometry.setDrawRange(0, this.highWater * 2);
     this.plumbs = new LineSegments(geometry, this.plumbMaterial);
+    this.plumbs.visible = this.plumbsDrawn;
     this.plumbPositions = positions;
 
     this.shadows = new InstancedMesh(this.disc, this.shadowMaterial, this.capacity);

@@ -713,10 +713,12 @@ vertical one without flight:
 - **The command plane** is the lead selected hull's depth, which MOVE 3D arms with; with
   nothing selected, a raised focus's depth; with the focus on the seabed there is no plane
   ([free-camera.md](free-camera.md) §4).
-- **Stalks.** Every own hull and every Tier 3+ contact draws a hairline from its depth to
-  the plane with a foot ring on it: solid above the plane, dashed below, in the navy's own
-  ink, so the side reads without colour (§11). A Tier 2 contact carries no depth and has no
-  stalk; none is inferred.
+- **Foot rings.** Every own hull and every Tier 3+ contact marks the plane with a ring at
+  its plan position, in the navy's own ink. A hull on the plane wears its ring and one off
+  it stands over or under it, so the side reads by place and on the section scope, never
+  by colour (§11). No line joins a hull to its ring, and in the study no hull, structure,
+  shot or track hangs on a plumb: each keeps its ground shadow alone (#1772). A Tier 2
+  contact carries no depth and has no ring; none is inferred.
 - **The section scope** stands beside the north-up scope in the console, a block of the
   scope's own size that never yields, so at 1,440 px it costs the fleet block. It is a
   vertical slice along the camera's horizontal heading through the command focus, as wide
