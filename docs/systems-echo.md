@@ -226,7 +226,8 @@ instead: the navy, the hull and the authored depth of a hull another side's part
 from the mission file and never from the map, so it tells nothing the file does not and goes on
 claiming a seat whose hull is gone. Where the water at its point could not hold that depth — above the
 Lid or a roof, or below the seabed — it is drawn again (#1319). Health and the bow are vouched the same way. A phantom claims full health, as most hulls
-on the map have it, so a hurt return is a hull; and it all but never draws a bow of exactly zero,
+on the map have it, at its kind's own maximum and never a Plate Refit's, so a hurt return is a
+hull and so is a plated one; and it all but never draws a bow of exactly zero,
 the one a hull keeps from its yard until it first moves. Every heading a contact reports, true or
 false, is told as a bow is stored, single precision in the half turn either side of zero, so its
 precision and its range sort nothing (#1307). Every depth a contact reports, true or false, is
