@@ -163,8 +163,8 @@ document already points at it:
 - **Refits and rank** — [systems-progression.md](systems-progression.md) decides the question
   #436 left open: five fleet-wide refits priced in Resonance Crystal and bought on the Slipway's
   line at SIG 70, three ranks a hull earns by fighting and not dying, and no research tree
-  (#462). Designed in full; nothing is transcribed. The Slipway's line exists since #461, so
-  the refits have somewhere to land; the doc's §5 says where.
+  (#462). The five refits are built on the Slipway's line, which #461 laid (#517, #1785).
+  Rank is designed and not yet transcribed; the doc's §5 says where it lands.
 
 Supply, once the one deferred design question here, is decided and built:
 [economy.md](economy.md) §10 gives every hull a berth cost and every commander a grant the

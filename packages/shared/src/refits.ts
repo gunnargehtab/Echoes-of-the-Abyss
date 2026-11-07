@@ -10,8 +10,9 @@
  * All five are here (#1785), and each moves one stat a hull already has,
  * through the system that owns it: the Pressure Refit the rating, the Plate the
  * hull, the Drive the speed and the depth rates, the Magazine the torpedoes and
- * the Hold the cargo. What each costs acoustically is read in one place, the
- * acoustics pass.
+ * the Hold the cargo. The SIG a refit adds to a hull is read in one place, the
+ * acoustics pass. The Hold adds none: its noise is the bigger hum the harvest
+ * lays at the depot, and the longer cut at the throttle's own SIG.
  *
  * A roster table, in the manner of `units.ts` and `structures.ts`, and here
  * rather than in `constants.ts` for the same reason those are: the numbers are
