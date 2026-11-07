@@ -9,6 +9,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { Biome, SEABED_DETAIL } from '@echoes/shared';
 import {
+  erodedGroundAtM,
   SEABED_PX_PER_CELL,
   seabedRange,
   seabedSeed,
@@ -264,5 +265,28 @@ describe('the eroded bake', () => {
       if (plain.data[i] !== study.data[i] || plain.data[i + 1] !== study.data[i + 1]) differ++;
     }
     assert.ok(differ > 1000, `${differ} pixels differ under the study`);
+  });
+
+  it("hands over the study's survey floor at each pixel it reads, at no second pass", () => {
+    // The study's isobaths contour its rounded floor at the bake's own
+    // resolution (surveyInk.ts `DrawnSurvey`), which the bake reads anyway.
+    const ppc = SEABED_PX_PER_CELL;
+    const w = terrain.cols * ppc;
+    const floors = new Float32Array(w * terrain.rows * ppc).fill(Number.NaN);
+    const rockTopM = eroded.rockTopM;
+    shadeSeabed(terrain, seed, range, whole, [], { eroded: { rockTopM, floors } });
+    const m = terrain.cellM / ppc;
+    for (let i = 0; i < floors.length; i += 37) {
+      // The bake reads the drawn ground at each pixel's north-west corner.
+      const x = (i % w) * m;
+      const y = Math.floor(i / w) * m;
+      assert.equal(floors[i], Math.fround(erodedGroundAtM(terrain, rockTopM, x, y).floorM));
+    }
+    // And a bake without the option takes none, the skin itself unchanged.
+    const without = shadeSeabed(terrain, seed, range, whole, [], { eroded });
+    const withFloors = shadeSeabed(terrain, seed, range, whole, [], {
+      eroded: { rockTopM, floors },
+    });
+    assert.deepEqual(withFloors.data, without.data);
   });
 });

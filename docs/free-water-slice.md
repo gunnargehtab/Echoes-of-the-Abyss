@@ -643,8 +643,9 @@ mechanisms draw them:
   slopes along the cell grid.
 
 The study may reshape the drawn floor, rock faces and roof between cell centres, so that
-cell edges read as eroded rock. The override adds nothing at a cell centre, a solid cell
-stays rock at its centre, and the drawn floor stays between the four centres it blends.
+cell edges read as eroded rock. The override adds nothing to the authored floor at a cell
+centre, a solid cell stays rock at its centre, and the drawn floor stays between the four
+centres it blends.
 The flight eye already sweeps the drawn triangles, so its clearance follows the override,
 and a test in #1750 proves it. No new model: rock props would be a separate `shape-work`
 child.
@@ -657,15 +658,16 @@ sampled on a 90 m grid (`BIOME_RELIEF` and `BLOCK_M` in `seabed.ts`), terraced t
 rim in blocks. So since #1774 the study draws its cells rounded (`roundedCells.ts`), and
 its ink with them:
 
-- **Rounded edges.** Each kind of ground, rock or one biome at one floor and ceiling, keeps
-  a signed distance to its own cell edges. Blurred, a one-cell jog in the staircase spreads
-  into a curve and a corner rounds. A licence well inside half a cell bounds how far an
-  edge moves, and a wander of a few tens of metres keeps the curve from reading as drawn.
-  A cell centre lies half a cell from every other kind's cells, so it keeps its own.
-- **Ramps and faces.** The floor climbs across the rounded edge: centre to centre where
-  the edge runs straight, steeper where a corner was cut. A rock face rises from a gentle
-  foot to a steep lip. Within a cell of the roofed cut nothing rounds, because the roof's
-  curtains stand on the cell edges, and each jamb keeps its step on them.
+- **Rounded edges.** Each kind of ground, rock or one biome at one floor and ceiling, is
+  blurred as a share of the map, the shares summing to one, and the kind with the most
+  holds each point. A one-cell jog in the staircase spreads into a curve, a corner rounds,
+  and where three kinds meet the junction settles into a Y rather than one kind spiking
+  into the others. A licence of 50 m, well inside half a cell, bounds how far an edge
+  moves. A cell centre lies half a cell from every other kind's cells, so it keeps its own.
+- **Ramps and faces.** The floor climbs across the rounded edge as a scarp a little over
+  100 m wide, and a rock face rises from a gentle foot to a steep lip. Within half a cell
+  of the roofed cut nothing rounds, easing in over the next cell, because the roof's
+  curtains stand on the cell edges; each jamb keeps its step on them.
 - **Terraces.** Coral's blocks become benches cut in the relief's own depth, so their edges
   wander with the ground rather than marching on the 90 m grid. Every shipped map keeps
   the blocks.

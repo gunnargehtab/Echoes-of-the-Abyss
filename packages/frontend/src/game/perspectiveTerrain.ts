@@ -24,6 +24,7 @@
 
 import type { TerrainPayload } from '../net/GameClient.ts';
 import {
+  benchedDetailM,
   cellBlend,
   detailM,
   erodedGroundAtM,
@@ -94,11 +95,11 @@ export function rockTopDepthM(terrain: TerrainPayload): number {
  * lowest notch still stands above every open floor, and clamped at the
  * surface so no spire ever pierces depth 0.
  *
- * `eroded` is the free-water study's reshaping of the cell transitions
- * (seabed.ts `erodedGroundAtM`, docs/free-water-slice.md §9): the same
- * centres, the same fields, the blend between centres given a scarp and
- * each rock face a foot and a set-back lip. Off, which every shipped map
- * is, this is the bilinear above to the bit.
+ * `eroded` is the free-water study's ground (seabed.ts `erodedGroundAtM`,
+ * docs/free-water-slice.md §9, "Crater walls"): the same centres, the cells'
+ * staircase rounded between them, each ramp a scarp and each rock face a foot
+ * and a lip, and coral's relief cut in benches rather than blocks. Off, which
+ * every shipped map is, this is the bilinear above to the bit.
  */
 export function seabedDepthAtM(
   terrain: TerrainPayload,
@@ -108,16 +109,18 @@ export function seabedDepthAtM(
   yM: number,
   eroded = false
 ): number {
-  const relief = reliefAtCell(terrain, xM / terrain.cellM - 0.5, yM / terrain.cellM - 0.5);
   if (eroded) {
-    const { stepM, rockWeight } = erodedGroundAtM(terrain, seed, rockTopM, xM, yM);
-    // The biome field over the open share, the crag over the rock share, and
-    // the rock share clamped at the surface as a mesa is: at a centre, one or
-    // the other whole, so the point reads exactly what the plain sample does.
-    const open = detailM(xM, yM, seed, relief.amplitudeM, relief.roughness, relief.blockiness);
+    const { stepM, rockWeight, relief } = erodedGroundAtM(terrain, rockTopM, xM, yM);
+    // The relief over the open share, the crag over the rock share, and the
+    // rock share clamped at the surface as a mesa is: at a centre, one or the
+    // other whole. The relief blends across the drawn edges as the floor
+    // does, and coral's is benched (`benchedDetailM`), so a centre reads its
+    // own biome's relief, as the plain sample's does, only benched.
+    const open = benchedDetailM(xM, yM, seed, relief);
     const crag = rockSurfaceDepthM(seed, rockTopM, xM, yM) - rockTopM;
     return stepM + (1 - rockWeight) * open + rockWeight * crag;
   }
+  const relief = reliefAtCell(terrain, xM / terrain.cellM - 0.5, yM / terrain.cellM - 0.5);
   const homeIndex = homeCellIndex(terrain, xM, yM);
   if (isRock(terrain, homeIndex)) return rockSurfaceDepthM(seed, rockTopM, xM, yM);
 
@@ -210,9 +213,22 @@ export interface HeightGrid {
    * The authored floor per vertex, in metres of depth — `authoredFloorAtM`,
    * the surface the survey ink contours. Metres rather than world Y because
    * an isobath is a statement about depth, and the vertical compression is
-   * a look (the rule above).
+   * a look (the rule above). Under the free-water study, its rounded floor
+   * instead (`ErodedGround.floorM`; docs/map-visuals.md §4, the study's clause).
    */
   floor: Float32Array;
+  /**
+   * The free-water study's coastlines per vertex, metres, or absent on every
+   * other ground: the signed distance to the drawn rock coast
+   * (`ErodedGround.coastM`), whose zero the study's ink draws solid.
+   */
+  coast?: Float32Array;
+  /**
+   * And to each biome's drawn edge, `BIOME_FIELDS` to a vertex, by the
+   * biome's enum index (`ErodedGround.biomeM`): each one's zero is a dashed
+   * coast.
+   */
+  biomes?: Float32Array;
   widthM: number;
   heightM: number;
 }
@@ -231,39 +247,72 @@ export function buildHeightGrid(
   const vertsX = terrain.cols * VERTS_PER_CELL + 1;
   const vertsZ = terrain.rows * VERTS_PER_CELL + 1;
   const stepM = terrain.cellM / VERTS_PER_CELL;
-  const y = new Float32Array(vertsX * vertsZ);
-  const floor = new Float32Array(vertsX * vertsZ);
-  for (let iz = 0; iz < vertsZ; iz++) {
-    for (let ix = 0; ix < vertsX; ix++) {
-      y[iz * vertsX + ix] = depthToWorldY(
-        seabedDepthAtM(terrain, seed, rockTop, ix * stepM, iz * stepM, eroded)
-      );
-      floor[iz * vertsX + ix] = authoredFloorAtM(terrain, ix * stepM, iz * stepM);
-    }
-  }
-  return {
+  const grid: HeightGrid = {
     vertsX,
     vertsZ,
     stepM,
-    y,
-    floor,
+    y: new Float32Array(vertsX * vertsZ),
+    floor: new Float32Array(vertsX * vertsZ),
+    ...(eroded
+      ? {
+          coast: new Float32Array(vertsX * vertsZ),
+          biomes: new Float32Array(vertsX * vertsZ * BIOME_FIELDS),
+        }
+      : {}),
     widthM: terrain.cols * terrain.cellM,
     heightM: terrain.rows * terrain.cellM,
   };
+  for (let iz = 0; iz < vertsZ; iz++) {
+    for (let ix = 0; ix < vertsX; ix++) readVertex(grid, terrain, seed, rockTop, ix, iz, eroded);
+  }
+  return grid;
+}
+
+/** The biome fields a study vertex carries: one per `Biome` value, which run from 0. */
+export const BIOME_FIELDS = 6;
+
+/** One vertex of the grid, its height and its survey, as a full build reads it. */
+function readVertex(
+  grid: HeightGrid,
+  terrain: TerrainPayload,
+  seed: number,
+  rockTop: number,
+  ix: number,
+  iz: number,
+  eroded: boolean
+): void {
+  const i = iz * grid.vertsX + ix;
+  const xM = ix * grid.stepM;
+  const yM = iz * grid.stepM;
+  grid.y[i] = depthToWorldY(seabedDepthAtM(terrain, seed, rockTop, xM, yM, eroded));
+  if (!eroded) {
+    grid.floor[i] = authoredFloorAtM(terrain, xM, yM);
+    return;
+  }
+  // The study's survey reads the drawn ground's own edges, so its ink lies
+  // where the ground changes (docs/map-visuals.md §4, the study's clause).
+  const drawn = erodedGroundAtM(terrain, rockTop, xM, yM);
+  grid.floor[i] = drawn.floorM;
+  grid.coast![i] = drawn.coastM;
+  for (let b = 0; b < BIOME_FIELDS; b++) grid.biomes![i * BIOME_FIELDS + b] = drawn.biomeM[b]!;
 }
 
 /**
  * Recompute the vertices a ground delta moved, in place (#434).
  *
- * The heightfield interpolates the floor between cell centres, the rock
- * relief reaches one cell past its own edge, and the study's eroded edges
- * read the same four centres, so a changed cell moves every
+ * The heightfield interpolates the floor between cell centres and the rock
+ * relief reaches one cell past its own edge, so a changed cell moves every
  * vertex within one cell of it and none further: the touched rectangle plus
  * a one-cell ring is recomputed, and the rest of the grid is left exactly as
  * the full build made it. With the same seed and rock top, the result is the
  * grid a full rebuild would produce — which the tests hold — for a fraction
  * of the 16k vertices a whole-map rebuild walks. Returns the vertex index
  * range that changed, for a caller that uploads only that span.
+ *
+ * The free-water study's rounding reads cells several away
+ * (roundedCells.ts), so under it a delta re-reads the whole grid; its
+ * fixture authors no delta, and the caller must have forgotten the old
+ * cells' rounding first (`forgetRoundedCells`).
  */
 export function patchHeightGrid(
   grid: HeightGrid,
@@ -273,21 +322,17 @@ export function patchHeightGrid(
   touched: { col0: number; row0: number; col1: number; row1: number },
   eroded = false
 ): { first: number; last: number } {
-  const ix0 = Math.max(0, (touched.col0 - 1) * VERTS_PER_CELL);
-  const iz0 = Math.max(0, (touched.row0 - 1) * VERTS_PER_CELL);
-  const ix1 = Math.min(grid.vertsX - 1, (touched.col1 + 2) * VERTS_PER_CELL);
-  const iz1 = Math.min(grid.vertsZ - 1, (touched.row1 + 2) * VERTS_PER_CELL);
+  const whole = eroded;
+  const ix0 = whole ? 0 : Math.max(0, (touched.col0 - 1) * VERTS_PER_CELL);
+  const iz0 = whole ? 0 : Math.max(0, (touched.row0 - 1) * VERTS_PER_CELL);
+  const ix1 = whole
+    ? grid.vertsX - 1
+    : Math.min(grid.vertsX - 1, (touched.col1 + 2) * VERTS_PER_CELL);
+  const iz1 = whole
+    ? grid.vertsZ - 1
+    : Math.min(grid.vertsZ - 1, (touched.row1 + 2) * VERTS_PER_CELL);
   for (let iz = iz0; iz <= iz1; iz++) {
-    for (let ix = ix0; ix <= ix1; ix++) {
-      grid.y[iz * grid.vertsX + ix] = depthToWorldY(
-        seabedDepthAtM(terrain, seed, rockTop, ix * grid.stepM, iz * grid.stepM, eroded)
-      );
-      grid.floor[iz * grid.vertsX + ix] = authoredFloorAtM(
-        terrain,
-        ix * grid.stepM,
-        iz * grid.stepM
-      );
-    }
+    for (let ix = ix0; ix <= ix1; ix++) readVertex(grid, terrain, seed, rockTop, ix, iz, eroded);
   }
   return { first: iz0 * grid.vertsX + ix0, last: iz1 * grid.vertsX + ix1 };
 }

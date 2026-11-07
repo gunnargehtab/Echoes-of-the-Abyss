@@ -14,16 +14,26 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { Biome } from '@echoes/shared';
 import {
+  benchedDetailM,
   BIOME_RELIEF,
   detailM,
   ERODED_EDGES,
+  erodedBoundM,
   erodedGroundAtM,
+  erodedReachM,
   reliefAtCell,
   ROCK_RELIEF,
   seabedSeed,
 } from '../src/game/seabed.ts';
 import {
+  buildRoundedCells,
+  forgetRoundedCells,
+  ROUNDED_CELLS,
+  roundedCellsOf,
+} from '../src/game/roundedCells.ts';
+import {
   authoredFloorAtM,
+  BIOME_FIELDS,
   buildHeightGrid,
   edgeRing,
   patchHeightGrid,
@@ -320,41 +330,78 @@ describe('authored floor for the survey ink', () => {
 });
 
 /**
- * The free-water study's eroded cell edges (docs/free-water-slice.md §9,
- * "Crater walls"; seabed.ts `erodedGroundAtM`). What the section promises:
- * the drawn floor, rock faces and roof are reshaped between cell centres;
- * nothing is added at a centre, and a solid cell stays rock at its centre;
- * the survey ink keeps tracing the authored floor; the shipped ground is
- * untouched. The picture is the run-game frames' to review.
+ * The free-water study's rounded ground (docs/free-water-slice.md §9, "Crater
+ * walls"; seabed.ts `erodedGroundAtM`, roundedCells.ts). What the section
+ * promises: the drawn floor, rock faces and roof are reshaped between cell
+ * centres, the cells' staircase rounded; nothing is added to the authored
+ * floor at a centre, and a solid cell stays rock at its centre; the drawn
+ * step stays between the four centres it blends; within a cell of the roofed
+ * cut nothing rounds, and each jamb keeps its step; the study's ink traces the
+ * rounded ground (docs/map-visuals.md §4, the study's clause); the shipped
+ * ground is untouched. The picture is the run-game frames' to review.
  */
-describe('eroded cell edges (docs/free-water-slice.md §9)', () => {
+describe('the rounded ground (docs/free-water-slice.md §9)', () => {
   const terrain = terrainFor(FREE_WATER_SLICE).serialize();
   const seed = seabedSeed(terrain);
   const rockTop = rockTopDepthM(terrain);
   const plain = buildHeightGrid(terrain, seed, rockTop);
   const eroded = buildHeightGrid(terrain, seed, rockTop, true);
+  const { cols, rows, cellM } = terrain;
   const isRock = (i: number) => terrain.ceiling[i]! > terrain.floor[i]!;
+  const cellAt = (x: number, y: number) =>
+    Math.min(rows - 1, Math.max(0, Math.floor(y / cellM))) * cols +
+    Math.min(cols - 1, Math.max(0, Math.floor(x / cellM)));
+  /** The distance from a point to the nearest cell whose kind its test says is other. */
+  const toOther = (x: number, y: number, other: (i: number) => boolean) => {
+    let best = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < cols * rows; i++) {
+      if (!other(i)) continue;
+      const c = i % cols;
+      const r = Math.floor(i / cols);
+      const dx = Math.max(c * cellM - x, 0, x - (c + 1) * cellM);
+      const dy = Math.max(r * cellM - y, 0, y - (r + 1) * cellM);
+      best = Math.min(best, Math.hypot(dx, dy));
+    }
+    return best;
+  };
+  /** The drawn biome at a point: the one whose drawn edge it lies furthest inside. */
+  const drawnBiome = (biomeM: readonly number[]) =>
+    biomeM.reduce((best, v, b) => (v > biomeM[best]! ? b : best), 0);
 
   it('is off unless asked: the shipped grid is the bilinear one to the bit', () => {
     assert.deepEqual([...buildHeightGrid(terrain, seed, rockTop, false).y], [...plain.y]);
     assert.deepEqual([...buildHeightGrid(terrain).y], [...plain.y]);
+    assert.equal(plain.coast, undefined, 'a shipped grid carries no drawn coast');
+    assert.equal(plain.biomes, undefined);
   });
 
-  it('adds nothing at a cell centre, and a solid cell stays rock at its centre', () => {
-    for (let row = 0; row < terrain.rows; row++) {
-      for (let col = 0; col < terrain.cols; col++) {
-        const x = (col + 0.5) * terrain.cellM;
-        const y = (row + 0.5) * terrain.cellM;
-        const want = seabedDepthAtM(terrain, seed, rockTop, x, y);
-        assert.equal(seabedDepthAtM(terrain, seed, rockTop, x, y, true), want);
-        const { stepM, rockWeight } = erodedGroundAtM(terrain, seed, rockTop, x, y);
-        if (isRock(row * terrain.cols + col)) {
-          assert.equal(rockWeight, 1);
-          assert.equal(stepM, rockTop);
-          assert.equal(want, rockSurfaceDepthM(seed, rockTop, x, y));
+  it('adds nothing to the authored floor at a cell centre, and a solid cell stays rock there', () => {
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const x = (col + 0.5) * cellM;
+        const y = (row + 0.5) * cellM;
+        const i = row * cols + col;
+        const g = erodedGroundAtM(terrain, rockTop, x, y);
+        if (isRock(i)) {
+          assert.equal(g.rockWeight, 1);
+          assert.equal(g.stepM, rockTop);
+          assert.ok(g.coastM > 0, `rock centre ${col},${row} is inside the drawn coast`);
+          assert.equal(
+            seabedDepthAtM(terrain, seed, rockTop, x, y, true),
+            rockSurfaceDepthM(seed, rockTop, x, y)
+          );
         } else {
-          assert.equal(rockWeight, 0);
-          assert.equal(stepM, terrain.floor[row * terrain.cols + col]);
+          const biome = terrain.biomes[i] as Biome;
+          assert.equal(g.rockWeight, 0);
+          assert.equal(g.stepM, terrain.floor[i]);
+          assert.equal(g.floorM, terrain.floor[i], 'the survey floor is the authored one');
+          assert.ok(g.coastM < 0, `open centre ${col},${row} is outside the drawn coast`);
+          assert.equal(drawnBiome(g.biomeM), biome, `centre ${col},${row} keeps its biome`);
+          // The relief is the study's own: coral's benched, the rest as shipped.
+          assert.equal(
+            seabedDepthAtM(terrain, seed, rockTop, x, y, true),
+            terrain.floor[i]! + benchedDetailM(x, y, seed, BIOME_RELIEF[biome])
+          );
         }
       }
     }
@@ -372,7 +419,6 @@ describe('eroded cell edges (docs/free-water-slice.md §9)', () => {
     // A visual slope never opens a route the grid refuses
     // (docs/three-layer-ocean.md §5): the drawn step is never shallower than
     // the shallowest of its patch's centres, nor deeper than the deepest.
-    const { cols, rows, cellM } = terrain;
     for (let y = 3; y < rows * cellM; y += 23) {
       for (let x = 3; x < cols * cellM; x += 23) {
         const c0 = Math.floor(x / cellM - 0.5);
@@ -387,72 +433,120 @@ describe('eroded cell edges (docs/free-water-slice.md §9)', () => {
             Math.min(rows - 1, Math.max(0, r!)) * cols + Math.min(cols - 1, Math.max(0, c!));
           return isRock(i) ? rockTop : terrain.floor[i]!;
         });
-        const { stepM } = erodedGroundAtM(terrain, seed, rockTop, x, y);
-        assert.ok(stepM >= Math.min(...corners) - 1e-6 && stepM <= Math.max(...corners) + 1e-6);
+        const { stepM } = erodedGroundAtM(terrain, rockTop, x, y);
+        assert.ok(
+          stepM >= Math.min(...corners) - 1e-6 && stepM <= Math.max(...corners) + 1e-6,
+          `${x},${y}: ${stepM} outside ${corners}`
+        );
       }
     }
   });
 
-  it('tears no seam where one patch of four centres hands over to the next', () => {
-    // A centre line is where the blend changes its four corners. The face
-    // and the scarp are steep, so the bound is a slope's, not a tear's: the
-    // narrowest face climbs 1,250 m over 40 m with a lip twice as steep,
-    // 0.6 m a centimetre, and a seam in the blend would jump tens of metres.
-    const { cols, rows, cellM } = terrain;
+  it('tears no seam, a jamb its one step', () => {
+    // The ground is continuous everywhere but where the rock meets the stone
+    // over the roofed cut, whose curtain stands on the edge: across every
+    // other point a centimetre apart the drawn surface moves less than a
+    // steep scarp climbs in that width.
+    const jamb = (x: number, y: number) =>
+      y > 3000 && y < 3500 && (Math.abs(x - 1750) < 0.5 || Math.abs(x - 2250) < 0.5);
     let worst = 0;
-    for (let k = 1; k < cols; k++) {
-      const line = (k + 0.5) * cellM;
-      for (let s = 7; s < rows * cellM; s += 31) {
-        for (const [ax, ay, bx, by] of [
-          [line - 0.005, s, line + 0.005, s],
-          [s, line - 0.005, s, line + 0.005],
+    let where = '';
+    for (let y = 1.3; y < rows * cellM; y += 17.9) {
+      for (let x = 2.1; x < cols * cellM; x += 17.9) {
+        if (jamb(x, y)) continue;
+        const a = seabedDepthAtM(terrain, seed, rockTop, x, y, true);
+        for (const [bx, by] of [
+          [x + 0.01, y],
+          [x, y + 0.01],
         ] as const) {
-          const a = seabedDepthAtM(terrain, seed, rockTop, ax, ay, true);
-          const b = seabedDepthAtM(terrain, seed, rockTop, bx, by, true);
-          worst = Math.max(worst, Math.abs(a - b));
+          if (jamb(bx, by)) continue;
+          const d = Math.abs(a - seabedDepthAtM(terrain, seed, rockTop, bx, by, true));
+          if (d > worst) [worst, where] = [d, `${x.toFixed(1)},${y.toFixed(1)}`];
         }
       }
     }
-    assert.ok(worst < 3, `the ground jumps ${worst} m across a centre line`);
+    assert.ok(worst < 1, `the ground jumps ${worst} m at ${where}`);
   });
 
-  it('gives a wall a foot in the water and a lip set back into the stone', () => {
-    // The southern wall's north face at x = 1,625 (col 6's centre line): open
-    // bowl at row 11, rock at row 12, the edge at y = 3,000. Drawn plain, the
-    // face is the vertical drop on the edge; eroded, the rock's share rises
-    // from the water side of the edge to the stone side, and reaches 1 well
-    // before the rock's centre.
-    const x = 1625;
-    const at = (y: number) => erodedGroundAtM(terrain, seed, rockTop, x, y).rockWeight;
-    assert.equal(at(2875), 0, 'the bowl centre');
-    assert.equal(at(3125), 1, 'the rock centre');
-    // Walk the 11/12 patch from the bowl's centre to the rock's: water, then
-    // the face, then stone, each a run, and the stone run beginning before
-    // the rock's centre at 3,125 and no further from the edge than the
-    // setback and the wander allow.
-    const runs: string[] = [];
-    let stoneFrom = Infinity;
-    for (let y = 2875; y <= 3125; y += 1) {
-      const w = at(y);
-      const kind = w === 0 ? 'water' : w === 1 ? 'stone' : 'face';
-      if (runs.at(-1) !== kind) runs.push(kind);
-      if (kind === 'stone') stoneFrom = Math.min(stoneFrom, y);
+  it('rounds the staircase, never moving an edge past the licence', () => {
+    // docs/map-visuals.md §4, the study's clause: no edge moves as far as half
+    // a cell. Wherever the drawn ground is not the kind its cell is, it lies
+    // within the licence of a cell of the kind it is drawn as; and somewhere
+    // it is not, or nothing was rounded.
+    let moved = 0;
+    for (let y = 5; y < rows * cellM; y += 7.7) {
+      for (let x = 5; x < cols * cellM; x += 7.7) {
+        const i = cellAt(x, y);
+        const g = erodedGroundAtM(terrain, rockTop, x, y);
+        const drawnRock = g.coastM > 0;
+        if (drawnRock !== isRock(i)) {
+          const d = toOther(x, y, (j) => isRock(j) === drawnRock);
+          assert.ok(d <= ROUNDED_CELLS.LICENCE_M, `${x},${y}: drawn ${d} m past its cells`);
+          moved = Math.max(moved, d);
+        } else if (!drawnRock) {
+          const biome = drawnBiome(g.biomeM);
+          if (biome !== terrain.biomes[i]) {
+            const d = toOther(x, y, (j) => !isRock(j) && terrain.biomes[j] === biome);
+            assert.ok(d <= ROUNDED_CELLS.LICENCE_M, `${x},${y}: biome ${d} m past its cells`);
+            moved = Math.max(moved, d);
+          }
+        }
+      }
     }
-    assert.deepEqual(runs, ['water', 'face', 'stone']);
+    assert.ok(moved > 25, `the rounding moved an edge at most ${moved} m`);
+    assert.ok(2 * ROUNDED_CELLS.LICENCE_M < cellM / 2, 'twice the licence stays under half a cell');
+    assert.ok(erodedReachM(cellM) < erodedBoundM(cellM));
+    assert.ok(erodedBoundM(cellM) > ROUNDED_CELLS.LICENCE_M);
+  });
+
+  it("draws the bowl's rim as a curve, not a staircase of cells", () => {
+    // From the crater's centre, the radius at which the bowl's kelp gives way
+    // to the rim's coral, ray by ray across its eastern side. Read off the
+    // cells it jumps a cell's worth wherever the staircase steps; drawn, it
+    // turns, but never jumps.
+    const centre = { x: 2250, y: 2250 };
+    const rim = (inCoral: (x: number, y: number) => boolean, theta: number) => {
+      for (let r = 750; r < 1750; r += 1) {
+        if (inCoral(centre.x + r * Math.cos(theta), centre.y + r * Math.sin(theta))) return r;
+      }
+      return Number.NaN;
+    };
+    const cells = (x: number, y: number) => terrain.biomes[cellAt(x, y)] === Biome.CoralRuins;
+    const drawn = (x: number, y: number) => {
+      const g = erodedGroundAtM(terrain, rockTop, x, y);
+      return g.coastM < 0 && drawnBiome(g.biomeM) === Biome.CoralRuins;
+    };
+    let cellJump = 0;
+    let drawnJump = 0;
+    const step = (0.5 * Math.PI) / 180;
+    for (let theta = -1; theta < 1; theta += step) {
+      cellJump = Math.max(cellJump, Math.abs(rim(cells, theta + step) - rim(cells, theta)));
+      drawnJump = Math.max(drawnJump, Math.abs(rim(drawn, theta + step) - rim(drawn, theta)));
+    }
+    assert.ok(cellJump >= cellM * 0.9, `the premise: the cells' rim jumps ${cellJump} m`);
     assert.ok(
-      stoneFrom > 3000 && stoneFrom <= 3000 + ERODED_EDGES.SETBACK_M + ERODED_EDGES.WANDER_M,
-      `stone from y=${stoneFrom}`
+      drawnJump < 40,
+      `the drawn rim jumps ${drawnJump} m between rays half a degree apart`
     );
-    assert.equal(
-      at(3000 - ERODED_EDGES.FOOT_M - ERODED_EDGES.WANDER_M - 1),
-      0,
-      'water before the foot'
-    );
-    assert.equal(
-      seabedDepthAtM(terrain, seed, rockTop, x, stoneFrom, true),
-      rockSurfaceDepthM(seed, rockTop, x, stoneFrom),
-      'stone past the setback is the rock surface, crag and all'
-    );
+  });
+
+  it('holds the cell edges within half a cell of the roofed cut', () => {
+    // The roof stands its curtains on the cut's cell edges (passages.ts), so
+    // nothing rounds there: every kind's move is nothing within the hold.
+    const field = roundedCellsOf(terrain);
+    let checked = 0;
+    for (let iz = 0; iz < field.nz; iz++) {
+      for (let ix = 0; ix < field.nx; ix++) {
+        const x = ix * field.stepM;
+        const y = iz * field.stepM;
+        const dx = Math.max(1750 - x, 0, x - 2250);
+        const dy = Math.max(3000 - y, 0, y - 3500);
+        if (Math.hypot(dx, dy) > ROUNDED_CELLS.ROOF_HOLD_CELLS * cellM) continue;
+        for (const moves of field.moves) assert.ok(moves[iz * field.nx + ix] === 0, `${x},${y}`);
+        checked++;
+      }
+    }
+    assert.ok(checked > 100);
   });
 
   it('keeps the step on the edge against the stone over a roofed passage', () => {
@@ -462,8 +556,8 @@ describe('eroded cell edges (docs/free-water-slice.md §9)', () => {
     // it, the whole step in no width. Near the wall's north edge the stone
     // side is still on the north face, which runs into the jamb.
     for (const y of [3062.5, 3125, 3187.5, 3250, 3375]) {
-      const stone = erodedGroundAtM(terrain, seed, rockTop, 1749.99, y);
-      const passage = erodedGroundAtM(terrain, seed, rockTop, 1750, y);
+      const stone = erodedGroundAtM(terrain, rockTop, 1749.99, y);
+      const passage = erodedGroundAtM(terrain, rockTop, 1750, y);
       assert.ok(stone.rockWeight > 0.5 && stone.stepM < 1500, `stone at y=${y}`);
       assert.equal(passage.rockWeight, 0, `no stone in the passage at y=${y}`);
       if (y >= 3125) {
@@ -477,16 +571,86 @@ describe('eroded cell edges (docs/free-water-slice.md §9)', () => {
     }
   });
 
-  it('leaves the survey floor the authored one', () => {
-    assert.deepEqual([...eroded.floor], [...plain.floor]);
+  it('gives a wall a foot in the water and a lip in the stone', () => {
+    // The southern wall's north face at x = 1,625 (col 6's centre line): open
+    // bowl at row 11, rock at row 12, the edge at y = 3,000, held on it by the
+    // cut beside. The rock's share rises from the water side of the edge to
+    // the stone side across the reach, and the face climbs from a gentle foot
+    // to a steep lip.
+    const x = 1625;
+    const reach = erodedReachM(cellM);
+    const at = (y: number) => erodedGroundAtM(terrain, rockTop, x, y);
+    const runs: string[] = [];
+    let stoneFrom = Infinity;
+    for (let y = 2875; y <= 3125; y += 1) {
+      const w = at(y).rockWeight;
+      const kind = w === 0 ? 'water' : w === 1 ? 'stone' : 'face';
+      if (runs.at(-1) !== kind) runs.push(kind);
+      if (kind === 'stone') stoneFrom = Math.min(stoneFrom, y);
+    }
+    assert.deepEqual(runs, ['water', 'face', 'stone']);
+    assert.ok(stoneFrom > 3000 && stoneFrom <= 3000 + reach + 1, `stone from y=${stoneFrom}`);
+    assert.equal(at(3000 - reach - 1).rockWeight, 0, 'water before the foot');
+    // A gentle foot, a steep lip: the step's climb over the face's first
+    // quarter is less than over its last.
+    const climb = (a: number, b: number) => at(a).stepM - at(b).stepM;
+    assert.ok(climb(3000 - reach, 3000 - reach / 2) < climb(3000 + reach / 2, 3000 + reach));
+    assert.equal(
+      seabedDepthAtM(terrain, seed, rockTop, x, stoneFrom, true),
+      rockSurfaceDepthM(seed, rockTop, x, stoneFrom),
+      'stone past the lip is the rock surface, crag and all'
+    );
+  });
+
+  it("carries the ink's fields: the rounded survey floor, the coast and each biome's edge", () => {
+    // docs/map-visuals.md §4, the study's clause: the isobaths contour the
+    // drawn floor without its relief, and the coastlines run where the drawn
+    // ground changes kind, at every vertex the same reading as the ground's.
+    const { vertsX, vertsZ, stepM } = eroded;
+    for (let iz = 0; iz < vertsZ; iz += 3) {
+      for (let ix = 0; ix < vertsX; ix += 3) {
+        const i = iz * vertsX + ix;
+        const g = erodedGroundAtM(terrain, rockTop, ix * stepM, iz * stepM);
+        assert.equal(eroded.floor[i], Math.fround(g.floorM));
+        assert.equal(eroded.coast![i], Math.fround(g.coastM));
+        for (let b = 0; b < BIOME_FIELDS; b++) {
+          assert.equal(eroded.biomes![i * BIOME_FIELDS + b], Math.fround(g.biomeM[b]!));
+        }
+      }
+    }
+    // And the shipped grid keeps the authored floor's bilinear.
+    for (let i = 0; i < plain.floor.length; i += 97) {
+      const x = (i % plain.vertsX) * plain.stepM;
+      const y = Math.floor(i / plain.vertsX) * plain.stepM;
+      assert.equal(plain.floor[i], Math.fround(authoredFloorAtM(terrain, x, y)));
+    }
+  });
+
+  it('reads the public cells and nothing else (docs/map-visuals.md §4, rule 2)', () => {
+    // The rounding is a function of each cell's floor, ceiling and biome: the
+    // same cells in a fresh payload round the same, and one cell changed
+    // moves it.
+    const copy: TerrainPayload = JSON.parse(JSON.stringify(terrain));
+    const a = buildRoundedCells(terrain);
+    const b = buildRoundedCells(copy);
+    assert.deepEqual(
+      a.moves.map((m) => [...m]),
+      b.moves.map((m) => [...m])
+    );
+    copy.floor[7 * cols + 7] = 2600;
+    const c = buildRoundedCells(copy);
+    assert.notDeepEqual(
+      a.moves.map((m) => [...m]),
+      c.moves.map((m) => [...m])
+    );
   });
 
   it('patches a ground delta into the grid a full eroded build would make (#434)', () => {
     const grid = buildHeightGrid(terrain, seed, rockTop, true);
     const after = { ...terrain, floor: [...terrain.floor], ceiling: [...terrain.ceiling] };
-    after.floor[7 * terrain.cols + 7] = 2600; // the bowl's floor drops
-    after.ceiling[11 * terrain.cols + 5] = 3000; // a bowl cell becomes rock
-    after.floor[11 * terrain.cols + 5] = 1500;
+    after.floor[7 * cols + 7] = 2600; // the bowl's floor drops
+    after.ceiling[11 * cols + 5] = 3000; // a bowl cell becomes rock
+    after.floor[11 * cols + 5] = 1500;
     const span = patchHeightGrid(
       grid,
       after,
@@ -497,18 +661,56 @@ describe('eroded cell edges (docs/free-water-slice.md §9)', () => {
     );
     const fresh = buildHeightGrid(after, seed, rockTop, true);
     assert.deepEqual([...grid.y], [...fresh.y]);
-    assert.ok(span.first < span.last);
-    // And nothing outside the ring moved between the two full builds.
-    const ring = {
-      ix0: 4 * VERTS_PER_CELL,
-      ix1: 9 * VERTS_PER_CELL,
-      iz0: 6 * VERTS_PER_CELL,
-      iz1: 13 * VERTS_PER_CELL,
-    };
-    for (let iz = 0; iz < fresh.vertsZ; iz++) {
-      for (let ix = 0; ix < fresh.vertsX; ix++) {
-        if (ix >= ring.ix0 && ix <= ring.ix1 && iz >= ring.iz0 && iz <= ring.iz1) continue;
-        assert.equal(fresh.y[iz * fresh.vertsX + ix], eroded.y[iz * fresh.vertsX + ix]);
+    assert.deepEqual([...grid.floor], [...fresh.floor]);
+    assert.deepEqual([...grid.coast!], [...fresh.coast!]);
+    assert.deepEqual([...grid.biomes!], [...fresh.biomes!]);
+    // The rounding reads cells several away, so the study re-reads it whole.
+    assert.deepEqual(span, { first: 0, last: grid.vertsX * grid.vertsZ - 1 });
+  });
+
+  it('forgets a terrain changed in place, and reads it afresh', () => {
+    // The view changes its cells in place on a ground delta (PerspectiveView
+    // `applyGround`) and forgets the rounding first; a reader that kept it
+    // would round the cells the map no longer has.
+    const local = terrainFor(FREE_WATER_SLICE).serialize();
+    const before = erodedGroundAtM(local, rockTop, 1375, 2875).stepM;
+    local.ceiling[11 * cols + 5] = 3000;
+    assert.equal(erodedGroundAtM(local, rockTop, 1375, 2875).stepM, before, 'held until forgotten');
+    forgetRoundedCells(local);
+    assert.equal(erodedGroundAtM(local, rockTop, 1375, 2875).stepM, rockTop, 'the new rock');
+  });
+
+  it('benches coral within one step of the field it cuts, centred, and nothing else', () => {
+    const coral = BIOME_RELIEF[Biome.CoralRuins];
+    const raw = (x: number, y: number) => detailM(x, y, seed, coral.amplitudeM, coral.roughness, 0);
+    let worst = 0;
+    let rawSum = 0;
+    let benchSum = 0;
+    let n = 0;
+    for (let y = 0; y < 4000; y += 13.1) {
+      for (let x = 0; x < 4000; x += 13.1) {
+        const b = benchedDetailM(x, y, seed, coral);
+        worst = Math.max(worst, Math.abs(b - raw(x, y)));
+        rawSum += raw(x, y);
+        benchSum += b;
+        n++;
+      }
+    }
+    assert.ok(worst <= ERODED_EDGES.BENCH_M, `a bench strays ${worst} m from the field`);
+    assert.ok(worst > ERODED_EDGES.BENCH_M / 3, 'the positive control: the benches cut');
+    assert.ok(Math.abs(benchSum - rawSum) / n < 1, 'the benches average to the field they cut');
+    // Every other biome's relief is the shipped field, untouched.
+    for (const biome of [Biome.KelpForest, Biome.AbyssalTrench, Biome.OpenWater]) {
+      const r = BIOME_RELIEF[biome];
+      for (const [x, y] of [
+        [100, 200],
+        [1234, 2345],
+        [3999, 17],
+      ] as const) {
+        assert.equal(
+          benchedDetailM(x, y, seed, r),
+          detailM(x, y, seed, r.amplitudeM, r.roughness, r.blockiness)
+        );
       }
     }
   });
