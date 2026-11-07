@@ -3,22 +3,27 @@
 // packages/frontend/src/game/freeWaterDecoration.ts. Nothing runs this at
 // play time. It starts from #1751's rows, four of fourteen stands at one
 // 125 m pitch and the sixteen clusters' straight fringe, every plant facing
-// down-current, and anneals them under §5's rules: each outline whole on the
-// garden's tread, clear of the clearing by its sway, overlapping no other,
-// and turned at most 45 degrees from the current. What it lowers is §5's
-// two readings of a planted forest, aiming past the test's bars: no plant
-// within 15 m of the line through two neighbours it stands between (the
-// test asks 10), and every east-west line across the north flank meeting
-// stands over 30% of the tread (the test asks a quarter). Neighbouring
-// stands are also turned apart, and a last max-min pass lifts the one
-// worst triple a summed cost can leave behind.
+// down-current. Four stands leave the south row, which opens the band's four
+// gaps, and are seated on the north flank as the anneal makes room, 46 north
+// and 10 south, the owner's split. It anneals every plant under §5's rules:
+// each outline whole on the garden's tread, clear of the clearing by as far
+// as its sway can carry it at its heading, overlapping no other, turned at
+// most 45 degrees from the current, and the south band keeping four gaps of
+// 60 m or more. What it lowers is §5's two readings of a planted forest,
+// aiming past the test's bars: no plant within 15 m of the line through two
+// neighbours it stands between (the test asks 10), and every east-west line
+// across the north flank meeting stands over 30% of the tread (the test asks
+// a quarter). Neighbouring stands are also turned apart, and a last max-min
+// pass lifts the one worst triple a summed cost can leave behind.
 //
 //   node docs/screenshots/issue-1773/layout.mjs [--seed=1773] [--sweeps=16000]
 //
 // It prints the two lists in the module's own form, and draws the plan
-// before and after into plan.svg beside it. The outlines are read off the
-// committed GLBs the way the decoration test reads them, so a re-authored
-// stand is re-checked here as it is there. A seed draws the same list on one
+// before and after into plan.svg beside it. Each outline is its GLB's box,
+// the longer side scaled to the registry footprint. The decoration test
+// reads the template the layer builds instead, whose box this one bounds
+// (a cluster's template is 17.76 m long to this box's 18), so a list that
+// clears these outlines clears the test's. A seed draws the same list on one
 // engine; another engine may round a cosine differently and anneal
 // elsewhere, so the list, not the seed, is the record.
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -35,6 +40,14 @@ const TREAD = { x0: 1125, x1: 2875, y0: 625, y1: 1375 };
 const CLEARING = { y0: 1000, y1: 1250 };
 const SWAY_M = 4;
 const MAX_YAW = Math.PI / 4;
+// The owner's split, and the gaps it buys the south band.
+const SOUTH_STANDS = 10;
+const SOUTH_GAPS = 4;
+const SOUTH_GAP_M = 60;
+// How far a sway carries a tip north or south: the shader moves it up to
+// 1.35 swayM along the plant's own x and 0.4 across it (environmentModels.ts).
+const swayReach = (yaw) =>
+  SWAY_M * (1.35 * Math.abs(Math.sin(yaw)) + 0.4 * Math.abs(Math.cos(yaw)));
 // The clusters' fringe: north of every stand, on the ramp's garden cells,
 // with room for a turned cluster's 9.9 m reach inside them.
 const FRINGE = { x0: 1011, x1: 2989, y0: 511, y1: 614 };
@@ -132,8 +145,8 @@ const fits = (p, sp) => {
   }
   if (sp.x0 < TREAD.x0 + EDGE_M || sp.x1 > TREAD.x1 - EDGE_M) return false;
   if (sp.y0 < TREAD.y0 + EDGE_M || sp.y1 > TREAD.y1 - EDGE_M) return false;
-  if (p.north) return sp.y1 + SWAY_M <= CLEARING.y0 - EDGE_M;
-  return sp.y0 - SWAY_M >= CLEARING.y1 + EDGE_M;
+  if (p.north) return sp.y1 + swayReach(p.yaw) <= CLEARING.y0 - EDGE_M;
+  return sp.y0 - swayReach(p.yaw) >= CLEARING.y1 + EDGE_M;
 };
 
 // #1751's rows and fringe, the start.
@@ -147,9 +160,36 @@ for (let x = 1062.5; x <= 2937.5; x += 125) {
   plants.push({ kind: 'cluster', x, y: 562.5, yaw: 0, north: true });
 }
 const before = plants.map((p) => ({ ...p }));
+// Four south stands, none beside another, leave the row: each leaves a
+// 130 m gap, and each is seated north below once the anneal makes room.
+{
+  const south = plants.filter((p) => p.kind === 'stand' && !p.north);
+  for (const k of [1, 3, 6, 10]) plants.splice(plants.indexOf(south[k]), 1);
+}
+let unseated = 56 - plants.filter((p) => p.kind === 'stand').length;
+if (plants.filter((p) => p.kind === 'stand' && !p.north).length !== SOUTH_STANDS) {
+  throw new Error('the start does not hold the split');
+}
 const shapes = plants.map(shape);
+// The south band's gaps of SOUTH_GAP_M or more between its outlines along x,
+// with the plant at i in the outline sp.
+const southGaps = (i, sp) => {
+  const spans = plants
+    .map((p, j) => (p.kind === 'stand' && !p.north ? (j === i ? sp : shapes[j]) : null))
+    .filter((s) => s !== null)
+    .map((s) => [s.x0, s.x1])
+    .sort((u, v) => u[0] - v[0]);
+  let gaps = 0;
+  for (let k = 1, end = spans[0][1]; k < spans.length; k++) {
+    if (spans[k][0] - end >= SOUTH_GAP_M) gaps++;
+    end = Math.max(end, spans[k][1]);
+  }
+  return gaps;
+};
 const valid = (i, p, sp) =>
-  fits(p, sp) && shapes.every((sq, j) => j === i || !overlap(sp, sq));
+  fits(p, sp) &&
+  shapes.every((sq, j) => j === i || !overlap(sp, sq)) &&
+  (p.kind !== 'stand' || p.north || southGaps(i, sp) >= SOUTH_GAPS);
 plants.forEach((p, i) => {
   if (!valid(i, p, shapes[i])) throw new Error(`#1751's ${p.kind} at ${p.x},${p.y} breaks a rule`);
 });
@@ -220,8 +260,25 @@ const laneCost = (share) => Math.max(0, LANE_SHARE - share) / LANE_SHARE;
 const shares = LANES.map((y) => covered(y, standShapes()));
 
 // The temperature falls to nothing at 85% of the steps; the rest quench.
+// While a stand waits for the north flank, every fiftieth step tries forty
+// places for it there, at a heading within the current's 45 degrees.
 const steps = SWEEPS * plants.length;
 for (let k = 0; k < steps; k++) {
+  for (let t = 0; unseated > 0 && k % 50 === 0 && t < 40; t++) {
+    const r = {
+      kind: 'stand',
+      north: true,
+      x: Math.round((TREAD.x0 + rand() * (TREAD.x1 - TREAD.x0)) * 10) / 10,
+      y: Math.round((TREAD.y0 + rand() * (CLEARING.y0 - TREAD.y0)) * 10) / 10,
+      yaw: degree(Math.round((rand() * 2 - 1) * 45)),
+    };
+    const sr = shape(r);
+    if (!valid(-1, r, sr)) continue;
+    plants.push(r);
+    shapes.push(sr);
+    unseated--;
+    LANES.forEach((y, n) => (shares[n] = covered(y, standShapes())));
+  }
   const temperature = Math.max(0, 0.5 * (1 - k / (steps * 0.85))) + 1e-4;
   const i = Math.floor(rand() * plants.length);
   const p = plants[i];
@@ -258,6 +315,8 @@ for (let k = 0; k < steps; k++) {
     touched.forEach((n, m) => (shares[n] = after[m]));
   }
 }
+
+if (unseated > 0) throw new Error(`${unseated} stands found no room on the north flank`);
 
 // A last pass, max-min: the sum the anneal lowered can hide one worst
 // triple. A plant of the worst moves only when every triple through it ends
@@ -342,6 +401,11 @@ console.log(
   `// thinnest north-flank line ${(thinnest * 100).toFixed(0)}% of the tread; stands turned ` +
     `${((turned.reduce((a, b) => a + b, 0) / turned.length) * (180 / Math.PI)).toFixed(1)} degrees ` +
     `on average, ${turned.filter((t) => t < Math.PI / 18).length} within 10`
+);
+const north = plants.filter((p) => p.kind === 'stand' && p.north).length;
+console.log(
+  `// ${north} stands north and ${plants.filter((p) => p.kind === 'stand').length - north} south, ` +
+    `the south band's gaps of ${SOUTH_GAP_M} m or more: ${southGaps(-1, null)}`
 );
 console.log(`const KELP_STANDS = [\n${print('stand')}\n] as const;`);
 console.log(`const KELP_CLUSTERS = [\n${print('cluster')}\n] as const;`);

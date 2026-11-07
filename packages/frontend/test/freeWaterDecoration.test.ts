@@ -129,11 +129,16 @@ describe('authored public decoration', () => {
       if (p.motion === undefined) {
         // §5: a plant turns at most 45 degrees from the current, its +x.
         assert.ok(Math.abs(p.yawRad) <= Math.PI / 4 + 1e-9, `${p.slug} turned ${p.yawRad}`);
-        // §3: outlines, not origins, stay out of the clearing, swaying tips included.
+        // §3: outlines, not origins, stay out of the clearing, swaying tips
+        // included. The shader carries a tip up to 1.35 swayM along the
+        // plant's own x and 0.4 swayM across it (environmentModels.ts), so the
+        // reach north or south turns with the plant's heading.
         const ys = outline[p.slug]!.corners(p).map(([, y]) => y);
         const { swayM } = propSpec(p.slug)!;
+        const reach =
+          swayM * (1.35 * Math.abs(Math.sin(p.yawRad)) + 0.4 * Math.abs(Math.cos(p.yawRad)));
         assert.ok(
-          Math.max(...ys) + swayM <= 1000 || Math.min(...ys) - swayM >= 1250,
+          Math.max(...ys) + reach <= 1000 || Math.min(...ys) - reach >= 1250,
           `${p.slug} at ${p.xM},${p.yM}: clearing stays clear`
         );
       }
@@ -180,9 +185,10 @@ describe('authored public decoration', () => {
         }
       }
     }
-    // §5: the north flank's tread holds 42 stands and the south flank's 14.
-    assert.equal(stands.filter((p) => p.yM < 1000).length, 42);
-    assert.equal(stands.filter((p) => p.yM > 1250).length, 14);
+    // §5: 46 stands on the north flank's tread and 10 on the south flank's,
+    // the owner's split.
+    assert.equal(stands.filter((p) => p.yM < 1000).length, 46);
+    assert.equal(stands.filter((p) => p.yM > 1250).length, 10);
     // §5: the clusters' fringe, where a turned cluster's 9.9 m reach stays on
     // the garden's cells and north of every stand.
     for (const p of plants.filter((q) => q.slug === 'env-kelp-cluster')) {
@@ -218,7 +224,7 @@ describe('authored public decoration', () => {
     );
   });
 
-  it('stands no three plants in a row and opens no lane through the forest', async () => {
+  it('stands no three plants in a row, opens no lane and breaks the south band', async () => {
     // §5, No rows (#1773). Roots stand on one floor, and the camera maps a
     // plane through a homography, which keeps a line a line: three roots in
     // line in plan are in line in the garden-close and survey frames alike.
@@ -249,6 +255,21 @@ describe('authored public decoration', () => {
       const share = lineCover(y, north);
       assert.ok(share >= 0.25, `the line y=${y} meets stands over ${(share * 100).toFixed(0)}%`);
     }
+    // The south flank, one stand deep, leaves four gaps of 60 m or more
+    // between its outlines along its length, so it breaks into clumps.
+    const spans = plants
+      .filter((p) => p.slug === 'env-kelp-stand' && p.yM > 1250)
+      .map((p) => {
+        const xs = outline.corners(p).map(([x]) => x);
+        return [Math.min(...xs), Math.max(...xs)] as const;
+      })
+      .sort((u, v) => u[0] - v[0]);
+    const gaps: number[] = [];
+    for (let k = 1, end = spans[0]![1]; k < spans.length; k++) {
+      if (spans[k]![0] - end >= 60) gaps.push(Math.round(spans[k]![0] - end));
+      end = Math.max(end, spans[k]![1]);
+    }
+    assert.ok(gaps.length >= 4, `the south band opens ${gaps.length} gaps of 60 m: ${gaps}`);
   });
 
   it('holds whole loops inside their authored patches and places the body axis at depth', () => {

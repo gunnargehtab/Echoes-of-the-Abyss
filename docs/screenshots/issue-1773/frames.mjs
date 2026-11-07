@@ -3,7 +3,8 @@
 // whose top right holds the garden's canopy; then §9's garden-close pose,
 // looking west along the clearing; a pose across the north flank from the
 // clearing, where #1751's three rows stood one behind another; the garden
-// from straight above, the plan the rows were laid in; and §9's survey.
+// from straight above, the plan the rows were laid in; §9's low pose, whose
+// top third is the garden with the south band nearest; and §9's survey.
 // Beside the frames, readings.json carries each probe's pose, prop count,
 // draw calls and triangles.
 //
@@ -31,6 +32,8 @@ const POSES = [
   ['north-flank', 2000, 900, 500, 0, 25, 300],
   // The whole garden, 2,000 by 1,000 m, under the camera's 60 degrees across.
   ['garden-above', 2000, 1000, 2400, 0, 88, null],
+  // §9's low pose: its top third is the garden, the south band nearest.
+  ['low', 2000, 2000, 1600, 0, 12, 850],
   ['survey', 2000, 2000, 10000, 0, 88, null],
 ];
 
