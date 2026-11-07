@@ -1,0 +1,178 @@
+{
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "software": true,
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "readings": [
+    {
+      "name": "survey",
+      "look": "free-water",
+      "ground": {
+        "eroded": true
+      },
+      "pitchDeg": 88,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 1988,
+        "zM": 2356,
+        "depthM": -43038
+      },
+      "distance": 10000,
+      "calls": 45,
+      "triangles": 568986
+    },
+    {
+      "name": "low",
+      "look": "free-water",
+      "ground": {
+        "eroded": true
+      },
+      "pitchDeg": 12,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": 850
+      },
+      "eye": {
+        "xM": 2000,
+        "zM": 3566,
+        "depthM": -651
+      },
+      "distance": 1600,
+      "calls": 26,
+      "triangles": 561017
+    },
+    {
+      "name": "bowl",
+      "look": "free-water",
+      "ground": {
+        "eroded": true
+      },
+      "pitchDeg": 70,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 2003,
+        "zM": 3530,
+        "depthM": -16848
+      },
+      "distance": 4500,
+      "calls": 45,
+      "triangles": 568986
+    },
+    {
+      "name": "wall",
+      "look": "free-water",
+      "ground": {
+        "eroded": true
+      },
+      "pitchDeg": 14,
+      "yawDeg": 180,
+      "focus": {
+        "xM": 2125,
+        "zM": 2875,
+        "depthM": 900
+      },
+      "eye": {
+        "xM": 2124,
+        "zM": 2196,
+        "depthM": 124
+      },
+      "distance": 700,
+      "calls": 26,
+      "triangles": 561017
+    },
+    {
+      "name": "rim",
+      "look": "free-water",
+      "ground": {
+        "eroded": true
+      },
+      "pitchDeg": 14,
+      "yawDeg": 90,
+      "focus": {
+        "xM": 1000,
+        "zM": 1875,
+        "depthM": 816
+      },
+      "eye": {
+        "xM": 1679,
+        "zM": 1875,
+        "depthM": 51
+      },
+      "distance": 700,
+      "calls": 44,
+      "triangles": 568586
+    },
+    {
+      "name": "bowl-pan",
+      "strip": [
+        {
+          "tMs": 92368,
+          "focus": {
+            "xM": 2000,
+            "zM": 2000,
+            "depthM": null
+          },
+          "eye": {
+            "xM": 2005,
+            "zM": 3530,
+            "depthM": -16848
+          }
+        },
+        {
+          "tMs": 103589,
+          "focus": {
+            "xM": 2146,
+            "zM": 2000,
+            "depthM": null
+          },
+          "eye": {
+            "xM": 2147,
+            "zM": 3531,
+            "depthM": -16847
+          }
+        },
+        {
+          "tMs": 114628,
+          "focus": {
+            "xM": 2291,
+            "zM": 2000,
+            "depthM": null
+          },
+          "eye": {
+            "xM": 2285,
+            "zM": 3531,
+            "depthM": -16841
+          }
+        },
+        {
+          "tMs": 125814,
+          "focus": {
+            "xM": 2437,
+            "zM": 2000,
+            "depthM": null
+          },
+          "eye": {
+            "xM": 2442,
+            "zM": 3531,
+            "depthM": -16834
+          }
+        }
+      ]
+    }
+  ]
+}

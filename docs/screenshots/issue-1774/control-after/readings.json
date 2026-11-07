@@ -1,0 +1,55 @@
+{
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "software": true,
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "readings": [
+    {
+      "name": "survey",
+      "look": "standard",
+      "ground": {
+        "eroded": false
+      },
+      "pitchDeg": 88,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 1994,
+        "zM": 2352,
+        "depthM": -42803
+      },
+      "distance": 10000,
+      "calls": 76,
+      "triangles": 163878
+    },
+    {
+      "name": "low",
+      "look": "standard",
+      "ground": {
+        "eroded": false
+      },
+      "pitchDeg": 12,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": 850
+      },
+      "eye": {
+        "xM": 2001,
+        "zM": 3566,
+        "depthM": -647
+      },
+      "distance": 1600,
+      "calls": 75,
+      "triangles": 160006
+    }
+  ]
+}
