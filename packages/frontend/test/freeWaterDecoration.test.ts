@@ -96,6 +96,7 @@ describe('authored public decoration', () => {
       'env-shoal-fry': 144,
       'env-outer-fish': 16,
       'env-deep-fish': 26,
+      'env-rim-ray': 1,
     });
     assert.ok(placements.reduce((n, p) => n + propSpec(p.slug)!.triBudget, 0) <= 600000);
     const control = terrainFor(KELP_LABYRINTH).serialize();
@@ -111,6 +112,7 @@ describe('authored public decoration', () => {
               'env-shoal-fry',
               'env-outer-fish',
               'env-deep-fish',
+              'env-rim-ray',
             ].includes(p.slug)
         )
       )
@@ -171,7 +173,7 @@ describe('authored public decoration', () => {
     }
   });
 
-  it('stands the life §5 adds for garden close and the low pose in those frames all loop long', () => {
+  it('stands the life §5 adds for the opening, garden close and the low pose in those frames all loop long', () => {
     // §5, Life in the frames: §9's poses through the conn camera's field at
     // 1,440 × 900, the eye where the orbit puts it, a body counted only between
     // the top bar's foot (52 px) and the console's top edge (692 px) and only
@@ -220,9 +222,11 @@ describe('authored public decoration', () => {
     };
     const gardenClose = pose(1875, 1125, 250, 90, 12, 275);
     const low = pose(2000, 2000, 1600, 0, 12, 850);
+    const opening = pose(709, 1710, 1200, -34, 15, 300);
     const placements = freeWaterPlacements(terrain);
     // Each patch §5 adds, the frame it is for, and the farthest §5 places it from
-    // that frame's eye: 65 to 140 m, 185 to 385 m, 220 to 395 m, and about 2 km.
+    // that frame's eye: 65 to 140 m, 185 to 385 m, 220 to 395 m, about 2 km, and
+    // the ray's 810 to 930 m.
     const rows = [
       [
         'env-shoal-fry',
@@ -263,6 +267,7 @@ describe('authored public decoration', () => {
         low,
         2100,
       ],
+      ['env-rim-ray', [[735, 2210]], opening, 930],
     ] as const;
     for (const [slug, centres, frame, reachM] of rows) {
       const bodies = placements.filter(
@@ -290,6 +295,7 @@ describe('authored public decoration', () => {
       'env-shoal-fry': 0.15,
       'env-outer-fish': 1.69,
       'env-deep-fish': 0.84,
+      'env-rim-ray': 4.05,
     };
     const at = (x: number, y: number) => (p: { xM: number; yM: number }) =>
       p.xM === x && p.yM === y;
@@ -316,6 +322,7 @@ describe('authored public decoration', () => {
         band: [200, 300],
       },
       { slug: 'env-deep-fish', of: () => true, radiusM: 25, band: [1900, 2100] },
+      { slug: 'env-rim-ray', of: () => true, radiusM: 70, band: [200, 300] },
     ];
     for (const p of freeWaterPlacements(ground())) {
       if (p.motion === undefined) continue;
@@ -397,6 +404,7 @@ describe('authored public decoration', () => {
       'env-shoal-fry',
       'env-outer-fish',
       'env-deep-fish',
+      'env-rim-ray',
     ]) {
       const bytes = readFileSync(
         new URL(`../../../docs/concept-art/models/${slug}.glb`, import.meta.url)

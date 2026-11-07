@@ -13,8 +13,9 @@
  * and two of its own, `silt_drift` and `ore_trace` — #1555; the sixteenth,
  * the kelp stand, the cluster's two — #1712; the four microfauna that make
  * twenty, `stone_dark` again under two skins of their own, `carapace` and
- * `fish_flank` — #1711), the builders more than one prop needs, and the
- * root every prop stands on.
+ * `fish_flank` — #1711; and the rim ray that makes twenty-one, the same
+ * two — #1777), the builders more than one prop needs, and the root every
+ * prop stands on.
  *
  * Three things about the fourteen batch files are worth knowing before
  * reading one, and this module is where they are written down:
@@ -576,17 +577,21 @@ export function bake(root) {
  * The microfauna — env-rim-crab, env-shoal-fry, env-outer-fish and
  * env-deep-fish (#1711), the four public decorative bodies
  * docs/free-water-slice.md §5 commissions under Block 4's public-microfauna
- * variant of ENV STYLE. Four files, one grammar: a body is a `shaft`, a
- * closed run of corner rings whose facets are crisp because every corner is
- * drawn with a little jitter from a seeded stream; everything flat on it
- * — a fin, a claw's hand — is a `blade`, a thin closed slab on a convex
- * outline. The three fish differ in proportion and fin plan and in nothing
- * else: the same shaft from nose to tail, the same blades rooted through
- * the skin, the same two materials. The crab's legs and claw arms are the
- * same shaft along a bent axis, its shell the same shaft stood on end. Both
- * builders wind every triangle against a point inside the part it belongs
- * to, so no script here checks a facet's facing after the fact as the
- * nodule bed and the kelp stand do: the wind is the construction.
+ * variant of ENV STYLE, and env-rim-ray (#1777), the one large body the
+ * variant's fifth clause admits. Five files, one grammar: a body is a
+ * `shaft`, a closed run of corner rings whose facets are crisp because
+ * every corner is drawn with a little jitter from a seeded stream;
+ * everything flat on it — a fin, a claw's hand — is a `blade`, a thin
+ * closed slab on a convex outline. The three fish differ in proportion and
+ * fin plan and in nothing else: the same shaft from nose to tail, the same
+ * blades rooted through the skin, the same two materials. The crab's legs
+ * and claw arms are the same shaft along a bent axis, its shell the same
+ * shaft stood on end. The ray is the same shaft laid across the span, its
+ * rings chord sections rather than girths (`wingBody`), and its lobes and
+ * tail the same shaft again. Both builders wind every triangle against a
+ * point inside the part it belongs to, so no script here checks a facet's
+ * facing after the fact as the nodule bed and the kelp stand do: the wind
+ * is the construction.
  * ------------------------------------------------------------------------ */
 
 /**
@@ -627,13 +632,18 @@ const middle = (ring) =>
  * included, and a point on a starboard facet's diagonal has its mirror on
  * the port facet's diagonal — the reviewer's finding A on #1711: cut on
  * one diagonal throughout, a mirrored target fell on a different half of
- * the quad, or the next facet, and no two eyes sat alike.
+ * the quad, or the next facet, and no two eyes sat alike. `split(b, i)`
+ * overrides the rule band by band for a shaft whose mirror plane cuts
+ * across its rings rather than along them (`wingBody`: ring b's mirror is
+ * another ring, so a facet's mirror is on another band, cut on the other
+ * diagonal).
  */
 /** Whether band facet `i` of `n` is cut on the (b,i)–(b+1,i+1) diagonal, or on (b,i+1)–(b+1,i). */
 export const splitAC = (n, i) => i < n / 2;
 
-export function shaft(rings, { start = null, end = null } = {}) {
+export function shaft(rings, { start = null, end = null, split = null } = {}) {
   const n = rings[0].length;
+  const cut = split ?? ((b, i) => splitAC(n, i));
   const points = rings.flat();
   const tris = [];
   const at = (b, i) => b * n + (i % n);
@@ -643,7 +653,15 @@ export function shaft(rings, { start = null, end = null } = {}) {
     const inside = lo.map((v, i) => (v + hi[i]) / 2);
     for (let i = 0; i < n; i++) {
       const [A, B, C, D] = [at(b, i), at(b, i + 1), at(b + 1, i + 1), at(b + 1, i)];
-      const pair = splitAC(n, i) ? [[A, B, C], [A, C, D]] : [[A, B, D], [B, C, D]];
+      const pair = cut(b, i)
+        ? [
+            [A, B, C],
+            [A, C, D],
+          ]
+        : [
+            [A, B, D],
+            [B, C, D],
+          ];
       tris.push(facing(points, pair[0], inside), facing(points, pair[1], inside));
     }
   }
@@ -808,21 +826,16 @@ export function fishBody(
     );
     if (b < 0) throw new Error(`fishBody: u ${u} is on no band`);
     const step = (2 * Math.PI) / sides;
-    const i = (((Math.floor((Math.PI / 2 - phi) / step) % sides) + sides) % sides);
-    const j = (i + 1) % sides;
+    const i = ((Math.floor((Math.PI / 2 - phi) / step) % sides) + sides) % sides;
     const V = (p) => new THREE.Vector3(...p);
-    const [A, B, C, D] = [V(rings[b][i]), V(rings[b][j]), V(rings[b + 1][j]), V(rings[b + 1][i])];
-    const pair = splitAC(sides, i) ? [[A, B, C], [A, C, D]] : [[A, B, D], [B, C, D]];
-    const [P, Q] = splitAC(sides, i) ? [A, C] : [B, D];
-    const inside = V(axis((stations[b].u + stations[b + 1].u) / 2));
-    const normal = new THREE.Vector3();
-    for (const [a, c, d] of pair) {
-      const nn = new THREE.Vector3().subVectors(c, a).cross(new THREE.Vector3().subVectors(d, a));
-      const centre = a.clone().add(c).add(d).divideScalar(3);
-      if (nn.dot(centre.sub(inside)) < 0) nn.negate();
-      normal.add(nn.normalize());
-    }
-    normal.normalize();
+    const quad = bandFacet(
+      rings,
+      b,
+      i,
+      splitAC(sides, i),
+      axis((stations[b].u + stations[b + 1].u) / 2)
+    );
+    const [P, Q] = quad.diagonal;
     const u0 = stations[b].u;
     const u1 = stations[b + 1].u;
     const at = (uu) => P.clone().lerp(Q, (uu - u0) / (u1 - u0));
@@ -830,21 +843,131 @@ export function fishBody(
     // the plane the band's corners mirror about (the bend is sampled at
     // the stations, and a corner's slip moves it along x off that curve).
     const axisAt = (uu) => V(axis(u0)).lerp(V(axis(u1)), (uu - u0) / (u1 - u0));
-    const size = Math.min(A.distanceTo(B), B.distanceTo(C), C.distanceTo(D), D.distanceTo(A));
-    return {
-      corners: [A, B, C, D],
-      diagonal: [P, Q],
-      at,
-      axisAt,
-      mid: P.clone().lerp(Q, 0.5),
-      midU: (u0 + u1) / 2,
-      normal,
-      size,
-      band: b,
-      facet: i,
-    };
+    return { ...quad, at, axisAt, midU: (u0 + u1) / 2 };
   };
   return { geo, rings, axis, half, point, facetAt, length };
+}
+
+/**
+ * One band quad of a `shaft` as built, for a lens or a seat to sit on:
+ * the quad between rings `b` and `b + 1` at corner `i`, its four
+ * corners, the diagonal it was cut on (`ac` true for (b,i)–(b+1,i+1),
+ * the rule `shaft` cut it by, front ring to back), `mid` for that
+ * diagonal's middle — on the surface exactly, on both triangles —
+ * `normal` for the quad's (the mean of its two triangles', each turned
+ * away from `inside`) and `size` for its shortest edge. `fishBody`
+ * `facetAt` wraps it with the fish's u; `wingBody` `facetAt` with the
+ * span's station.
+ */
+export function bandFacet(rings, b, i, ac, inside) {
+  const n = rings[0].length;
+  const j = (i + 1) % n;
+  const V = (p) => new THREE.Vector3(...p);
+  const [A, B, C, D] = [V(rings[b][i]), V(rings[b][j]), V(rings[b + 1][j]), V(rings[b + 1][i])];
+  const pair = ac
+    ? [
+        [A, B, C],
+        [A, C, D],
+      ]
+    : [
+        [A, B, D],
+        [B, C, D],
+      ];
+  const [P, Q] = ac ? [A, C] : [B, D];
+  const centreOf = V(inside);
+  const normal = new THREE.Vector3();
+  for (const [a, c, d] of pair) {
+    const nn = new THREE.Vector3().subVectors(c, a).cross(new THREE.Vector3().subVectors(d, a));
+    const centre = a.clone().add(c).add(d).divideScalar(3);
+    if (nn.dot(centre.sub(centreOf)) < 0) nn.negate();
+    normal.add(nn.normalize());
+  }
+  normal.normalize();
+  const size = Math.min(A.distanceTo(B), B.distanceTo(C), C.distanceTo(D), D.distanceTo(A));
+  return {
+    corners: [A, B, C, D],
+    diagonal: [P, Q],
+    mid: P.clone().lerp(Q, 0.5),
+    normal,
+    size,
+    band: b,
+    facet: i,
+  };
+}
+
+/**
+ * A winged body: a `shaft` laid across the span rather than down the
+ * length — the ray (#1777). Its rings are chord sections in the x–y
+ * plane, one per station across z, from the port tip through the
+ * centreline to the starboard tip, each fanned to a tip point at
+ * ±`halfSpan`. `stations` is the starboard half from z = 0 outward —
+ * `{ z, le, te, t, y }`: the leading and trailing edges' x, the section's
+ * whole thickness and the chord line's height — and the port half is its
+ * mirror; `tip` is `{ x, y }` of the tip point. A section is `profile`:
+ * `s` the corners' positions along the chord, 0 at the leading edge and
+ * 1 at the trailing, round the top from the leading edge and back along
+ * the bottom, and `f` each corner's share of the thickness there (0 at
+ * both edges), the top taking `topShare` of it and the bottom the rest —
+ * a lens, thickest forward, flatter underneath. Each station's corners
+ * are drawn once from `draw` — pushed up or down by up to `jitter` of
+ * their height off the chord, slipped along the chord by as much of the
+ * thickness and along the span by as much, the centre ring not at all
+ * along the span — and the port ring reuses the draw, so the skin is
+ * mirror-symmetric about z = 0, triangles included: a band on one side is
+ * cut on the other diagonal from its mirror on the other (`shaft`
+ * `split`), which is what puts a starboard facet's diagonal middle
+ * exactly where the port one's mirrors to. Returns the geometry, the
+ * rings, `facetAt(k, i, side)` for the band quad between starboard
+ * stations k and k + 1 at corner i, or its port mirror (side −1), and
+ * `section(k)` for the nominal station.
+ */
+export function wingBody(
+  draw,
+  { halfSpan, stations, tip, profile, topShare = 0.6, jitter = 0.04 }
+) {
+  if (stations[0].z !== 0) throw new Error('wingBody: the first station is the centreline');
+  const n = profile.s.length;
+  if (n !== profile.f.length) throw new Error('wingBody: profile s and f differ in length');
+  const K = stations.length;
+  const corner = (st, k, j) => {
+    const chord = st.le - st.te;
+    const top = j <= profile.s.indexOf(1);
+    const share = top ? topShare : -(1 - topShare);
+    return [st.le - profile.s[j] * chord, st.y + share * st.t * profile.f[j], st.z];
+  };
+  const drawn = stations.map((st, k) =>
+    Array.from({ length: n }, (_, j) => {
+      const [x, y] = corner(st, k, j);
+      const h = y - st.y;
+      return [
+        x + draw.between(-jitter, jitter) * st.t,
+        st.y + h * (1 + draw.between(-jitter, jitter)),
+        k === 0 ? 0 : st.z + draw.between(-jitter, jitter) * st.t,
+      ];
+    })
+  );
+  const mirror = ([x, y, z]) => [x, y, -z];
+  const rings = [
+    ...drawn
+      .slice(1)
+      .reverse()
+      .map((ring) => ring.map(mirror)),
+    ...drawn,
+  ];
+  // Bands 0..K−2 are port, K−1..2K−3 starboard; band b mirrors band 2K−3−b.
+  const split = (b, i) => b >= K - 1 === splitAC(n, i);
+  const geo = shaft(rings, {
+    start: [tip.x, tip.y, -halfSpan],
+    end: [tip.x, tip.y, halfSpan],
+    split,
+  });
+  const facetAt = (k, i, side = 1) => {
+    if (k < 0 || k + 1 >= K) throw new Error(`wingBody: station ${k} is on no band`);
+    const b = side > 0 ? K - 1 + k : K - 2 - k;
+    const inside = middle(rings[b]).map((v, c) => (v + middle(rings[b + 1])[c]) / 2);
+    return bandFacet(rings, b, i, split(b, i), inside);
+  };
+  return { geo, rings, facetAt, section: (k) => stations[k], halfSpan };
 }
 
 /**

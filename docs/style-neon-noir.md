@@ -89,7 +89,7 @@ suffix saying which. Metalness is 0 on every one; roughness is the material's ow
 
 | Token | Hex | Roughness | Material | Props |
 | --- | --- | --- | --- | --- |
-| `stone-dark` | `#15181B` | 1 | `stone_dark` | Both crags, coral growth, ruin block, dome shard, nodule bed's lumps, transit arch's masonry, rim crab's legs, the three swimmers' fins and eyes |
+| `stone-dark` | `#15181B` | 1 | `stone_dark` | Both crags, coral growth, ruin block, dome shard, nodule bed's lumps, transit arch's masonry, rim crab's legs, the three swimmers' fins and eyes, the rim ray's lobes, tail and eyes |
 | `stone-silt` | `#17150F` | 1 | `stone_silt` | Open boulder |
 | `silt-drift` | `#211E15` | 1 | `silt_drift` | Nodule bed's drift, transit arch's sediment |
 | `structure-rib` | `#160F0C` | 0.9 | `structure_rib` | Transit arch's exposed ribs and hung fittings |
@@ -100,7 +100,7 @@ suffix saying which. Metalness is 0 on every one; roughness is the material's ow
 | `coral-stone-living` | `#171D19` | 1 | `coral_stone` | Coral tower |
 | `kelp` | `#2A2916` | 0.96 | `kelp` | Kelp cluster, kelp stand (two-sided) |
 | `carapace` | `#2F1F1C` | 0.9 | `carapace` | Rim crab's shell, claws and eyestalks |
-| `fish-flank` | `#212A2B` | 0.8 | `fish_flank` | Shoal fry, outer fish and deep fish: the body, and the deep fish's photophore seats |
+| `fish-flank` | `#212A2B` | 0.8 | `fish_flank` | Shoal fry, outer fish, deep fish and rim ray: the body, and the deep fish's photophore seats |
 | `ember-base` | `#0B0806` | 1 | `ember` | Vent chimney, under `vent-ember` |
 | `biolight-base` | `#0B1D19` | 1 | `biolight` | Kelp cluster, kelp stand, coral growth, under `flora-biolight` |
 | `violet-seam-base` | `#06050A` | 0.9 | `violet_seam` | Resonance crystal, under `crystal-seam` |
@@ -132,9 +132,9 @@ Five rules ride with the table:
   cladding exposes on the transit arch, warm with two centuries of water. At 0.0054 it sits
   at 0.61 of `stone-dark`, so the ribs read darker than the masonry they carry. On the arch
   the ceiling rule puts the masonry at 0.68 of its sediment and the ribs at 0.41.
-- **A body is neither, and is its own colour.** `carapace` and `fish-flank` are the four
-  public microfauna's (#1711, [asset-prompts-3d.md](asset-prompts-3d.md) Block 4's
-  variant): the carapace a dark russet at sRGB hue 9°, redder than `coral-stone-ruin`; the
+- **A body is neither, and is its own colour.** `carapace` and `fish-flank` are the five
+  public decorative bodies' (#1711, #1777, [asset-prompts-3d.md](asset-prompts-3d.md)
+  Block 4's variant): the carapace a dark russet at sRGB hue 9°, redder than `coral-stone-ruin`; the
   flank a cold pewter at sRGB hue 186°, between the stones' blue and the living coral's green,
   so a fish reads as a body against rock and kelp alike. Under the ceiling rule the crab's
   `stone-dark` legs sit at 0.53 of its shell and a fish's fins at 0.41 of its flank.

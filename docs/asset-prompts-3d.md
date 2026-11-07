@@ -21,9 +21,9 @@ generated from this kit is:
 Nothing here weakens the Asymmetric Fidelity Law: full-detail unit and structure models
 describe *own-force* rendering only, and no prompt in this kit generates fauna — animals
 are contacts, drawn at earned fidelity, never world meshes
-([bestiary.md](bestiary.md) §3) — but for the four public decorative bodies Block 4's
-public-microfauna variant scopes under that section's own licence (#1711), environment
-geometry that is no animal of the roster.
+([bestiary.md](bestiary.md) §3) — but for the five public decorative bodies Block 4's
+public-microfauna variant scopes under that section's own licence (#1711, and #1777 for
+the one large body), environment geometry that is no animal of the roster.
 
 ## Workflow rules
 
@@ -1902,31 +1902,38 @@ surface — this stands on the seabed, deep underwater.
 ```
 
 ```text
-ENV STYLE, public-microfauna variant (for exactly four models of the
+ENV STYLE, public-microfauna variant (for exactly five models of the
 "Echoes of the Abyss" environment set, the decorative bodies
 docs/free-water-slice.md section 5 commissions: env-rim-crab,
-env-shoal-fry, env-outer-fish, env-deep-fish): everything in ENV STYLE
-holds — no faction, nothing manufactured, desaturated dark low-luminance
-materials, at most two, crisp low-poly facets, no lights and no emissive —
-with two lines changed. The natural form is a small living body rather
-than stone, coral, kelp or crystal: a crab standing on its own legs on
-the seabed, or a fish in one still swimming pose with nothing under it —
-no base, no rock, no stand, no water. "This stands on the seabed" holds
-for the crab alone; the three swimmers hang free in the column, built
-with their lowest vertex on the ground plane like every prop, and the
-runtime hangs each at an authored depth. Decoration, not an animal of the
-bestiary: no silhouette borrowed from a classified predator — nothing
-coiled to strike, no pack hunter's jaw, no colossus — no eye that glows,
-no lure, no lit skin, no photophore in the file; the deep fish marks six
-photophore seats as dark facets and the runtime lights them.
+env-shoal-fry, env-outer-fish, env-deep-fish, and the one large body,
+env-rim-ray): everything in ENV STYLE holds — no faction, nothing
+manufactured, desaturated dark low-luminance materials, at most two,
+crisp low-poly facets, no lights and no emissive — with two lines
+changed. The natural form is a living body rather than stone,
+coral, kelp or crystal: a crab standing on its own legs on the seabed,
+or a fish in one still swimming pose with nothing under it — no base, no
+rock, no stand, no water. "This stands on the seabed" holds for the crab
+alone; the four swimmers hang free in the column, built with their
+lowest vertex on the ground plane like every prop, and the runtime hangs
+each at an authored depth. Decoration, not an animal of the bestiary: no
+silhouette borrowed from a classified predator — nothing coiled to
+strike, no pack hunter's jaw, no colossus — no eye that glows, no lure,
+no lit skin, no photophore in the file; the deep fish marks six
+photophore seats as dark facets and the runtime lights them. The one
+large body, the rim ray, is held to every line above at 18 m of span: a
+grazer of the water and not a hunter — a broad blunt head, two short
+cephalic lobes, wings swept back to rounded tips, a short whip tail, no
+jaw, nothing swept to a point, no armour — and nothing of the colossus,
+under a third of the smallest Sounder.
 ```
 
 The variant is the scoped amendment [free-water-slice.md](free-water-slice.md) §5 asks of
 this block for #1711, under the licence [bestiary.md](bestiary.md) §3 writes: four public
 decorative bodies, environment geometry with no SIG, entity, yield, collision or response
-to anything, never a scenic copy of a hidden gameplay animal. It covers those four slugs
-and nothing else — no other floating prop, no gameplay fauna — and the rest of ENV STYLE
-binds them as it binds a crag. All four rows carry Light `none`, the deep fish included:
+to anything, never a scenic copy of a hidden gameplay animal, and a fifth, the rim ray
+(#1777), one large body for the opening frame, where none of the four reads (a 4 m fish
+draws 5 px at 900 m). It covers those five slugs and nothing else — no other floating prop, no gameplay fauna — and the rest of ENV STYLE
+binds them as it binds a crag. All five rows carry Light `none`, the deep fish included:
 its photophores are the runtime's, at most six soft rung-5 dots on the public-life channel
 ([style-neon-noir.md](style-neon-noir.md) "World light"), and its file marks where they sit
 with six named `photophore_NN` facets in the body's own material, 2 cm proud and
@@ -1935,14 +1942,14 @@ owner's call, 3 November 2026). The swimmers are built as every prop is, lowest 
 y = 0 (`seabed.mjs` `stand`), and the fixture hangs each at its listed depth; nothing in
 the file says where in the column it belongs (the owner's call, the same day). Their
 footprint is the body's length, the slice's canonical size; the crab's is its spread
-across the legs.
+across the legs, and the ray's its wingspan.
 
 The prop table — one row per asset, with the numbers intake and the registry check.
 `Footprint` is the canonical scale hull-intake sizes against (`--footprint-m`) and the
 runtime draws at, taken over the parts' own boxes rather than their vertices (#876);
 `Height` is the vertical silhouette the 55° camera actually reads, by intake's measure
 (`sizeM.height`) at the row's footprint — a single figure is the approved model's to the
-metre (to the centimetre for the four microfauna), a range the band a generated one lands in; `Tris` is the per-instance budget;
+metre (to the centimetre for the five decorative bodies), a range the band a generated one lands in; `Tris` is the per-instance budget;
 `Light` names the licensed world-light family, `none` meaning any emissive fails intake:
 
 | Biome | Slug | Footprint | Height | Tris | Light |
@@ -1966,6 +1973,7 @@ metre (to the centimetre for the four microfauna), a range the band a generated 
 | Crater garden, suspended | `env-shoal-fry` | 0.5 m | 0.15 m | ≤ 180 | none |
 | Crater bowl and garden, suspended | `env-outer-fish` | 4 m | 1.69 m | ≤ 600 | none |
 | Crater deep pocket, suspended | `env-deep-fish` | 2 m | 0.84 m | ≤ 400 | none |
+| Crater rim approach, suspended | `env-rim-ray` | 18 m | 4.05 m | ≤ 800 | none |
 
 Four heights moved to their approved models (#879): the trench slab from 10 m, the
 resonance pylon from 25 m, the dome shard from 20 m to 14 m and the coral growth from
@@ -2010,10 +2018,12 @@ authored list places it; intake takes `--max-tris 9000` for this row, over its d
 
 `env-rim-crab`, `env-shoal-fry`, `env-outer-fish` and `env-deep-fish` are the four public
 decorative bodies [free-water-slice.md](free-water-slice.md) §5 commissions for the crater
-fixture (#1711), under the variant above and nothing else; the Footprint column is the
-slice's canonical size for each, the crab's its spread across the legs and a fish's its
-length, every row's Light is `none`, and their Height is the file's to the centimetre.
-All four are one grammar in `seabed.mjs` ("The microfauna"): a body is a `shaft`, a closed
+fixture (#1711), and `env-rim-ray` the fifth, the one large body #1777 adds for the
+opening frame, under the variant above and nothing else; the Footprint column is the
+slice's canonical size for each, the crab's its spread across the legs, a fish's its
+length and the ray's its wingspan, every row's Light is `none`, and their Height is the
+file's to the centimetre.
+All five are one grammar in `seabed.mjs` ("The microfauna"): a body is a `shaft`, a closed
 run of corner rings each corner of which is pushed and slipped a little by a seeded stream,
 so the skin is crisp facets and not a lathe, and whose band quads are cut on mirrored
 diagonals; everything flat on it is a `blade`, a thin closed slab on a convex outline,
@@ -2023,8 +2033,10 @@ body that bends and tapers under it, and each script samples every median root a
 whole length and refuses one with a point outside the closed body; a fish's eye is a
 `lens`, a dark six-sided pyramid seated on one band quad of the skin, that no light
 touches. A fish's corners mirror port to starboard, so its two eyes do, which each
-script asserts. The three fish differ in proportion and fin plan and in nothing else, and
-every one of the four is authored as a seeded formula in its script with no export behind
+script asserts. The three fish differ in proportion and fin plan and in nothing else; the
+ray is the same shaft laid across its span, its rings chord sections rather than girths
+(`wingBody`), mirrored port to starboard triangle for triangle; and
+every one of the five is authored as a seeded formula in its script with no export behind
 it, as the nodule bed and the kelp stand are. Two tokens were added for the kit,
 `carapace` and `fish-flank` ([style-neon-noir.md](style-neon-noir.md) "The props"); the
 second material on each is `stone_dark`.
@@ -2090,6 +2102,33 @@ facet by the file's triangles, and the skin points mirrored. `fish_flank` on the
 body and seats, `stone_dark` on the fins and eyes; 304 triangles; 0.84 m tall at its 2 m,
 the pelvic fins' tips on y = 0. Authored in `tools/hull-models/props/deep-fish.mjs`.
 
+`env-rim-ray` is the one large body, a broad ray gliding over the crater's outside rim
+for §9's opening frame, where the eye stands above the Lid and a canonical body draws
+5 px: at 18 m of span it draws 26–30 px from 810–930 m. A manta's plan and deliberately
+not a hunter's: one `shaft` laid across the span, nineteen twelve-cornered rings from the
+port wingtip through the centreline to the starboard one, each a lens section — the
+leading edge, five corners over the top, the trailing edge, five under, the top taking
+0.6 of the thickness so a shallow hump rises over a flatter belly — the chord 8.7 m at
+the centreline and 1.1 m at the last ring, fanned to the tip points at ±9 m; a broad
+blunt head, its leading edge nearly straight across to ±2.2 m and swept back from there
+to rounded tips, the trailing edge concave; the body 1.51 m thick at the centreline,
+0.16 m at the last ring. The still pose is the wings mid-stroke, tips raised: the chord
+line climbs from 0 at the centreline to 3.15 m at the last ring and 3.45 m at the tips,
+which with the hump is all the vertical silhouette the opening reads: its eye, pitched
+15°, looks down a 21° sightline at the ray, so the plan is foreshortened to 0.36 of its
+depth. Two short cephalic lobes forward of the head at
+z ∓1.38, paddles of four six-cornered rings each, 2.0 m long and wider than deep,
+flat-capped; a short whip of a tail from inside the trailing edge, four four-cornered
+rings fanned to a point, 3.7 m of it showing, drooping 0.34 m; two lenses for eyes on the
+head's shoulder where it drops to the wing, 0.20 m in radius. No jaw, no fin swept to a
+point (the wings round off through a short fan to their tip points, the lobes are
+flat-capped, and the whip alone ends on one), no coil, no armour, no lure, no eye that
+glows, and under a third of the smallest Sounder. Port rings mirror starboard ones triangle for triangle, so the eyes
+mirror exactly, which the script asserts. `fish_flank` on the body, `stone_dark` on the
+lobes, tail and eyes; 586 triangles; 4.05 m tall (4.0482) at its 18 m, 13.60 m long from
+the lobes' ends to the tail's, the belly at the centreline on y = 0 and the body's
+mid-plane 0.756 m over it. Authored in `tools/hull-models/props/rim-ray.mjs`.
+
 Shape cues, so the prompts land in each biome's materials brief
 ([environments.md](environments.md)): vent props are basalt and magma glass, cracked
 and heat-scorched; kelp props are the forty-metre columns of
@@ -2128,14 +2167,14 @@ roster. Props ship as meshes, not baked maps, so the sprite-density contract
 (4 / 1.5 px/m) does not apply to them — the triangle column above is their density
 contract.
 
-Every row of this table but the nodule bed's, the kelp stand's and the four microfauna's was filled by a Claude Design model from
+Every row of this table but the nodule bed's, the kelp stand's and the five microfauna's was filled by a Claude Design model from
 the Block 4 batch; the deterministic generator that stood in for the batch was retired
 when the last row landed ([graphics-standards.md](graphics-standards.md), "The
 environment branch"). Each file is now written by a script under
 `tools/hull-models/props/` (#869) that ports that model part for part — or, for the
-dome shard, replaces it (#883), and for the nodule bed, the kelp stand and the four
-microfauna authors it from a seeded formula with no export behind it (#1555, #1712,
-and #1711) — composed from `tools/hull-models/seabed.mjs`, and
+dome shard, replaces it (#883), and for the nodule bed, the kelp stand and the five
+microfauna authors it from a seeded formula with no export behind it (#1555, #1712, #1711
+and #1777) — composed from `tools/hull-models/seabed.mjs`, and
 held at the row's footprint. A model generated from the prompts above replaces its row through that
 script: port the export into it, run it, run intake with the row's footprint, cap and
 light, commit the GLB with the script, and update the registry row's triangle count from
