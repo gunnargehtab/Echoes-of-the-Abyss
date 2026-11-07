@@ -19,6 +19,57 @@ centre. Before, four strips of fourteen with lanes between them and a straight f
 clusters; after, 42 stands north of the clearing and 14 south of it at varied headings,
 with the clusters scattered along the fringe.
 
+## The frames
+
+Run the dev servers, then the frames module against the study and the Kelp Labyrinth
+control:
+
+```bash
+node .claude/skills/run-game/scripts/drive.mjs --headed --channel msedge \
+  --url 'http://localhost:5173/?study=free-water' \
+  --out docs/screenshots/issue-1773/after --steps docs/screenshots/issue-1773/frames.mjs
+CONTROL=1 node .claude/skills/run-game/scripts/drive.mjs --headed --channel msedge \
+  --url 'http://localhost:5173/?map=kelp-labyrinth' \
+  --out docs/screenshots/issue-1773/control-after --steps docs/screenshots/issue-1773/frames.mjs
+```
+
+The before sets are the same two commands with `origin/main`'s
+`packages/frontend/src/game/freeWaterDecoration.ts`, at `273e3517`, swapped in between
+drives and restored after, into `before/` and `control-before/`. All four sets were taken
+headed on a GeForce GTX 1070 (ANGLE, Direct3D 11) at 1,440 × 900 and DPR 1, as each
+`readings.json` records.
+
+| Row | Before | After | Reads as |
+| --- | --- | --- | --- |
+| Opening, as the study opens | [before](before/01-opening.png) | [after](after/01-opening.png) | The hulls in the lower third and the garden's canopy at the top right, too far off for its layout to read |
+| Garden close, 1,875 / 1,125, 250 m, 12°, 275 m, `yawDeg` 90 | [before](before/02-garden-close.png) | [after](after/02-garden-close.png) | Before, each flank a continuous wall along the clearing, one stand repeated at one heading; after, stands in clumps and gaps at varied headings, the clearing still the one cut |
+| North flank, 2,000 / 900, 500 m, 25°, 300 m, `yawDeg` 0 | [before](before/03-north-flank.png) | [after](after/03-north-flank.png) | Before, three rows one behind another, every stand leaning the same way; after, no row to follow into the flank's depth |
+| Garden from above, 2,000 / 1,000, 2,400 m, 88°, seabed | [before](before/04-garden-above.png) | [after](after/04-garden-above.png) | Before, four strips of fourteen; after, the plan above, drawn |
+| Survey, 2,000 / 2,000, 10,000 m, 88°, seabed | [before](before/05-survey.png) | [after](after/05-survey.png) | The garden at the top of the bowl: before, four lines of stipple; after, an even texture with no line in it |
+| Kelp Labyrinth control: its opening, then its own force from 3,000 m at 60° | [02](control-before/02-opening.png), [03](control-before/03-overview.png) | [02](control-after/02-opening.png), [03](control-after/03-overview.png) | Unchanged: a shipped map places its kelp by the registry's scatter, which #1773 leaves alone (01 is its lobby) |
+
+The garden-close and north-flank frames are dark by design (§9, Light). The
+[garden-close](crops/garden-close.png) and [north-flank](crops/north-flank.png) crops
+(links) put before above after, each brightened three times, so the stands' layout reads.
+
+## What the probe read
+
+| Frame | Props | Calls | Triangles |
+| --- | --- | --- | --- |
+| Opening | 291 | 44 | 568,596 |
+| Garden close | 291 | 31 | 565,913 |
+| North flank | 291 | 23 | 560,617 |
+| Garden from above | 291 | 25 | 562,517 |
+| Survey | 291 | 45 | 568,986 |
+| Control opening | 363 | 74 | 160,006 |
+| Control overview | 363 | 74 | 160,006 |
+
+Before and after read the same in every frame: the list moves and turns instances and
+adds none, so the props, calls and whole-frame triangles hold, under the study's
+720,000-triangle frame cap (§7). The props' own 600,000 reservation holds with them, at
+most 568,928 at the per-model ceilings (§7), and the decoration test sums the registry's
+budgets under it. The control reads the same too.
+
 ## Reproduce the list
 
 ```bash
