@@ -276,10 +276,10 @@ The fixture uses closed circular plan paths: crab radius 20 m over 240 s, fry
 radius 20 m over 90 s, outer fish radius 35 m over 180 s, deep fish radius
 20 m over 240 s and the ray radius 60 m over 300 s, a walking pace. Within a crab or deep-fish patch, radii range from 40% to 100% of
 that radius, with evenly spaced phases; a fixed seed of 1713 offsets each patch.
-The ray alone takes an authored phase and a bank (#1780): it circles clockwise seen
-from above, stands at `(765, 2,158)` when the match starts, and banks 30 degrees into
-its turn, its starboard wing low, rolled about its body axis so the axis keeps its path
-and depth (Life in the frames, below).
+Every path runs clockwise seen from above. The ray alone takes an authored phase and a
+bank (#1780): it stands at `(765, 2,158)` when the match starts, and banks 30 degrees
+into its turn, its starboard wing low, rolled about its body axis so the axis keeps its
+path and depth (Life in the frames, below).
 A school keeps station instead (#1771): its fish share the school's loop, each held
 at a fixed seeded offset from the school's own point, at most 1.5 m along the loop,
 1 m across it and 4 m of depth for fry, and 12 m, 6 m and 10 m for outer fish. A fry
@@ -289,9 +289,9 @@ group.
 Swimming depth follows the same phase: fry 275 ± 20 m over the north flank and
 132 or 145 ± 20 m over the clearing, outer fish 850 ± 130 m over the bowl and
 250 ± 35 m over the clearing, deep fish 2,000 ± 80 m, the ray 250 ± 15 m beside
-the hulls' 300 m, a narrower swing than a level body needs because its bank lifts the
-high wingtip 7.35 m over its axis, 33 m of depth at the display scale, so its whole body
-spans 202 to 275 m. Crabs follow the public rendered floor. These smaller envelopes leave room for the full body inside the
+the hulls' 300 m, half the level body's swing, because its bank lifts the high wingtip
+7.35 m over its axis, 33 m of depth at the display scale; its whole body then spans 202
+to 275 m. Crabs follow the public rendered floor. These smaller envelopes leave room for the full body inside the
 licensed bounds.
 
 **Life in the frames.** The owner's re-acceptance of 6 November 2026 found no crabs or
@@ -324,10 +324,10 @@ than moved from it, by the owner's calls of that day:
   ([issue-1777](screenshots/issue-1777/README.md), "What the frame shows"). So it
   banks into its turn and starts its loop on the far side from the eye (#1780, the
   owner's call of 7 November 2026): through the match's first minute the eye sees
-  0.63 to 0.75 of its plan, a pale body against the dark water beyond the shelf's
-  edge, where the level ray drew a smaller one against the paler shelf; on the near
-  side it draws as a dark silhouette on the shelf, and one arc still turns it edge-on
-  ([issue-1780](screenshots/issue-1780/README.md)). The pocket
+  0.63 to 0.75 of its plan, a pale body against the dark water past the rim's edge,
+  where the level ray drew a smaller one against the paler rim floor; on the near
+  side it draws as a dark silhouette on the rim floor, and one arc still turns it
+  edge-on ([issue-1780](screenshots/issue-1780/README.md)). The pocket
   shows only at the frame's right edge, where two of the low pose's deep-fish patches
   read as photophore pinpricks 2.2 to 2.5 km out. A nearer opening is §9's call, not
   taken.
