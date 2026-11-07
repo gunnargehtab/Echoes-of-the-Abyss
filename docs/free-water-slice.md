@@ -690,16 +690,25 @@ frames).
 
 This is the author's design for the owner's amendment to decision 6, pending review. A
 three-dimensional order is two two-dimensional readings. The north-up scope already picks
-a plan position; a section scope picks a depth. In the world, stalks tie every hull to one
-plane, so depth reads at any camera angle without flight.
+a plan position; a section scope picks a depth. In the world, a foot ring marks where
+every hull stands against one plane, and no line is drawn under or over a hull.
 
 - **Command plane.** The lead selected hull's depth, which MOVE 3D already arms with
   (§6). With nothing selected it is a raised focus's depth; with the focus on the seabed
-  there is no plane and no stalks, as [free-camera.md](free-camera.md) §4 says of a seabed
-  focus.
-- **Stalks.** Each own hull and each Tier 3+ contact draws a hairline from its depth to
-  the plane, with a foot ring on it: solid above the plane, dashed below. Hue stays the
-  faction's. A Tier 2 contact carries no depth, so it has no stalk, and none is inferred.
+  there is no plane and no foot rings, as [free-camera.md](free-camera.md) §4 says of a
+  seabed focus.
+- **Foot rings.** Each own hull and each Tier 3+ contact marks the plane with a ring at
+  its plan position, in the faction's hue. A hull on the plane wears its ring; one off it
+  stands over or under it, and the section scope, which draws the plane and the hulls
+  against the column, shows which at any camera angle. A Tier 2 contact carries no depth,
+  so it has no ring, and none is inferred.
+- **No altitude lines.** No line joins a hull to its ring, and nothing in the study
+  hangs on a plumb: hulls, structures, shots and live tracks keep their ground shadows
+  alone. The owner asked on 6 November 2026 for the grey lines under the hulls to go
+  (#1772). An order's ring and the MOVE 3D preview keep their lines to the ground
+  ([ui-ux.md](ui-ux.md) §9), since they mark where a hull is sent rather than a hull.
+  Shipped maps keep the plumb ([art-direction.md](art-direction.md), "Depth is drawn,
+  not implied").
 - **Section scope.** Beside the north-up scope, a vertical slice along the camera's
   horizontal heading through the command focus, as wide as the scope's range. It draws
   the public floor and roof profile, band hairlines at 400 m and 1,800 m, the thermocline
@@ -736,7 +745,9 @@ which at 1,440 px costs the fleet block; and every own hull and contact is place
 section by its distance along the heading, while the ground drawn is the slice through
 the focus alone. The band is `STUDY_PITCH_MIN_DEG` in `PerspectiveView.ts`
 ([free-camera.md](free-camera.md) §4, "Looking up in the study"), and the instruments'
-frames are in `docs/screenshots/issue-1753/`.
+frames are in `docs/screenshots/issue-1753/`. #1753 drew each foot ring at the end of a
+stalk, a hairline from the hull, solid above the plane and dashed below; #1772 took the
+stalks and the plumbs off, and its frames are in `docs/screenshots/issue-1772/`.
 
 ### Toward a vertical multiplayer match (#1754)
 
