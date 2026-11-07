@@ -2,16 +2,16 @@
  * The free-water study's vertical command instruments (#1753):
  * docs/free-water-slice.md §9, "Vertical command". A three-dimensional order
  * is two two-dimensional readings. The north-up scope picks a plan position;
- * the section scope picks a depth; in the world, stalks tie every hull to one
- * command plane, so depth reads at any camera angle without flight; and an
+ * the section scope picks a depth; in the world, a foot ring marks each
+ * hull's place on one command plane, with no line to the hull (#1772); and an
  * earned contact off the frame marks the screen edge with where it stands
  * against that plane.
  *
  * Everything here is arithmetic on what the client already holds: own state,
  * the public terrain, and contacts the server resolved for this player. A
  * Tier 2 contact carries no depth (`Contact`, packages/shared/src/types.ts)
- * and gets none inferred: it has no stalk, a tick down the whole public water
- * column on the section, and a bearing alone at the edge.
+ * and gets none inferred: it has no foot ring, a tick down the whole public
+ * water column on the section, and a bearing alone at the edge.
  */
 import { DEPTH, ResolutionTier } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
@@ -20,7 +20,7 @@ import type { TerrainPayload } from '../net/GameClient.ts';
  * The command plane, metres: the lead selected hull's depth, which MOVE 3D
  * arms with too (§6); with nothing selected, a raised focus's depth; with the
  * focus on the seabed, no plane at all (docs/free-camera.md §4: a seabed focus
- * makes no plane), so no stalks and no ABOVE or BELOW.
+ * makes no plane), so no foot rings and no ABOVE or BELOW.
  */
 export function commandPlaneM(
   leadDepthM: number | undefined,
@@ -28,17 +28,6 @@ export function commandPlaneM(
 ): number | null {
   if (leadDepthM !== undefined) return leadDepthM;
   return raisedFocusDepthM;
-}
-
-/**
- * Which side of the plane a depth stands on, for its stalk's line style.
- * Within the arrival epsilon it stands *on* the plane: a foot ring and no
- * line, as a hull that has reached its ordered depth is at it.
- */
-export function stalkSide(depthM: number, planeM: number): 'above' | 'below' | null {
-  const delta = depthM - planeM;
-  if (Math.abs(delta) <= DEPTH.ARRIVAL_EPSILON_M) return null;
-  return delta < 0 ? 'above' : 'below';
 }
 
 /** A screen rectangle, HUD px. */

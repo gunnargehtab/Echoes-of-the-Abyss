@@ -3,11 +3,13 @@
  * docs/free-water-slice.md §9, "Vertical command", and docs/free-camera.md
  * §4, "Looking up in the study". The pure half holds the arithmetic to the
  * section's promises; the booted half boots the real chart and conn on the
- * study and reads what they draw.
+ * study and reads what they draw, the study's want of altitude lines (#1772)
+ * among it.
  */
 import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
 import type { Graphics, GraphicsPath } from 'pixi.js';
+import { InstancedMesh, LineSegments, Matrix4, type Object3D } from 'three';
 import { DEPTH, Faction, ResolutionTier } from '@echoes/shared';
 import {
   createHost,
@@ -19,6 +21,7 @@ import {
 import { cannedMap, cannedSnapshot, cannedTerrain } from './support/cannedMatch.ts';
 import { EchoRenderer, type RendererCallbacks } from '../src/game/EchoRenderer.ts';
 import { BLOCK_GAP, BLOCK_W, consoleBlocks } from '../src/game/consoleLayout.ts';
+import type { DepthCues } from '../src/game/depthCues.ts';
 import type { MovePreviewReading } from '../src/game/movePreview.ts';
 import { FACTION_PALETTE } from '../src/game/palette.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
@@ -33,23 +36,15 @@ import {
   sectionProfile,
   sectionX,
   sectionY,
-  stalkSide,
   waterIntervalAt,
   type SectionFrame,
 } from '../src/game/verticalCommand.ts';
 
-describe('the command plane and its stalks', () => {
+describe('the command plane', () => {
   it('is the lead hull, then a raised focus, and nothing on the seabed', () => {
     assert.equal(commandPlaneM(300, 900), 300);
     assert.equal(commandPlaneM(undefined, 900), 900);
     assert.equal(commandPlaneM(undefined, null), null);
-  });
-
-  it('reads a depth as above, below or on the plane within the arrival epsilon', () => {
-    assert.equal(stalkSide(250, 300), 'above');
-    assert.equal(stalkSide(350, 300), 'below');
-    assert.equal(stalkSide(300 + DEPTH.ARRIVAL_EPSILON_M, 300), null);
-    assert.equal(stalkSide(300 - DEPTH.ARRIVAL_EPSILON_M, 300), null);
   });
 });
 
@@ -180,12 +175,19 @@ afterEach(() => {
   for (const view of views.splice(0)) view.destroy();
 });
 
-/** Boot the chart and the conn, on the study or on a shipped look. */
-async function boot(options: { study: boolean; look?: WorldLook }) {
+/**
+ * Boot the chart and the conn, on the study or on a shipped look. `relook`
+ * moves the conn to another look before its session, as a persistent view
+ * moves between missions (`setLook`).
+ */
+async function boot(options: { study: boolean; look?: WorldLook; relook?: WorldLook }) {
   const gl = new HeadlessWebGLRenderer();
   const app = new HeadlessApplication();
   const conn = new PerspectiveView(options.look ?? (options.study ? 'free-water' : 'standard'));
   views.push(conn);
+  if (options.relook !== undefined) {
+    assert.ok(conn.setLook(options.relook), 'the premise: relooked');
+  }
   conn.mount(
     createHost(1280, 720) as unknown as HTMLElement,
     () => gl.asRenderer(),
@@ -228,32 +230,63 @@ async function boot(options: { study: boolean; look?: WorldLook }) {
   const reading = () =>
     calls.filter((call) => call.name === 'onDestination').at(-1)?.args[0] as
       MovePreviewReading | null | undefined;
-  return { chart, conn, app, frame, privates, reading, teardown: () => chart.destroy() };
+  return { chart, conn, gl, app, frame, privates, reading, teardown: () => chart.destroy() };
 }
 
 /**
- * The stalks on a layer, read off its stroke instructions. A stalk is one
- * stroke holding its foot ring, a circle of `STALK_FOOT_PX`, and its line: no
- * `lineTo` on the plane, one for a solid line above it, several for a dashed
- * line below it. Segments rather than `moveTo`s, since a run another painter
- * left open on the layer leaves a stray `moveTo` in the next stroke. Own
- * stalks are told by their ink; a contact's ink varies, so `color` is
- * optional and the ring is what names a stalk.
+ * The foot rings on a layer, read off its stroke instructions: each is a
+ * stroke holding a circle of `FOOT_RING_PX`. `lines` counts the segments
+ * those strokes also hold, which is where #1753's stalk drew its line to the
+ * hull, one segment solid and several dashed; #1772 draws none. Segments
+ * rather than `moveTo`s, since a run another painter left open on the layer
+ * leaves a stray `moveTo` in the next stroke. Own rings are told by their
+ * ink; a contact's ink varies, so `color` is optional and the radius is what
+ * names a ring.
  */
-function stalks(g: Graphics, color?: number): { feet: number; solid: number; dashed: number } {
-  const out = { feet: 0, solid: 0, dashed: 0 };
+function footRings(g: Graphics, color?: number): { rings: number; lines: number } {
+  const out = { rings: 0, lines: 0 };
   for (const instruction of g.context.instructions) {
     if (instruction.action !== 'stroke') continue;
     const data = instruction.data as { style?: { color?: number }; path?: GraphicsPath };
     if (color !== undefined && data.style?.color !== color) continue;
     const steps = (data.path?.instructions ?? []) as Array<{ action: string; data: unknown[] }>;
-    if (!steps.some((step) => step.action === 'circle' && step.data[2] === STALK_FOOT_PX)) {
+    if (!steps.some((step) => step.action === 'circle' && step.data[2] === FOOT_RING_PX)) {
       continue;
     }
-    out.feet++;
-    const segments = steps.filter((step) => step.action === 'lineTo').length;
-    if (segments === 1) out.solid++;
-    else if (segments > 1) out.dashed++;
+    out.rings++;
+    out.lines += steps.filter((step) => step.action === 'lineTo').length;
+  }
+  return out;
+}
+
+/**
+ * The depth cues the conn's last frame drew (depthCues.ts), read off the
+ * renderer's own walk of the visible scene, the walk that counts its calls:
+ * the plumbs it reached that have any length, and the shadows any radius.
+ */
+function drawnCues(world: { conn: PerspectiveView; gl: HeadlessWebGLRenderer }): {
+  plumbs: number;
+  shadows: number;
+} {
+  const cues = (world.conn as unknown as { cues: DepthCues }).cues;
+  const drawn = new Set<Object3D>();
+  world.gl.lastScene!.traverseVisible((object) => drawn.add(object));
+  const out = { plumbs: 0, shadows: 0 };
+  const matrix = new Matrix4();
+  for (const object of cues.group.children) {
+    if (!drawn.has(object)) continue;
+    if (object instanceof LineSegments) {
+      const position = object.geometry.getAttribute('position');
+      const end = object.geometry.drawRange.count;
+      for (let i = 0; i + 1 < end; i += 2) {
+        if (position.getY(i) !== position.getY(i + 1)) out.plumbs++;
+      }
+    } else if (object instanceof InstancedMesh) {
+      for (let i = 0; i < object.count; i++) {
+        object.getMatrixAt(i, matrix);
+        if (matrix.elements[0] !== 0) out.shadows++;
+      }
+    }
   }
   return out;
 }
@@ -274,58 +307,93 @@ function strokeStarts(g: Graphics): Array<{ x: number; y: number }> {
   return out;
 }
 
-/** `STALK_FOOT_PX` in EchoRenderer.ts: the foot ring's radius names a stalk. */
-const STALK_FOOT_PX = 3;
+/** `FOOT_RING_PX` in EchoRenderer.ts: the radius names a foot ring. */
+const FOOT_RING_PX = 3;
 
 describe('the instruments on the study', () => {
-  it('draws a stalk per own hull and Tier 3+ contact to the plane, solid above and dashed below', async () => {
+  it('marks the plane under or over each own hull and Tier 3+ contact with a foot ring and no line', async () => {
     const world = await boot({ study: true });
     try {
       const accent = FACTION_PALETTE[Faction.Bathyarch].accent;
       // Home: the focus on the seabed, nothing selected, so no plane and no
-      // stalk anywhere, own or contact.
+      // ring anywhere, own or contact.
       world.conn.setFrame({ xM: 1000, yM: 1000, distanceM: 2600, yawDeg: 0, pitchDeg: 55 });
       world.frame();
-      assert.deepEqual(stalks(world.privates.ringLayer, accent), { feet: 0, solid: 0, dashed: 0 });
-      assert.deepEqual(stalks(world.privates.contactLayer), { feet: 0, solid: 0, dashed: 0 });
+      assert.deepEqual(footRings(world.privates.ringLayer, accent), { rings: 0, lines: 0 });
+      assert.deepEqual(footRings(world.privates.contactLayer), { rings: 0, lines: 0 });
       // A raised focus is the plane with nothing selected. Own hulls stand at
       // 1,200, 900, 1,400 and 3,100 m: at a 1,200 m plane the Corvette is on
-      // it (a foot ring alone), the Scout above it (solid), the other two
-      // below it (dashed).
+      // it, the Scout above it and the other two below it, and each wears a
+      // ring there with no line to it, on the plane or off it.
       world.conn.aimFrame({ xM: 1000, yM: 1000, distanceM: 2600, yawDeg: 0, pitchDeg: 55 }, 1200);
       world.frame();
-      assert.deepEqual(stalks(world.privates.ringLayer, accent), { feet: 4, solid: 1, dashed: 2 });
-      // Five contacts earned a depth at Tier 3 or 4 (103 to 107): one stalk
-      // each. The Tier 2 contact's payload carries a depth the type says is
-      // never sent, and it still gets none; the Tier 1 contact has nothing.
-      // Their depths are 2,000 / 2,400 / 1,100 / 2,600 / 1,100 m: the turret
-      // and the torpedo at 1,100 m stand above the 1,200 m plane (solid), and
-      // the other three hang below it (dashed).
-      assert.deepEqual(stalks(world.privates.contactLayer), { feet: 5, solid: 2, dashed: 3 });
+      assert.deepEqual(footRings(world.privates.ringLayer, accent), { rings: 4, lines: 0 });
+      // Five contacts earned a depth at Tier 3 or 4 (103 to 107): one ring
+      // each, at 2,000 / 2,400 / 1,100 / 2,600 / 1,100 m, above and below the
+      // plane alike. The Tier 2 contact's payload carries a depth the type
+      // says is never sent, and it still gets none; the Tier 1 contact has
+      // nothing.
+      assert.deepEqual(footRings(world.privates.contactLayer), { rings: 5, lines: 0 });
       // The lead selected hull's depth takes over: the Scout at 900 m, which
       // then stands on the plane while the three others hang below it.
       world.privates.selected.add(12);
       world.privates.selectionSeq++;
       world.frame();
-      assert.deepEqual(stalks(world.privates.ringLayer, accent), { feet: 4, solid: 0, dashed: 3 });
-      assert.deepEqual(stalks(world.privates.contactLayer), { feet: 5, solid: 0, dashed: 5 });
+      assert.deepEqual(footRings(world.privates.ringLayer, accent), { rings: 4, lines: 0 });
+      assert.deepEqual(footRings(world.privates.contactLayer), { rings: 5, lines: 0 });
     } finally {
       world.teardown();
     }
   });
 
-  it('draws no stalk on a shipped map', async () => {
+  it('draws no foot ring on a shipped map', async () => {
     const world = await boot({ study: false });
     try {
       world.conn.aimFrame({ xM: 1000, yM: 1000, distanceM: 2600, yawDeg: 0, pitchDeg: 55 }, 1200);
       world.frame();
       const accent = FACTION_PALETTE[Faction.Bathyarch].accent;
-      assert.deepEqual(stalks(world.privates.ringLayer, accent), { feet: 0, solid: 0, dashed: 0 });
-      assert.deepEqual(stalks(world.privates.contactLayer), { feet: 0, solid: 0, dashed: 0 });
+      assert.deepEqual(footRings(world.privates.ringLayer, accent), { rings: 0, lines: 0 });
+      assert.deepEqual(footRings(world.privates.contactLayer), { rings: 0, lines: 0 });
       assert.equal(world.privates.sectionRect(), null);
       assert.ok(!textContents(world.app.stage).includes('SECTION'));
     } finally {
       world.teardown();
+    }
+  });
+
+  it('hangs nothing on a plumb in the study, over the shadows a shipped map also draws', async () => {
+    const study = await boot({ study: true });
+    const shipped = await boot({ study: false });
+    // A persistent view moved between missions before its session takes the
+    // new look's rule, both ways.
+    const toStudy = await boot({ study: true, look: 'standard', relook: 'free-water' });
+    const toShipped = await boot({ study: false, look: 'free-water', relook: 'standard' });
+    const worlds = [study, shipped, toStudy, toShipped];
+    try {
+      for (const world of worlds) {
+        world.conn.aimFrame({ xM: 1000, yM: 1000, distanceM: 2600, yawDeg: 0, pitchDeg: 55 }, 1200);
+        world.frame();
+      }
+      // Every own hull, structure and shot holds a slot, and so does a live
+      // Tier 4 track drawn as its model. On a shipped look each hangs on its
+      // plumb; on the study's none does.
+      const slots = (world: { conn: PerspectiveView }): number =>
+        (world.conn as unknown as { cues: DepthCues }).cues.count;
+      for (const world of worlds) assert.ok(slots(world) > 0, 'the premise: entities hold slots');
+      for (const world of [shipped, toShipped]) {
+        assert.equal(drawnCues(world).plumbs, slots(world));
+      }
+      for (const world of [study, toStudy]) assert.equal(drawnCues(world).plumbs, 0);
+      // The shadows stay, the same ones on either look. Headless, a hull's
+      // shadow takes its size from a model or a sprite and has none, so the
+      // shots' shadows are the ones with a radius.
+      const shadows = drawnCues(shipped).shadows;
+      assert.ok(shadows > 0, 'the premise: a shadow with a radius');
+      for (const world of [study, toStudy, toShipped]) {
+        assert.equal(drawnCues(world).shadows, shadows);
+      }
+    } finally {
+      for (const world of worlds) world.teardown();
     }
   });
 
