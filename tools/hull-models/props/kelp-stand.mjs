@@ -174,9 +174,10 @@
  * The sway (environmentModels.ts) is a vertex weight computed at load from
  * each vertex's height over the prop's, so it needs nothing from the file;
  * #1713 sets the stand's `swayM` in the registry row it adds, and a sway
- * pushes the fence: a top vertex at the disc's edge swings `swayM`
- * further, which docs/free-water-slice.md §5 counts at the clearing's
- * edges (#1773). The runtime
+ * pushes the fence: a top vertex at the disc's edge swings up to 1.35
+ * times `swayM` further along the stand's length and 0.4 times across it
+ * (environmentModels.ts), which docs/free-water-slice.md §5 counts at the
+ * clearing's edges (#1773). The runtime
  * owns value (`ENV_LUMINANCE_CEILING`), so the two materials are the
  * cluster's tokens and nothing is tuned here.
  *

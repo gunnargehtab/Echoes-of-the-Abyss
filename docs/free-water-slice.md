@@ -220,7 +220,7 @@ every other row.
 
 | Kit | Authored placement list, map metres | Opening count |
 | --- | --- | --- |
-| New kelp stands | 56 authored slots, each a position and a heading (`KELP_STANDS` in `freeWaterDecoration.ts`): 42 north of the clearing, every outline inside `x=1,125..2,875` and `y=625..996`, and 14 south of it, inside the same `x` and `y=1,254..1,375` | 56 |
+| New kelp stands | 56 authored slots, each a position and a heading (`KELP_STANDS` in `freeWaterDecoration.ts`): 46 north of the clearing, every outline inside `x=1,125..2,875` and `y=625..1,000`, and 10 south of it, inside the same `x` and `y=1,250..1,375`, each back from the clearing by its sway's reach (below) | 56 |
 | Retained kelp clusters | 16 authored slots along the garden's north fringe, each a position and a heading (`KELP_CLUSTERS`), centred inside `x=1,011..2,989` and `y=511..614`, so a turned cluster's 9.9 m reach stays on the garden's cells and north of every stand | 16 |
 | Rim crabs | Four floor patches among the south flank's stands, centred on `(1,625,1,375)`, `(1,875,1,375)`, `(2,125,1,375)`, `(2,375,1,375)`, and four on the clearing's floor, centred on `(1,900,1,060)`, `(1,880,1,165)`, `(1,800,1,110)`, `(1,760,1,200)`; each patch has a 25 m radius and four crabs | 32 |
 | Fry shoals | Centres `(1,375,875)`, `(1,875,875)`, `(2,375,875)`, `(2,875,875)`, each school within 25 m horizontally and 250..300 m depth; and two over the clearing, `(2,035,1,120)` within 105..160 m depth and `(2,010,1,160)` within 120..170 m | 6 schools / 144 fish |
@@ -238,9 +238,12 @@ only on the garden's 400 m tread, whole: the rendered floor interpolates between
 centres, so every cell centre around a stand's envelope must be a garden centre, which
 keeps every stand's outline inside `x=1,125..2,875` and `y=625..1,375`, off the ramps to
 the rim, the bowl and the pocket. Across any stand's envelope the eroded floor stays
-within 40 m of its root, a stand's height. With the clearing's row bare and every outline
-at least 4 m back from its edges, so a 4 m sway never crosses them, the north flank's
-tread is 371 m deep and the south flank's 121 m, which hold 42 stands and 14 (§9, Kelp).
+within 40 m of its root, a stand's height. The clearing's row is bare, and every outline
+stands back from its edges by as far as a sway can carry it there: the shader moves a tip
+up to 1.35 times the registry's 4 m `swayM` along the plant and 0.4 times across it, so a
+plant turned θ from the current reaches 4 × (1.35 |sin θ| + 0.4 |cos θ|) m north or
+south, 1.6 m unturned and 4.95 m at 45 degrees. The list stands 46 on the north flank's
+tread and 10 on the south flank's, which is one stand deep (§9, Kelp).
 Retained clusters stay at their approved 18 m footprint, a fringe along the garden's north
 edge behind the stands, on the gentle ramp up to the rim. The clearing row receives
 neither plant list. Animals'
@@ -249,18 +252,18 @@ checked against public ground, and cannot migrate to another patch. No deep-pock
 plants or bowl-wide kelp are inherited just because those cells have a kelp biome.
 
 **No rows.** The owner's re-acceptance of 6 November 2026 read the forest as planted in
-rows (#1773). Two readings hold that off. No plant stands within 10 m of the line through
+rows (#1773). Three readings hold that off. No plant stands within 10 m of the line through
 two others of its kind when it lies between them, at least a fifth of the way in from
-each, and within 260 m of both. And every east-west line across the north flank, from
+each, and within 260 m of both. Every east-west line across the north flank, from
 `y=650` to `970`, meets stand outlines over at least a quarter of the tread's 1,750 m, so
-no lane runs between stands. Both are read in plan: the roots stand on one floor, near
+no lane runs between stands. And the south flank, one stand deep, leaves at least four
+gaps of 60 m or more between its outlines along its length, so it breaks into clumps
+rather than one band. All three are read in plan: the roots stand on one floor, near
 enough a plane, and a camera maps a plane to the screen through a homography, which keeps
 a line a line, so three roots in line on the floor stand in line in the garden-close and
 survey frames alike. Each plant turns at most 45 degrees
 from the current, +x in the stand's and the cluster's scripts, so the forest keeps one
-prevailing current while its turned plans break the strips. The south flank is one stand
-deep (§9, Kelp), so it stays a band along the clearing, its stands wandering across the
-band and turning as far as its depth allows. The list was drawn once, by a seeded anneal
+prevailing current while its turned plans break the strips. The list was drawn once, by a seeded anneal
 from #1751's rows ([issue-1773](screenshots/issue-1773/README.md)), and is held by tests
 rather than redrawn.
 
@@ -710,13 +713,15 @@ is 120 m long and 69 m wide, and every one faced down-current with its length al
 row, so the forest drew as four strips with lanes about 55 m wide between them. §5 then
 cleared each stand by a 120 m disc kept inside its own 250 m cell, which left every row at
 most 6 m of play north or south. Since #1773 the same 56 stand where a seeded anneal from
-those rows left them, cleared by their outlines and held to §5's No rows: 42 north of the
-clearing and 14 south, the canopy still continuous on each flank and the clearing still
-the one gap in it. The clusters' fringe is scattered the same way.
-Four other ways were weighed with the owner on #1773: keeping each outline inside its
-cell, which drew the cell grid as empty seams; holding each stand within 40 m of its row
-slot, which left three wavy rows; fewer stands under the discs, which gave up the fill
-above; and any heading, which turns each stand's lean and fronds its own way.
+those rows left them, cleared by their outlines and held to §5's No rows. Four of the
+south row's fourteen moved north, the owner's split: 46 north of the clearing and 10
+south, so no lane runs through the north flank, the south band opens four gaps instead
+of reading as one line, and the clearing is still the one cut through the forest. The
+clusters' fringe is scattered the same way. Five other ways were weighed with the owner
+on #1773: keeping each outline inside its cell, which drew the cell grid as empty seams;
+holding each stand within 40 m of its row slot, which left three wavy rows; fewer stands
+under the discs, which gave up the fill above; any heading, which turns each stand's lean
+and fronds its own way; and keeping fourteen stands south, a band with no gap in it.
 
 ### Vertical command (#1753)
 
