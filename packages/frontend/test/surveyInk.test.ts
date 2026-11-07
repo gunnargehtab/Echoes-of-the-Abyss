@@ -171,6 +171,10 @@ describe('survey ink levels', () => {
         assert.match(shader.vertexShader, new RegExp(`attribute \\w+ ${attribute};`));
       }
       assert.match(shader.fragmentShader, /surveyFieldPx\( vSurveyCoast/);
+      // A triangle whose vertices all lie on a coast reads no line, not a
+      // triangle of ink (the cut's held corners).
+      assert.match(shader.fragmentShader, /coastSound \? surveyLine/);
+      assert.match(shader.fragmentShader, /water && surveyFieldSound\( borderGrad/);
       assert.match(shader.fragmentShader, /surveyFloorAt\( vSurveyXZ \)/);
       assert.doesNotMatch(shader.fragmentShader, /surveyEdge\( here/);
       assert.ok('uSurveyFloor' in shader.uniforms && 'uSurveyFloorGrid' in shader.uniforms);

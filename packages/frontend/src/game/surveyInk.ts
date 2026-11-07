@@ -389,6 +389,18 @@ const DRAWN_FRAGMENT_PARS = [
   'float surveyFieldPx( float f, float dx, float dy ) {',
   '  return abs( f ) / max( length( vec2( dx, dy ) ), 1e-6 );',
   '}',
+  // Whether a field climbs at least a quarter as fast as a distance does,
+  // in the plan: its screen gradient taken back through the inverse of the
+  // plan's (`xzDx`, `xzDy`, their determinant `det`), both sides scaled by
+  // it. A triangle whose three vertices all lie on its edge — at a corner
+  // the roof holds on the cells (roundedCells.ts) — carries a field of
+  // nothing there, which no line can be read off, and would otherwise ink
+  // the whole triangle; its neighbours still draw their half of the line.
+  'bool surveyFieldSound( float dx, float dy, vec2 xzDx, vec2 xzDy, float det ) {',
+  '  float gX = dx * xzDy.y - dy * xzDx.y;',
+  '  float gZ = dy * xzDx.x - dx * xzDy.x;',
+  '  return gX * gX + gZ * gZ > 0.0625 * det * det;',
+  '}',
   // The nearest of the six biome edges, with its gradient, for the dash.
   'void surveyNearestBorder( float f, float dx, float dy, inout float px, inout vec2 grad ) {',
   '  float p = surveyFieldPx( f, dx, dy );',
@@ -463,7 +475,11 @@ const DRAWN_FRAGMENT_MAIN = [
   '  float perPx = max( fwidth( surveyFloorM ), 1e-4 );',
   '  vec2 xzDx = dFdx( vSurveyXZ );',
   '  vec2 xzDy = dFdy( vSurveyXZ );',
-  '  float coastPx = surveyFieldPx( vSurveyCoast, dFdx( vSurveyCoast ), dFdy( vSurveyCoast ) );',
+  '  float det = xzDx.x * xzDy.y - xzDx.y * xzDy.x;',
+  '  float coastDx = dFdx( vSurveyCoast );',
+  '  float coastDy = dFdy( vSurveyCoast );',
+  '  float coastPx = surveyFieldPx( vSurveyCoast, coastDx, coastDy );',
+  '  bool coastSound = surveyFieldSound( coastDx, coastDy, xzDx, xzDy, det );',
   '  vec3 aDx = dFdx( vSurveyBiomeA );',
   '  vec3 aDy = dFdy( vSurveyBiomeA );',
   '  vec3 bDx = dFdx( vSurveyBiomeB );',
@@ -484,9 +500,9 @@ const DRAWN_FRAGMENT_MAIN = [
   '  if ( water ) {',
   isobaths('surveyFloorM'),
   '  }',
-  `  float coast = surveyLine( coastPx, ${glslFloat(SURVEY_WIDTH_PX.coast)} );`,
+  `  float coast = coastSound ? surveyLine( coastPx, ${glslFloat(SURVEY_WIDTH_PX.coast)} ) : 0.0;`,
   '  float border = 0.0;',
-  '  if ( water ) {',
+  '  if ( water && surveyFieldSound( borderGrad.x, borderGrad.y, xzDx, xzDy, det ) ) {',
   // The dash runs in world metres along whichever world axis the edge runs
   // nearer, as the cell pass's does along its edge, so it never crawls
   // under a pan. The field's gradient in the world, up to its sign and
