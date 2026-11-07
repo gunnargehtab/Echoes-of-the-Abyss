@@ -549,14 +549,15 @@ Implemented in the client scaffold today (`packages/frontend/src/game/EchoRender
 | --- | --- |
 | Left click | Select nearest own unit; `Shift` adds, `Ctrl` subtracts |
 | Left drag | Box select own units; `Shift` adds, `Ctrl` subtracts |
-| Double click | Select every visible unit of that class (`Alt`-click does the same) |
+| Double click | Select every visible unit of that class (`Alt`-click does the same). In the free-water study it also glides to the hull clicked and follows it ([free-camera.md](free-camera.md) §4, "The study's camera feel") |
 | Right click | Context order — move, attack a contact, or work a field — given on release. A move lands at a depth as well as a place (below). With a yard and nothing else selected: its rally point, where every hull it launches goes first |
 | `Shift` + right click | Queue the order behind the unit's current plan |
+| Right drag, free-water study only | Orbit the camera, as `Shift` + middle drag does, once the press has moved past the 6 px click slop; no order is given. **This gesture gave the order at the press point before #1775**, and it is written down here for the reason `Shift` + wheel's row gives. Under the slop a right press is still the click above |
 | `W`, then click | Attack-move: go there, and stop to fight whatever is met on the way, then carry on. The one order that advances a force into water it cannot hear — which is most of it. `Esc` disarms; `Shift` + click queues it |
 | `X` | Stop: drop the plan, the route, the chase and the posture, and stand. Depth is a commitment and is left alone, floor-following included |
 | `S` / `D` | Rise / dive the selected hulls by 150 m, without moving the camera or cancelling their horizontal orders. The SQUAD card offers the same two controls |
 | `H` | Hold position: fire at what comes into range, chase nothing, go nowhere. Any move releases it |
-| `1`–`9` | Recall control group; `Ctrl` + digit assigns; `Shift` + digit adds the selection; recall twice to centre. A hull aboard a transport stays in its group, and is in hand again when it lands; it counts at its transport when the group is centred (#1337) |
+| `1`–`9` | Recall control group; `Ctrl` + digit assigns; `Shift` + digit adds the selection; recall twice to centre, and in the free-water study to glide there and follow the group. A hull aboard a transport stays in its group, and is in hand again when it lands; it counts at its transport when the group is centred (#1337) |
 | `0` | Select the army — every hull that fights, wherever it is |
 | Middle drag | Pan |
 | Left + right drag | Move the camera: across pans sideways, up and down raises and sinks the focus through the water column, the water moving with the hand. Either button may land first, and once both are down neither click fires ([free-camera.md](free-camera.md) §4) |
@@ -672,7 +673,8 @@ when no selected hull's charge would be taken.
 
 [free-water-slice.md](free-water-slice.md) §6 is the implementation contract for #1706
 and the rest of #1707. The bounded orbit remains the default. Development-only
-`?freeWaterControls=1` enables flight with F8/FLIGHT, a visible F9/NAV keyboard latch,
+`?freeWaterControls=1` enables flight through a visible F9/NAV keyboard latch (F8/FLIGHT
+was retired in #1775),
 local translation and unrestricted quaternion rotation including roll; Home returns
 to the saved orbit frame. NAV owns its keys and suspends fleet shortcuts, not the
 simulation; outside it S/D still commands hulls, never the camera. Focusable controls,

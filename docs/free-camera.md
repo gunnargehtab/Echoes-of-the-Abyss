@@ -11,7 +11,8 @@ The bounded orbit described in §4 remains the default: free yaw, 10°–88° pi
 leaves the seabed. It is not six-degree flight and has no roll. The opt-in target is
 [free-water-slice.md](free-water-slice.md), the #1694 contract: opt-in flight, independent
 destination depth and a crater/kelp-jungle study. Flight is implemented in #1706;
-the destination preview and integrated world remain separate increments.
+the destination preview and integrated world remain separate increments. In that study
+the orbit also eases, coasts, glides and follows a hull (§4, "The study's camera feel").
 This document keeps the argument that retired the old yaw lock and the default rig it
 produced; neither that history nor continuous hull depth proves volumetric pathfinding.
 
@@ -145,14 +146,16 @@ take the way out of a frame a player cannot otherwise read.
 ### Opt-in six-degree flight
 
 In development, `?freeWaterControls=1` enables the controls study without replacing
-the map. Production ignores the flag. F8 or FLIGHT enters a quaternion camera;
-F9 or NAV latches camera keys. W/S travel forward/back, A/D sideways, R/F local
+the map. Production ignores the flag. F9 or NAV enters a quaternion camera and
+latches camera keys; F8 and FLIGHT, which entered it without the latch, were retired
+by #1775 ("The study's camera feel" below). W/S travel forward/back, A/D sideways, R/F local
 up/down, Q/E roll, and arrows look. All are rebindable in Controls, with conflicts
 checked within their active context. NAV suspends every fleet shortcut and world
 order click, not existing orders or the simulation. Its labelled motion buttons
 provide a mouse-only route; the one-handed fleet layout is unchanged.
 
-Middle drag translates on the final camera right/up axes; Shift-middle turns locally.
+Middle drag translates on the final camera right/up axes; Shift-middle and a right drag
+turn locally.
 Wheel travels forward/back and Shift-wheel changes world depth by 150 m. Travel is
 200 rendered m/s by default, adjustable over 50–800 in Controls; keyboard rotation
 is 60 degrees/s. The eye sweeps the rendered terrain triangles and authored roof/rock
@@ -160,9 +163,11 @@ boundaries, maintaining 25 m depth clearance. A blocked move stops without level
 Entry retains the current orientation and uses the legal command focus when the
 orbit eye is outside water; a focus without clearance refuses entry.
 
-Home leaves both modes and restores north/55 degrees/seabed at the saved command
-focus and orbit dolly. Escape leaves NAV before cancelling placement or opening the
-menu. Blur, focused controls, mode exit, disconnect and menus clear held movement.
+Since #1775 NAV and flight are one mode: leaving NAV, by F9, the NAV button, Escape or
+the menu, leaves flight and glides back to the orbit it left. Home leaves both and
+restores north/55 degrees/seabed at the saved command focus and orbit dolly. Escape
+leaves NAV before cancelling placement or opening the menu. Blur, focused controls, mode
+exit, disconnect and menus clear held movement.
 Flight has neither edge scroll nor sway. The upright EYE instrument distinguishes
 camera depth from hull depth, displays world up and marks a pole VERTICAL.
 Hull models stay at canonical 1× scale in flight rather than inheriting the saved
@@ -191,6 +196,120 @@ the focus, so on the 4 km crater the slice runs ±2,000 m, reaches the 900 m rad
 the 2,400 m one. The band's floor is
 `STUDY_PITCH_MIN_DEG` in `PerspectiveView.ts`, switched on the view's look as the study's
 water is, so the two cannot disagree.
+
+### The study's camera feel (#1775)
+
+**Status: the owner chose the three decisions below on #1775, 7 November 2026,** as their
+options described them: steps easing in about 0.1 s, drags coasting on release, jumps
+gliding in about 0.6 s, a followed hull held centred at its depth until a pan or a focus
+step, and F8 retired with NAV kept. The other numbers and rules are the author's, written
+to carry those choices out, and await the owner's review on the pull request that adds
+this section.
+
+The owner's re-acceptance of 6 November 2026 found the camera cumbersome and clunky (#1694).
+Nothing eased. A wheel notch jumped the dolly by a factor of 1.1 and `Shift` + wheel jumped
+the focus 150 m. `Home`, a press on the scope and a group recalled twice cut to their frame.
+The arrows and the screen edge started and stopped at a constant 900 pixels a second, and a
+drag stopped dead on release. Orbiting took `Shift` + middle drag, and flight was a latch:
+F8, then F9 for keys, at a constant 200 m/s with no momentum
+([free-water-slice.md](free-water-slice.md) §6).
+
+"Moves like space, Homeworld-style" names the owner's reference by its camera model, not
+its keys. Classic Homeworld has no free pan: its camera is bound to a ship or a group and
+turns about it, and it moves between them by travelling. Space is the feel of that travel:
+motion carries and then settles. This ocean adds drag, so a camera let go coasts and stops
+within a second, as a hull does. The camera's argument is depth's: it glides down to a
+hull's band and holds the hull there while the player turns about it.
+
+| Decision | Taken | Rejected |
+| --- | --- | --- |
+| 1. Model | The orbit is the whole camera: eased, coasting, gliding, and able to follow a hull | Mouse-first flight as the main camera, which takes `W`, `S` and `D` from attack-move, rise and dive; both models at once |
+| 2. Follow | Double-click a hull: it selects the class as before, then glides to that hull and follows it | Middle-click a hull, which needs a middle button |
+| 3. Orbit | A right drag past the click slop orbits; a right click still orders | `Shift` + middle drag alone; middle drag orbiting with `Shift` + middle drag panning |
+
+The rest of this section holds in the free-water study only, under both of its entry
+flags (`?study=free-water` and `?freeWaterControls=1`). Shipped maps keep the instant
+camera above, and promoting the feel to them is a separate decision.
+
+**Motion.** Six rules, in the order a gesture meets them:
+
+1. **The hand is never late.** A drag moves the camera with the pointer in the frame the
+   pointer moves. A pan keeps the ground under the hand, and an orbit turns as many degrees
+   per pixel as before.
+2. **A release coasts.** Let go of a pan or an orbit while the pointer is moving, and the
+   camera carries on at the release speed, which falls by a factor of e every **0.3 s**
+   (`COAST_S`). A pointer held still for **80 ms** before the release does not coast
+   (`COAST_STILL_MS`). The release speed is capped at **1,200 pixels a second**
+   (`COAST_MAX_PX_S`), so a flick coasts the orbit just over half a revolution at most. The
+   focus depth never coasts: it is where the next order goes, so it moves only while the
+   hand does.
+3. **Steps ease.** A wheel notch, a `Shift` + wheel notch, the arrows and the screen edge
+   say where the camera is going. The drawn camera closes the gap by a factor of e every
+   **0.1 s** (`EASE_S`), settling in about 0.3 s instead of in one frame. Notches add to the
+   destination rather than to the drawn camera, so a fast scroll is one smooth zoom, and
+   the zoom still holds the water under the cursor.
+4. **Jumps glide.** `Home`, a press on the scope, a group recalled twice and a double-click
+   on a hull travel over **0.6 s** (`GLIDE_S`), starting and ending at rest. They swing
+   about the focus rather than cutting across to the new eye. Leaving NAV glides from the
+   flight eye back to the orbit it left.
+5. **Input takes over.** Any drag, step or jump starts from where the camera is drawn, not
+   from where it was going, and stops a coast.
+6. **Nothing turns by itself.** Every motion above finishes a gesture the player made, and
+   following moves the focus without turning the camera. §5's rule holds: no effect rotates
+   the projection, and the sway stays a translation.
+
+All five numbers are TUNABLEs in `CAMERA_FEEL` (`packages/shared/src/constants.ts`). The
+eye's 25 m clamp and the focus's clamps hold on every frame of an ease, a coast and a glide.
+
+**Focus and follow.** Double-clicking an own hull still selects every visible hull of its
+class ([ui-ux.md](ui-ux.md) §9), and in the study it also glides the focus to the hull
+clicked and follows it. Recalling a control group twice glides to the group and follows
+the centre of its hulls, where it used to cut. While following, the focus sits on the hull
+at its depth, drawn between Echo ticks as the hull itself is (`ownMotion.ts`).
+
+- **The plane follows too.** The focus depth is where a click into open water lands
+  ([ui-ux.md](ui-ux.md) §9), so while a hull is followed an order lands at its depth, and
+  the depth ribbon's focus tick says so. Following the lead selected hull puts the click
+  plane on the command plane its foot rings mark ([free-water-slice.md](free-water-slice.md)
+  §9).
+- **Turning and zooming keep the follow.** The wheel then dollies toward the hull, not the
+  cursor, since a zoom about the cursor would pull the focus off it.
+- **Anything else that moves the focus ends it.** A pan of any kind ends following: a
+  middle drag, the arrows, the edge, the left + right drag's sideways half, a press on the
+  scope or a jump. So do raising or sinking the focus, `Home` and entering NAV, and the
+  hull leaving the player's snapshot, destroyed or carried aboard a transport; a group's
+  follow ends with the last of its hulls.
+- **Own hulls only.** A contact cannot be followed, and following reads nothing the
+  snapshot does not already hold for the player's own force.
+
+**Inputs.**
+
+| Input | In the study | Elsewhere |
+| --- | --- | --- |
+| Right drag past the 6 px click slop | Orbit; in NAV, look. No order is given on release | Unchanged: the order goes to the press point on release |
+| Right click, inside the slop | The context order on release, as before | Unchanged |
+| `Shift` + middle drag | Orbit, as before | Unchanged |
+| Double click on an own hull | Selects its class, then glides to the hull and follows it | Selects its class |
+| Recall a control group twice | Glides to the group and follows it | Centres on it |
+| F8 / FLIGHT | Retired | — |
+| F9 / NAV | Enters keyboard flight, roll included, as the accessibility route, with flight's own rules: constant speed, no momentum. Leaving glides back to the orbit | — |
+
+The right drag changes what a mouse gesture means, so §9 of [ui-ux.md](ui-ux.md) records it
+in its table and the Controls screen states it. Under the slop a right press is still a
+click, so a steady click still orders. The left + right drag keeps its rule:
+pressing the other button at any time, even mid-orbit, makes the chord.
+
+**Kept.** `Home` restores north, 55° and the seabed at the focus's plan position and the
+saved dolly, now by gliding; the −60–88° band above is unchanged. No order, wire message or
+simulation rule changes: every glide and coast moves what the client draws, never what it
+receives (§6).
+
+**Evidence.** A `run-game` drive records the camera's pose on every frame through a scripted
+gesture: wheel notches, a pan flicked and released, a right-drag orbit and a double-click
+that follows a moving hull. The readings show no jump between frames, the coast decaying
+and the focus tracking the hull. The last gate is the owner's hands on it, as §9 of
+[free-water-slice.md](free-water-slice.md) makes the owner's reading the last gate of the
+look.
 
 ## 5. What the yaw lock protected, and where each protection goes
 
