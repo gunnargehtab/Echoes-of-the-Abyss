@@ -1,4 +1,10 @@
-import { DEPTH, requiredPressureRating, type OwnUnit } from '@echoes/shared';
+import {
+  DEPTH,
+  refitSpeedFactor,
+  requiredPressureRating,
+  type OwnedRefits,
+  type OwnUnit,
+} from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
 
 export interface MovePreview {
@@ -23,7 +29,13 @@ export interface MovePreviewReading extends MovePreview {
 export function readMovePreview(
   preview: MovePreview,
   terrain: TerrainPayload | null,
-  units: readonly OwnUnit[]
+  units: readonly OwnUnit[],
+  /**
+   * The navy's own refits, for the Drive Refit's faster descent and ascent
+   * (docs/systems-progression.md §2). The server moves a refitted hull at the
+   * refitted rate, so a clock read off the roster's would overstate the leg.
+   */
+  refits: OwnedRefits = undefined
 ): MovePreviewReading {
   const hulls = units.filter((unit) => preview.unitIds.includes(unit.id));
   const reading: MovePreviewReading = {
@@ -59,14 +71,15 @@ export function readMovePreview(
       reading.reason = 'DEPTH OUTSIDE WATER INTERVAL';
   }
   if (Number.isFinite(preview.depthM)) {
+    const drive = refitSpeedFactor(refits);
     for (const hull of hulls) {
       if (requiredPressureRating(preview.depthM) > hull.pressureRating + hull.pressureBonus)
         reading.crushCount++;
       const delta = preview.depthM - hull.depth;
       if (delta > 0 && hull.silentRunning) reading.breaksSilence = true;
       if (Math.abs(delta) <= DEPTH.ARRIVAL_EPSILON_M) continue;
-      reading.riseSeconds = Math.max(reading.riseSeconds, -delta / DEPTH.ASCENT_RATE_MPS);
-      reading.diveSeconds = Math.max(reading.diveSeconds, delta / DEPTH.DESCENT_RATE_MPS);
+      reading.riseSeconds = Math.max(reading.riseSeconds, -delta / (DEPTH.ASCENT_RATE_MPS * drive));
+      reading.diveSeconds = Math.max(reading.diveSeconds, delta / (DEPTH.DESCENT_RATE_MPS * drive));
     }
   }
   return reading;

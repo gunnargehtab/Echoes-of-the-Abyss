@@ -427,13 +427,27 @@ export function hashWorld(world: SimWorld): number {
     // The refit on the line, on the same argument: two worlds whose yards
     // agree about the hulls and disagree about the upgrade diverge a band of
     // depth later, which is minutes after the tick that caused it
-    // (docs/systems-progression.md §2). The purchase itself needs no separate
-    // mixing — `Pressure.rating` above carries what a granted refit did, and
-    // a refit *is* what it did to the hulls.
+    // (docs/systems-progression.md §2). The purchase, once it lands, is mixed
+    // below with the navy's others.
     if (line.refit !== undefined) {
       h = mixU32(h, line.refit.kind);
       h = mixFloat(h, line.refit.remainingS);
     }
+  }
+
+  // The refits each navy owns, as purchases. Once a refit was only the
+  // ratings it wrote, which the entity walk mixes; three of the five write
+  // nothing on a hull when they land — speed, a full magazine and a full hold
+  // are read live from `world.refits` — so two worlds that disagreed about a
+  // Drive Refit would agree on every hull until the first leg after it. By
+  // slot and then by kind, so the set's insertion order, which is purchase
+  // order, sorts nothing.
+  const navies = [...world.refits.keys()].sort((a, b) => a - b);
+  for (const slot of navies) {
+    const owned = [...world.refits.get(slot)!].sort((a, b) => a - b);
+    h = mixU32(h, slot);
+    h = mixU32(h, owned.length);
+    for (const kind of owned) h = mixU32(h, kind);
   }
 
   // Rally points, by ordinal like the lines: same yards, different places
@@ -552,6 +566,7 @@ export type HashedWorldState =
   | 'marks'
   | 'economies'
   | 'production'
+  | 'refits'
   | 'rallies'
   | 'orderQueues'
   | 'hazards'
@@ -578,11 +593,6 @@ export type CoveredWorldState =
    * it belongs to, so the pair of counts `capacity` bounds is already mixed —
    * what is aboard, and what is in the water naming this carrier. */
   | 'flights'
-  /** Through `Pressure.rating` and `Pressure.bonus`. A refit *is* the ratings
-   * it wrote, and `world.refits` says so where it is declared — a world that
-   * agreed about the purchase and disagreed about the hulls would be the
-   * divergence, and that is the half that is mixed. */
-  | 'refits'
   /** Through `hazards`. A bloom node *is* a bed, held by reference into that
    * same list rather than copied, precisely so the two cannot drift apart. */
   | 'blooms';

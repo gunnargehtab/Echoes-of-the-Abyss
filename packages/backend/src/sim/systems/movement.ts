@@ -25,6 +25,7 @@ import {
   MOVEMENT,
   silentSpeedMultiplierFor,
   inDirectorateShallows,
+  refitSpeedFactor,
   statsFor,
   unitRadiusM,
   type UnitKind,
@@ -289,6 +290,14 @@ function speedMultiplier(world: SimWorld, eid: number): number {
   // in every skirmish, and the read is gated on that.
   const act = water * (world.commanderHaste.size === 0 ? 1 : (world.commanderHaste.get(eid) ?? 1));
 
+  // The navy's Drive Refit (docs/systems-progression.md §2): "+10% speed", a
+  // bigger drive on every hull, and so on every leg — cruising, creeping and
+  // coasting alike, because what the refit bought is the drive and not a
+  // posture. A multiplier like the terms above, and gated the same way: until
+  // somebody buys a refit the map is empty and this is one integer compare.
+  const driven =
+    act * (world.refits.size === 0 ? 1 : refitSpeedFactor(world.refits.get(Owner.slot[eid]!)));
+
   // The drive is cut (docs/systems-echo.md §6). Checked before Silent
   // Running's multiplier because the two are exclusive postures, and checked
   // last among the terms above because weather still applies to a hull that is
@@ -299,10 +308,10 @@ function speedMultiplier(world: SimWorld, eid: number): number {
   // its acoustic floor — the one line that separates a doctrine from a parked
   // hull.
   if (EngineOff.active[eid]) {
-    return act * (statsFor(Unit.kind[eid] as UnitKind).glideSpeedFraction ?? 0);
+    return driven * (statsFor(Unit.kind[eid] as UnitKind).glideSpeedFraction ?? 0);
   }
 
-  if (!SilentRunning.active[eid]) return act;
+  if (!SilentRunning.active[eid]) return driven;
   // Immunity is to the **speed** penalty and to nothing else — the SIG floor
   // stays, per docs/mission-convocation.md §4: "A convocation makes the plateau
   // fast; it does not make it inaudible, and an ability that did both would be
@@ -314,8 +323,8 @@ function speedMultiplier(world: SimWorld, eid: number): number {
   // against everybody else's 0.55, so removing it and adding the bonus reads
   // 0.8 → 1.0 → 1.25 — fifteen seconds of a hull that moves half again as fast
   // as it was moving and is still silent.
-  if (world.commanderSilentImmune.has(eid)) return act;
-  return act * silentSpeedMultiplierFor(Owner.faction[eid] as Faction);
+  if (world.commanderSilentImmune.has(eid)) return driven;
+  return driven * silentSpeedMultiplierFor(Owner.faction[eid] as Faction);
 }
 
 export function movementSystem(world: SimWorld): void {

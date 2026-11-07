@@ -24,6 +24,8 @@ import {
   EchoMarkKind,
   Faction,
   HarvestThrottle,
+  REFIT_KINDS,
+  RefitKind,
   ResolutionTier,
   SIM,
   StructureKind,
@@ -496,6 +498,31 @@ describe('the fingerprint covers what it certifies', () => {
     assert.equal(hashWorld(match.world), before, 'the probe must leave the world as it found it');
     return after !== before;
   }
+
+  it('follows the refits each navy owns, as purchases (#1785)', () => {
+    // Once a refit was only the ratings it wrote, which the entity walk mixes.
+    // Three of the five write nothing on a hull when they land — speed, a full
+    // magazine and a full hold are read live from the navy's set — so two
+    // worlds that disagreed about a Drive Refit would hash alike until the
+    // first leg after it. Iterated over the roster for the accounts' reason:
+    // a refit that is not in the fingerprint is one nobody listed.
+    const match = twoPlayers(new Match(undefined, { fauna: false, seed: SEED }));
+    assert.equal(match.world.refits.size, 0, 'nobody has bought anything yet');
+    for (const kind of REFIT_KINDS) {
+      assert.ok(
+        moved(
+          match,
+          () => {
+            match.world.refits.set(0, new Set([kind]));
+          },
+          () => {
+            match.world.refits.delete(0);
+          }
+        ),
+        `a navy that owns the ${RefitKind[kind]} Refit must not hash as one that does not`
+      );
+    }
+  });
 
   it('follows every banked account, by iterating them rather than naming them', () => {
     // Written over ECONOMY_ACCOUNTS on purpose. Naming the accounts here would

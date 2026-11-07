@@ -196,10 +196,10 @@ describe('the two predicates the guards are written on', () => {
   });
 
   it('offers no navy a refit with no row', () => {
-    // §2 designs five refits and one is transcribed, so four of the enum's
-    // eventual members do not exist yet. Until they do they are offered to
-    // nobody, which is what stops `refitPriceFor` reading a row that is not
-    // there — the check `Match.refit` always looked like it was making.
+    // §2 closes the list at five, and every number past it has no row. Such a
+    // kind is offered to nobody, which is what stops `refitPriceFor` reading
+    // a row that is not there — the check `Match.refit` always looked like it
+    // was making.
     for (const faction of Object.values(Faction)) {
       if (typeof faction !== 'number') continue;
       for (const kind of NOT_A_KIND) {

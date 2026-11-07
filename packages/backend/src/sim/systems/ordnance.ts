@@ -45,6 +45,7 @@ import {
   STRUCTURE_STATS,
   UNIT_STATS,
   perceivedLoudness,
+  torpedoMagazineFor,
   requiredPressureRating,
   unitRadiusM,
   withinSeekerCone,
@@ -268,8 +269,10 @@ function rearmSystem(world: SimWorld): void {
     // The hull's own magazine, not the roster's two: the Broadside's four and
     // the Lance's one are what those hulls are bought for, and a rearm that
     // stopped at two gave one half its tubes back and the other twice its one
-    // (#1092). `decoyMagazines` reads its rack the same way.
-    const full = statsFor(Unit.kind[eid] as UnitKind).torpedoMagazine ?? ORDNANCE.TORPEDO.MAGAZINE;
+    // (#1092). `decoyMagazines` reads its rack the same way. And the navy's:
+    // the Magazine Refit's third tube on a hull already afloat is loaded here,
+    // at a depot, and nowhere else (docs/systems-progression.md §2).
+    const full = torpedoMagazineFor(Unit.kind[eid] as UnitKind, world.refits.get(Owner.slot[eid]!));
     if (Magazine.torpedoes[eid]! >= full) {
       Magazine.rearmRemainingS[eid] = 0;
       continue;
