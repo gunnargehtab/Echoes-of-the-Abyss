@@ -1,0 +1,131 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "software": false,
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "readings": [
+    {
+      "name": "opening",
+      "look": "free-water",
+      "pitchDeg": 15,
+      "yawDeg": 326,
+      "focus": {
+        "xM": 709,
+        "zM": 1710,
+        "depthM": 300
+      },
+      "eye": {
+        "xM": 61,
+        "zM": 2671,
+        "depthM": -1100
+      },
+      "distance": 1200,
+      "ownCentre": {
+        "x": 541.6666666666666,
+        "z": 1958.3333333333333
+      },
+      "modelBacked": 3,
+      "calls": 45,
+      "triangles": 568596
+    },
+    {
+      "name": "opening-pose",
+      "look": "free-water",
+      "pitchDeg": 15,
+      "yawDeg": 326,
+      "focus": {
+        "xM": 709,
+        "zM": 1710,
+        "depthM": 300
+      },
+      "eye": {
+        "xM": 61,
+        "zM": 2672,
+        "depthM": -1100
+      },
+      "distance": 1200,
+      "ownCentre": {
+        "x": 541.6666666666666,
+        "z": 1958.3333333333333
+      },
+      "modelBacked": 3,
+      "calls": 45,
+      "triangles": 568596
+    },
+    {
+      "name": "garden-close",
+      "look": "free-water",
+      "pitchDeg": 12,
+      "yawDeg": 90,
+      "focus": {
+        "xM": 1875,
+        "zM": 1125,
+        "depthM": 275
+      },
+      "eye": {
+        "xM": 2120,
+        "zM": 1125,
+        "depthM": 41
+      },
+      "distance": 250,
+      "ownCentre": {
+        "x": 541.6666666666666,
+        "z": 1958.3333333333333
+      },
+      "modelBacked": 3,
+      "calls": 32,
+      "triangles": 565913
+    },
+    {
+      "name": "rings-above",
+      "look": "free-water",
+      "pitchDeg": 15,
+      "yawDeg": 326,
+      "focus": {
+        "xM": 709,
+        "zM": 1710,
+        "depthM": 586
+      },
+      "eye": {
+        "xM": 60,
+        "zM": 2671,
+        "depthM": -815
+      },
+      "distance": 1200,
+      "ownCentre": {
+        "x": 541.6666666666666,
+        "z": 1958.3333333333333
+      },
+      "modelBacked": 3,
+      "calls": 45,
+      "triangles": 568596
+    },
+    {
+      "name": "rings-below",
+      "look": "free-water",
+      "pitchDeg": 15,
+      "yawDeg": 326,
+      "focus": {
+        "xM": 709,
+        "zM": 1710,
+        "depthM": 150
+      },
+      "eye": {
+        "xM": 60,
+        "zM": 2671,
+        "depthM": -1252
+      },
+      "distance": 1200,
+      "ownCentre": {
+        "x": 541.6666666666666,
+        "z": 1958.3333333333333
+      },
+      "modelBacked": 3,
+      "calls": 45,
+      "triangles": 568596
+    }
+  ]
+}
