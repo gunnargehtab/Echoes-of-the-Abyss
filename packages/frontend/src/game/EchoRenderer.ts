@@ -3451,7 +3451,7 @@ export class EchoRenderer {
       if (this.marquee !== null) {
         const box = this.marquee;
         this.marquee = null;
-        this.resolveSelection(box, e.shiftKey, e.ctrlKey || e.metaKey, e.altKey);
+        this.resolveSelection(box, e.shiftKey, e.ctrlKey || e.metaKey, e.altKey, eventMs(e));
         return;
       }
 
@@ -3817,13 +3817,17 @@ export class EchoRenderer {
     box: { x0: number; y0: number; x1: number; y1: number },
     add: boolean,
     subtract: boolean,
-    selectAllOfType: boolean
+    selectAllOfType: boolean,
+    // When the click happened, not when it was handled: a slow frame hands a
+    // double-click's two releases over late and apart, and timed on arrival it
+    // read as two clicks, which since #1775 also loses the study's follow.
+    clickedAtMs: number = performance.now()
   ): void {
     const rect = EchoRenderer.normalise(box);
     const dragged = Math.hypot(rect.right - rect.left, rect.bottom - rect.top) > DRAG_SLOP_PX;
 
     if (!dragged) {
-      const now = performance.now();
+      const now = clickedAtMs;
       const doubled =
         now - this.lastClick.at < DOUBLE_CLICK_MS &&
         Math.hypot(box.x0 - this.lastClick.x, box.y0 - this.lastClick.y) < DRAG_SLOP_PX * 2;

@@ -116,15 +116,49 @@ describe('the study camera feel, as arithmetic (#1775)', () => {
     );
   });
 
-  it('holds a followed focus exactly once it is on it, and eases to it when it is not', () => {
+  it('holds a followed focus exactly once it has reached it, however fast the hull moves', () => {
     const feel = new OrbitFeel(pose());
     const drawn = pose();
-    feel.goal.x = 2000.2;
-    feel.step(drawn, FRAME_S, flatSeabed, true);
-    assert.equal(drawn.x, 2000.2, 'within reach: held');
     feel.goal.x = 2400;
     feel.step(drawn, FRAME_S, flatSeabed, true);
-    assert.ok(drawn.x > 2000.2 && drawn.x < 2400, 'a jump away: eased, not cut');
+    assert.ok(drawn.x > 2000 && drawn.x < 2400, 'not yet reached: eased toward, not cut');
+    // Reached at its glide's end, then held there at five metres a frame, ten
+    // times the reach that once had to be re-measured every frame.
+    feel.jump(drawn, flatSeabed());
+    feel.goal.x = 2400;
+    for (let i = 0; i < Math.ceil(CAMERA_FEEL.GLIDE_S / FRAME_S); i++) {
+      feel.step(drawn, FRAME_S, flatSeabed, true);
+    }
+    assert.equal(drawn.x, 2400);
+    for (let i = 1; i <= 30; i++) {
+      feel.goal.x = 2400 + 5 * i;
+      feel.goal.depthM = 300 + i;
+      feel.step(drawn, FRAME_S, flatSeabed, true);
+      assert.equal(drawn.x, feel.goal.x, `frame ${i}`);
+      assert.equal(drawn.depthM, feel.goal.depthM, `frame ${i}`);
+    }
+    // Let go: an ease again.
+    feel.goal.x = 3000;
+    feel.step(drawn, FRAME_S, flatSeabed, false);
+    assert.ok(drawn.x < 3000, 'no longer held');
+  });
+
+  it('lets a drag take what it moves out of a glide, and the glide carry the rest (rule 5)', () => {
+    const feel = new OrbitFeel(pose());
+    const drawn = pose();
+    feel.jump(drawn, flatSeabed());
+    feel.goal.x = 3000;
+    feel.goal.yaw = 1.2;
+    const frames = Math.ceil(CAMERA_FEEL.GLIDE_S / FRAME_S);
+    for (let i = 0; i < frames / 2; i++) feel.step(drawn, FRAME_S, flatSeabed, false);
+    // The hand turns the camera mid-glide: the yaw is its from now on.
+    drawn.yaw = -0.4;
+    feel.take(drawn, ['yaw'], flatSeabed());
+    assert.equal(feel.goal.yaw, -0.4);
+    for (let i = 0; i < frames; i++) feel.step(drawn, FRAME_S, flatSeabed, false);
+    assert.equal(drawn.yaw, -0.4, 'the hand kept what it took');
+    assert.equal(drawn.x, 3000, 'and the glide still landed the rest');
+    assert.equal(feel.gliding, false);
   });
 
   it('coasts the same distance at every frame rate, and stops', () => {

@@ -11,7 +11,11 @@
 //
 // The same module drives the base commit for the before set, where the study
 // camera is instant, a right drag orders, a double-click only selects, and the
-// probe has no `feel`. CONTROL=1 waits for a shipped map instead of the
+// probe has no `feel`. The flicks and the double-click are dispatched in the
+// page with a hand's timing, 16 ms a move: here a software-rendered frame can
+// take a second or more, and Playwright's input waits on frames, so its moves
+// arrive a frame apart, which is a hand held still, and its two clicks land
+// past the double-click's 320 ms. CONTROL=1 waits for a shipped map instead of the
 // study's props, for the unchanged Kelp Labyrinth control
 // (`?map=kelp-labyrinth`), whose camera stays instant and whose right drag
 // still orders. Software rendering draws a frame every 100–200 ms here,
@@ -24,15 +28,18 @@ import { dirname, join } from 'node:path';
 const VIEW = { x: 720, y: 360 };
 
 export default async ({ page, shot }) => {
+  // The hull models first; the study also waits for its props, whose count
+  // has grown with each child of #1694 (291 at #1775), so any is enough.
   const control = process.env.CONTROL === '1';
   await page.waitForFunction(
-    (shipped) =>
-      shipped
-        ? window.__perspectiveProbe?.().modelBacked >= 1
-        : window.__perspectiveProbe?.().props === 200,
+    (shipped) => {
+      const probe = window.__perspectiveProbe?.();
+      return probe !== undefined && probe.modelBacked >= 1 && (shipped || probe.props > 0);
+    },
     control,
     { timeout: 120000 }
   );
+  await page.waitForTimeout(3000);
   // The double-click aims at a hull's model, so the models must have landed.
   await page.waitForFunction(
     () => window.__perspectiveLamps?.().units.some((unit) => unit.screen !== null),
@@ -55,6 +62,7 @@ export default async ({ page, shot }) => {
         pitchDeg: p.pitchDeg,
         distance: p.distance,
         focus: p.focus,
+        eye: p.eye,
         flying: p.flight?.flying ?? false,
       };
       if (feel !== null) {
@@ -73,7 +81,49 @@ export default async ({ page, shot }) => {
       requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);
+    // A drag or clicks at a hand's pace, on the HUD canvas that hears the
+    // pointer: each event is made, and so timed, when it is dispatched.
+    window.__poseGesture = ({ button, path, stepMs, holdMs = 0, clicks = 0 }) => {
+      const canvas = document.querySelector('.game-host canvas');
+      const mask = { 0: 1, 1: 4, 2: 2 }[button];
+      const fire = (type, at, buttons) =>
+        canvas.dispatchEvent(
+          new PointerEvent(type, {
+            bubbles: true,
+            cancelable: true,
+            pointerId: 1,
+            pointerType: 'mouse',
+            isPrimary: true,
+            button: type === 'pointermove' ? -1 : button,
+            buttons,
+            clientX: at.x,
+            clientY: at.y,
+          })
+        );
+      const wait = (ms) => {
+        const until = performance.now() + ms;
+        while (performance.now() < until);
+      };
+      if (clicks > 0) {
+        for (let i = 0; i < clicks; i++) {
+          if (i > 0) wait(stepMs);
+          fire('pointerdown', path[0], mask);
+          fire('pointerup', path[0], 0);
+        }
+        return;
+      }
+      fire('pointerdown', path[0], mask);
+      for (const at of path.slice(1)) {
+        wait(stepMs);
+        fire('pointermove', at, mask);
+      }
+      wait(holdMs);
+      fire('pointerup', path.at(-1), 0);
+    };
   });
+  const gesture = (spec) => page.evaluate((g) => window.__poseGesture(g), spec);
+  const line = (from, dx, dy, steps) =>
+    Array.from({ length: steps + 1 }, (_, i) => ({ x: from.x + dx * i, y: from.y + dy * i }));
   const mark = (label) => page.evaluate((text) => window.__poseMark(text), label);
   const hold = (ms) => page.waitForTimeout(ms);
 
@@ -92,27 +142,19 @@ export default async ({ page, shot }) => {
   // Rules 1 and 2: a pan let go moving coasts; one held still first does not.
   for (const still of [false, true]) {
     await mark(still ? 'pan: held still, then let go' : 'pan: let go moving');
-    await page.mouse.move(VIEW.x - 120, VIEW.y);
-    await page.mouse.down({ button: 'middle' });
-    for (let i = 1; i <= 8; i++) {
-      await page.mouse.move(VIEW.x - 120 + i * 24, VIEW.y);
-      await hold(16);
-    }
-    if (still) await hold(250);
-    await page.mouse.up({ button: 'middle' });
-    await hold(3000);
+    await gesture({
+      button: 1,
+      path: line({ x: VIEW.x - 120, y: VIEW.y }, 24, 0, 8),
+      stepMs: 16,
+      holdMs: still ? 250 : 0,
+    });
+    await hold(still ? 6000 : 25000);
   }
 
   // Decision 3: a right drag past the slop orbits, and gives no order.
   await mark('orbit: right drag, let go moving');
-  await page.mouse.move(VIEW.x, VIEW.y);
-  await page.mouse.down({ button: 'right' });
-  for (let i = 1; i <= 8; i++) {
-    await page.mouse.move(VIEW.x + i * 18, VIEW.y + i * 2);
-    await hold(16);
-  }
-  await page.mouse.up({ button: 'right' });
-  await hold(3000);
+  await gesture({ button: 2, path: line(VIEW, 18, 2, 8), stepMs: 16 });
+  await hold(25000);
   await shot('orbited');
 
   // Decision 2: a double-click glides to a hull and follows it; sent across
@@ -130,8 +172,8 @@ export default async ({ page, shot }) => {
   });
   if (target !== null) {
     await mark(`follow: double-click the ${target.name} (${target.id})`);
-    await page.mouse.dblclick(target.x, target.y);
-    await hold(3000);
+    await gesture({ button: 0, path: [target], stepMs: 90, clicks: 2 });
+    await hold(8000);
     await shot('following');
     await mark('follow: the hull sent across the water');
     await page.mouse.click(VIEW.x + 260, VIEW.y - 60, { button: 'right' });
@@ -214,6 +256,10 @@ function summarise(rows) {
       const total = deltas.reduce((n, d) => n + Math.abs(d), 0);
       return total === 0 ? null : Number((Math.max(...deltas.map(Math.abs)) / total).toFixed(3));
     };
+    const eyeSteps = frames.slice(1).map((row, i) => {
+      const prev = frames[i];
+      return Math.hypot(row.eye.xM - prev.eye.xM, row.eye.zM - prev.eye.zM, row.eye.depthM - prev.eye.depthM);
+    });
     const tracked = frames.filter((row) => row.hull !== undefined && !row.gliding);
     return {
       mark,
@@ -229,6 +275,11 @@ function summarise(rows) {
         to: last.focus,
         travelledM: Math.round(planar.reduce((n, d) => n + d, 0)),
         biggestFrameShare: share(planar),
+      },
+      // The eye too, sway and all: NAV moves the eye and not the orbit's pose.
+      eye: {
+        travelledM: Math.round(eyeSteps.reduce((n, d) => n + d, 0)),
+        biggestFrameShare: share(eyeSteps),
       },
       // Frames until the step's motion stopped, and whether it had by the end.
       settledAfterFrames: Math.max(lastMoving(distance), lastMoving(planar), lastMoving(yaw)),

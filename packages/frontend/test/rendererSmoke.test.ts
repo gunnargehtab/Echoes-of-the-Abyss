@@ -1028,6 +1028,11 @@ describe("the free-water study's camera feel (#1775)", () => {
       for (let t = 0; t <= 1000; t += 50) {
         now += 50;
         world.frame();
+        // Every frame of the glide between ticks, not just its end: the goal
+        // is the hull where it is drawn, and the focus is held on it exactly.
+        const goal = world.conn.feelReading!.goal;
+        assert.equal(world.conn.frame.xM, goal.x, `held on the drawn hull at ${t} ms`);
+        assert.equal(world.conn.frame.yM, goal.z);
       }
       assert.ok(Math.abs(world.conn.frame.xM - moved.x) < 1e-6, 'the focus moved with the hull');
       assert.ok(Math.abs(world.conn.focusDepth() - moved.depth) < 1e-6, 'and dived with it');

@@ -258,7 +258,7 @@ import { DreamLightHalos } from './dreamLightHalos.ts';
 import { swayAt, type SwayOffset } from './cameraSway.ts';
 import { installDisplayVeil, VEIL_SHADE_ATTRIBUTE } from './veilShading.ts';
 import { flightInterval, rotateFlight, sweepFlight, type FlightReading } from './flightCamera.ts';
-import { glideShare, OrbitFeel, type OrbitPose } from './cameraFeel.ts';
+import { glideShare, OrbitFeel, type OrbitPart, type OrbitPose } from './cameraFeel.ts';
 
 /**
  * SPEC — docs/art-direction.md "Camera & Projection": 55° below horizontal,
@@ -2205,8 +2205,8 @@ export class PerspectiveView {
       return;
     }
     // A drag in the study (rule 1): the drawn rig and the goal move together,
-    // so the ground stays under the hand, and the hand takes over from a glide
-    // or a coast (rule 5) and lets go of a followed hull.
+    // so the ground stays under the hand. It stops a coast, takes the place out
+    // of a glide (rule 5) and lets go of a followed hull.
     this.takeHold();
     this.followIds = null;
     this.dragPan(dxPx, dyPx);
@@ -2241,9 +2241,12 @@ export class PerspectiveView {
     this.target.z += d.z;
     this.clampTarget();
     if (this.feel !== null) {
+      // Added to the goal, so an ease under way (a zoom about the cursor) keeps
+      // its course; taken out of a glide, so the hand owns the place (rule 5).
       this.feel.goal.x += d.x;
       this.feel.goal.z += d.z;
       this.clampGoal();
+      this.takeParts(['x', 'z']);
     }
     // Applied now, not at the next frame: the overlay painter projects
     // through this camera on its own ticker, and a camera that moved between
@@ -2282,8 +2285,9 @@ export class PerspectiveView {
       this.turnFlight(-dxPx * ORBIT_YAW_PER_PX, -dyPx * ORBIT_PITCH_PER_PX, 0);
       return;
     }
-    // A drag (rule 1), which takes over from a glide or a coast (rule 5). A
-    // followed hull stays followed: turning about it is what following is for.
+    // A drag (rule 1): it stops a coast and takes the angles out of a glide
+    // (rule 5), so a glide to a followed hull still lands on it. The hull stays
+    // followed: turning about it is what following is for.
     this.takeHold();
     this.dragOrbit(dxPx, dyPx);
   }
@@ -2302,6 +2306,7 @@ export class PerspectiveView {
     if (this.feel !== null) {
       this.feel.goal.yaw = this.yaw;
       this.feel.goal.pitch = this.pitch;
+      this.takeParts(['yaw', 'pitch']);
     }
     return this.pitch !== asked;
   }
@@ -2341,7 +2346,10 @@ export class PerspectiveView {
     this.focusDepthM = next >= seabed ? null : next;
     this.nearSnowDepthM = this.focusDepthM;
     this.clampTarget();
-    if (this.feel !== null) this.feel.goal.depthM = this.focusDepthM;
+    if (this.feel !== null) {
+      this.feel.goal.depthM = this.focusDepthM;
+      this.takeParts(['depthM']);
+    }
     this.applyCamera();
   }
 
@@ -2605,7 +2613,7 @@ export class PerspectiveView {
   /**
    * Centre the camera on a world point; optionally set the dolly too. Instant
    * everywhere: in the study it is the scope's scrub, a drag (rule 1), which
-   * takes over from a glide or a coast and lets go of a followed hull.
+   * stops a coast, takes the place out of a glide and lets go of a followed hull.
    */
   focusWorld(xM: number, yM: number, distanceM?: number): void {
     if (this.flight) {
@@ -2625,6 +2633,7 @@ export class PerspectiveView {
       goal.x = this.target.x;
       goal.z = this.target.z;
       goal.distance = this.distance;
+      this.takeParts(distanceM === undefined ? ['x', 'z'] : ['x', 'z', 'distance']);
     }
     this.applyCamera();
   }
@@ -2809,12 +2818,17 @@ export class PerspectiveView {
     return this.feel !== null && !this.flight && !this.swayHeld ? this.feel : null;
   }
 
-  /** Rule 5: a drag starts from where the camera is drawn, ending a glide or a coast. */
+  /**
+   * Rule 5's first half: the hand closes on the camera, so nothing it let go
+   * of still carries. Each drag then takes what it moves (`takeParts`).
+   */
   private takeHold(): void {
-    const feel = this.feel;
-    if (feel === null) return;
-    if (feel.gliding) feel.settle(this.drawnPose());
-    else feel.stopCoasts();
+    this.feel?.stopCoasts();
+  }
+
+  /** Rule 5: the parts a drag moved, out of any glide, as they are drawn. */
+  private takeParts(parts: readonly OrbitPart[]): void {
+    this.feel?.take(this.drawnPose(), parts, this.seabedDepthAt(this.target.x, this.target.z));
   }
 
   /** A verb that frames the camera outright: nothing eases toward it or away. */

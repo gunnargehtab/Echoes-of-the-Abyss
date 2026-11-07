@@ -17,6 +17,9 @@ export interface OrbitPose {
   distance: number;
 }
 
+/** One of the orbit's numbers, as a drag names the ones it moves. */
+export type OrbitPart = keyof OrbitPose;
+
 /** A pointer's place at a moment, for measuring the speed a drag ends at. */
 export interface PointerSample {
   atMs: number;
@@ -143,6 +146,13 @@ export class OrbitFeel {
   /** The pose a jump left from, its depth resolved to metres. */
   private glideFrom: OrbitPose | null = null;
   private glideT = 0;
+  /**
+   * Whether a followed hull's focus has reached it. From then on the focus is
+   * written onto the hull each frame however fast it moves: re-measured every
+   * frame instead, a hull moving more than `HELD_M` a frame never counted as
+   * reached and the focus trailed it by an ease (#1775's drive, 54 m).
+   */
+  private held = false;
 
   constructor(drawn: OrbitPose) {
     this.goal = { ...drawn };
@@ -169,6 +179,7 @@ export class OrbitFeel {
   settle(drawn: OrbitPose): void {
     Object.assign(this.goal, drawn);
     this.glideFrom = null;
+    this.held = false;
     this.stopCoasts();
   }
 
@@ -177,6 +188,27 @@ export class OrbitFeel {
     this.panCoast.y = 0;
     this.orbitCoast.x = 0;
     this.orbitCoast.y = 0;
+  }
+
+  /**
+   * Rule 5: a drag takes the numbers it moves out of a glide under way, so the
+   * hand owns them at once, and the glide carries the rest to their end: Home
+   * still arrives at north while the player pans, and a followed hull's focus
+   * still arrives on it while they turn. `seabedM` stands in for a seabed
+   * depth, as in `jump`. No glide, nothing to take.
+   */
+  take(drawn: OrbitPose, parts: readonly OrbitPart[], seabedM: number): void {
+    const from = this.glideFrom;
+    if (from === null) return;
+    for (const part of parts) {
+      if (part === 'depthM') {
+        from.depthM = drawn.depthM ?? seabedM;
+        this.goal.depthM = drawn.depthM;
+      } else {
+        from[part] = drawn[part];
+        this.goal[part] = drawn[part];
+      }
+    }
   }
 
   /**
@@ -189,6 +221,7 @@ export class OrbitFeel {
     this.stopCoasts();
     this.glideFrom = { ...drawn, depthM: drawn.depthM ?? seabedM };
     this.glideT = 0;
+    this.held = false;
   }
 
   /**
@@ -216,8 +249,9 @@ export class OrbitFeel {
    * One frame: move `drawn` toward the goal. A glide runs its eased path
    * (rule 4); otherwise each number closes its gap by the ease (rule 3).
    * `seabedAt` reads the seabed under a plan point, for a focus easing to or
-   * from the ground. `holding` is a followed hull's focus: once the focus is
-   * on it, it is held there exactly rather than eased after.
+   * from the ground. `holding` is a followed hull's focus: once the focus has
+   * reached it, by a glide's end or by easing within `HELD_M`, it is held on
+   * it exactly from then on rather than eased after.
    */
   step(
     drawn: OrbitPose,
@@ -241,18 +275,21 @@ export class OrbitFeel {
         this.glideFrom = null;
         drawn.yaw = goal.yaw;
         drawn.depthM = goal.depthM;
+        this.held = holding;
       }
       return;
     }
 
     const k = easeShare(dtS);
-    const held =
-      holding &&
-      Math.hypot(goal.x - drawn.x, goal.z - drawn.z) < HELD_M &&
-      Math.abs(
-        (goal.depthM ?? seabedAt(goal.x, goal.z)) - (drawn.depthM ?? seabedAt(drawn.x, drawn.z))
-      ) < HELD_M;
-    if (held) {
+    if (!holding) this.held = false;
+    else if (!this.held) {
+      this.held =
+        Math.hypot(goal.x - drawn.x, goal.z - drawn.z) < HELD_M &&
+        Math.abs(
+          (goal.depthM ?? seabedAt(goal.x, goal.z)) - (drawn.depthM ?? seabedAt(drawn.x, drawn.z))
+        ) < HELD_M;
+    }
+    if (this.held) {
       drawn.x = goal.x;
       drawn.z = goal.z;
       drawn.depthM = goal.depthM;

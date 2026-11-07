@@ -254,9 +254,11 @@ camera above, and promoting the feel to them is a separate decision.
    and a double-click on a hull travel over **0.6 s** (`GLIDE_S`), starting and ending at
    rest. They swing about the focus rather than cutting across to the new eye. Leaving NAV
    glides from the flight eye back to the orbit it left.
-5. **Input takes over.** A drag or a jump starts from where the camera is drawn, not from
-   where it was going, and stops a glide or a coast under way. A step adds to where the
-   camera is going, as rule 3 says.
+5. **Input takes over.** A drag stops a coast and takes the numbers it moves from where
+   the camera is drawn, and a glide under way carries the rest to their end: `Home` still
+   arrives at north while the player pans, and a glide to a hull still lands on it while
+   they turn. A jump starts from where the camera is drawn, not from where it was going.
+   A step adds to where the camera is going, as rule 3 says.
 6. **Nothing turns by itself.** Every motion above finishes a gesture the player made, and
    following moves the focus without turning the camera. §5's rule holds: no effect rotates
    the projection, and the sway stays a translation.
