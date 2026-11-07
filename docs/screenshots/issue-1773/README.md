@@ -70,6 +70,56 @@ adds none, so the props, calls and whole-frame triangles hold, under the study's
 most 568,928 at the per-model ceilings (§7), and the decoration test sums the registry's
 budgets under it. The control reads the same too.
 
+## Motion and reduced motion
+
+`MOTION=1 FRAMES=garden-close,north-flank` shoots each of those poses again ten seconds of
+match later, and `SETTINGS_JSON='{"reducedMotion":true,"reducedMotionChosen":true}'` stores
+reduced motion for the second drive. The sway is object-space
+(`packages/frontend/src/game/environmentModels.ts`), so a turned stand sways along its own
+heading, the way its stalks lean.
+
+- **Motion.** [motion/04](motion/04-north-flank.png) and
+  [motion/05](motion/05-north-flank-later.png), and the garden-close pair 02 and 03, are
+  one camera ten seconds apart: the stands sway and the life moves, and 109,632 of the
+  604,800 pixels in rows 180 to 600 of the north-flank pair change by more than 8 levels
+  (28,757 at garden close), marine snow included.
+- **Reduced motion.** [reduced-motion/04](reduced-motion/04-north-flank.png) and
+  [reduced-motion/05](reduced-motion/05-north-flank-later.png), and 02 and 03, are the
+  same pairs with reduced motion stored: no pixel changes by more than one level, the sway
+  held.
+
+## Hardware
+
+`docs/screenshots/issue-1713/gpu.mjs`, unpaced, with the animation running, at the
+fixture's 291 props and 156 photophores:
+
+```bash
+UNPACED=1 VIEW_DPR=1 GPU_PROPS=291 GPU_PHOTOPHORES=156 \
+  node .claude/skills/run-game/scripts/drive.mjs --headed --channel msedge \
+  --url 'http://localhost:5173/?study=free-water' --out <dir> \
+  --steps docs/screenshots/issue-1713/gpu.mjs
+```
+
+Each revision was read twice at DPR 1 and 1.5 on the GeForce GTX 1070 through Edge/ANGLE
+D3D11, the revisions interleaved, `before` with `origin/main`'s
+`freeWaterDecoration.ts` served as above. Every window holds at least 240 samples and every
+queue load, 3.59 ms or more, outlasts the frame it measures. The table gives the mean of
+the two runs; the raw runs are `gpu/{before,after}/dpr-{1,1.5}/run-{1,2}.json`, for
+example [gpu/after/dpr-1/run-1.json](gpu/after/dpr-1/run-1.json).
+
+| Station | Calls | Triangles | DPR 1 GPU / queued ms, before → after | DPR 1.5 GPU / queued ms, before → after |
+| --- | --- | --- | --- | --- |
+| Home | 44 | 568,986 | 1.19 / 1.09 → 1.20 / 1.08 | 1.86 / 1.83 → 1.90 / 1.82 |
+| Garden, 1,875 / 875 at `yawDeg` 0 | 23 | 560,617 | 1.29 / 1.19 → 1.31 / 1.21 | 1.96 / 2.01 → 1.98 / 2.08 |
+| Low | 26 | 561,017 | 1.04 / 1.00 → 1.08 / 1.02 | 1.57 / 1.51 → 1.58 / 1.51 |
+| Survey | 45 | 568,986 | 1.15 / 0.93 → 1.17 / 0.93 | 1.69 / 1.50 → 1.60 / 1.49 |
+
+Calls and triangles hold at every station. Two runs of one revision differ by up to
+0.03 ms queued, gate 6's reading, and every step but one is within that. The one is the
+garden station at DPR 1.5, 2.01 → 2.08 ms in both runs: from the clearing it looks north
+into the flank, the densest kelp in any frame, and the moved and turned stands cost it
+0.07 ms there. Unqueued time scatters more, up to 0.22 ms between one revision's runs.
+
 ## Reproduce the list
 
 ```bash

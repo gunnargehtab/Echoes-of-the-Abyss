@@ -12,6 +12,11 @@
 //     --out docs/screenshots/issue-1773/after --steps docs/screenshots/issue-1773/frames.mjs
 //
 // PROPS=291 is the study's prop count since #1777, which #1773 keeps.
+// FRAMES=garden-close,north-flank limits the explicit poses, and MOTION=1
+// shoots each again ten seconds of match later: the stands' sway, which
+// turns with each stand's heading, and the life's loops. Seeded with
+// SETTINGS_JSON='{"reducedMotion":true,"reducedMotionChosen":true}', the
+// same pair shows both held.
 // CONTROL=1 drives the Kelp Labyrinth control instead (`?map=kelp-labyrinth`):
 // its opening, then its own force from 3,000 m at 60 degrees, where the
 // registry's kelp scatter, which #1773 leaves alone, fills the frame.
@@ -91,10 +96,18 @@ export default async ({ page, shot }) => {
     await read('overview');
     await shot('overview');
   } else {
+    const only = process.env.FRAMES?.split(',');
     for (const pose of POSES) {
+      if (only !== undefined && !only.includes(pose[0])) continue;
       await aim(pose);
       await read(pose[0]);
       await shot(pose[0]);
+      if (process.env.MOTION === '1') {
+        await page.waitForTimeout(10000);
+        await settle();
+        await read(`${pose[0]}-later`);
+        await shot(`${pose[0]}-later`);
+      }
     }
   }
   const renderer = await page.evaluate(() => {
