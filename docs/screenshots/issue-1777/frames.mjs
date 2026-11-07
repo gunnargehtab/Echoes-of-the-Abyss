@@ -1,4 +1,4 @@
-// The §9 frames with the ray the opening reads (#1777), after #1771's life
+// The §9 frames with the ray placed for the opening (#1777), after #1771's life
 // (docs/free-water-slice.md §5, "Life in the frames"), as a run-game steps
 // module. First the frame the study opens on, untouched, then the four §9
 // poses with the HUD on. Beside each frame, readings.json carries the probe's
