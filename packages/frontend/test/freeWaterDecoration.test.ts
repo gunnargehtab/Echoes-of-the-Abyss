@@ -2,11 +2,16 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { readFileSync } from 'node:fs';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { MeshStandardMaterial, Vector3 } from 'three';
+import { Box3, Matrix4, MeshStandardMaterial, Vector3 } from 'three';
 import { terrainFor, KELP_LABYRINTH } from '../../backend/src/sim/maps/index.ts';
 import { FREE_WATER_SLICE } from '../../backend/src/sim/maps/freeWaterSlice.ts';
 import { decorationPose, freeWaterPlacements } from '../src/game/freeWaterDecoration.ts';
-import { ENVIRONMENT_PROPS, placeProps, propSpec } from '../src/game/environment.ts';
+import {
+  ENVIRONMENT_PROPS,
+  placeProps,
+  propSpec,
+  type PropPlacement,
+} from '../src/game/environment.ts';
 import { buildTemplate } from '../src/game/environmentModels.ts';
 import {
   DEPTH_VISUAL_M_PER_M,
@@ -19,61 +24,154 @@ import { Biome, Faction, FaunaSpecies, ResolutionTier, UnitKind } from '@echoes/
 import { Match } from '../../backend/src/sim/match.ts';
 import { spawnFauna, spawnUnit } from '../../backend/src/sim/world.ts';
 
+// A plant's plan outline where the layer draws it: half its length on the
+// template's own x and half its width on its z, off the GLB normalised to its
+// footprint as the layer builds it, turned by the placement's yaw about +y.
+const outlineOf = async (slug: string) => {
+  const bytes = readFileSync(
+    new URL(`../../../docs/concept-art/models/${slug}.glb`, import.meta.url)
+  );
+  const parsed = await new GLTFLoader().parseAsync(
+    bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+    ''
+  );
+  const spec = propSpec(slug)!;
+  const box = new Box3();
+  for (const { geometry } of buildTemplate(parsed.scene, spec.footprintM, spec.swayM, 'free-water')
+    .parts) {
+    geometry.computeBoundingBox();
+    box.union(geometry.boundingBox!);
+  }
+  const a = Math.max(-box.min.x, box.max.x);
+  const b = Math.max(-box.min.z, box.max.z);
+  // The plan point a share of the way out along the outline's length and width.
+  const at = (p: PropPlacement, u: number, v: number) => {
+    const turned = new Vector3(u * a, 0, v * b).applyMatrix4(new Matrix4().makeRotationY(p.yawRad));
+    return [p.xM + turned.x, p.yM + turned.z] as const;
+  };
+  return {
+    at,
+    corners: (p: PropPlacement) => [at(p, 1, 1), at(p, 1, -1), at(p, -1, -1), at(p, -1, 1)],
+  };
+};
+
+// Two convex outlines overlap unless an edge normal of one separates them.
+const outlinesOverlap = (
+  p: readonly (readonly [number, number])[],
+  q: readonly (readonly [number, number])[]
+) => {
+  for (const shape of [p, q]) {
+    for (let k = 0; k < shape.length; k++) {
+      const [ax, ay] = shape[k]!;
+      const [bx, by] = shape[(k + 1) % shape.length]!;
+      const normal = [by - ay, ax - bx] as const;
+      const span = (s: typeof p) => s.map(([x, y]) => x * normal[0] + y * normal[1]);
+      if (Math.max(...span(p)) <= Math.min(...span(q))) return false;
+      if (Math.max(...span(q)) <= Math.min(...span(p))) return false;
+    }
+  }
+  return true;
+};
+
+// §5, No rows: how far the middle plant of a triple stands from the line
+// through the outer two, when it lies between them, at least a fifth of the
+// way in from each, and within 260 m of both; otherwise null.
+const offRow = (a: PropPlacement, b: PropPlacement, c: PropPlacement): number | null => {
+  if (Math.hypot(b.xM - a.xM, b.yM - a.yM) > 260 || Math.hypot(b.xM - c.xM, b.yM - c.yM) > 260) {
+    return null;
+  }
+  const acx = c.xM - a.xM;
+  const acy = c.yM - a.yM;
+  const ac2 = acx * acx + acy * acy;
+  const t = ((b.xM - a.xM) * acx + (b.yM - a.yM) * acy) / ac2;
+  if (t < 0.2 || t > 0.8) return null;
+  return Math.abs(acx * (b.yM - a.yM) - acy * (b.xM - a.xM)) / Math.sqrt(ac2);
+};
+
+// The share of the tread's 1,750 m an east-west line meets in outlines.
+const lineCover = (y: number, outlines: readonly (readonly (readonly [number, number])[])[]) => {
+  const spans: [number, number][] = [];
+  for (const shape of outlines) {
+    const xs: number[] = [];
+    for (let k = 0; k < shape.length; k++) {
+      const [ax, ay] = shape[k]!;
+      const [bx, by] = shape[(k + 1) % shape.length]!;
+      if ((ay - y) * (by - y) <= 0 && ay !== by) xs.push(ax + ((y - ay) * (bx - ax)) / (by - ay));
+    }
+    if (xs.length >= 2) spans.push([Math.min(...xs), Math.max(...xs)]);
+  }
+  spans.sort((u, v) => u[0] - v[0]);
+  let total = 0;
+  let open: [number, number] | null = null;
+  for (const [a, b] of spans) {
+    if (open === null || a > open[1]) {
+      if (open !== null) total += open[1] - open[0];
+      open = [a, b];
+    } else open[1] = Math.max(open[1], b);
+  }
+  if (open !== null) total += open[1] - open[0];
+  return total / 1750;
+};
+
 describe('authored public decoration', () => {
   const ground = () => terrainFor(FREE_WATER_SLICE).serialize();
-  it('places every commissioned instance without scatter, scale jitter or truncation', () => {
+  it('places every commissioned instance without scatter, scale jitter or truncation', async () => {
     const placements = freeWaterPlacements(ground());
     const counts: Record<string, number> = {};
     const plants = placements.filter((p) => p.motion === undefined);
+    const outline = {
+      'env-kelp-stand': await outlineOf('env-kelp-stand'),
+      'env-kelp-cluster': await outlineOf('env-kelp-cluster'),
+    } as Record<string, Awaited<ReturnType<typeof outlineOf>>>;
     for (const p of placements) {
       counts[p.slug] = (counts[p.slug] ?? 0) + 1;
       assert.equal(p.scale, 1);
       if (p.motion === undefined) {
-        // §3: bounds, not origins, stay out of the clearing, swaying tips included.
-        const { footprintM, swayM } = propSpec(p.slug)!;
-        const reach = footprintM / 2 + swayM;
-        assert.ok(p.yM + reach <= 1000 || p.yM - reach >= 1250, 'clearing stays clear');
-        // §5: each slot leaves the plan envelope wholly inside its 250 m cell.
-        const cellX = Math.floor(p.xM / 250) * 250;
-        const cellY = Math.floor(p.yM / 250) * 250;
-        assert.ok(p.xM - footprintM / 2 >= cellX && p.xM + footprintM / 2 <= cellX + 250);
-        assert.ok(p.yM - footprintM / 2 >= cellY && p.yM + footprintM / 2 <= cellY + 250);
+        // §5: a plant turns at most 45 degrees from the current, its +x.
+        assert.ok(Math.abs(p.yawRad) <= Math.PI / 4 + 1e-9, `${p.slug} turned ${p.yawRad}`);
+        // §3: outlines, not origins, stay out of the clearing, swaying tips included.
+        const ys = outline[p.slug]!.corners(p).map(([, y]) => y);
+        const { swayM } = propSpec(p.slug)!;
+        assert.ok(
+          Math.max(...ys) + swayM <= 1000 || Math.min(...ys) - swayM >= 1250,
+          `${p.slug} at ${p.xM},${p.yM}: clearing stays clear`
+        );
       }
     }
-    // §5: a longer list buys clearance, so no two plan envelopes overlap.
+    // §5: no two plant outlines overlap.
     for (const a of plants) {
       for (const b of plants) {
         if (a === b) continue;
-        const apart = (propSpec(a.slug)!.footprintM + propSpec(b.slug)!.footprintM) / 2;
-        assert.ok(Math.hypot(a.xM - b.xM, a.yM - b.yM) >= apart - 1e-8, `${a.slug} overlaps`);
+        assert.ok(
+          !outlinesOverlap(outline[a.slug]!.corners(a), outline[b.slug]!.corners(b)),
+          `${a.slug} at ${a.xM},${a.yM} overlaps ${b.slug} at ${b.xM},${b.yM}`
+        );
       }
     }
-    // §5: a stand's whole envelope lies where every surrounding cell centre is
+    // §5: a stand's whole outline lies where every surrounding cell centre is
     // the garden's 400 m tread, so the view's interpolation never puts a ramp
     // under it; and the rendered floor, eroded, stays within a stand's height
-    // of its root across the envelope.
+    // of its root across that outline, sampled every eighth of its length and
+    // every quarter of its width.
     const terrain = ground();
     const seed = seabedSeed(terrain);
     const rockTop = rockTopDepthM(terrain);
     const stands = plants.filter((p) => p.slug === 'env-kelp-stand');
+    const standOutline = outline['env-kelp-stand']!;
     for (const p of stands) {
-      const half = propSpec(p.slug)!.footprintM / 2;
-      for (const x of [p.xM - half, p.xM + half]) {
-        for (const y of [p.yM - half, p.yM + half]) {
-          for (const col of [Math.floor(x / 250 - 0.5), Math.ceil(x / 250 - 0.5)]) {
-            for (const row of [Math.floor(y / 250 - 0.5), Math.ceil(y / 250 - 0.5)]) {
-              const i = row * terrain.cols + col;
-              assert.equal(terrain.floor[i], 400, `${p.xM},${p.yM} reaches a ramp`);
-              assert.equal(terrain.biomes[i], Biome.KelpForest);
-            }
+      for (const [x, y] of standOutline.corners(p)) {
+        for (const col of [Math.floor(x / 250 - 0.5), Math.ceil(x / 250 - 0.5)]) {
+          for (const row of [Math.floor(y / 250 - 0.5), Math.ceil(y / 250 - 0.5)]) {
+            const i = row * terrain.cols + col;
+            assert.equal(terrain.floor[i], 400, `${p.xM},${p.yM} reaches a ramp`);
+            assert.equal(terrain.biomes[i], Biome.KelpForest);
           }
         }
       }
       const root = seabedDepthAtM(terrain, seed, rockTop, p.xM, p.yM, true);
-      for (let a = 0; a < 32; a++) {
-        for (const f of [0.5, 1]) {
-          const x = p.xM + Math.cos((a * Math.PI) / 16) * half * f;
-          const y = p.yM + Math.sin((a * Math.PI) / 16) * half * f;
+      for (let u = -4; u <= 4; u++) {
+        for (let v = -2; v <= 2; v++) {
+          const [x, y] = standOutline.at(p, u / 4, v / 2);
           const floor = seabedDepthAtM(terrain, seed, rockTop, x, y, true);
           assert.ok(
             Math.abs(floor - root) <= 40,
@@ -82,13 +180,9 @@ describe('authored public decoration', () => {
         }
       }
     }
-    // §9: three rows north of the clearing and one south, each 14 stands.
-    const rows = [...new Set(stands.map((p) => p.yM))].sort((a, b) => a - b);
-    assert.deepEqual(rows, [687.5, 812.5, 935, 1315]);
-    assert.deepEqual(
-      rows.map((y) => stands.filter((p) => p.yM === y).length),
-      [14, 14, 14, 14]
-    );
+    // §5: the north flank's tread holds 42 stands and the south flank's 14.
+    assert.equal(stands.filter((p) => p.yM < 1000).length, 42);
+    assert.equal(stands.filter((p) => p.yM > 1250).length, 14);
     assert.deepEqual(counts, {
       'env-kelp-stand': 56,
       'env-kelp-cluster': 16,
@@ -117,6 +211,39 @@ describe('authored public decoration', () => {
         )
       )
     );
+  });
+
+  it('stands no three plants in a row and opens no lane through the forest', async () => {
+    // §5, No rows (#1773). Roots stand on one floor, and the camera maps a
+    // plane through a homography, which keeps a line a line: three roots in
+    // line in plan are in line in the garden-close and survey frames alike.
+    const plants = freeWaterPlacements(ground()).filter((p) => p.motion === undefined);
+    for (const slug of ['env-kelp-stand', 'env-kelp-cluster']) {
+      const kind = plants.filter((p) => p.slug === slug);
+      for (const a of kind) {
+        for (const b of kind) {
+          for (const c of kind) {
+            if (a === b || b === c || a === c) continue;
+            const off = offRow(a, b, c);
+            assert.ok(
+              off === null || off >= 10,
+              `${slug} at ${b.xM},${b.yM} stands ${off?.toFixed(1)} m off the line from ` +
+                `${a.xM},${a.yM} to ${c.xM},${c.yM}`
+            );
+          }
+        }
+      }
+    }
+    // Every east-west line across the north flank meets stands over a
+    // quarter of the tread, sampled every 5 m, so no lane runs between them.
+    const outline = await outlineOf('env-kelp-stand');
+    const north = plants
+      .filter((p) => p.slug === 'env-kelp-stand' && p.yM < 1000)
+      .map((p) => outline.corners(p));
+    for (let y = 650; y <= 970; y += 5) {
+      const share = lineCover(y, north);
+      assert.ok(share >= 0.25, `the line y=${y} meets stands over ${(share * 100).toFixed(0)}%`);
+    }
   });
 
   it('holds whole loops inside their authored patches and places the body axis at depth', () => {
@@ -341,19 +468,35 @@ describe('authored public decoration', () => {
   });
 
   it('a public delta invalidates only placements whose envelopes touch its cells', () => {
+    // §5: a slot need not keep its envelope in its own cell, so a change
+    // takes every placement whose registry footprint, swept along any loop,
+    // reaches the changed cell, from whichever cell its slot stands in, and
+    // nothing whose footprint's bounding square stays clear of it.
     const terrain = ground();
     const before = freeWaterPlacements(terrain, true);
-    terrain.ceiling[3 * 16 + 6] = 3000;
+    const [row, col] = [3, 6];
+    terrain.ceiling[row * 16 + col] = 3000;
     const after = freeWaterPlacements(terrain, true);
     assert.equal(before.length, after.length);
     let removed = 0;
+    let fromNeighbours = 0;
     after.forEach((p, i) => {
+      const reach = (p.motion?.radiusM ?? 0) + propSpec(p.slug)!.footprintM / 2;
+      const dx = Math.max(col * 250 - p.xM, 0, p.xM - (col + 1) * 250);
+      const dy = Math.max(row * 250 - p.yM, 0, p.yM - (row + 1) * 250);
+      const discReaches = Math.hypot(dx, dy) < reach;
+      const squareReaches = dx <= reach && dy <= reach;
       if (p.disabled === true) {
         removed++;
-        assert.equal(p.cellIndex, 3 * 16 + 6);
-      } else assert.deepEqual(p, before[i]);
+        if (p.cellIndex !== row * 16 + col) fromNeighbours++;
+        assert.ok(squareReaches, `${p.slug} at ${p.xM},${p.yM} lies clear of the change`);
+      } else {
+        assert.ok(!discReaches, `${p.slug} at ${p.xM},${p.yM} reaches the change`);
+        assert.deepEqual(p, before[i]);
+      }
     });
-    assert.equal(removed, 4);
+    assert.ok(removed > 0);
+    assert.ok(fromNeighbours > 0, 'a slot in a neighbouring cell whose footprint reaches it goes');
   });
 
   it('is byte-identical with hidden opposition and a server-only Hollow', () => {
