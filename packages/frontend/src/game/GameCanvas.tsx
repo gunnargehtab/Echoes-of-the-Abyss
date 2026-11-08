@@ -1061,7 +1061,6 @@ export function GameCanvas({
         {FREE_WATER_CONTROLS && live && phase === MatchPhase.Playing && (
           <MovePreviewPanel
             reading={destination}
-            navigating={flight?.navigating ?? false}
             onArm={() => rendererRef.current?.armDestination()}
             onPlan={(axis, value) => rendererRef.current?.setDestinationPlan(axis, value)}
             onDepth={(value) => rendererRef.current?.setDestinationDepth(value)}
@@ -1074,7 +1073,6 @@ export function GameCanvas({
         {FREE_WATER_CONTROLS && live && phase === MatchPhase.Playing && (
           <FlightPanel
             reading={flight}
-            onFlight={() => rendererRef.current?.toggleFlight()}
             onNav={() => rendererRef.current?.toggleNavigation()}
             onHome={() => rendererRef.current?.homeCamera()}
             onStep={(action) => rendererRef.current?.stepFlight(action)}

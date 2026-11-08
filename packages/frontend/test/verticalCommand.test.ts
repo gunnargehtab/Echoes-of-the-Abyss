@@ -7,10 +7,10 @@
  * among it.
  */
 import assert from 'node:assert/strict';
-import { afterEach, describe, it } from 'node:test';
+import { afterEach, describe, it, mock } from 'node:test';
 import type { Graphics, GraphicsPath } from 'pixi.js';
 import { InstancedMesh, LineSegments, Matrix4, type Object3D } from 'three';
-import { DEPTH, Faction, ResolutionTier } from '@echoes/shared';
+import { CAMERA_FEEL, DEPTH, Faction, ResolutionTier } from '@echoes/shared';
 import {
   createHost,
   HeadlessApplication,
@@ -570,9 +570,21 @@ describe('the instruments on the study', () => {
       const eye = study.conn.eyePosition;
       const floor = study.conn.seabedDepthAt(eye.x, eye.y);
       assert.ok(eye.depthM <= floor, `the eye is in the water: ${eye.depthM} over ${floor}`);
-      // Home still restores 55°, and a frame set below the shipped floor is
-      // held to it there and taken in the study.
-      study.conn.home();
+      // Home still restores 55°, by its glide in the study (docs/free-camera.md
+      // §4, "The study's camera feel"), and a frame set below the shipped floor
+      // is held to it there and taken in the study.
+      let now = 10_000;
+      const clock = mock.method(performance, 'now', () => now);
+      try {
+        study.frame();
+        study.conn.home();
+        for (let t = 0; t <= CAMERA_FEEL.GLIDE_S * 1000; t += 50) {
+          now += 50;
+          study.frame();
+        }
+      } finally {
+        clock.mock.restore();
+      }
       assert.equal(study.conn.frame.pitchDeg, 55);
       shipped.conn.setFrame({ xM: 2000, yM: 2000, distanceM: 600, yawDeg: 0, pitchDeg: -30 });
       assert.ok(Math.abs(shipped.conn.frame.pitchDeg - 10) < 1e-9);

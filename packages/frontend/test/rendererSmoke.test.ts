@@ -26,6 +26,7 @@ import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 import { CanvasTextMetrics, Container, Graphics, Text, type GraphicsPath } from 'pixi.js';
 import {
+  CAMERA_FEEL,
   FREE_WATER_OPENING,
   ACTIVE_SONAR,
   DEPTH,
@@ -545,8 +546,10 @@ describe('free-water camera integration', () => {
       world.chart.toggleNavigation();
       world.chart.stepFlight('rollLeft');
       world.chart.stepFlight('flyRight');
-      world.chart.confirmDestination();
-      assert.equal(world.log.names().includes('onMoveOrder'), false, 'NAV cannot confirm');
+      // NAV takes the keys, never the mouse (docs/free-camera.md §4, decision
+      // 4): Enter is NAV's while it is latched, so it confirms nothing.
+      dispatchWindow('keydown', { code: 'Enter', target: { closest: () => null } });
+      assert.equal(world.log.names().includes('onMoveOrder'), false, 'NAV owns Enter');
       dispatchWindow('keydown', { code: 'Escape' });
       assert.deepEqual(reading(), pinned, 'leaving NAV preserves preview and depth');
       world.app.canvas.dispatch('wheel', { deltaY: 1, shiftKey: true });
@@ -573,7 +576,7 @@ describe('free-water camera integration', () => {
         world.conn.focusWorld(2000, 2000, distance);
         world.conn.raiseFocusBy(world.conn.focusDepth() - 300);
         world.frame();
-        world.chart.toggleFlight();
+        world.chart.toggleNavigation();
         world.frame();
         if (first === undefined) first = world.conn.eyePosition;
         else assert.deepEqual(world.conn.eyePosition, first);
@@ -622,7 +625,7 @@ describe('free-water camera integration', () => {
       world.conn.setReducedMotion(true);
       world.conn.focusWorld(2000, 2000, 1000);
       world.conn.raiseFocusBy(world.conn.focusDepth() - 300);
-      world.chart.toggleFlight();
+      world.chart.toggleNavigation();
       assert.notEqual(world.conn.pickPlane(640, 360, 500), null, 'forward control reaches water');
       const horizonTurn = (HOME_PITCH_DEG * Math.PI) / 180;
       world.conn.turnFlight(0, horizonTurn, 0);
@@ -640,6 +643,10 @@ describe('free-water camera integration', () => {
       assert.equal(reading()!.reason, 'NO WATER TARGET');
       world.chart.confirmDestination();
       assert.equal(world.log.names().includes('onMoveOrder'), false);
+      // Escape's chain (docs/free-water-slice.md §6): NAV first, keeping the
+      // preview, then the preview, even from an input.
+      dispatchWindow('keydown', { code: 'Escape', target: { closest: () => ({}) } });
+      assert.equal(reading()!.reason, 'NO WATER TARGET', 'leaving NAV keeps the preview');
       dispatchWindow('keydown', { code: 'Escape', target: { closest: () => ({}) } });
       assert.equal(reading(), null, 'Escape owns preview even from an input');
       assert.equal(world.log.names().includes('onOpenMenu'), false);
@@ -690,7 +697,7 @@ describe('free-water camera integration', () => {
       world.conn.focusWorld(2000, 2000, 1000);
       world.conn.raiseFocusBy(world.conn.focusDepth() - 300);
       const saved = world.conn.frame;
-      world.chart.toggleFlight();
+      world.chart.toggleNavigation();
       assert.equal(world.conn.flying, true);
       const camera = (world.conn as unknown as { camera: import('three').PerspectiveCamera })
         .camera;
@@ -798,10 +805,12 @@ describe('free-water camera integration', () => {
       assert.deepEqual(world.conn.eyePosition, blurred);
       dispatchWindow('keydown', { code: 'KeyA' });
       world.chart.setMenuOpen(true);
+      assert.equal(world.conn.flying, false, 'the menu leaves NAV, and flight with it');
+      const menued = world.conn.eyePosition;
       world.chart.setMenuOpen(false);
       now += 100;
       world.frame();
-      assert.deepEqual(world.conn.eyePosition, blurred, 'menu never resumes motion');
+      assert.deepEqual(world.conn.eyePosition, menued, 'menu never resumes motion');
       world.chart.toggleNavigation();
       const focusedButton = { closest: () => ({}) };
       dispatchWindow('keydown', { code: 'Escape', target: focusedButton });
@@ -813,14 +822,16 @@ describe('free-water camera integration', () => {
     }
   });
 
-  it('selects and queues orders through a rolled view, refusing a sky pick', async () => {
+  it('selects and queues orders through a rolled view in NAV, refusing a sky pick', async () => {
     const world = await boot({ controlsStudy: true });
     try {
       const hull = cannedSnapshot().units[0]!;
       world.conn.setReducedMotion(true);
       world.conn.focusWorld(hull.x, hull.y, 100);
       world.conn.raiseFocusBy(world.conn.focusDepth() - hull.depth);
-      world.chart.toggleFlight();
+      // NAV is the one way into flight, and it takes the keys but not the
+      // mouse (docs/free-camera.md §4, decision 4), so the clicks below land.
+      world.chart.toggleNavigation();
       world.conn.turnFlight(0, 0, Math.PI);
       world.frame();
       const at = world.conn.projectPoint(hull.x, hull.y, hull.depth);
@@ -850,6 +861,432 @@ describe('free-water camera integration', () => {
       assert.equal(world.log.first('onMoveOrder'), undefined);
       assert.ok(textContents(world.app.stage).some((text) => text.includes('NO WATER TARGET')));
     } finally {
+      world.teardown();
+    }
+  });
+});
+
+/**
+ * docs/free-camera.md §4, "The study's camera feel" (#1775), through the real
+ * classes: steps ease and arrive, drags keep up with the hand and coast when
+ * let go moving, a right drag orbits, a double-click follows, reduced motion
+ * takes the motion out, and leaving NAV glides home to the orbit it left.
+ */
+describe("the free-water study's camera feel (#1775)", () => {
+  /** Count of orders of any kind the shell was asked to send. */
+  const orders = (world: Booted) => world.log.names().filter((name) => /Order$/.test(name)).length;
+  /** The selected hulls' ids, off the renderer's own selection. */
+  const selection = (world: Booted) =>
+    (world.chart as unknown as { selectedUnits(): Array<{ id: number }> })
+      .selectedUnits()
+      .map((unit) => unit.id);
+  const press = (world: Booted, type: string, button: number, x: number, y: number) => {
+    const buttons = type === 'pointerup' ? 0 : button === 1 ? 4 : button === 2 ? 2 : 1;
+    world.app.canvas.dispatch(type, { button, buttons, clientX: x, clientY: y, pointerId: 1 });
+  };
+
+  it('eases a wheel notch in the study and arrives exactly, and keeps it instant elsewhere', async () => {
+    for (const study of [true, false]) {
+      const world = await boot({ controlsStudy: study });
+      let now = 10_000;
+      const clock = mock.method(performance, 'now', () => now);
+      try {
+        world.frame();
+        const before = world.conn.frame.distanceM;
+        world.app.canvas.dispatch('wheel', { deltaY: -1, clientX: 640, clientY: 360 });
+        const goal = before / 1.1;
+        if (!study) {
+          assert.ok(Math.abs(world.conn.frame.distanceM - goal) < 1e-6, 'a cut outside the study');
+          continue;
+        }
+        assert.equal(world.conn.frame.distanceM, before, 'the notch moves where the dolly goes');
+        const steps: number[] = [];
+        let last = before;
+        for (let i = 0; i < 120; i++) {
+          now += 16;
+          world.frame();
+          assert.ok(world.conn.frame.distanceM >= goal - 1e-9, 'closing, never overshooting');
+          steps.push(last - world.conn.frame.distanceM);
+          last = world.conn.frame.distanceM;
+        }
+        assert.ok(Math.abs(last - goal) < 1e-6, `arrives: ${last} of ${goal}`);
+        assert.ok(steps[0]! > 0 && steps[0]! < (before - goal) / 2, 'eased, not cut');
+        assert.ok(
+          steps.every((step) => step >= 0),
+          'never backing away'
+        );
+        assert.equal(steps.at(-1), 0, 'and then still: a settled ease repaints nothing (#1032)');
+      } finally {
+        clock.mock.restore();
+        world.teardown();
+      }
+    }
+  });
+
+  it('keeps a middle drag under the hand, coasts it let go moving, and not held still', async () => {
+    for (const still of [false, true]) {
+      const world = await boot({ controlsStudy: true });
+      let now = 10_000;
+      const clock = mock.method(performance, 'now', () => now);
+      try {
+        world.frame();
+        const start = world.conn.frame.xM;
+        press(world, 'pointerdown', 1, 600, 360);
+        for (let i = 1; i <= 5; i++) {
+          now += 16;
+          press(world, 'pointermove', 1, 600 + i * 8, 360);
+        }
+        const held = world.conn.frame.xM;
+        assert.notEqual(held, start, 'the drag moved the camera before any frame (rule 1)');
+        if (still) now += CAMERA_FEEL.COAST_STILL_MS + 20;
+        press(world, 'pointerup', 1, 640, 360);
+        for (let i = 0; i < 120; i++) {
+          now += 16;
+          world.frame();
+        }
+        const rest = world.conn.frame.xM;
+        if (still) assert.equal(rest, held, 'held still before the release: no coast');
+        else {
+          assert.ok(
+            Math.sign(rest - held) === Math.sign(held - start) && rest !== held,
+            'the release carried on the way the hand was going (rule 2)'
+          );
+          now += 16;
+          world.frame();
+          assert.equal(world.conn.frame.xM, rest, 'and the water stopped it');
+        }
+      } finally {
+        clock.mock.restore();
+        world.teardown();
+      }
+    }
+  });
+
+  it('orbits on a right drag past the slop in the study, and still orders on a right click', async () => {
+    for (const study of [true, false]) {
+      const world = await boot({ controlsStudy: study });
+      try {
+        dispatchWindow('keydown', { code: 'Digit0' });
+        world.frame();
+        const yaw = world.conn.frame.yawDeg;
+        press(world, 'pointerdown', 2, 640, 360);
+        press(world, 'pointermove', 2, 700, 360);
+        press(world, 'pointerup', 2, 700, 360);
+        if (study) {
+          assert.notEqual(world.conn.frame.yawDeg, yaw, 'the drag turned the camera');
+          assert.equal(orders(world), 0, 'and gave no order');
+        } else {
+          assert.equal(world.conn.frame.yawDeg, yaw, 'outside the study a right drag never turns');
+          assert.equal(orders(world), 1, 'it orders at the press point, as it always has');
+        }
+        const before = orders(world);
+        const turned = world.conn.frame.yawDeg;
+        press(world, 'pointerdown', 2, 640, 360);
+        press(world, 'pointermove', 2, 643, 362);
+        press(world, 'pointerup', 2, 643, 362);
+        assert.equal(orders(world), before + 1, 'inside the slop a right press is still the click');
+        assert.equal(world.conn.frame.yawDeg, turned);
+      } finally {
+        world.teardown();
+      }
+    }
+  });
+
+  it('follows a double-clicked hull at its depth through its moves, until a pan lets go', async () => {
+    const world = await boot({ controlsStudy: true });
+    let now = 10_000;
+    const clock = mock.method(performance, 'now', () => now);
+    try {
+      const snapshot = cannedSnapshot();
+      const [hull, ...rest] = snapshot.units;
+      world.conn.focusWorld(hull!.x + 150, hull!.y + 150, 1200);
+      world.frame();
+      const at = world.conn.projectPoint(hull!.x, hull!.y, hull!.depth);
+      assert.ok(at.visible);
+      // A double-click: two clicks inside DOUBLE_CLICK_MS.
+      for (let click = 0; click < 2; click++) {
+        press(world, 'pointerdown', 0, at.x, at.y);
+        press(world, 'pointerup', 0, at.x, at.y);
+        now += 100;
+      }
+      assert.deepEqual(world.conn.following, [hull!.id]);
+      assert.ok(selection(world).includes(hull!.id), 'and selected');
+      // Orders read the hull's depth from the double-click on, before the
+      // glide has carried the picture there (decision 5).
+      assert.equal(world.conn.focusDepth(), hull!.depth, 'the click plane is at once the hull');
+      const mid: number[] = [];
+      for (let t = 0; t <= 1000; t += 50) {
+        now += 50;
+        world.frame();
+        mid.push(world.conn.frame.xM);
+      }
+      assert.ok(mid[0]! > hull!.x && mid[0]! < hull!.x + 150, 'glided there, not cut (rule 4)');
+      assert.ok(Math.abs(world.conn.frame.xM - hull!.x) < 1e-6);
+      assert.ok(Math.abs(world.conn.frame.yM - hull!.y) < 1e-6);
+      assert.ok(Math.abs(world.conn.focusDepth() - hull!.depth) < 1e-6, 'at its depth');
+
+      const moved = { ...hull!, x: hull!.x + 200, y: hull!.y + 100, depth: hull!.depth + 150 };
+      const next = { ...cannedSnapshot(snapshot.tick + 1), units: [moved, ...rest] };
+      world.conn.applySnapshot(next);
+      world.chart.applySnapshot(next);
+      for (let t = 0; t <= 1000; t += 50) {
+        now += 50;
+        world.frame();
+        // Every frame of the glide between ticks, not just its end: the goal
+        // is the hull where it is drawn, and the focus is held on it exactly.
+        const goal = world.conn.feelReading!.goal;
+        assert.equal(world.conn.frame.xM, goal.x, `held on the drawn hull at ${t} ms`);
+        assert.equal(world.conn.frame.yM, goal.z);
+      }
+      assert.ok(Math.abs(world.conn.frame.xM - moved.x) < 1e-6, 'the focus moved with the hull');
+      assert.ok(Math.abs(world.conn.focusDepth() - moved.depth) < 1e-6, 'and dived with it');
+
+      // The wheel dollies toward the hull, not the cursor, and keeps it.
+      const dolly = world.conn.frame.distanceM;
+      world.app.canvas.dispatch('wheel', { deltaY: -1, clientX: 100, clientY: 100 });
+      for (let t = 0; t <= 1000; t += 50) {
+        now += 50;
+        world.frame();
+      }
+      assert.ok(Math.abs(world.conn.frame.distanceM - dolly / 1.1) < 1e-6, 'zoomed in');
+      assert.ok(Math.abs(world.conn.frame.xM - moved.x) < 1e-6, 'toward the hull, not the cursor');
+      assert.deepEqual(world.conn.following, [hull!.id], 'and still following');
+
+      world.conn.orbitBy(40, 0);
+      assert.deepEqual(world.conn.following, [hull!.id], 'turning about it keeps the follow');
+      world.conn.panBy(30, 0);
+      assert.deepEqual(world.conn.following, [], 'a pan lets go');
+
+      // Followed again, it leaves the snapshot, sunk or carried: the follow ends.
+      world.conn.follow([hull!.id]);
+      assert.deepEqual(world.conn.following, [hull!.id]);
+      const gone = { ...cannedSnapshot(snapshot.tick + 2), units: rest };
+      world.conn.applySnapshot(gone);
+      world.chart.applySnapshot(gone);
+      now += 50;
+      world.frame();
+      assert.deepEqual(world.conn.following, [], 'the hull left the snapshot');
+    } finally {
+      clock.mock.restore();
+      world.teardown();
+    }
+  });
+
+  it('lands an order where the focus depth is going, not where the picture has got to', async () => {
+    // docs/free-camera.md §4, decision 5: a click in the window an ease takes
+    // lands at the depth the hand set.
+    const world = await boot({ controlsStudy: true });
+    let now = 10_000;
+    const clock = mock.method(performance, 'now', () => now);
+    const probe = () =>
+      (
+        globalThis as unknown as {
+          window: { __perspectiveProbe: () => { focus: { depthM: number } } };
+        }
+      ).window.__perspectiveProbe();
+    try {
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.conn.focusWorld(2000, 2000, 1200);
+      world.conn.raiseFocusBy(world.conn.focusDepth() - 600);
+      world.frame();
+      world.app.canvas.dispatch('wheel', {
+        deltaY: -1,
+        shiftKey: true,
+        clientX: 640,
+        clientY: 360,
+      });
+      now += 16;
+      world.frame();
+      assert.ok(probe().focus.depthM > 500, `the picture is on its way: ${probe().focus.depthM} m`);
+      assert.equal(world.conn.focusDepth(), 450, "the ribbon's tick reads where it is going");
+      press(world, 'pointerdown', 2, 640, 300);
+      press(world, 'pointerup', 2, 640, 300);
+      const order = world.log.calls.filter((call) => call.name === 'onMoveOrder').at(-1);
+      assert.ok(order, `no move order: ${world.log.names()}`);
+      assert.equal(order.args[4], 450, "the order lands at the notch's depth");
+    } finally {
+      clock.mock.restore();
+      world.teardown();
+    }
+  });
+
+  it('follows a control group recalled twice', async () => {
+    const world = await boot({ controlsStudy: true });
+    try {
+      dispatchWindow('keydown', { code: 'Digit0' });
+      dispatchWindow('keydown', { code: 'Digit1', ctrlKey: true });
+      dispatchWindow('keydown', { code: 'Digit1' });
+      assert.deepEqual(world.conn.following, [], 'one recall selects');
+      dispatchWindow('keydown', { code: 'Digit1' });
+      const hulls = selection(world).sort();
+      assert.ok(hulls.length > 1);
+      assert.deepEqual([...world.conn.following].sort(), hulls, 'two follow the group');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('glides on a scope press that wobbles inside the click slop, and scrubs past it', async () => {
+    const world = await boot({ controlsStudy: true });
+    let now = 10_000;
+    const clock = mock.method(performance, 'now', () => now);
+    try {
+      world.frame();
+      const scope = (
+        world.chart as unknown as { minimapRect(): { x: number; y: number; size: number } }
+      ).minimapRect();
+      const at = { x: scope.x + scope.size * 0.25, y: scope.y + scope.size * 0.25 };
+      const toWorld = (px: number) => ((px - scope.x) * 4000) / scope.size;
+      const before = world.conn.frame.xM;
+      press(world, 'pointerdown', 0, at.x, at.y);
+      press(world, 'pointermove', 0, at.x + 2, at.y);
+      // Inside the slop the wobble is not a scrub: nothing has cut the focus
+      // to the pointer, and the glide still runs to the point pressed.
+      assert.equal(world.conn.frame.xM, before, 'no cut to the wobble');
+      assert.ok(
+        Math.abs(world.conn.feelReading!.goal.x - toWorld(at.x)) < 1e-6,
+        'gliding to the press'
+      );
+      press(world, 'pointerup', 0, at.x + 2, at.y);
+      assert.equal(world.conn.feelReading!.gliding, true, 'a 2 px wobble is still a press');
+      now += 100;
+      world.frame();
+      const mid = world.conn.frame.xM;
+      const goal = toWorld(at.x);
+      assert.ok(
+        (mid - before) * (goal - before) > 0 && Math.abs(mid - before) < Math.abs(goal - before),
+        `between the two points: ${before} → ${mid} → ${goal}`
+      );
+      // Past the slop it is a scrub, and the focus goes under the hand at once.
+      press(world, 'pointerdown', 0, at.x, at.y);
+      press(world, 'pointermove', 0, at.x + 20, at.y);
+      assert.ok(Math.abs(world.conn.frame.xM - toWorld(at.x + 20)) < 1e-6, 'under the hand');
+      press(world, 'pointerup', 0, at.x + 20, at.y);
+    } finally {
+      clock.mock.restore();
+      world.teardown();
+    }
+  });
+
+  it('glides to a group of structures recalled twice, which has no hull to follow', async () => {
+    const world = await boot({ controlsStudy: true });
+    try {
+      const bastion = cannedSnapshot().structures[0]!;
+      world.conn.focusWorld(bastion.x + 400, bastion.y + 400, 1500);
+      world.frame();
+      const at = world.conn.projectPoint(bastion.x, bastion.y, bastion.depth);
+      assert.ok(at.visible);
+      press(world, 'pointerdown', 0, at.x, at.y);
+      press(world, 'pointerup', 0, at.x, at.y);
+      assert.deepEqual(
+        [...(world.chart as unknown as { selected: Set<number> }).selected],
+        [bastion.id]
+      );
+      dispatchWindow('keydown', { code: 'Digit2', ctrlKey: true });
+      dispatchWindow('keydown', { code: 'Digit2' });
+      dispatchWindow('keydown', { code: 'Digit2' });
+      assert.deepEqual(world.conn.following, [], 'a structure is not followed');
+      assert.equal(world.conn.feelReading!.gliding, true, 'it is glided to, not cut to');
+      assert.equal(world.conn.feelReading!.goal.x, bastion.x);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('keeps every input and takes the motion out under reduced motion', async () => {
+    const world = await boot({ controlsStudy: true });
+    let now = 10_000;
+    const clock = mock.method(performance, 'now', () => now);
+    try {
+      world.conn.setReducedMotion(true);
+      world.frame();
+      const before = world.conn.frame.distanceM;
+      world.app.canvas.dispatch('wheel', { deltaY: -1, clientX: 640, clientY: 360 });
+      assert.ok(
+        Math.abs(world.conn.frame.distanceM - before / 1.1) < 1e-6,
+        'a step arrives at once'
+      );
+      world.conn.orbitBy(120, -60);
+      world.conn.home();
+      assert.equal(world.conn.frame.yawDeg, 0, 'Home cuts');
+      assert.equal(world.conn.frame.pitchDeg, HOME_PITCH_DEG);
+      press(world, 'pointerdown', 1, 600, 360);
+      for (let i = 1; i <= 5; i++) {
+        now += 16;
+        press(world, 'pointermove', 1, 600 + i * 8, 360);
+      }
+      press(world, 'pointerup', 1, 640, 360);
+      const released = world.conn.frame.xM;
+      for (let i = 0; i < 10; i++) {
+        now += 16;
+        world.frame();
+      }
+      assert.equal(world.conn.frame.xM, released, 'nothing coasts');
+      const hull = cannedSnapshot().units[0]!;
+      world.conn.follow([hull.id]);
+      assert.ok(Math.abs(world.conn.frame.xM - hull.x) < 1e-6, 'a followed hull is held at once');
+    } finally {
+      clock.mock.restore();
+      world.teardown();
+    }
+  });
+
+  it('glides from the flight eye back to the orbit NAV left, and NAV still takes clicks', async () => {
+    const world = await boot({ controlsStudy: true });
+    let now = 10_000;
+    const clock = mock.method(performance, 'now', () => now);
+    try {
+      world.conn.focusWorld(2000, 2000, 1000);
+      world.conn.raiseFocusBy(world.conn.focusDepth() - 300);
+      // Selected before NAV, which suspends fleet keys, the army's `0` among them.
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.frame();
+      const orbit = world.conn.frame;
+      const orbitEye = world.conn.eyePosition;
+      world.chart.toggleNavigation();
+      world.conn.flyLocal(0, 0, 400);
+      // Entering glides too: the orbit's eye stood out of the water, which
+      // flight cannot keep, so it starts where the orbit drew it and arrives.
+      const entered = world.conn.eyePosition;
+      assert.ok(
+        Math.hypot(entered.x - orbitEye.x, entered.y - orbitEye.y) < 10,
+        'entry leaves from the orbit eye'
+      );
+      for (let t = 0; t <= CAMERA_FEEL.GLIDE_S * 1000 + 100; t += 50) {
+        now += 50;
+        world.frame();
+      }
+      const flightEye = world.conn.eyePosition;
+      const apart = Math.hypot(flightEye.x - orbitEye.x, flightEye.y - orbitEye.y);
+      assert.ok(apart > 300, 'flight carried the eye away');
+
+      // NAV takes the keys, never the mouse (decision 4): the preview's
+      // CONFIRM, a mouse route, still commands while it is latched.
+      world.chart.armDestination();
+      world.chart.setDestinationPlan('x', 2000);
+      world.chart.setDestinationPlan('y', 2000);
+      world.chart.pinDestination(true);
+      world.chart.setDestinationDepth(900);
+      world.chart.confirmDestination();
+      assert.equal(world.log.calls.filter((call) => call.name === 'onMoveOrder').length, 1);
+
+      world.chart.toggleNavigation();
+      assert.equal(world.conn.flying, false);
+      const away = (eye: { x: number; y: number }) =>
+        Math.hypot(eye.x - orbitEye.x, eye.y - orbitEye.y);
+      // Sway translates the eye a few metres either way; the flight was 400 m off.
+      assert.ok(away(world.conn.eyePosition) > apart - 10, 'it leaves from the flight eye');
+      const trail: number[] = [];
+      for (let t = 0; t <= CAMERA_FEEL.GLIDE_S * 1000 + 100; t += 50) {
+        now += 50;
+        world.frame();
+        trail.push(away(world.conn.eyePosition));
+      }
+      assert.ok(trail[1]! < apart && trail[1]! > 10, 'partway: neither there nor cut');
+      assert.ok(trail.at(-1)! < 10, 'and home on the orbit it left');
+      assert.deepEqual(world.conn.frame, orbit, "the orbit's own pose was kept for it");
+    } finally {
+      clock.mock.restore();
       world.teardown();
     }
   });
@@ -6025,7 +6462,28 @@ describe('renderer smoke test: the free camera', () => {
         'the panel is told where the camera stands'
       );
 
-      world.conn.home();
+      // In the study Home glides (docs/free-camera.md §4, rule 4): partway
+      // through, the camera stands between the opening and home rather than
+      // cutting, and at the glide's end it is home.
+      let now = 10_000;
+      const clock = mock.method(performance, 'now', () => now);
+      try {
+        world.frame();
+        world.conn.home();
+        now += 100;
+        world.frame();
+        const mid = rig();
+        assert.ok(
+          mid.pitchDeg > FREE_WATER_OPENING.PITCH_DEG && mid.pitchDeg < HOME_PITCH_DEG,
+          `partway home, not cut there: ${mid.pitchDeg}°`
+        );
+        for (let t = 0; t < CAMERA_FEEL.GLIDE_S * 1000; t += 100) {
+          now += 100;
+          world.frame();
+        }
+      } finally {
+        clock.mock.restore();
+      }
       const homed = rig();
       assert.equal(homed.yawDeg, 0, 'Home is north');
       assert.equal(homed.pitchDeg, HOME_PITCH_DEG, 'Home is 55°');

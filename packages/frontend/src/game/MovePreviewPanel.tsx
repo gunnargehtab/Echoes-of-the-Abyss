@@ -3,7 +3,6 @@ import type { MovePreviewReading } from './movePreview.ts';
 
 export function MovePreviewPanel({
   reading,
-  navigating,
   onArm,
   onPlan,
   onDepth,
@@ -13,7 +12,6 @@ export function MovePreviewPanel({
   onCancel,
 }: {
   reading: MovePreviewReading | null;
-  navigating: boolean;
   onArm(): void;
   onPlan(axis: 'x' | 'y', value: number): void;
   onDepth(value: number): void;
@@ -87,7 +85,7 @@ export function MovePreviewPanel({
           {reading.reason !== null && <p role="status">{reading.reason}</p>}
           <button
             type="button"
-            disabled={navigating || !reading.pinned || reading.reason !== null}
+            disabled={!reading.pinned || reading.reason !== null}
             onClick={onConfirm}
           >
             CONFIRM

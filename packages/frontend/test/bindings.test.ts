@@ -20,6 +20,7 @@ import {
   actionFor,
   conflictsIn,
   DEFAULT_BINDINGS,
+  FREE_WATER_FIXED_CONTROLS,
   isBindable,
   keyLabel,
   LAYOUTS,
@@ -205,6 +206,27 @@ describe('resolving a stored table', () => {
       if (action === 'ping') continue;
       assert.equal(resolved[action], DEFAULT_BINDINGS[action], action);
     }
+  });
+
+  it('drops a binding for the retired FLIGHT toggle, and leaves F8 meaning nothing', () => {
+    // #1775 retired F8/FLIGHT (docs/free-camera.md §4, decision 4). A record
+    // saved before it still carries the key; resolving reads only live actions.
+    const stored = { toggleFlight: 'F8', ping: 'KeyJ' } as unknown as Partial<Bindings>;
+    for (const layout of ['default', 'custom'] as const) {
+      const resolved = resolveBindings(layout, stored);
+      assert.equal('toggleFlight' in resolved, false, layout);
+      assert.equal(actionFor(resolved, 'F8'), null, layout);
+      assert.equal(actionFor(resolved, 'F8', true), null, layout);
+    }
+  });
+
+  it("states the study's right-drag orbit among its fixed controls", () => {
+    // docs/free-camera.md §4: the right drag changes what a mouse gesture
+    // means in the study, so Controls must say so (docs/ui-ux.md §9).
+    const orbit = FREE_WATER_FIXED_CONTROLS.find((fixed) => fixed.keys === 'Right drag');
+    assert.ok(orbit);
+    assert.match(orbit.label, /orbit/i);
+    assert.match(orbit.why, /right click still orders/);
   });
 
   it('layers a custom table over the standard, not over nothing', () => {

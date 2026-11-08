@@ -57,7 +57,7 @@ export type FlightAction =
   | 'lookRight'
   | 'lookUp'
   | 'lookDown';
-export type CameraAction = 'toggleFlight' | 'toggleNav' | FlightAction;
+export type CameraAction = 'toggleNav' | FlightAction;
 export type InputAction = BindableAction | CameraAction;
 
 export interface ActionSpec {
@@ -158,15 +158,9 @@ export const ACTIONS: readonly ActionSpec[] = [
     group: 'fleet',
   },
   {
-    action: 'toggleFlight',
-    label: 'Flight',
-    hint: 'Development study: free camera / Home',
-    group: 'camera',
-  },
-  {
     action: 'toggleNav',
     label: 'Camera NAV',
-    hint: 'Latch camera keys; suspend fleet shortcuts',
+    hint: 'Fly on the keys; fleet shortcuts wait, the mouse still commands',
     group: 'camera',
   },
   ...(
@@ -230,7 +224,6 @@ export const DEFAULT_BINDINGS: Bindings = {
   buildTurret: 'KeyT',
   buildVentTap: 'KeyG',
   buildSignature: 'KeyB',
-  toggleFlight: 'F8',
   toggleNav: 'F9',
   flyForward: 'KeyW',
   flyBack: 'KeyS',
@@ -367,6 +360,30 @@ export const FIXED_CONTROLS: readonly { label: string; keys: string; why: string
   { label: 'Rally point', keys: 'Right click', why: 'With a yard selected: where its hulls go' },
 ];
 
+/**
+ * The free-water study's own fixed mouse controls (docs/free-camera.md §4,
+ * "The study's camera feel"). Listed in Controls because the right drag
+ * changed what a mouse gesture means there, and docs/ui-ux.md §9 will not
+ * let a mouse interaction change meaning where the player cannot read it.
+ */
+export const FREE_WATER_FIXED_CONTROLS: readonly { label: string; keys: string; why: string }[] = [
+  {
+    label: 'Orbit the camera',
+    keys: 'Right drag',
+    why: 'Past a 6 px slop, and no order is given; a right click still orders',
+  },
+  {
+    label: 'Follow a hull',
+    keys: 'Double-click',
+    why: 'Selects its class and follows the hull; any pan or focus step lets go',
+  },
+  {
+    label: 'Follow a group',
+    keys: 'Recall twice',
+    why: 'Glides to the control group and follows it',
+  },
+];
+
 /** Structures the build actions arm, so the renderer needs no second table. */
 export const BUILD_ACTION_KIND: Partial<Record<BindableAction, StructureKind>> = {
   buildRefinery: StructureKind.Refinery,
@@ -439,8 +456,7 @@ export function isFlightAction(action: InputAction): action is FlightAction {
 }
 
 function contextsOverlap(a: InputAction, b: InputAction): boolean {
-  if (a === 'toggleNav' || a === 'toggleFlight' || b === 'toggleNav' || b === 'toggleFlight')
-    return true;
+  if (a === 'toggleNav' || b === 'toggleNav') return true;
   return isFlightAction(a) === isFlightAction(b);
 }
 

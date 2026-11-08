@@ -1,0 +1,5324 @@
+{
+ "url": "http://localhost:5173/?study=free-water",
+ "viewport": {
+  "width": 1440,
+  "height": 900
+ },
+ "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+ "target": {
+  "id": 2,
+  "name": "Corvette",
+  "x": 1138,
+  "y": 158
+ },
+ "summary": [
+  {
+   "mark": "wheel: three notches in",
+   "frames": 15,
+   "ms": 19946,
+   "distance": {
+    "from": 1200,
+    "to": 902,
+    "biggestFrameShare": 0.242
+   },
+   "yaw": {
+    "from": 326,
+    "to": 326,
+    "biggestFrameShare": null
+   },
+   "pitch": {
+    "from": 15,
+    "to": 15,
+    "biggestFrameShare": null
+   },
+   "focus": {
+    "from": {
+     "xM": 709,
+     "zM": 1710,
+     "depthM": 300
+    },
+    "to": {
+     "xM": 802,
+     "zM": 1572,
+     "depthM": 300
+    },
+    "travelledM": 167,
+    "biggestFrameShare": 0.238
+   },
+   "eye": {
+    "travelledM": 596,
+    "biggestFrameShare": 0.227
+   },
+   "settledAfterFrames": 11,
+   "stillAtEnd": true,
+   "flyingAtEnd": false,
+   "followingAtEnd": [],
+   "followGapToDrawnM": null,
+   "followGapM": null,
+   "followDepthGapM": null
+  },
+  {
+   "mark": "pan: let go moving",
+   "frames": 20,
+   "ms": 26231,
+   "distance": {
+    "from": 902,
+    "to": 902,
+    "biggestFrameShare": null
+   },
+   "yaw": {
+    "from": 326,
+    "to": 326,
+    "biggestFrameShare": null
+   },
+   "pitch": {
+    "from": 15,
+    "to": 15,
+    "biggestFrameShare": null
+   },
+   "focus": {
+    "from": {
+     "xM": 802,
+     "zM": 1572,
+     "depthM": 300
+    },
+    "to": {
+     "xM": 469,
+     "zM": 1347,
+     "depthM": 300
+    },
+    "travelledM": 403,
+    "biggestFrameShare": 0.533
+   },
+   "eye": {
+    "travelledM": 439,
+    "biggestFrameShare": 0.491
+   },
+   "settledAfterFrames": 17,
+   "stillAtEnd": true,
+   "flyingAtEnd": false,
+   "followingAtEnd": [],
+   "followGapToDrawnM": null,
+   "followGapM": null,
+   "followDepthGapM": null
+  },
+  {
+   "mark": "pan: held still, then let go",
+   "frames": 7,
+   "ms": 7029,
+   "distance": {
+    "from": 902,
+    "to": 902,
+    "biggestFrameShare": null
+   },
+   "yaw": {
+    "from": 326,
+    "to": 326,
+    "biggestFrameShare": null
+   },
+   "pitch": {
+    "from": 15,
+    "to": 15,
+    "biggestFrameShare": null
+   },
+   "focus": {
+    "from": {
+     "xM": 469,
+     "zM": 1347,
+     "depthM": 300
+    },
+    "to": {
+     "xM": 353,
+     "zM": 1269,
+     "depthM": 300
+    },
+    "travelledM": 140,
+    "biggestFrameShare": 1
+   },
+   "eye": {
+    "travelledM": 158,
+    "biggestFrameShare": 0.891
+   },
+   "settledAfterFrames": 1,
+   "stillAtEnd": true,
+   "flyingAtEnd": false,
+   "followingAtEnd": [],
+   "followGapToDrawnM": null,
+   "followGapM": null,
+   "followDepthGapM": null
+  },
+  {
+   "mark": "orbit: right drag, let go moving",
+   "frames": 42,
+   "ms": 31521,
+   "distance": {
+    "from": 902,
+    "to": 902,
+    "biggestFrameShare": null
+   },
+   "yaw": {
+    "from": 326,
+    "to": 233,
+    "biggestFrameShare": 0.501
+   },
+   "pitch": {
+    "from": 15,
+    "to": 29.7,
+    "biggestFrameShare": 0.503
+   },
+   "focus": {
+    "from": {
+     "xM": 353,
+     "zM": 1269,
+     "depthM": 300
+    },
+    "to": {
+     "xM": 353,
+     "zM": 1269,
+     "depthM": 300
+    },
+    "travelledM": 0,
+    "biggestFrameShare": null
+   },
+   "eye": {
+    "travelledM": 3637,
+    "biggestFrameShare": 0.453
+   },
+   "settledAfterFrames": 17,
+   "stillAtEnd": true,
+   "flyingAtEnd": false,
+   "followingAtEnd": [],
+   "followGapToDrawnM": null,
+   "followGapM": null,
+   "followDepthGapM": null
+  },
+  {
+   "mark": "follow: double-click the Corvette (2)",
+   "frames": 19,
+   "ms": 12418,
+   "distance": {
+    "from": 902,
+    "to": 902,
+    "biggestFrameShare": null
+   },
+   "yaw": {
+    "from": 233,
+    "to": 233,
+    "biggestFrameShare": null
+   },
+   "pitch": {
+    "from": 29.7,
+    "to": 29.7,
+    "biggestFrameShare": null
+   },
+   "focus": {
+    "from": {
+     "xM": 353,
+     "zM": 1269,
+     "depthM": 300
+    },
+    "to": {
+     "xM": 625,
+     "zM": 2125,
+     "depthM": 300
+    },
+    "travelledM": 898,
+    "biggestFrameShare": 0.24
+   },
+   "eye": {
+    "travelledM": 921,
+    "biggestFrameShare": 0.235
+   },
+   "settledAfterFrames": 6,
+   "stillAtEnd": true,
+   "flyingAtEnd": false,
+   "followingAtEnd": [
+    2
+   ],
+   "followGapToDrawnM": 0,
+   "followGapM": 0,
+   "followDepthGapM": 0
+  },
+  {
+   "mark": "follow: the hull sent across the water",
+   "frames": 22,
+   "ms": 13417,
+   "distance": {
+    "from": 902,
+    "to": 902,
+    "biggestFrameShare": null
+   },
+   "yaw": {
+    "from": 233,
+    "to": 233,
+    "biggestFrameShare": null
+   },
+   "pitch": {
+    "from": 29.7,
+    "to": 29.7,
+    "biggestFrameShare": null
+   },
+   "focus": {
+    "from": {
+     "xM": 625,
+     "zM": 2125,
+     "depthM": 300
+    },
+    "to": {
+     "xM": 700,
+     "zM": 2480,
+     "depthM": 300
+    },
+    "travelledM": 363,
+    "biggestFrameShare": 0.186
+   },
+   "eye": {
+    "travelledM": 392,
+    "biggestFrameShare": 0.175
+   },
+   "settledAfterFrames": 9,
+   "stillAtEnd": true,
+   "flyingAtEnd": false,
+   "followingAtEnd": [
+    2
+   ],
+   "followGapToDrawnM": 0,
+   "followGapM": 17,
+   "followDepthGapM": 0
+  },
+  {
+   "mark": "follow: an arrow pan lets go",
+   "frames": 7,
+   "ms": 3745,
+   "distance": {
+    "from": 902,
+    "to": 902,
+    "biggestFrameShare": null
+   },
+   "yaw": {
+    "from": 233,
+    "to": 233,
+    "biggestFrameShare": null
+   },
+   "pitch": {
+    "from": 29.7,
+    "to": 29.7,
+    "biggestFrameShare": null
+   },
+   "focus": {
+    "from": {
+     "xM": 700,
+     "zM": 2480,
+     "depthM": 300
+    },
+    "to": {
+     "xM": 739,
+     "zM": 2428,
+     "depthM": 300
+    },
+    "travelledM": 65,
+    "biggestFrameShare": 0.632
+   },
+   "eye": {
+    "travelledM": 70,
+    "biggestFrameShare": 0.591
+   },
+   "settledAfterFrames": 6,
+   "stillAtEnd": false,
+   "flyingAtEnd": false,
+   "followingAtEnd": [],
+   "followGapToDrawnM": 0,
+   "followGapM": 0,
+   "followDepthGapM": 0
+  },
+  {
+   "mark": "home",
+   "frames": 13,
+   "ms": 7412,
+   "distance": {
+    "from": 902,
+    "to": 902,
+    "biggestFrameShare": null
+   },
+   "yaw": {
+    "from": 233,
+    "to": 0,
+    "biggestFrameShare": 0.241
+   },
+   "pitch": {
+    "from": 29.7,
+    "to": 55,
+    "biggestFrameShare": 0.241
+   },
+   "focus": {
+    "from": {
+     "xM": 739,
+     "zM": 2428,
+     "depthM": 300
+    },
+    "to": {
+     "xM": 739,
+     "zM": 2428,
+     "depthM": null
+    },
+    "travelledM": 0,
+    "biggestFrameShare": null
+   },
+   "eye": {
+    "travelledM": 1815,
+    "biggestFrameShare": 0.253
+   },
+   "settledAfterFrames": 6,
+   "stillAtEnd": true,
+   "flyingAtEnd": false,
+   "followingAtEnd": [],
+   "followGapToDrawnM": null,
+   "followGapM": null,
+   "followDepthGapM": null
+  },
+  {
+   "mark": "nav: in, flying forward",
+   "frames": 14,
+   "ms": 5515,
+   "distance": {
+    "from": 902,
+    "to": 902,
+    "biggestFrameShare": null
+   },
+   "yaw": {
+    "from": 0,
+    "to": 0,
+    "biggestFrameShare": null
+   },
+   "pitch": {
+    "from": 55,
+    "to": 55,
+    "biggestFrameShare": null
+   },
+   "focus": {
+    "from": {
+     "xM": 739,
+     "zM": 2428,
+     "depthM": null
+    },
+    "to": {
+     "xM": 739,
+     "zM": 2428,
+     "depthM": null
+    },
+    "travelledM": 0,
+    "biggestFrameShare": null
+   },
+   "eye": {
+    "travelledM": 3377,
+    "biggestFrameShare": 0.241
+   },
+   "settledAfterFrames": 0,
+   "stillAtEnd": true,
+   "flyingAtEnd": true,
+   "followingAtEnd": [],
+   "followGapToDrawnM": null,
+   "followGapM": null,
+   "followDepthGapM": null
+  },
+  {
+   "mark": "nav: out",
+   "frames": 14,
+   "ms": 7029,
+   "distance": {
+    "from": 902,
+    "to": 902,
+    "biggestFrameShare": null
+   },
+   "yaw": {
+    "from": 0,
+    "to": 0,
+    "biggestFrameShare": null
+   },
+   "pitch": {
+    "from": 55,
+    "to": 55,
+    "biggestFrameShare": null
+   },
+   "focus": {
+    "from": {
+     "xM": 739,
+     "zM": 2428,
+     "depthM": null
+    },
+    "to": {
+     "xM": 739,
+     "zM": 2428,
+     "depthM": null
+    },
+    "travelledM": 0,
+    "biggestFrameShare": null
+   },
+   "eye": {
+    "travelledM": 3382,
+    "biggestFrameShare": 0.241
+   },
+   "settledAfterFrames": 0,
+   "stillAtEnd": true,
+   "flyingAtEnd": false,
+   "followingAtEnd": [],
+   "followGapToDrawnM": null,
+   "followGapM": null,
+   "followDepthGapM": null
+  }
+ ],
+ "rows": [
+  {
+   "t": 27388,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 1200,
+   "focus": {
+    "xM": 709,
+    "zM": 1710,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 60,
+    "zM": 2670,
+    "depthM": -1113
+   },
+   "flying": false,
+   "goal": {
+    "x": 709,
+    "z": 1710
+   },
+   "goalDistance": 1200,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 28819,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 1200,
+   "focus": {
+    "xM": 709,
+    "zM": 1710,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 60,
+    "zM": 2670,
+    "depthM": -1104
+   },
+   "flying": false,
+   "goal": {
+    "x": 709,
+    "z": 1710
+   },
+   "goalDistance": 1200,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 30244,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 1200,
+   "focus": {
+    "xM": 709,
+    "zM": 1710,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 59,
+    "zM": 2670,
+    "depthM": -1100
+   },
+   "flying": false,
+   "goal": {
+    "x": 709,
+    "z": 1710
+   },
+   "goalDistance": 1200,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 31691,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 1200,
+   "focus": {
+    "xM": 709,
+    "zM": 1710,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 60,
+    "zM": 2670,
+    "depthM": -1104
+   },
+   "flying": false,
+   "goal": {
+    "x": 709,
+    "z": 1710
+   },
+   "goalDistance": 1200,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 33110,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 1200,
+   "focus": {
+    "xM": 709,
+    "zM": 1710,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 61,
+    "zM": 2670,
+    "depthM": -1112
+   },
+   "flying": false,
+   "goal": {
+    "x": 709,
+    "z": 1710
+   },
+   "goalDistance": 1200,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 34542,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 1200,
+   "focus": {
+    "xM": 709,
+    "zM": 1710,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 62,
+    "zM": 2670,
+    "depthM": -1121
+   },
+   "flying": false,
+   "goal": {
+    "x": 709,
+    "z": 1710
+   },
+   "goalDistance": 1200,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 36033,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 1200,
+   "focus": {
+    "xM": 709,
+    "zM": 1710,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 63,
+    "zM": 2671,
+    "depthM": -1123
+   },
+   "flying": false,
+   "goal": {
+    "x": 709,
+    "z": 1710
+   },
+   "goalDistance": 1200,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 37483,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 1200,
+   "focus": {
+    "xM": 709,
+    "zM": 1710,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 63,
+    "zM": 2671,
+    "depthM": -1118
+   },
+   "flying": false,
+   "goal": {
+    "x": 709,
+    "z": 1710
+   },
+   "goalDistance": 1200,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 38986,
+   "mark": "wheel: three notches in"
+  },
+  {
+   "t": 38991,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 1200,
+   "focus": {
+    "xM": 709,
+    "zM": 1710,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 63,
+    "zM": 2672,
+    "depthM": -1109
+   },
+   "flying": false,
+   "goal": {
+    "x": 709,
+    "z": 1710
+   },
+   "goalDistance": 1200,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 40400,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 1200,
+   "focus": {
+    "xM": 709,
+    "zM": 1710,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 62,
+    "zM": 2672,
+    "depthM": -1102
+   },
+   "flying": false,
+   "goal": {
+    "x": 709,
+    "z": 1710
+   },
+   "goalDistance": 1200,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 41795,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 1200,
+   "focus": {
+    "xM": 709,
+    "zM": 1710,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 61,
+    "zM": 2671,
+    "depthM": -1101
+   },
+   "flying": false,
+   "goal": {
+    "x": 709,
+    "z": 1710
+   },
+   "goalDistance": 1200,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 43155,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 1131,
+   "focus": {
+    "xM": 730,
+    "zM": 1679,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 119,
+    "zM": 2585,
+    "depthM": -1026
+   },
+   "flying": false,
+   "goal": {
+    "x": 742,
+    "z": 1661
+   },
+   "goalDistance": 1091,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 44544,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 1106,
+   "focus": {
+    "xM": 738,
+    "zM": 1667,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 140,
+    "zM": 2552,
+    "depthM": -1004
+   },
+   "flying": false,
+   "goal": {
+    "x": 742,
+    "z": 1661
+   },
+   "goalDistance": 1091,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 45949,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 1034,
+   "focus": {
+    "xM": 760,
+    "zM": 1634,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 201,
+    "zM": 2461,
+    "depthM": -925
+   },
+   "flying": false,
+   "goal": {
+    "x": 773,
+    "z": 1615
+   },
+   "goalDistance": 992,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 47367,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 1007,
+   "focus": {
+    "xM": 769,
+    "zM": 1622,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 224,
+    "zM": 2427,
+    "depthM": -894
+   },
+   "flying": false,
+   "goal": {
+    "x": 773,
+    "z": 1615
+   },
+   "goalDistance": 992,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 48752,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 940,
+   "focus": {
+    "xM": 790,
+    "zM": 1590,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 281,
+    "zM": 2342,
+    "depthM": -810
+   },
+   "flying": false,
+   "goal": {
+    "x": 802,
+    "z": 1572
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 50149,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 916,
+   "focus": {
+    "xM": 798,
+    "zM": 1578,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 303,
+    "zM": 2312,
+    "depthM": -774
+   },
+   "flying": false,
+   "goal": {
+    "x": 802,
+    "z": 1572
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 51631,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 907,
+   "focus": {
+    "xM": 801,
+    "zM": 1574,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 311,
+    "zM": 2301,
+    "depthM": -759
+   },
+   "flying": false,
+   "goal": {
+    "x": 802,
+    "z": 1572
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 53163,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 904,
+   "focus": {
+    "xM": 802,
+    "zM": 1573,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 314,
+    "zM": 2297,
+    "depthM": -755
+   },
+   "flying": false,
+   "goal": {
+    "x": 802,
+    "z": 1572
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 54563,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 802,
+    "zM": 1572,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 316,
+    "zM": 2295,
+    "depthM": -759
+   },
+   "flying": false,
+   "goal": {
+    "x": 802,
+    "z": 1572
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 56040,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 802,
+    "zM": 1572,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 316,
+    "zM": 2294,
+    "depthM": -766
+   },
+   "flying": false,
+   "goal": {
+    "x": 802,
+    "z": 1572
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 57435,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 802,
+    "zM": 1572,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 316,
+    "zM": 2294,
+    "depthM": -769
+   },
+   "flying": false,
+   "goal": {
+    "x": 802,
+    "z": 1572
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 58937,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 802,
+    "zM": 1572,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 316,
+    "zM": 2293,
+    "depthM": -767
+   },
+   "flying": false,
+   "goal": {
+    "x": 802,
+    "z": 1572
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 60326,
+   "mark": "pan: let go moving"
+  },
+  {
+   "t": 60333,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 802,
+    "zM": 1572,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 315,
+    "zM": 2293,
+    "depthM": -762
+   },
+   "flying": false,
+   "goal": {
+    "x": 802,
+    "z": 1572
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 61888,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 624,
+    "zM": 1452,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 136,
+    "zM": 2173,
+    "depthM": -755
+   },
+   "flying": false,
+   "goal": {
+    "x": 624,
+    "z": 1452
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 63351,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 580,
+    "zM": 1422,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 92,
+    "zM": 2144,
+    "depthM": -752
+   },
+   "flying": false,
+   "goal": {
+    "x": 580,
+    "z": 1422
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 64701,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 549,
+    "zM": 1401,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 60,
+    "zM": 2122,
+    "depthM": -755
+   },
+   "flying": false,
+   "goal": {
+    "x": 549,
+    "z": 1401
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 66121,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 526,
+    "zM": 1385,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 38,
+    "zM": 2107,
+    "depthM": -761
+   },
+   "flying": false,
+   "goal": {
+    "x": 526,
+    "z": 1385
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 67544,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 510,
+    "zM": 1374,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 23,
+    "zM": 2096,
+    "depthM": -767
+   },
+   "flying": false,
+   "goal": {
+    "x": 510,
+    "z": 1374
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 69053,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 498,
+    "zM": 1366,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 12,
+    "zM": 2088,
+    "depthM": -769
+   },
+   "flying": false,
+   "goal": {
+    "x": 498,
+    "z": 1366
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 70393,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 490,
+    "zM": 1361,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 4,
+    "zM": 2083,
+    "depthM": -766
+   },
+   "flying": false,
+   "goal": {
+    "x": 490,
+    "z": 1361
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 71736,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 484,
+    "zM": 1357,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -2,
+    "zM": 2080,
+    "depthM": -760
+   },
+   "flying": false,
+   "goal": {
+    "x": 484,
+    "z": 1357
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 73070,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 479,
+    "zM": 1354,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -7,
+    "zM": 2077,
+    "depthM": -754
+   },
+   "flying": false,
+   "goal": {
+    "x": 479,
+    "z": 1354
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 74413,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 476,
+    "zM": 1352,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -10,
+    "zM": 2075,
+    "depthM": -752
+   },
+   "flying": false,
+   "goal": {
+    "x": 476,
+    "z": 1352
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 75772,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 474,
+    "zM": 1350,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -13,
+    "zM": 2073,
+    "depthM": -755
+   },
+   "flying": false,
+   "goal": {
+    "x": 474,
+    "z": 1350
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 77115,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 473,
+    "zM": 1349,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -15,
+    "zM": 2071,
+    "depthM": -761
+   },
+   "flying": false,
+   "goal": {
+    "x": 473,
+    "z": 1349
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 78369,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 471,
+    "zM": 1348,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -16,
+    "zM": 2070,
+    "depthM": -767
+   },
+   "flying": false,
+   "goal": {
+    "x": 471,
+    "z": 1348
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 79595,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 471,
+    "zM": 1348,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -17,
+    "zM": 2069,
+    "depthM": -769
+   },
+   "flying": false,
+   "goal": {
+    "x": 471,
+    "z": 1348
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 81028,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 470,
+    "zM": 1348,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -18,
+    "zM": 2068,
+    "depthM": -767
+   },
+   "flying": false,
+   "goal": {
+    "x": 470,
+    "z": 1348
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 82296,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 470,
+    "zM": 1347,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -18,
+    "zM": 2069,
+    "depthM": -762
+   },
+   "flying": false,
+   "goal": {
+    "x": 470,
+    "z": 1347
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 83704,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 469,
+    "zM": 1347,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -18,
+    "zM": 2069,
+    "depthM": -755
+   },
+   "flying": false,
+   "goal": {
+    "x": 469,
+    "z": 1347
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 85172,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 469,
+    "zM": 1347,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -18,
+    "zM": 2069,
+    "depthM": -752
+   },
+   "flying": false,
+   "goal": {
+    "x": 469,
+    "z": 1347
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 86564,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 469,
+    "zM": 1347,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -18,
+    "zM": 2070,
+    "depthM": -754
+   },
+   "flying": false,
+   "goal": {
+    "x": 469,
+    "z": 1347
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 87920,
+   "mark": "pan: held still, then let go"
+  },
+  {
+   "t": 87927,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 469,
+    "zM": 1347,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -17,
+    "zM": 2070,
+    "depthM": -760
+   },
+   "flying": false,
+   "goal": {
+    "x": 469,
+    "z": 1347
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 89545,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -133,
+    "zM": 1991,
+    "depthM": -767
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 90528,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -133,
+    "zM": 1991,
+    "depthM": -769
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 91642,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -133,
+    "zM": 1991,
+    "depthM": -768
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 92696,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -134,
+    "zM": 1991,
+    "depthM": -765
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 93784,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -134,
+    "zM": 1991,
+    "depthM": -759
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 94956,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -135,
+    "zM": 1991,
+    "depthM": -754
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 96084,
+   "mark": "orbit: right drag, let go moving"
+  },
+  {
+   "t": 96091,
+   "yawDeg": 326,
+   "pitchDeg": 15,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -135,
+    "zM": 1990,
+    "depthM": -752
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 97298,
+   "yawDeg": 99.9,
+   "pitchDeg": 22.4,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 1175,
+    "zM": 1126,
+    "depthM": -1253
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 97757,
+   "yawDeg": 137.8,
+   "pitchDeg": 24.5,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 905,
+    "zM": 661,
+    "depthM": -1391
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 98380,
+   "yawDeg": 165,
+   "pitchDeg": 25.9,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 564,
+    "zM": 486,
+    "depthM": -1490
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 98910,
+   "yawDeg": 184.4,
+   "pitchDeg": 27,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 292,
+    "zM": 468,
+    "depthM": -1561
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 99625,
+   "yawDeg": 198.4,
+   "pitchDeg": 27.8,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 103,
+    "zM": 512,
+    "depthM": -1613
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 100285,
+   "yawDeg": 208.4,
+   "pitchDeg": 28.3,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -23,
+    "zM": 571,
+    "depthM": -1650
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 100878,
+   "yawDeg": 215.5,
+   "pitchDeg": 28.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -106,
+    "zM": 626,
+    "depthM": -1677
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 101487,
+   "yawDeg": 220.7,
+   "pitchDeg": 29,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -160,
+    "zM": 671,
+    "depthM": -1695
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 102114,
+   "yawDeg": 224.3,
+   "pitchDeg": 29.2,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -196,
+    "zM": 707,
+    "depthM": -1708
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 102862,
+   "yawDeg": 227,
+   "pitchDeg": 29.4,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -221,
+    "zM": 733,
+    "depthM": -1716
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 103563,
+   "yawDeg": 228.9,
+   "pitchDeg": 29.5,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -238,
+    "zM": 753,
+    "depthM": -1720
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 104344,
+   "yawDeg": 230.2,
+   "pitchDeg": 29.5,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -250,
+    "zM": 768,
+    "depthM": -1721
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 105131,
+   "yawDeg": 231.2,
+   "pitchDeg": 29.6,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -259,
+    "zM": 778,
+    "depthM": -1721
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 105899,
+   "yawDeg": 231.9,
+   "pitchDeg": 29.6,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -265,
+    "zM": 785,
+    "depthM": -1721
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 106749,
+   "yawDeg": 232.4,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -269,
+    "zM": 791,
+    "depthM": -1720
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 107533,
+   "yawDeg": 232.7,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -272,
+    "zM": 795,
+    "depthM": -1721
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": true,
+   "following": []
+  },
+  {
+   "t": 108338,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -274,
+    "zM": 797,
+    "depthM": -1724
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 109151,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -273,
+    "zM": 797,
+    "depthM": -1726
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 109965,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -273,
+    "zM": 797,
+    "depthM": -1730
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 110845,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -272,
+    "zM": 797,
+    "depthM": -1733
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 111688,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -271,
+    "zM": 797,
+    "depthM": -1736
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 112493,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -271,
+    "zM": 797,
+    "depthM": -1738
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 113433,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -271,
+    "zM": 797,
+    "depthM": -1737
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 114276,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -271,
+    "zM": 797,
+    "depthM": -1735
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 115071,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -271,
+    "zM": 796,
+    "depthM": -1732
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 115910,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -272,
+    "zM": 796,
+    "depthM": -1728
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 116768,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -272,
+    "zM": 796,
+    "depthM": -1725
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 117537,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -273,
+    "zM": 796,
+    "depthM": -1723
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 118347,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -273,
+    "zM": 796,
+    "depthM": -1722
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 119155,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -273,
+    "zM": 797,
+    "depthM": -1723
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 119943,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -273,
+    "zM": 797,
+    "depthM": -1725
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 120705,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -273,
+    "zM": 798,
+    "depthM": -1729
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 121507,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -273,
+    "zM": 798,
+    "depthM": -1732
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 122276,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -273,
+    "zM": 799,
+    "depthM": -1735
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 123007,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -272,
+    "zM": 799,
+    "depthM": -1737
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 123725,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -272,
+    "zM": 799,
+    "depthM": -1738
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 124534,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -272,
+    "zM": 799,
+    "depthM": -1737
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 125271,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -272,
+    "zM": 798,
+    "depthM": -1735
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 126065,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -273,
+    "zM": 798,
+    "depthM": -1732
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 126852,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -273,
+    "zM": 797,
+    "depthM": -1728
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 127612,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -273,
+    "zM": 797,
+    "depthM": -1725
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 128372,
+   "mark": "follow: double-click the Corvette (2)"
+  },
+  {
+   "t": 128376,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 353,
+    "zM": 1269,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -273,
+    "zM": 796,
+    "depthM": -1723
+   },
+   "flying": false,
+   "goal": {
+    "x": 353,
+    "z": 1269
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 129270,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 373,
+    "zM": 1332,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -253,
+    "zM": 859,
+    "depthM": -1722
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": true,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 130070,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 424,
+    "zM": 1491,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -202,
+    "zM": 1018,
+    "depthM": -1723
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": true,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 130889,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 489,
+    "zM": 1697,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -136,
+    "zM": 1224,
+    "depthM": -1725
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": true,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 131554,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 554,
+    "zM": 1903,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -70,
+    "zM": 1430,
+    "depthM": -1728
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": true,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 132305,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 605,
+    "zM": 2062,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -20,
+    "zM": 1589,
+    "depthM": -1731
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": true,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 133026,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 625,
+    "zM": 2125,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 1,
+    "zM": 1653,
+    "depthM": -1734
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 133662,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 625,
+    "zM": 2125,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 1,
+    "zM": 1653,
+    "depthM": -1736
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 134301,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 625,
+    "zM": 2125,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 1,
+    "zM": 1654,
+    "depthM": -1737
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 134932,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 625,
+    "zM": 2125,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 1,
+    "zM": 1654,
+    "depthM": -1738
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 135551,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 625,
+    "zM": 2125,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 0,
+    "zM": 1654,
+    "depthM": -1737
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 136223,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 625,
+    "zM": 2125,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 0,
+    "zM": 1654,
+    "depthM": -1735
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 136888,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 625,
+    "zM": 2125,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 0,
+    "zM": 1654,
+    "depthM": -1733
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 137498,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 625,
+    "zM": 2125,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -1,
+    "zM": 1654,
+    "depthM": -1730
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 138142,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 625,
+    "zM": 2125,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -1,
+    "zM": 1654,
+    "depthM": -1727
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 138792,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 625,
+    "zM": 2125,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -2,
+    "zM": 1654,
+    "depthM": -1725
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 139413,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 625,
+    "zM": 2125,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -2,
+    "zM": 1654,
+    "depthM": -1723
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 140134,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 625,
+    "zM": 2125,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -2,
+    "zM": 1654,
+    "depthM": -1722
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 140794,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 625,
+    "zM": 2125,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -2,
+    "zM": 1654,
+    "depthM": -1722
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 141400,
+   "mark": "follow: the hull sent across the water"
+  },
+  {
+   "t": 141406,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 625,
+    "zM": 2125,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -2,
+    "zM": 1654,
+    "depthM": -1724
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 142037,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 625,
+    "zM": 2125,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -1,
+    "zM": 1654,
+    "depthM": -1726
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 142668,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 625,
+    "zM": 2125,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": -1,
+    "zM": 1654,
+    "depthM": -1728
+   },
+   "flying": false,
+   "goal": {
+    "x": 625,
+    "z": 2125
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 625,
+    "z": 2125,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 143317,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 630,
+    "zM": 2149,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 4,
+    "zM": 1678,
+    "depthM": -1731
+   },
+   "flying": false,
+   "goal": {
+    "x": 630,
+    "z": 2149
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 633,
+    "z": 2165,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 143960,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 644,
+    "zM": 2215,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 19,
+    "zM": 1745,
+    "depthM": -1734
+   },
+   "flying": false,
+   "goal": {
+    "x": 644,
+    "z": 2215
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 647,
+    "z": 2232,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 144660,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 655,
+    "zM": 2265,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 30,
+    "zM": 1794,
+    "depthM": -1736
+   },
+   "flying": false,
+   "goal": {
+    "x": 655,
+    "z": 2265
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 658,
+    "z": 2282,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 145265,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 665,
+    "zM": 2315,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 41,
+    "zM": 1844,
+    "depthM": -1737
+   },
+   "flying": false,
+   "goal": {
+    "x": 665,
+    "z": 2315
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 668,
+    "z": 2332,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 145900,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 676,
+    "zM": 2365,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 51,
+    "zM": 1894,
+    "depthM": -1738
+   },
+   "flying": false,
+   "goal": {
+    "x": 676,
+    "z": 2365
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 679,
+    "z": 2381,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 146519,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 686,
+    "zM": 2415,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 62,
+    "zM": 1943,
+    "depthM": -1737
+   },
+   "flying": false,
+   "goal": {
+    "x": 686,
+    "z": 2415
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 689,
+    "z": 2431,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 147157,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 700,
+    "zM": 2480,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 75,
+    "zM": 2008,
+    "depthM": -1735
+   },
+   "flying": false,
+   "goal": {
+    "x": 700,
+    "z": 2480
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 700,
+    "z": 2480,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 147804,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 700,
+    "zM": 2480,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 75,
+    "zM": 2008,
+    "depthM": -1733
+   },
+   "flying": false,
+   "goal": {
+    "x": 700,
+    "z": 2480
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 700,
+    "z": 2480,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 148481,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 700,
+    "zM": 2480,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 75,
+    "zM": 2007,
+    "depthM": -1730
+   },
+   "flying": false,
+   "goal": {
+    "x": 700,
+    "z": 2480
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 700,
+    "z": 2480,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 149112,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 700,
+    "zM": 2480,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 75,
+    "zM": 2007,
+    "depthM": -1727
+   },
+   "flying": false,
+   "goal": {
+    "x": 700,
+    "z": 2480
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 700,
+    "z": 2480,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 149712,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 700,
+    "zM": 2480,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 74,
+    "zM": 2007,
+    "depthM": -1725
+   },
+   "flying": false,
+   "goal": {
+    "x": 700,
+    "z": 2480
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 700,
+    "z": 2480,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 150315,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 700,
+    "zM": 2480,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 74,
+    "zM": 2007,
+    "depthM": -1723
+   },
+   "flying": false,
+   "goal": {
+    "x": 700,
+    "z": 2480
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 700,
+    "z": 2480,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 150902,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 700,
+    "zM": 2480,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 74,
+    "zM": 2007,
+    "depthM": -1722
+   },
+   "flying": false,
+   "goal": {
+    "x": 700,
+    "z": 2480
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 700,
+    "z": 2480,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 151564,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 700,
+    "zM": 2480,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 74,
+    "zM": 2007,
+    "depthM": -1722
+   },
+   "flying": false,
+   "goal": {
+    "x": 700,
+    "z": 2480
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 700,
+    "z": 2480,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 152252,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 700,
+    "zM": 2480,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 74,
+    "zM": 2008,
+    "depthM": -1723
+   },
+   "flying": false,
+   "goal": {
+    "x": 700,
+    "z": 2480
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 700,
+    "z": 2480,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 152905,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 700,
+    "zM": 2480,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 74,
+    "zM": 2008,
+    "depthM": -1725
+   },
+   "flying": false,
+   "goal": {
+    "x": 700,
+    "z": 2480
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 700,
+    "z": 2480,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 153527,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 700,
+    "zM": 2480,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 74,
+    "zM": 2008,
+    "depthM": -1728
+   },
+   "flying": false,
+   "goal": {
+    "x": 700,
+    "z": 2480
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 700,
+    "z": 2480,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 154163,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 700,
+    "zM": 2480,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 74,
+    "zM": 2009,
+    "depthM": -1731
+   },
+   "flying": false,
+   "goal": {
+    "x": 700,
+    "z": 2480
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 700,
+    "z": 2480,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 154823,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 700,
+    "zM": 2480,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 74,
+    "zM": 2009,
+    "depthM": -1733
+   },
+   "flying": false,
+   "goal": {
+    "x": 700,
+    "z": 2480
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 700,
+    "z": 2480,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 155494,
+   "mark": "follow: an arrow pan lets go"
+  },
+  {
+   "t": 155500,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 700,
+    "zM": 2480,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 74,
+    "zM": 2010,
+    "depthM": -1736
+   },
+   "flying": false,
+   "goal": {
+    "x": 700,
+    "z": 2480
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": [
+    2
+   ],
+   "hull": {
+    "x": 700,
+    "z": 2480,
+    "depthM": 300
+   }
+  },
+  {
+   "t": 156155,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 700,
+    "zM": 2480,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 74,
+    "zM": 2010,
+    "depthM": -1737
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2427
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 156793,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 725,
+    "zM": 2447,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 99,
+    "zM": 1977,
+    "depthM": -1738
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2427
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 157387,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 734,
+    "zM": 2435,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 108,
+    "zM": 1965,
+    "depthM": -1737
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2427
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 158014,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 737,
+    "zM": 2430,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 112,
+    "zM": 1960,
+    "depthM": -1736
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2427
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 158611,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 738,
+    "zM": 2428,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 113,
+    "zM": 1958,
+    "depthM": -1734
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2427
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 159245,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 113,
+    "zM": 1957,
+    "depthM": -1731
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2427
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 159874,
+   "mark": "home"
+  },
+  {
+   "t": 159878,
+   "yawDeg": 233,
+   "pitchDeg": 29.7,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": 300
+   },
+   "eye": {
+    "xM": 113,
+    "zM": 1957,
+    "depthM": -1728
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2427
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 160519,
+   "yawDeg": 242.4,
+   "pitchDeg": 31.6,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": 321
+   },
+   "eye": {
+    "xM": 58,
+    "zM": 2072,
+    "depthM": -1820
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": true,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 161232,
+   "yawDeg": 265.9,
+   "pitchDeg": 36.3,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": 374
+   },
+   "eye": {
+    "xM": 13,
+    "zM": 2376,
+    "depthM": -2043
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": true,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 161841,
+   "yawDeg": 296.5,
+   "pitchDeg": 42.3,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": 443
+   },
+   "eye": {
+    "xM": 141,
+    "zM": 2725,
+    "depthM": -2311
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": true,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 162482,
+   "yawDeg": 327.1,
+   "pitchDeg": 48.4,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": 512
+   },
+   "eye": {
+    "xM": 413,
+    "zM": 2931,
+    "depthM": -2548
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": true,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 163116,
+   "yawDeg": 350.6,
+   "pitchDeg": 53.1,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": 565
+   },
+   "eye": {
+    "xM": 650,
+    "zM": 2963,
+    "depthM": -2708
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": true,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 163705,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 738,
+    "zM": 2946,
+    "depthM": -2767
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 164252,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 738,
+    "zM": 2945,
+    "depthM": -2768
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 164879,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 738,
+    "zM": 2945,
+    "depthM": -2770
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 165437,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 738,
+    "zM": 2944,
+    "depthM": -2772
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 166035,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 738,
+    "zM": 2944,
+    "depthM": -2773
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 166636,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 738,
+    "zM": 2943,
+    "depthM": -2774
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 167290,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 738,
+    "zM": 2943,
+    "depthM": -2775
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 167898,
+   "mark": "nav: in, flying forward"
+  },
+  {
+   "t": 167905,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 738,
+    "zM": 2943,
+    "depthM": -2775
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 168481,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 738,
+    "zM": 2905,
+    "depthM": -2528
+   },
+   "flying": true,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 169033,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 738,
+    "zM": 2809,
+    "depthM": -1910
+   },
+   "flying": true,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 169578,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 739,
+    "zM": 2685,
+    "depthM": -1106
+   },
+   "flying": true,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 170149,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 739,
+    "zM": 2561,
+    "depthM": -303
+   },
+   "flying": true,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 170697,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 739,
+    "zM": 2466,
+    "depthM": 316
+   },
+   "flying": true,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 171163,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": 563
+   },
+   "flying": true,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 171475,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": 563
+   },
+   "flying": true,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 171812,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": 563
+   },
+   "flying": true,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 172107,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": 563
+   },
+   "flying": true,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 172435,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": 563
+   },
+   "flying": true,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 172766,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": 563
+   },
+   "flying": true,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 173082,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": 563
+   },
+   "flying": true,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 173420,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": 563
+   },
+   "flying": true,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 173730,
+   "mark": "nav: out"
+  },
+  {
+   "t": 173733,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": 563
+   },
+   "flying": true,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 174045,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 740,
+    "zM": 2467,
+    "depthM": 321
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 174440,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 740,
+    "zM": 2563,
+    "depthM": -297
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 174990,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 740,
+    "zM": 2687,
+    "depthM": -1101
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 175555,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 740,
+    "zM": 2811,
+    "depthM": -1905
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 176127,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 740,
+    "zM": 2906,
+    "depthM": -2524
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 176685,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 740,
+    "zM": 2944,
+    "depthM": -2772
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 177245,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 740,
+    "zM": 2944,
+    "depthM": -2774
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 177843,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 739,
+    "zM": 2943,
+    "depthM": -2775
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 178400,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 739,
+    "zM": 2943,
+    "depthM": -2775
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 178985,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 739,
+    "zM": 2943,
+    "depthM": -2775
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 179594,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 739,
+    "zM": 2943,
+    "depthM": -2775
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 180174,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 738,
+    "zM": 2944,
+    "depthM": -2774
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  },
+  {
+   "t": 180762,
+   "yawDeg": 0,
+   "pitchDeg": 55,
+   "distance": 902,
+   "focus": {
+    "xM": 739,
+    "zM": 2428,
+    "depthM": null
+   },
+   "eye": {
+    "xM": 738,
+    "zM": 2944,
+    "depthM": -2772
+   },
+   "flying": false,
+   "goal": {
+    "x": 739,
+    "z": 2428
+   },
+   "goalDistance": 902,
+   "gliding": false,
+   "coasting": false,
+   "following": []
+  }
+ ]
+}

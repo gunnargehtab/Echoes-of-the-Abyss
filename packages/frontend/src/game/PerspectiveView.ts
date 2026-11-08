@@ -66,6 +66,7 @@ import {
   type WebGLRenderTarget,
 } from 'three';
 import {
+  CAMERA_FEEL,
   DEPTH,
   Faction,
   FLIGHT_CAMERA,
@@ -257,6 +258,7 @@ import { DreamLightHalos } from './dreamLightHalos.ts';
 import { swayAt, type SwayOffset } from './cameraSway.ts';
 import { installDisplayVeil, VEIL_SHADE_ATTRIBUTE } from './veilShading.ts';
 import { flightInterval, rotateFlight, sweepFlight, type FlightReading } from './flightCamera.ts';
+import { glideShare, OrbitFeel, type OrbitPart, type OrbitPose } from './cameraFeel.ts';
 
 /**
  * SPEC — docs/art-direction.md "Camera & Projection": 55° below horizontal,
@@ -433,6 +435,11 @@ const BOX_TMP = new Box3();
 const SWAY_TMP: SwayOffset = { right: 0, up: 0 };
 const SWAY_RIGHT = new Vector3();
 const SWAY_UP = new Vector3();
+/** The new mode's own eye and turn while a change of mode blends into them. */
+const BLEND_EYE = new Vector3();
+const BLEND_TURN = new Quaternion();
+/** One followed hull's drawn place, written per frame (`followedFocus`). */
+const FOLLOW_AT = { x: 0, y: 0, depth: 0 };
 /** The lamp reading's box and corner; a capture reads it once a frame at most. */
 const LAMP_BOX = new Box3();
 
@@ -686,6 +693,23 @@ export class PerspectiveView {
   private readonly flightEye = new Vector3();
   private readonly flightOrientation = new Quaternion();
   private flightBlocked = false;
+  /**
+   * The free-water study's camera feel (docs/free-camera.md §4, "The study's
+   * camera feel", #1775): where the orbit is going, beside the drawn rig
+   * above, which is where it is. Null outside the study, whose camera stays
+   * instant; `setCameraFeel` is the one switch.
+   */
+  private feel: OrbitFeel | null = null;
+  /** Own hulls the focus is following, by id; null when it follows nothing. */
+  private followIds: readonly number[] | null = null;
+  /** When the feel last stepped, `performance.now()` ms; negative before the first. */
+  private feelSteppedAt = -1;
+  /**
+   * Entering or leaving NAV's flight: the camera the last mode drew, blended
+   * into the new mode's own over a glide (rule 4), `t` running 0..1. Null when
+   * nothing is blending.
+   */
+  private modeBlend: { position: Vector3; quaternion: Quaternion; t: number } | null = null;
   /**
    * The sway's clock (cameraSway.ts): the frame's own time, set once a frame
    * before the camera is applied. A pan between frames re-applies the camera
@@ -1697,7 +1721,7 @@ export class PerspectiveView {
     }
     this.target.x -= dx;
     this.target.z -= dy;
-    this.applyCamera();
+    this.frameInstantly();
     this.cutOverview();
     return true;
   }
@@ -1911,9 +1935,14 @@ export class PerspectiveView {
     const { origin, direction } = RAY_TMP.ray;
     // How far along the ray the focus plane is; not positive when there is
     // no plane, when it lies behind the eye, or when the ray runs level with it.
-    const planeless = this.focusDepthM === null;
+    // The plane is where the focus depth is going, not where the picture has
+    // got to (`orderDepthM`).
+    const planeDepthM = this.orderDepthM();
+    const planeless = planeDepthM === null;
     const toPlane =
-      planeless || Math.abs(direction.y) < 1e-6 ? -1 : (this.focusY() - origin.y) / direction.y;
+      planeless || Math.abs(direction.y) < 1e-6
+        ? -1
+        : (depthToWorldY(planeDepthM) - origin.y) / direction.y;
 
     let ground: 'floor' | 'roof' | null = null;
     let x: number;
@@ -2181,6 +2210,19 @@ export class PerspectiveView {
       this.flyLocal(-dxPx, dyPx, 0);
       return;
     }
+    // A drag in the study (rule 1): the drawn rig and the goal move together,
+    // so the ground stays under the hand. It stops a coast, takes the place out
+    // of a glide (rule 5) and lets go of a followed hull.
+    this.takeHold();
+    this.followIds = null;
+    this.dragPan(dxPx, dyPx);
+  }
+
+  /**
+   * The ground's motion under a screen delta, world metres: `panBy`'s mapping,
+   * read through the drawn camera, for a drag, a step and a coast alike.
+   */
+  private panDelta(dxPx: number, dyPx: number): { x: number; z: number } {
     const canvas = this.renderer?.domElement;
     const height = canvas?.clientHeight ?? 900;
     const worldPerPx = (2 * this.distance * Math.tan(((FOV_DEG / 2) * Math.PI) / 180)) / height;
@@ -2192,13 +2234,50 @@ export class PerspectiveView {
     const intoScreen = dyPx / Math.max(0.2, Math.sin(this.pitch));
     // Screen right is (cos yaw, -sin yaw); screen "down the ground" is
     // (-sin yaw, -cos yaw). Both negated, because the ground follows the hand.
-    this.target.x -= dxPx * cosYaw * worldPerPx + intoScreen * sinYaw * worldPerPx;
-    this.target.z -= -dxPx * sinYaw * worldPerPx + intoScreen * cosYaw * worldPerPx;
+    return {
+      x: -(dxPx * cosYaw * worldPerPx + intoScreen * sinYaw * worldPerPx),
+      z: -(-dxPx * sinYaw * worldPerPx + intoScreen * cosYaw * worldPerPx),
+    };
+  }
+
+  /** Move the drawn focus, and the goal with it, by a screen delta. */
+  private dragPan(dxPx: number, dyPx: number): void {
+    const d = this.panDelta(dxPx, dyPx);
+    this.target.x += d.x;
+    this.target.z += d.z;
     this.clampTarget();
+    if (this.feel !== null) {
+      // Added to the goal, so an ease under way (a zoom about the cursor) keeps
+      // its course; taken out of a glide, so the hand owns the place (rule 5).
+      this.feel.goal.x += d.x;
+      this.feel.goal.z += d.z;
+      this.clampGoal();
+      this.takeParts(['x', 'z']);
+    }
     // Applied now, not at the next frame: the overlay painter projects
     // through this camera on its own ticker, and a camera that moved between
     // the two draws would smear the HUD marks off the hulls they annotate.
     this.applyCamera();
+  }
+
+  /**
+   * A pan that says where the camera is going rather than moving it: the
+   * arrows and the screen edge, per frame. In the study the drawn camera eases
+   * after it (rule 3), so the pan gathers speed and settles; elsewhere, and
+   * under reduced motion, it is `panBy`.
+   */
+  panStep(dxPx: number, dyPx: number): void {
+    const feel = this.easing();
+    if (feel === null) {
+      this.panBy(dxPx, dyPx);
+      return;
+    }
+    this.followIds = null;
+    feel.beforeStep(['x', 'z']);
+    const d = this.panDelta(dxPx, dyPx);
+    feel.goal.x += d.x;
+    feel.goal.z += d.z;
+    this.clampGoal();
   }
 
   /**
@@ -2213,10 +2292,30 @@ export class PerspectiveView {
       this.turnFlight(-dxPx * ORBIT_YAW_PER_PX, -dyPx * ORBIT_PITCH_PER_PX, 0);
       return;
     }
-    this.yaw = (this.yaw + dxPx * ORBIT_YAW_PER_PX) % (Math.PI * 2);
+    // A drag (rule 1): it stops a coast and takes the angles out of a glide
+    // (rule 5), so a glide to a followed hull still lands on it. The hull stays
+    // followed: turning about it is what following is for.
+    this.takeHold();
+    this.dragOrbit(dxPx, dyPx);
+  }
+
+  /**
+   * Turn the drawn rig, and the goal with it, by a screen delta. Returns
+   * whether the pitch met an end of its band, which stops a coast's tilt.
+   */
+  private dragOrbit(dxPx: number, dyPx: number): boolean {
+    const dYaw = dxPx * ORBIT_YAW_PER_PX;
+    this.yaw = (this.yaw + dYaw) % (Math.PI * 2);
+    const asked = this.pitch + dyPx * ORBIT_PITCH_PER_PX;
     // setPitch re-applies, so the yaw above rides along and the camera moves
     // once per event rather than twice.
-    this.setPitch(this.pitch + dyPx * ORBIT_PITCH_PER_PX);
+    this.setPitch(asked);
+    if (this.feel !== null) {
+      this.feel.goal.yaw = this.yaw;
+      this.feel.goal.pitch = this.pitch;
+      this.takeParts(['yaw', 'pitch']);
+    }
+    return this.pitch !== asked;
   }
 
   /**
@@ -2245,30 +2344,74 @@ export class PerspectiveView {
       this.moveFlight(new Vector3(0, metres * DEPTH_VISUAL_M_PER_M, 0));
       return;
     }
+    // A drag in the study: the depth moves with the hand and never after it
+    // (rule 2), and moving it lets go of a followed hull.
+    this.takeHold();
+    this.followIds = null;
     const seabed = this.seabedDepthAt(this.target.x, this.target.z);
     const next = (this.focusDepthM ?? seabed) - metres;
     this.focusDepthM = next >= seabed ? null : next;
     this.nearSnowDepthM = this.focusDepthM;
     this.clampTarget();
+    if (this.feel !== null) {
+      this.feel.goal.depthM = this.focusDepthM;
+      this.takeParts(['depthM']);
+    }
     this.applyCamera();
+  }
+
+  /**
+   * Raise or sink the focus one notch: `Shift` + wheel. In the study the
+   * notch moves where the focus is going and the drawn focus eases after it
+   * (rule 3); elsewhere, and under reduced motion, it is `raiseFocusBy`.
+   */
+  stepFocusBy(metres: number): void {
+    const feel = this.easing();
+    if (feel === null) {
+      this.raiseFocusBy(metres);
+      return;
+    }
+    if (metres === 0) return;
+    this.followIds = null;
+    feel.beforeStep(['depthM']);
+    const goal = feel.goal;
+    const seabed = this.seabedDepthAt(goal.x, goal.z);
+    const next = (goal.depthM ?? seabed) - metres;
+    goal.depthM = next >= seabed ? null : Math.max(0, next);
   }
 
   /**
    * The depth the focus sits at, metres: where a click into open water lands
    * (docs/ui-ux.md §9), and what the depth ribbon's focus tick reads (§8). On
-   * the seabed, the drawn seabed under it.
+   * the seabed, the drawn seabed under it. In the study, where the depth is
+   * going (`orderDepthM`).
    */
   focusDepth(): number {
-    return this.focusDepthM ?? this.seabedDepthAt(this.target.x, this.target.z);
+    const goal = this.feel?.goal;
+    return (
+      this.orderDepthM() ?? this.seabedDepthAt(goal?.x ?? this.target.x, goal?.z ?? this.target.z)
+    );
   }
 
   /**
    * The focus's depth only while it is raised into the column, metres: the
    * command plane with nothing selected (verticalCommand.ts). Null on the
-   * seabed, where there is no plane (docs/free-camera.md §4).
+   * seabed, where there is no plane (docs/free-camera.md §4). In the study,
+   * where the depth is going (`orderDepthM`).
    */
   raisedFocusDepthM(): number | null {
-    return this.focusDepthM;
+    return this.orderDepthM();
+  }
+
+  /**
+   * The focus depth every order reads (docs/free-camera.md §4, "The study's
+   * camera feel", decision 5): where it is going. In the study the drawn depth
+   * eases after a notch and glides after a follow, and a click in that window
+   * must land at the depth the hand set, or at the followed hull's, not at
+   * one on the way. Elsewhere the two are one number. Null on the seabed.
+   */
+  private orderDepthM(): number | null {
+    return this.feel !== null ? this.feel.goal.depthM : this.focusDepthM;
   }
 
   /**
@@ -2279,12 +2422,23 @@ export class PerspectiveView {
    * they had navigated to would answer a question they did not ask.
    */
   home(): void {
-    this.flight = false;
-    this.flightBlocked = false;
+    this.leaveFlight();
+    this.followIds = null;
+    const feel = this.easing();
+    if (feel !== null) {
+      // A jump (rule 4): from where the camera is drawn to the home angles,
+      // by the glide, with the place and the dolly kept as they are.
+      feel.jump(this.drawnPose(), this.seabedDepthAt(this.target.x, this.target.z));
+      feel.goal.yaw = 0;
+      feel.goal.pitch = (HOME_PITCH_DEG * Math.PI) / 180;
+      feel.goal.depthM = null;
+      return;
+    }
     this.yaw = 0;
     this.pitch = (HOME_PITCH_DEG * Math.PI) / 180;
     this.focusDepthM = null;
     this.nearSnowDepthM = null;
+    this.feel?.settle(this.drawnPose());
     this.applyCamera();
   }
 
@@ -2308,11 +2462,14 @@ export class PerspectiveView {
     return this.flight;
   }
 
-  toggleFlight(): boolean {
-    if (this.flight) {
-      this.home();
-      return true;
-    }
+  /**
+   * Enter flight where the camera is drawn (docs/free-water-slice.md §6): its
+   * orientation kept, the eye moved only if it is out of legal water. Since
+   * #1775 NAV is the only way in. False, and NO CAMERA CLEARANCE, when there
+   * is no clear water at the eye or the focus.
+   */
+  enterFlight(): boolean {
+    if (this.flight) return true;
     const terrain = this.terrain;
     const grid = this.terrainGrid;
     if (terrain === null || grid === null) return false;
@@ -2329,10 +2486,63 @@ export class PerspectiveView {
       this.flightEye.y = Math.min(interval.maxY, Math.max(interval.minY, this.flightEye.y));
     }
     this.flightOrientation.copy(this.camera.quaternion);
+    // The orbit waits where it is drawn, for the way back out; nothing it was
+    // easing toward or following carries into flight (docs/free-camera.md §4).
+    this.followIds = null;
+    this.feel?.settle(this.drawnPose());
+    // From where the camera is drawn to where flight puts the eye, which
+    // differ where the orbit's eye was out of the water (rule 4).
+    this.blendFromDrawn();
     this.flight = true;
     this.flightBlocked = false;
     this.applyCamera();
     return true;
+  }
+
+  /**
+   * Leave flight for the orbit it left, untouched while flying. In the study
+   * the camera blends from the flight's eye and turn into the orbit's over a
+   * glide (rule 4); under reduced motion it cuts.
+   */
+  leaveFlight(): void {
+    if (!this.flight) return;
+    this.blendFromDrawn();
+    this.flight = false;
+    this.flightBlocked = false;
+    this.applyCamera();
+  }
+
+  /**
+   * Start a change of mode's blend from the camera as drawn this moment,
+   * mid-blend included, so a quick NAV in and out never jumps. In the study
+   * outside reduced motion only; elsewhere the change cuts, as it always has.
+   */
+  private blendFromDrawn(): void {
+    this.modeBlend =
+      this.feel !== null && !this.swayHeld
+        ? {
+            position: this.camera.position.clone(),
+            quaternion: this.camera.quaternion.clone(),
+            t: 0,
+          }
+        : null;
+  }
+
+  /**
+   * A change of camera mode (docs/free-camera.md §4, rule 4): the camera the
+   * last mode drew blends into the one this mode just placed, rest to rest,
+   * the eye held over the floor on every frame as the orbit's own is.
+   */
+  private blendModes(): void {
+    const blend = this.modeBlend;
+    if (blend === null) return;
+    const s = glideShare(blend.t);
+    BLEND_EYE.copy(this.camera.position);
+    BLEND_TURN.copy(this.camera.quaternion);
+    const eye = this.camera.position.lerpVectors(blend.position, BLEND_EYE, s);
+    this.camera.quaternion.slerpQuaternions(blend.quaternion, BLEND_TURN, s);
+    const floor = this.groundYAt(eye.x, eye.z) + EYE_CLEARANCE_M * DEPTH_VISUAL_M_PER_M;
+    if (eye.y < floor) eye.y = floor;
   }
 
   turnFlight(yaw: number, pitch: number, roll: number): void {
@@ -2424,6 +2634,25 @@ export class PerspectiveView {
       return;
     }
     const diagonal = this.mapDiagonal();
+    const feel = this.easing();
+    if (feel !== null) {
+      // A step (rule 3): the notch moves where the dolly is going, and the
+      // drawn one eases after it. Notches add to the goal, so a fast scroll is
+      // one zoom. Following, the wheel dollies toward the hull rather than
+      // the cursor, which would pull the focus off it.
+      const goal = feel.goal;
+      feel.beforeStep(this.followIds === null ? ['distance', 'x', 'z'] : ['distance']);
+      const next = Math.min(diagonal * 2.2, Math.max(250, goal.distance / factor));
+      if (this.followIds === null) {
+        const cursor = this.resolveGround(clientX, clientY);
+        const k = 1 - next / goal.distance;
+        goal.x += (cursor.x - goal.x) * k;
+        goal.z += (cursor.y - goal.z) * k;
+        this.clampGoal();
+      }
+      goal.distance = next;
+      return;
+    }
     const next = Math.min(diagonal * 2.2, Math.max(250, this.distance / factor));
     const cursor = this.resolveGround(clientX, clientY);
     const k = 1 - next / this.distance;
@@ -2431,22 +2660,133 @@ export class PerspectiveView {
     this.target.z += (cursor.y - this.target.z) * k;
     this.clampTarget();
     this.distance = next;
+    this.feel?.settle(this.drawnPose());
     this.applyCamera();
   }
 
-  /** Centre the camera on a world point; optionally set the dolly too. */
+  /**
+   * Centre the camera on a world point; optionally set the dolly too. Instant
+   * everywhere: in the study it is the scope's scrub, a drag (rule 1), which
+   * stops a coast, takes the place out of a glide and lets go of a followed hull.
+   */
   focusWorld(xM: number, yM: number, distanceM?: number): void {
     if (this.flight) {
       this.moveFlight(new Vector3(xM - this.flightEye.x, 0, yM - this.flightEye.z));
       return;
     }
+    this.takeHold();
+    this.followIds = null;
     this.target.x = xM;
     this.target.z = yM;
     this.clampTarget();
     if (distanceM !== undefined) {
       this.distance = Math.min(this.mapDiagonal() * 2.2, Math.max(250, distanceM));
     }
+    if (this.feel !== null) {
+      const goal = this.feel.goal;
+      goal.x = this.target.x;
+      goal.z = this.target.z;
+      goal.distance = this.distance;
+      this.takeParts(distanceM === undefined ? ['x', 'z'] : ['x', 'z', 'distance']);
+    }
     this.applyCamera();
+  }
+
+  /**
+   * Travel to a world point (rule 4): a press on the scope or a log entry.
+   * In the study the focus glides there; elsewhere, and under reduced motion,
+   * it is `focusWorld`'s cut.
+   */
+  glideTo(xM: number, yM: number): void {
+    const feel = this.easing();
+    if (feel === null) {
+      this.focusWorld(xM, yM);
+      return;
+    }
+    this.followIds = null;
+    feel.jump(this.drawnPose(), this.seabedDepthAt(this.target.x, this.target.z));
+    feel.goal.x = xM;
+    feel.goal.z = yM;
+    this.clampGoal();
+  }
+
+  /**
+   * Follow own hulls (docs/free-camera.md §4, "Focus and follow"): the focus
+   * glides to their drawn centre and stays on it, at its depth, until a pan,
+   * a focus step, Home or NAV lets go, or the last of them leaves the
+   * snapshot. The study only; elsewhere this centres on them, as a recalled
+   * group always has. Ids the snapshot does not hold are ignored, and with
+   * none left nothing moves.
+   */
+  follow(ids: readonly number[]): void {
+    if (this.flight) return;
+    const held = ids.filter((id) => this.units.some((unit) => unit.id === id));
+    if (held.length === 0) return;
+    const at = this.followedFocus(held, performance.now());
+    if (at === null) return;
+    if (this.feel === null) {
+      this.focusWorld(at.x, at.y);
+      return;
+    }
+    this.followIds = held;
+    const feel = this.feel;
+    const glides = this.easing() !== null;
+    if (glides) feel.jump(this.drawnPose(), this.seabedDepthAt(this.target.x, this.target.z));
+    feel.goal.x = at.x;
+    feel.goal.z = at.y;
+    feel.goal.depthM = at.depth;
+    this.clampGoal();
+    if (glides) return;
+    // Reduced motion: held from the frame it is chosen, with no glide to it.
+    this.setDrawnPose({ ...this.drawnPose(), x: feel.goal.x, z: feel.goal.z, depthM: at.depth });
+    this.clampTarget();
+    feel.settle(this.drawnPose());
+    this.applyCamera();
+  }
+
+  /** What the focus is following, by id: empty when it follows nothing. */
+  get following(): readonly number[] {
+    return this.followIds ?? [];
+  }
+
+  /**
+   * Let a released pan carry on (rule 2), at the speed the drag was let go
+   * at, screen pixels a second. Only in the study, outside reduced motion.
+   */
+  coastPan(vxPx: number, vyPx: number): void {
+    const feel = this.easing();
+    if (feel === null) return;
+    feel.panCoast.x = vxPx;
+    feel.panCoast.y = vyPx;
+  }
+
+  /** Let a released orbit carry on (rule 2), as `coastPan` does a pan. */
+  coastOrbit(vxPx: number, vyPx: number): void {
+    const feel = this.easing();
+    if (feel === null) return;
+    feel.orbitCoast.x = vxPx;
+    feel.orbitCoast.y = vyPx;
+  }
+
+  /**
+   * The study's camera, for the pose recording #1775's evidence takes: the
+   * pose drawn this frame, where it is going, and what is carrying it there.
+   * Null outside the study.
+   */
+  get feelReading(): {
+    goal: OrbitPose;
+    gliding: boolean;
+    coasting: boolean;
+    following: readonly number[];
+  } | null {
+    const feel = this.feel;
+    if (feel === null) return null;
+    return {
+      goal: { ...feel.goal },
+      gliding: feel.gliding,
+      coasting: feel.coasting,
+      following: this.following,
+    };
   }
 
   /** Frame the whole map — the opening shot, and the scope's double-tap out. */
@@ -2462,7 +2802,7 @@ export class PerspectiveView {
     this.focusDepthM = null;
     this.nearSnowDepthM = null;
     this.distance = opening.distanceM;
-    this.applyCamera();
+    this.frameInstantly();
   }
 
   /** Where the camera stands: its focus on the ground, dolly and angles. */
@@ -2484,6 +2824,7 @@ export class PerspectiveView {
    */
   setFrame(frame: CameraFrame): void {
     this.flight = false;
+    this.modeBlend = null;
     this.target.x = frame.xM;
     this.target.z = frame.yM;
     this.focusDepthM = null;
@@ -2493,7 +2834,7 @@ export class PerspectiveView {
     this.yaw = (frame.yawDeg * Math.PI) / 180;
     const pitch = Math.min(PITCH_MAX_DEG, Math.max(this.pitchMinDeg(), frame.pitchDeg));
     this.pitch = (pitch * Math.PI) / 180;
-    this.applyCamera();
+    this.frameInstantly();
   }
 
   /**
@@ -2506,6 +2847,158 @@ export class PerspectiveView {
     this.setFrame(frame);
     this.focusDepthM = focusDepthM;
     this.nearSnowDepthM = focusDepthM;
+    this.clampTarget();
+    this.frameInstantly();
+  }
+
+  /**
+   * Switch the study's camera feel on or off (docs/free-camera.md §4, "The
+   * study's camera feel"). The renderer turns it on for the free-water study
+   * alone; every other match keeps the instant camera.
+   */
+  setCameraFeel(on: boolean): void {
+    if (on === (this.feel !== null)) return;
+    this.feel = on ? new OrbitFeel(this.drawnPose()) : null;
+    this.followIds = null;
+    this.modeBlend = null;
+  }
+
+  /**
+   * The feel while it is easing: the study's, outside flight and reduced
+   * motion (docs/ui-ux.md §11), which keep every input and take the motion
+   * out. Null means a verb acts at once, as it always has.
+   */
+  private easing(): OrbitFeel | null {
+    return this.feel !== null && !this.flight && !this.swayHeld ? this.feel : null;
+  }
+
+  /**
+   * Rule 5's first half: the hand closes on the camera, so nothing it let go
+   * of still carries. Each drag then takes what it moves (`takeParts`).
+   */
+  private takeHold(): void {
+    this.feel?.stopCoasts();
+  }
+
+  /** Rule 5: the parts a drag moved, out of any glide, as they are drawn. */
+  private takeParts(parts: readonly OrbitPart[]): void {
+    this.feel?.take(this.drawnPose(), parts);
+  }
+
+  /** A verb that frames the camera outright: nothing eases toward it or away. */
+  private frameInstantly(): void {
+    this.followIds = null;
+    this.feel?.settle(this.drawnPose());
+    this.applyCamera();
+  }
+
+  private drawnPose(): OrbitPose {
+    return {
+      x: this.target.x,
+      z: this.target.z,
+      depthM: this.focusDepthM,
+      yaw: this.yaw,
+      pitch: this.pitch,
+      distance: this.distance,
+    };
+  }
+
+  private setDrawnPose(pose: OrbitPose): void {
+    this.target.x = pose.x;
+    this.target.z = pose.z;
+    if (pose.depthM !== this.focusDepthM) this.nearSnowDepthM = pose.depthM;
+    this.focusDepthM = pose.depthM;
+    this.yaw = pose.yaw;
+    this.pitch = pose.pitch;
+    this.distance = pose.distance;
+  }
+
+  /** The goal held to the focus's own clamps: the focus rectangle and the column. */
+  private clampGoal(): void {
+    const goal = this.feel?.goal;
+    if (goal === undefined) return;
+    const rect = this.focusRect();
+    if (rect !== null) {
+      const held = clampToRect(rect, { x: goal.x, y: goal.z });
+      goal.x = held.x;
+      goal.z = held.y;
+    }
+    if (goal.depthM !== null) {
+      goal.depthM = Math.min(this.seabedDepthAt(goal.x, goal.z), Math.max(0, goal.depthM));
+    }
+    const diagonal = this.mapDiagonal();
+    goal.distance = Math.min(diagonal * 2.2, Math.max(250, goal.distance));
+  }
+
+  /** The drawn centre of the followed hulls now, with their mean depth, or null with none left. */
+  private followedFocus(
+    ids: readonly number[],
+    nowMs: number
+  ): { x: number; y: number; depth: number } | null {
+    let x = 0;
+    let y = 0;
+    let depth = 0;
+    let n = 0;
+    for (const id of ids) {
+      const unit = this.units.find((own) => own.id === id);
+      if (unit === undefined) continue;
+      const at = this.motion.at(unit, nowMs, FOLLOW_AT);
+      x += at.x;
+      y += at.y;
+      depth += at.depth;
+      n++;
+    }
+    return n === 0 ? null : { x: x / n, y: y / n, depth: depth / n };
+  }
+
+  /**
+   * One frame of the study's camera (docs/free-camera.md §4, "The study's
+   * camera feel"): coasts carried, a followed hull read where it is drawn,
+   * and the drawn rig moved toward its goal. Run at the top of this view's
+   * frame, which `requestAnimationFrame` runs before the overlay's ticker
+   * (both painters boot in that order, `GameCanvas`), so both draw one pose.
+   */
+  private stepCamera(nowMs: number): void {
+    const dtS =
+      this.feelSteppedAt < 0 ? 0 : Math.min(0.1, Math.max(0, (nowMs - this.feelSteppedAt) / 1000));
+    this.feelSteppedAt = nowMs;
+    const blend = this.modeBlend;
+    if (blend !== null) {
+      blend.t = this.swayHeld ? 1 : blend.t + dtS / CAMERA_FEEL.GLIDE_S;
+      if (blend.t >= 1) this.modeBlend = null;
+    }
+    const feel = this.feel;
+    if (feel === null || this.flight) return;
+    // Reduced motion takes the motion out (docs/ui-ux.md §11): whatever was
+    // under way arrives this frame, and nothing coasts.
+    const instant = this.swayHeld;
+    if (instant) feel.stopCoasts();
+    if (feel.coasting && dtS > 0) {
+      const coast = feel.takeCoast(dtS);
+      if (coast.pan.x !== 0 || coast.pan.y !== 0) this.dragPan(coast.pan.x, coast.pan.y);
+      if (coast.orbit.x !== 0 || coast.orbit.y !== 0) {
+        // A coast that tilts into an end of the band stops tilting there.
+        if (this.dragOrbit(coast.orbit.x, coast.orbit.y)) feel.orbitCoast.y = 0;
+      }
+    }
+    if (this.followIds !== null) {
+      const at = this.followedFocus(this.followIds, nowMs);
+      if (at === null) this.followIds = null;
+      else {
+        feel.goal.x = at.x;
+        feel.goal.z = at.y;
+        feel.goal.depthM = at.depth;
+        this.clampGoal();
+      }
+    }
+    const drawn = this.drawnPose();
+    feel.step(
+      drawn,
+      instant ? Number.POSITIVE_INFINITY : dtS,
+      (x, z) => this.seabedDepthAt(x, z),
+      this.followIds !== null
+    );
+    this.setDrawnPose(drawn);
     this.clampTarget();
     this.applyCamera();
   }
@@ -3986,7 +4479,7 @@ export class PerspectiveView {
       if (!this.castPointer(clientX, clientY)) return true;
       if (this.groundHit() !== undefined) return false;
       return (
-        this.focusDepthM === null || this.pickPlane(clientX, clientY, this.focusDepth()) === null
+        this.orderDepthM() === null || this.pickPlane(clientX, clientY, this.focusDepth()) === null
       );
     }
     const rect = this.missionRect();
@@ -4760,8 +5253,9 @@ export class PerspectiveView {
   private applyCamera(): void {
     if (this.flight) {
       this.camera.position.copy(this.flightEye);
-      this.restEye.copy(this.flightEye);
       this.camera.quaternion.copy(this.flightOrientation);
+      this.blendModes();
+      this.restEye.copy(this.camera.position);
     } else {
       const look = LOOK_TMP.set(this.target.x, this.focusY(), this.target.z);
       const reach = Math.cos(this.pitch) * this.distance;
@@ -4781,8 +5275,9 @@ export class PerspectiveView {
       if (eyeY < floorY) eyeY = floorY;
 
       this.camera.position.set(eyeX, eyeY, eyeZ);
-      this.restEye.set(eyeX, eyeY, eyeZ);
       this.camera.lookAt(look);
+      this.blendModes();
+      this.restEye.copy(this.camera.position);
       this.applySway();
     }
     this.camera.updateMatrixWorld();
@@ -5027,7 +5522,9 @@ export class PerspectiveView {
     // How far the water reaches, before anything asks. It follows the dolly
     // (water.ts), so a wheel notch moves it and it is cheapest to settle once
     // a frame rather than to recompute it in each of the four places that
-    // read it.
+    // read it. The study's eased camera moves first, so the dolly read here
+    // is this frame's.
+    this.stepCamera(now);
     this.waterReach = waterReachM(this.distance, this.waterStudy);
     if (this.scene.fog instanceof FogExp2) {
       this.scene.fog.density = fogDensityFor(this.distance, this.waterDensity, this.waterStudy);
@@ -5291,7 +5788,9 @@ export class PerspectiveView {
       // see the focus the other two just set.
       this.setPitch(aim.pitchDeg === undefined ? this.pitch : (aim.pitchDeg * Math.PI) / 180);
       this.clampTarget();
-      this.applyCamera();
+      // A tripod frames outright: the study's eased camera must not ease back
+      // to where it was going before the harness pointed it.
+      this.frameInstantly();
     };
 
     // Gate 3's quiet-and-loud reading (tools/render-stack/lamps.mjs). Kept
@@ -5451,6 +5950,9 @@ export class PerspectiveView {
         depthM: Math.round(-this.camera.position.y / DEPTH_VISUAL_M_PER_M),
       },
       distance: Math.round(this.distance),
+      // The study's eased camera (#1775): where the rig above is going, and
+      // what carries it there. Null outside the study.
+      feel: this.feelReading,
       // The water this frame (#836). A gate-6 or gate-7 shot judged across
       // the pitch band has to be able to say how far the medium was reaching
       // when it was taken, because the reach follows the dolly and two shots
