@@ -163,7 +163,7 @@ describe('earning a rank', () => {
   it('ranks a fresh duel’s winner on its killing shot, and never its loser', () => {
     // docs/systems-combat.md §9, held by combatBeat.test.ts in snapshots: a
     // Corvette duel is 12–15 s. Credited as it landed, both hulls ranked on the
-    // sixth exchange and healed into a seventh cycle.
+    // sixth exchange and healed into a tenth shot.
     const match = openWater();
     const a = spawnUnit(match.world, {
       kind: UnitKind.Corvette,

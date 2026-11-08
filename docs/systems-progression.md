@@ -191,13 +191,14 @@ Four rulings say what the table leaves open. All four are SPEC (#1785):
   torpedo, a mine, a depth charge, a bite. Survived means survived the *fight*: half of each
   hit is banked, and paid once the hull has gone 10 s without another, the engagement the
   under-fire alert already counts ([ui-ux.md](ui-ux.md) §5). A hull sunk first is paid
-  nothing. Crush, hazards and the Lid are the water, not a fight, and earn nothing. Any hull
-  ranks, armed or not: a Harvester repaired under fire earns its rank from half of what it
-  lived through.
+  nothing. Crush, hazards and the Lid are the water, not a fight, and earn nothing, and so does
+  the Standing Wave, whose line harms its builder as it harms anyone. Any hull ranks, armed or
+  not: a Harvester repaired under fire earns its rank from half of what it lived through.
 - **"Own max hull" is the listed one**, the stat block's figure. A Plate Refit does not slow a
   hull's ranking, and a rank's own hull does not raise the next threshold.
 - **A rank and the Plate multiply.** A rank's share is of the hull's maximum with the plate in
-  it, so a plated Corvette at rank 1 carries 126.5 (100 × 1.15 × 1.10), whichever came first.
+  it, so a plated hull at rank 1 carries 126.5% of its listed hull (1.15 × 1.10), 531.3 for a
+  Corvette's 420, whichever came first.
 
 ### What a rank does not do
 
@@ -251,7 +252,7 @@ under fire, and fire is what the map already heard.
 | Knight instant refits are a silent tech-up | Sounded: SIG 80 for 15 s from the Bastion, the loudest single event a Knight base makes short of a ping. Everyone hears the Order harden its hulls, and where from |
 | Refits erode the asymmetry | No SIG refit, no HYD refit, no weapon class, no damage type. The four things the factions differ on are exactly the four things the list cannot buy |
 | Veterancy snowballs | Three ranks and a hard ceiling; the ranks die with the hull; experience is hull points, so a rank-3 hull has been *hit* for three times its own hull and lived, which is not a state a snowball is in |
-| Rank breaks the TTK bands | The bands in [systems-combat.md](systems-combat.md) §9 are rank-0 figures, and a fight between fresh hulls stays one: a survived hit is paid when the fight ends (§3), so a duel's winner ranks on its killing shot and the loser never does. Paid as each hit landed, two fresh Corvettes both ranked on their sixth exchange and the duel ran 16.2 s. At rank 3 against rank 0, a Corvette kills a Corvette in about 10 s and dies to one in about 20, both inside the row's neighbours; the per-rank figures are sized so no band moves by more than a third, and the test that holds the bands should hold that too |
+| Rank breaks the TTK bands | The bands in [systems-combat.md](systems-combat.md) §9 are rank-0 figures, and a duel between like fresh hulls stays one: a survived hit is paid when the fight ends (§3), so the winner ranks on its killing shot and the loser never does. Paid as each hit landed, two fresh Corvettes both ranked on their sixth exchange and the duel ran 16.2 s. At rank 3 against rank 0, a Corvette kills a Corvette in about 10 s and dies to one in about 20, both inside the row's neighbours; the per-rank figures are sized so no band moves by more than a third, and the test that holds the bands should hold that too |
 | Rank bonuses make a hull quiet-strong | Rule 2 and rule 3 together: nothing quieter, and nothing that was not paid for in exposure the map already heard — the hull's own discharges, or the ones that hit it (§3). A hull that is never in a fight never ranks |
 | Progression becomes a chore | Five refits, once each; three ranks, earned by playing. A commander who ignores this document entirely plays a coherent rank-0, refit-0 game and loses to arithmetic in the late game, which is what progression is for |
 

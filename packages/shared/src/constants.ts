@@ -2214,9 +2214,12 @@ export const PERSISTENCE = {
    */
   LIVE_TRACK_S: 0.4,
   /**
-   * TUNABLE — what one "engagement" is, for the under-fire alert
-   * (docs/ui-ux.md §5, §11): a hull hit again within this many seconds is the
-   * same fight, and raises nothing new. The log records the first blow of an
+   * SPEC — docs/ui-ux.md §5: "a hull hit again within ten seconds is the same
+   * fight". What one "engagement" is, for the under-fire alert (§5, §11), and
+   * since #1785 for rank too: docs/systems-progression.md §3 pays a survived
+   * hit once the fight is over, by this clock (`RANK.QUIET_S`). Both docs say
+   * ten seconds, so moving this moves both docs first. A hull hit again within
+   * this many seconds is the same fight, and raises nothing new. The log records the first blow of an
    * engagement rather than every round of it, and the cue and the log share
    * this number so the ear and the record cannot disagree.
    */
@@ -3089,7 +3092,7 @@ export const RANK = {
    *
    * It is why a fresh duel stays inside docs/systems-combat.md §9's band:
    * credited as it landed, half of each hit taken ranked both Corvettes on
-   * their sixth exchange and healed them into a seventh cycle, 16.2 s.
+   * their sixth exchange and healed them into a tenth shot, 16.2 s.
    */
   QUIET_S: PERSISTENCE.UNDER_FIRE_REARM_S,
 } as const;

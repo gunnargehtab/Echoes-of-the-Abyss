@@ -52,7 +52,8 @@ describe('the rank table (§3)', () => {
   });
 
   it('gives a hull its rank’s maximum at single precision, plated or not', () => {
-    // §3, ruling 4: 100 × 1.15 × 1.10 = 126.5 for a plated Corvette-sized hull.
+    // §3, ruling 4: a plated rank-1 hull carries 126.5% of its listed hull
+    // (1.15 × 1.10), read here off a listed 100 so the figure is the percentage.
     const plated = Math.fround(rankedHull(100, 1) * REFIT_STATS[RefitKind.Plate].hullFactor);
     assert.ok(Math.abs(plated - 126.5) < 1e-4, `${plated}`);
     assert.equal(rankedHull(420, 2), Math.fround(420 * 1.2));
