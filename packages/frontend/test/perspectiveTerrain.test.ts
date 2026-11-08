@@ -335,7 +335,7 @@ describe('authored floor for the survey ink', () => {
  * promises: the drawn floor, rock faces and roof are reshaped between cell
  * centres, the cells' staircase rounded; nothing is added to the authored
  * floor at a centre, and a solid cell stays rock at its centre; the drawn
- * step stays between the four centres it blends; within half a cell of the
+ * step stays between the cells within a cell of it; within half a cell of the
  * roofed cut nothing rounds, and each jamb keeps its step; the study's ink traces the
  * rounded ground (docs/map-visuals.md §4, the study's clause); the shipped
  * ground is untouched. The picture is the run-game frames' to review.
@@ -432,28 +432,31 @@ describe('the rounded ground (docs/free-water-slice.md §9)', () => {
     assert.equal(ERODED_VERTS_PER_CELL % VERTS_PER_CELL, 0);
   });
 
-  it('stays between the four centres it blends, like the bilinear it replaces', () => {
+  it('stays between the shallowest and the deepest of the cells within a cell of it', () => {
     // A visual slope never opens a route the grid refuses
     // (docs/three-layer-ocean.md §5): the drawn step is never shallower than
-    // the shallowest of its patch's centres, nor deeper than the deepest.
-    for (let y = 3; y < rows * cellM; y += 23) {
-      for (let x = 3; x < cols * cellM; x += 23) {
-        const c0 = Math.floor(x / cellM - 0.5);
-        const r0 = Math.floor(y / cellM - 0.5);
-        const corners = [
-          [r0, c0],
-          [r0, c0 + 1],
-          [r0 + 1, c0],
-          [r0 + 1, c0 + 1],
-        ].map(([r, c]) => {
-          const i =
-            Math.min(rows - 1, Math.max(0, r!)) * cols + Math.min(cols - 1, Math.max(0, c!));
-          return isRock(i) ? rockTop : terrain.floor[i]!;
-        });
+    // every cell within a cell of it, nor deeper than every one. The four
+    // centres the bilinear blends are not the bound: a rounded edge may cross
+    // the line between two centres of other kinds, as the garden's does into
+    // the bowl's cell at the pocket's north-west corner.
+    const depthOf = (i: number) => (isRock(i) ? rockTop : terrain.floor[i]!);
+    for (let y = 3; y < rows * cellM; y += 13) {
+      for (let x = 3; x < cols * cellM; x += 13) {
+        let lo = Number.POSITIVE_INFINITY;
+        let hi = Number.NEGATIVE_INFINITY;
+        for (let i = 0; i < cols * rows; i++) {
+          const c = i % cols;
+          const r = Math.floor(i / cols);
+          const dx = Math.max(c * cellM - x, 0, x - (c + 1) * cellM);
+          const dy = Math.max(r * cellM - y, 0, y - (r + 1) * cellM);
+          if (Math.hypot(dx, dy) > cellM) continue;
+          lo = Math.min(lo, depthOf(i));
+          hi = Math.max(hi, depthOf(i));
+        }
         const { stepM } = erodedGroundAtM(terrain, rockTop, x, y);
         assert.ok(
-          stepM >= Math.min(...corners) - 1e-6 && stepM <= Math.max(...corners) + 1e-6,
-          `${x},${y}: ${stepM} outside ${corners}`
+          stepM >= lo - 1e-6 && stepM <= hi + 1e-6,
+          `${x},${y}: ${stepM} outside ${lo}–${hi}`
         );
       }
     }

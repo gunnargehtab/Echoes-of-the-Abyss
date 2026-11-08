@@ -133,7 +133,7 @@ and that reading is owed.
 ## Tests
 
 - `perspectiveTerrain.test.ts`, "the rounded ground": each centre's floor, kind and biome;
-  the positive control; the finer mesh; the step between its four centres; no seam but the
+  the positive control; the finer mesh; the step between the cells within a cell; no seam but the
   jambs; no edge past the licence; the bowl's rim near its circle and without the stair's
   kinks; the roof's hold; the jamb; the wall's foot and lip; the ink's fields at every
   vertex; the cells as the only input (§4 rule 2); the delta path; the forgotten terrain;

@@ -507,9 +507,13 @@ let shares = new Float64Array(16);
  * further one's share falls to nothing a reach inside the nearer
  * (`erodedReachM`), so at a cell centre the centre's own kind is whole and
  * every other kind nothing: the centre reads its authored floor, or rock. A
- * kind whose cells are none of a point's four nearest centres lies the bound
- * outside its own rounded edge there (`erodedBoundM`), so it has no share,
- * and the step stays between those four centres as the bilinear did.
+ * kind weighs only within twice the reach outside its rounded edge, which
+ * lies within the licence of its cells (roundedCells.ts `LICENCE_M`), read
+ * through samples a fraction of a cell apart: 80 + 115 + 22 m, under a cell.
+ * So the step stays between the shallowest and the deepest of the cells
+ * within a cell of the point. Not between its four nearest centres, as the
+ * bilinear's does: a rounded edge may cross the line between two centres
+ * of other kinds, which is what rounding a staircase is.
  *
  * Against the stone over a roofed passage the rock keeps a step on the edge:
  * the roof stands a curtain there (passages.ts), and the hold keeps that
