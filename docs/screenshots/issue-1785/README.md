@@ -31,3 +31,21 @@ an attack-move into the Draymaws east of the base, and the camera was put on the
   The selection card reads HULL 616/616, a Caisson's 560 at rank 1.
 - [`rank-chevrons-caissons-crop.png`](rank-chevrons-caissons-crop.png): the same frame,
   cropped round the pair and enlarged four times. Nothing was drawn over it.
+
+## Rank at Track
+
+The real client at `121ab076`, two seats in one match on the Ventfront Divide at 1440 × 900 and
+device pixel ratio 1. Seat A is the Bathyarch Consortium and seat B the Pelagia Commune, which
+joined by room code. A scratch two-browser script drove both. A's two opening Caissons crossed to
+B's seat in Silent Running and were ordered onto B's Bastion. B's hulls stayed home and pinged
+every pass.
+
+- [`rank-chevrons-track-contact.png`](rank-chevrons-track-contact.png): B's view at T+04:04. A's
+  Caisson is a Track contact over B's Bastion, with the Consortium's glyph, its health bar in
+  the faction's ink and three chevrons at the bar's right end
+  ([systems-progression.md](../../systems-progression.md) §3, [ui-ux.md](../../ui-ux.md) §4).
+- [`rank-chevrons-track-contact-crop.png`](rank-chevrons-track-contact-crop.png): the same
+  frame, cropped round the contact and enlarged four times. Nothing was drawn over it.
+- [`rank-chevrons-track-owner.png`](rank-chevrons-track-owner.png): A's view at T+04:13. The same
+  Caisson, whole and selected, reads HULL 728/728 (560 at rank 3) and wears three chevrons
+  where its bar would end.
