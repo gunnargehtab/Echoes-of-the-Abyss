@@ -50,6 +50,7 @@ function parkUnderClosingRock(mission: MissionDefinition, region: string, beatTi
   Position.y[hull] = y;
   Position.depth[hull] = parkedM;
   const full = Health.hp[hull]!;
+  const maxAtPark = Health.max[hull]!;
 
   let shallowest = Infinity;
   while (match.world.tick < beatTick + T(4, 30) && match.missionOver === null) {
@@ -62,7 +63,16 @@ function parkUnderClosingRock(mission: MissionDefinition, region: string, beatTi
     !match.world.terrain.admits(x, y, Position.depth[hull]!),
     `${mission.id}: the premise — ${region} closed over the hull`
   );
-  return { depthM: Position.depth[hull]!, shallowest, hp: Health.hp[hull]!, full };
+  // The hull it was parked with, plus any a rank added since: Asset Recovery's
+  // Cruiser shells the mission's creatures and ranks inside the run, and a
+  // rank's hull arrives as current hull too (docs/systems-progression.md §3).
+  // What is left over is what the rock took.
+  return {
+    depthM: Position.depth[hull]!,
+    shallowest,
+    hp: Health.hp[hull]!,
+    full: full + (Health.max[hull]! - maxAtPark),
+  };
 }
 
 describe('rock that closes over a hull', () => {

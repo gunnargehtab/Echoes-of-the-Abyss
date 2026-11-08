@@ -97,19 +97,24 @@ function gain(world: SimWorld, eid: number, experience: number): void {
  * The rank's hull, arriving as current hull too: "the one heal a hull can earn
  * under fire" (§3).
  *
- * The maximum is computed afresh from the listed hull rather than scaled from
- * the one the hull had, so every hull of a kind at a rank holds one number. A
- * scaled maximum drifts in the last bit with the order things happened in, and
- * an unplated veteran's maximum is what a plated one reads at Track
- * (`rankedHull`), so a drifted one would sort the plate the readout hides.
+ * The rank's increment is *added* to the maximum the hull has, never written
+ * over it, so a maximum something else set stays set. The increment is the
+ * difference of two `rankedHull` figures, so on an unplated hull the sum lands
+ * on `rankedHull(listed, rank)` exactly — two singles a factor under two apart
+ * subtract without error — and that is the number a plated veteran reads at
+ * Track (echoLayer.ts). A drifted one would sort the plate the readout hides.
+ * A plated hull's own maximum may sit an ulp off its fresh product, which
+ * nothing reads: its Track readout is `rankedHull`, not `Health.max`.
  *
  * The permanent loss stays where it was. A rank adds new hull rather than
  * mending old, so the share of the bar the deep took is still the deep's.
  */
 function promote(world: SimWorld, eid: number, rank: number): void {
   const listed = statsFor(Unit.kind[eid] as UnitKind).maxHp;
+  const plate = refitHullFactor(world.refits.get(Owner.slot[eid]!));
+  const added = (rankedHull(listed, rank) - rankedHull(listed, Veterancy.rank[eid]!)) * plate;
   const before = Health.max[eid]!;
-  Health.max[eid] = rankedHull(listed, rank) * refitHullFactor(world.refits.get(Owner.slot[eid]!));
+  Health.max[eid] = before + added;
   Health.hp[eid] = Health.hp[eid]! + (Health.max[eid]! - before);
   Veterancy.rank[eid] = rank;
 }
