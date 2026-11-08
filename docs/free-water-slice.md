@@ -175,9 +175,12 @@ harvest here; production, resource payouts and fabricated mining effects are abs
 
 Retain all three GLBs, outlines, scales, lamp placement and glow curves. Reuse the
 Pelagia laminate/trim treatment, existing coral stone and kelp material families,
-shared lighting, ACES and view-owned PMREM. No new textures, render targets or bespoke
-composer are commissioned: added texture/target memory is zero. New shape templates
-use the existing environment loader/cache ownership; per-view instances and animation
+shared lighting, ACES and view-owned PMREM. No new render targets or bespoke composer
+are commissioned, and one texture only: since #1774 the survey ink contours the study's
+rounded floor from a 512 × 512 float texture of the seabed bake's floors, 1,048,576
+bytes, released with the ground (§9, "Crater walls"). Added target memory is zero. The
+owner approved that texture in session on 8 November 2026, recorded in #1787. New shape
+templates use the existing environment loader/cache ownership; per-view instances and animation
 state are released with the view. Pending loads cannot repopulate a disposed view.
 No cloned material may lose its fog, instancing, sway or glow-preservation hooks.
 
@@ -568,7 +571,8 @@ matrix is satisfied, not merely until this document or the camera lands.
 
 ## 9. Feel pass: the approved look target
 
-**Status: decisions 1–7 approved by the owner on #1748, 4 November 2026.** Three parts
+**Status: decisions 1–7 approved by the owner on #1748, 4 November 2026, and decision
+4's clause for #1774 in session on 7 November 2026, recorded in #1787.** Three parts
 below are the author's, written to carry those decisions out, and await the owner's
 review on the pull request that adds this section: the kelp flanks under decision 5, and
 the #1753 and #1754 designs under decision 6. The integrated slice passed §7 and still
@@ -636,8 +640,7 @@ into the water with the ground under it.
 
 ### Water medium (#1749)
 
-Two permitted changes, each study-only and inside §4's zero added texture and target
-memory:
+Two permitted changes, each study-only and adding no texture or target memory (§4):
 
 1. **Reach.** A study-only curve for how far the water lets you see, in
    `packages/frontend/src/game/water.ts`. The ramp's stops and its single hue stay
@@ -684,12 +687,15 @@ its ink with them:
 
 - **Rounded edges.** Each kind of ground, rock or one biome at one floor and ceiling, is
   blurred as a share of the map, the shares summing to one, and the kind with the most
-  holds each point. A one-cell jog in the staircase spreads into a curve, a corner rounds,
-  and where three kinds meet the junction settles into a Y rather than one kind spiking
-  into the others. A licence of 50 m, well inside half a cell, bounds how far an edge
-  moves. A cell centre lies half a cell from every other kind's cells, so it keeps its own.
-- **Ramps and faces.** The floor climbs across the rounded edge as a scarp a little over
-  100 m wide, and a rock face rises from a gentle foot to a steep lip. Within half a cell
+  holds each point. The blur spreads 175 m, so a one-cell jog in the staircase reads as
+  the curve it stairs, a corner rounds, and where three kinds meet the junction settles
+  into a Y rather than one kind spiking into the others. A licence of 115 m, inside half a
+  cell, bounds how far an edge moves. Every cell centre stands at least 40 m inside its
+  own kind: where the rounding would carry an edge nearer, the edge bends round the centre
+  within 110 m of it. The bowl's rim lies within 35 m of its authored circle, where the
+  cells stair up to 129 m off it.
+- **Ramps and faces.** The floor climbs across the rounded edge as a scarp about 80 m
+  wide, and a rock face rises from a gentle foot to a steep lip. Within half a cell
   of the roofed cut nothing rounds, easing in over the next cell, because the roof's
   curtains stand on the cell edges; each jamb keeps its step on them.
 - **Terraces.** Coral's blocks become benches cut in the relief's own depth, so their edges
@@ -853,8 +859,9 @@ Two pose calls were taken here. For the opening, a focus ahead of the hulls puts
 the lower third; keeping the focus on their centroid would centre them, because the orbit
 aims at its focus. For garden close, a pose along the clearing shows both flanks; the
 yaw-0 station looks north from over the clearing, so its south flank is behind the eye.
-A survey frame without the cell-edge outline is an ink change. The owner made it in the
-issue #1774, with map-visuals.md §4 amended first. Since #1771 the garden
+A survey frame without the cell-edge outline is an ink change. The owner made it for
+issue #1774 in session on 7 November 2026, recorded in #1787, with map-visuals.md §4
+amended first. Since #1771 the garden
 close and the low frame also carry life, and since #1777 the opening carries the ray,
 18 m across, gliding at the lower right between the corvette and the legend, besides two
 of the low pose's deep-fish patches at its right edge as pinpricks (§5, Life in the
