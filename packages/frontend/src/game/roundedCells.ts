@@ -12,14 +12,19 @@
  * meet the junction settles into a Y rather than one kind spiking into the
  * gap the other two leave, which is what blurring each kind's distance on
  * its own did. Each kind's rounded edge is read back as a signed distance,
- * and how far it moved from the cell edges is bounded by `LICENCE_M`, well
- * inside half a cell. A cell centre lies half a cell from every other kind's
- * cells, so it keeps its own kind whatever the rounding does.
+ * and how far it moved from the cell edges is bounded by `LICENCE_M`, under
+ * half a cell. Every cell centre keeps its own kind with `CENTRE_MARGIN_M` to
+ * spare: where the rounding would carry an edge nearer, the edge bends round
+ * the centre instead, inside `CENTRE_BEND_M` of it (#1774). So the edge
+ * follows the authored curve wherever no centre stands close to it.
  *
- * The field holds only the move: the rounded distance less the exact one, per
- * kind, on a grid finer than the heightfield's. A reader takes the exact
- * distance where it stands and adds the move there (`roundedDistances`), so
- * the promise at a centre never rests on an interpolated distance.
+ * The field holds each kind's rounded signed distance on a grid finer than
+ * the heightfield's, and every cell centre is one of its samples, so a reader
+ * at a centre reads the margin the bend gave it exactly
+ * (`roundedDistances`). Between samples it reads them blended, which keeps
+ * the edge the blur's own curve: adding the cells' exact distance to a
+ * blended move instead put that distance's ridge back into the edge, a bend
+ * on every staircase corner's bisector.
  *
  * Pure data, no three.js, and render-only like everything the bake and the
  * heightfield draw: the cells stay the truth the simulation plays on.
@@ -33,24 +38,39 @@ export const ROUNDED_CELLS = {
   /** TUNABLE — field samples along a cell's side: one every 31.25 m at 250 m cells. */
   SAMPLES_PER_CELL: 8,
   /**
-   * TUNABLE — the blur's standard deviation, metres. Half a cell spreads a
-   * one-cell jog over about two cells, which is what an ellipse's staircase
-   * needs to read as its curve. Much wider, and a ring two cells thick — the
-   * bowl between the rim and the pocket — starts to feel its far side.
+   * TUNABLE — the blur's standard deviation, metres. Seven tenths of a cell
+   * spreads a one-cell jog over about three cells, which is what an
+   * ellipse's staircase needs to read as its curve rather than as a stair
+   * with its corners cut (#1774, after a first pass at half a cell left each
+   * jog a chamfer). Wider, and a ring two cells thick — the bowl between the
+   * rim and the pocket — loses its corners to the kinds either side of it.
    */
-  SIGMA_M: 125,
+  SIGMA_M: 175,
   /**
-   * TUNABLE — the most the rounding moves an edge, metres: a soft bound
-   * (tanh), so a corner cut deeper than the licence eases into it rather than
-   * printing the licence's own outline. Twice it stays under half a cell, so
-   * the room it leaves the drawn ground's ramps outruns the move
-   * (seabed.ts `erodedBoundM`).
+   * TUNABLE — the most the rounding moves an edge, metres: a soft bound, so
+   * a corner cut deeper than the licence eases into it rather than printing
+   * the licence's own outline. Under half a cell, the study's clause in
+   * docs/map-visuals.md §4. A move under `KNEE_M` passes untouched.
    */
-  LICENCE_M: 50,
-  /** How far the field's own distances look for an edge, in cells: past the blur's three sigmas. */
+  LICENCE_M: 115,
+  KNEE_M: 80,
+  /**
+   * TUNABLE — how far inside its own rounded edge every cell centre stands,
+   * metres, and so how far either side of an edge the drawn ground can ramp
+   * (seabed.ts `erodedReachM`) with each centre still reading its own floor.
+   */
+  CENTRE_MARGIN_M: 40,
+  /**
+   * TUNABLE — how far round a centre an edge bends to keep that margin,
+   * metres: under half the spacing of centres, so no two bends meet.
+   */
+  CENTRE_BEND_M: 110,
+  /**
+   * How far the field's distances look for an edge, in cells: past where a
+   * kind's move is let go, and past any kind that can weigh at a point. A
+   * kind further off reads as this far.
+   */
   SEARCH_CELLS: 3,
-  /** How far a reader's distances look for an edge, in cells: past half a cell and the licence. */
-  READ_CELLS: 2,
   /**
    * TUNABLE — within half a cell of a roofed cell nothing rounds, and the hold
    * eases off over the next cell. The roof over a passage stands its curtains
@@ -83,14 +103,12 @@ export interface RoundedCells {
   readonly stepM: number;
   /** Per kind, per sample: how far the rounding moves that kind's signed distance, metres. */
   readonly moves: readonly Float32Array[];
+  /** Per kind, per sample: the rounded signed distance itself, the exact one plus its move. */
+  readonly rounded: readonly Float32Array[];
   /** Per sample: the largest move over every kind, as a magnitude. */
   readonly most: Float32Array;
   /** Per sample: 0 where a roof holds the cell edges, 1 where nothing does. */
   readonly hold: Float32Array;
-  /** Every edge between two kinds: x0, z0, x1, z1, kind, kind — six numbers an edge. */
-  readonly edges: Float64Array;
-  /** Per cell, the edges within `READ_CELLS` of it, as indices into `edges`. */
-  readonly near: readonly Int32Array[];
 }
 
 const isRockCell = (terrain: TerrainPayload, i: number) => terrain.ceiling[i]! > terrain.floor[i]!;
@@ -277,6 +295,23 @@ function normalQuantile(p: number): number {
   );
 }
 
+/**
+ * A move held under the licence: unchanged up to the knee, then easing
+ * toward the licence and never reaching it. Unchanged, the rounded edge is
+ * the blur's own smooth curve; a squeeze on every move, as a tanh from zero
+ * puts on it, lets the cells' staircase distance back into the edge, and
+ * bends it where each jog's curve meets a straight run.
+ */
+function withinLicence(move: number): number {
+  const { KNEE_M, LICENCE_M } = ROUNDED_CELLS;
+  const size = Math.abs(move);
+  if (size <= KNEE_M) return move;
+  return (
+    Math.sign(move) *
+    (KNEE_M + (LICENCE_M - KNEE_M) * Math.tanh((size - KNEE_M) / (LICENCE_M - KNEE_M)))
+  );
+}
+
 /** The roofed cells' hold at a point: 0 within half a cell of one, easing to 1 a cell further. */
 function roofHold(terrain: TerrainPayload, roofs: readonly number[], x: number, z: number): number {
   if (roofs.length === 0) return 1;
@@ -320,6 +355,57 @@ function coverage(
       const x1 = c === cols - 1 ? x + half : Math.min(x + half, (c + 1) * cellM);
       if (x1 <= x0 || z1 <= z0) continue;
       out[kindOf[r * cols + c]!]! += ((x1 - x0) * (z1 - z0)) / area;
+    }
+  }
+}
+
+/**
+ * Bend each edge the rounding carried within `CENTRE_MARGIN_M` of a cell
+ * centre back round it: at the centre, raise its own kind's rounded distance
+ * to the margin and lower every other kind's below its negative, easing the
+ * correction off over `CENTRE_BEND_M`. Centres are samples of the grid
+ * (`SAMPLES_PER_CELL` is even), so a reader at a centre reads the corrected
+ * value exactly. No two bends meet, so each centre's is its own.
+ */
+function bendRoundCentres(
+  cols: number,
+  rows: number,
+  per: number,
+  nx: number,
+  nz: number,
+  stepM: number,
+  kindOf: Uint16Array,
+  exact: readonly Float32Array[],
+  moves: Float32Array[]
+): void {
+  const margin = ROUNDED_CELLS.CENTRE_MARGIN_M;
+  const bend = ROUNDED_CELLS.CENTRE_BEND_M / stepM;
+  const reach = Math.ceil(bend);
+  const need = new Float64Array(moves.length);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cx = c * per + per / 2;
+      const cz = r * per + per / 2;
+      const at = cz * nx + cx;
+      const own = kindOf[r * cols + c]!;
+      let any = false;
+      for (let k = 0; k < moves.length; k++) {
+        const s = exact[k]![at]! + moves[k]![at]!;
+        need[k] = k === own ? Math.max(0, margin - s) : -Math.max(0, s + margin);
+        if (need[k] !== 0) any = true;
+      }
+      if (!any) continue;
+      for (let dz = -reach; dz <= reach; dz++) {
+        for (let dx = -reach; dx <= reach; dx++) {
+          const ix = cx + dx;
+          const iz = cz + dz;
+          if (ix < 0 || iz < 0 || ix >= nx || iz >= nz) continue;
+          const d = Math.hypot(dx, dz) / bend;
+          if (d >= 1) continue;
+          const b = smooth(1 - d);
+          for (let k = 0; k < moves.length; k++) moves[k]![iz * nx + ix] += need[k]! * b;
+        }
+      }
     }
   }
 }
@@ -386,8 +472,8 @@ export function buildRoundedCells(terrain: TerrainPayload): RoundedCells {
   // so a straight edge reads exactly its distance and moves nowhere. The move
   // is that less the exact distance, bounded by the licence, held off the
   // roofs' edges, and let go a cell from the kind, where no reader weighs it.
-  const licence = ROUNDED_CELLS.LICENCE_M;
-  const from = cellM / 2 + licence;
+  const from = cellM;
+  const to = 1.5 * cellM;
   const most = new Float32Array(nx * nz);
   const moves = kinds.map(() => new Float32Array(nx * nz));
   for (let i = 0; i < nx * nz; i++) {
@@ -406,17 +492,17 @@ export function buildRoundedCells(terrain: TerrainPayload): RoundedCells {
       const rounded =
         ROUNDED_CELLS.SIGMA_M * normalQuantile(clamp((1 + margin) / 2, 1e-6, 1 - 1e-6));
       const s = exact[k]![i]!;
-      const letGo = 1 - smooth(clamp((Math.abs(s) - from) / (cellM - from), 0, 1));
-      const move = licence * Math.tanh((rounded - s) / licence) * hold[i]! * letGo;
-      moves[k]![i] = move;
-      most[i] = Math.max(most[i]!, Math.abs(move));
+      const letGo = 1 - smooth(clamp((Math.abs(s) - from) / (to - from), 0, 1));
+      moves[k]![i] = withinLicence(rounded - s) * hold[i]! * letGo;
     }
   }
+  bendRoundCentres(cols, rows, per, nx, nz, stepM, kindOf, exact, moves);
+  for (let i = 0; i < nx * nz; i++) {
+    for (const m of moves) most[i] = Math.max(most[i]!, Math.abs(m[i]!));
+  }
 
-  const near = Array.from({ length: cols * rows }, (_, i) =>
-    edgesNear(cols, rows, byCell, i % cols, Math.floor(i / cols), ROUNDED_CELLS.READ_CELLS)
-  );
-  return { cols, rows, cellM, kinds, kindOf, nx, nz, stepM, moves, most, hold, edges, near };
+  const rounded = exact.map((s, k) => s.map((v, i) => v + moves[k]![i]!));
+  return { cols, rows, cellM, kinds, kindOf, nx, nz, stepM, moves, rounded, most, hold };
 }
 
 const fields = new WeakMap<TerrainPayload, RoundedCells>();
@@ -458,10 +544,9 @@ function sampleGrid(field: RoundedCells, grid: Float32Array, x: number, z: numbe
 
 /**
  * The rounded signed distance of every kind at a point, metres, into `out`:
- * positive inside the kind's rounded ground, negative outside — the exact
- * distance to the kind's cell edges plus the field's move there. Returns the
- * largest move at the point, the margin a reader leaves for the rounding.
- * Kinds further than `READ_CELLS` read as that far.
+ * positive inside the kind's rounded ground, negative outside, its samples
+ * blended. At a cell centre, a sample, it is exact. Returns the largest move
+ * at the point.
  */
 export function roundedDistances(
   field: RoundedCells,
@@ -469,21 +554,8 @@ export function roundedDistances(
   z: number,
   out: Float64Array
 ): number {
-  const { cols, rows, cellM } = field;
-  const col = clamp(Math.floor(x / cellM), 0, cols - 1);
-  const row = clamp(Math.floor(z / cellM), 0, rows - 1);
-  const cell = row * cols + col;
-  exactDistances(
-    field.edges,
-    field.near[cell]!,
-    field.kindOf[cell]!,
-    x,
-    z,
-    ROUNDED_CELLS.READ_CELLS * cellM,
-    out
-  );
   for (let k = 0; k < field.kinds.length; k++) {
-    out[k] = out[k]! + sampleGrid(field, field.moves[k]!, x, z);
+    out[k] = sampleGrid(field, field.rounded[k]!, x, z);
   }
   return sampleGrid(field, field.most, x, z);
 }

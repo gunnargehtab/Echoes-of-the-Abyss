@@ -401,18 +401,12 @@ export function mottleFactor(xM: number, yM: number, seed: number, mottle: numbe
  */
 export const ERODED_EDGES = {
   /**
-   * TUNABLE — how much of the room between a centre and the nearest other
-   * kind a ramp takes: the rest is where that kind's weight is let go
-   * (`kindWeight`), so a two-kind ramp starts from its foot on a slope rather
-   * than easing in from flat, which the survey's foot isobath would trace as
-   * a stair wherever it crossed the vertices at an angle.
-   */
-  REACH_SHARE: 0.75,
-  /**
    * How much of a ramp's rise gathers into a scarp at its middle; 0 is the
-   * linear ramp. Where an edge runs straight the ramp still spans most of
-   * the way from centre to centre, so a centre keeps a slope rather than
-   * #1532's flat tread; on a crater's rim a scarp is the aim.
+   * linear ramp. A ramp spans twice the reach (`erodedReachM`), so between
+   * two edges a cell's centre stands on a flat tread: on a crater's rim a
+   * scarp with a tread either side is the aim. A gentle slope authored
+   * across many cells would climb as #1532's staircase of treads, and the
+   * study authors none.
    */
   SCARP: 0.8,
   /** The face's profile exponent: a gentle foot rising to a steep lip. */
@@ -438,26 +432,16 @@ const BENCH_SALT = 0x510e527f;
 const BIOME_COUNT = Object.keys(BIOME_RELIEF).length;
 
 /**
- * The least distance outside its own rounded edge at which a kind can lie
- * from a point it has no cell beside, metres: half a cell, the least a cell
- * centre or a point between four centres stands from any other kind's
- * cells, less the most the rounding moves an edge (roundedCells.ts
- * `LICENCE_M`). It outruns that move, so the kind nearest a point is always
- * one of its four centres'.
- */
-export function erodedBoundM(cellM: number): number {
-  return cellM / 2 - ROUNDED_CELLS.LICENCE_M;
-}
-
-/**
  * How far either side of a rounded edge the study's ground ramps, metres:
- * `REACH_SHARE` of the bound. One number everywhere, not the moves where a
- * point stands: a reach that followed them would follow the cells' staircase
- * too, which is where the moves fall off, and draw it back in where each
- * ramp begins.
+ * the margin every cell centre keeps from its own rounded edge
+ * (roundedCells.ts `CENTRE_MARGIN_M`), so a centre stands at or past the end
+ * of every ramp and reads its own floor. One number everywhere, not the
+ * moves where a point stands: a reach that followed them would follow the
+ * cells' staircase too, which is where the moves fall off, and draw it back
+ * in where each ramp begins.
  */
-export function erodedReachM(cellM: number): number {
-  return ERODED_EDGES.REACH_SHARE * erodedBoundM(cellM);
+export function erodedReachM(): number {
+  return ROUNDED_CELLS.CENTRE_MARGIN_M;
 }
 
 /** A ramp's climb at `u` of the reach from its edge: 0 at −1, ½ on the edge, whole at +1. */
@@ -470,15 +454,15 @@ function rampClimb(u: number): number {
  * A kind's weight beside the kind nearest the point, which weighs 1: as
  * much as makes a two-kind ramp climb by `rampClimb`, the edge being where
  * the two are level and `behind` twice the distance from it. Nothing once a
- * kind lies two reaches behind, or the bound outside its own rounded edge:
- * the second is what keeps a kind whose cells are none of a point's four
- * nearest centres out of it, however close the nearest kind stands, and it
- * is let go only past the reach, so it never bends a two-kind ramp.
+ * kind lies two reaches behind, or two reaches outside its own rounded edge:
+ * the second keeps a far kind out of a point where the kinds about it have
+ * all drawn back from it, and it is let go only past the reach, so it never
+ * bends a two-kind ramp.
  */
-function kindWeight(behind: number, own: number, reach: number, bound: number): number {
+function kindWeight(behind: number, own: number, reach: number): number {
   const minority = 1 - rampClimb(behind / (2 * reach));
   if (minority <= 0) return 0;
-  const outside = smooth(Math.min(1, Math.max(0, (own + bound) / (bound - reach))));
+  const outside = smooth(Math.min(1, Math.max(0, (own + 2 * reach) / reach)));
   return (minority / (1 - minority)) * outside;
 }
 
@@ -553,8 +537,7 @@ export function erodedGroundAtM(
   const w = shares.subarray(0, n);
 
   roundedDistances(field, xM, yM, s);
-  const reach = erodedReachM(cellM);
-  const bound = erodedBoundM(cellM);
+  const reach = erodedReachM();
 
   // Each kind against the nearest: so where three kinds meet and the rounding
   // has drawn all three back from the junction, the nearest still holds the
@@ -566,7 +549,7 @@ export function erodedGroundAtM(
   let rockNear = Number.NEGATIVE_INFINITY;
   let roofNear = Number.NEGATIVE_INFINITY;
   for (let k = 0; k < n; k++) {
-    w[k] = k === nearest ? 1 : kindWeight(s[nearest]! - s[k]!, s[k]!, reach, bound);
+    w[k] = k === nearest ? 1 : kindWeight(s[nearest]! - s[k]!, s[k]!, reach);
     if (kinds[k]!.rock) {
       rockShare += w[k]!;
       rockNear = Math.max(rockNear, s[k]!);
@@ -599,7 +582,8 @@ export function erodedGroundAtM(
   let floor = 0;
   const relief = { amplitudeM: 0, roughness: 0, blockiness: 0, mottle: 0 };
   let nearestOpen = -1;
-  const cap = -ROUNDED_CELLS.READ_CELLS * cellM;
+  // Past every distance the field holds: what a side reads with no kind near.
+  const cap = -(ROUNDED_CELLS.SEARCH_CELLS + 1) * cellM;
   let rockSide = cap;
   let openSide = cap;
   const biomeSide = new Array<number>(BIOME_COUNT).fill(cap);
@@ -668,8 +652,8 @@ export function erodedGroundAtM(
  * benches follow the field's own contours, wandered, so their edges curve
  * with the ground. Bounded by one step of the field it cuts, and centred on
  * it, since texture averages to its fill (docs/art-direction.md, "Reading
- * the Sea Floor"): a tread sits half a riser's share above the floor of its
- * step. Every shipped map keeps `detailM`'s blocks.
+ * the Sea Floor"): a tread sits half the tread's share of a step above the
+ * floor of its step. Every shipped map keeps `detailM`'s blocks.
  */
 export function benchedDetailM(xM: number, yM: number, seed: number, relief: BiomeRelief): number {
   const raw = detailM(xM, yM, seed, relief.amplitudeM, relief.roughness, 0);

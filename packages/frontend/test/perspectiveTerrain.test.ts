@@ -18,7 +18,6 @@ import {
   BIOME_RELIEF,
   detailM,
   ERODED_EDGES,
-  erodedBoundM,
   erodedGroundAtM,
   erodedReachM,
   reliefAtCell,
@@ -335,8 +334,8 @@ describe('authored floor for the survey ink', () => {
  * promises: the drawn floor, rock faces and roof are reshaped between cell
  * centres, the cells' staircase rounded; nothing is added to the authored
  * floor at a centre, and a solid cell stays rock at its centre; the drawn
- * step stays between the four centres it blends; within a cell of the roofed
- * cut nothing rounds, and each jamb keeps its step; the study's ink traces the
+ * step stays between the four centres it blends; within half a cell of the
+ * roofed cut nothing rounds, and each jamb keeps its step; the study's ink traces the
  * rounded ground (docs/map-visuals.md §4, the study's clause); the shipped
  * ground is untouched. The picture is the run-game frames' to review.
  */
@@ -494,19 +493,25 @@ describe('the rounded ground (docs/free-water-slice.md §9)', () => {
       }
     }
     assert.ok(moved > 25, `the rounding moved an edge at most ${moved} m`);
-    assert.ok(2 * ROUNDED_CELLS.LICENCE_M < cellM / 2, 'twice the licence stays under half a cell');
-    assert.ok(erodedReachM(cellM) < erodedBoundM(cellM));
-    assert.ok(erodedBoundM(cellM) > ROUNDED_CELLS.LICENCE_M);
+    assert.ok(ROUNDED_CELLS.LICENCE_M < cellM / 2, 'the licence stays under half a cell');
+    assert.ok(ROUNDED_CELLS.CENTRE_BEND_M < cellM / 2, 'no two centres bend the same edge');
+    assert.equal(erodedReachM(), ROUNDED_CELLS.CENTRE_MARGIN_M);
   });
 
-  it("draws the bowl's rim as a curve, not a staircase of cells", () => {
-    // From the crater's centre, the radius at which the bowl's kelp gives way
-    // to the rim's coral, ray by ray across its eastern side. Read off the
-    // cells it jumps a cell's worth wherever the staircase steps; drawn, it
-    // turns, but never jumps.
+  it("draws the bowl's rim near its authored circle, where the cells stair round it", () => {
+    // The bowl is authored as an ellipse of 1,250 m radius about 2,250 / 2,250
+    // (freeWaterSlice.ts). From that centre, ray by ray across its east and
+    // west sides, the radius at which the bowl's kelp gives way to the rim's
+    // coral. Read off the cells it stairs up to half a cell off the circle and
+    // kinks at every corner of the stair; drawn, it stays near the circle and
+    // turns without a kink. Every centre's margin bends it where a centre
+    // stands close to the circle, so it does not lie on it. A kink is the
+    // second difference over rays half a degree apart.
     const centre = { x: 2250, y: 2250 };
-    const rim = (inCoral: (x: number, y: number) => boolean, theta: number) => {
-      for (let r = 750; r < 1750; r += 1) {
+    const radius = 1250;
+    const rim = (inCoral: (x: number, y: number) => boolean, deg: number) => {
+      const theta = (deg * Math.PI) / 180;
+      for (let r = 900; r < 1700; r += 1) {
         if (inCoral(centre.x + r * Math.cos(theta), centre.y + r * Math.sin(theta))) return r;
       }
       return Number.NaN;
@@ -516,18 +521,32 @@ describe('the rounded ground (docs/free-water-slice.md §9)', () => {
       const g = erodedGroundAtM(terrain, rockTop, x, y);
       return g.coastM < 0 && drawnBiome(g.biomeM) === Biome.CoralRuins;
     };
-    let cellJump = 0;
-    let drawnJump = 0;
-    const step = (0.5 * Math.PI) / 180;
-    for (let theta = -1; theta < 1; theta += step) {
-      cellJump = Math.max(cellJump, Math.abs(rim(cells, theta + step) - rim(cells, theta)));
-      drawnJump = Math.max(drawnJump, Math.abs(rim(drawn, theta + step) - rim(drawn, theta)));
+    const reading = { cellsOff: 0, cellsKink: 0, drawnOff: 0, drawnKink: 0 };
+    // Past 150 and 210 degrees the ray meets the wall's coast and the garden's,
+    // where three kinds meet, rather than the bowl's own.
+    for (const [from, to] of [
+      [-34, 34],
+      [150, 210],
+    ] as const) {
+      const cellsR: number[] = [];
+      const drawnR: number[] = [];
+      for (let deg = from; deg <= to; deg += 0.5) {
+        cellsR.push(rim(cells, deg));
+        drawnR.push(rim(drawn, deg));
+      }
+      for (let i = 0; i < cellsR.length; i++) {
+        reading.cellsOff = Math.max(reading.cellsOff, Math.abs(cellsR[i]! - radius));
+        reading.drawnOff = Math.max(reading.drawnOff, Math.abs(drawnR[i]! - radius));
+        if (i === 0 || i === cellsR.length - 1) continue;
+        const kink = (r: number[]) => Math.abs(r[i - 1]! - 2 * r[i]! + r[i + 1]!);
+        reading.cellsKink = Math.max(reading.cellsKink, kink(cellsR));
+        reading.drawnKink = Math.max(reading.drawnKink, kink(drawnR));
+      }
     }
-    assert.ok(cellJump >= cellM * 0.9, `the premise: the cells' rim jumps ${cellJump} m`);
-    assert.ok(
-      drawnJump < 40,
-      `the drawn rim jumps ${drawnJump} m between rays half a degree apart`
-    );
+    const said = JSON.stringify(reading);
+    assert.ok(reading.cellsOff > cellM / 2 - 5, `the premise, the cells' stair: ${said}`);
+    assert.ok(reading.drawnOff < 50, `the drawn rim strays from the circle: ${said}`);
+    assert.ok(reading.drawnKink < reading.cellsKink / 3, `the drawn rim kinks: ${said}`);
   });
 
   it('holds the cell edges within half a cell of the roofed cut', () => {
@@ -578,7 +597,7 @@ describe('the rounded ground (docs/free-water-slice.md §9)', () => {
     // the stone side across the reach, and the face climbs from a gentle foot
     // to a steep lip.
     const x = 1625;
-    const reach = erodedReachM(cellM);
+    const reach = erodedReachM();
     const at = (y: number) => erodedGroundAtM(terrain, rockTop, x, y);
     const runs: string[] = [];
     let stoneFrom = Infinity;

@@ -2,8 +2,9 @@
  * The free-water study's cells, rounded (roundedCells.ts; docs/free-water-slice.md
  * §9, "Crater walls"). What the field promises its readers: a straight edge
  * moves nowhere, no edge moves as far as the licence, a cell centre keeps its
- * own kind with half a cell less the licence to spare, and where three kinds
- * meet none spikes into the others. Small authored grounds stand in for the
+ * own kind with `CENTRE_MARGIN_M` to spare, an edge the rounding would carry
+ * too near a centre bends round it, and where three kinds meet none spikes
+ * into the others. Small authored grounds stand in for the
  * study, so each property is read where it is the only one at work.
  */
 
@@ -85,7 +86,7 @@ describe('rounded cells (roundedCells.ts)', () => {
     assert.equal(heldBy(terrain, 2 * CELL + 10, 2 * CELL + 10), field.kindOf[0]);
   });
 
-  it("keeps every cell centre its own kind's, half a cell less the licence inside it", () => {
+  it("keeps every cell centre its own kind's, the margin inside it", () => {
     const terrain = ground(['aaab#', 'abbb#', 'aaab#', 'ccab#', 'ccaa#']);
     const field = buildRoundedCells(terrain);
     const s = new Float64Array(field.kinds.length);
@@ -94,10 +95,10 @@ describe('rounded cells (roundedCells.ts)', () => {
       const z = (Math.floor(i / terrain.cols) + 0.5) * CELL;
       roundedDistances(field, x, z, s);
       const own = field.kindOf[i]!;
-      assert.ok(s[own]! >= CELL / 2 - ROUNDED_CELLS.LICENCE_M, `centre ${i}: own ${s[own]}`);
+      const margin = ROUNDED_CELLS.CENTRE_MARGIN_M - 1e-3;
+      assert.ok(s[own]! >= margin, `centre ${i}: own ${s[own]}`);
       for (let k = 0; k < s.length; k++) {
-        if (k !== own)
-          assert.ok(s[k]! <= -(CELL / 2 - ROUNDED_CELLS.LICENCE_M), `centre ${i}: ${k}`);
+        if (k !== own) assert.ok(s[k]! <= -margin, `centre ${i}: ${k} at ${s[k]}`);
       }
     }
   });
@@ -106,14 +107,14 @@ describe('rounded cells (roundedCells.ts)', () => {
     // a over the west half, b over the east, c across the south: the corners
     // a and b turn into c round off, and blurred as shares that sum to one
     // the junction settles rather than c filling the gap the two leave, as a
-    // spike up the a–b edge. Up that edge, half a cell from the junction, a
-    // and b still meet there rather than c holding the line.
+    // spike up the a–b edge. The Y's stem climbs the edge a little; past it,
+    // a and b still meet there rather than c holding the line.
     const terrain = ground(['aaabbb', 'aaabbb', 'aaabbb', 'cccccc', 'cccccc', 'cccccc']);
     const field = buildRoundedCells(terrain);
     const [a, b, c] = [field.kindOf[0]!, field.kindOf[5]!, field.kindOf[18]!];
     const edgeX = 3 * CELL;
     const junctionZ = 3 * CELL;
-    for (const dz of [60, 90, 125]) {
+    for (const dz of [90, 125, 160]) {
       const z = junctionZ - dz;
       assert.equal(heldBy(terrain, edgeX - 5, z), a, `a holds its side ${dz} m up`);
       assert.equal(heldBy(terrain, edgeX + 5, z), b, `b holds its side ${dz} m up`);
@@ -122,6 +123,21 @@ describe('rounded cells (roundedCells.ts)', () => {
     for (let dz = ROUNDED_CELLS.LICENCE_M + 1; dz < CELL; dz += 7) {
       assert.notEqual(heldBy(terrain, edgeX, junctionZ - dz), c, `c spikes ${dz} m up the edge`);
     }
+  });
+
+  it('bends an edge the rounding would carry over a centre back round it', () => {
+    // A lone cell of b in a field of a: blurred, its share never leads, so the
+    // rounding alone would drown it. Its centre still reads b, with the
+    // margin to spare, and the bend is local: past it the field is a's.
+    const terrain = ground(['aaaaa', 'aaaaa', 'aabaa', 'aaaaa', 'aaaaa']);
+    const field = buildRoundedCells(terrain);
+    const b = field.kindOf[12]!;
+    const a = field.kindOf[0]!;
+    const s = new Float64Array(field.kinds.length);
+    roundedDistances(field, 2.5 * CELL, 2.5 * CELL, s);
+    assert.ok(s[b]! >= ROUNDED_CELLS.CENTRE_MARGIN_M - 1e-3, `the lone centre reads ${s[b]}`);
+    assert.equal(heldBy(terrain, 2.5 * CELL, 2.5 * CELL), b);
+    assert.equal(heldBy(terrain, 2.5 * CELL + ROUNDED_CELLS.CENTRE_BEND_M + 5, 2.5 * CELL), a);
   });
 
   it('builds once per terrain, and reads a changed one afresh once forgotten', () => {
